@@ -1,98 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:62151 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754161Ab0EAQdJ (ORCPT
+Received: from mail.redfish-solutions.com ([66.232.79.143]:46162 "EHLO
+	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754153Ab0ESAWs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 May 2010 12:33:09 -0400
-Received: by fxm10 with SMTP id 10so1038483fxm.19
-        for <linux-wireless@vger.kernel.org>; Sat, 01 May 2010 09:33:07 -0700 (PDT)
+	Tue, 18 May 2010 20:22:48 -0400
+Message-ID: <4BF32B2B.6010202@redfish-solutions.com>
+Date: Tue, 18 May 2010 18:04:59 -0600
+From: "Philip A. Prindeville" <philipp@redfish-solutions.com>
 MIME-Version: 1.0
-In-Reply-To: <4BDC56D2.5060605@gmail.com>
-References: <4BDC56D2.5060605@gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Sat, 1 May 2010 18:32:47 +0200
-Message-ID: <AANLkTinJVm-6o8tVLesiOeiYGgvy8vYSpXPtcAh0CQ5D@mail.gmail.com>
-Subject: Re: [PATCH] ssb: Implement fast powerup delay calculation
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <larry.finger@lwfinger.net>
-Content-Type: multipart/mixed; boundary=001485f19a3029499504858aea64
+To: David Miller <davem@davemloft.net>
+CC: dunc@lemonia.org, kalle.valo@iki.fi, kaber@trash.net,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: Network QoS support in applications
+References: <87my01m0zm.fsf@purkki.valot.fi>	<4B5EF5DF.2070005@lemonia.org>	<4B9942A7.40205@redfish-solutions.com> <20100311.112754.142886660.davem@davemloft.net> <4B9944A0.5080308@redfish-solutions.com>
+In-Reply-To: <4B9944A0.5080308@redfish-solutions.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---001485f19a3029499504858aea64
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-2010/5/1 G=E1bor Stefanik <netrolller.3d@gmail.com>:
-> Implement fast powerup delay calculation, as described
-> in the recently updated specs. The 4325 part is coming soon.
+On 03/11/2010 12:29 PM, Philip A. Prindeville wrote:
+> On 03/11/2010 12:27 PM, David Miller wrote:
+>   
+>> From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+>> Date: Thu, 11 Mar 2010 12:21:11 -0700
+>>
+>>     
+>>> And yes, there will always be misbehaving users.  They are a fact of
+>>> life.  That doesn't mean we should lobotomize the network.  We don't
+>>> have an authentication mechanism on ICMP Redirects or Source-Quench,
+>>>       
+>> Which is why most networks block those packets from the outside.
+>>
+>>     
+>>> Nor is ARP authenticated.
+>>>       
+>> Which is why people control who can plug into their physical
+>> network.
+>>
+>> None of the things you are saying support the idea of having
+>> applications decide what the DSCP marking should be.
+>>     
 >
-> Signed-off-by: G=E1bor Stefanik<netrolller.3d@gmail.com>
-> ---
->
-> To people experiencing DMA errors: please test this patch, it touches
-> the PMU code, one of the suspected problem areas.
->
-> I'm submitting this patch using Thunderbird 3; so I cannot be held liable
-> if it gets damaged in transit. Blame Mozilla. :-)
+> Does "decide what the DSCP marking should be" include complying to the recommendations of RFC-4594?
+>   
 
-Apparently the nasty space-doubling issue seen in the Tb3 beta is
-still present in the final version... here is the patch as an
-attachment.
+If anyone cares, here's an update:
 
---G=E1bor
+I've submitted patches for QoS configuration for:
 
---001485f19a3029499504858aea64
-Content-Type: application/octet-stream; name="ssb_fast_pwrup_delay.patch"
-Content-Disposition: attachment; filename="ssb_fast_pwrup_delay.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_g8onidcx0
+APR/Apache (stalled);
+Proftpd (committed);
+Openssh (pending review);
+Firefox/Thunderbird (reviewed and on-track for commit);
+Cyrus (committed);
+Sendmail (submittted and acknowledged, but not yet reviewed);
+Curl (stalled);
 
-SW1wbGVtZW50IGZhc3QgcG93ZXJ1cCBkZWxheSBjYWxjdWxhdGlvbiwgYXMgZGVzY3JpYmVkCmlu
-IHRoZSByZWNlbnRseSB1cGRhdGVkIHNwZWNzLiBUaGUgNDMyNSBwYXJ0IGlzIGNvbWluZyBzb29u
-LgoKU2lnbmVkLW9mZi1ieTogR+Fib3IgU3RlZmFuaWsgPG5ldHJvbGxsZXIuM2RAZ21haWwuY29t
-PgotLS0KCkluZGV4OiB3aXJlbGVzcy10ZXN0aW5nL2RyaXZlcnMvc3NiL2RyaXZlcl9jaGlwY29t
-bW9uLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PQotLS0gd2lyZWxlc3MtdGVzdGluZy5vcmlnL2RyaXZlcnMvc3NiL2Ry
-aXZlcl9jaGlwY29tbW9uLmMKKysrIHdpcmVsZXNzLXRlc3RpbmcvZHJpdmVycy9zc2IvZHJpdmVy
-X2NoaXBjb21tb24uYwpAQCAtMjA5LDcgKzIwOSwyNCBAQCBzdGF0aWMgdm9pZCBjaGlwY29fcG93
-ZXJjb250cm9sX2luaXQoc3RyCiAJfQogfQogCi1zdGF0aWMgdm9pZCBjYWxjX2Zhc3RfcG93ZXJ1
-cF9kZWxheShzdHJ1Y3Qgc3NiX2NoaXBjb21tb24gKmNjKQorc3RhdGljIHUxNiBwbXVfZmFzdF9w
-b3dlcnVwX2RlbGF5KHN0cnVjdCBzc2JfY2hpcGNvbW1vbiAqY2MpCit7CisJc3RydWN0IHNzYl9i
-dXMgKmJ1cyA9IGNjLT5kZXYtPmJ1czsKKworCXN3aXRjaCAoYnVzLT5jaGlwX2lkKSB7CisJY2Fz
-ZSAweDQzMTI6CisJY2FzZSAweDQzMjI6CisJY2FzZSAweDQzMjg6CisJCXJldHVybiA3MDAwOwor
-CWNhc2UgMHg0MzI1OgorCQkvKiBUT0RPOiAqLworCWRlZmF1bHQ6CisJCWJyZWFrOworCX0KKwly
-ZXR1cm4gMTUwMDA7Cit9CisKK3N0YXRpYyB1MTYgY2FsY19mYXN0X3Bvd2VydXBfZGVsYXkoc3Ry
-dWN0IHNzYl9jaGlwY29tbW9uICpjYykKIHsKIAlzdHJ1Y3Qgc3NiX2J1cyAqYnVzID0gY2MtPmRl
-di0+YnVzOwogCWludCBtaW5mcmVxOwpAQCAtMjE3LDI2ICsyMzQsMzMgQEAgc3RhdGljIHZvaWQg
-Y2FsY19mYXN0X3Bvd2VydXBfZGVsYXkoc3RydQogCXUzMiBwbGxfb25fZGVsYXk7CiAKIAlpZiAo
-YnVzLT5idXN0eXBlICE9IFNTQl9CVVNUWVBFX1BDSSkKLQkJcmV0dXJuOworCQlyZXR1cm4gMDsK
-KwlpZiAoY2MtPmNhcGFiaWxpdGllcyAmIFNTQl9DSElQQ09fQ0FQX1BNVSkKKwkJcmV0dXJuIHBt
-dV9mYXN0X3Bvd2VydXBfZGVsYXkoY2MpOwogCWlmICghKGNjLT5jYXBhYmlsaXRpZXMgJiBTU0Jf
-Q0hJUENPX0NBUF9QQ1RMKSkKLQkJcmV0dXJuOworCQlyZXR1cm4gMDsKIAogCW1pbmZyZXEgPSBj
-aGlwY29fcGN0bF9jbG9ja2ZyZXFsaW1pdChjYywgMCk7CiAJcGxsX29uX2RlbGF5ID0gY2hpcGNv
-X3JlYWQzMihjYywgU1NCX0NISVBDT19QTExPTkRFTEFZKTsKIAl0bXAgPSAoKChwbGxfb25fZGVs
-YXkgKyAyKSAqIDEwMDAwMDApICsgKG1pbmZyZXEgLSAxKSkgLyBtaW5mcmVxOwogCVNTQl9XQVJO
-X09OKHRtcCAmIH4weEZGRkYpOwogCi0JY2MtPmZhc3RfcHdydXBfZGVsYXkgPSB0bXA7CisJcmV0
-dXJuIHRtcDsKIH0KIAogdm9pZCBzc2JfY2hpcGNvbW1vbl9pbml0KHN0cnVjdCBzc2JfY2hpcGNv
-bW1vbiAqY2MpCiB7CisJdTE2IGRlbGF5OworCiAJaWYgKCFjYy0+ZGV2KQogCQlyZXR1cm47IC8q
-IFdlIGRvbid0IGhhdmUgYSBDaGlwQ29tbW9uICovCiAJc3NiX3BtdV9pbml0KGNjKTsKIAljaGlw
-Y29fcG93ZXJjb250cm9sX2luaXQoY2MpOwogCXNzYl9jaGlwY29fc2V0X2Nsb2NrbW9kZShjYywg
-U1NCX0NMS01PREVfRkFTVCk7Ci0JY2FsY19mYXN0X3Bvd2VydXBfZGVsYXkoY2MpOworCWRlbGF5
-ID0gY2FsY19mYXN0X3Bvd2VydXBfZGVsYXkoY2MpOworCXNzYl9wcmludGsoS0VSTl9JTkZPIFBG
-WCAiZmFzdF9wd3J1cF9kZWxheSBpcyAlZFxuIiwgZGVsYXkpOworCWNjLT5mYXN0X3B3cnVwX2Rl
-bGF5ID0gZGVsYXk7CisJc3NiX3dyaXRlMTYoY2MtPmRldiwgU1NCX01NSU9fUE9XRVJVUF9ERUxB
-WSwgZGVsYXkpOwogfQogCiB2b2lkIHNzYl9jaGlwY29fc3VzcGVuZChzdHJ1Y3Qgc3NiX2NoaXBj
-b21tb24gKmNjKQpJbmRleDogd2lyZWxlc3MtdGVzdGluZy9pbmNsdWRlL2xpbnV4L3NzYi9zc2Jf
-cmVncy5oCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT0KLS0tIHdpcmVsZXNzLXRlc3Rpbmcub3JpZy9pbmNsdWRlL2xpbnV4
-L3NzYi9zc2JfcmVncy5oCisrKyB3aXJlbGVzcy10ZXN0aW5nL2luY2x1ZGUvbGludXgvc3NiL3Nz
-Yl9yZWdzLmgKQEAgLTI2LDYgKzI2LDcgQEAKICNkZWZpbmUJU1NCX0VVQVJUCQkoU1NCX0VYVElG
-X0JBU0UgKyAweDAwODAwMDAwKQogI2RlZmluZQlTU0JfTEVECQkJKFNTQl9FWFRJRl9CQVNFICsg
-MHgwMDkwMDAwMCkKIAorI2RlZmluZSBTU0JfTU1JT19QT1dFUlVQX0RFTEFZCTB4MDZBOAogCiAv
-KiBFbnVtZXJhdGlvbiBzcGFjZSBjb25zdGFudHMgKi8KICNkZWZpbmUgU1NCX0NPUkVfU0laRQkJ
-MHgxMDAwCS8qIFNpemUgb2YgYSBjb3JlIE1NSU8gYXJlYSAqLwo=
---001485f19a3029499504858aea64--
+All, as per the request of the maintainers, default to either no QoS
+markings or previous RFC-791 QoS markings if that's what they already
+supported (Proftpd and Openssh).
+
+If anyone can think of anything else that needs to be supported to
+impact a significant portion of network (or enterprise intranet)
+traffic, please call it out.
+
+And if anyone wants to see if they can help get Apache unstalled (it's
+mostly an autoconf issue with Solaris that's holding things up), please
+give me a holler offline.
+
+Thanks.
+
+
+
