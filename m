@@ -1,36 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:13443 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751543Ab0EMRxD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 13:53:03 -0400
-Date: Thu, 13 May 2010 10:52:54 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Matt Chen <machen@novell.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Joey Lee <jlee@novell.com>, Gary Lin <GLin@novell.com>,
-	Greg Kroah-Hartman <GregKH@novell.com>,
-	"linux-net@vger.kernel.org" <linux-net@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] Fix AR9285 always turn off LED on HP mini 210 [1/1]
-Message-ID: <20100513175254.GI2354@tux>
-References: <4BE67B370200002300018B53@novprvlin0050.provo.novell.com>
- <20100510182139.GD2177@tux>
- <AANLkTikDcu0vDdThckqunFEa1bPzkfxhpwyql-wKdU8Z@mail.gmail.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:62396 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753288Ab0ESG5M convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 May 2010 02:57:12 -0400
+Received: by fxm10 with SMTP id 10so1942860fxm.19
+        for <linux-wireless@vger.kernel.org>; Tue, 18 May 2010 23:57:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <AANLkTikDcu0vDdThckqunFEa1bPzkfxhpwyql-wKdU8Z@mail.gmail.com>
+In-Reply-To: <201005190847.59068.helmut.schaa@googlemail.com>
+References: <201005190847.59068.helmut.schaa@googlemail.com>
+Date: Wed, 19 May 2010 08:57:10 +0200
+Message-ID: <AANLkTikUBorBjZ03BR6m1X0vfVlLtunRQz1BD3mO0xAz@mail.gmail.com>
+Subject: Re: [PATCH] rt2x00: don't use to_pci_dev in rt2x00pci_uninitialize
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 13, 2010 at 04:13:18AM -0700, Matt Chen wrote:
-> Hi Luis,
-> Tried the driver,compat-wireless-2.6.33.
-> 2.tar.bz2,  from http://wireless.kernel.org/en/users/Download/stable, it doesn't fix this issue. The LED is still keeping off whatever you enable/disable it.
+On Wed, May 19, 2010 at 8:47 AM, Helmut Schaa
+<helmut.schaa@googlemail.com> wrote:
+> Don't use to_pci_dev in rt2x00pci_uninitialize to get the allocated irq
+> as it won't work for platform devices (SoC). Instead, use the irq field
+> that's already used everywhere else.
+>
+> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 
-2.6.33 is ancient now, try the compat-wireles 2.6.34-rc stuff and if
-that doesn't help try bleeding edge. The fixes need to be addressed
-on bleedinge edge *first* but if bleedinge edge already has a fix
-then its a matter of cherry picking that and sending it to the stable
-gods.
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-  Luis
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00pci.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
+> index a016f7c..f71eee6 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
+> @@ -206,7 +206,7 @@ void rt2x00pci_uninitialize(struct rt2x00_dev *rt2x00dev)
+>        /*
+>         * Free irq line.
+>         */
+> -       free_irq(to_pci_dev(rt2x00dev->dev)->irq, rt2x00dev);
+> +       free_irq(rt2x00dev->irq, rt2x00dev);
+>
+>        /*
+>         * Free DMA
+> --
+> 1.6.4.2
+>
+>
