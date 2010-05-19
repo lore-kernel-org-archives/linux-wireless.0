@@ -1,45 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36693 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750874Ab0EGCpN (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:35306 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751890Ab0ESSK0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 May 2010 22:45:13 -0400
-Date: Thu, 6 May 2010 22:35:20 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: set IEEE80211_TX_CTL_FIRST_FRAGMENT for beacons
-Message-ID: <20100507023519.GA7240@tuxdriver.com>
-References: <1273171517-6264-1-git-send-email-linville@tuxdriver.com>
- <k2t43e72e891005061501h91e475f6q6cb8bc7c3bbec990@mail.gmail.com>
- <20100507001319.GA6990@tuxdriver.com>
+	Wed, 19 May 2010 14:10:26 -0400
+Received: by fxm10 with SMTP id 10so2659509fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 19 May 2010 11:10:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100507001319.GA6990@tuxdriver.com>
+In-Reply-To: <1274282769-19244-3-git-send-email-gwingerde@gmail.com>
+References: <1274282769-19244-1-git-send-email-gwingerde@gmail.com>
+	 <1274282769-19244-3-git-send-email-gwingerde@gmail.com>
+Date: Wed, 19 May 2010 20:10:15 +0200
+Message-ID: <AANLkTiktN6_0F5IBR8XStKUh7qfnFEn97ZkhuIwnPO4T@mail.gmail.com>
+Subject: Re: [PATCH 2/7] rt2x00: Move all register definitions for rt2800 to
+	rt2800.h.
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 06, 2010 at 08:13:20PM -0400, John W. Linville wrote:
-> On Thu, May 06, 2010 at 03:01:25PM -0700, Luis R. Rodriguez wrote:
-> > On Thu, May 6, 2010 at 11:45 AM, John W. Linville
-> > <linville@tuxdriver.com> wrote:
-> > 
-> > Why though?
-> 
-> Because it is correct, appropriate, and zero additional cost.  And
-> because if you use the same tx path for beacons as you use for normal
-> frames and if in that path you manage the sequence number in software
-> you should be checking that flag before bumping the sequence number.
+On Wed, May 19, 2010 at 5:26 PM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+> There is no point on having them separated across 3 files.
+> At the same time rename USB_CYC_CFG to its proper name US_CYC_CNT
+> (as per the datasheet).
+>
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-That isn't worded too clearly...  If you manage the sequence number
-in software then you should be checking that flag before bumping
-the sequence number.  If you use the same tx path for beacons as is
-used for normal frames and you don't set that flag for beacons,
-then beacons will reuse the sequence number from the previous frame.
-
-Does that make sense?
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
