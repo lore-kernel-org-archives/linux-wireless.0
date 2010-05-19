@@ -1,58 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:41483 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757724Ab0ENNQ0 (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:42759 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756428Ab0ESBb5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 09:16:26 -0400
-Received: by pvh1 with SMTP id 1so517748pvh.19
-        for <linux-wireless@vger.kernel.org>; Fri, 14 May 2010 06:16:26 -0700 (PDT)
-From: tom.leiming@gmail.com
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH 2/2] ath9k: fix dma sync in rx path
-Date: Fri, 14 May 2010 21:16:09 +0800
-Message-Id: <1273842969-3435-1-git-send-email-tom.leiming@gmail.com>
-In-Reply-To: <1273842938-3401-1-git-send-email-tom.leiming@gmail.com>
-References: <1273842938-3401-1-git-send-email-tom.leiming@gmail.com>
+	Tue, 18 May 2010 21:31:57 -0400
+Received: from vs3004.wh2.ocn.ne.jp (125.206.180.167)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-087562716
+	for <linux-wireless@vger.kernel.org>; Wed, 19 May 2010 10:31:56 +0900 (JST)
+Subject: [PATCH v2 01/20] ath5k: add debugfs file for queue debugging
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Wed, 19 May 2010 10:30:44 +0900
+Message-ID: <20100519013044.22206.90019.stgit@tt-desk>
+In-Reply-To: <20100519012528.22206.77550.stgit@tt-desk>
+References: <20100519012528.22206.77550.stgit@tt-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ming Lei <tom.leiming@gmail.com>
-
-If buffer is to be accessed by cpu after dma transfer is over, but
-between dma mapping and dma unmapping, we should use
-dma_sync_single_for_cpu to sync the buffer between cpu with
-device. And dma_sync_single_for_device is used to let
-device gain the buffer again.
-
-Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 ---
- drivers/net/wireless/ath/ath9k/recv.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath5k/debug.c |   66 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath5k/debug.h |    1 
+ 2 files changed, 67 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index a3fe6e1..96f5d83 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -694,7 +694,7 @@ static bool ath_edma_get_buffers(struct ath_softc *sc,
- 	bf = SKB_CB_ATHBUF(skb);
- 	BUG_ON(!bf);
+diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
+index 6fb5c5f..c77a6ad 100644
+--- a/drivers/net/wireless/ath/ath5k/debug.c
++++ b/drivers/net/wireless/ath/ath5k/debug.c
+@@ -729,6 +729,66 @@ static const struct file_operations fops_ani = {
+ };
  
--	dma_sync_single_for_device(sc->dev, bf->bf_buf_addr,
-+	dma_sync_single_for_cpu(sc->dev, bf->bf_buf_addr,
- 				common->rx_bufsize, DMA_FROM_DEVICE);
  
- 	ret = ath9k_hw_process_rxdesc_edma(ah, NULL, skb->data);
-@@ -808,7 +808,7 @@ static struct ath_buf *ath_get_next_rx_buf(struct ath_softc *sc,
- 	 * 1. accessing the frame
- 	 * 2. requeueing the same buffer to h/w
- 	 */
--	dma_sync_single_for_device(sc->dev, bf->bf_buf_addr,
-+	dma_sync_single_for_cpu(sc->dev, bf->bf_buf_addr,
- 			common->rx_bufsize,
- 			DMA_FROM_DEVICE);
++/* debugfs: queues etc */
++
++static ssize_t read_file_queue(struct file *file, char __user *user_buf,
++				   size_t count, loff_t *ppos)
++{
++	struct ath5k_softc *sc = file->private_data;
++	char buf[700];
++	unsigned int len = 0;
++
++	struct ath5k_txq *txq;
++	struct ath5k_buf *bf, *bf0;
++	int i, n = 0;
++
++	len += snprintf(buf+len, sizeof(buf)-len,
++			"available txbuffers: %d\n", sc->txbuf_len);
++
++	for (i = 0; i < ARRAY_SIZE(sc->txqs); i++) {
++		txq = &sc->txqs[i];
++
++		len += snprintf(buf+len, sizeof(buf)-len,
++			"%02d: %ssetup\n", i, txq->setup ? "" : "not ");
++
++		if (!txq->setup)
++			continue;
++
++		list_for_each_entry_safe(bf, bf0, &txq->q, list)
++			n++;
++		len += snprintf(buf+len, sizeof(buf)-len, "  len: %d\n", n);
++	}
++
++	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
++}
++
++static ssize_t write_file_queue(struct file *file,
++				 const char __user *userbuf,
++				 size_t count, loff_t *ppos)
++{
++	struct ath5k_softc *sc = file->private_data;
++	char buf[20];
++
++	if (copy_from_user(buf, userbuf, min(count, sizeof(buf))))
++		return -EFAULT;
++
++	if (strncmp(buf, "start", 5) == 0)
++		ieee80211_wake_queues(sc->hw);
++	else if (strncmp(buf, "stop", 4) == 0)
++		ieee80211_stop_queues(sc->hw);
++
++	return count;
++}
++
++
++static const struct file_operations fops_queue = {
++	.read = read_file_queue,
++	.write = write_file_queue,
++	.open = ath5k_debugfs_open,
++	.owner = THIS_MODULE,
++};
++
++
+ /* init */
  
--- 
-1.6.2.5
+ void
+@@ -772,6 +832,11 @@ ath5k_debug_init_device(struct ath5k_softc *sc)
+ 				S_IWUSR | S_IRUSR,
+ 				sc->debug.debugfs_phydir, sc,
+ 				&fops_ani);
++
++	sc->debug.debugfs_queue = debugfs_create_file("queue",
++				S_IWUSR | S_IRUSR,
++				sc->debug.debugfs_phydir, sc,
++				&fops_queue);
+ }
+ 
+ void
+@@ -790,6 +855,7 @@ ath5k_debug_finish_device(struct ath5k_softc *sc)
+ 	debugfs_remove(sc->debug.debugfs_antenna);
+ 	debugfs_remove(sc->debug.debugfs_frameerrors);
+ 	debugfs_remove(sc->debug.debugfs_ani);
++	debugfs_remove(sc->debug.debugfs_queue);
+ 	debugfs_remove(sc->debug.debugfs_phydir);
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath5k/debug.h b/drivers/net/wireless/ath/ath5k/debug.h
+index ddd5b3a..c7a0769 100644
+--- a/drivers/net/wireless/ath/ath5k/debug.h
++++ b/drivers/net/wireless/ath/ath5k/debug.h
+@@ -77,6 +77,7 @@ struct ath5k_dbg_info {
+ 	struct dentry		*debugfs_antenna;
+ 	struct dentry		*debugfs_frameerrors;
+ 	struct dentry		*debugfs_ani;
++	struct dentry		*debugfs_queue;
+ };
+ 
+ /**
 
