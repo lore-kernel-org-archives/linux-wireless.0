@@ -1,53 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55847 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750888Ab0EXIOu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 May 2010 04:14:50 -0400
-Subject: Re: [linux-pm] [Regression][git head f4b87dee9] ath9k doesn't work
- correctly after resume from suspend to RAM
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-pm@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Daniel Yingqiang Ma <yma.cool@gmail.com>,
-	David Miller <davem@davemloft.net>
-In-Reply-To: <201005240059.57921.rjw@sisk.pl>
-References: <201005222353.26920.rjw@sisk.pl>
-	 <201005230013.37578.rjw@sisk.pl> <201005232120.16814.rjw@sisk.pl>
-	 <201005240059.57921.rjw@sisk.pl>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 24 May 2010 10:14:29 +0200
-Message-ID: <1274688869.3743.5.camel@jlt3.sipsolutions.net>
+Received: from c60.cesmail.net ([216.154.195.49]:53938 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754044Ab0ESTFy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 May 2010 15:05:54 -0400
+Subject: Re: [PATCH] cfg80211: make action channel type optional
+From: Pavel Roskin <proski@gnu.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>, Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1274294939.19404.4.camel@jlt3.sipsolutions.net>
+References: <1274264232.3874.7.camel@jlt3.sipsolutions.net>
+	 <1274293152.8463.2.camel@mj>
+	 <1274294939.19404.4.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain
+Date: Wed, 19 May 2010 15:05:52 -0400
+Message-Id: <1274295952.9409.3.camel@mj>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-05-24 at 00:59 +0200, Rafael J. Wysocki wrote:
-
-> commit 03ceedea972a82d343fa5c2528b3952fa9e615d5
-> Author: Daniel Yingqiang Ma <yma.cool@gmail.com>
-> Date:   Tue Apr 13 15:12:07 2010 +0800
+On Wed, 2010-05-19 at 20:48 +0200, Johannes Berg wrote:
+> On Wed, 2010-05-19 at 14:19 -0400, Pavel Roskin wrote:
+> > On Wed, 2010-05-19 at 12:17 +0200, Johannes Berg wrote:
+> > 
+> > > @@ -1168,6 +1168,7 @@ struct cfg80211_ops {
+> > >  	int	(*action)(struct wiphy *wiphy, struct net_device *dev,
+> > >  			  struct ieee80211_channel *chan,
+> > >  			  enum nl80211_channel_type channel_type,
+> > > +			  bool channel_type_valid,
+> > >  			  const u8 *buf, size_t len, u64 *cookie);
+> > 
+> > Would not it be easier to introduce NL80211_CHAN_UNSPECIFIED in enum
+> > nl80211_channel_type?
 > 
->     ath9k: Group Key fix for VAPs
-> 
-> also fixes the resume issue with iwlagn.
+> Yes, but it would change the userspace API so we can't do that.
 
-Ok that had me going WTF.
+I believe the new API would be a superset of the old API.  No userspace
+caller would need to be changed.
 
-But then I saw that a huge ath9k patch had a mac80211 change sneakily
-hidden in it. WTF!
+Anyway, I just wanted to be sure that a simpler solution was considered.
 
-> So, please revert.
-
-Indeed, this patch needs to be reverted. That mac80211 change is wrong
-and completely unnecessary.
-
-johannes
-
+-- 
+Regards,
+Pavel Roskin
