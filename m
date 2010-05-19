@@ -1,138 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp3-g21.free.fr ([212.27.42.3]:36955 "EHLO smtp3-g21.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752315Ab0EMVFo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 17:05:44 -0400
-Message-ID: <4BEC699E.4090308@free.fr>
-Date: Thu, 13 May 2010 23:05:34 +0200
-From: Benoit Papillault <benoit.papillault@free.fr>
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:13500 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754604Ab0ESBcG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 18 May 2010 21:32:06 -0400
+Received: from vs3016.wh2.ocn.ne.jp (125.206.180.189)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0413122721
+	for <linux-wireless@vger.kernel.org>; Wed, 19 May 2010 10:32:03 +0900 (JST)
+Subject: [PATCH v2 02/20] ath5k: wake queues on reset
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Wed, 19 May 2010 10:30:49 +0900
+Message-ID: <20100519013049.22206.42069.stgit@tt-desk>
+In-Reply-To: <20100519012528.22206.77550.stgit@tt-desk>
+References: <20100519012528.22206.77550.stgit@tt-desk>
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: linux-wireless@vger.kernel.org, lrodriguez@atheros.com,
-	linville@tuxdriver.com
-Subject: Re: [PATCH 2/2] ath9k: remove VEOL support for ad-hoc
-References: <1273775845-10056-1-git-send-email-nbd@openwrt.org> <1273775845-10056-2-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1273775845-10056-2-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le 13/05/2010 20:37, Felix Fietkau a écrit :
-> With VEOL, Beacon transmission in ad-hoc does not currently work.
-> I believe for larger ad-hoc networks, VEOL is too unreliable, as
-> it can get beacon transmissions stuck during synchronization.
-> Use SWBA based beacon trasmission similar to AP mode instead.
->
-> Signed-off-by: Felix Fietkau<nbd@openwrt.org>
+We can wake all queues after a chip reset since everything should be set up and
+we are ready to transmit. If we don't do that we might end up starting up with
+stopped queues, not beeing able to transmit. (This started to happen after
+"ath5k: clean up queue manipulation" but since periodic calibration also
+stopped and started the queues this effect was hidden most of the time).
 
-This is very good step toward IBSS. Thanks Felix!
+This way we can also get rid of the superfluous ath5k_reset_wake() function.
 
-Acked-by: Benoit Papillault <benoit.papillault@free.fr>
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ drivers/net/wireless/ath/ath5k/base.c |   17 +++--------------
+ 1 files changed, 3 insertions(+), 14 deletions(-)
 
-> ---
->   drivers/net/wireless/ath/ath9k/beacon.c |   63 +++++--------------------------
->   1 files changed, 10 insertions(+), 53 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-> index 77face7..f43d85a 100644
-> --- a/drivers/net/wireless/ath/ath9k/beacon.c
-> +++ b/drivers/net/wireless/ath/ath9k/beacon.c
-> @@ -76,22 +76,13 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
->   	ds = bf->bf_desc;
->   	flags = ATH9K_TXDESC_NOACK;
->
-> -	if (((sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC) ||
-> -	     (sc->sc_ah->opmode == NL80211_IFTYPE_MESH_POINT))&&
-> -	    (ah->caps.hw_caps&  ATH9K_HW_CAP_VEOL)) {
-> -		ds->ds_link = bf->bf_daddr; /* self-linked */
-> -		flags |= ATH9K_TXDESC_VEOL;
-> -		/* Let hardware handle antenna switching. */
-> -		antenna = 0;
-> -	} else {
-> -		ds->ds_link = 0;
-> -		/*
-> -		 * Switch antenna every beacon.
-> -		 * Should only switch every beacon period, not for every SWBA
-> -		 * XXX assumes two antennae
-> -		 */
-> -		antenna = ((sc->beacon.ast_be_xmit / sc->nbcnvifs)&  1 ? 2 : 1);
-> -	}
-> +	ds->ds_link = 0;
-> +	/*
-> +	 * Switch antenna every beacon.
-> +	 * Should only switch every beacon period, not for every SWBA
-> +	 * XXX assumes two antennae
-> +	 */
-> +	antenna = ((sc->beacon.ast_be_xmit / sc->nbcnvifs)&  1 ? 2 : 1);
->
->   	sband =&sc->sbands[common->hw->conf.channel->band];
->   	rate = sband->bitrates[rateidx].hw_value;
-> @@ -215,36 +206,6 @@ static struct ath_buf *ath_beacon_generate(struct ieee80211_hw *hw,
->   	return bf;
->   }
->
-> -/*
-> - * Startup beacon transmission for adhoc mode when they are sent entirely
-> - * by the hardware using the self-linked descriptor + veol trick.
-> -*/
-> -static void ath_beacon_start_adhoc(struct ath_softc *sc,
-> -				   struct ieee80211_vif *vif)
-> -{
-> -	struct ath_hw *ah = sc->sc_ah;
-> -	struct ath_common *common = ath9k_hw_common(ah);
-> -	struct ath_buf *bf;
-> -	struct ath_vif *avp;
-> -	struct sk_buff *skb;
-> -
-> -	avp = (void *)vif->drv_priv;
-> -
-> -	if (avp->av_bcbuf == NULL)
-> -		return;
-> -
-> -	bf = avp->av_bcbuf;
-> -	skb = bf->bf_mpdu;
-> -
-> -	ath_beacon_setup(sc, avp, bf, 0);
-> -
-> -	/* NB: caller is known to have already stopped tx dma */
-> -	ath9k_hw_puttxbuf(ah, sc->beacon.beaconq, bf->bf_daddr);
-> -	ath9k_hw_txstart(ah, sc->beacon.beaconq);
-> -	ath_print(common, ATH_DBG_BEACON, "TXDP%u = %llx (%p)\n",
-> -		  sc->beacon.beaconq, ito64(bf->bf_daddr), bf->bf_desc);
-> -}
-> -
->   int ath_beacon_alloc(struct ath_wiphy *aphy, struct ieee80211_vif *vif)
->   {
->   	struct ath_softc *sc = aphy->sc;
-> @@ -265,7 +226,8 @@ int ath_beacon_alloc(struct ath_wiphy *aphy, struct ieee80211_vif *vif)
->   		list_del(&avp->av_bcbuf->list);
->
->   		if (sc->sc_ah->opmode == NL80211_IFTYPE_AP ||
-> -		    !(sc->sc_ah->caps.hw_caps&  ATH9K_HW_CAP_VEOL)) {
-> +		    sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC ||
-> +		    sc->sc_ah->opmode == NL80211_IFTYPE_MESH_POINT) {
->   			int slot;
->   			/*
->   			 * Assign the vif to a beacon xmit slot. As
-> @@ -715,8 +677,7 @@ static void ath_beacon_config_adhoc(struct ath_softc *sc,
->   	 * self-linked tx descriptor and let the hardware deal with things.
->   	 */
->   	intval |= ATH9K_BEACON_ENA;
-> -	if (!(ah->caps.hw_caps&  ATH9K_HW_CAP_VEOL))
-> -		ah->imask |= ATH9K_INT_SWBA;
-> +	ah->imask |= ATH9K_INT_SWBA;
->
->   	ath_beaconq_config(sc);
->
-> @@ -726,10 +687,6 @@ static void ath_beacon_config_adhoc(struct ath_softc *sc,
->   	ath9k_beacon_init(sc, nexttbtt, intval);
->   	sc->beacon.bmisscnt = 0;
->   	ath9k_hw_set_interrupts(ah, ah->imask);
-> -
-> -	/* FIXME: Handle properly when vif is NULL */
-> -	if (vif&&  ah->caps.hw_caps&  ATH9K_HW_CAP_VEOL)
-> -		ath_beacon_start_adhoc(sc, vif);
->   }
->
->   void ath_beacon_config(struct ath_softc *sc, struct ieee80211_vif *vif)
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index fbd5fc7..9f9107b 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -222,7 +222,6 @@ static int ath5k_tx(struct ieee80211_hw *hw, struct sk_buff *skb);
+ static int ath5k_tx_queue(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		struct ath5k_txq *txq);
+ static int ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan);
+-static int ath5k_reset_wake(struct ath5k_softc *sc);
+ static int ath5k_start(struct ieee80211_hw *hw);
+ static void ath5k_stop(struct ieee80211_hw *hw);
+ static int ath5k_add_interface(struct ieee80211_hw *hw,
+@@ -2770,7 +2769,7 @@ ath5k_tasklet_reset(unsigned long data)
+ {
+ 	struct ath5k_softc *sc = (void *)data;
+ 
+-	ath5k_reset_wake(sc);
++	ath5k_reset(sc, sc->curchan);
+ }
+ 
+ /*
+@@ -2941,23 +2940,13 @@ ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan)
+ 	ath5k_beacon_config(sc);
+ 	/* intrs are enabled by ath5k_beacon_config */
+ 
++	ieee80211_wake_queues(sc->hw);
++
+ 	return 0;
+ err:
+ 	return ret;
+ }
+ 
+-static int
+-ath5k_reset_wake(struct ath5k_softc *sc)
+-{
+-	int ret;
+-
+-	ret = ath5k_reset(sc, sc->curchan);
+-	if (!ret)
+-		ieee80211_wake_queues(sc->hw);
+-
+-	return ret;
+-}
+-
+ static int ath5k_start(struct ieee80211_hw *hw)
+ {
+ 	return ath5k_init(hw->priv);
 
