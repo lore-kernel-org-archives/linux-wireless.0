@@ -1,50 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:41517 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757474Ab0EZRvF convert rfc822-to-8bit (ORCPT
+Received: from cpsmtpb-ews03.kpnxchange.com ([213.75.39.6]:4174 "EHLO
+	cpsmtpb-ews03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752237Ab0ESP0Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 May 2010 13:51:05 -0400
-Received: by pxi18 with SMTP id 18so2637468pxi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 10:51:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1274896002-10866-1-git-send-email-justinmattock@gmail.com>
-References: <1274896002-10866-1-git-send-email-justinmattock@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 26 May 2010 10:50:45 -0700
-Message-ID: <AANLkTimrFUYIkTQ7ev-AL0V8y0Lot064h8JK_fU81Lyr@mail.gmail.com>
-Subject: Re: [PATCH] ath9k: Fix ath_print in xmit for harware reset.
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: linville@tuxdriver.com, arnd@arndnet.de,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 19 May 2010 11:26:16 -0400
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 7/7] rt2x00: Fix HT40 operation in rt2800.
+Date: Wed, 19 May 2010 17:26:09 +0200
+Message-Id: <1274282769-19244-8-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1274282769-19244-1-git-send-email-gwingerde@gmail.com>
+References: <1274282769-19244-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 26, 2010 at 10:46 AM, Justin P. Mattock
-<justinmattock@gmail.com> wrote:
-> ath_print in xmit.c should say "Reseting hardware"
-> instead of Resetting HAL!(since HAL is being fazed out).
-> dmesg shows:
-> [ 8660.899624] ath: Failed to stop TX DMA in 100 msec after killing last frame
-> [ 8660.899676] ath: Unable to stop TxDMA. Reset HAL!
->
->  Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
->
-> ---
->  drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-> index 3db1917..617db8e 100644
-> --- a/drivers/net/wireless/ath/ath9k/xmit.c
-> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
-> @@ -1198,7 +1198,7 @@ void ath_drain_all_txq(struct ath_softc *sc, bool retry_tx)
->                int r;
->
->                ath_print(common, ATH_DBG_FATAL,
-> -                         "Unable to stop TxDMA. Reset HAL!\n");
-> +                         "ath9k: Failed to stop TX DMA. Resetting hardware!\n");
+Closer inspection of the legacy Ralink driver reveals that in case of HT40+
+or HT40- we must adjust the frequency settings that we program to the device.
+Implement the same adjustment in the rt2x00 code.
 
-Nack, No need to put "ath9k:" since ath_print already prepends "ath: "
+With this HT40 seems to work for all devices supported by rt2800pci and
+rt2800usb.
 
-  Luis
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c    |    5 +----
+ drivers/net/wireless/rt2x00/rt2x00config.c |   12 ++++++++----
+ drivers/net/wireless/rt2x00/rt2x00ht.c     |   27 +++++++++++++++++++++++++++
+ drivers/net/wireless/rt2x00/rt2x00lib.h    |    9 +++++++++
+ 4 files changed, 45 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 8ffbc3c..15322f0 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2530,11 +2530,8 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 	else
+ 		spec->ht.ht_supported = false;
+ 
+-	/*
+-	 * Don't set IEEE80211_HT_CAP_SUP_WIDTH_20_40 for now as it causes
+-	 * reception problems with HT40 capable 11n APs
+-	 */
+ 	spec->ht.cap =
++	    IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
+ 	    IEEE80211_HT_CAP_GRN_FLD |
+ 	    IEEE80211_HT_CAP_SGI_20 |
+ 	    IEEE80211_HT_CAP_SGI_40 |
+diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
+index 098315a..8dbd634 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00config.c
++++ b/drivers/net/wireless/rt2x00/rt2x00config.c
+@@ -170,23 +170,27 @@ void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
+ 		      unsigned int ieee80211_flags)
+ {
+ 	struct rt2x00lib_conf libconf;
++	u16 hw_value;
+ 
+ 	memset(&libconf, 0, sizeof(libconf));
+ 
+ 	libconf.conf = conf;
+ 
+ 	if (ieee80211_flags & IEEE80211_CONF_CHANGE_CHANNEL) {
+-		if (conf_is_ht40(conf))
++		if (conf_is_ht40(conf)) {
+ 			__set_bit(CONFIG_CHANNEL_HT40, &rt2x00dev->flags);
+-		else
++			hw_value = rt2x00ht_center_channel(rt2x00dev, conf);
++		} else {
+ 			__clear_bit(CONFIG_CHANNEL_HT40, &rt2x00dev->flags);
++			hw_value = conf->channel->hw_value;
++		}
+ 
+ 		memcpy(&libconf.rf,
+-		       &rt2x00dev->spec.channels[conf->channel->hw_value],
++		       &rt2x00dev->spec.channels[hw_value],
+ 		       sizeof(libconf.rf));
+ 
+ 		memcpy(&libconf.channel,
+-		       &rt2x00dev->spec.channels_info[conf->channel->hw_value],
++		       &rt2x00dev->spec.channels_info[hw_value],
+ 		       sizeof(libconf.channel));
+ 	}
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00ht.c b/drivers/net/wireless/rt2x00/rt2x00ht.c
+index 5a40760..588c766 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00ht.c
++++ b/drivers/net/wireless/rt2x00/rt2x00ht.c
+@@ -84,3 +84,30 @@ void rt2x00ht_create_tx_descriptor(struct queue_entry *entry,
+ 	else
+ 		txdesc->txop = TXOP_HTTXOP;
+ }
++
++u16 rt2x00ht_center_channel(struct rt2x00_dev *rt2x00dev,
++			    struct ieee80211_conf *conf)
++{
++	struct hw_mode_spec *spec = &rt2x00dev->spec;
++	int center_channel;
++	u16 i;
++
++	/*
++	 * Initialize center channel to current channel.
++	 */
++	center_channel = spec->channels[conf->channel->hw_value].channel;
++
++	/*
++	 * Adjust center channel to HT40+ and HT40- operation.
++	 */
++	if (conf_is_ht40_plus(conf))
++		center_channel += 2;
++	else if (conf_is_ht40_minus(conf))
++		center_channel -= (center_channel == 14) ? 1 : 2;
++
++	for (i = 0; i < spec->num_channels; i++)
++		if (spec->channels[i].channel == center_channel)
++			return i;
++
++	BUG();
++}
+diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
+index 822affc..ed27de1 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00lib.h
++++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
+@@ -367,12 +367,21 @@ static inline void rt2x00crypto_rx_insert_iv(struct sk_buff *skb,
+ void rt2x00ht_create_tx_descriptor(struct queue_entry *entry,
+ 				   struct txentry_desc *txdesc,
+ 				   const struct rt2x00_rate *hwrate);
++
++u16 rt2x00ht_center_channel(struct rt2x00_dev *rt2x00dev,
++			    struct ieee80211_conf *conf);
+ #else
+ static inline void rt2x00ht_create_tx_descriptor(struct queue_entry *entry,
+ 						 struct txentry_desc *txdesc,
+ 						 const struct rt2x00_rate *hwrate)
+ {
+ }
++
++static inline u16 rt2x00ht_center_channel(struct rt2x00_dev *rt2x00dev,
++					  struct ieee80211_conf *conf)
++{
++	return conf->channel->hw_value;
++}
+ #endif /* CONFIG_RT2X00_LIB_HT */
+ 
+ /*
+-- 
+1.7.1
+
