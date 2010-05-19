@@ -1,134 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:46707 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758443Ab0EYWeM convert rfc822-to-8bit (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:7837 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753549Ab0ESBdh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 May 2010 18:34:12 -0400
+	Tue, 18 May 2010 21:33:37 -0400
+Received: from vs3000.wh2.ocn.ne.jp (125.206.180.163)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-098012816
+	for <linux-wireless@vger.kernel.org>; Wed, 19 May 2010 10:33:36 +0900 (JST)
+Subject: [PATCH v2 20/20] ath5k: no need to save/restore the default antenna
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Wed, 19 May 2010 10:32:24 +0900
+Message-ID: <20100519013224.22206.85364.stgit@tt-desk>
+In-Reply-To: <20100519012528.22206.77550.stgit@tt-desk>
+References: <20100519012528.22206.77550.stgit@tt-desk>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <201005251027.32778.dmitry.torokhov@gmail.com>
-References: <20100525163920.GA2730@core.coreip.homeip.net>
-	 <1274806916.18861.0.camel@jlt3.sipsolutions.net>
-	 <1274807302.7494.1.camel@abhi-desktop>
-	 <201005251027.32778.dmitry.torokhov@gmail.com>
-Date: Wed, 26 May 2010 00:34:10 +0200
-Message-ID: <AANLkTiljgdU4guPZUFMTI1xtfD5YLYoAicy6xmRhxfXL@mail.gmail.com>
-Subject: Re: iwl3945 dies (oops) in post 2.6.34 kernels
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, 582906@bugs.debian.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[ CC <582906@bugs.debian.org> ]
+Since ath5k_hw_set_antenna_mode() always writes the default antenna register
+and is called at the end of reset, there is no need to separately save and
+restore the default antenna.
 
-Unfortunately, I didn't notice I compiled compat-wireless (2010-05-21)
-on user request against linux-image-2.6.32-5-686 and was using it
-since then.
-AFAICS Debian Bug #582906 can be closed.
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ drivers/net/wireless/ath/ath5k/reset.c |    8 +-------
+ 1 files changed, 1 insertions(+), 7 deletions(-)
 
-$ dpkg -l | grep linux-image
-ii  linux-image-2.6.32-5-686
-    2.6.32-13                             Linux 2.6.32 for modern PCs
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index cf8fd48..3f24d46 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -880,12 +880,11 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 	struct ieee80211_channel *channel, bool change_channel)
+ {
+ 	struct ath_common *common = ath5k_hw_common(ah);
+-	u32 s_seq[10], s_ant, s_led[3], staid1_flags, tsf_up, tsf_lo;
++	u32 s_seq[10], s_led[3], staid1_flags, tsf_up, tsf_lo;
+ 	u32 phy_tst1;
+ 	u8 mode, freq, ee_mode;
+ 	int i, ret;
+ 
+-	s_ant = 0;
+ 	ee_mode = 0;
+ 	staid1_flags = 0;
+ 	tsf_up = 0;
+@@ -982,9 +981,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 			}
+ 		}
+ 
+-		/* Save default antenna */
+-		s_ant = ath5k_hw_reg_read(ah, AR5K_DEFAULT_ANTENNA);
+-
+ 		if (ah->ah_version == AR5K_AR5212) {
+ 			/* Restore normal 32/40MHz clock operation
+ 			 * to avoid register access delay on certain
+@@ -1144,8 +1140,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 				ath5k_hw_reg_write(ah, tsf_lo, AR5K_TSF_L32);
+ 			}
+ 		}
+-
+-		ath5k_hw_reg_write(ah, s_ant, AR5K_DEFAULT_ANTENNA);
+ 	}
+ 
+ 	/* Ledstate */
 
-$ sudo lsmod | grep iwl | sort
-cfg80211              100582  3 iwl3945,iwlcore,mac80211
-compat_firmware_class     4683  1 iwl3945
-iwl3945                45461  0
-iwlcore                58688  1 iwl3945
-mac80211              140617  2 iwl3945,iwlcore
-
-On first sight it seems both patches fixed the issue here:
-
-sd@seduxbox:~/src/compat-wireless/compat-wireless-2010-05-21$ cat
-.pc/applied-patches
-iwlwifi-fix-internal-scan-race.patch
-temp.patch
-
-By the way, iwlwifi-fix-internal-scan-race.patch alone did it not.
-
-Any ideas for a testcase to be sure the problem is really fixed, now?
-
-- Sedat -
-
-[1] http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=582906
-
-P.S.:
-
-$ dmesg | egrep -i 'iwl|80211|wlan'
-[    9.854377] cfg80211: Calling CRDA to update world regulatory domain
-[   11.196129] iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network
-Connection driver for Linux, in-tree:s
-[   11.196132] iwl3945: Copyright(c) 2003-2010 Intel Corporation
-[   11.196215] iwl3945 0000:10:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-[   11.196229] iwl3945 0000:10:00.0: setting latency timer to 64
-[   11.250133] iwl3945 0000:10:00.0: Tunable channels: 13 802.11bg, 23
-802.11a channels
-[   11.250136] iwl3945 0000:10:00.0: Detected Intel Wireless WiFi Link 3945ABG
-[   11.250277] iwl3945 0000:10:00.0: irq 29 for MSI/MSI-X
-[   11.437198] cfg80211: World regulatory domain updated:
-[   11.792890] phy0: Selected rate control algorithm 'iwl-3945-rs'
-[   20.000982] iwl3945 0000:10:00.0: loaded firmware version 15.32.2.9
-[   20.090054] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[   30.185858] wlan0: direct probe to 00:04:0e:e4:00:3d (try 1)
-[   30.188652] wlan0: direct probe responded
-[   30.200042] wlan0: authenticate with 00:04:0e:e4:00:3d (try 1)
-[   30.203234] wlan0: authenticated
-[   30.203856] wlan0: associate with 00:04:0e:e4:00:3d (try 1)
-[   30.400035] wlan0: associate with 00:04:0e:e4:00:3d (try 2)
-[   30.404960] wlan0: RX AssocResp from 00:04:0e:e4:00:3d (capab=0x411
-status=0 aid=1)
-[   30.404966] wlan0: associated
-[   30.406500] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-[   41.048032] wlan0: no IPv6 routers present
-
-On Tue, May 25, 2010 at 7:27 PM, Dmitry Torokhov
-<dmitry.torokhov@gmail.com> wrote:
-> On Tuesday 25 May 2010 10:08:22 am Abhijeet Kolekar wrote:
->> On Tue, 2010-05-25 at 10:01 -0700, Johannes Berg wrote:
->> > On Tue, 2010-05-25 at 09:39 -0700, Dmitry Torokhov wrote:
->> > > Hi,
->> > >
->> > > I am getting the following crashers in iwl3945 after updating to
->> > > post-2.6.34 kernels. This is with the pull from Linus's tree as of last
->> > > night (the taint is from nvidia module):
->> > >
->> > > [ 3330.630734] general protection fault: 0000 [#1] PREEMPT SMP
->> > > [ 3330.630752] last sysfs file: /sys/devices/platform/dock.0/docked
->> > > [ 3330.630761] CPU 0
->> > > [ 3330.630766] Modules linked in: cryptd aes_x86_64 aes_generic fuse
->> > > rfcomm sco bnep l2cap autofs4 coretemp hwmon sunrpc ppdev parport_pc
->> > > parport acpi_cpufreq mperf uinput nvidia(P) snd_hda_codec_idt arc4
->> > > snd_hda_intel ecb snd_hda_codec snd_hwdep iwl3945 joydev snd_seq
->> > > snd_seq_device snd_pcm iwlcore mac80211 snd_timer cfg80211 snd psmouse
->> > > iTCO_wdt dell_wmi iTCO_vendor_support serio_raw tg3 battery
->> > > dell_laptop dcdbas soundcore snd_page_alloc btusb bluetooth video
->> > > pcspkr mac_hid ac wmi libphy firewire_ohci i2c_i801 firewire_core
->> > > yenta_socket crc_itu_t ohci_hcd [last unloaded: microcode] [
->> > > 3330.630950]
->> > > [ 3330.630958] Pid: 455, comm: iwl3945 Tainted: P            2.6.35-rc0
->> > > #293 0WM416/Latitude D630 [ 3330.630967] RIP:
->> > > 0010:[<ffffffffa01e70d3>]  [<ffffffffa01e70d3>]
->> > > iwl3945_get_channels_for_scan+0xe3/0x460 [iwl3945]
->> >
->> > http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2208
->>
->> Can you please try this patch and report your findings?
->>
->> http://bugzilla.intellinuxwireless.org/attachment.cgi?id=2447
->>
->
-> Thanks, will try both this patch and the one John mention. Later tonight
-> though.
->
-> --
-> Dmitry
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
