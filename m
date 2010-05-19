@@ -1,107 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web56805.mail.re3.yahoo.com ([66.196.97.79]:29155 "HELO
-	web56805.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755221Ab0EQTep convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 May 2010 15:34:45 -0400
-Message-ID: <526427.36015.qm@web56805.mail.re3.yahoo.com>
-Date: Mon, 17 May 2010 12:34:44 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: [PATCH] fix minor typos and small additions
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:33178 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753524Ab0ESRHq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 May 2010 13:07:46 -0400
+Received: by pwi5 with SMTP id 5so1642083pwi.19
+        for <linux-wireless@vger.kernel.org>; Wed, 19 May 2010 10:07:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20100519013147.22206.71360.stgit@tt-desk>
+References: <20100519012528.22206.77550.stgit@tt-desk> <20100519013147.22206.71360.stgit@tt-desk>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 19 May 2010 10:07:25 -0700
+Message-ID: <AANLkTikgyTZptw5CGu8MFinkqlXeqEJMJixdckb89aFc@mail.gmail.com>
+Subject: Re: [PATCH v2 13/20] cfg80211: Add nl80211 antenna configuration
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
----
+On Tue, May 18, 2010 at 6:31 PM, Bruno Randolf <br1@einfach.org> wrote:
 
---- a/README
-+++ b/README
-@@ -59,7 +59,7 @@ helper script:
- 
- Run that script to see more information.
- 
--Building, and installing
-+Building and installing
- ------------------------
- 
- Build: build the latest linux wireless subsystem
-@@ -104,14 +104,15 @@ Unload:
- Drivers
- -------
- 
--This is the list of drivers this package provides. It adds
-+This is the list of drivers the package provides. It adds
- all new drivers or drivers which keep being updated which you might
- be interested in.
- 
- Driver
- adm8211
- ath5k
--ath9h
-+ath9k
-+ath9k_htc
- ar9170
- b43
- b43legacy
-@@ -121,11 +122,13 @@ ipw2100
- ipw2200
- libertas_cs (Libertas)
- ub8xxx      (Libertas)
-+orinoco
- p54pci
- p54usb
- rt2400pci (rt2x00)
- rt2500pci (rt2x00)
- rt2500usb (rt2x00)
-+rt2800usb (rt2x00)
- rt61pci      (rt2x00)
- rt73usb      (rt2x00)
- rtl8180    (Realtek)
-@@ -136,7 +139,7 @@ This package also provides more drivers 
- 
- For a complete list see:
- 
--http://wireless.kernel.org/en/users/Download
-+http://linuxwireless.org/en/users/Drivers and http://wireless.kernel.org/en/users/Download
- 
- Non-wireless drivers
- --------------------
-@@ -144,7 +147,7 @@ Non-wireless drivers
- To support b43 ssb is also provided, and since ssb is also provided
- we provide b44 (the ethernet driver).
- 
--The new rfkill drivers also provided and backported.
-+The new rfkill drivers are also provided and backported.
- 
- Bluetooth drivers:
- bluetooth
---- a/scripts/admin-update.sh
-+++ b/scripts/admin-update.sh
-@@ -106,7 +106,7 @@ DRIVERS="$DRIVERS drivers/net/atlx"
- # Bluetooth drivers
- DRIVERS_BT="drivers/bluetooth"
- 
--# Drivers that belong the the wireless directory
-+# Drivers that belong to the wireless directory
- DRIVER_FILES="adm8211.c  adm8211.h"
- DRIVER_FILES="$DRIVER_FILES rndis_wlan.c"
- DRIVER_FILES="$DRIVER_FILES mac80211_hwsim.c"
---- a/scripts/driver-select
-+++ b/scripts/driver-select
-@@ -1,7 +1,7 @@
- #!/bin/bash
- # Copyright 2009        Luis R. Rodriguez <mcgrof@gmail.com>
- #
--# This this to select your compat-wireless driver and
-+# Use this to select your compat-wireless driver and
- # reduce compilation time.
- 
- DRIVERS_MAKEFILE="drivers/net/wireless/Makefile"
+> + * @NL80211_ATTR_ANTENNA_TX: Bitmap of antennas to use for transmitting.
+> + * @NL80211_ATTR_ANTENNA_RX: Bitmap of antennas to use for receiving.
 
+This gets the job done, but that's it. The API defined allows for a
+hugely loose implementation on each driver. Users could end up using
+for ath5k:
 
+iw dev wlan0 set_tx_antenna 1 # for AR5K_ANTMODE_FIXED_A
+iw dev wlan0 set_tx_antenna 2 # for AR5K_ANTMODE_FIXED_B
+iw dev wlan0 set_tx_antenna 3 # for AR5K_ANTMODE_DEFAULT
 
-      
+And yet for another driver it could be something completely different
+in usersepace. I think it would be better for us to define a static
+API for all legacy cards and another for 802.11n cards, or unify them
+but to be very specific about the API for antenna settings/chainmask
+settings.
+
+  Luis
