@@ -1,28 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f196.google.com ([209.85.222.196]:52828 "EHLO
-	mail-pz0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756078Ab0EFAlx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 May 2010 20:41:53 -0400
-Received: by pzk34 with SMTP id 34so2953215pzk.33
-        for <linux-wireless@vger.kernel.org>; Wed, 05 May 2010 17:41:52 -0700 (PDT)
+Received: from nbd.name ([88.198.39.176]:59656 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753855Ab0ESP5D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 19 May 2010 11:57:03 -0400
+Message-ID: <4BF40A3F.2040902@openwrt.org>
+Date: Wed, 19 May 2010 17:56:47 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <1273098457-21658-1-git-send-email-hauke@hauke-m.de>
-References: <1273098457-21658-1-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 5 May 2010 17:41:32 -0700
-Message-ID: <r2i43e72e891005051741v8a432a31j39a9ec099b5f021f@mail.gmail.com>
-Subject: Re: [PATCH] compat: backport eth_change_mtu and eth_validate_addr
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
-Content-Type: text/plain; charset=UTF-8
+To: Jussi Haakana <Jussi.Haakana@7signal.com>
+CC: John Linville <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] cfg80211: Add a missing null pointer check
+References: <0290AB2F0A8E124B9FFC144088A1A95609D6AA414B@EX-MBS04.nbl.local>
+In-Reply-To: <0290AB2F0A8E124B9FFC144088A1A95609D6AA414B@EX-MBS04.nbl.local>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 5, 2010 at 3:27 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+On 2010-05-19 12:27 PM, Jussi Haakana wrote:
+> If a network interface is down while setting a channel,
+> missing null pointer check causes an oops in cfg80211_set_freq:
+> 
+> # iw phy phy0 interface add ath1 type monitor
+> # iw dev ath1 set channel 3
+> Unable to handle kernel paging request for data at address 0x00000004
+> Faulting instruction address: 0xca16d778
+> Oops: Kernel access of bad area, sig: 11 [#1]
+> ...
+> 
+> Signed-off-by: Jussi Haakana <Jussi.Haakana@7signal.com>
+That's exactly what I sent 4 days ago ;)
 
-Awesome, thanks.
-
-  Luis
+- Felix
