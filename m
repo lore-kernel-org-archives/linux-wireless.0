@@ -1,77 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:36802 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1750800Ab0EALmf convert rfc822-to-8bit (ORCPT
+Received: from mail-qy0-f183.google.com ([209.85.221.183]:46983 "EHLO
+	mail-qy0-f183.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753277Ab0ETPWZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 1 May 2010 07:42:35 -0400
-From: "Stefan Lippers-Hollmann" <s.L-H@gmx.de>
-To: "David H. Lynch Jr." <dhlii@dlasys.net>
-Subject: Re: ar9170-fw
-Date: Sat, 1 May 2010 13:42:27 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <4BDB72AA.7000203@dlasys.net> <201005010323.53295.s.L-H@gmx.de> <4BDBFE51.2010305@dlasys.net>
-In-Reply-To: <4BDBFE51.2010305@dlasys.net>
+	Thu, 20 May 2010 11:22:25 -0400
+Received: by qyk13 with SMTP id 13so13159374qyk.1
+        for <linux-wireless@vger.kernel.org>; Thu, 20 May 2010 08:22:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="windows-1252"
-Message-Id: <201005011342.30412.s.L-H@gmx.de>
+In-Reply-To: <AANLkTinRbL-9udra90QbgYxr1x3VVgzNZI82xfbrg9PB@mail.gmail.com>
+References: <AANLkTimKdb5sUCSq1i3gfeV0GLNiNFyfK057q26Kw67n@mail.gmail.com>
+	 <AANLkTimly6U5ZIYR8epN1povTgoCEG3STEuy2-1T-9Gq@mail.gmail.com>
+	 <AANLkTinRbL-9udra90QbgYxr1x3VVgzNZI82xfbrg9PB@mail.gmail.com>
+Date: Thu, 20 May 2010 20:52:24 +0530
+Message-ID: <AANLkTil6F_08X1Cpf0XK-TCZWvJHZU3jcjaQ-FqmcZzM@mail.gmail.com>
+Subject: Re: wireless card that support master mode
+From: VivekKumar Singh <vivekkumar.singh@iiitb.net>
+To: Bob Beers <bob.beers@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+Hi Bob,
 
-On Saturday 01 May 2010, David H. Lynch Jr. wrote:
->   Did a git pull and picked up the bashisms and versions update.
-> At HEAD I get build failures in bfd
-> 
-> ----------------------------------
-> make[5]: Entering directory 
-> `/usr/src/ar9170-fw/toolchain/build/binutils/bfd'
-> 1011 /bin/sh ./libtool --tag=CC --mode=compile gcc -DHAVE_CONFIG_H -I. 
-> -I/usr/src/ar9170-fw/toolchain/src/binutils-2.20.1/bfd
-> 1012 libtool: compile: gcc -DHAVE_CONFIG_H -I. 
-> -I/usr/src/ar9170-fw/toolchain/src/binutils-2.20.1/bfd -I. 
-> -I/usr/src/ar9170-fw/
-> 1013 cc1: warnings being treated as errors
-> 1014 In file included from 
-> /usr/src/ar9170-fw/toolchain/src/binutils-2.20.1/bfd/elf32-sh.c:6055:
-> 1015 ./elf32-target.h:718: error: initialization makes pointer from 
-> integer without a cast
-> 1016 ./elf32-target.h:731: error: large integer implicitly truncated to 
-> unsigned type
-> 1017 ./elf32-target.h:738: error: missing initializer
-> 1018 ./elf32-target.h:738: error: (near initialization for 
-> ‘elf32_bed.want_p_paddr_set_to_zero’)
-> 1019 ./elf32-target.h:826: error: ‘bfd_elf32_bfd_define_common_symbol’ 
-> undeclared here (not in a function)
-> 1020 In file included from 
-> /usr/src/ar9170-fw/toolchain/src/binutils-2.20.1/bfd/elf32-sh.c:6074:
-> ------------------------------------
-> 
-> If I back off to
-> dc858db5b191d70362d30f90906d68c1c3c2c972
-> the bashism fixes I get the same build errors in libssp in my first email.
-> 
-> In an unrelated toolchain build project (buildroot for a ppc405) I get 
-> libssp errors if I enable SSP.
-> 
-> I am reading the errors is a failure to properly include standard headers.
-> 
-> I am working under ubuntu lucid
-[...]
-> Alternately maybe I am missing some development dependency that 
-> configure is not warning about
+Thanks a lot for your help.
 
-I have verified before sending the mail yesterday that ar9170.fw still 
-builds fine on current Debian unstable (gcc-4.4, but it also worked on 
-4.4.2, 4.4.3 before; confirmed in a minimal build chroot (pbuilder) 
-environment), so you're likely just missing build dependencies.
+I want to ask that is it possible to change the tranmission power of a
+athros card without rebooting the card?
 
-# apt-get install build-essential
-# apt-get build-dep gcc-4.4 binutils newlib
 
-While this pulls a little more than you'd absolutely need, it still makes
-sure that all eventual build dependencies are covered.
+Thanks,
 
-Regards
-	Stefan Lippers-Hollmann
+Vivek
+
+On Thu, May 20, 2010 at 7:54 PM, Bob Beers <bob.beers@gmail.com> wrote:
+> On Thu, May 20, 2010 at 8:12 AM, VivekKumar Singh
+> <vivekkumar.singh@iiitb.net> wrote:
+>> Dear Friends,
+>>
+>> I have to purchase a PCI based wireless card that can support "master
+>> mode" in linux. I want to make it to work like an access point. But
+>> not all cards support "master mode".
+>>
+>> Please mail me some wireless cards (PCI / USB) model number/company
+>> name that supports "master mode".
+>
+> Maybe this is helpful?
+> <http://linuxwireless.org/en/users/Drivers>
+>
+> -Bob Beers
+>
+
+
+
+-- 
+Thanks and Regards,
+
+Vivek Kumar Singh
+MT-2009146
+IIITB, Bangalore
+
+(91)9886317184
