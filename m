@@ -1,50 +1,180 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:65176 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756573Ab0EYNa2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 May 2010 09:30:28 -0400
-Received: by gwaa20 with SMTP id a20so1979298gwa.19
-        for <linux-wireless@vger.kernel.org>; Tue, 25 May 2010 06:30:26 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:45364 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755041Ab0ETLxd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 May 2010 07:53:33 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 20 May 2010 04:53:33 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTikOgv6d0FlXu2-smnYPApeehjRq_j8UxEealqFC@mail.gmail.com>
-References: <AANLkTimltZSc8dJPPBCibcGDaOPcQRU_5kSbenIAdi_6@mail.gmail.com>
-	<AANLkTinYZ-_DkNZweDFfdf_DdDJGMNhgQwppDnVo_Duj@mail.gmail.com>
-	<AANLkTimaLEQYH4Y7HO4Fv4zT8w8AsPkaAQtk9EauX4Bt@mail.gmail.com>
-	<AANLkTikRt1fUgngBQxEoEFe1VDrYVFRAoMSR53et7gxf@mail.gmail.com>
-	<AANLkTim-A_TWT-flrW88gJGan47Xhm7llyrQE3ehDKU6@mail.gmail.com>
-	<AANLkTim4zLxIQH2r76WZRh9kNigVNAngcK1d9-Cu65Ag@mail.gmail.com>
-	<AANLkTimH3p-dBA_6ee2a0iCnPDhtPZONzCEVkzMHrUWo@mail.gmail.com>
-	<AANLkTim-4UNn8acYvF7AF2FDzdC9xRY-9JS0lSurwBc6@mail.gmail.com>
-	<AANLkTimYeL4KQozuTl4le9WUpObsjwp0YAx7eAYq6MBr@mail.gmail.com>
-	<AANLkTikOgv6d0FlXu2-smnYPApeehjRq_j8UxEealqFC@mail.gmail.com>
-From: Weedy <weedy2887@gmail.com>
-Date: Tue, 25 May 2010 09:30:03 -0400
-Message-ID: <AANLkTinynNqs6_zyTJcpi7yKiSvC5fBhbM2tVZcnoNUq@mail.gmail.com>
-Subject: Re: ath5k past 2.6.30 breaks monitor mode (and thus the aircrack
-	suite)
-To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19445.8879.11611.555549@gargle.gargle.HOWL>
+Date: Thu, 20 May 2010 17:23:19 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] ath9k: Move driver specific structures
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/5/24 Gábor Stefanik <netrolller.3d@gmail.com>:
-> 2010/5/25 Weedy <weedy2887@gmail.com>:
->> 2010/5/23 Gábor Stefanik <netrolller.3d@gmail.com>:
->>> In the meantime, one thing to test: Add a printk of sc->opmode.
->>
->> May 24 22:04:20 tiny-h4x kernel: [41147.243149] sc->opmode: 02 (over9000 times)
->>
->> So i'm guessing I did it wrong (I don't know C).
->>        printk(KERN_NOTICE "sc->opmode: %02x\n", sc->opmode);
->>
->
-> No, that is correct, and proves my theory (2 is NL80211_IFTYPE_STATION
-> - it should be 6 for monitor mode).
->
-> BTW, please use "Reply to all".
->
-gmail got rid of the "Reply to all by default" option :<
+A bunch of data structures are present in the
+common module, which are internal to ath9k.
+Move them to ath9k.h
 
-When you have a patch I will be waiting.
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h  |   63 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/common.h |   63 -------------------------------
+ 2 files changed, 63 insertions(+), 63 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index fbb7dec..cc6ea42 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -206,6 +206,69 @@ struct ath_txq {
+ 	u8 txq_tailidx;
+ };
+ 
++struct ath_atx_ac {
++	int sched;
++	int qnum;
++	struct list_head list;
++	struct list_head tid_q;
++};
++
++struct ath_buf_state {
++	int bfs_nframes;
++	u16 bfs_al;
++	u16 bfs_frmlen;
++	int bfs_seqno;
++	int bfs_tidno;
++	int bfs_retries;
++	u8 bf_type;
++	u32 bfs_keyix;
++	enum ath9k_key_type bfs_keytype;
++};
++
++struct ath_buf {
++	struct list_head list;
++	struct ath_buf *bf_lastbf;	/* last buf of this unit (a frame or
++					   an aggregate) */
++	struct ath_buf *bf_next;	/* next subframe in the aggregate */
++	struct sk_buff *bf_mpdu;	/* enclosing frame structure */
++	void *bf_desc;			/* virtual addr of desc */
++	dma_addr_t bf_daddr;		/* physical addr of desc */
++	dma_addr_t bf_buf_addr;		/* physical addr of data buffer */
++	bool bf_stale;
++	bool bf_isnullfunc;
++	bool bf_tx_aborted;
++	u16 bf_flags;
++	struct ath_buf_state bf_state;
++	dma_addr_t bf_dmacontext;
++	struct ath_wiphy *aphy;
++};
++
++struct ath_atx_tid {
++	struct list_head list;
++	struct list_head buf_q;
++	struct ath_node *an;
++	struct ath_atx_ac *ac;
++	struct ath_buf *tx_buf[ATH_TID_MAX_BUFS];
++	u16 seq_start;
++	u16 seq_next;
++	u16 baw_size;
++	int tidno;
++	int baw_head;   /* first un-acked tx buffer */
++	int baw_tail;   /* next unused tx buffer slot */
++	int sched;
++	int paused;
++	u8 state;
++};
++
++struct ath_node {
++	struct ath_common *common;
++	struct ath_atx_tid tid[WME_NUM_TID];
++	struct ath_atx_ac ac[WME_NUM_AC];
++	u16 maxampdu;
++	u8 mpdudensity;
++	int last_rssi;
++};
++
+ #define AGGR_CLEANUP         BIT(1)
+ #define AGGR_ADDBA_COMPLETE  BIT(2)
+ #define AGGR_ADDBA_PROGRESS  BIT(3)
+diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
+index 1e6f360..283cca8 100644
+--- a/drivers/net/wireless/ath/ath9k/common.h
++++ b/drivers/net/wireless/ath/ath9k/common.h
+@@ -52,69 +52,6 @@
+ #define ATH_EP_RND(x, mul) 						\
+ 	((((x)%(mul)) >= ((mul)/2)) ? ((x) + ((mul) - 1)) / (mul) : (x)/(mul))
+ 
+-struct ath_atx_ac {
+-	int sched;
+-	int qnum;
+-	struct list_head list;
+-	struct list_head tid_q;
+-};
+-
+-struct ath_buf_state {
+-	int bfs_nframes;
+-	u16 bfs_al;
+-	u16 bfs_frmlen;
+-	int bfs_seqno;
+-	int bfs_tidno;
+-	int bfs_retries;
+-	u8 bf_type;
+-	u32 bfs_keyix;
+-	enum ath9k_key_type bfs_keytype;
+-};
+-
+-struct ath_buf {
+-	struct list_head list;
+-	struct ath_buf *bf_lastbf;	/* last buf of this unit (a frame or
+-					   an aggregate) */
+-	struct ath_buf *bf_next;	/* next subframe in the aggregate */
+-	struct sk_buff *bf_mpdu;	/* enclosing frame structure */
+-	void *bf_desc;			/* virtual addr of desc */
+-	dma_addr_t bf_daddr;		/* physical addr of desc */
+-	dma_addr_t bf_buf_addr;		/* physical addr of data buffer */
+-	bool bf_stale;
+-	bool bf_isnullfunc;
+-	bool bf_tx_aborted;
+-	u16 bf_flags;
+-	struct ath_buf_state bf_state;
+-	dma_addr_t bf_dmacontext;
+-	struct ath_wiphy *aphy;
+-};
+-
+-struct ath_atx_tid {
+-	struct list_head list;
+-	struct list_head buf_q;
+-	struct ath_node *an;
+-	struct ath_atx_ac *ac;
+-	struct ath_buf *tx_buf[ATH_TID_MAX_BUFS];
+-	u16 seq_start;
+-	u16 seq_next;
+-	u16 baw_size;
+-	int tidno;
+-	int baw_head;   /* first un-acked tx buffer */
+-	int baw_tail;   /* next unused tx buffer slot */
+-	int sched;
+-	int paused;
+-	u8 state;
+-};
+-
+-struct ath_node {
+-	struct ath_common *common;
+-	struct ath_atx_tid tid[WME_NUM_TID];
+-	struct ath_atx_ac ac[WME_NUM_AC];
+-	u16 maxampdu;
+-	u8 mpdudensity;
+-	int last_rssi;
+-};
+-
+ int ath9k_cmn_padpos(__le16 frame_control);
+ int ath9k_cmn_get_hw_crypto_keytype(struct sk_buff *skb);
+ void ath9k_cmn_update_ichannel(struct ieee80211_hw *hw,
+-- 
+1.7.1
+
