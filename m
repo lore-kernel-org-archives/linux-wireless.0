@@ -1,42 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:33178 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753524Ab0ESRHq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 May 2010 13:07:46 -0400
-Received: by pwi5 with SMTP id 5so1642083pwi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 19 May 2010 10:07:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20100519013147.22206.71360.stgit@tt-desk>
-References: <20100519012528.22206.77550.stgit@tt-desk> <20100519013147.22206.71360.stgit@tt-desk>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 19 May 2010 10:07:25 -0700
-Message-ID: <AANLkTikgyTZptw5CGu8MFinkqlXeqEJMJixdckb89aFc@mail.gmail.com>
-Subject: Re: [PATCH v2 13/20] cfg80211: Add nl80211 antenna configuration
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+Received: from cantor.suse.de ([195.135.220.2]:54237 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753057Ab0ETGso (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 May 2010 02:48:44 -0400
+Date: Thu, 20 May 2010 08:48:09 +0200
+From: Kurt Garloff <kurt@garloff.de>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Michael Green <Michael.Green@atheros.com>,
+	David Quan <David.Quan@atheros.com>,
 	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: WLAN Regulatory Domain Germany
+Message-ID: <20100520064809.GC32757@tpkurt2.garloff.de>
+References: <20100519172944.GB32757@tpkurt2.garloff.de> <AANLkTilXo13Pn6n0n3mJONuUj50BImufADLveYAjX3YR@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="uXxzq0nDebZQVNAZ"
+In-Reply-To: <AANLkTilXo13Pn6n0n3mJONuUj50BImufADLveYAjX3YR@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 18, 2010 at 6:31 PM, Bruno Randolf <br1@einfach.org> wrote:
 
-> + * @NL80211_ATTR_ANTENNA_TX: Bitmap of antennas to use for transmitting.
-> + * @NL80211_ATTR_ANTENNA_RX: Bitmap of antennas to use for receiving.
+--uXxzq0nDebZQVNAZ
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-This gets the job done, but that's it. The API defined allows for a
-hugely loose implementation on each driver. Users could end up using
-for ath5k:
+Luis,
 
-iw dev wlan0 set_tx_antenna 1 # for AR5K_ANTMODE_FIXED_A
-iw dev wlan0 set_tx_antenna 2 # for AR5K_ANTMODE_FIXED_B
-iw dev wlan0 set_tx_antenna 3 # for AR5K_ANTMODE_DEFAULT
+On Wed, May 19, 2010 at 03:20:24PM -0700, Luis R. Rodriguez wrote:
+> On Wed, May 19, 2010 at 10:29 AM, Kurt Garloff <kurt@garloff.de> wrote:
+> > country DE:
+> > =A0 =A0 =A0 =A0# entries 279004 and 280006
+> > =A0 =A0 =A0 =A0(2400 - 2483.5 @ 40), (N/A, 100 mW)
+> > =A0 =A0 =A0 =A0# entry 303005
+> > =A0 =A0 =A0 =A0(5150 - 5250 @ 40), (N/A, 100 mW), NO-OUTDOOR
+> > =A0 =A0 =A0 =A0# entries 304002 and 305002
+> > =A0 =A0 =A0 =A0(5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
+> > =A0 =A0 =A0 =A0# entries 308002, 309001 and 310003
+> > =A0 =A0 =A0 =A0(5470 - 5725 @ 40), (N/A, 500 mW), DFS
+> >
+> > 8<---------------------------------------------------------------------=
+---
+> >
+> > (Or in db, as displayed by iw reg get)
+> > country DE:
+> > =A0 =A0 =A0 =A0(2400 - 2483 @ 40), (N/A, 20)
+> > =A0 =A0 =A0 =A0(5150 - 5250 @ 40), (N/A, 20), NO-OUTDOOR
+> > =A0 =A0 =A0 =A0(5250 - 5350 @ 40), (N/A, 20), NO-OUTDOOR, DFS
+> > =A0 =A0 =A0 =A0(5470 - 5725 @ 40), (N/A, 27), DFS
+> >
+> > PS: I'm not subscribed, please copy responses to me.
+>=20
+> Thanks for the e-mail and your review, I've passed this to our
+> regulatory gods and it is now being picked at and reviewed.
 
-And yet for another driver it could be something completely different
-in usersepace. I think it would be better for us to define a static
-API for all legacy cards and another for 802.11n cards, or unify them
-but to be very specific about the API for antenna settings/chainmask
-settings.
+Thanks.
 
-  Luis
+Two more remarks:
+- Having looked at the framework how we handle this regulatory stuff
+  in Linux these days, it looks very reasonable to me -- good job!
+- The frequencies above (from Frequenznutzungsplan =3D freq. util. plan)=20
+  are really the limits of the frequency ranges to be used, not channel
+  center freqs. So if we'd have to put possible center freqs in there=20
+  and assume 22MHz (+-11MHz) for the 2.4 GHz range, we'd need to put=20
+  2411 -- 2472.5 in the DB. Likewise, assuming 20MHz (+-10MHz for the
+  5GHz range, we'd specify 5160 -- 5240, 5240 -- 5340 and 5480 -- 5715),
+  of, for 40MHz(+-20MHz) channels, it would be 5170 -- 5230, 5230 --
+  5330 and 5490 -- 5705. Such values are displayed with iw reg get=20
+  for our neighbors NL, FR, ... which gave me the idea that we might
+  not have the real boundaries in the db, but center freqs.
+  That said, I'd think real boundaries make more sense, as channel
+  widths may evolve over time ...
+
+Thanks,
+--=20
+Kurt Garloff, VP OPS Partner Engineering -- Novell Inc.
+
+--uXxzq0nDebZQVNAZ
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.9 (GNU/Linux)
+
+iD8DBQFL9NspxmLh6hyYd04RAuF1AKC3MVVKx3xI2RXpYqIAqWTwQkUS3wCgjdcL
+5WvyOTtLAgytZsb88zCa4Co=
+=Sg76
+-----END PGP SIGNATURE-----
+
+--uXxzq0nDebZQVNAZ--
