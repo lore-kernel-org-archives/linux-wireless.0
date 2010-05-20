@@ -1,54 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33975 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753611Ab0EZMxO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 May 2010 08:53:14 -0400
-Subject: Re: [PATCHv2] mac80211: Fix basic rates for created IBSS networks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1274878088-22785-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1274878088-22785-1-git-send-email-juuso.oikarinen@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 26 May 2010 14:53:11 +0200
-Message-ID: <1274878391.3658.9.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:22597 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753404Ab0ETVrh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 May 2010 17:47:37 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 20 May 2010 14:47:37 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/3] ath9k: Fix bug in validating received data length for edma
+Date: Thu, 20 May 2010 14:47:38 -0700
+Message-ID: <1274392058-16317-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-05-26 at 15:48 +0300, Juuso Oikarinen wrote:
-> Currently the mac80211 marks rates 1 and 2 mbps as basic rates for created
-> ad-hoc networks. To be certifiable, rates 1, 2, 5.5 and 11 need to be marked
-> basic.
-> 
-> Change this.
-> 
-> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> ---
->  net/mac80211/ibss.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
-> 
-> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-> index b2cc1fd..0b8360c 100644
-> --- a/net/mac80211/ibss.c
-> +++ b/net/mac80211/ibss.c
-> @@ -529,7 +529,8 @@ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
->  		sdata->drop_unencrypted = 0;
->  
->  	__ieee80211_sta_join_ibss(sdata, bssid, sdata->vif.bss_conf.beacon_int,
-> -				  ifibss->channel, 3, /* first two are basic */
-> +				  ifibss->channel,
-> +				  15, /* 1, 2, 5.5 and 11 are basic */
+The rx status length should also be taken into account while
+validating the length of a received frame.
 
-It's still wrong for 5 GHz.
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/recv.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-We've had this discussion before. Making more rates required will break
-compatibility with 11b devices.
-
-What should be done here is add a basic rates parameter to the IBSS join
-nl80211 command so that you can decide at runtime which rates to use as
-basic.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 95f1622..fc15b4b 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -827,6 +827,7 @@ static bool ath9k_rx_accept(struct ath_common *common,
+ {
+ 	struct ath_hw *ah = common->ah;
+ 	__le16 fc;
++	u8 rx_status_len = ah->caps.rx_status_len;
+ 
+ 	fc = hdr->frame_control;
+ 
+@@ -837,7 +838,7 @@ static bool ath9k_rx_accept(struct ath_common *common,
+          * we can take a hint that hardware corrupted it, so ignore
+          * those frames.
+          */
+-	if (rx_stats->rs_datalen > common->rx_bufsize)
++	if (rx_stats->rs_datalen > (common->rx_bufsize - rx_status_len))
+ 		return false;
+ 
+ 	/*
+-- 
+1.7.0.4
 
