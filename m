@@ -1,92 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redfish-solutions.com ([66.232.79.143]:50783 "EHLO
-	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751279Ab0EaUau (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:36735 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753469Ab0ETHEO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 May 2010 16:30:50 -0400
-Message-ID: <4C041BEA.2010303@redfish-solutions.com>
-Date: Mon, 31 May 2010 14:28:26 -0600
-From: Philip Prindeville <philipp_subx@redfish-solutions.com>
+	Thu, 20 May 2010 03:04:14 -0400
+Received: by pxi18 with SMTP id 18so1174841pxi.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 May 2010 00:04:14 -0700 (PDT)
 MIME-Version: 1.0
-To: Ben Gardiner <bengardiner@nanometrics.ca>
-CC: David Miller <davem@davemloft.net>, dunc@lemonia.org,
-	kalle.valo@iki.fi, kaber@trash.net, netdev@vger.kernel.org,
+In-Reply-To: <20100520064809.GC32757@tpkurt2.garloff.de>
+References: <20100519172944.GB32757@tpkurt2.garloff.de> <AANLkTilXo13Pn6n0n3mJONuUj50BImufADLveYAjX3YR@mail.gmail.com>
+	<20100520064809.GC32757@tpkurt2.garloff.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 20 May 2010 00:03:54 -0700
+Message-ID: <AANLkTinqVWmXNVR_3Wd3nSWWe7LwtCn3J7ZGFYYfuTen@mail.gmail.com>
+Subject: Re: WLAN Regulatory Domain Germany
+To: Kurt Garloff <kurt@garloff.de>
+Cc: Michael Green <Michael.Green@atheros.com>,
+	David Quan <David.Quan@atheros.com>,
 	linux-wireless@vger.kernel.org
-Subject: Re: Network QoS support in applications
-References: <87my01m0zm.fsf@purkki.valot.fi>	<4B5EF5DF.2070005@lemonia.org>	<4B9942A7.40205@redfish-solutions.com>	<20100311.112754.142886660.davem@davemloft.net>	<4B9944A0.5080308@redfish-solutions.com>	<4BF32B2B.6010202@redfish-solutions.com> <AANLkTindWCmxtAJU5R3ey_18_3wNUuMGc-jq_EY_itiN@mail.gmail.com>
-In-Reply-To: <AANLkTindWCmxtAJU5R3ey_18_3wNUuMGc-jq_EY_itiN@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5/31/10 1:30 PM, Ben Gardiner wrote:
-> On Tue, May 18, 2010 at 8:04 PM, Philip A. Prindeville
-> <philipp@redfish-solutions.com>  wrote:
->    
->> On 03/11/2010 12:29 PM, Philip A. Prindeville wrote:
->>      
->>> On 03/11/2010 12:27 PM, David Miller wrote:
->>>
->>>        
->>>> From: "Philip A. Prindeville"<philipp_subx@redfish-solutions.com>
->>>> Date: Thu, 11 Mar 2010 12:21:11 -0700
->>>>
->>>>
->>>>          
->>>>> And yes, there will always be misbehaving users.  They are a fact of
->>>>> life.  That doesn't mean we should lobotomize the network.  We don't
->>>>> have an authentication mechanism on ICMP Redirects or Source-Quench,
->>>>>
->>>>>            
->>>> Which is why most networks block those packets from the outside.
->>>>
->>>>
->>>>          
->>>>> Nor is ARP authenticated.
->>>>>
->>>>>            
->>>> Which is why people control who can plug into their physical
->>>> network.
->>>>
->>>> None of the things you are saying support the idea of having
->>>> applications decide what the DSCP marking should be.
->>>>
->>>>          
->>> Does "decide what the DSCP marking should be" include complying to the recommendations of RFC-4594?
->>>
->>>        
->> If anyone cares, here's an update:
->>
->> I've submitted patches for QoS configuration for:
->>
->> APR/Apache (stalled);
->> Proftpd (committed);
->> Openssh (pending review);
->> Firefox/Thunderbird (reviewed and on-track for commit);
->> Cyrus (committed);
->> Sendmail (submittted and acknowledged, but not yet reviewed);
->> Curl (stalled);
->>
->> All, as per the request of the maintainers, default to either no QoS
->> markings or previous RFC-791 QoS markings if that's what they already
->> supported (Proftpd and Openssh).
->>
->> If anyone can think of anything else that needs to be supported to
->> impact a significant portion of network (or enterprise intranet)
->> traffic, please call it out.
->>      
-> wget [1], like curl, is used for downloads of artifacts by some build systems.
+On Wed, May 19, 2010 at 11:48 PM, Kurt Garloff <kurt@garloff.de> wrote:
+> Luis,
 >
-> [1] http://www.gnu.org/software/wget/
+> On Wed, May 19, 2010 at 03:20:24PM -0700, Luis R. Rodriguez wrote:
+>> On Wed, May 19, 2010 at 10:29 AM, Kurt Garloff <kurt@garloff.de> wrote:
+>> > country DE:
+>> >        # entries 279004 and 280006
+>> >        (2400 - 2483.5 @ 40), (N/A, 100 mW)
+>> >        # entry 303005
+>> >        (5150 - 5250 @ 40), (N/A, 100 mW), NO-OUTDOOR
+>> >        # entries 304002 and 305002
+>> >        (5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
+>> >        # entries 308002, 309001 and 310003
+>> >        (5470 - 5725 @ 40), (N/A, 500 mW), DFS
+>> >
+>> > 8<------------------------------------------------------------------------
+>> >
+>> > (Or in db, as displayed by iw reg get)
+>> > country DE:
+>> >        (2400 - 2483 @ 40), (N/A, 20)
+>> >        (5150 - 5250 @ 40), (N/A, 20), NO-OUTDOOR
+>> >        (5250 - 5350 @ 40), (N/A, 20), NO-OUTDOOR, DFS
+>> >        (5470 - 5725 @ 40), (N/A, 27), DFS
+>> >
+>> > PS: I'm not subscribed, please copy responses to me.
+>>
+>> Thanks for the e-mail and your review, I've passed this to our
+>> regulatory gods and it is now being picked at and reviewed.
 >
->    
+> Thanks.
+>
+> Two more remarks:
+> - Having looked at the framework how we handle this regulatory stuff
+>  in Linux these days, it looks very reasonable to me -- good job!
 
-Ok, but I'm not sure that changes anything... what I was asking about 
-was other services not enumerated: not how the above services are used.  
-Sorry that wasn't clear.
+Thanks! Thank Johannes as well :)
 
--Philip
+> - The frequencies above (from Frequenznutzungsplan = freq. util. plan)
+>  are really the limits of the frequency ranges to be used, not channel
+>  center freqs. So if we'd have to put possible center freqs in there
+>  and assume 22MHz (+-11MHz) for the 2.4 GHz range, we'd need to put
+>  2411 -- 2472.5 in the DB. Likewise, assuming 20MHz (+-10MHz for the
+>  5GHz range, we'd specify 5160 -- 5240, 5240 -- 5340 and 5480 -- 5715),
+>  of, for 40MHz(+-20MHz) channels, it would be 5170 -- 5230, 5230 --
+>  5330 and 5490 -- 5705. Such values are displayed with iw reg get
+>  for our neighbors NL, FR, ... which gave me the idea that we might
+>  not have the real boundaries in the db, but center freqs.
+>  That said, I'd think real boundaries make more sense, as channel
+>  widths may evolve over time ...
 
+The db.txt rules uses the exact ranges, not the center of freq, the
+bandwidth indicates the maximum bandwidth allowed. We had also revised
+on linux-wireless some changes to make for future more complex
+considerations. For details see:
 
+http://wireless.kernel.org/en/developers/todo-list
 
-
+  Luis
