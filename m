@@ -1,31 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:56089 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752234Ab0EIJEp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 May 2010 05:04:45 -0400
-Received: by bwz19 with SMTP id 19so1239863bwz.21
-        for <linux-wireless@vger.kernel.org>; Sun, 09 May 2010 02:04:43 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:25824 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755396Ab0ETWY2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 May 2010 18:24:28 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 20 May 2010 15:24:28 -0700
+Date: Thu, 20 May 2010 15:24:26 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Sam Ng <Sam.Ng@Atheros.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Bruno Randolf <br1@einfach.org>,
+	David Quan <David.Quan@Atheros.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Subject: Re: [ath5k-devel] [PATCH v2 13/20] cfg80211: Add nl80211 antenna
+ configuration
+Message-ID: <20100520222426.GH4566@tux>
+References: <20100519012528.22206.77550.stgit@tt-desk>
+ <201005201121.49846.br1@einfach.org>
+ <AANLkTilG3c2UDEQa66PMvKysRVTt_dd-ZAS8FiDOe4Ob@mail.gmail.com>
+ <201005201436.11667.br1@einfach.org>
+ <AANLkTilk0CIkmmIsBzPwchd6EBIVavw9R1amiSgCZOrx@mail.gmail.com>
+ <AANLkTinPVSkrawZ4OCjp6vb-f4bA7nSrmnXjRDi-Pvvm@mail.gmail.com>
+ <BD672EAEE3AD2C47A7120B0973C3FB3A2DC1C779ED@SC1EXMB-MBCL.global.atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <1273354826-4335-3-git-send-email-gwingerde@gmail.com>
-References: <1273354826-4335-1-git-send-email-gwingerde@gmail.com>
-	 <1273354826-4335-3-git-send-email-gwingerde@gmail.com>
-Date: Sun, 9 May 2010 11:04:43 +0200
-Message-ID: <AANLkTim-OWVtQ1KgRme5lidkzx9yMnwGmX52m9kZseNa@mail.gmail.com>
-Subject: Re: [PATCH 2/9] rt2x00: Clean up rt2800usb.h.
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <BD672EAEE3AD2C47A7120B0973C3FB3A2DC1C779ED@SC1EXMB-MBCL.global.atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, May 8, 2010 at 11:40 PM, Gertjan van Wingerde
-<gwingerde@gmail.com> wrote:
-> Remove unused RXD_DESC_SIZE define and remove duplicated RXWI definitions
-> from rt2800.h.
->
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Just for clarification, these e-mails are on a public mailing list.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+On Thu, May 20, 2010 at 03:14:01PM -0700, Sam Ng wrote:
+> Just to be accurate, we do have pre-lln devices that support
+> more than 1 antenna ie. slow/fast diversity
+
+Right, this is the typical fixed anntena a, fixed anntena b, or
+antenna diversity mode.
+
+> and rangemax style 'beamforming'. However, all these devices
+> have only 1 chain.
+
+Thanks for the clarification Sam.
+
+  Luis
