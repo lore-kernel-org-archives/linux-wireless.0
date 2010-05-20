@@ -1,58 +1,624 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49456 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933170Ab0E0J12 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 May 2010 05:27:28 -0400
-Subject: Re: [PATCH] cfg80211: Removed warning from cfg80211_send_rx_auth
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1274950081.20619.18.camel@paavo-desktop>
-References: <1274870625-19712-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-	 <1274872877.3658.4.camel@jlt3.sipsolutions.net>
-	 <1274950081.20619.18.camel@paavo-desktop>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 27 May 2010 11:27:22 +0200
-Message-ID: <1274952442.3669.28.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:42173 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753147Ab0ETKJz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 May 2010 06:09:55 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 20 May 2010 03:09:55 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19445.2358.174399.247229@gargle.gargle.HOWL>
+Date: Thu, 20 May 2010 15:34:38 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/2] ath9k: Move ath9k specific RX code to driver
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-05-27 at 11:48 +0300, Teemu Paasikivi wrote:
-> On Wed, 2010-05-26 at 13:21 +0200, ext Johannes Berg wrote:
-> > On Wed, 2010-05-26 at 13:43 +0300, Teemu Paasikivi wrote:
-> > > In cfg80211_send_rx_auth function there was a warning if bssid of the received
-> > > authentication message was not found from the authtry_bsses table.
-> > > 
-> > > During the beginning of the authentication there is a small time window, when
-> > > handling of the received deauthentication message can cause information
-> > > for the access point to be removed from the authtry_bsses table before
-> > > authentication response is received. This triggers the warning. This has
-> > > been seen happening with several access points occasionally. At least
-> > > one of those (Asus) has been seen to send spurious deauthentication
-> > > messages after deauthentication. Possibly this warning could be triggered also
-> > > by forged deauthentication messages sent at a correct time.
-> > 
-> > This doesn't seem right. Why is mac80211 not preventing those messages
-> > from bubbling up in that case?
-> > 
-> > FWIW, this check is there for a reason -- we want to avoid telling
-> > userspace twice that we disconnected from a given AP, and we shouldn't
-> > be processing it anyway.
+This patch relocates RX processing code from the
+common module to ath9k. This reduces the size
+of the common module which is also used by ath9k_htc.
 
-> Normally, when the stack in the idle state, or connected to other access
-> point, those deauth messages doesn't cause a problem. The problem arises
-> if that spurious deauth message is received at the right moment, when
-> authentication to the access point has been started but response is not
-> yet received. If I'm correct in that the deauthentication message from
-> the AP during authentication is legal, this would be quite hard to
-> filter out.
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/common.c |  264 ------------------------------
+ drivers/net/wireless/ath/ath9k/common.h |   13 --
+ drivers/net/wireless/ath/ath9k/recv.c   |  267 ++++++++++++++++++++++++++++++-
+ 3 files changed, 263 insertions(+), 281 deletions(-)
 
-Yes .. I understand the scenario. You don't want to filter it out, you
-want to abort the authentication so you kill the work for it and never
-send the timeout to cfg80211.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
+index 7707341..27f9ae5 100644
+--- a/drivers/net/wireless/ath/ath9k/common.c
++++ b/drivers/net/wireless/ath/ath9k/common.c
+@@ -27,270 +27,6 @@ MODULE_AUTHOR("Atheros Communications");
+ MODULE_DESCRIPTION("Shared library for Atheros wireless 802.11n LAN cards.");
+ MODULE_LICENSE("Dual BSD/GPL");
+ 
+-/* Common RX processing */
+-
+-/* Assumes you've already done the endian to CPU conversion */
+-static bool ath9k_rx_accept(struct ath_common *common,
+-			    struct sk_buff *skb,
+-			    struct ieee80211_rx_status *rxs,
+-			    struct ath_rx_status *rx_stats,
+-			    bool *decrypt_error)
+-{
+-	struct ath_hw *ah = common->ah;
+-	struct ieee80211_hdr *hdr;
+-	__le16 fc;
+-
+-	hdr = (struct ieee80211_hdr *) skb->data;
+-	fc = hdr->frame_control;
+-
+-	if (!rx_stats->rs_datalen)
+-		return false;
+-        /*
+-         * rs_status follows rs_datalen so if rs_datalen is too large
+-         * we can take a hint that hardware corrupted it, so ignore
+-         * those frames.
+-         */
+-	if (rx_stats->rs_datalen > common->rx_bufsize)
+-		return false;
+-
+-	/*
+-	 * rs_more indicates chained descriptors which can be used
+-	 * to link buffers together for a sort of scatter-gather
+-	 * operation.
+-	 * reject the frame, we don't support scatter-gather yet and
+-	 * the frame is probably corrupt anyway
+-	 */
+-	if (rx_stats->rs_more)
+-		return false;
+-
+-	/*
+-	 * The rx_stats->rs_status will not be set until the end of the
+-	 * chained descriptors so it can be ignored if rs_more is set. The
+-	 * rs_more will be false at the last element of the chained
+-	 * descriptors.
+-	 */
+-	if (rx_stats->rs_status != 0) {
+-		if (rx_stats->rs_status & ATH9K_RXERR_CRC)
+-			rxs->flag |= RX_FLAG_FAILED_FCS_CRC;
+-		if (rx_stats->rs_status & ATH9K_RXERR_PHY)
+-			return false;
+-
+-		if (rx_stats->rs_status & ATH9K_RXERR_DECRYPT) {
+-			*decrypt_error = true;
+-		} else if (rx_stats->rs_status & ATH9K_RXERR_MIC) {
+-			if (ieee80211_is_ctl(fc))
+-				/*
+-				 * Sometimes, we get invalid
+-				 * MIC failures on valid control frames.
+-				 * Remove these mic errors.
+-				 */
+-				rx_stats->rs_status &= ~ATH9K_RXERR_MIC;
+-			else
+-				rxs->flag |= RX_FLAG_MMIC_ERROR;
+-		}
+-		/*
+-		 * Reject error frames with the exception of
+-		 * decryption and MIC failures. For monitor mode,
+-		 * we also ignore the CRC error.
+-		 */
+-		if (ah->opmode == NL80211_IFTYPE_MONITOR) {
+-			if (rx_stats->rs_status &
+-			    ~(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_MIC |
+-			      ATH9K_RXERR_CRC))
+-				return false;
+-		} else {
+-			if (rx_stats->rs_status &
+-			    ~(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_MIC)) {
+-				return false;
+-			}
+-		}
+-	}
+-	return true;
+-}
+-
+-static int ath9k_process_rate(struct ath_common *common,
+-			      struct ieee80211_hw *hw,
+-			      struct ath_rx_status *rx_stats,
+-			      struct ieee80211_rx_status *rxs,
+-			      struct sk_buff *skb)
+-{
+-	struct ieee80211_supported_band *sband;
+-	enum ieee80211_band band;
+-	unsigned int i = 0;
+-
+-	band = hw->conf.channel->band;
+-	sband = hw->wiphy->bands[band];
+-
+-	if (rx_stats->rs_rate & 0x80) {
+-		/* HT rate */
+-		rxs->flag |= RX_FLAG_HT;
+-		if (rx_stats->rs_flags & ATH9K_RX_2040)
+-			rxs->flag |= RX_FLAG_40MHZ;
+-		if (rx_stats->rs_flags & ATH9K_RX_GI)
+-			rxs->flag |= RX_FLAG_SHORT_GI;
+-		rxs->rate_idx = rx_stats->rs_rate & 0x7f;
+-		return 0;
+-	}
+-
+-	for (i = 0; i < sband->n_bitrates; i++) {
+-		if (sband->bitrates[i].hw_value == rx_stats->rs_rate) {
+-			rxs->rate_idx = i;
+-			return 0;
+-		}
+-		if (sband->bitrates[i].hw_value_short == rx_stats->rs_rate) {
+-			rxs->flag |= RX_FLAG_SHORTPRE;
+-			rxs->rate_idx = i;
+-			return 0;
+-		}
+-	}
+-
+-	/*
+-	 * No valid hardware bitrate found -- we should not get here
+-	 * because hardware has already validated this frame as OK.
+-	 */
+-	ath_print(common, ATH_DBG_XMIT, "unsupported hw bitrate detected "
+-		  "0x%02x using 1 Mbit\n", rx_stats->rs_rate);
+-	if ((common->debug_mask & ATH_DBG_XMIT))
+-		print_hex_dump_bytes("", DUMP_PREFIX_NONE, skb->data, skb->len);
+-
+-	return -EINVAL;
+-}
+-
+-static void ath9k_process_rssi(struct ath_common *common,
+-			       struct ieee80211_hw *hw,
+-			       struct sk_buff *skb,
+-			       struct ath_rx_status *rx_stats)
+-{
+-	struct ath_hw *ah = common->ah;
+-	struct ieee80211_sta *sta;
+-	struct ieee80211_hdr *hdr;
+-	struct ath_node *an;
+-	int last_rssi = ATH_RSSI_DUMMY_MARKER;
+-	__le16 fc;
+-
+-	hdr = (struct ieee80211_hdr *)skb->data;
+-	fc = hdr->frame_control;
+-
+-	rcu_read_lock();
+-	/*
+-	 * XXX: use ieee80211_find_sta! This requires quite a bit of work
+-	 * under the current ath9k virtual wiphy implementation as we have
+-	 * no way of tying a vif to wiphy. Typically vifs are attached to
+-	 * at least one sdata of a wiphy on mac80211 but with ath9k virtual
+-	 * wiphy you'd have to iterate over every wiphy and each sdata.
+-	 */
+-	sta = ieee80211_find_sta_by_hw(hw, hdr->addr2);
+-	if (sta) {
+-		an = (struct ath_node *) sta->drv_priv;
+-		if (rx_stats->rs_rssi != ATH9K_RSSI_BAD &&
+-		   !rx_stats->rs_moreaggr)
+-			ATH_RSSI_LPF(an->last_rssi, rx_stats->rs_rssi);
+-		last_rssi = an->last_rssi;
+-	}
+-	rcu_read_unlock();
+-
+-	if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
+-		rx_stats->rs_rssi = ATH_EP_RND(last_rssi,
+-					      ATH_RSSI_EP_MULTIPLIER);
+-	if (rx_stats->rs_rssi < 0)
+-		rx_stats->rs_rssi = 0;
+-
+-	/* Update Beacon RSSI, this is used by ANI. */
+-	if (ieee80211_is_beacon(fc))
+-		ah->stats.avgbrssi = rx_stats->rs_rssi;
+-}
+-
+-/*
+- * For Decrypt or Demic errors, we only mark packet status here and always push
+- * up the frame up to let mac80211 handle the actual error case, be it no
+- * decryption key or real decryption error. This let us keep statistics there.
+- */
+-int ath9k_cmn_rx_skb_preprocess(struct ath_common *common,
+-				struct ieee80211_hw *hw,
+-				struct sk_buff *skb,
+-				struct ath_rx_status *rx_stats,
+-				struct ieee80211_rx_status *rx_status,
+-				bool *decrypt_error)
+-{
+-	struct ath_hw *ah = common->ah;
+-
+-	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
+-
+-	/*
+-	 * everything but the rate is checked here, the rate check is done
+-	 * separately to avoid doing two lookups for a rate for each frame.
+-	 */
+-	if (!ath9k_rx_accept(common, skb, rx_status, rx_stats, decrypt_error))
+-		return -EINVAL;
+-
+-	ath9k_process_rssi(common, hw, skb, rx_stats);
+-
+-	if (ath9k_process_rate(common, hw, rx_stats, rx_status, skb))
+-		return -EINVAL;
+-
+-	rx_status->mactime = ath9k_hw_extend_tsf(ah, rx_stats->rs_tstamp);
+-	rx_status->band = hw->conf.channel->band;
+-	rx_status->freq = hw->conf.channel->center_freq;
+-	rx_status->signal = ATH_DEFAULT_NOISE_FLOOR + rx_stats->rs_rssi;
+-	rx_status->antenna = rx_stats->rs_antenna;
+-	rx_status->flag |= RX_FLAG_TSFT;
+-
+-	return 0;
+-}
+-EXPORT_SYMBOL(ath9k_cmn_rx_skb_preprocess);
+-
+-void ath9k_cmn_rx_skb_postprocess(struct ath_common *common,
+-				  struct sk_buff *skb,
+-				  struct ath_rx_status *rx_stats,
+-				  struct ieee80211_rx_status *rxs,
+-				  bool decrypt_error)
+-{
+-	struct ath_hw *ah = common->ah;
+-	struct ieee80211_hdr *hdr;
+-	int hdrlen, padpos, padsize;
+-	u8 keyix;
+-	__le16 fc;
+-
+-	/* see if any padding is done by the hw and remove it */
+-	hdr = (struct ieee80211_hdr *) skb->data;
+-	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
+-	fc = hdr->frame_control;
+-	padpos = ath9k_cmn_padpos(hdr->frame_control);
+-
+-	/* The MAC header is padded to have 32-bit boundary if the
+-	 * packet payload is non-zero. The general calculation for
+-	 * padsize would take into account odd header lengths:
+-	 * padsize = (4 - padpos % 4) % 4; However, since only
+-	 * even-length headers are used, padding can only be 0 or 2
+-	 * bytes and we can optimize this a bit. In addition, we must
+-	 * not try to remove padding from short control frames that do
+-	 * not have payload. */
+-	padsize = padpos & 3;
+-	if (padsize && skb->len>=padpos+padsize+FCS_LEN) {
+-		memmove(skb->data + padsize, skb->data, padpos);
+-		skb_pull(skb, padsize);
+-	}
+-
+-	keyix = rx_stats->rs_keyix;
+-
+-	if (!(keyix == ATH9K_RXKEYIX_INVALID) && !decrypt_error &&
+-	    ieee80211_has_protected(fc)) {
+-		rxs->flag |= RX_FLAG_DECRYPTED;
+-	} else if (ieee80211_has_protected(fc)
+-		   && !decrypt_error && skb->len >= hdrlen + 4) {
+-		keyix = skb->data[hdrlen + 3] >> 6;
+-
+-		if (test_bit(keyix, common->keymap))
+-			rxs->flag |= RX_FLAG_DECRYPTED;
+-	}
+-	if (ah->sw_mgmt_crypto &&
+-	    (rxs->flag & RX_FLAG_DECRYPTED) &&
+-	    ieee80211_is_mgmt(fc))
+-		/* Use software decrypt for management frames. */
+-		rxs->flag &= ~RX_FLAG_DECRYPTED;
+-}
+-EXPORT_SYMBOL(ath9k_cmn_rx_skb_postprocess);
+-
+ int ath9k_cmn_padpos(__le16 frame_control)
+ {
+ 	int padpos = 24;
+diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
+index e08f7e5..1e6f360 100644
+--- a/drivers/net/wireless/ath/ath9k/common.h
++++ b/drivers/net/wireless/ath/ath9k/common.h
+@@ -115,19 +115,6 @@ struct ath_node {
+ 	int last_rssi;
+ };
+ 
+-int ath9k_cmn_rx_skb_preprocess(struct ath_common *common,
+-				struct ieee80211_hw *hw,
+-				struct sk_buff *skb,
+-				struct ath_rx_status *rx_stats,
+-				struct ieee80211_rx_status *rx_status,
+-				bool *decrypt_error);
+-
+-void ath9k_cmn_rx_skb_postprocess(struct ath_common *common,
+-				  struct sk_buff *skb,
+-				  struct ath_rx_status *rx_stats,
+-				  struct ieee80211_rx_status *rxs,
+-				  bool decrypt_error);
+-
+ int ath9k_cmn_padpos(__le16 frame_control);
+ int ath9k_cmn_get_hw_crypto_keytype(struct sk_buff *skb);
+ void ath9k_cmn_update_ichannel(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index ba13913..10092dd 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -815,6 +815,265 @@ static struct ath_buf *ath_get_next_rx_buf(struct ath_softc *sc,
+ 	return bf;
+ }
+ 
++/* Assumes you've already done the endian to CPU conversion */
++static bool ath9k_rx_accept(struct ath_common *common,
++			    struct sk_buff *skb,
++			    struct ieee80211_rx_status *rxs,
++			    struct ath_rx_status *rx_stats,
++			    bool *decrypt_error)
++{
++	struct ath_hw *ah = common->ah;
++	struct ieee80211_hdr *hdr;
++	__le16 fc;
++
++	hdr = (struct ieee80211_hdr *) skb->data;
++	fc = hdr->frame_control;
++
++	if (!rx_stats->rs_datalen)
++		return false;
++        /*
++         * rs_status follows rs_datalen so if rs_datalen is too large
++         * we can take a hint that hardware corrupted it, so ignore
++         * those frames.
++         */
++	if (rx_stats->rs_datalen > common->rx_bufsize)
++		return false;
++
++	/*
++	 * rs_more indicates chained descriptors which can be used
++	 * to link buffers together for a sort of scatter-gather
++	 * operation.
++	 * reject the frame, we don't support scatter-gather yet and
++	 * the frame is probably corrupt anyway
++	 */
++	if (rx_stats->rs_more)
++		return false;
++
++	/*
++	 * The rx_stats->rs_status will not be set until the end of the
++	 * chained descriptors so it can be ignored if rs_more is set. The
++	 * rs_more will be false at the last element of the chained
++	 * descriptors.
++	 */
++	if (rx_stats->rs_status != 0) {
++		if (rx_stats->rs_status & ATH9K_RXERR_CRC)
++			rxs->flag |= RX_FLAG_FAILED_FCS_CRC;
++		if (rx_stats->rs_status & ATH9K_RXERR_PHY)
++			return false;
++
++		if (rx_stats->rs_status & ATH9K_RXERR_DECRYPT) {
++			*decrypt_error = true;
++		} else if (rx_stats->rs_status & ATH9K_RXERR_MIC) {
++			if (ieee80211_is_ctl(fc))
++				/*
++				 * Sometimes, we get invalid
++				 * MIC failures on valid control frames.
++				 * Remove these mic errors.
++				 */
++				rx_stats->rs_status &= ~ATH9K_RXERR_MIC;
++			else
++				rxs->flag |= RX_FLAG_MMIC_ERROR;
++		}
++		/*
++		 * Reject error frames with the exception of
++		 * decryption and MIC failures. For monitor mode,
++		 * we also ignore the CRC error.
++		 */
++		if (ah->opmode == NL80211_IFTYPE_MONITOR) {
++			if (rx_stats->rs_status &
++			    ~(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_MIC |
++			      ATH9K_RXERR_CRC))
++				return false;
++		} else {
++			if (rx_stats->rs_status &
++			    ~(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_MIC)) {
++				return false;
++			}
++		}
++	}
++	return true;
++}
++
++static int ath9k_process_rate(struct ath_common *common,
++			      struct ieee80211_hw *hw,
++			      struct ath_rx_status *rx_stats,
++			      struct ieee80211_rx_status *rxs,
++			      struct sk_buff *skb)
++{
++	struct ieee80211_supported_band *sband;
++	enum ieee80211_band band;
++	unsigned int i = 0;
++
++	band = hw->conf.channel->band;
++	sband = hw->wiphy->bands[band];
++
++	if (rx_stats->rs_rate & 0x80) {
++		/* HT rate */
++		rxs->flag |= RX_FLAG_HT;
++		if (rx_stats->rs_flags & ATH9K_RX_2040)
++			rxs->flag |= RX_FLAG_40MHZ;
++		if (rx_stats->rs_flags & ATH9K_RX_GI)
++			rxs->flag |= RX_FLAG_SHORT_GI;
++		rxs->rate_idx = rx_stats->rs_rate & 0x7f;
++		return 0;
++	}
++
++	for (i = 0; i < sband->n_bitrates; i++) {
++		if (sband->bitrates[i].hw_value == rx_stats->rs_rate) {
++			rxs->rate_idx = i;
++			return 0;
++		}
++		if (sband->bitrates[i].hw_value_short == rx_stats->rs_rate) {
++			rxs->flag |= RX_FLAG_SHORTPRE;
++			rxs->rate_idx = i;
++			return 0;
++		}
++	}
++
++	/*
++	 * No valid hardware bitrate found -- we should not get here
++	 * because hardware has already validated this frame as OK.
++	 */
++	ath_print(common, ATH_DBG_XMIT, "unsupported hw bitrate detected "
++		  "0x%02x using 1 Mbit\n", rx_stats->rs_rate);
++	if ((common->debug_mask & ATH_DBG_XMIT))
++		print_hex_dump_bytes("", DUMP_PREFIX_NONE, skb->data, skb->len);
++
++	return -EINVAL;
++}
++
++static void ath9k_process_rssi(struct ath_common *common,
++			       struct ieee80211_hw *hw,
++			       struct sk_buff *skb,
++			       struct ath_rx_status *rx_stats)
++{
++	struct ath_hw *ah = common->ah;
++	struct ieee80211_sta *sta;
++	struct ieee80211_hdr *hdr;
++	struct ath_node *an;
++	int last_rssi = ATH_RSSI_DUMMY_MARKER;
++	__le16 fc;
++
++	hdr = (struct ieee80211_hdr *)skb->data;
++	fc = hdr->frame_control;
++
++	rcu_read_lock();
++	/*
++	 * XXX: use ieee80211_find_sta! This requires quite a bit of work
++	 * under the current ath9k virtual wiphy implementation as we have
++	 * no way of tying a vif to wiphy. Typically vifs are attached to
++	 * at least one sdata of a wiphy on mac80211 but with ath9k virtual
++	 * wiphy you'd have to iterate over every wiphy and each sdata.
++	 */
++	sta = ieee80211_find_sta_by_hw(hw, hdr->addr2);
++	if (sta) {
++		an = (struct ath_node *) sta->drv_priv;
++		if (rx_stats->rs_rssi != ATH9K_RSSI_BAD &&
++		   !rx_stats->rs_moreaggr)
++			ATH_RSSI_LPF(an->last_rssi, rx_stats->rs_rssi);
++		last_rssi = an->last_rssi;
++	}
++	rcu_read_unlock();
++
++	if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
++		rx_stats->rs_rssi = ATH_EP_RND(last_rssi,
++					      ATH_RSSI_EP_MULTIPLIER);
++	if (rx_stats->rs_rssi < 0)
++		rx_stats->rs_rssi = 0;
++
++	/* Update Beacon RSSI, this is used by ANI. */
++	if (ieee80211_is_beacon(fc))
++		ah->stats.avgbrssi = rx_stats->rs_rssi;
++}
++
++/*
++ * For Decrypt or Demic errors, we only mark packet status here and always push
++ * up the frame up to let mac80211 handle the actual error case, be it no
++ * decryption key or real decryption error. This let us keep statistics there.
++ */
++static int ath9k_rx_skb_preprocess(struct ath_common *common,
++				   struct ieee80211_hw *hw,
++				   struct sk_buff *skb,
++				   struct ath_rx_status *rx_stats,
++				   struct ieee80211_rx_status *rx_status,
++				   bool *decrypt_error)
++{
++	struct ath_hw *ah = common->ah;
++
++	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
++
++	/*
++	 * everything but the rate is checked here, the rate check is done
++	 * separately to avoid doing two lookups for a rate for each frame.
++	 */
++	if (!ath9k_rx_accept(common, skb, rx_status, rx_stats, decrypt_error))
++		return -EINVAL;
++
++	ath9k_process_rssi(common, hw, skb, rx_stats);
++
++	if (ath9k_process_rate(common, hw, rx_stats, rx_status, skb))
++		return -EINVAL;
++
++	rx_status->mactime = ath9k_hw_extend_tsf(ah, rx_stats->rs_tstamp);
++	rx_status->band = hw->conf.channel->band;
++	rx_status->freq = hw->conf.channel->center_freq;
++	rx_status->signal = ATH_DEFAULT_NOISE_FLOOR + rx_stats->rs_rssi;
++	rx_status->antenna = rx_stats->rs_antenna;
++	rx_status->flag |= RX_FLAG_TSFT;
++
++	return 0;
++}
++
++static void ath9k_rx_skb_postprocess(struct ath_common *common,
++				     struct sk_buff *skb,
++				     struct ath_rx_status *rx_stats,
++				     struct ieee80211_rx_status *rxs,
++				     bool decrypt_error)
++{
++	struct ath_hw *ah = common->ah;
++	struct ieee80211_hdr *hdr;
++	int hdrlen, padpos, padsize;
++	u8 keyix;
++	__le16 fc;
++
++	/* see if any padding is done by the hw and remove it */
++	hdr = (struct ieee80211_hdr *) skb->data;
++	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
++	fc = hdr->frame_control;
++	padpos = ath9k_cmn_padpos(hdr->frame_control);
++
++	/* The MAC header is padded to have 32-bit boundary if the
++	 * packet payload is non-zero. The general calculation for
++	 * padsize would take into account odd header lengths:
++	 * padsize = (4 - padpos % 4) % 4; However, since only
++	 * even-length headers are used, padding can only be 0 or 2
++	 * bytes and we can optimize this a bit. In addition, we must
++	 * not try to remove padding from short control frames that do
++	 * not have payload. */
++	padsize = padpos & 3;
++	if (padsize && skb->len>=padpos+padsize+FCS_LEN) {
++		memmove(skb->data + padsize, skb->data, padpos);
++		skb_pull(skb, padsize);
++	}
++
++	keyix = rx_stats->rs_keyix;
++
++	if (!(keyix == ATH9K_RXKEYIX_INVALID) && !decrypt_error &&
++	    ieee80211_has_protected(fc)) {
++		rxs->flag |= RX_FLAG_DECRYPTED;
++	} else if (ieee80211_has_protected(fc)
++		   && !decrypt_error && skb->len >= hdrlen + 4) {
++		keyix = skb->data[hdrlen + 3] >> 6;
++
++		if (test_bit(keyix, common->keymap))
++			rxs->flag |= RX_FLAG_DECRYPTED;
++	}
++	if (ah->sw_mgmt_crypto &&
++	    (rxs->flag & RX_FLAG_DECRYPTED) &&
++	    ieee80211_is_mgmt(fc))
++		/* Use software decrypt for management frames. */
++		rxs->flag &= ~RX_FLAG_DECRYPTED;
++}
+ 
+ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ {
+@@ -877,8 +1136,8 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 		if (flush)
+ 			goto requeue;
+ 
+-		retval = ath9k_cmn_rx_skb_preprocess(common, hw, skb, &rs,
+-						     rxs, &decrypt_error);
++		retval = ath9k_rx_skb_preprocess(common, hw, skb, &rs,
++						 rxs, &decrypt_error);
+ 		if (retval)
+ 			goto requeue;
+ 
+@@ -902,8 +1161,8 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 		if (ah->caps.rx_status_len)
+ 			skb_pull(skb, ah->caps.rx_status_len);
+ 
+-		ath9k_cmn_rx_skb_postprocess(common, skb, &rs,
+-					     rxs, decrypt_error);
++		ath9k_rx_skb_postprocess(common, skb, &rs,
++					 rxs, decrypt_error);
+ 
+ 		/* We will now give hardware our shiny new allocated skb */
+ 		bf->bf_mpdu = requeue_skb;
+-- 
+1.7.1
 
