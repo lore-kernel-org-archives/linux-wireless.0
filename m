@@ -1,52 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server.heaven-czfree.net ([78.108.102.201]:41839 "EHLO
-	smtp.heaven-czfree.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751146Ab0ETHXW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 May 2010 03:23:22 -0400
-Received: from [10.23.202.43] (unknown [10.23.202.43])
-	by smtp.heaven-czfree.net (Postfix) with ESMTP id 6F11F147682
-	for <linux-wireless@vger.kernel.org>; Thu, 20 May 2010 09:00:11 +0200 (CEST)
-From: "Jaroslav Fojtik" <jafojtik@seznam.cz>
-To: linux-wireless@vger.kernel.org
-Date: Thu, 20 May 2010 08:00:08 +0200
-MIME-Version: 1.0
-Subject: How to scan APs with ATH5k?
-Message-ID: <4BF4CFE8.10182.FA668@jafojtik.seznam.cz>
-In-reply-to: <201005200852.03136.helmut.schaa@googlemail.com>
-References: <1274296671-13596-1-git-send-email-gwingerde@gmail.com>, <201005200852.03136.helmut.schaa@googlemail.com>
-Content-type: text/plain; charset=US-ASCII
+Received: from c60.cesmail.net ([216.154.195.49]:14301 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752866Ab0ETVxe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 May 2010 17:53:34 -0400
+Subject: Re: How to scan APs with ATH5k?
+From: Pavel Roskin <proski@gnu.org>
+To: Jaroslav Fojtik <jafojtik@seznam.cz>
+Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
+In-Reply-To: <4BF58D72.22852.D1D2D@jafojtik.seznam.cz>
+References: <1274296671-13596-1-git-send-email-gwingerde@gmail.com>
+	 , <4BF4CFE8.10182.FA668@jafojtik.seznam.cz>
+	 , <AANLkTim90zZxvcwT9joVAqO1oDzk-jCaRCQAd0Cfu3N0@mail.gmail.com>
+	 <4BF58D72.22852.D1D2D@jafojtik.seznam.cz>
+Content-Type: text/plain
+Date: Thu, 20 May 2010 17:53:31 -0400
+Message-Id: <1274392411.7054.6.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dears,
+On Thu, 2010-05-20 at 21:28 +0200, Jaroslav Fojtik wrote:
+> Dear Bob,
+> 
+> > $ sudo ifconfig wlan0 up
+> > $ sudo iw dev wlan0 scan
+> 
+> I have typed:
+> 
+> ifconfig wlan0 down
+> ifconfig wlan0 up
+> iwlist wlan0 scanning 
+>   (I do not have installed iw)
 
-I have a problem with AP scanning:
+I think you should install iw and use it instead.  Ideally, iwlist
+should work as well, but iw would provide a useful datapoint.
 
-root@dvouramenna:/tmp# iwlist "wlan0" scanning
-wlan0     Interface doesn't support scanning : Operation not supported
+> But when an interface wlan0 become associated, it refuses scanning.
+> 
+> root@dvouramenna:~# iwlist wlan0 scanning
+> wlan0     Interface doesn't support scanning : Operation not supported
+> 
+> 
+> Is this bug or feature?
 
-root@dvouramenna:/tmp# iwlist "wlan1" scanning
-wlan1     Failed to read scan data : Resource temporarily unavailable
+It looks like a bug.  Even if something is preventing scanning, the
+error code should be -EBUSY (device busy).
 
-I am testing "compat-wireless-2.6.34-rc4".
+> MadWifi can scan even when interface is associated.
+> ipw2200bg can also scan when it is associated.
 
-I hope that this is a defect and should be reported somewhere into bugzilla.
+The same is true for ath9k, but I cannot test ath5k at the moment.
+mac80211 does a considerable effort to allow scanning while associated.
 
-regards
-   Jara
-
-PS: this is my wireless devices:
-02:08.0 Ethernet controller: Atheros Communications Inc. AR2413 802.11bg NIC (rev 01)
-        Subsystem: Atheros Communications Inc. TP-Link TL-WN510G Wireless CardBus Adapter
-        Flags: bus master, medium devsel, latency 168, IRQ 17
-        Memory at fdef0000 (32-bit, non-prefetchable) [size=64K]
-        Capabilities: [44] Power Management version 2
-
-02:0a.0 Ethernet controller: Atheros Communications Inc. AR5212/AR5213 Multiprotocol MAC/baseband processor (rev 01)
-        Subsystem: Wistron NeWeb Corp. CM9 Wireless a/b/g MiniPCI Adapter
-        Flags: bus master, medium devsel, latency 168, IRQ 19
-        Memory at fdee0000 (32-bit, non-prefetchable) [size=64K]
-        Capabilities: [44] Power Management version 2
-
-
+-- 
+Regards,
+Pavel Roskin
