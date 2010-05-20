@@ -1,95 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 27.mail-out.ovh.net ([91.121.30.210]:47129 "HELO
-	27.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754675Ab0ELVCb (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:51767 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754925Ab0ETWGK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 May 2010 17:02:31 -0400
-Message-ID: <4BEB175F.7000001@free.fr>
-Date: Wed, 12 May 2010 23:02:23 +0200
-From: Benoit Papillault <benoit.papillault@free.fr>
+	Thu, 20 May 2010 18:06:10 -0400
+Received: by pxi18 with SMTP id 18so137349pxi.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 May 2010 15:06:10 -0700 (PDT)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] mac80211: Add HT IE to IBSS beacons and probe responses.
-References: <1273098986-19330-1-git-send-email-benoit.papillault@free.fr>	 <1273098986-19330-2-git-send-email-benoit.papillault@free.fr>	 <1273128051.3573.17.camel@jlt3.sipsolutions.net> <4BE49BDD.8010803@free.fr> <1273574892.3669.54.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1273574892.3669.54.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <AANLkTilk0CIkmmIsBzPwchd6EBIVavw9R1amiSgCZOrx@mail.gmail.com>
+References: <20100519012528.22206.77550.stgit@tt-desk> <201005201121.49846.br1@einfach.org>
+	<AANLkTilG3c2UDEQa66PMvKysRVTt_dd-ZAS8FiDOe4Ob@mail.gmail.com>
+	<201005201436.11667.br1@einfach.org> <AANLkTilk0CIkmmIsBzPwchd6EBIVavw9R1amiSgCZOrx@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 20 May 2010 15:05:48 -0700
+Message-ID: <AANLkTinPVSkrawZ4OCjp6vb-f4bA7nSrmnXjRDi-Pvvm@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH v2 13/20] cfg80211: Add nl80211 antenna
+	configuration
+To: Bruno Randolf <br1@einfach.org>,
+	David Quan <David.Quan@atheros.com>,
+	Sam Ng <Sam.Ng@atheros.com>
+Cc: "ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le 11/05/2010 12:48, Johannes Berg a écrit :
-> On Sat, 2010-05-08 at 01:01 +0200, Benoit Papillault wrote:
->
->>> It would be helpful if you were to rebase over my patch that adds the
->>> channel type tracking.
+On Wed, May 19, 2010 at 11:43 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Wed, May 19, 2010 at 10:36 PM, Bruno Randolf <br1@einfach.org> wrote:
+>> On Thursday 20 May 2010 14:17:19 you wrote:
+>>> None of the legacy 802.11 drivers we support have more than 2
+>>> antennas, I am also not aware of any.
 >>
->> Your patches are now in wireless-testing, so I am doing it at the moment.
+>> i have heard of some solutions based on atheros chipsets with more than 2
+>> antennas ("pre-11n RangeMax", "large phased array switch"). please check
+>> internally.
 >
-> Thanks.
->
->>>> +	if (channel_type != NL80211_CHAN_NO_HT&&
->>>> +	    sband->ht_cap.ht_supported) {
->>>
->>> You shouldn't be able to get here with an HT channel but !ht_supported,
->>> no? Or is that to support the case where you have HT only on one band?
+> I will. David, are you aware of legacy (non 802.11n) devices with more
+> than 2 antennas?
+
+I picked David's brain and we're pretty certain these devices do not
+exist in the market.
+
+>>> You're right, then if you really don't mind lets think 802.11n through
+>>> well then.
 >>
->> Good point. I think there are several cases here :
->>
->> - a non-HT STA is joining an HT IBSS (we need to check 802.11n-2009 to
->> see how it's supposed to be handled). In this case channel_type could be
->> ht40+ and ht_supported = false
+>> i don't mind to do that, but as i said i dont know much about 802.11n yet.
 >
-> Hmm, true.
->
->> - an HT STA is joining a non-HT IBSS. It's clear in this case that no HT
->> IE should be sent, which is catched by (channel_type !=
->> NL80211_CHAN_NO_HT) condition.
->
-> Right.
->
->> Could we examine those cases in a follow up patch?
->
-> Well what do we actually need to do then?
+> Thanks, give me some time to think about this then and get back to you.
 
-I thought again about 2 HT STA joining a non-HT IBSS. If we want those 2 
-STA to be able to send/receive HT frames then they must know each other 
-capabilities. So HT Capabilities should be sent if ht_supported = true, 
-even if channel_type is CHAN_NO_HT
+OK so back to the drawing board, this is what I recommend:
 
->
->>>> +}
->>>> +
->>>> +int ieee80211_add_ht_info(u8 **ppos,
->>>> +			  struct ieee80211_supported_band *sband,
->>>> +			  struct ieee80211_channel *channel,
->>>> +			  enum nl80211_channel_type channel_type)
->>>
->>> what's wrong with ieee80211_add_ht_ie()
->>
->> Seems it's close to what I'm doing, but not entirely the same. I will
->> read it. If applicable, should I move ieee80211_add_ht_ie to util.c (and
->> declaration to ieee80211_i.h) then ?
->
-> Yes.
+For legacy, keep it simple, use 3 settings, fixed_a, fixed_b,
+diversity, for all devices.
 
-Done. I still keep both ieee80211_add_ht_ie and ieee80211_add_ht_cap. 
-What is done in ieee80211_add_ht_ie is only required for an HT AP, not 
-an HT IBSS STA. I guess we should pass "sdata" to those functions before 
-merging them.
+Lets use a different API for 802.11n. Reason being that even the case
+I mentioned of an 802.11n device connecting on a legacy network needs
+to be treated differently actually.
 
->
-> Also I just noticed that there's a TODO item in rx.c when we receive an
-> HT frame from a peer we don't know about yet. Not sure what to do there,
-> but you'll need to look at it.
+For 802.11n you have a few more considerations. You can actually TX at
+the same time on two or more different antennas at the same time. The
+data you transmit will be the contents on both chains on a dual stream
+device. So both antenna 0 and antenna 1 will both be transmitting the
+data for both stream 0 and stream 1. As it turns out the combination
+of TX'ing on two antennas at the same time at a certain dBm power will
+yield a higher received frame on the RX side. This is why when you use
+multiple chains you have to take regulatory rules into considerations
+as well, since adding more chains will increase the overall output
+power. Today ath9k handles this itself since this data is calibrated
+but the max EIRP is passed out from cfg80211. Devices which do not
+deal with these regulatory considerations likely won't support
+changing chainmasks unless they use an API to respect regulatory
+internally somehow. Perhaps the iwlagn firmware does this, beats me.
 
-I did some patch in this area in my tree. Basically, the peer STA is 
-created only on beacon/probe response since only those frames contains 
-peer capabilities. Any frames received before is simply ignored.
+The right terminology for antenna control for both TX and RX is
+chainmask and a bitmap of 8 will suffice for existing hardware and up
+to the not-yet-existant 600mbps 4 stream devices. Supporting 8 bits
+will support up to 8 streams and we do not envision using beyond that
+at this point. There is some considerations in the future for
+supporting something other than HT40, like maybe HT80 and so forth but
+those things won't be using more streams it seems.
 
->
-> johannes
->
->
+Then, some devices won't support all possible chainmask settings. This
+will vary depending on the chipset. I work for Atheros so I can only
+tell you what we can support, we'll have to check with the Intel folks
+about their chipset limitations and settings.
 
-Regards,
-Benoit
+AR5416, AR5418 can only support chainmask settings which always keep
+the first chain on. The AR9001 family and beyond cannot support the
+0b110 chaimask (David, you had pointed out some other restrictions,
+what were they again?), the details are complex and I did not get a
+chance to review them.
+
+I would not be surprised if other vendors had similar restrictions so
+I'm thinking maybe we can express this as a requirement mask, or a set
+of requirement masks. This way userspace utilities for debugging would
+only expose certain chainmask settings.
+
+Now technically then you can incorporate the legacy API with the
+802.11n API here somehow but it just seems cleaner to keep them
+separate.
+
+Also, David indicated that when we change the chainmask when are are
+associated we have to do an actual chip reset, this is different than
+the antenna diversity settings which an be done on the fly. We likely
+will need to reassociate for a chainmask setting, not sure.
+
+  Luis
