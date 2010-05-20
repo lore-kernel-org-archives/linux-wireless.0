@@ -1,64 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:10095 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932106Ab0EYUjL convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:25900 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753498Ab0ETRF7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 May 2010 16:39:11 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 25 May 2010 13:39:11 -0700
-From: David Quan <David.Quan@Atheros.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	Michael Green <Michael.Green@Atheros.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 25 May 2010 13:39:09 -0700
-Subject: RE: wireless-regdb: A band is missing for IL
-Message-ID: <93781E992CBA7843962D8B0E7D683F3C11178EC0E4@SC1EXMB-MBCL.global.atheros.com>
-References: <AANLkTimkpbans5mUObR8PWzf2-Uh0K-cZVVg0HjNxnSv@mail.gmail.com>
- <AANLkTikUhVoBKe95N_kkpXvSEsr845viGp5IhHZTVN2n@mail.gmail.com>
-In-Reply-To: <AANLkTikUhVoBKe95N_kkpXvSEsr845viGp5IhHZTVN2n@mail.gmail.com>
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+	Thu, 20 May 2010 13:05:59 -0400
+Subject: Re: [PATCH 07/11] drivers/net/wireless: Storage class should be
+ before const qualifier
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Tobias Klauser <tklauser@distanz.ch>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"reinette.chatre@intel.com" <reinette.chatre@intel.com>,
+	"yi.zhu@intel.com" <yi.zhu@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+In-Reply-To: <1274344691-9095-1-git-send-email-tklauser@distanz.ch>
+References: <1274344691-9095-1-git-send-email-tklauser@distanz.ch>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 20 May 2010 20:05:54 +0300
+Message-ID: <1274375154.1475.40.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Israel follows ETSI3_WORLD,
- this means 
+On Thu, 2010-05-20 at 10:38 +0200, ext Tobias Klauser wrote:
+> The C99 specification states in section 6.11.5:
+> 
+> The placement of a storage-class specifier other than at the beginning
+> of the declaration specifiers in a declaration is an obsolescent
+> feature.
+> 
+> Signed-off-by: Tobias Klauser <tklauser@distanz.ch>
+> ---
 
-Unii1 + Unii2 is supported. Unii2 requires DFS for APs.
+Thanks! Regarding wl1271:
 
-2ghz Ch1-13 supported.
- 
+Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
 
------Original Message-----
-From: Luis R. Rodriguez [mailto:mcgrof@gmail.com] 
-Sent: Tuesday, May 25, 2010 12:08 PM
-To: Emmanuel Grumbach; Michael Green; David Quan
-Cc: linville@tuxdriver.com; linux-wireless@vger.kernel.org
-Subject: Re: wireless-regdb: A band is missing for IL
 
-Michael, please review and let us know what you think.
+-- 
+Cheers,
+Luca.
 
-  Luis
-
-On Tue, May 25, 2010 at 12:03 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
-> According to http://en.wikipedia.org/wiki/List_of_WLAN_channels#5.C2.A0GHz_.28802.11a.2Fh.2Fj.2Fn.29
->
-> Channels 34 - 64 are allowed in 20 Mhz in Israel. This is not what is
-> written in db.txt:
->
-> country IL:
->         (2402 - 2482 @ 40), (N/A, 20)
->
-> This wikipedia page relies on an official page from the Israel
-> Ministry of the Communication.
->
-> Emmanuel Grumbach
-> egrumbach@gmail.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
