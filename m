@@ -1,226 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:19199 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751074Ab0ESVfw convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:63805 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752927Ab0EUKm1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 May 2010 17:35:52 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 19 May 2010 14:35:52 -0700
-Date: Wed, 19 May 2010 14:35:49 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Huub Reuver <h_reuver@mantell.xs4all.nl>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [Oops-report] problem with ath9k at shutdown
-Message-ID: <20100519213549.GA2305@tux>
-References: <20100516172012.GA8607@chidori>
- <20100517143240.GA2436@tuxdriver.com>
- <20100517165531.GE12203@tux>
- <20100517172403.GB2436@tuxdriver.com>
- <20100518054140.GA15675@navi.boekerij>
- <20100518165330.GC4209@tux>
- <AANLkTikNEiWcnxmIuBoh1fLQoRUvxgX95TQXtxki55oX@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-In-Reply-To: <AANLkTikNEiWcnxmIuBoh1fLQoRUvxgX95TQXtxki55oX@mail.gmail.com>
+	Fri, 21 May 2010 06:42:27 -0400
+Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
+	by mgw-mx03.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o4LAg0vH024584
+	for <linux-wireless@vger.kernel.org>; Fri, 21 May 2010 13:42:24 +0300
+Received: from localhost.localdomain (wimaxnb.nmp.nokia.com [172.22.211.32])
+	by mgw-da02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o4LAfxou017222
+	for <linux-wireless@vger.kernel.org>; Fri, 21 May 2010 13:42:00 +0300
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC PATCH 0/1] cfg80211: Fix user-space crda query stall
+Date: Fri, 21 May 2010 13:42:18 +0300
+Message-Id: <1274438539-11259-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 19, 2010 at 11:40:04AM -0700, Luis R. Rodriguez wrote:
-> On Tue, May 18, 2010 at 9:53 AM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
-> > On Mon, May 17, 2010 at 10:41:40PM -0700, Huub Reuver wrote:
-> >> On Mon, May 17, 2010 at 01:24:04PM -0400, John W. Linville wrote:
-> >> > On Mon, May 17, 2010 at 09:55:31AM -0700, Luis R. Rodriguez wrote:
-> >> > > On Mon, May 17, 2010 at 07:32:41AM -0700, John W. Linville wrote:
-> >> > > > Did you try 2.6.34?  I'm pretty sure we merged a fix for this...
-> >> > >
-> >> > > Ditto, and I think it was not related to ath9k but mac80211.
-> >> > >
-> >> > > Was it this maybe?
-> >> > >
-> >> > > commit a9f042cbe5284f34ccff15f3084477e11b39b17b
-> >> > > Author: Ming Lei <tom.leiming@gmail.com>
-> >> > > Date:   Sun Feb 28 00:56:24 2010 +0800
-> >> > >
-> >> > >     ath9k: fix lockdep warning when unloading module
-> >> > >
-> >> > > Johannes had noted:
-> >> > >
-> >> > > "I think the problem is that the locking for sta_notify changed, and a
-> >> > > patch that was written for the new locking was backported to the old,
-> >> > > irq-disabled, locking."
-> >> >
-> >> > Yeah, maybe that is what I was thinking about....
-> >>
-> >> The traces do not look similar to me, but I'm not a programmer.
-> >>
-> >> I have done a few tests:
-> >> 2.6.32.9 not affected
-> >> 2.6.32.13 affected
-> >> 2.6.33.3 affected
-> >> 2.6.33.4 affected
-> >> 2.6.34 the problem seems to have been fixed.
-> >>
-> >> Sorry for my slow report and response.
-> >> Thanks for your quick answer, I'll have to switch to 2.6.34 for a
-> >> production kernel.
-> >
-> > Eh, I am not sure what happened here... this must've been a fix
-> > regression as I do not recall seeing this on earlier 2.6.32.y releases.
-> > Can you try an earlier 2.6.32.y?
-> 
-> I have a fix for this, I'll post this soon, testing 2.6.33 now.
+When the user-space crda daemon fails to respond to kernel queries, the kernel
+crda subsystem will stall, refusing any further regulatory hints. Details are
+in the description of the patch itself.
 
-In case you are not subscribed to linux-wireless, please try:
+The patch proposes a fix to the problem by adding a timeout to the user-space
+crda accesses, reverting to the 00 domain if user space fails to respond. This
+seems safe assuming we don't know what the rules of the requested domain and
+allows further regulatory hints to be processed again.
 
-From: Luis R. Rodriguez <lrodriguez@atheros.com>
-Subject: [PATCH] Revert "ath9k: fix lockdep warning when unloading module" on stable kernels
+In my testing, this patch appears to function in the various scenarios I can 
+produce (user hints and 11d hints.) My understanding of the crda subsystem is
+still relatively shallow, so I'm asking for your thoughts on this approach.
 
-Johannes' patch 34e8950 titled:
+Comments will be appreaciated!
 
-	mac80211: allow station add/remove to sleep
 
-changed the way mac80211 adds and removes peers. The new
-sta_add() / sta_remove() callbacks allowed the driver callbacks
-to sleep. Johannes also ported ath9k to use sta_add() / sta_remove()
-via the patch 4ca7786 titled:
+Juuso Oikarinen (1):
+  cfg80211: Fix user-space crda query stall
 
-	ath9k: convert to new station add/remove callbacks
-
-but this patch forgot to address a change in locking issue which
-Ming Lei eventually found on his 2.6.33-wl #12 build. The 2.6.33-wl
-build includes code for the 802.11 subsystem for 2.6.34 though so did
-already have the above two patches (ath9k_sta_remove() on his trace),
-the 2.6.33 kernel did not however have these two patches. Ming eventually
-cured his lockdep warnign via the patch a9f042c titled:
-
-	ath9k: fix lockdep warning when unloading module
-
-This went in to 2.6.34 and although it was not marked as a stable
-fix it did get trickled down and applied on both 2.6.33 and 2.6.32.
-
-In review, the culprits:
-
-	mac80211: allow station add/remove to sleep
-git describe --contains 34e895075e21be3e21e71d6317440d1ee7969ad0
-v2.6.34-rc1~233^2~49^2~107
-
-	ath9k: convert to new station add/remove callbacks
-git describe --contains 4ca778605cfec53d8a689f0b57babb93b030c784
-v2.6.34-rc1~233^2~49^2~10
-
-	ath9k: fix lockdep warning when unloading module
-
-This last one trickled down to 2.6.33 (OK), 2.6.33 (invalid) and 2.6.32 (invalid).
-
-git describe --contains a9f042cbe5284f34ccff15f3084477e11b39b17b
-v2.6.34-rc2~48^2~77^2~7
-git describe --contains 0524bcfa80f1fffb4e1fe18a0a28900869a58a7c
-v2.6.33.2~125
-git describe --contains 0dcc9985f34aef3c60bffab3dfc7f7ba3748f35a
-v2.6.32.11~79
-
-The patch titled "ath9k: fix lockdep warning when unloading module"
-should be reverted on both 2.6.33 and 2.6.32 as it is invalid and
-actually ended up causing the following warning:
-
-ADDRCONF(NETDEV_CHANGE): wlan31: link becomes ready
-phy0: WMM queue=2 aci=0 acm=0 aifs=3 cWmin=15 cWmax=1023 txop=0
-phy0: WMM queue=3 aci=1 acm=0 aifs=7 cWmin=15 cWmax=1023 txop=0
-phy0: WMM queue=1 aci=2 acm=0 aifs=2 cWmin=7 cWmax=15 txop=94
-phy0: WMM queue=0 aci=3 acm=0 aifs=2 cWmin=3 cWmax=7 txop=47
-phy0: device now idle
-------------[ cut here ]------------
-WARNING: at kernel/softirq.c:143 local_bh_enable_ip+0x7b/0xa0()
-Hardware name: 7660A14
-Modules linked in: ath9k(-) mac80211 ath cfg80211 <whatever-bleh-etc>
-Pid: 2003, comm: rmmod Not tainted 2.6.32.11 #6
-Call Trace:
- [<ffffffff8105d178>] warn_slowpath_common+0x78/0xb0
- [<ffffffff8105d1bf>] warn_slowpath_null+0xf/0x20
- [<ffffffff81063f8b>] local_bh_enable_ip+0x7b/0xa0
- [<ffffffff815121e4>] _spin_unlock_bh+0x14/0x20
- [<ffffffffa034aea5>] ath_tx_node_cleanup+0x185/0x1b0 [ath9k]
- [<ffffffffa0345597>] ath9k_sta_notify+0x57/0xb0 [ath9k]
- [<ffffffffa02ac51a>] __sta_info_unlink+0x15a/0x260 [mac80211]
- [<ffffffffa02ac658>] sta_info_unlink+0x38/0x60 [mac80211]
- [<ffffffffa02b3fbe>] ieee80211_set_disassoc+0x1ae/0x210 [mac80211]
- [<ffffffffa02b42d9>] ieee80211_mgd_deauth+0x109/0x110 [mac80211]
- [<ffffffffa02ba409>] ieee80211_deauth+0x19/0x20 [mac80211]
- [<ffffffffa028160e>] __cfg80211_mlme_deauth+0xee/0x130 [cfg80211]
- [<ffffffff81118540>] ? init_object+0x50/0x90
- [<ffffffffa0285429>] __cfg80211_disconnect+0x159/0x1d0 [cfg80211]
- [<ffffffffa027125f>] cfg80211_netdev_notifier_call+0x10f/0x450 [cfg80211]
- [<ffffffff81514ca7>] notifier_call_chain+0x47/0x90
- [<ffffffff8107f501>] raw_notifier_call_chain+0x11/0x20
- [<ffffffff81442d66>] call_netdevice_notifiers+0x16/0x20
- [<ffffffff8144352d>] dev_close+0x4d/0xa0
- [<ffffffff814439a8>] rollback_registered+0x48/0x120
- [<ffffffff81443a9d>] unregister_netdevice+0x1d/0x70
- [<ffffffffa02b6cc4>] ieee80211_remove_interfaces+0x84/0xc0 [mac80211]
- [<ffffffffa02aa072>] ieee80211_unregister_hw+0x42/0xf0 [mac80211]
- [<ffffffffa0347bde>] ath_detach+0x8e/0x180 [ath9k]
- [<ffffffffa0347ce1>] ath_cleanup+0x11/0x50 [ath9k]
- [<ffffffffa0351a2c>] ath_pci_remove+0x1c/0x20 [ath9k]
- [<ffffffff8129d712>] pci_device_remove+0x32/0x60
- [<ffffffff81332373>] __device_release_driver+0x53/0xb0
- [<ffffffff81332498>] driver_detach+0xc8/0xd0
- [<ffffffff81331405>] bus_remove_driver+0x85/0xe0
- [<ffffffff81332a5a>] driver_unregister+0x5a/0x90
- [<ffffffff8129da00>] pci_unregister_driver+0x40/0xb0
- [<ffffffffa03518d0>] ath_pci_exit+0x10/0x20 [ath9k]
- [<ffffffffa0353cd5>] ath9k_exit+0x9/0x2a [ath9k]
- [<ffffffff81092838>] sys_delete_module+0x1a8/0x270
- [<ffffffff8107ebe9>] ? up_read+0x9/0x10
- [<ffffffff81011f82>] system_call_fastpath+0x16/0x1b
----[ end trace fad957019ffdd40b ]---
-phy0: Removed STA 00:22:6b:56:fd:e8
-phy0: Destroyed STA 00:22:6b:56:fd:e8
-wlan31: deauthenticating from 00:22:6b:56:fd:e8 by local choice (reason=3)
-ath9k 0000:16:00.0: PCI INT A disabled
-
-The original lockdep fixed an issue where due to the new changes
-the driver was not disabling the bottom halves but it is incorrect
-to do this on the older kernels since IRQs are already disabled.
-
-Cc: Ming Lei <tom.leiming@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: John W. Linville <linville@tuxdriver.com>
----
-
-Greg, I've tested 2.6.32.11 and 2.6.33.4 both with and without
-this patch. This cures the WARNING for both. This same patch
-applies to both 2.6.33.y and 2.6.33.y branches of the stable
-series.
-
- drivers/net/wireless/ath/ath9k/xmit.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index a232361..e499fb6 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2190,7 +2190,7 @@ void ath_tx_node_cleanup(struct ath_softc *sc, struct ath_node *an)
- 		if (ATH_TXQ_SETUP(sc, i)) {
- 			txq = &sc->tx.txq[i];
- 
--			spin_lock_bh(&txq->axq_lock);
-+			spin_lock(&txq->axq_lock);
- 
- 			list_for_each_entry_safe(ac,
- 					ac_tmp, &txq->axq_acq, list) {
-@@ -2211,7 +2211,7 @@ void ath_tx_node_cleanup(struct ath_softc *sc, struct ath_node *an)
- 				}
- 			}
- 
--			spin_unlock_bh(&txq->axq_lock);
-+			spin_unlock(&txq->axq_lock);
- 		}
- 	}
- }
--- 
-1.6.3.3
+ net/wireless/reg.c |   45 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 45 insertions(+), 0 deletions(-)
 
