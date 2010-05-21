@@ -1,73 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:44554 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751399Ab0EJT03 (ORCPT
+Received: from rcsinet10.oracle.com ([148.87.113.121]:33658 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758628Ab0EUSaZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 May 2010 15:26:29 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org
-Subject: [PATCH] ath5k: drop warning on jumbo frames
-Date: Mon, 10 May 2010 15:26:27 -0400
-Message-Id: <1273519587-25740-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 21 May 2010 14:30:25 -0400
+Date: Fri, 21 May 2010 11:28:33 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] wireless: fix mac80211.h kernel-doc warnings
+Message-Id: <20100521112833.316ccc60.randy.dunlap@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jumbo frames are not supported, and if they are seen it is likely
-a bogus frame so just silently discard them instead of warning on
-them all time. Also, instead of dropping them immediately though
-move the check *after* we check for all sort of frame errors. This
-should enable us to discard these frames if the hardware picks
-other bogus items first. Lets see if we still get those jumbo
-counters increasing still with this.
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Jumbo frames would happen if we tell hardware we can support
-a small 802.11 chunks of DMA'd frame, hardware would split RX'd
-frames into parts and we'd have to reconstruct them in software.
-This is done with USB due to the bulk size but with ath5k we
-already provide a good limit to hardware and this should not be
-happening.
+Fix kernel-doc warnings in mac80211.h:
 
-This is reported quite often and if it fills the logs then this
-needs to be addressed and to avoid spurious reports.
+Warning(include/net/mac80211.h:838): No description found for parameter 'ap_addr'
+Warning(include/net/mac80211.h:1726): No description found for parameter 'get_survey'
 
-Cc: stable@kernel.org
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
 ---
- drivers/net/wireless/ath/ath5k/base.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+ include/net/mac80211.h |    3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 3cf35c4..9c27623 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1932,12 +1932,6 @@ ath5k_tasklet_rx(unsigned long data)
- 
- 		sc->stats.rx_all_count++;
- 
--		if (unlikely(rs.rs_more)) {
--			ATH5K_WARN(sc, "unsupported jumbo\n");
--			sc->stats.rxerr_jumbo++;
--			goto next;
--		}
--
- 		if (unlikely(rs.rs_status)) {
- 			if (rs.rs_status & AR5K_RXERR_CRC)
- 				sc->stats.rxerr_crc++;
-@@ -1977,6 +1971,12 @@ ath5k_tasklet_rx(unsigned long data)
- 					sc->opmode != NL80211_IFTYPE_MONITOR)
- 				goto next;
- 		}
-+
-+		if (unlikely(rs.rs_more)) {
-+			sc->stats.rxerr_jumbo++;
-+			goto next;
-+
-+		}
- accept:
- 		next_skb = ath5k_rx_skb_alloc(sc, &next_skb_addr);
- 
--- 
-1.6.3.3
-
+--- linux-2.6.34-git6.orig/include/net/mac80211.h
++++ linux-2.6.34-git6/include/net/mac80211.h
+@@ -815,6 +815,7 @@ enum ieee80211_key_flags {
+  *	encrypted in hardware.
+  * @alg: The key algorithm.
+  * @flags: key flags, see &enum ieee80211_key_flags.
++ * @ap_addr: AP's MAC address
+  * @keyidx: the key index (0-3)
+  * @keylen: key material length
+  * @key: key material. For ALG_TKIP the key is encoded as a 256-bit (32 byte)
+@@ -1638,6 +1639,8 @@ enum ieee80211_ampdu_mlme_action {
+  *	Returns a negative error code on failure.
+  *	The callback must be atomic.
+  *
++ * @get_survey: Return per-channel survey information
++ *
+  * @rfkill_poll: Poll rfkill hardware state. If you need this, you also
+  *	need to set wiphy->rfkill_poll to %true before registration,
+  *	and need to call wiphy_rfkill_set_hw_state() in the callback.
