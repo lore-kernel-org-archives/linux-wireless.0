@@ -1,62 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:64083 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753689Ab0EZKtc (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:54917 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754126Ab0EUU2i convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 May 2010 06:49:32 -0400
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Subject: [PATCH] cfg80211: Removed warning from cfg80211_send_rx_auth
-Date: Wed, 26 May 2010 13:43:45 +0300
-Message-Id: <1274870625-19712-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	Fri, 21 May 2010 16:28:38 -0400
+Received: by pwi5 with SMTP id 5so608082pwi.19
+        for <linux-wireless@vger.kernel.org>; Fri, 21 May 2010 13:28:38 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4BF6DAAE.6090903@openwrt.org>
+References: <20100519012528.22206.77550.stgit@tt-desk> <AANLkTilk0CIkmmIsBzPwchd6EBIVavw9R1amiSgCZOrx@mail.gmail.com>
+	<AANLkTinPVSkrawZ4OCjp6vb-f4bA7nSrmnXjRDi-Pvvm@mail.gmail.com>
+	<201005211059.34081.br1@einfach.org> <20100521171102.GA27736@tux>
+	<4BF6DAAE.6090903@openwrt.org>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 21 May 2010 13:28:18 -0700
+Message-ID: <AANLkTilLA1lz2qiredIcYyD1gGoxRUFGmL7T9m0buRwL@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH v2 13/20] cfg80211: Add nl80211 antenna
+	configuration
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Bruno Randolf <br1@einfach.org>,
+	David Quan <David.Quan@atheros.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Sam Ng <Sam.Ng@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In cfg80211_send_rx_auth function there was a warning if bssid of the received
-authentication message was not found from the authtry_bsses table.
+On Fri, May 21, 2010 at 12:10 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> On 2010-05-21 7:11 PM, Luis R. Rodriguez wrote:
+>> On Thu, May 20, 2010 at 06:59:33PM -0700, Bruno Randolf wrote:
+>>> so from my point of view this is not very different from what we can support
+>>> with the API i suggested. for RX it seems to be 100% equivalent.
+>>
+>> Well I agree, the API *supports it* but I want *clean, clear and consistant
+>> API*. And it just seems cleaner to separate the two.
+>>
+>>> the main difference as i see it is that with 802.11n you transmit on more than
+>>> one antenna, while with 'legacy' we can only transmit on one antenna at a
+>>> time.
+>>
+>> True, but note how the fact that you transmit over two antennas actually
+>> has regulatory implications. Now, ath9k handles this within ath9k_hw already
+>> but this itself seems like a worthy reason for this API to be separated.
+>> While I think it is great for ath9k_hw to do this, wouldn't it be nice
+>> if we can eventually instead expose the gain by using different chains
+>> at the same time and do the regulatory calculation for all devices within
+>> cfg80211?
+>>
+>>> actually i have to admit that on legacy "antenna set tx 3 (b11)" (select two
+>>> antennas for transmit) does not make much sense. i have defined it before as
+>>> "use diversity" but what about a different definition: like "bitmap of
+>>> antennas/chains to TRANSMIT".
+>>
+>> Right, and while that *works*, I think it would be clearer to just use a
+>> clear "diveristy" knob.
+> Splitting it by mode of operation (11n vs legacy) does not work, because
+> in AP mode you're doing both at the same time and there is an overlap in
+> both settings.
 
-During the beginning of the authentication there is a small time window, when
-handling of the received deauthentication message can cause information
-for the access point to be removed from the authtry_bsses table before
-authentication response is received. This triggers the warning. This has
-been seen happening with several access points occasionally. At least
-one of those (Asus) has been seen to send spurious deauthentication
-messages after deauthentication. Possibly this warning could be triggered also
-by forged deauthentication messages sent at a correct time.
+Ah, hm, good point.
 
-Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
----
- net/wireless/mlme.c |    4 ----
- 1 files changed, 0 insertions(+), 4 deletions(-)
+> I think that Bruno's suggestion of keeping them as one setting makes
+> sense. About the regulatory concerns: where in the code does the
+> chainmask currently affect the regulatory constraints?
 
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 0855f0d..2565882 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -23,7 +23,6 @@ void cfg80211_send_rx_auth(struct net_device *dev, const u8 *buf, size_t len)
- 	u8 *bssid = mgmt->bssid;
- 	int i;
- 	u16 status = le16_to_cpu(mgmt->u.auth.status_code);
--	bool done = false;
- 
- 	wdev_lock(wdev);
- 
-@@ -38,13 +37,10 @@ void cfg80211_send_rx_auth(struct net_device *dev, const u8 *buf, size_t len)
- 				cfg80211_put_bss(&wdev->authtry_bsses[i]->pub);
- 			}
- 			wdev->authtry_bsses[i] = NULL;
--			done = true;
- 			break;
- 		}
- 	}
- 
--	WARN_ON(!done);
--
- 	nl80211_send_rx_auth(rdev, dev, buf, len, GFP_KERNEL);
- 	cfg80211_sme_rx_auth(dev, buf, len);
- 
--- 
-1.5.6.3
+I'm not sure, this was based on a quick review with David, I'll have
+to review and poke at it but IIRC this was related to the chainmask
+gains and I think we may get that from the EEPROM.
 
+>>> so for 802.11n that would allow you to select  multiple trasmit chains.
+>>
+>> Instead of leaving the API to be interpreted by the mode of operation
+>> I think it would be much cleaner to just make your desires clearer and
+>> have the API define it well, and let the driver reject/accept it.
+>>
+>>> on legacy you are only allowed to select one antenna
+>>> in the bitmap. if it is set to "0" (or a separate flag) this could enable
+>>> "follow RX antenna diversity" on legacy.
+>>
+>> Sure that is one way, but it seems cleaner and easier for legacy purposes
+>> to just define an API that only fits legacy.
+>>
+>>> most of the other things you mention (need a reset/reassociate, regulatory
+>>> concerns...) are driver implementation issues, which can be dealt with in the
+>>> driver.
+>>
+>> Well so some of these things *could* be handled in mac80211 as well. For
+>> example, we may want to just dissociate upon a tx/rx chain setting change
+>> for all devices, but not for legacy. The regulatory stuff is another thing
+>> which could eventually be made more generic accross the board.
+>>
+>> Additionally, suppose you write an iw-tweak-gui thingy, and you want to
+>> provide expose tx/rx chainmask settings. Since some cards do not support
+>> some chainmask settings we may want to allow for a query of unsupported
+>> chainmasks and that way the GUI application could just grey-out the
+>> unsupported chainmask settings instead of letting the user figure out
+>> by trial and error that they are indeed not supported.
+> The API should just provide a bitmask of possible chains/antennas to
+> user space, which will be used as a mask for any values that the user
+> space sets. That's easy for a GUI utility to process
+
+The bitmask of possible chains/antennas makes more sense, we could
+just add it to the general phy info request, it would just be a matter
+of piggy backing a new attribute back.
+
+  Luis
