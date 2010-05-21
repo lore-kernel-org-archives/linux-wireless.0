@@ -1,38 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:40365 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756665Ab0E0TUS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 May 2010 15:20:18 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1OHicn-0006DL-F9
-	for linux-wireless@vger.kernel.org; Thu, 27 May 2010 21:20:13 +0200
-Received: from g225011133.adsl.alicedsl.de ([92.225.11.133])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 27 May 2010 21:20:13 +0200
-Received: from pommnitz by g225011133.adsl.alicedsl.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 27 May 2010 21:20:13 +0200
-To: linux-wireless@vger.kernel.org
-From: jpo <pommnitz@yahoo.com>
-Subject: Re: Regulatory problem with multiple wireless interfaces
-Date: Thu, 27 May 2010 19:20:04 +0000 (UTC)
-Message-ID: <loom.20100527T211453-173@post.gmane.org>
-References: <201005271810.55211.8an@praha12.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mail-px0-f174.google.com ([209.85.212.174]:60531 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754212Ab0EUASx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 20 May 2010 20:18:53 -0400
+Received: by pxi18 with SMTP id 18so178094pxi.19
+        for <linux-wireless@vger.kernel.org>; Thu, 20 May 2010 17:18:53 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1274181228.3762.78.camel@jlt3.sipsolutions.net>
+References: <19442.25652.916516.143181@gargle.gargle.HOWL>
+	<1274181228.3762.78.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 20 May 2010 17:18:33 -0700
+Message-ID: <AANLkTinJtLScvxYrXG3CpziTMuKSlySd1SJquLibOntQ@mail.gmail.com>
+Subject: Re: [PATCH] ath9k_htc: Use proper station add/remove callbacks
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Sujith <Sujith.Manoharan@atheros.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lukáš Turek <8an@...> writes:
-> What should happen if all cards have different regdomains?
+On Tue, May 18, 2010 at 4:13 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2010-05-18 at 15:26 +0530, Sujith wrote:
+>> sta_add/sta_remove are the callbacks that can sleep.
+>> Use them instead of sta_notify.
+>>
+>> Sigh. What a dumb fsckup.
+>
+> Not really your fault? The sleeping ones are quite new.
 
-This is a problem I have come across, too. We have the case where we have
-an amplifier attached to one WLAN card in a system with two cards. Because
-of the amplifier the cards are governed by different rules (available
-channels, max output power,...).
+John, this fix might be a 2.6.35 fix although not noted as such.
 
-Regards
-  Joerg
-
+  Luis
