@@ -1,97 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:24466 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752602Ab0ERKGF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 May 2010 06:06:05 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 18 May 2010 03:06:05 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57612 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758628Ab0EUSaU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 May 2010 14:30:20 -0400
+Date: Fri, 21 May 2010 14:23:25 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Subject: Re: [PATCH 0/2] iwlwifi fixes for 2.6.34
+Message-ID: <20100521182325.GA2495@tuxdriver.com>
+References: <1273787385-9248-1-git-send-email-reinette.chatre@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19442.25652.916516.143181@gargle.gargle.HOWL>
-Date: Tue, 18 May 2010 15:26:04 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath9k_htc: Use proper station add/remove callbacks
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1273787385-9248-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-sta_add/sta_remove are the callbacks that can sleep.
-Use them instead of sta_notify.
+On Thu, May 13, 2010 at 02:49:43PM -0700, Reinette Chatre wrote:
+> We include two late fixes hoping to make it into 2.6.34.
+> 
+> "iwlwifi: fix internal scan race" fixes a kernel crash caused by
+> accessing a NULL pointer. More can be read in
+> https://bugzilla.kernel.org/show_bug.cgi?id=15824
+> 
+> "iwlagn: work around rate scaling reset delay" is already in
+> wireless-next-2.6 but has since been shown to be an issue in 2.6.34 also.
+> This fixes spurious firmware restarts that has been documented in
+> http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2173 , but it is the
+> community report tracked in
+> https://bugzilla.kernel.org/show_bug.cgi?id=15782 that prompted us sending
+> this fix to wireless-2.6 also.
+> 
+> These patches are also available from wireless-2.6 branch on
+> git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+> 
+> Reinette Chatre (2):
+>   iwlwifi: fix internal scan race
+>   iwlagn: work around rate scaling reset delay
 
-Sigh. What a dumb fsckup.
+Since the one of these is already in linux-2.6 now, I'll just apply
+the other one directly rather than pulling.  I hope that isn't too
+inconvenient!
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |   39 ++++++++++++++-----------
- 1 files changed, 22 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 6d46423..340d281 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1438,30 +1438,34 @@ static void ath9k_htc_configure_filter(struct ieee80211_hw *hw,
- 	mutex_unlock(&priv->mutex);
- }
- 
--static void ath9k_htc_sta_notify(struct ieee80211_hw *hw,
--				 struct ieee80211_vif *vif,
--				 enum sta_notify_cmd cmd,
--				 struct ieee80211_sta *sta)
-+static int ath9k_htc_sta_add(struct ieee80211_hw *hw,
-+			     struct ieee80211_vif *vif,
-+			     struct ieee80211_sta *sta)
- {
- 	struct ath9k_htc_priv *priv = hw->priv;
- 	int ret;
- 
- 	mutex_lock(&priv->mutex);
-+	ret = ath9k_htc_add_station(priv, vif, sta);
-+	if (!ret)
-+		ath9k_htc_init_rate(priv, sta);
-+	mutex_unlock(&priv->mutex);
- 
--	switch (cmd) {
--	case STA_NOTIFY_ADD:
--		ret = ath9k_htc_add_station(priv, vif, sta);
--		if (!ret)
--			ath9k_htc_init_rate(priv, sta);
--		break;
--	case STA_NOTIFY_REMOVE:
--		ath9k_htc_remove_station(priv, vif, sta);
--		break;
--	default:
--		break;
--	}
-+	return ret;
-+}
- 
-+static int ath9k_htc_sta_remove(struct ieee80211_hw *hw,
-+				struct ieee80211_vif *vif,
-+				struct ieee80211_sta *sta)
-+{
-+	struct ath9k_htc_priv *priv = hw->priv;
-+	int ret;
-+
-+	mutex_lock(&priv->mutex);
-+	ret = ath9k_htc_remove_station(priv, vif, sta);
- 	mutex_unlock(&priv->mutex);
-+
-+	return ret;
- }
- 
- static int ath9k_htc_conf_tx(struct ieee80211_hw *hw, u16 queue,
-@@ -1756,7 +1760,8 @@ struct ieee80211_ops ath9k_htc_ops = {
- 	.remove_interface   = ath9k_htc_remove_interface,
- 	.config             = ath9k_htc_config,
- 	.configure_filter   = ath9k_htc_configure_filter,
--	.sta_notify         = ath9k_htc_sta_notify,
-+	.sta_add            = ath9k_htc_sta_add,
-+	.sta_remove         = ath9k_htc_sta_remove,
- 	.conf_tx            = ath9k_htc_conf_tx,
- 	.bss_info_changed   = ath9k_htc_bss_info_changed,
- 	.set_key            = ath9k_htc_set_key,
+John
 -- 
-1.7.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
