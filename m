@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f217.google.com ([209.85.217.217]:49044 "EHLO
-	mail-gx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751302Ab0EQGjM convert rfc822-to-8bit (ORCPT
+Received: from cpoproxy2-pub.bluehost.com ([67.222.39.38]:35359 "HELO
+	outbound-mail-158.bluehost.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752645Ab0EUVfQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 May 2010 02:39:12 -0400
-Received: by gxk9 with SMTP id 9so3023507gxk.8
-        for <linux-wireless@vger.kernel.org>; Sun, 16 May 2010 23:39:11 -0700 (PDT)
+	Fri, 21 May 2010 17:35:16 -0400
+Message-ID: <4BF6FC91.9060109@dlasys.net>
+Date: Fri, 21 May 2010 17:35:13 -0400
+From: "David H. Lynch Jr." <dhlii@dlasys.net>
+Reply-To: dhlii@dlasys.net
 MIME-Version: 1.0
-In-Reply-To: <AANLkTim1i3oB10rydr8ezyCjher1yctqKcVt9Ct1Bze0@mail.gmail.com>
-References: <AANLkTimltZSc8dJPPBCibcGDaOPcQRU_5kSbenIAdi_6@mail.gmail.com>
-	<AANLkTim1i3oB10rydr8ezyCjher1yctqKcVt9Ct1Bze0@mail.gmail.com>
-From: Weedy <weedy2887@gmail.com>
-Date: Mon, 17 May 2010 02:38:51 -0400
-Message-ID: <AANLkTinYZ-_DkNZweDFfdf_DdDJGMNhgQwppDnVo_Duj@mail.gmail.com>
-Subject: Re: ath5k past 2.6.30 breaks monitor mode (and thus the aircrack
-	suite)
-To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: carl9170 1.0.6 carl9170_tx_superdesc
+References: <4BDC001F.9050202@dlasys.net> <4BDD2E05.40203@free.fr> <4BDD5EB3.7020802@dlasys.net> <201005021452.01101.chunkeey@googlemail.com>
+In-Reply-To: <201005021452.01101.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/5/16 Gábor Stefanik <netrolller.3d@gmail.com>:
-> On Sun, May 16, 2010 at 10:41 PM, Weedy <weedy2887@gmail.com> wrote:
->> Running airodump on ubuntus 2.6.30 kernel works as expected. The
->> 2.6.32 kernel shipped in lucid never sees data packets.
->>
->> I have narrowed it down to channel hopping. modprobing the driver and
->> starting mon0 on a fixed channel works as expected, but allowing
->> airodump to channel hop breaks the interface until the driver is
->> reset.
->>
->> I wrote a script to download and build compat wireless starting from
->> 2009-01-01 (granted everything fails until half way through october),
->> but every version that is successfully installed also show the same
->> bug.
->>
->> Further instructions welcome.
->
-> Try checking out linux-2.6, and doing a bisect between 2.6.30 and 2.6.32.
+	I need to track a new value for each tx frame only in the firmware.
+	It appears I should be adding it to carl9170_tx_superdesc. But that 
+structure seems to be used on both the Linux and firmware side, and I 
+have not been able to successfully add to it without breaking something 
+elsewhere either in the firmware or Linux driver or between them.
+	Alternately I can create a private array to hold my data, but then I 
+need to be able to find items in it using a carl9170_tx_superframe 
+pointer. I am gathering that the cookie and queue number constitute a 
+unique identifier, but that seems like alot of work to avoid adding a 
+u16 to carl9170_tx_superdesc.
+	Any other ideas about tracking a u16 value for each tx frame only on 
+the firmware side without substantial complexity ?
 
-Do I have to check out the entire kernel? even with scripting my
-netbook would take forever to do this.
+
+
+
+
+-- 
+Dave Lynch 					  	    DLA Systems
+Software Development:  				         Embedded Linux
+717.587.7774 	       dhlii@dlasys.net 	  http://www.dlasys.net
+Over 25 years' experience in platforms, languages, and technologies 
+toonumerous to list.
+
+"Any intelligent fool can make things bigger and more complex... It 
+takes a touch of genius - and a lot of courage to move in the opposite 
+direction."
+Albert Einstein
