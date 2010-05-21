@@ -1,47 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtagate6.de.ibm.com ([195.212.17.166]:38251 "EHLO
-	mtagate6.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751894Ab0EKPuT (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48955 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758203Ab0EUScm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 11:50:19 -0400
-From: Christian Borntraeger <borntraeger@de.ibm.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Subject: Re: kernel BUG in iwl-agn-rs.c:2076, WAS: iwlagn + some accesspoint == hardlock
-Date: Tue, 11 May 2010 17:50:08 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"NilsRadtkelkml@think-future.de" <NilsRadtkelkml@think-future.de>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <20100503191756.GA3479@localhost> <201005061114.35480.borntraeger@de.ibm.com> <1273163328.2226.2530.camel@rchatre-DESK>
-In-Reply-To: <1273163328.2226.2530.camel@rchatre-DESK>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201005111750.08533.borntraeger@de.ibm.com>
+	Fri, 21 May 2010 14:32:42 -0400
+Subject: Re: [PATCH] wireless: fix sta_info.h kernel-doc warnings
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20100521112841.86d6757c.randy.dunlap@oracle.com>
+References: <20100521112841.86d6757c.randy.dunlap@oracle.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 21 May 2010 20:32:39 +0200
+Message-ID: <1274466759.4446.3.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Donnerstag 06 Mai 2010 18:28:48 schrieb reinette chatre:
-> Below seven iwlwifi patches were added after rc4. If you are unable to
-> bisect ... perhaps you can run a while by reverting more and more from
-> this list?
+On Fri, 2010-05-21 at 11:28 -0700, Randy Dunlap wrote:
+> From: Randy Dunlap <randy.dunlap@oracle.com>
 > 
-> f2fa1b015e9c199e45c836c769d94db595150731 iwlwifi: correct 6000 EEPROM regulatory address
-> 88be026490ed89c2ffead81a52531fbac5507e01 iwlwifi: fix scan races
-> 8b9fce77737ae9983f61ec56cd53f52fb738b2c7 iwlwifi: work around bogus active chains detection
-> ece6444c2fe80dab679beb5f0d58b091f1933b00 iwlwifi: need check for valid qos packet before free
-> de0f60ea94e132c858caa64a44b2012e1e8580b0 iwlwifi: avoid Tx queue memory allocation in interface down
-> 04f2dec1c3d375c4072613880f28f43b66524876 iwlwifi: use consistent table for tx data collect
-> dd48744964296b5713032ea1d66eb9e3d990e287 iwlwifi: fix DMA allocation warnings
+> Fix sta_info.h kernel-doc warnings:
+> 
+> Warning(net/mac80211/sta_info.h:164): No description found for parameter 'tid_active_rx[STA_TID_NUM]'
+> Warning(net/mac80211/sta_info.h:164): Excess struct/union/enum/typedef member 'tid_state_rx' description in 'sta_ampdu_mlme'
+> 
+> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
 
-Just to give you some feedback. Sometimes it takes a while until it crashes.
-My hand made bisect is currently at two remaining patches:
+Thanks, and apologies for breaking this again.
 
-de0f60ea94e132c858caa64a44b2012e1e8580b0
-8b9fce77737ae9983f61ec56cd53f52fb738b2c7
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-reverting both solves my hard lockup. I will try to isolate the "bad" patch
-but this takes some more days since I wont be in the "hazardous environment"
-this week.
+> Cc: Johannes Berg <johannes@sipsolutions.net>
+> ---
+>  net/mac80211/sta_info.h |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> --- linux-2.6.34-git6.orig/net/mac80211/sta_info.h
+> +++ linux-2.6.34-git6/net/mac80211/sta_info.h
+> @@ -145,7 +145,7 @@ enum plink_state {
+>  /**
+>   * struct sta_ampdu_mlme - STA aggregation information.
+>   *
+> - * @tid_state_rx: TID's state in Rx session state machine.
+> + * @tid_active_rx: TID's state in Rx session state machine.
+>   * @tid_rx: aggregation info for Rx per TID
+>   * @tid_state_tx: TID's state in Tx session state machine.
+>   * @tid_tx: aggregation info for Tx per TID
+> 
 
-Christian
+
