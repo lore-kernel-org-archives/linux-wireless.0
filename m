@@ -1,37 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:63377 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751950Ab0EMXBt (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:53382 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934024Ab0EUSFP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 19:01:49 -0400
+	Fri, 21 May 2010 14:05:15 -0400
+Received: by wyb29 with SMTP id 29so82317wyb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 21 May 2010 11:05:12 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4BEC7A84.3010503@gmail.com>
-References: <4BEC7A84.3010503@gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 13 May 2010 16:01:29 -0700
-Message-ID: <AANLkTim7B5z76zJ33by6SGMgSy1gZF6qiwhEhAQ3NUtG@mail.gmail.com>
-Subject: Re: ath9k: BUG kmalloc-8192: Poison overwritten
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1274387415.1422.33.camel@localhost.localdomain>
+References: <AANLkTinMa92irnw8fH8PPO6egbAVDFWBg4pCPp3dInwd@mail.gmail.com>
+	 <1274387415.1422.33.camel@localhost.localdomain>
+Date: Fri, 21 May 2010 14:05:12 -0400
+Message-ID: <AANLkTilXnak_JDwWcx7ZqwNGEax89_Qj1YcFIH5VtecY@mail.gmail.com>
+Subject: Re: How the mac80211 handle "\0" essid?
+From: leo liang <leoliang9@gmail.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 13, 2010 at 3:17 PM, Justin P. Mattock
-<justinmattock@gmail.com> wrote:
-> not sure what this is, but while at a convention
-> I was trying to access the internet and(below is
-> full dmesg) this showed up.
+On Thu, May 20, 2010 at 4:30 PM, Dan Williams <dcbw@redhat.com> wrote:
+> On Thu, 2010-05-20 at 15:40 -0400, leo liang wrote:
+>> Hi,
+>>
+>> Does any one know that if the application send "\0" as essid to
+>> mac80211, how it handle this case?
 >
-> After receiving this, I sat and tried to re-create
-> my steps to reproduce but had no luck(was even going
-> todo a bisect n the spot if I could re-create).
+> What are you trying to do?  Are you trying to work with a hidden AP, or
+> do something else?
 
-OK this stuff is hard to reproduce it seems.. you have an Atheros
-AR5418 MAC/BB Rev:2 AR5133 RF Rev:81, what kconfig option do you use
-to get the poison stuff? I am just surprised we haven't seen it
-ourselves yet. Let me make sure all of us get this kconfig option
-enabled.
+I want to hide the associated AP name.  Or disassociate and do not let
+the interface connect to any AP.
+>
+> An SSID is simply a 32-byte array; the protocol and the stack don't care
+> what's in that array.  So while you can't use command-line tools like
+> 'iwconfig' to send an SSID containing a \0, you can use netlink or
+> wpa_supplicant's nl80211 driver to do so.
 
-  Luis
+I checked "iwconfig" source code, if you run "iwconfig wlan0 essid
+off", it will set the first char as "\0".
+
+>
+> But in the end, if you're trying to associate with an AP that has an
+> SSID of only '\0', that AP is likely broken or trying to hide it's SSID,
+> and you should be using the real SSID of that AP instead of '\0'.
+>
+> Dan
+>
+>
+>
