@@ -1,62 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:39137 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757179Ab0EZRiE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 May 2010 13:38:04 -0400
-Received: by pxi18 with SMTP id 18so2631274pxi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 10:38:02 -0700 (PDT)
-Message-ID: <4BFD5C89.8000308@gmail.com>
-Date: Wed, 26 May 2010 10:38:17 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+Received: from mx2.digadd.de ([195.47.195.236]:50388 "EHLO mx2.digadd.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752893Ab0EVIzP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 May 2010 04:55:15 -0400
+Received: from [192.168.3.128]
+	by mx2.digadd.de with esmtpsa (TLSv1:CAMELLIA256-SHA:256)
+	(Exim 4.69)
+	(envelope-from <schmidt@digadd.de>)
+	id 1OFk5t-0003TM-IB
+	for linux-wireless@vger.kernel.org; Sat, 22 May 2010 10:30:05 +0200
+Message-ID: <4BF795EB.9070902@digadd.de>
+Date: Sat, 22 May 2010 10:29:31 +0200
+From: "Christian P. Schmidt" <schmidt@digadd.de>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, mcgrof@gmail.com
-Subject: Re: [PATCH]wireless:ath9k Disable leds for Apple products.
-References: <1274894056-2866-1-git-send-email-justinmattock@gmail.com> <1274894056-2866-2-git-send-email-justinmattock@gmail.com> <20100526171844.GB5823@tuxdriver.com>
-In-Reply-To: <20100526171844.GB5823@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: linux-wireless@vger.kernel.org
+Subject: Problems connectring to an AP with Acer Aspire Revo
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/26/2010 10:18 AM, John W. Linville wrote:
-> On Wed, May 26, 2010 at 10:14:16AM -0700, Justin P. Mattock wrote:
->    
->> Disable the leds on ath9k for Apple products, since
->> there is no leds on any of there machines(or non that I can find!!).
->>
->>   Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
->>
->>      
->    
->>   void ath_init_leds(struct ath_softc *sc)
->>   {
->>   	char *trigger;
->>   	int ret;
->>
->> +	/* Apple has no leds lights for their wireless.  */
->> +	if (dmi_check_system(dmi_system_table)>  0)
->> +		return -ENODEV;
->> +	else
->> +
->>   	if (AR_SREV_9287(sc->sc_ah))
->>   		sc->sc_ah->led_pin = ATH_LED_PIN_9287;
->>   	else
->>      
-> Surely we don't need the 'else'.
->
-> Does enabling the LEDs on these systems cause any problems?
->
-> John
->    
-I picked up the idea, from this patch:
-http://kerneltrap.org/mailarchive/linux-kernel/2010/1/20/4530535
-while looking into a bug for ath9k(thinking maybe leds
-are causing something, which want  the case)
+Hi everyone,
 
-so Id have to say I don't think the leds cause issue's,
-if anything just a wasted symlink, call, or whatever
-in /sys/class/leds/*
+I do have an... interesting... problem with my HTPC, an Intel Atom 230 +
+Nvidia ION powered Acer Aspire Revo box.
 
-Justin P. mattock
+By default it ships with an Atheros Mini PCI Express card. However,
+since my experience with this card isn't the best (and it did not
+connect to my access point with wither the Madwifi-NG or the ath9k
+driver) I replaced it with an Intel WiFi Link 5100.
 
+However, even with the new card, I could not make any kernel from 2.6.32
+to 2.6.34 connect to any of my access points. Those are a Telekom DSL
+router and a Juniper NetScreen 5GT Wireless. I tried WEP64, WPA, WPA2,
+and even no encryption at all. My laptop with an Intel WiFi Link 5300
+has no problems whatsoever in any of the modes.
+
+The card is working for sure, if I put the 5100 in my laptop it works.
+Also I feel it's not related to configuration or software - I took my
+laptop's WiFi Link 5300 and the laptop HDD, and booted the HTPC up with
+those - no connection to the AP possible.
+
+I'm a bit at a loss here as what to try more. My access point doesn't
+even see a packet, but there's no rfkill switch anywhere (it's a
+stationary machine anyway).
+
+Regards,
+Christiam
