@@ -1,104 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:64864 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754531Ab0ENB0J (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 21:26:09 -0400
-Message-ID: <4BECA6AC.9060609@gmail.com>
-Date: Thu, 13 May 2010 18:26:04 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+Received: from purkki.adurom.net ([80.68.90.206]:52062 "EHLO purkki.valot.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755809Ab0EVTIu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 May 2010 15:08:50 -0400
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath9k: Fix rx of mcast/bcast frames in PS mode with auto sleep
+References: <1274229062-10412-1-git-send-email-vasanth@atheros.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Sat, 22 May 2010 22:08:48 +0300
+In-Reply-To: <1274229062-10412-1-git-send-email-vasanth@atheros.com> (Vasanthakumar Thiagarajan's message of "Tue\, 18 May 2010 17\:31\:02 -0700")
+Message-ID: <8739xjiwjj.fsf@purkki.valot.fi>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: Bruno Randolf <br1@einfach.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: ath9k: BUG kmalloc-8192: Poison overwritten
-References: <4BEC7A84.3010503@gmail.com> <AANLkTinKoMxdkPYQA_AblpByL6zAiAP5hv2M3Jn2R3hM@mail.gmail.com> <4BEC9E6B.30809@gmail.com> <201005141008.20667.br1@einfach.org> <4BECA3AE.4070607@gmail.com> <20100514012314.GA2170@tux>
-In-Reply-To: <20100514012314.GA2170@tux>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/13/10 18:23, Luis R. Rodriguez wrote:
-> On Thu, May 13, 2010 at 06:13:18PM -0700, Justin P. Mattock wrote:
->> On 05/13/10 18:08, Bruno Randolf wrote:
->>> On Friday 14 May 2010 09:50:51 Justin P. Mattock wrote:
->>>> On 05/13/10 17:28, Luis R. Rodriguez wrote:
->>>>> On Thu, May 13, 2010 at 5:21 PM, Justin P. Mattock
->>>>>
->>>>> <justinmattock@gmail.com>    wrote:
->>>>>> On 05/13/10 16:01, Luis R. Rodriguez wrote:
->>>>>>> On Thu, May 13, 2010 at 3:17 PM, Justin P. Mattock
->>>>>>>
->>>>>>> <justinmattock@gmail.com>      wrote:
->>>>>>>> not sure what this is, but while at a convention
->>>>>>>> I was trying to access the internet and(below is
->>>>>>>> full dmesg) this showed up.
->>>>>>>>
->>>>>>>> After receiving this, I sat and tried to re-create
->>>>>>>> my steps to reproduce but had no luck(was even going
->>>>>>>> todo a bisect n the spot if I could re-create).
->>>>>>>
->>>>>>> OK this stuff is hard to reproduce it seems.. you have an Atheros
->>>>>>> AR5418 MAC/BB Rev:2 AR5133 RF Rev:81, what kconfig option do you use
->>>>>>> to get the poison stuff? I am just surprised we haven't seen it
->>>>>>> ourselves yet. Let me make sure all of us get this kconfig option
->>>>>>> enabled.
->>>>>>>
->>>>>>>      Luis
->>>>>>
->>>>>> CONFIG_ATH_COMMON=m
->>>>>> # CONFIG_ATH_DEBUG is not set
->>>>>> CONFIG_ATH5K=m
->>>>>> # CONFIG_ATH5K_DEBUG is not set
->>>>>> CONFIG_ATH9K_HW=m
->>>>>> CONFIG_ATH9K_COMMON=m
->>>>>> CONFIG_ATH9K=m
->>>>>> # CONFIG_ATH9K_DEBUGFS is not set
->>>>>>
->>>>>> if you need my .config let me know.
->>>>>> (I can try again reproducing, but man
->>>>>> just doesn't easily fire off).
->>>>>
->>>>> Oh I mean the config options to enable the poison rant.
->>>>>
->>>>>      Luis
->>>>
->>>> shoot.. not sure how to grep for the right info
->>>> in the .config for you, heres what grepping for COFIG_DEBUG
->>>> looks like:
->>>> CONFIG_DEBUG_FS=y
->>>> CONFIG_DEBUG_KERNEL=y
->>>> CONFIG_DEBUG_RT_MUTEXES=y
->>>> CONFIG_DEBUG_PI_LIST=y
->>>> CONFIG_DEBUG_SPINLOCK=y
->>>> CONFIG_DEBUG_MUTEXES=y
->>>> CONFIG_DEBUG_BUGVERBOSE=y
->>>> CONFIG_DEBUG_MEMORY_INIT=y
->>>> CONFIG_DEBUG_STACKOVERFLOW=y
->>>
->>> oh, this reminds me of a similar report we had for ath5k:
->>>
->>> https://bugzilla.kernel.org/show_bug.cgi?id=15861
->>>
->>> the subject on this mailing list was "ath5k misbehaving affecting other kernel
->>> parts unrelated?"
->>>
->>> bruno
->>>
->>
->> Could be.. From what I remember
->> all I was doing was switching from
->> one wireless network to another
->> (then opening firefox to sign my life away).
->
-> Were you using network-manager? Or the supplicant manually?
->
->    Luis
->
+Vasanthakumar Thiagarajan <vasanth@atheros.com> writes:
 
-I've got wicd(1.5.9) manager
-running over here.
+> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 
-Justin P. Mattock
+Please describe more, this isn't very informative (if any). Especially
+try to answer in the commit log:
+
+o What was the original bug? How and why did it happen?
+o How was it visible to the user?
+o How does the fix actually fix the issue?
+o In what version was the bug introduced? This helps backporters.
+
+Powersave in 802.11 is very fragile and more information there is, the
+easier it is to handle the issues.
+
+> +#define ATH9K_CHECK_AUTO_SLEEP(__sc) \
+> +	(__sc->ps_enabled && \
+> +	(__sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_AUTOSLEEP))
+
+Like Andrew Morton says: use C instead of CPP. Meaning that this can
+be an inline function instead of a macro.
+
+-- 
+Kalle Valo
