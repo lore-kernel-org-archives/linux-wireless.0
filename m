@@ -1,54 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:40998 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754768Ab0EFAMP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 May 2010 20:12:15 -0400
-Received: by pwi5 with SMTP id 5so984990pwi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 05 May 2010 17:12:15 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:45648 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932376Ab0EVBTF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 May 2010 21:19:05 -0400
+Date: Fri, 21 May 2010 18:19:02 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Pavel Roskin <proski@gnu.org>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] compat-wireless: add linux-next-pending, crap patch
+ dirs and nagometer
+Message-ID: <20100522011902.GB2202@tux>
+References: <1274489059-1019-1-git-send-email-lrodriguez@atheros.com>
+ <1274490936.3439.14.camel@ct>
 MIME-Version: 1.0
-In-Reply-To: <4BE1BBD6.3030505@dlasys.net>
-References: <4BDC001F.9050202@dlasys.net> <4BDD2E05.40203@free.fr>
-	<4BDD5EB3.7020802@dlasys.net> <201005021452.01101.chunkeey@googlemail.com>
-	<4BE1BBD6.3030505@dlasys.net>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 5 May 2010 17:11:54 -0700
-Message-ID: <n2o43e72e891005051711i2e820ccdw2bd699bdfbe6a36f@mail.gmail.com>
-Subject: Re: carl9170 1.0.5.1
-To: dhlii@dlasys.net
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1274490936.3439.14.camel@ct>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 5, 2010 at 11:41 AM, David H. Lynch Jr. <dhlii@dlasys.net> wrote:
->    I am trying to build a kernel using the carl9170 driver/firmware.
->    I am not particular about what kernel or how so long as I can get it
-> running.
->
->    When I build out of the wireless-testing git tree (puled today)
-> 2.6.34-rc6
->    using my current systems .config I get a very quick error on boot about
-> PCI bridge windows.
->    googling the error indicates this is a know 2.6.34 problem and that there
-> are fixes in other 2.6.34 trees.
->    I have been unable to find the actual patches or I would just apply them
-> to wireless-testing.
->
->    Alternately, I tried to build out of the ubuntu-lucid git tree. 2.6.32
-> again with my existing .config.
->    I the carl9170 driver does not build. While I found patches at OpenWRT
-> that are supposed to allow building carl9170 with 2.6.33 or less,
->    the errors are unrelated to what is changed by those patches.
->
->    I have also tried using linux-source-2.6.32 pulled from cannonical via
-> apt for my install rather than the ubuntu-lucid git tree
->    with similar results.
+On Fri, May 21, 2010 at 06:15:36PM -0700, Pavel Roskin wrote:
+> On Fri, 2010-05-21 at 20:44 -0400, Luis R. Rodriguez wrote:
+> > Sometimes you have no other option but to carry around patches.
+> > This can happen for a variety of reasons. Ultimately testing of code
+> > cannot happen on the kernel maintainer's clock but on your own.
+> > 
+> > This expands the idea of the linux-next-cherry-pick patch directory
+> > on compat-wireless to also allow for patches to be merged which are
+> > posted to some mailing list but pending merge due to some reasons
+> > (merge window is a good example). It also adds a crap patch directory
+> > for those really nasty situations you can run into where you have
+> > no other option but to give someone a release with some delta even
+> > if the patch is not yet posted anywhere.
+> 
+> Please replace "crap" with some more descriptive name, like
+> "unpublished".  It's better to be friendly to users and express
+> frustration in a different way.
 
-You can build the driver with compat-wireless so that way you can keep
-your existing functional kernel and only backport the driver. We did
-this way back when we first started doing development on ath9k and it
-worked well.
+I'm using crap to keep focus on not-yet-merged-or-posted code, I refuse
+to be friendly to that type of code. I want the users to be frustrated
+about that code.
+
+> > +	printf "${RED}%10s${NORMAL} - Crap changes not yet posted\n" $2
+> > +	printf "${RED}%10s${NORMAL} - Crap additions not yet merged\n" $3
+> > +	printf "${RED}%10s${NORMAL} - Crap deletions not yet posted\n" $4
+> 
+> You want "not yet posted" in all cases.
+
+OK thanks, I'll fix.
+
+> "Crap deletions" may be offensive for Linux contributors whose code is
+> being deleted.  Besides, if patches are not posted, somebody still spent
+> time on making them.  Let's not discourage those who care.
+
+Sure.
 
   Luis
