@@ -1,92 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:37200 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751643Ab0ELBwT (ORCPT
+Received: from mail-qy0-f183.google.com ([209.85.221.183]:53974 "EHLO
+	mail-qy0-f183.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755773Ab0EVTS2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 21:52:19 -0400
-Received: by pxi5 with SMTP id 5so2613055pxi.19
-        for <linux-wireless@vger.kernel.org>; Tue, 11 May 2010 18:52:19 -0700 (PDT)
+	Sat, 22 May 2010 15:18:28 -0400
 MIME-Version: 1.0
-In-Reply-To: <201005121039.32882.br1@einfach.org>
-References: <20100511083121.28289.96180.stgit@tt-desk> <20100511083900.28289.43864.stgit@tt-desk>
-	<AANLkTilowwAyqLrIJ0_mlZxnqY-TqSHM3xdXkbO8aH6-@mail.gmail.com>
-	<201005121039.32882.br1@einfach.org>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 11 May 2010 18:51:59 -0700
-Message-ID: <AANLkTimOcEyrhJ6JZPM3JtZitPZxV5zD1yqVzjArtzxf@mail.gmail.com>
-Subject: Re: [RFC PATCH 1/2] mac80211: Add nl80211 antenna configuration
-To: Bruno Randolf <br1@einfach.org>
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, holgerschurig@gmail.com
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20100514133723.GA10351@basil.fritz.box>
+References: <20100514133723.GA10351@basil.fritz.box>
+Date: Sat, 22 May 2010 16:18:27 -0300
+Message-ID: <AANLkTilzIEPxROksx_WHjs3LlCChVk6mm1stBeLMOFku@mail.gmail.com>
+Subject: Re: RTL8185 mlme.c:341 warning and failure still in 2.6.34rc7
+From: Rogerio Luz Coelho <rogluz.news@gmail.com>
+To: Andi Kleen <andi@firstfloor.org>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	rjw@sisk.pl
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 11, 2010 at 6:39 PM, Bruno Randolf <br1@einfach.org> wrote:
-> On Wednesday 12 May 2010 03:14:30 Luis R. Rodriguez wrote:
->> Subject should be for cfg80211, not mac80211. In fact can you submit
->> the mac80211 stuff in a separate secondary patch? Some more comments
->> below.
+2010/5/14 Andi Kleen <andi@firstfloor.org>:
 >
-> ok.
+> [ccing Rafael because this seems to be a regression. Please add it to your list.]
 >
->> I think we should call this TX / RX chainmask given that with 802.11n
->> hardware this is what this is called.
+> When I boot my system with a RTL8185 the wireless doesn't come up at boot,
+> only when I manually restart it. Instead i get
 >
-> from the following discussion, i'll stick with antenna...
+> I reported this a few rc*s back, but haven't heard anything back and the
+> problem is still there.
 >
->> > The antenna configuration is defined as a bitmap of allowed antennas.
->> > This bitmap is 8 bit at the moment, each bit representing one antenna.
->>
->> If you use chainmask for this instead of 'antenna configuration' the
->> wording would be something like:
->>
->> The chainmask is defined as a bitmap of chain configurations used for
->> TX/RX. The bitmap allows for configuring up to up to 4 chains for both TX
->> and RX, 4 bits for each TX chain, 4 bits for each RX chain.
+> For me it's a serious problem when the wireless does not come up.
 >
-> actually we have 8 bit for TX and 8 bit for RX.
+> This didn't happen in .33.
 >
->> > If multiple
->> > antennas are selected, the driver may use diversity for receive and
->> > transmit.
->>
->> For 802.11n this is called "selection diversity" but typically just
->> referred to as "diversity", for legacy this is called "antenna
->> diversity". It may be good to elaborate how selection diversity or
->> antenna diversity might be enabled, ie, will this be another command,
->> or what. I think for legacy another command makes sense, and it may be
->> possible for us to use the same command for enabling selection
->> diversity, I am not sure if we can fine tune the diversity algorithm
->> at this time, I will have to review this and get back to you.
+> -Andi
 >
-> my idea was that if multiple antennas are selected in the bitmap this means
-> that "antenna diversity" will be enabled. for RX this is clear. for TX this is
-> a bit ambigous: it could mean "send on both antennas", which i believe is
-> impossible on legacy hardware, so it means "let HW diversity choose TX
-> antenna". for 802.11n - i think the TX part is different, because multiple TX
-> chains will mean "send on multiple antennas". but otherwise can't we think of
-> it as some form of advanced antenna diversity?
+> wlan0: authenticate with 00:1f:3f:1d:54:46 (try 1)
+> wlan0: authenticated
+> wlan0: associate with 00:1f:3f:1d:54:46 (try 1)
+> wlan0: associate with 00:1f:3f:1d:54:46 (try 2)
+> wlan0: associate with 00:1f:3f:1d:54:46 (try 3)
+> wlan0: association with 00:1f:3f:1d:54:46 timed out
+> ------------[ cut here ]------------
+> WARNING: at /home/lsrc/linux-2.6.34-rc7/net/wireless/mlme.c:341 cfg80211_send_assoc_timeout+0xff/0x117 [cfg80211]()
+> Hardware name: ...
+> Modules linked in:  ...
+> Pid: 3344, comm: phy0 Not tainted 2.6.34-rc7 #7
+> Call Trace:
+>  [<ffffffffa0072124>] ? cfg80211_send_assoc_timeout+0xff/0x117 [cfg80211]
+>  [<ffffffff8103a4f0>] warn_slowpath_common+0x7c/0xa9
+>  [<ffffffff8103a531>] warn_slowpath_null+0x14/0x16
+>  [<ffffffffa0072124>] cfg80211_send_assoc_timeout+0xff/0x117 [cfg80211]
+>  [<ffffffffa00e6393>] ieee80211_assoc_done+0x74/0xa9 [mac80211]
+>  [<ffffffffa00e85f0>] ieee80211_work_work+0xe4c/0xe8d [mac80211]
+>  [<ffffffff81033cbe>] ? finish_task_switch+0x42/0xab
+>  [<ffffffff810535d7>] ? prepare_to_wait+0x6e/0x7a
+>  [<ffffffff8104f832>] worker_thread+0x192/0x227
+>  [<ffffffffa00e77a4>] ? ieee80211_work_work+0x0/0xe8d [mac80211]
+>  [<ffffffff81053342>] ? autoremove_wake_function+0x0/0x3d
+>  [<ffffffff8104f6a0>] ? worker_thread+0x0/0x227
+>  [<ffffffff81052efc>] kthread+0x82/0x8a
+>  [<ffffffff81003954>] kernel_thread_helper+0x4/0x10
+>  [<ffffffff81052e7a>] ? kthread+0x0/0x8a
+>  [<ffffffff81003950>] ? kernel_thread_helper+0x0/0x10
+> ---[ end trace 4e3067114aa2fd06 ]---
+> wlan0: deauthenticating from 00:1f:3f:1d:54:46 by local choice (reason=3)
 
-802.11n has chains but is also allows two antennas to be assigned to
-one chain and the hardware then would do something equivalent to
-legacy as with antenna diversity for one chain but it is called
-"selection diversity" for 802.11n.
+This is what my rtl8187b says also ... no luck finding the cure, just
+look at the thread posted here in the last few months:
 
-> of course there are more possibillities of antenna configurations which cannot
-> be configured with this api - like the "multiple sector antennas + RTS/CTS on
-> omni" configuration of ath5k, but i don't think these are very common.
+http://thread.gmane.org/gmane.linux.kernel.wireless.general/48877/focus=50042
 
-Yeah I was reminded of these setups today as well, but as you note it
-is rare and the defaults should typically work on those.
-
-> the most important use case, imho, is to limit the antennas to one fixed
-> antenna, if we know only one antenna is connected. this might well apply for
-> 802.11n too, no?
-
-802.11n does allow for 1 stream devices with a 1x1 TX/RX chain setup
-but the hardware *can* have two antennas like your typical legacy
-device with diversity enabled. This is the case for AR9285, for
-example.
-
- Luis
+Rogerio
