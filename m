@@ -1,36 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:50213 "EHLO mail.atheros.com"
+Received: from c60.cesmail.net ([216.154.195.49]:42347 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755806Ab0EDTwM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 May 2010 15:52:12 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 04 May 2010 12:52:12 -0700
-Date: Tue, 4 May 2010 12:52:11 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Mathieu Olivari <Mathieu.Olivari@Atheros.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: mac80211/ath9k: HT rates in Mesh
-Message-ID: <20100504195211.GG2624@tux>
-References: <93781E992CBA7843962D8B0E7D683F3C1116C465A6@SC1EXMB-MBCL.global.atheros.com>
- <20100504194348.GD2624@tux>
- <93781E992CBA7843962D8B0E7D683F3C1116C465EA@SC1EXMB-MBCL.global.atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <93781E992CBA7843962D8B0E7D683F3C1116C465EA@SC1EXMB-MBCL.global.atheros.com>
+	id S932756Ab0EVBPv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 21 May 2010 21:15:51 -0400
+Subject: Re: [PATCH] compat-wireless: add linux-next-pending, crap patch
+ dirs and nagometer
+From: Pavel Roskin <proski@gnu.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+In-Reply-To: <1274489059-1019-1-git-send-email-lrodriguez@atheros.com>
+References: <1274489059-1019-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain
+Date: Fri, 21 May 2010 21:15:36 -0400
+Message-Id: <1274490936.3439.14.camel@ct>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cc'ing linux-wireless.
+On Fri, 2010-05-21 at 20:44 -0400, Luis R. Rodriguez wrote:
+> Sometimes you have no other option but to carry around patches.
+> This can happen for a variety of reasons. Ultimately testing of code
+> cannot happen on the kernel maintainer's clock but on your own.
+> 
+> This expands the idea of the linux-next-cherry-pick patch directory
+> on compat-wireless to also allow for patches to be merged which are
+> posted to some mailing list but pending merge due to some reasons
+> (merge window is a good example). It also adds a crap patch directory
+> for those really nasty situations you can run into where you have
+> no other option but to give someone a release with some delta even
+> if the patch is not yet posted anywhere.
 
-On Tue, May 04, 2010 at 12:45:36PM -0700, Mathieu Olivari wrote:
-> BTW, do you know if HT is supported in Mesh ?
+Please replace "crap" with some more descriptive name, like
+"unpublished".  It's better to be friendly to users and express
+frustration in a different way.
 
-This would involve doing the same as for IBSS that Benoit
-is doing, someone with good will would have to do it. It should
-be fairly easy to review the patches implemented by Benoit to
-port to Mesh but there may be some unresolved things I may be
-overlooking.
+> +	printf "${RED}%10s${NORMAL} - Crap changes not yet posted\n" $2
+> +	printf "${RED}%10s${NORMAL} - Crap additions not yet merged\n" $3
+> +	printf "${RED}%10s${NORMAL} - Crap deletions not yet posted\n" $4
 
-  Luis
+You want "not yet posted" in all cases.
+
+"Crap deletions" may be offensive for Linux contributors whose code is
+being deleted.  Besides, if patches are not posted, somebody still spent
+time on making them.  Let's not discourage those who care.
+
+-- 
+Regards,
+Pavel Roskin
