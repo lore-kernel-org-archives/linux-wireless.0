@@ -1,43 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33951 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753055Ab0ENN6f (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 09:58:35 -0400
-Subject: Re: [PATCH v2] mac80211: Add HT IE to IBSS beacons and probe
- responses.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Benoit Papillault <benoit.papillault@free.fr>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4BEB175F.7000001@free.fr>
-References: <1273098986-19330-1-git-send-email-benoit.papillault@free.fr>
-	 <1273098986-19330-2-git-send-email-benoit.papillault@free.fr>
-	 <1273128051.3573.17.camel@jlt3.sipsolutions.net> <4BE49BDD.8010803@free.fr>
-	 <1273574892.3669.54.camel@jlt3.sipsolutions.net> <4BEB175F.7000001@free.fr>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 14 May 2010 15:58:34 +0200
-Message-ID: <1273845514.4950.23.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mgw1.diku.dk ([130.225.96.91]:35032 "EHLO mgw1.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755675Ab0EVIZu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 May 2010 04:25:50 -0400
+Date: Sat, 22 May 2010 10:25:44 +0200 (CEST)
+From: Julia Lawall <julia@diku.dk>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH 23/27] drivers/net/wireless/prism54: Use memdup_user
+Message-ID: <Pine.LNX.4.64.1005221025200.13021@ask.diku.dk>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-05-12 at 23:02 +0200, Benoit Papillault wrote:
+From: Julia Lawall <julia@diku.dk>
 
-> I thought again about 2 HT STA joining a non-HT IBSS. If we want those 2 
-> STA to be able to send/receive HT frames then they must know each other 
-> capabilities. So HT Capabilities should be sent if ht_supported = true, 
-> even if channel_type is CHAN_NO_HT
+Use memdup_user when user data is immediately copied into the
+allocated region.
 
-That has interesting protection requirements. How do we take care of
-those?
+The semantic patch that makes this change is as follows:
+(http://coccinelle.lip6.fr/)
 
-> I did some patch in this area in my tree. Basically, the peer STA is 
-> created only on beacon/probe response since only those frames contains 
-> peer capabilities. Any frames received before is simply ignored.
+// <smpl>
+@@
+expression from,to,size,flag;
+position p;
+identifier l1,l2;
+@@
 
-I'll let you discuss that with Bruno. I think we may need to "upgrade"
-to HT on receiving that, rather than leaving us without connectivity to
-that peer.
+-  to = \(kmalloc@p\|kzalloc@p\)(size,flag);
++  to = memdup_user(from,size);
+   if (
+-      to==NULL
++      IS_ERR(to)
+                 || ...) {
+   <+... when != goto l1;
+-  -ENOMEM
++  PTR_ERR(to)
+   ...+>
+   }
+-  if (copy_from_user(to, from, size) != 0) {
+-    <+... when != goto l2;
+-    -EFAULT
+-    ...+>
+-  }
+// </smpl>
 
-johannes
+Signed-off-by: Julia Lawall <julia@diku.dk>
 
+---
+ drivers/net/wireless/prism54/isl_ioctl.c |   11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/prism54/isl_ioctl.c b/drivers/net/wireless/prism54/isl_ioctl.c
+index 8d1190c..2a62c60 100644
+--- a/drivers/net/wireless/prism54/isl_ioctl.c
++++ b/drivers/net/wireless/prism54/isl_ioctl.c
+@@ -2751,14 +2751,9 @@ prism54_hostapd(struct net_device *ndev, struct iw_point *p)
+            p->length > PRISM2_HOSTAPD_MAX_BUF_SIZE || !p->pointer)
+                return -EINVAL;
+ 
+-       param = kmalloc(p->length, GFP_KERNEL);
+-       if (param == NULL)
+-               return -ENOMEM;
+-
+-       if (copy_from_user(param, p->pointer, p->length)) {
+-               kfree(param);
+-               return -EFAULT;
+-       }
++	param = memdup_user(p->pointer, p->length);
++	if (IS_ERR(param))
++		return PTR_ERR(param);
+ 
+        switch (param->cmd) {
+        case PRISM2_SET_ENCRYPTION:
