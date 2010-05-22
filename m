@@ -1,29 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:46600 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758538Ab0EYBDA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 May 2010 21:03:00 -0400
-Received: by pxi18 with SMTP id 18so1700866pxi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 24 May 2010 18:03:00 -0700 (PDT)
-Message-ID: <4BFB21C1.3060703@gmail.com>
-Date: Mon, 24 May 2010 18:02:57 -0700
-From: Huy Le <lehuy0406@gmail.com>
-MIME-Version: 1.0
+Received: from ogre.sisk.pl ([217.79.144.158]:59008 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758278Ab0EVVwY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 May 2010 17:52:24 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
 To: linux-wireless@vger.kernel.org
-Subject: ioctl for b43 driver
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Subject: [Regression][git head f4b87dee9] ath9k doesn't work correctly after resume from suspend to RAM
+Date: Sat, 22 May 2010 23:53:26 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	pm list <linux-pm@lists.linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201005222353.26920.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Hi,
 
-Currently I try aircrack-ng with b43 driver but it is fail at this 
-statement due to the following statement:
+With current -git on Acer Ferrari One the ath9k driver doesn't seem to work
+after resume from suspend to RAM.  NetworkManager seems to think that it works,
+but it doesn't really connect with the AP and doesn't try to obtain an IP
+address.  Reloading the driver makes it work again.
 
-     ioctl( fd, SIOCGIWFREQ, &wrq ) < 0
+The 2.6.34 (final) version works flawlessly with STR.
 
-This happens because we do not have ioctl for b43 driver. I just want to 
-ask if there is any way to work around.
+The user space is openSUSE 11.3 Milestone 6, so it may be somewhat unstable
+in general, but this particular feature does work with 2.6.34.
 
-Thanks.
+Thanks,
+Rafael
