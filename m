@@ -1,64 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server.heaven-czfree.net ([78.108.102.201]:50104 "EHLO
-	smtp.heaven-czfree.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752642Ab0EWLbP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 May 2010 07:31:15 -0400
-From: "Jaroslav Fojtik" <jafojtik@seznam.cz>
-To: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org
-Date: Sun, 23 May 2010 13:21:15 +0200
+Received: from ogre.sisk.pl ([217.79.144.158]:59030 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758808Ab0EVWMi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 May 2010 18:12:38 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [Regression][git head f4b87dee9] ath9k doesn't work correctly after resume from suspend to RAM
+Date: Sun, 23 May 2010 00:13:37 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	pm list <linux-pm@lists.linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>
+References: <201005222353.26920.rjw@sisk.pl>
+In-Reply-To: <201005222353.26920.rjw@sisk.pl>
 MIME-Version: 1.0
-Subject: Re: How to scan APs with ATH5k? - compat-wireless-2010-05-21
-Message-ID: <4BF90FAB.3527.CD943C@jafojtik.seznam.cz>
-In-reply-to: <4BF6E64F.15188.168D31@jafojtik.seznam.cz>
-References: <1274296671-13596-1-git-send-email-gwingerde@gmail.com>, <20100520224609.GA27842@hash.localnet>, <4BF6E64F.15188.168D31@jafojtik.seznam.cz>
-Content-type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201005230013.37578.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Bob,
+On Saturday 22 May 2010, Rafael J. Wysocki wrote:
+> Hi,
+> 
+> With current -git on Acer Ferrari One the ath9k driver doesn't seem to work
+> after resume from suspend to RAM.  NetworkManager seems to think that it works,
+> but it doesn't really connect with the AP and doesn't try to obtain an IP
+> address.
 
-it looks that compat-wireless-2010-05-21 scans when associated.
-  But compat-wireless-2010-05-21 seems to be so defective that I cannot 
-use it.
+Sorry, this was incorrect.  It actually tries to obtain an IP address, but
+fails.  Apparently, it can't obtain the address without being reloaded.
 
-regards
-   Jara
-
-> > > It looks like a bug.  Even if something is preventing scanning, the
-> > > error code should be -EBUSY (device busy).
-> > > 
-> > > The same is true for ath9k, but I cannot test ath5k at the moment.
-> > > mac80211 does a considerable effort to allow scanning while associated.
-> > 
-> > It's certainly something that used to work, but I haven't tried in
-> > a recent kernel.  So yes probably a bug.
-> 
-> BTW: I do not have recent kernel. I am using:
->   linux-2.6.32.11 together with compat-wireless-2.6.34-rc4 
-> 
-> 
-> Anyway, wlan1 returns different error when associated:
-> 
-> #root@dvouramenna:~# iwlist wlan1 scanning
-> #wlan1     Failed to read scan data : Resource temporarily unavailable
-> 
-> regards
->    J.Fojtik
-> 
-> 
-> > -- 
-> > Bob Copeland %% www.bobcopeland.com
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+Rafael
