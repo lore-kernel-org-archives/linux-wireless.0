@@ -1,64 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:41762 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753029Ab0EOVUb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 May 2010 17:20:31 -0400
-Date: Sat, 15 May 2010 23:20:26 +0200 (CEST)
-From: Julia Lawall <julia@diku.dk>
-To: Stefano Brivio <stefano.brivio@polimi.it>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH 24/37] drivers/net/wireless/b43: Use kmemdup
-Message-ID: <Pine.LNX.4.64.1005152320070.21345@ask.diku.dk>
+Received: from cpoproxy1-pub.bluehost.com ([69.89.21.11]:60999 "HELO
+	outbound-mail-01.bluehost.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752967Ab0EWGat (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 23 May 2010 02:30:49 -0400
+Message-ID: <4BF8CB98.8030903@dlasys.net>
+Date: Sun, 23 May 2010 02:30:48 -0400
+From: "David H. Lynch Jr." <dhlii@dlasys.net>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+To: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Subject: carl9170 1.0.9.1
+References: <4BDC001F.9050202@dlasys.net> <201005021452.01101.chunkeey@googlemail.com> <4BF82CEE.8020502@dlasys.net> <201005230334.29866.chunkeey@googlemail.com>
+In-Reply-To: <201005230334.29866.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
+     When I was attempting to push my ll_temac driver, I was told to use 
+dev_err(), dev_warn(), and dev_info() rather than printk(KERN_XXXX. I 
+beleive the ar9170 driver already in the kernel tree is doing that. I 
+beleive these I tend to create DBG(), ERR() and WARN() macros, because 
+during debugging I have been known to reroute the error handling through 
+a uart or some other debug port - kind of like you are printf'ing 
+through USB in the firmware. Putting it in a macro makes global changes 
+easier. Though I think heavy use of macros is now frowned on.
 
-Use kmemdup when some other buffer is immediately copied into the
-allocated region.
+     Just my .02
 
-A simplified version of the semantic patch that makes this change is as
-follows: (http://coccinelle.lip6.fr/)
 
-// <smpl>
-@@
-expression from,to,size,flag;
-statement S;
-@@
 
--  to = \(kmalloc\|kzalloc\)(size,flag);
-+  to = kmemdup(from,size,flag);
-   if (to==NULL || ...) S
--  memcpy(to, from, size);
-// </smpl>
 
-Signed-off-by: Julia Lawall <julia@diku.dk>
+-- 
+Dave Lynch 					  	    DLA Systems
+Software Development:  				         Embedded Linux
+717.587.7774 	       dhlii@dlasys.net 	  http://www.dlasys.net
+Over 25 years' experience in platforms, languages, and technologies too numerous to list.
 
----
- drivers/net/wireless/b43/dma.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+"Any intelligent fool can make things bigger and more complex... It takes a touch of genius - and a lot of courage to move in the opposite direction."
+Albert Einstein
 
-diff -u -p a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
---- a/drivers/net/wireless/b43/dma.c
-+++ b/drivers/net/wireless/b43/dma.c
-@@ -1221,14 +1221,14 @@ static int dma_tx_fragment(struct b43_dm
- 	meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1);
- 	/* create a bounce buffer in zone_dma on mapping failure. */
- 	if (b43_dma_mapping_error(ring, meta->dmaaddr, skb->len, 1)) {
--		priv_info->bouncebuffer = kmalloc(skb->len, GFP_ATOMIC | GFP_DMA);
-+		priv_info->bouncebuffer = kmemdup(skb->data, skb->len,
-+						  GFP_ATOMIC | GFP_DMA);
- 		if (!priv_info->bouncebuffer) {
- 			ring->current_slot = old_top_slot;
- 			ring->used_slots = old_used_slots;
- 			err = -ENOMEM;
- 			goto out_unmap_hdr;
- 		}
--		memcpy(priv_info->bouncebuffer, skb->data, skb->len);
- 
- 		meta->dmaaddr = map_descbuffer(ring, priv_info->bouncebuffer, skb->len, 1);
- 		if (b43_dma_mapping_error(ring, meta->dmaaddr, skb->len, 1)) {
