@@ -1,39 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45961 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752909Ab0EXI2r (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 May 2010 04:28:47 -0400
-Subject: Re: [PATCH 3/6] wl1271: Flush TX buffers to air before going to
- idle
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-In-Reply-To: <1274689100-14785-4-git-send-email-luciano.coelho@nokia.com>
-References: <1274689100-14785-1-git-send-email-luciano.coelho@nokia.com>
-	 <1274689100-14785-4-git-send-email-luciano.coelho@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 24 May 2010 10:28:43 +0200
-Message-ID: <1274689723.3743.16.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from setoy.chost.de ([217.160.209.225]:35481 "EHLO smtp.chost.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756149Ab0E0IFh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 May 2010 04:05:37 -0400
+From: Sascha Silbe <sascha-pgp@silbe.org>
+To: linux-wireless@vger.kernel.org
+Date: Sun, 23 May 2010 10:03:29 +0200
+Subject: [PATCH] libertas: Fix ethtool reporting no WOL options supported if WOL is not already active
+Reply-To: Sascha Silbe <sascha-ml-reply-to-2010-2@silbe.org>
+Message-Id: <1274806808-24185-1-git-send-email-sascha-pgp@silbe.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-05-24 at 11:18 +0300, Luciano Coelho wrote:
-> From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> 
-> The mac80211 changes to idle almost immediately after transmitting some
-> frames, such as deauth etc. When going to idle, the wl1271 is disconnected,
-> which causes TX frames already on buffers, but not yet transmitted, to be
-> deleted.
-> 
-> To make sure deauth frames reach the air, allow the TX buffers to flush
-> before proceeding to idle.
+This patch fixes the libertas driver incorrectly reporting that Wake-on-LAN
+is not supported if Wake-on-LAN is currently disabled.
+---
+ drivers/net/wireless/libertas/ethtool.c |    9 +++------
+ 1 files changed, 3 insertions(+), 6 deletions(-)
 
-Actually, mac80211 executes a flush() request before idle, so you could
-just implement the flush callback and also benefit in some other
-scenarios (though the software scan one you don't care about)
+Without patch:
 
-johannes
+root@xo15-minimal:~# ethtool wlan0
+Settings for wlan0:
+        Supports Wake-on: d
+        Wake-on: d
+root@xo15-minimal:~# ethtool -s wlan0 wol pum
+root@xo15-minimal:~# ethtool wlan0
+Settings for wlan0:
+        Supports Wake-on: pumb
+        Wake-on: pum
+root@xo15-minimal:~# ethtool -s wlan0 wol d
+root@xo15-minimal:~# ethtool wlan0
+Settings for wlan0:
+        Supports Wake-on: d
+        Wake-on: d
+root@xo15-minimal:~# 
+
+
+With patch:
+
+xo-sascha:~# ethtool eth0
+Settings for eth0:
+        Supports Wake-on: pumb
+        Wake-on: d
+xo-sascha:~# ethtool -s eth0 wol pum
+xo-sascha:~# ethtool eth0
+Settings for eth0:
+        Supports Wake-on: pumb
+        Wake-on: pum
+xo-sascha:~# ethtool -s eth0 wol d
+xo-sascha:~# ethtool eth0
+Settings for eth0:
+        Supports Wake-on: pumb
+        Wake-on: d
+
+diff --git a/drivers/net/wireless/libertas/ethtool.c b/drivers/net/wireless/libertas/ethtool.c
+index 6eb9a88..4a337b7 100644
+--- a/drivers/net/wireless/libertas/ethtool.c
++++ b/drivers/net/wireless/libertas/ethtool.c
+@@ -145,14 +145,11 @@ static void lbs_ethtool_get_wol(struct net_device *dev,
+ {
+ 	struct lbs_private *priv = dev->ml_priv;
+ 
+-	if (priv->wol_criteria == 0xffffffff) {
+-		/* Interface driver didn't configure wake */
+-		wol->supported = wol->wolopts = 0;
+-		return;
+-	}
+-
+ 	wol->supported = WAKE_UCAST|WAKE_MCAST|WAKE_BCAST|WAKE_PHY;
+ 
++	if (priv->wol_criteria == EHS_REMOVE_WAKEUP)
++		return;
++
+ 	if (priv->wol_criteria & EHS_WAKE_ON_UNICAST_DATA)
+ 		wol->wolopts |= WAKE_UCAST;
+ 	if (priv->wol_criteria & EHS_WAKE_ON_MULTICAST_DATA)
+-- 
+1.6.5
 
