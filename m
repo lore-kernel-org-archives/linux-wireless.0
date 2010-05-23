@@ -1,54 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47913 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750967Ab0E0IYa (ORCPT
+Received: from server.heaven-czfree.net ([78.108.102.201]:50104 "EHLO
+	smtp.heaven-czfree.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752642Ab0EWLbP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 May 2010 04:24:30 -0400
-Subject: Re: [RFC PATCHv3] mac80211: Add support for hardware ARP query
- filtering
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1274940287-18980-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1274940287-18980-1-git-send-email-juuso.oikarinen@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 27 May 2010 10:24:27 +0200
-Message-ID: <1274948667.3669.19.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Sun, 23 May 2010 07:31:15 -0400
+From: "Jaroslav Fojtik" <jafojtik@seznam.cz>
+To: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org
+Date: Sun, 23 May 2010 13:21:15 +0200
+MIME-Version: 1.0
+Subject: Re: How to scan APs with ATH5k? - compat-wireless-2010-05-21
+Message-ID: <4BF90FAB.3527.CD943C@jafojtik.seznam.cz>
+In-reply-to: <4BF6E64F.15188.168D31@jafojtik.seznam.cz>
+References: <1274296671-13596-1-git-send-email-gwingerde@gmail.com>, <20100520224609.GA27842@hash.localnet>, <4BF6E64F.15188.168D31@jafojtik.seznam.cz>
+Content-type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-05-27 at 09:04 +0300, Juuso Oikarinen wrote:
+Dear Bob,
 
-> +static int ieee80211_ifa_changed(struct notifier_block *nb,
-> +				 unsigned long data, void *arg)
-> +{
-> +	struct in_ifaddr *ifa = arg;
-> +	struct ieee80211_local *local =
-> +		container_of(nb, struct ieee80211_local,
-> +			     ifa_notifier);
-> +	struct net_device *ndev = ifa->ifa_dev->dev;
-> +	struct wireless_dev *wdev = ndev->ieee80211_ptr;
-> +	struct ieee80211_sub_if_data *sdata;
-> +	struct ieee80211_if_managed *ifmgd;
-> +
-> +	/* Make sure it's our interface that got changed */
-> +	if (!wdev)
-> +		return NOTIFY_DONE;
-> +
-> +	if (wdev->wiphy != local->hw.wiphy)
-> +		return NOTIFY_DONE;
-> +
-> +	/* We are concerned about IP addresses only when associated */
-> +	sdata = IEEE80211_DEV_TO_SUB_IF(ndev);
-> +	mutex_lock(&sdata->u.mgd.mtx);
-> +	ifmgd = &sdata->u.mgd;
-> +	if (ifmgd->associated)
-> +		ieee80211_set_arp_filter(sdata);
-> +	mutex_unlock(&sdata->u.mgd.mtx);
+it looks that compat-wireless-2010-05-21 scans when associated.
+  But compat-wireless-2010-05-21 seems to be so defective that I cannot 
+use it.
 
-I'm sure this will fail in interesting ways since nothing guarantees
-that this interface is in managed mode.
+regards
+   Jara
 
-johannes
+> > > It looks like a bug.  Even if something is preventing scanning, the
+> > > error code should be -EBUSY (device busy).
+> > > 
+> > > The same is true for ath9k, but I cannot test ath5k at the moment.
+> > > mac80211 does a considerable effort to allow scanning while associated.
+> > 
+> > It's certainly something that used to work, but I haven't tried in
+> > a recent kernel.  So yes probably a bug.
+> 
+> BTW: I do not have recent kernel. I am using:
+>   linux-2.6.32.11 together with compat-wireless-2.6.34-rc4 
+> 
+> 
+> Anyway, wlan1 returns different error when associated:
+> 
+> #root@dvouramenna:~# iwlist wlan1 scanning
+> #wlan1     Failed to read scan data : Resource temporarily unavailable
+> 
+> regards
+>    J.Fojtik
+> 
+> 
+> > -- 
+> > Bob Copeland %% www.bobcopeland.com
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
