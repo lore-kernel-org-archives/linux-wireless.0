@@ -1,71 +1,217 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews03.kpnxchange.com ([213.75.39.6]:2250 "EHLO
-	cpsmtpb-ews03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754475Ab0EGIVL (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:54174 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752062Ab0EWGZp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 May 2010 04:21:11 -0400
-Message-ID: <4BE3CD74.80508@gmail.com>
-Date: Fri, 07 May 2010 10:21:08 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Sun, 23 May 2010 02:25:45 -0400
 MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>
-Subject: Re: [PATCH 3/3] rt2x00: rt2800: use correct txop value in tx descriptor
-References: <201005061229.58509.helmut.schaa@googlemail.com> <4BE30B3B.2000900@gmail.com> <201005062057.38692.helmut.schaa@googlemail.com> <201005071011.19735.helmut.schaa@googlemail.com>
-In-Reply-To: <201005071011.19735.helmut.schaa@googlemail.com>
+Date: Sun, 23 May 2010 11:55:43 +0530
+Message-ID: <AANLkTik_7rxDBc0TKlAfoYyM5S6Cf_Hyxbr4W5ORnTsq@mail.gmail.com>
+Subject: iwl3945 bug in 2.6.34
+From: Satish Eerpini <eerpini@gmail.com>
+To: linux-kernel <linux-kernel@vger.kernel.org>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/07/10 10:11, Helmut Schaa wrote:
-> Am Donnerstag 06 Mai 2010 schrieb Helmut Schaa:
->> Am Donnerstag 06 Mai 2010 schrieb Gertjan van Wingerde:
->>> On 05/06/10 12:29, Helmut Schaa wrote:
->>
->> [...]
->>
->>>> diff --git a/drivers/net/wireless/rt2x00/rt2x00ht.c b/drivers/net/wireless/rt2x00/rt2x00ht.c
->>>> index 1056c92..5483fec 100644
->>>> --- a/drivers/net/wireless/rt2x00/rt2x00ht.c
->>>> +++ b/drivers/net/wireless/rt2x00/rt2x00ht.c
->>>> @@ -66,4 +66,6 @@ void rt2x00ht_create_tx_descriptor(struct queue_entry *entry,
->>>>  		__set_bit(ENTRY_TXD_HT_BW_40, &txdesc->flags);
->>>>  	if (txrate->flags & IEEE80211_TX_RC_SHORT_GI)
->>>>  		__set_bit(ENTRY_TXD_HT_SHORT_GI, &txdesc->flags);
->>>> +
->>>> +	txdesc->txop = TXOP_HTTXOP;
->>>>  }
->>>
->>> I am not too sure about this part. If I look at the Ralink vendor driver, they are most of the time
->>> using IFS_BACKOFF (value 3). Why did you put this on TXOP_HTTXOP?
->>
->> From what I saw in the ralink driver IFS_BACKOFF is only used for management frames, IFS_SIFS only
->> for subsequent frames in a fragment burst and IFS_HTTXOPS for "normal" data frames. But that's
->> just the result of a _quick_ review. So I might be wrong here as well :)
->>
->> To be honest I don't really know what the device does in case IFS_HTTXOPS is set but that was
->> the value we've passed to the driver before ;) (==IFS_BACKOFF on all other ralink chips) and it 
->> works quite well. I also tried IFS_BACKOFF and I wasn't able to see a difference when using
->> legacy (11b & 11g) rates (neither on the device itself nor with a second machine monitoring
->> the traffic).
-> 
-> Ok, after further examination it turns out to be:
-> 
-> - Management frames are sent with IFS_BACKOFF
-> - Special case for PsPoll frames also with IFS_BACKOFF
-> - Data frames are sent with IFS_HTTXOP
-> - Data frame subsequent fragments are send with IFS_SIFS
-> - CTS frames (in AP mode) use IFS_SIFS
-> 
-> So, I guess I resend this patch after some testing with IFS_BACKOFF for
-> management frames and IFS_HTTXOP for data frames and SIFS for subsequent
-> fragments.
-> 
-> John, please don't merge this patch yet. Thanks.
+hello,
 
-Thanks for investigating this further. I think the approach you describe above is the correct
-approach for this.
+I am running a custom compiled 2.6.34 (fedora 12) on a hp nx7400 with
+a Intel Pro Wireless 3945 card, the card works fine and connects to a
+WEP secure wireless connection on my router. But after some time
+network manager starts reporting that the wireless access point is not
+available anymore and tries to reconnect to the network, though the
+network is still available, it fails to detect the network , I have
+not been able to reproduce the situation conclusively, seems to be
+happening randomly ... here is the tail from "dmesg" which looked
+suspicious :
+(btw, I also faced the same problem earlier when I was running RHEL
+beta 6.0 on the same machine)
 
----
-Gertjan.
+No probe response from AP 00:1b:da:2a:a1:53 after 500ms, disconnecting.
+iwl3945 0000:10:00.0: Error sending REPLY_RXON: time out after 500ms.
+iwl3945 0000:10:00.0: Error setting new configuration (-110).
+iwl3945 0000:10:00.0: Error sending REPLY_RXON: time out after 500ms.
+iwl3945 0000:10:00.0: Error setting new configuration (-110).
+cfg80211: Calling CRDA to update world regulatory domain
+cfg80211: Calling CRDA for country: IN
+cfg80211: Regulatory domain changed to country: IN
+    (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+    (2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+    (5170000 KHz - 5250000 KHz @ 20000 KHz), (N/A, 2000 mBm)
+    (5250000 KHz - 5330000 KHz @ 20000 KHz), (N/A, 2000 mBm)
+    (5735000 KHz - 5835000 KHz @ 20000 KHz), (N/A, 2000 mBm)
+iwl3945 0000:10:00.0: Error sending REPLY_RXON: time out after 500ms.
+iwl3945 0000:10:00.0: Error setting new configuration (-110).
+iwl3945 0000:10:00.0: Error sending REPLY_SCAN_CMD: time out after 500ms.
+iwl3945 0000:10:00.0: Error sending REPLY_TX_PWR_TABLE_CMD: time out
+after 500ms.
+iwl3945 0000:10:00.0: Error sending REPLY_SCAN_CMD: time out after 500ms.
+iwl3945 0000:10:00.0: Error sending REPLY_RXON: time out after 500ms.
+iwl3945 0000:10:00.0: Error setting new configuration (-110).
+iwl3945 0000:10:00.0: Error sending REPLY_RXON: time out after 500ms.
+iwl3945 0000:10:00.0: Error setting new configuration (-110).
+iwl3945 0000:10:00.0: Error sending REPLY_TX_PWR_TABLE_CMD: time out
+after 500ms.
+iwl3945 0000:10:00.0: Error sending REPLY_RXON: time out after 500ms.
+iwl3945 0000:10:00.0: Error setting new configuration (-110).
+iwl3945 0000:10:00.0: Error sending REPLY_SCAN_CMD: time out after 500ms.
+iwl3945 0000:10:00.0: Error sending REPLY_TX_PWR_TABLE_CMD: time out
+after 500ms.
+iwl3945 0000:10:00.0: Error sending REPLY_SCAN_CMD: time out after 500ms.
+iwl3945 0000:10:00.0: Error sending REPLY_RXON: time out after 500ms.
+iwl3945 0000:10:00.0: Error setting new configuration (-110).
+iwl3945 0000:10:00.0: Error sending REPLY_RXON: time out after 500ms.
+iwl3945 0000:10:00.0: Error setting new configuration (-110).
+iwl3945 0000:10:00.0: Error sending REPLY_TX_PWR_TABLE_CMD: time out
+after 500ms.
+iwl3945 0000:10:00.0: Error sending REPLY_RXON: time out after 500ms.
+iwl3945 0000:10:00.0: Error setting new configuration (-110).
+iwl3945 0000:10:00.0: Error sending REPLY_SCAN_CMD: time out after 500ms.
+iwl3945 0000:10:00.0: Error sending REPLY_TX_PWR_TABLE_CMD: time out
+after 500ms.
+iwl3945 0000:10:00.0: Error sending REPLY_SCAN_CMD: time out after 500ms.
+iwl3945 0000:10:00.0: Error sending REPLY_RXON: time out after 500ms.
+iwl3945 0000:10:00.0: Error setting new configuration (-110).
+iwl3945 0000:10:00.0: Error sending REPLY_RXON: time out after 500ms.
+iwl3945 0000:10:00.0: Error setting new configuration (-110).
+iwl3945 0000:10:00.0: Error sending REPLY_TX_PWR_TABLE_CMD: time out
+after 500ms.
+iwl3945 0000:10:00.0: No space in command queue
+iwl3945 0000:10:00.0: Restarting adapter due to queue full
+iwl3945 0000:10:00.0: Error sending REPLY_RXON: enqueue_hcmd failed: -28
+iwl3945 0000:10:00.0: Error setting new configuration (-28).
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: BSM uCode verification failed at addr
+0x00003800+0 (of 900), is 0xffffffff, s/b 0xf802020
+iwl3945 0000:10:00.0: request scan called when driver not ready.
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+usb 2-1: USB disconnect, address 2
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+iwl3945 0000:10:00.0: BSM uCode verification failed at addr
+0x00003800+0 (of 900), is 0xffffffff, s/b 0xf802020
+
+how can this be fixed ? I need to reboot the machine every time this happens,
+please let me know if any other information is needed .
+
+Cheers
+Satish
+
+--
+http://tuxitter.blogspot.com
