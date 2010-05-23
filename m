@@ -1,91 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:49315 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932665Ab0EMVuU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 17:50:20 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 05/17] iwl3945: remove sequence number assignment
-Date: Thu, 13 May 2010 14:49:47 -0700
-Message-Id: <1273787399-9280-6-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1273787399-9280-1-git-send-email-reinette.chatre@intel.com>
-References: <1273787399-9280-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:62433 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755663Ab0EWBeg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 22 May 2010 21:34:36 -0400
+Received: by fxm5 with SMTP id 5so1701074fxm.19
+        for <linux-wireless@vger.kernel.org>; Sat, 22 May 2010 18:34:34 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: dhlii@dlasys.net
+Subject: Re: carl9170 1.0.9
+Date: Sun, 23 May 2010 03:34:29 +0200
+Cc: linux-wireless@vger.kernel.org, jal2@gmx.de
+References: <4BDC001F.9050202@dlasys.net> <201005021452.01101.chunkeey@googlemail.com> <4BF82CEE.8020502@dlasys.net>
+In-Reply-To: <4BF82CEE.8020502@dlasys.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201005230334.29866.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Saturday 22 May 2010 21:13:50 David H. Lynch Jr. wrote:
+> 
+> some items I have found while making my changes to the code.
+patches are welcome :-D
 
-Unlike agn, where the sequence numbers must
-match with the TFD index, the driver for 3945
-devices can use the sequence numbers provided
-by mac80211 for QoS frames.
+> 	In firmware_source/carlfw/src/wlan.c you have aloop to read the TSF 
+> timer to make sure there is no roll over. According to the docs I have 
+> when TSF_LOW is read, TSF_HI is automatically concurrently copied to a 
+> temp register so that an immediate read of TSF_HI will get the value 
+> that was present when TSF_LO was read.
+Thanks for that clarification. The code in question was actually a
+adaptation from ar9170_op_get_tsf (patch author included in CC).
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    2 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   12 +-----------
- 2 files changed, 2 insertions(+), 12 deletions(-)
+Since this is now settled, I made the necessary chances to the
+kernel driver as well. (with a reference to your previous mail)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 858a548..8538af7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -433,7 +433,7 @@ struct iwl_ht_agg {
- 
- 
- struct iwl_tid_data {
--	u16 seq_number;
-+	u16 seq_number; /* agn only */
- 	u16 tfds_in_queue;
- 	struct iwl_ht_agg agg;
- };
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 68b8a1a..4454064 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -473,10 +473,8 @@ static int iwl3945_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	u8 unicast;
- 	u8 sta_id;
- 	u8 tid = 0;
--	u16 seq_number = 0;
- 	__le16 fc;
- 	u8 wait_write_ptr = 0;
--	u8 *qc = NULL;
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&priv->lock, flags);
-@@ -519,16 +517,10 @@ static int iwl3945_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	IWL_DEBUG_RATE(priv, "station Id %d\n", sta_id);
- 
- 	if (ieee80211_is_data_qos(fc)) {
--		qc = ieee80211_get_qos_ctl(hdr);
-+		u8 *qc = ieee80211_get_qos_ctl(hdr);
- 		tid = qc[0] & IEEE80211_QOS_CTL_TID_MASK;
- 		if (unlikely(tid >= MAX_TID_COUNT))
- 			goto drop;
--		seq_number = priv->stations[sta_id].tid[tid].seq_number &
--				IEEE80211_SCTL_SEQ;
--		hdr->seq_ctrl = cpu_to_le16(seq_number) |
--			(hdr->seq_ctrl &
--				cpu_to_le16(IEEE80211_SCTL_FRAG));
--		seq_number += 0x10;
- 	}
- 
- 	/* Descriptor for chosen Tx queue */
-@@ -587,8 +579,6 @@ static int iwl3945_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 
- 	if (!ieee80211_has_morefrags(hdr->frame_control)) {
- 		txq->need_update = 1;
--		if (qc)
--			priv->stations[sta_id].tid[tid].seq_number = seq_number;
- 	} else {
- 		wait_write_ptr = 1;
- 		txq->need_update = 0;
--- 
-1.6.3.3
+> 	I beleive the timer_init() routine in carlfw/src/timer.c can not be 
+> called for more than one timer. Any subsequent call will clear the 
+> interrupt and mode bits for the previous timer.
 
+there's more than that.
+Take a look at the (timer << 2) and so forth...
+
+> 	I have not completely tracked these down, but the new config system 
+> must be missing some dependencies, because I can configure and build 
+> firmware that will not load.
+> 	In carlfw/src/cmd.c the CARL9170_CMD_PSM case needs ifdef'd with 
+> CONFIG_CARL9170FW_PSM or it will not build with PSM disabled.
+> 
+fixed.
+
+Thanks for your comments. I've just released 1.0.9.1, which
+contains fixes for all of your comments and some additional changes.
+
+
+BTW:
+> I have been playing with the assorted timers in the ar9170.
+> My preliminary observations seem to be indicating that
+> AR9170_TIMER_REG_TIMER0 might actually be running at 40mhz/25ns,
+> But that all the other timers seem to be running far slower - i.e. 
+> maybe they are cascaded of the overflow on timer0.
+>
+> I have specifically looked at timer1-4 and tic_timer and clock_low 
+> and they all seem to be running very slow.
+> The docs that I have imply but do not state that all these clocks 
+> are directly off the 25ns/40mhz superH clock.
+> Have you had any experience with the clocks and their rates ?
+
+based on observation: Some timers(1-4) are *driven* by the cpu clock.
+Which is of course determined by the operation mode and phy band.
+As you know there are 7 (1 + 2 * 3) possible AHB/CPU clock settings:
+ * 40MHz (refclock)
+ * 20MHz (PSM, 5GHz) & 22MHz (PSM, 2.4GHz)
+ * 40MHz (11an, 5GHz, HT20) & 44Mhz (11bgn, 2.4GHz, HT20)
+ * 80MHz (11an, 5GHz, HT40) & 88MHz (11bgn, 2.4GHz, HT40)
+
+Regards,
+	Chr
