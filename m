@@ -1,89 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f191.google.com ([209.85.210.191]:56524 "EHLO
-	mail-yx0-f191.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750798Ab0EODJD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 23:09:03 -0400
-Received: by yxe29 with SMTP id 29so1360794yxe.4
-        for <linux-wireless@vger.kernel.org>; Fri, 14 May 2010 20:09:02 -0700 (PDT)
-Date: Fri, 14 May 2010 22:08:58 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	Michael Buesch <mb@bu3sch.de>
-Cc: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: [PATCH V2] ssb: Handle alternate SSPROM location
-Message-ID: <4bee104a.R4FgVxLrwpNRfHDA%Larry.Finger@lwfinger.net>
+Received: from kroah.org ([198.145.64.141]:42444 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753733Ab0EXWle (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 May 2010 18:41:34 -0400
+Date: Mon, 24 May 2010 15:38:43 -0700
+From: Greg KH <greg@kroah.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Ming Lei <tom.leiming@gmail.com>, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>, stable@kernel.org
+Subject: Re: [stable] [PATCH] Revert "ath9k: fix lockdep warning when
+ unloading module" on stable kernels
+Message-ID: <20100524223843.GA1261@kroah.com>
+References: <1274304829-14367-1-git-send-email-lrodriguez@atheros.com>
+ <20100524215216.GJ16655@kroah.com>
+ <AANLkTinhpYvUrxIw9-eZG3ihyshCZiSZP9wQ7ThLs_kx@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <AANLkTinhpYvUrxIw9-eZG3ihyshCZiSZP9wQ7ThLs_kx@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In kernel Bugzilla #15825 (2 users), in a wireless mailing list thread
-(http://lists.infradead.org/pipermail/b43-dev/2010-May/000124.html), and on a
-netbook owned by John Linville
-(http://marc.info/?l=linux-wireless&m=127230751408818&w=4), there are reports
-of ssb failing to detect an SPROM at the normal location. After studying the
-MMIO trace dump for the Broadcom wl driver, it was determined that the affected
-boxes had a relocated SPROM.
+On Mon, May 24, 2010 at 03:16:37PM -0700, Luis R. Rodriguez wrote:
+> >
+> > For some reason, you never signed-off on this patch, why?  Care to send
+> > me a "Signed-off-by:" line so I can add it?
+> 
+> WTF, sorry, you're right, can you just peg it for me?
+> 
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-This patch fixes all systems that have reported this problem.
+Yes, I'll go add it to the patch, thanks.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@kernel.org>
----
-
-John,
-
-This patch and the one by Gabor entitled "[PATCH] ssb: Implement
-fast powerup delay calculation" are needed to fix these systems. As there is the
-possibility that this patch will break some 14e4:4315 devices, it should stew in
-testing for a while. I am confident enough in it to add the Cc for stable.
-
-V2 - remove initialization per Michaels's comment. Sorry it has taken so long - I'm
-traveling.
-
-Larry
----
- 
-Index: wireless-testing/drivers/ssb/pci.c
-===================================================================
---- wireless-testing.orig/drivers/ssb/pci.c
-+++ wireless-testing/drivers/ssb/pci.c
-@@ -631,8 +631,17 @@ static int ssb_pci_sprom_get(struct ssb_
- 		return -ENODEV;
- 	}
- 
--	bus->sprom_offset = (bus->chipco.dev->id.revision < 31) ?
--		SSB_SPROM_BASE1 : SSB_SPROM_BASE31;
-+	/* get SPROM offset: SSB_SPROM_BASE1 except for chipcommon rev >= 31
-+	 * or chip ID is 0x4312 and chipcommon status & 3 == 2
-+	 */
-+	if (bus->chipco.dev->id.revision >= 31)
-+		bus->sprom_offset = SSB_SPROM_BASE31;
-+	else if (bus->chip_id == 0x4312 && (bus->chipco.status & 0x03) == 2)
-+		bus->sprom_offset = SSB_SPROM_BASE31;
-+	else
-+		bus->sprom_offset = SSB_SPROM_BASE1;
-+
-+	ssb_dprintk(KERN_INFO PFX "SPROM offset is 0x%x\n", bus->sprom_offset);
- 
- 	buf = kcalloc(SSB_SPROMSIZE_WORDS_R123, sizeof(u16), GFP_KERNEL);
- 	if (!buf)
-Index: wireless-testing/drivers/ssb/driver_chipcommon.c
-===================================================================
---- wireless-testing.orig/drivers/ssb/driver_chipcommon.c
-+++ wireless-testing/drivers/ssb/driver_chipcommon.c
-@@ -256,11 +256,12 @@ void ssb_chipcommon_init(struct ssb_chip
- 		return; /* We don't have a ChipCommon */
- 	if (cc->dev->id.revision >= 11)
- 		cc->status = chipco_read32(cc, SSB_CHIPCO_CHIPSTAT);
-+	ssb_dprintk(KERN_INFO PFX "chipcommon status is 0x%x\n", cc->status);
- 	ssb_pmu_init(cc);
- 	chipco_powercontrol_init(cc);
- 	ssb_chipco_set_clockmode(cc, SSB_CLKMODE_FAST);
- 	delay = calc_fast_powerup_delay(cc);
--	ssb_printk(KERN_INFO PFX "fast_pwrup_delay is %d\n", delay);
-+	ssb_dprintk(KERN_INFO PFX "fast_pwrup_delay is %d\n", delay);
- 	cc->fast_pwrup_delay = delay;
- 	ssb_write16(cc->dev, SSB_MMIO_POWERUP_DELAY, delay);
- }
+greg k-h
