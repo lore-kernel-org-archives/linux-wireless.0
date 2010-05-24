@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:39727 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752544Ab0ENQye (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55847 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750888Ab0EXIOu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 12:54:34 -0400
-Message-ID: <4BED8043.9070300@gmail.com>
-Date: Fri, 14 May 2010 09:54:27 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-MIME-Version: 1.0
-To: Christoph Lameter <cl@linux.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
+	Mon, 24 May 2010 04:14:50 -0400
+Subject: Re: [linux-pm] [Regression][git head f4b87dee9] ath9k doesn't work
+ correctly after resume from suspend to RAM
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-pm@lists.linux-foundation.org,
 	linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: ath9k: BUG kmalloc-8192: Poison overwritten
-References: <4BEC7A84.3010503@gmail.com> <AANLkTim7B5z76zJ33by6SGMgSy1gZF6qiwhEhAQ3NUtG@mail.gmail.com>  <AANLkTim7fnKebMoEu1DjD3S-15ZqlTUez3Lpp0wGVJQ6@mail.gmail.com> <AANLkTimmctk1GWOTlW8Han7E3gJVgqJjUAMeqYnvyuHn@mail.gmail.com> <4BECDD5D.9010609@gmail.com> <alpine.DEB.2.00.1005141110100.9466@router.home>
-In-Reply-To: <alpine.DEB.2.00.1005141110100.9466@router.home>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Daniel Yingqiang Ma <yma.cool@gmail.com>,
+	David Miller <davem@davemloft.net>
+In-Reply-To: <201005240059.57921.rjw@sisk.pl>
+References: <201005222353.26920.rjw@sisk.pl>
+	 <201005230013.37578.rjw@sisk.pl> <201005232120.16814.rjw@sisk.pl>
+	 <201005240059.57921.rjw@sisk.pl>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 24 May 2010 10:14:29 +0200
+Message-ID: <1274688869.3743.5.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/14/10 09:12, Christoph Lameter wrote:
-> On Thu, 13 May 2010, Justin P. Mattock wrote:
->
->> I enable these options as well..
->> (then see If I can(hopefully)re-create this
->> then I'll bisect it).
->
-> Debugging causes a slowdown. You can switch debuggin on for a specific
-> slab.
->
-> f.e.
->
-> slub_debug=,kmalloc-8192
->
-> See also Documentation/vm/slub.txt
->
->
+On Mon, 2010-05-24 at 00:59 +0200, Rafael J. Wysocki wrote:
 
-Cool, thanks for this.. I'll have a look
-also in slub.txt as well(never really did much
-debugging with slub).
+> commit 03ceedea972a82d343fa5c2528b3952fa9e615d5
+> Author: Daniel Yingqiang Ma <yma.cool@gmail.com>
+> Date:   Tue Apr 13 15:12:07 2010 +0800
+> 
+>     ath9k: Group Key fix for VAPs
+> 
+> also fixes the resume issue with iwlagn.
 
-Justin P. Mattock
+Ok that had me going WTF.
+
+But then I saw that a huge ath9k patch had a mac80211 change sneakily
+hidden in it. WTF!
+
+> So, please revert.
+
+Indeed, this patch needs to be reverted. That mac80211 change is wrong
+and completely unnecessary.
+
+johannes
+
