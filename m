@@ -1,21 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:45532 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751070Ab0ESVdv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 May 2010 17:33:51 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: greg@kroah.com, stable@kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+Received: from kroah.org ([198.145.64.141]:36555 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759074Ab0EXXJl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 May 2010 19:09:41 -0400
+Message-Id: <20100524230352.184913803@clark.site>
+Date: Mon, 24 May 2010 16:00:04 -0700
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org, greg@kroah.com
+Cc: stable-review@kernel.org, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
 	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
 	Ming Lei <tom.leiming@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] Revert "ath9k: fix lockdep warning when unloading module" on stable kernels
-Date: Wed, 19 May 2010 17:33:49 -0400
-Message-Id: <1274304829-14367-1-git-send-email-lrodriguez@atheros.com>
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [32/34] Revert "ath9k: fix lockdep warning when unloading module" on stable kernels
+In-Reply-To: <20100524230418.GA12770@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
+
+2.6.34-stable review patch.  If anyone has any objections, please let us know.
+
+------------------
+
 
 Johannes' patch 34e8950 titled:
 
@@ -127,21 +134,16 @@ to do this on the older kernels since IRQs are already disabled.
 Cc: Ming Lei <tom.leiming@gmail.com>
 Cc: Johannes Berg <johannes@sipsolutions.net>
 Cc: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
 ---
-
-Greg, I've tested 2.6.32.11 and 2.6.33.4 both with and without
-this patch. This cures the WARNING for both. This same patch
-applies to both 2.6.33.y and 2.6.33.y branches of the stable
-series.
-
  drivers/net/wireless/ath/ath9k/xmit.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index a232361..e499fb6 100644
 --- a/drivers/net/wireless/ath/ath9k/xmit.c
 +++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2190,7 +2190,7 @@ void ath_tx_node_cleanup(struct ath_softc *sc, struct ath_node *an)
+@@ -2190,7 +2190,7 @@ void ath_tx_node_cleanup(struct ath_soft
  		if (ATH_TXQ_SETUP(sc, i)) {
  			txq = &sc->tx.txq[i];
  
@@ -150,7 +152,7 @@ index a232361..e499fb6 100644
  
  			list_for_each_entry_safe(ac,
  					ac_tmp, &txq->axq_acq, list) {
-@@ -2211,7 +2211,7 @@ void ath_tx_node_cleanup(struct ath_softc *sc, struct ath_node *an)
+@@ -2211,7 +2211,7 @@ void ath_tx_node_cleanup(struct ath_soft
  				}
  			}
  
@@ -159,6 +161,5 @@ index a232361..e499fb6 100644
  		}
  	}
  }
--- 
-1.6.3.3
+
 
