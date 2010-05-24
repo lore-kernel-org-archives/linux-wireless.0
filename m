@@ -1,39 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:57265 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753637Ab0EOKo7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 May 2010 06:44:59 -0400
-Message-ID: <4BEE7B28.5000304@openwrt.org>
-Date: Sat, 15 May 2010 12:44:56 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:40788 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755173Ab0EXTs7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 May 2010 15:48:59 -0400
+Received: by wyb29 with SMTP id 29so1832612wyb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 24 May 2010 12:48:58 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 0/2] ssb: updates matching specs, fix for hangs?
+Date: Mon, 24 May 2010 21:50:22 +0200
+Message-Id: <1274730624-22922-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-To: Ming Lei <tom.leiming@gmail.com>
-CC: lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-Subject: Re: [PATCH 2/2] ath9k: fix dma sync in rx path
-References: <1273842938-3401-1-git-send-email-tom.leiming@gmail.com> <1273842969-3435-1-git-send-email-tom.leiming@gmail.com> <4BED5E08.3050000@openwrt.org> <AANLkTikVkBdTopPJlU2lGkafLIkiiviUHe8J-lTy67y9@mail.gmail.com> <4BED7809.3090204@openwrt.org> <AANLkTikV8cAc4Njpa1cXq1BHRExkwbaKwjlyyH52rgqO@mail.gmail.com> <4BEE689A.9060102@openwrt.org> <AANLkTikFtb1j7x9-d-SpV8AAODQAxNAobIZePCQNLbip@mail.gmail.com> <20100515182540.6f4e140c@tom-lei>
-In-Reply-To: <20100515182540.6f4e140c@tom-lei>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-05-15 12:25 PM, Ming Lei wrote:
-> From edd368e7436e7a80c5a43e7ad40cff1f3fa20806 Mon Sep 17 00:00:00 2001
-> From: Ming Lei <tom.leiming@gmail.com>
-> Date: Fri, 14 May 2010 17:35:51 +0800
-> Subject: [PATCH 2/2] ath9k: fix dma sync in rx path(v2)
-> 
-> If buffer is to be accessed by cpu after dma is over, but
-> between dma mapping and dma unmapping, we should use
-> dma_sync_single_for_cpu to sync the buffer between cpu with
-> device. And dma_sync_single_for_device is used to let
-> device gain the buffer again.
-> 
-> v2: Felix pointed out dma_sync_single_for_device is needed to return
-> buffer to device if an unsuccessful status bit check is found.
-> 
-> Signed-off-by: Ming Lei <tom.leiming@gmail.com>
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Thanks, I will test that later and let you know if it works.
+John, I don't really know w-t policy, so please decide where we should apply
+these patches. I'll try to provide some description.
 
-- Felix
+We got reports of some devices hanging with ssb module, it was around SPROM
+reading. AFAIK two patches are needed to fix this issue. One was already
+posted by Larry: "ssb: Handle alternate SSPROM location" (however I can not
+find it in w-t). Second one is attached patch for fast powerup delay.
+
+Not sure about PMU init patch, I think it is needed to get devices working
+but not sure if it affects (fixes) handing issue.
+
+Fix of hanging sounds important and thankfully patches are quite trivial. On
+the other hand we are at the end of merge window already. So please, help with
+taking a decision about this.
+
+CC-ing b43, hope it's OK.
+
+Rafał Miłecki (2):
+  ssb: update PMU init to match specs
+  ssb: fast powerup delay calculation for PMU capable devices
+
+ drivers/ssb/driver_chipcommon.c     |   24 ++++++++++++++++++++++++
+ drivers/ssb/driver_chipcommon_pmu.c |   17 +++++++----------
+ 2 files changed, 31 insertions(+), 10 deletions(-)
+
