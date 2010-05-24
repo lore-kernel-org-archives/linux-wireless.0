@@ -1,37 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56855 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753551Ab0ECUfr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 May 2010 16:35:47 -0400
-Subject: Re: [ANN] Mendiosus rt2800usb project
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: info@mendiosus.nl, linux-wireless <linux-wireless@vger.kernel.org>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>
-In-Reply-To: <20100503165246.GC24781@tuxdriver.com>
-References: <38430.62.163.0.236.1272900540.squirrel@www.mendiosus.nl>
-	 <20100503165246.GC24781@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 03 May 2010 13:34:53 -0700
-Message-ID: <1272918893.5632.2.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from cpoproxy3-pub.bluehost.com ([67.222.54.6]:55834 "HELO
+	outbound-mail-313.bluehost.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757737Ab0EXVQt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 May 2010 17:16:49 -0400
+Message-ID: <4BFAECC0.2000007@dlasys.net>
+Date: Mon, 24 May 2010 17:16:48 -0400
+From: "David H. Lynch Jr." <dhlii@dlasys.net>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Subject: CARL9170 features
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-05-03 at 12:52 -0400, John W. Linville wrote:
-> On Mon, May 03, 2010 at 05:29:00PM +0200, info@mendiosus.nl wrote:
-> > The Dutch company Mendiosus is pleased to announce that, with support
-> > of an United States based open-source development house, it will
-> > be working on the rt2800usb drivers. Development will focus on
-> > improving support for the rt2870 and rt2770 chipsets.
-> > Besides improvements of the basic functionality development will also
-> > focus on adding hardware cryptography and better 11n support.
-> 
-> Excellent!  I look forward to seeing some good results from this!
+     I am trying to kick carl9170 1.0.9 into either add-hoc or monitor 
+mode or anything else where I can xmit to any wireless device. I do not 
+care if the receiving device is interested - so long as the radio ACK's 
+the packet, which it should do automatically.
 
-Yeah, this is excellent news.  It's been great to see rt2800 and later
-chipsets getting a lot of attention recently.
+     I tried iwconfig wl_ath mode ad-hoc
+     And I get and errror:
 
-Dan
+root# iwconfig wl_ath mode ad-hoc
+Error for wireless request "Set Mode" (8B06) :
+     SET failed on device wl_ath ; Device or resource busy.
 
+root# iwconfig wl_ath mode monitor
+Error for wireless request "Set Mode" (8B06) :
+     SET failed on device wl_ath ; Device or resource busy.
+
+root# iwconfig wl_ath mode master
+Error for wireless request "Set Mode" (8B06) :
+     SET failed on device wl_ath ; Invalid argument.
+
+I can add something to the driver if needed if you coul recomend another 
+wireless driver for a reference.
+
+
+-- 
+Dave Lynch 					  	    DLA Systems
+Software Development:  				         Embedded Linux
+717.587.7774 	       dhlii@dlasys.net 	  http://www.dlasys.net
+Over 25 years' experience in platforms, languages, and technologies too numerous to list.
+
+"Any intelligent fool can make things bigger and more complex... It takes a touch of genius - and a lot of courage to move in the opposite direction."
+Albert Einstein
 
