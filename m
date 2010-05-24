@@ -1,31 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aurora.create-net.org ([193.206.22.116]:50694 "EHLO
-	aurora.create-net.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756478Ab0ELQmf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 May 2010 12:42:35 -0400
-Message-ID: <4BEADA79.5050000@create-net.org>
-Date: Wed, 12 May 2010 18:42:33 +0200
-From: Roberto Riggio <roberto.riggio@create-net.org>
+Received: from mta-out.inet.fi ([195.156.147.13]:39507 "EHLO jenni1.inet.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753799Ab0EXIPK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 May 2010 04:15:10 -0400
+Date: Mon, 24 May 2010 11:14:55 +0300
+From: Mikko Rapeli <mikko.rapeli@iki.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Silence debug prints when using adhoc mode
+Message-ID: <20100524081455.GB19669@nalle>
+References: <20100523162240.GZ19669@nalle> <1274688345.3743.2.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Packet injection with ath9k
-References: <4BE43C18.2030806@create-net.org> <j2v69e28c911005070935wb720d757labf3a0484aedefb8@mail.gmail.com> 	<4BE46584.5060304@create-net.org> <r2y69e28c911005091324sbff07538i28babb432e6751db@mail.gmail.com>
-In-Reply-To: <r2y69e28c911005091324sbff07538i28babb432e6751db@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1274688345.3743.2.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/09/2010 10:24 PM, Gábor Stefanik wrote:
->>     u_int16_t       it_len;
->>     u_int32_t       it_present;
->>      
-> AFAIK these 2 fields need to be little-endian even on big-endian
-> machines. If your system is big-endian, this can cause problems.
->    
+On Mon, May 24, 2010 at 10:05:45AM +0200, Johannes Berg wrote:
+> On Sun, 2010-05-23 at 19:22 +0300, Mikko Rapeli wrote:
+> > This is flooded to syslog quite a few times when connecting to another
+> > Linux box in adhoc mode. Syslog files fill up the disk fast:
+> > 
+> > $ dmesg | tail -10
+> > [ 1986.772018] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
+> > [ 1986.776149] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
+> > [ 1986.780076] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
+> > [ 1986.784020] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
+> > [ 1986.788149] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
+> > [ 1986.792108] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
+> > [ 1986.796070] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
+> > [ 1986.800018] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
+> > [ 1986.804186] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
+> > [ 1986.808072] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
+> 
+> Hm. That's not supposed to happen over and over again that quickly, only
+> every few seconds. I wonder if that's related to the other timer issue
+> that we saw in ibss.
 
-Thanks, that was indeed the issue. I totally missed this info
-in the radiotap website. Everything is working fine now.
+I've had this spamming problem since December 2009 with all 2.6.32 kernels
+from Debian unstable, so this not something new from 2.6.34.
 
-R.
+-Mikko
