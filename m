@@ -1,43 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta-out.inet.fi ([195.156.147.13]:39507 "EHLO jenni1.inet.fi"
+Received: from mga11.intel.com ([192.55.52.93]:3559 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753799Ab0EXIPK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 May 2010 04:15:10 -0400
-Date: Mon, 24 May 2010 11:14:55 +0300
-From: Mikko Rapeli <mikko.rapeli@iki.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Silence debug prints when using adhoc mode
-Message-ID: <20100524081455.GB19669@nalle>
-References: <20100523162240.GZ19669@nalle> <1274688345.3743.2.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1274688345.3743.2.camel@jlt3.sipsolutions.net>
+	id S1757948Ab0EXSdz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 May 2010 14:33:55 -0400
+Subject: Re: iwl3945 bug in 2.6.34
+From: reinette chatre <reinette.chatre@intel.com>
+To: Satish Eerpini <eerpini@gmail.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTik_7rxDBc0TKlAfoYyM5S6Cf_Hyxbr4W5ORnTsq@mail.gmail.com>
+References: <AANLkTik_7rxDBc0TKlAfoYyM5S6Cf_Hyxbr4W5ORnTsq@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 24 May 2010 11:33:49 -0700
+Message-ID: <1274726029.2091.15160.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 24, 2010 at 10:05:45AM +0200, Johannes Berg wrote:
-> On Sun, 2010-05-23 at 19:22 +0300, Mikko Rapeli wrote:
-> > This is flooded to syslog quite a few times when connecting to another
-> > Linux box in adhoc mode. Syslog files fill up the disk fast:
-> > 
-> > $ dmesg | tail -10
-> > [ 1986.772018] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> > [ 1986.776149] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> > [ 1986.780076] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> > [ 1986.784020] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> > [ 1986.788149] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> > [ 1986.792108] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> > [ 1986.796070] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> > [ 1986.800018] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> > [ 1986.804186] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> > [ 1986.808072] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> 
-> Hm. That's not supposed to happen over and over again that quickly, only
-> every few seconds. I wonder if that's related to the other timer issue
-> that we saw in ibss.
 
-I've had this spamming problem since December 2009 with all 2.6.32 kernels
-from Debian unstable, so this not something new from 2.6.34.
+On Sat, 2010-05-22 at 23:25 -0700, Satish Eerpini wrote:
 
--Mikko
+> No probe response from AP 00:1b:da:2a:a1:53 after 500ms, disconnecting.
+> iwl3945 0000:10:00.0: Error sending REPLY_RXON: time out after 500ms.
+> iwl3945 0000:10:00.0: Error setting new configuration (-110).
+> iwl3945 0000:10:00.0: Error sending REPLY_RXON: time out after 500ms.
+> iwl3945 0000:10:00.0: Error setting new configuration (-110).
+
+This did not use to be an issue with 3945 and unfortunately we do not
+know what is triggering it now. Please try the "Enable stuck queue
+detection on 3945" patch that is attached to
+http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=1834 as a
+workaround.
+
+Reinette
+
+
