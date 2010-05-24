@@ -1,65 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50104 "EHLO mx1.redhat.com"
+Received: from mga14.intel.com ([143.182.124.37]:16726 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934418Ab0E0SPp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 May 2010 14:15:45 -0400
-Received: from int-mx04.intmail.prod.int.phx2.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.17])
-	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o4RIFiMm027195
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Thu, 27 May 2010 14:15:44 -0400
-Date: Thu, 27 May 2010 14:15:42 -0400
-From: Prarit Bhargava <prarit@redhat.com>
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.org
-Cc: Prarit Bhargava <prarit@redhat.com>
-Message-Id: <20100527181139.23917.56655.sendpatchset@prarit.bos.redhat.com>
-Subject: [PATCH]: ath: Fix uninitialized variable warnings
+	id S1755973Ab0EXWac (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 May 2010 18:30:32 -0400
+Subject: Re: Iwlwifi and LEDS?
+From: reinette chatre <reinette.chatre@intel.com>
+To: Gregy <p.gregy@gmail.com>
+Cc: "Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTilnK6lkypJkajiwUbhl6JlNR7S8dL6YzKUe2yd3@mail.gmail.com>
+References: <AANLkTikB8WaMyIj6CTY5wfEeVDratQ1Y8W3B_JBVllBp@mail.gmail.com>
+	 <1274465242.12391.0.camel@abhi-desktop>
+	 <AANLkTilnK6lkypJkajiwUbhl6JlNR7S8dL6YzKUe2yd3@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 24 May 2010 15:30:31 -0700
+Message-ID: <1274740231.2091.15472.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes 'make -j24 CONFIG_DEBUG_SECTION_MISMATCH=y' warning:
+On Fri, 2010-05-21 at 13:49 -0700, Gregy wrote:
+> On 21 May 2010 20:07, Abhijeet Kolekar <abhijeet.kolekar@intel.com> wrote:
+> > On Fri, 2010-05-21 at 02:11 -0700, Gregy wrote:
+> >> Hello, I noticed you removed support for led subsystem from iwlwifi. I
+> >> have used it to control wifi led from userspace. Is it still possible
+> >> somehow?
+> >>
+> > There is module parameter for iwlcore called 'led_mode'.
+> 
+> Yes but I cannot control the led through it. I can only set one of two
+> modes. Before I could  use it as "connected to internet" indicator or
+> I could turn it off completely.
 
-drivers/net/wireless/ath/ath9k/eeprom_4k.c: In function ‘ath9k_hw_get_4k_gain_boundaries_pdadcs.clone.1’:
-drivers/net/wireless/ath/ath9k/eeprom_4k.c:311: error: ‘minPwrT4’ may be used uninitialized in this function
-drivers/net/wireless/ath/ath9k/eeprom_9287.c: In function ‘ath9k_hw_get_AR9287_gain_boundaries_pdadcs’:
-drivers/net/wireless/ath/ath9k/eeprom_9287.c:302: error: ‘minPwrT4’ may be used uninitialized in this function
-drivers/net/wireless/ath/ath9k/eeprom_def.c: In function ‘ath9k_hw_get_def_gain_boundaries_pdadcs.clone.0’:
-drivers/net/wireless/ath/ath9k/eeprom_def.c:679: error: ‘minPwrT4’ may be used uninitialized in this function
+No - we did not remove support for LEDs from iwlwifi. The led_mode
+module parameter is just to change the blinking behavior (0=blinking,
+1=On(RF On)/Off(RF Off)).
 
-Signed-off-by: Prarit Bhargava <prarit@redhat.com>
+What did you do before that does not work anymore?
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index 41a77d1..e25a2ab 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -249,6 +249,7 @@ static void ath9k_hw_get_4k_gain_boundaries_pdadcs(struct ath_hw *ah,
- 	struct chan_centers centers;
- #define PD_GAIN_BOUNDARY_DEFAULT 58;
- 
-+	memset(&minPwrT4, 0, AR9287_NUM_PD_GAINS);
- 	ath9k_hw_get_channel_centers(ah, chan, &centers);
- 
- 	for (numPiers = 0; numPiers < availPiers; numPiers++) {
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index b471db5..9b0478d 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -245,6 +245,7 @@ static void ath9k_hw_get_AR9287_gain_boundaries_pdadcs(struct ath_hw *ah,
- 	static u8 vpdTableI[AR5416_EEP4K_NUM_PD_GAINS]
- 		[AR5416_MAX_PWR_RANGE_IN_HALF_DB];
- 
-+	memset(&minPwrT4, 0, AR9287_NUM_PD_GAINS);
- 	ath9k_hw_get_channel_centers(ah, chan, &centers);
- 
- 	for (numPiers = 0; numPiers < availPiers; numPiers++) {
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index e591ad6..9019b6e 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -618,6 +618,7 @@ static void ath9k_hw_get_def_gain_boundaries_pdadcs(struct ath_hw *ah,
- 	int16_t minDelta = 0;
- 	struct chan_centers centers;
- 
-+	memset(&minPwrT4, 0, AR9287_NUM_PD_GAINS);
- 	ath9k_hw_get_channel_centers(ah, chan, &centers);
- 
- 	for (numPiers = 0; numPiers < availPiers; numPiers++) {
+Reinette
+
+
