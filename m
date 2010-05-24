@@ -1,105 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:37105 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753450Ab0E1SQH (ORCPT
+Received: from ns.store20.com ([212.7.7.16]:60373 "EHLO store20.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754602Ab0EXKeg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 May 2010 14:16:07 -0400
-Received: by gyg13 with SMTP id 13so1218948gyg.19
-        for <linux-wireless@vger.kernel.org>; Fri, 28 May 2010 11:16:06 -0700 (PDT)
-Message-ID: <4C000873.4070708@gmail.com>
-Date: Fri, 28 May 2010 14:16:19 -0400
-From: Richard Farina <sidhayn@gmail.com>
-MIME-Version: 1.0
-To: Bob Copeland <me@bobcopeland.com>
-CC: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	Weedy <weedy2887@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: ath5k past 2.6.30 breaks monitor mode (and thus the aircrack
- 	suite)
-References: <AANLkTimltZSc8dJPPBCibcGDaOPcQRU_5kSbenIAdi_6@mail.gmail.com>	<AANLkTimaLEQYH4Y7HO4Fv4zT8w8AsPkaAQtk9EauX4Bt@mail.gmail.com>	<AANLkTikRt1fUgngBQxEoEFe1VDrYVFRAoMSR53et7gxf@mail.gmail.com>	<AANLkTim-A_TWT-flrW88gJGan47Xhm7llyrQE3ehDKU6@mail.gmail.com>	<AANLkTim4zLxIQH2r76WZRh9kNigVNAngcK1d9-Cu65Ag@mail.gmail.com>	<AANLkTimH3p-dBA_6ee2a0iCnPDhtPZONzCEVkzMHrUWo@mail.gmail.com>	<AANLkTim-4UNn8acYvF7AF2FDzdC9xRY-9JS0lSurwBc6@mail.gmail.com>	<AANLkTimYeL4KQozuTl4le9WUpObsjwp0YAx7eAYq6MBr@mail.gmail.com>	<AANLkTikOgv6d0FlXu2-smnYPApeehjRq_j8UxEealqFC@mail.gmail.com>	<AANLkTinynNqs6_zyTJcpi7yKiSvC5fBhbM2tVZcnoNUq@mail.gmail.com>	<AANLkTinyGlwqq4xshLU5Ol74p0VfcUXBjBGKXlsB2pMy@mail.gmail.com>	<AANLkTimIeTadyAhUuri2P630mpDwmBk4B90RpERLbaFE@mail.gmail.com>	<AANLkTilXJHs8emXX4YNHbPq0SkuC4Z22NEh-T6mwUSHS@mail.gmail.com>	<4BFDEBDC.4070304@gmail.com> <AANLkTin3VSp_FcSiadD4efE1Yo1vKiDXmOngsHEKiQmF@mail.gmail.com>
-In-Reply-To: <AANLkTin3VSp_FcSiadD4efE1Yo1vKiDXmOngsHEKiQmF@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 24 May 2010 06:34:36 -0400
+Subject: Oops in iwl3945_request_scan (2.6.34+)
+From: Priit Laes <plaes@plaes.org>
+To: linux-wireless@vger.kernel.org, ilw@linux.intel.com
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 24 May 2010 13:28:46 +0300
+Message-ID: <1274696926.7803.15.camel@chi>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bob Copeland wrote:
-> On Wed, May 26, 2010 at 11:49 PM, Richard Farina <sidhayn@gmail.com> wrote:
->   
->> Bob Copeland wrote:
->>     
->>> Ok, it should be enough to look at the filter flags instead of
->>> the opmode -- I knew in the back of my mind that the monitor
->>> stuff was bogus (part of the reason I did the patch in the first
->>> place) but just got confused by what was already there I guess.
->>>       
->> I've got a lot of people very interested in this fix. Let me know what kind
->> of support you need to make this happen.  You know where to find me on irc
->> ;-)
->>     
->
-> Ok, can you and Weedy try this patch?
->
-> Use the attachment -- gmail will screw up the whitespace, but I included
-> it inline for reference.
->
-> Weedy, if you want reported-by credit can you give your full name and
-> preferred email address?
->
-> From: Bob Copeland <me@bobcopeland.com>
-> Date: Thu, 27 May 2010 08:54:38 -0400
-> Subject: [PATCH] ath5k: retain promiscuous setting
->
-> Commit 56d1de0a21db28e41741cfa0a66e18bc8d920554, "ath5k: clean up
-> filter flags setting" introduced a regression in monitor mode such
-> that the promisc filter flag would get lost.
->
-> Although we set the promisc flag when it changed, we did not
-> preserve it across subsequent calls to configure_filter.  This patch
-> restores the original functionality.
->
-> Cc: stable@kernel.org
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
-> ---
->
-> Note, a better fix would be to just unconditionally look at new_flags,
-> but this is the minimal change for stable.  I'll add fixing all this
-> stuff up to my todo.
->
->  drivers/net/wireless/ath/ath5k/base.c |    4 +++-
->  1 files changed, 3 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath5k/base.c
-> b/drivers/net/wireless/ath/ath5k/base.c
-> index 9c27623..9e023b8 100644
-> --- a/drivers/net/wireless/ath/ath5k/base.c
-> +++ b/drivers/net/wireless/ath/ath5k/base.c
-> @@ -3153,13 +3153,15 @@ static void ath5k_configure_filter(struct
-> ieee80211_hw *hw,
->
->  	if (changed_flags & (FIF_PROMISC_IN_BSS | FIF_OTHER_BSS)) {
->  		if (*new_flags & FIF_PROMISC_IN_BSS) {
-> -			rfilt |= AR5K_RX_FILTER_PROM;
->  			__set_bit(ATH_STAT_PROMISC, sc->status);
->  		} else {
->  			__clear_bit(ATH_STAT_PROMISC, sc->status);
->  		}
->  	}
->
-> +	if (test_bit(ATH_STAT_PROMISC, sc->status))
-> +		rfilt |= AR5K_RX_FILTER_PROM;
-> +
->  	/* Note, AR5K_RX_FILTER_MCAST is already enabled */
->  	if (*new_flags & FIF_ALLMULTI) {
->  		mfilt[0] =  ~0;
->   
-Tested-By: Rick Farina
+Hey!
 
-This patch fixes the problem, data packets are now captured while in 
-monitor mode.  Incidentally when I tried to chase this back to see when 
-it started I found the same behavior in 2.6.32_rc and even in 2.6.29 
-(which is funny since Weedy bisected the change to some time during 
-2.6.31_rc5).  This fix should be pushed out to as much of stable as 
-possible as soon as possible.  Thanks for the patch Bob!
+When trying latest upstream Linus's kernel (2.6.34-07097-gf4b87de) I got
+following Oops when associating with wireless access point (IIRC, it was
+WEP-authenticated).
+Although authentication was successful and I was able to ping external
+networks, no HTTP-data could be received.
 
--Rick Farina
+Machine: IBM/Lenovo Thinkpad x60s
+Network controller: Intel Corporation PRO/Wireless 3945ABG [Golan]
+Network Connection (rev 02)
+
+[snip]
+wlan0: authenticate with 00:xx:xx:xx:xx:xx (try 1)
+wlan0: authenticated
+wlan0: associate with 00:xx:xx:xx:xx:xx (try 1)
+wlan0: RX AssocResp from 00:xx:xx:xx:xx:xx (capab=0x411 status=0 aid=1)
+wlan0: associated
+ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+BUG: unable to handle kernel paging request at 0000000000100886
+IP: [<ffffffffa000cff0>] iwl3945_request_scan+0x8c5/0xcd6 [iwl3945]
+PGD bc115067 PUD bc114067 PMD 0 
+Oops: 0000 [#1] SMP 
+last sysfs file: /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq
+CPU 0 
+Modules linked in: sdhci_pci sdhci mmc_core joydev iwl3945
+Pid: 1372, comm: iwl3945 Not tainted 2.6.34-07097-gf4b87de #1 1702M3G/1702M3G
+RIP: 0010:[<ffffffffa000cff0>]  [<ffffffffa000cff0>] iwl3945_request_scan+0x8c5/0xcd6 [iwl3945]
+RSP: 0018:ffff8800bb311d40  EFLAGS: 00010207
+RAX: ffff8800bce40800 RBX: ffff8800bb611380 RCX: 0000000000000057
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff8800bb611380
+RBP: 0000000000100886 R08: 000000000000030e R09: 00000000ffffffff
+R10: 0000000010bf1c00 R11: ffff880001a12400 R12: ffff8800bafd38f2
+R13: 0000000000000000 R14: 0000000000000058 R15: 0000000000000000
+FS:  0000000000000000(0000) GS:ffff880001a00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+CR2: 0000000000100886 CR3: 00000000bc112000 CR4: 00000000000006f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+Process iwl3945 (pid: 1372, threadinfo ffff8800bb310000, task ffff8800baeae120)
+Stack:
+ ffff8800baeae120 0000000000000000 ffff880000000000 ffff880000000000
+<0> ffff8800bb311da0 ffffffff8104e5eb 0000000001a12400 0021000000000000
+<0> ffff8800be66ad01 ffff8800baeaeb60 0000000000000000 ff00000000000000
+Call Trace:
+ [<ffffffff8104e5eb>] ? finish_task_switch+0x3d/0xb5
+ [<ffffffff812a9a7d>] ? iwl_bg_start_internal_scan+0x0/0x2b5
+ [<ffffffff812a9d14>] ? iwl_bg_start_internal_scan+0x297/0x2b5
+ [<ffffffff81064413>] ? worker_thread+0x13d/0x1c2
+ [<ffffffff8106789b>] ? autoremove_wake_function+0x0/0x2a
+ [<ffffffff810642d6>] ? worker_thread+0x0/0x1c2
+ [<ffffffff810674e1>] ? kthread+0x75/0x7d
+ [<ffffffff81022c54>] ? kernel_thread_helper+0x4/0x10
+ [<ffffffff8106746c>] ? kthread+0x0/0x7d
+ [<ffffffff81022c50>] ? kernel_thread_helper+0x0/0x10
+Code: 4c 24 60 48 89 4c 24 70 41 0f b7 c6 41 8d 4e ff 89 44 24 7c 66 89 8c 24 86 00 00 00 e9 3c 02 00 00 48 63 54 24 38 48 8b 6c d0 38 <44> 39 7d 00 0f 85 24 02 00 00 66 8b 55 06 44 89 fe 41 88 54 24 
+RIP  [<ffffffffa000cff0>] iwl3945_request_scan+0x8c5/0xcd6 [iwl3945]
+ RSP <ffff8800bb311d40>
+CR2: 0000000000100886
+---[ end trace ac44e894bb32101c ]---
+wlan0: no IPv6 routers present
+[/snip]
