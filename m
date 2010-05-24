@@ -1,87 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.vyatta.com ([76.74.103.46]:53720 "EHLO mail.vyatta.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932705Ab0EEAEX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 May 2010 20:04:23 -0400
-Date: Tue, 4 May 2010 17:04:09 -0700
-From: Stephen Hemminger <shemminger@vyatta.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, mcgrof@kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH] compat-wireless: updates for orinoco
-Message-ID: <20100504170409.46914a88@nehalam>
-In-Reply-To: <v2u43e72e891005041626n14deaca5z284f2472e909c923@mail.gmail.com>
-References: <1273012850-8359-1-git-send-email-hauke@hauke-m.de>
-	<v2u43e72e891005041626n14deaca5z284f2472e909c923@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from osmium.mv.net ([199.125.85.152]:54903 "HELO shell.mv.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753957Ab0EXJh1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 May 2010 05:37:27 -0400
+Date: Mon, 24 May 2010 05:15:51 -0400 (EDT)
+From: RHS Linux User <xxx@nei.mv.com>
+To: Bruno Randolf <br1@einfach.org>
+cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	David Quan <David.Quan@atheros.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Sam Ng <Sam.Ng@atheros.com>
+Subject: Re: [ath5k-devel] [PATCH v2 13/20] cfg80211: Add nl80211 antenna configuration
+In-Reply-To: <201005240945.31550.br1@einfach.org>
+Message-ID: <Pine.LNX.3.95.1100524051316.32654A-100000@nei>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 4 May 2010 16:26:53 -0700
-"Luis R. Rodriguez" <lrodriguez@atheros.com> wrote:
 
-> First of all, thanks a lot! Some comments below.
+Hi,
+
+  One other *important* case:
+
+  on port A a low noise preamp and a receive antenna.
+
+  on port B a power amplifier and a seperate antenna
+
+  In this way transmit noise is ( mostly ) kept out of the low noise
+receive channel.
+
+  warm regards,
+  wiz
+
+
+On Mon, 24 May 2010, Bruno Randolf wrote:
+
+> On Saturday 22 May 2010 02:11:02 Luis R. Rodriguez wrote:
+> > > > For legacy, keep it simple, use 3 settings, fixed_a, fixed_b,
+> > > > diversity, for all devices.
+> > > 
+> > > did you not understand my examples why i think it makes sense to use a
+> > > bitmask for "legacy"? i think they are perfectly valid use-cases. do i
+> > > need to re- iterate them a third time?
+> > 
+> > Hehe, well from what I gather is that you indicate some other legacy cards
+> > would have a very different setup than the typical two anntennas and
+> > diversity modes. I see those cases as being reallllllly rare and not
+> > worth considering. Did I miss anything, if so please smack me.
 > 
-> On Tue, May 4, 2010 at 3:40 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> > * Make all the patches apply again.
-> > * rename read_pda to avoid conflicts with definitions in kernel <= 2.6.29
+> sorry, gotta smack you ;)
 > 
-> I'm going to apply these two changes, if you get time can you send a
-> patch to rename read_pda upstream as well, that way we don't have to
-> carry this?
+> i'm talking about cards with 2 antennas (but still believe it's good to keep 
+> the API flexible enough to be able to handle more antennas). i agree that 
+> these setups are rare, but i think we should support them because it's easily 
+> possible. why limit possibilities? also please note that it's perfectly 
+> feasible to suport these modes with ath5k as well (it's just not implemented 
+> yet):
 > 
-> > * add orinoco usb
+> * case 1: send on antenna 1, receive on antenna 2: why would you want to do 
+> this? to have a low gain antenna for TX in order to keep within the regulatory 
+> constraints and a high gain antenna for RX in order to receive weaker signals. 
+> this means "speak softly, but listen harder". it can be useful especially for 
+> outdoor links.
 > 
-> Thanks for this but I've grown tired of updating these netdev ops and
-> I think we can do better. I'll add a netdev_attach_ops() which would
-> simply do all the backport stuff for us, this way for backporting
-> purposes all we have to do is replace the old lines with a
-> netdev_attach_ops() call. In fact if we *really* wanted to we could
-> add a dummy netdev_attach_ops() upstream and just backport that on
-> older kernels, this would mean 0 line changes to backport a newer
-> driver.
+> that would translate to a RX antenna bitmap of 0b01 and TX antenna 0b10.
 > 
-> Something like this maybe on the generic compat module, it builds for
-> me, will commit soon.
+> * case 2: is the same like above, but using RX diversity on both antennas.
 > 
-> /*
->  * Expand this as drivers require more ops, for now this
->  * only sets the ones we need.
->  */
-> void netdev_attach_ops(struct net_device *dev,
->                       const struct net_device_ops *ops)
-> {
-> #define SET_NETDEVOP(_op) (_op ? _op : NULL)
->        dev->open = SET_NETDEVOP(ops->ndo_open);
->        dev->stop = SET_NETDEVOP(ops->ndo_stop);
->        dev->hard_start_xmit = SET_NETDEVOP(ops->ndo_start_xmit);
->        dev->set_multicast_list = SET_NETDEVOP(ops->ndo_set_multicast_list);
->        dev->change_mtu = SET_NETDEVOP(ops->ndo_change_mtu);
->        dev->set_mac_address = SET_NETDEVOP(ops->ndo_set_mac_address);
->        dev->tx_timeout = SET_NETDEVOP(ops->ndo_tx_timeout);
->        dev->get_stats = SET_NETDEVOP(ops->ndo_get_stats);
-> #undef SET_NETDEVOP
-> }
-> EXPORT_SYMBOL(netdev_attach_ops);
+> that would be RX antenna 0, give that we use "0" for diversity, and TX antenna 
+> 1.
 > 
-> For newer kernels then this would just be:
+> * case 3: are special setups in research and development where people might 
+> have more than 2 antennas or might want to do things which don't apparently 
+> make much sense for normal operation. while this does not have a high 
+> priority, i think it's good to have an API which can support a wide variety of 
+> configurations.
 > 
-> static inline void netdev_attach_ops(struct net_device *dev,
->                       const struct net_device_ops *ops)
-> {
->        dev->netdev_ops = ops;
-> }
+> > True, but note how the fact that you transmit over two antennas actually
+> > has regulatory implications. Now, ath9k handles this within ath9k_hw
+> > already but this itself seems like a worthy reason for this API to be
+> > separated. While I think it is great for ath9k_hw to do this, wouldn't it
+> > be nice if we can eventually instead expose the gain by using different
+> > chains at the same time and do the regulatory calculation for all devices
+> > within cfg80211?
 > 
-> Stephen, would the above be acceptable upstream on netdevice.h ? It
-> would eliminate all needs from having to #ifdef network drivers when
-> backporting. If so I can send a respective patch and spatch all the
-> setters I think. An example of the nasty ifdef crap we have to do for
-> the current backport of netdevop'able drivers is below.
+> yes, that would be good. i think we can add that in addition to the antenna 
+> API i suggested.
+> 
+> > Right, and while that *works*, I think it would be clearer to just use a
+> > clear "diveristy" knob.
+> 
+> yes i agree. so we could use the special value of "0" to indicate diversity, 
+> because it does not make sense to transmit on zero antennas - or create a flag 
+> for "use diversity".
+> 
+> > > most of the other things you mention (need a reset/reassociate,
+> > > regulatory concerns...) are driver implementation issues, which can be
+> > > dealt with in the driver.
+> > 
+> > Well so some of these things *could* be handled in mac80211 as well. For
+> > example, we may want to just dissociate upon a tx/rx chain setting change
+> > for all devices, but not for legacy. The regulatory stuff is another thing
+> > which could eventually be made more generic accross the board.
+> 
+> i see no reason why this could not be done with the bitmap API i suggested, or 
+> additionally to it.
+> 
+> bruno
+> _______________________________________________
+> ath5k-devel mailing list
+> ath5k-devel@lists.ath5k.org
+> https://lists.ath5k.org/mailman/listinfo/ath5k-devel
 > 
 
-No. supporting backporting is not part of the upstream kernel
-mission. Honestly, we try for forward compatibility but intentionally
-ignore carrying extra backport baggage.
