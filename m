@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:40788 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755173Ab0EXTs7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 May 2010 15:48:59 -0400
-Received: by wyb29 with SMTP id 29so1832612wyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 24 May 2010 12:48:58 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 0/2] ssb: updates matching specs, fix for hangs?
-Date: Mon, 24 May 2010 21:50:22 +0200
-Message-Id: <1274730624-22922-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mga02.intel.com ([134.134.136.20]:8804 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756007Ab0EXWIR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 May 2010 18:08:17 -0400
+Subject: Re: iwl3945 bug in 2.6.34
+From: reinette chatre <reinette.chatre@intel.com>
+To: Satish Eerpini <eerpini@gmail.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1274726029.2091.15160.camel@rchatre-DESK>
+References: <AANLkTik_7rxDBc0TKlAfoYyM5S6Cf_Hyxbr4W5ORnTsq@mail.gmail.com>
+	 <1274726029.2091.15160.camel@rchatre-DESK>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 24 May 2010 15:08:16 -0700
+Message-ID: <1274738896.2091.15438.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John, I don't really know w-t policy, so please decide where we should apply
-these patches. I'll try to provide some description.
+On Mon, 2010-05-24 at 11:33 -0700, reinette chatre wrote:
+> On Sat, 2010-05-22 at 23:25 -0700, Satish Eerpini wrote:
+> 
+> > No probe response from AP 00:1b:da:2a:a1:53 after 500ms, disconnecting.
+> > iwl3945 0000:10:00.0: Error sending REPLY_RXON: time out after 500ms.
+> > iwl3945 0000:10:00.0: Error setting new configuration (-110).
+> > iwl3945 0000:10:00.0: Error sending REPLY_RXON: time out after 500ms.
+> > iwl3945 0000:10:00.0: Error setting new configuration (-110).
+> 
+> This did not use to be an issue with 3945 and unfortunately we do not
+> know what is triggering it now. Please try the "Enable stuck queue
+> detection on 3945" patch that is attached to
+> http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=1834 as a
+> workaround.
 
-We got reports of some devices hanging with ssb module, it was around SPROM
-reading. AFAIK two patches are needed to fix this issue. One was already
-posted by Larry: "ssb: Handle alternate SSPROM location" (however I can not
-find it in w-t). Second one is attached patch for fast powerup delay.
+Actually, sorry, but that patch will not work on 2.6.34 since the
+feature it enables is not present there - it will be in 2.6.35 though.
+To enable the feature in 2.6.34 will take some more backporting effort
+that I'm looking into now.
 
-Not sure about PMU init patch, I think it is needed to get devices working
-but not sure if it affects (fixes) handing issue.
+Reinette
 
-Fix of hanging sounds important and thankfully patches are quite trivial. On
-the other hand we are at the end of merge window already. So please, help with
-taking a decision about this.
-
-CC-ing b43, hope it's OK.
-
-Rafał Miłecki (2):
-  ssb: update PMU init to match specs
-  ssb: fast powerup delay calculation for PMU capable devices
-
- drivers/ssb/driver_chipcommon.c     |   24 ++++++++++++++++++++++++
- drivers/ssb/driver_chipcommon_pmu.c |   17 +++++++----------
- 2 files changed, 31 insertions(+), 10 deletions(-)
 
