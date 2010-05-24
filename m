@@ -1,41 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52696 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754892Ab0EZLVW (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:51028 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750871Ab0EXFWf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 May 2010 07:21:22 -0400
-Subject: Re: [PATCH] cfg80211: Removed warning from cfg80211_send_rx_auth
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1274870625-19712-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-References: <1274870625-19712-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	Mon, 24 May 2010 01:22:35 -0400
+Subject: Re: [RFC PATCH 1/1] cfg80211: Fix user-space crda query stall
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Kalle Valo <kvalo@adurom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <87eih4hvzd.fsf@purkki.valot.fi>
+References: <1274438539-11259-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1274438539-11259-2-git-send-email-juuso.oikarinen@nokia.com>
+	 <87eih4hvzd.fsf@purkki.valot.fi>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 26 May 2010 13:21:17 +0200
-Message-ID: <1274872877.3658.4.camel@jlt3.sipsolutions.net>
+Date: Mon, 24 May 2010 08:23:34 +0300
+Message-ID: <1274678614.5277.40.camel@wimaxnb.nmp.nokia.com>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-05-26 at 13:43 +0300, Teemu Paasikivi wrote:
-> In cfg80211_send_rx_auth function there was a warning if bssid of the received
-> authentication message was not found from the authtry_bsses table.
+On Sat, 2010-05-22 at 16:06 +0200, ext Kalle Valo wrote:
+> Moi Juuso,
 > 
-> During the beginning of the authentication there is a small time window, when
-> handling of the received deauthentication message can cause information
-> for the access point to be removed from the authtry_bsses table before
-> authentication response is received. This triggers the warning. This has
-> been seen happening with several access points occasionally. At least
-> one of those (Asus) has been seen to send spurious deauthentication
-> messages after deauthentication. Possibly this warning could be triggered also
-> by forged deauthentication messages sent at a correct time.
+> Juuso Oikarinen <juuso.oikarinen@nokia.com> writes:
+> 
+> > The userspace crda utility can fail to respond to kernel requests in (at least)
+> > two scenarios: it is not runnable for any reason, or it is invoked with a
+> > country code not in its database.
+> >
+> 
+> [...]
+> 
+> > +	printk(KERN_INFO "cfg80211: Call crda daemon timed out for country: "
+> > +	       "%c%c\n", last_request->alpha2[0], last_request->alpha2[1]);
+> 
+> I would prefer to mention in the print that kernel will revert back to
+> world domain. Nicer for the users.
+> 
 
-This doesn't seem right. Why is mac80211 not preventing those messages
-from bubbling up in that case?
+That actually happens, because as the code forces the change to the
+world domain, there will that "world reg domain updated" trace.
 
-FWIW, this check is there for a reason -- we want to avoid telling
-userspace twice that we disconnected from a given AP, and we shouldn't
-be processing it anyway.
+I could also adjust this trace to indicate, what is going to happen.
 
-johannes
+-Juuso
 
