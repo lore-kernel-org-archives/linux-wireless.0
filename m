@@ -1,75 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:39106 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756763Ab0EZROn (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35562 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757090Ab0EYP0D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 May 2010 13:14:43 -0400
-Received: by pwi7 with SMTP id 7so294063pwi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 10:14:43 -0700 (PDT)
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@gmail.com,
-	"Justin P. Mattock" <justinmattock@gmail.com>
-Subject: [PATCH]wireless:ath9k Disable leds for Apple products.
-Date: Wed, 26 May 2010 10:14:16 -0700
-Message-Id: <1274894056-2866-2-git-send-email-justinmattock@gmail.com>
-In-Reply-To: <1274894056-2866-1-git-send-email-justinmattock@gmail.com>
-References: <1274894056-2866-1-git-send-email-justinmattock@gmail.com>
+	Tue, 25 May 2010 11:26:03 -0400
+Subject: Re: WLAN Regulatory Domain Germany
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kurt Garloff <garloff@suse.de>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+In-Reply-To: <20100525151429.GC6342@tpkurt2.garloff.de>
+References: <20100519172944.GB32757@tpkurt2.garloff.de>
+	 <1274690246.3743.20.camel@jlt3.sipsolutions.net>
+	 <20100525151429.GC6342@tpkurt2.garloff.de>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 25 May 2010 17:26:19 +0200
+Message-ID: <1274801179.3635.44.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Disable the leds on ath9k for Apple products, since
-there is no leds on any of there machines(or non that I can find!!).
+On Tue, 2010-05-25 at 17:14 +0200, Kurt Garloff wrote:
+>                                                                                               
+> OK, new suggestion.
+> 
+> 8<------------------------------------------------------------------------                    
+> 
+> # Data from "Frequenznutzungsplan" (as published in April 2008), downloaded from
+> # http://www.bundesnetzagentur.de/cae/servlet/contentblob/38448/publicationFile/2659/Frequenznutzungsplan2008_Id17448pdf.pdf
+> # For the 5GHz range also see
+> # http://www.bundesnetzagentur.de/cae/servlet/contentblob/38216/publicationFile/6579/WLAN5GHzVfg7_2010_28042010pdf.pdf
+> # The values have been reduced by a factor of 2 (3db) for non TPC devices
+> # (in other words: devices with TPC can use twice the tx power of this table).
+> # Note that the docs do not require TPC for 5150--5250; the reduction to
+> # 100mW thus is not strictly required -- however the conservative 100mW
+> # limit is used here as the non-interference with radar and satellite
+> # apps relies on the attenuation by the building walls only in the
+> # absence of DFS; the neighbour countries have 100mW limit here as well.
+> 
+> country DE:
+> 	# entries 279004 and 280006
+>        (2400 - 2483.5 @ 40), (N/A, 100 mW)
+>        # entry 303005
+>        (5150 - 5250 @ 40), (N/A, 100 mW), NO-OUTDOOR
+>        # entries 304002 and 305002
+>        (5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
+>        # entries 308002, 309001 and 310003
+>        (5470 - 5725 @ 40), (N/A, 500 mW), DFS
 
- Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+Ok, that looks fine to me.
 
----
- drivers/net/wireless/ath/ath9k/gpio.c |   20 ++++++++++++++++++++
- 1 files changed, 20 insertions(+), 0 deletions(-)
+> Can we actually put several entries covering the same frequency range?
+> Then we could put 200mW for DFS and 100mW for non-DFS.
+> This would also address the next issue you raise ...
 
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 0ee75e7..c21e74f 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -15,6 +15,7 @@
-  */
- 
- #include "ath9k.h"
-+#include <linux/dmi.h>
- 
- /********************************/
- /*	 LED functions		*/
-@@ -127,11 +128,30 @@ void ath_deinit_leds(struct ath_softc *sc)
- 	ath9k_hw_set_gpio(sc->sc_ah, sc->sc_ah->led_pin, 1);
- }
- 
-+static struct dmi_system_id __initdata dmi_system_table[] = {
-+	{
-+		.matches = {
-+			DMI_MATCH(DMI_BIOS_VENDOR, "Apple Computer, Inc.")
-+		},
-+	},
-+	{
-+		.matches = {
-+			DMI_MATCH(DMI_BIOS_VENDOR, "Apple Inc.")
-+		},
-+	},
-+	{}
-+};
-+
- void ath_init_leds(struct ath_softc *sc)
- {
- 	char *trigger;
- 	int ret;
- 
-+	/* Apple has no leds lights for their wireless.  */
-+	if (dmi_check_system(dmi_system_table) > 0)
-+		return -ENODEV;
-+	else
-+
- 	if (AR_SREV_9287(sc->sc_ah))
- 		sc->sc_ah->led_pin = ATH_LED_PIN_9287;
- 	else
--- 
-1.6.5.GIT
+I think you're confusing DFS and TPC requirements? Anyway, no, we can't
+right now.
+
+> > Also note that there are different requirements depending on the channel
+> > bandwidth, which will eventually come up in Linux too. But I think for
+> > that we need the new database format for that ... yet another thing to
+> > do before we can support 5/10 MHz channels.
+> 
+> Indeed. For 5150 -- 5350, the spectral power density may not exceed
+> 10mW/MHz (and overall emitted power in the range per device not 200mW);
+> this gives a limit of 200mW for 20MHz channels or 100mW if no TPC is 
+> used for 5250 -- 5350. (For 5470--5725 use 5x those values.)
+> I'm not aware of WLAN devices with narrower channels yet, but if they 
+> come into existence, we'd have to reflect it somehow ...
+
+They exist, we just don't support them right now ... I put it on the
+todo list for now.
+
+johannes
 
