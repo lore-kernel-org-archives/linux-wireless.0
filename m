@@ -1,120 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:50451 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753031Ab0EONhG (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:35183 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933161Ab0EYTCW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 May 2010 09:37:06 -0400
-Received: by fxm6 with SMTP id 6so2348414fxm.19
-        for <linux-wireless@vger.kernel.org>; Sat, 15 May 2010 06:37:05 -0700 (PDT)
-Date: Sat, 15 May 2010 15:36:16 +0200
-From: Dan Carpenter <error27@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Jouni Malinen <jmalinen@atheros.com>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Jeff Hansen <x@jeffhansen.com>, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-Subject: [patch -next 2/2 v2] ath9k/debug: fixup the return codes
-Message-ID: <20100515133616.GC5381@bicker>
-References: <20100514132539.GH5695@bicker>
+	Tue, 25 May 2010 15:02:22 -0400
+Received: by pxi18 with SMTP id 18so2109617pxi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 25 May 2010 12:02:21 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100514132539.GH5695@bicker>
+In-Reply-To: <1274770211-22710-2-git-send-email-juuso.oikarinen@nokia.com>
+References: <1274770211-22710-1-git-send-email-juuso.oikarinen@nokia.com>
+	<1274770211-22710-2-git-send-email-juuso.oikarinen@nokia.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 25 May 2010 12:02:01 -0700
+Message-ID: <AANLkTinMo6L_LuCgcu9izxUVsFbi7kamHD2F_xThwJ2R@mail.gmail.com>
+Subject: Re: [PATCH] cfg80211: Fix user-space crda query stall
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changed -EINVAL to -EFAULT if copy_to_user() failed.
-Changed 0 to -ENOMEM if allocations failed.
+On Mon, May 24, 2010 at 11:50 PM, Juuso Oikarinen
+<juuso.oikarinen@nokia.com> wrote:
+> The userspace crda utility can fail to respond to kernel requests in (at least)
+> two scenarios: it is not runnable for any reason, or it is invoked with a
+> country code not in its database.
+>
+> When the userspace crda utility fails to respond to kernel requests (i.e. it
+> does not use NL80211_CMD_SET_REG to provide the kernel regulatory information
+> for the requested country) the kernel crda subsystem will stall. It will
+> refuse to process any further regulatory hints. This is easiest demonstrated
+> by using for instance the "iw" tool:
+>
+>   iw reg set EU
+>   iw reg set US
+>
+> "EU" is not a country code present in the database, so user space crda will
+> not respond. Attempting to define US after that will be silently ignored
+> (internally, an -EAGAIN is the result, as the "EU" request is still
+> "being processed".)
+>
+> To fix this issue, this patch implements timeout protection for the userspace
+> crda invocation. If there is no response for five seconds, the crda code will
+> force itself to the world regulatory domain for maximum safety.
+>
+> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
----
-V2:  No change.  Just updated to apply on top of V2 of the earlier patch
+This is a great idea, I really like it and appreciate you taking the
+time to work on this, however to do this it requires a little more
+work and will point out the notes below. So NACK for now but with some
+fixes I think this would be great.
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index fad1c85..3ff6a52 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -56,7 +56,7 @@ static ssize_t write_file_debug(struct file *file, const char __user *user_buf,
- 
- 	len = min(count, sizeof(buf) - 1);
- 	if (copy_from_user(buf, user_buf, len))
--		return -EINVAL;
-+		return -EFAULT;
- 
- 	buf[len] = '\0';
- 	if (strict_strtoul(buf, 0, &mask))
-@@ -100,7 +100,7 @@ static ssize_t write_file_tx_chainmask(struct file *file, const char __user *use
- 
- 	len = min(count, sizeof(buf) - 1);
- 	if (copy_from_user(buf, user_buf, len))
--		return -EINVAL;
-+		return -EFAULT;
- 
- 	buf[len] = '\0';
- 	if (strict_strtoul(buf, 0, &mask))
-@@ -142,7 +142,7 @@ static ssize_t write_file_rx_chainmask(struct file *file, const char __user *use
- 
- 	len = min(count, sizeof(buf) - 1);
- 	if (copy_from_user(buf, user_buf, len))
--		return -EINVAL;
-+		return -EFAULT;
- 
- 	buf[len] = '\0';
- 	if (strict_strtoul(buf, 0, &mask))
-@@ -175,7 +175,7 @@ static ssize_t read_file_dma(struct file *file, char __user *user_buf,
- 
- 	buf = kmalloc(DMA_BUF_LEN, GFP_KERNEL);
- 	if (!buf)
--		return 0;
-+		return -ENOMEM;
- 
- 	ath9k_ps_wakeup(sc);
- 
-@@ -407,7 +407,7 @@ static ssize_t read_file_rcstat(struct file *file, char __user *user_buf,
- 	max = 80 + sc->cur_rate_table->rate_cnt * 1024 + 1;
- 	buf = kmalloc(max, GFP_KERNEL);
- 	if (buf == NULL)
--		return 0;
-+		return -ENOMEM;
- 
- 	len += sprintf(buf, "%6s %6s %6s "
- 		       "%10s %10s %10s %10s\n",
-@@ -644,7 +644,7 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
- 
- 	buf = kzalloc(size, GFP_KERNEL);
- 	if (buf == NULL)
--		return 0;
-+		return -ENOMEM;
- 
- 	len += sprintf(buf, "%30s %10s%10s%10s\n\n", "BE", "BK", "VI", "VO");
- 
-@@ -718,7 +718,7 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
- 
- 	buf = kzalloc(size, GFP_KERNEL);
- 	if (buf == NULL)
--		return 0;
-+		return -ENOMEM;
- 
- 	len += snprintf(buf + len, size - len,
- 			"%18s : %10u\n", "CRC ERR",
-@@ -838,7 +838,7 @@ static ssize_t write_file_regidx(struct file *file, const char __user *user_buf,
- 
- 	len = min(count, sizeof(buf) - 1);
- 	if (copy_from_user(buf, user_buf, len))
--		return -EINVAL;
-+		return -EFAULT;
- 
- 	buf[len] = '\0';
- 	if (strict_strtoul(buf, 0, &regidx))
-@@ -880,7 +880,7 @@ static ssize_t write_file_regval(struct file *file, const char __user *user_buf,
- 
- 	len = min(count, sizeof(buf) - 1);
- 	if (copy_from_user(buf, user_buf, len))
--		return -EINVAL;
-+		return -EFAULT;
- 
- 	buf[len] = '\0';
- 	if (strict_strtoul(buf, 0, &regval))
+> ---
+>  net/wireless/reg.c |   44 ++++++++++++++++++++++++++++++++++++++++++++
+>  1 files changed, 44 insertions(+), 0 deletions(-)
+>
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index 8f0d97d..6c945f0 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -385,6 +385,40 @@ static inline void reg_regdb_query(const char *alpha2) {}
+>  #endif /* CONFIG_CFG80211_INTERNAL_REGDB */
+>
+>  /*
+> + * This gets invoked if crda in userspace is not responding (it's not getting
+> + * executed or the country code in the hint is not in the database.
+> + */
+> +
+> +static void call_crda_timeout_work(struct work_struct *work)
+> +{
+> +       if (!last_request)
+> +               return;
+> +
+> +       printk(KERN_INFO "cfg80211: crda request timed out, reverting to 00\n");
+> +
+> +       mutex_lock(&cfg80211_mutex);
+> +
+> +       /*
+> +        * As we are not getting data for the current country, force us back
+> +        * to the world regdomain.
+> +        */
+> +       last_request->alpha2[0] = '0';
+> +       last_request->alpha2[1] = '0';
+> +       set_regdom(cfg80211_world_regdom);
+> +       mutex_unlock(&cfg80211_mutex);
+> +}
+
+
+Actually you may want to consider using restore_regulatory_settings()
+instead as that would:
+
+  * set the world regdom
+  * then set the first user specified regulatory domain if they had one picked
+
+This would mean we would go into a loop here though if the user had
+specified 'EU' though so this routine first needs to be fixed to
+annotate a regulatory domain as invalid. Note that a regulatory cannot
+be invalid if CRDA just times out -- CRDA could time out if it was not
+present. So this is a bit tricky and not sure how to resolve it. John
+recently added support for building the regulatory database as part of
+the kernel but at the same time support letting CRDA still update the
+same info if it is present. Then for those setup it could be possible
+'DE' exists on the core kernel regulatory database but if CRDA is not
+installed then CRDA will time out.
+
+Maybe what we can do is if both the internal kernel regdb *and* CRDA
+times out then mark the user specified request as invalid and restore
+to using the world regdom. This would allow the user to later install
+a CRDA with some newer regdb in userspace, for example. This allows
+for upgrading the db itself from userspace without making kernel
+changes. It allows for countries to be created.
+
+> +
+> +static DECLARE_WORK(crda_uevent_timeout_work, call_crda_timeout_work);
+> +
+> +#define CRDA_UEVENT_TIMEOUT 5000
+> +static void crda_uevent_timeout(unsigned long data)
+> +{
+> +       schedule_work(&crda_uevent_timeout_work);
+> +}
+> +
+> +static DEFINE_TIMER(crda_uevent_timer, crda_uevent_timeout, 0, 0);
+
+I would prefer we use a completion here, seems a little cleaner. Check
+out ath9k/wmi.c for cmd_wait and its use with init_completion() and
+complete().
+
+> +/*
+>  * This lets us keep regulatory code which is updated on a regulatory
+>  * basis in userspace.
+>  */
+> @@ -409,6 +443,10 @@ static int call_crda(const char *alpha2)
+>        country_env[8] = alpha2[0];
+>        country_env[9] = alpha2[1];
+>
+> +       /* start timeout timer */
+> +       mod_timer(&crda_uevent_timer,
+> +                 jiffies + msecs_to_jiffies(CRDA_UEVENT_TIMEOUT));
+> +
+>        return kobject_uevent_env(&reg_pdev->dev.kobj, KOBJ_CHANGE, envp);
+>  }
+>
+> @@ -2581,6 +2619,9 @@ int set_regdom(const struct ieee80211_regdomain *rd)
+>
+>        assert_cfg80211_lock();
+>
+> +       /* cancel timeout */
+> +       del_timer(&crda_uevent_timer);
+> +
+>        mutex_lock(&reg_mutex);
+>
+>        /* Note that this doesn't update the wiphys, this is done below */
+> @@ -2683,6 +2724,9 @@ void regulatory_exit(void)
+>
+>        cancel_work_sync(&reg_work);
+>
+> +       del_timer_sync(&crda_uevent_timer);
+> +       cancel_work_sync(&crda_uevent_timeout_work);
+> +
+>        mutex_lock(&cfg80211_mutex);
+>        mutex_lock(&reg_mutex);
+
+Thanks!!!
+
+  Luis
