@@ -1,39 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:6920 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754129Ab0EZRcf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 May 2010 13:32:35 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Michael Green <Michael.Green@atheros.com>,
-	David Quan <David.Quan@atheros.com>
-Date: Wed, 26 May 2010 20:32:28 +0300
-Subject: RE: [RFC] wireless-regdb: Add A band in IL
-Message-ID: <4825B8A2C4E264489E57869F0DCFB22343E33E611F@hasmsx502.ger.corp.intel.com>
-References: <1274856569-13436-1-git-send-email-emmanuel.grumbach@intel.com>
- <AANLkTikzEywcDi9zyJknMWkKymCVYnWQa2YXbbSDVx5o@mail.gmail.com>
-In-Reply-To: <AANLkTikzEywcDi9zyJknMWkKymCVYnWQa2YXbbSDVx5o@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from he.sipsolutions.net ([78.46.109.217]:46534 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754211Ab0EYLZ0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 May 2010 07:25:26 -0400
+Subject: Re: [RFC PATCH] mac80211: Add support for hardware ARP query
+ filtering
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1274779914.5277.216.camel@wimaxnb.nmp.nokia.com>
+References: <1274773685-11168-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1274778802.3635.30.camel@jlt3.sipsolutions.net>
+	 <1274779914.5277.216.camel@wimaxnb.nmp.nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 25 May 2010 13:25:43 +0200
+Message-ID: <1274786743.3635.33.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pj4gwqBjb3VudHJ5IElMOg0KPj4gwqAgwqAgwqAgwqAoMjQwMiAtIDI0ODIgQCA0MCksIChOL0Es
-IDIwKQ0KPj4gKyDCoCDCoCDCoCAoNTE1MCAtIDUyNTAgQCA0MCkuIChOL0EsIDIwMCBtVyksIE5P
-LU9VVERPT1INCj4+ICsgwqAgwqAgwqAgKDUyNTAgLSA1MzUwIEAgNDApLiAoTi9BLCAyMDAgbVcp
-LCBOTy1PVVRET09SLCBERlMNCj4NCj5JIGJlbGlldmUgdGhlIG9uZSBzdGFuZGluZyBpc3N1ZSBo
-ZXJlIGlzIHlvdSBhcmUgZW5hYmxpbmcgSFQ0MCBvbiA1DQo+R0h6LCBob3cgYWJvdXQgZW5hYmxp
-bmcgMi40IEdIeiBmaXJzdCwgYW5kIHRoZW4gdGhyb3VnaCBhIHNlcGFyYXRlDQo+cGF0Y2ggYW5k
-IHRpbWUvcmV2aWV3IHdlIHJldmlldyB0aGUgSFQ0MCBzdHVmZiwgdW5sZXNzIHlvdSBhcmUgaW4g
-bm8NCj5ydXNoIHRvIGdldCAyLjQgR0h6IGVuYWJsZWQuDQo+DQoNCkkgYW0gbm90IGZvbGxvd2lu
-Zy4uLiBIVDQwIG9uIDIuNCBHSHogaXMgYWxyZWFkeSBlbmFibGVkLi4uDQpXaGF0IHNob3VsZCBJ
-IGVuYWJsZSBpbiAyLjQgR0h6ID8NCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpJbnRlbCBJc3JhZWwgKDc0KSBMaW1p
-dGVkCgpUaGlzIGUtbWFpbCBhbmQgYW55IGF0dGFjaG1lbnRzIG1heSBjb250YWluIGNvbmZpZGVu
-dGlhbCBtYXRlcmlhbCBmb3IKdGhlIHNvbGUgdXNlIG9mIHRoZSBpbnRlbmRlZCByZWNpcGllbnQo
-cykuIEFueSByZXZpZXcgb3IgZGlzdHJpYnV0aW9uCmJ5IG90aGVycyBpcyBzdHJpY3RseSBwcm9o
-aWJpdGVkLiBJZiB5b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQKcmVjaXBpZW50LCBwbGVhc2UgY29u
-dGFjdCB0aGUgc2VuZGVyIGFuZCBkZWxldGUgYWxsIGNvcGllcy4K
+On Tue, 2010-05-25 at 12:31 +0300, Juuso Oikarinen wrote:
+
+> > BTW, how will drivers deal with getting this while unassociated? If, for
+> > example, I set an address before associating, you'll get it while
+> > unassociated and not again when associated. Another thing to document --
+> > driver needs to handle that, DHCP is not everything :)
+> 
+> This is actually a good point. The wl1271 driver configures the ARP
+> filter immediately - associated or not - once the chipset is booted up
+> (as above.) This is indeed not very generic.
+> 
+> I will move the set_arp_filter -thingy from _open() to when the we are
+> associated. That way we get the initial IP address (if there happen to
+> be any) from start when the address is actually needed. 
+
+But then you would still get a callback way before the hardware is even
+started if you set the address before ifup ... mac80211 should probably
+catch that. Or does the networking stack already defer it then?
+
+Another thing that came to mind -- how about locking? Will the callback
+have to be atomic? Can you really access idev->ifa_list without any
+locking at all?
+
+> > This is obviously broken when you have multiple virtual interfaces, so
+> > you either need to build a common list of IP addresses, or punt the
+> > problem to the driver and give the callback an ieee80211_vif argument
+> > and clearly document that the driver will have to keep track of it for
+> > each interface.
+> 
+> Good point. I will "punt" (never heard this expression before!) 
+
+Don't take my word for it ... I heard that once but can't find reference
+to it being a correct use of the word ;)
+
+johannes
 
