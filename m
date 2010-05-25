@@ -1,97 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:33977 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754082Ab0EXN1R convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:48098 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751127Ab0EYHq6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 May 2010 09:27:17 -0400
-Received: by wyb29 with SMTP id 29so1493632wyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 24 May 2010 06:27:16 -0700 (PDT)
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <1274696926.7803.15.camel@chi>
-References: <1274696926.7803.15.camel@chi>
-Date: Mon, 24 May 2010 15:27:15 +0200
-Message-ID: <AANLkTinJPe5tqo7K8k074W2fzih2kzQPHlgyiugTo9cC@mail.gmail.com>
-Subject: Re: Oops in iwl3945_request_scan (2.6.34+)
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Priit Laes <plaes@plaes.org>
-Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
-Content-Type: text/plain; charset=UTF-8
+	Tue, 25 May 2010 03:46:58 -0400
+Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
+	by mgw-mx03.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o4P7knf9009345
+	for <linux-wireless@vger.kernel.org>; Tue, 25 May 2010 10:46:56 +0300
+Received: from localhost.localdomain (wimaxnb.nmp.nokia.com [172.22.211.32])
+	by mgw-da01.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o4P7kdfq013030
+	for <linux-wireless@vger.kernel.org>; Tue, 25 May 2010 10:46:40 +0300
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC PATCH] mac80211: Add support for hardware ARP query filtering
+Date: Tue, 25 May 2010 10:48:05 +0300
+Message-Id: <1274773685-11168-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please see [1] and [2].
+Some hardware allow extended filtering of ARP frames not intended for
+this host. To perform such filtering, the hardware needs to know the current
+IP address(es) of the host, bound to its interface.
 
-- Sedat -
+Add support for ARP filtering to mac80211 by adding a new op to the driver
+interface, allowing to configure the current IP addresses. Call this op when
+the interface is opened (as there may be an address already configured) and
+whenever the IP addresses change.
 
-[1] http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2208
-[2] http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=582906
+This patch adds configuration of IPv4 addresses only, as IPv6 addresses don't
+need ARP filtering. IPv6 support could be added later if someone comes up with
+more frame types that can be filtered in hardware already.
 
-On Mon, May 24, 2010 at 12:28 PM, Priit Laes <plaes@plaes.org> wrote:
-> Hey!
->
-> When trying latest upstream Linus's kernel (2.6.34-07097-gf4b87de) I got
-> following Oops when associating with wireless access point (IIRC, it was
-> WEP-authenticated).
-> Although authentication was successful and I was able to ping external
-> networks, no HTTP-data could be received.
->
-> Machine: IBM/Lenovo Thinkpad x60s
-> Network controller: Intel Corporation PRO/Wireless 3945ABG [Golan]
-> Network Connection (rev 02)
->
-> [snip]
-> wlan0: authenticate with 00:xx:xx:xx:xx:xx (try 1)
-> wlan0: authenticated
-> wlan0: associate with 00:xx:xx:xx:xx:xx (try 1)
-> wlan0: RX AssocResp from 00:xx:xx:xx:xx:xx (capab=0x411 status=0 aid=1)
-> wlan0: associated
-> ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-> BUG: unable to handle kernel paging request at 0000000000100886
-> IP: [<ffffffffa000cff0>] iwl3945_request_scan+0x8c5/0xcd6 [iwl3945]
-> PGD bc115067 PUD bc114067 PMD 0
-> Oops: 0000 [#1] SMP
-> last sysfs file: /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq
-> CPU 0
-> Modules linked in: sdhci_pci sdhci mmc_core joydev iwl3945
-> Pid: 1372, comm: iwl3945 Not tainted 2.6.34-07097-gf4b87de #1 1702M3G/1702M3G
-> RIP: 0010:[<ffffffffa000cff0>]  [<ffffffffa000cff0>] iwl3945_request_scan+0x8c5/0xcd6 [iwl3945]
-> RSP: 0018:ffff8800bb311d40  EFLAGS: 00010207
-> RAX: ffff8800bce40800 RBX: ffff8800bb611380 RCX: 0000000000000057
-> RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff8800bb611380
-> RBP: 0000000000100886 R08: 000000000000030e R09: 00000000ffffffff
-> R10: 0000000010bf1c00 R11: ffff880001a12400 R12: ffff8800bafd38f2
-> R13: 0000000000000000 R14: 0000000000000058 R15: 0000000000000000
-> FS:  0000000000000000(0000) GS:ffff880001a00000(0000) knlGS:0000000000000000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-> CR2: 0000000000100886 CR3: 00000000bc112000 CR4: 00000000000006f0
-> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-> Process iwl3945 (pid: 1372, threadinfo ffff8800bb310000, task ffff8800baeae120)
-> Stack:
->  ffff8800baeae120 0000000000000000 ffff880000000000 ffff880000000000
-> <0> ffff8800bb311da0 ffffffff8104e5eb 0000000001a12400 0021000000000000
-> <0> ffff8800be66ad01 ffff8800baeaeb60 0000000000000000 ff00000000000000
-> Call Trace:
->  [<ffffffff8104e5eb>] ? finish_task_switch+0x3d/0xb5
->  [<ffffffff812a9a7d>] ? iwl_bg_start_internal_scan+0x0/0x2b5
->  [<ffffffff812a9d14>] ? iwl_bg_start_internal_scan+0x297/0x2b5
->  [<ffffffff81064413>] ? worker_thread+0x13d/0x1c2
->  [<ffffffff8106789b>] ? autoremove_wake_function+0x0/0x2a
->  [<ffffffff810642d6>] ? worker_thread+0x0/0x1c2
->  [<ffffffff810674e1>] ? kthread+0x75/0x7d
->  [<ffffffff81022c54>] ? kernel_thread_helper+0x4/0x10
->  [<ffffffff8106746c>] ? kthread+0x0/0x7d
->  [<ffffffff81022c50>] ? kernel_thread_helper+0x0/0x10
-> Code: 4c 24 60 48 89 4c 24 70 41 0f b7 c6 41 8d 4e ff 89 44 24 7c 66 89 8c 24 86 00 00 00 e9 3c 02 00 00 48 63 54 24 38 48 8b 6c d0 38 <44> 39 7d 00 0f 85 24 02 00 00 66 8b 55 06 44 89 fe 41 88 54 24
-> RIP  [<ffffffffa000cff0>] iwl3945_request_scan+0x8c5/0xcd6 [iwl3945]
->  RSP <ffff8800bb311d40>
-> CR2: 0000000000100886
-> ---[ end trace ac44e894bb32101c ]---
-> wlan0: no IPv6 routers present
-> [/snip]
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ include/net/mac80211.h     |    9 ++++++++
+ net/mac80211/driver-ops.h  |   12 ++++++++++
+ net/mac80211/ieee80211_i.h |    2 +
+ net/mac80211/iface.c       |    1 +
+ net/mac80211/main.c        |   49 +++++++++++++++++++++++++++++++++++++++++++-
+ 5 files changed, 72 insertions(+), 1 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index de22cbf..2354956 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1468,6 +1468,8 @@ enum ieee80211_ampdu_mlme_action {
+ 	IEEE80211_AMPDU_TX_OPERATIONAL,
+ };
+ 
++struct in_ifaddr;
++
+ /**
+  * struct ieee80211_ops - callbacks from mac80211 to the driver
+  *
+@@ -1535,6 +1537,11 @@ enum ieee80211_ampdu_mlme_action {
+  *	of the bss parameters has changed when a call is made. The callback
+  *	can sleep.
+  *
++ * @configure_ip_filter: Configuration function for IP address based filters,
++ *      such as an ARP query filter. This function is called with all the IP
++ *      addresses configured to the interface as argument - all frames targeted
++ *      to any of these addresses should pass through.
++ *
+  * @prepare_multicast: Prepare for multicast filter configuration.
+  *	This callback is optional, and its return value is passed
+  *	to configure_filter(). This callback must be atomic.
+@@ -1674,6 +1681,8 @@ struct ieee80211_ops {
+ 				 struct ieee80211_vif *vif,
+ 				 struct ieee80211_bss_conf *info,
+ 				 u32 changed);
++	int (*configure_ip_filter)(struct ieee80211_hw *hw,
++				   struct in_ifaddr *ifa_list);
+ 	u64 (*prepare_multicast)(struct ieee80211_hw *hw,
+ 				 struct netdev_hw_addr_list *mc_list);
+ 	void (*configure_filter)(struct ieee80211_hw *hw,
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 4f22713..fff6aca 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -83,6 +83,18 @@ static inline void drv_bss_info_changed(struct ieee80211_local *local,
+ 	trace_drv_bss_info_changed(local, sdata, info, changed);
+ }
+ 
++struct in_ifaddr;
++static inline int drv_configure_ip_filter(struct ieee80211_hw *hw,
++					  struct in_ifaddr *ifa_list)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++	int ret = 0;
++
++	if (local->ops->configure_ip_filter)
++		ret = local->ops->configure_ip_filter(hw, ifa_list);
++	return ret;
++}
++
+ static inline u64 drv_prepare_multicast(struct ieee80211_local *local,
+ 					struct netdev_hw_addr_list *mc_list)
+ {
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 1a9e2da..56e1331 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -851,6 +851,7 @@ struct ieee80211_local {
+ 	struct work_struct dynamic_ps_disable_work;
+ 	struct timer_list dynamic_ps_timer;
+ 	struct notifier_block network_latency_notifier;
++	struct notifier_block ifa_notifier;
+ 
+ 	int user_power_level; /* in dBm */
+ 	int power_constr_level; /* in dBm */
+@@ -996,6 +997,7 @@ void ieee80211_send_pspoll(struct ieee80211_local *local,
+ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency);
+ int ieee80211_max_network_latency(struct notifier_block *nb,
+ 				  unsigned long data, void *dummy);
++int ieee80211_set_arp_filter(struct net_device *ndev);
+ void ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 				      struct ieee80211_channel_sw_ie *sw_elem,
+ 				      struct ieee80211_bss *bss,
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 50deb01..5b488b8 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -330,6 +330,7 @@ static int ieee80211_open(struct net_device *dev)
+ 	if (sdata->vif.type == NL80211_IFTYPE_STATION)
+ 		ieee80211_queue_work(&local->hw, &sdata->u.mgd.work);
+ 
++	ieee80211_set_arp_filter(dev);
+ 	netif_tx_start_all_queues(dev);
+ 
+ 	return 0;
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 22a384d..f39e065 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -20,6 +20,7 @@
+ #include <linux/rtnetlink.h>
+ #include <linux/bitmap.h>
+ #include <linux/pm_qos_params.h>
++#include <linux/inetdevice.h>
+ #include <net/net_namespace.h>
+ #include <net/cfg80211.h>
+ 
+@@ -329,6 +330,43 @@ static void ieee80211_recalc_smps_work(struct work_struct *work)
+ 	mutex_unlock(&local->iflist_mtx);
+ }
+ 
++int ieee80211_set_arp_filter(struct net_device *ndev)
++{
++	struct ieee80211_local *local;
++	struct in_device *idev;
++	int ret;
++
++	BUG_ON(!ndev);
++
++	idev = ndev->ip_ptr;
++	if (!idev)
++		return 0;
++
++	local = wdev_priv(ndev->ieee80211_ptr);
++	ret = drv_configure_ip_filter(&local->hw, idev->ifa_list);
++	return ret;
++}
++
++static int ieee80211_ifa_changed(struct notifier_block *nb,
++				 unsigned long data, void *arg)
++{
++	struct in_ifaddr *ifa = arg;
++	struct ieee80211_local *local =
++		container_of(nb, struct ieee80211_local,
++			     ifa_notifier);
++	struct net_device *ndev = ifa->ifa_dev->dev;
++	struct wireless_dev *wdev = ndev->ieee80211_ptr;
++
++	if (!wdev)
++		return NOTIFY_DONE;
++
++	if (wdev->wiphy != local->hw.wiphy)
++		return NOTIFY_DONE;
++
++	ieee80211_set_arp_filter(ndev);
++	return NOTIFY_DONE;
++}
++
+ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 					const struct ieee80211_ops *ops)
+ {
+@@ -612,14 +650,22 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 		ieee80211_max_network_latency;
+ 	result = pm_qos_add_notifier(PM_QOS_NETWORK_LATENCY,
+ 				     &local->network_latency_notifier);
+-
+ 	if (result) {
+ 		rtnl_lock();
+ 		goto fail_pm_qos;
+ 	}
+ 
++	local->ifa_notifier.notifier_call = ieee80211_ifa_changed;
++	result = register_inetaddr_notifier(&local->ifa_notifier);
++	if (result)
++		goto fail_ifa;
++
+ 	return 0;
+ 
++ fail_ifa:
++	pm_qos_remove_notifier(PM_QOS_NETWORK_LATENCY,
++			       &local->network_latency_notifier);
++	rtnl_lock();
+  fail_pm_qos:
+ 	ieee80211_led_exit(local);
+ 	ieee80211_remove_interfaces(local);
+@@ -647,6 +693,7 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
+ 
+ 	pm_qos_remove_notifier(PM_QOS_NETWORK_LATENCY,
+ 			       &local->network_latency_notifier);
++	unregister_inetaddr_notifier(&local->ifa_notifier);
+ 
+ 	rtnl_lock();
+ 
+-- 
+1.6.3.3
+
