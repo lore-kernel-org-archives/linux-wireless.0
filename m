@@ -1,103 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:47725 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757030Ab0EKKyV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 06:54:21 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 11 May 2010 03:54:21 -0700
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19433.14192.60615.129429@gargle.gargle.HOWL>
-Date: Tue, 11 May 2010 16:24:40 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/5] ath9k_htc: Allocate URBs properly
-From: <Sujith.Manoharan@atheros.com>
+Received: from smtp.nokia.com ([192.100.105.134]:41855 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932199Ab0EYGs5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 May 2010 02:48:57 -0400
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] cfg80211: Fix user-space crda query stall
+Date: Tue, 25 May 2010 09:50:11 +0300
+Message-Id: <1274770211-22710-2-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1274770211-22710-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1274770211-22710-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The URBs have to be allocated before uploading
-the firmware to the target. This is needed to process
-the target ready message properly.
+The userspace crda utility can fail to respond to kernel requests in (at least)
+two scenarios: it is not runnable for any reason, or it is invoked with a
+country code not in its database.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+When the userspace crda utility fails to respond to kernel requests (i.e. it
+does not use NL80211_CMD_SET_REG to provide the kernel regulatory information
+for the requested country) the kernel crda subsystem will stall. It will
+refuse to process any further regulatory hints. This is easiest demonstrated
+by using for instance the "iw" tool:
+
+   iw reg set EU
+   iw reg set US
+
+"EU" is not a country code present in the database, so user space crda will
+not respond. Attempting to define US after that will be silently ignored
+(internally, an -EAGAIN is the result, as the "EU" request is still
+"being processed".)
+
+To fix this issue, this patch implements timeout protection for the userspace
+crda invocation. If there is no response for five seconds, the crda code will
+force itself to the world regulatory domain for maximum safety.
+
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 ---
- drivers/net/wireless/ath/ath9k/hif_usb.c |   36 +++++++++++++++---------------
- 1 files changed, 18 insertions(+), 18 deletions(-)
+ net/wireless/reg.c |   44 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 44 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 74872ca..453cf56 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -735,6 +735,14 @@ err:
- 	return -ENOMEM;
- }
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 8f0d97d..6c945f0 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -385,6 +385,40 @@ static inline void reg_regdb_query(const char *alpha2) {}
+ #endif /* CONFIG_CFG80211_INTERNAL_REGDB */
  
-+static void ath9k_hif_usb_dealloc_urbs(struct hif_device_usb *hif_dev)
+ /*
++ * This gets invoked if crda in userspace is not responding (it's not getting
++ * executed or the country code in the hint is not in the database.
++ */
++
++static void call_crda_timeout_work(struct work_struct *work)
 +{
-+	usb_kill_anchored_urbs(&hif_dev->regout_submitted);
-+	ath9k_hif_usb_dealloc_reg_in_urb(hif_dev);
-+	ath9k_hif_usb_dealloc_tx_urbs(hif_dev);
-+	ath9k_hif_usb_dealloc_rx_urbs(hif_dev);
++	if (!last_request)
++		return;
++
++	printk(KERN_INFO "cfg80211: crda request timed out, reverting to 00\n");
++
++	mutex_lock(&cfg80211_mutex);
++
++	/*
++	 * As we are not getting data for the current country, force us back
++	 * to the world regdomain.
++	 */
++	last_request->alpha2[0] = '0';
++	last_request->alpha2[1] = '0';
++	set_regdom(cfg80211_world_regdom);
++	mutex_unlock(&cfg80211_mutex);
 +}
 +
- static int ath9k_hif_usb_download_fw(struct hif_device_usb *hif_dev)
- {
- 	int transfer, err;
-@@ -794,14 +802,6 @@ static int ath9k_hif_usb_dev_init(struct hif_device_usb *hif_dev,
- 		goto err_fw_req;
- 	}
- 
--	/* Download firmware */
--	ret = ath9k_hif_usb_download_fw(hif_dev);
--	if (ret) {
--		dev_err(&hif_dev->udev->dev,
--			"ath9k_htc: Firmware - %s download failed\n", fw_name);
--		goto err_fw_download;
--	}
--
- 	/* Alloc URBs */
- 	ret = ath9k_hif_usb_alloc_urbs(hif_dev);
- 	if (ret) {
-@@ -810,25 +810,25 @@ static int ath9k_hif_usb_dev_init(struct hif_device_usb *hif_dev,
- 		goto err_urb;
- 	}
- 
-+	/* Download firmware */
-+	ret = ath9k_hif_usb_download_fw(hif_dev);
-+	if (ret) {
-+		dev_err(&hif_dev->udev->dev,
-+			"ath9k_htc: Firmware - %s download failed\n", fw_name);
-+		goto err_fw_download;
-+	}
++static DECLARE_WORK(crda_uevent_timeout_work, call_crda_timeout_work);
 +
- 	return 0;
++#define CRDA_UEVENT_TIMEOUT 5000
++static void crda_uevent_timeout(unsigned long data)
++{
++	schedule_work(&crda_uevent_timeout_work);
++}
++
++static DEFINE_TIMER(crda_uevent_timer, crda_uevent_timeout, 0, 0);
++
++/*
+  * This lets us keep regulatory code which is updated on a regulatory
+  * basis in userspace.
+  */
+@@ -409,6 +443,10 @@ static int call_crda(const char *alpha2)
+ 	country_env[8] = alpha2[0];
+ 	country_env[9] = alpha2[1];
  
--err_urb:
--	/* Nothing */
- err_fw_download:
-+	ath9k_hif_usb_dealloc_urbs(hif_dev);
-+err_urb:
- 	release_firmware(hif_dev->firmware);
- err_fw_req:
- 	hif_dev->firmware = NULL;
- 	return ret;
++	/* start timeout timer */
++	mod_timer(&crda_uevent_timer,
++		  jiffies + msecs_to_jiffies(CRDA_UEVENT_TIMEOUT));
++
+ 	return kobject_uevent_env(&reg_pdev->dev.kobj, KOBJ_CHANGE, envp);
  }
  
--static void ath9k_hif_usb_dealloc_urbs(struct hif_device_usb *hif_dev)
--{
--	usb_kill_anchored_urbs(&hif_dev->regout_submitted);
--	ath9k_hif_usb_dealloc_reg_in_urb(hif_dev);
--	ath9k_hif_usb_dealloc_tx_urbs(hif_dev);
--	ath9k_hif_usb_dealloc_rx_urbs(hif_dev);
--}
--
- static void ath9k_hif_usb_dev_deinit(struct hif_device_usb *hif_dev)
- {
- 	ath9k_hif_usb_dealloc_urbs(hif_dev);
+@@ -2581,6 +2619,9 @@ int set_regdom(const struct ieee80211_regdomain *rd)
+ 
+ 	assert_cfg80211_lock();
+ 
++	/* cancel timeout */
++	del_timer(&crda_uevent_timer);
++
+ 	mutex_lock(&reg_mutex);
+ 
+ 	/* Note that this doesn't update the wiphys, this is done below */
+@@ -2683,6 +2724,9 @@ void regulatory_exit(void)
+ 
+ 	cancel_work_sync(&reg_work);
+ 
++	del_timer_sync(&crda_uevent_timer);
++	cancel_work_sync(&crda_uevent_timeout_work);
++
+ 	mutex_lock(&cfg80211_mutex);
+ 	mutex_lock(&reg_mutex);
+ 
 -- 
-1.7.1
+1.6.3.3
 
-
--- 
