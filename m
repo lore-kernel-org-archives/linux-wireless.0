@@ -1,39 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:26019 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757389Ab0ETUaE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 May 2010 16:30:04 -0400
-Subject: Re: How the mac80211 handle "\0" essid?
-From: Dan Williams <dcbw@redhat.com>
-To: leo liang <leoliang9@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTinMa92irnw8fH8PPO6egbAVDFWBg4pCPp3dInwd@mail.gmail.com>
-References: <AANLkTinMa92irnw8fH8PPO6egbAVDFWBg4pCPp3dInwd@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 20 May 2010 13:30:15 -0700
-Message-ID: <1274387415.1422.33.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from mail-px0-f174.google.com ([209.85.212.174]:46600 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758538Ab0EYBDA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 24 May 2010 21:03:00 -0400
+Received: by pxi18 with SMTP id 18so1700866pxi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 24 May 2010 18:03:00 -0700 (PDT)
+Message-ID: <4BFB21C1.3060703@gmail.com>
+Date: Mon, 24 May 2010 18:02:57 -0700
+From: Huy Le <lehuy0406@gmail.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: ioctl for b43 driver
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-05-20 at 15:40 -0400, leo liang wrote:
-> Hi,
-> 
-> Does any one know that if the application send "\0" as essid to
-> mac80211, how it handle this case?
+Hi,
 
-What are you trying to do?  Are you trying to work with a hidden AP, or
-do something else?
+Currently I try aircrack-ng with b43 driver but it is fail at this 
+statement due to the following statement:
 
-An SSID is simply a 32-byte array; the protocol and the stack don't care
-what's in that array.  So while you can't use command-line tools like
-'iwconfig' to send an SSID containing a \0, you can use netlink or
-wpa_supplicant's nl80211 driver to do so.
+     ioctl( fd, SIOCGIWFREQ, &wrq ) < 0
 
-But in the end, if you're trying to associate with an AP that has an
-SSID of only '\0', that AP is likely broken or trying to hide it's SSID,
-and you should be using the real SSID of that AP instead of '\0'.  
+This happens because we do not have ioctl for b43 driver. I just want to 
+ask if there is any way to work around.
 
-Dan
-
-
+Thanks.
