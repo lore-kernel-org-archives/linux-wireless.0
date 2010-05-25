@@ -1,77 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:47501 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750752Ab0EMBGf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 May 2010 21:06:35 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 12 May 2010 18:06:35 -0700
-Date: Wed, 12 May 2010 18:06:34 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Bruno Randolf <br1@einfach.org>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"mcgrof@infradead.org" <mcgrof@infradead.org>
-Subject: Re: [PATCH 2/2] compat-wireless: make patches apply again
-Message-ID: <20100513010633.GC2717@tux>
-References: <1273526650-26282-1-git-send-email-hauke@hauke-m.de>
- <201005121720.50514.br1@einfach.org>
- <AANLkTinkg1lG6Zc-9CfxABp0DVpTsym1YFKlcFCHTMTE@mail.gmail.com>
- <201005131000.57369.br1@einfach.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <201005131000.57369.br1@einfach.org>
+Received: from smtp.nokia.com ([192.100.122.230]:40624 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932169Ab0EYJbF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 May 2010 05:31:05 -0400
+Subject: Re: [RFC PATCH] mac80211: Add support for hardware ARP query
+ filtering
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1274778802.3635.30.camel@jlt3.sipsolutions.net>
+References: <1274773685-11168-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1274778802.3635.30.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 25 May 2010 12:31:54 +0300
+Message-ID: <1274779914.5277.216.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 12, 2010 at 06:00:57PM -0700, Bruno Randolf wrote:
-> On Thursday 13 May 2010 01:28:18 Luis R. Rodriguez wrote:
-> > On Wed, May 12, 2010 at 1:20 AM, Bruno Randolf <br1@einfach.org> wrote:
-> > > On Tuesday 11 May 2010 06:24:10 Hauke Mehrtens wrote:
-> > >> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> > >> ---
-> > >>  patches/07-change-default-rate-alg.patch |    4 ++--
-> > >>  1 files changed, 2 insertions(+), 2 deletions(-)
-> > >> 
-> > >> diff --git a/patches/07-change-default-rate-alg.patch
-> > >> b/patches/07-change-default-rate-alg.patch index af65207..f0ccbce 100644
-> > >> --- a/patches/07-change-default-rate-alg.patch
-> > >> +++ b/patches/07-change-default-rate-alg.patch
-> > >> @@ -21,7 +21,7 @@ at compilation time.
-> > >>   module_param(ieee80211_default_rc_algo, charp, 0644);
-> > >>   MODULE_PARM_DESC(ieee80211_default_rc_algo,
-> > >>                "Default rate control algorithm for mac80211 to use");
-> > >> -@@ -118,8 +118,8 @@ ieee80211_rate_control_ops_get(const cha
-> > >> +@@ -119,8 +119,8 @@ ieee80211_rate_control_ops_get(const cha
-> > >>               ops =
-> > > 
-> > > ieee80211_try_rate_control_ops_get(ieee80211_default_rc_algo);
-> > > 
-> > >>       /* try built-in one if specific alg requested but not found */
-> > >> @@ -29,6 +29,6 @@ at compilation time.
-> > >>  -            ops =
-> > > 
-> > > ieee80211_try_rate_control_ops_get(CONFIG_MAC80211_RC_DEFAULT);
-> > > 
-> > >>  +    if (!ops && strlen(CONFIG_COMPAT_MAC80211_RC_DEFAULT))
-> > >>  +            ops =
-> > >> ieee80211_try_rate_control_ops_get(CONFIG_COMPAT_MAC80211_RC_DEFAULT); +
-> > >>       kparam_unblock_sysfs_write(ieee80211_default_rc_algo);
-> > >> 
-> > >>       return ops;
-> > >> - }
-> > > 
-> > > this is somehow messed up and doesn't apply. here is a fixed version of
-> > > the patch (not a patch for a patch)...
-> > 
-> > Odd, it applied, here with git am and all. Hm, oh well.
+On Tue, 2010-05-25 at 11:13 +0200, ext Johannes Berg wrote:
+> On Tue, 2010-05-25 at 10:48 +0300, Juuso Oikarinen wrote:
 > 
-> sorry, i wasn't clear about it. the patch from the mail obviously applied and 
-> i got it by git pull. but the resulting patch "07-change-default-rate-
-> alg.patch" does not apply any more, so i sent a fixed up version of that file.
+> > +struct in_ifaddr;
+> > +
+> 
+> I think you should include a header file for that, or was there a reason
+> you didn't?
 
-Sorry I'm still a little lost still, can you post any pending patch on a
-new e-mail ?
+Yeah, I'll add the header.
 
-  Luis
+> > + * @configure_ip_filter: Configuration function for IP address based filters,
+> > + *      such as an ARP query filter. This function is called with all the IP
+> > + *      addresses configured to the interface as argument - all frames targeted
+> > + *      to any of these addresses should pass through.
+> 
+> Huh ok I thought you wanted ARP filtering, not IP filtering. You need to
+> be more explicit about what this should do. IP filtering is not useful
+> since those frames will be unicast on the ethernet layer. I think this
+> should be more focused on ARP filtering.
+
+True, this is about ARP filtering. I was pondering naming it arp or IP,
+then opted to go with IP just because I was thinking that there may be
+some other frames we might want to filter based on IP in the future.
+Maybe I'm thinking too far ahead ;)
+
+I'll update the naming to be ARP all around.
+
+> Additionally, it needs to be very explicit that it must filter ONLY ARP
+> packets that do not match any of the given IP addresses. If, for
+> example, the hardware can only handle 2 addresses, but you have 3 in the
+> list, the filter must be turned off. Any packet that the device cannot
+> parse properly must also be passed through. All such things should be
+> documented.
+
+This is a valid point. That's actually what the wl1271 driver does - as
+the HW only supports one address for its filter. I'll add some text for
+this.
+
+> > +struct in_ifaddr;
+> 
+> You should get the right include too.
+> 
+> > +static inline int drv_configure_ip_filter(struct ieee80211_hw *hw,
+> > +					  struct in_ifaddr *ifa_list)
+> > +{
+> > +	struct ieee80211_local *local = hw_to_local(hw);
+> > +	int ret = 0;
+> > +
+> > +	if (local->ops->configure_ip_filter)
+> > +		ret = local->ops->configure_ip_filter(hw, ifa_list);
+> > +	return ret;
+> > +}
+> 
+> Tracing would be nice, you should even able able to trace all addresses
+> in a variable-length array.
+
+Yeah, I was lazy. I will look into this :P
+
+> 
+> > @@ -330,6 +330,7 @@ static int ieee80211_open(struct net_device *dev)
+> >  	if (sdata->vif.type == NL80211_IFTYPE_STATION)
+> >  		ieee80211_queue_work(&local->hw, &sdata->u.mgd.work);
+> >  
+> > +	ieee80211_set_arp_filter(dev);
+> 
+> That seems unnecessary if drivers assume that there are no addresses to
+> start with?
+> 
+
+The drivers assume there is no address to start with - this is for the
+scenario when there is, so that the driver enables the filtering from
+scratch. You can do this, for instance:
+
+ifconfig wlan0 up 192.168.1.1
+ifconfig wlan0 down
+ifconfig wlan0 up
+
+The address 192.168.1.1 will be there already on ifconfig wlan0 up.
+
+> BTW, how will drivers deal with getting this while unassociated? If, for
+> example, I set an address before associating, you'll get it while
+> unassociated and not again when associated. Another thing to document --
+> driver needs to handle that, DHCP is not everything :)
+
+This is actually a good point. The wl1271 driver configures the ARP
+filter immediately - associated or not - once the chipset is booted up
+(as above.) This is indeed not very generic.
+
+I will move the set_arp_filter -thingy from _open() to when the we are
+associated. That way we get the initial IP address (if there happen to
+be any) from start when the address is actually needed. 
+
+> 
+> > +static int ieee80211_ifa_changed(struct notifier_block *nb,
+> > +				 unsigned long data, void *arg)
+> > +{
+> > +	struct in_ifaddr *ifa = arg;
+> > +	struct ieee80211_local *local =
+> > +		container_of(nb, struct ieee80211_local,
+> > +			     ifa_notifier);
+> > +	struct net_device *ndev = ifa->ifa_dev->dev;
+> > +	struct wireless_dev *wdev = ndev->ieee80211_ptr;
+> > +
+> > +	if (!wdev)
+> > +		return NOTIFY_DONE;
+> > +
+> > +	if (wdev->wiphy != local->hw.wiphy)
+> > +		return NOTIFY_DONE;
+> > +
+> > +	ieee80211_set_arp_filter(ndev);
+> > +	return NOTIFY_DONE;
+> > +}
+> 
+> This is obviously broken when you have multiple virtual interfaces, so
+> you either need to build a common list of IP addresses, or punt the
+> problem to the driver and give the callback an ieee80211_vif argument
+> and clearly document that the driver will have to keep track of it for
+> each interface.
+
+Good point. I will "punt" (never heard this expression before!) the
+problem to the driver with a vif pointer.
+
+Thanks for your review. :)
+
+-Juuso
+
+> johannes
+> 
+
+
