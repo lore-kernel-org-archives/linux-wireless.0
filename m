@@ -1,144 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60659 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750962Ab0E0MlK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 May 2010 08:41:10 -0400
-Subject: [PATCH] mac80211: clean up ieee80211_stop_tx_ba_session
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 27 May 2010 14:41:07 +0200
-Message-ID: <1274964067.3669.43.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from nbd.name ([88.198.39.176]:50487 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758875Ab0EYRm6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 May 2010 13:42:58 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 2/3] ath9k_common: use allocated key cache entries for multi BSS crypto support
+Date: Tue, 25 May 2010 19:42:45 +0200
+Message-Id: <1274809366-73422-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1274809366-73422-1-git-send-email-nbd@openwrt.org>
+References: <1274809366-73422-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This patch replaces the buggy 'ath9k: Group Key fix for VAPs' change.
 
-There's no sense in letting anything but internal
-mac80211 functions set the initiator to anything
-but WLAN_BACK_INITIATOR, since WLAN_BACK_RECIPIENT
-is only valid when we have received a frame from
-the peer, which we react to directly in mac80211.
+For AP mode group keys, use the BSSID as lookup mac address, with
+the multicast keysearch bit set.
+For IBSS mode, use the peer's MAC address with multicast keysearch.
+For STA mode, keep using the group key slots.
 
-The debugfs code I recently added got this wrong
-as well.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    3 +--
- include/net/mac80211.h                    |    6 ++----
- net/mac80211/agg-tx.c                     |    7 +++----
- net/mac80211/debugfs_sta.c                |    3 +--
- net/mac80211/driver-trace.h               |   10 ++++------
- 5 files changed, 11 insertions(+), 18 deletions(-)
+ drivers/net/wireless/ath/ath9k/common.c |   37 ++++++++++++++++++++++--------
+ 1 files changed, 27 insertions(+), 10 deletions(-)
 
---- wireless-testing.orig/include/net/mac80211.h	2010-05-27 14:31:11.000000000 +0200
-+++ wireless-testing/include/net/mac80211.h	2010-05-27 14:32:19.000000000 +0200
-@@ -2331,16 +2331,14 @@ void ieee80211_start_tx_ba_cb_irqsafe(st
-  * ieee80211_stop_tx_ba_session - Stop a Block Ack session.
-  * @sta: the station whose BA session to stop
-  * @tid: the TID to stop BA.
-- * @initiator: if indicates initiator DELBA frame will be sent.
-  *
-- * Return: error if no sta with matching da found, success otherwise
-+ * Return: negative error if the TID is invalid, or no aggregation active
-  *
-  * Although mac80211/low level driver/user space application can estimate
-  * the need to stop aggregation on a certain RA/TID, the session level
-  * will be managed by the mac80211.
-  */
--int ieee80211_stop_tx_ba_session(struct ieee80211_sta *sta, u16 tid,
--				 enum ieee80211_back_parties initiator);
-+int ieee80211_stop_tx_ba_session(struct ieee80211_sta *sta, u16 tid);
- 
- /**
-  * ieee80211_stop_tx_ba_cb - low level driver ready to stop aggregate.
---- wireless-testing.orig/net/mac80211/agg-tx.c	2010-05-27 14:31:32.000000000 +0200
-+++ wireless-testing/net/mac80211/agg-tx.c	2010-05-27 14:34:25.000000000 +0200
-@@ -538,14 +538,13 @@ int __ieee80211_stop_tx_ba_session(struc
- 	return ret;
+diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
+index 7707341..6407a7f 100644
+--- a/drivers/net/wireless/ath/ath9k/common.c
++++ b/drivers/net/wireless/ath/ath9k/common.c
+@@ -475,10 +475,14 @@ static int ath_reserve_key_cache_slot_tkip(struct ath_common *common)
+ 	return -1;
  }
  
--int ieee80211_stop_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
--				 enum ieee80211_back_parties initiator)
-+int ieee80211_stop_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid)
+-static int ath_reserve_key_cache_slot(struct ath_common *common)
++static int ath_reserve_key_cache_slot(struct ath_common *common,
++				      enum ieee80211_key_alg alg)
  {
- 	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
- 	struct ieee80211_local *local = sdata->local;
+ 	int i;
  
--	trace_api_stop_tx_ba_session(pubsta, tid, initiator);
-+	trace_api_stop_tx_ba_session(pubsta, tid);
++	if (alg == ALG_TKIP)
++		return ath_reserve_key_cache_slot_tkip(common);
++
+ 	/* First, try to find slots that would not be available for TKIP. */
+ 	if (common->splitmic) {
+ 		for (i = IEEE80211_WEP_NKID; i < common->keymax / 4; i++) {
+@@ -547,6 +551,7 @@ int ath9k_cmn_key_config(struct ath_common *common,
+ 	struct ath_hw *ah = common->ah;
+ 	struct ath9k_keyval hk;
+ 	const u8 *mac = NULL;
++	u8 gmac[ETH_ALEN];
+ 	int ret = 0;
+ 	int idx;
  
- 	if (!local->ops->ampdu_action)
- 		return -EINVAL;
-@@ -553,7 +552,7 @@ int ieee80211_stop_tx_ba_session(struct
- 	if (tid >= STA_TID_NUM)
- 		return -EINVAL;
+@@ -570,9 +575,23 @@ int ath9k_cmn_key_config(struct ath_common *common,
+ 	memcpy(hk.kv_val, key->key, key->keylen);
  
--	return __ieee80211_stop_tx_ba_session(sta, tid, initiator);
-+	return __ieee80211_stop_tx_ba_session(sta, tid, WLAN_BACK_INITIATOR);
- }
- EXPORT_SYMBOL(ieee80211_stop_tx_ba_session);
+ 	if (!(key->flags & IEEE80211_KEY_FLAG_PAIRWISE)) {
+-		/* For now, use the default keys for broadcast keys. This may
+-		 * need to change with virtual interfaces. */
+-		idx = key->keyidx;
++		switch (vif->type) {
++		case NL80211_IFTYPE_AP:
++			memcpy(gmac, vif->addr, ETH_ALEN);
++			gmac[0] |= 0x01;
++			mac = gmac;
++			idx = ath_reserve_key_cache_slot(common, key->alg);
++			break;
++		case NL80211_IFTYPE_ADHOC:
++			memcpy(gmac, sta->addr, ETH_ALEN);
++			gmac[0] |= 0x01;
++			mac = gmac;
++			idx = ath_reserve_key_cache_slot(common, key->alg);
++			break;
++		default:
++			idx = key->keyidx;
++			break;
++		}
+ 	} else if (key->keyidx) {
+ 		if (WARN_ON(!sta))
+ 			return -EOPNOTSUPP;
+@@ -589,14 +608,12 @@ int ath9k_cmn_key_config(struct ath_common *common,
+ 			return -EOPNOTSUPP;
+ 		mac = sta->addr;
  
---- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-agn-rs.c	2010-05-27 14:34:01.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-agn-rs.c	2010-05-27 14:34:07.000000000 +0200
-@@ -313,8 +313,7 @@ static int rs_tl_turn_on_agg_for_tid(str
- 			 */
- 			IWL_DEBUG_HT(priv, "Fail start Tx agg on tid: %d\n",
- 				tid);
--			ieee80211_stop_tx_ba_session(sta, tid,
--						WLAN_BACK_INITIATOR);
-+			ieee80211_stop_tx_ba_session(sta, tid);
- 		}
- 	} else
- 		IWL_ERR(priv, "Fail finding valid aggregation tid: %d\n", tid);
---- wireless-testing.orig/net/mac80211/driver-trace.h	2010-05-27 14:34:29.000000000 +0200
-+++ wireless-testing/net/mac80211/driver-trace.h	2010-05-27 14:34:47.000000000 +0200
-@@ -850,25 +850,23 @@ TRACE_EVENT(api_start_tx_ba_cb,
- );
+-		if (key->alg == ALG_TKIP)
+-			idx = ath_reserve_key_cache_slot_tkip(common);
+-		else
+-			idx = ath_reserve_key_cache_slot(common);
+-		if (idx < 0)
+-			return -ENOSPC; /* no free key cache entries */
++		idx = ath_reserve_key_cache_slot(common, key->alg);
+ 	}
  
- TRACE_EVENT(api_stop_tx_ba_session,
--	TP_PROTO(struct ieee80211_sta *sta, u16 tid, u16 initiator),
-+	TP_PROTO(struct ieee80211_sta *sta, u16 tid),
- 
--	TP_ARGS(sta, tid, initiator),
-+	TP_ARGS(sta, tid),
- 
- 	TP_STRUCT__entry(
- 		STA_ENTRY
- 		__field(u16, tid)
--		__field(u16, initiator)
- 	),
- 
- 	TP_fast_assign(
- 		STA_ASSIGN;
- 		__entry->tid = tid;
--		__entry->initiator = initiator;
- 	),
- 
- 	TP_printk(
--		STA_PR_FMT " tid:%d initiator:%d",
--		STA_PR_ARG, __entry->tid, __entry->initiator
-+		STA_PR_FMT " tid:%d",
-+		STA_PR_ARG, __entry->tid
- 	)
- );
- 
---- wireless-testing.orig/net/mac80211/debugfs_sta.c	2010-05-27 14:37:41.000000000 +0200
-+++ wireless-testing/net/mac80211/debugfs_sta.c	2010-05-27 14:37:59.000000000 +0200
-@@ -210,8 +210,7 @@ static ssize_t sta_agg_status_write(stru
- 		if (start)
- 			ret = ieee80211_start_tx_ba_session(&sta->sta, tid);
- 		else
--			ret = ieee80211_stop_tx_ba_session(&sta->sta, tid,
--							   WLAN_BACK_RECIPIENT);
-+			ret = ieee80211_stop_tx_ba_session(&sta->sta, tid);
- 	} else {
- 		__ieee80211_stop_rx_ba_session(sta, tid, WLAN_BACK_RECIPIENT, 3);
- 		ret = 0;
-
++	if (idx < 0)
++		return -ENOSPC; /* no free key cache entries */
++
+ 	if (key->alg == ALG_TKIP)
+ 		ret = ath_setkey_tkip(common, idx, key->key, &hk, mac,
+ 				      vif->type == NL80211_IFTYPE_AP);
+-- 
+1.6.4.2
 
