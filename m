@@ -1,58 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:41810 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932155Ab0EDQTl (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:55874 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756371Ab0EYCVr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 May 2010 12:19:41 -0400
-Received: by fxm10 with SMTP id 10so3395283fxm.19
-        for <linux-wireless@vger.kernel.org>; Tue, 04 May 2010 09:19:40 -0700 (PDT)
+	Mon, 24 May 2010 22:21:47 -0400
 MIME-Version: 1.0
-In-Reply-To: <1272986655.2486.42.camel@gnutoo-desktop>
-References: <1272230300.2349.23.camel@gnutoo-desktop>
-	 <1272232671.2349.25.camel@gnutoo-desktop>
-	 <1272235632.2349.28.camel@gnutoo-desktop>
-	 <1272285416.2364.1.camel@gnutoo-desktop>
-	 <loom.20100427T143119-272@post.gmane.org>
-	 <1272986655.2486.42.camel@gnutoo-desktop>
-Date: Tue, 4 May 2010 19:19:39 +0300
-Message-ID: <AANLkTikFu4yTnveOxj5Z3PWLgUD7FprMgG6qJXPWe4YE@mail.gmail.com>
-Subject: Re: wl1251_sdio PSM
-From: Grazvydas Ignotas <notasas@gmail.com>
-To: gnutoo <GNUtoo@no-log.org>
-Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTinFt5yiINXrc9-fnUl7NiyzN42eUotFnZdcxbas@mail.gmail.com>
+References: <AANLkTik_7rxDBc0TKlAfoYyM5S6Cf_Hyxbr4W5ORnTsq@mail.gmail.com>
+	 <1274726029.2091.15160.camel@rchatre-DESK>
+	 <1274738896.2091.15438.camel@rchatre-DESK>
+	 <AANLkTinFt5yiINXrc9-fnUl7NiyzN42eUotFnZdcxbas@mail.gmail.com>
+Date: Tue, 25 May 2010 07:51:45 +0530
+Message-ID: <AANLkTin0GuV28NsXwK6Pzo3cZ24Jn3WLR2YL9L660Us_@mail.gmail.com>
+Subject: iwl3945 bug in 2.6.34
+From: Satish Eerpini <eerpini@gmail.com>
+To: linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 4, 2010 at 6:24 PM, gnutoo <GNUtoo@no-log.org> wrote:
+> Actually, sorry, but that patch will not work on 2.6.34 since the
+> feature it enables is not present there - it will be in 2.6.35 though.
+> To enable the feature in 2.6.34 will take some more backporting effort
+> that I'm looking into now.
 >
->> You need a few more patches for PS to work (on top of current compat-wireless):
->> http://git.openpandora.org/cgi-bin/gitweb.cgi?p=pandora-kernel.git;a=commitdiff;h=8eb97a1915ae2ab0a19cc6eef1a2753b9514017d
->> http://git.openpandora.org/cgi-bin/gitweb.cgi?p=pandora-wifi.git;a=commitdiff;h=d16ed8871faa892f5fd4e8161412051ee11c5ecb
->>
->> I'm working on mainline mergeable versions of those..
-> 2 things:
-> *I rebased the patches against lastest compat wireless but I don't know
-> where to send them...
-> Basically or they apply or they are already in compat-wireless(verified)
-> here are the one which applies:
-> 0007-wl1251-read-default-MAC-address-from-EEPROM-when-ava.patch
-> 0008-wl1251-register-platform_device-to-pass-board-data.patch
-> 0009-wl1251-add-support-for-dedicated-IRQ-line.patch
-> 0010-wl1251-use-sdio_readb_ext-for-ELP-to-work.patch
-> 0011-wl1251-add-reset-handling.patch
-> 0013-wl1251-prevent-scan-when-connected.patch
->
-> against compat-wireless-2010-04-26
-
->From your list 0007-0009 are on their way to mainline, 0010-0013 are
-not mainline friendly (0010 needs a new function in MMC subsystem
-which I sent for review, 0011 depends on some code from Android tree,
-0013 is a hack).
-
-> By the way we can't make ad-hoc work,Is ad-hoc supported by the driver?
-
-AFAIK it is not.
+the patch does lead to a reject, I am not very experienced with
+code-fu in the kernel, and have no clue about the iwl code base, but
+comparing the code from 2.6.24 and the latest compat-wireless tarball,
+I found that in iwl-core.c
+iwl_check_stuck_queue
+iwl_bg_monitor_recover
+are not present in the 2.6.34 version of the file, is there a
+particular reason for doing this ?
+is there a patch series/discussion I can follow to know the details on this ?
+and I am trying to compile 2.6.34 by adding just these two functions
+to iwl-core.c. If that works I will report back (though you might
+already know if it will work or not)
 
 
-Grazvydas
+Cheers
+Satish
+
+
+--
+http://tuxitter.blogspot.com
+
+
+
+-- 
+http://tuxitter.blogspot.com
