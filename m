@@ -1,130 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:19675 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753899Ab0ELJjr (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:63233 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756443Ab0EYTHK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 May 2010 05:39:47 -0400
-Received: from vs3004.wh2.ocn.ne.jp (125.206.180.167)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0898937185
-	for <linux-wireless@vger.kernel.org>; Wed, 12 May 2010 18:39:45 +0900 (JST)
-Subject: [PATCH 01/12] ath5k: add debugfs file for queue debugging
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Wed, 12 May 2010 18:39:47 +0900
-Message-ID: <20100512093947.6575.99595.stgit@tt-desk>
+	Tue, 25 May 2010 15:07:10 -0400
+Received: by pxi18 with SMTP id 18so2111814pxi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 25 May 2010 12:07:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20100525132035.GA863@ee.oulu.fi>
+References: <20100525132035.GA863@ee.oulu.fi>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 25 May 2010 12:06:49 -0700
+Message-ID: <AANLkTikXyd47rhxpDktfEk89tnBlooXKMhKNisp3GcXd@mail.gmail.com>
+Subject: Re: wireless-regdb: FI/CZ updates
+To: Pekka Pietikainen <pp@ee.oulu.fi>,
+	Michael Green <Michael.Green@atheros.com>,
+	David Quan <David.Quan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- drivers/net/wireless/ath/ath5k/debug.c |   66 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath5k/debug.h |    1 
- 2 files changed, 67 insertions(+), 0 deletions(-)
+Thanks for the patch, Michael, please review and let me know what you think.
 
-diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
-index 6fb5c5f..c77a6ad 100644
---- a/drivers/net/wireless/ath/ath5k/debug.c
-+++ b/drivers/net/wireless/ath/ath5k/debug.c
-@@ -729,6 +729,66 @@ static const struct file_operations fops_ani = {
- };
- 
- 
-+/* debugfs: queues etc */
-+
-+static ssize_t read_file_queue(struct file *file, char __user *user_buf,
-+				   size_t count, loff_t *ppos)
-+{
-+	struct ath5k_softc *sc = file->private_data;
-+	char buf[700];
-+	unsigned int len = 0;
-+
-+	struct ath5k_txq *txq;
-+	struct ath5k_buf *bf, *bf0;
-+	int i, n = 0;
-+
-+	len += snprintf(buf+len, sizeof(buf)-len,
-+			"available txbuffers: %d\n", sc->txbuf_len);
-+
-+	for (i = 0; i < ARRAY_SIZE(sc->txqs); i++) {
-+		txq = &sc->txqs[i];
-+
-+		len += snprintf(buf+len, sizeof(buf)-len,
-+			"%02d: %ssetup\n", i, txq->setup ? "" : "not ");
-+
-+		if (!txq->setup)
-+			continue;
-+
-+		list_for_each_entry_safe(bf, bf0, &txq->q, list)
-+			n++;
-+		len += snprintf(buf+len, sizeof(buf)-len, "  len: %d\n", n);
-+	}
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+}
-+
-+static ssize_t write_file_queue(struct file *file,
-+				 const char __user *userbuf,
-+				 size_t count, loff_t *ppos)
-+{
-+	struct ath5k_softc *sc = file->private_data;
-+	char buf[20];
-+
-+	if (copy_from_user(buf, userbuf, min(count, sizeof(buf))))
-+		return -EFAULT;
-+
-+	if (strncmp(buf, "start", 5) == 0)
-+		ieee80211_wake_queues(sc->hw);
-+	else if (strncmp(buf, "stop", 4) == 0)
-+		ieee80211_stop_queues(sc->hw);
-+
-+	return count;
-+}
-+
-+
-+static const struct file_operations fops_queue = {
-+	.read = read_file_queue,
-+	.write = write_file_queue,
-+	.open = ath5k_debugfs_open,
-+	.owner = THIS_MODULE,
-+};
-+
-+
- /* init */
- 
- void
-@@ -772,6 +832,11 @@ ath5k_debug_init_device(struct ath5k_softc *sc)
- 				S_IWUSR | S_IRUSR,
- 				sc->debug.debugfs_phydir, sc,
- 				&fops_ani);
-+
-+	sc->debug.debugfs_queue = debugfs_create_file("queue",
-+				S_IWUSR | S_IRUSR,
-+				sc->debug.debugfs_phydir, sc,
-+				&fops_queue);
- }
- 
- void
-@@ -790,6 +855,7 @@ ath5k_debug_finish_device(struct ath5k_softc *sc)
- 	debugfs_remove(sc->debug.debugfs_antenna);
- 	debugfs_remove(sc->debug.debugfs_frameerrors);
- 	debugfs_remove(sc->debug.debugfs_ani);
-+	debugfs_remove(sc->debug.debugfs_queue);
- 	debugfs_remove(sc->debug.debugfs_phydir);
- }
- 
-diff --git a/drivers/net/wireless/ath/ath5k/debug.h b/drivers/net/wireless/ath/ath5k/debug.h
-index ddd5b3a..c7a0769 100644
---- a/drivers/net/wireless/ath/ath5k/debug.h
-+++ b/drivers/net/wireless/ath/ath5k/debug.h
-@@ -77,6 +77,7 @@ struct ath5k_dbg_info {
- 	struct dentry		*debugfs_antenna;
- 	struct dentry		*debugfs_frameerrors;
- 	struct dentry		*debugfs_ani;
-+	struct dentry		*debugfs_queue;
- };
- 
- /**
+  Luis
 
+On Tue, May 25, 2010 at 6:20 AM, Pekka Pietikainen <pp@ee.oulu.fi> wrote:
+> Was looking at the relevant local regulations and noticed the regdb allowed
+> less power at 5GHz than is actually allowed. Until I found the "If you don't do TPC you have
+> to reduce your power by 3dB sometimes" bit on the next page.
+>
+> And looks like someone that did the entry for CZ fell into the same trap, they have
+>
+> "stations in the c and d bands must employ automatic transmitter power
+> control, which provides, on average, an interference mitigation factor at
+> least 3 dB on the maximum permitted output power of the systems.  If
+> automatic power control is not employed, the maximum permitted mean e.i.r.p.
+> and the corresponding limit of the mean e.i.r.p.  density for bands c and d
+> must be reduced by 3 dB;"
+>
+> Please sanity check, I became very confused while looking into this.
+> (like some places starting their freq ranges at 2400, others at 2402. Didn't
+> touch those, regs say 2400-2485,5, 5150-5250, 5250-5350 and 5470-5725)
+>
+> Signed-off-by: Pekka Pietikäinen <pp@ee.oulu.fi>
+> diff -up ./db.txt.orig ./db.txt
+> --- ./db.txt.orig       2010-05-25 15:03:48.812116854 +0300
+> +++ ./db.txt    2010-05-25 15:58:43.947117884 +0300
+> @@ -170,11 +170,13 @@ country CY:
+>
+>  # Data from http://www.ctu.eu/164/download/VOR/VOR-12-08-2005-34.pdf
+>  # and http://www.ctu.eu/164/download/VOR/VOR-12-05-2007-6-AN.pdf
+> +# Power at 5250 - 5350 MHz and 5470 - 5725 MHz can be doubled if TPC is
+> +# implemented.
+>  country CZ:
+>        (2400 - 2483.5 @ 40), (N/A, 100 mW)
+>        (5150 - 5250 @ 40), (N/A, 200 mW), NO-OUTDOOR
+> -       (5250 - 5350 @ 40), (N/A, 200 mW), NO-OUTDOOR, DFS
+> -       (5470 - 5725 @ 40), (N/A, 1000 mW), DFS
+> +       (5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
+> +       (5470 - 5725 @ 40), (N/A, 500 mW), DFS
+>
+>  # Data from "Frequenznutzungsplan" (as published in April 2008),
+>  # downloaded from http://www.bundesnetzagentur.de/media/archive/13358.pdf
+> @@ -226,11 +228,15 @@ country ES:
+>        (5250 - 5330 @ 40), (N/A, 20), DFS
+>        (5490 - 5710 @ 40), (N/A, 27), DFS
+>
+> +# Data from FICORA Regulation 15Z / 2009 M
+> +# http://www.ficora.fi/attachments/suomiry/5l1x1FIIk/Viestintavirasto15Z2009M.pdf
+> +# Power at 5250 - 5350 MHz and 5470 - 5725 MHz can be doubled if TPC is
+> +# implemented.
+>  country FI:
+> -       (2402 - 2482 @ 40), (N/A, 20)
+> -       (5170 - 5250 @ 40), (N/A, 20)
+> -       (5250 - 5330 @ 40), (N/A, 20), DFS
+> -       (5490 - 5710 @ 40), (N/A, 27), DFS
+> +       (2402 - 2482 @ 40), (N/A, 100mW)
+> +       (5170 - 5250 @ 40), (N/A, 200mW), NO-OUTDOOR
+> +       (5250 - 5330 @ 40), (N/A, 100mW), NO-OUTDOOR, DFS
+> +       (5490 - 5710 @ 40), (N/A, 500mW), DFS
+>
+>  country FR:
+>        (2402 - 2482 @ 40), (N/A, 20)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
