@@ -1,153 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:58099 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755475Ab0ENGmb (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:43074 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932370Ab0EYV6z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 02:42:31 -0400
-Message-ID: <4BECF0BE.6000500@gmail.com>
-Date: Thu, 13 May 2010 23:42:06 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+	Tue, 25 May 2010 17:58:55 -0400
+Received: by fxm5 with SMTP id 5so3765904fxm.19
+        for <linux-wireless@vger.kernel.org>; Tue, 25 May 2010 14:58:53 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 2.6.35] ar9170usb: fix read from freed driver context
+Date: Tue, 25 May 2010 23:58:47 +0200
+Cc: linville@tuxdriver.com
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: Bruno Randolf <br1@einfach.org>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: ath9k: BUG kmalloc-8192: Poison overwritten
-References: <4BEC7A84.3010503@gmail.com> <4BECD518.6040801@gmail.com> 	<AANLkTinE1q2K3j-IwCa3IPzTUChgi9wKTqBrVR1mGlv9@mail.gmail.com> 	<201005141520.30802.br1@einfach.org> <4BECEE3E.6090303@gmail.com> <AANLkTikKqFTS9MyvJKtyP9pNsrYyFPk5ijidjS9IA_30@mail.gmail.com>
-In-Reply-To: <AANLkTikKqFTS9MyvJKtyP9pNsrYyFPk5ijidjS9IA_30@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201005252358.48435.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/13/10 23:36, Luis R. Rodriguez wrote:
-> On Thu, May 13, 2010 at 11:31 PM, Justin P. Mattock
-> <justinmattock@gmail.com>  wrote:
->> On 05/13/10 23:20, Bruno Randolf wrote:
->>>
->>> On Friday 14 May 2010 15:16:22 Luis R. Rodriguez wrote:
->>>>
->>>> On Thu, May 13, 2010 at 9:44 PM, Justin P. Mattock
->>>>
->>>> <justinmattock@gmail.com>    wrote:
->>>>>
->>>>> On 05/13/10 21:01, Luis R. Rodriguez wrote:
->>>>>>
->>>>>> On Thu, May 13, 2010 at 7:14 PM, Justin P. Mattock
->>>>>>
->>>>>> <justinmattock@gmail.com>     wrote:
->>>>>>>
->>>>>>> what I can try, is(not at the convention, on eth0
->>>>>>> at the moment), but when I get back to the convention
->>>>>>> center place I can try your patch as well as the
->>>>>>> modprobe option, to see if I can get any signs of
->>>>>>> a recreation(if so I'll bisect there).
->>>>>>
->>>>>> The debug info I just need upon load of the module, I don't need you
->>>>>> to run the debug stuff to try to reproduce. The debug print upon load
->>>>>> will tell us the rxbuf size and cache line size.
->>>>>>
->>>>>>    Luis
->>>>>
->>>>> o.k. it's not pretty due
->>>>> to loads of avc's for SELinux:
->>>>> (I run a rootless system).
->>>>>
->>>>> [   84.172649] ath9k: Driver unloaded
->>>>> [  100.675300] audit_printk_skb: 6 callbacks suppressed
->>>>> [  100.675306] type=1400 audit(1273811633.675:20): avc:  denied  {
->>>>> search
->>>>> } for  pid=2168 comm="modprobe" name="modules" dev=sda3 ino=2500
->>>>> scontext=name:staff_r:staff_sudo_t:s0
->>>>> tcontext=system_u:object_r:modules_object_t:s0 tclass=dir
->>>>> [  100.675408] type=1400 audit(1273811633.675:20): avc:  denied  {
->>>>> search
->>>>> } for  pid=2168 comm="modprobe" name="2.6.34-rc7-00057-gcdfda35"
->>>>> dev=sda3 ino=524392 scontext=name:staff_r:staff_sudo_t:s0
->>>>> tcontext=name:object_r:modules_object_t:s0 tclass=dir
->>>>> [  100.675552] type=1400 audit(1273811633.675:20): avc:  denied  { read
->>>>> }
->>>>> for  pid=2168 comm="modprobe" name="modules.dep.bin" dev=sda3 ino=525251
->>>>> scontext=name:staff_r:staff_sudo_t:s0
->>>>> tcontext=name:object_r:modules_object_t:s0 tclass=file
->>>>> [  100.675598] type=1400 audit(1273811633.675:20): avc:  denied  { open
->>>>> }
->>>>> for  pid=2168 comm="modprobe" name="modules.dep.bin" dev=sda3 ino=525251
->>>>> scontext=name:staff_r:staff_sudo_t:s0
->>>>> tcontext=name:object_r:modules_object_t:s0 tclass=file
->>>>> [  100.675748] type=1300 audit(1273811633.675:20): arch=c000003e
->>>>> syscall=2 success=yes exit=3 a0=60d140 a1=0 a2=1b6 a3=0 items=0
->>>>> ppid=2080 pid=2168 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0
->>>>> sgid=0 fsgid=0 tty=pts0 ses=1 comm="modprobe" exe="/sbin/modprobe"
->>>>> subj=name:staff_r:staff_sudo_t:s0 key=(null)
->>>>> [  100.675902] type=1400 audit(1273811633.675:21): avc:  denied  {
->>>>> getattr } for  pid=2168 comm="modprobe"
->>>>> path="/lib/modules/2.6.34-rc7-00057-gcdfda35/modules.dep.bin" dev=sda3
->>>>> ino=525251 scontext=name:staff_r:staff_sudo_t:s0
->>>>> tcontext=name:object_r:modules_object_t:s0 tclass=file
->>>>> [  100.676052] type=1300 audit(1273811633.675:21): arch=c000003e
->>>>> syscall=5 success=yes exit=0 a0=3 a1=7fffd2d1dd70 a2=7fffd2d1dd70 a3=0
->>>>> items=0 ppid=2080 pid=2168 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0
->>>>> egid=0 sgid=0 fsgid=0 tty=pts0 ses=1 comm="modprobe"
->>>>> exe="/sbin/modprobe"
->>>>> subj=name:staff_r:staff_sudo_t:s0 key=(null)
->>>>> [  100.698392] ath9k 0000:03:00.0: PCI INT A ->    GSI 17 (level, low) ->
->>>>> IRQ 17
->>>>> [  100.698409] ath9k 0000:03:00.0: setting latency timer to 64
->>>>> [  100.828787] ath: EEPROM regdomain: 0x64
->>>>> [  100.828790] ath: EEPROM indicates we should expect a direct regpair
->>>>> map [  100.828793] ath: Country alpha2 being used: 00
->>>>> [  100.828795] ath: Regpair used: 0x64
->>>>> [  100.848609] type=1400 audit(1273811633.678:22): avc:  denied  {
->>>>> search
->>>>> } for  pid=2168 comm="modprobe" name="ieee80211" dev=debugfs ino=18
->>>>> scontext=name:staff_r:staff_sudo_t:s0
->>>>> tcontext=system_u:object_r:debugfs_t:s0 tclass=dir
->>>>> [  100.848788] phy1: Selected rate control algorithm
->>>>> 'ath9k_rate_control'
->>>>> [  100.850035] Registered led device: ath9k-phy1::radio
->>>>> [  100.850488] Registered led device: ath9k-phy1::assoc
->>>>> [  100.851227] Registered led device: ath9k-phy1::tx
->>>>> [  100.851633] Registered led device: ath9k-phy1::rx
->>>>> [  100.851640] phy1: Atheros AR5418 MAC/BB Rev:2 AR5133 RF Rev:81
->>>>> mem=0xffffc900005a0000, irq=17
->>>>> [  100.852240] type=1300 audit(1273811633.678:22): arch=c000003e
->>>>> syscall=175 success=yes exit=0 a0=7f1e9d6ab010 a1=19580 a2=60d920 a3=0
->>>>> items=0 ppid=2080 pid=2168 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0
->>>>> egid=0 sgid=0 fsgid=0 tty=pts0 ses=1 comm="modprobe"
->>>>> exe="/sbin/modprobe"
->>>>> subj=name:staff_r:staff_sudo_t:s0 key=(null)
->>>>>
->>>>> but there you go dmesg of the debug info for you
->>>>
->>>> Justin, did you forget to use the debug parameter on modprobe ath9k?
->>>>
->>>> modprobe ath9k debug=0x0000020
->>>>
->>>> I do not see the output I expected.
->>>
->>> i think you have to do at least "ifconfig wlan0 up" to see it - (at least
->>> for
->>> ath5k).
->>>
->>> bruno
->>>
->>
->> didn't think todo so, I'll redu
->> again and see. BTW: the connection
->> over here is dodgy(hotel) should I at-least
->> find a stable access point?
->
-> Up to you, just need that print line.
->
->               ath_print(common, ATH_DBG_CONFIG, "cachelsz %u rxbufsize %u\n",
->                                 common->cachelsz, common->rx_bufsize);
->
->    Luis
->
+Commit "ar9170: wait for asynchronous firmware loading"
+introduced a bug, which is triggered by fatal errors
+while the driver is initializing the device.
 
-alright.. (in a few) I'll go ahead and enable
-as much as possible, as well as the prink
-ans see if I can grab the right info for you.
+BUG: unable to handle kernel paging request at 6b6b6bf7
+IP: [<c117b567>] kobject_put+0x7/0x70
+*pde = 00000000 
+Oops: 0000 [#1] PREEMPT 
+last sysfs file: /sys/devices/platform/hdaps/position
+Modules linked in: ar9170usb [...]
 
-Justin P. Mattock
+Pid: 6246, comm: firmware/ar9170 Not tainted 2.6.34-wl #54
+EIP: 0060:[<c117b567>] EFLAGS: 00010206 CPU: 0
+EIP is at kobject_put+0x7/0x70
+EAX: 6b6b6bd7 EBX: f4d3d0e0 ECX: f5ba9124 EDX: f6af2a7c
+ESI: 00000000 EDI: f4d3d0e0 EBP: 00000000 ESP: f5e98f9c
+ DS: 007b ES: 007b FS: 0000 GS: 0000 SS: 0068
+Process firmware/ar9170 (pid: 6246)
+Stack:
+ c12532ed 00000246 f5bfaa70 f8487353 f4d3d0e0
+Call Trace:
+ [<c12532ed>] ? device_release_driver+0x1d/0x30
+ [<f8487353>] ? ar9170_usb_firmware_failed+0x43/0x70 [ar9170usb]
+ [<c125983c>] ? request_firmware_work_func+0x2c/0x70
+ [<c1259810>] ? request_firmware_work_func+0x0/0x70
+ [<c10413f4>] ? kthread+0x74/0x80
+ [<c1041380>] ? kthread+0x0/0x80
+ [<c1003136>] ? kernel_thread_helper+0x6/0x10
+Code: 40 d3 f2 ff 85 c0 89 c3 74 0a ba 44 86 4c c1 e8 [...]
+EIP: [<c117b567>] kobject_put+0x7/0x70 SS:ESP 0068:f5e98f9c
+CR2: 000000006b6b6bf7
+---[ end trace e81abb992434b410 ]---
+
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+diff --git a/drivers/net/wireless/ath/ar9170/usb.c b/drivers/net/wireless/ath/ar9170/usb.c
+index 82ab532..a93dc18 100644
+--- a/drivers/net/wireless/ath/ar9170/usb.c
++++ b/drivers/net/wireless/ath/ar9170/usb.c
+@@ -739,17 +739,27 @@ err_out:
+ static void ar9170_usb_firmware_failed(struct ar9170_usb *aru)
+ {
+ 	struct device *parent = aru->udev->dev.parent;
++	struct usb_device *udev;
++
++	/*
++	 * Store a copy of the usb_device pointer locally.
++	 * This is because device_release_driver initiates
++	 * ar9170_usb_disconnect, which in turn frees our
++	 * driver context (aru).
++	 */
++	udev = aru->udev;
+ 
+ 	complete(&aru->firmware_loading_complete);
+ 
+ 	/* unbind anything failed */
+ 	if (parent)
+ 		device_lock(parent);
+-	device_release_driver(&aru->udev->dev);
++
++	device_release_driver(&udev->dev);
+ 	if (parent)
+ 		device_unlock(parent);
+ 
+-	usb_put_dev(aru->udev);
++	usb_put_dev(udev);
+ }
+ 
+ static void ar9170_usb_firmware_finish(const struct firmware *fw, void *context)
