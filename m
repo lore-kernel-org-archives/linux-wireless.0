@@ -1,129 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:17754 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750996Ab0EGIjf (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:46927 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755804Ab0EYT06 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 7 May 2010 04:39:35 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 3/5] wl1271: Fix to join and channel number handling
-Date: Fri,  7 May 2010 11:39:00 +0300
-Message-Id: <1273221542-14283-4-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1273221542-14283-1-git-send-email-luciano.coelho@nokia.com>
-References: <1273221542-14283-1-git-send-email-luciano.coelho@nokia.com>
+	Tue, 25 May 2010 15:26:58 -0400
+Received: by pxi18 with SMTP id 18so2119345pxi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 25 May 2010 12:26:57 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTinMo6L_LuCgcu9izxUVsFbi7kamHD2F_xThwJ2R@mail.gmail.com>
+References: <1274770211-22710-1-git-send-email-juuso.oikarinen@nokia.com>
+	<1274770211-22710-2-git-send-email-juuso.oikarinen@nokia.com>
+	<AANLkTinMo6L_LuCgcu9izxUVsFbi7kamHD2F_xThwJ2R@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 25 May 2010 12:19:08 -0700
+Message-ID: <AANLkTilC6aKyLlFxWUyeO3k-aSs90W3tR1aMB7a2Oz7-@mail.gmail.com>
+Subject: Re: [PATCH] cfg80211: Fix user-space crda query stall
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On Tue, May 25, 2010 at 12:02 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Mon, May 24, 2010 at 11:50 PM, Juuso Oikarinen
+> <juuso.oikarinen@nokia.com> wrote:
+>> The userspace crda utility can fail to respond to kernel requests in (at least)
+>> two scenarios: it is not runnable for any reason, or it is invoked with a
+>> country code not in its database.
+>>
+>> When the userspace crda utility fails to respond to kernel requests (i.e. it
+>> does not use NL80211_CMD_SET_REG to provide the kernel regulatory information
+>> for the requested country) the kernel crda subsystem will stall. It will
+>> refuse to process any further regulatory hints. This is easiest demonstrated
+>> by using for instance the "iw" tool:
+>>
+>>   iw reg set EU
+>>   iw reg set US
+>>
+>> "EU" is not a country code present in the database, so user space crda will
+>> not respond. Attempting to define US after that will be silently ignored
+>> (internally, an -EAGAIN is the result, as the "EU" request is still
+>> "being processed".)
+>>
+>> To fix this issue, this patch implements timeout protection for the userspace
+>> crda invocation. If there is no response for five seconds, the crda code will
+>> force itself to the world regulatory domain for maximum safety.
+>>
+>> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+>
+> This is a great idea, I really like it and appreciate you taking the
+> time to work on this, however to do this it requires a little more
+> work and will point out the notes below. So NACK for now but with some
+> fixes I think this would be great.
+>
+>> ---
+>>  net/wireless/reg.c |   44 ++++++++++++++++++++++++++++++++++++++++++++
+>>  1 files changed, 44 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+>> index 8f0d97d..6c945f0 100644
+>> --- a/net/wireless/reg.c
+>> +++ b/net/wireless/reg.c
+>> @@ -385,6 +385,40 @@ static inline void reg_regdb_query(const char *alpha2) {}
+>>  #endif /* CONFIG_CFG80211_INTERNAL_REGDB */
+>>
+>>  /*
+>> + * This gets invoked if crda in userspace is not responding (it's not getting
+>> + * executed or the country code in the hint is not in the database.
+>> + */
+>> +
+>> +static void call_crda_timeout_work(struct work_struct *work)
+>> +{
+>> +       if (!last_request)
+>> +               return;
+>> +
+>> +       printk(KERN_INFO "cfg80211: crda request timed out, reverting to 00\n");
+>> +
+>> +       mutex_lock(&cfg80211_mutex);
+>> +
+>> +       /*
+>> +        * As we are not getting data for the current country, force us back
+>> +        * to the world regdomain.
+>> +        */
+>> +       last_request->alpha2[0] = '0';
+>> +       last_request->alpha2[1] = '0';
+>> +       set_regdom(cfg80211_world_regdom);
+>> +       mutex_unlock(&cfg80211_mutex);
+>> +}
+>
+>
+> Actually you may want to consider using restore_regulatory_settings()
+> instead as that would:
+>
+>  * set the world regdom
+>  * then set the first user specified regulatory domain if they had one picked
+>
+> This would mean we would go into a loop here though if the user had
+> specified 'EU' though so this routine first needs to be fixed to
+> annotate a regulatory domain as invalid. Note that a regulatory cannot
+> be invalid if CRDA just times out -- CRDA could time out if it was not
+> present. So this is a bit tricky and not sure how to resolve it. John
+> recently added support for building the regulatory database as part of
+> the kernel but at the same time support letting CRDA still update the
+> same info if it is present. Then for those setup it could be possible
+> 'DE' exists on the core kernel regulatory database but if CRDA is not
+> installed then CRDA will time out.
+>
+> Maybe what we can do is if both the internal kernel regdb *and* CRDA
+> times out then mark the user specified request as invalid and restore
+> to using the world regdom. This would allow the user to later install
+> a CRDA with some newer regdb in userspace, for example. This allows
+> for upgrading the db itself from userspace without making kernel
+> changes. It allows for countries to be created.
+>
+>> +
+>> +static DECLARE_WORK(crda_uevent_timeout_work, call_crda_timeout_work);
+>> +
+>> +#define CRDA_UEVENT_TIMEOUT 5000
+>> +static void crda_uevent_timeout(unsigned long data)
+>> +{
+>> +       schedule_work(&crda_uevent_timeout_work);
+>> +}
+>> +
+>> +static DEFINE_TIMER(crda_uevent_timer, crda_uevent_timeout, 0, 0);
+>
+> I would prefer we use a completion here, seems a little cleaner. Check
+> out ath9k/wmi.c for cmd_wait and its use with init_completion() and
+> complete().
 
-This patch changes the way JOIN's are performed, and channel numbers updated.
-The reason for this is that the firmware JOIN command clears WPA(2) key
-material, and if done while associated to a WPA(2) secured AP, will render
-the data-path unusable.
+Actually it makes no sense to linger a thread here waiting for a
+completion, your approach is better, never mind this comment.
 
-While the channel is not usually changed while associated (and currently we
-could not even support something like that), after performing a scan operation
-while associated, mac80211 will re-set the current channel to the driver. This
-caused our problem.
-
-Also, the mac80211 is assuming that the driver channel configuration remains
-persistent over periods of IDLE. Therefore remove channel resetting to zero
-from the unjoin function.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |   29 +++++++++++++++++++++++------
- 1 files changed, 23 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 5ad94fc..360daf8 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1140,10 +1140,25 @@ out:
- 	return ret;
- }
- 
--static int wl1271_join(struct wl1271 *wl)
-+static int wl1271_join(struct wl1271 *wl, bool set_assoc)
- {
- 	int ret;
- 
-+	/*
-+	 * One of the side effects of the JOIN command is that is clears
-+	 * WPA/WPA2 keys from the chipset. Performing a JOIN while associated
-+	 * to a WPA/WPA2 access point will therefore kill the data-path.
-+	 * Currently there is no supported scenario for JOIN during
-+	 * association - if it becomes a supported scenario, the WPA/WPA2 keys
-+	 * must be handled somehow.
-+	 *
-+	 */
-+	if (test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags))
-+		wl1271_info("JOIN while associated.");
-+
-+	if (set_assoc)
-+		set_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags);
-+
- 	ret = wl1271_cmd_join(wl, wl->set_bss_type);
- 	if (ret < 0)
- 		goto out;
-@@ -1190,7 +1205,6 @@ static int wl1271_unjoin(struct wl1271 *wl)
- 		goto out;
- 
- 	clear_bit(WL1271_FLAG_JOINED, &wl->flags);
--	wl->channel = 0;
- 	memset(wl->bssid, 0, ETH_ALEN);
- 
- 	/* stop filterting packets based on bssid */
-@@ -1250,7 +1264,9 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- 		goto out;
- 
- 	/* if the channel changes while joined, join again */
--	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
-+	if (changed & IEEE80211_CONF_CHANGE_CHANNEL &&
-+	    ((wl->band != conf->channel->band) ||
-+	     (wl->channel != channel))) {
- 		wl->band = conf->channel->band;
- 		wl->channel = channel;
- 
-@@ -1270,7 +1286,7 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- 				       "failed %d", ret);
- 
- 		if (test_bit(WL1271_FLAG_JOINED, &wl->flags)) {
--			ret = wl1271_join(wl);
-+			ret = wl1271_join(wl, false);
- 			if (ret < 0)
- 				wl1271_warning("cmd join to update channel "
- 					       "failed %d", ret);
-@@ -1652,6 +1668,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 	enum wl1271_cmd_ps_mode mode;
- 	struct wl1271 *wl = hw->priv;
- 	bool do_join = false;
-+	bool set_assoc = false;
- 	int ret;
- 
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 bss info changed");
-@@ -1761,7 +1778,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 		if (bss_conf->assoc) {
- 			u32 rates;
- 			wl->aid = bss_conf->aid;
--			set_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags);
-+			set_assoc = true;
- 
- 			/*
- 			 * use basic rates from AP, and determine lowest rate
-@@ -1861,7 +1878,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 	}
- 
- 	if (do_join) {
--		ret = wl1271_join(wl);
-+		ret = wl1271_join(wl, set_assoc);
- 		if (ret < 0) {
- 			wl1271_warning("cmd join failed %d", ret);
- 			goto out_sleep;
--- 
-1.6.3.3
-
+  Luis
