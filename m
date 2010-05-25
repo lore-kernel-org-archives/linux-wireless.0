@@ -1,34 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57291 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754728Ab0E1KyQ (ORCPT
+Received: from mail.atheros.com ([12.36.123.2]:10095 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932106Ab0EYUjL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 May 2010 06:54:16 -0400
-Subject: Re: Problems connectring to an AP with Acer Aspire Revo
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Christian P. Schmidt" <schmidt@digadd.de>
-Cc: reinette chatre <reinette.chatre@intel.com>,
+	Tue, 25 May 2010 16:39:11 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 25 May 2010 13:39:11 -0700
+From: David Quan <David.Quan@Atheros.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	Michael Green <Michael.Green@Atheros.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4BFF9FC6.4030101@digadd.de>
-References: <4BF795EB.9070902@digadd.de>
-	 <1274729665.2091.15280.camel@rchatre-DESK>  <4BFD1ED0.9050309@digadd.de>
-	 <1275003105.2091.20102.camel@rchatre-DESK>  <4BFF9B93.5010308@digadd.de>
-	 <1275043274.3909.71.camel@jlt3.sipsolutions.net>
-	 <4BFF9FC6.4030101@digadd.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 28 May 2010 12:54:34 +0200
-Message-ID: <1275044074.3909.72.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Date: Tue, 25 May 2010 13:39:09 -0700
+Subject: RE: wireless-regdb: A band is missing for IL
+Message-ID: <93781E992CBA7843962D8B0E7D683F3C11178EC0E4@SC1EXMB-MBCL.global.atheros.com>
+References: <AANLkTimkpbans5mUObR8PWzf2-Uh0K-cZVVg0HjNxnSv@mail.gmail.com>
+ <AANLkTikUhVoBKe95N_kkpXvSEsr845viGp5IhHZTVN2n@mail.gmail.com>
+In-Reply-To: <AANLkTikUhVoBKe95N_kkpXvSEsr845viGp5IhHZTVN2n@mail.gmail.com>
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-05-28 at 12:49 +0200, Christian P. Schmidt wrote:
+Israel follows ETSI3_WORLD,
+ this means 
 
-> I see a bunch of WLANs with levels between 180 and 225. I'll compare the
-> values to disconnected antennas while disassembling.
+Unii1 + Unii2 is supported. Unii2 requires DFS for APs.
 
-Those values make no sense to me .. can you use "iw scan" and tell us
-the dBm value?
+2ghz Ch1-13 supported.
+ 
 
-johannes
+-----Original Message-----
+From: Luis R. Rodriguez [mailto:mcgrof@gmail.com] 
+Sent: Tuesday, May 25, 2010 12:08 PM
+To: Emmanuel Grumbach; Michael Green; David Quan
+Cc: linville@tuxdriver.com; linux-wireless@vger.kernel.org
+Subject: Re: wireless-regdb: A band is missing for IL
 
+Michael, please review and let us know what you think.
+
+  Luis
+
+On Tue, May 25, 2010 at 12:03 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> According to http://en.wikipedia.org/wiki/List_of_WLAN_channels#5.C2.A0GHz_.28802.11a.2Fh.2Fj.2Fn.29
+>
+> Channels 34 - 64 are allowed in 20 Mhz in Israel. This is not what is
+> written in db.txt:
+>
+> country IL:
+>         (2402 - 2482 @ 40), (N/A, 20)
+>
+> This wikipedia page relies on an official page from the Israel
+> Ministry of the Communication.
+>
+> Emmanuel Grumbach
+> egrumbach@gmail.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
