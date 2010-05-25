@@ -1,77 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:8055 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757982Ab0EJXcG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 May 2010 19:32:06 -0400
-Subject: Re: kernel BUG in iwl-agn-rs.c:2076, WAS: iwlagn + some
- accesspoint == hardlock
-From: reinette chatre <reinette.chatre@intel.com>
-To: Nils Radtke <lkml@Think-Future.de>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20100510183639.GA17523@localhost>
-References: <20100510183639.GA17523@localhost>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 10 May 2010 16:32:04 -0700
-Message-ID: <1273534324.2370.6740.camel@rchatre-DESK>
-Mime-Version: 1.0
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:38756 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751567Ab0EYWy5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 25 May 2010 18:54:57 -0400
+Received: by fxm5 with SMTP id 5so3801825fxm.19
+        for <linux-wireless@vger.kernel.org>; Tue, 25 May 2010 15:54:55 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1274775071.3635.4.camel@jlt3.sipsolutions.net>
+References: <AANLkTinAnMwY0ZCetUmUbuhsp3rB360xvlaGM5ifdFHz@mail.gmail.com>
+	<1274775071.3635.4.camel@jlt3.sipsolutions.net>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Wed, 26 May 2010 00:54:35 +0200
+Message-ID: <AANLkTilPIt59FhAuVlhisUR7QDabCtnZwahjxWbUysiG@mail.gmail.com>
+Subject: Re: Path for fixed channel issue in aircrack-ng suite
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Joker Joker <jokesareonyou@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-05-10 at 11:36 -0700, Nils Radtke wrote:
->   Today weather was fine again, finally. So testing with .33.3 w/ the patch applied: 
-> 
->   http://marc.info/?l=linux-wireless&m=127290931304496&w=2
-> 
-> The kernel kernel .32 was still running before it crashed immediately on wireless activation.
-> The crash log showed again at least two messages, the last was as already described in my first
-> message, bug from 2010-04-30: I think even the 0x2030 was the same:
-> 
-> EIP rs_tx_status +x8f/x2030 
+On Tue, May 25, 2010 at 10:11 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2010-05-25 at 01:07 -0400, Joker Joker wrote:
+>> Below is a patch to fix monitor mode channel issue for aircrack-ng suit
+>> (fixed channel mon0: -1)
+>>
+>> diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+>> index d92d088..93f6c19 100644
+>> --- a/net/wireless/chan.c
+>> +++ b/net/wireless/chan.c
+>> @@ -48,6 +48,7 @@ int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
+>>                       enum nl80211_channel_type channel_type)
+>>  {
+>>         struct ieee80211_channel *chan;
+>> +       struct wireless_dev *old_wdev = wdev;
+>>         int result;
+>>
+>>         if (wdev->iftype == NL80211_IFTYPE_MONITOR)
+>> @@ -73,8 +74,8 @@ int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
+>>         if (result)
+>>                 return result;
+>>
+>> -       if (wdev)
+>> -               wdev->channel = chan;
+>> +       wdev = old_wdev;
+>> +       wdev->channel = chan;
+>
+> NACK. That will crash when there really is no interface being passed in.
+>
+> johannes
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-You report an issue on 2.6.32 ...
+Well, the original version already dereferences wdev in "if
+(wdev->iftype...", so the crash is nothing new if it exists.
 
-> 
-> W/ .33.3 and the above patch applied:
-
-... but then test the patch with 2.6.33.
-
-Which kernel are you focused on?
-
-
-> Linux mypole 2.6.33.3 #18 SMP PREEMPT Thu May 6 21:51:37 CEST 2010 i686 GNU/Linux
-> 
-> May 10 19:14:11 [   80.586637] iwlagn 0000:03:00.0: expected_tpt should have been calculated by now
-> May 10 19:23:17 [  626.476078] iwlagn 0000:03:00.0: expected_tpt should have been calculated by now
-> May 10 19:23:30 [  638.913740] iwlagn 0000:03:00.0: expected_tpt should have been calculated by now
-> May 10 19:23:32 [  641.232425] iwlagn 0000:03:00.0: expected_tpt should have been calculated by now
-> May 10 19:23:54 [  663.392697] iwlagn 0000:03:00.0: expected_tpt should have been calculated by now
-> May 10 19:23:58 [  666.980247] iwlagn 0000:03:00.0: expected_tpt should have been calculated by now
-> May 10 19:24:02 [  671.121826] iwlagn 0000:03:00.0: expected_tpt should have been calculated by now
-
-Can you see any impact on your connection speed that can be connected to
-these messages?
-
-> Additionally these were logged, could you tell why they're there and what to do? (also .33.3 w/ patch)
-> 
-> May 10 19:24:16 [  685.079617] iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:1a:70:12:23:25 tid = 0
-> May 10 19:24:22 [  691.026737] iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:1a:70:12:23:25 tid = 0
-> May 10 19:28:02 [  911.406162] iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:1a:70:12:23:25 tid = 0
-> May 10 19:35:38 [ 1367.251240] iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:1a:70:12:23:25 tid = 0
-> 
-> The above "iwl_tx_agg_start" lines happen when connecting - again to a Cisco AP - and the connection gets
-> dropped the exact moment when a download is started. It even often drops when dhcp is still negotiating, has
-> got it's IP but the nego isn't finished yet. Conn drops, same procedure again and again. This happens only
-> with this Cisco AP (which is BTW another one from the "expected_tpt should have been calculated by now" 
-> problem).
-
-It could be that some of the queues get stuck. Can you try with the
-patches in
-http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2037#c113 ? They
-are based on 2.6.33.
-
-Reinette
-
-
-
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
