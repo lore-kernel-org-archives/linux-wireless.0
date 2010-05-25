@@ -1,35 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:54793 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755368Ab0ENGXn (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57832 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753935Ab0EYRAM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 02:23:43 -0400
-Received: by vws16 with SMTP id 16so661560vws.19
-        for <linux-wireless@vger.kernel.org>; Thu, 13 May 2010 23:23:42 -0700 (PDT)
+	Tue, 25 May 2010 13:00:12 -0400
+Date: Tue, 25 May 2010 12:55:24 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: linux-wireless@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Subject: Re: iwl3945 dies (oops) in post 2.6.34 kernels
+Message-ID: <20100525165524.GD31753@tuxdriver.com>
+References: <20100525163920.GA2730@core.coreip.homeip.net>
 MIME-Version: 1.0
-Date: Fri, 14 May 2010 11:53:42 +0530
-Message-ID: <AANLkTimgcy5UV-snifCoduVOyhooS_1X7tn_HxKTXQ6w@mail.gmail.com>
-Subject: Architecture for wireless driver development in the Linux environment
-From: Madhavi Manchala <madhavi.linux@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100525163920.GA2730@core.coreip.homeip.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Experts,
+On Tue, May 25, 2010 at 09:39:20AM -0700, Dmitry Torokhov wrote:
+> Hi,
+> 
+> I am getting the following crashers in iwl3945 after updating to
+> post-2.6.34 kernels. This is with the pull from Linus's tree as of last
+> night (the taint is from nvidia module):
 
-I am new to the wireless driver development in the Linux environment.
-I have gone through the http://wireless.kernel.org/ link about the
-wireless driver development in the Linux environment. However, I did
-not find any architecture or skeleton driver like usb-skeleton.c file
-either in the drivers/Documentation or in the mentioned link. I want
-to develop a driver for USB WIFI device for x86 architecture. Please
-let me where can find the USB WIFI driver development architecture in
-the Linux environment.
+Linus doesn't have this one yet:
 
-http://wireless.kernel.org/en/developers/Documentation/cfg80211
-What is cfg80211? Are we need to follow this configuration method for
-developing the drivers in the Linux environment?
+commit 073d5eab6fc85b6c278d507a5633b759a85dc878
+Author: Reinette Chatre <reinette.chatre@intel.com>
+Date:   Thu May 13 14:49:44 2010 -0700
 
-Thanks and Regards,
-Madhavi.
+    iwlwifi: fix internal scan race
+    
+    It is possible for internal scan to race against itself if the device is
+    not returning the scan results from first requests. What happens in this
+    case is the cleanup done during the abort of the first internal scan also
+    cleans up part of the new scan, causing it to access memory it shouldn't.
+...
+
+I suspect it might be related.
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
