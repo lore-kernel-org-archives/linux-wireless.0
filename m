@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39811 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750893Ab0EXIJJ (ORCPT
+Received: from mbox2.netikka.net ([213.250.81.203]:45981 "EHLO
+	mbox2.netikka.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758317Ab0EYToW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 May 2010 04:09:09 -0400
-Subject: Re: [PATCH] Silence debug prints when using adhoc mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mikko Rapeli <mikko.rapeli@iki.fi>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1274688345.3743.2.camel@jlt3.sipsolutions.net>
-References: <20100523162240.GZ19669@nalle>
-	 <1274688345.3743.2.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 24 May 2010 10:09:06 +0200
-Message-ID: <1274688546.3743.3.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 25 May 2010 15:44:22 -0400
+Message-ID: <4BFC2677.7050509@mandriva.org>
+Date: Tue, 25 May 2010 22:35:19 +0300
+From: Thomas Backlund <tmb@mandriva.org>
+MIME-Version: 1.0
+To: sedat.dilek@gmail.com
+CC: Sedat Dilek <sedat.dilek@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2010-05-25
+References: <20100525170401.GE31753@tuxdriver.com> <AANLkTilMYGSprjMnmRHlZPMvk1KLd1Yeqd_l26yyVRT6@mail.gmail.com>
+In-Reply-To: <AANLkTilMYGSprjMnmRHlZPMvk1KLd1Yeqd_l26yyVRT6@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-05-24 at 10:05 +0200, Johannes Berg wrote:
-> On Sun, 2010-05-23 at 19:22 +0300, Mikko Rapeli wrote:
-> > This is flooded to syslog quite a few times when connecting to another
-> > Linux box in adhoc mode. Syslog files fill up the disk fast:
-> > 
-> > $ dmesg | tail -10
-> > [ 1986.772018] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> > [ 1986.776149] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> > [ 1986.780076] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> > [ 1986.784020] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> > [ 1986.788149] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> > [ 1986.792108] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> > [ 1986.796070] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> > [ 1986.800018] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> > [ 1986.804186] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> > [ 1986.808072] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> 
-> Hm. That's not supposed to happen over and over again that quickly, only
-> every few seconds. I wonder if that's related to the other timer issue
-> that we saw in ibss.
+25.05.2010 22:23, Sedat Dilek skrev:
+> "[1/2] iwlwifi: fix internal scan race" [1] is in this pull request.
+> Isn't "[2/2] iwlagn: work around rate scaling reset delay" [2] missing?
+> IIRC, both fixes were sent as a double-patch.
+>
 
-Try this patch please
+It's already upstream:
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=3bce6066263efb5733ee2141ac8b56684fb3b0a7
 
-http://thread.gmane.org/gmane.linux.kernel/989309/focus=989434
+> - Sedat -
+>
+> [1] https://patchwork.kernel.org/patch/99439/
+> [2] https://patchwork.kernel.org/patch/99438/
+>
 
-johannes
-
+--
+Thomas
