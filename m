@@ -1,34 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:35306 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751890Ab0ESSK0 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48265 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756915Ab0EZRaM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 May 2010 14:10:26 -0400
-Received: by fxm10 with SMTP id 10so2659509fxm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 19 May 2010 11:10:24 -0700 (PDT)
+	Wed, 26 May 2010 13:30:12 -0400
+Date: Wed, 26 May 2010 13:18:45 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: linux-wireless@vger.kernel.org, mcgrof@gmail.com
+Subject: Re: [PATCH]wireless:ath9k Disable leds for Apple products.
+Message-ID: <20100526171844.GB5823@tuxdriver.com>
+References: <1274894056-2866-1-git-send-email-justinmattock@gmail.com>
+ <1274894056-2866-2-git-send-email-justinmattock@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1274282769-19244-3-git-send-email-gwingerde@gmail.com>
-References: <1274282769-19244-1-git-send-email-gwingerde@gmail.com>
-	 <1274282769-19244-3-git-send-email-gwingerde@gmail.com>
-Date: Wed, 19 May 2010 20:10:15 +0200
-Message-ID: <AANLkTiktN6_0F5IBR8XStKUh7qfnFEn97ZkhuIwnPO4T@mail.gmail.com>
-Subject: Re: [PATCH 2/7] rt2x00: Move all register definitions for rt2800 to
-	rt2800.h.
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1274894056-2866-2-git-send-email-justinmattock@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 19, 2010 at 5:26 PM, Gertjan van Wingerde
-<gwingerde@gmail.com> wrote:
-> There is no point on having them separated across 3 files.
-> At the same time rename USB_CYC_CFG to its proper name US_CYC_CNT
-> (as per the datasheet).
->
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+On Wed, May 26, 2010 at 10:14:16AM -0700, Justin P. Mattock wrote:
+> Disable the leds on ath9k for Apple products, since
+> there is no leds on any of there machines(or non that I can find!!).
+> 
+>  Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+> 
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+>  void ath_init_leds(struct ath_softc *sc)
+>  {
+>  	char *trigger;
+>  	int ret;
+>  
+> +	/* Apple has no leds lights for their wireless.  */
+> +	if (dmi_check_system(dmi_system_table) > 0)
+> +		return -ENODEV;
+> +	else
+> +
+>  	if (AR_SREV_9287(sc->sc_ah))
+>  		sc->sc_ah->led_pin = ATH_LED_PIN_9287;
+>  	else
+
+Surely we don't need the 'else'.
+
+Does enabling the LEDs on these systems cause any problems?
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
