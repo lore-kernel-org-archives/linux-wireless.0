@@ -1,123 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:55381 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751754Ab0EBMwI convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 2 May 2010 08:52:08 -0400
-Received: by fxm10 with SMTP id 10so1399139fxm.19
-        for <linux-wireless@vger.kernel.org>; Sun, 02 May 2010 05:52:06 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: "David H. Lynch Jr." <dhlii@dlasys.net>
-Subject: Re: ar9170-fw II
-Date: Sun, 2 May 2010 14:52:00 +0200
-Cc: Benoit Papillault <benoit.papillault@free.fr>,
-	linux-wireless@vger.kernel.org
-References: <4BDC001F.9050202@dlasys.net> <4BDD2E05.40203@free.fr> <4BDD5EB3.7020802@dlasys.net>
-In-Reply-To: <4BDD5EB3.7020802@dlasys.net>
+Received: from slowhand.arndnet.de ([88.198.19.76]:52398 "EHLO mail.unitix.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752146Ab0EZSJz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 May 2010 14:09:55 -0400
+Message-ID: <4BFD63F0.9020905@nets.rwth-aachen.de>
+Date: Wed, 26 May 2010 20:09:52 +0200
+From: Arnd Hannemann <hannemann@nets.rwth-aachen.de>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201005021452.01101.chunkeey@googlemail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: David Quan <David.Quan@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>
+Subject: Re: regulatory problems with ath5k
+References: <4BFD04A4.4000403@nets.rwth-aachen.de> <AANLkTik5BnKa7eP4U2Qq6uDYiRk_uc47IpslpFeC0l9r@mail.gmail.com>
+In-Reply-To: <AANLkTik5BnKa7eP4U2Qq6uDYiRk_uc47IpslpFeC0l9r@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 02 May 2010 13:14:59 David H. Lynch Jr. wrote:
-> On 05/02/2010 03:47 AM, Benoit Papillault wrote:
-> > Le 01/05/2010 22:45, Christian Lamparter a écrit :
-> >> On Saturday 01 May 2010 20:23:26 David H. Lynch Jr. wrote:
-> >>> I think I can tell you what I am supposed add - I need to be able
-> >>> to provide userspace apps with precise timing information for each 
-> >>> packet.
-> >>> Since i am working on GPL'd code and the results are going to be
-> >>> provided to third parties whatever I do is GPL'd too.
-> >>
-> >> if by precise timing you mean "exact mac time in TU/usecs when frame
-> >> was received at the radio", then you might have a _problem_.
-> >> You see, the firmware already receives fully packed frames from
-> >> the MAC processor and only _forwards_ them all [as is] in
-> >> one big DMA to the USB subsystem.
-> >> (this is done in src/wlan.c handle_rx())
-> >>
-> >> So, unless the HW has a _magic_ flag to enable this capability...
-> >> you are sort of screwed :-/.
-> >
-> > I would love this feature as well. I have a device to test if that can 
-> > help. I share the feeling of Christian however... but maybe your 
-> > documentation says something about a special flag.
->     I am interested in round trip time as measured from some fixed point 
-> in the sending process to some fixed point in the packet acknowledgement.
->     The more accurate the better. Preferably measured by events at the 
-> radio rather than on the linux side.
+Am 26.05.2010 19:11, schrieb Luis R. Rodriguez:
+> On Wed, May 26, 2010 at 4:23 AM, Arnd Hannemann
+> <hannemann@nets.rwth-aachen.de> wrote:
+>   
+>> Hi,
+>>
+>> I'm trying to use 802.11a channels in AP mode with my ath5k nics with kernel 2.6.34.
+>> And after setting up crda, udev and wireless regdb,
+>>     
+> Which release of wireless-regdb?
+>
+>   
+This morning's git tree. I just copied the regulatory.bin from there.
+Last commit was:
 
-> I am interested in tx packets rather than rx packets.
-ahh, well... there goes' benoit interest ;).
+commit f3ba942f073358d1bca82a389da9f7da6e8fe81f
+Author: John W. Linville <linville@tuxdriver.com>
+Date:   Fri Feb 5 13:47:41 2010 -0500
 
->      If necessary I can measure the times myself as delta's from one 
-> event to another withing the SH2.
-> 
->      I have not digested the docs I have thoroughly yet but a cursory 
-> review suggests a less than trivial project.
->      I have not yet found a good high resolution clock inside the ar9170 
-> there are alot of clocks but they all seem to be 16bit. Probably that 
-> will make things harder.
-TSF timer could be used for this. (see 802.11-2007, Section 11 et seq.)
-It's a 2^64 bit timer with a 1us resolution and a accuracy _better_
-or equal to +/- 0.01%.
-
-The register address are at:
- - 0x1c3514 (low, AR9170_MAC_REG_TSF_L, read only)
- - 0x1c3518 (high, AR9170_MAC_REG_TSF_H, read only)
-
-But it comes at a small price: this timer is sometimes
-update & synchronized (802.11 11.1.3.4 and 11.1.4) in
-station or ad-hoc mode. The exact details are hidden
-inside MAC chip, but it should be possible to disable
-both by selecting the monitor mode.
-
->      I was expecting to have to make changes to the ar9170 firmware. I 
-> was expecting to have to devise some means of passing that information 
-> to the Linux driver and to the userspace application.
-Well, then you have two more good reasons why to use carl9170:
-
- * the ar9170usb driver and ar9170 firmware don't track tx frames.
-   carl9170 on the other hand does (every frame has a 8 bit "cookie").
-   This feature was necessary to generate an accurate tx transmission
-   feedback report for every individual frame for the driver.
-
- * carl9170 has the ability to store additional per-frame data.
-   In fact, if you don't need to have a different retry rates
-   you could realloc the 3 * 32 bit "rr" (as in retry rate)
-   array in the carl9170_tx_superdesc and _carl9170_tx_superdesc
-   struct (see wlan.h) for your purposes (storage for your time values).
-
-   And if you fetched all the data, everything will be sent
-   with an ordinary tx status feedback report to the application 
-   (add the timer fields into carl9170_tx_status and _carl9170_tx_status
-    struct - see fwcmd.h)
+    wireless-regdb: update sha1sum.txt in Makefile and fix REGDB_CHANGED
    
-(* talked about this earlier, but you never know...
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-   carlu _tool_ already provides a low-level HW driver for userspace.
-   This has the obvious advantage that you won't need to mess with
-   the kernel driver and network stacks.
 
-   The only work you'll have to do is: get the kernel code for
-   the MAC & PHY initialization and put it into carlu.
-   But the framework is already there so it's mostly copy + paste )
 
-> I would be happy to do that in some fashion that conformed to an existing
-> or future standard, but I was not anticipating a broad desire for what I am 
-> doing.  Variable latencies are highly undesirable in this application, 
-> but the userspace application will be aggregating large amounts of 
-> information, if latencies in what is measured are constrained and the 
-> unit of time measurement is small enough everything will work.
-> If it comes to that we switch to different hardware, but my project 
-> is bringing a concept that was demonstrated with an expensive SDR to an 
-> ar9170.
 
-It's always nice to have some "added value" for cheap and generic devices.
-e.g.: Atheros AR92xx chips can be used as among other stuff as a 
-      full range spectrum analyzer.
+>> "iw list" still shows flags
+>> "passive scanning, no IBSS" for most of the 802.11a channels (see below.)
+>>
+>> I wonder what I'm doing wrong here?
+>>     
+> Lets take a look.
+>
+>   
+>>        Band 2:
+>>                Frequencies:
+>>                        * 5180 MHz [36] (20.0 dBm) (radar detection)
+>>                        * 5200 MHz [40] (20.0 dBm) (radar detection)
+>>                        * 5220 MHz [44] (20.0 dBm) (radar detection)
+>>                        * 5240 MHz [48] (20.0 dBm) (radar detection)
+>>                        * 5260 MHz [52] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+>>                        * 5280 MHz [56] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+>>                        * 5300 MHz [60] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+>>                        * 5320 MHz [64] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+>>                        * 5500 MHz [100] (26.0 dBm) (passive scanning, no IBSS, radar detection)
+>>                        * 5520 MHz [104] (26.0 dBm) (passive scanning, no IBSS, radar detection)
+>>                        * 5540 MHz [108] (26.0 dBm) (passive scanning, no IBSS, radar detection)
+>>                        * 5560 MHz [112] (26.0 dBm) (passive scanning, no IBSS, radar detection)
+>>                        * 5580 MHz [116] (26.0 dBm) (passive scanning, no IBSS, radar detection)
+>>                        * 5600 MHz [120] (26.0 dBm) (passive scanning, no IBSS, radar detection)
+>>                        * 5620 MHz [124] (26.0 dBm) (passive scanning, no IBSS, radar detection)
+>>                        * 5640 MHz [128] (26.0 dBm) (passive scanning, no IBSS, radar detection)
+>>                        * 5660 MHz [132] (26.0 dBm) (passive scanning, no IBSS, radar detection)
+>>                        * 5680 MHz [136] (26.0 dBm) (passive scanning, no IBSS, radar detection)
+>>                        * 5700 MHz [140] (26.0 dBm) (passive scanning, no IBSS, radar detection)
+>>     
+>
+> Please do: 'iw reg get' and paste the output here, the above channels
+> should not be passive scan/no-ibss for 'DE'.
+>   
 
-Regards,
-	Chr
+hannemann@mrouter46:~ $ sudo iw reg get
+country DE:
+       (2400 - 2483 @ 40), (N/A, 20)
+       (5150 - 5350 @ 40), (N/A, 20), NO-OUTDOOR, DFS
+       (5470 - 5725 @ 40), (N/A, 26), NO-OUTDOOR, DFS
+
+
+>> hannemann@mrouter46:~ $ sudo iw reg get
+>> country DE:
+>>        (2400 - 2483 @ 40), (N/A, 20)
+>>        (5150 - 5350 @ 40), (N/A, 20), NO-OUTDOOR, DFS
+>>        (5470 - 5725 @ 40), (N/A, 26), NO-OUTDOOR, DFS
+>>
+>> dmesg snippet:
+>>
+>> May 26 12:10:36 mrouter46 kernel: [   30.023089] console [netcon0] enabled
+>> May 26 12:10:36 mrouter46 kernel: [   30.023103] netconsole: network logging started
+>> May 26 12:10:36 mrouter46 kernel: [   30.314702] cfg80211: Calling CRDA to update world regulatory domain
+>> May 26 12:10:37 mrouter46 kernel: [   30.555745] ath5k 0000:00:0c.0: registered as \'phy0\'
+>> May 26 12:10:37 mrouter46 kernel: [   31.039151] ath: EEPROM regdomain: 0x8114
+>>     
+> WTF your EEPROM has 0x8114 set on the regulatory domain. David, have
+> you ever seen such a thing? This kernel (2.6.34) should already have
+> an ath5k EEPROM checksum check so the EEPROM should be valid. Lets
+> figure this out first before digging more into this.
+>
+> Some more notes below though.
+>   
+
+You got me, I hacked this up:
+
+--- linux-2.6.34/drivers/net/wireless/ath/regd.c    2010-05-16
+23:17:36.000000000 +0200
++++ linux-2.6.34.x-um/drivers/net/wireless/ath/regd.c    2010-05-26
+19:57:44.000000000 +0200
+@@ -501,7 +501,7 @@ ath_regd_init(struct ath_regulatory *reg
+         return -EINVAL;
+ 
+     ath_regd_sanitize(reg);
+-
++    reg->current_rd = CTRY_GERMANY | COUNTRY_ERD_FLAG;
+     printk(KERN_DEBUG "ath: EEPROM regdomain: 0x%0x\n", reg->current_rd);
+ 
+     if (!ath_regd_is_eeprom_valid(reg)) {
+
+
+Do you think this is the cause?
+
+>   
+>> May 26 12:10:37 mrouter46 kernel: [   31.039168] ath: EEPROM indicates we should expect a country code
+>> May 26 12:10:37 mrouter46 kernel: [   31.039188] ath: doing EEPROM country->regdmn map search
+>> May 26 12:10:37 mrouter46 kernel: [   31.039205] ath: country maps to regdmn code: 0x37
+>> May 26 12:10:37 mrouter46 kernel: [   31.039222] ath: Country alpha2 being used: DE
+>> May 26 12:10:37 mrouter46 kernel: [   31.039237] ath: Regpair used: 0x37
+>> May 26 12:10:37 mrouter46 kernel: [   31.054155] cfg80211: World regulatory domain updated:
+>>     
+> So cfg80211 *first* starts out with the world regulatory domain by
+> default, and then it will call CRDA for DE since your regpair mapped
+> to 'DE'.
+>
+>   
+>> May 26 12:10:37 mrouter46 kernel: [   31.054178]     (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+>> May 26 12:10:37 mrouter46 kernel: [   31.054207]     (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+>> May 26 12:10:37 mrouter46 kernel: [   31.054232]     (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+>> May 26 12:10:37 mrouter46 kernel: [   31.054258]     (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+>> May 26 12:10:37 mrouter46 kernel: [   31.054284]     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+>> May 26 12:10:37 mrouter46 kernel: [   31.054310]     (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+>> May 26 12:10:38 mrouter46 kernel: [   31.212057] phy0: Selected rate control algorithm \'minstrel\'
+>> May 26 12:10:38 mrouter46 kernel: [   31.212732] ath5k phy0: Atheros AR5213A chip found (MAC: 0x59, PHY: 0x43)
+>> May 26 12:10:38 mrouter46 kernel: [   31.212732] ath5k phy0: RF5112B multiband radio found (0x36)
+>> May 26 12:10:38 mrouter46 kernel: [   31.212732] ath5k 0000:00:0e.0: registered as \'phy1\'
+>> May 26 12:10:38 mrouter46 kernel: [   31.622592] cfg80211: Calling CRDA for country: DE
+>>     
+> Here is the call for 'DE'
+>
+>   
+>> May 26 12:10:38 mrouter46 kernel: [   31.688006] cfg80211: Regulatory domain changed to country: DE
+>> May 26 12:10:38 mrouter46 kernel: [   31.688030]     (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+>> May 26 12:10:38 mrouter46 kernel: [   31.688057]     (2400000 KHz - 2483500 KHz @ 40000 KHz), (N/A, 2000 mBm)
+>> May 26 12:10:38 mrouter46 kernel: [   31.688080]     (5150000 KHz - 5350000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+>> May 26 12:10:38 mrouter46 kernel: [   31.688103]     (5470000 KHz - 5725000 KHz @ 40000 KHz), (N/A, 2698 mBm)
+>> May 26 12:10:38 mrouter46 kernel: [   31.745694] ath: EEPROM regdomain: 0x8114
+>> May 26 12:10:38 mrouter46 kernel: [   31.745694] ath: EEPROM indicates we should expect a country code
+>> May 26 12:10:38 mrouter46 kernel: [   31.745694] ath: doing EEPROM country->regdmn map search
+>> May 26 12:10:38 mrouter46 kernel: [   31.745694] ath: country maps to regdmn code: 0x37
+>> May 26 12:10:38 mrouter46 kernel: [   31.745694] ath: Country alpha2 being used: DE
+>> May 26 12:10:38 mrouter46 kernel: [   31.745694] ath: Regpair used: 0x37
+>> May 26 12:10:38 mrouter46 kernel: [   31.758662] phy1: Selected rate control algorithm \'minstrel\'
+>> May 26 12:10:38 mrouter46 kernel: [   31.759383] ath5k phy1: Atheros AR5213A chip found (MAC: 0x59, PHY: 0x43)
+>> May 26 12:10:38 mrouter46 kernel: [   31.759383] ath5k phy1: RF5112B multiband radio found (0x36)
+>>     
+> Do you have two cards?
+>   
+
+Yes.
+
+Best regards,
+Arnd
