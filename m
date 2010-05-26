@@ -1,36 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48018 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757433Ab0EKIvG (ORCPT
+Received: from mail-pz0-f176.google.com ([209.85.222.176]:33052 "EHLO
+	mail-pz0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752546Ab0EZVeI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 04:51:06 -0400
-Subject: Re: [RFC PATCH 2/2] ath5k: Add support for cfg80211 antenna setting
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	holgerschurig@gmail.com
-In-Reply-To: <20100511083910.28289.71188.stgit@tt-desk>
-References: <20100511083121.28289.96180.stgit@tt-desk>
-	 <20100511083910.28289.71188.stgit@tt-desk>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 11 May 2010 10:50:59 +0200
-Message-ID: <1273567859.3669.24.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 26 May 2010 17:34:08 -0400
+Received: by pzk6 with SMTP id 6so3000740pzk.1
+        for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 14:34:06 -0700 (PDT)
+Message-ID: <4BFD93E0.5080506@gmail.com>
+Date: Wed, 26 May 2010 14:34:24 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH]wireless:ath9k Disable leds for Apple products.
+References: <1274894056-2866-1-git-send-email-justinmattock@gmail.com> 	<1274894056-2866-2-git-send-email-justinmattock@gmail.com> 	<20100526171844.GB5823@tuxdriver.com> <4BFD5C89.8000308@gmail.com> <AANLkTim6ef__fNdXUyP1T4HB7jxbyt-Jlqi3Xa5Y_whm@mail.gmail.com>
+In-Reply-To: <AANLkTim6ef__fNdXUyP1T4HB7jxbyt-Jlqi3Xa5Y_whm@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-05-11 at 17:39 +0900, Bruno Randolf wrote:
+On 05/26/2010 02:05 PM, Luis R. Rodriguez wrote:
+> On Wed, May 26, 2010 at 10:38 AM, Justin P. Mattock
+> <justinmattock@gmail.com>  wrote:
+>    
+>> On 05/26/2010 10:18 AM, John W. Linville wrote:
+>>      
+>>> On Wed, May 26, 2010 at 10:14:16AM -0700, Justin P. Mattock wrote:
+>>>
+>>>        
+>>>> Disable the leds on ath9k for Apple products, since
+>>>> there is no leds on any of there machines(or non that I can find!!).
+>>>>
+>>>>   Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
+>>>>          
+> Our team has confirmed Apple devices do not have LEDs so a change like
+> this is OK but this patch is wrong anyway. More details below.
+>
+>    
+>>>>   void ath_init_leds(struct ath_softc *sc)
+>>>>   {
+>>>>         char *trigger;
+>>>>         int ret;
+>>>>
+>>>> +       /* Apple has no leds lights for their wireless.  */
+>>>> +       if (dmi_check_system(dmi_system_table)>    0)
+>>>> +               return -ENODEV;
+>>>> +       else
+>>>> +
+>>>>         if (AR_SREV_9287(sc->sc_ah))
+>>>>                 sc->sc_ah->led_pin = ATH_LED_PIN_9287;
+>>>>         else
+>>>>
+>>>>          
+>>> Surely we don't need the 'else'.
+>>>
+>>> Does enabling the LEDs on these systems cause any problems?
+>>>
+>>> John
+>>>
+>>>        
+>> I picked up the idea, from this patch:
+>> http://kerneltrap.org/mailarchive/linux-kernel/2010/1/20/4530535
+>> while looking into a bug for ath9k(thinking maybe leds
+>> are causing something, which want  the case)
+>>
+>> so Id have to say I don't think the leds cause issue's,
+>> if anything just a wasted symlink, call, or whatever
+>> in /sys/class/leds/*
+>>      
+> The patch is wrong anyway, ath_init_leds() is void and yet you return
+> a value. If this is really needed I'd also prefer if you define a bool
+> or something and use a ah->ignore_leds and set this to true if the DMI
+> stuff checks out for Apple up hw init. Then check for ignore_leds
+> prior to calling ath_init_leds() and also avoid it if set. Also check
+> for ingore_leds upon device cleanup and ignore the
+> acancel_delayed_work_sync(&sc->ath_led_blink_work) and
+> ath_deinit_leds() and skip that.
+>
+> But given that it is not needed it seems a lot of work for something
+> that is a non-issue.
+>
+>    Luis
+>
+>    
+tough to say!! I was looking into a bug a few months back, and
+thought hmm.. maybe something is being called with the leds
+but the leds are not there causing some thing to crap out..
 
-> +	if (tx_ant == 1 && rx_ant == 1)
-> +		ath5k_hw_set_antenna_mode(sc->ah, AR5K_ANTMODE_FIXED_A);
-> +	else if (tx_ant == 2 && rx_ant == 2)
-> +		ath5k_hw_set_antenna_mode(sc->ah, AR5K_ANTMODE_FIXED_B);
-> +	else if (tx_ant == 3 && rx_ant == 3)
-> +		ath5k_hw_set_antenna_mode(sc->ah, AR5K_ANTMODE_DEFAULT);
-> +	else
-> +		return -EOPNOTSUPP;
+so out of curiosity I remembered the dmi disable patch, and
+semi somewhat pieced it together(just to see the results of disabling 
+the leds).
+unfortunately still hit the strange thing with wpa_supplicant and 
+ath9k(the disconnect thing).
 
-That should be -EINVAL, I think.
+as for the above procedure(I can give that a try.. but it might
+take a while...)
 
-johannes
+Justin P. Mattock
+
 
