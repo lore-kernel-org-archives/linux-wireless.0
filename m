@@ -1,83 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f183.google.com ([209.85.221.183]:57211 "EHLO
-	mail-qy0-f183.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753590Ab0EHQW1 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45143 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754529Ab0EZMfE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 May 2010 12:22:27 -0400
-Received: by qyk13 with SMTP id 13so3445524qyk.1
-        for <linux-wireless@vger.kernel.org>; Sat, 08 May 2010 09:22:26 -0700 (PDT)
-Date: Sat, 8 May 2010 18:22:01 +0200
-From: Dan Carpenter <error27@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Jouni Malinen <jmalinen@atheros.com>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ming Lei <tom.leiming@gmail.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [patch 2/9] ath9k: range checking issues in htc_hst.c
-Message-ID: <20100508162201.GN27064@bicker>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 26 May 2010 08:35:04 -0400
+Subject: Re: [PATCH] mac80211: Fix basic rates for created IBSS networks
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1274877272-22487-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1274877272-22487-1-git-send-email-juuso.oikarinen@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 26 May 2010 14:34:58 +0200
+Message-ID: <1274877298.3658.6.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The original code had ENDPOINT_MAX and HST_ENDPOINT_MAX switched.
+On Wed, 2010-05-26 at 15:34 +0300, Juuso Oikarinen wrote:
+> Currently the mac80211 marks rates 1 and 2 mbps as basic rates for created
+> ad-hoc networks. To be certifiable, rates 1, 2, 5.5 and 12 need to be marked
+> basic.
+> 
+> Change this.
+> 
+> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> ---
+>  net/mac80211/ibss.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+> 
+> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+> index b2cc1fd..448cf57 100644
+> --- a/net/mac80211/ibss.c
+> +++ b/net/mac80211/ibss.c
+> @@ -529,7 +529,8 @@ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
+>  		sdata->drop_unencrypted = 0;
+>  
+>  	__ieee80211_sta_join_ibss(sdata, bssid, sdata->vif.bss_conf.beacon_int,
+> -				  ifibss->channel, 3, /* first two are basic */
+> +				  ifibss->channel,
+> +				  15, /* 1, 2, 5.5 and 12 are basic */
 
-Also the first loop was off by one, it started past the end of the array
-and went down to 1 instead of going down to 0.  The test at the end of
-the loop to see if we exited via a break wasn't right because
-"tmp_endpoint" is always non-null here.
+12?
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
+In any case, this is incorrect in 5 GHz (at least the comment is).
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
-index 7bf6ce1..0c062d0 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
-@@ -116,7 +116,7 @@ static void htc_process_conn_rsp(struct htc_target *target,
- 		max_msglen = be16_to_cpu(svc_rspmsg->max_msg_len);
- 		endpoint = &target->endpoint[epid];
- 
--		for (tepid = ENDPOINT_MAX; tepid > ENDPOINT0; tepid--) {
-+		for (tepid = HST_ENDPOINT_MAX - 1; tepid >= ENDPOINT0; tepid--) {
- 			tmp_endpoint = &target->endpoint[tepid];
- 			if (tmp_endpoint->service_id == service_id) {
- 				tmp_endpoint->service_id = 0;
-@@ -124,7 +124,7 @@ static void htc_process_conn_rsp(struct htc_target *target,
- 			}
- 		}
- 
--		if (!tmp_endpoint)
-+		if (tepid < ENDPOINT0)
- 			return;
- 
- 		endpoint->service_id = service_id;
-@@ -297,7 +297,7 @@ void htc_stop(struct htc_target *target)
- 	enum htc_endpoint_id epid;
- 	struct htc_endpoint *endpoint;
- 
--	for (epid = ENDPOINT0; epid <= ENDPOINT_MAX; epid++) {
-+	for (epid = ENDPOINT0; epid < HST_ENDPOINT_MAX; epid++) {
- 		endpoint = &target->endpoint[epid];
- 		if (endpoint->service_id != 0)
- 			target->hif->stop(target->hif_dev, endpoint->ul_pipeid);
-@@ -309,7 +309,7 @@ void htc_start(struct htc_target *target)
- 	enum htc_endpoint_id epid;
- 	struct htc_endpoint *endpoint;
- 
--	for (epid = ENDPOINT0; epid <= ENDPOINT_MAX; epid++) {
-+	for (epid = ENDPOINT0; epid < HST_ENDPOINT_MAX; epid++) {
- 		endpoint = &target->endpoint[epid];
- 		if (endpoint->service_id != 0)
- 			target->hif->start(target->hif_dev,
-@@ -377,7 +377,7 @@ void ath9k_htc_rx_msg(struct htc_target *htc_handle,
- 	htc_hdr = (struct htc_frame_hdr *) skb->data;
- 	epid = htc_hdr->endpoint_id;
- 
--	if (epid >= ENDPOINT_MAX) {
-+	if (epid >= HST_ENDPOINT_MAX) {
- 		if (pipe_id != USB_REG_IN_PIPE)
- 			dev_kfree_skb_any(skb);
- 		else
+johannes
+
