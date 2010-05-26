@@ -1,91 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bu3sch.de ([62.75.166.246]:50226 "EHLO vs166246.vserver.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751665Ab0EFKBV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 May 2010 06:01:21 -0400
-From: Michael Buesch <mb@bu3sch.de>
-To: b43-dev@lists.infradead.org
-Subject: Re: [RFC/RFT] ssb: resolve alternate SPROM offset for 14e4:4315
-Date: Thu, 6 May 2010 12:01:18 +0200
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-References: <4be24cdd.Yg6pH2Z4OwSotB+K%Larry.Finger@lwfinger.net> <201005061153.01488.mb@bu3sch.de> (sfid-20100506_055308_804338_0079B086)
-In-Reply-To: <201005061153.01488.mb@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201005061201.18469.mb@bu3sch.de>
+Received: from smtp.nokia.com ([192.100.122.233]:29392 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752952Ab0EZLN2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 May 2010 07:13:28 -0400
+Subject: Re: [RFC PATCH] mac80211: Add support for hardware ARP query
+ filtering
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1274778802.3635.30.camel@jlt3.sipsolutions.net>
+References: <1274773685-11168-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1274778802.3635.30.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 26 May 2010 14:14:27 +0300
+Message-ID: <1274872467.5277.1783.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 06 May 2010 11:53:01 Michael Buesch wrote:
-> On Thursday 06 May 2010 07:00:13 Larry Finger wrote:
-> > This patch and the patch by Gabor entitled "[PATCH] ssb: Implement
-> > fast powerup delay calculation" are enough to allow the netbook from
-> > John to work with ssb/b43. As this patch tampers with the SPROM offset for
-> > 14e4:4315 devices, it should be tested by anyone with an LP PHY that works
-> > to ensure that it is not killed.
-> > 
-> > The essential elements of this patch will also be tested as part of kernel Bug
-> > #15825.
-> > 
-> > Larry
-> >  
-> > Index: wireless-testing/drivers/ssb/pci.c
-> > ===================================================================
-> > --- wireless-testing.orig/drivers/ssb/pci.c
-> > +++ wireless-testing/drivers/ssb/pci.c
-> > @@ -631,8 +631,17 @@ static int ssb_pci_sprom_get(struct ssb_
-> >  		return -ENODEV;
-> >  	}
-> >  
-> > -	bus->sprom_offset = (bus->chipco.dev->id.revision < 31) ?
-> > -		SSB_SPROM_BASE1 : SSB_SPROM_BASE31;
-> > +	/* get SPROM offset: SSB_SPROM_BASE1 except for chipcommon rev >= 31
-> > +	 * or chip ID is 0x4312 and bit 0x2 is set in chipcommon status
-> > +	 */
-> > +	if (bus->chipco.dev->id.revision >= 31)
-> > +		bus->sprom_offset = SSB_SPROM_BASE31;
-> > +	else if (bus->chip_id == 0x4312 && (bus->chipco.status & 0x02))
-> > +		bus->sprom_offset = SSB_SPROM_BASE31;
-> > +	else
-> > +		bus->sprom_offset = SSB_SPROM_BASE1;
+On Tue, 2010-05-25 at 11:13 +0200, ext Johannes Berg wrote:
+> On Tue, 2010-05-25 at 10:48 +0300, Juuso Oikarinen wrote:
+> 
+> You should get the right include too.
+> 
+> > +static inline int drv_configure_ip_filter(struct ieee80211_hw *hw,
+> > +					  struct in_ifaddr *ifa_list)
+> > +{
+> > +	struct ieee80211_local *local = hw_to_local(hw);
+> > +	int ret = 0;
 > > +
-> > +	ssb_dprintk(KERN_INFO PFX "SPROM offset is 0x%x\n", bus->sprom_offset);
-> >  
-> >  	buf = kcalloc(SSB_SPROMSIZE_WORDS_R123, sizeof(u16), GFP_KERNEL);
-> >  	if (!buf)
-> > Index: wireless-testing/drivers/ssb/scan.c
-> > ===================================================================
-> > --- wireless-testing.orig/drivers/ssb/scan.c
-> > +++ wireless-testing/drivers/ssb/scan.c
-> > @@ -306,6 +306,11 @@ int ssb_bus_scan(struct ssb_bus *bus,
-> >  		}
-> >  		tmp = scan_read32(bus, 0, SSB_CHIPCO_CAP);
-> >  		bus->chipco.capabilities = tmp;
-> > +		if (bus->chip_rev >= 11)
+> > +	if (local->ops->configure_ip_filter)
+> > +		ret = local->ops->configure_ip_filter(hw, ifa_list);
+> > +	return ret;
+> > +}
 > 
-> This still is wrong. the chip_rev is not the chipcommon core revision.
-
-Although technically in most (all?) cases it might be the same number.
-I'm not sure on that one.
-But it is read from an entirely different register and I think it's plain
-wrong to assume that chip_rev equals the chipcommon core rev.
-
-> We already went through this and we decided to read the chipstat later.
-> Read it in chipcommon init. The bus scan is _way_ too early to read this.
-> 
-> > +			bus->chipco.status = scan_read32(bus, 0,
-> > +					     SSB_CHIPCO_CHIPSTAT);
-> > +		else
-> > +			bus->chipco.status = 0;
-> >  	} else {
-> >  		if (bus->bustype == SSB_BUSTYPE_PCI) {
-> >  			bus->chip_id = pcidev_to_chipid(bus->host_pci);
-> > 
-> > 
-> 
+> Tracing would be nice, you should even able able to trace all addresses
+> in a variable-length array.
 > 
 
--- 
-Greetings, Michael.
+I looked into the tracing. I still prefer using the ifa_list directly as
+argument to the driver, and not copy the addresses in it to another
+array.
+
+The ifa_list is a linked list, and does AFAIK does not directly fit into
+the tracing infrasturcture.
+
+Hence I added a trace for this op, but omitted tracing the IP addresses.
+
+I will sent an RFC patch with this shortly.
+
+-Juuso
+
+> johannes
+> 
+
+
