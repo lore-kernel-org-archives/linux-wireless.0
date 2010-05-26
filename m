@@ -1,41 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54190 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750888Ab0EXIFs (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:52031 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750923Ab0EZFFv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 May 2010 04:05:48 -0400
-Subject: Re: [PATCH] Silence debug prints when using adhoc mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mikko Rapeli <mikko.rapeli@iki.fi>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20100523162240.GZ19669@nalle>
-References: <20100523162240.GZ19669@nalle>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 24 May 2010 10:05:45 +0200
-Message-ID: <1274688345.3743.2.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 26 May 2010 01:05:51 -0400
+Received: by pwi2 with SMTP id 2so1407767pwi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 25 May 2010 22:05:50 -0700 (PDT)
+MIME-Version: 1.0
+Date: Tue, 25 May 2010 22:05:50 -0700
+Message-ID: <AANLkTikgoF1iaw8asRrnC1M7ezy9RBqvFBREqAb_B7Fu@mail.gmail.com>
+Subject: AR9220 + compat-wireless 2010-05-25 + HT40 == death
+From: Jeffrey Baker <jwbaker@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2010-05-23 at 19:22 +0300, Mikko Rapeli wrote:
-> This is flooded to syslog quite a few times when connecting to another
-> Linux box in adhoc mode. Syslog files fill up the disk fast:
-> 
-> $ dmesg | tail -10
-> [ 1986.772018] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> [ 1986.776149] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> [ 1986.780076] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> [ 1986.784020] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> [ 1986.788149] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> [ 1986.792108] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> [ 1986.796070] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> [ 1986.800018] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> [ 1986.804186] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
-> [ 1986.808072] wlan0: No active IBSS STAs - trying to scan for other IBSS networks with same SSID (merge)
+On my AP I installed compat-wireless 2010-05-25, where I already had
+hostapd 0.6.10 and kernel 2.6.30, with an AR9220 radio card.  I was
+using this config (irrelevant bits elided):
 
-Hm. That's not supposed to happen over and over again that quickly, only
-every few seconds. I wonder if that's related to the other timer issue
-that we saw in ibss.
+driver=nl80211
+country_code=US
+hw_mode=g
+channel=11
+beacon_int=100
+dtim_period=2
+max_num_sta=255
+rts_threshold=2347
+fragm_threshold=2346
+ieee80211n=1
+ht_capab=[HT40-][SHORT-GI-40]
 
-johannes
+After connecting with an Intel 6300 mobile station, I could pass
+packets for perhaps one minute before the connection would stop
+working.  I never did get disassociation on the mobile station, and
+there was nothing odd in the hostapd logs.  It just stopped working.
+An iperf run would kill it off immediately.  On the mobile station, iw
+dev wlan0 link indicated rates as high as 300mbps before it stopped
+working.
 
+Removing these two lines from my config make it work reliably:
+
+ieee80211n=1
+ht_capab=[HT40-][SHORT-GI-40]
+
+In other words, disabling 802.11n makes it work OK.  Unfortunately
+with 11n disabled I get only about 8mbps from station to station,
+which is pathetic.
+
+Would be happy to send any logs needed to debug this.  I don't see
+anything in hostapd's output nor in dmesg that indicates any kind of
+error.
+
+-jwb
