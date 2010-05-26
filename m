@@ -1,29 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:45271 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756404Ab0EMBUq (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:62310 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754995Ab0EZMur (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 May 2010 21:20:46 -0400
-Received: by pvg12 with SMTP id 12so67632pvg.19
-        for <linux-wireless@vger.kernel.org>; Wed, 12 May 2010 18:20:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20100513011711.13007.45318.stgit@tt-desk>
-References: <20100513011711.13007.45318.stgit@tt-desk>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 12 May 2010 18:20:25 -0700
-Message-ID: <AANLkTikL5FQ8SGES7v7ftxplTz3wloQ5mrbOx97Luw--@mail.gmail.com>
-Subject: Re: [PATCH] compat-wireless: fix 07-change-default-rate-alg.patch
-To: Bruno Randolf <br1@einfach.org>
-Cc: hauke@hauke-m.de, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 26 May 2010 08:50:47 -0400
+Subject: Re: [RFC PATCHv2] mac80211: Add support for hardware ARP query
+ filtering
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1274874739.3658.5.camel@jlt3.sipsolutions.net>
+References: <1274873379-12944-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1274874739.3658.5.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 26 May 2010 15:51:12 +0300
+Message-ID: <1274878272.5277.1890.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 12, 2010 at 6:17 PM, Bruno Randolf <br1@einfach.org> wrote:
-> i need this change to make it apply again
->
-> Signed-off-by: Bruno Randolf <br1@einfach.org>
+On Wed, 2010-05-26 at 13:52 +0200, ext Johannes Berg wrote:
+> On Wed, 2010-05-26 at 14:29 +0300, Juuso Oikarinen wrote:
+> 
+> > --- a/net/mac80211/mlme.c
+> > +++ b/net/mac80211/mlme.c
+> > @@ -858,6 +858,10 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
+> >  	ieee80211_recalc_smps(local, sdata);
+> >  	mutex_unlock(&local->iflist_mtx);
+> >  
+> > +	rtnl_lock();
+> > +	ieee80211_set_arp_filter(sdata);
+> > +	rtnl_unlock();
+> > +
+> 
+> Please analyse locking in more detail and enable lockdep :)
+> 
+> This will cause deadlocks.
 
-Applied and pushed out, thanks!
+I have lockdep permanently enabled in my development kernel. It has
+given me no complaints in testing with the corresponding wl1271 driver
+patch.
 
-  Luis
+But I will look into those locks further if I can figure out any
+deadlock scenarios.
+
+-Juuso
+
+
+> johannes
+> 
+
+
