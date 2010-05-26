@@ -1,63 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:53725 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753402Ab0E0QNV (ORCPT
+Received: from mail37.messagelabs.com ([216.82.241.83]:56738 "EHLO
+	mail37.messagelabs.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755017Ab0EZPIO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 May 2010 12:13:21 -0400
-Received: by pwi7 with SMTP id 7so101951pwi.19
-        for <linux-wireless@vger.kernel.org>; Thu, 27 May 2010 09:13:20 -0700 (PDT)
-Message-ID: <4BFE9A22.5040005@lwfinger.net>
-Date: Thu, 27 May 2010 11:13:22 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 26 May 2010 11:08:14 -0400
+From: "Gordon, Charles" <Charles.Gordon@digi.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 26 May 2010 10:07:44 -0500
+Subject: RE: Is there a bug in 2.6.29-rc8 support of Ad-Hoc mode?
+Message-ID: <8DCC153EAFE67A4B990A840E829F704B017C658D5E9F@mtk-sms-exch01.digi.com>
+References: <8DCC153EAFE67A4B990A840E829F704B017C658D5E6C@mtk-sms-exch01.digi.com>
+ <20100526132811.GA5823@tuxdriver.com>
+In-Reply-To: <20100526132811.GA5823@tuxdriver.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-To: John Linville <linville@tuxdriver.com>, Greg KH <greg@kroah.com>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Conversion of driver for Realtek 8192SU
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am in the process of converting the driver contained in the file
-RTL8192SU_usb_linux_v2.6.0006.20100511.zip obtained from the Realtek
-site. This driver is used for the following USB IDs:
+Hi John,
 
-Realtek (0x0bda)  0x8171, 0x8172, 0x8173, 0x8174, 0x8712, 0x8713, 0xC512
-Correga (0x07aa)  0x0047
-D-Link (0x07d1)   0x3303, 0x3302, 0x3300
-Skyworth (0x14b2) 0x3300, 0x3301, 0x3302
-EnGenius (0x1740) 0x9603, 0x9605
-Belkin (0x050d)   0x815F, 0x945A, 0x845A
-Guillemot(0x06f8) 0xe031
-Edimax (0x7392)   0x7611, 0x7612, 0x7622
-Sitecom (0x0DF6)  0x0045
-Hawking (0x0E66)  0x0015, 0x0016, 0x1786, 0x1791
-Other (0x13D3)    0x3306, 0x3309, 0x3310, 0x3311, 0x3325
-Other (0x083A)    0xC512
+Switching to your sequence of commands:
 
-My initial plan is to modify this driver code for inclusion in
-drivers/staging. The above list includes some, but not all, of the IDs
-in the driver currently in drivers/staging/rtl8192su. I will likely put
-this in as drivers/staging/rtl8712u, which is the name used in the code,
-and remove the duplicate IDs from rtl8192su. Once this step is done, I
-will then work at modifying it to use mac80211 so that it can go into
-mainline.
+>	ifconfig wlan0 down
+>	iwconfig wlan0 mode Ad-Hoc
+>	ifconfig wlan0 up
+>	iwconfig wlan0 essid "AdHocID"
 
-My test device is a D-Link DWA-130 (14b2:3300). The Realtek driver
-compiles cleanly and works as-is for this device on i386 architecture;
-however, compilation spews hundreds of warnings when built on x86_64.
-Most of these are due to wrong sized integers in pointer - integer
-conversions and were easily fixed. The driver also oopsed due to an
-illegal array index when getting the channel number from scan data. I
-found this problem, and added a fixup and a log message to prevent the
-oops. The driver now scans correctly, but cannot connect on x86_64,
-which is my second reason for this message.
+solves the problem.  
 
-I know that the size of pointers changes from 32- to 54-bit
-architecture, as does the size of longs. I have been through the code
-many times, and I think those have been fixed. Are there any other types
-of objects that change size? Does anyone have any suggestions on what to
-look for?
+Thanks for the help!
 
-Thanks,
 
-Larry
+
+-----Original Message-----
+From: John W. Linville [mailto:linville@tuxdriver.com] 
+Sent: Wednesday, May 26, 2010 9:28 AM
+To: Gordon, Charles
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Is there a bug in 2.6.29-rc8 support of Ad-Hoc mode?
+
+On Wed, May 26, 2010 at 06:57:31AM -0500, Gordon, Charles wrote:
+> I am trying to get a driver I'm developing to work with Ad-Hoc mode on
+> Linux 2.6.29-rc8.  I am running into a problem.  I have traced it down
+> to the routine ieee80211_scan_work.  I use the following commands to
+> start Ad-Hoc mode:
+> 
+> ifconfig wlan0 down
+> iwconfig wlan0 mode Ad-Hoc essid "AdHocID"
+> ifconfig wlan0 up
+
+FWIW, this should probably look more like the following:
+
+	ifconfig wlan0 down
+	iwconfig wlan0 mode Ad-Hoc
+	ifconfig wlan0 up
+	iwconfig wlan0 essid "AdHocID"
+
+If that doesn't work, you may be experiencing some bug.  But...
+
+> Can someone either confirm that this is a known problem with
+> 2.6.28-rc8, or tell me what my driver could be doing to cause this
+> problem?
+
+This kernel is ancient, even if you meant 2.6.29-rc8 like you
+said originally.  And it is not even an actual release version
+(e.g. 2.6.29).  I could be wrong, but I doubt there will be much
+interest among the people here in working on the internals of such
+an old kernel.  Is there some reason you can't try something newer?
+2.6.34 was just released...
+
+Good luck!
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
