@@ -1,43 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56201 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757186Ab0EKNpQ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33975 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753611Ab0EZMxO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 09:45:16 -0400
-Date: Tue, 11 May 2010 09:37:31 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	linux-kernel@vger.kernel.org,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Using wireless.kernel.org for Bluetooth documentation as well ?
-Message-ID: <20100511133731.GB9447@tuxdriver.com>
-References: <k2z43e72e891005101245se32796ex47a17683ab05d8b5@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <k2z43e72e891005101245se32796ex47a17683ab05d8b5@mail.gmail.com>
+	Wed, 26 May 2010 08:53:14 -0400
+Subject: Re: [PATCHv2] mac80211: Fix basic rates for created IBSS networks
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1274878088-22785-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1274878088-22785-1-git-send-email-juuso.oikarinen@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 26 May 2010 14:53:11 +0200
+Message-ID: <1274878391.3658.9.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 10, 2010 at 12:45:41PM -0700, Luis R. Rodriguez wrote:
-> Today we have a wealth of information on 802.11 Linux wireless on
-> http://wireless.kernel.org and I think the wiki model has worked
-> wonders for us. I wanted to see what you thought of using the same
-> site as a source of documentation for Bluetooth as well. We already
-> have *some* Bluetooth documentation [1], and we could just point to
-> the BlueZ pages for other docs but it doesn't seem to use a wiki and
-> those google ads do blind my right eye.
+On Wed, 2010-05-26 at 15:48 +0300, Juuso Oikarinen wrote:
+> Currently the mac80211 marks rates 1 and 2 mbps as basic rates for created
+> ad-hoc networks. To be certifiable, rates 1, 2, 5.5 and 11 need to be marked
+> basic.
 > 
-> Thoughts?
+> Change this.
 > 
-> [1] http://wireless.kernel.org/en/users/Documentation/Bluetooth-coexistence
-> [2] http://www.bluez.org
+> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> ---
+>  net/mac80211/ibss.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+> 
+> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+> index b2cc1fd..0b8360c 100644
+> --- a/net/mac80211/ibss.c
+> +++ b/net/mac80211/ibss.c
+> @@ -529,7 +529,8 @@ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
+>  		sdata->drop_unencrypted = 0;
+>  
+>  	__ieee80211_sta_join_ibss(sdata, bssid, sdata->vif.bss_conf.beacon_int,
+> -				  ifibss->channel, 3, /* first two are basic */
+> +				  ifibss->channel,
+> +				  15, /* 1, 2, 5.5 and 11 are basic */
 
-Personally, I have no objection.
+It's still wrong for 5 GHz.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+We've had this discussion before. Making more rates required will break
+compatibility with 11b devices.
+
+What should be done here is add a basic rates parameter to the IBSS join
+nl80211 command so that you can decide at runtime which rates to use as
+basic.
+
+johannes
+
