@@ -1,78 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:2462 "EHLO
-	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752559Ab0EITY2 (ORCPT
+Received: from mail.atheros.com ([12.36.123.2]:40722 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754877Ab0EZQVL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 May 2010 15:24:28 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 6/9 v2] rt2x00: Clean up generic procedures on descriptor writing.
-Date: Sun,  9 May 2010 21:24:22 +0200
-Message-Id: <1273433062-12982-1-git-send-email-gwingerde@gmail.com>
+	Wed, 26 May 2010 12:21:11 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 09:21:11 -0700
+From: David Quan <David.Quan@Atheros.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Michael Green <Michael.Green@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 26 May 2010 09:21:10 -0700
+Subject: RE: wireless-regdb: A band is missing for IL
+Message-ID: <93781E992CBA7843962D8B0E7D683F3C1117B01000@SC1EXMB-MBCL.global.atheros.com>
+References: <AANLkTimkpbans5mUObR8PWzf2-Uh0K-cZVVg0HjNxnSv@mail.gmail.com>
+	 <AANLkTikUhVoBKe95N_kkpXvSEsr845viGp5IhHZTVN2n@mail.gmail.com>
+	 <93781E992CBA7843962D8B0E7D683F3C11178EC0E4@SC1EXMB-MBCL.global.atheros.com>
+ <AANLkTin4UbuZOfpJ23KLq8HRfVcEKmHAAeEtSSxDE9Vu@mail.gmail.com>
+In-Reply-To: <AANLkTin4UbuZOfpJ23KLq8HRfVcEKmHAAeEtSSxDE9Vu@mail.gmail.com>
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With a little bit of restructuring it isn't necessary to have special
-cases in rt2x00queue_write_tx_descriptor for writing the descriptor
-for beacons.
-Simply split off the kicking of the TX queue to a separate function
-with is only called for non-beacons.
+ Unii1 = 5150 - 5250
+ Unii2 = 5250 - 5350
+http://en.wikipedia.org/wiki/U-NII
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
----
+Currently our internal database shows no HT40 support for Israel in 5Ghz.
+Only in 2Ghz it supports both HT20/40.
 
-v2: Fix up editorial in comment as reported by Adam Baker.
+5) The allow of HT40 is not control by WFA, but by regulatory. So even if WFA allows HT40 general support in 5Ghz,
+if the country do not allow it, it is not allowed.
 
----
- drivers/net/wireless/rt2x00/rt2x00queue.c |   16 ++++++++++------
- 1 files changed, 10 insertions(+), 6 deletions(-)
+6) Yes, however, I am not sure if ath9k supported this yet or not. Will chat with Luis.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 59d9459..8768c6f 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -428,20 +428,23 @@ static void rt2x00queue_write_tx_descriptor(struct queue_entry *entry,
- 	 * it is now ready to be dumped to userspace through debugfs.
- 	 */
- 	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_TX, entry->skb);
-+}
-+
-+static void rt2x00queue_kick_tx_queue(struct queue_entry *entry,
-+				      struct txentry_desc *txdesc)
-+{
-+	struct data_queue *queue = entry->queue;
-+	struct rt2x00_dev *rt2x00dev = queue->rt2x00dev;
- 
- 	/*
- 	 * Check if we need to kick the queue, there are however a few rules
--	 *	1) Don't kick beacon queue
--	 *	2) Don't kick unless this is the last in frame in a burst.
-+	 *	1) Don't kick unless this is the last in frame in a burst.
- 	 *	   When the burst flag is set, this frame is always followed
- 	 *	   by another frame which in some way are related to eachother.
- 	 *	   This is true for fragments, RTS or CTS-to-self frames.
--	 *	3) Rule 2 can be broken when the available entries
-+	 *	2) Rule 1 can be broken when the available entries
- 	 *	   in the queue are less then a certain threshold.
- 	 */
--	if (entry->queue->qid == QID_BEACON)
--		return;
--
- 	if (rt2x00queue_threshold(queue) ||
- 	    !test_bit(ENTRY_TXD_BURST, &txdesc->flags))
- 		rt2x00dev->ops->lib->kick_tx_queue(rt2x00dev, queue->qid);
-@@ -537,6 +540,7 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb,
- 
- 	rt2x00queue_index_inc(queue, Q_INDEX);
- 	rt2x00queue_write_tx_descriptor(entry, &txdesc);
-+	rt2x00queue_kick_tx_queue(entry, &txdesc);
- 
- 	return 0;
- }
--- 
-1.7.1
+David
 
+
+-----Original Message-----
+From: Emmanuel Grumbach [mailto:egrumbach@gmail.com] 
+Sent: Tuesday, May 25, 2010 11:26 PM
+To: David Quan
+Cc: Luis R. Rodriguez; Michael Green; linville@tuxdriver.com; linux-wireless@vger.kernel.org
+Subject: Re: wireless-regdb: A band is missing for IL
+
+I don't know exactly what Unii1 and Unii2 means but, this is the
+latest regulatory authoritative document (in hebrew):
+http://www.moc.gov.il/sip_storage/FILES/1/1061.pdf
+In short:
+
+1. 5150 - 5250
+2. 5250 - 5350 DFS mandatory
+3. outdoor is forbidden for both
+4. 200mW maximum e.i.r.p.
+5. 40 Mhz is allowed for all WiFi Alliance equipment in 5.2GHz
+6. 40 Mhz is allowed for WiFi Alliance equipment that have "40 MHz
+operation in 2.4 GHz, with coexistence mechanisms" only
+
+I know how to enforce 1 - 4. But 5 and 6 is another story....
+
+Anyway, I will send an RFC soon.
+
+Emmanuel Grumbach
+egrumbach@gmail.com
+
+
+
+On Tue, May 25, 2010 at 23:39, David Quan <David.Quan@atheros.com> wrote:
+> Israel follows ETSI3_WORLD,
+>  this means
+>
+> Unii1 + Unii2 is supported. Unii2 requires DFS for APs.
+>
+> 2ghz Ch1-13 supported.
+>
+>
+> -----Original Message-----
+> From: Luis R. Rodriguez [mailto:mcgrof@gmail.com]
+> Sent: Tuesday, May 25, 2010 12:08 PM
+> To: Emmanuel Grumbach; Michael Green; David Quan
+> Cc: linville@tuxdriver.com; linux-wireless@vger.kernel.org
+> Subject: Re: wireless-regdb: A band is missing for IL
+>
+> Michael, please review and let us know what you think.
+>
+>  Luis
+>
+> On Tue, May 25, 2010 at 12:03 AM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>> According to http://en.wikipedia.org/wiki/List_of_WLAN_channels#5.C2.A0GHz_.28802.11a.2Fh.2Fj.2Fn.29
+>>
+>> Channels 34 - 64 are allowed in 20 Mhz in Israel. This is not what is
+>> written in db.txt:
+>>
+>> country IL:
+>>         (2402 - 2482 @ 40), (N/A, 20)
+>>
+>> This wikipedia page relies on an official page from the Israel
+>> Ministry of the Communication.
+>>
+>> Emmanuel Grumbach
+>> egrumbach@gmail.com
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
