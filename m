@@ -1,58 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:42648 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752332Ab0ENFTa (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:63488 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754980Ab0EZSDd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 01:19:30 -0400
-Message-ID: <4BECDD5D.9010609@gmail.com>
-Date: Thu, 13 May 2010 22:19:25 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+	Wed, 26 May 2010 14:03:33 -0400
+Received: by pwi7 with SMTP id 7so317838pwi.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 11:03:33 -0700 (PDT)
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: Pekka Enberg <penberg@cs.helsinki.fi>,
-	linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Christoph Lameter <cl@linux-foundation.org>
-Subject: Re: ath9k: BUG kmalloc-8192: Poison overwritten
-References: <4BEC7A84.3010503@gmail.com> <AANLkTim7B5z76zJ33by6SGMgSy1gZF6qiwhEhAQ3NUtG@mail.gmail.com> 	<AANLkTim7fnKebMoEu1DjD3S-15ZqlTUez3Lpp0wGVJQ6@mail.gmail.com> <AANLkTimmctk1GWOTlW8Han7E3gJVgqJjUAMeqYnvyuHn@mail.gmail.com>
-In-Reply-To: <AANLkTimmctk1GWOTlW8Han7E3gJVgqJjUAMeqYnvyuHn@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <4BFD620B.8010301@gmail.com>
+References: <1274896002-10866-1-git-send-email-justinmattock@gmail.com>
+	<AANLkTimrFUYIkTQ7ev-AL0V8y0Lot064h8JK_fU81Lyr@mail.gmail.com>
+	<4BFD620B.8010301@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 26 May 2010 11:03:13 -0700
+Message-ID: <AANLkTilrXZCtJpTrynPlC0FbNfpXcfgYg1Pd6_2oOZml@mail.gmail.com>
+Subject: Re: [PATCH] ath9k: Fix ath_print in xmit for harware reset.
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: linville@tuxdriver.com, arnd@arndnet.de,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/13/10 22:07, Luis R. Rodriguez wrote:
-> On Thu, May 13, 2010 at 9:55 PM, Pekka Enberg<penberg@cs.helsinki.fi>  wrote:
->> Hi Luis,
+On Wed, May 26, 2010 at 11:01 AM, Justin P. Mattock
+<justinmattock@gmail.com> wrote:
+> On 05/26/2010 10:50 AM, Luis R. Rodriguez wrote:
 >>
->> On Fri, May 14, 2010 at 2:01 AM, Luis R. Rodriguez
->> <lrodriguez@atheros.com>  wrote:
->>> On Thu, May 13, 2010 at 3:17 PM, Justin P. Mattock
->>> <justinmattock@gmail.com>  wrote:
->>>> not sure what this is, but while at a convention
->>>> I was trying to access the internet and(below is
->>>> full dmesg) this showed up.
->>>>
->>>> After receiving this, I sat and tried to re-create
->>>> my steps to reproduce but had no luck(was even going
->>>> todo a bisect n the spot if I could re-create).
+>> On Wed, May 26, 2010 at 10:46 AM, Justin P. Mattock
+>> <justinmattock@gmail.com>  wrote:
+>>
 >>>
->>> OK this stuff is hard to reproduce it seems.. you have an Atheros
->>> AR5418 MAC/BB Rev:2 AR5133 RF Rev:81, what kconfig option do you use
->>> to get the poison stuff? I am just surprised we haven't seen it
->>> ourselves yet. Let me make sure all of us get this kconfig option
->>> enabled.
+>>> ath_print in xmit.c should say "Reseting hardware"
+>>> instead of Resetting HAL!(since HAL is being fazed out).
+>>> dmesg shows:
+>>> [ 8660.899624] ath: Failed to stop TX DMA in 100 msec after killing last
+>>> frame
+>>> [ 8660.899676] ath: Unable to stop TxDMA. Reset HAL!
+>>>
+>>>  Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
+>>>
+>>> ---
+>>>  drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
+>>>  1 files changed, 1 insertions(+), 1 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c
+>>> b/drivers/net/wireless/ath/ath9k/xmit.c
+>>> index 3db1917..617db8e 100644
+>>> --- a/drivers/net/wireless/ath/ath9k/xmit.c
+>>> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+>>> @@ -1198,7 +1198,7 @@ void ath_drain_all_txq(struct ath_softc *sc, bool
+>>> retry_tx)
+>>>                int r;
+>>>
+>>>                ath_print(common, ATH_DBG_FATAL,
+>>> -                         "Unable to stop TxDMA. Reset HAL!\n");
+>>> +                         "ath9k: Failed to stop TX DMA. Resetting
+>>> hardware!\n");
+>>>
 >>
->> CONFIG_SLUB_DEBUG and then either CONFIG_SLUB_DEBUG_ON or pass
->> 'slub_debug' as kernel parameter.
+>> Nack, No need to put "ath9k:" since ath_print already prepends "ath: "
+>>
+>>   Luis
+>>
+>>
 >
-> Ah OK I had CONFIG_SLUB_DEBUG but not  CONFIG_SLUB_DEBUG_ON, will
-> enable it from here on.
->
->    Luis
->
+> ah.. so the ATH_DBG_FATAL takes care of that?
+> resent..
 
-I enable these options as well..
-(then see If I can(hopefully)re-create this
-then I'll bisect it).
+No FATAL just makes sure it prints all the time, even if you do not
+have debugging enabled. Go read ath_print() though.
 
-Justin P. Mattock
+  Luis
