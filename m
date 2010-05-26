@@ -1,75 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews01.kpnxchange.com ([213.75.39.4]:2125 "EHLO
-	cpsmtpb-ews01.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753588Ab0EHVkc (ORCPT
+Received: from mail-qy0-f183.google.com ([209.85.221.183]:43389 "EHLO
+	mail-qy0-f183.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754936Ab0EZMnt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 May 2010 17:40:32 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 6/9] rt2x00: Clean up generic procedures on descriptor writing.
-Date: Sat,  8 May 2010 23:40:23 +0200
-Message-Id: <1273354826-4335-7-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1273354826-4335-1-git-send-email-gwingerde@gmail.com>
-References: <1273354826-4335-1-git-send-email-gwingerde@gmail.com>
+	Wed, 26 May 2010 08:43:49 -0400
+Received: by qyk13 with SMTP id 13so9009344qyk.1
+        for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 05:43:48 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTimIeTadyAhUuri2P630mpDwmBk4B90RpERLbaFE@mail.gmail.com>
+References: <AANLkTimltZSc8dJPPBCibcGDaOPcQRU_5kSbenIAdi_6@mail.gmail.com>
+	<AANLkTimaLEQYH4Y7HO4Fv4zT8w8AsPkaAQtk9EauX4Bt@mail.gmail.com>
+	<AANLkTikRt1fUgngBQxEoEFe1VDrYVFRAoMSR53et7gxf@mail.gmail.com>
+	<AANLkTim-A_TWT-flrW88gJGan47Xhm7llyrQE3ehDKU6@mail.gmail.com>
+	<AANLkTim4zLxIQH2r76WZRh9kNigVNAngcK1d9-Cu65Ag@mail.gmail.com>
+	<AANLkTimH3p-dBA_6ee2a0iCnPDhtPZONzCEVkzMHrUWo@mail.gmail.com>
+	<AANLkTim-4UNn8acYvF7AF2FDzdC9xRY-9JS0lSurwBc6@mail.gmail.com>
+	<AANLkTimYeL4KQozuTl4le9WUpObsjwp0YAx7eAYq6MBr@mail.gmail.com>
+	<AANLkTikOgv6d0FlXu2-smnYPApeehjRq_j8UxEealqFC@mail.gmail.com>
+	<AANLkTinynNqs6_zyTJcpi7yKiSvC5fBhbM2tVZcnoNUq@mail.gmail.com>
+	<AANLkTinyGlwqq4xshLU5Ol74p0VfcUXBjBGKXlsB2pMy@mail.gmail.com>
+	<AANLkTimIeTadyAhUuri2P630mpDwmBk4B90RpERLbaFE@mail.gmail.com>
+Date: Wed, 26 May 2010 08:43:48 -0400
+Message-ID: <AANLkTilXJHs8emXX4YNHbPq0SkuC4Z22NEh-T6mwUSHS@mail.gmail.com>
+Subject: Re: ath5k past 2.6.30 breaks monitor mode (and thus the aircrack
+	suite)
+From: Bob Copeland <me@bobcopeland.com>
+To: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Cc: Weedy <weedy2887@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With a little bit of restructuring it isn't necessary to have special
-cases in rt2x00queue_write_tx_descriptor for writing the descriptor
-for beacons.
-Simply split off the kicking of the TX queue to a separate function
-with is only called for non-beacons.
+2010/5/25 Gábor Stefanik <netrolller.3d@gmail.com>:
+> On Tue, May 25, 2010 at 4:53 PM, Bob Copeland <me@bobcopeland.com> wrote:
+>> 2010/5/25 Weedy <weedy2887@gmail.com>:
+>>> 2010/5/24 Gábor Stefanik <netrolller.3d@gmail.com>:
+>>>> 2010/5/25 Weedy <weedy2887@gmail.com>:
+>>>>> 2010/5/23 Gábor Stefanik <netrolller.3d@gmail.com>:
+>>>>>> In the meantime, one thing to test: Add a printk of sc->opmode.
+>>>>>
+>>>>> May 24 22:04:20 tiny-h4x kernel: [41147.243149] sc->opmode: 02 (over9000 times)
+>>>>>
+>>>>> So i'm guessing I did it wrong (I don't know C).
+>>>>>        printk(KERN_NOTICE "sc->opmode: %02x\n", sc->opmode);
+>>>>>
+>>>>
+>>>> No, that is correct, and proves my theory (2 is NL80211_IFTYPE_STATION
+>>>> - it should be 6 for monitor mode).
+>>>>
+>>>> BTW, please use "Reply to all".
+>>>>
+>>> gmail got rid of the "Reply to all by default" option :<
+>>>
+>>> When you have a patch I will be waiting.
+>>
+>> Sorry, I missed this thread somehow.  Thanks for the detective
+>> work and apologies for my stupid goof.  Gábor, are you prepping
+>> a patch?  I can fix it if you like.
+>>
+>
+> If you can, please fix it - I know what the bug is, but have no solid
+> idea about a fix.
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00queue.c |   16 ++++++++++------
- 1 files changed, 10 insertions(+), 6 deletions(-)
+Ok, it should be enough to look at the filter flags instead of
+the opmode -- I knew in the back of my mind that the monitor
+stuff was bogus (part of the reason I did the patch in the first
+place) but just got confused by what was already there I guess.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 59d9459..8768c6f 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -428,20 +428,23 @@ static void rt2x00queue_write_tx_descriptor(struct queue_entry *entry,
- 	 * it is now ready to be dumped to userspace through debugfs.
- 	 */
- 	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_TX, entry->skb);
-+}
-+
-+static void rt2x00queue_kick_tx_queue(struct queue_entry *entry,
-+				      struct txentry_desc *txdesc)
-+{
-+	struct data_queue *queue = entry->queue;
-+	struct rt2x00_dev *rt2x00dev = queue->rt2x00dev;
- 
- 	/*
- 	 * Check if we need to kick the queue, there are however a few rules
--	 *	1) Don't kick beacon queue
--	 *	2) Don't kick unless this is the last in frame in a burst.
-+	 *	1) Don't kick unless this is the last in frame in a burst.
- 	 *	   When the burst flag is set, this frame is always followed
- 	 *	   by another frame which in some way are related to eachother.
- 	 *	   This is true for fragments, RTS or CTS-to-self frames.
--	 *	3) Rule 2 can be broken when the available entries
-+	 *	2) Rule 2 can be broken when the available entries
- 	 *	   in the queue are less then a certain threshold.
- 	 */
--	if (entry->queue->qid == QID_BEACON)
--		return;
--
- 	if (rt2x00queue_threshold(queue) ||
- 	    !test_bit(ENTRY_TXD_BURST, &txdesc->flags))
- 		rt2x00dev->ops->lib->kick_tx_queue(rt2x00dev, queue->qid);
-@@ -537,6 +540,7 @@ int rt2x00queue_write_tx_frame(struct data_queue *queue, struct sk_buff *skb,
- 
- 	rt2x00queue_index_inc(queue, Q_INDEX);
- 	rt2x00queue_write_tx_descriptor(entry, &txdesc);
-+	rt2x00queue_kick_tx_queue(entry, &txdesc);
- 
- 	return 0;
- }
 -- 
-1.7.1
-
+Bob Copeland %% www.bobcopeland.com
