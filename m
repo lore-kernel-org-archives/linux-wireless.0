@@ -1,67 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f217.google.com ([209.85.217.217]:64975 "EHLO
-	mail-gx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757408Ab0ENWcd (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:61612 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756515Ab0EZVFq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 18:32:33 -0400
-References: <201005141520.30802.br1@einfach.org> <4BECEE3E.6090303@gmail.com> <201005141538.43416.br1@einfach.org> <4BED6F19.3040608@gmail.com> <20100514165325.GA28198@tux> <4BED8765.8040307@gmail.com> <AANLkTiky103uOz38yZPlLypEQ8DnkdCk1X3zPl9014Yi@mail.gmail.com> <67773379-350A-42D4-BEB5-DAC7D8277615@gmail.com> <20100514201339.GB28198@tux> <4638F7CF-1E00-411F-A086-BA30809E00BD@gmail.com> <20100514205253.GC28198@tux>
-Message-Id: <B796B1C7-D7CC-457A-9C86-7C70EA9451CF@gmail.com>
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-In-Reply-To: <20100514205253.GC28198@tux>
-Content-Type: text/plain;
-	charset=us-ascii;
-	format=flowed;
-	delsp=yes
-Mime-Version: 1.0 (iPhone Mail 7D11)
-Subject: Re: ath9k: BUG kmalloc-8192: Poison overwritten
-Date: Fri, 14 May 2010 15:32:48 -0700
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Bruno Randolf <br1@einfach.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+	Wed, 26 May 2010 17:05:46 -0400
+Received: by pvg3 with SMTP id 3so1310468pvg.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 14:05:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4BFD5C89.8000308@gmail.com>
+References: <1274894056-2866-1-git-send-email-justinmattock@gmail.com>
+	<1274894056-2866-2-git-send-email-justinmattock@gmail.com>
+	<20100526171844.GB5823@tuxdriver.com> <4BFD5C89.8000308@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 26 May 2010 14:05:26 -0700
+Message-ID: <AANLkTim6ef__fNdXUyP1T4HB7jxbyt-Jlqi3Xa5Y_whm@mail.gmail.com>
+Subject: Re: [PATCH]wireless:ath9k Disable leds for Apple products.
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, May 26, 2010 at 10:38 AM, Justin P. Mattock
+<justinmattock@gmail.com> wrote:
+> On 05/26/2010 10:18 AM, John W. Linville wrote:
+>>
+>> On Wed, May 26, 2010 at 10:14:16AM -0700, Justin P. Mattock wrote:
+>>
+>>>
+>>> Disable the leds on ath9k for Apple products, since
+>>> there is no leds on any of there machines(or non that I can find!!).
+>>>
+>>>  Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
 
+Our team has confirmed Apple devices do not have LEDs so a change like
+this is OK but this patch is wrong anyway. More details below.
 
-
-
-On May 14, 2010, at 1:52 PM, "Luis R. Rodriguez"  
-<lrodriguez@atheros.com> wrote:
-
-> On Fri, May 14, 2010 at 01:21:34PM -0700, Justin P. Mattock wrote:
->> Eveything is on except ath5k
->> For debugging.
+>>>
+>>>  void ath_init_leds(struct ath_softc *sc)
+>>>  {
+>>>        char *trigger;
+>>>        int ret;
+>>>
+>>> +       /* Apple has no leds lights for their wireless.  */
+>>> +       if (dmi_check_system(dmi_system_table)>  0)
+>>> +               return -ENODEV;
+>>> +       else
+>>> +
+>>>        if (AR_SREV_9287(sc->sc_ah))
+>>>                sc->sc_ah->led_pin = ATH_LED_PIN_9287;
+>>>        else
+>>>
+>>
+>> Surely we don't need the 'else'.
+>>
+>> Does enabling the LEDs on these systems cause any problems?
+>>
+>> John
+>>
 >
-> Bleh, try this.
+> I picked up the idea, from this patch:
+> http://kerneltrap.org/mailarchive/linux-kernel/2010/1/20/4530535
+> while looking into a bug for ath9k(thinking maybe leds
+> are causing something, which want  the case)
 >
-> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/ 
-> wireless/ath/ath9k/recv.c
-> index 1ca42e5..3404198 100644
-> --- a/drivers/net/wireless/ath/ath9k/recv.c
-> +++ b/drivers/net/wireless/ath/ath9k/recv.c
-> @@ -129,7 +129,7 @@ int ath_rx_init(struct ath_softc *sc, int nbufs)
->    common->rx_bufsize = roundup(IEEE80211_MAX_MPDU_LEN,
->                     min(common->cachelsz, (u16)64));
->
-> -    ath_print(common, ATH_DBG_CONFIG, "cachelsz %u rxbufsize %u\n",
-> +    printk("ATH9K: cachelsz %u rxbufsize %u\n",
->          common->cachelsz, common->rx_bufsize);
->
->    /* Initialize rx descriptors */
->
-> Not sure why this is not printing, the common debug_mask should
-> already be set here prior to this. Anyway this would force the
-> print I want.
->
->  Luis
+> so Id have to say I don't think the leds cause issue's,
+> if anything just a wasted symlink, call, or whatever
+> in /sys/class/leds/*
 
-O.k appologize for the delay
-(had to play limo driver),
-Anyways here is the grep info:
-ATH9K: cachelsz 256 rxbufsize 3904
-(messg is the same before and after
-Rrmod/modprobing with debug options)
+The patch is wrong anyway, ath_init_leds() is void and yet you return
+a value. If this is really needed I'd also prefer if you define a bool
+or something and use a ah->ignore_leds and set this to true if the DMI
+stuff checks out for Apple up hw init. Then check for ignore_leds
+prior to calling ath_init_leds() and also avoid it if set. Also check
+for ingore_leds upon device cleanup and ignore the
+acancel_delayed_work_sync(&sc->ath_led_blink_work) and
+ath_deinit_leds() and skip that.
 
-Justin P. Mattock
+But given that it is not needed it seems a lot of work for something
+that is a non-issue.
+
+  Luis
