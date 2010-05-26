@@ -1,76 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:36207 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755870Ab0EQVuS (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:49485 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753830Ab0EZRxV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 May 2010 17:50:18 -0400
-Received: by wyb39 with SMTP id 39so866411wyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 17 May 2010 14:50:16 -0700 (PDT)
-Message-ID: <4BF1B9EA.8060009@gmail.com>
-Date: Mon, 17 May 2010 22:49:30 +0100
-From: Dave <kilroyd@googlemail.com>
+	Wed, 26 May 2010 13:53:21 -0400
+Received: by fxm5 with SMTP id 5so4707728fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 10:53:20 -0700 (PDT)
 MIME-Version: 1.0
-To: Walter Goldens <goldenstranger@yahoo.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] fix several minor description typos
-References: <974011.51480.qm@web56808.mail.re3.yahoo.com>
-In-Reply-To: <974011.51480.qm@web56808.mail.re3.yahoo.com>
-Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1274895211-11438-1-git-send-email-linville@tuxdriver.com>
+References: <1274895211-11438-1-git-send-email-linville@tuxdriver.com>
+Date: Wed, 26 May 2010 19:53:20 +0200
+Message-ID: <AANLkTilsaTZP0MkCvbfraO6YOhroq7SkTNe97_VnXgcM@mail.gmail.com>
+Subject: Re: [PATCH] rt2x00: do not shortcut rt2x00lib_config_antenna
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, gwingerde@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-You may want to prefix the patch title with 'wireless:', and include in
-the commitlog a description what type of errors you are correcting. In
-this case I'd guess 'avoid word repetition'.
+On Wed, May 26, 2010 at 7:33 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> This function was exiting early if the existing diversity settings
+> were unchanged.  Unfortunately, in some cases the antenna configuration
+> is not initialized at all.
+>
+> https://bugzilla.kernel.org/show_bug.cgi?id=14751
+>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> Cc: Ivo van Doorn <IvDoorn@gmail.com>
+> Cc: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Most of the changes seem obviously correct. However a couple:
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-On 17/05/10 20:33, Walter Goldens wrote:
-> --- a/drivers/net/wireless/orinoco/main.h
-> +++ b/drivers/net/wireless/orinoco/main.h
-> @@ -12,7 +12,7 @@
->  /* Compile time configuration and compatibility stuff               */
->  /********************************************************************/
->  
-> -/* We do this this way to avoid ifdefs in the actual code */
-> +/* We do that this way to avoid ifdefs in the actual code */
->  #ifdef WIRELESS_SPY
->  #define SPY_NUMBER(priv)    (priv->spy_data.spy_number)
->  #else
-
-The latter construction doesn't make sense (to me). The former does,
-even if it is a little clumsy. If the comment is still useful, I suggest
-rewording it as something like:
-
-/* Define SPY_NUMBER like this to avoid ifdefs in the actual code */
-
-> --- a/include/linux/ieee80211.h
-> +++ b/include/linux/ieee80211.h
-> @@ -302,7 +302,7 @@ static inline int ieee80211_is_data_qos(
->  static inline int ieee80211_is_data_present(__le16 fc)
->  {
->      /*
-> -     * mask with 0x40 and test that that bit is clear to only return true
-> +     * mask with 0x40 and test that this bit is clear to only return true
->       * for the data-containing substypes.
->       */
->      return (fc & cpu_to_le16(IEEE80211_FCTL_FTYPE | 0x40)) ==
-
-You may also want to correct the spelling of 'subtypes' here. I also
-think that this could be reworded better. After consulting
-IEE802.11-2007, section 7.1.3.1.2, I'd suggest:
-
-/* Only return true for the data-containing subtypes.
- * Bit 0x40 indicates the frame subtype does not contain a Frame Body
- * field (i.e. there is no data). This bit should not be set.
- */
-
-But I'd confirm with one of the core wireless developers before making
-that change. It may also be worth changing the code to use
-IEEE80211_STYPE_NULLFUNC instead of 0x40.
-
-
-Regards,
-
-Dave.
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00config.c |    8 --------
+>  1 files changed, 0 insertions(+), 8 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
+> index 098315a..14a817d 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00config.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00config.c
+> @@ -124,11 +124,6 @@ void rt2x00lib_config_antenna(struct rt2x00_dev *rt2x00dev,
+>         * ANTENNA_SW_DIVERSITY state to the driver.
+>         * If that happens, fallback to hardware defaults,
+>         * or our own default.
+> -        * If diversity handling is active for a particular antenna,
+> -        * we shouldn't overwrite that antenna.
+> -        * The calls to rt2x00lib_config_antenna_check()
+> -        * might have caused that we restore back to the already
+> -        * active setting. If that has happened we can quit.
+>         */
+>        if (!(ant->flags & ANTENNA_RX_DIVERSITY))
+>                config.rx = rt2x00lib_config_antenna_check(config.rx, def->rx);
+> @@ -140,9 +135,6 @@ void rt2x00lib_config_antenna(struct rt2x00_dev *rt2x00dev,
+>        else
+>                config.tx = active->tx;
+>
+> -       if (config.rx == active->rx && config.tx == active->tx)
+> -               return;
+> -
+>        /*
+>         * Antenna setup changes require the RX to be disabled,
+>         * else the changes will be ignored by the device.
+> --
+> 1.6.6.1
+>
+>
