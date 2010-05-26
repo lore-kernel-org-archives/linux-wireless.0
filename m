@@ -1,53 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:27180 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757965Ab0ENHrB (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:44856 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756847Ab0EZROf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 03:47:01 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH v2 3/3] wl1271: Fix RX data path frame lengths
-Date: Fri, 14 May 2010 10:46:24 +0300
-Message-Id: <1273823184-9381-4-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1273823184-9381-1-git-send-email-luciano.coelho@nokia.com>
-References: <1273823184-9381-1-git-send-email-luciano.coelho@nokia.com>
+	Wed, 26 May 2010 13:14:35 -0400
+Received: by pxi18 with SMTP id 18so2619874pxi.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 10:14:34 -0700 (PDT)
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@gmail.com,
+	"Justin P. Mattock" <justinmattock@gmail.com>
+Subject: [PATCH]wireless:ath9k Fix ath_print in xmit.c
+Date: Wed, 26 May 2010 10:14:15 -0700
+Message-Id: <1274894056-2866-1-git-send-email-justinmattock@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+ath_print in xmit.c should say "Reseting hardware"
+instead of Reaseting HAL!(since HAL is being fazed out).
+dmesg shows:
+[ 8660.899624] ath: Failed to stop TX DMA in 100 msec after killing last frame
+[ 8660.899676] ath: Unable to stop TxDMA. Reset HAL!
 
-The current frame length used by the driver for RX frames is the SPI bus
-transfer length. This length has padding bytes, which do not belong to the
-WLAN frame.
-
-As there is no other length information in the WLAN frame except the skb
-length this problem caused for instance extra ESSID's to be listed at the
-end of scan results (IE id 0) with zero length.
-
-Fix the frame length by removing padding.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_rx.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1271_rx.c b/drivers/net/wireless/wl12xx/wl1271_rx.c
-index 57f4bfd..b98fb64 100644
---- a/drivers/net/wireless/wl12xx/wl1271_rx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_rx.c
-@@ -113,6 +113,8 @@ static void wl1271_rx_handle_data(struct wl1271 *wl, u32 length)
- 	wl1271_debug(DEBUG_RX, "rx skb 0x%p: %d B %s", skb, skb->len,
- 		     beacon ? "beacon" : "");
  
-+	skb_trim(skb, skb->len - desc->pad_len);
-+
- 	memcpy(IEEE80211_SKB_RXCB(skb), &rx_status, sizeof(rx_status));
- 	ieee80211_rx_ni(wl->hw, skb);
- }
+ Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+
+---
+ drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 3db1917..2a0558e 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1198,7 +1198,7 @@ void ath_drain_all_txq(struct ath_softc *sc, bool retry_tx)
+ 		int r;
+ 
+ 		ath_print(common, ATH_DBG_FATAL,
+-			  "Unable to stop TxDMA. Reset HAL!\n");
++			  "Unable to stop TxDMA. Reseting hardware!\n");
+ 
+ 		spin_lock_bh(&sc->sc_resetlock);
+ 		r = ath9k_hw_reset(ah, sc->sc_ah->curchan, false);
 -- 
-1.6.3.3
+1.6.5.GIT
 
