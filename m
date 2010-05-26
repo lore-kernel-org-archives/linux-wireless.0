@@ -1,105 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews06.kpnxchange.com ([213.75.39.9]:2117 "EHLO
-	cpsmtpb-ews06.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754009Ab0EHVke (ORCPT
+Received: from mail-pz0-f176.google.com ([209.85.222.176]:56142 "EHLO
+	mail-pz0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756282Ab0EZAlw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 8 May 2010 17:40:34 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 9/9] rt2x00: Fix beaconing on rt2800.
-Date: Sat,  8 May 2010 23:40:26 +0200
-Message-Id: <1273354826-4335-10-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1273354826-4335-1-git-send-email-gwingerde@gmail.com>
-References: <1273354826-4335-1-git-send-email-gwingerde@gmail.com>
+	Tue, 25 May 2010 20:41:52 -0400
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 25 May 2010 17:41:28 -0700
+Message-ID: <AANLkTilZCdt-YGLsAOd14qvaGRzl7iJa2r-wi5xljhTr@mail.gmail.com>
+Subject: Compat-wireless tarballs with pending and crap patches
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>
+Cc: linux-kernel@vger.kernel.org,
+	Ivan Seskar <Seskar@winlab.rutgers.edu>,
+	Shridatt James Sugrim <shridatt.sugrim@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to the Ralink vendor driver for rt2800 we don't need a full
-TXD for a beacon but just a TXWI in front of the actual beacon.
-Fix the rt2800pci and rt2800usb beaconing code accordingly.
+Since I added a way for compat-wireless to have pending and crap
+patches applied I figured I'd automate the creation of the same
+tarballs. The tarballs are hosted on Orbit as well in the same
+location as the regular tarballs. So we have for today for example:
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800pci.c |   17 +++++++++--------
- drivers/net/wireless/rt2x00/rt2800usb.c |   14 ++++++--------
- 2 files changed, 15 insertions(+), 16 deletions(-)
+compat-wireless-2010-05-25.tar.bz2       - The usual linux-next based
+tarball for 802.11 and BT
+compat-wireless-2010-05-25-p.tar.bz2	 - The usual linux-next based
+tarball + patches from linux-next-pending/
+compat-wireless-2010-05-25-pc.tar.bz2  -
+compat-wireless-2010-05-25-p.tar.bz2 + patches from crap/
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 80c6768..7d4778d 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -682,7 +682,6 @@ static void rt2800pci_write_beacon(struct queue_entry *entry,
- 				   struct txentry_desc *txdesc)
- {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
--	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
- 	unsigned int beacon_base;
- 	u32 reg;
- 
-@@ -695,15 +694,17 @@ static void rt2800pci_write_beacon(struct queue_entry *entry,
- 	rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
- 
- 	/*
--	 * Write entire beacon with descriptor to register.
-+	 * Add the TXWI for the beacon to the skb.
-+	 */
-+	rt2800_write_txwi(entry->skb, txdesc);
-+	skb_push(entry->skb, TXWI_DESC_SIZE);
-+
-+	/*
-+	 * Write entire beacon with TXWI to register.
- 	 */
- 	beacon_base = HW_BEACON_OFFSET(entry->entry_idx);
--	rt2800_register_multiwrite(rt2x00dev,
--				      beacon_base,
--				      skbdesc->desc, skbdesc->desc_len);
--	rt2800_register_multiwrite(rt2x00dev,
--				      beacon_base + skbdesc->desc_len,
--				      entry->skb->data, entry->skb->len);
-+	rt2800_register_multiwrite(rt2x00dev, beacon_base,
-+				   entry->skb->data, entry->skb->len);
- 
- 	/*
- 	 * Enable beaconing again.
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index d992a93..00e7906 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -431,18 +431,10 @@ static void rt2800usb_write_beacon(struct queue_entry *entry,
- 				   struct txentry_desc *txdesc)
- {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
--	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
- 	unsigned int beacon_base;
- 	u32 reg;
- 
- 	/*
--	 * Add the descriptor in front of the skb.
--	 */
--	skb_push(entry->skb, entry->queue->desc_size);
--	memcpy(entry->skb->data, skbdesc->desc, skbdesc->desc_len);
--	skbdesc->desc = entry->skb->data;
--
--	/*
- 	 * Disable beaconing while we are reloading the beacon data,
- 	 * otherwise we might be sending out invalid data.
- 	 */
-@@ -451,6 +443,12 @@ static void rt2800usb_write_beacon(struct queue_entry *entry,
- 	rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
- 
- 	/*
-+	 * Add the TXWI for the beacon to the skb.
-+	 */
-+	rt2800_write_txwi(entry->skb, txdesc);
-+	skb_push(entry->skb, TXWI_DESC_SIZE);
-+
-+	/*
- 	 * Write entire beacon with descriptor to register.
- 	 */
- 	beacon_base = HW_BEACON_OFFSET(entry->entry_idx);
--- 
-1.7.1
+Since we're in the merge window the pending stuff is a bit big and it
+just includes stuff in Atheros' queue. Feel free to poke at me to
+apply anything else, just e-mail me, hopefully in reply to the
+upstream posted patch. If there's a better way to do this we will
+figure it out I guess.
 
+FWIW the new code metrics for the pc release is:
+
+compat-wireless code metrics
+
+    491620 - Total upstream code being pulled
+      1393 - backport code changes
+      1163 - backport code additions
+       230 - backport code deletions
+      5679 - backport from compat module
+      7072 - total backport code
+      1.44 - % of code consists of backport work
+      7132 - Code changes posted but not yet merged
+      4449 - Code additions posted but not yet merged
+      2683 - Code deletions posted but not yet merged
+      1.45 - % of code not yet merged
+      1225 - Crap changes not yet posted
+      1181 - Crap additions not yet merged
+        44 - Crap deletions not yet posted
+      0.25 - % of crap code
+
+Base tree: linux-next.git
+Base tree version: next-20100525
+compat-wireless release: compat-wireless-20100525
+
+The backport metrics should now be a bit more correct, so I do guess
+1.44% code for this release is backport work, this includes C code,
+header files and the code changed by the patches. The pending code is
+a bit high due to the merge window, and the crap stuff hasn't moved.
+These stats will always be available on the code-metrics.txt file for
+each tarball. For the "p" release you will not see the metrics for the
+crap, and for the regular tarball you will not see the pending stats
+nor the crap stats.
+
+  Luis
