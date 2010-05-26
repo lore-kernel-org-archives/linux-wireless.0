@@ -1,882 +1,271 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:50740 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756536Ab0EJW23 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 May 2010 18:28:29 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 28/47] iwlwifi: push virtual interface through
-Date: Mon, 10 May 2010 15:27:59 -0700
-Message-Id: <1273530498-11876-29-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
-References: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
+Received: from smtp.nokia.com ([192.100.122.230]:33178 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759226Ab0EZL2y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 May 2010 07:28:54 -0400
+Received: from esebh105.NOE.Nokia.com (esebh105.ntc.nokia.com [172.21.138.211])
+	by mgw-mx03.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o4QBSjKB012457
+	for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 14:28:51 +0300
+Received: from localhost.localdomain (wimaxnb.nmp.nokia.com [172.22.211.32])
+	by mgw-da02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o4QBRrnj011463
+	for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 14:27:54 +0300
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC PATCHv2] mac80211: Add support for hardware ARP query filtering
+Date: Wed, 26 May 2010 14:29:39 +0300
+Message-Id: <1274873379-12944-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Some hardware allow extended filtering of ARP frames not intended for
+the host. To perform such filtering, the hardware needs to know the current
+IP address(es) of the host, bound to its interface.
 
-Rather than keeping every bit of information
-around in priv and the virtual interface, add
-a virtual interface to many functions and use
-the information directly from it.
+Add support for ARP filtering to mac80211 by adding a new op to the driver
+interface, allowing to configure the current IP addresses. This op is called
+upon association with the currently configured address(es), and when
+associated whenever the IP address(es) change.
 
-This removes beacon_int, assoc_capability and
-assoc_id from struct iwl_priv.
+This patch adds configuration of IPv4 addresses only, as IPv6 addresses don't
+need ARP filtering.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-3945.h     |    8 ++-
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |   18 ++++---
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   52 +++++++++++-----------
- drivers/net/wireless/iwlwifi/iwl-agn.h      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-core.c     |   54 +++++++++++------------
- drivers/net/wireless/iwlwifi/iwl-core.h     |   25 ++++++-----
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    5 --
- drivers/net/wireless/iwlwifi/iwl-scan.c     |   13 +++---
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   63 +++++++++++++--------------
- 9 files changed, 118 insertions(+), 122 deletions(-)
+ include/net/mac80211.h      |   14 ++++++++++
+ net/mac80211/driver-ops.h   |   17 +++++++++++++
+ net/mac80211/driver-trace.h |   25 +++++++++++++++++++
+ net/mac80211/ieee80211_i.h  |    2 +
+ net/mac80211/main.c         |   56 ++++++++++++++++++++++++++++++++++++++++++-
+ net/mac80211/mlme.c         |    4 +++
+ 6 files changed, 117 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.h b/drivers/net/wireless/iwlwifi/iwl-3945.h
-index cea824c..8fe24ee 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.h
-@@ -261,8 +261,10 @@ void iwl3945_reply_statistics(struct iwl_priv *priv,
- 			      struct iwl_rx_mem_buffer *rxb);
- extern void iwl3945_disable_events(struct iwl_priv *priv);
- extern int iwl4965_get_temperature(const struct iwl_priv *priv);
--extern void iwl3945_post_associate(struct iwl_priv *priv);
--extern void iwl3945_config_ap(struct iwl_priv *priv);
-+extern void iwl3945_post_associate(struct iwl_priv *priv,
-+				   struct ieee80211_vif *vif);
-+extern void iwl3945_config_ap(struct iwl_priv *priv,
-+			      struct ieee80211_vif *vif);
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index de22cbf..169251c 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -19,6 +19,7 @@
+ #include <linux/wireless.h>
+ #include <linux/device.h>
+ #include <linux/ieee80211.h>
++#include <linux/inetdevice.h>
+ #include <net/cfg80211.h>
  
  /**
-  * iwl3945_hw_find_station - Find station id for a given BSSID
-@@ -288,7 +290,7 @@ extern const struct iwl_channel_info *iwl3945_get_channel_info(
- extern int iwl3945_rs_next_rate(struct iwl_priv *priv, int rate);
- 
- /* scanning */
--void iwl3945_request_scan(struct iwl_priv *priv);
-+void iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif);
- 
- /* Requires full declaration of iwl_priv before including */
- #include "iwl-io.h"
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 50ff313..f05e600 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -1114,8 +1114,9 @@ void iwlagn_rx_reply_rx_phy(struct iwl_priv *priv,
+@@ -1535,6 +1536,16 @@ enum ieee80211_ampdu_mlme_action {
+  *	of the bss parameters has changed when a call is made. The callback
+  *	can sleep.
+  *
++ * @configure_arp_filter: Configuration function for hardware ARP query filter.
++ *	This function is called with all the IP addresses configured to the
++ *	interface as argument - all ARP queries targeted to any of these
++ *	addresses must pass through. If the hardware filter does not support
++ *	enought addresses, hardware filtering must be disabled. The ifa_list
++ *	argument may be NULL, indicating that filtering must be disabled.
++ *	This function is called upon association complete with current
++ *	address(es), and while associated whenever the IP address(es) change.
++ *	The callback can sleep.
++ *
+  * @prepare_multicast: Prepare for multicast filter configuration.
+  *	This callback is optional, and its return value is passed
+  *	to configure_filter(). This callback must be atomic.
+@@ -1674,6 +1685,9 @@ struct ieee80211_ops {
+ 				 struct ieee80211_vif *vif,
+ 				 struct ieee80211_bss_conf *info,
+ 				 u32 changed);
++	int (*configure_arp_filter)(struct ieee80211_hw *hw,
++				    struct ieee80211_vif *vif,
++				    struct in_ifaddr *ifa_list);
+ 	u64 (*prepare_multicast)(struct ieee80211_hw *hw,
+ 				 struct netdev_hw_addr_list *mc_list);
+ 	void (*configure_filter)(struct ieee80211_hw *hw,
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 4f22713..978850e 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -83,6 +83,23 @@ static inline void drv_bss_info_changed(struct ieee80211_local *local,
+ 	trace_drv_bss_info_changed(local, sdata, info, changed);
  }
  
- static int iwl_get_single_channel_for_scan(struct iwl_priv *priv,
--				     enum ieee80211_band band,
--				     struct iwl_scan_channel *scan_ch)
++struct in_ifaddr;
++static inline int drv_configure_arp_filter(struct ieee80211_local *local,
 +					   struct ieee80211_vif *vif,
-+					   enum ieee80211_band band,
-+					   struct iwl_scan_channel *scan_ch)
- {
- 	const struct ieee80211_supported_band *sband;
- 	const struct iwl_channel_info *ch_info;
-@@ -1131,7 +1132,7 @@ static int iwl_get_single_channel_for_scan(struct iwl_priv *priv,
- 	}
- 
- 	active_dwell = iwl_get_active_dwell_time(priv, band, 0);
--	passive_dwell = iwl_get_passive_dwell_time(priv, band);
-+	passive_dwell = iwl_get_passive_dwell_time(priv, band, vif);
- 
- 	if (passive_dwell <= active_dwell)
- 		passive_dwell = active_dwell + 1;
-@@ -1180,6 +1181,7 @@ static int iwl_get_single_channel_for_scan(struct iwl_priv *priv,
- }
- 
- static int iwl_get_channels_for_scan(struct iwl_priv *priv,
-+				     struct ieee80211_vif *vif,
- 				     enum ieee80211_band band,
- 				     u8 is_active, u8 n_probes,
- 				     struct iwl_scan_channel *scan_ch)
-@@ -1197,7 +1199,7 @@ static int iwl_get_channels_for_scan(struct iwl_priv *priv,
- 		return 0;
- 
- 	active_dwell = iwl_get_active_dwell_time(priv, band, n_probes);
--	passive_dwell = iwl_get_passive_dwell_time(priv, band);
-+	passive_dwell = iwl_get_passive_dwell_time(priv, band, vif);
- 
- 	if (passive_dwell <= active_dwell)
- 		passive_dwell = active_dwell + 1;
-@@ -1257,7 +1259,7 @@ static int iwl_get_channels_for_scan(struct iwl_priv *priv,
- 	return added;
- }
- 
--void iwlagn_request_scan(struct iwl_priv *priv)
-+void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- {
- 	struct iwl_host_cmd cmd = {
- 		.id = REPLY_SCAN_CMD,
-@@ -1343,7 +1345,7 @@ void iwlagn_request_scan(struct iwl_priv *priv)
- 
- 		IWL_DEBUG_INFO(priv, "Scanning while associated...\n");
- 		spin_lock_irqsave(&priv->lock, flags);
--		interval = priv->beacon_int;
-+		interval = vif ? vif->bss_conf.beacon_int : 0;
- 		spin_unlock_irqrestore(&priv->lock, flags);
- 
- 		scan->suspend_time = 0;
-@@ -1474,12 +1476,12 @@ void iwlagn_request_scan(struct iwl_priv *priv)
- 
- 	if (priv->is_internal_short_scan) {
- 		scan->channel_count =
--			iwl_get_single_channel_for_scan(priv, band,
-+			iwl_get_single_channel_for_scan(priv, vif, band,
- 				(void *)&scan->data[le16_to_cpu(
- 				scan->tx_cmd.len)]);
- 	} else {
- 		scan->channel_count =
--			iwl_get_channels_for_scan(priv, band,
-+			iwl_get_channels_for_scan(priv, vif, band,
- 				is_active, n_probes,
- 				(void *)&scan->data[le16_to_cpu(
- 				scan->tx_cmd.len)]);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 7c3363a..270635e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2356,7 +2356,7 @@ static void iwl_alive_start(struct iwl_priv *priv)
- 		active_rxon->filter_flags &= ~RXON_FILTER_ASSOC_MSK;
- 	} else {
- 		/* Initialize our rx_config data */
--		iwl_connection_init_rx_config(priv, priv->iw_mode);
-+		iwl_connection_init_rx_config(priv, NULL);
- 
- 		if (priv->cfg->ops->hcmd->set_rxon_chain)
- 			priv->cfg->ops->hcmd->set_rxon_chain(priv);
-@@ -2729,12 +2729,15 @@ static void iwl_bg_rx_replenish(struct work_struct *data)
- 
- #define IWL_DELAY_NEXT_SCAN (HZ*2)
- 
--void iwl_post_associate(struct iwl_priv *priv)
-+void iwl_post_associate(struct iwl_priv *priv, struct ieee80211_vif *vif)
- {
- 	struct ieee80211_conf *conf = NULL;
- 	int ret = 0;
- 
--	if (priv->iw_mode == NL80211_IFTYPE_AP) {
-+	if (!vif || !priv->is_open)
-+		return;
++					   struct in_ifaddr *ifa_list)
++{
++	int ret = 0;
 +
-+	if (vif->type == NL80211_IFTYPE_AP) {
- 		IWL_ERR(priv, "%s Should not be called in AP mode\n", __func__);
- 		return;
- 	}
-@@ -2742,10 +2745,6 @@ void iwl_post_associate(struct iwl_priv *priv)
- 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
- 		return;
- 
--
--	if (!priv->vif || !priv->is_open)
--		return;
--
- 	iwl_scan_cancel_timeout(priv, 200);
- 
- 	conf = ieee80211_get_hw_conf(priv->hw);
-@@ -2753,7 +2752,7 @@ void iwl_post_associate(struct iwl_priv *priv)
- 	priv->staging_rxon.filter_flags &= ~RXON_FILTER_ASSOC_MSK;
- 	iwlcore_commit_rxon(priv);
- 
--	iwl_setup_rxon_timing(priv);
-+	iwl_setup_rxon_timing(priv, vif);
- 	ret = iwl_send_cmd_pdu(priv, REPLY_RXON_TIMING,
- 			      sizeof(priv->rxon_timing), &priv->rxon_timing);
- 	if (ret)
-@@ -2767,43 +2766,41 @@ void iwl_post_associate(struct iwl_priv *priv)
- 	if (priv->cfg->ops->hcmd->set_rxon_chain)
- 		priv->cfg->ops->hcmd->set_rxon_chain(priv);
- 
--	priv->staging_rxon.assoc_id = cpu_to_le16(priv->assoc_id);
-+	priv->staging_rxon.assoc_id = cpu_to_le16(vif->bss_conf.aid);
- 
- 	IWL_DEBUG_ASSOC(priv, "assoc id %d beacon interval %d\n",
--			priv->assoc_id, priv->beacon_int);
-+			vif->bss_conf.aid, vif->bss_conf.beacon_int);
- 
--	if (priv->assoc_capability & WLAN_CAPABILITY_SHORT_PREAMBLE)
-+	if (vif->bss_conf.assoc_capability & WLAN_CAPABILITY_SHORT_PREAMBLE)
- 		priv->staging_rxon.flags |= RXON_FLG_SHORT_PREAMBLE_MSK;
- 	else
- 		priv->staging_rxon.flags &= ~RXON_FLG_SHORT_PREAMBLE_MSK;
- 
- 	if (priv->staging_rxon.flags & RXON_FLG_BAND_24G_MSK) {
--		if (priv->assoc_capability & WLAN_CAPABILITY_SHORT_SLOT_TIME)
-+		if (vif->bss_conf.assoc_capability &
-+					WLAN_CAPABILITY_SHORT_SLOT_TIME)
- 			priv->staging_rxon.flags |= RXON_FLG_SHORT_SLOT_MSK;
- 		else
- 			priv->staging_rxon.flags &= ~RXON_FLG_SHORT_SLOT_MSK;
- 
--		if (priv->iw_mode == NL80211_IFTYPE_ADHOC)
-+		if (vif->type == NL80211_IFTYPE_ADHOC)
- 			priv->staging_rxon.flags &= ~RXON_FLG_SHORT_SLOT_MSK;
--
- 	}
- 
- 	iwlcore_commit_rxon(priv);
- 
- 	IWL_DEBUG_ASSOC(priv, "Associated as %d to: %pM\n",
--			priv->assoc_id, priv->active_rxon.bssid_addr);
-+			vif->bss_conf.aid, priv->active_rxon.bssid_addr);
- 
--	switch (priv->iw_mode) {
-+	switch (vif->type) {
- 	case NL80211_IFTYPE_STATION:
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
--		/* assume default assoc id */
--		priv->assoc_id = 1;
- 		iwl_send_beacon_cmd(priv);
- 		break;
- 	default:
- 		IWL_ERR(priv, "%s Should not be called in %d mode\n",
--			  __func__, priv->iw_mode);
-+			  __func__, vif->type);
- 		break;
- 	}
- 
-@@ -2980,7 +2977,7 @@ static int iwl_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	return NETDEV_TX_OK;
- }
- 
--void iwl_config_ap(struct iwl_priv *priv)
-+void iwl_config_ap(struct iwl_priv *priv, struct ieee80211_vif *vif)
- {
- 	int ret = 0;
- 
-@@ -2995,7 +2992,7 @@ void iwl_config_ap(struct iwl_priv *priv)
- 		iwlcore_commit_rxon(priv);
- 
- 		/* RXON Timing */
--		iwl_setup_rxon_timing(priv);
-+		iwl_setup_rxon_timing(priv, vif);
- 		ret = iwl_send_cmd_pdu(priv, REPLY_RXON_TIMING,
- 				sizeof(priv->rxon_timing), &priv->rxon_timing);
- 		if (ret)
-@@ -3009,9 +3006,10 @@ void iwl_config_ap(struct iwl_priv *priv)
- 		if (priv->cfg->ops->hcmd->set_rxon_chain)
- 			priv->cfg->ops->hcmd->set_rxon_chain(priv);
- 
--		/* FIXME: what should be the assoc_id for AP? */
--		priv->staging_rxon.assoc_id = cpu_to_le16(priv->assoc_id);
--		if (priv->assoc_capability & WLAN_CAPABILITY_SHORT_PREAMBLE)
-+		priv->staging_rxon.assoc_id = 0;
++	might_sleep();
 +
-+		if (vif->bss_conf.assoc_capability &
-+						WLAN_CAPABILITY_SHORT_PREAMBLE)
- 			priv->staging_rxon.flags |=
- 				RXON_FLG_SHORT_PREAMBLE_MSK;
- 		else
-@@ -3019,15 +3017,15 @@ void iwl_config_ap(struct iwl_priv *priv)
- 				~RXON_FLG_SHORT_PREAMBLE_MSK;
- 
- 		if (priv->staging_rxon.flags & RXON_FLG_BAND_24G_MSK) {
--			if (priv->assoc_capability &
--				WLAN_CAPABILITY_SHORT_SLOT_TIME)
-+			if (vif->bss_conf.assoc_capability &
-+						WLAN_CAPABILITY_SHORT_SLOT_TIME)
- 				priv->staging_rxon.flags |=
- 					RXON_FLG_SHORT_SLOT_MSK;
- 			else
- 				priv->staging_rxon.flags &=
- 					~RXON_FLG_SHORT_SLOT_MSK;
- 
--			if (priv->iw_mode == NL80211_IFTYPE_ADHOC)
-+			if (vif->type == NL80211_IFTYPE_ADHOC)
- 				priv->staging_rxon.flags &=
- 					~RXON_FLG_SHORT_SLOT_MSK;
- 		}
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index 4a1e7b2..f52bedb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -171,7 +171,7 @@ static inline bool iwl_is_tx_success(u32 status)
- }
- 
- /* scan */
--void iwlagn_request_scan(struct iwl_priv *priv);
-+void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif);
- 
- /* station mgmt */
- int iwlagn_manage_ibss_station(struct iwl_priv *priv,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 246538a..68c3693 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -480,7 +480,7 @@ static u16 iwl_adjust_beacon_interval(u16 beacon_val, u16 max_beacon_val)
- 	return new_val;
- }
- 
--void iwl_setup_rxon_timing(struct iwl_priv *priv)
-+void iwl_setup_rxon_timing(struct iwl_priv *priv, struct ieee80211_vif *vif)
- {
- 	u64 tsf;
- 	s32 interval_tm, rem;
-@@ -494,15 +494,14 @@ void iwl_setup_rxon_timing(struct iwl_priv *priv)
- 	priv->rxon_timing.timestamp = cpu_to_le64(priv->timestamp);
- 	priv->rxon_timing.listen_interval = cpu_to_le16(conf->listen_interval);
- 
--	if (priv->iw_mode == NL80211_IFTYPE_STATION) {
--		beacon_int = priv->beacon_int;
--		priv->rxon_timing.atim_window = 0;
--	} else {
--		beacon_int = priv->vif->bss_conf.beacon_int;
-+	beacon_int = vif->bss_conf.beacon_int;
- 
-+	if (vif->type == NL80211_IFTYPE_ADHOC) {
- 		/* TODO: we need to get atim_window from upper stack
- 		 * for now we set to 0 */
- 		priv->rxon_timing.atim_window = 0;
-+	} else {
-+		priv->rxon_timing.atim_window = 0;
- 	}
- 
- 	beacon_int = iwl_adjust_beacon_interval(beacon_int,
-@@ -894,8 +893,9 @@ int iwl_set_rxon_channel(struct iwl_priv *priv, struct ieee80211_channel *ch)
- }
- EXPORT_SYMBOL(iwl_set_rxon_channel);
- 
--void iwl_set_flags_for_band(struct iwl_priv *priv,
--			    enum ieee80211_band band)
-+static void iwl_set_flags_for_band(struct iwl_priv *priv,
-+				   enum ieee80211_band band,
-+				   struct ieee80211_vif *vif)
- {
- 	if (band == IEEE80211_BAND_5GHZ) {
- 		priv->staging_rxon.flags &=
-@@ -904,12 +904,12 @@ void iwl_set_flags_for_band(struct iwl_priv *priv,
- 		priv->staging_rxon.flags |= RXON_FLG_SHORT_SLOT_MSK;
- 	} else {
- 		/* Copied from iwl_post_associate() */
--		if (priv->assoc_capability & WLAN_CAPABILITY_SHORT_SLOT_TIME)
-+		if (vif && vif->bss_conf.assoc_capability & WLAN_CAPABILITY_SHORT_SLOT_TIME)
- 			priv->staging_rxon.flags |= RXON_FLG_SHORT_SLOT_MSK;
- 		else
- 			priv->staging_rxon.flags &= ~RXON_FLG_SHORT_SLOT_MSK;
- 
--		if (priv->iw_mode == NL80211_IFTYPE_ADHOC)
-+		if (vif && vif->type == NL80211_IFTYPE_ADHOC)
- 			priv->staging_rxon.flags &= ~RXON_FLG_SHORT_SLOT_MSK;
- 
- 		priv->staging_rxon.flags |= RXON_FLG_BAND_24G_MSK;
-@@ -921,13 +921,18 @@ void iwl_set_flags_for_band(struct iwl_priv *priv,
- /*
-  * initialize rxon structure with default values from eeprom
-  */
--void iwl_connection_init_rx_config(struct iwl_priv *priv, int mode)
-+void iwl_connection_init_rx_config(struct iwl_priv *priv,
-+				   struct ieee80211_vif *vif)
- {
- 	const struct iwl_channel_info *ch_info;
-+	enum nl80211_iftype type = NL80211_IFTYPE_STATION;
++	if (local->ops->configure_arp_filter)
++		ret = local->ops->configure_arp_filter(&local->hw, vif,
++						       ifa_list);
 +
-+	if (vif)
-+		type = vif->type;
- 
- 	memset(&priv->staging_rxon, 0, sizeof(priv->staging_rxon));
- 
--	switch (mode) {
-+	switch (type) {
- 	case NL80211_IFTYPE_AP:
- 		priv->staging_rxon.dev_type = RXON_DEV_TYPE_AP;
- 		break;
-@@ -945,7 +950,7 @@ void iwl_connection_init_rx_config(struct iwl_priv *priv, int mode)
- 		break;
- 
- 	default:
--		IWL_ERR(priv, "Unsupported interface type %d\n", mode);
-+		IWL_ERR(priv, "Unsupported interface type %d\n", type);
- 		break;
- 	}
- 
-@@ -967,7 +972,7 @@ void iwl_connection_init_rx_config(struct iwl_priv *priv, int mode)
- 	priv->staging_rxon.channel = cpu_to_le16(ch_info->channel);
- 	priv->band = ch_info->band;
- 
--	iwl_set_flags_for_band(priv, priv->band);
-+	iwl_set_flags_for_band(priv, priv->band, vif);
- 
- 	priv->staging_rxon.ofdm_basic_rates =
- 	    (IWL_OFDM_RATES_MASK >> IWL_FIRST_OFDM_RATE) & 0xFF;
-@@ -1793,7 +1798,6 @@ static void iwl_ht_conf(struct iwl_priv *priv,
- 
- static inline void iwl_set_no_assoc(struct iwl_priv *priv)
++	trace_drv_configure_arp_filter(local, vif_to_sdata(vif), ifa_list, ret);
++	return ret;
++}
++
+ static inline u64 drv_prepare_multicast(struct ieee80211_local *local,
+ 					struct netdev_hw_addr_list *mc_list)
  {
--	priv->assoc_id = 0;
- 	iwl_led_disassociate(priv);
- 	/*
- 	 * inform the ucode that there is no longer an
-@@ -1827,7 +1831,6 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
+diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
+index 6a9b234..577460d 100644
+--- a/net/mac80211/driver-trace.h
++++ b/net/mac80211/driver-trace.h
+@@ -219,6 +219,31 @@ TRACE_EVENT(drv_bss_info_changed,
+ 	)
+ );
+ 
++TRACE_EVENT(drv_configure_arp_filter,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 struct in_ifaddr *ifa_list, int ret),
++
++	TP_ARGS(local, sdata, ifa_list, ret),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		VIF_ENTRY
++		__field(int, ret)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		VIF_ASSIGN;
++		__entry->ret = ret;
++	),
++
++	TP_printk(
++		VIF_PR_FMT LOCAL_PR_FMT " ret:%d",
++		VIF_PR_ARG, LOCAL_PR_ARG, __entry->ret
++	)
++);
++
+ TRACE_EVENT(drv_prepare_multicast,
+ 	TP_PROTO(struct ieee80211_local *local, int mc_count, u64 ret),
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 1a9e2da..8356a08 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -851,6 +851,7 @@ struct ieee80211_local {
+ 	struct work_struct dynamic_ps_disable_work;
+ 	struct timer_list dynamic_ps_timer;
+ 	struct notifier_block network_latency_notifier;
++	struct notifier_block ifa_notifier;
+ 
+ 	int user_power_level; /* in dBm */
+ 	int power_constr_level; /* in dBm */
+@@ -996,6 +997,7 @@ void ieee80211_send_pspoll(struct ieee80211_local *local,
+ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency);
+ int ieee80211_max_network_latency(struct notifier_block *nb,
+ 				  unsigned long data, void *dummy);
++int ieee80211_set_arp_filter(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 				      struct ieee80211_channel_sw_ie *sw_elem,
+ 				      struct ieee80211_bss *bss,
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 22a384d..12e51f0 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -329,6 +329,51 @@ static void ieee80211_recalc_smps_work(struct work_struct *work)
+ 	mutex_unlock(&local->iflist_mtx);
+ }
+ 
++int ieee80211_set_arp_filter(struct ieee80211_sub_if_data *sdata)
++{
++	struct in_device *idev;
++	int ret = 0;
++
++	BUG_ON(!sdata);
++	ASSERT_RTNL();
++
++	idev = sdata->dev->ip_ptr;
++	if (!idev)
++		return 0;
++
++	ret = drv_configure_arp_filter(sdata->local, &sdata->vif,
++				       idev->ifa_list);
++	return ret;
++}
++
++static int ieee80211_ifa_changed(struct notifier_block *nb,
++				 unsigned long data, void *arg)
++{
++	struct in_ifaddr *ifa = arg;
++	struct ieee80211_local *local =
++		container_of(nb, struct ieee80211_local,
++			     ifa_notifier);
++	struct net_device *ndev = ifa->ifa_dev->dev;
++	struct wireless_dev *wdev = ndev->ieee80211_ptr;
++	struct ieee80211_sub_if_data *sdata;
++	struct ieee80211_if_managed *ifmgd;
++
++
++	/* Make sure it's our interface that got changed */
++	if (!wdev)
++		return NOTIFY_DONE;
++
++	if (wdev->wiphy != local->hw.wiphy)
++		return NOTIFY_DONE;
++
++	/* We are concerned about IP addresses only when associated */
++	sdata = IEEE80211_DEV_TO_SUB_IF(ndev);
++	ifmgd = &sdata->u.mgd;
++	if (ifmgd->associated)
++		ieee80211_set_arp_filter(sdata);
++	return NOTIFY_DONE;
++}
++
+ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 					const struct ieee80211_ops *ops)
+ {
+@@ -612,14 +657,22 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 		ieee80211_max_network_latency;
+ 	result = pm_qos_add_notifier(PM_QOS_NETWORK_LATENCY,
+ 				     &local->network_latency_notifier);
+-
+ 	if (result) {
+ 		rtnl_lock();
+ 		goto fail_pm_qos;
  	}
  
- 	if (changes & BSS_CHANGED_BEACON_INT) {
--		priv->beacon_int = bss_conf->beacon_int;
- 		/* TODO: in AP mode, do something to make this take effect */
- 	}
- 
-@@ -1917,20 +1920,17 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
- 	if (changes & BSS_CHANGED_ASSOC) {
- 		IWL_DEBUG_MAC80211(priv, "ASSOC %d\n", bss_conf->assoc);
- 		if (bss_conf->assoc) {
--			priv->assoc_id = bss_conf->aid;
--			priv->beacon_int = bss_conf->beacon_int;
- 			priv->timestamp = bss_conf->timestamp;
--			priv->assoc_capability = bss_conf->assoc_capability;
- 
- 			iwl_led_associate(priv);
- 
- 			if (!iwl_is_rfkill(priv))
--				priv->cfg->ops->lib->post_associate(priv);
-+				priv->cfg->ops->lib->post_associate(priv, vif);
- 		} else
- 			iwl_set_no_assoc(priv);
- 	}
- 
--	if (changes && iwl_is_associated(priv) && priv->assoc_id) {
-+	if (changes && iwl_is_associated(priv) && bss_conf->aid) {
- 		IWL_DEBUG_MAC80211(priv, "Changes (%#x) while associated\n",
- 				   changes);
- 		ret = iwl_send_rxon_assoc(priv);
-@@ -1947,7 +1947,7 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
- 			memcpy(priv->staging_rxon.bssid_addr,
- 			       bss_conf->bssid, ETH_ALEN);
- 			memcpy(priv->bssid, bss_conf->bssid, ETH_ALEN);
--			iwlcore_config_ap(priv);
-+			iwlcore_config_ap(priv, vif);
- 		} else
- 			iwl_set_no_assoc(priv);
- 	}
-@@ -1987,14 +1987,13 @@ int iwl_mac_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb)
- 
- 	priv->ibss_beacon = skb;
- 
--	priv->assoc_id = 0;
- 	timestamp = ((struct ieee80211_mgmt *)skb->data)->u.beacon.timestamp;
- 	priv->timestamp = le64_to_cpu(timestamp);
- 
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
--	priv->cfg->ops->lib->post_associate(priv);
-+	priv->cfg->ops->lib->post_associate(priv, priv->vif);
- 
++	local->ifa_notifier.notifier_call = ieee80211_ifa_changed;
++	result = register_inetaddr_notifier(&local->ifa_notifier);
++	if (result)
++		goto fail_ifa;
++
  	return 0;
- }
-@@ -2002,7 +2001,7 @@ EXPORT_SYMBOL(iwl_mac_beacon_update);
  
- static int iwl_set_mode(struct iwl_priv *priv, struct ieee80211_vif *vif)
- {
--	iwl_connection_init_rx_config(priv, vif->type);
-+	iwl_connection_init_rx_config(priv, vif);
++ fail_ifa:
++	pm_qos_remove_notifier(PM_QOS_NETWORK_LATENCY,
++			       &local->network_latency_notifier);
++	rtnl_lock();
+  fail_pm_qos:
+ 	ieee80211_led_exit(local);
+ 	ieee80211_remove_interfaces(local);
+@@ -647,6 +700,7 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
  
- 	if (priv->cfg->ops->hcmd->set_rxon_chain)
- 		priv->cfg->ops->hcmd->set_rxon_chain(priv);
-@@ -2176,7 +2175,7 @@ int iwl_mac_config(struct ieee80211_hw *hw, u32 changed)
- 		iwl_set_rxon_channel(priv, conf->channel);
- 		iwl_set_rxon_ht(priv, ht_conf);
+ 	pm_qos_remove_notifier(PM_QOS_NETWORK_LATENCY,
+ 			       &local->network_latency_notifier);
++	unregister_inetaddr_notifier(&local->ifa_notifier);
  
--		iwl_set_flags_for_band(priv, conf->channel->band);
-+		iwl_set_flags_for_band(priv, conf->channel->band, priv->vif);
- 		spin_unlock_irqrestore(&priv->lock, flags);
- 		if (iwl_is_associated(priv) &&
- 		    (le16_to_cpu(priv->active_rxon.channel) != ch) &&
-@@ -2259,8 +2258,6 @@ void iwl_mac_reset_tsf(struct ieee80211_hw *hw)
- 	spin_unlock_irqrestore(&priv->lock, flags);
+ 	rtnl_lock();
  
- 	spin_lock_irqsave(&priv->lock, flags);
--	priv->assoc_id = 0;
--	priv->assoc_capability = 0;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 0839c4e..15d6b79 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -858,6 +858,10 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_recalc_smps(local, sdata);
+ 	mutex_unlock(&local->iflist_mtx);
  
- 	/* new association get rid of ibss beacon skb */
- 	if (priv->ibss_beacon)
-@@ -2268,7 +2265,6 @@ void iwl_mac_reset_tsf(struct ieee80211_hw *hw)
- 
- 	priv->ibss_beacon = NULL;
- 
--	priv->beacon_int = priv->vif->bss_conf.beacon_int;
- 	priv->timestamp = 0;
- 
- 	spin_unlock_irqrestore(&priv->lock, flags);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 7a3f949..1774ce9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -106,7 +106,7 @@ struct iwl_hcmd_utils_ops {
- 			__le32 *tx_flags);
- 	int  (*calc_rssi)(struct iwl_priv *priv,
- 			  struct iwl_rx_phy_res *rx_resp);
--	void (*request_scan)(struct iwl_priv *priv);
-+	void (*request_scan)(struct iwl_priv *priv, struct ieee80211_vif *vif);
- };
- 
- struct iwl_apm_ops {
-@@ -180,8 +180,9 @@ struct iwl_lib_ops {
- 	/* power */
- 	int (*send_tx_power) (struct iwl_priv *priv);
- 	void (*update_chain_flags)(struct iwl_priv *priv);
--	void (*post_associate) (struct iwl_priv *priv);
--	void (*config_ap) (struct iwl_priv *priv);
-+	void (*post_associate)(struct iwl_priv *priv,
-+			       struct ieee80211_vif *vif);
-+	void (*config_ap)(struct iwl_priv *priv, struct ieee80211_vif *vif);
- 	irqreturn_t (*isr) (int irq, void *data);
- 
- 	/* eeprom operations (as defined in iwl-eeprom.h) */
-@@ -334,8 +335,8 @@ int iwl_set_rxon_channel(struct iwl_priv *priv, struct ieee80211_channel *ch);
- void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_config *ht_conf);
- u8 iwl_is_ht40_tx_allowed(struct iwl_priv *priv,
- 			 struct ieee80211_sta_ht_cap *sta_ht_inf);
--void iwl_set_flags_for_band(struct iwl_priv *priv, enum ieee80211_band band);
--void iwl_connection_init_rx_config(struct iwl_priv *priv, int mode);
-+void iwl_connection_init_rx_config(struct iwl_priv *priv,
-+				   struct ieee80211_vif *vif);
- int iwl_set_decrypted_flag(struct iwl_priv *priv,
- 			   struct ieee80211_hdr *hdr,
- 			   u32 decrypt_res,
-@@ -345,7 +346,7 @@ void iwl_configure_filter(struct ieee80211_hw *hw,
- 			  unsigned int changed_flags,
- 			  unsigned int *total_flags, u64 multicast);
- int iwl_set_hw_params(struct iwl_priv *priv);
--void iwl_post_associate(struct iwl_priv *priv);
-+void iwl_post_associate(struct iwl_priv *priv, struct ieee80211_vif *vif);
- void iwl_bss_info_changed(struct ieee80211_hw *hw,
- 				     struct ieee80211_vif *vif,
- 				     struct ieee80211_bss_conf *bss_conf,
-@@ -357,7 +358,7 @@ int iwl_mac_add_interface(struct ieee80211_hw *hw,
- void iwl_mac_remove_interface(struct ieee80211_hw *hw,
- 			      struct ieee80211_vif *vif);
- int iwl_mac_config(struct ieee80211_hw *hw, u32 changed);
--void iwl_config_ap(struct iwl_priv *priv);
-+void iwl_config_ap(struct iwl_priv *priv, struct ieee80211_vif *vif);
- void iwl_mac_reset_tsf(struct ieee80211_hw *hw);
- int iwl_alloc_txq_mem(struct iwl_priv *priv);
- void iwl_free_txq_mem(struct iwl_priv *priv);
-@@ -520,7 +521,8 @@ u16 iwl_get_active_dwell_time(struct iwl_priv *priv,
- 			      enum ieee80211_band band,
- 			      u8 n_probes);
- u16 iwl_get_passive_dwell_time(struct iwl_priv *priv,
--			       enum ieee80211_band band);
-+			       enum ieee80211_band band,
-+			       struct ieee80211_vif *vif);
- void iwl_bg_scan_check(struct work_struct *data);
- void iwl_bg_abort_scan(struct work_struct *work);
- void iwl_bg_scan_completed(struct work_struct *work);
-@@ -684,7 +686,7 @@ extern int iwl_send_lq_cmd(struct iwl_priv *priv,
- void iwl_apm_stop(struct iwl_priv *priv);
- int iwl_apm_init(struct iwl_priv *priv);
- 
--void iwl_setup_rxon_timing(struct iwl_priv *priv);
-+void iwl_setup_rxon_timing(struct iwl_priv *priv, struct ieee80211_vif *vif);
- static inline int iwl_send_rxon_assoc(struct iwl_priv *priv)
- {
- 	return priv->cfg->ops->hcmd->rxon_assoc(priv);
-@@ -693,9 +695,10 @@ static inline int iwlcore_commit_rxon(struct iwl_priv *priv)
- {
- 	return priv->cfg->ops->hcmd->commit_rxon(priv);
- }
--static inline void iwlcore_config_ap(struct iwl_priv *priv)
-+static inline void iwlcore_config_ap(struct iwl_priv *priv,
-+				     struct ieee80211_vif *vif)
- {
--	priv->cfg->ops->lib->config_ap(priv);
-+	priv->cfg->ops->lib->config_ap(priv, vif);
- }
- static inline const struct ieee80211_supported_band *iwl_get_hw_mode(
- 			struct iwl_priv *priv, enum ieee80211_band band)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index d09c8bc..bcdb663 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1243,7 +1243,6 @@ struct iwl_priv {
- 
- 	/* Last Rx'd beacon timestamp */
- 	u64 timestamp;
--	u16 beacon_int;
- 	struct ieee80211_vif *vif;
- 
- 	union {
-@@ -1305,10 +1304,6 @@ struct iwl_priv {
- 	struct iwl_hw_params hw_params;
- 
- 	u32 inta_mask;
--	/* Current association information needed to configure the
--	 * hardware */
--	u16 assoc_id;
--	u16 assoc_capability;
- 
- 	struct iwl_qos_info qos_data;
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 28e2d86..32ca848 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -264,7 +264,8 @@ inline u16 iwl_get_active_dwell_time(struct iwl_priv *priv,
- EXPORT_SYMBOL(iwl_get_active_dwell_time);
- 
- u16 iwl_get_passive_dwell_time(struct iwl_priv *priv,
--			       enum ieee80211_band band)
-+			       enum ieee80211_band band,
-+			       struct ieee80211_vif *vif)
- {
- 	u16 passive = (band == IEEE80211_BAND_2GHZ) ?
- 	    IWL_PASSIVE_DWELL_BASE + IWL_PASSIVE_DWELL_TIME_24 :
-@@ -274,7 +275,7 @@ u16 iwl_get_passive_dwell_time(struct iwl_priv *priv,
- 		/* If we're associated, we clamp the maximum passive
- 		 * dwell time to be 98% of the beacon interval (minus
- 		 * 2 * channel tune time) */
--		passive = priv->beacon_int;
-+		passive = vif ? vif->bss_conf.beacon_int : 0;
- 		if ((passive > IWL_PASSIVE_DWELL_BASE) || !passive)
- 			passive = IWL_PASSIVE_DWELL_BASE;
- 		passive = (passive * 98) / 100 - IWL_CHANNEL_TUNE_TIME * 2;
-@@ -294,7 +295,7 @@ void iwl_init_scan_params(struct iwl_priv *priv)
- }
- EXPORT_SYMBOL(iwl_init_scan_params);
- 
--static int iwl_scan_initiate(struct iwl_priv *priv)
-+static int iwl_scan_initiate(struct iwl_priv *priv, struct ieee80211_vif *vif)
- {
- 	WARN_ON(!mutex_is_locked(&priv->mutex));
- 
-@@ -306,7 +307,7 @@ static int iwl_scan_initiate(struct iwl_priv *priv)
- 	if (WARN_ON(!priv->cfg->ops->utils->request_scan))
- 		return -EOPNOTSUPP;
- 
--	priv->cfg->ops->utils->request_scan(priv);
-+	priv->cfg->ops->utils->request_scan(priv, vif);
- 
- 	return 0;
- }
-@@ -347,7 +348,7 @@ int iwl_mac_hw_scan(struct ieee80211_hw *hw,
- 	priv->scan_band = req->channels[0]->band;
- 	priv->scan_request = req;
- 
--	ret = iwl_scan_initiate(priv);
-+	ret = iwl_scan_initiate(priv, vif);
- 
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
- 
-@@ -398,7 +399,7 @@ void iwl_bg_start_internal_scan(struct work_struct *work)
- 	if (WARN_ON(!priv->cfg->ops->utils->request_scan))
- 		goto unlock;
- 
--	priv->cfg->ops->utils->request_scan(priv);
-+	priv->cfg->ops->utils->request_scan(priv, NULL);
-  unlock:
- 	mutex_unlock(&priv->mutex);
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 77ab00b..85a46ad 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -1847,7 +1847,8 @@ static void iwl3945_irq_tasklet(struct iwl_priv *priv)
- static int iwl3945_get_channels_for_scan(struct iwl_priv *priv,
- 					 enum ieee80211_band band,
- 				     u8 is_active, u8 n_probes,
--				     struct iwl3945_scan_channel *scan_ch)
-+				     struct iwl3945_scan_channel *scan_ch,
-+				     struct ieee80211_vif *vif)
- {
- 	struct ieee80211_channel *chan;
- 	const struct ieee80211_supported_band *sband;
-@@ -1861,7 +1862,7 @@ static int iwl3945_get_channels_for_scan(struct iwl_priv *priv,
- 		return 0;
- 
- 	active_dwell = iwl_get_active_dwell_time(priv, band, n_probes);
--	passive_dwell = iwl_get_passive_dwell_time(priv, band);
-+	passive_dwell = iwl_get_passive_dwell_time(priv, band, vif);
- 
- 	if (passive_dwell <= active_dwell)
- 		passive_dwell = active_dwell + 1;
-@@ -2543,7 +2544,7 @@ static void iwl3945_alive_start(struct iwl_priv *priv)
- 		active_rxon->filter_flags &= ~RXON_FILTER_ASSOC_MSK;
- 	} else {
- 		/* Initialize our rx_config data */
--		iwl_connection_init_rx_config(priv, priv->iw_mode);
-+		iwl_connection_init_rx_config(priv, NULL);
- 	}
- 
- 	/* Configure Bluetooth device coexistence support */
-@@ -2811,7 +2812,7 @@ static void iwl3945_rfkill_poll(struct work_struct *data)
- 
- }
- 
--void iwl3945_request_scan(struct iwl_priv *priv)
-+void iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- {
- 	struct iwl_host_cmd cmd = {
- 		.id = REPLY_SCAN_CMD,
-@@ -2892,7 +2893,7 @@ void iwl3945_request_scan(struct iwl_priv *priv)
- 		IWL_DEBUG_INFO(priv, "Scanning while associated...\n");
- 
- 		spin_lock_irqsave(&priv->lock, flags);
--		interval = priv->beacon_int;
-+		interval = vif ? vif->bss_conf.beacon_int : 0;
- 		spin_unlock_irqrestore(&priv->lock, flags);
- 
- 		scan->suspend_time = 0;
-@@ -2987,7 +2988,7 @@ void iwl3945_request_scan(struct iwl_priv *priv)
- 
- 	scan->channel_count =
- 		iwl3945_get_channels_for_scan(priv, band, is_active, n_probes,
--			(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)]);
-+			(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)], vif);
- 
- 	if (scan->channel_count == 0) {
- 		IWL_DEBUG_SCAN(priv, "channel count %d\n", scan->channel_count);
-@@ -3060,26 +3061,25 @@ static void iwl3945_bg_rx_replenish(struct work_struct *data)
- 	mutex_unlock(&priv->mutex);
- }
- 
--void iwl3945_post_associate(struct iwl_priv *priv)
-+void iwl3945_post_associate(struct iwl_priv *priv, struct ieee80211_vif *vif)
- {
- 	int rc = 0;
- 	struct ieee80211_conf *conf = NULL;
- 
--	if (priv->iw_mode == NL80211_IFTYPE_AP) {
-+	if (!vif || !priv->is_open)
-+		return;
++	rtnl_lock();
++	ieee80211_set_arp_filter(sdata);
++	rtnl_unlock();
 +
-+	if (vif->type == NL80211_IFTYPE_AP) {
- 		IWL_ERR(priv, "%s Should not be called in AP mode\n", __func__);
- 		return;
- 	}
- 
--
- 	IWL_DEBUG_ASSOC(priv, "Associated as %d to: %pM\n",
--			priv->assoc_id, priv->active_rxon.bssid_addr);
-+			vif->bss_conf.aid, priv->active_rxon.bssid_addr);
- 
- 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
- 		return;
- 
--	if (!priv->vif || !priv->is_open)
--		return;
--
- 	iwl_scan_cancel_timeout(priv, 200);
- 
- 	conf = ieee80211_get_hw_conf(priv->hw);
-@@ -3088,7 +3088,7 @@ void iwl3945_post_associate(struct iwl_priv *priv)
- 	iwlcore_commit_rxon(priv);
- 
- 	memset(&priv->rxon_timing, 0, sizeof(struct iwl_rxon_time_cmd));
--	iwl_setup_rxon_timing(priv);
-+	iwl_setup_rxon_timing(priv, vif);
- 	rc = iwl_send_cmd_pdu(priv, REPLY_RXON_TIMING,
- 			      sizeof(priv->rxon_timing), &priv->rxon_timing);
- 	if (rc)
-@@ -3097,40 +3097,38 @@ void iwl3945_post_associate(struct iwl_priv *priv)
- 
- 	priv->staging_rxon.filter_flags |= RXON_FILTER_ASSOC_MSK;
- 
--	priv->staging_rxon.assoc_id = cpu_to_le16(priv->assoc_id);
-+	priv->staging_rxon.assoc_id = cpu_to_le16(vif->bss_conf.aid);
- 
- 	IWL_DEBUG_ASSOC(priv, "assoc id %d beacon interval %d\n",
--			priv->assoc_id, priv->beacon_int);
-+			vif->bss_conf.aid, vif->bss_conf.beacon_int);
- 
--	if (priv->assoc_capability & WLAN_CAPABILITY_SHORT_PREAMBLE)
-+	if (vif->bss_conf.assoc_capability & WLAN_CAPABILITY_SHORT_PREAMBLE)
- 		priv->staging_rxon.flags |= RXON_FLG_SHORT_PREAMBLE_MSK;
- 	else
- 		priv->staging_rxon.flags &= ~RXON_FLG_SHORT_PREAMBLE_MSK;
- 
- 	if (priv->staging_rxon.flags & RXON_FLG_BAND_24G_MSK) {
--		if (priv->assoc_capability & WLAN_CAPABILITY_SHORT_SLOT_TIME)
-+		if (vif->bss_conf.assoc_capability & WLAN_CAPABILITY_SHORT_SLOT_TIME)
- 			priv->staging_rxon.flags |= RXON_FLG_SHORT_SLOT_MSK;
- 		else
- 			priv->staging_rxon.flags &= ~RXON_FLG_SHORT_SLOT_MSK;
- 
--		if (priv->iw_mode == NL80211_IFTYPE_ADHOC)
-+		if (vif->type == NL80211_IFTYPE_ADHOC)
- 			priv->staging_rxon.flags &= ~RXON_FLG_SHORT_SLOT_MSK;
--
- 	}
- 
- 	iwlcore_commit_rxon(priv);
- 
--	switch (priv->iw_mode) {
-+	switch (vif->type) {
- 	case NL80211_IFTYPE_STATION:
- 		iwl3945_rate_scale_init(priv->hw, IWL_AP_ID);
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
--		priv->assoc_id = 1;
- 		iwl3945_send_beacon_cmd(priv);
- 		break;
- 	default:
--		 IWL_ERR(priv, "%s Should not be called in %d mode\n",
--			   __func__, priv->iw_mode);
-+		IWL_ERR(priv, "%s Should not be called in %d mode\n",
-+			__func__, vif->type);
- 		break;
- 	}
+ 	netif_tx_start_all_queues(sdata->dev);
+ 	netif_carrier_on(sdata->dev);
  }
-@@ -3254,7 +3252,7 @@ static int iwl3945_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	return NETDEV_TX_OK;
- }
- 
--void iwl3945_config_ap(struct iwl_priv *priv)
-+void iwl3945_config_ap(struct iwl_priv *priv, struct ieee80211_vif *vif)
- {
- 	int rc = 0;
- 
-@@ -3270,7 +3268,7 @@ void iwl3945_config_ap(struct iwl_priv *priv)
- 
- 		/* RXON Timing */
- 		memset(&priv->rxon_timing, 0, sizeof(struct iwl_rxon_time_cmd));
--		iwl_setup_rxon_timing(priv);
-+		iwl_setup_rxon_timing(priv, vif);
- 		rc = iwl_send_cmd_pdu(priv, REPLY_RXON_TIMING,
- 				      sizeof(priv->rxon_timing),
- 				      &priv->rxon_timing);
-@@ -3278,9 +3276,10 @@ void iwl3945_config_ap(struct iwl_priv *priv)
- 			IWL_WARN(priv, "REPLY_RXON_TIMING failed - "
- 					"Attempting to continue.\n");
- 
--		/* FIXME: what should be the assoc_id for AP? */
--		priv->staging_rxon.assoc_id = cpu_to_le16(priv->assoc_id);
--		if (priv->assoc_capability & WLAN_CAPABILITY_SHORT_PREAMBLE)
-+		priv->staging_rxon.assoc_id = 0;
-+
-+		if (vif->bss_conf.assoc_capability &
-+					WLAN_CAPABILITY_SHORT_PREAMBLE)
- 			priv->staging_rxon.flags |=
- 				RXON_FLG_SHORT_PREAMBLE_MSK;
- 		else
-@@ -3288,15 +3287,15 @@ void iwl3945_config_ap(struct iwl_priv *priv)
- 				~RXON_FLG_SHORT_PREAMBLE_MSK;
- 
- 		if (priv->staging_rxon.flags & RXON_FLG_BAND_24G_MSK) {
--			if (priv->assoc_capability &
--				WLAN_CAPABILITY_SHORT_SLOT_TIME)
-+			if (vif->bss_conf.assoc_capability &
-+					WLAN_CAPABILITY_SHORT_SLOT_TIME)
- 				priv->staging_rxon.flags |=
- 					RXON_FLG_SHORT_SLOT_MSK;
- 			else
- 				priv->staging_rxon.flags &=
- 					~RXON_FLG_SHORT_SLOT_MSK;
- 
--			if (priv->iw_mode == NL80211_IFTYPE_ADHOC)
-+			if (vif->type == NL80211_IFTYPE_ADHOC)
- 				priv->staging_rxon.flags &=
- 					~RXON_FLG_SHORT_SLOT_MSK;
- 		}
 -- 
 1.6.3.3
 
