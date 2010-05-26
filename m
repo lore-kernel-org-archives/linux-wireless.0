@@ -1,80 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:62433 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755663Ab0EWBeg (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:46900 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753888Ab0EZSBc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 May 2010 21:34:36 -0400
-Received: by fxm5 with SMTP id 5so1701074fxm.19
-        for <linux-wireless@vger.kernel.org>; Sat, 22 May 2010 18:34:34 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: dhlii@dlasys.net
-Subject: Re: carl9170 1.0.9
-Date: Sun, 23 May 2010 03:34:29 +0200
-Cc: linux-wireless@vger.kernel.org, jal2@gmx.de
-References: <4BDC001F.9050202@dlasys.net> <201005021452.01101.chunkeey@googlemail.com> <4BF82CEE.8020502@dlasys.net>
-In-Reply-To: <4BF82CEE.8020502@dlasys.net>
+	Wed, 26 May 2010 14:01:32 -0400
+Received: by pxi18 with SMTP id 18so2642254pxi.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 11:01:32 -0700 (PDT)
+Message-ID: <4BFD620B.8010301@gmail.com>
+Date: Wed, 26 May 2010 11:01:47 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201005230334.29866.chunkeey@googlemail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linville@tuxdriver.com, arnd@arndnet.de,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k: Fix ath_print in xmit for harware reset.
+References: <1274896002-10866-1-git-send-email-justinmattock@gmail.com> <AANLkTimrFUYIkTQ7ev-AL0V8y0Lot064h8JK_fU81Lyr@mail.gmail.com>
+In-Reply-To: <AANLkTimrFUYIkTQ7ev-AL0V8y0Lot064h8JK_fU81Lyr@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 22 May 2010 21:13:50 David H. Lynch Jr. wrote:
-> 
-> some items I have found while making my changes to the code.
-patches are welcome :-D
-
-> 	In firmware_source/carlfw/src/wlan.c you have aloop to read the TSF 
-> timer to make sure there is no roll over. According to the docs I have 
-> when TSF_LOW is read, TSF_HI is automatically concurrently copied to a 
-> temp register so that an immediate read of TSF_HI will get the value 
-> that was present when TSF_LO was read.
-Thanks for that clarification. The code in question was actually a
-adaptation from ar9170_op_get_tsf (patch author included in CC).
-
-Since this is now settled, I made the necessary chances to the
-kernel driver as well. (with a reference to your previous mail)
-
-> 	I beleive the timer_init() routine in carlfw/src/timer.c can not be 
-> called for more than one timer. Any subsequent call will clear the 
-> interrupt and mode bits for the previous timer.
-
-there's more than that.
-Take a look at the (timer << 2) and so forth...
-
-> 	I have not completely tracked these down, but the new config system 
-> must be missing some dependencies, because I can configure and build 
-> firmware that will not load.
-> 	In carlfw/src/cmd.c the CARL9170_CMD_PSM case needs ifdef'd with 
-> CONFIG_CARL9170FW_PSM or it will not build with PSM disabled.
-> 
-fixed.
-
-Thanks for your comments. I've just released 1.0.9.1, which
-contains fixes for all of your comments and some additional changes.
-
-
-BTW:
-> I have been playing with the assorted timers in the ar9170.
-> My preliminary observations seem to be indicating that
-> AR9170_TIMER_REG_TIMER0 might actually be running at 40mhz/25ns,
-> But that all the other timers seem to be running far slower - i.e. 
-> maybe they are cascaded of the overflow on timer0.
+On 05/26/2010 10:50 AM, Luis R. Rodriguez wrote:
+> On Wed, May 26, 2010 at 10:46 AM, Justin P. Mattock
+> <justinmattock@gmail.com>  wrote:
+>    
+>> ath_print in xmit.c should say "Reseting hardware"
+>> instead of Resetting HAL!(since HAL is being fazed out).
+>> dmesg shows:
+>> [ 8660.899624] ath: Failed to stop TX DMA in 100 msec after killing last frame
+>> [ 8660.899676] ath: Unable to stop TxDMA. Reset HAL!
+>>
+>>   Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
+>>
+>> ---
+>>   drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
+>>   1 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+>> index 3db1917..617db8e 100644
+>> --- a/drivers/net/wireless/ath/ath9k/xmit.c
+>> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+>> @@ -1198,7 +1198,7 @@ void ath_drain_all_txq(struct ath_softc *sc, bool retry_tx)
+>>                 int r;
+>>
+>>                 ath_print(common, ATH_DBG_FATAL,
+>> -                         "Unable to stop TxDMA. Reset HAL!\n");
+>> +                         "ath9k: Failed to stop TX DMA. Resetting hardware!\n");
+>>      
+> Nack, No need to put "ath9k:" since ath_print already prepends "ath: "
 >
-> I have specifically looked at timer1-4 and tic_timer and clock_low 
-> and they all seem to be running very slow.
-> The docs that I have imply but do not state that all these clocks 
-> are directly off the 25ns/40mhz superH clock.
-> Have you had any experience with the clocks and their rates ?
+>    Luis
+>
+>    
+ah.. so the ATH_DBG_FATAL takes care of that?
+resent..
 
-based on observation: Some timers(1-4) are *driven* by the cpu clock.
-Which is of course determined by the operation mode and phy band.
-As you know there are 7 (1 + 2 * 3) possible AHB/CPU clock settings:
- * 40MHz (refclock)
- * 20MHz (PSM, 5GHz) & 22MHz (PSM, 2.4GHz)
- * 40MHz (11an, 5GHz, HT20) & 44Mhz (11bgn, 2.4GHz, HT20)
- * 80MHz (11an, 5GHz, HT40) & 88MHz (11bgn, 2.4GHz, HT40)
-
-Regards,
-	Chr
+Justin P. Mattock
