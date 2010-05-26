@@ -1,41 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:21289 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755844Ab0EQTKm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 May 2010 15:10:42 -0400
-Subject: Re: A file to print the release of loaded compat-wireless stuff
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <AANLkTilrjw-Jq4MEQPT35fHTTqsaSdU5Jc7lt_2lUH2V@mail.gmail.com>
-References: <x2q43e72e891005041344gb9945d73p3d97e648fd13aa85@mail.gmail.com>
-	 <1273007509.12618.1.camel@mj>
-	 <z2o43e72e891005041451qa4ea338bu5a20171a82f13471@mail.gmail.com>
-	 <AANLkTilrjw-Jq4MEQPT35fHTTqsaSdU5Jc7lt_2lUH2V@mail.gmail.com>
-Content-Type: text/plain
-Date: Mon, 17 May 2010 15:10:39 -0400
-Message-Id: <1274123439.4743.15.camel@mj>
+Received: from he.sipsolutions.net ([78.46.109.217]:45407 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754589Ab0EZPT3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 May 2010 11:19:29 -0400
+Subject: [PATCH] mac80211: remove tx status ampdu_ack_map
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 26 May 2010 17:19:25 +0200
+Message-ID: <1274887165.3658.25.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-05-17 at 10:54 -0700, Luis R. Rodriguez wrote:
+There's a single use of this struct member, but
+as it is write-only it clearly not necessary.
+Thus we can free up some space here, even if we
+don't need it right now it seems pointless to
+carry around the variable.
 
-> Oh wow, and look at that, even if you enable the module as built-in to
-> the kernel you still get the module parameter sysfs file for it. For
-> example I just built-in cfg80211 on my kernel and I still see the
-> ieee80211_regdom module parameter:
-> 
-> mcgrof@tux ~ $ lsmod | grep cfg
-> mcgrof@tux ~ $ cat /sys/module/cfg80211/parameters/ieee80211_regdom
-> 00
-> 
-> This is important as some distributions [1] might built-in some stable
-> compat-wireless releases into their older kernel releases.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    1 -
+ include/net/mac80211.h                    |    5 +----
+ 2 files changed, 1 insertion(+), 5 deletions(-)
 
-I actually wanted to mention that, but decided that it's irrelevant to
-compat-wireless.  It turns out I should have.
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-agn-tx.c	2010-05-26 17:16:01.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-agn-tx.c	2010-05-26 17:16:05.000000000 +0200
+@@ -1231,7 +1231,6 @@ static int iwlagn_tx_status_reply_compre
+ 	info->flags |= IEEE80211_TX_STAT_ACK;
+ 	info->flags |= IEEE80211_TX_STAT_AMPDU;
+ 	info->status.ampdu_ack_len = successes;
+-	info->status.ampdu_ack_map = bitmap;
+ 	info->status.ampdu_len = agg->frame_count;
+ 	iwlagn_hwrate_to_tx_control(priv, agg->rate_n_flags, info);
+ 
+--- wireless-testing.orig/include/net/mac80211.h	2010-05-26 17:15:29.000000000 +0200
++++ wireless-testing/include/net/mac80211.h	2010-05-26 17:15:56.000000000 +0200
+@@ -412,8 +412,6 @@ struct ieee80211_tx_rate {
+  * @driver_data: array of driver_data pointers
+  * @ampdu_ack_len: number of acked aggregated frames.
+  * 	relevant only if IEEE80211_TX_STAT_AMPDU was set.
+- * @ampdu_ack_map: block ack bit map for the aggregation.
+- * 	relevant only if IEEE80211_TX_STAT_AMPDU was set.
+  * @ampdu_len: number of aggregated frames.
+  * 	relevant only if IEEE80211_TX_STAT_AMPDU was set.
+  * @ack_signal: signal strength of the ACK frame
+@@ -448,10 +446,9 @@ struct ieee80211_tx_info {
+ 		struct {
+ 			struct ieee80211_tx_rate rates[IEEE80211_TX_MAX_RATES];
+ 			u8 ampdu_ack_len;
+-			u64 ampdu_ack_map;
+ 			int ack_signal;
+ 			u8 ampdu_len;
+-			/* 7 bytes free */
++			/* 15 bytes free */
+ 		} status;
+ 		struct {
+ 			struct ieee80211_tx_rate driver_rates[
 
--- 
-Regards,
-Pavel Roskin
+
