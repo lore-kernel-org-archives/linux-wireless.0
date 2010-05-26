@@ -1,143 +1,181 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:53644 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755514Ab0EMHhS convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:45364 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751500Ab0EZFHZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 03:37:18 -0400
-MIME-Version: 1.0
-In-Reply-To: <1273679336.10823.15.camel@mj>
-References: <4bea1f81.09b6660a.746e.1c12@mx.google.com> <1273679336.10823.15.camel@mj>
-From: Dmytro Milinevskyy <milinevskyy@gmail.com>
-Date: Thu, 13 May 2010 10:36:56 +0300
-Message-ID: <AANLkTinYfKlQ-MzkGV9o2qXUTeArYscfqoc8WS7SRjgz@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH] [ath5k][leds] Ability to disable leds
-	support. If leds support enabled do not force mac802.11 leds layer selection.
-To: Pavel Roskin <proski@gnu.org>
-Cc: ath5k-devel@lists.ath5k.org, Kalle Valo <kalle.valo@iki.fi>,
-	linux-wireless@vger.kernel.org,
-	GeunSik Lim <geunsik.lim@samsung.com>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Keng-Yu Lin <keng-yu.lin@canonical.com>,
-	netdev@vger.kernel.org, Jiri Kosina <jkosina@suse.cz>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Shahar Or <shahar@shahar-or.co.il>,
-	linux-kernel@vger.kernel.org, Luca Verdesca <magooz@salug.it>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 26 May 2010 01:07:25 -0400
+Subject: Re: [PATCH] cfg80211: Fix user-space crda query stall
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: "ext Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTinMo6L_LuCgcu9izxUVsFbi7kamHD2F_xThwJ2R@mail.gmail.com>
+References: <1274770211-22710-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1274770211-22710-2-git-send-email-juuso.oikarinen@nokia.com>
+	 <AANLkTinMo6L_LuCgcu9izxUVsFbi7kamHD2F_xThwJ2R@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 26 May 2010 08:08:39 +0300
+Message-ID: <1274850519.5277.1413.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello, Pavel.
+On Tue, 2010-05-25 at 21:02 +0200, ext Luis R. Rodriguez wrote:
+> On Mon, May 24, 2010 at 11:50 PM, Juuso Oikarinen
+> <juuso.oikarinen@nokia.com> wrote:
+> > The userspace crda utility can fail to respond to kernel requests in (at least)
+> > two scenarios: it is not runnable for any reason, or it is invoked with a
+> > country code not in its database.
+> >
+> > When the userspace crda utility fails to respond to kernel requests (i.e. it
+> > does not use NL80211_CMD_SET_REG to provide the kernel regulatory information
+> > for the requested country) the kernel crda subsystem will stall. It will
+> > refuse to process any further regulatory hints. This is easiest demonstrated
+> > by using for instance the "iw" tool:
+> >
+> >   iw reg set EU
+> >   iw reg set US
+> >
+> > "EU" is not a country code present in the database, so user space crda will
+> > not respond. Attempting to define US after that will be silently ignored
+> > (internally, an -EAGAIN is the result, as the "EU" request is still
+> > "being processed".)
+> >
+> > To fix this issue, this patch implements timeout protection for the userspace
+> > crda invocation. If there is no response for five seconds, the crda code will
+> > force itself to the world regulatory domain for maximum safety.
+> >
+> > Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> 
+> This is a great idea, I really like it and appreciate you taking the
+> time to work on this, however to do this it requires a little more
+> work and will point out the notes below. So NACK for now but with some
+> fixes I think this would be great.
+> 
+> > ---
+> >  net/wireless/reg.c |   44 ++++++++++++++++++++++++++++++++++++++++++++
+> >  1 files changed, 44 insertions(+), 0 deletions(-)
+> >
+> > diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> > index 8f0d97d..6c945f0 100644
+> > --- a/net/wireless/reg.c
+> > +++ b/net/wireless/reg.c
+> > @@ -385,6 +385,40 @@ static inline void reg_regdb_query(const char *alpha2) {}
+> >  #endif /* CONFIG_CFG80211_INTERNAL_REGDB */
+> >
+> >  /*
+> > + * This gets invoked if crda in userspace is not responding (it's not getting
+> > + * executed or the country code in the hint is not in the database.
+> > + */
+> > +
+> > +static void call_crda_timeout_work(struct work_struct *work)
+> > +{
+> > +       if (!last_request)
+> > +               return;
+> > +
+> > +       printk(KERN_INFO "cfg80211: crda request timed out, reverting to 00\n");
+> > +
+> > +       mutex_lock(&cfg80211_mutex);
+> > +
+> > +       /*
+> > +        * As we are not getting data for the current country, force us back
+> > +        * to the world regdomain.
+> > +        */
+> > +       last_request->alpha2[0] = '0';
+> > +       last_request->alpha2[1] = '0';
+> > +       set_regdom(cfg80211_world_regdom);
+> > +       mutex_unlock(&cfg80211_mutex);
+> > +}
+> 
+> 
+> Actually you may want to consider using restore_regulatory_settings()
+> instead as that would:
+> 
+>   * set the world regdom
+>   * then set the first user specified regulatory domain if they had one picked
+> 
+> This would mean we would go into a loop here though if the user had
+> specified 'EU' though so this routine first needs to be fixed to
+> annotate a regulatory domain as invalid. Note that a regulatory cannot
+> be invalid if CRDA just times out -- CRDA could time out if it was not
+> present. So this is a bit tricky and not sure how to resolve it. John
+> recently added support for building the regulatory database as part of
+> the kernel but at the same time support letting CRDA still update the
+> same info if it is present. Then for those setup it could be possible
+> 'DE' exists on the core kernel regulatory database but if CRDA is not
+> installed then CRDA will time out.
+> 
+> Maybe what we can do is if both the internal kernel regdb *and* CRDA
+> times out then mark the user specified request as invalid and restore
+> to using the world regdom. This would allow the user to later install
+> a CRDA with some newer regdb in userspace, for example. This allows
+> for upgrading the db itself from userspace without making kernel
+> changes. It allows for countries to be created.
 
-I will rework the patch considering your suggestions.
+Sounds fair. Here's my initial thought: 
 
-> I'm not sure this complexity is needed.  Are you going to support LEDs
-> if CONFIG_LEDS_CLASS is disabled?
-If there's any other place in driver that might want use LEDs w/o
-exporting the interface to the userspace.
+I will look into adding validation of the country code with the kernel
+internal database if the db is enabled in the config - in which case we
+proceed as you describe. In case the internal db is disabled in the
+config, we proceed as the patch currently does?
 
--- Dima Milinevskyy
+Would that sound like an acceptable approach?
+
+-Juuso
+
+> 
+> > +
+> > +static DECLARE_WORK(crda_uevent_timeout_work, call_crda_timeout_work);
+> > +
+> > +#define CRDA_UEVENT_TIMEOUT 5000
+> > +static void crda_uevent_timeout(unsigned long data)
+> > +{
+> > +       schedule_work(&crda_uevent_timeout_work);
+> > +}
+> > +
+> > +static DEFINE_TIMER(crda_uevent_timer, crda_uevent_timeout, 0, 0);
+> 
+> I would prefer we use a completion here, seems a little cleaner. Check
+> out ath9k/wmi.c for cmd_wait and its use with init_completion() and
+> complete().
+> 
+> > +/*
+> >  * This lets us keep regulatory code which is updated on a regulatory
+> >  * basis in userspace.
+> >  */
+> > @@ -409,6 +443,10 @@ static int call_crda(const char *alpha2)
+> >        country_env[8] = alpha2[0];
+> >        country_env[9] = alpha2[1];
+> >
+> > +       /* start timeout timer */
+> > +       mod_timer(&crda_uevent_timer,
+> > +                 jiffies + msecs_to_jiffies(CRDA_UEVENT_TIMEOUT));
+> > +
+> >        return kobject_uevent_env(&reg_pdev->dev.kobj, KOBJ_CHANGE, envp);
+> >  }
+> >
+> > @@ -2581,6 +2619,9 @@ int set_regdom(const struct ieee80211_regdomain *rd)
+> >
+> >        assert_cfg80211_lock();
+> >
+> > +       /* cancel timeout */
+> > +       del_timer(&crda_uevent_timer);
+> > +
+> >        mutex_lock(&reg_mutex);
+> >
+> >        /* Note that this doesn't update the wiphys, this is done below */
+> > @@ -2683,6 +2724,9 @@ void regulatory_exit(void)
+> >
+> >        cancel_work_sync(&reg_work);
+> >
+> > +       del_timer_sync(&crda_uevent_timer);
+> > +       cancel_work_sync(&crda_uevent_timeout_work);
+> > +
+> >        mutex_lock(&cfg80211_mutex);
+> >        mutex_lock(&reg_mutex);
+> 
+> Thanks!!!
+> 
+>   Luis
 
 
-On Wed, May 12, 2010 at 6:48 PM, Pavel Roskin <proski@gnu.org> wrote:
-> On Wed, 2010-04-07 at 21:58 +0300, Dmytro Milinevskyy wrote:
->
->> Here is the patch to disable ath5k leds support on build stage.
->> However if the leds support was enabled do not force selection of 802.11 leds layer.
->
-> The idea is good, but the implementation could be improved.
->
-> There are too many preprocessor conditionals in your patch.
->
->> +#ifdef CONFIG_ATH5K_LEDS
->>  /*
->>   * These match net80211 definitions (not used in
->>   * mac80211).
->> @@ -939,11 +940,7 @@ enum ath5k_power_mode {
->>  #define AR5K_LED_AUTH        2 /*IEEE80211_S_AUTH*/
->>  #define AR5K_LED_ASSOC       3 /*IEEE80211_S_ASSOC*/
->>  #define AR5K_LED_RUN 4 /*IEEE80211_S_RUN*/
->
-> It should be OK to leave the constants defined even if they are not
-> used.
->
->> +#ifdef CONFIG_ATH5K_LEDS
->>  /* LED functions */
->>  extern int ath5k_init_leds(struct ath5k_softc *sc);
->>  extern void ath5k_led_enable(struct ath5k_softc *sc);
->>  extern void ath5k_led_off(struct ath5k_softc *sc);
->>  extern void ath5k_unregister_leds(struct ath5k_softc *sc);
->> +#endif
->
-> You could add inline functions for the case when CONFIG_ATH5K_LEDS is
-> not defined.  That would avoid may conditionals in the code.
->
->>  /* GPIO Functions */
->> +#ifdef CONFIG_ATH5K_LEDS
->>  extern void ath5k_hw_set_ledstate(struct ath5k_hw *ah, unsigned int state);
->> +#endif
->
-> The same comment applies.
->
-> Also, there is nothing wrong with having an external declaration that is
-> not used in some particular configuration.
->
->> +#ifdef CONFIG_ATH5K_LEDS
->>       /* turn on HW LEDs */
->>       ath5k_hw_set_ledstate(ah, AR5K_LED_INIT);
->> +#endif
->
-> This is avoidable by having an inline ath5k_hw_set_ledstate() that does
-> nothing.
->
->> +#ifdef CONFIG_ATH5K_LEDS
->>       struct ieee80211_hw *hw = pci_get_drvdata(to_pci_dev(dev));
->>       struct ath5k_softc *sc = hw->priv;
->>
->>       ath5k_led_off(sc);
->> +#endif
->
-> Even this is avoidable if ath5k_led_off() does nothing.  gcc should be
-> smart enough to optimize out unneeded function calls.
->
->> +#ifdef CONFIG_ATH5K_LEDS
->>  /*
->>   * State for LED triggers
->>   */
->>  struct ath5k_led
->>  {
->> +#ifdef CONFIG_LEDS_CLASS
->
-> I'm not sure this complexity is needed.  Are you going to support LEDs
-> if CONFIG_LEDS_CLASS is disabled?
->
->> +#ifdef CONFIG_ATH5K_LEDS
->>       unsigned int            led_pin,        /* GPIO pin for driving LED */
->>                               led_on;         /* pin setting for LED on */
->> +#endif
->>
->>       struct tasklet_struct   restq;          /* reset tasklet */
->>
->> @@ -164,7 +172,9 @@ struct ath5k_softc {
->>       spinlock_t              rxbuflock;
->>       u32                     *rxlink;        /* link ptr in last RX desc */
->>       struct tasklet_struct   rxtq;           /* rx intr tasklet */
->> +#ifdef CONFIG_ATH5K_LEDS
->>       struct ath5k_led        rx_led;         /* rx led */
->> +#endif
->
-> You may want to group those fields together to make the code more
-> readable.
->
->> --- a/drivers/net/wireless/ath/ath5k/led.c
->> +++ b/drivers/net/wireless/ath/ath5k/led.c
->
-> I wonder if you could omit led.c completely in the Makefile.  If there
-> are some parts of led.c that are needed without CONFIG_ATH5K_LEDS, maybe
-> they belong elsewhere?
->
-> --
-> Regards,
-> Pavel Roskin
->
