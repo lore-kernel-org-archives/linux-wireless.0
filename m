@@ -1,48 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48026 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932068Ab0EKIwg (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:36234 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757430Ab0EZRt1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 04:52:36 -0400
-Subject: Re: [RFC PATCH 1/2] mac80211: Add nl80211 antenna configuration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	holgerschurig@gmail.com
-In-Reply-To: <20100511083900.28289.43864.stgit@tt-desk>
-References: <20100511083121.28289.96180.stgit@tt-desk>
-	 <20100511083900.28289.43864.stgit@tt-desk>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 11 May 2010 10:52:29 +0200
-Message-ID: <1273567949.3669.26.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 26 May 2010 13:49:27 -0400
+Received: by pwi7 with SMTP id 7so310984pwi.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 10:49:27 -0700 (PDT)
+Message-ID: <4BFD5F2F.4050708@gmail.com>
+Date: Wed, 26 May 2010 10:49:35 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+MIME-Version: 1.0
+To: Arnd Hannemann <arnd@arndnet.de>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@gmail.com
+Subject: Re: [PATCH]wireless:ath9k Fix ath_print in xmit.c
+References: <1274894056-2866-1-git-send-email-justinmattock@gmail.com> <4BFD5A49.4050601@arndnet.de>
+In-Reply-To: <4BFD5A49.4050601@arndnet.de>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-05-11 at 17:39 +0900, Bruno Randolf wrote:
+On 05/26/2010 10:28 AM, Arnd Hannemann wrote:
+> Am 26.05.2010 19:14, schrieb Justin P. Mattock:
+>    
+>> ath_print in xmit.c should say "Reseting hardware"
+>> instead of Reaseting HAL!(since HAL is being fazed out).
+>> dmesg shows:
+>> [ 8660.899624] ath: Failed to stop TX DMA in 100 msec after killing last frame
+>> [ 8660.899676] ath: Unable to stop TxDMA. Reset HAL!
+>>
+>>
+>>   Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
+>>
+>> ---
+>>   drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
+>>   1 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+>> index 3db1917..2a0558e 100644
+>> --- a/drivers/net/wireless/ath/ath9k/xmit.c
+>> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+>> @@ -1198,7 +1198,7 @@ void ath_drain_all_txq(struct ath_softc *sc, bool retry_tx)
+>>   		int r;
+>>
+>>   		ath_print(common, ATH_DBG_FATAL,
+>> -			  "Unable to stop TxDMA. Reset HAL!\n");
+>> +			  "Unable to stop TxDMA. Reseting hardware!\n");
+>>
+>>      
+> 1.) Should'nt it read "Resetting"
+> 2.) Why "common" ? Seems it is ath9k specific so message should read
+> "ath9k: Failed to stop TX DMA"
+> 3.) While we are at it write "TX DMA" instead of "TxDMA" just to be
+> consistent...
+>    
 
+pretty bad!! I cant spell.
+>>
+>>   		spin_lock_bh(&sc->sc_resetlock);
+>>   		r = ath9k_hw_reset(ah, sc->sc_ah->curchan, false);
+>>
+>>      
+> Best regards,
+> Arnd
+>
+>
+>    
+o.k. re-submitted, with the above fixes, if good
+let me know..(a bit confused with the signed off
+stuff(if I need to re-du to add the correct signed-off's
+let me know))
 
-> +static inline int drv_set_antenna(struct ieee80211_local *local,
-> +				  u8 tx_ant, u8 rx_ant)
-> +{
-> +	int ret = -EOPNOTSUPP;
-> +	might_sleep();
-> +	if (local->ops->set_antenna)
-> +		ret = local->ops->set_antenna(&local->hw, tx_ant, rx_ant);
-> +	return ret;
-> +}
-> +
-> +static inline int drv_get_antenna(struct ieee80211_local *local,
-> +				  u8 *tx_ant, u8 *rx_ant)
-> +{
-> +	int ret = -EOPNOTSUPP;
-> +	might_sleep();
-> +	if (local->ops->get_antenna)
-> +		ret = local->ops->get_antenna(&local->hw, tx_ant, rx_ant);
-> +	return ret;
-> +}
-
-Oh .. and add tracing please.
-
-johannes
-
+Justin P. mattock
