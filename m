@@ -1,48 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49311 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751220Ab0ECR2z (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47558 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753611Ab0EZMwD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 May 2010 13:28:55 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: johill@sipsolutions.net, reinette.chatre@intel.com,
-	Adel Gadllah <adel.gadllah@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] iwlagn: Change the TPT calculations sanity-check to WARN_ON
-Date: Mon,  3 May 2010 13:25:49 -0400
-Message-Id: <1272907549-25847-1-git-send-email-linville@tuxdriver.com>
+	Wed, 26 May 2010 08:52:03 -0400
+Subject: Re: [RFC PATCHv2] mac80211: Add support for hardware ARP query
+ filtering
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1274878272.5277.1890.camel@wimaxnb.nmp.nokia.com>
+References: <1274873379-12944-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1274874739.3658.5.camel@jlt3.sipsolutions.net>
+	 <1274878272.5277.1890.camel@wimaxnb.nmp.nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 26 May 2010 14:52:01 +0200
+Message-ID: <1274878321.3658.7.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Adel Gadllah <adel.gadllah@gmail.com>
+On Wed, 2010-05-26 at 15:51 +0300, Juuso Oikarinen wrote:
 
-Currently it is a BUG_ON() which will hang the machine once triggered.
+> > > +	rtnl_lock();
+> > > +	ieee80211_set_arp_filter(sdata);
+> > > +	rtnl_unlock();
+> > > +
+> > 
+> > Please analyse locking in more detail and enable lockdep :)
+> > 
+> > This will cause deadlocks.
+> 
+> I have lockdep permanently enabled in my development kernel. It has
+> given me no complaints in testing with the corresponding wl1271 driver
+> patch.
+> 
+> But I will look into those locks further if I can figure out any
+> deadlock scenarios.
 
-(Changed from WARN_ON to WARN_ON_ONCE. -- JWL)
+Interesting .. because for sure a lot of the ieee80211_mgd_* functions
+are called with rtnl held and lock the mgd mutex, but it is the other
+way around here.
 
-Signed-off-by: Adel Gadllah <adel.gadllah@gmail.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index 8f8d5e3..ca63ff9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -2079,8 +2079,9 @@ static void rs_rate_scale_perform(struct iwl_priv *priv,
- 	 * actual average throughput */
- 
- 	/* Sanity-check TPT calculations */
--	BUG_ON(window->average_tpt != ((window->success_ratio *
--			tbl->expected_tpt[index] + 64) / 128));
-+	if (WARN_ON_ONCE(window->average_tpt != ((window->success_ratio *
-+				tbl->expected_tpt[index] + 64) / 128)))
-+		return;
- 
- 	/* If we are searching for better modulation mode, check success. */
- 	if (lq_sta->search_better_tbl &&
--- 
-1.6.6.1
+johannes
 
