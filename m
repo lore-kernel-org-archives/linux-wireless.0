@@ -1,44 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:51326 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757070Ab0EKSSR (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:39792 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755523Ab0EZSHw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 14:18:17 -0400
-Received: by pwi5 with SMTP id 5so2406967pwi.19
-        for <linux-wireless@vger.kernel.org>; Tue, 11 May 2010 11:18:17 -0700 (PDT)
+	Wed, 26 May 2010 14:07:52 -0400
+Received: by gyg13 with SMTP id 13so3150834gyg.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 11:07:49 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <201005111834.36879.br1@einfach.org>
-References: <20100511083121.28289.96180.stgit@tt-desk> <1273567999.3669.27.camel@jlt3.sipsolutions.net>
-	<201005111834.36879.br1@einfach.org>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 11 May 2010 11:17:57 -0700
-Message-ID: <AANLkTinovE4SfYj3bzVo1GJcSciiT0Tt1RB8Mz-rXWeR@mail.gmail.com>
-Subject: Re: [RFC PATCH 0/2] mac80211: antenna configuration
-To: Bruno Randolf <br1@einfach.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, holgerschurig@gmail.com
+In-Reply-To: <AANLkTinAgV0Vd4mjuVB_wOARcWlAC_VKAoEmCS0rr1qa@mail.gmail.com>
+References: <-4856622450948873340@unknownmsgid>
+	<AANLkTinAgV0Vd4mjuVB_wOARcWlAC_VKAoEmCS0rr1qa@mail.gmail.com>
+Date: Wed, 26 May 2010 13:07:49 -0500
+Message-ID: <AANLkTiklOsGCeh26tiIgE6xMvvwSrpezhYe4HC-lfKnw@mail.gmail.com>
+Subject: Re: [ath9k-devel] ath9k: 802.11n ad-hoc mode and mesh mode
+From: Xianghua Xiao <xiaoxianghua@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: =?UTF-8?B?SsOzbmF0YW4gTXXDsW96?= <jonatan.munoz@alu.umh.es>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 11, 2010 at 2:34 AM, Bruno Randolf <br1@einfach.org> wrote:
-> On Tuesday 11 May 2010 17:53:19 you wrote:
->> On Tue, 2010-05-11 at 17:38 +0900, Bruno Randolf wrote:
->> > i have followed holger schurig's suggestion to use a bitmap for allowed
->> > antennas. when multiple antennas are selected in the bitmap, the driver
->> > may use diversity. i think that this allows for the most flexible, yet
->> > simple configuration of antennas, and drivers can just reject
->> > configurations they cannot support. i hope that this will also be
->> > generic enough for 802.11n with multiple antennas
+the non-HT 80211n mesh should work, however for 80211N I think HT is
+not fully supported(yet) for mesh.
+
+Xianghua
+
+On Wed, May 26, 2010 at 11:53 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Wed, May 26, 2010 at 2:33 AM, Jónatan Muñoz <jonatan.munoz@alu.umh.es> wrote:
 >>
->> Not sure ... 11n has antennas and chains, but people mix them up
->> frequently. Does this API even make sense for 11n? Use cases? Should it
->> be about *antennas*, or about *chains*?
+>>
+>>
+>>
+>> Hi All,
+>>
+>>
+>>
+>> I’m interested in ad-hoc and mesh networks and I have some questions.
+>>
+>>
+>>
+>> Does anyone know if mesh mode is successfully enabled for AR9280?
 >
-> thanks for the review! i'll resend tomorrow.
+> Yes, does no one read the documentation or think of looking for it?
 >
-> i personally don't know about 802.11n - and what i need is about *antennas* :)
-
-I figured, let us help you with the 11n review.
-
-  Luis
+> http://wireless.kernel.org/en/users/Drivers
+> http://wireless.kernel.org/en/users/Drivers/ath9k#supported_chipsets
+>
+>  Luis
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
