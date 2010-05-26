@@ -1,147 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews06.kpnxchange.com ([213.75.39.9]:1950 "EHLO
-	cpsmtpb-ews06.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759195Ab0EFQtr (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:64083 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753689Ab0EZKtc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 May 2010 12:49:47 -0400
-Message-ID: <4BE2F328.4090403@gmail.com>
-Date: Thu, 06 May 2010 18:49:44 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: Ivo van Doorn <ivdoorn@gmail.com>,
-	John Linville <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH] rt2x00: Fix RF3052 channel initialization
-References: <201005061445.47170.IvDoorn@gmail.com>
-In-Reply-To: <201005061445.47170.IvDoorn@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 26 May 2010 06:49:32 -0400
+From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Subject: [PATCH] cfg80211: Removed warning from cfg80211_send_rx_auth
+Date: Wed, 26 May 2010 13:43:45 +0300
+Message-Id: <1274870625-19712-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/06/10 14:45, Ivo van Doorn wrote:
-> Update channel initialization for the RF3052 chipset.
-> According to the Ralink drivers, the rt3x array must be
-> used for this chipset, rather then the rt2x array.
-> 
-> Furthermore RF3052 supports the 5GHz band, extend
-> the rt3x array with the 5GHz channels, and use them
-> for the RF3052 chip.
-> 
-> Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+In cfg80211_send_rx_auth function there was a warning if bssid of the received
+authentication message was not found from the authtry_bsses table.
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+During the beginning of the authentication there is a small time window, when
+handling of the received deauthentication message can cause information
+for the access point to be removed from the authtry_bsses table before
+authentication response is received. This triggers the warning. This has
+been seen happening with several access points occasionally. At least
+one of those (Asus) has been seen to send spurious deauthentication
+messages after deauthentication. Possibly this warning could be triggered also
+by forged deauthentication messages sent at a correct time.
 
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c |   67 ++++++++++++++++++++++++++----
->  1 files changed, 58 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index e37bbea..6c0abc3 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -2219,7 +2219,7 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
->  EXPORT_SYMBOL_GPL(rt2800_init_eeprom);
->  
->  /*
-> - * RF value list for rt28x0
-> + * RF value list for rt28xx
->   * Supports: 2.4 GHz (all) & 5.2 GHz (RF2850 & RF2750)
->   */
->  static const struct rf_channel rf_vals[] = {
-> @@ -2294,10 +2294,10 @@ static const struct rf_channel rf_vals[] = {
->  };
->  
->  /*
-> - * RF value list for rt3070
-> - * Supports: 2.4 GHz
-> + * RF value list for rt3xxx
-> + * Supports: 2.4 GHz (all) & 5.2 GHz (RF3052)
->   */
-> -static const struct rf_channel rf_vals_302x[] = {
-> +static const struct rf_channel rf_vals_3x[] = {
->  	{1,  241, 2, 2 },
->  	{2,  241, 2, 7 },
->  	{3,  242, 2, 2 },
-> @@ -2312,6 +2312,51 @@ static const struct rf_channel rf_vals_302x[] = {
->  	{12, 246, 2, 7 },
->  	{13, 247, 2, 2 },
->  	{14, 248, 2, 4 },
-> +
-> +	/* 802.11 UNI / HyperLan 2 */
-> +	{36, 0x56, 0, 4},
-> +	{38, 0x56, 0, 6},
-> +	{40, 0x56, 0, 8},
-> +	{44, 0x57, 0, 0},
-> +	{46, 0x57, 0, 2},
-> +	{48, 0x57, 0, 4},
-> +	{52, 0x57, 0, 8},
-> +	{54, 0x57, 0, 10},
-> +	{56, 0x58, 0, 0},
-> +	{60, 0x58, 0, 4},
-> +	{62, 0x58, 0, 6},
-> +	{64, 0x58, 0, 8},
-> +
-> +	/* 802.11 HyperLan 2 */
-> +	{100, 0x5b, 0, 8},
-> +	{102, 0x5b, 0, 10},
-> +	{104, 0x5c, 0, 0},
-> +	{108, 0x5c, 0, 4},
-> +	{110, 0x5c, 0, 6},
-> +	{112, 0x5c, 0, 8},
-> +	{116, 0x5d, 0, 0},
-> +	{118, 0x5d, 0, 2},
-> +	{120, 0x5d, 0, 4},
-> +	{124, 0x5d, 0, 8},
-> +	{126, 0x5d, 0, 10},
-> +	{128, 0x5e, 0, 0},
-> +	{132, 0x5e, 0, 4},
-> +	{134, 0x5e, 0, 6},
-> +	{136, 0x5e, 0, 8},
-> +	{140, 0x5f, 0, 0},
-> +
-> +	/* 802.11 UNII */
-> +	{149, 0x5f, 0, 9},
-> +	{151, 0x5f, 0, 11},
-> +	{153, 0x60, 0, 1},
-> +	{157, 0x60, 0, 5},
-> +	{159, 0x60, 0, 7},
-> +	{161, 0x60, 0, 9},
-> +	{165, 0x61, 0, 1},
-> +	{167, 0x61, 0, 3},
-> +	{169, 0x61, 0, 5},
-> +	{171, 0x61, 0, 7},
-> +	{173, 0x61, 0, 9},
->  };
->  
->  int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
-> @@ -2352,11 +2397,11 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
->  	spec->supported_rates = SUPPORT_RATE_CCK | SUPPORT_RATE_OFDM;
->  
->  	if (rt2x00_rf(rt2x00dev, RF2820) ||
-> -	    rt2x00_rf(rt2x00dev, RF2720) ||
-> -	    rt2x00_rf(rt2x00dev, RF3052)) {
-> +	    rt2x00_rf(rt2x00dev, RF2720)) {
->  		spec->num_channels = 14;
->  		spec->channels = rf_vals;
-> -	} else if (rt2x00_rf(rt2x00dev, RF2850) || rt2x00_rf(rt2x00dev, RF2750)) {
-> +	} else if (rt2x00_rf(rt2x00dev, RF2850) ||
-> +		   rt2x00_rf(rt2x00dev, RF2750)) {
->  		spec->supported_bands |= SUPPORT_BAND_5GHZ;
->  		spec->num_channels = ARRAY_SIZE(rf_vals);
->  		spec->channels = rf_vals;
-> @@ -2364,8 +2409,12 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
->  		   rt2x00_rf(rt2x00dev, RF2020) ||
->  		   rt2x00_rf(rt2x00dev, RF3021) ||
->  		   rt2x00_rf(rt2x00dev, RF3022)) {
-> -		spec->num_channels = ARRAY_SIZE(rf_vals_302x);
-> -		spec->channels = rf_vals_302x;
-> +		spec->num_channels = 14;
-> +		spec->channels = rf_vals_3x;
-> +	} else if (rt2x00_rf(rt2x00dev, RF3052)) {
-> +		spec->supported_bands |= SUPPORT_BAND_5GHZ;
-> +		spec->num_channels = ARRAY_SIZE(rf_vals_3x);
-> +		spec->channels = rf_vals_3x;
->  	}
->  
->  	/*
+Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+---
+ net/wireless/mlme.c |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
+
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 0855f0d..2565882 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -23,7 +23,6 @@ void cfg80211_send_rx_auth(struct net_device *dev, const u8 *buf, size_t len)
+ 	u8 *bssid = mgmt->bssid;
+ 	int i;
+ 	u16 status = le16_to_cpu(mgmt->u.auth.status_code);
+-	bool done = false;
+ 
+ 	wdev_lock(wdev);
+ 
+@@ -38,13 +37,10 @@ void cfg80211_send_rx_auth(struct net_device *dev, const u8 *buf, size_t len)
+ 				cfg80211_put_bss(&wdev->authtry_bsses[i]->pub);
+ 			}
+ 			wdev->authtry_bsses[i] = NULL;
+-			done = true;
+ 			break;
+ 		}
+ 	}
+ 
+-	WARN_ON(!done);
+-
+ 	nl80211_send_rx_auth(rdev, dev, buf, len, GFP_KERNEL);
+ 	cfg80211_sme_rx_auth(dev, buf, len);
+ 
+-- 
+1.5.6.3
 
