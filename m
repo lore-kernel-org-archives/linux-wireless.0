@@ -1,127 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews05.kpnxchange.com ([213.75.39.8]:1644 "EHLO
-	cpsmtpb-ews05.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751501Ab0EFSc3 (ORCPT
+Received: from mail.atheros.com ([12.36.123.2]:18560 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753163Ab0EZVrA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 May 2010 14:32:29 -0400
-Message-ID: <4BE30B3B.2000900@gmail.com>
-Date: Thu, 06 May 2010 20:32:27 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Wed, 26 May 2010 17:47:00 -0400
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 14:46:59 -0700
+Date: Wed, 26 May 2010 14:46:58 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: =?utf-8?B?THVrw6HFoQ==?= Turek <8an@praha12.net>
+CC: "ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [ath5k-devel] Race condition in CRDA calls?
+Message-ID: <20100526214658.GB10931@tux>
+References: <201003251801.57951.8an@praha12.net>
 MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>
-Subject: Re: [PATCH 3/3] rt2x00: rt2800: use correct txop value in tx descriptor
-References: <201005061229.58509.helmut.schaa@googlemail.com>
-In-Reply-To: <201005061229.58509.helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <201003251801.57951.8an@praha12.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/06/10 12:29, Helmut Schaa wrote:
-> rt2800 devices use a different enumeration to specify what IFS values should
-> be used on frame transmission compared to the other rt2x00 devices. Hence,
-> create a new enum called txop that contains the valid values.
-> 
-> Furthermore use TXOP_HTTXOP as default on HT devices which means that the
-> hardware should select the correct IFS value on its own.
-> 
-> I'm not sure if we have the need to specify one of the other txop values
-> in the future but as far as I could see TXOP_HTTXOP is used by the Ralink
-> drivers for all normal data frames and should be a reasonable default.
-> 
-> This patch doesn't really fix anything as until now the IFS_BACKOFF(=0)
-> value was used as txop which luckily mapped to TXOP_HTTXOP(=0).
-> 
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-> ---
->  drivers/net/wireless/rt2x00/rt2800pci.c   |    2 +-
->  drivers/net/wireless/rt2x00/rt2800usb.c   |    2 +-
->  drivers/net/wireless/rt2x00/rt2x00ht.c    |    2 ++
->  drivers/net/wireless/rt2x00/rt2x00queue.h |    2 ++
->  drivers/net/wireless/rt2x00/rt2x00reg.h   |   10 ++++++++++
->  5 files changed, 16 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-> index f08b6a3..df2c3fb 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-> @@ -643,7 +643,7 @@ static int rt2800pci_write_tx_data(struct queue_entry* entry,
->  	rt2x00_set_field32(&word, TXWI_W0_AMPDU,
->  			   test_bit(ENTRY_TXD_HT_AMPDU, &txdesc->flags));
->  	rt2x00_set_field32(&word, TXWI_W0_MPDU_DENSITY, txdesc->mpdu_density);
-> -	rt2x00_set_field32(&word, TXWI_W0_TX_OP, txdesc->ifs);
-> +	rt2x00_set_field32(&word, TXWI_W0_TX_OP, txdesc->txop);
->  	rt2x00_set_field32(&word, TXWI_W0_MCS, txdesc->mcs);
->  	rt2x00_set_field32(&word, TXWI_W0_BW,
->  			   test_bit(ENTRY_TXD_HT_BW_40, &txdesc->flags));
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index e3f3a97..c9e1320 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -417,7 +417,7 @@ static void rt2800usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
->  	rt2x00_set_field32(&word, TXWI_W0_AMPDU,
->  			   test_bit(ENTRY_TXD_HT_AMPDU, &txdesc->flags));
->  	rt2x00_set_field32(&word, TXWI_W0_MPDU_DENSITY, txdesc->mpdu_density);
-> -	rt2x00_set_field32(&word, TXWI_W0_TX_OP, txdesc->ifs);
-> +	rt2x00_set_field32(&word, TXWI_W0_TX_OP, txdesc->txop);
->  	rt2x00_set_field32(&word, TXWI_W0_MCS, txdesc->mcs);
->  	rt2x00_set_field32(&word, TXWI_W0_BW,
->  			   test_bit(ENTRY_TXD_HT_BW_40, &txdesc->flags));
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00ht.c b/drivers/net/wireless/rt2x00/rt2x00ht.c
-> index 1056c92..5483fec 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00ht.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00ht.c
-> @@ -66,4 +66,6 @@ void rt2x00ht_create_tx_descriptor(struct queue_entry *entry,
->  		__set_bit(ENTRY_TXD_HT_BW_40, &txdesc->flags);
->  	if (txrate->flags & IEEE80211_TX_RC_SHORT_GI)
->  		__set_bit(ENTRY_TXD_HT_SHORT_GI, &txdesc->flags);
-> +
-> +	txdesc->txop = TXOP_HTTXOP;
->  }
+Just FYI, you want to use linux-wireless for reporting such things,
+not ath5k-devel. Also I have been real busy in March (and stil am but
+just trying to reply) so if I do not reply maybe others can. In
+linux-wireless you'll likely get much more review/help than ath5k-devel
+for this.
 
-I am not too sure about this part. If I look at the Ralink vendor driver, they are most of the time
-using IFS_BACKOFF (value 3). Why did you put this on TXOP_HTTXOP?
+More below.
 
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
-> index 94a48c1..36a957a 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00queue.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
-> @@ -299,6 +299,7 @@ enum txentry_desc_flags {
->   * @retry_limit: Max number of retries.
->   * @aifs: AIFS value.
->   * @ifs: IFS value.
-> + * @txop: IFS value for 11n capable chips.
->   * @cw_min: cwmin value.
->   * @cw_max: cwmax value.
->   * @cipher: Cipher type used for encryption.
-> @@ -328,6 +329,7 @@ struct txentry_desc {
->  	short retry_limit;
->  	short aifs;
->  	short ifs;
-> +	short txop;
->  	short cw_min;
->  	short cw_max;
->  
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00reg.h b/drivers/net/wireless/rt2x00/rt2x00reg.h
-> index 603bfc0..894ff78 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00reg.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00reg.h
-> @@ -101,6 +101,16 @@ enum ifs {
->  };
->  
->  /*
-> + * IFS values for HT devices
-> + */
-> +enum txop {
-> +	TXOP_HTTXOP = 0,
-> +	TXOP_PIFS = 1,
-> +	TXOP_SIFS = 2,
-> +	TXOP_BACKOFF = 3,
-> +};
-> +
-> +/*
->   * Cipher types for hardware encryption
->   */
->  enum cipher {
+On Thu, Mar 25, 2010 at 10:01:54AM -0700, Lukáš Turek wrote:
+> Hi,
+> 
+> I've been testing current vanilla 2.6.34 from git today on a computer with 
+> three Atheros PCI cards and noticed a strange behavior: although all the 
+> cards have the same regulatory domain (0x36), only the last one (phy2) had 
+> the correct channels enabled, the other two (phy0 and phy1) stayed in US 
+> regulatory domain with channels 52-140 disabled.
+> 
+> It seems the reply from CRDA for the first request gets into the kernel after 
+> the last card is detected and all the replies get mixed up some way:
+> 
+> ath5k 0000:02:01.0: PCI INT A -> GSI 22 (level, low) -> IRQ 22
+> ath5k 0000:02:01.0: registered as 'phy0'
+> ath: EEPROM regdomain: 0x36
+> ath: EEPROM indicates we should expect a direct regpair map
+> ath: Country alpha2 being used: CZ
+> ath: Regpair used: 0x36
+> udev: renamed network interface eth0 to eth2
+> udev: renamed network interface eth1_rename to eth0
+> phy0: Selected rate control algorithm 'minstrel'
+> ath5k phy0: Atheros AR5414 chip found (MAC: 0xa5, PHY: 0x61)
+> ath5k 0000:02:02.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+> ath5k 0000:02:02.0: registered as 'phy1'
+> ath: EEPROM regdomain: 0x36
+> ath: EEPROM indicates we should expect a direct regpair map
+> ath: Country alpha2 being used: CZ
+> ath: Regpair used: 0x36
+> cfg80211: Calling CRDA for country: CZ
+> phy1: Selected rate control algorithm 'minstrel'
+> ath5k phy1: Atheros AR5414 chip found (MAC: 0xa5, PHY: 0x61)
+> ath5k 0000:02:03.0: PCI INT A -> GSI 19 (level, low) -> IRQ 19
+> ath5k 0000:02:03.0: registered as 'phy2'
+> ath: EEPROM regdomain: 0x36
+> ath: EEPROM indicates we should expect a direct regpair map
+> ath: Country alpha2 being used: CZ
+> ath: Regpair used: 0x36
+> cfg80211: Calling CRDA for country: CZ
+> udev: renamed network interface wlan1 to wlan3
+> phy2: Selected rate control algorithm 'minstrel'
+> ath5k phy2: Atheros AR5414 chip found (MAC: 0xa5, PHY: 0x61)
+> cfg80211: Calling CRDA for country: CZ
+> udev: renamed network interface wlan1 to wlan2
+> cfg80211: Current regulatory domain intersected:
+> (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+> (2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+> (2457000 KHz - 2482000 KHz @ 20000 KHz), (N/A, 2000 mBm)
+> (2474000 KHz - 2483500 KHz @ 9500 KHz), (N/A, 2000 mBm)
+> (5170000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+> cfg80211: Current regulatory domain intersected:
+> (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+> (2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+> (2457000 KHz - 2482000 KHz @ 20000 KHz), (N/A, 2000 mBm)
+> (2474000 KHz - 2483500 KHz @ 9500 KHz), (N/A, 2000 mBm)
+> (5170000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+> cfg80211: Current regulatory domain intersected:
+> (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+> (2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+> (2457000 KHz - 2482000 KHz @ 20000 KHz), (N/A, 2000 mBm)
+> (2474000 KHz - 2483500 KHz @ 9500 KHz), (N/A, 2000 mBm)
+> (5170000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+> 
+> Another reason might be udev messing up with device names. I will try to debug 
+> this, but any hints would be greatly appreciated, because there's not much 
+> info about the CRDA <-> kernel interaction.
 
+You forgot to supply the kernel log of when cfg80211 loads, that
+would have been helpful. After cfg80211 loads then leave a window
+open with 'iw event -t' running. Then load ath5k, and if you want to
+debug udev you can use udevadm, for example to debug only
+kernel messages:
+
+udevadm monitor --environment kernel
+
+In short cfg80211 will do an intersection if the core had a regulatory
+domain set for some reason and then a driver suggested to use another
+country. If cfg80211 was world roaming and a driver then just used
+a request for CZ then it shuld stick to CZ. If a second device comes
+up with CZ then -EALREADY should be expected IIRC, if this is not happening
+it smells like a bug.
+
+  Luis
