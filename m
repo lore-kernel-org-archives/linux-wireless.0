@@ -1,77 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews06.kpnxchange.com ([213.75.39.9]:4165 "EHLO
-	cpsmtpb-ews06.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751492Ab0EKVvw (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.157]:8196 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754217Ab0EZWVr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 17:51:52 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 1/9] rt2x00: Consistently name skb frame descriptor skbdesc.
-Date: Tue, 11 May 2010 23:51:37 +0200
-Message-Id: <1273614705-25118-2-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1273614705-25118-1-git-send-email-gwingerde@gmail.com>
-References: <1273614705-25118-1-git-send-email-gwingerde@gmail.com>
+	Wed, 26 May 2010 18:21:47 -0400
+Received: by fg-out-1718.google.com with SMTP id e12so1049594fga.1
+        for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 15:21:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1274911569.2593.8.camel@mj>
+References: <c785bba31003060945j22be2e78pfeaa1bcd39fcba2c@mail.gmail.com>
+	<69e28c911003061007y258ec349laa802810e0517de4@mail.gmail.com>
+	<1267949782.15192.13.camel@mj> <69e28c911003070736t678cf6ccld0fe6dc332f4380d@mail.gmail.com>
+	<1268190973.10669.12.camel@mj> <c785bba31003291519tfd7d26fy466a4ee4310ac590@mail.gmail.com>
+	<1274911569.2593.8.camel@mj>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Thu, 27 May 2010 00:21:26 +0200
+Message-ID: <AANLkTin6cAHj2p266yMLQkrpkhCdX98leNl5F8f3DAJR@mail.gmail.com>
+Subject: Re: Realtek rtl8188 support?
+To: Pavel Roskin <proski@gnu.org>
+Cc: Paul Thomas <pthomas8589@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Andrea Merello <andreamrl@tiscali.it>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The skb frame descriptor is called everywhere skbdesc, except in one
-place in rt2x00debug_dump_frame. Change that occurence to have
-consistent naming.
+On Thu, May 27, 2010 at 12:06 AM, Pavel Roskin <proski@gnu.org> wrote:
+> On Mon, 2010-03-29 at 15:19 -0700, Paul Thomas wrote:
+>> OK, I'd love to get to where Pavel & Gabor are, but I think I'm having
+>> trouble with the PCI dependency. I'm on an arm platform without PCI
+>> (atmel at91sam9g20). If I remove the PCI dependency from the Kconfig
+>> it does compile with warnings, and then when the module loads I get
+>> "r8192s_usb: Unknown symbol wireless_send_event".
+>>
+>> I'm happy to hang out and try again when the driver leaves staging,
+>> but I thought I might mention the PCI dependency now.
+>
+> wireless_send_event should be available if WIRELESS_EXT is selected in Kconfig.
+>
+> But I cannot find the "r8192s_usb" symbol in any staging drivers, so I
+> have no idea which driver you are talking about.
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00debug.c |   13 +++++++------
- 1 files changed, 7 insertions(+), 6 deletions(-)
+r8192s_usb is not a symbol, it is the name of the module being loaded.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
-index 70c04c2..9e2eed5 100644
---- a/drivers/net/wireless/rt2x00/rt2x00debug.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
-@@ -155,7 +155,7 @@ void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
- 			    enum rt2x00_dump_type type, struct sk_buff *skb)
- {
- 	struct rt2x00debug_intf *intf = rt2x00dev->debugfs_intf;
--	struct skb_frame_desc *desc = get_skb_frame_desc(skb);
-+	struct skb_frame_desc *skbdesc = get_skb_frame_desc(skb);
- 	struct sk_buff *skbcopy;
- 	struct rt2x00dump_hdr *dump_hdr;
- 	struct timeval timestamp;
-@@ -170,7 +170,7 @@ void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
- 		return;
- 	}
- 
--	skbcopy = alloc_skb(sizeof(*dump_hdr) + desc->desc_len + skb->len,
-+	skbcopy = alloc_skb(sizeof(*dump_hdr) + skbdesc->desc_len + skb->len,
- 			    GFP_ATOMIC);
- 	if (!skbcopy) {
- 		DEBUG(rt2x00dev, "Failed to copy skb for dump.\n");
-@@ -180,18 +180,19 @@ void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
- 	dump_hdr = (struct rt2x00dump_hdr *)skb_put(skbcopy, sizeof(*dump_hdr));
- 	dump_hdr->version = cpu_to_le32(DUMP_HEADER_VERSION);
- 	dump_hdr->header_length = cpu_to_le32(sizeof(*dump_hdr));
--	dump_hdr->desc_length = cpu_to_le32(desc->desc_len);
-+	dump_hdr->desc_length = cpu_to_le32(skbdesc->desc_len);
- 	dump_hdr->data_length = cpu_to_le32(skb->len);
- 	dump_hdr->chip_rt = cpu_to_le16(rt2x00dev->chip.rt);
- 	dump_hdr->chip_rf = cpu_to_le16(rt2x00dev->chip.rf);
- 	dump_hdr->chip_rev = cpu_to_le16(rt2x00dev->chip.rev);
- 	dump_hdr->type = cpu_to_le16(type);
--	dump_hdr->queue_index = desc->entry->queue->qid;
--	dump_hdr->entry_index = desc->entry->entry_idx;
-+	dump_hdr->queue_index = skbdesc->entry->queue->qid;
-+	dump_hdr->entry_index = skbdesc->entry->entry_idx;
- 	dump_hdr->timestamp_sec = cpu_to_le32(timestamp.tv_sec);
- 	dump_hdr->timestamp_usec = cpu_to_le32(timestamp.tv_usec);
- 
--	memcpy(skb_put(skbcopy, desc->desc_len), desc->desc, desc->desc_len);
-+	memcpy(skb_put(skbcopy, skbdesc->desc_len), skbdesc->desc,
-+	       skbdesc->desc_len);
- 	memcpy(skb_put(skbcopy, skb->len), skb->data, skb->len);
- 
- 	skb_queue_tail(&intf->frame_dump_skbqueue, skbcopy);
+>
+> I suggest that you don't hijack existing threads to report new issues.
+> When reporting a problem, please give the kernel version, the driver
+> name and whatever details are needed for others to reproduce the
+> problem.
+>
+>> > CCMP is working, and I could browse the web over it!
+>
+> Please don't quote parts of the message that are irrelevant to what you
+> are saying.
+>
+> --
+> Regards,
+> Pavel Roskin
+>
+
+
+
 -- 
-1.7.1
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
