@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web56807.mail.re3.yahoo.com ([66.196.97.81]:33377 "HELO
-	web56807.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S934364Ab0EEJod (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:55002 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933711Ab0EZRqZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 5 May 2010 05:44:33 -0400
-Message-ID: <946956.98853.qm@web56807.mail.re3.yahoo.com>
-Date: Wed, 5 May 2010 02:44:32 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: [PATCH] compat-wireless: rt2x00 added to driver-select
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+	Wed, 26 May 2010 13:46:25 -0400
+Received: by mail-px0-f174.google.com with SMTP id 18so2635034pxi.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 10:46:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4825B8A2C4E264489E57869F0DCFB22343E33E611F@hasmsx502.ger.corp.intel.com>
+References: <1274856569-13436-1-git-send-email-emmanuel.grumbach@intel.com>
+	<AANLkTikzEywcDi9zyJknMWkKymCVYnWQa2YXbbSDVx5o@mail.gmail.com>
+	<4825B8A2C4E264489E57869F0DCFB22343E33E611F@hasmsx502.ger.corp.intel.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 26 May 2010 10:46:05 -0700
+Message-ID: <AANLkTinG2zWHE8l-ZPBnyrFq5gs4nZX59zhF3AVh7h_4@mail.gmail.com>
+Subject: Re: [RFC] wireless-regdb: Add A band in IL
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Michael Green <Michael.Green@atheros.com>,
+	David Quan <David.Quan@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Walter Goldens <goldenstranger@yahoo.com>
----
+On Wed, May 26, 2010 at 10:32 AM, Grumbach, Emmanuel
+<emmanuel.grumbach@intel.com> wrote:
+>>>  country IL:
+>>>        (2402 - 2482 @ 40), (N/A, 20)
+>>> +       (5150 - 5250 @ 40). (N/A, 200 mW), NO-OUTDOOR
+>>> +       (5250 - 5350 @ 40). (N/A, 200 mW), NO-OUTDOOR, DFS
+>>
+>>I believe the one standing issue here is you are enabling HT40 on 5
+>>GHz, how about enabling 2.4 GHz first, and then through a separate
+>>patch and time/review we review the HT40 stuff, unless you are in no
+>>rush to get 2.4 GHz enabled.
+>>
+>
+> I am not following... HT40 on 2.4 GHz is already enabled...
+> What should I enable in 2.4 GHz ?
 
-With the ever expanding and improving rt2x00 supporting myriad of devices, I think its about time we enabled faster compilation via scripts/driver-select.
+Sorry I meant 5 GHz.
 
---- a/scripts/driver-select	2010-05-05 12:02:23.000000000 +0300
-+++ b/scripts/driver-select	2010-05-05 12:02:01.000000000 +0300
-@@ -7,6 +7,7 @@
- DRIVERS_MAKEFILE="drivers/net/wireless/Makefile"
- ATH_MAKEFILE="drivers/net/wireless/ath/Makefile"
- ATH9K_MAKEFILE="drivers/net/wireless/ath/ath9k/Makefile"
-+RT2X00_MAKEFILE="drivers/net/wireless/rt2x00/Makefile"
- NET_WIRELESS_MAKEFILE="net/wireless/Makefile"
- EEPROM_MAKEFILE="drivers/misc/eeprom/Makefile"
- DRIVERS_NET="drivers/net/Makefile"
-@@ -29,7 +30,7 @@ PURPLE="\033[35m"
- CYAN="\033[36m"
- UNDERLINE="\033[02m"
- 
--SUPPORTED_DRIVERS="ath5k ath9k ath9k_htc ar9170 b43 zd1211rw"
-+SUPPORTED_DRIVERS="ath5k ath9k ath9k_htc ar9170 b43 zd1211rw rt2x00"
- 
- function usage {
- 	echo -e "${GREEN}Usage${NORMAL}: ${CYAN}$0${NORMAL} [ ${PURPLE}<driver-name>${NORMAL} | ${PURPLE}<driver-group-name>${NORMAL} | ${GREEN}restore${NORMAL} ]"
-@@ -293,6 +294,10 @@ case $1 in
- 		disable_var_03
- 		select_driver		CONFIG_B43
- 		;;
-+	rt2x00)
-+		select_driver		CONFIG_RT2X00
-+		disable_var_02
-+		;;
- 	*)
- 		echo "Unsupported driver"
- 		exit
- 
-
-
-      
+  Luis
