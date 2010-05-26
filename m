@@ -1,77 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:56233 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751828Ab0EIJmU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 9 May 2010 05:42:20 -0400
-Received: by bwz19 with SMTP id 19so1248091bwz.21
-        for <linux-wireless@vger.kernel.org>; Sun, 09 May 2010 02:42:19 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4BE6832C.1020408@gmail.com>
-References: <1273354826-4335-1-git-send-email-gwingerde@gmail.com>
-	 <1273354826-4335-10-git-send-email-gwingerde@gmail.com>
-	 <AANLkTilX7auYKpqXFyVs-1EJ8X5wL5PebnDSXtOW1Swk@mail.gmail.com>
-	 <4BE6832C.1020408@gmail.com>
-Date: Sun, 9 May 2010 11:42:18 +0200
-Message-ID: <AANLkTikMQR4C54MzOMgpL-k2reaPb-kU2bL_Tph91IQs@mail.gmail.com>
-Subject: Re: [PATCH 9/9] rt2x00: Fix beaconing on rt2800.
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from c60.cesmail.net ([216.154.195.49]:37276 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751356Ab0EZWGO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 May 2010 18:06:14 -0400
+Subject: Re: Realtek rtl8188 support?
+From: Pavel Roskin <proski@gnu.org>
+To: Paul Thomas <pthomas8589@gmail.com>
+Cc: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Andrea Merello <andreamrl@tiscali.it>
+In-Reply-To: <c785bba31003291519tfd7d26fy466a4ee4310ac590@mail.gmail.com>
+References: <c785bba31003060945j22be2e78pfeaa1bcd39fcba2c@mail.gmail.com>
+	 <69e28c911003061007y258ec349laa802810e0517de4@mail.gmail.com>
+	 <1267949782.15192.13.camel@mj>
+	 <69e28c911003070736t678cf6ccld0fe6dc332f4380d@mail.gmail.com>
+	 <1268190973.10669.12.camel@mj>
+	 <c785bba31003291519tfd7d26fy466a4ee4310ac590@mail.gmail.com>
+Content-Type: text/plain
+Date: Wed, 26 May 2010 18:06:09 -0400
+Message-Id: <1274911569.2593.8.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 9, 2010 at 11:41 AM, Gertjan van Wingerde
-<gwingerde@gmail.com> wrote:
-> On 05/09/10 11:21, Ivo Van Doorn wrote:
->> On Sat, May 8, 2010 at 11:40 PM, Gertjan van Wingerde
->> <gwingerde@gmail.com> wrote:
->>> According to the Ralink vendor driver for rt2800 we don't need a full
->>> TXD for a beacon but just a TXWI in front of the actual beacon.
->>> Fix the rt2800pci and rt2800usb beaconing code accordingly.
->>>
->>> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
->>> ---
->>>  drivers/net/wireless/rt2x00/rt2800pci.c |   17 +++++++++--------
->>>  drivers/net/wireless/rt2x00/rt2800usb.c |   14 ++++++--------
->>>  2 files changed, 15 insertions(+), 16 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
->>> index 80c6768..7d4778d 100644
->>> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
->>> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
->>> @@ -682,7 +682,6 @@ static void rt2800pci_write_beacon(struct queue_entry *entry,
->>>                                   struct txentry_desc *txdesc)
->>>  {
->>>        struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
->>> -       struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
->>>        unsigned int beacon_base;
->>>        u32 reg;
->>>
->>> @@ -695,15 +694,17 @@ static void rt2800pci_write_beacon(struct queue_entry *entry,
->>>        rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
->>>
->>>        /*
->>> -        * Write entire beacon with descriptor to register.
->>> +        * Add the TXWI for the beacon to the skb.
->>> +        */
->>> +       rt2800_write_txwi(entry->skb, txdesc);
->>> +       skb_push(entry->skb, TXWI_DESC_SIZE);
->>
->> This looks quite suspicious...
->> First writing into the SKB and only then making room for it?
->> Perhaps we should make sure rt2800_write_txwi demands the
->> room is already added (or it calls skb_push itself).
->>
->
-> Yep, I wasn't too happy with this as well. It's on my TODO-list to fix that up, but that
-> requires more restructuring of the common code.
-> For the sake of keeping this patch small I kept it this way, and I'm already working on
-> follow-up patches to clean the skb handling up, so that we don't have to fiddle around
-> with the skb->data pointer anymore when creating descriptors and TXWI's.
+On Mon, 2010-03-29 at 15:19 -0700, Paul Thomas wrote:
+> OK, I'd love to get to where Pavel & Gabor are, but I think I'm having
+> trouble with the PCI dependency. I'm on an arm platform without PCI
+> (atmel at91sam9g20). If I remove the PCI dependency from the Kconfig
+> it does compile with warnings, and then when the module loads I get
+> "r8192s_usb: Unknown symbol wireless_send_event".
+> 
+> I'm happy to hang out and try again when the driver leaves staging,
+> but I thought I might mention the PCI dependency now.
 
-Ok. In that case:
+wireless_send_event should be available if WIRELESS_EXT is selected in Kconfig.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+But I cannot find the "r8192s_usb" symbol in any staging drivers, so I
+have no idea which driver you are talking about.
+
+I suggest that you don't hijack existing threads to report new issues.
+When reporting a problem, please give the kernel version, the driver
+name and whatever details are needed for others to reproduce the
+problem.
+
+> > CCMP is working, and I could browse the web over it!
+
+Please don't quote parts of the message that are irrelevant to what you
+are saying.
+
+-- 
+Regards,
+Pavel Roskin
