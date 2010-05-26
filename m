@@ -1,52 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:53382 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934024Ab0EUSFP convert rfc822-to-8bit (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:57198 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751936Ab0EZSa6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 May 2010 14:05:15 -0400
-Received: by wyb29 with SMTP id 29so82317wyb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 21 May 2010 11:05:12 -0700 (PDT)
+	Wed, 26 May 2010 14:30:58 -0400
+Received: by pvg3 with SMTP id 3so1249829pvg.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 11:30:58 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1274387415.1422.33.camel@localhost.localdomain>
-References: <AANLkTinMa92irnw8fH8PPO6egbAVDFWBg4pCPp3dInwd@mail.gmail.com>
-	 <1274387415.1422.33.camel@localhost.localdomain>
-Date: Fri, 21 May 2010 14:05:12 -0400
-Message-ID: <AANLkTilXnak_JDwWcx7ZqwNGEax89_Qj1YcFIH5VtecY@mail.gmail.com>
-Subject: Re: How the mac80211 handle "\0" essid?
-From: leo liang <leoliang9@gmail.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20100525132035.GA863@ee.oulu.fi>
+References: <20100525132035.GA863@ee.oulu.fi>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 26 May 2010 11:30:37 -0700
+Message-ID: <AANLkTik7vyllINxzeMN2HPD7cqpQH2tZegc3-VsNa8da@mail.gmail.com>
+Subject: Re: wireless-regdb: FI/CZ updates
+To: Pekka Pietikainen <pp@ee.oulu.fi>,
+	Michael Green <Michael.Green@atheros.com>,
+	David Quan <David.Quan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 20, 2010 at 4:30 PM, Dan Williams <dcbw@redhat.com> wrote:
-> On Thu, 2010-05-20 at 15:40 -0400, leo liang wrote:
->> Hi,
->>
->> Does any one know that if the application send "\0" as essid to
->> mac80211, how it handle this case?
+On Tue, May 25, 2010 at 6:20 AM, Pekka Pietikainen <pp@ee.oulu.fi> wrote:
+> Was looking at the relevant local regulations and noticed the regdb allowed
+> less power at 5GHz than is actually allowed. Until I found the "If you don't do TPC you have
+> to reduce your power by 3dB sometimes" bit on the next page.
 >
-> What are you trying to do? �Are you trying to work with a hidden AP, or
-> do something else?
+> And looks like someone that did the entry for CZ fell into the same trap, they have
+>
+> "stations in the c and d bands must employ automatic transmitter power
+> control, which provides, on average, an interference mitigation factor at
+> least 3 dB on the maximum permitted output power of the systems.  If
+> automatic power control is not employed, the maximum permitted mean e.i.r.p.
+> and the corresponding limit of the mean e.i.r.p.  density for bands c and d
+> must be reduced by 3 dB;"
+>
+> Please sanity check, I became very confused while looking into this.
+> (like some places starting their freq ranges at 2400, others at 2402. Didn't
+> touch those, regs say 2400-2485,5, 5150-5250, 5250-5350 and 5470-5725)
+>
+> Signed-off-by: Pekka Pietikäinen <pp@ee.oulu.fi>
+> diff -up ./db.txt.orig ./db.txt
+> --- ./db.txt.orig       2010-05-25 15:03:48.812116854 +0300
+> +++ ./db.txt    2010-05-25 15:58:43.947117884 +0300
+> @@ -170,11 +170,13 @@ country CY:
+>
+>  # Data from http://www.ctu.eu/164/download/VOR/VOR-12-08-2005-34.pdf
+>  # and http://www.ctu.eu/164/download/VOR/VOR-12-05-2007-6-AN.pdf
+> +# Power at 5250 - 5350 MHz and 5470 - 5725 MHz can be doubled if TPC is
+> +# implemented.
+>  country CZ:
+>        (2400 - 2483.5 @ 40), (N/A, 100 mW)
+>        (5150 - 5250 @ 40), (N/A, 200 mW), NO-OUTDOOR
+> -       (5250 - 5350 @ 40), (N/A, 200 mW), NO-OUTDOOR, DFS
+> -       (5470 - 5725 @ 40), (N/A, 1000 mW), DFS
+> +       (5250 - 5350 @ 40), (N/A, 100 mW), NO-OUTDOOR, DFS
+> +       (5470 - 5725 @ 40), (N/A, 500 mW), DFS
 
-I want to hide the associated AP name.  Or disassociate and do not let
-the interface connect to any AP.
->
-> An SSID is simply a 32-byte array; the protocol and the stack don't care
-> what's in that array. �So while you can't use command-line tools like
-> 'iwconfig' to send an SSID containing a \0, you can use netlink or
-> wpa_supplicant's nl80211 driver to do so.
+Michael -- as per David's review this seems fine, please let us know
+if you agree.
 
-I checked "iwconfig" source code, if you run "iwconfig wlan0 essid
-off", it will set the first char as "\0".
+>  # Data from "Frequenznutzungsplan" (as published in April 2008),
+>  # downloaded from http://www.bundesnetzagentur.de/media/archive/13358.pdf
+> @@ -226,11 +228,15 @@ country ES:
+>        (5250 - 5330 @ 40), (N/A, 20), DFS
+>        (5490 - 5710 @ 40), (N/A, 27), DFS
+>
+> +# Data from FICORA Regulation 15Z / 2009 M
+> +# http://www.ficora.fi/attachments/suomiry/5l1x1FIIk/Viestintavirasto15Z2009M.pdf
+> +# Power at 5250 - 5350 MHz and 5470 - 5725 MHz can be doubled if TPC is
+> +# implemented.
+>  country FI:
+> -       (2402 - 2482 @ 40), (N/A, 20)
+> -       (5170 - 5250 @ 40), (N/A, 20)
+> -       (5250 - 5330 @ 40), (N/A, 20), DFS
+> -       (5490 - 5710 @ 40), (N/A, 27), DFS
+> +       (2402 - 2482 @ 40), (N/A, 100mW)
+> +       (5170 - 5250 @ 40), (N/A, 200mW), NO-OUTDOOR
+> +       (5250 - 5330 @ 40), (N/A, 100mW), NO-OUTDOOR, DFS
+> +       (5490 - 5710 @ 40), (N/A, 500mW), DFS
 
->
-> But in the end, if you're trying to associate with an AP that has an
-> SSID of only '\0', that AP is likely broken or trying to hide it's SSID,
-> and you should be using the real SSID of that AP instead of '\0'.
->
-> Dan
->
->
->
+Pekka, please remove these changes from this patch, you want to make
+your patches atomic, with only one purpose to help the review process
+easier. You stashed changes to CZ & FI on one... You also switched
+from dBm to mW and note how you actually did change the EIRP here for
+only one for FI. Please provide a separate set of patches for that for
+FI. If you want to switch to mW for all of the entries for FI first do
+that, and then on a separate patch make the actual regulatory changes
+so this is crystal clear for the review process.
+
+So in summary: please post another separate patch for CZ and please
+lets wait on Michael's final ACK. The other FI changes should be split
+up. Also please CC Michael And David on your e-mails for regulatory
+changes, they are not subscribed to linux-wireless but can certainly
+help with reviewing these changes. I'll post some suggested updates on
+guidelines for patches to wireless-regdb later.
+
+Thanks,
+
+  Luis
