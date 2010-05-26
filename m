@@ -1,64 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:33348 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756544Ab0ERRPK (ORCPT
+Received: from mail-i4.informatik.RWTH-Aachen.DE ([137.226.12.21]:55113 "EHLO
+	MAIL-i4.nets.rwth-aachen.de" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S933386Ab0EZLcs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 May 2010 13:15:10 -0400
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1OEQNp-0005lu-Jj
-	for linux-wireless@vger.kernel.org; Tue, 18 May 2010 13:15:09 -0400
-Received: from linville-t400.local (linville-t400.local [127.0.0.1])
-	by linville-t400.local (8.14.3/8.14.3) with ESMTP id o4IHBrff014622
-	for <linux-wireless@vger.kernel.org>; Tue, 18 May 2010 13:11:53 -0400
-Received: (from linville@localhost)
-	by linville-t400.local (8.14.3/8.14.3/Submit) id o4IHBr68014621
-	for linux-wireless@vger.kernel.org; Tue, 18 May 2010 13:11:53 -0400
-Date: Tue, 18 May 2010 13:11:53 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: merge window -- [davem@davemloft.net: bug fixes only please...]
-Message-ID: <20100518171152.GE4190@tuxdriver.com>
+	Wed, 26 May 2010 07:32:48 -0400
+Message-ID: <4BFD04A4.4000403@nets.rwth-aachen.de>
+Date: Wed, 26 May 2010 13:23:16 +0200
+From: Arnd Hannemann <hannemann@nets.rwth-aachen.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>
+Subject: regulatory problems with ath5k
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-FYI...expect delays for any patches posted between now and -rc1.
-I also have a backlog from the weekend, which seemed unusually active.
-I'll evaluate those already in the queue for inclusion in 2.6.35,
-but no promises....
+Hi,
 
-John
+I'm trying to use 802.11a channels in AP mode with my ath5k nics with kernel 2.6.34.
+And after setting up crda, udev and wireless regdb, "iw list" still shows flags
+"passive scanning, no IBSS" for most of the 802.11a channels (see below.)
 
------ Forwarded message from David Miller <davem@davemloft.net> -----
+I wonder what I'm doing wrong here?
 
-> Date: Mon, 17 May 2010 22:25:49 -0700 (PDT)
-> From: David Miller <davem@davemloft.net>
-> To: netdev@vger.kernel.org
-> Subject: bug fixes only please...
-> X-Mailer: Mew version 6.3 on Emacs 23.1 / Mule 6.0 (HANACHIRUSATO)
-> 
-> 
-> We are entering the merge window, so please do not submit any new
-> features or cleanups at this time.
-> 
-> I will make a final pass through patchwork before I submit to Linus
-> so anything there still has a chance.  I also plan to merge the
-> respun virtif netlink bits, as that code was ready it's just that
-> a change that went into net-2.6 the other day created conflicts.
-> 
-> We'll open the spigot back up after 2.6.35-rc1 goes out.
-> 
-> Thanks.
-> --
-> To unsubscribe from this list: send the line "unsubscribe netdev" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
 
------ End forwarded message -----
+	Band 2:
+		Frequencies:
+			* 5180 MHz [36] (20.0 dBm) (radar detection)
+			* 5200 MHz [40] (20.0 dBm) (radar detection)
+			* 5220 MHz [44] (20.0 dBm) (radar detection)
+			* 5240 MHz [48] (20.0 dBm) (radar detection)
+			* 5260 MHz [52] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5280 MHz [56] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5300 MHz [60] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5320 MHz [64] (20.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5500 MHz [100] (26.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5520 MHz [104] (26.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5540 MHz [108] (26.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5560 MHz [112] (26.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5580 MHz [116] (26.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5600 MHz [120] (26.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5620 MHz [124] (26.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5640 MHz [128] (26.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5660 MHz [132] (26.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5680 MHz [136] (26.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5700 MHz [140] (26.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5745 MHz [149] (disabled)
+			* 5765 MHz [153] (disabled)
+			* 5785 MHz [157] (disabled)
+			* 5805 MHz [161] (disabled)
+			* 5825 MHz [165] (disabled)
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+hannemann@mrouter46:~ $ sudo iw reg get
+country DE:
+	(2400 - 2483 @ 40), (N/A, 20)
+	(5150 - 5350 @ 40), (N/A, 20), NO-OUTDOOR, DFS
+	(5470 - 5725 @ 40), (N/A, 26), NO-OUTDOOR, DFS
+
+dmesg snippet:
+
+May 26 12:10:36 mrouter46 kernel: [   30.023089] console [netcon0] enabled
+May 26 12:10:36 mrouter46 kernel: [   30.023103] netconsole: network logging started
+May 26 12:10:36 mrouter46 kernel: [   30.314702] cfg80211: Calling CRDA to update world regulatory domain
+May 26 12:10:37 mrouter46 kernel: [   30.555745] ath5k 0000:00:0c.0: registered as \'phy0\'
+May 26 12:10:37 mrouter46 kernel: [   31.039151] ath: EEPROM regdomain: 0x8114
+May 26 12:10:37 mrouter46 kernel: [   31.039168] ath: EEPROM indicates we should expect a country code
+May 26 12:10:37 mrouter46 kernel: [   31.039188] ath: doing EEPROM country->regdmn map search
+May 26 12:10:37 mrouter46 kernel: [   31.039205] ath: country maps to regdmn code: 0x37
+May 26 12:10:37 mrouter46 kernel: [   31.039222] ath: Country alpha2 being used: DE
+May 26 12:10:37 mrouter46 kernel: [   31.039237] ath: Regpair used: 0x37
+May 26 12:10:37 mrouter46 kernel: [   31.054155] cfg80211: World regulatory domain updated:
+May 26 12:10:37 mrouter46 kernel: [   31.054178]     (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+May 26 12:10:37 mrouter46 kernel: [   31.054207]     (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+May 26 12:10:37 mrouter46 kernel: [   31.054232]     (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+May 26 12:10:37 mrouter46 kernel: [   31.054258]     (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+May 26 12:10:37 mrouter46 kernel: [   31.054284]     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+May 26 12:10:37 mrouter46 kernel: [   31.054310]     (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+May 26 12:10:38 mrouter46 kernel: [   31.212057] phy0: Selected rate control algorithm \'minstrel\'
+May 26 12:10:38 mrouter46 kernel: [   31.212732] ath5k phy0: Atheros AR5213A chip found (MAC: 0x59, PHY: 0x43)
+May 26 12:10:38 mrouter46 kernel: [   31.212732] ath5k phy0: RF5112B multiband radio found (0x36)
+May 26 12:10:38 mrouter46 kernel: [   31.212732] ath5k 0000:00:0e.0: registered as \'phy1\'
+May 26 12:10:38 mrouter46 kernel: [   31.622592] cfg80211: Calling CRDA for country: DE
+May 26 12:10:38 mrouter46 kernel: [   31.688006] cfg80211: Regulatory domain changed to country: DE
+May 26 12:10:38 mrouter46 kernel: [   31.688030]     (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+May 26 12:10:38 mrouter46 kernel: [   31.688057]     (2400000 KHz - 2483500 KHz @ 40000 KHz), (N/A, 2000 mBm)
+May 26 12:10:38 mrouter46 kernel: [   31.688080]     (5150000 KHz - 5350000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+May 26 12:10:38 mrouter46 kernel: [   31.688103]     (5470000 KHz - 5725000 KHz @ 40000 KHz), (N/A, 2698 mBm)
+May 26 12:10:38 mrouter46 kernel: [   31.745694] ath: EEPROM regdomain: 0x8114
+May 26 12:10:38 mrouter46 kernel: [   31.745694] ath: EEPROM indicates we should expect a country code
+May 26 12:10:38 mrouter46 kernel: [   31.745694] ath: doing EEPROM country->regdmn map search
+May 26 12:10:38 mrouter46 kernel: [   31.745694] ath: country maps to regdmn code: 0x37
+May 26 12:10:38 mrouter46 kernel: [   31.745694] ath: Country alpha2 being used: DE
+May 26 12:10:38 mrouter46 kernel: [   31.745694] ath: Regpair used: 0x37
+May 26 12:10:38 mrouter46 kernel: [   31.758662] phy1: Selected rate control algorithm \'minstrel\'
+May 26 12:10:38 mrouter46 kernel: [   31.759383] ath5k phy1: Atheros AR5213A chip found (MAC: 0x59, PHY: 0x43)
+May 26 12:10:38 mrouter46 kernel: [   31.759383] ath5k phy1: RF5112B multiband radio found (0x36)
+
+
+Best regards,
+Arnd
