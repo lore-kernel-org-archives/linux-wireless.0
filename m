@@ -1,36 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43376 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:60536 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754902Ab0E0IIr (ORCPT
+	with ESMTP id S1756888Ab0EZLwZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 May 2010 04:08:47 -0400
-Subject: Re: [PATCH] mac80211: mark 1, 2, 5.5 and 11Mbps as mandatory rates
- for 802.11b
+	Wed, 26 May 2010 07:52:25 -0400
+Subject: Re: [RFC PATCHv2] mac80211: Add support for hardware ARP query
+ filtering
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, juuso.oikarinen@nokia.com,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-In-Reply-To: <20100527004545.11541.88667.stgit@tt-desk>
-References: <1274883276.3658.15.camel@jlt3.sipsolutions.net>
-	 <20100527004545.11541.88667.stgit@tt-desk>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1274873379-12944-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1274873379-12944-1-git-send-email-juuso.oikarinen@nokia.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 27 May 2010 10:08:36 +0200
-Message-ID: <1274947716.3669.13.camel@jlt3.sipsolutions.net>
+Date: Wed, 26 May 2010 13:52:19 +0200
+Message-ID: <1274874739.3658.5.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-05-27 at 09:45 +0900, Bruno Randolf wrote:
-> IEEE802.11-2007 clause 18.2.3.3 (p640) states that 1, 2, 5.5 & 11 Mbits are
-> mandatory rates for what they call High Rate direct sequence spread spectrum
-> (HR/DSSS) PHY (with long PLCP).
+On Wed, 2010-05-26 at 14:29 +0300, Juuso Oikarinen wrote:
 
-You're confused. Clause 18 is 11g, we knew that those were mandatory
-there, see the code you're modifying.
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -858,6 +858,10 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
+>  	ieee80211_recalc_smps(local, sdata);
+>  	mutex_unlock(&local->iflist_mtx);
+>  
+> +	rtnl_lock();
+> +	ieee80211_set_arp_filter(sdata);
+> +	rtnl_unlock();
+> +
 
-Clause 15 is 11b, and it shouldn't change.
+Please analyse locking in more detail and enable lockdep :)
 
-So NACK.
+This will cause deadlocks.
 
 johannes
 
