@@ -1,60 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:34634 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750795Ab0E0FfC (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48547 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753611Ab0EZNaM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 May 2010 01:35:02 -0400
-Subject: Re: [RFC PATCHv2] mac80211: Add support for hardware ARP query
- filtering
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
+	Wed, 26 May 2010 09:30:12 -0400
+Date: Wed, 26 May 2010 09:28:12 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Gordon, Charles" <Charles.Gordon@digi.com>
 Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1274878321.3658.7.camel@jlt3.sipsolutions.net>
-References: <1274873379-12944-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1274874739.3658.5.camel@jlt3.sipsolutions.net>
-	 <1274878272.5277.1890.camel@wimaxnb.nmp.nokia.com>
-	 <1274878321.3658.7.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 27 May 2010 08:36:50 +0300
-Message-ID: <1274938610.5277.2914.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+Subject: Re: Is there a bug in 2.6.29-rc8 support of Ad-Hoc mode?
+Message-ID: <20100526132811.GA5823@tuxdriver.com>
+References: <8DCC153EAFE67A4B990A840E829F704B017C658D5E6C@mtk-sms-exch01.digi.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <8DCC153EAFE67A4B990A840E829F704B017C658D5E6C@mtk-sms-exch01.digi.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-05-26 at 14:52 +0200, ext Johannes Berg wrote:
-> On Wed, 2010-05-26 at 15:51 +0300, Juuso Oikarinen wrote:
+On Wed, May 26, 2010 at 06:57:31AM -0500, Gordon, Charles wrote:
+> I am trying to get a driver I'm developing to work with Ad-Hoc mode on
+> Linux 2.6.29-rc8.  I am running into a problem.  I have traced it down
+> to the routine ieee80211_scan_work.  I use the following commands to
+> start Ad-Hoc mode:
 > 
-> > > > +	rtnl_lock();
-> > > > +	ieee80211_set_arp_filter(sdata);
-> > > > +	rtnl_unlock();
-> > > > +
-> > > 
-> > > Please analyse locking in more detail and enable lockdep :)
-> > > 
-> > > This will cause deadlocks.
-> > 
-> > I have lockdep permanently enabled in my development kernel. It has
-> > given me no complaints in testing with the corresponding wl1271 driver
-> > patch.
-> > 
-> > But I will look into those locks further if I can figure out any
-> > deadlock scenarios.
-> 
-> Interesting .. because for sure a lot of the ieee80211_mgd_* functions
-> are called with rtnl held and lock the mgd mutex, but it is the other
-> way around here.
+> ifconfig wlan0 down
+> iwconfig wlan0 mode Ad-Hoc essid "AdHocID"
+> ifconfig wlan0 up
 
-You are right. There are at least some paths where mgd mutex is locked
-with rtnl held, so there is a risk of deadlock. This has not occurred in
-my limited testing, but is certainly possible, and obviously we should
-always do locking in the same order.
+FWIW, this should probably look more like the following:
 
-I'll have to see if I can move this notification outside the mgd lock,
-and if I can't, I'll have to use a workqueue function.
+	ifconfig wlan0 down
+	iwconfig wlan0 mode Ad-Hoc
+	ifconfig wlan0 up
+	iwconfig wlan0 essid "AdHocID"
 
--Juuso
+If that doesn't work, you may be experiencing some bug.  But...
 
-> johannes
-> 
+> Can someone either confirm that this is a known problem with
+> 2.6.28-rc8, or tell me what my driver could be doing to cause this
+> problem?
 
+This kernel is ancient, even if you meant 2.6.29-rc8 like you
+said originally.  And it is not even an actual release version
+(e.g. 2.6.29).  I could be wrong, but I doubt there will be much
+interest among the people here in working on the internals of such
+an old kernel.  Is there some reason you can't try something newer?
+2.6.34 was just released...
 
+Good luck!
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
