@@ -1,35 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:46392 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755052Ab0EJTqD (ORCPT
+Received: from mail-pz0-f176.google.com ([209.85.222.176]:46259 "EHLO
+	mail-pz0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755994Ab0EZSPK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 May 2010 15:46:03 -0400
+	Wed, 26 May 2010 14:15:10 -0400
+Received: by pzk6 with SMTP id 6so2902415pzk.1
+        for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 11:15:09 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <4BFD6478.8090700@gmail.com>
+References: <1274896804-19441-1-git-send-email-justinmattock@gmail.com>
+	<AANLkTilII7C41BTshkXyCmAU81LQ3fJF0ogq_BLVv6w-@mail.gmail.com>
+	<4BFD636B.3070607@gmail.com> <AANLkTikIfbrD7t122jJG-ODU5qb9sbGVIGrHlNJ7w2ia@mail.gmail.com>
+	<4BFD6478.8090700@gmail.com>
 From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 10 May 2010 12:45:41 -0700
-Message-ID: <k2z43e72e891005101245se32796ex47a17683ab05d8b5@mail.gmail.com>
-Subject: Using wireless.kernel.org for Bluetooth documentation as well ?
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Johannes Berg <johannes@sipsolutions.net>
+Date: Wed, 26 May 2010 11:14:48 -0700
+Message-ID: <AANLkTinjgtKhQJ1UoQPY8aUFxhb3qrKrYjBgAZz1asZ_@mail.gmail.com>
+Subject: Re: [PATCH][RESEND] ath9k: Fix ath_print in xmit for hardware reset.
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: linville@tuxdriver.com, arnd@arndnet.de,
+	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Today we have a wealth of information on 802.11 Linux wireless on
-http://wireless.kernel.org and I think the wiki model has worked
-wonders for us. I wanted to see what you thought of using the same
-site as a source of documentation for Bluetooth as well. We already
-have *some* Bluetooth documentation [1], and we could just point to
-the BlueZ pages for other docs but it doesn't seem to use a wiki and
-those google ads do blind my right eye.
+On Wed, May 26, 2010 at 11:12 AM, Justin P. Mattock
+<justinmattock@gmail.com> wrote:
+> On 05/26/2010 11:09 AM, Luis R. Rodriguez wrote:
+>> On Wed, May 26, 2010 at 11:07 AM, Justin P. Mattock
+>> <justinmattock@gmail.com>  wrote:
 
-Thoughts?
+>>> what about all the signed-off's? should I
+>>> resend with all of those, or no?
+>
+>> I do not get what you are asking.
+>
+> all the people that gave there 00.02$ on this to
+> make it all-good
 
-[1] http://wireless.kernel.org/en/users/Documentation/Bluetooth-coexistence
-[2] http://www.bluez.org
+Heh... no. SOBs are just for the authors of the code. The real purpose
+of SOB is explained on Documentation/SubmittingPatches, read
+"Developer's Certificate of Origin 1.1".
 
   Luis
