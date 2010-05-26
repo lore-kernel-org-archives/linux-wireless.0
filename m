@@ -1,84 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:18615 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756244Ab0ESBbw (ORCPT
+Received: from mail-pz0-f176.google.com ([209.85.222.176]:45867 "EHLO
+	mail-pz0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754902Ab0EZSCw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 May 2010 21:31:52 -0400
-Received: from vs3014.wh2.ocn.ne.jp (125.206.180.187)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-086912710
-	for <linux-wireless@vger.kernel.org>; Wed, 19 May 2010 10:31:51 +0900 (JST)
-Subject: [PATCH v2 00/20] pending ath5k + antenna patches
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Wed, 19 May 2010 10:30:39 +0900
-Message-ID: <20100519012528.22206.77550.stgit@tt-desk>
+	Wed, 26 May 2010 14:02:52 -0400
+Received: by pzk6 with SMTP id 6so2895413pzk.1
+        for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 11:02:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1274896804-19441-1-git-send-email-justinmattock@gmail.com>
+References: <1274896804-19441-1-git-send-email-justinmattock@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 26 May 2010 11:02:31 -0700
+Message-ID: <AANLkTilII7C41BTshkXyCmAU81LQ3fJF0ogq_BLVv6w-@mail.gmail.com>
+Subject: Re: [PATCH][RESEND] ath9k: Fix ath_print in xmit for hardware reset.
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: linville@tuxdriver.com, arnd@arndnet.de,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These are all my pending ath5k patches + the antenna support for cfg80211
-rebased against 2.6.34 and based on the previous patch i sent for stable
-("ath5k: consistently use rx_bufsize for RX DMA"). 
+On Wed, May 26, 2010 at 11:00 AM, Justin P. Mattock
+<justinmattock@gmail.com> wrote:
+> ath_print in xmit.c should say "Reseting hardware"
+> instead of Resetting HAL!(since HAL is being fazed out).
+> dmesg shows:
+> [ 8660.899624] ath: Failed to stop TX DMA in 100 msec after killing last frame
+> [ 8660.899676] ath: Unable to stop TxDMA. Reset HAL!
+>
+>  Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+>
 
-Also i'd like to note that there are quite a few ath5k patches which haven't
-made it into linux-next yet. It would be great to get them into 2.6.35...
+For next time, no need for extra spaces between the SOB and the ---.
+And instead of RESEND do [PATCH v2]. Please read:
 
-thanks,
-bruno
+http://wireless.kernel.org/en/developers/Documentation/git-guide
 
----
+> ---
+>  drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+> index 3db1917..09cb13c 100644
+> --- a/drivers/net/wireless/ath/ath9k/xmit.c
+> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+> @@ -1198,7 +1198,7 @@ void ath_drain_all_txq(struct ath_softc *sc, bool retry_tx)
+>                int r;
+>
+>                ath_print(common, ATH_DBG_FATAL,
+> -                         "Unable to stop TxDMA. Reset HAL!\n");
+> +                         "Failed to stop TX DMA. Resetting hardware!\n");
+>
+>                spin_lock_bh(&sc->sc_resetlock);
+>                r = ath9k_hw_reset(ah, sc->sc_ah->curchan, false);
 
-Bruno Randolf (20):
-      ath5k: add debugfs file for queue debugging
-      ath5k: wake queues on reset
-      ath5k: initialize calibration timers
-      ath5k: move noise floor calibration into tasklet
-      ath5k: Stop queues only for NF calibration
-      ath5k: run NF calibration only every 60 seconds
-      ath5k: remove ATH_TRACE macro
-      ath5k: clarify logic when to enable spur mitigation filter
-      ath5k: use ath5k_softc as driver data
-      ath5k: add sysfs files for ANI parameters
-      ath5k: always calculate ANI listen time
-      ath5k: print error message if ANI levels are out of range
-      cfg80211: Add nl80211 antenna configuration
-      mac80211: Add antenna configuration
-      ath5k: Add support for antenna configuration
-      ath5k: remove setting ANI and antenna thru debugfs files
-      ath5k: fix NULL pointer in antenna configuration
-      ath5k: update AR5K_PHY_RESTART_DIV_GC values to match masks
-      ath5k: new function for setting the antenna switch table
-      ath5k: no need to save/restore the default antenna
+Thanks, this is good.
 
-
- drivers/net/wireless/ath/ath5k/Makefile |    1 
- drivers/net/wireless/ath/ath5k/ani.c    |   20 +++--
- drivers/net/wireless/ath/ath5k/ath5k.h  |    7 ++
- drivers/net/wireless/ath/ath5k/attach.c |    2 -
- drivers/net/wireless/ath/ath5k/base.c   |   89 ++++++++++++++++--------
- drivers/net/wireless/ath/ath5k/caps.c   |    7 --
- drivers/net/wireless/ath/ath5k/debug.c  |  107 ++++++++++++++++++++---------
- drivers/net/wireless/ath/ath5k/debug.h  |    9 --
- drivers/net/wireless/ath/ath5k/desc.c   |    7 --
- drivers/net/wireless/ath/ath5k/dma.c    |   13 ---
- drivers/net/wireless/ath/ath5k/eeprom.c |    1 
- drivers/net/wireless/ath/ath5k/gpio.c   |    7 --
- drivers/net/wireless/ath/ath5k/pcu.c    |   24 ------
- drivers/net/wireless/ath/ath5k/phy.c    |   89 ++++++++++++++----------
- drivers/net/wireless/ath/ath5k/qcu.c    |    9 --
- drivers/net/wireless/ath/ath5k/reset.c  |   64 +++--------------
- drivers/net/wireless/ath/ath5k/sysfs.c  |  116 +++++++++++++++++++++++++++++++
- include/linux/nl80211.h                 |   12 +++
- include/net/cfg80211.h                  |    3 +
- include/net/mac80211.h                  |    2 +
- net/mac80211/cfg.c                      |   16 ++++
- net/mac80211/driver-ops.h               |   23 ++++++
- net/mac80211/driver-trace.h             |   50 +++++++++++++
- net/wireless/nl80211.c                  |  116 +++++++++++++++++++++++++++++++
- 24 files changed, 554 insertions(+), 240 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath5k/sysfs.c
-
--- 
-Signature
+  Luis
