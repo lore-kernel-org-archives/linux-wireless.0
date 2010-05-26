@@ -1,62 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:60531 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755387Ab0EWW67 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 23 May 2010 18:58:59 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [linux-pm] [Regression][git head f4b87dee9] ath9k doesn't work correctly after resume from suspend to RAM
-Date: Mon, 24 May 2010 00:59:57 +0200
-Cc: linux-pm@lists.linux-foundation.org,
-	linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Daniel Yingqiang Ma <yma.cool@gmail.com>,
-	David Miller <davem@davemloft.net>
-References: <201005222353.26920.rjw@sisk.pl> <201005230013.37578.rjw@sisk.pl> <201005232120.16814.rjw@sisk.pl>
-In-Reply-To: <201005232120.16814.rjw@sisk.pl>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:64235 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753601Ab0EZVm7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 May 2010 17:42:59 -0400
+Received: by pvg3 with SMTP id 3so1323324pvg.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 14:42:58 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201005240059.57921.rjw@sisk.pl>
+In-Reply-To: <4BFD93E0.5080506@gmail.com>
+References: <1274894056-2866-1-git-send-email-justinmattock@gmail.com>
+	<1274894056-2866-2-git-send-email-justinmattock@gmail.com>
+	<20100526171844.GB5823@tuxdriver.com> <4BFD5C89.8000308@gmail.com>
+	<AANLkTim6ef__fNdXUyP1T4HB7jxbyt-Jlqi3Xa5Y_whm@mail.gmail.com>
+	<4BFD93E0.5080506@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 26 May 2010 14:42:38 -0700
+Message-ID: <AANLkTik_di7oAPf6PeebZJCC3RyGGB5FNTkJNNj0XVzU@mail.gmail.com>
+Subject: Re: [PATCH]wireless:ath9k Disable leds for Apple products.
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 23 May 2010, Rafael J. Wysocki wrote:
-> On Sunday 23 May 2010, Rafael J. Wysocki wrote:
-> > On Saturday 22 May 2010, Rafael J. Wysocki wrote:
-> > > Hi,
-> > > 
-> > > With current -git on Acer Ferrari One the ath9k driver doesn't seem to work
-> > > after resume from suspend to RAM.  NetworkManager seems to think that it works,
-> > > but it doesn't really connect with the AP and doesn't try to obtain an IP
-> > > address.
-> > 
-> > Sorry, this was incorrect.  It actually tries to obtain an IP address, but
-> > fails.  Apparently, it can't obtain the address without being reloaded.
-> 
-> iwlagn also has problems after resume from suspend to RAM (tested on
-> Toshiba Portege R500).  In this case resume works once, but then the next
-> attempt to suspend fails (I had to reboot the box every time that happened).
-> 
-> If iwlagn is unloaded, it is possible to suspend and resume the system
-> arbitrary number of times, but then iwlagn doesn't work when its reloaded
-> (it doesn't detect wireless networks).
+On Wed, May 26, 2010 at 2:34 PM, Justin P. Mattock
+<justinmattock@gmail.com> wrote:
+> On 05/26/2010 02:05 PM, Luis R. Rodriguez wrote:
+>>
+>> On Wed, May 26, 2010 at 10:38 AM, Justin P. Mattock
+>> <justinmattock@gmail.com>  wrote:
+>>
+>>>
+>>> On 05/26/2010 10:18 AM, John W. Linville wrote:
+>>>
+>>>>
+>>>> On Wed, May 26, 2010 at 10:14:16AM -0700, Justin P. Mattock wrote:
+>>>>
+>>>>
+>>>>>
+>>>>> Disable the leds on ath9k for Apple products, since
+>>>>> there is no leds on any of there machines(or non that I can find!!).
+>>>>>
+>>>>>  Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
+>>>>>
+>>
+>> Our team has confirmed Apple devices do not have LEDs so a change like
+>> this is OK but this patch is wrong anyway. More details below.
+>>
+>>
+>>>>>
+>>>>>  void ath_init_leds(struct ath_softc *sc)
+>>>>>  {
+>>>>>        char *trigger;
+>>>>>        int ret;
+>>>>>
+>>>>> +       /* Apple has no leds lights for their wireless.  */
+>>>>> +       if (dmi_check_system(dmi_system_table)>    0)
+>>>>> +               return -ENODEV;
+>>>>> +       else
+>>>>> +
+>>>>>        if (AR_SREV_9287(sc->sc_ah))
+>>>>>                sc->sc_ah->led_pin = ATH_LED_PIN_9287;
+>>>>>        else
+>>>>>
+>>>>>
+>>>>
+>>>> Surely we don't need the 'else'.
+>>>>
+>>>> Does enabling the LEDs on these systems cause any problems?
+>>>>
+>>>> John
+>>>>
+>>>>
+>>>
+>>> I picked up the idea, from this patch:
+>>> http://kerneltrap.org/mailarchive/linux-kernel/2010/1/20/4530535
+>>> while looking into a bug for ath9k(thinking maybe leds
+>>> are causing something, which want  the case)
+>>>
+>>> so Id have to say I don't think the leds cause issue's,
+>>> if anything just a wasted symlink, call, or whatever
+>>> in /sys/class/leds/*
+>>>
+>>
+>> The patch is wrong anyway, ath_init_leds() is void and yet you return
+>> a value. If this is really needed I'd also prefer if you define a bool
+>> or something and use a ah->ignore_leds and set this to true if the DMI
+>> stuff checks out for Apple up hw init. Then check for ignore_leds
+>> prior to calling ath_init_leds() and also avoid it if set. Also check
+>> for ingore_leds upon device cleanup and ignore the
+>> acancel_delayed_work_sync(&sc->ath_led_blink_work) and
+>> ath_deinit_leds() and skip that.
+>>
+>> But given that it is not needed it seems a lot of work for something
+>> that is a non-issue.
+>>
+>>   Luis
+>>
+>>
+>
+> tough to say!! I was looking into a bug a few months back, and
+> thought hmm.. maybe something is being called with the leds
+> but the leds are not there causing some thing to crap out..
+>
+> so out of curiosity I remembered the dmi disable patch, and
+> semi somewhat pieced it together(just to see the results of disabling the
+> leds).
+> unfortunately still hit the strange thing with wpa_supplicant and ath9k(the
+> disconnect thing).
+>
+> as for the above procedure(I can give that a try.. but it might
+> take a while...)
 
-Reverting
+OK thanks for the details, best just ignore it unless you can prove it
+fixes an issue.
 
-commit 03ceedea972a82d343fa5c2528b3952fa9e615d5
-Author: Daniel Yingqiang Ma <yma.cool@gmail.com>
-Date:   Tue Apr 13 15:12:07 2010 +0800
-
-    ath9k: Group Key fix for VAPs
-
-also fixes the resume issue with iwlagn.
-
-So, please revert.
-
-Thanks,
-Rafael
+ Luis
