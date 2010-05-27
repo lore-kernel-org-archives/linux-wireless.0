@@ -1,103 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay01.mx.bawue.net ([193.7.176.67]:55060 "EHLO
-	relay01.mx.bawue.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757711Ab0EKJll (ORCPT
+Received: from 26.mail-out.ovh.net ([91.121.27.225]:56308 "HELO
+	26.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1759196Ab0E0MJY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 05:41:41 -0400
-Date: Tue, 11 May 2010 11:41:34 +0200
-From: Nils Radtke <lkml@Think-Future.de>
-To: reinette.chatre@intel.com
-Cc: linville@tuxdriver.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: kernel BUG in iwl-agn-rs.c:2076, WAS: iwlagn + some
- accesspoint == hardlock
-Message-ID: <20100511094134.GC9838@localhost>
-Reply-To: Nils Radtke <lkml@Think-Future.de>
+	Thu, 27 May 2010 08:09:24 -0400
+Message-ID: <4BFE60EF.7020800@free.fr>
+Date: Thu, 27 May 2010 14:09:19 +0200
+From: Benoit Papillault <benoit.papillault@free.fr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Bruno Randolf <br1@einfach.org>, linville@tuxdriver.com,
+	juuso.oikarinen@nokia.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: mark 1, 2, 5.5 and 11Mbps as mandatory rates
+ for 802.11b
+References: <1274883276.3658.15.camel@jlt3.sipsolutions.net>	 <20100527004545.11541.88667.stgit@tt-desk> <1274947716.3669.13.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1274947716.3669.13.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  Hi,
+Le 27/05/2010 10:08, Johannes Berg a écrit :
+> On Thu, 2010-05-27 at 09:45 +0900, Bruno Randolf wrote:
+>> IEEE802.11-2007 clause 18.2.3.3 (p640) states that 1, 2, 5.5&  11 Mbits are
+>> mandatory rates for what they call High Rate direct sequence spread spectrum
+>> (HR/DSSS) PHY (with long PLCP).
+>
+> You're confused. Clause 18 is 11g, we knew that those were mandatory
+> there, see the code you're modifying.
+>
+> Clause 15 is 11b, and it shouldn't change.
+>
+> So NACK.
+>
+> johannes
 
-Thanks a lot for the driver not hanging w/ bug_on() any more. At least the machine 
-keeps working and when on battery no repeated reboots are required any more. That alone
-already means a lot.
+I just dig through the various standards and besides there are still 
+some grey areas in my mind (like what is HR/DSSS/PBCC mentioned in 
+Clause 18 or DSSS-OFDM as specified in Clause 19, hopefully both are 
+optional), we have :
 
-# On Mon, 2010-05-10 at 11:36 -0700, Nils Radtke wrote:
-# >   Today weather was fine again, finally. So testing with .33.3 w/ the patch applied: 
-# > 
-# >   http://marc.info/?l=linux-wireless&m=127290931304496&w=2
-# > 
-# > The kernel kernel .32 was still running before it crashed immediately on wireless activation.
-# > The crash log showed again at least two messages, the last was as already described in my first
-# > message, bug from 2010-04-30: I think even the 0x2030 was the same:
-# > 
-# > EIP rs_tx_status +x8f/x2030 
-# 
-# You report an issue on 2.6.32 ...
-Yes. These errors happened to be the same regardless of .32 or .33
+802.11a = Clause 17, called OFDM
+802.11b = Clause 15 (called DSSS) & Clause 18 (called HR/DSSS).
+802.11g = Clause 19, called ERP with lots of variants : ERP-DSSS/CCK, 
+ERP-OFDM, ERP-PBCC
+802.11n = Clause 20, called HT for High Throughput, which also includes 
+DUP-OFDM
 
-# > W/ .33.3 and the above patch applied:
-# 
-# ... but then test the patch with 2.6.33.
-# 
-# Which kernel are you focused on?
-Sorry, no intention to confuse or show erratic behaviour.. :)
+Clause 15 defines 1 Mbits and 2 Mbits rates, long PLCP only
+Clause 18 defines 5.5 Mbits and 11 Mbits. Optionally, short PLCP is 
+available for 2 Mbits, 5.5 Mbits and 11 Mbits. Since it's optional, such 
+short PLCP rates are probably not part of the mandatory rates.
 
-It's just that the errors occur on both of them. Then I accidently booted the old one again (now
-removed from the system), but again, the error showed up on .32, .33{1,2,3} . But you always had
-had an indication which kernel it happened on.
+Basic rate set must includes mandatory rates set. This is apparently 
+what every other AP do today and I indeed see no points in adding more 
+rates to the basic rate set other than what is already defined in the 
+mandatory rate set (except we cannot rely on this rule when joining an 
+existing BSS/IBSS, of course).
 
-OTH, it's basically the same, the identical error persists, so I can't seem the difference here. 
-Except for a scientific approach one shouldn't do that, ACK. But, hey, I'd like to use the machine in
-the meantime and happened to update the kernel source. 
+Does the patch you posted is intended to create a 802.11b only or 
+802.11bg AP/IBSS with a 802.11g hardware for instance?
 
-# > Linux mypole 2.6.33.3 #18 SMP PREEMPT Thu May 6 21:51:37 CEST 2010 i686 GNU/Linux
-# > 
-# > May 10 19:14:11 [   80.586637] iwlagn 0000:03:00.0: expected_tpt should have been calculated by now
-# > May 10 19:23:17 [  626.476078] iwlagn 0000:03:00.0: expected_tpt should have been calculated by now
-# > May 10 19:23:30 [  638.913740] iwlagn 0000:03:00.0: expected_tpt should have been calculated by now
-# > May 10 19:23:32 [  641.232425] iwlagn 0000:03:00.0: expected_tpt should have been calculated by now
-# > May 10 19:23:54 [  663.392697] iwlagn 0000:03:00.0: expected_tpt should have been calculated by now
-# > May 10 19:23:58 [  666.980247] iwlagn 0000:03:00.0: expected_tpt should have been calculated by now
-# > May 10 19:24:02 [  671.121826] iwlagn 0000:03:00.0: expected_tpt should have been calculated by now
-# Can you see any impact on your connection speed that can be connected to
-# these messages?
-I'm glad you're asking. Yes, indeed, speed it exceptionally low to what might be achievable. Around 30k/s
-average, burst with maybe 200k/s, instead of 700k/s.
-
-# > Additionally these were logged, could you tell why they're there and what to do? (also .33.3 w/ patch)
-# > 
-# > May 10 19:24:16 [  685.079617] iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:1a:70:12:23:25 tid = 0
-# > May 10 19:24:22 [  691.026737] iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:1a:70:12:23:25 tid = 0
-# > May 10 19:28:02 [  911.406162] iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:1a:70:12:23:25 tid = 0
-# > May 10 19:35:38 [ 1367.251240] iwlagn 0000:03:00.0: iwl_tx_agg_start on ra = 00:1a:70:12:23:25 tid = 0
-# > 
-# > The above "iwl_tx_agg_start" lines happen when connecting - again to a Cisco AP - and the connection gets
-# > dropped the exact moment when a download is started. It even often drops when dhcp is still negotiating, has
-# > got it's IP but the nego isn't finished yet. Conn drops, same procedure again and again. This happens only
-# > with this Cisco AP (which is BTW another one from the "expected_tpt should have been calculated by now" 
-# > problem).
-# It could be that some of the queues get stuck. Can you try with the
-# patches in
-# http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2037#c113 ? They
-# are based on 2.6.33.
-Good, no wait, bad, now running on .34-rc7. *sigh
-
-I'll apply the patches to .33. .34-rc7 hadn't brought the desired success w/ the olicard100 usb-umts-stick.
-
-Update: noticed you mean 2.6.33 not .33.x ;) On .33.3 it doesn't apply cleanly for a couple of files..
-Any objections if I apply it to .33.3 anyway? (Fixing the rej of course..)
-
-Interestingly enough, quilt import 0001*patch imports, quilt push patches but it applies the patch w/o
-rej. patch -p1 0001*patch does recognize the patch already applied and rejects..
-
-All patches applied successfully, trying again these days.
-
-Thanks for your comments.
-
-Will keep you informed.
-
-Nils
-
+Regards,
+Benoit
