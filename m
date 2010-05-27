@@ -1,97 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews03.kpnxchange.com ([213.75.39.6]:1118 "EHLO
-	cpsmtpb-ews03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752879Ab0EKVvw (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:20253 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751946Ab0E0JDZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 17:51:52 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 7/9] rt2x00: In debugfs frame dumping allow the TX descriptor to be part of the skb.
-Date: Tue, 11 May 2010 23:51:43 +0200
-Message-Id: <1273614705-25118-8-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1273614705-25118-1-git-send-email-gwingerde@gmail.com>
-References: <1273614705-25118-1-git-send-email-gwingerde@gmail.com>
+	Thu, 27 May 2010 05:03:25 -0400
+Subject: Re: [RFC PATCHv3] mac80211: Add support for hardware ARP query
+ filtering
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1274948667.3669.19.camel@jlt3.sipsolutions.net>
+References: <1274940287-18980-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1274948667.3669.19.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 27 May 2010 12:05:17 +0300
+Message-ID: <1274951117.5277.3155.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Preparation for futher cleanups in the area of properly maintaining the skb
-data without fiddling with the skb->data pointer.
+On Thu, 2010-05-27 at 10:24 +0200, ext Johannes Berg wrote:
+> On Thu, 2010-05-27 at 09:04 +0300, Juuso Oikarinen wrote:
+> 
+> > +static int ieee80211_ifa_changed(struct notifier_block *nb,
+> > +				 unsigned long data, void *arg)
+> > +{
+> > +	struct in_ifaddr *ifa = arg;
+> > +	struct ieee80211_local *local =
+> > +		container_of(nb, struct ieee80211_local,
+> > +			     ifa_notifier);
+> > +	struct net_device *ndev = ifa->ifa_dev->dev;
+> > +	struct wireless_dev *wdev = ndev->ieee80211_ptr;
+> > +	struct ieee80211_sub_if_data *sdata;
+> > +	struct ieee80211_if_managed *ifmgd;
+> > +
+> > +	/* Make sure it's our interface that got changed */
+> > +	if (!wdev)
+> > +		return NOTIFY_DONE;
+> > +
+> > +	if (wdev->wiphy != local->hw.wiphy)
+> > +		return NOTIFY_DONE;
+> > +
+> > +	/* We are concerned about IP addresses only when associated */
+> > +	sdata = IEEE80211_DEV_TO_SUB_IF(ndev);
+> > +	mutex_lock(&sdata->u.mgd.mtx);
+> > +	ifmgd = &sdata->u.mgd;
+> > +	if (ifmgd->associated)
+> > +		ieee80211_set_arp_filter(sdata);
+> > +	mutex_unlock(&sdata->u.mgd.mtx);
+> 
+> I'm sure this will fail in interesting ways since nothing guarantees
+> that this interface is in managed mode.
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00debug.c |   14 ++++++++++----
- drivers/net/wireless/rt2x00/rt2x00queue.h |    3 +++
- 2 files changed, 13 insertions(+), 4 deletions(-)
+S***, I need a vacation. This is bound to fail even if the interface is
+in managed mode, as it's not protecting the right thing. 
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
-index 85e9990..9dd8b7c 100644
---- a/drivers/net/wireless/rt2x00/rt2x00debug.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
-@@ -159,6 +159,7 @@ void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
- 	struct sk_buff *skbcopy;
- 	struct rt2x00dump_hdr *dump_hdr;
- 	struct timeval timestamp;
-+	u32 data_len;
- 
- 	do_gettimeofday(&timestamp);
- 
-@@ -170,7 +171,11 @@ void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
- 		return;
- 	}
- 
--	skbcopy = alloc_skb(sizeof(*dump_hdr) + skbdesc->desc_len + skb->len,
-+	data_len = skb->len;
-+	if (skbdesc->flags & SKBDESC_DESC_IN_SKB)
-+		data_len -= skbdesc->desc_len;
-+
-+	skbcopy = alloc_skb(sizeof(*dump_hdr) + skbdesc->desc_len + data_len,
- 			    GFP_ATOMIC);
- 	if (!skbcopy) {
- 		DEBUG(rt2x00dev, "Failed to copy skb for dump.\n");
-@@ -181,7 +186,7 @@ void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
- 	dump_hdr->version = cpu_to_le32(DUMP_HEADER_VERSION);
- 	dump_hdr->header_length = cpu_to_le32(sizeof(*dump_hdr));
- 	dump_hdr->desc_length = cpu_to_le32(skbdesc->desc_len);
--	dump_hdr->data_length = cpu_to_le32(skb->len);
-+	dump_hdr->data_length = cpu_to_le32(data_len);
- 	dump_hdr->chip_rt = cpu_to_le16(rt2x00dev->chip.rt);
- 	dump_hdr->chip_rf = cpu_to_le16(rt2x00dev->chip.rf);
- 	dump_hdr->chip_rev = cpu_to_le16(rt2x00dev->chip.rev);
-@@ -191,8 +196,9 @@ void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
- 	dump_hdr->timestamp_sec = cpu_to_le32(timestamp.tv_sec);
- 	dump_hdr->timestamp_usec = cpu_to_le32(timestamp.tv_usec);
- 
--	memcpy(skb_put(skbcopy, skbdesc->desc_len), skbdesc->desc,
--	       skbdesc->desc_len);
-+	if (!(skbdesc->flags & SKBDESC_DESC_IN_SKB))
-+		memcpy(skb_put(skbcopy, skbdesc->desc_len), skbdesc->desc,
-+		       skbdesc->desc_len);
- 	memcpy(skb_put(skbcopy, skb->len), skb->data, skb->len);
- 
- 	skb_queue_tail(&intf->frame_dump_skbqueue, skbcopy);
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
-index 36a957a..f791708 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
-@@ -94,12 +94,15 @@ enum data_queue_qid {
-  *	mac80211 but was stripped for processing by the driver.
-  * @SKBDESC_NOT_MAC80211: Frame didn't originate from mac80211,
-  *	don't try to pass it back.
-+ * @SKBDESC_DESC_IN_SKB: The descriptor is at the start of the
-+ *	skb, instead of in the desc field.
-  */
- enum skb_frame_desc_flags {
- 	SKBDESC_DMA_MAPPED_RX = 1 << 0,
- 	SKBDESC_DMA_MAPPED_TX = 1 << 1,
- 	SKBDESC_IV_STRIPPED = 1 << 2,
- 	SKBDESC_NOT_MAC80211 = 1 << 3,
-+	SKBDESC_DESC_IN_SKB = 1 << 4,
- };
- 
- /**
--- 
-1.7.1
+I was already looking at the ifmgd->mtx but somehow managed to
+copy-paste this one :(
+
+-Juuso
+
+> johannes
+> 
+
 
