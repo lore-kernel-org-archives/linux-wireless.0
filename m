@@ -1,167 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:47727 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757267Ab0EKKyW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 11 May 2010 06:54:22 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 11 May 2010 03:54:22 -0700
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:33412 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754247Ab0E0Qoc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 May 2010 12:44:32 -0400
+Received: by pvg3 with SMTP id 3so91918pvg.19
+        for <linux-wireless@vger.kernel.org>; Thu, 27 May 2010 09:44:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19433.14193.579653.665234@gargle.gargle.HOWL>
-Date: Tue, 11 May 2010 16:24:41 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/5] ath9k_htc: Reorder HTC initialization
-From: <Sujith.Manoharan@atheros.com>
+In-Reply-To: <20100527154350.GA3728@tuxdriver.com>
+References: <AANLkTik_bztAq5aLTHTlcD3ug0QeXfkEf-vPhkzEUA_6@mail.gmail.com>
+	<20100527150515.GB2486@tuxdriver.com> <1274974452.20576.20410.camel@macbook.infradead.org>
+	<20100527154350.GA3728@tuxdriver.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 27 May 2010 09:44:12 -0700
+Message-ID: <AANLkTinQLcc9iwu9YSV64_JcmDLdg9bkkG7PHA17oSRW@mail.gmail.com>
+Subject: Re: A mailing list for regulatory wireless-regdb changes
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Michael Green <Michael.Green@atheros.com>,
+	David Quan <David.Quan@atheros.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The HTC state has to be setup before initializing
-the target because the ready message could possibly
-come before the control endpoints in HTC have been
-identified.
+On Thu, May 27, 2010 at 8:43 AM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Thu, May 27, 2010 at 04:34:12PM +0100, David Woodhouse wrote:
+>> On Thu, 2010-05-27 at 11:05 -0400, John W. Linville wrote:
+>> > On Thu, May 27, 2010 at 01:15:50AM -0700, Luis R. Rodriguez wrote:
+>> > > David, can I trouble you for a mailman wireless-regdb mailing list on
+>> > > infradead.org? This would be used by those who are not developers and
+>> > > do not need to be subscribed to linux-wireless. An example are
+>> > > regulatory guys at different companies and generally interested
+>> > > people/developers on the topic. This should hopefully accelerate the
+>> > > turn around time for reviewing of patches and also a good placeholder
+>> > > for us to go back and check the discussions that went on about this.
+>> >
+>> > Is this really necessary?
+>>
+>> Feel free not to use it :)
+>
+> Just hoping to avoid unnecessary confusion -- I suppose it is fine
+> if that is what people want...
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hif_usb.c |   22 ++++++++--------
- drivers/net/wireless/ath/ath9k/htc_hst.c |   38 +++++++++++++++---------------
- drivers/net/wireless/ath/ath9k/htc_hst.h |    9 ++++---
- 3 files changed, 35 insertions(+), 34 deletions(-)
+I do not know how else to help speed up review without having to wait
+for a intermediary delay of someone at a company forwarding some
+regulatory changes e-mail to a person who is supposed to review them.
+With the list we would have a direct way for people to communicate
+with the folks who do care about regulatory and who may have roles who
+do that.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 453cf56..46dc41a 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -859,21 +859,21 @@ static int ath9k_hif_usb_probe(struct usb_interface *interface,
- #endif
- 	usb_set_intfdata(interface, hif_dev);
- 
-+	hif_dev->htc_handle = ath9k_htc_hw_alloc(hif_dev, &hif_usb,
-+						 &hif_dev->udev->dev);
-+	if (hif_dev->htc_handle == NULL) {
-+		ret = -ENOMEM;
-+		goto err_htc_hw_alloc;
-+	}
-+
- 	ret = ath9k_hif_usb_dev_init(hif_dev, fw_name);
- 	if (ret) {
- 		ret = -EINVAL;
- 		goto err_hif_init_usb;
- 	}
- 
--	hif_dev->htc_handle = ath9k_htc_hw_alloc(hif_dev);
--	if (hif_dev->htc_handle == NULL) {
--		ret = -ENOMEM;
--		goto err_htc_hw_alloc;
--	}
--
--	ret = ath9k_htc_hw_init(&hif_usb, hif_dev->htc_handle, hif_dev,
--				&hif_dev->udev->dev, hif_dev->device_id,
--				ATH9K_HIF_USB);
-+	ret = ath9k_htc_hw_init(hif_dev->htc_handle,
-+				&hif_dev->udev->dev, hif_dev->device_id);
- 	if (ret) {
- 		ret = -EINVAL;
- 		goto err_htc_hw_init;
-@@ -884,10 +884,10 @@ static int ath9k_hif_usb_probe(struct usb_interface *interface,
- 	return 0;
- 
- err_htc_hw_init:
--	ath9k_htc_hw_free(hif_dev->htc_handle);
--err_htc_hw_alloc:
- 	ath9k_hif_usb_dev_deinit(hif_dev);
- err_hif_init_usb:
-+	ath9k_htc_hw_free(hif_dev->htc_handle);
-+err_htc_hw_alloc:
- 	usb_set_intfdata(interface, NULL);
- 	kfree(hif_dev);
- 	usb_put_dev(udev);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
-index 7bf6ce1..2c8006a 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
-@@ -425,29 +425,19 @@ void ath9k_htc_rx_msg(struct htc_target *htc_handle,
- 	}
- }
- 
--struct htc_target *ath9k_htc_hw_alloc(void *hif_handle)
-+struct htc_target *ath9k_htc_hw_alloc(void *hif_handle,
-+				      struct ath9k_htc_hif *hif,
-+				      struct device *dev)
- {
-+	struct htc_endpoint *endpoint;
- 	struct htc_target *target;
- 
- 	target = kzalloc(sizeof(struct htc_target), GFP_KERNEL);
--	if (!target)
-+	if (!target) {
- 		printk(KERN_ERR "Unable to allocate memory for"
- 			"target device\n");
--
--	return target;
--}
--
--void ath9k_htc_hw_free(struct htc_target *htc)
--{
--	kfree(htc);
--}
--
--int ath9k_htc_hw_init(struct ath9k_htc_hif *hif, struct htc_target *target,
--		      void *hif_handle, struct device *dev, u16 devid,
--		      enum ath9k_hif_transports transport)
--{
--	struct htc_endpoint *endpoint;
--	int err = 0;
-+		return NULL;
-+	}
- 
- 	init_completion(&target->target_wait);
- 	init_completion(&target->cmd_wait);
-@@ -461,8 +451,18 @@ int ath9k_htc_hw_init(struct ath9k_htc_hif *hif, struct htc_target *target,
- 	endpoint->ul_pipeid = hif->control_ul_pipe;
- 	endpoint->dl_pipeid = hif->control_dl_pipe;
- 
--	err = ath9k_htc_probe_device(target, dev, devid);
--	if (err) {
-+	return target;
-+}
-+
-+void ath9k_htc_hw_free(struct htc_target *htc)
-+{
-+	kfree(htc);
-+}
-+
-+int ath9k_htc_hw_init(struct htc_target *target,
-+		      struct device *dev, u16 devid)
-+{
-+	if (ath9k_htc_probe_device(target, dev, devid)) {
- 		printk(KERN_ERR "Failed to initialize the device\n");
- 		return -ENODEV;
- 	}
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.h b/drivers/net/wireless/ath/ath9k/htc_hst.h
-index ea50ab0..d216c0f 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.h
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.h
-@@ -236,11 +236,12 @@ void ath9k_htc_rx_msg(struct htc_target *htc_handle,
- void ath9k_htc_txcompletion_cb(struct htc_target *htc_handle,
- 			       struct sk_buff *skb, bool txok);
- 
--struct htc_target *ath9k_htc_hw_alloc(void *hif_handle);
-+struct htc_target *ath9k_htc_hw_alloc(void *hif_handle,
-+				      struct ath9k_htc_hif *hif,
-+				      struct device *dev);
- void ath9k_htc_hw_free(struct htc_target *htc);
--int ath9k_htc_hw_init(struct ath9k_htc_hif *hif, struct htc_target *target,
--		      void *hif_handle, struct device *dev, u16 devid,
--		      enum ath9k_hif_transports transport);
-+int ath9k_htc_hw_init(struct htc_target *target,
-+		      struct device *dev, u16 devid);
- void ath9k_htc_hw_deinit(struct htc_target *target, bool hot_unplug);
- 
- #endif /* HTC_HST_H */
--- 
-1.7.1
+If people do not mind the constant "please give us a few days" e-mails
+then things work without the list but then we (at least Atheros) just
+need to make sure regulatory change e-mails do get to the proper folks
+for review because we (Atheros) is committed to reviewing these
+changes.
 
-
--- 
+ Luis
