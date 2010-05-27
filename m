@@ -1,55 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:49208 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756881Ab0EJW2c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 May 2010 18:28:32 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 38/47] iwlwifi: provide more comments for cfg structure
-Date: Mon, 10 May 2010 15:28:09 -0700
-Message-Id: <1273530498-11876-39-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
-References: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:55181 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754820Ab0E0LrG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 May 2010 07:47:06 -0400
+Subject: Re: [RFC PATCHv6] mac80211: Add support for hardware ARP query
+ filtering
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1274960533-395-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1274960533-395-1-git-send-email-juuso.oikarinen@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 27 May 2010 13:47:05 +0200
+Message-ID: <1274960825.3669.37.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On Thu, 2010-05-27 at 14:42 +0300, Juuso Oikarinen wrote:
+> Some hardware allow extended filtering of ARP frames not intended for
+> the host. To perform such filtering, the hardware needs to know the current
+> IP address(es) of the host, bound to its interface.
+> 
+> Add support for ARP filtering to mac80211 by adding a new op to the driver
+> interface, allowing to configure the current IP addresses. This op is called
+> upon association with the currently configured address(es), and when
+> associated whenever the IP address(es) change.
+> 
+> This patch adds configuration of IPv4 addresses only, as IPv6 addresses don't
+> need ARP filtering.
+> 
+> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-Provide comments for newly added cfg parameters
+Yay.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.h |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index d80aa6c..7e5a5ba 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -247,6 +247,18 @@ struct iwl_mod_params {
-  * @support_wimax_coexist: support wimax/wifi co-exist
-  * @plcp_delta_threshold: plcp error rate threshold used to trigger
-  *	radio tuning when there is a high receiving plcp error rate
-+ * @chain_noise_scale: default chain noise scale used for gain computation
-+ * @monitor_recover_period: default timer used to check stuck queues
-+ * @temperature_kelvin: temperature report by uCode in kelvin
-+ * @max_event_log_size: size of event log buffer size for ucode event logging
-+ * @tx_power_by_driver: tx power calibration performed by driver
-+ *	instead of uCode
-+ * @ucode_tracing: support ucode continuous tracing
-+ * @sensitivity_calib_by_driver: driver has the capability to perform
-+ *	sensitivity calibration operation
-+ * @chain_noise_calib_by_driver: driver has the capability to perform
-+ *	chain noise calibration operation
-+ * @scan_antennas: available antenna for scan operation
-  *
-  * We enable the driver to be backward compatible wrt API version. The
-  * driver specifies which APIs it supports (with @ucode_api_max being the
--- 
-1.6.3.3
+
+Hmm. Actually, something I just thought of during our IRC discussion,
+should we turn it off when we disassociate or something? Do we even
+care? I guess not since it'll be reconfigured after the next
+association?
+
+johannes
 
