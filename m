@@ -1,71 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:48342 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752294Ab0ESSkY convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49349 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755166Ab0E0SpN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 May 2010 14:40:24 -0400
-Received: by pwi5 with SMTP id 5so1682933pwi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 19 May 2010 11:40:24 -0700 (PDT)
+	Thu, 27 May 2010 14:45:13 -0400
+Date: Thu, 27 May 2010 14:41:10 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Weedy <weedy2887@gmail.com>, Richard Farina <sidhayn@gmail.com>,
+	=?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: ath5k past 2.6.30 breaks monitor mode (and thus the aircrack
+ suite)
+Message-ID: <20100527184110.GB3728@tuxdriver.com>
+References: <AANLkTimYeL4KQozuTl4le9WUpObsjwp0YAx7eAYq6MBr@mail.gmail.com>
+ <AANLkTikOgv6d0FlXu2-smnYPApeehjRq_j8UxEealqFC@mail.gmail.com>
+ <AANLkTinynNqs6_zyTJcpi7yKiSvC5fBhbM2tVZcnoNUq@mail.gmail.com>
+ <AANLkTinyGlwqq4xshLU5Ol74p0VfcUXBjBGKXlsB2pMy@mail.gmail.com>
+ <AANLkTimIeTadyAhUuri2P630mpDwmBk4B90RpERLbaFE@mail.gmail.com>
+ <AANLkTilXJHs8emXX4YNHbPq0SkuC4Z22NEh-T6mwUSHS@mail.gmail.com>
+ <4BFDEBDC.4070304@gmail.com>
+ <AANLkTin3VSp_FcSiadD4efE1Yo1vKiDXmOngsHEKiQmF@mail.gmail.com>
+ <AANLkTilPvGLRhwZBY3q9UXLaq-zbI9U-VhFNx1dfq1mH@mail.gmail.com>
+ <AANLkTil5yP2xZ5sBXmDEVCHvD2oim92R-dfHx6f-pLOS@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20100518165330.GC4209@tux>
-References: <20100516172012.GA8607@chidori> <20100517143240.GA2436@tuxdriver.com>
-	<20100517165531.GE12203@tux> <20100517172403.GB2436@tuxdriver.com>
-	<20100518054140.GA15675@navi.boekerij> <20100518165330.GC4209@tux>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 19 May 2010 11:40:04 -0700
-Message-ID: <AANLkTikNEiWcnxmIuBoh1fLQoRUvxgX95TQXtxki55oX@mail.gmail.com>
-Subject: Re: [Oops-report] problem with ath9k at shutdown
-To: Huub Reuver <h_reuver@mantell.xs4all.nl>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTil5yP2xZ5sBXmDEVCHvD2oim92R-dfHx6f-pLOS@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 18, 2010 at 9:53 AM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> On Mon, May 17, 2010 at 10:41:40PM -0700, Huub Reuver wrote:
->> On Mon, May 17, 2010 at 01:24:04PM -0400, John W. Linville wrote:
->> > On Mon, May 17, 2010 at 09:55:31AM -0700, Luis R. Rodriguez wrote:
->> > > On Mon, May 17, 2010 at 07:32:41AM -0700, John W. Linville wrote:
->> > > > Did you try 2.6.34?  I'm pretty sure we merged a fix for this...
->> > >
->> > > Ditto, and I think it was not related to ath9k but mac80211.
->> > >
->> > > Was it this maybe?
->> > >
->> > > commit a9f042cbe5284f34ccff15f3084477e11b39b17b
->> > > Author: Ming Lei <tom.leiming@gmail.com>
->> > > Date:   Sun Feb 28 00:56:24 2010 +0800
->> > >
->> > >     ath9k: fix lockdep warning when unloading module
->> > >
->> > > Johannes had noted:
->> > >
->> > > "I think the problem is that the locking for sta_notify changed, and a
->> > > patch that was written for the new locking was backported to the old,
->> > > irq-disabled, locking."
->> >
->> > Yeah, maybe that is what I was thinking about....
->>
->> The traces do not look similar to me, but I'm not a programmer.
->>
->> I have done a few tests:
->> 2.6.32.9 not affected
->> 2.6.32.13 affected
->> 2.6.33.3 affected
->> 2.6.33.4 affected
->> 2.6.34 the problem seems to have been fixed.
->>
->> Sorry for my slow report and response.
->> Thanks for your quick answer, I'll have to switch to 2.6.34 for a
->> production kernel.
->
-> Eh, I am not sure what happened here... this must've been a fix
-> regression as I do not recall seeing this on earlier 2.6.32.y releases.
-> Can you try an earlier 2.6.32.y?
+On Thu, May 27, 2010 at 02:31:12PM -0400, Bob Copeland wrote:
+> On Thu, May 27, 2010 at 1:40 PM, Weedy <weedy2887@gmail.com> wrote:
+> 
+> >> Weedy, if you want reported-by credit can you give your full name and
+> >> preferred email address?
+> > Do I have to? I don't really want to tie my name to this email :/
+> 
+> Honestly I don't know what reported-by policy is (other than I should
+> get your consent first).  I guess John can weigh in whether:
+> 
+>    Reported-by: weedy2887@gmail.com
+> 
+> is acceptable.  For S-o-b, the rule is no anonymous or pseudonymous
+> contributions.  Of course, you don't have to be credited, but your
+> bisection was a huge help in pinning it down :)
 
-I have a fix for this, I'll post this soon, testing 2.6.33 now.
+It isn't necessary, and I suspect that someone that doesn't want his
+name attached doesn't wanted the addition of any further unnecessary
+evidence in the git changelogs either. :-)
 
-  Luis
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
