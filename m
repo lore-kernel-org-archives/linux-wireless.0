@@ -1,46 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:26038 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751198Ab0EXIS7 (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:11173 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752146Ab0E0Alc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 24 May 2010 04:18:59 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 5/6] wl1271: Use proper rates for PSM entry/exit null-funcs for 5GHz
-Date: Mon, 24 May 2010 11:18:19 +0300
-Message-Id: <1274689100-14785-6-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1274689100-14785-1-git-send-email-luciano.coelho@nokia.com>
-References: <1274689100-14785-1-git-send-email-luciano.coelho@nokia.com>
+	Wed, 26 May 2010 20:41:32 -0400
+Received: from vs3012.wh2.ocn.ne.jp (125.206.180.183)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-05467887
+	for <linux-wireless@vger.kernel.org>; Thu, 27 May 2010 09:41:28 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCHv2] mac80211: Fix basic rates for created IBSS networks
+Date: Thu, 27 May 2010 09:41:30 +0900
+References: <1274878088-22785-1-git-send-email-juuso.oikarinen@nokia.com> <1274879624.5277.1917.camel@wimaxnb.nmp.nokia.com> <1274883276.3658.15.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1274883276.3658.15.camel@jlt3.sipsolutions.net>
+Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201005270941.30654.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On Wednesday 26 May 2010 23:14:36 you wrote:
+> Needs to be split up (setting bss_conf and the bss_change flag is a
+> separate bugfix) and tested but this is what I think it should be like.
 
-A fixed 1 mbps rate was used for the PSM entry/exit null-func frames. Fix this
-by using the basic rates instead.
+thanks for this!
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_cmd.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> +	} else {
+> +		/*
+> +		 * If no rates were explicitly configured,
+> +		 * use the mandatory rate set for 11b or
+> +		 * 11a for maximum compatibility.
+> +		 */
+> +		struct ieee80211_supported_band *sband =
+> +			wiphy->bands[ibss.channel->band];
+> +		int j;
+> +		u32 flag = ibss.channel->band == IEEE80211_BAND_5GHZ ?
+> +				IEEE80211_RATE_MANDATORY_A :
+> +				IEEE80211_RATE_MANDATORY_B;
+> +
+> +		for (j = 0; j < sband->n_bitrates; j++) {
+> +			if (sband->bitrates[j].flags & flag)
+> +				ibss.basic_rates |= j;
+> +		}
+> +	}
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-index 5a3ff93..d477929 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-@@ -511,7 +511,7 @@ int wl1271_cmd_ps_mode(struct wl1271 *wl, u8 ps_mode, bool send)
- 	ps_params->send_null_data = send;
- 	ps_params->retries = 5;
- 	ps_params->hang_over_period = 1;
--	ps_params->null_data_rate = cpu_to_le32(1); /* 1 Mbps */
-+	ps_params->null_data_rate = cpu_to_le32(wl->basic_rate_set);
- 
- 	ret = wl1271_cmd_send(wl, CMD_SET_PS_MODE, ps_params,
- 			      sizeof(*ps_params), 0);
--- 
-1.6.3.3
+couldn't we use ieee80211_mandatory_rates() here?
 
+bruno
