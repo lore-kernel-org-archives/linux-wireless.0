@@ -1,70 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:37524 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752384Ab0EMFEb convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37435 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753608Ab0E0LLk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 01:04:31 -0400
-From: Kiran Divekar <dkiran@marvell.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>
-Date: Wed, 12 May 2010 22:04:28 -0700
-Subject: [PATCH] libertas: Added callback functions to support SDIO
- suspend/resume.
-Message-ID: <25B60CDC2F704E4E9D88FFD52780CB4C04D61E8CEA@SC-VEXCH1.marvell.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Thu, 27 May 2010 07:11:40 -0400
+Subject: Re: [RFC PATCHv5] mac80211: Add support for hardware ARP query
+ filtering
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1274958042-25573-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1274958042-25573-1-git-send-email-juuso.oikarinen@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 27 May 2010 13:11:37 +0200
+Message-ID: <1274958697.3669.33.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In suspend() host sleep is activated using already configured
-host sleep parameters through wol command, and in resume() host
-sleep is cancelled. Earlier priv->fw_ready flag used to reset and
-set in suspend and resume handler respectively. Since after suspend
-only host goes into sleep state and firmware is always ready, those
-changes in flag state are removed.
+On Thu, 2010-05-27 at 14:00 +0300, Juuso Oikarinen wrote:
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
----
- drivers/net/wireless/libertas/cmd.c     |   37 ++++++++++++--
- drivers/net/wireless/libertas/cmdresp.c |   30 ++---------
- drivers/net/wireless/libertas/decl.h    |    2 +-
- drivers/net/wireless/libertas/dev.h     |    6 ++
- drivers/net/wireless/libertas/ethtool.c |   15 +++---
- drivers/net/wireless/libertas/if_sdio.c |   58 ++++++++++++++++++++++
- drivers/net/wireless/libertas/if_usb.c  |    6 ++
- drivers/net/wireless/libertas/main.c    |   79 ++++++++++++++++++++++---------
- 8 files changed, 172 insertions(+), 61 deletions(-)
+[...]
 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index cdb9b96..0fa6b0e 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -70,6 +70,8 @@ static u8 is_command_allowed_in_ps(u16 cmd)
- 	switch (cmd) {
- 	case CMD_802_11_RSSI:
- 		return 1;
-+	case CMD_802_11_HOST_SLEEP_CFG:
-+		return 1;
- 	default:
- 		break;
- 	}
-@@ -185,6 +187,23 @@ out:
- 	return ret;
- }
- 
-+static int lbs_ret_host_sleep_cfg(struct lbs_private *priv, unsigned long dummy,
-+			struct cmd_header *resp)
-+{
-+	lbs_deb_enter(LBS_DEB_CMD);
-+	if (priv->wol_criteria == EHS_REMOVE_WAKEUP) {
-+		priv->is_host_sleep_configured = 0;
-+		if (priv->psstate == PS_STATE_FULL_POWER) {
-+			priv->is_host_sleep_activated = 0;
-+			wake_up_interruptible(&priv->host_sleep_q);
-+		}
-+	} else {
-+		priv->is_host_sleep_configured = 1;
-+	}
-+	lbs_deb_leave(LBS_DEB_CMD);
-+	return 0;
+> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> ---
+
+Btw, a patch changelog after the --- would be good.
+
+Like, for example,
+
+v5: no changes, still don't fix interface type crash
+
+
+> +static int ieee80211_ifa_changed(struct notifier_block *nb,
+> +				 unsigned long data, void *arg)
+> +{
+> +	struct in_ifaddr *ifa = arg;
+> +	struct ieee80211_local *local =
+> +		container_of(nb, struct ieee80211_local,
+> +			     ifa_notifier);
+> +	struct net_device *ndev = ifa->ifa_dev->dev;
+> +	struct wireless_dev *wdev = ndev->ieee80211_ptr;
+> +	struct ieee80211_sub_if_data *sdata;
+> +	struct ieee80211_if_managed *ifmgd;
+> +
+> +	/* Make sure it's our interface that got changed */
+> +	if (!wdev)
+> +		return NOTIFY_DONE;
+> +
+> +	if (wdev->wiphy != local->hw.wiphy)
+> +		return NOTIFY_DONE;
+> +
+> +	/* We are concerned about IP addresses only when associated */
+> +	sdata = IEEE80211_DEV_TO_SUB_IF(ndev);
+> +	ifmgd = &sdata->u.mgd;
+> +	mutex_lock(&ifmgd->mtx);
+> +	if (ifmgd->associated)
+> +		ieee80211_set_arp_filter(sdata);
+> +	mutex_unlock(&ifmgd->mtx);
+> +
+> +	return NOTIFY_DONE;
+> +}
+
+Ok ...
+
+Was I not clear enough? I thought I was or you'd have asked, but I can
+spell it out too:
+
+        This *will* crash if you use an interface of a type other than
+        managed/station. You need to check the interface type here and
+        document that the callback will only be invoked for managed mode
+        interfaces.
+
+johannes
+
