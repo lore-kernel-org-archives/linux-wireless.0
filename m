@@ -1,60 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailgw1.uni-kl.de ([131.246.120.220]:42981 "EHLO
-	mailgw1.uni-kl.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757599Ab0E0Jxn (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:59964 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933103Ab0E0I12 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 May 2010 05:53:43 -0400
-Received: from itwm2.itwm.fhg.de (itwm2.itwm.fhg.de [131.246.191.3])
-	by mailgw1.uni-kl.de (8.14.3/8.14.3/Debian-5+lenny1) with ESMTP id o4R9rfIh000759
-	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 27 May 2010 11:53:41 +0200
-Received: from mail2.itwm.fhg.de ([131.246.191.79]:54177)
-	by itwm2.itwm.fhg.de with esmtps (TLSv1:DES-CBC3-SHA:168)
-	(/C=DE/ST=Rheinland-Pfalz/L=Kaiserslautern/O=Fraunhofer ITWM/OU=SLG/CN=mail2.itwm.fhg.de)(verified=1)
-	 (Exim 4.66 #1)
-	id 1OHZmX-0000Ld-E5
-	for linux-wireless@vger.kernel.org; Thu, 27 May 2010 11:53:41 +0200
-Message-ID: <4BFE4124.2090601@itwm.fraunhofer.de>
-Date: Thu, 27 May 2010 11:53:40 +0200
-From: Martin Vogt <martin.vogt@itwm.fraunhofer.de>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: new bluetooth id for lenovo T410s?
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 27 May 2010 04:27:28 -0400
+Subject: Re: [PATCHv2] mac80211: Fix basic rates for created IBSS networks
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1274947895.3669.16.camel@jlt3.sipsolutions.net>
+References: <1274878088-22785-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1274878391.3658.9.camel@jlt3.sipsolutions.net>
+	 <1274879624.5277.1917.camel@wimaxnb.nmp.nokia.com>
+	 <1274883276.3658.15.camel@jlt3.sipsolutions.net>
+	 <1274936780.5277.2879.camel@wimaxnb.nmp.nokia.com>
+	 <1274947895.3669.16.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 27 May 2010 11:28:29 +0300
+Message-ID: <1274948909.5277.3105.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Thu, 2010-05-27 at 10:11 +0200, ext Johannes Berg wrote:
+> On Thu, 2010-05-27 at 08:06 +0300, Juuso Oikarinen wrote:
+> > On Wed, 2010-05-26 at 16:14 +0200, ext Johannes Berg wrote:
+> > > TBD
+> > > 
+> > > Needs to be split up (setting bss_conf and the bss_change flag is a
+> > > separate bugfix) and tested but this is what I think it should be like.
+> > 
+> > Yes, I think this would work. Are you planning on working on this patch?
+> 
+> No.
 
-I have a new Lenovo T410s with the compat-wireless package for 2.6.34.
+Okay, I'll take the patch and work it further.
 
-My bluetooh chip seems not to work:
+-Juuso
 
-linux-4box:~ # lsusb | grep Broadcom
-Bus 001 Device 005: ID 0a5c:217f Broadcom Corp.
+> johannes
+> 
 
-This device id (from lsub) is missing in ./drivers/bluetooth/btusb.c:
-
-/* IBM/Lenovo ThinkPad with Broadcom chip */
-{ USB_DEVICE(0x0a5c, 0x201e), .driver_info = BTUSB_WRONG_SCO_MTU },
-{ USB_DEVICE(0x0a5c, 0x2110), .driver_info = BTUSB_WRONG_SCO_MTU },
-
-Most likely the T410s has this chip onboard:
-
-Broadcom Model: BCM2045B (BDC-2).
-
-But I haven't found any resources on the lenovo pages about that.
-Only this:
-
-http://www.thinkwiki.org/wiki/ThinkPad_Bluetooth_with_Enhanced_Data_Rate_(BDC-2.1)
-
-Do you think I should add the ids to btusb.c?
-
-+{ USB_DEVICE(0x0a5c, 0x217f), .driver_info = BTUSB_WRONG_SCO_MTU },
-
-and test it?
-
-regards,
-
-Martin
 
