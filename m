@@ -1,79 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:55341 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754168Ab0EYQj3 (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:34634 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750795Ab0E0FfC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 25 May 2010 12:39:29 -0400
-Date: Tue, 25 May 2010 09:39:20 -0700
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>
-Subject: iwl3945 dies (oops) in post 2.6.34 kernels
-Message-ID: <20100525163920.GA2730@core.coreip.homeip.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 27 May 2010 01:35:02 -0400
+Subject: Re: [RFC PATCHv2] mac80211: Add support for hardware ARP query
+ filtering
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1274878321.3658.7.camel@jlt3.sipsolutions.net>
+References: <1274873379-12944-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1274874739.3658.5.camel@jlt3.sipsolutions.net>
+	 <1274878272.5277.1890.camel@wimaxnb.nmp.nokia.com>
+	 <1274878321.3658.7.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 27 May 2010 08:36:50 +0300
+Message-ID: <1274938610.5277.2914.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, 2010-05-26 at 14:52 +0200, ext Johannes Berg wrote:
+> On Wed, 2010-05-26 at 15:51 +0300, Juuso Oikarinen wrote:
+> 
+> > > > +	rtnl_lock();
+> > > > +	ieee80211_set_arp_filter(sdata);
+> > > > +	rtnl_unlock();
+> > > > +
+> > > 
+> > > Please analyse locking in more detail and enable lockdep :)
+> > > 
+> > > This will cause deadlocks.
+> > 
+> > I have lockdep permanently enabled in my development kernel. It has
+> > given me no complaints in testing with the corresponding wl1271 driver
+> > patch.
+> > 
+> > But I will look into those locks further if I can figure out any
+> > deadlock scenarios.
+> 
+> Interesting .. because for sure a lot of the ieee80211_mgd_* functions
+> are called with rtnl held and lock the mgd mutex, but it is the other
+> way around here.
 
-I am getting the following crashers in iwl3945 after updating to
-post-2.6.34 kernels. This is with the pull from Linus's tree as of last
-night (the taint is from nvidia module):
+You are right. There are at least some paths where mgd mutex is locked
+with rtnl held, so there is a risk of deadlock. This has not occurred in
+my limited testing, but is certainly possible, and obviously we should
+always do locking in the same order.
 
-[ 3330.630734] general protection fault: 0000 [#1] PREEMPT SMP 
-[ 3330.630752] last sysfs file: /sys/devices/platform/dock.0/docked
-[ 3330.630761] CPU 0 
-[ 3330.630766] Modules linked in: cryptd aes_x86_64 aes_generic fuse rfcomm sco bnep l2cap autofs4
-coretemp hwmon sunrpc ppdev parport_pc parport acpi_cpufreq mperf uinput nvidia(P) snd_hda_codec_idt
-arc4 snd_hda_intel ecb snd_hda_codec snd_hwdep iwl3945 joydev snd_seq snd_seq_device snd_pcm iwlcore
-mac80211 snd_timer cfg80211 snd psmouse iTCO_wdt dell_wmi iTCO_vendor_support serio_raw tg3 battery
-dell_laptop dcdbas soundcore snd_page_alloc btusb bluetooth video pcspkr mac_hid ac wmi libphy
-firewire_ohci i2c_i801 firewire_core yenta_socket crc_itu_t ohci_hcd [last unloaded: microcode]
-[ 3330.630950] 
-[ 3330.630958] Pid: 455, comm: iwl3945 Tainted: P            2.6.35-rc0 #293 0WM416/Latitude D630                   
-[ 3330.630967] RIP: 0010:[<ffffffffa01e70d3>]  [<ffffffffa01e70d3>] iwl3945_get_channels_for_scan+0xe3/0x460 [iwl3945]
-[ 3330.630993] RSP: 0018:ffff8801126b1c10  EFLAGS: 00010297
-[ 3330.631001] RAX: ffff8800b2853c00 RBX: 0000000000000000 RCX: 0002079700220078
-[ 3330.631009] RDX: 0000000000000000 RSI: 0000000000000001 RDI: ffff880112641aa0
-[ 3330.631016] RBP: ffff8801126b1cc0 R08: ffff88010c22d0f2 R09: 0000000000000000
-[ 3330.631024] R10: 0000000000000000 R11: 0000000000000001 R12: 0000000000000001
-[ 3330.631032] R13: ffff880112641aa0 R14: ffff88010c22d0f2 R15: 0000000000000000
-[ 3330.631040] FS:  0000000000000000(0000) GS:ffff880002600000(0000) knlGS:0000000000000000
-[ 3330.631049] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-[ 3330.631056] CR2: 0000000005d03000 CR3: 0000000001806000 CR4: 00000000000006f0
-[ 3330.631064] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[ 3330.631072] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-[ 3330.631081] Process iwl3945 (pid: 455, threadinfo ffff8801126b0000, task ffff880115ab3fa0)
-[ 3330.631087] Stack:
-[ 3330.631092]  0000000000000000 ffffffffa01e7980 ffff880100000000 ffffffff814932ad
-[ 3330.631106] <0> ffff8801126424c0 ffff880115ab3fa0 ffffffff00000000 0000005800000016
-[ 3330.631123] <0> ffff8801126b1fd8 0058ffff00575231 ffff8801126b1fd8 0000000000000001
-[ 3330.631143] Call Trace:
-[ 3330.631161]  [<ffffffffa01e7980>] ? iwl3945_request_scan+0x3f0/0xb40 [iwl3945]
-[ 3330.631178]  [<ffffffff814932ad>] ? _raw_spin_unlock_irqrestore+0x3d/0x70
-[ 3330.631190]  [<ffffffff81496dfd>] ? sub_preempt_count+0x9d/0xd0
-[ 3330.631206]  [<ffffffffa01e7ac4>] iwl3945_request_scan+0x534/0xb40 [iwl3945]
-[ 3330.631233]  [<ffffffffa018bf60>] ? iwl_bg_start_internal_scan+0x0/0x320 [iwlcore]
-[ 3330.631254]  [<ffffffffa018bf60>] ? iwl_bg_start_internal_scan+0x0/0x320 [iwlcore]
-[ 3330.631274]  [<ffffffffa018c166>] iwl_bg_start_internal_scan+0x206/0x320 [iwlcore]
-[ 3330.631288]  [<ffffffff81065f4c>] run_workqueue+0x12c/0x2a0
-[ 3330.631298]  [<ffffffff81065efb>] ? run_workqueue+0xdb/0x2a0
-[ 3330.631311]  [<ffffffff81066156>] worker_thread+0x96/0xf0
-[ 3330.631323]  [<ffffffff8106b1c0>] ? autoremove_wake_function+0x0/0x40
-[ 3330.631333]  [<ffffffff810660c0>] ? worker_thread+0x0/0xf0
-[ 3330.631344]  [<ffffffff8106acae>] kthread+0x8e/0xa0
-[ 3330.631356]  [<ffffffff81003d94>] kernel_thread_helper+0x4/0x10
-[ 3330.631367]  [<ffffffff81035c24>] ? finish_task_switch+0x74/0xd0
-[ 3330.631377]  [<ffffffff81493a40>] ? restore_args+0x0/0x30
-[ 3330.631388]  [<ffffffff8106ac20>] ? kthread+0x0/0xa0
-[ 3330.631398]  [<ffffffff81003d90>] ? kernel_thread_helper+0x0/0x10
-[ 3330.631404] Code: b7 55 ce 89 55 88 41 8d 57 ff 45 89 d7 66 89 55 9a eb 10 0f 1f 44 00 00 ff c3
-39 58 0c 0f 86 c5 00 00 00 48 63 d3 48 8b 4c d0 38 <44> 39 21 75 e8 0f b7 51 06 44 89 e6 41 88 56 01
-48 89 4d 80 0f 
-[ 3330.631505] RIP  [<ffffffffa01e70d3>] iwl3945_get_channels_for_scan+0xe3/0x460 [iwl3945]
-[ 3330.631505]  RSP <ffff8801126b1c10>
-[ 3330.631657] ---[ end trace faaae140797cc308 ]---
+I'll have to see if I can move this notification outside the mgd lock,
+and if I can't, I'll have to use a workqueue function.
 
--- 
-Dmitry
+-Juuso
+
+> johannes
+> 
+
+
