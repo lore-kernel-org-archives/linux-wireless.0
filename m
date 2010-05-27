@@ -1,60 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:45648 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932376Ab0EVBTF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 May 2010 21:19:05 -0400
-Date: Fri, 21 May 2010 18:19:02 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Pavel Roskin <proski@gnu.org>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] compat-wireless: add linux-next-pending, crap patch
- dirs and nagometer
-Message-ID: <20100522011902.GB2202@tux>
-References: <1274489059-1019-1-git-send-email-lrodriguez@atheros.com>
- <1274490936.3439.14.camel@ct>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1274490936.3439.14.camel@ct>
+Received: from he.sipsolutions.net ([78.46.109.217]:43391 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754902Ab0E0ILl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 May 2010 04:11:41 -0400
+Subject: Re: [PATCHv2] mac80211: Fix basic rates for created IBSS networks
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1274936780.5277.2879.camel@wimaxnb.nmp.nokia.com>
+References: <1274878088-22785-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1274878391.3658.9.camel@jlt3.sipsolutions.net>
+	 <1274879624.5277.1917.camel@wimaxnb.nmp.nokia.com>
+	 <1274883276.3658.15.camel@jlt3.sipsolutions.net>
+	 <1274936780.5277.2879.camel@wimaxnb.nmp.nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 27 May 2010 10:11:35 +0200
+Message-ID: <1274947895.3669.16.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 21, 2010 at 06:15:36PM -0700, Pavel Roskin wrote:
-> On Fri, 2010-05-21 at 20:44 -0400, Luis R. Rodriguez wrote:
-> > Sometimes you have no other option but to carry around patches.
-> > This can happen for a variety of reasons. Ultimately testing of code
-> > cannot happen on the kernel maintainer's clock but on your own.
+On Thu, 2010-05-27 at 08:06 +0300, Juuso Oikarinen wrote:
+> On Wed, 2010-05-26 at 16:14 +0200, ext Johannes Berg wrote:
+> > TBD
 > > 
-> > This expands the idea of the linux-next-cherry-pick patch directory
-> > on compat-wireless to also allow for patches to be merged which are
-> > posted to some mailing list but pending merge due to some reasons
-> > (merge window is a good example). It also adds a crap patch directory
-> > for those really nasty situations you can run into where you have
-> > no other option but to give someone a release with some delta even
-> > if the patch is not yet posted anywhere.
+> > Needs to be split up (setting bss_conf and the bss_change flag is a
+> > separate bugfix) and tested but this is what I think it should be like.
 > 
-> Please replace "crap" with some more descriptive name, like
-> "unpublished".  It's better to be friendly to users and express
-> frustration in a different way.
+> Yes, I think this would work. Are you planning on working on this patch?
 
-I'm using crap to keep focus on not-yet-merged-or-posted code, I refuse
-to be friendly to that type of code. I want the users to be frustrated
-about that code.
+No.
 
-> > +	printf "${RED}%10s${NORMAL} - Crap changes not yet posted\n" $2
-> > +	printf "${RED}%10s${NORMAL} - Crap additions not yet merged\n" $3
-> > +	printf "${RED}%10s${NORMAL} - Crap deletions not yet posted\n" $4
-> 
-> You want "not yet posted" in all cases.
+johannes
 
-OK thanks, I'll fix.
-
-> "Crap deletions" may be offensive for Linux contributors whose code is
-> being deleted.  Besides, if patches are not posted, somebody still spent
-> time on making them.  Let's not discourage those who care.
-
-Sure.
-
-  Luis
