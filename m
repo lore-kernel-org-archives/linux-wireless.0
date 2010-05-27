@@ -1,624 +1,282 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:42173 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753147Ab0ETKJz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 20 May 2010 06:09:55 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 20 May 2010 03:09:55 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19445.2358.174399.247229@gargle.gargle.HOWL>
-Date: Thu, 20 May 2010 15:34:38 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/2] ath9k: Move ath9k specific RX code to driver
+Received: from smtp.nokia.com ([192.100.122.230]:21058 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750821Ab0E0Mb1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 May 2010 08:31:27 -0400
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: Add support for hardware ARP query filtering
+Date: Thu, 27 May 2010 15:32:13 +0300
+Message-Id: <1274963533-8687-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch relocates RX processing code from the
-common module to ath9k. This reduces the size
-of the common module which is also used by ath9k_htc.
+Some hardware allow extended filtering of ARP frames not intended for
+the host. To perform such filtering, the hardware needs to know the current
+IP address(es) of the host, bound to its interface.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Add support for ARP filtering to mac80211 by adding a new op to the driver
+interface, allowing to configure the current IP addresses. This op is called
+upon association with the currently configured address(es), and when
+associated whenever the IP address(es) change.
+
+This patch adds configuration of IPv4 addresses only, as IPv6 addresses don't
+need ARP filtering.
+
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/ath/ath9k/common.c |  264 ------------------------------
- drivers/net/wireless/ath/ath9k/common.h |   13 --
- drivers/net/wireless/ath/ath9k/recv.c   |  267 ++++++++++++++++++++++++++++++-
- 3 files changed, 263 insertions(+), 281 deletions(-)
+ include/net/mac80211.h      |   14 +++++++++
+ net/mac80211/driver-ops.h   |   17 +++++++++++
+ net/mac80211/driver-trace.h |   25 +++++++++++++++++
+ net/mac80211/ieee80211_i.h  |    2 +
+ net/mac80211/main.c         |   63 ++++++++++++++++++++++++++++++++++++++++++-
+ net/mac80211/mlme.c         |   11 +++++++-
+ 6 files changed, 130 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
-index 7707341..27f9ae5 100644
---- a/drivers/net/wireless/ath/ath9k/common.c
-+++ b/drivers/net/wireless/ath/ath9k/common.c
-@@ -27,270 +27,6 @@ MODULE_AUTHOR("Atheros Communications");
- MODULE_DESCRIPTION("Shared library for Atheros wireless 802.11n LAN cards.");
- MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index de22cbf..169251c 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -19,6 +19,7 @@
+ #include <linux/wireless.h>
+ #include <linux/device.h>
+ #include <linux/ieee80211.h>
++#include <linux/inetdevice.h>
+ #include <net/cfg80211.h>
  
--/* Common RX processing */
--
--/* Assumes you've already done the endian to CPU conversion */
--static bool ath9k_rx_accept(struct ath_common *common,
--			    struct sk_buff *skb,
--			    struct ieee80211_rx_status *rxs,
--			    struct ath_rx_status *rx_stats,
--			    bool *decrypt_error)
--{
--	struct ath_hw *ah = common->ah;
--	struct ieee80211_hdr *hdr;
--	__le16 fc;
--
--	hdr = (struct ieee80211_hdr *) skb->data;
--	fc = hdr->frame_control;
--
--	if (!rx_stats->rs_datalen)
--		return false;
--        /*
--         * rs_status follows rs_datalen so if rs_datalen is too large
--         * we can take a hint that hardware corrupted it, so ignore
--         * those frames.
--         */
--	if (rx_stats->rs_datalen > common->rx_bufsize)
--		return false;
--
--	/*
--	 * rs_more indicates chained descriptors which can be used
--	 * to link buffers together for a sort of scatter-gather
--	 * operation.
--	 * reject the frame, we don't support scatter-gather yet and
--	 * the frame is probably corrupt anyway
--	 */
--	if (rx_stats->rs_more)
--		return false;
--
--	/*
--	 * The rx_stats->rs_status will not be set until the end of the
--	 * chained descriptors so it can be ignored if rs_more is set. The
--	 * rs_more will be false at the last element of the chained
--	 * descriptors.
--	 */
--	if (rx_stats->rs_status != 0) {
--		if (rx_stats->rs_status & ATH9K_RXERR_CRC)
--			rxs->flag |= RX_FLAG_FAILED_FCS_CRC;
--		if (rx_stats->rs_status & ATH9K_RXERR_PHY)
--			return false;
--
--		if (rx_stats->rs_status & ATH9K_RXERR_DECRYPT) {
--			*decrypt_error = true;
--		} else if (rx_stats->rs_status & ATH9K_RXERR_MIC) {
--			if (ieee80211_is_ctl(fc))
--				/*
--				 * Sometimes, we get invalid
--				 * MIC failures on valid control frames.
--				 * Remove these mic errors.
--				 */
--				rx_stats->rs_status &= ~ATH9K_RXERR_MIC;
--			else
--				rxs->flag |= RX_FLAG_MMIC_ERROR;
--		}
--		/*
--		 * Reject error frames with the exception of
--		 * decryption and MIC failures. For monitor mode,
--		 * we also ignore the CRC error.
--		 */
--		if (ah->opmode == NL80211_IFTYPE_MONITOR) {
--			if (rx_stats->rs_status &
--			    ~(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_MIC |
--			      ATH9K_RXERR_CRC))
--				return false;
--		} else {
--			if (rx_stats->rs_status &
--			    ~(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_MIC)) {
--				return false;
--			}
--		}
--	}
--	return true;
--}
--
--static int ath9k_process_rate(struct ath_common *common,
--			      struct ieee80211_hw *hw,
--			      struct ath_rx_status *rx_stats,
--			      struct ieee80211_rx_status *rxs,
--			      struct sk_buff *skb)
--{
--	struct ieee80211_supported_band *sband;
--	enum ieee80211_band band;
--	unsigned int i = 0;
--
--	band = hw->conf.channel->band;
--	sband = hw->wiphy->bands[band];
--
--	if (rx_stats->rs_rate & 0x80) {
--		/* HT rate */
--		rxs->flag |= RX_FLAG_HT;
--		if (rx_stats->rs_flags & ATH9K_RX_2040)
--			rxs->flag |= RX_FLAG_40MHZ;
--		if (rx_stats->rs_flags & ATH9K_RX_GI)
--			rxs->flag |= RX_FLAG_SHORT_GI;
--		rxs->rate_idx = rx_stats->rs_rate & 0x7f;
--		return 0;
--	}
--
--	for (i = 0; i < sband->n_bitrates; i++) {
--		if (sband->bitrates[i].hw_value == rx_stats->rs_rate) {
--			rxs->rate_idx = i;
--			return 0;
--		}
--		if (sband->bitrates[i].hw_value_short == rx_stats->rs_rate) {
--			rxs->flag |= RX_FLAG_SHORTPRE;
--			rxs->rate_idx = i;
--			return 0;
--		}
--	}
--
--	/*
--	 * No valid hardware bitrate found -- we should not get here
--	 * because hardware has already validated this frame as OK.
--	 */
--	ath_print(common, ATH_DBG_XMIT, "unsupported hw bitrate detected "
--		  "0x%02x using 1 Mbit\n", rx_stats->rs_rate);
--	if ((common->debug_mask & ATH_DBG_XMIT))
--		print_hex_dump_bytes("", DUMP_PREFIX_NONE, skb->data, skb->len);
--
--	return -EINVAL;
--}
--
--static void ath9k_process_rssi(struct ath_common *common,
--			       struct ieee80211_hw *hw,
--			       struct sk_buff *skb,
--			       struct ath_rx_status *rx_stats)
--{
--	struct ath_hw *ah = common->ah;
--	struct ieee80211_sta *sta;
--	struct ieee80211_hdr *hdr;
--	struct ath_node *an;
--	int last_rssi = ATH_RSSI_DUMMY_MARKER;
--	__le16 fc;
--
--	hdr = (struct ieee80211_hdr *)skb->data;
--	fc = hdr->frame_control;
--
--	rcu_read_lock();
--	/*
--	 * XXX: use ieee80211_find_sta! This requires quite a bit of work
--	 * under the current ath9k virtual wiphy implementation as we have
--	 * no way of tying a vif to wiphy. Typically vifs are attached to
--	 * at least one sdata of a wiphy on mac80211 but with ath9k virtual
--	 * wiphy you'd have to iterate over every wiphy and each sdata.
--	 */
--	sta = ieee80211_find_sta_by_hw(hw, hdr->addr2);
--	if (sta) {
--		an = (struct ath_node *) sta->drv_priv;
--		if (rx_stats->rs_rssi != ATH9K_RSSI_BAD &&
--		   !rx_stats->rs_moreaggr)
--			ATH_RSSI_LPF(an->last_rssi, rx_stats->rs_rssi);
--		last_rssi = an->last_rssi;
--	}
--	rcu_read_unlock();
--
--	if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
--		rx_stats->rs_rssi = ATH_EP_RND(last_rssi,
--					      ATH_RSSI_EP_MULTIPLIER);
--	if (rx_stats->rs_rssi < 0)
--		rx_stats->rs_rssi = 0;
--
--	/* Update Beacon RSSI, this is used by ANI. */
--	if (ieee80211_is_beacon(fc))
--		ah->stats.avgbrssi = rx_stats->rs_rssi;
--}
--
--/*
-- * For Decrypt or Demic errors, we only mark packet status here and always push
-- * up the frame up to let mac80211 handle the actual error case, be it no
-- * decryption key or real decryption error. This let us keep statistics there.
-- */
--int ath9k_cmn_rx_skb_preprocess(struct ath_common *common,
--				struct ieee80211_hw *hw,
--				struct sk_buff *skb,
--				struct ath_rx_status *rx_stats,
--				struct ieee80211_rx_status *rx_status,
--				bool *decrypt_error)
--{
--	struct ath_hw *ah = common->ah;
--
--	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
--
--	/*
--	 * everything but the rate is checked here, the rate check is done
--	 * separately to avoid doing two lookups for a rate for each frame.
--	 */
--	if (!ath9k_rx_accept(common, skb, rx_status, rx_stats, decrypt_error))
--		return -EINVAL;
--
--	ath9k_process_rssi(common, hw, skb, rx_stats);
--
--	if (ath9k_process_rate(common, hw, rx_stats, rx_status, skb))
--		return -EINVAL;
--
--	rx_status->mactime = ath9k_hw_extend_tsf(ah, rx_stats->rs_tstamp);
--	rx_status->band = hw->conf.channel->band;
--	rx_status->freq = hw->conf.channel->center_freq;
--	rx_status->signal = ATH_DEFAULT_NOISE_FLOOR + rx_stats->rs_rssi;
--	rx_status->antenna = rx_stats->rs_antenna;
--	rx_status->flag |= RX_FLAG_TSFT;
--
--	return 0;
--}
--EXPORT_SYMBOL(ath9k_cmn_rx_skb_preprocess);
--
--void ath9k_cmn_rx_skb_postprocess(struct ath_common *common,
--				  struct sk_buff *skb,
--				  struct ath_rx_status *rx_stats,
--				  struct ieee80211_rx_status *rxs,
--				  bool decrypt_error)
--{
--	struct ath_hw *ah = common->ah;
--	struct ieee80211_hdr *hdr;
--	int hdrlen, padpos, padsize;
--	u8 keyix;
--	__le16 fc;
--
--	/* see if any padding is done by the hw and remove it */
--	hdr = (struct ieee80211_hdr *) skb->data;
--	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
--	fc = hdr->frame_control;
--	padpos = ath9k_cmn_padpos(hdr->frame_control);
--
--	/* The MAC header is padded to have 32-bit boundary if the
--	 * packet payload is non-zero. The general calculation for
--	 * padsize would take into account odd header lengths:
--	 * padsize = (4 - padpos % 4) % 4; However, since only
--	 * even-length headers are used, padding can only be 0 or 2
--	 * bytes and we can optimize this a bit. In addition, we must
--	 * not try to remove padding from short control frames that do
--	 * not have payload. */
--	padsize = padpos & 3;
--	if (padsize && skb->len>=padpos+padsize+FCS_LEN) {
--		memmove(skb->data + padsize, skb->data, padpos);
--		skb_pull(skb, padsize);
--	}
--
--	keyix = rx_stats->rs_keyix;
--
--	if (!(keyix == ATH9K_RXKEYIX_INVALID) && !decrypt_error &&
--	    ieee80211_has_protected(fc)) {
--		rxs->flag |= RX_FLAG_DECRYPTED;
--	} else if (ieee80211_has_protected(fc)
--		   && !decrypt_error && skb->len >= hdrlen + 4) {
--		keyix = skb->data[hdrlen + 3] >> 6;
--
--		if (test_bit(keyix, common->keymap))
--			rxs->flag |= RX_FLAG_DECRYPTED;
--	}
--	if (ah->sw_mgmt_crypto &&
--	    (rxs->flag & RX_FLAG_DECRYPTED) &&
--	    ieee80211_is_mgmt(fc))
--		/* Use software decrypt for management frames. */
--		rxs->flag &= ~RX_FLAG_DECRYPTED;
--}
--EXPORT_SYMBOL(ath9k_cmn_rx_skb_postprocess);
--
- int ath9k_cmn_padpos(__le16 frame_control)
- {
- 	int padpos = 24;
-diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
-index e08f7e5..1e6f360 100644
---- a/drivers/net/wireless/ath/ath9k/common.h
-+++ b/drivers/net/wireless/ath/ath9k/common.h
-@@ -115,19 +115,6 @@ struct ath_node {
- 	int last_rssi;
- };
- 
--int ath9k_cmn_rx_skb_preprocess(struct ath_common *common,
--				struct ieee80211_hw *hw,
--				struct sk_buff *skb,
--				struct ath_rx_status *rx_stats,
--				struct ieee80211_rx_status *rx_status,
--				bool *decrypt_error);
--
--void ath9k_cmn_rx_skb_postprocess(struct ath_common *common,
--				  struct sk_buff *skb,
--				  struct ath_rx_status *rx_stats,
--				  struct ieee80211_rx_status *rxs,
--				  bool decrypt_error);
--
- int ath9k_cmn_padpos(__le16 frame_control);
- int ath9k_cmn_get_hw_crypto_keytype(struct sk_buff *skb);
- void ath9k_cmn_update_ichannel(struct ieee80211_hw *hw,
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index ba13913..10092dd 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -815,6 +815,265 @@ static struct ath_buf *ath_get_next_rx_buf(struct ath_softc *sc,
- 	return bf;
+ /**
+@@ -1535,6 +1536,16 @@ enum ieee80211_ampdu_mlme_action {
+  *	of the bss parameters has changed when a call is made. The callback
+  *	can sleep.
+  *
++ * @configure_arp_filter: Configuration function for hardware ARP query filter.
++ *	This function is called with all the IP addresses configured to the
++ *	interface as argument - all ARP queries targeted to any of these
++ *	addresses must pass through. If the hardware filter does not support
++ *	enought addresses, hardware filtering must be disabled. The ifa_list
++ *	argument may be NULL, indicating that filtering must be disabled.
++ *	This function is called upon association complete with current
++ *	address(es), and while associated whenever the IP address(es) change.
++ *	The callback can sleep.
++ *
+  * @prepare_multicast: Prepare for multicast filter configuration.
+  *	This callback is optional, and its return value is passed
+  *	to configure_filter(). This callback must be atomic.
+@@ -1674,6 +1685,9 @@ struct ieee80211_ops {
+ 				 struct ieee80211_vif *vif,
+ 				 struct ieee80211_bss_conf *info,
+ 				 u32 changed);
++	int (*configure_arp_filter)(struct ieee80211_hw *hw,
++				    struct ieee80211_vif *vif,
++				    struct in_ifaddr *ifa_list);
+ 	u64 (*prepare_multicast)(struct ieee80211_hw *hw,
+ 				 struct netdev_hw_addr_list *mc_list);
+ 	void (*configure_filter)(struct ieee80211_hw *hw,
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 4f22713..978850e 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -83,6 +83,23 @@ static inline void drv_bss_info_changed(struct ieee80211_local *local,
+ 	trace_drv_bss_info_changed(local, sdata, info, changed);
  }
  
-+/* Assumes you've already done the endian to CPU conversion */
-+static bool ath9k_rx_accept(struct ath_common *common,
-+			    struct sk_buff *skb,
-+			    struct ieee80211_rx_status *rxs,
-+			    struct ath_rx_status *rx_stats,
-+			    bool *decrypt_error)
++struct in_ifaddr;
++static inline int drv_configure_arp_filter(struct ieee80211_local *local,
++					   struct ieee80211_vif *vif,
++					   struct in_ifaddr *ifa_list)
 +{
-+	struct ath_hw *ah = common->ah;
-+	struct ieee80211_hdr *hdr;
-+	__le16 fc;
++	int ret = 0;
 +
-+	hdr = (struct ieee80211_hdr *) skb->data;
-+	fc = hdr->frame_control;
++	might_sleep();
 +
-+	if (!rx_stats->rs_datalen)
-+		return false;
-+        /*
-+         * rs_status follows rs_datalen so if rs_datalen is too large
-+         * we can take a hint that hardware corrupted it, so ignore
-+         * those frames.
-+         */
-+	if (rx_stats->rs_datalen > common->rx_bufsize)
-+		return false;
++	if (local->ops->configure_arp_filter)
++		ret = local->ops->configure_arp_filter(&local->hw, vif,
++						       ifa_list);
 +
-+	/*
-+	 * rs_more indicates chained descriptors which can be used
-+	 * to link buffers together for a sort of scatter-gather
-+	 * operation.
-+	 * reject the frame, we don't support scatter-gather yet and
-+	 * the frame is probably corrupt anyway
-+	 */
-+	if (rx_stats->rs_more)
-+		return false;
-+
-+	/*
-+	 * The rx_stats->rs_status will not be set until the end of the
-+	 * chained descriptors so it can be ignored if rs_more is set. The
-+	 * rs_more will be false at the last element of the chained
-+	 * descriptors.
-+	 */
-+	if (rx_stats->rs_status != 0) {
-+		if (rx_stats->rs_status & ATH9K_RXERR_CRC)
-+			rxs->flag |= RX_FLAG_FAILED_FCS_CRC;
-+		if (rx_stats->rs_status & ATH9K_RXERR_PHY)
-+			return false;
-+
-+		if (rx_stats->rs_status & ATH9K_RXERR_DECRYPT) {
-+			*decrypt_error = true;
-+		} else if (rx_stats->rs_status & ATH9K_RXERR_MIC) {
-+			if (ieee80211_is_ctl(fc))
-+				/*
-+				 * Sometimes, we get invalid
-+				 * MIC failures on valid control frames.
-+				 * Remove these mic errors.
-+				 */
-+				rx_stats->rs_status &= ~ATH9K_RXERR_MIC;
-+			else
-+				rxs->flag |= RX_FLAG_MMIC_ERROR;
-+		}
-+		/*
-+		 * Reject error frames with the exception of
-+		 * decryption and MIC failures. For monitor mode,
-+		 * we also ignore the CRC error.
-+		 */
-+		if (ah->opmode == NL80211_IFTYPE_MONITOR) {
-+			if (rx_stats->rs_status &
-+			    ~(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_MIC |
-+			      ATH9K_RXERR_CRC))
-+				return false;
-+		} else {
-+			if (rx_stats->rs_status &
-+			    ~(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_MIC)) {
-+				return false;
-+			}
-+		}
-+	}
-+	return true;
++	trace_drv_configure_arp_filter(local, vif_to_sdata(vif), ifa_list, ret);
++	return ret;
 +}
 +
-+static int ath9k_process_rate(struct ath_common *common,
-+			      struct ieee80211_hw *hw,
-+			      struct ath_rx_status *rx_stats,
-+			      struct ieee80211_rx_status *rxs,
-+			      struct sk_buff *skb)
-+{
-+	struct ieee80211_supported_band *sband;
-+	enum ieee80211_band band;
-+	unsigned int i = 0;
-+
-+	band = hw->conf.channel->band;
-+	sband = hw->wiphy->bands[band];
-+
-+	if (rx_stats->rs_rate & 0x80) {
-+		/* HT rate */
-+		rxs->flag |= RX_FLAG_HT;
-+		if (rx_stats->rs_flags & ATH9K_RX_2040)
-+			rxs->flag |= RX_FLAG_40MHZ;
-+		if (rx_stats->rs_flags & ATH9K_RX_GI)
-+			rxs->flag |= RX_FLAG_SHORT_GI;
-+		rxs->rate_idx = rx_stats->rs_rate & 0x7f;
-+		return 0;
-+	}
-+
-+	for (i = 0; i < sband->n_bitrates; i++) {
-+		if (sband->bitrates[i].hw_value == rx_stats->rs_rate) {
-+			rxs->rate_idx = i;
-+			return 0;
-+		}
-+		if (sband->bitrates[i].hw_value_short == rx_stats->rs_rate) {
-+			rxs->flag |= RX_FLAG_SHORTPRE;
-+			rxs->rate_idx = i;
-+			return 0;
-+		}
-+	}
-+
-+	/*
-+	 * No valid hardware bitrate found -- we should not get here
-+	 * because hardware has already validated this frame as OK.
-+	 */
-+	ath_print(common, ATH_DBG_XMIT, "unsupported hw bitrate detected "
-+		  "0x%02x using 1 Mbit\n", rx_stats->rs_rate);
-+	if ((common->debug_mask & ATH_DBG_XMIT))
-+		print_hex_dump_bytes("", DUMP_PREFIX_NONE, skb->data, skb->len);
-+
-+	return -EINVAL;
-+}
-+
-+static void ath9k_process_rssi(struct ath_common *common,
-+			       struct ieee80211_hw *hw,
-+			       struct sk_buff *skb,
-+			       struct ath_rx_status *rx_stats)
-+{
-+	struct ath_hw *ah = common->ah;
-+	struct ieee80211_sta *sta;
-+	struct ieee80211_hdr *hdr;
-+	struct ath_node *an;
-+	int last_rssi = ATH_RSSI_DUMMY_MARKER;
-+	__le16 fc;
-+
-+	hdr = (struct ieee80211_hdr *)skb->data;
-+	fc = hdr->frame_control;
-+
-+	rcu_read_lock();
-+	/*
-+	 * XXX: use ieee80211_find_sta! This requires quite a bit of work
-+	 * under the current ath9k virtual wiphy implementation as we have
-+	 * no way of tying a vif to wiphy. Typically vifs are attached to
-+	 * at least one sdata of a wiphy on mac80211 but with ath9k virtual
-+	 * wiphy you'd have to iterate over every wiphy and each sdata.
-+	 */
-+	sta = ieee80211_find_sta_by_hw(hw, hdr->addr2);
-+	if (sta) {
-+		an = (struct ath_node *) sta->drv_priv;
-+		if (rx_stats->rs_rssi != ATH9K_RSSI_BAD &&
-+		   !rx_stats->rs_moreaggr)
-+			ATH_RSSI_LPF(an->last_rssi, rx_stats->rs_rssi);
-+		last_rssi = an->last_rssi;
-+	}
-+	rcu_read_unlock();
-+
-+	if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
-+		rx_stats->rs_rssi = ATH_EP_RND(last_rssi,
-+					      ATH_RSSI_EP_MULTIPLIER);
-+	if (rx_stats->rs_rssi < 0)
-+		rx_stats->rs_rssi = 0;
-+
-+	/* Update Beacon RSSI, this is used by ANI. */
-+	if (ieee80211_is_beacon(fc))
-+		ah->stats.avgbrssi = rx_stats->rs_rssi;
-+}
-+
-+/*
-+ * For Decrypt or Demic errors, we only mark packet status here and always push
-+ * up the frame up to let mac80211 handle the actual error case, be it no
-+ * decryption key or real decryption error. This let us keep statistics there.
-+ */
-+static int ath9k_rx_skb_preprocess(struct ath_common *common,
-+				   struct ieee80211_hw *hw,
-+				   struct sk_buff *skb,
-+				   struct ath_rx_status *rx_stats,
-+				   struct ieee80211_rx_status *rx_status,
-+				   bool *decrypt_error)
-+{
-+	struct ath_hw *ah = common->ah;
-+
-+	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
-+
-+	/*
-+	 * everything but the rate is checked here, the rate check is done
-+	 * separately to avoid doing two lookups for a rate for each frame.
-+	 */
-+	if (!ath9k_rx_accept(common, skb, rx_status, rx_stats, decrypt_error))
-+		return -EINVAL;
-+
-+	ath9k_process_rssi(common, hw, skb, rx_stats);
-+
-+	if (ath9k_process_rate(common, hw, rx_stats, rx_status, skb))
-+		return -EINVAL;
-+
-+	rx_status->mactime = ath9k_hw_extend_tsf(ah, rx_stats->rs_tstamp);
-+	rx_status->band = hw->conf.channel->band;
-+	rx_status->freq = hw->conf.channel->center_freq;
-+	rx_status->signal = ATH_DEFAULT_NOISE_FLOOR + rx_stats->rs_rssi;
-+	rx_status->antenna = rx_stats->rs_antenna;
-+	rx_status->flag |= RX_FLAG_TSFT;
-+
-+	return 0;
-+}
-+
-+static void ath9k_rx_skb_postprocess(struct ath_common *common,
-+				     struct sk_buff *skb,
-+				     struct ath_rx_status *rx_stats,
-+				     struct ieee80211_rx_status *rxs,
-+				     bool decrypt_error)
-+{
-+	struct ath_hw *ah = common->ah;
-+	struct ieee80211_hdr *hdr;
-+	int hdrlen, padpos, padsize;
-+	u8 keyix;
-+	__le16 fc;
-+
-+	/* see if any padding is done by the hw and remove it */
-+	hdr = (struct ieee80211_hdr *) skb->data;
-+	hdrlen = ieee80211_get_hdrlen_from_skb(skb);
-+	fc = hdr->frame_control;
-+	padpos = ath9k_cmn_padpos(hdr->frame_control);
-+
-+	/* The MAC header is padded to have 32-bit boundary if the
-+	 * packet payload is non-zero. The general calculation for
-+	 * padsize would take into account odd header lengths:
-+	 * padsize = (4 - padpos % 4) % 4; However, since only
-+	 * even-length headers are used, padding can only be 0 or 2
-+	 * bytes and we can optimize this a bit. In addition, we must
-+	 * not try to remove padding from short control frames that do
-+	 * not have payload. */
-+	padsize = padpos & 3;
-+	if (padsize && skb->len>=padpos+padsize+FCS_LEN) {
-+		memmove(skb->data + padsize, skb->data, padpos);
-+		skb_pull(skb, padsize);
-+	}
-+
-+	keyix = rx_stats->rs_keyix;
-+
-+	if (!(keyix == ATH9K_RXKEYIX_INVALID) && !decrypt_error &&
-+	    ieee80211_has_protected(fc)) {
-+		rxs->flag |= RX_FLAG_DECRYPTED;
-+	} else if (ieee80211_has_protected(fc)
-+		   && !decrypt_error && skb->len >= hdrlen + 4) {
-+		keyix = skb->data[hdrlen + 3] >> 6;
-+
-+		if (test_bit(keyix, common->keymap))
-+			rxs->flag |= RX_FLAG_DECRYPTED;
-+	}
-+	if (ah->sw_mgmt_crypto &&
-+	    (rxs->flag & RX_FLAG_DECRYPTED) &&
-+	    ieee80211_is_mgmt(fc))
-+		/* Use software decrypt for management frames. */
-+		rxs->flag &= ~RX_FLAG_DECRYPTED;
-+}
- 
- int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ static inline u64 drv_prepare_multicast(struct ieee80211_local *local,
+ 					struct netdev_hw_addr_list *mc_list)
  {
-@@ -877,8 +1136,8 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 		if (flush)
- 			goto requeue;
+diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
+index 6a9b234..577460d 100644
+--- a/net/mac80211/driver-trace.h
++++ b/net/mac80211/driver-trace.h
+@@ -219,6 +219,31 @@ TRACE_EVENT(drv_bss_info_changed,
+ 	)
+ );
  
--		retval = ath9k_cmn_rx_skb_preprocess(common, hw, skb, &rs,
--						     rxs, &decrypt_error);
-+		retval = ath9k_rx_skb_preprocess(common, hw, skb, &rs,
-+						 rxs, &decrypt_error);
- 		if (retval)
- 			goto requeue;
++TRACE_EVENT(drv_configure_arp_filter,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 struct in_ifaddr *ifa_list, int ret),
++
++	TP_ARGS(local, sdata, ifa_list, ret),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		VIF_ENTRY
++		__field(int, ret)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		VIF_ASSIGN;
++		__entry->ret = ret;
++	),
++
++	TP_printk(
++		VIF_PR_FMT LOCAL_PR_FMT " ret:%d",
++		VIF_PR_ARG, LOCAL_PR_ARG, __entry->ret
++	)
++);
++
+ TRACE_EVENT(drv_prepare_multicast,
+ 	TP_PROTO(struct ieee80211_local *local, int mc_count, u64 ret),
  
-@@ -902,8 +1161,8 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 		if (ah->caps.rx_status_len)
- 			skb_pull(skb, ah->caps.rx_status_len);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 1a9e2da..8356a08 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -851,6 +851,7 @@ struct ieee80211_local {
+ 	struct work_struct dynamic_ps_disable_work;
+ 	struct timer_list dynamic_ps_timer;
+ 	struct notifier_block network_latency_notifier;
++	struct notifier_block ifa_notifier;
  
--		ath9k_cmn_rx_skb_postprocess(common, skb, &rs,
--					     rxs, decrypt_error);
-+		ath9k_rx_skb_postprocess(common, skb, &rs,
-+					 rxs, decrypt_error);
+ 	int user_power_level; /* in dBm */
+ 	int power_constr_level; /* in dBm */
+@@ -996,6 +997,7 @@ void ieee80211_send_pspoll(struct ieee80211_local *local,
+ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency);
+ int ieee80211_max_network_latency(struct notifier_block *nb,
+ 				  unsigned long data, void *dummy);
++int ieee80211_set_arp_filter(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 				      struct ieee80211_channel_sw_ie *sw_elem,
+ 				      struct ieee80211_bss *bss,
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 22a384d..d6eb0b6 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -329,6 +329,58 @@ static void ieee80211_recalc_smps_work(struct work_struct *work)
+ 	mutex_unlock(&local->iflist_mtx);
+ }
  
- 		/* We will now give hardware our shiny new allocated skb */
- 		bf->bf_mpdu = requeue_skb;
++int ieee80211_set_arp_filter(struct ieee80211_sub_if_data *sdata)
++{
++	struct in_device *idev;
++	int ret = 0;
++
++	BUG_ON(!sdata);
++	ASSERT_RTNL();
++
++	idev = sdata->dev->ip_ptr;
++	if (!idev)
++		return 0;
++
++	ret = drv_configure_arp_filter(sdata->local, &sdata->vif,
++				       idev->ifa_list);
++	return ret;
++}
++
++static int ieee80211_ifa_changed(struct notifier_block *nb,
++				 unsigned long data, void *arg)
++{
++	struct in_ifaddr *ifa = arg;
++	struct ieee80211_local *local =
++		container_of(nb, struct ieee80211_local,
++			     ifa_notifier);
++	struct net_device *ndev = ifa->ifa_dev->dev;
++	struct wireless_dev *wdev = ndev->ieee80211_ptr;
++	struct ieee80211_sub_if_data *sdata;
++	struct ieee80211_if_managed *ifmgd;
++
++	/* Make sure it's our interface that got changed */
++	if (!wdev)
++		return NOTIFY_DONE;
++
++	if (wdev->wiphy != local->hw.wiphy)
++		return NOTIFY_DONE;
++
++	/* We are concerned about IP addresses only when associated */
++	sdata = IEEE80211_DEV_TO_SUB_IF(ndev);
++
++	/* ARP filtering is only supported in managed mode */
++	if (sdata->vif.type != NL80211_IFTYPE_STATION)
++		return NOTIFY_DONE;
++
++	ifmgd = &sdata->u.mgd;
++	mutex_lock(&ifmgd->mtx);
++	if (ifmgd->associated)
++		ieee80211_set_arp_filter(sdata);
++	mutex_unlock(&ifmgd->mtx);
++
++	return NOTIFY_DONE;
++}
++
+ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 					const struct ieee80211_ops *ops)
+ {
+@@ -612,14 +664,22 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 		ieee80211_max_network_latency;
+ 	result = pm_qos_add_notifier(PM_QOS_NETWORK_LATENCY,
+ 				     &local->network_latency_notifier);
+-
+ 	if (result) {
+ 		rtnl_lock();
+ 		goto fail_pm_qos;
+ 	}
+ 
++	local->ifa_notifier.notifier_call = ieee80211_ifa_changed;
++	result = register_inetaddr_notifier(&local->ifa_notifier);
++	if (result)
++		goto fail_ifa;
++
+ 	return 0;
+ 
++ fail_ifa:
++	pm_qos_remove_notifier(PM_QOS_NETWORK_LATENCY,
++			       &local->network_latency_notifier);
++	rtnl_lock();
+  fail_pm_qos:
+ 	ieee80211_led_exit(local);
+ 	ieee80211_remove_interfaces(local);
+@@ -647,6 +707,7 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
+ 
+ 	pm_qos_remove_notifier(PM_QOS_NETWORK_LATENCY,
+ 			       &local->network_latency_notifier);
++	unregister_inetaddr_notifier(&local->ifa_notifier);
+ 
+ 	rtnl_lock();
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 0839c4e..0fa1fa3 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2078,8 +2078,17 @@ static enum work_done_result ieee80211_assoc_done(struct ieee80211_work *wk,
+ 			cfg80211_send_assoc_timeout(wk->sdata->dev,
+ 						    wk->filter_ta);
+ 			return WORK_DONE_DESTROY;
++		} else {
++			mutex_unlock(&wk->sdata->u.mgd.mtx);
++
++			/*
++			 * configure ARP filter IP addresses to the driver,
++			 * intentionally outside the mgd mutex.
++			 */
++			rtnl_lock();
++			ieee80211_set_arp_filter(wk->sdata);
++			rtnl_unlock();
+ 		}
+-		mutex_unlock(&wk->sdata->u.mgd.mtx);
+ 	}
+ 
+ 	cfg80211_send_rx_assoc(wk->sdata->dev, skb->data, skb->len);
 -- 
-1.7.1
+1.6.3.3
 
