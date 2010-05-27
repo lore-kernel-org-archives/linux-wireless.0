@@ -1,87 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:12060 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757898Ab0EDXEx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 4 May 2010 19:04:53 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH] mac80211: remove association work when processing deauth request
-Date: Tue,  4 May 2010 16:04:49 -0700
-Message-Id: <1273014289-21765-1-git-send-email-reinette.chatre@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:60659 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750962Ab0E0MlK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 May 2010 08:41:10 -0400
+Subject: [PATCH] mac80211: clean up ieee80211_stop_tx_ba_session
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 27 May 2010 14:41:07 +0200
+Message-ID: <1274964067.3669.43.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Reinette Chatre <reinette.chatre@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-In https://bugzilla.kernel.org/show_bug.cgi?id=15794 a user encountered the
-following:
+There's no sense in letting anything but internal
+mac80211 functions set the initiator to anything
+but WLAN_BACK_INITIATOR, since WLAN_BACK_RECIPIENT
+is only valid when we have received a frame from
+the peer, which we react to directly in mac80211.
 
-[18967.469098] wlan0: authenticated
-[18967.472527] wlan0: associate with 00:1c:10:b8:e3:ea (try 1)
-[18967.472585] wlan0: deauthenticating from 00:1c:10:b8:e3:ea by local choice (reason=3)
-[18967.672057] wlan0: associate with 00:1c:10:b8:e3:ea (try 2)
-[18967.872357] wlan0: associate with 00:1c:10:b8:e3:ea (try 3)
-[18968.072960] wlan0: association with 00:1c:10:b8:e3:ea timed out
-[18968.076890] ------------[ cut here ]------------
-[18968.076898] WARNING: at net/wireless/mlme.c:341 cfg80211_send_assoc_timeout+0xa8/0x140()
-[18968.076900] Hardware name: GX628
-[18968.076924] Pid: 1408, comm: phy0 Not tainted 2.6.34-rc4-00082-g250541f-dirty #3
-[18968.076926] Call Trace:
-[18968.076931]  [<ffffffff8103459e>] ?  warn_slowpath_common+0x6e/0xb0
-[18968.076934]  [<ffffffff8157c2d8>] ?  cfg80211_send_assoc_timeout+0xa8/0x140
-[18968.076937]  [<ffffffff8103ff8b>] ? mod_timer+0x10b/0x180
-[18968.076940]  [<ffffffff8158f0fc>] ?  ieee80211_assoc_done+0xbc/0xc0
-[18968.076943]  [<ffffffff81590d53>] ?  ieee80211_work_work+0x553/0x11c0
-[18968.076945]  [<ffffffff8102d931>] ? finish_task_switch+0x41/0xb0
-[18968.076948]  [<ffffffff81590800>] ?  ieee80211_work_work+0x0/0x11c0
-[18968.076951]  [<ffffffff810476fb>] ? worker_thread+0x13b/0x210
-[18968.076954]  [<ffffffff8104b6b0>] ?  autoremove_wake_function+0x0/0x30
-[18968.076956]  [<ffffffff810475c0>] ? worker_thread+0x0/0x210
-[18968.076959]  [<ffffffff8104b21e>] ? kthread+0x8e/0xa0
-[18968.076962]  [<ffffffff810031f4>] ?  kernel_thread_helper+0x4/0x10
-[18968.076964]  [<ffffffff8104b190>] ? kthread+0x0/0xa0
-[18968.076966]  [<ffffffff810031f0>] ?  kernel_thread_helper+0x0/0x10
-[18968.076968] ---[ end trace 8aa6265f4b1adfe0 ]---
+The debugfs code I recently added got this wrong
+as well.
 
-As explained by Johannes Berg <johannes@sipsolutions.net>:
-
-We authenticate successfully, and then userspace requests association.
-Then we start that process, but the AP doesn't respond. While we're
-still waiting for an AP response, userspace asks for a deauth. We do
-the deauth, but don't abort the association work. Then once the
-association work times out we tell cfg80211, but it no longer wants
-to know since for all it is concerned we accepted the deauth that
-also kills the association attempt.
-
-Fix this by, upon receipt of deauth request, removing the association work
-and continuing to send the deauth.
-
-Unfortunately the user reporting the issue is not able to reproduce this
-problem anymore and cannot verify this fix. This seems like a well understood
-issue though and I thus present the patch.
-
-Bug-identified-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mlme.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    3 +--
+ include/net/mac80211.h                    |    6 ++----
+ net/mac80211/agg-tx.c                     |    7 +++----
+ net/mac80211/debugfs_sta.c                |    3 +--
+ net/mac80211/driver-trace.h               |   10 ++++------
+ 5 files changed, 11 insertions(+), 18 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 358226f..890510c 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2176,7 +2176,8 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
- 				continue;
+--- wireless-testing.orig/include/net/mac80211.h	2010-05-27 14:31:11.000000000 +0200
++++ wireless-testing/include/net/mac80211.h	2010-05-27 14:32:19.000000000 +0200
+@@ -2331,16 +2331,14 @@ void ieee80211_start_tx_ba_cb_irqsafe(st
+  * ieee80211_stop_tx_ba_session - Stop a Block Ack session.
+  * @sta: the station whose BA session to stop
+  * @tid: the TID to stop BA.
+- * @initiator: if indicates initiator DELBA frame will be sent.
+  *
+- * Return: error if no sta with matching da found, success otherwise
++ * Return: negative error if the TID is invalid, or no aggregation active
+  *
+  * Although mac80211/low level driver/user space application can estimate
+  * the need to stop aggregation on a certain RA/TID, the session level
+  * will be managed by the mac80211.
+  */
+-int ieee80211_stop_tx_ba_session(struct ieee80211_sta *sta, u16 tid,
+-				 enum ieee80211_back_parties initiator);
++int ieee80211_stop_tx_ba_session(struct ieee80211_sta *sta, u16 tid);
  
- 			if (wk->type != IEEE80211_WORK_DIRECT_PROBE &&
--			    wk->type != IEEE80211_WORK_AUTH)
-+			    wk->type != IEEE80211_WORK_AUTH &&
-+			    wk->type != IEEE80211_WORK_ASSOC)
- 				continue;
+ /**
+  * ieee80211_stop_tx_ba_cb - low level driver ready to stop aggregate.
+--- wireless-testing.orig/net/mac80211/agg-tx.c	2010-05-27 14:31:32.000000000 +0200
++++ wireless-testing/net/mac80211/agg-tx.c	2010-05-27 14:34:25.000000000 +0200
+@@ -538,14 +538,13 @@ int __ieee80211_stop_tx_ba_session(struc
+ 	return ret;
+ }
  
- 			if (memcmp(req->bss->bssid, wk->filter_ta, ETH_ALEN))
--- 
-1.6.3.3
+-int ieee80211_stop_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
+-				 enum ieee80211_back_parties initiator)
++int ieee80211_stop_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid)
+ {
+ 	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 	struct ieee80211_local *local = sdata->local;
+ 
+-	trace_api_stop_tx_ba_session(pubsta, tid, initiator);
++	trace_api_stop_tx_ba_session(pubsta, tid);
+ 
+ 	if (!local->ops->ampdu_action)
+ 		return -EINVAL;
+@@ -553,7 +552,7 @@ int ieee80211_stop_tx_ba_session(struct
+ 	if (tid >= STA_TID_NUM)
+ 		return -EINVAL;
+ 
+-	return __ieee80211_stop_tx_ba_session(sta, tid, initiator);
++	return __ieee80211_stop_tx_ba_session(sta, tid, WLAN_BACK_INITIATOR);
+ }
+ EXPORT_SYMBOL(ieee80211_stop_tx_ba_session);
+ 
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-agn-rs.c	2010-05-27 14:34:01.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-agn-rs.c	2010-05-27 14:34:07.000000000 +0200
+@@ -313,8 +313,7 @@ static int rs_tl_turn_on_agg_for_tid(str
+ 			 */
+ 			IWL_DEBUG_HT(priv, "Fail start Tx agg on tid: %d\n",
+ 				tid);
+-			ieee80211_stop_tx_ba_session(sta, tid,
+-						WLAN_BACK_INITIATOR);
++			ieee80211_stop_tx_ba_session(sta, tid);
+ 		}
+ 	} else
+ 		IWL_ERR(priv, "Fail finding valid aggregation tid: %d\n", tid);
+--- wireless-testing.orig/net/mac80211/driver-trace.h	2010-05-27 14:34:29.000000000 +0200
++++ wireless-testing/net/mac80211/driver-trace.h	2010-05-27 14:34:47.000000000 +0200
+@@ -850,25 +850,23 @@ TRACE_EVENT(api_start_tx_ba_cb,
+ );
+ 
+ TRACE_EVENT(api_stop_tx_ba_session,
+-	TP_PROTO(struct ieee80211_sta *sta, u16 tid, u16 initiator),
++	TP_PROTO(struct ieee80211_sta *sta, u16 tid),
+ 
+-	TP_ARGS(sta, tid, initiator),
++	TP_ARGS(sta, tid),
+ 
+ 	TP_STRUCT__entry(
+ 		STA_ENTRY
+ 		__field(u16, tid)
+-		__field(u16, initiator)
+ 	),
+ 
+ 	TP_fast_assign(
+ 		STA_ASSIGN;
+ 		__entry->tid = tid;
+-		__entry->initiator = initiator;
+ 	),
+ 
+ 	TP_printk(
+-		STA_PR_FMT " tid:%d initiator:%d",
+-		STA_PR_ARG, __entry->tid, __entry->initiator
++		STA_PR_FMT " tid:%d",
++		STA_PR_ARG, __entry->tid
+ 	)
+ );
+ 
+--- wireless-testing.orig/net/mac80211/debugfs_sta.c	2010-05-27 14:37:41.000000000 +0200
++++ wireless-testing/net/mac80211/debugfs_sta.c	2010-05-27 14:37:59.000000000 +0200
+@@ -210,8 +210,7 @@ static ssize_t sta_agg_status_write(stru
+ 		if (start)
+ 			ret = ieee80211_start_tx_ba_session(&sta->sta, tid);
+ 		else
+-			ret = ieee80211_stop_tx_ba_session(&sta->sta, tid,
+-							   WLAN_BACK_RECIPIENT);
++			ret = ieee80211_stop_tx_ba_session(&sta->sta, tid);
+ 	} else {
+ 		__ieee80211_stop_rx_ba_session(sta, tid, WLAN_BACK_RECIPIENT, 3);
+ 		ret = 0;
+
 
