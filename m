@@ -1,37 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:47666 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754166Ab0ECSgU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 May 2010 14:36:20 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] compat: backport usb_alloc_coherent() and  usb_free_coherent()
-Date: Mon,  3 May 2010 20:36:13 +0200
-Message-Id: <1272911773-18486-1-git-send-email-hauke@hauke-m.de>
+Received: from smtp.nokia.com ([192.100.122.230]:17874 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751946Ab0E0IzF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 May 2010 04:55:05 -0400
+Subject: Re: [PATCH] cfg80211: Removed warning from cfg80211_send_rx_auth
+From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1274872877.3658.4.camel@jlt3.sipsolutions.net>
+References: <1274870625-19712-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	 <1274872877.3658.4.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain
+Date: Thu, 27 May 2010 11:48:01 +0300
+Message-Id: <1274950081.20619.18.camel@paavo-desktop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2010-05-26 at 13:21 +0200, ext Johannes Berg wrote:
+> On Wed, 2010-05-26 at 13:43 +0300, Teemu Paasikivi wrote:
+> > In cfg80211_send_rx_auth function there was a warning if bssid of the received
+> > authentication message was not found from the authtry_bsses table.
+> > 
+> > During the beginning of the authentication there is a small time window, when
+> > handling of the received deauthentication message can cause information
+> > for the access point to be removed from the authtry_bsses table before
+> > authentication response is received. This triggers the warning. This has
+> > been seen happening with several access points occasionally. At least
+> > one of those (Asus) has been seen to send spurious deauthentication
+> > messages after deauthentication. Possibly this warning could be triggered also
+> > by forged deauthentication messages sent at a correct time.
+> 
+> This doesn't seem right. Why is mac80211 not preventing those messages
+> from bubbling up in that case?
+> 
+> FWIW, this check is there for a reason -- we want to avoid telling
+> userspace twice that we disconnected from a given AP, and we shouldn't
+> be processing it anyway.
+> 
+> johannes
+> 
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/compat-2.6.35.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Normally, when the stack in the idle state, or connected to other access
+point, those deauth messages doesn't cause a problem. The problem arises
+if that spurious deauth message is received at the right moment, when
+authentication to the access point has been started but response is not
+yet received. If I'm correct in that the deauthentication message from
+the AP during authentication is legal, this would be quite hard to
+filter out.
 
-diff --git a/include/linux/compat-2.6.35.h b/include/linux/compat-2.6.35.h
-index 9132ecb..62c54cf 100644
---- a/include/linux/compat-2.6.35.h
-+++ b/include/linux/compat-2.6.35.h
-@@ -19,6 +19,8 @@ static inline wait_queue_head_t *sk_sleep(struct sock *sk)
- {
- 	return sk->sk_sleep;
- }
-+#define usb_alloc_coherent usb_buffer_alloc
-+#define usb_free_coherent usb_buffer_free
- 
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,35)) */
- 
--- 
-1.7.0.4
+
+Best regards,
+
+Teemu
+
 
