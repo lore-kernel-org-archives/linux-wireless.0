@@ -1,41 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:48608 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755223Ab0E1U17 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 May 2010 16:27:59 -0400
-Subject: Re: [ath5k-devel] [PATCH] ath5k: disable ASPM
-From: Pavel Roskin <proski@gnu.org>
-To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-In-Reply-To: <20100528212523.213125g8t0an4mn4@hayate.sektori.org>
-References: <20100528100901.14580.1322.stgit@fate.lan>
-	 <1275063576.15168.14.camel@mj>
-	 <20100528212523.213125g8t0an4mn4@hayate.sektori.org>
-Content-Type: text/plain
-Date: Fri, 28 May 2010 16:27:56 -0400
-Message-Id: <1275078476.18152.10.camel@mj>
-Mime-Version: 1.0
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:34242 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753707Ab0E0Dth (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 26 May 2010 23:49:37 -0400
+Received: by vws9 with SMTP id 9so4964957vws.19
+        for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 20:49:36 -0700 (PDT)
+Message-ID: <4BFDEBDC.4070304@gmail.com>
+Date: Wed, 26 May 2010 23:49:48 -0400
+From: Richard Farina <sidhayn@gmail.com>
+MIME-Version: 1.0
+To: Bob Copeland <me@bobcopeland.com>
+CC: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	Weedy <weedy2887@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: ath5k past 2.6.30 breaks monitor mode (and thus the aircrack
+ 	suite)
+References: <AANLkTimltZSc8dJPPBCibcGDaOPcQRU_5kSbenIAdi_6@mail.gmail.com>	<AANLkTimaLEQYH4Y7HO4Fv4zT8w8AsPkaAQtk9EauX4Bt@mail.gmail.com>	<AANLkTikRt1fUgngBQxEoEFe1VDrYVFRAoMSR53et7gxf@mail.gmail.com>	<AANLkTim-A_TWT-flrW88gJGan47Xhm7llyrQE3ehDKU6@mail.gmail.com>	<AANLkTim4zLxIQH2r76WZRh9kNigVNAngcK1d9-Cu65Ag@mail.gmail.com>	<AANLkTimH3p-dBA_6ee2a0iCnPDhtPZONzCEVkzMHrUWo@mail.gmail.com>	<AANLkTim-4UNn8acYvF7AF2FDzdC9xRY-9JS0lSurwBc6@mail.gmail.com>	<AANLkTimYeL4KQozuTl4le9WUpObsjwp0YAx7eAYq6MBr@mail.gmail.com>	<AANLkTikOgv6d0FlXu2-smnYPApeehjRq_j8UxEealqFC@mail.gmail.com>	<AANLkTinynNqs6_zyTJcpi7yKiSvC5fBhbM2tVZcnoNUq@mail.gmail.com>	<AANLkTinyGlwqq4xshLU5Ol74p0VfcUXBjBGKXlsB2pMy@mail.gmail.com>	<AANLkTimIeTadyAhUuri2P630mpDwmBk4B90RpERLbaFE@mail.gmail.com> <AANLkTilXJHs8emXX4YNHbPq0SkuC4Z22NEh-T6mwUSHS@mail.gmail.com>
+In-Reply-To: <AANLkTilXJHs8emXX4YNHbPq0SkuC4Z22NEh-T6mwUSHS@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-05-28 at 21:25 +0300, Jussi Kivilinna wrote:
-> I used code from e1000e which does this same way, which now suddenly  
-> reminds me of that ath5k is dual lisenced, right? Can I even reuse  
-> code from GPL driver in ath5k?
+Bob Copeland wrote:
+> 2010/5/25 Gábor Stefanik <netrolller.3d@gmail.com>:
+>   
+>> On Tue, May 25, 2010 at 4:53 PM, Bob Copeland <me@bobcopeland.com> wrote:
+>>     
+>>> 2010/5/25 Weedy <weedy2887@gmail.com>:
+>>>       
+>>>> 2010/5/24 Gábor Stefanik <netrolller.3d@gmail.com>:
+>>>>         
+>>>>> 2010/5/25 Weedy <weedy2887@gmail.com>:
+>>>>>           
+>>>>>> 2010/5/23 Gábor Stefanik <netrolller.3d@gmail.com>:
+>>>>>>             
+>>>>>>> In the meantime, one thing to test: Add a printk of sc->opmode.
+>>>>>>>               
+>>>>>> May 24 22:04:20 tiny-h4x kernel: [41147.243149] sc->opmode: 02 (over9000 times)
+>>>>>>
+>>>>>> So i'm guessing I did it wrong (I don't know C).
+>>>>>>        printk(KERN_NOTICE "sc->opmode: %02x\n", sc->opmode);
+>>>>>>
+>>>>>>             
+>>>>> No, that is correct, and proves my theory (2 is NL80211_IFTYPE_STATION
+>>>>> - it should be 6 for monitor mode).
+>>>>>
+>>>>> BTW, please use "Reply to all".
+>>>>>
+>>>>>           
+>>>> gmail got rid of the "Reply to all by default" option :<
+>>>>
+>>>> When you have a patch I will be waiting.
+>>>>         
+>>> Sorry, I missed this thread somehow.  Thanks for the detective
+>>> work and apologies for my stupid goof.  Gábor, are you prepping
+>>> a patch?  I can fix it if you like.
+>>>
+>>>       
+>> If you can, please fix it - I know what the bug is, but have no solid
+>> idea about a fix.
+>>     
+>
+> Ok, it should be enough to look at the filter flags instead of
+> the opmode -- I knew in the back of my mind that the monitor
+> stuff was bogus (part of the reason I did the patch in the first
+> place) but just got confused by what was already there I guess.
+>
+>   
+I've got a lot of people very interested in this fix. Let me know what 
+kind of support you need to make this happen.  You know where to find me 
+on irc ;-)
 
-That's another reason why we don't want this code to be all over the
-place.
+Thanks,
+Rick
 
-If you could generalize the code sufficiently, it could be an inline
-function in pci.h or some other GPL licensed header.
-
-If we need to add GPL code to ath5k, it could go to a separate file.
-But if that separation becomes inconvenient, we could drop BSD
-compatibility from ath5k.  I don't see any benefit from dual licensing,
-unless some existing ath5k contributors are BSD developers who would
-stop working on the code in case of relicensing, but I don't think it's
-the case.
-
--- 
-Regards,
-Pavel Roskin
