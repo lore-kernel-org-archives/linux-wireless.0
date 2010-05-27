@@ -1,74 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:64061 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757557Ab0D3XAh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Apr 2010 19:00:37 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 8/8] iwlwifi: greenfield support only true for 11n devices
-Date: Fri, 30 Apr 2010 16:00:25 -0700
-Message-Id: <1272668425-3753-9-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1272668425-3753-1-git-send-email-reinette.chatre@intel.com>
-References: <1272668425-3753-1-git-send-email-reinette.chatre@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:47380 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932464Ab0E0MNu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 27 May 2010 08:13:50 -0400
+Subject: Re: [PATCH] mac80211: mark 1, 2, 5.5 and 11Mbps as mandatory rates
+ for 802.11b
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Benoit Papillault <benoit.papillault@free.fr>
+Cc: Bruno Randolf <br1@einfach.org>, linville@tuxdriver.com,
+	juuso.oikarinen@nokia.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4BFE60EF.7020800@free.fr>
+References: <1274883276.3658.15.camel@jlt3.sipsolutions.net>
+	 <20100527004545.11541.88667.stgit@tt-desk>
+	 <1274947716.3669.13.camel@jlt3.sipsolutions.net> <4BFE60EF.7020800@free.fr>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 27 May 2010 14:13:40 +0200
+Message-ID: <1274962420.3669.39.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On Thu, 2010-05-27 at 14:09 +0200, Benoit Papillault wrote:
 
-Greenfield is a 11n feature, remove it from non-11n devices
-configuration parameters list
+> 802.11a = Clause 17, called OFDM
+> 802.11b = Clause 15 (called DSSS) & Clause 18 (called HR/DSSS).
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-1000.c |    1 -
- drivers/net/wireless/iwlwifi/iwl-6000.c |    3 ---
- 2 files changed, 0 insertions(+), 4 deletions(-)
+Are you sure? Isn't clause 15 pre-amendement?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index 8431ffc..fb59af2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -282,7 +282,6 @@ struct iwl_cfg iwl1000_bg_cfg = {
- 	.use_bsm = false,
- 	.max_ll_items = OTP_MAX_LL_ITEMS_1000,
- 	.shadow_ram_support = false,
--	.ht_greenfield_support = true,
- 	.led_compensation = 51,
- 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
- 	.support_ct_kill_exit = true,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index c492650..7acef70 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -500,7 +500,6 @@ struct iwl_cfg iwl6000i_2abg_cfg = {
- 	.pa_type = IWL_PA_INTERNAL,
- 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
- 	.shadow_ram_support = true,
--	.ht_greenfield_support = true,
- 	.led_compensation = 51,
- 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
- 	.supports_idle = true,
-@@ -533,7 +532,6 @@ struct iwl_cfg iwl6000i_2bg_cfg = {
- 	.pa_type = IWL_PA_INTERNAL,
- 	.max_ll_items = OTP_MAX_LL_ITEMS_6x00,
- 	.shadow_ram_support = true,
--	.ht_greenfield_support = true,
- 	.led_compensation = 51,
- 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
- 	.supports_idle = true,
-@@ -600,7 +598,6 @@ struct iwl_cfg iwl6050_2abg_cfg = {
- 	.pa_type = IWL_PA_SYSTEM,
- 	.max_ll_items = OTP_MAX_LL_ITEMS_6x50,
- 	.shadow_ram_support = true,
--	.ht_greenfield_support = true,
- 	.led_compensation = 51,
- 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
- 	.supports_idle = true,
--- 
-1.6.3.3
+> Clause 15 defines 1 Mbits and 2 Mbits rates, long PLCP only
+> Clause 18 defines 5.5 Mbits and 11 Mbits. Optionally, short PLCP is 
+> available for 2 Mbits, 5.5 Mbits and 11 Mbits. Since it's optional, such 
+> short PLCP rates are probably not part of the mandatory rates.
+> 
+> Basic rate set must includes mandatory rates set. 
+
+I don't think this is true.
+
+> This is apparently 
+> what every other AP do today and I indeed see no points in adding more 
+> rates to the basic rate set other than what is already defined in the 
+> mandatory rate set (except we cannot rely on this rule when joining an 
+> existing BSS/IBSS, of course).
+
+Sure, you can add more than say 11b mandatory rates to specifically
+exclude non-11g stations from it to improve performance.
+
+johannes
 
