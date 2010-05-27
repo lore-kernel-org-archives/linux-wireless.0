@@ -1,49 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:25327 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755032Ab0ESBdW (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:31964 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751305Ab0E0Esf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 May 2010 21:33:22 -0400
-Received: from vs3007.wh2.ocn.ne.jp (125.206.180.235)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-096572800
-	for <linux-wireless@vger.kernel.org>; Wed, 19 May 2010 10:33:20 +0900 (JST)
-Subject: [PATCH v2 17/20] ath5k: fix NULL pointer in antenna configuration
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Wed, 19 May 2010 10:32:09 +0900
-Message-ID: <20100519013208.22206.11002.stgit@tt-desk>
-In-Reply-To: <20100519012528.22206.77550.stgit@tt-desk>
-References: <20100519012528.22206.77550.stgit@tt-desk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Thu, 27 May 2010 00:48:35 -0400
+Subject: Re: [PATCHv2] mac80211: Fix basic rates for created IBSS networks
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1274880434.3658.14.camel@jlt3.sipsolutions.net>
+References: <1274878088-22785-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1274878391.3658.9.camel@jlt3.sipsolutions.net>
+	 <1274879624.5277.1917.camel@wimaxnb.nmp.nokia.com>
+	 <1274880434.3658.14.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 27 May 2010 07:50:05 +0300
+Message-ID: <1274935805.5277.2859.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the channel is not set yet and we configure the antennas just store the
-setting. It will be activated during the next reset, when the channel is set.
+On Wed, 2010-05-26 at 15:27 +0200, ext Johannes Berg wrote:
+> On Wed, 2010-05-26 at 16:13 +0300, Juuso Oikarinen wrote:
+> 
+> > > > diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+> > > > index b2cc1fd..0b8360c 100644
+> > > > --- a/net/mac80211/ibss.c
+> > > > +++ b/net/mac80211/ibss.c
+> > > > @@ -529,7 +529,8 @@ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
+> > > >  		sdata->drop_unencrypted = 0;
+> > > >  
+> > > >  	__ieee80211_sta_join_ibss(sdata, bssid, sdata->vif.bss_conf.beacon_int,
+> > > > -				  ifibss->channel, 3, /* first two are basic */
+> > > > +				  ifibss->channel,
+> > > > +				  15, /* 1, 2, 5.5 and 11 are basic */
+> > > 
+> > > It's still wrong for 5 GHz.
+> > 
+> > Yes, it is as wrong for 5GHz as it was before the change.
+> 
+> No it wasn't wrong before the change, and only the comment is now
+> wrong ...
+> 
+> before the change, 6 and 9 mbps were basic for 5ghz, now it would be
+> 5,9,12 and 18. Neither set actually overlaps with the mandatory rates,
+> which is a bug I guess?
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- drivers/net/wireless/ath/ath5k/phy.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+Ah, now I get it. So the rate bitmap changes - I had a confusion here.
 
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index f369e7e..d9506e7 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -1793,6 +1793,13 @@ ath5k_hw_set_antenna_mode(struct ath5k_hw *ah, u8 ant_mode)
- 	u8 def_ant, tx_ant, ee_mode;
- 	u32 sta_id1 = 0;
- 
-+	/* if channel is not initialized yet we can't set the antennas
-+	 * so just store the mode. it will be set on the next reset */
-+	if (channel == NULL) {
-+		ah->ah_ant_mode = ant_mode;
-+		return;
-+	}
-+
- 	def_ant = ah->ah_def_ant;
- 
- 	switch (channel->hw_value & CHANNEL_MODES) {
+> > > We've had this discussion before. Making more rates required will break
+> > > compatibility with 11b devices.
+> > 
+> > I don't understand this. AFAIK also in 11b all these rates are
+> > mandatory. How come this breaks 11b?
+> 
+> No, only 1mbit is really mandatory in 11b. So I guess our default should
+> be just "1" rather than "3" or something like that.
+
+That's weird. At least in certification PoV, AFAIK, a device would not
+pass with just 1mbit even for 11b.
+
+> > This change is for creating IBSS, not joining. In case of joining, we
+> > still adhere to the basic rates set by the creator, or that is what I
+> > understand based on the code.
+> > 
+> > > What should be done here is add a basic rates parameter to the IBSS join
+> > > nl80211 command so that you can decide at runtime which rates to use as
+> > > basic.
+> > 
+> > Yeah, this is a solution needed latest when 5GHz support is implemented.
+> 
+> Well this hopefully doesn't come as a surprise to you, but mac80211 does
+> support 5 GHz operation :)
+
+Yeah, I know there is support (even the wl1271 has preliminary) but
+there are also some issues ;)
+
+So it seems to me that if we want this fixed, we would have to go with
+an interface update?
+
+> johannes
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
