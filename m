@@ -1,129 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:43675 "EHLO c60.cesmail.net"
+Received: from mx2.digadd.de ([195.47.195.236]:40340 "EHLO mx2.digadd.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755556Ab0ELPtI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 May 2010 11:49:08 -0400
-Subject: Re: [ath5k-devel] [PATCH] [ath5k][leds] Ability to disable leds
- support. If leds support enabled do not force mac802.11 leds layer
- selection.
-From: Pavel Roskin <proski@gnu.org>
-To: Dmytro Milinevskyy <milinevskyy@gmail.com>
-Cc: ath5k-devel@lists.ath5k.org, Kalle Valo <kalle.valo@iki.fi>,
-	linux-wireless@vger.kernel.org,
-	GeunSik Lim <geunsik.lim@samsung.com>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Keng-Yu Lin <keng-yu.lin@canonical.com>,
-	netdev@vger.kernel.org, Jiri Kosina <jkosina@suse.cz>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Shahar Or <shahar@shahar-or.co.il>,
-	linux-kernel@vger.kernel.org, Luca Verdesca <magooz@salug.it>
-In-Reply-To: <4bea1f81.09b6660a.746e.1c12@mx.google.com>
-References: <4bea1f81.09b6660a.746e.1c12@mx.google.com>
-Content-Type: text/plain
-Date: Wed, 12 May 2010 11:48:56 -0400
-Message-Id: <1273679336.10823.15.camel@mj>
-Mime-Version: 1.0
+	id S932333Ab0E1LKs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 May 2010 07:10:48 -0400
+Message-ID: <4BFFA490.90600@digadd.de>
+Date: Fri, 28 May 2010 13:10:08 +0200
+From: "Christian P. Schmidt" <schmidt@digadd.de>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: reinette chatre <reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Problems connectring to an AP with Acer Aspire Revo
+References: <4BF795EB.9070902@digadd.de>	 <1274729665.2091.15280.camel@rchatre-DESK>  <4BFD1ED0.9050309@digadd.de>	 <1275003105.2091.20102.camel@rchatre-DESK>  <4BFF9B93.5010308@digadd.de>	 <1275043274.3909.71.camel@jlt3.sipsolutions.net>	 <4BFF9FC6.4030101@digadd.de> <1275044074.3909.72.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1275044074.3909.72.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-04-07 at 21:58 +0300, Dmytro Milinevskyy wrote:
+On 05/28/2010 12:54 PM, Johannes Berg wrote:
+> On Fri, 2010-05-28 at 12:49 +0200, Christian P. Schmidt wrote:
+> 
+>> I see a bunch of WLANs with levels between 180 and 225. I'll compare the
+>> values to disconnected antennas while disassembling.
+> 
+> Those values make no sense to me .. can you use "iw scan" and tell us
+> the dBm value?
 
-> Here is the patch to disable ath5k leds support on build stage.
-> However if the leds support was enabled do not force selection of 802.11 leds layer.
+This translates to -52 to -30dBm.
 
-The idea is good, but the implementation could be improved.
+Well, maybe you can answer me a question I never dared to ask because I
+felt stupid... I can't take the Intel card online with only ifconfig or
+ip? I always get "unknown error 132" on ifconfig wlan0 up / ip link set
+wlan0 up...
 
-There are too many preprocessor conditionals in your patch.
-
-> +#ifdef CONFIG_ATH5K_LEDS
->  /*
->   * These match net80211 definitions (not used in
->   * mac80211).
-> @@ -939,11 +940,7 @@ enum ath5k_power_mode {
->  #define AR5K_LED_AUTH	2 /*IEEE80211_S_AUTH*/
->  #define AR5K_LED_ASSOC	3 /*IEEE80211_S_ASSOC*/
->  #define AR5K_LED_RUN	4 /*IEEE80211_S_RUN*/
-
-It should be OK to leave the constants defined even if they are not
-used.
-
-> +#ifdef CONFIG_ATH5K_LEDS
->  /* LED functions */
->  extern int ath5k_init_leds(struct ath5k_softc *sc);
->  extern void ath5k_led_enable(struct ath5k_softc *sc);
->  extern void ath5k_led_off(struct ath5k_softc *sc);
->  extern void ath5k_unregister_leds(struct ath5k_softc *sc);
-> +#endif
-
-You could add inline functions for the case when CONFIG_ATH5K_LEDS is
-not defined.  That would avoid may conditionals in the code.
-
->  /* GPIO Functions */
-> +#ifdef CONFIG_ATH5K_LEDS
->  extern void ath5k_hw_set_ledstate(struct ath5k_hw *ah, unsigned int state);
-> +#endif
-
-The same comment applies.
-
-Also, there is nothing wrong with having an external declaration that is
-not used in some particular configuration.
-
-> +#ifdef CONFIG_ATH5K_LEDS
->  	/* turn on HW LEDs */
->  	ath5k_hw_set_ledstate(ah, AR5K_LED_INIT);
-> +#endif
-
-This is avoidable by having an inline ath5k_hw_set_ledstate() that does
-nothing.
-
-> +#ifdef CONFIG_ATH5K_LEDS
->  	struct ieee80211_hw *hw = pci_get_drvdata(to_pci_dev(dev));
->  	struct ath5k_softc *sc = hw->priv;
->  
->  	ath5k_led_off(sc);
-> +#endif
-
-Even this is avoidable if ath5k_led_off() does nothing.  gcc should be
-smart enough to optimize out unneeded function calls.
-
-> +#ifdef CONFIG_ATH5K_LEDS
->  /*
->   * State for LED triggers
->   */
->  struct ath5k_led
->  {
-> +#ifdef CONFIG_LEDS_CLASS
-
-I'm not sure this complexity is needed.  Are you going to support LEDs
-if CONFIG_LEDS_CLASS is disabled?
-
-> +#ifdef CONFIG_ATH5K_LEDS
->  	unsigned int		led_pin,	/* GPIO pin for driving LED */
->  				led_on;		/* pin setting for LED on */
-> +#endif
->  
->  	struct tasklet_struct	restq;		/* reset tasklet */
->  
-> @@ -164,7 +172,9 @@ struct ath5k_softc {
->  	spinlock_t		rxbuflock;
->  	u32			*rxlink;	/* link ptr in last RX desc */
->  	struct tasklet_struct	rxtq;		/* rx intr tasklet */
-> +#ifdef CONFIG_ATH5K_LEDS
->  	struct ath5k_led	rx_led;		/* rx led */
-> +#endif
-
-You may want to group those fields together to make the code more
-readable.
-
-> --- a/drivers/net/wireless/ath/ath5k/led.c
-> +++ b/drivers/net/wireless/ath/ath5k/led.c
-
-I wonder if you could omit led.c completely in the Makefile.  If there
-are some parts of led.c that are needed without CONFIG_ATH5K_LEDS, maybe
-they belong elsewhere?
-
--- 
 Regards,
-Pavel Roskin
+Christian
