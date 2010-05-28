@@ -1,63 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:35502 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755841Ab0EOVYM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 May 2010 17:24:12 -0400
-Date: Sat, 15 May 2010 23:24:07 +0200 (CEST)
-From: Julia Lawall <julia@diku.dk>
-To: Pavel Roskin <proski@gnu.org>,
-	David Gibson <hermes@gibson.dropbear.id.au>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	orinoco-users@lists.sourceforge.net,
-	orinoco-devel@lists.sourceforge.net, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH 36/37] drivers/net/wireless/orinoco: Use kmemdup
-Message-ID: <Pine.LNX.4.64.1005152323480.21345@ask.diku.dk>
+Received: from saarni.dnainternet.net ([83.102.40.136]:53518 "EHLO
+	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751193Ab0E1SZY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 May 2010 14:25:24 -0400
+Message-ID: <20100528212523.213125g8t0an4mn4@hayate.sektori.org>
+Date: Fri, 28 May 2010 21:25:23 +0300
+From: "Jussi Kivilinna" <jussi.kivilinna@mbnet.fi>
+To: "Pavel Roskin" <proski@gnu.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Subject: Re: [ath5k-devel] [PATCH] ath5k: disable ASPM
+References: <20100528100901.14580.1322.stgit@fate.lan>
+	<1275063576.15168.14.camel@mj>
+In-Reply-To: <1275063576.15168.14.camel@mj>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII;
+	DelSp=Yes	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
+Quoting "Pavel Roskin" <proski@gnu.org>:
 
-Use kmemdup when some other buffer is immediately copied into the
-allocated region.
+> On Fri, 2010-05-28 at 13:09 +0300, Jussi Kivilinna wrote:
+>> +static void		__ath5k_disable_aspm(struct pci_dev *pdev, u16 state);
+>> +static void		ath5k_disable_aspm(struct pci_dev *pdev, u16 state);
+>
+> Forward declarations should not be needed unless the functions are
+> called before their implementations, which is not the case here.
 
-A simplified version of the semantic patch that makes this change is as
-follows: (http://coccinelle.lip6.fr/)
+Ok.
 
-// <smpl>
-@@
-expression from,to,size,flag;
-statement S;
-@@
+>
+>> @@ -424,6 +427,47 @@ module_exit(exit_ath5k_pci);
+>>  * PCI Initialization *
+>>  \********************/
+>>
+>> +#ifdef CONFIG_PCIEASPM
+>> +static void __ath5k_disable_aspm(struct pci_dev *pdev, u16 state)
+>> +{
+>> +	pci_disable_link_state(pdev, state);
+>> +}
+>> +#else
+>> +static void __ath5k_disable_aspm(struct pci_dev *pdev, u16 state)
+>> +{
+>
+> It looks like a replacement for pci_disable_link_state() if
+> CONFIG_PCIEASPM is disabled.  I guess it should be in the PCI code, not
+> in ath5k.  At least the PCI developers should have a look at the
+> replacement code.
 
--  to = \(kmalloc\|kzalloc\)(size,flag);
-+  to = kmemdup(from,size,flag);
-   if (to==NULL || ...) S
--  memcpy(to, from, size);
-// </smpl>
+I used code from e1000e which does this same way, which now suddenly  
+reminds me of that ath5k is dual lisenced, right? Can I even reuse  
+code from GPL driver in ath5k?
 
-Signed-off-by: Julia Lawall <julia@diku.dk>
+-Jussi
 
----
- drivers/net/wireless/orinoco/wext.c |    4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff -u -p a/drivers/net/wireless/orinoco/wext.c b/drivers/net/wireless/orinoco/wext.c
---- a/drivers/net/wireless/orinoco/wext.c
-+++ b/drivers/net/wireless/orinoco/wext.c
-@@ -993,11 +993,9 @@ static int orinoco_ioctl_set_genie(struc
- 		return -EINVAL;
- 
- 	if (wrqu->data.length) {
--		buf = kmalloc(wrqu->data.length, GFP_KERNEL);
-+		buf = kmemdup(extra, wrqu->data.length, GFP_KERNEL);
- 		if (buf == NULL)
- 			return -ENOMEM;
--
--		memcpy(buf, extra, wrqu->data.length);
- 	} else
- 		buf = NULL;
- 
