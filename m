@@ -1,76 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews01.kpnxchange.com ([213.75.39.4]:1779 "EHLO
-	cpsmtpb-ews01.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756351Ab0EMJhE (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43051 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757609Ab0E1PIU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 05:37:04 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH v2 03/10] rt2x00: Dump beacons under a different identifier than TX frames.
-Date: Thu, 13 May 2010 11:36:51 +0200
-Message-Id: <1273743418-28383-4-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1273743418-28383-1-git-send-email-gwingerde@gmail.com>
-References: <1273743418-28383-1-git-send-email-gwingerde@gmail.com>
+	Fri, 28 May 2010 11:08:20 -0400
+Subject: Re: Iwlwifi and LEDS?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Richard Purdie <rpurdie@rpsys.net>
+Cc: Gregy <p.gregy@gmail.com>,
+	reinette chatre <reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Richard Purdie <rpurdie@openedhand.com>
+In-Reply-To: <1275058729.24079.1488.camel@rex>
+References: <AANLkTikB8WaMyIj6CTY5wfEeVDratQ1Y8W3B_JBVllBp@mail.gmail.com>
+	 <1274465242.12391.0.camel@abhi-desktop>
+	 <AANLkTilnK6lkypJkajiwUbhl6JlNR7S8dL6YzKUe2yd3@mail.gmail.com>
+	 <1274740231.2091.15472.camel@rchatre-DESK>
+	 <AANLkTilfa4YPPiroX5yfJ2BNRUVZH6imTvG4I8ukGjBC@mail.gmail.com>
+	 <1275025163.2091.20502.camel@rchatre-DESK>
+	 <AANLkTim86ILiQu0BNzUAkUV6lg1-mXt5UBJ0C9gGcgaI@mail.gmail.com>
+	 <1275045779.3909.90.camel@jlt3.sipsolutions.net>
+	 <1275058729.24079.1488.camel@rex>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 28 May 2010 17:08:14 +0200
+Message-ID: <1275059294.3909.112.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows for specific identification of beacons in the debugfs
-frame stream.
-Preparation for later differences between dumped TX frames and dumped
-beacons.
+On Fri, 2010-05-28 at 15:58 +0100, Richard Purdie wrote:
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00dump.h  |    3 +++
- drivers/net/wireless/rt2x00/rt2x00queue.c |    5 ++++-
- 2 files changed, 7 insertions(+), 1 deletions(-)
+> > The proper way to do this now would be to rewrite the LED code in
+> > iwlwifi to:
+> > 
+> > 1) register an LED again, which implements the blink_set() callback and
+> > programs the hw accordingly. This is essentially implementing
+> > iwl_led_pattern(), but with on_time/off_time parameters.
+> > 
+> > 2) Convert the current caller of iwl_led_pattern() to be an LED trigger
+> > that registers with the LED system. It would call the blink_set() for
+> > the LED it is connected to. Ideally, there should be some common
+> > software emulation if the LED has no blink_set(). Richard, is there a
+> > "make LED blink" callback that would start a timer for that LED? The
+> > timer trigger uses it but doesn't seem to be usable itself for other
+> > triggers?
+> > 
+> > 3) start the LED on device start, stop it on device stop
+> > 
+> > 4) depending on the module's led_mode, connect the LED to the
+> > appropriate default trigger, e.g. mac80211's assoc trigger or normally
+> > of course the new iwlwifi-blink trigger.
+> 
+> I have to admit I don't fully understand what the capabilities of your
+> hardware are.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dump.h b/drivers/net/wireless/rt2x00/rt2x00dump.h
-index 727019a..ed303b4 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dump.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00dump.h
-@@ -62,11 +62,14 @@
-  *	the tx event which has either succeeded or failed. A frame
-  *	with this type should also have been reported with as a
-  *	%DUMP_FRAME_TX frame.
-+ * @DUMP_FRAME_BEACON: This beacon frame is queued for transmission to the
-+ *	hardware.
-  */
- enum rt2x00_dump_type {
- 	DUMP_FRAME_RXDONE = 1,
- 	DUMP_FRAME_TX = 2,
- 	DUMP_FRAME_TXDONE = 3,
-+	DUMP_FRAME_BEACON = 4,
- };
- 
- /**
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 97b2c76..4a067db 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -420,6 +420,7 @@ static void rt2x00queue_write_tx_descriptor(struct queue_entry *entry,
- {
- 	struct data_queue *queue = entry->queue;
- 	struct rt2x00_dev *rt2x00dev = queue->rt2x00dev;
-+	enum rt2x00_dump_type dump_type;
- 
- 	rt2x00dev->ops->lib->write_tx_desc(rt2x00dev, entry->skb, txdesc);
- 
-@@ -427,7 +428,9 @@ static void rt2x00queue_write_tx_descriptor(struct queue_entry *entry,
- 	 * All processing on the frame has been completed, this means
- 	 * it is now ready to be dumped to userspace through debugfs.
- 	 */
--	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_TX, entry->skb);
-+	dump_type = (txdesc->queue == QID_BEACON) ?
-+					DUMP_FRAME_BEACON : DUMP_FRAME_TX;
-+	rt2x00debug_dump_frame(rt2x00dev, dump_type, entry->skb);
- }
- 
- static void rt2x00queue_kick_tx_queue(struct queue_entry *entry,
--- 
-1.7.1
+Sorry, I didn't mean to confuse you with the hardware details. The
+hardware can blink, essentially.
+
+> Certainly registering a trigger with the LED system, maybe only
+> appearing for this specific hardware sounds like the way to go. Since
+> this will only appear as a trigger for this hardware, the trigger can
+> then poke whatever it needs into the hardware to work as a traffic
+> indication?
+
+Yes, that would be one way. However, that would seem to unduly restrict
+the trigger's use. It can be used with any LED that has a blink_set()
+callback since it doesn't need to poke the hardware directly.
+
+What I was wondering is if there is (or should be) a common "blink
+emulation" for LEDs that don't have a blink_set, so instead of calling
+	led->blink_set(...)
+I would call
+	led_blink_set(...)
+and that would start the timer etc.
+
+johannes
 
