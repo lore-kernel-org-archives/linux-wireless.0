@@ -1,54 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ip84.de ([212.122.42.5]:56286 "EHLO bart.ip84.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932715Ab0ECPUs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 May 2010 11:20:48 -0400
-From: "rain_maker@root-forum.org" <rain_maker@root-forum.org>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rt2x00: remove USB-ID 148f:2573 from rt2500usb driver
-Date: Mon, 3 May 2010 17:20:36 +0200
-References: <201005031624.45409.rain_maker@root-forum.org> <20100503145815.GA24781@tuxdriver.com>
-In-Reply-To: <20100503145815.GA24781@tuxdriver.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Message-Id: <201005031720.36288.rain_maker@root-forum.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:60271 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754684Ab0E1ICf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 May 2010 04:02:35 -0400
+Subject: Re: [PATCH] cfg80211: Removed warning from cfg80211_send_rx_auth
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1275029755.20619.1261.camel@paavo-desktop>
+References: <1274870625-19712-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	 <1274872877.3658.4.camel@jlt3.sipsolutions.net>
+	 <1274950081.20619.18.camel@paavo-desktop>
+	 <1274952442.3669.28.camel@jlt3.sipsolutions.net>
+	 <1275029755.20619.1261.camel@paavo-desktop>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 28 May 2010 10:02:47 +0200
+Message-ID: <1275033767.3909.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Monday 03 May 2010 16:58:16 schrieben Sie:
-> I also get more than 100 hits from (probably the same) well-known
-> search engine for "rt73usb_init_eeprom: Error - Invalid RT chipset
-> detected".  I'm sure those aren't all for the same USB ID, and perhaps
-> none of them are.  Then again, not all of the 1500+ that you cite
-> are for the same USB ID either.
+On Fri, 2010-05-28 at 09:55 +0300, Teemu Paasikivi wrote:
 
-Well, of course I can't be 100% sure, I had this patch "in storage" for a long 
-time and already applied it so some packages I build, but hesitated for quite 
-a while if I should submit it.
+> > Yes .. I understand the scenario. You don't want to filter it out, you
+> > want to abort the authentication so you kill the work for it and never
+> > send the timeout to cfg80211.
 
-Additionally, the search string was not too good, it would have been better to 
-cite this one here
 
-148f:2573 rt2500usb_init_eeprom: Error
+> Isn't that already done? Aborting the authentication, I mean. 
 
-(about 500 hits)
+Evidently not? ieee80211_rx_mgmt_deauth() doesn't touch the work.
 
->
-> So I'm curious, how can you be sure that 148f:2573 is _always_ wrong
-> for rt2500usb?  I do acknowledge that the "73" part makes it suspicious...
->
+> The
+> warning is triggered by the authentication response in the
+> cfg80211_send_rx_auth function.
 
-As I am active in several fora and read quite a few more, I stumbled over this 
-annoyance (as I said it is not a fatal error) for several times in the past 
-few months/years and in all cases I know rt73usb was the working driver.
+Right, ieee80211_rx_mgmt_deauth() removed the auth work, that frame
+would never make it up to cfg80211.
 
-But of course the problem in such cases is, you can't prove it, you can only 
-add more and more examples for "not being wrong" while finding one example 
-where actually a device with 148f:2573 working with rt2500usb und not working 
-with rt73usb would prove me wrong once and for all.
+>  Removal of the warning would keep logs
+> clean. I suppose that in the case where wdev->sme_state !=
+> CFG80211_SME_CONNECTING we could just bail out from the
+> cfg80211_send_rx_auth function instead of removing the warning.
 
-Best wishes,
+No ... don't modify cfg80211.
 
-Axel K
+johannes
+
