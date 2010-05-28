@@ -1,129 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:43862 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932423Ab0EZW27 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 May 2010 18:28:59 -0400
-Received: by pvg3 with SMTP id 3so1338220pvg.19
-        for <linux-wireless@vger.kernel.org>; Wed, 26 May 2010 15:28:58 -0700 (PDT)
-Message-ID: <4BFDA09E.9080608@gmail.com>
-Date: Wed, 26 May 2010 15:28:46 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH]wireless:ath9k Disable leds for Apple products.
-References: <1274894056-2866-1-git-send-email-justinmattock@gmail.com> 	<1274894056-2866-2-git-send-email-justinmattock@gmail.com> 	<20100526171844.GB5823@tuxdriver.com> <4BFD5C89.8000308@gmail.com> 	<AANLkTim6ef__fNdXUyP1T4HB7jxbyt-Jlqi3Xa5Y_whm@mail.gmail.com> 	<4BFD93E0.5080506@gmail.com> <AANLkTik_di7oAPf6PeebZJCC3RyGGB5FNTkJNNj0XVzU@mail.gmail.com>
-In-Reply-To: <AANLkTik_di7oAPf6PeebZJCC3RyGGB5FNTkJNNj0XVzU@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from c60.cesmail.net ([216.154.195.49]:19958 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754999Ab0E1Qfk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 May 2010 12:35:40 -0400
+Subject: Re: Realtek rtl8188 support?
+From: Pavel Roskin <proski@gnu.org>
+To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: Paul Thomas <pthomas8589@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Andrea Merello <andreamrl@tiscali.it>
+In-Reply-To: <AANLkTin6cAHj2p266yMLQkrpkhCdX98leNl5F8f3DAJR@mail.gmail.com>
+References: <c785bba31003060945j22be2e78pfeaa1bcd39fcba2c@mail.gmail.com>
+	 <69e28c911003061007y258ec349laa802810e0517de4@mail.gmail.com>
+	 <1267949782.15192.13.camel@mj>
+	 <69e28c911003070736t678cf6ccld0fe6dc332f4380d@mail.gmail.com>
+	 <1268190973.10669.12.camel@mj>
+	 <c785bba31003291519tfd7d26fy466a4ee4310ac590@mail.gmail.com>
+	 <1274911569.2593.8.camel@mj>
+	 <AANLkTin6cAHj2p266yMLQkrpkhCdX98leNl5F8f3DAJR@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 28 May 2010 12:35:38 -0400
+Message-Id: <1275064538.15168.21.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/26/2010 02:42 PM, Luis R. Rodriguez wrote:
-> On Wed, May 26, 2010 at 2:34 PM, Justin P. Mattock
-> <justinmattock@gmail.com>  wrote:
->    
->> On 05/26/2010 02:05 PM, Luis R. Rodriguez wrote:
->>      
->>> On Wed, May 26, 2010 at 10:38 AM, Justin P. Mattock
->>> <justinmattock@gmail.com>    wrote:
->>>
->>>        
->>>> On 05/26/2010 10:18 AM, John W. Linville wrote:
->>>>
->>>>          
->>>>> On Wed, May 26, 2010 at 10:14:16AM -0700, Justin P. Mattock wrote:
->>>>>
->>>>>
->>>>>            
->>>>>> Disable the leds on ath9k for Apple products, since
->>>>>> there is no leds on any of there machines(or non that I can find!!).
->>>>>>
->>>>>>   Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
->>>>>>
->>>>>>              
->>> Our team has confirmed Apple devices do not have LEDs so a change like
->>> this is OK but this patch is wrong anyway. More details below.
->>>
->>>
->>>        
->>>>>>   void ath_init_leds(struct ath_softc *sc)
->>>>>>   {
->>>>>>         char *trigger;
->>>>>>         int ret;
->>>>>>
->>>>>> +       /* Apple has no leds lights for their wireless.  */
->>>>>> +       if (dmi_check_system(dmi_system_table)>      0)
->>>>>> +               return -ENODEV;
->>>>>> +       else
->>>>>> +
->>>>>>         if (AR_SREV_9287(sc->sc_ah))
->>>>>>                 sc->sc_ah->led_pin = ATH_LED_PIN_9287;
->>>>>>         else
->>>>>>
->>>>>>
->>>>>>              
->>>>> Surely we don't need the 'else'.
->>>>>
->>>>> Does enabling the LEDs on these systems cause any problems?
->>>>>
->>>>> John
->>>>>
->>>>>
->>>>>            
->>>> I picked up the idea, from this patch:
->>>> http://kerneltrap.org/mailarchive/linux-kernel/2010/1/20/4530535
->>>> while looking into a bug for ath9k(thinking maybe leds
->>>> are causing something, which want  the case)
->>>>
->>>> so Id have to say I don't think the leds cause issue's,
->>>> if anything just a wasted symlink, call, or whatever
->>>> in /sys/class/leds/*
->>>>
->>>>          
->>> The patch is wrong anyway, ath_init_leds() is void and yet you return
->>> a value. If this is really needed I'd also prefer if you define a bool
->>> or something and use a ah->ignore_leds and set this to true if the DMI
->>> stuff checks out for Apple up hw init. Then check for ignore_leds
->>> prior to calling ath_init_leds() and also avoid it if set. Also check
->>> for ingore_leds upon device cleanup and ignore the
->>> acancel_delayed_work_sync(&sc->ath_led_blink_work) and
->>> ath_deinit_leds() and skip that.
->>>
->>> But given that it is not needed it seems a lot of work for something
->>> that is a non-issue.
->>>
->>>    Luis
->>>
->>>
->>>        
->> tough to say!! I was looking into a bug a few months back, and
->> thought hmm.. maybe something is being called with the leds
->> but the leds are not there causing some thing to crap out..
->>
->> so out of curiosity I remembered the dmi disable patch, and
->> semi somewhat pieced it together(just to see the results of disabling the
->> leds).
->> unfortunately still hit the strange thing with wpa_supplicant and ath9k(the
->> disconnect thing).
->>
->> as for the above procedure(I can give that a try.. but it might
->> take a while...)
->>      
-> OK thanks for the details, best just ignore it unless you can prove it
-> fixes an issue.
->
->   Luis
->
->    
-at this point the only thing I can think of(if anything),
-would maybe a wakeup with powertop or something in
-the area of power management(but haven't looked into it).
+On Thu, 2010-05-27 at 00:21 +0200, Gábor Stefanik wrote:
+> > But I cannot find the "r8192s_usb" symbol in any staging drivers, so I
+> > have no idea which driver you are talking about.
+> 
+> r8192s_usb is not a symbol, it is the name of the module being loaded.
 
-In any case Thanks for having a look at the ath_print
-earlier..
+Oh, I see.  That means the driver is rtl8192su.  But its Kconfig file
+already selects WIRELESS_EXT.  git log should that it was fixed by the
+last commit to drivers/staging/rtl8192su/Kconfig:
 
-cheers,
+commit 784d3119475652d34a8d8ec3911e39c5e3d3036f
+Author: Simon Horman <horms@verge.net.au>
+Date:   Mon Dec 21 15:07:10 2009 +1100
 
-Justin P. Mattock
+    Staging: rtl8192su: Build should select WIRELESS_EXT
+
+As for the PCI dependency, it's probably wrong.  USB used to depend on
+PCI, but I understand it's no longer true.
+
+-- 
+Regards,
+Pavel Roskin
