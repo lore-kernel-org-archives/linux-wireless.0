@@ -1,32 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:43956 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752804Ab0EPUmT (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58739 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758240Ab0E1Kk5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 16 May 2010 16:42:19 -0400
-Received: by gyg13 with SMTP id 13so1815100gyg.19
-        for <linux-wireless@vger.kernel.org>; Sun, 16 May 2010 13:42:18 -0700 (PDT)
-MIME-Version: 1.0
-From: Weedy <weedy2887@gmail.com>
-Date: Sun, 16 May 2010 16:41:58 -0400
-Message-ID: <AANLkTimltZSc8dJPPBCibcGDaOPcQRU_5kSbenIAdi_6@mail.gmail.com>
-Subject: ath5k past 2.6.30 breaks monitor mode (and thus the aircrack suite)
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 28 May 2010 06:40:57 -0400
+Subject: Re: Problems connectring to an AP with Acer Aspire Revo
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Christian P. Schmidt" <schmidt@digadd.de>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4BFF9B93.5010308@digadd.de>
+References: <4BF795EB.9070902@digadd.de>
+	 <1274729665.2091.15280.camel@rchatre-DESK>  <4BFD1ED0.9050309@digadd.de>
+	 <1275003105.2091.20102.camel@rchatre-DESK>  <4BFF9B93.5010308@digadd.de>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 28 May 2010 12:41:14 +0200
+Message-ID: <1275043274.3909.71.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Running airodump on ubuntus 2.6.30 kernel works as expected. The
-2.6.32 kernel shipped in lucid never sees data packets.
+On Fri, 2010-05-28 at 12:31 +0200, Christian P. Schmidt wrote:
 
-I have narrowed it down to channel hopping. modprobing the driver and
-starting mon0 on a fixed channel works as expected, but allowing
-airodump to channel hop breaks the interface until the driver is
-reset.
+> >> I kind of feel that no packets are sent, since I can't see them on the
+> >> firewall, even with packet dumps, not even association attempts.
+> > 
+> > We can look into this more by enabling TX debugging and general
+> > debugging. Could you please reload driver with "modprobe iwlagn
+> > debug=0x40843fff" and rerun your test?
+> 
+> I've attached two files, first the card init, second a full association
+> attempt to both access points (encrypted & open).
 
-I wrote a script to download and build compat wireless starting from
-2009-01-01 (granted everything fails until half way through october),
-but every version that is successfully installed also show the same
-bug.
+I'll let Reinette analyse that.
 
-Further instructions welcome.
+> After looking up the specs for the mini pci express port I'm gonna
+> disassemble the HTPC tonight and will figure out if that thing asserts
+> the RFKILL signal... even though there's no RFKILL switch.
+
+That isn't useful I think since the rfkill line would disable the
+hardware, which we'd know in software and never get this far. Maybe
+better check if the antennas are connected properly and are dual-band
+antennas if you use 5ghz? :)
+
+johannes
+
