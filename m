@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpoproxy3-pub.bluehost.com ([67.222.54.6]:37657 "HELO
-	outbound-mail-313.bluehost.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S932376Ab0EVBRF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 May 2010 21:17:05 -0400
-Message-ID: <4BF7308D.3010201@dlasys.net>
-Date: Fri, 21 May 2010 21:17:01 -0400
-From: "David H. Lynch Jr." <dhlii@dlasys.net>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Subject: AR9170 FW
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from c60.cesmail.net ([216.154.195.49]:59949 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753603Ab0E1Uoi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 May 2010 16:44:38 -0400
+Subject: Re: [PATCH]: ath: Fix uninitialized variable warnings
+From: Pavel Roskin <proski@gnu.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Prarit Bhargava <prarit@redhat.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@atheros.com
+In-Reply-To: <20100528173431.GB2405@tuxdriver.com>
+References: <20100527181052.23905.67123.sendpatchset@prarit.bos.redhat.com>
+	 <20100528173431.GB2405@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 28 May 2010 16:44:36 -0400
+Message-Id: <1275079476.18152.18.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-     I have been playing with the assorted timers in the ar9170.
+On Fri, 2010-05-28 at 13:34 -0400, John W. Linville wrote:
+> On Thu, May 27, 2010 at 02:14:54PM -0400, Prarit Bhargava wrote:
+> > Fixes 'make -j24 CONFIG_DEBUG_SECTION_MISMATCH=y' warning:
+> > 
+> > drivers/net/wireless/ath/ath9k/eeprom_4k.c: In function ‘ath9k_hw_get_4k_gain_boundaries_pdadcs.clone.1’:
+> > drivers/net/wireless/ath/ath9k/eeprom_4k.c:311: error: ‘minPwrT4’ may be used uninitialized in this function
+> > drivers/net/wireless/ath/ath9k/eeprom_9287.c: In function ‘ath9k_hw_get_AR9287_gain_boundaries_pdadcs’:
+> > drivers/net/wireless/ath/ath9k/eeprom_9287.c:302: error: ‘minPwrT4’ may be used uninitialized in this function
+> > drivers/net/wireless/ath/ath9k/eeprom_def.c: In function ‘ath9k_hw_get_def_gain_boundaries_pdadcs.clone.0’:
+> > drivers/net/wireless/ath/ath9k/eeprom_def.c:679: error: ‘minPwrT4’ may be used uninitialized in this function
+> > 
+> > Signed-off-by: Prarit Bhargava <prarit@redhat.com>
+> 
+> It looks to me like minPwrT4 will get initialized as long as
+> numXpdGains is non-zero in all cases.  Anyone know if this is true?
 
-     My preliminary observations seem to be indicating that
-         AR9170_TIMER_REG_TIMER0 might actually be running at 40mhz/25ns,
-     But that all the other timers seem to be running far slower - i.e. 
-maybe they are cascaded of the overflow on timer0.
-     I have specifically looked at timer1-4 and tic_timer and clock_low 
-and they all seem to be running very slow.
+It's calculated based on a value from EEPROM (xpdMask).  If xpdMask is
+0, numXpdGain would be 0.  So bogus EEPROM can lead to bogus
+tMinCalPower.  But the good thing is that tMinCalPower is never used.
 
-     The docs that I have imply but do not state that all these clocks 
-are directly off the 25ns/40mhz superH clock.
-
-     Have you had any experience with the clocks and their rates ?
-
-
-
-
-
+So let's just eliminate tMinCalPower in all three files, as well as the
+corresponding function arguments.
 
 -- 
-Dave Lynch 					  	    DLA Systems
-Software Development:  				         Embedded Linux
-717.587.7774 	       dhlii@dlasys.net 	  http://www.dlasys.net
-Over 25 years' experience in platforms, languages, and technologies too numerous to list.
-
-"Any intelligent fool can make things bigger and more complex... It takes a touch of genius - and a lot of courage to move in the opposite direction."
-Albert Einstein
-
+Regards,
+Pavel Roskin
