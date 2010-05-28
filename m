@@ -1,145 +1,305 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f220.google.com ([209.85.219.220]:41076 "EHLO
-	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757374Ab0EFMpw (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60661 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753667Ab0E1S5j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 6 May 2010 08:45:52 -0400
-Received: by ewy20 with SMTP id 20so1654706ewy.1
-        for <linux-wireless@vger.kernel.org>; Thu, 06 May 2010 05:45:50 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] rt2x00: Fix RF3052 channel initialization
-Date: Thu, 6 May 2010 14:45:46 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201005061445.47170.IvDoorn@gmail.com>
+	Fri, 28 May 2010 14:57:39 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.71)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1OI4kU-000480-8C
+	for linux-wireless@vger.kernel.org; Fri, 28 May 2010 20:57:38 +0200
+Message-Id: <20100528185505.162785761@sipsolutions.net>
+Date: Fri, 28 May 2010 20:53:06 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 4/7] mac80211: use common work function
+References: <20100528185302.639535282@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update channel initialization for the RF3052 chipset.
-According to the Ralink drivers, the rt3x array must be
-used for this chipset, rather then the rt2x array.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Furthermore RF3052 supports the 5GHz band, extend
-the rt3x array with the 5GHz channels, and use them
-for the RF3052 chip.
+Even with the previous patch, IBSS, managed
+and mesh modes all attach their own work
+function to the shared work struct, which
+means some duplicated code. Change that to
+only have a frame processing function and a
+further work function for each of them and
+share some common code.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |   67 ++++++++++++++++++++++++++----
- 1 files changed, 58 insertions(+), 9 deletions(-)
+ net/mac80211/ibss.c        |   29 ++-------------------
+ net/mac80211/ieee80211_i.h |   11 +++++++
+ net/mac80211/iface.c       |   62 +++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/mesh.c        |   20 ++------------
+ net/mac80211/mlme.c        |   35 ++-----------------------
+ 5 files changed, 84 insertions(+), 73 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index e37bbea..6c0abc3 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2219,7 +2219,7 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
- EXPORT_SYMBOL_GPL(rt2800_init_eeprom);
+--- wireless-testing.orig/net/mac80211/ibss.c	2010-05-28 20:37:06.000000000 +0200
++++ wireless-testing/net/mac80211/ibss.c	2010-05-28 20:37:08.000000000 +0200
+@@ -727,8 +727,8 @@ static void ieee80211_rx_mgmt_beacon(str
+ 	ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems, true);
+ }
  
+-static void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+-					  struct sk_buff *skb)
++void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
++				   struct sk_buff *skb)
+ {
+ 	struct ieee80211_rx_status *rx_status;
+ 	struct ieee80211_mgmt *mgmt;
+@@ -758,29 +758,9 @@ static void ieee80211_ibss_rx_queued_mgm
+ 	kfree_skb(skb);
+ }
+ 
+-static void ieee80211_ibss_work(struct work_struct *work)
++void ieee80211_ibss_work(struct ieee80211_sub_if_data *sdata)
+ {
+-	struct ieee80211_sub_if_data *sdata =
+-		container_of(work, struct ieee80211_sub_if_data, work);
+-	struct ieee80211_local *local = sdata->local;
+-	struct ieee80211_if_ibss *ifibss;
+-	struct sk_buff *skb;
+-
+-	if (WARN_ON(local->suspended))
+-		return;
+-
+-	if (!ieee80211_sdata_running(sdata))
+-		return;
+-
+-	if (local->scanning)
+-		return;
+-
+-	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_ADHOC))
+-		return;
+-	ifibss = &sdata->u.ibss;
+-
+-	while ((skb = skb_dequeue(&sdata->skb_queue)))
+-		ieee80211_ibss_rx_queued_mgmt(sdata, skb);
++	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+ 
+ 	if (!test_and_clear_bit(IEEE80211_IBSS_REQ_RUN, &ifibss->request))
+ 		return;
+@@ -847,7 +827,6 @@ void ieee80211_ibss_setup_sdata(struct i
+ {
+ 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+ 
+-	INIT_WORK(&sdata->work, ieee80211_ibss_work);
+ 	setup_timer(&ifibss->timer, ieee80211_ibss_timer,
+ 		    (unsigned long) sdata);
+ }
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2010-05-28 20:37:06.000000000 +0200
++++ wireless-testing/net/mac80211/ieee80211_i.h	2010-05-28 20:37:08.000000000 +0200
+@@ -998,6 +998,9 @@ void ieee80211_sta_process_chanswitch(st
+ 				      u64 timestamp);
+ void ieee80211_sta_quiesce(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata);
++void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata);
++void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
++				  struct sk_buff *skb);
+ 
+ /* IBSS code */
+ void ieee80211_ibss_notify_scan_completed(struct ieee80211_local *local);
+@@ -1012,6 +1015,14 @@ int ieee80211_ibss_join(struct ieee80211
+ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_ibss_quiesce(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_ibss_restart(struct ieee80211_sub_if_data *sdata);
++void ieee80211_ibss_work(struct ieee80211_sub_if_data *sdata);
++void ieee80211_ibss_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
++				   struct sk_buff *skb);
++
++/* mesh code */
++void ieee80211_mesh_work(struct ieee80211_sub_if_data *sdata);
++void ieee80211_mesh_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
++				   struct sk_buff *skb);
+ 
+ /* scan/BSS handling */
+ void ieee80211_scan_work(struct work_struct *work);
+--- wireless-testing.orig/net/mac80211/iface.c	2010-05-28 20:37:06.000000000 +0200
++++ wireless-testing/net/mac80211/iface.c	2010-05-28 20:37:08.000000000 +0200
+@@ -704,6 +704,67 @@ static void ieee80211_if_setup(struct ne
+ 	dev->destructor = free_netdev;
+ }
+ 
++static void ieee80211_iface_work(struct work_struct *work)
++{
++	struct ieee80211_sub_if_data *sdata =
++		container_of(work, struct ieee80211_sub_if_data, work);
++	struct ieee80211_local *local = sdata->local;
++	struct sk_buff *skb;
++
++	if (!ieee80211_sdata_running(sdata))
++		return;
++
++	if (local->scanning)
++		return;
++
++	/*
++	 * ieee80211_queue_work() should have picked up most cases,
++	 * here we'll pick the the rest.
++	 */
++	if (WARN(local->suspended,
++		 "interface work scheduled while going to suspend\n"))
++		return;
++
++	/* first process frames */
++	while ((skb = skb_dequeue(&sdata->skb_queue))) {
++		switch (sdata->vif.type) {
++		case NL80211_IFTYPE_STATION:
++			ieee80211_sta_rx_queued_mgmt(sdata, skb);
++			break;
++		case NL80211_IFTYPE_ADHOC:
++			ieee80211_ibss_rx_queued_mgmt(sdata, skb);
++			break;
++		case NL80211_IFTYPE_MESH_POINT:
++			if (!ieee80211_vif_is_mesh(&sdata->vif))
++				break;
++			ieee80211_mesh_rx_queued_mgmt(sdata, skb);
++			break;
++		default:
++			WARN(1, "frame for unexpected interface type");
++			kfree_skb(skb);
++			break;
++		}
++	}
++
++	/* then other type-dependent work */
++	switch (sdata->vif.type) {
++	case NL80211_IFTYPE_STATION:
++		ieee80211_sta_work(sdata);
++		break;
++	case NL80211_IFTYPE_ADHOC:
++		ieee80211_ibss_work(sdata);
++		break;
++	case NL80211_IFTYPE_MESH_POINT:
++		if (!ieee80211_vif_is_mesh(&sdata->vif))
++			break;
++		ieee80211_mesh_work(sdata);
++		break;
++	default:
++		break;
++	}
++}
++
++
  /*
-- * RF value list for rt28x0
-+ * RF value list for rt28xx
-  * Supports: 2.4 GHz (all) & 5.2 GHz (RF2850 & RF2750)
+  * Helper function to initialise an interface to a specific type.
   */
- static const struct rf_channel rf_vals[] = {
-@@ -2294,10 +2294,10 @@ static const struct rf_channel rf_vals[] = {
- };
+@@ -722,6 +783,7 @@ static void ieee80211_setup_sdata(struct
+ 	sdata->dev->type = ARPHRD_ETHER;
  
- /*
-- * RF value list for rt3070
-- * Supports: 2.4 GHz
-+ * RF value list for rt3xxx
-+ * Supports: 2.4 GHz (all) & 5.2 GHz (RF3052)
-  */
--static const struct rf_channel rf_vals_302x[] = {
-+static const struct rf_channel rf_vals_3x[] = {
- 	{1,  241, 2, 2 },
- 	{2,  241, 2, 7 },
- 	{3,  242, 2, 2 },
-@@ -2312,6 +2312,51 @@ static const struct rf_channel rf_vals_302x[] = {
- 	{12, 246, 2, 7 },
- 	{13, 247, 2, 2 },
- 	{14, 248, 2, 4 },
-+
-+	/* 802.11 UNI / HyperLan 2 */
-+	{36, 0x56, 0, 4},
-+	{38, 0x56, 0, 6},
-+	{40, 0x56, 0, 8},
-+	{44, 0x57, 0, 0},
-+	{46, 0x57, 0, 2},
-+	{48, 0x57, 0, 4},
-+	{52, 0x57, 0, 8},
-+	{54, 0x57, 0, 10},
-+	{56, 0x58, 0, 0},
-+	{60, 0x58, 0, 4},
-+	{62, 0x58, 0, 6},
-+	{64, 0x58, 0, 8},
-+
-+	/* 802.11 HyperLan 2 */
-+	{100, 0x5b, 0, 8},
-+	{102, 0x5b, 0, 10},
-+	{104, 0x5c, 0, 0},
-+	{108, 0x5c, 0, 4},
-+	{110, 0x5c, 0, 6},
-+	{112, 0x5c, 0, 8},
-+	{116, 0x5d, 0, 0},
-+	{118, 0x5d, 0, 2},
-+	{120, 0x5d, 0, 4},
-+	{124, 0x5d, 0, 8},
-+	{126, 0x5d, 0, 10},
-+	{128, 0x5e, 0, 0},
-+	{132, 0x5e, 0, 4},
-+	{134, 0x5e, 0, 6},
-+	{136, 0x5e, 0, 8},
-+	{140, 0x5f, 0, 0},
-+
-+	/* 802.11 UNII */
-+	{149, 0x5f, 0, 9},
-+	{151, 0x5f, 0, 11},
-+	{153, 0x60, 0, 1},
-+	{157, 0x60, 0, 5},
-+	{159, 0x60, 0, 7},
-+	{161, 0x60, 0, 9},
-+	{165, 0x61, 0, 1},
-+	{167, 0x61, 0, 3},
-+	{169, 0x61, 0, 5},
-+	{171, 0x61, 0, 7},
-+	{173, 0x61, 0, 9},
- };
+ 	skb_queue_head_init(&sdata->skb_queue);
++	INIT_WORK(&sdata->work, ieee80211_iface_work);
  
- int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
-@@ -2352,11 +2397,11 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	spec->supported_rates = SUPPORT_RATE_CCK | SUPPORT_RATE_OFDM;
- 
- 	if (rt2x00_rf(rt2x00dev, RF2820) ||
--	    rt2x00_rf(rt2x00dev, RF2720) ||
--	    rt2x00_rf(rt2x00dev, RF3052)) {
-+	    rt2x00_rf(rt2x00dev, RF2720)) {
- 		spec->num_channels = 14;
- 		spec->channels = rf_vals;
--	} else if (rt2x00_rf(rt2x00dev, RF2850) || rt2x00_rf(rt2x00dev, RF2750)) {
-+	} else if (rt2x00_rf(rt2x00dev, RF2850) ||
-+		   rt2x00_rf(rt2x00dev, RF2750)) {
- 		spec->supported_bands |= SUPPORT_BAND_5GHZ;
- 		spec->num_channels = ARRAY_SIZE(rf_vals);
- 		spec->channels = rf_vals;
-@@ -2364,8 +2409,12 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 		   rt2x00_rf(rt2x00dev, RF2020) ||
- 		   rt2x00_rf(rt2x00dev, RF3021) ||
- 		   rt2x00_rf(rt2x00dev, RF3022)) {
--		spec->num_channels = ARRAY_SIZE(rf_vals_302x);
--		spec->channels = rf_vals_302x;
-+		spec->num_channels = 14;
-+		spec->channels = rf_vals_3x;
-+	} else if (rt2x00_rf(rt2x00dev, RF3052)) {
-+		spec->supported_bands |= SUPPORT_BAND_5GHZ;
-+		spec->num_channels = ARRAY_SIZE(rf_vals_3x);
-+		spec->channels = rf_vals_3x;
+ 	switch (type) {
+ 	case NL80211_IFTYPE_AP:
+--- wireless-testing.orig/net/mac80211/mesh.c	2010-05-28 20:37:06.000000000 +0200
++++ wireless-testing/net/mac80211/mesh.c	2010-05-28 20:37:08.000000000 +0200
+@@ -599,8 +599,8 @@ static void ieee80211_mesh_rx_mgmt_actio
  	}
+ }
  
- 	/*
--- 
-1.6.6.1
+-static void ieee80211_mesh_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+-					  struct sk_buff *skb)
++void ieee80211_mesh_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
++				   struct sk_buff *skb)
+ {
+ 	struct ieee80211_rx_status *rx_status;
+ 	struct ieee80211_if_mesh *ifmsh;
+@@ -627,22 +627,9 @@ static void ieee80211_mesh_rx_queued_mgm
+ 	kfree_skb(skb);
+ }
+ 
+-static void ieee80211_mesh_work(struct work_struct *work)
++void ieee80211_mesh_work(struct ieee80211_sub_if_data *sdata)
+ {
+-	struct ieee80211_sub_if_data *sdata =
+-		container_of(work, struct ieee80211_sub_if_data, work);
+-	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+-	struct sk_buff *skb;
+-
+-	if (!ieee80211_sdata_running(sdata))
+-		return;
+-
+-	if (local->scanning)
+-		return;
+-
+-	while ((skb = skb_dequeue(&sdata->skb_queue)))
+-		ieee80211_mesh_rx_queued_mgmt(sdata, skb);
+ 
+ 	if (ifmsh->preq_queue_len &&
+ 	    time_after(jiffies,
+@@ -677,7 +664,6 @@ void ieee80211_mesh_init_sdata(struct ie
+ {
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 
+-	INIT_WORK(&sdata->work, ieee80211_mesh_work);
+ 	setup_timer(&ifmsh->housekeeping_timer,
+ 		    ieee80211_mesh_housekeeping_timer,
+ 		    (unsigned long) sdata);
+--- wireless-testing.orig/net/mac80211/mlme.c	2010-05-28 20:37:06.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2010-05-28 20:37:08.000000000 +0200
+@@ -1660,8 +1660,8 @@ ieee80211_rx_result ieee80211_sta_rx_mgm
+ 	return RX_DROP_MONITOR;
+ }
+ 
+-static void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+-					 struct sk_buff *skb)
++void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
++				  struct sk_buff *skb)
+ {
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	struct ieee80211_rx_status *rx_status;
+@@ -1782,36 +1782,10 @@ static void ieee80211_sta_timer(unsigned
+ 	ieee80211_queue_work(&local->hw, &sdata->work);
+ }
+ 
+-static void ieee80211_sta_work(struct work_struct *work)
++void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata)
+ {
+-	struct ieee80211_sub_if_data *sdata =
+-		container_of(work, struct ieee80211_sub_if_data, work);
+ 	struct ieee80211_local *local = sdata->local;
+-	struct ieee80211_if_managed *ifmgd;
+-	struct sk_buff *skb;
+-
+-	if (!ieee80211_sdata_running(sdata))
+-		return;
+-
+-	if (local->scanning)
+-		return;
+-
+-	if (WARN_ON(sdata->vif.type != NL80211_IFTYPE_STATION))
+-		return;
+-
+-	/*
+-	 * ieee80211_queue_work() should have picked up most cases,
+-	 * here we'll pick the the rest.
+-	 */
+-	if (WARN(local->suspended, "STA MLME work scheduled while "
+-		 "going to suspend\n"))
+-		return;
+-
+-	ifmgd = &sdata->u.mgd;
+-
+-	/* first process frames to avoid timing out while a frame is pending */
+-	while ((skb = skb_dequeue(&sdata->skb_queue)))
+-		ieee80211_sta_rx_queued_mgmt(sdata, skb);
++	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 
+ 	/* then process the rest of the work */
+ 	mutex_lock(&ifmgd->mtx);
+@@ -1953,7 +1927,6 @@ void ieee80211_sta_setup_sdata(struct ie
+ 	struct ieee80211_if_managed *ifmgd;
+ 
+ 	ifmgd = &sdata->u.mgd;
+-	INIT_WORK(&sdata->work, ieee80211_sta_work);
+ 	INIT_WORK(&ifmgd->monitor_work, ieee80211_sta_monitor_work);
+ 	INIT_WORK(&ifmgd->chswitch_work, ieee80211_chswitch_work);
+ 	INIT_WORK(&ifmgd->beacon_connection_loss_work,
+
 
