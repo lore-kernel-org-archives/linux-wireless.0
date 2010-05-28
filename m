@@ -1,65 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw1.diku.dk ([130.225.96.91]:46624 "EHLO mgw1.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754024Ab0EOVPQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 May 2010 17:15:16 -0400
-Date: Sat, 15 May 2010 23:15:10 +0200 (CEST)
-From: Julia Lawall <julia@diku.dk>
-To: Kalle Valo <kalle.valo@iki.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH 7/37] drivers/net/wireless/wl12xx: Use kmemdup
-Message-ID: <Pine.LNX.4.64.1005152314540.21345@ask.diku.dk>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from he.sipsolutions.net ([78.46.109.217]:47787 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753379Ab0E1Msz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 May 2010 08:48:55 -0400
+Subject: [PATCH] mac80211: remove useless work starting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 28 May 2010 14:48:52 +0200
+Message-ID: <1275050932.3909.103.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
+Ever since we use only cfg80211 for configuration,
+there is no configuration that could be pending at
+this point, cfg80211 will have the configuration
+that is pending and apply it afterwards.
 
-Use kmemdup when some other buffer is immediately copied into the
-allocated region.
-
-A simplified version of the semantic patch that makes this change is as
-follows: (http://coccinelle.lip6.fr/)
-
-// <smpl>
-@@
-expression from,to,size,flag;
-statement S;
-@@
-
--  to = \(kmalloc\|kzalloc\)(size,flag);
-+  to = kmemdup(from,size,flag);
-   if (to==NULL || ...) S
--  memcpy(to, from, size);
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 ---
- drivers/net/wireless/wl12xx/wl1251_main.c |    4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ net/mac80211/iface.c |    9 ---------
+ 1 file changed, 9 deletions(-)
 
-diff -u -p a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
---- a/drivers/net/wireless/wl12xx/wl1251_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_main.c
-@@ -124,7 +124,7 @@ static int wl1251_fetch_nvs(struct wl125
- 	}
+--- wireless-testing.orig/net/mac80211/iface.c	2010-05-28 14:47:29.000000000 +0200
++++ wireless-testing/net/mac80211/iface.c	2010-05-28 14:47:32.000000000 +0200
+@@ -321,15 +321,6 @@ static int ieee80211_open(struct net_dev
  
- 	wl->nvs_len = fw->size;
--	wl->nvs = kmalloc(wl->nvs_len, GFP_KERNEL);
-+	wl->nvs = kmemdup(fw->data, wl->nvs_len, GFP_KERNEL);
+ 	ieee80211_recalc_ps(local, -1);
  
- 	if (!wl->nvs) {
- 		wl1251_error("could not allocate memory for the nvs file");
-@@ -132,8 +132,6 @@ static int wl1251_fetch_nvs(struct wl125
- 		goto out;
- 	}
- 
--	memcpy(wl->nvs, fw->data, wl->nvs_len);
+-	/*
+-	 * ieee80211_sta_work is disabled while network interface
+-	 * is down. Therefore, some configuration changes may not
+-	 * yet be effective. Trigger execution of ieee80211_sta_work
+-	 * to fix this.
+-	 */
+-	if (sdata->vif.type == NL80211_IFTYPE_STATION)
+-		ieee80211_queue_work(&local->hw, &sdata->u.mgd.work);
 -
- 	ret = 0;
+ 	netif_tx_start_all_queues(dev);
  
- out:
+ 	return 0;
+
+
