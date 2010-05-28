@@ -1,141 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:56529 "EHLO mail.atheros.com"
+Received: from mga09.intel.com ([134.134.136.24]:32188 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755280Ab0ENBpz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 21:45:55 -0400
-Date: Thu, 13 May 2010 18:45:53 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-CC: "Justin P. Mattock" <justinmattock@gmail.com>,
-	Bruno Randolf <br1@einfach.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: ath9k: BUG kmalloc-8192: Poison overwritten
-Message-ID: <20100514014553.GD2170@tux>
-References: <4BEC7A84.3010503@gmail.com>
- <AANLkTinKoMxdkPYQA_AblpByL6zAiAP5hv2M3Jn2R3hM@mail.gmail.com>
- <4BEC9E6B.30809@gmail.com>
- <201005141008.20667.br1@einfach.org>
- <4BECA3AE.4070607@gmail.com>
- <20100514012314.GA2170@tux>
- <4BECA6AC.9060609@gmail.com>
- <20100514014311.GC2170@tux>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20100514014311.GC2170@tux>
+	id S1755253Ab0E1Fj1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 May 2010 01:39:27 -0400
+Subject: Re: Iwlwifi and LEDS?
+From: reinette chatre <reinette.chatre@intel.com>
+To: Gregy <p.gregy@gmail.com>
+Cc: "Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTilfa4YPPiroX5yfJ2BNRUVZH6imTvG4I8ukGjBC@mail.gmail.com>
+References: <AANLkTikB8WaMyIj6CTY5wfEeVDratQ1Y8W3B_JBVllBp@mail.gmail.com>
+	 <1274465242.12391.0.camel@abhi-desktop>
+	 <AANLkTilnK6lkypJkajiwUbhl6JlNR7S8dL6YzKUe2yd3@mail.gmail.com>
+	 <1274740231.2091.15472.camel@rchatre-DESK>
+	 <AANLkTilfa4YPPiroX5yfJ2BNRUVZH6imTvG4I8ukGjBC@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 27 May 2010 22:39:23 -0700
+Message-ID: <1275025163.2091.20502.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 13, 2010 at 06:43:11PM -0700, Luis Rodriguez wrote:
-> On Thu, May 13, 2010 at 06:26:04PM -0700, Justin P. Mattock wrote:
-> > On 05/13/10 18:23, Luis R. Rodriguez wrote:
-> > > On Thu, May 13, 2010 at 06:13:18PM -0700, Justin P. Mattock wrote:
-> > >> On 05/13/10 18:08, Bruno Randolf wrote:
-> > >>> On Friday 14 May 2010 09:50:51 Justin P. Mattock wrote:
-> > >>>> On 05/13/10 17:28, Luis R. Rodriguez wrote:
-> > >>>>> On Thu, May 13, 2010 at 5:21 PM, Justin P. Mattock
-> > >>>>>
-> > >>>>> <justinmattock@gmail.com>    wrote:
-> > >>>>>> On 05/13/10 16:01, Luis R. Rodriguez wrote:
-> > >>>>>>> On Thu, May 13, 2010 at 3:17 PM, Justin P. Mattock
-> > >>>>>>>
-> > >>>>>>> <justinmattock@gmail.com>      wrote:
-> > >>>>>>>> not sure what this is, but while at a convention
-> > >>>>>>>> I was trying to access the internet and(below is
-> > >>>>>>>> full dmesg) this showed up.
-> > >>>>>>>>
-> > >>>>>>>> After receiving this, I sat and tried to re-create
-> > >>>>>>>> my steps to reproduce but had no luck(was even going
-> > >>>>>>>> todo a bisect n the spot if I could re-create).
-> > >>>>>>>
-> > >>>>>>> OK this stuff is hard to reproduce it seems.. you have an Atheros
-> > >>>>>>> AR5418 MAC/BB Rev:2 AR5133 RF Rev:81, what kconfig option do you use
-> > >>>>>>> to get the poison stuff? I am just surprised we haven't seen it
-> > >>>>>>> ourselves yet. Let me make sure all of us get this kconfig option
-> > >>>>>>> enabled.
-> > >>>>>>>
-> > >>>>>>>      Luis
-> > >>>>>>
-> > >>>>>> CONFIG_ATH_COMMON=m
-> > >>>>>> # CONFIG_ATH_DEBUG is not set
-> > >>>>>> CONFIG_ATH5K=m
-> > >>>>>> # CONFIG_ATH5K_DEBUG is not set
-> > >>>>>> CONFIG_ATH9K_HW=m
-> > >>>>>> CONFIG_ATH9K_COMMON=m
-> > >>>>>> CONFIG_ATH9K=m
-> > >>>>>> # CONFIG_ATH9K_DEBUGFS is not set
-> > >>>>>>
-> > >>>>>> if you need my .config let me know.
-> > >>>>>> (I can try again reproducing, but man
-> > >>>>>> just doesn't easily fire off).
-> > >>>>>
-> > >>>>> Oh I mean the config options to enable the poison rant.
-> > >>>>>
-> > >>>>>      Luis
-> > >>>>
-> > >>>> shoot.. not sure how to grep for the right info
-> > >>>> in the .config for you, heres what grepping for COFIG_DEBUG
-> > >>>> looks like:
-> > >>>> CONFIG_DEBUG_FS=y
-> > >>>> CONFIG_DEBUG_KERNEL=y
-> > >>>> CONFIG_DEBUG_RT_MUTEXES=y
-> > >>>> CONFIG_DEBUG_PI_LIST=y
-> > >>>> CONFIG_DEBUG_SPINLOCK=y
-> > >>>> CONFIG_DEBUG_MUTEXES=y
-> > >>>> CONFIG_DEBUG_BUGVERBOSE=y
-> > >>>> CONFIG_DEBUG_MEMORY_INIT=y
-> > >>>> CONFIG_DEBUG_STACKOVERFLOW=y
-> > >>>
-> > >>> oh, this reminds me of a similar report we had for ath5k:
-> > >>>
-> > >>> https://bugzilla.kernel.org/show_bug.cgi?id=15861
-> > >>>
-> > >>> the subject on this mailing list was "ath5k misbehaving affecting other kernel
-> > >>> parts unrelated?"
-> > >>>
-> > >>> bruno
-> > >>>
-> > >>
-> > >> Could be.. From what I remember
-> > >> all I was doing was switching from
-> > >> one wireless network to another
-> > >> (then opening firefox to sign my life away).
-> > >
-> > > Were you using network-manager? Or the supplicant manually?
-> > >
-> > >    Luis
-> > >
-> > 
-> > I've got wicd(1.5.9) manager
-> > running over here.
-> 
-> Can you try this:
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-> index 8c79548..a372f2c 100644
-> --- a/drivers/net/wireless/ath/ath9k/init.c
-> +++ b/drivers/net/wireless/ath/ath9k/init.c
-> @@ -599,6 +599,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc, u16 subsysid,
->  	 */
->  	ath_read_cachesize(common, &csz);
->  	common->cachelsz = csz << 2; /* convert to bytes */
-> +	printk("ATH9K: cachelsz: %d\n", common->cachelsz);
->  
->  	/* Initializes the hardware for all supported chipsets */
->  	ret = ath9k_hw_init(ah);
-> 
-> 
-> Would like to see what you get there on dmesg upon load.
+On Thu, 2010-05-27 at 13:14 -0700, Gregy wrote:
+> > What did you do before that does not work anymore?
+> No, led never gets registered in /sys/class/leds.
 
-Actually don't bother I just realized you can get this with
-ATH_DBG_CONFIG enabled.
+Right, and the patch you reference explains why. At no point was support
+for LEDs removed.
 
-                ath_print(common, ATH_DBG_CONFIG, "cachelsz %u rxbufsize %u\n",
-                                common->cachelsz, common->rx_bufsize);
+>  Also I found this:
+> http://article.gmane.org/gmane.linux.kernel.wireless.general/40328/
+
+The intention and supported LED behavior has always been for a single
+LED to blink according to data. The led_mode module parameter was added
+to support the additional RF status indication capability. 
+
+If you want to be able to manipulate the LED in other ways than the
+driver supports you could look into adding a debugfs file that
+manipulates the driver's led variables (allow_blinking,
+last_blink_time, ...). There is already a readable led file in debugfs,
+but not writable. 
+
+Reinette
 
 
-This is already in the code so just
-
-modprobe ath9k debug=0x00000200
-
-  Luis
