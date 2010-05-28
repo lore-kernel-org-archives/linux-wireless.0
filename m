@@ -1,277 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews02.kpnxchange.com ([213.75.39.5]:1227 "EHLO
-	cpsmtpb-ews02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758045Ab0EMJhH (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40690 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751973Ab0E1NXC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 13 May 2010 05:37:07 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH v2 08/10] rt2x00: Push beacon TX descriptor writing to drivers.
-Date: Thu, 13 May 2010 11:36:56 +0200
-Message-Id: <1273743418-28383-9-git-send-email-gwingerde@gmail.com>
-In-Reply-To: <1273743418-28383-1-git-send-email-gwingerde@gmail.com>
-References: <1273743418-28383-1-git-send-email-gwingerde@gmail.com>
+	Fri, 28 May 2010 09:23:02 -0400
+Subject: [PATCH] mac80211: process station blockack action frames from work
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	John Linville <linville@tuxdriver.com>,
+	Zhu Yi <yi.zhu@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 28 May 2010 15:22:58 +0200
+Message-ID: <1275052978.3909.105.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Not all the devices require a TX descriptor to be written (i.e. rt2800
-device don't require them). Push down the creation of the TX descriptor
-to the device drivers so that they can decide for themselves whether
-a TX descriptor is to be created.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Processing an association response could take a bit
+of time while we set up the hardware etc. During that
+time, the AP might already send a blockack request.
+If this happens very quickly on a fairly slow machine,
+we can end up processing the blockack request before
+the association processing has finished. Since the
+blockack processing cannot sleep right now, we also
+cannot make it wait in the driver.
+
+As a result, sometimes on slow machines the iwlagn
+driver gets totally confused, and no traffic can pass
+when the aggregation setup was done before the assoc
+setup completed.
+
+I'm working on a proper fix for this, which involves
+queuing all blockack category action frames from a
+work struct, and also allowing the ampdu_action driver
+callback to sleep, which will generally clean up the
+code and make things easier.
+
+However, this is a very involved and complex change.
+To fix the problem at hand in a way that can also be
+backported to stable, I've come up with this patch.
+Here, I simply process all aggregation action frames
+from the managed interface skb queue, which means
+their processing will be serialized with processing
+the association response, thereby fixing the problem.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Cc: stable@kernel.org
 ---
- drivers/net/wireless/rt2x00/rt2400pci.c   |   15 +++++++++------
- drivers/net/wireless/rt2x00/rt2500pci.c   |   15 +++++++++------
- drivers/net/wireless/rt2x00/rt2500usb.c   |   10 ++++++++++
- drivers/net/wireless/rt2x00/rt2800pci.c   |   16 ++++++++++++++++
- drivers/net/wireless/rt2x00/rt2800usb.c   |   16 ++++++++++++++++
- drivers/net/wireless/rt2x00/rt2x00queue.c |   10 +---------
- drivers/net/wireless/rt2x00/rt61pci.c     |   10 ++++++++++
- drivers/net/wireless/rt2x00/rt73usb.c     |   10 ++++++++++
- 8 files changed, 81 insertions(+), 21 deletions(-)
+ net/mac80211/mlme.c |   52 +++++++++++++++++++++++++++++++++++++++++++++-------
+ net/mac80211/rx.c   |    3 +++
+ 2 files changed, 48 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index def3fa4..66cff04 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -1074,9 +1074,6 @@ static void rt2400pci_write_beacon(struct queue_entry *entry,
- 				   struct txentry_desc *txdesc)
- {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
--	struct queue_entry_priv_pci *entry_priv = entry->priv_data;
--	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
--	u32 word;
- 	u32 reg;
+--- wireless-testing.orig/net/mac80211/mlme.c	2010-05-28 15:10:29.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2010-05-28 15:12:04.000000000 +0200
+@@ -1692,14 +1692,52 @@ static void ieee80211_sta_rx_queued_mgmt
+ 			rma = ieee80211_rx_mgmt_disassoc(sdata, mgmt, skb->len);
+ 			break;
+ 		case IEEE80211_STYPE_ACTION:
+-			if (mgmt->u.action.category != WLAN_CATEGORY_SPECTRUM_MGMT)
+-				break;
++			switch (mgmt->u.action.category) {
++			case WLAN_CATEGORY_BACK: {
++				struct ieee80211_local *local = sdata->local;
++				int len = skb->len;
++				struct sta_info *sta;
  
- 	/*
-@@ -1089,9 +1086,15 @@ static void rt2400pci_write_beacon(struct queue_entry *entry,
- 
- 	rt2x00queue_map_txskb(rt2x00dev, entry->skb);
- 
--	rt2x00_desc_read(entry_priv->desc, 1, &word);
--	rt2x00_set_field32(&word, TXD_W1_BUFFER_ADDRESS, skbdesc->skb_dma);
--	rt2x00_desc_write(entry_priv->desc, 1, word);
-+	/*
-+	 * Write the TX descriptor for the beacon.
-+	 */
-+	rt2400pci_write_tx_desc(rt2x00dev, entry->skb, txdesc);
+-			ieee80211_sta_process_chanswitch(sdata,
+-					&mgmt->u.action.u.chan_switch.sw_elem,
+-					(void *)ifmgd->associated->priv,
+-					rx_status->mactime);
+-			break;
++				rcu_read_lock();
++				sta = sta_info_get(sdata, mgmt->sa);
++				if (!sta) {
++					rcu_read_unlock();
++					break;
++				}
 +
-+	/*
-+	 * Dump beacon to userspace through debugfs.
-+	 */
-+	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_BEACON, entry->skb);
- 
- 	/*
- 	 * Enable beaconing again.
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index 070c23e..d30811c 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -1231,9 +1231,6 @@ static void rt2500pci_write_beacon(struct queue_entry *entry,
- 				   struct txentry_desc *txdesc)
- {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
--	struct queue_entry_priv_pci *entry_priv = entry->priv_data;
--	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
--	u32 word;
- 	u32 reg;
- 
- 	/*
-@@ -1246,9 +1243,15 @@ static void rt2500pci_write_beacon(struct queue_entry *entry,
- 
- 	rt2x00queue_map_txskb(rt2x00dev, entry->skb);
- 
--	rt2x00_desc_read(entry_priv->desc, 1, &word);
--	rt2x00_set_field32(&word, TXD_W1_BUFFER_ADDRESS, skbdesc->skb_dma);
--	rt2x00_desc_write(entry_priv->desc, 1, word);
-+	/*
-+	 * Write the TX descriptor for the beacon.
-+	 */
-+	rt2500pci_write_tx_desc(rt2x00dev, entry->skb, txdesc);
++				local_bh_disable();
 +
-+	/*
-+	 * Dump beacon to userspace through debugfs.
-+	 */
-+	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_BEACON, entry->skb);
++				switch (mgmt->u.action.u.addba_req.action_code) {
++				case WLAN_ACTION_ADDBA_REQ:
++					if (len < (IEEE80211_MIN_ACTION_SIZE +
++						   sizeof(mgmt->u.action.u.addba_req)))
++						break;
++					ieee80211_process_addba_request(local, sta, mgmt, len);
++					break;
++				case WLAN_ACTION_ADDBA_RESP:
++					if (len < (IEEE80211_MIN_ACTION_SIZE +
++						   sizeof(mgmt->u.action.u.addba_resp)))
++						break;
++					ieee80211_process_addba_resp(local, sta, mgmt, len);
++					break;
++				case WLAN_ACTION_DELBA:
++					if (len < (IEEE80211_MIN_ACTION_SIZE +
++						   sizeof(mgmt->u.action.u.delba)))
++						break;
++					ieee80211_process_delba(sdata, sta, mgmt, len);
++					break;
++				}
++				local_bh_enable();
++				rcu_read_unlock();
++				break;
++				}
++			case WLAN_CATEGORY_SPECTRUM_MGMT:
++				ieee80211_sta_process_chanswitch(sdata,
++						&mgmt->u.action.u.chan_switch.sw_elem,
++						(void *)ifmgd->associated->priv,
++						rx_status->mactime);
++				break;
++			}
+ 		}
+ 		mutex_unlock(&ifmgd->mtx);
  
- 	/*
- 	 * Enable beaconing again.
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index b985d8f..dfaa948 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -1107,6 +1107,16 @@ static void rt2500usb_write_beacon(struct queue_entry *entry,
- 	rt2500usb_register_write(rt2x00dev, TXRX_CSR19, reg);
+--- wireless-testing.orig/net/mac80211/rx.c	2010-05-28 14:22:59.000000000 +0200
++++ wireless-testing/net/mac80211/rx.c	2010-05-28 15:11:47.000000000 +0200
+@@ -1936,6 +1936,9 @@ ieee80211_rx_h_action(struct ieee80211_r
+ 		if (len < IEEE80211_MIN_ACTION_SIZE + 1)
+ 			break;
  
- 	/*
-+	 * Write the TX descriptor for the beacon.
-+	 */
-+	rt2500usb_write_tx_desc(rt2x00dev, entry->skb, txdesc);
++		if (sdata->vif.type == NL80211_IFTYPE_STATION)
++			return ieee80211_sta_rx_mgmt(sdata, rx->skb);
 +
-+	/*
-+	 * Dump beacon to userspace through debugfs.
-+	 */
-+	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_BEACON, entry->skb);
-+
-+	/*
- 	 * Take the descriptor in front of the skb into account.
- 	 */
- 	skb_push(entry->skb, TXD_DESC_SIZE);
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index b2f2327..88dba7f 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -688,6 +688,7 @@ static void rt2800pci_write_beacon(struct queue_entry *entry,
- 				   struct txentry_desc *txdesc)
- {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
-+	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
- 	unsigned int beacon_base;
- 	u32 reg;
- 
-@@ -700,9 +701,24 @@ static void rt2800pci_write_beacon(struct queue_entry *entry,
- 	rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
- 
- 	/*
-+	 * Register descriptor details in skb frame descriptor.
-+	 */
-+	skbdesc->desc = entry->skb->data - TXWI_DESC_SIZE;
-+	skbdesc->desc_len = TXWI_DESC_SIZE;
-+
-+	/*
- 	 * Add the TXWI for the beacon to the skb.
- 	 */
- 	rt2800_write_txwi(entry->skb, txdesc);
-+
-+	/*
-+	 * Dump beacon to userspace through debugfs.
-+	 */
-+	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_BEACON, entry->skb);
-+
-+	/*
-+	 * Adjust skb to take TXWI into account.
-+	 */
- 	skb_push(entry->skb, TXWI_DESC_SIZE);
- 
- 	/*
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 1b87daa..2ac1386 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -437,6 +437,7 @@ static void rt2800usb_write_beacon(struct queue_entry *entry,
- 				   struct txentry_desc *txdesc)
- {
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
-+	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
- 	unsigned int beacon_base;
- 	u32 reg;
- 
-@@ -449,9 +450,24 @@ static void rt2800usb_write_beacon(struct queue_entry *entry,
- 	rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
- 
- 	/*
-+	 * Register descriptor details in skb frame descriptor.
-+	 */
-+	skbdesc->desc = entry->skb->data - TXWI_DESC_SIZE;
-+	skbdesc->desc_len = TXWI_DESC_SIZE;
-+
-+	/*
- 	 * Add the TXWI for the beacon to the skb.
- 	 */
- 	rt2800_write_txwi(entry->skb, txdesc);
-+
-+	/*
-+	 * Dump beacon to userspace through debugfs.
-+	 */
-+	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_BEACON, entry->skb);
-+
-+	/*
-+	 * Adjust skb to take TXWI into account.
-+	 */
- 	skb_push(entry->skb, TXWI_DESC_SIZE);
- 
- 	/*
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index c68bf32..9e48bbc 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -420,7 +420,6 @@ static void rt2x00queue_write_tx_descriptor(struct queue_entry *entry,
- {
- 	struct data_queue *queue = entry->queue;
- 	struct rt2x00_dev *rt2x00dev = queue->rt2x00dev;
--	enum rt2x00_dump_type dump_type;
- 
- 	rt2x00dev->ops->lib->write_tx_desc(rt2x00dev, entry->skb, txdesc);
- 
-@@ -428,9 +427,7 @@ static void rt2x00queue_write_tx_descriptor(struct queue_entry *entry,
- 	 * All processing on the frame has been completed, this means
- 	 * it is now ready to be dumped to userspace through debugfs.
- 	 */
--	dump_type = (txdesc->queue == QID_BEACON) ?
--					DUMP_FRAME_BEACON : DUMP_FRAME_TX;
--	rt2x00debug_dump_frame(rt2x00dev, dump_type, entry->skb);
-+	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_TX, entry->skb);
- }
- 
- static void rt2x00queue_kick_tx_queue(struct queue_entry *entry,
-@@ -594,11 +591,6 @@ int rt2x00queue_update_beacon(struct rt2x00_dev *rt2x00dev,
- 	skbdesc->entry = intf->beacon;
- 
- 	/*
--	 * Write TX descriptor into reserved room in front of the beacon.
--	 */
--	rt2x00queue_write_tx_descriptor(intf->beacon, &txdesc);
--
--	/*
- 	 * Send beacon to hardware and enable beacon genaration..
- 	 */
- 	rt2x00dev->ops->lib->write_beacon(intf->beacon, &txdesc);
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 1be1d7d..643202f 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -1872,6 +1872,16 @@ static void rt61pci_write_beacon(struct queue_entry *entry,
- 	rt2x00pci_register_write(rt2x00dev, TXRX_CSR9, reg);
- 
- 	/*
-+	 * Write the TX descriptor for the beacon.
-+	 */
-+	rt61pci_write_tx_desc(rt2x00dev, entry->skb, txdesc);
-+
-+	/*
-+	 * Dump beacon to userspace through debugfs.
-+	 */
-+	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_BEACON, entry->skb);
-+
-+	/*
- 	 * Write entire beacon with descriptor to register.
- 	 */
- 	beacon_base = HW_BEACON_OFFSET(entry->entry_idx);
-diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
-index fca661c..dcc46a2 100644
---- a/drivers/net/wireless/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/rt2x00/rt73usb.c
-@@ -1526,6 +1526,16 @@ static void rt73usb_write_beacon(struct queue_entry *entry,
- 	rt2x00usb_register_write(rt2x00dev, TXRX_CSR9, reg);
- 
- 	/*
-+	 * Write the TX descriptor for the beacon.
-+	 */
-+	rt73usb_write_tx_desc(rt2x00dev, entry->skb, txdesc);
-+
-+	/*
-+	 * Dump beacon to userspace through debugfs.
-+	 */
-+	rt2x00debug_dump_frame(rt2x00dev, DUMP_FRAME_BEACON, entry->skb);
-+
-+	/*
- 	 * Take the descriptor in front of the skb into account.
- 	 */
- 	skb_push(entry->skb, TXD_DESC_SIZE);
--- 
-1.7.1
+ 		switch (mgmt->u.action.u.addba_req.action_code) {
+ 		case WLAN_ACTION_ADDBA_REQ:
+ 			if (len < (IEEE80211_MIN_ACTION_SIZE +
+
 
