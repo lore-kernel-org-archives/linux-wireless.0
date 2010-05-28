@@ -1,41 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:34363 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754302Ab0EaBFx (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:24419 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755261Ab0E1MCL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 30 May 2010 21:05:53 -0400
-Received: from vs3007.wh2.ocn.ne.jp (125.206.180.235)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0116147949
-	for <linux-wireless@vger.kernel.org>; Mon, 31 May 2010 10:05:49 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: ath5k-devel@lists.ath5k.org
-Subject: Re: [ath5k-devel] [PATCH] ath5k: disable ASPM
-Date: Mon, 31 May 2010 10:06:15 +0900
-Cc: Pavel Roskin <proski@gnu.org>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	linux-wireless@vger.kernel.org
-References: <20100528100901.14580.1322.stgit@fate.lan> <20100528212523.213125g8t0an4mn4@hayate.sektori.org> <1275078476.18152.10.camel@mj>
-In-Reply-To: <1275078476.18152.10.camel@mj>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201005311006.15282.br1@einfach.org>
+	Fri, 28 May 2010 08:02:11 -0400
+Received: from esebh105.NOE.Nokia.com (esebh105.ntc.nokia.com [172.21.138.211])
+	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o4SC21gu024891
+	for <linux-wireless@vger.kernel.org>; Fri, 28 May 2010 07:02:10 -0500
+Received: from localhost.localdomain (wimaxnb.nmp.nokia.com [172.22.211.32])
+	by mgw-sa02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o4SC1gNC015942
+	for <linux-wireless@vger.kernel.org>; Fri, 28 May 2010 15:01:42 +0300
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC PATCH 0/1] mac80211: Shared BT/WLAN antenna co-existence management
+Date: Fri, 28 May 2010 15:04:01 +0300
+Message-Id: <1275048242-19427-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 29 May 2010 05:27:56 Pavel Roskin wrote:
-> If we need to add GPL code to ath5k, it could go to a separate file.
-> But if that separation becomes inconvenient, we could drop BSD
-> compatibility from ath5k.  I don't see any benefit from dual licensing,
-> unless some existing ath5k contributors are BSD developers who would
-> stop working on the code in case of relicensing, but I don't think it's
-> the case.
+The following patch proposes an implementation to handle WLAN-Bluetooth
+coexistence in the case of a shared WLAN/BT antenna.
 
-afaik, one of the reasons for the dual license is that *BSDs (our ancestors 
-from a ath5k point of view) should be able to benefit from improvements we 
-make. this applies mostly to atheros chipset related things, and is irrelevant 
-for linux-only implementation specifics.
+The patch adds to mac80211 an interface for the driver to be able to
+temporarily disable dynamic power save. When power save is enabled, a call to
+the function will cause mac80211 to immediately enter full PSM until the driver
+indicates that dynamic PSM can be resumed. If power save is enabled the 
+function does nothing.
 
-also we can mix BSD and GPL in one file - see debug.c
+The driver uses this function to disable dynamic PSM whenever there are bursts
+Bluetooth traffic. Full PSM allows the WLAN hardware to relinquish the antenna
+for use by BT during the inactive WLAN periods.
 
-bruno
+The driver gets information on Bluetooth traffic from the WLAN chipset. The
+chipset has hardware lines to coordinate the co-existence, and the chipset will
+indicate to the driver whenever there is Bluetooth traffic.
+
+Comments are welcomed!
+
+Juuso Oikarinen (1):
+  mac80211: Add interface for driver to temporarily disable dynamic ps
+
+ include/net/mac80211.h     |   15 +++++++++++++++
+ net/mac80211/ieee80211_i.h |    3 +++
+ net/mac80211/iface.c       |    1 +
+ net/mac80211/mlme.c        |   20 +++++++++++++++++++-
+ net/mac80211/rx.c          |    3 ++-
+ net/mac80211/tx.c          |    4 ++++
+ 6 files changed, 44 insertions(+), 2 deletions(-)
+
