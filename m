@@ -1,79 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:10972 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753656Ab0EQGbA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 May 2010 02:31:00 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 16 May 2010 23:31:00 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19440.58038.38360.648206@gargle.gargle.HOWL>
-Date: Mon, 17 May 2010 12:01:18 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/5] ath9k_htc: Update HT configuration properly
+Received: from he.sipsolutions.net ([78.46.109.217]:60129 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755991Ab0E1LYH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 28 May 2010 07:24:07 -0400
+Subject: Re: Problems connectring to an AP with Acer Aspire Revo
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Christian P. Schmidt" <schmidt@digadd.de>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4BFFA490.90600@digadd.de>
+References: <4BF795EB.9070902@digadd.de>
+	 <1274729665.2091.15280.camel@rchatre-DESK>  <4BFD1ED0.9050309@digadd.de>
+	 <1275003105.2091.20102.camel@rchatre-DESK>  <4BFF9B93.5010308@digadd.de>
+	 <1275043274.3909.71.camel@jlt3.sipsolutions.net>
+	 <4BFF9FC6.4030101@digadd.de>
+	 <1275044074.3909.72.camel@jlt3.sipsolutions.net> <4BFFA490.90600@digadd.de>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 28 May 2010 13:24:03 +0200
+Message-ID: <1275045843.3909.92.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use BSS_CHANGED_HT to handle HT parameter changes.
-The rate information on the target has to be updated
-to handle changes in HT configuration.
+On Fri, 2010-05-28 at 13:10 +0200, Christian P. Schmidt wrote:
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |   30 +++++++++++++++++++++++++
- 1 files changed, 30 insertions(+), 0 deletions(-)
+> > Those values make no sense to me .. can you use "iw scan" and tell us
+> > the dBm value?
+> 
+> This translates to -52 to -30dBm.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index fe5debf..80feeb3 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -409,6 +409,33 @@ static void ath9k_htc_init_rate(struct ath9k_htc_priv *priv,
- 			  sta->addr, be32_to_cpu(trate.capflags));
- }
- 
-+static void ath9k_htc_update_rate(struct ath9k_htc_priv *priv,
-+				  struct ieee80211_vif *vif,
-+				  struct ieee80211_bss_conf *bss_conf)
-+{
-+	struct ath_common *common = ath9k_hw_common(priv->ah);
-+	struct ath9k_htc_target_rate trate;
-+	struct ieee80211_sta *sta;
-+	int ret;
-+
-+	memset(&trate, 0, sizeof(struct ath9k_htc_target_rate));
-+
-+	rcu_read_lock();
-+	sta = ieee80211_find_sta(vif, bss_conf->bssid);
-+	if (!sta) {
-+		rcu_read_unlock();
-+		return;
-+	}
-+	ath9k_htc_setup_rate(priv, sta, &trate);
-+	rcu_read_unlock();
-+
-+	ret = ath9k_htc_send_rate_cmd(priv, &trate);
-+	if (!ret)
-+		ath_print(common, ATH_DBG_CONFIG,
-+			  "Updated target sta: %pM, rate caps: 0x%X\n",
-+			  bss_conf->bssid, be32_to_cpu(trate.capflags));
-+}
-+
- static int ath9k_htc_aggr_oper(struct ath9k_htc_priv *priv,
- 			       struct ieee80211_vif *vif,
- 			       u8 *sta_addr, u8 tid, bool oper)
-@@ -1595,6 +1622,9 @@ static void ath9k_htc_bss_info_changed(struct ieee80211_hw *hw,
- 		ath9k_hw_init_global_settings(ah);
- 	}
- 
-+	if (changed & BSS_CHANGED_HT)
-+		ath9k_htc_update_rate(priv, vif, bss_conf);
-+
- 	ath9k_htc_ps_restore(priv);
- 	mutex_unlock(&priv->mutex);
- }
--- 
-1.7.1
+Ok that sounds like you have antennas.
+
+> Well, maybe you can answer me a question I never dared to ask because I
+> felt stupid... I can't take the Intel card online with only ifconfig or
+> ip? I always get "unknown error 132" on ifconfig wlan0 up / ip link set
+> wlan0 up...
+
+Huh. This means that the device detected rfkill. But you previously
+posted logs that showed it trying to associate, which cannot happen. And
+you can't even scan when you can't bring the device up??
+
+Maybe try the rfkill tool:
+http://wireless.kernel.org/en/users/Documentation/rfkill
+
+johannes
 
