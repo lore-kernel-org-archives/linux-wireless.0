@@ -1,82 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:41702 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755161Ab0EOVQo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 May 2010 17:16:44 -0400
-Date: Sat, 15 May 2010 23:16:39 +0200 (CEST)
-From: Julia Lawall <julia@diku.dk>
-To: Luciano Coelho <luciano.coelho@nokia.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH 12/37] drivers/net/wireless/wl12xx: Use kmemdup
-Message-ID: <Pine.LNX.4.64.1005152316220.21345@ask.diku.dk>
+Received: from mail-px0-f174.google.com ([209.85.212.174]:43679 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754095Ab0E2SFm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 29 May 2010 14:05:42 -0400
+Received: by pxi18 with SMTP id 18so973372pxi.19
+        for <linux-wireless@vger.kernel.org>; Sat, 29 May 2010 11:05:42 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+In-Reply-To: <1275140672-4785-1-git-send-email-hauke@hauke-m.de>
+References: <1275140107-4616-3-git-send-email-hauke@hauke-m.de>
+	<1275140672-4785-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Sat, 29 May 2010 11:05:22 -0700
+Message-ID: <AANLkTimshD7WqhsEU7Z_Q_iwzmOT4WziVWi4Fium6aoZ@mail.gmail.com>
+Subject: Re: [PATCH 3/3] compat-wireless: run refresh only on last applied
+	directory
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
+On Sat, May 29, 2010 at 6:44 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> Running "./scripts/admin-refresh.sh -n -p -c refresh" failed because
+> patchRefresh refreshes and applies every patch form the series and
+> then  reverse them all. If a patch from the next series in an other
+> directory depends on that it will not apply any more.
+>
+> Now only the last series/directory will be refresh.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-Use kmemdup when some other buffer is immediately copied into the
-allocated region.
+All applied, thanks!
 
-A simplified version of the semantic patch that makes this change is as
-follows: (http://coccinelle.lip6.fr/)
-
-// <smpl>
-@@
-expression from,to,size,flag;
-statement S;
-@@
-
--  to = \(kmalloc\|kzalloc\)(size,flag);
-+  to = kmemdup(from,size,flag);
-   if (to==NULL || ...) S
--  memcpy(to, from, size);
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
----
- drivers/net/wireless/wl12xx/wl1271_main.c |    8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
-
-diff -u -p a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -573,7 +573,7 @@ static int wl1271_fetch_nvs(struct wl127
- 		goto out;
- 	}
- 
--	wl->nvs = kmalloc(sizeof(struct wl1271_nvs_file), GFP_KERNEL);
-+	wl->nvs = kmemdup(fw->data, sizeof(struct wl1271_nvs_file), GFP_KERNEL);
- 
- 	if (!wl->nvs) {
- 		wl1271_error("could not allocate memory for the nvs file");
-@@ -581,8 +581,6 @@ static int wl1271_fetch_nvs(struct wl127
- 		goto out;
- 	}
- 
--	memcpy(wl->nvs, fw->data, sizeof(struct wl1271_nvs_file));
--
- out:
- 	release_firmware(fw);
- 
-@@ -2350,15 +2348,13 @@ struct ieee80211_hw *wl1271_alloc_hw(voi
- 		goto err_hw_alloc;
- 	}
- 
--	plat_dev = kmalloc(sizeof(wl1271_device), GFP_KERNEL);
-+	plat_dev = kmemdup(&wl1271_device, sizeof(wl1271_device), GFP_KERNEL);
- 	if (!plat_dev) {
- 		wl1271_error("could not allocate platform_device");
- 		ret = -ENOMEM;
- 		goto err_plat_alloc;
- 	}
- 
--	memcpy(plat_dev, &wl1271_device, sizeof(wl1271_device));
--
- 	wl = hw->priv;
- 	memset(wl, 0, sizeof(*wl));
- 
+  Luis
