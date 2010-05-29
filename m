@@ -1,29 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58261 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756552Ab0ERLN4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 18 May 2010 07:13:56 -0400
-Subject: Re: [PATCH] ath9k_htc: Use proper station add/remove callbacks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <19442.25652.916516.143181@gargle.gargle.HOWL>
-References: <19442.25652.916516.143181@gargle.gargle.HOWL>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 18 May 2010 13:13:48 +0200
-Message-ID: <1274181228.3762.78.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:56448 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754629Ab0E2Noj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 29 May 2010 09:44:39 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 3/3] compat-wireless: run refresh only on last applied directory
+Date: Sat, 29 May 2010 15:44:32 +0200
+Message-Id: <1275140672-4785-1-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1275140107-4616-3-git-send-email-hauke@hauke-m.de>
+References: <1275140107-4616-3-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-05-18 at 15:26 +0530, Sujith wrote:
-> sta_add/sta_remove are the callbacks that can sleep.
-> Use them instead of sta_notify.
-> 
-> Sigh. What a dumb fsckup.
+Running "./scripts/admin-refresh.sh -n -p -c refresh" failed because 
+patchRefresh refreshes and applies every patch form the series and 
+then  reverse them all. If a patch from the next series in an other 
+directory depends on that it will not apply any more.
 
-Not really your fault? The sleeping ones are quite new.
+Now only the last series/directory will be refresh.
 
-johannes
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+
+commit comment was not ready ;-)
+
+ scripts/admin-update.sh |   14 ++++++++------
+ 1 files changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
+index 99ab6c3..36cce31 100755
+--- a/scripts/admin-update.sh
++++ b/scripts/admin-update.sh
+@@ -391,12 +391,6 @@ patchRefresh() {
+ 	rm -rf patches.orig .pc $1/series
+ }
+ 
+-if [[ "$REFRESH" = "y" ]]; then
+-	for dir in $EXTRA_PATCHES; do
+-		patchRefresh $dir
+-	done
+-fi
+-
+ ORIG_CODE=$(find ./ -type f -name  \*.[ch] |
+ 	egrep -v "^./compat/|include/linux/compat" |
+ 	xargs wc -l | tail -1 | awk '{print $1}')
+@@ -404,6 +398,14 @@ printf "\n${CYAN}compat-wireless code metrics${NORMAL}\n\n" > $CODE_METRICS
+ printf "${PURPLE}%10s${NORMAL} - Total upstream code being pulled\n" $ORIG_CODE >> $CODE_METRICS
+ 
+ for dir in $EXTRA_PATCHES; do
++	LAST_ELEM=$dir
++done
++
++for dir in $EXTRA_PATCHES; do
++	if [[ $LAST_ELEM = $dir && "$REFRESH" = y ]]; then
++		patchRefresh $dir
++	fi
++
+ 	FOUND=$(find $dir/ -name \*.patch | wc -l)
+ 	if [ $FOUND -eq 0 ]; then
+ 		continue
+-- 
+1.7.0.4
 
