@@ -1,50 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:37128 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758240Ab0ENXoa (ORCPT
+Received: from jessica.hrz.tu-chemnitz.de ([134.109.132.47]:52454 "EHLO
+	jessica.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754278Ab0E2WeA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 14 May 2010 19:44:30 -0400
-Received: by wyb36 with SMTP id 36so448863wyb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 14 May 2010 16:44:29 -0700 (PDT)
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, herton@mandriva.com.br,
-	htl10@users.sourceforge.net, Larry.Finger@lwfinger.net,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: [PATCH 1/2] wireless: rtl818x: rtl8180: add ids
-Date: Sat, 15 May 2010 01:44:19 +0200
-Message-Id: <1273880660-11072-1-git-send-email-xose.vazquez@gmail.com>
+	Sat, 29 May 2010 18:34:00 -0400
+From: Tobias Doerffel <tobias.doerffel@gmail.com>
+To: ath5k-devel@lists.ath5k.org
+Cc: linux-wireless@vger.kernel.org,
+	Tobias Doerffel <tobias.doerffel@gmail.com>
+Subject: [PATCH] ath5k: depend on CONFIG_PM_SLEEP for suspend/resume functions
+Date: Sun, 30 May 2010 00:02:18 +0200
+Message-Id: <1275170538-7304-1-git-send-email-tobias.doerffel@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-taken from windows inf file
+When building a kernel with CONFIG_PM=y but neither suspend nor
+hibernate support, the compiler complains about the static functions
+ath5k_pci_suspend() and ath5k_pci_resume() not being used:
 
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+drivers/net/wireless/ath/ath5k/base.c:713:12: warning: ‘ath5k_pci_suspend’ defined but not used
+drivers/net/wireless/ath/ath5k/base.c:722:12: warning: ‘ath5k_pci_resume’ defined but not used
+
+Depending on CONFIG_PM_SLEEP rather than CONFIG_PM fixes the issue.
+
+Signed-off-by: Tobias Doerffel <tobias.doerffel@gmail.com>
 ---
- drivers/net/wireless/rtl818x/rtl8180_dev.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath5k/base.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8180_dev.c b/drivers/net/wireless/rtl818x/rtl8180_dev.c
-index 4801589..6d6140d 100644
---- a/drivers/net/wireless/rtl818x/rtl8180_dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8180_dev.c
-@@ -36,6 +36,7 @@ MODULE_LICENSE("GPL");
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 8a36aa6..d4bab48 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -195,7 +195,7 @@ static const struct ieee80211_rate ath5k_rates[] = {
+ static int __devinit	ath5k_pci_probe(struct pci_dev *pdev,
+ 				const struct pci_device_id *id);
+ static void __devexit	ath5k_pci_remove(struct pci_dev *pdev);
+-#ifdef CONFIG_PM
++#ifdef CONFIG_PM_SLEEP
+ static int		ath5k_pci_suspend(struct device *dev);
+ static int		ath5k_pci_resume(struct device *dev);
  
- static DEFINE_PCI_DEVICE_TABLE(rtl8180_table) = {
- 	/* rtl8185 */
-+	{ PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8184) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8185) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BELKIN, 0x700f) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BELKIN, 0x701f) },
-@@ -45,6 +46,8 @@ static DEFINE_PCI_DEVICE_TABLE(rtl8180_table) = {
- 	{ PCI_DEVICE(0x1799, 0x6001) },
- 	{ PCI_DEVICE(0x1799, 0x6020) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_DLINK, 0x3300) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_DLINK, 0x3301) },
-+	{ PCI_DEVICE(0x1432, 0x7106) },
- 	{ }
- };
+@@ -203,7 +203,7 @@ static SIMPLE_DEV_PM_OPS(ath5k_pm_ops, ath5k_pci_suspend, ath5k_pci_resume);
+ #define ATH5K_PM_OPS	(&ath5k_pm_ops)
+ #else
+ #define ATH5K_PM_OPS	NULL
+-#endif /* CONFIG_PM */
++#endif /* CONFIG_PM_SLEEP */
  
+ static struct pci_driver ath5k_pci_driver = {
+ 	.name		= KBUILD_MODNAME,
+@@ -709,7 +709,7 @@ ath5k_pci_remove(struct pci_dev *pdev)
+ 	ieee80211_free_hw(hw);
+ }
+ 
+-#ifdef CONFIG_PM
++#ifdef CONFIG_PM_SLEEP
+ static int ath5k_pci_suspend(struct device *dev)
+ {
+ 	struct ieee80211_hw *hw = pci_get_drvdata(to_pci_dev(dev));
+@@ -735,7 +735,7 @@ static int ath5k_pci_resume(struct device *dev)
+ 	ath5k_led_enable(sc);
+ 	return 0;
+ }
+-#endif /* CONFIG_PM */
++#endif /* CONFIG_PM_SLEEP */
+ 
+ 
+ /***********************\
 -- 
-1.6.6.1
+1.7.0.4
 
