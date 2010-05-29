@@ -1,89 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:10995 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751314Ab0EQGgw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 17 May 2010 02:36:52 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Sun, 16 May 2010 23:36:52 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19440.58389.396040.175315@gargle.gargle.HOWL>
-Date: Mon, 17 May 2010 12:07:09 +0530
-To: "linville@tuxdriver.com" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCH 4/5] ath9k_htc: Enable SGI in HT20 for AR9271
-In-Reply-To: <19440.58039.731965.709469@gargle.gargle.HOWL>
-References: <19440.58039.731965.709469@gargle.gargle.HOWL>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55748 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754230Ab0E2NfS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 29 May 2010 09:35:18 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/3] compat-wireless: use /etc/init.d/ and not sudo service
+Date: Sat, 29 May 2010 15:35:06 +0200
+Message-Id: <1275140107-4616-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1275140107-4616-1-git-send-email-hauke@hauke-m.de>
+References: <1275140107-4616-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+sudo is not installed and used on all distributions. the user should
+call the script with the needed rights and the script should not
+include sudo. This fails on debian lenny.
 
-This patch depends on Vasanth's patch:
-"ath9k: Enable Short GI in 20 Mhz for ar9287 and later chips"
+service is only available on very recent distributions and not on old
+ons like debian lenny in the default configuration. Use the old init.d
+script. This also works on ubuntu 10.04.
 
-Sujith
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ scripts/btload.sh   |    4 ++--
+ scripts/btunload.sh |    4 ++--
+ scripts/load.sh     |    4 ++--
+ scripts/unload.sh   |    4 ++--
+ 4 files changed, 8 insertions(+), 8 deletions(-)
 
-Sujith wrote:
-> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
-> ---
->  drivers/net/wireless/ath/ath9k/htc_drv_init.c |    3 +++
->  drivers/net/wireless/ath/ath9k/htc_drv_main.c |    7 +++++--
->  drivers/net/wireless/ath/ath9k/hw.c           |    2 +-
->  3 files changed, 9 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-> index 7ec2c2e..8b202e0 100644
-> --- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-> @@ -404,6 +404,9 @@ static void setup_ht_cap(struct ath9k_htc_priv *priv,
->  		       IEEE80211_HT_CAP_SGI_40 |
->  		       IEEE80211_HT_CAP_DSSSCCK40;
->  
-> +	if (priv->ah->caps.hw_caps & ATH9K_HW_CAP_SGI_20)
-> +		ht_info->cap |= IEEE80211_HT_CAP_SGI_20;
-> +
->  	ht_info->ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
->  	ht_info->ampdu_density = IEEE80211_HT_MPDU_DENSITY_8;
->  
-> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-> index 80feeb3..6d46423 100644
-> --- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-> @@ -367,9 +367,12 @@ static void ath9k_htc_setup_rate(struct ath9k_htc_priv *priv,
->  		caps = WLAN_RC_HT_FLAG;
->  		if (sta->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40)
->  			caps |= WLAN_RC_40_FLAG;
-> -		if (sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_40)
-> +		if (conf_is_ht40(&priv->hw->conf) &&
-> +		    (sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_40))
-> +			caps |= WLAN_RC_SGI_FLAG;
-> +		else if (conf_is_ht20(&priv->hw->conf) &&
-> +			 (sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_20))
->  			caps |= WLAN_RC_SGI_FLAG;
-> -
->  	}
->  
->  	trate->sta_index = ista->index;
-> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-> index 1985d19..45a9c84 100644
-> --- a/drivers/net/wireless/ath/ath9k/hw.c
-> +++ b/drivers/net/wireless/ath/ath9k/hw.c
-> @@ -2232,7 +2232,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
->  	if (AR_SREV_9300_20_OR_LATER(ah))
->  		pCap->hw_caps |= ATH9K_HW_CAP_RAC_SUPPORTED;
->  
-> -	if (AR_SREV_9287_10_OR_LATER(ah))
-> +	if (AR_SREV_9287_10_OR_LATER(ah) || AR_SREV_9271(ah))
->  		pCap->hw_caps |= ATH9K_HW_CAP_SGI_20;
->  
->  	return 0;
-> -- 
-> 1.7.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/scripts/btload.sh b/scripts/btload.sh
+index 50f37b6..e3f7cef 100755
+--- a/scripts/btload.sh
++++ b/scripts/btload.sh
+@@ -5,6 +5,6 @@ for i in $MODULES; do
+ 	modprobe $i
+ done
+ echo Starting bluetooth service..
+-sudo service bluetooth start
+-sudo service bluetooth status
++/etc/init.d/bluetooth start
++/etc/init.d/bluetooth status
+ 
+diff --git a/scripts/btunload.sh b/scripts/btunload.sh
+index c14f8c6..56046c2 100755
+--- a/scripts/btunload.sh
++++ b/scripts/btunload.sh
+@@ -1,8 +1,8 @@
+ #!/bin/bash
+ MODULES="hidp rfcomm bnep l2cap sco btusb bluetooth"
+ echo Stoping bluetooth service..
+-sudo service bluetooth stop
+-sudo service bluetooth status
++/etc/init.d/bluetooth stop
++/etc/init.d/bluetooth status
+ 
+ for i in $MODULES; do
+ 	grep ^$i /proc/modules 2>&1 > /dev/null
+diff --git a/scripts/load.sh b/scripts/load.sh
+index 9f82e2c..304798c 100755
+--- a/scripts/load.sh
++++ b/scripts/load.sh
+@@ -22,5 +22,5 @@ athload ath5k
+ # For b43 we must make sure to unload bcm43xx first
+ b43load b43
+ echo Starting bluetooth service..
+-sudo service bluetooth start
+-sudo service bluetooth status
++/etc/init.d/bluetooth start
++/etc/init.d/bluetooth status
+diff --git a/scripts/unload.sh b/scripts/unload.sh
+index 0cd8a0a..12bb35c 100755
+--- a/scripts/unload.sh
++++ b/scripts/unload.sh
+@@ -31,8 +31,8 @@ MODULES="$MODULES mac80211 cfg80211 lib80211"
+ MODULES="$MODULES hidp rfcomm bnep l2cap sco btusb bluetooth"
+ MODULES="$MODULES compat"
+ echo Stoping bluetooth service..
+-sudo service bluetooth stop
+-sudo service bluetooth status
++/etc/init.d/bluetooth stop
++/etc/init.d/bluetooth status
+ MADWIFI_MODULES="ath_pci ath_rate_sample wlan_scan_sta wlan ath_hal"
+ IPW3945D="/sbin/ipw3945d-`uname -r`"
+ 
+-- 
+1.7.0.4
+
