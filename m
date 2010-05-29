@@ -1,71 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aurora.create-net.org ([193.206.22.116]:60093 "EHLO
-	aurora.create-net.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753514Ab0EOJYv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 15 May 2010 05:24:51 -0400
-Message-ID: <4BEE684F.2070707@create-net.org>
-Date: Sat, 15 May 2010 11:24:31 +0200
-From: Roberto Riggio <roberto.riggio@create-net.org>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Strange ACK Behaviour with ath9k
-References: <4BEC2318.5050701@create-net.org> <AANLkTimnzAJd9Y02m8OBVLHphL5pbFw56M2LfB1L5oKz@mail.gmail.com>
-In-Reply-To: <AANLkTimnzAJd9Y02m8OBVLHphL5pbFw56M2LfB1L5oKz@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55753 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756047Ab0E2NfU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 29 May 2010 09:35:20 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 3/3] compat-wireless: run refresh only on last applied directory
+Date: Sat, 29 May 2010 15:35:07 +0200
+Message-Id: <1275140107-4616-3-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1275140107-4616-1-git-send-email-hauke@hauke-m.de>
+References: <1275140107-4616-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+running "./scripts/admin-refresh.sh -n -p -c refresh" failed because the patches were applied but
 
-at both ends of the communications I get the hwaddr from the iwconfig
-command and I pass the output to my software. In fact the other host
-acks the frame carrying the echo request message and generates the
-corresponding echo reply whose frame is actually acked by the recipient
-the point is that they keep resending the frames until the max data retries
-is reached.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ scripts/admin-update.sh |   14 ++++++++------
+ 1 files changed, 8 insertions(+), 6 deletions(-)
 
-On 05/14/2010 01:15 AM, Björn Smedman wrote:
-> Hi Roberto,
->
-> When I've seen this it has been caused by a mismatch between the
-> addresses in the injected frame and that configured in the hardware.
-> The transmitting radio doesn't understand it is the intended recipient
-> of the ack and continues retrying.
->
-> /Björn
->
-> On Thu, May 13, 2010 at 6:04 PM, Roberto Riggio
-> <roberto.riggio@create-net.org>  wrote:
->    
->> Hi,
->>
->> I'm having a very strange behaviour between two sr71a (ath9k) cards
->> operating in monitor mode. I'm using the following patch to specify
->> the transmission rate frame by frame:
->>
->> http://thread.gmane.org/gmane.linux.kernel.wireless.general/47441
->>
->>
->> However if I try to send some traffic between the two nodes with both
->> interfaces operating in monitor mode I can see from a third machine
->> using wireshark that albeit the frame is sent and the corresponding
->> ack generated, the originator seems to ignore the ACK and keepts
->> retransmitting the frame. This is happening on both ends of the
->> communication (i'm ping one node from the other).
->>
->> As a matter of fact i thought that ACK are handled directly by the
->> firmware. Any hints?
->>
->> R.
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>      
->
->
->    
+diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
+index 99ab6c3..36cce31 100755
+--- a/scripts/admin-update.sh
++++ b/scripts/admin-update.sh
+@@ -391,12 +391,6 @@ patchRefresh() {
+ 	rm -rf patches.orig .pc $1/series
+ }
+ 
+-if [[ "$REFRESH" = "y" ]]; then
+-	for dir in $EXTRA_PATCHES; do
+-		patchRefresh $dir
+-	done
+-fi
+-
+ ORIG_CODE=$(find ./ -type f -name  \*.[ch] |
+ 	egrep -v "^./compat/|include/linux/compat" |
+ 	xargs wc -l | tail -1 | awk '{print $1}')
+@@ -404,6 +398,14 @@ printf "\n${CYAN}compat-wireless code metrics${NORMAL}\n\n" > $CODE_METRICS
+ printf "${PURPLE}%10s${NORMAL} - Total upstream code being pulled\n" $ORIG_CODE >> $CODE_METRICS
+ 
+ for dir in $EXTRA_PATCHES; do
++	LAST_ELEM=$dir
++done
++
++for dir in $EXTRA_PATCHES; do
++	if [[ $LAST_ELEM = $dir && "$REFRESH" = y ]]; then
++		patchRefresh $dir
++	fi
++
+ 	FOUND=$(find $dir/ -name \*.patch | wc -l)
+ 	if [ $FOUND -eq 0 ]; then
+ 		continue
+-- 
+1.7.0.4
 
