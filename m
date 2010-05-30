@@ -1,55 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:39018 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752077Ab0EJVW7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 May 2010 17:22:59 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] compat: move kparam_{block,unblock}_sysfs_write
-Date: Mon, 10 May 2010 23:22:48 +0200
-Message-Id: <1273526569-22845-1-git-send-email-hauke@hauke-m.de>
+Received: from mxl.seznam.cz ([77.75.76.44]:37670 "EHLO mxl.seznam.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752176Ab0E3WeY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 30 May 2010 18:34:24 -0400
+Cc: =?us-ascii?Q?Pekka=20Pietikainen?= <pp@ee.oulu.fi>
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <20100528124258.GA27491@ee.oulu.fi>
+Date: Mon, 31 May 2010 00:20:30 +0200 (CEST)
+From: =?iso-8859-2?Q?Carlos=20Lau=E9?= <CarlosL@seznam.cz>
+Subject: =?us-ascii?Q?Re=3A=20wireless=2Dregdb=3A=20FI=2FCZ=20updates?=
+Mime-Version: 1.0
+Message-Id: <25058.24619.30500-29157-1485433759-1275258029@seznam.cz>
+Content-Type: text/plain;
+	charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-kparam_block_sysfs_write and kparam_unblock_sysfs_write will introduced
-in kernel 2.6.35 and not 2.6.33.
+I've helped with the regulatory rules for CZ, and I thought we should use lower power limits for 5.25 & 5.47 GHz,  because we cannot assure TPC is enabled or not.
+Apparently it should be fine to use this higher limit ( 200 mW / 1000 mW ).
+Carlos
+ 
+PS: This was discussed here in linux-wireless in december 2008, and Michael Green wrote:
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/compat-2.6.33.h |    3 ---
- include/linux/compat-2.6.35.h |    3 +++
- 2 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/include/linux/compat-2.6.33.h b/include/linux/compat-2.6.33.h
-index 70e5f98..0b434fc 100644
---- a/include/linux/compat-2.6.33.h
-+++ b/include/linux/compat-2.6.33.h
-@@ -54,9 +54,6 @@ static inline void compat_release_firmware(const struct firmware *fw)
- #define IFF_DONT_BRIDGE 0x800		/* disallow bridging this ether dev */
- /* source: include/linux/if.h */
- 
--#define kparam_block_sysfs_write(a)
--#define kparam_unblock_sysfs_write(a)
--
- /* this will never happen on older kernels */
- #define NETDEV_POST_INIT 0xffff
- 
-diff --git a/include/linux/compat-2.6.35.h b/include/linux/compat-2.6.35.h
-index 9c6e696..278af5e 100644
---- a/include/linux/compat-2.6.35.h
-+++ b/include/linux/compat-2.6.35.h
-@@ -23,6 +23,9 @@ static inline wait_queue_head_t *sk_sleep(struct sock *sk)
- #define usb_alloc_coherent(dev, size, mem_flags, dma) usb_buffer_alloc(dev, size, mem_flags, dma)
- #define usb_free_coherent(dev, size, addr, dma) usb_buffer_free(dev, size, addr, dma)
- 
-+#define kparam_block_sysfs_write(a)
-+#define kparam_unblock_sysfs_write(a)
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,35)) */
- 
- #endif /* LINUX_26_35_COMPAT_H */
--- 
-1.7.0.4
-
+> The tx power levels are worth discussing more. Even though the European
+> countries are harmonized on EN301 893 which enforces 200mW EIRP in 5.15-5.35 and
+> 1W EIRP in 5.470-5.725, vendors must not blindly set new hardware to transmit at
+> these upper limits.
+> 
+> Each board design must undergo conformance testing to the applicable RF
+> conformance spec (in this case 301 893) at which time the vendor will discover
+> that various other tests in the conformance spec will limit the achievable
+> compliant tx power for that design and it's associated antennas (i.e. power
+> spectral density, spurious emissions, etc. So using 200mW and 1W EIRP in code
+> may be fine as an upper limit, fail safe, users of the code / hardware
+> developers must be educated to ensure awareness that there is no universal
+> "compliant tx power" that you can assign for a country that applies to all the
+> different hardware out there.
+> 
+> Michael Green
+> Atheros Communications, Inc.
+> mgreen@atheros.com
