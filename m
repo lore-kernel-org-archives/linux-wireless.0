@@ -1,59 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:17874 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751946Ab0E0IzF (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58122 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752566Ab0E3MxG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 27 May 2010 04:55:05 -0400
-Subject: Re: [PATCH] cfg80211: Removed warning from cfg80211_send_rx_auth
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1274872877.3658.4.camel@jlt3.sipsolutions.net>
-References: <1274870625-19712-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-	 <1274872877.3658.4.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain
-Date: Thu, 27 May 2010 11:48:01 +0300
-Message-Id: <1274950081.20619.18.camel@paavo-desktop>
+	Sun, 30 May 2010 08:53:06 -0400
+Subject: [PATCH 2.6.34] mac80211: fix blockack-req processing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Daniel Halperin <dhalperi@cs.washington.edu>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 30 May 2010 14:52:58 +0200
+Message-ID: <1275223978.3599.0.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-05-26 at 13:21 +0200, ext Johannes Berg wrote:
-> On Wed, 2010-05-26 at 13:43 +0300, Teemu Paasikivi wrote:
-> > In cfg80211_send_rx_auth function there was a warning if bssid of the received
-> > authentication message was not found from the authtry_bsses table.
-> > 
-> > During the beginning of the authentication there is a small time window, when
-> > handling of the received deauthentication message can cause information
-> > for the access point to be removed from the authtry_bsses table before
-> > authentication response is received. This triggers the warning. This has
-> > been seen happening with several access points occasionally. At least
-> > one of those (Asus) has been seen to send spurious deauthentication
-> > messages after deauthentication. Possibly this warning could be triggered also
-> > by forged deauthentication messages sent at a correct time.
-> 
-> This doesn't seem right. Why is mac80211 not preventing those messages
-> from bubbling up in that case?
-> 
-> FWIW, this check is there for a reason -- we want to avoid telling
-> userspace twice that we disconnected from a given AP, and we shouldn't
-> be processing it anyway.
-> 
-> johannes
-> 
+Daniel reported that the paged RX changes had
+broken blockack request frame processing due
+to using data that wasn't really part of the
+skb data.
 
-Normally, when the stack in the idle state, or connected to other access
-point, those deauth messages doesn't cause a problem. The problem arises
-if that spurious deauth message is received at the right moment, when
-authentication to the access point has been started but response is not
-yet received. If I'm correct in that the deauthentication message from
-the AP during authentication is legal, this would be quite hard to
-filter out.
+Fix this using skb_copy_bits() for the needed
+data. As a side effect, this adds a check on
+processing too short frames, which previously
+this code could do.
 
+Reported-by: Daniel Halperin <dhalperi@cs.washington.edu>
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+---
+Ok so maybe this patch is better than the
+linearize one after all since we only ever
+process this type of control frame anyway,
+and unlike skb_linearize() skb_copy_bits()
+cannot fail (unless the bits didn't exist
+in the frame to start with).
 
-Best regards,
+ net/mac80211/rx.c |   13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
-Teemu
+--- wireless-testing.orig/net/mac80211/rx.c	2010-05-28 22:25:07.000000000 +0200
++++ wireless-testing/net/mac80211/rx.c	2010-05-30 14:44:00.000000000 +0200
+@@ -1819,17 +1819,26 @@ ieee80211_rx_h_ctrl(struct ieee80211_rx_
+ 		return RX_CONTINUE;
+ 
+ 	if (ieee80211_is_back_req(bar->frame_control)) {
++		struct {
++			__le16 control, start_seq_num;
++		} __packed bar_data;
++
+ 		if (!rx->sta)
+ 			return RX_DROP_MONITOR;
++
++		if (skb_copy_bits(skb, offsetof(struct ieee80211_bar, control),
++				  &bar_data, sizeof(bar_data)))
++			return RX_DROP_MONITOR;
++
+ 		spin_lock(&rx->sta->lock);
+-		tid = le16_to_cpu(bar->control) >> 12;
++		tid = le16_to_cpu(bar_data.control) >> 12;
+ 		if (!rx->sta->ampdu_mlme.tid_active_rx[tid]) {
+ 			spin_unlock(&rx->sta->lock);
+ 			return RX_DROP_MONITOR;
+ 		}
+ 		tid_agg_rx = rx->sta->ampdu_mlme.tid_rx[tid];
+ 
+-		start_seq_num = le16_to_cpu(bar->start_seq_num) >> 4;
++		start_seq_num = le16_to_cpu(bar_data.start_seq_num) >> 4;
+ 
+ 		/* reset session timer */
+ 		if (tid_agg_rx->timeout)
 
 
