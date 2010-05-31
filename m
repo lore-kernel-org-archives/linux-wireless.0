@@ -1,155 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:4069 "EHLO
-	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752865Ab0ESTR6 (ORCPT
+Received: from mailgw1.uni-kl.de ([131.246.120.220]:53823 "EHLO
+	mailgw1.uni-kl.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756392Ab0EaIBq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 19 May 2010 15:17:58 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	<linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH v2 7/7] rt2x00: Fix HT40 operation in rt2800.
-Date: Wed, 19 May 2010 21:17:51 +0200
-Message-Id: <1274296671-13596-1-git-send-email-gwingerde@gmail.com>
+	Mon, 31 May 2010 04:01:46 -0400
+Received: from itwm2.itwm.fhg.de (itwm2.itwm.fhg.de [131.246.191.3])
+	by mailgw1.uni-kl.de (8.14.3/8.14.3/Debian-5+lenny1) with ESMTP id o4V81fmS021804
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 31 May 2010 10:01:41 +0200
+Message-ID: <4C036CE4.1060503@itwm.fraunhofer.de>
+Date: Mon, 31 May 2010 10:01:40 +0200
+From: Martin Vogt <martin.vogt@itwm.fraunhofer.de>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: new bluetooth id for lenovo T410s?
+References: <4BFE4124.2090601@itwm.fraunhofer.de> <1274957276.4706.4.camel@aeonflux.t-mobile.de> 	<4BFF9D8E.5040702@itwm.fraunhofer.de> <AANLkTin6B6EHaTzepktDo_TrRF3n0N8ZyUB9oszdE5wS@mail.gmail.com>
+In-Reply-To: <AANLkTin6B6EHaTzepktDo_TrRF3n0N8ZyUB9oszdE5wS@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Closer inspection of the legacy Ralink driver reveals that in case of HT40+
-or HT40- we must adjust the frequency settings that we program to the device.
-Implement the same adjustment in the rt2x00 code.
+Luis R. Rodriguez wrote:
+> On Fri, May 28, 2010 at 3:40 AM, Martin Vogt
+> <martin.vogt@itwm.fraunhofer.de> wrote:
+>> Marcel Holtmann wrote:
+>>> Hi Martin,
+>>>
+>>> so first of all, this is the wrong mailing list. You should be using
+>>> linux-bluetooth@vger.kernel.org.
+>> Oh, ok.
 
-With this HT40 seems to work for all devices supported by rt2800pci and
-rt2800usb.
+>>>
+>> Just a small update: It works now, the btusb driver
+>> from the compat-wireless module didnt load with symbol
+>> problems.
+>> (I use a Suse 2.6.27 vendor kernel which already is a bit 2.6.28+
+>> compat-wireless-2.6.34)
+>>
+>> I placed some #if 0 #endif combinations in compat-2.6.28.c
+>> ==>now it works.
+> 
+> Was this a Suse distribution problem? If so can you elaborate?
+> 
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
+I thought that bluetooth would not work an the T410, but
+now Im not sure anymore, if it would have worked directly
+with 2.6.27.suse.
+(At least the KDE 3.5 bluetooth applet was "grey" (and is still grey),
+the KDE 4.x kbluetooth app works now, but maybe
+this would have worked before too...--dont know--)
 
-v2: Handled feedback from Ivo.
+So I cannot say if it wouldnt have worked out of the box
+because I directly upgrade to compat-wireless 2.6.34.
 
----
- drivers/net/wireless/rt2x00/rt2800lib.c    |    5 +----
- drivers/net/wireless/rt2x00/rt2x00config.c |   12 ++++++++----
- drivers/net/wireless/rt2x00/rt2x00ht.c     |   27 +++++++++++++++++++++++++++
- drivers/net/wireless/rt2x00/rt2x00lib.h    |    9 +++++++++
- 4 files changed, 45 insertions(+), 8 deletions(-)
+regards,
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 8ffbc3c..15322f0 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2530,11 +2530,8 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	else
- 		spec->ht.ht_supported = false;
- 
--	/*
--	 * Don't set IEEE80211_HT_CAP_SUP_WIDTH_20_40 for now as it causes
--	 * reception problems with HT40 capable 11n APs
--	 */
- 	spec->ht.cap =
-+	    IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
- 	    IEEE80211_HT_CAP_GRN_FLD |
- 	    IEEE80211_HT_CAP_SGI_20 |
- 	    IEEE80211_HT_CAP_SGI_40 |
-diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
-index 098315a..8dbd634 100644
---- a/drivers/net/wireless/rt2x00/rt2x00config.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00config.c
-@@ -170,23 +170,27 @@ void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
- 		      unsigned int ieee80211_flags)
- {
- 	struct rt2x00lib_conf libconf;
-+	u16 hw_value;
- 
- 	memset(&libconf, 0, sizeof(libconf));
- 
- 	libconf.conf = conf;
- 
- 	if (ieee80211_flags & IEEE80211_CONF_CHANGE_CHANNEL) {
--		if (conf_is_ht40(conf))
-+		if (conf_is_ht40(conf)) {
- 			__set_bit(CONFIG_CHANNEL_HT40, &rt2x00dev->flags);
--		else
-+			hw_value = rt2x00ht_center_channel(rt2x00dev, conf);
-+		} else {
- 			__clear_bit(CONFIG_CHANNEL_HT40, &rt2x00dev->flags);
-+			hw_value = conf->channel->hw_value;
-+		}
- 
- 		memcpy(&libconf.rf,
--		       &rt2x00dev->spec.channels[conf->channel->hw_value],
-+		       &rt2x00dev->spec.channels[hw_value],
- 		       sizeof(libconf.rf));
- 
- 		memcpy(&libconf.channel,
--		       &rt2x00dev->spec.channels_info[conf->channel->hw_value],
-+		       &rt2x00dev->spec.channels_info[hw_value],
- 		       sizeof(libconf.channel));
- 	}
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00ht.c b/drivers/net/wireless/rt2x00/rt2x00ht.c
-index 5a40760..588c766 100644
---- a/drivers/net/wireless/rt2x00/rt2x00ht.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00ht.c
-@@ -84,3 +84,31 @@ void rt2x00ht_create_tx_descriptor(struct queue_entry *entry,
- 	else
- 		txdesc->txop = TXOP_HTTXOP;
+Martin
+
+
+This was the patch required for the vendor SUSE kernel.
+
+--- compat/compat-2.6.28.c.org  2010-05-27 15:41:41.000000000 +0200
++++ compat/compat-2.6.28.c      2010-05-27 15:57:33.000000000 +0200
+@@ -307,6 +307,7 @@
  }
-+
-+u16 rt2x00ht_center_channel(struct rt2x00_dev *rt2x00dev,
-+			    struct ieee80211_conf *conf)
-+{
-+	struct hw_mode_spec *spec = &rt2x00dev->spec;
-+	int center_channel;
-+	u16 i;
-+
-+	/*
-+	 * Initialize center channel to current channel.
-+	 */
-+	center_channel = spec->channels[conf->channel->hw_value].channel;
-+
-+	/*
-+	 * Adjust center channel to HT40+ and HT40- operation.
-+	 */
-+	if (conf_is_ht40_plus(conf))
-+		center_channel += 2;
-+	else if (conf_is_ht40_minus(conf))
-+		center_channel -= (center_channel == 14) ? 1 : 2;
-+
-+	for (i = 0; i < spec->num_channels; i++)
-+		if (spec->channels[i].channel == center_channel)
-+			return i;
-+
-+	WARN_ON(1);
-+	return conf->channel->hw_value;
-+}
-diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
-index 822affc..ed27de1 100644
---- a/drivers/net/wireless/rt2x00/rt2x00lib.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
-@@ -367,12 +367,21 @@ static inline void rt2x00crypto_rx_insert_iv(struct sk_buff *skb,
- void rt2x00ht_create_tx_descriptor(struct queue_entry *entry,
- 				   struct txentry_desc *txdesc,
- 				   const struct rt2x00_rate *hwrate);
-+
-+u16 rt2x00ht_center_channel(struct rt2x00_dev *rt2x00dev,
-+			    struct ieee80211_conf *conf);
- #else
- static inline void rt2x00ht_create_tx_descriptor(struct queue_entry *entry,
- 						 struct txentry_desc *txdesc,
- 						 const struct rt2x00_rate *hwrate)
+ EXPORT_SYMBOL_GPL(pci_ioremap_bar);
+
++#if 0
+ static unsigned long round_jiffies_common(unsigned long j, int cpu,
+                bool force_up)
  {
+@@ -369,5 +370,5 @@
+        skb->truesize += size;
  }
-+
-+static inline u16 rt2x00ht_center_channel(struct rt2x00_dev *rt2x00dev,
-+					  struct ieee80211_conf *conf)
-+{
-+	return conf->channel->hw_value;
-+}
- #endif /* CONFIG_RT2X00_LIB_HT */
- 
- /*
--- 
-1.7.1
+ EXPORT_SYMBOL(skb_add_rx_frag);
+-
++#endif /* vogt */
+ #endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,28) */
+
+
 
