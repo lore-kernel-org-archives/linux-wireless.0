@@ -1,91 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:65350 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756464Ab0EJW20 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 10 May 2010 18:28:26 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 25/47] iwlagn: move iwl_get_ra_sta_id to 4965
-Date: Mon, 10 May 2010 15:27:56 -0700
-Message-Id: <1273530498-11876-26-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
-References: <1273530498-11876-1-git-send-email-reinette.chatre@intel.com>
+Received: from uxs-bsd-240-042.unaxus.net ([195.191.240.42]:16392 "EHLO
+	uxs-bsd-240-042.unaxus.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752430Ab0EaQYI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 May 2010 12:24:08 -0400
+Received: from i577a8134.versanet.de ([87.122.129.52]:41288 helo=[192.168.178.92])
+	by uxs-bsd-240-042.unaxus.net with esmtpsa (TLSv1:CAMELLIA256-SHA:256)
+	(Exim 4.71 (FreeBSD))
+	(envelope-from <janek.bevendorff@openwebboard.org>)
+	id 1OJ5tc-000Nwo-1T
+	for linux-wireless@vger.kernel.org; Mon, 31 May 2010 16:23:16 +0200
+Message-ID: <4C03C652.3000608@openwebboard.org>
+Date: Mon, 31 May 2010 16:23:14 +0200
+From: Janek Bevendorff <janek.bevendorff@openwebboard.org>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: Strange behavior of DWA-547
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hey guys!
 
-This function is only needed by 4965, so
-it need not be in core code and can be
-made static.
+There's a strange problem with my brand-new DWA-547 PCI WLAN card.
+I use the driver ath9k for it (already tried Madwifi and ndiswrapper,
+both don't work for me at all). I'm on a Gentoo Linux with a 2.6.34
+kernel and linux-headers package 2.6.33 (newest in Portage). I first
+used the built-in kernel module and now the bleeding edge ath9k driver
+from wireless.kernel.org but it brought no change.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-4965.c |   10 ++++++++++
- drivers/net/wireless/iwlwifi/iwl-sta.c  |   11 -----------
- drivers/net/wireless/iwlwifi/iwl-sta.h  |    1 -
- 3 files changed, 10 insertions(+), 12 deletions(-)
+So what's the problem? The problem is that I have a very unsteady WLAN
+connection. iwconfig wlan2 (wlan2 is the device since it's not the first
+WLAN adapter I've used but all other drivers are unloaded) shows me bit
+rates from 1Mb/s up to 54Mb/s depending on... yes I actually don't know
+what it depends on.
+The actual data rate is between 0kB/s and 700kB/s, sometimes it has tips
+up to 1,3/MB/s for a second or so. But the average data rate is about
+120-200kB/s or below. But that's very slow. I had another WLAN device
+which had a more stable connection. Sometimes I have a data rate of
+fantastic 700kB/s and then it suddenly goes down to 60kB/s. And of
+course one connection has a significantly different data rate than the
+previous connection. So when I connect with a good speed, then
+disconnect and reconnect it can be that I now have not even half of the
+speed I had before but I haven't changed the position of the antennas at
+all.
+Adjusting the antennas of course has an effect on the speed but not
+significantly. I can adjust them in a way that I get 0kB/s but anyway
+when I already have a very slow connection I can only advance the speed
+about 80-100kB/s, not more.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index a3562a1..b8bf837 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -1953,6 +1953,16 @@ static int iwl4965_tx_status_reply_tx(struct iwl_priv *priv,
- 	return 0;
- }
- 
-+static int iwl_get_ra_sta_id(struct iwl_priv *priv, struct ieee80211_hdr *hdr)
-+{
-+	if (priv->iw_mode == NL80211_IFTYPE_STATION) {
-+		return IWL_AP_ID;
-+	} else {
-+		u8 *da = ieee80211_get_DA(hdr);
-+		return iwl_find_station(priv, da);
-+	}
-+}
-+
- /**
-  * iwl4965_rx_reply_tx - Handle standard (non-aggregation) Tx response
-  */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index 7da8ede..0db742c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -80,17 +80,6 @@ u8 iwl_find_station(struct iwl_priv *priv, const u8 *addr)
- }
- EXPORT_SYMBOL(iwl_find_station);
- 
--int iwl_get_ra_sta_id(struct iwl_priv *priv, struct ieee80211_hdr *hdr)
--{
--	if (priv->iw_mode == NL80211_IFTYPE_STATION) {
--		return IWL_AP_ID;
--	} else {
--		u8 *da = ieee80211_get_DA(hdr);
--		return iwl_find_station(priv, da);
--	}
--}
--EXPORT_SYMBOL(iwl_get_ra_sta_id);
--
- /* priv->sta_lock must be held */
- static void iwl_sta_ucode_activate(struct iwl_priv *priv, u8 sta_id)
- {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
-index 9a869f1..1a0e590 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.h
-@@ -66,7 +66,6 @@ void iwl_restore_stations(struct iwl_priv *priv);
- void iwl_clear_ucode_stations(struct iwl_priv *priv, bool force);
- int iwl_get_free_ucode_key_index(struct iwl_priv *priv);
- int iwl_get_sta_id(struct iwl_priv *priv, struct ieee80211_hdr *hdr);
--int iwl_get_ra_sta_id(struct iwl_priv *priv, struct ieee80211_hdr *hdr);
- int iwl_send_add_sta(struct iwl_priv *priv,
- 		     struct iwl_addsta_cmd *sta, u8 flags);
- int iwl_add_local_station(struct iwl_priv *priv, const u8 *addr, bool init_rs);
--- 
-1.6.3.3
+I've googled a lot the last few days and found many similar problems
+with ath9k but none of them solved my problem. I use WICD as my network
+manager and most of the time it shows an orange bar for the connection
+quality (~45-50%), seldom a green bar but never 100%. Sometimes it even
+shows a red bar (<25%) whereas my old WLAN card always had a green bar
+and that with only one antenna (DWA-547 has three).
 
+Here's what lspci says about my WLAN card:
+0c:02.0 Network controller: Atheros Communications Inc. AR922X Wireless
+Network Adapter (rev 01)
+
+
+I hope someone can help me.
+
+Thanks
+Janek
