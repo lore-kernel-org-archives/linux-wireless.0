@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:57449 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754549Ab0EZMdi (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:18532 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756640Ab0EaK0L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 26 May 2010 08:33:38 -0400
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Fix basic rates for created IBSS networks
-Date: Wed, 26 May 2010 15:34:32 +0300
-Message-Id: <1274877272-22487-1-git-send-email-juuso.oikarinen@nokia.com>
+	Mon, 31 May 2010 06:26:11 -0400
+Received: from vs3006.wh2.ocn.ne.jp (125.206.180.169)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0892821566
+	for <linux-wireless@vger.kernel.org>; Mon, 31 May 2010 19:26:07 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Peter Chubb <peter.chubb@nicta.com.au>
+Subject: Re: Commit 6b5d,.. breaks ath5k in WPA-enabled networks
+Date: Mon, 31 May 2010 19:26:34 +0900
+Cc: me@bobcopeland.com, linux-wireless@vger.kernel.org
+References: <w47hmkh1b4.wl%peter@chubb.wattle.id.au>
+In-Reply-To: <w47hmkh1b4.wl%peter@chubb.wattle.id.au>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201005311926.34371.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently the mac80211 marks rates 1 and 2 mbps as basic rates for created
-ad-hoc networks. To be certifiable, rates 1, 2, 5.5 and 12 need to be marked
-basic.
+On Monday 31 May 2010 18:23:43 Peter Chubb wrote:
+> With Linus's current head-of-tree my ath5k cannot associate with
+> WPA-enabled access points.  I bisected back to this patch:
+> 
+> 	    Since commit 6b5d117eddc09cd976ad8030d715f4350f598a22
+> 	    ath5k: clean up queue manipulation
+> 
+> I suspect at least one of the two wake-up calls that were removed is
+> actually necessary.
+> 
+> Reverting the patch restores correct behaviour.
 
-Change this.
+try this, please:
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- net/mac80211/ibss.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+https://patchwork.kernel.org/patch/100681/
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index b2cc1fd..448cf57 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -529,7 +529,8 @@ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
- 		sdata->drop_unencrypted = 0;
- 
- 	__ieee80211_sta_join_ibss(sdata, bssid, sdata->vif.bss_conf.beacon_int,
--				  ifibss->channel, 3, /* first two are basic */
-+				  ifibss->channel,
-+				  15, /* 1, 2, 5.5 and 12 are basic */
- 				  capability, 0);
- }
- 
--- 
-1.6.3.3
+i have sent the patch a long time ago but it didnt get merged yet.
 
+bruno
+
+> --
+> Dr Peter Chubb                                  peter DOT chubb AT
+> nicta.com.au http://www.ertos.nicta.com.au               ERTOS within
+> National ICT Australia All things shall perish from under the sky/Music
+> alone shall live, never to die --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+> in the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
