@@ -1,69 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:16895 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752349Ab0ELJkX (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35343 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756529Ab0EaJk1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 12 May 2010 05:40:23 -0400
-Received: from vs3011.wh2.ocn.ne.jp (125.206.180.239)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0393937222
-	for <linux-wireless@vger.kernel.org>; Wed, 12 May 2010 18:40:22 +0900 (JST)
-Subject: [PATCH 08/12] ath5k: clarify logic when to enable spur mitigation
-	filter
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Wed, 12 May 2010 18:40:23 +0900
-Message-ID: <20100512094023.6575.80390.stgit@tt-desk>
-In-Reply-To: <20100512093947.6575.99595.stgit@tt-desk>
-References: <20100512093947.6575.99595.stgit@tt-desk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Mon, 31 May 2010 05:40:27 -0400
+Subject: [PATCH] mac80211: move plink state
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 31 May 2010 11:40:23 +0200
+Message-ID: <1275298823.3586.9.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The old code logically did not make sense and seems to have been confused by
-the fact that we could have newer EEPROMs on older hardware. In any case the
-spur mitigation filter was set if the srev was >= AR5K_SREV_AR5424.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Spur info is available only from EEPROM versions bigger than 5.3 but but the
-EEPOM routines will use static values for older versions, so that should be
-o.k.
+For some odd reason, the plink_state enum is
+declared in the middle between aggregation
+related structures. Move it down to make the
+file easier to read.
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath5k/reset.c |   15 +++++----------
- 1 files changed, 5 insertions(+), 10 deletions(-)
+ net/mac80211/sta_info.h |   44 ++++++++++++++++++++++----------------------
+ 1 file changed, 22 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-index 5e23e61..2890a7f 100644
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -1090,22 +1090,17 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
- 		/* Write OFDM timings on 5212*/
- 		if (ah->ah_version == AR5K_AR5212 &&
- 			channel->hw_value & CHANNEL_OFDM) {
--			struct ath5k_eeprom_info *ee =
--					&ah->ah_capabilities.cap_eeprom;
+--- wireless-testing.orig/net/mac80211/sta_info.h	2010-05-31 11:35:53.000000000 +0200
++++ wireless-testing/net/mac80211/sta_info.h	2010-05-31 11:39:01.000000000 +0200
+@@ -120,6 +120,28 @@ struct tid_ampdu_rx {
+ };
  
- 			ret = ath5k_hw_write_ofdm_timings(ah, channel);
- 			if (ret)
- 				return ret;
+ /**
++ * struct sta_ampdu_mlme - STA aggregation information.
++ *
++ * @tid_active_rx: TID's state in Rx session state machine.
++ * @tid_rx: aggregation info for Rx per TID
++ * @tid_state_tx: TID's state in Tx session state machine.
++ * @tid_tx: aggregation info for Tx per TID
++ * @addba_req_num: number of times addBA request has been sent.
++ * @dialog_token_allocator: dialog token enumerator for each new session;
++ */
++struct sta_ampdu_mlme {
++	/* rx */
++	bool tid_active_rx[STA_TID_NUM];
++	struct tid_ampdu_rx *tid_rx[STA_TID_NUM];
++	/* tx */
++	u8 tid_state_tx[STA_TID_NUM];
++	struct tid_ampdu_tx *tid_tx[STA_TID_NUM];
++	u8 addba_req_num[STA_TID_NUM];
++	u8 dialog_token_allocator;
++};
++
++
++/**
+  * enum plink_state - state of a mesh peer link finite state machine
+  *
+  * @PLINK_LISTEN: initial state, considered the implicit state of non existant
+@@ -143,28 +165,6 @@ enum plink_state {
+ };
  
--			/* Note: According to docs we can have a newer
--			 * EEPROM on old hardware, so we need to verify
--			 * that our hardware is new enough to have spur
--			 * mitigation registers (delta phase etc) */
--			if (ah->ah_mac_srev >= AR5K_SREV_AR5424 ||
--			(ah->ah_mac_srev >= AR5K_SREV_AR5424 &&
--			ee->ee_version >= AR5K_EEPROM_VERSION_5_3))
-+			/* Spur info is available only from EEPROM versions
-+			 * bigger than 5.3 but but the EEPOM routines will use
-+			 * static values for older versions */
-+			if (ah->ah_mac_srev >= AR5K_SREV_AR5424)
- 				ath5k_hw_set_spur_mitigation_filter(ah,
--								channel);
-+								    channel);
- 		}
- 
- 		/*Enable/disable 802.11b mode on 5111
+ /**
+- * struct sta_ampdu_mlme - STA aggregation information.
+- *
+- * @tid_active_rx: TID's state in Rx session state machine.
+- * @tid_rx: aggregation info for Rx per TID
+- * @tid_state_tx: TID's state in Tx session state machine.
+- * @tid_tx: aggregation info for Tx per TID
+- * @addba_req_num: number of times addBA request has been sent.
+- * @dialog_token_allocator: dialog token enumerator for each new session;
+- */
+-struct sta_ampdu_mlme {
+-	/* rx */
+-	bool tid_active_rx[STA_TID_NUM];
+-	struct tid_ampdu_rx *tid_rx[STA_TID_NUM];
+-	/* tx */
+-	u8 tid_state_tx[STA_TID_NUM];
+-	struct tid_ampdu_tx *tid_tx[STA_TID_NUM];
+-	u8 addba_req_num[STA_TID_NUM];
+-	u8 dialog_token_allocator;
+-};
+-
+-
+-/**
+  * struct sta_info - STA information
+  *
+  * This structure collects information about a station that
+
 
