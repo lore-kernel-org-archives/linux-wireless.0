@@ -1,109 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:35810 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1758585Ab0ECWIr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 3 May 2010 18:08:47 -0400
-From: "Stefan Lippers-Hollmann" <s.L-H@gmx.de>
-To: Pavel Roskin <proski@gnu.org>
-Subject: Re: [PATCH 2/4] rt2x00: Enable RT30xx by default.
-Date: Tue, 4 May 2010 00:08:34 +0200
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <1272919385-18004-1-git-send-email-gwingerde@gmail.com> <1272919385-18004-3-git-send-email-gwingerde@gmail.com> <1272920358.4907.3.camel@mj>
-In-Reply-To: <1272920358.4907.3.camel@mj>
+Received: from mail.redfish-solutions.com ([66.232.79.143]:50783 "EHLO
+	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751279Ab0EaUau (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 May 2010 16:30:50 -0400
+Message-ID: <4C041BEA.2010303@redfish-solutions.com>
+Date: Mon, 31 May 2010 14:28:26 -0600
+From: Philip Prindeville <philipp_subx@redfish-solutions.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201005040008.36956.s.L-H@gmx.de>
+To: Ben Gardiner <bengardiner@nanometrics.ca>
+CC: David Miller <davem@davemloft.net>, dunc@lemonia.org,
+	kalle.valo@iki.fi, kaber@trash.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: Network QoS support in applications
+References: <87my01m0zm.fsf@purkki.valot.fi>	<4B5EF5DF.2070005@lemonia.org>	<4B9942A7.40205@redfish-solutions.com>	<20100311.112754.142886660.davem@davemloft.net>	<4B9944A0.5080308@redfish-solutions.com>	<4BF32B2B.6010202@redfish-solutions.com> <AANLkTindWCmxtAJU5R3ey_18_3wNUuMGc-jq_EY_itiN@mail.gmail.com>
+In-Reply-To: <AANLkTindWCmxtAJU5R3ey_18_3wNUuMGc-jq_EY_itiN@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+On 5/31/10 1:30 PM, Ben Gardiner wrote:
+> On Tue, May 18, 2010 at 8:04 PM, Philip A. Prindeville
+> <philipp@redfish-solutions.com>  wrote:
+>    
+>> On 03/11/2010 12:29 PM, Philip A. Prindeville wrote:
+>>      
+>>> On 03/11/2010 12:27 PM, David Miller wrote:
+>>>
+>>>        
+>>>> From: "Philip A. Prindeville"<philipp_subx@redfish-solutions.com>
+>>>> Date: Thu, 11 Mar 2010 12:21:11 -0700
+>>>>
+>>>>
+>>>>          
+>>>>> And yes, there will always be misbehaving users.  They are a fact of
+>>>>> life.  That doesn't mean we should lobotomize the network.  We don't
+>>>>> have an authentication mechanism on ICMP Redirects or Source-Quench,
+>>>>>
+>>>>>            
+>>>> Which is why most networks block those packets from the outside.
+>>>>
+>>>>
+>>>>          
+>>>>> Nor is ARP authenticated.
+>>>>>
+>>>>>            
+>>>> Which is why people control who can plug into their physical
+>>>> network.
+>>>>
+>>>> None of the things you are saying support the idea of having
+>>>> applications decide what the DSCP marking should be.
+>>>>
+>>>>          
+>>> Does "decide what the DSCP marking should be" include complying to the recommendations of RFC-4594?
+>>>
+>>>        
+>> If anyone cares, here's an update:
+>>
+>> I've submitted patches for QoS configuration for:
+>>
+>> APR/Apache (stalled);
+>> Proftpd (committed);
+>> Openssh (pending review);
+>> Firefox/Thunderbird (reviewed and on-track for commit);
+>> Cyrus (committed);
+>> Sendmail (submittted and acknowledged, but not yet reviewed);
+>> Curl (stalled);
+>>
+>> All, as per the request of the maintainers, default to either no QoS
+>> markings or previous RFC-791 QoS markings if that's what they already
+>> supported (Proftpd and Openssh).
+>>
+>> If anyone can think of anything else that needs to be supported to
+>> impact a significant portion of network (or enterprise intranet)
+>> traffic, please call it out.
+>>      
+> wget [1], like curl, is used for downloads of artifacts by some build systems.
+>
+> [1] http://www.gnu.org/software/wget/
+>
+>    
 
-On Monday 03 May 2010, Pavel Roskin wrote:
-> On Mon, 2010-05-03 at 22:43 +0200, Gertjan van Wingerde wrote:
-> > Now that RT30xx support is at the same level as RT28xx support we can enable
-> > these devices by default.
-[...]
-> > --- a/drivers/net/wireless/rt2x00/Kconfig
-> > +++ b/drivers/net/wireless/rt2x00/Kconfig
-> > @@ -87,7 +87,7 @@ if RT2800PCI
-> >  
-> >  config RT2800PCI_RT30XX
-> >  	bool "rt2800pci - Include support for rt30xx (PCI/PCIe/PCMCIA) devices"
-> > -	default n
-> > +	default y
-> 
-> I believe defaulting booleans to "y" is discouraged, especially for
-> drivers.  Most users don't have any particular hardware device.
+Ok, but I'm not sure that changes anything... what I was asking about 
+was other services not enumerated: not how the above services are used.  
+Sorry that wasn't clear.
 
-[disclaimer, I have no access to any rt30xx USB/ PCI devices, so I'm not 
-proposing the attached patch, as I can't evaluate the stability of 
-rt2800pci's rt30xx support myself but merely use it for demonstration 
-purposes]
-
-RT2800PCI_RT30XX is not a new/ separate module, its only function is to 
-limit the PCI ID space (to not claim PCI IDs for chipset generations not
-yet debugged properly) of rt2800pci.ko; this symbol isn't even used 
-anywhere else than within the PCI table. A 100% equivalent patch would be 
-to just drop the config option completely. I doubt that doing that would 
-meet resistance, as it merely adds previously 'unknown' (to be supported) 
-PCI IDs.
-
-[However if RT2800PCI_RT30XX is going to be kept, but changed to default 
-to 'y', I'd propose to drop the 'Support for these devices is 
-non-functional at the moment and is intended for testers and developers" 
-paragraph at the same time.]
-
-Regards
-	Stefan Lippers-Hollmann
+-Philip
 
 
-rt2x00: claim RT30xx PCI IDs in rt2800pci
 
-Now that RT30xx support is at the same level as RT28xx, it can be enabled 
-unconditionally.
 
-Signed-off-by: Stefan Lippers-Hollmann <s.l-h@gmx.de>
-
-diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
-index 5239e08..ee088ac 100644
---- a/drivers/net/wireless/rt2x00/Kconfig
-+++ b/drivers/net/wireless/rt2x00/Kconfig
-@@ -85,17 +85,6 @@ config RT2800PCI
- 
- if RT2800PCI
- 
--config RT2800PCI_RT30XX
--	bool "rt2800pci - Include support for rt30xx (PCI/PCIe/PCMCIA) devices"
--	default n
--	---help---
--	  This adds support for rt30xx wireless chipset family to the
--	  rt2800pci driver.
--	  Supported chips: RT3090, RT3091 & RT3092
--
--	  Support for these devices is non-functional at the moment and is
--	  intended for testers and developers.
--
- config RT2800PCI_RT35XX
- 	bool "rt2800pci - Include support for rt35xx (PCI/PCIe/PCMCIA) devices"
- 	default n
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 0e52f17..9efd4fb 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -1225,12 +1225,10 @@ static DEFINE_PCI_DEVICE_TABLE(rt2800pci_device_table) = {
- 	{ PCI_DEVICE(0x1432, 0x7758), PCI_DEVICE_DATA(&rt2800pci_ops) },
- 	{ PCI_DEVICE(0x1432, 0x7768), PCI_DEVICE_DATA(&rt2800pci_ops) },
- 	{ PCI_DEVICE(0x1a3b, 0x1059), PCI_DEVICE_DATA(&rt2800pci_ops) },
--#ifdef CONFIG_RT2800PCI_RT30XX
- 	{ PCI_DEVICE(0x1814, 0x3090), PCI_DEVICE_DATA(&rt2800pci_ops) },
- 	{ PCI_DEVICE(0x1814, 0x3091), PCI_DEVICE_DATA(&rt2800pci_ops) },
- 	{ PCI_DEVICE(0x1814, 0x3092), PCI_DEVICE_DATA(&rt2800pci_ops) },
- 	{ PCI_DEVICE(0x1462, 0x891a), PCI_DEVICE_DATA(&rt2800pci_ops) },
--#endif
- #ifdef CONFIG_RT2800PCI_RT35XX
- 	{ PCI_DEVICE(0x1814, 0x3060), PCI_DEVICE_DATA(&rt2800pci_ops) },
- 	{ PCI_DEVICE(0x1814, 0x3062), PCI_DEVICE_DATA(&rt2800pci_ops) },
