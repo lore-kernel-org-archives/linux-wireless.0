@@ -1,46 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:59949 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753603Ab0E1Uoi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 28 May 2010 16:44:38 -0400
-Subject: Re: [PATCH]: ath: Fix uninitialized variable warnings
-From: Pavel Roskin <proski@gnu.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Prarit Bhargava <prarit@redhat.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@atheros.com
-In-Reply-To: <20100528173431.GB2405@tuxdriver.com>
-References: <20100527181052.23905.67123.sendpatchset@prarit.bos.redhat.com>
-	 <20100528173431.GB2405@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 28 May 2010 16:44:36 -0400
-Message-Id: <1275079476.18152.18.camel@mj>
-Mime-Version: 1.0
+Received: from mail.deathmatch.net ([72.66.92.28]:4811 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754428Ab0EaNDr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 May 2010 09:03:47 -0400
+Date: Mon, 31 May 2010 08:56:40 -0400
+From: me@bobcopeland.com
+To: Peter Chubb <peter.chubb@nicta.com.au>
+Cc: Bruno Randolf <br1@einfach.org>, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+Subject: Re: Commit 6b5d,.. breaks ath5k in WPA-enabled networks
+Message-ID: <20100531125640.GA11680@hash.localnet>
+References: <w47hmkh1b4.wl%peter@chubb.wattle.id.au> <201005311926.34371.br1@einfach.org> <w4mxvg2tz0.wl%peter@chubb.wattle.id.au>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <w4mxvg2tz0.wl%peter@chubb.wattle.id.au>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-05-28 at 13:34 -0400, John W. Linville wrote:
-> On Thu, May 27, 2010 at 02:14:54PM -0400, Prarit Bhargava wrote:
-> > Fixes 'make -j24 CONFIG_DEBUG_SECTION_MISMATCH=y' warning:
-> > 
-> > drivers/net/wireless/ath/ath9k/eeprom_4k.c: In function ‘ath9k_hw_get_4k_gain_boundaries_pdadcs.clone.1’:
-> > drivers/net/wireless/ath/ath9k/eeprom_4k.c:311: error: ‘minPwrT4’ may be used uninitialized in this function
-> > drivers/net/wireless/ath/ath9k/eeprom_9287.c: In function ‘ath9k_hw_get_AR9287_gain_boundaries_pdadcs’:
-> > drivers/net/wireless/ath/ath9k/eeprom_9287.c:302: error: ‘minPwrT4’ may be used uninitialized in this function
-> > drivers/net/wireless/ath/ath9k/eeprom_def.c: In function ‘ath9k_hw_get_def_gain_boundaries_pdadcs.clone.0’:
-> > drivers/net/wireless/ath/ath9k/eeprom_def.c:679: error: ‘minPwrT4’ may be used uninitialized in this function
-> > 
-> > Signed-off-by: Prarit Bhargava <prarit@redhat.com>
+On Mon, May 31, 2010 at 09:25:55PM +1000, Peter Chubb wrote:
+> Bruno> On Monday 31 May 2010 18:23:43 Peter Chubb wrote:
+> >> With Linus's current head-of-tree my ath5k cannot associate with
+> >> WPA-enabled access points.  I bisected back to this patch:
+> >> 
+> >> Since commit 6b5d117eddc09cd976ad8030d715f4350f598a22 ath5k: clean
+> >> up queue manipulation
 > 
-> It looks to me like minPwrT4 will get initialized as long as
-> numXpdGains is non-zero in all cases.  Anyone know if this is true?
+> Bruno> try this, please:
+> Bruno> https://patchwork.kernel.org/patch/100681/
+> 
+> This works, thanks.
 
-It's calculated based on a value from EEPROM (xpdMask).  If xpdMask is
-0, numXpdGain would be 0.  So bogus EEPROM can lead to bogus
-tMinCalPower.  But the good thing is that tMinCalPower is never used.
+Yeah, big oops. :\
 
-So let's just eliminate tMinCalPower in all three files, as well as the
-corresponding function arguments.
+So what do we do now?  I guess we should just revert it for now rather
+than taking the half that works plus Bruno's fix?
 
 -- 
-Regards,
-Pavel Roskin
+Bob Copeland %% www.bobcopeland.com
+
