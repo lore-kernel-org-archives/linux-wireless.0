@@ -1,129 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:36783 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753136Ab0EUKmp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 21 May 2010 06:42:45 -0400
-Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
-	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o4LAfbFp015186
-	for <linux-wireless@vger.kernel.org>; Fri, 21 May 2010 05:42:44 -0500
-Received: from localhost.localdomain (wimaxnb.nmp.nokia.com [172.22.211.32])
-	by mgw-da02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o4LAfxov017222
-	for <linux-wireless@vger.kernel.org>; Fri, 21 May 2010 13:42:01 +0300
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Received: from lo.gmane.org ([80.91.229.12]:44222 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751973Ab0EaV0U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 31 May 2010 17:26:20 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1OJCUz-0007D5-6r
+	for linux-wireless@vger.kernel.org; Mon, 31 May 2010 23:26:17 +0200
+Received: from 56-47.dial.nortenet.pt ([212.13.56.47])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 31 May 2010 23:26:17 +0200
+Received: from subscriptions by 56-47.dial.nortenet.pt with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 31 May 2010 23:26:17 +0200
 To: linux-wireless@vger.kernel.org
-Subject: [RFC PATCH 1/1] cfg80211: Fix user-space crda query stall
-Date: Fri, 21 May 2010 13:42:19 +0300
-Message-Id: <1274438539-11259-2-git-send-email-juuso.oikarinen@nokia.com>
-In-Reply-To: <1274438539-11259-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1274438539-11259-1-git-send-email-juuso.oikarinen@nokia.com>
+From: doddel <subscriptions@stroomer.com>
+Subject: mac80211 rx.c: in recent builds bridging between stations associated to an AP does not work
+Date: Mon, 31 May 2010 21:26:08 +0000 (UTC)
+Message-ID: <loom.20100531T230843-554@post.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The userspace crda utility can fail to respond to kernel requests in (at least)
-two scenarios: it is not runnable for any reason, or it is invoked with a
-country code not in its database.
+bridging used to work between stations associated to one AP with a compilation
+of a Nov 2009; now it doesn't.
+(using RouterStation platform with three radios and ath9k drivers,
+compat-wireless of May 24 2010; routing between the radios works fine;
+communication between stations via one AP does not work).
 
-When the userspace crda utility fails to respond to kernel requests (i.e. it
-does not use NL80211_CMD_SET_REG to provide the kernel regulatory information
-for the requested country) the kernel crda subsystem will stall. It will
-refuse to process any further regulatory hints. This is easiest demonstrated
-by using for instance the "iw" tool:
+The only change I could find in the code that is relevant for this has been part
+of patch "cfg80211: introduce capability for 4addr mode", and possibly earlier
+changes to this piece of code related to 4addr:
 
-   iw reg set EU
-   iw reg set US
+@@ -1245,7 +1248,8 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
+        if ((sdata->vif.type == NL80211_IFTYPE_AP ||
+             sdata->vif.type == NL80211_IFTYPE_AP_VLAN) &&
+            !(sdata->flags & IEEE80211_SDATA_DONT_BRIDGE_PACKETS) &&
+-           (rx->flags & IEEE80211_RX_RA_MATCH) && !rx->sdata->use_4addr) {
++           (rx->flags & IEEE80211_RX_RA_MATCH) &&
++           (sdata->vif.type != NL80211_IFTYPE_AP_VLAN || !sdata->u.vlan.sta)) {
+                if (is_multicast_ether_addr(ehdr->h_dest)) {
+                        /*
+                         * send multicast frames both to higher layers in 
 
-"EU" is not a country code present in the database, so user space crda will
-not respond. Attempting to define US after that will be silently ignored
-(internally, an -EAGAIN is the result, as the "EU" request is still
-"being processed".)
+Once I force a station to do a SNAT action on its wireless, pretending that the
+packets stem from another subnet than the actual subnet of the wireless, the
+communication is reestablished if the AP and other station know how to route
+answers back to this modified subnet.
 
-To fix this issue, this patch implements timeout protection for the userspace
-crda invocation. If there is no response for five seconds, the crda code will
-force itself to the world regulatory domain for maximum safety.
+Somehow in these tests above a false is produced where a true is needed in a
+basic setup (legacy 11a, one AP with multiple stations).
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- net/wireless/reg.c |   45 +++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 45 insertions(+), 0 deletions(-)
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 8f0d97d..6e72f90 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -385,6 +385,41 @@ static inline void reg_regdb_query(const char *alpha2) {}
- #endif /* CONFIG_CFG80211_INTERNAL_REGDB */
- 
- /*
-+ * This gets invoked if crda in userspace is not responding (it's not getting
-+ * executed or the country code in the hint is not in the database.
-+ */
-+
-+static void call_crda_timeout_work(struct work_struct *work)
-+{
-+	if (!last_request)
-+		return;
-+
-+	printk(KERN_INFO "cfg80211: Call crda daemon timed out for country: "
-+	       "%c%c\n", last_request->alpha2[0], last_request->alpha2[1]);
-+
-+	mutex_lock(&cfg80211_mutex);
-+
-+	/*
-+	 * As we are not getting data for the current country, force us back
-+	 * to the world regdomain.
-+	 */
-+	last_request->alpha2[0] = '0';
-+	last_request->alpha2[1] = '0';
-+	set_regdom(cfg80211_world_regdom);
-+	mutex_unlock(&cfg80211_mutex);
-+}
-+
-+static DECLARE_WORK(crda_uevent_timeout_work, call_crda_timeout_work);
-+
-+#define CRDA_UEVENT_TIMEOUT 5000
-+static void crda_uevent_timeout(unsigned long data)
-+{
-+	schedule_work(&crda_uevent_timeout_work);
-+}
-+
-+static DEFINE_TIMER(crda_uevent_timer, crda_uevent_timeout, 0, 0);
-+
-+/*
-  * This lets us keep regulatory code which is updated on a regulatory
-  * basis in userspace.
-  */
-@@ -409,6 +444,10 @@ static int call_crda(const char *alpha2)
- 	country_env[8] = alpha2[0];
- 	country_env[9] = alpha2[1];
- 
-+	/* start timeout timer */
-+	mod_timer(&crda_uevent_timer,
-+		  jiffies + msecs_to_jiffies(CRDA_UEVENT_TIMEOUT));
-+
- 	return kobject_uevent_env(&reg_pdev->dev.kobj, KOBJ_CHANGE, envp);
- }
- 
-@@ -2581,6 +2620,9 @@ int set_regdom(const struct ieee80211_regdomain *rd)
- 
- 	assert_cfg80211_lock();
- 
-+	/* cancel timeout */
-+	del_timer(&crda_uevent_timer);
-+
- 	mutex_lock(&reg_mutex);
- 
- 	/* Note that this doesn't update the wiphys, this is done below */
-@@ -2683,6 +2725,9 @@ void regulatory_exit(void)
- 
- 	cancel_work_sync(&reg_work);
- 
-+	del_timer_sync(&crda_uevent_timer);
-+	cancel_work_sync(&crda_uevent_timeout_work);
-+
- 	mutex_lock(&cfg80211_mutex);
- 	mutex_lock(&reg_mutex);
- 
--- 
-1.6.3.3
 
