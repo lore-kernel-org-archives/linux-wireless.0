@@ -1,44 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:57946 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752296Ab0FIN6k (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:51147 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754517Ab0FAST4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jun 2010 09:58:40 -0400
+	Tue, 1 Jun 2010 14:19:56 -0400
+Received: by fxm8 with SMTP id 8so1228517fxm.19
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Jun 2010 11:19:55 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: "Greg Munroe" <gmunroe@keywcorp.com>
+Subject: Re: Can't find firmware file
+Date: Tue, 1 Jun 2010 20:19:47 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <4B6B69AB42555546BF8AEBDA21196517011624B5@ihq-app01.keywcorp.com>
+In-Reply-To: <4B6B69AB42555546BF8AEBDA21196517011624B5@ihq-app01.keywcorp.com>
 MIME-Version: 1.0
-In-Reply-To: <4c0f4326.0a41df0a.7bde.ffffeef2@mx.google.com>
-References: <4c0f4326.0a41df0a.7bde.ffffeef2@mx.google.com>
-Date: Wed, 9 Jun 2010 09:58:37 -0400
-Message-ID: <AANLkTilrYYHjcMEhhrP7zjcLoo-TNczozxJSNRkDvSZy@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH] [ath5k][leds] Ability to disable leds
-	support. If leds support enabled do not force mac802.11 leds layer selection.
-From: Bob Copeland <me@bobcopeland.com>
-To: Dmytro Milinevskyy <milinevskyy@gmail.com>
-Cc: ath5k-devel@lists.ath5k.org, Kalle Valo <kalle.valo@iki.fi>,
-	linux-wireless@vger.kernel.org,
-	GeunSik Lim <geunsik.lim@samsung.com>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Keng-Yu Lin <keng-yu.lin@canonical.com>,
-	netdev@vger.kernel.org, Jiri Kosina <jkosina@suse.cz>,
-	Shahar Or <shahar@shahar-or.co.il>,
-	linux-kernel@vger.kernel.org, Luca Verdesca <magooz@salug.it>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201006012019.48194.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 9, 2010 at 3:31 AM, Dmytro Milinevskyy
-<milinevskyy@gmail.com> wrote:
-> However if the leds support was enabled do not force selection of 802.11 leds layer.
+please send questions to: linux-wireless@vger.kernel.org ,
+else they'll go straight into the spam trash folder.
 
-I don't understand this part.  What's the point of enabling software LEDs
-if nothing triggers them?
+On Tuesday 01 June 2010 17:18:56 Greg Munroe wrote:
+> I'm having trouble loading the firmware files when I compile the
+> carl9170 driver into the kernel instead of being mod-loadable.
+> If I build "CONFIG_CARL9170_USB=m", it has no trouble locating the
+> firmware files in /lib/firmware.
+> If I build "CONFIG_CARL9170_USB=y", it can't find the firmware files?
+> Thanks again for the help,
 
-Also, we can probably build hardware LEDs (hw_set_ledstate) in regardless.
-It's a pure register write and doesn't require the rest of the LED machinery.
+http://lkml.org/lkml/2010/3/11/490 et seq. ?
 
-I assume you are doing this to reduce the size of the module.  If so, can
-you include size(1) output in the commit message?
+Or: add the firmware into the kernel image.
 
--- 
-Bob Copeland %% www.bobcopeland.com
+Regards,
+	Chr
