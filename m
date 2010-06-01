@@ -1,50 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:43216 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751752Ab0FLEeE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jun 2010 00:34:04 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 09/24] ath9k_hw: reduce delay on programming INI on AR9003
-Date: Sat, 12 Jun 2010 00:33:47 -0400
-Message-Id: <1276317242-15540-10-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
-References: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
+Received: from mga02.intel.com ([134.134.136.20]:54519 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750748Ab0FAQWm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Jun 2010 12:22:42 -0400
+Subject: Re: pull request: wireless-2.6 2010-05-28
+From: reinette chatre <reinette.chatre@intel.com>
+To: "sedat.dilek@gmail.com" <sedat.dilek@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Zheng, Jiajia" <jiajia.zheng@intel.com>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+In-Reply-To: <AANLkTil8SLseSeq1M_Xg7P4AqMy3V_0jxc7by2Xuaqnb@mail.gmail.com>
+References: <20100528180952.GC2405@tuxdriver.com>
+	 <AANLkTil8SLseSeq1M_Xg7P4AqMy3V_0jxc7by2Xuaqnb@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 01 Jun 2010 09:22:41 -0700
+Message-ID: <1275409361.2091.27208.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All AR9003 devices are PCI-E only, the extra delay here
-is not required and only reduces the delay for loading
-the initial register values by at least 14ms.
+Hi Sedat,
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |    9 ---------
- 1 files changed, 0 insertions(+), 9 deletions(-)
+On Sat, 2010-05-29 at 06:34 -0700, Sedat Dilek wrote:
+> Two people confirmed the patch in [2] fixes:
+> 1. iwlwifi-2.6 GIT master (commit f10a237c95abd6d64a3a24553bd1d3bcddd9108b)
+> 2. compat-wireless (2010-05-21)
+> 
+> And it fixes also the above mentionned combination.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index d5e6b08..27feb08 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -543,15 +543,6 @@ static void ar9003_hw_prog_ini(struct ath_hw *ah,
- 		u32 val = INI_RA(iniArr, i, column);
- 
- 		REG_WRITE(ah, reg, val);
--
--		/*
--		 * Determine if this is a shift register value, and insert the
--		 * configured delay if so.
--		 */
--		if (reg >= 0x16000 && reg < 0x17000
--		    && ah->config.analog_shiftreg)
--			udelay(100);
--
- 		DO_DELAY(regWrites);
- 	}
- }
--- 
-1.6.3.3
+We are working on getting this patch upstream. The version tested
+contains a significant amount of duplicated code as well as some cleanup
+code mixed in. It is thus not appropriate for an upstream submission at
+this time.
+
+> As a suggestion:
+> What about "copying" bug-reports (incl. its history) from IWL-BTS into
+> linux-wireless ML?
+> For example (dri-devel related) bug-reports from
+> bugzilla.freedesktop.org are "copied" into dri-devel ML.
+
+Pointing people to the bug report seems to work ok. What benefit does
+the above have?
+
+Reinette
+
 
