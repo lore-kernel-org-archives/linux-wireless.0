@@ -1,313 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:41725 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750854Ab0FOEw5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jun 2010 00:52:57 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Jun 2010 21:52:57 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19479.1933.521344.310442@gargle.gargle.HOWL>
-Date: Tue, 15 Jun 2010 10:24:37 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath9k_htc: Fix ampdu_action callback
+Received: from fg-out-1718.google.com ([72.14.220.154]:52898 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755949Ab0FATxO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Jun 2010 15:53:14 -0400
+Received: by fg-out-1718.google.com with SMTP id d23so1934929fga.1
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Jun 2010 12:53:13 -0700 (PDT)
+Subject: Re: Path for fixed channel issue in aircrack-ng suite [V2]
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Richard Farina <sidhayn@gmail.com>,
+	=?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	Joker Joker <jokesareonyou@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1275419973.3634.7.camel@jlt3.sipsolutions.net>
+References: <AANLkTinAnMwY0ZCetUmUbuhsp3rB360xvlaGM5ifdFHz@mail.gmail.com>
+	 <1274775071.3635.4.camel@jlt3.sipsolutions.net>
+	 <AANLkTilPIt59FhAuVlhisUR7QDabCtnZwahjxWbUysiG@mail.gmail.com>
+	 <1274860275.3658.0.camel@jlt3.sipsolutions.net>
+	 <4C000B68.9000305@gmail.com>  <1275416907.3778.11.camel@maxim-laptop>
+	 <1275419973.3634.7.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 01 Jun 2010 22:53:09 +0300
+Message-ID: <1275421989.2574.12.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now that ampdu_action() can sleep, remove all
-the driver hacks and just issue WMI commands
-to the target.
+On Tue, 2010-06-01 at 21:19 +0200, Johannes Berg wrote: 
+> On Tue, 2010-06-01 at 21:28 +0300, Maxim Levitsky wrote:
+> 
+> >     wireless: allow to retrieve the channel set on monitor interface
+> >     
+> >     This will allow to preserve compatibility with userspace
+> >     
+> >     Signed-off-by: Maxim Levitsky <maximlevitsky@gmail.com>
+> > 
+> > diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+> > index b01a6f6..09d979b 100644
+> > --- a/net/wireless/chan.c
+> > +++ b/net/wireless/chan.c
+> > @@ -49,9 +49,12 @@ int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
+> >  {
+> >  	struct ieee80211_channel *chan;
+> >  	int result;
+> > +	struct wireless_dev *mon_dev = NULL;
+> >  
+> > -	if (wdev && wdev->iftype == NL80211_IFTYPE_MONITOR)
+> > +	if (wdev && wdev->iftype == NL80211_IFTYPE_MONITOR) {
+> > +		mon_dev = wdev;
+> >  		wdev = NULL;
+> > +	}
+> >  
+> >  	if (wdev) {
+> >  		ASSERT_WDEV_LOCK(wdev);
+> > @@ -76,5 +79,8 @@ int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
+> >  	if (wdev)
+> >  		wdev->channel = chan;
+> >  
+> > +	if (mon_dev)
+> > +		mon_dev->channel = chan;
+> > +
+> 
+> This won't quite work. monitor interfaces are always slaves in the sense
+> that their channel setting never takes precedence over anything, so if
+> you add another interface and do something there, the hardware will
+> happily channel switch away from the monitor channel, but it will still
+> report the old channel here that you set.
+> 
+> I have no idea how to _properly_ fix this though, since eventually we'll
+> have a situation where you can have multiple interfaces active on
+> different channels, so that monitors don't have a fixed channel anyway.
+> 
+> Maybe this patch is sufficient since it works in the case people care
+> about when they _only_ have a monitor interface, but I think it'd be
+> nicer if it wouldn't report anything in the other cases.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc.h          |   20 +----
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |    3 -
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |   93 +++++++------------------
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |   21 +++++-
- 4 files changed, 45 insertions(+), 92 deletions(-)
+Why?
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index c584fbd..58f52a1 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -223,15 +223,6 @@ struct ath9k_htc_sta {
- 	enum tid_aggr_state tid_state[ATH9K_HTC_MAX_TID];
- };
- 
--struct ath9k_htc_aggr_work {
--	u16 tid;
--	u8 sta_addr[ETH_ALEN];
--	struct ieee80211_hw *hw;
--	struct ieee80211_vif *vif;
--	enum ieee80211_ampdu_mlme_action action;
--	struct mutex mutex;
--};
--
- #define ATH9K_HTC_RXBUF 256
- #define HTC_RX_FRAME_HEADER_SIZE 40
- 
-@@ -331,11 +322,10 @@ struct htc_beacon_config {
- #define OP_LED_ON         BIT(4)
- #define OP_PREAMBLE_SHORT BIT(5)
- #define OP_PROTECT_ENABLE BIT(6)
--#define OP_TXAGGR         BIT(7)
--#define OP_ASSOCIATED     BIT(8)
--#define OP_ENABLE_BEACON  BIT(9)
--#define OP_LED_DEINIT     BIT(10)
--#define OP_UNPLUGGED      BIT(11)
-+#define OP_ASSOCIATED     BIT(7)
-+#define OP_ENABLE_BEACON  BIT(8)
-+#define OP_LED_DEINIT     BIT(9)
-+#define OP_UNPLUGGED      BIT(10)
- 
- struct ath9k_htc_priv {
- 	struct device *dev;
-@@ -376,8 +366,6 @@ struct ath9k_htc_priv {
- 	struct ath9k_htc_rx rx;
- 	struct tasklet_struct tx_tasklet;
- 	struct sk_buff_head tx_queue;
--	struct ath9k_htc_aggr_work aggr_work;
--	struct delayed_work ath9k_aggr_work;
- 	struct delayed_work ath9k_ani_work;
- 	struct work_struct ps_work;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index d339e5f..a63ae88 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -606,7 +606,6 @@ static void ath9k_init_misc(struct ath9k_htc_priv *priv)
- 	if (priv->ah->caps.hw_caps & ATH9K_HW_CAP_BSSIDMASK)
- 		memcpy(common->bssidmask, ath_bcast_mac, ETH_ALEN);
- 
--	priv->op_flags |= OP_TXAGGR;
- 	priv->ah->opmode = NL80211_IFTYPE_STATION;
- }
- 
-@@ -638,14 +637,12 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv, u16 devid)
- 	spin_lock_init(&priv->beacon_lock);
- 	spin_lock_init(&priv->tx_lock);
- 	mutex_init(&priv->mutex);
--	mutex_init(&priv->aggr_work.mutex);
- 	mutex_init(&priv->htc_pm_lock);
- 	tasklet_init(&priv->wmi_tasklet, ath9k_wmi_tasklet,
- 		     (unsigned long)priv);
- 	tasklet_init(&priv->rx_tasklet, ath9k_rx_tasklet,
- 		     (unsigned long)priv);
- 	tasklet_init(&priv->tx_tasklet, ath9k_tx_tasklet, (unsigned long)priv);
--	INIT_DELAYED_WORK(&priv->ath9k_aggr_work, ath9k_htc_aggr_work);
- 	INIT_DELAYED_WORK(&priv->ath9k_ani_work, ath9k_ani_work);
- 	INIT_WORK(&priv->ps_work, ath9k_ps_work);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index b9206e4..05445d8 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -438,13 +438,13 @@ static void ath9k_htc_update_rate(struct ath9k_htc_priv *priv,
- 			  bss_conf->bssid, be32_to_cpu(trate.capflags));
- }
- 
--static int ath9k_htc_aggr_oper(struct ath9k_htc_priv *priv,
--			       struct ieee80211_vif *vif,
--			       u8 *sta_addr, u8 tid, bool oper)
-+int ath9k_htc_tx_aggr_oper(struct ath9k_htc_priv *priv,
-+			   struct ieee80211_vif *vif,
-+			   struct ieee80211_sta *sta,
-+			   enum ieee80211_ampdu_mlme_action action, u16 tid)
- {
- 	struct ath_common *common = ath9k_hw_common(priv->ah);
- 	struct ath9k_htc_target_aggr aggr;
--	struct ieee80211_sta *sta = NULL;
- 	struct ath9k_htc_sta *ista;
- 	int ret = 0;
- 	u8 cmd_rsp;
-@@ -453,72 +453,28 @@ static int ath9k_htc_aggr_oper(struct ath9k_htc_priv *priv,
- 		return -EINVAL;
- 
- 	memset(&aggr, 0, sizeof(struct ath9k_htc_target_aggr));
--
--	rcu_read_lock();
--
--	/* Check if we are able to retrieve the station */
--	sta = ieee80211_find_sta(vif, sta_addr);
--	if (!sta) {
--		rcu_read_unlock();
--		return -EINVAL;
--	}
--
- 	ista = (struct ath9k_htc_sta *) sta->drv_priv;
- 
--	if (oper)
--		ista->tid_state[tid] = AGGR_START;
--	else
--		ista->tid_state[tid] = AGGR_STOP;
--
- 	aggr.sta_index = ista->index;
--
--	rcu_read_unlock();
--
--	aggr.tidno = tid;
--	aggr.aggr_enable = oper;
-+	aggr.tidno = tid & 0xf;
-+	aggr.aggr_enable = (action == IEEE80211_AMPDU_TX_START) ? true : false;
- 
- 	WMI_CMD_BUF(WMI_TX_AGGR_ENABLE_CMDID, &aggr);
- 	if (ret)
- 		ath_print(common, ATH_DBG_CONFIG,
- 			  "Unable to %s TX aggregation for (%pM, %d)\n",
--			  (oper) ? "start" : "stop", sta->addr, tid);
-+			  (aggr.aggr_enable) ? "start" : "stop", sta->addr, tid);
- 	else
- 		ath_print(common, ATH_DBG_CONFIG,
--			  "%s aggregation for (%pM, %d)\n",
--			  (oper) ? "Starting" : "Stopping", sta->addr, tid);
--
--	return ret;
--}
-+			  "%s TX aggregation for (%pM, %d)\n",
-+			  (aggr.aggr_enable) ? "Starting" : "Stopping",
-+			  sta->addr, tid);
- 
--void ath9k_htc_aggr_work(struct work_struct *work)
--{
--	int ret = 0;
--	struct ath9k_htc_priv *priv =
--		container_of(work, struct ath9k_htc_priv,
--			     ath9k_aggr_work.work);
--	struct ath9k_htc_aggr_work *wk = &priv->aggr_work;
--
--	mutex_lock(&wk->mutex);
--
--	switch (wk->action) {
--	case IEEE80211_AMPDU_TX_START:
--		ret = ath9k_htc_aggr_oper(priv, wk->vif, wk->sta_addr,
--					  wk->tid, true);
--		if (!ret)
--			ieee80211_start_tx_ba_cb_irqsafe(wk->vif, wk->sta_addr,
--							 wk->tid);
--		break;
--	case IEEE80211_AMPDU_TX_STOP:
--		ath9k_htc_aggr_oper(priv, wk->vif, wk->sta_addr,
--				    wk->tid, false);
--		ieee80211_stop_tx_ba_cb_irqsafe(wk->vif, wk->sta_addr, wk->tid);
--		break;
--	default:
--		ath_print(ath9k_hw_common(priv->ah), ATH_DBG_FATAL,
--			  "Unknown AMPDU action\n");
--	}
-+	spin_lock_bh(&priv->tx_lock);
-+	ista->tid_state[tid] = (aggr.aggr_enable && !ret) ? AGGR_START : AGGR_STOP;
-+	spin_unlock_bh(&priv->tx_lock);
- 
--	mutex_unlock(&wk->mutex);
-+	return ret;
- }
- 
- /*********/
-@@ -1266,7 +1222,6 @@ static void ath9k_htc_stop(struct ieee80211_hw *hw)
- 	/* Cancel all the running timers/work .. */
- 	cancel_work_sync(&priv->ps_work);
- 	cancel_delayed_work_sync(&priv->ath9k_ani_work);
--	cancel_delayed_work_sync(&priv->ath9k_aggr_work);
- 	cancel_delayed_work_sync(&priv->ath9k_led_blink_work);
- 	ath9k_led_stop_brightness(priv);
- 
-@@ -1767,8 +1722,8 @@ static int ath9k_htc_ampdu_action(struct ieee80211_hw *hw,
- 				  u16 tid, u16 *ssn)
- {
- 	struct ath9k_htc_priv *priv = hw->priv;
--	struct ath9k_htc_aggr_work *work = &priv->aggr_work;
- 	struct ath9k_htc_sta *ista;
-+	int ret = 0;
- 
- 	switch (action) {
- 	case IEEE80211_AMPDU_RX_START:
-@@ -1776,26 +1731,26 @@ static int ath9k_htc_ampdu_action(struct ieee80211_hw *hw,
- 	case IEEE80211_AMPDU_RX_STOP:
- 		break;
- 	case IEEE80211_AMPDU_TX_START:
-+		ret = ath9k_htc_tx_aggr_oper(priv, vif, sta, action, tid);
-+		if (!ret)
-+			ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
-+		break;
- 	case IEEE80211_AMPDU_TX_STOP:
--		if (!(priv->op_flags & OP_TXAGGR))
--			return -ENOTSUPP;
--		memcpy(work->sta_addr, sta->addr, ETH_ALEN);
--		work->hw = hw;
--		work->vif = vif;
--		work->action = action;
--		work->tid = tid;
--		ieee80211_queue_delayed_work(hw, &priv->ath9k_aggr_work, 0);
-+		ath9k_htc_tx_aggr_oper(priv, vif, sta, action, tid);
-+		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
- 		break;
- 	case IEEE80211_AMPDU_TX_OPERATIONAL:
- 		ista = (struct ath9k_htc_sta *) sta->drv_priv;
-+		spin_lock_bh(&priv->tx_lock);
- 		ista->tid_state[tid] = AGGR_OPERATIONAL;
-+		spin_unlock_bh(&priv->tx_lock);
- 		break;
- 	default:
- 		ath_print(ath9k_hw_common(priv->ah), ATH_DBG_FATAL,
- 			  "Unknown AMPDU action\n");
- 	}
- 
--	return 0;
-+	return ret;
- }
- 
- static void ath9k_htc_sw_scan_start(struct ieee80211_hw *hw)
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index 89d3848..bd0b4ac 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -187,6 +187,19 @@ int ath9k_htc_tx_start(struct ath9k_htc_priv *priv, struct sk_buff *skb)
- 	return htc_send(priv->htc, skb, epid, &tx_ctl);
- }
- 
-+static bool ath9k_htc_check_tx_aggr(struct ath9k_htc_priv *priv,
-+				    struct ath9k_htc_sta *ista, u8 tid)
-+{
-+	bool ret = false;
-+
-+	spin_lock_bh(&priv->tx_lock);
-+	if ((tid < ATH9K_HTC_MAX_TID) && (ista->tid_state[tid] == AGGR_STOP))
-+		ret = true;
-+	spin_unlock_bh(&priv->tx_lock);
-+
-+	return ret;
-+}
-+
- void ath9k_tx_tasklet(unsigned long data)
- {
- 	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *)data;
-@@ -216,8 +229,7 @@ void ath9k_tx_tasklet(unsigned long data)
- 		/* Check if we need to start aggregation */
- 
- 		if (sta && conf_is_ht(&priv->hw->conf) &&
--		    (priv->op_flags & OP_TXAGGR)
--		    && !(skb->protocol == cpu_to_be16(ETH_P_PAE))) {
-+		    !(skb->protocol == cpu_to_be16(ETH_P_PAE))) {
- 			if (ieee80211_is_data_qos(fc)) {
- 				u8 *qc, tid;
- 				struct ath9k_htc_sta *ista;
-@@ -226,10 +238,11 @@ void ath9k_tx_tasklet(unsigned long data)
- 				tid = qc[0] & 0xf;
- 				ista = (struct ath9k_htc_sta *)sta->drv_priv;
- 
--				if ((tid < ATH9K_HTC_MAX_TID) &&
--				    ista->tid_state[tid] == AGGR_STOP) {
-+				if (ath9k_htc_check_tx_aggr(priv, ista, tid)) {
- 					ieee80211_start_tx_ba_session(sta, tid);
-+					spin_lock_bh(&priv->tx_lock);
- 					ista->tid_state[tid] = AGGR_PROGRESS;
-+					spin_unlock_bh(&priv->tx_lock);
- 				}
- 			}
- 		}
--- 
-1.7.1
+We don't have any wireless devices that actually support using 2
+channels independently.
+Therefore user should be aware that if he sets channel on one interface,
+and then on other, the last setting matters.
+Of course the right fix would to make channel a global property of card
+rather that of interface.
+
+Best regards,
+Maxim Levitsky
 
