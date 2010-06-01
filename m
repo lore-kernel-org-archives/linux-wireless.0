@@ -1,126 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.clear-code.com ([219.94.198.64]:36440 "EHLO
-	mail.clear-code.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750973Ab0FMGBt (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:22019 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754764Ab0FAJE4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jun 2010 02:01:49 -0400
-Received: from localhost (softbank218138133044.bbtec.net [218.138.133.44])
-	by mail.clear-code.com (Postfix) with ESMTPSA id EFF55AC084
-	for <linux-wireless@vger.kernel.org>; Sun, 13 Jun 2010 14:52:02 +0900 (JST)
-Date: Sun, 13 Jun 2010 14:52:00 +0900 (JST)
-Message-Id: <20100613.145200.1459063883179763823.kou@clear-code.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] zd1211rw: ignore unknown regulatory domain.
-From: Kouhei Sutou <kou@clear-code.com>
+	Tue, 1 Jun 2010 05:04:56 -0400
+Subject: Re: [RFC PATCHv2 1/1] mac80211: Add interface for driver to
+ temporarily disable dynamic ps
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1275379233.3621.2.camel@jlt3.sipsolutions.net>
+References: <1275289547-7104-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1275289547-7104-2-git-send-email-juuso.oikarinen@nokia.com>
+	 <1275379233.3621.2.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 01 Jun 2010 12:07:57 +0300
+Message-ID: <1275383277.5277.21357.camel@wimaxnb.nmp.nokia.com>
 Mime-Version: 1.0
-Content-Type: Multipart/Mixed;
- boundary="--Next_Part(Sun_Jun_13_14_52_00_2010_363)--"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-----Next_Part(Sun_Jun_13_14_52_00_2010_363)--
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+On Tue, 2010-06-01 at 10:00 +0200, ext Johannes Berg wrote:
+> On Mon, 2010-05-31 at 10:05 +0300, Juuso Oikarinen wrote:
+> 
+> >  /**
+> > + * ieee80211_disable_dyn_ps - force mac80211 to temporarily disable dynamic psm
+> > + *
+> > + * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+> 
+> * @disable: ...
+> 
+> The name is also a bit odd since you can re-enable it, but I can't think
+> of a better name either.
 
-Hi,
+I'll try to come up with a better name. If I cannot, I'll leave it as it
+is.
 
-I'm using PLANEX GW-US54GXS (2019:5303) and it works with
-the attached patch. Could you consider to merge the attached
-patch?
+> > --- a/net/mac80211/mlme.c
+> > +++ b/net/mac80211/mlme.c
+> > @@ -478,6 +478,24 @@ static void ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
+> >  	}
+> >  }
+> >  
+> > +void ieee80211_disable_dyn_ps(struct ieee80211_vif *vif, bool disable)
+> > +{
+> > +	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+> > +	struct ieee80211_local *local = sdata->local;
+> > +
+> > +	WARN_ON(sdata->vif.type != NL80211_IFTYPE_STATION);
+> > +
+> > +	sdata->disable_dyn_ps = disable;
+> > +
+> > +	/* immediately go to psm */
+> > +	if (disable && timer_pending(&local->dynamic_ps_timer)) {
+> > +		ieee80211_queue_work(&local->hw,
+> > +				     &local->dynamic_ps_enable_work);
+> > +		del_timer_sync(&local->dynamic_ps_timer);
+> > +	}
+> > +}
+> 
+> The timer trickery seems weird, why not just queue the work and ignore
+> the timer?
 
-Problem: GW-US54GXS uses zd1211rw but zd1211rw doesn't have
-a regulatory domain reported by GW-US54GXS (0x49).
+It's there for the obvious reason - it just saves an extra execution of
+the dynamic_ps_enable_work. That said, maybe the saving is not worth the
+added complexity.
 
-Solutions:
+> > -	if (conf->dynamic_ps_timeout > 0 &&
+> > +	if (conf->dynamic_ps_timeout > 0 && !sdata->disable_dyn_ps &&
+> 
+> As we just discussed on IRC, it might be worthwhile to adjust
+> dynamic_ps_timeout to 0 instead in this case, so this and the RX and TX
+> paths need not be touched.
 
-  (1) add a new regulatory domain (0x49). Here is a patch to
-      use the approach:
+Yes, as we discussed I'll change this to adjusting the
+dynamic_ps_timeout to zero, and using a separate variable to track the
+actual value of the timer.
 
-----
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-index 163a8a0..faf45f1 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -43,6 +43,7 @@ static struct zd_reg_alpha2_map reg_alpha2_map[] = {
- 	{ ZD_REGDOMAIN_ETSI, "DE" }, /* Generic ETSI, use most restrictive */
- 	{ ZD_REGDOMAIN_JAPAN, "JP" },
- 	{ ZD_REGDOMAIN_JAPAN_ADD, "JP" },
-+	{ ZD_REGDOMAIN_JAPAN_GW_US54GXS, "JP" },
- 	{ ZD_REGDOMAIN_SPAIN, "ES" },
- 	{ ZD_REGDOMAIN_FRANCE, "FR" },
- };
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.h b/drivers/net/wireless/zd1211rw/zd_mac.h
-index 630c298..7ab19d5 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.h
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.h
-@@ -214,6 +214,7 @@ struct zd_mac {
- #define ZD_REGDOMAIN_FRANCE	0x32
- #define ZD_REGDOMAIN_JAPAN_ADD	0x40
- #define ZD_REGDOMAIN_JAPAN	0x41
-+#define ZD_REGDOMAIN_JAPAN_GW_US54GXS	0x49
- 
- enum {
- 	MIN_CHANNEL24 = 1,
-----
+-Juuso
 
-  (2) just ignore unknown regulatory domain. (the attached
-      patch approach)
-
-
-It seems that (2) is a better solution because we can change
-regulatory domain by CRDA (*).
-(*) http://wireless.kernel.org/en/developers/Regulatory/CRDA
-
-
-Thanks,
---
-kou
-
-----Next_Part(Sun_Jun_13_14_52_00_2010_363)--
-Content-Type: Text/X-Patch; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="0001-zd1211rw-ignore-unknown-regulatory-domain.patch"
-
->From c230320db45e9261814b69e7596d4f641c3c8aad Mon Sep 17 00:00:00 2001
-From: Kouhei Sutou <kou@clear-code.com>
-Date: Sun, 13 Jun 2010 14:37:54 +0900
-Subject: [PATCH] zd1211rw: ignore unknown regulatory domain.
-
-Zd1211rw supports 7 regulatory domains (ZD_REGDOMAIN_*) but they
-aren't cover all regulatory domains. For example, PLANEX
-GW-US54GXS (2019:5303) uses 0x49 for its regulatory domain.
-
-If zd1211rw can't convert a regulatory domain to alpha2, it
-reports that initialization is failed. But we can change
-regulatory domain by another way (CRDA). So it seems that zd1211rw
-can ignore unknown regulatory domain.
-
-Signed-off-by: Kouhei Sutou <kou@clear-code.com>
----
- drivers/net/wireless/zd1211rw/zd_mac.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-index 163a8a0..8b04d93 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -198,11 +198,9 @@ int zd_mac_init_hw(struct ieee80211_hw *hw)
- 	if (r)
- 		goto disable_int;
- 
--	r = zd_reg2alpha2(mac->regdomain, alpha2);
--	if (r)
--		goto disable_int;
-+	if (zd_reg2alpha2(mac->regdomain, alpha2))
-+		r = regulatory_hint(hw->wiphy, alpha2);
- 
--	r = regulatory_hint(hw->wiphy, alpha2);
- disable_int:
- 	zd_chip_disable_int(chip);
- out:
--- 
-1.7.1
+> johannes
+> 
 
 
-----Next_Part(Sun_Jun_13_14_52_00_2010_363)----
