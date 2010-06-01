@@ -1,60 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:38403 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755776Ab0F2TvI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jun 2010 15:51:08 -0400
-Received: by wwb18 with SMTP id 18so547wwb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Jun 2010 12:51:06 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 11/21] rt2x00: Correctly detect 93C86 EEPROMs in rt2800pci.
-Date: Tue, 29 Jun 2010 21:44:18 +0200
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-References: <201006292138.13509.IvDoorn@gmail.com> <201006292143.04173.IvDoorn@gmail.com> <201006292143.45392.IvDoorn@gmail.com>
-In-Reply-To: <201006292143.45392.IvDoorn@gmail.com>
+Received: from nbd.name ([88.198.39.176]:58064 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751151Ab0FATdU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Jun 2010 15:33:20 -0400
+Message-ID: <4C056079.40803@openwrt.org>
+Date: Tue, 01 Jun 2010 21:33:13 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201006292144.19486.IvDoorn@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH v2] ath9k: fix queue stop/start based on the number of pending
+ frames
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+Because there is a limited number of tx buffers available, once the
+queue has been filled to a certain point, ath9k needs to stop accepting
+new frames from mac80211. In order to prevent a full WMM queue from
+stopping another queue with fewer frames, this patch limits the number
+of queued frames to a quarter of the total available tx buffers, minus
+some reserved frames to be used for other purposes (e.g. beacons).
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Because tx buffers are reserved for frames when they're staged in
+software queues as well, the actual queue depth cannot be used for
+this, so this patch stores a reference to the tx queue in the ath_buf
+struct and keeps track of the total number of pending frames.
+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/rt2x00/rt2800pci.c |   14 ++++++++++++--
- 1 files changed, 12 insertions(+), 2 deletions(-)
+v2: ath_wake_mac80211_queue() needs to be fixed as well (thanks, vasanth)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 0af53bd..b48b949 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -139,8 +139,18 @@ static void rt2800pci_read_eeprom_pci(struct rt2x00_dev *rt2x00dev)
- 	eeprom.data = rt2x00dev;
- 	eeprom.register_read = rt2800pci_eepromregister_read;
- 	eeprom.register_write = rt2800pci_eepromregister_write;
--	eeprom.width = !rt2x00_get_field32(reg, E2PROM_CSR_TYPE) ?
--	    PCI_EEPROM_WIDTH_93C46 : PCI_EEPROM_WIDTH_93C66;
-+	switch (rt2x00_get_field32(reg, E2PROM_CSR_TYPE))
-+	{
-+	case 0:
-+		eeprom.width = PCI_EEPROM_WIDTH_93C46;
-+		break;
-+	case 1:
-+		eeprom.width = PCI_EEPROM_WIDTH_93C66;
-+		break;
-+	default:
-+		eeprom.width = PCI_EEPROM_WIDTH_93C86;
-+		break;
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -137,6 +137,8 @@ void ath_descdma_cleanup(struct ath_soft
+ #define ATH_MAX_ANTENNA         3
+ #define ATH_RXBUF               512
+ #define ATH_TXBUF               512
++#define ATH_TXBUF_RESERVE       5
++#define ATH_MAX_QDEPTH          (ATH_TXBUF / 4 - ATH_TXBUF_RESERVE)
+ #define ATH_TXMAXTRY            13
+ #define ATH_MGT_TXMAXTRY        4
+ 
+@@ -205,6 +207,7 @@ struct ath_txq {
+ 	struct list_head txq_fifo_pending;
+ 	u8 txq_headidx;
+ 	u8 txq_tailidx;
++	int pending_frames;
+ };
+ 
+ struct ath_atx_ac {
+@@ -242,6 +245,7 @@ struct ath_buf {
+ 	struct ath_buf_state bf_state;
+ 	dma_addr_t bf_dmacontext;
+ 	struct ath_wiphy *aphy;
++	struct ath_txq *txq;
+ };
+ 
+ struct ath_atx_tid {
+@@ -331,7 +335,6 @@ void ath_tx_node_cleanup(struct ath_soft
+ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq);
+ int ath_tx_init(struct ath_softc *sc, int nbufs);
+ void ath_tx_cleanup(struct ath_softc *sc);
+-struct ath_txq *ath_test_get_txq(struct ath_softc *sc, struct sk_buff *skb);
+ int ath_txq_update(struct ath_softc *sc, int qnum,
+ 		   struct ath9k_tx_queue_info *q);
+ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -986,32 +986,6 @@ int ath_tx_get_qnum(struct ath_softc *sc
+ 	return qnum;
+ }
+ 
+-struct ath_txq *ath_test_get_txq(struct ath_softc *sc, struct sk_buff *skb)
+-{
+-	struct ath_txq *txq = NULL;
+-	u16 skb_queue = skb_get_queue_mapping(skb);
+-	int qnum;
+-
+-	qnum = ath_get_hal_qnum(skb_queue, sc);
+-	txq = &sc->tx.txq[qnum];
+-
+-	spin_lock_bh(&txq->axq_lock);
+-
+-	if (txq->axq_depth >= (ATH_TXBUF - 20)) {
+-		ath_print(ath9k_hw_common(sc->sc_ah), ATH_DBG_XMIT,
+-			  "TX queue: %d is full, depth: %d\n",
+-			  qnum, txq->axq_depth);
+-		ath_mac80211_stop_queue(sc, skb_queue);
+-		txq->stopped = 1;
+-		spin_unlock_bh(&txq->axq_lock);
+-		return NULL;
+-	}
+-
+-	spin_unlock_bh(&txq->axq_lock);
+-
+-	return txq;
+-}
+-
+ int ath_txq_update(struct ath_softc *sc, int qnum,
+ 		   struct ath9k_tx_queue_info *qinfo)
+ {
+@@ -1811,6 +1785,7 @@ int ath_tx_start(struct ieee80211_hw *hw
+ 	struct ath_wiphy *aphy = hw->priv;
+ 	struct ath_softc *sc = aphy->sc;
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	struct ath_txq *txq = txctl->txq;
+ 	struct ath_buf *bf;
+ 	int r;
+ 
+@@ -1820,10 +1795,16 @@ int ath_tx_start(struct ieee80211_hw *hw
+ 		return -1;
+ 	}
+ 
++	bf->txq = txctl->txq;
++	spin_lock_bh(&bf->txq->axq_lock);
++	if (++bf->txq->pending_frames > ATH_MAX_QDEPTH && !txq->stopped) {
++		ath_mac80211_stop_queue(sc, skb_get_queue_mapping(skb));
++		txq->stopped = 1;
 +	}
- 	eeprom.reg_data_in = 0;
- 	eeprom.reg_data_out = 0;
- 	eeprom.reg_data_clock = 0;
--- 
-1.6.6.1
-
++	spin_unlock_bh(&bf->txq->axq_lock);
++
+ 	r = ath_tx_setup_buffer(hw, bf, skb, txctl);
+ 	if (unlikely(r)) {
+-		struct ath_txq *txq = txctl->txq;
+-
+ 		ath_print(common, ATH_DBG_FATAL, "TX mem alloc failure\n");
+ 
+ 		/* upon ath_tx_processq() this TX queue will be resumed, we
+@@ -1831,7 +1812,7 @@ int ath_tx_start(struct ieee80211_hw *hw
+ 		 * we will at least have to run TX completionon one buffer
+ 		 * on the queue */
+ 		spin_lock_bh(&txq->axq_lock);
+-		if (sc->tx.txq[txq->axq_qnum].axq_depth > 1) {
++		if (!txq->stopped && txq->axq_depth > 1) {
+ 			ath_mac80211_stop_queue(sc, skb_get_queue_mapping(skb));
+ 			txq->stopped = 1;
+ 		}
+@@ -1972,6 +1953,13 @@ static void ath_tx_complete_buf(struct a
+ 			tx_flags |= ATH_TX_XRETRY;
+ 	}
+ 
++	if (bf->txq) {
++		spin_lock_bh(&bf->txq->axq_lock);
++		bf->txq->pending_frames--;
++		spin_unlock_bh(&bf->txq->axq_lock);
++		bf->txq = NULL;
++	}
++
+ 	dma_unmap_single(sc->dev, bf->bf_dmacontext, skb->len, DMA_TO_DEVICE);
+ 	ath_tx_complete(sc, skb, bf->aphy, tx_flags);
+ 	ath_debug_stat_tx(sc, txq, bf, ts);
+@@ -2060,8 +2048,7 @@ static void ath_wake_mac80211_queue(stru
+ 	int qnum;
+ 
+ 	spin_lock_bh(&txq->axq_lock);
+-	if (txq->stopped &&
+-	    sc->tx.txq[txq->axq_qnum].axq_depth <= (ATH_TXBUF - 20)) {
++	if (txq->stopped && txq->pending_frames < ATH_MAX_QDEPTH) {
+ 		qnum = ath_get_mac80211_qnum(txq->axq_qnum, sc);
+ 		if (qnum != -1) {
+ 			ath_mac80211_start_queue(sc, qnum);
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1026,6 +1026,7 @@ static int ath9k_tx(struct ieee80211_hw 
+ 	struct ath_tx_control txctl;
+ 	int padpos, padsize;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
++	int qnum;
+ 
+ 	if (aphy->state != ATH_WIPHY_ACTIVE && aphy->state != ATH_WIPHY_SCAN) {
+ 		ath_print(common, ATH_DBG_XMIT,
+@@ -1098,11 +1099,8 @@ static int ath9k_tx(struct ieee80211_hw 
+ 		memmove(skb->data, skb->data + padsize, padpos);
+ 	}
+ 
+-	/* Check if a tx queue is available */
+-
+-	txctl.txq = ath_test_get_txq(sc, skb);
+-	if (!txctl.txq)
+-		goto exit;
++	qnum = ath_get_hal_qnum(skb_get_queue_mapping(skb), sc);
++	txctl.txq = &sc->tx.txq[qnum];
+ 
+ 	ath_print(common, ATH_DBG_XMIT, "transmitting packet, skb: %p\n", skb);
+ 
