@@ -1,37 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:44564 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750833Ab0FVQwp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jun 2010 12:52:45 -0400
-Date: Tue, 22 Jun 2010 17:52:13 +0100
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	Maxim Levitsky <maximlevitsky@gmail.com>,
-	David Quan <David.Quan@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Subject: Re: [ath5k-devel] [PATCH v2] ath5k: disable ASPM
-Message-ID: <20100622165213.GA21842@srcf.ucam.org>
-References: <1276870309.23783.3.camel@maxim-laptop> <1276933774.16697.11.camel@maxim-laptop> <AANLkTimIjaxq7IDWwIl1vv93k9bNQ2i89Sb5R5TiJmmA@mail.gmail.com> <1277032723.9555.12.camel@maxim-laptop> <AANLkTim8iZmm8pEERJUsrQWOiLSjPUfCN-TFFzZZQWx2@mail.gmail.com> <1277151410.5409.33.camel@maxim-laptop> <20100621233333.21262abjfxl8j1xc@hayate.sektori.org> <AANLkTikkt4dqYWrwtTCJ8tJZLB1kZXgF1KvaPsIOO3Dl@mail.gmail.com> <20100622163138.GD20668@srcf.ucam.org> <AANLkTikQkLFdpusfcLVOpyZHFrxwB5akr-ggFB7Fjm08@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTikQkLFdpusfcLVOpyZHFrxwB5akr-ggFB7Fjm08@mail.gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:2734 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753192Ab0FAVKH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Jun 2010 17:10:07 -0400
+Subject: Re: [PATCH] mac80211: process station blockack action frames from
+ work
+From: reinette chatre <reinette.chatre@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>
+In-Reply-To: <1275052978.3909.105.camel@jlt3.sipsolutions.net>
+References: <1275052978.3909.105.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 01 Jun 2010 14:10:05 -0700
+Message-ID: <1275426605.2091.27516.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 22, 2010 at 09:48:40AM -0700, Luis R. Rodriguez wrote:
+Hi John,
 
-> Sure, I agree with that, but it also will enable ASPM for *all*
-> devices which have the capability which IMHO is a terrible idea for
-> users when all they want to do is enable ASPM for one device. Instead
-> I recommend users to enable ASPM for their devices selectively and
-> from userspace.
+On Fri, 2010-05-28 at 06:22 -0700, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Processing an association response could take a bit
+> of time while we set up the hardware etc. During that
+> time, the AP might already send a blockack request.
+> If this happens very quickly on a fairly slow machine,
+> we can end up processing the blockack request before
+> the association processing has finished. Since the
+> blockack processing cannot sleep right now, we also
+> cannot make it wait in the driver.
+> 
+> As a result, sometimes on slow machines the iwlagn
+> driver gets totally confused, and no traffic can pass
+> when the aggregation setup was done before the assoc
+> setup completed.
+> 
+> I'm working on a proper fix for this, which involves
+> queuing all blockack category action frames from a
+> work struct, and also allowing the ampdu_action driver
+> callback to sleep, which will generally clean up the
+> code and make things easier.
+> 
+> However, this is a very involved and complex change.
+> To fix the problem at hand in a way that can also be
+> backported to stable, I've come up with this patch.
+> Here, I simply process all aggregation action frames
+> from the managed interface skb queue, which means
+> their processing will be serialized with processing
+> the association response, thereby fixing the problem.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> Cc: stable@kernel.org
+> ---
 
-Why would you only want to enable ASPM for one device?
+Could you please consider this patch for wireless-2.6/2.6.34 ? Without
+this patch no data transfer is possible on some slow machines.
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+Thank you
+
+Reinette
+
+
+
