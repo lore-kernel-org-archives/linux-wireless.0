@@ -1,87 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f204.google.com ([209.85.211.204]:50796 "EHLO
-	mail-yw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753046Ab0FPTdD (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:38433 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751567Ab0FASgP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jun 2010 15:33:03 -0400
-Received: by ywh42 with SMTP id 42so5995702ywh.15
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Jun 2010 12:33:00 -0700 (PDT)
-Message-ID: <4C1926E7.1070503@cortland.com>
-Date: Wed, 16 Jun 2010 13:32:55 -0600
-From: Steve Brown <sbrown@cortland.com>
+	Tue, 1 Jun 2010 14:36:15 -0400
+Received: by gwaa12 with SMTP id a12so3849109gwa.19
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Jun 2010 11:36:14 -0700 (PDT)
+Message-ID: <4C05531C.7000506@gmail.com>
+Date: Tue, 01 Jun 2010 14:36:12 -0400
+From: Richard Farina <sidhayn@gmail.com>
 MIME-Version: 1.0
-To: ath5k-devel@venema.h4ckr.net
-CC: linux-wireless@vger.kernel.org
-Subject: OOPS in ath5k when setting coverage class
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	=?UTF-8?B?R8OhYm9yIFN0ZWZh?= =?UTF-8?B?bmlr?=
+	<netrolller.3d@gmail.com>, Joker Joker <jokesareonyou@gmail.com>,
+	linux-wireless@vger.kernel.org, mister_x@aircrack-ng.org
+Subject: Re: Path for fixed channel issue in aircrack-ng suite [V2]
+References: <AANLkTinAnMwY0ZCetUmUbuhsp3rB360xvlaGM5ifdFHz@mail.gmail.com>	 <1274775071.3635.4.camel@jlt3.sipsolutions.net>	 <AANLkTilPIt59FhAuVlhisUR7QDabCtnZwahjxWbUysiG@mail.gmail.com>	 <1274860275.3658.0.camel@jlt3.sipsolutions.net>	 <4C000B68.9000305@gmail.com> <1275416907.3778.11.camel@maxim-laptop>
+In-Reply-To: <1275416907.3778.11.camel@maxim-laptop>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- From the printk's, it appears that ah->ah_current_channel isn't set at 
-the time of the callback.
+Maxim Levitsky wrote:
+> While debugging recent wireless problems, I gave the aircrack suite a
+> shot, and found this thread.
+>
+>   
+Thanks Maxim!
+> How about this patch to fix this issue:
+>
+>   
+I will definitely find some testers, the problem is that I have been 
+unable to reliably reproduce the "channel -1".  Since I don't know the 
+exact conditions this happens under the best I can do is have a few 
+people test it and make sure no one sees the error.
 
-The following produces the oops with compat-wireless-2010-06-10.
+Mister_X, how does this look to you? I assume you are familiar with the 
+issue.
 
-Steve
-
----------------------------------
-rmmod ath5k
-insmod ath5k
-iw phy0 set distance 11000
-
-pcu.c:ath5k_hw_set_coverage_class:849 ah:cf8c0000 coverage_class:25
-pcu.c:ath5k_hw_get_default_slottime:254 ah:cf8c0000 channel:(null)
-BUG: unable to handle kernel NULL pointer dereference at 00000006
-IP: [<d0a1ff24>] ath5k_hw_set_coverage_class+0x74/0x1b0 [ath5k]
-*pde = 00000000
-Oops: 0000 [#1]
-last sysfs file: /sys/devices/pci0000:00/0000:00:0e.0/ieee80211/phy0/index
-Modules linked in: usbhid option usb_storage usbserial usblp evdev lm90 
-scx200_acb i2c_algo_bit i2c_dev i2c_core via_rhine ohci_hcd ne2k_pci 
-8390 leds_alix2 xt_IMQ imq nf_nat_tftp nf_conntrack_tftp nf_nat_irc nf_cc
-
-Pid: 1597, comm: iw Not tainted (2.6.32.14 #8)
-EIP: 0060:[<d0a1ff24>] EFLAGS: 00010296 CPU: 0
-EIP is at ath5k_hw_set_coverage_class+0x74/0x1b0 [ath5k]
-EAX: 000000c2 EBX: 00000000 ECX: ffffffff EDX: c12d2080
-ESI: 00000019 EDI: cf8c0000 EBP: d0a30edc ESP: cfa09bf4
-  DS: 007b ES: 007b FS: 0000 GS: 0000 SS: 0068
-Process iw (pid: 1597, ti=cfa09000 task=cf88a000 task.ti=cfa09000)
-Stack:
-  d0a34f35 d0a353f8 d0a30edc 000000fe cf8c0000 00000000 1900063d cfa8c9e0
-<0> cfa8c9e8 cfa8c0c0 cfa8c000 d0a27f0c 199d84b4 cfa8c200 00000010 d09bfdc7
-<0> 00000000 00000000 ffffffff d08e0d28 cf9263c0 00000001 cfa09cc4 00000000
-Call Trace:
-  [<d0a27f0c>] ? ath5k_hw_attach+0xc8c/0x3c10 [ath5k]
-  [<d09bfdc7>] ? __ieee80211_request_smps+0x1347/0x1580 [mac80211]
-  [<d08e0d28>] ? nl80211_send_scan_start+0x7b8/0x4520 [cfg80211]
-  [<c10f5db9>] ? nla_parse+0x59/0xc0
-  [<c11ca8d9>] ? genl_rcv_msg+0x169/0x1a0
-  [<c11ca770>] ? genl_rcv_msg+0x0/0x1a0
-  [<c11c7e68>] ? netlink_rcv_skb+0x38/0x90
-  [<c11c9649>] ? genl_rcv+0x19/0x30
-  [<c11c7c03>] ? netlink_unicast+0x1b3/0x220
-  [<c11c893e>] ? netlink_sendmsg+0x26e/0x290
-  [<c11a409e>] ? sock_sendmsg+0xbe/0xf0
-  [<c1032780>] ? autoremove_wake_function+0x0/0x50
-  [<c104d846>] ? __alloc_pages_nodemask+0x106/0x530
-  [<c1074933>] ? do_lookup+0x53/0x1b0
-  [<c10766f9>] ? __link_path_walk+0x9b9/0x9e0
-  [<c11acab0>] ? verify_iovec+0x50/0x90
-  [<c11a42b1>] ? sys_sendmsg+0x1e1/0x270
-  [<c1048e50>] ? find_get_page+0x10/0x50
-  [<c104a96f>] ? filemap_fault+0x5f/0x370
-  [<c1059159>] ? __do_fault+0x319/0x370
-  [<c11a55b4>] ? sys_socketcall+0x244/0x290
-  [<c101962c>] ? do_page_fault+0x1ec/0x270
-  [<c1019440>] ? do_page_fault+0x0/0x270
-  [<c1002ae5>] ? syscall_call+0x7/0xb
-Code: 00 b8 fe 00 00 00 b9 f8 53 a3 d0 89 5c 24 14 89 7c 24 10 89 44 24 
-0c 89 6c 24 08 89 4c 24 04 c7 04 24 35 4f a3 d0 e8 7c 30 60 f0 <0f> b7 
-43 06 ba 06 00 00 00 a8 10 75 0e 83 e0 20 83 f8 01 19 d2
-EIP: [<d0a1ff24>] ath5k_hw_set_coverage_class+0x74/0x1b0 [ath5k] SS:ESP 
-0068:cfa09bf4
-CR2: 0000000000000006
----[ end trace 54f73d6b10ceb87b ]---
-Killed
+Thanks,
+Rick Farina
+> commit fffd6e63ea75850dafbf2ccfb38a4189f43c0282
+> Author: Maxim Levitsky <maximlevitsky@gmail.com>
+> Date:   Tue Jun 1 15:43:21 2010 +0300
+>
+>     wireless: allow to retrieve the channel set on monitor interface
+>     
+>     This will allow to preserve compatibility with userspace
+>     
+>     Signed-off-by: Maxim Levitsky <maximlevitsky@gmail.com>
+>
+> diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+> index b01a6f6..09d979b 100644
+> --- a/net/wireless/chan.c
+> +++ b/net/wireless/chan.c
+> @@ -49,9 +49,12 @@ int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
+>  {
+>  	struct ieee80211_channel *chan;
+>  	int result;
+> +	struct wireless_dev *mon_dev = NULL;
+>  
+> -	if (wdev && wdev->iftype == NL80211_IFTYPE_MONITOR)
+> +	if (wdev && wdev->iftype == NL80211_IFTYPE_MONITOR) {
+> +		mon_dev = wdev;
+>  		wdev = NULL;
+> +	}
+>  
+>  	if (wdev) {
+>  		ASSERT_WDEV_LOCK(wdev);
+> @@ -76,5 +79,8 @@ int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
+>  	if (wdev)
+>  		wdev->channel = chan;
+>  
+> +	if (mon_dev)
+> +		mon_dev->channel = chan;
+> +
+>  	return 0;
+>  }
+>
+>
+>
+>   
 
