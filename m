@@ -1,53 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56676 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751546Ab0FXRPO (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:28840 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753232Ab0FADzR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jun 2010 13:15:14 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] minstrel_ht: move minstrel_mcs_groups declaration to header file
-Date: Thu, 24 Jun 2010 13:06:47 -0400
-Message-Id: <1277399207-17462-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1277392602-10578-1-git-send-email-linville@tuxdriver.com>
-References: <1277392602-10578-1-git-send-email-linville@tuxdriver.com>
+	Mon, 31 May 2010 23:55:17 -0400
+Received: from vs3005.wh2.ocn.ne.jp (125.206.180.233)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0575824512
+	for <linux-wireless@vger.kernel.org>; Tue,  1 Jun 2010 12:55:13 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: me@bobcopeland.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org,
+	Peter Chubb <peter.chubb@nicta.com.au>
+Subject: Re: Commit 6b5d,.. breaks ath5k in WPA-enabled networks
+Date: Tue, 1 Jun 2010 12:55:43 +0900
+References: <w47hmkh1b4.wl%peter@chubb.wattle.id.au> <w4mxvg2tz0.wl%peter@chubb.wattle.id.au> <20100531125640.GA11680@hash.localnet>
+In-Reply-To: <20100531125640.GA11680@hash.localnet>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201006011255.43905.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/mac80211/rc80211_minstrel_ht.h         |    2 ++
- net/mac80211/rc80211_minstrel_ht_debugfs.c |    2 --
- 2 files changed, 2 insertions(+), 2 deletions(-)
+On Monday 31 May 2010 21:56:40 you wrote:
+> On Mon, May 31, 2010 at 09:25:55PM +1000, Peter Chubb wrote:
+> > Bruno> On Monday 31 May 2010 18:23:43 Peter Chubb wrote:
+> > >> With Linus's current head-of-tree my ath5k cannot associate with
+> > >> WPA-enabled access points.  I bisected back to this patch:
+> > >> 
+> > >> Since commit 6b5d117eddc09cd976ad8030d715f4350f598a22 ath5k: clean
+> > >> up queue manipulation
+> > 
+> > Bruno> try this, please:
+> > Bruno> https://patchwork.kernel.org/patch/100681/
+> > 
+> > This works, thanks.
+> 
+> Yeah, big oops. :\
+> 
+> So what do we do now?  I guess we should just revert it for now rather
+> than taking the half that works plus Bruno's fix?
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.h b/net/mac80211/rc80211_minstrel_ht.h
-index 696c0fc..462d2b2 100644
---- a/net/mac80211/rc80211_minstrel_ht.h
-+++ b/net/mac80211/rc80211_minstrel_ht.h
-@@ -29,6 +29,8 @@ struct mcs_group {
- 	unsigned int duration[MCS_GROUP_RATES];
- };
- 
-+extern const struct mcs_group minstrel_mcs_groups[];
-+
- struct minstrel_rate_stats {
- 	/* current / last sampling period attempts/success counters */
- 	unsigned int attempts, last_attempts;
-diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-index 4fb3ccb..4a5a4b3 100644
---- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-@@ -14,8 +14,6 @@
- #include "rc80211_minstrel.h"
- #include "rc80211_minstrel_ht.h"
- 
--extern const struct mcs_group minstrel_mcs_groups[];
--
- static int
- minstrel_ht_stats_open(struct inode *inode, struct file *file)
- {
--- 
-1.7.0.1
+cc: stable for my patch?
+john?
 
+bruno
