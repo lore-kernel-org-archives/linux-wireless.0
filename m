@@ -1,79 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:23395 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754835Ab0FDJGP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jun 2010 05:06:15 -0400
-Received: from mail.atheros.com ([10.10.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 04 Jun 2010 02:06:15 -0700
-From: Vivek Natarajan <vnatarajan@atheros.com>
-To: <greg@kroah.com>
-CC: <stable@kernel.org>, <linux-wireless@vger.kernel.org>,
-	Ranga Rao Ravuri <ranga.ravuri@atheros.com>
-Subject: [stable][PATCH] ath9k: Avoid corrupt frames being forwarded to mac80211.
-Date: Fri, 4 Jun 2010 14:36:09 +0530
-Message-ID: <1275642369-5024-1-git-send-email-vnatarajan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:55059 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753801Ab0FAIAL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Jun 2010 04:00:11 -0400
+Subject: Re: [RFC PATCHv2 1/1] mac80211: Add interface for driver to
+ temporarily disable dynamic ps
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1275289547-7104-2-git-send-email-juuso.oikarinen@nokia.com>
+References: <1275289547-7104-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1275289547-7104-2-git-send-email-juuso.oikarinen@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 01 Jun 2010 10:00:33 +0200
+Message-ID: <1275379233.3621.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If bit 29 is set, MAC H/W can attempt to decrypt the received aggregate
-with WEP or TKIP, eventhough the received frame may be a CRC failed
-corrupted frame. If this bit is set, H/W obeys key type in keycache.
-If it is not set and if the key type in keycache is neither open nor
-AES, H/W forces key type to be open.  But bit 29 should be set to 1
-for AsyncFIFO feature to encrypt/decrypt the aggregate with WEP or TKIP.
+On Mon, 2010-05-31 at 10:05 +0300, Juuso Oikarinen wrote:
 
-Reported-by: Johan Hovold <johan.hovold@lundinova.se>
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
-Signed-off-by: Ranga Rao Ravuri <ranga.ravuri@atheros.com>
----
-Applies on top of 2.6.33 and 2.6.34
+>  /**
+> + * ieee80211_disable_dyn_ps - force mac80211 to temporarily disable dynamic psm
+> + *
+> + * @vif: &struct ieee80211_vif pointer from the add_interface callback.
 
- drivers/net/wireless/ath/ath9k/initvals.h |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+* @disable: ...
 
-diff --git a/drivers/net/wireless/ath/ath9k/initvals.h b/drivers/net/wireless/ath/ath9k/initvals.h
-index 8a3bf3a..7203f00 100644
---- a/drivers/net/wireless/ath/ath9k/initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/initvals.h
-@@ -246,7 +246,7 @@ static const u32 ar5416Common[][2] = {
-     { 0x00008258, 0x00000000 },
-     { 0x0000825c, 0x400000ff },
-     { 0x00008260, 0x00080922 },
--    { 0x00008264, 0xa8000010 },
-+    { 0x00008264, 0x88000010 },
-     { 0x00008270, 0x00000000 },
-     { 0x00008274, 0x40000000 },
-     { 0x00008278, 0x003e4180 },
-@@ -2766,7 +2766,7 @@ static const u32 ar9280Common_9280_2[][2] = {
-     { 0x00008258, 0x00000000 },
-     { 0x0000825c, 0x400000ff },
-     { 0x00008260, 0x00080922 },
--    { 0x00008264, 0xa8a00010 },
-+    { 0x00008264, 0x88a00010 },
-     { 0x00008270, 0x00000000 },
-     { 0x00008274, 0x40000000 },
-     { 0x00008278, 0x003e4180 },
-@@ -3936,7 +3936,7 @@ static const u_int32_t ar9285Common_9285[][2] = {
-     { 0x00008258, 0x00000000 },
-     { 0x0000825c, 0x400000ff },
-     { 0x00008260, 0x00080922 },
--    { 0x00008264, 0xa8a00010 },
-+    { 0x00008264, 0x88a00010 },
-     { 0x00008270, 0x00000000 },
-     { 0x00008274, 0x40000000 },
-     { 0x00008278, 0x003e4180 },
-@@ -5073,7 +5073,7 @@ static const u_int32_t ar9287Common_9287_1_0[][2] = {
-     { 0x00008258, 0x00000000 },
-     { 0x0000825c, 0x400000ff },
-     { 0x00008260, 0x00080922 },
--    { 0x00008264, 0xa8a00010 },
-+    { 0x00008264, 0x88a00010 },
-     { 0x00008270, 0x00000000 },
-     { 0x00008274, 0x40000000 },
-     { 0x00008278, 0x003e4180 },
--- 
-1.7.1
+The name is also a bit odd since you can re-enable it, but I can't think
+of a better name either.
+
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -478,6 +478,24 @@ static void ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
+>  	}
+>  }
+>  
+> +void ieee80211_disable_dyn_ps(struct ieee80211_vif *vif, bool disable)
+> +{
+> +	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+> +	struct ieee80211_local *local = sdata->local;
+> +
+> +	WARN_ON(sdata->vif.type != NL80211_IFTYPE_STATION);
+> +
+> +	sdata->disable_dyn_ps = disable;
+> +
+> +	/* immediately go to psm */
+> +	if (disable && timer_pending(&local->dynamic_ps_timer)) {
+> +		ieee80211_queue_work(&local->hw,
+> +				     &local->dynamic_ps_enable_work);
+> +		del_timer_sync(&local->dynamic_ps_timer);
+> +	}
+> +}
+
+The timer trickery seems weird, why not just queue the work and ignore
+the timer?
+
+> -	if (conf->dynamic_ps_timeout > 0 &&
+> +	if (conf->dynamic_ps_timeout > 0 && !sdata->disable_dyn_ps &&
+
+As we just discussed on IRC, it might be worthwhile to adjust
+dynamic_ps_timeout to 0 instead in this case, so this and the RX and TX
+paths need not be touched.
+
+johannes
 
