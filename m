@@ -1,60 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:59642 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754504Ab0FYN3s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jun 2010 09:29:48 -0400
-Message-ID: <4C24AF41.3080101@bu3sch.de>
-Date: Fri, 25 Jun 2010 15:29:37 +0200
-From: =?ISO-8859-1?Q?Michael_B=FCsch?= <mb@bu3sch.de>
-MIME-Version: 1.0
-To: Magnus Damm <magnus.damm@gmail.com>
-CC: linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Albert Herranz <albert_herranz@yahoo.es>
-Subject: Re: [PATCH] b43: Add SDIO_DEVICE() for EW-CG1102GC
-References: <20100625093254.9484.69877.sendpatchset@t400s> (sfid-20100625_113248_442184_13EC6E79)
-In-Reply-To: <20100625093254.9484.69877.sendpatchset@t400s> (sfid-20100625_113248_442184_13EC6E79)
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from he.sipsolutions.net ([78.46.109.217]:51640 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756078Ab0FAUJv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Jun 2010 16:09:51 -0400
+Subject: Re: Association problems - again - comment
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jaroslav Fojtik <jafojtik@seznam.cz>
+Cc: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <4C055FA2.23990.223BFA@jafojtik.seznam.cz>
+References: <4C02E1CA.10757.239262@jafojtik.seznam.cz>
+	 , <AANLkTimRxjfvS_6cR7ZN3yim3TO9GcPwJ59L3HZzpVmy@mail.gmail.com>
+	 <4C055FA2.23990.223BFA@jafojtik.seznam.cz>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 01 Jun 2010 22:09:45 +0200
+Message-ID: <1275422985.3634.22.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/25/2010 11:32 AM, Magnus Damm wrote:
-> From: Magnus Damm<damm@opensource.se>
->
-> This patch enables the EW-CG1102GC SDIO card in the b43 driver.
->
-> b43-sdio mmc0:0001:1: Chip ID 14e4:4318
-> ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x0D, vendor 0x4243)
-> ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x09, vendor 0x4243)
-> ssb: Core 2 found: PCI (cc 0x804, rev 0x0C, vendor 0x4243)
-> ssb: Core 3 found: PCMCIA (cc 0x80D, rev 0x07, vendor 0x4243)
-> b43-phy0: Broadcom 4318 WLAN found (core revision 9)
-> b43-phy0 debug: Found PHY: Analog 3, Type 2, Revision 7
-> b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2050, Revision 8
->
-> Tested with openfwwf-5.2 using a SuperH SDHI host controller.
->
-> Signed-off-by: Magnus Damm<damm@opensource.se>
-> ---
->
->   drivers/net/wireless/b43/sdio.c |    1 +
->   1 file changed, 1 insertion(+)
->
-> --- 0001/drivers/net/wireless/b43/sdio.c
-> +++ work/drivers/net/wireless/b43/sdio.c	2010-06-25 18:20:46.000000000 +0900
-> @@ -182,6 +182,7 @@ static void b43_sdio_remove(struct sdio_
->
->   static const struct sdio_device_id b43_sdio_ids[] = {
->   	{ SDIO_DEVICE(0x02d0, 0x044b) }, /* Nintendo Wii WLAN daughter card */
-> +	{ SDIO_DEVICE(0x0092, 0x0004) }, /* C-guys, Inc. EW-CG1102GC */
->   	{ },
->   };
->
->
+On Tue, 2010-06-01 at 21:29 +0200, Jaroslav Fojtik wrote:
+> Dear Bob,
+> 
+> I have found a solution for my problem.
+> 
+> Patch from "Johannes Berg <johannes.berg@intel.com>" fixes a problem.
+> 
+> #Processing an association response could take a bit
+> #of time while we set up the hardware etc. During that
+> #time, the AP might already send a blockack request.
 
-ack
+That makes no sense at all -- ath5k doesn't do aggregation. I guess it
+probably just means that your problem is timing related.
 
--- 
-Greetings Michael.
+johannes
+
+
