@@ -1,65 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:25128 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752899Ab0FHMfE (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:58492 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754937Ab0FARGY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jun 2010 08:35:04 -0400
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Subject: [RFC 3/3] mac80211: Store basic rates for bss when joining ibss network
-Date: Tue,  8 Jun 2010 15:34:19 +0300
-Message-Id: <1276000459-1121-4-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-In-Reply-To: <1276000459-1121-3-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-References: <1276000459-1121-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
- <1276000459-1121-2-git-send-email-ext-teemu.3.paasikivi@nokia.com>
- <1276000459-1121-3-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	Tue, 1 Jun 2010 13:06:24 -0400
+Received: by gye5 with SMTP id 5so1323184gye.19
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Jun 2010 10:06:24 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4C02E1CA.10757.239262@jafojtik.seznam.cz>
+References: <4C02E1CA.10757.239262@jafojtik.seznam.cz>
+Date: Tue, 1 Jun 2010 13:06:23 -0400
+Message-ID: <AANLkTimRxjfvS_6cR7ZN3yim3TO9GcPwJ59L3HZzpVmy@mail.gmail.com>
+Subject: Re: Association problems - again
+From: Bob Copeland <me@bobcopeland.com>
+To: Jaroslav Fojtik <jafojtik@seznam.cz>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When joinig a ibss network, basic rates for bss were not stored. When
-network was self created, leaving and (re)joining same network has
-caused basic rates to be left unset. With this patch stored values are
-used.
+On Sun, May 30, 2010 at 6:08 PM, Jaroslav Fojtik <jafojtik@seznam.cz> wrote:
+> Dears,
+>
+> I have found that ATH5k has severe problems during association to AP.
+>
+> Sometimes it needs more than 100 attempts to association, before it connects
+> to AP.
 
-Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
----
- net/mac80211/ibss.c |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
+Did it work in previous kernels?
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index d984ab2..72407f0 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -77,6 +77,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 	struct cfg80211_bss *bss;
- 	u32 bss_change;
- 	u8 supp_rates[IEEE80211_MAX_SUPP_RATES];
-+	struct ieee80211_bss *ibss;
- 
- 	/* Reset own TSF to allow time synchronization work. */
- 	drv_reset_tsf(local);
-@@ -191,6 +192,19 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 
- 	bss = cfg80211_inform_bss_frame(local->hw.wiphy, local->hw.conf.channel,
- 					mgmt, skb->len, 0, GFP_KERNEL);
-+
-+	ibss = (struct ieee80211_bss *)(bss->priv);
-+
-+	for (i = 0; i < sband->n_bitrates; i++) {
-+		u8 basic = 0x00;
-+		if (basic_rates & BIT(i))
-+			basic = 0x80;
-+
-+		ibss->supp_rates[i] = supp_rates[i] | basic;
-+	}
-+
-+	ibss->supp_rates_len = i;
-+
- 	cfg80211_put_bss(bss);
- 	cfg80211_ibss_joined(sdata->dev, ifibss->bssid, GFP_KERNEL);
- }
+You said you reverted 6b5d117eddc09cd976ad8030d715f4 and still have the
+problem, right?  Are you sure you booted the kernel with the revert?
+
+> [  149.926717] wlan1: direct probe to 00:15:6d:d6:2a:9d (try 1)
+> [  150.013353] eth3: no IPv6 routers present
+> [  150.126699] wlan1: direct probe to 00:15:6d:d6:2a:9d (try 2)
+> [  150.326707] wlan1: direct probe to 00:15:6d:d6:2a:9d (try 3)
+> [  150.526696] wlan1: direct probe to 00:15:6d:d6:2a:9d timed out
+
+Probably traffic is not being sent or received from one side.
+
 -- 
-1.5.6.3
-
+Bob Copeland %% www.bobcopeland.com
