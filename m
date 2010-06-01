@@ -1,81 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54051 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754589Ab0FNGdc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jun 2010 02:33:32 -0400
-Subject: Re: [PATCH 3/3] mac80211: remove BSS from cfg80211 list when
- leaving IBSS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1276496145-5623-4-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-References: <1276496145-5623-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-	 <1276496145-5623-2-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-	 <1276496145-5623-3-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-	 <1276496145-5623-4-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 14 Jun 2010 08:33:27 +0200
-Message-ID: <1276497207.3926.9.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:41933 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751364Ab0FAJsn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Jun 2010 05:48:43 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 01 Jun 2010 02:48:43 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19460.54898.616315.983281@gargle.gargle.HOWL>
+Date: Tue, 1 Jun 2010 15:14:18 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 12/13] ath9k_htc: Handle host RX disable
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-06-14 at 09:15 +0300, Teemu Paasikivi wrote:
-> Remove BSS from cfg80211 BSS list if we are only member in IBSS when
-> leaving it.
-> 
-> Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-> ---
->  net/mac80211/ibss.c |   33 +++++++++++++++++++++++++++++++++
->  1 files changed, 33 insertions(+), 0 deletions(-)
-> 
-> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-> index ff91265..6d5489b 100644
-> --- a/net/mac80211/ibss.c
-> +++ b/net/mac80211/ibss.c
-> @@ -969,6 +969,39 @@ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata)
->  {
->  	struct sk_buff *skb;
->  
-> +	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+The MIB counters used by ANI have to be disabled
+on the host because the FW doesn't do it on the target side.
+Also, flush the receive buffers before initializing
+RX on the target.
 
-remove that empty live please
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ani.c          |    1 +
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |   10 ++++++++++
+ 2 files changed, 11 insertions(+), 0 deletions(-)
 
-> +	struct ieee80211_local *local = sdata->local;
-> +	struct cfg80211_bss *cbss;
-> +	struct ieee80211_channel *chan = NULL;
-> +	const u8 *bssid = NULL;
-> +	u16 capability;
-> +	int active_ibss = 0;
-> +
-> +
-> +	active_ibss = ieee80211_sta_active_ibss(sdata);
-> +
-> +	if (!active_ibss) {
-> +		capability = WLAN_CAPABILITY_IBSS;
-> +		if (ifibss->privacy)
-> +			capability |= WLAN_CAPABILITY_PRIVACY;
-> +		if (ifibss->fixed_bssid)
-> +			bssid = ifibss->bssid;
-
-Don't we update ifibss->bssid even if it's not fixed?
-
-> +		if (ifibss->fixed_channel)
-> +			chan = ifibss->channel;
-
-> +		if (!is_zero_ether_addr(ifibss->bssid))
-> +			bssid = ifibss->bssid;
-
-I guess we do, but can it really ever be zeroed? Or does that happen
-when we haven't even joined yet? But in that case you'd pass a NULL
-bssid into get_bss() which would return a random one ... shouldn't you
-rather not do anything in that case? Like making the first condition
-
-if (!active_ibss && !is_zero_ether_addr(ifibss->bssid)) {
-
-
-and then never worry about the bssid again?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index ba8b20f..3da820f 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -495,6 +495,7 @@ void ath9k_hw_disable_mib_counters(struct ath_hw *ah)
+ 	REG_WRITE(ah, AR_FILT_OFDM, 0);
+ 	REG_WRITE(ah, AR_FILT_CCK, 0);
+ }
++EXPORT_SYMBOL(ath9k_hw_disable_mib_counters);
+ 
+ u32 ath9k_hw_GetMibCycleCountsPct(struct ath_hw *ah,
+ 				  u32 *rxc_pcnt,
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 1ed88fb..86145ef 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1117,6 +1117,12 @@ static void ath9k_htc_radio_disable(struct ieee80211_hw *hw)
+ 	/* Stop RX */
+ 	WMI_CMD(WMI_STOP_RECV_CMDID);
+ 
++	/*
++	 * The MIB counters have to be disabled here,
++	 * since the target doesn't do it.
++	 */
++	ath9k_hw_disable_mib_counters(ah);
++
+ 	if (!ah->curchan)
+ 		ah->curchan = ath9k_cmn_get_curchannel(hw, ah);
+ 
+@@ -1198,6 +1204,10 @@ static int ath9k_htc_start(struct ieee80211_hw *hw)
+ 		  "Starting driver with initial channel: %d MHz\n",
+ 		  curchan->center_freq);
+ 
++	/* Ensure that HW is awake before flushing RX */
++	ath9k_htc_setpower(priv, ATH9K_PM_AWAKE);
++	WMI_CMD(WMI_FLUSH_RECV_CMDID);
++
+ 	/* setup initial channel */
+ 	init_channel = ath9k_cmn_get_curchannel(hw, ah);
+ 
+-- 
+1.7.1
 
