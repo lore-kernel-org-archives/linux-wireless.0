@@ -1,50 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51484
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756217Ab0FIRdP (ORCPT
+Received: from coco.cs.washington.edu ([128.208.3.82]:56288 "EHLO
+	coco.cs.washington.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750716Ab0FAECB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jun 2010 13:33:15 -0400
-Date: Wed, 09 Jun 2010 10:33:26 -0700 (PDT)
-Message-Id: <20100609.103326.189711649.davem@davemloft.net>
-To: reinette.chatre@intel.com
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: iwlagn fails to assoc with nexus one in ad-hoc mode
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1276102692.1835.14610.camel@rchatre-DESK>
-References: <20100607.214612.26938385.davem@davemloft.net>
-	<1276102692.1835.14610.camel@rchatre-DESK>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 1 Jun 2010 00:02:01 -0400
+Subject: Re: [PATCH 2.6.34] mac80211: fix blockack-req processing
+Mime-Version: 1.0 (Apple Message framework v1078)
+Content-Type: text/plain; charset=us-ascii
+From: Daniel Halperin <dhalperi@cs.washington.edu>
+In-Reply-To: <1275223978.3599.0.camel@jlt3.sipsolutions.net>
+Date: Mon, 31 May 2010 21:01:47 -0700
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Message-Id: <BF3B435D-CEBE-428E-A0BE-3D14106FF6CB@cs.washington.edu>
+References: <1275223978.3599.0.camel@jlt3.sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: reinette chatre <reinette.chatre@intel.com>
-Date: Wed, 09 Jun 2010 09:58:12 -0700
+Thanks!
+Dan
 
-> Hi David,
+On May 30, 2010, at 5:52 AM, Johannes Berg wrote:
+
+> Daniel reported that the paged RX changes had
+> broken blockack request frame processing due
+> to using data that wasn't really part of the
+> skb data.
 > 
-> On Mon, 2010-06-07 at 21:46 -0700, David Miller wrote:
->> When I try to associate the wireless activity light blinks like
->> crazy and I get kernel log dumps like the one at the end of
->> this email.
+> Fix this using skb_copy_bits() for the needed
+> data. As a side effect, this adds a check on
+> processing too short frames, which previously
+> this code could do.
 > 
-> Which hardware are you using? This information is needed to decode the
-> firmware assert you are posting.
+> Reported-by: Daniel Halperin <dhalperi@cs.washington.edu>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
 
-5300
-
-> 
->> 
->> The nexus one uses a Broadcom BCM4328 for wireless.
->> 
->> Windows 7 users report the same problem with Intel wireless, and that
->> upgrading to the Intel wireless windows driver, version 13.1.1.1,
->> fixes the problem.
-> 
-> Any idea what they upgraded _from_ ?
-
-13.0, and I believe it says this in the report I gave the URL for,
-there might be other bits of useful information there :-)
-
-
+Acked-by: Daniel Halperin <dhalperi@cs.washington.edu>
 
