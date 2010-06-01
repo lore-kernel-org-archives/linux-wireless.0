@@ -1,74 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:54669 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752770Ab0FWSrB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jun 2010 14:47:01 -0400
-Received: by iwn1 with SMTP id 1so23409iwn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Jun 2010 11:47:01 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:42261 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751259Ab0FAKNr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Jun 2010 06:13:47 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 01 Jun 2010 03:13:47 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <4C223F58.3060509@openwrt.org>
-References: <4B8C3A21.2050105@openwrt.org>
-	<133e8d7e1003020419r6fab7b13kd77b06407c8c1380@mail.gmail.com>
-	<4B8D25DC.8070502@openwrt.org>
-	<133e8d7e1003020747w348dbee0g60a25a86393972d7@mail.gmail.com>
-	<4B8D396B.5040007@openwrt.org>
-	<AANLkTilWfp6LzCYhxFweqAP_GceRz5PQBIBl5AksLKUf@mail.gmail.com>
-	<4C223F58.3060509@openwrt.org>
-Date: Wed, 23 Jun 2010 20:47:00 +0200
-Message-ID: <AANLkTilDTZRUk_3iI5NPX0JhqG7N8LtKcE3VSSnqFGk9@mail.gmail.com>
-Subject: Re: [RFC/RFT] minstrel_ht: new rate control module for 802.11n
-From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19460.56736.744071.882417@gargle.gargle.HOWL>
+Date: Tue, 1 Jun 2010 15:44:56 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 02/13] ath9k_hw: Optimize ath9k_hw_ar9287_set_board_values
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/6/23 Felix Fietkau <nbd@openwrt.org>:
-> On 2010-06-23 6:36 PM, Björn Smedman wrote:
-[snip]
->> If I'm not wrong above then the rate control feedback must also be
->> incorrect: a disaster of that magnitude simply cannot be conveyed to
->> the rate control algorithm through the thin tx status interface. As
->> far as I can tell, whenever the first subframe of an aggregate fails
->> and is software retried, the rate control feedback for that aggregate
->> is lost (ath_tx_rc_status() is never called with update_rc = true in
->> xmit.c).
-> I think you misread that part. The loop iterates over all subframes in
-> the aggregate, and the first successful or swretry-expired frame will
-> trigger an AMPDU status report, which will update the RC. The first
-> subframe of the A-MPDU is not getting any special treatment here.
+Rather than doing a series of RMWs, calculate the
+value to be written to the register in question and
+do a single REGWRITE. This improves bringup time.
 
-You're right, I missed that part. And I guess that's also why the
-worst case is so rare.
+This depends on the analog_shiftreg configuration option,
+which is currently buggy. For AP mode, a delay of 100us
+has to be the default. For station mode, this knob has to
+be enabled on a per-case basis, though it is a little
+unclear on when to enable a delay. This can be fixed later though.
 
-But on the other hand doesn't that also mean that MRR rates and counts
-in the tx status will be incorrect? I.e. one set of rates/counts used
-to transmit the aggregate (first subframe) and (possibly) another set
-reported back in tx status (first acked/expired subframe)?
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/eeprom.c      |    8 +++
+ drivers/net/wireless/ath/ath9k/eeprom.h      |    1 +
+ drivers/net/wireless/ath/ath9k/eeprom_9287.c |   69 ++++++++++++--------------
+ 3 files changed, 41 insertions(+), 37 deletions(-)
 
-Also, bf->bf_retries is used in ath_tx_rc_status() but the logic makes
-no sense if bf_retries holds the number of software retries...
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
+index ca8704a..a29b2d9 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom.c
+@@ -24,6 +24,14 @@ static inline u16 ath9k_hw_fbin2freq(u8 fbin, bool is2GHz)
+ 	return (u16) ((is2GHz) ? (2300 + fbin) : (4800 + 5 * fbin));
+ }
+ 
++void ath9k_hw_analog_shift_regwrite(struct ath_hw *ah, u32 reg, u32 val)
++{
++        REG_WRITE(ah, reg, val);
++
++        if (ah->config.analog_shiftreg)
++		udelay(100);
++}
++
+ void ath9k_hw_analog_shift_rmw(struct ath_hw *ah, u32 reg, u32 mask,
+ 			       u32 shift, u32 val)
+ {
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index 21354c1..14186f2 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -679,6 +679,7 @@ struct eeprom_ops {
+ 	u16 (*get_spur_channel)(struct ath_hw *ah, u16 i, bool is2GHz);
+ };
+ 
++void ath9k_hw_analog_shift_regwrite(struct ath_hw *ah, u32 reg, u32 val);
+ void ath9k_hw_analog_shift_rmw(struct ath_hw *ah, u32 reg, u32 mask,
+ 			       u32 shift, u32 val);
+ int16_t ath9k_hw_interpolate(u16 target, u16 srcLeft, u16 srcRight,
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+index 5010cd1..27abfba 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+@@ -988,7 +988,7 @@ static void ath9k_hw_ar9287_set_board_values(struct ath_hw *ah,
+ 	struct ar9287_eeprom *eep = &ah->eeprom.map9287;
+ 	struct modal_eep_ar9287_header *pModal = &eep->modalHeader;
+ 	u16 antWrites[AR9287_ANT_16S];
+-	u32 regChainOffset;
++	u32 regChainOffset, regval;
+ 	u8 txRxAttenLocal;
+ 	int i, j, offset_num;
+ 
+@@ -1075,42 +1075,37 @@ static void ath9k_hw_ar9287_set_board_values(struct ath_hw *ah,
+ 	REG_RMW_FIELD(ah, AR_PHY_EXT_CCA0,
+ 		      AR_PHY_EXT_CCA0_THRESH62, pModal->thresh62);
+ 
+-	ath9k_hw_analog_shift_rmw(ah, AR9287_AN_RF2G3_CH0, AR9287_AN_RF2G3_DB1,
+-				  AR9287_AN_RF2G3_DB1_S, pModal->db1);
+-	ath9k_hw_analog_shift_rmw(ah, AR9287_AN_RF2G3_CH0, AR9287_AN_RF2G3_DB2,
+-				  AR9287_AN_RF2G3_DB2_S, pModal->db2);
+-	ath9k_hw_analog_shift_rmw(ah, AR9287_AN_RF2G3_CH0,
+-				  AR9287_AN_RF2G3_OB_CCK,
+-				  AR9287_AN_RF2G3_OB_CCK_S, pModal->ob_cck);
+-	ath9k_hw_analog_shift_rmw(ah, AR9287_AN_RF2G3_CH0,
+-				  AR9287_AN_RF2G3_OB_PSK,
+-				  AR9287_AN_RF2G3_OB_PSK_S, pModal->ob_psk);
+-	ath9k_hw_analog_shift_rmw(ah, AR9287_AN_RF2G3_CH0,
+-				  AR9287_AN_RF2G3_OB_QAM,
+-				  AR9287_AN_RF2G3_OB_QAM_S, pModal->ob_qam);
+-	ath9k_hw_analog_shift_rmw(ah, AR9287_AN_RF2G3_CH0,
+-				  AR9287_AN_RF2G3_OB_PAL_OFF,
+-				  AR9287_AN_RF2G3_OB_PAL_OFF_S,
+-				  pModal->ob_pal_off);
+-
+-	ath9k_hw_analog_shift_rmw(ah, AR9287_AN_RF2G3_CH1,
+-				  AR9287_AN_RF2G3_DB1, AR9287_AN_RF2G3_DB1_S,
+-				  pModal->db1);
+-	ath9k_hw_analog_shift_rmw(ah, AR9287_AN_RF2G3_CH1, AR9287_AN_RF2G3_DB2,
+-				  AR9287_AN_RF2G3_DB2_S, pModal->db2);
+-	ath9k_hw_analog_shift_rmw(ah, AR9287_AN_RF2G3_CH1,
+-				  AR9287_AN_RF2G3_OB_CCK,
+-				  AR9287_AN_RF2G3_OB_CCK_S, pModal->ob_cck);
+-	ath9k_hw_analog_shift_rmw(ah, AR9287_AN_RF2G3_CH1,
+-				  AR9287_AN_RF2G3_OB_PSK,
+-				  AR9287_AN_RF2G3_OB_PSK_S, pModal->ob_psk);
+-	ath9k_hw_analog_shift_rmw(ah, AR9287_AN_RF2G3_CH1,
+-				  AR9287_AN_RF2G3_OB_QAM,
+-				  AR9287_AN_RF2G3_OB_QAM_S, pModal->ob_qam);
+-	ath9k_hw_analog_shift_rmw(ah, AR9287_AN_RF2G3_CH1,
+-				  AR9287_AN_RF2G3_OB_PAL_OFF,
+-				  AR9287_AN_RF2G3_OB_PAL_OFF_S,
+-				  pModal->ob_pal_off);
++	regval = REG_READ(ah, AR9287_AN_RF2G3_CH0);
++	regval &= ~(AR9287_AN_RF2G3_DB1 |
++		    AR9287_AN_RF2G3_DB2 |
++		    AR9287_AN_RF2G3_OB_CCK |
++		    AR9287_AN_RF2G3_OB_PSK |
++		    AR9287_AN_RF2G3_OB_QAM |
++		    AR9287_AN_RF2G3_OB_PAL_OFF);
++	regval |= (SM(pModal->db1, AR9287_AN_RF2G3_DB1) |
++		   SM(pModal->db2, AR9287_AN_RF2G3_DB2) |
++		   SM(pModal->ob_cck, AR9287_AN_RF2G3_OB_CCK) |
++		   SM(pModal->ob_psk, AR9287_AN_RF2G3_OB_PSK) |
++		   SM(pModal->ob_qam, AR9287_AN_RF2G3_OB_QAM) |
++		   SM(pModal->ob_pal_off, AR9287_AN_RF2G3_OB_PAL_OFF));
++
++	ath9k_hw_analog_shift_regwrite(ah, AR9287_AN_RF2G3_CH0, regval);
++
++	regval = REG_READ(ah, AR9287_AN_RF2G3_CH1);
++	regval &= ~(AR9287_AN_RF2G3_DB1 |
++		    AR9287_AN_RF2G3_DB2 |
++		    AR9287_AN_RF2G3_OB_CCK |
++		    AR9287_AN_RF2G3_OB_PSK |
++		    AR9287_AN_RF2G3_OB_QAM |
++		    AR9287_AN_RF2G3_OB_PAL_OFF);
++	regval |= (SM(pModal->db1, AR9287_AN_RF2G3_DB1) |
++		   SM(pModal->db2, AR9287_AN_RF2G3_DB2) |
++		   SM(pModal->ob_cck, AR9287_AN_RF2G3_OB_CCK) |
++		   SM(pModal->ob_psk, AR9287_AN_RF2G3_OB_PSK) |
++		   SM(pModal->ob_qam, AR9287_AN_RF2G3_OB_QAM) |
++		   SM(pModal->ob_pal_off, AR9287_AN_RF2G3_OB_PAL_OFF));
++
++	ath9k_hw_analog_shift_regwrite(ah, AR9287_AN_RF2G3_CH1, regval);
+ 
+ 	REG_RMW_FIELD(ah, AR_PHY_RF_CTL2,
+ 		      AR_PHY_TX_END_DATA_START, pModal->txFrameToDataStart);
+-- 
+1.7.1
 
->> Any ideas on how to fix this? To me the aggregation and rate control
->> code seems to need a major overhaul, something which would require
->> changes to the interface between mac80211 and drivers, e.g. ath9k.
->> That's out of my league unfortunately...
-> I've already made a lot of progress rewriting the entire aggregation
-> logic (it'll be in mac80211 instead of ath9k).
-> As soon as I'm done fixing the current batch of bugs that I'm debugging
-> at the moment, I will post my changes as RFC on the linux-wireless list.
-
-Very nice to hear a rewrite is in progress. :) Looking forward to those patches.
-
-> - Felix
->
-
-/Björn
