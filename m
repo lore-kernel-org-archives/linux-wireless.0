@@ -1,44 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55726 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751961Ab0FHJFI (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:60377 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756561Ab0FAN30 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jun 2010 05:05:08 -0400
-Subject: Re: [PATCH v3 1/3] cfg80211: Add nl80211 antenna configuration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <201006081010.13314.br1@einfach.org>
-References: <20100607065858.16060.38448.stgit@tt-desk>
-	 <1275901514.3639.4.camel@jlt3.sipsolutions.net>
-	 <201006081010.13314.br1@einfach.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Jun 2010 11:05:02 +0200
-Message-ID: <1275987902.3706.107.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 1 Jun 2010 09:29:26 -0400
+Received: by wyi11 with SMTP id 11so959283wyi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Jun 2010 06:29:22 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1274739877.19662.39.camel@localhost.localdomain>
+References: <AANLkTinMa92irnw8fH8PPO6egbAVDFWBg4pCPp3dInwd@mail.gmail.com>
+	<1274387415.1422.33.camel@localhost.localdomain>
+	<AANLkTilXnak_JDwWcx7ZqwNGEax89_Qj1YcFIH5VtecY@mail.gmail.com>
+	<1274739877.19662.39.camel@localhost.localdomain>
+Date: Tue, 1 Jun 2010 09:29:18 -0400
+Message-ID: <AANLkTimdDehMCo2cmEsgq2dDqDyjxYWrIQdw96EPXJrC@mail.gmail.com>
+Subject: Re: How the mac80211 handle "\0" essid?
+From: leo liang <leoliang9@gmail.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-06-08 at 10:10 +0900, Bruno Randolf wrote:
+Thank you for the answer.
 
-> i don't particularly care about where the antenna information is printed 
-> exactly, so anything will be fine with me.
-> 
-> but when i look at the wiphy info, it shows mostly capability information, 
-> like the list of supported frequencies, list of bitrates, supported interface 
-> modes, supported commands. the only exception is coverage class, which is the 
-> only runtime configuration as far as i can see. therefore i thought it doesnt 
-> fit there well.
-> 
-> maybe another command for getting runtime configuration like channel(s), fixed 
-> bitrates, essid, bssid, RTS/CTS, fraqmentation, txpower, power management, 
-> antenna settings, etc... would make sense? allthough in this list antenna is 
-> probably the only one which is per phy and not per interface...
-
-Right so there isn't much runtime stuff in the list now. I don't see
-anything inherently bad in adding more though, since userspace can
-selectively look at the attributes, and it's not like it's a huge amount
-of data?
-
-johannes
-
+On Mon, May 24, 2010 at 6:24 PM, Dan Williams <dcbw@redhat.com> wrote:
+> On Fri, 2010-05-21 at 14:05 -0400, leo liang wrote:
+>> On Thu, May 20, 2010 at 4:30 PM, Dan Williams <dcbw@redhat.com> wrote:
+>> > On Thu, 2010-05-20 at 15:40 -0400, leo liang wrote:
+>> >> Hi,
+>> >>
+>> >> Does any one know that if the application send "\0" as essid to
+>> >> mac80211, how it handle this case?
+>> >
+>> > What are you trying to do?  Are you trying to work with a hidden AP, or
+>> > do something else?
+>>
+>> I want to hide the associated AP name.  Or disassociate and do not let
+>> the interface connect to any AP.
+>
+> "I want to hide the associated AP name"
+>
+> What do you mean by this?  Do you mean make 'iwconfig' or some other
+> program not report the currently associated AP name?  Or do you mean
+> something else?
+>
+> "Or disassociate and do not let..."
+>
+> For complete disassociation, you don't need to send an empty BSSID when
+> using nl80211, just send the disassociate command using nl80211 (in
+> code) or the 'iw' command.  When using WEXT (which is the older
+> predecessor of nl80211) you need to send a random SSID (ie, 32 random
+> ascii characters for example) not including \0.  That should cause
+> devices to disassociate from the AP and not attempt to reconnect to it
+> until you send a new, valid SSID.
+>
+>> >
+>> > An SSID is simply a 32-byte array; the protocol and the stack don't care
+>> > what's in that array.  So while you can't use command-line tools like
+>> > 'iwconfig' to send an SSID containing a \0, you can use netlink or
+>> > wpa_supplicant's nl80211 driver to do so.
+>>
+>> I checked "iwconfig" source code, if you run "iwconfig wlan0 essid
+>> off", it will set the first char as "\0".
+>
+> Right, iwconfig is pretty old and does not correctly handle empty
+> BSSIDs.  Don't depend on the iwconfig behavior.
+>
+> Dan
+>
+>> >
+>> > But in the end, if you're trying to associate with an AP that has an
+>> > SSID of only '\0', that AP is likely broken or trying to hide it's SSID,
+>> > and you should be using the real SSID of that AP instead of '\0'.
+>> >
+>> > Dan
+>> >
+>> >
+>> >
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+>
