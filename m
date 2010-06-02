@@ -1,51 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:56671 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757260Ab0FRQjw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jun 2010 12:39:52 -0400
-Subject: Re: USB device that supports master mode?
-From: Pavel Roskin <proski@gnu.org>
-To: Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
-Cc: Robert Urban <urban@unix-beratung.de>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1276871717.918.1.camel@gnutoo-laptop>
-References: <4C0EDB71.1070104@unix-beratung.de>
-	 <1276871717.918.1.camel@gnutoo-laptop>
-Content-Type: text/plain
-Date: Fri, 18 Jun 2010 12:39:49 -0400
-Message-Id: <1276879189.5110.10.camel@mj>
-Mime-Version: 1.0
+Received: from uxs-bsd-240-042.unaxus.net ([195.191.240.42]:34613 "EHLO
+	uxs-bsd-240-042.unaxus.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757854Ab0FBL3y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jun 2010 07:29:54 -0400
+Received: from i577a748e.versanet.de ([87.122.116.142]:35214 helo=[192.168.178.92])
+	by uxs-bsd-240-042.unaxus.net with esmtpsa (TLSv1:CAMELLIA256-SHA:256)
+	(Exim 4.71 (FreeBSD))
+	(envelope-from <janek.bevendorff@openwebboard.org>)
+	id 1OJm8t-0008mS-PN
+	for linux-wireless@vger.kernel.org; Wed, 02 Jun 2010 13:29:52 +0200
+Message-ID: <4C064077.5060807@openwebboard.org>
+Date: Wed, 02 Jun 2010 13:28:55 +0200
+From: Janek Bevendorff <janek.bevendorff@openwebboard.org>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: Re: Strange behavior of DWA-547
+References: <4C03C652.3000608@openwebboard.org>
+In-Reply-To: <4C03C652.3000608@openwebboard.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-06-18 at 16:35 +0200, Denis 'GNUtoo' Carikli wrote:
-> On Wed, 2010-06-09 at 02:08 +0200, Robert Urban wrote:
-> > Hello Wireless folks,
-> > 
-> > I'm looking for a USB device that supports master mode, preferably with a
-> > connection for an external antenna.
-> > 
-> > Does anyone know of specific products that satisy these criteria?
-> > 
-> > thanks,
-> > 
-> > Rob Urban
-> I've a rt3070 that can do access point,
-> I've tried it with wireless-compat and it worked.
-> But I've not used it extensively(I plan to do so altough because of the
-> good range.)
-> It also has a connector for the antenna,but I don't know the brand,
-> there is no brand written on it.
+H again,
 
-TP-Link TL-WN422G has an external antenna, it's a USB device and it
-supports master mode with the patches for ath9k_htc that were recently
-posted:
+I couldn't fix the problem, returned the card ordered a new one which is
+supposed to be working.
+Thanks anyway!
 
-http://marc.info/?t=127676699200001&r=1&w=3
-
-The device appears to be capable of 802.11n, even though that capability
-is not advertised on the box.  I haven't run any benchmarks though.
-
--- 
-Regards,
-Pavel Roskin
+Janek
