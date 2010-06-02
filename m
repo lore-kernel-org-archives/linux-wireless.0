@@ -1,64 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55380 "EHLO mx1.redhat.com"
+Received: from mail.atheros.com ([12.36.123.2]:57546 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754912Ab0FGKBO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jun 2010 06:01:14 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: stable@kernel.org
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2 2.6.32.y] mac80211: fix supported rates IE if AP doesn't give us it's rates
-Date: Mon,  7 Jun 2010 11:59:43 +0200
-Message-Id: <1275904783-6563-2-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1275904783-6563-1-git-send-email-sgruszka@redhat.com>
-References: <1275904783-6563-1-git-send-email-sgruszka@redhat.com>
+	id S1757776Ab0FBKW0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jun 2010 06:22:26 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 02 Jun 2010 03:22:26 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19462.12588.699806.245206@gargle.gargle.HOWL>
+Date: Wed, 2 Jun 2010 15:53:40 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 5/8] ath9k_htc: Setup HT capabilites for 2-stream devices
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If AP do not provide us supported rates before assiociation, send
-all rates we are supporting instead of empty information element.
+The supported MCS rate set has to be setup properly
+for 2-stream devices.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
 ---
- net/mac80211/mlme.c |   17 +++++++++++------
- 1 files changed, 11 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |   23 ++++++++++++++++++++++-
+ 1 files changed, 22 insertions(+), 1 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index d3950b7..abd62fc 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -269,12 +269,6 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata,
- 	if (wk->bss->wmm_used)
- 		wmm = 1;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index ff6c080..acd9cb9 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -398,6 +398,10 @@ static const struct ath_bus_ops ath9k_usb_bus_ops = {
+ static void setup_ht_cap(struct ath9k_htc_priv *priv,
+ 			 struct ieee80211_sta_ht_cap *ht_info)
+ {
++	struct ath_common *common = ath9k_hw_common(priv->ah);
++	u8 tx_streams, rx_streams;
++	int i;
++
+ 	ht_info->ht_supported = true;
+ 	ht_info->cap = IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
+ 		       IEEE80211_HT_CAP_SM_PS |
+@@ -413,7 +417,24 @@ static void setup_ht_cap(struct ath9k_htc_priv *priv,
+ 	ht_info->ampdu_density = IEEE80211_HT_MPDU_DENSITY_8;
  
--	/* get all rates supported by the device and the AP as
--	 * some APs don't like getting a superset of their rates
--	 * in the association request (e.g. D-Link DAP 1353 in
--	 * b-only mode) */
--	rates_len = ieee80211_compatible_rates(wk->bss, sband, &rates);
--
- 	if ((wk->bss->cbss.capability & WLAN_CAPABILITY_SPECTRUM_MGMT) &&
- 	    (local->hw.flags & IEEE80211_HW_SPECTRUM_MGMT))
- 		capab |= WLAN_CAPABILITY_SPECTRUM_MGMT;
-@@ -309,6 +303,17 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata,
- 	*pos++ = wk->ssid_len;
- 	memcpy(pos, wk->ssid, wk->ssid_len);
- 
-+	if (wk->bss->supp_rates_len) {
-+		/* get all rates supported by the device and the AP as
-+		 * some APs don't like getting a superset of their rates
-+		 * in the association request (e.g. D-Link DAP 1353 in
-+		 * b-only mode) */
-+		rates_len = ieee80211_compatible_rates(wk->bss, sband, &rates);
-+	} else {
-+		rates = ~0;
-+		rates_len = sband->n_bitrates;
+ 	memset(&ht_info->mcs, 0, sizeof(ht_info->mcs));
+-	ht_info->mcs.rx_mask[0] = 0xff;
++
++	/* ath9k_htc supports only 1 or 2 stream devices */
++	tx_streams = ath9k_cmn_count_streams(common->tx_chainmask, 2);
++	rx_streams = ath9k_cmn_count_streams(common->rx_chainmask, 2);
++
++	ath_print(common, ATH_DBG_CONFIG,
++		  "TX streams %d, RX streams: %d\n",
++		  tx_streams, rx_streams);
++
++	if (tx_streams != rx_streams) {
++		ht_info->mcs.tx_params |= IEEE80211_HT_MCS_TX_RX_DIFF;
++		ht_info->mcs.tx_params |= ((tx_streams - 1) <<
++					   IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT);
 +	}
 +
- 	/* add all rates which were marked to be used above */
- 	supp_rates_len = rates_len;
- 	if (supp_rates_len > 8)
++	for (i = 0; i < rx_streams; i++)
++		ht_info->mcs.rx_mask[i] = 0xff;
++
+ 	ht_info->mcs.tx_params |= IEEE80211_HT_MCS_TX_DEFINED;
+ }
+ 
 -- 
-1.6.2.5
+1.7.1
 
