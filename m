@@ -1,41 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44583 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754895Ab0FUTPf (ORCPT
+Received: from cp-out12.libero.it ([212.52.84.112]:41180 "EHLO
+	cp-out12.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756569Ab0FBJgM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jun 2010 15:15:35 -0400
-Subject: Re: wireless-regdb: Add A band in IL - And general point regarding
- tx power limits in the dbase
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Green <Michael.Green@Atheros.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	David Quan <David.Quan@Atheros.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>
-In-Reply-To: <93781E992CBA7843962D8B0E7D683F3C1172BD0B6D@SC1EXMB-MBCL.global.atheros.com>
-References: <1274856569-13436-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <20100618184257.GB6282@tuxdriver.com>
-	 <AANLkTimN8oZ63m7cp2lE5MuFiEJ8iAGKswKIENTjIhMg@mail.gmail.com>
-	 <93781E992CBA7843962D8B0E7D683F3C1172BD0B6D@SC1EXMB-MBCL.global.atheros.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 21 Jun 2010 21:15:31 +0200
-Message-ID: <1277147731.3635.12.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 2 Jun 2010 05:36:12 -0400
+Received: from pcfabio2.localnet (151.48.10.118) by cp-out12.libero.it (8.5.119) (authenticated as rossi.f@inwind.it)
+        id 4B0BAAC221486CAB for linux-wireless@vger.kernel.org; Wed, 2 Jun 2010 11:30:17 +0200
+From: Fabio Rossi <rossi.f@inwind.it>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: WARNING: at drivers/base/core.c:130 device_release+0x82/0x90()
+Date: Wed, 2 Jun 2010 11:29:43 +0200
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <201006021129.43621.rossi.f@inwind.it>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-06-21 at 07:51 -0700, Michael Green wrote:
+Compiling the kernel without ACPI (CONFIG_ACPI=n) gives the following warning:
 
-> b) I think all entries in the dbase should be in dBm (not mW).   dBm
-> vs. mW are absolutely equivalent. No reason to retain "mW" unit from
-> the source docs.  I think this was agreed by all before, but wanted to
-> reiterate. 
+cfg80211: Calling CRDA to update world regulatory domain
+cfg80211: World regulatory domain updated:
+    (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+    (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+ath5k 0000:08:01.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+ath5k 0000:08:01.0: registered as 'phy0'
+ath5k phy0: request_irq failed
+------------[ cut here ]------------
+WARNING: at drivers/base/core.c:130 device_release+0x82/0x90()
+Hardware name: System Product Name
+Device 'phy0' does not have a release() function, it is broken and must be 
+fixed.
+Modules linked in: ath5k(+) mac80211 ath cfg80211 vmnet vsock vmci vmmon 
+gspca_zc3xx gspca_main [last unloaded: cfg80211]
+Pid: 8607, comm: modprobe Tainted: G        W   2.6.35-rc1-wl #50
+Call Trace:
+ [<ffffffff8103917a>] warn_slowpath_common+0x7a/0xb0
+ [<ffffffff81039251>] warn_slowpath_fmt+0x41/0x50
+ [<ffffffff8138c4a2>] device_release+0x82/0x90
+ [<ffffffff81225fc7>] kobject_release+0x47/0x90
+ [<ffffffff81225f80>] ? kobject_release+0x0/0x90
+ [<ffffffff81227187>] kref_put+0x37/0x70
+ [<ffffffff81225e87>] kobject_put+0x27/0x60
+ [<ffffffff8138be22>] put_device+0x12/0x20
+ [<ffffffffa00eb790>] wiphy_free+0x10/0x20 [cfg80211]
+ [<ffffffffa011102d>] ieee80211_free_hw+0xd/0x10 [mac80211]
+ [<ffffffffa016f891>] ath5k_pci_probe+0x16da/0x1710 [ath5k]
+ [<ffffffff811089da>] ? __sysfs_add_one+0x2a/0xe0
+ [<ffffffff81108b07>] ? sysfs_add_one+0x27/0xd0
+ [<ffffffff8123e322>] local_pci_probe+0x12/0x20
+ [<ffffffff8123e5d0>] pci_device_probe+0x80/0xb0
+ [<ffffffff8138f98a>] ? driver_sysfs_add+0x5a/0x90                                                                                   
+ [<ffffffff8138facd>] driver_probe_device+0x8d/0x1a0                                                                                 
+ [<ffffffff8138fc73>] __driver_attach+0x93/0xa0                                                                                      
+ [<ffffffff8138fbe0>] ? __driver_attach+0x0/0xa0                                                                                     
+ [<ffffffff8138f1e8>] bus_for_each_dev+0x68/0x90
+ [<ffffffff8138f929>] driver_attach+0x19/0x20
+ [<ffffffff8138e9a8>] bus_add_driver+0xb8/0x260
+ [<ffffffff8138ff68>] driver_register+0x78/0x140
+ [<ffffffff8123e841>] __pci_register_driver+0x51/0xd0
+ [<ffffffff811f2996>] ? debugfs_create_dir+0x16/0x20
+ [<ffffffffa0180000>] ? init_ath5k_pci+0x0/0x43 [ath5k]
+ [<ffffffffa0180028>] init_ath5k_pci+0x28/0x43 [ath5k]
+ [<ffffffff810001d7>] do_one_initcall+0x37/0x190
+ [<ffffffff81066fc6>] sys_init_module+0xd6/0x250
+ [<ffffffff810023ab>] system_call_fastpath+0x16/0x1b
+---[ end trace a6ef611dbd725746 ]---
+ath5k 0000:08:01.0: PCI INT A disabled
+ath5k: probe of 0000:08:01.0 failed with error -22
 
-Why? The tools automatically convert one into the other as required, so
-if the source documents state mW it is _much_ easier to retain it for
-future review. Hence I think it should be retained. As you say, it's
-absolutely equivalent, so there's no reason _not_ to retain it as in the
-source.
+It is not possible to use the wireless network.
 
-johannes
-
+Fabio
