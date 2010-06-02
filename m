@@ -1,65 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:37858 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758761Ab0FPG4b (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jun 2010 02:56:31 -0400
-Message-ID: <4C1875B0.1050007@gmail.com>
-Date: Tue, 15 Jun 2010 23:56:48 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+Received: from zinan.dashjr.org ([173.242.112.54]:39637 "EHLO zinan.dashjr.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756081Ab0FBTIo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jun 2010 15:08:44 -0400
+From: "Luke-Jr" <luke@dashjr.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] p54spi: replace internal "cx3110x" name with "p54spi"
+Date: Wed, 2 Jun 2010 14:06:05 -0500
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	torvalds@linux-foundation.org
+References: <201006012117.00432.luke@dashjr.org> <1275465299.3915.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1275465299.3915.0.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 3/5]pci:bus.c Fix variable 'retval' set but not used
-References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com> 	<1276666434-11227-4-git-send-email-justinmattock@gmail.com> <AANLkTik27fbCY0pMJdcbuCaEXr-902WiqiFPkju4Bet0@mail.gmail.com>
-In-Reply-To: <AANLkTik27fbCY0pMJdcbuCaEXr-902WiqiFPkju4Bet0@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201006021406.15393.luke@dashjr.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/15/2010 10:42 PM, Julian Calaby wrote:
-> On Wed, Jun 16, 2010 at 15:33, Justin P. Mattock
-> <justinmattock@gmail.com>  wrote:
->> The patch below fixes the warning message I am seeing with gcc 4.6.0
->>   CC      drivers/pci/bus.o
->> drivers/pci/bus.c: In function 'pci_enable_bridges':
->> drivers/pci/bus.c:237:6: warning: variable 'retval' set but not used
->>
->>   Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
->>
->> ---
->>   drivers/pci/bus.c |    2 --
->>   1 files changed, 0 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
->> index 628ea20..84bdb48 100644
->> --- a/drivers/pci/bus.c
->> +++ b/drivers/pci/bus.c
->> @@ -234,12 +234,10 @@ void pci_bus_add_devices(const struct pci_bus *bus)
->>   void pci_enable_bridges(struct pci_bus *bus)
->>   {
->>         struct pci_dev *dev;
->> -       int retval;
->>
->>         list_for_each_entry(dev,&bus->devices, bus_list) {
->>                 if (dev->subordinate) {
->>                         if (!pci_is_enabled(dev)) {
->> -                               retval = pci_enable_device(dev);
->>                                 pci_set_master(dev);
->>                         }
->>                         pci_enable_bridges(dev->subordinate);
->
-> Er, this appears to be bogus: I'm only guessing, but I'd expect that
-> the pci_enable_device() call is actually doing something useful, and
-> removing it is going to break *something* - Have you booted a kernel
-> with this code enabled and these patches applied?
->
-> As for this warning, I think that there is a better solution.
->
-> Thanks,
->
+On Wednesday 02 June 2010 02:54:59 am Johannes Berg wrote:
+> On Tue, 2010-06-01 at 21:16 -0500, Luke-Jr wrote:
+> >  static struct spi_driver p54spi_driver = {
+> >  	.driver = {
+> > -		/* use cx3110x name because board-n800.c uses that for the
+> > -		 * SPI port */
+> > -		.name		= "cx3110x",
+> > +		.name		= "p54spi",
+> >  		.bus		= &spi_bus_type,
+> 
+> maybe that comment wasn't clear enough ... it needs to be that way to be
+> properly linked up against SPI.
 
-alright!!
-
-Justin P. Mattock
+I don't understand what you mean here. Does the hardware-side of SPI use 
+string identifiers? These are the only two instances of "cx3110x" in the 
+kernel source; N8x0 board files expect "p54spi"
