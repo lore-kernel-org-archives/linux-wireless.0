@@ -1,67 +1,284 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:54861 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932479Ab0FEA56 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jun 2010 20:57:58 -0400
-Received: by fxm8 with SMTP id 8so1152001fxm.19
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Jun 2010 17:57:57 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Richard Tillmore <rtillmore@gmail.com>
-Subject: Re: p54usb doesn't create wlan0 interface
-Date: Sat, 5 Jun 2010 02:57:42 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <AANLkTillVZPnU2MDGmMcHQ3Yxj-LfJxPLlOUzSQ8S1Bm@mail.gmail.com>
-In-Reply-To: <AANLkTillVZPnU2MDGmMcHQ3Yxj-LfJxPLlOUzSQ8S1Bm@mail.gmail.com>
+Received: from nbd.name ([88.198.39.176]:51651 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756412Ab0FBA5o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Jun 2010 20:57:44 -0400
+Message-ID: <4C05AC7E.2060002@openwrt.org>
+Date: Wed, 02 Jun 2010 02:57:34 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201006050257.43071.chunkeey@googlemail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH] mac80211: reduce debugfs code size
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday 05 June 2010 02:41:05 Richard Tillmore wrote:
-> I have a Dell usb wireless card that I am trying to use under Linux.
-> A search of the FCC-ID M4Y-XG705A lead me to believe it has a Z-Com
-> XG-705A chipset.  Another search tells me that the p54usb driver
-> should work.  So I added
-> 	{USB_DEVICE(0x413c, 0x5513)},	/* Dell Wireless */
-> to the /usr/src/linux/drivers/net/wireless/p54/p54usb.c file in the
-> correct spot.
-Please post the diff, so it can be integrated into -stable!
+This patch reduces the binary size by around 25k (measured on MIPS,
+with CONFIG_MAC80211_DEBUG_COUNTERS enabled).
 
-> A quick recompile and the module was built.  I did a
-> modprobe p54usb and dmesg shows:
-
-have you put the newly-built module into the right directory?
-modprobe only takes modules from the kernel's module directory
-(which is normally /lib/modules/$KVER/kernel/...)
-
-you can verify that by calling modinfo p54usb and
-check if there's a line usb:v413Cp5513d*...
-
-> cfg80211: Calling CRDA to update world regulatory domain
-> usbcore: registered new interface driver p54usb
-> cfg80211: World regulatory domain updated:
->     (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
->     (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
->     (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
->     (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
->     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
->     (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-> 
-> However iwconfig doesn't list a wlan0.
-please don't use "iwconfig". WEXT is obsolete, you can find a
-nl80211 replacement "iw" right here:
-http://wireless.kernel.org/en/users/Documentation/iw .
-
-> OK maybe I need firmware so another search leads me to
-> http://wireless.kernel.org/en/users/Drivers/p54 where I download
-> 2.13.24.0.lm87.arm (USB 2nd generation (ISL3887)), rename it to
-> isl3887usb and put it in /lib/firmware.  I rebooted and still no wlan0
-> listed in iwconfig.
-No need for a reboot, if the correct module is loaded the device
-should be recognized instantly... (or as soon as it is replugged.)
-
-Regards,
-	Chr
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -307,9 +307,6 @@ static const struct file_operations queu
+ 
+ /* statistics stuff */
+ 
+-#define DEBUGFS_STATS_FILE(name, buflen, fmt, value...)			\
+-	DEBUGFS_READONLY_FILE(stats_ ##name, buflen, fmt, ##value)
+-
+ static ssize_t format_devstat_counter(struct ieee80211_local *local,
+ 	char __user *userbuf,
+ 	size_t count, loff_t *ppos,
+@@ -351,75 +348,16 @@ static const struct file_operations stat
+ 	.open = mac80211_open_file_generic,				\
+ };
+ 
+-#define DEBUGFS_STATS_ADD(name)						\
++#define DEBUGFS_STATS_ADD(name, field)					\
++	debugfs_create_u32(#name, 0400, statsd, (u32 *) &field);
++#define DEBUGFS_DEVSTATS_ADD(name)					\
+ 	debugfs_create_file(#name, 0400, statsd, local, &stats_ ##name## _ops);
+ 
+-DEBUGFS_STATS_FILE(transmitted_fragment_count, 20, "%u",
+-		   local->dot11TransmittedFragmentCount);
+-DEBUGFS_STATS_FILE(multicast_transmitted_frame_count, 20, "%u",
+-		   local->dot11MulticastTransmittedFrameCount);
+-DEBUGFS_STATS_FILE(failed_count, 20, "%u",
+-		   local->dot11FailedCount);
+-DEBUGFS_STATS_FILE(retry_count, 20, "%u",
+-		   local->dot11RetryCount);
+-DEBUGFS_STATS_FILE(multiple_retry_count, 20, "%u",
+-		   local->dot11MultipleRetryCount);
+-DEBUGFS_STATS_FILE(frame_duplicate_count, 20, "%u",
+-		   local->dot11FrameDuplicateCount);
+-DEBUGFS_STATS_FILE(received_fragment_count, 20, "%u",
+-		   local->dot11ReceivedFragmentCount);
+-DEBUGFS_STATS_FILE(multicast_received_frame_count, 20, "%u",
+-		   local->dot11MulticastReceivedFrameCount);
+-DEBUGFS_STATS_FILE(transmitted_frame_count, 20, "%u",
+-		   local->dot11TransmittedFrameCount);
+-#ifdef CONFIG_MAC80211_DEBUG_COUNTERS
+-DEBUGFS_STATS_FILE(tx_handlers_drop, 20, "%u",
+-		   local->tx_handlers_drop);
+-DEBUGFS_STATS_FILE(tx_handlers_queued, 20, "%u",
+-		   local->tx_handlers_queued);
+-DEBUGFS_STATS_FILE(tx_handlers_drop_unencrypted, 20, "%u",
+-		   local->tx_handlers_drop_unencrypted);
+-DEBUGFS_STATS_FILE(tx_handlers_drop_fragment, 20, "%u",
+-		   local->tx_handlers_drop_fragment);
+-DEBUGFS_STATS_FILE(tx_handlers_drop_wep, 20, "%u",
+-		   local->tx_handlers_drop_wep);
+-DEBUGFS_STATS_FILE(tx_handlers_drop_not_assoc, 20, "%u",
+-		   local->tx_handlers_drop_not_assoc);
+-DEBUGFS_STATS_FILE(tx_handlers_drop_unauth_port, 20, "%u",
+-		   local->tx_handlers_drop_unauth_port);
+-DEBUGFS_STATS_FILE(rx_handlers_drop, 20, "%u",
+-		   local->rx_handlers_drop);
+-DEBUGFS_STATS_FILE(rx_handlers_queued, 20, "%u",
+-		   local->rx_handlers_queued);
+-DEBUGFS_STATS_FILE(rx_handlers_drop_nullfunc, 20, "%u",
+-		   local->rx_handlers_drop_nullfunc);
+-DEBUGFS_STATS_FILE(rx_handlers_drop_defrag, 20, "%u",
+-		   local->rx_handlers_drop_defrag);
+-DEBUGFS_STATS_FILE(rx_handlers_drop_short, 20, "%u",
+-		   local->rx_handlers_drop_short);
+-DEBUGFS_STATS_FILE(rx_handlers_drop_passive_scan, 20, "%u",
+-		   local->rx_handlers_drop_passive_scan);
+-DEBUGFS_STATS_FILE(tx_expand_skb_head, 20, "%u",
+-		   local->tx_expand_skb_head);
+-DEBUGFS_STATS_FILE(tx_expand_skb_head_cloned, 20, "%u",
+-		   local->tx_expand_skb_head_cloned);
+-DEBUGFS_STATS_FILE(rx_expand_skb_head, 20, "%u",
+-		   local->rx_expand_skb_head);
+-DEBUGFS_STATS_FILE(rx_expand_skb_head2, 20, "%u",
+-		   local->rx_expand_skb_head2);
+-DEBUGFS_STATS_FILE(rx_handlers_fragments, 20, "%u",
+-		   local->rx_handlers_fragments);
+-DEBUGFS_STATS_FILE(tx_status_drop, 20, "%u",
+-		   local->tx_status_drop);
+-
+-#endif
+-
+ DEBUGFS_DEVSTATS_FILE(dot11ACKFailureCount);
+ DEBUGFS_DEVSTATS_FILE(dot11RTSFailureCount);
+ DEBUGFS_DEVSTATS_FILE(dot11FCSErrorCount);
+ DEBUGFS_DEVSTATS_FILE(dot11RTSSuccessCount);
+ 
+-
+ void debugfs_hw_add(struct ieee80211_local *local)
+ {
+ 	struct dentry *phyd = local->hw.wiphy->debugfsdir;
+@@ -448,38 +386,60 @@ void debugfs_hw_add(struct ieee80211_loc
+ 	if (!statsd)
+ 		return;
+ 
+-	DEBUGFS_STATS_ADD(transmitted_fragment_count);
+-	DEBUGFS_STATS_ADD(multicast_transmitted_frame_count);
+-	DEBUGFS_STATS_ADD(failed_count);
+-	DEBUGFS_STATS_ADD(retry_count);
+-	DEBUGFS_STATS_ADD(multiple_retry_count);
+-	DEBUGFS_STATS_ADD(frame_duplicate_count);
+-	DEBUGFS_STATS_ADD(received_fragment_count);
+-	DEBUGFS_STATS_ADD(multicast_received_frame_count);
+-	DEBUGFS_STATS_ADD(transmitted_frame_count);
++	DEBUGFS_STATS_ADD(transmitted_fragment_count,
++		local->dot11TransmittedFragmentCount);
++	DEBUGFS_STATS_ADD(multicast_transmitted_frame_count,
++		local->dot11MulticastTransmittedFrameCount);
++	DEBUGFS_STATS_ADD(failed_count, local->dot11FailedCount);
++	DEBUGFS_STATS_ADD(retry_count, local->dot11RetryCount);
++	DEBUGFS_STATS_ADD(multiple_retry_count,
++		local->dot11MultipleRetryCount);
++	DEBUGFS_STATS_ADD(frame_duplicate_count,
++		local->dot11FrameDuplicateCount);
++	DEBUGFS_STATS_ADD(received_fragment_count,
++		local->dot11ReceivedFragmentCount);
++	DEBUGFS_STATS_ADD(multicast_received_frame_count,
++		local->dot11MulticastReceivedFrameCount);
++	DEBUGFS_STATS_ADD(transmitted_frame_count,
++		local->dot11TransmittedFrameCount);
+ #ifdef CONFIG_MAC80211_DEBUG_COUNTERS
+-	DEBUGFS_STATS_ADD(tx_handlers_drop);
+-	DEBUGFS_STATS_ADD(tx_handlers_queued);
+-	DEBUGFS_STATS_ADD(tx_handlers_drop_unencrypted);
+-	DEBUGFS_STATS_ADD(tx_handlers_drop_fragment);
+-	DEBUGFS_STATS_ADD(tx_handlers_drop_wep);
+-	DEBUGFS_STATS_ADD(tx_handlers_drop_not_assoc);
+-	DEBUGFS_STATS_ADD(tx_handlers_drop_unauth_port);
+-	DEBUGFS_STATS_ADD(rx_handlers_drop);
+-	DEBUGFS_STATS_ADD(rx_handlers_queued);
+-	DEBUGFS_STATS_ADD(rx_handlers_drop_nullfunc);
+-	DEBUGFS_STATS_ADD(rx_handlers_drop_defrag);
+-	DEBUGFS_STATS_ADD(rx_handlers_drop_short);
+-	DEBUGFS_STATS_ADD(rx_handlers_drop_passive_scan);
+-	DEBUGFS_STATS_ADD(tx_expand_skb_head);
+-	DEBUGFS_STATS_ADD(tx_expand_skb_head_cloned);
+-	DEBUGFS_STATS_ADD(rx_expand_skb_head);
+-	DEBUGFS_STATS_ADD(rx_expand_skb_head2);
+-	DEBUGFS_STATS_ADD(rx_handlers_fragments);
+-	DEBUGFS_STATS_ADD(tx_status_drop);
++	DEBUGFS_STATS_ADD(tx_handlers_drop, local->tx_handlers_drop);
++	DEBUGFS_STATS_ADD(tx_handlers_queued, local->tx_handlers_queued);
++	DEBUGFS_STATS_ADD(tx_handlers_drop_unencrypted,
++		local->tx_handlers_drop_unencrypted);
++	DEBUGFS_STATS_ADD(tx_handlers_drop_fragment,
++		local->tx_handlers_drop_fragment);
++	DEBUGFS_STATS_ADD(tx_handlers_drop_wep,
++		local->tx_handlers_drop_wep);
++	DEBUGFS_STATS_ADD(tx_handlers_drop_not_assoc,
++		local->tx_handlers_drop_not_assoc);
++	DEBUGFS_STATS_ADD(tx_handlers_drop_unauth_port,
++		local->tx_handlers_drop_unauth_port);
++	DEBUGFS_STATS_ADD(rx_handlers_drop, local->rx_handlers_drop);
++	DEBUGFS_STATS_ADD(rx_handlers_queued, local->rx_handlers_queued);
++	DEBUGFS_STATS_ADD(rx_handlers_drop_nullfunc,
++		local->rx_handlers_drop_nullfunc);
++	DEBUGFS_STATS_ADD(rx_handlers_drop_defrag,
++		local->rx_handlers_drop_defrag);
++	DEBUGFS_STATS_ADD(rx_handlers_drop_short,
++		local->rx_handlers_drop_short);
++	DEBUGFS_STATS_ADD(rx_handlers_drop_passive_scan,
++		local->rx_handlers_drop_passive_scan);
++	DEBUGFS_STATS_ADD(tx_expand_skb_head,
++		local->tx_expand_skb_head);
++	DEBUGFS_STATS_ADD(tx_expand_skb_head_cloned,
++		local->tx_expand_skb_head_cloned);
++	DEBUGFS_STATS_ADD(rx_expand_skb_head,
++		local->rx_expand_skb_head);
++	DEBUGFS_STATS_ADD(rx_expand_skb_head2,
++		local->rx_expand_skb_head2);
++	DEBUGFS_STATS_ADD(rx_handlers_fragments,
++		local->rx_handlers_fragments);
++	DEBUGFS_STATS_ADD(tx_status_drop,
++		local->tx_status_drop);
+ #endif
+-	DEBUGFS_STATS_ADD(dot11ACKFailureCount);
+-	DEBUGFS_STATS_ADD(dot11RTSFailureCount);
+-	DEBUGFS_STATS_ADD(dot11FCSErrorCount);
+-	DEBUGFS_STATS_ADD(dot11RTSSuccessCount);
++	DEBUGFS_DEVSTATS_ADD(dot11ACKFailureCount);
++	DEBUGFS_DEVSTATS_ADD(dot11RTSFailureCount);
++	DEBUGFS_DEVSTATS_ADD(dot11FCSErrorCount);
++	DEBUGFS_DEVSTATS_ADD(dot11RTSSuccessCount);
+ }
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -30,7 +30,6 @@ static ssize_t sta_ ##name## _read(struc
+ }
+ #define STA_READ_D(name, field) STA_READ(name, 20, field, "%d\n")
+ #define STA_READ_U(name, field) STA_READ(name, 20, field, "%u\n")
+-#define STA_READ_LU(name, field) STA_READ(name, 20, field, "%lu\n")
+ #define STA_READ_S(name, field) STA_READ(name, 20, field, "%s\n")
+ 
+ #define STA_OPS(name)							\
+@@ -52,19 +51,7 @@ static const struct file_operations sta_
+ 
+ STA_FILE(aid, sta.aid, D);
+ STA_FILE(dev, sdata->name, S);
+-STA_FILE(rx_packets, rx_packets, LU);
+-STA_FILE(tx_packets, tx_packets, LU);
+-STA_FILE(rx_bytes, rx_bytes, LU);
+-STA_FILE(tx_bytes, tx_bytes, LU);
+-STA_FILE(rx_duplicates, num_duplicates, LU);
+-STA_FILE(rx_fragments, rx_fragments, LU);
+-STA_FILE(rx_dropped, rx_dropped, LU);
+-STA_FILE(tx_fragments, tx_fragments, LU);
+-STA_FILE(tx_filtered, tx_filtered_count, LU);
+-STA_FILE(tx_retry_failed, tx_retry_failed, LU);
+-STA_FILE(tx_retry_count, tx_retry_count, LU);
+ STA_FILE(last_signal, last_signal, D);
+-STA_FILE(wep_weak_iv_count, wep_weak_iv_count, LU);
+ 
+ static ssize_t sta_flags_read(struct file *file, char __user *userbuf,
+ 			      size_t count, loff_t *ppos)
+@@ -307,6 +294,13 @@ STA_OPS(ht_capa);
+ 	debugfs_create_file(#name, 0400, \
+ 		sta->debugfs.dir, sta, &sta_ ##name## _ops);
+ 
++#define DEBUGFS_ADD_COUNTER(name, field)				\
++	if (sizeof(sta->field) == sizeof(u32))				\
++		debugfs_create_u32(#name, 0400, sta->debugfs.dir,	\
++			(u32 *) &sta->field);				\
++	else								\
++		debugfs_create_u64(#name, 0400, sta->debugfs.dir,	\
++			(u64 *) &sta->field);
+ 
+ void ieee80211_sta_debugfs_add(struct sta_info *sta)
+ {
+@@ -339,20 +333,21 @@ void ieee80211_sta_debugfs_add(struct st
+ 	DEBUGFS_ADD(last_seq_ctrl);
+ 	DEBUGFS_ADD(agg_status);
+ 	DEBUGFS_ADD(dev);
+-	DEBUGFS_ADD(rx_packets);
+-	DEBUGFS_ADD(tx_packets);
+-	DEBUGFS_ADD(rx_bytes);
+-	DEBUGFS_ADD(tx_bytes);
+-	DEBUGFS_ADD(rx_duplicates);
+-	DEBUGFS_ADD(rx_fragments);
+-	DEBUGFS_ADD(rx_dropped);
+-	DEBUGFS_ADD(tx_fragments);
+-	DEBUGFS_ADD(tx_filtered);
+-	DEBUGFS_ADD(tx_retry_failed);
+-	DEBUGFS_ADD(tx_retry_count);
+ 	DEBUGFS_ADD(last_signal);
+-	DEBUGFS_ADD(wep_weak_iv_count);
+ 	DEBUGFS_ADD(ht_capa);
++
++	DEBUGFS_ADD_COUNTER(rx_packets, rx_packets);
++	DEBUGFS_ADD_COUNTER(tx_packets, tx_packets);
++	DEBUGFS_ADD_COUNTER(rx_bytes, rx_bytes);
++	DEBUGFS_ADD_COUNTER(tx_bytes, tx_bytes);
++	DEBUGFS_ADD_COUNTER(rx_duplicates, num_duplicates);
++	DEBUGFS_ADD_COUNTER(rx_fragments, rx_fragments);
++	DEBUGFS_ADD_COUNTER(rx_dropped, rx_dropped);
++	DEBUGFS_ADD_COUNTER(tx_fragments, tx_fragments);
++	DEBUGFS_ADD_COUNTER(tx_filtered, tx_filtered_count);
++	DEBUGFS_ADD_COUNTER(tx_retry_failed, tx_retry_failed);
++	DEBUGFS_ADD_COUNTER(tx_retry_count, tx_retry_count);
++	DEBUGFS_ADD_COUNTER(wep_weak_iv_count, wep_weak_iv_count);
+ }
+ 
+ void ieee80211_sta_debugfs_remove(struct sta_info *sta)
