@@ -1,146 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:46452 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753580Ab0FAUec convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jun 2010 16:34:32 -0400
-MIME-Version: 1.0
-In-Reply-To: <4c056b50.0c3fdf0a.500b.44af@mx.google.com>
-References: <4c056b50.0c3fdf0a.500b.44af@mx.google.com>
-Date: Tue, 1 Jun 2010 16:34:30 -0400
-Message-ID: <AANLkTinFCuqgvnEGFmssL5R1J9-Yx7JB8mO9yKdXuYUj@mail.gmail.com>
-Subject: Re: [PATCH] [ath5k][leds] Ability to disable leds support. If leds
-	support enabled do not force mac802.11 leds layer selection.
-From: Bob Copeland <me@bobcopeland.com>
-To: Dmytro Milinevskyy <milinevskyy@gmail.com>
-Cc: ath5k-devel@lists.ath5k.org, Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	GeunSik Lim <geunsik.lim@samsung.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Lukas Turek <8an@praha12.net>,
-	Mark Hindley <mark@hindley.org.uk>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jiri Kosina <jkosina@suse.cz>, Kalle Valo <kalle.valo@iki.fi>,
-	Keng-Yu Lin <keng-yu.lin@canonical.com>,
-	Luca Verdesca <magooz@salug.it>,
-	Shahar Or <shahar@shahar-or.co.il>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga01.intel.com ([192.55.52.88]:60176 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755725Ab0FBRv2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jun 2010 13:51:28 -0400
+Subject: Re: kernel BUG in iwl-agn-rs.c:2076, WAS: iwlagn + some
+ accesspoint == hardlock
+From: reinette chatre <reinette.chatre@intel.com>
+To: Nils Radtke <lkml@Think-Future.de>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20100531201225.GA6327@localhost>
+References: <20100531201225.GA6327@localhost>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 02 Jun 2010 10:51:25 -0700
+Message-ID: <1275501085.2091.28873.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 7, 2010 at 2:58 PM, Dmytro Milinevskyy
-<milinevskyy@gmail.com> wrote:
-> Hello!
+On Mon, 2010-05-31 at 13:12 -0700, Nils Radtke wrote:
 
-Thanks, comments inline.
+> This line indicates the first timestamp _after_ the crash:
+> May 31 17:35:19 localhost kernel: [   69.488456]
+> 
+> The crash happened after site A and on site B. Just arrived, opened lid and *crash*.
+> 
+> I noticed in iwl-agn-rs.c:2080:
+>   BUG_ON(window->average_tpt != ((window->success_ratio *
+>         tbl->expected_tpt[index] + 64) / 128));
+> Could that be again the point that hit me today when the machine crashed once?
+> Would you mind changing this into a milder WARN? That way I wouldn't hit the wall 
+> that hard. And I would notice it anyway while skimming the logs as we still are on the
+> hunt. It's more maintainable if it's a WARN in the src instead of me patching it w/ any
+> update..
+> 
+> Wasn't this BUG_ON a WARNING in .33.3? (didn't check..)
+
+Seems like you performed the testing without the patch that we used to
+address the hang issue from the beginning of this thread. Please see
+http://marc.info/?l=linux-wireless&m=127290931304496&w=2 - that thread
+also explains why the patch is not in 2.6.34.
+
+I think it is time to move this discussion to a bug report so that it
+can be tracked better. Please open a new bug at
+http://bugzilla.intellinuxwireless.org/
+
+Reinette
 
 
-> +config ATH5K_LEDS
-> +       tristate "Atheros 5xxx wireless cards LEDs support"
-> +       depends on ATH5K
-> +       ---help---
-> +         Atheros 5xxx LED support.
-> +
 
-This can select the proper LED classes?  Then you can get rid of another
-ifdef check later.
-
-> -/* GPIO-controlled software LED */
-> -#define AR5K_SOFTLED_PIN       0
-> -#define AR5K_SOFTLED_ON                0
-> -#define AR5K_SOFTLED_OFF       1
-> -
-
-Please drop this hunk, no problem keeping it around.
-
-> +#ifdef CONFIG_ATH5K_LEDS
->  /* LED functions */
->  int ath5k_init_leds(struct ath5k_softc *sc);
->  void ath5k_led_enable(struct ath5k_softc *sc);
->  void ath5k_led_off(struct ath5k_softc *sc);
->  void ath5k_unregister_leds(struct ath5k_softc *sc);
-> +#else
-> +#define ath5k_init_leds(sc) do {} while (0)
-> +#define ath5k_led_enable(sc) do {} while (0)
-> +#define ath5k_led_off(sc) do {} while (0)
-> +#define ath5k_unregister_leds(sc) do {} while (0)
-> +#endif
-
-I prefer:
-
-#ifdef
-...
-#else
-static inline int ath5k_init_leds(struct ath5k_softc *sc)
-{
-    return 0;
-}
-...
-#endif
-
-so you get type-checking.  Also this doesn't quite work in your version:
-
-    int foo = ath5k_init_leds(sc);
-
-> +#ifdef CONFIG_ATH5K_LEDS
->  /*
->  * State for LED triggers
->  */
->  struct ath5k_led
->  {
-> -       char name[ATH5K_LED_MAX_NAME_LEN + 1];  /* name of the LED in sysfs */
->        struct ath5k_softc *sc;                 /* driver state */
-> +#ifdef CONFIG_LEDS_CLASS
-> +       char name[ATH5K_LED_MAX_NAME_LEN + 1];  /* name of the LED in sysfs */
->        struct led_classdev led_dev;            /* led classdev */
-> +#endif
->  };
-> +#endif
-
-Why move name?
-
->  /* Rfkill */
->  struct ath5k_rfkill {
-> @@ -186,9 +190,6 @@ struct ath5k_softc {
->
->        u8                      bssidmask[ETH_ALEN];
->
-> -       unsigned int            led_pin,        /* GPIO pin for driving LED */
-> -                               led_on;         /* pin setting for LED on */
-> -
->        struct tasklet_struct   restq;          /* reset tasklet */
->
->        unsigned int            rxbufsize;      /* rx size based on mtu */
-> @@ -196,7 +197,6 @@ struct ath5k_softc {
->        spinlock_t              rxbuflock;
->        u32                     *rxlink;        /* link ptr in last RX desc */
->        struct tasklet_struct   rxtq;           /* rx intr tasklet */
-> -       struct ath5k_led        rx_led;         /* rx led */
->
->        struct list_head        txbuf;          /* transmit buffer */
->        spinlock_t              txbuflock;
-> @@ -204,7 +204,14 @@ struct ath5k_softc {
->        struct ath5k_txq        txqs[AR5K_NUM_TX_QUEUES];       /* tx queues */
->        struct ath5k_txq        *txq;           /* main tx queue */
->        struct tasklet_struct   txtq;           /* tx intr tasklet */
-> +
-> +
-> +#ifdef CONFIG_ATH5K_LEDS
-> +       unsigned int            led_pin,        /* GPIO pin for driving LED */
-> +                               led_on;         /* pin setting for LED on */
-> +       struct ath5k_led        rx_led;         /* rx led */
->        struct ath5k_led        tx_led;         /* tx led */
-> +#endif
-
-You might want to do this in two stages: move the led-dependent things
-together in the structure (or into a separate structure) and then only
-have one #ifdef section.
-
-Still too many ifdefs in general.
-
--- 
-Bob Copeland %% www.bobcopeland.com
