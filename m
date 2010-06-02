@@ -1,125 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ist.d-labs.de ([213.239.218.44]:55653 "EHLO mx01.d-labs.de"
+Received: from mx1.redhat.com ([209.132.183.28]:51401 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756348Ab0FIJeO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jun 2010 05:34:14 -0400
-From: florian@mickler.org
-To: pm list <linux-pm@lists.linux-foundation.org>
-Cc: james.bottomley@suse.de, markgross@thegnar.org,
-	mgross@linux.intel.com, Florian Mickler <florian@mickler.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Javier Cardona <javier@cozybit.com>, Jouni Malinen <j@w1.fi>,
-	Rui Paulo <rpaulo@gmail.com>,
-	Kalle Valo <kalle.valo@nokia.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: [RFC PATCH 1/2] mac80211: make max_network_latency notifier atomic safe
-Date: Wed,  9 Jun 2010 11:15:13 +0200
-Message-Id: <1276074915-26879-1-git-send-email-florian@mickler.org>
+	id S1751212Ab0FBFgn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jun 2010 01:36:43 -0400
+Subject: Re: [PATCH] libertas: Fix ethtool reporting no WOL options
+ supported if WOL is not already active
+From: Dan Williams <dcbw@redhat.com>
+To: Sascha Silbe <sascha-ml-reply-to-2010-2@silbe.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1274806808-24185-1-git-send-email-sascha-pgp@silbe.org>
+References: <1274806808-24185-1-git-send-email-sascha-pgp@silbe.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 01 Jun 2010 22:36:45 -0700
+Message-ID: <1275457005.18302.1.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to have the pm_qos framework be callable from interrupt
-context, all listeners have to also be callable in that context.
+On Sun, 2010-05-23 at 10:03 +0200, Sascha Silbe wrote:
+> This patch fixes the libertas driver incorrectly reporting that Wake-on-LAN
+> is not supported if Wake-on-LAN is currently disabled.
 
-This patch schedules the update of the latency value via
-ieee80211_max_network_latency() for execution on
-the global workqueue (using schedule_work()).
+Acked-by: Dan Williams <dcbw@redhat.com>
 
-As there was no synchronization/locking between the listener and the
-caller of pm_qos_update_request before, there should be no new races
-uncovered by this. Although the timing probably changes.
+but note that this patch submission isn't correctly formatted, you'll
+need to add your Signed-off-by tag as described here:
 
-Signed-off-by: Florian Mickler <florian@mickler.org>
----
+http://lxr.linux.no/#linux+v2.6.34/Documentation/SubmittingPatches
 
-This needs some networking expertise to check the reasoning above and
-judge the implementation.
+around line 286 or so.  I doubt John will pick the patch up until you've
+done that.
 
- net/mac80211/ieee80211_i.h |    4 +++-
- net/mac80211/main.c        |    5 +++--
- net/mac80211/mlme.c        |   20 +++++++++++++++-----
- 3 files changed, 21 insertions(+), 8 deletions(-)
+> ---
+>  drivers/net/wireless/libertas/ethtool.c |    9 +++------
+>  1 files changed, 3 insertions(+), 6 deletions(-)
+> 
+> Without patch:
+> 
+> root@xo15-minimal:~# ethtool wlan0
+> Settings for wlan0:
+>         Supports Wake-on: d
+>         Wake-on: d
+> root@xo15-minimal:~# ethtool -s wlan0 wol pum
+> root@xo15-minimal:~# ethtool wlan0
+> Settings for wlan0:
+>         Supports Wake-on: pumb
+>         Wake-on: pum
+> root@xo15-minimal:~# ethtool -s wlan0 wol d
+> root@xo15-minimal:~# ethtool wlan0
+> Settings for wlan0:
+>         Supports Wake-on: d
+>         Wake-on: d
+> root@xo15-minimal:~# 
+> 
+> 
+> With patch:
+> 
+> xo-sascha:~# ethtool eth0
+> Settings for eth0:
+>         Supports Wake-on: pumb
+>         Wake-on: d
+> xo-sascha:~# ethtool -s eth0 wol pum
+> xo-sascha:~# ethtool eth0
+> Settings for eth0:
+>         Supports Wake-on: pumb
+>         Wake-on: pum
+> xo-sascha:~# ethtool -s eth0 wol d
+> xo-sascha:~# ethtool eth0
+> Settings for eth0:
+>         Supports Wake-on: pumb
+>         Wake-on: d
+> 
+> diff --git a/drivers/net/wireless/libertas/ethtool.c b/drivers/net/wireless/libertas/ethtool.c
+> index 6eb9a88..4a337b7 100644
+> --- a/drivers/net/wireless/libertas/ethtool.c
+> +++ b/drivers/net/wireless/libertas/ethtool.c
+> @@ -145,14 +145,11 @@ static void lbs_ethtool_get_wol(struct net_device *dev,
+>  {
+>  	struct lbs_private *priv = dev->ml_priv;
+>  
+> -	if (priv->wol_criteria == 0xffffffff) {
+> -		/* Interface driver didn't configure wake */
+> -		wol->supported = wol->wolopts = 0;
+> -		return;
+> -	}
+> -
+>  	wol->supported = WAKE_UCAST|WAKE_MCAST|WAKE_BCAST|WAKE_PHY;
+>  
+> +	if (priv->wol_criteria == EHS_REMOVE_WAKEUP)
+> +		return;
+> +
+>  	if (priv->wol_criteria & EHS_WAKE_ON_UNICAST_DATA)
+>  		wol->wolopts |= WAKE_UCAST;
+>  	if (priv->wol_criteria & EHS_WAKE_ON_MULTICAST_DATA)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 1a9e2da..3d2155a 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -851,6 +851,7 @@ struct ieee80211_local {
- 	struct work_struct dynamic_ps_disable_work;
- 	struct timer_list dynamic_ps_timer;
- 	struct notifier_block network_latency_notifier;
-+	struct work_struct network_latency_notifier_work;
- 
- 	int user_power_level; /* in dBm */
- 	int power_constr_level; /* in dBm */
-@@ -994,8 +995,9 @@ ieee80211_rx_result ieee80211_sta_rx_mgmt(struct ieee80211_sub_if_data *sdata,
- void ieee80211_send_pspoll(struct ieee80211_local *local,
- 			   struct ieee80211_sub_if_data *sdata);
- void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency);
--int ieee80211_max_network_latency(struct notifier_block *nb,
-+int ieee80211_max_network_latency_notification(struct notifier_block *nb,
- 				  unsigned long data, void *dummy);
-+void ieee80211_max_network_latency(struct work_struct *w);
- void ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 				      struct ieee80211_channel_sw_ie *sw_elem,
- 				      struct ieee80211_bss *bss,
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 22a384d..5cded3a 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -607,9 +607,10 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	rtnl_unlock();
- 
- 	ieee80211_led_init(local);
--
-+	INIT_WORK(&local->network_latency_notifier_work,
-+			ieee80211_max_network_latency);
- 	local->network_latency_notifier.notifier_call =
--		ieee80211_max_network_latency;
-+		ieee80211_max_network_latency_notification;
- 	result = pm_qos_add_notifier(PM_QOS_NETWORK_LATENCY,
- 				     &local->network_latency_notifier);
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 0839c4e..feb6134 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1953,17 +1953,27 @@ void ieee80211_mlme_notify_scan_completed(struct ieee80211_local *local)
- 	rcu_read_unlock();
- }
- 
--int ieee80211_max_network_latency(struct notifier_block *nb,
--				  unsigned long data, void *dummy)
-+void ieee80211_max_network_latency(struct work_struct *w)
- {
--	s32 latency_usec = (s32) data;
-+	s32 latency_usec = (s32) atomic_long_read(&w->data);
- 	struct ieee80211_local *local =
--		container_of(nb, struct ieee80211_local,
--			     network_latency_notifier);
-+		container_of(w, struct ieee80211_local,
-+			     network_latency_notifier_work);
- 
- 	mutex_lock(&local->iflist_mtx);
- 	ieee80211_recalc_ps(local, latency_usec);
- 	mutex_unlock(&local->iflist_mtx);
-+}
-+
-+/* the notifier might be called from interrupt context */
-+int ieee80211_max_network_latency_notification(struct notifier_block *nb,
-+				  unsigned long data, void *dummy)
-+{
-+	struct ieee80211_local *local =
-+		container_of(nb, struct ieee80211_local,
-+				network_latency_notifier);
-+	atomic_long_set(&local->network_latency_notifier_work.data, data);
-+	schedule_work(&local->network_latency_notifier_work);
- 
- 	return 0;
- }
--- 
-1.7.1
 
