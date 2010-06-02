@@ -1,109 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:64256 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751327Ab0FWJM7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jun 2010 05:12:59 -0400
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] nl80211: Add option to adjust transmit power
-Date: Wed, 23 Jun 2010 12:12:38 +0300
-Message-Id: <1277284358-11014-2-git-send-email-juuso.oikarinen@nokia.com>
-In-Reply-To: <1277284358-11014-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1277284358-11014-1-git-send-email-juuso.oikarinen@nokia.com>
+Received: from mail.atheros.com ([12.36.123.2]:57557 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932365Ab0FBKWm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jun 2010 06:22:42 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 02 Jun 2010 03:22:42 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19462.12602.481326.129620@gargle.gargle.HOWL>
+Date: Wed, 2 Jun 2010 15:53:54 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 8/8] ath9k_htc: Configure credit size for AR7010
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds transmit power setting type and transmit power level attributes
-to NL80211_CMD_SET_WIPHY in order to facilitate adjusting of the transmit power
-level of the device.
+For non-AR9271 chips, the credit size is different
+and has to be configured appropriately.
 
-The added attributes allow selection of automatic, limited or fixed transmit
-power level, with the level definable in signed mBm format.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
 ---
- include/linux/nl80211.h |    9 +++++++++
- net/wireless/nl80211.c  |   31 +++++++++++++++++++++++++++++++
- 2 files changed, 40 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |   30 ++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath9k/htc_hst.c      |    3 +-
+ 2 files changed, 28 insertions(+), 5 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 07aa046..2c87016 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -725,6 +725,12 @@ enum nl80211_commands {
-  * @NL80211_ATTR_AP_ISOLATE: (AP mode) Do not forward traffic between stations
-  *	connected to this BSS.
-  *
-+ * @NL80211_ATTR_WIPHY_TX_POWER_SETTING: Transmit power setting type. See
-+ *      &enum nl80211_tx_power_setting for possible values.
-+ * @NL80211_ATTR_WIPHY_TX_POWER_LEVEL: Transmit power level in signed mBm units.
-+ *      This is used in association with @NL80211_ATTR_WIPHY_TX_POWER_SETTING
-+ *      for non-automatic settings.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -882,6 +888,9 @@ enum nl80211_attrs {
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index cda3041..7339439 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -179,7 +179,7 @@ static inline int ath9k_htc_connect_svc(struct ath9k_htc_priv *priv,
+ 	return htc_connect_service(priv->htc, &req, ep_id);
+ }
  
- 	NL80211_ATTR_AP_ISOLATE,
+-static int ath9k_init_htc_services(struct ath9k_htc_priv *priv)
++static int ath9k_init_htc_services(struct ath9k_htc_priv *priv, u16 devid)
+ {
+ 	int ret;
  
-+	NL80211_ATTR_WIPHY_TX_POWER_SETTING,
-+	NL80211_ATTR_WIPHY_TX_POWER_LEVEL,
-+
- 	/* add attributes here, update the policy in nl80211.c */
+@@ -237,10 +237,33 @@ static int ath9k_init_htc_services(struct ath9k_htc_priv *priv)
+ 	if (ret)
+ 		goto err;
  
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 41529ac..a999fc1 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -153,6 +153,9 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_CQM] = { .type = NLA_NESTED, },
- 	[NL80211_ATTR_LOCAL_STATE_CHANGE] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_AP_ISOLATE] = { .type = NLA_U8 },
++	/*
++	 * Setup required credits before initializing HTC.
++	 * This is a bit hacky, but, since queuing is done in
++	 * the HIF layer, shouldn't matter much.
++	 */
 +
-+	[NL80211_ATTR_WIPHY_TX_POWER_SETTING] = { .type = NLA_U32 },
-+	[NL80211_ATTR_WIPHY_TX_POWER_LEVEL] = { .type = NLA_U32 },
- };
- 
- /* policy for the attributes */
-@@ -869,6 +872,34 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
- 			goto bad_res;
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_WIPHY_TX_POWER_SETTING]) {
-+		enum nl80211_tx_power_setting type;
-+		int idx, mbm = 0;
-+
-+		if (!rdev->ops->set_tx_power) {
-+			return -EOPNOTSUPP;
-+			goto bad_res;
-+		}
-+
-+		idx = NL80211_ATTR_WIPHY_TX_POWER_SETTING;
-+		type = nla_get_u32(info->attrs[idx]);
-+
-+		if (!info->attrs[NL80211_ATTR_WIPHY_TX_POWER_LEVEL] &&
-+		    (type != NL80211_TX_POWER_AUTOMATIC)) {
-+			result = -EINVAL;
-+			goto bad_res;
-+		}
-+
-+		if (type != NL80211_TX_POWER_AUTOMATIC) {
-+			idx = NL80211_ATTR_WIPHY_TX_POWER_LEVEL;
-+			mbm = nla_get_u32(info->attrs[idx]);
-+		}
-+
-+		result = rdev->ops->set_tx_power(&rdev->wiphy, type, mbm);
-+		if (result)
-+			goto bad_res;
++	switch(devid) {
++	case 0x9271:
++	case 0x1006:
++		priv->htc->credits = 33;
++		break;
++	case 0x7010:
++		priv->htc->credits = 45;
++		break;
++	default:
++		dev_err(priv->dev, "ath9k_htc: Unsupported device id: 0x%x\n",
++			devid);
++		goto err;
 +	}
 +
- 	changed = 0;
+ 	ret = htc_init(priv->htc);
+ 	if (ret)
+ 		goto err;
  
- 	if (info->attrs[NL80211_ATTR_WIPHY_RETRY_SHORT]) {
++	dev_info(priv->dev, "ath9k_htc: HTC initialized with %d credits\n",
++		 priv->htc->credits);
++
+ 	return 0;
+ 
+ err:
+@@ -842,7 +865,7 @@ int ath9k_htc_probe_device(struct htc_target *htc_handle, struct device *dev,
+ 		goto err_free;
+ 	}
+ 
+-	ret = ath9k_init_htc_services(priv);
++	ret = ath9k_init_htc_services(priv, devid);
+ 	if (ret)
+ 		goto err_init;
+ 
+@@ -885,7 +908,8 @@ int ath9k_htc_resume(struct htc_target *htc_handle)
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = ath9k_init_htc_services(htc_handle->drv_priv);
++	ret = ath9k_init_htc_services(htc_handle->drv_priv,
++			      htc_handle->drv_priv->ah->hw_version.devid);
+ 	return ret;
+ }
+ #endif
+diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
+index 2173196..705c0f3 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_hst.c
++++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
+@@ -89,7 +89,6 @@ static void htc_process_target_rdy(struct htc_target *target,
+ 	struct htc_endpoint *endpoint;
+ 	struct htc_ready_msg *htc_ready_msg = (struct htc_ready_msg *) buf;
+ 
+-	target->credits = be16_to_cpu(htc_ready_msg->credits);
+ 	target->credit_size = be16_to_cpu(htc_ready_msg->credit_size);
+ 
+ 	endpoint = &target->endpoint[ENDPOINT0];
+@@ -159,7 +158,7 @@ static int htc_config_pipe_credits(struct htc_target *target)
+ 
+ 	cp_msg->message_id = cpu_to_be16(HTC_MSG_CONFIG_PIPE_ID);
+ 	cp_msg->pipe_id = USB_WLAN_TX_PIPE;
+-	cp_msg->credits = 33;
++	cp_msg->credits = target->credits;
+ 
+ 	target->htc_flags |= HTC_OP_CONFIG_PIPE_CREDITS;
+ 
 -- 
-1.6.3.3
+1.7.1
 
