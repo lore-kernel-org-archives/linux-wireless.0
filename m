@@ -1,54 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:42201 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932998Ab0FROL6 (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:62801 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751604Ab0FBIrp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jun 2010 10:11:58 -0400
-Subject: Re: [PATCH] ath5k: disable ASPM
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-In-Reply-To: <AANLkTimdTjedtoeKAp5tcTqefrUB6k373Kx9EacuYFcO@mail.gmail.com>
-References: <20100528100901.14580.1322.stgit@fate.lan>
-	 <1276806785.20754.8.camel@maxim-laptop>
-	 <20100618112026.17623g6uhdjk8hts@naisho.dyndns.info>
-	 <1276856142.9114.1.camel@maxim-laptop>
-	 <20100618134930.124225d4fsi8w1fk@naisho.dyndns.info>
-	 <1276859156.19554.2.camel@maxim-laptop>
-	 <AANLkTimdTjedtoeKAp5tcTqefrUB6k373Kx9EacuYFcO@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 18 Jun 2010 17:11:49 +0300
-Message-ID: <1276870309.23783.3.camel@maxim-laptop>
-Mime-Version: 1.0
+	Wed, 2 Jun 2010 04:47:45 -0400
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <1275409361.2091.27208.camel@rchatre-DESK>
+References: <20100528180952.GC2405@tuxdriver.com>
+	<AANLkTil8SLseSeq1M_Xg7P4AqMy3V_0jxc7by2Xuaqnb@mail.gmail.com>
+	<1275409361.2091.27208.camel@rchatre-DESK>
+Date: Wed, 2 Jun 2010 10:42:02 +0200
+Message-ID: <AANLkTimo_CpVC0B99GMJtIllAye5Yqa5yiIAiFBY-pIN@mail.gmail.com>
+Subject: Re: pull request: wireless-2.6 2010-05-28
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Zheng, Jiajia" <jiajia.zheng@intel.com>,
+	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-06-18 at 09:59 -0400, Bob Copeland wrote: 
-> On Fri, Jun 18, 2010 at 7:05 AM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
-> >> Patch I made uses GPL code from e1000e, but since ath5k is
-> >> dual-licensed so patch can't be accepted. So if I got it right, patch
-> >> has to be remade from scratch by someone who really knows about pci
-> >> registers etc. I don't, and learning this to fix something that is
-> >> already fixed in my point of view is waste of (my) time.
-> > Sure, regardless of licensing, this patch has to be redone (and e1000
-> > with it)
-> 
-> At any rate, Jussi, thanks a bundle for tracking it down.  I owe you a
-> beer, lots of bugs have been reported on these devices.
-> 
-> Maxim, this device was always broken in the same way, right?  Just
-> curious if anything made it worse recently.
+On Tue, Jun 1, 2010 at 6:22 PM, reinette chatre
+<reinette.chatre@intel.com> wrote:
+> Hi Sedat,
+>
+> On Sat, 2010-05-29 at 06:34 -0700, Sedat Dilek wrote:
+>> Two people confirmed the patch in [2] fixes:
+>> 1. iwlwifi-2.6 GIT master (commit f10a237c95abd6d64a3a24553bd1d3bcddd9108b)
+>> 2. compat-wireless (2010-05-21)
+>>
+>> And it fixes also the above mentionned combination.
+>
+> We are working on getting this patch upstream. The version tested
+> contains a significant amount of duplicated code as well as some cleanup
+> code mixed in. It is thus not appropriate for an upstream submission at
+> this time.
+>
 
-Always was broken, of course even with madwifi.
+What do you mean by "upstream"?
+upstream for me is Linus-tree (linux-2.6 GIT master).
+Patches against iwlwifi-2.6 GIT trees are not very helpful in my case.
 
-Recently I think driver stopped doing reset on RXORN, which sometimes
-helped. This did made things a bit worse.
+>> As a suggestion:
+>> What about "copying" bug-reports (incl. its history) from IWL-BTS into
+>> linux-wireless ML?
+>> For example (dri-devel related) bug-reports from
+>> bugzilla.freedesktop.org are "copied" into dri-devel ML.
+>
+> Pointing people to the bug report seems to work ok. What benefit does
+> the above have?
+>
 
-Anyway, just disable L0S, and card works perfectly.
+[+] People - not subscribed to the BR - can follow "on change".
+[-] Blow up linux-wireless ML?
 
-Best regards,
-Maxim Levitsky
-
+- Sedat -
