@@ -1,65 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:58776 "EHLO
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:35255 "EHLO
 	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754172Ab0FECvZ convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1757697Ab0FBVzJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jun 2010 22:51:25 -0400
-Received: by vws5 with SMTP id 5so502374vws.19
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Jun 2010 19:51:24 -0700 (PDT)
+	Wed, 2 Jun 2010 17:55:09 -0400
 MIME-Version: 1.0
-In-Reply-To: <201006050257.43071.chunkeey@googlemail.com>
-References: <AANLkTillVZPnU2MDGmMcHQ3Yxj-LfJxPLlOUzSQ8S1Bm@mail.gmail.com>
-	<201006050257.43071.chunkeey@googlemail.com>
-Date: Fri, 4 Jun 2010 21:51:23 -0500
-Message-ID: <AANLkTilrhSH4u-7MOjYILlQZoSqF5zc04JEbMI5IXgBs@mail.gmail.com>
-Subject: Re: p54usb doesn't create wlan0 interface
-From: Richard Tillmore <rtillmore@gmail.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <19462.12578.143627.398866@gargle.gargle.HOWL>
+References: <19462.12578.143627.398866@gargle.gargle.HOWL>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 2 Jun 2010 14:54:46 -0700
+Message-ID: <AANLkTiky9UF-aqeZCFleOFSIVw3vDiYbLUdTkkYEWN2B@mail.gmail.com>
+Subject: Re: [PATCH 1/8] ath9k: Determine Firmware on probe
+To: Sujith <Sujith.Manoharan@atheros.com>,
+	Marcel Holtmann <marcel@holtmann.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 4, 2010 at 7:57 PM, Christian Lamparter wrote:
-> On Saturday 05 June 2010 02:41:05 Richard wrote:
->> I have a Dell usb wireless card that I am trying to use under Linux.
->> A search of the FCC-ID M4Y-XG705A lead me to believe it has a Z-Com
->> XG-705A chipset. �Another search tells me that the p54usb driver
->> should work. �So I added
->> � � � {USB_DEVICE(0x413c, 0x5513)}, � /* Dell Wireless */
->> to the /usr/src/linux/drivers/net/wireless/p54/p54usb.c file in the
->> correct spot.
-> Please post the diff, so it can be integrated into -stable!
-
-I will have my friend post the diff tomorrow as I don't know how to make a diff.
-
->> A quick recompile and the module was built. �I did a
->> modprobe p54usb and dmesg shows:
+On Wed, Jun 2, 2010 at 3:23 AM, Sujith <Sujith.Manoharan@atheros.com> wrote:
+> Do not assign the FW name to driver_info but determine
+> it dynamically on device probe. This facilitates adding new
+> firmware.
 >
-> have you put the newly-built module into the right directory?
-> modprobe only takes modules from the kernel's module directory
-> (which is normally /lib/modules/$KVER/kernel/...)
+> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/hif_usb.c |   39 ++++++++++++++++++++----------
+>  drivers/net/wireless/ath/ath9k/hif_usb.h |    1 +
+>  2 files changed, 27 insertions(+), 13 deletions(-)
 >
-> you can verify that by calling modinfo p54usb and
-> check if there's a line usb:v413Cp5513d*...
-
-You are right I was booting with the wrong kernel.  The default was
-2.6.34-rc5 not the 2.6.34 we compiled.
-
->> However iwconfig doesn't list a wlan0.
-> please don't use "iwconfig". WEXT is obsolete, you can find a
-> nl80211 replacement "iw" right here:
-> http://wireless.kernel.org/en/users/Documentation/iw .
+> diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+> index 77b3591..7da55eb 100644
+> --- a/drivers/net/wireless/ath/ath9k/hif_usb.c
+> +++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+> @@ -16,12 +16,9 @@
 >
->> OK maybe I need firmware so another search leads me to
->> http://wireless.kernel.org/en/users/Drivers/p54 where I download
->> 2.13.24.0.lm87.arm (USB 2nd generation (ISL3887)), rename it to
->> isl3887usb and put it in /lib/firmware. �I rebooted and still no wlan0
->> listed in iwconfig.
-> No need for a reboot, if the correct module is loaded the device
-> should be recognized instantly... (or as soon as it is replugged.)
+>  #include "htc.h"
+>
+> -#define ATH9K_FW_USB_DEV(devid, fw)                                    \
+> -       { USB_DEVICE(0x0cf3, devid), .driver_info = (unsigned long) fw }
+> -
+>  static struct usb_device_id ath9k_hif_usb_ids[] = {
+> -       ATH9K_FW_USB_DEV(0x9271, "ar9271.fw"),
+> -       ATH9K_FW_USB_DEV(0x1006, "ar9271.fw"),
+> +       { USB_DEVICE(0x0cf3, 0x9271) },
+> +       { USB_DEVICE(0x0cf3, 0x1006) },
+>        { },
+>  };
+>
+> @@ -790,21 +787,21 @@ static int ath9k_hif_usb_download_fw(struct hif_device_usb *hif_dev)
+>                return -EIO;
+>
+>        dev_info(&hif_dev->udev->dev, "ath9k_htc: Transferred FW: %s, size: %ld\n",
+> -                "ar9271.fw", (unsigned long) hif_dev->firmware->size);
+> +                hif_dev->fw_name, (unsigned long) hif_dev->firmware->size);
+>
+>        return 0;
+>  }
+>
+> -static int ath9k_hif_usb_dev_init(struct hif_device_usb *hif_dev,
+> -                                 const char *fw_name)
+> +static int ath9k_hif_usb_dev_init(struct hif_device_usb *hif_dev)
+>  {
+>        int ret;
+>
+>        /* Request firmware */
+> -       ret = request_firmware(&hif_dev->firmware, fw_name, &hif_dev->udev->dev);
+> +       ret = request_firmware(&hif_dev->firmware, hif_dev->fw_name,
+> +                              &hif_dev->udev->dev);
+>        if (ret) {
+>                dev_err(&hif_dev->udev->dev,
+> -                       "ath9k_htc: Firmware - %s not found\n", fw_name);
+> +                       "ath9k_htc: Firmware - %s not found\n", hif_dev->fw_name);
+>                goto err_fw_req;
+>        }
+>
+> @@ -820,7 +817,8 @@ static int ath9k_hif_usb_dev_init(struct hif_device_usb *hif_dev,
+>        ret = ath9k_hif_usb_download_fw(hif_dev);
+>        if (ret) {
+>                dev_err(&hif_dev->udev->dev,
+> -                       "ath9k_htc: Firmware - %s download failed\n", fw_name);
+> +                       "ath9k_htc: Firmware - %s download failed\n",
+> +                       hif_dev->fw_name);
+>                goto err_fw_download;
+>        }
+>
+> @@ -847,7 +845,6 @@ static int ath9k_hif_usb_probe(struct usb_interface *interface,
+>  {
+>        struct usb_device *udev = interface_to_usbdev(interface);
+>        struct hif_device_usb *hif_dev;
+> -       const char *fw_name = (const char *) id->driver_info;
+>        int ret = 0;
+>
+>        hif_dev = kzalloc(sizeof(struct hif_device_usb), GFP_KERNEL);
+> @@ -872,7 +869,23 @@ static int ath9k_hif_usb_probe(struct usb_interface *interface,
+>                goto err_htc_hw_alloc;
+>        }
+>
+> -       ret = ath9k_hif_usb_dev_init(hif_dev, fw_name);
+> +       /* Find out which firmware to load */
+> +
+> +       switch(hif_dev->device_id) {
+> +       case 0x9271:
+> +       case 0x1006:
+> +               hif_dev->fw_name = "ar9271.fw";
+> +               break;
+> +       default:
+> +               break;
+> +       }
+> +
+> +       if (!hif_dev->fw_name) {
+> +               dev_err(&udev->dev, "Can't determine firmware !\n");
+> +               goto err_htc_hw_alloc;
+> +       }
+> +
+> +       ret = ath9k_hif_usb_dev_init(hif_dev);
+>        if (ret) {
+>                ret = -EINVAL;
+>                goto err_hif_init_usb;
+> diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.h b/drivers/net/wireless/ath/ath9k/hif_usb.h
+> index 0aca49b..b2647e8 100644
+> --- a/drivers/net/wireless/ath/ath9k/hif_usb.h
+> +++ b/drivers/net/wireless/ath/ath9k/hif_usb.h
+> @@ -90,6 +90,7 @@ struct hif_device_usb {
+>        struct usb_anchor regout_submitted;
+>        struct usb_anchor rx_submitted;
+>        struct sk_buff *remain_skb;
+> +       const char *fw_name;
+>        int rx_remain_len;
+>        int rx_pkt_len;
+>        int rx_transfer_len;
 
-I have iw and it works.  I just have to figure out how to use it :)
+I had done some something similar for ar9170 a while back [1] when
+adding AVM FRITZ support to ar9170 and then got complaints from Marcel
+on this approach since it requires synching the PCI device IDs in two
+places. I frankly don't care how we do this but we should try to at
+least stick to one way of doing this.
 
-Thanks
-Greg
+[1] http://osdir.com/ml/linux-wireless/2009-05/msg01219.html
+
+  Luis
