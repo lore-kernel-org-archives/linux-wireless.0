@@ -1,76 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:51383 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751057Ab0FUWsn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jun 2010 18:48:43 -0400
-Received: by gxk26 with SMTP id 26so1164224gxk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Jun 2010 15:48:42 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:57633 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932411Ab0FBKYS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jun 2010 06:24:18 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 02 Jun 2010 03:24:18 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <1277145901.28895.29.camel@gnutoo-laptop>
-References: <1275693948-3189-1-git-send-email-notasas@gmail.com>
-	<1275693948-3189-2-git-send-email-notasas@gmail.com>
-	<AANLkTinqgUGCjCBzg8j7bXGY05EW3-jfW7vlnrvCuwRd@mail.gmail.com>
-	<1277124410.28895.23.camel@gnutoo-laptop>
-	<AANLkTimLKDqDn_97BbOYr1cdxbFdPvyTz_lxJ59LVJ1b@mail.gmail.com>
-	<1277145901.28895.29.camel@gnutoo-laptop>
-Date: Tue, 22 Jun 2010 01:48:40 +0300
-Message-ID: <AANLkTildbagKqzTQbcZ8cT53s4L2OWpJ5fkBUTcejj0h@mail.gmail.com>
-Subject: Re: [PATCH 2/2] wl1251: fix ELP_CTRL register reads
-From: Grazvydas Ignotas <notasas@gmail.com>
-To: "Denis 'GNUtoo' Carikli" <GNUtoo@no-log.org>
-Cc: Bob Copeland <me@bobcopeland.com>, Kalle Valo <kvalo@adurom.com>,
-	"John W.Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19462.12698.575676.968491@gargle.gargle.HOWL>
+Date: Wed, 2 Jun 2010 15:55:30 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/8] ath9k_hw: Configure byte swap for non AR9271 chips
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> Probably not relevant to power saving, but:
->>
->> Are you using the dedicated irq line or sdio interrupt?
->> It makes a big difference in overall throughput to use
->> the former.
-> I don't know. what should I grep for?
+This patch fixes programming the byte swap registers
+for chipsets other than AR9271. This is needed for
+AR7010.
 
-It might actually be related.. Try adding this to your board file to
-enable GPIO irq:
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
 
-static void wl1251_set_power(bool enable)
-{
-}
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 1c541b4..81239ce 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1429,9 +1429,13 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 				"Setting CFG 0x%x\n", REG_READ(ah, AR_CFG));
+ 		}
+ 	} else {
+-		/* Configure AR9271 target WLAN */
+-                if (AR_SREV_9271(ah))
+-			REG_WRITE(ah, AR_CFG, AR_CFG_SWRB | AR_CFG_SWTB);
++		if (common->bus_ops->ath_bus_type == ATH_USB) {
++			/* Configure AR9271 target WLAN */
++			if (AR_SREV_9271(ah))
++				REG_WRITE(ah, AR_CFG, AR_CFG_SWRB | AR_CFG_SWTB);
++			else
++				REG_WRITE(ah, AR_CFG, AR_CFG_SWTD | AR_CFG_SWRD);
++		}
+ #ifdef __BIG_ENDIAN
+                 else
+ 			REG_WRITE(ah, AR_CFG, AR_CFG_SWTD | AR_CFG_SWRD);
+-- 
+1.7.1
 
-static struct wl12xx_platform_data wl1251_pdata = {
-        .set_power      = wl1251_set_power,
-};
-
-static struct platform_device wl1251_data = {
-        .name           = "wl1251_data",
-        .id             = -1,
-        .dev            = {
-                .platform_data  = &wl1251_pdata,
-        },
-};
-
-.. then from some init function:
-
-// WIFI_IRQ_GPIO is the GPIO number connected to wl1251 irq line
-wl1251_pdata.irq = gpio_to_irq(WIFI_IRQ_GPIO);
-platform_device_register(&wl1251_pdata);
-
->
->> > +       /*
->> > +        * FIXME: scanning while associated causes lockups,
->> > +        * so we don't allow that
->> > +        */
->> > +       if (wl->associated)
->> > +               return -EBUSY;
->>
->> Any idea why?  Could you turn on lockdep?
-> No I just used the patches that weren't mine
-> I took them from openpandora wireless repository,looked if they were
-> already included,and include the one that weren't.
-
-This is a workaround we use on pandora, otherwise with NetworkManager
-running the driver locks up. I didn't have a chance to properly debug
-this, but I can do some backtraces if you are interested.
