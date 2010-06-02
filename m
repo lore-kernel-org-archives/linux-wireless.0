@@ -1,41 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:43254 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752469Ab0FLEeF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jun 2010 00:34:05 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 24/24] ath9k: enable AR9003 PCI IDs
-Date: Sat, 12 Jun 2010 00:34:02 -0400
-Message-Id: <1276317242-15540-25-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
-References: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
+Received: from mga03.intel.com ([143.182.124.21]:61689 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758204Ab0FBXUT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jun 2010 19:20:19 -0400
+Subject: iwlwifi 6050 uCode available
+From: reinette chatre <reinette.chatre@intel.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 02 Jun 2010 16:20:18 -0700
+Message-ID: <1275520818.2091.29558.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All AR9003 features are now complete so enable AR9003
-support.
+Hi,
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/pci.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+uCode for Intel® Wireless WiFi Link 6250AGN Adapter is now available for
+download from http://intellinuxwireless.org/?n=Downloads
 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 1ec836c..257b10b 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -28,6 +28,7 @@ static DEFINE_PCI_DEVICE_TABLE(ath_pci_id_table) = {
- 	{ PCI_VDEVICE(ATHEROS, 0x002C) }, /* PCI-E 802.11n bonded out */
- 	{ PCI_VDEVICE(ATHEROS, 0x002D) }, /* PCI   */
- 	{ PCI_VDEVICE(ATHEROS, 0x002E) }, /* PCI-E */
-+	{ PCI_VDEVICE(ATHEROS, 0x0030) }, /* PCI-E  AR9300 */
- 	{ 0 }
- };
- 
--- 
-1.6.3.3
+Intel® Centrino® Advanced N + WiMax 6250 is a multi-comm WiFi and WiMax
+product. This release only supports the WiFi portion of this product.
+
+The WiMax portion of this product is connected via internal USB
+interface, which on power up is actively drawing power from the USB bus.
+If you are working with a platform software configuration which is not
+loading the WiMax driver for the Intel® Centrino® Advanced N + WiMax
+6250 device, then the WiMax portion of this device should be put into
+power save mode. Please refer to the README included with the firmware
+for the details.
+
+Reinette
 
