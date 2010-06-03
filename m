@@ -1,79 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ist.d-labs.de ([213.239.218.44]:48312 "EHLO mx01.d-labs.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751029Ab0FIPiA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jun 2010 11:38:00 -0400
-Date: Wed, 9 Jun 2010 17:37:40 +0200
-From: Florian Mickler <florian@mickler.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: pm list <linux-pm@lists.linux-foundation.org>,
-	james.bottomley@suse.de, markgross@thegnar.org,
-	mgross@linux.intel.com,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Javier Cardona <javier@cozybit.com>, Jouni Malinen <j@w1.fi>,
-	Rui Paulo <rpaulo@gmail.com>,
-	Kalle Valo <kalle.valo@nokia.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: [RFC PATCH 1/2] mac80211: make max_network_latency notifier
- atomic safe
-Message-ID: <20100609173740.3851c6a5@schatten.dmk.lab>
-In-Reply-To: <1276086425.14580.14.camel@jlt3.sipsolutions.net>
-References: <1276074915-26879-1-git-send-email-florian@mickler.org>
-	<1276076287.3727.15.camel@jlt3.sipsolutions.net>
-	<20100609122050.1dd18132@schatten.dmk.lab>
-	<1276080128.14580.5.camel@jlt3.sipsolutions.net>
-	<20100609141643.14e9aedc@schatten.dmk.lab>
-	<1276086425.14580.14.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail51.messagelabs.com ([216.82.241.99]:40214 "EHLO
+	mail51.messagelabs.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754110Ab0FCX1q convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jun 2010 19:27:46 -0400
+From: "Gordon, Charles" <Charles.Gordon@digi.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 3 Jun 2010 18:27:38 -0500
+Subject: Power save mode in 2.6.32-22
+Message-ID: <8DCC153EAFE67A4B990A840E829F704B017C658D620C@mtk-sms-exch01.digi.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 09 Jun 2010 14:27:05 +0200
-Johannes Berg <johannes@sipsolutions.net> wrote:
+Hi,
 
-> On Wed, 2010-06-09 at 14:16 +0200, Florian Mickler wrote:
-> 
-> > That was also my first idea, but then I thought about qos and thought
-> > atomic notification are necessary.
-> > Do you see any value in having atomic notification? 
-> > 
-> > I have the following situation before my eyes:
-> > 
-> > 	Driver A gets an interrupt and needs (to service that
-> > 	interrupt) the cpu to guarantee a latency of X because the
-> > 	device is a bit icky.
-> > 
-> > Now, in that situation, if we don't immediately (without scheduling in
-> > between) notify the system to be in that latency-mode the driver won't
-> > function properly. Is this a realistic scene?
-> > 
-> > At the moment we only have process context notification and only 2
-> > listeners.
-> > 
-> > I think providing for atomic as well as "relaxed" notification could be
-> > useful. 
-> > 
-> > If atomic notification is deemed unnecessary, I have no
-> > problems to just use schedule_work() in update request.
-> > Anyway, it is probably best to split this. I.e. first make
-> > update_request callable from atomic contexts with doing the
-> > schedule_work in update_request and then
-> > as an add on provide for constraints_objects with atomic notifications.
-> 
-> Well I remember http://thread.gmane.org/gmane.linux.kernel/979935 where
-> Mark renamed things to "request" which seems to imply to me more of a
-> "please do this" than "I NEED IT NOW!!!!!".
-> 
-> johannes
+I'm trying to get power save mode to work in a wireless driver on Linux
+2.6.32.  What I'm seeing is that the wireless stack is sending null-data
+frames with the power management bit on or off from time to time.  It does
+this regardless of whether flags IEEE80211_HW_SUPPORTS_PS and
+IEEE80211_HW_SUPPORTS_DYNAMIC_PS are set.  This is not how I would expect
+it to work.  If IEEE80211_HW_SUPPORTS_PS is set, I would expect it to let
+the driver handle the sending of these frames.  If IEEE80211_HW_SUPPORTS_PS
+is not set, then this would indicate that the driver cannot power down, in
+which case I still would not expect the stack to be sending these frames. 
+The documentation for power save is very thin and it seems the
+implementation has changed recently. 
 
-Yes. I just posted a version which uses schedule_work().
-Just FYI, James has also posted his version which uses either a blocking
-or an atomic notifier chain.
-http://article.gmane.org/gmane.linux.kernel/996813
+Why is the stack sending these frames when the driver says the H/W does not
+support powering down? 
 
-Cheers,
-Flo
+Why is the stack sending these frames when it would seem that the driver
+could better handle them? 
+
+The reason why I think the driver can better handle them is that if the
+stack sends a frame with the power-mgmt bit set, and then tells the driver
+to power down, there will be a race condition where the interface could
+receive a frame before the hardware is powered down.  The AP may send such
+a frame after it receives the null-data frame because some could be in a
+H/W queue.  I have seen this happen.  In this case, the interface H/W on
+the station will send an ACK and since the H/W does not know that it is
+about to be powered down, that ACK will be sent with the power-mgmt bit
+clear, which may confuse the access point.  In short, sending these frames
+is something the driver should do since it will know that it should adjust
+the H/W so that any ACKs or other control frames will be sent with the
+power mgmt bit correctly set until such time as the H/W is actually powered
+down.
+
+Anyway, that's my take on it.  As I said, the documentation on power save
+doesn't say much and it is not clear to me how it is suppose to work. 
+Perhaps someone can provide an explanation.
+
+Thanks for any help you can provide.
 
