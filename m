@@ -1,77 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:63327 "EHLO mga02.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:43913 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750729Ab0FDFMQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jun 2010 01:12:16 -0400
-Subject: Re: iwl3945 dies (oops) in post 2.6.34 kernels
-From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
+	id S1756826Ab0FCRmt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jun 2010 13:42:49 -0400
+Subject: Re: linux-next: Tree for June 3 (iwlwifi)
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-In-Reply-To: <20100604050836.GA21239@core.coreip.homeip.net>
-References: <20100525163920.GA2730@core.coreip.homeip.net>
-	 <1274806916.18861.0.camel@jlt3.sipsolutions.net>
-	 <1274807302.7494.1.camel@abhi-desktop>
-	 <201005251027.32778.dmitry.torokhov@gmail.com>
-	 <20100604050836.GA21239@core.coreip.homeip.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 03 Jun 2010 22:08:46 -0700
-Message-ID: <1275628126.3225.5.camel@abhi-desktop>
+	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>
+In-Reply-To: <20100603172114.GA14597@tuxdriver.com>
+References: <20100603134753.710a64b3.sfr@canb.auug.org.au>
+	 <20100603085501.ac113779.randy.dunlap@oracle.com>
+	 <20100603172114.GA14597@tuxdriver.com>
+Content-Type: text/plain
+Date: Thu, 03 Jun 2010 10:42:03 -0700
+Message-Id: <1275586923.16009.0.camel@wwguy-ubuntu>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-06-03 at 22:08 -0700, Dmitry Torokhov wrote:
-> On Tue, May 25, 2010 at 10:27:31AM -0700, Dmitry Torokhov wrote:
-> > On Tuesday 25 May 2010 10:08:22 am Abhijeet Kolekar wrote:
-> > > On Tue, 2010-05-25 at 10:01 -0700, Johannes Berg wrote:
-> > > > On Tue, 2010-05-25 at 09:39 -0700, Dmitry Torokhov wrote:
-> > > > > Hi,
-> > > > > 
-> > > > > I am getting the following crashers in iwl3945 after updating to
-> > > > > post-2.6.34 kernels. This is with the pull from Linus's tree as of last
-> > > > > night (the taint is from nvidia module):
-> > > > > 
-> > > > > [ 3330.630734] general protection fault: 0000 [#1] PREEMPT SMP
-> > > > > [ 3330.630752] last sysfs file: /sys/devices/platform/dock.0/docked
-> > > > > [ 3330.630761] CPU 0
-> > > > > [ 3330.630766] Modules linked in: cryptd aes_x86_64 aes_generic fuse
-> > > > > rfcomm sco bnep l2cap autofs4 coretemp hwmon sunrpc ppdev parport_pc
-> > > > > parport acpi_cpufreq mperf uinput nvidia(P) snd_hda_codec_idt arc4
-> > > > > snd_hda_intel ecb snd_hda_codec snd_hwdep iwl3945 joydev snd_seq
-> > > > > snd_seq_device snd_pcm iwlcore mac80211 snd_timer cfg80211 snd psmouse
-> > > > > iTCO_wdt dell_wmi iTCO_vendor_support serio_raw tg3 battery
-> > > > > dell_laptop dcdbas soundcore snd_page_alloc btusb bluetooth video
-> > > > > pcspkr mac_hid ac wmi libphy firewire_ohci i2c_i801 firewire_core
-> > > > > yenta_socket crc_itu_t ohci_hcd [last unloaded: microcode] [
-> > > > > 3330.630950]
-> > > > > [ 3330.630958] Pid: 455, comm: iwl3945 Tainted: P            2.6.35-rc0
-> > > > > #293 0WM416/Latitude D630 [ 3330.630967] RIP:
-> > > > > 0010:[<ffffffffa01e70d3>]  [<ffffffffa01e70d3>]
-> > > > > iwl3945_get_channels_for_scan+0xe3/0x460 [iwl3945]
-> > > > 
-> > > > http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2208
-> > > 
-> > > Can you please try this patch and report your findings?
-> > > 
-> > > http://bugzilla.intellinuxwireless.org/attachment.cgi?id=2447
-> > > 
-> > 
-> > Thanks, will try both this patch and the one John mention. Later tonight
-> > though.
-> > 
-> 
-> John,
-> 
-> Any chnace that 2nd patch be merged upstream? Without it my iwl3945
-> craps out regularly.
-> 
-It is merged in iwlwifi-2.6. It will be sent for upstream submission.
+Hi John,
 
-Abhijeet
-> Thanks!
+On Thu, 2010-06-03 at 10:21 -0700, John W. Linville wrote:
+> On Thu, Jun 03, 2010 at 08:55:01AM -0700, Randy Dunlap wrote:
+> > On Thu, 3 Jun 2010 13:47:53 +1000 Stephen Rothwell wrote:
+> > 
+> > > Hi all,
+> > > 
+> > > Changes since 20100602:
+> > 
+> > 
+> > when CONFIG_IWLAGN=n:
+> > 
+> > drivers/net/wireless/iwlwifi/iwl-rx.c:254: error: 'struct iwl_priv' has no member named '_agn'
+> > drivers/net/wireless/iwlwifi/iwl-rx.c:303: error: 'struct iwl_priv' has no member named '_agn'
+> > drivers/net/wireless/iwlwifi/iwl-rx.c:304: error: 'struct iwl_priv' has no member named '_agn'
+> > drivers/net/wireless/iwlwifi/iwl-rx.c:305: error: 'struct iwl_priv' has no member named '_agn'
+> > drivers/net/wireless/iwlwifi/iwl-rx.c:306: error: 'struct iwl_priv' has no member named '_agn'
+> > 
+> > and many more.
+> > 
+> > Haven't we seen this movie before?
 > 
+> Ugh...caused be this:
+> 
+> commit a2064b7a4a22d118087898e4308670da7ac07911
+> Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> Date:   Fri Apr 30 14:21:48 2010 -0700
+> 
+>     iwlwifi: move _agn statistics related structure
+>     
+>     agn and 3945 has different statistics_notif data structure; since 3945
+>     has it statistics_notif data structure inside the _3945 portion of
+>     iwl_priv, it make sense to move the agn statistics_notif into _agn portion.
+>     
+>     Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+>     Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+> 
+> Since iwl-rx.o is part of iwlcore.ko, this change seems wrong.
+> Reinette, any reason why I shouldn't just revert it?
+> 
+Sorry for the mistake, please revert it and I will fix the issue and
+re-submit.
 
+Thanks
+Wey
 
