@@ -1,115 +1,216 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:39210 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752588Ab0FVSpI (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:64843 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754326Ab0FCTjT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jun 2010 14:45:08 -0400
-Date: Tue, 22 Jun 2010 19:44:26 +0100
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	Maxim Levitsky <maximlevitsky@gmail.com>,
-	David Quan <David.Quan@atheros.com>,
+	Thu, 3 Jun 2010 15:39:19 -0400
+Message-ID: <4c0804e2.0c3ddf0a.2771.10f7@mx.google.com>
+Date: Thu, 03 Jun 2010 22:39:30 +0300
+From: Dmytro Milinevskyy <milinevskyy@gmail.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
 	Bob Copeland <me@bobcopeland.com>,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Jonathan May <jonathan.may@atheros.com>,
-	Tim Gardner <tim.gardner@canonical.com>
-Subject: Re: [ath5k-devel] [PATCH v2] ath5k: disable ASPM
-Message-ID: <20100622184426.GA24546@srcf.ucam.org>
-References: <20100621233333.21262abjfxl8j1xc@hayate.sektori.org> <AANLkTikkt4dqYWrwtTCJ8tJZLB1kZXgF1KvaPsIOO3Dl@mail.gmail.com> <20100622163138.GD20668@srcf.ucam.org> <AANLkTikQkLFdpusfcLVOpyZHFrxwB5akr-ggFB7Fjm08@mail.gmail.com> <20100622165213.GA21842@srcf.ucam.org> <AANLkTikHLBBWrhCP_1f5Jv7zE9RKPvdsl5nSyfkeMfLl@mail.gmail.com> <20100622172545.GA22680@srcf.ucam.org> <AANLkTilEHJ5qRD8ov0gIK0Zc4o-gJUPYkvHdyD1uZUon@mail.gmail.com> <20100622175058.GA23499@srcf.ucam.org> <AANLkTinE0BiOa5cpcIerbias7K-aDzj3x4qaeDpzy2CQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTinE0BiOa5cpcIerbias7K-aDzj3x4qaeDpzy2CQ@mail.gmail.com>
+	"John W. Linville" <linville@tuxdriver.com>,
+	GeunSik Lim <geunsik.lim@samsung.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Lukas Turek <8an@praha12.net>,
+	Mark Hindley <mark@hindley.org.uk>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jiri Kosina <jkosina@suse.cz>, Kalle Valo <kalle.valo@iki.fi>,
+	Keng-Yu Lin <keng-yu.lin@canonical.com>,
+	Luca Verdesca <magooz@salug.it>,
+	Shahar Or <shahar@shahar-or.co.il>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] [ath5k][leds] Ability to disable leds support. If leds support enabled do not force mac802.11 leds layer selection.
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 22, 2010 at 11:28:20AM -0700, Luis R. Rodriguez wrote:
-> On Tue, Jun 22, 2010 at 10:50 AM, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
-> > People who use "force" deserve whatever they get,
-> 
-> Heh, this whole patch and thread was started because Jussi tested
-> ath5k with  pcie_aspm=force (on a pre PCIE 1.1 device (?)) . I have
-> been trying to explain all along why this is a terrible idea to the
-> point we should probably just remove that code from the kernel. Hence
-> my side rants and explanations to justify my reasonings.
+Hi!
 
-Well, there's two things here. If you use force then you might get 
-inappropriate ASPM. But if your BIOS enables ASPM on an old device, then 
-booting *without* CONFIG_PCIE_ASPM will leave it turned on, and booting 
-*with* CONFIG_PCIE_ASPM will turn it off. The Kconfig description is 
-confusing - reality is that CONFIG_PCIE_ASPM enables logic that allows 
-the kernel to modify the BIOS default, and disabling it makes the 
-assumption that your BIOS did something sensible.
+Here is the patch to disable ath5k leds support on build stage.
+However if the leds support was enabled do not force selection of 802.11 leds layer.
+Depency on LEDS_CLASS is kept.
 
-> Where is "powersave"?
-> 
-> I do see a "powersave" but its an ASPM policy string and it implies
-> you want to enable L1 and L0s when the device's LinkCap supports it,
-> see pcie_config_aspm_link() and its users. So in other words powersave
-> seems to imply you are using pcie_aspm=force, no?
+Suggestion given by Pavel Roskin and Bob Copeland applied.
 
-No. pcie_aspm=force will enable ASPM even if (a) the device is pre-1.1, 
-(b) the firmware has the FADT flag set to tell you not to and (c) the 
-firmware doesn't grant control via _OSC. The powersave policy will 
-enable ASPM even if the BIOS didn't, but only if something else doesn't 
-tell us not to.
+Regards,
 
-> > Fedora's defaulted to that for a while now - we've hit
-> > issues with aacraid, but that's pretty much it in terms of cases where
-> > the heuristics don't work. Maxim's problems wouldn't be triggered
-> > because CONFIG_PCIE_ASPM disables it on pre-1.1 devices regardless of
-> > the BIOS setup.
-> 
-> I don't expect all distributions to have CONFIG_PCIE_ASPM enabled, in
-> fact I was unaware of this sanity check being included as part of
-> CONFIG_PCIE_ASPM, I recommend we consider just enabling the sanity
-> check all the time. The fact that CONFIG_PCIE_ASPM is even an option
-> seems confusing to me given that apart from this sanity check the only
-> other thing that I see useful in it is the forcing of ASPM settings
-> and as I noted I think pcie_aspm=force is pretty dangerous.
+--Dima
 
-You're right, it shouldn't be an option. It's vital for making sure that 
-ASPM is disabled when it should be. I'd be happy with pcie_aspm=force 
-tainting the kernel.
+---
+ drivers/net/wireless/ath/ath5k/Kconfig  |   12 +++++++++---
+ drivers/net/wireless/ath/ath5k/Makefile |    2 +-
+ drivers/net/wireless/ath/ath5k/ath5k.h  |   22 ++++++++++++++++++++++
+ drivers/net/wireless/ath/ath5k/base.h   |   13 +++++++++----
+ drivers/net/wireless/ath/ath5k/gpio.c   |    2 ++
+ 5 files changed, 43 insertions(+), 8 deletions(-)
 
-> > With the patch I've just sent, they should also all be used for Linux as
-> > well.
-> 
-> Oh nice! It'll be part of 2.6.36?
-
-As long as Jesse picks it up.
-
-> > If the same problems would appear under Windows then it's not a problem
-> > that I'm hugely concerned about as yet
-> 
-> Yes, these issues would also be part of Windows. But should also note
-> this also means for those people working on their own BIOSes it means
-> you also have to take these things into more serious consideration.
-
-There's a standardised mechanism for BIOS authors to tell us not to 
-touch their ASPM configuration, and people that ignore that really do 
-deserve to have things break.
-
-> Me neither, ASPM should just work with default settings, which is why
-> I also do not like that the sanity check on the PCIE 1.1 spec is done
-> through CONFIG_PCIE_ASPM, it makes no sense given that ASPM *will*
-> work even if you do not have CONFIG_PCIE_ASPM but the device has
-> functional ASPM.
-
-I agree. I'll send a patch that moves it under CONFIG_EMBEDDED and 
-defaults to on.
-
-> I do think we should be depending on userspace to do development
-> testing and forcing ASPM on, because the only other alternative is
-> pcie_aspm=force and as noted this is just not a good idea unless you
-> *seriously* know what you are doing.
-
-If you set the powersave policy and ASPM doesn't get enabled, then 
-that's because we've got a really strong belief that ASPM shouldn't be 
-enabled. Is your concern just that pcie_aspm=force is too easy for users 
-to get at?
-
+diff --git a/drivers/net/wireless/ath/ath5k/Kconfig b/drivers/net/wireless/ath/ath5k/Kconfig
+index eb83b7b..29f4572 100644
+--- a/drivers/net/wireless/ath/ath5k/Kconfig
++++ b/drivers/net/wireless/ath/ath5k/Kconfig
+@@ -1,9 +1,6 @@
+ config ATH5K
+ 	tristate "Atheros 5xxx wireless cards support"
+ 	depends on PCI && MAC80211
+-	select MAC80211_LEDS
+-	select LEDS_CLASS
+-	select NEW_LEDS
+ 	---help---
+ 	  This module adds support for wireless adapters based on
+ 	  Atheros 5xxx chipset.
+@@ -18,6 +15,15 @@ config ATH5K
+ 	  If you choose to build a module, it'll be called ath5k. Say M if
+ 	  unsure.
+ 
++
++config ATH5K_LEDS
++	tristate "Atheros 5xxx wireless cards LEDs support"
++	depends on ATH5K
++	select NEW_LEDS
++	select LEDS_CLASS
++	---help---
++	  Atheros 5xxx LED support.
++
+ config ATH5K_DEBUG
+ 	bool "Atheros 5xxx debugging"
+ 	depends on ATH5K
+diff --git a/drivers/net/wireless/ath/ath5k/Makefile b/drivers/net/wireless/ath/ath5k/Makefile
+index cc09595..6d552dd 100644
+--- a/drivers/net/wireless/ath/ath5k/Makefile
++++ b/drivers/net/wireless/ath/ath5k/Makefile
+@@ -10,8 +10,8 @@ ath5k-y				+= phy.o
+ ath5k-y				+= reset.o
+ ath5k-y				+= attach.o
+ ath5k-y				+= base.o
+-ath5k-y				+= led.o
+ ath5k-y				+= rfkill.o
+ ath5k-y				+= ani.o
+ ath5k-$(CONFIG_ATH5K_DEBUG)	+= debug.o
++ath5k-$(CONFIG_ATH5K_LEDS) += led.o
+ obj-$(CONFIG_ATH5K)		+= ath5k.o
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 2785946..bb7e09a 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1148,11 +1148,27 @@ struct ath5k_hw {
+ int ath5k_hw_attach(struct ath5k_softc *sc);
+ void ath5k_hw_detach(struct ath5k_hw *ah);
+ 
++#ifdef CONFIG_ATH5K_LEDS
+ /* LED functions */
+ int ath5k_init_leds(struct ath5k_softc *sc);
+ void ath5k_led_enable(struct ath5k_softc *sc);
+ void ath5k_led_off(struct ath5k_softc *sc);
+ void ath5k_unregister_leds(struct ath5k_softc *sc);
++#else
++static inline int ath5k_init_leds(struct ath5k_softc *sc)
++{
++	return 0;
++}
++static inline void ath5k_led_enable(struct ath5k_softc *sc)
++{
++}
++static inline void ath5k_led_off(struct ath5k_softc *sc)
++{
++}
++static inline void ath5k_unregister_leds(struct ath5k_softc *sc)
++{
++}
++#endif
+ 
+ /* Reset Functions */
+ int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial);
+@@ -1233,7 +1249,13 @@ int ath5k_hw_set_slot_time(struct ath5k_hw *ah, unsigned int slot_time);
+ int ath5k_hw_init_desc_functions(struct ath5k_hw *ah);
+ 
+ /* GPIO Functions */
++#ifdef CONFIG_ATH5K_LEDS
+ void ath5k_hw_set_ledstate(struct ath5k_hw *ah, unsigned int state);
++#else
++static inline void ath5k_hw_set_ledstate(struct ath5k_hw *ah, unsigned int state)
++{
++}
++#endif
+ int ath5k_hw_set_gpio_input(struct ath5k_hw *ah, u32 gpio);
+ int ath5k_hw_set_gpio_output(struct ath5k_hw *ah, u32 gpio);
+ u32 ath5k_hw_get_gpio(struct ath5k_hw *ah, u32 gpio);
+diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
+index 56221bc..97b26c1 100644
+--- a/drivers/net/wireless/ath/ath5k/base.h
++++ b/drivers/net/wireless/ath/ath5k/base.h
+@@ -86,6 +86,7 @@ struct ath5k_txq {
+ 
+ #define ATH5K_LED_MAX_NAME_LEN 31
+ 
++#ifdef CONFIG_ATH5K_LEDS
+ /*
+  * State for LED triggers
+  */
+@@ -95,6 +96,7 @@ struct ath5k_led
+ 	struct ath5k_softc *sc;			/* driver state */
+ 	struct led_classdev led_dev;		/* led classdev */
+ };
++#endif
+ 
+ /* Rfkill */
+ struct ath5k_rfkill {
+@@ -186,9 +188,6 @@ struct ath5k_softc {
+ 
+ 	u8			bssidmask[ETH_ALEN];
+ 
+-	unsigned int		led_pin,	/* GPIO pin for driving LED */
+-				led_on;		/* pin setting for LED on */
+-
+ 	struct tasklet_struct	restq;		/* reset tasklet */
+ 
+ 	unsigned int		rxbufsize;	/* rx size based on mtu */
+@@ -196,7 +195,6 @@ struct ath5k_softc {
+ 	spinlock_t		rxbuflock;
+ 	u32			*rxlink;	/* link ptr in last RX desc */
+ 	struct tasklet_struct	rxtq;		/* rx intr tasklet */
+-	struct ath5k_led	rx_led;		/* rx led */
+ 
+ 	struct list_head	txbuf;		/* transmit buffer */
+ 	spinlock_t		txbuflock;
+@@ -204,7 +202,14 @@ struct ath5k_softc {
+ 	struct ath5k_txq	txqs[AR5K_NUM_TX_QUEUES];	/* tx queues */
+ 	struct ath5k_txq	*txq;		/* main tx queue */
+ 	struct tasklet_struct	txtq;		/* tx intr tasklet */
++
++
++#ifdef CONFIG_ATH5K_LEDS
++	unsigned int		led_pin,	/* GPIO pin for driving LED */
++				led_on;		/* pin setting for LED on */
++	struct ath5k_led	rx_led;		/* rx led */
+ 	struct ath5k_led	tx_led;		/* tx led */
++#endif
+ 
+ 	struct ath5k_rfkill	rf_kill;
+ 
+diff --git a/drivers/net/wireless/ath/ath5k/gpio.c b/drivers/net/wireless/ath/ath5k/gpio.c
+index 64a27e7..9e757b3 100644
+--- a/drivers/net/wireless/ath/ath5k/gpio.c
++++ b/drivers/net/wireless/ath/ath5k/gpio.c
+@@ -25,6 +25,7 @@
+ #include "debug.h"
+ #include "base.h"
+ 
++#ifdef CONFIG_ATH5K_LEDS
+ /*
+  * Set led state
+  */
+@@ -76,6 +77,7 @@ void ath5k_hw_set_ledstate(struct ath5k_hw *ah, unsigned int state)
+ 	else
+ 		AR5K_REG_ENABLE_BITS(ah, AR5K_PCICFG, led_5210);
+ }
++#endif
+ 
+ /*
+  * Set GPIO inputs
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+1.7.1
+
