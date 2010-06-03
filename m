@@ -1,44 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:42041 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754537Ab0FEHVO convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55947 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753403Ab0FCRaL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Jun 2010 03:21:14 -0400
-Received: by vws5 with SMTP id 5so736549vws.19
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Jun 2010 00:21:14 -0700 (PDT)
+	Thu, 3 Jun 2010 13:30:11 -0400
+Date: Thu, 3 Jun 2010 13:21:15 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>, reinette.chatre@intel.com
+Subject: Re: linux-next: Tree for June 3 (iwlwifi)
+Message-ID: <20100603172114.GA14597@tuxdriver.com>
+References: <20100603134753.710a64b3.sfr@canb.auug.org.au>
+ <20100603085501.ac113779.randy.dunlap@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTildAN_AYlUV6l34TcWdVVelRIn9sWe5IEaLO5fS@mail.gmail.com>
-References: <1275642369-5024-1-git-send-email-vnatarajan@atheros.com>
-	<AANLkTildAN_AYlUV6l34TcWdVVelRIn9sWe5IEaLO5fS@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sat, 5 Jun 2010 00:20:53 -0700
-Message-ID: <AANLkTimorQtjCmyiTpimfa4qx0F-cSLaQNO0V4Dv8CH3@mail.gmail.com>
-Subject: Re: [stable][PATCH] ath9k: Avoid corrupt frames being forwarded to
-	mac80211.
-To: Vivek Natarajan <vnatarajan@atheros.com>
-Cc: greg@kroah.com, stable@kernel.org, linux-wireless@vger.kernel.org,
-	Ranga Rao Ravuri <ranga.ravuri@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100603085501.ac113779.randy.dunlap@oracle.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 5, 2010 at 12:20 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Fri, Jun 4, 2010 at 2:06 AM, Vivek Natarajan <vnatarajan@atheros.com> wrote:
->> If bit 29 is set, MAC H/W can attempt to decrypt the received aggregate
->> with WEP or TKIP, eventhough the received frame may be a CRC failed
->> corrupted frame. If this bit is set, H/W obeys key type in keycache.
->> If it is not set and if the key type in keycache is neither open nor
->> AES, H/W forces key type to be open.  But bit 29 should be set to 1
->> for AsyncFIFO feature to encrypt/decrypt the aggregate with WEP or TKIP.
->>
->> Reported-by: Johan Hovold <johan.hovold@lundinova.se>
->> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
->> Signed-off-by: Ranga Rao Ravuri <ranga.ravuri@atheros.com>
->> ---
->> Applies on top of 2.6.33 and 2.6.34
->
-> You need to Cc: stable@kernel.org on the commit log.
+On Thu, Jun 03, 2010 at 08:55:01AM -0700, Randy Dunlap wrote:
+> On Thu, 3 Jun 2010 13:47:53 +1000 Stephen Rothwell wrote:
+> 
+> > Hi all,
+> > 
+> > Changes since 20100602:
+> 
+> 
+> when CONFIG_IWLAGN=n:
+> 
+> drivers/net/wireless/iwlwifi/iwl-rx.c:254: error: 'struct iwl_priv' has no member named '_agn'
+> drivers/net/wireless/iwlwifi/iwl-rx.c:303: error: 'struct iwl_priv' has no member named '_agn'
+> drivers/net/wireless/iwlwifi/iwl-rx.c:304: error: 'struct iwl_priv' has no member named '_agn'
+> drivers/net/wireless/iwlwifi/iwl-rx.c:305: error: 'struct iwl_priv' has no member named '_agn'
+> drivers/net/wireless/iwlwifi/iwl-rx.c:306: error: 'struct iwl_priv' has no member named '_agn'
+> 
+> and many more.
+> 
+> Haven't we seen this movie before?
 
-Does 2.6.32 not have this issue?
+Ugh...caused be this:
 
-  Luis
+commit a2064b7a4a22d118087898e4308670da7ac07911
+Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Date:   Fri Apr 30 14:21:48 2010 -0700
+
+    iwlwifi: move _agn statistics related structure
+    
+    agn and 3945 has different statistics_notif data structure; since 3945
+    has it statistics_notif data structure inside the _3945 portion of
+    iwl_priv, it make sense to move the agn statistics_notif into _agn portion.
+    
+    Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+    Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+
+Since iwl-rx.o is part of iwlcore.ko, this change seems wrong.
+Reinette, any reason why I shouldn't just revert it?
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
