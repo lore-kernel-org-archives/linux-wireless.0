@@ -1,626 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:41893 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755239Ab0FAJm6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jun 2010 05:42:58 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 01 Jun 2010 02:42:58 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19460.54887.569783.322877@gargle.gargle.HOWL>
-Date: Tue, 1 Jun 2010 15:14:07 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 03/13] ath9k_hw: Cleanup TX power calculation for AR9287
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:60511 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756495Ab0FCPlY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jun 2010 11:41:24 -0400
+Received: by vws11 with SMTP id 11so286590vws.19
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Jun 2010 08:41:23 -0700 (PDT)
+Subject: Re: RTL 8187b - naughty behaviour
+From: Rogerio Luz Coelho <rogluz.news@gmail.com>
+To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+In-Reply-To: <q2k69e28c911004110635nac8100f6pe014361ed0a516a5@mail.gmail.com>
+References: <u2u917a57cb1004030656w7aff9e18qa43a358674d52d5a@mail.gmail.com>
+	 <4BB7660A.3030900@lwfinger.net>
+	 <i2x917a57cb1004030949qabd49dfeqa1f7cb66f4ef0f4e@mail.gmail.com>
+	 <4BB773A9.2070703@lwfinger.net>
+	 <n2n917a57cb1004031000h9910230ew50c6380788a64b1c@mail.gmail.com>
+	 <q2k917a57cb1004100507s17249540xfb11a2e2f0a2dd76@mail.gmail.com>
+	 <w2i69e28c911004101150h9db59aa1x2f9d12964f3c3fc1@mail.gmail.com>
+	 <y2g917a57cb1004101240g8033e225n57bf68b6d37b5431@mail.gmail.com>
+	 <q2k69e28c911004110635nac8100f6pe014361ed0a516a5@mail.gmail.com>
+Content-Type: multipart/mixed; boundary="=-N1HQh1SAdadN14dQQFvM"
+Date: Thu, 03 Jun 2010 12:40:54 -0300
+Message-ID: <1275579654.1311.32.camel@casa>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Add a few comments, and move the updation of max_power_level
-  to a helper routine. This is also done by non-4K based chipsets,
-  this will be fixed in a separate patch.
 
-* Remove two WARs which are required for old AR5416 chipsets,
-  and are not needed for AR9287.
+--=-N1HQh1SAdadN14dQQFvM
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-* Fix indentation and make things readable.
+You need to enable MMIO tracing support in your kernel config, and
+> recompile your kernel (assuming it is not enabled already - distros
+> usually disable the entire tracing framework by default). Then:
+> -Mount debugfs to /debug. (Usually it is mounted by default, but some
+> distros like to mount it @ /sys/kernel/debug instead - remount it to
+> /debug.)
+> -"echo mmiotrace > /debug/tracing/current_tracer"
+> -"cat /debug/tracing/trace_pipe >  trace.txt &" - at this point, tracing begins.
+> -Load r8187b and connect.
+> -"echo "Driver loaded!" > /debug/tracing/trace_marker"
+> -"echo nop
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/eeprom.c      |   21 ++
- drivers/net/wireless/ath/ath9k/eeprom.h      |    1 +
- drivers/net/wireless/ath/ath9k/eeprom_9287.c |  287 +++++++++++++-------------
- 3 files changed, 168 insertions(+), 141 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
-index a29b2d9..1266333 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.c
-@@ -258,6 +258,27 @@ u16 ath9k_hw_get_max_edge_power(u16 freq, struct cal_ctl_edges *pRdEdgesPower,
- 	return twiceMaxEdgePower;
- }
+Ok here are some news: 
+
+1) The rtl8187b problem is a know bug in Ubuntu since forever - bug
+#215802 https://bugs.launchpad.net/ubuntu/+source/linux/+bug/215802
+
+2) Tryied the Realtek driver found in: 
+http://ubuntuforums.org/showthread.php?t=1446894 
+(rtl8187B_linux_26.1056.1112.2009.release.tar.gz )
+
+- as seno said here on the list in 14-05-2010 17:20:02
+
+It installs a module called r8187b, witch I managed to use ONCE, after
+it installed, then after it disconnected it would not connect again, and
+after I rebooted there was no more wi-fi interface (!!!) ifconfig and
+iwconfig confirm that my wi-fi card (wlan0) is nowhere to be found
+
+5) Rate seems weird on this card. If I define the rate with 
+"iwconfig wlan0 rate 11M" it gives the best download speed, even if I
+rase this to 24M or 54M I get at least a 40% difference, same if I lower
+the rate. 
+Maybe what Hin-Tak Leung (2010-04-03) said about the Minstrel algorithm?
+Could we try to install both Minstrel and older algorithms side by side
+and make a comparison? from what I read here: 
+
+http://wireless.kernel.org/en/developers/Documentation/mac80211/RateControl/minstrel
+"Further, it means that the 1 Mbps rate (which typically has a high
+probability of successful transmission) will not be used in preference
+to the 11 Mbps rate." 
+
+But my rate is always a defaulted 1Mb/s on bootup. I put it to 11M
+manually and the connection improves dramatically 
+
+4) Ran the mmiotrace on the rtl8187 driver, it all seems gibberish to
+me ;) 
+
+one while it was at 1m from the router giving me top speed (same as
+Win7): trace1.txt:
  
-+void ath9k_hw_update_regulatory_maxpower(struct ath_hw *ah)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
-+
-+	switch (ar5416_get_ntxchains(ah->txchainmask)) {
-+	case 1:
-+		break;
-+	case 2:
-+		regulatory->max_power_level += INCREASE_MAXPOW_BY_TWO_CHAIN;
-+		break;
-+	case 3:
-+		regulatory->max_power_level += INCREASE_MAXPOW_BY_THREE_CHAIN;
-+		break;
-+	default:
-+		ath_print(common, ATH_DBG_EEPROM,
-+			  "Invalid chainmask configuration\n");
-+		break;
-+	}
-+}
-+
- int ath9k_hw_eeprom_init(struct ath_hw *ah)
- {
- 	int status;
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-index 14186f2..7da7d73 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-@@ -705,6 +705,7 @@ void ath9k_hw_get_target_powers(struct ath_hw *ah,
- 				u16 numRates, bool isHt40Target);
- u16 ath9k_hw_get_max_edge_power(u16 freq, struct cal_ctl_edges *pRdEdgesPower,
- 				bool is2GHz, int num_band_edges);
-+void ath9k_hw_update_regulatory_maxpower(struct ath_hw *ah);
- int ath9k_hw_eeprom_init(struct ath_hw *ah);
- 
- #define ar5416_get_ntxchains(_txchainmask)			\
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index 27abfba..5f3b20b 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -317,21 +317,18 @@ static void ath9k_hw_get_ar9287_gain_boundaries_pdadcs(struct ath_hw *ah,
- 					   pPdGainBoundaries[i]);
- 
- 
--		if ((i == 0) && !AR_SREV_5416_20_OR_LATER(ah)) {
--			minDelta = pPdGainBoundaries[0] - 23;
--			pPdGainBoundaries[0] = 23;
--		} else
--			minDelta = 0;
-+		minDelta = 0;
- 
- 		if (i == 0) {
- 			if (AR_SREV_9280_10_OR_LATER(ah))
- 				ss = (int16_t)(0 - (minPwrT4[i] / 2));
- 			else
- 				ss = 0;
--		} else
-+		} else {
- 			ss = (int16_t)((pPdGainBoundaries[i-1] -
- 					(minPwrT4[i] / 2)) -
- 				       tPdGainOverlap + 1 + minDelta);
-+		}
- 
- 		vpdStep = (int16_t)(vpdTableI[i][1] - vpdTableI[i][0]);
- 		vpdStep = (int16_t)((vpdStep < 1) ? 1 : vpdStep);
-@@ -396,8 +393,8 @@ static void ar9287_eeprom_get_tx_gain_index(struct ath_hw *ah,
- 	}
- 
- 	match = ath9k_hw_get_lower_upper_index(
--			(u8)FREQ2FBIN(centers.synth_center, IS_CHAN_2GHZ(chan)),
--			pCalChans, numPiers, &idxL, &idxR);
-+		(u8)FREQ2FBIN(centers.synth_center, IS_CHAN_2GHZ(chan)),
-+		pCalChans, numPiers, &idxL, &idxR);
- 
- 	if (match) {
- 		*pPwr = (int8_t) pRawDatasetOpLoop[idxL].pwrPdg[0][0];
-@@ -463,7 +460,7 @@ static void ath9k_hw_set_ar9287_power_cal_table(struct ath_hw *ah,
- 	int16_t tMinCalPower;
- 	u16 numXpdGain, xpdMask;
- 	u16 xpdGainValues[AR9287_NUM_PD_GAINS] = {0, 0, 0, 0};
--	u32 reg32, regOffset, regChainOffset;
-+	u32 reg32, regOffset, regChainOffset, regval;
- 	int16_t modalIdx, diff = 0;
- 	struct ar9287_eeprom *pEepData = &ah->eeprom.map9287;
- 
-@@ -471,7 +468,7 @@ static void ath9k_hw_set_ar9287_power_cal_table(struct ath_hw *ah,
- 	xpdMask = pEepData->modalHeader.xpdGain;
- 
- 	if ((pEepData->baseEepHeader.version & AR9287_EEP_VER_MINOR_MASK) >=
--			AR9287_EEP_MINOR_VER_2)
-+	    AR9287_EEP_MINOR_VER_2)
- 		pdGainOverlap_t2 = pEepData->modalHeader.pdGainOverlap;
- 	else
- 		pdGainOverlap_t2 = (u16)(MS(REG_READ(ah, AR_PHY_TPCRG5),
-@@ -482,14 +479,14 @@ static void ath9k_hw_set_ar9287_power_cal_table(struct ath_hw *ah,
- 		numPiers = AR9287_NUM_2G_CAL_PIERS;
- 		if (ath9k_hw_ar9287_get_eeprom(ah, EEP_OL_PWRCTRL)) {
- 			pRawDatasetOpenLoop =
--				(struct cal_data_op_loop_ar9287 *)
--				pEepData->calPierData2G[0];
-+			(struct cal_data_op_loop_ar9287 *)pEepData->calPierData2G[0];
- 			ah->initPDADC = pRawDatasetOpenLoop->vpdPdg[0][0];
- 		}
- 	}
- 
- 	numXpdGain = 0;
- 
-+	/* Calculate the value of xpdgains from the xpdGain Mask */
- 	for (i = 1; i <= AR9287_PD_GAINS_IN_MASK; i++) {
- 		if ((xpdMask >> (AR9287_PD_GAINS_IN_MASK - i)) & 1) {
- 			if (numXpdGain >= AR9287_NUM_PD_GAINS)
-@@ -511,77 +508,79 @@ static void ath9k_hw_set_ar9287_power_cal_table(struct ath_hw *ah,
- 
- 	for (i = 0; i < AR9287_MAX_CHAINS; i++)	{
- 		regChainOffset = i * 0x1000;
-+
- 		if (pEepData->baseEepHeader.txMask & (1 << i)) {
--			pRawDatasetOpenLoop = (struct cal_data_op_loop_ar9287 *)
--					       pEepData->calPierData2G[i];
-+			pRawDatasetOpenLoop =
-+			(struct cal_data_op_loop_ar9287 *)pEepData->calPierData2G[i];
-+
- 			if (ath9k_hw_ar9287_get_eeprom(ah, EEP_OL_PWRCTRL)) {
- 				int8_t txPower;
- 				ar9287_eeprom_get_tx_gain_index(ah, chan,
--							  pRawDatasetOpenLoop,
--							  pCalBChans, numPiers,
--							  &txPower);
-+							pRawDatasetOpenLoop,
-+							pCalBChans, numPiers,
-+							&txPower);
- 				ar9287_eeprom_olpc_set_pdadcs(ah, txPower, i);
- 			} else {
- 				pRawDataset =
- 					(struct cal_data_per_freq_ar9287 *)
- 					pEepData->calPierData2G[i];
--				ath9k_hw_get_ar9287_gain_boundaries_pdadcs(
--						  ah, chan, pRawDataset,
--						  pCalBChans, numPiers,
--						  pdGainOverlap_t2,
--						  &tMinCalPower, gainBoundaries,
--						  pdadcValues, numXpdGain);
-+
-+				ath9k_hw_get_ar9287_gain_boundaries_pdadcs(ah, chan,
-+							   pRawDataset,
-+							   pCalBChans, numPiers,
-+							   pdGainOverlap_t2,
-+							   &tMinCalPower,
-+							   gainBoundaries,
-+							   pdadcValues,
-+							   numXpdGain);
- 			}
- 
- 			if (i == 0) {
--				if (!ath9k_hw_ar9287_get_eeprom(
--					    ah, EEP_OL_PWRCTRL)) {
--					REG_WRITE(ah, AR_PHY_TPCRG5 +
--					  regChainOffset,
--					  SM(pdGainOverlap_t2,
--					     AR_PHY_TPCRG5_PD_GAIN_OVERLAP) |
--					  SM(gainBoundaries[0],
--					     AR_PHY_TPCRG5_PD_GAIN_BOUNDARY_1)
--					  | SM(gainBoundaries[1],
--					       AR_PHY_TPCRG5_PD_GAIN_BOUNDARY_2)
--					  | SM(gainBoundaries[2],
--					       AR_PHY_TPCRG5_PD_GAIN_BOUNDARY_3)
--					  | SM(gainBoundaries[3],
--					       AR_PHY_TPCRG5_PD_GAIN_BOUNDARY_4));
-+				if (!ath9k_hw_ar9287_get_eeprom(ah,
-+							EEP_OL_PWRCTRL)) {
-+
-+					regval = SM(pdGainOverlap_t2,
-+						    AR_PHY_TPCRG5_PD_GAIN_OVERLAP)
-+						| SM(gainBoundaries[0],
-+						     AR_PHY_TPCRG5_PD_GAIN_BOUNDARY_1)
-+						| SM(gainBoundaries[1],
-+						     AR_PHY_TPCRG5_PD_GAIN_BOUNDARY_2)
-+						| SM(gainBoundaries[2],
-+						     AR_PHY_TPCRG5_PD_GAIN_BOUNDARY_3)
-+						| SM(gainBoundaries[3],
-+						     AR_PHY_TPCRG5_PD_GAIN_BOUNDARY_4);
-+
-+					REG_WRITE(ah,
-+						  AR_PHY_TPCRG5 + regChainOffset,
-+						  regval);
- 				}
- 			}
- 
- 			if ((int32_t)AR9287_PWR_TABLE_OFFSET_DB !=
--				     pEepData->baseEepHeader.pwrTableOffset) {
--				diff = (u16)
--				       (pEepData->baseEepHeader.pwrTableOffset
--					- (int32_t)AR9287_PWR_TABLE_OFFSET_DB);
-+			    pEepData->baseEepHeader.pwrTableOffset) {
-+				diff = (u16)(pEepData->baseEepHeader.pwrTableOffset -
-+					     (int32_t)AR9287_PWR_TABLE_OFFSET_DB);
- 				diff *= 2;
- 
--				for (j = 0;
--				     j < ((u16)AR9287_NUM_PDADC_VALUES-diff);
--				     j++)
-+				for (j = 0; j < ((u16)AR9287_NUM_PDADC_VALUES-diff); j++)
- 					pdadcValues[j] = pdadcValues[j+diff];
- 
- 				for (j = (u16)(AR9287_NUM_PDADC_VALUES-diff);
- 				     j < AR9287_NUM_PDADC_VALUES; j++)
- 					pdadcValues[j] =
--					  pdadcValues[
--					  AR9287_NUM_PDADC_VALUES-diff];
-+					  pdadcValues[AR9287_NUM_PDADC_VALUES-diff];
- 			}
- 
- 			if (!ath9k_hw_ar9287_get_eeprom(ah, EEP_OL_PWRCTRL)) {
--				regOffset = AR_PHY_BASE + (672 << 2) +
--							   regChainOffset;
-+				regOffset = AR_PHY_BASE +
-+					(672 << 2) + regChainOffset;
-+
- 				for (j = 0; j < 32; j++) {
--					reg32 = ((pdadcValues[4*j + 0]
--						  & 0xFF) << 0)  |
--						((pdadcValues[4*j + 1]
--						  & 0xFF) << 8)  |
--						((pdadcValues[4*j + 2]
--						  & 0xFF) << 16) |
--						((pdadcValues[4*j + 3]
--						  & 0xFF) << 24) ;
-+					reg32 = ((pdadcValues[4*j + 0] & 0xFF) << 0)
-+						| ((pdadcValues[4*j + 1] & 0xFF) << 8)
-+						| ((pdadcValues[4*j + 2] & 0xFF) << 16)
-+						| ((pdadcValues[4*j + 3] & 0xFF) << 24);
-+
- 					REG_WRITE(ah, regOffset, reg32);
- 					regOffset += 4;
- 				}
-@@ -600,6 +599,14 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
- 						     u16 twiceMaxRegulatoryPower,
- 						     u16 powerLimit)
- {
-+#define CMP_CTL \
-+	(((cfgCtl & ~CTL_MODE_M) | (pCtlMode[ctlMode] & CTL_MODE_M)) == \
-+	 pEepData->ctlIndex[i])
-+
-+#define CMP_NO_CTL \
-+	(((cfgCtl & ~CTL_MODE_M) | (pCtlMode[ctlMode] & CTL_MODE_M)) == \
-+	 ((pEepData->ctlIndex[i] & CTL_MODE_M) | SD_NO_CTL))
-+
- #define REDUCE_SCALED_POWER_BY_TWO_CHAIN     6
- #define REDUCE_SCALED_POWER_BY_THREE_CHAIN   10
- 
-@@ -617,9 +624,12 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
- 	struct cal_target_power_ht targetPowerHt20,
- 				    targetPowerHt40 = {0, {0, 0, 0, 0} };
- 	u16 scaledPower = 0, minCtlPower, maxRegAllowedPower;
--	u16 ctlModesFor11g[] =
--		{CTL_11B, CTL_11G, CTL_2GHT20,
--		 CTL_11B_EXT, CTL_11G_EXT, CTL_2GHT40};
-+	u16 ctlModesFor11g[] = {CTL_11B,
-+				CTL_11G,
-+				CTL_2GHT20,
-+				CTL_11B_EXT,
-+				CTL_11G_EXT,
-+				CTL_2GHT40};
- 	u16 numCtlModes = 0, *pCtlMode = NULL, ctlMode, freq;
- 	struct chan_centers centers;
- 	int tx_chainmask;
-@@ -629,19 +639,28 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
- 
- 	ath9k_hw_get_channel_centers(ah, chan, &centers);
- 
-+	/* Compute TxPower reduction due to Antenna Gain */
- 	twiceLargestAntenna = max(pEepData->modalHeader.antennaGainCh[0],
- 				  pEepData->modalHeader.antennaGainCh[1]);
--
- 	twiceLargestAntenna = (int16_t)min((AntennaReduction) -
- 					   twiceLargestAntenna, 0);
- 
-+	/*
-+	 * scaledPower is the minimum of the user input power level
-+	 * and the regulatory allowed power level.
-+	 */
- 	maxRegAllowedPower = twiceMaxRegulatoryPower + twiceLargestAntenna;
-+
- 	if (regulatory->tp_scale != ATH9K_TP_SCALE_MAX)
- 		maxRegAllowedPower -=
- 			(tpScaleReductionTable[(regulatory->tp_scale)] * 2);
- 
- 	scaledPower = min(powerLimit, maxRegAllowedPower);
- 
-+	/*
-+	 * Reduce scaled Power by number of chains active
-+	 * to get the per chain tx power level.
-+	 */
- 	switch (ar5416_get_ntxchains(tx_chainmask)) {
- 	case 1:
- 		break;
-@@ -654,7 +673,11 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
- 	}
- 	scaledPower = max((u16)0, scaledPower);
- 
-+	/*
-+	 * Get TX power from EEPROM.
-+	 */
- 	if (IS_CHAN_2GHZ(chan))	{
-+		/* CTL_11B, CTL_11G, CTL_2GHT20 */
- 		numCtlModes =
- 			ARRAY_SIZE(ctlModesFor11g) - SUB_NUM_CTL_MODES_AT_2G_40;
- 
-@@ -674,6 +697,7 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
- 					   &targetPowerHt20, 8, false);
- 
- 		if (IS_CHAN_HT40(chan))	{
-+			/* All 2G CTLs */
- 			numCtlModes = ARRAY_SIZE(ctlModesFor11g);
- 			ath9k_hw_get_target_powers(ah, chan,
- 						   pEepData->calTargetPower2GHT40,
-@@ -691,8 +715,9 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
- 	}
- 
- 	for (ctlMode = 0; ctlMode < numCtlModes; ctlMode++) {
--		bool isHt40CtlMode = (pCtlMode[ctlMode] == CTL_5GHT40) ||
--				     (pCtlMode[ctlMode] == CTL_2GHT40);
-+		bool isHt40CtlMode =
-+			(pCtlMode[ctlMode] == CTL_2GHT40) ? true : false;
-+
- 		if (isHt40CtlMode)
- 			freq = centers.synth_center;
- 		else if (pCtlMode[ctlMode] & EXT_ADDITIVE)
-@@ -700,31 +725,28 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
- 		else
- 			freq = centers.ctl_center;
- 
--		if (ah->eep_ops->get_eeprom_ver(ah) == 14 &&
--		    ah->eep_ops->get_eeprom_rev(ah) <= 2)
--			twiceMaxEdgePower = AR5416_MAX_RATE_POWER;
--
-+		/* Walk through the CTL indices stored in EEPROM */
- 		for (i = 0; (i < AR9287_NUM_CTLS) && pEepData->ctlIndex[i]; i++) {
--			if ((((cfgCtl & ~CTL_MODE_M) |
--			      (pCtlMode[ctlMode] & CTL_MODE_M)) ==
--			     pEepData->ctlIndex[i]) ||
--			    (((cfgCtl & ~CTL_MODE_M) |
--			      (pCtlMode[ctlMode] & CTL_MODE_M)) ==
--			     ((pEepData->ctlIndex[i] &
--			       CTL_MODE_M) | SD_NO_CTL))) {
-+			struct cal_ctl_edges *pRdEdgesPower;
- 
-+			/*
-+			 * Compare test group from regulatory channel list
-+			 * with test mode from pCtlMode list
-+			 */
-+			if (CMP_CTL || CMP_NO_CTL) {
- 				rep = &(pEepData->ctlData[i]);
--				twiceMinEdgePower = ath9k_hw_get_max_edge_power(
--				    freq,
--				    rep->ctlEdges[ar5416_get_ntxchains(
--				    tx_chainmask) - 1],
--				    IS_CHAN_2GHZ(chan), AR5416_NUM_BAND_EDGES);
--
--				if ((cfgCtl & ~CTL_MODE_M) == SD_NO_CTL)
--					twiceMaxEdgePower = min(
--							    twiceMaxEdgePower,
--							    twiceMinEdgePower);
--				else {
-+				pRdEdgesPower =
-+				rep->ctlEdges[ar5416_get_ntxchains(tx_chainmask) - 1];
-+
-+				twiceMinEdgePower = ath9k_hw_get_max_edge_power(freq,
-+								pRdEdgesPower,
-+								IS_CHAN_2GHZ(chan),
-+								AR5416_NUM_BAND_EDGES);
-+
-+				if ((cfgCtl & ~CTL_MODE_M) == SD_NO_CTL) {
-+					twiceMaxEdgePower = min(twiceMaxEdgePower,
-+								twiceMinEdgePower);
-+				} else {
- 					twiceMaxEdgePower = twiceMinEdgePower;
- 					break;
- 				}
-@@ -733,55 +755,48 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
- 
- 		minCtlPower = (u8)min(twiceMaxEdgePower, scaledPower);
- 
-+		/* Apply ctl mode to correct target power set */
- 		switch (pCtlMode[ctlMode]) {
- 		case CTL_11B:
--			for (i = 0;
--			     i < ARRAY_SIZE(targetPowerCck.tPow2x);
--			     i++) {
--				targetPowerCck.tPow2x[i] = (u8)min(
--					(u16)targetPowerCck.tPow2x[i],
--					minCtlPower);
-+			for (i = 0; i < ARRAY_SIZE(targetPowerCck.tPow2x); i++) {
-+				targetPowerCck.tPow2x[i] =
-+					(u8)min((u16)targetPowerCck.tPow2x[i],
-+						minCtlPower);
- 			}
- 			break;
- 		case CTL_11A:
- 		case CTL_11G:
--			for (i = 0;
--			     i < ARRAY_SIZE(targetPowerOfdm.tPow2x);
--			     i++) {
--				targetPowerOfdm.tPow2x[i] = (u8)min(
--					(u16)targetPowerOfdm.tPow2x[i],
--					minCtlPower);
-+			for (i = 0; i < ARRAY_SIZE(targetPowerOfdm.tPow2x); i++) {
-+				targetPowerOfdm.tPow2x[i] =
-+					(u8)min((u16)targetPowerOfdm.tPow2x[i],
-+						minCtlPower);
- 			}
- 			break;
- 		case CTL_5GHT20:
- 		case CTL_2GHT20:
--			for (i = 0;
--			     i < ARRAY_SIZE(targetPowerHt20.tPow2x);
--			     i++) {
--				targetPowerHt20.tPow2x[i] = (u8)min(
--					(u16)targetPowerHt20.tPow2x[i],
--					minCtlPower);
-+			for (i = 0; i < ARRAY_SIZE(targetPowerHt20.tPow2x); i++) {
-+				targetPowerHt20.tPow2x[i] =
-+					(u8)min((u16)targetPowerHt20.tPow2x[i],
-+						minCtlPower);
- 			}
- 			break;
- 		case CTL_11B_EXT:
--			targetPowerCckExt.tPow2x[0] = (u8)min(
--				    (u16)targetPowerCckExt.tPow2x[0],
--				    minCtlPower);
-+			targetPowerCckExt.tPow2x[0] =
-+				(u8)min((u16)targetPowerCckExt.tPow2x[0],
-+					minCtlPower);
- 			break;
- 		case CTL_11A_EXT:
- 		case CTL_11G_EXT:
--			targetPowerOfdmExt.tPow2x[0] = (u8)min(
--				    (u16)targetPowerOfdmExt.tPow2x[0],
--				    minCtlPower);
-+			targetPowerOfdmExt.tPow2x[0] =
-+				(u8)min((u16)targetPowerOfdmExt.tPow2x[0],
-+					minCtlPower);
- 			break;
- 		case CTL_5GHT40:
- 		case CTL_2GHT40:
--			for (i = 0;
--			     i < ARRAY_SIZE(targetPowerHt40.tPow2x);
--			     i++) {
--				targetPowerHt40.tPow2x[i] = (u8)min(
--					(u16)targetPowerHt40.tPow2x[i],
--					minCtlPower);
-+			for (i = 0; i < ARRAY_SIZE(targetPowerHt40.tPow2x); i++) {
-+				targetPowerHt40.tPow2x[i] =
-+					(u8)min((u16)targetPowerHt40.tPow2x[i],
-+						minCtlPower);
- 			}
- 			break;
- 		default:
-@@ -789,12 +804,13 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
- 		}
- 	}
- 
-+	/* Now set the rates array */
-+
- 	ratesArray[rate6mb] =
- 	ratesArray[rate9mb] =
- 	ratesArray[rate12mb] =
- 	ratesArray[rate18mb] =
--	ratesArray[rate24mb] =
--	targetPowerOfdm.tPow2x[0];
-+	ratesArray[rate24mb] = targetPowerOfdm.tPow2x[0];
- 
- 	ratesArray[rate36mb] = targetPowerOfdm.tPow2x[1];
- 	ratesArray[rate48mb] = targetPowerOfdm.tPow2x[2];
-@@ -806,12 +822,12 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
- 
- 	if (IS_CHAN_2GHZ(chan))	{
- 		ratesArray[rate1l] = targetPowerCck.tPow2x[0];
--		ratesArray[rate2s] = ratesArray[rate2l] =
--			targetPowerCck.tPow2x[1];
--		ratesArray[rate5_5s] = ratesArray[rate5_5l] =
--			targetPowerCck.tPow2x[2];
--		ratesArray[rate11s] = ratesArray[rate11l] =
--			targetPowerCck.tPow2x[3];
-+		ratesArray[rate2s] =
-+		ratesArray[rate2l] = targetPowerCck.tPow2x[1];
-+		ratesArray[rate5_5s] =
-+		ratesArray[rate5_5l] = targetPowerCck.tPow2x[2];
-+		ratesArray[rate11s] =
-+		ratesArray[rate11l] = targetPowerCck.tPow2x[3];
- 	}
- 	if (IS_CHAN_HT40(chan))	{
- 		for (i = 0; i < ARRAY_SIZE(targetPowerHt40.tPow2x); i++)
-@@ -820,10 +836,13 @@ static void ath9k_hw_set_ar9287_power_per_rate_table(struct ath_hw *ah,
- 		ratesArray[rateDupOfdm] = targetPowerHt40.tPow2x[0];
- 		ratesArray[rateDupCck]  = targetPowerHt40.tPow2x[0];
- 		ratesArray[rateExtOfdm] = targetPowerOfdmExt.tPow2x[0];
-+
- 		if (IS_CHAN_2GHZ(chan))
- 			ratesArray[rateExtCck] = targetPowerCckExt.tPow2x[0];
- 	}
- 
-+#undef CMP_CTL
-+#undef CMP_NO_CTL
- #undef REDUCE_SCALED_POWER_BY_TWO_CHAIN
- #undef REDUCE_SCALED_POWER_BY_THREE_CHAIN
- }
-@@ -834,10 +853,6 @@ static void ath9k_hw_ar9287_set_txpower(struct ath_hw *ah,
- 					u8 twiceMaxRegulatoryPower,
- 					u8 powerLimit)
- {
--#define INCREASE_MAXPOW_BY_TWO_CHAIN     6
--#define INCREASE_MAXPOW_BY_THREE_CHAIN   10
--
--	struct ath_common *common = ath9k_hw_common(ah);
- 	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
- 	struct ar9287_eeprom *pEepData = &ah->eeprom.map9287;
- 	struct modal_eep_ar9287_header *pModal = &pEepData->modalHeader;
-@@ -871,6 +886,7 @@ static void ath9k_hw_ar9287_set_txpower(struct ath_hw *ah,
- 			ratesArray[i] -= AR9287_PWR_TABLE_OFFSET_DB * 2;
- 	}
- 
-+	/* OFDM power per rate */
- 	REG_WRITE(ah, AR_PHY_POWER_TX_RATE1,
- 		  ATH9K_POW_SM(ratesArray[rate18mb], 24)
- 		  | ATH9K_POW_SM(ratesArray[rate12mb], 16)
-@@ -883,6 +899,7 @@ static void ath9k_hw_ar9287_set_txpower(struct ath_hw *ah,
- 		  | ATH9K_POW_SM(ratesArray[rate36mb], 8)
- 		  | ATH9K_POW_SM(ratesArray[rate24mb], 0));
- 
-+	/* CCK power per rate */
- 	if (IS_CHAN_2GHZ(chan))	{
- 		REG_WRITE(ah, AR_PHY_POWER_TX_RATE3,
- 			  ATH9K_POW_SM(ratesArray[rate2s], 24)
-@@ -896,6 +913,7 @@ static void ath9k_hw_ar9287_set_txpower(struct ath_hw *ah,
- 			  | ATH9K_POW_SM(ratesArray[rate5_5l], 0));
- 	}
- 
-+	/* HT20 power per rate */
- 	REG_WRITE(ah, AR_PHY_POWER_TX_RATE5,
- 		  ATH9K_POW_SM(ratesArray[rateHt20_3], 24)
- 		  | ATH9K_POW_SM(ratesArray[rateHt20_2], 16)
-@@ -908,6 +926,7 @@ static void ath9k_hw_ar9287_set_txpower(struct ath_hw *ah,
- 		  | ATH9K_POW_SM(ratesArray[rateHt20_5], 8)
- 		  | ATH9K_POW_SM(ratesArray[rateHt20_4], 0));
- 
-+	/* HT40 power per rate */
- 	if (IS_CHAN_HT40(chan))	{
- 		if (ath9k_hw_ar9287_get_eeprom(ah, EEP_OL_PWRCTRL)) {
- 			REG_WRITE(ah, AR_PHY_POWER_TX_RATE7,
-@@ -943,6 +962,7 @@ static void ath9k_hw_ar9287_set_txpower(struct ath_hw *ah,
- 						 ht40PowerIncForPdadc, 0));
- 		}
- 
-+		/* Dup/Ext power per rate */
- 		REG_WRITE(ah, AR_PHY_POWER_TX_RATE9,
- 			  ATH9K_POW_SM(ratesArray[rateExtOfdm], 24)
- 			  | ATH9K_POW_SM(ratesArray[rateExtCck], 16)
-@@ -960,21 +980,6 @@ static void ath9k_hw_ar9287_set_txpower(struct ath_hw *ah,
- 			ratesArray[i] + AR9287_PWR_TABLE_OFFSET_DB * 2;
- 	else
- 		regulatory->max_power_level = ratesArray[i];
--
--	switch (ar5416_get_ntxchains(ah->txchainmask)) {
--	case 1:
--		break;
--	case 2:
--		regulatory->max_power_level += INCREASE_MAXPOW_BY_TWO_CHAIN;
--		break;
--	case 3:
--		regulatory->max_power_level += INCREASE_MAXPOW_BY_THREE_CHAIN;
--		break;
--	default:
--		ath_print(common, ATH_DBG_EEPROM,
--			  "Invalid chainmask configuration\n");
--		break;
--	}
- }
- 
- static void ath9k_hw_ar9287_set_addac(struct ath_hw *ah,
--- 
-1.7.1
+VERSION 20070824
+PCIDEV 0000 10390671 0 d0000000 0 0 0 0 0 0 8000000 0 0 0 0 0 0
+agpgart-sis
+PCIDEV 0008 10390003 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+PCIDEV 0010 10390968 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+PCIDEV 0015 10395513 10 1f0 3f6 170 376 1081 0 0 8 0 8 0 10 0 0 pata_sis
+PCIDEV 0018 10397001 14 d8404000 0 0 0 0 0 0 1000 0 0 0 0 0 0 ohci_hcd
+PCIDEV 0019 10397001 15 d8405000 0 0 0 0 0 0 1000 0 0 0 0 0 0 ohci_hcd
+PCIDEV 001b 10397002 16 d8406000 0 0 0 0 0 0 1000 0 0 0 0 0 0 ehci_hcd
+PCIDEV 0020 10390191 13 d8407000 1001 0 0 0 0 0 80 80 0 0 0 0 0 sis190
+PCIDEV 0028 10391183 11 10c9 10bd 10c1 10b9 10a1 0 0 8 4 8 4 10 0 0
+sata_sis
+PCIDEV 0030 1039000a 18 0 0 0 0 0 0 0 0 0 0 0 0 0 0 pcieport
+PCIDEV 0038 1039000a 19 0 0 0 0 0 0 0 0 0 0 0 0 0 0 pcieport
+PCIDEV 0078 10397502 12 d8400000 0 0 0 0 0 0 4000 0 0 0 0 0 0 HDA Intel
+PCIDEV 00f8 10390004 1a 0 0 0 0 0 0 0 0 0 0 0 0 0 0 pcieport
+PCIDEV 0100 10396351 10 c0000008 d8000000 9001 0 0 0 2 10000000 20000 80
+0 0 0 0 
+PCIDEV 0300 197b2382 10 d8100000 0 0 0 0 0 d8500000 100 0 0 0 0 0 10000
+sdhci-pci
+PCIDEV 0302 197b2381 10 d8100400 0 0 0 0 0 0 100 0 0 0 0 0 0 
+PCIDEV 0303 197b2383 10 d8100800 0 0 0 0 0 0 100 0 0 0 0 0 0 jmb38x_ms
+
+** then when it was about 10m - failed to connect (Windows 7 connects
+normally) trace2.txt 
+
+VERSION 20070824
+PCIDEV 0000 10390671 0 d0000000 0 0 0 0 0 0 8000000 0 0 0 0 0 0
+agpgart-sis
+PCIDEV 0008 10390003 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+PCIDEV 0010 10390968 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+PCIDEV 0015 10395513 10 1f0 3f6 170 376 1081 0 0 8 0 8 0 10 0 0 pata_sis
+PCIDEV 0018 10397001 14 d8404000 0 0 0 0 0 0 1000 0 0 0 0 0 0 ohci_hcd
+PCIDEV 0019 10397001 15 d8405000 0 0 0 0 0 0 1000 0 0 0 0 0 0 ohci_hcd
+PCIDEV 001b 10397002 16 d8406000 0 0 0 0 0 0 1000 0 0 0 0 0 0 ehci_hcd
+PCIDEV 0020 10390191 13 d8407000 1001 0 0 0 0 0 80 80 0 0 0 0 0 sis190
+PCIDEV 0028 10391183 11 10c9 10bd 10c1 10b9 10a1 0 0 8 4 8 4 10 0 0
+sata_sis
+PCIDEV 0030 1039000a 18 0 0 0 0 0 0 0 0 0 0 0 0 0 0 pcieport
+PCIDEV 0038 1039000a 19 0 0 0 0 0 0 0 0 0 0 0 0 0 0 pcieport
+PCIDEV 0078 10397502 12 d8400000 0 0 0 0 0 0 4000 0 0 0 0 0 0 HDA Intel
+PCIDEV 00f8 10390004 1a 0 0 0 0 0 0 0 0 0 0 0 0 0 0 pcieport
+PCIDEV 0100 10396351 10 c0000008 d8000000 9001 0 0 0 2 10000000 20000 80
+0 0 0 0 
+PCIDEV 0300 197b2382 10 d8100000 0 0 0 0 0 d8500000 100 0 0 0 0 0 10000
+sdhci-pci
+PCIDEV 0302 197b2381 10 d8100400 0 0 0 0 0 0 100 0 0 0 0 0 0 
+PCIDEV 0303 197b2383 10 d8100800 0 0 0 0 0 0 100 0 0 0 0 0 0 jmb38x_ms
+
+*** All the steps asked by Gábor were done. 
+
+Thanks all you guys.
+
+Rogerio 
+
+--=-N1HQh1SAdadN14dQQFvM
+Content-Disposition: attachment; filename="trace2.txt"
+Content-Type: text/plain; name="trace2.txt"; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+VERSION 20070824
+PCIDEV 0000 10390671 0 d0000000 0 0 0 0 0 0 8000000 0 0 0 0 0 0 agpgart-sis
+PCIDEV 0008 10390003 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+PCIDEV 0010 10390968 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+PCIDEV 0015 10395513 10 1f0 3f6 170 376 1081 0 0 8 0 8 0 10 0 0 pata_sis
+PCIDEV 0018 10397001 14 d8404000 0 0 0 0 0 0 1000 0 0 0 0 0 0 ohci_hcd
+PCIDEV 0019 10397001 15 d8405000 0 0 0 0 0 0 1000 0 0 0 0 0 0 ohci_hcd
+PCIDEV 001b 10397002 16 d8406000 0 0 0 0 0 0 1000 0 0 0 0 0 0 ehci_hcd
+PCIDEV 0020 10390191 13 d8407000 1001 0 0 0 0 0 80 80 0 0 0 0 0 sis190
+PCIDEV 0028 10391183 11 10c9 10bd 10c1 10b9 10a1 0 0 8 4 8 4 10 0 0 sata_sis
+PCIDEV 0030 1039000a 18 0 0 0 0 0 0 0 0 0 0 0 0 0 0 pcieport
+PCIDEV 0038 1039000a 19 0 0 0 0 0 0 0 0 0 0 0 0 0 0 pcieport
+PCIDEV 0078 10397502 12 d8400000 0 0 0 0 0 0 4000 0 0 0 0 0 0 HDA Intel
+PCIDEV 00f8 10390004 1a 0 0 0 0 0 0 0 0 0 0 0 0 0 0 pcieport
+PCIDEV 0100 10396351 10 c0000008 d8000000 9001 0 0 0 2 10000000 20000 80 0 0 0 0 
+PCIDEV 0300 197b2382 10 d8100000 0 0 0 0 0 d8500000 100 0 0 0 0 0 10000 sdhci-pci
+PCIDEV 0302 197b2381 10 d8100400 0 0 0 0 0 0 100 0 0 0 0 0 0 
+PCIDEV 0303 197b2383 10 d8100800 0 0 0 0 0 0 100 0 0 0 0 0 0 jmb38x_ms
+
+--=-N1HQh1SAdadN14dQQFvM
+Content-Disposition: attachment; filename="trace1.txt"
+Content-Type: text/plain; name="trace1.txt"; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+VERSION 20070824
+PCIDEV 0000 10390671 0 d0000000 0 0 0 0 0 0 8000000 0 0 0 0 0 0 agpgart-sis
+PCIDEV 0008 10390003 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+PCIDEV 0010 10390968 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+PCIDEV 0015 10395513 10 1f0 3f6 170 376 1081 0 0 8 0 8 0 10 0 0 pata_sis
+PCIDEV 0018 10397001 14 d8404000 0 0 0 0 0 0 1000 0 0 0 0 0 0 ohci_hcd
+PCIDEV 0019 10397001 15 d8405000 0 0 0 0 0 0 1000 0 0 0 0 0 0 ohci_hcd
+PCIDEV 001b 10397002 16 d8406000 0 0 0 0 0 0 1000 0 0 0 0 0 0 ehci_hcd
+PCIDEV 0020 10390191 13 d8407000 1001 0 0 0 0 0 80 80 0 0 0 0 0 sis190
+PCIDEV 0028 10391183 11 10c9 10bd 10c1 10b9 10a1 0 0 8 4 8 4 10 0 0 sata_sis
+PCIDEV 0030 1039000a 18 0 0 0 0 0 0 0 0 0 0 0 0 0 0 pcieport
+PCIDEV 0038 1039000a 19 0 0 0 0 0 0 0 0 0 0 0 0 0 0 pcieport
+PCIDEV 0078 10397502 12 d8400000 0 0 0 0 0 0 4000 0 0 0 0 0 0 HDA Intel
+PCIDEV 00f8 10390004 1a 0 0 0 0 0 0 0 0 0 0 0 0 0 0 pcieport
+PCIDEV 0100 10396351 10 c0000008 d8000000 9001 0 0 0 2 10000000 20000 80 0 0 0 0 
+PCIDEV 0300 197b2382 10 d8100000 0 0 0 0 0 d8500000 100 0 0 0 0 0 10000 sdhci-pci
+PCIDEV 0302 197b2381 10 d8100400 0 0 0 0 0 0 100 0 0 0 0 0 0 
+PCIDEV 0303 197b2383 10 d8100800 0 0 0 0 0 0 100 0 0 0 0 0 0 jmb38x_ms
+
+--=-N1HQh1SAdadN14dQQFvM--
 
