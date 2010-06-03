@@ -1,58 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:48746 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757459Ab0FOLvU convert rfc822-to-8bit (ORCPT
+Received: from rcsinet10.oracle.com ([148.87.113.121]:48707 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751690Ab0FCPzj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jun 2010 07:51:20 -0400
-Received: by iwn9 with SMTP id 9so4430369iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Jun 2010 04:51:19 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1276593467-28309-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1276593467-28309-1-git-send-email-juuso.oikarinen@nokia.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 15 Jun 2010 21:50:58 +1000
-Message-ID: <AANLkTilMwuYujJ1vhVGdoop8ZbgHeJRGcWEYECPLcx-B@mail.gmail.com>
-Subject: Re: [RFC PATCH] iw: Add support for setting transmit power
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 3 Jun 2010 11:55:39 -0400
+Date: Thu, 3 Jun 2010 08:55:01 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-wireless@vger.kernel.org
+Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Subject: Re: linux-next: Tree for June 3 (iwlwifi)
+Message-Id: <20100603085501.ac113779.randy.dunlap@oracle.com>
+In-Reply-To: <20100603134753.710a64b3.sfr@canb.auug.org.au>
+References: <20100603134753.710a64b3.sfr@canb.auug.org.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 15, 2010 at 19:17, Juuso Oikarinen
-<juuso.oikarinen@nokia.com> wrote:
-> This patch adds the "set tx_power" command to allow specifying the transmit
-> power level to the WLAN stack. The transmit power configuration consists of
-> a mode (automatic, fixed, limited) and the limit mBm value.
->
-> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> ---
->  Makefile  |    3 ++-
->  nl80211.h |   27 ++++++++++++++++++++++++++-
->  2 files changed, 28 insertions(+), 2 deletions(-)
->
-> diff --git a/Makefile b/Makefile
-> index d303f45..cbb9504 100644
-> --- a/Makefile
-> +++ b/Makefile
-> @@ -17,7 +17,8 @@ CFLAGS += -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs -fno-strict-aliasing
->  OBJS = iw.o genl.o event.o info.o phy.o \
->        interface.o ibss.o station.o survey.o util.o \
->        mesh.o mpath.o scan.o reg.o version.o \
-> -       reason.o status.o connect.o link.o offch.o ps.o cqm.o
-> +       reason.o status.o connect.o link.o offch.o ps.o cqm.o \
-> +       txpower.o
->  OBJS += sections.o
->  ALL = iw
->
+On Thu, 3 Jun 2010 13:47:53 +1000 Stephen Rothwell wrote:
 
-Call me stupid, but is there a txpower.c?
+> Hi all,
+> 
+> Changes since 20100602:
 
-Thanks,
 
--- 
+when CONFIG_IWLAGN=n:
 
-Julian Calaby
+drivers/net/wireless/iwlwifi/iwl-rx.c:254: error: 'struct iwl_priv' has no member named '_agn'
+drivers/net/wireless/iwlwifi/iwl-rx.c:303: error: 'struct iwl_priv' has no member named '_agn'
+drivers/net/wireless/iwlwifi/iwl-rx.c:304: error: 'struct iwl_priv' has no member named '_agn'
+drivers/net/wireless/iwlwifi/iwl-rx.c:305: error: 'struct iwl_priv' has no member named '_agn'
+drivers/net/wireless/iwlwifi/iwl-rx.c:306: error: 'struct iwl_priv' has no member named '_agn'
 
-Email: julian.calaby@gmail.com
-.Plan: http://sites.google.com/site/juliancalaby/
+and many more.
+
+Haven't we seen this movie before?
+
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
