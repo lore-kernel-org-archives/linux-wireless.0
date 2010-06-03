@@ -1,38 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:52422 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751733Ab0FJFxg convert rfc822-to-8bit (ORCPT
+Received: from LL-220-228-151-25.LL.sparqnet.net ([220.228.151.25]:32249 "EHLO
+	mail.atheros.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933579Ab0FCC7K convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jun 2010 01:53:36 -0400
-Received: by yxl31 with SMTP id 31so1296324yxl.19
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Jun 2010 22:53:35 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <19472.32107.793016.762850@gargle.gargle.HOWL>
-References: <4C107563.3010709@yatharthgupta.com> <19472.30680.855993.112084@gargle.gargle.HOWL>
-	<4C1078D4.3070604@yatharthgupta.com> <19472.31157.569068.781531@gargle.gargle.HOWL>
-	<4C1079E0.6090605@yatharthgupta.com> <19472.32107.793016.762850@gargle.gargle.HOWL>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 9 Jun 2010 22:53:15 -0700
-Message-ID: <AANLkTimVqheuVKI3tCpSGoDHRaEcexDFwm77wj_9_QJU@mail.gmail.com>
-Subject: Re: issues while attempting ath9k_htc to work with ubuntu 10.04,
-	device TL-WN721N
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: Yatharth <y@yatharthgupta.com>,
+	Wed, 2 Jun 2010 22:59:10 -0400
+From: Stephen Chen <Stephen.Chen@Atheros.com>
+To: Sujith Manoharan <Sujith.Manoharan@Atheros.com>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Date: Thu, 3 Jun 2010 10:53:15 +0800
+Subject: RE: [PATCH 5/8] ath9k_htc: Setup HT capabilites for 2-stream devices
+Message-ID: <2C7E3D9F044EE14CAA55964B610057BDF7317285@TAEXMB-01.global.atheros.com>
+References: <19462.12588.699806.245206@gargle.gargle.HOWL>
+	<AANLkTilTTMEHGQj0Y4roSOjf69ufynaV-jmtb2g6n181@mail.gmail.com>
+	<19462.65093.260306.326262@gargle.gargle.HOWL>
+	<AANLkTikumUaxrXti3F8gPbb1NMAcVQNqmnKpmqSicD5g@mail.gmail.com>
+ <19462.65521.350785.861619@gargle.gargle.HOWL>
+In-Reply-To: <19462.65521.350785.861619@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 9, 2010 at 10:51 PM, Sujith <Sujith.Manoharan@atheros.com> wrote:
-> Yatharth wrote:
->> Here is the output of 'modinfo ath9k_hw'
->>
->> Ubu-VM:~/tmp/compat-wireless-2010-06-05$ modinfo ath9k_hw
->> filename:       /lib/modules/2.6.32-22-generic/updates/cw/ath9k_hw.ko
->
-> What is the 'cw' directory ?
+You meant UB94?
 
-Its ubuntu's compat-wireless package, linux-backport-modules. Try to
-uninstall that or rm -rf it.
+ 
+Thank you.
+Stephen Chen
+-----Original Message-----
+From: Sujith Manoharan 
+Sent: Thursday, June 03, 2010 9:06 AM
+To: Luis R. Rodriguez
+Cc: Stephen Chen; linville@tuxdriver.com; linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 5/8] ath9k_htc: Setup HT capabilites for 2-stream devices
 
-  Luis
+Luis R. Rodriguez wrote:
+> Adding Stephen. Stephen, this is a public e-mail.
+> 
+> On Wed, Jun 2, 2010 at 5:58 PM, Sujith <Sujith.Manoharan@atheros.com> wrote:
+> > Luis R. Rodriguez wrote:
+> >> On Wed, Jun 2, 2010 at 3:23 AM, Sujith <Sujith.Manoharan@atheros.com> wrote:
+> >> > The supported MCS rate set has to be setup properly
+> >> > for 2-stream devices.
+> >> >
+> >> > Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+> >>
+> >> Awesome, are these being sold yet?
+> >
+> > Yep.
+> 
+> What are the names of a few products in the market with these devices?
+
+Hm, not sure, maybe Stephen knows ?
+
+Sujith
