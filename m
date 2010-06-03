@@ -1,105 +1,245 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail1-out1.atlantis.sk ([80.94.52.55]:50864 "EHLO
-	mail.atlantis.sk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755314Ab0FVKih (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jun 2010 06:38:37 -0400
-From: Ondrej Zary <linux@rainbow-software.org>
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Subject: rt2500usb: WPA2 TKIP+AES does not work with HW encryption
-Date: Tue, 22 Jun 2010 12:38:31 +0200
-Cc: rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <201006221238.32745.linux@rainbow-software.org>
+Received: from mga11.intel.com ([192.55.52.93]:60593 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752726Ab0FCGAG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jun 2010 02:00:06 -0400
+Subject: Re: IWL3945 problems in 2.6.35-rc1
+From: reinette chatre <reinette.chatre@intel.com>
+To: "sedat.dilek@gmail.com" <sedat.dilek@gmail.com>
+Cc: "Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
+	Maxim Levitsky <maximlevitsky@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <AANLkTimRt-8d5RkBtGVyReASZqBFIjSzOHPFV6RVjYlV@mail.gmail.com>
+References: <1275395142.14385.6.camel@maxim-laptop>
+	 <1275404221.2839.2.camel@maxim-laptop>
+	 <AANLkTinmjlukRABwWWVuO6VRHrULcqB7Zk_HQZSDicKr@mail.gmail.com>
+	 <1275419000.5225.0.camel@abhi-desktop>
+	 <AANLkTimRt-8d5RkBtGVyReASZqBFIjSzOHPFV6RVjYlV@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 02 Jun 2010 23:00:03 -0700
+Message-ID: <1275544803.2091.30386.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-I'm (again) trying to solve (debug) a weird problem with Asus WL-167G:
-0b05:1706 ASUSTek Computer, Inc. WL-167G v1 802.11g Adapter [Ralink RT2500USB]
+On Wed, 2010-06-02 at 01:35 -0700, Sedat Dilek wrote:
+> This patch seems to be done against iwlwifi-2.6 GIT master.
+> 
+> Can you please offer a patch against vanilla 2.6.35-rc1 as requested
+> so we can try and give feedback?
 
-The problem only appears when HW encryption is enabled and connecting to an AP
-configured as WPA2 TKIP+AES.
+Sorry that you did not get this. Please try this patch:
 
-HW encryption works when the AP is configured as TKIP-only or AES-only. It
-also works when AP is configured as TKIP+AES but wpa_supplicant is forced to
-use TKIP as pairwise cipher (pairwise=TKIP)
+>From 364614af1fbabe2989bb3e1434d50255a631546b Mon Sep 17 00:00:00 2001
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Date: Wed, 2 Jun 2010 21:15:10 -0700
+Subject: [PATCH] iwl3945: fix internal scan
 
-SW encryption works always.
+Port of internal scan to iwl3945 missed introduction
+of iwl3945_get_single_channel_for_scan.
 
-The problem is that no packets are transmitted. I can't see DHCP broadcasts on
-other machine using tcpdump. But when I run tcpdump on the rt2500usb, I see
-broadcasts from the other machine, so receive seems to work fine.
+Fix the following bug by introducing the iwl3945_get_single_channel_for_scan
+http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2208
 
-Added some printk()s to the driver, 6 packets from unsuccessful DHCP:
-[  371.760073] rt2500usb_write_tx_desc: key_idx=0
-[  371.852062] rt2500usb_write_tx_desc: key_idx=0
-[  371.944054] rt2500usb_write_tx_desc: key_idx=0
-[  372.036068] rt2500usb_write_tx_desc: key_idx=0
-[  372.128056] rt2500usb_write_tx_desc: key_idx=0
-[  372.220053] rt2500usb_write_tx_desc: key_idx=0
-[  372.312053] rt2500usb_write_tx_desc: key_idx=0
-[  372.404055] rt2500usb_write_tx_desc: key_idx=0
-[  372.496101] rt2500usb_write_tx_desc: key_idx=0
-[  372.588077] rt2500usb_write_tx_desc: key_idx=0
-[  372.688073] rt2500usb_write_tx_desc: key_idx=0
-[  373.272513] wlan1: authenticate with 00:13:d4:0f:f3:19 (try 1)
-[  373.272552] rt2500usb_write_tx_desc: key_idx=0
-[  373.274533] wlan1: authenticated
-[  373.274564] wlan1: associate with 00:13:d4:0f:f3:19 (try 1)
-[  373.274581] rt2500usb_write_tx_desc: key_idx=0
-[  373.277696] wlan1: RX AssocResp from 00:13:d4:0f:f3:19 (capab=0x411 status=0 aid=1)
-[  373.277704] wlan1: associated
-[  373.308247] rt2500usb_write_tx_desc: key_idx=0
-[  373.308392] rt2500usb_write_tx_desc: key_idx=0
-[  373.315999] rt2500usb_write_tx_desc: key_idx=0
-[  373.340306] rt2x00crypto_key_to_cipher: ALG_CCMP
-[  373.340318] rt2500usb_config_key key->hw_key_idx=0 SET_KEY hw_key_idx = 0 OK
-[  373.344521] rt2x00crypto_key_to_cipher: ALG_TKIP
-[  373.344527] rt2500usb_config_key key->hw_key_idx=0 SET_KEY hw_key_idx = 1 OK
-[  373.412083] rt2500usb_write_tx_desc: key_idx=0
-[  375.160233] rt2x00crypto_key_to_cipher: ALG_CCMP
-[  375.160246] rt2x00crypto_tx_overhead=8
-[  375.160254] rt2500usb_write_tx_desc: key_idx=0
-[  375.240078] rt2500usb_write_tx_desc: key_idx=0
-[  381.163494] rt2x00crypto_key_to_cipher: ALG_CCMP
-[  381.163507] rt2x00crypto_tx_overhead=8
-[  381.163515] rt2500usb_write_tx_desc: key_idx=0
-[  381.244066] rt2500usb_write_tx_desc: key_idx=0
-[  388.165180] rt2x00crypto_key_to_cipher: ALG_CCMP
-[  388.165194] rt2x00crypto_tx_overhead=8
-[  388.165201] rt2500usb_write_tx_desc: key_idx=0
-[  388.244069] rt2500usb_write_tx_desc: key_idx=0
-[  399.169468] rt2x00crypto_key_to_cipher: ALG_CCMP
-[  399.169481] rt2x00crypto_tx_overhead=8
-[  399.169489] rt2500usb_write_tx_desc: key_idx=0
-[  399.248067] rt2500usb_write_tx_desc: key_idx=0
-[  404.080428] rt2500usb_write_tx_desc: key_idx=0
-[  404.180066] rt2500usb_write_tx_desc: key_idx=0
-[  410.168836] rt2x00crypto_key_to_cipher: ALG_CCMP
-[  410.168850] rt2x00crypto_tx_overhead=8
-[  410.168858] rt2500usb_write_tx_desc: key_idx=0
-[  410.248068] rt2500usb_write_tx_desc: key_idx=0
-[  414.374545] rt2500usb_write_tx_desc: key_idx=0
-[  414.472061] rt2500usb_write_tx_desc: key_idx=0
-[  422.169686] rt2x00crypto_key_to_cipher: ALG_CCMP
-[  422.169699] rt2x00crypto_tx_overhead=8
-[  422.169706] rt2500usb_write_tx_desc: key_idx=0
-[  422.252069] rt2500usb_write_tx_desc: key_idx=0
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |   30 +-------------
+ drivers/net/wireless/iwlwifi/iwl-core.c     |   39 ++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    2 +
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   56 +++++++++++++++++++++++++-
+ 4 files changed, 96 insertions(+), 31 deletions(-)
 
-Seems that it's trying to use CCMP, which is good. I wonder if the keys are 
-properly handled in rt2500usb_config_key. They seem to be uploaded to the HW
-correctly (one at index 0, one at 1) - but can't tell without any HW docs.
-
-I did some framedumps before but don't know what to do with them (what to
-look for):
-http://www.rainbow-software.org/linux_files/rt2500usb/dump-wpa2-bad.txt
-http://www.rainbow-software.org/linux_files/rt2500usb/dump-wpa2-good.txt
-
-Anything else I can try?
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 59aeb2e..ac4031e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1031,10 +1031,9 @@ static int iwl_get_single_channel_for_scan(struct iwl_priv *priv,
+ 					   struct iwl_scan_channel *scan_ch)
+ {
+ 	const struct ieee80211_supported_band *sband;
+-	const struct iwl_channel_info *ch_info;
+ 	u16 passive_dwell = 0;
+ 	u16 active_dwell = 0;
+-	int i, added = 0;
++	int added = 0;
+ 	u16 channel = 0;
+ 
+ 	sband = iwl_get_hw_mode(priv, band);
+@@ -1049,32 +1048,7 @@ static int iwl_get_single_channel_for_scan(struct iwl_priv *priv,
+ 	if (passive_dwell <= active_dwell)
+ 		passive_dwell = active_dwell + 1;
+ 
+-	/* only scan single channel, good enough to reset the RF */
+-	/* pick the first valid not in-use channel */
+-	if (band == IEEE80211_BAND_5GHZ) {
+-		for (i = 14; i < priv->channel_count; i++) {
+-			if (priv->channel_info[i].channel !=
+-			    le16_to_cpu(priv->staging_rxon.channel)) {
+-				channel = priv->channel_info[i].channel;
+-				ch_info = iwl_get_channel_info(priv,
+-					band, channel);
+-				if (is_channel_valid(ch_info))
+-					break;
+-			}
+-		}
+-	} else {
+-		for (i = 0; i < 14; i++) {
+-			if (priv->channel_info[i].channel !=
+-			    le16_to_cpu(priv->staging_rxon.channel)) {
+-					channel =
+-						priv->channel_info[i].channel;
+-					ch_info = iwl_get_channel_info(priv,
+-						band, channel);
+-					if (is_channel_valid(ch_info))
+-						break;
+-			}
+-		}
+-	}
++	channel = iwl_get_single_channel_number(priv, band);
+ 	if (channel) {
+ 		scan_ch->channel = cpu_to_le16(channel);
+ 		scan_ch->type = SCAN_CHANNEL_TYPE_PASSIVE;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 3ed3dbf..11b20ba 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -855,6 +855,45 @@ void iwl_set_rxon_chain(struct iwl_priv *priv)
+ }
+ EXPORT_SYMBOL(iwl_set_rxon_chain);
+ 
++/* Return valid channel */
++u8 iwl_get_single_channel_number(struct iwl_priv *priv,
++				  enum ieee80211_band band)
++{
++	const struct iwl_channel_info *ch_info;
++	int i;
++	u8 channel = 0;
++
++	/* only scan single channel, good enough to reset the RF */
++	/* pick the first valid not in-use channel */
++	if (band == IEEE80211_BAND_5GHZ) {
++		for (i = 14; i < priv->channel_count; i++) {
++			if (priv->channel_info[i].channel !=
++			    le16_to_cpu(priv->staging_rxon.channel)) {
++				channel = priv->channel_info[i].channel;
++				ch_info = iwl_get_channel_info(priv,
++					band, channel);
++				if (is_channel_valid(ch_info))
++					break;
++			}
++		}
++	} else {
++		for (i = 0; i < 14; i++) {
++			if (priv->channel_info[i].channel !=
++			    le16_to_cpu(priv->staging_rxon.channel)) {
++					channel =
++						priv->channel_info[i].channel;
++					ch_info = iwl_get_channel_info(priv,
++						band, channel);
++					if (is_channel_valid(ch_info))
++						break;
++			}
++		}
++	}
++
++	return channel;
++}
++EXPORT_SYMBOL(iwl_get_single_channel_number);
++
+ /**
+  * iwl_set_rxon_channel - Set the phymode and channel values in staging RXON
+  * @phymode: MODE_IEEE80211A sets to 5.2GHz; all else set to 2.4GHz
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 87dd573..244d163 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -347,6 +347,8 @@ int iwl_check_rxon_cmd(struct iwl_priv *priv);
+ int iwl_full_rxon_required(struct iwl_priv *priv);
+ void iwl_set_rxon_chain(struct iwl_priv *priv);
+ int iwl_set_rxon_channel(struct iwl_priv *priv, struct ieee80211_channel *ch);
++u8 iwl_get_single_channel_number(struct iwl_priv *priv,
++				  enum ieee80211_band band);
+ void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_config *ht_conf);
+ u8 iwl_is_ht40_tx_allowed(struct iwl_priv *priv,
+ 			 struct ieee80211_sta_ht_cap *sta_ht_inf);
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index a527895..2366394 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -1785,6 +1785,49 @@ static void iwl3945_irq_tasklet(struct iwl_priv *priv)
+ #endif
+ }
+ 
++static int iwl3945_get_single_channel_for_scan(struct iwl_priv *priv,
++					       struct ieee80211_vif *vif,
++					       enum ieee80211_band band,
++					       struct iwl3945_scan_channel *scan_ch)
++{
++	const struct ieee80211_supported_band *sband;
++	u16 passive_dwell = 0;
++	u16 active_dwell = 0;
++	int added = 0;
++	u8 channel = 0;
++
++	sband = iwl_get_hw_mode(priv, band);
++	if (!sband) {
++		IWL_ERR(priv, "invalid band\n");
++		return added;
++	}
++
++	active_dwell = iwl_get_active_dwell_time(priv, band, 0);
++	passive_dwell = iwl_get_passive_dwell_time(priv, band, vif);
++
++	if (passive_dwell <= active_dwell)
++		passive_dwell = active_dwell + 1;
++
++
++	channel = iwl_get_single_channel_number(priv, band);
++
++	if (channel) {
++		scan_ch->channel = channel;
++		scan_ch->type = 0;	/* passive */
++		scan_ch->active_dwell = cpu_to_le16(active_dwell);
++		scan_ch->passive_dwell = cpu_to_le16(passive_dwell);
++		/* Set txpower levels to defaults */
++		scan_ch->tpc.dsp_atten = 110;
++		if (band == IEEE80211_BAND_5GHZ)
++			scan_ch->tpc.tx_gain = ((1 << 5) | (3 << 3)) | 3;
++		else
++			scan_ch->tpc.tx_gain = ((1 << 5) | (5 << 3));
++		added++;
++	} else
++		IWL_ERR(priv, "no valid channel found\n");
++	return added;
++}
++
+ static int iwl3945_get_channels_for_scan(struct iwl_priv *priv,
+ 					 enum ieee80211_band band,
+ 				     u8 is_active, u8 n_probes,
+@@ -2935,9 +2978,16 @@ void iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 	/* select Rx antennas */
+ 	scan->flags |= iwl3945_get_antenna_flags(priv);
+ 
+-	scan->channel_count =
+-		iwl3945_get_channels_for_scan(priv, band, is_active, n_probes,
+-			(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)], vif);
++	if (priv->is_internal_short_scan) {
++		scan->channel_count =
++			iwl3945_get_single_channel_for_scan(priv, vif, band,
++				(void *)&scan->data[le16_to_cpu(
++				scan->tx_cmd.len)]);
++	} else {
++		scan->channel_count =
++			iwl3945_get_channels_for_scan(priv, band, is_active, n_probes,
++				(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)], vif);
++	}
+ 
+ 	if (scan->channel_count == 0) {
+ 		IWL_DEBUG_SCAN(priv, "channel count %d\n", scan->channel_count);
 -- 
-Ondrej Zary
+1.7.0.4
+
+
+
