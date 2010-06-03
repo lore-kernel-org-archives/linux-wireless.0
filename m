@@ -1,45 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:46309 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755773Ab0EVUdm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 22 May 2010 16:33:42 -0400
-Date: Sat, 22 May 2010 22:33:11 +0200
-From: Dan Carpenter <error27@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Jouni Malinen <jmalinen@atheros.com>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ming Lei <tom.leiming@gmail.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	kernel-janitors@vger.kernel.org
-Subject: [patch] ath9k: cleanup: remove unneeded null check
-Message-ID: <20100522203311.GR22515@bicker>
+Received: from kroah.org ([198.145.64.141]:46465 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755452Ab0FCWm3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jun 2010 18:42:29 -0400
+Date: Thu, 3 Jun 2010 15:17:51 -0700
+From: Greg KH <greg@kroah.com>
+To: Vivek Natarajan <vnatarajan@Atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	stable@kernel.org, Ranga Rao Ravuri <ranga.ravuri@Atheros.com>
+Subject: Re: [stable] [PATCH 2/2] ath9k: Avoid corrupt frames being
+ forwarded to mac80211.
+Message-ID: <20100603221751.GB22595@kroah.com>
+References: <1272353738-17084-1-git-send-email-vnatarajan@atheros.com>
+ <1272353738-17084-2-git-send-email-vnatarajan@atheros.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1272353738-17084-2-git-send-email-vnatarajan@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We dereference "wmi" on the line before and also when we initialize "ah".
-This check has always been after a dereference since the first commit a
-couple months ago.  Looking through the code, it looks like "wmi" can't 
-actually be null here so I just removed the check.
+On Tue, Apr 27, 2010 at 01:05:38PM +0530, Vivek Natarajan wrote:
+> If bit 29 is set, MAC H/W can attempt to decrypt the received aggregate
+> with WEP or TKIP, eventhough the received frame may be a CRC failed
+> corrupted frame. If this bit is set, H/W obeys key type in keycache.
+> If it is not set and if the key type in keycache is neither open nor
+> AES, H/W forces key type to be open.  But bit 29 should be set to 1
+> for AsyncFIFO feature to encrypt/decrypt the aggregate with WEP or TKIP. 
+> 
+> Cc: stable@kernel.org
+> Reported-by: Johan Hovold <johan.hovold@lundinova.se>
+> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+> Signed-off-by: Ranga Rao Ravuri <ranga.ravuri@atheros.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/ar5008_initvals.h |    2 +-
+>  drivers/net/wireless/ath/ath9k/ar9002_initvals.h |    8 ++++----
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
+This is now upstream in Linus's tree, but does not apply to the .32,
+.32, or .34 kernel trees due to the file movements in this area.  I
+tried to apply this by hand, but didn't get it correct.
 
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
-index e23172c..6260faa 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.c
-+++ b/drivers/net/wireless/ath/ath9k/wmi.c
-@@ -279,9 +279,6 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
- 	if (wmi->drv_priv->op_flags & OP_UNPLUGGED)
- 		return 0;
- 
--	if (!wmi)
--		return -EINVAL;
--
- 	skb = alloc_skb(headroom + cmd_len, GFP_ATOMIC);
- 	if (!skb)
- 		return -ENOMEM;
+Can someone please send me a properly backported version of this patch
+to apply to the -stable tree?
+
+thanks,
+
+greg k-h
