@@ -1,43 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39197 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753843Ab0FVHBc (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:39785 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758314Ab0FCBBK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jun 2010 03:01:32 -0400
-Subject: Re: [PATCH] ath9k: Modify LED blinking pattern during wifi
- activity.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Cc: Vivek Natarajan <Vivek.Natarajan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Wed, 2 Jun 2010 21:01:10 -0400
+Received: by gye5 with SMTP id 5so2701672gye.19
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Jun 2010 18:01:09 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <19462.65093.260306.326262@gargle.gargle.HOWL>
+References: <19462.12588.699806.245206@gargle.gargle.HOWL>
+	<AANLkTilTTMEHGQj0Y4roSOjf69ufynaV-jmtb2g6n181@mail.gmail.com>
+	<19462.65093.260306.326262@gargle.gargle.HOWL>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 2 Jun 2010 18:00:48 -0700
+Message-ID: <AANLkTikumUaxrXti3F8gPbb1NMAcVQNqmnKpmqSicD5g@mail.gmail.com>
+Subject: Re: [PATCH 5/8] ath9k_htc: Setup HT capabilites for 2-stream devices
+To: Sujith <Sujith.Manoharan@atheros.com>,
+	Stephen Chen <Stephen.Chen@atheros.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20100622063800.GC9292@vasanth-laptop>
-References: <1276579217-6837-1-git-send-email-vnatarajan@atheros.com>
-	 <1276587140.3648.6.camel@jlt3.sipsolutions.net>
-	 <20100622063800.GC9292@vasanth-laptop>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 22 Jun 2010 09:01:27 +0200
-Message-ID: <1277190087.3637.7.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-06-22 at 12:08 +0530, Vasanthakumar Thiagarajan wrote:
+Adding Stephen. Stephen, this is a public e-mail.
 
-> > http://thread.gmane.org/gmane.linux.kernel.wireless.general/51218/focus=51520
-> 
-> Sorry for a late reply. LED implementation with ath9k is completely
-> manual, fully controlled by driver (We have to set/clear a particular
-> gpio pin to turn on/off the LED every time). on/off period during blink
-> is based on the number of brightness_set() on tx/rx led trigger. Do
-> you think your suggested implementation would help in this case too? 
+On Wed, Jun 2, 2010 at 5:58 PM, Sujith <Sujith.Manoharan@atheros.com> wrote:
+> Luis R. Rodriguez wrote:
+>> On Wed, Jun 2, 2010 at 3:23 AM, Sujith <Sujith.Manoharan@atheros.com> wrote:
+>> > The supported MCS rate set has to be setup properly
+>> > for 2-stream devices.
+>> >
+>> > Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+>>
+>> Awesome, are these being sold yet?
+>
+> Yep.
 
-I'm not sure. I was mostly describing the use in iwlwifi, and since I
-don't know how ath9k works I can't really comment much. It just seemed
-to me that the driver was also hard-coding the behaviour of the LEDs,
-which the user in that thread didn't like for iwlwifi, so integrating
-with the LED trigger stuff could be worthwhile for ath9k? Or maybe it
-does and I'm reading the patches incorrectly.
+What are the names of a few products in the market with these devices?
 
-johannes
-
+  Luis
