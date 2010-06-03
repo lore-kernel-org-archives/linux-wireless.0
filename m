@@ -1,110 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:19306 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755128Ab0FGKCm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jun 2010 06:02:42 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: stable@kernel.org
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 1/4 2.6.34.y] mac80211: explicitly disable/enable QoS
-Date: Mon,  7 Jun 2010 12:01:06 +0200
-Message-Id: <1275904869-6634-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-ww0-f46.google.com ([74.125.82.46]:57720 "EHLO
+	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751690Ab0FCP4G convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jun 2010 11:56:06 -0400
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <20100603151752.GB2053@tiehlicka.suse.cz>
+References: <E1OKBva-00080h-8E@pomaz-ex.szeredi.hu>
+	<20100603151752.GB2053@tiehlicka.suse.cz>
+Date: Thu, 3 Jun 2010 17:56:02 +0200
+Message-ID: <AANLkTimw_d4LAUhQ2qQqQMEXbmeiF-75lnvkx4bCNqDj@mail.gmail.com>
+Subject: Re: iwl3945 oops with latest git
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Miklos Szeredi <miklos@szeredi.hu>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit e1b3ec1a2a336c328c336cfa5485a5f0484cc90d upstream.
+The patch in [1] applies against 2.6.35-rc1 and works fine since...
 
-Add interface to disable/enable QoS (aka WMM or WME). Currently drivers
-enable it explicitly when ->conf_tx method is called, and newer disable.
-Disabling is needed for some APs, which do not support QoS, such
-we should send QoS frames to them.
+$ uptime
+ 17:54:38 up  2:32,  1 user,  load average: 0.23, 0.26, 0.18
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- include/net/mac80211.h |    5 +++++
- net/mac80211/mlme.c    |    9 ++++++++-
- net/mac80211/util.c    |    5 +++++
- 3 files changed, 18 insertions(+), 1 deletions(-)
+$ cat /proc/version
+Linux version 2.6.35-rc1-iniza-686-kms (Debian 2.6.35~rc1-4~git1.sd.1)
+(sedat.dilek@gmail.com) (gcc version 4.4.4 (Debian 4.4.4-4) ) #1 SMP
+PREEMPT Thu Jun 3 14:58:19 CEST 2010
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 45d7d44..ea607d6 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -580,11 +580,15 @@ struct ieee80211_rx_status {
-  *	may turn the device off as much as possible. Typically, this flag will
-  *	be set when an interface is set UP but not associated or scanning, but
-  *	it can also be unset in that case when monitor interfaces are active.
-+ * @IEEE80211_CONF_QOS: Enable 802.11e QoS also know as WMM (Wireless
-+ *      Multimedia). On some drivers (iwlwifi is one of know) we have
-+ *      to enable/disable QoS explicitly.
-  */
- enum ieee80211_conf_flags {
- 	IEEE80211_CONF_MONITOR		= (1<<0),
- 	IEEE80211_CONF_PS		= (1<<1),
- 	IEEE80211_CONF_IDLE		= (1<<2),
-+	IEEE80211_CONF_QOS		= (1<<3),
- };
- 
- 
-@@ -609,6 +613,7 @@ enum ieee80211_conf_changed {
- 	IEEE80211_CONF_CHANGE_CHANNEL		= BIT(6),
- 	IEEE80211_CONF_CHANGE_RETRY_LIMITS	= BIT(7),
- 	IEEE80211_CONF_CHANGE_IDLE		= BIT(8),
-+	IEEE80211_CONF_CHANGE_QOS		= BIT(9),
- };
- 
- /**
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 875c8de..1b80e2b 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -592,6 +592,9 @@ static void ieee80211_sta_wmm_params(struct ieee80211_local *local,
- 	int count;
- 	u8 *pos, uapsd_queues = 0;
- 
-+	if (!local->ops->conf_tx)
-+		return;
-+
- 	if (local->hw.queues < 4)
- 		return;
- 
-@@ -666,11 +669,15 @@ static void ieee80211_sta_wmm_params(struct ieee80211_local *local,
- 		       params.aifs, params.cw_min, params.cw_max, params.txop,
- 		       params.uapsd);
- #endif
--		if (drv_conf_tx(local, queue, &params) && local->ops->conf_tx)
-+		if (drv_conf_tx(local, queue, &params))
- 			printk(KERN_DEBUG "%s: failed to set TX queue "
- 			       "parameters for queue %d\n",
- 			       wiphy_name(local->hw.wiphy), queue);
- 	}
-+
-+	/* enable WMM or activate new settings */
-+	local->hw.conf.flags |=	IEEE80211_CONF_QOS;
-+	drv_config(local, IEEE80211_CONF_CHANGE_QOS);
- }
- 
- static u32 ieee80211_handle_bss_capability(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 53af570..582f43a 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -796,6 +796,11 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata)
- 
- 		drv_conf_tx(local, queue, &qparam);
- 	}
-+
-+	/* after reinitialize QoS TX queues setting to default,
-+	 * disable QoS at all */
-+	local->hw.conf.flags &=	~IEEE80211_CONF_QOS;
-+	drv_config(local, IEEE80211_CONF_CHANGE_QOS);
- }
- 
- void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
--- 
-1.6.2.5
+Hope this information helps you.
 
+- Sedat -
+
+[1] https://patchwork.kernel.org/patch/104010/
+
+On Thu, Jun 3, 2010 at 5:17 PM, Michal Hocko <mhocko@suse.cz> wrote:
+> On Thu 03-06-10 17:01:50, Miklos Szeredi wrote:
+>> Hi,
+>
+> Hi,
+>
+>>
+>> This oops comes shortly after booting machine and using wireless
+>> network.  Reproduced two times now.
+>>
+>> Please let me know if you need more info.
+>>
+>> Thanks,
+>> Miklos
+>>
+>>
+>> BUG: unable to handle kernel NULL pointer dereference at (null)
+>> IP: [<ffffffffa022738f>] iwl3945_request_scan+0x961/0xd68 [iwl3945]
+>
+> Sounds pretty much like https://patchwork.kernel.org/patch/103596/
+> I have similar problem but didn't get to testing the patch.
+>
+>> PGD 0
+>> Oops: 0000 [#1] PREEMPT SMP
+>> last sysfs file: /sys/class/rfkill/rfkill1/state
+>> CPU 0
+>> Modules linked in: nfs lockd nfs_acl sunrpc rfcomm sco bnep l2cap acpi_cpufreq mperf nf_conntrack_netbios_ns fuse iwl3945 iwlcore thinkpad_acpi nsc_ircc mac80211 backlight btusb led_class uinput ac irda battery crc_ccitt thermal cfg80211 bluetooth button processor e1000e rfkill kvm_intel kvm
+>>
+>> Pid: 1493, comm: iwl3945 Not tainted 2.6.35-rc1-00194-gaef4b9a #76 2007FUG/2007FUG
+>> RIP: 0010:[<ffffffffa022738f>]  [<ffffffffa022738f>] iwl3945_request_scan+0x961/0xd68 [iwl3945]
+>> RSP: 0018:ffff8800b4d71d10  EFLAGS: 00010287
+>> RAX: ffff8800bea80c00 RBX: ffff8800b4171380 RCX: 0000000000000021
+>> RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff8800b4171380
+>> RBP: ffff8800b4d71de0 R08: 000000000000030e R09: 00000000ffffffff
+>> R10: 000000000ad21900 R11: 0000000000000292 R12: 0000000000000000
+>> R13: ffff8800b60950f2 R14: 0000000000000000 R15: 0000000000000058
+>> FS:  0000000000000000(0000) GS:ffff880001a00000(0000) knlGS:0000000000000000
+>> CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+>> CR2: 0000000000000000 CR3: 0000000001612000 CR4: 00000000000006f0
+>> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+>> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+>> Process iwl3945 (pid: 1493, threadinfo ffff8800b4d70000, task ffff8800b6790940)
+>> Stack:
+>>  ffff880001a12f40 0000000000012f40 ffff8800b64f8800 ffffffff8161a378
+>> <0> 0000000000000000 ffff8800b6095000 00578800b4d71e20 0000005800000021
+>> <0> ffff8800b4d71fd8 00ff8800b4175128 ffff8800b4d71fd8 002188ffb6790940
+>> Call Trace:
+>>  [<ffffffffa01f9bb5>] iwl_bg_start_internal_scan+0x34f/0x371 [iwlcore]
+>>  [<ffffffff8104e175>] worker_thread+0x1fc/0x2a3
+>>  [<ffffffffa01f9866>] ? iwl_bg_start_internal_scan+0x0/0x371 [iwlcore]
+>>  [<ffffffff81051d96>] ? autoremove_wake_function+0x0/0x34
+>>  [<ffffffff813f4590>] ? _raw_spin_unlock_irqrestore+0x27/0x29
+>>  [<ffffffff8104df79>] ? worker_thread+0x0/0x2a3
+>>  [<ffffffff810518db>] kthread+0x7a/0x82
+>>  [<ffffffff81002c94>] kernel_thread_helper+0x4/0x10
+>>  [<ffffffff81051861>] ? kthread+0x0/0x82
+>>  [<ffffffff81002c90>] ? kernel_thread_helper+0x0/0x10
+>> Code: 48 b5 00 00 48 89 45 80 48 89 85 70 ff ff ff 41 8d 47 ff 66 89 85 66 ff ff ff e9 43 02 00 00 48 63 55 a8 4c 8b 64 d0 38 8b 55 a4 <41> 39 14 24 0f 85 2a 02 00 00 66 41 8b 54 24 06 48 89 df 41 88
+>> RIP  [<ffffffffa022738f>] iwl3945_request_scan+0x961/0xd68 [iwl3945]
+>>  RSP <ffff8800b4d71d10>
+>> CR2: 0000000000000000
+>> ---[ end trace 63fe07b50f147114 ]---
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Please read the FAQ at  http://www.tux.org/lkml/
+>
+> --
+> Michal Hocko
+> L3 team
+> SUSE LINUX s.r.o.
+> Lihovarska 1060/12
+> 190 00 Praha 9
+> Czech Republic
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
