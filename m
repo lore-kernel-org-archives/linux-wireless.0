@@ -1,76 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53425 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753837Ab0FFJRX (ORCPT
+Received: from LL-220-228-151-25.LL.sparqnet.net ([220.228.151.25]:43284 "EHLO
+	mail.atheros.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753105Ab0FCGL3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jun 2010 05:17:23 -0400
-Subject: Re: Locking in new ARP query filtering patch
-From: Johannes Berg <johannes@sipsolutions.net>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: juuso.oikarinen@nokia.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1275802426.1835.4408.camel@rchatre-DESK>
-References: <1275802426.1835.4408.camel@rchatre-DESK>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 06 Jun 2010 11:17:18 +0200
-Message-ID: <1275815838.3615.5.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 3 Jun 2010 02:11:29 -0400
+From: Stephen Chen <Stephen.Chen@Atheros.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Sujith Manoharan <Sujith.Manoharan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 3 Jun 2010 14:10:48 +0800
+Subject: RE: [PATCH 5/8] ath9k_htc: Setup HT capabilites for 2-stream devices
+Message-ID: <2C7E3D9F044EE14CAA55964B610057BDF7317311@TAEXMB-01.global.atheros.com>
+References: <19462.12588.699806.245206@gargle.gargle.HOWL>
+ 	<AANLkTilTTMEHGQj0Y4roSOjf69ufynaV-jmtb2g6n181@mail.gmail.com>
+ 	<19462.65093.260306.326262@gargle.gargle.HOWL>
+ <AANLkTikumUaxrXti3F8gPbb1NMAcVQNqmnKpmqSicD5g@mail.gmail.com>
+ 	<19462.65521.350785.861619@gargle.gargle.HOWL>
+ <2C7E3D9F044EE14CAA55964B610057BDF7317285@TAEXMB-01.global.atheros.com>
+ <AANLkTimyXZ5dGb_9GlJJgjNf5fpWsrieUTjfzxuqmDzS@mail.gmail.com>
+In-Reply-To: <AANLkTimyXZ5dGb_9GlJJgjNf5fpWsrieUTjfzxuqmDzS@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2010-06-05 at 22:33 -0700, reinette chatre wrote:
+None on the market today, maybe in Q3.
 
-> [   92.026800] =======================================================
-> [   92.030507] [ INFO: possible circular locking dependency detected ]
-> [   92.030507] 2.6.34-04781-g2b2c009 #85
-> [   92.030507] -------------------------------------------------------
-> [   92.030507] modprobe/5225 is trying to acquire lock:
-> [   92.030507]  ((wiphy_name(local->hw.wiphy))){+.+.+.}, at: [<ffffffff8105b5c0>] flush_workq
-> ueue+0x0/0xb0
-> [   92.030507]
-> [   92.030507] but task is already holding lock:
-> [   92.030507]  (rtnl_mutex){+.+.+.}, at: [<ffffffff812b9ce2>] rtnl_lock+0x12/0x20
-> [   92.030507]
-> [   92.030507] which lock already depends on the new lock.
+ 
+Thank you.
+Stephen Chen
 
-> [   92.030507] 1 lock held by modprobe/5225:
-> [   92.030507]  #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff812b9ce2>] rtnl_lock+0x12/0x20
+-----Original Message-----
+From: Luis R. Rodriguez [mailto:mcgrof@gmail.com] 
+Sent: Thursday, June 03, 2010 12:58 PM
+To: Stephen Chen
+Cc: Sujith Manoharan; linville@tuxdriver.com; linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 5/8] ath9k_htc: Setup HT capabilites for 2-stream devices
 
-Suck, I should've caught that. Yes, because we need to flush the
-mac80211 workqueue under RTNL we cannot acquire the RTNL while working
-from it, so the ARP filter upload after associating needs to be further
-deferred to a schedule_work(), which then needs to do a bunch of sanity
-checking and I think might even need to iterate the iface list because
-it might not be possible to make it depend on it.
+On Wed, Jun 2, 2010 at 7:53 PM, Stephen Chen <Stephen.Chen@atheros.com> wrote:
+> You meant UB94?
 
-> Here is the BUG:
-> 
-> [  132.460013] kernel BUG at /home/wifi/iwlwifi-2.6/net/mac80211/main.c:380!
-> [  132.460013] invalid opcode: 0000 [#1] SMP
+Yeap.
 
-> [  132.460013] RIP: 0010:[<ffffffffa022fac2>]  [<ffffffffa022fac2>] ieee80211_alloc_hw+0x502/
-> 0x520 [mac80211]
-
-> [  132.460013]  [<ffffffffa02af53e>] iwl_alloc_all+0x1e/0x50 [iwlcore]
-
-> The code in which the above appears is:
-> (gdb) l *(ieee80211_alloc_hw+0x502)
-> 0xaf2 is in ieee80211_alloc_hw (/home/wifi/iwlwifi-2.6/net/mac80211/main.c:380).
-> 375	
-> 376		ifmgd = &sdata->u.mgd;
-> 377		mutex_lock(&ifmgd->mtx);
-> 378		if (ifmgd->associated)
-> 379			ieee80211_set_arp_filter(sdata);
-> 380		mutex_unlock(&ifmgd->mtx);
-> 381	
-> 382		return NOTIFY_DONE;
-> 383	}
-> 384	#endif
-
-Not sure why this appears as part of init? But anyway, the reason for
-this is obvious -- we're not checking netif_running() in
-ieee80211_ifa_changed, which we must since we only init the mutex as
-part of open(). The fix would be to abort ieee80211_ifa_changed() if not
-netif_running() -- before locking the mutex.
-
-johannes
-
+  Luis
