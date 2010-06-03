@@ -1,80 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:51020 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752828Ab0FUUQ5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jun 2010 16:16:57 -0400
-Subject: Re: [ath5k-devel] [PATCH v2] ath5k: disable ASPM
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: David Quan <David.Quan@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-In-Reply-To: <AANLkTim8iZmm8pEERJUsrQWOiLSjPUfCN-TFFzZZQWx2@mail.gmail.com>
-References: <20100528100901.14580.1322.stgit@fate.lan>
-	 <1276806785.20754.8.camel@maxim-laptop>
-	 <20100618112026.17623g6uhdjk8hts@naisho.dyndns.info>
-	 <1276856142.9114.1.camel@maxim-laptop>
-	 <20100618134930.124225d4fsi8w1fk@naisho.dyndns.info>
-	 <1276859156.19554.2.camel@maxim-laptop>
-	 <AANLkTimdTjedtoeKAp5tcTqefrUB6k373Kx9EacuYFcO@mail.gmail.com>
-	 <1276870309.23783.3.camel@maxim-laptop>
-	 <1276933774.16697.11.camel@maxim-laptop>
-	 <AANLkTimIjaxq7IDWwIl1vv93k9bNQ2i89Sb5R5TiJmmA@mail.gmail.com>
-	 <1277032723.9555.12.camel@maxim-laptop>
-	 <AANLkTim8iZmm8pEERJUsrQWOiLSjPUfCN-TFFzZZQWx2@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 21 Jun 2010 23:16:50 +0300
-Message-ID: <1277151410.5409.33.camel@maxim-laptop>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:61442 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752675Ab0FCWtO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jun 2010 18:49:14 -0400
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 03 Jun 2010 15:49:14 -0700
+Date: Thu, 3 Jun 2010 15:49:12 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Greg KH <greg@kroah.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"stable@kernel.org" <stable@kernel.org>
+Subject: Re: [stable] [PATCH] ath5k: drop warning on jumbo frames
+Message-ID: <20100603224912.GK2318@tux>
+References: <1273519587-25740-1-git-send-email-lrodriguez@atheros.com>
+ <20100603220947.GA22595@kroah.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20100603220947.GA22595@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis, let me explain again, exactly the situation:
+On Thu, Jun 03, 2010 at 03:09:47PM -0700, Greg KH wrote:
+> On Mon, May 10, 2010 at 03:26:27PM -0400, Luis R. Rodriguez wrote:
+> > Jumbo frames are not supported, and if they are seen it is likely
+> > a bogus frame so just silently discard them instead of warning on
+> > them all time. Also, instead of dropping them immediately though
+> > move the check *after* we check for all sort of frame errors. This
+> > should enable us to discard these frames if the hardware picks
+> > other bogus items first. Lets see if we still get those jumbo
+> > counters increasing still with this.
+> > 
+> > Jumbo frames would happen if we tell hardware we can support
+> > a small 802.11 chunks of DMA'd frame, hardware would split RX'd
+> > frames into parts and we'd have to reconstruct them in software.
+> > This is done with USB due to the bulk size but with ath5k we
+> > already provide a good limit to hardware and this should not be
+> > happening.
+> > 
+> > This is reported quite often and if it fills the logs then this
+> > needs to be addressed and to avoid spurious reports.
+> > 
+> > Cc: stable@kernel.org
+> > Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> > ---
+> >  drivers/net/wireless/ath/ath5k/base.c |   12 ++++++------
+> 
+> This is now upstream, but doesn't seem to apply to any of the .32, .33,
+> or .34 trees.  If you want it there, please send me a backported version
+> of it.
 
-First of all AR5001 and AR5001X devices (former was usualy listed as
-AR2425, and I have it, later I don't know about much), don't work well
-with ASPM L0s enabled.
+Thanks Greg. I cannot address this right now so I've stashed it here:
 
-I told that many times, but I tell again.
-As soon as card it put on medium to high transmit load
-(for example even if transmission consists mostly of TCP ACK packets),
-it dies.
+http://wireless.kernel.org/en/developers/stable-pending
 
-Usualy it will stop transmitting, and then after few seconds it will
-send RXORN intrrupt to the host, even though the channel was idle.
-(Tested by sending a stream of UDP packets on channel that is neighbor
-free).
+If anyone has free time please feel free to address the backport and
+any other listed above (just one more).
 
-I didn't see it, but some users reported seeing jumbo frames at this
-time as well. 
-Overall it doesn't matter because card just goes south.
-
-A reset sometimes brings card to life, sometimes causes another storm of
-RXORN and sometimes just results in quiet dead card.
-A next reset might bring it to life, or not.
-
-Card (at least mine) advertises its as a 'pre pci 1.1 device'.
-Therefore if I enable CONFIG_PCIEASPM, the pci core will automaticly
-disable ASPM (both L0s and L1) on this card.
-I won't be surprised that windows does the same.
-
-
-Therefore the patch I sent it useless because it only works when
-CONFIG_PCIEASPM is enabled.
-
-In addition to that using the original version of this patch from Jussi
-Kivilinna contains code that disables ASPM (I modified it to disable
-only L0s) with or without CONFIG_PCIEASPM.
-
-But without CONFIG_PCIEASPM it uses open coded function that should
-belong to pci core.
-And it is also copied from e1000 which shouldn't do that too.
-
-Best regards,
-Maxim Levitsky
-
-
+  Luis
