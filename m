@@ -1,216 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:64843 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754326Ab0FCTjT (ORCPT
+Received: from fxip-0047f.externet.hu ([88.209.222.127]:37656 "EHLO
+	pomaz-ex.szeredi.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755867Ab0FCP2E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jun 2010 15:39:19 -0400
-Message-ID: <4c0804e2.0c3ddf0a.2771.10f7@mx.google.com>
-Date: Thu, 03 Jun 2010 22:39:30 +0300
-From: Dmytro Milinevskyy <milinevskyy@gmail.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	GeunSik Lim <geunsik.lim@samsung.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Lukas Turek <8an@praha12.net>,
-	Mark Hindley <mark@hindley.org.uk>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jiri Kosina <jkosina@suse.cz>, Kalle Valo <kalle.valo@iki.fi>,
-	Keng-Yu Lin <keng-yu.lin@canonical.com>,
-	Luca Verdesca <magooz@salug.it>,
-	Shahar Or <shahar@shahar-or.co.il>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] [ath5k][leds] Ability to disable leds support. If leds support enabled do not force mac802.11 leds layer selection.
-To: unlisted-recipients:; (no To-header on input)
+	Thu, 3 Jun 2010 11:28:04 -0400
+To: Reinette Chatre <reinette.chatre@intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: iwl3945 oops with latest git
+Message-Id: <E1OKBva-00080h-8E@pomaz-ex.szeredi.hu>
+From: Miklos Szeredi <miklos@szeredi.hu>
+Date: Thu, 03 Jun 2010 17:01:50 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+Hi,
 
-Here is the patch to disable ath5k leds support on build stage.
-However if the leds support was enabled do not force selection of 802.11 leds layer.
-Depency on LEDS_CLASS is kept.
+This oops comes shortly after booting machine and using wireless
+network.  Reproduced two times now.
 
-Suggestion given by Pavel Roskin and Bob Copeland applied.
+Please let me know if you need more info.
 
-Regards,
+Thanks,
+Miklos
 
---Dima
 
----
- drivers/net/wireless/ath/ath5k/Kconfig  |   12 +++++++++---
- drivers/net/wireless/ath/ath5k/Makefile |    2 +-
- drivers/net/wireless/ath/ath5k/ath5k.h  |   22 ++++++++++++++++++++++
- drivers/net/wireless/ath/ath5k/base.h   |   13 +++++++++----
- drivers/net/wireless/ath/ath5k/gpio.c   |    2 ++
- 5 files changed, 43 insertions(+), 8 deletions(-)
+BUG: unable to handle kernel NULL pointer dereference at (null)
+IP: [<ffffffffa022738f>] iwl3945_request_scan+0x961/0xd68 [iwl3945]
+PGD 0 
+Oops: 0000 [#1] PREEMPT SMP 
+last sysfs file: /sys/class/rfkill/rfkill1/state
+CPU 0 
+Modules linked in: nfs lockd nfs_acl sunrpc rfcomm sco bnep l2cap acpi_cpufreq mperf nf_conntrack_netbios_ns fuse iwl3945 iwlcore thinkpad_acpi nsc_ircc mac80211 backlight btusb led_class uinput ac irda battery crc_ccitt thermal cfg80211 bluetooth button processor e1000e rfkill kvm_intel kvm
 
-diff --git a/drivers/net/wireless/ath/ath5k/Kconfig b/drivers/net/wireless/ath/ath5k/Kconfig
-index eb83b7b..29f4572 100644
---- a/drivers/net/wireless/ath/ath5k/Kconfig
-+++ b/drivers/net/wireless/ath/ath5k/Kconfig
-@@ -1,9 +1,6 @@
- config ATH5K
- 	tristate "Atheros 5xxx wireless cards support"
- 	depends on PCI && MAC80211
--	select MAC80211_LEDS
--	select LEDS_CLASS
--	select NEW_LEDS
- 	---help---
- 	  This module adds support for wireless adapters based on
- 	  Atheros 5xxx chipset.
-@@ -18,6 +15,15 @@ config ATH5K
- 	  If you choose to build a module, it'll be called ath5k. Say M if
- 	  unsure.
- 
-+
-+config ATH5K_LEDS
-+	tristate "Atheros 5xxx wireless cards LEDs support"
-+	depends on ATH5K
-+	select NEW_LEDS
-+	select LEDS_CLASS
-+	---help---
-+	  Atheros 5xxx LED support.
-+
- config ATH5K_DEBUG
- 	bool "Atheros 5xxx debugging"
- 	depends on ATH5K
-diff --git a/drivers/net/wireless/ath/ath5k/Makefile b/drivers/net/wireless/ath/ath5k/Makefile
-index cc09595..6d552dd 100644
---- a/drivers/net/wireless/ath/ath5k/Makefile
-+++ b/drivers/net/wireless/ath/ath5k/Makefile
-@@ -10,8 +10,8 @@ ath5k-y				+= phy.o
- ath5k-y				+= reset.o
- ath5k-y				+= attach.o
- ath5k-y				+= base.o
--ath5k-y				+= led.o
- ath5k-y				+= rfkill.o
- ath5k-y				+= ani.o
- ath5k-$(CONFIG_ATH5K_DEBUG)	+= debug.o
-+ath5k-$(CONFIG_ATH5K_LEDS) += led.o
- obj-$(CONFIG_ATH5K)		+= ath5k.o
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index 2785946..bb7e09a 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -1148,11 +1148,27 @@ struct ath5k_hw {
- int ath5k_hw_attach(struct ath5k_softc *sc);
- void ath5k_hw_detach(struct ath5k_hw *ah);
- 
-+#ifdef CONFIG_ATH5K_LEDS
- /* LED functions */
- int ath5k_init_leds(struct ath5k_softc *sc);
- void ath5k_led_enable(struct ath5k_softc *sc);
- void ath5k_led_off(struct ath5k_softc *sc);
- void ath5k_unregister_leds(struct ath5k_softc *sc);
-+#else
-+static inline int ath5k_init_leds(struct ath5k_softc *sc)
-+{
-+	return 0;
-+}
-+static inline void ath5k_led_enable(struct ath5k_softc *sc)
-+{
-+}
-+static inline void ath5k_led_off(struct ath5k_softc *sc)
-+{
-+}
-+static inline void ath5k_unregister_leds(struct ath5k_softc *sc)
-+{
-+}
-+#endif
- 
- /* Reset Functions */
- int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial);
-@@ -1233,7 +1249,13 @@ int ath5k_hw_set_slot_time(struct ath5k_hw *ah, unsigned int slot_time);
- int ath5k_hw_init_desc_functions(struct ath5k_hw *ah);
- 
- /* GPIO Functions */
-+#ifdef CONFIG_ATH5K_LEDS
- void ath5k_hw_set_ledstate(struct ath5k_hw *ah, unsigned int state);
-+#else
-+static inline void ath5k_hw_set_ledstate(struct ath5k_hw *ah, unsigned int state)
-+{
-+}
-+#endif
- int ath5k_hw_set_gpio_input(struct ath5k_hw *ah, u32 gpio);
- int ath5k_hw_set_gpio_output(struct ath5k_hw *ah, u32 gpio);
- u32 ath5k_hw_get_gpio(struct ath5k_hw *ah, u32 gpio);
-diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
-index 56221bc..97b26c1 100644
---- a/drivers/net/wireless/ath/ath5k/base.h
-+++ b/drivers/net/wireless/ath/ath5k/base.h
-@@ -86,6 +86,7 @@ struct ath5k_txq {
- 
- #define ATH5K_LED_MAX_NAME_LEN 31
- 
-+#ifdef CONFIG_ATH5K_LEDS
- /*
-  * State for LED triggers
-  */
-@@ -95,6 +96,7 @@ struct ath5k_led
- 	struct ath5k_softc *sc;			/* driver state */
- 	struct led_classdev led_dev;		/* led classdev */
- };
-+#endif
- 
- /* Rfkill */
- struct ath5k_rfkill {
-@@ -186,9 +188,6 @@ struct ath5k_softc {
- 
- 	u8			bssidmask[ETH_ALEN];
- 
--	unsigned int		led_pin,	/* GPIO pin for driving LED */
--				led_on;		/* pin setting for LED on */
--
- 	struct tasklet_struct	restq;		/* reset tasklet */
- 
- 	unsigned int		rxbufsize;	/* rx size based on mtu */
-@@ -196,7 +195,6 @@ struct ath5k_softc {
- 	spinlock_t		rxbuflock;
- 	u32			*rxlink;	/* link ptr in last RX desc */
- 	struct tasklet_struct	rxtq;		/* rx intr tasklet */
--	struct ath5k_led	rx_led;		/* rx led */
- 
- 	struct list_head	txbuf;		/* transmit buffer */
- 	spinlock_t		txbuflock;
-@@ -204,7 +202,14 @@ struct ath5k_softc {
- 	struct ath5k_txq	txqs[AR5K_NUM_TX_QUEUES];	/* tx queues */
- 	struct ath5k_txq	*txq;		/* main tx queue */
- 	struct tasklet_struct	txtq;		/* tx intr tasklet */
-+
-+
-+#ifdef CONFIG_ATH5K_LEDS
-+	unsigned int		led_pin,	/* GPIO pin for driving LED */
-+				led_on;		/* pin setting for LED on */
-+	struct ath5k_led	rx_led;		/* rx led */
- 	struct ath5k_led	tx_led;		/* tx led */
-+#endif
- 
- 	struct ath5k_rfkill	rf_kill;
- 
-diff --git a/drivers/net/wireless/ath/ath5k/gpio.c b/drivers/net/wireless/ath/ath5k/gpio.c
-index 64a27e7..9e757b3 100644
---- a/drivers/net/wireless/ath/ath5k/gpio.c
-+++ b/drivers/net/wireless/ath/ath5k/gpio.c
-@@ -25,6 +25,7 @@
- #include "debug.h"
- #include "base.h"
- 
-+#ifdef CONFIG_ATH5K_LEDS
- /*
-  * Set led state
-  */
-@@ -76,6 +77,7 @@ void ath5k_hw_set_ledstate(struct ath5k_hw *ah, unsigned int state)
- 	else
- 		AR5K_REG_ENABLE_BITS(ah, AR5K_PCICFG, led_5210);
- }
-+#endif
- 
- /*
-  * Set GPIO inputs
--- 
-1.7.1
-
+Pid: 1493, comm: iwl3945 Not tainted 2.6.35-rc1-00194-gaef4b9a #76 2007FUG/2007FUG
+RIP: 0010:[<ffffffffa022738f>]  [<ffffffffa022738f>] iwl3945_request_scan+0x961/0xd68 [iwl3945]
+RSP: 0018:ffff8800b4d71d10  EFLAGS: 00010287
+RAX: ffff8800bea80c00 RBX: ffff8800b4171380 RCX: 0000000000000021
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff8800b4171380
+RBP: ffff8800b4d71de0 R08: 000000000000030e R09: 00000000ffffffff
+R10: 000000000ad21900 R11: 0000000000000292 R12: 0000000000000000
+R13: ffff8800b60950f2 R14: 0000000000000000 R15: 0000000000000058
+FS:  0000000000000000(0000) GS:ffff880001a00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+CR2: 0000000000000000 CR3: 0000000001612000 CR4: 00000000000006f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+Process iwl3945 (pid: 1493, threadinfo ffff8800b4d70000, task ffff8800b6790940)
+Stack:
+ ffff880001a12f40 0000000000012f40 ffff8800b64f8800 ffffffff8161a378
+<0> 0000000000000000 ffff8800b6095000 00578800b4d71e20 0000005800000021
+<0> ffff8800b4d71fd8 00ff8800b4175128 ffff8800b4d71fd8 002188ffb6790940
+Call Trace:
+ [<ffffffffa01f9bb5>] iwl_bg_start_internal_scan+0x34f/0x371 [iwlcore]
+ [<ffffffff8104e175>] worker_thread+0x1fc/0x2a3
+ [<ffffffffa01f9866>] ? iwl_bg_start_internal_scan+0x0/0x371 [iwlcore]
+ [<ffffffff81051d96>] ? autoremove_wake_function+0x0/0x34
+ [<ffffffff813f4590>] ? _raw_spin_unlock_irqrestore+0x27/0x29
+ [<ffffffff8104df79>] ? worker_thread+0x0/0x2a3
+ [<ffffffff810518db>] kthread+0x7a/0x82
+ [<ffffffff81002c94>] kernel_thread_helper+0x4/0x10
+ [<ffffffff81051861>] ? kthread+0x0/0x82
+ [<ffffffff81002c90>] ? kernel_thread_helper+0x0/0x10
+Code: 48 b5 00 00 48 89 45 80 48 89 85 70 ff ff ff 41 8d 47 ff 66 89 85 66 ff ff ff e9 43 02 00 00 48 63 55 a8 4c 8b 64 d0 38 8b 55 a4 <41> 39 14 24 0f 85 2a 02 00 00 66 41 8b 54 24 06 48 89 df 41 88 
+RIP  [<ffffffffa022738f>] iwl3945_request_scan+0x961/0xd68 [iwl3945]
+ RSP <ffff8800b4d71d10>
+CR2: 0000000000000000
+---[ end trace 63fe07b50f147114 ]---
