@@ -1,68 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:11103 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:63238 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752367Ab0F3KrV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jun 2010 06:47:21 -0400
+	id S1758335Ab0FCBEq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Jun 2010 21:04:46 -0400
 Received: from mail.atheros.com ([10.10.20.108])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Jun 2010 03:47:21 -0700
-Date: Wed, 30 Jun 2010 03:47:15 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] mac80211: Dont allow to wake up netif tx queues
- while on off channel
-Message-ID: <20100630104715.GA2192@vasanth-laptop>
-References: <1277892907-2401-1-git-send-email-vasanth@atheros.com>
- <1277893026.7823.7.camel@jlt3.sipsolutions.net>
+	for <linux-wireless@vger.kernel.org>; Wed, 02 Jun 2010 18:04:46 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1277893026.7823.7.camel@jlt3.sipsolutions.net>
+Message-ID: <19462.65521.350785.861619@gargle.gargle.HOWL>
+Date: Thu, 3 Jun 2010 06:35:53 +0530
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Stephen Chen <Stephen.Chen@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 5/8] ath9k_htc: Setup HT capabilites for 2-stream devices
+In-Reply-To: <AANLkTikumUaxrXti3F8gPbb1NMAcVQNqmnKpmqSicD5g@mail.gmail.com>
+References: <19462.12588.699806.245206@gargle.gargle.HOWL>
+	<AANLkTilTTMEHGQj0Y4roSOjf69ufynaV-jmtb2g6n181@mail.gmail.com>
+	<19462.65093.260306.326262@gargle.gargle.HOWL>
+	<AANLkTikumUaxrXti3F8gPbb1NMAcVQNqmnKpmqSicD5g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 30, 2010 at 03:47:06PM +0530, Johannes Berg wrote:
-> On Wed, 2010-06-30 at 03:15 -0700, Vasanthakumar Thiagarajan wrote:
-> > Drivers are not supposed to call ieee80211_wake_queue() while operating
-> > on off channel during sw scanning, but there is no clear way for
-> > the driver to know that it is operating on off channel during scanning.
-> > There are cases (unavailablity/availability of tx buffers in ath9k, for
-> > example) where driver needs to stop/restart tx queues during background
-> > scanning state, this might result in waking up the corresponding netif
-> > tx queue when the device is on off channel which is not desired. This
-> > patches fixes this by checking SCAN_OFF_CHANNEL bit in scanning before
-> > restarting the tx queue.
-> > 
-> > Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> > ---
-> >  net/mac80211/util.c |    3 ++-
-> >  1 files changed, 2 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-> > index a54cf14..1938a67 100644
-> > --- a/net/mac80211/util.c
-> > +++ b/net/mac80211/util.c
-> > @@ -277,7 +277,8 @@ static void __ieee80211_wake_queue(struct ieee80211_hw *hw, int queue,
-> >  
-> >  	__clear_bit(reason, &local->queue_stop_reasons[queue]);
-> >  
-> > -	if (local->queue_stop_reasons[queue] != 0)
-> > +	if ((local->queue_stop_reasons[queue] != 0) ||
-> > +	    test_bit(SCAN_OFF_CHANNEL, &local->scanning))
-> >  		/* someone still has this queue stopped */
-> >  		return;
+Luis R. Rodriguez wrote:
+> Adding Stephen. Stephen, this is a public e-mail.
 > 
-> That doesn't seem to make sense, since we treat driver and scan stop
-> status separately via wake_queue_by_reason()
+> On Wed, Jun 2, 2010 at 5:58 PM, Sujith <Sujith.Manoharan@atheros.com> wrote:
+> > Luis R. Rodriguez wrote:
+> >> On Wed, Jun 2, 2010 at 3:23 AM, Sujith <Sujith.Manoharan@atheros.com> wrote:
+> >> > The supported MCS rate set has to be setup properly
+> >> > for 2-stream devices.
+> >> >
+> >> > Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+> >>
+> >> Awesome, are these being sold yet?
+> >
+> > Yep.
+> 
+> What are the names of a few products in the market with these devices?
 
-I dont know if I explained the issue properly. The issue here is
-waking up the queues by driver during scan, particularly when
-operating on off channel. With ath9k, there is a possibility that
-ieee80211_wake_queue() can be called while moving from operational
-channel (during channel set in driver). In this case driver still
-needs to be allowed to clear the bit in queue_stop_reasons[] but
-not wake up the tx queue.
+Hm, not sure, maybe Stephen knows ?
 
-Vasanth
+Sujith
