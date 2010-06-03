@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:51295 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752878Ab0FMMW2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jun 2010 08:22:28 -0400
-Received: by fxm8 with SMTP id 8so1908815fxm.19
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Jun 2010 05:22:25 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 2.6.35 V2] p54pci: add Symbol AP-300 minipci adapters pciid
-Cc: Joerg Albert <jal2@gmx.de>,
-	John W Linville <linville@tuxdriver.com>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Sun, 13 Jun 2010 14:22:23 +0200
+Received: from mx2.digadd.de ([195.47.195.236]:40210 "EHLO mx2.digadd.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751690Ab0FCP5w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jun 2010 11:57:52 -0400
+Message-ID: <4C07D0C7.8010907@digadd.de>
+Date: Thu, 03 Jun 2010 17:56:55 +0200
+From: "Christian P. Schmidt" <schmidt@digadd.de>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201006131422.23772.chunkeey@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: reinette chatre <reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Problems connectring to an AP with Acer Aspire Revo
+References: <4BF795EB.9070902@digadd.de>	 <1274729665.2091.15280.camel@rchatre-DESK>  <4BFD1ED0.9050309@digadd.de>	 <1275003105.2091.20102.camel@rchatre-DESK>  <4BFF9B93.5010308@digadd.de>	 <1275043274.3909.71.camel@jlt3.sipsolutions.net>	 <4BFF9FC6.4030101@digadd.de>	 <1275044074.3909.72.camel@jlt3.sipsolutions.net> <4BFFA490.90600@digadd.de> <1275045843.3909.92.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1275045843.3909.92.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Joerg Albert <jal2@gmx.de>
 
-Cc: stable@kernel.org
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-> On Sunday 13 June 2010, Joerg Albert wrote:
->
-> BTW, the 2.4 GHz card in the AP-300 has the same id
----
-diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
-index 791e2ae..4357e69 100644
---- a/drivers/net/wireless/p54/p54pci.c
-+++ b/drivers/net/wireless/p54/p54pci.c
-@@ -42,6 +42,8 @@ static DEFINE_PCI_DEVICE_TABLE(p54p_table) = {
- 	{ PCI_DEVICE(0x1260, 0x3877) },
- 	/* Intersil PRISM Javelin/Xbow Wireless LAN adapter */
- 	{ PCI_DEVICE(0x1260, 0x3886) },
-+	/* Intersil PRISM Xbow Wireless LAN adapter (Symbol AP-300) */
-+	{ PCI_DEVICE(0x1260, 0xffff) },
- 	{ },
- };
- 
+On 05/28/2010 01:24 PM, Johannes Berg wrote:
+> On Fri, 2010-05-28 at 13:10 +0200, Christian P. Schmidt wrote:
+> 
+>>> Those values make no sense to me .. can you use "iw scan" and tell us
+>>> the dBm value?
+>>
+>> This translates to -52 to -30dBm.
+> 
+> Ok that sounds like you have antennas.
+
+Yes, I double checked it. Associations with my Linksys WRT54G running
+OpenWRT times out as well, two laptops can successfully connect.
+
+> Maybe try the rfkill tool:
+> http://wireless.kernel.org/en/users/Documentation/rfkill
+
+Yes, it was the rfkill tool that caused my attempts to fail. However,
+this didn't change my association attempt problems.
+I also took my time to look at the PCIe port - steady 3.3V on the RFKILL
+pin, which means "no RFKILL".
+
+Any further ideas?
+
+Regards,
+Christian
