@@ -1,67 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:40558 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754361Ab0FFJMQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jun 2010 05:12:16 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/3] compat-wireless: deactivate libertas sdio suspend for < 2.6.34
-Date: Sun,  6 Jun 2010 11:11:56 +0200
-Message-Id: <1275815518-30281-1-git-send-email-hauke@hauke-m.de>
+Received: from kroah.org ([198.145.64.141]:46461 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755452Ab0FCWm2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jun 2010 18:42:28 -0400
+Date: Thu, 3 Jun 2010 15:09:47 -0700
+From: Greg KH <greg@kroah.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	stable@kernel.org
+Subject: Re: [stable] [PATCH] ath5k: drop warning on jumbo frames
+Message-ID: <20100603220947.GA22595@kroah.com>
+References: <1273519587-25740-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1273519587-25740-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-libertas sdio suspend and resume depends on some new features of the
-sdio framework in kernel 2.6.34.
+On Mon, May 10, 2010 at 03:26:27PM -0400, Luis R. Rodriguez wrote:
+> Jumbo frames are not supported, and if they are seen it is likely
+> a bogus frame so just silently discard them instead of warning on
+> them all time. Also, instead of dropping them immediately though
+> move the check *after* we check for all sort of frame errors. This
+> should enable us to discard these frames if the hardware picks
+> other bogus items first. Lets see if we still get those jumbo
+> counters increasing still with this.
+> 
+> Jumbo frames would happen if we tell hardware we can support
+> a small 802.11 chunks of DMA'd frame, hardware would split RX'd
+> frames into parts and we'd have to reconstruct them in software.
+> This is done with USB due to the bulk size but with ath5k we
+> already provide a good limit to hardware and this should not be
+> happening.
+> 
+> This is reported quite often and if it fills the logs then this
+> needs to be addressed and to avoid spurious reports.
+> 
+> Cc: stable@kernel.org
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> ---
+>  drivers/net/wireless/ath/ath5k/base.c |   12 ++++++------
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/29-libertas_sdio_no_suspend.patch |   34 +++++++++++++++++++++++++++++
- 1 files changed, 34 insertions(+), 0 deletions(-)
- create mode 100644 patches/29-libertas_sdio_no_suspend.patch
+This is now upstream, but doesn't seem to apply to any of the .32, .33,
+or .34 trees.  If you want it there, please send me a backported version
+of it.
 
-diff --git a/patches/29-libertas_sdio_no_suspend.patch b/patches/29-libertas_sdio_no_suspend.patch
-new file mode 100644
-index 0000000..f5dc993
---- /dev/null
-+++ b/patches/29-libertas_sdio_no_suspend.patch
-@@ -0,0 +1,34 @@
-+Starting with commit 66fceb69b72ff7e9cd8da2ca70033982d5376e0e
-+"libertas: Added callback functions to support SDIO suspend/resume."
-+libertas uses new functions from the in kernel sdio framework for
-+suspend and resume that are not backported.
-+
-+--- a/drivers/net/wireless/libertas/if_sdio.c
-++++ b/drivers/net/wireless/libertas/if_sdio.c
-+@@ -1212,6 +1212,7 @@ static void if_sdio_remove(struct sdio_f
-+ 	lbs_deb_leave(LBS_DEB_SDIO);
-+ }
-+ 
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
-+ static int if_sdio_suspend(struct device *dev)
-+ {
-+ 	struct sdio_func *func = dev_to_sdio_func(dev);
-+@@ -1266,15 +1267,18 @@ static const struct dev_pm_ops if_sdio_p
-+ 	.suspend	= if_sdio_suspend,
-+ 	.resume		= if_sdio_resume,
-+ };
-++#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34)) */
-+ 
-+ static struct sdio_driver if_sdio_driver = {
-+ 	.name		= "libertas_sdio",
-+ 	.id_table	= if_sdio_ids,
-+ 	.probe		= if_sdio_probe,
-+ 	.remove		= if_sdio_remove,
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
-+ 	.drv = {
-+ 		.pm = &if_sdio_pm_ops,
-+ 	},
-++#endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34)) */
-+ };
-+ 
-+ /*******************************************************************/
--- 
-1.7.0.4
+thanks,
 
+greg k-h
