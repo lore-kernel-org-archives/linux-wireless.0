@@ -1,37 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38955 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755143Ab0FHNO3 (ORCPT
+Received: from relay01.mx.bawue.net ([193.7.176.67]:50843 "EHLO
+	relay01.mx.bawue.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750880Ab0FDQc2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jun 2010 09:14:29 -0400
-Subject: Re: [PATCHv2] mac80211: Fix circular locking dependency in ARP
- filter handling
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	reinette.chatre@intel.com
-In-Reply-To: <1276002335-18600-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1276002335-18600-1-git-send-email-juuso.oikarinen@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Jun 2010 15:14:23 +0200
-Message-ID: <1276002863.3706.131.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 4 Jun 2010 12:32:28 -0400
+Date: Fri, 4 Jun 2010 18:32:18 +0200
+From: Nils Radtke <lkml@Think-Future.de>
+To: linville@tuxdriver.com
+Cc: reinette.chatre@intel.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] iwlwifi: recalculate average tpt if not current
+Message-ID: <20100604163218.GA28003@localhost>
+Reply-To: Nils Radtke <lkml@Think-Future.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-06-08 at 16:05 +0300, Juuso Oikarinen wrote:
+  Hi John,
 
-> +		promisc = sdata->flags & IEEE80211_SDATA_PROMISC;
-> +		if (promisc)
-> +			bss_conf->arp_filter_enabled = 0;
-> +		else
-> +			bss_conf->arp_filter_enabled = sdata->arp_filter_state;
+http://marc.info/?l=linux-wireless&m=127317062320707&w=2 :
+> > > The BUG_ON was introduced by:
+> > > commit 3110bef78cb4282c58245bc8fd6d95d9ccb19749
+> > > Author: Guy Cohen <guy.cohen@intel.com>
+> > > Date:   Tue Sep 9 10:54:54 2008 +0800
+> > > 
+> > >     iwlwifi: Added support for 3 antennas
+> > > 
+> > > ... the portion adding the BUG_ON is reverted since we are encountering the error
+> > > and BUG_ON was created with assumption that error is not encountered.
+> > > 
+> > > Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+> > > ---
+> > 
+> > I noticed this patch in your wireless-next-2.6 pull request. Since it is
+> > addressing a system hang issue, could it perhaps be included in
+> > wireless-2.6 also? I should have included the bug report reference for
+> > this purpose, sorry ... it is
+> > https://bugzilla.redhat.com/show_bug.cgi?id=588021
+> 
+> I didn't send it that way because a) that code has been there for a
+> really long time; and b) the reporter couldn't reliably reproduce
+> the bug and therefore can't reliably test the fix.  While I agree
+> that the fix looks harmless, no update is zero-risk.
+> 
+> Can you reliably hit that code?  Has it been tested enough that we
+> should risk holding-up 2.6.34's release for it?
+I'm one of those _very reliably_ hitting this BUG. I can tell how 
+annoying it is. I have to backport the patch w/ every kernel release
+to be able to use the wireless link _at all_. So please consider
+it as somewhat urgent to get the patch included. 
 
-bss_conf->arp_filter_enabled = !promisc && sdata->arp_filter_state;
+I'm still in contact w/ Reinette regularly to get those problems fixed.
+It involves physically moving around the city for testing any modification
+so this working is slowly processing as it takes every time an enormous 
+amount of time to do so. Work in (slow) progress, but it's alive..
+C.f. http://permalink.gmane.org/gmane.linux.kernel/992941
 
-?
+BTW, https://bugzilla.redhat.com/show_bug.cgi?id=588021 this isn't fixed.
+Maybe RH did fix it. kernel.org sources haven't. This is a blocker ever 
+since.
 
-Or if not, use false instead of 0 please.
+  Cheers,
 
-johannes
+      Nils
+
 
