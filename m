@@ -1,38 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:22369 "EHLO mga01.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:63101 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756483Ab0FBQBi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jun 2010 12:01:38 -0400
-Subject: Re: pull request: wireless-2.6 2010-05-28
+	id S1752139Ab0FDQkj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Jun 2010 12:40:39 -0400
+Subject: Re: Problems connectring to an AP with Acer Aspire Revo
 From: reinette chatre <reinette.chatre@intel.com>
-To: "sedat.dilek@gmail.com" <sedat.dilek@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Zheng, Jiajia" <jiajia.zheng@intel.com>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-In-Reply-To: <AANLkTimo_CpVC0B99GMJtIllAye5Yqa5yiIAiFBY-pIN@mail.gmail.com>
-References: <20100528180952.GC2405@tuxdriver.com>
-	 <AANLkTil8SLseSeq1M_Xg7P4AqMy3V_0jxc7by2Xuaqnb@mail.gmail.com>
-	 <1275409361.2091.27208.camel@rchatre-DESK>
-	 <AANLkTimo_CpVC0B99GMJtIllAye5Yqa5yiIAiFBY-pIN@mail.gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Christian P. Schmidt" <schmidt@digadd.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1275634104.3694.0.camel@jlt3.sipsolutions.net>
+References: <4BF795EB.9070902@digadd.de>
+	 <1274729665.2091.15280.camel@rchatre-DESK>  <4BFD1ED0.9050309@digadd.de>
+	 <1275003105.2091.20102.camel@rchatre-DESK>  <4BFF9B93.5010308@digadd.de>
+	 <1275043274.3909.71.camel@jlt3.sipsolutions.net>
+	 <4BFF9FC6.4030101@digadd.de>
+	 <1275044074.3909.72.camel@jlt3.sipsolutions.net> <4BFFA490.90600@digadd.de>
+	 <1275045843.3909.92.camel@jlt3.sipsolutions.net>
+	 <4C07D0C7.8010907@digadd.de>
+	 <1275634104.3694.0.camel@jlt3.sipsolutions.net>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 02 Jun 2010 09:01:37 -0700
-Message-ID: <1275494497.2091.28731.camel@rchatre-DESK>
+Date: Fri, 04 Jun 2010 09:40:38 -0700
+Message-ID: <1275669638.2091.34633.camel@rchatre-DESK>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-06-02 at 01:42 -0700, Sedat Dilek wrote:
-> What do you mean by "upstream"?
-> upstream for me is Linus-tree (linux-2.6 GIT master).
-> Patches against iwlwifi-2.6 GIT trees are not very helpful in my case.
+On Thu, 2010-06-03 at 23:48 -0700, Johannes Berg wrote:
+> On Thu, 2010-06-03 at 17:56 +0200, Christian P. Schmidt wrote:
+> 
+> > > Maybe try the rfkill tool:
+> > > http://wireless.kernel.org/en/users/Documentation/rfkill
+> > 
+> > Yes, it was the rfkill tool that caused my attempts to fail. However,
+> > this didn't change my association attempt problems.
+> > I also took my time to look at the PCIe port - steady 3.3V on the RFKILL
+> > pin, which means "no RFKILL".
+> > 
+> > Any further ideas?
+> 
+> Unfortunately not. It would seem that something is causing your frames
+> not to be transmitted correctly, but I see no reason for that right now.
 
-Since the problem exists in 2.6.35-rc1 linux-2.6 is indeed the target
-for this fix.
+The logs provided contains a lot of useful information. Among this is
+that the device is unable to transmit data with the firmware returning a
+"TX_LOCKED" status. From what I understand this is a regulatory check
+failure based on the channel type, which does not make sense in this
+regard since from what I can tell channel 8, which is an active channel,
+is used. I passed this question to our firmware folks and now waiting
+for an answer.
 
 Reinette
 
