@@ -1,226 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:8358 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752141Ab0FFG4T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jun 2010 02:56:19 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 2/4] iwl3945: fix internal scan
-Date: Sat,  5 Jun 2010 23:56:01 -0700
-Message-Id: <1275807363-18150-3-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1275807363-18150-1-git-send-email-reinette.chatre@intel.com>
-References: <1275807363-18150-1-git-send-email-reinette.chatre@intel.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43800 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751239Ab0FDSPK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Jun 2010 14:15:10 -0400
+Date: Fri, 4 Jun 2010 14:03:28 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Nils Radtke <lkml@Think-Future.de>
+Cc: reinette.chatre@intel.com, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, stable@kernel.org
+Subject: Re: [PATCH] iwlwifi: recalculate average tpt if not current
+Message-ID: <20100604180328.GB2492@tuxdriver.com>
+References: <20100604163218.GA28003@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100604163218.GA28003@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+On Fri, Jun 04, 2010 at 06:32:18PM +0200, Nils Radtke wrote:
+>   Hi John,
+> 
+> http://marc.info/?l=linux-wireless&m=127317062320707&w=2 :
+> > > > The BUG_ON was introduced by:
+> > > > commit 3110bef78cb4282c58245bc8fd6d95d9ccb19749
+> > > > Author: Guy Cohen <guy.cohen@intel.com>
+> > > > Date:   Tue Sep 9 10:54:54 2008 +0800
+> > > > 
+> > > >     iwlwifi: Added support for 3 antennas
+> > > > 
+> > > > ... the portion adding the BUG_ON is reverted since we are encountering the error
+> > > > and BUG_ON was created with assumption that error is not encountered.
+> > > > 
+> > > > Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+> > > > ---
+> > > 
+> > > I noticed this patch in your wireless-next-2.6 pull request. Since it is
+> > > addressing a system hang issue, could it perhaps be included in
+> > > wireless-2.6 also? I should have included the bug report reference for
+> > > this purpose, sorry ... it is
+> > > https://bugzilla.redhat.com/show_bug.cgi?id=588021
+> > 
+> > I didn't send it that way because a) that code has been there for a
+> > really long time; and b) the reporter couldn't reliably reproduce
+> > the bug and therefore can't reliably test the fix.  While I agree
+> > that the fix looks harmless, no update is zero-risk.
+> > 
+> > Can you reliably hit that code?  Has it been tested enough that we
+> > should risk holding-up 2.6.34's release for it?
+> I'm one of those _very reliably_ hitting this BUG. I can tell how 
+> annoying it is. I have to backport the patch w/ every kernel release
+> to be able to use the wireless link _at all_. So please consider
+> it as somewhat urgent to get the patch included. 
+> 
+> I'm still in contact w/ Reinette regularly to get those problems fixed.
+> It involves physically moving around the city for testing any modification
+> so this working is slowly processing as it takes every time an enormous 
+> amount of time to do so. Work in (slow) progress, but it's alive..
+> C.f. http://permalink.gmane.org/gmane.linux.kernel/992941
+> 
+> BTW, https://bugzilla.redhat.com/show_bug.cgi?id=588021 this isn't fixed.
+> Maybe RH did fix it. kernel.org sources haven't. This is a blocker ever 
+> since.
 
-Port of internal scan to iwl3945 missed introduction
-of iwl3945_get_single_channel_for_scan.
+The patch is in linux-2.6.  I suppose it could go to stable@kernel.org.
 
-Fix the following bug by introducing the iwl3945_get_single_channel_for_scan
-http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2208
+commit 3d79b2a9eeaa066b35c49fbb17e3156a3c482c3e
+Author: Reinette Chatre <reinette.chatre@intel.com>
+Date:   Mon May 3 10:55:07 2010 -0700
 
-Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |   30 +-------------
- drivers/net/wireless/iwlwifi/iwl-core.c     |   39 ++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-core.h     |    2 +
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   56 +++++++++++++++++++++++++-
- 4 files changed, 96 insertions(+), 31 deletions(-)
+    iwlwifi: recalculate average tpt if not current
+    
+    We currently have this check as a BUG_ON, which is being hit by people.
+    Previously it was an error with a recalculation if not current, return that
+    code.
+    
+    The BUG_ON was introduced by:
+    commit 3110bef78cb4282c58245bc8fd6d95d9ccb19749
+    Author: Guy Cohen <guy.cohen@intel.com>
+    Date:   Tue Sep 9 10:54:54 2008 +0800
+    
+        iwlwifi: Added support for 3 antennas
+    
+    ... the portion adding the BUG_ON is reverted since we are encountering the 
+    and BUG_ON was created with assumption that error is not encountered.
+    
+    Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 1004cfc..0f292a2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -1119,10 +1119,9 @@ static int iwl_get_single_channel_for_scan(struct iwl_priv *priv,
- 					   struct iwl_scan_channel *scan_ch)
- {
- 	const struct ieee80211_supported_band *sband;
--	const struct iwl_channel_info *ch_info;
- 	u16 passive_dwell = 0;
- 	u16 active_dwell = 0;
--	int i, added = 0;
-+	int added = 0;
- 	u16 channel = 0;
- 
- 	sband = iwl_get_hw_mode(priv, band);
-@@ -1137,32 +1136,7 @@ static int iwl_get_single_channel_for_scan(struct iwl_priv *priv,
- 	if (passive_dwell <= active_dwell)
- 		passive_dwell = active_dwell + 1;
- 
--	/* only scan single channel, good enough to reset the RF */
--	/* pick the first valid not in-use channel */
--	if (band == IEEE80211_BAND_5GHZ) {
--		for (i = 14; i < priv->channel_count; i++) {
--			if (priv->channel_info[i].channel !=
--			    le16_to_cpu(priv->staging_rxon.channel)) {
--				channel = priv->channel_info[i].channel;
--				ch_info = iwl_get_channel_info(priv,
--					band, channel);
--				if (is_channel_valid(ch_info))
--					break;
--			}
--		}
--	} else {
--		for (i = 0; i < 14; i++) {
--			if (priv->channel_info[i].channel !=
--			    le16_to_cpu(priv->staging_rxon.channel)) {
--					channel =
--						priv->channel_info[i].channel;
--					ch_info = iwl_get_channel_info(priv,
--						band, channel);
--					if (is_channel_valid(ch_info))
--						break;
--			}
--		}
--	}
-+	channel = iwl_get_single_channel_number(priv, band);
- 	if (channel) {
- 		scan_ch->channel = cpu_to_le16(channel);
- 		scan_ch->type = SCAN_CHANNEL_TYPE_PASSIVE;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 5a7eca8..426e955 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -854,6 +854,45 @@ void iwl_set_rxon_chain(struct iwl_priv *priv)
- }
- EXPORT_SYMBOL(iwl_set_rxon_chain);
- 
-+/* Return valid channel */
-+u8 iwl_get_single_channel_number(struct iwl_priv *priv,
-+				  enum ieee80211_band band)
-+{
-+	const struct iwl_channel_info *ch_info;
-+	int i;
-+	u8 channel = 0;
-+
-+	/* only scan single channel, good enough to reset the RF */
-+	/* pick the first valid not in-use channel */
-+	if (band == IEEE80211_BAND_5GHZ) {
-+		for (i = 14; i < priv->channel_count; i++) {
-+			if (priv->channel_info[i].channel !=
-+			    le16_to_cpu(priv->staging_rxon.channel)) {
-+				channel = priv->channel_info[i].channel;
-+				ch_info = iwl_get_channel_info(priv,
-+					band, channel);
-+				if (is_channel_valid(ch_info))
-+					break;
-+			}
-+		}
-+	} else {
-+		for (i = 0; i < 14; i++) {
-+			if (priv->channel_info[i].channel !=
-+			    le16_to_cpu(priv->staging_rxon.channel)) {
-+					channel =
-+						priv->channel_info[i].channel;
-+					ch_info = iwl_get_channel_info(priv,
-+						band, channel);
-+					if (is_channel_valid(ch_info))
-+						break;
-+			}
-+		}
-+	}
-+
-+	return channel;
-+}
-+EXPORT_SYMBOL(iwl_get_single_channel_number);
-+
- /**
-  * iwl_set_rxon_channel - Set the phymode and channel values in staging RXON
-  * @phymode: MODE_IEEE80211A sets to 5.2GHz; all else set to 2.4GHz
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 7e5a5ba..31775bd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -343,6 +343,8 @@ int iwl_check_rxon_cmd(struct iwl_priv *priv);
- int iwl_full_rxon_required(struct iwl_priv *priv);
- void iwl_set_rxon_chain(struct iwl_priv *priv);
- int iwl_set_rxon_channel(struct iwl_priv *priv, struct ieee80211_channel *ch);
-+u8 iwl_get_single_channel_number(struct iwl_priv *priv,
-+				  enum ieee80211_band band);
- void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_config *ht_conf);
- u8 iwl_is_ht40_tx_allowed(struct iwl_priv *priv,
- 			 struct ieee80211_sta_ht_cap *sta_ht_inf);
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 3e5bffb..6c353ca 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -1844,6 +1844,49 @@ static void iwl3945_irq_tasklet(struct iwl_priv *priv)
- #endif
- }
- 
-+static int iwl3945_get_single_channel_for_scan(struct iwl_priv *priv,
-+					       struct ieee80211_vif *vif,
-+					       enum ieee80211_band band,
-+					       struct iwl3945_scan_channel *scan_ch)
-+{
-+	const struct ieee80211_supported_band *sband;
-+	u16 passive_dwell = 0;
-+	u16 active_dwell = 0;
-+	int added = 0;
-+	u8 channel = 0;
-+
-+	sband = iwl_get_hw_mode(priv, band);
-+	if (!sband) {
-+		IWL_ERR(priv, "invalid band\n");
-+		return added;
-+	}
-+
-+	active_dwell = iwl_get_active_dwell_time(priv, band, 0);
-+	passive_dwell = iwl_get_passive_dwell_time(priv, band, vif);
-+
-+	if (passive_dwell <= active_dwell)
-+		passive_dwell = active_dwell + 1;
-+
-+
-+	channel = iwl_get_single_channel_number(priv, band);
-+
-+	if (channel) {
-+		scan_ch->channel = channel;
-+		scan_ch->type = 0;	/* passive */
-+		scan_ch->active_dwell = cpu_to_le16(active_dwell);
-+		scan_ch->passive_dwell = cpu_to_le16(passive_dwell);
-+		/* Set txpower levels to defaults */
-+		scan_ch->tpc.dsp_atten = 110;
-+		if (band == IEEE80211_BAND_5GHZ)
-+			scan_ch->tpc.tx_gain = ((1 << 5) | (3 << 3)) | 3;
-+		else
-+			scan_ch->tpc.tx_gain = ((1 << 5) | (5 << 3));
-+		added++;
-+	} else
-+		IWL_ERR(priv, "no valid channel found\n");
-+	return added;
-+}
-+
- static int iwl3945_get_channels_for_scan(struct iwl_priv *priv,
- 					 enum ieee80211_band band,
- 				     u8 is_active, u8 n_probes,
-@@ -2992,9 +3035,16 @@ void iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- 	/* select Rx antennas */
- 	scan->flags |= iwl3945_get_antenna_flags(priv);
- 
--	scan->channel_count =
--		iwl3945_get_channels_for_scan(priv, band, is_active, n_probes,
--			(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)], vif);
-+	if (priv->is_internal_short_scan) {
-+		scan->channel_count =
-+			iwl3945_get_single_channel_for_scan(priv, vif, band,
-+				(void *)&scan->data[le16_to_cpu(
-+				scan->tx_cmd.len)]);
-+	} else {
-+		scan->channel_count =
-+			iwl3945_get_channels_for_scan(priv, band, is_active, n_probes,
-+				(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)], vif);
-+	}
- 
- 	if (scan->channel_count == 0) {
- 		IWL_DEBUG_SCAN(priv, "channel count %d\n", scan->channel_count);
 -- 
-1.7.0.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
