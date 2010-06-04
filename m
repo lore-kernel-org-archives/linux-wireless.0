@@ -1,152 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:37294 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755226Ab0FKR1q (ORCPT
+Received: from mail-pz0-f185.google.com ([209.85.222.185]:50965 "EHLO
+	mail-pz0-f185.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750729Ab0FDFIo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jun 2010 13:27:46 -0400
-Date: Fri, 11 Jun 2010 10:27:33 -0700
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2] mac80211: Use a separate CCMP PN receive counter for
- management frames
-Message-ID: <20100611172733.GA21347@jm.kir.nu>
-References: <20100611024625.GB3985@jm.kir.nu>
+	Fri, 4 Jun 2010 01:08:44 -0400
+Date: Thu, 3 Jun 2010 22:08:36 -0700
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Subject: Re: iwl3945 dies (oops) in post 2.6.34 kernels
+Message-ID: <20100604050836.GA21239@core.coreip.homeip.net>
+References: <20100525163920.GA2730@core.coreip.homeip.net>
+ <1274806916.18861.0.camel@jlt3.sipsolutions.net>
+ <1274807302.7494.1.camel@abhi-desktop>
+ <201005251027.32778.dmitry.torokhov@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100611024625.GB3985@jm.kir.nu>
+In-Reply-To: <201005251027.32778.dmitry.torokhov@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When management frame protection (IEEE 802.11w) is used, we must use a
-separate counter for tracking received CCMP packet number for the
-management frames. The previously used NUM_RX_DATA_QUEUESth queue was
-shared with data frames when QoS was not used and that can cause
-problems in detecting replays incorrectly for robust management frames.
-Add a new counter just for robust management frames to avoid this issue.
+On Tue, May 25, 2010 at 10:27:31AM -0700, Dmitry Torokhov wrote:
+> On Tuesday 25 May 2010 10:08:22 am Abhijeet Kolekar wrote:
+> > On Tue, 2010-05-25 at 10:01 -0700, Johannes Berg wrote:
+> > > On Tue, 2010-05-25 at 09:39 -0700, Dmitry Torokhov wrote:
+> > > > Hi,
+> > > > 
+> > > > I am getting the following crashers in iwl3945 after updating to
+> > > > post-2.6.34 kernels. This is with the pull from Linus's tree as of last
+> > > > night (the taint is from nvidia module):
+> > > > 
+> > > > [ 3330.630734] general protection fault: 0000 [#1] PREEMPT SMP
+> > > > [ 3330.630752] last sysfs file: /sys/devices/platform/dock.0/docked
+> > > > [ 3330.630761] CPU 0
+> > > > [ 3330.630766] Modules linked in: cryptd aes_x86_64 aes_generic fuse
+> > > > rfcomm sco bnep l2cap autofs4 coretemp hwmon sunrpc ppdev parport_pc
+> > > > parport acpi_cpufreq mperf uinput nvidia(P) snd_hda_codec_idt arc4
+> > > > snd_hda_intel ecb snd_hda_codec snd_hwdep iwl3945 joydev snd_seq
+> > > > snd_seq_device snd_pcm iwlcore mac80211 snd_timer cfg80211 snd psmouse
+> > > > iTCO_wdt dell_wmi iTCO_vendor_support serio_raw tg3 battery
+> > > > dell_laptop dcdbas soundcore snd_page_alloc btusb bluetooth video
+> > > > pcspkr mac_hid ac wmi libphy firewire_ohci i2c_i801 firewire_core
+> > > > yenta_socket crc_itu_t ohci_hcd [last unloaded: microcode] [
+> > > > 3330.630950]
+> > > > [ 3330.630958] Pid: 455, comm: iwl3945 Tainted: P            2.6.35-rc0
+> > > > #293 0WM416/Latitude D630 [ 3330.630967] RIP:
+> > > > 0010:[<ffffffffa01e70d3>]  [<ffffffffa01e70d3>]
+> > > > iwl3945_get_channels_for_scan+0xe3/0x460 [iwl3945]
+> > > 
+> > > http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2208
+> > 
+> > Can you please try this patch and report your findings?
+> > 
+> > http://bugzilla.intellinuxwireless.org/attachment.cgi?id=2447
+> > 
+> 
+> Thanks, will try both this patch and the one John mention. Later tonight
+> though.
+> 
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+John,
 
----
- net/mac80211/debugfs_key.c |    2 +-
- net/mac80211/key.c         |    2 +-
- net/mac80211/key.h         |    8 +++++++-
- net/mac80211/rx.c          |    9 +++++++--
- net/mac80211/wpa.c         |    8 ++++++--
- 5 files changed, 22 insertions(+), 7 deletions(-)
+Any chnace that 2nd patch be merged upstream? Without it my iwl3945
+craps out regularly.
 
-v2: Add a comment describing the use of CCMP receive counters per
-    request from Johannes.
-
-
---- wireless-testing.orig/net/mac80211/debugfs_key.c	2010-06-11 10:22:06.000000000 -0700
-+++ wireless-testing/net/mac80211/debugfs_key.c	2010-06-11 10:22:42.000000000 -0700
-@@ -143,7 +143,7 @@ static ssize_t key_rx_spec_read(struct f
- 		len = p - buf;
- 		break;
- 	case ALG_CCMP:
--		for (i = 0; i < NUM_RX_DATA_QUEUES; i++) {
-+		for (i = 0; i < NUM_RX_DATA_QUEUES + 1; i++) {
- 			rpn = key->u.ccmp.rx_pn[i];
- 			p += scnprintf(p, sizeof(buf)+buf-p,
- 				       "%02x%02x%02x%02x%02x%02x\n",
---- wireless-testing.orig/net/mac80211/key.c	2010-06-11 10:22:06.000000000 -0700
-+++ wireless-testing/net/mac80211/key.c	2010-06-11 10:22:42.000000000 -0700
-@@ -273,7 +273,7 @@ struct ieee80211_key *ieee80211_key_allo
- 		key->conf.iv_len = CCMP_HDR_LEN;
- 		key->conf.icv_len = CCMP_MIC_LEN;
- 		if (seq) {
--			for (i = 0; i < NUM_RX_DATA_QUEUES; i++)
-+			for (i = 0; i < NUM_RX_DATA_QUEUES + 1; i++)
- 				for (j = 0; j < CCMP_PN_LEN; j++)
- 					key->u.ccmp.rx_pn[i][j] =
- 						seq[CCMP_PN_LEN - j - 1];
---- wireless-testing.orig/net/mac80211/key.h	2010-06-11 10:22:06.000000000 -0700
-+++ wireless-testing/net/mac80211/key.h	2010-06-11 10:23:04.000000000 -0700
-@@ -77,7 +77,13 @@ struct ieee80211_key {
- 		} tkip;
- 		struct {
- 			u8 tx_pn[6];
--			u8 rx_pn[NUM_RX_DATA_QUEUES][6];
-+			/*
-+			 * Last received packet number. The first
-+			 * NUM_RX_DATA_QUEUES counters are used with Data
-+			 * frames and the last counter is used with Robust
-+			 * Management frames.
-+			 */
-+			u8 rx_pn[NUM_RX_DATA_QUEUES + 1][6];
- 			struct crypto_cipher *tfm;
- 			u32 replays; /* dot11RSNAStatsCCMPReplays */
- 			/* scratch buffers for virt_to_page() (crypto API) */
---- wireless-testing.orig/net/mac80211/rx.c	2010-06-11 10:22:06.000000000 -0700
-+++ wireless-testing/net/mac80211/rx.c	2010-06-11 10:22:42.000000000 -0700
-@@ -1268,11 +1268,13 @@ ieee80211_rx_h_defragment(struct ieee802
- 						 rx->queue, &(rx->skb));
- 		if (rx->key && rx->key->conf.alg == ALG_CCMP &&
- 		    ieee80211_has_protected(fc)) {
-+			int queue = ieee80211_is_mgmt(fc) ?
-+				NUM_RX_DATA_QUEUES : rx->queue;
- 			/* Store CCMP PN so that we can verify that the next
- 			 * fragment has a sequential PN value. */
- 			entry->ccmp = 1;
- 			memcpy(entry->last_pn,
--			       rx->key->u.ccmp.rx_pn[rx->queue],
-+			       rx->key->u.ccmp.rx_pn[queue],
- 			       CCMP_PN_LEN);
- 		}
- 		return RX_QUEUED;
-@@ -1292,6 +1294,7 @@ ieee80211_rx_h_defragment(struct ieee802
- 	if (entry->ccmp) {
- 		int i;
- 		u8 pn[CCMP_PN_LEN], *rpn;
-+		int queue;
- 		if (!rx->key || rx->key->conf.alg != ALG_CCMP)
- 			return RX_DROP_UNUSABLE;
- 		memcpy(pn, entry->last_pn, CCMP_PN_LEN);
-@@ -1300,7 +1303,9 @@ ieee80211_rx_h_defragment(struct ieee802
- 			if (pn[i])
- 				break;
- 		}
--		rpn = rx->key->u.ccmp.rx_pn[rx->queue];
-+		queue = ieee80211_is_mgmt(fc) ?
-+			NUM_RX_DATA_QUEUES : rx->queue;
-+		rpn = rx->key->u.ccmp.rx_pn[queue];
- 		if (memcmp(pn, rpn, CCMP_PN_LEN))
- 			return RX_DROP_UNUSABLE;
- 		memcpy(entry->last_pn, pn, CCMP_PN_LEN);
---- wireless-testing.orig/net/mac80211/wpa.c	2010-06-11 10:22:06.000000000 -0700
-+++ wireless-testing/net/mac80211/wpa.c	2010-06-11 10:22:42.000000000 -0700
-@@ -436,6 +436,7 @@ ieee80211_crypto_ccmp_decrypt(struct iee
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
- 	u8 pn[CCMP_PN_LEN];
- 	int data_len;
-+	int queue;
- 
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 
-@@ -453,7 +454,10 @@ ieee80211_crypto_ccmp_decrypt(struct iee
- 
- 	ccmp_hdr2pn(pn, skb->data + hdrlen);
- 
--	if (memcmp(pn, key->u.ccmp.rx_pn[rx->queue], CCMP_PN_LEN) <= 0) {
-+	queue = ieee80211_is_mgmt(hdr->frame_control) ?
-+		NUM_RX_DATA_QUEUES : rx->queue;
-+
-+	if (memcmp(pn, key->u.ccmp.rx_pn[queue], CCMP_PN_LEN) <= 0) {
- 		key->u.ccmp.replays++;
- 		return RX_DROP_UNUSABLE;
- 	}
-@@ -470,7 +474,7 @@ ieee80211_crypto_ccmp_decrypt(struct iee
- 			return RX_DROP_UNUSABLE;
- 	}
- 
--	memcpy(key->u.ccmp.rx_pn[rx->queue], pn, CCMP_PN_LEN);
-+	memcpy(key->u.ccmp.rx_pn[queue], pn, CCMP_PN_LEN);
- 
- 	/* Remove CCMP header and MIC */
- 	skb_trim(skb, skb->len - CCMP_MIC_LEN);
-
+Thanks!
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Dmitry
