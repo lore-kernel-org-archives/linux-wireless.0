@@ -1,60 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:54582 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750993Ab0F1AM3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Jun 2010 20:12:29 -0400
-Message-ID: <4C27E8E8.8040606@openwrt.org>
-Date: Mon, 28 Jun 2010 02:12:24 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47354 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751239Ab0FDSaQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Jun 2010 14:30:16 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>,
 	Johannes Berg <johannes@sipsolutions.net>,
-	ath9k-devel@lists.ath9k.org
-Subject: Re: [RFC/RFT] minstrel_ht: new rate control module for 802.11n
-References: <4B8C3A21.2050105@openwrt.org>	<133e8d7e1003020419r6fab7b13kd77b06407c8c1380@mail.gmail.com>	<4B8D25DC.8070502@openwrt.org>	<133e8d7e1003020747w348dbee0g60a25a86393972d7@mail.gmail.com>	<4B8D396B.5040007@openwrt.org>	<AANLkTilWfp6LzCYhxFweqAP_GceRz5PQBIBl5AksLKUf@mail.gmail.com>	<4C223F58.3060509@openwrt.org> <AANLkTikmXoEnHb1K9StEgszdllAxdsAbm9WdtSUiwKWE@mail.gmail.com>
-In-Reply-To: <AANLkTikmXoEnHb1K9StEgszdllAxdsAbm9WdtSUiwKWE@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: make ARP filtering depend on CONFIG_INET
+Date: Fri,  4 Jun 2010 14:28:07 -0400
+Message-Id: <1275676087-20039-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <20100604153006.fa15c770.sfr@canb.auug.org.au>
+References: <20100604153006.fa15c770.sfr@canb.auug.org.au>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-06-28 2:01 AM, Björn Smedman wrote:
-> 2010/6/23 Felix Fietkau <nbd@openwrt.org>:
->> On 2010-06-23 6:36 PM, Björn Smedman wrote:
->>> [snip] As
->>> far as I can tell, whenever the first subframe of an aggregate fails
->>> and is software retried, the rate control feedback for that aggregate
->>> is lost (ath_tx_rc_status() is never called with update_rc = true in
->>> xmit.c).
->> I think you misread that part. The loop iterates over all subframes in
->> the aggregate, and the first successful or swretry-expired frame will
->> trigger an AMPDU status report, which will update the RC. The first
->> subframe of the A-MPDU is not getting any special treatment here.
-> 
-> You're (still) right I misread that part. But I think there is another
-> problem when the first subframe of an A-MPDU is not acked: if it has
-> not expired yet it is (as I understand it) prepended to the tid queue
-> for software retry and will therefore be the first subframe of the
-> next aggregate as well, which will then be transmitted with the same
-> "old" rates and counts as the previous aggregate. So the feedback from
-> xmit to rc works, but the control information flow from rc to xmit is
-> delayed.
-> 
-> I guess the real solution is your rewrite... But in the mean time
-> perhaps we can memcpy the tx_info control from the last subframe to
-> the first before calling ath_buf_set_rate() in ath_tx_sched_aggr()?
-> Could that have any side effects? It could make the aggregate size go
-> over the 4 ms limit I guess... How bad is that?
-There's an easy solution which would take into account the 4ms frame
-limit properly, and which could work without any memcpy() hacks:
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/mac80211/main.c |    6 ++++++
+ net/mac80211/mlme.c |    2 ++
+ 2 files changed, 8 insertions(+), 0 deletions(-)
 
-I could just grab a pointer to the last buffer in the tid queue in the
-ath_tx_sched_aggr() function, then pass it to ath_lookup_rate() via
-ath_tx_form_aggr(), and also to ath_buf_set_rate(). Then I make those
-functions use this last buffer as reference for the rate lookup.
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 045ead9..5706156 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -329,6 +329,7 @@ static void ieee80211_recalc_smps_work(struct work_struct *work)
+ 	mutex_unlock(&local->iflist_mtx);
+ }
+ 
++#ifdef CONFIG_INET
+ int ieee80211_set_arp_filter(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct in_device *idev;
+@@ -380,6 +381,7 @@ static int ieee80211_ifa_changed(struct notifier_block *nb,
+ 
+ 	return NOTIFY_DONE;
+ }
++#endif
+ 
+ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 					const struct ieee80211_ops *ops)
+@@ -669,10 +671,12 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 		goto fail_pm_qos;
+ 	}
+ 
++#ifdef CONFIG_INET
+ 	local->ifa_notifier.notifier_call = ieee80211_ifa_changed;
+ 	result = register_inetaddr_notifier(&local->ifa_notifier);
+ 	if (result)
+ 		goto fail_ifa;
++#endif
+ 
+ 	return 0;
+ 
+@@ -707,7 +711,9 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
+ 
+ 	pm_qos_remove_notifier(PM_QOS_NETWORK_LATENCY,
+ 			       &local->network_latency_notifier);
++#ifdef CONFIG_INET
+ 	unregister_inetaddr_notifier(&local->ifa_notifier);
++#endif
+ 
+ 	rtnl_lock();
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 7e72013..3623bb7 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2078,6 +2078,7 @@ static enum work_done_result ieee80211_assoc_done(struct ieee80211_work *wk,
+ 			cfg80211_send_assoc_timeout(wk->sdata->dev,
+ 						    wk->filter_ta);
+ 			return WORK_DONE_DESTROY;
++#ifdef CONFIG_INET
+ 		} else {
+ 			mutex_unlock(&wk->sdata->u.mgd.mtx);
+ 
+@@ -2088,6 +2089,7 @@ static enum work_done_result ieee80211_assoc_done(struct ieee80211_work *wk,
+ 			rtnl_lock();
+ 			ieee80211_set_arp_filter(wk->sdata);
+ 			rtnl_unlock();
++#endif
+ 		}
+ 	}
+ 
+-- 
+1.6.6.1
 
-- Felix
