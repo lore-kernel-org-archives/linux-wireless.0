@@ -1,59 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([70.99.223.143]:2663 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751375Ab0FVAOc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jun 2010 20:14:32 -0400
-Message-ID: <4C200059.1090100@canonical.com>
-Date: Mon, 21 Jun 2010 18:14:17 -0600
-From: Tim Gardner <tim.gardner@canonical.com>
-Reply-To: tim.gardner@canonical.com
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Pavel Roskin <proski@gnu.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>, j@w1.fi
-Subject: Re: 2.6.35-rc3: Reported regressions 2.6.33 -> 2.6.34
-References: <g77CuMUl7QI.A.qMH.4ZpHMB@chimera> <AANLkTinRKbRPPzEqhdcexISRJKViBldG01cj9aF0wPx-@mail.gmail.com> 	<1277157673.24550.5.camel@mj> <AANLkTinRqbLH1NOx0o8GNfMaCa1N9NxlsqNzWZWzEyQt@mail.gmail.com>
-In-Reply-To: <AANLkTinRqbLH1NOx0o8GNfMaCa1N9NxlsqNzWZWzEyQt@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from rcsinet10.oracle.com ([148.87.113.121]:41145 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755399Ab0FDQ5q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Jun 2010 12:57:46 -0400
+Date: Fri, 4 Jun 2010 09:56:51 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-wireless@vger.kernel.org
+Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Subject: Re: linux-next: Tree for June 4 (mac80211)
+Message-Id: <20100604095651.5f59119e.randy.dunlap@oracle.com>
+In-Reply-To: <20100604153006.fa15c770.sfr@canb.auug.org.au>
+References: <20100604153006.fa15c770.sfr@canb.auug.org.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/21/2010 04:18 PM, Luis R. Rodriguez wrote:
-> On Mon, Jun 21, 2010 at 3:01 PM, Pavel Roskin<proski@gnu.org>  wrote:
->> On Mon, 2010-06-21 at 11:32 -0700, Luis R. Rodriguez wrote:
->>
->>>> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16111
->>>> Subject         : hostap_pci: infinite registered netdevice wifi0
->>>> Submitter       : Petr Pisar<petr.pisar@atlas.cz>
->>>> Date            : 2010-06-02 20:55 (19 days old)
->>>
->>> The last entry on this one says we are not sure how to fix this...
->>
->> That was a patch posted for that by Tim Gardner:
->> https://patchwork.kernel.org/patch/105008/
->>
->> The patch is applied to wireless-testing
->> (d6a574ff6bfb842bdb98065da053881ff527be46)
->>
->> $ git describe d6a574ff6bfb842bdb98065da053881ff527be46
->> v2.6.34-4694-gd6a574f
->>
->> I understand it was applied after 2.6.34, so it should be backported to
->> 2.6.34 and whatever older kernels are affected.
->
-> Tim can this be sent for stable?
->
->    Luis, a stable whore
->
+On Fri, 4 Jun 2010 15:30:06 +1000 Stephen Rothwell wrote:
 
-Luis,
+> Hi all,
+> 
+> Changes since 20100603:
+> 
+> My fixes tree contains:
+>       v4l-dvb: update gfp/slab.h includes
+>       arm: update gfp/slab.h includes
+>       davinci: update gfp/slab.h includes
+>       ocfs2: update gfp/slab.h includes
+>       acpi: update gfp/slab.h includes
+> 
+> The wireless tree gained a conflict against the net tree.
+> 
+> The rr tree gained a build failure for which I applied a patch.
 
-The patch that I sent John is already Cc stable@kernel.org, though it 
-may not now apply after 56bf882230d2266a2e07b7f404dc96d157a65daa 'Revert 
-"wireless: hostap, fix oops due to early probing interrupt"'. I'll check 
-in the morning and craft a backported patch if necessary.
 
-rtg
--- 
-Tim Gardner tim.gardner@canonical.com
+when CONFIG_INET is not enabled:
+
+
+ERROR: "register_inetaddr_notifier" [net/mac80211/mac80211.ko] undefined!
+ERROR: "unregister_inetaddr_notifier" [net/mac80211/mac80211.ko] undefined!
+
+or
+
+(.text+0xb9585): undefined reference to `unregister_inetaddr_notifier'
+(.text+0xb9b84): undefined reference to `register_inetaddr_notifier'
+
+
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
