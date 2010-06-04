@@ -1,38 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40254 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752359Ab0FDTaJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jun 2010 15:30:09 -0400
-Date: Fri, 4 Jun 2010 15:26:40 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kiran Divekar <dkiran@marvell.com>
-Cc: "libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: Re: [PATCH 0/3] Libertas : cfg80211, 11d support
-Message-ID: <20100604192639.GC2492@tuxdriver.com>
-References: <25B60CDC2F704E4E9D88FFD52780CB4C04D627399A@SC-VEXCH1.marvell.com>
+Received: from nbd.name ([88.198.39.176]:53099 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751523Ab0FDPAy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Jun 2010 11:00:54 -0400
+Message-ID: <4C09151C.7040509@openwrt.org>
+Date: Fri, 04 Jun 2010 17:00:44 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <25B60CDC2F704E4E9D88FFD52780CB4C04D627399A@SC-VEXCH1.marvell.com>
+To: Roberto Riggio <roberto.riggio@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Strange ACK Behaviour with ath9k
+References: <4BEC2318.5050701@create-net.org> <AANLkTimnzAJd9Y02m8OBVLHphL5pbFw56M2LfB1L5oKz@mail.gmail.com> <4BEE684F.2070707@create-net.org> <loom.20100604T153747-904@post.gmane.org>
+In-Reply-To: <loom.20100604T153747-904@post.gmane.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 18, 2010 at 05:32:58AM -0700, Kiran Divekar wrote:
-> Add cfg80211 support to Libertas based on initial work from Holger Shurig.
-> Add 11d support to Libertas.
+On 2010-06-04 3:59 PM, Roberto Riggio wrote:
 > 
-> Kiran Divekar (3):
->   Libertas: cfg80211 support
->   Libertas: fix WARN_ON issues in cfg80211 support
->   Libertas: Added 11d support using cfg80211
+>> On 05/14/2010 01:15 AM, Björn Smedman wrote:
+>> > Hi Roberto,
+>> >
+>> > When I've seen this it has been caused by a mismatch between the
+>> > addresses in the injected frame and that configured in the hardware.
+>> > The transmitting radio doesn't understand it is the intended recipient
+>> > of the ack and continues retrying.
+> 
+> It seems that the problem is related to the ack timeout. The strange thing is 
+> that if is use (on the transmitter)
+> 
+> iw phy phy0 set distance 600
+> 
+> everything works fine
+> 
+> however if I use:
+> 
+> iw phy phy0 set distance 300
+> 
+> ack are ignored. 
+Are you using 2.4 or 5 GHz?
 
-This series no longer applies.  Would you care to rebase it again? :-)
-
-Thanks!
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+- Felix
