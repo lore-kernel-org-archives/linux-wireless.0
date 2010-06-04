@@ -1,135 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:34099 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932663Ab0FQJsN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jun 2010 05:48:13 -0400
-Received: from mail.atheros.com ([10.10.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 17 Jun 2010 02:48:13 -0700
-From: Vivek Natarajan <vnatarajan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/2] wireless-regdb: Enable 40MHz operation for some countries.
-Date: Thu, 17 Jun 2010 15:17:54 +0530
-Message-ID: <1276768074-4366-3-git-send-email-vnatarajan@atheros.com>
-In-Reply-To: <1276768074-4366-2-git-send-email-vnatarajan@atheros.com>
-References: <1276768074-4366-1-git-send-email-vnatarajan@atheros.com>
- <1276768074-4366-2-git-send-email-vnatarajan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-ww0-f46.google.com ([74.125.82.46]:34774 "EHLO
+	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757477Ab0FDXZ6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Jun 2010 19:25:58 -0400
+Received: by wwb28 with SMTP id 28so1264770wwb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Jun 2010 16:25:57 -0700 (PDT)
+From: Grazvydas Ignotas <notasas@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@iki.fi>,
+	Grazvydas Ignotas <notasas@gmail.com>
+Subject: [PATCH 2/2] wl1251: fix ELP_CTRL register reads
+Date: Sat,  5 Jun 2010 02:25:48 +0300
+Message-Id: <1275693948-3189-2-git-send-email-notasas@gmail.com>
+In-Reply-To: <1275693948-3189-1-git-send-email-notasas@gmail.com>
+References: <1275693948-3189-1-git-send-email-notasas@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable 40MHz operation for Argentina, Brazil, Colombia, Algeria,
-India, Malaysia, Peru and South Africa.
+Reading the ELP_CTRL register with sdio_readb causes problems because
+hardware seems to be performing a write using stuff bits in the request
+(those bits contain write data in write request). This indicates that it
+actually expects RAW (read after write) type of request, so perform that
+when reading ELP_CTRL instead. Also cache last written value so we know
+what to write when doing RAW request.
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+Because of the above it was not possible to wake the chip from ELP power
+saving mode, PM had to be disabled to have the driver usable in SDIO
+mode. After this patch PM is functional.
+
+Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
 ---
- db.txt |   42 +++++++++++++++++++++---------------------
- 1 files changed, 21 insertions(+), 21 deletions(-)
+this patch is not suitable for backporting because reqiured SDIO function
+was only merged during the last merge window.
 
-diff --git a/db.txt b/db.txt
-index e405d78..74ae9e3 100644
---- a/db.txt
-+++ b/db.txt
-@@ -33,7 +33,7 @@ country AN:
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
+ drivers/net/wireless/wl12xx/wl1251_sdio.c |   40 ++++++++++++++++++++++++----
+ 1 files changed, 34 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1251_sdio.c b/drivers/net/wireless/wl12xx/wl1251_sdio.c
+index c561332..b901b61 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_sdio.c
++++ b/drivers/net/wireless/wl12xx/wl1251_sdio.c
+@@ -37,11 +37,17 @@
+ #define SDIO_DEVICE_ID_TI_WL1251	0x9066
+ #endif
  
- country AR:
--	(2402 - 2482 @ 20), (N/A, 20)
-+	(2402 - 2482 @ 40), (N/A, 20)
- 	(5170 - 5250 @ 40), (3, 17)
- 	(5250 - 5330 @ 40), (3, 20), DFS
- 	(5490 - 5710 @ 40), (3, 20), DFS
-@@ -111,11 +111,11 @@ country BO:
- 	(5735 - 5835 @ 40), (N/A, 30)
++struct wl1251_sdio {
++	struct sdio_func *func;
++	u32 elp_val;
++};
++
+ static struct wl12xx_platform_data *wl12xx_board_data;
  
- country BR:
--	(2402 - 2482 @ 20), (N/A, 20)
--	(5170 - 5250 @ 20), (3, 17)
--	(5250 - 5330 @ 20), (3, 20), DFS
--	(5490 - 5710 @ 20), (3, 20), DFS
--	(5735 - 5835 @ 20), (3, 30)
-+	(2402 - 2482 @ 40), (N/A, 20)
-+	(5170 - 5250 @ 40), (3, 17)
-+	(5250 - 5330 @ 40), (3, 20), DFS
-+	(5490 - 5710 @ 40), (3, 20), DFS
-+	(5735 - 5835 @ 40), (3, 30)
+ static struct sdio_func *wl_to_func(struct wl1251 *wl)
+ {
+-	return wl->if_priv;
++	struct wl1251_sdio *wl_sdio = wl->if_priv;
++	return wl_sdio->func;
+ }
  
- country BY:
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -152,9 +152,9 @@ country CN:
+ static void wl1251_sdio_interrupt(struct sdio_func *func)
+@@ -90,10 +96,17 @@ static void wl1251_sdio_write(struct wl1251 *wl, int addr,
+ static void wl1251_sdio_read_elp(struct wl1251 *wl, int addr, u32 *val)
+ {
+ 	int ret = 0;
+-	struct sdio_func *func = wl_to_func(wl);
+-
++	struct wl1251_sdio *wl_sdio = wl->if_priv;
++	struct sdio_func *func = wl_sdio->func;
++
++	/*
++	 * The hardware only supports RAW (read after write) access for
++	 * reading, regular sdio_readb won't work here (it interprets
++	 * the unused bits of CMD52 as write data even if we send read
++	 * request).
++	 */
+ 	sdio_claim_host(func);
+-	*val = sdio_readb(func, addr, &ret);
++	*val = sdio_writeb_readb(func, wl_sdio->elp_val, addr, &ret);
+ 	sdio_release_host(func);
  
- country CO:
- 	(2402 - 2472 @ 40), (3, 27)
--	(5170 - 5250 @ 20), (3, 17)
--	(5250 - 5330 @ 20), (3, 23), DFS
--	(5735 - 5835 @ 20), (3, 30)
-+	(5170 - 5250 @ 40), (3, 17)
-+	(5250 - 5330 @ 40), (3, 23), DFS
-+	(5735 - 5835 @ 40), (3, 30)
+ 	if (ret)
+@@ -103,7 +116,8 @@ static void wl1251_sdio_read_elp(struct wl1251 *wl, int addr, u32 *val)
+ static void wl1251_sdio_write_elp(struct wl1251 *wl, int addr, u32 val)
+ {
+ 	int ret = 0;
+-	struct sdio_func *func = wl_to_func(wl);
++	struct wl1251_sdio *wl_sdio = wl->if_priv;
++	struct sdio_func *func = wl_sdio->func;
  
- country CR:
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -207,7 +207,7 @@ country DO:
- 	(5735 - 5835 @ 40), (3, 30)
+ 	sdio_claim_host(func);
+ 	sdio_writeb(func, val, addr, &ret);
+@@ -111,6 +125,8 @@ static void wl1251_sdio_write_elp(struct wl1251 *wl, int addr, u32 val)
  
- country DZ:
--	(2402 - 2482 @ 20), (N/A, 20)
-+	(2402 - 2482 @ 40), (N/A, 20)
+ 	if (ret)
+ 		wl1251_error("sdio_writeb failed (%d)", ret);
++	else
++		wl_sdio->elp_val = val;
+ }
  
- country EC:
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -332,9 +332,9 @@ country IL:
+ static void wl1251_sdio_reset(struct wl1251 *wl)
+@@ -197,6 +213,7 @@ static int wl1251_sdio_probe(struct sdio_func *func,
+ 	int ret;
+ 	struct wl1251 *wl;
+ 	struct ieee80211_hw *hw;
++	struct wl1251_sdio *wl_sdio;
  
- country IN:
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 20), (N/A, 20)
--	(5250 - 5330 @ 20), (N/A, 20), DFS
--	(5735 - 5835 @ 20), (N/A, 20)
-+	(5170 - 5250 @ 40), (N/A, 20)
-+	(5250 - 5330 @ 40), (N/A, 20), DFS
-+	(5735 - 5835 @ 40), (N/A, 20)
+ 	hw = wl1251_alloc_hw();
+ 	if (IS_ERR(hw))
+@@ -204,6 +221,12 @@ static int wl1251_sdio_probe(struct sdio_func *func,
  
- country IS:
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -471,9 +471,9 @@ country MT:
- 	(5490 - 5710 @ 40), (N/A, 27), DFS
+ 	wl = hw->priv;
  
- country MY:
--	(2402 - 2482 @ 20), (N/A, 20)
--	(5250 - 5330 @ 20), (N/A, 30), DFS
--	(5735 - 5835 @ 20), (N/A, 30)
-+	(2402 - 2482 @ 40), (N/A, 20)
-+	(5250 - 5330 @ 40), (N/A, 30), DFS
-+	(5735 - 5835 @ 40), (N/A, 30)
++	wl_sdio = kzalloc(sizeof(*wl_sdio), GFP_KERNEL);
++	if (wl_sdio == NULL) {
++		ret = -ENOMEM;
++		goto out_free_hw;
++	}
++
+ 	sdio_claim_host(func);
+ 	ret = sdio_enable_func(func);
+ 	if (ret)
+@@ -213,7 +236,8 @@ static int wl1251_sdio_probe(struct sdio_func *func,
+ 	sdio_release_host(func);
  
- country MX:
- 	(2402 - 2472 @ 40), (3, 27)
-@@ -518,7 +518,7 @@ country PA:
+ 	SET_IEEE80211_DEV(hw, &func->dev);
+-	wl->if_priv = func;
++	wl_sdio->func = func;
++	wl->if_priv = wl_sdio;
+ 	wl->if_ops = &wl1251_sdio_ops;
+ 	wl->set_power = wl1251_sdio_set_power;
  
- country PE:
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5735 - 5835 @ 20), (N/A, 30)
-+	(5735 - 5835 @ 40), (N/A, 30)
+@@ -259,6 +283,8 @@ disable:
+ 	sdio_disable_func(func);
+ release:
+ 	sdio_release_host(func);
++	kfree(wl_sdio);
++out_free_hw:
+ 	wl1251_free_hw(wl);
+ 	return ret;
+ }
+@@ -266,9 +292,11 @@ release:
+ static void __devexit wl1251_sdio_remove(struct sdio_func *func)
+ {
+ 	struct wl1251 *wl = sdio_get_drvdata(func);
++	struct wl1251_sdio *wl_sdio = wl->if_priv;
  
- country PG:
- 	(2402 - 2482 @ 40), (N/A, 20)
-@@ -673,10 +673,10 @@ country YE:
+ 	if (wl->irq)
+ 		free_irq(wl->irq, wl);
++	kfree(wl_sdio);
+ 	wl1251_free_hw(wl);
  
- country ZA:
- 	(2402 - 2482 @ 40), (N/A, 20)
--	(5170 - 5250 @ 20), (3, 17)
--	(5250 - 5330 @ 20), (3, 20), DFS
--	(5490 - 5710 @ 20), (3, 20), DFS
--	(5735 - 5835 @ 20), (3, 30)
-+	(5170 - 5250 @ 40), (3, 17)
-+	(5250 - 5330 @ 40), (3, 20), DFS
-+	(5490 - 5710 @ 40), (3, 20), DFS
-+	(5735 - 5835 @ 40), (3, 30)
- 
- country ZW:
- 	(2402 - 2482 @ 40), (N/A, 20)
+ 	sdio_claim_host(func);
 -- 
 1.6.3.3
 
