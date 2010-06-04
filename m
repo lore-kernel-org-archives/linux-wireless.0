@@ -1,81 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:57570 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751506Ab0FWQf3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jun 2010 12:35:29 -0400
-MIME-Version: 1.0
-In-Reply-To: <20100623143940.GA5424@sig21.net>
-References: <20100622165213.GA21842@srcf.ucam.org> <AANLkTikHLBBWrhCP_1f5Jv7zE9RKPvdsl5nSyfkeMfLl@mail.gmail.com>
-	<20100622172545.GA22680@srcf.ucam.org> <AANLkTilEHJ5qRD8ov0gIK0Zc4o-gJUPYkvHdyD1uZUon@mail.gmail.com>
-	<20100622175058.GA23499@srcf.ucam.org> <AANLkTinE0BiOa5cpcIerbias7K-aDzj3x4qaeDpzy2CQ@mail.gmail.com>
-	<20100622184426.GA24546@srcf.ucam.org> <20100622193143.GA17803@sig21.net>
-	<AANLkTin1fAAgYTYegqaadkYIYP2NXRNRzCR48e-uIgYV@mail.gmail.com>
-	<AANLkTimsEkff4sMiMB_VyWqkZOjy9PIuJ4AiC95PASOZ@mail.gmail.com>
-	<20100623143940.GA5424@sig21.net>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 23 Jun 2010 09:28:57 -0700
-Message-ID: <AANLkTilyQB-q8Xf9Mu3F5SnKbRqbBuLjbdx8EcyCt_0v@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH v2] ath5k: disable ASPM
-To: Johannes Stezenbach <js@sig21.net>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	Maxim Levitsky <maximlevitsky@gmail.com>,
-	David Quan <David.Quan@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Jonathan May <jonathan.may@atheros.com>,
-	Tim Gardner <tim.gardner@canonical.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga02.intel.com ([134.134.136.20]:63327 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750729Ab0FDFMQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Jun 2010 01:12:16 -0400
+Subject: Re: iwl3945 dies (oops) in post 2.6.34 kernels
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+In-Reply-To: <20100604050836.GA21239@core.coreip.homeip.net>
+References: <20100525163920.GA2730@core.coreip.homeip.net>
+	 <1274806916.18861.0.camel@jlt3.sipsolutions.net>
+	 <1274807302.7494.1.camel@abhi-desktop>
+	 <201005251027.32778.dmitry.torokhov@gmail.com>
+	 <20100604050836.GA21239@core.coreip.homeip.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 03 Jun 2010 22:08:46 -0700
+Message-ID: <1275628126.3225.5.camel@abhi-desktop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 23, 2010 at 7:39 AM, Johannes Stezenbach <js@sig21.net> wrote:
-> On Tue, Jun 22, 2010 at 12:38:03PM -0700, Luis R. Rodriguez wrote:
->> On Tue, Jun 22, 2010 at 12:37 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> > On Tue, Jun 22, 2010 at 12:31 PM, Johannes Stezenbach <js@sig21.net> wrote:
->> >>
->> >> Does CONFIG_PCIEASPM provide a way for the user to modifiy
->> >> the settings at runtime?
->> >
->> > You can tune ASPM settings at runtime, regardless of CONFIG_PCIEASPM. See:
->> >
->> > http://kernel.org/pub/linux/kernel/people/mcgrof/aspm/enable-aspm
->> > http://wireless.kernel.org/en/users/Documentation/ASPM
->> >
->> >> I have a Samsung N130 netbook which has a BIOS setting
->> >> called "CPU Power Saving Mode".  When enabled it activates
->> >> ASPM L1 and L0s for the ethernet chip (Realtek RTL8102e, 100Mbit)
->> >> and the PCIE bridge (with the BIOS setting off it's just L1).
->> >> The result is that the ethernet througput is reduced to 25Mbit/s.
->> >
->> > L0s is not going to buy you much gains, getting at least L1 will
->> > however. L0s is just a further enhancement. I recommend you test by
->> > enabling L1 and L0s, check how longer your battery lasts and then test
->> > again with just L1. Then test without both L1 and L0s.
->>
->> So defaults should always be sane and you should not have to play with
->> this stuff, unless you're a hacker, or are testing something for
->> development purposes. Tweaking ASPM settings is not something a user
->> should have to worry about. Period.
->
-> OK, let me put the question another way:
->
-> If enabling ASPM comes with a performance penalty (which is not unexpected,
-> there is usually a tradeoff between performance and power consumption),
-> do you think a boot time option (pcie_aspm=) or compile time option
-> (CONFIG_PCIEASPM) is the right user interface?
->
->
-> But meanwhile I found that CONFIG_PCIEASPM has a runtime
-> interface, /sys/module/pcie_aspm/parameters/policy.
-> http://lwn.net/Articles/266585/
->
-> I have not tested it on my N130 yet.
+On Thu, 2010-06-03 at 22:08 -0700, Dmitry Torokhov wrote:
+> On Tue, May 25, 2010 at 10:27:31AM -0700, Dmitry Torokhov wrote:
+> > On Tuesday 25 May 2010 10:08:22 am Abhijeet Kolekar wrote:
+> > > On Tue, 2010-05-25 at 10:01 -0700, Johannes Berg wrote:
+> > > > On Tue, 2010-05-25 at 09:39 -0700, Dmitry Torokhov wrote:
+> > > > > Hi,
+> > > > > 
+> > > > > I am getting the following crashers in iwl3945 after updating to
+> > > > > post-2.6.34 kernels. This is with the pull from Linus's tree as of last
+> > > > > night (the taint is from nvidia module):
+> > > > > 
+> > > > > [ 3330.630734] general protection fault: 0000 [#1] PREEMPT SMP
+> > > > > [ 3330.630752] last sysfs file: /sys/devices/platform/dock.0/docked
+> > > > > [ 3330.630761] CPU 0
+> > > > > [ 3330.630766] Modules linked in: cryptd aes_x86_64 aes_generic fuse
+> > > > > rfcomm sco bnep l2cap autofs4 coretemp hwmon sunrpc ppdev parport_pc
+> > > > > parport acpi_cpufreq mperf uinput nvidia(P) snd_hda_codec_idt arc4
+> > > > > snd_hda_intel ecb snd_hda_codec snd_hwdep iwl3945 joydev snd_seq
+> > > > > snd_seq_device snd_pcm iwlcore mac80211 snd_timer cfg80211 snd psmouse
+> > > > > iTCO_wdt dell_wmi iTCO_vendor_support serio_raw tg3 battery
+> > > > > dell_laptop dcdbas soundcore snd_page_alloc btusb bluetooth video
+> > > > > pcspkr mac_hid ac wmi libphy firewire_ohci i2c_i801 firewire_core
+> > > > > yenta_socket crc_itu_t ohci_hcd [last unloaded: microcode] [
+> > > > > 3330.630950]
+> > > > > [ 3330.630958] Pid: 455, comm: iwl3945 Tainted: P            2.6.35-rc0
+> > > > > #293 0WM416/Latitude D630 [ 3330.630967] RIP:
+> > > > > 0010:[<ffffffffa01e70d3>]  [<ffffffffa01e70d3>]
+> > > > > iwl3945_get_channels_for_scan+0xe3/0x460 [iwl3945]
+> > > > 
+> > > > http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2208
+> > > 
+> > > Can you please try this patch and report your findings?
+> > > 
+> > > http://bugzilla.intellinuxwireless.org/attachment.cgi?id=2447
+> > > 
+> > 
+> > Thanks, will try both this patch and the one John mention. Later tonight
+> > though.
+> > 
+> 
+> John,
+> 
+> Any chnace that 2nd patch be merged upstream? Without it my iwl3945
+> craps out regularly.
+> 
+It is merged in iwlwifi-2.6. It will be sent for upstream submission.
 
-Same thing, its to be used by developers not users, damn it we should
-just remove this crap.
+Abhijeet
+> Thanks!
+> 
 
-  Luis
+
