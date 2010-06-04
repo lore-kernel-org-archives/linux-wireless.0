@@ -1,56 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:31807 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751548Ab0FIC1Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jun 2010 22:27:25 -0400
-Message-ID: <4C0EFBC1.5090401@redhat.com>
-Date: Tue, 08 Jun 2010 23:26:09 -0300
-From: Mauro Carvalho Chehab <mchehab@redhat.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:47244 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751344Ab0FDKXI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Jun 2010 06:23:08 -0400
+Received: by bwz11 with SMTP id 11so328533bwz.19
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Jun 2010 03:23:04 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: rt2800, minstrel_ht & mac80211
+Date: Fri, 4 Jun 2010 12:22:49 +0200
+Cc: Felix Fietkau <nbd@openwrt.org>, Ivo van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-To: Linus Torvalds <torvalds@linux-foundation.org>
-CC: "Rafael J. Wysocki" <rjw@sisk.pl>, Carl Worth <cworth@cworth.org>,
-	Eric Anholt <eric@anholt.net>,
-	Venkatesh Pallipadi <venki@google.com>,
-	Jens Axboe <jaxboe@fusionio.com>,
-	Dave Airlie <airlied@gmail.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Ingo Molnar <mingo@elte.hu>,
-	=?ISO-8859-15?Q?David_H=E4rdeman?= <david@hardeman.nu>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-Subject: Re: 2.6.35-rc2-git2: Reported regressions from 2.6.34
-References: <Rlf_Qjov7bG.A.a8F.I8rDMB@chimera> <alpine.LFD.2.00.1006081814240.4506@i5.linux-foundation.org>
-In-Reply-To: <alpine.LFD.2.00.1006081814240.4506@i5.linux-foundation.org>
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201006041222.49820.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Em 08-06-2010 22:53, Linus Torvalds escreveu:
+Hi,
 
-> 
->> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16037
->> Subject	: NULL Pointer dereference in __ir_input_register/budget_ci_attach
->> Submitter	: Sean Finney <seanius@debian.org>
->> Date		: 2010-05-23 19:52 (17 days old)
-> 
-> Perhaps related to commit 13c24497086418010bf4f76378bcae241d7f59cd?
-> 
-> David Härdeman, Mauro Carvalho Chehab added to cc.
+While working on throughput problems with some mcs rates on rt2800 cards I've
+noticed a strange issue between rt2800, minstrel_ht and mac80211.
 
-This patch probably solves the issue:
+Despite the fact that rt2800 always reported MCS15 as _not_ successful (and
+it was really never successful), minstrel_ht's rc_stats always claimed that
+the attempt was successful.
 
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=84b14f181a36eea6591779156ef356f8d198bbfd
+rt2800 has a global rate fallback table (something like MCS15 -> MCS14 ->
+MCS13 ...), so it is capable of trying a frame at different rates but we
+cannot specify the rates to be used for every single frame. Hence, rt2800
+does not set hw->max_rates and thus ends up with max_rates = 1 but since
+rt2800 will try different rates it will fill the tx status with all the rates
+it really tried.
 
-The patch were already applied upstream. I've already asked the reporter to test it, via BZ.
+Unfortunately, mac80211 (status.c) decides to drop all reported rates >=
+max_rates and thus we end up with minstrel_ht thinking that MCS15 was
+successful while rt2800 reported that it tried MCS15,14,13 and 12 was
+finally successful.
 
-Cheers,
-Mauro
+This meant that minstrel most of the time selected MCS15 as tx rate which
+resulted in a huge number of retries and thus a very slow throughput.
+
+status.c:
+
+178                 /* the HW cannot have attempted that rate */
+179                 if (i >= hw->max_rates) {
+180                         info->status.rates[i].idx = -1;
+181                         info->status.rates[i].count = 0;
+
+Johannes, is there a valid reason for this check in status.c. Can we remove
+it without breaking anything else?
+
+What other options would we have to fix this issue? Just use max_rates = 4 
+in rt2800 even if we will only use the first rate provided by minstrel and
+then fall back to the global fallback setup (I tried that already and it
+works just fine but seems not correct to me)?
+
+Thanks,
+Helmut
