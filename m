@@ -1,29 +1,21 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:56747 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751537Ab0FNGP6 (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:43482 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757065Ab0FDXIH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jun 2010 02:15:58 -0400
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Subject: [PATCH 0/3] mac80211: Add support for configuring ibss basic rates
-Date: Mon, 14 Jun 2010 09:15:42 +0300
-Message-Id: <1276496145-5623-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	Fri, 4 Jun 2010 19:08:07 -0400
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 4 Jun 2010 16:01:25 -0700
+Message-ID: <AANLkTik9A36RWe4RjbgxrFvlOw2Vnlwa7U8y1qpawpOO@mail.gmail.com>
+Subject: fyi - had disabled git updates on compat-wireless for the last few
+	days
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>
+Cc: Senthil Balasubramanian <senthilkumar@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch set implements support for configuring basic rates for ibss network when joining/creating one. First two patches are basically patch proposed by Johannes Berg on linux-wireless posting list split in two. These implement interface to nl80211 to do actual configuration from user space. Last patch impelents removal of the BSS information from the cfg80211 when leaving the IBSS and there is no other active STA's.
-
-Teemu Paasikivi (3):
-  mac80211: Set basic rates while joining ibss network
-  mac80211: Set changed basic rates flag
-  mac80211: remove BSS from cfg80211 list when leaving IBSS
-
- include/net/cfg80211.h     |    2 +
- net/mac80211/ibss.c        |   38 +++++++++++++++++++++++++++++++++-
- net/mac80211/ieee80211_i.h |    2 +
- net/wireless/nl80211.c     |   49 ++++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 90 insertions(+), 1 deletions(-)
-
+Just a quick fyi, I had made a mistake and had disabled git updates on
+orbit. I'll force a new fresh release right now.
