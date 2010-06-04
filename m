@@ -1,49 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:41535 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754833Ab0F2UgX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jun 2010 16:36:23 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] compat-wireless: refresh patch
-Date: Tue, 29 Jun 2010 22:36:15 +0200
-Message-Id: <1277843775-2656-1-git-send-email-hauke@hauke-m.de>
+Received: from cp-out12.libero.it ([212.52.84.112]:48115 "EHLO
+	cp-out12.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753261Ab0FDIZN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Jun 2010 04:25:13 -0400
+From: Fabio Rossi <rossi.f@inwind.it>
+To: linux-wireless@vger.kernel.org
+Subject: Re: WARNING: at drivers/base/core.c:130 device_release+0x82/0x90()
+Date: Fri, 4 Jun 2010 10:25:08 +0200
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>
+References: <201006021129.43621.rossi.f@inwind.it> <AANLkTik0A8qhlIi1pjvo0DKXhxjBEYEwOCn6iIsLXFJi@mail.gmail.com>
+In-Reply-To: <AANLkTik0A8qhlIi1pjvo0DKXhxjBEYEwOCn6iIsLXFJi@mail.gmail.com>
+MIME-Version: 1.0
+Message-Id: <201006041025.08348.rossi.f@inwind.it>
+Content-Type: Text/Plain;
+  charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 02 June 2010 23:42:14 Luis R. Rodriguez wrote:
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/25-multicast-list_head.patch |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+> On Wed, Jun 2, 2010 at 2:29 AM, Fabio Rossi <rossi.f@inwind.it> wrote:
+> > Compiling the kernel without ACPI (CONFIG_ACPI=n) gives the following
+> > warning:
+> > 
+> > cfg80211: Calling CRDA to update world regulatory domain
+> > cfg80211: World regulatory domain updated:
+> >    (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+> >    (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+> > ath5k 0000:08:01.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+> > ath5k 0000:08:01.0: registered as 'phy0'
+> > ath5k phy0: request_irq failed
+> > ------------[ cut here ]------------
+> 
+> Since traces are printed reversed you will have to read my logic from
+> bottom to top:
+> 
+> Seems we need to implement the dev_release() op for the class of our
+> devices.
 
-diff --git a/patches/25-multicast-list_head.patch b/patches/25-multicast-list_head.patch
-index f7304cb..f3746ca 100644
---- a/patches/25-multicast-list_head.patch
-+++ b/patches/25-multicast-list_head.patch
-@@ -419,7 +419,7 @@ This also backport commit 2f787b0b76bf5de2eaa3ca3a29d89123ae03c856
-  			      size_t fw_name_len, u32 *hw_ver);
- --- a/drivers/net/wireless/rndis_wlan.c
- +++ b/drivers/net/wireless/rndis_wlan.c
--@@ -1587,7 +1587,11 @@ static void set_multicast_list(struct us
-+@@ -1588,7 +1588,11 @@ static void set_multicast_list(struct us
-  
-  		netdev_for_each_mc_addr(ha, usbdev->net)
-  			memcpy(mc_addrs + i++ * ETH_ALEN,
-@@ -601,9 +601,9 @@ This also backport commit 2f787b0b76bf5de2eaa3ca3a29d89123ae03c856
- +			memcpy(__skb_put(skb, ETH_ALEN), ha->dmi_addr, ETH_ALEN);
- +			memcpy(__skb_put(skb, ETH_ALEN), ha->dmi_addr, ETH_ALEN);
- +#endif
-+ 
-+ 			i++;
-  		}
-- 		r->len = htons(skb->len - len);
-- 	}
- --- a/net/mac80211/driver-ops.h
- +++ b/net/mac80211/driver-ops.h
- @@ -90,14 +90,28 @@ static inline void drv_bss_info_changed(
--- 
-1.7.0.4
+Shall I open a bug in kernel bugzilla to keep trace of this?
 
+Fabio
