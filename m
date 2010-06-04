@@ -1,32 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:62320 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755911Ab0FDPCX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jun 2010 11:02:23 -0400
-Received: by gye5 with SMTP id 5so962451gye.19
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Jun 2010 08:02:22 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4C09151C.7040509@openwrt.org>
-References: <4BEC2318.5050701@create-net.org>
-	<AANLkTimnzAJd9Y02m8OBVLHphL5pbFw56M2LfB1L5oKz@mail.gmail.com>
-	<4BEE684F.2070707@create-net.org>
-	<loom.20100604T153747-904@post.gmane.org>
-	<4C09151C.7040509@openwrt.org>
-Date: Fri, 4 Jun 2010 17:02:21 +0200
-Message-ID: <AANLkTik03jIq7xEzdY0FF3LQHI_Zqeu_unbI3CJbUqu-@mail.gmail.com>
-Subject: Re: Strange ACK Behaviour with ath9k
+Received: from lo.gmane.org ([80.91.229.12]:48741 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755722Ab0FDOKF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Jun 2010 10:10:05 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1OKXb1-0006RQ-OD
+	for linux-wireless@vger.kernel.org; Fri, 04 Jun 2010 16:10:03 +0200
+Received: from 193.206.22.97 ([193.206.22.97])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Jun 2010 16:10:03 +0200
+Received: from roberto.riggio by 193.206.22.97 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Jun 2010 16:10:03 +0200
+To: linux-wireless@vger.kernel.org
 From: Roberto Riggio <roberto.riggio@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: Strange ACK Behaviour with ath9k
+Date: Fri, 4 Jun 2010 13:59:55 +0000 (UTC)
+Message-ID: <loom.20100604T153747-904@post.gmane.org>
+References: <4BEC2318.5050701@create-net.org> <AANLkTimnzAJd9Y02m8OBVLHphL5pbFw56M2LfB1L5oKz@mail.gmail.com> <4BEE684F.2070707@create-net.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 4, 2010 at 5:00 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> Are you using 2.4 or 5 GHz?
 
-5 GHz
+> On 05/14/2010 01:15 AM, Björn Smedman wrote:
+> > Hi Roberto,
+> >
+> > When I've seen this it has been caused by a mismatch between the
+> > addresses in the injected frame and that configured in the hardware.
+> > The transmitting radio doesn't understand it is the intended recipient
+> > of the ack and continues retrying.
 
-> - Felix
+It seems that the problem is related to the ack timeout. The strange thing is 
+that if is use (on the transmitter)
+
+iw phy phy0 set distance 600
+
+everything works fine
+
+however if I use:
+
+iw phy phy0 set distance 300
+
+ack are ignored. 
+
 R.
+
