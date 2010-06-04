@@ -1,116 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:34096 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932805Ab0FQJsA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jun 2010 05:48:00 -0400
-Received: from mail.atheros.com ([10.10.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 17 Jun 2010 02:48:00 -0700
-From: Vivek Natarajan <vnatarajan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath: Update the regulatory domain information for a few countries.
-Date: Thu, 17 Jun 2010 15:17:52 +0530
-Message-ID: <1276768074-4366-1-git-send-email-vnatarajan@atheros.com>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:50715 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757036Ab0FDCi3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Jun 2010 22:38:29 -0400
+Message-Id: <201006040237.o542bOww001409@imap1.linux-foundation.org>
+Subject: [patch 1/5] ssb: add dma_dev to ssb_device structure
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
+	fujita.tomonori@lab.ntt.co.jp, Larry.Finger@lwfinger.net,
+	davem@davemloft.net, mb@bu3sch.de, stefano.brivio@polimi.it,
+	zambrano@broadcom.com
+From: akpm@linux-foundation.org
+Date: Thu, 03 Jun 2010 19:37:27 -0700
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ANSI_X3.4-1968
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add Kenya(KE) with APL1_WORLD.
-Change Honduras(HN) to FCC3_WORLD.
-Change Lebanon(LB) to  APL1_WORLD,
-Change Macedonia(MK) to ETSI1_WORLD.
-Change Pakistan(PK) to APL1_WORLD.
-Change Romania(RO) to ETSI1_WORLD.
-Change Russia(RU) to FCC3_WORLD.
-Change Saudi Arabia(SA) to FCC2_WORLD.
-Change UAE(AE) to ETSI1_WORLD.
-Change Venezuela(VE) to FCC1_WORLD.
-Change Vietnam(VN) to ETSI3_WORLD.
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+Add dma_dev, a pointer to struct device, to struct ssb_device.  We pass it
+to the generic DMA API with SSB_BUSTYPE_PCI and SSB_BUSTYPE_SSB. 
+ssb_devices_register() sets up it properly.
+
+This is preparation for replacing the ssb bus specific DMA API (ssb_dma_*)
+with the generic DMA API.
+
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Acked-by: Michael Buesch <mb@bu3sch.de>
+Cc: Gary Zambrano <zambrano@broadcom.com>
+Cc: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W. Linville <linville@tuxdriver.com>
+Acked-by: David S. Miller <davem@davemloft.net>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
- drivers/net/wireless/ath/regd_common.h |   21 +++++++++++----------
- 1 files changed, 11 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
-index 248c670..b59b690 100644
---- a/drivers/net/wireless/ath/regd_common.h
-+++ b/drivers/net/wireless/ath/regd_common.h
-@@ -333,7 +333,7 @@ static struct country_code_to_enum_rd allCountries[] = {
- 	{CTRY_GUAM, FCC1_FCCA, "GU"},
- 	{CTRY_GUATEMALA, FCC1_FCCA, "GT"},
- 	{CTRY_HAITI, ETSI1_WORLD, "HT"},
--	{CTRY_HONDURAS, NULL1_WORLD, "HN"},
-+	{CTRY_HONDURAS, FCC3_WORLD, "HN"},
- 	{CTRY_HONG_KONG, FCC3_WORLD, "HK"},
- 	{CTRY_HUNGARY, ETSI1_WORLD, "HU"},
- 	{CTRY_ICELAND, ETSI1_WORLD, "IS"},
-@@ -406,18 +406,19 @@ static struct country_code_to_enum_rd allCountries[] = {
+ drivers/ssb/main.c      |    2 ++
+ include/linux/ssb/ssb.h |    2 +-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff -puN drivers/ssb/main.c~ssb-add-dma_dev-to-ssb_device-structure drivers/ssb/main.c
+--- a/drivers/ssb/main.c~ssb-add-dma_dev-to-ssb_device-structure
++++ a/drivers/ssb/main.c
+@@ -486,6 +486,7 @@ static int ssb_devices_register(struct s
+ #ifdef CONFIG_SSB_PCIHOST
+ 			sdev->irq = bus->host_pci->irq;
+ 			dev->parent = &bus->host_pci->dev;
++			sdev->dma_dev = dev->parent;
+ #endif
+ 			break;
+ 		case SSB_BUSTYPE_PCMCIA:
+@@ -501,6 +502,7 @@ static int ssb_devices_register(struct s
+ 			break;
+ 		case SSB_BUSTYPE_SSB:
+ 			dev->dma_mask = &dev->coherent_dma_mask;
++			sdev->dma_dev = dev;
+ 			break;
+ 		}
  
- 	{CTRY_JORDAN, ETSI2_WORLD, "JO"},
- 	{CTRY_KAZAKHSTAN, NULL1_WORLD, "KZ"},
-+	{CTRY_KENYA, APL1_WORLD, "KE"},
- 	{CTRY_KOREA_NORTH, APL9_WORLD, "KP"},
- 	{CTRY_KOREA_ROC, APL9_WORLD, "KR"},
- 	{CTRY_KOREA_ROC2, APL2_WORLD, "K2"},
- 	{CTRY_KOREA_ROC3, APL9_WORLD, "K3"},
- 	{CTRY_KUWAIT, ETSI3_WORLD, "KW"},
- 	{CTRY_LATVIA, ETSI1_WORLD, "LV"},
--	{CTRY_LEBANON, NULL1_WORLD, "LB"},
-+	{CTRY_LEBANON, APL1_WORLD, "LB"},
- 	{CTRY_LIECHTENSTEIN, ETSI1_WORLD, "LI"},
- 	{CTRY_LITHUANIA, ETSI1_WORLD, "LT"},
- 	{CTRY_LUXEMBOURG, ETSI1_WORLD, "LU"},
- 	{CTRY_MACAU, FCC2_WORLD, "MO"},
--	{CTRY_MACEDONIA, NULL1_WORLD, "MK"},
-+	{CTRY_MACEDONIA, ETSI1_WORLD, "MK"},
- 	{CTRY_MALAYSIA, APL8_WORLD, "MY"},
- 	{CTRY_MALTA, ETSI1_WORLD, "MT"},
- 	{CTRY_MEXICO, FCC1_FCCA, "MX"},
-@@ -429,7 +430,7 @@ static struct country_code_to_enum_rd allCountries[] = {
- 	{CTRY_NEW_ZEALAND, FCC2_ETSIC, "NZ"},
- 	{CTRY_NORWAY, ETSI1_WORLD, "NO"},
- 	{CTRY_OMAN, FCC3_WORLD, "OM"},
--	{CTRY_PAKISTAN, NULL1_WORLD, "PK"},
-+	{CTRY_PAKISTAN, APL1_WORLD, "PK"},
- 	{CTRY_PANAMA, FCC1_FCCA, "PA"},
- 	{CTRY_PAPUA_NEW_GUINEA, FCC1_WORLD, "PG"},
- 	{CTRY_PERU, APL1_WORLD, "PE"},
-@@ -438,9 +439,9 @@ static struct country_code_to_enum_rd allCountries[] = {
- 	{CTRY_PORTUGAL, ETSI1_WORLD, "PT"},
- 	{CTRY_PUERTO_RICO, FCC1_FCCA, "PR"},
- 	{CTRY_QATAR, APL1_WORLD, "QA"},
--	{CTRY_ROMANIA, NULL1_WORLD, "RO"},
--	{CTRY_RUSSIA, NULL1_WORLD, "RU"},
--	{CTRY_SAUDI_ARABIA, NULL1_WORLD, "SA"},
-+	{CTRY_ROMANIA, ETSI1_WORLD, "RO"},
-+	{CTRY_RUSSIA, FCC3_WORLD, "RU"},
-+	{CTRY_SAUDI_ARABIA, FCC2_WORLD, "SA"},
- 	{CTRY_SERBIA_MONTENEGRO, ETSI1_WORLD, "CS"},
- 	{CTRY_SINGAPORE, APL6_WORLD, "SG"},
- 	{CTRY_SLOVAKIA, ETSI1_WORLD, "SK"},
-@@ -457,7 +458,7 @@ static struct country_code_to_enum_rd allCountries[] = {
- 	{CTRY_TUNISIA, ETSI3_WORLD, "TN"},
- 	{CTRY_TURKEY, ETSI3_WORLD, "TR"},
- 	{CTRY_UKRAINE, NULL1_WORLD, "UA"},
--	{CTRY_UAE, NULL1_WORLD, "AE"},
-+	{CTRY_UAE, ETSI1_WORLD, "AE"},
- 	{CTRY_UNITED_KINGDOM, ETSI1_WORLD, "GB"},
- 	{CTRY_UNITED_STATES, FCC3_FCCA, "US"},
- 	/* This "PS" is for US public safety actually... to support this we
-@@ -466,8 +467,8 @@ static struct country_code_to_enum_rd allCountries[] = {
- 	{CTRY_UNITED_STATES_FCC49, FCC4_FCCA, "PS"},
- 	{CTRY_URUGUAY, FCC3_WORLD, "UY"},
- 	{CTRY_UZBEKISTAN, FCC3_FCCA, "UZ"},
--	{CTRY_VENEZUELA, APL2_ETSIC, "VE"},
--	{CTRY_VIET_NAM, NULL1_WORLD, "VN"},
-+	{CTRY_VENEZUELA, FCC1_WORLD, "VE"},
-+	{CTRY_VIET_NAM, ETSI3_WORLD, "VN"},
- 	{CTRY_YEMEN, NULL1_WORLD, "YE"},
- 	{CTRY_ZIMBABWE, NULL1_WORLD, "ZW"},
- };
--- 
-1.6.3.3
-
+diff -puN include/linux/ssb/ssb.h~ssb-add-dma_dev-to-ssb_device-structure include/linux/ssb/ssb.h
+--- a/include/linux/ssb/ssb.h~ssb-add-dma_dev-to-ssb_device-structure
++++ a/include/linux/ssb/ssb.h
+@@ -167,7 +167,7 @@ struct ssb_device {
+ 	 * is an optimization. */
+ 	const struct ssb_bus_ops *ops;
+ 
+-	struct device *dev;
++	struct device *dev, *dma_dev;
+ 
+ 	struct ssb_bus *bus;
+ 	struct ssb_device_id id;
+_
