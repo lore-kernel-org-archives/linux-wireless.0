@@ -1,53 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:36056 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751355Ab0FGFFI (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43312 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755921Ab0FDOPT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jun 2010 01:05:08 -0400
-Subject: Re: [PATCH] mac80211: Add interface for driver to temporarily
- disable dynamic ps
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1275817484.3615.9.camel@jlt3.sipsolutions.net>
-References: <1275561873-21500-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1275817484.3615.9.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 07 Jun 2010 08:04:46 +0300
-Message-ID: <1275887086.5277.29790.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+	Fri, 4 Jun 2010 10:15:19 -0400
+Date: Fri, 4 Jun 2010 10:09:19 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dmytro Milinevskyy <milinevskyy@gmail.com>
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	GeunSik Lim <geunsik.lim@samsung.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Lukas Turek <8an@praha12.net>,
+	Mark Hindley <mark@hindley.org.uk>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jiri Kosina <jkosina@suse.cz>, Kalle Valo <kalle.valo@iki.fi>,
+	Keng-Yu Lin <keng-yu.lin@canonical.com>,
+	Luca Verdesca <magooz@salug.it>,
+	Shahar Or <shahar@shahar-or.co.il>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] [ath5k][leds] Ability to disable leds support. If leds
+ support enabled do not force mac802.11 leds layer selection.
+Message-ID: <20100604140919.GA2492@tuxdriver.com>
+References: <4c0804e2.0c3ddf0a.2771.10f7@mx.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4c0804e2.0c3ddf0a.2771.10f7@mx.google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2010-06-06 at 11:44 +0200, ext Johannes Berg wrote:
-> Hi,
+On Thu, Jun 03, 2010 at 10:39:30PM +0300, Dmytro Milinevskyy wrote:
+> Hi!
 > 
-> Apologies for the delay in reviewing this.
+> Here is the patch to disable ath5k leds support on build stage.
+> However if the leds support was enabled do not force selection of 802.11 leds layer.
+> Depency on LEDS_CLASS is kept.
 > 
-> On Thu, 2010-06-03 at 13:44 +0300, Juuso Oikarinen wrote:
+> Suggestion given by Pavel Roskin and Bob Copeland applied.
 > 
-> > @@ -699,6 +704,8 @@ enum ieee80211_smps_mode {
-> >  struct ieee80211_conf {
-> >  	u32 flags;
-> >  	int power_level, dynamic_ps_timeout, dynamic_ps_forced_timeout;
-> > +	int dynamic_ps_user_timeout;
-> > +	bool disable_dynamic_ps;
-> >  	int max_sleep_period;
+> Regards,
 > 
-> Please don't keep these variables in driver-visible structures, they
-> don't belong there as they are implementation details, they should be in
-> the ieee80211_local structure somewhere and the driver should see _only_
-> dynamic_ps_timeout.
-> 
-> The same actually applies to dynamic_ps_forced_timeout as well, so
-> please also make a separate patch moving that.
+> --Dima
 
-Understood. I will make these changes.
+Needs at least a Signed-off-by line, and preferrably a changelog that
+explains what the patch is doing and (especially) why it is necessary.
 
--Juuso
-
-> johannes
-> 
-
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
