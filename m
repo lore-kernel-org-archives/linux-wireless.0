@@ -1,191 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:18669 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751779Ab0FUF75 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jun 2010 01:59:57 -0400
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCHv4] mac80211: Add interface for driver to temporarily disable dynamic ps
-Date: Mon, 21 Jun 2010 08:59:39 +0300
-Message-Id: <1277099979-7810-1-git-send-email-juuso.oikarinen@nokia.com>
+Received: from mail.atheros.com ([12.36.123.2]:23395 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754835Ab0FDJGP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Jun 2010 05:06:15 -0400
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 04 Jun 2010 02:06:15 -0700
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <greg@kroah.com>
+CC: <stable@kernel.org>, <linux-wireless@vger.kernel.org>,
+	Ranga Rao Ravuri <ranga.ravuri@atheros.com>
+Subject: [stable][PATCH] ath9k: Avoid corrupt frames being forwarded to mac80211.
+Date: Fri, 4 Jun 2010 14:36:09 +0530
+Message-ID: <1275642369-5024-1-git-send-email-vnatarajan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This mechanism introduced in this patch applies (at least) for hardware
-designs using a single shared antenna for both WLAN and BT. In these designs,
-the antenna must be toggled between WLAN and BT.
+If bit 29 is set, MAC H/W can attempt to decrypt the received aggregate
+with WEP or TKIP, eventhough the received frame may be a CRC failed
+corrupted frame. If this bit is set, H/W obeys key type in keycache.
+If it is not set and if the key type in keycache is neither open nor
+AES, H/W forces key type to be open.  But bit 29 should be set to 1
+for AsyncFIFO feature to encrypt/decrypt the aggregate with WEP or TKIP.
 
-In those hardware, managing WLAN co-existence with Bluetooth requires WLAN
-full power save whenever there is Bluetooth activity in order for WLAN to be
-able to periodically relinquish the antenna to be used for BT. This is because
-BT can only access the shared antenna when WLAN is idle or asleep.
-
-Some hardware, for instance the wl1271, are able to indicate to the host
-whenever there is BT traffic. In essence, the hardware will send an indication
-to the host whenever there is, for example, SCO traffic or A2DP traffic, and
-will send another indication when the traffic is over.
-
-The hardware gets information of Bluetooth traffic via hardware co-existence
-control lines - these lines are used to negotiate the shared antenna
-ownership. The hardware will give the antenna to BT whenever WLAN is sleeping.
-
-This patch adds the interface to mac80211 to facilitate temporarily disabling
-of dynamic power save as per request of the WLAN driver. This interface will
-immediately force WLAN to full powersave, hence allowing BT coexistence as
-described above.
-
-In these kind of shared antenna desings, when WLAN powersave is fully disabled,
-Bluetooth will not work simultaneously with WLAN at all. This patch does not
-address that problem. This interface will not change PSM state, so if PSM is
-disabled it will remain so. Solving this problem requires knowledge about BT
-state, and is best done in user-space.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reported-by: Johan Hovold <johan.hovold@lundinova.se>
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+Signed-off-by: Ranga Rao Ravuri <ranga.ravuri@atheros.com>
 ---
-v4: the previous version was on top of an old wireless-testing/master, this
-    one should be up-to-date.
+Applies on top of 2.6.33 and 2.6.34
 
- include/net/mac80211.h     |   39 +++++++++++++++++++++++++++++++++++++++
- net/mac80211/ieee80211_i.h |    2 ++
- net/mac80211/mlme.c        |   39 ++++++++++++++++++++++++++++++++++++++-
- 3 files changed, 79 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/initvals.h |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index fe1a3a6..7f256e2 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1271,6 +1271,15 @@ ieee80211_get_alt_retry_rate(const struct ieee80211_hw *hw,
-  * dynamic PS feature in stack and will just keep %IEEE80211_CONF_PS
-  * enabled whenever user has enabled powersave.
-  *
-+ * Some hardware need to toggle a single shared antenna between WLAN and
-+ * Bluetooth to facilitate co-existence. These types of hardware set
-+ * limitations on the use of host controlled dynamic powersave whenever there
-+ * is simultaneous WLAN and Bluetooth traffic. For these types of hardware, the
-+ * driver may request temporarily going into full power save, in order to
-+ * enable toggling the antenna between BT and WLAN. If the driver requests
-+ * disabling dynamic powersave, the @dynamic_ps_timeout value will be
-+ * temporarily set to zero until the driver re-enables dynamic powersave.
-+ *
-  * Driver informs U-APSD client support by enabling
-  * %IEEE80211_HW_SUPPORTS_UAPSD flag. The mode is configured through the
-  * uapsd paramater in conf_tx() operation. Hardware needs to send the QoS
-@@ -2447,6 +2456,36 @@ void ieee80211_beacon_loss(struct ieee80211_vif *vif);
- void ieee80211_connection_loss(struct ieee80211_vif *vif);
- 
- /**
-+ * ieee80211_disable_dyn_ps - force mac80211 to temporarily disable dynamic psm
-+ *
-+ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-+ *
-+ * Some hardware require full power save to manage simultaneous BT traffic
-+ * on the WLAN frequency. Full PSM is required periodically, whenever there are
-+ * burst of BT traffic. The hardware gets information of BT traffic via
-+ * hardware co-existence lines, and consequentially requests mac80211 to
-+ * (temporarily) enter full psm.
-+ * This function will only temporarily disable dynamic PS, not enable PSM if
-+ * it was not already enabled.
-+ * The driver must make sure to re-enable dynamic PS using
-+ * ieee80211_enable_dyn_ps() if the driver has disabled it.
-+ *
-+ */
-+void ieee80211_disable_dyn_ps(struct ieee80211_vif *vif);
-+
-+/**
-+ * ieee80211_enable_dyn_ps - restore dynamic psm after being disabled
-+ *
-+ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-+ *
-+ * This function restores dynamic PS after being temporarily disabled via
-+ * ieee80211_disable_dyn_ps(). Each ieee80211_disable_dyn_ps() call must
-+ * be coupled with an eventual call to this function.
-+ *
-+ */
-+void ieee80211_enable_dyn_ps(struct ieee80211_vif *vif);
-+
-+/**
-  * ieee80211_cqm_rssi_notify - inform a configured connection quality monitoring
-  *	rssi threshold triggered
-  *
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index fb54301..f9251d5 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -855,6 +855,8 @@ struct ieee80211_local {
- 	 * this will override whatever chosen by mac80211 internally.
- 	 */
- 	int dynamic_ps_forced_timeout;
-+	int dynamic_ps_user_timeout;
-+	bool disable_dynamic_ps;
- 
- 	int user_power_level; /* in dBm */
- 	int power_constr_level; /* in dBm */
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 85c3ca3..d196265 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -478,6 +478,39 @@ static void ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
- 	}
- }
- 
-+void ieee80211_enable_dyn_ps(struct ieee80211_vif *vif)
-+{
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_conf *conf = &local->hw.conf;
-+
-+	WARN_ON(sdata->vif.type != NL80211_IFTYPE_STATION ||
-+		!(local->hw.flags & IEEE80211_HW_SUPPORTS_PS) ||
-+		(local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_PS));
-+
-+	local->disable_dynamic_ps = false;
-+	conf->dynamic_ps_timeout = local->dynamic_ps_user_timeout;
-+}
-+EXPORT_SYMBOL(ieee80211_enable_dyn_ps);
-+
-+void ieee80211_disable_dyn_ps(struct ieee80211_vif *vif)
-+{
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_conf *conf = &local->hw.conf;
-+
-+	WARN_ON(sdata->vif.type != NL80211_IFTYPE_STATION ||
-+		!(local->hw.flags & IEEE80211_HW_SUPPORTS_PS) ||
-+		(local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_PS));
-+
-+	local->disable_dynamic_ps = true;
-+	conf->dynamic_ps_timeout = 0;
-+	del_timer_sync(&local->dynamic_ps_timer);
-+	ieee80211_queue_work(&local->hw,
-+			     &local->dynamic_ps_enable_work);
-+}
-+EXPORT_SYMBOL(ieee80211_disable_dyn_ps);
-+
- /* powersave */
- static void ieee80211_enable_ps(struct ieee80211_local *local,
- 				struct ieee80211_sub_if_data *sdata)
-@@ -553,6 +586,7 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
- 	    found->u.mgd.associated->beacon_ies &&
- 	    !(found->u.mgd.flags & (IEEE80211_STA_BEACON_POLL |
- 				    IEEE80211_STA_CONNECTION_POLL))) {
-+		struct ieee80211_conf *conf = &local->hw.conf;
- 		s32 beaconint_us;
- 
- 		if (latency < 0)
-@@ -575,7 +609,10 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
- 			else
- 				timeout = 100;
- 		}
--		local->hw.conf.dynamic_ps_timeout = timeout;
-+		local->dynamic_ps_user_timeout = timeout;
-+		if (!local->disable_dynamic_ps)
-+			conf->dynamic_ps_timeout =
-+				local->dynamic_ps_user_timeout;
- 
- 		if (beaconint_us > latency) {
- 			local->ps_sdata = NULL;
+diff --git a/drivers/net/wireless/ath/ath9k/initvals.h b/drivers/net/wireless/ath/ath9k/initvals.h
+index 8a3bf3a..7203f00 100644
+--- a/drivers/net/wireless/ath/ath9k/initvals.h
++++ b/drivers/net/wireless/ath/ath9k/initvals.h
+@@ -246,7 +246,7 @@ static const u32 ar5416Common[][2] = {
+     { 0x00008258, 0x00000000 },
+     { 0x0000825c, 0x400000ff },
+     { 0x00008260, 0x00080922 },
+-    { 0x00008264, 0xa8000010 },
++    { 0x00008264, 0x88000010 },
+     { 0x00008270, 0x00000000 },
+     { 0x00008274, 0x40000000 },
+     { 0x00008278, 0x003e4180 },
+@@ -2766,7 +2766,7 @@ static const u32 ar9280Common_9280_2[][2] = {
+     { 0x00008258, 0x00000000 },
+     { 0x0000825c, 0x400000ff },
+     { 0x00008260, 0x00080922 },
+-    { 0x00008264, 0xa8a00010 },
++    { 0x00008264, 0x88a00010 },
+     { 0x00008270, 0x00000000 },
+     { 0x00008274, 0x40000000 },
+     { 0x00008278, 0x003e4180 },
+@@ -3936,7 +3936,7 @@ static const u_int32_t ar9285Common_9285[][2] = {
+     { 0x00008258, 0x00000000 },
+     { 0x0000825c, 0x400000ff },
+     { 0x00008260, 0x00080922 },
+-    { 0x00008264, 0xa8a00010 },
++    { 0x00008264, 0x88a00010 },
+     { 0x00008270, 0x00000000 },
+     { 0x00008274, 0x40000000 },
+     { 0x00008278, 0x003e4180 },
+@@ -5073,7 +5073,7 @@ static const u_int32_t ar9287Common_9287_1_0[][2] = {
+     { 0x00008258, 0x00000000 },
+     { 0x0000825c, 0x400000ff },
+     { 0x00008260, 0x00080922 },
+-    { 0x00008264, 0xa8a00010 },
++    { 0x00008264, 0x88a00010 },
+     { 0x00008270, 0x00000000 },
+     { 0x00008274, 0x40000000 },
+     { 0x00008278, 0x003e4180 },
 -- 
-1.6.3.3
+1.7.1
 
