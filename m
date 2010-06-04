@@ -1,43 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:24920 "EHLO
-	idcmail-mo1so.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759417Ab0FJSEO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49605 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752387Ab0FDGyT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jun 2010 14:04:14 -0400
-From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
-To: linux-wireless@vger.kernel.org
-Subject: Re: Support for the Linksys WUSB300N?
-Date: Thu, 10 Jun 2010 12:04:11 -0600
-Cc: "John W. Linville" <linville@tuxdriver.com>
-References: <201006100653.48734.tfjellstrom@shaw.ca> <20100610141526.GC28553@tuxdriver.com>
-In-Reply-To: <20100610141526.GC28553@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201006101204.11538.tfjellstrom@shaw.ca>
+	Fri, 4 Jun 2010 02:54:19 -0400
+Subject: Re: Problems connectring to an AP with Acer Aspire Revo
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Christian P. Schmidt" <schmidt@digadd.de>
+Cc: reinette chatre <reinette.chatre@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4C07D0C7.8010907@digadd.de>
+References: <4BF795EB.9070902@digadd.de>
+	 <1274729665.2091.15280.camel@rchatre-DESK>  <4BFD1ED0.9050309@digadd.de>
+	 <1275003105.2091.20102.camel@rchatre-DESK>  <4BFF9B93.5010308@digadd.de>
+	 <1275043274.3909.71.camel@jlt3.sipsolutions.net>
+	 <4BFF9FC6.4030101@digadd.de>
+	 <1275044074.3909.72.camel@jlt3.sipsolutions.net> <4BFFA490.90600@digadd.de>
+	 <1275045843.3909.92.camel@jlt3.sipsolutions.net>
+	 <4C07D0C7.8010907@digadd.de>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 04 Jun 2010 08:48:24 +0200
+Message-ID: <1275634104.3694.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On June 10, 2010, John W. Linville wrote:
-> On Thu, Jun 10, 2010 at 06:53:48AM -0600, Thomas Fjellstrom wrote:
-> > I have recently acquired a WUSB300N, and was wondering what the status
-> > is on linux support for this device.
-> > 
-> > It's chipset (Marvell 88w8362) seems to be supported, but over PCI/PCIe
-> > only so far. Is anyone working on USB variants? I'm willing to help
-> > test anything anyone might be working on.
-> 
-> I'm not aware of anything in progress for this. :-(  In fact, even the
-> PCI variant seems to mostly be getting random maintenance (e.g. API
-> changes) from the community rather than any support from Marvell.
-> 
-> John
+On Thu, 2010-06-03 at 17:56 +0200, Christian P. Schmidt wrote:
 
-Thats too bad. Well I did get the thing for free. So theres noone at all 
-working on this chipset specifically? Is there any information/documentation 
-available? It might be interesting to see if I can manage to hack something 
-together (total kernel programming n00b, but I do C relatively well).
+> > Maybe try the rfkill tool:
+> > http://wireless.kernel.org/en/users/Documentation/rfkill
+> 
+> Yes, it was the rfkill tool that caused my attempts to fail. However,
+> this didn't change my association attempt problems.
+> I also took my time to look at the PCIe port - steady 3.3V on the RFKILL
+> pin, which means "no RFKILL".
+> 
+> Any further ideas?
 
--- 
-Thomas Fjellstrom
-tfjellstrom@shaw.ca
+Unfortunately not. It would seem that something is causing your frames
+not to be transmitted correctly, but I see no reason for that right now.
+
+johannes
+
