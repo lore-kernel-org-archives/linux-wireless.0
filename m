@@ -1,60 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:38772 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755904Ab0F2TvZ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52788 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754431Ab0FDIgy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jun 2010 15:51:25 -0400
-Received: by mail-ew0-f46.google.com with SMTP id 23so2589ewy.19
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Jun 2010 12:51:24 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 21/21] rt2x00: Fix compile warning when debug disabled
-Date: Tue, 29 Jun 2010 21:49:50 +0200
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-References: <201006292138.13509.IvDoorn@gmail.com> <201006292149.06304.IvDoorn@gmail.com> <201006292149.27751.IvDoorn@gmail.com>
-In-Reply-To: <201006292149.27751.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201006292149.51654.IvDoorn@gmail.com>
+	Fri, 4 Jun 2010 04:36:54 -0400
+Subject: Re: [PATCH] p54spi: replace internal "cx3110x" name with "p54spi"
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luke-Jr <luke@dashjr.org>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	torvalds@linux-foundation.org
+In-Reply-To: <201006021406.15393.luke@dashjr.org>
+References: <201006012117.00432.luke@dashjr.org>
+	 <1275465299.3915.0.camel@jlt3.sipsolutions.net>
+	 <201006021406.15393.luke@dashjr.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 04 Jun 2010 10:36:47 +0200
+Message-ID: <1275640607.9953.15.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ivo van Doorn <IvDoorn@gmail.com>
+On Wed, 2010-06-02 at 14:06 -0500, Luke-Jr wrote:
 
-CC [M]  drivers/net/wireless/rt2x00/rt2800lib.o
-drivers/net/wireless/rt2x00/rt2800lib.c: In function 'rt2800_ampdu_action':
-drivers/net/wireless/rt2x00/rt2800lib.c:2821: warning: unused variable 'rt2x00dev'
+> > >  	.driver = {
+> > > -		/* use cx3110x name because board-n800.c uses that for the
+> > > -		 * SPI port */
+> > > -		.name		= "cx3110x",
+> > > +		.name		= "p54spi",
+> > >  		.bus		= &spi_bus_type,
+> > 
+> > maybe that comment wasn't clear enough ... it needs to be that way to be
+> > properly linked up against SPI.
+> 
+> I don't understand what you mean here. Does the hardware-side of SPI use 
+> string identifiers? These are the only two instances of "cx3110x" in the 
+> kernel source; N8x0 board files expect "p54spi"
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+Hm, ok, I thought that the board stuff needed cx3110x. Hopefully it
+doesn't differ in n810s?
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index f813b43..d3cf0cc 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2769,7 +2769,6 @@ static int rt2800_ampdu_action(struct ieee80211_hw *hw,
- 			       struct ieee80211_sta *sta,
- 			       u16 tid, u16 *ssn)
- {
--	struct rt2x00_dev *rt2x00dev = hw->priv;
- 	int ret = 0;
- 
- 	switch (action) {
-@@ -2787,7 +2786,7 @@ static int rt2800_ampdu_action(struct ieee80211_hw *hw,
- 	case IEEE80211_AMPDU_TX_OPERATIONAL:
- 		break;
- 	default:
--		WARNING(rt2x00dev, "Unknown AMPDU action\n");
-+		WARNING((struct rt2x00_dev *)hw->priv, "Unknown AMPDU action\n");
- 	}
- 
- 	return ret;
--- 
-1.6.6.1
+johannes
 
