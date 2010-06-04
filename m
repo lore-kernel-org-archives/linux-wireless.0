@@ -1,49 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx04.teleca.com ([212.92.145.6]:34032 "EHLO mx04.teleca.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755257Ab0F2Kux (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jun 2010 06:50:53 -0400
-From: Yuri Ershov <ext-yuri.ershov@nokia.com>
-To: johannes@sipsolutions.net
-Cc: ext-yuri.kululin@nokia.com, linux-wireless@vger.kernel.org
-Subject: [RFC 1/3] mac80211: Put some code under MESH macro
-Date: Tue, 29 Jun 2010 15:08:06 +0400
-Message-Id: <4b8939924daf1a8904b7bbedd3bfb784a762089a.1277808543.git.ext-yuri.ershov@nokia.com>
-In-Reply-To: <cover.1277808543.git.ext-yuri.ershov@nokia.com>
-References: <cover.1277808543.git.ext-yuri.ershov@nokia.com>
-In-Reply-To: <cover.1277808543.git.ext-yuri.ershov@nokia.com>
-References: <cover.1277808543.git.ext-yuri.ershov@nokia.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40254 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752359Ab0FDTaJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Jun 2010 15:30:09 -0400
+Date: Fri, 4 Jun 2010 15:26:40 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kiran Divekar <dkiran@marvell.com>
+Cc: "libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: Re: [PATCH 0/3] Libertas : cfg80211, 11d support
+Message-ID: <20100604192639.GC2492@tuxdriver.com>
+References: <25B60CDC2F704E4E9D88FFD52780CB4C04D627399A@SC-VEXCH1.marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <25B60CDC2F704E4E9D88FFD52780CB4C04D627399A@SC-VEXCH1.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the function ieee80211_subif_start_xmit the logic related with
-meshdrlen is under CONFIG_MAC80211_MESH macro, but in one place it isn't.
-This is some update for this
+On Tue, May 18, 2010 at 05:32:58AM -0700, Kiran Divekar wrote:
+> Add cfg80211 support to Libertas based on initial work from Holger Shurig.
+> Add 11d support to Libertas.
+> 
+> Kiran Divekar (3):
+>   Libertas: cfg80211 support
+>   Libertas: fix WARN_ON issues in cfg80211 support
+>   Libertas: Added 11d support using cfg80211
 
-Signed-off-by: Yuri Ershov <ext-yuri.ershov@nokia.com>
----
----
- net/mac80211/tx.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+This series no longer applies.  Would you care to rebase it again? :-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 698d471..007b76a 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1942,11 +1942,13 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 		h_pos += encaps_len;
- 	}
- 
-+#ifdef CONFIG_MAC80211_MESH
- 	if (meshhdrlen > 0) {
- 		memcpy(skb_push(skb, meshhdrlen), &mesh_hdr, meshhdrlen);
- 		nh_pos += meshhdrlen;
- 		h_pos += meshhdrlen;
- 	}
-+#endif
- 
- 	if (ieee80211_is_data_qos(fc)) {
- 		__le16 *qos_control;
+Thanks!
+
+John
 -- 
-1.7.0.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
