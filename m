@@ -1,36 +1,297 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:49681 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755356Ab0FPAiO (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:56995 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757036Ab0FDCiT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jun 2010 20:38:14 -0400
-Subject: Compat-wireless release for 2010-06-15v2 is baked
-To: <linux-wireless@vger.kernel.org>, <linux-bluetooth@vger.kernel.org>
-Message-Id: <20100616003813.77B0E42E2C@repository3.localdomain>
-Date: Tue, 15 Jun 2010 20:38:13 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Thu, 3 Jun 2010 22:38:19 -0400
+Message-Id: <201006040237.o542bfE1001421@imap1.linux-foundation.org>
+Subject: [patch 5/5] ssb: remove the ssb DMA API
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
+	fujita.tomonori@lab.ntt.co.jp, Larry.Finger@lwfinger.net,
+	davem@davemloft.net, mb@bu3sch.de, stefano.brivio@polimi.it,
+	zambrano@broadcom.com
+From: akpm@linux-foundation.org
+Date: Thu, 03 Jun 2010 19:37:44 -0700
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ANSI_X3.4-1968
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-compat-wireless code metrics
+Now they are unnecessary.  We can use the generic DMA API with any bus.
 
-    498409 - Total upstream lines of code being pulled
-      1398 - backport code changes
-      1167 - backport code additions
-       231 - backport code deletions
-      5748 - backport from compat module
-      7146 - total backport code
-    1.4338 - % of code consists of backport work
-        13 - Code changes posted but not yet merged
-         8 - Code additions posted but not yet merged
-         5 - Code deletions posted but not yet merged
-    0.0026 - % of code not yet merged
-      1218 - Crap changes not yet posted
-      1179 - Crap additions not yet merged
-        39 - Crap deletions not yet posted
-    0.2444 - % of crap code
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Michael Buesch <mb@bu3sch.de>
+Cc: Gary Zambrano <zambrano@broadcom.com>
+Cc: Stefano Brivio <stefano.brivio@polimi.it>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: David S. Miller <davem@davemloft.net>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
-Base tree: linux-next.git
-Base tree version: next-20100615
-compat-wireless release: compat-wireless-2010-06-10-11-gd1c4956
+ drivers/ssb/main.c      |   74 -----------------
+ include/linux/ssb/ssb.h |  157 --------------------------------------
+ 2 files changed, 231 deletions(-)
+
+diff -puN drivers/ssb/main.c~ssb-remove-the-ssb-dma-api drivers/ssb/main.c
+--- a/drivers/ssb/main.c~ssb-remove-the-ssb-dma-api
++++ a/drivers/ssb/main.c
+@@ -1228,80 +1228,6 @@ u32 ssb_dma_translation(struct ssb_devic
+ }
+ EXPORT_SYMBOL(ssb_dma_translation);
+ 
+-int ssb_dma_set_mask(struct ssb_device *dev, u64 mask)
+-{
+-#ifdef CONFIG_SSB_PCIHOST
+-	int err;
+-#endif
+-
+-	switch (dev->bus->bustype) {
+-	case SSB_BUSTYPE_PCI:
+-#ifdef CONFIG_SSB_PCIHOST
+-		err = pci_set_dma_mask(dev->bus->host_pci, mask);
+-		if (err)
+-			return err;
+-		err = pci_set_consistent_dma_mask(dev->bus->host_pci, mask);
+-		return err;
+-#endif
+-	case SSB_BUSTYPE_SSB:
+-		return dma_set_mask(dev->dev, mask);
+-	default:
+-		__ssb_dma_not_implemented(dev);
+-	}
+-	return -ENOSYS;
+-}
+-EXPORT_SYMBOL(ssb_dma_set_mask);
+-
+-void * ssb_dma_alloc_consistent(struct ssb_device *dev, size_t size,
+-				dma_addr_t *dma_handle, gfp_t gfp_flags)
+-{
+-	switch (dev->bus->bustype) {
+-	case SSB_BUSTYPE_PCI:
+-#ifdef CONFIG_SSB_PCIHOST
+-		if (gfp_flags & GFP_DMA) {
+-			/* Workaround: The PCI API does not support passing
+-			 * a GFP flag. */
+-			return dma_alloc_coherent(&dev->bus->host_pci->dev,
+-						  size, dma_handle, gfp_flags);
+-		}
+-		return pci_alloc_consistent(dev->bus->host_pci, size, dma_handle);
+-#endif
+-	case SSB_BUSTYPE_SSB:
+-		return dma_alloc_coherent(dev->dev, size, dma_handle, gfp_flags);
+-	default:
+-		__ssb_dma_not_implemented(dev);
+-	}
+-	return NULL;
+-}
+-EXPORT_SYMBOL(ssb_dma_alloc_consistent);
+-
+-void ssb_dma_free_consistent(struct ssb_device *dev, size_t size,
+-			     void *vaddr, dma_addr_t dma_handle,
+-			     gfp_t gfp_flags)
+-{
+-	switch (dev->bus->bustype) {
+-	case SSB_BUSTYPE_PCI:
+-#ifdef CONFIG_SSB_PCIHOST
+-		if (gfp_flags & GFP_DMA) {
+-			/* Workaround: The PCI API does not support passing
+-			 * a GFP flag. */
+-			dma_free_coherent(&dev->bus->host_pci->dev,
+-					  size, vaddr, dma_handle);
+-			return;
+-		}
+-		pci_free_consistent(dev->bus->host_pci, size,
+-				    vaddr, dma_handle);
+-		return;
+-#endif
+-	case SSB_BUSTYPE_SSB:
+-		dma_free_coherent(dev->dev, size, vaddr, dma_handle);
+-		return;
+-	default:
+-		__ssb_dma_not_implemented(dev);
+-	}
+-}
+-EXPORT_SYMBOL(ssb_dma_free_consistent);
+-
+ int ssb_bus_may_powerdown(struct ssb_bus *bus)
+ {
+ 	struct ssb_chipcommon *cc;
+diff -puN include/linux/ssb/ssb.h~ssb-remove-the-ssb-dma-api include/linux/ssb/ssb.h
+--- a/include/linux/ssb/ssb.h~ssb-remove-the-ssb-dma-api
++++ a/include/linux/ssb/ssb.h
+@@ -470,14 +470,6 @@ extern u32 ssb_dma_translation(struct ss
+ #define SSB_DMA_TRANSLATION_MASK	0xC0000000
+ #define SSB_DMA_TRANSLATION_SHIFT	30
+ 
+-extern int ssb_dma_set_mask(struct ssb_device *dev, u64 mask);
+-
+-extern void * ssb_dma_alloc_consistent(struct ssb_device *dev, size_t size,
+-				       dma_addr_t *dma_handle, gfp_t gfp_flags);
+-extern void ssb_dma_free_consistent(struct ssb_device *dev, size_t size,
+-				    void *vaddr, dma_addr_t dma_handle,
+-				    gfp_t gfp_flags);
+-
+ static inline void __cold __ssb_dma_not_implemented(struct ssb_device *dev)
+ {
+ #ifdef CONFIG_SSB_DEBUG
+@@ -486,155 +478,6 @@ static inline void __cold __ssb_dma_not_
+ #endif /* DEBUG */
+ }
+ 
+-static inline int ssb_dma_mapping_error(struct ssb_device *dev, dma_addr_t addr)
+-{
+-	switch (dev->bus->bustype) {
+-	case SSB_BUSTYPE_PCI:
+-#ifdef CONFIG_SSB_PCIHOST
+-		return pci_dma_mapping_error(dev->bus->host_pci, addr);
+-#endif
+-		break;
+-	case SSB_BUSTYPE_SSB:
+-		return dma_mapping_error(dev->dev, addr);
+-	default:
+-		break;
+-	}
+-	__ssb_dma_not_implemented(dev);
+-	return -ENOSYS;
+-}
+-
+-static inline dma_addr_t ssb_dma_map_single(struct ssb_device *dev, void *p,
+-					    size_t size, enum dma_data_direction dir)
+-{
+-	switch (dev->bus->bustype) {
+-	case SSB_BUSTYPE_PCI:
+-#ifdef CONFIG_SSB_PCIHOST
+-		return pci_map_single(dev->bus->host_pci, p, size, dir);
+-#endif
+-		break;
+-	case SSB_BUSTYPE_SSB:
+-		return dma_map_single(dev->dev, p, size, dir);
+-	default:
+-		break;
+-	}
+-	__ssb_dma_not_implemented(dev);
+-	return 0;
+-}
+-
+-static inline void ssb_dma_unmap_single(struct ssb_device *dev, dma_addr_t dma_addr,
+-					size_t size, enum dma_data_direction dir)
+-{
+-	switch (dev->bus->bustype) {
+-	case SSB_BUSTYPE_PCI:
+-#ifdef CONFIG_SSB_PCIHOST
+-		pci_unmap_single(dev->bus->host_pci, dma_addr, size, dir);
+-		return;
+-#endif
+-		break;
+-	case SSB_BUSTYPE_SSB:
+-		dma_unmap_single(dev->dev, dma_addr, size, dir);
+-		return;
+-	default:
+-		break;
+-	}
+-	__ssb_dma_not_implemented(dev);
+-}
+-
+-static inline void ssb_dma_sync_single_for_cpu(struct ssb_device *dev,
+-					       dma_addr_t dma_addr,
+-					       size_t size,
+-					       enum dma_data_direction dir)
+-{
+-	switch (dev->bus->bustype) {
+-	case SSB_BUSTYPE_PCI:
+-#ifdef CONFIG_SSB_PCIHOST
+-		pci_dma_sync_single_for_cpu(dev->bus->host_pci, dma_addr,
+-					    size, dir);
+-		return;
+-#endif
+-		break;
+-	case SSB_BUSTYPE_SSB:
+-		dma_sync_single_for_cpu(dev->dev, dma_addr, size, dir);
+-		return;
+-	default:
+-		break;
+-	}
+-	__ssb_dma_not_implemented(dev);
+-}
+-
+-static inline void ssb_dma_sync_single_for_device(struct ssb_device *dev,
+-						  dma_addr_t dma_addr,
+-						  size_t size,
+-						  enum dma_data_direction dir)
+-{
+-	switch (dev->bus->bustype) {
+-	case SSB_BUSTYPE_PCI:
+-#ifdef CONFIG_SSB_PCIHOST
+-		pci_dma_sync_single_for_device(dev->bus->host_pci, dma_addr,
+-					       size, dir);
+-		return;
+-#endif
+-		break;
+-	case SSB_BUSTYPE_SSB:
+-		dma_sync_single_for_device(dev->dev, dma_addr, size, dir);
+-		return;
+-	default:
+-		break;
+-	}
+-	__ssb_dma_not_implemented(dev);
+-}
+-
+-static inline void ssb_dma_sync_single_range_for_cpu(struct ssb_device *dev,
+-						     dma_addr_t dma_addr,
+-						     unsigned long offset,
+-						     size_t size,
+-						     enum dma_data_direction dir)
+-{
+-	switch (dev->bus->bustype) {
+-	case SSB_BUSTYPE_PCI:
+-#ifdef CONFIG_SSB_PCIHOST
+-		/* Just sync everything. That's all the PCI API can do. */
+-		pci_dma_sync_single_for_cpu(dev->bus->host_pci, dma_addr,
+-					    offset + size, dir);
+-		return;
+-#endif
+-		break;
+-	case SSB_BUSTYPE_SSB:
+-		dma_sync_single_range_for_cpu(dev->dev, dma_addr, offset,
+-					      size, dir);
+-		return;
+-	default:
+-		break;
+-	}
+-	__ssb_dma_not_implemented(dev);
+-}
+-
+-static inline void ssb_dma_sync_single_range_for_device(struct ssb_device *dev,
+-							dma_addr_t dma_addr,
+-							unsigned long offset,
+-							size_t size,
+-							enum dma_data_direction dir)
+-{
+-	switch (dev->bus->bustype) {
+-	case SSB_BUSTYPE_PCI:
+-#ifdef CONFIG_SSB_PCIHOST
+-		/* Just sync everything. That's all the PCI API can do. */
+-		pci_dma_sync_single_for_device(dev->bus->host_pci, dma_addr,
+-					       offset + size, dir);
+-		return;
+-#endif
+-		break;
+-	case SSB_BUSTYPE_SSB:
+-		dma_sync_single_range_for_device(dev->dev, dma_addr, offset,
+-						 size, dir);
+-		return;
+-	default:
+-		break;
+-	}
+-	__ssb_dma_not_implemented(dev);
+-}
+-
+-
+ #ifdef CONFIG_SSB_PCIHOST
+ /* PCI-host wrapper driver */
+ extern int ssb_pcihost_register(struct pci_driver *driver);
+_
