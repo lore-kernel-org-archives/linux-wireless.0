@@ -1,38 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpoproxy1-pub.bluehost.com ([69.89.21.11]:60349 "HELO
-	cpoproxy1-pub.bluehost.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753314Ab0FRUHQ (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:32807 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754450Ab0FEGab convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jun 2010 16:07:16 -0400
-Date: Fri, 18 Jun 2010 13:05:38 -0700
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 4/5]pci:setup_bus.c Fix warning: variable 'retval' set
- but not used
-Message-ID: <20100618130538.0fc562ee@virtuousgeek.org>
-In-Reply-To: <4C1BD024.1030707@gmail.com>
-References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>
-	<1276666434-11227-5-git-send-email-justinmattock@gmail.com>
-	<20100618102330.29eccb5b@virtuousgeek.org>
-	<4C1BBF7D.8090904@kernel.org>
-	<20100618124956.40c869a0@virtuousgeek.org>
-	<4C1BD024.1030707@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Sat, 5 Jun 2010 02:30:31 -0400
+From: Kiran Divekar <dkiran@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: "libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Fri, 4 Jun 2010 23:30:19 -0700
+Subject: RE: [PATCH 0/3] Libertas : cfg80211, 11d support
+Message-ID: <25B60CDC2F704E4E9D88FFD52780CB4C04D6389AC4@SC-VEXCH1.marvell.com>
+In-Reply-To: <20100604192639.GC2492@tuxdriver.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 18 Jun 2010 12:59:32 -0700
-"Justin P. Mattock" <justinmattock@gmail.com> wrote:
-> just added this in(as a test), and the retval warning still shows up.
-> with the last post I just added a printk was that legit, and if so what 
-> else might be added to it to make it complete and proper?
+> > Kiran Divekar (3):
+> >   Libertas: cfg80211 support
+> >   Libertas: fix WARN_ON issues in cfg80211 support
+> >   Libertas: Added 11d support using cfg80211
+> 
+> This series no longer applies.  Would you care to rebase it again? :-)
+> 
 
-What's the full warning?  Seems like printing the value should have
-been enough to shut up gcc...
+I rebased the patches and sent to mailing list.
 
--- 
-Jesse Barnes, Intel Open Source Technology Center
+> Thanks!
+> 
+> John
+
+Thanks
+- Kiran
+
