@@ -1,44 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41974 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755714Ab0FXPaQ (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:49354 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932298Ab0FEA5P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jun 2010 11:30:16 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] minstrel_ht: make *idx unsigned in minstrel_downgrade_rate
-Date: Thu, 24 Jun 2010 11:19:57 -0400
-Message-Id: <1277392797-11260-1-git-send-email-linville@tuxdriver.com>
+	Fri, 4 Jun 2010 20:57:15 -0400
+To: mcgrof@gmail.com, linux-wireless@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org
+Subject: Compat-wireless release for 2010-06-04 is baked
+Message-Id: <20100605004644.88F252FAF7@repository2.localdomain>
+Date: Fri,  4 Jun 2010 20:46:44 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-net/mac80211/rc80211_minstrel_ht.c:440:46: warning: incorrect type in argument 2 (different signedness)
-net/mac80211/rc80211_minstrel_ht.c:440:46:    expected int *idx
-net/mac80211/rc80211_minstrel_ht.c:440:46:    got unsigned int *<noident>
-net/mac80211/rc80211_minstrel_ht.c:446:46: warning: incorrect type in argument 2 (different signedness)
-net/mac80211/rc80211_minstrel_ht.c:446:46:    expected int *idx
-net/mac80211/rc80211_minstrel_ht.c:446:46:    got unsigned int *<noident>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/mac80211/rc80211_minstrel_ht.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+compat-wireless code metrics
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index a8f658c..ae91ad9 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -328,7 +328,8 @@ minstrel_next_sample_idx(struct minstrel_ht_sta *mi)
- }
- 
- static void
--minstrel_downgrade_rate(struct minstrel_ht_sta *mi, int *idx, bool primary)
-+minstrel_downgrade_rate(struct minstrel_ht_sta *mi, unsigned int *idx,
-+			bool primary)
- {
- 	int group, orig_group;
- 
--- 
-1.7.0.1
+    495683 - Total upstream code being pulled
+      1393 - backport code changes
+      1163 - backport code additions
+       230 - backport code deletions
+      5685 - backport from compat module
+      7078 - total backport code
+      1.43 - % of code consists of backport work
+      1222 - Crap changes not yet posted
+      1181 - Crap additions not yet merged
+        41 - Crap deletions not yet posted
+      0.25 - % of crap code
 
+Base tree: linux-next.git
+Base tree version: next-20100604
+compat-wireless release: compat-wireless-2010-06-04
