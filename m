@@ -1,41 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:49132 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753430Ab0FMUtt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jun 2010 16:49:49 -0400
-Received: by wyb40 with SMTP id 40so3163190wyb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Jun 2010 13:49:48 -0700 (PDT)
+Received: from setoy.chost.de ([217.160.209.225]:48109 "EHLO smtp.chost.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932938Ab0FELoa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 Jun 2010 07:44:30 -0400
+Subject: Re: [PATCH] libertas: Fix ethtool reporting no WOL options supported if WOL is not already active
+From: Sascha Silbe <sascha-ml-linux-kernel-wireless@silbe.org>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+In-reply-to: <1275457005.18302.1.camel@localhost.localdomain>
+Reply-To: Sascha Silbe <sascha-ml-reply-to-2010-3@silbe.org>
+References: <1274806808-24185-1-git-send-email-sascha-pgp@silbe.org> <1275457005.18302.1.camel@localhost.localdomain>
+Date: Sat, 05 Jun 2010 11:37:57 +0000
+Message-Id: <1275737632-sup-3834@xo15-minimal.sascha.silbe.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; boundary="=-1275737877-355890-3302-5147-5-="; protocol="application/pgp-signature"
 MIME-Version: 1.0
-Date: Sun, 13 Jun 2010 17:49:47 -0300
-Message-ID: <AANLkTim4kDJZnEdNy-C4xhOigWiTWQZhVJAs36LOUbjQ@mail.gmail.com>
-Subject: wireless button problem with atheros on hp machines
-From: Leonardo <sombriks@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hello all, i don't know if this is the correct channel to report, but
-from Slackware 13.0 (2.6.29.6) to 13.1 (2.6.33.4) the wireless button
-stopped to work properly.
 
-it is happening on 2 different hp machines: hp dv5-1220br (AR5001) and
-hp dv4-2140us (AR9285).
+--=-1275737877-355890-3302-5147-5-=
+Content-Type: text/plain; charset=UTF-8
 
-basically i can't touch the wireless button, if i do that i will not
-be able to recover the net, also the button color will not back to
-blue, will remain orange.
+Excerpts from Dan Williams's message of Wed Jun 02 05:36:45 +0000 2010:
 
-also if i touch the button not even restarting the machine or removing
-the battery the bluetooth subsystem come back.
+> Acked-by: Dan Williams <dcbw@redhat.com>
+Thanks!
 
-on dv5 i have only linux, but on dv4 if i give up and enter on windows
-just to restart bluetooth;
+> but note that this patch submission isn't correctly formatted, you'll
+> need to add your Signed-off-by tag as described here:
+Oops, "tg patch" usually does that for me, but I've used git format-patch for this patch. I've just resent it with SOB and Acked-By added.
 
-as i related before, at least on dv5 one it worked like a charm on older one.
+Sascha
+-- 
+http://sascha.silbe.org/
+http://www.infra-silbe.de/
 
-please if anyone can help, tell me what can i do to help to track such
-bug (what kind of output to send, maybe a downgrade, etc)
+--=-1275737877-355890-3302-5147-5-=
+Content-Disposition: attachment; filename="signature.asc"
+Content-Type: application/pgp-signature; name="signature.asc"
 
-thanks in advance.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAkwKNxUACgkQebr7S6V0daNP4ACfQTfejdj/uz66v0eiptxr4Qgq
+5YwAn1uZt3jQ2n6SjY/N2nNuNHTZOZIm
+=L5uX
+-----END PGP SIGNATURE-----
+
+--=-1275737877-355890-3302-5147-5-=--
