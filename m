@@ -1,75 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:52449 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753021Ab0FHIrS (ORCPT
+Received: from sd-11162.dedibox.fr ([88.191.70.230]:55311 "EHLO
+	sd-11162.dedibox.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755292Ab0FETDD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jun 2010 04:47:18 -0400
-Subject: Re: [RFC PATCHv2] mac80211: Fix circular locking dependency in ARP
- filter handling
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"reinette.chatre@intel.com" <reinette.chatre@intel.com>
-In-Reply-To: <1275984236.3706.45.camel@jlt3.sipsolutions.net>
-References: <1275978299-18237-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1275984236.3706.45.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Jun 2010 11:46:57 +0300
-Message-ID: <1275986817.5277.31574.camel@wimaxnb.nmp.nokia.com>
+	Sat, 5 Jun 2010 15:03:03 -0400
+Date: Sat, 5 Jun 2010 20:50:15 +0200
+From: Frederic Leroy <fredo@starox.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John Linville <linville@tuxdriver.com>, Greg KH <greg@kroah.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Conversion of driver for Realtek 8192SU
+Message-ID: <20100605205015.65979235@devel>
+In-Reply-To: <4BFE9A22.5040005@lwfinger.net>
+References: <4BFE9A22.5040005@lwfinger.net>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-06-08 at 10:03 +0200, ext Johannes Berg wrote:
-> On Tue, 2010-06-08 at 09:24 +0300, Juuso Oikarinen wrote:
+Le Thu, 27 May 2010 11:13:22 -0500,
+Larry Finger <Larry.Finger@lwfinger.net> a écrit :
+
+> I am in the process of converting the driver contained in the file
+> RTL8192SU_usb_linux_v2.6.0006.20100511.zip obtained from the Realtek
+> site. This driver is used for the following USB IDs:
 > 
-> > @@ -161,10 +161,20 @@ enum ieee80211_bss_change {
-> >  	BSS_CHANGED_BEACON_ENABLED	= 1<<9,
-> >  	BSS_CHANGED_CQM			= 1<<10,
-> >  	BSS_CHANGED_IBSS		= 1<<11,
-> > +#ifdef CONFIG_INET
-> > +	BSS_CHANGED_ARP_ADDR_LIST	= 1<<12,
-> > +#endif
-> 
-> Ick, don't do that, all drivers would end up littered with ifdefs.
->  
-> > @@ -220,6 +235,10 @@ struct ieee80211_bss_conf {
-> >  	s32 cqm_rssi_thold;
-> >  	u32 cqm_rssi_hyst;
-> >  	enum nl80211_channel_type channel_type;
-> > +#ifdef CONFIG_INET
-> > +	__be32 arp_addr_list[IEEE80211_BSS_ARP_ADDR_LIST_LEN];
-> > +	u8 arp_addr_cnt;
-> > +#endifs
-> 
-> same here.
-> 
-> > @@ -851,6 +851,10 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
-> >  	    sdata->vif.bss_conf.cqm_rssi_thold)
-> >  		bss_info_changed |= BSS_CHANGED_CQM;
-> >  
-> > +#ifdef CONFIG_INET
-> > +	bss_info_changed |= BSS_CHANGED_ARP_ADDR_LIST;
-> > +#endif
-> > +
-> 
-> I don't see why you can't set that unconditionally here either, it'll
-> just be an empty list always.
+> Realtek (0x0bda)  0x8171, 0x8172, 0x8173, 0x8174, 0x8712,
+> 0x8713,
+> [...]
+> My test device is a D-Link DWA-130 (14b2:3300). The Realtek driver
+> compiles cleanly and works as-is for this device on i386 architecture;
 
-I was about to send the patch without the ifdefs, but was unsure about
-the policy here so I decided to add at the at the last minute.
+I own a Trendnet TEW-649UB (usb ids : 0bda:8172).
+I got the staging driver working only once. Since then, I found that the
+function which sets the channel didn't work.
+The 20100511 driver has the same behaviour at first sight, looking at
+wireshark trace.
 
-Our testing guy found a bug too - the condition for the max number of
-IP's is wrong, it will take at most 3 addresses currently.
+> My initial plan is to modify this driver code for inclusion in
+> drivers/staging. The above list includes some, but not all, of the IDs
+> in the driver currently in drivers/staging/rtl8192su. I will likely
+> put this in as drivers/staging/rtl8712u, which is the name used in
+> the code, and remove the duplicate IDs from rtl8192su. Once this step
+> is done, I will then work at modifying it to use mac80211 so that it
+> can go into mainline.
 
-> Otherwise looks pretty good.
+Some work has been made in the staging driver. Can it be a better
+start ?
 
-As you say it looks OK, I'll remove the above #ifdef's, fix that one bug
-(and others if/when our tester dude finds more) and resubmit. 
+Have you a repository with your work ? I would like to test it again my
+device and if possible join our effort.
 
--Juuso
-
-> johannes
-> 
-
-
+-- 
+Frédéric Leroy
