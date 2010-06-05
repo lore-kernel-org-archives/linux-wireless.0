@@ -1,74 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:38012 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753062Ab0F2Tuy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jun 2010 15:50:54 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 38so2999610wyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Jun 2010 12:50:54 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 03/21] rt2x00: Remove unneeded variable
-Date: Tue, 29 Jun 2010 21:39:29 +0200
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-References: <201006292138.13509.IvDoorn@gmail.com> <201006292138.56463.IvDoorn@gmail.com>
-In-Reply-To: <201006292138.56463.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201006292139.30199.IvDoorn@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:18406 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932500Ab0FEAx4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Jun 2010 20:53:56 -0400
+Subject: Re: [PATCH 0/3] Libertas : cfg80211, 11d support
+From: Dan Williams <dcbw@redhat.com>
+To: Kiran Divekar <dkiran@marvell.com>
+Cc: "libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>
+In-Reply-To: <25B60CDC2F704E4E9D88FFD52780CB4C04D627399A@SC-VEXCH1.marvell.com>
+References: <25B60CDC2F704E4E9D88FFD52780CB4C04D627399A@SC-VEXCH1.marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 04 Jun 2010 17:54:06 -0700
+Message-ID: <1275699246.2290.4.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ivo van Doorn <ivdoorn@gmail.com>
+On Tue, 2010-05-18 at 05:32 -0700, Kiran Divekar wrote:
+> Add cfg80211 support to Libertas based on initial work from Holger Shurig.
+> Add 11d support to Libertas.
 
-The update_bssid is set only when BSS_CHANGED_BSSID is used,
-but the check if that field is true is done later in the function
-but also only when BSS_CHANGED_BSSID is set. This makes the
-variable useless, as it can never result in a negative check.
+Like John said, if you wouldn't mind rebasing, I'd love to get this in
+even if there are a few regressions.  We need to move this forward to
+cfg80211.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00mac.c |    7 ++-----
- 1 files changed, 2 insertions(+), 5 deletions(-)
+Thanks!
+Dan
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index 2071cf3..3b838c0 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -563,7 +563,6 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
- {
- 	struct rt2x00_dev *rt2x00dev = hw->priv;
- 	struct rt2x00_intf *intf = vif_to_intf(vif);
--	int update_bssid = 0;
- 
- 	/*
- 	 * mac80211 might be calling this function while we are trying
-@@ -578,10 +577,8 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
- 	 * conf->bssid can be NULL if coming from the internal
- 	 * beacon update routine.
- 	 */
--	if (changes & BSS_CHANGED_BSSID) {
--		update_bssid = 1;
-+	if (changes & BSS_CHANGED_BSSID)
- 		memcpy(&intf->bssid, bss_conf->bssid, ETH_ALEN);
--	}
- 
- 	spin_unlock(&intf->lock);
- 
-@@ -593,7 +590,7 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
- 	 */
- 	if (changes & BSS_CHANGED_BSSID)
- 		rt2x00lib_config_intf(rt2x00dev, intf, vif->type, NULL,
--				      update_bssid ? bss_conf->bssid : NULL);
-+				      bss_conf->bssid);
- 
- 	/*
- 	 * Update the beacon.
--- 
-1.6.6.1
+> Kiran Divekar (3):
+>   Libertas: cfg80211 support
+>   Libertas: fix WARN_ON issues in cfg80211 support
+>   Libertas: Added 11d support using cfg80211
+> 
+>  drivers/net/wireless/libertas/Makefile  |    3 -
+>  drivers/net/wireless/libertas/assoc.c   | 2264 -----------------------------
+>  drivers/net/wireless/libertas/assoc.h   |  155 --
+>  drivers/net/wireless/libertas/cfg.c     | 2038 ++++++++++++++++++++++++++-
+>  drivers/net/wireless/libertas/cfg.h     |   21 +-
+>  drivers/net/wireless/libertas/cmd.c     |   87 +-
+>  drivers/net/wireless/libertas/cmdresp.c |   82 +-
+>  drivers/net/wireless/libertas/debugfs.c |   54 +-
+>  drivers/net/wireless/libertas/decl.h    |    8 +
+>  drivers/net/wireless/libertas/dev.h     |   62 +-
+>  drivers/net/wireless/libertas/ethtool.c |    5 -
+>  drivers/net/wireless/libertas/host.h    |   28 +-
+>  drivers/net/wireless/libertas/main.c    |  226 +---
+>  drivers/net/wireless/libertas/rx.c      |  122 +--
+>  drivers/net/wireless/libertas/scan.c    | 1354 ------------------
+>  drivers/net/wireless/libertas/scan.h    |   63 -
+>  drivers/net/wireless/libertas/tx.c      |   12 +-
+>  drivers/net/wireless/libertas/wext.c    | 2353 -------------------------------
+>  drivers/net/wireless/libertas/wext.h    |   17 -
+>  19 files changed, 2237 insertions(+), 6717 deletions(-)
+>  delete mode 100644 drivers/net/wireless/libertas/assoc.c
+>  delete mode 100644 drivers/net/wireless/libertas/assoc.h
+>  delete mode 100644 drivers/net/wireless/libertas/scan.c
+>  delete mode 100644 drivers/net/wireless/libertas/scan.h
+>  delete mode 100644 drivers/net/wireless/libertas/wext.c
+>  delete mode 100644 drivers/net/wireless/libertas/wext.h
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
