@@ -1,67 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:34748 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753782Ab0FUHvu (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:39589 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755244Ab0FEUaZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jun 2010 03:51:50 -0400
-Received: from vs3014.wh2.ocn.ne.jp (125.206.180.187)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-0518656707
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Jun 2010 16:51:48 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: "Jaroslav Fojtik" <jafojtik@seznam.cz>
-Subject: Re: ATH5k - Signal measurement reports wrong values
-Date: Mon, 21 Jun 2010 16:50:50 +0900
-Cc: linux-wireless@vger.kernel.org
-References: <4C1E6A13.4259.24AF3C@jafojtik.seznam.cz> <201006211026.48484.br1@einfach.org> <4C1F135A.26516.F45AB@jafojtik.seznam.cz>
-In-Reply-To: <4C1F135A.26516.F45AB@jafojtik.seznam.cz>
+	Sat, 5 Jun 2010 16:30:25 -0400
+Received: by fxm8 with SMTP id 8so1384452fxm.19
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Jun 2010 13:30:24 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] p54usb: Add device ID for Dell WLA3310 USB
+Date: Sat, 5 Jun 2010 22:30:18 +0200
+Cc: John W Linville <linville@tuxdriver.com>, dravet@hotmail.com,
+	linux-wireless@vger.kernel.org
+References: <4c0aaebd.7lqiusTk9vdkgjCd%Larry.Finger@lwfinger.net>
+In-Reply-To: <4c0aaebd.7lqiusTk9vdkgjCd%Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: Text/Plain;
   charset="iso-8859-1"
-Message-Id: <201006211650.50766.br1@einfach.org>
+Message-Id: <201006052230.18402.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon June 21 2010 16:23:06 Jaroslav Fojtik wrote:
-> Dear Bruno,
+On Saturday 05 June 2010 22:08:29 Larry Finger wrote:
+> From: Jason Dravet <dravet@hotmail.com>
 > 
-> > hi jara!
-> > 
-> > are you sure it has to do with the upgrade from
-> > compat-wireless-2010-06-13 to compat-wireless-2010-06-18? i don't see
-> > any relevant differences in the code between these two versions...
+> Add Dell WLA3310 USB wireless card, which is based on
+> Z-Com XG-705A and has an ISL3887 chipset, to the USB Ids
+> in p54usb.
 > 
->   Sorry, it might be compat-wireless-2010-05-30.
+> Signed-off-by: Jason Dravet <dravet@hotmail.com>
+> Tested-by: Richard Gregory Tillmore <rtillmore@gmail.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Acked-by: Christian Lamparter <chunkeey@googlemail.com>
+Cc: <stable@kernel.org>
 
-that would make more sense. there are changes in noise floor calibration and 
-in antenna diversity setup between these two (2010-05-30 and 2010-06-18). 
-either one may be the reason...
-
-> I have tested only 3 versions.
+> ---
 > 
-> Anyway, I have observed "false" signal drop even for client stations.
+> Index: wireless-testing/drivers/net/wireless/p54/p54usb.c
+> ===================================================================
+> --- wireless-testing.orig/drivers/net/wireless/p54/p54usb.c
+> +++ wireless-testing/drivers/net/wireless/p54/p54usb.c
+> @@ -80,6 +80,7 @@ static struct usb_device_id p54u_table[]
+>  	{USB_DEVICE(0x1413, 0x5400)},   /* Telsey 802.11g USB2.0 Adapter */
+>  	{USB_DEVICE(0x1435, 0x0427)},	/* Inventel UR054G */
+>  	{USB_DEVICE(0x2001, 0x3704)},	/* DLink DWL-G122 rev A2 */
+> +	{USB_DEVICE(0x413c, 0x5513)},	/* Dell WLA3310 USB Wireless Adapter */
+>  	{USB_DEVICE(0x413c, 0x8102)},	/* Spinnaker DUT */
+>  	{USB_DEVICE(0x413c, 0x8104)},	/* Cohiba Proto board */
+>  	{}
 > 
-> You could see that purple line als dropped from -61 to -71 without any
-> reason: http://78.108.103.11:11080/cgi-bin/klienti_year.cgi
-> 
-> > it might be interresting to see what results you get from noise
-> > calibration. you can enable calibration debugging with "echo calib >
-> > /sys/kernel/debug/ath5k/phy0/debug"
-> 
-> The directory /sys/kernel/debug is empty.
-> It looks that I have to recompile kernel. Or do you know any option to
-> pass to kernel to allow this feature?
-
-maybe you need to:
-  mount -t debugfs debugfs /sys/kernel/debug
-?
-
-also you need to compile ath5k with debugging enabled.
-
-can you tell us which chipset you are using (output of dmesg |grep 
-"ath5.*chip")?
-
-also it would be interesting to know how you generate your graphs?
-
-bruno
-
-
