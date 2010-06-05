@@ -1,70 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:50072 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756839Ab0FYWnK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jun 2010 18:43:10 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 5/8] iwlwifi: read rfkill during resume
-Date: Fri, 25 Jun 2010 15:42:58 -0700
-Message-Id: <1277505781-25268-6-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1277505781-25268-1-git-send-email-reinette.chatre@intel.com>
-References: <1277505781-25268-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:58776 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754172Ab0FECvZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Jun 2010 22:51:25 -0400
+Received: by vws5 with SMTP id 5so502374vws.19
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Jun 2010 19:51:24 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201006050257.43071.chunkeey@googlemail.com>
+References: <AANLkTillVZPnU2MDGmMcHQ3Yxj-LfJxPLlOUzSQ8S1Bm@mail.gmail.com>
+	<201006050257.43071.chunkeey@googlemail.com>
+Date: Fri, 4 Jun 2010 21:51:23 -0500
+Message-ID: <AANLkTilrhSH4u-7MOjYILlQZoSqF5zc04JEbMI5IXgBs@mail.gmail.com>
+Subject: Re: p54usb doesn't create wlan0 interface
+From: Richard Tillmore <rtillmore@gmail.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, Jun 4, 2010 at 7:57 PM, Christian Lamparter wrote:
+> On Saturday 05 June 2010 02:41:05 Richard wrote:
+>> I have a Dell usb wireless card that I am trying to use under Linux.
+>> A search of the FCC-ID M4Y-XG705A lead me to believe it has a Z-Com
+>> XG-705A chipset.  Another search tells me that the p54usb driver
+>> should work.  So I added
+>>       {USB_DEVICE(0x413c, 0x5513)},   /* Dell Wireless */
+>> to the /usr/src/linux/drivers/net/wireless/p54/p54usb.c file in the
+>> correct spot.
+> Please post the diff, so it can be integrated into -stable!
 
-When resuming from hibernate or suspend,
-the status of the rfkill switch isn't
-known since it might have been toggled
-while the system was asleep. Therefore,
-we need to read out the status at resume
-time to make sure the system knows about
-an up-to-date status.
+I will have my friend post the diff tomorrow as I don't know how to make a diff.
 
-Reported-by: Mark Tung <mark.y.tung@intel.com>
-Tested-by: Mark Tung <mark.y.tung@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+>> A quick recompile and the module was built.  I did a
+>> modprobe p54usb and dmesg shows:
+>
+> have you put the newly-built module into the right directory?
+> modprobe only takes modules from the kernel's module directory
+> (which is normally /lib/modules/$KVER/kernel/...)
+>
+> you can verify that by calling modinfo p54usb and
+> check if there's a line usb:v413Cp5513d*...
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index f47a58f..a56fb46 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2845,6 +2845,7 @@ int iwl_pci_resume(struct pci_dev *pdev)
- {
- 	struct iwl_priv *priv = pci_get_drvdata(pdev);
- 	int ret;
-+	bool hw_rfkill = false;
- 
- 	/*
- 	 * We disable the RETRY_TIMEOUT register (0x41) to keep
-@@ -2859,6 +2860,17 @@ int iwl_pci_resume(struct pci_dev *pdev)
- 	pci_restore_state(pdev);
- 	iwl_enable_interrupts(priv);
- 
-+	if (!(iwl_read32(priv, CSR_GP_CNTRL) &
-+				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW))
-+		hw_rfkill = true;
-+
-+	if (hw_rfkill)
-+		set_bit(STATUS_RF_KILL_HW, &priv->status);
-+	else
-+		clear_bit(STATUS_RF_KILL_HW, &priv->status);
-+
-+	wiphy_rfkill_set_hw_state(priv->hw->wiphy, hw_rfkill);
-+
- 	return 0;
- }
- EXPORT_SYMBOL(iwl_pci_resume);
--- 
-1.7.0.4
+You are right I was booting with the wrong kernel.  The default was
+2.6.34-rc5 not the 2.6.34 we compiled.
 
+>> However iwconfig doesn't list a wlan0.
+> please don't use "iwconfig". WEXT is obsolete, you can find a
+> nl80211 replacement "iw" right here:
+> http://wireless.kernel.org/en/users/Documentation/iw .
+>
+>> OK maybe I need firmware so another search leads me to
+>> http://wireless.kernel.org/en/users/Drivers/p54 where I download
+>> 2.13.24.0.lm87.arm (USB 2nd generation (ISL3887)), rename it to
+>> isl3887usb and put it in /lib/firmware.  I rebooted and still no wlan0
+>> listed in iwconfig.
+> No need for a reboot, if the correct module is loaded the device
+> should be recognized instantly... (or as soon as it is replugged.)
+
+I have iw and it works.  I just have to figure out how to use it :)
+
+Thanks
+Greg
