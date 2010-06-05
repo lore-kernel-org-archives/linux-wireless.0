@@ -1,35 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:62823 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932835Ab0FCA5b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jun 2010 20:57:31 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 02 Jun 2010 17:57:31 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:42041 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932458Ab0FEHVb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 Jun 2010 03:21:31 -0400
+Received: by mail-vw0-f46.google.com with SMTP id 5so736549vws.19
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Jun 2010 00:21:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19462.65093.260306.326262@gargle.gargle.HOWL>
-Date: Thu, 3 Jun 2010 06:28:45 +0530
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 5/8] ath9k_htc: Setup HT capabilites for 2-stream devices
-In-Reply-To: <AANLkTilTTMEHGQj0Y4roSOjf69ufynaV-jmtb2g6n181@mail.gmail.com>
-References: <19462.12588.699806.245206@gargle.gargle.HOWL>
-	<AANLkTilTTMEHGQj0Y4roSOjf69ufynaV-jmtb2g6n181@mail.gmail.com>
+In-Reply-To: <AANLkTimorQtjCmyiTpimfa4qx0F-cSLaQNO0V4Dv8CH3@mail.gmail.com>
+References: <1275642369-5024-1-git-send-email-vnatarajan@atheros.com>
+	<AANLkTildAN_AYlUV6l34TcWdVVelRIn9sWe5IEaLO5fS@mail.gmail.com>
+	<AANLkTimorQtjCmyiTpimfa4qx0F-cSLaQNO0V4Dv8CH3@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Sat, 5 Jun 2010 00:21:10 -0700
+Message-ID: <AANLkTikfoBorEiKhJDra2cwr-TfwriRgbRrbEnAUKDgQ@mail.gmail.com>
+Subject: Re: [stable][PATCH] ath9k: Avoid corrupt frames being forwarded to
+	mac80211.
+To: Vivek Natarajan <vnatarajan@atheros.com>
+Cc: greg@kroah.com, stable@kernel.org, linux-wireless@vger.kernel.org,
+	Ranga Rao Ravuri <ranga.ravuri@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> On Wed, Jun 2, 2010 at 3:23 AM, Sujith <Sujith.Manoharan@atheros.com> wrote:
-> > The supported MCS rate set has to be setup properly
-> > for 2-stream devices.
-> >
-> > Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
-> 
-> Awesome, are these being sold yet?
+On Sat, Jun 5, 2010 at 12:20 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Sat, Jun 5, 2010 at 12:20 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> On Fri, Jun 4, 2010 at 2:06 AM, Vivek Natarajan <vnatarajan@atheros.com> wrote:
+>>> If bit 29 is set, MAC H/W can attempt to decrypt the received aggregate
+>>> with WEP or TKIP, eventhough the received frame may be a CRC failed
+>>> corrupted frame. If this bit is set, H/W obeys key type in keycache.
+>>> If it is not set and if the key type in keycache is neither open nor
+>>> AES, H/W forces key type to be open.  But bit 29 should be set to 1
+>>> for AsyncFIFO feature to encrypt/decrypt the aggregate with WEP or TKIP.
+>>>
+>>> Reported-by: Johan Hovold <johan.hovold@lundinova.se>
+>>> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+>>> Signed-off-by: Ranga Rao Ravuri <ranga.ravuri@atheros.com>
+>>> ---
+>>> Applies on top of 2.6.33 and 2.6.34
+>>
+>> You need to Cc: stable@kernel.org on the commit log.
+>
+> Does 2.6.32 not have this issue?
 
-Yep.
+If not, why not?
 
-Sujith
+  Luis
