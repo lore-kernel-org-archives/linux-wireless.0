@@ -1,49 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx04.teleca.com ([212.92.145.6]:34034 "EHLO mx04.teleca.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755341Ab0F2Kux (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jun 2010 06:50:53 -0400
-From: Yuri Ershov <ext-yuri.ershov@nokia.com>
-To: johannes@sipsolutions.net
-Cc: ext-yuri.kululin@nokia.com, linux-wireless@vger.kernel.org
-Subject: [RFC 2/3] nl80211: Fix memory leaks
-Date: Tue, 29 Jun 2010 15:08:07 +0400
-Message-Id: <8123f79aa6e6c6d5634ae86396cfd020c0e2bbb9.1277808543.git.ext-yuri.ershov@nokia.com>
-In-Reply-To: <cover.1277808543.git.ext-yuri.ershov@nokia.com>
-References: <cover.1277808543.git.ext-yuri.ershov@nokia.com>
-In-Reply-To: <cover.1277808543.git.ext-yuri.ershov@nokia.com>
-References: <cover.1277808543.git.ext-yuri.ershov@nokia.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:42041 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754537Ab0FEHVO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 Jun 2010 03:21:14 -0400
+Received: by vws5 with SMTP id 5so736549vws.19
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Jun 2010 00:21:14 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTildAN_AYlUV6l34TcWdVVelRIn9sWe5IEaLO5fS@mail.gmail.com>
+References: <1275642369-5024-1-git-send-email-vnatarajan@atheros.com>
+	<AANLkTildAN_AYlUV6l34TcWdVVelRIn9sWe5IEaLO5fS@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Sat, 5 Jun 2010 00:20:53 -0700
+Message-ID: <AANLkTimorQtjCmyiTpimfa4qx0F-cSLaQNO0V4Dv8CH3@mail.gmail.com>
+Subject: Re: [stable][PATCH] ath9k: Avoid corrupt frames being forwarded to
+	mac80211.
+To: Vivek Natarajan <vnatarajan@atheros.com>
+Cc: greg@kroah.com, stable@kernel.org, linux-wireless@vger.kernel.org,
+	Ranga Rao Ravuri <ranga.ravuri@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case of errors during message composing msg should be freed after canceling.
+On Sat, Jun 5, 2010 at 12:20 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Fri, Jun 4, 2010 at 2:06 AM, Vivek Natarajan <vnatarajan@atheros.com> wrote:
+>> If bit 29 is set, MAC H/W can attempt to decrypt the received aggregate
+>> with WEP or TKIP, eventhough the received frame may be a CRC failed
+>> corrupted frame. If this bit is set, H/W obeys key type in keycache.
+>> If it is not set and if the key type in keycache is neither open nor
+>> AES, H/W forces key type to be open.  But bit 29 should be set to 1
+>> for AsyncFIFO feature to encrypt/decrypt the aggregate with WEP or TKIP.
+>>
+>> Reported-by: Johan Hovold <johan.hovold@lundinova.se>
+>> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+>> Signed-off-by: Ranga Rao Ravuri <ranga.ravuri@atheros.com>
+>> ---
+>> Applies on top of 2.6.33 and 2.6.34
+>
+> You need to Cc: stable@kernel.org on the commit log.
 
-Signed-off-by: Yuri Kululin <ext-yuri.kululin@nokia.com>
-Signed-off-by: Yuri Ershov <ext-yuri.ershov@nokia.com>
----
- net/wireless/nl80211.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Does 2.6.32 not have this issue?
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index a999fc1..c6bff6b 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2769,6 +2769,7 @@ static int nl80211_get_mesh_params(struct sk_buff *skb,
- 
-  nla_put_failure:
- 	genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
- 	err = -EMSGSIZE;
-  out:
- 	/* Cleanup */
-@@ -2960,6 +2961,7 @@ static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
- 
- nla_put_failure:
- 	genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
- 	err = -EMSGSIZE;
- out:
- 	mutex_unlock(&cfg80211_mutex);
--- 
-1.7.0.4
-
+  Luis
