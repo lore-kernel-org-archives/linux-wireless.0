@@ -1,97 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:47601 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751682Ab0FFRrZ (ORCPT
+Received: from mail-pz0-f185.google.com ([209.85.222.185]:51233 "EHLO
+	mail-pz0-f185.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757088Ab0FETzA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jun 2010 13:47:25 -0400
-Received: by vws5 with SMTP id 5so2286876vws.19
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Jun 2010 10:47:24 -0700 (PDT)
-Message-ID: <4C0BDF2F.2020001@gmail.com>
-Date: Sun, 06 Jun 2010 13:47:27 -0400
-From: Richard Farina <sidhayn@gmail.com>
+	Sat, 5 Jun 2010 15:55:00 -0400
+Received: by pzk15 with SMTP id 15so1607005pzk.15
+        for <linux-wireless@vger.kernel.org>; Sat, 05 Jun 2010 12:55:00 -0700 (PDT)
+Message-ID: <4C0AABA8.9010401@lwfinger.net>
+Date: Sat, 05 Jun 2010 14:55:20 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	gwingerde@gmail.com, "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: compat-wireless 2.6.35_rc2 build errors
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Jason Dravet <dravet@hotmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] add support for Dell WLA3310 USB card
+References: <SNT144-w4640D712F57F1472EF0A16DFD30@phx.gbl>
+In-Reply-To: <SNT144-w4640D712F57F1472EF0A16DFD30@phx.gbl>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I realize we are still pretty early in the rc process but there are some 
-seemingly significant problems building compat-wireless 2.6.35_rc2 
-(which should be very close if not identical to the linus tree). I have 
-copied the rt2x00 team because of the first error and Luiz for the second.
+On 06/05/2010 02:04 PM, Jason Dravet wrote:
+> 
+> Hi,
+> 
+> The Dell WLA3310 USB wireless card has a Z-Com XG-705A chipset that p54 supports with this patch.  You also have to get the firmware from
+> http://wireless.kernel.org/en/users/Drivers/p54 
+> download 2.13.24.0.lm87.arm (USB 2nd generation (ISL3887)), rename it to
+> isl3887usb and put it in /lib/firmware.
+> 
+> The only problem I see is the LED light goes on when I plug the card in and it goes out when I get a dhcp address (dhclient).  The LED doesn't flicker when I ping the router either.  The other funny thing it has two LEDs, one on top and one on the bottom.  It appears they do the same thing i.e. they are both on or both off.
+> 
+> Please consider applying for 2.6.35 and stable depending on if you can distribute the firmware.  If you need anything else please let me know.
+> 
+> Thanks,
+> Jason Dravet
+> 
+> Signed-off-by: Jason Dravet <dravet@hotmail.com>
+> Tested-by: Richard Gregory Tillmore <rtillmore@gmail.com>
+> 
+> diff -c p54usb2.c p54usb.c>wla3310.patch
+> 
+> *** p54usb2.c    Fri Jun  4 21:54:16 2010
+> --- p54usb.c    Fri Jun  4 21:54:06 2010
+> ***************
+> *** 82,87 ****
+> --- 82,88 ----
+>       {USB_DEVICE(0x2001, 0x3704)},    /* DLink DWL-G122 rev A2 */
+>       {USB_DEVICE(0x413c, 0x8102)},    /* Spinnaker DUT */
+>       {USB_DEVICE(0x413c, 0x8104)},    /* Cohiba Proto board */
+> +     {USB_DEVICE(0x413c, 0x5513)},    /* Dell WLA3310 USB Wireless Adapter */
+>       {}
+>   };
 
-First and foremost this won't build at all:
+Thanks for looking to this, but you need read
+Documentation/SubmittingPatches and follow the guidelines, otherwise you
+cause considerable extra work for John Linville.
 
-/var/tmp/portage/net-wireless/compat-wireless-2.6.35_rc2/work/compat-wireless-2.6.35-rc2/drivers/net/wireless/rt2x00/rt2800pci.c: 
-In function 'rt2800pci_read_eeprom_soc':
-/var/tmp/portage/net-wireless/compat-wireless-2.6.35_rc2/work/compat-wireless-2.6.35-rc2/drivers/net/wireless/rt2x00/rt2800pci.c:91: 
-error: implicit declaration of function 'KSEG1ADDR'
-/var/tmp/portage/net-wireless/compat-wireless-2.6.35_rc2/work/compat-wireless-2.6.35-rc2/drivers/net/wireless/rt2x00/rt2800pci.c:91: 
-warning: cast to pointer from integer of different size
-make[4]: *** 
-[/var/tmp/portage/net-wireless/compat-wireless-2.6.35_rc2/work/compat-wireless-2.6.35-rc2/drivers/net/wireless/rt2x00/rt2800pci.o] 
-Error 1
+This time, I will reformat the patch for you.
 
-
-Additionally but likely less important this driver seems to be defining 
-variables overriding kernel headers, I can't imagine that is good.  Not 
-sure if this is something that the driver needs to fix or needs to be 
-fixed in compat-wireless but here it is:
-
-/var/tmp/portage/net-wireless/compat-wireless-2.6.35_rc2/work/compat-wireless-2.6.35-rc2/drivers/net/wireless/libertas_tf/main.c:10:1: 
-warning: "pr_fmt" redefined
-In file included from include/linux/skbuff.h:17,
-                 from include/linux/if_ether.h:124,
-                 from include/linux/netdevice.h:29,
-                 from 
-/var/tmp/portage/net-wireless/compat-wireless-2.6.35_rc2/work/compat-wireless-2.6.35-rc2/include/linux/compat-2.6.29.h:5,
-                 from 
-/var/tmp/portage/net-wireless/compat-wireless-2.6.35_rc2/work/compat-wireless-2.6.35-rc2/include/linux/compat-2.6.h:24,
-                 from <command-line>:0:
-include/linux/kernel.h:376:1: warning: this is the location of the 
-previous definition
-  CC [M]  
-/var/tmp/portage/net-wireless/compat-wireless-2.6.35_rc2/work/compat-wireless-2.6.35-rc2/drivers/net/wireless/orinoco/main.o
-/var/tmp/portage/net-wireless/compat-wireless-2.6.35_rc2/work/compat-wireless-2.6.35-rc2/drivers/net/wireless/libertas_tf/main.c:10:1: 
-warning: "pr_fmt" redefined
-In file included from include/linux/skbuff.h:17,
-                 from include/linux/if_ether.h:124,
-                 from include/linux/netdevice.h:29,
-                 from 
-/var/tmp/portage/net-wireless/compat-wireless-2.6.35_rc2/work/compat-wireless-2.6.35-rc2/include/linux/compat-2.6.29.h:5,
-                 from 
-/var/tmp/portage/net-wireless/compat-wireless-2.6.35_rc2/work/compat-wireless-2.6.35-rc2/include/linux/compat-2.6.h:24,
-                 from <command-line>:0:
-include/linux/kernel.h:376:1: warning: this is the location of the 
-previous definition
-  CC [M]  
-/var/tmp/portage/net-wireless/compat-wireless-2.6.35_rc2/work/compat-wireless-2.6.35-rc2/drivers/net/wireless/libertas_tf/cmd.o
-/var/tmp/portage/net-wireless/compat-wireless-2.6.35_rc2/work/compat-wireless-2.6.35-rc2/drivers/net/wireless/libertas_tf/cmd.c:10:1: 
-warning: "pr_fmt" redefined
-In file included from include/linux/skbuff.h:17,
-                 from include/linux/if_ether.h:124,
-                 from include/linux/netdevice.h:29,
-                 from 
-/var/tmp/portage/net-wireless/compat-wireless-2.6.35_rc2/work/compat-wireless-2.6.35-rc2/include/linux/compat-2.6.29.h:5,
-                 from 
-/var/tmp/portage/net-wireless/compat-wireless-2.6.35_rc2/work/compat-wireless-2.6.35-rc2/include/linux/compat-2.6.h:24,
-                 from <command-line>:0:
-include/linux/kernel.h:376:1: warning: this is the location of the 
-previous definition
-/var/tmp/portage/net-wireless/compat-wireless-2.6.35_rc2/work/compat-wireless-2.6.35-rc2/drivers/net/wireless/libertas_tf/cmd.c:10:1: 
-warning: "pr_fmt" redefined
-In file included from include/linux/skbuff.h:17,
-                 from include/linux/if_ether.h:124,
-                 from include/linux/netdevice.h:29,
-                 from 
-/var/tmp/portage/net-wireless/compat-wireless-2.6.35_rc2/work/compat-wireless-2.6.35-rc2/include/linux/compat-2.6.29.h:5,
-                 from 
-/var/tmp/portage/net-wireless/compat-wireless-2.6.35_rc2/work/compat-wireless-2.6.35-rc2/include/linux/compat-2.6.h:24,
-                 from <command-line>:0:
-
-I'll try to build the rc2 kernel and see if these errors are the same.
-
-Thanks,
-Rick Farina
+Larry
