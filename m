@@ -1,62 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35867 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752368Ab0FGTAM (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:41347 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751115Ab0FFJaP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jun 2010 15:00:12 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Randy Dunlap <randy.dunlap@oracle.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] iwlwifi: fix-up botched revert
-Date: Mon,  7 Jun 2010 14:49:36 -0400
-Message-Id: <1275936576-15590-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <20100607090230.deed8bd1.randy.dunlap@oracle.com>
-References: <20100607090230.deed8bd1.randy.dunlap@oracle.com>
+	Sun, 6 Jun 2010 05:30:15 -0400
+Received: by vws5 with SMTP id 5so1900626vws.19
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Jun 2010 02:30:14 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTim6tx9plm0tqqms64iUboSRxo9KnTGbHmwKrhQK@mail.gmail.com>
+References: <201006021129.43621.rossi.f@inwind.it> <AANLkTik0A8qhlIi1pjvo0DKXhxjBEYEwOCn6iIsLXFJi@mail.gmail.com>
+	<201006041025.08348.rossi.f@inwind.it> <AANLkTim6tx9plm0tqqms64iUboSRxo9KnTGbHmwKrhQK@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Sun, 6 Jun 2010 02:29:54 -0700
+Message-ID: <AANLkTimTGPFL_1qAn4YEtYPogOkbZIr_C1YHOtKoHzxw@mail.gmail.com>
+Subject: Re: WARNING: at drivers/base/core.c:130 device_release+0x82/0x90()
+To: Fabio Rossi <rossi.f@inwind.it>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the revert of "iwlwifi: move _agn statistics related structure", I
-need to use CONFIG_IWLWIFI_DEBUGFS instead of CONFIG_IWLWIFI_DEBUG in
-the private structure definition.  Without this patch, it is possible
-to get this:
+On Sun, Jun 6, 2010 at 2:28 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Fri, Jun 4, 2010 at 1:25 AM, Fabio Rossi <rossi.f@inwind.it> wrote:
+>> On Wednesday 02 June 2010 23:42:14 Luis R. Rodriguez wrote:
+>>
+>>> On Wed, Jun 2, 2010 at 2:29 AM, Fabio Rossi <rossi.f@inwind.it> wrote:
+>>> > Compiling the kernel without ACPI (CONFIG_ACPI=n) gives the following
+>>> > warning:
+>>> >
+>>> > cfg80211: Calling CRDA to update world regulatory domain
+>>> > cfg80211: World regulatory domain updated:
+>>> >    (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+>>> >    (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+>>> > ath5k 0000:08:01.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+>>> > ath5k 0000:08:01.0: registered as 'phy0'
+>>> > ath5k phy0: request_irq failed
+>>> > ------------[ cut here ]------------
+>>>
+>>> Since traces are printed reversed you will have to read my logic from
+>>> bottom to top:
+>>>
+>>> Seems we need to implement the dev_release() op for the class of our
+>>> devices.
+>>
+>> Shall I open a bug in kernel bugzilla to keep trace of this?
+>
+> Nah something else is up...
+>
+> struct class ieee80211_class = {
+>        .name = "ieee80211",
+>        .owner = THIS_MODULE,
+>        .dev_release = wiphy_dev_release,
+>        .dev_attrs = ieee80211_dev_attrs,
+> #ifdef CONFIG_HOTPLUG
+>        .dev_uevent = wiphy_uevent,
+> #endif
+>        .suspend = wiphy_suspend,
+>        .resume = wiphy_resume,
+> };
+>
 
-drivers/net/wireless/iwlwifi/iwl-rx.c: In function 'iwl_accumulative_statistics':
-drivers/net/wireless/iwlwifi/iwl-rx.c:304: error: 'struct iwl_priv' has no member named 'accum_statistics'
-drivers/net/wireless/iwlwifi/iwl-rx.c:305: error: 'struct iwl_priv' has no member named 'delta_statistics'
-drivers/net/wireless/iwlwifi/iwl-rx.c:306: error: 'struct iwl_priv' has no member named 'max_delta'
-drivers/net/wireless/iwlwifi/iwl-rx.c:321: error: 'struct iwl_priv' has no member named 'accum_statistics'
-drivers/net/wireless/iwlwifi/iwl-rx.c:323: error: 'struct iwl_priv' has no member named 'accum_statistics'
-drivers/net/wireless/iwlwifi/iwl-rx.c:325: error: 'struct iwl_priv' has no member named 'accum_statistics'
-drivers/net/wireless/iwlwifi/iwl-rx.c:327: error: 'struct iwl_priv' has no member named 'accum_statistics'
-drivers/net/wireless/iwlwifi/iwl-rx.c:329: error: 'struct iwl_priv' has no member named 'accum_statistics'
-drivers/net/wireless/iwlwifi/iwl-rx.c:331: error: 'struct iwl_priv' has no member named 'accum_statistics'
-drivers/net/wireless/iwlwifi/iwl-rx.c: In function 'iwl_reply_statistics':
-drivers/net/wireless/iwlwifi/iwl-rx.c:484: error: 'struct iwl_priv' has no member named 'accum_statistics'
-drivers/net/wireless/iwlwifi/iwl-rx.c:486: error: 'struct iwl_priv' has no member named 'delta_statistics'
-drivers/net/wireless/iwlwifi/iwl-rx.c:488: error: 'struct iwl_priv' has no member named 'max_delta'
+This is wireless-testing, not compat-wireless right?
 
-Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/iwlwifi/iwl-dev.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index f359d9f..a00248c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1208,7 +1208,7 @@ struct iwl_priv {
- 	struct iwl_tt_mgmt thermal_throttle;
- 
- 	struct iwl_notif_statistics statistics;
--#ifdef CONFIG_IWLWIFI_DEBUG
-+#ifdef CONFIG_IWLWIFI_DEBUGFS
- 	struct iwl_notif_statistics accum_statistics;
- 	struct iwl_notif_statistics delta_statistics;
- 	struct iwl_notif_statistics max_delta;
--- 
-1.6.6.1
-
+  Luis
