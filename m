@@ -1,39 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:52406 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752847Ab0FVTEM (ORCPT
+Received: from cp-out10.libero.it ([212.52.84.110]:59060 "EHLO
+	cp-out10.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753652Ab0FFJpE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jun 2010 15:04:12 -0400
-Subject: Compat-wireless release for 2010-06-22 is baked
-To: <linux-wireless@vger.kernel.org>, <linux-bluetooth@vger.kernel.org>
-Message-Id: <20100622190411.2103F42E2C@repository3.orbit-lab.org>
-Date: Tue, 22 Jun 2010 15:04:10 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Sun, 6 Jun 2010 05:45:04 -0400
+From: Fabio Rossi <rossi.f@inwind.it>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: WARNING: at drivers/base/core.c:130 device_release+0x82/0x90()
+Date: Sun, 6 Jun 2010 11:43:56 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <201006021129.43621.rossi.f@inwind.it> <AANLkTim6tx9plm0tqqms64iUboSRxo9KnTGbHmwKrhQK@mail.gmail.com> <AANLkTimTGPFL_1qAn4YEtYPogOkbZIr_C1YHOtKoHzxw@mail.gmail.com>
+In-Reply-To: <AANLkTimTGPFL_1qAn4YEtYPogOkbZIr_C1YHOtKoHzxw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201006061143.56259.rossi.f@inwind.it>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   75bb510..7df472d  master     -> origin/master
-   3eaa500..8e2a8ea  wl         -> origin/wl
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   fd729ff..41d99c6  history    -> origin/history
- + 13f4704...d82e647 master     -> origin/master  (forced update)
- * [new tag]         next-20100622 -> next-20100622
+On Sunday 06 June 2010 11:29:54 Luis R. Rodriguez wrote:
 
-compat-wireless code metrics
+> On Sun, Jun 6, 2010 at 2:28 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> > On Fri, Jun 4, 2010 at 1:25 AM, Fabio Rossi <rossi.f@inwind.it> wrote:
+> >> On Wednesday 02 June 2010 23:42:14 Luis R. Rodriguez wrote:
+> >>> On Wed, Jun 2, 2010 at 2:29 AM, Fabio Rossi <rossi.f@inwind.it> wrote:
+> >>> > Compiling the kernel without ACPI (CONFIG_ACPI=n) gives the following
+> >>> > warning:
+> >>> > 
+> >>> > cfg80211: Calling CRDA to update world regulatory domain
+> >>> > cfg80211: World regulatory domain updated:
+> >>> >    (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+> >>> >    (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+> >>> > ath5k 0000:08:01.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+> >>> > ath5k 0000:08:01.0: registered as 'phy0'
+> >>> > ath5k phy0: request_irq failed
+> >>> > ------------[ cut here ]------------
+> >>> 
+> >>> Since traces are printed reversed you will have to read my logic from
+> >>> bottom to top:
+> >>> 
+> >>> Seems we need to implement the dev_release() op for the class of our
+> >>> devices.
+> >> 
+> >> Shall I open a bug in kernel bugzilla to keep trace of this?
+> > 
+> > Nah something else is up...
+> > 
+> > struct class ieee80211_class = {
+> >        .name = "ieee80211",
+> >        .owner = THIS_MODULE,
+> >        .dev_release = wiphy_dev_release,
+> >        .dev_attrs = ieee80211_dev_attrs,
+> > #ifdef CONFIG_HOTPLUG
+> >        .dev_uevent = wiphy_uevent,
+> > #endif
+> >        .suspend = wiphy_suspend,
+> >        .resume = wiphy_resume,
+> > };
+> 
+> This is wireless-testing, not compat-wireless right?
 
-    498619 - Total upstream lines of code being pulled
-      1410 - backport code changes
-      1177 - backport code additions
-       233 - backport code deletions
-      5748 - backport from compat module
-      7158 - total backport code
-    1.4356 - % of code consists of backport work
-      1218 - Crap changes not yet posted
-      1179 - Crap additions not yet merged
-        39 - Crap deletions not yet posted
-    0.2443 - % of crap code
+Yes, I'm using the latest wireless-testing.git
 
-Base tree: linux-next.git
-Base tree version: next-20100622
-compat-wireless release: compat-wireless-2010-06-17-3-g7df472d
+Fabio
+
