@@ -1,82 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:33500 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751401Ab0FNTQq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jun 2010 15:16:46 -0400
-Received: by pwi1 with SMTP id 1so2982719pwi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Jun 2010 12:16:45 -0700 (PDT)
-Subject: Re: [PATCH] p54usb: Remove duplicate Medion MD40900 device id
-From: Ben Collins <benmcollins13@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Leann Ogasawara <leann.ogasawara@canonical.com>,
-	flamingice@sourmilk.net, linux-wireless@vger.kernel.org,
-	Ben Collins <ben.collins@ubuntu.com>
-In-Reply-To: <20100614185549.GB2216@tuxdriver.com>
-References: <1276208913.1221.3646.camel@emiko>
-	 <4C1173E7.6010201@lwfinger.net>  <20100614185549.GB2216@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 14 Jun 2010 15:16:37 -0400
-Message-ID: <1276542997.2694.23.camel@maclara>
-Mime-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:61538 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752475Ab0FFG4o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Jun 2010 02:56:44 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 14/23] iwl3945: fix bugs in txq freeing
+Date: Sat,  5 Jun 2010 23:56:29 -0700
+Message-Id: <1275807398-18184-15-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1275807398-18184-1-git-send-email-reinette.chatre@intel.com>
+References: <1275807398-18184-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-06-14 at 14:55 -0400, John W. Linville wrote:
-> On Thu, Jun 10, 2010 at 06:23:19PM -0500, Larry Finger wrote:
-> > On 06/10/2010 05:28 PM, Leann Ogasawara wrote:
-> > > The Medion MD40900 device id [0x0cde, 0x0006] is defined twice.  Remove
-> > > the duplicate.
-> > > 
-> > > Originally-by: Ben Collins <ben.collins@ubuntu.com>
-> > > Signed-off-by: Leann Ogasawara <leann.ogasawara@canonical.com>
-> > > ---
-> > >  drivers/net/wireless/p54/p54usb.c |    1 -
-> > >  1 files changed, 0 insertions(+), 1 deletions(-)
-> > > 
-> > > diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
-> > > index 7307325..d6d8713 100644
-> > > --- a/drivers/net/wireless/p54/p54usb.c
-> > > +++ b/drivers/net/wireless/p54/p54usb.c
-> > > @@ -69,7 +69,6 @@ static struct usb_device_id p54u_table[] __devinitdata = {
-> > >  	{USB_DEVICE(0x0915, 0x2002)},	/* Cohiba Proto board */
-> > >  	{USB_DEVICE(0x0baf, 0x0118)},   /* U.S. Robotics U5 802.11g Adapter*/
-> > >  	{USB_DEVICE(0x0bf8, 0x1009)},   /* FUJITSU E-5400 USB D1700*/
-> > > -	{USB_DEVICE(0x0cde, 0x0006)},   /* Medion MD40900 */
-> > >  	{USB_DEVICE(0x0cde, 0x0008)},	/* Sagem XG703A */
-> > >  	{USB_DEVICE(0x0cde, 0x0015)},	/* Zcomax XG-705A */
-> > >  	{USB_DEVICE(0x0d8e, 0x3762)},	/* DLink DWL-G120 Cohiba */
-> > 
-> > Do you know for certain that this device is a Version 1 chip, and for
-> > that reason, you are removing it from the version 2 list?
-> > 
-> > If not, NACK.
-> 
-> So, I guess you are concerned about the groupings because of the
-> different firmwares or something like that?  Perhaps a comment that
-> says "this could be a version 2 device" is just as handy?  Since the
-> driver prints the name of the firmware it wants, is there any real
-> need for grouping the IDs?
-> 
-> OTOH, is there any actual harm from the duplicate entry?  It "seems"
-> wrong to me too, but I guess it does no harm...?
-> 
-> Leann and/or Ben, was this just tidying-up?  I'm guessing there wasn't
-> an actual bug involved?
+From: Johannes Berg <johannes.berg@intel.com>
 
-It was flagged by a script I wrote to detect overlapping drivers. This
-driver had dual entries for the same device, so the second was basically
-giving depmod another entry to worry about. Trivial, yes, but just
-seemed cleaner to not do that in general.
+When we free a txq that had no txb array allocated,
+we still try to access it. Fix that, and also free
+all SKBs that may be in the txb array (although it
+can just be a single one).
 
-I think we had decided awhile back to just comment out this entry with a
-note that says something like "already above, just listing for clarity"
-or similar.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c |   14 ++++++++------
+ 1 files changed, 8 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 295b67a..fec05b5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -705,16 +705,18 @@ void iwl3945_hw_txq_free_tfd(struct iwl_priv *priv, struct iwl_tx_queue *txq)
+ 	for (i = 1; i < counter; i++) {
+ 		pci_unmap_single(dev, le32_to_cpu(tfd->tbs[i].addr),
+ 			 le32_to_cpu(tfd->tbs[i].len), PCI_DMA_TODEVICE);
+-		if (txq->txb[txq->q.read_ptr].skb[0]) {
+-			struct sk_buff *skb = txq->txb[txq->q.read_ptr].skb[0];
+-			if (txq->txb[txq->q.read_ptr].skb[0]) {
+-				/* Can be called from interrupt context */
++		if (txq->txb) {
++			struct sk_buff *skb;
++
++			skb = txq->txb[txq->q.read_ptr].skb[i - 1];
++
++			/* can be called from irqs-disabled context */
++			if (skb) {
+ 				dev_kfree_skb_any(skb);
+-				txq->txb[txq->q.read_ptr].skb[0] = NULL;
++				txq->txb[txq->q.read_ptr].skb[i - 1] = NULL;
+ 			}
+ 		}
+ 	}
+-	return ;
+ }
+ 
+ /**
 -- 
-Bluecherry: http://www.bluecherrydvr.com/
-SwissDisk : http://www.swissdisk.com/
-Ubuntu    : http://www.ubuntu.com/
-My Blog   : http://ben-collins.blogspot.com/
+1.7.0.4
 
