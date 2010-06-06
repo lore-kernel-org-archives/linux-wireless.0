@@ -1,81 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:24519 "EHLO mx1.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:17575 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755197Ab0FGKCr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jun 2010 06:02:47 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: stable@kernel.org
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 3/4 2.6.34.y] mac80211: do not wip out old supported rates
-Date: Mon,  7 Jun 2010 12:01:08 +0200
-Message-Id: <1275904869-6634-3-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1275904869-6634-2-git-send-email-sgruszka@redhat.com>
-References: <1275904869-6634-1-git-send-email-sgruszka@redhat.com>
- <1275904869-6634-2-git-send-email-sgruszka@redhat.com>
+	id S1752551Ab0FFG4p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Jun 2010 02:56:45 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 19/23] iwlwifi: generic scan TX antenna forcing
+Date: Sat,  5 Jun 2010 23:56:34 -0700
+Message-Id: <1275807398-18184-20-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1275807398-18184-1-git-send-email-reinette.chatre@intel.com>
+References: <1275807398-18184-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit f0b058b61711ebf5be94d6865ca7b2c259b71d37 upstream.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Use old supported rates, if AP do not provide supported rates
-information element in a new managment frame.
+In "iwlwifi: make scan antenna forcing more generic"
+I introduced generic scan RX antenna forcing, which
+here I rename to make it more evident. Also add scan
+TX antenna forcing, since I will need that as well.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- net/mac80211/scan.c |   21 +++++++++++----------
- 1 files changed, 11 insertions(+), 10 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-4965.c    |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |   12 ++++++++----
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c  |    3 ++-
+ drivers/net/wireless/iwlwifi/iwl-agn.c     |    3 ++-
+ drivers/net/wireless/iwlwifi/iwl-core.c    |    5 +++--
+ drivers/net/wireless/iwlwifi/iwl-core.h    |    5 +++--
+ 6 files changed, 19 insertions(+), 11 deletions(-)
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 85507bd..151d933 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -83,7 +83,7 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index a51c4b8..83e6a42 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -2326,7 +2326,7 @@ struct iwl_cfg iwl4965_agn_cfg = {
+ 	 * Force use of chains B and C for scan RX on 5 GHz band
+ 	 * because the device has off-channel reception on chain A.
+ 	 */
+-	.scan_antennas[IEEE80211_BAND_5GHZ] = ANT_BC,
++	.scan_rx_antennas[IEEE80211_BAND_5GHZ] = ANT_BC,
+ };
+ 
+ /* Module firmware */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 5bec72a..d339881 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1150,6 +1150,7 @@ void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 	bool is_active = false;
+ 	int  chan_mod;
+ 	u8 active_chains;
++	u8 scan_tx_antennas = priv->hw_params.valid_tx_ant;
+ 
+ 	conf = ieee80211_get_hw_conf(priv->hw);
+ 
+@@ -1301,11 +1302,14 @@ void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 
+ 	band = priv->scan_band;
+ 
+-	if (priv->cfg->scan_antennas[band])
+-		rx_ant = priv->cfg->scan_antennas[band];
++	if (priv->cfg->scan_rx_antennas[band])
++		rx_ant = priv->cfg->scan_rx_antennas[band];
+ 
+-	priv->scan_tx_ant[band] =
+-			iwl_toggle_tx_ant(priv, priv->scan_tx_ant[band]);
++	if (priv->cfg->scan_tx_antennas[band])
++		scan_tx_antennas = priv->cfg->scan_tx_antennas[band];
++
++	priv->scan_tx_ant[band] = iwl_toggle_tx_ant(priv, priv->scan_tx_ant[band],
++						    scan_tx_antennas);
+ 	rate_flags |= iwl_ant_idx_to_flags(priv->scan_tx_ant[band]);
+ 	scan->tx_cmd.rate_n_flags = iwl_hw_set_rate_n_flags(rate, rate_flags);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index 0037a52..0d3e13b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -469,7 +469,8 @@ static void iwlagn_tx_cmd_build_rate(struct iwl_priv *priv,
+ 	}
+ 
+ 	/* Set up antennas */
+-	priv->mgmt_tx_ant = iwl_toggle_tx_ant(priv, priv->mgmt_tx_ant);
++	priv->mgmt_tx_ant = iwl_toggle_tx_ant(priv, priv->mgmt_tx_ant,
++					      priv->hw_params.valid_tx_ant);
+ 	rate_flags |= iwl_ant_idx_to_flags(priv->mgmt_tx_ant);
+ 
+ 	/* Set the rate in the TX cmd */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index a0e995e..ac5fade 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -367,7 +367,8 @@ static unsigned int iwl_hw_get_beacon_cmd(struct iwl_priv *priv,
+ 
+ 	/* Set up packet rate and flags */
+ 	rate = iwl_rate_get_lowest_plcp(priv);
+-	priv->mgmt_tx_ant = iwl_toggle_tx_ant(priv, priv->mgmt_tx_ant);
++	priv->mgmt_tx_ant = iwl_toggle_tx_ant(priv, priv->mgmt_tx_ant,
++					      priv->hw_params.valid_tx_ant);
+ 	rate_flags = iwl_ant_idx_to_flags(priv->mgmt_tx_ant);
+ 	if ((rate >= IWL_FIRST_CCK_RATE) && (rate <= IWL_LAST_CCK_RATE))
+ 		rate_flags |= RATE_MCS_CCK_MSK;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index ec0f39c..00b2cdd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -141,13 +141,14 @@ int iwl_hwrate_to_plcp_idx(u32 rate_n_flags)
+ }
+ EXPORT_SYMBOL(iwl_hwrate_to_plcp_idx);
+ 
+-u8 iwl_toggle_tx_ant(struct iwl_priv *priv, u8 ant)
++u8 iwl_toggle_tx_ant(struct iwl_priv *priv, u8 ant, u8 valid)
  {
- 	struct cfg80211_bss *cbss;
- 	struct ieee80211_bss *bss;
--	int clen;
-+	int clen, srlen;
- 	s32 signal = 0;
- 
- 	if (local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
-@@ -112,23 +112,24 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
- 		bss->dtim_period = tim_ie->dtim_period;
+ 	int i;
+ 	u8 ind = ant;
++
+ 	for (i = 0; i < RATE_ANT_NUM - 1; i++) {
+ 		ind = (ind + 1) < RATE_ANT_NUM ?  ind + 1 : 0;
+-		if (priv->hw_params.valid_tx_ant & BIT(ind))
++		if (valid & BIT(ind))
+ 			return ind;
  	}
+ 	return ant;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 9fe08ec..87dd573 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -328,7 +328,8 @@ struct iwl_cfg {
+ 	const bool ucode_tracing;
+ 	const bool sensitivity_calib_by_driver;
+ 	const bool chain_noise_calib_by_driver;
+-	u8 scan_antennas[IEEE80211_NUM_BANDS];
++	u8 scan_rx_antennas[IEEE80211_NUM_BANDS];
++	u8 scan_tx_antennas[IEEE80211_NUM_BANDS];
+ };
  
--	bss->supp_rates_len = 0;
-+	/* replace old supported rates if we get new values */
-+	srlen = 0;
- 	if (elems->supp_rates) {
--		clen = IEEE80211_MAX_SUPP_RATES - bss->supp_rates_len;
-+		clen = IEEE80211_MAX_SUPP_RATES;
- 		if (clen > elems->supp_rates_len)
- 			clen = elems->supp_rates_len;
--		memcpy(&bss->supp_rates[bss->supp_rates_len], elems->supp_rates,
--		       clen);
--		bss->supp_rates_len += clen;
-+		memcpy(bss->supp_rates, elems->supp_rates, clen);
-+		srlen += clen;
- 	}
- 	if (elems->ext_supp_rates) {
--		clen = IEEE80211_MAX_SUPP_RATES - bss->supp_rates_len;
-+		clen = IEEE80211_MAX_SUPP_RATES - srlen;
- 		if (clen > elems->ext_supp_rates_len)
- 			clen = elems->ext_supp_rates_len;
--		memcpy(&bss->supp_rates[bss->supp_rates_len],
--		       elems->ext_supp_rates, clen);
--		bss->supp_rates_len += clen;
-+		memcpy(bss->supp_rates + srlen, elems->ext_supp_rates, clen);
-+		srlen += clen;
- 	}
-+	if (srlen)
-+		bss->supp_rates_len = srlen;
+ /***************************
+@@ -499,7 +500,7 @@ int iwl_hwrate_to_plcp_idx(u32 rate_n_flags);
  
- 	bss->wmm_used = elems->wmm_param || elems->wmm_info;
- 	bss->uapsd_supported = is_uapsd_supported(elems);
+ u8 iwl_rate_get_lowest_plcp(struct iwl_priv *priv);
+ 
+-u8 iwl_toggle_tx_ant(struct iwl_priv *priv, u8 ant_idx);
++u8 iwl_toggle_tx_ant(struct iwl_priv *priv, u8 ant_idx, u8 valid);
+ 
+ static inline u32 iwl_ant_idx_to_flags(u8 ant_idx)
+ {
 -- 
-1.6.2.5
+1.7.0.4
 
