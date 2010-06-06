@@ -1,126 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:59381 "EHLO mga02.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:17575 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755920Ab0FUSGp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jun 2010 14:06:45 -0400
+	id S1752091Ab0FFG4m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Jun 2010 02:56:42 -0400
 From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
 	ipw3945-devel@lists.sourceforge.net,
 	Johannes Berg <johannes.berg@intel.com>,
 	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 2/9] iwlwifi: use sync commands for keys
-Date: Mon, 21 Jun 2010 11:06:33 -0700
-Message-Id: <1277143600-32554-3-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1277143600-32554-1-git-send-email-reinette.chatre@intel.com>
-References: <1277143600-32554-1-git-send-email-reinette.chatre@intel.com>
+Subject: [PATCH 05/23] iwlwifi: use virtual interface address for scan
+Date: Sat,  5 Jun 2010 23:56:20 -0700
+Message-Id: <1275807398-18184-6-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1275807398-18184-1-git-send-email-reinette.chatre@intel.com>
+References: <1275807398-18184-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Key management can use sync commands
-instead of asynchronous ones to have
-better error checking.
-
-Also add checks that the commands all
-should have the mutex held.
+For probe request frames sent during scan, we
+should use the virtual interface's mac address
+that the scan was initiated on to avoid issues
+when the wrong address is used.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-sta.c |   29 ++++++++++++++++++-----------
- 1 files changed, 18 insertions(+), 11 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    4 +++-
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-scan.c     |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    4 +++-
+ 4 files changed, 9 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index a62a032..d39bfac 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -834,7 +834,9 @@ static int iwl_set_wep_dynamic_key_info(struct iwl_priv *priv,
- {
- 	unsigned long flags;
- 	__le16 key_flags = 0;
--	int ret;
-+	struct iwl_addsta_cmd sta_cmd;
-+
-+	lockdep_assert_held(&priv->mutex);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 57c122d..42e6219 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1462,13 +1462,15 @@ void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 	if (!priv->is_internal_short_scan) {
+ 		cmd_len = iwl_fill_probe_req(priv,
+ 					(struct ieee80211_mgmt *)scan->data,
++					vif->addr,
+ 					priv->scan_request->ie,
+ 					priv->scan_request->ie_len,
+ 					IWL_MAX_SCAN_SIZE - sizeof(*scan));
+ 	} else {
++		/* use bcast addr, will not be transmitted but must be valid */
+ 		cmd_len = iwl_fill_probe_req(priv,
+ 					(struct ieee80211_mgmt *)scan->data,
+-					NULL, 0,
++					iwl_bcast_addr, NULL, 0,
+ 					IWL_MAX_SCAN_SIZE - sizeof(*scan));
  
- 	keyconf->flags &= ~IEEE80211_KEY_FLAG_GENERATE_IV;
- 
-@@ -874,11 +876,10 @@ static int iwl_set_wep_dynamic_key_info(struct iwl_priv *priv,
- 	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
- 	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
- 
--	ret = iwl_send_add_sta(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
--
-+	memcpy(&sta_cmd, &priv->stations[sta_id].sta, sizeof(struct iwl_addsta_cmd));
- 	spin_unlock_irqrestore(&priv->sta_lock, flags);
- 
--	return ret;
-+	return iwl_send_add_sta(priv, &sta_cmd, CMD_SYNC);
- }
- 
- static int iwl_set_ccmp_dynamic_key_info(struct iwl_priv *priv,
-@@ -887,7 +888,9 @@ static int iwl_set_ccmp_dynamic_key_info(struct iwl_priv *priv,
- {
- 	unsigned long flags;
- 	__le16 key_flags = 0;
--	int ret;
-+	struct iwl_addsta_cmd sta_cmd;
-+
-+	lockdep_assert_held(&priv->mutex);
- 
- 	key_flags |= (STA_KEY_FLG_CCMP | STA_KEY_FLG_MAP_KEY_MSK);
- 	key_flags |= cpu_to_le16(keyconf->keyidx << STA_KEY_FLG_KEYID_POS);
-@@ -922,11 +925,10 @@ static int iwl_set_ccmp_dynamic_key_info(struct iwl_priv *priv,
- 	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_KEY_MASK;
- 	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
- 
--	ret = iwl_send_add_sta(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
--
-+	memcpy(&sta_cmd, &priv->stations[sta_id].sta, sizeof(struct iwl_addsta_cmd));
- 	spin_unlock_irqrestore(&priv->sta_lock, flags);
- 
--	return ret;
-+	return iwl_send_add_sta(priv, &sta_cmd, CMD_SYNC);
- }
- 
- static int iwl_set_tkip_dynamic_key_info(struct iwl_priv *priv,
-@@ -1016,9 +1018,11 @@ int iwl_remove_dynamic_key(struct iwl_priv *priv,
- 				u8 sta_id)
- {
- 	unsigned long flags;
--	int ret = 0;
- 	u16 key_flags;
- 	u8 keyidx;
-+	struct iwl_addsta_cmd sta_cmd;
-+
-+	lockdep_assert_held(&priv->mutex);
- 
- 	priv->key_mapping_key--;
- 
-@@ -1065,9 +1069,10 @@ int iwl_remove_dynamic_key(struct iwl_priv *priv,
- 		spin_unlock_irqrestore(&priv->sta_lock, flags);
- 		return 0;
  	}
--	ret =  iwl_send_add_sta(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
-+	memcpy(&sta_cmd, &priv->stations[sta_id].sta, sizeof(struct iwl_addsta_cmd));
- 	spin_unlock_irqrestore(&priv->sta_lock, flags);
--	return ret;
-+
-+	return iwl_send_add_sta(priv, &sta_cmd, CMD_SYNC);
- }
- EXPORT_SYMBOL(iwl_remove_dynamic_key);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index d3b61dc..69738f1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -524,7 +524,7 @@ void iwl_bg_start_internal_scan(struct work_struct *work);
+ void iwl_internal_short_hw_scan(struct iwl_priv *priv);
+ int iwl_force_reset(struct iwl_priv *priv, int mode);
+ u16 iwl_fill_probe_req(struct iwl_priv *priv, struct ieee80211_mgmt *frame,
+-		       const u8 *ie, int ie_len, int left);
++		       const u8 *ta, const u8 *ie, int ie_len, int left);
+ void iwl_setup_rx_scan_handlers(struct iwl_priv *priv);
+ u16 iwl_get_active_dwell_time(struct iwl_priv *priv,
+ 			      enum ieee80211_band band,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 5d3f51f..0f9cbc2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -438,7 +438,7 @@ EXPORT_SYMBOL(iwl_bg_scan_check);
+  */
  
-@@ -1076,6 +1081,8 @@ int iwl_set_dynamic_key(struct iwl_priv *priv,
+ u16 iwl_fill_probe_req(struct iwl_priv *priv, struct ieee80211_mgmt *frame,
+-		       const u8 *ies, int ie_len, int left)
++		       const u8 *ta, const u8 *ies, int ie_len, int left)
  {
- 	int ret;
+ 	int len = 0;
+ 	u8 *pos = NULL;
+@@ -451,7 +451,7 @@ u16 iwl_fill_probe_req(struct iwl_priv *priv, struct ieee80211_mgmt *frame,
  
-+	lockdep_assert_held(&priv->mutex);
-+
- 	priv->key_mapping_key++;
- 	keyconf->hw_key_idx = HW_KEY_DYNAMIC;
+ 	frame->frame_control = cpu_to_le16(IEEE80211_STYPE_PROBE_REQ);
+ 	memcpy(frame->da, iwl_bcast_addr, ETH_ALEN);
+-	memcpy(frame->sa, priv->mac_addr, ETH_ALEN);
++	memcpy(frame->sa, ta, ETH_ALEN);
+ 	memcpy(frame->bssid, iwl_bcast_addr, ETH_ALEN);
+ 	frame->seq_ctrl = 0;
  
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 5976166..35471cf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -2967,14 +2967,16 @@ void iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 		scan->tx_cmd.len = cpu_to_le16(
+ 			iwl_fill_probe_req(priv,
+ 				(struct ieee80211_mgmt *)scan->data,
++				vif->addr,
+ 				priv->scan_request->ie,
+ 				priv->scan_request->ie_len,
+ 				IWL_MAX_SCAN_SIZE - sizeof(*scan)));
+ 	} else {
++		/* use bcast addr, will not be transmitted but must be valid */
+ 		scan->tx_cmd.len = cpu_to_le16(
+ 			iwl_fill_probe_req(priv,
+ 				(struct ieee80211_mgmt *)scan->data,
+-				NULL, 0,
++				iwl_bcast_addr, NULL, 0,
+ 				IWL_MAX_SCAN_SIZE - sizeof(*scan)));
+ 	}
+ 	/* select Rx antennas */
 -- 
 1.7.0.4
 
