@@ -1,94 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:36783 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755138Ab0FNUPR (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53425 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753837Ab0FFJRX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jun 2010 16:15:17 -0400
-Received: by wyb40 with SMTP id 40so4235972wyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Jun 2010 13:15:15 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 06/14] rt2x00: Fix TX_STA_FIFO handling
-Date: Mon, 14 Jun 2010 22:11:09 +0200
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-References: <201006142208.31736.IvDoorn@gmail.com> <201006142210.10378.IvDoorn@gmail.com> <201006142210.43525.IvDoorn@gmail.com>
-In-Reply-To: <201006142210.43525.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201006142211.09880.IvDoorn@gmail.com>
+	Sun, 6 Jun 2010 05:17:23 -0400
+Subject: Re: Locking in new ARP query filtering patch
+From: Johannes Berg <johannes@sipsolutions.net>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: juuso.oikarinen@nokia.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1275802426.1835.4408.camel@rchatre-DESK>
+References: <1275802426.1835.4408.camel@rchatre-DESK>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 06 Jun 2010 11:17:18 +0200
+Message-ID: <1275815838.3615.5.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+On Sat, 2010-06-05 at 22:33 -0700, reinette chatre wrote:
 
-Currently rt2800pci will read TX_STA_FIFO until the previously read value
-matches the current value. However, it is obvious that TX_STA_FIFO only
-contains values that can easily be the same for multiple consecutive frames
-(especially when communicating with only one other STA). Hence, we often
-ended up with reading only the first entry and ignoring the rest.
+> [   92.026800] =======================================================
+> [   92.030507] [ INFO: possible circular locking dependency detected ]
+> [   92.030507] 2.6.34-04781-g2b2c009 #85
+> [   92.030507] -------------------------------------------------------
+> [   92.030507] modprobe/5225 is trying to acquire lock:
+> [   92.030507]  ((wiphy_name(local->hw.wiphy))){+.+.+.}, at: [<ffffffff8105b5c0>] flush_workq
+> ueue+0x0/0xb0
+> [   92.030507]
+> [   92.030507] but task is already holding lock:
+> [   92.030507]  (rtnl_mutex){+.+.+.}, at: [<ffffffff812b9ce2>] rtnl_lock+0x12/0x20
+> [   92.030507]
+> [   92.030507] which lock already depends on the new lock.
 
-One result was that when the TX_STA_FIFO contained multiple entires, only
-the first one was read and properly handled while the others remained in the
-tx queue.
+> [   92.030507] 1 lock held by modprobe/5225:
+> [   92.030507]  #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff812b9ce2>] rtnl_lock+0x12/0x20
 
-Thus, drop this check but introduce a maximum number of reads. All legacy
-drivers use the size of the tx ring as limit but state that the TX_STA_FIFO
-has only 16 entries. So, let's just stick with the tx ring size for now.
+Suck, I should've caught that. Yes, because we need to flush the
+mac80211 workqueue under RTNL we cannot acquire the RTNL while working
+from it, so the ARP filter upload after associating needs to be further
+deferred to a schedule_work(), which then needs to do a bunch of sanity
+checking and I think might even need to iterate the iface list because
+it might not be possible to make it depend on it.
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800pci.c |   23 +++++++++--------------
- 1 files changed, 9 insertions(+), 14 deletions(-)
+> Here is the BUG:
+> 
+> [  132.460013] kernel BUG at /home/wifi/iwlwifi-2.6/net/mac80211/main.c:380!
+> [  132.460013] invalid opcode: 0000 [#1] SMP
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index eeecedb..afa30ea 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -813,29 +813,24 @@ static void rt2800pci_txdone(struct rt2x00_dev *rt2x00dev)
- 	struct txdone_entry_desc txdesc;
- 	u32 word;
- 	u32 reg;
--	u32 old_reg;
- 	int wcid, ack, pid, tx_wcid, tx_ack, tx_pid;
- 	u16 mcs, real_mcs;
-+	int i;
- 
- 	/*
--	 * During each loop we will compare the freshly read
--	 * TX_STA_FIFO register value with the value read from
--	 * the previous loop. If the 2 values are equal then
--	 * we should stop processing because the chance it
--	 * quite big that the device has been unplugged and
--	 * we risk going into an endless loop.
-+	 * TX_STA_FIFO is a stack of X entries, hence read TX_STA_FIFO
-+	 * at most X times and also stop processing once the TX_STA_FIFO_VALID
-+	 * flag is not set anymore.
-+	 *
-+	 * The legacy drivers use X=TX_RING_SIZE but state in a comment
-+	 * that the TX_STA_FIFO stack has a size of 16. We stick to our
-+	 * tx ring size for now.
- 	 */
--	old_reg = 0;
--
--	while (1) {
-+	for (i = 0; i < TX_ENTRIES; i++) {
- 		rt2800_register_read(rt2x00dev, TX_STA_FIFO, &reg);
- 		if (!rt2x00_get_field32(reg, TX_STA_FIFO_VALID))
- 			break;
- 
--		if (old_reg == reg)
--			break;
--		old_reg = reg;
--
- 		wcid    = rt2x00_get_field32(reg, TX_STA_FIFO_WCID);
- 		ack     = rt2x00_get_field32(reg, TX_STA_FIFO_TX_ACK_REQUIRED);
- 		pid     = rt2x00_get_field32(reg, TX_STA_FIFO_PID_TYPE);
--- 
-1.6.6.1
+> [  132.460013] RIP: 0010:[<ffffffffa022fac2>]  [<ffffffffa022fac2>] ieee80211_alloc_hw+0x502/
+> 0x520 [mac80211]
+
+> [  132.460013]  [<ffffffffa02af53e>] iwl_alloc_all+0x1e/0x50 [iwlcore]
+
+> The code in which the above appears is:
+> (gdb) l *(ieee80211_alloc_hw+0x502)
+> 0xaf2 is in ieee80211_alloc_hw (/home/wifi/iwlwifi-2.6/net/mac80211/main.c:380).
+> 375	
+> 376		ifmgd = &sdata->u.mgd;
+> 377		mutex_lock(&ifmgd->mtx);
+> 378		if (ifmgd->associated)
+> 379			ieee80211_set_arp_filter(sdata);
+> 380		mutex_unlock(&ifmgd->mtx);
+> 381	
+> 382		return NOTIFY_DONE;
+> 383	}
+> 384	#endif
+
+Not sure why this appears as part of init? But anyway, the reason for
+this is obvious -- we're not checking netif_running() in
+ieee80211_ifa_changed, which we must since we only init the mutex as
+part of open(). The fix would be to abort ieee80211_ifa_changed() if not
+netif_running() -- before locking the mutex.
+
+johannes
 
