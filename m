@@ -1,32 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:41316 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752067Ab0FQTCn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jun 2010 15:02:43 -0400
-Subject: Compat-wireless release for 2010-06-17 is baked
-To: <linux-wireless@vger.kernel.org>, <linux-bluetooth@vger.kernel.org>
-Message-Id: <20100617190242.A602542E2C@repository3.localdomain>
-Date: Thu, 17 Jun 2010 15:02:42 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mga01.intel.com ([192.55.52.88]:17575 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752320Ab0FFG4m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Jun 2010 02:56:42 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 02/23] iwlwifi: remove unused wlap_bssid_addr assignment
+Date: Sat,  5 Jun 2010 23:56:17 -0700
+Message-Id: <1275807398-18184-3-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1275807398-18184-1-git-send-email-reinette.chatre@intel.com>
+References: <1275807398-18184-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
-compat-wireless code metrics
+There's no microcode that actually uses this
+variable, and it is reserved for functionality
+that the driver doesn't support anyway, so we
+shouldn't be setting it.
 
-    498472 - Total upstream lines of code being pulled
-      1410 - backport code changes
-      1177 - backport code additions
-       233 - backport code deletions
-      5748 - backport from compat module
-      7158 - total backport code
-    1.4360 - % of code consists of backport work
-      1218 - Crap changes not yet posted
-      1179 - Crap additions not yet merged
-        39 - Crap deletions not yet posted
-    0.2443 - % of crap code
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-Base tree: linux-next.git
-Base tree version: next-20100617
-compat-wireless release: compat-wireless-2010-06-17
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 3754762..4315212 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -980,7 +980,6 @@ void iwl_connection_init_rx_config(struct iwl_priv *priv,
+ 	priv->staging_rxon.flags &= ~(RXON_FLG_CHANNEL_MODE_MIXED |
+ 					RXON_FLG_CHANNEL_MODE_PURE_40);
+ 	memcpy(priv->staging_rxon.node_addr, priv->mac_addr, ETH_ALEN);
+-	memcpy(priv->staging_rxon.wlap_bssid_addr, priv->mac_addr, ETH_ALEN);
+ 	priv->staging_rxon.ofdm_ht_single_stream_basic_rates = 0xff;
+ 	priv->staging_rxon.ofdm_ht_dual_stream_basic_rates = 0xff;
+ 	priv->staging_rxon.ofdm_ht_triple_stream_basic_rates = 0xff;
+-- 
+1.7.0.4
+
