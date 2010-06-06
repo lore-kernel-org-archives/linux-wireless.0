@@ -1,61 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:42269 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754429Ab0FAKNv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jun 2010 06:13:51 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 01 Jun 2010 03:13:51 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:59404 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754393Ab0FFJVQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Jun 2010 05:21:16 -0400
+Received: by vws5 with SMTP id 5so1895781vws.19
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Jun 2010 02:21:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19460.56743.50858.600654@gargle.gargle.HOWL>
-Date: Tue, 1 Jun 2010 15:45:03 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 11/13] ath9k_htc: Handle monitor interface removal
+In-Reply-To: <1275815547-30313-4-git-send-email-hauke@hauke-m.de>
+References: <1275815547-30313-1-git-send-email-hauke@hauke-m.de>
+	<1275815547-30313-4-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Sun, 6 Jun 2010 02:20:53 -0700
+Message-ID: <AANLkTimk6Q6Mhc5e-MmfXRcPS0O6mRo_NN4o38an5SCA@mail.gmail.com>
+Subject: Re: [PATCH 4/4] compat: use kernel pm_qos_params.h
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The monitor interface instance on the target has
-to be removed before setting it to FULLSLEEP.
-Handle this properly.
+On Sun, Jun 6, 2010 at 2:12 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> Do not use pm_qos_params.h from compat-wireless if the kernel also
+> ships this file. In kernel 2.6.35 pm_qos_params.h changed and the in
+> kernel header file is needed.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+Dude you rock, thanks a lot for this, applied all compat-wireless and
+compat patches and pushed them out. Also propagated the compat ones to
+the 2.6.35.y branch FWIW.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 5dad5cd..1ed88fb 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1266,12 +1266,6 @@ static void ath9k_htc_stop(struct ieee80211_hw *hw)
- 	WMI_CMD(WMI_DISABLE_INTR_CMDID);
- 	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
- 	WMI_CMD(WMI_STOP_RECV_CMDID);
--	ath9k_hw_phy_disable(ah);
--	ath9k_hw_disable(ah);
--	ath9k_hw_configpcipowersave(ah, 1, 1);
--	ath9k_htc_ps_restore(priv);
--	ath9k_htc_setpower(priv, ATH9K_PM_FULL_SLEEP);
--
- 	skb_queue_purge(&priv->tx_queue);
- 
- 	/* Remove monitor interface here */
-@@ -1284,6 +1278,12 @@ static void ath9k_htc_stop(struct ieee80211_hw *hw)
- 				  "Monitor interface removed\n");
- 	}
- 
-+	ath9k_hw_phy_disable(ah);
-+	ath9k_hw_disable(ah);
-+	ath9k_hw_configpcipowersave(ah, 1, 1);
-+	ath9k_htc_ps_restore(priv);
-+	ath9k_htc_setpower(priv, ATH9K_PM_FULL_SLEEP);
-+
- 	priv->op_flags |= OP_INVALID;
- 
- 	ath_print(common, ATH_DBG_CONFIG, "Driver halt\n");
--- 
-1.7.1
-
+  Luis
