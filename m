@@ -1,52 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:55068 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758338Ab0FUUj2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jun 2010 16:39:28 -0400
-MIME-Version: 1.0
-In-Reply-To: <20100621233333.21262abjfxl8j1xc@hayate.sektori.org>
-References: <20100528100901.14580.1322.stgit@fate.lan> <1276806785.20754.8.camel@maxim-laptop>
-	<20100618112026.17623g6uhdjk8hts@naisho.dyndns.info> <1276856142.9114.1.camel@maxim-laptop>
-	<20100618134930.124225d4fsi8w1fk@naisho.dyndns.info> <1276859156.19554.2.camel@maxim-laptop>
-	<AANLkTimdTjedtoeKAp5tcTqefrUB6k373Kx9EacuYFcO@mail.gmail.com>
-	<1276870309.23783.3.camel@maxim-laptop> <1276933774.16697.11.camel@maxim-laptop>
-	<AANLkTimIjaxq7IDWwIl1vv93k9bNQ2i89Sb5R5TiJmmA@mail.gmail.com>
-	<1277032723.9555.12.camel@maxim-laptop> <AANLkTim8iZmm8pEERJUsrQWOiLSjPUfCN-TFFzZZQWx2@mail.gmail.com>
-	<1277151410.5409.33.camel@maxim-laptop> <20100621233333.21262abjfxl8j1xc@hayate.sektori.org>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 21 Jun 2010 13:39:07 -0700
-Message-ID: <AANLkTikkt4dqYWrwtTCJ8tJZLB1kZXgF1KvaPsIOO3Dl@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH v2] ath5k: disable ASPM
-To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
-	David Quan <David.Quan@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:61538 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752396Ab0FFG4q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Jun 2010 02:56:46 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Daniel Halperin <dhalperi@cs.washington.edu>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 23/23] iwlwifi: fix wrapping when handling aggregated batches
+Date: Sat,  5 Jun 2010 23:56:38 -0700
+Message-Id: <1275807398-18184-24-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1275807398-18184-1-git-send-email-reinette.chatre@intel.com>
+References: <1275807398-18184-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 21, 2010 at 1:33 PM, Jussi Kivilinna
-<jussi.kivilinna@mbnet.fi> wrote:
-> Quoting "Maxim Levitsky" <maximlevitsky@gmail.com>:
->
->> Card (at least mine) advertises its as a 'pre pci 1.1 device'.
->> Therefore if I enable CONFIG_PCIEASPM, the pci core will automaticly
->> disable ASPM (both L0s and L1) on this card.
->> I won't be surprised that windows does the same.
->>
->
-> Even if CONFIG_PCIEASPM compiled in, ASPM code can be disabled by user with
-> pcie_aspm=off option, leaving BIOS-enabled L0s on.
+From: Daniel Halperin <dhalperi@cs.washington.edu>
 
-Last I reviewed CONFIG_PCIEASPM won't buy you *anything* other than
-debugging knobs. With it you can force all devices to enable ASPM
-completely on or disable it. Both of which I think are not really
-useful and instead should be done in userspace given that if you are
-testing ASPM you likely want to test only one one device and its
-respective root complex, not all at the same time.
+Fairly complex code in iwlagn_tx_status_reply_tx handle the status reports for
+aggregated packet batches sent by the NIC. This code aims to handle the case
+where the NIC retransmits failed packets from a previous batch; the status
+information for these packets can sometimes be inserted in the middle of a
+batch and are actually not in order by sequence number! (I verified this can
+happen with printk's in the function.)
 
-  Luis
+The code in question adaptively identifies the "first" frame of the batch,
+taking into account that it may not be the one corresponding to the first agg
+status report, and also handles the case when the set of sent packets wraps the
+256-character entry buffer. It generates the agg->bitmap field of sent packets
+which is later compared to the BlockAck response from the receiver to see which
+frames of those sent in this batch were ACKed. A small logic error (wrapping by
+0xff==255 instead of 0x100==256) was causing the agg->bitmap to be set
+incorrectly.
+
+Fix this wrapping code, and add extensive comments to clarify what is going on.
+
+Signed-off-by: Daniel Halperin <dhalperi@cs.washington.edu>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |   51 ++++++++++++++++++++++++---
+ 1 files changed, 45 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index d339881..3577c1e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -93,6 +93,12 @@ static int iwlagn_tx_status_reply_tx(struct iwl_priv *priv,
+ 	} else {
+ 		/* Two or more frames were attempted; expect block-ack */
+ 		u64 bitmap = 0;
++
++		/*
++		 * Start is the lowest frame sent. It may not be the first
++		 * frame in the batch; we figure this out dynamically during
++		 * the following loop.
++		 */
+ 		int start = agg->start_idx;
+ 
+ 		/* Construct bit-map of pending frames within Tx window */
+@@ -131,25 +137,58 @@ static int iwlagn_tx_status_reply_tx(struct iwl_priv *priv,
+ 			IWL_DEBUG_TX_REPLY(priv, "AGG Frame i=%d idx %d seq=%d\n",
+ 					   i, idx, SEQ_TO_SN(sc));
+ 
++			/*
++			 * sh -> how many frames ahead of the starting frame is
++			 * the current one?
++			 *
++			 * Note that all frames sent in the batch must be in a
++			 * 64-frame window, so this number should be in [0,63].
++			 * If outside of this window, then we've found a new
++			 * "first" frame in the batch and need to change start.
++			 */
+ 			sh = idx - start;
+-			if (sh > 64) {
+-				sh = (start - idx) + 0xff;
++
++			/*
++			 * If >= 64, out of window. start must be at the front
++			 * of the circular buffer, idx must be near the end of
++			 * the buffer, and idx is the new "first" frame. Shift
++			 * the indices around.
++			 */
++			if (sh >= 64) {
++				/* Shift bitmap by start - idx, wrapped */
++				sh = 0x100 - idx + start;
+ 				bitmap = bitmap << sh;
++				/* Now idx is the new start so sh = 0 */
+ 				sh = 0;
+ 				start = idx;
+-			} else if (sh < -64)
+-				sh  = 0xff - (start - idx);
+-			else if (sh < 0) {
++			/*
++			 * If <= -64 then wraps the 256-pkt circular buffer
++			 * (e.g., start = 255 and idx = 0, sh should be 1)
++			 */
++			} else if (sh <= -64) {
++				sh  = 0x100 - start + idx;
++			/*
++			 * If < 0 but > -64, out of window. idx is before start
++			 * but not wrapped. Shift the indices around.
++			 */
++			} else if (sh < 0) {
++				/* Shift by how far start is ahead of idx */
+ 				sh = start - idx;
+-				start = idx;
+ 				bitmap = bitmap << sh;
++				/* Now idx is the new start so sh = 0 */
++				start = idx;
+ 				sh = 0;
+ 			}
++			/* Sequence number start + sh was sent in this batch */
+ 			bitmap |= 1ULL << sh;
+ 			IWL_DEBUG_TX_REPLY(priv, "start=%d bitmap=0x%llx\n",
+ 					   start, (unsigned long long)bitmap);
+ 		}
+ 
++		/*
++		 * Store the bitmap and possibly the new start, if we wrapped
++		 * the buffer above
++		 */
+ 		agg->bitmap = bitmap;
+ 		agg->start_idx = start;
+ 		IWL_DEBUG_TX_REPLY(priv, "Frames %d start_idx=%d bitmap=0x%llx\n",
+-- 
+1.7.0.4
+
