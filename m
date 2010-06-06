@@ -1,147 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:43228 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752272Ab0FLEeF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jun 2010 00:34:05 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Received: from mga14.intel.com ([143.182.124.37]:8358 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752141Ab0FFG4T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Jun 2010 02:56:19 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH 12/24] ath9k_htc: use common WMM AC definitions instead of ath9k ones
-Date: Sat, 12 Jun 2010 00:33:50 -0400
-Message-Id: <1276317242-15540-13-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
-References: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Abhijeet Kolekar <abhijeet.kolekar@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 2/4] iwl3945: fix internal scan
+Date: Sat,  5 Jun 2010 23:56:01 -0700
+Message-Id: <1275807363-18150-3-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1275807363-18150-1-git-send-email-reinette.chatre@intel.com>
+References: <1275807363-18150-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+From: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Port of internal scan to iwl3945 missed introduction
+of iwl3945_get_single_channel_for_scan.
+
+Fix the following bug by introducing the iwl3945_get_single_channel_for_scan
+http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2208
+
+Signed-off-by: Abhijeet Kolekar <abhijeet.kolekar@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/htc.h            |    5 ++---
- drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |    2 +-
- drivers/net/wireless/ath/ath9k/htc_drv_init.c   |    8 ++++----
- drivers/net/wireless/ath/ath9k/htc_drv_main.c   |    2 +-
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c   |   13 ++++++-------
- 5 files changed, 14 insertions(+), 16 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |   30 +-------------
+ drivers/net/wireless/iwlwifi/iwl-core.c     |   39 ++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    2 +
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   56 +++++++++++++++++++++++++-
+ 4 files changed, 96 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 051b8d8..c584fbd 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -398,7 +398,7 @@ struct ath9k_htc_priv {
- 
- 	int beaconq;
- 	int cabq;
--	int hwq_map[ATH9K_WME_AC_VO+1];
-+	int hwq_map[WME_NUM_AC];
- 
- #ifdef CONFIG_ATH9K_HTC_DEBUGFS
- 	struct ath9k_debug debug;
-@@ -431,8 +431,7 @@ int ath9k_tx_init(struct ath9k_htc_priv *priv);
- void ath9k_tx_tasklet(unsigned long data);
- int ath9k_htc_tx_start(struct ath9k_htc_priv *priv, struct sk_buff *skb);
- void ath9k_tx_cleanup(struct ath9k_htc_priv *priv);
--bool ath9k_htc_txq_setup(struct ath9k_htc_priv *priv,
--			 enum ath9k_tx_queue_subtype qtype);
-+bool ath9k_htc_txq_setup(struct ath9k_htc_priv *priv, int subtype);
- int ath9k_htc_cabq_setup(struct ath9k_htc_priv *priv);
- int get_hw_qnum(u16 queue, int *hwq_map);
- int ath_htc_txq_update(struct ath9k_htc_priv *priv, int qnum,
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-index 12a3bb0..bd1506e 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-@@ -227,7 +227,7 @@ void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 1004cfc..0f292a2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1119,10 +1119,9 @@ static int iwl_get_single_channel_for_scan(struct iwl_priv *priv,
+ 					   struct iwl_scan_channel *scan_ch)
  {
- 	struct ath_hw *ah = priv->ah;
- 	struct ath9k_tx_queue_info qi, qi_be;
--	int qnum = priv->hwq_map[ATH9K_WME_AC_BE];
-+	int qnum = priv->hwq_map[WME_AC_BE];
+ 	const struct ieee80211_supported_band *sband;
+-	const struct iwl_channel_info *ch_info;
+ 	u16 passive_dwell = 0;
+ 	u16 active_dwell = 0;
+-	int i, added = 0;
++	int added = 0;
+ 	u16 channel = 0;
  
- 	memset(&qi, 0, sizeof(struct ath9k_tx_queue_info));
- 	memset(&qi_be, 0, sizeof(struct ath9k_tx_queue_info));
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index 7339439..947de70 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -521,23 +521,23 @@ static int ath9k_init_queues(struct ath9k_htc_priv *priv)
- 		goto err;
- 	}
+ 	sband = iwl_get_hw_mode(priv, band);
+@@ -1137,32 +1136,7 @@ static int iwl_get_single_channel_for_scan(struct iwl_priv *priv,
+ 	if (passive_dwell <= active_dwell)
+ 		passive_dwell = active_dwell + 1;
  
--	if (!ath9k_htc_txq_setup(priv, ATH9K_WME_AC_BE)) {
-+	if (!ath9k_htc_txq_setup(priv, WME_AC_BE)) {
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Unable to setup xmit queue for BE traffic\n");
- 		goto err;
- 	}
+-	/* only scan single channel, good enough to reset the RF */
+-	/* pick the first valid not in-use channel */
+-	if (band == IEEE80211_BAND_5GHZ) {
+-		for (i = 14; i < priv->channel_count; i++) {
+-			if (priv->channel_info[i].channel !=
+-			    le16_to_cpu(priv->staging_rxon.channel)) {
+-				channel = priv->channel_info[i].channel;
+-				ch_info = iwl_get_channel_info(priv,
+-					band, channel);
+-				if (is_channel_valid(ch_info))
+-					break;
+-			}
+-		}
+-	} else {
+-		for (i = 0; i < 14; i++) {
+-			if (priv->channel_info[i].channel !=
+-			    le16_to_cpu(priv->staging_rxon.channel)) {
+-					channel =
+-						priv->channel_info[i].channel;
+-					ch_info = iwl_get_channel_info(priv,
+-						band, channel);
+-					if (is_channel_valid(ch_info))
+-						break;
+-			}
+-		}
+-	}
++	channel = iwl_get_single_channel_number(priv, band);
+ 	if (channel) {
+ 		scan_ch->channel = cpu_to_le16(channel);
+ 		scan_ch->type = SCAN_CHANNEL_TYPE_PASSIVE;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 5a7eca8..426e955 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -854,6 +854,45 @@ void iwl_set_rxon_chain(struct iwl_priv *priv)
+ }
+ EXPORT_SYMBOL(iwl_set_rxon_chain);
  
--	if (!ath9k_htc_txq_setup(priv, ATH9K_WME_AC_BK)) {
-+	if (!ath9k_htc_txq_setup(priv, WME_AC_BK)) {
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Unable to setup xmit queue for BK traffic\n");
- 		goto err;
- 	}
--	if (!ath9k_htc_txq_setup(priv, ATH9K_WME_AC_VI)) {
-+	if (!ath9k_htc_txq_setup(priv, WME_AC_VI)) {
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Unable to setup xmit queue for VI traffic\n");
- 		goto err;
- 	}
--	if (!ath9k_htc_txq_setup(priv, ATH9K_WME_AC_VO)) {
-+	if (!ath9k_htc_txq_setup(priv, WME_AC_VO)) {
- 		ath_print(common, ATH_DBG_FATAL,
- 			  "Unable to setup xmit queue for VO traffic\n");
- 		goto err;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 7aefbc6..c4d022a 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1590,7 +1590,7 @@ static int ath9k_htc_conf_tx(struct ieee80211_hw *hw, u16 queue,
- 	}
- 
- 	if ((priv->ah->opmode == NL80211_IFTYPE_ADHOC) &&
--	    (qnum == priv->hwq_map[ATH9K_WME_AC_BE]))
-+	    (qnum == priv->hwq_map[WME_AC_BE]))
- 		    ath9k_htc_beaconq_config(priv);
- out:
- 	ath9k_htc_ps_restore(priv);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index ffebd5a..89d81ab 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -34,15 +34,15 @@ int get_hw_qnum(u16 queue, int *hwq_map)
- {
- 	switch (queue) {
- 	case 0:
--		return hwq_map[ATH9K_WME_AC_VO];
-+		return hwq_map[WME_AC_VO];
- 	case 1:
--		return hwq_map[ATH9K_WME_AC_VI];
-+		return hwq_map[WME_AC_VI];
- 	case 2:
--		return hwq_map[ATH9K_WME_AC_BE];
-+		return hwq_map[WME_AC_BE];
- 	case 3:
--		return hwq_map[ATH9K_WME_AC_BK];
-+		return hwq_map[WME_AC_BK];
- 	default:
--		return hwq_map[ATH9K_WME_AC_BE];
-+		return hwq_map[WME_AC_BE];
- 	}
++/* Return valid channel */
++u8 iwl_get_single_channel_number(struct iwl_priv *priv,
++				  enum ieee80211_band band)
++{
++	const struct iwl_channel_info *ch_info;
++	int i;
++	u8 channel = 0;
++
++	/* only scan single channel, good enough to reset the RF */
++	/* pick the first valid not in-use channel */
++	if (band == IEEE80211_BAND_5GHZ) {
++		for (i = 14; i < priv->channel_count; i++) {
++			if (priv->channel_info[i].channel !=
++			    le16_to_cpu(priv->staging_rxon.channel)) {
++				channel = priv->channel_info[i].channel;
++				ch_info = iwl_get_channel_info(priv,
++					band, channel);
++				if (is_channel_valid(ch_info))
++					break;
++			}
++		}
++	} else {
++		for (i = 0; i < 14; i++) {
++			if (priv->channel_info[i].channel !=
++			    le16_to_cpu(priv->staging_rxon.channel)) {
++					channel =
++						priv->channel_info[i].channel;
++					ch_info = iwl_get_channel_info(priv,
++						band, channel);
++					if (is_channel_valid(ch_info))
++						break;
++			}
++		}
++	}
++
++	return channel;
++}
++EXPORT_SYMBOL(iwl_get_single_channel_number);
++
+ /**
+  * iwl_set_rxon_channel - Set the phymode and channel values in staging RXON
+  * @phymode: MODE_IEEE80211A sets to 5.2GHz; all else set to 2.4GHz
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 7e5a5ba..31775bd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -343,6 +343,8 @@ int iwl_check_rxon_cmd(struct iwl_priv *priv);
+ int iwl_full_rxon_required(struct iwl_priv *priv);
+ void iwl_set_rxon_chain(struct iwl_priv *priv);
+ int iwl_set_rxon_channel(struct iwl_priv *priv, struct ieee80211_channel *ch);
++u8 iwl_get_single_channel_number(struct iwl_priv *priv,
++				  enum ieee80211_band band);
+ void iwl_set_rxon_ht(struct iwl_priv *priv, struct iwl_ht_config *ht_conf);
+ u8 iwl_is_ht40_tx_allowed(struct iwl_priv *priv,
+ 			 struct ieee80211_sta_ht_cap *sta_ht_inf);
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 3e5bffb..6c353ca 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -1844,6 +1844,49 @@ static void iwl3945_irq_tasklet(struct iwl_priv *priv)
+ #endif
  }
  
-@@ -297,8 +297,7 @@ void ath9k_tx_cleanup(struct ath9k_htc_priv *priv)
++static int iwl3945_get_single_channel_for_scan(struct iwl_priv *priv,
++					       struct ieee80211_vif *vif,
++					       enum ieee80211_band band,
++					       struct iwl3945_scan_channel *scan_ch)
++{
++	const struct ieee80211_supported_band *sband;
++	u16 passive_dwell = 0;
++	u16 active_dwell = 0;
++	int added = 0;
++	u8 channel = 0;
++
++	sband = iwl_get_hw_mode(priv, band);
++	if (!sband) {
++		IWL_ERR(priv, "invalid band\n");
++		return added;
++	}
++
++	active_dwell = iwl_get_active_dwell_time(priv, band, 0);
++	passive_dwell = iwl_get_passive_dwell_time(priv, band, vif);
++
++	if (passive_dwell <= active_dwell)
++		passive_dwell = active_dwell + 1;
++
++
++	channel = iwl_get_single_channel_number(priv, band);
++
++	if (channel) {
++		scan_ch->channel = channel;
++		scan_ch->type = 0;	/* passive */
++		scan_ch->active_dwell = cpu_to_le16(active_dwell);
++		scan_ch->passive_dwell = cpu_to_le16(passive_dwell);
++		/* Set txpower levels to defaults */
++		scan_ch->tpc.dsp_atten = 110;
++		if (band == IEEE80211_BAND_5GHZ)
++			scan_ch->tpc.tx_gain = ((1 << 5) | (3 << 3)) | 3;
++		else
++			scan_ch->tpc.tx_gain = ((1 << 5) | (5 << 3));
++		added++;
++	} else
++		IWL_ERR(priv, "no valid channel found\n");
++	return added;
++}
++
+ static int iwl3945_get_channels_for_scan(struct iwl_priv *priv,
+ 					 enum ieee80211_band band,
+ 				     u8 is_active, u8 n_probes,
+@@ -2992,9 +3035,16 @@ void iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 	/* select Rx antennas */
+ 	scan->flags |= iwl3945_get_antenna_flags(priv);
  
- }
+-	scan->channel_count =
+-		iwl3945_get_channels_for_scan(priv, band, is_active, n_probes,
+-			(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)], vif);
++	if (priv->is_internal_short_scan) {
++		scan->channel_count =
++			iwl3945_get_single_channel_for_scan(priv, vif, band,
++				(void *)&scan->data[le16_to_cpu(
++				scan->tx_cmd.len)]);
++	} else {
++		scan->channel_count =
++			iwl3945_get_channels_for_scan(priv, band, is_active, n_probes,
++				(void *)&scan->data[le16_to_cpu(scan->tx_cmd.len)], vif);
++	}
  
--bool ath9k_htc_txq_setup(struct ath9k_htc_priv *priv,
--			 enum ath9k_tx_queue_subtype subtype)
-+bool ath9k_htc_txq_setup(struct ath9k_htc_priv *priv, int subtype)
- {
- 	struct ath_hw *ah = priv->ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
+ 	if (scan->channel_count == 0) {
+ 		IWL_DEBUG_SCAN(priv, "channel count %d\n", scan->channel_count);
 -- 
-1.6.3.3
+1.7.0.4
 
