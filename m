@@ -1,42 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:29515 "EHLO mail.atheros.com"
+Received: from mga03.intel.com ([143.182.124.21]:21043 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754402Ab0FXJm6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jun 2010 05:42:58 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 24 Jun 2010 02:42:58 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/3] ath9k: Restore ps state in ath_paprd_calibrate() upon failure to allocate skb
-Date: Thu, 24 Jun 2010 02:42:45 -0700
-Message-ID: <1277372566-22883-2-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1277372566-22883-1-git-send-email-vasanth@atheros.com>
-References: <1277372566-22883-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1751976Ab0FFG4N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Jun 2010 02:56:13 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/4] iwlwifi fixes fo 2.6.35
+Date: Sat,  5 Jun 2010 23:55:59 -0700
+Message-Id: <1275807363-18150-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+We include four fixes. This series includes the overdue 3945 fix to
+internal scanning. The system hang issue fixed by this patch is
+encountered by many people, see:
+http://thread.gmane.org/gmane.linux.kernel/994562
+http://thread.gmane.org/gmane.linux.kernel.wireless.general/51343
+http://thread.gmane.org/gmane.linux.kernel.wireless.general/51614
+http://thread.gmane.org/gmane.linux.kernel/992191/focus=51561
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 6d57877..484d113 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -271,7 +271,7 @@ void ath_paprd_calibrate(struct work_struct *work)
- 	ath9k_ps_wakeup(sc);
- 	skb = alloc_skb(len, GFP_KERNEL);
- 	if (!skb)
--		return;
-+		goto fail_paprd;
- 
- 	tx_info = IEEE80211_SKB_CB(skb);
- 
--- 
-1.7.0.4
+We include a second fix for iwl3945 that enables a workaround to detect and
+recover when the command queue, or a transmit queue, becomes stuck.
+Unfortunately users seem to be running into this issue more frequently now.
+The bugs related to this issue is noted in the commit message.
+
+A third fix addresses a lockdep warning.
+
+We also include an update to the MAINTAINERS file that we would like to
+include in 2.6.35 since Wey-Yi will be maintainer during this
+kernel's stabilization as well as thereafter.
+
+These patches are also available from wireless-2.6 branch on
+git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+
+Abhijeet Kolekar (1):
+  iwl3945: fix internal scan
+
+Emmanuel Grumbach (1):
+  iwlwifi: move sysfs_create_group to post request firmware
+
+Reinette Chatre (1):
+  iwl3945: enable stuck queue detection on 3945
+
+Wey-Yi Guy (1):
+  iwlwifi: add name to Maintainers list
+
+ MAINTAINERS                                 |    1 +
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |    1 +
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |   30 +---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |  318 +++++++++++++-------------
+ drivers/net/wireless/iwlwifi/iwl-core.c     |   39 ++++
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    2 +
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   56 +++++-
+ 7 files changed, 257 insertions(+), 190 deletions(-)
 
