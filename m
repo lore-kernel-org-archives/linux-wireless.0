@@ -1,71 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:43552 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750882Ab0FNS4M (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jun 2010 14:56:12 -0400
-Date: Mon, 14 Jun 2010 11:55:56 -0700
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2] mac80211: Protect Deauthentication frame when using MFP
-Message-ID: <20100614185556.GA5955@jm.kir.nu>
-References: <20100611024456.GA3985@jm.kir.nu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100611024456.GA3985@jm.kir.nu>
+Received: from mga01.intel.com ([192.55.52.88]:61538 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752190Ab0FFG4n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Jun 2010 02:56:43 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 08/23] iwlwifi: remove unused parameter in iwl_priv
+Date: Sat,  5 Jun 2010 23:56:23 -0700
+Message-Id: <1275807398-18184-9-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1275807398-18184-1-git-send-email-reinette.chatre@intel.com>
+References: <1275807398-18184-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When management frame protection (IEEE 802.11w) is used,
-Deauthentication frame needs to be protected when the pairwise key is
-configured. mac80211 was removing the station entry (and its keys)
-before actually sending out the Deauthentication frame. Fix this by
-reordering the code to send the frame before the station entry gets
-removed. This matches an earlier change that handled the Disassociation
-frame processing, but missed Deauthentication frames.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+restrict_refcnt is no longer used, remove it from iwl_priv
+structure
 
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- net/mac80211/mlme.c |   10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    3 ---
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    1 -
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 ---
+ 3 files changed, 0 insertions(+), 7 deletions(-)
 
-v2: Fix a bug that left STA entries behind and broke some reassociation
-    cases.
-
---- wireless-testing.orig/net/mac80211/mlme.c	2010-06-14 11:40:07.000000000 -0700
-+++ wireless-testing/net/mac80211/mlme.c	2010-06-14 11:41:03.000000000 -0700
-@@ -2292,14 +2292,16 @@ int ieee80211_mgd_deauth(struct ieee8021
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	struct ieee80211_work *wk;
--	const u8 *bssid = req->bss->bssid;
-+	u8 bssid[ETH_ALEN];
-+	bool assoc_bss = false;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 7c63c06..021b014 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3686,9 +3686,6 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	priv->pci_dev = pdev;
+ 	priv->inta_mask = CSR_INI_SET_MASK;
  
- 	mutex_lock(&ifmgd->mtx);
+-#ifdef CONFIG_IWLWIFI_DEBUG
+-	atomic_set(&priv->restrict_refcnt, 0);
+-#endif
+ 	if (iwl_alloc_traffic_mem(priv))
+ 		IWL_ERR(priv, "Not enough memory to generate traffic log\n");
  
-+	memcpy(bssid, req->bss->bssid, ETH_ALEN);
- 	if (ifmgd->associated == req->bss) {
--		bssid = req->bss->bssid;
--		ieee80211_set_disassoc(sdata, true);
-+		ieee80211_set_disassoc(sdata, false);
- 		mutex_unlock(&ifmgd->mtx);
-+		assoc_bss = true;
- 	} else {
- 		bool not_auth_yet = false;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index f359d9f..8b7731a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1346,7 +1346,6 @@ struct iwl_priv {
+ 	u32 debug_level; /* per device debugging will override global
+ 			    iwl_debug_level if set */
+ 	u32 framecnt_to_us;
+-	atomic_t restrict_refcnt;
+ #endif /* CONFIG_IWLWIFI_DEBUG */
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ 	/* debugfs */
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 35471cf..f2ec752 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -3946,9 +3946,6 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 	priv->pci_dev = pdev;
+ 	priv->inta_mask = CSR_INI_SET_MASK;
  
-@@ -2345,6 +2347,8 @@ int ieee80211_mgd_deauth(struct ieee8021
- 	ieee80211_send_deauth_disassoc(sdata, bssid, IEEE80211_STYPE_DEAUTH,
- 				       req->reason_code, cookie,
- 				       !req->local_state_change);
-+	if (assoc_bss)
-+		sta_info_destroy_addr(sdata, bssid);
+-#ifdef CONFIG_IWLWIFI_DEBUG
+-	atomic_set(&priv->restrict_refcnt, 0);
+-#endif
+ 	if (iwl_alloc_traffic_mem(priv))
+ 		IWL_ERR(priv, "Not enough memory to generate traffic log\n");
  
- 	ieee80211_recalc_idle(sdata->local);
- 
-
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.7.0.4
+
