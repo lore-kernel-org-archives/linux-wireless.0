@@ -1,61 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:58588 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753362Ab0FPRBT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jun 2010 13:01:19 -0400
-Message-ID: <4C190363.8010900@gmail.com>
-Date: Wed, 16 Jun 2010 10:01:23 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-MIME-Version: 1.0
-To: Junchang Wang <junchangwang@gmail.com>
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 3/5]pci:bus.c Fix variable 'retval' set but not used
-References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com> <1276666434-11227-4-git-send-email-justinmattock@gmail.com> <20100616060738.GA12461@host-a-229.ustcsz.edu.cn>
-In-Reply-To: <20100616060738.GA12461@host-a-229.ustcsz.edu.cn>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga01.intel.com ([192.55.52.88]:17575 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752469Ab0FFG4o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Jun 2010 02:56:44 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 13/23] iwlwifi: remove inaccurate comment
+Date: Sat,  5 Jun 2010 23:56:28 -0700
+Message-Id: <1275807398-18184-14-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1275807398-18184-1-git-send-email-reinette.chatre@intel.com>
+References: <1275807398-18184-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/15/2010 11:07 PM, Junchang Wang wrote:
-> On Tue, Jun 15, 2010 at 10:33:52PM -0700, Justin P. Mattock wrote:
->> @@ -234,12 +234,10 @@ void pci_bus_add_devices(const struct pci_bus *bus)
->> void pci_enable_bridges(struct pci_bus *bus)
->> {
->> 	struct pci_dev *dev;
->> -	int retval;
->>
->> 	list_for_each_entry(dev,&bus->devices, bus_list) {
->> 		if (dev->subordinate) {
->> 			if (!pci_is_enabled(dev)) {
->> -				retval = pci_enable_device(dev);
-> Hi Justin,
->
-> pci_enable_device initializes device before it's used by a driver.
->
-> I think you should add check instead of eliminating pci_enable_device.
->
-> For example,
-> retval = pci_enable_device(dev);
-> if (retval<  0) {
-> 	goto handle_err;
-> }
->
-> --Junchang
->
->
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-this gets it to compile with no warning. although not sure if correct.
+REPLY_REMOVE_STA command is used
 
-		if (dev->subordinate) {
-			if (!pci_is_enabled(dev)) {
-				retval = pci_enable_device(dev);
-				if (retval)
-					printk("test...\n");
-				pci_set_master(dev);
-			}
-			pci_enable_bridges(dev->subordinate);
-		}
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Justin P. Mattock
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index 4790571..d5938e4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -95,7 +95,7 @@ enum {
+ 
+ 	/* Multi-Station support */
+ 	REPLY_ADD_STA = 0x18,
+-	REPLY_REMOVE_STA = 0x19,	/* not used */
++	REPLY_REMOVE_STA = 0x19,
+ 	REPLY_REMOVE_ALL_STA = 0x1a,	/* not used */
+ 
+ 	/* Security */
+-- 
+1.7.0.4
+
