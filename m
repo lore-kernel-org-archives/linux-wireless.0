@@ -1,56 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:43270 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755842Ab0F2Vyq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jun 2010 17:54:46 -0400
-Message-ID: <4C2A6BA4.8080000@openwrt.org>
-Date: Tue, 29 Jun 2010 23:54:44 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org
-Subject: Re: ath9k: ap tsf seems random and only uses lower 24 bits or so
-References: <AANLkTilG4qxjX0e5u_BGp0YcPoVBbsqd6Hlb8E0j_S8S@mail.gmail.com>	<4C29284C.5050707@openwrt.org>	<AANLkTint2L1xSMughBA5aHCFMRB5KMC8EfwcxJJU5XYW@mail.gmail.com>	<4C2A1776.2080508@openwrt.org>	<AANLkTik_d6tIKj3otsgaojVBPfvW1lz9OBRujeZLyv1U@mail.gmail.com>	<4C2A24D2.4070007@openwrt.org>	<AANLkTikw3l6FIxLtIwxofGaqGQD_b7LO25uu-JV45UL6@mail.gmail.com> <AANLkTikQz34vgfweDrzH_9_a-BU4dPXbX2UGR61jtJ9n@mail.gmail.com>
-In-Reply-To: <AANLkTikQz34vgfweDrzH_9_a-BU4dPXbX2UGR61jtJ9n@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:54553 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754375Ab0FFJMg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Jun 2010 05:12:36 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/4] compat: update bitops.h and wireless.h
+Date: Sun,  6 Jun 2010 11:12:24 +0200
+Message-Id: <1275815547-30313-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-06-29 11:40 PM, Björn Smedman wrote:
-> 2010/6/29 Björn Smedman <bjorn.smedman@venatech.se>:
->> Yes, hw reset is due to reg = 0x01702400 every 4 - 40 seconds or so:
->> ...
-> 
-> When the chip is really stuck, does 'reg' (at 'return false') change
-> over time? If I add a second requirement that ath9k_hw_check_alive()
-> must fail three times in a row (in different invocations of
-> ath9k_tasklet()) before we reset the chip the ap seems fine. I
-> sometimes get several of these reg = 0x01702400 every second but only
-> one or at the max two in a row.
-> 
-> Under load I sometimes see some reg = 0x00f02400 as well. I also see
-> an occasional reset now and then (about once a minute) that must be
-> caused by something else.
-> 
-> Any insight into what these reg values mean? Do you think they can
-> safely be ignored as per above?
-I had a similar thought about the multiple invocations thing. I think
-that's a good approach in general, but we need to ensure that we make it
-safe.
-The main point of this function is to detect baseband hangs. If we
-experience such a hang, I'm not sure we will always get enough
-interrupts to do multiple consecutive tests.
-One way to make it safe would be to reschedule the tasklet each time we
-ignore the result of the ath9k_hw_check_alive(), that way we keep the
-detection time low as well. Maybe we could also use a timer for leaving
-10 ms time between attempts.
+copy files from linux-next next-20100604
 
-Another thing that I'm working on right now is to ensure that the TSF
-gets preserved across resets. For some AR9280 based cards the code
-already preserves TSF in software over the chip reset, I could simply
-extend that to cover SoC as well.
-But before I post such a patch, I'll do a test on AR9160 - to see if it
-would be better to make the TSF preserve unconditional.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ include/linux/bitops.h        |   33 +++++----------------------------
+ include/linux/compat-2.6.35.h |    3 ---
+ include/linux/wireless.h      |    4 +++-
+ 3 files changed, 8 insertions(+), 32 deletions(-)
 
-- Felix
+diff --git a/include/linux/bitops.h b/include/linux/bitops.h
+index b62de8c..679369b 100644
+--- a/include/linux/bitops.h
++++ b/include/linux/bitops.h
+@@ -12,6 +12,11 @@
+ #endif
+ #endif
+ 
++extern unsigned int __sw_hweight8(unsigned int w);
++extern unsigned int __sw_hweight16(unsigned int w);
++extern unsigned int __sw_hweight32(unsigned int w);
++extern unsigned long __sw_hweight64(__u64 w);
++
+ /*
+  * Include this here because some architectures need generic_ffs/fls in
+  * scope
+@@ -23,9 +28,6 @@
+ 	     (bit) < (size); \
+ 	     (bit) = find_next_bit((addr), (size), (bit) + 1))
+ 
+-/* Temporary */
+-#define for_each_bit(bit, addr, size) for_each_set_bit(bit, addr, size)
+-
+ static __inline__ int get_bitmask_order(unsigned int count)
+ {
+ 	int order;
+@@ -49,31 +51,6 @@ static inline unsigned long hweight_long(unsigned long w)
+ 	return sizeof(w) == 4 ? hweight32(w) : hweight64(w);
+ }
+ 
+-/*
+- * Clearly slow versions of the hweightN() functions, their benefit is
+- * of course compile time evaluation of constant arguments.
+- */
+-#define HWEIGHT8(w)					\
+-      (	BUILD_BUG_ON_ZERO(!__builtin_constant_p(w)) +	\
+-	(!!((w) & (1ULL << 0))) +			\
+-	(!!((w) & (1ULL << 1))) +			\
+-	(!!((w) & (1ULL << 2))) +			\
+-	(!!((w) & (1ULL << 3))) +			\
+-	(!!((w) & (1ULL << 4))) +			\
+-	(!!((w) & (1ULL << 5))) +			\
+-	(!!((w) & (1ULL << 6))) +			\
+-	(!!((w) & (1ULL << 7)))	)
+-
+-#define HWEIGHT16(w) (HWEIGHT8(w)  + HWEIGHT8((w) >> 8))
+-#define HWEIGHT32(w) (HWEIGHT16(w) + HWEIGHT16((w) >> 16))
+-#define HWEIGHT64(w) (HWEIGHT32(w) + HWEIGHT32((w) >> 32))
+-
+-/*
+- * Type invariant version that simply casts things to the
+- * largest type.
+- */
+-#define HWEIGHT(w)   HWEIGHT64((u64)(w))
+-
+ /**
+  * rol32 - rotate a 32-bit value left
+  * @word: value to rotate
+diff --git a/include/linux/compat-2.6.35.h b/include/linux/compat-2.6.35.h
+index 7091f7c..b38d6de 100644
+--- a/include/linux/compat-2.6.35.h
++++ b/include/linux/compat-2.6.35.h
+@@ -13,9 +13,6 @@
+ #define SHRT_MAX       ((s16)(USHRT_MAX>>1))
+ #define SHRT_MIN       ((s16)(-SHRT_MAX - 1))
+ 
+-#define IW_HANDLER(id, func)			\
+-	[IW_IOCTL_IDX(id)] = func
+-
+ #define  SDIO_BUS_ECSI		0x20	/* Enable continuous SPI interrupt */
+ #define  SDIO_BUS_SCSI		0x40	/* Support continuous SPI interrupt */
+ 
+diff --git a/include/linux/wireless.h b/include/linux/wireless.h
+index 5b4c6c7..e6827ee 100644
+--- a/include/linux/wireless.h
++++ b/include/linux/wireless.h
+@@ -346,6 +346,8 @@
+ #define SIOCIWFIRST	0x8B00
+ #define SIOCIWLAST	SIOCIWLASTPRIV		/* 0x8BFF */
+ #define IW_IOCTL_IDX(cmd)	((cmd) - SIOCIWFIRST)
++#define IW_HANDLER(id, func)			\
++	[IW_IOCTL_IDX(id)] = func
+ 
+ /* Odd : get (world access), even : set (root access) */
+ #define IW_IS_SET(cmd)	(!((cmd) & 0x1))
+@@ -648,7 +650,7 @@
+  * 32 bit bitmasks. Note : 32 bits = 0x20 = 2^5. */
+ #define IW_EVENT_CAPA_BASE(cmd)		((cmd >= SIOCIWFIRSTPRIV) ? \
+ 					 (cmd - SIOCIWFIRSTPRIV + 0x60) : \
+-					 (cmd - SIOCSIWCOMMIT))
++					 (cmd - SIOCIWFIRST))
+ #define IW_EVENT_CAPA_INDEX(cmd)	(IW_EVENT_CAPA_BASE(cmd) >> 5)
+ #define IW_EVENT_CAPA_MASK(cmd)		(1 << (IW_EVENT_CAPA_BASE(cmd) & 0x1F))
+ /* Event capability constants - event autogenerated by the kernel
+-- 
+1.7.0.4
+
