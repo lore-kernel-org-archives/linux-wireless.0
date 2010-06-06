@@ -1,91 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:44664 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755219Ab0FNHSA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jun 2010 03:18:00 -0400
-Subject: Re: [PATCH 3/3] mac80211: remove BSS from cfg80211 list when
- leaving IBSS
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1276497207.3926.9.camel@jlt3.sipsolutions.net>
-References: <1276496145-5623-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-	 <1276496145-5623-2-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-	 <1276496145-5623-3-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-	 <1276496145-5623-4-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-	 <1276497207.3926.9.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain
-Date: Mon, 14 Jun 2010 10:16:45 +0300
-Message-Id: <1276499805.4314.16.camel@paavo-desktop>
-Mime-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:22880 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752448Ab0FFG4o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Jun 2010 02:56:44 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 12/23] iwlwifi: remove priv->mac_addr
+Date: Sat,  5 Jun 2010 23:56:27 -0700
+Message-Id: <1275807398-18184-13-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1275807398-18184-1-git-send-email-reinette.chatre@intel.com>
+References: <1275807398-18184-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-06-14 at 08:33 +0200, ext Johannes Berg wrote:
-> On Mon, 2010-06-14 at 09:15 +0300, Teemu Paasikivi wrote:
-> > Remove BSS from cfg80211 BSS list if we are only member in IBSS when
-> > leaving it.
-> > 
-> > Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-> > ---
-> >  net/mac80211/ibss.c |   33 +++++++++++++++++++++++++++++++++
-> >  1 files changed, 33 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-> > index ff91265..6d5489b 100644
-> > --- a/net/mac80211/ibss.c
-> > +++ b/net/mac80211/ibss.c
-> > @@ -969,6 +969,39 @@ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata)
-> >  {
-> >  	struct sk_buff *skb;
-> >  
-> > +	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
-> 
-> remove that empty live please
-> 
-> > +	struct ieee80211_local *local = sdata->local;
-> > +	struct cfg80211_bss *cbss;
-> > +	struct ieee80211_channel *chan = NULL;
-> > +	const u8 *bssid = NULL;
-> > +	u16 capability;
-> > +	int active_ibss = 0;
-> > +
-> > +
-> > +	active_ibss = ieee80211_sta_active_ibss(sdata);
-> > +
-> > +	if (!active_ibss) {
-> > +		capability = WLAN_CAPABILITY_IBSS;
-> > +		if (ifibss->privacy)
-> > +			capability |= WLAN_CAPABILITY_PRIVACY;
-> > +		if (ifibss->fixed_bssid)
-> > +			bssid = ifibss->bssid;
-> 
-> Don't we update ifibss->bssid even if it's not fixed?
-> 
-> > +		if (ifibss->fixed_channel)
-> > +			chan = ifibss->channel;
-> 
-> > +		if (!is_zero_ether_addr(ifibss->bssid))
-> > +			bssid = ifibss->bssid;
-> 
-> I guess we do, but can it really ever be zeroed? Or does that happen
-> when we haven't even joined yet? But in that case you'd pass a NULL
-> bssid into get_bss() which would return a random one ... shouldn't you
-> rather not do anything in that case? Like making the first condition
-> 
-> if (!active_ibss && !is_zero_ether_addr(ifibss->bssid)) {
-> 
-> 
-> and then never worry about the bssid again?
-> 
-> johannes
-> 
+From: Johannes Berg <johannes.berg@intel.com>
 
-Valid points. Back to the drawing board. I'll rework this a little bit.
+This variable is now no longer used, so it
+can be removed completely.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |    6 ++----
+ drivers/net/wireless/iwlwifi/iwl-dev.h  |    1 -
+ 2 files changed, 2 insertions(+), 5 deletions(-)
 
-Teemu
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 56bcf0e..ec0f39c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1907,7 +1907,8 @@ int iwl_mac_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 	struct iwl_priv *priv = hw->priv;
+ 	int err = 0;
+ 
+-	IWL_DEBUG_MAC80211(priv, "enter: type %d\n", vif->type);
++	IWL_DEBUG_MAC80211(priv, "enter: type %d, addr %pM\n",
++			   vif->type, vif->addr);
+ 
+ 	mutex_lock(&priv->mutex);
+ 
+@@ -1925,9 +1926,6 @@ int iwl_mac_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 	priv->vif = vif;
+ 	priv->iw_mode = vif->type;
+ 
+-	IWL_DEBUG_MAC80211(priv, "Set %pM\n", vif->addr);
+-	memcpy(priv->mac_addr, vif->addr, ETH_ALEN);
+-
+ 	err = iwl_set_mode(priv, vif);
+ 	if (err)
+ 		goto out_err;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 6663df2..4abc24e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1232,7 +1232,6 @@ struct iwl_priv {
+ 
+ 	/* context information */
+ 	u8 bssid[ETH_ALEN]; /* used only on 3945 but filled by core */
+-	u8 mac_addr[ETH_ALEN];
+ 
+ 	/* station table variables */
+ 
+-- 
+1.7.0.4
 
