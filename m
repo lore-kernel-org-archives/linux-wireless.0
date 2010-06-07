@@ -1,51 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:50741 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758506Ab0FJBnJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jun 2010 21:43:09 -0400
-From: Zhu Yi <yi.zhu@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
-Subject: [PATCH] wireless: orphan ipw2x00 drivers
-Date: Thu, 10 Jun 2010 09:44:29 +0800
-Message-Id: <1276134269-2273-1-git-send-email-yi.zhu@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:35579 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755667Ab0FGLD0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jun 2010 07:03:26 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.71)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1OLa73-0007FC-TM
+	for linux-wireless@vger.kernel.org; Mon, 07 Jun 2010 13:03:26 +0200
+Message-Id: <20100607110202.597388000@sipsolutions.net>
+Date: Mon, 07 Jun 2010 13:01:52 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 19/21] mac80211: defer TX agg session teardown to work
+References: <20100607110133.472649120@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
+
+Since we want the code to be able to sleep
+in the future, it must not be called from
+the timer directly. To achieve that, simply
+call the function drivers would call, and
+also use RCU in the timer to get the struct
+so we don't need to rely on the spinlock in
+the future.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-Please let us know if someone is interested in maintaining these drivers.
+ net/mac80211/agg-tx.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
- MAINTAINERS |   10 ++--------
- 1 files changed, 2 insertions(+), 8 deletions(-)
+--- wireless-testing.orig/net/mac80211/agg-tx.c	2010-06-06 13:22:27.000000000 +0200
++++ wireless-testing/net/mac80211/agg-tx.c	2010-06-06 13:22:31.000000000 +0200
+@@ -200,11 +200,11 @@ static void sta_addba_resp_timer_expired
+ 	struct tid_ampdu_tx *tid_tx;
+ 
+ 	/* check if the TID waits for addBA response */
+-	spin_lock_bh(&sta->lock);
+-	tid_tx = sta->ampdu_mlme.tid_tx[tid];
++	rcu_read_lock();
++	tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[tid]);
+ 	if (!tid_tx ||
+ 	    test_bit(HT_AGG_STATE_RESPONSE_RECEIVED, &tid_tx->state)) {
+-		spin_unlock_bh(&sta->lock);
++		rcu_read_unlock();
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+ 		printk(KERN_DEBUG "timer expired on tid %d but we are not "
+ 				"(or no longer) expecting addBA response there\n",
+@@ -217,8 +217,8 @@ static void sta_addba_resp_timer_expired
+ 	printk(KERN_DEBUG "addBA response timer expired on tid %d\n", tid);
+ #endif
+ 
+-	___ieee80211_stop_tx_ba_session(sta, tid, WLAN_BACK_INITIATOR);
+-	spin_unlock_bh(&sta->lock);
++	ieee80211_stop_tx_ba_session(&sta->sta, tid);
++	rcu_read_unlock();
+ }
+ 
+ static inline int ieee80211_ac_from_tid(int tid)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 6d119c9..bef7c1a 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -2978,20 +2978,14 @@ F:	drivers/net/ixgb/
- F:	drivers/net/ixgbe/
- 
- INTEL PRO/WIRELESS 2100 NETWORK CONNECTION SUPPORT
--M:	Reinette Chatre <reinette.chatre@intel.com>
--M:	Intel Linux Wireless <ilw@linux.intel.com>
- L:	linux-wireless@vger.kernel.org
--W:	http://ipw2100.sourceforge.net
--S:	Odd Fixes
-+S:	Orphan
- F:	Documentation/networking/README.ipw2100
- F:	drivers/net/wireless/ipw2x00/ipw2100.*
- 
- INTEL PRO/WIRELESS 2915ABG NETWORK CONNECTION SUPPORT
--M:	Reinette Chatre <reinette.chatre@intel.com>
--M:	Intel Linux Wireless <ilw@linux.intel.com>
- L:	linux-wireless@vger.kernel.org
--W:	http://ipw2200.sourceforge.net
--S:	Odd Fixes
-+S:	Orphan
- F:	Documentation/networking/README.ipw2200
- F:	drivers/net/wireless/ipw2x00/ipw2200.*
- 
--- 
-1.6.3.3
 
