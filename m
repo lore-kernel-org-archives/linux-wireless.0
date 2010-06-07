@@ -1,61 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:36375 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753046Ab0FUTSk (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60902 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752671Ab0FGTUn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jun 2010 15:18:40 -0400
-Received: by fxm10 with SMTP id 10so2031822fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Jun 2010 12:18:38 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH] mac80211: allow selection of minstrel_ht as default rc algo
-Date: Mon, 21 Jun 2010 21:18:06 +0200
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felix Fietkau <nbd@openwrt.org>
-References: <201006211059.58879.helmut.schaa@googlemail.com> <AANLkTinj36oA6QpEiYywGGkRqCmNRHSeR643HpiUsXC-@mail.gmail.com>
-In-Reply-To: <AANLkTinj36oA6QpEiYywGGkRqCmNRHSeR643HpiUsXC-@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201006212118.06767.helmut.schaa@googlemail.com>
+	Mon, 7 Jun 2010 15:20:43 -0400
+Subject: [PATCH] iwlwifi: add missing rcu_read_lock
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Reinette Chatre <reinette.chatre@intel.com>,
+	Wey-Yi W Guy <wey-yi.w.guy@intel.com>,
+	Miles Lane <miles.lane@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 07 Jun 2010 21:20:38 +0200
+Message-ID: <1275938438.29978.23.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Montag 21 Juni 2010 schrieb Luis R. Rodriguez:
-> On Mon, Jun 21, 2010 at 1:59 AM, Helmut Schaa
-> <helmut.schaa@googlemail.com> wrote:
-> > Allow selection of minstrel_ht as default rate control algorithm. At the
-> > moment minstrel_ht can only be requested by the driver code but not selected
-> > as default in make menuconfig.
-> >
-> > Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-> 
-> Shouldn't this just be enabled when you enable minstrel? I don't get
-> why we would split up the two.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Would be fine for me as well. But I'm not sure if we want minstrel_ht already
-as default and we want definitely keep the possibility to only select minstrel
-(if compiling on an embedded system with just bg wifi for example).
+Using ieee80211_find_sta() needs to be under
+RCU read lock, which iwlwifi currently misses,
+so fix it.
 
-Felix, any objections against selecting minstrel_ht as default if minstrel
-was selected as default rc algo and minstrel_ht is compiled in?
+Cc: stable@kernel.org
+Reported-by: Miles Lane <miles.lane@gmail.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-In case of an embedded system without minstrel_ht minstrel would stay as default.
-
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index 83eec7a..4d6f865 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -69,6 +69,7 @@ endchoice
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-agn-tx.c	2010-06-07 21:17:56.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-agn-tx.c	2010-06-07 21:18:04.000000000 +0200
+@@ -1146,6 +1146,7 @@ static void iwlagn_tx_status(struct iwl_
+ 	struct ieee80211_sta *sta;
+ 	struct iwl_station_priv *sta_priv;
  
- config MAC80211_RC_DEFAULT
- 	string
-+	default "minstrel_ht" if MAC80211_RC_DEFAULT_MINSTREL && MAC80211_RC_MINSTREL_HT
- 	default "minstrel" if MAC80211_RC_DEFAULT_MINSTREL
- 	default "pid" if MAC80211_RC_DEFAULT_PID
- 	default ""
++	rcu_read_lock();
+ 	sta = ieee80211_find_sta(priv->vif, hdr->addr1);
+ 	if (sta) {
+ 		sta_priv = (void *)sta->drv_priv;
+@@ -1154,6 +1155,7 @@ static void iwlagn_tx_status(struct iwl_
+ 		    atomic_dec_return(&sta_priv->pending_frames) == 0)
+ 			ieee80211_sta_block_awake(priv->hw, sta, false);
+ 	}
++	rcu_read_unlock();
+ 
+ 	ieee80211_tx_status_irqsafe(priv->hw, skb);
+ }
 
-Thanks,
-Helmut
+
