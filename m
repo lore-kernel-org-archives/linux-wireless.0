@@ -1,49 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1193 "EHLO mail.perches.com"
+Received: from mga14.intel.com ([143.182.124.37]:59791 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753498Ab0FSXaT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jun 2010 19:30:19 -0400
-From: Joe Perches <joe@perches.com>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 1/3] drivers/net/wireless/b43: Use local ratelimit_state
-Date: Sat, 19 Jun 2010 16:30:09 -0700
-Message-Id: <4b06544d432227e8587f17330f73edcaa734de86.1276988387.git.joe@perches.com>
-In-Reply-To: <cover.1276988387.git.joe@perches.com>
-References: <cover.1276988387.git.joe@perches.com>
+	id S1752077Ab0FGVeX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jun 2010 17:34:23 -0400
+Subject: Re: [PATCH] iwlwifi: add missing rcu_read_lock
+From: reinette chatre <reinette.chatre@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	Miles Lane <miles.lane@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1275938438.29978.23.camel@jlt3.sipsolutions.net>
+References: <1275938438.29978.23.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 07 Jun 2010 14:34:22 -0700
+Message-ID: <1275946462.1835.9324.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Avoid limiting the logging output of other networking devices
+On Mon, 2010-06-07 at 12:20 -0700, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Using ieee80211_find_sta() needs to be under
+> RCU read lock, which iwlwifi currently misses,
+> so fix it.
+> 
+> Cc: stable@kernel.org
+> Reported-by: Miles Lane <miles.lane@gmail.com>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/b43/main.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+Acked-by: Reinette Chatre <reinette.chatre@intel.com>
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 7965b70..8031f24 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -311,13 +311,15 @@ static int b43_wireless_core_start(struct b43_wldev *dev);
- 
- static int b43_ratelimit(struct b43_wl *wl)
- {
-+	static DEFINE_RATELIMIT_STATE(ratelimit, 5 * HZ, 10);
-+
- 	if (!wl || !wl->current_dev)
- 		return 1;
- 	if (b43_status(wl->current_dev) < B43_STAT_STARTED)
- 		return 1;
- 	/* We are up and running.
- 	 * Ratelimit the messages to avoid DoS over the net. */
--	return net_ratelimit();
-+	return __ratelimit(&ratelimit);
- }
- 
- void b43info(struct b43_wl *wl, const char *fmt, ...)
--- 
-1.7.1.337.g6068.dirty
+Reinette
+
 
