@@ -1,369 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:16423 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754531Ab0FGKB5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jun 2010 06:01:57 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: stable@kernel.org
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 2/4 2.6.33.y] iwlwifi: manage QoS by mac stack
-Date: Mon,  7 Jun 2010 12:00:25 +0200
-Message-Id: <1275904827-6598-2-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1275904827-6598-1-git-send-email-sgruszka@redhat.com>
-References: <1275904827-6598-1-git-send-email-sgruszka@redhat.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:35582 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756042Ab0FGLD3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jun 2010 07:03:29 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.71)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1OLa76-0007Fc-Ud
+	for linux-wireless@vger.kernel.org; Mon, 07 Jun 2010 13:03:29 +0200
+Message-Id: <20100607110202.980071320@sipsolutions.net>
+Date: Mon, 07 Jun 2010 13:01:54 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 21/21] mac80211: allow drivers to sleep in ampdu_action
+References: <20100607110133.472649120@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit e61146e36b40fd9d346118c40285913236c329f3 upstream.
+From: Johannes Berg <johannes.berg@intel.com>
 
-We activate/deactivate QoS and setup default queue parameters in iwlwifi
-driver. Mac stack do the same, so we do not need repeat that work here.
-Stack also will tell when disable QoS, this will fix driver when working
-with older APs, that do not have QoS implemented.
+Allow drivers to sleep, and indicate this in
+the documentation. ath9k has some locking I
+don't understand, so keep it safe and disable
+BHs in it, all other drivers look fine with
+the context change.
 
-Patch make "force = true" in iwl_active_qos() assuming we always want
-to do with QoS what mac stack wish.
-
-Patch also remove unused qos_cap bits, do not initialize qos_active = 0,
-as we have it initialized to zero by kzalloc.
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   15 ---
- drivers/net/wireless/iwlwifi/iwl-core.c     |  142 +++------------------------
- drivers/net/wireless/iwlwifi/iwl-core.h     |    3 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h      |   21 ----
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    7 --
- 5 files changed, 17 insertions(+), 171 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c |    4 ++++
+ include/net/mac80211.h                |    2 +-
+ net/mac80211/driver-ops.h             |    3 +--
+ 3 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 5622a55..9ba4207 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2327,7 +2327,6 @@ void iwl_post_associate(struct iwl_priv *priv)
- {
- 	struct ieee80211_conf *conf = NULL;
+--- wireless-testing.orig/include/net/mac80211.h	2010-06-07 12:42:24.000000000 +0200
++++ wireless-testing/include/net/mac80211.h	2010-06-07 12:42:35.000000000 +0200
+@@ -1640,7 +1640,7 @@ enum ieee80211_ampdu_mlme_action {
+  * 	is the first frame we expect to perform the action on. Notice
+  * 	that TX/RX_STOP can pass NULL for this parameter.
+  *	Returns a negative error code on failure.
+- *	The callback must be atomic.
++ *	The callback can sleep.
+  *
+  * @get_survey: Return per-channel survey information
+  *
+--- wireless-testing.orig/drivers/net/wireless/ath/ath9k/main.c	2010-06-07 12:43:05.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath/ath9k/main.c	2010-06-07 12:43:55.000000000 +0200
+@@ -1769,6 +1769,8 @@ static int ath9k_ampdu_action(struct iee
+ 	struct ath_softc *sc = aphy->sc;
  	int ret = 0;
--	unsigned long flags;
  
- 	if (priv->iw_mode == NL80211_IFTYPE_AP) {
- 		IWL_ERR(priv, "%s Should not be called in AP mode\n", __func__);
-@@ -2412,10 +2411,6 @@ void iwl_post_associate(struct iwl_priv *priv)
- 	if (priv->iw_mode == NL80211_IFTYPE_ADHOC)
- 		priv->assoc_station_added = 1;
- 
--	spin_lock_irqsave(&priv->lock, flags);
--	iwl_activate_qos(priv, 0);
--	spin_unlock_irqrestore(&priv->lock, flags);
--
- 	/* the chain noise calibration will enabled PM upon completion
- 	 * If chain noise has already been run, then we need to enable
- 	 * power management here */
-@@ -2602,7 +2597,6 @@ static int iwl_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- void iwl_config_ap(struct iwl_priv *priv)
- {
- 	int ret = 0;
--	unsigned long flags;
- 
- 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
- 		return;
-@@ -2654,10 +2648,6 @@ void iwl_config_ap(struct iwl_priv *priv)
- 		/* restore RXON assoc */
- 		priv->staging_rxon.filter_flags |= RXON_FILTER_ASSOC_MSK;
- 		iwlcore_commit_rxon(priv);
--		iwl_reset_qos(priv);
--		spin_lock_irqsave(&priv->lock, flags);
--		iwl_activate_qos(priv, 1);
--		spin_unlock_irqrestore(&priv->lock, flags);
- 		iwl_add_bcast_station(priv);
- 	}
- 	iwl_send_beacon_cmd(priv);
-@@ -3195,11 +3185,6 @@ static int iwl_init_drv(struct iwl_priv *priv)
- 
- 	iwl_init_scan_params(priv);
- 
--	iwl_reset_qos(priv);
--
--	priv->qos_data.qos_active = 0;
--	priv->qos_data.qos_cap.val = 0;
--
- 	priv->rates_mask = IWL_RATES_MASK;
- 	/* Set the tx_power_user_lmt to the lowest power level
- 	 * this value will get overwritten by channel max power avg
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 6e9e156..d79b1e9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -301,17 +301,13 @@ EXPORT_SYMBOL(iwl_hw_nic_init);
- /*
-  * QoS  support
- */
--void iwl_activate_qos(struct iwl_priv *priv, u8 force)
-+static void iwl_update_qos(struct iwl_priv *priv)
- {
- 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
- 		return;
- 
- 	priv->qos_data.def_qos_parm.qos_flags = 0;
- 
--	if (priv->qos_data.qos_cap.q_AP.queue_request &&
--	    !priv->qos_data.qos_cap.q_AP.txop_request)
--		priv->qos_data.def_qos_parm.qos_flags |=
--			QOS_PARAM_FLG_TXOP_TYPE_MSK;
- 	if (priv->qos_data.qos_active)
- 		priv->qos_data.def_qos_parm.qos_flags |=
- 			QOS_PARAM_FLG_UPDATE_EDCA_MSK;
-@@ -319,118 +315,14 @@ void iwl_activate_qos(struct iwl_priv *priv, u8 force)
- 	if (priv->current_ht_config.is_ht)
- 		priv->qos_data.def_qos_parm.qos_flags |= QOS_PARAM_FLG_TGN_MSK;
- 
--	if (force || iwl_is_associated(priv)) {
--		IWL_DEBUG_QOS(priv, "send QoS cmd with Qos active=%d FLAGS=0x%X\n",
--				priv->qos_data.qos_active,
--				priv->qos_data.def_qos_parm.qos_flags);
-+	IWL_DEBUG_QOS(priv, "send QoS cmd with Qos active=%d FLAGS=0x%X\n",
-+		      priv->qos_data.qos_active,
-+		      priv->qos_data.def_qos_parm.qos_flags);
- 
--		iwl_send_cmd_pdu_async(priv, REPLY_QOS_PARAM,
--				       sizeof(struct iwl_qosparam_cmd),
--				       &priv->qos_data.def_qos_parm, NULL);
--	}
-+	iwl_send_cmd_pdu_async(priv, REPLY_QOS_PARAM,
-+			       sizeof(struct iwl_qosparam_cmd),
-+			       &priv->qos_data.def_qos_parm, NULL);
- }
--EXPORT_SYMBOL(iwl_activate_qos);
--
--/*
-- * AC        CWmin         CW max      AIFSN      TXOP Limit    TXOP Limit
-- *                                              (802.11b)      (802.11a/g)
-- * AC_BK      15            1023        7           0               0
-- * AC_BE      15            1023        3           0               0
-- * AC_VI       7              15        2          6.016ms       3.008ms
-- * AC_VO       3               7        2          3.264ms       1.504ms
-- */
--void iwl_reset_qos(struct iwl_priv *priv)
--{
--	u16 cw_min = 15;
--	u16 cw_max = 1023;
--	u8 aifs = 2;
--	bool is_legacy = false;
--	unsigned long flags;
--	int i;
--
--	spin_lock_irqsave(&priv->lock, flags);
--	/* QoS always active in AP and ADHOC mode
--	 * In STA mode wait for association
--	 */
--	if (priv->iw_mode == NL80211_IFTYPE_ADHOC ||
--	    priv->iw_mode == NL80211_IFTYPE_AP)
--		priv->qos_data.qos_active = 1;
--	else
--		priv->qos_data.qos_active = 0;
--
--	/* check for legacy mode */
--	if ((priv->iw_mode == NL80211_IFTYPE_ADHOC &&
--	    (priv->active_rate & IWL_OFDM_RATES_MASK) == 0) ||
--	    (priv->iw_mode == NL80211_IFTYPE_STATION &&
--	    (priv->staging_rxon.flags & RXON_FLG_SHORT_SLOT_MSK) == 0)) {
--		cw_min = 31;
--		is_legacy = 1;
--	}
--
--	if (priv->qos_data.qos_active)
--		aifs = 3;
--
--	/* AC_BE */
--	priv->qos_data.def_qos_parm.ac[0].cw_min = cpu_to_le16(cw_min);
--	priv->qos_data.def_qos_parm.ac[0].cw_max = cpu_to_le16(cw_max);
--	priv->qos_data.def_qos_parm.ac[0].aifsn = aifs;
--	priv->qos_data.def_qos_parm.ac[0].edca_txop = 0;
--	priv->qos_data.def_qos_parm.ac[0].reserved1 = 0;
--
--	if (priv->qos_data.qos_active) {
--		/* AC_BK */
--		i = 1;
--		priv->qos_data.def_qos_parm.ac[i].cw_min = cpu_to_le16(cw_min);
--		priv->qos_data.def_qos_parm.ac[i].cw_max = cpu_to_le16(cw_max);
--		priv->qos_data.def_qos_parm.ac[i].aifsn = 7;
--		priv->qos_data.def_qos_parm.ac[i].edca_txop = 0;
--		priv->qos_data.def_qos_parm.ac[i].reserved1 = 0;
--
--		/* AC_VI */
--		i = 2;
--		priv->qos_data.def_qos_parm.ac[i].cw_min =
--			cpu_to_le16((cw_min + 1) / 2 - 1);
--		priv->qos_data.def_qos_parm.ac[i].cw_max =
--			cpu_to_le16(cw_min);
--		priv->qos_data.def_qos_parm.ac[i].aifsn = 2;
--		if (is_legacy)
--			priv->qos_data.def_qos_parm.ac[i].edca_txop =
--				cpu_to_le16(6016);
--		else
--			priv->qos_data.def_qos_parm.ac[i].edca_txop =
--				cpu_to_le16(3008);
--		priv->qos_data.def_qos_parm.ac[i].reserved1 = 0;
--
--		/* AC_VO */
--		i = 3;
--		priv->qos_data.def_qos_parm.ac[i].cw_min =
--			cpu_to_le16((cw_min + 1) / 4 - 1);
--		priv->qos_data.def_qos_parm.ac[i].cw_max =
--			cpu_to_le16((cw_min + 1) / 2 - 1);
--		priv->qos_data.def_qos_parm.ac[i].aifsn = 2;
--		priv->qos_data.def_qos_parm.ac[i].reserved1 = 0;
--		if (is_legacy)
--			priv->qos_data.def_qos_parm.ac[i].edca_txop =
--				cpu_to_le16(3264);
--		else
--			priv->qos_data.def_qos_parm.ac[i].edca_txop =
--				cpu_to_le16(1504);
--	} else {
--		for (i = 1; i < 4; i++) {
--			priv->qos_data.def_qos_parm.ac[i].cw_min =
--				cpu_to_le16(cw_min);
--			priv->qos_data.def_qos_parm.ac[i].cw_max =
--				cpu_to_le16(cw_max);
--			priv->qos_data.def_qos_parm.ac[i].aifsn = aifs;
--			priv->qos_data.def_qos_parm.ac[i].edca_txop = 0;
--			priv->qos_data.def_qos_parm.ac[i].reserved1 = 0;
--		}
--	}
--	IWL_DEBUG_QOS(priv, "set QoS to default \n");
--
--	spin_unlock_irqrestore(&priv->lock, flags);
--}
--EXPORT_SYMBOL(iwl_reset_qos);
- 
- #define MAX_BIT_RATE_40_MHZ 150 /* Mbps */
- #define MAX_BIT_RATE_20_MHZ 72 /* Mbps */
-@@ -2273,12 +2165,6 @@ int iwl_mac_conf_tx(struct ieee80211_hw *hw, u16 queue,
- 			cpu_to_le16((params->txop * 32));
- 
- 	priv->qos_data.def_qos_parm.ac[q].reserved1 = 0;
--	priv->qos_data.qos_active = 1;
--
--	if (priv->iw_mode == NL80211_IFTYPE_AP)
--		iwl_activate_qos(priv, 1);
--	else if (priv->assoc_id && iwl_is_associated(priv))
--		iwl_activate_qos(priv, 0);
- 
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
-@@ -2554,11 +2440,8 @@ int iwl_mac_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
--	iwl_reset_qos(priv);
--
- 	priv->cfg->ops->lib->post_associate(priv);
- 
--
- 	return 0;
- }
- EXPORT_SYMBOL(iwl_mac_beacon_update);
-@@ -2790,6 +2673,15 @@ int iwl_mac_config(struct ieee80211_hw *hw, u32 changed)
- 	if (priv->cfg->ops->hcmd->set_rxon_chain)
- 		priv->cfg->ops->hcmd->set_rxon_chain(priv);
- 
-+	if (changed & IEEE80211_CONF_CHANGE_QOS) {
-+		bool qos_active = !!(conf->flags & IEEE80211_CONF_QOS);
++	local_bh_disable();
 +
-+		spin_lock_irqsave(&priv->lock, flags);
-+		priv->qos_data.qos_active = qos_active;
-+		iwl_update_qos(priv);
-+		spin_unlock_irqrestore(&priv->lock, flags);
-+	}
-+
- 	if (!iwl_is_ready(priv)) {
- 		IWL_DEBUG_MAC80211(priv, "leave - not ready\n");
- 		goto out;
-@@ -2860,8 +2752,6 @@ void iwl_mac_reset_tsf(struct ieee80211_hw *hw)
- 	memset(&priv->current_ht_config, 0, sizeof(struct iwl_ht_config));
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
--	iwl_reset_qos(priv);
--
- 	spin_lock_irqsave(&priv->lock, flags);
- 	priv->assoc_id = 0;
- 	priv->assoc_capability = 0;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index b69e972..403f512 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -298,8 +298,7 @@ struct iwl_cfg {
- struct ieee80211_hw *iwl_alloc_all(struct iwl_cfg *cfg,
- 		struct ieee80211_ops *hw_ops);
- void iwl_hw_detect(struct iwl_priv *priv);
--void iwl_reset_qos(struct iwl_priv *priv);
--void iwl_activate_qos(struct iwl_priv *priv, u8 force);
-+void iwl_activate_qos(struct iwl_priv *priv);
- int iwl_mac_conf_tx(struct ieee80211_hw *hw, u16 queue,
- 		    const struct ieee80211_tx_queue_params *params);
- void iwl_set_rxon_hwcrypto(struct iwl_priv *priv, int hw_decrypt);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 3822cf5..f2a9356 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -518,30 +518,9 @@ struct iwl_ht_config {
- 	u8 non_GF_STA_present;
- };
- 
--union iwl_qos_capabity {
--	struct {
--		u8 edca_count:4;	/* bit 0-3 */
--		u8 q_ack:1;		/* bit 4 */
--		u8 queue_request:1;	/* bit 5 */
--		u8 txop_request:1;	/* bit 6 */
--		u8 reserved:1;		/* bit 7 */
--	} q_AP;
--	struct {
--		u8 acvo_APSD:1;		/* bit 0 */
--		u8 acvi_APSD:1;		/* bit 1 */
--		u8 ac_bk_APSD:1;	/* bit 2 */
--		u8 ac_be_APSD:1;	/* bit 3 */
--		u8 q_ack:1;		/* bit 4 */
--		u8 max_len:2;		/* bit 5-6 */
--		u8 more_data_ack:1;	/* bit 7 */
--	} q_STA;
--	u8 val;
--};
--
- /* QoS structures */
- struct iwl_qos_info {
- 	int qos_active;
--	union iwl_qos_capabity qos_cap;
- 	struct iwl_qosparam_cmd def_qos_parm;
- };
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index adbb3ea..2280ba7 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -3127,8 +3127,6 @@ void iwl3945_post_associate(struct iwl_priv *priv)
- 		break;
+ 	switch (action) {
+ 	case IEEE80211_AMPDU_RX_START:
+ 		if (!(sc->sc_flags & SC_OP_RXAGGR))
+@@ -1798,6 +1800,8 @@ static int ath9k_ampdu_action(struct iee
+ 			  "Unknown AMPDU action\n");
  	}
  
--	iwl_activate_qos(priv, 0);
--
- 	/* we have just associated, don't start scan too early */
- 	priv->next_scan_jiffies = jiffies + IWL_DELAY_NEXT_SCAN;
++	local_bh_enable();
++
+ 	return ret;
  }
-@@ -3841,11 +3839,6 @@ static int iwl3945_init_drv(struct iwl_priv *priv)
  
- 	priv->iw_mode = NL80211_IFTYPE_STATION;
+--- wireless-testing.orig/net/mac80211/driver-ops.h	2010-06-07 12:42:42.000000000 +0200
++++ wireless-testing/net/mac80211/driver-ops.h	2010-06-07 12:42:46.000000000 +0200
+@@ -352,11 +352,10 @@ static inline int drv_ampdu_action(struc
  
--	iwl_reset_qos(priv);
--
--	priv->qos_data.qos_active = 0;
--	priv->qos_data.qos_cap.val = 0;
--
- 	priv->rates_mask = IWL_RATES_MASK;
- 	priv->tx_power_user_lmt = IWL_DEFAULT_TX_POWER;
+ 	might_sleep();
  
--- 
-1.6.2.5
+-	local_bh_disable();
+ 	if (local->ops->ampdu_action)
+ 		ret = local->ops->ampdu_action(&local->hw, &sdata->vif, action,
+ 					       sta, tid, ssn);
+-	local_bh_enable();
++
+ 	trace_drv_ampdu_action(local, sdata, action, sta, tid, ssn, ret);
+ 	return ret;
+ }
+
 
