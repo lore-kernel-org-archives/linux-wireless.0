@@ -1,48 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:39364 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932414Ab0FEHEZ (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:36056 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751355Ab0FGFFI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Jun 2010 03:04:25 -0400
-Received: by wyi11 with SMTP id 11so1350862wyi.19
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Jun 2010 00:04:24 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1275693948-3189-2-git-send-email-notasas@gmail.com>
-References: <1275693948-3189-1-git-send-email-notasas@gmail.com>
-	<1275693948-3189-2-git-send-email-notasas@gmail.com>
-Date: Sat, 5 Jun 2010 10:04:24 +0300
-Message-ID: <AANLkTinqgUGCjCBzg8j7bXGY05EW3-jfW7vlnrvCuwRd@mail.gmail.com>
-Subject: Re: [PATCH 2/2] wl1251: fix ELP_CTRL register reads
-From: Kalle Valo <kvalo@adurom.com>
-To: Grazvydas Ignotas <notasas@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 7 Jun 2010 01:05:08 -0400
+Subject: Re: [PATCH] mac80211: Add interface for driver to temporarily
+ disable dynamic ps
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1275817484.3615.9.camel@jlt3.sipsolutions.net>
+References: <1275561873-21500-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1275817484.3615.9.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 07 Jun 2010 08:04:46 +0300
+Message-ID: <1275887086.5277.29790.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5 June 2010 02:25, Grazvydas Ignotas <notasas@gmail.com> wrote:
-> Reading the ELP_CTRL register with sdio_readb causes problems because
-> hardware seems to be performing a write using stuff bits in the request
-> (those bits contain write data in write request). This indicates that it
-> actually expects RAW (read after write) type of request, so perform that
-> when reading ELP_CTRL instead. Also cache last written value so we know
-> what to write when doing RAW request.
->
-> Because of the above it was not possible to wake the chip from ELP power
-> saving mode, PM had to be disabled to have the driver usable in SDIO
-> mode. After this patch PM is functional.
+On Sun, 2010-06-06 at 11:44 +0200, ext Johannes Berg wrote:
+> Hi,
+> 
+> Apologies for the delay in reviewing this.
+> 
+> On Thu, 2010-06-03 at 13:44 +0300, Juuso Oikarinen wrote:
+> 
+> > @@ -699,6 +704,8 @@ enum ieee80211_smps_mode {
+> >  struct ieee80211_conf {
+> >  	u32 flags;
+> >  	int power_level, dynamic_ps_timeout, dynamic_ps_forced_timeout;
+> > +	int dynamic_ps_user_timeout;
+> > +	bool disable_dynamic_ps;
+> >  	int max_sleep_period;
+> 
+> Please don't keep these variables in driver-visible structures, they
+> don't belong there as they are implementation details, they should be in
+> the ieee80211_local structure somewhere and the driver should see _only_
+> dynamic_ps_timeout.
+> 
+> The same actually applies to dynamic_ps_forced_timeout as well, so
+> please also make a separate patch moving that.
 
-Excellent that Power Save is now working SDIO. Thank you very much!
+Understood. I will make these changes.
 
-> Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
+-Juuso
 
-Acked-by: Kalle Valo <kvalo@adurom.com>
+> johannes
+> 
 
-> this patch is not suitable for backporting because reqiured SDIO function
-> was only merged during the last merge window.
 
-Usually information like this is good to store in the commit log
-itself so that it gets properly archived.
-
-Kalle
