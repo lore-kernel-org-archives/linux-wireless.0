@@ -1,49 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:49848 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753343Ab0FZQM0 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:48097 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755220Ab0FGJFW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Jun 2010 12:12:26 -0400
-Date: Sat, 26 Jun 2010 08:08:00 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Iuri Diniz <iuridiniz@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Fwd: mesh configuration information element is wrong?
-Message-ID: <20100626150800.GA20900@jm.kir.nu>
-References: <AANLkTinHfFVr45OV3V6CT9auK3L-JfrCYUMQpeo9toTw@mail.gmail.com>
- <AANLkTimeR5kQX2hSNw0Ud0QOF0-nsqCFMkSNul9wwa7C@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <AANLkTimeR5kQX2hSNw0Ud0QOF0-nsqCFMkSNul9wwa7C@mail.gmail.com>
+	Mon, 7 Jun 2010 05:05:22 -0400
+Subject: Re: [PATCH v3 1/3] cfg80211: Add nl80211 antenna configuration
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20100607065858.16060.38448.stgit@tt-desk>
+References: <20100607065858.16060.38448.stgit@tt-desk>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 07 Jun 2010 11:05:14 +0200
+Message-ID: <1275901514.3639.4.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 25, 2010 at 02:43:31PM -0300, Iuri Diniz wrote:
+On Mon, 2010-06-07 at 15:58 +0900, Bruno Randolf wrote:
 
-> I'm analyzing the 802.11s code and I think I've found that mesh
-> configuration information element has wrongs sizes.
-> 
-> It is not according to my copy of 802.11s draft 3.
+> + * @NL80211_CMD_GET_ANTENNA: Get antenna configuration from driver.
 
-Draft 3 is quite old..
+Since we already have runtime configuration and capability information
+as part of the wiphy information printout, remind me again what was
+wrong with adding antenna information there as well rather than having a
+separate command to retrieve it?
 
-> on linux-wireless-testing/linux/include/ieee80211.h we have:
->  * struct ieee80211_meshconf_ie
->  * This structure refers to "Mesh Configuration information element"
+As far as differentiating that information is concerned, you can easily
+implement an iw "get antenna" command by just partially printing the
+wiphy information, for example, no?
 
-> struct ieee80211_meshconf_ie {
->     u8 meshconf_psel;
->     u8 meshconf_pmetric;
->     u8 meshconf_congest;
->     u8 meshconf_synch;
->     u8 meshconf_auth;
->     u8 meshconf_form;
->     u8 meshconf_cap;
-> } __attribute__ ((packed));
+johannes
 
-That matches otherwise with the latest draft (P802.11s/D6.0), but it
-lacks one field. There is a 1-octet field "Mesh Peering Protocol
-Identifier" between the _auth and _form fields in the latest draft.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
