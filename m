@@ -1,62 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41182 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755673Ab0F2TpR (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35572 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755064Ab0FGLDR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jun 2010 15:45:17 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
+	Mon, 7 Jun 2010 07:03:17 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.71)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1OLa6u-0007C7-OC
+	for linux-wireless@vger.kernel.org; Mon, 07 Jun 2010 13:03:16 +0200
+Message-Id: <20100607110201.225614720@sipsolutions.net>
+Date: Mon, 07 Jun 2010 13:01:45 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>, ath9k-devel@atheros.com,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] ath9k: remove unused function ath9k_hw_keyisvalid
-Date: Tue, 29 Jun 2010 15:38:50 -0400
-Message-Id: <1277840330-18228-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1266572413.3991.55.camel@jlt3.sipsolutions.net>
-References: <1266572413.3991.55.camel@jlt3.sipsolutions.net>
+Subject: [RFC 12/21] mac80211: remove non-irqsafe aggregation callbacks
+References: <20100607110133.472649120@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/ath/ath9k/hw.c |   11 -----------
- drivers/net/wireless/ath/ath9k/hw.h |    1 -
- 2 files changed, 0 insertions(+), 12 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 1ed1440..9d22444 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1737,17 +1737,6 @@ bool ath9k_hw_set_keycache_entry(struct ath_hw *ah, u16 entry,
- }
- EXPORT_SYMBOL(ath9k_hw_set_keycache_entry);
+The non-irqsafe aggregation start/stop done
+callbacks are currently only used by ath9k_htc,
+and can cause callbacks into the driver again.
+This might lead to locking issues, which will
+only get worse as we modify locking. To avoid
+trouble, remove the non-irqsafe versions and
+change ath9k_htc to use those instead.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |    6 ++--
+ include/net/mac80211.h                        |   32 ++++----------------------
+ net/mac80211/agg-tx.c                         |    2 -
+ net/mac80211/ieee80211_i.h                    |    2 +
+ 4 files changed, 10 insertions(+), 32 deletions(-)
+
+--- wireless-testing.orig/include/net/mac80211.h	2010-06-06 13:11:21.000000000 +0200
++++ wireless-testing/include/net/mac80211.h	2010-06-06 13:22:24.000000000 +0200
+@@ -1445,7 +1445,7 @@ enum ieee80211_filter_flags {
+  *
+  * Note that drivers MUST be able to deal with a TX aggregation
+  * session being stopped even before they OK'ed starting it by
+- * calling ieee80211_start_tx_ba_cb(_irqsafe), because the peer
++ * calling ieee80211_start_tx_ba_cb_irqsafe, because the peer
+  * might receive the addBA frame and send a delBA right away!
+  *
+  * @IEEE80211_AMPDU_RX_START: start Rx aggregation
+@@ -2314,25 +2314,14 @@ void ieee80211_queue_delayed_work(struct
+ int ieee80211_start_tx_ba_session(struct ieee80211_sta *sta, u16 tid);
  
--bool ath9k_hw_keyisvalid(struct ath_hw *ah, u16 entry)
--{
--	if (entry < ah->caps.keycache_size) {
--		u32 val = REG_READ(ah, AR_KEYTABLE_MAC1(entry));
--		if (val & AR_KEYTABLE_VALID)
--			return true;
--	}
--	return false;
--}
--EXPORT_SYMBOL(ath9k_hw_keyisvalid);
+ /**
+- * ieee80211_start_tx_ba_cb - low level driver ready to aggregate.
+- * @vif: &struct ieee80211_vif pointer from the add_interface callback
+- * @ra: receiver address of the BA session recipient.
+- * @tid: the TID to BA on.
+- *
+- * This function must be called by low level driver once it has
+- * finished with preparations for the BA session.
+- */
+-void ieee80211_start_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u16 tid);
 -
- /******************************/
- /* Power Management (Chipset) */
- /******************************/
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index e9578a4..f0e0cc9 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -863,7 +863,6 @@ bool ath9k_hw_keysetmac(struct ath_hw *ah, u16 entry, const u8 *mac);
- bool ath9k_hw_set_keycache_entry(struct ath_hw *ah, u16 entry,
- 				 const struct ath9k_keyval *k,
- 				 const u8 *mac);
--bool ath9k_hw_keyisvalid(struct ath_hw *ah, u16 entry);
+-/**
+  * ieee80211_start_tx_ba_cb_irqsafe - low level driver ready to aggregate.
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback
+  * @ra: receiver address of the BA session recipient.
+  * @tid: the TID to BA on.
+  *
+  * This function must be called by low level driver once it has
+- * finished with preparations for the BA session.
+- * This version of the function is IRQ-safe.
++ * finished with preparations for the BA session. It can be called
++ * from any context.
+  */
+ void ieee80211_start_tx_ba_cb_irqsafe(struct ieee80211_vif *vif, const u8 *ra,
+ 				      u16 tid);
+@@ -2351,25 +2340,14 @@ void ieee80211_start_tx_ba_cb_irqsafe(st
+ int ieee80211_stop_tx_ba_session(struct ieee80211_sta *sta, u16 tid);
  
- /* GPIO / RFKILL / Antennae */
- void ath9k_hw_cfg_gpio_input(struct ath_hw *ah, u32 gpio);
--- 
-1.7.0.1
+ /**
+- * ieee80211_stop_tx_ba_cb - low level driver ready to stop aggregate.
+- * @vif: &struct ieee80211_vif pointer from the add_interface callback
+- * @ra: receiver address of the BA session recipient.
+- * @tid: the desired TID to BA on.
+- *
+- * This function must be called by low level driver once it has
+- * finished with preparations for the BA session tear down.
+- */
+-void ieee80211_stop_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u8 tid);
+-
+-/**
+  * ieee80211_stop_tx_ba_cb_irqsafe - low level driver ready to stop aggregate.
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback
+  * @ra: receiver address of the BA session recipient.
+  * @tid: the desired TID to BA on.
+  *
+  * This function must be called by low level driver once it has
+- * finished with preparations for the BA session tear down.
+- * This version of the function is IRQ-safe.
++ * finished with preparations for the BA session tear down. It
++ * can be called from any context.
+  */
+ void ieee80211_stop_tx_ba_cb_irqsafe(struct ieee80211_vif *vif, const u8 *ra,
+ 				     u16 tid);
+--- wireless-testing.orig/net/mac80211/agg-tx.c	2010-06-06 13:22:23.000000000 +0200
++++ wireless-testing/net/mac80211/agg-tx.c	2010-06-06 13:22:24.000000000 +0200
+@@ -479,7 +479,6 @@ void ieee80211_start_tx_ba_cb(struct iee
+ 	spin_unlock_bh(&sta->lock);
+ 	rcu_read_unlock();
+ }
+-EXPORT_SYMBOL(ieee80211_start_tx_ba_cb);
+ 
+ void ieee80211_start_tx_ba_cb_irqsafe(struct ieee80211_vif *vif,
+ 				      const u8 *ra, u16 tid)
+@@ -619,7 +618,6 @@ void ieee80211_stop_tx_ba_cb(struct ieee
+ 	spin_unlock_bh(&sta->lock);
+ 	rcu_read_unlock();
+ }
+-EXPORT_SYMBOL(ieee80211_stop_tx_ba_cb);
+ 
+ void ieee80211_stop_tx_ba_cb_irqsafe(struct ieee80211_vif *vif,
+ 				     const u8 *ra, u16 tid)
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2010-06-06 13:22:23.000000000 +0200
++++ wireless-testing/net/mac80211/ieee80211_i.h	2010-06-06 13:22:24.000000000 +0200
+@@ -1124,6 +1124,8 @@ void ieee80211_process_addba_request(str
+ 
+ int __ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
+ 				   enum ieee80211_back_parties initiator);
++void ieee80211_start_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u16 tid);
++void ieee80211_stop_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u8 tid);
+ 
+ /* Spectrum management */
+ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
+--- wireless-testing.orig/drivers/net/wireless/ath/ath9k/htc_drv_main.c	2010-06-06 13:11:20.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath/ath9k/htc_drv_main.c	2010-06-06 13:22:24.000000000 +0200
+@@ -510,13 +510,13 @@ void ath9k_htc_aggr_work(struct work_str
+ 		ret = ath9k_htc_aggr_oper(priv, wk->vif, wk->sta_addr,
+ 					  wk->tid, true);
+ 		if (!ret)
+-			ieee80211_start_tx_ba_cb(wk->vif, wk->sta_addr,
+-						 wk->tid);
++			ieee80211_start_tx_ba_cb_irqsafe(wk->vif, wk->sta_addr,
++							 wk->tid);
+ 		break;
+ 	case IEEE80211_AMPDU_TX_STOP:
+ 		ath9k_htc_aggr_oper(priv, wk->vif, wk->sta_addr,
+ 				    wk->tid, false);
+-		ieee80211_stop_tx_ba_cb(wk->vif, wk->sta_addr, wk->tid);
++		ieee80211_stop_tx_ba_cb_irqsafe(wk->vif, wk->sta_addr, wk->tid);
+ 		break;
+ 	default:
+ 		ath_print(ath9k_hw_common(priv->ah), ATH_DBG_FATAL,
+
 
