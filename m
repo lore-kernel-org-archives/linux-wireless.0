@@ -1,148 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:48413 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753062Ab0F1Ujd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jun 2010 16:39:33 -0400
-Subject: Re: intel 5100/iwlagn bug in 2.6.35-rc2 during large file transfer
-From: reinette chatre <reinette.chatre@intel.com>
-To: Richard Farina <sidhayn@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4C28D552.30000@gmail.com>
-References: <4C198EF0.5080807@gmail.com>
-	 <1277225293.25793.2257.camel@rchatre-DESK>  <4C2383E2.8000909@gmail.com>
-	 <1277399636.25793.2389.camel@rchatre-DESK>  <4C23961D.7050500@gmail.com>
-	 <1277401731.25793.2391.camel@rchatre-DESK>  <4C24D926.7010806@gmail.com>
-	 <1277492229.13673.1297.camel@rchatre-DESK>  <4C278704.5040604@gmail.com>
-	 <1277742425.13673.1376.camel@rchatre-DESK>  <4C28D552.30000@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 28 Jun 2010 13:39:23 -0700
-Message-ID: <1277757563.4197.11.camel@rchatre-DESK>
-Mime-Version: 1.0
+Received: from emita2.mittwald.de ([85.199.184.189]:38294 "EHLO
+	emita2.mittwald.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756327Ab0FGIEP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jun 2010 04:04:15 -0400
+Received: from mx51.mymxserver.com (mail5104.internal [172.16.51.4])
+	by emita2.mittwald.de (Postfix) with ESMTP id E9C2A1F9E23
+	for <linux-wireless@vger.kernel.org>; Mon,  7 Jun 2010 09:55:03 +0200 (CEST)
+From: Holger Schurig <holgerschurig@gmail.com>
+To: Ray <raystinger@gmail.com>
+Subject: Re: New developer to linux and ath5k, request for assistance :)
+Date: Mon, 7 Jun 2010 09:54:53 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <ED64ABDC-524D-4A77-BEAB-95125A54822C@gmail.com>
+In-Reply-To: <ED64ABDC-524D-4A77-BEAB-95125A54822C@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201006070954.53380.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-06-28 at 10:01 -0700, Richard Farina wrote:
-> reinette chatre wrote:
-> > On Sun, 2010-06-27 at 10:14 -0700, Richard Farina wrote:
-> >   
-> >>> ---
-> >>>  drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    5 +++--
-> >>>  drivers/net/wireless/iwlwifi/iwl-fh.h      |    2 +-
-> >>>  2 files changed, 4 insertions(+), 3 deletions(-)
-> >>>
-> >>> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> >>> index 0f292a2..2815ee7 100644
-> >>> --- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> >>> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> >>> @@ -613,7 +613,8 @@ void iwlagn_rx_allocate(struct iwl_priv *priv, gfp_t priority)
-> >>>               }
-> >>>               spin_unlock_irqrestore(&rxq->lock, flags);
-> >>>
-> >>> -             if (rxq->free_count > RX_LOW_WATERMARK)
-> >>> +             if ((priority == GFP_ATOMIC) ||
-> >>> +                 (rxq->free_count > RX_LOW_WATERMARK / 4))
-> >>>                       gfp_mask |= __GFP_NOWARN;
-> >>>
-> >>>       
-> >
-> > Here I set the allocation mask to not print _any_ warnings when
-> > allocation is atomic ...
-> >
-> >
-> >   
-> >> [180257.090410] swapper: page allocation failure. order:1, mode:0x4020
-> >> [180257.090414] Pid: 0, comm: swapper Not tainted 2.6.34-pentoo-r2 #2
-> >> [180257.090416] Call Trace:
-> >>     
-> >
-> > ... clearly this is an allocation warning ...
-> >
-> >   
-> >> [180257.090418]  <IRQ>  [<ffffffff810984c0>]
-> >> __alloc_pages_nodemask+0x571/0x5b9
-> >> [180257.090437]  [<ffffffffa05162f3>] iwlagn_rx_allocate+0x98/0x2e0 [iwlagn]
-> >> [180257.090445]  [<ffffffffa051668c>] iwlagn_rx_replenish_now+0x16/0x23
-> >> [iwlagn]
-> >>     
-> >
-> > ... but it is an atomic one, which after the patch should not be
-> > printing _any_ warning ...
-> >
-> >   
-> I dunno, I really don't. but I did just verify the patch and it is 
-> correct and applied.
+> The next step I suppose is to download the ATH5k source and start to look
+> into the codes. But I have several questions in mind and would appreciate if
+> some of you can shed me some light and point me to the right direction.
 
-Could you please verify that it is the patch below and not an earlier
-patch I sent? Apart from what I mention above there is another strange
-thing in the logs you provide. In your logs you have the message:
+Go and visit
 
-iwlagn 0000:02:00.0: Failed to alloc_pages with
-GFP_ATOMIC. Only 40 free buffers remaining.
+http://wireless.kernel.org/
 
-while the code is:
+There's a large section there for "Developers".
 
-»-------»-------»-------if ((rxq->free_count <= RX_LOW_WATERMARK / 4) &&
-»-------»-------»-------    net_ratelimit())
-»-------»-------»-------»-------IWL_CRIT(priv, "Failed to alloc_pages with %s. Only %u free buffers remaining.\n",
-»-------»-------»-------»-------»------- priority == GFP_ATOMIC ?  "GFP_ATOMIC" : "GFP_KERNEL",
-»-------»-------»-------»-------»------- rxq->free_count);
 
-with :
-#define RX_LOW_WATERMARK 128
+You don't download the source of ath5k. Instead, you download the source of 
+Linux, it contains the source of ath5k. The best option is to use the 
+wireless-testing tree. More info about that on the above mentioned web page.
 
-The message in your log should thus not be there since it should only
-print the message if the free_count less than or equal to 32.
 
->From 65c459c35332c7039cc84a980e6e04118ba81c04 Mon Sep 17 00:00:00 2001
-From: Reinette Chatre <reinette.chatre@intel.com>
-Date: Thu, 24 Jun 2010 10:48:59 -0700
-Subject: [PATCH] increase low watermark
+> I understand that this version is Ubuntu already comes with ATH5k installed
+> by default.
 
----
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    5 +++--
- drivers/net/wireless/iwlwifi/iwl-fh.h      |    2 +-
- 2 files changed, 4 insertions(+), 3 deletions(-)
+For any serious linux kernel hacking you need to learn how to work without a 
+Distribution supplied kernel. Basically, you want to load and run your own 
+kernel on your distribution. Forget about all the Distribution supplied 
+things. At least this is what I make, your mileage may vary. I personally get 
+the "vanilla" or "wireless-testing" source tree via git, do a "make xconfig" 
+or similar, and then a "make && make install". Now I reboot into this kernel, 
+look if everything works still, and maybe do one more iteration. I keep the 
+distro-supplied kernel just for reference, or in case I make something 
+horribly. then I reboot into the distro-kernel via the grub menu.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 0f292a2..2815ee7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -613,7 +613,8 @@ void iwlagn_rx_allocate(struct iwl_priv *priv, gfp_t priority)
- 		}
- 		spin_unlock_irqrestore(&rxq->lock, flags);
- 
--		if (rxq->free_count > RX_LOW_WATERMARK)
-+		if ((priority == GFP_ATOMIC) ||
-+		    (rxq->free_count > RX_LOW_WATERMARK / 4))
- 			gfp_mask |= __GFP_NOWARN;
- 
- 		if (priv->hw_params.rx_page_order > 0)
-@@ -627,7 +628,7 @@ void iwlagn_rx_allocate(struct iwl_priv *priv, gfp_t priority)
- 					       "order: %d\n",
- 					       priv->hw_params.rx_page_order);
- 
--			if ((rxq->free_count <= RX_LOW_WATERMARK) &&
-+			if ((rxq->free_count <= RX_LOW_WATERMARK / 4) &&
- 			    net_ratelimit())
- 				IWL_CRIT(priv, "Failed to alloc_pages with %s. Only %u free buffers remaining.\n",
- 					 priority == GFP_ATOMIC ?  "GFP_ATOMIC" : "GFP_KERNEL",
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fh.h b/drivers/net/wireless/iwlwifi/iwl-fh.h
-index 113c366..431bc58 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fh.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fh.h
-@@ -426,7 +426,7 @@
-  * RX related structures and functions
-  */
- #define RX_FREE_BUFFERS 64
--#define RX_LOW_WATERMARK 8
-+#define RX_LOW_WATERMARK 128
- 
- /* Size of one Rx buffer in host DRAM */
- #define IWL_RX_BUF_SIZE_3K (3 * 1000) /* 3945 only */
--- 
-1.7.0.4
+Later, when you have your wireless-kernel up & running, you simply do "make && 
+make modules_install", remove all old modules and reload the new modules, 
+without booting into new kernels. I have made my own custom scripts for that.
+
+
+I'm assuming you already know "Linux Device Drivers 3", available as paper-
+book and in the web?  And also http://kernelnewbies.org?
 
 
 
-
-
+Which parts of ath5k do you want to modify?
