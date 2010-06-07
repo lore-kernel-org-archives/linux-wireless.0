@@ -1,52 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:46427 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752138Ab0FJRwu (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35577 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755667Ab0FGLDY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jun 2010 13:52:50 -0400
-Received: by gye5 with SMTP id 5so147831gye.19
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Jun 2010 10:52:48 -0700 (PDT)
-Message-ID: <4C112661.9060909@gmail.com>
-Date: Thu, 10 Jun 2010 13:52:33 -0400
-From: Richard Farina <sidhayn@gmail.com>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: compat-wireless: Enabled RT3[05]xx support in rt2800pci driver
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 7 Jun 2010 07:03:24 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.71)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1OLa71-0007EU-7Z
+	for linux-wireless@vger.kernel.org; Mon, 07 Jun 2010 13:03:23 +0200
+Message-Id: <20100607110202.206072320@sipsolutions.net>
+Date: Mon, 07 Jun 2010 13:01:50 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 17/21] mac80211: fix RX aggregation timer
+References: <20100607110133.472649120@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit 3e5212c1d07909478c38c6b606ccc9d88b2a7297
-Author: Rick Farina <sidhayn@gmail.com>
-Date:   Thu Jun 10 13:46:33 2010 -0400
+From: Johannes Berg <johannes.berg@intel.com>
 
+I noticed that when there was _no_ traffic at
+all on a given aggregation session, it would
+never time out. This won't happen unless you
+forced creating a session, but fix it anyway.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/agg-rx.c |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+--- wireless-testing.orig/net/mac80211/agg-rx.c	2010-06-06 13:22:28.000000000 +0200
++++ wireless-testing/net/mac80211/agg-rx.c	2010-06-06 13:22:29.000000000 +0200
+@@ -274,6 +274,10 @@ void ieee80211_process_addba_request(str
  
-    Enable CONFIG_RT2800PCI_RT30XX and CONFIG_RT2800PCI_RT35XX. This 
-change has been
-    compile tested only as I do not personally own this hardware.
-    
-    Added additional note about requirements to safely enable 
-CONFIG_RT2800PCI_SOC.
-    
-    Signed-off-by: Rick Farina
+ 	/* activate it for RX */
+ 	rcu_assign_pointer(sta->ampdu_mlme.tid_rx[tid], tid_agg_rx);
++
++	if (timeout)
++		mod_timer(&tid_agg_rx->session_timer, TU_TO_EXP_TIME(timeout));
++
+ end:
+ 	spin_unlock_bh(&sta->lock);
+ 
 
-diff --git a/config.mk b/config.mk
-index 0001a7d..42ca58e 100644
---- a/config.mk
-+++ b/config.mk
-@@ -270,8 +270,11 @@ CONFIG_RT2500PCI=m
- ifneq ($(CONFIG_CRC_CCITT),)
- CONFIG_RT2800PCI=m
- CONFIG_RT2800PCI_PCI=y
--# CONFIG_RT2800PCI_RT30XX=y
--# CONFIG_RT2800PCI_RT35XX=y
-+CONFIG_RT2800PCI_RT30XX=y
-+CONFIG_RT2800PCI_RT35XX=y
-+# XXX: This config param needs to be activated only if
-+# RALINK_RT288X || RALINK_RT305X but the Makefile doesn't
-+# support this yet.
- # CONFIG_RT2800PCI_SOC=y
- endif
- NEED_RT2X00=y
 
