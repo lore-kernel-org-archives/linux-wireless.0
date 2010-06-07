@@ -1,49 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from setoy.chost.de ([217.160.209.225]:48109 "EHLO smtp.chost.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932938Ab0FELoa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Jun 2010 07:44:30 -0400
-Subject: Re: [PATCH] libertas: Fix ethtool reporting no WOL options supported if WOL is not already active
-From: Sascha Silbe <sascha-ml-linux-kernel-wireless@silbe.org>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-In-reply-to: <1275457005.18302.1.camel@localhost.localdomain>
-Reply-To: Sascha Silbe <sascha-ml-reply-to-2010-3@silbe.org>
-References: <1274806808-24185-1-git-send-email-sascha-pgp@silbe.org> <1275457005.18302.1.camel@localhost.localdomain>
-Date: Sat, 05 Jun 2010 11:37:57 +0000
-Message-Id: <1275737632-sup-3834@xo15-minimal.sascha.silbe.org>
-Content-Type: multipart/signed; micalg="pgp-sha1"; boundary="=-1275737877-355890-3302-5147-5-="; protocol="application/pgp-signature"
-MIME-Version: 1.0
+Received: from he.sipsolutions.net ([78.46.109.217]:48090 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756626Ab0FGJDh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jun 2010 05:03:37 -0400
+Subject: Re: [PATCH v3 1/3] cfg80211: Add nl80211 antenna configuration
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20100607065858.16060.38448.stgit@tt-desk>
+References: <20100607065858.16060.38448.stgit@tt-desk>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 07 Jun 2010 11:03:28 +0200
+Message-ID: <1275901408.3639.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2010-06-07 at 15:58 +0900, Bruno Randolf wrote:
 
---=-1275737877-355890-3302-5147-5-=
-Content-Type: text/plain; charset=UTF-8
+> +static int nl80211_get_antenna(struct sk_buff *skb, struct genl_info *info)
+> +{
+> +	struct cfg80211_registered_device *rdev;
+> +	struct sk_buff *msg;
+> +	void *hdr;
+> +	int res;
+> +	u8 tx_ant, rx_ant;
 
-Excerpts from Dan Williams's message of Wed Jun 02 05:36:45 +0000 2010:
+You should probably set them both to 0 here,
 
-> Acked-by: Dan Williams <dcbw@redhat.com>
-Thanks!
+> +	res = rdev->ops->get_antenna(&rdev->wiphy, &tx_ant, &rx_ant);
+> +	if (res)
+> +		goto free_msg;
 
-> but note that this patch submission isn't correctly formatted, you'll
-> need to add your Signed-off-by tag as described here:
-Oops, "tg patch" usually does that for me, but I've used git format-patch for this patch. I've just resent it with SOB and Acked-By added.
+and complain about the driver if they still are after this.
 
-Sascha
--- 
-http://sascha.silbe.org/
-http://www.infra-silbe.de/
+johannes
 
---=-1275737877-355890-3302-5147-5-=
-Content-Disposition: attachment; filename="signature.asc"
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAkwKNxUACgkQebr7S6V0daNP4ACfQTfejdj/uz66v0eiptxr4Qgq
-5YwAn1uZt3jQ2n6SjY/N2nNuNHTZOZIm
-=L5uX
------END PGP SIGNATURE-----
-
---=-1275737877-355890-3302-5147-5-=--
