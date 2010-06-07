@@ -1,117 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:17575 "EHLO mga01.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:1030 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752377Ab0FFG4n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jun 2010 02:56:43 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Shanyu Zhao <shanyu.zhao@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 07/23] iwlwifi: do not clear data after chain noise calib
-Date: Sat,  5 Jun 2010 23:56:22 -0700
-Message-Id: <1275807398-18184-8-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1275807398-18184-1-git-send-email-reinette.chatre@intel.com>
-References: <1275807398-18184-1-git-send-email-reinette.chatre@intel.com>
+	id S1754576Ab0FGKB6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jun 2010 06:01:58 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: stable@kernel.org
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 3/4 2.6.33.y] mac80211: do not wip out old supported rates
+Date: Mon,  7 Jun 2010 12:00:26 +0200
+Message-Id: <1275904827-6598-3-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1275904827-6598-2-git-send-email-sgruszka@redhat.com>
+References: <1275904827-6598-1-git-send-email-sgruszka@redhat.com>
+ <1275904827-6598-2-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shanyu Zhao <shanyu.zhao@intel.com>
+commit f0b058b61711ebf5be94d6865ca7b2c259b71d37 upstream.
 
-Chain noise calibration data are cleared after the calibration is done
-in iwlagn_gain_computation() and iwl4965_gain_computation(). This cause
-the debugfs entries for those data useless. To provide valid debugging
-info, clear those data right before starting the calibration instead.
+Use old supported rates, if some buggy AP do not provide
+supported rates information element in managment frame.
 
-Signed-off-by: Shanyu Zhao <shanyu.zhao@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-4965.c     |   19 +++++++++++--------
- drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c |   22 ++++++++++++----------
- 2 files changed, 23 insertions(+), 18 deletions(-)
+ net/mac80211/scan.c |   21 +++++++++++----------
+ 1 files changed, 11 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 4e377c8..a0669ea 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -346,9 +346,19 @@ static void iwl4965_chain_noise_reset(struct iwl_priv *priv)
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index bc17cf7..697dc54 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -60,7 +60,7 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
+ 			  bool beacon)
  {
- 	struct iwl_chain_noise_data *data = &(priv->chain_noise_data);
+ 	struct ieee80211_bss *bss;
+-	int clen;
++	int clen, srlen;
+ 	s32 signal = 0;
  
--	if ((data->state == IWL_CHAIN_NOISE_ALIVE) && iwl_is_associated(priv)) {
-+	if ((data->state == IWL_CHAIN_NOISE_ALIVE) &&
-+	     iwl_is_associated(priv)) {
- 		struct iwl_calib_diff_gain_cmd cmd;
+ 	if (local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
+@@ -92,23 +92,24 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
+ 	if (bss->dtim_period == 0)
+ 		bss->dtim_period = 1;
  
-+		/* clear data for chain noise calibration algorithm */
-+		data->chain_noise_a = 0;
-+		data->chain_noise_b = 0;
-+		data->chain_noise_c = 0;
-+		data->chain_signal_a = 0;
-+		data->chain_signal_b = 0;
-+		data->chain_signal_c = 0;
-+		data->beacon_count = 0;
-+
- 		memset(&cmd, 0, sizeof(cmd));
- 		cmd.hdr.op_code = IWL_PHY_CALIBRATE_DIFF_GAIN_CMD;
- 		cmd.diff_gain_a = 0;
-@@ -419,13 +429,6 @@ static void iwl4965_gain_computation(struct iwl_priv *priv,
- 		/* Mark so we run this algo only once! */
- 		data->state = IWL_CHAIN_NOISE_CALIBRATED;
+-	bss->supp_rates_len = 0;
++	/* replace old supported rates if we get new values */
++	srlen = 0;
+ 	if (elems->supp_rates) {
+-		clen = IEEE80211_MAX_SUPP_RATES - bss->supp_rates_len;
++		clen = IEEE80211_MAX_SUPP_RATES;
+ 		if (clen > elems->supp_rates_len)
+ 			clen = elems->supp_rates_len;
+-		memcpy(&bss->supp_rates[bss->supp_rates_len], elems->supp_rates,
+-		       clen);
+-		bss->supp_rates_len += clen;
++		memcpy(bss->supp_rates, elems->supp_rates, clen);
++		srlen += clen;
  	}
--	data->chain_noise_a = 0;
--	data->chain_noise_b = 0;
--	data->chain_noise_c = 0;
--	data->chain_signal_a = 0;
--	data->chain_signal_b = 0;
--	data->chain_signal_c = 0;
--	data->beacon_count = 0;
- }
- 
- static void iwl4965_bg_txpower_work(struct work_struct *work)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-index 25851ec..3f765ba 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-@@ -176,14 +176,6 @@ static void iwlagn_gain_computation(struct iwl_priv *priv,
- 		data->radio_write = 1;
- 		data->state = IWL_CHAIN_NOISE_CALIBRATED;
+ 	if (elems->ext_supp_rates) {
+-		clen = IEEE80211_MAX_SUPP_RATES - bss->supp_rates_len;
++		clen = IEEE80211_MAX_SUPP_RATES - srlen;
+ 		if (clen > elems->ext_supp_rates_len)
+ 			clen = elems->ext_supp_rates_len;
+-		memcpy(&bss->supp_rates[bss->supp_rates_len],
+-		       elems->ext_supp_rates, clen);
+-		bss->supp_rates_len += clen;
++		memcpy(bss->supp_rates + srlen, elems->ext_supp_rates, clen);
++		srlen += clen;
  	}
--
--	data->chain_noise_a = 0;
--	data->chain_noise_b = 0;
--	data->chain_noise_c = 0;
--	data->chain_signal_a = 0;
--	data->chain_signal_b = 0;
--	data->chain_signal_c = 0;
--	data->beacon_count = 0;
- }
++	if (srlen)
++		bss->supp_rates_len = srlen;
  
- static void iwlagn_chain_noise_reset(struct iwl_priv *priv)
-@@ -191,10 +183,20 @@ static void iwlagn_chain_noise_reset(struct iwl_priv *priv)
- 	struct iwl_chain_noise_data *data = &priv->chain_noise_data;
- 	int ret;
+ 	bss->wmm_used = elems->wmm_param || elems->wmm_info;
  
--	if ((data->state == IWL_CHAIN_NOISE_ALIVE) && iwl_is_associated(priv)) {
-+	if ((data->state == IWL_CHAIN_NOISE_ALIVE) &&
-+	     iwl_is_associated(priv)) {
- 		struct iwl_calib_chain_noise_reset_cmd cmd;
--		memset(&cmd, 0, sizeof(cmd));
- 
-+		/* clear data for chain noise calibration algorithm */
-+		data->chain_noise_a = 0;
-+		data->chain_noise_b = 0;
-+		data->chain_noise_c = 0;
-+		data->chain_signal_a = 0;
-+		data->chain_signal_b = 0;
-+		data->chain_signal_c = 0;
-+		data->beacon_count = 0;
-+
-+		memset(&cmd, 0, sizeof(cmd));
- 		cmd.hdr.op_code = IWL_PHY_CALIBRATE_CHAIN_NOISE_RESET_CMD;
- 		cmd.hdr.first_group = 0;
- 		cmd.hdr.groups_num = 1;
 -- 
-1.7.0.4
+1.6.2.5
 
