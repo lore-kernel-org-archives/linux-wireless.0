@@ -1,39 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:49115 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751004Ab0FFF5B convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37985 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750732Ab0FGPJp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jun 2010 01:57:01 -0400
-Received: by vws5 with SMTP id 5so1784503vws.19
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Jun 2010 22:57:00 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4C0B32E8.4080208@gmail.com>
-References: <4C0B32E8.4080208@gmail.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Sat, 5 Jun 2010 22:56:39 -0700
-Message-ID: <AANLkTikgARRZOd1kMUbT3fQLbgHLU0-6Y0kbDw7EmMYX@mail.gmail.com>
-Subject: Re: [Patch] Enable rt2800usb in compat-wireless stable branch
-To: Richard Farina <sidhayn@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 7 Jun 2010 11:09:45 -0400
+Subject: Re: [RFC PATCH] mac80211: Fix circular locking dependency in ARP
+ filter handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"reinette.chatre@intel.com" <reinette.chatre@intel.com>
+In-Reply-To: <1275918144.5277.30408.camel@wimaxnb.nmp.nokia.com>
+References: <1275915965-10124-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1275916761.29978.15.camel@jlt3.sipsolutions.net>
+	 <1275918144.5277.30408.camel@wimaxnb.nmp.nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 07 Jun 2010 17:09:43 +0200
+Message-ID: <1275923383.29978.19.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 5, 2010 at 10:32 PM, Richard Farina <sidhayn@gmail.com> wrote:
-> This patch enables the new RT307x and RT357x chips in compat-wireless
-> stable.  I'd like to enable the same for rt2800pci as well but right now it
-> doesn't seem to build so I'll wait till it does to submit the diff.
->
-> Thanks,
-> Rick Farina
->
-> Don't see why this is needed to patch config.mk but:
-> Signed-off-by: Rick Farina
->
+On Mon, 2010-06-07 at 16:42 +0300, Juuso Oikarinen wrote:
 
-Manged the patch commit log a bit, but applied it thanks. Will
-propagate to 2.6.35.y on the next release.
+> > > +#ifdef CONFIG_INET
+> > > +		cancel_work_sync(&sdata->u.mgd.arp_config_work);
+> > > +#endif
+> > 
+> > No can do, this is under RTNL and thus can't block waiting for a work
+> > that acquires the RTNL ... the work might already be running, waiting
+> > for the RTNL, by the time you get here. This will also get you a lockdep
+> > complaint.
+> 
+> The work-func escapes based on ieee80211_sdata_running before acquiring
+> the rtnl - hence here it should never get to the lock. I saw the same
+> being used in those other work funcs too. I was beginning work to try to
+> validate that, so it's not enough?
 
-Thanks!
+No, it's not enough. Like I said: "the work might already be running,
+waiting for the RTNL" -- and once it obtains the RTNL, sdata has already
+been freed!
 
-  Luis
+> > This is why 
+> > 
+> > > @@ -379,7 +379,8 @@ static int ieee80211_ifa_changed(struct notifier_block *nb,
+> > >  	ifmgd = &sdata->u.mgd;
+> > >  	mutex_lock(&ifmgd->mtx);
+> > >  	if (ifmgd->associated)
+> > > -		ieee80211_set_arp_filter(sdata);
+> > > +		ieee80211_queue_work(&sdata->local->hw,
+> > > +				     &sdata->u.mgd.arp_config_work);
+> > >  	mutex_unlock(&ifmgd->mtx);
+> > 
+> > No need to do change it here since the rtnl is held outside.
+> 
+> Yes, I know rtnl is held outside. I changed this for two reasons. First,
+> I think it maybe better if the driver function is always called in the
+> same scope. Secondly, this gets rid of inetdevs intermediate
+> configurations (if you change IP address, it will first remove the
+> previous one, and immediately after add a new one, resulting in two
+> calls to the driver config function.)
+
+Interesting. But that only works if it does that both together under
+rtnl. I don't think the context really matters -- it should be the same
+at least from a locking POV you have both rtnl and mgd->mtx acquired.
+
+> > Also, and this applies to the change in mlme.c too, you must never put
+> > work that acquires the rtnl onto the mac80211 workqueue ... that's what
+> > you were trying to fix to start with!
+> 
+> > But because the interface might go away before your work runs, you're in
+> > a stupid situation where you can't really use a per-interface work
+> > either ... I think you probably need to have the work in ieee80211_local
+> > and iterate the interface list.
+> 
+> I thought about iterating the interface list. I assume you imply calling
+> the configure function for every interface.
+
+Only if it's associated, I guess.
+
+> Going still back to the current patch: assuming that you overlooked the
+> sdata_running() call in the arp_config_work() function, and we can after
+> all cancel_work_sync in _stop(), would using the kernel's default
+> workqueue solve the rtnl problem, or are the rtnl dependencies there
+> too?
+
+Using the default wq would solve the rtnl from workqueue problem,
+obviously, but wouldn't fix the cancel_work_sync problem.
+
+johannes
+
