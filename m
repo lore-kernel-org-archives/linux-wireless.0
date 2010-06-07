@@ -1,34 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:18749 "EHLO mga02.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:37710 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753299Ab0FVRM3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jun 2010 13:12:29 -0400
-Subject: Re: ASPM status for iwlwifi and power-management (in general)
-From: reinette chatre <reinette.chatre@intel.com>
-To: "sedat.dilek@gmail.com" <sedat.dilek@gmail.com>
-Cc: wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <AANLkTilpqUnWG2CnMNZR7a45rY9cbqks3W-gkjsMbYOQ@mail.gmail.com>
-References: <AANLkTilpqUnWG2CnMNZR7a45rY9cbqks3W-gkjsMbYOQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 22 Jun 2010 10:12:28 -0700
-Message-ID: <1277226748.25793.2267.camel@rchatre-DESK>
-Mime-Version: 1.0
+	id S1755220Ab0FGHC5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jun 2010 03:02:57 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 07 Jun 2010 00:02:57 -0700
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <greg@kroah.com>
+CC: <linux-wireless@vger.kernel.org>, <stable@kernel.org>,
+	Ranga Rao Ravuri <ranga.ravuri@atheros.com>
+Subject: [stable 2.6.32][PATCH] ath9k: Avoid corrupt frames being forwarded to mac80211.
+Date: Mon, 7 Jun 2010 12:32:43 +0530
+Message-ID: <1275894163-3348-2-git-send-email-vnatarajan@atheros.com>
+In-Reply-To: <1275894163-3348-1-git-send-email-vnatarajan@atheros.com>
+References: <1275894163-3348-1-git-send-email-vnatarajan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-06-22 at 03:44 -0700, Sedat Dilek wrote:
+If bit 29 is set, MAC H/W can attempt to decrypt the received aggregate
+with WEP or TKIP, eventhough the received frame may be a CRC failed
+corrupted frame. If this bit is set, H/W obeys key type in keycache.
+If it is not set and if the key type in keycache is neither open nor
+AES, H/W forces key type to be open.  But bit 29 should be set to 1
+for AsyncFIFO feature to encrypt/decrypt the aggregate with WEP or TKIP.
 
-> Before I will try 'pcie_aspm=force' cheat-code I wanted to ask about
-> the status of iwlwifi and ASPM.
-> Is there code available. yet? Which kernel has it - linux-next,
-> wireless-testing GIT, iwlwifi GIT?
+Cc: stable@kernel.org
+Reported-by: Johan Hovold <johan.hovold@lundinova.se>
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+Signed-off-by: Ranga Rao Ravuri <ranga.ravuri@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/initvals.h |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-iwl3945 will disable L0s if L1 enabled, and enable L0s if L1 disabled.
-Please see iwl_apm_init which is called by iwl3945_apm_init
-
-Reinette
-
+diff --git a/drivers/net/wireless/ath/ath9k/initvals.h b/drivers/net/wireless/ath/ath9k/initvals.h
+index 8622265..a21c214 100644
+--- a/drivers/net/wireless/ath/ath9k/initvals.h
++++ b/drivers/net/wireless/ath/ath9k/initvals.h
+@@ -2762,7 +2762,7 @@ static const u32 ar9280Common_9280_2[][2] = {
+     { 0x00008258, 0x00000000 },
+     { 0x0000825c, 0x400000ff },
+     { 0x00008260, 0x00080922 },
+-    { 0x00008264, 0xa8a00010 },
++    { 0x00008264, 0x88a00010 },
+     { 0x00008270, 0x00000000 },
+     { 0x00008274, 0x40000000 },
+     { 0x00008278, 0x003e4180 },
+@@ -3935,7 +3935,7 @@ static const u_int32_t ar9285Common_9285[][2] = {
+     { 0x00008258, 0x00000000 },
+     { 0x0000825c, 0x400000ff },
+     { 0x00008260, 0x00080922 },
+-    { 0x00008264, 0xa8a00010 },
++    { 0x00008264, 0x88a00010 },
+     { 0x00008270, 0x00000000 },
+     { 0x00008274, 0x40000000 },
+     { 0x00008278, 0x003e4180 },
+@@ -5072,7 +5072,7 @@ static const u_int32_t ar9287Common_9287_1_0[][2] = {
+     { 0x00008258, 0x00000000 },
+     { 0x0000825c, 0x400000ff },
+     { 0x00008260, 0x00080922 },
+-    { 0x00008264, 0xa8a00010 },
++    { 0x00008264, 0x88a00010 },
+     { 0x00008270, 0x00000000 },
+     { 0x00008274, 0x40000000 },
+     { 0x00008278, 0x003e4180 },
+@@ -6864,7 +6864,7 @@ static const u_int32_t ar9271Common_9271_1_0[][2] = {
+     { 0x00008258, 0x00000000 },
+     { 0x0000825c, 0x400000ff },
+     { 0x00008260, 0x00080922 },
+-    { 0x00008264, 0xa8a00010 },
++    { 0x00008264, 0x88a00010 },
+     { 0x00008270, 0x00000000 },
+     { 0x00008274, 0x40000000 },
+     { 0x00008278, 0x003e4180 },
+-- 
+1.7.1
 
