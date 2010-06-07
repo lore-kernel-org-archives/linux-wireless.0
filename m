@@ -1,33 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:38711 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933620Ab0FCDCm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jun 2010 23:02:42 -0400
-Received: by pvg16 with SMTP id 16so384964pvg.19
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Jun 2010 20:02:42 -0700 (PDT)
-From: Ray <raystinger@gmail.com>
-Content-Type: text/plain; charset=us-ascii
-Subject: New developer to linux and ath5k, request for assistance :) 
-Date: Thu, 3 Jun 2010 11:02:39 +0800
-Message-Id: <ED64ABDC-524D-4A77-BEAB-95125A54822C@gmail.com>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Mime-Version: 1.0 (Apple Message framework v1078)
+Received: from mail.atheros.com ([12.36.123.2]:20377 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754406Ab0FGUMZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jun 2010 16:12:25 -0400
+Date: Mon, 7 Jun 2010 13:12:23 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Joe Perches <joe@perches.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] drivers/staging/otus/TODO: Don't bother, for
+ documentation purposes only
+Message-ID: <20100607201223.GE29505@tux>
+References: <cover.1275935090.git.joe@perches.com>
+ <de848b7990a8a691068c8761543a321f4df3f759.1275935091.git.joe@perches.com>
+ <20100607190236.GD29505@tux>
+ <1275937895.26425.41.camel@Joe-Laptop.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1275937895.26425.41.camel@Joe-Laptop.home>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi fellow developers,
+On Mon, Jun 07, 2010 at 12:11:35PM -0700, Joe Perches wrote:
+> On Mon, 2010-06-07 at 12:02 -0700, Luis R. Rodriguez wrote:
+> > this driver is unmaintained and its only purpose is as a
+> > source of documentation for developers working on ar9170 and carl9170.
+> > Once carl9170 gets 11n support and merged upstream then this driver
+> > can be removed.
+> 
+> Then the TODO file should be updated.
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-I have just started to look into Linux and would like to get my hands dirty with the ATH5k development.
-
-As of now, I have installed Ubuntu LTS 10.04 and some software packages I believe would be necessary for development (i.e. Build-essentials, linux-libc-dev and linux-source-2.6.32). The next step I suppose is to download the ATH5k source and start to look into the codes. But I have several questions in mind and would appreciate if some of you can shed me some light and point me to the right direction.
-
-I understand that this version is Ubuntu already comes with ATH5k installed by default. My understanding is that I have to first disable it and then download the ATH5K source off the internet and work on the downloaded copy instead. In that case, may I know how can I unload the default ATH5K from Ubuntu? I tried using the blacklist method as suggested by some folks in a forum but I am wondering if that will effectively blacklist my home-brewed ATH5K as a result subsequently.
-
-Lastly, may I know if theres any online guide on how do I get started with ATH5K development for a new developer who has little Linux experience? I'm a relatively quick learner, so if theres an online guide somewhere, I should be able to follow it through and hopefully get up to speed quickly.
-
-Thanks for reading and I appreciate all the help I can get. Cheers! :)
-
-
-Best,
-Simon
+Sure, thanks.
