@@ -1,67 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ist.d-labs.de ([213.239.218.44]:42937 "EHLO mx01.d-labs.de"
+Received: from mx1.redhat.com ([209.132.183.28]:6231 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754218Ab0FIKVJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jun 2010 06:21:09 -0400
-Date: Wed, 9 Jun 2010 12:20:50 +0200
-From: Florian Mickler <florian@mickler.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: pm list <linux-pm@lists.linux-foundation.org>,
-	james.bottomley@suse.de, markgross@thegnar.org,
-	mgross@linux.intel.com,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Javier Cardona <javier@cozybit.com>, Jouni Malinen <j@w1.fi>,
-	Rui Paulo <rpaulo@gmail.com>,
-	Kalle Valo <kalle.valo@nokia.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: [RFC PATCH 1/2] mac80211: make max_network_latency notifier
- atomic safe
-Message-ID: <20100609122050.1dd18132@schatten.dmk.lab>
-In-Reply-To: <1276076287.3727.15.camel@jlt3.sipsolutions.net>
-References: <1276074915-26879-1-git-send-email-florian@mickler.org>
-	<1276076287.3727.15.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S1754818Ab0FGKBK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jun 2010 06:01:10 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: stable@kernel.org
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 1/2 2.6.32.y] mac80211: do not wip out old supported rates
+Date: Mon,  7 Jun 2010 11:59:42 +0200
+Message-Id: <1275904783-6563-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 09 Jun 2010 11:38:07 +0200
-Johannes Berg <johannes@sipsolutions.net> wrote:
+Use old supported rates, if some buggy AP do not provide
+supported rates information element in managment frame.
 
-> On Wed, 2010-06-09 at 11:15 +0200, florian@mickler.org wrote:
-> > In order to have the pm_qos framework be callable from interrupt
-> > context, all listeners have to also be callable in that context.
-> 
-> That makes no sense at all. Why add work structs _everywhere_ in the
-> callees and make the API harder to use and easy to get wrong completely,
-> instead of just adding a single work struct that will be queued from the
-> caller and dealing with the locking complexity etc. just once.
-> 
-> johannes
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ net/mac80211/scan.c |   21 +++++++++++----------
+ 1 files changed, 11 insertions(+), 10 deletions(-)
 
-Just to defend this approach, but I'm certainly not married to it
-(hence RFC):
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index fd6411d..169111a 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -62,7 +62,7 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
+ 			  bool beacon)
+ {
+ 	struct ieee80211_bss *bss;
+-	int clen;
++	int clen, srlen;
+ 	s32 signal = 0;
+ 
+ 	if (local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
+@@ -94,23 +94,24 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
+ 	if (bss->dtim_period == 0)
+ 		bss->dtim_period = 1;
+ 
+-	bss->supp_rates_len = 0;
++	/* replace old supported rates if we get new values */
++	srlen = 0;
+ 	if (elems->supp_rates) {
+-		clen = IEEE80211_MAX_SUPP_RATES - bss->supp_rates_len;
++		clen = IEEE80211_MAX_SUPP_RATES;
+ 		if (clen > elems->supp_rates_len)
+ 			clen = elems->supp_rates_len;
+-		memcpy(&bss->supp_rates[bss->supp_rates_len], elems->supp_rates,
+-		       clen);
+-		bss->supp_rates_len += clen;
++		memcpy(bss->supp_rates, elems->supp_rates, clen);
++		srlen += clen;
+ 	}
+ 	if (elems->ext_supp_rates) {
+-		clen = IEEE80211_MAX_SUPP_RATES - bss->supp_rates_len;
++		clen = IEEE80211_MAX_SUPP_RATES - srlen;
+ 		if (clen > elems->ext_supp_rates_len)
+ 			clen = elems->ext_supp_rates_len;
+-		memcpy(&bss->supp_rates[bss->supp_rates_len],
+-		       elems->ext_supp_rates, clen);
+-		bss->supp_rates_len += clen;
++		memcpy(bss->supp_rates + srlen, elems->ext_supp_rates, clen);
++		srlen += clen;
+ 	}
++	if (srlen)
++		bss->supp_rates_len = srlen;
+ 
+ 	bss->wmm_used = elems->wmm_param || elems->wmm_info;
+ 
+-- 
+1.6.2.5
 
-There are only two listeners at the moment. I suspect that most future
-uses of the framework need to be atomic, as the driver that
-requests a specific quality of service probably doesn't want to get into
-races with the provider of that service(listener). So i suspected the
-network listener to be the special case.  
-
-The race between service-provider and qos-requester for non-atomic
-contextes is already there, isn't it? so, locking complexity shouldn't
-be worse than before.
-
-But my first approach to this is seen here:
-https://lists.linux-foundation.org/pipermail/linux-pm/2010-June/026902.html
-
-A third possibility would be to make it dependent on the
-type of the constraint, if blocking notifiers are allowed or not. 
-But that would sacrifice API consistency (update_request for one
-constraint is allowed to be called in interrupt context and
-update_request for another would be not).
-
-Cheers,
-Flo
