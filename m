@@ -1,68 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55059 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753801Ab0FAIAL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jun 2010 04:00:11 -0400
-Subject: Re: [RFC PATCHv2 1/1] mac80211: Add interface for driver to
- temporarily disable dynamic ps
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1275289547-7104-2-git-send-email-juuso.oikarinen@nokia.com>
-References: <1275289547-7104-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1275289547-7104-2-git-send-email-juuso.oikarinen@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 01 Jun 2010 10:00:33 +0200
-Message-ID: <1275379233.3621.2.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:50423 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752239Ab0FGGOn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jun 2010 02:14:43 -0400
+From: Zhu Yi <yi.zhu@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Zhu Yi <yi.zhu@intel.com>
+Subject: [PATCH] wireless: remove my name from the maintainer list
+Date: Mon,  7 Jun 2010 14:15:43 +0800
+Message-Id: <1275891343-11931-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-05-31 at 10:05 +0300, Juuso Oikarinen wrote:
+Remove my name from the MAINTAINERS file.
 
->  /**
-> + * ieee80211_disable_dyn_ps - force mac80211 to temporarily disable dynamic psm
-> + *
-> + * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+---
+ MAINTAINERS |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
 
-* @disable: ...
-
-The name is also a bit odd since you can re-enable it, but I can't think
-of a better name either.
-
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -478,6 +478,24 @@ static void ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
->  	}
->  }
->  
-> +void ieee80211_disable_dyn_ps(struct ieee80211_vif *vif, bool disable)
-> +{
-> +	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-> +	struct ieee80211_local *local = sdata->local;
-> +
-> +	WARN_ON(sdata->vif.type != NL80211_IFTYPE_STATION);
-> +
-> +	sdata->disable_dyn_ps = disable;
-> +
-> +	/* immediately go to psm */
-> +	if (disable && timer_pending(&local->dynamic_ps_timer)) {
-> +		ieee80211_queue_work(&local->hw,
-> +				     &local->dynamic_ps_enable_work);
-> +		del_timer_sync(&local->dynamic_ps_timer);
-> +	}
-> +}
-
-The timer trickery seems weird, why not just queue the work and ignore
-the timer?
-
-> -	if (conf->dynamic_ps_timeout > 0 &&
-> +	if (conf->dynamic_ps_timeout > 0 && !sdata->disable_dyn_ps &&
-
-As we just discussed on IRC, it might be worthwhile to adjust
-dynamic_ps_timeout to 0 instead in this case, so this and the RX and TX
-paths need not be touched.
-
-johannes
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 13608bd..d7c467a 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -2978,7 +2978,6 @@ F:	drivers/net/ixgb/
+ F:	drivers/net/ixgbe/
+ 
+ INTEL PRO/WIRELESS 2100 NETWORK CONNECTION SUPPORT
+-M:	Zhu Yi <yi.zhu@intel.com>
+ M:	Reinette Chatre <reinette.chatre@intel.com>
+ M:	Intel Linux Wireless <ilw@linux.intel.com>
+ L:	linux-wireless@vger.kernel.org
+@@ -2988,7 +2987,6 @@ F:	Documentation/networking/README.ipw2100
+ F:	drivers/net/wireless/ipw2x00/ipw2100.*
+ 
+ INTEL PRO/WIRELESS 2915ABG NETWORK CONNECTION SUPPORT
+-M:	Zhu Yi <yi.zhu@intel.com>
+ M:	Reinette Chatre <reinette.chatre@intel.com>
+ M:	Intel Linux Wireless <ilw@linux.intel.com>
+ L:	linux-wireless@vger.kernel.org
+@@ -3019,7 +3017,6 @@ F:	drivers/net/wimax/i2400m/
+ F:	include/linux/wimax/i2400m.h
+ 
+ INTEL WIRELESS WIFI LINK (iwlwifi)
+-M:	Zhu Yi <yi.zhu@intel.com>
+ M:	Reinette Chatre <reinette.chatre@intel.com>
+ M:	Intel Linux Wireless <ilw@linux.intel.com>
+ L:	linux-wireless@vger.kernel.org
+@@ -3030,7 +3027,6 @@ F:	drivers/net/wireless/iwlwifi/
+ 
+ INTEL WIRELESS MULTICOMM 3200 WIFI (iwmc3200wifi)
+ M:	Samuel Ortiz <samuel.ortiz@intel.com>
+-M:	Zhu Yi <yi.zhu@intel.com>
+ M:	Intel Linux Wireless <ilw@linux.intel.com>
+ L:	linux-wireless@vger.kernel.org
+ S:	Supported
+-- 
+1.6.3.3
 
