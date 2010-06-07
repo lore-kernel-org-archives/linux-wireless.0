@@ -1,47 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:5287 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753862Ab0FYAtL (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59309 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753198Ab0FGTuK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jun 2010 20:49:11 -0400
-Received: from vs3013.wh2.ocn.ne.jp (125.206.180.245)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0931866946
-	for <linux-wireless@vger.kernel.org>; Fri, 25 Jun 2010 09:49:07 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: "Jaroslav Fojtik" <jafojtik@seznam.cz>
-Subject: Re: ATH5k - Signal measurement reports wrong values - "calib" did not help
-Date: Fri, 25 Jun 2010 09:47:38 +0900
-Cc: linux-wireless@vger.kernel.org
-References: <4C1E6A13.4259.24AF3C@jafojtik.seznam.cz> <201006211650.50766.br1@einfach.org> <4C21CDD7.22303.238050@jafojtik.seznam.cz>
-In-Reply-To: <4C21CDD7.22303.238050@jafojtik.seznam.cz>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201006250947.39223.br1@einfach.org>
+	Mon, 7 Jun 2010 15:50:10 -0400
+Subject: [PATCH] mac80211: fix deauth before assoc
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Miles Lane <miles.lane@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 07 Jun 2010 21:50:07 +0200
+Message-ID: <1275940207.29978.24.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed June 23 2010 18:03:19 Jaroslav Fojtik wrote:
-> Dear Bruno & ATH5k developpers,
-> 
-> > > > it might be interresting to see what results you get from noise
-> > > > calibration. you can enable calibration debugging with "echo calib >
-> > > > /sys/kernel/debug/ath5k/phy0/debug"
-> 
-> Nothing changed after setting "calib" on.
-> 
-> ATH5k still reports bad values.
-> 
-> You could see a magenta line here:
->   http://78.108.103.11:11080/cgi-bin/rodga.cgi
-> 
-> regards
->    Jara
+From: Johannes Berg <johannes.berg@intel.com>
 
-hey jara!
+When we receive a deauthentication frame before
+having successfully associated, we neither print
+a message nor abort assocation. The former makes
+it hard to debug, while the latter later causes
+a warning in cfg80211 when, as will typically be
+the case, association timed out.
 
-setting "calib" is not supposed to change the results, it would just show us 
-debug messages in the kernel log (dmesg). have you tried the patch i sent 
-later? that should fix it...
+This warning was reported by many, e.g. in
+https://bugzilla.kernel.org/show_bug.cgi?id=15981,
+but I couldn't initially pinpoint it. I verified
+the fix by hacking hostapd to send a deauth frame
+instead of an association response.
 
-bruno
+Cc: stable@kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c |   39 ++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 38 insertions(+), 1 deletion(-)
+
+--- wireless-testing.orig/net/mac80211/mlme.c	2010-06-07 21:35:41.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2010-06-07 21:46:00.000000000 +0200
+@@ -1695,8 +1695,45 @@ void ieee80211_sta_rx_queued_mgmt(struct
+ 	mutex_unlock(&ifmgd->mtx);
+ 
+ 	if (skb->len >= 24 + 2 /* mgmt + deauth reason */ &&
+-	    (fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_DEAUTH)
++	    (fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_DEAUTH) {
++		struct ieee80211_local *local = sdata->local;
++		struct ieee80211_work *wk;
++
++		mutex_lock(&local->work_mtx);
++		list_for_each_entry(wk, &local->work_list, list) {
++			if (wk->sdata != sdata)
++				continue;
++
++			if (wk->type != IEEE80211_WORK_ASSOC)
++				continue;
++
++			if (memcmp(mgmt->bssid, wk->filter_ta, ETH_ALEN))
++				continue;
++			if (memcmp(mgmt->sa, wk->filter_ta, ETH_ALEN))
++				continue;
++
++			/*
++			 * Printing the message only here means we can't
++			 * spuriously print it, but it also means that it
++			 * won't be printed when the frame comes in before
++			 * we even tried to associate or in similar cases.
++			 *
++			 * Ultimately, I suspect cfg80211 should print the
++			 * messages instead.
++			 */
++			printk(KERN_DEBUG
++			       "%s: deauthenticated from %pM (Reason: %u)\n",
++			       sdata->name, mgmt->bssid,
++			       le16_to_cpu(mgmt->u.deauth.reason_code));
++
++			list_del_rcu(&wk->list);
++			free_work(wk);
++			break;
++		}
++		mutex_unlock(&local->work_mtx);
++
+ 		cfg80211_send_deauth(sdata->dev, (u8 *)mgmt, skb->len);
++	}
+ }
+ 
+ static void ieee80211_sta_timer(unsigned long data)
+
+
