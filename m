@@ -1,84 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:36732 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759922Ab0FKSaO convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35867 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752368Ab0FGTAM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jun 2010 14:30:14 -0400
-MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 11 Jun 2010 11:29:53 -0700
-Message-ID: <AANLkTikx7UuxgGRjo1TViZ2ZxU9DVmnErBoef13pKftd@mail.gmail.com>
-Subject: compat-wireless based on 2.6.35-rc2 pushed out
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>
-Cc: linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 7 Jun 2010 15:00:12 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Randy Dunlap <randy.dunlap@oracle.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] iwlwifi: fix-up botched revert
+Date: Mon,  7 Jun 2010 14:49:36 -0400
+Message-Id: <1275936576-15590-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <20100607090230.deed8bd1.randy.dunlap@oracle.com>
+References: <20100607090230.deed8bd1.randy.dunlap@oracle.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Its on the stable page now:
+In the revert of "iwlwifi: move _agn statistics related structure", I
+need to use CONFIG_IWLWIFI_DEBUGFS instead of CONFIG_IWLWIFI_DEBUG in
+the private structure definition.  Without this patch, it is possible
+to get this:
 
-http://wireless.kernel.org/en/users/Download/stable
+drivers/net/wireless/iwlwifi/iwl-rx.c: In function 'iwl_accumulative_statistics':
+drivers/net/wireless/iwlwifi/iwl-rx.c:304: error: 'struct iwl_priv' has no member named 'accum_statistics'
+drivers/net/wireless/iwlwifi/iwl-rx.c:305: error: 'struct iwl_priv' has no member named 'delta_statistics'
+drivers/net/wireless/iwlwifi/iwl-rx.c:306: error: 'struct iwl_priv' has no member named 'max_delta'
+drivers/net/wireless/iwlwifi/iwl-rx.c:321: error: 'struct iwl_priv' has no member named 'accum_statistics'
+drivers/net/wireless/iwlwifi/iwl-rx.c:323: error: 'struct iwl_priv' has no member named 'accum_statistics'
+drivers/net/wireless/iwlwifi/iwl-rx.c:325: error: 'struct iwl_priv' has no member named 'accum_statistics'
+drivers/net/wireless/iwlwifi/iwl-rx.c:327: error: 'struct iwl_priv' has no member named 'accum_statistics'
+drivers/net/wireless/iwlwifi/iwl-rx.c:329: error: 'struct iwl_priv' has no member named 'accum_statistics'
+drivers/net/wireless/iwlwifi/iwl-rx.c:331: error: 'struct iwl_priv' has no member named 'accum_statistics'
+drivers/net/wireless/iwlwifi/iwl-rx.c: In function 'iwl_reply_statistics':
+drivers/net/wireless/iwlwifi/iwl-rx.c:484: error: 'struct iwl_priv' has no member named 'accum_statistics'
+drivers/net/wireless/iwlwifi/iwl-rx.c:486: error: 'struct iwl_priv' has no member named 'delta_statistics'
+drivers/net/wireless/iwlwifi/iwl-rx.c:488: error: 'struct iwl_priv' has no member named 'max_delta'
 
-tarball: http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.35/compat-wireless-2.6.35-rc2.tar.bz2
-sha1sum: 6b2f040c965bffd4a659a7f4771832a9b7b568e5
-ChangeLog: http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.35/ChangeLog-2.6.35-rc2-wireless
+Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-dev.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-This actually has all the changes from Linus' tree as of today so it
-actually has extra stuff on top of rc2, its more like an rc3. I
-spotted these merged already:
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index f359d9f..a00248c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1208,7 +1208,7 @@ struct iwl_priv {
+ 	struct iwl_tt_mgmt thermal_throttle;
+ 
+ 	struct iwl_notif_statistics statistics;
+-#ifdef CONFIG_IWLWIFI_DEBUG
++#ifdef CONFIG_IWLWIFI_DEBUGFS
+ 	struct iwl_notif_statistics accum_statistics;
+ 	struct iwl_notif_statistics delta_statistics;
+ 	struct iwl_notif_statistics max_delta;
+-- 
+1.6.6.1
 
-$ git shortlog  v2.6.35-rc2.. net/mac80211/ net/wireless/ drivers/net/
-drivers/bluetooth/
-
-Abhijeet Kolekar (1):
-      iwl3945: fix internal scan
-
-Bob Copeland (1):
-      ath5k: retain promiscuous setting
-
-Bruno Randolf (1):
-      ath5k: fix NULL pointer in antenna configuration
-
-David S. Miller (1):
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-2.6
-
-Denis Kirjanov (1):
-      8139too: fix buffer overrun in rtl8139_init_board
-
-Emmanuel Grumbach (1):
-      iwlwifi: move sysfs_create_group to post request firmware
-
-Grazvydas Ignotas (1):
-      wl1251: fix a memory leak in probe
-
-Holger Schurig (1):
-      mac80211: fix function pointer check
-
-Jason Dravet (1):
-      p54usb: Add device ID for Dell WLA3310 USB
-
-Johannes Berg (3):
-      mac80211: process station blockack action frames from work
-      iwlwifi: add missing rcu_read_lock
-      mac80211: fix deauth before assoc
-
-John W. Linville (1):
-      Revert "wireless: hostap, fix oops due to early probing interrupt"
-
-Jussi Kivilinna (1):
-      asix: check packet size against mtu+ETH_HLEN instead of ETH_FRAME_LEN
-
-Linus Torvalds (1):
-      Merge git://git.kernel.org/.../davem/net-2.6
-
-Reinette Chatre (1):
-      iwl3945: enable stuck queue detection on 3945
-
-Timo Teräs (1):
-      r8169: fix random mdio_write failures
-
-Tobias Doerffel (1):
-      ath5k: depend on CONFIG_PM_SLEEP for suspend/resume functions
-
-  Luis
