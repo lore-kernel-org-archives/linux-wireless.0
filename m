@@ -1,46 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58166 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755553Ab0FIIyi (ORCPT
+Received: from rcsinet10.oracle.com ([148.87.113.121]:26952 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752048Ab0FGUk2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jun 2010 04:54:38 -0400
-Subject: Re: [PATCHv3] mac80211: Fix circular locking dependency in ARP
- filter handling
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"reinette.chatre@intel.com" <reinette.chatre@intel.com>
-In-Reply-To: <1276073421.5277.33026.camel@wimaxnb.nmp.nokia.com>
-References: <1276066224-17880-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1276068754.3727.0.camel@jlt3.sipsolutions.net>
-	 <1276073421.5277.33026.camel@wimaxnb.nmp.nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 09 Jun 2010 10:54:30 +0200
-Message-ID: <1276073670.3727.12.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 7 Jun 2010 16:40:28 -0400
+Message-ID: <4C0D58C6.2060505@oracle.com>
+Date: Mon, 07 Jun 2010 13:38:30 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] iwlwifi: fix-up botched revert
+References: <20100607090230.deed8bd1.randy.dunlap@oracle.com> <1275936576-15590-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1275936576-15590-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-06-09 at 11:50 +0300, Juuso Oikarinen wrote:
-> On Wed, 2010-06-09 at 09:32 +0200, ext Johannes Berg wrote:
-> > On Wed, 2010-06-09 at 09:50 +0300, Juuso Oikarinen wrote:
-> > 
-> > > v3: - queue reconfig filter work to kernel default wq instead of mac80211 wq
-> > 
-> > I think it would make more sense to use a different lock instead, like
-> > the iflist mutex?
+On 06/07/10 11:49, John W. Linville wrote:
+> In the revert of "iwlwifi: move _agn statistics related structure", I
+> need to use CONFIG_IWLWIFI_DEBUGFS instead of CONFIG_IWLWIFI_DEBUG in
+> the private structure definition.  Without this patch, it is possible
+> to get this:
 > 
-> Yeah had that originally, but apparently the iflist mutex is acquired
-> *after* the mgd mutex in some places of the code, especially all around
-> mlme.c, and here I would have to acquire them in reverse order. So I
-> changed to the rtnl lock.
+> drivers/net/wireless/iwlwifi/iwl-rx.c: In function 'iwl_accumulative_statistics':
+> drivers/net/wireless/iwlwifi/iwl-rx.c:304: error: 'struct iwl_priv' has no member named 'accum_statistics'
+> drivers/net/wireless/iwlwifi/iwl-rx.c:305: error: 'struct iwl_priv' has no member named 'delta_statistics'
+> drivers/net/wireless/iwlwifi/iwl-rx.c:306: error: 'struct iwl_priv' has no member named 'max_delta'
+> drivers/net/wireless/iwlwifi/iwl-rx.c:321: error: 'struct iwl_priv' has no member named 'accum_statistics'
+> drivers/net/wireless/iwlwifi/iwl-rx.c:323: error: 'struct iwl_priv' has no member named 'accum_statistics'
+> drivers/net/wireless/iwlwifi/iwl-rx.c:325: error: 'struct iwl_priv' has no member named 'accum_statistics'
+> drivers/net/wireless/iwlwifi/iwl-rx.c:327: error: 'struct iwl_priv' has no member named 'accum_statistics'
+> drivers/net/wireless/iwlwifi/iwl-rx.c:329: error: 'struct iwl_priv' has no member named 'accum_statistics'
+> drivers/net/wireless/iwlwifi/iwl-rx.c:331: error: 'struct iwl_priv' has no member named 'accum_statistics'
+> drivers/net/wireless/iwlwifi/iwl-rx.c: In function 'iwl_reply_statistics':
+> drivers/net/wireless/iwlwifi/iwl-rx.c:484: error: 'struct iwl_priv' has no member named 'accum_statistics'
+> drivers/net/wireless/iwlwifi/iwl-rx.c:486: error: 'struct iwl_priv' has no member named 'delta_statistics'
+> drivers/net/wireless/iwlwifi/iwl-rx.c:488: error: 'struct iwl_priv' has no member named 'max_delta'
+> 
+> Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-Ah, right.
+Acked-by: Randy Dunlap <randy.dunlap@oracle.com>
 
-However I'm a bit worried that making this workqueue change will allow
-the filter reconfigure to cross with suspend, which might mean it could
-execute after the device is suspended?
+Thanks.
 
-johannes
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-dev.h |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+> index f359d9f..a00248c 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-dev.h
+> +++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+> @@ -1208,7 +1208,7 @@ struct iwl_priv {
+>  	struct iwl_tt_mgmt thermal_throttle;
+>  
+>  	struct iwl_notif_statistics statistics;
+> -#ifdef CONFIG_IWLWIFI_DEBUG
+> +#ifdef CONFIG_IWLWIFI_DEBUGFS
+>  	struct iwl_notif_statistics accum_statistics;
+>  	struct iwl_notif_statistics delta_statistics;
+>  	struct iwl_notif_statistics max_delta;
 
+
+-- 
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
