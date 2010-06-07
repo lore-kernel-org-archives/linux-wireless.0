@@ -1,34 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:33957 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752188Ab0FWUsN (ORCPT
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:11912 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751320Ab0FGELO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jun 2010 16:48:13 -0400
-Received: by pxi7 with SMTP id 7so428862pxi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Jun 2010 13:48:13 -0700 (PDT)
-Message-ID: <4C227340.2000302@lwfinger.net>
-Date: Wed, 23 Jun 2010 15:49:04 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 7 Jun 2010 00:11:14 -0400
+Received: from vs3007.wh2.ocn.ne.jp (125.206.180.235)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0273843873
+	for <linux-wireless@vger.kernel.org>; Mon,  7 Jun 2010 13:11:13 +0900 (JST)
+Subject: [PATCH 2/5] ath5k: update AR5K_PHY_RESTART_DIV_GC values to match
+	masks
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Mon, 07 Jun 2010 13:11:25 +0900
+Message-ID: <20100607041125.18667.65985.stgit@tt-desk>
+In-Reply-To: <20100607041012.18667.6859.stgit@tt-desk>
+References: <20100607041012.18667.6859.stgit@tt-desk>
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Michael_B=FCsch?= <mb@bu3sch.de>
-CC: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: Recent results with BCM4312 on Netbook
-References: <4C20D884.3010501@lwfinger.net> <AANLkTikjzHcT9L472CFJ2LKtOiEUIk2S78_S_s-IxHjl@mail.gmail.com> (sfid-20100623_004823_485864_1D673701) <4C22014A.3000102@bu3sch.de>
-In-Reply-To: <4C22014A.3000102@bu3sch.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/23/2010 07:42 AM, Michael Büsch wrote:
-> Please note that there were some rewrites recently in the kernel
-> DMA subsystem. b43 does now use the generic DMA interface, which
-> should work on all busses. I would not rule out an error in
-> that area, though it's unlikely.
+#define AR5K_PHY_RESTART_DIV_GC               0x001c0000
+is 3 bit wide.
 
-I don't think that is a problem. None of my other 3 systems developed an
-error with that change. In addition, the Netbook started working as
-mysteriously as it had failed earlier. I just love intermittent cases. ;-)
+The previous values of 0xc and 0x8 are 4bit wide and bigger than the mask.
 
-Larry
+Writing 0 and 1 to AR5K_PHY_RESTART_DIV_GC is consistent with the comments and
+initvals we have in the HAL.
+
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ drivers/net/wireless/ath/ath5k/phy.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index 34ba576..0f3b9be 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -1768,13 +1768,13 @@ ath5k_hw_set_fast_div(struct ath5k_hw *ah, u8 ee_mode, bool enable)
+ 
+ 	if (enable) {
+ 		AR5K_REG_WRITE_BITS(ah, AR5K_PHY_RESTART,
+-				AR5K_PHY_RESTART_DIV_GC, 0xc);
++				AR5K_PHY_RESTART_DIV_GC, 1);
+ 
+ 		AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_FAST_ANT_DIV,
+ 					AR5K_PHY_FAST_ANT_DIV_EN);
+ 	} else {
+ 		AR5K_REG_WRITE_BITS(ah, AR5K_PHY_RESTART,
+-				AR5K_PHY_RESTART_DIV_GC, 0x8);
++				AR5K_PHY_RESTART_DIV_GC, 0);
+ 
+ 		AR5K_REG_DISABLE_BITS(ah, AR5K_PHY_FAST_ANT_DIV,
+ 					AR5K_PHY_FAST_ANT_DIV_EN);
+
