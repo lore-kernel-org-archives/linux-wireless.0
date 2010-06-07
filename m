@@ -1,56 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:47547 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751987Ab0FIGgU (ORCPT
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:48919 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751674Ab0FGG6x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jun 2010 02:36:20 -0400
-Subject: Re: 2.6.35-rc2-git2: Reported regressions from 2.6.34
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Carl Worth <cworth@cworth.org>,
-	Eric Anholt <eric@anholt.net>,
-	Venkatesh Pallipadi <venki@google.com>,
-	Jens Axboe <jaxboe@fusionio.com>,
-	Dave Airlie <airlied@gmail.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Ingo Molnar <mingo@elte.hu>,
-	David =?ISO-8859-1?Q?H=E4rdeman?= <david@hardeman.nu>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-In-Reply-To: <alpine.LFD.2.00.1006081814240.4506@i5.linux-foundation.org>
-References: <Rlf_Qjov7bG.A.a8F.I8rDMB@chimera>
-	 <alpine.LFD.2.00.1006081814240.4506@i5.linux-foundation.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 09 Jun 2010 08:36:12 +0200
-Message-ID: <1276065372.2439.700.camel@edumazet-laptop>
-Mime-Version: 1.0
+	Mon, 7 Jun 2010 02:58:53 -0400
+Received: from vs3007.wh2.ocn.ne.jp (125.206.180.235)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0708983931
+	for <linux-wireless@vger.kernel.org>; Mon,  7 Jun 2010 15:58:52 +0900 (JST)
+Subject: [PATCH v3 2/3] mac80211: Add antenna configuration
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Mon, 07 Jun 2010 15:59:04 +0900
+Message-ID: <20100607065903.16060.73955.stgit@tt-desk>
+In-Reply-To: <20100607065858.16060.38448.stgit@tt-desk>
+References: <20100607065858.16060.38448.stgit@tt-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le mardi 08 juin 2010 à 18:53 -0700, Linus Torvalds a écrit :
+Allow antenna configuration by calling driver's function for it.
 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16120
-> > Subject	: Oops: 0000 [#1] SMP, unable to handle kernel NULL pointer dereference at (null)
-> > Submitter	: Alex Zhavnerchik <alex.vizor@gmail.com>
-> > Date		: 2010-06-04 09:25 (5 days old)
-> > Handled-By	: Eric Dumazet <eric.dumazet@gmail.com>
-> 
-> This one seems to have a patch in bugzilla.
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ include/net/mac80211.h      |    2 ++
+ net/mac80211/cfg.c          |   16 ++++++++++++++
+ net/mac80211/driver-ops.h   |   23 ++++++++++++++++++++
+ net/mac80211/driver-trace.h |   50 +++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 91 insertions(+), 0 deletions(-)
 
-Yep, commit 035320d54758e21227987e3aae0d46e7a04f4ddc in David net-2.6
-tree, i'll be included in its next pull request.
-
-http://git.kernel.org/?p=linux/kernel/git/davem/net-2.6.git;a=commit;h=035320d54758e21227987e3aae0d46e7a04f4ddc
-
-Thanks
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index e3c1d47..e0688a9 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1732,6 +1732,8 @@ struct ieee80211_ops {
+ 	void (*flush)(struct ieee80211_hw *hw, bool drop);
+ 	void (*channel_switch)(struct ieee80211_hw *hw,
+ 			       struct ieee80211_channel_switch *ch_switch);
++	int (*set_antenna)(struct ieee80211_hw *hw, u8 tx_ant, u8 rx_ant);
++	int (*get_antenna)(struct ieee80211_hw *hw, u8 *tx_ant, u8 *rx_ant);
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 952845e..2e4d947 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1560,6 +1560,20 @@ static int ieee80211_action(struct wiphy *wiphy, struct net_device *dev,
+ 				    buf, len, cookie);
+ }
+ 
++static int ieee80211_set_antenna(struct wiphy *wiphy, u8 tx_ant, u8 rx_ant)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++
++	return drv_set_antenna(local, tx_ant, rx_ant);
++}
++
++static int ieee80211_get_antenna(struct wiphy *wiphy, u8 *tx_ant, u8 *rx_ant)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++
++	return drv_get_antenna(local, tx_ant, rx_ant);
++}
++
+ struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -1611,4 +1625,6 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.cancel_remain_on_channel = ieee80211_cancel_remain_on_channel,
+ 	.action = ieee80211_action,
+ 	.set_cqm_rssi_config = ieee80211_set_cqm_rssi_config,
++	.set_antenna = ieee80211_set_antenna,
++	.get_antenna = ieee80211_get_antenna,
+ };
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index d1139e4..edb4b4e 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -393,4 +393,27 @@ static inline void drv_channel_switch(struct ieee80211_local *local,
+ 	trace_drv_channel_switch(local, ch_switch);
+ }
+ 
++
++static inline int drv_set_antenna(struct ieee80211_local *local,
++				  u8 tx_ant, u8 rx_ant)
++{
++	int ret = -EOPNOTSUPP;
++	might_sleep();
++	if (local->ops->set_antenna)
++		ret = local->ops->set_antenna(&local->hw, tx_ant, rx_ant);
++	trace_drv_set_antenna(local, tx_ant, rx_ant, ret);
++	return ret;
++}
++
++static inline int drv_get_antenna(struct ieee80211_local *local,
++				  u8 *tx_ant, u8 *rx_ant)
++{
++	int ret = -EOPNOTSUPP;
++	might_sleep();
++	if (local->ops->get_antenna)
++		ret = local->ops->get_antenna(&local->hw, tx_ant, rx_ant);
++	trace_drv_get_antenna(local, *tx_ant, *rx_ant, ret);
++	return ret;
++}
++
+ #endif /* __MAC80211_DRIVER_OPS */
+diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
+index 6b90630..31bf664 100644
+--- a/net/mac80211/driver-trace.h
++++ b/net/mac80211/driver-trace.h
+@@ -827,6 +827,56 @@ TRACE_EVENT(drv_channel_switch,
+ 	)
+ );
+ 
++TRACE_EVENT(drv_set_antenna,
++	TP_PROTO(struct ieee80211_local *local, u8 tx_ant, u8 rx_ant, int ret),
++
++	TP_ARGS(local, tx_ant, rx_ant, ret),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		__field(u8, tx_ant)
++		__field(u8, rx_ant)
++		__field(int, ret)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		__entry->tx_ant = tx_ant;
++		__entry->rx_ant = rx_ant;
++		__entry->ret = ret;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT " tx_ant:%d rx_ant:%d ret:%d",
++		LOCAL_PR_ARG, __entry->tx_ant, __entry->rx_ant, __entry->ret
++	)
++);
++
++TRACE_EVENT(drv_get_antenna,
++	TP_PROTO(struct ieee80211_local *local, u8 tx_ant, u8 rx_ant, int ret),
++
++	TP_ARGS(local, tx_ant, rx_ant, ret),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		__field(u8, tx_ant)
++		__field(u8, rx_ant)
++		__field(int, ret)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		__entry->tx_ant = tx_ant;
++		__entry->rx_ant = rx_ant;
++		__entry->ret = ret;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT " tx_ant:%d rx_ant:%d ret:%d",
++		LOCAL_PR_ARG, __entry->tx_ant, __entry->rx_ant, __entry->ret
++	)
++);
++
+ /*
+  * Tracing for API calls that drivers call.
+  */
 
