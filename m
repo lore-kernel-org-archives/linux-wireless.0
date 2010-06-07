@@ -1,66 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:37752 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751099Ab0FVWsP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jun 2010 18:48:15 -0400
-Received: by fxm10 with SMTP id 10so2756674fxm.19
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jun 2010 15:48:13 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4C20D884.3010501@lwfinger.net>
-References: <4C20D884.3010501@lwfinger.net>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Wed, 23 Jun 2010 00:47:53 +0200
-Message-ID: <AANLkTikjzHcT9L472CFJ2LKtOiEUIk2S78_S_s-IxHjl@mail.gmail.com>
-Subject: Re: Recent results with BCM4312 on Netbook
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Michael Buesch <mb@bu3sch.de>,
-	wireless <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:31502 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753961Ab0FGKBs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jun 2010 06:01:48 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: stable@kernel.org
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 1/4 2.6.33.y] mac80211: explicitly disable/enable QoS
+Date: Mon,  7 Jun 2010 12:00:24 +0200
+Message-Id: <1275904827-6598-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 22, 2010 at 5:36 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> Michael,
->
-> I have some good news. The Netbook that came from John is suddenly
-> developing DMA errors for the BCM4312, even though it does not have a
-> Phoenix BIOS. I have no idea why it did not fail this way earlier, but at
-> least I have a machine to debug that failure.
+commit e1b3ec1a2a336c328c336cfa5485a5f0484cc90d upstream.
 
-Suddenly developing DMA errors? Hmm... maybe it's a hardware issue
-with the card, from which wl can silently recover?
+Add interface to disable/enable QoS (aka WMM or WME). Currently drivers
+enable it explicitly when ->conf_tx method is called, and newer disable.
+Disabling is needed for some APs, which do not support QoS, such
+we should send QoS frames to them.
 
->
-> My first discovery is that if PIO mode is to be used, it is not sufficient
-> to load the module with the "pio=1" option, but that both "qos=0" and
-> "nohwcrypt=1" options must also be used, at least for WPA/WPA2 networks.
-> No other combination works. In addition, the automatic failover to PIO
-> mode does not work unless those two options were used when the module was
-> loaded. Thus both of the following work:
->
-> modprobe b43 pio=1 qos=0 nohwcrypt=1
-> modprobe b43 qos=0 hwcrypt=1
->
-> The second example gets a fatal DMA error and resets the controller before
-> the network comes up. I tried setting the latter two options before the
-> controller reset call in the failover, but that did not work.
->
-> If you have suggestions on changes in the switch from DMA to PIO mode,
-> please send them to me. In the meantime, I will be looking at differences
-> in the MMIO traces between wl and b43 to try to fix the DMA problem at the
-> source of the trouble.
->
-> Larry
->
-> _______________________________________________
-> b43-dev mailing list
-> b43-dev@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/b43-dev
->
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ include/net/mac80211.h |    5 +++++
+ net/mac80211/mlme.c    |    9 ++++++++-
+ net/mac80211/util.c    |    5 +++++
+ 3 files changed, 18 insertions(+), 1 deletions(-)
 
-
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index f39b303..8c1f0ee 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -577,11 +577,15 @@ struct ieee80211_rx_status {
+  *	may turn the device off as much as possible. Typically, this flag will
+  *	be set when an interface is set UP but not associated or scanning, but
+  *	it can also be unset in that case when monitor interfaces are active.
++ * @IEEE80211_CONF_QOS: Enable 802.11e QoS also know as WMM (Wireless
++ *      Multimedia). On some drivers (iwlwifi is one of know) we have
++ *      to enable/disable QoS explicitly.
+  */
+ enum ieee80211_conf_flags {
+ 	IEEE80211_CONF_MONITOR		= (1<<0),
+ 	IEEE80211_CONF_PS		= (1<<1),
+ 	IEEE80211_CONF_IDLE		= (1<<2),
++	IEEE80211_CONF_QOS		= (1<<3),
+ };
+ 
+ 
+@@ -604,6 +608,7 @@ enum ieee80211_conf_changed {
+ 	IEEE80211_CONF_CHANGE_CHANNEL		= BIT(6),
+ 	IEEE80211_CONF_CHANGE_RETRY_LIMITS	= BIT(7),
+ 	IEEE80211_CONF_CHANGE_IDLE		= BIT(8),
++	IEEE80211_CONF_CHANGE_QOS		= BIT(9),
+ };
+ 
+ /**
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 1a209ac..950088d 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -798,6 +798,9 @@ static void ieee80211_sta_wmm_params(struct ieee80211_local *local,
+ 	int count;
+ 	u8 *pos;
+ 
++	if (!local->ops->conf_tx)
++		return;
++
+ 	if (!(ifmgd->flags & IEEE80211_STA_WMM_ENABLED))
+ 		return;
+ 
+@@ -856,11 +859,15 @@ static void ieee80211_sta_wmm_params(struct ieee80211_local *local,
+ 		       wiphy_name(local->hw.wiphy), queue, aci, acm,
+ 		       params.aifs, params.cw_min, params.cw_max, params.txop);
+ #endif
+-		if (drv_conf_tx(local, queue, &params) && local->ops->conf_tx)
++		if (drv_conf_tx(local, queue, &params))
+ 			printk(KERN_DEBUG "%s: failed to set TX queue "
+ 			       "parameters for queue %d\n",
+ 			       wiphy_name(local->hw.wiphy), queue);
+ 	}
++
++	/* enable WMM or activate new settings */
++	local->hw.conf.flags |=	IEEE80211_CONF_QOS;
++	drv_config(local, IEEE80211_CONF_CHANGE_QOS);
+ }
+ 
+ static u32 ieee80211_handle_bss_capability(struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 27212e8..9e35dcb 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -795,6 +795,11 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata)
+ 
+ 		drv_conf_tx(local, queue, &qparam);
+ 	}
++
++	/* after reinitialize QoS TX queues setting to default,
++	 * disable QoS at all */
++	local->hw.conf.flags &=	~IEEE80211_CONF_QOS;
++	drv_config(local, IEEE80211_CONF_CHANGE_QOS);
+ }
+ 
+ void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.6.2.5
+
