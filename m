@@ -1,59 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:30116 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751885Ab0F1BXk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Jun 2010 21:23:40 -0400
-Received: from vs3005.wh2.ocn.ne.jp (125.206.180.233)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0121368217
-	for <linux-wireless@vger.kernel.org>; Mon, 28 Jun 2010 10:23:38 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: "Jaroslav Fojtik" <jafojtik@seznam.cz>
-Subject: Re: ATH5k - Signal measurement reports wrong values - thanks for a fix
-Date: Mon, 28 Jun 2010 10:21:47 +0900
-Cc: linux-wireless@vger.kernel.org
-References: <4C1E6A13.4259.24AF3C@jafojtik.seznam.cz> <201006271120.11785.br1@einfach.org> <4C26FD91.10140.F4D6B@jafojtik.seznam.cz>
-In-Reply-To: <4C26FD91.10140.F4D6B@jafojtik.seznam.cz>
+Received: from mail.atheros.com ([12.36.123.2]:12298 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752390Ab0FGTCi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jun 2010 15:02:38 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 07 Jun 2010 12:02:38 -0700
+Date: Mon, 7 Jun 2010 12:02:36 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Joe Perches <joe@perches.com>
+CC: Andrew Morton <akpm@linux-foundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+Subject: Re: [PATCH 11/17] MAINTAINERS: Add STAGING - OTUS 802.11n USB
+ WIRELESS DRIVER
+Message-ID: <20100607190236.GD29505@tux>
+References: <cover.1275935090.git.joe@perches.com>
+ <de848b7990a8a691068c8761543a321f4df3f759.1275935091.git.joe@perches.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201006281021.47132.br1@einfach.org>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <de848b7990a8a691068c8761543a321f4df3f759.1275935091.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun June 27 2010 16:28:17 Jaroslav Fojtik wrote:
-> Dear Bruno,
+On Mon, Jun 07, 2010 at 11:49:45AM -0700, Joe Perches wrote:
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
+>  MAINTAINERS |    5 +++++
+>  1 files changed, 5 insertions(+), 0 deletions(-)
 > 
-> > > I hope that this patch would not influence performance or any other
-> > > functionality.
-> > 
-> > no it just fixes a regression i have introduced in an earlier change.
-> > thanks for reporting and testing this! i will send the patch for
-> > inclusion on monday, then it might take some time (few days to weeks)
-> > until it apperars in compat- wireless.
-> 
-> Thank you for explanation.
-> The patch surely improves signal strength measurement and I recomend it.
->
-> Anyway, when you look at the magenta line here:
->   http://78.108.103.11:11080/cgi-bin/rodga_1day_big.cgi
-> 
-> There are big drops in measured signal. Did you fix all places?
-> 
-> Before this patch there were short peeks from -78dB to -71dB.
-> After patch there are short measurement drops from -62dB to -70dB.
-> 
-> The week charting simply averages it:
->   http://78.108.103.11:11080/cgi-bin/rodga_1week_big.cgi
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 06eed7b..4494736 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -5507,6 +5507,11 @@ M:	Ossama Othman <ossama.othman@intel.com>
+>  S:	Odd Fixes
+>  F:	drivers/staging/memrar/
+>  
+> +STAGING - OTUS 802.11n USB WIRELESS DRIVER
+> +M:	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+> +S:	Odd Fixes
+> +F:	drivers/staging/otus/
+> +
+>  STARFIRE/DURALAN NETWORK DRIVER
+>  M:	Ion Badulescu <ionut@badula.org>
+>  S:	Odd Fixes
 
-i guess this must be the same situation as before, no?
+Nack, this driver is unmaintained and its only purpose is as a
+source of documentation for developers working on ar9170 and carl9170.
+Once carl9170 gets 11n support and merged upstream then this driver
+can be removed.
 
-how many antennas do you have attached to your device? it might be interesting 
-to check if you get more consistent signal measurements by disabling antenna 
-diversity, setting it to a fixed antenna. you can do this by using a debugfs 
-file "echo fixed-a > /sys/kernel/debug/ath5k/phy0/antenna" (or "fixed-b")...
-
-btw: when the signal measurement was low, did you see any negative impact on 
-the thruput as well?
-
-bruno
+  Luis
