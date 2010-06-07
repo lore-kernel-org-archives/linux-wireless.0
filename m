@@ -1,43 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:49721 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753546Ab0F2X4i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jun 2010 19:56:38 -0400
-Message-ID: <4C2A8833.8050602@openwrt.org>
-Date: Wed, 30 Jun 2010 01:56:35 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:21634 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752879Ab0FGG65 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jun 2010 02:58:57 -0400
+Received: from vs3006.wh2.ocn.ne.jp (125.206.180.169)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0425063936
+	for <linux-wireless@vger.kernel.org>; Mon,  7 Jun 2010 15:58:56 +0900 (JST)
+Subject: [PATCH v3 3/3] ath5k: Add support for antenna configuration
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Mon, 07 Jun 2010 15:59:09 +0900
+Message-ID: <20100607065909.16060.75498.stgit@tt-desk>
+In-Reply-To: <20100607065858.16060.38448.stgit@tt-desk>
+References: <20100607065858.16060.38448.stgit@tt-desk>
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org
-Subject: Re: ath9k: ap tsf seems random and only uses lower 24 bits or so
-References: <AANLkTilG4qxjX0e5u_BGp0YcPoVBbsqd6Hlb8E0j_S8S@mail.gmail.com>	<4C29284C.5050707@openwrt.org>	<AANLkTint2L1xSMughBA5aHCFMRB5KMC8EfwcxJJU5XYW@mail.gmail.com>	<4C2A1776.2080508@openwrt.org>	<AANLkTik_d6tIKj3otsgaojVBPfvW1lz9OBRujeZLyv1U@mail.gmail.com>	<4C2A24D2.4070007@openwrt.org>	<AANLkTikw3l6FIxLtIwxofGaqGQD_b7LO25uu-JV45UL6@mail.gmail.com>	<AANLkTikQz34vgfweDrzH_9_a-BU4dPXbX2UGR61jtJ9n@mail.gmail.com>	<4C2A6BA4.8080000@openwrt.org> <AANLkTimhHK461U_qguBGuJjppy5RP2tx5ApasJWVLgr4@mail.gmail.com>
-In-Reply-To: <AANLkTimhHK461U_qguBGuJjppy5RP2tx5ApasJWVLgr4@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-06-30 12:50 AM, Björn Smedman wrote:
-> 2010/6/29 Felix Fietkau <nbd@openwrt.org>:
->> I had a similar thought about the multiple invocations thing. I think
->> that's a good approach in general, but we need to ensure that we make it
->> safe.
->> The main point of this function is to detect baseband hangs. If we
->> experience such a hang, I'm not sure we will always get enough
->> interrupts to do multiple consecutive tests.
->> One way to make it safe would be to reschedule the tasklet each time we
->> ignore the result of the ath9k_hw_check_alive(), that way we keep the
->> detection time low as well. Maybe we could also use a timer for leaving
->> 10 ms time between attempts.
-> 
-> The xmit logic has sc->tx_complete_work that periodically checks if
-> the tx is hung and resets the chip if so. Maybe we could refactor that
-> into a common periodic health checkup task in main.c that could call
-> into both xmit.c and recv.c? Or does ath9k_hw_check_alive() have to
-> run in the interrupt context in some way?
-I'd like to keep them separate. I think a tx queue hang is very rare,
-and the check only runs every second or so, whereas the baseband hang
-check needs to run very frequently, as in some situations, the hangs can
-probably occur frequently as well.
+Support setting the antenna configuration via cfg/mac80211. At the moment only
+allow the simple pre-defined configurations we already have (fixed antenna A/B
+or diversity), but more advanced settings are possible to implement.
 
-- Felix
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ drivers/net/wireless/ath/ath5k/base.c |   34 +++++++++++++++++++++++++++++++++
+ 1 files changed, 34 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 9d37c1a..12ba9a1 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -256,6 +256,8 @@ static void ath5k_sw_scan_start(struct ieee80211_hw *hw);
+ static void ath5k_sw_scan_complete(struct ieee80211_hw *hw);
+ static void ath5k_set_coverage_class(struct ieee80211_hw *hw,
+ 		u8 coverage_class);
++static int ath5k_set_antenna(struct ieee80211_hw *hw, u8 tx_ant, u8 rx_ant);
++static int ath5k_get_antenna(struct ieee80211_hw *hw, u8 *tx_ant, u8 *rx_ant);
+ 
+ static const struct ieee80211_ops ath5k_hw_ops = {
+ 	.tx 		= ath5k_tx,
+@@ -277,6 +279,8 @@ static const struct ieee80211_ops ath5k_hw_ops = {
+ 	.sw_scan_start	= ath5k_sw_scan_start,
+ 	.sw_scan_complete = ath5k_sw_scan_complete,
+ 	.set_coverage_class = ath5k_set_coverage_class,
++	.set_antenna	= ath5k_set_antenna,
++	.get_antenna	= ath5k_get_antenna,
+ };
+ 
+ /*
+@@ -3482,3 +3486,33 @@ static void ath5k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
+ 	ath5k_hw_set_coverage_class(sc->ah, coverage_class);
+ 	mutex_unlock(&sc->lock);
+ }
++
++static int ath5k_set_antenna(struct ieee80211_hw *hw, u8 tx_ant, u8 rx_ant)
++{
++	struct ath5k_softc *sc = hw->priv;
++
++	if (tx_ant == 1 && rx_ant == 1)
++		ath5k_hw_set_antenna_mode(sc->ah, AR5K_ANTMODE_FIXED_A);
++	else if (tx_ant == 2 && rx_ant == 2)
++		ath5k_hw_set_antenna_mode(sc->ah, AR5K_ANTMODE_FIXED_B);
++	else if (tx_ant == 0 && rx_ant == 3)
++		ath5k_hw_set_antenna_mode(sc->ah, AR5K_ANTMODE_DEFAULT);
++	else
++		return -EINVAL;
++	return 0;
++}
++
++static int ath5k_get_antenna(struct ieee80211_hw *hw, u8 *tx_ant, u8 *rx_ant)
++{
++	struct ath5k_softc *sc = hw->priv;
++
++	switch (sc->ah->ah_ant_mode) {
++	case AR5K_ANTMODE_FIXED_A:
++		*tx_ant = 1; *rx_ant = 1; break;
++	case AR5K_ANTMODE_FIXED_B:
++		*tx_ant = 2; *rx_ant = 2; break;
++	case AR5K_ANTMODE_DEFAULT:
++		*tx_ant = 0; *rx_ant = 3; break;
++	}
++	return 0;
++}
+
