@@ -1,61 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:41233 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754091Ab0FII67 convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:52336 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755013Ab0FGICQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jun 2010 04:58:59 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Mauro Carvalho Chehab <mchehab@redhat.com>
-Subject: Re: 2.6.35-rc2-git2: Reported regressions from 2.6.34
-Date: Wed, 9 Jun 2010 11:00:32 +0200
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Carl Worth <cworth@cworth.org>, Eric Anholt <eric@anholt.net>,
-	Venkatesh Pallipadi <venki@google.com>,
-	Jens Axboe <jaxboe@fusionio.com>,
-	Dave Airlie <airlied@gmail.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Ingo Molnar <mingo@elte.hu>,
-	David =?iso-8859-15?q?H=E4rdeman?= <david@hardeman.nu>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-References: <Rlf_Qjov7bG.A.a8F.I8rDMB@chimera> <alpine.LFD.2.00.1006081814240.4506@i5.linux-foundation.org> <4C0EFBC1.5090401@redhat.com>
-In-Reply-To: <4C0EFBC1.5090401@redhat.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201006091100.32494.rjw@sisk.pl>
+	Mon, 7 Jun 2010 04:02:16 -0400
+Subject: Re: [PATCH] mac80211: make ARP filtering depend on CONFIG_INET
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: "ext John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <1275676087-20039-1-git-send-email-linville@tuxdriver.com>
+References: <20100604153006.fa15c770.sfr@canb.auug.org.au>
+	 <1275676087-20039-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 07 Jun 2010 11:01:50 +0300
+Message-ID: <1275897710.5277.29986.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 09 June 2010, Mauro Carvalho Chehab wrote:
-> Em 08-06-2010 22:53, Linus Torvalds escreveu:
-> 
-> > 
-> >> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16037
-> >> Subject	: NULL Pointer dereference in __ir_input_register/budget_ci_attach
-> >> Submitter	: Sean Finney <seanius@debian.org>
-> >> Date		: 2010-05-23 19:52 (17 days old)
-> > 
-> > Perhaps related to commit 13c24497086418010bf4f76378bcae241d7f59cd?
-> > 
-> > David Härdeman, Mauro Carvalho Chehab added to cc.
-> 
-> This patch probably solves the issue:
-> 
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=84b14f181a36eea6591779156ef356f8d198bbfd
-> 
-> The patch were already applied upstream. I've already asked the reporter to test it, via BZ.
+Hi,
 
-Confirmed fixed, so closing.
+On Fri, 2010-06-04 at 20:28 +0200, ext John W. Linville wrote:
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+>  net/mac80211/main.c |    6 ++++++
+>  net/mac80211/mlme.c |    2 ++
+>  2 files changed, 8 insertions(+), 0 deletions(-)
 
-Thanks,
-Rafael
+
+
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index 7e72013..3623bb7 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -2078,6 +2078,7 @@ static enum work_done_result ieee80211_assoc_done(struct ieee80211_work *wk,
+>  			cfg80211_send_assoc_timeout(wk->sdata->dev,
+>  						    wk->filter_ta);
+>  			return WORK_DONE_DESTROY;
+> +#ifdef CONFIG_INET
+>  		} else {
+>  			mutex_unlock(&wk->sdata->u.mgd.mtx);
+>  
+> @@ -2088,6 +2089,7 @@ static enum work_done_result ieee80211_assoc_done(struct ieee80211_work *wk,
+>  			rtnl_lock();
+>  			ieee80211_set_arp_filter(wk->sdata);
+>  			rtnl_unlock();
+> +#endif
+>  		}
+
+Here, if CONFIG_INET is not set, and the previous condition is not true,
+the mutex will not be unlocked.
+
+The arp-filter code here is causing some locking issues, so I'll need to
+move it elsewhere anyway. I can also fix the unlocking while at it.
+
+-Juuso
+
+>  	}
+>  
+
+
