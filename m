@@ -1,168 +1,369 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36443 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758569Ab0FUVPP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jun 2010 17:15:15 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>,
-	Andrey Yurovsky <andrey@cozybit.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: avoid scheduling while atomic in mesh_rx_plink_frame
-Date: Mon, 21 Jun 2010 17:09:07 -0400
-Message-Id: <1277154547-5851-1-git-send-email-linville@tuxdriver.com>
+Received: from mx1.redhat.com ([209.132.183.28]:24892 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755064Ab0FGKCk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jun 2010 06:02:40 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: stable@kernel.org
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 2/4 2.6.34.y] iwlwifi: manage QoS by mac stack
+Date: Mon,  7 Jun 2010 12:01:07 +0200
+Message-Id: <1275904869-6634-2-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1275904869-6634-1-git-send-email-sgruszka@redhat.com>
+References: <1275904869-6634-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While mesh_rx_plink_frame holds sta->lock...
+commit e61146e36b40fd9d346118c40285913236c329f3 upstream.
 
-mesh_rx_plink_frame ->
-	mesh_plink_inc_estab_count ->
-		ieee80211_bss_info_change_notify
+We activate/deactivate QoS and setup default queue parameters in iwlwifi
+driver. Mac stack do the same, so we do not need repeat that work here.
+Stack also will tell when disable QoS, this will fix driver when working
+with older APs, that do not have QoS implemented.
 
-...but ieee80211_bss_info_change_notify is allowed to sleep.  A driver
-taking advantage of that allowance can cause a scheduling while
-atomic bug.  Similar paths exist for mesh_plink_dec_estab_count,
-so work around those as well.
+Patch make "force = true" in iwl_active_qos() assuming we always want
+to do with QoS what mac stack wish.
 
-http://bugzilla.kernel.org/show_bug.cgi?id=16099
+Patch also remove unused qos_cap bits, do not initialize qos_active = 0,
+as we have it initialized to zero by kzalloc.
 
-Also, correct a minor kerneldoc comment error (mismatched function names).
-
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- net/mac80211/mesh_plink.c |   39 +++++++++++++++++++++++++++++----------
- 1 files changed, 29 insertions(+), 10 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   15 ---
+ drivers/net/wireless/iwlwifi/iwl-core.c     |  142 +++------------------------
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |   21 ----
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    7 --
+ 5 files changed, 17 insertions(+), 171 deletions(-)
 
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 3cd5f7b..350f9a8 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -73,7 +73,6 @@ void mesh_plink_dec_estab_count(struct ieee80211_sub_if_data *sdata)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index bdff565..21c3ef0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2515,7 +2515,6 @@ void iwl_post_associate(struct iwl_priv *priv)
  {
- 	atomic_dec(&sdata->u.mesh.mshstats.estab_plinks);
- 	mesh_accept_plinks_update(sdata);
--	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
- }
+ 	struct ieee80211_conf *conf = NULL;
+ 	int ret = 0;
+-	unsigned long flags;
  
- /**
-@@ -115,7 +114,7 @@ static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
- }
+ 	if (priv->iw_mode == NL80211_IFTYPE_AP) {
+ 		IWL_ERR(priv, "%s Should not be called in AP mode\n", __func__);
+@@ -2600,10 +2599,6 @@ void iwl_post_associate(struct iwl_priv *priv)
+ 	if (priv->iw_mode == NL80211_IFTYPE_ADHOC)
+ 		priv->assoc_station_added = 1;
  
- /**
-- * mesh_plink_deactivate - deactivate mesh peer link
-+ * __mesh_plink_deactivate - deactivate mesh peer link
-  *
-  * @sta: mesh peer link to deactivate
-  *
-@@ -123,18 +122,23 @@ static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
-  *
-  * Locking: the caller must hold sta->lock
-  */
--static void __mesh_plink_deactivate(struct sta_info *sta)
-+static bool __mesh_plink_deactivate(struct sta_info *sta)
+-	spin_lock_irqsave(&priv->lock, flags);
+-	iwl_activate_qos(priv, 0);
+-	spin_unlock_irqrestore(&priv->lock, flags);
+-
+ 	/* the chain noise calibration will enabled PM upon completion
+ 	 * If chain noise has already been run, then we need to enable
+ 	 * power management here */
+@@ -2780,7 +2775,6 @@ static int iwl_mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ void iwl_config_ap(struct iwl_priv *priv)
  {
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
-+	bool deactivated = false;
+ 	int ret = 0;
+-	unsigned long flags;
  
--	if (sta->plink_state == PLINK_ESTAB)
-+	if (sta->plink_state == PLINK_ESTAB) {
- 		mesh_plink_dec_estab_count(sdata);
-+		deactivated = true;
+ 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+ 		return;
+@@ -2832,10 +2826,6 @@ void iwl_config_ap(struct iwl_priv *priv)
+ 		/* restore RXON assoc */
+ 		priv->staging_rxon.filter_flags |= RXON_FILTER_ASSOC_MSK;
+ 		iwlcore_commit_rxon(priv);
+-		iwl_reset_qos(priv);
+-		spin_lock_irqsave(&priv->lock, flags);
+-		iwl_activate_qos(priv, 1);
+-		spin_unlock_irqrestore(&priv->lock, flags);
+ 		iwl_add_bcast_station(priv);
+ 	}
+ 	iwl_send_beacon_cmd(priv);
+@@ -3396,11 +3386,6 @@ static int iwl_init_drv(struct iwl_priv *priv)
+ 
+ 	iwl_init_scan_params(priv);
+ 
+-	iwl_reset_qos(priv);
+-
+-	priv->qos_data.qos_active = 0;
+-	priv->qos_data.qos_cap.val = 0;
+-
+ 	priv->rates_mask = IWL_RATES_MASK;
+ 	/* Set the tx_power_user_lmt to the lowest power level
+ 	 * this value will get overwritten by channel max power avg
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 049b652..2dd8aaa 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -325,17 +325,13 @@ EXPORT_SYMBOL(iwl_hw_nic_init);
+ /*
+  * QoS  support
+ */
+-void iwl_activate_qos(struct iwl_priv *priv, u8 force)
++static void iwl_update_qos(struct iwl_priv *priv)
+ {
+ 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+ 		return;
+ 
+ 	priv->qos_data.def_qos_parm.qos_flags = 0;
+ 
+-	if (priv->qos_data.qos_cap.q_AP.queue_request &&
+-	    !priv->qos_data.qos_cap.q_AP.txop_request)
+-		priv->qos_data.def_qos_parm.qos_flags |=
+-			QOS_PARAM_FLG_TXOP_TYPE_MSK;
+ 	if (priv->qos_data.qos_active)
+ 		priv->qos_data.def_qos_parm.qos_flags |=
+ 			QOS_PARAM_FLG_UPDATE_EDCA_MSK;
+@@ -343,118 +339,14 @@ void iwl_activate_qos(struct iwl_priv *priv, u8 force)
+ 	if (priv->current_ht_config.is_ht)
+ 		priv->qos_data.def_qos_parm.qos_flags |= QOS_PARAM_FLG_TGN_MSK;
+ 
+-	if (force || iwl_is_associated(priv)) {
+-		IWL_DEBUG_QOS(priv, "send QoS cmd with Qos active=%d FLAGS=0x%X\n",
+-				priv->qos_data.qos_active,
+-				priv->qos_data.def_qos_parm.qos_flags);
++	IWL_DEBUG_QOS(priv, "send QoS cmd with Qos active=%d FLAGS=0x%X\n",
++		      priv->qos_data.qos_active,
++		      priv->qos_data.def_qos_parm.qos_flags);
+ 
+-		iwl_send_cmd_pdu_async(priv, REPLY_QOS_PARAM,
+-				       sizeof(struct iwl_qosparam_cmd),
+-				       &priv->qos_data.def_qos_parm, NULL);
+-	}
++	iwl_send_cmd_pdu_async(priv, REPLY_QOS_PARAM,
++			       sizeof(struct iwl_qosparam_cmd),
++			       &priv->qos_data.def_qos_parm, NULL);
+ }
+-EXPORT_SYMBOL(iwl_activate_qos);
+-
+-/*
+- * AC        CWmin         CW max      AIFSN      TXOP Limit    TXOP Limit
+- *                                              (802.11b)      (802.11a/g)
+- * AC_BK      15            1023        7           0               0
+- * AC_BE      15            1023        3           0               0
+- * AC_VI       7              15        2          6.016ms       3.008ms
+- * AC_VO       3               7        2          3.264ms       1.504ms
+- */
+-void iwl_reset_qos(struct iwl_priv *priv)
+-{
+-	u16 cw_min = 15;
+-	u16 cw_max = 1023;
+-	u8 aifs = 2;
+-	bool is_legacy = false;
+-	unsigned long flags;
+-	int i;
+-
+-	spin_lock_irqsave(&priv->lock, flags);
+-	/* QoS always active in AP and ADHOC mode
+-	 * In STA mode wait for association
+-	 */
+-	if (priv->iw_mode == NL80211_IFTYPE_ADHOC ||
+-	    priv->iw_mode == NL80211_IFTYPE_AP)
+-		priv->qos_data.qos_active = 1;
+-	else
+-		priv->qos_data.qos_active = 0;
+-
+-	/* check for legacy mode */
+-	if ((priv->iw_mode == NL80211_IFTYPE_ADHOC &&
+-	    (priv->active_rate & IWL_OFDM_RATES_MASK) == 0) ||
+-	    (priv->iw_mode == NL80211_IFTYPE_STATION &&
+-	    (priv->staging_rxon.flags & RXON_FLG_SHORT_SLOT_MSK) == 0)) {
+-		cw_min = 31;
+-		is_legacy = 1;
+-	}
+-
+-	if (priv->qos_data.qos_active)
+-		aifs = 3;
+-
+-	/* AC_BE */
+-	priv->qos_data.def_qos_parm.ac[0].cw_min = cpu_to_le16(cw_min);
+-	priv->qos_data.def_qos_parm.ac[0].cw_max = cpu_to_le16(cw_max);
+-	priv->qos_data.def_qos_parm.ac[0].aifsn = aifs;
+-	priv->qos_data.def_qos_parm.ac[0].edca_txop = 0;
+-	priv->qos_data.def_qos_parm.ac[0].reserved1 = 0;
+-
+-	if (priv->qos_data.qos_active) {
+-		/* AC_BK */
+-		i = 1;
+-		priv->qos_data.def_qos_parm.ac[i].cw_min = cpu_to_le16(cw_min);
+-		priv->qos_data.def_qos_parm.ac[i].cw_max = cpu_to_le16(cw_max);
+-		priv->qos_data.def_qos_parm.ac[i].aifsn = 7;
+-		priv->qos_data.def_qos_parm.ac[i].edca_txop = 0;
+-		priv->qos_data.def_qos_parm.ac[i].reserved1 = 0;
+-
+-		/* AC_VI */
+-		i = 2;
+-		priv->qos_data.def_qos_parm.ac[i].cw_min =
+-			cpu_to_le16((cw_min + 1) / 2 - 1);
+-		priv->qos_data.def_qos_parm.ac[i].cw_max =
+-			cpu_to_le16(cw_min);
+-		priv->qos_data.def_qos_parm.ac[i].aifsn = 2;
+-		if (is_legacy)
+-			priv->qos_data.def_qos_parm.ac[i].edca_txop =
+-				cpu_to_le16(6016);
+-		else
+-			priv->qos_data.def_qos_parm.ac[i].edca_txop =
+-				cpu_to_le16(3008);
+-		priv->qos_data.def_qos_parm.ac[i].reserved1 = 0;
+-
+-		/* AC_VO */
+-		i = 3;
+-		priv->qos_data.def_qos_parm.ac[i].cw_min =
+-			cpu_to_le16((cw_min + 1) / 4 - 1);
+-		priv->qos_data.def_qos_parm.ac[i].cw_max =
+-			cpu_to_le16((cw_min + 1) / 2 - 1);
+-		priv->qos_data.def_qos_parm.ac[i].aifsn = 2;
+-		priv->qos_data.def_qos_parm.ac[i].reserved1 = 0;
+-		if (is_legacy)
+-			priv->qos_data.def_qos_parm.ac[i].edca_txop =
+-				cpu_to_le16(3264);
+-		else
+-			priv->qos_data.def_qos_parm.ac[i].edca_txop =
+-				cpu_to_le16(1504);
+-	} else {
+-		for (i = 1; i < 4; i++) {
+-			priv->qos_data.def_qos_parm.ac[i].cw_min =
+-				cpu_to_le16(cw_min);
+-			priv->qos_data.def_qos_parm.ac[i].cw_max =
+-				cpu_to_le16(cw_max);
+-			priv->qos_data.def_qos_parm.ac[i].aifsn = aifs;
+-			priv->qos_data.def_qos_parm.ac[i].edca_txop = 0;
+-			priv->qos_data.def_qos_parm.ac[i].reserved1 = 0;
+-		}
+-	}
+-	IWL_DEBUG_QOS(priv, "set QoS to default \n");
+-
+-	spin_unlock_irqrestore(&priv->lock, flags);
+-}
+-EXPORT_SYMBOL(iwl_reset_qos);
+ 
+ #define MAX_BIT_RATE_40_MHZ 150 /* Mbps */
+ #define MAX_BIT_RATE_20_MHZ 72 /* Mbps */
+@@ -2306,12 +2198,6 @@ int iwl_mac_conf_tx(struct ieee80211_hw *hw, u16 queue,
+ 			cpu_to_le16((params->txop * 32));
+ 
+ 	priv->qos_data.def_qos_parm.ac[q].reserved1 = 0;
+-	priv->qos_data.qos_active = 1;
+-
+-	if (priv->iw_mode == NL80211_IFTYPE_AP)
+-		iwl_activate_qos(priv, 1);
+-	else if (priv->assoc_id && iwl_is_associated(priv))
+-		iwl_activate_qos(priv, 0);
+ 
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ 
+@@ -2587,11 +2473,8 @@ int iwl_mac_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	IWL_DEBUG_MAC80211(priv, "leave\n");
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ 
+-	iwl_reset_qos(priv);
+-
+ 	priv->cfg->ops->lib->post_associate(priv);
+ 
+-
+ 	return 0;
+ }
+ EXPORT_SYMBOL(iwl_mac_beacon_update);
+@@ -2833,6 +2716,15 @@ int iwl_mac_config(struct ieee80211_hw *hw, u32 changed)
+ 		iwl_set_tx_power(priv, conf->power_level, false);
+ 	}
+ 
++	if (changed & IEEE80211_CONF_CHANGE_QOS) {
++		bool qos_active = !!(conf->flags & IEEE80211_CONF_QOS);
++
++		spin_lock_irqsave(&priv->lock, flags);
++		priv->qos_data.qos_active = qos_active;
++		iwl_update_qos(priv);
++		spin_unlock_irqrestore(&priv->lock, flags);
 +	}
- 	sta->plink_state = PLINK_BLOCKED;
- 	mesh_path_flush_by_nexthop(sta);
 +
-+	return deactivated;
+ 	if (!iwl_is_ready(priv)) {
+ 		IWL_DEBUG_MAC80211(priv, "leave - not ready\n");
+ 		goto out;
+@@ -2867,8 +2759,6 @@ void iwl_mac_reset_tsf(struct ieee80211_hw *hw)
+ 	memset(&priv->current_ht_config, 0, sizeof(struct iwl_ht_config));
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ 
+-	iwl_reset_qos(priv);
+-
+ 	spin_lock_irqsave(&priv->lock, flags);
+ 	priv->assoc_id = 0;
+ 	priv->assoc_capability = 0;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 36940a9..70af968 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -304,8 +304,7 @@ struct iwl_cfg {
+ struct ieee80211_hw *iwl_alloc_all(struct iwl_cfg *cfg,
+ 		struct ieee80211_ops *hw_ops);
+ void iwl_hw_detect(struct iwl_priv *priv);
+-void iwl_reset_qos(struct iwl_priv *priv);
+-void iwl_activate_qos(struct iwl_priv *priv, u8 force);
++void iwl_activate_qos(struct iwl_priv *priv);
+ int iwl_mac_conf_tx(struct ieee80211_hw *hw, u16 queue,
+ 		    const struct ieee80211_tx_queue_params *params);
+ void iwl_set_rxon_hwcrypto(struct iwl_priv *priv, int hw_decrypt);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index ef1720a..cc12e89 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -519,30 +519,9 @@ struct iwl_ht_config {
+ 	u8 non_GF_STA_present;
+ };
+ 
+-union iwl_qos_capabity {
+-	struct {
+-		u8 edca_count:4;	/* bit 0-3 */
+-		u8 q_ack:1;		/* bit 4 */
+-		u8 queue_request:1;	/* bit 5 */
+-		u8 txop_request:1;	/* bit 6 */
+-		u8 reserved:1;		/* bit 7 */
+-	} q_AP;
+-	struct {
+-		u8 acvo_APSD:1;		/* bit 0 */
+-		u8 acvi_APSD:1;		/* bit 1 */
+-		u8 ac_bk_APSD:1;	/* bit 2 */
+-		u8 ac_be_APSD:1;	/* bit 3 */
+-		u8 q_ack:1;		/* bit 4 */
+-		u8 max_len:2;		/* bit 5-6 */
+-		u8 more_data_ack:1;	/* bit 7 */
+-	} q_STA;
+-	u8 val;
+-};
+-
+ /* QoS structures */
+ struct iwl_qos_info {
+ 	int qos_active;
+-	union iwl_qos_capabity qos_cap;
+ 	struct iwl_qosparam_cmd def_qos_parm;
+ };
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index b74a56c..c054527 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -3152,8 +3152,6 @@ void iwl3945_post_associate(struct iwl_priv *priv)
+ 		break;
+ 	}
+ 
+-	iwl_activate_qos(priv, 0);
+-
+ 	/* we have just associated, don't start scan too early */
+ 	priv->next_scan_jiffies = jiffies + IWL_DELAY_NEXT_SCAN;
  }
+@@ -3861,11 +3859,6 @@ static int iwl3945_init_drv(struct iwl_priv *priv)
+ 	priv->iw_mode = NL80211_IFTYPE_STATION;
+ 	priv->missed_beacon_threshold = IWL_MISSED_BEACON_THRESHOLD_DEF;
  
- /**
-- * __mesh_plink_deactivate - deactivate mesh peer link
-+ * mesh_plink_deactivate - deactivate mesh peer link
-  *
-  * @sta: mesh peer link to deactivate
-  *
-@@ -142,9 +146,15 @@ static void __mesh_plink_deactivate(struct sta_info *sta)
-  */
- void mesh_plink_deactivate(struct sta_info *sta)
- {
-+	struct ieee80211_sub_if_data *sdata = sta->sdata;
-+	bool deactivated;
-+
- 	spin_lock_bh(&sta->lock);
--	__mesh_plink_deactivate(sta);
-+	deactivated = __mesh_plink_deactivate(sta);
- 	spin_unlock_bh(&sta->lock);
-+
-+	if (deactivated)
-+		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
- }
+-	iwl_reset_qos(priv);
+-
+-	priv->qos_data.qos_active = 0;
+-	priv->qos_data.qos_cap.val = 0;
+-
+ 	priv->rates_mask = IWL_RATES_MASK;
+ 	priv->tx_power_user_lmt = IWL_DEFAULT_TX_POWER;
  
- static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
-@@ -381,10 +391,16 @@ int mesh_plink_open(struct sta_info *sta)
- 
- void mesh_plink_block(struct sta_info *sta)
- {
-+	struct ieee80211_sub_if_data *sdata = sta->sdata;
-+	bool deactivated;
-+
- 	spin_lock_bh(&sta->lock);
--	__mesh_plink_deactivate(sta);
-+	deactivated = __mesh_plink_deactivate(sta);
- 	sta->plink_state = PLINK_BLOCKED;
- 	spin_unlock_bh(&sta->lock);
-+
-+	if (deactivated)
-+		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
- }
- 
- 
-@@ -397,6 +413,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 	enum plink_event event;
- 	enum plink_frame_type ftype;
- 	size_t baselen;
-+	bool deactivated;
- 	u8 ie_len;
- 	u8 *baseaddr;
- 	__le16 plid, llid, reason;
-@@ -651,8 +668,8 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 		case CNF_ACPT:
- 			del_timer(&sta->plink_timer);
- 			sta->plink_state = PLINK_ESTAB;
--			mesh_plink_inc_estab_count(sdata);
- 			spin_unlock_bh(&sta->lock);
-+			mesh_plink_inc_estab_count(sdata);
- 			mpl_dbg("Mesh plink with %pM ESTABLISHED\n",
- 				sta->sta.addr);
- 			break;
-@@ -684,8 +701,8 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 		case OPN_ACPT:
- 			del_timer(&sta->plink_timer);
- 			sta->plink_state = PLINK_ESTAB;
--			mesh_plink_inc_estab_count(sdata);
- 			spin_unlock_bh(&sta->lock);
-+			mesh_plink_inc_estab_count(sdata);
- 			mpl_dbg("Mesh plink with %pM ESTABLISHED\n",
- 				sta->sta.addr);
- 			mesh_plink_frame_tx(sdata, PLINK_CONFIRM, sta->sta.addr, llid,
-@@ -702,11 +719,13 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 		case CLS_ACPT:
- 			reason = cpu_to_le16(MESH_CLOSE_RCVD);
- 			sta->reason = reason;
--			__mesh_plink_deactivate(sta);
-+			deactivated = __mesh_plink_deactivate(sta);
- 			sta->plink_state = PLINK_HOLDING;
- 			llid = sta->llid;
- 			mod_plink_timer(sta, dot11MeshHoldingTimeout(sdata));
- 			spin_unlock_bh(&sta->lock);
-+			if (deactivated)
-+				ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
- 			mesh_plink_frame_tx(sdata, PLINK_CLOSE, sta->sta.addr, llid,
- 					    plid, reason);
- 			break;
 -- 
-1.7.0.1
+1.6.2.5
 
