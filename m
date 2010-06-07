@@ -1,115 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:41842 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751394Ab0FLPWk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jun 2010 11:22:40 -0400
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:35576 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755609Ab0FGLDW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jun 2010 07:03:22 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.71)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1OLa6z-0007Dq-Uo
+	for linux-wireless@vger.kernel.org; Mon, 07 Jun 2010 13:03:22 +0200
+Message-Id: <20100607110202.012113320@sipsolutions.net>
+Date: Mon, 07 Jun 2010 13:01:49 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, linville@tuxdriver.com
-Subject: [PATCH 3/7] ath9k_hw: remove ATH9K_CAP_TKIP_MIC
-Date: Sat, 12 Jun 2010 17:22:30 +0200
-Message-Id: <1276356154-66545-3-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1276356154-66545-2-git-send-email-nbd@openwrt.org>
-References: <1276356154-66545-1-git-send-email-nbd@openwrt.org>
- <1276356154-66545-2-git-send-email-nbd@openwrt.org>
+Subject: [RFC 16/21] mac80211: defer RX agg session teardown to work
+References: <20100607110133.472649120@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-TKIP MIC support is always enabled anyway.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Since we want the code to be able to sleep
+in the future, it must not be called from
+the timer directly. To prepare, move it out
+into the aggregation work.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |    8 --------
- drivers/net/wireless/ath/ath9k/hw.c           |   17 -----------------
- drivers/net/wireless/ath/ath9k/hw.h           |    1 -
- drivers/net/wireless/ath/ath9k/init.c         |    8 --------
- 4 files changed, 0 insertions(+), 34 deletions(-)
+ net/mac80211/agg-rx.c      |   24 ++++++++++--------------
+ net/mac80211/ht.c          |    5 +++++
+ net/mac80211/ieee80211_i.h |    2 ++
+ net/mac80211/sta_info.h    |    3 +++
+ 4 files changed, 20 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index a26bc56..03100e3 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -571,14 +571,6 @@ static void ath9k_init_crypto(struct ath9k_htc_priv *priv)
- 		ath9k_hw_keyreset(priv->ah, (u16) i);
+--- wireless-testing.orig/net/mac80211/agg-rx.c	2010-06-06 15:30:23.000000000 +0200
++++ wireless-testing/net/mac80211/agg-rx.c	2010-06-06 15:43:50.000000000 +0200
+@@ -32,21 +32,18 @@ static void ieee80211_free_tid_rx(struct
+ 	kfree(tid_rx);
+ }
  
- 	/*
--	 * Whether we should enable h/w TKIP MIC.
--	 * XXX: if we don't support WME TKIP MIC, then we wouldn't
--	 * report WMM capable, so it's always safe to turn on
--	 * TKIP MIC in this case.
--	 */
--	ath9k_hw_setcapability(priv->ah, ATH9K_CAP_TKIP_MIC, 0, 1, NULL);
--
--	/*
- 	 * Check whether the separate key cache entries
- 	 * are required to handle both tx+rx MIC keys.
- 	 * With split mic keys the number of stations is limited
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index d908f78..f1d9918 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2259,15 +2259,6 @@ bool ath9k_hw_getcapability(struct ath_hw *ah, enum ath9k_capability_type type,
- 			    u32 capability, u32 *result)
+-static void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+-					    u16 initiator, u16 reason,
+-					    bool from_timer)
++void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
++				     u16 initiator, u16 reason)
  {
- 	switch (type) {
--	case ATH9K_CAP_TKIP_MIC:
--		switch (capability) {
--		case 0:
--			return true;
--		case 1:
--			return (ah->sta_id1_defaults &
--				AR_STA_ID1_CRPT_MIC_ENABLE) ? true :
--			false;
--		}
- 	case ATH9K_CAP_TKIP_SPLIT:
- 		return (ah->misc_mode & AR_PCU_MIC_NEW_LOC_ENA) ?
- 			false : true;
-@@ -2299,14 +2290,6 @@ bool ath9k_hw_setcapability(struct ath_hw *ah, enum ath9k_capability_type type,
- 			    u32 capability, u32 setting, int *status)
- {
- 	switch (type) {
--	case ATH9K_CAP_TKIP_MIC:
--		if (setting)
--			ah->sta_id1_defaults |=
--				AR_STA_ID1_CRPT_MIC_ENABLE;
--		else
--			ah->sta_id1_defaults &=
--				~AR_STA_ID1_CRPT_MIC_ENABLE;
--		return true;
- 	case ATH9K_CAP_MCAST_KEYSRCH:
- 		if (setting)
- 			ah->sta_id1_defaults |= AR_STA_ID1_MCAST_KSRCH;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 7456850..5574daa 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -207,7 +207,6 @@ enum ath9k_hw_caps {
- };
+ 	struct ieee80211_local *local = sta->local;
+ 	struct tid_ampdu_rx *tid_rx;
  
- enum ath9k_capability_type {
--	ATH9K_CAP_TKIP_MIC,
- 	ATH9K_CAP_TKIP_SPLIT,
- 	ATH9K_CAP_MCAST_KEYSRCH,
- 	ATH9K_CAP_DS
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 8bb866d..f66b357 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -380,14 +380,6 @@ static void ath9k_init_crypto(struct ath_softc *sc)
- 		ath9k_hw_keyreset(sc->sc_ah, (u16) i);
+-	spin_lock_bh(&sta->lock);
++	lockdep_assert_held(&sta->lock);
  
- 	/*
--	 * Whether we should enable h/w TKIP MIC.
--	 * XXX: if we don't support WME TKIP MIC, then we wouldn't
--	 * report WMM capable, so it's always safe to turn on
--	 * TKIP MIC in this case.
--	 */
--	ath9k_hw_setcapability(sc->sc_ah, ATH9K_CAP_TKIP_MIC, 0, 1, NULL);
+ 	tid_rx = sta->ampdu_mlme.tid_rx[tid];
+ 
+-	if (!tid_rx) {
+-		spin_unlock_bh(&sta->lock);
++	if (!tid_rx)
+ 		return;
+-	}
+ 
+ 	rcu_assign_pointer(sta->ampdu_mlme.tid_rx[tid], NULL);
+ 
+@@ -65,10 +62,7 @@ static void ___ieee80211_stop_rx_ba_sess
+ 		ieee80211_send_delba(sta->sdata, sta->sta.addr,
+ 				     tid, 0, reason);
+ 
+-	spin_unlock_bh(&sta->lock);
 -
--	/*
- 	 * Check whether the separate key cache entries
- 	 * are required to handle both tx+rx MIC keys.
- 	 * With split mic keys the number of stations is limited
--- 
-1.6.4.2
+-	if (!from_timer)
+-		del_timer_sync(&tid_rx->session_timer);
++	del_timer_sync(&tid_rx->session_timer);
+ 
+ 	call_rcu(&tid_rx->rcu_head, ieee80211_free_tid_rx);
+ }
+@@ -76,7 +70,9 @@ static void ___ieee80211_stop_rx_ba_sess
+ void __ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+ 				    u16 initiator, u16 reason)
+ {
+-	___ieee80211_stop_rx_ba_session(sta, tid, initiator, reason, false);
++	spin_lock_bh(&sta->lock);
++	___ieee80211_stop_rx_ba_session(sta, tid, initiator, reason);
++	spin_unlock_bh(&sta->lock);
+ }
+ 
+ /*
+@@ -97,8 +93,8 @@ static void sta_rx_agg_session_timer_exp
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+ 	printk(KERN_DEBUG "rx session timer expired on tid %d\n", (u16)*ptid);
+ #endif
+-	___ieee80211_stop_rx_ba_session(sta, *ptid, WLAN_BACK_RECIPIENT,
+-					WLAN_REASON_QSTA_TIMEOUT, true);
++	set_bit(*ptid, sta->ampdu_mlme.tid_rx_timer_expired);
++	ieee80211_queue_work(&sta->local->hw, &sta->ampdu_mlme.work);
+ }
+ 
+ static void ieee80211_send_addba_resp(struct ieee80211_sub_if_data *sdata, u8 *da, u16 tid,
+--- wireless-testing.orig/net/mac80211/ht.c	2010-06-06 15:30:23.000000000 +0200
++++ wireless-testing/net/mac80211/ht.c	2010-06-06 15:43:50.000000000 +0200
+@@ -132,6 +132,11 @@ void ieee80211_ba_session_work(struct wo
+ 
+ 	spin_lock_bh(&sta->lock);
+ 	for (tid = 0; tid < STA_TID_NUM; tid++) {
++		if (test_and_clear_bit(tid, sta->ampdu_mlme.tid_rx_timer_expired))
++			___ieee80211_stop_rx_ba_session(
++				sta, tid, WLAN_BACK_RECIPIENT,
++				WLAN_REASON_QSTA_TIMEOUT);
++
+ 		tid_tx = sta->ampdu_mlme.tid_tx[tid];
+ 		if (!tid_tx)
+ 			continue;
+--- wireless-testing.orig/net/mac80211/sta_info.h	2010-06-06 15:30:23.000000000 +0200
++++ wireless-testing/net/mac80211/sta_info.h	2010-06-06 15:44:11.000000000 +0200
+@@ -140,10 +140,13 @@ struct tid_ampdu_rx {
+  * @addba_req_num: number of times addBA request has been sent.
+  * @dialog_token_allocator: dialog token enumerator for each new session;
+  * @work: work struct for starting/stopping aggregation
++ * @tid_rx_timer_expired: bitmap indicating on which TIDs the
++ *	RX timer expired until the work for it runs
+  */
+ struct sta_ampdu_mlme {
+ 	/* rx */
+ 	struct tid_ampdu_rx *tid_rx[STA_TID_NUM];
++	unsigned long tid_rx_timer_expired[BITS_TO_LONGS(STA_TID_NUM)];
+ 	/* tx */
+ 	struct work_struct work;
+ 	struct tid_ampdu_tx *tid_tx[STA_TID_NUM];
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2010-06-06 15:30:23.000000000 +0200
++++ wireless-testing/net/mac80211/ieee80211_i.h	2010-06-06 15:43:49.000000000 +0200
+@@ -1101,6 +1101,8 @@ int ieee80211_send_smps_action(struct ie
+ 			       enum ieee80211_smps_mode smps, const u8 *da,
+ 			       const u8 *bssid);
+ 
++void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
++				     u16 initiator, u16 reason);
+ void __ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+ 				    u16 initiator, u16 reason);
+ void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta);
+
 
