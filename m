@@ -1,46 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:64046 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756352Ab0FHVJY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jun 2010 17:09:24 -0400
-From: <juuso.oikarinen@nokia.com>
-To: <johannes@sipsolutions.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<reinette.chatre@intel.com>
-Date: Tue, 8 Jun 2010 23:09:02 +0200
-Subject: RE: [PATCHv2] mac80211: Fix circular locking dependency in ARP
- filter handling
-Message-ID: <EEF08FFE3AB06D43A1F6BDF1C0F779B3293D81DA58@NOK-EUMSG-02.mgdnok.nokia.com>
-References: <1276002335-18600-1-git-send-email-juuso.oikarinen@nokia.com>,<1276002863.3706.131.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1276002863.3706.131.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:24519 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755197Ab0FGKCr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jun 2010 06:02:47 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: stable@kernel.org
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 3/4 2.6.34.y] mac80211: do not wip out old supported rates
+Date: Mon,  7 Jun 2010 12:01:08 +0200
+Message-Id: <1275904869-6634-3-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1275904869-6634-2-git-send-email-sgruszka@redhat.com>
+References: <1275904869-6634-1-git-send-email-sgruszka@redhat.com>
+ <1275904869-6634-2-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: ext Johannes Berg [johannes@sipsolutions.net]
->
->On Tue, 2010-06-08 at 16:05 +0300, Juuso Oikarinen wrote:
->
->> +             promisc = sdata->flags & IEEE80211_SDATA_PROMISC;
->> +             if (promisc)
->> +                     bss_conf->arp_filter_enabled = 0;
->> +             else
->> +                     bss_conf->arp_filter_enabled = sdata->arp_filter_state;
->
->bss_conf->arp_filter_enabled = !promisc && sdata->arp_filter_state;
->
->?
->
->Or if not, use false instead of 0 please.
->
+commit f0b058b61711ebf5be94d6865ca7b2c259b71d37 upstream.
 
-Yes, sure I can change this.
+Use old supported rates, if AP do not provide supported rates
+information element in a new managment frame.
 
-My home WLAN is giving me a headache, so I can't seem to access my work machine just now, but I began to wonder if I managed to create the same locking problem in this patch I had before. To traverse the interface list we need to acquire a lock - either the mutex for the iflist (which seems not to be an option as we also need the mgd mutex - to be locked after the iflist mutex) or the rtnl lock, which I chose to acquire. I quess the filter reconfig work is in the same mac80211 workqueue as the rest of the stuff, so the rtnl lock problem is there again.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/mac80211/scan.c |   21 +++++++++++----------
+ 1 files changed, 11 insertions(+), 10 deletions(-)
 
--Juuso
-
->johannes
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 85507bd..151d933 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -83,7 +83,7 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
+ {
+ 	struct cfg80211_bss *cbss;
+ 	struct ieee80211_bss *bss;
+-	int clen;
++	int clen, srlen;
+ 	s32 signal = 0;
+ 
+ 	if (local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
+@@ -112,23 +112,24 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
+ 		bss->dtim_period = tim_ie->dtim_period;
+ 	}
+ 
+-	bss->supp_rates_len = 0;
++	/* replace old supported rates if we get new values */
++	srlen = 0;
+ 	if (elems->supp_rates) {
+-		clen = IEEE80211_MAX_SUPP_RATES - bss->supp_rates_len;
++		clen = IEEE80211_MAX_SUPP_RATES;
+ 		if (clen > elems->supp_rates_len)
+ 			clen = elems->supp_rates_len;
+-		memcpy(&bss->supp_rates[bss->supp_rates_len], elems->supp_rates,
+-		       clen);
+-		bss->supp_rates_len += clen;
++		memcpy(bss->supp_rates, elems->supp_rates, clen);
++		srlen += clen;
+ 	}
+ 	if (elems->ext_supp_rates) {
+-		clen = IEEE80211_MAX_SUPP_RATES - bss->supp_rates_len;
++		clen = IEEE80211_MAX_SUPP_RATES - srlen;
+ 		if (clen > elems->ext_supp_rates_len)
+ 			clen = elems->ext_supp_rates_len;
+-		memcpy(&bss->supp_rates[bss->supp_rates_len],
+-		       elems->ext_supp_rates, clen);
+-		bss->supp_rates_len += clen;
++		memcpy(bss->supp_rates + srlen, elems->ext_supp_rates, clen);
++		srlen += clen;
+ 	}
++	if (srlen)
++		bss->supp_rates_len = srlen;
+ 
+ 	bss->wmm_used = elems->wmm_param || elems->wmm_info;
+ 	bss->uapsd_supported = is_uapsd_supported(elems);
+-- 
+1.6.2.5
 
