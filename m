@@ -1,35 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f187.google.com ([209.85.211.187]:51453 "EHLO
-	mail-yw0-f187.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751815Ab0FDSEZ (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:51221 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754279Ab0FGHwf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jun 2010 14:04:25 -0400
-Received: by ywh17 with SMTP id 17so794113ywh.1
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Jun 2010 11:04:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4C092155.5040206@openwrt.org>
-References: <4BEC2318.5050701@create-net.org>
-	<AANLkTimnzAJd9Y02m8OBVLHphL5pbFw56M2LfB1L5oKz@mail.gmail.com>
-	<4BEE684F.2070707@create-net.org>
-	<loom.20100604T153747-904@post.gmane.org>
-	<4C09151C.7040509@openwrt.org>
-	<AANLkTik03jIq7xEzdY0FF3LQHI_Zqeu_unbI3CJbUqu-@mail.gmail.com>
-	<4C092155.5040206@openwrt.org>
-Date: Fri, 4 Jun 2010 19:36:19 +0200
-Message-ID: <AANLkTikmBtf3iqVleTGvee3ugM00wlte14abC9tOKFFH@mail.gmail.com>
-Subject: Re: Strange ACK Behaviour with ath9k
-From: Roberto Riggio <roberto.riggio@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 7 Jun 2010 03:52:35 -0400
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linville@tuxdriver.com
+Cc: reinette.chatre@intel.com, linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: Add netif state checking to ieee80211_ifa_changed
+Date: Mon,  7 Jun 2010 10:52:12 +0300
+Message-Id: <1275897132-10932-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Did you test a recent version of wireless-testing/compat-wireless?
-> IIRC versions before the AR9300 merge had some bugs/inconsistencies in
-> the fast clock handling for 5 GHz.
+There's a window for ieee80211_ifa_changed() to get called whilst the
+managed mode mutex has not been initialized when opening and stopping the
+interface. Currently this causes a kernel BUG like the following:
 
-I'm using compat wireless 2010-05-24 (the version available in openwrt trunk).
+[  132.460013] kernel BUG at /home/wifi/iwlwifi-2.6/net/mac80211/main.c:380!
+[  132.460013] invalid opcode: 0000 [#1] SMP
 
-> - Felix
-R.
+The mutex is initialized during open(), hence once netif_running() is true,
+the mutex should be valid. Fix by adding a netif_running() check to the
+function.
+
+Reported-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ net/mac80211/main.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 5706156..88b671a 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -359,6 +359,9 @@ static int ieee80211_ifa_changed(struct notifier_block *nb,
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct ieee80211_if_managed *ifmgd;
+ 
++	if (!netif_running(ndev))
++		return NOTIFY_DONE;
++
+ 	/* Make sure it's our interface that got changed */
+ 	if (!wdev)
+ 		return NOTIFY_DONE;
+-- 
+1.6.3.3
+
