@@ -1,64 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:59114 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754078Ab0FNGsk (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:39294 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753416Ab0FGW3O convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jun 2010 02:48:40 -0400
-Subject: Re: [PATCH 1/3] mac80211: Set basic rates while joining ibss
- network
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1276497001.3926.4.camel@jlt3.sipsolutions.net>
-References: <1276496145-5623-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-	 <1276496145-5623-2-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-	 <1276497001.3926.4.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain
-Date: Mon, 14 Jun 2010 09:48:08 +0300
-Message-Id: <1276498088.4314.14.camel@paavo-desktop>
-Mime-Version: 1.0
+	Mon, 7 Jun 2010 18:29:14 -0400
+Received: by wyi11 with SMTP id 11so2777880wyi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Jun 2010 15:29:11 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1275940207.29978.24.camel@jlt3.sipsolutions.net>
+References: <1275940207.29978.24.camel@jlt3.sipsolutions.net>
+Date: Mon, 7 Jun 2010 18:29:10 -0400
+Message-ID: <AANLkTim-ML9b8yvuSVQbr1Qr5kokkzZyjrnjECdUGDF5@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: fix deauth before assoc
+From: Miles Lane <miles.lane@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Tested.  Looks good.
 
-On Mon, 2010-06-14 at 08:30 +0200, ext Johannes Berg wrote:
-> On Mon, 2010-06-14 at 09:15 +0300, Teemu Paasikivi wrote:
-> > This patch adds support to nl80211 and mac80211 to set basic rates when
-> > joining/creating ibss network.
-> > 
-> > Original patch was posted by Johannes Berg on the linux-wireless posting list.
-> 
-> Did you actually change it at all? (Ok I see you did make a bugfix, good
-> catch)
-> 
-
-You're right, I only made that bugfix.
-
-
-> I personally don't care at all, but I guess generally you should
-> attribute it to the person who actually did (most of) the work.
-> 
-> In any case, John will need this:
-> 
+On Mon, Jun 7, 2010 at 3:50 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> When we receive a deauthentication frame before
+> having successfully associated, we neither print
+> a message nor abort assocation. The former makes
+> it hard to debug, while the latter later causes
+> a warning in cfg80211 when, as will typically be
+> the case, association timed out.
+>
+> This warning was reported by many, e.g. in
+> https://bugzilla.kernel.org/show_bug.cgi?id=15981,
+> but I couldn't initially pinpoint it. I verified
+> the fix by hacking hostapd to send a deauth frame
+> instead of an association response.
+>
+> Cc: stable@kernel.org
 > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> 
-
-I'm very sorry about forgetting that. I'll send new versions of patches
-with appropriate Signed-off-by's.
-
-
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> 
-> 
-
-
-Teemu
-
-
+> ---
+>  net/mac80211/mlme.c |   39 ++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 38 insertions(+), 1 deletion(-)
+>
+> --- wireless-testing.orig/net/mac80211/mlme.c   2010-06-07 21:35:41.000000000 +0200
+> +++ wireless-testing/net/mac80211/mlme.c        2010-06-07 21:46:00.000000000 +0200
+> @@ -1695,8 +1695,45 @@ void ieee80211_sta_rx_queued_mgmt(struct
+>        mutex_unlock(&ifmgd->mtx);
+>
+>        if (skb->len >= 24 + 2 /* mgmt + deauth reason */ &&
+> -           (fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_DEAUTH)
+> +           (fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_DEAUTH) {
+> +               struct ieee80211_local *local = sdata->local;
+> +               struct ieee80211_work *wk;
+> +
+> +               mutex_lock(&local->work_mtx);
+> +               list_for_each_entry(wk, &local->work_list, list) {
+> +                       if (wk->sdata != sdata)
+> +                               continue;
+> +
+> +                       if (wk->type != IEEE80211_WORK_ASSOC)
+> +                               continue;
+> +
+> +                       if (memcmp(mgmt->bssid, wk->filter_ta, ETH_ALEN))
+> +                               continue;
+> +                       if (memcmp(mgmt->sa, wk->filter_ta, ETH_ALEN))
+> +                               continue;
+> +
+> +                       /*
+> +                        * Printing the message only here means we can't
+> +                        * spuriously print it, but it also means that it
+> +                        * won't be printed when the frame comes in before
+> +                        * we even tried to associate or in similar cases.
+> +                        *
+> +                        * Ultimately, I suspect cfg80211 should print the
+> +                        * messages instead.
+> +                        */
+> +                       printk(KERN_DEBUG
+> +                              "%s: deauthenticated from %pM (Reason: %u)\n",
+> +                              sdata->name, mgmt->bssid,
+> +                              le16_to_cpu(mgmt->u.deauth.reason_code));
+> +
+> +                       list_del_rcu(&wk->list);
+> +                       free_work(wk);
+> +                       break;
+> +               }
+> +               mutex_unlock(&local->work_mtx);
+> +
+>                cfg80211_send_deauth(sdata->dev, (u8 *)mgmt, skb->len);
+> +       }
+>  }
+>
+>  static void ieee80211_sta_timer(unsigned long data)
+>
+>
+>
