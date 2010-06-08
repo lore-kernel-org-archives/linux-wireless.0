@@ -1,29 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:38142 "EHLO
-	idcmail-mo1so.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753412Ab0FJNDV (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:48660 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751406Ab0FHMj6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jun 2010 09:03:21 -0400
-From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
-To: linux-wireless@vger.kernel.org
-Subject: Support for the Linksys WUSB300N?
-Date: Thu, 10 Jun 2010 06:53:48 -0600
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <201006100653.48734.tfjellstrom@shaw.ca>
+	Tue, 8 Jun 2010 08:39:58 -0400
+From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Subject: [RFC] iw: Configure basic rates when joining ibss network
+Date: Tue,  8 Jun 2010 15:37:58 +0300
+Message-Id: <1276000678-1230-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have recently acquired a WUSB300N, and was wondering what the status is on 
-linux support for this device.
+This patch adds configuration option to configure basic rates when
+joining ibss network.
 
-It's chipset (Marvell 88w8362) seems to be supported, but over PCI/PCIe only 
-so far. Is anyone working on USB variants? I'm willing to help test anything 
-anyone might be working on.
+Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+---
+ ibss.c |   27 ++++++++++++++++++++++++++-
+ 1 files changed, 26 insertions(+), 1 deletions(-)
 
-Thanks
-
+diff --git a/ibss.c b/ibss.c
+index 4715ac8..edc83fd 100644
+--- a/ibss.c
++++ b/ibss.c
+@@ -18,6 +18,11 @@ static int join_ibss(struct nl80211_state *state,
+ {
+ 	char *end;
+ 	unsigned char abssid[6];
++	unsigned char rates[NL80211_MAX_SUPP_RATES];
++	int n_rates = 0;
++	char *value = NULL, *sptr = NULL;
++	float rate;
++
+ 
+ 	if (argc < 2)
+ 		return 1;
+@@ -41,6 +46,24 @@ static int join_ibss(struct nl80211_state *state,
+ 		argc--;
+ 	}
+ 
++	if (argc > 1 && strcmp(argv[0], "basic-rates") == 0) {
++		argv++;
++		argc--;
++
++		value = strtok_r(argv[0], ",", &sptr);
++
++		while (value && n_rates < NL80211_MAX_SUPP_RATES) {
++			rate = atof(value);
++			rates[n_rates++] = rate * 2;
++			value = strtok_r(NULL, ",", &sptr);
++		}
++
++		NLA_PUT(msg, NL80211_ATTR_BSS_BASIC_RATES, n_rates, rates);
++
++		argv++;
++		argc--;
++	}
++
+ 	if (argc) {
+ 		if (mac_addr_a2n(abssid, argv[0]) == 0) {
+ 			NLA_PUT(msg, NL80211_ATTR_MAC, 6, abssid);
+@@ -73,7 +96,9 @@ static int leave_ibss(struct nl80211_state *state,
+ COMMAND(ibss, leave, NULL,
+ 	NL80211_CMD_LEAVE_IBSS, 0, CIB_NETDEV, leave_ibss,
+ 	"Leave the current IBSS cell.");
+-COMMAND(ibss, join, "<SSID> <freq in MHz> [fixed-freq] [<fixed bssid>] [key d:0:abcde]",
++COMMAND(ibss, join,
++	"<SSID> <freq in MHz> [fixed-freq] [<fixed bssid>] "
++	"[basic-rates <rate in Mbps,rate2,...>] [key d:0:abcde]",
+ 	NL80211_CMD_JOIN_IBSS, 0, CIB_NETDEV, join_ibss,
+ 	"Join the IBSS cell with the given SSID, if it doesn't exist create\n"
+ 	"it on the given frequency. When fixed frequency is requested, don't\n"
 -- 
-Thomas Fjellstrom
-tfjellstrom@shaw.ca
+1.5.6.3
+
