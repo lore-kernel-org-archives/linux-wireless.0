@@ -1,42 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1189 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753497Ab0FSXaS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jun 2010 19:30:18 -0400
-From: Joe Perches <joe@perches.com>
-To: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 0/3] b43: logging cleanups
-Date: Sat, 19 Jun 2010 16:30:08 -0700
-Message-Id: <cover.1276988387.git.joe@perches.com>
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:13361 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752535Ab0FHBKD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Jun 2010 21:10:03 -0400
+Received: from vs3002.wh2.ocn.ne.jp (125.206.180.165)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0588869396
+	for <linux-wireless@vger.kernel.org>; Tue,  8 Jun 2010 10:10:00 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH v3 1/3] cfg80211: Add nl80211 antenna configuration
+Date: Tue, 8 Jun 2010 10:10:13 +0900
+References: <20100607065858.16060.38448.stgit@tt-desk> <1275901514.3639.4.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1275901514.3639.4.camel@jlt3.sipsolutions.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201006081010.13314.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just some small cleanups
+On Monday 07 June 2010 18:05:14 you wrote:
+> On Mon, 2010-06-07 at 15:58 +0900, Bruno Randolf wrote:
+> > + * @NL80211_CMD_GET_ANTENNA: Get antenna configuration from driver.
+> 
+> Since we already have runtime configuration and capability information
+> as part of the wiphy information printout, remind me again what was
+> wrong with adding antenna information there as well rather than having a
+> separate command to retrieve it?
+>
+> As far as differentiating that information is concerned, you can easily
+> implement an iw "get antenna" command by just partially printing the
+> wiphy information, for example, no?
 
-Joe Perches (3):
-  drivers/net/wireless/b43: Use local ratelimit_state
-  drivers/net/wireless/b43: Logging cleanups
-  drivers/net/wireless/b43: Rename b43_debug to b43_debugging
+i don't particularly care about where the antenna information is printed 
+exactly, so anything will be fine with me.
 
- drivers/net/wireless/b43/b43.h        |   17 +--
- drivers/net/wireless/b43/debugfs.c    |   16 +-
- drivers/net/wireless/b43/debugfs.h    |    4 +-
- drivers/net/wireless/b43/dma.c        |  125 ++++++++---------
- drivers/net/wireless/b43/leds.c       |    6 +-
- drivers/net/wireless/b43/lo.c         |   37 +++---
- drivers/net/wireless/b43/main.c       |  252 +++++++++++++++++----------------
- drivers/net/wireless/b43/pcmcia.c     |    3 +-
- drivers/net/wireless/b43/phy_a.c      |   11 +-
- drivers/net/wireless/b43/phy_common.c |    7 +-
- drivers/net/wireless/b43/phy_g.c      |   62 ++++----
- drivers/net/wireless/b43/phy_lp.c     |   17 ++-
- drivers/net/wireless/b43/phy_n.c      |   30 ++--
- drivers/net/wireless/b43/pio.c        |   12 +-
- drivers/net/wireless/b43/rfkill.c     |    4 +-
- drivers/net/wireless/b43/sysfs.c      |    3 +-
- drivers/net/wireless/b43/xmit.c       |   10 +-
- 17 files changed, 304 insertions(+), 312 deletions(-)
+but when i look at the wiphy info, it shows mostly capability information, 
+like the list of supported frequencies, list of bitrates, supported interface 
+modes, supported commands. the only exception is coverage class, which is the 
+only runtime configuration as far as i can see. therefore i thought it doesnt 
+fit there well.
 
+maybe another command for getting runtime configuration like channel(s), fixed 
+bitrates, essid, bssid, RTS/CTS, fraqmentation, txpower, power management, 
+antenna settings, etc... would make sense? allthough in this list antenna is 
+probably the only one which is per phy and not per interface...
+
+i can leave the 'antenna get' command out until this is clarified.
+
+bruno
