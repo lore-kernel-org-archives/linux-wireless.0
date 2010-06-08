@@ -1,297 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:56995 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757036Ab0FDCiT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jun 2010 22:38:19 -0400
-Message-Id: <201006040237.o542bfE1001421@imap1.linux-foundation.org>
-Subject: [patch 5/5] ssb: remove the ssb DMA API
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
-	fujita.tomonori@lab.ntt.co.jp, Larry.Finger@lwfinger.net,
-	davem@davemloft.net, mb@bu3sch.de, stefano.brivio@polimi.it,
-	zambrano@broadcom.com
-From: akpm@linux-foundation.org
-Date: Thu, 03 Jun 2010 19:37:44 -0700
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ANSI_X3.4-1968
+Received: from mga02.intel.com ([134.134.136.20]:31428 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755202Ab0FHRqb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jun 2010 13:46:31 -0400
+Subject: Re: kernel BUG in iwl-agn-rs.c:2076, WAS: iwlagn + some
+ accesspoint == hardlock
+From: reinette chatre <reinette.chatre@intel.com>
+To: Nils Radtke <Nils.Radtke@Think-Future.de>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20100604165732.GB28003@localhost>
+References: <20100531201225.GA6327@localhost>
+	 <1275501085.2091.28873.camel@rchatre-DESK>
+	 <20100604165732.GB28003@localhost>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Jun 2010 10:46:29 -0700
+Message-ID: <1276019189.1835.11781.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+On Fri, 2010-06-04 at 09:57 -0700, Nils Radtke wrote:
+> I haven't yet received a comment of yours regarding my many other questions in
+> my previous message. I am willing to help investigate more, assist in other ways 
+> than testing only (always only doing testing isn't a way to keep up fun..)
 
-Now they are unnecessary.  We can use the generic DMA API with any bus.
+Your messages contain references to many issues and it is becoming
+increasingly hard to keep track of them all in a single email thread.
+Since the system crash is clearly the big issue I would like to focus on
+that and get that resolved. This is why I proposed that you create bug
+reports to help track your various issues better.
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Michael Buesch <mb@bu3sch.de>
-Cc: Gary Zambrano <zambrano@broadcom.com>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: David S. Miller <davem@davemloft.net>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+Reinette
 
- drivers/ssb/main.c      |   74 -----------------
- include/linux/ssb/ssb.h |  157 --------------------------------------
- 2 files changed, 231 deletions(-)
 
-diff -puN drivers/ssb/main.c~ssb-remove-the-ssb-dma-api drivers/ssb/main.c
---- a/drivers/ssb/main.c~ssb-remove-the-ssb-dma-api
-+++ a/drivers/ssb/main.c
-@@ -1228,80 +1228,6 @@ u32 ssb_dma_translation(struct ssb_devic
- }
- EXPORT_SYMBOL(ssb_dma_translation);
- 
--int ssb_dma_set_mask(struct ssb_device *dev, u64 mask)
--{
--#ifdef CONFIG_SSB_PCIHOST
--	int err;
--#endif
--
--	switch (dev->bus->bustype) {
--	case SSB_BUSTYPE_PCI:
--#ifdef CONFIG_SSB_PCIHOST
--		err = pci_set_dma_mask(dev->bus->host_pci, mask);
--		if (err)
--			return err;
--		err = pci_set_consistent_dma_mask(dev->bus->host_pci, mask);
--		return err;
--#endif
--	case SSB_BUSTYPE_SSB:
--		return dma_set_mask(dev->dev, mask);
--	default:
--		__ssb_dma_not_implemented(dev);
--	}
--	return -ENOSYS;
--}
--EXPORT_SYMBOL(ssb_dma_set_mask);
--
--void * ssb_dma_alloc_consistent(struct ssb_device *dev, size_t size,
--				dma_addr_t *dma_handle, gfp_t gfp_flags)
--{
--	switch (dev->bus->bustype) {
--	case SSB_BUSTYPE_PCI:
--#ifdef CONFIG_SSB_PCIHOST
--		if (gfp_flags & GFP_DMA) {
--			/* Workaround: The PCI API does not support passing
--			 * a GFP flag. */
--			return dma_alloc_coherent(&dev->bus->host_pci->dev,
--						  size, dma_handle, gfp_flags);
--		}
--		return pci_alloc_consistent(dev->bus->host_pci, size, dma_handle);
--#endif
--	case SSB_BUSTYPE_SSB:
--		return dma_alloc_coherent(dev->dev, size, dma_handle, gfp_flags);
--	default:
--		__ssb_dma_not_implemented(dev);
--	}
--	return NULL;
--}
--EXPORT_SYMBOL(ssb_dma_alloc_consistent);
--
--void ssb_dma_free_consistent(struct ssb_device *dev, size_t size,
--			     void *vaddr, dma_addr_t dma_handle,
--			     gfp_t gfp_flags)
--{
--	switch (dev->bus->bustype) {
--	case SSB_BUSTYPE_PCI:
--#ifdef CONFIG_SSB_PCIHOST
--		if (gfp_flags & GFP_DMA) {
--			/* Workaround: The PCI API does not support passing
--			 * a GFP flag. */
--			dma_free_coherent(&dev->bus->host_pci->dev,
--					  size, vaddr, dma_handle);
--			return;
--		}
--		pci_free_consistent(dev->bus->host_pci, size,
--				    vaddr, dma_handle);
--		return;
--#endif
--	case SSB_BUSTYPE_SSB:
--		dma_free_coherent(dev->dev, size, vaddr, dma_handle);
--		return;
--	default:
--		__ssb_dma_not_implemented(dev);
--	}
--}
--EXPORT_SYMBOL(ssb_dma_free_consistent);
--
- int ssb_bus_may_powerdown(struct ssb_bus *bus)
- {
- 	struct ssb_chipcommon *cc;
-diff -puN include/linux/ssb/ssb.h~ssb-remove-the-ssb-dma-api include/linux/ssb/ssb.h
---- a/include/linux/ssb/ssb.h~ssb-remove-the-ssb-dma-api
-+++ a/include/linux/ssb/ssb.h
-@@ -470,14 +470,6 @@ extern u32 ssb_dma_translation(struct ss
- #define SSB_DMA_TRANSLATION_MASK	0xC0000000
- #define SSB_DMA_TRANSLATION_SHIFT	30
- 
--extern int ssb_dma_set_mask(struct ssb_device *dev, u64 mask);
--
--extern void * ssb_dma_alloc_consistent(struct ssb_device *dev, size_t size,
--				       dma_addr_t *dma_handle, gfp_t gfp_flags);
--extern void ssb_dma_free_consistent(struct ssb_device *dev, size_t size,
--				    void *vaddr, dma_addr_t dma_handle,
--				    gfp_t gfp_flags);
--
- static inline void __cold __ssb_dma_not_implemented(struct ssb_device *dev)
- {
- #ifdef CONFIG_SSB_DEBUG
-@@ -486,155 +478,6 @@ static inline void __cold __ssb_dma_not_
- #endif /* DEBUG */
- }
- 
--static inline int ssb_dma_mapping_error(struct ssb_device *dev, dma_addr_t addr)
--{
--	switch (dev->bus->bustype) {
--	case SSB_BUSTYPE_PCI:
--#ifdef CONFIG_SSB_PCIHOST
--		return pci_dma_mapping_error(dev->bus->host_pci, addr);
--#endif
--		break;
--	case SSB_BUSTYPE_SSB:
--		return dma_mapping_error(dev->dev, addr);
--	default:
--		break;
--	}
--	__ssb_dma_not_implemented(dev);
--	return -ENOSYS;
--}
--
--static inline dma_addr_t ssb_dma_map_single(struct ssb_device *dev, void *p,
--					    size_t size, enum dma_data_direction dir)
--{
--	switch (dev->bus->bustype) {
--	case SSB_BUSTYPE_PCI:
--#ifdef CONFIG_SSB_PCIHOST
--		return pci_map_single(dev->bus->host_pci, p, size, dir);
--#endif
--		break;
--	case SSB_BUSTYPE_SSB:
--		return dma_map_single(dev->dev, p, size, dir);
--	default:
--		break;
--	}
--	__ssb_dma_not_implemented(dev);
--	return 0;
--}
--
--static inline void ssb_dma_unmap_single(struct ssb_device *dev, dma_addr_t dma_addr,
--					size_t size, enum dma_data_direction dir)
--{
--	switch (dev->bus->bustype) {
--	case SSB_BUSTYPE_PCI:
--#ifdef CONFIG_SSB_PCIHOST
--		pci_unmap_single(dev->bus->host_pci, dma_addr, size, dir);
--		return;
--#endif
--		break;
--	case SSB_BUSTYPE_SSB:
--		dma_unmap_single(dev->dev, dma_addr, size, dir);
--		return;
--	default:
--		break;
--	}
--	__ssb_dma_not_implemented(dev);
--}
--
--static inline void ssb_dma_sync_single_for_cpu(struct ssb_device *dev,
--					       dma_addr_t dma_addr,
--					       size_t size,
--					       enum dma_data_direction dir)
--{
--	switch (dev->bus->bustype) {
--	case SSB_BUSTYPE_PCI:
--#ifdef CONFIG_SSB_PCIHOST
--		pci_dma_sync_single_for_cpu(dev->bus->host_pci, dma_addr,
--					    size, dir);
--		return;
--#endif
--		break;
--	case SSB_BUSTYPE_SSB:
--		dma_sync_single_for_cpu(dev->dev, dma_addr, size, dir);
--		return;
--	default:
--		break;
--	}
--	__ssb_dma_not_implemented(dev);
--}
--
--static inline void ssb_dma_sync_single_for_device(struct ssb_device *dev,
--						  dma_addr_t dma_addr,
--						  size_t size,
--						  enum dma_data_direction dir)
--{
--	switch (dev->bus->bustype) {
--	case SSB_BUSTYPE_PCI:
--#ifdef CONFIG_SSB_PCIHOST
--		pci_dma_sync_single_for_device(dev->bus->host_pci, dma_addr,
--					       size, dir);
--		return;
--#endif
--		break;
--	case SSB_BUSTYPE_SSB:
--		dma_sync_single_for_device(dev->dev, dma_addr, size, dir);
--		return;
--	default:
--		break;
--	}
--	__ssb_dma_not_implemented(dev);
--}
--
--static inline void ssb_dma_sync_single_range_for_cpu(struct ssb_device *dev,
--						     dma_addr_t dma_addr,
--						     unsigned long offset,
--						     size_t size,
--						     enum dma_data_direction dir)
--{
--	switch (dev->bus->bustype) {
--	case SSB_BUSTYPE_PCI:
--#ifdef CONFIG_SSB_PCIHOST
--		/* Just sync everything. That's all the PCI API can do. */
--		pci_dma_sync_single_for_cpu(dev->bus->host_pci, dma_addr,
--					    offset + size, dir);
--		return;
--#endif
--		break;
--	case SSB_BUSTYPE_SSB:
--		dma_sync_single_range_for_cpu(dev->dev, dma_addr, offset,
--					      size, dir);
--		return;
--	default:
--		break;
--	}
--	__ssb_dma_not_implemented(dev);
--}
--
--static inline void ssb_dma_sync_single_range_for_device(struct ssb_device *dev,
--							dma_addr_t dma_addr,
--							unsigned long offset,
--							size_t size,
--							enum dma_data_direction dir)
--{
--	switch (dev->bus->bustype) {
--	case SSB_BUSTYPE_PCI:
--#ifdef CONFIG_SSB_PCIHOST
--		/* Just sync everything. That's all the PCI API can do. */
--		pci_dma_sync_single_for_device(dev->bus->host_pci, dma_addr,
--					       offset + size, dir);
--		return;
--#endif
--		break;
--	case SSB_BUSTYPE_SSB:
--		dma_sync_single_range_for_device(dev->dev, dma_addr, offset,
--						 size, dir);
--		return;
--	default:
--		break;
--	}
--	__ssb_dma_not_implemented(dev);
--}
--
--
- #ifdef CONFIG_SSB_PCIHOST
- /* PCI-host wrapper driver */
- extern int ssb_pcihost_register(struct pci_driver *driver);
-_
