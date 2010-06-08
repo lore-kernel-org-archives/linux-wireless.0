@@ -1,84 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:14757 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753365Ab0FUHgO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jun 2010 03:36:14 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Jun 2010 00:36:14 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath9k: Fix kernel panic during rmmod ath9k
-Date: Mon, 21 Jun 2010 00:36:08 -0700
-Message-ID: <1277105768-1980-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:45899 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752082Ab0FHMsq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Jun 2010 08:48:46 -0400
+Subject: Re: [RFC 3/3] mac80211: Store basic rates for bss when joining
+ ibss network
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1276000459-1121-4-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+References: <1276000459-1121-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	 <1276000459-1121-2-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	 <1276000459-1121-3-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	 <1276000459-1121-4-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Jun 2010 14:48:38 +0200
+Message-ID: <1276001318.3706.130.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This panic was introduced in ar9003 family chipsets
-by the following commit
+On Tue, 2010-06-08 at 15:34 +0300, Teemu Paasikivi wrote:
+> When joinig a ibss network, basic rates for bss were not stored. When
+> network was self created, leaving and (re)joining same network has
+> caused basic rates to be left unset. With this patch stored values are
+> used.
 
-	Author: Felix Fietkau <nbd@openwrt.org>
-	Date:   Sat Jun 12 00:34:01 2010 -0400
+>  	bss = cfg80211_inform_bss_frame(local->hw.wiphy, local->hw.conf.channel,
+>  					mgmt, skb->len, 0, GFP_KERNEL);
+> +
+> +	ibss = (struct ieee80211_bss *)(bss->priv);
 
-	ath9k: implement PA predistortion support
+Watch out -- bss can be NULL here if memory allocation fails. It's just
+that put_bss(NULL) is valid.
 
-Above patch does kfree_skb on a PA predistortion frame
-in ath_paprd_calibrate(). This is fine for the cases
-where this frame could not be queued onto sw/hw queues
-or the tx of this frame is completed. But freeing this
-frame upon a failed completion event will result in
-dereferencing a freed memory in ath_tx_complete_buf()
-while draining pending tx frames.
+> +	for (i = 0; i < sband->n_bitrates; i++) {
+> +		u8 basic = 0x00;
+> +		if (basic_rates & BIT(i))
+> +			basic = 0x80;
+> +
+> +		ibss->supp_rates[i] = supp_rates[i] | basic;
+> +	}
+> +
+> +	ibss->supp_rates_len = i;
+> +
+>  	cfg80211_put_bss(bss);
 
-This patch fixes this issue by moving kfree_skb to
-ath_tx_complete_buf() once the frame is successfully
-queued.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    5 +++--
- drivers/net/wireless/ath/ath9k/xmit.c |    1 +
- 2 files changed, 4 insertions(+), 2 deletions(-)
+However this kinda confuses me.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index c8de50f..37933d3 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -306,8 +306,10 @@ void ath_paprd_calibrate(struct work_struct *work)
- 		init_completion(&sc->paprd_complete);
- 		ar9003_paprd_setup_gain_table(ah, chain);
- 		txctl.paprd = BIT(chain);
--		if (ath_tx_start(hw, skb, &txctl) != 0)
-+		if (ath_tx_start(hw, skb, &txctl) != 0) {
-+			kfree_skb(skb);
- 			break;
-+		}
- 
- 		time_left = wait_for_completion_timeout(&sc->paprd_complete,
- 							100);
-@@ -327,7 +329,6 @@ void ath_paprd_calibrate(struct work_struct *work)
- 
- 		chain_ok = 1;
- 	}
--	kfree_skb(skb);
- 
- 	if (chain_ok) {
- 		ah->curchan->paprd_done = true;
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 8c7c615..197e898 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1946,6 +1946,7 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
- 	if (bf->bf_state.bfs_paprd) {
- 		sc->paprd_txok = txok;
- 		complete(&sc->paprd_complete);
-+		dev_kfree_skb_any(skb);
- 	} else {
- 		ath_tx_complete(sc, skb, bf->aphy, tx_flags);
- 		ath_debug_stat_tx(sc, txq, bf, ts);
--- 
-1.7.0.4
+We had a long-standing TODO item on our list at
+http://wireless.kernel.org/en/developers/todo-list
+
+"when leaving an IBSS and we were the only member, remove it from
+cfg80211's BSS list"
+
+Maybe that would help here too?
+
+However I don't understand the scenario anyway. If you create an IBSS,
+you start beaconing and tell cfg80211 about it with a frame that
+includes the supported and basic rates. Then you leave, but the BSS
+stays around in cfg80211 for 15 seconds. If you re-join within those 15
+seconds, the scan results will pick up the old IBSS that no longer
+exists, and we "join" it rather than creating it.
+
+However -- joining it will take the basic rates from it. So wouldn't you
+get the old basic rates which is fine? What do you mean by "left unset"?
+
+What happens if you join an IBSS that already exists?
+
+johannes
 
