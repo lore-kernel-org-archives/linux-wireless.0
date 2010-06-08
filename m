@@ -1,75 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:39368 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752526Ab0FNGQM (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:28626 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752007Ab0FHMei (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jun 2010 02:16:12 -0400
+	Tue, 8 Jun 2010 08:34:38 -0400
 From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
 	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Subject: [PATCH 3/3] mac80211: remove BSS from cfg80211 list when leaving IBSS
-Date: Mon, 14 Jun 2010 09:15:45 +0300
-Message-Id: <1276496145-5623-4-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-In-Reply-To: <1276496145-5623-3-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-References: <1276496145-5623-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
- <1276496145-5623-2-git-send-email-ext-teemu.3.paasikivi@nokia.com>
- <1276496145-5623-3-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+Subject: [RFC 0/3] mac80211: Add support for configuring ibss basic rates
+Date: Tue,  8 Jun 2010 15:34:16 +0300
+Message-Id: <1276000459-1121-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove BSS from cfg80211 BSS list if we are only member in IBSS when
-leaving it.
+This patch set implements support for configuring basic rates for ibss network when joining/creating one. First two patches are basically patch proposed by Johannes Berg on linux-wireless posting list split in two. These implement interface to nl80211 to do actual configuration from user space. Last patch is to fix a problem when leaving and joining back to self created ibss network, without this basic rates would be left unset. That is caused by the fact that the stack holds information for the self created bss and when rejoining it looks like already existing ibss network. This causes little annoyance (bug?) by preventing changing basic rates once ibss is created as long as the stack holds the information. 
 
-Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
----
- net/mac80211/ibss.c |   33 +++++++++++++++++++++++++++++++++
- 1 files changed, 33 insertions(+), 0 deletions(-)
+Teemu Paasikivi (3):
+  mac80211: Set basic rates while joining ibss network
+  mac80211: Set changed basic rates flag
+  mac80211: Store basic rates for bss when joining ibss network
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index ff91265..6d5489b 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -969,6 +969,39 @@ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata)
- {
- 	struct sk_buff *skb;
- 
-+	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
-+	struct ieee80211_local *local = sdata->local;
-+	struct cfg80211_bss *cbss;
-+	struct ieee80211_channel *chan = NULL;
-+	const u8 *bssid = NULL;
-+	u16 capability;
-+	int active_ibss = 0;
-+
-+
-+	active_ibss = ieee80211_sta_active_ibss(sdata);
-+
-+	if (!active_ibss) {
-+		capability = WLAN_CAPABILITY_IBSS;
-+		if (ifibss->privacy)
-+			capability |= WLAN_CAPABILITY_PRIVACY;
-+		if (ifibss->fixed_bssid)
-+			bssid = ifibss->bssid;
-+		if (ifibss->fixed_channel)
-+			chan = ifibss->channel;
-+		if (!is_zero_ether_addr(ifibss->bssid))
-+			bssid = ifibss->bssid;
-+		cbss = cfg80211_get_bss(local->hw.wiphy, chan, bssid,
-+					ifibss->ssid, ifibss->ssid_len,
-+					WLAN_CAPABILITY_IBSS |
-+					WLAN_CAPABILITY_PRIVACY,
-+					capability);
-+
-+		if (cbss) {
-+			cfg80211_unlink_bss(local->hw.wiphy, cbss);
-+			cfg80211_put_bss(cbss);
-+		}
-+	}
-+
- 	del_timer_sync(&sdata->u.ibss.timer);
- 	clear_bit(IEEE80211_IBSS_REQ_RUN, &sdata->u.ibss.request);
- 	cancel_work_sync(&sdata->u.ibss.work);
--- 
-1.5.6.3
+ include/net/cfg80211.h     |    2 +
+ net/mac80211/ibss.c        |   19 ++++++++++++++++-
+ net/mac80211/ieee80211_i.h |    2 +
+ net/wireless/nl80211.c     |   49 ++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 71 insertions(+), 1 deletions(-)
 
