@@ -1,36 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:46870
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756338Ab0FKSeg (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38955 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755143Ab0FHNO3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jun 2010 14:34:36 -0400
-Date: Fri, 11 Jun 2010 11:34:47 -0700 (PDT)
-Message-Id: <20100611.113447.27795939.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2010-06-09
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20100609211251.GC2452@tuxdriver.com>
-References: <20100609211251.GC2452@tuxdriver.com>
+	Tue, 8 Jun 2010 09:14:29 -0400
+Subject: Re: [PATCHv2] mac80211: Fix circular locking dependency in ARP
+ filter handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	reinette.chatre@intel.com
+In-Reply-To: <1276002335-18600-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1276002335-18600-1-git-send-email-juuso.oikarinen@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Jun 2010 15:14:23 +0200
+Message-ID: <1276002863.3706.131.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=euc-kr
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 9 Jun 2010 17:12:51 -0400
+On Tue, 2010-06-08 at 16:05 +0300, Juuso Oikarinen wrote:
 
-> Dave,
-> 
-> Here is the usual, frightening, monstrous post-window pull request...
-> Along with the usual batch of driver updates, there are also some DMA
-> state API conversions from FUJITA Tomonori, some cleanups from Julia
-> Lawall and Joe Perches, some SSB changes from Larry Finger and Rafa©©
-> Mi©©ecki, and a number of mac80211 changes from Johannes Berg.  All of it
-> has had at least one cycle through linux-next and most of it has been
-> there for several days.  This also includes the same wireless-2.6 pull I
-> sent you previously so as to resolve some merge conflicts.
-> 
-> Please let me know if there are problems!
+> +		promisc = sdata->flags & IEEE80211_SDATA_PROMISC;
+> +		if (promisc)
+> +			bss_conf->arp_filter_enabled = 0;
+> +		else
+> +			bss_conf->arp_filter_enabled = sdata->arp_filter_state;
 
-Pulled, thanks JOhn.
+bss_conf->arp_filter_enabled = !promisc && sdata->arp_filter_state;
+
+?
+
+Or if not, use false instead of 0 please.
+
+johannes
+
