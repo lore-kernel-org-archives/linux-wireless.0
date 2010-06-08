@@ -1,41 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56343 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753176Ab0FWOpP (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:25128 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752899Ab0FHMfE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jun 2010 10:45:15 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: dkiran@marvell.com, Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 3/3] libertas: mark lbs_ret_802_11d_domain_info static
-Date: Wed, 23 Jun 2010 10:37:26 -0400
-Message-Id: <1277303846-17257-3-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1277281556.3642.6.camel@jlt3.sipsolutions.net>
-References: <1277281556.3642.6.camel@jlt3.sipsolutions.net>
+	Tue, 8 Jun 2010 08:35:04 -0400
+From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Subject: [RFC 3/3] mac80211: Store basic rates for bss when joining ibss network
+Date: Tue,  8 Jun 2010 15:34:19 +0300
+Message-Id: <1276000459-1121-4-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+In-Reply-To: <1276000459-1121-3-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+References: <1276000459-1121-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+ <1276000459-1121-2-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+ <1276000459-1121-3-git-send-email-ext-teemu.3.paasikivi@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Probably little risk of namespace polution, but good practice... :-)
+When joinig a ibss network, basic rates for bss were not stored. When
+network was self created, leaving and (re)joining same network has
+caused basic rates to be left unset. With this patch stored values are
+used.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
 ---
- drivers/net/wireless/libertas/cmdresp.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ net/mac80211/ibss.c |   14 ++++++++++++++
+ 1 files changed, 14 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-index b4bc103..a0d9482 100644
---- a/drivers/net/wireless/libertas/cmdresp.c
-+++ b/drivers/net/wireless/libertas/cmdresp.c
-@@ -103,7 +103,7 @@ static int lbs_ret_reg_access(struct lbs_private *priv,
-  *  @param resp    pointer to command response buffer
-  *  @return        0; -1
-  */
--int lbs_ret_802_11d_domain_info(struct cmd_ds_command *resp)
-+static int lbs_ret_802_11d_domain_info(struct cmd_ds_command *resp)
- {
- 	struct cmd_ds_802_11d_domain_info *domaininfo =
- 			&resp->params.domaininforesp;
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index d984ab2..72407f0 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -77,6 +77,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	struct cfg80211_bss *bss;
+ 	u32 bss_change;
+ 	u8 supp_rates[IEEE80211_MAX_SUPP_RATES];
++	struct ieee80211_bss *ibss;
+ 
+ 	/* Reset own TSF to allow time synchronization work. */
+ 	drv_reset_tsf(local);
+@@ -191,6 +192,19 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 
+ 	bss = cfg80211_inform_bss_frame(local->hw.wiphy, local->hw.conf.channel,
+ 					mgmt, skb->len, 0, GFP_KERNEL);
++
++	ibss = (struct ieee80211_bss *)(bss->priv);
++
++	for (i = 0; i < sband->n_bitrates; i++) {
++		u8 basic = 0x00;
++		if (basic_rates & BIT(i))
++			basic = 0x80;
++
++		ibss->supp_rates[i] = supp_rates[i] | basic;
++	}
++
++	ibss->supp_rates_len = i;
++
+ 	cfg80211_put_bss(bss);
+ 	cfg80211_ibss_joined(sdata->dev, ifibss->bssid, GFP_KERNEL);
+ }
 -- 
-1.7.0.1
+1.5.6.3
 
