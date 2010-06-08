@@ -1,110 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:19568 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756284Ab0FUArj (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:48210 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752007Ab0FHMej (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jun 2010 20:47:39 -0400
-Received: from vs3005.wh2.ocn.ne.jp (125.206.180.233)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0536371256
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Jun 2010 09:47:37 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: ath5k-devel@lists.ath5k.org
-Subject: Re: [ath5k-devel] [PATCH] ath5k: initialize ah->ah_current_channel
-Date: Mon, 21 Jun 2010 09:46:41 +0900
-Cc: Bob Copeland <me@bobcopeland.com>, linville@tuxdriver.com,
-	sbrown@cortland.com, linux-wireless@vger.kernel.org,
-	stable@kernel.org
-References: <1276881323-31807-1-git-send-email-me@bobcopeland.com>
-In-Reply-To: <1276881323-31807-1-git-send-email-me@bobcopeland.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201006210946.41547.br1@einfach.org>
+	Tue, 8 Jun 2010 08:34:39 -0400
+From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Subject: [RFC 1/3] mac80211: Set basic rates while joining ibss network
+Date: Tue,  8 Jun 2010 15:34:17 +0300
+Message-Id: <1276000459-1121-2-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+In-Reply-To: <1276000459-1121-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+References: <1276000459-1121-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat June 19 2010 02:15:23 Bob Copeland wrote:
-> ath5k assumes ah_current_channel is always a valid pointer in
-> several places, but a newly created interface may not have a
-> channel.  To avoid null pointer dereferences, set it up to point
-> to the first available channel until later reconfigured.
-> 
-> This fixes the following oops:
-> $ rmmod ath5k
-> $ insmod ath5k
-> $ iw phy0 set distance 11000
-> 
-> BUG: unable to handle kernel NULL pointer dereference at 00000006
-> IP: [<d0a1ff24>] ath5k_hw_set_coverage_class+0x74/0x1b0 [ath5k]
-> *pde = 00000000
-> Oops: 0000 [#1]
-> last sysfs file: /sys/devices/pci0000:00/0000:00:0e.0/ieee80211/phy0/index
-> Modules linked in: usbhid option usb_storage usbserial usblp evdev lm90
-> scx200_acb i2c_algo_bit i2c_dev i2c_core via_rhine ohci_hcd ne2k_pci
-> 8390 leds_alix2 xt_IMQ imq nf_nat_tftp nf_conntrack_tftp nf_nat_irc nf_cc
-> 
-> Pid: 1597, comm: iw Not tainted (2.6.32.14 #8)
-> EIP: 0060:[<d0a1ff24>] EFLAGS: 00010296 CPU: 0
-> EIP is at ath5k_hw_set_coverage_class+0x74/0x1b0 [ath5k]
-> EAX: 000000c2 EBX: 00000000 ECX: ffffffff EDX: c12d2080
-> ESI: 00000019 EDI: cf8c0000 EBP: d0a30edc ESP: cfa09bf4
->   DS: 007b ES: 007b FS: 0000 GS: 0000 SS: 0068
-> Process iw (pid: 1597, ti=cfa09000 task=cf88a000 task.ti=cfa09000)
-> Stack:
->   d0a34f35 d0a353f8 d0a30edc 000000fe cf8c0000 00000000 1900063d cfa8c9e0
-> <0> cfa8c9e8 cfa8c0c0 cfa8c000 d0a27f0c 199d84b4 cfa8c200 00000010 d09bfdc7
-> <0> 00000000 00000000 ffffffff d08e0d28 cf9263c0 00000001 cfa09cc4 00000000
-> Call Trace:
->   [<d0a27f0c>] ? ath5k_hw_attach+0xc8c/0x3c10 [ath5k]
->   [<d09bfdc7>] ? __ieee80211_request_smps+0x1347/0x1580 [mac80211]
->   [<d08e0d28>] ? nl80211_send_scan_start+0x7b8/0x4520 [cfg80211]
->   [<c10f5db9>] ? nla_parse+0x59/0xc0
->   [<c11ca8d9>] ? genl_rcv_msg+0x169/0x1a0
->   [<c11ca770>] ? genl_rcv_msg+0x0/0x1a0
->   [<c11c7e68>] ? netlink_rcv_skb+0x38/0x90
->   [<c11c9649>] ? genl_rcv+0x19/0x30
->   [<c11c7c03>] ? netlink_unicast+0x1b3/0x220
->   [<c11c893e>] ? netlink_sendmsg+0x26e/0x290
->   [<c11a409e>] ? sock_sendmsg+0xbe/0xf0
->   [<c1032780>] ? autoremove_wake_function+0x0/0x50
->   [<c104d846>] ? __alloc_pages_nodemask+0x106/0x530
->   [<c1074933>] ? do_lookup+0x53/0x1b0
->   [<c10766f9>] ? __link_path_walk+0x9b9/0x9e0
->   [<c11acab0>] ? verify_iovec+0x50/0x90
->   [<c11a42b1>] ? sys_sendmsg+0x1e1/0x270
->   [<c1048e50>] ? find_get_page+0x10/0x50
->   [<c104a96f>] ? filemap_fault+0x5f/0x370
->   [<c1059159>] ? __do_fault+0x319/0x370
->   [<c11a55b4>] ? sys_socketcall+0x244/0x290
->   [<c101962c>] ? do_page_fault+0x1ec/0x270
->   [<c1019440>] ? do_page_fault+0x0/0x270
->   [<c1002ae5>] ? syscall_call+0x7/0xb
-> Code: 00 b8 fe 00 00 00 b9 f8 53 a3 d0 89 5c 24 14 89 7c 24 10 89 44 24
-> 0c 89 6c 24 08 89 4c 24 04 c7 04 24 35 4f a3 d0 e8 7c 30 60 f0 <0f> b7
-> 43 06 ba 06 00 00 00 a8 10 75 0e 83 e0 20 83 f8 01 19 d2
-> EIP: [<d0a1ff24>] ath5k_hw_set_coverage_class+0x74/0x1b0 [ath5k] SS:ESP
-> 0068:cfa09bf4
-> CR2: 0000000000000006
-> ---[ end trace 54f73d6b10ceb87b ]---
-> 
-> Cc: stable@kernel.org
-> Reported-by: Steve Brown <sbrown@cortland.com>
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
-> ---
->  drivers/net/wireless/ath/ath5k/attach.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath5k/attach.c
-> b/drivers/net/wireless/ath/ath5k/attach.c index ef2dc1d..b32e28c 100644
-> --- a/drivers/net/wireless/ath/ath5k/attach.c
-> +++ b/drivers/net/wireless/ath/ath5k/attach.c
-> @@ -126,6 +126,7 @@ int ath5k_hw_attach(struct ath5k_softc *sc)
->  	ah->ah_ant_mode = AR5K_ANTMODE_DEFAULT;
->  	ah->ah_noise_floor = -95;	/* until first NF calibration is run */
->  	sc->ani_state.ani_mode = ATH5K_ANI_MODE_AUTO;
-> +	ah->ah_current_channel = &sc->channels[0];
-> 
->  	/*
->  	 * Find the mac version
+This patch adds support to nl80211 and mac80211 to set basic rates when
+joining/creating ibss network.
 
-Acked-by: Bruno Randolf <br1@einfach.org>
+Original patch was posted by Johannes Berg on the linux-wireless posting list.
+
+Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+---
+ include/net/cfg80211.h     |    2 +
+ net/mac80211/ibss.c        |    4 ++-
+ net/mac80211/ieee80211_i.h |    2 +
+ net/wireless/nl80211.c     |   49 ++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 56 insertions(+), 1 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 0c3c214..4ff4e1f 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -801,6 +801,7 @@ struct cfg80211_disassoc_request {
+  * @beacon_interval: beacon interval to use
+  * @privacy: this is a protected network, keys will be configured
+  *	after joining
++ * @basic_rates: bitmap of basic rates to use when creating the IBSS
+  */
+ struct cfg80211_ibss_params {
+ 	u8 *ssid;
+@@ -809,6 +810,7 @@ struct cfg80211_ibss_params {
+ 	u8 *ie;
+ 	u8 ssid_len, ie_len;
+ 	u16 beacon_interval;
++	u32 basic_rates;
+ 	bool channel_fixed;
+ 	bool privacy;
+ };
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index d7a96ce..8be5a96 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -172,6 +172,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	rcu_assign_pointer(ifibss->presp, skb);
+ 
+ 	sdata->vif.bss_conf.beacon_int = beacon_int;
++	sdata->vif.bss_conf.basic_rates = basic_rates;
+ 	bss_change = BSS_CHANGED_BEACON_INT;
+ 	bss_change |= ieee80211_reset_erp_info(sdata);
+ 	bss_change |= BSS_CHANGED_BSSID;
+@@ -529,7 +530,7 @@ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
+ 		sdata->drop_unencrypted = 0;
+ 
+ 	__ieee80211_sta_join_ibss(sdata, bssid, sdata->vif.bss_conf.beacon_int,
+-				  ifibss->channel, 3, /* first two are basic */
++				  ifibss->channel, ifibss->basic_rates,
+ 				  capability, 0);
+ }
+ 
+@@ -910,6 +911,7 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
+ 		sdata->u.ibss.fixed_bssid = false;
+ 
+ 	sdata->u.ibss.privacy = params->privacy;
++	sdata->u.ibss.basic_rates = params->basic_rates;
+ 
+ 	sdata->vif.bss_conf.beacon_int = params->beacon_interval;
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 4d3883e..fde058b 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -393,6 +393,8 @@ struct ieee80211_if_ibss {
+ 	unsigned long request;
+ 	unsigned long last_scan_completed;
+ 
++	u32 basic_rates;
++
+ 	bool timer_running;
+ 
+ 	bool fixed_bssid;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 90ab3c8..324b4a5 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3955,6 +3955,55 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
+ 		}
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_BSS_BASIC_RATES]) {
++		u8 *rates =
++			nla_data(info->attrs[NL80211_ATTR_BSS_BASIC_RATES]);
++		int n_rates =
++			nla_len(info->attrs[NL80211_ATTR_BSS_BASIC_RATES]);
++		struct ieee80211_supported_band *sband =
++			wiphy->bands[ibss.channel->band];
++		int i, j;
++
++		if (n_rates == 0) {
++			err = -EINVAL;
++			goto out;
++		}
++
++		for (i = 0; i < n_rates; i++) {
++			int rate = (rates[i] & 0x7f) * 5;
++			bool found = false;
++
++			for (j = 0; j < sband->n_bitrates; j++) {
++				if (sband->bitrates[j].bitrate == rate) {
++					found = true;
++					ibss.basic_rates |= BIT(j);
++					break;
++				}
++			}
++			if (!found) {
++				err = -EINVAL;
++				goto out;
++			}
++		}
++	} else {
++		/*
++		* If no rates were explicitly configured,
++		* use the mandatory rate set for 11b or
++		* 11a for maximum compatibility.
++		*/
++		struct ieee80211_supported_band *sband =
++			wiphy->bands[ibss.channel->band];
++		int j;
++		u32 flag = ibss.channel->band == IEEE80211_BAND_5GHZ ?
++			IEEE80211_RATE_MANDATORY_A :
++			IEEE80211_RATE_MANDATORY_B;
++
++		for (j = 0; j < sband->n_bitrates; j++) {
++			if (sband->bitrates[j].flags & flag)
++				ibss.basic_rates |= BIT(j);
++		}
++	}
++
+ 	err = cfg80211_join_ibss(rdev, dev, &ibss, connkeys);
+ 
+ out:
+-- 
+1.5.6.3
+
