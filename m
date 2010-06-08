@@ -1,31 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:63027 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753430Ab0FMUZl (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:28661 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752007Ab0FHMeo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jun 2010 16:25:41 -0400
-Received: by pwi1 with SMTP id 1so2260293pwi.19
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Jun 2010 13:25:41 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1276459009-17168-2-git-send-email-hauke@hauke-m.de>
-References: <1276459009-17168-1-git-send-email-hauke@hauke-m.de>
-	<1276459009-17168-2-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Sun, 13 Jun 2010 13:25:21 -0700
-Message-ID: <AANLkTil4XIVT2vuQwDWFsCjKX2sIo3ac6MTe_UoFvQlS@mail.gmail.com>
-Subject: Re: [PATCH 2/2] compat: backport sdio_writeb_readb
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 8 Jun 2010 08:34:44 -0400
+From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Subject: [RFC 2/3] mac80211: Set changed basic rates flag
+Date: Tue,  8 Jun 2010 15:34:18 +0300
+Message-Id: <1276000459-1121-3-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+In-Reply-To: <1276000459-1121-2-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+References: <1276000459-1121-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+ <1276000459-1121-2-git-send-email-ext-teemu.3.paasikivi@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 13, 2010 at 12:56 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> This is needed by wl1251_sdio.c
-> Use sdio_readb instead of sdio_writeb_readb as long as sdio_writeb_readb was not realy backported.
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Add changed basic rates flag to bss_changed while joinig ibss network.
 
-Thanks, applied both!
+This patch is split from the patch containing support for setting basic
+rates when creating ibss network. Original patch was posted by Johannes
+Berg on the linux-wireless posting list.
 
-  Luis
+Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+---
+ net/mac80211/ibss.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 8be5a96..d984ab2 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -179,6 +179,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	bss_change |= BSS_CHANGED_BEACON;
+ 	bss_change |= BSS_CHANGED_BEACON_ENABLED;
+ 	bss_change |= BSS_CHANGED_IBSS;
++	bss_change |= BSS_CHANGED_BASIC_RATES;
+ 	sdata->vif.bss_conf.ibss_joined = true;
+ 	ieee80211_bss_info_change_notify(sdata, bss_change);
+ 
+-- 
+1.5.6.3
+
