@@ -1,72 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:56433 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932997Ab0FBVhd convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55726 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751961Ab0FHJFI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jun 2010 17:37:33 -0400
-Received: by vws11 with SMTP id 11so3100309vws.19
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Jun 2010 14:37:32 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTikxoZxZVp-1gLjXLy2XFrBz47SR6temPfBVDG-I@mail.gmail.com>
-References: <1274856569-13436-1-git-send-email-emmanuel.grumbach@intel.com>
-	<AANLkTikzEywcDi9zyJknMWkKymCVYnWQa2YXbbSDVx5o@mail.gmail.com>
-	<4825B8A2C4E264489E57869F0DCFB22343E33E611F@hasmsx502.ger.corp.intel.com>
-	<AANLkTinG2zWHE8l-ZPBnyrFq5gs4nZX59zhF3AVh7h_4@mail.gmail.com>
-	<4825B8A2C4E264489E57869F0DCFB22343E33E6133@hasmsx502.ger.corp.intel.com>
-	<AANLkTilHP9QwNPWVgJhVxYxQF8hzM9cd6-eVKOJc9qC3@mail.gmail.com>
-	<AANLkTikxoZxZVp-1gLjXLy2XFrBz47SR6temPfBVDG-I@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 2 Jun 2010 14:37:09 -0700
-Message-ID: <AANLkTikr4Gi72LO_4x-ZZnecE6Lmc4c0JkNPQRqgA3fL@mail.gmail.com>
-Subject: Re: [RFC] wireless-regdb: Add A band in IL
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Michael Green <Michael.Green@atheros.com>,
-	David Quan <David.Quan@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 8 Jun 2010 05:05:08 -0400
+Subject: Re: [PATCH v3 1/3] cfg80211: Add nl80211 antenna configuration
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <201006081010.13314.br1@einfach.org>
+References: <20100607065858.16060.38448.stgit@tt-desk>
+	 <1275901514.3639.4.camel@jlt3.sipsolutions.net>
+	 <201006081010.13314.br1@einfach.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Jun 2010 11:05:02 +0200
+Message-ID: <1275987902.3706.107.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 2, 2010 at 12:46 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->> <emmanuel.grumbach@intel.com> wrote:
->> >>On Wed, May 26, 2010 at 10:32 AM, Grumbach, Emmanuel
->> >><emmanuel.grumbach@intel.com> wrote:
->> >>>>>  country IL:
->> >>>>>        (2402 - 2482 @ 40), (N/A, 20)
->> >>>>> +       (5150 - 5250 @ 40). (N/A, 200 mW), NO-OUTDOOR
->> >>>>> +       (5250 - 5350 @ 40). (N/A, 200 mW), NO-OUTDOOR, DFS
->> >>>>
->> >>>>I believe the one standing issue here is you are enabling HT40 on 5
->> >>>>GHz, how about enabling 2.4 GHz first, and then through a separate
->> >>>>patch and time/review we review the HT40 stuff, unless you are in no
->> >>>>rush to get 2.4 GHz enabled.
->> >>>>
->> >>>
->> >>> I am not following... HT40 on 2.4 GHz is already enabled...
->> >>> What should I enable in 2.4 GHz ?
->> >>
->> >>Sorry I meant 5 GHz.
->> >
->> > Actually 40GHz is less a problem in 5GHz than in 2.4GHz since in 2.4GHz
->> > I need to have a "Coexistence mechanism", which is not required in 5GHz.
->> > This Coexistence mechanism is apparently implemented by one OEM under the
->> > name "Clear Channel Assessment (CCA)".
->> >
->> > In short, I don't think there is any special issue with 40MHz in 5GHz, but
->> > I may miss something here... In any case, I have no problem with sending
->> > a patch that allows 5GHz in 20MHz for the moment.
->> > I can also have a look at the EEPROM in our NICs which is supposed to have
->> > all the needed limitations. Details to follow tomorrow.
->>
->> OK thanks for the clarification Emmanuel, please give Michael some
->> time to review.
->>
->
->
-> How much time ? :-)
+On Tue, 2010-06-08 at 10:10 +0900, Bruno Randolf wrote:
 
-Seems he just finished and sent his notes to the list.
+> i don't particularly care about where the antenna information is printed 
+> exactly, so anything will be fine with me.
+> 
+> but when i look at the wiphy info, it shows mostly capability information, 
+> like the list of supported frequencies, list of bitrates, supported interface 
+> modes, supported commands. the only exception is coverage class, which is the 
+> only runtime configuration as far as i can see. therefore i thought it doesnt 
+> fit there well.
+> 
+> maybe another command for getting runtime configuration like channel(s), fixed 
+> bitrates, essid, bssid, RTS/CTS, fraqmentation, txpower, power management, 
+> antenna settings, etc... would make sense? allthough in this list antenna is 
+> probably the only one which is per phy and not per interface...
 
-  Luis
+Right so there isn't much runtime stuff in the list now. I don't see
+anything inherently bad in adding more though, since userspace can
+selectively look at the attributes, and it's not like it's a huge amount
+of data?
+
+johannes
+
