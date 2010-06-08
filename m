@@ -1,102 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:57840 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751143Ab0FPILY (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:52743 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750743Ab0FHEce (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jun 2010 04:11:24 -0400
-Received: by wwb18 with SMTP id 18so5419591wwb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Jun 2010 01:11:21 -0700 (PDT)
-Date: Wed, 16 Jun 2010 10:12:27 +0200
-From: Kristoffer Ericson <kristoffer.ericson@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: stable@kernel.org, greg@kroah.com, linux-wireless@vger.kernel.org,
-	Peter Stuge <peter@stuge.se>,
-	"Justin P. Mattock" <justinmattock@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 2.6.32.y] ath9k: re-enable ps by default for new single
- chip families
-Message-ID: <20100616081227.GA1118@boggieman>
-Reply-To: Kristoffer Ericson <kristoffer.ericson@gmail.com>
-References: <1276640359-25360-1-git-send-email-lrodriguez@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1276640359-25360-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 8 Jun 2010 00:32:34 -0400
+Subject: Re: [RFC PATCH] mac80211: Fix circular locking dependency in ARP
+ filter handling
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"reinette.chatre@intel.com" <reinette.chatre@intel.com>
+In-Reply-To: <1275923383.29978.19.camel@jlt3.sipsolutions.net>
+References: <1275915965-10124-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1275916761.29978.15.camel@jlt3.sipsolutions.net>
+	 <1275918144.5277.30408.camel@wimaxnb.nmp.nokia.com>
+	 <1275923383.29978.19.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Jun 2010 07:32:19 +0300
+Message-ID: <1275971539.5277.31311.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 15, 2010 at 06:19:19PM -0400, Luis R. Rodriguez wrote:
-> commit 14acdde6e527950f66c084dbf19bad6fbfcaeedc upstream.
+On Mon, 2010-06-07 at 17:09 +0200, ext Johannes Berg wrote:
+> On Mon, 2010-06-07 at 16:42 +0300, Juuso Oikarinen wrote:
 > 
-> The newer single chip hardware family of chipsets have not been
-> experiencing issues with power saving set by default with recent
-> fixes merged (even into stable). The remaining issues are only
-> reported with AR5416 and since enabling PS by default can increase
-> power savings considerably best to take advantage of that feature
-> as this has been tested properly.
+> > > > +#ifdef CONFIG_INET
+> > > > +		cancel_work_sync(&sdata->u.mgd.arp_config_work);
+> > > > +#endif
+> > > 
+> > > No can do, this is under RTNL and thus can't block waiting for a work
+> > > that acquires the RTNL ... the work might already be running, waiting
+> > > for the RTNL, by the time you get here. This will also get you a lockdep
+> > > complaint.
+> > 
+> > The work-func escapes based on ieee80211_sdata_running before acquiring
+> > the rtnl - hence here it should never get to the lock. I saw the same
+> > being used in those other work funcs too. I was beginning work to try to
+> > validate that, so it's not enough?
+> 
+> No, it's not enough. Like I said: "the work might already be running,
+> waiting for the RTNL" -- and once it obtains the RTNL, sdata has already
+> been freed!
+> 
+> > > This is why 
+> > > 
+> > > > @@ -379,7 +379,8 @@ static int ieee80211_ifa_changed(struct notifier_block *nb,
+> > > >  	ifmgd = &sdata->u.mgd;
+> > > >  	mutex_lock(&ifmgd->mtx);
+> > > >  	if (ifmgd->associated)
+> > > > -		ieee80211_set_arp_filter(sdata);
+> > > > +		ieee80211_queue_work(&sdata->local->hw,
+> > > > +				     &sdata->u.mgd.arp_config_work);
+> > > >  	mutex_unlock(&ifmgd->mtx);
+> > > 
+> > > No need to do change it here since the rtnl is held outside.
+> > 
+> > Yes, I know rtnl is held outside. I changed this for two reasons. First,
+> > I think it maybe better if the driver function is always called in the
+> > same scope. Secondly, this gets rid of inetdevs intermediate
+> > configurations (if you change IP address, it will first remove the
+> > previous one, and immediately after add a new one, resulting in two
+> > calls to the driver config function.)
+> 
+> Interesting. But that only works if it does that both together under
+> rtnl. I don't think the context really matters -- it should be the same
+> at least from a locking POV you have both rtnl and mgd->mtx acquired.
+> 
+> > > Also, and this applies to the change in mlme.c too, you must never put
+> > > work that acquires the rtnl onto the mac80211 workqueue ... that's what
+> > > you were trying to fix to start with!
+> > 
+> > > But because the interface might go away before your work runs, you're in
+> > > a stupid situation where you can't really use a per-interface work
+> > > either ... I think you probably need to have the work in ieee80211_local
+> > > and iterate the interface list.
+> > 
+> > I thought about iterating the interface list. I assume you imply calling
+> > the configure function for every interface.
+> 
+> Only if it's associated, I guess.
+> 
+> > Going still back to the current patch: assuming that you overlooked the
+> > sdata_running() call in the arp_config_work() function, and we can after
+> > all cancel_work_sync in _stop(), would using the kernel's default
+> > workqueue solve the rtnl problem, or are the rtnl dependencies there
+> > too?
+> 
+> Using the default wq would solve the rtnl from workqueue problem,
+> obviously, but wouldn't fix the cancel_work_sync problem.
+> 
 
-I havent had any issues lately. But that said Ive moved on to
-2.6.33, 2.6.34 which seems to work fine. Believe you set
-to disabled by default on those?
+Yeah, I actually did realize this during the night. No, I wasn't
+sleepless - my brain still has a tendency to generate realizations for
+the joy of the morning.
 
-/Kristoffer
+I'll try to think about alternative solutions. The driver provided list
+idea is neat, but I think will scale badly for multiple vif's.
 
+-Juuso
+
+> johannes
 > 
-> For more details on this issue see the bug report:
-> 
-> http://bugzilla.kernel.org/show_bug.cgi?id=14267
-> 
-> We leave AR5416 with PS disabled by default, that seems to require
-> some more work.
-> 
-> Cc: stable@kernel.org
-> Cc: Peter Stuge <peter@stuge.se>
-> Cc: Justin P. Mattock  <justinmattock@gmail.com>
-> Cc: Kristoffer Ericson <kristoffer.ericson@gmail.com>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
-> 
-> Greg, this is the long promised backport of the patch titled
-> "ath9k: re-enable ps by default for new single chip families" backported
-> down to 2.6.32.y. This just goes test compiled. Manual backport
-> was required from the upstream Linus patch since the flag
-> WIPHY_FLAG_PS_ON_BY_DEFAULT was not used back on 2.6.32 so instead
-> we use the equivalent hw->wiphy->ps_default bool.
-> 
-> Apologies for the delay, was just stuck with other stuff.
-> 
-> I'll remove this from the stable pending list for 802.11 [1] once
-> this gets sucked in.
-> 
-> [1] http://wireless.kernel.org/en/developers/stable-pending
-> 
->  drivers/net/wireless/ath/ath9k/main.c |    7 ++++++-
->  1 files changed, 6 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> index 15eb245..dba27b7 100644
-> --- a/drivers/net/wireless/ath/ath9k/main.c
-> +++ b/drivers/net/wireless/ath/ath9k/main.c
-> @@ -1538,6 +1538,8 @@ bad_no_ah:
->  
->  void ath_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
->  {
-> +	struct ath_hw *ah = sc->sc_ah;
-> +
->  	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
->  		IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
->  		IEEE80211_HW_SIGNAL_DBM |
-> @@ -1556,7 +1558,10 @@ void ath_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
->  		BIT(NL80211_IFTYPE_ADHOC) |
->  		BIT(NL80211_IFTYPE_MESH_POINT);
->  
-> -	hw->wiphy->ps_default = false;
-> +	if (AR_SREV_5416(ah))
-> +		hw->wiphy->ps_default = false;
-> +	else
-> +		hw->wiphy->ps_default = true;
->  
->  	hw->queues = 4;
->  	hw->max_rates = 4;
-> -- 
-> 1.6.3.3
+
+
