@@ -1,75 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:52194 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759510Ab0FPVfc (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37817 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753874Ab0FHHZM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jun 2010 17:35:32 -0400
-Date: Wed, 16 Jun 2010 14:34:27 -0700
-From: Andrew Morton <akpm@linux-foundation.org>
-To: sedat.dilek@gmail.com
-Cc: Sedat Dilek <sedat.dilek@googlemail.com>,
-	"Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>, dmonakhov@openvz.org
-Subject: Re: 2.6.35-rc2-git2: Reported regressions from 2.6.34
-Message-Id: <20100616143427.a0323701.akpm@linux-foundation.org>
-In-Reply-To: <AANLkTil-X5IMZMer7fHVPOMalsTJNliv-gMimzKmJ3Od@mail.gmail.com>
-References: <Rlf_Qjov7bG.A.a8F.I8rDMB@chimera>
-	<AANLkTiksbL1qHg7Q0A-6TbX0uUrxra4jctUoIGVk5vnE@mail.gmail.com>
-	<201006091122.35304.rjw@sisk.pl>
-	<20100616134231.23ff30da.akpm@linux-foundation.org>
-	<AANLkTil-X5IMZMer7fHVPOMalsTJNliv-gMimzKmJ3Od@mail.gmail.com>
+	Tue, 8 Jun 2010 03:25:12 -0400
+Subject: Re: [PATCH] iwlwifi: add missing rcu_read_lock
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Miles Lane <miles.lane@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Wey-Yi W Guy <wey-yi.w.guy@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTin91YUTC8ogoflpFN4V3f21ItLlV_EoFU-uvrzo@mail.gmail.com>
+References: <1275938438.29978.23.camel@jlt3.sipsolutions.net>
+	 <AANLkTin91YUTC8ogoflpFN4V3f21ItLlV_EoFU-uvrzo@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 08 Jun 2010 09:25:03 +0200
+Message-ID: <1275981903.3706.0.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 16 Jun 2010 23:00:37 +0200
-Sedat Dilek <sedat.dilek@googlemail.com> wrote:
+On Mon, 2010-06-07 at 17:31 -0400, Miles Lane wrote:
 
-> On Wed, Jun 16, 2010 at 10:42 PM, Andrew Morton
-> <akpm@linux-foundation.org> wrote:
-> > On Wed, 9 Jun 2010 11:22:35 +0200
-> > "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
+> > --- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-agn-tx.c     2010-06-07 21:17:56.000000000 +0200
+> > +++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-agn-tx.c  2010-06-07 21:18:04.000000000 +0200
+> > @@ -1146,6 +1146,7 @@ static void iwlagn_tx_status(struct iwl_
+> >        struct ieee80211_sta *sta;
+> >        struct iwl_station_priv *sta_priv;
 > >
-> >> On Wednesday 09 June 2010, Sedat Dilek wrote:
-> >> > The patch from [1] is still missing.
-> >> >
-> >> > __ __"cpufreq-call-nr_iowait_cpu-with-disabled-preemption.patch" from
-> >> > Dmitry Monakhoc
-> >> >
-> >> > Tested-by: Sedat Dilek <sedat.dilek@gmail.com>
-> >> > Tested-by Maciej Rutecki <maciej.rutecki@gmail.com>
-> >> >
-> >> > I have already reported this issue on LKML [2] and cpufreq ML [3].
-> >> >
-> >> > - Sedat -
-> >> >
-> >> > [1] http://www.spinics.net/lists/cpufreq/msg01631.html
-> >> > [2] http://lkml.org/lkml/2010/5/31/77
-> >> > [3] http://www.spinics.net/lists/cpufreq/msg01637.html
-> >>
-> >> Thanks, added.
+> > +       rcu_read_lock();
+> >        sta = ieee80211_find_sta(priv->vif, hdr->addr1);
+> >        if (sta) {
+> >                sta_priv = (void *)sta->drv_priv;
+> > @@ -1154,6 +1155,7 @@ static void iwlagn_tx_status(struct iwl_
+> >                    atomic_dec_return(&sta_priv->pending_frames) == 0)
+> >                        ieee80211_sta_block_awake(priv->hw, sta, false);
+> >        }
+> > +       rcu_read_unlock();
 > >
-> > I just merged a different patch whcih should address this:
->
-> How do cpu-freq related stuff find its way into mainline?
-> Is there a GIT repository/branch on <git.kernel.org> where you can pull from?
+> >        ieee80211_tx_status_irqsafe(priv->hw, skb);
+> >  }
+> >
+> >
+> >
 > 
+> Unclean patch application - is this to be expected?
+> 
+> patching file drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+> Hunk #1 succeeded at 1125 (offset -21 lines).
+> Hunk #2 succeeded at 1134 (offset -21 lines).
 
-(top-posting repaired.  Please don't)
+Didn't pay much attention what tree I generated it against since I knew
+this code hasn't changed in a while ... so the offset looks perfectly
+fine. Fuzz I'd have been surprised about :)
 
-Usually via the cpufreq git tree, mailing list and maintainer, as
-described in ./MAINTAINERS.
-
-But for a patch like this one, I'll just scoot it into mainline unless
-Dave happens to grab it before I do that.
+johannes
 
