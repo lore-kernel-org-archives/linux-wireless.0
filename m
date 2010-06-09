@@ -1,111 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:40181 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751815Ab0FVGWm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jun 2010 02:22:42 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Jun 2010 23:22:42 -0700
-From: Vivek Natarajan <vnatarajan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath9k: Add a module parameter to disable led blinking.
-Date: Tue, 22 Jun 2010 11:52:37 +0530
-Message-ID: <1277187757-5472-1-git-send-email-vnatarajan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from he.sipsolutions.net ([78.46.109.217]:46555 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754661Ab0FIPHV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jun 2010 11:07:21 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.71)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1OMMsC-00089r-1k
+	for linux-wireless@vger.kernel.org; Wed, 09 Jun 2010 17:07:20 +0200
+Message-Id: <20100609150456.003185959@sipsolutions.net>
+Date: Wed, 09 Jun 2010 17:01:58 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC v2 16/22] mac80211: defer RX agg session teardown to work
+References: <20100609150142.227469359@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some vendors require the LED to be ON always irrespective of any
-radio activity. Introducing a module parameter to disable blinking,
-so that one can choose between always on or led blink during
-activity.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+Since we want the code to be able to sleep
+in the future, it must not be called from
+the timer directly. To prepare, move it out
+into the aggregation work.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
- drivers/net/wireless/ath/ath9k/gpio.c  |    9 ++++++---
- drivers/net/wireless/ath/ath9k/init.c  |    4 ++++
- drivers/net/wireless/ath/ath9k/main.c  |    4 +++-
- 4 files changed, 14 insertions(+), 4 deletions(-)
+ net/mac80211/agg-rx.c      |   24 ++++++++++--------------
+ net/mac80211/ht.c          |    5 +++++
+ net/mac80211/ieee80211_i.h |    2 ++
+ net/mac80211/sta_info.h    |    3 +++
+ 4 files changed, 20 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 8d163ae..3a14630 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -628,6 +628,7 @@ static inline void ath_read_cachesize(struct ath_common *common, int *csz)
- 
- extern struct ieee80211_ops ath9k_ops;
- extern int modparam_nohwcrypt;
-+extern int led_blink;
- 
- irqreturn_t ath_isr(int irq, void *dev);
- int ath9k_init_device(u16 devid, struct ath_softc *sc, u16 subsysid,
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 0ee75e7..3a8ee99 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -76,7 +76,8 @@ static void ath_led_brightness(struct led_classdev *led_cdev,
- 	case LED_FULL:
- 		if (led->led_type == ATH_LED_ASSOC) {
- 			sc->sc_flags |= SC_OP_LED_ASSOCIATED;
--			ieee80211_queue_delayed_work(sc->hw,
-+			if (led_blink)
-+				ieee80211_queue_delayed_work(sc->hw,
- 						     &sc->ath_led_blink_work, 0);
- 		} else if (led->led_type == ATH_LED_RADIO) {
- 			ath9k_hw_set_gpio(sc->sc_ah, sc->sc_ah->led_pin, 0);
-@@ -143,7 +144,8 @@ void ath_init_leds(struct ath_softc *sc)
- 	/* LED off, active low */
- 	ath9k_hw_set_gpio(sc->sc_ah, sc->sc_ah->led_pin, 1);
- 
--	INIT_DELAYED_WORK(&sc->ath_led_blink_work, ath_led_blink_work);
-+	if (led_blink)
-+		INIT_DELAYED_WORK(&sc->ath_led_blink_work, ath_led_blink_work);
- 
- 	trigger = ieee80211_get_radio_led_name(sc->hw);
- 	snprintf(sc->radio_led.name, sizeof(sc->radio_led.name),
-@@ -180,7 +182,8 @@ void ath_init_leds(struct ath_softc *sc)
- 	return;
- 
- fail:
--	cancel_delayed_work_sync(&sc->ath_led_blink_work);
-+	if (led_blink)
-+		cancel_delayed_work_sync(&sc->ath_led_blink_work);
- 	ath_deinit_leds(sc);
+--- wireless-testing.orig/net/mac80211/agg-rx.c	2010-06-09 12:57:26.000000000 +0200
++++ wireless-testing/net/mac80211/agg-rx.c	2010-06-09 12:57:30.000000000 +0200
+@@ -32,21 +32,18 @@ static void ieee80211_free_tid_rx(struct
+ 	kfree(tid_rx);
  }
  
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 514a401..8700e3d 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -33,6 +33,10 @@ int modparam_nohwcrypt;
- module_param_named(nohwcrypt, modparam_nohwcrypt, int, 0444);
- MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption");
+-static void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+-					    u16 initiator, u16 reason,
+-					    bool from_timer)
++void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
++				     u16 initiator, u16 reason)
+ {
+ 	struct ieee80211_local *local = sta->local;
+ 	struct tid_ampdu_rx *tid_rx;
  
-+int led_blink = 1;
-+module_param_named(blink, led_blink, int, 0444);
-+MODULE_PARM_DESC(blink, "Enable LED blink on activity");
+-	spin_lock_bh(&sta->lock);
++	lockdep_assert_held(&sta->lock);
+ 
+ 	tid_rx = sta->ampdu_mlme.tid_rx[tid];
+ 
+-	if (!tid_rx) {
+-		spin_unlock_bh(&sta->lock);
++	if (!tid_rx)
+ 		return;
+-	}
+ 
+ 	rcu_assign_pointer(sta->ampdu_mlme.tid_rx[tid], NULL);
+ 
+@@ -65,10 +62,7 @@ static void ___ieee80211_stop_rx_ba_sess
+ 		ieee80211_send_delba(sta->sdata, sta->sta.addr,
+ 				     tid, 0, reason);
+ 
+-	spin_unlock_bh(&sta->lock);
+-
+-	if (!from_timer)
+-		del_timer_sync(&tid_rx->session_timer);
++	del_timer_sync(&tid_rx->session_timer);
+ 
+ 	call_rcu(&tid_rx->rcu_head, ieee80211_free_tid_rx);
+ }
+@@ -76,7 +70,9 @@ static void ___ieee80211_stop_rx_ba_sess
+ void __ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+ 				    u16 initiator, u16 reason)
+ {
+-	___ieee80211_stop_rx_ba_session(sta, tid, initiator, reason, false);
++	spin_lock_bh(&sta->lock);
++	___ieee80211_stop_rx_ba_session(sta, tid, initiator, reason);
++	spin_unlock_bh(&sta->lock);
+ }
+ 
+ /*
+@@ -97,8 +93,8 @@ static void sta_rx_agg_session_timer_exp
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+ 	printk(KERN_DEBUG "rx session timer expired on tid %d\n", (u16)*ptid);
+ #endif
+-	___ieee80211_stop_rx_ba_session(sta, *ptid, WLAN_BACK_RECIPIENT,
+-					WLAN_REASON_QSTA_TIMEOUT, true);
++	set_bit(*ptid, sta->ampdu_mlme.tid_rx_timer_expired);
++	ieee80211_queue_work(&sta->local->hw, &sta->ampdu_mlme.work);
+ }
+ 
+ static void ieee80211_send_addba_resp(struct ieee80211_sub_if_data *sdata, u8 *da, u16 tid,
+--- wireless-testing.orig/net/mac80211/ht.c	2010-06-09 12:57:30.000000000 +0200
++++ wireless-testing/net/mac80211/ht.c	2010-06-09 12:57:30.000000000 +0200
+@@ -132,6 +132,11 @@ void ieee80211_ba_session_work(struct wo
+ 
+ 	spin_lock_bh(&sta->lock);
+ 	for (tid = 0; tid < STA_TID_NUM; tid++) {
++		if (test_and_clear_bit(tid, sta->ampdu_mlme.tid_rx_timer_expired))
++			___ieee80211_stop_rx_ba_session(
++				sta, tid, WLAN_BACK_RECIPIENT,
++				WLAN_REASON_QSTA_TIMEOUT);
 +
- /* We use the hw_value as an index into our private channel structure */
+ 		tid_tx = sta->ampdu_mlme.tid_tx[tid];
+ 		if (!tid_tx)
+ 			continue;
+--- wireless-testing.orig/net/mac80211/sta_info.h	2010-06-09 12:57:29.000000000 +0200
++++ wireless-testing/net/mac80211/sta_info.h	2010-06-09 12:57:30.000000000 +0200
+@@ -140,10 +140,13 @@ struct tid_ampdu_rx {
+  * @addba_req_num: number of times addBA request has been sent.
+  * @dialog_token_allocator: dialog token enumerator for each new session;
+  * @work: work struct for starting/stopping aggregation
++ * @tid_rx_timer_expired: bitmap indicating on which TIDs the
++ *	RX timer expired until the work for it runs
+  */
+ struct sta_ampdu_mlme {
+ 	/* rx */
+ 	struct tid_ampdu_rx *tid_rx[STA_TID_NUM];
++	unsigned long tid_rx_timer_expired[BITS_TO_LONGS(STA_TID_NUM)];
+ 	/* tx */
+ 	struct work_struct work;
+ 	struct tid_ampdu_tx *tid_tx[STA_TID_NUM];
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2010-06-09 12:57:30.000000000 +0200
++++ wireless-testing/net/mac80211/ieee80211_i.h	2010-06-09 12:57:30.000000000 +0200
+@@ -1101,6 +1101,8 @@ int ieee80211_send_smps_action(struct ie
+ 			       enum ieee80211_smps_mode smps, const u8 *da,
+ 			       const u8 *bssid);
  
- #define CHAN2G(_freq, _idx)  { \
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index c8de50f..5af2596 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1241,7 +1241,9 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 
- 	aphy->state = ATH_WIPHY_INACTIVE;
- 
--	cancel_delayed_work_sync(&sc->ath_led_blink_work);
-+	if (led_blink)
-+		cancel_delayed_work_sync(&sc->ath_led_blink_work);
-+
- 	cancel_delayed_work_sync(&sc->tx_complete_work);
- 	cancel_work_sync(&sc->paprd_work);
- 
--- 
-1.7.1
++void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
++				     u16 initiator, u16 reason);
+ void __ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+ 				    u16 initiator, u16 reason);
+ void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta);
+
 
