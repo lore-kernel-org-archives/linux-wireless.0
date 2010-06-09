@@ -1,194 +1,405 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:17222 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752615Ab0FVTN3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jun 2010 15:13:29 -0400
-Date: Tue, 22 Jun 2010 12:13:25 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	David Quan <David.Quan@Atheros.com>,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"ath5k-devel@venema.h4ckr.net" <ath5k-devel@venema.h4ckr.net>,
-	Jonathan May <Jonathan.May@Atheros.com>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	Tim Gardner <tim.gardner@canonical.com>
-Subject: Re: [ath5k-devel] [PATCH v2] ath5k: disable ASPM
-Message-ID: <20100622191325.GF12659@tux>
-References: <AANLkTikkt4dqYWrwtTCJ8tJZLB1kZXgF1KvaPsIOO3Dl@mail.gmail.com>
- <20100622163138.GD20668@srcf.ucam.org>
- <AANLkTikQkLFdpusfcLVOpyZHFrxwB5akr-ggFB7Fjm08@mail.gmail.com>
- <20100622165213.GA21842@srcf.ucam.org>
- <AANLkTikHLBBWrhCP_1f5Jv7zE9RKPvdsl5nSyfkeMfLl@mail.gmail.com>
- <20100622172545.GA22680@srcf.ucam.org>
- <AANLkTilEHJ5qRD8ov0gIK0Zc4o-gJUPYkvHdyD1uZUon@mail.gmail.com>
- <20100622175058.GA23499@srcf.ucam.org>
- <AANLkTinE0BiOa5cpcIerbias7K-aDzj3x4qaeDpzy2CQ@mail.gmail.com>
- <20100622184426.GA24546@srcf.ucam.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20100622184426.GA24546@srcf.ucam.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:46553 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755516Ab0FIPHS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jun 2010 11:07:18 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.71)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1OMMs9-00089Q-B5
+	for linux-wireless@vger.kernel.org; Wed, 09 Jun 2010 17:07:17 +0200
+Message-Id: <20100609150455.599336320@sipsolutions.net>
+Date: Wed, 09 Jun 2010 17:01:56 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC v2 14/22] mac80211: make TX aggregation start/stop request
+ async
+References: <20100609150142.227469359@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 22, 2010 at 11:44:26AM -0700, Matthew Garrett wrote:
-> On Tue, Jun 22, 2010 at 11:28:20AM -0700, Luis R. Rodriguez wrote:
-> > On Tue, Jun 22, 2010 at 10:50 AM, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
-> > > People who use "force" deserve whatever they get,
-> > 
-> > Heh, this whole patch and thread was started because Jussi tested
-> > ath5k with  pcie_aspm=force (on a pre PCIE 1.1 device (?)) . I have
-> > been trying to explain all along why this is a terrible idea to the
-> > point we should probably just remove that code from the kernel. Hence
-> > my side rants and explanations to justify my reasonings.
-> 
-> Well, there's two things here. If you use force then you might get 
-> inappropriate ASPM. But if your BIOS enables ASPM on an old device, then 
-> booting *without* CONFIG_PCIE_ASPM will leave it turned on, and booting 
-> *with* CONFIG_PCIE_ASPM will turn it off. The Kconfig description is 
-> confusing - reality is that CONFIG_PCIE_ASPM enables logic that allows 
-> the kernel to modify the BIOS default, and disabling it makes the 
-> assumption that your BIOS did something sensible.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Agreed, given that you also mentioned you would put it under embeeded
-how about something like this:
+When the driver or rate control requests starting
+or stopping an aggregation session, that currently
+causes a direct callback into the driver, which
+could potentially cause locking problems. Also,
+the functions need to be callable from contexts
+that cannot sleep, and thus will interfere with
+making the ampdu_action callback sleeping.
 
-diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
-index b8b494b..9c76b70 100644
---- a/drivers/pci/pcie/Kconfig
-+++ b/drivers/pci/pcie/Kconfig
-@@ -31,14 +31,29 @@ source "drivers/pci/pcie/aer/Kconfig"
- # PCI Express ASPM
- #
- config PCIEASPM
--	bool "PCI Express ASPM support(Experimental)"
--	depends on PCI && EXPERIMENTAL && PCIEPORTBUS
--	default n
-+	bool "PCI Express ASPM sanity check support" if EMBEDDED
-+	depends on PCI && PCIEPORTBUS
-+	default y
- 	help
--	  This enables PCI Express ASPM (Active State Power Management) and
--	  Clock Power Management. ASPM supports state L0/L0s/L1.
-+	  This enables some sanity checks for PCI Express ASPM.
-+	  ASPM supports the states L0/L0s/L1. The sanity checks are to
-+	  disable ASPM if:
-+
-+	  a) the device is pre-1.1
-+	  b) the firmware has the FADT flag set to tell you not to
-+	  c) the firmware doesn't grant control via _OSC
-+
-+	  Without this option your BIOS's defaults will be respected
-+	  and while although this should always be correct it typically
-+	  is not. If your ASPM settings are incorrect you may experience
-+	  odd hangs which are hard to debug. These sanity checks should
-+	  help avoid these odd hangs by only enabling ASPM if we are
-+	  sure we can enable it.
-+
-+	  For more information you can refer to this documentation:
-+
-+	  http://wireless.kernel.org/en/users/Documentation/ASPM
+To address these issues, add a new work item for
+each station that will process any start or stop
+requests out of line.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/agg-tx.c      |  177 +++++++++++++++++++++++++++++++--------------
+ net/mac80211/debugfs_sta.c |    5 -
+ net/mac80211/ht.c          |    2 
+ net/mac80211/ieee80211_i.h |    1 
+ net/mac80211/sta_info.c    |    1 
+ net/mac80211/sta_info.h    |    6 +
+ net/mac80211/tx.c          |    5 +
+ 7 files changed, 139 insertions(+), 58 deletions(-)
+
+--- wireless-testing.orig/net/mac80211/agg-tx.c	2010-06-09 14:49:50.000000000 +0200
++++ wireless-testing/net/mac80211/agg-tx.c	2010-06-09 14:50:15.000000000 +0200
+@@ -146,6 +146,13 @@ static int ___ieee80211_stop_tx_ba_sessi
+ 	if (WARN_ON(!tid_tx))
+ 		return -ENOENT;
  
--	  When in doubt, say N.
- config PCIEASPM_DEBUG
- 	bool "Debug PCI Express ASPM"
- 	depends on PCIEASPM
++	if (test_bit(HT_AGG_STATE_WANT_START, &tid_tx->state)) {
++		/* not even started yet! */
++		rcu_assign_pointer(sta->ampdu_mlme.tid_tx[tid], NULL);
++		call_rcu(&tid_tx->rcu_head, kfree_tid_tx);
++		return 0;
++	}
++
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+ 	printk(KERN_DEBUG "Tx BA session stop requested for %pM tid %u\n",
+ 	       sta->sta.addr, tid);
+@@ -255,6 +262,94 @@ ieee80211_wake_queue_agg(struct ieee8021
+ 	__release(agg_queue);
+ }
+ 
++static void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
++{
++	struct tid_ampdu_tx *tid_tx = sta->ampdu_mlme.tid_tx[tid];
++	struct ieee80211_local *local = sta->local;
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	u16 start_seq_num;
++	int ret;
++
++	/*
++	 * While we're asking the driver about the aggregation,
++	 * stop the AC queue so that we don't have to worry
++	 * about frames that came in while we were doing that,
++	 * which would require us to put them to the AC pending
++	 * afterwards which just makes the code more complex.
++	 */
++	ieee80211_stop_queue_agg(local, tid);
++
++	clear_bit(HT_AGG_STATE_WANT_START, &tid_tx->state);
++
++	/*
++	 * This might be off by one due to a race that we can't
++	 * really prevent here without synchronize_net() which
++	 * can't be called now.
++	 */
++	start_seq_num = sta->tid_seq[tid] >> 4;
++
++	ret = drv_ampdu_action(local, sdata, IEEE80211_AMPDU_TX_START,
++			       &sta->sta, tid, &start_seq_num);
++	if (ret) {
++#ifdef CONFIG_MAC80211_HT_DEBUG
++		printk(KERN_DEBUG "BA request denied - HW unavailable for"
++					" tid %d\n", tid);
++#endif
++		rcu_assign_pointer(sta->ampdu_mlme.tid_tx[tid], NULL);
++		ieee80211_wake_queue_agg(local, tid);
++		call_rcu(&tid_tx->rcu_head, kfree_tid_tx);
++		return;
++	}
++
++	/* we can take packets again now */
++	ieee80211_wake_queue_agg(local, tid);
++
++	/* activate the timer for the recipient's addBA response */
++	mod_timer(&tid_tx->addba_resp_timer, jiffies + ADDBA_RESP_INTERVAL);
++#ifdef CONFIG_MAC80211_HT_DEBUG
++	printk(KERN_DEBUG "activated addBA response timer on tid %d\n", tid);
++#endif
++
++	sta->ampdu_mlme.addba_req_num[tid]++;
++
++	/* send AddBA request */
++	ieee80211_send_addba_request(sdata, sta->sta.addr, tid,
++				     tid_tx->dialog_token, start_seq_num,
++				     0x40, 5000);
++}
++
++void ieee80211_tx_ba_session_work(struct work_struct *work)
++{
++	struct sta_info *sta =
++		container_of(work, struct sta_info, ampdu_mlme.work);
++	struct tid_ampdu_tx *tid_tx;
++	int tid;
++
++	/*
++	 * When this flag is set, new sessions should be
++	 * blocked, and existing sessions will be torn
++	 * down by the code that set the flag, so this
++	 * need not run.
++	 */
++	if (test_sta_flags(sta, WLAN_STA_BLOCK_BA))
++		return;
++
++	spin_lock_bh(&sta->lock);
++	for (tid = 0; tid < STA_TID_NUM; tid++) {
++		tid_tx = sta->ampdu_mlme.tid_tx[tid];
++		if (!tid_tx)
++			continue;
++
++		if (test_bit(HT_AGG_STATE_WANT_START, &tid_tx->state))
++			ieee80211_tx_ba_session_handle_start(sta, tid);
++		else if (test_and_clear_bit(HT_AGG_STATE_WANT_STOP,
++					    &tid_tx->state))
++			___ieee80211_stop_tx_ba_session(sta, tid,
++							WLAN_BACK_INITIATOR);
++	}
++	spin_unlock_bh(&sta->lock);
++}
++
+ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid)
+ {
+ 	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+@@ -262,7 +357,6 @@ int ieee80211_start_tx_ba_session(struct
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct tid_ampdu_tx *tid_tx;
+ 	int ret = 0;
+-	u16 start_seq_num;
+ 
+ 	trace_api_start_tx_ba_session(pubsta, tid);
+ 
+@@ -316,15 +410,6 @@ int ieee80211_start_tx_ba_session(struct
+ 		goto err_unlock_sta;
+ 	}
+ 
+-	/*
+-	 * While we're asking the driver about the aggregation,
+-	 * stop the AC queue so that we don't have to worry
+-	 * about frames that came in while we were doing that,
+-	 * which would require us to put them to the AC pending
+-	 * afterwards which just makes the code more complex.
+-	 */
+-	ieee80211_stop_queue_agg(local, tid);
+-
+ 	/* prepare A-MPDU MLME for Tx aggregation */
+ 	tid_tx = kzalloc(sizeof(struct tid_ampdu_tx), GFP_ATOMIC);
+ 	if (!tid_tx) {
+@@ -334,59 +419,27 @@ int ieee80211_start_tx_ba_session(struct
+ 					tid);
+ #endif
+ 		ret = -ENOMEM;
+-		goto err_wake_queue;
++		goto err_unlock_sta;
+ 	}
+ 
+ 	skb_queue_head_init(&tid_tx->pending);
++	__set_bit(HT_AGG_STATE_WANT_START, &tid_tx->state);
+ 
+ 	/* Tx timer */
+ 	tid_tx->addba_resp_timer.function = sta_addba_resp_timer_expired;
+ 	tid_tx->addba_resp_timer.data = (unsigned long)&sta->timer_to_tid[tid];
+ 	init_timer(&tid_tx->addba_resp_timer);
+ 
+-	start_seq_num = sta->tid_seq[tid] >> 4;
+-
+-	ret = drv_ampdu_action(local, sdata, IEEE80211_AMPDU_TX_START,
+-			       pubsta, tid, &start_seq_num);
+-	if (ret) {
+-#ifdef CONFIG_MAC80211_HT_DEBUG
+-		printk(KERN_DEBUG "BA request denied - HW unavailable for"
+-					" tid %d\n", tid);
+-#endif /* CONFIG_MAC80211_HT_DEBUG */
+-		goto err_free;
+-	}
+-
+-	rcu_assign_pointer(sta->ampdu_mlme.tid_tx[tid], tid_tx);
+-
+-	/* Driver vetoed or OKed, but we can take packets again now */
+-	ieee80211_wake_queue_agg(local, tid);
+-
+-	/* activate the timer for the recipient's addBA response */
+-	tid_tx->addba_resp_timer.expires = jiffies + ADDBA_RESP_INTERVAL;
+-	add_timer(&tid_tx->addba_resp_timer);
+-#ifdef CONFIG_MAC80211_HT_DEBUG
+-	printk(KERN_DEBUG "activated addBA response timer on tid %d\n", tid);
+-#endif
+-
+-	/* prepare tid data */
++	/* assign a dialog token */
+ 	sta->ampdu_mlme.dialog_token_allocator++;
+ 	tid_tx->dialog_token = sta->ampdu_mlme.dialog_token_allocator;
+-	tid_tx->ssn = start_seq_num;
+ 
+-	sta->ampdu_mlme.addba_req_num[tid]++;
++	/* finally, assign it to the array */
++	rcu_assign_pointer(sta->ampdu_mlme.tid_tx[tid], tid_tx);
+ 
+-	spin_unlock_bh(&sta->lock);
++	ieee80211_queue_work(&local->hw, &sta->ampdu_mlme.work);
+ 
+-	/* send AddBA request */
+-	ieee80211_send_addba_request(sdata, pubsta->addr, tid,
+-			 tid_tx->dialog_token, tid_tx->ssn,
+-			 0x40, 5000);
+-	return 0;
+-
+- err_free:
+-	kfree(tid_tx);
+- err_wake_queue:
+-	ieee80211_wake_queue_agg(local, tid);
++	/* this flow continues off the work */
+  err_unlock_sta:
+ 	spin_unlock_bh(&sta->lock);
+ 	return ret;
+@@ -534,8 +587,7 @@ int __ieee80211_stop_tx_ba_session(struc
+ 	spin_lock_bh(&sta->lock);
+ 	tid_tx = sta->ampdu_mlme.tid_tx[tid];
+ 
+-	/* check if the TID is in aggregation */
+-	if (!tid_tx || !test_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state)) {
++	if (!tid_tx) {
+ 		ret = -ENOENT;
+ 		goto unlock;
+ 	}
+@@ -552,6 +604,8 @@ int ieee80211_stop_tx_ba_session(struct
+ 	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 	struct ieee80211_local *local = sdata->local;
++	struct tid_ampdu_tx *tid_tx;
++	int ret = 0;
+ 
+ 	trace_api_stop_tx_ba_session(pubsta, tid);
+ 
+@@ -561,7 +615,26 @@ int ieee80211_stop_tx_ba_session(struct
+ 	if (tid >= STA_TID_NUM)
+ 		return -EINVAL;
+ 
+-	return __ieee80211_stop_tx_ba_session(sta, tid, WLAN_BACK_INITIATOR);
++	spin_lock_bh(&sta->lock);
++	tid_tx = sta->ampdu_mlme.tid_tx[tid];
++
++	if (!tid_tx) {
++		ret = -ENOENT;
++		goto unlock;
++	}
++
++	if (test_bit(HT_AGG_STATE_STOPPING, &tid_tx->state)) {
++		/* already in progress stopping it */
++		ret = 0;
++		goto unlock;
++	}
++
++	set_bit(HT_AGG_STATE_WANT_STOP, &tid_tx->state);
++	ieee80211_queue_work(&local->hw, &sta->ampdu_mlme.work);
++
++ unlock:
++	spin_unlock_bh(&sta->lock);
++	return ret;
+ }
+ EXPORT_SYMBOL(ieee80211_stop_tx_ba_session);
+ 
+--- wireless-testing.orig/net/mac80211/sta_info.h	2010-06-09 14:49:34.000000000 +0200
++++ wireless-testing/net/mac80211/sta_info.h	2010-06-09 14:49:52.000000000 +0200
+@@ -67,6 +67,8 @@ enum ieee80211_sta_info_flags {
+ #define HT_AGG_STATE_RESPONSE_RECEIVED	1
+ #define HT_AGG_STATE_OPERATIONAL	2
+ #define HT_AGG_STATE_STOPPING		3
++#define HT_AGG_STATE_WANT_START		4
++#define HT_AGG_STATE_WANT_STOP		5
+ 
+ /**
+  * struct tid_ampdu_tx - TID aggregation information (Tx).
+@@ -74,7 +76,6 @@ enum ieee80211_sta_info_flags {
+  * @rcu_head: rcu head for freeing structure
+  * @addba_resp_timer: timer for peer's response to addba request
+  * @pending: pending frames queue -- use sta's spinlock to protect
+- * @ssn: Starting Sequence Number expected to be aggregated.
+  * @dialog_token: dialog token for aggregation session
+  * @state: session state (see above)
+  * @stop_initiator: initiator of a session stop
+@@ -92,7 +93,6 @@ struct tid_ampdu_tx {
+ 	struct timer_list addba_resp_timer;
+ 	struct sk_buff_head pending;
+ 	unsigned long state;
+-	u16 ssn;
+ 	u8 dialog_token;
+ 	u8 stop_initiator;
+ };
+@@ -139,11 +139,13 @@ struct tid_ampdu_rx {
+  * @tid_tx: aggregation info for Tx per TID
+  * @addba_req_num: number of times addBA request has been sent.
+  * @dialog_token_allocator: dialog token enumerator for each new session;
++ * @work: work struct for starting/stopping aggregation
+  */
+ struct sta_ampdu_mlme {
+ 	/* rx */
+ 	struct tid_ampdu_rx *tid_rx[STA_TID_NUM];
+ 	/* tx */
++	struct work_struct work;
+ 	struct tid_ampdu_tx *tid_tx[STA_TID_NUM];
+ 	u8 addba_req_num[STA_TID_NUM];
+ 	u8 dialog_token_allocator;
+--- wireless-testing.orig/net/mac80211/debugfs_sta.c	2010-06-09 14:49:34.000000000 +0200
++++ wireless-testing/net/mac80211/debugfs_sta.c	2010-06-09 14:49:52.000000000 +0200
+@@ -121,7 +121,7 @@ static ssize_t sta_agg_status_read(struc
+ 	p += scnprintf(p, sizeof(buf) + buf - p, "next dialog_token: %#02x\n",
+ 			sta->ampdu_mlme.dialog_token_allocator + 1);
+ 	p += scnprintf(p, sizeof(buf) + buf - p,
+-		       "TID\t\tRX active\tDTKN\tSSN\t\tTX\tDTKN\tSSN\tpending\n");
++		       "TID\t\tRX active\tDTKN\tSSN\t\tTX\tDTKN\tpending\n");
+ 	for (i = 0; i < STA_TID_NUM; i++) {
+ 		p += scnprintf(p, sizeof(buf) + buf - p, "%02d", i);
+ 		p += scnprintf(p, sizeof(buf) + buf - p, "\t\t%x",
+@@ -138,9 +138,6 @@ static ssize_t sta_agg_status_read(struc
+ 		p += scnprintf(p, sizeof(buf) + buf - p, "\t%#.2x",
+ 				sta->ampdu_mlme.tid_tx[i] ?
+ 				sta->ampdu_mlme.tid_tx[i]->dialog_token : 0);
+-		p += scnprintf(p, sizeof(buf) + buf - p, "\t%#.3x",
+-				sta->ampdu_mlme.tid_tx[i] ?
+-				sta->ampdu_mlme.tid_tx[i]->ssn : 0);
+ 		p += scnprintf(p, sizeof(buf) + buf - p, "\t%03d",
+ 				sta->ampdu_mlme.tid_tx[i] ?
+ 				skb_queue_len(&sta->ampdu_mlme.tid_tx[i]->pending) : 0);
+--- wireless-testing.orig/net/mac80211/tx.c	2010-06-09 14:49:34.000000000 +0200
++++ wireless-testing/net/mac80211/tx.c	2010-06-09 14:49:52.000000000 +0200
+@@ -1102,6 +1102,11 @@ static bool ieee80211_tx_prep_agg(struct
+ 
+ 	if (test_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state)) {
+ 		info->flags |= IEEE80211_TX_CTL_AMPDU;
++	} else if (test_bit(HT_AGG_STATE_WANT_START, &tid_tx->state)) {
++		/*
++		 * nothing -- this aggregation session is being started
++		 * but that might still fail with the driver
++		 */
+ 	} else {
+ 		spin_lock(&tx->sta->lock);
+ 		/*
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2010-06-09 14:49:50.000000000 +0200
++++ wireless-testing/net/mac80211/ieee80211_i.h	2010-06-09 14:49:52.000000000 +0200
+@@ -1120,6 +1120,7 @@ int __ieee80211_stop_tx_ba_session(struc
+ 				   enum ieee80211_back_parties initiator);
+ void ieee80211_start_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u16 tid);
+ void ieee80211_stop_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u8 tid);
++void ieee80211_tx_ba_session_work(struct work_struct *work);
+ 
+ /* Spectrum management */
+ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
+--- wireless-testing.orig/net/mac80211/sta_info.c	2010-06-09 14:49:34.000000000 +0200
++++ wireless-testing/net/mac80211/sta_info.c	2010-06-09 14:49:52.000000000 +0200
+@@ -235,6 +235,7 @@ struct sta_info *sta_info_alloc(struct i
+ 	spin_lock_init(&sta->lock);
+ 	spin_lock_init(&sta->flaglock);
+ 	INIT_WORK(&sta->drv_unblock_wk, sta_unblock);
++	INIT_WORK(&sta->ampdu_mlme.work, ieee80211_tx_ba_session_work);
+ 
+ 	memcpy(sta->sta.addr, addr, ETH_ALEN);
+ 	sta->local = local;
+--- wireless-testing.orig/net/mac80211/ht.c	2010-06-09 14:49:34.000000000 +0200
++++ wireless-testing/net/mac80211/ht.c	2010-06-09 14:49:52.000000000 +0200
+@@ -105,6 +105,8 @@ void ieee80211_sta_tear_down_BA_sessions
+ {
+ 	int i;
+ 
++	cancel_work_sync(&sta->ampdu_mlme.work);
++
+ 	for (i = 0; i <  STA_TID_NUM; i++) {
+ 		__ieee80211_stop_tx_ba_session(sta, i, WLAN_BACK_INITIATOR);
+ 		__ieee80211_stop_rx_ba_session(sta, i, WLAN_BACK_RECIPIENT,
 
-> > Where is "powersave"?
-> > 
-> > I do see a "powersave" but its an ASPM policy string and it implies
-> > you want to enable L1 and L0s when the device's LinkCap supports it,
-> > see pcie_config_aspm_link() and its users. So in other words powersave
-> > seems to imply you are using pcie_aspm=force, no?
-> 
-> No. pcie_aspm=force will enable ASPM even if (a) the device is pre-1.1, 
-> (b) the firmware has the FADT flag set to tell you not to and (c) the 
-> firmware doesn't grant control via _OSC. The powersave policy will 
-> enable ASPM even if the BIOS didn't, but only if something else doesn't 
-> tell us not to.
 
-So if any of the above (a) (b) or (c) are true powersave will keep
-it disabled? Is pcie_aspm=forcepowersave this a new option with your
-patches?
-
-> > > Fedora's defaulted to that for a while now - we've hit
-> > > issues with aacraid, but that's pretty much it in terms of cases where
-> > > the heuristics don't work. Maxim's problems wouldn't be triggered
-> > > because CONFIG_PCIE_ASPM disables it on pre-1.1 devices regardless of
-> > > the BIOS setup.
-> > 
-> > I don't expect all distributions to have CONFIG_PCIE_ASPM enabled, in
-> > fact I was unaware of this sanity check being included as part of
-> > CONFIG_PCIE_ASPM, I recommend we consider just enabling the sanity
-> > check all the time. The fact that CONFIG_PCIE_ASPM is even an option
-> > seems confusing to me given that apart from this sanity check the only
-> > other thing that I see useful in it is the forcing of ASPM settings
-> > and as I noted I think pcie_aspm=force is pretty dangerous.
-> 
-> You're right, it shouldn't be an option. It's vital for making sure that 
-> ASPM is disabled when it should be. I'd be happy with pcie_aspm=force 
-> tainting the kernel.
-
-:) !
-
-> > > With the patch I've just sent, they should also all be used for Linux as
-> > > well.
-> > 
-> > Oh nice! It'll be part of 2.6.36?
-> 
-> As long as Jesse picks it up.
-
-Nice.
-
-> > > If the same problems would appear under Windows then it's not a problem
-> > > that I'm hugely concerned about as yet
-> > 
-> > Yes, these issues would also be part of Windows. But should also note
-> > this also means for those people working on their own BIOSes it means
-> > you also have to take these things into more serious consideration.
-> 
-> There's a standardised mechanism for BIOS authors to tell us not to 
-> touch their ASPM configuration, and people that ignore that really do 
-> deserve to have things break.
-
-Oh, I was more concerned about open bios hackers. If a device requires
-PCI host controller tweaks should *we* be doing those tweaks and sanity
-checks oursevles upstream or should we rely on the open-bios guys to
-do it accordingly in their code?
-
-> > Me neither, ASPM should just work with default settings, which is why
-> > I also do not like that the sanity check on the PCIE 1.1 spec is done
-> > through CONFIG_PCIE_ASPM, it makes no sense given that ASPM *will*
-> > work even if you do not have CONFIG_PCIE_ASPM but the device has
-> > functional ASPM.
-> 
-> I agree. I'll send a patch that moves it under CONFIG_EMBEDDED and 
-> defaults to on.
-
-:D
-
-> > I do think we should be depending on userspace to do development
-> > testing and forcing ASPM on, because the only other alternative is
-> > pcie_aspm=force and as noted this is just not a good idea unless you
-> > *seriously* know what you are doing.
-> 
-> If you set the powersave policy and ASPM doesn't get enabled, then 
-> that's because we've got a really strong belief that ASPM shouldn't be 
-> enabled. Is your concern just that pcie_aspm=force is too easy for users 
-> to get at?
-
-Yes! I think people are starting to use it like to magically save
-more power without taking into consideration the implications. This is
-why I was suggesting maybe we nuke that option all together. Does it
-*really* give us any benefit? The only benefit I see is if we *are*
-100% sure our system should work with all our root complexes and
-endpoints having ASPM enabled. That I do not see happening until
-a few years from now.
-
-Maybe we should have another type of module parameter type, a
-I_know_what_Im_doing_module_parameter and taint whenever any of
-those are on, not just pcie_aspm=force ? :)
-
-  Luis
