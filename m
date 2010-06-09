@@ -1,53 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:63101 "EHLO mga03.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:37000 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752139Ab0FDQkj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jun 2010 12:40:39 -0400
-Subject: Re: Problems connectring to an AP with Acer Aspire Revo
+	id S1754167Ab0FITRw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jun 2010 15:17:52 -0400
+Subject: Re: iwlagn fails to assoc with nexus one in ad-hoc mode
 From: reinette chatre <reinette.chatre@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Christian P. Schmidt" <schmidt@digadd.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1275634104.3694.0.camel@jlt3.sipsolutions.net>
-References: <4BF795EB.9070902@digadd.de>
-	 <1274729665.2091.15280.camel@rchatre-DESK>  <4BFD1ED0.9050309@digadd.de>
-	 <1275003105.2091.20102.camel@rchatre-DESK>  <4BFF9B93.5010308@digadd.de>
-	 <1275043274.3909.71.camel@jlt3.sipsolutions.net>
-	 <4BFF9FC6.4030101@digadd.de>
-	 <1275044074.3909.72.camel@jlt3.sipsolutions.net> <4BFFA490.90600@digadd.de>
-	 <1275045843.3909.92.camel@jlt3.sipsolutions.net>
-	 <4C07D0C7.8010907@digadd.de>
-	 <1275634104.3694.0.camel@jlt3.sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20100609.121207.193693646.davem@davemloft.net>
+References: <1276102692.1835.14610.camel@rchatre-DESK>
+	 <20100609.103326.189711649.davem@davemloft.net>
+	 <1276110641.1835.14891.camel@rchatre-DESK>
+	 <20100609.121207.193693646.davem@davemloft.net>
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 04 Jun 2010 09:40:38 -0700
-Message-ID: <1275669638.2091.34633.camel@rchatre-DESK>
+Date: Wed, 09 Jun 2010 12:17:42 -0700
+Message-ID: <1276111062.1835.14914.camel@rchatre-DESK>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-06-03 at 23:48 -0700, Johannes Berg wrote:
-> On Thu, 2010-06-03 at 17:56 +0200, Christian P. Schmidt wrote:
-> 
-> > > Maybe try the rfkill tool:
-> > > http://wireless.kernel.org/en/users/Documentation/rfkill
-> > 
-> > Yes, it was the rfkill tool that caused my attempts to fail. However,
-> > this didn't change my association attempt problems.
-> > I also took my time to look at the PCIe port - steady 3.3V on the RFKILL
-> > pin, which means "no RFKILL".
-> > 
-> > Any further ideas?
-> 
-> Unfortunately not. It would seem that something is causing your frames
-> not to be transmitted correctly, but I see no reason for that right now.
+On Wed, 2010-06-09 at 12:12 -0700, David Miller wrote:
+> Upstream 2.6.34 vanilla.
 
-The logs provided contains a lot of useful information. Among this is
-that the device is unable to transmit data with the firmware returning a
-"TX_LOCKED" status. From what I understand this is a regulatory check
-failure based on the channel type, which does not make sense in this
-regard since from what I can tell channel 8, which is an active channel,
-is used. I passed this question to our firmware folks and now waiting
-for an answer.
+ok - the firmware assert you are encountering is in the station
+management code which received significant rework in 2.6.35. Could you
+please try latest linux-2.6 (since there are some issues with
+2.6.35-rc2)?
 
 Reinette
 
