@@ -1,53 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:43082 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754836Ab0FOARh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jun 2010 20:17:37 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] ath9k_hw: avoid setting cwmin/cwmax to 0 for IBSS for AR9003
-Date: Mon, 14 Jun 2010 20:17:36 -0400
-Message-Id: <1276561056-2976-1-git-send-email-lrodriguez@atheros.com>
+Received: from ist.d-labs.de ([213.239.218.44]:42937 "EHLO mx01.d-labs.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754218Ab0FIKVJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jun 2010 06:21:09 -0400
+Date: Wed, 9 Jun 2010 12:20:50 +0200
+From: Florian Mickler <florian@mickler.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: pm list <linux-pm@lists.linux-foundation.org>,
+	james.bottomley@suse.de, markgross@thegnar.org,
+	mgross@linux.intel.com,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Javier Cardona <javier@cozybit.com>, Jouni Malinen <j@w1.fi>,
+	Rui Paulo <rpaulo@gmail.com>,
+	Kalle Valo <kalle.valo@nokia.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [RFC PATCH 1/2] mac80211: make max_network_latency notifier
+ atomic safe
+Message-ID: <20100609122050.1dd18132@schatten.dmk.lab>
+In-Reply-To: <1276076287.3727.15.camel@jlt3.sipsolutions.net>
+References: <1276074915-26879-1-git-send-email-florian@mickler.org>
+	<1276076287.3727.15.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IBSS requires the cwmin and cwmax to be respected when
-we reset the txqueues on AR9003 otherwise the distribution
-of beacons will be balanced towards the AR9003 card first
-preventing equal contention for air time for other peers
-on the IBSS.
+On Wed, 09 Jun 2010 11:38:07 +0200
+Johannes Berg <johannes@sipsolutions.net> wrote:
 
-Without this IBSS will work but only the AR9003 card will be
-be issuing beacons on the IBSS.
+> On Wed, 2010-06-09 at 11:15 +0200, florian@mickler.org wrote:
+> > In order to have the pm_qos framework be callable from interrupt
+> > context, all listeners have to also be callable in that context.
+> 
+> That makes no sense at all. Why add work structs _everywhere_ in the
+> callees and make the API harder to use and easy to get wrong completely,
+> instead of just adding a single work struct that will be queued from the
+> caller and dealing with the locking complexity etc. just once.
+> 
+> johannes
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/mac.c |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
+Just to defend this approach, but I'm certainly not married to it
+(hence RFC):
 
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index 1550591..e955bb9 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -555,8 +555,13 @@ bool ath9k_hw_resettxqueue(struct ath_hw *ah, u32 q)
- 		REGWRITE_BUFFER_FLUSH(ah);
- 		DISABLE_REGWRITE_BUFFER(ah);
- 
--		/* cwmin and cwmax should be 0 for beacon queue */
--		if (AR_SREV_9300_20_OR_LATER(ah)) {
-+		/*
-+		 * cwmin and cwmax should be 0 for beacon queue
-+		 * but not for IBSS as we would create an imbalance
-+		 * on beaconing fairness for participating nodes.
-+		 */
-+		if (AR_SREV_9300_20_OR_LATER(ah) &&
-+		    ah->opmode != NL80211_IFTYPE_ADHOC) {
- 			REG_WRITE(ah, AR_DLCL_IFS(q), SM(0, AR_D_LCL_IFS_CWMIN)
- 				  | SM(0, AR_D_LCL_IFS_CWMAX)
- 				  | SM(qi->tqi_aifs, AR_D_LCL_IFS_AIFS));
--- 
-1.6.3.3
+There are only two listeners at the moment. I suspect that most future
+uses of the framework need to be atomic, as the driver that
+requests a specific quality of service probably doesn't want to get into
+races with the provider of that service(listener). So i suspected the
+network listener to be the special case.  
 
+The race between service-provider and qos-requester for non-atomic
+contextes is already there, isn't it? so, locking complexity shouldn't
+be worse than before.
+
+But my first approach to this is seen here:
+https://lists.linux-foundation.org/pipermail/linux-pm/2010-June/026902.html
+
+A third possibility would be to make it dependent on the
+type of the constraint, if blocking notifiers are allowed or not. 
+But that would sacrifice API consistency (update_request for one
+constraint is allowed to be called in interrupt context and
+update_request for another would be not).
+
+Cheers,
+Flo
