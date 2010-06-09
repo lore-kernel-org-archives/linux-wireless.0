@@ -1,102 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 0122700014.0.fullrate.dk ([95.166.99.235]:53073 "EHLO kernel.dk"
+Received: from ist.d-labs.de ([213.239.218.44]:55653 "EHLO mx01.d-labs.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755585Ab0FIHxX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jun 2010 03:53:23 -0400
-Message-ID: <4C0F4872.7090909@fusionio.com>
-Date: Wed, 09 Jun 2010 09:53:22 +0200
-From: Jens Axboe <jaxboe@fusionio.com>
-MIME-Version: 1.0
-To: Linus Torvalds <torvalds@linux-foundation.org>
-CC: "Rafael J. Wysocki" <rjw@sisk.pl>, Carl Worth <cworth@cworth.org>,
-	Eric Anholt <eric@anholt.net>,
-	Venkatesh Pallipadi <venki@google.com>,
-	Dave Airlie <airlied@gmail.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Ingo Molnar <mingo@elte.hu>,
-	=?ISO-8859-15?Q?David_H=E4rdeman?= <david@hardeman.nu>,
-	Mauro Carvalho Chehab <mchehab@redhat.com>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-Subject: Re: 2.6.35-rc2-git2: Reported regressions from 2.6.34
-References: <Rlf_Qjov7bG.A.a8F.I8rDMB@chimera> <alpine.LFD.2.00.1006081814240.4506@i5.linux-foundation.org>
-In-Reply-To: <alpine.LFD.2.00.1006081814240.4506@i5.linux-foundation.org>
-Content-Type: text/plain; charset=ISO-8859-15
+	id S1756348Ab0FIJeO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jun 2010 05:34:14 -0400
+From: florian@mickler.org
+To: pm list <linux-pm@lists.linux-foundation.org>
+Cc: james.bottomley@suse.de, markgross@thegnar.org,
+	mgross@linux.intel.com, Florian Mickler <florian@mickler.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Javier Cardona <javier@cozybit.com>, Jouni Malinen <j@w1.fi>,
+	Rui Paulo <rpaulo@gmail.com>,
+	Kalle Valo <kalle.valo@nokia.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: [RFC PATCH 1/2] mac80211: make max_network_latency notifier atomic safe
+Date: Wed,  9 Jun 2010 11:15:13 +0200
+Message-Id: <1276074915-26879-1-git-send-email-florian@mickler.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-06-09 03:53, Linus Torvalds wrote:
->> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16129
->> Subject	: BUG: using smp_processor_id() in preemptible [00000000] code: jbd2/sda2
->> Submitter	: Jan Kreuzer <kontrollator@gmx.de>
->> Date		: 2010-06-05 06:15 (4 days old)
-> 
-> This seems to have been introduced by
-> 
-> 	commit 7cbaef9c83e58bbd4bdd534b09052b6c5ec457d5
-> 	Author: Ingo Molnar <mingo@elte.hu>
-> 	Date:   Sat Nov 8 17:05:38 2008 +0100
-> 
-> 	    sched: optimize sched_clock() a bit
->     
-> 	    sched_clock() uses cycles_2_ns() needlessly - which is an irq-disabling
-> 	    variant of __cycles_2_ns().
->     
-> 	    Most of the time sched_clock() is called with irqs disabled already.
-> 	    The few places that call it with irqs enabled need to be updated.
->     
-> 	    Signed-off-by: Ingo Molnar <mingo@elte.hu>
-> 
-> and this seems to be one of those calling cases that need to be updated.
-> 
-> Ingo? The call trace is:
-> 
-> 	BUG: using smp_processor_id() in preemptible [00000000] code: jbd2/sda2-8/337
-> 	caller is native_sched_clock+0x3c/0x68
-> 	Pid: 337, comm: jbd2/sda2-8 Not tainted 2.6.35-rc1jan+ #4
-> 	Call Trace:
-> 	[<ffffffff812362c5>] debug_smp_processor_id+0xc9/0xe4
-> 	[<ffffffff8101059d>] native_sched_clock+0x3c/0x68
-> 	[<ffffffff8101043d>] sched_clock+0x9/0xd
-> 	[<ffffffff81212d7a>] blk_rq_init+0x97/0xa3
-> 	[<ffffffff81214d71>] get_request+0x1c4/0x2d0
-> 	[<ffffffff81214ea6>] get_request_wait+0x29/0x1a6
-> 	[<ffffffff81215537>] __make_request+0x338/0x45b
-> 	[<ffffffff812147c2>] generic_make_request+0x2bb/0x330
-> 	[<ffffffff81214909>] submit_bio+0xd2/0xef
-> 	[<ffffffff811413cb>] submit_bh+0xf4/0x116
-> 	[<ffffffff81144853>] block_write_full_page_endio+0x89/0x96
-> 	[<ffffffff81144875>] block_write_full_page+0x15/0x17
-> 	[<ffffffff8119b00a>] ext4_writepage+0x356/0x36b
-> 	[<ffffffff810e1f91>] __writepage+0x1a/0x39
-> 	[<ffffffff810e32a6>] write_cache_pages+0x20d/0x346
-> 	[<ffffffff810e3406>] generic_writepages+0x27/0x29
-> 	[<ffffffff811ca279>] journal_submit_data_buffers+0x110/0x17d
-> 	[<ffffffff811ca986>] jbd2_journal_commit_transaction+0x4cb/0x156d
-> 	[<ffffffff811d0cba>] kjournald2+0x147/0x37a
-> 
-> (from the bugzilla thing)
+In order to have the pm_qos framework be callable from interrupt
+context, all listeners have to also be callable in that context.
 
-This should be fixed by commit 28f4197e which was merged on friday.
+This patch schedules the update of the latency value via
+ieee80211_max_network_latency() for execution on
+the global workqueue (using schedule_work()).
 
->> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16122
->> Subject	: 2.6.35-rc1: WARNING at fs/fs-writeback.c:1142 __mark_inode_dirty+0x103/0x170
->> Submitter	: Larry Finger <Larry.Finger@lwfinger.net>
->> Date		: 2010-06-04 13:18 (5 days old)
-> 
-> Jens?
+As there was no synchronization/locking between the listener and the
+caller of pm_qos_update_request before, there should be no new races
+uncovered by this. Although the timing probably changes.
 
-Looking into this one.
+Signed-off-by: Florian Mickler <florian@mickler.org>
+---
 
+This needs some networking expertise to check the reasoning above and
+judge the implementation.
+
+ net/mac80211/ieee80211_i.h |    4 +++-
+ net/mac80211/main.c        |    5 +++--
+ net/mac80211/mlme.c        |   20 +++++++++++++++-----
+ 3 files changed, 21 insertions(+), 8 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 1a9e2da..3d2155a 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -851,6 +851,7 @@ struct ieee80211_local {
+ 	struct work_struct dynamic_ps_disable_work;
+ 	struct timer_list dynamic_ps_timer;
+ 	struct notifier_block network_latency_notifier;
++	struct work_struct network_latency_notifier_work;
+ 
+ 	int user_power_level; /* in dBm */
+ 	int power_constr_level; /* in dBm */
+@@ -994,8 +995,9 @@ ieee80211_rx_result ieee80211_sta_rx_mgmt(struct ieee80211_sub_if_data *sdata,
+ void ieee80211_send_pspoll(struct ieee80211_local *local,
+ 			   struct ieee80211_sub_if_data *sdata);
+ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency);
+-int ieee80211_max_network_latency(struct notifier_block *nb,
++int ieee80211_max_network_latency_notification(struct notifier_block *nb,
+ 				  unsigned long data, void *dummy);
++void ieee80211_max_network_latency(struct work_struct *w);
+ void ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 				      struct ieee80211_channel_sw_ie *sw_elem,
+ 				      struct ieee80211_bss *bss,
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 22a384d..5cded3a 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -607,9 +607,10 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	rtnl_unlock();
+ 
+ 	ieee80211_led_init(local);
+-
++	INIT_WORK(&local->network_latency_notifier_work,
++			ieee80211_max_network_latency);
+ 	local->network_latency_notifier.notifier_call =
+-		ieee80211_max_network_latency;
++		ieee80211_max_network_latency_notification;
+ 	result = pm_qos_add_notifier(PM_QOS_NETWORK_LATENCY,
+ 				     &local->network_latency_notifier);
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 0839c4e..feb6134 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1953,17 +1953,27 @@ void ieee80211_mlme_notify_scan_completed(struct ieee80211_local *local)
+ 	rcu_read_unlock();
+ }
+ 
+-int ieee80211_max_network_latency(struct notifier_block *nb,
+-				  unsigned long data, void *dummy)
++void ieee80211_max_network_latency(struct work_struct *w)
+ {
+-	s32 latency_usec = (s32) data;
++	s32 latency_usec = (s32) atomic_long_read(&w->data);
+ 	struct ieee80211_local *local =
+-		container_of(nb, struct ieee80211_local,
+-			     network_latency_notifier);
++		container_of(w, struct ieee80211_local,
++			     network_latency_notifier_work);
+ 
+ 	mutex_lock(&local->iflist_mtx);
+ 	ieee80211_recalc_ps(local, latency_usec);
+ 	mutex_unlock(&local->iflist_mtx);
++}
++
++/* the notifier might be called from interrupt context */
++int ieee80211_max_network_latency_notification(struct notifier_block *nb,
++				  unsigned long data, void *dummy)
++{
++	struct ieee80211_local *local =
++		container_of(nb, struct ieee80211_local,
++				network_latency_notifier);
++	atomic_long_set(&local->network_latency_notifier_work.data, data);
++	schedule_work(&local->network_latency_notifier_work);
+ 
+ 	return 0;
+ }
 -- 
-Jens Axboe
+1.7.1
 
