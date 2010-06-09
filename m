@@ -1,47 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:53870 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755733Ab0FTJp1 (ORCPT
+Received: from ogre.sisk.pl ([217.79.144.158]:41233 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754091Ab0FII67 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jun 2010 05:45:27 -0400
-Received: by fxm10 with SMTP id 10so1315762fxm.19
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Jun 2010 02:45:26 -0700 (PDT)
-From: Paul Fertser <fercerpav@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: linux-wireless@vger.kernel.org, Paul Fertser <fercerpav@gmail.com>
-Subject: [PATCH] compat-wireless: fix compilation for 2.6.32
-Date: Sun, 20 Jun 2010 13:44:57 +0400
-Message-Id: <1277027097-3222-1-git-send-email-fercerpav@gmail.com>
+	Wed, 9 Jun 2010 04:58:59 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Mauro Carvalho Chehab <mchehab@redhat.com>
+Subject: Re: 2.6.35-rc2-git2: Reported regressions from 2.6.34
+Date: Wed, 9 Jun 2010 11:00:32 +0200
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Carl Worth <cworth@cworth.org>, Eric Anholt <eric@anholt.net>,
+	Venkatesh Pallipadi <venki@google.com>,
+	Jens Axboe <jaxboe@fusionio.com>,
+	Dave Airlie <airlied@gmail.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Ingo Molnar <mingo@elte.hu>,
+	David =?iso-8859-15?q?H=E4rdeman?= <david@hardeman.nu>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+References: <Rlf_Qjov7bG.A.a8F.I8rDMB@chimera> <alpine.LFD.2.00.1006081814240.4506@i5.linux-foundation.org> <4C0EFBC1.5090401@redhat.com>
+In-Reply-To: <4C0EFBC1.5090401@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201006091100.32494.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2.6.32 was the latest version using CONFIG_WIRELESS_EXT. Without this patch
-compilation produced
+On Wednesday 09 June 2010, Mauro Carvalho Chehab wrote:
+> Em 08-06-2010 22:53, Linus Torvalds escreveu:
+> 
+> > 
+> >> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16037
+> >> Subject	: NULL Pointer dereference in __ir_input_register/budget_ci_attach
+> >> Submitter	: Sean Finney <seanius@debian.org>
+> >> Date		: 2010-05-23 19:52 (17 days old)
+> > 
+> > Perhaps related to commit 13c24497086418010bf4f76378bcae241d7f59cd?
+> > 
+> > David H�rdeman, Mauro Carvalho Chehab added to cc.
+> 
+> This patch probably solves the issue:
+> 
+> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=84b14f181a36eea6591779156ef356f8d198bbfd
+> 
+> The patch were already applied upstream. I've already asked the reporter to test it, via BZ.
 
-net/wireless/wext-compat.c:443: error: ‘struct wireless_dev’ has no member named ‘wext’
+Confirmed fixed, so closing.
 
-since config.mk defined CONFIG_CFG80211_WEXT but autoconf.sh didn't.
-
-Signed-off-by: Paul Fertser <fercerpav@gmail.com>
----
- scripts/gen-compat-autoconf.sh |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/scripts/gen-compat-autoconf.sh b/scripts/gen-compat-autoconf.sh
-index 88e2740..1e3002e 100755
---- a/scripts/gen-compat-autoconf.sh
-+++ b/scripts/gen-compat-autoconf.sh
-@@ -192,7 +192,7 @@ if [ -f $KLIB_BUILD/Makefile ]; then
- 		define_config_multiple_deps CONFIG_MAC80211_QOS y $ALL_DEPS
- 		rm -f $MULT_DEP_FILE
- 		# Kernels >= 2.6.32 can disable WEXT :D
--		if [ $SUBLEVEL -lt 32 ]; then
-+		if [ $SUBLEVEL -le 32 ]; then
- 			define_config_dep CONFIG_CFG80211_WEXT 1 CONFIG_WIRELESS_EXT
- 		fi
- 	fi
--- 
-1.6.4.4
-
+Thanks,
+Rafael
