@@ -1,35 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56536 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755198Ab0FXTAS (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49383
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757605Ab0FISRO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jun 2010 15:00:18 -0400
-Date: Thu, 24 Jun 2010 14:53:39 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Joe Perches <joe@perches.com>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Larry.Finger@lwfinger.net,
-	mb@bu3sch.de, zajec5@gmail.com
-Subject: Re: [PATCH 0/3] b43: logging cleanups
-Message-ID: <20100624185339.GC2368@tuxdriver.com>
-References: <cover.1276988387.git.joe@perches.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1276988387.git.joe@perches.com>
+	Wed, 9 Jun 2010 14:17:14 -0400
+Date: Wed, 09 Jun 2010 11:17:23 -0700 (PDT)
+Message-Id: <20100609.111723.183033775.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2010-06-08
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20100608190214.GD2422@tuxdriver.com>
+References: <20100608190214.GD2422@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 19, 2010 at 04:30:08PM -0700, Joe Perches wrote:
-> Just some small cleanups
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 8 Jun 2010 15:02:14 -0400
+
+> Dave,
 > 
-> Joe Perches (3):
->   drivers/net/wireless/b43: Use local ratelimit_state
->   drivers/net/wireless/b43: Logging cleanups
->   drivers/net/wireless/b43: Rename b43_debug to b43_debugging
+> Here is a flurry of fixes intended for 2.6.35.  Most of them are small
+> and obvious, but there are a few exceptions...I'll include some text from
+> the iwlwifi pull request:
+...
+> The iwlwifi bits are bigger than I would like to see, but the fixes
+> seem worthwhile.  Also included is a revert of a hostap patch that
+> introduced failures with some devices, a NULL pointer dereference fix,
+> a memory leak fix, a fix for an incorrect check of function pointer,
+> a USB ID for p54, and a fix for an association failure 'corner case'
+> from Johannes.
 
-Any of the b43 guys want to express an opinion on these?
+Pulled, thanks John.
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Please try to keep things a lot smaller from here on out, thank you.
