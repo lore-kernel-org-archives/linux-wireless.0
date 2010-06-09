@@ -1,166 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:58708 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751570Ab0FCFTn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jun 2010 01:19:43 -0400
-Date: Thu, 3 Jun 2010 14:19:20 +0900
-To: yi.zhu@intel.com, reinette.chatre@intel.com, ilw@linux.intel.com
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: [PATCH] iwlwifi: use the DMA state API instead of the pci
- equivalents
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Received: from he.sipsolutions.net ([78.46.109.217]:46551 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755284Ab0FIPHP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jun 2010 11:07:15 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.71)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1OMMs6-00089H-Lu
+	for linux-wireless@vger.kernel.org; Wed, 09 Jun 2010 17:07:14 +0200
+Message-Id: <20100609150455.233186760@sipsolutions.net>
+Date: Wed, 09 Jun 2010 17:01:54 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC v2 12/22] mac80211: remove non-irqsafe aggregation callbacks
+References: <20100609150142.227469359@sipsolutions.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Message-Id: <20100603141853Z.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This can be cleanly applied to wireless-2.6 and iwlwifi git trees.
+From: Johannes Berg <johannes.berg@intel.com>
 
-=
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] iwlwifi: use the DMA state API instead of the pci equivalents
+The non-irqsafe aggregation start/stop done
+callbacks are currently only used by ath9k_htc,
+and can cause callbacks into the driver again.
+This might lead to locking issues, which will
+only get worse as we modify locking. To avoid
+trouble, remove the non-irqsafe versions and
+change ath9k_htc to use those instead.
 
-This replace the PCI DMA state API (include/linux/pci-dma.h) with the
-DMA equivalents since the PCI DMA state API will be obsolete.
-
-No functional change.
-
-For further information about the background:
-
-http://marc.info/?l=linux-netdev&m=127037540020276&w=2
-
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-3945.c     |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c   |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-tx.c       |   16 ++++++++--------
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    4 ++--
- 6 files changed, 18 insertions(+), 18 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |    6 ++--
+ include/net/mac80211.h                        |   32 ++++----------------------
+ net/mac80211/agg-tx.c                         |    2 -
+ net/mac80211/ieee80211_i.h                    |    2 +
+ 4 files changed, 10 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index 253d032..0fa1d51 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -696,8 +696,8 @@ void iwl3945_hw_txq_free_tfd(struct iwl_priv *priv, struct iwl_tx_queue *txq)
- 	/* Unmap tx_cmd */
- 	if (counter)
- 		pci_unmap_single(dev,
--				pci_unmap_addr(&txq->meta[index], mapping),
--				pci_unmap_len(&txq->meta[index], len),
-+				dma_unmap_addr(&txq->meta[index], mapping),
-+				dma_unmap_len(&txq->meta[index], len),
- 				PCI_DMA_TODEVICE);
+--- wireless-testing.orig/include/net/mac80211.h	2010-06-09 12:51:27.000000000 +0200
++++ wireless-testing/include/net/mac80211.h	2010-06-09 12:57:28.000000000 +0200
+@@ -1445,7 +1445,7 @@ enum ieee80211_filter_flags {
+  *
+  * Note that drivers MUST be able to deal with a TX aggregation
+  * session being stopped even before they OK'ed starting it by
+- * calling ieee80211_start_tx_ba_cb(_irqsafe), because the peer
++ * calling ieee80211_start_tx_ba_cb_irqsafe, because the peer
+  * might receive the addBA frame and send a delBA right away!
+  *
+  * @IEEE80211_AMPDU_RX_START: start Rx aggregation
+@@ -2314,25 +2314,14 @@ void ieee80211_queue_delayed_work(struct
+ int ieee80211_start_tx_ba_session(struct ieee80211_sta *sta, u16 tid);
  
- 	/* unmap chunks if any */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index 7e68517..fa82f86 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -705,8 +705,8 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 	txcmd_phys = pci_map_single(priv->pci_dev,
- 				    &out_cmd->hdr, len,
- 				    PCI_DMA_BIDIRECTIONAL);
--	pci_unmap_addr_set(out_meta, mapping, txcmd_phys);
--	pci_unmap_len_set(out_meta, len, len);
-+	dma_unmap_addr_set(out_meta, mapping, txcmd_phys);
-+	dma_unmap_len_set(out_meta, len, len);
- 	/* Add buffer containing Tx command and MAC(!) header to TFD's
- 	 * first entry */
- 	priv->cfg->ops->lib->txq_attach_buf_to_tfd(priv, txq,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index ef05f63..776ef2e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -475,8 +475,8 @@ void iwl_hw_txq_free_tfd(struct iwl_priv *priv, struct iwl_tx_queue *txq)
- 	/* Unmap tx_cmd */
- 	if (num_tbs)
- 		pci_unmap_single(dev,
--				pci_unmap_addr(&txq->meta[index], mapping),
--				pci_unmap_len(&txq->meta[index], len),
-+				dma_unmap_addr(&txq->meta[index], mapping),
-+				dma_unmap_len(&txq->meta[index], len),
- 				PCI_DMA_BIDIRECTIONAL);
+ /**
+- * ieee80211_start_tx_ba_cb - low level driver ready to aggregate.
+- * @vif: &struct ieee80211_vif pointer from the add_interface callback
+- * @ra: receiver address of the BA session recipient.
+- * @tid: the TID to BA on.
+- *
+- * This function must be called by low level driver once it has
+- * finished with preparations for the BA session.
+- */
+-void ieee80211_start_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u16 tid);
+-
+-/**
+  * ieee80211_start_tx_ba_cb_irqsafe - low level driver ready to aggregate.
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback
+  * @ra: receiver address of the BA session recipient.
+  * @tid: the TID to BA on.
+  *
+  * This function must be called by low level driver once it has
+- * finished with preparations for the BA session.
+- * This version of the function is IRQ-safe.
++ * finished with preparations for the BA session. It can be called
++ * from any context.
+  */
+ void ieee80211_start_tx_ba_cb_irqsafe(struct ieee80211_vif *vif, const u8 *ra,
+ 				      u16 tid);
+@@ -2351,25 +2340,14 @@ void ieee80211_start_tx_ba_cb_irqsafe(st
+ int ieee80211_stop_tx_ba_session(struct ieee80211_sta *sta, u16 tid);
  
- 	/* Unmap chunks, if any. */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 401ce2e..57cddab 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -114,8 +114,8 @@ struct iwl_cmd_meta {
- 	 * structure is stored at the end of the shared queue memory. */
- 	u32 flags;
+ /**
+- * ieee80211_stop_tx_ba_cb - low level driver ready to stop aggregate.
+- * @vif: &struct ieee80211_vif pointer from the add_interface callback
+- * @ra: receiver address of the BA session recipient.
+- * @tid: the desired TID to BA on.
+- *
+- * This function must be called by low level driver once it has
+- * finished with preparations for the BA session tear down.
+- */
+-void ieee80211_stop_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u8 tid);
+-
+-/**
+  * ieee80211_stop_tx_ba_cb_irqsafe - low level driver ready to stop aggregate.
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback
+  * @ra: receiver address of the BA session recipient.
+  * @tid: the desired TID to BA on.
+  *
+  * This function must be called by low level driver once it has
+- * finished with preparations for the BA session tear down.
+- * This version of the function is IRQ-safe.
++ * finished with preparations for the BA session tear down. It
++ * can be called from any context.
+  */
+ void ieee80211_stop_tx_ba_cb_irqsafe(struct ieee80211_vif *vif, const u8 *ra,
+ 				     u16 tid);
+--- wireless-testing.orig/net/mac80211/agg-tx.c	2010-06-09 12:57:27.000000000 +0200
++++ wireless-testing/net/mac80211/agg-tx.c	2010-06-09 12:57:28.000000000 +0200
+@@ -479,7 +479,6 @@ void ieee80211_start_tx_ba_cb(struct iee
+ 	spin_unlock_bh(&sta->lock);
+ 	rcu_read_unlock();
+ }
+-EXPORT_SYMBOL(ieee80211_start_tx_ba_cb);
  
--	DECLARE_PCI_UNMAP_ADDR(mapping)
--	DECLARE_PCI_UNMAP_LEN(len)
-+	DEFINE_DMA_UNMAP_ADDR(mapping);
-+	DEFINE_DMA_UNMAP_LEN(len);
- };
+ void ieee80211_start_tx_ba_cb_irqsafe(struct ieee80211_vif *vif,
+ 				      const u8 *ra, u16 tid)
+@@ -619,7 +618,6 @@ void ieee80211_stop_tx_ba_cb(struct ieee
+ 	spin_unlock_bh(&sta->lock);
+ 	rcu_read_unlock();
+ }
+-EXPORT_SYMBOL(ieee80211_stop_tx_ba_cb);
  
- /*
-diff --git a/drivers/net/wireless/iwlwifi/iwl-tx.c b/drivers/net/wireless/iwlwifi/iwl-tx.c
-index 788dcf1..a81989c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-tx.c
-@@ -154,15 +154,15 @@ void iwl_cmd_queue_free(struct iwl_priv *priv)
- 		}
+ void ieee80211_stop_tx_ba_cb_irqsafe(struct ieee80211_vif *vif,
+ 				     const u8 *ra, u16 tid)
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2010-06-09 12:57:27.000000000 +0200
++++ wireless-testing/net/mac80211/ieee80211_i.h	2010-06-09 12:57:28.000000000 +0200
+@@ -1124,6 +1124,8 @@ void ieee80211_process_addba_request(str
  
- 		pci_unmap_single(priv->pci_dev,
--				 pci_unmap_addr(&txq->meta[i], mapping),
--				 pci_unmap_len(&txq->meta[i], len),
-+				 dma_unmap_addr(&txq->meta[i], mapping),
-+				 dma_unmap_len(&txq->meta[i], len),
- 				 PCI_DMA_BIDIRECTIONAL);
- 	}
- 	if (huge) {
- 		i = q->n_window;
- 		pci_unmap_single(priv->pci_dev,
--				 pci_unmap_addr(&txq->meta[i], mapping),
--				 pci_unmap_len(&txq->meta[i], len),
-+				 dma_unmap_addr(&txq->meta[i], mapping),
-+				 dma_unmap_len(&txq->meta[i], len),
- 				 PCI_DMA_BIDIRECTIONAL);
- 	}
+ int __ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
+ 				   enum ieee80211_back_parties initiator);
++void ieee80211_start_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u16 tid);
++void ieee80211_stop_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u8 tid);
  
-@@ -516,8 +516,8 @@ int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- 
- 	phys_addr = pci_map_single(priv->pci_dev, &out_cmd->hdr,
- 				   fix_size, PCI_DMA_BIDIRECTIONAL);
--	pci_unmap_addr_set(out_meta, mapping, phys_addr);
--	pci_unmap_len_set(out_meta, len, fix_size);
-+	dma_unmap_addr_set(out_meta, mapping, phys_addr);
-+	dma_unmap_len_set(out_meta, len, fix_size);
- 
- 	trace_iwlwifi_dev_hcmd(priv, &out_cmd->hdr, fix_size, cmd->flags);
- 
-@@ -611,8 +611,8 @@ void iwl_tx_cmd_complete(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb)
- 	meta = &txq->meta[cmd_index];
- 
- 	pci_unmap_single(priv->pci_dev,
--			 pci_unmap_addr(meta, mapping),
--			 pci_unmap_len(meta, len),
-+			 dma_unmap_addr(meta, mapping),
-+			 dma_unmap_len(meta, len),
- 			 PCI_DMA_BIDIRECTIONAL);
- 
- 	/* Input error checking is done when commands are added to queue. */
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index a527895..a1bac61 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -619,8 +619,8 @@ static int iwl3945_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 				    len, PCI_DMA_TODEVICE);
- 	/* we do not map meta data ... so we can safely access address to
- 	 * provide to unmap command*/
--	pci_unmap_addr_set(out_meta, mapping, txcmd_phys);
--	pci_unmap_len_set(out_meta, len, len);
-+	dma_unmap_addr_set(out_meta, mapping, txcmd_phys);
-+	dma_unmap_len_set(out_meta, len, len);
- 
- 	/* Add buffer containing Tx command and MAC(!) header to TFD's
- 	 * first entry */
--- 
-1.6.5
+ /* Spectrum management */
+ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
+--- wireless-testing.orig/drivers/net/wireless/ath/ath9k/htc_drv_main.c	2010-06-09 12:51:28.000000000 +0200
++++ wireless-testing/drivers/net/wireless/ath/ath9k/htc_drv_main.c	2010-06-09 12:57:28.000000000 +0200
+@@ -510,13 +510,13 @@ void ath9k_htc_aggr_work(struct work_str
+ 		ret = ath9k_htc_aggr_oper(priv, wk->vif, wk->sta_addr,
+ 					  wk->tid, true);
+ 		if (!ret)
+-			ieee80211_start_tx_ba_cb(wk->vif, wk->sta_addr,
+-						 wk->tid);
++			ieee80211_start_tx_ba_cb_irqsafe(wk->vif, wk->sta_addr,
++							 wk->tid);
+ 		break;
+ 	case IEEE80211_AMPDU_TX_STOP:
+ 		ath9k_htc_aggr_oper(priv, wk->vif, wk->sta_addr,
+ 				    wk->tid, false);
+-		ieee80211_stop_tx_ba_cb(wk->vif, wk->sta_addr, wk->tid);
++		ieee80211_stop_tx_ba_cb_irqsafe(wk->vif, wk->sta_addr, wk->tid);
+ 		break;
+ 	default:
+ 		ath_print(ath9k_hw_common(priv->ah), ATH_DBG_FATAL,
+
 
