@@ -1,188 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:58064 "EHLO ds10.nbd.name"
+Received: from ogre.sisk.pl ([217.79.144.158]:41429 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751151Ab0FATdU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jun 2010 15:33:20 -0400
-Message-ID: <4C056079.40803@openwrt.org>
-Date: Tue, 01 Jun 2010 21:33:13 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1753454Ab0FIJVS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jun 2010 05:21:18 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: sedat.dilek@gmail.com
+Subject: Re: 2.6.35-rc2-git2: Reported regressions from 2.6.34
+Date: Wed, 9 Jun 2010 11:22:35 +0200
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>, dmonakhov@openvz.org
+References: <Rlf_Qjov7bG.A.a8F.I8rDMB@chimera> <AANLkTiksbL1qHg7Q0A-6TbX0uUrxra4jctUoIGVk5vnE@mail.gmail.com>
+In-Reply-To: <AANLkTiksbL1qHg7Q0A-6TbX0uUrxra4jctUoIGVk5vnE@mail.gmail.com>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v2] ath9k: fix queue stop/start based on the number of pending
- frames
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201006091122.35304.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Because there is a limited number of tx buffers available, once the
-queue has been filled to a certain point, ath9k needs to stop accepting
-new frames from mac80211. In order to prevent a full WMM queue from
-stopping another queue with fewer frames, this patch limits the number
-of queued frames to a quarter of the total available tx buffers, minus
-some reserved frames to be used for other purposes (e.g. beacons).
+On Wednesday 09 June 2010, Sedat Dilek wrote:
+> The patch from [1] is still missing.
+> 
+>    "cpufreq-call-nr_iowait_cpu-with-disabled-preemption.patch" from
+> Dmitry Monakhoc
+> 
+> Tested-by: Sedat Dilek <sedat.dilek@gmail.com>
+> Tested-by Maciej Rutecki <maciej.rutecki@gmail.com>
+> 
+> I have already reported this issue on LKML [2] and cpufreq ML [3].
+> 
+> - Sedat -
+> 
+> [1] http://www.spinics.net/lists/cpufreq/msg01631.html
+> [2] http://lkml.org/lkml/2010/5/31/77
+> [3] http://www.spinics.net/lists/cpufreq/msg01637.html
 
-Because tx buffers are reserved for frames when they're staged in
-software queues as well, the actual queue depth cannot be used for
-this, so this patch stores a reference to the tx queue in the ath_buf
-struct and keeps track of the total number of pending frames.
+Thanks, added.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
-v2: ath_wake_mac80211_queue() needs to be fixed as well (thanks, vasanth)
-
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -137,6 +137,8 @@ void ath_descdma_cleanup(struct ath_soft
- #define ATH_MAX_ANTENNA         3
- #define ATH_RXBUF               512
- #define ATH_TXBUF               512
-+#define ATH_TXBUF_RESERVE       5
-+#define ATH_MAX_QDEPTH          (ATH_TXBUF / 4 - ATH_TXBUF_RESERVE)
- #define ATH_TXMAXTRY            13
- #define ATH_MGT_TXMAXTRY        4
- 
-@@ -205,6 +207,7 @@ struct ath_txq {
- 	struct list_head txq_fifo_pending;
- 	u8 txq_headidx;
- 	u8 txq_tailidx;
-+	int pending_frames;
- };
- 
- struct ath_atx_ac {
-@@ -242,6 +245,7 @@ struct ath_buf {
- 	struct ath_buf_state bf_state;
- 	dma_addr_t bf_dmacontext;
- 	struct ath_wiphy *aphy;
-+	struct ath_txq *txq;
- };
- 
- struct ath_atx_tid {
-@@ -331,7 +335,6 @@ void ath_tx_node_cleanup(struct ath_soft
- void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq);
- int ath_tx_init(struct ath_softc *sc, int nbufs);
- void ath_tx_cleanup(struct ath_softc *sc);
--struct ath_txq *ath_test_get_txq(struct ath_softc *sc, struct sk_buff *skb);
- int ath_txq_update(struct ath_softc *sc, int qnum,
- 		   struct ath9k_tx_queue_info *q);
- int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -986,32 +986,6 @@ int ath_tx_get_qnum(struct ath_softc *sc
- 	return qnum;
- }
- 
--struct ath_txq *ath_test_get_txq(struct ath_softc *sc, struct sk_buff *skb)
--{
--	struct ath_txq *txq = NULL;
--	u16 skb_queue = skb_get_queue_mapping(skb);
--	int qnum;
--
--	qnum = ath_get_hal_qnum(skb_queue, sc);
--	txq = &sc->tx.txq[qnum];
--
--	spin_lock_bh(&txq->axq_lock);
--
--	if (txq->axq_depth >= (ATH_TXBUF - 20)) {
--		ath_print(ath9k_hw_common(sc->sc_ah), ATH_DBG_XMIT,
--			  "TX queue: %d is full, depth: %d\n",
--			  qnum, txq->axq_depth);
--		ath_mac80211_stop_queue(sc, skb_queue);
--		txq->stopped = 1;
--		spin_unlock_bh(&txq->axq_lock);
--		return NULL;
--	}
--
--	spin_unlock_bh(&txq->axq_lock);
--
--	return txq;
--}
--
- int ath_txq_update(struct ath_softc *sc, int qnum,
- 		   struct ath9k_tx_queue_info *qinfo)
- {
-@@ -1811,6 +1785,7 @@ int ath_tx_start(struct ieee80211_hw *hw
- 	struct ath_wiphy *aphy = hw->priv;
- 	struct ath_softc *sc = aphy->sc;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath_txq *txq = txctl->txq;
- 	struct ath_buf *bf;
- 	int r;
- 
-@@ -1820,10 +1795,16 @@ int ath_tx_start(struct ieee80211_hw *hw
- 		return -1;
- 	}
- 
-+	bf->txq = txctl->txq;
-+	spin_lock_bh(&bf->txq->axq_lock);
-+	if (++bf->txq->pending_frames > ATH_MAX_QDEPTH && !txq->stopped) {
-+		ath_mac80211_stop_queue(sc, skb_get_queue_mapping(skb));
-+		txq->stopped = 1;
-+	}
-+	spin_unlock_bh(&bf->txq->axq_lock);
-+
- 	r = ath_tx_setup_buffer(hw, bf, skb, txctl);
- 	if (unlikely(r)) {
--		struct ath_txq *txq = txctl->txq;
--
- 		ath_print(common, ATH_DBG_FATAL, "TX mem alloc failure\n");
- 
- 		/* upon ath_tx_processq() this TX queue will be resumed, we
-@@ -1831,7 +1812,7 @@ int ath_tx_start(struct ieee80211_hw *hw
- 		 * we will at least have to run TX completionon one buffer
- 		 * on the queue */
- 		spin_lock_bh(&txq->axq_lock);
--		if (sc->tx.txq[txq->axq_qnum].axq_depth > 1) {
-+		if (!txq->stopped && txq->axq_depth > 1) {
- 			ath_mac80211_stop_queue(sc, skb_get_queue_mapping(skb));
- 			txq->stopped = 1;
- 		}
-@@ -1972,6 +1953,13 @@ static void ath_tx_complete_buf(struct a
- 			tx_flags |= ATH_TX_XRETRY;
- 	}
- 
-+	if (bf->txq) {
-+		spin_lock_bh(&bf->txq->axq_lock);
-+		bf->txq->pending_frames--;
-+		spin_unlock_bh(&bf->txq->axq_lock);
-+		bf->txq = NULL;
-+	}
-+
- 	dma_unmap_single(sc->dev, bf->bf_dmacontext, skb->len, DMA_TO_DEVICE);
- 	ath_tx_complete(sc, skb, bf->aphy, tx_flags);
- 	ath_debug_stat_tx(sc, txq, bf, ts);
-@@ -2060,8 +2048,7 @@ static void ath_wake_mac80211_queue(stru
- 	int qnum;
- 
- 	spin_lock_bh(&txq->axq_lock);
--	if (txq->stopped &&
--	    sc->tx.txq[txq->axq_qnum].axq_depth <= (ATH_TXBUF - 20)) {
-+	if (txq->stopped && txq->pending_frames < ATH_MAX_QDEPTH) {
- 		qnum = ath_get_mac80211_qnum(txq->axq_qnum, sc);
- 		if (qnum != -1) {
- 			ath_mac80211_start_queue(sc, qnum);
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1026,6 +1026,7 @@ static int ath9k_tx(struct ieee80211_hw 
- 	struct ath_tx_control txctl;
- 	int padpos, padsize;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+	int qnum;
- 
- 	if (aphy->state != ATH_WIPHY_ACTIVE && aphy->state != ATH_WIPHY_SCAN) {
- 		ath_print(common, ATH_DBG_XMIT,
-@@ -1098,11 +1099,8 @@ static int ath9k_tx(struct ieee80211_hw 
- 		memmove(skb->data, skb->data + padsize, padpos);
- 	}
- 
--	/* Check if a tx queue is available */
--
--	txctl.txq = ath_test_get_txq(sc, skb);
--	if (!txctl.txq)
--		goto exit;
-+	qnum = ath_get_hal_qnum(skb_get_queue_mapping(skb), sc);
-+	txctl.txq = &sc->tx.txq[qnum];
- 
- 	ath_print(common, ATH_DBG_XMIT, "transmitting packet, skb: %p\n", skb);
- 
+Rafael
