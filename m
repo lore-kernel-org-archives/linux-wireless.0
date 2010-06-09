@@ -1,56 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:38012 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755803Ab0F2TvM (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43676 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755027Ab0FINxK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jun 2010 15:51:12 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 38so2999610wyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Jun 2010 12:51:11 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 14/21] rt2x00: Fix beacon updates in rt2800pci
-Date: Tue, 29 Jun 2010 21:46:43 +0200
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-References: <201006292138.13509.IvDoorn@gmail.com> <201006292144.51636.IvDoorn@gmail.com> <201006292145.32554.IvDoorn@gmail.com>
-In-Reply-To: <201006292145.32554.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201006292146.44952.IvDoorn@gmail.com>
+	Wed, 9 Jun 2010 09:53:10 -0400
+Subject: Re: [PATCH v2] mac80211: fix deauth before assoc
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Miles Lane <miles.lane@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTilm2zuqCzc1VZf6r3NfuUnGmxkhYsp6qPKdV6lC@mail.gmail.com>
+References: <1275940207.29978.24.camel@jlt3.sipsolutions.net>
+	 <1276080986.14580.6.camel@jlt3.sipsolutions.net>
+	 <AANLkTilm2zuqCzc1VZf6r3NfuUnGmxkhYsp6qPKdV6lC@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 09 Jun 2010 15:53:08 +0200
+Message-ID: <1276091588.14580.15.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+On Wed, 2010-06-09 at 09:51 -0400, Miles Lane wrote:
 
-rt2800pci didn't update the beacon template after each beacon interval,
-resulting in the DTIM count being incorrect (if DTIM period > 1). Fix this
-by calling rt2x00lib_beacondone after the current beacon was sent out.
+> > That previous one didn't even apply to the right tree, how did you ever
+> > test it? Or did you just fix up the context?
+> 
+> patching file net/mac80211/mlme.c
+> Hunk #1 succeeded at 1722 with fuzz 3 (offset 27 lines).
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800pci.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+Oh, so it did actually apply with fuzz, quilt didn't like it here.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index b48b949..6f11760 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -953,6 +953,12 @@ static irqreturn_t rt2800pci_interrupt(int irq, void *dev_instance)
- 	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_TX_FIFO_STATUS))
- 		rt2800pci_txdone(rt2x00dev);
- 
-+	/*
-+	 * Current beacon was sent out, fetch the next one
-+	 */
-+	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_TBTT))
-+		rt2x00lib_beacondone(rt2x00dev);
-+
- 	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_AUTO_WAKEUP))
- 		rt2800pci_wakeup(rt2x00dev);
- 
--- 
-1.6.6.1
+johannes
 
