@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:13219 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753060Ab0FNSYz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jun 2010 14:24:55 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 3/6] iwlwifi: cancel run time calibration work when going down
-Date: Mon, 14 Jun 2010 11:24:49 -0700
-Message-Id: <1276539892-12471-4-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1276539892-12471-1-git-send-email-reinette.chatre@intel.com>
-References: <1276539892-12471-1-git-send-email-reinette.chatre@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:46556 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755516Ab0FIPHW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jun 2010 11:07:22 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.71)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1OMMsD-00089x-GP
+	for linux-wireless@vger.kernel.org; Wed, 09 Jun 2010 17:07:21 +0200
+Message-Id: <20100609150456.191611399@sipsolutions.net>
+Date: Wed, 09 Jun 2010 17:01:59 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC v2 17/22] mac80211: fix RX aggregation timer
+References: <20100609150142.227469359@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Cancel scheduled run time calibration work when interface is going
-down.
+I noticed that when there was _no_ traffic at
+all on a given aggregation session, it would
+never time out. This won't happen unless you
+forced creating a session, but fix it anyway.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ net/mac80211/agg-rx.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index ce88bc0..4ade9a6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3641,6 +3641,7 @@ static void iwl_cancel_deferred_work(struct iwl_priv *priv)
- 	cancel_delayed_work(&priv->scan_check);
- 	cancel_work_sync(&priv->start_internal_scan);
- 	cancel_delayed_work(&priv->alive_start);
-+	cancel_work_sync(&priv->run_time_calib_work);
- 	cancel_work_sync(&priv->beacon_update);
- 	del_timer_sync(&priv->statistics_periodic);
- 	del_timer_sync(&priv->ucode_trace);
--- 
-1.7.0.4
+--- wireless-testing.orig/net/mac80211/agg-rx.c	2010-06-09 12:57:30.000000000 +0200
++++ wireless-testing/net/mac80211/agg-rx.c	2010-06-09 12:57:31.000000000 +0200
+@@ -274,6 +274,10 @@ void ieee80211_process_addba_request(str
+ 
+ 	/* activate it for RX */
+ 	rcu_assign_pointer(sta->ampdu_mlme.tid_rx[tid], tid_agg_rx);
++
++	if (timeout)
++		mod_timer(&tid_agg_rx->session_timer, TU_TO_EXP_TIME(timeout));
++
+ end:
+ 	spin_unlock_bh(&sta->lock);
+ 
+
 
