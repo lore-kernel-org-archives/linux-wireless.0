@@ -1,61 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35746 "EHLO mx1.redhat.com"
+Received: from ist.d-labs.de ([213.239.218.44]:36726 "EHLO mx01.d-labs.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755200Ab0FTC7L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jun 2010 22:59:11 -0400
-Subject: Re: Bad performance for libertas on Murata combo.
-From: Dan Williams <dcbw@redhat.com>
-To: Enric =?ISO-8859-1?Q?Balletb=F2?= i Serra <eballetbo@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTik5z5SL_JB2-_elmbdyt1rDSxY3IHVEi2V_4uLD@mail.gmail.com>
-References: <AANLkTik5z5SL_JB2-_elmbdyt1rDSxY3IHVEi2V_4uLD@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 19 Jun 2010 19:59:53 -0700
-Message-ID: <1277002793.18385.6.camel@100.103.161.25.in-addr.arpa>
+	id S1752687Ab0FIMRF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Jun 2010 08:17:05 -0400
+Date: Wed, 9 Jun 2010 14:16:43 +0200
+From: Florian Mickler <florian@mickler.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: pm list <linux-pm@lists.linux-foundation.org>,
+	james.bottomley@suse.de, markgross@thegnar.org,
+	mgross@linux.intel.com,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Javier Cardona <javier@cozybit.com>, Jouni Malinen <j@w1.fi>,
+	Rui Paulo <rpaulo@gmail.com>,
+	Kalle Valo <kalle.valo@nokia.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [RFC PATCH 1/2] mac80211: make max_network_latency notifier
+ atomic safe
+Message-ID: <20100609141643.14e9aedc@schatten.dmk.lab>
+In-Reply-To: <1276080128.14580.5.camel@jlt3.sipsolutions.net>
+References: <1276074915-26879-1-git-send-email-florian@mickler.org>
+	<1276076287.3727.15.camel@jlt3.sipsolutions.net>
+	<20100609122050.1dd18132@schatten.dmk.lab>
+	<1276080128.14580.5.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2010-06-19 at 15:53 +0200, Enric Balletbò i Serra wrote:
-> Hi all,
-> 
-> Maybe someone can help me ...
-> 
-> I am in the process of enabling WLAN for a target board. It has a WLAN
-> Bluetooth (WLAN-BT) combo module from MuRata which has a Marvell WLAN
-> (88W8686) + CSR Bluetooth chipset.
+On Wed, 09 Jun 2010 12:42:08 +0200
+Johannes Berg <johannes@sipsolutions.net> wrote:
 
-What SDIO host controller?  Does the host controller support interrupts
-and 4-bit mode?  We've always been able to get good performance out of
-laptop host controllers (Ricoh mostly) and the largest source of
-performance issues has always been quirky hardware or non-optimized SDHC
-drivers.  Are there any errata for your SDHC that you're aware of?
+> On Wed, 2010-06-09 at 12:20 +0200, Florian Mickler wrote:
+> 
+> > A third possibility would be to make it dependent on the
+> > type of the constraint, if blocking notifiers are allowed or not. 
+> > But that would sacrifice API consistency (update_request for one
+> > constraint is allowed to be called in interrupt context and
+> > update_request for another would be not).
+> 
+> I don't see what's wrong with the fourth possibility: Allow calling
+> pm_qos_update_request() from atomic context, but change _it_ to schedule
+> off a work that calls the blocking notifier chain. That avoids the
+> complexity in notify-API users since they have process context, and also
+> in request-API users since they can call it from any context.
+> 
+> johannes
 
-If you also turn on kernel MMC debugging and the 'dmesg' output of the
-controller and the libertas device being recognized, that can sometimes
-help determine where the problem lies.
+That was also my first idea, but then I thought about qos and thought
+atomic notification are necessary.
+Do you see any value in having atomic
+notification? 
 
-Dan
+I have the following situation before my eyes:
+
+	Driver A gets an interrupt and needs (to service that
+	interrupt) the cpu to guarantee a latency of X because the
+	device is a bit icky.
+
+Now, in that situation, if we don't immediately (without scheduling in
+between) notify the system to be in that latency-mode the driver won't
+function properly. Is this a realistic scene?
+
+At the moment we only have process context notification and only 2
+listeners.
+
+I think providing for atomic as well as "relaxed" notification could be
+useful. 
+
+If atomic notification is deemed unnecessary, I have no
+problems to just use schedule_work() in update request.
+Anyway, it is probably best to split this. I.e. first make
+update_request callable from atomic contexts with doing the
+schedule_work in update_request and then
+as an add on provide for constraints_objects with atomic notifications.
+
+Flo
 
 
-> I can connect to an AP, but the performance is too low. Pinging my AP
-> I see a lot of 'Rx invalid crypt' and 'Invalid misc' packets.
-> 
-> I'm using the libertas driver from mainline kernel (2.6.35-rc3) with
-> SDIO interface and these errors are reported using the iwconfig
-> command.
-> 
-> I also tested with 2.6.34 and 2.6.33 with same result.
-> 
-> Any idea about what this means ? What could be wrong? Or how can I
-> investigate more ?
-> 
-> Thanks in advance,
-> 
-> Enric
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
 
