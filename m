@@ -1,85 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:38433 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751567Ab0FASgP (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46557 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755567Ab0FIPHX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jun 2010 14:36:15 -0400
-Received: by gwaa12 with SMTP id a12so3849109gwa.19
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Jun 2010 11:36:14 -0700 (PDT)
-Message-ID: <4C05531C.7000506@gmail.com>
-Date: Tue, 01 Jun 2010 14:36:12 -0400
-From: Richard Farina <sidhayn@gmail.com>
-MIME-Version: 1.0
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	=?UTF-8?B?R8OhYm9yIFN0ZWZh?= =?UTF-8?B?bmlr?=
-	<netrolller.3d@gmail.com>, Joker Joker <jokesareonyou@gmail.com>,
-	linux-wireless@vger.kernel.org, mister_x@aircrack-ng.org
-Subject: Re: Path for fixed channel issue in aircrack-ng suite [V2]
-References: <AANLkTinAnMwY0ZCetUmUbuhsp3rB360xvlaGM5ifdFHz@mail.gmail.com>	 <1274775071.3635.4.camel@jlt3.sipsolutions.net>	 <AANLkTilPIt59FhAuVlhisUR7QDabCtnZwahjxWbUysiG@mail.gmail.com>	 <1274860275.3658.0.camel@jlt3.sipsolutions.net>	 <4C000B68.9000305@gmail.com> <1275416907.3778.11.camel@maxim-laptop>
-In-Reply-To: <1275416907.3778.11.camel@maxim-laptop>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Wed, 9 Jun 2010 11:07:23 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.71)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1OMMsE-0008Ab-N1
+	for linux-wireless@vger.kernel.org; Wed, 09 Jun 2010 17:07:22 +0200
+Message-Id: <20100609150456.406149639@sipsolutions.net>
+Date: Wed, 09 Jun 2010 17:02:00 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC v2 18/22] mac80211: change RX aggregation locking
+References: <20100609150142.227469359@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maxim Levitsky wrote:
-> While debugging recent wireless problems, I gave the aircrack suite a
-> shot, and found this thread.
->
->   
-Thanks Maxim!
-> How about this patch to fix this issue:
->
->   
-I will definitely find some testers, the problem is that I have been 
-unable to reliably reproduce the "channel -1".  Since I don't know the 
-exact conditions this happens under the best I can do is have a few 
-people test it and make sure no one sees the error.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Mister_X, how does this look to you? I assume you are familiar with the 
-issue.
+To prepare for allowing drivers to sleep in
+ampdu_action, change the locking in the RX
+aggregation code to use a mutex, so that it
+would already allow drivers to sleep. But
+explicitly disable BHs around the callback
+for now since the TX part cannot yet sleep,
+and drivers' locking might require it.
 
-Thanks,
-Rick Farina
-> commit fffd6e63ea75850dafbf2ccfb38a4189f43c0282
-> Author: Maxim Levitsky <maximlevitsky@gmail.com>
-> Date:   Tue Jun 1 15:43:21 2010 +0300
->
->     wireless: allow to retrieve the channel set on monitor interface
->     
->     This will allow to preserve compatibility with userspace
->     
->     Signed-off-by: Maxim Levitsky <maximlevitsky@gmail.com>
->
-> diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-> index b01a6f6..09d979b 100644
-> --- a/net/wireless/chan.c
-> +++ b/net/wireless/chan.c
-> @@ -49,9 +49,12 @@ int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
->  {
->  	struct ieee80211_channel *chan;
->  	int result;
-> +	struct wireless_dev *mon_dev = NULL;
->  
-> -	if (wdev && wdev->iftype == NL80211_IFTYPE_MONITOR)
-> +	if (wdev && wdev->iftype == NL80211_IFTYPE_MONITOR) {
-> +		mon_dev = wdev;
->  		wdev = NULL;
-> +	}
->  
->  	if (wdev) {
->  		ASSERT_WDEV_LOCK(wdev);
-> @@ -76,5 +79,8 @@ int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
->  	if (wdev)
->  		wdev->channel = chan;
->  
-> +	if (mon_dev)
-> +		mon_dev->channel = chan;
-> +
->  	return 0;
->  }
->
->
->
->   
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/agg-rx.c     |   12 ++++++------
+ net/mac80211/driver-ops.h |    2 ++
+ net/mac80211/ht.c         |    6 +++++-
+ net/mac80211/iface.c      |    8 ++++----
+ net/mac80211/sta_info.c   |    1 +
+ net/mac80211/sta_info.h   |    3 +++
+ 6 files changed, 21 insertions(+), 11 deletions(-)
+
+--- wireless-testing.orig/net/mac80211/iface.c	2010-06-09 13:37:24.000000000 +0200
++++ wireless-testing/net/mac80211/iface.c	2010-06-09 13:37:24.000000000 +0200
+@@ -740,7 +740,7 @@ static void ieee80211_iface_work(struct
+ 			   mgmt->u.action.category == WLAN_CATEGORY_BACK) {
+ 			int len = skb->len;
+ 
+-			rcu_read_lock();
++			mutex_lock(&local->sta_mtx);
+ 			sta = sta_info_get(sdata, mgmt->sa);
+ 			if (sta) {
+ 				switch (mgmt->u.action.u.addba_req.action_code) {
+@@ -761,7 +761,7 @@ static void ieee80211_iface_work(struct
+ 					break;
+ 				}
+ 			}
+-			rcu_read_unlock();
++			mutex_unlock(&local->sta_mtx);
+ 		} else if (ieee80211_is_data_qos(mgmt->frame_control)) {
+ 			struct ieee80211_hdr *hdr = (void *)mgmt;
+ 			/*
+@@ -781,7 +781,7 @@ static void ieee80211_iface_work(struct
+ 			 * a block-ack session was active. That cannot be
+ 			 * right, so terminate the session.
+ 			 */
+-			rcu_read_lock();
++			mutex_lock(&local->sta_mtx);
+ 			sta = sta_info_get(sdata, mgmt->sa);
+ 			if (sta) {
+ 				u16 tid = *ieee80211_get_qos_ctl(hdr) &
+@@ -791,7 +791,7 @@ static void ieee80211_iface_work(struct
+ 					sta, tid, WLAN_BACK_RECIPIENT,
+ 					WLAN_REASON_QSTA_REQUIRE_SETUP);
+ 			}
+-			rcu_read_unlock();
++			mutex_unlock(&local->sta_mtx);
+ 		} else switch (sdata->vif.type) {
+ 		case NL80211_IFTYPE_STATION:
+ 			ieee80211_sta_rx_queued_mgmt(sdata, skb);
+--- wireless-testing.orig/net/mac80211/driver-ops.h	2010-06-09 13:32:11.000000000 +0200
++++ wireless-testing/net/mac80211/driver-ops.h	2010-06-09 14:14:38.000000000 +0200
+@@ -349,9 +349,11 @@ static inline int drv_ampdu_action(struc
+ 				   u16 *ssn)
+ {
+ 	int ret = -EOPNOTSUPP;
++	local_bh_disable();
+ 	if (local->ops->ampdu_action)
+ 		ret = local->ops->ampdu_action(&local->hw, &sdata->vif, action,
+ 					       sta, tid, ssn);
++	local_bh_enable();
+ 	trace_drv_ampdu_action(local, sdata, action, sta, tid, ssn, ret);
+ 	return ret;
+ }
+--- wireless-testing.orig/net/mac80211/sta_info.c	2010-06-09 13:37:24.000000000 +0200
++++ wireless-testing/net/mac80211/sta_info.c	2010-06-09 13:37:24.000000000 +0200
+@@ -236,6 +236,7 @@ struct sta_info *sta_info_alloc(struct i
+ 	spin_lock_init(&sta->flaglock);
+ 	INIT_WORK(&sta->drv_unblock_wk, sta_unblock);
+ 	INIT_WORK(&sta->ampdu_mlme.work, ieee80211_ba_session_work);
++	mutex_init(&sta->ampdu_mlme.mtx);
+ 
+ 	memcpy(sta->sta.addr, addr, ETH_ALEN);
+ 	sta->local = local;
+--- wireless-testing.orig/net/mac80211/sta_info.h	2010-06-09 13:37:24.000000000 +0200
++++ wireless-testing/net/mac80211/sta_info.h	2010-06-09 13:37:24.000000000 +0200
+@@ -142,8 +142,11 @@ struct tid_ampdu_rx {
+  * @work: work struct for starting/stopping aggregation
+  * @tid_rx_timer_expired: bitmap indicating on which TIDs the
+  *	RX timer expired until the work for it runs
++ * @mtx: mutex to protect all TX data (except non-NULL assignments
++ *	to tid_tx[idx], which are protected by the sta spinlock)
+  */
+ struct sta_ampdu_mlme {
++	struct mutex mtx;
+ 	/* rx */
+ 	struct tid_ampdu_rx *tid_rx[STA_TID_NUM];
+ 	unsigned long tid_rx_timer_expired[BITS_TO_LONGS(STA_TID_NUM)];
+--- wireless-testing.orig/net/mac80211/agg-rx.c	2010-06-09 13:37:24.000000000 +0200
++++ wireless-testing/net/mac80211/agg-rx.c	2010-06-09 14:14:47.000000000 +0200
+@@ -6,7 +6,7 @@
+  * Copyright 2005-2006, Devicescape Software, Inc.
+  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
+  * Copyright 2007, Michael Wu <flamingice@sourmilk.net>
+- * Copyright 2007-2008, Intel Corporation
++ * Copyright 2007-2010, Intel Corporation
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -38,7 +38,7 @@ void ___ieee80211_stop_rx_ba_session(str
+ 	struct ieee80211_local *local = sta->local;
+ 	struct tid_ampdu_rx *tid_rx;
+ 
+-	lockdep_assert_held(&sta->lock);
++	lockdep_assert_held(&sta->ampdu_mlme.mtx);
+ 
+ 	tid_rx = sta->ampdu_mlme.tid_rx[tid];
+ 
+@@ -70,9 +70,9 @@ void ___ieee80211_stop_rx_ba_session(str
+ void __ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+ 				    u16 initiator, u16 reason)
+ {
+-	spin_lock_bh(&sta->lock);
++	mutex_lock(&sta->ampdu_mlme.mtx);
+ 	___ieee80211_stop_rx_ba_session(sta, tid, initiator, reason);
+-	spin_unlock_bh(&sta->lock);
++	mutex_unlock(&sta->ampdu_mlme.mtx);
+ }
+ 
+ /*
+@@ -205,7 +205,7 @@ void ieee80211_process_addba_request(str
+ 
+ 
+ 	/* examine state machine */
+-	spin_lock_bh(&sta->lock);
++	mutex_lock(&sta->ampdu_mlme.mtx);
+ 
+ 	if (sta->ampdu_mlme.tid_rx[tid]) {
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+@@ -279,7 +279,7 @@ void ieee80211_process_addba_request(str
+ 		mod_timer(&tid_agg_rx->session_timer, TU_TO_EXP_TIME(timeout));
+ 
+ end:
+-	spin_unlock_bh(&sta->lock);
++	mutex_unlock(&sta->ampdu_mlme.mtx);
+ 
+ end_no_lock:
+ 	ieee80211_send_addba_resp(sta->sdata, sta->sta.addr, tid,
+--- wireless-testing.orig/net/mac80211/ht.c	2010-06-09 13:37:24.000000000 +0200
++++ wireless-testing/net/mac80211/ht.c	2010-06-09 14:14:38.000000000 +0200
+@@ -130,13 +130,17 @@ void ieee80211_ba_session_work(struct wo
+ 	if (test_sta_flags(sta, WLAN_STA_BLOCK_BA))
+ 		return;
+ 
+-	spin_lock_bh(&sta->lock);
++	mutex_lock(&sta->ampdu_mlme.mtx);
+ 	for (tid = 0; tid < STA_TID_NUM; tid++) {
+ 		if (test_and_clear_bit(tid, sta->ampdu_mlme.tid_rx_timer_expired))
+ 			___ieee80211_stop_rx_ba_session(
+ 				sta, tid, WLAN_BACK_RECIPIENT,
+ 				WLAN_REASON_QSTA_TIMEOUT);
++	}
++	mutex_unlock(&sta->ampdu_mlme.mtx);
+ 
++	spin_lock_bh(&sta->lock);
++	for (tid = 0; tid < STA_TID_NUM; tid++) {
+ 		tid_tx = sta->ampdu_mlme.tid_tx[tid];
+ 		if (!tid_tx)
+ 			continue;
+
 
