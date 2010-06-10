@@ -1,54 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:46517 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754548Ab0FPFdv (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42778 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754679Ab0FJI0U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jun 2010 01:33:51 -0400
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	"Justin P. Mattock" <justinmattock@gmail.com>
-Subject: [PATCH 2/5]wireless:hostap_ap.c Fix warning: variable 'fc' set but not used
-Date: Tue, 15 Jun 2010 22:33:51 -0700
-Message-Id: <1276666434-11227-3-git-send-email-justinmattock@gmail.com>
-In-Reply-To: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>
-References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>
+	Thu, 10 Jun 2010 04:26:20 -0400
+Message-Id: <20100610082231.910424119@sipsolutions.net>
+Date: Thu, 10 Jun 2010 10:21:45 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 17/23] mac80211: fix RX aggregation timer
+References: <20100610082128.641664439@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The below patch fixes a warning message when compiling with gcc 4.6.0
-  CC [M]  drivers/net/wireless/hostap/hostap_ap.o
-drivers/net/wireless/hostap/hostap_ap.c: In function 'hostap_ap_tx_cb_assoc':
-drivers/net/wireless/hostap/hostap_ap.c:691:6: warning: variable 'fc' set but not used
+From: Johannes Berg <johannes.berg@intel.com>
 
- Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+I noticed that when there was _no_ traffic at
+all on a given aggregation session, it would
+never time out. This won't happen unless you
+forced creating a session, but fix it anyway.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/hostap/hostap_ap.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+ net/mac80211/agg-rx.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/hostap/hostap_ap.c b/drivers/net/wireless/hostap/hostap_ap.c
-index 231dbd7..9cadaa2 100644
---- a/drivers/net/wireless/hostap/hostap_ap.c
-+++ b/drivers/net/wireless/hostap/hostap_ap.c
-@@ -688,7 +688,7 @@ static void hostap_ap_tx_cb_assoc(struct sk_buff *skb, int ok, void *data)
- 	struct ap_data *ap = data;
- 	struct net_device *dev = ap->local->dev;
- 	struct ieee80211_hdr *hdr;
--	u16 fc, status;
-+	u16 status;
- 	__le16 *pos;
- 	struct sta_info *sta = NULL;
- 	char *txt = NULL;
-@@ -699,7 +699,6 @@ static void hostap_ap_tx_cb_assoc(struct sk_buff *skb, int ok, void *data)
- 	}
+--- wireless-testing.orig/net/mac80211/agg-rx.c	2010-06-09 17:21:15.000000000 +0200
++++ wireless-testing/net/mac80211/agg-rx.c	2010-06-09 17:21:15.000000000 +0200
+@@ -274,6 +274,10 @@ void ieee80211_process_addba_request(str
  
- 	hdr = (struct ieee80211_hdr *) skb->data;
--	fc = le16_to_cpu(hdr->frame_control);
- 	if ((!ieee80211_is_assoc_resp(hdr->frame_control) &&
- 	     !ieee80211_is_reassoc_resp(hdr->frame_control)) ||
- 	    skb->len < IEEE80211_MGMT_HDR_LEN + 4) {
--- 
-1.7.1.rc1.21.gf3bd6
+ 	/* activate it for RX */
+ 	rcu_assign_pointer(sta->ampdu_mlme.tid_rx[tid], tid_agg_rx);
++
++	if (timeout)
++		mod_timer(&tid_agg_rx->session_timer, TU_TO_EXP_TIME(timeout));
++
+ end:
+ 	spin_unlock_bh(&sta->lock);
+ 
+
 
