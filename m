@@ -1,143 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:57494 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757700Ab0FUKun (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42789 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754679Ab0FJI02 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jun 2010 06:50:43 -0400
-Received: from esebh105.NOE.Nokia.com (esebh105.ntc.nokia.com [172.21.138.211])
-	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o5LAoWTc030829
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Jun 2010 05:50:42 -0500
-Received: from localhost.localdomain (wimaxnb.nmp.nokia.com [172.22.211.32])
-	by mgw-da02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o5LAoH1O004280
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Jun 2010 13:50:18 +0300
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC PATCHv2] iw: Add support for setting transmit power level
-Date: Mon, 21 Jun 2010 13:50:17 +0300
-Message-Id: <1277117417-3126-1-git-send-email-juuso.oikarinen@nokia.com>
+	Thu, 10 Jun 2010 04:26:28 -0400
+Message-Id: <20100610082233.036307919@sipsolutions.net>
+Date: Thu, 10 Jun 2010 10:21:51 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 23/23] mac80211: fix mgmt frame accounting
+References: <20100610082128.641664439@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a "set txpower" option to specify the current transmit power level. Modes
-supported are automatic, fixed and limited, and the limit may be specified
-in signed mBm units.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+The recent change to processing action frames from
+the management frame queue had already broken action
+frame accounting, and my rework didn't help either.
+So add back accounting and simplify the code with a
+label rather than duplicating it, and also add
+accounting for management frames.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- nl80211.h |   22 ++++++++++++++++++++++
- phy.c     |   50 +++++++++++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 71 insertions(+), 1 deletions(-)
+ net/mac80211/rx.c |   25 +++++++++++++------------
+ 1 file changed, 13 insertions(+), 12 deletions(-)
 
-diff --git a/nl80211.h b/nl80211.h
-index 64fb32b..2c87016 100644
---- a/nl80211.h
-+++ b/nl80211.h
-@@ -725,6 +725,12 @@ enum nl80211_commands {
-  * @NL80211_ATTR_AP_ISOLATE: (AP mode) Do not forward traffic between stations
-  *	connected to this BSS.
-  *
-+ * @NL80211_ATTR_WIPHY_TX_POWER_SETTING: Transmit power setting type. See
-+ *      &enum nl80211_tx_power_setting for possible values.
-+ * @NL80211_ATTR_WIPHY_TX_POWER_LEVEL: Transmit power level in signed mBm units.
-+ *      This is used in association with @NL80211_ATTR_WIPHY_TX_POWER_SETTING
-+ *      for non-automatic settings.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -882,6 +888,9 @@ enum nl80211_attrs {
+--- wireless-testing.orig/net/mac80211/rx.c	2010-06-10 08:37:20.000000000 +0200
++++ wireless-testing/net/mac80211/rx.c	2010-06-10 08:41:02.000000000 +0200
+@@ -1966,10 +1966,7 @@ ieee80211_rx_h_action(struct ieee80211_r
+ 			goto invalid;
+ 		}
  
- 	NL80211_ATTR_AP_ISOLATE,
+-		rx->skb->pkt_type = IEEE80211_SDATA_QUEUE_TYPE_FRAME;
+-		skb_queue_tail(&sdata->skb_queue, rx->skb);
+-		ieee80211_queue_work(&local->hw, &sdata->work);
+-		return RX_QUEUED;
++		goto queue;
+ 	case WLAN_CATEGORY_SPECTRUM_MGMT:
+ 		if (local->hw.conf.channel->band != IEEE80211_BAND_5GHZ)
+ 			break;
+@@ -1999,10 +1996,7 @@ ieee80211_rx_h_action(struct ieee80211_r
+ 			if (memcmp(mgmt->bssid, sdata->u.mgd.bssid, ETH_ALEN))
+ 				break;
  
-+	NL80211_ATTR_WIPHY_TX_POWER_SETTING,
-+	NL80211_ATTR_WIPHY_TX_POWER_LEVEL,
-+
- 	/* add attributes here, update the policy in nl80211.c */
+-			rx->skb->pkt_type = IEEE80211_SDATA_QUEUE_TYPE_FRAME;
+-			skb_queue_tail(&sdata->skb_queue, rx->skb);
+-			ieee80211_queue_work(&local->hw, &sdata->work);
+-			return RX_QUEUED;
++			goto queue;
+ 		}
+ 		break;
+ 	case WLAN_CATEGORY_SA_QUERY:
+@@ -2022,10 +2016,7 @@ ieee80211_rx_h_action(struct ieee80211_r
+ 	case WLAN_CATEGORY_MESH_PATH_SEL:
+ 		if (!ieee80211_vif_is_mesh(&sdata->vif))
+ 			break;
+-		rx->skb->pkt_type = IEEE80211_SDATA_QUEUE_TYPE_FRAME;
+-		skb_queue_tail(&sdata->skb_queue, rx->skb);
+-		ieee80211_queue_work(&local->hw, &sdata->work);
+-		return RX_QUEUED;
++		goto queue;
+ 	}
  
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -1659,4 +1668,17 @@ enum nl80211_cqm_rssi_threshold_event {
- 	NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
- };
+  invalid:
+@@ -2076,6 +2067,14 @@ ieee80211_rx_h_action(struct ieee80211_r
+ 		rx->sta->rx_packets++;
+ 	dev_kfree_skb(rx->skb);
+ 	return RX_QUEUED;
++
++ queue:
++	rx->skb->pkt_type = IEEE80211_SDATA_QUEUE_TYPE_FRAME;
++	skb_queue_tail(&sdata->skb_queue, rx->skb);
++	ieee80211_queue_work(&local->hw, &sdata->work);
++	if (rx->sta)
++		rx->sta->rx_packets++;
++	return RX_QUEUED;
+ }
  
-+
-+/**
-+ * enum nl80211_tx_power_setting - TX power adjustment
-+ * @NL80211_TX_POWER_AUTOMATIC: automatically determine transmit power
-+ * @NL80211_TX_POWER_LIMITED: limit TX power by the mBm parameter
-+ * @NL80211_TX_POWER_FIXED: fix TX power to the mBm parameter
-+ */
-+enum nl80211_tx_power_setting {
-+	NL80211_TX_POWER_AUTOMATIC,
-+	NL80211_TX_POWER_LIMITED,
-+	NL80211_TX_POWER_FIXED,
-+};
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/phy.c b/phy.c
-index 8f8d757..f042dc2 100644
---- a/phy.c
-+++ b/phy.c
-@@ -175,7 +175,7 @@ static int handle_netns(struct nl80211_state *state,
- 		return 1;
+ static ieee80211_rx_result debug_noinline
+@@ -2131,6 +2130,8 @@ ieee80211_rx_h_mgmt(struct ieee80211_rx_
+ 	rx->skb->pkt_type = IEEE80211_SDATA_QUEUE_TYPE_FRAME;
+ 	skb_queue_tail(&sdata->skb_queue, rx->skb);
+ 	ieee80211_queue_work(&rx->local->hw, &sdata->work);
++	if (rx->sta)
++		rx->sta->rx_packets++;
  
- 	NLA_PUT_U32(msg, NL80211_ATTR_PID,
--		    strtoul(argv[0], &end, 10)); 
-+		    strtoul(argv[0], &end, 10));
- 
- 	if (*end != '\0')
- 		return 1;
-@@ -258,3 +258,51 @@ COMMAND(set, distance, "<distance>",
- 	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_distance,
- 	"Set appropriate coverage class for given link distance in meters.\n"
- 	"Valid values: 0 - 114750");
-+
-+static int handle_txpower(struct nl80211_state *state,
-+			  struct nl_cb *cb,
-+			  struct nl_msg *msg,
-+			  int argc, char **argv)
-+{
-+	enum nl80211_tx_power_setting type;
-+	int ret = -ENOSPC;
-+	int mbm;
-+
-+	/* get the required args */
-+	if (argc != 1 && argc != 2)
-+		return 1;
-+
-+	if (!strcmp(argv[0], "auto"))
-+		type = NL80211_TX_POWER_AUTOMATIC;
-+	else if (!strcmp(argv[0], "fixed"))
-+		type = NL80211_TX_POWER_FIXED;
-+	else if (!strcmp(argv[0], "limit"))
-+		type = NL80211_TX_POWER_LIMITED;
-+	else {
-+		printf("Invalid parameter: %s\n", argv[0]);
-+		return 2;
-+	}
-+
-+	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_TX_POWER_SETTING, type);
-+
-+	if (type != NL80211_TX_POWER_AUTOMATIC) {
-+		if (argc != 2) {
-+			printf("Missing TX power level argument.\n");
-+			return 2;
-+		}
-+
-+		mbm = atoi(argv[1]);
-+		NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_TX_POWER_LEVEL, mbm);
-+	}
-+
-+	ret = 0;
-+
-+ nla_put_failure:
-+	return ret;
-+}
-+COMMAND(set, txpower, "<auto|fixed|limit> [<tx power in mBm>]",
-+	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_txpower,
-+	"Specify transmit power level and setting type.");
-+COMMAND(set, txpower, "<auto|fixed|limit> [<tx power in mBm>]",
-+	NL80211_CMD_SET_WIPHY, 0, CIB_NETDEV, handle_txpower,
-+	"Specify transmit power level and setting type.");
--- 
-1.6.3.3
+ 	return RX_QUEUED;
+ }
+
 
