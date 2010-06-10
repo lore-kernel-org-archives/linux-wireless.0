@@ -1,42 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:55537 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758251Ab0FPOix (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:34441 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751972Ab0FJFR0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jun 2010 10:38:53 -0400
-Received: by gye5 with SMTP id 5so3985333gye.19
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Jun 2010 07:38:52 -0700 (PDT)
+	Thu, 10 Jun 2010 01:17:26 -0400
+Received: by mail-pw0-f46.google.com with SMTP id 5so2253189pwj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Jun 2010 22:17:26 -0700 (PDT)
+Message-ID: <4C107563.3010709@yatharthgupta.com>
+Date: Wed, 09 Jun 2010 22:17:23 -0700
+From: Yatharth <y@yatharthgupta.com>
 MIME-Version: 1.0
-In-Reply-To: <4C18DA3D.1030303@googlemail.com>
-References: <4C18DA3D.1030303@googlemail.com>
-Date: Wed, 16 Jun 2010 10:38:52 -0400
-Message-ID: <AANLkTimtZBRfkAOnz2vPXp71Z03DfPQniY2qFHCsgI44@mail.gmail.com>
-Subject: Re: "ressource temporarily unavailable" on 2.4 GHz, not on 5GHz
-From: Bob Copeland <me@bobcopeland.com>
-To: Dennis Borgmann <dennis.borgmann@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, hostap@lists.shmoo.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: linux-wireless@vger.kernel.org
+Subject: issues while attempting ath9k_htc to work with ubuntu 10.04, device
+ TL-WN721N
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 16, 2010 at 10:05 AM, Dennis Borgmann
-<dennis.borgmann@googlemail.com> wrote:
-> Hello wireless-list!
-> Hello hostapd-list!
->
-> I am using ath5k with hostapd-0.6.9 on a debian running kernel 2.6.34
-> and I am observing a "ressource temporarily unavailable" - error code 11
-[...]
-> What could be the problem? Is this due to backoff-times in 2.4 GHz, that
-> don't occur on 5 GHz? Or could this be a bug?
+I am trying to install driver for the TP-LINK : TL-WN721N (Wi-Fi USB
+Device). If this is not the sort of issues this mailing list is for,
+please let me know.
 
-Does dmesg report any error (e.g. no available txbuf)?
+This device should use the ath9k_htc driver
 
-My guess is you have more frequent successful delivery in 5 GHz than in
-ISM band so you aren't running out of send buffers somewhere in the stack.
+./lsusb
+Bus 001 Device 003: ID 0cf3:9271 Atheros Communications, Inc.
 
-Of course, your program should expect and handle EAGAIN if you are
-using MSG_DONTWAIT.
+I have followed the instruction from 
+http://linuxwireless.org/en/users/Download 
+<http://linuxwireless.org/en/users/Download> But they do not seem to 
+work for me
 
--- 
-Bob Copeland %% www.bobcopeland.com
+When I modprobe ath9k_htc
+
+Ubu-VM:/lib/modules/2.6.32-22-generic/build$ sudo modprobe ath9k_htc
+
+FATAL: Error inserting ath9k_htc
+(/lib/modules/2.6.32-22-generic/updates/drivers/net/wireless/ath/ath9k/ath9k_htc.ko):
+Unknown symbol in module, or unknown parameter (see dmesg)
+
+Here is the output of dmesg
+
+
+Ubu-VM:/lib/modules/2.6.32-22-generic/build$ dmesg | grep ath9k
+
+[ 1926.917944] ath9k_htc: disagrees about version of symbol
+ath9k_hw_set_txpowerlimit
+[ 1926.917947] ath9k_htc: Unknown symbol ath9k_hw_set_txpowerlimit
+[ 1926.918248] ath9k_htc: disagrees about version of symbol
+ath9k_hw_reset_calvalid
+[ 1926.918250] ath9k_htc: Unknown symbol ath9k_hw_reset_calvalid
+[ 1926.918377] ath9k_htc: disagrees about version of symbol
+ath9k_hw_setcapability
+[ 1926.918379] ath9k_htc: Unknown symbol ath9k_hw_setcapability
+[ 1926.918603] ath9k_htc: disagrees about version of symbol
+ieee80211_free_hw
+[ 1926.918605] ath9k_htc: Unknown symbol ieee80211_free_hw
+[ 1926.918680] ath9k_htc: disagrees about version of symbol ath9k_hw_reset
+[ 1926.918682] ath9k_htc: Unknown symbol ath9k_hw_reset
+[ 1926.919176] ath9k_htc: disagrees about version of symbol
+ath9k_hw_setuptxqueue
+[ 1926.919179] ath9k_htc: Unknown symbol ath9k_hw_setuptxqueue
+[ 1926.919256] ath9k_htc: disagrees about version of symbol
+ath9k_hw_startpcureceive
+[ 1926.919257] ath9k_htc: Unknown symbol ath9k_hw_startpcureceive
+[ 1926.919352] ath9k_htc: Unknown symbol ath9k_cmn_key_delete
+[ 1926.919477] ath9k_htc: Unknown symbol ath9k_cmn_key_config
+[ 1926.919559] ath9k_htc: disagrees about version of symbol
+ath9k_hw_keyreset
