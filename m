@@ -1,377 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35562 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752819Ab0FGLDE (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:40051 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751537Ab0FJFcI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jun 2010 07:03:04 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.71)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1OLa6h-0007AY-EB
-	for linux-wireless@vger.kernel.org; Mon, 07 Jun 2010 13:03:03 +0200
-Message-Id: <20100607110159.454332400@sipsolutions.net>
-Date: Mon, 07 Jun 2010 13:01:36 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 03/21] mac80211: use common work struct
-References: <20100607110133.472649120@sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 10 Jun 2010 01:32:08 -0400
+Received: by pxi8 with SMTP id 8so2529321pxi.19
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Jun 2010 22:32:07 -0700 (PDT)
+Message-ID: <4C1078D4.3070604@yatharthgupta.com>
+Date: Wed, 09 Jun 2010 22:32:04 -0700
+From: Yatharth <y@yatharthgupta.com>
+MIME-Version: 1.0
+To: Sujith <Sujith.Manoharan@atheros.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: issues while attempting ath9k_htc to work with ubuntu 10.04,
+ device TL-WN721N
+References: <4C107563.3010709@yatharthgupta.com> <19472.30680.855993.112084@gargle.gargle.HOWL>
+In-Reply-To: <19472.30680.855993.112084@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 06/09/2010 10:27 PM, Sujith wrote:
+> Yatharth wrote:
+>    
+>> I am trying to install driver for the TP-LINK : TL-WN721N (Wi-Fi USB
+>> Device). If this is not the sort of issues this mailing list is for,
+>> please let me know.
+>>
+>> This device should use the ath9k_htc driver
+>>
+>> ./lsusb
+>> Bus 001 Device 003: ID 0cf3:9271 Atheros Communications, Inc.
+>>
+>> I have followed the instruction from
+>> http://linuxwireless.org/en/users/Download
+>> <http://linuxwireless.org/en/users/Download>  But they do not seem to
+>> work for me
+>>
+>> When I modprobe ath9k_htc
+>>
+>> Ubu-VM:/lib/modules/2.6.32-22-generic/build$ sudo modprobe ath9k_htc
+>>
+>> FATAL: Error inserting ath9k_htc
+>> (/lib/modules/2.6.32-22-generic/updates/drivers/net/wireless/ath/ath9k/ath9k_htc.ko):
+>> Unknown symbol in module, or unknown parameter (see dmesg)
+>>
+>> Here is the output of dmesg
+>>
+>>
+>> Ubu-VM:/lib/modules/2.6.32-22-generic/build$ dmesg | grep ath9k
+>>
+>> [ 1926.917944] ath9k_htc: disagrees about version of symbol
+>> ath9k_hw_set_txpowerlimit
+>> [ 1926.917947] ath9k_htc: Unknown symbol ath9k_hw_set_txpowerlimit
+>> [ 1926.918248] ath9k_htc: disagrees about version of symbol
+>> ath9k_hw_reset_calvalid
+>> [ 1926.918250] ath9k_htc: Unknown symbol ath9k_hw_reset_calvalid
+>> [ 1926.918377] ath9k_htc: disagrees about version of symbol
+>> ath9k_hw_setcapability
+>> [ 1926.918379] ath9k_htc: Unknown symbol ath9k_hw_setcapability
+>> [ 1926.918603] ath9k_htc: disagrees about version of symbol
+>> ieee80211_free_hw
+>> [ 1926.918605] ath9k_htc: Unknown symbol ieee80211_free_hw
+>> [ 1926.918680] ath9k_htc: disagrees about version of symbol ath9k_hw_reset
+>> [ 1926.918682] ath9k_htc: Unknown symbol ath9k_hw_reset
+>> [ 1926.919176] ath9k_htc: disagrees about version of symbol
+>> ath9k_hw_setuptxqueue
+>> [ 1926.919179] ath9k_htc: Unknown symbol ath9k_hw_setuptxqueue
+>> [ 1926.919256] ath9k_htc: disagrees about version of symbol
+>> ath9k_hw_startpcureceive
+>> [ 1926.919257] ath9k_htc: Unknown symbol ath9k_hw_startpcureceive
+>> [ 1926.919352] ath9k_htc: Unknown symbol ath9k_cmn_key_delete
+>> [ 1926.919477] ath9k_htc: Unknown symbol ath9k_cmn_key_config
+>> [ 1926.919559] ath9k_htc: disagrees about version of symbol
+>> ath9k_hw_keyreset
+>>      
+> You haven't unloaded the existing ath9k_hw module.
+>
+> Do a 'sudo make install' in your compat directory, and
+> then 'sudo make unload'.
+>
+> Check 'lsmod | grep ath'. If anything is still present, unload all of them,
+> along with mac80211, cfg80211. Then modprobe ath9k_htc.
+>
+> Of course, you can just reboot after 'sudo make install' and things should work.
+>
+> Sujith
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>    
 
-IBSS, managed and mesh modes all have their
-own work struct, and in the future we want
-to also use it in other modes to process
-frames from the now common skb queue.
+I had checked earlier to ensure that everything was unloaded.
 
-This also makes the skb queue and work safe
-to use from other interface types.
+But I've done it again to make sure.
+Step 1 :  'sudo make unload'
+Step 2 : 'lsmod | grep ath'  [Returns Nothing, thus indicating none of 
+these modules are loaded]
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ibss.c         |   13 ++++++-------
- net/mac80211/ieee80211_i.h  |    4 +---
- net/mac80211/iface.c        |    6 ++----
- net/mac80211/mesh.c         |   22 +++++++++-------------
- net/mac80211/mesh_hwmp.c    |    4 ++--
- net/mac80211/mesh_pathtbl.c |    4 ++--
- net/mac80211/mlme.c         |   12 +++++-------
- net/mac80211/pm.c           |    2 ++
- 8 files changed, 29 insertions(+), 38 deletions(-)
-
---- wireless-testing.orig/net/mac80211/ibss.c	2010-06-01 10:19:35.000000000 +0200
-+++ wireless-testing/net/mac80211/ibss.c	2010-06-01 10:19:38.000000000 +0200
-@@ -761,7 +761,7 @@ static void ieee80211_ibss_rx_queued_mgm
- static void ieee80211_ibss_work(struct work_struct *work)
- {
- 	struct ieee80211_sub_if_data *sdata =
--		container_of(work, struct ieee80211_sub_if_data, u.ibss.work);
-+		container_of(work, struct ieee80211_sub_if_data, work);
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_if_ibss *ifibss;
- 	struct sk_buff *skb;
-@@ -804,7 +804,7 @@ static void ieee80211_queue_ibss_work(st
- 	struct ieee80211_local *local = sdata->local;
- 
- 	set_bit(IEEE80211_IBSS_REQ_RUN, &ifibss->request);
--	ieee80211_queue_work(&local->hw, &ifibss->work);
-+	ieee80211_queue_work(&local->hw, &sdata->work);
- }
- 
- static void ieee80211_ibss_timer(unsigned long data)
-@@ -827,7 +827,6 @@ void ieee80211_ibss_quiesce(struct ieee8
- {
- 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
- 
--	cancel_work_sync(&ifibss->work);
- 	if (del_timer_sync(&ifibss->timer))
- 		ifibss->timer_running = true;
- }
-@@ -847,7 +846,7 @@ void ieee80211_ibss_setup_sdata(struct i
- {
- 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
- 
--	INIT_WORK(&ifibss->work, ieee80211_ibss_work);
-+	INIT_WORK(&sdata->work, ieee80211_ibss_work);
- 	setup_timer(&ifibss->timer, ieee80211_ibss_timer,
- 		    (unsigned long) sdata);
- }
-@@ -890,7 +889,7 @@ ieee80211_ibss_rx_mgmt(struct ieee80211_
- 	case IEEE80211_STYPE_PROBE_REQ:
- 	case IEEE80211_STYPE_AUTH:
- 		skb_queue_tail(&sdata->skb_queue, skb);
--		ieee80211_queue_work(&local->hw, &sdata->u.ibss.work);
-+		ieee80211_queue_work(&local->hw, &sdata->work);
- 		return RX_QUEUED;
- 	}
- 
-@@ -956,7 +955,7 @@ int ieee80211_ibss_join(struct ieee80211
- 	ieee80211_recalc_idle(sdata->local);
- 
- 	set_bit(IEEE80211_IBSS_REQ_RUN, &sdata->u.ibss.request);
--	ieee80211_queue_work(&sdata->local->hw, &sdata->u.ibss.work);
-+	ieee80211_queue_work(&sdata->local->hw, &sdata->work);
- 
- 	return 0;
- }
-@@ -967,7 +966,7 @@ int ieee80211_ibss_leave(struct ieee8021
- 
- 	del_timer_sync(&sdata->u.ibss.timer);
- 	clear_bit(IEEE80211_IBSS_REQ_RUN, &sdata->u.ibss.request);
--	cancel_work_sync(&sdata->u.ibss.work);
-+	cancel_work_sync(&sdata->work);
- 	clear_bit(IEEE80211_IBSS_REQ_RUN, &sdata->u.ibss.request);
- 
- 	sta_info_flush(sdata->local, sdata);
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2010-06-01 10:19:35.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2010-06-01 10:19:38.000000000 +0200
-@@ -325,7 +325,6 @@ struct ieee80211_if_managed {
- 	struct timer_list conn_mon_timer;
- 	struct timer_list bcn_mon_timer;
- 	struct timer_list chswitch_timer;
--	struct work_struct work;
- 	struct work_struct monitor_work;
- 	struct work_struct chswitch_work;
- 	struct work_struct beacon_connection_loss_work;
-@@ -384,7 +383,6 @@ enum ieee80211_ibss_request {
- 
- struct ieee80211_if_ibss {
- 	struct timer_list timer;
--	struct work_struct work;
- 
- 	unsigned long request;
- 	unsigned long last_scan_completed;
-@@ -412,7 +410,6 @@ struct ieee80211_if_ibss {
- };
- 
- struct ieee80211_if_mesh {
--	struct work_struct work;
- 	struct timer_list housekeeping_timer;
- 	struct timer_list mesh_path_timer;
- 	struct timer_list mesh_path_root_timer;
-@@ -512,6 +509,7 @@ struct ieee80211_sub_if_data {
- 
- 	u16 sequence_number;
- 
-+	struct work_struct work;
- 	struct sk_buff_head skb_queue;
- 
- 	/*
---- wireless-testing.orig/net/mac80211/mlme.c	2010-06-01 10:19:35.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2010-06-01 10:19:38.000000000 +0200
-@@ -1653,7 +1653,7 @@ ieee80211_rx_result ieee80211_sta_rx_mgm
- 	case IEEE80211_STYPE_DISASSOC:
- 	case IEEE80211_STYPE_ACTION:
- 		skb_queue_tail(&sdata->skb_queue, skb);
--		ieee80211_queue_work(&local->hw, &sdata->u.mgd.work);
-+		ieee80211_queue_work(&local->hw, &sdata->work);
- 		return RX_QUEUED;
- 	}
- 
-@@ -1779,13 +1779,13 @@ static void ieee80211_sta_timer(unsigned
- 		return;
- 	}
- 
--	ieee80211_queue_work(&local->hw, &ifmgd->work);
-+	ieee80211_queue_work(&local->hw, &sdata->work);
- }
- 
- static void ieee80211_sta_work(struct work_struct *work)
- {
- 	struct ieee80211_sub_if_data *sdata =
--		container_of(work, struct ieee80211_sub_if_data, u.mgd.work);
-+		container_of(work, struct ieee80211_sub_if_data, work);
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_if_managed *ifmgd;
- 	struct sk_buff *skb;
-@@ -1906,8 +1906,7 @@ static void ieee80211_restart_sta_timer(
- 		ieee80211_queue_work(&sdata->local->hw,
- 			   &sdata->u.mgd.monitor_work);
- 		/* and do all the other regular work too */
--		ieee80211_queue_work(&sdata->local->hw,
--			   &sdata->u.mgd.work);
-+		ieee80211_queue_work(&sdata->local->hw, &sdata->work);
- 	}
- }
- 
-@@ -1922,7 +1921,6 @@ void ieee80211_sta_quiesce(struct ieee80
- 	 * time -- the code here is properly synchronised.
- 	 */
- 
--	cancel_work_sync(&ifmgd->work);
- 	cancel_work_sync(&ifmgd->beacon_connection_loss_work);
- 	if (del_timer_sync(&ifmgd->timer))
- 		set_bit(TMR_RUNNING_TIMER, &ifmgd->timers_running);
-@@ -1954,7 +1952,7 @@ void ieee80211_sta_setup_sdata(struct ie
- 	struct ieee80211_if_managed *ifmgd;
- 
- 	ifmgd = &sdata->u.mgd;
--	INIT_WORK(&ifmgd->work, ieee80211_sta_work);
-+	INIT_WORK(&sdata->work, ieee80211_sta_work);
- 	INIT_WORK(&ifmgd->monitor_work, ieee80211_sta_monitor_work);
- 	INIT_WORK(&ifmgd->chswitch_work, ieee80211_chswitch_work);
- 	INIT_WORK(&ifmgd->beacon_connection_loss_work,
---- wireless-testing.orig/net/mac80211/iface.c	2010-06-01 10:19:35.000000000 +0200
-+++ wireless-testing/net/mac80211/iface.c	2010-06-01 10:19:38.000000000 +0200
-@@ -460,17 +460,14 @@ static int ieee80211_stop(struct net_dev
- 		 * whether the interface is running, which, at this point,
- 		 * it no longer is.
- 		 */
--		cancel_work_sync(&sdata->u.mgd.work);
- 		cancel_work_sync(&sdata->u.mgd.chswitch_work);
- 		cancel_work_sync(&sdata->u.mgd.monitor_work);
- 		cancel_work_sync(&sdata->u.mgd.beacon_connection_loss_work);
- 
- 		/* fall through */
- 	case NL80211_IFTYPE_ADHOC:
--		if (sdata->vif.type == NL80211_IFTYPE_ADHOC) {
-+		if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
- 			del_timer_sync(&sdata->u.ibss.timer);
--			cancel_work_sync(&sdata->u.ibss.work);
--		}
- 		/* fall through */
- 	case NL80211_IFTYPE_MESH_POINT:
- 		if (ieee80211_vif_is_mesh(&sdata->vif)) {
-@@ -485,6 +482,7 @@ static int ieee80211_stop(struct net_dev
- 		}
- 		/* fall through */
- 	default:
-+		cancel_work_sync(&sdata->work);
- 		/*
- 		 * When we get here, the interface is marked down.
- 		 * Call synchronize_rcu() to wait for the RX path
---- wireless-testing.orig/net/mac80211/mesh.c	2010-06-01 10:19:35.000000000 +0200
-+++ wireless-testing/net/mac80211/mesh.c	2010-06-01 10:19:38.000000000 +0200
-@@ -54,7 +54,7 @@ static void ieee80211_mesh_housekeeping_
- 		return;
- 	}
- 
--	ieee80211_queue_work(&local->hw, &ifmsh->work);
-+	ieee80211_queue_work(&local->hw, &sdata->work);
- }
- 
- /**
-@@ -345,7 +345,7 @@ static void ieee80211_mesh_path_timer(un
- 		return;
- 	}
- 
--	ieee80211_queue_work(&local->hw, &ifmsh->work);
-+	ieee80211_queue_work(&local->hw, &sdata->work);
- }
- 
- static void ieee80211_mesh_path_root_timer(unsigned long data)
-@@ -362,7 +362,7 @@ static void ieee80211_mesh_path_root_tim
- 		return;
- 	}
- 
--	ieee80211_queue_work(&local->hw, &ifmsh->work);
-+	ieee80211_queue_work(&local->hw, &sdata->work);
- }
- 
- void ieee80211_mesh_root_setup(struct ieee80211_if_mesh *ifmsh)
-@@ -484,9 +484,6 @@ void ieee80211_mesh_quiesce(struct ieee8
- {
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 
--	/* might restart the timer but that doesn't matter */
--	cancel_work_sync(&ifmsh->work);
--
- 	/* use atomic bitops in case both timers fire at the same time */
- 
- 	if (del_timer_sync(&ifmsh->housekeeping_timer))
-@@ -518,7 +515,7 @@ void ieee80211_start_mesh(struct ieee802
- 
- 	set_bit(MESH_WORK_HOUSEKEEPING, &ifmsh->wrkq_flags);
- 	ieee80211_mesh_root_setup(ifmsh);
--	ieee80211_queue_work(&local->hw, &ifmsh->work);
-+	ieee80211_queue_work(&local->hw, &sdata->work);
- 	sdata->vif.bss_conf.beacon_int = MESH_DEFAULT_BEACON_INTERVAL;
- 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON |
- 						BSS_CHANGED_BEACON_ENABLED |
-@@ -536,7 +533,7 @@ void ieee80211_stop_mesh(struct ieee8021
- 	 * whether the interface is running, which, at this point,
- 	 * it no longer is.
- 	 */
--	cancel_work_sync(&sdata->u.mesh.work);
-+	cancel_work_sync(&sdata->work);
- }
- 
- static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
-@@ -630,7 +627,7 @@ static void ieee80211_mesh_rx_queued_mgm
- static void ieee80211_mesh_work(struct work_struct *work)
- {
- 	struct ieee80211_sub_if_data *sdata =
--		container_of(work, struct ieee80211_sub_if_data, u.mesh.work);
-+		container_of(work, struct ieee80211_sub_if_data, work);
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 	struct sk_buff *skb;
-@@ -669,7 +666,7 @@ void ieee80211_mesh_notify_scan_complete
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list)
- 		if (ieee80211_vif_is_mesh(&sdata->vif))
--			ieee80211_queue_work(&local->hw, &sdata->u.mesh.work);
-+			ieee80211_queue_work(&local->hw, &sdata->work);
- 	rcu_read_unlock();
- }
- 
-@@ -677,7 +674,7 @@ void ieee80211_mesh_init_sdata(struct ie
- {
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 
--	INIT_WORK(&ifmsh->work, ieee80211_mesh_work);
-+	INIT_WORK(&sdata->work, ieee80211_mesh_work);
- 	setup_timer(&ifmsh->housekeeping_timer,
- 		    ieee80211_mesh_housekeeping_timer,
- 		    (unsigned long) sdata);
-@@ -726,7 +723,6 @@ ieee80211_rx_result
- ieee80211_mesh_rx_mgmt(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
- {
- 	struct ieee80211_local *local = sdata->local;
--	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 	struct ieee80211_mgmt *mgmt;
- 	u16 fc;
- 
-@@ -741,7 +737,7 @@ ieee80211_mesh_rx_mgmt(struct ieee80211_
- 	case IEEE80211_STYPE_PROBE_RESP:
- 	case IEEE80211_STYPE_BEACON:
- 		skb_queue_tail(&sdata->skb_queue, skb);
--		ieee80211_queue_work(&local->hw, &ifmsh->work);
-+		ieee80211_queue_work(&local->hw, &sdata->work);
- 		return RX_QUEUED;
- 	}
- 
---- wireless-testing.orig/net/mac80211/mesh_hwmp.c	2010-05-31 21:20:17.000000000 +0200
-+++ wireless-testing/net/mac80211/mesh_hwmp.c	2010-06-01 10:19:38.000000000 +0200
-@@ -805,14 +805,14 @@ static void mesh_queue_preq(struct mesh_
- 	spin_unlock(&ifmsh->mesh_preq_queue_lock);
- 
- 	if (time_after(jiffies, ifmsh->last_preq + min_preq_int_jiff(sdata)))
--		ieee80211_queue_work(&sdata->local->hw, &ifmsh->work);
-+		ieee80211_queue_work(&sdata->local->hw, &sdata->work);
- 
- 	else if (time_before(jiffies, ifmsh->last_preq)) {
- 		/* avoid long wait if did not send preqs for a long time
- 		 * and jiffies wrapped around
- 		 */
- 		ifmsh->last_preq = jiffies - min_preq_int_jiff(sdata) - 1;
--		ieee80211_queue_work(&sdata->local->hw, &ifmsh->work);
-+		ieee80211_queue_work(&sdata->local->hw, &sdata->work);
- 	} else
- 		mod_timer(&ifmsh->mesh_path_timer, ifmsh->last_preq +
- 						min_preq_int_jiff(sdata));
---- wireless-testing.orig/net/mac80211/mesh_pathtbl.c	2010-05-31 21:20:17.000000000 +0200
-+++ wireless-testing/net/mac80211/mesh_pathtbl.c	2010-06-01 10:19:38.000000000 +0200
-@@ -315,7 +315,7 @@ int mesh_path_add(u8 *dst, struct ieee80
- 	read_unlock(&pathtbl_resize_lock);
- 	if (grow) {
- 		set_bit(MESH_WORK_GROW_MPATH_TABLE,  &ifmsh->wrkq_flags);
--		ieee80211_queue_work(&local->hw, &ifmsh->work);
-+		ieee80211_queue_work(&local->hw, &sdata->work);
- 	}
- 	return 0;
- 
-@@ -425,7 +425,7 @@ int mpp_path_add(u8 *dst, u8 *mpp, struc
- 	read_unlock(&pathtbl_resize_lock);
- 	if (grow) {
- 		set_bit(MESH_WORK_GROW_MPP_TABLE,  &ifmsh->wrkq_flags);
--		ieee80211_queue_work(&local->hw, &ifmsh->work);
-+		ieee80211_queue_work(&local->hw, &sdata->work);
- 	}
- 	return 0;
- 
---- wireless-testing.orig/net/mac80211/pm.c	2010-06-01 10:19:33.000000000 +0200
-+++ wireless-testing/net/mac80211/pm.c	2010-06-01 10:19:38.000000000 +0200
-@@ -64,6 +64,8 @@ int __ieee80211_suspend(struct ieee80211
- 
- 	/* remove all interfaces */
- 	list_for_each_entry(sdata, &local->interfaces, list) {
-+		cancel_work_sync(&sdata->work);
-+
- 		switch(sdata->vif.type) {
- 		case NL80211_IFTYPE_STATION:
- 			ieee80211_sta_quiesce(sdata);
-
+If I do 'modprobe ath9k_htc' after this, I still get the same error
 
