@@ -1,49 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:56491 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751990Ab0F1K1r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jun 2010 06:27:47 -0400
-Message-ID: <4C287913.8070405@openwrt.org>
-Date: Mon, 28 Jun 2010 12:27:31 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	ath9k-devel@lists.ath9k.org
-Subject: Re: [RFC/RFT] minstrel_ht: new rate control module for 802.11n
-References: <4B8C3A21.2050105@openwrt.org>	<133e8d7e1003020419r6fab7b13kd77b06407c8c1380@mail.gmail.com>	<4B8D25DC.8070502@openwrt.org>	<133e8d7e1003020747w348dbee0g60a25a86393972d7@mail.gmail.com>	<4B8D396B.5040007@openwrt.org>	<AANLkTilWfp6LzCYhxFweqAP_GceRz5PQBIBl5AksLKUf@mail.gmail.com>	<4C223F58.3060509@openwrt.org>	<AANLkTikmXoEnHb1K9StEgszdllAxdsAbm9WdtSUiwKWE@mail.gmail.com>	<4C27E8E8.8040606@openwrt.org> <AANLkTinoz66aXYBSlwVtTnJBs1u-4FfOCphHTZONHc4B@mail.gmail.com>
-In-Reply-To: <AANLkTinoz66aXYBSlwVtTnJBs1u-4FfOCphHTZONHc4B@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:42774 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754669Ab0FJI0R (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jun 2010 04:26:17 -0400
+Message-Id: <20100610082231.512809279@sipsolutions.net>
+Date: Thu, 10 Jun 2010 10:21:43 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 15/23] mac80211: move BA session work
+References: <20100610082128.641664439@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-06-28 12:20 PM, Björn Smedman wrote:
-> 2010/6/28 Felix Fietkau <nbd@openwrt.org>:
->> On 2010-06-28 2:01 AM, Björn Smedman wrote:
-> [snip]
->>> I guess the real solution is your rewrite... But in the mean time
->>> perhaps we can memcpy the tx_info control from the last subframe to
->>> the first before calling ath_buf_set_rate() in ath_tx_sched_aggr()?
->>> Could that have any side effects? It could make the aggregate size go
->>> over the 4 ms limit I guess... How bad is that?
->> There's an easy solution which would take into account the 4ms frame
->> limit properly, and which could work without any memcpy() hacks:
->>
->> I could just grab a pointer to the last buffer in the tid queue in the
->> ath_tx_sched_aggr() function, then pass it to ath_lookup_rate() via
->> ath_tx_form_aggr(), and also to ath_buf_set_rate(). Then I make those
->> functions use this last buffer as reference for the rate lookup.
-> 
-> Sounds better to use the rate control from the last buffer in the tid
-> queue. But be careful if you don't memcpy it to the first frame of the
-> aggregate then the feedback calculated in ath_tx_rc_status() after tx
-> will be incorrect again, no?
-Right. I intend to let ath_buf_set_rate() set the rates array of the
-first subframe accordingly.
+From: Johannes Berg <johannes.berg@intel.com>
 
-- Felix
+Move the block-ack session works into common
+code, since it will be needed for RX agg too
+in the next patches.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/agg-tx.c      |   39 +++------------------------------------
+ net/mac80211/ht.c          |   32 ++++++++++++++++++++++++++++++++
+ net/mac80211/ieee80211_i.h |    5 ++++-
+ net/mac80211/sta_info.c    |    2 +-
+ 4 files changed, 40 insertions(+), 38 deletions(-)
+
+--- wireless-testing.orig/net/mac80211/agg-tx.c	2010-06-09 17:21:13.000000000 +0200
++++ wireless-testing/net/mac80211/agg-tx.c	2010-06-09 17:21:14.000000000 +0200
+@@ -133,9 +133,8 @@ static void kfree_tid_tx(struct rcu_head
+ 	kfree(tid_tx);
+ }
+ 
+-static int ___ieee80211_stop_tx_ba_session(
+-		struct sta_info *sta, u16 tid,
+-		enum ieee80211_back_parties initiator)
++int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
++				    enum ieee80211_back_parties initiator)
+ {
+ 	struct ieee80211_local *local = sta->local;
+ 	struct tid_ampdu_tx *tid_tx = sta->ampdu_mlme.tid_tx[tid];
+@@ -262,7 +261,7 @@ ieee80211_wake_queue_agg(struct ieee8021
+ 	__release(agg_queue);
+ }
+ 
+-static void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
++void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
+ {
+ 	struct tid_ampdu_tx *tid_tx = sta->ampdu_mlme.tid_tx[tid];
+ 	struct ieee80211_local *local = sta->local;
+@@ -318,38 +317,6 @@ static void ieee80211_tx_ba_session_hand
+ 				     0x40, 5000);
+ }
+ 
+-void ieee80211_tx_ba_session_work(struct work_struct *work)
+-{
+-	struct sta_info *sta =
+-		container_of(work, struct sta_info, ampdu_mlme.work);
+-	struct tid_ampdu_tx *tid_tx;
+-	int tid;
+-
+-	/*
+-	 * When this flag is set, new sessions should be
+-	 * blocked, and existing sessions will be torn
+-	 * down by the code that set the flag, so this
+-	 * need not run.
+-	 */
+-	if (test_sta_flags(sta, WLAN_STA_BLOCK_BA))
+-		return;
+-
+-	spin_lock_bh(&sta->lock);
+-	for (tid = 0; tid < STA_TID_NUM; tid++) {
+-		tid_tx = sta->ampdu_mlme.tid_tx[tid];
+-		if (!tid_tx)
+-			continue;
+-
+-		if (test_bit(HT_AGG_STATE_WANT_START, &tid_tx->state))
+-			ieee80211_tx_ba_session_handle_start(sta, tid);
+-		else if (test_and_clear_bit(HT_AGG_STATE_WANT_STOP,
+-					    &tid_tx->state))
+-			___ieee80211_stop_tx_ba_session(sta, tid,
+-							WLAN_BACK_INITIATOR);
+-	}
+-	spin_unlock_bh(&sta->lock);
+-}
+-
+ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid)
+ {
+ 	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+--- wireless-testing.orig/net/mac80211/ht.c	2010-06-09 17:21:13.000000000 +0200
++++ wireless-testing/net/mac80211/ht.c	2010-06-09 17:21:14.000000000 +0200
+@@ -114,6 +114,38 @@ void ieee80211_sta_tear_down_BA_sessions
+ 	}
+ }
+ 
++void ieee80211_ba_session_work(struct work_struct *work)
++{
++	struct sta_info *sta =
++		container_of(work, struct sta_info, ampdu_mlme.work);
++	struct tid_ampdu_tx *tid_tx;
++	int tid;
++
++	/*
++	 * When this flag is set, new sessions should be
++	 * blocked, and existing sessions will be torn
++	 * down by the code that set the flag, so this
++	 * need not run.
++	 */
++	if (test_sta_flags(sta, WLAN_STA_BLOCK_BA))
++		return;
++
++	spin_lock_bh(&sta->lock);
++	for (tid = 0; tid < STA_TID_NUM; tid++) {
++		tid_tx = sta->ampdu_mlme.tid_tx[tid];
++		if (!tid_tx)
++			continue;
++
++		if (test_bit(HT_AGG_STATE_WANT_START, &tid_tx->state))
++			ieee80211_tx_ba_session_handle_start(sta, tid);
++		else if (test_and_clear_bit(HT_AGG_STATE_WANT_STOP,
++					    &tid_tx->state))
++			___ieee80211_stop_tx_ba_session(sta, tid,
++							WLAN_BACK_INITIATOR);
++	}
++	spin_unlock_bh(&sta->lock);
++}
++
+ void ieee80211_send_delba(struct ieee80211_sub_if_data *sdata,
+ 			  const u8 *da, u16 tid,
+ 			  u16 initiator, u16 reason_code)
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2010-06-09 17:21:13.000000000 +0200
++++ wireless-testing/net/mac80211/ieee80211_i.h	2010-06-09 17:21:14.000000000 +0200
+@@ -1113,9 +1113,12 @@ void ieee80211_process_addba_request(str
+ 
+ int __ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
+ 				   enum ieee80211_back_parties initiator);
++int ___ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
++				    enum ieee80211_back_parties initiator);
+ void ieee80211_start_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u16 tid);
+ void ieee80211_stop_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u8 tid);
+-void ieee80211_tx_ba_session_work(struct work_struct *work);
++void ieee80211_ba_session_work(struct work_struct *work);
++void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid);
+ 
+ /* Spectrum management */
+ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
+--- wireless-testing.orig/net/mac80211/sta_info.c	2010-06-09 17:21:13.000000000 +0200
++++ wireless-testing/net/mac80211/sta_info.c	2010-06-09 17:21:14.000000000 +0200
+@@ -235,7 +235,7 @@ struct sta_info *sta_info_alloc(struct i
+ 	spin_lock_init(&sta->lock);
+ 	spin_lock_init(&sta->flaglock);
+ 	INIT_WORK(&sta->drv_unblock_wk, sta_unblock);
+-	INIT_WORK(&sta->ampdu_mlme.work, ieee80211_tx_ba_session_work);
++	INIT_WORK(&sta->ampdu_mlme.work, ieee80211_ba_session_work);
+ 
+ 	memcpy(sta->sta.addr, addr, ETH_ALEN);
+ 	sta->local = local;
+
+
