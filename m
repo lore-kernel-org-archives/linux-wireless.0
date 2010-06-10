@@ -1,55 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47024 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751947Ab0F3KRK (ORCPT
+Received: from relay01.mx.bawue.net ([193.7.176.67]:38439 "EHLO
+	relay01.mx.bawue.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759148Ab0FJOW5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jun 2010 06:17:10 -0400
-Subject: Re: [PATCH 1/2] mac80211: Dont allow to wake up netif tx queues
- while on off channel
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1277892907-2401-1-git-send-email-vasanth@atheros.com>
-References: <1277892907-2401-1-git-send-email-vasanth@atheros.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 30 Jun 2010 12:17:06 +0200
-Message-ID: <1277893026.7823.7.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 10 Jun 2010 10:22:57 -0400
+Date: Thu, 10 Jun 2010 16:22:54 +0200
+From: Nils Radtke <lkml@Think-Future.de>
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: kernel BUG in iwl-agn-rs.c:2076, WAS: iwlagn + some
+ accesspoint == hardlock
+Message-ID: <20100610142254.GD4452@localhost>
+Reply-To: Nils Radtke <lkml@Think-Future.de>
+References: <20100531201225.GA6327@localhost>
+ <1275501085.2091.28873.camel@rchatre-DESK>
+ <20100604165732.GB28003@localhost>
+ <1276019189.1835.11781.camel@rchatre-DESK>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1276019189.1835.11781.camel@rchatre-DESK>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-06-30 at 03:15 -0700, Vasanthakumar Thiagarajan wrote:
-> Drivers are not supposed to call ieee80211_wake_queue() while operating
-> on off channel during sw scanning, but there is no clear way for
-> the driver to know that it is operating on off channel during scanning.
-> There are cases (unavailablity/availability of tx buffers in ath9k, for
-> example) where driver needs to stop/restart tx queues during background
-> scanning state, this might result in waking up the corresponding netif
-> tx queue when the device is on off channel which is not desired. This
-> patches fixes this by checking SCAN_OFF_CHANNEL bit in scanning before
-> restarting the tx queue.
-> 
-> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> ---
->  net/mac80211/util.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
-> 
-> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-> index a54cf14..1938a67 100644
-> --- a/net/mac80211/util.c
-> +++ b/net/mac80211/util.c
-> @@ -277,7 +277,8 @@ static void __ieee80211_wake_queue(struct ieee80211_hw *hw, int queue,
->  
->  	__clear_bit(reason, &local->queue_stop_reasons[queue]);
->  
-> -	if (local->queue_stop_reasons[queue] != 0)
-> +	if ((local->queue_stop_reasons[queue] != 0) ||
-> +	    test_bit(SCAN_OFF_CHANNEL, &local->scanning))
->  		/* someone still has this queue stopped */
->  		return;
 
-That doesn't seem to make sense, since we treat driver and scan stop
-status separately via wake_queue_by_reason()
+  Hi Reinette,
 
-johannes
+  Thanks for your message.
 
+  Yes, you're right about the multiple bugs one thread thing.
+
+  Just today I got registered w/ the wireless ml because the
+  system just did not send me a registration message. 
+
+  For the bug reports to be created it will take me some time.
+  I'll firstly report the main issue, the 2 other ones afterwards.
+  Would it be ok cross referencing i.e. to the log and such 
+  between the reports?
+
+  Should I paste all the mail messages in separate report messages 
+  (belonging to one bug report, of course) or should I paste some
+  links to the thread?
+
+  Cheers,
+
+        Nils
+
+@John: Yes, you're right but the 2.6.33.4 tree which for me still
+  has the bug_on in.
+
+
+On Tue 2010-06-08 @ 10-46-29AM -0700, reinette chatre wrote: 
+# On Fri, 2010-06-04 at 09:57 -0700, Nils Radtke wrote:
+# > I haven't yet received a comment of yours regarding my many other questions in
+# > my previous message. I am willing to help investigate more, assist in other ways 
+# > than testing only (always only doing testing isn't a way to keep up fun..)
+# 
+# Your messages contain references to many issues and it is becoming
+# increasingly hard to keep track of them all in a single email thread.
+# Since the system crash is clearly the big issue I would like to focus on
+# that and get that resolved. This is why I proposed that you create bug
+# reports to help track your various issues better.
+# 
+# Reinette
+# 
+# 
+
+-- 
