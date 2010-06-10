@@ -1,53 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38198 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751971Ab0FTQaO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42758 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758628Ab0FJI0I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jun 2010 12:30:14 -0400
-Date: Sun, 20 Jun 2010 12:20:15 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH 0/2] ssb: updates matching specs, fix for hangs?
-Message-ID: <20100620162014.GB2386@tuxdriver.com>
-References: <1274730624-22922-1-git-send-email-zajec5@gmail.com>
- <AANLkTilXBLwE85KLEAM2aRqdeQoO4uK2D-B_dr5Jr2pR@mail.gmail.com>
- <4C1E0C5E.7070407@hauke-m.de>
- <AANLkTilYIRMalJXji9OCerjSdZJpj45JNa8XngKB9eyC@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <AANLkTilYIRMalJXji9OCerjSdZJpj45JNa8XngKB9eyC@mail.gmail.com>
+	Thu, 10 Jun 2010 04:26:08 -0400
+Message-Id: <20100610082230.200071519@sipsolutions.net>
+Date: Thu, 10 Jun 2010 10:21:36 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 08/23] mac80211: move blockack stop due to fragmentation
+References: <20100610082128.641664439@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 20, 2010 at 02:56:09PM +0200, Rafał Miłecki wrote:
-> W dniu 20 czerwca 2010 14:41 użytkownik Hauke Mehrtens
-> <hauke@hauke-m.de> napisał:
-> > Am 20.06.2010 14:34, schrieb Rafał Miłecki:
-> >> W dniu 24 maja 2010 21:50 użytkownik Rafał Miłecki <zajec5@gmail.com> napisał:
-> >>> John, I don't really know w-t policy, so please decide where we should apply
-> >>> these patches. I'll try to provide some description.
-> >>
-> >> John, I think you missed that two patches. It was already some time
-> >> ago, but AFAIR there wasn't any reason against commiting them, am I
-> >> wrong here?
-> >>
-> > Hi Rafał,
-> >
-> > They are aleardy in the wireless-next-2.6 tree and in linux-next:
-> >
-> > http://git.kernel.org/?p=linux/kernel/git/linville/wireless-next-2.6.git;a=commitdiff;h=fd515941cfaf949b55086a36943afe085d7268e6
-> >
-> > http://git.kernel.org/?p=linux/kernel/git/linville/wireless-next-2.6.git;a=commitdiff;h=c35deb4e70d52ed564c58569fe059dd7ca5f4eec
-> 
-> Whoops, OK, thanks for pointing. I just checked Linus's git and
-> wireless-testing.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Must not have checked the latter too closely, since the exact same
-commits are there as well... :-)
+There's a corner case where we receive a fragmented
+frame during a blockack session, in which case we
+will terminate that session. To simplify future work
+in this area that will culminate in allowing the
+driver callbacks for aggregation to sleep, move the
+processing of this case out of the RX path into the
+interface work.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+This will simplify future work because the new place
+for this code doesn't require that the function will
+always be atomic, which the RX path needs.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/iface.c |   32 +++++++++++++++++++++++++++++++-
+ net/mac80211/rx.c    |    5 ++---
+ 2 files changed, 33 insertions(+), 4 deletions(-)
+
+--- wireless-testing.orig/net/mac80211/iface.c	2010-06-09 17:21:09.000000000 +0200
++++ wireless-testing/net/mac80211/iface.c	2010-06-09 17:21:10.000000000 +0200
+@@ -707,6 +707,7 @@ static void ieee80211_iface_work(struct
+ 		container_of(work, struct ieee80211_sub_if_data, work);
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
++	struct sta_info *sta;
+ 
+ 	if (!ieee80211_sdata_running(sdata))
+ 		return;
+@@ -729,7 +730,6 @@ static void ieee80211_iface_work(struct
+ 		if (ieee80211_is_action(mgmt->frame_control) &&
+ 		    mgmt->u.action.category == WLAN_CATEGORY_BACK) {
+ 			int len = skb->len;
+-			struct sta_info *sta;
+ 
+ 			rcu_read_lock();
+ 			sta = sta_info_get(sdata, mgmt->sa);
+@@ -753,6 +753,36 @@ static void ieee80211_iface_work(struct
+ 				}
+ 			}
+ 			rcu_read_unlock();
++		} else if (ieee80211_is_data_qos(mgmt->frame_control)) {
++			struct ieee80211_hdr *hdr = (void *)mgmt;
++			/*
++			 * So the frame isn't mgmt, but frame_control
++			 * is at the right place anyway, of course, so
++			 * the if statement is correct.
++			 *
++			 * Warn if we have other data frame types here,
++			 * they must not get here.
++			 */
++			WARN_ON(hdr->frame_control &
++					cpu_to_le16(IEEE80211_STYPE_NULLFUNC));
++			WARN_ON(!(hdr->seq_ctrl &
++					cpu_to_le16(IEEE80211_SCTL_FRAG)));
++			/*
++			 * This was a fragment of a frame, received while
++			 * a block-ack session was active. That cannot be
++			 * right, so terminate the session.
++			 */
++			rcu_read_lock();
++			sta = sta_info_get(sdata, mgmt->sa);
++			if (sta) {
++				u16 tid = *ieee80211_get_qos_ctl(hdr) &
++						IEEE80211_QOS_CTL_TID_MASK;
++
++				__ieee80211_stop_rx_ba_session(
++					sta, tid, WLAN_BACK_RECIPIENT,
++					WLAN_REASON_QSTA_REQUIRE_SETUP);
++			}
++			rcu_read_unlock();
+ 		} else switch (sdata->vif.type) {
+ 		case NL80211_IFTYPE_STATION:
+ 			ieee80211_sta_rx_queued_mgmt(sdata, skb);
+--- wireless-testing.orig/net/mac80211/rx.c	2010-06-09 17:21:09.000000000 +0200
++++ wireless-testing/net/mac80211/rx.c	2010-06-09 17:21:10.000000000 +0200
+@@ -741,9 +741,8 @@ static void ieee80211_rx_reorder_ampdu(s
+ 	sc = le16_to_cpu(hdr->seq_ctrl);
+ 	if (sc & IEEE80211_SCTL_FRAG) {
+ 		spin_unlock(&sta->lock);
+-		__ieee80211_stop_rx_ba_session(sta, tid, WLAN_BACK_RECIPIENT,
+-					       WLAN_REASON_QSTA_REQUIRE_SETUP);
+-		dev_kfree_skb(skb);
++		skb_queue_tail(&rx->sdata->skb_queue, skb);
++		ieee80211_queue_work(&local->hw, &rx->sdata->work);
+ 		return;
+ 	}
+ 
+
+
