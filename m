@@ -1,66 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:22324 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750955Ab0F1Q1I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jun 2010 12:27:08 -0400
-Subject: Re: intel 5100/iwlagn bug in 2.6.35-rc2 during large file transfer
-From: reinette chatre <reinette.chatre@intel.com>
-To: Richard Farina <sidhayn@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4C278704.5040604@gmail.com>
-References: <4C198EF0.5080807@gmail.com>
-	 <1277225293.25793.2257.camel@rchatre-DESK>  <4C2383E2.8000909@gmail.com>
-	 <1277399636.25793.2389.camel@rchatre-DESK>  <4C23961D.7050500@gmail.com>
-	 <1277401731.25793.2391.camel@rchatre-DESK>  <4C24D926.7010806@gmail.com>
-	 <1277492229.13673.1297.camel@rchatre-DESK>  <4C278704.5040604@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 28 Jun 2010 09:27:05 -0700
-Message-ID: <1277742425.13673.1376.camel@rchatre-DESK>
-Mime-Version: 1.0
+Received: from dakia2.marvell.com ([65.219.4.35]:58157 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751994Ab0FJF6f convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jun 2010 01:58:35 -0400
+From: Nishant Sarmukadam <nishants@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 9 Jun 2010 22:58:32 -0700
+Subject: RE: Possible leak in the ampdu aggregation code?
+Message-ID: <EC64E4604C8024438259B683BB2514E1079C16C01D@SC-VEXCH1.marvell.com>
+In-Reply-To: <1276083568.14580.13.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2010-06-27 at 10:14 -0700, Richard Farina wrote:
-> > ---
-> >  drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    5 +++--
-> >  drivers/net/wireless/iwlwifi/iwl-fh.h      |    2 +-
-> >  2 files changed, 4 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> > index 0f292a2..2815ee7 100644
-> > --- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> > +++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> > @@ -613,7 +613,8 @@ void iwlagn_rx_allocate(struct iwl_priv *priv, gfp_t priority)
-> >               }
-> >               spin_unlock_irqrestore(&rxq->lock, flags);
-> >
-> > -             if (rxq->free_count > RX_LOW_WATERMARK)
-> > +             if ((priority == GFP_ATOMIC) ||
-> > +                 (rxq->free_count > RX_LOW_WATERMARK / 4))
-> >                       gfp_mask |= __GFP_NOWARN;
-> >
+> I think that commit should just be reverted.
 
-Here I set the allocation mask to not print _any_ warnings when
-allocation is atomic ...
+Ok, I will send a patch to revert commit 416fbdff2137e8d8cc8f23f517bee3a26b11526f.
 
+Nishant
 
-> [180257.090410] swapper: page allocation failure. order:1, mode:0x4020
-> [180257.090414] Pid: 0, comm: swapper Not tainted 2.6.34-pentoo-r2 #2
-> [180257.090416] Call Trace:
+-----Original Message-----
+From: Johannes Berg [mailto:johannes@sipsolutions.net] 
+Sent: Wednesday, June 09, 2010 5:09 PM
+To: Nishant Sarmukadam
+Cc: linux-wireless@vger.kernel.org; Luis R. Rodriguez
+Subject: Re: Possible leak in the ampdu aggregation code?
 
-... clearly this is an allocation warning ...
+On Wed, 2010-06-09 at 01:35 -0700, Nishant Sarmukadam wrote:
 
-> [180257.090418]  <IRQ>  [<ffffffff810984c0>]
-> __alloc_pages_nodemask+0x571/0x5b9
-> [180257.090437]  [<ffffffffa05162f3>] iwlagn_rx_allocate+0x98/0x2e0 [iwlagn]
-> [180257.090445]  [<ffffffffa051668c>] iwlagn_rx_replenish_now+0x16/0x23
-> [iwlagn]
+> I wanted to get some views on a possible issue while using mac80211
+> ampdu support. 
+> skb's from pending queue for a TID are spliced onto the local pending
+> queue when tearing down a block ack session.
 
-... but it is an atomic one, which after the patch should not be
-printing _any_ warning ...
+Right.
 
-I am very confused now.
+> If aggregation is stopped before the ampdu state becomes
+> HT_AGG_STATE_OPERATIONAL say on addba timer expiry or if the addba
+> request is declined, the state is changed to
+> HT_AGG_STATE_REQ_STOP_BA_MSK |(initiator <<
+> HT_AGG_STATE_INITIATOR_SHIFT) in ___ieee80211_stop_tx_ba_session. 
 
-Reinette
+Right.
 
+> After commit 416fbdff2137e8d8cc8f23f517bee3a26b11526f, the ampdu state
+> needs to have HT_ADDBA_REQUESTED_MSK set, else the skb's are not
+> spliced.
+
+Bleh. That commit is bogus. I didn't even know it existed. It looks like
+that commit was trying to fix the issue fixed by
+827d42c9ac91ddd728e4f4a31fefb906ef2ceff7 but ended up just hiding it
+enough that we didn't really find the cause of issue for a long time
+still... we shouldn't even have been stopping the aggregation session
+when it was never started!!
+
+I think that commit should just be reverted.
+
+johannes
 
