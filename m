@@ -1,43 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:34646 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754127Ab0FUS5e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jun 2010 14:57:34 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Nick Bowler <nbowler@elliptictech.com>
-Subject: Re: 2.6.35-rc3: Reported regressions from 2.6.34
-Date: Mon, 21 Jun 2010 20:56:08 +0200
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-References: <lc60d4toGTL.A.QzD._LpHMB@chimera> <20100621135857.GA21159@elliptictech.com>
-In-Reply-To: <20100621135857.GA21159@elliptictech.com>
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:24920 "EHLO
+	idcmail-mo1so.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759417Ab0FJSEO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jun 2010 14:04:14 -0400
+From: Thomas Fjellstrom <tfjellstrom@shaw.ca>
+To: linux-wireless@vger.kernel.org
+Subject: Re: Support for the Linksys WUSB300N?
+Date: Thu, 10 Jun 2010 12:04:11 -0600
+Cc: "John W. Linville" <linville@tuxdriver.com>
+References: <201006100653.48734.tfjellstrom@shaw.ca> <20100610141526.GC28553@tuxdriver.com>
+In-Reply-To: <20100610141526.GC28553@tuxdriver.com>
 MIME-Version: 1.0
 Content-Type: Text/Plain;
   charset="iso-8859-1"
-Message-Id: <201006212056.09000.rjw@sisk.pl>
+Message-Id: <201006101204.11538.tfjellstrom@shaw.ca>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, June 21, 2010, Nick Bowler wrote:
-> On 00:11 Mon 21 Jun     , Rafael J. Wysocki wrote:
-> > If you know of any other unresolved regressions from 2.6.34, please let us
-> > know either and we'll add them to the list.  Also, please let us know
-> > if any of the entries below are invalid.
+On June 10, 2010, John W. Linville wrote:
+> On Thu, Jun 10, 2010 at 06:53:48AM -0600, Thomas Fjellstrom wrote:
+> > I have recently acquired a WUSB300N, and was wondering what the status
+> > is on linux support for this device.
+> > 
+> > It's chipset (Marvell 88w8362) seems to be supported, but over PCI/PCIe
+> > only so far. Is anyone working on USB variants? I'm willing to help
+> > test anything anyone might be working on.
 > 
-> Didn't see this one in the list:
+> I'm not aware of anything in progress for this. :-(  In fact, even the
+> PCI variant seems to mostly be getting random maintenance (e.g. API
+> changes) from the community rather than any support from Marvell.
 > 
->   Why is kslowd accumulating so much CPU time?
->   http://thread.gmane.org/gmane.linux.kernel/996907
+> John
 
-Thanks, I'm going to add it to the list.
+Thats too bad. Well I did get the thing for free. So theres noone at all 
+working on this chipset specifically? Is there any information/documentation 
+available? It might be interesting to see if I can manage to hack something 
+together (total kernel programming n00b, but I do C relatively well).
 
-Rafael
+-- 
+Thomas Fjellstrom
+tfjellstrom@shaw.ca
