@@ -1,121 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:54553 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754375Ab0FFJMg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jun 2010 05:12:36 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/4] compat: update bitops.h and wireless.h
-Date: Sun,  6 Jun 2010 11:12:24 +0200
-Message-Id: <1275815547-30313-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.atheros.com ([12.36.123.2]:40820 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751556Ab0FJEMq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jun 2010 00:12:46 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 09 Jun 2010 21:12:46 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19472.26264.654635.201393@gargle.gargle.HOWL>
+Date: Thu, 10 Jun 2010 09:44:16 +0530
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [RFC v2 07/22] mac80211: always process blockack action from
+ workqueue
+In-Reply-To: <20100609150454.273811480@sipsolutions.net>
+References: <20100609150142.227469359@sipsolutions.net>
+	<20100609150454.273811480@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-copy files from linux-next next-20100604
+Johannes Berg wrote:
+>  		switch (mgmt->u.action.u.addba_req.action_code) {
+>  		case WLAN_ACTION_ADDBA_REQ:
+>  			if (len < (IEEE80211_MIN_ACTION_SIZE +
+>  				   sizeof(mgmt->u.action.u.addba_req)))
+> -				return RX_DROP_MONITOR;
+> -			ieee80211_process_addba_request(local, rx->sta, mgmt, len);
+> -			goto handled;
+> +				goto invalid;
+> +			break;
+>  		case WLAN_ACTION_ADDBA_RESP:
+>  			if (len < (IEEE80211_MIN_ACTION_SIZE +
+>  				   sizeof(mgmt->u.action.u.addba_resp)))
+> -				break;
+> -			ieee80211_process_addba_resp(local, rx->sta, mgmt, len);
+> -			goto handled;
+> +				goto invalid;
+> +			break;
+>  		case WLAN_ACTION_DELBA:
+>  			if (len < (IEEE80211_MIN_ACTION_SIZE +
+>  				   sizeof(mgmt->u.action.u.delba)))
+> -				break;
+> -			ieee80211_process_delba(sdata, rx->sta, mgmt, len);
+> -			goto handled;
+> +				goto invalid;
+> +			break;
+> +		default:
+> +			goto invalid;
+>  		}
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/bitops.h        |   33 +++++----------------------------
- include/linux/compat-2.6.35.h |    3 ---
- include/linux/wireless.h      |    4 +++-
- 3 files changed, 8 insertions(+), 32 deletions(-)
+rx->sta->rx_packets is no longer incremented for valid action frames,
+since we return immediately after queuing to sdata.
 
-diff --git a/include/linux/bitops.h b/include/linux/bitops.h
-index b62de8c..679369b 100644
---- a/include/linux/bitops.h
-+++ b/include/linux/bitops.h
-@@ -12,6 +12,11 @@
- #endif
- #endif
- 
-+extern unsigned int __sw_hweight8(unsigned int w);
-+extern unsigned int __sw_hweight16(unsigned int w);
-+extern unsigned int __sw_hweight32(unsigned int w);
-+extern unsigned long __sw_hweight64(__u64 w);
-+
- /*
-  * Include this here because some architectures need generic_ffs/fls in
-  * scope
-@@ -23,9 +28,6 @@
- 	     (bit) < (size); \
- 	     (bit) = find_next_bit((addr), (size), (bit) + 1))
- 
--/* Temporary */
--#define for_each_bit(bit, addr, size) for_each_set_bit(bit, addr, size)
--
- static __inline__ int get_bitmask_order(unsigned int count)
- {
- 	int order;
-@@ -49,31 +51,6 @@ static inline unsigned long hweight_long(unsigned long w)
- 	return sizeof(w) == 4 ? hweight32(w) : hweight64(w);
- }
- 
--/*
-- * Clearly slow versions of the hweightN() functions, their benefit is
-- * of course compile time evaluation of constant arguments.
-- */
--#define HWEIGHT8(w)					\
--      (	BUILD_BUG_ON_ZERO(!__builtin_constant_p(w)) +	\
--	(!!((w) & (1ULL << 0))) +			\
--	(!!((w) & (1ULL << 1))) +			\
--	(!!((w) & (1ULL << 2))) +			\
--	(!!((w) & (1ULL << 3))) +			\
--	(!!((w) & (1ULL << 4))) +			\
--	(!!((w) & (1ULL << 5))) +			\
--	(!!((w) & (1ULL << 6))) +			\
--	(!!((w) & (1ULL << 7)))	)
--
--#define HWEIGHT16(w) (HWEIGHT8(w)  + HWEIGHT8((w) >> 8))
--#define HWEIGHT32(w) (HWEIGHT16(w) + HWEIGHT16((w) >> 16))
--#define HWEIGHT64(w) (HWEIGHT32(w) + HWEIGHT32((w) >> 32))
--
--/*
-- * Type invariant version that simply casts things to the
-- * largest type.
-- */
--#define HWEIGHT(w)   HWEIGHT64((u64)(w))
--
- /**
-  * rol32 - rotate a 32-bit value left
-  * @word: value to rotate
-diff --git a/include/linux/compat-2.6.35.h b/include/linux/compat-2.6.35.h
-index 7091f7c..b38d6de 100644
---- a/include/linux/compat-2.6.35.h
-+++ b/include/linux/compat-2.6.35.h
-@@ -13,9 +13,6 @@
- #define SHRT_MAX       ((s16)(USHRT_MAX>>1))
- #define SHRT_MIN       ((s16)(-SHRT_MAX - 1))
- 
--#define IW_HANDLER(id, func)			\
--	[IW_IOCTL_IDX(id)] = func
--
- #define  SDIO_BUS_ECSI		0x20	/* Enable continuous SPI interrupt */
- #define  SDIO_BUS_SCSI		0x40	/* Support continuous SPI interrupt */
- 
-diff --git a/include/linux/wireless.h b/include/linux/wireless.h
-index 5b4c6c7..e6827ee 100644
---- a/include/linux/wireless.h
-+++ b/include/linux/wireless.h
-@@ -346,6 +346,8 @@
- #define SIOCIWFIRST	0x8B00
- #define SIOCIWLAST	SIOCIWLASTPRIV		/* 0x8BFF */
- #define IW_IOCTL_IDX(cmd)	((cmd) - SIOCIWFIRST)
-+#define IW_HANDLER(id, func)			\
-+	[IW_IOCTL_IDX(id)] = func
- 
- /* Odd : get (world access), even : set (root access) */
- #define IW_IS_SET(cmd)	(!((cmd) & 0x1))
-@@ -648,7 +650,7 @@
-  * 32 bit bitmasks. Note : 32 bits = 0x20 = 2^5. */
- #define IW_EVENT_CAPA_BASE(cmd)		((cmd >= SIOCIWFIRSTPRIV) ? \
- 					 (cmd - SIOCIWFIRSTPRIV + 0x60) : \
--					 (cmd - SIOCSIWCOMMIT))
-+					 (cmd - SIOCIWFIRST))
- #define IW_EVENT_CAPA_INDEX(cmd)	(IW_EVENT_CAPA_BASE(cmd) >> 5)
- #define IW_EVENT_CAPA_MASK(cmd)		(1 << (IW_EVENT_CAPA_BASE(cmd) & 0x1F))
- /* Event capability constants - event autogenerated by the kernel
--- 
-1.7.0.4
-
+Sujith
