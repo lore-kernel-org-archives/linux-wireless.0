@@ -1,63 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:49887 "EHLO purkki.valot.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752945Ab0FQG1T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jun 2010 02:27:19 -0400
-To: Sebastian Smolorz <Sebastian.Smolorz@gmx.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Marcel Holtmann <marcel@holtmann.org>
-Subject: Re: [RFC] Changes in mac80211 to make at76c50x-usb working again
-References: <201006151416.36686.Sebastian.Smolorz@gmx.de>
-	<1276609006.3648.233.camel@jlt3.sipsolutions.net>
-	<AANLkTinHK_MbKZd9HUDoiWuWs5AmDOQiza0poofzYeDn@mail.gmail.com>
-	<201006160946.54197.Sebastian.Smolorz@gmx.de>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Thu, 17 Jun 2010 09:27:16 +0300
-In-Reply-To: <201006160946.54197.Sebastian.Smolorz@gmx.de> (Sebastian Smolorz's message of "Wed\, 16 Jun 2010 09\:46\:54 +0200")
-Message-ID: <87typ2fa2j.fsf@purkki.valot.fi>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:53945 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751864Ab0FJXWw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jun 2010 19:22:52 -0400
+Received: by pvg16 with SMTP id 16so193573pvg.19
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Jun 2010 16:22:52 -0700 (PDT)
+Message-ID: <4C1173E7.6010201@lwfinger.net>
+Date: Thu, 10 Jun 2010 18:23:19 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Leann Ogasawara <leann.ogasawara@canonical.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	flamingice@sourmilk.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] p54usb: Remove duplicate Medion MD40900 device id
+References: <1276208913.1221.3646.camel@emiko>
+In-Reply-To: <1276208913.1221.3646.camel@emiko>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sebastian Smolorz <Sebastian.Smolorz@gmx.de> writes:
+On 06/10/2010 05:28 PM, Leann Ogasawara wrote:
+> The Medion MD40900 device id [0x0cde, 0x0006] is defined twice.  Remove
+> the duplicate.
+> 
+> Originally-by: Ben Collins <ben.collins@ubuntu.com>
+> Signed-off-by: Leann Ogasawara <leann.ogasawara@canonical.com>
+> ---
+>  drivers/net/wireless/p54/p54usb.c |    1 -
+>  1 files changed, 0 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+> index 7307325..d6d8713 100644
+> --- a/drivers/net/wireless/p54/p54usb.c
+> +++ b/drivers/net/wireless/p54/p54usb.c
+> @@ -69,7 +69,6 @@ static struct usb_device_id p54u_table[] __devinitdata = {
+>  	{USB_DEVICE(0x0915, 0x2002)},	/* Cohiba Proto board */
+>  	{USB_DEVICE(0x0baf, 0x0118)},   /* U.S. Robotics U5 802.11g Adapter*/
+>  	{USB_DEVICE(0x0bf8, 0x1009)},   /* FUJITSU E-5400 USB D1700*/
+> -	{USB_DEVICE(0x0cde, 0x0006)},   /* Medion MD40900 */
+>  	{USB_DEVICE(0x0cde, 0x0008)},	/* Sagem XG703A */
+>  	{USB_DEVICE(0x0cde, 0x0015)},	/* Zcomax XG-705A */
+>  	{USB_DEVICE(0x0d8e, 0x3762)},	/* DLink DWL-G120 Cohiba */
 
-> Kalle Valo wrote:
->
->> I debugged this a long time ago. The problem is that firmware's
->> CMD_JOIN only works if bssid is correct one. I remember trying
->> ff:ff:ff:ff:ff:ff, but that didn't work for some reason. The join
->> command needs to be sent before association, otherwise transmission
->> won't work at all. And if I use a random bssid the firmware will
->> filter the replies. But I tested this a long time ago, I might
->> remember something wrong.
->> 
->> I was thinking a hack which would get bssid from association frames
->> and then send CMD_JOIN, before the association frame.
->
-> Could you elaborate a little bit on this?
+Do you know for certain that this device is a Version 1 chip, and for
+that reason, you are removing it from the version 2 list?
 
-Basically my idea is this (all in tx path):
+If not, NACK.
 
-1. if tx frame is an association frame, get bssid from the frame
-2. if bssid == priv->bssid, goto step 6
-3. store tx frame, don't transmit it yet
-4. send CMD_JOIN with new bssid
-5. wait for command completion
-6. priv->bssid = bssid
-7. transmit tx frame
-8. done
+Larry
 
-Ugly as hell, but one option to get the driver working again.
-
-> How do we proceed to make the driver working again? Do you want to work on 
-> this issue?
-
-Sorry, currently I only have time to review patches and send comments.
-If you have the time, it would be great to if you could fix the driver
-finally.
-
--- 
-Kalle Valo
