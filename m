@@ -1,63 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35226 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41196 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752030Ab0FRTPK (ORCPT
+	with ESMTP id S1752819Ab0FJBwi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jun 2010 15:15:10 -0400
-Date: Fri, 18 Jun 2010 15:12:26 -0400
+	Wed, 9 Jun 2010 21:52:38 -0400
+Date: Wed, 9 Jun 2010 21:45:47 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: Zhu Yi <yi.zhu@intel.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCHv3] mac80211: Add interface for driver to temporarily
- disable dynamic ps
-Message-ID: <20100618191225.GH6282@tuxdriver.com>
-References: <1276753353-30310-1-git-send-email-juuso.oikarinen@nokia.com>
+Subject: Re: [PATCH] wireless: orphan ipw2x00 drivers
+Message-ID: <20100610014547.GA2318@tuxdriver.com>
+References: <1276134269-2273-1-git-send-email-yi.zhu@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1276753353-30310-1-git-send-email-juuso.oikarinen@nokia.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1276134269-2273-1-git-send-email-yi.zhu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 17, 2010 at 08:42:33AM +0300, Juuso Oikarinen wrote:
-> This mechanism introduced in this patch applies (at least) for hardware
-> designs using a single shared antenna for both WLAN and BT. In these designs,
-> the antenna must be toggled between WLAN and BT.
-> 
-> In those hardware, managing WLAN co-existence with Bluetooth requires WLAN
-> full power save whenever there is Bluetooth activity in order for WLAN to be
-> able to periodically relinquish the antenna to be used for BT. This is because
-> BT can only access the shared antenna when WLAN is idle or asleep.
-> 
-> Some hardware, for instance the wl1271, are able to indicate to the host
-> whenever there is BT traffic. In essence, the hardware will send an indication
-> to the host whenever there is, for example, SCO traffic or A2DP traffic, and
-> will send another indication when the traffic is over.
-> 
-> The hardware gets information of Bluetooth traffic via hardware co-existence
-> control lines - these lines are used to negotiate the shared antenna
-> ownership. The hardware will give the antenna to BT whenever WLAN is sleeping.
-> 
-> This patch adds the interface to mac80211 to facilitate temporarily disabling
-> of dynamic power save as per request of the WLAN driver. This interface will
-> immediately force WLAN to full powersave, hence allowing BT coexistence as
-> described above.
-> 
-> In these kind of shared antenna desings, when WLAN powersave is fully disabled,
-> Bluetooth will not work simultaneously with WLAN at all. This patch does not
-> address that problem. This interface will not change PSM state, so if PSM is
-> disabled it will remain so. Solving this problem requires knowledge about BT
-> state, and is best done in user-space.
-> 
-> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On Thu, Jun 10, 2010 at 09:44:29AM +0800, Zhu Yi wrote:
+> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
 > ---
-> v3: separate ieee80211_dyn_ps_enable/ieee80211_dyn_ps_enable functions
+> Please let us know if someone is interested in maintaining these drivers.
 
-  CC [M]  net/mac80211/mlme.o
-net/mac80211/mlme.c: In function â€˜ieee80211_recalc_psâ€™:
-net/mac80211/mlme.c:598: error: â€˜struct ieee80211_confâ€™ has no member named â€˜dynamic_ps_forced_timeoutâ€™
-make[1]: *** [net/mac80211/mlme.o] Error 1
+Any chance of getting some hardware/firmware documentation?
 
 John
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+John W. Linville                Someday the world will need a hero, and you
+linville@tuxdriver.com                  might be all we have.  Be ready.
