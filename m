@@ -1,265 +1,401 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:64264 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751327Ab0FWJNB (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42772 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754679Ab0FJI0Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jun 2010 05:13:01 -0400
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
+	Thu, 10 Jun 2010 04:26:16 -0400
+Message-Id: <20100610082231.325571559@sipsolutions.net>
+Date: Thu, 10 Jun 2010 10:21:42 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] cfg80211/mac80211: Update set_tx_power to use mBm instead of dBm units
-Date: Wed, 23 Jun 2010 12:12:37 +0300
-Message-Id: <1277284358-11014-1-git-send-email-juuso.oikarinen@nokia.com>
+Subject: [PATCH 14/23] mac80211: make TX aggregation start/stop request
+ async
+References: <20100610082128.641664439@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In preparation for a TX power setting interface in the nl80211, change the
-.set_tx_power function to use mBm units instead of dBm for greater accuracy and
-smaller power levels.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Also, already in advance move the tx_power_setting enumeration to nl80211.
+When the driver or rate control requests starting
+or stopping an aggregation session, that currently
+causes a direct callback into the driver, which
+could potentially cause locking problems. Also,
+the functions need to be callable from contexts
+that cannot sleep, and thus will interfere with
+making the ampdu_action callback sleeping.
 
-This change affects the .tx_set_power function prototype. As a result, the
-corresponding changes are needed to modules using it. These are mac80211,
-iwmc3200wifi and rndis_wlan.
+To address these issues, add a new work item for
+each station that will process any start or stop
+requests out of line.
 
-Cc: Samuel Ortiz <samuel.ortiz@intel.com>
-Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Acked-by: Samuel Ortiz <samuel.ortiz@intel.com>
-Acked-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/iwmc3200wifi/cfg80211.c |   12 ++++++++----
- drivers/net/wireless/rndis_wlan.c            |   20 +++++++++++++-------
- include/linux/nl80211.h                      |   13 +++++++++++++
- include/net/cfg80211.h                       |   15 +--------------
- net/mac80211/cfg.c                           |   22 +++++++++++-----------
- net/wireless/wext-compat.c                   |   10 +++++-----
- 6 files changed, 51 insertions(+), 41 deletions(-)
+ net/mac80211/agg-tx.c      |  177 +++++++++++++++++++++++++++++++--------------
+ net/mac80211/debugfs_sta.c |    5 -
+ net/mac80211/ht.c          |    2 
+ net/mac80211/ieee80211_i.h |    1 
+ net/mac80211/sta_info.c    |    1 
+ net/mac80211/sta_info.h    |    6 +
+ net/mac80211/tx.c          |    5 +
+ 7 files changed, 139 insertions(+), 58 deletions(-)
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/cfg80211.c b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-index 902e95f..6061967 100644
---- a/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-+++ b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
-@@ -670,20 +670,24 @@ static int iwm_cfg80211_disconnect(struct wiphy *wiphy, struct net_device *dev,
+--- wireless-testing.orig/net/mac80211/agg-tx.c	2010-06-09 17:21:13.000000000 +0200
++++ wireless-testing/net/mac80211/agg-tx.c	2010-06-09 17:21:13.000000000 +0200
+@@ -146,6 +146,13 @@ static int ___ieee80211_stop_tx_ba_sessi
+ 	if (WARN_ON(!tid_tx))
+ 		return -ENOENT;
+ 
++	if (test_bit(HT_AGG_STATE_WANT_START, &tid_tx->state)) {
++		/* not even started yet! */
++		rcu_assign_pointer(sta->ampdu_mlme.tid_tx[tid], NULL);
++		call_rcu(&tid_tx->rcu_head, kfree_tid_tx);
++		return 0;
++	}
++
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+ 	printk(KERN_DEBUG "Tx BA session stop requested for %pM tid %u\n",
+ 	       sta->sta.addr, tid);
+@@ -255,6 +262,94 @@ ieee80211_wake_queue_agg(struct ieee8021
+ 	__release(agg_queue);
  }
  
- static int iwm_cfg80211_set_txpower(struct wiphy *wiphy,
--				    enum tx_power_setting type, int dbm)
-+				    enum nl80211_tx_power_setting type, int mbm)
++static void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
++{
++	struct tid_ampdu_tx *tid_tx = sta->ampdu_mlme.tid_tx[tid];
++	struct ieee80211_local *local = sta->local;
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	u16 start_seq_num;
++	int ret;
++
++	/*
++	 * While we're asking the driver about the aggregation,
++	 * stop the AC queue so that we don't have to worry
++	 * about frames that came in while we were doing that,
++	 * which would require us to put them to the AC pending
++	 * afterwards which just makes the code more complex.
++	 */
++	ieee80211_stop_queue_agg(local, tid);
++
++	clear_bit(HT_AGG_STATE_WANT_START, &tid_tx->state);
++
++	/*
++	 * This might be off by one due to a race that we can't
++	 * really prevent here without synchronize_net() which
++	 * can't be called now.
++	 */
++	start_seq_num = sta->tid_seq[tid] >> 4;
++
++	ret = drv_ampdu_action(local, sdata, IEEE80211_AMPDU_TX_START,
++			       &sta->sta, tid, &start_seq_num);
++	if (ret) {
++#ifdef CONFIG_MAC80211_HT_DEBUG
++		printk(KERN_DEBUG "BA request denied - HW unavailable for"
++					" tid %d\n", tid);
++#endif
++		rcu_assign_pointer(sta->ampdu_mlme.tid_tx[tid], NULL);
++		ieee80211_wake_queue_agg(local, tid);
++		call_rcu(&tid_tx->rcu_head, kfree_tid_tx);
++		return;
++	}
++
++	/* we can take packets again now */
++	ieee80211_wake_queue_agg(local, tid);
++
++	/* activate the timer for the recipient's addBA response */
++	mod_timer(&tid_tx->addba_resp_timer, jiffies + ADDBA_RESP_INTERVAL);
++#ifdef CONFIG_MAC80211_HT_DEBUG
++	printk(KERN_DEBUG "activated addBA response timer on tid %d\n", tid);
++#endif
++
++	sta->ampdu_mlme.addba_req_num[tid]++;
++
++	/* send AddBA request */
++	ieee80211_send_addba_request(sdata, sta->sta.addr, tid,
++				     tid_tx->dialog_token, start_seq_num,
++				     0x40, 5000);
++}
++
++void ieee80211_tx_ba_session_work(struct work_struct *work)
++{
++	struct sta_info *sta =
++		container_of(work, struct sta_info, ampdu_mlme.work);
++	struct tid_ampdu_tx *tid_tx;
++	int tid;
++
++	/*
++	 * When this flag is set, new sessions should be
++	 * blocked, and existing sessions will be torn
++	 * down by the code that set the flag, so this
++	 * need not run.
++	 */
++	if (test_sta_flags(sta, WLAN_STA_BLOCK_BA))
++		return;
++
++	spin_lock_bh(&sta->lock);
++	for (tid = 0; tid < STA_TID_NUM; tid++) {
++		tid_tx = sta->ampdu_mlme.tid_tx[tid];
++		if (!tid_tx)
++			continue;
++
++		if (test_bit(HT_AGG_STATE_WANT_START, &tid_tx->state))
++			ieee80211_tx_ba_session_handle_start(sta, tid);
++		else if (test_and_clear_bit(HT_AGG_STATE_WANT_STOP,
++					    &tid_tx->state))
++			___ieee80211_stop_tx_ba_session(sta, tid,
++							WLAN_BACK_INITIATOR);
++	}
++	spin_unlock_bh(&sta->lock);
++}
++
+ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid)
  {
- 	struct iwm_priv *iwm = wiphy_to_iwm(wiphy);
- 	int ret;
+ 	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+@@ -262,7 +357,6 @@ int ieee80211_start_tx_ba_session(struct
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct tid_ampdu_tx *tid_tx;
+ 	int ret = 0;
+-	u16 start_seq_num;
  
- 	switch (type) {
--	case TX_POWER_AUTOMATIC:
-+	case NL80211_TX_POWER_AUTOMATIC:
- 		return 0;
--	case TX_POWER_FIXED:
-+	case NL80211_TX_POWER_FIXED:
-+		if (mbm < 0 || (mbm % 100))
-+			return -EOPNOTSUPP;
-+
- 		if (!test_bit(IWM_STATUS_READY, &iwm->status))
- 			return 0;
+ 	trace_api_start_tx_ba_session(pubsta, tid);
  
- 		ret = iwm_umac_set_config_fix(iwm, UMAC_PARAM_TBL_CFG_FIX,
--					      CFG_TX_PWR_LIMIT_USR, dbm * 2);
-+					      CFG_TX_PWR_LIMIT_USR,
-+					      MBM_TO_DBM(mbm) * 2);
- 		if (ret < 0)
- 			return ret;
+@@ -316,15 +410,6 @@ int ieee80211_start_tx_ba_session(struct
+ 		goto err_unlock_sta;
+ 	}
  
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index 4102cca..5e26edb 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -520,8 +520,9 @@ static int rndis_scan(struct wiphy *wiphy, struct net_device *dev,
- 
- static int rndis_set_wiphy_params(struct wiphy *wiphy, u32 changed);
- 
--static int rndis_set_tx_power(struct wiphy *wiphy, enum tx_power_setting type,
--				int dbm);
-+static int rndis_set_tx_power(struct wiphy *wiphy,
-+			      enum nl80211_tx_power_setting type,
-+			      int mbm);
- static int rndis_get_tx_power(struct wiphy *wiphy, int *dbm);
- 
- static int rndis_connect(struct wiphy *wiphy, struct net_device *dev,
-@@ -1856,20 +1857,25 @@ static int rndis_set_wiphy_params(struct wiphy *wiphy, u32 changed)
- 	return 0;
- }
- 
--static int rndis_set_tx_power(struct wiphy *wiphy, enum tx_power_setting type,
--				int dbm)
-+static int rndis_set_tx_power(struct wiphy *wiphy,
-+			      enum nl80211_tx_power_setting type,
-+			      int mbm)
- {
- 	struct rndis_wlan_private *priv = wiphy_priv(wiphy);
- 	struct usbnet *usbdev = priv->usbdev;
- 
--	netdev_dbg(usbdev->net, "%s(): type:0x%x dbm:%i\n",
--		   __func__, type, dbm);
-+	netdev_dbg(usbdev->net, "%s(): type:0x%x mbm:%i\n",
-+		   __func__, type, mbm);
-+
-+	if (mbm < 0 || (mbm % 100))
-+		return -ENOTSUPP;
- 
- 	/* Device doesn't support changing txpower after initialization, only
- 	 * turn off/on radio. Support 'auto' mode and setting same dBm that is
- 	 * currently used.
- 	 */
--	if (type == TX_POWER_AUTOMATIC || dbm == get_bcm4320_power_dbm(priv)) {
-+	if (type == NL80211_TX_POWER_AUTOMATIC ||
-+	    MBM_TO_DBM(mbm) == get_bcm4320_power_dbm(priv)) {
- 		if (!priv->radio_on)
- 			disassociate(usbdev, true); /* turn on radio */
- 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 64fb32b..07aa046 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1659,4 +1659,17 @@ enum nl80211_cqm_rssi_threshold_event {
- 	NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
- };
- 
-+
-+/**
-+ * enum nl80211_tx_power_setting - TX power adjustment
-+ * @NL80211_TX_POWER_AUTOMATIC: automatically determine transmit power
-+ * @NL80211_TX_POWER_LIMITED: limit TX power by the mBm parameter
-+ * @NL80211_TX_POWER_FIXED: fix TX power to the mBm parameter
-+ */
-+enum nl80211_tx_power_setting {
-+	NL80211_TX_POWER_AUTOMATIC,
-+	NL80211_TX_POWER_LIMITED,
-+	NL80211_TX_POWER_FIXED,
-+};
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 64374f4..9b8b3f4 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -875,19 +875,6 @@ enum wiphy_params_flags {
- 	WIPHY_PARAM_COVERAGE_CLASS	= 1 << 4,
- };
- 
--/**
-- * enum tx_power_setting - TX power adjustment
-- *
-- * @TX_POWER_AUTOMATIC: the dbm parameter is ignored
-- * @TX_POWER_LIMITED: limit TX power by the dbm parameter
-- * @TX_POWER_FIXED: fix TX power to the dbm parameter
-- */
--enum tx_power_setting {
--	TX_POWER_AUTOMATIC,
--	TX_POWER_LIMITED,
--	TX_POWER_FIXED,
--};
+-	/*
+-	 * While we're asking the driver about the aggregation,
+-	 * stop the AC queue so that we don't have to worry
+-	 * about frames that came in while we were doing that,
+-	 * which would require us to put them to the AC pending
+-	 * afterwards which just makes the code more complex.
+-	 */
+-	ieee80211_stop_queue_agg(local, tid);
 -
- /*
-  * cfg80211_bitrate_mask - masks for bitrate control
+ 	/* prepare A-MPDU MLME for Tx aggregation */
+ 	tid_tx = kzalloc(sizeof(struct tid_ampdu_tx), GFP_ATOMIC);
+ 	if (!tid_tx) {
+@@ -334,59 +419,27 @@ int ieee80211_start_tx_ba_session(struct
+ 					tid);
+ #endif
+ 		ret = -ENOMEM;
+-		goto err_wake_queue;
++		goto err_unlock_sta;
+ 	}
+ 
+ 	skb_queue_head_init(&tid_tx->pending);
++	__set_bit(HT_AGG_STATE_WANT_START, &tid_tx->state);
+ 
+ 	/* Tx timer */
+ 	tid_tx->addba_resp_timer.function = sta_addba_resp_timer_expired;
+ 	tid_tx->addba_resp_timer.data = (unsigned long)&sta->timer_to_tid[tid];
+ 	init_timer(&tid_tx->addba_resp_timer);
+ 
+-	start_seq_num = sta->tid_seq[tid] >> 4;
+-
+-	ret = drv_ampdu_action(local, sdata, IEEE80211_AMPDU_TX_START,
+-			       pubsta, tid, &start_seq_num);
+-	if (ret) {
+-#ifdef CONFIG_MAC80211_HT_DEBUG
+-		printk(KERN_DEBUG "BA request denied - HW unavailable for"
+-					" tid %d\n", tid);
+-#endif /* CONFIG_MAC80211_HT_DEBUG */
+-		goto err_free;
+-	}
+-
+-	rcu_assign_pointer(sta->ampdu_mlme.tid_tx[tid], tid_tx);
+-
+-	/* Driver vetoed or OKed, but we can take packets again now */
+-	ieee80211_wake_queue_agg(local, tid);
+-
+-	/* activate the timer for the recipient's addBA response */
+-	tid_tx->addba_resp_timer.expires = jiffies + ADDBA_RESP_INTERVAL;
+-	add_timer(&tid_tx->addba_resp_timer);
+-#ifdef CONFIG_MAC80211_HT_DEBUG
+-	printk(KERN_DEBUG "activated addBA response timer on tid %d\n", tid);
+-#endif
+-
+-	/* prepare tid data */
++	/* assign a dialog token */
+ 	sta->ampdu_mlme.dialog_token_allocator++;
+ 	tid_tx->dialog_token = sta->ampdu_mlme.dialog_token_allocator;
+-	tid_tx->ssn = start_seq_num;
+ 
+-	sta->ampdu_mlme.addba_req_num[tid]++;
++	/* finally, assign it to the array */
++	rcu_assign_pointer(sta->ampdu_mlme.tid_tx[tid], tid_tx);
+ 
+-	spin_unlock_bh(&sta->lock);
++	ieee80211_queue_work(&local->hw, &sta->ampdu_mlme.work);
+ 
+-	/* send AddBA request */
+-	ieee80211_send_addba_request(sdata, pubsta->addr, tid,
+-			 tid_tx->dialog_token, tid_tx->ssn,
+-			 0x40, 5000);
+-	return 0;
+-
+- err_free:
+-	kfree(tid_tx);
+- err_wake_queue:
+-	ieee80211_wake_queue_agg(local, tid);
++	/* this flow continues off the work */
+  err_unlock_sta:
+ 	spin_unlock_bh(&sta->lock);
+ 	return ret;
+@@ -534,8 +587,7 @@ int __ieee80211_stop_tx_ba_session(struc
+ 	spin_lock_bh(&sta->lock);
+ 	tid_tx = sta->ampdu_mlme.tid_tx[tid];
+ 
+-	/* check if the TID is in aggregation */
+-	if (!tid_tx || !test_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state)) {
++	if (!tid_tx) {
+ 		ret = -ENOENT;
+ 		goto unlock;
+ 	}
+@@ -552,6 +604,8 @@ int ieee80211_stop_tx_ba_session(struct
+ 	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 	struct ieee80211_local *local = sdata->local;
++	struct tid_ampdu_tx *tid_tx;
++	int ret = 0;
+ 
+ 	trace_api_stop_tx_ba_session(pubsta, tid);
+ 
+@@ -561,7 +615,26 @@ int ieee80211_stop_tx_ba_session(struct
+ 	if (tid >= STA_TID_NUM)
+ 		return -EINVAL;
+ 
+-	return __ieee80211_stop_tx_ba_session(sta, tid, WLAN_BACK_INITIATOR);
++	spin_lock_bh(&sta->lock);
++	tid_tx = sta->ampdu_mlme.tid_tx[tid];
++
++	if (!tid_tx) {
++		ret = -ENOENT;
++		goto unlock;
++	}
++
++	if (test_bit(HT_AGG_STATE_STOPPING, &tid_tx->state)) {
++		/* already in progress stopping it */
++		ret = 0;
++		goto unlock;
++	}
++
++	set_bit(HT_AGG_STATE_WANT_STOP, &tid_tx->state);
++	ieee80211_queue_work(&local->hw, &sta->ampdu_mlme.work);
++
++ unlock:
++	spin_unlock_bh(&sta->lock);
++	return ret;
+ }
+ EXPORT_SYMBOL(ieee80211_stop_tx_ba_session);
+ 
+--- wireless-testing.orig/net/mac80211/sta_info.h	2010-06-09 17:21:11.000000000 +0200
++++ wireless-testing/net/mac80211/sta_info.h	2010-06-09 17:21:13.000000000 +0200
+@@ -67,6 +67,8 @@ enum ieee80211_sta_info_flags {
+ #define HT_AGG_STATE_RESPONSE_RECEIVED	1
+ #define HT_AGG_STATE_OPERATIONAL	2
+ #define HT_AGG_STATE_STOPPING		3
++#define HT_AGG_STATE_WANT_START		4
++#define HT_AGG_STATE_WANT_STOP		5
+ 
+ /**
+  * struct tid_ampdu_tx - TID aggregation information (Tx).
+@@ -74,7 +76,6 @@ enum ieee80211_sta_info_flags {
+  * @rcu_head: rcu head for freeing structure
+  * @addba_resp_timer: timer for peer's response to addba request
+  * @pending: pending frames queue -- use sta's spinlock to protect
+- * @ssn: Starting Sequence Number expected to be aggregated.
+  * @dialog_token: dialog token for aggregation session
+  * @state: session state (see above)
+  * @stop_initiator: initiator of a session stop
+@@ -92,7 +93,6 @@ struct tid_ampdu_tx {
+ 	struct timer_list addba_resp_timer;
+ 	struct sk_buff_head pending;
+ 	unsigned long state;
+-	u16 ssn;
+ 	u8 dialog_token;
+ 	u8 stop_initiator;
+ };
+@@ -139,11 +139,13 @@ struct tid_ampdu_rx {
+  * @tid_tx: aggregation info for Tx per TID
+  * @addba_req_num: number of times addBA request has been sent.
+  * @dialog_token_allocator: dialog token enumerator for each new session;
++ * @work: work struct for starting/stopping aggregation
   */
-@@ -1149,7 +1136,7 @@ struct cfg80211_ops {
- 	int	(*set_wiphy_params)(struct wiphy *wiphy, u32 changed);
+ struct sta_ampdu_mlme {
+ 	/* rx */
+ 	struct tid_ampdu_rx *tid_rx[STA_TID_NUM];
+ 	/* tx */
++	struct work_struct work;
+ 	struct tid_ampdu_tx *tid_tx[STA_TID_NUM];
+ 	u8 addba_req_num[STA_TID_NUM];
+ 	u8 dialog_token_allocator;
+--- wireless-testing.orig/net/mac80211/debugfs_sta.c	2010-06-09 17:21:11.000000000 +0200
++++ wireless-testing/net/mac80211/debugfs_sta.c	2010-06-09 17:21:13.000000000 +0200
+@@ -121,7 +121,7 @@ static ssize_t sta_agg_status_read(struc
+ 	p += scnprintf(p, sizeof(buf) + buf - p, "next dialog_token: %#02x\n",
+ 			sta->ampdu_mlme.dialog_token_allocator + 1);
+ 	p += scnprintf(p, sizeof(buf) + buf - p,
+-		       "TID\t\tRX active\tDTKN\tSSN\t\tTX\tDTKN\tSSN\tpending\n");
++		       "TID\t\tRX active\tDTKN\tSSN\t\tTX\tDTKN\tpending\n");
+ 	for (i = 0; i < STA_TID_NUM; i++) {
+ 		p += scnprintf(p, sizeof(buf) + buf - p, "%02d", i);
+ 		p += scnprintf(p, sizeof(buf) + buf - p, "\t\t%x",
+@@ -138,9 +138,6 @@ static ssize_t sta_agg_status_read(struc
+ 		p += scnprintf(p, sizeof(buf) + buf - p, "\t%#.2x",
+ 				sta->ampdu_mlme.tid_tx[i] ?
+ 				sta->ampdu_mlme.tid_tx[i]->dialog_token : 0);
+-		p += scnprintf(p, sizeof(buf) + buf - p, "\t%#.3x",
+-				sta->ampdu_mlme.tid_tx[i] ?
+-				sta->ampdu_mlme.tid_tx[i]->ssn : 0);
+ 		p += scnprintf(p, sizeof(buf) + buf - p, "\t%03d",
+ 				sta->ampdu_mlme.tid_tx[i] ?
+ 				skb_queue_len(&sta->ampdu_mlme.tid_tx[i]->pending) : 0);
+--- wireless-testing.orig/net/mac80211/tx.c	2010-06-09 17:21:11.000000000 +0200
++++ wireless-testing/net/mac80211/tx.c	2010-06-09 17:21:13.000000000 +0200
+@@ -1102,6 +1102,11 @@ static bool ieee80211_tx_prep_agg(struct
  
- 	int	(*set_tx_power)(struct wiphy *wiphy,
--				enum tx_power_setting type, int dbm);
-+				enum nl80211_tx_power_setting type, int mbm);
- 	int	(*get_tx_power)(struct wiphy *wiphy, int *dbm);
- 
- 	int	(*set_wds_peer)(struct wiphy *wiphy, struct net_device *dev,
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 003b6ad..f4efbfa 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1329,28 +1329,28 @@ static int ieee80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
- }
- 
- static int ieee80211_set_tx_power(struct wiphy *wiphy,
--				  enum tx_power_setting type, int dbm)
-+				  enum nl80211_tx_power_setting type, int mbm)
- {
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
- 	struct ieee80211_channel *chan = local->hw.conf.channel;
- 	u32 changes = 0;
- 
- 	switch (type) {
--	case TX_POWER_AUTOMATIC:
-+	case NL80211_TX_POWER_AUTOMATIC:
- 		local->user_power_level = -1;
- 		break;
--	case TX_POWER_LIMITED:
--		if (dbm < 0)
--			return -EINVAL;
--		local->user_power_level = dbm;
-+	case NL80211_TX_POWER_LIMITED:
-+		if (mbm < 0 || (mbm % 100))
-+			return -EOPNOTSUPP;
-+		local->user_power_level = MBM_TO_DBM(mbm);
- 		break;
--	case TX_POWER_FIXED:
--		if (dbm < 0)
--			return -EINVAL;
-+	case NL80211_TX_POWER_FIXED:
-+		if (mbm < 0 || (mbm % 100))
-+			return -EOPNOTSUPP;
- 		/* TODO: move to cfg80211 when it knows the channel */
--		if (dbm > chan->max_power)
-+		if (MBM_TO_DBM(mbm) > chan->max_power)
- 			return -EINVAL;
--		local->user_power_level = dbm;
-+		local->user_power_level = MBM_TO_DBM(mbm);
- 		break;
- 	}
- 
-diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-index 9634299..1ff1e9f 100644
---- a/net/wireless/wext-compat.c
-+++ b/net/wireless/wext-compat.c
-@@ -829,7 +829,7 @@ int cfg80211_wext_siwtxpower(struct net_device *dev,
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
--	enum tx_power_setting type;
-+	enum nl80211_tx_power_setting type;
- 	int dbm = 0;
- 
- 	if ((data->txpower.flags & IW_TXPOW_TYPE) != IW_TXPOW_DBM)
-@@ -852,7 +852,7 @@ int cfg80211_wext_siwtxpower(struct net_device *dev,
- 			if (data->txpower.value < 0)
- 				return -EINVAL;
- 			dbm = data->txpower.value;
--			type = TX_POWER_FIXED;
-+			type = NL80211_TX_POWER_FIXED;
- 			/* TODO: do regulatory check! */
- 		} else {
- 			/*
-@@ -860,10 +860,10 @@ int cfg80211_wext_siwtxpower(struct net_device *dev,
- 			 * passed in from userland.
- 			 */
- 			if (data->txpower.value < 0) {
--				type = TX_POWER_AUTOMATIC;
-+				type = NL80211_TX_POWER_AUTOMATIC;
- 			} else {
- 				dbm = data->txpower.value;
--				type = TX_POWER_LIMITED;
-+				type = NL80211_TX_POWER_LIMITED;
- 			}
- 		}
+ 	if (test_bit(HT_AGG_STATE_OPERATIONAL, &tid_tx->state)) {
+ 		info->flags |= IEEE80211_TX_CTL_AMPDU;
++	} else if (test_bit(HT_AGG_STATE_WANT_START, &tid_tx->state)) {
++		/*
++		 * nothing -- this aggregation session is being started
++		 * but that might still fail with the driver
++		 */
  	} else {
-@@ -872,7 +872,7 @@ int cfg80211_wext_siwtxpower(struct net_device *dev,
- 		return 0;
- 	}
+ 		spin_lock(&tx->sta->lock);
+ 		/*
+--- wireless-testing.orig/net/mac80211/ieee80211_i.h	2010-06-09 17:21:13.000000000 +0200
++++ wireless-testing/net/mac80211/ieee80211_i.h	2010-06-09 17:21:13.000000000 +0200
+@@ -1115,6 +1115,7 @@ int __ieee80211_stop_tx_ba_session(struc
+ 				   enum ieee80211_back_parties initiator);
+ void ieee80211_start_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u16 tid);
+ void ieee80211_stop_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u8 tid);
++void ieee80211_tx_ba_session_work(struct work_struct *work);
  
--	return rdev->ops->set_tx_power(wdev->wiphy, type, dbm);
-+	return rdev->ops->set_tx_power(wdev->wiphy, type, DBM_TO_MBM(dbm));
- }
- EXPORT_SYMBOL_GPL(cfg80211_wext_siwtxpower);
+ /* Spectrum management */
+ void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
+--- wireless-testing.orig/net/mac80211/sta_info.c	2010-06-09 17:21:11.000000000 +0200
++++ wireless-testing/net/mac80211/sta_info.c	2010-06-09 17:21:13.000000000 +0200
+@@ -235,6 +235,7 @@ struct sta_info *sta_info_alloc(struct i
+ 	spin_lock_init(&sta->lock);
+ 	spin_lock_init(&sta->flaglock);
+ 	INIT_WORK(&sta->drv_unblock_wk, sta_unblock);
++	INIT_WORK(&sta->ampdu_mlme.work, ieee80211_tx_ba_session_work);
  
--- 
-1.6.3.3
+ 	memcpy(sta->sta.addr, addr, ETH_ALEN);
+ 	sta->local = local;
+--- wireless-testing.orig/net/mac80211/ht.c	2010-06-09 17:21:11.000000000 +0200
++++ wireless-testing/net/mac80211/ht.c	2010-06-09 17:21:13.000000000 +0200
+@@ -105,6 +105,8 @@ void ieee80211_sta_tear_down_BA_sessions
+ {
+ 	int i;
+ 
++	cancel_work_sync(&sta->ampdu_mlme.work);
++
+ 	for (i = 0; i <  STA_TID_NUM; i++) {
+ 		__ieee80211_stop_tx_ba_session(sta, i, WLAN_BACK_INITIATOR);
+ 		__ieee80211_stop_rx_ba_session(sta, i, WLAN_BACK_RECIPIENT,
+
 
