@@ -1,52 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:22880 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752338Ab0FFG4m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jun 2010 02:56:42 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 04/23] iwlwifi: set MAC address in RXON from interface
-Date: Sat,  5 Jun 2010 23:56:19 -0700
-Message-Id: <1275807398-18184-5-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1275807398-18184-1-git-send-email-reinette.chatre@intel.com>
-References: <1275807398-18184-1-git-send-email-reinette.chatre@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:42751 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755624Ab0FJI0E (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jun 2010 04:26:04 -0400
+Message-Id: <20100610082229.632383239@sipsolutions.net>
+Date: Thu, 10 Jun 2010 10:21:33 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 05/23] mac80211: common work skb freeing
+References: <20100610082128.641664439@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-When we do not have an interface, priv->mac_addr
-is all zeroes, so the memcpy() is not useful as
-the RXON buffer has been cleared previously.
-Therefore, use the interface's address that we
-are setting up the RXON for, if available.
+All the management processing functions free the
+skb after they are done, so this can be done in
+the new common code instead.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-core.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+ net/mac80211/ibss.c  |    2 --
+ net/mac80211/iface.c |    3 ++-
+ net/mac80211/mesh.c  |    2 --
+ net/mac80211/mlme.c  |    5 +----
+ 4 files changed, 3 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 4315212..245cb90 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -979,7 +979,10 @@ void iwl_connection_init_rx_config(struct iwl_priv *priv,
- 	/* clear both MIX and PURE40 mode flag */
- 	priv->staging_rxon.flags &= ~(RXON_FLG_CHANNEL_MODE_MIXED |
- 					RXON_FLG_CHANNEL_MODE_PURE_40);
--	memcpy(priv->staging_rxon.node_addr, priv->mac_addr, ETH_ALEN);
+--- wireless-testing.orig/net/mac80211/ibss.c	2010-06-09 17:21:07.000000000 +0200
++++ wireless-testing/net/mac80211/ibss.c	2010-06-09 17:21:08.000000000 +0200
+@@ -754,8 +754,6 @@ void ieee80211_ibss_rx_queued_mgmt(struc
+ 		ieee80211_rx_mgmt_auth_ibss(sdata, mgmt, skb->len);
+ 		break;
+ 	}
+-
+-	kfree_skb(skb);
+ }
+ 
+ void ieee80211_ibss_work(struct ieee80211_sub_if_data *sdata)
+--- wireless-testing.orig/net/mac80211/mesh.c	2010-06-09 17:21:07.000000000 +0200
++++ wireless-testing/net/mac80211/mesh.c	2010-06-09 17:21:08.000000000 +0200
+@@ -620,8 +620,6 @@ void ieee80211_mesh_rx_queued_mgmt(struc
+ 		ieee80211_mesh_rx_mgmt_action(sdata, mgmt, skb->len, rx_status);
+ 		break;
+ 	}
+-
+-	kfree_skb(skb);
+ }
+ 
+ void ieee80211_mesh_work(struct ieee80211_sub_if_data *sdata)
+--- wireless-testing.orig/net/mac80211/mlme.c	2010-06-09 17:21:07.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2010-06-09 17:21:08.000000000 +0200
+@@ -1754,7 +1754,7 @@ void ieee80211_sta_rx_queued_mgmt(struct
+ 		default:
+ 			WARN(1, "unexpected: %d", rma);
+ 		}
+-		goto out;
++		return;
+ 	}
+ 
+ 	mutex_unlock(&ifmgd->mtx);
+@@ -1799,9 +1799,6 @@ void ieee80211_sta_rx_queued_mgmt(struct
+ 
+ 		cfg80211_send_deauth(sdata->dev, (u8 *)mgmt, skb->len);
+ 	}
+-
+- out:
+-	kfree_skb(skb);
+ }
+ 
+ static void ieee80211_sta_timer(unsigned long data)
+--- wireless-testing.orig/net/mac80211/iface.c	2010-06-09 17:21:07.000000000 +0200
++++ wireless-testing/net/mac80211/iface.c	2010-06-09 17:21:08.000000000 +0200
+@@ -738,9 +738,10 @@ static void ieee80211_iface_work(struct
+ 			break;
+ 		default:
+ 			WARN(1, "frame for unexpected interface type");
+-			kfree_skb(skb);
+ 			break;
+ 		}
 +
-+	if (vif)
-+		memcpy(priv->staging_rxon.node_addr, vif->addr, ETH_ALEN);
-+
- 	priv->staging_rxon.ofdm_ht_single_stream_basic_rates = 0xff;
- 	priv->staging_rxon.ofdm_ht_dual_stream_basic_rates = 0xff;
- 	priv->staging_rxon.ofdm_ht_triple_stream_basic_rates = 0xff;
--- 
-1.7.0.4
++		kfree_skb(skb);
+ 	}
+ 
+ 	/* then other type-dependent work */
+
 
