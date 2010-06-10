@@ -1,70 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:2484 "EHLO mail.perches.com"
+Received: from mail.atheros.com ([12.36.123.2]:41982 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753232Ab0FADXb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 31 May 2010 23:23:31 -0400
-From: Joe Perches <joe@perches.com>
-To: linux-kernel@vger.kernel.org
-Cc: Zhu Yi <yi.zhu@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 13/21] drivers/net/wireless/ipw2x00/ipw2100.c: Remove unnecessary kmalloc casts
-Date: Mon, 31 May 2010 20:23:15 -0700
-Message-Id: <0542180516aae715912f619f18d4cdc6b3908c48.1275360951.git.joe@perches.com>
-In-Reply-To: <cover.1275360951.git.joe@perches.com>
-References: <cover.1275360951.git.joe@perches.com>
+	id S1751712Ab0FJGeN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Jun 2010 02:34:13 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 09 Jun 2010 23:34:13 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19472.34751.901289.691973@gargle.gargle.HOWL>
+Date: Thu, 10 Jun 2010 12:05:43 +0530
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC v2 06/22] mac80211: pull mgmt frame rx into rx handler
+In-Reply-To: <1276151288.3623.4.camel@jlt3.sipsolutions.net>
+References: <20100609150142.227469359@sipsolutions.net>
+	<20100609150454.085469240@sipsolutions.net>
+	<19472.26203.835523.525595@gargle.gargle.HOWL>
+	<1276151288.3623.4.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/ipw2x00/ipw2100.c |   18 +++++++-----------
- 1 files changed, 7 insertions(+), 11 deletions(-)
+Johannes Berg wrote:
+> Mesh also used (and needed to!) RX_QUEUED for the case where it actually
+> wanted the packet. I just wrote the code the other way around -- before
+> it was returning RX_QUEUED if wanted, now it short-cuts to
+> "RX_DROP_MONITOR" if unwanted.
+> 
+> > Wouldn't this change mesh mode's existing behavior ?
+> 
+> No, I don't think it does, in ieee80211_rx_h_mgmt() RX_CONTINUE and
+> RX_DROP_MONITOR are equivalent since that's the last possible thing to
+> happen with a (management) frame. Unless I'm misunderstanding you?
 
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
-index 0bd4dfa..18ebd60 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-@@ -3467,10 +3467,8 @@ static int ipw2100_msg_allocate(struct ipw2100_priv *priv)
- 	dma_addr_t p;
- 
- 	priv->msg_buffers =
--	    (struct ipw2100_tx_packet *)kmalloc(IPW_COMMAND_POOL_SIZE *
--						sizeof(struct
--						       ipw2100_tx_packet),
--						GFP_KERNEL);
-+	    kmalloc(IPW_COMMAND_POOL_SIZE * sizeof(struct ipw2100_tx_packet),
-+		    GFP_KERNEL);
- 	if (!priv->msg_buffers) {
- 		printk(KERN_ERR DRV_NAME ": %s: PCI alloc failed for msg "
- 		       "buffers.\n", priv->net_dev->name);
-@@ -4499,10 +4497,8 @@ static int ipw2100_tx_allocate(struct ipw2100_priv *priv)
- 	}
- 
- 	priv->tx_buffers =
--	    (struct ipw2100_tx_packet *)kmalloc(TX_PENDED_QUEUE_LENGTH *
--						sizeof(struct
--						       ipw2100_tx_packet),
--						GFP_ATOMIC);
-+	    kmalloc(TX_PENDED_QUEUE_LENGTH * sizeof(struct ipw2100_tx_packet),
-+		    GFP_ATOMIC);
- 	if (!priv->tx_buffers) {
- 		printk(KERN_ERR DRV_NAME
- 		       ": %s: alloc failed form tx buffers.\n",
-@@ -4651,9 +4647,9 @@ static int ipw2100_rx_allocate(struct ipw2100_priv *priv)
- 	/*
- 	 * allocate packets
- 	 */
--	priv->rx_buffers = (struct ipw2100_rx_packet *)
--	    kmalloc(RX_QUEUE_LENGTH * sizeof(struct ipw2100_rx_packet),
--		    GFP_KERNEL);
-+	priv->rx_buffers = kmalloc(RX_QUEUE_LENGTH *
-+				   sizeof(struct ipw2100_rx_packet),
-+				   GFP_KERNEL);
- 	if (!priv->rx_buffers) {
- 		IPW_DEBUG_INFO("can't allocate rx packet buffer table\n");
- 
--- 
-1.7.0.3.311.g6a6955
+Ok. I assumed that RX_CONTINUE was needed by mesh for some purpose.
 
+Sujith
