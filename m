@@ -1,53 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:48551 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751537Ab0FJFgf (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:44881 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755942Ab0FKKMg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jun 2010 01:36:35 -0400
-Received: by pwj5 with SMTP id 5so2258357pwj.19
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Jun 2010 22:36:35 -0700 (PDT)
-Message-ID: <4C1079E0.6090605@yatharthgupta.com>
-Date: Wed, 09 Jun 2010 22:36:32 -0700
-From: Yatharth <y@yatharthgupta.com>
+	Fri, 11 Jun 2010 06:12:36 -0400
+Received: from vs3015.wh2.ocn.ne.jp (125.206.180.247)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0995721152
+	for <linux-wireless@vger.kernel.org>; Fri, 11 Jun 2010 19:12:32 +0900 (JST)
+Subject: [PATCH] ath5k: disable all tasklets while resetting
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Fri, 11 Jun 2010 19:12:21 +0900
+Message-ID: <20100611101221.26538.46913.stgit@tt-desk>
 MIME-Version: 1.0
-To: Sujith <Sujith.Manoharan@atheros.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: issues while attempting ath9k_htc to work with ubuntu 10.04,
- device TL-WN721N
-References: <4C107563.3010709@yatharthgupta.com>	<19472.30680.855993.112084@gargle.gargle.HOWL>	<4C1078D4.3070604@yatharthgupta.com> <19472.31157.569068.781531@gargle.gargle.HOWL>
-In-Reply-To: <19472.31157.569068.781531@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/09/2010 10:35 PM, Sujith wrote:
-> Yatharth wrote:
->    
->> I had checked earlier to ensure that everything was unloaded.
->>
->> But I've done it again to make sure.
->> Step 1 :  'sudo make unload'
->> Step 2 : 'lsmod | grep ath'  [Returns Nothing, thus indicating none of
->> these modules are loaded]
->>
->> If I do 'modprobe ath9k_htc' after this, I still get the same error
->>      
-> What does 'modinfo ath9k_hw' show ?
->
-> Sujith
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->    
-Here is the output of 'modinfo ath9k_hw'
+Make sure no tasklets can run concurrently to a reset.
 
-Ubu-VM:~/tmp/compat-wireless-2010-06-05$ modinfo ath9k_hw
-filename:       /lib/modules/2.6.32-22-generic/updates/cw/ath9k_hw.ko
-license:        Dual BSD/GPL
-description:    Support for Atheros 802.11n wireless LAN cards.
-author:         Atheros Communications
-srcversion:     0946B41CE1566D09C4B08F1
-depends:        ath
-vermagic:       2.6.32-22-generic SMP mod_unload modversions 586
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ drivers/net/wireless/ath/ath5k/base.c |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 9d37c1a..585c517 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2908,6 +2908,12 @@ ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan)
+ 
+ 	ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "resetting\n");
+ 
++	tasklet_disable(&sc->rxtq);		/* ath5k_tasklet_rx */
++	tasklet_disable(&sc->txtq);		/* ath5k_tasklet_tx */
++	tasklet_disable(&sc->calib);		/* ath5k_tasklet_calibrate */
++	tasklet_disable(&sc->beacontq);		/* ath5k_tasklet_beacon */
++	tasklet_disable(&sc->ani_tasklet);	/* ath5k_tasklet_ani */
++
+ 	if (chan) {
+ 		ath5k_hw_set_imr(ah, 0);
+ 		ath5k_txq_cleanup(sc);
+@@ -2948,6 +2954,12 @@ ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan)
+ 	ath5k_beacon_config(sc);
+ 	/* intrs are enabled by ath5k_beacon_config */
+ 
++	tasklet_enable(&sc->rxtq);		/* ath5k_tasklet_rx */
++	tasklet_enable(&sc->txtq);		/* ath5k_tasklet_tx */
++	tasklet_enable(&sc->calib);		/* ath5k_tasklet_calibrate */
++	tasklet_enable(&sc->beacontq);		/* ath5k_tasklet_beacon */
++	tasklet_enable(&sc->ani_tasklet);	/* ath5k_tasklet_ani */
++
+ 	ieee80211_wake_queues(sc->hw);
+ 
+ 	return 0;
 
