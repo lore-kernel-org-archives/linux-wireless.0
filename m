@@ -1,74 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45899 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752082Ab0FHMsq (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:42106 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759689Ab0FKTwW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jun 2010 08:48:46 -0400
-Subject: Re: [RFC 3/3] mac80211: Store basic rates for bss when joining
- ibss network
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1276000459-1121-4-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-References: <1276000459-1121-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-	 <1276000459-1121-2-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-	 <1276000459-1121-3-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-	 <1276000459-1121-4-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Jun 2010 14:48:38 +0200
-Message-ID: <1276001318.3706.130.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 11 Jun 2010 15:52:22 -0400
+MIME-Version: 1.0
+In-Reply-To: <AANLkTimUW58T19GOkRk3oCC9huLDQLgLj4W3RjiQ9n53@mail.gmail.com>
+References: <4c0f4326.0a41df0a.7bde.ffffeef2@mx.google.com>
+	<AANLkTilrYYHjcMEhhrP7zjcLoo-TNczozxJSNRkDvSZy@mail.gmail.com>
+	<AANLkTimXqdkQxv_Y1JaleTTWNsDIQHQaPn8HR7efOupb@mail.gmail.com>
+	<AANLkTimUW58T19GOkRk3oCC9huLDQLgLj4W3RjiQ9n53@mail.gmail.com>
+From: Dmytro Milinevskyy <milinevskyy@gmail.com>
+Date: Fri, 11 Jun 2010 22:52:00 +0300
+Message-ID: <AANLkTilECEFWIxXTfykAagSaZUv20Btrz-Fmq3IA8Dap@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH] [ath5k][leds] Ability to disable leds
+	support. If leds support enabled do not force mac802.11 leds layer selection.
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Kalle Valo <kalle.valo@iki.fi>,
+	GeunSik Lim <geunsik.lim@samsung.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	Jiri Slaby <jirislaby@gmail.com>, netdev@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Keng-Yu Lin <keng-yu.lin@canonical.com>,
+	Jiri Kosina <jkosina@suse.cz>,
+	Shahar Or <shahar@shahar-or.co.il>,
+	linux-kernel@vger.kernel.org, Luca Verdesca <magooz@salug.it>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-06-08 at 15:34 +0300, Teemu Paasikivi wrote:
-> When joinig a ibss network, basic rates for bss were not stored. When
-> network was self created, leaving and (re)joining same network has
-> caused basic rates to be left unset. With this patch stored values are
-> used.
+I didn't know. Thank you for noting that.
+However I think it's better to give a chance to disable 802.11 leds.
 
->  	bss = cfg80211_inform_bss_frame(local->hw.wiphy, local->hw.conf.channel,
->  					mgmt, skb->len, 0, GFP_KERNEL);
-> +
-> +	ibss = (struct ieee80211_bss *)(bss->priv);
+-- Dima
 
-Watch out -- bss can be NULL here if memory allocation fails. It's just
-that put_bss(NULL) is valid.
-
-> +	for (i = 0; i < sband->n_bitrates; i++) {
-> +		u8 basic = 0x00;
-> +		if (basic_rates & BIT(i))
-> +			basic = 0x80;
-> +
-> +		ibss->supp_rates[i] = supp_rates[i] | basic;
-> +	}
-> +
-> +	ibss->supp_rates_len = i;
-> +
->  	cfg80211_put_bss(bss);
-
-
-However this kinda confuses me.
-
-We had a long-standing TODO item on our list at
-http://wireless.kernel.org/en/developers/todo-list
-
-"when leaving an IBSS and we were the only member, remove it from
-cfg80211's BSS list"
-
-Maybe that would help here too?
-
-However I don't understand the scenario anyway. If you create an IBSS,
-you start beaconing and tell cfg80211 about it with a frame that
-includes the supported and basic rates. Then you leave, but the BSS
-stays around in cfg80211 for 15 seconds. If you re-join within those 15
-seconds, the scan results will pick up the old IBSS that no longer
-exists, and we "join" it rather than creating it.
-
-However -- joining it will take the basic rates from it. So wouldn't you
-get the old basic rates which is fine? What do you mean by "left unset"?
-
-What happens if you join an IBSS that already exists?
-
-johannes
-
+On Fri, Jun 11, 2010 at 8:07 PM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Wed, Jun 9, 2010 at 10:43 AM, Dmytro Milinevskyy
+> <milinevskyy@gmail.com> wrote:
+>> Hi, Bob.
+>>
+>> For instance I don't use 802.11 leds layer and trigger leds from
+>> userspace according to my purposes.
+>
+> FWIW you can disable mac80211 triggers from userspace as well.
+> But, I guess hooking up null triggers will work too.
+>
+> --
+> Bob Copeland %% www.bobcopeland.com
+>
