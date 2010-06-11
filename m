@@ -1,56 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53958 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755300Ab0F2Up0 (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:56118 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932103Ab0FKUIs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jun 2010 16:45:26 -0400
-Date: Tue, 29 Jun 2010 16:32:42 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] iwlwifi: do not export iwl_leds_background
-Message-ID: <20100629203239.GE5296@tuxdriver.com>
-References: <1266572413.3991.55.camel@jlt3.sipsolutions.net>
- <1277840378-18305-1-git-send-email-linville@tuxdriver.com>
- <1277842739.4197.54.camel@rchatre-DESK>
+	Fri, 11 Jun 2010 16:08:48 -0400
+Received: by vws17 with SMTP id 17so1521530vws.19
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Jun 2010 13:08:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1277842739.4197.54.camel@rchatre-DESK>
+In-Reply-To: <AANLkTinpYdb9Q_AEdUc7gvEIcxZoCFyVaKMIi6c_Sf9n@mail.gmail.com>
+References: <AANLkTinpYdb9Q_AEdUc7gvEIcxZoCFyVaKMIi6c_Sf9n@mail.gmail.com>
+From: Assim Deodia <assim.deodia@gmail.com>
+Date: Sat, 12 Jun 2010 01:38:21 +0530
+Message-ID: <AANLkTinPM1byJy-y8GChXbAdYQuCvgiQRISWfmBRKoJu@mail.gmail.com>
+Subject: Re: no eth0 on using libertas_tf + F11 on OLPC XO-1
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 29, 2010 at 01:18:59PM -0700, reinette chatre wrote:
-> On Tue, 2010-06-29 at 12:39 -0700, John W. Linville wrote:
-> > It is only used from within the iwlcore module.
-> > 
-> > Reported-by: Johannes Berg <johannes@sipsolutions.net>
-> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> > ---
-> >  drivers/net/wireless/iwlwifi/iwl-led.c |    1 -
-> >  1 files changed, 0 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/iwlwifi/iwl-led.c b/drivers/net/wireless/iwlwifi/iwl-led.c
-> > index db5bfcb..486244b 100644
-> > --- a/drivers/net/wireless/iwlwifi/iwl-led.c
-> > +++ b/drivers/net/wireless/iwlwifi/iwl-led.c
-> > @@ -214,7 +214,6 @@ void iwl_leds_background(struct iwl_priv *priv)
-> >  	priv->last_blink_time = jiffies;
-> >  	priv->last_blink_rate = blink_idx;
-> >  }
-> > -EXPORT_SYMBOL(iwl_leds_background);
-> >  
-> >  void iwl_leds_init(struct iwl_priv *priv)
-> >  {
-> 
-> Nack.
-> 
-> Please take a closer look at how it is used ... it is used in iwl-core.h
-> in an inline (iwl_update_stats) function that is used by both iwlagn and
-> iwl3945.
+Hi All,
 
-OK
+I am having some issues loading libertas_tf on XO-1 with kernel 2.6.31.
+
+1) after unloading libertas and usb8xxx modules when i modprobe
+libertas_tf module eth0 (wireless interface) disappears. and instead
+wmaster0 appears. but iwconfig show  wmaster0 does not have wireless
+extensions. lsmod shows libertas_tf and libertas_tf_usb module loaded.
+No error in system logs. no error by modprobe. but no wireless
+interface. Do i have to pass any parameter while loading libertas_tf?
+I have also tried installing all the firmware versions from
+http://dev.laptop.org/pub/firmware/libertas/thinfirm/ just to be sure.
+I have installed the kernel after build its RPM
+(http://dev.laptop.org/~assim/kernel_rpms/) on XO itself.
+
+2) I also tried blacklisting libertas and usb8xxx modules but still
+they are loading at boot time. again no error in logs.
+
+I am stuck as i am not getting any error message at all.
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Assim Deodia
