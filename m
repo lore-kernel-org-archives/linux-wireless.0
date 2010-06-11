@@ -1,216 +1,182 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:49697 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754168Ab0FDNnP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jun 2010 09:43:15 -0400
-Message-ID: <4c0902ef.0a41df0a.6c86.2df0@mx.google.com>
-Date: Fri, 04 Jun 2010 16:43:27 +0300
-From: Dmytro Milinevskyy <milinevskyy@gmail.com>
-To: ath5k-devel@lists.ath5k.org
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	GeunSik Lim <geunsik.lim@samsung.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Lukas Turek <8an@praha12.net>,
-	Mark Hindley <mark@hindley.org.uk>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jiri Kosina <jkosina@suse.cz>, Kalle Valo <kalle.valo@iki.fi>,
-	Keng-Yu Lin <keng-yu.lin@canonical.com>,
-	Luca Verdesca <magooz@salug.it>,
-	Shahar Or <shahar@shahar-or.co.il>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] [ath5k][leds] Ability to disable leds support. If leds support enabled do not force mac802.11 leds layer selection.
+Received: from 0122700014.0.fullrate.dk ([95.166.99.235]:37425 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755121Ab0FKJHj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Jun 2010 05:07:39 -0400
+Message-ID: <4C11FCDA.8070902@fusionio.com>
+Date: Fri, 11 Jun 2010 11:07:38 +0200
+From: Jens Axboe <jaxboe@fusionio.com>
+MIME-Version: 1.0
+To: Ingo Molnar <mingo@elte.hu>
+CC: Linus Torvalds <torvalds@linux-foundation.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>, Carl Worth <cworth@cworth.org>,
+	Eric Anholt <eric@anholt.net>,
+	Venkatesh Pallipadi <venki@google.com>,
+	Dave Airlie <airlied@gmail.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	David H?rdeman <david@hardeman.nu>,
+	Mauro Carvalho Chehab <mchehab@redhat.com>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+Subject: Re: 2.6.35-rc2-git2: Reported regressions from 2.6.34
+References: <Rlf_Qjov7bG.A.a8F.I8rDMB@chimera> <alpine.LFD.2.00.1006081814240.4506@i5.linux-foundation.org> <4C0F4872.7090909@fusionio.com> <20100611083249.GA11143@elte.hu> <4C11F661.3070604@fusionio.com> <20100611085520.GA20218@elte.hu>
+In-Reply-To: <20100611085520.GA20218@elte.hu>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+On 2010-06-11 10:55, Ingo Molnar wrote:
+> 
+> * Jens Axboe <jaxboe@fusionio.com> wrote:
+> 
+>> On 2010-06-11 10:32, Ingo Molnar wrote:
+>>>
+>>> * Jens Axboe <jaxboe@fusionio.com> wrote:
+>>>
+>>>> On 2010-06-09 03:53, Linus Torvalds wrote:
+>>>>>> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16129
+>>>>>> Subject	: BUG: using smp_processor_id() in preemptible [00000000] code: jbd2/sda2
+>>>>>> Submitter	: Jan Kreuzer <kontrollator@gmx.de>
+>>>>>> Date		: 2010-06-05 06:15 (4 days old)
+>>>>>
+>>>>> This seems to have been introduced by
+>>>>>
+>>>>> 	commit 7cbaef9c83e58bbd4bdd534b09052b6c5ec457d5
+>>>>> 	Author: Ingo Molnar <mingo@elte.hu>
+>>>>> 	Date:   Sat Nov 8 17:05:38 2008 +0100
+>>>>>
+>>>>> 	    sched: optimize sched_clock() a bit
+>>>>>     
+>>>>> 	    sched_clock() uses cycles_2_ns() needlessly - which is an irq-disabling
+>>>>> 	    variant of __cycles_2_ns().
+>>>>>     
+>>>>> 	    Most of the time sched_clock() is called with irqs disabled already.
+>>>>> 	    The few places that call it with irqs enabled need to be updated..
+>>>>>     
+>>>>> 	    Signed-off-by: Ingo Molnar <mingo@elte.hu>
+>>>>>
+>>>>> and this seems to be one of those calling cases that need to be updated..
+>>>>>
+>>>>> Ingo? The call trace is:
+>>>>>
+>>>>> 	BUG: using smp_processor_id() in preemptible [00000000] code: jbd2/sda2-8/337
+>>>>> 	caller is native_sched_clock+0x3c/0x68
+>>>>> 	Pid: 337, comm: jbd2/sda2-8 Not tainted 2.6.35-rc1jan+ #4
+>>>>> 	Call Trace:
+>>>>> 	[<ffffffff812362c5>] debug_smp_processor_id+0xc9/0xe4
+>>>>> 	[<ffffffff8101059d>] native_sched_clock+0x3c/0x68
+>>>>> 	[<ffffffff8101043d>] sched_clock+0x9/0xd
+>>>>> 	[<ffffffff81212d7a>] blk_rq_init+0x97/0xa3
+>>>>> 	[<ffffffff81214d71>] get_request+0x1c4/0x2d0
+>>>>> 	[<ffffffff81214ea6>] get_request_wait+0x29/0x1a6
+>>>>> 	[<ffffffff81215537>] __make_request+0x338/0x45b
+>>>>> 	[<ffffffff812147c2>] generic_make_request+0x2bb/0x330
+>>>>> 	[<ffffffff81214909>] submit_bio+0xd2/0xef
+>>>>> 	[<ffffffff811413cb>] submit_bh+0xf4/0x116
+>>>>> 	[<ffffffff81144853>] block_write_full_page_endio+0x89/0x96
+>>>>> 	[<ffffffff81144875>] block_write_full_page+0x15/0x17
+>>>>> 	[<ffffffff8119b00a>] ext4_writepage+0x356/0x36b
+>>>>> 	[<ffffffff810e1f91>] __writepage+0x1a/0x39
+>>>>> 	[<ffffffff810e32a6>] write_cache_pages+0x20d/0x346
+>>>>> 	[<ffffffff810e3406>] generic_writepages+0x27/0x29
+>>>>> 	[<ffffffff811ca279>] journal_submit_data_buffers+0x110/0x17d
+>>>>> 	[<ffffffff811ca986>] jbd2_journal_commit_transaction+0x4cb/0x156d
+>>>>> 	[<ffffffff811d0cba>] kjournald2+0x147/0x37a
+>>>>>
+>>>>> (from the bugzilla thing)
+>>>>
+>>>> This should be fixed by commit 28f4197e which was merged on friday.
+>>>
+>>> Hm, it's still not entirely fixed, as of 2.6.35-rc2-00131-g7908a9e. With some 
+>>> configs i get bad spinlock warnings during bootup:
+>>>
+>>> [   28.968013] initcall net_olddevs_init+0x0/0x82 returned 0 after 93750 usecs
+>>> [   28.972003] calling  b44_init+0x0/0x55 @ 1
+>>> [   28.976009] bus: 'pci': add driver b44
+>>> [   28.976374]  sda:
+>>> [   28.978157] BUG: spinlock bad magic on CPU#1, async/0/117
+>>> [   28.980000]  lock: 7e1c5bbc, .magic: 00000000, .owner: <none>/-1, .owner_cpu: 0
+>>> [   28.980000] Pid: 117, comm: async/0 Not tainted 2.6.35-rc2-tip-01092-g010e7ef-dirty #8183
+>>> [   28.980000] Call Trace:
+>>> [   28.980000]  [<41ba6d55>] ? printk+0x20/0x24
+>>> [   28.980000]  [<4134b7b7>] spin_bug+0x7c/0x87
+>>> [   28.980000]  [<4134b853>] do_raw_spin_lock+0x1e/0x123
+>>> [   28.980000]  [<41ba92ca>] ? _raw_spin_lock_irqsave+0x12/0x20
+>>> [   28.980000]  [<41ba92d2>] _raw_spin_lock_irqsave+0x1a/0x20
+>>> [   28.980000]  [<4133476f>] blkiocg_update_io_add_stats+0x25/0xfb
+>>> [   28.980000]  [<41335dae>] ? cfq_prio_tree_add+0xb1/0xc1
+>>> [   28.980000]  [<41337bc7>] cfq_insert_request+0x8c/0x425
+>>> [   28.980000]  [<41ba9271>] ? _raw_spin_unlock_irqrestore+0x17/0x23
+>>> [   28.980000]  [<41ba9271>] ? _raw_spin_unlock_irqrestore+0x17/0x23
+>>> [   28.980000]  [<41329225>] elv_insert+0x107/0x1a0
+>>> [   28.980000]  [<41329354>] __elv_add_request+0x96/0x9d
+>>> [   28.980000]  [<4132bb8c>] ? drive_stat_acct+0x9d/0xc6
+>>> [   28.980000]  [<4132dd64>] __make_request+0x335/0x376
+>>> [   28.980000]  [<4132c726>] generic_make_request+0x336/0x39d
+>>> [   28.980000]  [<410ad422>] ? kmem_cache_alloc+0xa1/0x105
+>>> [   28.980000]  [<41089285>] ? mempool_alloc_slab+0xe/0x10
+>>> [   28.980000]  [<41089285>] ? mempool_alloc_slab+0xe/0x10
+>>> [   28.980000]  [<41089285>] ? mempool_alloc_slab+0xe/0x10
+>>> [   28.980000]  [<41089347>] ? mempool_alloc+0x57/0xe2
+>>> [   28.980000]  [<4132c804>] submit_bio+0x77/0x8f
+>>> [   28.980000]  [<410d2cbc>] ? bio_alloc_bioset+0x37/0x94
+>>> [   28.980000]  [<410ceb90>] submit_bh+0xc3/0xe2
+>>> [   28.980000]  [<410d1474>] block_read_full_page+0x249/0x259
+>>> [   28.980000]  [<410d31fb>] ? blkdev_get_block+0x0/0xc6
+>>> [   28.980000]  [<41087bfa>] ? add_to_page_cache_locked+0x94/0xb5
+>>> [   28.980000]  [<410d3d92>] blkdev_readpage+0xf/0x11
+>>> [   28.980000]  [<41088823>] do_read_cache_page+0x7d/0x11a
+>>> [   28.980000]  [<410d3d83>] ? blkdev_readpage+0x0/0x11
+>>> [   28.980000]  [<410888f4>] read_cache_page_async+0x16/0x1b
+>>> [   28.980000]  [<41088904>] read_cache_page+0xb/0x12
+>>> [   28.980000]  [<410e80e1>] read_dev_sector+0x2a/0x63
+>>> [   28.980000]  [<410e92e8>] adfspart_check_ICS+0x2e/0x166
+>>> [   28.980000]  [<41ba6d55>] ? printk+0x20/0x24
+>>> [   28.980000]  [<410e8d23>] rescan_partitions+0x196/0x3e4
+>>> [   28.980000]  [<41ba7dc7>] ? __mutex_unlock_slowpath+0x98/0x9f
+>>> [   28.980000]  [<410e92ba>] ? adfspart_check_ICS+0x0/0x166
+>>> [   28.980000]  [<410d4277>] __blkdev_get+0x1e7/0x292
+>>> [   28.980000]  [<4133a201>] ? kobject_put+0x14/0x16
+>>> [   28.980000]  [<410d432c>] blkdev_get+0xa/0xc
+>>> [   28.980000]  [<410e81fb>] register_disk+0x94/0xe5
+>>> [   28.980000]  [<413326c6>] ? blk_register_region+0x1b/0x20
+>>> [   28.980000]  [<41332815>] add_disk+0x57/0x95
+>>> [   28.980000]  [<41331fc6>] ? exact_match+0x0/0x8
+>>> [   28.980000]  [<4133233f>] ? exact_lock+0x0/0x11
+>>> [   28.980000]  [<41643848>] sd_probe_async+0x108/0x1be
+>>> [   28.980000]  [<41048865>] async_thread+0xf5/0x1e6
+>>> [   28.980000]  [<4102cbcb>] ? default_wake_function+0x0/0xd
+>>> [   28.980000]  [<41048770>] ? async_thread+0x0/0x1e6
+>>> [   28.980000]  [<410433df>] kthread+0x5f/0x64
+>>> [   28.980000]  [<41043380>] ? kthread+0x0/0x64
+>>> [   28.980000]  [<41002cc6>] kernel_thread_helper+0x6/0x10
+>>> [   29.264071] async/1 used greatest stack depth: 2336 bytes left
+>>> [   29.267020] bus: 'ssb': add driver b44
+>>> [   29.267072] initcall b44_init+0x0/0x55 returned 0 after 281250 usecs
+>>> [   29.267076] calling  init_nic+0x0/0x16 @ 1
+>>>
+>>> Caused by the same blkiocg_update_io_add_stats() function. Bootlog and config 
+>>> attached. Reproducible on that sha1 and with that config.
+>>
+>> I think I see it, the internal CFQ blkg groups are not properly
+>> initialized... Will send a patch shortly.
+> 
+> Cool - can test it with a short turnaround, the bug is easy to reproduce.
 
-Here is the patch to disable ath5k leds support on build stage.
-However if the leds support was enabled do not force selection of 802.11 leds layer.
-Depency on LEDS_CLASS is kept.
+Thanks, I need to ensure what the best way to solve it is. The problem
+is that if you have BLK_CGROUP set but don't enable the CFQ cgroup
+stuff, then you end up calling the real update functions but CFQ has not
+initialized them.
 
-Suggestion given by Pavel Roskin and Bob Copeland applied.
-
-Regards,
-
---Dima
-
----
- drivers/net/wireless/ath/ath5k/Kconfig  |   12 +++++++++---
- drivers/net/wireless/ath/ath5k/Makefile |    2 +-
- drivers/net/wireless/ath/ath5k/ath5k.h  |   22 ++++++++++++++++++++++
- drivers/net/wireless/ath/ath5k/base.h   |   13 +++++++++----
- drivers/net/wireless/ath/ath5k/gpio.c   |    2 ++
- 5 files changed, 43 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath5k/Kconfig b/drivers/net/wireless/ath/ath5k/Kconfig
-index eb83b7b..29f4572 100644
---- a/drivers/net/wireless/ath/ath5k/Kconfig
-+++ b/drivers/net/wireless/ath/ath5k/Kconfig
-@@ -1,9 +1,6 @@
- config ATH5K
- 	tristate "Atheros 5xxx wireless cards support"
- 	depends on PCI && MAC80211
--	select MAC80211_LEDS
--	select LEDS_CLASS
--	select NEW_LEDS
- 	---help---
- 	  This module adds support for wireless adapters based on
- 	  Atheros 5xxx chipset.
-@@ -18,6 +15,15 @@ config ATH5K
- 	  If you choose to build a module, it'll be called ath5k. Say M if
- 	  unsure.
- 
-+
-+config ATH5K_LEDS
-+	tristate "Atheros 5xxx wireless cards LEDs support"
-+	depends on ATH5K
-+	select NEW_LEDS
-+	select LEDS_CLASS
-+	---help---
-+	  Atheros 5xxx LED support.
-+
- config ATH5K_DEBUG
- 	bool "Atheros 5xxx debugging"
- 	depends on ATH5K
-diff --git a/drivers/net/wireless/ath/ath5k/Makefile b/drivers/net/wireless/ath/ath5k/Makefile
-index cc09595..6d552dd 100644
---- a/drivers/net/wireless/ath/ath5k/Makefile
-+++ b/drivers/net/wireless/ath/ath5k/Makefile
-@@ -10,8 +10,8 @@ ath5k-y				+= phy.o
- ath5k-y				+= reset.o
- ath5k-y				+= attach.o
- ath5k-y				+= base.o
--ath5k-y				+= led.o
- ath5k-y				+= rfkill.o
- ath5k-y				+= ani.o
- ath5k-$(CONFIG_ATH5K_DEBUG)	+= debug.o
-+ath5k-$(CONFIG_ATH5K_LEDS) += led.o
- obj-$(CONFIG_ATH5K)		+= ath5k.o
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index 2785946..bb7e09a 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -1148,11 +1148,27 @@ struct ath5k_hw {
- int ath5k_hw_attach(struct ath5k_softc *sc);
- void ath5k_hw_detach(struct ath5k_hw *ah);
- 
-+#ifdef CONFIG_ATH5K_LEDS
- /* LED functions */
- int ath5k_init_leds(struct ath5k_softc *sc);
- void ath5k_led_enable(struct ath5k_softc *sc);
- void ath5k_led_off(struct ath5k_softc *sc);
- void ath5k_unregister_leds(struct ath5k_softc *sc);
-+#else
-+static inline int ath5k_init_leds(struct ath5k_softc *sc)
-+{
-+	return 0;
-+}
-+static inline void ath5k_led_enable(struct ath5k_softc *sc)
-+{
-+}
-+static inline void ath5k_led_off(struct ath5k_softc *sc)
-+{
-+}
-+static inline void ath5k_unregister_leds(struct ath5k_softc *sc)
-+{
-+}
-+#endif
- 
- /* Reset Functions */
- int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial);
-@@ -1233,7 +1249,13 @@ int ath5k_hw_set_slot_time(struct ath5k_hw *ah, unsigned int slot_time);
- int ath5k_hw_init_desc_functions(struct ath5k_hw *ah);
- 
- /* GPIO Functions */
-+#ifdef CONFIG_ATH5K_LEDS
- void ath5k_hw_set_ledstate(struct ath5k_hw *ah, unsigned int state);
-+#else
-+static inline void ath5k_hw_set_ledstate(struct ath5k_hw *ah, unsigned int state)
-+{
-+}
-+#endif
- int ath5k_hw_set_gpio_input(struct ath5k_hw *ah, u32 gpio);
- int ath5k_hw_set_gpio_output(struct ath5k_hw *ah, u32 gpio);
- u32 ath5k_hw_get_gpio(struct ath5k_hw *ah, u32 gpio);
-diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
-index 56221bc..97b26c1 100644
---- a/drivers/net/wireless/ath/ath5k/base.h
-+++ b/drivers/net/wireless/ath/ath5k/base.h
-@@ -86,6 +86,7 @@ struct ath5k_txq {
- 
- #define ATH5K_LED_MAX_NAME_LEN 31
- 
-+#ifdef CONFIG_ATH5K_LEDS
- /*
-  * State for LED triggers
-  */
-@@ -95,6 +96,7 @@ struct ath5k_led
- 	struct ath5k_softc *sc;			/* driver state */
- 	struct led_classdev led_dev;		/* led classdev */
- };
-+#endif
- 
- /* Rfkill */
- struct ath5k_rfkill {
-@@ -186,9 +188,6 @@ struct ath5k_softc {
- 
- 	u8			bssidmask[ETH_ALEN];
- 
--	unsigned int		led_pin,	/* GPIO pin for driving LED */
--				led_on;		/* pin setting for LED on */
--
- 	struct tasklet_struct	restq;		/* reset tasklet */
- 
- 	unsigned int		rxbufsize;	/* rx size based on mtu */
-@@ -196,7 +195,6 @@ struct ath5k_softc {
- 	spinlock_t		rxbuflock;
- 	u32			*rxlink;	/* link ptr in last RX desc */
- 	struct tasklet_struct	rxtq;		/* rx intr tasklet */
--	struct ath5k_led	rx_led;		/* rx led */
- 
- 	struct list_head	txbuf;		/* transmit buffer */
- 	spinlock_t		txbuflock;
-@@ -204,7 +202,14 @@ struct ath5k_softc {
- 	struct ath5k_txq	txqs[AR5K_NUM_TX_QUEUES];	/* tx queues */
- 	struct ath5k_txq	*txq;		/* main tx queue */
- 	struct tasklet_struct	txtq;		/* tx intr tasklet */
-+
-+
-+#ifdef CONFIG_ATH5K_LEDS
-+	unsigned int		led_pin,	/* GPIO pin for driving LED */
-+				led_on;		/* pin setting for LED on */
-+	struct ath5k_led	rx_led;		/* rx led */
- 	struct ath5k_led	tx_led;		/* tx led */
-+#endif
- 
- 	struct ath5k_rfkill	rf_kill;
- 
-diff --git a/drivers/net/wireless/ath/ath5k/gpio.c b/drivers/net/wireless/ath/ath5k/gpio.c
-index 64a27e7..9e757b3 100644
---- a/drivers/net/wireless/ath/ath5k/gpio.c
-+++ b/drivers/net/wireless/ath/ath5k/gpio.c
-@@ -25,6 +25,7 @@
- #include "debug.h"
- #include "base.h"
- 
-+#ifdef CONFIG_ATH5K_LEDS
- /*
-  * Set led state
-  */
-@@ -76,6 +77,7 @@ void ath5k_hw_set_ledstate(struct ath5k_hw *ah, unsigned int state)
- 	else
- 		AR5K_REG_ENABLE_BITS(ah, AR5K_PCICFG, led_5210);
- }
-+#endif
- 
- /*
-  * Set GPIO inputs
 -- 
-1.7.1
+Jens Axboe
 
