@@ -1,56 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:41159 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758059Ab0FURyb convert rfc822-to-8bit (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:45055 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754733Ab0FKDMZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jun 2010 13:54:31 -0400
-Received: by gye5 with SMTP id 5so2370724gye.19
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Jun 2010 10:54:30 -0700 (PDT)
+	Thu, 10 Jun 2010 23:12:25 -0400
+Date: Thu, 10 Jun 2010 19:46:25 -0700
+From: Jouni Malinen <jouni.malinen@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: Use a separate CCMP PN receive counter for
+ management frames
+Message-ID: <20100611024625.GB3985@jm.kir.nu>
 MIME-Version: 1.0
-In-Reply-To: <1277124410.28895.23.camel@gnutoo-laptop>
-References: <1275693948-3189-1-git-send-email-notasas@gmail.com>
-	<1275693948-3189-2-git-send-email-notasas@gmail.com>
-	<AANLkTinqgUGCjCBzg8j7bXGY05EW3-jfW7vlnrvCuwRd@mail.gmail.com>
-	<1277124410.28895.23.camel@gnutoo-laptop>
-Date: Mon, 21 Jun 2010 13:54:29 -0400
-Message-ID: <AANLkTimLKDqDn_97BbOYr1cdxbFdPvyTz_lxJ59LVJ1b@mail.gmail.com>
-Subject: Re: [PATCH 2/2] wl1251: fix ELP_CTRL register reads
-From: Bob Copeland <me@bobcopeland.com>
-To: "Denis 'GNUtoo' Carikli" <GNUtoo@no-log.org>
-Cc: Kalle Valo <kvalo@adurom.com>,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	"John W.Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 21, 2010 at 8:46 AM, Denis 'GNUtoo' Carikli
-<GNUtoo@no-log.org> wrote:
+When management frame protection (IEEE 802.11w) is used, we must use a
+separate counter for tracking received CCMP packet number for the
+management frames. The previously used NUM_RX_DATA_QUEUESth queue was
+shared with data frames when QoS was not used and that can cause
+problems in detecting replays incorrectly for robust management frames.
+Add a new counter just for robust management frames to avoid this issue.
 
-> Hi, me and some other people are trying to run standard GNU/Linux (not
-> android ) on the htcdream.
+Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
 
-> [ 1556.425354] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-> [ 1556.734130] mmc0: Command timeout
+---
+ net/mac80211/debugfs_key.c |    2 +-
+ net/mac80211/key.c         |    2 +-
+ net/mac80211/key.h         |    2 +-
+ net/mac80211/rx.c          |    9 +++++++--
+ net/mac80211/wpa.c         |    8 ++++++--
+ 5 files changed, 16 insertions(+), 7 deletions(-)
 
-In this case it was only up for 1/3 second before it quit
-responding to reads.  With power saving disabled it works?
-
-Probably not relevant to power saving, but:
-
-Are you using the dedicated irq line or sdio interrupt?
-It makes a big difference in overall throughput to use
-the former.
-
-> +       /*
-> +        * FIXME: scanning while associated causes lockups,
-> +        * so we don't allow that
-> +        */
-> +       if (wl->associated)
-> +               return -EBUSY;
-
-Any idea why?  Could you turn on lockdep?
+--- wireless-testing.orig/net/mac80211/debugfs_key.c	2010-06-10 17:57:51.000000000 -0700
++++ wireless-testing/net/mac80211/debugfs_key.c	2010-06-10 18:35:33.000000000 -0700
+@@ -143,7 +143,7 @@ static ssize_t key_rx_spec_read(struct f
+ 		len = p - buf;
+ 		break;
+ 	case ALG_CCMP:
+-		for (i = 0; i < NUM_RX_DATA_QUEUES; i++) {
++		for (i = 0; i < NUM_RX_DATA_QUEUES + 1; i++) {
+ 			rpn = key->u.ccmp.rx_pn[i];
+ 			p += scnprintf(p, sizeof(buf)+buf-p,
+ 				       "%02x%02x%02x%02x%02x%02x\n",
+--- wireless-testing.orig/net/mac80211/key.c	2010-06-10 18:09:38.000000000 -0700
++++ wireless-testing/net/mac80211/key.c	2010-06-10 18:35:33.000000000 -0700
+@@ -273,7 +273,7 @@ struct ieee80211_key *ieee80211_key_allo
+ 		key->conf.iv_len = CCMP_HDR_LEN;
+ 		key->conf.icv_len = CCMP_MIC_LEN;
+ 		if (seq) {
+-			for (i = 0; i < NUM_RX_DATA_QUEUES; i++)
++			for (i = 0; i < NUM_RX_DATA_QUEUES + 1; i++)
+ 				for (j = 0; j < CCMP_PN_LEN; j++)
+ 					key->u.ccmp.rx_pn[i][j] =
+ 						seq[CCMP_PN_LEN - j - 1];
+--- wireless-testing.orig/net/mac80211/key.h	2010-06-10 18:09:38.000000000 -0700
++++ wireless-testing/net/mac80211/key.h	2010-06-10 18:35:33.000000000 -0700
+@@ -77,7 +77,7 @@ struct ieee80211_key {
+ 		} tkip;
+ 		struct {
+ 			u8 tx_pn[6];
+-			u8 rx_pn[NUM_RX_DATA_QUEUES][6];
++			u8 rx_pn[NUM_RX_DATA_QUEUES + 1][6];
+ 			struct crypto_cipher *tfm;
+ 			u32 replays; /* dot11RSNAStatsCCMPReplays */
+ 			/* scratch buffers for virt_to_page() (crypto API) */
+--- wireless-testing.orig/net/mac80211/rx.c	2010-06-10 18:09:38.000000000 -0700
++++ wireless-testing/net/mac80211/rx.c	2010-06-10 18:35:33.000000000 -0700
+@@ -1268,11 +1268,13 @@ ieee80211_rx_h_defragment(struct ieee802
+ 						 rx->queue, &(rx->skb));
+ 		if (rx->key && rx->key->conf.alg == ALG_CCMP &&
+ 		    ieee80211_has_protected(fc)) {
++			int queue = ieee80211_is_mgmt(fc) ?
++				NUM_RX_DATA_QUEUES : rx->queue;
+ 			/* Store CCMP PN so that we can verify that the next
+ 			 * fragment has a sequential PN value. */
+ 			entry->ccmp = 1;
+ 			memcpy(entry->last_pn,
+-			       rx->key->u.ccmp.rx_pn[rx->queue],
++			       rx->key->u.ccmp.rx_pn[queue],
+ 			       CCMP_PN_LEN);
+ 		}
+ 		return RX_QUEUED;
+@@ -1292,6 +1294,7 @@ ieee80211_rx_h_defragment(struct ieee802
+ 	if (entry->ccmp) {
+ 		int i;
+ 		u8 pn[CCMP_PN_LEN], *rpn;
++		int queue;
+ 		if (!rx->key || rx->key->conf.alg != ALG_CCMP)
+ 			return RX_DROP_UNUSABLE;
+ 		memcpy(pn, entry->last_pn, CCMP_PN_LEN);
+@@ -1300,7 +1303,9 @@ ieee80211_rx_h_defragment(struct ieee802
+ 			if (pn[i])
+ 				break;
+ 		}
+-		rpn = rx->key->u.ccmp.rx_pn[rx->queue];
++		queue = ieee80211_is_mgmt(fc) ?
++			NUM_RX_DATA_QUEUES : rx->queue;
++		rpn = rx->key->u.ccmp.rx_pn[queue];
+ 		if (memcmp(pn, rpn, CCMP_PN_LEN))
+ 			return RX_DROP_UNUSABLE;
+ 		memcpy(entry->last_pn, pn, CCMP_PN_LEN);
+--- wireless-testing.orig/net/mac80211/wpa.c	2010-06-10 17:57:51.000000000 -0700
++++ wireless-testing/net/mac80211/wpa.c	2010-06-10 18:35:33.000000000 -0700
+@@ -436,6 +436,7 @@ ieee80211_crypto_ccmp_decrypt(struct iee
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+ 	u8 pn[CCMP_PN_LEN];
+ 	int data_len;
++	int queue;
+ 
+ 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 
+@@ -453,7 +454,10 @@ ieee80211_crypto_ccmp_decrypt(struct iee
+ 
+ 	ccmp_hdr2pn(pn, skb->data + hdrlen);
+ 
+-	if (memcmp(pn, key->u.ccmp.rx_pn[rx->queue], CCMP_PN_LEN) <= 0) {
++	queue = ieee80211_is_mgmt(hdr->frame_control) ?
++		NUM_RX_DATA_QUEUES : rx->queue;
++
++	if (memcmp(pn, key->u.ccmp.rx_pn[queue], CCMP_PN_LEN) <= 0) {
+ 		key->u.ccmp.replays++;
+ 		return RX_DROP_UNUSABLE;
+ 	}
+@@ -470,7 +474,7 @@ ieee80211_crypto_ccmp_decrypt(struct iee
+ 			return RX_DROP_UNUSABLE;
+ 	}
+ 
+-	memcpy(key->u.ccmp.rx_pn[rx->queue], pn, CCMP_PN_LEN);
++	memcpy(key->u.ccmp.rx_pn[queue], pn, CCMP_PN_LEN);
+ 
+ 	/* Remove CCMP header and MIC */
+ 	skb_trim(skb, skb->len - CCMP_MIC_LEN);
 
 -- 
-Bob Copeland %% www.bobcopeland.com
+Jouni Malinen                                            PGP id EFC895FA
