@@ -1,47 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:36662 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754967Ab0FINwA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jun 2010 09:52:00 -0400
-Received: by wwb31 with SMTP id 31so263801wwb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Jun 2010 06:51:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1276080986.14580.6.camel@jlt3.sipsolutions.net>
-References: <1275940207.29978.24.camel@jlt3.sipsolutions.net>
-	<1276080986.14580.6.camel@jlt3.sipsolutions.net>
-Date: Wed, 9 Jun 2010 09:51:58 -0400
-Message-ID: <AANLkTilm2zuqCzc1VZf6r3NfuUnGmxkhYsp6qPKdV6lC@mail.gmail.com>
-Subject: Re: [PATCH v2] mac80211: fix deauth before assoc
-From: Miles Lane <miles.lane@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga01.intel.com ([192.55.52.88]:36612 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758916Ab0FKRrt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Jun 2010 13:47:49 -0400
+Subject: Re: [PATCH] wireless: orphan ipw2x00 drivers
+From: reinette chatre <reinette.chatre@intel.com>
+To: David Miller <davem@davemloft.net>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"Zhu, Yi" <yi.zhu@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20100609.225243.179940910.davem@davemloft.net>
+References: <1276134269-2273-1-git-send-email-yi.zhu@intel.com>
+	 <20100610014547.GA2318@tuxdriver.com>
+	 <20100609.225243.179940910.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 11 Jun 2010 10:47:47 -0700
+Message-ID: <1276278467.25793.1296.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 9, 2010 at 6:56 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> When we receive a deauthentication frame before
-> having successfully associated, we neither print
-> a message nor abort assocation. The former makes
-> it hard to debug, while the latter later causes
-> a warning in cfg80211 when, as will typically be
-> the case, association timed out.
->
-> This warning was reported by many, e.g. in
-> https://bugzilla.kernel.org/show_bug.cgi?id=15981,
-> but I couldn't initially pinpoint it. I verified
-> the fix by hacking hostapd to send a deauth frame
-> instead of an association response.
->
-> Cc: stable@kernel.org
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
-> That previous one didn't even apply to the right tree, how did you ever
-> test it? Or did you just fix up the context?
+On Wed, 2010-06-09 at 22:52 -0700, David Miller wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Wed, 9 Jun 2010 21:45:47 -0400
+> 
+> > On Thu, Jun 10, 2010 at 09:44:29AM +0800, Zhu Yi wrote:
+> >> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+> >> ---
+> >> Please let us know if someone is interested in maintaining these drivers.
+> > 
+> > Any chance of getting some hardware/firmware documentation?
+> 
+> Indeed.
+> 
+> I'm extremely disappointed that the only organization currently even
+> capable of fixing low level bugs in these drivers no longer is willing
+> to do so.
 
-patching file net/mac80211/mlme.c
-Hunk #1 succeeded at 1722 with fuzz 3 (offset 27 lines).
+This is not the situation. We recently lost all expertise with these
+drivers and are unable to maintain them respectfully anymore.
+
+If we continue to have the MAINTAINERS file commit us to "Odd fixes" we
+are still responsible for reviewing/acknowledging patches, answering
+community questions related to the driver, and looking into at least
+critical bugs. Unfortunately we now have no ability to do any of these
+tasks and surely not any better that members from the community (some of
+whom actually know these drivers better than any of the people left here
+at Intel).
+
+This is why we changed the status to "Orphaned" since it really seem to
+reflect our status at this time. We really do not know what else to do. 
+
+I understand that there is a concern with low level bugs for which
+hardware documentation may be needed. We surely will do our best to help
+out when these situations arise. 
+
+> If documentation can't be provided so that others can maintain this
+> driver (not just few specific people, because some day those folks
+> might tire of maintaining this too) that would be a serious crime.
+
+We are unable to release this documentation, but are looking into our
+options at this time. With groups disbanded this will take some time.
+
+Reinette
+
+
