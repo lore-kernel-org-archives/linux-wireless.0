@@ -1,174 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:35427 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751293Ab0FKLjV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jun 2010 07:39:21 -0400
-Received: by wyb40 with SMTP id 40so670689wyb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Jun 2010 04:39:17 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTinfoyhEyFjxReR6Oza7r_AQhcyMlpaXYB4ZjjlU@mail.gmail.com>
-References: <AANLkTik_7rxDBc0TKlAfoYyM5S6Cf_Hyxbr4W5ORnTsq@mail.gmail.com>
-	<1274726029.2091.15160.camel@rchatre-DESK>
-	<1274738896.2091.15438.camel@rchatre-DESK>
-	<1274830187.2091.17034.camel@rchatre-DESK>
-	<1275600737.2091.32332.camel@rchatre-DESK>
-	<AANLkTinfoyhEyFjxReR6Oza7r_AQhcyMlpaXYB4ZjjlU@mail.gmail.com>
-Date: Fri, 11 Jun 2010 17:09:17 +0530
-Message-ID: <AANLkTillaEGISTjW4iqpsNsJbaE6ZW7pqYvAzoBrkI69@mail.gmail.com>
-Subject: Re: iwl3945 bug in 2.6.34
-From: Satish Eerpini <eerpini@gmail.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from isilmar-3.linta.de ([188.40.101.200]:33965 "EHLO linta.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1756627Ab0FKOpY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Jun 2010 10:45:24 -0400
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+To: <linux-pcmcia@lists.infradead.org>
+Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH 3/4] pcmcia: dev_node removal bugfix
+Date: Fri, 11 Jun 2010 16:44:55 +0200
+Message-Id: <1276267496-9836-3-git-send-email-linux@dominikbrodowski.net>
+In-Reply-To: <20100611144359.GA9572@comet.dominikbrodowski.net>
+References: <20100611144359.GA9572@comet.dominikbrodowski.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 2.6.34 vanilla kernel with the above patches applied crashed again
-today, I was amidst a conference on webex when this happened, still
-not able to figure out what is the kind of traffic that causes the
-driver to give up ... here is output from dmesg :
+Patch c7c2fa07 removed one line too much from smc91c92_cs.c.
 
+Reported-by: Komuro <komurojun-mbn@nifty.com>
+CC: netdev@vger.kernel.org
+CC: linux-wireless@vger.kernel.org
+Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
+---
+ drivers/net/pcmcia/smc91c92_cs.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-cfg80211: Calling CRDA to update world regulatory domain
-cfg80211: Calling CRDA for country: IN
-cfg80211: Regulatory domain changed to country: IN
-    (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-    (2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-    (5170000 KHz - 5250000 KHz @ 20000 KHz), (N/A, 2000 mBm)
-    (5250000 KHz - 5330000 KHz @ 20000 KHz), (N/A, 2000 mBm)
-    (5735000 KHz - 5835000 KHz @ 20000 KHz), (N/A, 2000 mBm)
-wlan0: authenticate with 00:1b:da:2a:a1:53 (try 1)
-wlan0: authenticated
-wlan0: associate with 00:1b:da:2a:a1:53 (try 1)
-wlan0: RX AssocResp from 00:1b:da:2a:a1:53 (capab=0x411 status=0 aid=1)
-wlan0: associated
-usb 4-2: USB disconnect, address 4
-iwl3945 0000:10:00.0: queue 2 stuck 3 time. Fw reload.
-iwl3945 0000:10:00.0: On demand firmware reload
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-iwl3945 0000:10:00.0: BSM uCode verification failed at addr
-0x00003800+0 (of 900), is 0xffffffff, s/b 0xf802020
-iwl3945 0000:10:00.0: Wait for START_ALIVE timeout after 2000ms.
-No probe response from AP 00:1b:da:2a:a1:53 after 500ms, disconnecting.
-cfg80211: Calling CRDA to update world regulatory domain
-cfg80211: Calling CRDA for country: IN
-cfg80211: Regulatory domain changed to country: IN
-    (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-    (2402000 KHz - 2482000 KHz @ 40000 KHz), (N/A, 2000 mBm)
-    (5170000 KHz - 5250000 KHz @ 20000 KHz), (N/A, 2000 mBm)
-    (5250000 KHz - 5330000 KHz @ 20000 KHz), (N/A, 2000 mBm)
-    (5735000 KHz - 5835000 KHz @ 20000 KHz), (N/A, 2000 mBm)
-
-is there anything else that can be done ??
-
-Cheers
-Satish
-
-On Fri, Jun 11, 2010 at 12:19 AM, Satish Eerpini <eerpini@gmail.com> wrote:
-> I have applied the patches to the 2.6.34 kernel, my machine has been
-> up for 20 hours now, there is nothing in the dmesg either, dmesg |
-> grep wlan0 just gives this :
->
-> ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> wlan0: deauthenticating from 00:1b:da:2a:a1:53 by local choice (reason=3)
-> wlan0: authenticate with 00:1b:da:2a:a1:53 (try 1)
-> wlan0: authenticated
-> wlan0: associate with 00:1b:da:2a:a1:53 (try 1)
-> wlan0: RX AssocResp from 00:1b:da:2a:a1:53 (capab=0x411 status=0 aid=1)
-> wlan0: associated
-> ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-> wlan0: no IPv6 routers present
-> wlan0: deauthenticating from 00:1b:da:2a:a1:53 by local choice (reason=3)
-> ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> wlan0: deauthenticating from 00:1b:da:2a:a1:53 by local choice (reason=3)
-> wlan0: authenticate with 00:1b:da:2a:a1:53 (try 1)
-> wlan0: authenticated
-> wlan0: associate with 00:1b:da:2a:a1:53 (try 1)
-> wlan0: RX AssocResp from 00:1b:da:2a:a1:53 (capab=0x411 status=0 aid=1)
-> wlan0: associated
-> ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-> wlan0: no IPv6 routers present
-> wlan0: authenticate with 00:1b:da:2a:a1:53 (try 1)
-> wlan0: authenticated
-> wlan0: associate with 00:1b:da:2a:a1:53 (try 1)
-> wlan0: RX AssocResp from 00:1b:da:2a:a1:53 (capab=0x411 status=0 aid=1)
-> wlan0: associated
-> wlan0: authenticate with 00:1b:da:2a:a1:53 (try 1)
-> wlan0: authenticated
-> wlan0: associate with 00:1b:da:2a:a1:53 (try 1)
-> wlan0: RX AssocResp from 00:1b:da:2a:a1:53 (capab=0x411 status=0 aid=1)
-> wlan0: associated
->
-> so I think after applying the patches, things have been working fine.
->
-> Cheers
-> Satish
->
-> --
-> http://satisheerpini.net
->
-
-
-
+diff --git a/drivers/net/pcmcia/smc91c92_cs.c b/drivers/net/pcmcia/smc91c92_cs.c
+index 7b6fe89..64e6a84 100644
+--- a/drivers/net/pcmcia/smc91c92_cs.c
++++ b/drivers/net/pcmcia/smc91c92_cs.c
+@@ -322,6 +322,7 @@ static int smc91c92_probe(struct pcmcia_device *link)
+ 	return -ENOMEM;
+     smc = netdev_priv(dev);
+     smc->p_dev = link;
++    link->priv = dev;
+ 
+     spin_lock_init(&smc->lock);
+     link->io.NumPorts1 = 16;
 -- 
-http://satisheerpini.net
+1.7.0.4
+
