@@ -1,67 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server.heaven-czfree.net ([78.108.102.201]:53154 "EHLO
-	smtp.heaven-czfree.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751407Ab0FIGsZ (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:43218 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752040Ab0FLEeF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jun 2010 02:48:25 -0400
-Received: from [10.23.202.43] (unknown [10.23.202.43])
-	by smtp.heaven-czfree.net (Postfix) with ESMTP id DA812147681
-	for <linux-wireless@vger.kernel.org>; Wed,  9 Jun 2010 08:48:23 +0200 (CEST)
-From: "Jaroslav Fojtik" <jafojtik@seznam.cz>
-To: linux-wireless@vger.kernel.org
-Date: Wed, 09 Jun 2010 08:50:02 +0200
-MIME-Version: 1.0
-Subject: Compilation problems with Linux-2.6.34 and compat-wireless-2010-06-05
-Message-ID: <4C0F399A.21017.1F03DB8@jafojtik.seznam.cz>
-Content-type: text/plain; charset=US-ASCII
+	Sat, 12 Jun 2010 00:34:05 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 03/24] ath9k_hw: clear MIB interrupt causes when skipping ANI adjustments
+Date: Sat, 12 Jun 2010 00:33:41 -0400
+Message-Id: <1276317242-15540-4-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
+References: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dears,
+We get an MIB interrupt when we hit certain PHY error counter
+thresholds. If ANI is disabled but the MIB interrupt is enabled
+we'll keep around the old MIB interrupt causes.
 
-could you fix this compilation problem:
+Since ath9k disables the MIB interrupt when ANI is disabled
+this is not a fix, but more of a sanity fix in case we ever
+need the MIB interrupt enabled but disabling ANI.
 
-make -C /usr/src/linux-2.6.34 M=/I/USR_SRC/compat-wireless-2010-06-05 modules
-make[1]: Entering directory `/I/USR_SRC/linux-2.6.34'
-  CC [M]  /I/USR_SRC/compat-wireless-2010-06-05/drivers/net/wireless/ipw2x00/ipw2100.o
-/I/USR_SRC/compat-wireless-2010-06-05/drivers/net/wireless/ipw2x00/ipw2100.c: In function 
-'ipw2100_alloc_device':
-/I/USR_SRC/compat-wireless-2010-06-05/drivers/net/wireless/ipw2x00/ipw2100.c:6138: error: 
-'struct net_device' has no member named 'wireless_handlers'
-/I/USR_SRC/compat-wireless-2010-06-05/drivers/net/wireless/ipw2x00/ipw2100.c:6144: error: 
-'struct net_device' has no member named 'wireless_data'
-/I/USR_SRC/compat-wireless-2010-06-05/drivers/net/wireless/ipw2x00/ipw2100.c: At top 
-level:
-/I/USR_SRC/compat-wireless-2010-06-05/drivers/net/wireless/ipw2x00/ipw2100.c:8406: error: 
-unknown field 'num_private' specified in initializer
-/I/USR_SRC/compat-wireless-2010-06-05/drivers/net/wireless/ipw2x00/ipw2100.c:8406: 
-warning: initialization makes pointer from integer without a cast
-/I/USR_SRC/compat-wireless-2010-06-05/drivers/net/wireless/ipw2x00/ipw2100.c:8407: error: 
-unknown field 'num_private_args' specified in initializer
-/I/USR_SRC/compat-wireless-2010-06-05/drivers/net/wireless/ipw2x00/ipw2100.c:8407: 
-warning: excess elements in struct initializer
-/I/USR_SRC/compat-wireless-2010-06-05/drivers/net/wireless/ipw2x00/ipw2100.c:8407: 
-warning: (near initialization for 'ipw2100_wx_handler_def')
-/I/USR_SRC/compat-wireless-2010-06-05/drivers/net/wireless/ipw2x00/ipw2100.c:8408: error: 
-unknown field 'private' specified in initializer
-/I/USR_SRC/compat-wireless-2010-06-05/drivers/net/wireless/ipw2x00/ipw2100.c:8408: 
-warning: excess elements in struct initializer
-/I/USR_SRC/compat-wireless-2010-06-05/drivers/net/wireless/ipw2x00/ipw2100.c:8408: 
-warning: (near initialization for 'ipw2100_wx_handler_def')
-/I/USR_SRC/compat-wireless-2010-06-05/drivers/net/wireless/ipw2x00/ipw2100.c:8409: error: 
-unknown field 'private_args' specified in initializer
-/I/USR_SRC/compat-wireless-2010-06-05/drivers/net/wireless/ipw2x00/ipw2100.c:8409: 
-warning: excess elements in struct initializer
-/I/USR_SRC/compat-wireless-2010-06-05/drivers/net/wireless/ipw2x00/ipw2100.c:8409: 
-warning: (near initialization for 'ipw2100_wx_handler_def')
-make[4]: *** [/I/USR_SRC/compat-wireless-2010-06-
-05/drivers/net/wireless/ipw2x00/ipw2100.o] Error 1
-make[3]: *** [/I/USR_SRC/compat-wireless-2010-06-05/drivers/net/wireless/ipw2x00] Error 2
-make[2]: *** [/I/USR_SRC/compat-wireless-2010-06-05/drivers/net/wireless] Error 2
-make[2]: *** Waiting for unfinished jobs....
-make[1]: *** [_module_/I/USR_SRC/compat-wireless-2010-06-05] Error 2
-make[1]: Leaving directory `/I/USR_SRC/linux-2.6.34'
-make: *** [modules] Error 2
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ani.c |    9 ++++++++-
+ 1 files changed, 8 insertions(+), 1 deletions(-)
 
-regards
-   Jara
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index e879055..66d0b88 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -585,8 +585,15 @@ void ath9k_hw_procmibevent(struct ath_hw *ah)
+ 	/* Clear the mib counters and save them in the stats */
+ 	ath9k_hw_update_mibstats(ah, &ah->ah_mibStats);
+ 
+-	if (!DO_ANI(ah))
++	if (!DO_ANI(ah)) {
++		/*
++		 * We must always clear the interrupt cause by
++		 * resetting the phy error regs.
++		 */
++		REG_WRITE(ah, AR_PHY_ERR_1, 0);
++		REG_WRITE(ah, AR_PHY_ERR_2, 0);
+ 		return;
++	}
+ 
+ 	/* NB: these are not reset-on-read */
+ 	phyCnt1 = REG_READ(ah, AR_PHY_ERR_1);
+-- 
+1.6.3.3
+
