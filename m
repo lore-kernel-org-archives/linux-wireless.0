@@ -1,111 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:35831 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932865Ab0FBUMM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jun 2010 16:12:12 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 02 Jun 2010 13:12:12 -0700
-From: Michael Green <Michael.Green@Atheros.com>
-To: Pekka Pietikainen <pp@ee.oulu.fi>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: David Quan <David.Quan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 2 Jun 2010 13:12:08 -0700
-Subject: wireless-regdb: FI/CZ updates
-Message-ID: <93781E992CBA7843962D8B0E7D683F3C1117C4603A@SC1EXMB-MBCL.global.atheros.com>
-References: <20100525132035.GA863@ee.oulu.fi>
- <AANLkTik7vyllINxzeMN2HPD7cqpQH2tZegc3-VsNa8da@mail.gmail.com>
- <20100528124258.GA27491@ee.oulu.fi>
-In-Reply-To: <20100528124258.GA27491@ee.oulu.fi>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from bombadil.infradead.org ([18.85.46.34]:43235 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752310Ab0FLEeF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Jun 2010 00:34:05 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 15/24] ath9k: make ath_get_hal_qnum static
+Date: Sat, 12 Jun 2010 00:33:53 -0400
+Message-Id: <1276317242-15540-16-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
+References: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-VG8gcmVpdGVyYXRlIGEgZmV3IHBvaW50cyBtYWRlIGluIGxhc3QgZW1haWwgYW5kIGFkZCBhIG5l
-dyBpbXBvcnRhbnQgcG9pbnQgYykuLi4NCg0KYSkgSSByZWNvbW1lbmQgYW55b25lIHN1Ym1pdHRp
-bmcgY2hhbmdlcyB0byB0aGUgdGFibGUgdXNlIGRCbSBpbnN0ZWFkIG9mIG1XIHZhbHVlcy4gVGhp
-cyBpcyBzaW1wbHkgZm9yIGNvbnNpc3RlbmN5LiBUaGUgcmVndWxhdG9yeSBydWxlcyBxdW90ZSBh
-bGwgc29ydHMgb2YgZGlmZmVyZW50IGRlZmluaXRpb25zIG9mIHR4IHBvd2VyIChpLmUgJ1BTRCBp
-biBtVy9NSHonLCAncGVhayBFSVJQJywgJ21heCBkQm0nKS4gQnV0IGlmIHRoaXMgdGFibGUgaXMg
-bWVhbnQgYXMgc3cgKHJhdGhlciB0aGFuIGp1c3QgYSByZWZlcmVuY2UgZG9jKSwgdGhlbiBJIHN1
-Z2dlc3QgdXNpbmcgdGhlIHNhbWUgdW5pdHMgdGhyb3VnaG91dC4NCg0KYikgWWVzLCBGaW5sYW5k
-IHNob3VsZCBmb2xsb3cgdGhlIHNhbWUgIkVUU0kxIiB2YWx1ZXMgdXNlZCBmb3IgbW9zdCBvZiB0
-aGUgb3RoZXIgRVUgY291bnRyaWVzLiBFVSBtZW1iZXIgc3RhdGVzIHNvbWV0aW1lcyBoYXZlIG1p
-bm9yIGRpZmZlcmVuY2VzIGluIHRyYW5zcG9zaXRpb24gb2YgdGhlIGhhcm1vbml6ZWQgc3RhbmRh
-cmRzLCBidXQgaXQgaXMgdGhlIGhhcm1vbml6ZWQgc3RhbmRhcmRzIHRoYXQgbXVzdCBiZSB1c2Vk
-IGZvciByZWd1bGF0b3J5IGNvbmZvcm1hbmNlIGFuZCBDRSBNYXJraW5nL2ltcG9ydCBhY3Jvc3Mg
-YWxsIHRoZSBFVSBjb3VudHJpZXMuDQpJbiBvdGhlciB3b3JkcyB0aGUgUiZUVEUgRGlyZWN0aXZl
-IGFuZCBFVFNJIEVOIDMwMSAzMjggKGZvciAyLjRHSHopIGFuZCBFTjMwMSA4OTMgKGZvciA1R0h6
-KSBhcmUgInRoZSBvdmVycmlkaW5nIGxhdyBmb3IgY29tcGxpYW5jZSBhY3Jvc3MgYWxsIHRoZSBF
-dXJvcGVhbiBDb21tdW5pdHkgY291bnRyaWVzIChpZSBhbGxvd2VkIHR4IHBvd2VyLCBtb2R1bGF0
-aW9ucyBhbmQgY2hhbm5lbHMpLg0KDQoNCg0KYykgSSB0aGluayB0aGUgZ3JvdXAgc2hvdWxkIHJl
-dmlldyB0aGUgZG9jdW1lbnRhdGlvbi9jb21tZW50cyB0aGF0IGFjY29tcGFueSB0aGUgcmVnZGJh
-c2UgdG8gZXhwbGFpbiBjbGVhcmx5IHRvIGltcGxlbWVudGVycy4uLg0KDQppKSBUeCBwb3dlciB2
-YWx1ZXMgaW4gdGhlIGRiYXNlIGFyZSBpbiBFSVJQIC0gbWVhbmluZyB0aGUgZGV2aWNlJ3MgY29u
-ZHVjdGVkIHR4IHBvd2VyIHBsdXMgaW5kaXZpZHVhbCBkZXZpY2UncyBhbnRlbm5hIGdhaW4gKGlu
-IDIuNCAmIDVHSHopIG11c3QgYmUgYmVsb3cgdGhlIEVJUlAgdmFsdWVzIGluIHRoZSBkYmFzZS4g
-IElmIGEgcHJvZHVjdCBzaW1wbHkgc2V0cyBjb25kdWN0ZWQgdHggcG93ZXIgdG8gdGhlIHZhbHVl
-IGluIHRoZSBkYmFzZSBhbmQgdGhlIHByb2R1Y3QgaGFzIGFuIGFudGVubmEgd2l0aCBwb3NpdGl2
-ZSBnYWluLCB0aGVuIGVuZCBwcm9kdWN0IHdpbGwgKHVuaW50ZW50aW9uYWxseSkgbm90IGNvbXBs
-eSB3aXRoIG1vc3QgY291bnRyaWVzIGxpbWl0cy4NCg0KaWkpIEltcGxlbWVudGVycyBtdXN0IGVu
-c3VyZSB0aGUgY29tcGxldGUgcmFkaW8gZGV2aWNlL3N5c3RlbSBwYXNzZXMgcmVndWxhdG9yeSBj
-b21wbGlhbmNlICBhbmQgcmVjZWl2ZXMgcmFkaW8gY2VydGlmaWNhdGlvbiBmb3IgdGFyZ2V0IGNv
-dW50cmllcy4gIEFjdHVhbCBhbnRlbm5hIGdhaW4gaXMgdGFrZW4gaW50byBhY2NvdW50IGR1cmlu
-ZyByZWd1bGF0b3J5IGNvbXBsaWFuY2UgdGVzdGluZyBvZiB0aGUgc3lzdGVtIChodyArIHN3KS4g
-UmVzdWx0aW5nIGNvbXBsaWFudCBsZXZlbHMgY2FuIGJlIChJTU8gbXVzdCBiZSkgcHJvZ3JhbW1l
-ZCBpbnRvIGEgcmFkaW8ncyBody9FRVBST00uICBUaGlzIHByZXZlbnRzIHBvc3NpYmxlIG5vbi1j
-b21wbGlhbmNlIHBlciBpKS4gICBBbiBpbXBvcnRhbnQgYXNpZGUgZm9yIHRoaXMgZ3JvdXAgdG8g
-dW5kZXJzdGFuZC4uLml0IGlzIHJhcmUgdGhhdCBhbnkgcmFkaW8gZGV2aWNlIGNhbiBiZSBsZWdh
-bGx5IHNldCB0byB0aGUgInR4IHBvd2VyIiB2YWx1ZSB0aGF0IGFwcGVhcnMgaW4gYSBjb3VudHJp
-ZXMgcHVibGlzaGVkIHJ1bGVzLiBSZWFzb24gaXMgdGhhdCB0eCBwb3dlciBpcyBqdXN0IG9uZSBv
-ZiBtYW55IHJlcXVpcmVkIGNvbXBsaWFuY2UgdGVzdHMuIEl0IGlzIG9mdGVuIHNwdXJpb3VzIGVt
-aXNzaW9ucywgaGFybW9uaWNzIGFuZCBwb3dlciBzcGVjdHJhbCBkZW5zaXR5IHRlc3RzIHRoYXQg
-bGltaXQgdGhlIGNvbXBsaWFudCB0eCBwb3dlciB0byBsZXZlbHMgc29tZXRpbWVzIG11Y2ggbG93
-ZXIgdGhhbiB0aGUgc2ltcGxlICJwZWFrIEVJUlAiIGxpbWl0IHF1b3RlZCBpbiB0aGUgcnVsZXMu
-ICAgDQoNCk15IHBvaW50IGhlcmUgaXMgdG8gcmVpdGVyYXRlIHRoZSBuZWVkIHRvIGVkdWNhdGUg
-aW1wbGVtZW50ZXJzIHRvIHRha2UgcmVzcG9uc2liaWxpdHkgYW5kIHVuZGVyc3RhbmQgdGhlIGNv
-bXBsZXRlIHJhZGlvIHByb2R1Y3QgKGh3K3N3KSBtdXN0IG1lZXQgcmVndWxhdG9yeSBydWxlcy4g
-SW1wbGVtZW50ZXJzIGNhbm5vdCBhdCBhbGwgcmVseSBvbiB0aGlzIHJlZ2RiYXNlIHRvIGVuc3Vy
-ZSB0aGUgZGV2aWNlIG1haW50YWlucyBjb21wbGlhbmNlIHdpdGggdGhlIHJ1bGVzLg0KDQppaWkp
-IENhbiBzb21lb25lIHBsZWFzZSBleHBsYWluIGlmL2hvdyBhbnRlbm5hIGdhaW4gaXMgZW50ZXJl
-ZCBpbnRvIHN3IGZvciBhIHByb2R1Y3Q/ICBUaGlzIGlzIG9uZSBwb3NzaWJsZSByb290IGZvciB2
-ZW5kb3JzIHdobyBkb24ndCBwcm9ncmFtIGluIGNvbXBsaWFuY2UgdGVzdCByZXN1bHRzIGludG8g
-dGhlaXIgaHcgdG8gYWRqdXN0IGRvd24gYWN0dWFsIHR4IHBvd2VyIGNvbXBhcmVkIHRvIHRoZSBF
-SVJQIHZhbHVlcyBpbiB0aGUgcmVnZGJhc2UuDQoNCg0KIA0KTWljaGFlbCBHcmVlbg0KQXRoZXJv
-cyBDb21tdW5pY2F0aW9ucywgSW5jLg0KbWdyZWVuQGF0aGVyb3MuY29tDQpEZXNrOiAgICsxLTc4
-MS00MDAtMTQ5MQ0KTW9iaWxlOiArMS01MDgtMzgwLTQ5MjENCg0KLS0tLS1PcmlnaW5hbCBNZXNz
-YWdlLS0tLS0NCkZyb206IFBla2thIFBpZXRpa2FpbmVuIFttYWlsdG86cHBAZWUub3VsdS5maV0g
-DQpTZW50OiBGcmlkYXksIE1heSAyOCwgMjAxMCA4OjQzIEFNDQpUbzogTHVpcyBSLiBSb2RyaWd1
-ZXoNCkNjOiBNaWNoYWVsIEdyZWVuOyBEYXZpZCBRdWFuOyBsaW52aWxsZUB0dXhkcml2ZXIuY29t
-OyBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6IFJlOiB3aXJlbGVzcy1y
-ZWdkYjogRkkvQ1ogdXBkYXRlcw0KDQpPbiBXZWQsIE1heSAyNiwgMjAxMCBhdCAxMTozMDozN0FN
-IC0wNzAwLCBMdWlzIFIuIFJvZHJpZ3VleiB3cm90ZToNCj4gUGVra2EsIHBsZWFzZSByZW1vdmUg
-dGhlc2UgY2hhbmdlcyBmcm9tIHRoaXMgcGF0Y2gsIHlvdSB3YW50IHRvIG1ha2UNCj4geW91ciBw
-YXRjaGVzIGF0b21pYywgd2l0aCBvbmx5IG9uZSBwdXJwb3NlIHRvIGhlbHAgdGhlIHJldmlldyBw
-cm9jZXNzDQo+IGVhc2llci4gWW91IHN0YXNoZWQgY2hhbmdlcyB0byBDWiAmIEZJIG9uIG9uZS4u
-LiBZb3UgYWxzbyBzd2l0Y2hlZA0KPiBmcm9tIGRCbSB0byBtVyBhbmQgbm90ZSBob3cgeW91IGFj
-dHVhbGx5IGRpZCBjaGFuZ2UgdGhlIEVJUlAgaGVyZSBmb3INCj4gb25seSBvbmUgZm9yIEZJLiBQ
-bGVhc2UgcHJvdmlkZSBhIHNlcGFyYXRlIHNldCBvZiBwYXRjaGVzIGZvciB0aGF0IGZvcg0KPiBG
-SS4gSWYgeW91IHdhbnQgdG8gc3dpdGNoIHRvIG1XIGZvciBhbGwgb2YgdGhlIGVudHJpZXMgZm9y
-IEZJIGZpcnN0IGRvDQo+IHRoYXQsIGFuZCB0aGVuIG9uIGEgc2VwYXJhdGUgcGF0Y2ggbWFrZSB0
-aGUgYWN0dWFsIHJlZ3VsYXRvcnkgY2hhbmdlcw0KPiBzbyB0aGlzIGlzIGNyeXN0YWwgY2xlYXIg
-Zm9yIHRoZSByZXZpZXcgcHJvY2Vzcy4NCk9raWUNCg0KTG9va2luZyBhdCBpdCBhIGJpdCBtb3Jl
-IHByb2JhYmx5IG1ha2VzIHNlbnNlIHRvIGNvZGlmeSB0aGUgY3VycmVudA0KaGFybW9uaXplZCBF
-VSBydWxlcywgYW5kIHRoZW4ganVzdCBmb3IgZWFjaCBjb3VudHJ5IG5vdGUgdGhhdCB0aGV5J3Zl
-DQphY3R1YWxseSBpbXBsZW1lbnRlZCBpdCBpbiB0aGVpciBsb2NhbCBsZWdpc2xhdGlvbiAoSSBj
-aGVja2VkIEZJLCBTRSBhbmQNCkNaKS4gIEV2ZXJ5b25lIHNob3VsZCBoYXZlLCBidXQgc29tZSBh
-cmUgcHJldHR5IHNsb3cgYXQgdGhpcywgb3INCmhhdmUgc29tZSBzcGVjaWFsIG5hdGlvbmFsIGlu
-dGVyZXN0cy4uLg0KDQpUaGUgbGVnaXNsYXRpb24gdXNlcyBtVywgc28gdGhhdCdzIHRoZSByZWFz
-b24gSSBzd2l0Y2hlZCB0aGVtLg0KDQpGb3IgcmV2aWV3IChmaXJzdCBoaXQgb24gZ29vZ2xlIGZv
-ciB0aGUgZGVjaXNpb24gbnVtYmVyDQpzaG91bGQgZmluZCB0aGUgb2ZmaWNpYWwgdGV4dCksIEkg
-Y2FuIGRvIHBhdGNoZXMgb25jZSBzb21lb25lDQpoYXMgdmVyaWZpZWQsIHRoYXQgdGhpcyBpcyB3
-aGF0IHRoZSBsZWdhbGVzZSBhY3R1YWxseSBzYXlzOg0KDQojIEVVIENvbW1pc3Npb24gRGVjaXNp
-b24gMjAwOS8zODEvRUMNCiAgICAgICAoMjQwMCAtIDI0ODMuNSBAIDQwKSwgKE4vQSwgMTAwbVcp
-DQojIDIwMDUvNTEzL0VDIGFuZCAyMDA3LzkwL0VDLCA1MjUwIGFuZCA1NDcwIGNhbiBiZSBkb3Vi
-bGVkIGlmIFRQQyBpcyBpbiB1c2UNCiAgICAgICAoNTE1MCAtIDUyNTAgQCA0MCksIChOL0EsIDIw
-MG1XKSwgTk8tT1VURE9PUg0KICAgICAgICg1MjUwIC0gNTM1MCBAIDQwKSwgKE4vQSwgMTAwbVcp
-LCBOTy1PVVRET09SLCBERlMNCiAgICAgICAoNTQ3MCAtIDU3MjUgQCA0MCksIChOL0EsIDUwMG1X
-KSwgREZTDQoNCg0K
+From: Felix Fietkau <nbd@openwrt.org>
+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    1 -
+ drivers/net/wireless/ath/ath9k/main.c  |    2 +-
+ 2 files changed, 1 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 6b5a26f..6aa8fa6 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -612,7 +612,6 @@ struct ath_wiphy {
+ 
+ void ath9k_tasklet(unsigned long data);
+ int ath_reset(struct ath_softc *sc, bool retry_tx);
+-int ath_get_hal_qnum(u16 queue, struct ath_softc *sc);
+ int ath_get_mac80211_qnum(u32 queue, struct ath_softc *sc);
+ int ath_cabq_update(struct ath_softc *);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 200e390..52ed4c8 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -808,7 +808,7 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 	return r;
+ }
+ 
+-int ath_get_hal_qnum(u16 queue, struct ath_softc *sc)
++static int ath_get_hal_qnum(u16 queue, struct ath_softc *sc)
+ {
+ 	int qnum;
+ 
+-- 
+1.6.3.3
+
