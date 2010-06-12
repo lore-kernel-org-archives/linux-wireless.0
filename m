@@ -1,45 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from straum.hexapodia.org ([207.7.131.186]:40298 "EHLO
-	straum.hexapodia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933756Ab0FEXk0 (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:58788 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751069Ab0FLCDP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Jun 2010 19:40:26 -0400
-Date: Sat, 5 Jun 2010 16:32:28 -0700
-From: Andy Isaacson <adi@hexapodia.org>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: Jay Sternberg <jay.e.sternberg@linux.intel.com>,
-	Greg KH <greg@kroah.com>, drago01 <drago01@gmail.com>,
-	reinette chatre <reinette.chatre@intel.com>,
-	=?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Subject: Re: iwl6050 firmware?
-Message-ID: <20100605233228.GA25826@hexapodia.org>
-References: <1269452733.2446.3138.camel@rchatre-DESK> <69e28c911003241324l1379abfcj782c8d16920450f3@mail.gmail.com> <20100323221350.GA20509@hexapodia.org> <1269452733.2446.3138.camel@rchatre-DESK> <20100323221350.GA20509@hexapodia.org> <f6ca9fed1003240115s238ff0d4pc00e16be9f34a1e@mail.gmail.com> <20100324160018.GN15308@hexapodia.org> <20100323221350.GA20509@hexapodia.org> <f6ca9fed1003240115s238ff0d4pc00e16be9f34a1e@mail.gmail.com> <20100323221350.GA20509@hexapodia.org>
+	Fri, 11 Jun 2010 22:03:15 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100323221350.GA20509@hexapodia.org>
+In-Reply-To: <1276288163.3918.1.camel@jlt3.sipsolutions.net>
+References: <4c0f4326.0a41df0a.7bde.ffffeef2@mx.google.com>
+	<AANLkTilrYYHjcMEhhrP7zjcLoo-TNczozxJSNRkDvSZy@mail.gmail.com>
+	<AANLkTimXqdkQxv_Y1JaleTTWNsDIQHQaPn8HR7efOupb@mail.gmail.com>
+	<1276286993.3918.0.camel@jlt3.sipsolutions.net> <AANLkTim90VBfWjp2YPYeYN6ImjIyZzcJ_XnpT5cdgCt4@mail.gmail.com>
+	<1276288163.3918.1.camel@jlt3.sipsolutions.net>
+From: Dmytro Milinevskyy <milinevskyy@gmail.com>
+Date: Sat, 12 Jun 2010 05:02:53 +0300
+Message-ID: <AANLkTinA0cEXRVtD8iP1UhOsdYsSRONagfX7yQbMl_DG@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH] [ath5k][leds] Ability to disable leds
+	support. If leds support enabled do not force mac802.11 leds layer selection.
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Bob Copeland <me@bobcopeland.com>, ath5k-devel@lists.ath5k.org,
+	Kalle Valo <kalle.valo@iki.fi>, linux-wireless@vger.kernel.org,
+	GeunSik Lim <geunsik.lim@samsung.com>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Keng-Yu Lin <keng-yu.lin@canonical.com>,
+	netdev@vger.kernel.org, Jiri Kosina <jkosina@suse.cz>,
+	Shahar Or <shahar@shahar-or.co.il>,
+	linux-kernel@vger.kernel.org, Luca Verdesca <magooz@salug.it>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 23, 2010 at 03:13:50PM -0700, Andy Isaacson wrote:
-> It's been several months since iwl6050 support was merged to mainline,
-> 
->     commit e1228374d648efe451973bc5f3d1f9a8e943ec0b
->     Author: Jay Sternberg <jay.e.sternberg@linux.intel.com>
->     Date:   Mon Jan 19 15:30:34 2009 -0800
-> 
-> 	iwlwifi: add recognition of Intel WiFi Link 6000 and 6050 Series
-> 
-> and hardware is shipping,
-> 
-> 02:00.0 Network controller: Intel Corporation WiMAX/WiFi Link 6050 Series (rev 35)
-> 
-> but the firmware isn't yet in linux-firmware.git nor on
-> intellinuxwireless.org.
-> 
-> Any ETA on a release?
+In this case no way to control LEDs. If you turn LEDs support you
+can't tune them out, no?
 
-FWIW, iwlwifi-6050-ucode-9.201.4.1.tgz was released this past week, and
-is working fine on my "Advanced-N + WiMAX 6250" 8086:0089 (rev 35) with
-2.6.35-rc1-00194-gaef4b9a.
+I believe that user should be able to chose whether LEDs support is
+needed or not. This is how done in intel wireless drivers. The driver
+should be tolerant.
 
--andy
+-- Dima
+
+On Fri, Jun 11, 2010 at 11:29 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2010-06-11 at 23:26 +0300, Dmytro Milinevskyy wrote:
+>> Generic LED class is not disabled so it's possible to control leds in sysfs.
+>
+> But if you turn off ATH5K_LEDS??
+>
+> johannes
+>
+>
