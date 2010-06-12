@@ -1,61 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40603 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754917Ab0FGNTX (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:43219 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751909Ab0FLEeF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jun 2010 09:19:23 -0400
-Subject: Re: [RFC PATCH] mac80211: Fix circular locking dependency in ARP
- filter handling
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: linux-wireless@vger.kernel.org, reinette.chatre@intel.com
-In-Reply-To: <1275915965-10124-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1275915965-10124-1-git-send-email-juuso.oikarinen@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 07 Jun 2010 15:19:21 +0200
-Message-ID: <1275916761.29978.15.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Sat, 12 Jun 2010 00:34:05 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 02/24] ath9k_hw: fix clock rate calculations for ANI
+Date: Sat, 12 Jun 2010 00:33:40 -0400
+Message-Id: <1276317242-15540-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
+References: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-06-07 at 16:06 +0300, Juuso Oikarinen wrote:
+The clock rate was assumed to be static but it actually
+changes depending on the mode of operation, correct this
+to help improve the calcuation of the listenTime for ANI.
+This change will help adjust ANI more accurately on different
+PHY thresholds.
 
-> --- a/net/mac80211/iface.c
-> +++ b/net/mac80211/iface.c
-> @@ -477,6 +477,9 @@ static int ieee80211_stop(struct net_device *dev)
->  		cancel_work_sync(&sdata->u.mgd.chswitch_work);
->  		cancel_work_sync(&sdata->u.mgd.monitor_work);
->  		cancel_work_sync(&sdata->u.mgd.beacon_connection_loss_work);
-> +#ifdef CONFIG_INET
-> +		cancel_work_sync(&sdata->u.mgd.arp_config_work);
-> +#endif
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ani.c |   31 ++++++++++++++++++++++++++++++-
+ 1 files changed, 30 insertions(+), 1 deletions(-)
 
-No can do, this is under RTNL and thus can't block waiting for a work
-that acquires the RTNL ... the work might already be running, waiting
-for the RTNL, by the time you get here. This will also get you a lockdep
-complaint.
-
-This is why 
-
-> @@ -379,7 +379,8 @@ static int ieee80211_ifa_changed(struct notifier_block *nb,
->  	ifmgd = &sdata->u.mgd;
->  	mutex_lock(&ifmgd->mtx);
->  	if (ifmgd->associated)
-> -		ieee80211_set_arp_filter(sdata);
-> +		ieee80211_queue_work(&sdata->local->hw,
-> +				     &sdata->u.mgd.arp_config_work);
->  	mutex_unlock(&ifmgd->mtx);
-
-No need to do change it here since the rtnl is held outside.
-
-Also, and this applies to the change in mlme.c too, you must never put
-work that acquires the rtnl onto the mac80211 workqueue ... that's what
-you were trying to fix to start with!
-
-But because the interface might go away before your work runs, you're in
-a stupid situation where you can't really use a per-interface work
-either ... I think you probably need to have the work in ieee80211_local
-and iterate the interface list.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index 3da820f..e879055 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -259,6 +259,27 @@ static void ath9k_hw_ani_lower_immunity(struct ath_hw *ah)
+ 	}
+ }
+ 
++static u8 ath9k_hw_chan_2_clockrate_mhz(struct ath_hw *ah)
++{
++	struct ath9k_channel *chan = ah->curchan;
++	struct ieee80211_conf *conf = &ath9k_hw_common(ah)->hw->conf;
++	u8 clockrate; /* in MHz */
++
++	if (!ah->curchan) /* should really check for CCK instead */
++		clockrate = ATH9K_CLOCK_RATE_CCK;
++	else if (conf->channel->band == IEEE80211_BAND_2GHZ)
++		clockrate = ATH9K_CLOCK_RATE_2GHZ_OFDM;
++	else if (IS_CHAN_A_FAST_CLOCK(ah, chan))
++		clockrate = ATH9K_CLOCK_FAST_RATE_5GHZ_OFDM;
++	else
++		clockrate = ATH9K_CLOCK_RATE_5GHZ_OFDM;
++
++	if (conf_is_ht40(conf))
++		return clockrate * 2;
++
++	return clockrate * 2;
++}
++
+ static int32_t ath9k_hw_ani_get_listen_time(struct ath_hw *ah)
+ {
+ 	struct ar5416AniState *aniState;
+@@ -278,7 +299,15 @@ static int32_t ath9k_hw_ani_get_listen_time(struct ath_hw *ah)
+ 		int32_t ccdelta = cycleCount - aniState->cycleCount;
+ 		int32_t rfdelta = rxFrameCount - aniState->rxFrameCount;
+ 		int32_t tfdelta = txFrameCount - aniState->txFrameCount;
+-		listenTime = (ccdelta - rfdelta - tfdelta) / 44000;
++		int32_t clock_rate = ath9k_hw_chan_2_clockrate_mhz(ah) * 1000;;
++
++		/*
++		 * convert HW counter values to ms using mode
++		 * specifix clock rate
++		 */
++		clock_rate = ath9k_hw_chan_2_clockrate_mhz(ah) * 1000;;
++
++		listenTime = (ccdelta - rfdelta - tfdelta) / clock_rate;
+ 	}
+ 	aniState->cycleCount = cycleCount;
+ 	aniState->txFrameCount = txFrameCount;
+-- 
+1.6.3.3
 
