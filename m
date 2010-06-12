@@ -1,37 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:38015 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755359Ab0FRSCM (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:43243 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752411Ab0FLEeF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jun 2010 14:02:12 -0400
-Received: by fxm10 with SMTP id 10so757577fxm.19
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Jun 2010 11:02:10 -0700 (PDT)
-MIME-Version: 1.0
-Date: Fri, 18 Jun 2010 14:02:10 -0400
-Message-ID: <AANLkTimZTGvPuWPTXSOfOjvxzQh5tSnlqNBpueASLAUF@mail.gmail.com>
-Subject: rt61pci AP performance issues
-From: David Ellingsworth <david@identd.dyndns.org>
-To: rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 12 Jun 2010 00:34:05 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 19/24] ath9k_hw: remove a useless function for setting the mac address
+Date: Sat, 12 Jun 2010 00:33:57 -0400
+Message-Id: <1276317242-15540-20-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
+References: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've been trying unsuccessfully for some time to use a rt61pci based
-wireless card as an Access Point for my network. With kernel version
-2.6.32-4 (Debian version) the AP works but has intermittent problems.
-Notably, that version continuously prints the message
-"ieee80211_tx_status: headroom too small" to my system log and the
-driver simply stops working after a random amount of time. The first
-of these errors was fixed some time ago after I reported it, but the
-other still remains, even with the latest wireless-testing driver, and
-there's no indication as to the cause of the issue. With regards to
-this issue, it appears that performance steadily drops until it
-becomes unusable. With the latest wireless-testing driver I can
-reliably reproduce this issue by trying to transfer a large file from
-my server to a client. Any help diagnosing and correcting this issue
-would be greatly appreciated.
+From: Felix Fietkau <nbd@openwrt.org>
 
-Regards,
+ath9k_hw_setmac() only copies the mac address it is called with into
+common->macaddr, yet in all call sites, the supplied mac address pointer
+is already common->macaddr.
 
-David Ellingsworth
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    3 ---
+ drivers/net/wireless/ath/ath9k/hw.c           |    6 ------
+ drivers/net/wireless/ath/ath9k/hw.h           |    1 -
+ drivers/net/wireless/ath/ath9k/recv.c         |    3 ---
+ 4 files changed, 0 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index 89d81ab..89d3848 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -403,9 +403,6 @@ static void ath9k_htc_opmode_init(struct ath9k_htc_priv *priv)
+ 	/* configure operational mode */
+ 	ath9k_hw_setopmode(ah);
+ 
+-	/* Handle any link-level address change. */
+-	ath9k_hw_setmac(ah, common->macaddr);
+-
+ 	/* calculate and install multicast filter */
+ 	mfilt[0] = mfilt[1] = ~0;
+ 	ath9k_hw_setmcastfilter(ah, mfilt[0], mfilt[1]);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 1fa3fe7..83e0461 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2538,12 +2538,6 @@ void ath9k_hw_set_txpowerlimit(struct ath_hw *ah, u32 limit)
+ }
+ EXPORT_SYMBOL(ath9k_hw_set_txpowerlimit);
+ 
+-void ath9k_hw_setmac(struct ath_hw *ah, const u8 *mac)
+-{
+-	memcpy(ath9k_hw_common(ah)->macaddr, mac, ETH_ALEN);
+-}
+-EXPORT_SYMBOL(ath9k_hw_setmac);
+-
+ void ath9k_hw_setopmode(struct ath_hw *ah)
+ {
+ 	ath9k_hw_set_operating_mode(ah, ah->opmode);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 20ec29f..09dd7be 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -885,7 +885,6 @@ void ath9k_hw_setrxfilter(struct ath_hw *ah, u32 bits);
+ bool ath9k_hw_phy_disable(struct ath_hw *ah);
+ bool ath9k_hw_disable(struct ath_hw *ah);
+ void ath9k_hw_set_txpowerlimit(struct ath_hw *ah, u32 limit);
+-void ath9k_hw_setmac(struct ath_hw *ah, const u8 *mac);
+ void ath9k_hw_setopmode(struct ath_hw *ah);
+ void ath9k_hw_setmcastfilter(struct ath_hw *ah, u32 filter0, u32 filter1);
+ void ath9k_hw_setbssidmask(struct ath_hw *ah);
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 78ef1ae..da0cfe9 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -116,9 +116,6 @@ static void ath_opmode_init(struct ath_softc *sc)
+ 	/* configure operational mode */
+ 	ath9k_hw_setopmode(ah);
+ 
+-	/* Handle any link-level address change. */
+-	ath9k_hw_setmac(ah, common->macaddr);
+-
+ 	/* calculate and install multicast filter */
+ 	mfilt[0] = mfilt[1] = ~0;
+ 	ath9k_hw_setmcastfilter(ah, mfilt[0], mfilt[1]);
+-- 
+1.6.3.3
+
