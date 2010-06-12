@@ -1,85 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47325 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753044Ab0FAUGq (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:43237 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752325Ab0FLEeF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jun 2010 16:06:46 -0400
-Subject: Re: Path for fixed channel issue in aircrack-ng suite [V2]
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: Richard Farina <sidhayn@gmail.com>,
-	=?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
-	Joker Joker <jokesareonyou@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1275421989.2574.12.camel@maxim-laptop>
-References: <AANLkTinAnMwY0ZCetUmUbuhsp3rB360xvlaGM5ifdFHz@mail.gmail.com>
-	 <1274775071.3635.4.camel@jlt3.sipsolutions.net>
-	 <AANLkTilPIt59FhAuVlhisUR7QDabCtnZwahjxWbUysiG@mail.gmail.com>
-	 <1274860275.3658.0.camel@jlt3.sipsolutions.net>
-	 <4C000B68.9000305@gmail.com>  <1275416907.3778.11.camel@maxim-laptop>
-	 <1275419973.3634.7.camel@jlt3.sipsolutions.net>
-	 <1275421989.2574.12.camel@maxim-laptop>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 01 Jun 2010 22:06:43 +0200
-Message-ID: <1275422803.3634.20.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Sat, 12 Jun 2010 00:34:05 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 16/24] ath9k: fix extending the rx timestamp with the hardware TSF
+Date: Sat, 12 Jun 2010 00:33:54 -0400
+Message-Id: <1276317242-15540-17-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
+References: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-06-01 at 22:53 +0300, Maxim Levitsky wrote:
+From: Felix Fietkau <nbd@openwrt.org>
 
-> > This won't quite work. monitor interfaces are always slaves in the sense
-> > that their channel setting never takes precedence over anything, so if
-> > you add another interface and do something there, the hardware will
-> > happily channel switch away from the monitor channel, but it will still
-> > report the old channel here that you set.
-> > 
-> > I have no idea how to _properly_ fix this though, since eventually we'll
-> > have a situation where you can have multiple interfaces active on
-> > different channels, so that monitors don't have a fixed channel anyway.
-> > 
-> > Maybe this patch is sufficient since it works in the case people care
-> > about when they _only_ have a monitor interface, but I think it'd be
-> > nicer if it wouldn't report anything in the other cases.
-> 
-> Why?
-> 
-> We don't have any wireless devices that actually support using 2
-> channels independently.
+AR5416 and all newer chipsets use a 32 bit rx timestamp, so there
+is no need to keep the 15 bit timestamp extending logic around.
 
-ath9k already supports this with its virtual wiphy concept, and that
-will be moved in the medium term to do channel switching between
-multiple virtual interfaces. It's perfectly possible to do this with two
-station interfaces, for instance, since you can pretend to be in
-powersave while you go to the other channel. So we actually _do_ have
-devices that support multiple channels independently, just not the way
-you think of it.
+This patch removes ath9k_hw_extend_tsf (replaced by a call to
+ath9k_hw_gettsf64), and reduces the frequency of TSF reads, which
+can improve performance in some cases.
 
-> Therefore user should be aware that if he sets channel on one interface,
-> and then on other, the last setting matters.
+This change also has the side effect of making rx timestamps
+more accurate.
 
-Like I said, this is not true.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/hw.c   |   15 ---------------
+ drivers/net/wireless/ath/ath9k/hw.h   |    1 -
+ drivers/net/wireless/ath/ath9k/recv.c |   17 ++++++++++++++---
+ 3 files changed, 14 insertions(+), 19 deletions(-)
 
-> Of course the right fix would to make channel a global property of card
-> rather that of interface.
-
-No, see above ... my recent patches have moved exactly in the other
-direction for this reason!
-
-However, This obviously only works for certain special cases like 2
-stations. Monitor interfaces are sort of a second class citizen, if you
-have two stations on different channels and add a monitor interface, its
-channel setting won't matter at all.
-
-However, in that case, when you set a channel on the monitor interface,
-with this patch it will report that channel, irregardless of what
-channel it is currently on. And if you have 2 channel switching station
-mode interfaces, there's no sensible channel to report at all.
-
-Again however though, very likely you don't care about that situation.
-But I still think we shouldn't report a bogus channel then. So maybe in
-that situation we should just fall back to reporting nothing, i.e.
-return -EINVAL?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 874c4e9..1fa3fe7 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2616,21 +2616,6 @@ void ath9k_hw_set_tsfadjust(struct ath_hw *ah, u32 setting)
+ }
+ EXPORT_SYMBOL(ath9k_hw_set_tsfadjust);
+ 
+-/*
+- *  Extend 15-bit time stamp from rx descriptor to
+- *  a full 64-bit TSF using the current h/w TSF.
+-*/
+-u64 ath9k_hw_extend_tsf(struct ath_hw *ah, u32 rstamp)
+-{
+-	u64 tsf;
+-
+-	tsf = ath9k_hw_gettsf64(ah);
+-	if ((tsf & 0x7fff) < rstamp)
+-		tsf -= 0x8000;
+-	return (tsf & ~0x7fff) | rstamp;
+-}
+-EXPORT_SYMBOL(ath9k_hw_extend_tsf);
+-
+ void ath9k_hw_set11nmac2040(struct ath_hw *ah)
+ {
+ 	struct ieee80211_conf *conf = &ath9k_hw_common(ah)->hw->conf;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 009f0fa..ba84ac7 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -894,7 +894,6 @@ u64 ath9k_hw_gettsf64(struct ath_hw *ah);
+ void ath9k_hw_settsf64(struct ath_hw *ah, u64 tsf64);
+ void ath9k_hw_reset_tsf(struct ath_hw *ah);
+ void ath9k_hw_set_tsfadjust(struct ath_hw *ah, u32 setting);
+-u64 ath9k_hw_extend_tsf(struct ath_hw *ah, u32 rstamp);
+ void ath9k_hw_init_global_settings(struct ath_hw *ah);
+ void ath9k_hw_set11nmac2040(struct ath_hw *ah);
+ void ath9k_hw_beaconinit(struct ath_hw *ah, u32 next_beacon, u32 beacon_period);
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 5141cd8..78ef1ae 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1002,8 +1002,6 @@ static int ath9k_rx_skb_preprocess(struct ath_common *common,
+ 				   struct ieee80211_rx_status *rx_status,
+ 				   bool *decrypt_error)
+ {
+-	struct ath_hw *ah = common->ah;
+-
+ 	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
+ 
+ 	/*
+@@ -1018,7 +1016,6 @@ static int ath9k_rx_skb_preprocess(struct ath_common *common,
+ 	if (ath9k_process_rate(common, hw, rx_stats, rx_status))
+ 		return -EINVAL;
+ 
+-	rx_status->mactime = ath9k_hw_extend_tsf(ah, rx_stats->rs_tstamp);
+ 	rx_status->band = hw->conf.channel->band;
+ 	rx_status->freq = hw->conf.channel->center_freq;
+ 	rx_status->signal = ATH_DEFAULT_NOISE_FLOOR + rx_stats->rs_rssi;
+@@ -1100,6 +1097,8 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 	bool edma = !!(ah->caps.hw_caps & ATH9K_HW_CAP_EDMA);
+ 	int dma_type;
+ 	u8 rx_status_len = ah->caps.rx_status_len;
++	u64 tsf = 0;
++	u32 tsf_lower = 0;
+ 
+ 	if (edma)
+ 		dma_type = DMA_BIDIRECTIONAL;
+@@ -1109,6 +1108,9 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 	qtype = hp ? ATH9K_RX_QUEUE_HP : ATH9K_RX_QUEUE_LP;
+ 	spin_lock_bh(&sc->rx.rxbuflock);
+ 
++	tsf = ath9k_hw_gettsf64(ah);
++	tsf_lower = tsf & 0xffffffff;
++
+ 	do {
+ 		/* If handling rx interrupt and flush is in progress => exit */
+ 		if ((sc->sc_flags & SC_OP_RXFLUSH) && (flush == 0))
+@@ -1141,6 +1143,15 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 		if (flush)
+ 			goto requeue;
+ 
++		rxs->mactime = (tsf & ~0xffffffffULL) | rs.rs_tstamp;
++		if (rs.rs_tstamp > tsf_lower &&
++		    unlikely(rs.rs_tstamp - tsf_lower > 0x10000000))
++			rxs->mactime -= 0x100000000ULL;
++
++		if (rs.rs_tstamp < tsf_lower &&
++		    unlikely(tsf_lower - rs.rs_tstamp > 0x10000000))
++			rxs->mactime += 0x100000000ULL;
++
+ 		retval = ath9k_rx_skb_preprocess(common, hw, hdr, &rs,
+ 						 rxs, &decrypt_error);
+ 		if (retval)
+-- 
+1.6.3.3
 
