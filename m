@@ -1,51 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:10966 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755329Ab0F3KPN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jun 2010 06:15:13 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Jun 2010 03:15:13 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/2] mac80211: Dont allow to wake up netif tx queues while on off channel
-Date: Wed, 30 Jun 2010 03:15:07 -0700
-Message-ID: <1277892907-2401-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from bombadil.infradead.org ([18.85.46.34]:43216 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751752Ab0FLEeE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Jun 2010 00:34:04 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 09/24] ath9k_hw: reduce delay on programming INI on AR9003
+Date: Sat, 12 Jun 2010 00:33:47 -0400
+Message-Id: <1276317242-15540-10-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
+References: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drivers are not supposed to call ieee80211_wake_queue() while operating
-on off channel during sw scanning, but there is no clear way for
-the driver to know that it is operating on off channel during scanning.
-There are cases (unavailablity/availability of tx buffers in ath9k, for
-example) where driver needs to stop/restart tx queues during background
-scanning state, this might result in waking up the corresponding netif
-tx queue when the device is on off channel which is not desired. This
-patches fixes this by checking SCAN_OFF_CHANNEL bit in scanning before
-restarting the tx queue.
+All AR9003 devices are PCI-E only, the extra delay here
+is not required and only reduces the delay for loading
+the initial register values by at least 14ms.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- net/mac80211/util.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |    9 ---------
+ 1 files changed, 0 insertions(+), 9 deletions(-)
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index a54cf14..1938a67 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -277,7 +277,8 @@ static void __ieee80211_wake_queue(struct ieee80211_hw *hw, int queue,
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index d5e6b08..27feb08 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -543,15 +543,6 @@ static void ar9003_hw_prog_ini(struct ath_hw *ah,
+ 		u32 val = INI_RA(iniArr, i, column);
  
- 	__clear_bit(reason, &local->queue_stop_reasons[queue]);
- 
--	if (local->queue_stop_reasons[queue] != 0)
-+	if ((local->queue_stop_reasons[queue] != 0) ||
-+	    test_bit(SCAN_OFF_CHANNEL, &local->scanning))
- 		/* someone still has this queue stopped */
- 		return;
- 
+ 		REG_WRITE(ah, reg, val);
+-
+-		/*
+-		 * Determine if this is a shift register value, and insert the
+-		 * configured delay if so.
+-		 */
+-		if (reg >= 0x16000 && reg < 0x17000
+-		    && ah->config.analog_shiftreg)
+-			udelay(100);
+-
+ 		DO_DELAY(regWrites);
+ 	}
+ }
 -- 
-1.7.0.4
+1.6.3.3
 
