@@ -1,86 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:31357 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756232Ab0FPGWb (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:43241 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752340Ab0FLEeF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jun 2010 02:22:31 -0400
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Subject: [PATCH v3] iw: Configure basic rates when joining ibss network
-Date: Wed, 16 Jun 2010 09:22:16 +0300
-Message-Id: <1276669336-32266-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	Sat, 12 Jun 2010 00:34:05 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 18/24] ath9k: add a debugfs entry for ignoring CCA on the extension channel in HT40
+Date: Sat, 12 Jun 2010 00:33:56 -0400
+Message-Id: <1276317242-15540-19-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
+References: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds option to configure basic rates when joining ibss network.
+From: Felix Fietkau <nbd@openwrt.org>
 
-Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Debugfs requires a u32 for bool knobs though so we turn the
+ath9k_hw knob into a u32 as well.
+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- ibss.c |   35 ++++++++++++++++++++++++++++++++++-
- 1 files changed, 34 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/debug.c |    4 ++++
+ drivers/net/wireless/ath/ath9k/hw.h    |    2 +-
+ 2 files changed, 5 insertions(+), 1 deletions(-)
 
-diff --git a/ibss.c b/ibss.c
-index 4715ac8..7e3ff89 100644
---- a/ibss.c
-+++ b/ibss.c
-@@ -18,6 +18,11 @@ static int join_ibss(struct nl80211_state *state,
- {
- 	char *end;
- 	unsigned char abssid[6];
-+	unsigned char rates[NL80211_MAX_SUPP_RATES];
-+	int n_rates = 0;
-+	char *value = NULL, *sptr = NULL;
-+	float rate;
-+
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index a6cb48d..54aae93 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -956,6 +956,10 @@ int ath9k_init_debug(struct ath_hw *ah)
+ 			sc->debug.debugfs_phy, sc, &fops_regval))
+ 		goto err;
  
- 	if (argc < 2)
- 		return 1;
-@@ -49,6 +54,32 @@ static int join_ibss(struct nl80211_state *state,
- 		}
- 	}
- 
-+	/* basic rates */
-+	if (argc > 1 && strcmp(argv[0], "basic-rates") == 0) {
-+		argv++;
-+		argc--;
++	if (!debugfs_create_bool("ignore_extcca", S_IRUSR | S_IWUSR,
++			sc->debug.debugfs_phy, &ah->config.cwm_ignore_extcca))
++		goto err;
 +
-+		value = strtok_r(argv[0], ",", &sptr);
-+
-+		while (value && n_rates < NL80211_MAX_SUPP_RATES) {
-+			rate = strtod(value, &end);
-+			rates[n_rates] = rate * 2;
-+
-+			/* filter out suspicious values  */
-+			if (*end != '\0' || !rates[n_rates] ||
-+			    rate*2 != rates[n_rates])
-+				return 1;
-+
-+			n_rates++;
-+			value = strtok_r(NULL, ",", &sptr);
-+		}
-+
-+		NLA_PUT(msg, NL80211_ATTR_BSS_BASIC_RATES, n_rates, rates);
-+
-+		argv++;
-+		argc--;
-+	}
-+
- 	if (!argc)
- 		return 0;
- 
-@@ -73,7 +104,9 @@ static int leave_ibss(struct nl80211_state *state,
- COMMAND(ibss, leave, NULL,
- 	NL80211_CMD_LEAVE_IBSS, 0, CIB_NETDEV, leave_ibss,
- 	"Leave the current IBSS cell.");
--COMMAND(ibss, join, "<SSID> <freq in MHz> [fixed-freq] [<fixed bssid>] [key d:0:abcde]",
-+COMMAND(ibss, join,
-+	"<SSID> <freq in MHz> [fixed-freq] [<fixed bssid>] "
-+	"[basic-rates <rate in Mbps,rate2,...>] [key d:0:abcde]",
- 	NL80211_CMD_JOIN_IBSS, 0, CIB_NETDEV, join_ibss,
- 	"Join the IBSS cell with the given SSID, if it doesn't exist create\n"
- 	"it on the given frequency. When fixed frequency is requested, don't\n"
+ 	sc->debug.regidx = 0;
+ 	return 0;
+ err:
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index ba84ac7..20ec29f 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -238,7 +238,7 @@ struct ath9k_ops_config {
+ 	int sw_beacon_response_time;
+ 	int additional_swba_backoff;
+ 	int ack_6mb;
+-	int cwm_ignore_extcca;
++	u32 cwm_ignore_extcca;
+ 	u8 pcie_powersave_enable;
+ 	u8 pcie_clock_req;
+ 	u32 pcie_waen;
 -- 
-1.5.6.3
+1.6.3.3
 
