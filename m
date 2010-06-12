@@ -1,96 +1,173 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:57542 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755143Ab0FBKWU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jun 2010 06:22:20 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 02 Jun 2010 03:22:20 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19462.12582.151315.715@gargle.gargle.HOWL>
-Date: Wed, 2 Jun 2010 15:53:34 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/8] ath9k_htc: Add support for AR7010
+Received: from bombadil.infradead.org ([18.85.46.34]:43240 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752330Ab0FLEeF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Jun 2010 00:34:05 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 17/24] ath9k: fix queue stopping threshold
+Date: Sat, 12 Jun 2010 00:33:55 -0400
+Message-Id: <1276317242-15540-18-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
+References: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add the USB device IDs for AR7010 and handle
-firmware loading properly.
+From: Felix Fietkau <nbd@openwrt.org>
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+ath9k tries to prevent WMM queue tx buffer starvation caused by
+traffic on different queues by limiting the number of pending frames
+in a tx queue (tracked in the ath_buf structure). This had a leak
+issue, because the a skb can be reassigned to a different ath_buf
+in the tx path, causing the pending frame counter to become inaccurate.
+
+To fix this, track the number of frames in an array in the softc,
+using the mac80211 queue mapping as index.
+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath9k/hif_usb.c |   15 ++++++++++++++-
- drivers/net/wireless/ath/ath9k/hif_usb.h |    1 +
- 2 files changed, 15 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h |    3 +-
+ drivers/net/wireless/ath/ath9k/xmit.c  |   53 +++++++++++++++++--------------
+ 2 files changed, 30 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 7da55eb..1b75b1b 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -19,6 +19,7 @@
- static struct usb_device_id ath9k_hif_usb_ids[] = {
- 	{ USB_DEVICE(0x0cf3, 0x9271) },
- 	{ USB_DEVICE(0x0cf3, 0x1006) },
-+	{ USB_DEVICE(0x0cf3, 0x7010) },
- 	{ },
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 6aa8fa6..1a19aea 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -207,7 +207,6 @@ struct ath_txq {
+ 	struct list_head txq_fifo_pending;
+ 	u8 txq_headidx;
+ 	u8 txq_tailidx;
+-	int pending_frames;
  };
  
-@@ -753,6 +754,7 @@ static int ath9k_hif_usb_download_fw(struct hif_device_usb *hif_dev)
- 	size_t len = hif_dev->firmware->size;
- 	u32 addr = AR9271_FIRMWARE;
- 	u8 *buf = kzalloc(4096, GFP_KERNEL);
-+	u32 firm_offset;
+ struct ath_atx_ac {
+@@ -245,7 +244,6 @@ struct ath_buf {
+ 	struct ath_buf_state bf_state;
+ 	dma_addr_t bf_dmacontext;
+ 	struct ath_wiphy *aphy;
+-	struct ath_txq *txq;
+ };
  
- 	if (!buf)
- 		return -ENOMEM;
-@@ -776,13 +778,18 @@ static int ath9k_hif_usb_download_fw(struct hif_device_usb *hif_dev)
+ struct ath_atx_tid {
+@@ -296,6 +294,7 @@ struct ath_tx {
+ 	struct list_head txbuf;
+ 	struct ath_txq txq[ATH9K_NUM_TX_QUEUES];
+ 	struct ath_descdma txdma;
++	int pending_frames[WME_NUM_AC];
+ };
+ 
+ struct ath_rx_edma {
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 9bff6c5..875b8b4 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1760,7 +1760,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_txq *txq = txctl->txq;
+ 	struct ath_buf *bf;
+-	int r;
++	int q, r;
+ 
+ 	bf = ath_tx_get_buffer(sc);
+ 	if (!bf) {
+@@ -1768,14 +1768,6 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		return -1;
  	}
- 	kfree(buf);
  
-+	if (hif_dev->device_id == 0x7010)
-+		firm_offset = AR7010_FIRMWARE_TEXT;
-+	else
-+		firm_offset = AR9271_FIRMWARE_TEXT;
+-	bf->txq = txctl->txq;
+-	spin_lock_bh(&bf->txq->axq_lock);
+-	if (++bf->txq->pending_frames > ATH_MAX_QDEPTH && !txq->stopped) {
+-		ath_mac80211_stop_queue(sc, skb_get_queue_mapping(skb));
+-		txq->stopped = 1;
+-	}
+-	spin_unlock_bh(&bf->txq->axq_lock);
+-
+ 	r = ath_tx_setup_buffer(hw, bf, skb, txctl);
+ 	if (unlikely(r)) {
+ 		ath_print(common, ATH_DBG_FATAL, "TX mem alloc failure\n");
+@@ -1796,6 +1788,17 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		return r;
+ 	}
+ 
++	q = skb_get_queue_mapping(skb);
++	if (q >= 4)
++		q = 0;
 +
- 	/*
- 	 * Issue FW download complete command to firmware.
- 	 */
- 	err = usb_control_msg(hif_dev->udev, usb_sndctrlpipe(hif_dev->udev, 0),
- 			      FIRMWARE_DOWNLOAD_COMP,
- 			      0x40 | USB_DIR_OUT,
--			      AR9271_FIRMWARE_TEXT >> 8, 0, NULL, 0, HZ);
-+			      firm_offset >> 8, 0, NULL, 0, HZ);
- 	if (err)
- 		return -EIO;
++	spin_lock_bh(&txq->axq_lock);
++	if (++sc->tx.pending_frames[q] > ATH_MAX_QDEPTH && !txq->stopped) {
++		ath_mac80211_stop_queue(sc, skb_get_queue_mapping(skb));
++		txq->stopped = 1;
++	}
++	spin_unlock_bh(&txq->axq_lock);
++
+ 	ath_tx_start_dma(sc, bf, txctl);
  
-@@ -876,6 +883,12 @@ static int ath9k_hif_usb_probe(struct usb_interface *interface,
- 	case 0x1006:
- 		hif_dev->fw_name = "ar9271.fw";
- 		break;
-+	case 0x7010:
-+		if (le16_to_cpu(udev->descriptor.bcdDevice) == 0x0202)
-+			hif_dev->fw_name = "ar7010_1_1.fw";
-+		else
-+			hif_dev->fw_name = "ar7010.fw";
-+		break;
- 	default:
- 		break;
+ 	return 0;
+@@ -1865,7 +1868,7 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ieee80211_hdr * hdr = (struct ieee80211_hdr *)skb->data;
+-	int padpos, padsize;
++	int q, padpos, padsize;
+ 
+ 	ath_print(common, ATH_DBG_XMIT, "TX complete: skb: %p\n", skb);
+ 
+@@ -1904,8 +1907,16 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
+ 
+ 	if (unlikely(tx_info->pad[0] & ATH_TX_INFO_FRAME_TYPE_INTERNAL))
+ 		ath9k_tx_status(hw, skb);
+-	else
++	else {
++		q = skb_get_queue_mapping(skb);
++		if (q >= 4)
++			q = 0;
++
++		if (--sc->tx.pending_frames[q] < 0)
++			sc->tx.pending_frames[q] = 0;
++
+ 		ieee80211_tx_status(hw, skb);
++	}
+ }
+ 
+ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+@@ -1926,13 +1937,6 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+ 			tx_flags |= ATH_TX_XRETRY;
  	}
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.h b/drivers/net/wireless/ath/ath9k/hif_usb.h
-index b2647e8..2daf97b 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.h
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.h
-@@ -19,6 +19,7 @@
  
- #define AR9271_FIRMWARE       0x501000
- #define AR9271_FIRMWARE_TEXT  0x903000
-+#define AR7010_FIRMWARE_TEXT  0x906000
+-	if (bf->txq) {
+-		spin_lock_bh(&bf->txq->axq_lock);
+-		bf->txq->pending_frames--;
+-		spin_unlock_bh(&bf->txq->axq_lock);
+-		bf->txq = NULL;
+-	}
+-
+ 	dma_unmap_single(sc->dev, bf->bf_dmacontext, skb->len, DMA_TO_DEVICE);
+ 	ath_tx_complete(sc, skb, bf->aphy, tx_flags);
+ 	ath_debug_stat_tx(sc, txq, bf, ts);
+@@ -2020,13 +2024,14 @@ static void ath_wake_mac80211_queue(struct ath_softc *sc, struct ath_txq *txq)
+ {
+ 	int qnum;
  
- #define FIRMWARE_DOWNLOAD       0x30
- #define FIRMWARE_DOWNLOAD_COMP  0x31
++	qnum = ath_get_mac80211_qnum(txq->axq_class, sc);
++	if (qnum == -1)
++		return;
++
+ 	spin_lock_bh(&txq->axq_lock);
+-	if (txq->stopped && txq->pending_frames < ATH_MAX_QDEPTH) {
+-		qnum = ath_get_mac80211_qnum(txq->axq_class, sc);
+-		if (qnum != -1) {
+-			ath_mac80211_start_queue(sc, qnum);
+-			txq->stopped = 0;
+-		}
++	if (txq->stopped && sc->tx.pending_frames[qnum] < ATH_MAX_QDEPTH) {
++		ath_mac80211_start_queue(sc, qnum);
++		txq->stopped = 0;
+ 	}
+ 	spin_unlock_bh(&txq->axq_lock);
+ }
 -- 
-1.7.1
+1.6.3.3
 
