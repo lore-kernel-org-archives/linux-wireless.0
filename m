@@ -1,89 +1,297 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from adelie.canonical.com ([91.189.90.139]:34474 "EHLO
-	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754915Ab0FOXjP (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:43245 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752370Ab0FLEeF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jun 2010 19:39:15 -0400
-Subject: [PATCH v2] p54usb: Comment out duplicate Medion MD40900 device id
-From: Leann Ogasawara <leann.ogasawara@canonical.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org,
-	Ben Collins <ben.collins@ubuntu.com>
-In-Reply-To: <20100615194610.GB2415@tuxdriver.com>
-References: <1276208913.1221.3646.camel@emiko>
-	 <4C1173E7.6010201@lwfinger.net> <20100614185549.GB2216@tuxdriver.com>
-	 <1276624745.6127.61.camel@emiko>  <20100615194610.GB2415@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 15 Jun 2010 16:39:08 -0700
-Message-ID: <1276645148.6127.219.camel@emiko>
-Mime-Version: 1.0
+	Sat, 12 Jun 2010 00:34:05 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 20/24] ath9k_hw: add register definitions related to PA predistortion
+Date: Sat, 12 Jun 2010 00:33:58 -0400
+Message-Id: <1276317242-15540-21-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
+References: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-06-15 at 15:46 -0400, John W. Linville wrote:
-> On Tue, Jun 15, 2010 at 10:59:05AM -0700, Leann Ogasawara wrote:
-> > On Mon, 2010-06-14 at 14:55 -0400, John W. Linville wrote:
-> 
-> > > So, I guess you are concerned about the groupings because of the
-> > > different firmwares or something like that?  Perhaps a comment that
-> > > says "this could be a version 2 device" is just as handy?  Since the
-> > > driver prints the name of the firmware it wants, is there any real
-> > > need for grouping the IDs?
-> > > 
-> > > OTOH, is there any actual harm from the duplicate entry?  It "seems"
-> > > wrong to me too, but I guess it does no harm...?
-> > 
-> > I don't believe there is any harm from the duplicate entry, it just
-> > seemed unnecessary.
-> > 
-> > > Leann and/or Ben, was this just tidying-up?  I'm guessing there wasn't
-> > > an actual bug involved?
-> > 
-> > Indeed, this was just a patch we'd been carrying to tidy things up.
-> > There was no actual bug involved.  I'd be happy to send a v2 of the
-> > patch which comments out the duplicate entry and adds a note as to why.
-> > Or I'd be fine just leaving the code as is and we'll drop the patch
-> > we're carrying locally in Ubuntu.
-> 
-> FWIW, I like the 'comment-out and add a note' option.
+From: Felix Fietkau <nbd@openwrt.org>
 
-Here's the 'comment-out and add a note' option.  Let me know if you'd
-prefer a different style formatting etc.
-
-Thanks,
-Leann
-
->From 5d1b6029ffc0eb770cd34f7dd1a910451c0cda4d Mon Sep 17 00:00:00 2001
-From: Leann Ogasawara <leann.ogasawara@canonical.com>
-Date: Tue, 15 Jun 2010 14:01:51 -0700
-Subject: [PATCH] p54usb: Comment out duplicate Medion MD40900 device id
-
-The Medion MD40900 device id [0x0cde, 0x0006] is defined twice.
-Comment out the duplicate.
-
-Originally-by: Ben Collins <ben.collins@ubuntu.com>
-Signed-off-by: Leann Ogasawara <leann.ogasawara@canonical.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/p54/p54usb.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h |  224 +++++++++++++++++++++++++--
+ 1 files changed, 207 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
-index 7307325..2d8d03d 100644
---- a/drivers/net/wireless/p54/p54usb.c
-+++ b/drivers/net/wireless/p54/p54usb.c
-@@ -69,7 +69,8 @@ static struct usb_device_id p54u_table[] __devinitdata = {
- 	{USB_DEVICE(0x0915, 0x2002)},	/* Cohiba Proto board */
- 	{USB_DEVICE(0x0baf, 0x0118)},   /* U.S. Robotics U5 802.11g Adapter*/
- 	{USB_DEVICE(0x0bf8, 0x1009)},   /* FUJITSU E-5400 USB D1700*/
--	{USB_DEVICE(0x0cde, 0x0006)},   /* Medion MD40900 */
-+	/* {USB_DEVICE(0x0cde, 0x0006)}, * Medion MD40900 already listed above,
-+					 * just noting it here for clarity */
- 	{USB_DEVICE(0x0cde, 0x0008)},	/* Sagem XG703A */
- 	{USB_DEVICE(0x0cde, 0x0015)},	/* Zcomax XG-705A */
- 	{USB_DEVICE(0x0d8e, 0x3762)},	/* DLink DWL-G120 Cohiba */
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index 265f59f..3394dfe 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -459,7 +459,11 @@
+ #define AR_PHY_TSTDAC            (AR_SM_BASE + 0x168)
+ 
+ #define AR_PHY_CHAN_STATUS       (AR_SM_BASE + 0x16c)
+-#define AR_PHY_CHAN_INFO_MEMORY  (AR_SM_BASE + 0x170)
++
++#define AR_PHY_CHAN_INFO_MEMORY				(AR_SM_BASE + 0x170)
++#define AR_PHY_CHAN_INFO_MEMORY_CHANINFOMEM_S2_READ	0x00000008
++#define AR_PHY_CHAN_INFO_MEMORY_CHANINFOMEM_S2_READ_S	3
++
+ #define AR_PHY_CHNINFO_NOISEPWR  (AR_SM_BASE + 0x174)
+ #define AR_PHY_CHNINFO_GAINDIFF  (AR_SM_BASE + 0x178)
+ #define AR_PHY_CHNINFO_FINETIM   (AR_SM_BASE + 0x17c)
+@@ -475,17 +479,63 @@
+ #define AR_PHY_PWRTX_MAX         (AR_SM_BASE + 0x1f0)
+ #define AR_PHY_POWER_TX_SUB      (AR_SM_BASE + 0x1f4)
+ 
+-#define AR_PHY_TPC_4_B0          (AR_SM_BASE + 0x204)
+-#define AR_PHY_TPC_5_B0          (AR_SM_BASE + 0x208)
+-#define AR_PHY_TPC_6_B0          (AR_SM_BASE + 0x20c)
+-#define AR_PHY_TPC_11_B0         (AR_SM_BASE + 0x220)
+-#define AR_PHY_TPC_18            (AR_SM_BASE + 0x23c)
+-#define AR_PHY_TPC_19            (AR_SM_BASE + 0x240)
++#define AR_PHY_TPC_1				(AR_SM_BASE + 0x1f8)
++#define AR_PHY_TPC_1_FORCED_DAC_GAIN		0x0000003e
++#define AR_PHY_TPC_1_FORCED_DAC_GAIN_S		1
++#define AR_PHY_TPC_1_FORCE_DAC_GAIN		0x00000001
++#define AR_PHY_TPC_1_FORCE_DAC_GAIN_S		0
++
++#define AR_PHY_TPC_4_B0				(AR_SM_BASE + 0x204)
++#define AR_PHY_TPC_5_B0				(AR_SM_BASE + 0x208)
++#define AR_PHY_TPC_6_B0				(AR_SM_BASE + 0x20c)
++
++#define AR_PHY_TPC_11_B0			(AR_SM_BASE + 0x220)
++#define AR_PHY_TPC_11_B1			(AR_SM1_BASE + 0x220)
++#define AR_PHY_TPC_11_B2			(AR_SM2_BASE + 0x220)
++#define AR_PHY_TPC_11_OLPC_GAIN_DELTA		0x00ff0000
++#define AR_PHY_TPC_11_OLPC_GAIN_DELTA_S		16
++
++#define AR_PHY_TPC_12				(AR_SM_BASE + 0x224)
++#define AR_PHY_TPC_12_DESIRED_SCALE_HT40_5	0x3e000000
++#define AR_PHY_TPC_12_DESIRED_SCALE_HT40_5_S	25
++
++#define AR_PHY_TPC_18				(AR_SM_BASE + 0x23c)
++#define AR_PHY_TPC_18_THERM_CAL_VALUE           0x000000ff
++#define AR_PHY_TPC_18_THERM_CAL_VALUE_S         0
++#define AR_PHY_TPC_18_VOLT_CAL_VALUE		0x0000ff00
++#define AR_PHY_TPC_18_VOLT_CAL_VALUE_S		8
++
++#define AR_PHY_TPC_19				(AR_SM_BASE + 0x240)
++#define AR_PHY_TPC_19_ALPHA_VOLT		0x001f0000
++#define AR_PHY_TPC_19_ALPHA_VOLT_S		16
++#define AR_PHY_TPC_19_ALPHA_THERM		0xff
++#define AR_PHY_TPC_19_ALPHA_THERM_S		0
++
++#define AR_PHY_TX_FORCED_GAIN				(AR_SM_BASE + 0x258)
++#define AR_PHY_TX_FORCED_GAIN_FORCE_TX_GAIN		0x00000001
++#define AR_PHY_TX_FORCED_GAIN_FORCE_TX_GAIN_S		0
++#define AR_PHY_TX_FORCED_GAIN_FORCED_TXBB1DBGAIN	0x0000000e
++#define AR_PHY_TX_FORCED_GAIN_FORCED_TXBB1DBGAIN_S	1
++#define AR_PHY_TX_FORCED_GAIN_FORCED_TXBB6DBGAIN	0x00000030
++#define AR_PHY_TX_FORCED_GAIN_FORCED_TXBB6DBGAIN_S	4
++#define AR_PHY_TX_FORCED_GAIN_FORCED_TXMXRGAIN		0x000003c0
++#define AR_PHY_TX_FORCED_GAIN_FORCED_TXMXRGAIN_S	6
++#define AR_PHY_TX_FORCED_GAIN_FORCED_PADRVGNA		0x00003c00
++#define AR_PHY_TX_FORCED_GAIN_FORCED_PADRVGNA_S		10
++#define AR_PHY_TX_FORCED_GAIN_FORCED_PADRVGNB		0x0003c000
++#define AR_PHY_TX_FORCED_GAIN_FORCED_PADRVGNB_S		14
++#define AR_PHY_TX_FORCED_GAIN_FORCED_PADRVGNC		0x003c0000
++#define AR_PHY_TX_FORCED_GAIN_FORCED_PADRVGNC_S		18
++#define AR_PHY_TX_FORCED_GAIN_FORCED_PADRVGND		0x00c00000
++#define AR_PHY_TX_FORCED_GAIN_FORCED_PADRVGND_S		22
++#define AR_PHY_TX_FORCED_GAIN_FORCED_ENABLE_PAL		0x01000000
++#define AR_PHY_TX_FORCED_GAIN_FORCED_ENABLE_PAL_S	24
+ 
+-#define AR_PHY_TX_FORCED_GAIN    (AR_SM_BASE + 0x258)
+ 
+ #define AR_PHY_PDADC_TAB_0       (AR_SM_BASE + 0x280)
+ 
++#define AR_PHY_TXGAIN_TABLE      (AR_SM_BASE + 0x300)
++
+ #define AR_PHY_TX_IQCAL_CONTROL_1   (AR_SM_BASE + 0x448)
+ #define AR_PHY_TX_IQCAL_START       (AR_SM_BASE + 0x440)
+ #define AR_PHY_TX_IQCAL_STATUS_B0   (AR_SM_BASE + 0x48c)
+@@ -498,7 +548,17 @@
+ #define AR_PHY_ONLY_WARMRESET       (AR_SM_BASE + 0x5d0)
+ #define AR_PHY_ONLY_CTL             (AR_SM_BASE + 0x5d4)
+ #define AR_PHY_ECO_CTRL             (AR_SM_BASE + 0x5dc)
+-#define AR_PHY_BB_THERM_ADC_1       (AR_SM_BASE + 0x248)
++
++#define AR_PHY_BB_THERM_ADC_1				(AR_SM_BASE + 0x248)
++#define AR_PHY_BB_THERM_ADC_1_INIT_THERM		0x000000ff
++#define AR_PHY_BB_THERM_ADC_1_INIT_THERM_S		0
++
++#define AR_PHY_BB_THERM_ADC_4				(AR_SM_BASE + 0x254)
++#define AR_PHY_BB_THERM_ADC_4_LATEST_THERM_VALUE	0x000000ff
++#define AR_PHY_BB_THERM_ADC_4_LATEST_THERM_VALUE_S	0
++#define AR_PHY_BB_THERM_ADC_4_LATEST_VOLT_VALUE		0x0000ff00
++#define AR_PHY_BB_THERM_ADC_4_LATEST_VOLT_VALUE_S	8
++
+ 
+ #define AR_PHY_65NM_CH0_SYNTH4      0x1608c
+ #define AR_PHY_SYNTH4_LONG_SHIFT_SELECT   0x00000002
+@@ -668,17 +728,9 @@
+ #define AR_PHY_TX_IQCAL_CORR_COEFF_01_COEFF_TABLE      0x00003fff
+ #define AR_PHY_TX_IQCAL_CORR_COEFF_01_COEFF_TABLE_S    0
+ 
+-#define AR_PHY_TPC_18_THERM_CAL_VALUE           0xff
+-#define AR_PHY_TPC_18_THERM_CAL_VALUE_S         0
+-#define AR_PHY_TPC_19_ALPHA_THERM               0xff
+-#define AR_PHY_TPC_19_ALPHA_THERM_S             0
+-
+ #define AR_PHY_65NM_CH0_RXTX4_THERM_ON          0x10000000
+ #define AR_PHY_65NM_CH0_RXTX4_THERM_ON_S        28
+ 
+-#define AR_PHY_BB_THERM_ADC_1_INIT_THERM        0x000000ff
+-#define AR_PHY_BB_THERM_ADC_1_INIT_THERM_S      0
+-
+ /*
+  * Channel 1 Register Map
+  */
+@@ -850,6 +902,144 @@
+ 
+ #define AR_PHY_WATCHDOG_STATUS_CLR         0x00000008
+ 
++/*
++ * PAPRD registers
++ */
++#define AR_PHY_XPA_TIMING_CTL		(AR_SM_BASE + 0x64)
++
++#define AR_PHY_PAPRD_AM2AM		(AR_CHAN_BASE + 0xe4)
++#define AR_PHY_PAPRD_AM2AM_MASK		0x01ffffff
++#define AR_PHY_PAPRD_AM2AM_MASK_S	0
++
++#define AR_PHY_PAPRD_AM2PM		(AR_CHAN_BASE + 0xe8)
++#define AR_PHY_PAPRD_AM2PM_MASK		0x01ffffff
++#define AR_PHY_PAPRD_AM2PM_MASK_S	0
++
++#define AR_PHY_PAPRD_HT40		(AR_CHAN_BASE + 0xec)
++#define AR_PHY_PAPRD_HT40_MASK		0x01ffffff
++#define AR_PHY_PAPRD_HT40_MASK_S	0
++
++#define AR_PHY_PAPRD_CTRL0_B0				(AR_CHAN_BASE + 0xf0)
++#define AR_PHY_PAPRD_CTRL0_B1				(AR_CHAN1_BASE + 0xf0)
++#define AR_PHY_PAPRD_CTRL0_B2				(AR_CHAN2_BASE + 0xf0)
++#define AR_PHY_PAPRD_CTRL0_PAPRD_ENABLE			0x00000001
++#define AR_PHY_PAPRD_CTRL0_PAPRD_ENABLE_S		0
++#define AR_PHY_PAPRD_CTRL0_USE_SINGLE_TABLE_MASK	0x00000002
++#define AR_PHY_PAPRD_CTRL0_USE_SINGLE_TABLE_MASK_S	1
++#define AR_PHY_PAPRD_CTRL0_PAPRD_MAG_THRSH		0xf8000000
++#define AR_PHY_PAPRD_CTRL0_PAPRD_MAG_THRSH_S		27
++
++#define AR_PHY_PAPRD_CTRL1_B0				(AR_CHAN_BASE + 0xf4)
++#define AR_PHY_PAPRD_CTRL1_B1				(AR_CHAN1_BASE + 0xf4)
++#define AR_PHY_PAPRD_CTRL1_B2				(AR_CHAN2_BASE + 0xf4)
++#define AR_PHY_PAPRD_CTRL1_ADAPTIVE_SCALING_ENA		0x00000001
++#define AR_PHY_PAPRD_CTRL1_ADAPTIVE_SCALING_ENA_S	0
++#define AR_PHY_PAPRD_CTRL1_ADAPTIVE_AM2AM_ENABLE	0x00000002
++#define AR_PHY_PAPRD_CTRL1_ADAPTIVE_AM2AM_ENABLE_S	1
++#define AR_PHY_PAPRD_CTRL1_ADAPTIVE_AM2PM_ENABLE	0x00000004
++#define AR_PHY_PAPRD_CTRL1_ADAPTIVE_AM2PM_ENABLE_S	2
++#define AR_PHY_PAPRD_CTRL1_PAPRD_POWER_AT_AM2AM_CAL	0x000001f8
++#define AR_PHY_PAPRD_CTRL1_PAPRD_POWER_AT_AM2AM_CAL_S	3
++#define AR_PHY_PAPRD_CTRL1_PA_GAIN_SCALE_FACT_MASK	0x0001fe00
++#define AR_PHY_PAPRD_CTRL1_PA_GAIN_SCALE_FACT_MASK_S	9
++#define AR_PHY_PAPRD_CTRL1_PAPRD_MAG_SCALE_FACT		0x0ffe0000
++#define AR_PHY_PAPRD_CTRL1_PAPRD_MAG_SCALE_FACT_S	17
++
++#define AR_PHY_PAPRD_TRAINER_CNTL1				(AR_SM_BASE + 0x490)
++#define AR_PHY_PAPRD_TRAINER_CNTL1_CF_CF_PAPRD_TRAIN_ENABLE	0x00000001
++#define AR_PHY_PAPRD_TRAINER_CNTL1_CF_CF_PAPRD_TRAIN_ENABLE_S	0
++#define AR_PHY_PAPRD_TRAINER_CNTL1_CF_PAPRD_AGC2_SETTLING	0x0000007e
++#define AR_PHY_PAPRD_TRAINER_CNTL1_CF_PAPRD_AGC2_SETTLING_S	1
++#define AR_PHY_PAPRD_TRAINER_CNTL1_CF_PAPRD_IQCORR_ENABLE	0x00000100
++#define AR_PHY_PAPRD_TRAINER_CNTL1_CF_PAPRD_IQCORR_ENABLE_S	8
++#define AR_PHY_PAPRD_TRAINER_CNTL1_CF_PAPRD_RX_BB_GAIN_FORCE	0x00000200
++#define AR_PHY_PAPRD_TRAINER_CNTL1_CF_PAPRD_RX_BB_GAIN_FORCE_S	9
++#define AR_PHY_PAPRD_TRAINER_CNTL1_CF_PAPRD_TX_GAIN_FORCE	0x00000400
++#define AR_PHY_PAPRD_TRAINER_CNTL1_CF_PAPRD_TX_GAIN_FORCE_S	10
++#define AR_PHY_PAPRD_TRAINER_CNTL1_CF_PAPRD_LB_ENABLE		0x00000800
++#define AR_PHY_PAPRD_TRAINER_CNTL1_CF_PAPRD_LB_ENABLE_S		11
++#define AR_PHY_PAPRD_TRAINER_CNTL1_CF_PAPRD_LB_SKIP		0x0003f000
++#define AR_PHY_PAPRD_TRAINER_CNTL1_CF_PAPRD_LB_SKIP_S		12
++
++#define AR_PHY_PAPRD_TRAINER_CNTL2				(AR_SM_BASE + 0x494)
++#define AR_PHY_PAPRD_TRAINER_CNTL2_CF_PAPRD_INIT_RX_BB_GAIN	0xFFFFFFFF
++#define AR_PHY_PAPRD_TRAINER_CNTL2_CF_PAPRD_INIT_RX_BB_GAIN_S	0
++
++#define AR_PHY_PAPRD_TRAINER_CNTL3				(AR_SM_BASE + 0x498)
++#define AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_ADC_DESIRED_SIZE	0x0000003f
++#define AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_ADC_DESIRED_SIZE_S	0
++#define AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_QUICK_DROP		0x00000fc0
++#define AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_QUICK_DROP_S	6
++#define AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_MIN_LOOPBACK_DEL	0x0001f000
++#define AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_MIN_LOOPBACK_DEL_S	12
++#define AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_NUM_CORR_STAGES	0x000e0000
++#define AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_NUM_CORR_STAGES_S	17
++#define AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_COARSE_CORR_LEN	0x00f00000
++#define AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_COARSE_CORR_LEN_S	20
++#define AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_FINE_CORR_LEN	0x0f000000
++#define AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_FINE_CORR_LEN_S	24
++#define AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_BBTXMIX_DISABLE	0x20000000
++#define AR_PHY_PAPRD_TRAINER_CNTL3_CF_PAPRD_BBTXMIX_DISABLE_S	29
++
++#define AR_PHY_PAPRD_TRAINER_CNTL4				(AR_SM_BASE + 0x49c)
++#define AR_PHY_PAPRD_TRAINER_CNTL4_CF_PAPRD_NUM_TRAIN_SAMPLES	0x03ff0000
++#define AR_PHY_PAPRD_TRAINER_CNTL4_CF_PAPRD_NUM_TRAIN_SAMPLES_S	16
++#define AR_PHY_PAPRD_TRAINER_CNTL4_CF_PAPRD_SAFETY_DELTA	0x0000f000
++#define AR_PHY_PAPRD_TRAINER_CNTL4_CF_PAPRD_SAFETY_DELTA_S	12
++#define AR_PHY_PAPRD_TRAINER_CNTL4_CF_PAPRD_MIN_CORR		0x00000fff
++#define AR_PHY_PAPRD_TRAINER_CNTL4_CF_PAPRD_MIN_CORR_S		0
++
++#define AR_PHY_PAPRD_PRE_POST_SCALE_0_B0			(AR_CHAN_BASE + 0x100)
++#define AR_PHY_PAPRD_PRE_POST_SCALE_1_B0			(AR_CHAN_BASE + 0x104)
++#define AR_PHY_PAPRD_PRE_POST_SCALE_2_B0			(AR_CHAN_BASE + 0x108)
++#define AR_PHY_PAPRD_PRE_POST_SCALE_3_B0			(AR_CHAN_BASE + 0x10c)
++#define AR_PHY_PAPRD_PRE_POST_SCALE_4_B0			(AR_CHAN_BASE + 0x110)
++#define AR_PHY_PAPRD_PRE_POST_SCALE_5_B0			(AR_CHAN_BASE + 0x114)
++#define AR_PHY_PAPRD_PRE_POST_SCALE_6_B0			(AR_CHAN_BASE + 0x118)
++#define AR_PHY_PAPRD_PRE_POST_SCALE_7_B0			(AR_CHAN_BASE + 0x11c)
++#define AR_PHY_PAPRD_PRE_POST_SCALING				0x3FFFF
++#define AR_PHY_PAPRD_PRE_POST_SCALING_S				0
++
++#define AR_PHY_PAPRD_TRAINER_STAT1				(AR_SM_BASE + 0x4a0)
++#define AR_PHY_PAPRD_TRAINER_STAT1_PAPRD_TRAIN_DONE		0x00000001
++#define AR_PHY_PAPRD_TRAINER_STAT1_PAPRD_TRAIN_DONE_S		0
++#define AR_PHY_PAPRD_TRAINER_STAT1_PAPRD_TRAIN_INCOMPLETE	0x00000002
++#define AR_PHY_PAPRD_TRAINER_STAT1_PAPRD_TRAIN_INCOMPLETE_S	1
++#define AR_PHY_PAPRD_TRAINER_STAT1_PAPRD_CORR_ERR		0x00000004
++#define AR_PHY_PAPRD_TRAINER_STAT1_PAPRD_CORR_ERR_S		2
++#define AR_PHY_PAPRD_TRAINER_STAT1_PAPRD_TRAIN_ACTIVE		0x00000008
++#define AR_PHY_PAPRD_TRAINER_STAT1_PAPRD_TRAIN_ACTIVE_S		3
++#define AR_PHY_PAPRD_TRAINER_STAT1_PAPRD_RX_GAIN_IDX		0x000001f0
++#define AR_PHY_PAPRD_TRAINER_STAT1_PAPRD_RX_GAIN_IDX_S		4
++#define AR_PHY_PAPRD_TRAINER_STAT1_PAPRD_AGC2_PWR		0x0001fe00
++#define AR_PHY_PAPRD_TRAINER_STAT1_PAPRD_AGC2_PWR_S		9
++
++#define AR_PHY_PAPRD_TRAINER_STAT2				(AR_SM_BASE + 0x4a4)
++#define AR_PHY_PAPRD_TRAINER_STAT2_PAPRD_FINE_VAL		0x0000ffff
++#define AR_PHY_PAPRD_TRAINER_STAT2_PAPRD_FINE_VAL_S		0
++#define AR_PHY_PAPRD_TRAINER_STAT2_PAPRD_COARSE_IDX		0x001f0000
++#define AR_PHY_PAPRD_TRAINER_STAT2_PAPRD_COARSE_IDX_S		16
++#define AR_PHY_PAPRD_TRAINER_STAT2_PAPRD_FINE_IDX		0x00600000
++#define AR_PHY_PAPRD_TRAINER_STAT2_PAPRD_FINE_IDX_S		21
++
++#define AR_PHY_PAPRD_TRAINER_STAT3				(AR_SM_BASE + 0x4a8)
++#define AR_PHY_PAPRD_TRAINER_STAT3_PAPRD_TRAIN_SAMPLES_CNT	0x000fffff
++#define AR_PHY_PAPRD_TRAINER_STAT3_PAPRD_TRAIN_SAMPLES_CNT_S	0
++
++#define AR_PHY_PAPRD_MEM_TAB_B0			(AR_CHAN_BASE + 0x120)
++#define AR_PHY_PAPRD_MEM_TAB_B1			(AR_CHAN1_BASE + 0x120)
++#define AR_PHY_PAPRD_MEM_TAB_B2			(AR_CHAN2_BASE + 0x120)
++
++#define AR_PHY_PA_GAIN123_B0			(AR_CHAN_BASE + 0xf8)
++#define AR_PHY_PA_GAIN123_B1			(AR_CHAN1_BASE + 0xf8)
++#define AR_PHY_PA_GAIN123_B2			(AR_CHAN2_BASE + 0xf8)
++#define AR_PHY_PA_GAIN123_PA_GAIN1		0x3FF
++#define AR_PHY_PA_GAIN123_PA_GAIN1_S		0
++
++#define AR_PHY_POWERTX_RATE5			(AR_SM_BASE + 0x1d0)
++#define AR_PHY_POWERTX_RATE5_POWERTXHT20_0	0x3F
++#define AR_PHY_POWERTX_RATE5_POWERTXHT20_0_S	0
++
+ void ar9003_hw_set_chain_masks(struct ath_hw *ah, u8 rx, u8 tx);
+ 
+ #endif  /* AR9003_PHY_H */
 -- 
-1.7.0.4
-
-
+1.6.3.3
 
