@@ -1,66 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cp-out10.libero.it ([212.52.84.110]:59060 "EHLO
-	cp-out10.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753652Ab0FFJpE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jun 2010 05:45:04 -0400
-From: Fabio Rossi <rossi.f@inwind.it>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: WARNING: at drivers/base/core.c:130 device_release+0x82/0x90()
-Date: Sun, 6 Jun 2010 11:43:56 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <201006021129.43621.rossi.f@inwind.it> <AANLkTim6tx9plm0tqqms64iUboSRxo9KnTGbHmwKrhQK@mail.gmail.com> <AANLkTimTGPFL_1qAn4YEtYPogOkbZIr_C1YHOtKoHzxw@mail.gmail.com>
-In-Reply-To: <AANLkTimTGPFL_1qAn4YEtYPogOkbZIr_C1YHOtKoHzxw@mail.gmail.com>
+Received: from nbd.name ([88.198.39.176]:46692 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750725Ab0FLRg7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Jun 2010 13:36:59 -0400
+Message-ID: <4C13C5B5.3080609@openwrt.org>
+Date: Sat, 12 Jun 2010 19:36:53 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201006061143.56259.rossi.f@inwind.it>
+To: Pavel Roskin <proski@gnu.org>
+CC: linux-wireless@vger.kernel.org, lrodriguez@atheros.com,
+	linville@tuxdriver.com
+Subject: Re: [PATCH 4/7] ath9k_hw: remove ATH9K_CAP_TKIP_SPLIT
+References: <1276356154-66545-1-git-send-email-nbd@openwrt.org>	 <1276356154-66545-2-git-send-email-nbd@openwrt.org>	 <1276356154-66545-3-git-send-email-nbd@openwrt.org>	 <1276356154-66545-4-git-send-email-nbd@openwrt.org> <1276363723.2625.7.camel@ct>
+In-Reply-To: <1276363723.2625.7.camel@ct>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 06 June 2010 11:29:54 Luis R. Rodriguez wrote:
-
-> On Sun, Jun 6, 2010 at 2:28 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> > On Fri, Jun 4, 2010 at 1:25 AM, Fabio Rossi <rossi.f@inwind.it> wrote:
-> >> On Wednesday 02 June 2010 23:42:14 Luis R. Rodriguez wrote:
-> >>> On Wed, Jun 2, 2010 at 2:29 AM, Fabio Rossi <rossi.f@inwind.it> wrote:
-> >>> > Compiling the kernel without ACPI (CONFIG_ACPI=n) gives the following
-> >>> > warning:
-> >>> > 
-> >>> > cfg80211: Calling CRDA to update world regulatory domain
-> >>> > cfg80211: World regulatory domain updated:
-> >>> >    (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-> >>> >    (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-> >>> > ath5k 0000:08:01.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-> >>> > ath5k 0000:08:01.0: registered as 'phy0'
-> >>> > ath5k phy0: request_irq failed
-> >>> > ------------[ cut here ]------------
-> >>> 
-> >>> Since traces are printed reversed you will have to read my logic from
-> >>> bottom to top:
-> >>> 
-> >>> Seems we need to implement the dev_release() op for the class of our
-> >>> devices.
-> >> 
-> >> Shall I open a bug in kernel bugzilla to keep trace of this?
-> > 
-> > Nah something else is up...
-> > 
-> > struct class ieee80211_class = {
-> >        .name = "ieee80211",
-> >        .owner = THIS_MODULE,
-> >        .dev_release = wiphy_dev_release,
-> >        .dev_attrs = ieee80211_dev_attrs,
-> > #ifdef CONFIG_HOTPLUG
-> >        .dev_uevent = wiphy_uevent,
-> > #endif
-> >        .suspend = wiphy_suspend,
-> >        .resume = wiphy_resume,
-> > };
+On 2010-06-12 7:28 PM, Pavel Roskin wrote:
+> On Sat, 2010-06-12 at 17:22 +0200, Felix Fietkau wrote:
+>> This is only used as a workaround for an issue in one specific hw revision.
 > 
-> This is wireless-testing, not compat-wireless right?
+> Is that workaround needed for both PCI and USB?  If not,
+> common->splitmic should not be needed and further cleanup should be
+> possible.
+It's only needed for PCI.
 
-Yes, I'm using the latest wireless-testing.git
-
-Fabio
-
+- Felix
