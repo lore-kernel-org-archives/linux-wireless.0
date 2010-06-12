@@ -1,54 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:23940 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757742Ab0FPKLu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jun 2010 06:11:50 -0400
-Received: from vs3004.wh2.ocn.ne.jp (125.206.180.167)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0977723108
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Jun 2010 19:11:48 +0900 (JST)
-Subject: [PATCH 04/17] ath5k: fix rx descriptor debugging
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Wed, 16 Jun 2010 19:11:30 +0900
-Message-ID: <20100616101130.10067.99750.stgit@tt-desk>
-In-Reply-To: <20100616100809.10067.34787.stgit@tt-desk>
-References: <20100616100809.10067.34787.stgit@tt-desk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from nbd.name ([88.198.39.176]:41845 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751383Ab0FLPWk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Jun 2010 11:22:40 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: lrodriguez@atheros.com, linville@tuxdriver.com
+Subject: [PATCH 1/7] ath9k_hw: remove ATH9K_CAP_CIPHER
+Date: Sat, 12 Jun 2010 17:22:28 +0200
+Message-Id: <1276356154-66545-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the debug ouptut rx_status_0 was printed twice instead of rx_status_1. Also
-make the debug message more clear.
+All of the ciphers that are tested for are always supported
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
-Acked-by: Bob Copeland <me@bobcopeland.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath5k/debug.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |   24 ++++++++----------------
+ drivers/net/wireless/ath/ath9k/hw.c           |   12 ------------
+ drivers/net/wireless/ath/ath9k/hw.h           |    1 -
+ drivers/net/wireless/ath/ath9k/init.c         |   24 ++++++++----------------
+ 4 files changed, 16 insertions(+), 45 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
-index 5984edc..02db66e 100644
---- a/drivers/net/wireless/ath/ath5k/debug.c
-+++ b/drivers/net/wireless/ath/ath5k/debug.c
-@@ -925,7 +925,7 @@ ath5k_debug_printrxbuf(struct ath5k_buf *bf, int done,
- 		ds, (unsigned long long)bf->daddr,
- 		ds->ds_link, ds->ds_data,
- 		rd->rx_ctl.rx_control_0, rd->rx_ctl.rx_control_1,
--		rd->u.rx_stat.rx_status_0, rd->u.rx_stat.rx_status_0,
-+		rd->u.rx_stat.rx_status_0, rd->u.rx_stat.rx_status_1,
- 		!done ? ' ' : (rs->rs_status == 0) ? '*' : '!');
- }
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 947de70..a26bc56 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -570,16 +570,13 @@ static void ath9k_init_crypto(struct ath9k_htc_priv *priv)
+ 	for (i = 0; i < common->keymax; i++)
+ 		ath9k_hw_keyreset(priv->ah, (u16) i);
  
-@@ -940,7 +940,7 @@ ath5k_debug_printrxbuffs(struct ath5k_softc *sc, struct ath5k_hw *ah)
- 	if (likely(!(sc->debug.level & ATH5K_DEBUG_RESET)))
- 		return;
+-	if (ath9k_hw_getcapability(priv->ah, ATH9K_CAP_CIPHER,
+-				   ATH9K_CIPHER_TKIP, NULL)) {
+-		/*
+-		 * Whether we should enable h/w TKIP MIC.
+-		 * XXX: if we don't support WME TKIP MIC, then we wouldn't
+-		 * report WMM capable, so it's always safe to turn on
+-		 * TKIP MIC in this case.
+-		 */
+-		ath9k_hw_setcapability(priv->ah, ATH9K_CAP_TKIP_MIC, 0, 1, NULL);
+-	}
++	/*
++	 * Whether we should enable h/w TKIP MIC.
++	 * XXX: if we don't support WME TKIP MIC, then we wouldn't
++	 * report WMM capable, so it's always safe to turn on
++	 * TKIP MIC in this case.
++	 */
++	ath9k_hw_setcapability(priv->ah, ATH9K_CAP_TKIP_MIC, 0, 1, NULL);
  
--	printk(KERN_DEBUG "rx queue %x, link %p\n",
-+	printk(KERN_DEBUG "rxdp %x, rxlink %p\n",
- 		ath5k_hw_get_rxdp(ah), sc->rxlink);
+ 	/*
+ 	 * Check whether the separate key cache entries
+@@ -587,12 +584,7 @@ static void ath9k_init_crypto(struct ath9k_htc_priv *priv)
+ 	 * With split mic keys the number of stations is limited
+ 	 * to 27 otherwise 59.
+ 	 */
+-	if (ath9k_hw_getcapability(priv->ah, ATH9K_CAP_CIPHER,
+-				   ATH9K_CIPHER_TKIP, NULL)
+-	    && ath9k_hw_getcapability(priv->ah, ATH9K_CAP_CIPHER,
+-				      ATH9K_CIPHER_MIC, NULL)
+-	    && ath9k_hw_getcapability(priv->ah, ATH9K_CAP_TKIP_SPLIT,
+-				      0, NULL))
++	if (ath9k_hw_getcapability(priv->ah, ATH9K_CAP_TKIP_SPLIT, 0, NULL))
+ 		common->splitmic = 1;
  
- 	spin_lock_bh(&sc->rxbuflock);
+ 	/* turn on mcast key search if possible */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 5a2e72a..94f1258 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2260,18 +2260,6 @@ bool ath9k_hw_getcapability(struct ath_hw *ah, enum ath9k_capability_type type,
+ {
+ 	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
+ 	switch (type) {
+-	case ATH9K_CAP_CIPHER:
+-		switch (capability) {
+-		case ATH9K_CIPHER_AES_CCM:
+-		case ATH9K_CIPHER_AES_OCB:
+-		case ATH9K_CIPHER_TKIP:
+-		case ATH9K_CIPHER_WEP:
+-		case ATH9K_CIPHER_MIC:
+-		case ATH9K_CIPHER_CLR:
+-			return true;
+-		default:
+-			return false;
+-		}
+ 	case ATH9K_CAP_TKIP_MIC:
+ 		switch (capability) {
+ 		case 0:
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index d60472b..cc01dc8 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -207,7 +207,6 @@ enum ath9k_hw_caps {
+ };
+ 
+ enum ath9k_capability_type {
+-	ATH9K_CAP_CIPHER = 0,
+ 	ATH9K_CAP_TKIP_MIC,
+ 	ATH9K_CAP_TKIP_SPLIT,
+ 	ATH9K_CAP_TXPOW,
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index e1fa268..8bb866d 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -379,16 +379,13 @@ static void ath9k_init_crypto(struct ath_softc *sc)
+ 	for (i = 0; i < common->keymax; i++)
+ 		ath9k_hw_keyreset(sc->sc_ah, (u16) i);
+ 
+-	if (ath9k_hw_getcapability(sc->sc_ah, ATH9K_CAP_CIPHER,
+-				   ATH9K_CIPHER_TKIP, NULL)) {
+-		/*
+-		 * Whether we should enable h/w TKIP MIC.
+-		 * XXX: if we don't support WME TKIP MIC, then we wouldn't
+-		 * report WMM capable, so it's always safe to turn on
+-		 * TKIP MIC in this case.
+-		 */
+-		ath9k_hw_setcapability(sc->sc_ah, ATH9K_CAP_TKIP_MIC, 0, 1, NULL);
+-	}
++	/*
++	 * Whether we should enable h/w TKIP MIC.
++	 * XXX: if we don't support WME TKIP MIC, then we wouldn't
++	 * report WMM capable, so it's always safe to turn on
++	 * TKIP MIC in this case.
++	 */
++	ath9k_hw_setcapability(sc->sc_ah, ATH9K_CAP_TKIP_MIC, 0, 1, NULL);
+ 
+ 	/*
+ 	 * Check whether the separate key cache entries
+@@ -396,12 +393,7 @@ static void ath9k_init_crypto(struct ath_softc *sc)
+ 	 * With split mic keys the number of stations is limited
+ 	 * to 27 otherwise 59.
+ 	 */
+-	if (ath9k_hw_getcapability(sc->sc_ah, ATH9K_CAP_CIPHER,
+-				   ATH9K_CIPHER_TKIP, NULL)
+-	    && ath9k_hw_getcapability(sc->sc_ah, ATH9K_CAP_CIPHER,
+-				      ATH9K_CIPHER_MIC, NULL)
+-	    && ath9k_hw_getcapability(sc->sc_ah, ATH9K_CAP_TKIP_SPLIT,
+-				      0, NULL))
++	if (ath9k_hw_getcapability(sc->sc_ah, ATH9K_CAP_TKIP_SPLIT, 0, NULL))
+ 		common->splitmic = 1;
+ 
+ 	/* turn on mcast key search if possible */
+-- 
+1.6.4.2
 
