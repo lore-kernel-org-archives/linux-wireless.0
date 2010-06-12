@@ -1,98 +1,279 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from adelie.canonical.com ([91.189.90.139]:46872 "EHLO
-	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755402Ab0FPAzW (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:43222 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751895Ab0FLEeF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jun 2010 20:55:22 -0400
-Subject: [PATCH] ipw2200: Enable LED by default
-From: Leann Ogasawara <leann.ogasawara@canonical.com>
-To: reinette.chatre@intel.com, ilw@linux.intel.com
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	TJ <ubuntu@tjworld.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 15 Jun 2010 17:55:13 -0700
-Message-ID: <1276649713.6127.276.camel@emiko>
-Mime-Version: 1.0
+	Sat, 12 Jun 2010 00:34:05 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 04/24] ath9k_hw: allow for spliting up ANI operations by family
+Date: Sat, 12 Jun 2010 00:33:42 -0400
+Message-Id: <1276317242-15540-5-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
+References: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+The AR9003 hardware family will use a slightly modified ANI
+implementation which has not yet been tested on the other hardware
+families. To allow for this new ANI implementation a few ANI
+calls need to be abstracted away. This patch just allows for
+each hardware family to declare their own ANI ops and annotates
+the current ANI implementation as old.
 
-As documented in 2005 in Documentation/networking/README.ipw2200, "The
-LED code has been reported to hang some systems when running ifconfig
-and is therefore disabled by default."  We've however been carrying the
-following patch in our Ubuntu kernel for quite some time which enables
-the ipw2200 LED by default.  This was a result of numerous user
-requests.  We've seen no subsequent bug reports of systems hanging due
-to the the LED code being enabled by default.  I'd therefore like to
-propose the following patch to enable the LED by default.  This patch
-was originally authored by TJ.  I apologize in advance that I do not
-have TJ's full first and last name for provenance.
-
-Thanks,
-Leann
-
->From 315246037a0edab4d626de6ccb68c73d3fe61ce3 Mon Sep 17 00:00:00 2001
-From: ubuntu@tjworld.net <ubuntu@tjworld.net>
-Date: Mon, 23 Mar 2009 20:29:28 +0000
-Subject: [PATCH] ipw2200: Enable LED by default
-
-BugLink: http://bugs.launchpad.net/bugs/21367
-
-Enable LED by default and update the MODULE_PARM_DESC.  The original
-reason for defaulting to disabled was documented in 2005 and noted, "The
-LED code has been reported to hang some systems when running ifconfig
-and is therefore disabled by default."  This no longer appears
-applicable and users have been requesting this be enabled for several
-years.
-
-Originally-by: TJ <ubuntu@tjworld.net>
-Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
-Signed-off-by: Andy Whitcroft <apw@canonical.com>
-Acked-by: Stefan Bader <stefan.bader@canonical.com>
-Signed-off-by: Leann Ogasawara <leann.ogasawara@canonical.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- Documentation/networking/README.ipw2200 |    2 +-
- drivers/net/wireless/ipw2x00/ipw2200.c  |    4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath9k/ani.c       |   30 +++++++++++++++++++++------
+ drivers/net/wireless/ath/ath9k/ani.h       |    4 ---
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c |    2 +
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c |    2 +
+ drivers/net/wireless/ath/ath9k/hw-ops.h    |   16 ++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h        |   29 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/mac.c       |    1 +
+ 7 files changed, 73 insertions(+), 11 deletions(-)
 
-diff --git a/Documentation/networking/README.ipw2200 b/Documentation/networking/README.ipw2200
-index 80c7285..e4d3267 100644
---- a/Documentation/networking/README.ipw2200
-+++ b/Documentation/networking/README.ipw2200
-@@ -171,7 +171,7 @@ Where the supported parameter are:
-   
-   led
- 	Can be used to turn on experimental LED code.
--	0 = Off, 1 = On.  Default is 0.
-+	0 = Off, 1 = On.  Default is 1.
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index 66d0b88..28a1dc3 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -17,6 +17,12 @@
+ #include "hw.h"
+ #include "hw-ops.h"
  
-   mode
- 	Can be used to set the default mode of the adapter.  
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-index 3aa3bb1..0805569 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -96,7 +96,7 @@ static int network_mode = 0;
- static u32 ipw_debug_level;
- static int associate;
- static int auto_create = 1;
--static int led_support = 0;
-+static int led_support = 1;
- static int disable = 0;
- static int bt_coexist = 0;
- static int hwcrypto = 0;
-@@ -12083,7 +12083,7 @@ module_param(auto_create, int, 0444);
- MODULE_PARM_DESC(auto_create, "auto create adhoc network (default on)");
++/* Private to ani.c */
++static inline void ath9k_hw_ani_lower_immunity(struct ath_hw *ah)
++{
++	ath9k_hw_private_ops(ah)->ani_lower_immunity(ah);
++}
++
+ static int ath9k_hw_get_ani_channel_idx(struct ath_hw *ah,
+ 					struct ath9k_channel *chan)
+ {
+@@ -206,7 +212,7 @@ static void ath9k_hw_ani_cck_err_trigger(struct ath_hw *ah)
+ 	}
+ }
  
- module_param_named(led, led_support, int, 0444);
--MODULE_PARM_DESC(led, "enable led control on some systems (default 0 off)");
-+MODULE_PARM_DESC(led, "enable led control on some systems (default 1 on)");
+-static void ath9k_hw_ani_lower_immunity(struct ath_hw *ah)
++static void ath9k_hw_ani_lower_immunity_old(struct ath_hw *ah)
+ {
+ 	struct ar5416AniState *aniState;
+ 	int32_t rssi;
+@@ -316,7 +322,7 @@ static int32_t ath9k_hw_ani_get_listen_time(struct ath_hw *ah)
+ 	return listenTime;
+ }
  
- module_param(debug, int, 0444);
- MODULE_PARM_DESC(debug, "debug output mask");
+-void ath9k_ani_reset(struct ath_hw *ah)
++static void ath9k_ani_reset_old(struct ath_hw *ah)
+ {
+ 	struct ar5416AniState *aniState;
+ 	struct ath9k_channel *chan = ah->curchan;
+@@ -402,8 +408,8 @@ void ath9k_ani_reset(struct ath_hw *ah)
+ 	DISABLE_REGWRITE_BUFFER(ah);
+ }
+ 
+-void ath9k_hw_ani_monitor(struct ath_hw *ah,
+-			  struct ath9k_channel *chan)
++static void ath9k_hw_ani_monitor_old(struct ath_hw *ah,
++				     struct ath9k_channel *chan)
+ {
+ 	struct ar5416AniState *aniState;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+@@ -487,7 +493,6 @@ void ath9k_hw_ani_monitor(struct ath_hw *ah,
+ 		}
+ 	}
+ }
+-EXPORT_SYMBOL(ath9k_hw_ani_monitor);
+ 
+ void ath9k_enable_mib_counters(struct ath_hw *ah)
+ {
+@@ -572,7 +577,7 @@ u32 ath9k_hw_GetMibCycleCountsPct(struct ath_hw *ah,
+  * any of the MIB counters overflow/trigger so don't assume we're
+  * here because a PHY error counter triggered.
+  */
+-void ath9k_hw_procmibevent(struct ath_hw *ah)
++static void ath9k_hw_proc_mib_event_old(struct ath_hw *ah)
+ {
+ 	u32 phyCnt1, phyCnt2;
+ 
+@@ -628,7 +633,6 @@ void ath9k_hw_procmibevent(struct ath_hw *ah)
+ 		ath9k_ani_restart(ah);
+ 	}
+ }
+-EXPORT_SYMBOL(ath9k_hw_procmibevent);
+ 
+ void ath9k_hw_ani_setup(struct ath_hw *ah)
+ {
+@@ -694,3 +698,15 @@ void ath9k_hw_ani_init(struct ath_hw *ah)
+ 	if (ah->config.enable_ani)
+ 		ah->proc_phyerr |= HAL_PROCESS_ANI;
+ }
++
++void ath9k_hw_attach_ani_ops_old(struct ath_hw *ah)
++{
++	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
++	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
++
++	priv_ops->ani_reset = ath9k_ani_reset_old;
++	priv_ops->ani_lower_immunity = ath9k_hw_ani_lower_immunity_old;
++
++	ops->ani_proc_mib_event = ath9k_hw_proc_mib_event_old;
++	ops->ani_monitor = ath9k_hw_ani_monitor_old;
++}
+diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
+index 3356762..4631ab2 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.h
++++ b/drivers/net/wireless/ath/ath9k/ani.h
+@@ -108,14 +108,10 @@ struct ar5416Stats {
+ };
+ #define ah_mibStats stats.ast_mibstats
+ 
+-void ath9k_ani_reset(struct ath_hw *ah);
+-void ath9k_hw_ani_monitor(struct ath_hw *ah,
+-			  struct ath9k_channel *chan);
+ void ath9k_enable_mib_counters(struct ath_hw *ah);
+ void ath9k_hw_disable_mib_counters(struct ath_hw *ah);
+ u32 ath9k_hw_GetMibCycleCountsPct(struct ath_hw *ah, u32 *rxc_pcnt,
+ 				  u32 *rxf_pcnt, u32 *txf_pcnt);
+-void ath9k_hw_procmibevent(struct ath_hw *ah);
+ void ath9k_hw_ani_setup(struct ath_hw *ah);
+ void ath9k_hw_ani_init(struct ath_hw *ah);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+index 7ba9dd6..917eae0 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+@@ -636,4 +636,6 @@ void ar9002_hw_attach_ops(struct ath_hw *ah)
+ 
+ 	ar9002_hw_attach_calib_ops(ah);
+ 	ar9002_hw_attach_mac_ops(ah);
++
++	ath9k_hw_attach_ani_ops_old(ah);
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index 863f61e..b757470 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -313,4 +313,6 @@ void ar9003_hw_attach_ops(struct ath_hw *ah)
+ 	ar9003_hw_attach_phy_ops(ah);
+ 	ar9003_hw_attach_calib_ops(ah);
+ 	ar9003_hw_attach_mac_ops(ah);
++
++	ath9k_hw_attach_ani_ops_old(ah);
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
+index 624422a..65d2c66 100644
+--- a/drivers/net/wireless/ath/ath9k/hw-ops.h
++++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
+@@ -128,6 +128,17 @@ static inline void ath9k_hw_set11n_virtualmorefrag(struct ath_hw *ah, void *ds,
+ 	ath9k_hw_ops(ah)->set11n_virtualmorefrag(ah, ds, vmf);
+ }
+ 
++static inline void ath9k_hw_procmibevent(struct ath_hw *ah)
++{
++	ath9k_hw_ops(ah)->ani_proc_mib_event(ah);
++}
++
++static inline void ath9k_hw_ani_monitor(struct ath_hw *ah,
++					struct ath9k_channel *chan)
++{
++	ath9k_hw_ops(ah)->ani_monitor(ah, chan);
++}
++
+ /* Private hardware call ops */
+ 
+ /* PHY ops */
+@@ -277,4 +288,9 @@ static inline bool ath9k_hw_iscal_supported(struct ath_hw *ah,
+ 	return ath9k_hw_private_ops(ah)->iscal_supported(ah, calType);
+ }
+ 
++static inline void ath9k_ani_reset(struct ath_hw *ah)
++{
++	ath9k_hw_private_ops(ah)->ani_reset(ah);
++}
++
+ #endif /* ATH9K_HW_OPS_H */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 3a28cdc..a207a70 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -511,6 +511,15 @@ struct ath_gen_timer_table {
+  * @setup_calibration: set up calibration
+  * @iscal_supported: used to query if a type of calibration is supported
+  * @loadnf: load noise floor read from each chain on the CCA registers
++ *
++ * @ani_reset: reset ANI parameters to default values
++ * @ani_lower_immunity: lower the noise immunity level. The level controls
++ *	the power-based packet detection on hardware. If a power jump is
++ *	detected the adapter takes it as an indication that a packet has
++ *	arrived. The level ranges from 0-5. Each level corresponds to a
++ *	few dB more of noise immunity. If you have a strong time-varying
++ *	interference that is causing false detections (OFDM timing errors or
++ *	CCK timing errors) the level can be increased.
+  */
+ struct ath_hw_private_ops {
+ 	/* Calibration ops */
+@@ -554,6 +563,10 @@ struct ath_hw_private_ops {
+ 			    int param);
+ 	void (*do_getnf)(struct ath_hw *ah, int16_t nfarray[NUM_NF_READINGS]);
+ 	void (*loadnf)(struct ath_hw *ah, struct ath9k_channel *chan);
++
++	/* ANI */
++	void (*ani_reset)(struct ath_hw *ah);
++	void (*ani_lower_immunity)(struct ath_hw *ah);
+ };
+ 
+ /**
+@@ -564,6 +577,11 @@ struct ath_hw_private_ops {
+  *
+  * @config_pci_powersave:
+  * @calibrate: periodic calibration for NF, ANI, IQ, ADC gain, ADC-DC
++ *
++ * @ani_proc_mib_event: process MIB events, this would happen upon specific ANI
++ *	thresholds being reached or having overflowed.
++ * @ani_monitor: called periodically by the core driver to collect
++ *	MIB stats and adjust ANI if specific thresholds have been reached.
+  */
+ struct ath_hw_ops {
+ 	void (*config_pci_powersave)(struct ath_hw *ah,
+@@ -604,6 +622,9 @@ struct ath_hw_ops {
+ 				     u32 burstDuration);
+ 	void (*set11n_virtualmorefrag)(struct ath_hw *ah, void *ds,
+ 				       u32 vmf);
++
++	void (*ani_proc_mib_event)(struct ath_hw *ah);
++	void (*ani_monitor)(struct ath_hw *ah, struct ath9k_channel *chan);
+ };
+ 
+ struct ath_hw {
+@@ -934,6 +955,14 @@ void ar9003_hw_attach_calib_ops(struct ath_hw *ah);
+ void ar9002_hw_attach_ops(struct ath_hw *ah);
+ void ar9003_hw_attach_ops(struct ath_hw *ah);
+ 
++/*
++ * ANI work can be shared between all families but a next
++ * generation implementation of ANI will be used only for AR9003 only
++ * for now as the other families still need to be tested with the same
++ * next generation ANI.
++ */
++void ath9k_hw_attach_ani_ops_old(struct ath_hw *ah);
++
+ #define ATH_PCIE_CAP_LINK_CTRL	0x70
+ #define ATH_PCIE_CAP_LINK_L0S	1
+ #define ATH_PCIE_CAP_LINK_L1	2
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 0e425cb..b4d0198 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -15,6 +15,7 @@
+  */
+ 
+ #include "hw.h"
++#include "hw-ops.h"
+ 
+ static void ath9k_hw_set_txq_interrupts(struct ath_hw *ah,
+ 					struct ath9k_tx_queue_info *qi)
 -- 
-1.7.0.4
-
-
+1.6.3.3
 
