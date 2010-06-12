@@ -1,172 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:41943 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755852Ab0FAJvd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jun 2010 05:51:33 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 01 Jun 2010 02:51:33 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19460.55013.281809.921510@gargle.gargle.HOWL>
-Date: Tue, 1 Jun 2010 15:16:13 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 07/13] ath9k_htc: Add PS wrappers
+Received: from bombadil.infradead.org ([18.85.46.34]:43228 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752272Ab0FLEeF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Jun 2010 00:34:05 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 12/24] ath9k_htc: use common WMM AC definitions instead of ath9k ones
+Date: Sat, 12 Jun 2010 00:33:50 -0400
+Message-Id: <1276317242-15540-13-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
+References: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The HW has to be awake when registers are accessed.
-Ensure this is so by using the PS wrappers at
-appropriate places.
+From: Felix Fietkau <nbd@openwrt.org>
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |   25 ++++++++++++++++++++-----
- 1 files changed, 20 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc.h            |    5 ++---
+ drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |    2 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c   |    8 ++++----
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c   |    2 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c   |   13 ++++++-------
+ 5 files changed, 14 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 08afd6e..d6c1f2f 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1357,6 +1357,7 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
- out:
- 	ath9k_htc_ps_restore(priv);
- 	mutex_unlock(&priv->mutex);
-+
- 	return ret;
- }
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 051b8d8..c584fbd 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -398,7 +398,7 @@ struct ath9k_htc_priv {
  
-@@ -1373,6 +1374,7 @@ static void ath9k_htc_remove_interface(struct ieee80211_hw *hw,
- 	ath_print(common, ATH_DBG_CONFIG, "Detach Interface\n");
+ 	int beaconq;
+ 	int cabq;
+-	int hwq_map[ATH9K_WME_AC_VO+1];
++	int hwq_map[WME_NUM_AC];
  
- 	mutex_lock(&priv->mutex);
-+	ath9k_htc_ps_wakeup(priv);
- 
- 	memset(&hvif, 0, sizeof(struct ath9k_htc_target_vif));
- 	memcpy(&hvif.myaddr, vif->addr, ETH_ALEN);
-@@ -1383,6 +1385,7 @@ static void ath9k_htc_remove_interface(struct ieee80211_hw *hw,
- 	ath9k_htc_remove_station(priv, vif, NULL);
- 	priv->vif = NULL;
- 
-+	ath9k_htc_ps_restore(priv);
- 	mutex_unlock(&priv->mutex);
- }
- 
-@@ -1479,8 +1482,8 @@ static void ath9k_htc_configure_filter(struct ieee80211_hw *hw,
- 	u32 rfilt;
- 
- 	mutex_lock(&priv->mutex);
--
- 	ath9k_htc_ps_wakeup(priv);
-+
- 	changed_flags &= SUPPORTED_FILTERS;
- 	*total_flags &= SUPPORTED_FILTERS;
- 
-@@ -1503,9 +1506,11 @@ static int ath9k_htc_sta_add(struct ieee80211_hw *hw,
- 	int ret;
- 
- 	mutex_lock(&priv->mutex);
-+	ath9k_htc_ps_wakeup(priv);
- 	ret = ath9k_htc_add_station(priv, vif, sta);
- 	if (!ret)
- 		ath9k_htc_init_rate(priv, sta);
-+	ath9k_htc_ps_restore(priv);
- 	mutex_unlock(&priv->mutex);
- 
- 	return ret;
-@@ -1519,7 +1524,9 @@ static int ath9k_htc_sta_remove(struct ieee80211_hw *hw,
- 	int ret;
- 
- 	mutex_lock(&priv->mutex);
-+	ath9k_htc_ps_wakeup(priv);
- 	ret = ath9k_htc_remove_station(priv, vif, sta);
-+	ath9k_htc_ps_restore(priv);
- 	mutex_unlock(&priv->mutex);
- 
- 	return ret;
-@@ -1537,6 +1544,7 @@ static int ath9k_htc_conf_tx(struct ieee80211_hw *hw, u16 queue,
- 		return 0;
- 
- 	mutex_lock(&priv->mutex);
-+	ath9k_htc_ps_wakeup(priv);
+ #ifdef CONFIG_ATH9K_HTC_DEBUGFS
+ 	struct ath9k_debug debug;
+@@ -431,8 +431,7 @@ int ath9k_tx_init(struct ath9k_htc_priv *priv);
+ void ath9k_tx_tasklet(unsigned long data);
+ int ath9k_htc_tx_start(struct ath9k_htc_priv *priv, struct sk_buff *skb);
+ void ath9k_tx_cleanup(struct ath9k_htc_priv *priv);
+-bool ath9k_htc_txq_setup(struct ath9k_htc_priv *priv,
+-			 enum ath9k_tx_queue_subtype qtype);
++bool ath9k_htc_txq_setup(struct ath9k_htc_priv *priv, int subtype);
+ int ath9k_htc_cabq_setup(struct ath9k_htc_priv *priv);
+ int get_hw_qnum(u16 queue, int *hwq_map);
+ int ath_htc_txq_update(struct ath9k_htc_priv *priv, int qnum,
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+index 12a3bb0..bd1506e 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+@@ -227,7 +227,7 @@ void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv)
+ {
+ 	struct ath_hw *ah = priv->ah;
+ 	struct ath9k_tx_queue_info qi, qi_be;
+-	int qnum = priv->hwq_map[ATH9K_WME_AC_BE];
++	int qnum = priv->hwq_map[WME_AC_BE];
  
  	memset(&qi, 0, sizeof(struct ath9k_tx_queue_info));
+ 	memset(&qi_be, 0, sizeof(struct ath9k_tx_queue_info));
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 7339439..947de70 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -521,23 +521,23 @@ static int ath9k_init_queues(struct ath9k_htc_priv *priv)
+ 		goto err;
+ 	}
  
-@@ -1557,6 +1565,7 @@ static int ath9k_htc_conf_tx(struct ieee80211_hw *hw, u16 queue,
- 	if (ret)
- 		ath_print(common, ATH_DBG_FATAL, "TXQ Update failed\n");
+-	if (!ath9k_htc_txq_setup(priv, ATH9K_WME_AC_BE)) {
++	if (!ath9k_htc_txq_setup(priv, WME_AC_BE)) {
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to setup xmit queue for BE traffic\n");
+ 		goto err;
+ 	}
  
-+	ath9k_htc_ps_restore(priv);
- 	mutex_unlock(&priv->mutex);
+-	if (!ath9k_htc_txq_setup(priv, ATH9K_WME_AC_BK)) {
++	if (!ath9k_htc_txq_setup(priv, WME_AC_BK)) {
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to setup xmit queue for BK traffic\n");
+ 		goto err;
+ 	}
+-	if (!ath9k_htc_txq_setup(priv, ATH9K_WME_AC_VI)) {
++	if (!ath9k_htc_txq_setup(priv, WME_AC_VI)) {
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to setup xmit queue for VI traffic\n");
+ 		goto err;
+ 	}
+-	if (!ath9k_htc_txq_setup(priv, ATH9K_WME_AC_VO)) {
++	if (!ath9k_htc_txq_setup(priv, WME_AC_VO)) {
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to setup xmit queue for VO traffic\n");
+ 		goto err;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 7aefbc6..c4d022a 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1590,7 +1590,7 @@ static int ath9k_htc_conf_tx(struct ieee80211_hw *hw, u16 queue,
+ 	}
  
- 	return ret;
-@@ -1699,7 +1708,9 @@ static u64 ath9k_htc_get_tsf(struct ieee80211_hw *hw)
- 	u64 tsf;
- 
- 	mutex_lock(&priv->mutex);
-+	ath9k_htc_ps_wakeup(priv);
- 	tsf = ath9k_hw_gettsf64(priv->ah);
-+	ath9k_htc_ps_restore(priv);
- 	mutex_unlock(&priv->mutex);
- 
- 	return tsf;
-@@ -1710,7 +1721,9 @@ static void ath9k_htc_set_tsf(struct ieee80211_hw *hw, u64 tsf)
- 	struct ath9k_htc_priv *priv = hw->priv;
- 
- 	mutex_lock(&priv->mutex);
-+	ath9k_htc_ps_wakeup(priv);
- 	ath9k_hw_settsf64(priv->ah, tsf);
-+	ath9k_htc_ps_restore(priv);
- 	mutex_unlock(&priv->mutex);
- }
- 
-@@ -1718,11 +1731,11 @@ static void ath9k_htc_reset_tsf(struct ieee80211_hw *hw)
- {
- 	struct ath9k_htc_priv *priv = hw->priv;
- 
--	ath9k_htc_ps_wakeup(priv);
- 	mutex_lock(&priv->mutex);
-+	ath9k_htc_ps_wakeup(priv);
- 	ath9k_hw_reset_tsf(priv->ah);
--	mutex_unlock(&priv->mutex);
+ 	if ((priv->ah->opmode == NL80211_IFTYPE_ADHOC) &&
+-	    (qnum == priv->hwq_map[ATH9K_WME_AC_BE]))
++	    (qnum == priv->hwq_map[WME_AC_BE]))
+ 		    ath9k_htc_beaconq_config(priv);
+ out:
  	ath9k_htc_ps_restore(priv);
-+	mutex_unlock(&priv->mutex);
- }
- 
- static int ath9k_htc_ampdu_action(struct ieee80211_hw *hw,
-@@ -1780,8 +1793,8 @@ static void ath9k_htc_sw_scan_complete(struct ieee80211_hw *hw)
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index ffebd5a..89d81ab 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -34,15 +34,15 @@ int get_hw_qnum(u16 queue, int *hwq_map)
  {
- 	struct ath9k_htc_priv *priv = hw->priv;
- 
--	ath9k_htc_ps_wakeup(priv);
- 	mutex_lock(&priv->mutex);
-+	ath9k_htc_ps_wakeup(priv);
- 	spin_lock_bh(&priv->beacon_lock);
- 	priv->op_flags &= ~OP_SCANNING;
- 	spin_unlock_bh(&priv->beacon_lock);
-@@ -1789,8 +1802,8 @@ static void ath9k_htc_sw_scan_complete(struct ieee80211_hw *hw)
- 	if (priv->op_flags & OP_ASSOCIATED)
- 		ath9k_htc_beacon_config(priv, priv->vif);
- 	ath_start_ani(priv);
--	mutex_unlock(&priv->mutex);
- 	ath9k_htc_ps_restore(priv);
-+	mutex_unlock(&priv->mutex);
+ 	switch (queue) {
+ 	case 0:
+-		return hwq_map[ATH9K_WME_AC_VO];
++		return hwq_map[WME_AC_VO];
+ 	case 1:
+-		return hwq_map[ATH9K_WME_AC_VI];
++		return hwq_map[WME_AC_VI];
+ 	case 2:
+-		return hwq_map[ATH9K_WME_AC_BE];
++		return hwq_map[WME_AC_BE];
+ 	case 3:
+-		return hwq_map[ATH9K_WME_AC_BK];
++		return hwq_map[WME_AC_BK];
+ 	default:
+-		return hwq_map[ATH9K_WME_AC_BE];
++		return hwq_map[WME_AC_BE];
+ 	}
  }
  
- static int ath9k_htc_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
-@@ -1804,8 +1817,10 @@ static void ath9k_htc_set_coverage_class(struct ieee80211_hw *hw,
- 	struct ath9k_htc_priv *priv = hw->priv;
+@@ -297,8 +297,7 @@ void ath9k_tx_cleanup(struct ath9k_htc_priv *priv)
  
- 	mutex_lock(&priv->mutex);
-+	ath9k_htc_ps_wakeup(priv);
- 	priv->ah->coverage_class = coverage_class;
- 	ath9k_hw_init_global_settings(priv->ah);
-+	ath9k_htc_ps_restore(priv);
- 	mutex_unlock(&priv->mutex);
  }
  
+-bool ath9k_htc_txq_setup(struct ath9k_htc_priv *priv,
+-			 enum ath9k_tx_queue_subtype subtype)
++bool ath9k_htc_txq_setup(struct ath9k_htc_priv *priv, int subtype)
+ {
+ 	struct ath_hw *ah = priv->ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
 -- 
-1.7.1
+1.6.3.3
 
