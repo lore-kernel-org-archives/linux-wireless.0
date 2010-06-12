@@ -1,43 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52788 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754431Ab0FDIgy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jun 2010 04:36:54 -0400
-Subject: Re: [PATCH] p54spi: replace internal "cx3110x" name with "p54spi"
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luke-Jr <luke@dashjr.org>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	torvalds@linux-foundation.org
-In-Reply-To: <201006021406.15393.luke@dashjr.org>
-References: <201006012117.00432.luke@dashjr.org>
-	 <1275465299.3915.0.camel@jlt3.sipsolutions.net>
-	 <201006021406.15393.luke@dashjr.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 04 Jun 2010 10:36:47 +0200
-Message-ID: <1275640607.9953.15.camel@jlt3.sipsolutions.net>
+Received: from c60.cesmail.net ([216.154.195.49]:2676 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750888Ab0FLReb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Jun 2010 13:34:31 -0400
+Subject: Re: [PATCH v2] mac80211: Use a separate CCMP PN receive counter
+ for management frames
+From: Pavel Roskin <proski@gnu.org>
+To: Jouni Malinen <jouni.malinen@atheros.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20100611172733.GA21347@jm.kir.nu>
+References: <20100611024625.GB3985@jm.kir.nu>
+	 <20100611172733.GA21347@jm.kir.nu>
+Content-Type: text/plain
+Date: Sat, 12 Jun 2010 13:34:27 -0400
+Message-Id: <1276364067.2625.12.camel@ct>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-06-02 at 14:06 -0500, Luke-Jr wrote:
+On Fri, 2010-06-11 at 10:27 -0700, Jouni Malinen wrote:
 
-> > >  	.driver = {
-> > > -		/* use cx3110x name because board-n800.c uses that for the
-> > > -		 * SPI port */
-> > > -		.name		= "cx3110x",
-> > > +		.name		= "p54spi",
-> > >  		.bus		= &spi_bus_type,
-> > 
-> > maybe that comment wasn't clear enough ... it needs to be that way to be
-> > properly linked up against SPI.
-> 
-> I don't understand what you mean here. Does the hardware-side of SPI use 
-> string identifiers? These are the only two instances of "cx3110x" in the 
-> kernel source; N8x0 board files expect "p54spi"
+> -		for (i = 0; i < NUM_RX_DATA_QUEUES; i++) {
+> +		for (i = 0; i < NUM_RX_DATA_QUEUES + 1; i++) {
 
-Hm, ok, I thought that the board stuff needed cx3110x. Hopefully it
-doesn't differ in n810s?
+Perhaps we could have a define for NUM_RX_DATA_QUEUES + 1, e.g.
+NUM_RX_ALL_QUEUES
 
-johannes
+> +			int queue = ieee80211_is_mgmt(fc) ?
+> +				NUM_RX_DATA_QUEUES : rx->queue;
 
+Again, it would be nice to add a define for readability, e.g.
+#define NUM_RX_MGMT_QUEUE NUM_RX_DATA_QUEUES
+
+-- 
+Regards,
+Pavel Roskin
