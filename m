@@ -1,39 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:44388 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755621Ab0F3T1w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jun 2010 15:27:52 -0400
-Subject: Re: Compat-wireless release for 2010-06-30 is baked
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20100630190300.056B742E2B@repository3.orbit-lab.org>
-References: <20100630190300.056B742E2B@repository3.orbit-lab.org>
-Content-Type: text/plain
-Date: Wed, 30 Jun 2010 15:27:47 -0400
-Message-Id: <1277926067.6591.3.camel@mj>
+Received: from he.sipsolutions.net ([78.46.109.217]:53696 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752048Ab0FLRrh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Jun 2010 13:47:37 -0400
+Subject: Re: [PATCH v2] mac80211: Use a separate CCMP PN receive counter
+ for management frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Roskin <proski@gnu.org>
+Cc: Jouni Malinen <jouni.malinen@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1276364067.2625.12.camel@ct>
+References: <20100611024625.GB3985@jm.kir.nu>
+	 <20100611172733.GA21347@jm.kir.nu>  <1276364067.2625.12.camel@ct>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 12 Jun 2010 19:47:19 +0200
+Message-ID: <1276364839.7894.2.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-06-30 at 15:02 -0400, Compat-wireless cronjob account
-wrote:
-> From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
->    4570588..85e0e99  history    -> origin/history
->  + 1b72384...7a6353a master     -> origin/master  (forced update)
->    5904b3b..984bc96  stable     -> origin/stable
->  * [new tag]         next-20100630 -> next-20100630
-> cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-> cat: compat_base_tree: No such file or directory
+On Sat, 2010-06-12 at 13:34 -0400, Pavel Roskin wrote:
+> On Fri, 2010-06-11 at 10:27 -0700, Jouni Malinen wrote:
+> 
+> > -		for (i = 0; i < NUM_RX_DATA_QUEUES; i++) {
+> > +		for (i = 0; i < NUM_RX_DATA_QUEUES + 1; i++) {
+> 
+> Perhaps we could have a define for NUM_RX_DATA_QUEUES + 1, e.g.
+> NUM_RX_ALL_QUEUES
 
-Luis, could you please check what is going on?  There was another
-announcement with error messages.  Then there was a truncated message.
-Now the errors are back.
+I kinda disagree. Yes, this is tricky code, but adding a define wouldn't
+make it clearer. In fact, it isn't really related to queues to start
+with, and ALL_QUEUES would just strengthen that mostly wrong notion.
 
-I'm not sure such messages should be posted to the list.  It would be
-more useful to send then to those who can do something in the build
-system breaks.
+I guess it really should be renamed to TIDs with the last two being
+special for non-QoS (so no TID) traffic + mgmt traffic. But then
+sequence numbers are allocated from the same counter (so there we just
+have 17 possibilities) while PNs have 18 counters...
 
--- 
-Regards,
-Pavel Roskin
+johannes
+
