@@ -1,77 +1,296 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:38553 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758119Ab0FUUhZ (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:43231 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752251Ab0FLEeF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jun 2010 16:37:25 -0400
-MIME-Version: 1.0
-In-Reply-To: <1277151410.5409.33.camel@maxim-laptop>
-References: <20100528100901.14580.1322.stgit@fate.lan> <1276806785.20754.8.camel@maxim-laptop>
-	<20100618112026.17623g6uhdjk8hts@naisho.dyndns.info> <1276856142.9114.1.camel@maxim-laptop>
-	<20100618134930.124225d4fsi8w1fk@naisho.dyndns.info> <1276859156.19554.2.camel@maxim-laptop>
-	<AANLkTimdTjedtoeKAp5tcTqefrUB6k373Kx9EacuYFcO@mail.gmail.com>
-	<1276870309.23783.3.camel@maxim-laptop> <1276933774.16697.11.camel@maxim-laptop>
-	<AANLkTimIjaxq7IDWwIl1vv93k9bNQ2i89Sb5R5TiJmmA@mail.gmail.com>
-	<1277032723.9555.12.camel@maxim-laptop> <AANLkTim8iZmm8pEERJUsrQWOiLSjPUfCN-TFFzZZQWx2@mail.gmail.com>
-	<1277151410.5409.33.camel@maxim-laptop>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 21 Jun 2010 13:37:04 -0700
-Message-ID: <AANLkTin3fKn0_4mrhmPOlTeN--1EZbKECGF3NVdh9h1t@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH v2] ath5k: disable ASPM
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: David Quan <David.Quan@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Jonathan May <jonathan.may@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 12 Jun 2010 00:34:05 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH 13/24] ath9k: remove duplicate WMM AC definitions
+Date: Sat, 12 Jun 2010 00:33:51 -0400
+Message-Id: <1276317242-15540-14-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
+References: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 21, 2010 at 1:16 PM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
-> Luis, let me explain again, exactly the situation:
->
-> First of all AR5001 and AR5001X devices (former was usualy listed as
-> AR2425, and I have it, later I don't know about much), don't work well
-> with ASPM L0s enabled.
+From: Felix Fietkau <nbd@openwrt.org>
 
-Thanks for the clarification. David, do you see this as well on your end?
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h   |    4 +--
+ drivers/net/wireless/ath/ath9k/beacon.c  |    3 +-
+ drivers/net/wireless/ath/ath9k/debug.c   |    8 ++--
+ drivers/net/wireless/ath/ath9k/init.c    |   10 +++---
+ drivers/net/wireless/ath/ath9k/mac.h     |   11 ++-----
+ drivers/net/wireless/ath/ath9k/main.c    |   20 ++++++------
+ drivers/net/wireless/ath/ath9k/virtual.c |    2 +-
+ drivers/net/wireless/ath/ath9k/xmit.c    |   46 +-----------------------------
+ 8 files changed, 26 insertions(+), 78 deletions(-)
 
-> I told that many times, but I tell again.
-> As soon as card it put on medium to high transmit load
-> (for example even if transmission consists mostly of TCP ACK packets),
-> it dies.
->
-> Usualy it will stop transmitting, and then after few seconds it will
-> send RXORN intrrupt to the host, even though the channel was idle.
-> (Tested by sending a stream of UDP packets on channel that is neighbor
-> free).
->
-> I didn't see it, but some users reported seeing jumbo frames at this
-> time as well.
-> Overall it doesn't matter because card just goes south.
->
-> A reset sometimes brings card to life, sometimes causes another storm of
-> RXORN and sometimes just results in quiet dead card.
-> A next reset might bring it to life, or not.
->
-> Card (at least mine) advertises its as a 'pre pci 1.1 device'.
-> Therefore if I enable CONFIG_PCIEASPM, the pci core will automaticly
-> disable ASPM (both L0s and L1) on this card.
-> I won't be surprised that windows does the same.
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index c5c6629..a0f1567 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -291,7 +291,7 @@ struct ath_tx_control {
+ struct ath_tx {
+ 	u16 seq_no;
+ 	u32 txqsetup;
+-	int hwq_map[ATH9K_WME_AC_VO+1];
++	int hwq_map[WME_NUM_AC];
+ 	spinlock_t txbuflock;
+ 	struct list_head txbuf;
+ 	struct ath_txq txq[ATH9K_NUM_TX_QUEUES];
+@@ -680,8 +680,6 @@ void ath9k_set_wiphy_idle(struct ath_wiphy *aphy, bool idle);
+ void ath_mac80211_stop_queue(struct ath_softc *sc, u16 skb_queue);
+ void ath_mac80211_start_queue(struct ath_softc *sc, u16 skb_queue);
+ 
+-int ath_tx_get_qnum(struct ath_softc *sc, int qtype, int haltype);
+-
+ void ath_start_rfkill_poll(struct ath_softc *sc);
+ extern void ath9k_rfkill_poll_state(struct ieee80211_hw *hw);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index f43d85a..4d4b22d 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -38,8 +38,7 @@ int ath_beaconq_config(struct ath_softc *sc)
+ 		qi.tqi_cwmax = 0;
+ 	} else {
+ 		/* Adhoc mode; important thing is to use 2x cwmin. */
+-		qnum = ath_tx_get_qnum(sc, ATH9K_TX_QUEUE_DATA,
+-				       ATH9K_WME_AC_BE);
++		qnum = sc->tx.hwq_map[WME_AC_BE];
+ 		ath9k_hw_get_txq_props(ah, qnum, &qi_be);
+ 		qi.tqi_aifs = qi_be.tqi_aifs;
+ 		qi.tqi_cwmin = 4*qi_be.tqi_cwmin;
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index a127bdb..a6cb48d 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -630,10 +630,10 @@ static const struct file_operations fops_wiphy = {
+ 	do {								\
+ 		len += snprintf(buf + len, size - len,			\
+ 				"%s%13u%11u%10u%10u\n", str,		\
+-		sc->debug.stats.txstats[sc->tx.hwq_map[ATH9K_WME_AC_BE]].elem, \
+-		sc->debug.stats.txstats[sc->tx.hwq_map[ATH9K_WME_AC_BK]].elem, \
+-		sc->debug.stats.txstats[sc->tx.hwq_map[ATH9K_WME_AC_VI]].elem, \
+-		sc->debug.stats.txstats[sc->tx.hwq_map[ATH9K_WME_AC_VO]].elem); \
++		sc->debug.stats.txstats[sc->tx.hwq_map[WME_AC_BE]].elem, \
++		sc->debug.stats.txstats[sc->tx.hwq_map[WME_AC_BK]].elem, \
++		sc->debug.stats.txstats[sc->tx.hwq_map[WME_AC_VI]].elem, \
++		sc->debug.stats.txstats[sc->tx.hwq_map[WME_AC_VO]].elem); \
+ } while(0)
+ 
+ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 18d76ed..4e07830 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -426,7 +426,7 @@ static int ath9k_init_btcoex(struct ath_softc *sc)
+ 		r = ath_init_btcoex_timer(sc);
+ 		if (r)
+ 			return -1;
+-		qnum = ath_tx_get_qnum(sc, ATH9K_TX_QUEUE_DATA, ATH9K_WME_AC_BE);
++		qnum = sc->tx.hwq_map[WME_AC_BE];
+ 		ath9k_hw_init_btcoex_hw(sc->sc_ah, qnum);
+ 		sc->btcoex.bt_stomp_type = ATH_BTCOEX_STOMP_LOW;
+ 		break;
+@@ -463,23 +463,23 @@ static int ath9k_init_queues(struct ath_softc *sc)
+ 	sc->config.cabqReadytime = ATH_CABQ_READY_TIME;
+ 	ath_cabq_update(sc);
+ 
+-	if (!ath_tx_setup(sc, ATH9K_WME_AC_BK)) {
++	if (!ath_tx_setup(sc, WME_AC_BK)) {
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to setup xmit queue for BK traffic\n");
+ 		goto err;
+ 	}
+ 
+-	if (!ath_tx_setup(sc, ATH9K_WME_AC_BE)) {
++	if (!ath_tx_setup(sc, WME_AC_BE)) {
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to setup xmit queue for BE traffic\n");
+ 		goto err;
+ 	}
+-	if (!ath_tx_setup(sc, ATH9K_WME_AC_VI)) {
++	if (!ath_tx_setup(sc, WME_AC_VI)) {
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to setup xmit queue for VI traffic\n");
+ 		goto err;
+ 	}
+-	if (!ath_tx_setup(sc, ATH9K_WME_AC_VO)) {
++	if (!ath_tx_setup(sc, WME_AC_VO)) {
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to setup xmit queue for VO traffic\n");
+ 		goto err;
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index 3c65c91..7559fb2 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -577,13 +577,8 @@ enum ath9k_tx_queue {
+ 
+ #define	ATH9K_NUM_TX_QUEUES 10
+ 
+-enum ath9k_tx_queue_subtype {
+-	ATH9K_WME_AC_BK = 0,
+-	ATH9K_WME_AC_BE,
+-	ATH9K_WME_AC_VI,
+-	ATH9K_WME_AC_VO,
+-	ATH9K_WME_UPSD
+-};
++/* Used as a queue subtype instead of a WMM AC */
++#define ATH9K_WME_UPSD	4
+ 
+ enum ath9k_tx_queue_flags {
+ 	TXQ_FLAG_TXOKINT_ENABLE = 0x0001,
+@@ -617,7 +612,7 @@ enum ath9k_pkt_type {
+ struct ath9k_tx_queue_info {
+ 	u32 tqi_ver;
+ 	enum ath9k_tx_queue tqi_type;
+-	enum ath9k_tx_queue_subtype tqi_subtype;
++	int tqi_subtype;
+ 	enum ath9k_tx_queue_flags tqi_qflags;
+ 	u32 tqi_priority;
+ 	u32 tqi_aifs;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 846107c..200e390 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -814,19 +814,19 @@ int ath_get_hal_qnum(u16 queue, struct ath_softc *sc)
+ 
+ 	switch (queue) {
+ 	case 0:
+-		qnum = sc->tx.hwq_map[ATH9K_WME_AC_VO];
++		qnum = sc->tx.hwq_map[WME_AC_VO];
+ 		break;
+ 	case 1:
+-		qnum = sc->tx.hwq_map[ATH9K_WME_AC_VI];
++		qnum = sc->tx.hwq_map[WME_AC_VI];
+ 		break;
+ 	case 2:
+-		qnum = sc->tx.hwq_map[ATH9K_WME_AC_BE];
++		qnum = sc->tx.hwq_map[WME_AC_BE];
+ 		break;
+ 	case 3:
+-		qnum = sc->tx.hwq_map[ATH9K_WME_AC_BK];
++		qnum = sc->tx.hwq_map[WME_AC_BK];
+ 		break;
+ 	default:
+-		qnum = sc->tx.hwq_map[ATH9K_WME_AC_BE];
++		qnum = sc->tx.hwq_map[WME_AC_BE];
+ 		break;
+ 	}
+ 
+@@ -838,16 +838,16 @@ int ath_get_mac80211_qnum(u32 queue, struct ath_softc *sc)
+ 	int qnum;
+ 
+ 	switch (queue) {
+-	case ATH9K_WME_AC_VO:
++	case WME_AC_VO:
+ 		qnum = 0;
+ 		break;
+-	case ATH9K_WME_AC_VI:
++	case WME_AC_VI:
+ 		qnum = 1;
+ 		break;
+-	case ATH9K_WME_AC_BE:
++	case WME_AC_BE:
+ 		qnum = 2;
+ 		break;
+-	case ATH9K_WME_AC_BK:
++	case WME_AC_BK:
+ 		qnum = 3;
+ 		break;
+ 	default:
+@@ -1559,7 +1559,7 @@ static int ath9k_conf_tx(struct ieee80211_hw *hw, u16 queue,
+ 		ath_print(common, ATH_DBG_FATAL, "TXQ Update failed\n");
+ 
+ 	if (sc->sc_ah->opmode == NL80211_IFTYPE_ADHOC)
+-		if ((qnum == sc->tx.hwq_map[ATH9K_WME_AC_BE]) && !ret)
++		if ((qnum == sc->tx.hwq_map[WME_AC_BE]) && !ret)
+ 			ath_beaconq_config(sc);
+ 
+ 	mutex_unlock(&sc->mutex);
+diff --git a/drivers/net/wireless/ath/ath9k/virtual.c b/drivers/net/wireless/ath/ath9k/virtual.c
+index 105ad40..89423ca 100644
+--- a/drivers/net/wireless/ath/ath9k/virtual.c
++++ b/drivers/net/wireless/ath/ath9k/virtual.c
+@@ -219,7 +219,7 @@ static int ath9k_send_nullfunc(struct ath_wiphy *aphy,
+ 	info->control.rates[1].idx = -1;
+ 
+ 	memset(&txctl, 0, sizeof(struct ath_tx_control));
+-	txctl.txq = &sc->tx.txq[sc->tx.hwq_map[ATH9K_WME_AC_VO]];
++	txctl.txq = &sc->tx.txq[sc->tx.hwq_map[WME_AC_VO]];
+ 	txctl.frame_type = ps ? ATH9K_IFT_PAUSE : ATH9K_IFT_UNPAUSE;
+ 
+ 	if (ath_tx_start(aphy->hw, skb, &txctl) != 0)
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index ec124fb..9bff6c5 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -959,32 +959,6 @@ struct ath_txq *ath_txq_setup(struct ath_softc *sc, int qtype, int subtype)
+ 	return &sc->tx.txq[qnum];
+ }
+ 
+-int ath_tx_get_qnum(struct ath_softc *sc, int qtype, int haltype)
+-{
+-	int qnum;
+-
+-	switch (qtype) {
+-	case ATH9K_TX_QUEUE_DATA:
+-		if (haltype >= ARRAY_SIZE(sc->tx.hwq_map)) {
+-			ath_print(ath9k_hw_common(sc->sc_ah), ATH_DBG_FATAL,
+-				  "HAL AC %u out of range, max %zu!\n",
+-				  haltype, ARRAY_SIZE(sc->tx.hwq_map));
+-			return -1;
+-		}
+-		qnum = sc->tx.hwq_map[haltype];
+-		break;
+-	case ATH9K_TX_QUEUE_BEACON:
+-		qnum = sc->beacon.beaconq;
+-		break;
+-	case ATH9K_TX_QUEUE_CAB:
+-		qnum = sc->beacon.cabq->axq_qnum;
+-		break;
+-	default:
+-		qnum = -1;
+-	}
+-	return qnum;
+-}
+-
+ int ath_txq_update(struct ath_softc *sc, int qnum,
+ 		   struct ath9k_tx_queue_info *qinfo)
+ {
+@@ -2423,26 +2397,8 @@ void ath_tx_node_init(struct ath_softc *sc, struct ath_node *an)
+ 	for (acno = 0, ac = &an->ac[acno];
+ 	     acno < WME_NUM_AC; acno++, ac++) {
+ 		ac->sched    = false;
++		ac->qnum = sc->tx.hwq_map[acno];
+ 		INIT_LIST_HEAD(&ac->tid_q);
+-
+-		switch (acno) {
+-		case WME_AC_BE:
+-			ac->qnum = ath_tx_get_qnum(sc,
+-				   ATH9K_TX_QUEUE_DATA, ATH9K_WME_AC_BE);
+-			break;
+-		case WME_AC_BK:
+-			ac->qnum = ath_tx_get_qnum(sc,
+-				   ATH9K_TX_QUEUE_DATA, ATH9K_WME_AC_BK);
+-			break;
+-		case WME_AC_VI:
+-			ac->qnum = ath_tx_get_qnum(sc,
+-				   ATH9K_TX_QUEUE_DATA, ATH9K_WME_AC_VI);
+-			break;
+-		case WME_AC_VO:
+-			ac->qnum = ath_tx_get_qnum(sc,
+-				   ATH9K_TX_QUEUE_DATA, ATH9K_WME_AC_VO);
+-			break;
+-		}
+ 	}
+ }
+ 
+-- 
+1.6.3.3
 
-I am not sure when L0s was enabled as per the spec as mandatory, I
-thought it was optional. Interesting to hear this behavior on Linux
-with CONFIG_PCIEASPM. That Kconfig description and code really need
-some spit shining.
-
-> Therefore the patch I sent it useless because it only works when
-> CONFIG_PCIEASPM is enabled.
-
-How so ? Your patch disables L0s, I can use ASPM with L0s and L1 with
-or without CONFIG_PCIEASPM. If I added your calls to ath9k I would
-disable L0s.
-
-  Luis
