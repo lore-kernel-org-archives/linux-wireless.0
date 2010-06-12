@@ -1,50 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:59188 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751395Ab0FZWv2 (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:43221 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751743Ab0FLEeE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Jun 2010 18:51:28 -0400
-Received: by bwz10 with SMTP id 10so232053bwz.19
-        for <linux-wireless@vger.kernel.org>; Sat, 26 Jun 2010 15:51:26 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] iw: fix ampdu spacing & max amsdu length reporting
-Date: Sun, 27 Jun 2010 00:51:23 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201006270051.24299.chunkeey@googlemail.com>
+	Sat, 12 Jun 2010 00:34:04 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 01/24] ath9k_hw: move clock definitions from hw.c to hw.h
+Date: Sat, 12 Jun 2010 00:33:39 -0400
+Message-Id: <1276317242-15540-2-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
+References: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+These will be used by the ANI code next.
+
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
-diff --git a/scan.c b/scan.c
-index 09b1047..cd58290 100644
---- a/scan.c
-+++ b/scan.c
-@@ -497,7 +497,7 @@ static void print_ht_capa(const uint8_t type, uint8_t len, const uint8_t *data)
- 	printf("\n");
- 	print_ht_capability(data[0] | (data[1] << 8));
- 	print_ampdu_length(data[2] & 3);
--	print_ampdu_spacing((data[2] >> 2) & 3);
-+	print_ampdu_spacing((data[2] >> 2) & 7);
- 	print_ht_mcs(data + 3);
- }
+ drivers/net/wireless/ath/ath9k/hw.c |    5 -----
+ drivers/net/wireless/ath/ath9k/hw.h |    5 +++++
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 2adc7e7..5f46861 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -23,11 +23,6 @@
+ #include "rc.h"
+ #include "ar9003_mac.h"
  
-diff --git a/util.c b/util.c
-index 0c6d978..80d5402 100644
---- a/util.c
-+++ b/util.c
-@@ -457,8 +457,8 @@ void print_ht_capability(__u16 cap)
+-#define ATH9K_CLOCK_RATE_CCK		22
+-#define ATH9K_CLOCK_RATE_5GHZ_OFDM	40
+-#define ATH9K_CLOCK_RATE_2GHZ_OFDM	44
+-#define ATH9K_CLOCK_FAST_RATE_5GHZ_OFDM 44
+-
+ static bool ath9k_hw_set_reset_reg(struct ath_hw *ah, u32 type);
  
- 	PRINT_HT_CAP((cap & BIT(10)), "HT Delayed Block Ack");
+ MODULE_AUTHOR("Atheros Communications");
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 88bf2fc..3a28cdc 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -938,4 +938,9 @@ void ar9003_hw_attach_ops(struct ath_hw *ah);
+ #define ATH_PCIE_CAP_LINK_L0S	1
+ #define ATH_PCIE_CAP_LINK_L1	2
  
--	PRINT_HT_CAP((cap & BIT(11)), "Max AMSDU length: 3839 bytes");
--        PRINT_HT_CAP(!(cap & BIT(11)), "Max AMSDU length: 7935 bytes");
-+	PRINT_HT_CAP(!(cap & BIT(11)), "Max AMSDU length: 3839 bytes");
-+	PRINT_HT_CAP((cap & BIT(11)), "Max AMSDU length: 7935 bytes");
- 
- 	/*
- 	 * For beacons and probe response this would mean the BSS
++#define ATH9K_CLOCK_RATE_CCK		22
++#define ATH9K_CLOCK_RATE_5GHZ_OFDM	40
++#define ATH9K_CLOCK_RATE_2GHZ_OFDM	44
++#define ATH9K_CLOCK_FAST_RATE_5GHZ_OFDM 44
++
+ #endif
+-- 
+1.6.3.3
+
