@@ -1,73 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60030 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750765Ab0FNSpP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jun 2010 14:45:15 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
+Received: from nbd.name ([88.198.39.176]:41844 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751393Ab0FLPWk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Jun 2010 11:22:40 -0400
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: Mihai Harpau <mishu@piatafinanciara.ro>, reinette.chatre@intel.com,
-	"John W. Linville" <linville@tuxdriver.com>, stable@kernel.org
-Subject: [PATCH] iwlwifi: cancel scan watchdog in iwl_bg_abort_scan
-Date: Mon, 14 Jun 2010 14:35:54 -0400
-Message-Id: <1276540554-5336-1-git-send-email-linville@tuxdriver.com>
+Cc: lrodriguez@atheros.com, linville@tuxdriver.com
+Subject: [PATCH 5/7] ath9k_hw: remove ATH9K_CAP_MCAST_KEYSRCH
+Date: Sat, 12 Jun 2010 17:22:32 +0200
+Message-Id: <1276356154-66545-5-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1276356154-66545-4-git-send-email-nbd@openwrt.org>
+References: <1276356154-66545-1-git-send-email-nbd@openwrt.org>
+ <1276356154-66545-2-git-send-email-nbd@openwrt.org>
+ <1276356154-66545-3-git-send-email-nbd@openwrt.org>
+ <1276356154-66545-4-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Avoids this:
+The driver always sets this to enabled, but this can be simplified with
+a small change to ah->sta_id1_defaults instead.
+This change also removes the now-obsolete ath9k_hw_setcapability function.
 
-WARNING: at net/mac80211/scan.c:312 ieee80211_scan_completed+0x5f/0x1f1
-[mac80211]()
-Hardware name: Latitude E5400
-Modules linked in: aes_x86_64 aes_generic fuse ipt_MASQUERADE iptable_nat
-nf_nat rfcomm sco bridge stp llc bnep l2cap sunrpc cpufreq_ondemand
-acpi_cpufreq freq_table xt_physdev ip6t_REJECT nf_conntrack_ipv6
-ip6table_filter ip6_tables ipv6 kvm_intel kvm uinput arc4 ecb
-snd_hda_codec_intelhdmi snd_hda_codec_idt snd_hda_intel iwlagn snd_hda_codec
-snd_hwdep snd_seq snd_seq_device iwlcore snd_pcm dell_wmi sdhci_pci sdhci
-iTCO_wdt tg3 dell_laptop mmc_core i2c_i801 wmi mac80211 snd_timer
-iTCO_vendor_support btusb joydev dcdbas cfg80211 bluetooth snd soundcore
-microcode rfkill snd_page_alloc firewire_ohci firewire_core crc_itu_t
-yenta_socket rsrc_nonstatic i915 drm_kms_helper drm i2c_algo_bit i2c_core video
-output [last unloaded: scsi_wait_scan]
-Pid: 979, comm: iwlagn Tainted: G        W  2.6.33.3-85.fc13.x86_64 #1
-Call Trace:
-[<ffffffff8104b558>] warn_slowpath_common+0x77/0x8f
-[<ffffffff8104b57f>] warn_slowpath_null+0xf/0x11
-[<ffffffffa01bb7d9>] ieee80211_scan_completed+0x5f/0x1f1 [mac80211]
-[<ffffffffa02a23f0>] iwl_bg_scan_completed+0xbb/0x17a [iwlcore]
-[<ffffffff81060d3d>] worker_thread+0x1a4/0x232
-[<ffffffffa02a2335>] ? iwl_bg_scan_completed+0x0/0x17a [iwlcore]
-[<ffffffff81064817>] ? autoremove_wake_function+0x0/0x34
-[<ffffffff81060b99>] ? worker_thread+0x0/0x232
-[<ffffffff810643c7>] kthread+0x7a/0x82
-[<ffffffff8100a924>] kernel_thread_helper+0x4/0x10
-[<ffffffff8106434d>] ? kthread+0x0/0x82
-[<ffffffff8100a920>] ? kernel_thread_helper+0x0/0x10
-
-Reported here:
-
-	https://bugzilla.redhat.com/show_bug.cgi?id=590436
-
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Reported-by: Mihai Harpau <mishu@piatafinanciara.ro>
-Cc: stable@kernel.org
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-scan.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |    5 ----
+ drivers/net/wireless/ath/ath9k/hw.c           |   33 ++----------------------
+ drivers/net/wireless/ath/ath9k/hw.h           |    3 --
+ drivers/net/wireless/ath/ath9k/init.c         |    6 ----
+ 4 files changed, 3 insertions(+), 44 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 5d3f51f..386c5f9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -491,6 +491,7 @@ void iwl_bg_abort_scan(struct work_struct *work)
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 5190a88..d339e5f 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -569,11 +569,6 @@ static void ath9k_init_crypto(struct ath9k_htc_priv *priv)
+ 	 */
+ 	for (i = 0; i < common->keymax; i++)
+ 		ath9k_hw_keyreset(priv->ah, (u16) i);
+-
+-	/* turn on mcast key search if possible */
+-	if (!ath9k_hw_getcapability(priv->ah, ATH9K_CAP_MCAST_KEYSRCH, 0, NULL))
+-		(void)ath9k_hw_setcapability(priv->ah, ATH9K_CAP_MCAST_KEYSRCH,
+-					     1, 1, NULL);
+ }
  
- 	mutex_lock(&priv->mutex);
+ static void ath9k_init_channels_rates(struct ath9k_htc_priv *priv)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index a5203b1..9321931 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -425,7 +425,9 @@ static void ath9k_hw_init_defaults(struct ath_hw *ah)
+ 		ah->ah_flags = AH_USE_EEPROM;
  
-+	cancel_delayed_work_sync(&priv->scan_check);
- 	set_bit(STATUS_SCAN_ABORTING, &priv->status);
- 	iwl_send_scan_abort(priv);
+ 	ah->atim_window = 0;
+-	ah->sta_id1_defaults = AR_STA_ID1_CRPT_MIC_ENABLE;
++	ah->sta_id1_defaults =
++		AR_STA_ID1_CRPT_MIC_ENABLE |
++		AR_STA_ID1_MCAST_KSRCH;
+ 	ah->beacon_interval = 100;
+ 	ah->enable_32kHz_clock = DONT_USE_32KHZ;
+ 	ah->slottime = (u32) -1;
+@@ -2259,20 +2261,6 @@ bool ath9k_hw_getcapability(struct ath_hw *ah, enum ath9k_capability_type type,
+ 			    u32 capability, u32 *result)
+ {
+ 	switch (type) {
+-	case ATH9K_CAP_MCAST_KEYSRCH:
+-		switch (capability) {
+-		case 0:
+-			return true;
+-		case 1:
+-			if (REG_READ(ah, AR_STA_ID1) & AR_STA_ID1_ADHOC) {
+-				return false;
+-			} else {
+-				return (ah->sta_id1_defaults &
+-					AR_STA_ID1_MCAST_KSRCH) ? true :
+-					false;
+-			}
+-		}
+-		return false;
+ 	case ATH9K_CAP_DS:
+ 		return (AR_SREV_9280_20_OR_LATER(ah) &&
+ 			(ah->eep_ops->get_eeprom(ah, EEP_RC_CHAIN_MASK) == 1))
+@@ -2283,21 +2271,6 @@ bool ath9k_hw_getcapability(struct ath_hw *ah, enum ath9k_capability_type type,
+ }
+ EXPORT_SYMBOL(ath9k_hw_getcapability);
  
+-bool ath9k_hw_setcapability(struct ath_hw *ah, enum ath9k_capability_type type,
+-			    u32 capability, u32 setting, int *status)
+-{
+-	switch (type) {
+-	case ATH9K_CAP_MCAST_KEYSRCH:
+-		if (setting)
+-			ah->sta_id1_defaults |= AR_STA_ID1_MCAST_KSRCH;
+-		else
+-			ah->sta_id1_defaults &= ~AR_STA_ID1_MCAST_KSRCH;
+-		return true;
+-	default:
+-		return false;
+-	}
+-}
+-EXPORT_SYMBOL(ath9k_hw_setcapability);
+ 
+ /****************************/
+ /* GPIO / RFKILL / Antennae */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 28fca9d..16b35cd 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -207,7 +207,6 @@ enum ath9k_hw_caps {
+ };
+ 
+ enum ath9k_capability_type {
+-	ATH9K_CAP_MCAST_KEYSRCH,
+ 	ATH9K_CAP_DS
+ };
+ 
+@@ -855,8 +854,6 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ int ath9k_hw_fill_cap_info(struct ath_hw *ah);
+ bool ath9k_hw_getcapability(struct ath_hw *ah, enum ath9k_capability_type type,
+ 			    u32 capability, u32 *result);
+-bool ath9k_hw_setcapability(struct ath_hw *ah, enum ath9k_capability_type type,
+-			    u32 capability, u32 setting, int *status);
+ u32 ath9k_regd_get_ctl(struct ath_regulatory *reg, struct ath9k_channel *chan);
+ 
+ /* Key Cache Management */
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 4bdf8c8..514a401 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -387,12 +387,6 @@ static void ath9k_init_crypto(struct ath_softc *sc)
+ 	 */
+ 	if (!(sc->sc_ah->misc_mode & AR_PCU_MIC_NEW_LOC_ENA))
+ 		common->splitmic = 1;
+-
+-	/* turn on mcast key search if possible */
+-	if (!ath9k_hw_getcapability(sc->sc_ah, ATH9K_CAP_MCAST_KEYSRCH, 0, NULL))
+-		(void)ath9k_hw_setcapability(sc->sc_ah, ATH9K_CAP_MCAST_KEYSRCH,
+-					     1, 1, NULL);
+-
+ }
+ 
+ static int ath9k_init_btcoex(struct ath_softc *sc)
 -- 
-1.6.6.1
+1.6.4.2
 
