@@ -1,63 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:52824 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752876Ab0FNVf5 convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:43224 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751790Ab0FLEeF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jun 2010 17:35:57 -0400
-Received: by wyb40 with SMTP id 40so4299765wyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Jun 2010 14:35:55 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTimxtFMpJftSdwDK_DRap4Bw0iVPS9Tcwe_vE_f9@mail.gmail.com>
-References: <AANLkTim4kDJZnEdNy-C4xhOigWiTWQZhVJAs36LOUbjQ@mail.gmail.com>
-	<AANLkTimxtFMpJftSdwDK_DRap4Bw0iVPS9Tcwe_vE_f9@mail.gmail.com>
-Date: Mon, 14 Jun 2010 18:35:55 -0300
-Message-ID: <AANLkTik2kYW-GxWK7ZIPj7crBZKP6JTsWJs2Mfy7xvoe@mail.gmail.com>
-Subject: Re: wireless button problem with atheros on hp machines
-From: Leonardo <sombriks@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 12 Jun 2010 00:34:05 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 06/24] ath9k_hw: inform ANI calibration when scanning
+Date: Sat, 12 Jun 2010 00:33:44 -0400
+Message-Id: <1276317242-15540-7-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
+References: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/6/13 Luis R. Rodriguez <mcgrof@gmail.com>:
-> On Sun, Jun 13, 2010 at 1:49 PM, Leonardo <sombriks@gmail.com> wrote:
->> hello all, i don't know if this is the correct channel to report, but
->> from Slackware 13.0 (2.6.29.6) to 13.1 (2.6.33.4) the wireless button
->> stopped to work properly.
->
-> Try 2.6.30, 2.6.31, and 2.6.32 and see if you see the issue on one of
-> those. If so then you can use git bisect to find the culprit. I
-> realize this can be quite cumbersome, but without more information I'm
-> afraid this is as good as it gets. Instead of using Linus' tree you'll
-> want to use the linux-2.6-allstable.git tree since that will have the
-> extra version kernel revisions.
->
-> git://git.kernel.org/pub/scm/linux/kernel/git/hpa/linux-2.6-allstable.git
->
->  Luis
->
+The new ANI implementation will use this to skip ANI
+calibration upon a scan. This cannot be ported to the
+older ANI implementation unless default ANI values from
+the ANI are also used upon a scan. This is essentially
+what one of the things thenew ANI does.
 
-Hello currently i'm trying those other kernel versions. I'm grabbing
-it from  http://www.kernel.org/
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ani.c          |    2 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    2 +-
+ drivers/net/wireless/ath/ath9k/hw-ops.h       |    4 ++--
+ drivers/net/wireless/ath/ath9k/hw.h           |    2 +-
+ drivers/net/wireless/ath/ath9k/mac.c          |    4 ++--
+ drivers/net/wireless/ath/ath9k/mac.h          |    2 +-
+ drivers/net/wireless/ath/ath9k/recv.c         |    4 ++--
+ 7 files changed, 10 insertions(+), 10 deletions(-)
 
-for now i have about 3 kernels running ok or almost ok:
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index 28a1dc3..f5b9719 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -322,7 +322,7 @@ static int32_t ath9k_hw_ani_get_listen_time(struct ath_hw *ah)
+ 	return listenTime;
+ }
+ 
+-static void ath9k_ani_reset_old(struct ath_hw *ah)
++static void ath9k_ani_reset_old(struct ath_hw *ah, bool is_scanning)
+ {
+ 	struct ar5416AniState *aniState;
+ 	struct ath9k_channel *chan = ah->curchan;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index f0cca4e..ffebd5a 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -416,7 +416,7 @@ void ath9k_host_rx_init(struct ath9k_htc_priv *priv)
+ {
+ 	ath9k_hw_rxena(priv->ah);
+ 	ath9k_htc_opmode_init(priv);
+-	ath9k_hw_startpcureceive(priv->ah);
++	ath9k_hw_startpcureceive(priv->ah, (priv->op_flags & OP_SCANNING));
+ 	priv->rx.last_rssi = ATH_RSSI_DUMMY_MARKER;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
+index 65d2c66..381da6c 100644
+--- a/drivers/net/wireless/ath/ath9k/hw-ops.h
++++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
+@@ -288,9 +288,9 @@ static inline bool ath9k_hw_iscal_supported(struct ath_hw *ah,
+ 	return ath9k_hw_private_ops(ah)->iscal_supported(ah, calType);
+ }
+ 
+-static inline void ath9k_ani_reset(struct ath_hw *ah)
++static inline void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning)
+ {
+-	ath9k_hw_private_ops(ah)->ani_reset(ah);
++	ath9k_hw_private_ops(ah)->ani_reset(ah, is_scanning);
+ }
+ 
+ #endif /* ATH9K_HW_OPS_H */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index a207a70..790a457 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -565,7 +565,7 @@ struct ath_hw_private_ops {
+ 	void (*loadnf)(struct ath_hw *ah, struct ath9k_channel *chan);
+ 
+ 	/* ANI */
+-	void (*ani_reset)(struct ath_hw *ah);
++	void (*ani_reset)(struct ath_hw *ah, bool is_scanning);
+ 	void (*ani_lower_immunity)(struct ath_hw *ah);
+ };
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index b4d0198..1550591 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -757,11 +757,11 @@ void ath9k_hw_putrxbuf(struct ath_hw *ah, u32 rxdp)
+ }
+ EXPORT_SYMBOL(ath9k_hw_putrxbuf);
+ 
+-void ath9k_hw_startpcureceive(struct ath_hw *ah)
++void ath9k_hw_startpcureceive(struct ath_hw *ah, bool is_scanning)
+ {
+ 	ath9k_enable_mib_counters(ah);
+ 
+-	ath9k_ani_reset(ah);
++	ath9k_ani_reset(ah, is_scanning);
+ 
+ 	REG_CLR_BIT(ah, AR_DIAG_SW, (AR_DIAG_RX_DIS | AR_DIAG_RX_ABORT));
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index 00f3e0c..3c65c91 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -715,7 +715,7 @@ void ath9k_hw_setuprxdesc(struct ath_hw *ah, struct ath_desc *ds,
+ 			  u32 size, u32 flags);
+ bool ath9k_hw_setrxabort(struct ath_hw *ah, bool set);
+ void ath9k_hw_putrxbuf(struct ath_hw *ah, u32 rxdp);
+-void ath9k_hw_startpcureceive(struct ath_hw *ah);
++void ath9k_hw_startpcureceive(struct ath_hw *ah, bool is_scanning);
+ void ath9k_hw_stoppcurecv(struct ath_hw *ah);
+ void ath9k_hw_abortpcurecv(struct ath_hw *ah);
+ bool ath9k_hw_stopdmarecv(struct ath_hw *ah);
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index d373364..5141cd8 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -295,7 +295,7 @@ static void ath_edma_start_recv(struct ath_softc *sc)
+ 
+ 	ath_opmode_init(sc);
+ 
+-	ath9k_hw_startpcureceive(sc->sc_ah);
++	ath9k_hw_startpcureceive(sc->sc_ah, (sc->sc_flags & SC_OP_SCANNING));
+ }
+ 
+ static void ath_edma_stop_recv(struct ath_softc *sc)
+@@ -501,7 +501,7 @@ int ath_startrecv(struct ath_softc *sc)
+ start_recv:
+ 	spin_unlock_bh(&sc->rx.rxbuflock);
+ 	ath_opmode_init(sc);
+-	ath9k_hw_startpcureceive(ah);
++	ath9k_hw_startpcureceive(ah, (sc->sc_flags & SC_OP_SCANNING));
+ 
+ 	return 0;
+ }
+-- 
+1.6.3.3
 
-2.6.33.4
-2.6.29.6
-2.6.31.13
-
-29 and 33 are default packages from slackware, and as i related before
-by using 2.6.29.6 i get the perfect functionality of wireless
-button/led (those hp machines have the led, and if i touch the led it
-changes de color.. nvm)
-
-today i got the 31.13 running; i have to say, maybe i have missed
-something, because i lost sound and the 3d stuff. also ath5k.ko wasn't
-created... but the bluetooth worked as expected, just as 2.6.29.6; i
-am almost sure that i missed the kernel configuration, but fortunately
-i've made a package (make targz-pkg) so i can fix it.
-
-next i'll try the 2.6.32.15 and then 2.6.34, and with some hope find
-when the problem began and report there.
-
-thanks a lot for the guidance,
