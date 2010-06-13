@@ -1,88 +1,203 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:44823 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753901Ab0F1Wbp convert rfc822-to-8bit (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:63410 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752322Ab0FMRIz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jun 2010 18:31:45 -0400
-Received: by iwn7 with SMTP id 7so470370iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Jun 2010 15:31:43 -0700 (PDT)
+	Sun, 13 Jun 2010 13:08:55 -0400
+Received: by wyb40 with SMTP id 40so3014521wyb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Jun 2010 10:08:54 -0700 (PDT)
 MIME-Version: 1.0
-Date: Tue, 29 Jun 2010 00:31:39 +0200
-Message-ID: <AANLkTilG4qxjX0e5u_BGp0YcPoVBbsqd6Hlb8E0j_S8S@mail.gmail.com>
-Subject: ath9k: ap tsf seems random and only uses lower 24 bits or so
-From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org
+Date: Sun, 13 Jun 2010 13:08:53 -0400
+Message-ID: <AANLkTincbrPV9DTY0qIM1iBZ6byvsSV1t84OVoFNZ2Bq@mail.gmail.com>
+Subject: DHCPDISCOVER on wlan0 to 255.255.255.255 port 67 interval 19
+From: sundar mahadevan <sundarmahadevan82@gmail.com>
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Hi All,
+Greetings. I am on Oracle Enterprise Linux (OEL 5.5 x86_64) same as
+Redhat 5.5. I must use OEL5.5 because of my software installation
+requirements. NetworkManager detects my ssid but its just not getting
+ip from my router assigned. I use a Belkin 54g router with WPA/WPA2
+encryption. The other options available on my router are WPA2 only,
+WEP and Disabled. I have spent more than 20 hours trying to get wifi
+working but no luck. Your help is highly appreciated.
 
-I'm getting weird values from the debugfs file ieee80211/phy0/tsf: the
-value goes up and down rather randomly and only the lower 24 bits or
-so seem to ever be used (see below for details).
+[root@localhost ~]$uname -a
+Linux localhost.localdomain 2.6.18-194.el5 #1 SMP Mon Mar 29 22:10:29
+EDT 2010 x86_64 x86_64 x86_64 GNU/Linux
 
-The only thing running on phy0 is a single ap interface (and the
-monitor companion that hostapd sets up). I was expecting tsf to
-increase monotonically until all 64 bits had been used.
+[root@localhost /etc/wpa_supplicant]$lspci | grep -i ath
+04:00.0 Network controller: Atheros Communications Inc. AR928X
+Wireless Network Adapter (PCI-Express) (rev 01)
 
-root@OpenWrt:/debug/ieee80211/phy0# dmesg | grep phy0
-phy0: Selected rate control algorithm 'minstrel_ht'
-phy0: Atheros AR9100 MAC/BB Rev:0 AR2133 RF Rev:a2 mem=0xb80c0000, irq=2
-root@OpenWrt:/debug/ieee80211/phy0# while sleep 1; do cat tsf; done
-0x0000000000059d9b
-0x0000000000038fa2
-0x00000000000ee67e
-0x000000000008121e
-0x000000000017752d
-0x000000000006438b
-0x000000000015a771
-0x00000000000d5ea0
-0x0000000000085b43
-0x0000000000037806
-0x000000000001f562
-0x0000000000115b03
-0x000000000020be55
-^C
+[root@localhost /etc/wpa_supplicant]$cat wpa_supplicant.conf
+ctrl_interface=/var/run/wpa_supplicant
+ctrl_interface_group=wheel
 
-If you poll tsf really fast it looks a bit like it's running correctly
-but being reset very often:
+network={
+        ssid="any"
+        key_mgmt=NONE
+}
 
-root@OpenWrt:/debug/ieee80211/phy0# while true; do cat tsf; done
-...
-0x00000000004b2319
-0x00000000004b33f2
-0x00000000004b46dc
-0x00000000004b578c
-0x00000000004b6a89
-0x0000000000014435
-0x00000000000154a0
-0x00000000000167ce
-0x000000000001785d
-...
-^C
+[root@localhost ~]$service network restart
+Shutting down interface wlan0:                             [  OK  ]
+Shutting down loopback interface:                          [  OK  ]
+Bringing up loopback interface:                            [  OK  ]
+Bringing up interface eth0:
+Determining IP information for eth0...dhclient(5038) is already
+running - exiting.
+exiting.
+ failed.
+                                                           [FAILED]
+Bringing up interface wlan0:  Error for wireless request "Set Mode" (8B06) :
+    SET failed on device wlan0 ; Invalid argument.
 
-For a moment I thought it might be the kernel snprintf (on mips)
-playing a trick on me so I tried the following patch. But the result
-is the same.
+Determining IP information for wlan0... failed.
+                                                           [FAILED]
 
-diff -urN a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -63,7 +63,8 @@
+[root@localhost /etc/sysconfig/network-scripts]$cat ifcfg-wlan0
+# Atheros Communications Inc. AR928X Wireless Network Adapter (PCI-Express)
+DEVICE=wlan0
+BOOTPROTO=dhcp
+ONBOOT=yes
+HWADDR=90:4c:e5:56:ce:14
+NETMASK=
+DHCP_HOSTNAME=
+IPADDR=
+BONDING_OPTS=
+DOMAIN=
+MASTER=
+TYPE=Wireless
+USERCTL=no
+IPV6INIT=no
+PEERDNS=yes
+ESSID=suma
+CHANNEL=9
+MODE=Auto
+SECURITYMODE=off
+RATE=auto
 
- 	tsf = drv_get_tsf(local);
-
--	snprintf(buf, sizeof(buf), "0x%016llx\n", (unsigned long long) tsf);
-+	snprintf(buf, sizeof(buf), "0x%08lx%08lx\n",
-+		 (unsigned long)(tsf >> 32), (unsigned long)tsf);
-
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, 19);
- }
-
-
-What could be causing this? Because it's not supposed to do this,
-right? Any insight much appreciated!
-
-/Björn
+[root@localhost ~]$tail -f /var/log/messages
+Jun 12 23:37:36 localhost NetworkManager: (info)  Activation (wlan0)
+starting connection 'Auto suma'
+Jun 12 23:37:36 localhost NetworkManager: (info)  (wlan0): device
+state change: 3 -> 4
+Jun 12 23:37:36 localhost NetworkManager: (info)  Activation (wlan0)
+Stage 1 of 5 (Device Prepare) scheduled...
+Jun 12 23:37:36 localhost NetworkManager: (info)  Activation (wlan0)
+Stage 1 of 5 (Device Prepare) started...
+Jun 12 23:37:36 localhost NetworkManager: (info)  Activation (wlan0)
+Stage 2 of 5 (Device Configure) scheduled...
+Jun 12 23:37:36 localhost NetworkManager: (info)  Activation (wlan0)
+Stage 1 of 5 (Device Prepare) complete.
+Jun 12 23:37:36 localhost NetworkManager: (info)  Activation (wlan0)
+Stage 2 of 5 (Device Configure) starting...
+Jun 12 23:37:36 localhost NetworkManager: (info)  (wlan0): device
+state change: 4 -> 5
+Jun 12 23:37:36 localhost NetworkManager: (info)  Activation
+(wlan0/wireless): access point 'Auto suma' has security, but secrets
+are required.
+Jun 12 23:37:36 localhost NetworkManager: (info)  (wlan0): device
+state change: 5 -> 6
+Jun 12 23:37:36 localhost NetworkManager: (info)  Activation (wlan0)
+Stage 2 of 5 (Device Configure) complete.
+Jun 12 23:37:36 localhost NetworkManager: (info)  Activation (wlan0)
+Stage 1 of 5 (Device Prepare) scheduled...
+Jun 12 23:37:36 localhost NetworkManager: (info)  Activation (wlan0)
+Stage 1 of 5 (Device Prepare) started...
+Jun 12 23:37:36 localhost NetworkManager: (info)  (wlan0): device
+state change: 6 -> 4
+Jun 12 23:37:36 localhost NetworkManager: (info)  Activation (wlan0)
+Stage 2 of 5 (Device Configure) scheduled...
+Jun 12 23:37:36 localhost NetworkManager: (info)  Activation (wlan0)
+Stage 1 of 5 (Device Prepare) complete.
+Jun 12 23:37:36 localhost NetworkManager: (info)  Activation (wlan0)
+Stage 2 of 5 (Device Configure) starting...
+Jun 12 23:37:36 localhost NetworkManager: (info)  (wlan0): device
+state change: 4 -> 5
+Jun 12 23:37:36 localhost NetworkManager: (info)  Activation
+(wlan0/wireless): connection 'Auto suma' has security, and secrets
+exist.  No new secrets needed.
+Jun 12 23:37:36 localhost NetworkManager: (info)  Config: added 'ssid'
+value 'suma'
+Jun 12 23:37:36 localhost NetworkManager: (info)  Config: added
+'scan_ssid' value '1'
+Jun 12 23:37:36 localhost NetworkManager: (info)  Config: added
+'key_mgmt' value 'WPA-PSK'
+Jun 12 23:37:36 localhost NetworkManager: (info)  Config: added 'psk'
+value '(omitted)'
+Jun 12 23:37:36 localhost NetworkManager: (info)  Activation (wlan0)
+Stage 2 of 5 (Device Configure) complete.
+Jun 12 23:37:36 localhost NetworkManager: (info)  Config: set
+interface ap_scan to 1
+Jun 12 23:37:36 localhost NetworkManager: (info)  (wlan0): supplicant
+connection state:  disconnected -> scanning
+Jun 12 23:37:37 localhost NetworkManager: (info)  (wlan0): supplicant
+connection state:  scanning -> associating
+Jun 12 23:37:38 localhost NetworkManager: (info)  (wlan0): supplicant
+connection state:  associating -> associated
+Jun 12 23:37:40 localhost NetworkManager: (info)  (wlan0): supplicant
+connection state:  associated -> 4-way handshake
+Jun 12 23:37:40 localhost NetworkManager: (info)  (wlan0): supplicant
+connection state:  4-way handshake -> group handshake
+Jun 12 23:37:40 localhost NetworkManager: (info)  (wlan0): supplicant
+connection state:  group handshake -> completed
+Jun 12 23:37:40 localhost NetworkManager: (info)  Activation
+(wlan0/wireless) Stage 2 of 5 (Device Configure) successful.
+Connected to wireless network 'suma'.
+Jun 12 23:37:40 localhost NetworkManager: (info)  Activation (wlan0)
+Stage 3 of 5 (IP Configure Start) scheduled.
+Jun 12 23:37:40 localhost NetworkManager: (info)  Activation (wlan0)
+Stage 3 of 5 (IP Configure Start) started...
+Jun 12 23:37:40 localhost NetworkManager: (info)  (wlan0): device
+state change: 5 -> 7
+Jun 12 23:37:40 localhost NetworkManager: (info)  Activation (wlan0)
+Beginning DHCP transaction.
+Jun 12 23:37:40 localhost NetworkManager: (info)  dhclient started with pid 4713
+Jun 12 23:37:40 localhost NetworkManager: (info)  Activation (wlan0)
+Stage 3 of 5 (IP Configure Start) complete.
+Jun 12 23:37:40 localhost dhclient: Internet Systems Consortium DHCP
+Client V3.0.5-RedHat
+Jun 12 23:37:40 localhost dhclient: Copyright 2004-2006 Internet
+Systems Consortium.
+Jun 12 23:37:40 localhost dhclient: All rights reserved.
+Jun 12 23:37:40 localhost dhclient: For info, please visit
+http://www.isc.org/sw/dhcp/
+Jun 12 23:37:40 localhost dhclient:
+Jun 12 23:37:40 localhost NetworkManager: (info)  DHCP: device wlan0
+state changed normal exit -> preinit
+Jun 12 23:37:40 localhost dhclient: Listening on LPF/wlan0/90:4c:e5:56:ce:14
+Jun 12 23:37:40 localhost dhclient: Sending on   LPF/wlan0/90:4c:e5:56:ce:14
+Jun 12 23:37:40 localhost dhclient: Sending on   Socket/fallback
+Jun 12 23:37:40 localhost dhclient: DHCPDISCOVER on wlan0 to
+255.255.255.255 port 67 interval 3
+Jun 12 23:37:43 localhost dhclient: DHCPDISCOVER on wlan0 to
+255.255.255.255 port 67 interval 7
+Jun 12 23:37:49 localhost dhclient: DHCPDISCOVER on wlan0 to
+255.255.255.255 port 67 interval 20
+Jun 12 23:38:10 localhost dhclient: DHCPDISCOVER on wlan0 to
+255.255.255.255 port 67 interval 19
+Jun 12 23:38:25 localhost NetworkManager: (info)  Device 'wlan0' DHCP
+transaction took too long (>45s), stopping it.
+Jun 12 23:38:25 localhost NetworkManager: (info)  wlan0: canceled DHCP
+transaction, dhcp client pid 4713
+Jun 12 23:38:25 localhost NetworkManager: (info)  Activation (wlan0)
+Stage 4 of 5 (IP Configure Timeout) scheduled...
+Jun 12 23:38:25 localhost NetworkManager: (info)  Activation (wlan0)
+Stage 4 of 5 (IP Configure Timeout) started...
+Jun 12 23:38:25 localhost NetworkManager: (info)  (wlan0): device
+state change: 7 -> 9
+Jun 12 23:38:25 localhost NetworkManager: (info)  Activation (wlan0)
+failed for access point (suma)
+Jun 12 23:38:25 localhost NetworkManager: (info)  Marking connection
+'Auto suma' invalid.
+Jun 12 23:38:25 localhost NetworkManager: (info)  Activation (wlan0) failed.
+Jun 12 23:38:25 localhost NetworkManager: (info)  Activation (wlan0)
+Stage 4 of 5 (IP Configure Timeout) complete.
+Jun 12 23:38:25 localhost NetworkManager: (info)  (wlan0): device
+state change: 9 -> 3
+Jun 12 23:38:25 localhost NetworkManager: (info)  (wlan0):
+deactivating device (reason: 0).
