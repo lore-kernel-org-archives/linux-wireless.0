@@ -1,97 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:51405 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752796Ab0FLOki convert rfc822-to-8bit (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:61731 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754196Ab0FMURO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jun 2010 10:40:38 -0400
-Received: by fxm8 with SMTP id 8so1499520fxm.19
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Jun 2010 07:40:36 -0700 (PDT)
+	Sun, 13 Jun 2010 16:17:14 -0400
+Received: by pvg16 with SMTP id 16so2312871pvg.19
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Jun 2010 13:17:14 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <AANLkTinRyKGntYZ7dqRWTql3dIfzEHEf5yFPfYL-D6sg@mail.gmail.com>
-References: <AANLkTinpYdb9Q_AEdUc7gvEIcxZoCFyVaKMIi6c_Sf9n@mail.gmail.com>
-	<AANLkTinPM1byJy-y8GChXbAdYQuCvgiQRISWfmBRKoJu@mail.gmail.com>
-	<AANLkTimuFeal0x-j3wZ3MpP0lnLZfX8lO1R45nF74DCx@mail.gmail.com>
-	<AANLkTinRyKGntYZ7dqRWTql3dIfzEHEf5yFPfYL-D6sg@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Sat, 12 Jun 2010 16:40:16 +0200
-Message-ID: <AANLkTintQyFD3TV7vzTkzlGSEHdMKPzNw0T9o2-zlMY9@mail.gmail.com>
-Subject: Re: no eth0 on using libertas_tf + F11 on OLPC XO-1
-To: Assim Deodia <assim.deodia@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <AANLkTincbrPV9DTY0qIM1iBZ6byvsSV1t84OVoFNZ2Bq@mail.gmail.com>
+References: <AANLkTincbrPV9DTY0qIM1iBZ6byvsSV1t84OVoFNZ2Bq@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Sun, 13 Jun 2010 13:16:54 -0700
+Message-ID: <AANLkTinWtINkUig1AmNldv28CSxD2O2kFChZbv0lwsGa@mail.gmail.com>
+Subject: Re: DHCPDISCOVER on wlan0 to 255.255.255.255 port 67 interval 19
+To: sundar mahadevan <sundarmahadevan82@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No, renaming eth0 won't help - with the libertas driver (fullmac),
-eth0 is a correct name, but not with libertas_tf (mac80211). However,
-if wlan0 does not appear (but wmaster0 does), then probably
-libertas_tf isn't registering any supported interface types with
-mac80211. Try installing compat-wireless - this may be resolved
-already there.
+On Sun, Jun 13, 2010 at 10:08 AM, sundar mahadevan
+<sundarmahadevan82@gmail.com> wrote:
+> Hi All,
+> Greetings. I am on Oracle Enterprise Linux (OEL 5.5 x86_64) same as
+> Redhat 5.5. I must use OEL5.5 because of my software installation
+> requirements. NetworkManager detects my ssid but its just not getting
+> ip from my router assigned. I use a Belkin 54g router with WPA/WPA2
+> encryption. The other options available on my router are WPA2 only,
+> WEP and Disabled. I have spent more than 20 hours trying to get wifi
+> working but no luck. Your help is highly appreciated.
+>
+> [root@localhost ~]$uname -a
+> Linux localhost.localdomain 2.6.18-194.el5 #1 SMP Mon Mar 29 22:10:29
+> EDT 2010 x86_64 x86_64 x86_64 GNU/Linux
+>
+> [root@localhost /etc/wpa_supplicant]$lspci | grep -i ath
+> 04:00.0 Network controller: Atheros Communications Inc. AR928X
+> Wireless Network Adapter (PCI-Express) (rev 01)
 
-2010/6/12 Assim Deodia <assim.deodia@gmail.com>:
-> In my system eth0 is the wireless interface. There is no wlan0. and
-> after loading libertas_tf there is neither wlan0 nor eth0 interface.
->
-> I also tried renaming the eth0 to wlan0 in
-> /etc/udev/rules.d/70-persistent-net.rules and renaming
-> /etc/sysconfig/network-scripts/*-eth* to *-wlan*. Now i have wlan
-> interface which also disappears on loading libertas_tf.
->
->
->
-> 2010/6/12 Gábor Stefanik <netrolller.3d@gmail.com>:
->> On Fri, Jun 11, 2010 at 10:08 PM, Assim Deodia <assim.deodia@gmail.com> wrote:
->>> Hi All,
->>>
->>> I am having some issues loading libertas_tf on XO-1 with kernel 2.6.31.
->>>
->>> 1) after unloading libertas and usb8xxx modules when i modprobe
->>> libertas_tf module eth0 (wireless interface) disappears. and instead
->>> wmaster0 appears. but iwconfig show  wmaster0 does not have wireless
->>> extensions. lsmod shows libertas_tf and libertas_tf_usb module loaded.
->>> No error in system logs. no error by modprobe. but no wireless
->>> interface. Do i have to pass any parameter while loading libertas_tf?
->>> I have also tried installing all the firmware versions from
->>> http://dev.laptop.org/pub/firmware/libertas/thinfirm/ just to be sure.
->>> I have installed the kernel after build its RPM
->>> (http://dev.laptop.org/~assim/kernel_rpms/) on XO itself.
->>>
->>> 2) I also tried blacklisting libertas and usb8xxx modules but still
->>> they are loading at boot time. again no error in logs.
->>>
->>> I am stuck as i am not getting any error message at all.
->>>
->>> --
->>> Assim Deodia
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>
->> With libertas_tf, it is completely normal to have no eth0 interface,
->> as it is a mac80211 driver, and thus registers interfaces with the
->> "wlan" prefix, rather than "eth". So, you should be seeing a "wlan0"
->> interface.
->>
->> --
->> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
->>
->
->
->
-> --
-> Assim Deodia
-> Software Developer
-> One97 Communications Ltd, Noida
-> P: + 91 120 4770770
-> M: + 91 9911804112
->
-> Let’s Get Talking!
->
+Please see:
 
+http://wireless.kernel.org/en/users/Drivers/ath9k/RHEL5#Known_issues
 
+Seems like the same issue.
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+  Luis
