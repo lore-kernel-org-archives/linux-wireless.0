@@ -1,74 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:44617 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751825Ab0FYWnI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jun 2010 18:43:08 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/8] iwlwifi updates for 2.6.36
-Date: Fri, 25 Jun 2010 15:42:53 -0700
-Message-Id: <1277505781-25268-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:57309 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754451Ab0FMSQM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Jun 2010 14:16:12 -0400
+Received: by wyb40 with SMTP id 40so3059281wyb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Jun 2010 11:16:11 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 2/2] rt2x00: Disable Mesh mode for USB drivers
+Date: Sun, 13 Jun 2010 20:16:07 +0200
+Cc: rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+References: <201006132015.10629.IvDoorn@gmail.com>
+In-Reply-To: <201006132015.10629.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201006132016.08975.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A variety of changes are included in this series. With the recent station
-management changes the rate is not allocated correctly for broadcast
-station if user happens to switch from 2.4 to 5 GHz. Fix this. We also
-include a fix for the case when the user switches the rfkill state while
-system hibernates. A recent patch introduced an error message with it is
-learned that antennas are disconnected ... we since have seen this message
-under various circumstances and reduce the severity here until our
-understanding of the behavior is complete. We add some configuration
-capabilities to driver to deal with requirements of various hardwares.
-There is a potential issue at the moment where a move to RTS/CTS protection
-can cause problems, this is reworked to set RTS/CTS mode when the
-aggregation becomes operational ... which it when it is really needed.
+bss_info_changed must be atomic in Mesh mode.
+As a result it must be disabled for all USB drivers.
 
-Please note that I merged wireless-2.6 into wireless-next-2.6 since there
-is a fix in wireless-2.6 ("iwlwifi: set TX_CMD_FLAG_PROT_REQUIRE_MSK
-in tx_flag") that should be considered in a name change patch included in
-this series.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c |   13 +++++++++++--
+ 1 files changed, 11 insertions(+), 2 deletions(-)
 
-These patches are also available from wireless-next-2.6 branch on
-git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-
-Daniel Halperin (1):
-  iwlwifi: update LQ for bcast station on channel change
-
-Johannes Berg (1):
-  iwlwifi: read rfkill during resume
-
-Reinette Chatre (1):
-  iwlagn: reduce severity of disconnected antennas warning
-
-Wey-Yi Guy (5):
-  iwlwifi: name change from signal protection flag
-  iwlwifi: enable DC calibration based on config parameter
-  iwlwifi: add a mechanism to disable plcp error checking
-  iwlwifi: turn on RTS/CTS after aggregation become operational
-  iwlwifi: add disable rf calibration support for 6000g2a and 6000g2b
-
- drivers/net/wireless/iwlwifi/iwl-1000.c      |    3 +
- drivers/net/wireless/iwlwifi/iwl-3945.c      |    5 +
- drivers/net/wireless/iwlwifi/iwl-4965.c      |    1 +
- drivers/net/wireless/iwlwifi/iwl-5000.c      |    7 +-
- drivers/net/wireless/iwlwifi/iwl-6000.c      |  160 ++++++--------------------
- drivers/net/wireless/iwlwifi/iwl-agn-calib.c |    8 +-
- drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c    |   17 +--
- drivers/net/wireless/iwlwifi/iwl-agn-rx.c    |    6 +
- drivers/net/wireless/iwlwifi/iwl-agn.c       |   28 +++++-
- drivers/net/wireless/iwlwifi/iwl-commands.h  |   30 ++++--
- drivers/net/wireless/iwlwifi/iwl-core.c      |   15 +++
- drivers/net/wireless/iwlwifi/iwl-core.h      |    2 +
- drivers/net/wireless/iwlwifi/iwl-debugfs.c   |    4 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h       |    3 +-
- drivers/net/wireless/iwlwifi/iwl-eeprom.c    |    3 +
- drivers/net/wireless/iwlwifi/iwl-scan.c      |    9 ++
- drivers/net/wireless/iwlwifi/iwl-sta.c       |   30 +++++
- drivers/net/wireless/iwlwifi/iwl-sta.h       |    1 +
- 19 files changed, 179 insertions(+), 155 deletions(-)
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 7d30efd..8661ada 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -852,13 +852,22 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
+ 	 * beacon entries.
+ 	 */
+ 	rt2x00dev->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+-	if (rt2x00dev->ops->bcn->entry_num > 0)
++	if (rt2x00dev->ops->bcn->entry_num > 0) {
+ 		rt2x00dev->hw->wiphy->interface_modes |=
+ 		    BIT(NL80211_IFTYPE_ADHOC) |
+ 		    BIT(NL80211_IFTYPE_AP) |
+-		    BIT(NL80211_IFTYPE_MESH_POINT) |
+ 		    BIT(NL80211_IFTYPE_WDS);
+ 
++		/*
++ 		 * The bss_info_changed() callback function is not
++ 		 * allowed to sleep in mesh mode. As a result, we
++ 		 * can't support Mesh mode for the USB drivers.
++ 		 */
++		if (!rt2x00_is_usb(rt2x00dev))
++			rt2x00dev->hw->wiphy->interface_modes |=
++			    BIT(NL80211_IFTYPE_MESH_POINT);
++	}
++
+ 	/*
+ 	 * Let the driver probe the device to detect the capabilities.
+ 	 */
+-- 
+1.6.6.1
 
