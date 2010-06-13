@@ -1,63 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emita2.mittwald.de ([85.199.184.189]:38294 "EHLO
-	emita2.mittwald.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756327Ab0FGIEP (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:49132 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753430Ab0FMUtt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jun 2010 04:04:15 -0400
-Received: from mx51.mymxserver.com (mail5104.internal [172.16.51.4])
-	by emita2.mittwald.de (Postfix) with ESMTP id E9C2A1F9E23
-	for <linux-wireless@vger.kernel.org>; Mon,  7 Jun 2010 09:55:03 +0200 (CEST)
-From: Holger Schurig <holgerschurig@gmail.com>
-To: Ray <raystinger@gmail.com>
-Subject: Re: New developer to linux and ath5k, request for assistance :)
-Date: Mon, 7 Jun 2010 09:54:53 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <ED64ABDC-524D-4A77-BEAB-95125A54822C@gmail.com>
-In-Reply-To: <ED64ABDC-524D-4A77-BEAB-95125A54822C@gmail.com>
+	Sun, 13 Jun 2010 16:49:49 -0400
+Received: by wyb40 with SMTP id 40so3163190wyb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 13 Jun 2010 13:49:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201006070954.53380.holgerschurig@gmail.com>
+Date: Sun, 13 Jun 2010 17:49:47 -0300
+Message-ID: <AANLkTim4kDJZnEdNy-C4xhOigWiTWQZhVJAs36LOUbjQ@mail.gmail.com>
+Subject: wireless button problem with atheros on hp machines
+From: Leonardo <sombriks@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> The next step I suppose is to download the ATH5k source and start to look
-> into the codes. But I have several questions in mind and would appreciate if
-> some of you can shed me some light and point me to the right direction.
+hello all, i don't know if this is the correct channel to report, but
+from Slackware 13.0 (2.6.29.6) to 13.1 (2.6.33.4) the wireless button
+stopped to work properly.
 
-Go and visit
+it is happening on 2 different hp machines: hp dv5-1220br (AR5001) and
+hp dv4-2140us (AR9285).
 
-http://wireless.kernel.org/
+basically i can't touch the wireless button, if i do that i will not
+be able to recover the net, also the button color will not back to
+blue, will remain orange.
 
-There's a large section there for "Developers".
+also if i touch the button not even restarting the machine or removing
+the battery the bluetooth subsystem come back.
 
+on dv5 i have only linux, but on dv4 if i give up and enter on windows
+just to restart bluetooth;
 
-You don't download the source of ath5k. Instead, you download the source of 
-Linux, it contains the source of ath5k. The best option is to use the 
-wireless-testing tree. More info about that on the above mentioned web page.
+as i related before, at least on dv5 one it worked like a charm on older one.
 
+please if anyone can help, tell me what can i do to help to track such
+bug (what kind of output to send, maybe a downgrade, etc)
 
-> I understand that this version is Ubuntu already comes with ATH5k installed
-> by default.
-
-For any serious linux kernel hacking you need to learn how to work without a 
-Distribution supplied kernel. Basically, you want to load and run your own 
-kernel on your distribution. Forget about all the Distribution supplied 
-things. At least this is what I make, your mileage may vary. I personally get 
-the "vanilla" or "wireless-testing" source tree via git, do a "make xconfig" 
-or similar, and then a "make && make install". Now I reboot into this kernel, 
-look if everything works still, and maybe do one more iteration. I keep the 
-distro-supplied kernel just for reference, or in case I make something 
-horribly. then I reboot into the distro-kernel via the grub menu.
-
-Later, when you have your wireless-kernel up & running, you simply do "make && 
-make modules_install", remove all old modules and reload the new modules, 
-without booting into new kernels. I have made my own custom scripts for that.
-
-
-I'm assuming you already know "Linux Device Drivers 3", available as paper-
-book and in the web?  And also http://kernelnewbies.org?
-
-
-
-Which parts of ath5k do you want to modify?
+thanks in advance.
