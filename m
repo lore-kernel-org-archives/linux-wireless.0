@@ -1,39 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:36107 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751182Ab0F3Doo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jun 2010 23:44:44 -0400
-Received: by qwi4 with SMTP id 4so111715qwi.19
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Jun 2010 20:44:43 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTikC3saJNwAFhHvSyJNqVF1fGPcVfn-hwGpR5V30@mail.gmail.com>
-References: <AANLkTikC3saJNwAFhHvSyJNqVF1fGPcVfn-hwGpR5V30@mail.gmail.com>
-From: Jono <koppah@gmail.com>
-Date: Wed, 30 Jun 2010 13:44:22 +1000
-Message-ID: <AANLkTinTDPyeV2QWWmXskp4504nxPIm1neJdxdLat51p@mail.gmail.com>
-Subject: ath5k Register Question
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel <ath5k-devel@lists.ath5k.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:43139 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754517Ab0FMT5A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 13 Jun 2010 15:57:00 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/2] compat: backport sdio_writeb_readb
+Date: Sun, 13 Jun 2010 21:56:49 +0200
+Message-Id: <1276459009-17168-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1276459009-17168-1-git-send-email-hauke@hauke-m.de>
+References: <1276459009-17168-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This is needed by wl1251_sdio.c
+Use sdio_readb instead of sdio_writeb_readb as long as sdio_writeb_readb was not realy backported.
 
-I'm not sure if this is the right place to ask, but I'm looking for
-information on a specific register on Atheros cards.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ include/linux/compat-2.6.35.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-I've been told that there is a register that Atheros chips update with
-information about how much of a set period has been detected as 'CCA'
-time. Unfortunately, I cannot find this information in the source
-code. The only register I found that matches this even closely appears
-to only be used during noise calibration, and not updated
-continuously.
+diff --git a/include/linux/compat-2.6.35.h b/include/linux/compat-2.6.35.h
+index 886815d..c6e7136 100644
+--- a/include/linux/compat-2.6.35.h
++++ b/include/linux/compat-2.6.35.h
+@@ -23,6 +23,8 @@ static inline wait_queue_head_t *sk_sleep(struct sock *sk)
+ 	return sk->sk_sleep;
+ }
+ 
++#define sdio_writeb_readb(func, write_byte, addr, err_ret) sdio_readb(func, addr, err_ret)
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,35)) */
+ 
+ #endif /* LINUX_26_35_COMPAT_H */
+-- 
+1.7.0.4
 
-Any help would be greatly appreciated!
-
-Thank you,
-
---
-Jonathan Guerin
