@@ -1,146 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:41844 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751393Ab0FLPWk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jun 2010 11:22:40 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, linville@tuxdriver.com
-Subject: [PATCH 5/7] ath9k_hw: remove ATH9K_CAP_MCAST_KEYSRCH
-Date: Sat, 12 Jun 2010 17:22:32 +0200
-Message-Id: <1276356154-66545-5-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1276356154-66545-4-git-send-email-nbd@openwrt.org>
-References: <1276356154-66545-1-git-send-email-nbd@openwrt.org>
- <1276356154-66545-2-git-send-email-nbd@openwrt.org>
- <1276356154-66545-3-git-send-email-nbd@openwrt.org>
- <1276356154-66545-4-git-send-email-nbd@openwrt.org>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:36783 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755138Ab0FNUPR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Jun 2010 16:15:17 -0400
+Received: by wyb40 with SMTP id 40so4235972wyb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jun 2010 13:15:15 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 06/14] rt2x00: Fix TX_STA_FIFO handling
+Date: Mon, 14 Jun 2010 22:11:09 +0200
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+References: <201006142208.31736.IvDoorn@gmail.com> <201006142210.10378.IvDoorn@gmail.com> <201006142210.43525.IvDoorn@gmail.com>
+In-Reply-To: <201006142210.43525.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201006142211.09880.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver always sets this to enabled, but this can be simplified with
-a small change to ah->sta_id1_defaults instead.
-This change also removes the now-obsolete ath9k_hw_setcapability function.
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Currently rt2800pci will read TX_STA_FIFO until the previously read value
+matches the current value. However, it is obvious that TX_STA_FIFO only
+contains values that can easily be the same for multiple consecutive frames
+(especially when communicating with only one other STA). Hence, we often
+ended up with reading only the first entry and ignoring the rest.
+
+One result was that when the TX_STA_FIFO contained multiple entires, only
+the first one was read and properly handled while the others remained in the
+tx queue.
+
+Thus, drop this check but introduce a maximum number of reads. All legacy
+drivers use the size of the tx ring as limit but state that the TX_STA_FIFO
+has only 16 entries. So, let's just stick with the tx ring size for now.
+
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |    5 ----
- drivers/net/wireless/ath/ath9k/hw.c           |   33 ++----------------------
- drivers/net/wireless/ath/ath9k/hw.h           |    3 --
- drivers/net/wireless/ath/ath9k/init.c         |    6 ----
- 4 files changed, 3 insertions(+), 44 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800pci.c |   23 +++++++++--------------
+ 1 files changed, 9 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index 5190a88..d339e5f 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -569,11 +569,6 @@ static void ath9k_init_crypto(struct ath9k_htc_priv *priv)
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index eeecedb..afa30ea 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -813,29 +813,24 @@ static void rt2800pci_txdone(struct rt2x00_dev *rt2x00dev)
+ 	struct txdone_entry_desc txdesc;
+ 	u32 word;
+ 	u32 reg;
+-	u32 old_reg;
+ 	int wcid, ack, pid, tx_wcid, tx_ack, tx_pid;
+ 	u16 mcs, real_mcs;
++	int i;
+ 
+ 	/*
+-	 * During each loop we will compare the freshly read
+-	 * TX_STA_FIFO register value with the value read from
+-	 * the previous loop. If the 2 values are equal then
+-	 * we should stop processing because the chance it
+-	 * quite big that the device has been unplugged and
+-	 * we risk going into an endless loop.
++	 * TX_STA_FIFO is a stack of X entries, hence read TX_STA_FIFO
++	 * at most X times and also stop processing once the TX_STA_FIFO_VALID
++	 * flag is not set anymore.
++	 *
++	 * The legacy drivers use X=TX_RING_SIZE but state in a comment
++	 * that the TX_STA_FIFO stack has a size of 16. We stick to our
++	 * tx ring size for now.
  	 */
- 	for (i = 0; i < common->keymax; i++)
- 		ath9k_hw_keyreset(priv->ah, (u16) i);
+-	old_reg = 0;
 -
--	/* turn on mcast key search if possible */
--	if (!ath9k_hw_getcapability(priv->ah, ATH9K_CAP_MCAST_KEYSRCH, 0, NULL))
--		(void)ath9k_hw_setcapability(priv->ah, ATH9K_CAP_MCAST_KEYSRCH,
--					     1, 1, NULL);
- }
+-	while (1) {
++	for (i = 0; i < TX_ENTRIES; i++) {
+ 		rt2800_register_read(rt2x00dev, TX_STA_FIFO, &reg);
+ 		if (!rt2x00_get_field32(reg, TX_STA_FIFO_VALID))
+ 			break;
  
- static void ath9k_init_channels_rates(struct ath9k_htc_priv *priv)
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index a5203b1..9321931 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -425,7 +425,9 @@ static void ath9k_hw_init_defaults(struct ath_hw *ah)
- 		ah->ah_flags = AH_USE_EEPROM;
- 
- 	ah->atim_window = 0;
--	ah->sta_id1_defaults = AR_STA_ID1_CRPT_MIC_ENABLE;
-+	ah->sta_id1_defaults =
-+		AR_STA_ID1_CRPT_MIC_ENABLE |
-+		AR_STA_ID1_MCAST_KSRCH;
- 	ah->beacon_interval = 100;
- 	ah->enable_32kHz_clock = DONT_USE_32KHZ;
- 	ah->slottime = (u32) -1;
-@@ -2259,20 +2261,6 @@ bool ath9k_hw_getcapability(struct ath_hw *ah, enum ath9k_capability_type type,
- 			    u32 capability, u32 *result)
- {
- 	switch (type) {
--	case ATH9K_CAP_MCAST_KEYSRCH:
--		switch (capability) {
--		case 0:
--			return true;
--		case 1:
--			if (REG_READ(ah, AR_STA_ID1) & AR_STA_ID1_ADHOC) {
--				return false;
--			} else {
--				return (ah->sta_id1_defaults &
--					AR_STA_ID1_MCAST_KSRCH) ? true :
--					false;
--			}
--		}
--		return false;
- 	case ATH9K_CAP_DS:
- 		return (AR_SREV_9280_20_OR_LATER(ah) &&
- 			(ah->eep_ops->get_eeprom(ah, EEP_RC_CHAIN_MASK) == 1))
-@@ -2283,21 +2271,6 @@ bool ath9k_hw_getcapability(struct ath_hw *ah, enum ath9k_capability_type type,
- }
- EXPORT_SYMBOL(ath9k_hw_getcapability);
- 
--bool ath9k_hw_setcapability(struct ath_hw *ah, enum ath9k_capability_type type,
--			    u32 capability, u32 setting, int *status)
--{
--	switch (type) {
--	case ATH9K_CAP_MCAST_KEYSRCH:
--		if (setting)
--			ah->sta_id1_defaults |= AR_STA_ID1_MCAST_KSRCH;
--		else
--			ah->sta_id1_defaults &= ~AR_STA_ID1_MCAST_KSRCH;
--		return true;
--	default:
--		return false;
--	}
--}
--EXPORT_SYMBOL(ath9k_hw_setcapability);
- 
- /****************************/
- /* GPIO / RFKILL / Antennae */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 28fca9d..16b35cd 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -207,7 +207,6 @@ enum ath9k_hw_caps {
- };
- 
- enum ath9k_capability_type {
--	ATH9K_CAP_MCAST_KEYSRCH,
- 	ATH9K_CAP_DS
- };
- 
-@@ -855,8 +854,6 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- int ath9k_hw_fill_cap_info(struct ath_hw *ah);
- bool ath9k_hw_getcapability(struct ath_hw *ah, enum ath9k_capability_type type,
- 			    u32 capability, u32 *result);
--bool ath9k_hw_setcapability(struct ath_hw *ah, enum ath9k_capability_type type,
--			    u32 capability, u32 setting, int *status);
- u32 ath9k_regd_get_ctl(struct ath_regulatory *reg, struct ath9k_channel *chan);
- 
- /* Key Cache Management */
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 4bdf8c8..514a401 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -387,12 +387,6 @@ static void ath9k_init_crypto(struct ath_softc *sc)
- 	 */
- 	if (!(sc->sc_ah->misc_mode & AR_PCU_MIC_NEW_LOC_ENA))
- 		common->splitmic = 1;
+-		if (old_reg == reg)
+-			break;
+-		old_reg = reg;
 -
--	/* turn on mcast key search if possible */
--	if (!ath9k_hw_getcapability(sc->sc_ah, ATH9K_CAP_MCAST_KEYSRCH, 0, NULL))
--		(void)ath9k_hw_setcapability(sc->sc_ah, ATH9K_CAP_MCAST_KEYSRCH,
--					     1, 1, NULL);
--
- }
- 
- static int ath9k_init_btcoex(struct ath_softc *sc)
+ 		wcid    = rt2x00_get_field32(reg, TX_STA_FIFO_WCID);
+ 		ack     = rt2x00_get_field32(reg, TX_STA_FIFO_TX_ACK_REQUIRED);
+ 		pid     = rt2x00_get_field32(reg, TX_STA_FIFO_PID_TYPE);
 -- 
-1.6.4.2
+1.6.6.1
 
