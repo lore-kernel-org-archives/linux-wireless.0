@@ -1,44 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:8358 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752091Ab0FFG4U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jun 2010 02:56:20 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
+Received: from smtp.nokia.com ([192.100.105.134]:39368 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752526Ab0FNGQM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Jun 2010 02:16:12 -0400
+From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 3/4] iwlwifi: add name to Maintainers list
-Date: Sat,  5 Jun 2010 23:56:02 -0700
-Message-Id: <1275807363-18150-4-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1275807363-18150-1-git-send-email-reinette.chatre@intel.com>
-References: <1275807363-18150-1-git-send-email-reinette.chatre@intel.com>
+	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Subject: [PATCH 3/3] mac80211: remove BSS from cfg80211 list when leaving IBSS
+Date: Mon, 14 Jun 2010 09:15:45 +0300
+Message-Id: <1276496145-5623-4-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+In-Reply-To: <1276496145-5623-3-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+References: <1276496145-5623-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+ <1276496145-5623-2-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+ <1276496145-5623-3-git-send-email-ext-teemu.3.paasikivi@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Remove BSS from cfg80211 BSS list if we are only member in IBSS when
+leaving it.
 
-Add "Wey-Yi Guy" to maintainers list for iwlwifi.
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
 ---
- MAINTAINERS |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ net/mac80211/ibss.c |   33 +++++++++++++++++++++++++++++++++
+ 1 files changed, 33 insertions(+), 0 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 22a49e6..8d51903 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -3009,6 +3009,7 @@ F:	include/linux/wimax/i2400m.h
- INTEL WIRELESS WIFI LINK (iwlwifi)
- M:	Zhu Yi <yi.zhu@intel.com>
- M:	Reinette Chatre <reinette.chatre@intel.com>
-+M:	Wey-Yi Guy <wey-yi.w.guy@intel.com>
- M:	Intel Linux Wireless <ilw@linux.intel.com>
- L:	linux-wireless@vger.kernel.org
- W:	http://intellinuxwireless.org
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index ff91265..6d5489b 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -969,6 +969,39 @@ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct sk_buff *skb;
+ 
++	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
++	struct ieee80211_local *local = sdata->local;
++	struct cfg80211_bss *cbss;
++	struct ieee80211_channel *chan = NULL;
++	const u8 *bssid = NULL;
++	u16 capability;
++	int active_ibss = 0;
++
++
++	active_ibss = ieee80211_sta_active_ibss(sdata);
++
++	if (!active_ibss) {
++		capability = WLAN_CAPABILITY_IBSS;
++		if (ifibss->privacy)
++			capability |= WLAN_CAPABILITY_PRIVACY;
++		if (ifibss->fixed_bssid)
++			bssid = ifibss->bssid;
++		if (ifibss->fixed_channel)
++			chan = ifibss->channel;
++		if (!is_zero_ether_addr(ifibss->bssid))
++			bssid = ifibss->bssid;
++		cbss = cfg80211_get_bss(local->hw.wiphy, chan, bssid,
++					ifibss->ssid, ifibss->ssid_len,
++					WLAN_CAPABILITY_IBSS |
++					WLAN_CAPABILITY_PRIVACY,
++					capability);
++
++		if (cbss) {
++			cfg80211_unlink_bss(local->hw.wiphy, cbss);
++			cfg80211_put_bss(cbss);
++		}
++	}
++
+ 	del_timer_sync(&sdata->u.ibss.timer);
+ 	clear_bit(IEEE80211_IBSS_REQ_RUN, &sdata->u.ibss.request);
+ 	cancel_work_sync(&sdata->u.ibss.work);
 -- 
-1.7.0.4
+1.5.6.3
 
