@@ -1,146 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:43224 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751790Ab0FLEeF (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:56915 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751598Ab0FNGTH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jun 2010 00:34:05 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+	Mon, 14 Jun 2010 02:19:07 -0400
+From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 06/24] ath9k_hw: inform ANI calibration when scanning
-Date: Sat, 12 Jun 2010 00:33:44 -0400
-Message-Id: <1276317242-15540-7-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
-References: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
+	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Subject: [PATCH 1/3] mac80211: Set basic rates while joining ibss network
+Date: Mon, 14 Jun 2010 09:15:43 +0300
+Message-Id: <1276496145-5623-2-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+In-Reply-To: <1276496145-5623-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+References: <1276496145-5623-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The new ANI implementation will use this to skip ANI
-calibration upon a scan. This cannot be ported to the
-older ANI implementation unless default ANI values from
-the ANI are also used upon a scan. This is essentially
-what one of the things thenew ANI does.
+This patch adds support to nl80211 and mac80211 to set basic rates when
+joining/creating ibss network.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Original patch was posted by Johannes Berg on the linux-wireless posting list.
+
+Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
 ---
- drivers/net/wireless/ath/ath9k/ani.c          |    2 +-
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    2 +-
- drivers/net/wireless/ath/ath9k/hw-ops.h       |    4 ++--
- drivers/net/wireless/ath/ath9k/hw.h           |    2 +-
- drivers/net/wireless/ath/ath9k/mac.c          |    4 ++--
- drivers/net/wireless/ath/ath9k/mac.h          |    2 +-
- drivers/net/wireless/ath/ath9k/recv.c         |    4 ++--
- 7 files changed, 10 insertions(+), 10 deletions(-)
+ include/net/cfg80211.h     |    2 +
+ net/mac80211/ibss.c        |    4 ++-
+ net/mac80211/ieee80211_i.h |    2 +
+ net/wireless/nl80211.c     |   49 ++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 56 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 28a1dc3..f5b9719 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -322,7 +322,7 @@ static int32_t ath9k_hw_ani_get_listen_time(struct ath_hw *ah)
- 	return listenTime;
- }
- 
--static void ath9k_ani_reset_old(struct ath_hw *ah)
-+static void ath9k_ani_reset_old(struct ath_hw *ah, bool is_scanning)
- {
- 	struct ar5416AniState *aniState;
- 	struct ath9k_channel *chan = ah->curchan;
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index f0cca4e..ffebd5a 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -416,7 +416,7 @@ void ath9k_host_rx_init(struct ath9k_htc_priv *priv)
- {
- 	ath9k_hw_rxena(priv->ah);
- 	ath9k_htc_opmode_init(priv);
--	ath9k_hw_startpcureceive(priv->ah);
-+	ath9k_hw_startpcureceive(priv->ah, (priv->op_flags & OP_SCANNING));
- 	priv->rx.last_rssi = ATH_RSSI_DUMMY_MARKER;
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
-index 65d2c66..381da6c 100644
---- a/drivers/net/wireless/ath/ath9k/hw-ops.h
-+++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
-@@ -288,9 +288,9 @@ static inline bool ath9k_hw_iscal_supported(struct ath_hw *ah,
- 	return ath9k_hw_private_ops(ah)->iscal_supported(ah, calType);
- }
- 
--static inline void ath9k_ani_reset(struct ath_hw *ah)
-+static inline void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning)
- {
--	ath9k_hw_private_ops(ah)->ani_reset(ah);
-+	ath9k_hw_private_ops(ah)->ani_reset(ah, is_scanning);
- }
- 
- #endif /* ATH9K_HW_OPS_H */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index a207a70..790a457 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -565,7 +565,7 @@ struct ath_hw_private_ops {
- 	void (*loadnf)(struct ath_hw *ah, struct ath9k_channel *chan);
- 
- 	/* ANI */
--	void (*ani_reset)(struct ath_hw *ah);
-+	void (*ani_reset)(struct ath_hw *ah, bool is_scanning);
- 	void (*ani_lower_immunity)(struct ath_hw *ah);
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 22ab9d8..64374f4 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -810,6 +810,7 @@ struct cfg80211_disassoc_request {
+  * @beacon_interval: beacon interval to use
+  * @privacy: this is a protected network, keys will be configured
+  *	after joining
++ * @basic_rates: bitmap of basic rates to use when creating the IBSS
+  */
+ struct cfg80211_ibss_params {
+ 	u8 *ssid;
+@@ -818,6 +819,7 @@ struct cfg80211_ibss_params {
+ 	u8 *ie;
+ 	u8 ssid_len, ie_len;
+ 	u16 beacon_interval;
++	u32 basic_rates;
+ 	bool channel_fixed;
+ 	bool privacy;
  };
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index d7a96ce..8be5a96 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -172,6 +172,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 	rcu_assign_pointer(ifibss->presp, skb);
  
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index b4d0198..1550591 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -757,11 +757,11 @@ void ath9k_hw_putrxbuf(struct ath_hw *ah, u32 rxdp)
- }
- EXPORT_SYMBOL(ath9k_hw_putrxbuf);
+ 	sdata->vif.bss_conf.beacon_int = beacon_int;
++	sdata->vif.bss_conf.basic_rates = basic_rates;
+ 	bss_change = BSS_CHANGED_BEACON_INT;
+ 	bss_change |= ieee80211_reset_erp_info(sdata);
+ 	bss_change |= BSS_CHANGED_BSSID;
+@@ -529,7 +530,7 @@ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
+ 		sdata->drop_unencrypted = 0;
  
--void ath9k_hw_startpcureceive(struct ath_hw *ah)
-+void ath9k_hw_startpcureceive(struct ath_hw *ah, bool is_scanning)
- {
- 	ath9k_enable_mib_counters(ah);
- 
--	ath9k_ani_reset(ah);
-+	ath9k_ani_reset(ah, is_scanning);
- 
- 	REG_CLR_BIT(ah, AR_DIAG_SW, (AR_DIAG_RX_DIS | AR_DIAG_RX_ABORT));
- }
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index 00f3e0c..3c65c91 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -715,7 +715,7 @@ void ath9k_hw_setuprxdesc(struct ath_hw *ah, struct ath_desc *ds,
- 			  u32 size, u32 flags);
- bool ath9k_hw_setrxabort(struct ath_hw *ah, bool set);
- void ath9k_hw_putrxbuf(struct ath_hw *ah, u32 rxdp);
--void ath9k_hw_startpcureceive(struct ath_hw *ah);
-+void ath9k_hw_startpcureceive(struct ath_hw *ah, bool is_scanning);
- void ath9k_hw_stoppcurecv(struct ath_hw *ah);
- void ath9k_hw_abortpcurecv(struct ath_hw *ah);
- bool ath9k_hw_stopdmarecv(struct ath_hw *ah);
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index d373364..5141cd8 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -295,7 +295,7 @@ static void ath_edma_start_recv(struct ath_softc *sc)
- 
- 	ath_opmode_init(sc);
- 
--	ath9k_hw_startpcureceive(sc->sc_ah);
-+	ath9k_hw_startpcureceive(sc->sc_ah, (sc->sc_flags & SC_OP_SCANNING));
+ 	__ieee80211_sta_join_ibss(sdata, bssid, sdata->vif.bss_conf.beacon_int,
+-				  ifibss->channel, 3, /* first two are basic */
++				  ifibss->channel, ifibss->basic_rates,
+ 				  capability, 0);
  }
  
- static void ath_edma_stop_recv(struct ath_softc *sc)
-@@ -501,7 +501,7 @@ int ath_startrecv(struct ath_softc *sc)
- start_recv:
- 	spin_unlock_bh(&sc->rx.rxbuflock);
- 	ath_opmode_init(sc);
--	ath9k_hw_startpcureceive(ah);
-+	ath9k_hw_startpcureceive(ah, (sc->sc_flags & SC_OP_SCANNING));
+@@ -910,6 +911,7 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
+ 		sdata->u.ibss.fixed_bssid = false;
  
- 	return 0;
- }
+ 	sdata->u.ibss.privacy = params->privacy;
++	sdata->u.ibss.basic_rates = params->basic_rates;
+ 
+ 	sdata->vif.bss_conf.beacon_int = params->beacon_interval;
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 4d3883e..fde058b 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -393,6 +393,8 @@ struct ieee80211_if_ibss {
+ 	unsigned long request;
+ 	unsigned long last_scan_completed;
+ 
++	u32 basic_rates;
++
+ 	bool timer_running;
+ 
+ 	bool fixed_bssid;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 90ab3c8..324b4a5 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3955,6 +3955,55 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
+ 		}
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_BSS_BASIC_RATES]) {
++		u8 *rates =
++			nla_data(info->attrs[NL80211_ATTR_BSS_BASIC_RATES]);
++		int n_rates =
++			nla_len(info->attrs[NL80211_ATTR_BSS_BASIC_RATES]);
++		struct ieee80211_supported_band *sband =
++			wiphy->bands[ibss.channel->band];
++		int i, j;
++
++		if (n_rates == 0) {
++			err = -EINVAL;
++			goto out;
++		}
++
++		for (i = 0; i < n_rates; i++) {
++			int rate = (rates[i] & 0x7f) * 5;
++			bool found = false;
++
++			for (j = 0; j < sband->n_bitrates; j++) {
++				if (sband->bitrates[j].bitrate == rate) {
++					found = true;
++					ibss.basic_rates |= BIT(j);
++					break;
++				}
++			}
++			if (!found) {
++				err = -EINVAL;
++				goto out;
++			}
++		}
++	} else {
++		/*
++		* If no rates were explicitly configured,
++		* use the mandatory rate set for 11b or
++		* 11a for maximum compatibility.
++		*/
++		struct ieee80211_supported_band *sband =
++			wiphy->bands[ibss.channel->band];
++		int j;
++		u32 flag = ibss.channel->band == IEEE80211_BAND_5GHZ ?
++			IEEE80211_RATE_MANDATORY_A :
++			IEEE80211_RATE_MANDATORY_B;
++
++		for (j = 0; j < sband->n_bitrates; j++) {
++			if (sband->bitrates[j].flags & flag)
++				ibss.basic_rates |= BIT(j);
++		}
++	}
++
+ 	err = cfg80211_join_ibss(rdev, dev, &ibss, connkeys);
+ 
+ out:
 -- 
-1.6.3.3
+1.5.6.3
 
