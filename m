@@ -1,37 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:64808 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756758Ab0FUSnO (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:56747 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751537Ab0FNGP6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jun 2010 14:43:14 -0400
-Received: by pxi12 with SMTP id 12so1497071pxi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Jun 2010 11:43:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201006211059.58879.helmut.schaa@googlemail.com>
-References: <201006211059.58879.helmut.schaa@googlemail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 21 Jun 2010 11:37:53 -0700
-Message-ID: <AANLkTinj36oA6QpEiYywGGkRqCmNRHSeR643HpiUsXC-@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: allow selection of minstrel_ht as default rc
-	algo
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 14 Jun 2010 02:15:58 -0400
+From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Subject: [PATCH 0/3] mac80211: Add support for configuring ibss basic rates
+Date: Mon, 14 Jun 2010 09:15:42 +0300
+Message-Id: <1276496145-5623-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 21, 2010 at 1:59 AM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> Allow selection of minstrel_ht as default rate control algorithm. At the
-> moment minstrel_ht can only be requested by the driver code but not selected
-> as default in make menuconfig.
->
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+This patch set implements support for configuring basic rates for ibss network when joining/creating one. First two patches are basically patch proposed by Johannes Berg on linux-wireless posting list split in two. These implement interface to nl80211 to do actual configuration from user space. Last patch impelents removal of the BSS information from the cfg80211 when leaving the IBSS and there is no other active STA's.
 
-Shouldn't this just be enabled when you enable minstrel? I don't get
-why we would split up the two.
+Teemu Paasikivi (3):
+  mac80211: Set basic rates while joining ibss network
+  mac80211: Set changed basic rates flag
+  mac80211: remove BSS from cfg80211 list when leaving IBSS
 
-  Luis
+ include/net/cfg80211.h     |    2 +
+ net/mac80211/ibss.c        |   38 +++++++++++++++++++++++++++++++++-
+ net/mac80211/ieee80211_i.h |    2 +
+ net/wireless/nl80211.c     |   49 ++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 90 insertions(+), 1 deletions(-)
+
