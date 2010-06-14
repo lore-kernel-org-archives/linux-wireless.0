@@ -1,88 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpoproxy3-pub.bluehost.com ([67.222.54.6]:44683 "HELO
-	cpoproxy3-pub.bluehost.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751310Ab0FRUr7 (ORCPT
+Received: from mail-ww0-f46.google.com ([74.125.82.46]:49407 "EHLO
+	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755212Ab0FNUP2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jun 2010 16:47:59 -0400
-Date: Fri, 18 Jun 2010 13:46:22 -0700
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 4/5]pci:setup_bus.c Fix warning: variable 'retval' set
- but not used
-Message-ID: <20100618134622.7db9f913@virtuousgeek.org>
-In-Reply-To: <4C1BD678.1020405@gmail.com>
-References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>
-	<1276666434-11227-5-git-send-email-justinmattock@gmail.com>
-	<20100618102330.29eccb5b@virtuousgeek.org>
-	<4C1BBF7D.8090904@kernel.org>
-	<20100618124956.40c869a0@virtuousgeek.org>
-	<4C1BD024.1030707@gmail.com>
-	<20100618130538.0fc562ee@virtuousgeek.org>
-	<4C1BD678.1020405@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Mon, 14 Jun 2010 16:15:28 -0400
+Received: by mail-ww0-f46.google.com with SMTP id 18so4215976wwb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jun 2010 13:15:28 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 14/14] rt2x00: Synchronize WCID initialization with legacy driver
+Date: Mon, 14 Jun 2010 22:14:19 +0200
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+References: <201006142208.31736.IvDoorn@gmail.com> <201006142213.38654.IvDoorn@gmail.com> <201006142213.57748.IvDoorn@gmail.com>
+In-Reply-To: <201006142213.57748.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201006142214.20934.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 18 Jun 2010 13:26:32 -0700
-"Justin P. Mattock" <justinmattock@gmail.com> wrote:
+From: Ivo van Doorn <IvDoorn@gmail.com>
 
-> On 06/18/2010 01:05 PM, Jesse Barnes wrote:
-> > On Fri, 18 Jun 2010 12:59:32 -0700
-> > "Justin P. Mattock"<justinmattock@gmail.com>  wrote:
-> >> just added this in(as a test), and the retval warning still shows up.
-> >> with the last post I just added a printk was that legit, and if so what
-> >> else might be added to it to make it complete and proper?
-> >
-> > What's the full warning?  Seems like printing the value should have
-> > been enough to shut up gcc...
-> >
-> 
-> this is the warning messg after applying yinghai's patch:
-> 
->    CC      drivers/pci/setup-bus.o
-> drivers/pci/setup-bus.c: In function 
-> 'pci_assign_unassigned_bridge_resources':
-> drivers/pci/setup-bus.c:868:6: warning: variable 'retval' set but not used
+Legacy rt2870 driver handles WCID differently then we expected,
+the BSSID and Cipher value are 3 bit values, while the 4th bit
+should be set elsewhere in an extended field.
 
-Right because Yinghai's patch just sets retval but doesn't actually use
-it anywhere.
+After this, rt2800usb reports frames have been decrypted
+successfully, indicating that the Hardware decryption now is
+working correctly.
 
-> if I add a printk then gcc is content.. patch below, but not the best at 
-> creating printk's(the whole % thing messes me up) but here goes:
-> 
->  From 48e15b87072c6b4286d943c55bfe2ae26d358795 Mon Sep 17 00:00:00 2001
-> From: Justin P. Mattock <justinmattock@gmail.com>
-> Date: Fri, 18 Jun 2010 13:23:27 -0700
-> Subject: [PATCH 4/4] bus.c_add_print
->   Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
-> 
-> ---
->   drivers/pci/setup-bus.c |    1 +
->   1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 66cb8f4..806b766 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -919,6 +919,7 @@ again:
-> 
->   enable_all:
->   	retval = pci_reenable_device(bridge);
-> +	printk(KERN_DEBUG "PCI%d: re-enabling device\n", retval);
->   	pci_set_master(bridge);
->   	pci_enable_bridges(parent);
->   }
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800.h    |    4 ++++
+ drivers/net/wireless/rt2x00/rt2800lib.c |   31 ++++++++++++++++++++++---------
+ 2 files changed, 26 insertions(+), 9 deletions(-)
 
-Again, this doesn't have the if (retval) condition around the printk; I
-don't want to see this message everytime regardless.  Also the message
-is misleading, it should be something like:
-  dev_err(&bridge->dev, "failed to re-enable device: %d\n", retval)
-instead.  PCI%d makes it look like we're talking about a specific bus
-or something and not an error code.
-
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index b308421..3ed87ba 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -1436,6 +1436,10 @@ struct mac_iveiv_entry {
+ #define MAC_WCID_ATTRIBUTE_CIPHER	FIELD32(0x0000000e)
+ #define MAC_WCID_ATTRIBUTE_BSS_IDX	FIELD32(0x00000070)
+ #define MAC_WCID_ATTRIBUTE_RX_WIUDF	FIELD32(0x00000380)
++#define MAC_WCID_ATTRIBUTE_CIPHER_EXT	FIELD32(0x00000400)
++#define MAC_WCID_ATTRIBUTE_BSS_IDX_EXT	FIELD32(0x00000800)
++#define MAC_WCID_ATTRIBUTE_WAPI_MCBC	FIELD32(0x00008000)
++#define MAC_WCID_ATTRIBUTE_WAPI_KEY_IDX	FIELD32(0xff000000)
+ 
+ /*
+  * SHARED_KEY_MODE:
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index a83477a..636bfd6 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -554,15 +554,28 @@ static void rt2800_config_wcid_attr(struct rt2x00_dev *rt2x00dev,
+ 
+ 	offset = MAC_WCID_ATTR_ENTRY(key->hw_key_idx);
+ 
+-	rt2800_register_read(rt2x00dev, offset, &reg);
+-	rt2x00_set_field32(&reg, MAC_WCID_ATTRIBUTE_KEYTAB,
+-			   !!(key->flags & IEEE80211_KEY_FLAG_PAIRWISE));
+-	rt2x00_set_field32(&reg, MAC_WCID_ATTRIBUTE_CIPHER,
+-			   (crypto->cmd == SET_KEY) * crypto->cipher);
+-	rt2x00_set_field32(&reg, MAC_WCID_ATTRIBUTE_BSS_IDX,
+-			   (crypto->cmd == SET_KEY) * crypto->bssidx);
+-	rt2x00_set_field32(&reg, MAC_WCID_ATTRIBUTE_RX_WIUDF, crypto->cipher);
+-	rt2800_register_write(rt2x00dev, offset, reg);
++	if (crypto->cmd == SET_KEY) {
++		rt2800_register_read(rt2x00dev, offset, &reg);
++		rt2x00_set_field32(&reg, MAC_WCID_ATTRIBUTE_KEYTAB,
++				   !!(key->flags & IEEE80211_KEY_FLAG_PAIRWISE));
++		/*
++		 * Both the cipher as the BSS Idx numbers are split in a main
++		 * value of 3 bits, and a extended field for adding one additional
++		 * bit to the value.
++		 */
++		rt2x00_set_field32(&reg, MAC_WCID_ATTRIBUTE_CIPHER,
++				   (crypto->cipher & 0x7));
++		rt2x00_set_field32(&reg, MAC_WCID_ATTRIBUTE_CIPHER_EXT,
++				   (crypto->cipher & 0x8) >> 3);
++		rt2x00_set_field32(&reg, MAC_WCID_ATTRIBUTE_BSS_IDX,
++				   (crypto->bssidx & 0x7));
++		rt2x00_set_field32(&reg, MAC_WCID_ATTRIBUTE_BSS_IDX_EXT,
++				   (crypto->bssidx & 0x8) >> 3);
++		rt2x00_set_field32(&reg, MAC_WCID_ATTRIBUTE_RX_WIUDF, crypto->cipher);
++		rt2800_register_write(rt2x00dev, offset, reg);
++	} else {
++		rt2800_register_write(rt2x00dev, offset, 0);
++	}
+ 
+ 	offset = MAC_IVEIV_ENTRY(key->hw_key_idx);
+ 
 -- 
-Jesse Barnes, Intel Open Source Technology Center
+1.6.6.1
+
