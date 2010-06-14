@@ -1,101 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fxip-0047f.externet.hu ([88.209.222.127]:55936 "EHLO
-	pomaz-ex.szeredi.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751564Ab0FCQNn (ORCPT
+Received: from mail-ww0-f46.google.com ([74.125.82.46]:49407 "EHLO
+	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755186Ab0FNUPZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jun 2010 12:13:43 -0400
-To: Michal Hocko <mhocko@suse.cz>
-CC: miklos@szeredi.hu, reinette.chatre@intel.com,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-In-reply-to: <20100603151752.GB2053@tiehlicka.suse.cz> (message from Michal
-	Hocko on Thu, 3 Jun 2010 17:17:52 +0200)
-Subject: Re: iwl3945 oops with latest git
-References: <E1OKBva-00080h-8E@pomaz-ex.szeredi.hu> <20100603151752.GB2053@tiehlicka.suse.cz>
-Message-Id: <E1OKD2y-0008Gn-8P@pomaz-ex.szeredi.hu>
-From: Miklos Szeredi <miklos@szeredi.hu>
-Date: Thu, 03 Jun 2010 18:13:32 +0200
+	Mon, 14 Jun 2010 16:15:25 -0400
+Received: by mail-ww0-f46.google.com with SMTP id 18so4215976wwb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jun 2010 13:15:24 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 12/14] rt2x00: Limit TX done looping to number of TX ring entries
+Date: Mon, 14 Jun 2010 22:13:37 +0200
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+References: <201006142208.31736.IvDoorn@gmail.com> <201006142212.55156.IvDoorn@gmail.com> <201006142213.16315.IvDoorn@gmail.com>
+In-Reply-To: <201006142213.16315.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201006142213.38654.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 3 Jun 2010, Michal Hocko wrote:
-> On Thu 03-06-10 17:01:50, Miklos Szeredi wrote:
-> > Hi,
-> 
-> Hi,
-> 
-> > 
-> > This oops comes shortly after booting machine and using wireless
-> > network.  Reproduced two times now.
-> > 
-> > Please let me know if you need more info.
-> > 
-> > Thanks,
-> > Miklos
-> > 
-> > 
-> > BUG: unable to handle kernel NULL pointer dereference at (null)
-> > IP: [<ffffffffa022738f>] iwl3945_request_scan+0x961/0xd68 [iwl3945]
-> 
-> Sounds pretty much like https://patchwork.kernel.org/patch/103596/
-> I have similar problem but didn't get to testing the patch.
+From: Ivo van Doorn <IvDoorn@gmail.com>
 
-Yes, patch fixed it for me.
+Similar to rt2800pci, remove the check for duplicate
+register reading, and instead limit the for-loop to
+the maximum number of TX entries inside a queue.
 
-Thanks,
-Miklos
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt61pci.c |   23 +++++++++--------------
+ 1 files changed, 9 insertions(+), 14 deletions(-)
 
-> 
-> > PGD 0 
-> > Oops: 0000 [#1] PREEMPT SMP 
-> > last sysfs file: /sys/class/rfkill/rfkill1/state
-> > CPU 0 
-> > Modules linked in: nfs lockd nfs_acl sunrpc rfcomm sco bnep l2cap acpi_cpufreq mperf nf_conntrack_netbios_ns fuse iwl3945 iwlcore thinkpad_acpi nsc_ircc mac80211 backlight btusb led_class uinput ac irda battery crc_ccitt thermal cfg80211 bluetooth button processor e1000e rfkill kvm_intel kvm
-> > 
-> > Pid: 1493, comm: iwl3945 Not tainted 2.6.35-rc1-00194-gaef4b9a #76 2007FUG/2007FUG
-> > RIP: 0010:[<ffffffffa022738f>]  [<ffffffffa022738f>] iwl3945_request_scan+0x961/0xd68 [iwl3945]
-> > RSP: 0018:ffff8800b4d71d10  EFLAGS: 00010287
-> > RAX: ffff8800bea80c00 RBX: ffff8800b4171380 RCX: 0000000000000021
-> > RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff8800b4171380
-> > RBP: ffff8800b4d71de0 R08: 000000000000030e R09: 00000000ffffffff
-> > R10: 000000000ad21900 R11: 0000000000000292 R12: 0000000000000000
-> > R13: ffff8800b60950f2 R14: 0000000000000000 R15: 0000000000000058
-> > FS:  0000000000000000(0000) GS:ffff880001a00000(0000) knlGS:0000000000000000
-> > CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-> > CR2: 0000000000000000 CR3: 0000000001612000 CR4: 00000000000006f0
-> > DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> > DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-> > Process iwl3945 (pid: 1493, threadinfo ffff8800b4d70000, task ffff8800b6790940)
-> > Stack:
-> >  ffff880001a12f40 0000000000012f40 ffff8800b64f8800 ffffffff8161a378
-> > <0> 0000000000000000 ffff8800b6095000 00578800b4d71e20 0000005800000021
-> > <0> ffff8800b4d71fd8 00ff8800b4175128 ffff8800b4d71fd8 002188ffb6790940
-> > Call Trace:
-> >  [<ffffffffa01f9bb5>] iwl_bg_start_internal_scan+0x34f/0x371 [iwlcore]
-> >  [<ffffffff8104e175>] worker_thread+0x1fc/0x2a3
-> >  [<ffffffffa01f9866>] ? iwl_bg_start_internal_scan+0x0/0x371 [iwlcore]
-> >  [<ffffffff81051d96>] ? autoremove_wake_function+0x0/0x34
-> >  [<ffffffff813f4590>] ? _raw_spin_unlock_irqrestore+0x27/0x29
-> >  [<ffffffff8104df79>] ? worker_thread+0x0/0x2a3
-> >  [<ffffffff810518db>] kthread+0x7a/0x82
-> >  [<ffffffff81002c94>] kernel_thread_helper+0x4/0x10
-> >  [<ffffffff81051861>] ? kthread+0x0/0x82
-> >  [<ffffffff81002c90>] ? kernel_thread_helper+0x0/0x10
-> > Code: 48 b5 00 00 48 89 45 80 48 89 85 70 ff ff ff 41 8d 47 ff 66 89 85 66 ff ff ff e9 43 02 00 00 48 63 55 a8 4c 8b 64 d0 38 8b 55 a4 <41> 39 14 24 0f 85 2a 02 00 00 66 41 8b 54 24 06 48 89 df 41 88 
-> > RIP  [<ffffffffa022738f>] iwl3945_request_scan+0x961/0xd68 [iwl3945]
-> >  RSP <ffff8800b4d71d10>
-> > CR2: 0000000000000000
-> > ---[ end trace 63fe07b50f147114 ]---
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > Please read the FAQ at  http://www.tux.org/lkml/
-> 
-> -- 
-> Michal Hocko
-> L3 team 
-> SUSE LINUX s.r.o.
-> Lihovarska 1060/12
-> 190 00 Praha 9    
-> Czech Republic
-> 
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index d127011..f7ee31e 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -2052,29 +2052,24 @@ static void rt61pci_txdone(struct rt2x00_dev *rt2x00dev)
+ 	struct txdone_entry_desc txdesc;
+ 	u32 word;
+ 	u32 reg;
+-	u32 old_reg;
+ 	int type;
+ 	int index;
++	int i;
+ 
+ 	/*
+-	 * During each loop we will compare the freshly read
+-	 * STA_CSR4 register value with the value read from
+-	 * the previous loop. If the 2 values are equal then
+-	 * we should stop processing because the chance is
+-	 * quite big that the device has been unplugged and
+-	 * we risk going into an endless loop.
++	 * TX_STA_FIFO is a stack of X entries, hence read TX_STA_FIFO
++	 * at most X times and also stop processing once the TX_STA_FIFO_VALID
++	 * flag is not set anymore.
++	 *
++	 * The legacy drivers use X=TX_RING_SIZE but state in a comment
++	 * that the TX_STA_FIFO stack has a size of 16. We stick to our
++	 * tx ring size for now.
+ 	 */
+-	old_reg = 0;
+-
+-	while (1) {
++	for (i = 0; i < TX_ENTRIES; i++) {
+ 		rt2x00pci_register_read(rt2x00dev, STA_CSR4, &reg);
+ 		if (!rt2x00_get_field32(reg, STA_CSR4_VALID))
+ 			break;
+ 
+-		if (old_reg == reg)
+-			break;
+-		old_reg = reg;
+-
+ 		/*
+ 		 * Skip this entry when it contains an invalid
+ 		 * queue identication number.
+-- 
+1.6.6.1
+
