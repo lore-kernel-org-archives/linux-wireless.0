@@ -1,58 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:63542 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753660Ab0FUJAo (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60030 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750765Ab0FNSpP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jun 2010 05:00:44 -0400
-Received: by bwz7 with SMTP id 7so837308bwz.19
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Jun 2010 02:00:42 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: John Linville <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: allow selection of minstrel_ht as default rc algo
-Date: Mon, 21 Jun 2010 10:59:56 +0200
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201006211059.58879.helmut.schaa@googlemail.com>
+	Mon, 14 Jun 2010 14:45:15 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Mihai Harpau <mishu@piatafinanciara.ro>, reinette.chatre@intel.com,
+	"John W. Linville" <linville@tuxdriver.com>, stable@kernel.org
+Subject: [PATCH] iwlwifi: cancel scan watchdog in iwl_bg_abort_scan
+Date: Mon, 14 Jun 2010 14:35:54 -0400
+Message-Id: <1276540554-5336-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow selection of minstrel_ht as default rate control algorithm. At the
-moment minstrel_ht can only be requested by the driver code but not selected
-as default in make menuconfig.
+Avoids this:
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+WARNING: at net/mac80211/scan.c:312 ieee80211_scan_completed+0x5f/0x1f1
+[mac80211]()
+Hardware name: Latitude E5400
+Modules linked in: aes_x86_64 aes_generic fuse ipt_MASQUERADE iptable_nat
+nf_nat rfcomm sco bridge stp llc bnep l2cap sunrpc cpufreq_ondemand
+acpi_cpufreq freq_table xt_physdev ip6t_REJECT nf_conntrack_ipv6
+ip6table_filter ip6_tables ipv6 kvm_intel kvm uinput arc4 ecb
+snd_hda_codec_intelhdmi snd_hda_codec_idt snd_hda_intel iwlagn snd_hda_codec
+snd_hwdep snd_seq snd_seq_device iwlcore snd_pcm dell_wmi sdhci_pci sdhci
+iTCO_wdt tg3 dell_laptop mmc_core i2c_i801 wmi mac80211 snd_timer
+iTCO_vendor_support btusb joydev dcdbas cfg80211 bluetooth snd soundcore
+microcode rfkill snd_page_alloc firewire_ohci firewire_core crc_itu_t
+yenta_socket rsrc_nonstatic i915 drm_kms_helper drm i2c_algo_bit i2c_core video
+output [last unloaded: scsi_wait_scan]
+Pid: 979, comm: iwlagn Tainted: G        W  2.6.33.3-85.fc13.x86_64 #1
+Call Trace:
+[<ffffffff8104b558>] warn_slowpath_common+0x77/0x8f
+[<ffffffff8104b57f>] warn_slowpath_null+0xf/0x11
+[<ffffffffa01bb7d9>] ieee80211_scan_completed+0x5f/0x1f1 [mac80211]
+[<ffffffffa02a23f0>] iwl_bg_scan_completed+0xbb/0x17a [iwlcore]
+[<ffffffff81060d3d>] worker_thread+0x1a4/0x232
+[<ffffffffa02a2335>] ? iwl_bg_scan_completed+0x0/0x17a [iwlcore]
+[<ffffffff81064817>] ? autoremove_wake_function+0x0/0x34
+[<ffffffff81060b99>] ? worker_thread+0x0/0x232
+[<ffffffff810643c7>] kthread+0x7a/0x82
+[<ffffffff8100a924>] kernel_thread_helper+0x4/0x10
+[<ffffffff8106434d>] ? kthread+0x0/0x82
+[<ffffffff8100a920>] ? kernel_thread_helper+0x0/0x10
+
+Reported here:
+
+	https://bugzilla.redhat.com/show_bug.cgi?id=590436
+
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Reported-by: Mihai Harpau <mishu@piatafinanciara.ro>
+Cc: stable@kernel.org
 ---
- net/mac80211/Kconfig |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-scan.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
-index 83eec7a..3ad82cd 100644
---- a/net/mac80211/Kconfig
-+++ b/net/mac80211/Kconfig
-@@ -64,6 +64,11 @@ config MAC80211_RC_DEFAULT_MINSTREL
- 	---help---
- 	  Select Minstrel as the default rate control algorithm.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 5d3f51f..386c5f9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -491,6 +491,7 @@ void iwl_bg_abort_scan(struct work_struct *work)
  
-+config MAC80211_RC_DEFAULT_MINSTREL_HT
-+	bool "Minstrel HT"
-+	depends on MAC80211_RC_MINSTREL_HT
-+	---help---
-+	  Select Minstrel HT as the default rate control algorithm.
+ 	mutex_lock(&priv->mutex);
  
- endchoice
++	cancel_delayed_work_sync(&priv->scan_check);
+ 	set_bit(STATUS_SCAN_ABORTING, &priv->status);
+ 	iwl_send_scan_abort(priv);
  
-@@ -71,6 +76,7 @@ config MAC80211_RC_DEFAULT
- 	string
- 	default "minstrel" if MAC80211_RC_DEFAULT_MINSTREL
- 	default "pid" if MAC80211_RC_DEFAULT_PID
-+	default "minstrel_ht" if MAC80211_RC_DEFAULT_MINSTREL_HT
- 	default ""
- 
- endif
 -- 
-1.6.4.2
+1.6.6.1
 
