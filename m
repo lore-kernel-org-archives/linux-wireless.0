@@ -1,173 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:43240 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752330Ab0FLEeF (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:33007 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755089Ab0FNUPP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jun 2010 00:34:05 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH 17/24] ath9k: fix queue stopping threshold
-Date: Sat, 12 Jun 2010 00:33:55 -0400
-Message-Id: <1276317242-15540-18-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
-References: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 14 Jun 2010 16:15:15 -0400
+Received: by mail-wy0-f174.google.com with SMTP id 40so4235810wyb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jun 2010 13:15:14 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 05/14] rt2x00: Add comment about BBP1_TX_POWER
+Date: Mon, 14 Jun 2010 22:10:42 +0200
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+References: <201006142208.31736.IvDoorn@gmail.com> <201006142209.42709.IvDoorn@gmail.com> <201006142210.10378.IvDoorn@gmail.com>
+In-Reply-To: <201006142210.10378.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201006142210.43525.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-ath9k tries to prevent WMM queue tx buffer starvation caused by
-traffic on different queues by limiting the number of pending frames
-in a tx queue (tracked in the ath_buf structure). This had a leak
-issue, because the a skb can be reassigned to a different ath_buf
-in the tx path, causing the pending frame counter to become inaccurate.
+Add a comment about the meaning of BBP1_TX_POWER stating all possible values.
 
-To fix this, track the number of frames in an array in the softc,
-using the mac80211 queue mapping as index.
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |    3 +-
- drivers/net/wireless/ath/ath9k/xmit.c  |   53 +++++++++++++++++--------------
- 2 files changed, 30 insertions(+), 26 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800.h |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 6aa8fa6..1a19aea 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -207,7 +207,6 @@ struct ath_txq {
- 	struct list_head txq_fifo_pending;
- 	u8 txq_headidx;
- 	u8 txq_tailidx;
--	int pending_frames;
- };
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index 16bfaa8..b308421 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -1557,7 +1557,9 @@ struct mac_iveiv_entry {
+  */
  
- struct ath_atx_ac {
-@@ -245,7 +244,6 @@ struct ath_buf {
- 	struct ath_buf_state bf_state;
- 	dma_addr_t bf_dmacontext;
- 	struct ath_wiphy *aphy;
--	struct ath_txq *txq;
- };
- 
- struct ath_atx_tid {
-@@ -296,6 +294,7 @@ struct ath_tx {
- 	struct list_head txbuf;
- 	struct ath_txq txq[ATH9K_NUM_TX_QUEUES];
- 	struct ath_descdma txdma;
-+	int pending_frames[WME_NUM_AC];
- };
- 
- struct ath_rx_edma {
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 9bff6c5..875b8b4 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1760,7 +1760,7 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_txq *txq = txctl->txq;
- 	struct ath_buf *bf;
--	int r;
-+	int q, r;
- 
- 	bf = ath_tx_get_buffer(sc);
- 	if (!bf) {
-@@ -1768,14 +1768,6 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		return -1;
- 	}
- 
--	bf->txq = txctl->txq;
--	spin_lock_bh(&bf->txq->axq_lock);
--	if (++bf->txq->pending_frames > ATH_MAX_QDEPTH && !txq->stopped) {
--		ath_mac80211_stop_queue(sc, skb_get_queue_mapping(skb));
--		txq->stopped = 1;
--	}
--	spin_unlock_bh(&bf->txq->axq_lock);
--
- 	r = ath_tx_setup_buffer(hw, bf, skb, txctl);
- 	if (unlikely(r)) {
- 		ath_print(common, ATH_DBG_FATAL, "TX mem alloc failure\n");
-@@ -1796,6 +1788,17 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		return r;
- 	}
- 
-+	q = skb_get_queue_mapping(skb);
-+	if (q >= 4)
-+		q = 0;
-+
-+	spin_lock_bh(&txq->axq_lock);
-+	if (++sc->tx.pending_frames[q] > ATH_MAX_QDEPTH && !txq->stopped) {
-+		ath_mac80211_stop_queue(sc, skb_get_queue_mapping(skb));
-+		txq->stopped = 1;
-+	}
-+	spin_unlock_bh(&txq->axq_lock);
-+
- 	ath_tx_start_dma(sc, bf, txctl);
- 
- 	return 0;
-@@ -1865,7 +1868,7 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ieee80211_hdr * hdr = (struct ieee80211_hdr *)skb->data;
--	int padpos, padsize;
-+	int q, padpos, padsize;
- 
- 	ath_print(common, ATH_DBG_XMIT, "TX complete: skb: %p\n", skb);
- 
-@@ -1904,8 +1907,16 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
- 
- 	if (unlikely(tx_info->pad[0] & ATH_TX_INFO_FRAME_TYPE_INTERNAL))
- 		ath9k_tx_status(hw, skb);
--	else
-+	else {
-+		q = skb_get_queue_mapping(skb);
-+		if (q >= 4)
-+			q = 0;
-+
-+		if (--sc->tx.pending_frames[q] < 0)
-+			sc->tx.pending_frames[q] = 0;
-+
- 		ieee80211_tx_status(hw, skb);
-+	}
- }
- 
- static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
-@@ -1926,13 +1937,6 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
- 			tx_flags |= ATH_TX_XRETRY;
- 	}
- 
--	if (bf->txq) {
--		spin_lock_bh(&bf->txq->axq_lock);
--		bf->txq->pending_frames--;
--		spin_unlock_bh(&bf->txq->axq_lock);
--		bf->txq = NULL;
--	}
--
- 	dma_unmap_single(sc->dev, bf->bf_dmacontext, skb->len, DMA_TO_DEVICE);
- 	ath_tx_complete(sc, skb, bf->aphy, tx_flags);
- 	ath_debug_stat_tx(sc, txq, bf, ts);
-@@ -2020,13 +2024,14 @@ static void ath_wake_mac80211_queue(struct ath_softc *sc, struct ath_txq *txq)
- {
- 	int qnum;
- 
-+	qnum = ath_get_mac80211_qnum(txq->axq_class, sc);
-+	if (qnum == -1)
-+		return;
-+
- 	spin_lock_bh(&txq->axq_lock);
--	if (txq->stopped && txq->pending_frames < ATH_MAX_QDEPTH) {
--		qnum = ath_get_mac80211_qnum(txq->axq_class, sc);
--		if (qnum != -1) {
--			ath_mac80211_start_queue(sc, qnum);
--			txq->stopped = 0;
--		}
-+	if (txq->stopped && sc->tx.pending_frames[qnum] < ATH_MAX_QDEPTH) {
-+		ath_mac80211_start_queue(sc, qnum);
-+		txq->stopped = 0;
- 	}
- 	spin_unlock_bh(&txq->axq_lock);
- }
+ /*
+- * BBP 1: TX Antenna
++ * BBP 1: TX Antenna & Power
++ * POWER: 0 - normal, 1 - drop tx power by 6dBm, 2 - drop tx power by 12dBm,
++ *	3 - increase tx power by 6dBm
+  */
+ #define BBP1_TX_POWER			FIELD8(0x07)
+ #define BBP1_TX_ANTENNA			FIELD8(0x18)
 -- 
-1.6.3.3
+1.6.6.1
 
