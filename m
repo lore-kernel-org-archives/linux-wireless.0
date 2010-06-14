@@ -1,56 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:58084 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756012Ab0FVR0P (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:44664 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755219Ab0FNHSA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jun 2010 13:26:15 -0400
-Date: Tue, 22 Jun 2010 18:25:45 +0100
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	Maxim Levitsky <maximlevitsky@gmail.com>,
-	David Quan <David.Quan@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Subject: Re: [ath5k-devel] [PATCH v2] ath5k: disable ASPM
-Message-ID: <20100622172545.GA22680@srcf.ucam.org>
-References: <AANLkTimIjaxq7IDWwIl1vv93k9bNQ2i89Sb5R5TiJmmA@mail.gmail.com> <1277032723.9555.12.camel@maxim-laptop> <AANLkTim8iZmm8pEERJUsrQWOiLSjPUfCN-TFFzZZQWx2@mail.gmail.com> <1277151410.5409.33.camel@maxim-laptop> <20100621233333.21262abjfxl8j1xc@hayate.sektori.org> <AANLkTikkt4dqYWrwtTCJ8tJZLB1kZXgF1KvaPsIOO3Dl@mail.gmail.com> <20100622163138.GD20668@srcf.ucam.org> <AANLkTikQkLFdpusfcLVOpyZHFrxwB5akr-ggFB7Fjm08@mail.gmail.com> <20100622165213.GA21842@srcf.ucam.org> <AANLkTikHLBBWrhCP_1f5Jv7zE9RKPvdsl5nSyfkeMfLl@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTikHLBBWrhCP_1f5Jv7zE9RKPvdsl5nSyfkeMfLl@mail.gmail.com>
+	Mon, 14 Jun 2010 03:18:00 -0400
+Subject: Re: [PATCH 3/3] mac80211: remove BSS from cfg80211 list when
+ leaving IBSS
+From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1276497207.3926.9.camel@jlt3.sipsolutions.net>
+References: <1276496145-5623-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	 <1276496145-5623-2-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	 <1276496145-5623-3-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	 <1276496145-5623-4-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	 <1276497207.3926.9.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain
+Date: Mon, 14 Jun 2010 10:16:45 +0300
+Message-Id: <1276499805.4314.16.camel@paavo-desktop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 22, 2010 at 10:17:11AM -0700, Luis R. Rodriguez wrote:
-> On Tue, Jun 22, 2010 at 9:52 AM, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
-> > Why would you only want to enable ASPM for one device?
+On Mon, 2010-06-14 at 08:33 +0200, ext Johannes Berg wrote:
+> On Mon, 2010-06-14 at 09:15 +0300, Teemu Paasikivi wrote:
+> > Remove BSS from cfg80211 BSS list if we are only member in IBSS when
+> > leaving it.
+> > 
+> > Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+> > ---
+> >  net/mac80211/ibss.c |   33 +++++++++++++++++++++++++++++++++
+> >  1 files changed, 33 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+> > index ff91265..6d5489b 100644
+> > --- a/net/mac80211/ibss.c
+> > +++ b/net/mac80211/ibss.c
+> > @@ -969,6 +969,39 @@ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata)
+> >  {
+> >  	struct sk_buff *skb;
+> >  
+> > +	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
 > 
-> ASPM doesn't always work for all devices even if they do advertise
-> ASPM capability so turning it on selectively by device is what I
-> recommend since otherwise you may get hangs and you will then have to
-> do the selective enabling.
+> remove that empty live please
+> 
+> > +	struct ieee80211_local *local = sdata->local;
+> > +	struct cfg80211_bss *cbss;
+> > +	struct ieee80211_channel *chan = NULL;
+> > +	const u8 *bssid = NULL;
+> > +	u16 capability;
+> > +	int active_ibss = 0;
+> > +
+> > +
+> > +	active_ibss = ieee80211_sta_active_ibss(sdata);
+> > +
+> > +	if (!active_ibss) {
+> > +		capability = WLAN_CAPABILITY_IBSS;
+> > +		if (ifibss->privacy)
+> > +			capability |= WLAN_CAPABILITY_PRIVACY;
+> > +		if (ifibss->fixed_bssid)
+> > +			bssid = ifibss->bssid;
+> 
+> Don't we update ifibss->bssid even if it's not fixed?
+> 
+> > +		if (ifibss->fixed_channel)
+> > +			chan = ifibss->channel;
+> 
+> > +		if (!is_zero_ether_addr(ifibss->bssid))
+> > +			bssid = ifibss->bssid;
+> 
+> I guess we do, but can it really ever be zeroed? Or does that happen
+> when we haven't even joined yet? But in that case you'd pass a NULL
+> bssid into get_bss() which would return a random one ... shouldn't you
+> rather not do anything in that case? Like making the first condition
+> 
+> if (!active_ibss && !is_zero_ether_addr(ifibss->bssid)) {
+> 
+> 
+> and then never worry about the bssid again?
+> 
+> johannes
+> 
 
-Right, which we have to deal with by having drivers disable ASPM on 
-broken devices.
+Valid points. Back to the drawing board. I'll rework this a little bit.
 
-> Furthermore laptops tend to disable ASPM for cards not built-in to it, 
-> an example is Cardbus slots or internal PCI-E slots. This is often 
-> done because to enable ASPM for some cards you often need to tune the 
-> host controller in addition to enabling ASPM for the endpoint, so this 
-> will vary depending on vendor, chipset, and host controller 
-> combination. This is documentation that the OEM / ODM typically end up 
-> getting, but not end users.
 
-Having looked into this, Windows will enable ASPM on external 
-controllers unless there's some reason for it not to - where that may be 
-either the appropriate bit in the FADT being set, the device not being 
-PCIe 1.1 or later, there being no _OSC method on the appropriate root 
-bridge or the _OSC method not giving it full control over PCIe, the 
-driver disabling ASPM or the device not advertising it in the first 
-place. Are you aware of any other cases where Windows will refuse to 
-enable ASPM?
- 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+Teemu
+
+
