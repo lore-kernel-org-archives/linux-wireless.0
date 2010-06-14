@@ -1,138 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:40641 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752402Ab0FXRaD (ORCPT
+Received: from mail-yw0-f204.google.com ([209.85.211.204]:57608 "EHLO
+	mail-yw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756917Ab0FNW0f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jun 2010 13:30:03 -0400
-Received: by vws9 with SMTP id 9so2726518vws.19
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jun 2010 10:30:02 -0700 (PDT)
-Message-ID: <4C23961D.7050500@gmail.com>
-Date: Thu, 24 Jun 2010 13:30:05 -0400
-From: Richard Farina <sidhayn@gmail.com>
+	Mon, 14 Jun 2010 18:26:35 -0400
+Received: by ywh42 with SMTP id 42so4064208ywh.15
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jun 2010 15:26:34 -0700 (PDT)
 MIME-Version: 1.0
-To: reinette chatre <reinette.chatre@intel.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: intel 5100/iwlagn bug in 2.6.35-rc2 during large file transfer
-References: <4C198EF0.5080807@gmail.com>	 <1277225293.25793.2257.camel@rchatre-DESK>  <4C2383E2.8000909@gmail.com> <1277399636.25793.2389.camel@rchatre-DESK>
-In-Reply-To: <1277399636.25793.2389.camel@rchatre-DESK>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Date: Mon, 14 Jun 2010 15:18:56 -0700
+Message-ID: <AANLkTileP2BMsZUsA-NigDcmVcAmXn6KNw0R1vMzSgYw@mail.gmail.com>
+Subject: radiotap rate no longer supported in mac80211?
+From: Steve deRosier <steve@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-reinette chatre wrote:
-> Hi Richard,
->
-> On Thu, 2010-06-24 at 09:12 -0700, Richard Farina wrote:
->   
->> reinette chatre wrote:
->>     
->>> On Wed, 2010-06-16 at 19:56 -0700, Richard Farina wrote:
->>>   
->>>       
->>>> The repeated line appears ad infinitum filling my dmesg buffer.  This of 
->>>> hangcheck timer seem to trigger with every large file transfer on my 
->>>> intel 5100.  What would you like me to do to provide a more useful 
->>>> output as this is currently extremely easy to reproduce.  Kernel 2.6.34 
->>>> using compat-wireless stable 2.6.35-rc2
->>>>
->>>> Thanks,
->>>> Rick Farina
->>>>
->>>> phy0: failed to reallocate TX buffer
->>>> phy0: failed to reallocate TX buffer
->>>> phy0: failed to reallocate TX buffer
->>>> phy0: failed to reallocate TX buffer
->>>> phy0: failed to reallocate TX buffer
->>>> phy0: failed to reallocate TX buffer
->>>> phy0: failed to reallocate TX buffer
->>>>     
->>>>         
->>> First mac80211 runs out of memory ... it cannot even allocate enough
->>> memory for a skb header.
->>>
->>>   
->>>       
->>>> net_ratelimit: 22 callbacks suppressed
->>>> __alloc_pages_slowpath: 3799 callbacks suppressed
->>>> swapper: page allocation failure. order:1, mode:0x4020
->>>> Pid: 0, comm: swapper Not tainted 2.6.34-pentoo #5
->>>> Call Trace:
->>>>  <IRQ>  [<ffffffff8109cb74>] __alloc_pages_nodemask+0x571/0x5b9
->>>>  [<ffffffff816732e9>] ? skb_release_data+0xc4/0xc9
->>>>  [<ffffffffa04701e4>] iwlagn_rx_allocate+0x98/0x25a [iwlagn]
->>>>     
->>>>         
->>> Next driver runs out of memory.
->>>
->>> Note that the above are all atomic allocations that fail and should be
->>> able to recover. 
->>>
->>> Is your system low on memory? Are you running applications that take a
->>> lot of memory? Does your wifi connection drop or otherwise suffer at the
->>> time you see these messages?
->>>
->>>   
->>>       
->> I have 4GB of RAM on this system, I often run a VM which wastes like 
->> half that but that still leaves 2GB for linux and I'm running XFCE4 so 
->> not exactly a memory hog. It's possible that firefox leaks ram until I'm 
->> out but that would be a LOT of leak, much more than I usually see.
->>     
->
-> There has been an issue with atomic memory allocations ever since
-> 2.6.31. This used to be easy to trigger with iwlagn, but we fixed a
-> number of issues. There are still issue with any atomic memory
-> allocation (not just iwlagn) and this issue is still open. You can find
-> more information at https://bugzilla.kernel.org/show_bug.cgi?id=14141
->
->   
->> Yeah, as you may guess these errors cause my wifi connection to slow 
->> drastically.
->>     
->
-> The driver, when unable to allocate memory atomically, will reattempt
-> the allocation later when it can use GFP_KERNEL. I think there may be
-> ways in which we can try to optimize this since right now it will only
-> schedule this when there are about 8 buffers remaining. I was looking at
-> your trace again and even though you state "Kernel 2.6.34 using
-> compat-wireless stable 2.6.35-rc2" ... the trace you provide does not
-> seem to match the driver code from 2.6.35-rc2. Could you please confirm
-> which version of driver you are running so that I can prepare a patch?
->
->   
-There were two compat-wireless releases for 2.6.35_rc2 because Luis had 
-asked me to test and then he changed it for the official release.  I'll 
-use the official 2.6.35_rc2 release for the current testing so if there 
-are any patches you wish to toss my way please base them on that.  The 
-other option is you tell me what to do, I can run any kernel, any git 
-snapshot, whatever you say.  Like I said, all I have to do is download 
-something or transfer something large so it is pretty easily 
-reproducible here so I'll test whatever you like.
+I'm trying to support per-packet setting of rate on a packet injection
+via the radiotap header.  In an earlier version of mac80211 (around
+2.6.26), there was code in __ieee80211_parse_tx_radiotap (in
+net/mac80211/tx.c) to support the use of the the rate element from the
+radiotap header.  In current versions of wireless-testing, most of the
+code here has been removed and only the flags are parsed.
+
+I want to return the IEEE80211_RADIOTAP_RATE portion of this function
+in order to support this.  So the questions:
+1. Why were all fields other than IEEE80211_RADIOTAP_FLAGS removed?
+2. Would it be OK for me to prepare and submit a patch to restore the
+rate functionality?
 
 Thanks,
-Rick Farina
->>  If I had to guess, since this happens when I make a large 
->> file transfer it is likely that something related is leaking RAM.  I'm 
->> using wget or axel to download and NFS to dump the files on a NAS.  I'll 
->> try to trigger this again
->>     
->
-> Does this happen every time you run this test? I would like to get an
-> idea whether we will get a clear indication whether our changes will
-> help or not.
->
->   
->>  and watch memory usage to see if I can find 
->> something other than the driver that could be leaking.  Failing that, 
->> what do I need to enable to find a leak in the driver?
->>     
->
-> Perhaps kmemleak?
->
-> Reinette
->
->
->
->
->   
-
+- Steve
