@@ -1,194 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:6270 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758599Ab0FPKMQ (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:58284 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756852Ab0FNWtp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jun 2010 06:12:16 -0400
-Received: from vs3001.wh2.ocn.ne.jp (125.206.180.229)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-088183134
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Jun 2010 19:12:14 +0900 (JST)
-Subject: [PATCH 09/17] ath5k: move checks and stats into new function
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Wed, 16 Jun 2010 19:11:56 +0900
-Message-ID: <20100616101156.10067.88925.stgit@tt-desk>
-In-Reply-To: <20100616100809.10067.34787.stgit@tt-desk>
-References: <20100616100809.10067.34787.stgit@tt-desk>
+	Mon, 14 Jun 2010 18:49:45 -0400
+Received: by pwi1 with SMTP id 1so3065413pwi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jun 2010 15:49:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <AANLkTik2kYW-GxWK7ZIPj7crBZKP6JTsWJs2Mfy7xvoe@mail.gmail.com>
+References: <AANLkTim4kDJZnEdNy-C4xhOigWiTWQZhVJAs36LOUbjQ@mail.gmail.com>
+	<AANLkTimxtFMpJftSdwDK_DRap4Bw0iVPS9Tcwe_vE_f9@mail.gmail.com>
+	<AANLkTik2kYW-GxWK7ZIPj7crBZKP6JTsWJs2Mfy7xvoe@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 14 Jun 2010 15:49:25 -0700
+Message-ID: <AANLkTimYwoZbiC7QtFQO681m5LyYxTfIhJohtNyzuW-P@mail.gmail.com>
+Subject: Re: wireless button problem with atheros on hp machines
+To: Leonardo <sombriks@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Create a new function ath5k_receive_frame_ok() which checks for errors, updates
-error statistics and tells us if we want to further "receive" this frame or
-not. This way we can avoid a goto and have a cleaner separation between buffer
-handling and other things.
+On Mon, Jun 14, 2010 at 2:35 PM, Leonardo <sombriks@gmail.com> wrote:
+> 2010/6/13 Luis R. Rodriguez <mcgrof@gmail.com>:
+>> On Sun, Jun 13, 2010 at 1:49 PM, Leonardo <sombriks@gmail.com> wrote:
+>>> hello all, i don't know if this is the correct channel to report, but
+>>> from Slackware 13.0 (2.6.29.6) to 13.1 (2.6.33.4) the wireless button
+>>> stopped to work properly.
+>>
+>> Try 2.6.30, 2.6.31, and 2.6.32 and see if you see the issue on one of
+>> those. If so then you can use git bisect to find the culprit. I
+>> realize this can be quite cumbersome, but without more information I'm
+>> afraid this is as good as it gets. Instead of using Linus' tree you'll
+>> want to use the linux-2.6-allstable.git tree since that will have the
+>> extra version kernel revisions.
+>>
+>> git://git.kernel.org/pub/scm/linux/kernel/git/hpa/linux-2.6-allstable.git
+>>
+>>  Luis
+>>
+>
+> Hello currently i'm trying those other kernel versions. I'm grabbing
+> it from  http://www.kernel.org/
+>
+> for now i have about 3 kernels running ok or almost ok:
+>
+> 2.6.33.4
+> 2.6.29.6
+> 2.6.31.13
+>
+> 29 and 33 are default packages from slackware, and as i related before
+> by using 2.6.29.6 i get the perfect functionality of wireless
+> button/led (those hp machines have the led, and if i touch the led it
+> changes de color.. nvm)
+>
+> today i got the 31.13 running; i have to say, maybe i have missed
+> something, because i lost sound and the 3d stuff. also ath5k.ko wasn't
+> created... but the bluetooth worked as expected, just as 2.6.29.6; i
+> am almost sure that i missed the kernel configuration, but fortunately
+> i've made a package (make targz-pkg) so i can fix it.
+>
+> next i'll try the 2.6.32.15 and then 2.6.34, and with some hope find
+> when the problem began and report there.
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- drivers/net/wireless/ath/ath5k/base.c |  130 ++++++++++++++++++---------------
- 1 files changed, 70 insertions(+), 60 deletions(-)
+Once you narrow it down between kernel revisions then you can git
+bisect yourself to narrow down the issue to the specific culprit
+commit.
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index c54d1fd..a4482b5 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1973,6 +1973,61 @@ ath5k_receive_frame(struct ath5k_softc *sc, struct sk_buff *skb,
- 	ieee80211_rx(sc->hw, skb);
- }
- 
-+/** ath5k_frame_receive_ok() - Do we want to receive this frame or not?
-+ *
-+ * Check if we want to further process this frame or not. Also update
-+ * statistics. Return true if we want this frame, false if not.
-+ */
-+static bool
-+ath5k_receive_frame_ok(struct ath5k_softc *sc, struct ath5k_rx_status *rs)
-+{
-+	sc->stats.rx_all_count++;
-+
-+	if (unlikely(rs->rs_status)) {
-+		if (rs->rs_status & AR5K_RXERR_CRC)
-+			sc->stats.rxerr_crc++;
-+		if (rs->rs_status & AR5K_RXERR_FIFO)
-+			sc->stats.rxerr_fifo++;
-+		if (rs->rs_status & AR5K_RXERR_PHY) {
-+			sc->stats.rxerr_phy++;
-+			if (rs->rs_phyerr > 0 && rs->rs_phyerr < 32)
-+				sc->stats.rxerr_phy_code[rs->rs_phyerr]++;
-+			return false;
-+		}
-+		if (rs->rs_status & AR5K_RXERR_DECRYPT) {
-+			/*
-+			 * Decrypt error.  If the error occurred
-+			 * because there was no hardware key, then
-+			 * let the frame through so the upper layers
-+			 * can process it.  This is necessary for 5210
-+			 * parts which have no way to setup a ``clear''
-+			 * key cache entry.
-+			 *
-+			 * XXX do key cache faulting
-+			 */
-+			sc->stats.rxerr_decrypt++;
-+			if (rs->rs_keyix == AR5K_RXKEYIX_INVALID &&
-+			    !(rs->rs_status & AR5K_RXERR_CRC))
-+				return true;
-+		}
-+		if (rs->rs_status & AR5K_RXERR_MIC) {
-+			sc->stats.rxerr_mic++;
-+			return true;
-+		}
-+
-+		/* let crypto-error packets fall through in MNTR */
-+		if ((rs->rs_status & ~(AR5K_RXERR_DECRYPT|AR5K_RXERR_MIC)) ||
-+		    sc->opmode != NL80211_IFTYPE_MONITOR)
-+			return false;
-+	}
-+
-+	if (unlikely(rs->rs_more)) {
-+		sc->stats.rxerr_jumbo++;
-+		return false;
-+	}
-+	return true;
-+}
-+
- static void
- ath5k_tasklet_rx(unsigned long data)
- {
-@@ -2010,70 +2065,27 @@ ath5k_tasklet_rx(unsigned long data)
- 			break;
- 		}
- 
--		sc->stats.rx_all_count++;
--
--		if (unlikely(rs.rs_status)) {
--			if (rs.rs_status & AR5K_RXERR_CRC)
--				sc->stats.rxerr_crc++;
--			if (rs.rs_status & AR5K_RXERR_FIFO)
--				sc->stats.rxerr_fifo++;
--			if (rs.rs_status & AR5K_RXERR_PHY) {
--				sc->stats.rxerr_phy++;
--				if (rs.rs_phyerr > 0 && rs.rs_phyerr < 32)
--					sc->stats.rxerr_phy_code[rs.rs_phyerr]++;
--				goto next;
--			}
--			if (rs.rs_status & AR5K_RXERR_DECRYPT) {
--				/*
--				 * Decrypt error.  If the error occurred
--				 * because there was no hardware key, then
--				 * let the frame through so the upper layers
--				 * can process it.  This is necessary for 5210
--				 * parts which have no way to setup a ``clear''
--				 * key cache entry.
--				 *
--				 * XXX do key cache faulting
--				 */
--				sc->stats.rxerr_decrypt++;
--				if (rs.rs_keyix == AR5K_RXKEYIX_INVALID &&
--				    !(rs.rs_status & AR5K_RXERR_CRC))
--					goto accept;
--			}
--			if (rs.rs_status & AR5K_RXERR_MIC) {
--				sc->stats.rxerr_mic++;
--				goto accept;
--			}
-+		if (ath5k_receive_frame_ok(sc, &rs)) {
-+			next_skb = ath5k_rx_skb_alloc(sc, &next_skb_addr);
- 
--			/* let crypto-error packets fall through in MNTR */
--			if ((rs.rs_status &
--				~(AR5K_RXERR_DECRYPT|AR5K_RXERR_MIC)) ||
--					sc->opmode != NL80211_IFTYPE_MONITOR)
-+			/*
-+			 * If we can't replace bf->skb with a new skb under
-+			 * memory pressure, just skip this packet
-+			 */
-+			if (!next_skb)
- 				goto next;
--		}
--
--		if (unlikely(rs.rs_more)) {
--			sc->stats.rxerr_jumbo++;
--			goto next;
- 
--		}
--accept:
--		next_skb = ath5k_rx_skb_alloc(sc, &next_skb_addr);
--
--		/*
--		 * If we can't replace bf->skb with a new skb under memory
--		 * pressure, just skip this packet
--		 */
--		if (!next_skb)
--			goto next;
-+			pci_unmap_single(sc->pdev, bf->skbaddr,
-+					 common->rx_bufsize,
-+					 PCI_DMA_FROMDEVICE);
- 
--		pci_unmap_single(sc->pdev, bf->skbaddr, common->rx_bufsize,
--				PCI_DMA_FROMDEVICE);
--		skb_put(skb, rs.rs_datalen);
-+			skb_put(skb, rs.rs_datalen);
- 
--		ath5k_receive_frame(sc, skb, &rs);
-+			ath5k_receive_frame(sc, skb, &rs);
- 
--		bf->skb = next_skb;
--		bf->skbaddr = next_skb_addr;
-+			bf->skb = next_skb;
-+			bf->skbaddr = next_skb_addr;
-+		}
- next:
- 		list_move_tail(&bf->list, &sc->rxbuf);
- 	} while (ath5k_rxbuf_setup(sc, bf) == 0);
-@@ -2082,8 +2094,6 @@ unlock:
- }
- 
- 
--
--
- /*************\
- * TX Handling *
- \*************/
-
+  Luis
