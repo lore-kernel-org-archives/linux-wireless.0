@@ -1,63 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:45055 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752902Ab0FKDMY (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54051 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754589Ab0FNGdc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jun 2010 23:12:24 -0400
-Date: Thu, 10 Jun 2010 19:44:56 -0700
-From: Jouni Malinen <jouni.malinen@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Protect Deauthentication frame when using MFP
-Message-ID: <20100611024456.GA3985@jm.kir.nu>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 14 Jun 2010 02:33:32 -0400
+Subject: Re: [PATCH 3/3] mac80211: remove BSS from cfg80211 list when
+ leaving IBSS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1276496145-5623-4-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+References: <1276496145-5623-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	 <1276496145-5623-2-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	 <1276496145-5623-3-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	 <1276496145-5623-4-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 14 Jun 2010 08:33:27 +0200
+Message-ID: <1276497207.3926.9.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When management frame protection (IEEE 802.11w) is used,
-Deauthentication frame needs to be protected when the pairwise key is
-configured. mac80211 was removing the station entry (and its keys)
-before actually sending out the Deauthentication frame. Fix this by
-reordering the code to send the frame before the station entry gets
-removed. This matches an earlier change that handled the Disassociation
-frame processing, but missed Deauthentication frames.
+On Mon, 2010-06-14 at 09:15 +0300, Teemu Paasikivi wrote:
+> Remove BSS from cfg80211 BSS list if we are only member in IBSS when
+> leaving it.
+> 
+> Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+> ---
+>  net/mac80211/ibss.c |   33 +++++++++++++++++++++++++++++++++
+>  1 files changed, 33 insertions(+), 0 deletions(-)
+> 
+> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+> index ff91265..6d5489b 100644
+> --- a/net/mac80211/ibss.c
+> +++ b/net/mac80211/ibss.c
+> @@ -969,6 +969,39 @@ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata)
+>  {
+>  	struct sk_buff *skb;
+>  
+> +	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
 
-Signed-off-by: Jouni Malinen <jouni.malinen@atheros.com>
+remove that empty live please
 
----
- net/mac80211/mlme.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+> +	struct ieee80211_local *local = sdata->local;
+> +	struct cfg80211_bss *cbss;
+> +	struct ieee80211_channel *chan = NULL;
+> +	const u8 *bssid = NULL;
+> +	u16 capability;
+> +	int active_ibss = 0;
+> +
+> +
+> +	active_ibss = ieee80211_sta_active_ibss(sdata);
+> +
+> +	if (!active_ibss) {
+> +		capability = WLAN_CAPABILITY_IBSS;
+> +		if (ifibss->privacy)
+> +			capability |= WLAN_CAPABILITY_PRIVACY;
+> +		if (ifibss->fixed_bssid)
+> +			bssid = ifibss->bssid;
 
---- wireless-testing.orig/net/mac80211/mlme.c	2010-06-10 18:09:38.000000000 -0700
-+++ wireless-testing/net/mac80211/mlme.c	2010-06-10 18:35:20.000000000 -0700
-@@ -2292,13 +2292,13 @@ int ieee80211_mgd_deauth(struct ieee8021
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	struct ieee80211_work *wk;
--	const u8 *bssid = req->bss->bssid;
-+	u8 bssid[ETH_ALEN];
- 
- 	mutex_lock(&ifmgd->mtx);
- 
-+	memcpy(bssid, req->bss->bssid, ETH_ALEN);
- 	if (ifmgd->associated == req->bss) {
--		bssid = req->bss->bssid;
--		ieee80211_set_disassoc(sdata, true);
-+		ieee80211_set_disassoc(sdata, false);
- 		mutex_unlock(&ifmgd->mtx);
- 	} else {
- 		bool not_auth_yet = false;
-@@ -2345,6 +2345,8 @@ int ieee80211_mgd_deauth(struct ieee8021
- 	ieee80211_send_deauth_disassoc(sdata, bssid, IEEE80211_STYPE_DEAUTH,
- 				       req->reason_code, cookie,
- 				       !req->local_state_change);
-+	if (ifmgd->associated == req->bss)
-+		sta_info_destroy_addr(sdata, bssid);
- 
- 	ieee80211_recalc_idle(sdata->local);
- 
+Don't we update ifibss->bssid even if it's not fixed?
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+> +		if (ifibss->fixed_channel)
+> +			chan = ifibss->channel;
+
+> +		if (!is_zero_ether_addr(ifibss->bssid))
+> +			bssid = ifibss->bssid;
+
+I guess we do, but can it really ever be zeroed? Or does that happen
+when we haven't even joined yet? But in that case you'd pass a NULL
+bssid into get_bss() which would return a random one ... shouldn't you
+rather not do anything in that case? Like making the first condition
+
+if (!active_ibss && !is_zero_ether_addr(ifibss->bssid)) {
+
+
+and then never worry about the bssid again?
+
+johannes
+
