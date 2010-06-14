@@ -1,54 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43312 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755921Ab0FDOPT (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:3792 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753041Ab0FNLxM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jun 2010 10:15:19 -0400
-Date: Fri, 4 Jun 2010 10:09:19 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dmytro Milinevskyy <milinevskyy@gmail.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	GeunSik Lim <geunsik.lim@samsung.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	Lukas Turek <8an@praha12.net>,
-	Mark Hindley <mark@hindley.org.uk>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jiri Kosina <jkosina@suse.cz>, Kalle Valo <kalle.valo@iki.fi>,
-	Keng-Yu Lin <keng-yu.lin@canonical.com>,
-	Luca Verdesca <magooz@salug.it>,
-	Shahar Or <shahar@shahar-or.co.il>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] [ath5k][leds] Ability to disable leds support. If leds
- support enabled do not force mac802.11 leds layer selection.
-Message-ID: <20100604140919.GA2492@tuxdriver.com>
-References: <4c0804e2.0c3ddf0a.2771.10f7@mx.google.com>
+	Mon, 14 Jun 2010 07:53:12 -0400
+Date: Mon, 14 Jun 2010 07:43:02 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+Subject: Re: [ath5k-devel] [PATCH] ath5k: disable all tasklets while
+	resetting
+Message-ID: <20100614114302.GA15017@hash.localnet>
+References: <20100611101221.26538.46913.stgit@tt-desk> <AANLkTilzHEhYgPyOnUtHk9HrOuSyyifwoI3hN6VUG1Xr@mail.gmail.com> <AANLkTik0Q2JM_DNaiLxc33Nn6dpI6uT52uG7b8-F4QjW@mail.gmail.com> <201006141050.59607.br1@einfach.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4c0804e2.0c3ddf0a.2771.10f7@mx.google.com>
+In-Reply-To: <201006141050.59607.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 03, 2010 at 10:39:30PM +0300, Dmytro Milinevskyy wrote:
-> Hi!
-> 
-> Here is the patch to disable ath5k leds support on build stage.
-> However if the leds support was enabled do not force selection of 802.11 leds layer.
-> Depency on LEDS_CLASS is kept.
-> 
-> Suggestion given by Pavel Roskin and Bob Copeland applied.
-> 
-> Regards,
-> 
-> --Dima
+On Mon, Jun 14, 2010 at 10:50:59AM +0900, Bruno Randolf wrote:
+> we disable interrupts right after disabling the tasklets, so they should not 
+> be scheduled again, right? actually, we should disable interrupts first, and 
+> then disable tasklets... but then it should be safe, no?
 
-Needs at least a Signed-off-by line, and preferrably a changelog that
-explains what the patch is doing and (especially) why it is necessary.
+Disable interrupts then tasklet_kill should do it.
 
-John
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Bob Copeland %% www.bobcopeland.com
+
