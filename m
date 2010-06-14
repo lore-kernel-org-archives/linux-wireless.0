@@ -1,113 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:56850 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756157Ab0FSPcu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jun 2010 11:32:50 -0400
-Subject: [PATCH v3] ath5k: disable ASPM
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-In-Reply-To: <1276952554.3332.3.camel@maxim-laptop>
-References: <20100528100901.14580.1322.stgit@fate.lan>
-	 <1276806785.20754.8.camel@maxim-laptop>
-	 <20100618112026.17623g6uhdjk8hts@naisho.dyndns.info>
-	 <1276856142.9114.1.camel@maxim-laptop>
-	 <20100618134930.124225d4fsi8w1fk@naisho.dyndns.info>
-	 <1276859156.19554.2.camel@maxim-laptop>
-	 <AANLkTimdTjedtoeKAp5tcTqefrUB6k373Kx9EacuYFcO@mail.gmail.com>
-	 <1276870309.23783.3.camel@maxim-laptop>
-	 <1276933774.16697.11.camel@maxim-laptop>
-	 <20100619123841.GA31838@hash.localnet>
-	 <1276952554.3332.3.camel@maxim-laptop>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 19 Jun 2010 18:32:44 +0300
-Message-ID: <1276961564.5173.12.camel@maxim-laptop>
-Mime-Version: 1.0
+Received: from mga03.intel.com ([143.182.124.21]:7575 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751916Ab0FNSYl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Jun 2010 14:24:41 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 1/2] iwlwifi: serialize station management actions
+Date: Mon, 14 Jun 2010 11:24:31 -0700
+Message-Id: <1276539872-12440-2-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1276539872-12440-1-git-send-email-reinette.chatre@intel.com>
+References: <1276539872-12440-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2010-06-19 at 16:02 +0300, Maxim Levitsky wrote: 
-> On Sat, 2010-06-19 at 08:38 -0400, Bob Copeland wrote: 
-> > On Sat, Jun 19, 2010 at 10:49:34AM +0300, Maxim Levitsky wrote:
-> > > How this patch?
-> > 
-> > Looks fine to me.  Some nitpicking below but feel free to add my
-> > 
-> > Acked-by: Bob Copeland <me@bobcopeland.com>
-> > 
-Done.
+From: Reinette Chatre <reinette.chatre@intel.com>
 
-Best regards,
-Maxim Levitsky
+We are seeing some race conditions between incoming station management
+requests (station add/remove) and the internal unassoc RXON command that
+modifies station table. Modify these flows to require the mutex to be held
+and thus serializing them.
 
---- 
+This fixes http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2207
 
-commit 616afa397b3e843f2aba06be12a30e72dfff7740
-Author: Maxim Levitsky <maximlevitsky@gmail.com>
-Date:   Thu Jun 17 23:21:42 2010 +0300
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    8 ++++++--
+ drivers/net/wireless/iwlwifi/iwl-sta.c      |    4 ++++
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    9 +++++++--
+ 3 files changed, 17 insertions(+), 4 deletions(-)
 
-    ath5k: disable ASPM
-    
-    Atheros card on Acer Aspire One (AOA150, Atheros Communications Inc. AR5001
-    Wireless Network Adapter [168c:001c] (rev 01)) doesn't work well with ASPM
-    enabled. With ASPM ath5k will eventually stall on heavy traffic with often
-    'unsupported jumbo' warnings appearing. Disabling ASPM L0s in ath5k fixes
-    these problems.
-    Also card sends a storm of RXORN interrupts even though medium is idle.
-    
-    Reproduced with pcie_aspm=force and by using 'nc < /dev/zero > /dev/null' at
-    both ends (usually stalls within seconds).
-    
-    Unfortunately BIOS enables ASPM on this card by default on these machines
-    This means that, problem shows up (less often) without pcie_aspm=force too. 
-    Therefore to benefit from this fix you need to _enable_ CONFIG_PCIEASPM
-    
-
-    All credit for this patch goes to Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-    for finding and fixing this bug.
-    
-    Based on patch that is
-    From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-    
-    
-    Signed-off-by: Maxim Levitsky <maximlevitsky@gmail.com>
-    Acked-by: Bob Copeland <me@bobcopeland.com>
-
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 3abbe75..4f6bd7c 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -48,6 +48,7 @@
- #include <linux/netdevice.h>
- #include <linux/cache.h>
- #include <linux/pci.h>
-+#include <linux/pci-aspm.h>
- #include <linux/ethtool.h>
- #include <linux/uaccess.h>
- #include <linux/slab.h>
-@@ -469,6 +470,19 @@ ath5k_pci_probe(struct pci_dev *pdev,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 7726e67..24aff65 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3391,10 +3391,12 @@ static int iwlagn_mac_sta_add(struct ieee80211_hw *hw,
  	int ret;
- 	u8 csz;
+ 	u8 sta_id;
  
-+	/*
-+	 * Disable PCIE ASPM L0S on the card.
-+	 * ASPM triggers hardware bug, that makes card stall transmission
-+	 * untill reset, and even that doesn't always help.
-+	 * This happens on meduim to heavy transmit utilization.
-+	 * In addition to stall, hardware usually gives a storm of
-+	 * RXORN interrupts, despite idle channel, and otherwise doesn't work.
-+	 * Windows driver also disables the L0s ASPM,
-+	 * probably due to same reason
-+	 * Note: to benefit from this fix, please _enable_ CONFIG_PCIEASPM
-+	 */
-+	pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S);
+-	sta_priv->common.sta_id = IWL_INVALID_STATION;
+-
+ 	IWL_DEBUG_INFO(priv, "received request to add station %pM\n",
+ 			sta->addr);
++	mutex_lock(&priv->mutex);
++	IWL_DEBUG_INFO(priv, "proceeding to add station %pM\n",
++			sta->addr);
++	sta_priv->common.sta_id = IWL_INVALID_STATION;
+ 
+ 	atomic_set(&sta_priv->pending_frames, 0);
+ 	if (vif->type == NL80211_IFTYPE_AP)
+@@ -3406,6 +3408,7 @@ static int iwlagn_mac_sta_add(struct ieee80211_hw *hw,
+ 		IWL_ERR(priv, "Unable to add station %pM (%d)\n",
+ 			sta->addr, ret);
+ 		/* Should we return success if return code is EEXIST ? */
++		mutex_unlock(&priv->mutex);
+ 		return ret;
+ 	}
+ 
+@@ -3415,6 +3418,7 @@ static int iwlagn_mac_sta_add(struct ieee80211_hw *hw,
+ 	IWL_DEBUG_INFO(priv, "Initializing rate scaling for station %pM\n",
+ 		       sta->addr);
+ 	iwl_rs_rate_init(priv, sta, sta_id);
++	mutex_unlock(&priv->mutex);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index 83a2636..c27c13f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -1373,10 +1373,14 @@ int iwl_mac_sta_remove(struct ieee80211_hw *hw,
+ 
+ 	IWL_DEBUG_INFO(priv, "received request to remove station %pM\n",
+ 			sta->addr);
++	mutex_lock(&priv->mutex);
++	IWL_DEBUG_INFO(priv, "proceeding to remove station %pM\n",
++			sta->addr);
+ 	ret = iwl_remove_station(priv, sta_common->sta_id, sta->addr);
+ 	if (ret)
+ 		IWL_ERR(priv, "Error removing station %pM\n",
+ 			sta->addr);
++	mutex_unlock(&priv->mutex);
+ 	return ret;
+ }
+ EXPORT_SYMBOL(iwl_mac_sta_remove);
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 6c353ca..a27872d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -3437,10 +3437,13 @@ static int iwl3945_mac_sta_add(struct ieee80211_hw *hw,
+ 	bool is_ap = vif->type == NL80211_IFTYPE_STATION;
+ 	u8 sta_id;
+ 
+-	sta_priv->common.sta_id = IWL_INVALID_STATION;
+-
+ 	IWL_DEBUG_INFO(priv, "received request to add station %pM\n",
+ 			sta->addr);
++	mutex_lock(&priv->mutex);
++	IWL_DEBUG_INFO(priv, "proceeding to add station %pM\n",
++			sta->addr);
++	sta_priv->common.sta_id = IWL_INVALID_STATION;
 +
- 	ret = pci_enable_device(pdev);
- 	if (ret) {
- 		dev_err(&pdev->dev, "can't enable device\n");
-
+ 
+ 	ret = iwl_add_station_common(priv, sta->addr, is_ap, &sta->ht_cap,
+ 				     &sta_id);
+@@ -3448,6 +3451,7 @@ static int iwl3945_mac_sta_add(struct ieee80211_hw *hw,
+ 		IWL_ERR(priv, "Unable to add station %pM (%d)\n",
+ 			sta->addr, ret);
+ 		/* Should we return success if return code is EEXIST ? */
++		mutex_unlock(&priv->mutex);
+ 		return ret;
+ 	}
+ 
+@@ -3457,6 +3461,7 @@ static int iwl3945_mac_sta_add(struct ieee80211_hw *hw,
+ 	IWL_DEBUG_INFO(priv, "Initializing rate scaling for station %pM\n",
+ 		       sta->addr);
+ 	iwl3945_rs_rate_init(priv, sta, sta_id);
++	mutex_unlock(&priv->mutex);
+ 
+ 	return 0;
+ }
+-- 
+1.7.0.4
 
