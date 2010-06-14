@@ -1,36 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from baikonur.stro.at ([213.239.196.228]:32798 "EHLO
-	baikonur.stro.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751190Ab0FWQeN (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48762 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750937Ab0FNTAK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jun 2010 12:34:13 -0400
-Date: Wed, 23 Jun 2010 18:33:35 +0200
-From: maximilian attems <max@stro.at>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: Zhu Yi <yi.zhu@intel.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] wireless: orphan ipw2x00 drivers
-Message-ID: <20100623163335.GA14856@stro.at>
-References: <1276134269-2273-1-git-send-email-yi.zhu@intel.com>
- <1276186201.1835.17488.camel@rchatre-DESK>
+	Mon, 14 Jun 2010 15:00:10 -0400
+Date: Mon, 14 Jun 2010 14:55:49 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Leann Ogasawara <leann.ogasawara@canonical.com>,
+	flamingice@sourmilk.net, linux-wireless@vger.kernel.org,
+	Ben Collins <ben.collins@ubuntu.com>
+Subject: Re: [PATCH] p54usb: Remove duplicate Medion MD40900 device id
+Message-ID: <20100614185549.GB2216@tuxdriver.com>
+References: <1276208913.1221.3646.camel@emiko>
+ <4C1173E7.6010201@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1276186201.1835.17488.camel@rchatre-DESK>
+In-Reply-To: <4C1173E7.6010201@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 10 Jun 2010, reinette chatre wrote:
-
-> On Wed, 2010-06-09 at 18:44 -0700, Zhu Yi wrote:
-> > Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+On Thu, Jun 10, 2010 at 06:23:19PM -0500, Larry Finger wrote:
+> On 06/10/2010 05:28 PM, Leann Ogasawara wrote:
+> > The Medion MD40900 device id [0x0cde, 0x0006] is defined twice.  Remove
+> > the duplicate.
+> > 
+> > Originally-by: Ben Collins <ben.collins@ubuntu.com>
+> > Signed-off-by: Leann Ogasawara <leann.ogasawara@canonical.com>
+> > ---
+> >  drivers/net/wireless/p54/p54usb.c |    1 -
+> >  1 files changed, 0 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+> > index 7307325..d6d8713 100644
+> > --- a/drivers/net/wireless/p54/p54usb.c
+> > +++ b/drivers/net/wireless/p54/p54usb.c
+> > @@ -69,7 +69,6 @@ static struct usb_device_id p54u_table[] __devinitdata = {
+> >  	{USB_DEVICE(0x0915, 0x2002)},	/* Cohiba Proto board */
+> >  	{USB_DEVICE(0x0baf, 0x0118)},   /* U.S. Robotics U5 802.11g Adapter*/
+> >  	{USB_DEVICE(0x0bf8, 0x1009)},   /* FUJITSU E-5400 USB D1700*/
+> > -	{USB_DEVICE(0x0cde, 0x0006)},   /* Medion MD40900 */
+> >  	{USB_DEVICE(0x0cde, 0x0008)},	/* Sagem XG703A */
+> >  	{USB_DEVICE(0x0cde, 0x0015)},	/* Zcomax XG-705A */
+> >  	{USB_DEVICE(0x0d8e, 0x3762)},	/* DLink DWL-G120 Cohiba */
 > 
-> Not sure if it is needed but the sourceforge pages will still have the
-> firmware available for download. We are in process of cleaning those
-> pages up.
+> Do you know for certain that this device is a Version 1 chip, and for
+> that reason, you are removing it from the version 2 list?
+> 
+> If not, NACK.
 
-while you are at it:
-it be cool to have the firmware license also "cleaned up" to allow
-at least distribution.
+So, I guess you are concerned about the groupings because of the
+different firmwares or something like that?  Perhaps a comment that
+says "this could be a version 2 device" is just as handy?  Since the
+driver prints the name of the firmware it wants, is there any real
+need for grouping the IDs?
 
-thanks
+OTOH, is there any actual harm from the duplicate entry?  It "seems"
+wrong to me too, but I guess it does no harm...?
+
+Leann and/or Ben, was this just tidying-up?  I'm guessing there wasn't
+an actual bug involved?
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
