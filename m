@@ -1,56 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:39329 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756528Ab0F2PVs convert rfc822-to-8bit (ORCPT
+Received: from fg-out-1718.google.com ([72.14.220.158]:34241 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756453Ab0FNRYb convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jun 2010 11:21:48 -0400
+	Mon, 14 Jun 2010 13:24:31 -0400
+From: Maciej Rutecki <maciej.rutecki@gmail.com>
+Reply-To: maciej.rutecki@gmail.com
+To: LKML <linux-kernel@vger.kernel.org>, reinette.chatre@intel.com,
+	wey-yi.w.guy@intel.com, ilw@linux.intel.com,
+	linux-wireless@vger.kernel.org
+Subject: [REGRESSION] [IWL3945] Broadcast is broken?
+Date: Mon, 14 Jun 2010 19:24:23 +0200
 MIME-Version: 1.0
-In-Reply-To: <1277793487-9071-1-git-send-email-rmanoharan@atheros.com>
-References: <1277793487-9071-1-git-send-email-rmanoharan@atheros.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 29 Jun 2010 08:21:28 -0700
-Message-ID: <AANLkTikLB4nxUzUAlVeKDC3owHYCIqmBba-JbsFkrIJn@mail.gmail.com>
-Subject: Re: [PATCH] compat: Fix panic caused by NULL pointer derefence in
-	rtnl_fill_ifinfo
-To: Rajkumar Manoharan <rmanoharan@atheros.com>
-Cc: mcgrof@kernel.org, linux-wireless@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201006141924.24061.maciej.rutecki@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 28, 2010 at 11:38 PM, Rajkumar Manoharan
-<rmanoharan@atheros.com> wrote:
-> get stats netdev ops is blindy called for older kernels (< 2.6.29) and
-> so assigning a NULL pointer from netdev_attach_ops causes a NULL pointer
-> dereference.
->
-> By default, netdev alloc provides an internal stats reference. So fill
-> this only if ndo_get_stats is defined.
->
-> Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
-> ---
->  compat/compat-2.6.29.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
->
-> diff --git a/compat/compat-2.6.29.c b/compat/compat-2.6.29.c
-> index f94aed8..2e7e623 100644
-> --- a/compat/compat-2.6.29.c
-> +++ b/compat/compat-2.6.29.c
-> @@ -35,7 +35,8 @@ void netdev_attach_ops(struct net_device *dev,
->        dev->change_mtu = ops->ndo_change_mtu;
->        dev->set_mac_address = ops->ndo_set_mac_address;
->        dev->tx_timeout = ops->ndo_tx_timeout;
-> -       dev->get_stats = ops->ndo_get_stats;
-> +       if (ops->ndo_get_stats)
-> +               dev->get_stats = ops->ndo_get_stats;
+Hardware:
+08:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG [Golan] 
+Network Connection (rev 02)
 
-If ops->ndo_get_stats is NULL then dev->get_stats will be set to NULL.
-Do you know for sure this fixes something? If so can you explain how?
-I used to have a macro that checked for not NULL and if true set the
-callback but then later realized after Johannes poked me that this is
-silly given that if the op is NULL you are just setting it to NULL.
+Last known good kernel: 2.6.34
 
-I don't see the potential crash here.
+Failing kernels: since 2.6.35-rc1 to 2.6.35-rc3
 
-  Luis
+Symptoms:
+During connect do wireless network authentication seems be OK, but I cannot 
+get IP from dhcp serwer. I do:
+echo 0x43fff > /sys/class/net/wlan0/device/debug_level
+
+Syslog is here:
+http://unixy.pl/maciek/download/kernel/2.6.35-rc3/gumis/syslog-before.txt
+
+>From syslog I guess the problem is that it doesn't receive broadcast frames 
+(but I'm not sure), so I try:
+sudo ifconfig wlan0 promisc
+
+Syslog:
+http://unixy.pl/maciek/download/kernel/2.6.35-rc3/gumis/syslog-after.txt
+
+And then I can get IP address.
+
+Any advice?
+
+Regards
+-- 
+Maciej Rutecki
+http://www.maciek.unixy.pl
