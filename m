@@ -1,39 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:55371 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751490Ab0FRTDW (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:33007 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754820Ab0FNUPH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jun 2010 15:03:22 -0400
-Subject: Compat-wireless release for 2010-06-18 is baked
-To: <linux-wireless@vger.kernel.org>, <linux-bluetooth@vger.kernel.org>
-Message-Id: <20100618190319.249D942E2C@repository3.localdomain>
-Date: Fri, 18 Jun 2010 15:03:19 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Mon, 14 Jun 2010 16:15:07 -0400
+Received: by mail-wy0-f174.google.com with SMTP id 40so4235810wyb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jun 2010 13:15:07 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 02/14] rt2x00: don't use TXDONE_FALLBACK as success indicator
+Date: Mon, 14 Jun 2010 22:09:09 +0200
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+References: <201006142208.31736.IvDoorn@gmail.com>
+In-Reply-To: <201006142208.31736.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201006142209.09943.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   11542b5..75bb510  master     -> origin/master
-   d584ab0..3eaa500  wl         -> origin/wl
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   67eac11..49bc196  history    -> origin/history
- + 8668718...d568ec36 master     -> origin/master  (forced update)
- * [new tag]         next-20100618 -> next-20100618
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-compat-wireless code metrics
+TXDONE_FALLBACK doesn't express if the frame was sent successful or not. It
+only tells us that the hw used fallback rates for retries. Hence, don't use
+TXDONE_FALLBACK as success indicator.
 
-    498472 - Total upstream lines of code being pulled
-      1410 - backport code changes
-      1177 - backport code additions
-       233 - backport code deletions
-      5748 - backport from compat module
-      7158 - total backport code
-    1.4360 - % of code consists of backport work
-      1218 - Crap changes not yet posted
-      1179 - Crap additions not yet merged
-        39 - Crap deletions not yet posted
-    0.2443 - % of crap code
+Before this patch we reported success to the rate control algorithm which
+was wrong in a number of cases and might have lead to improper tx rate
+selections.
 
-Base tree: linux-next.git
-Base tree version: next-20100618
-compat-wireless release: compat-wireless-2010-06-17-1-g75bb510
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 0b8efe8..8faee4c 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -236,8 +236,7 @@ void rt2x00lib_txdone(struct queue_entry *entry,
+ 	 */
+ 	success =
+ 	    test_bit(TXDONE_SUCCESS, &txdesc->flags) ||
+-	    test_bit(TXDONE_UNKNOWN, &txdesc->flags) ||
+-	    test_bit(TXDONE_FALLBACK, &txdesc->flags);
++	    test_bit(TXDONE_UNKNOWN, &txdesc->flags);
+ 
+ 	/*
+ 	 * Update TX statistics.
+-- 
+1.6.6.1
+
