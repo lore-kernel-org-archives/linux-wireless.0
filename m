@@ -1,46 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45056 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753901Ab0FWXYl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jun 2010 19:24:41 -0400
-Subject: Re: [PATCH 3/3] libertas: mark lbs_ret_802_11d_domain_info static
-From: Dan Williams <dcbw@redhat.com>
+Received: from mail-ww0-f46.google.com ([74.125.82.46]:49407 "EHLO
+	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755089Ab0FNUPT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 14 Jun 2010 16:15:19 -0400
+Received: by wwb18 with SMTP id 18so4215976wwb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Jun 2010 13:15:17 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, dkiran@marvell.com,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <1277303846-17257-3-git-send-email-linville@tuxdriver.com>
-References: <1277281556.3642.6.camel@jlt3.sipsolutions.net>
-	 <1277303846-17257-3-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 23 Jun 2010 16:24:43 -0700
-Message-ID: <1277335483.25126.29.camel@dcbw.foobar.com>
-Mime-Version: 1.0
+Subject: [PATCH 07/14] rt2x00: Fix typo in rt2800_config_txpower
+Date: Mon, 14 Jun 2010 22:11:32 +0200
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+References: <201006142208.31736.IvDoorn@gmail.com> <201006142210.43525.IvDoorn@gmail.com> <201006142211.09880.IvDoorn@gmail.com>
+In-Reply-To: <201006142211.09880.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201006142211.33421.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-06-23 at 10:37 -0400, John W. Linville wrote:
-> Probably little risk of namespace polution, but good practice... :-)
-> 
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+Fix typo in rt2800_config_txpower.
 
-> ---
->  drivers/net/wireless/libertas/cmdresp.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-> index b4bc103..a0d9482 100644
-> --- a/drivers/net/wireless/libertas/cmdresp.c
-> +++ b/drivers/net/wireless/libertas/cmdresp.c
-> @@ -103,7 +103,7 @@ static int lbs_ret_reg_access(struct lbs_private *priv,
->   *  @param resp    pointer to command response buffer
->   *  @return        0; -1
->   */
-> -int lbs_ret_802_11d_domain_info(struct cmd_ds_command *resp)
-> +static int lbs_ret_802_11d_domain_info(struct cmd_ds_command *resp)
->  {
->  	struct cmd_ds_802_11d_domain_info *domaininfo =
->  			&resp->params.domaininforesp;
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index ae20e67..f158322 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -1079,7 +1079,7 @@ static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
+ 	u8 r1;
+ 
+ 	rt2800_bbp_read(rt2x00dev, 1, &r1);
+-	rt2x00_set_field8(&reg, BBP1_TX_POWER, 0);
++	rt2x00_set_field8(&r1, BBP1_TX_POWER, 0);
+ 	rt2800_bbp_write(rt2x00dev, 1, r1);
+ 
+ 	rt2800_register_read(rt2x00dev, TX_PWR_CFG_0, &reg);
+-- 
+1.6.6.1
 
