@@ -1,89 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:41536 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754296Ab0FXQMN (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34807 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751598Ab0FNGaM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jun 2010 12:12:13 -0400
-Received: by gxk28 with SMTP id 28so857782gxk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jun 2010 09:12:13 -0700 (PDT)
-Message-ID: <4C2383E2.8000909@gmail.com>
-Date: Thu, 24 Jun 2010 12:12:18 -0400
-From: Richard Farina <sidhayn@gmail.com>
-MIME-Version: 1.0
-To: reinette chatre <reinette.chatre@intel.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: intel 5100/iwlagn bug in 2.6.35-rc2 during large file transfer
-References: <4C198EF0.5080807@gmail.com> <1277225293.25793.2257.camel@rchatre-DESK>
-In-Reply-To: <1277225293.25793.2257.camel@rchatre-DESK>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Mon, 14 Jun 2010 02:30:12 -0400
+Subject: Re: [PATCH 1/3] mac80211: Set basic rates while joining ibss
+ network
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1276496145-5623-2-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+References: <1276496145-5623-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	 <1276496145-5623-2-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 14 Jun 2010 08:30:01 +0200
+Message-ID: <1276497001.3926.4.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-reinette chatre wrote:
-> On Wed, 2010-06-16 at 19:56 -0700, Richard Farina wrote:
->   
->> The repeated line appears ad infinitum filling my dmesg buffer.  This of 
->> hangcheck timer seem to trigger with every large file transfer on my 
->> intel 5100.  What would you like me to do to provide a more useful 
->> output as this is currently extremely easy to reproduce.  Kernel 2.6.34 
->> using compat-wireless stable 2.6.35-rc2
->>
->> Thanks,
->> Rick Farina
->>
->> phy0: failed to reallocate TX buffer
->> phy0: failed to reallocate TX buffer
->> phy0: failed to reallocate TX buffer
->> phy0: failed to reallocate TX buffer
->> phy0: failed to reallocate TX buffer
->> phy0: failed to reallocate TX buffer
->> phy0: failed to reallocate TX buffer
->>     
->
-> First mac80211 runs out of memory ... it cannot even allocate enough
-> memory for a skb header.
->
->   
->> net_ratelimit: 22 callbacks suppressed
->> __alloc_pages_slowpath: 3799 callbacks suppressed
->> swapper: page allocation failure. order:1, mode:0x4020
->> Pid: 0, comm: swapper Not tainted 2.6.34-pentoo #5
->> Call Trace:
->>  <IRQ>  [<ffffffff8109cb74>] __alloc_pages_nodemask+0x571/0x5b9
->>  [<ffffffff816732e9>] ? skb_release_data+0xc4/0xc9
->>  [<ffffffffa04701e4>] iwlagn_rx_allocate+0x98/0x25a [iwlagn]
->>     
->
-> Next driver runs out of memory.
->
-> Note that the above are all atomic allocations that fail and should be
-> able to recover. 
->
-> Is your system low on memory? Are you running applications that take a
-> lot of memory? Does your wifi connection drop or otherwise suffer at the
-> time you see these messages?
->
->   
-I have 4GB of RAM on this system, I often run a VM which wastes like 
-half that but that still leaves 2GB for linux and I'm running XFCE4 so 
-not exactly a memory hog. It's possible that firefox leaks ram until I'm 
-out but that would be a LOT of leak, much more than I usually see.
+On Mon, 2010-06-14 at 09:15 +0300, Teemu Paasikivi wrote:
+> This patch adds support to nl80211 and mac80211 to set basic rates when
+> joining/creating ibss network.
+> 
+> Original patch was posted by Johannes Berg on the linux-wireless posting list.
 
-Yeah, as you may guess these errors cause my wifi connection to slow 
-drastically. If I had to guess, since this happens when I make a large 
-file transfer it is likely that something related is leaking RAM.  I'm 
-using wget or axel to download and NFS to dump the files on a NAS.  I'll 
-try to trigger this again and watch memory usage to see if I can find 
-something other than the driver that could be leaking.  Failing that, 
-what do I need to enable to find a leak in the driver?
+Did you actually change it at all? (Ok I see you did make a bugfix, good
+catch)
 
-Thanks,
-Rick Farina
+I personally don't care at all, but I guess generally you should
+attribute it to the person who actually did (most of) the work.
 
-> Reinette
->
->
->
->
->   
+In any case, John will need this:
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+
+
+> Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+> ---
+>  include/net/cfg80211.h     |    2 +
+>  net/mac80211/ibss.c        |    4 ++-
+>  net/mac80211/ieee80211_i.h |    2 +
+>  net/wireless/nl80211.c     |   49 ++++++++++++++++++++++++++++++++++++++++++++
+>  4 files changed, 56 insertions(+), 1 deletions(-)
+> 
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index 22ab9d8..64374f4 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -810,6 +810,7 @@ struct cfg80211_disassoc_request {
+>   * @beacon_interval: beacon interval to use
+>   * @privacy: this is a protected network, keys will be configured
+>   *	after joining
+> + * @basic_rates: bitmap of basic rates to use when creating the IBSS
+>   */
+>  struct cfg80211_ibss_params {
+>  	u8 *ssid;
+> @@ -818,6 +819,7 @@ struct cfg80211_ibss_params {
+>  	u8 *ie;
+>  	u8 ssid_len, ie_len;
+>  	u16 beacon_interval;
+> +	u32 basic_rates;
+>  	bool channel_fixed;
+>  	bool privacy;
+>  };
+> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+> index d7a96ce..8be5a96 100644
+> --- a/net/mac80211/ibss.c
+> +++ b/net/mac80211/ibss.c
+> @@ -172,6 +172,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+>  	rcu_assign_pointer(ifibss->presp, skb);
+>  
+>  	sdata->vif.bss_conf.beacon_int = beacon_int;
+> +	sdata->vif.bss_conf.basic_rates = basic_rates;
+>  	bss_change = BSS_CHANGED_BEACON_INT;
+>  	bss_change |= ieee80211_reset_erp_info(sdata);
+>  	bss_change |= BSS_CHANGED_BSSID;
+> @@ -529,7 +530,7 @@ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
+>  		sdata->drop_unencrypted = 0;
+>  
+>  	__ieee80211_sta_join_ibss(sdata, bssid, sdata->vif.bss_conf.beacon_int,
+> -				  ifibss->channel, 3, /* first two are basic */
+> +				  ifibss->channel, ifibss->basic_rates,
+>  				  capability, 0);
+>  }
+>  
+> @@ -910,6 +911,7 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
+>  		sdata->u.ibss.fixed_bssid = false;
+>  
+>  	sdata->u.ibss.privacy = params->privacy;
+> +	sdata->u.ibss.basic_rates = params->basic_rates;
+>  
+>  	sdata->vif.bss_conf.beacon_int = params->beacon_interval;
+>  
+> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+> index 4d3883e..fde058b 100644
+> --- a/net/mac80211/ieee80211_i.h
+> +++ b/net/mac80211/ieee80211_i.h
+> @@ -393,6 +393,8 @@ struct ieee80211_if_ibss {
+>  	unsigned long request;
+>  	unsigned long last_scan_completed;
+>  
+> +	u32 basic_rates;
+> +
+>  	bool timer_running;
+>  
+>  	bool fixed_bssid;
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 90ab3c8..324b4a5 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -3955,6 +3955,55 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
+>  		}
+>  	}
+>  
+> +	if (info->attrs[NL80211_ATTR_BSS_BASIC_RATES]) {
+> +		u8 *rates =
+> +			nla_data(info->attrs[NL80211_ATTR_BSS_BASIC_RATES]);
+> +		int n_rates =
+> +			nla_len(info->attrs[NL80211_ATTR_BSS_BASIC_RATES]);
+> +		struct ieee80211_supported_band *sband =
+> +			wiphy->bands[ibss.channel->band];
+> +		int i, j;
+> +
+> +		if (n_rates == 0) {
+> +			err = -EINVAL;
+> +			goto out;
+> +		}
+> +
+> +		for (i = 0; i < n_rates; i++) {
+> +			int rate = (rates[i] & 0x7f) * 5;
+> +			bool found = false;
+> +
+> +			for (j = 0; j < sband->n_bitrates; j++) {
+> +				if (sband->bitrates[j].bitrate == rate) {
+> +					found = true;
+> +					ibss.basic_rates |= BIT(j);
+> +					break;
+> +				}
+> +			}
+> +			if (!found) {
+> +				err = -EINVAL;
+> +				goto out;
+> +			}
+> +		}
+> +	} else {
+> +		/*
+> +		* If no rates were explicitly configured,
+> +		* use the mandatory rate set for 11b or
+> +		* 11a for maximum compatibility.
+> +		*/
+> +		struct ieee80211_supported_band *sband =
+> +			wiphy->bands[ibss.channel->band];
+> +		int j;
+> +		u32 flag = ibss.channel->band == IEEE80211_BAND_5GHZ ?
+> +			IEEE80211_RATE_MANDATORY_A :
+> +			IEEE80211_RATE_MANDATORY_B;
+> +
+> +		for (j = 0; j < sband->n_bitrates; j++) {
+> +			if (sband->bitrates[j].flags & flag)
+> +				ibss.basic_rates |= BIT(j);
+> +		}
+> +	}
+> +
+>  	err = cfg80211_join_ibss(rdev, dev, &ibss, connkeys);
+>  
+>  out:
+> -- 
+> 1.5.6.3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
 
