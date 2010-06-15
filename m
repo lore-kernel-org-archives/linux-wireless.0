@@ -1,119 +1,292 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:57720 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751690Ab0FCP4G convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:60399 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750765Ab0FOJRq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jun 2010 11:56:06 -0400
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <20100603151752.GB2053@tiehlicka.suse.cz>
-References: <E1OKBva-00080h-8E@pomaz-ex.szeredi.hu>
-	<20100603151752.GB2053@tiehlicka.suse.cz>
-Date: Thu, 3 Jun 2010 17:56:02 +0200
-Message-ID: <AANLkTimw_d4LAUhQ2qQqQMEXbmeiF-75lnvkx4bCNqDj@mail.gmail.com>
-Subject: Re: iwl3945 oops with latest git
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Miklos Szeredi <miklos@szeredi.hu>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 15 Jun 2010 05:17:46 -0400
+Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
+	by mgw-mx06.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o5F9Han4026403
+	for <linux-wireless@vger.kernel.org>; Tue, 15 Jun 2010 12:17:43 +0300
+Received: from localhost.localdomain (wimaxnb.nmp.nokia.com [172.22.211.32])
+	by mgw-da02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o5F9HXvW019350
+	for <linux-wireless@vger.kernel.org>; Tue, 15 Jun 2010 12:17:34 +0300
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC PATCH] nl80211/cfg80211/mac80211: Add support for setting transmit power
+Date: Tue, 15 Jun 2010 12:17:33 +0300
+Message-Id: <1276593453-27818-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch in [1] applies against 2.6.35-rc1 and works fine since...
+This patch adds an interface to adjust the transmit power level. Using this
+interface the transmit power mode (automatic, limited or fixed) can be set
+along with the power level to be enforced.
 
-$ uptime
- 17:54:38 up  2:32,  1 user,  load average: 0.23, 0.26, 0.18
+The power level is specified with a signed mBm unit value, which allows for
+greater accuracy and smaller power levels.
 
-$ cat /proc/version
-Linux version 2.6.35-rc1-iniza-686-kms (Debian 2.6.35~rc1-4~git1.sd.1)
-(sedat.dilek@gmail.com) (gcc version 4.4.4 (Debian 4.4.4-4) ) #1 SMP
-PREEMPT Thu Jun 3 14:58:19 CEST 2010
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ include/linux/nl80211.h    |   24 ++++++++++++++++
+ include/net/cfg80211.h     |   15 +---------
+ net/mac80211/cfg.c         |    8 ++--
+ net/wireless/nl80211.c     |   66 ++++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/wext-compat.c |    8 ++--
+ 5 files changed, 99 insertions(+), 22 deletions(-)
 
-Hope this information helps you.
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 64fb32b..047d28c 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -340,6 +340,8 @@
+  *	no other interfaces are operating to avoid disturbing the operation
+  *	of any other interfaces, and other interfaces will again take
+  *	precedence when they are used.
++ * @NL80211_CMD_SET_TX_POWER: Set the used transmit power level (using
++ *	%NL80211_ATTR_TX_POWER_SETTING and %NL80211_ATTR_TX_POWER_LEVEL).
+  *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+@@ -441,6 +443,8 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_SET_CHANNEL,
+ 
++	NL80211_CMD_SET_TX_POWER,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -725,6 +729,11 @@ enum nl80211_commands {
+  * @NL80211_ATTR_AP_ISOLATE: (AP mode) Do not forward traffic between stations
+  *	connected to this BSS.
+  *
++ * @NL80211_ATTR_TX_POWER_SETTING: Setting of the transmit power, see
++ *	&enum nl80211_tx_power_setting for the possible values. This is
++ *	currently used with @NL80211_CMD_SET_TX_POWER.
++ * @NL80211_ATTR_TX_POWER_LEVEL: Trasnmit power level in signed mBm format. This
++ *	is currently used with @NL80211_CMD_SET_TX_POWER.
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -882,6 +891,9 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_AP_ISOLATE,
+ 
++	NL80211_ATTR_TX_POWER_SETTING,
++	NL80211_ATTR_TX_POWER_LEVEL,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -1624,6 +1636,18 @@ enum nl80211_ps_state {
+ };
+ 
+ /**
++ * enum nl80211_tx_power_setting - TX power adjustment
++ * @TX_POWER_AUTOMATIC: automatic TX power handling
++ * @TX_POWER_LIMITED: limit TX power to the specified level
++ * @TX_POWER_FIXED: fix TX power to the specified level
++ */
++enum nl80211_tx_power_setting {
++	NL80211_TX_POWER_AUTOMATIC,
++	NL80211_TX_POWER_LIMITED,
++	NL80211_TX_POWER_FIXED,
++};
++
++/**
+  * enum nl80211_attr_cqm - connection quality monitor attributes
+  * @__NL80211_ATTR_CQM_INVALID: invalid
+  * @NL80211_ATTR_CQM_RSSI_THOLD: RSSI threshold in dBm. This value specifies
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 22ab9d8..4db30f8 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -873,19 +873,6 @@ enum wiphy_params_flags {
+ 	WIPHY_PARAM_COVERAGE_CLASS	= 1 << 4,
+ };
+ 
+-/**
+- * enum tx_power_setting - TX power adjustment
+- *
+- * @TX_POWER_AUTOMATIC: the dbm parameter is ignored
+- * @TX_POWER_LIMITED: limit TX power by the dbm parameter
+- * @TX_POWER_FIXED: fix TX power to the dbm parameter
+- */
+-enum tx_power_setting {
+-	TX_POWER_AUTOMATIC,
+-	TX_POWER_LIMITED,
+-	TX_POWER_FIXED,
+-};
+-
+ /*
+  * cfg80211_bitrate_mask - masks for bitrate control
+  */
+@@ -1147,7 +1134,7 @@ struct cfg80211_ops {
+ 	int	(*set_wiphy_params)(struct wiphy *wiphy, u32 changed);
+ 
+ 	int	(*set_tx_power)(struct wiphy *wiphy,
+-				enum tx_power_setting type, int dbm);
++				enum nl80211_tx_power_setting type, int dbm);
+ 	int	(*get_tx_power)(struct wiphy *wiphy, int *dbm);
+ 
+ 	int	(*set_wds_peer)(struct wiphy *wiphy, struct net_device *dev,
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 952845e..c1c149e 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1329,22 +1329,22 @@ static int ieee80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
+ }
+ 
+ static int ieee80211_set_tx_power(struct wiphy *wiphy,
+-				  enum tx_power_setting type, int dbm)
++				  enum nl80211_tx_power_setting type, int dbm)
+ {
+ 	struct ieee80211_local *local = wiphy_priv(wiphy);
+ 	struct ieee80211_channel *chan = local->hw.conf.channel;
+ 	u32 changes = 0;
+ 
+ 	switch (type) {
+-	case TX_POWER_AUTOMATIC:
++	case NL80211_TX_POWER_AUTOMATIC:
+ 		local->user_power_level = -1;
+ 		break;
+-	case TX_POWER_LIMITED:
++	case NL80211_TX_POWER_LIMITED:
+ 		if (dbm < 0)
+ 			return -EINVAL;
+ 		local->user_power_level = dbm;
+ 		break;
+-	case TX_POWER_FIXED:
++	case NL80211_TX_POWER_FIXED:
+ 		if (dbm < 0)
+ 			return -EINVAL;
+ 		/* TODO: move to cfg80211 when it knows the channel */
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 90ab3c8..32b3352 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -153,6 +153,8 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_CQM] = { .type = NLA_NESTED, },
+ 	[NL80211_ATTR_LOCAL_STATE_CHANGE] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_AP_ISOLATE] = { .type = NLA_U8 },
++	[NL80211_ATTR_TX_POWER_SETTING] = { .type = NLA_U32 },
++	[NL80211_ATTR_TX_POWER_LEVEL] = { .type = NLA_U32 },
+ };
+ 
+ /* policy for the attributes */
+@@ -4968,6 +4970,64 @@ out:
+ 	return err;
+ }
+ 
++static int nl80211_set_tx_power(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev;
++	struct wireless_dev *wdev;
++	struct net_device *dev;
++	enum nl80211_tx_power_setting type;
++	int mbm = 0;
++	int err;
++
++	if (!info->attrs[NL80211_ATTR_TX_POWER_SETTING]) {
++		err = -EINVAL;
++		goto out;
++	}
++
++	type = nla_get_u32(info->attrs[NL80211_ATTR_TX_POWER_SETTING]);
++
++	if (!info->attrs[NL80211_ATTR_TX_POWER_LEVEL] &&
++	    (type != NL80211_TX_POWER_AUTOMATIC)) {
++		err = -EINVAL;
++		goto out;
++	}
++
++	if (type != NL80211_TX_POWER_AUTOMATIC)
++		mbm = nla_get_u32(info->attrs[NL80211_ATTR_TX_POWER_LEVEL]);
++
++	/*
++	 * Though the nl80211 supports negative mBm values, the interface
++	 * below it does not, for now.
++	 */
++	if (mbm < 0) {
++		err = -EOPNOTSUPP;
++		goto out;
++	}
++
++	rtnl_lock();
++
++	err = get_rdev_dev_by_info_ifindex(info, &rdev, &dev);
++	if (err)
++		goto unlock_rdev;
++
++	wdev = dev->ieee80211_ptr;
++
++	if (!rdev->ops->set_tx_power) {
++		return -EOPNOTSUPP;
++		goto unlock_rdev;
++	}
++
++	err = rdev->ops->set_tx_power(wdev->wiphy, type, MBM_TO_DBM(mbm));
++
++unlock_rdev:
++	cfg80211_unlock_rdev(rdev);
++	dev_put(dev);
++	rtnl_unlock();
++
++out:
++	return err;
++}
++
+ static struct genl_ops nl80211_ops[] = {
+ 	{
+ 		.cmd = NL80211_CMD_GET_WIPHY,
+@@ -5284,6 +5344,12 @@ static struct genl_ops nl80211_ops[] = {
+ 		.policy = nl80211_policy,
+ 		.flags = GENL_ADMIN_PERM,
+ 	},
++	{
++		.cmd = NL80211_CMD_SET_TX_POWER,
++		.doit = nl80211_set_tx_power,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++	},
+ };
+ 
+ static struct genl_multicast_group nl80211_mlme_mcgrp = {
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index 9634299..3dfe8ed 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -829,7 +829,7 @@ int cfg80211_wext_siwtxpower(struct net_device *dev,
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
+-	enum tx_power_setting type;
++	enum nl80211_tx_power_setting type;
+ 	int dbm = 0;
+ 
+ 	if ((data->txpower.flags & IW_TXPOW_TYPE) != IW_TXPOW_DBM)
+@@ -852,7 +852,7 @@ int cfg80211_wext_siwtxpower(struct net_device *dev,
+ 			if (data->txpower.value < 0)
+ 				return -EINVAL;
+ 			dbm = data->txpower.value;
+-			type = TX_POWER_FIXED;
++			type = NL80211_TX_POWER_FIXED;
+ 			/* TODO: do regulatory check! */
+ 		} else {
+ 			/*
+@@ -860,10 +860,10 @@ int cfg80211_wext_siwtxpower(struct net_device *dev,
+ 			 * passed in from userland.
+ 			 */
+ 			if (data->txpower.value < 0) {
+-				type = TX_POWER_AUTOMATIC;
++				type = NL80211_TX_POWER_AUTOMATIC;
+ 			} else {
+ 				dbm = data->txpower.value;
+-				type = TX_POWER_LIMITED;
++				type = NL80211_TX_POWER_LIMITED;
+ 			}
+ 		}
+ 	} else {
+-- 
+1.6.3.3
 
-- Sedat -
-
-[1] https://patchwork.kernel.org/patch/104010/
-
-On Thu, Jun 3, 2010 at 5:17 PM, Michal Hocko <mhocko@suse.cz> wrote:
-> On Thu 03-06-10 17:01:50, Miklos Szeredi wrote:
->> Hi,
->
-> Hi,
->
->>
->> This oops comes shortly after booting machine and using wireless
->> network.  Reproduced two times now.
->>
->> Please let me know if you need more info.
->>
->> Thanks,
->> Miklos
->>
->>
->> BUG: unable to handle kernel NULL pointer dereference at (null)
->> IP: [<ffffffffa022738f>] iwl3945_request_scan+0x961/0xd68 [iwl3945]
->
-> Sounds pretty much like https://patchwork.kernel.org/patch/103596/
-> I have similar problem but didn't get to testing the patch.
->
->> PGD 0
->> Oops: 0000 [#1] PREEMPT SMP
->> last sysfs file: /sys/class/rfkill/rfkill1/state
->> CPU 0
->> Modules linked in: nfs lockd nfs_acl sunrpc rfcomm sco bnep l2cap acpi_cpufreq mperf nf_conntrack_netbios_ns fuse iwl3945 iwlcore thinkpad_acpi nsc_ircc mac80211 backlight btusb led_class uinput ac irda battery crc_ccitt thermal cfg80211 bluetooth button processor e1000e rfkill kvm_intel kvm
->>
->> Pid: 1493, comm: iwl3945 Not tainted 2.6.35-rc1-00194-gaef4b9a #76 2007FUG/2007FUG
->> RIP: 0010:[<ffffffffa022738f>]  [<ffffffffa022738f>] iwl3945_request_scan+0x961/0xd68 [iwl3945]
->> RSP: 0018:ffff8800b4d71d10  EFLAGS: 00010287
->> RAX: ffff8800bea80c00 RBX: ffff8800b4171380 RCX: 0000000000000021
->> RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff8800b4171380
->> RBP: ffff8800b4d71de0 R08: 000000000000030e R09: 00000000ffffffff
->> R10: 000000000ad21900 R11: 0000000000000292 R12: 0000000000000000
->> R13: ffff8800b60950f2 R14: 0000000000000000 R15: 0000000000000058
->> FS:  0000000000000000(0000) GS:ffff880001a00000(0000) knlGS:0000000000000000
->> CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
->> CR2: 0000000000000000 CR3: 0000000001612000 CR4: 00000000000006f0
->> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
->> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
->> Process iwl3945 (pid: 1493, threadinfo ffff8800b4d70000, task ffff8800b6790940)
->> Stack:
->>  ffff880001a12f40 0000000000012f40 ffff8800b64f8800 ffffffff8161a378
->> <0> 0000000000000000 ffff8800b6095000 00578800b4d71e20 0000005800000021
->> <0> ffff8800b4d71fd8 00ff8800b4175128 ffff8800b4d71fd8 002188ffb6790940
->> Call Trace:
->>  [<ffffffffa01f9bb5>] iwl_bg_start_internal_scan+0x34f/0x371 [iwlcore]
->>  [<ffffffff8104e175>] worker_thread+0x1fc/0x2a3
->>  [<ffffffffa01f9866>] ? iwl_bg_start_internal_scan+0x0/0x371 [iwlcore]
->>  [<ffffffff81051d96>] ? autoremove_wake_function+0x0/0x34
->>  [<ffffffff813f4590>] ? _raw_spin_unlock_irqrestore+0x27/0x29
->>  [<ffffffff8104df79>] ? worker_thread+0x0/0x2a3
->>  [<ffffffff810518db>] kthread+0x7a/0x82
->>  [<ffffffff81002c94>] kernel_thread_helper+0x4/0x10
->>  [<ffffffff81051861>] ? kthread+0x0/0x82
->>  [<ffffffff81002c90>] ? kernel_thread_helper+0x0/0x10
->> Code: 48 b5 00 00 48 89 45 80 48 89 85 70 ff ff ff 41 8d 47 ff 66 89 85 66 ff ff ff e9 43 02 00 00 48 63 55 a8 4c 8b 64 d0 38 8b 55 a4 <41> 39 14 24 0f 85 2a 02 00 00 66 41 8b 54 24 06 48 89 df 41 88
->> RIP  [<ffffffffa022738f>] iwl3945_request_scan+0x961/0xd68 [iwl3945]
->>  RSP <ffff8800b4d71d10>
->> CR2: 0000000000000000
->> ---[ end trace 63fe07b50f147114 ]---
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> Please read the FAQ at  http://www.tux.org/lkml/
->
-> --
-> Michal Hocko
-> L3 team
-> SUSE LINUX s.r.o.
-> Lihovarska 1060/12
-> 190 00 Praha 9
-> Czech Republic
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
