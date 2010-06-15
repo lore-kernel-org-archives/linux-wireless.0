@@ -1,41 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:43139 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754517Ab0FMT5A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jun 2010 15:57:00 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/2] compat: backport sdio_writeb_readb
-Date: Sun, 13 Jun 2010 21:56:49 +0200
-Message-Id: <1276459009-17168-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1276459009-17168-1-git-send-email-hauke@hauke-m.de>
-References: <1276459009-17168-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.deathmatch.net ([72.66.92.28]:3039 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750855Ab0FOEUW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Jun 2010 00:20:22 -0400
+Date: Tue, 15 Jun 2010 00:10:16 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+Subject: Re: [ath5k-devel] [PATCH] ath5k: disable all tasklets while
+	resetting
+Message-ID: <20100615041016.GA13984@hash.localnet>
+References: <20100611101221.26538.46913.stgit@tt-desk> <201006141050.59607.br1@einfach.org> <20100614114302.GA15017@hash.localnet> <201006151007.21708.br1@einfach.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201006151007.21708.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is needed by wl1251_sdio.c
-Use sdio_readb instead of sdio_writeb_readb as long as sdio_writeb_readb was not realy backported.
+On Tue, Jun 15, 2010 at 10:07:21AM +0900, Bruno Randolf wrote:
+> On Mon June 14 2010 20:43:02 you wrote:
+> > On Mon, Jun 14, 2010 at 10:50:59AM +0900, Bruno Randolf wrote:
+> > > we disable interrupts right after disabling the tasklets, so they should
+> > > not be scheduled again, right? actually, we should disable interrupts
+> > > first, and then disable tasklets... but then it should be safe, no?
+> > 
+> > Disable interrupts then tasklet_kill should do it.
+> 
+> what's wrong with first disable interrupts and tasklet_disable?
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/compat-2.6.35.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Look at the code for tasklet_disable... it only waits for tasks that
+are in the run state but doesn't do anything for scheduled tasks.
+So you can still get the spinning behavior if the interrupt runs and
+schedules the tasklet on another CPU.
 
-diff --git a/include/linux/compat-2.6.35.h b/include/linux/compat-2.6.35.h
-index 886815d..c6e7136 100644
---- a/include/linux/compat-2.6.35.h
-+++ b/include/linux/compat-2.6.35.h
-@@ -23,6 +23,8 @@ static inline wait_queue_head_t *sk_sleep(struct sock *sk)
- 	return sk->sk_sleep;
- }
- 
-+#define sdio_writeb_readb(func, write_byte, addr, err_ret) sdio_readb(func, addr, err_ret)
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,35)) */
- 
- #endif /* LINUX_26_35_COMPAT_H */
 -- 
-1.7.0.4
+Bob Copeland %% www.bobcopeland.com
 
