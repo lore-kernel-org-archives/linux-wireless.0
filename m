@@ -1,52 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zinan.dashjr.org ([173.242.112.54]:36367 "EHLO zinan.dashjr.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755467Ab0FBC1X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jun 2010 22:27:23 -0400
-From: "Luke-Jr" <luke@dashjr.org>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] p54spi: replace internal "cx3110x" name with "p54spi"
-Date: Tue, 1 Jun 2010 21:16:53 -0500
-Cc: linux-kernel@vger.kernel.org, torvalds@linux-foundation.org
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201006012117.00432.luke@dashjr.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:53599 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754715Ab0FONgv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Jun 2010 09:36:51 -0400
+Subject: Re: [RFC] Changes in mac80211 to make at76c50x-usb working again
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Sebastian Smolorz <Sebastian.Smolorz@gmx.de>, kalle.valo@iki.fi,
+	linux-wireless@vger.kernel.org,
+	Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <20100615132619.GB12885@tuxdriver.com>
+References: <201006151416.36686.Sebastian.Smolorz@gmx.de>
+	 <20100615132619.GB12885@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 15 Jun 2010 15:36:46 +0200
+Message-ID: <1276609006.3648.233.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While the comment removed in this patch claims board_n800.c uses "cx3110x", it was never merged to mainline like 
-this.
-Mainlined board files for Nokia N8x0 devices are expected "p54spi", and thus don't work because the modalias is 
-"cx3110x".
-To my knowledge, these devices are the only real-world use of p54spi, and will not work without this change.
-Tested against my Nokia N810.
+On Tue, 2010-06-15 at 09:26 -0400, John W. Linville wrote:
+> On Tue, Jun 15, 2010 at 02:16:36PM +0200, Sebastian Smolorz wrote:
+> > Hi,
+> > 
+> > the at76c50x-usb driver fails to authenticate with an AP. 
 
-Signed-off-by: Luke Dashjr <luke-jr+git@utopios.org>
----
- drivers/net/wireless/p54/p54spi.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+We need more information on how it fails.
 
-diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
-index c8f09da..087bf06 100644
---- a/drivers/net/wireless/p54/p54spi.c
-+++ b/drivers/net/wireless/p54/p54spi.c
-@@ -697,9 +697,7 @@ static int __devexit p54spi_remove(struct spi_device *spi)
- 
- static struct spi_driver p54spi_driver = {
- 	.driver = {
--		/* use cx3110x name because board-n800.c uses that for the
--		 * SPI port */
--		.name		= "cx3110x",
-+		.name		= "p54spi",
- 		.bus		= &spi_bus_type,
- 		.owner		= THIS_MODULE,
- 	},
-@@ -733,3 +731,4 @@ module_exit(p54spi_exit);
- MODULE_LICENSE("GPL");
- MODULE_AUTHOR("Christian Lamparter <chunkeey@web.de>");
- MODULE_ALIAS("spi:cx3110x");
-+MODULE_ALIAS("spi:p54spi");
--- 
-1.6.4.4
+> > The last working 
+> > major kernel version was 2.6.30. I investigated the problem and found out 
+> > that the driver needs to send a join command (CMD_JOIN) prior to the actual 
+> > authentication process. For the join command, the driver needs to know the 
+> > bssid of the AP. The problem is now that the mac80211 layer does not inform 
+> > the driver about the bssid prior to the authentication. So we have a 
+> > chicken-and-egg dilemma.
+
+
+
+>     [1] http://thread.gmane.org/gmane.linux.kernel.wireless.general/32598
+>     [2] http://www.intellinuxwireless.org/bugzilla/show_bug.cgi?id=1995
+>     
+>     Cc: Marcel Holtmann <marcel@holtmann.org>
+>     Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> 
+> It would be best to avoid reintroducing the bug mentioned in that
+> commit.  Perhaps ensuring that iwlwifi's sta_notify is correct would
+> be worthwhile?
+
+mac80211's sta_notify was since fixed.
+
+> What other issues might be introduced from setting a non-zero BSSID
+> when not associated?  Will that limit scan results for any devices?
+> Trigger a premature auth or assoc?  Etc?
+
+I still think this is the wrong thing to do though.
+
+What if you want to implement fast roaming? In that case, you still have
+to authenticate to one AP while associated with another, etc.
+
+johannes
 
