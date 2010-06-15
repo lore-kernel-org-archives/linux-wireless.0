@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:17575 "EHLO mga01.intel.com"
+Received: from c60.cesmail.net ([216.154.195.49]:50741 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752469Ab0FFG4o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jun 2010 02:56:44 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 13/23] iwlwifi: remove inaccurate comment
-Date: Sat,  5 Jun 2010 23:56:28 -0700
-Message-Id: <1275807398-18184-14-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1275807398-18184-1-git-send-email-reinette.chatre@intel.com>
-References: <1275807398-18184-1-git-send-email-reinette.chatre@intel.com>
+	id S1754556Ab0FOUSa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Jun 2010 16:18:30 -0400
+Subject: Re: radiotap rate no longer supported in mac80211?
+From: Pavel Roskin <proski@gnu.org>
+To: Steve deRosier <steve@cozybit.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTileP2BMsZUsA-NigDcmVcAmXn6KNw0R1vMzSgYw@mail.gmail.com>
+References: <AANLkTileP2BMsZUsA-NigDcmVcAmXn6KNw0R1vMzSgYw@mail.gmail.com>
+Content-Type: text/plain
+Date: Tue, 15 Jun 2010 16:18:27 -0400
+Message-Id: <1276633107.14133.11.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On Mon, 2010-06-14 at 15:18 -0700, Steve deRosier wrote:
+> I'm trying to support per-packet setting of rate on a packet injection
+> via the radiotap header.  In an earlier version of mac80211 (around
+> 2.6.26), there was code in __ieee80211_parse_tx_radiotap (in
+> net/mac80211/tx.c) to support the use of the the rate element from the
+> radiotap header.  In current versions of wireless-testing, most of the
+> code here has been removed and only the flags are parsed.
+> 
+> I want to return the IEEE80211_RADIOTAP_RATE portion of this function
+> in order to support this.  So the questions:
+> 1. Why were all fields other than IEEE80211_RADIOTAP_FLAGS removed?
+> 2. Would it be OK for me to prepare and submit a patch to restore the
+> rate functionality?
 
-REPLY_REMOVE_STA command is used
+I posted a patch that would add rate and retry flags:
+http://thread.gmane.org/gmane.linux.kernel.wireless.general/47441
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-commands.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+I didn't see any interest in the patch.  Perhaps injecting packets at a
+specific rate in not particularly needed.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 4790571..d5938e4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -95,7 +95,7 @@ enum {
- 
- 	/* Multi-Station support */
- 	REPLY_ADD_STA = 0x18,
--	REPLY_REMOVE_STA = 0x19,	/* not used */
-+	REPLY_REMOVE_STA = 0x19,
- 	REPLY_REMOVE_ALL_STA = 0x1a,	/* not used */
- 
- 	/* Security */
+Also, the patch is somewhat inelegant because of the requirement to
+specify the rate when the retry count is specified.
+
+mac80211 has an array of rates with corresponding retry counts.  The
+radiotap standard has one rate and one retry count.  This doesn't map
+well to the mac80211 approach.  Supporting the retry count without the
+rate would require some tricky logic, and I don't know if anyone needs
+that.
+
+I don't feel good about pushing a patch that makes the code more complex
+without knowing the use case.
+
 -- 
-1.7.0.4
-
+Regards,
+Pavel Roskin
