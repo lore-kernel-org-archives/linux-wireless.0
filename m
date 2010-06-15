@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:58492 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754937Ab0FARGY convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:47173 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756825Ab0FOIuX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jun 2010 13:06:24 -0400
-Received: by gye5 with SMTP id 5so1323184gye.19
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Jun 2010 10:06:24 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4C02E1CA.10757.239262@jafojtik.seznam.cz>
-References: <4C02E1CA.10757.239262@jafojtik.seznam.cz>
-Date: Tue, 1 Jun 2010 13:06:23 -0400
-Message-ID: <AANLkTimRxjfvS_6cR7ZN3yim3TO9GcPwJ59L3HZzpVmy@mail.gmail.com>
-Subject: Re: Association problems - again
-From: Bob Copeland <me@bobcopeland.com>
-To: Jaroslav Fojtik <jafojtik@seznam.cz>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 15 Jun 2010 04:50:23 -0400
+Subject: Re: [PATCH] iw: Configure basic rates when joining ibss network
+From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1276586335.3648.3.camel@jlt3.sipsolutions.net>
+References: <1276583053-30638-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	 <1276586335.3648.3.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain
+Date: Tue, 15 Jun 2010 11:50:05 +0300
+Message-Id: <1276591805.4314.28.camel@paavo-desktop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, May 30, 2010 at 6:08 PM, Jaroslav Fojtik <jafojtik@seznam.cz> wrote:
-> Dears,
->
-> I have found that ATH5k has severe problems during association to AP.
->
-> Sometimes it needs more than 100 attempts to association, before it connects
-> to AP.
+On Tue, 2010-06-15 at 09:18 +0200, ext Johannes Berg wrote:
+> On Tue, 2010-06-15 at 09:24 +0300, Teemu Paasikivi wrote:
+> 
+> > @@ -41,6 +46,31 @@ static int join_ibss(struct nl80211_state *state,
+> >  		argc--;
+> >  	}
+> >  
+> > +	/* basic rates */
+> > +	if (argc > 1 && strcmp(argv[0], "basic-rates") == 0) {
+> > +		argv++;
+> > +		argc--;
+> > +
+> > +		value = strtok_r(argv[0], ",", &sptr);
+> > +
+> > +		while (value && n_rates < NL80211_MAX_SUPP_RATES) {
+> > +			rate = atof(value);
+> 
+> should that use strtod() to check you didn't give "1a,2b,6c,11d"?
+> 
+Sure, it can be used. I think I'll change it to use that. I was just
+wondering that how much the values given by the user should/could be
+checked here.
 
-Did it work in previous kernels?
+> johannes
+> 
 
-You said you reverted 6b5d117eddc09cd976ad8030d715f4 and still have the
-problem, right?  Are you sure you booted the kernel with the revert?
+Br,
 
-> [  149.926717] wlan1: direct probe to 00:15:6d:d6:2a:9d (try 1)
-> [  150.013353] eth3: no IPv6 routers present
-> [  150.126699] wlan1: direct probe to 00:15:6d:d6:2a:9d (try 2)
-> [  150.326707] wlan1: direct probe to 00:15:6d:d6:2a:9d (try 3)
-> [  150.526696] wlan1: direct probe to 00:15:6d:d6:2a:9d timed out
+Teemu
 
-Probably traffic is not being sent or received from one side.
 
--- 
-Bob Copeland %% www.bobcopeland.com
