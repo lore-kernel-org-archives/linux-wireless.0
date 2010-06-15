@@ -1,55 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:46981 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752338Ab0FXVAM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jun 2010 17:00:12 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/2] compat-wireless: activate iwmc3200wifi and WL1271_SDIO
-Date: Thu, 24 Jun 2010 23:00:05 +0200
-Message-Id: <1277413205-6753-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1277413205-6753-1-git-send-email-hauke@hauke-m.de>
-References: <1277413205-6753-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.gmx.net ([213.165.64.20]:42068 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1757802Ab0FOOLP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Jun 2010 10:11:15 -0400
+From: Sebastian Smolorz <Sebastian.Smolorz@gmx.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC] Changes in mac80211 to make at76c50x-usb working again
+Date: Tue, 15 Jun 2010 16:11:56 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>, kalle.valo@iki.fi,
+	linux-wireless@vger.kernel.org,
+	Marcel Holtmann <marcel@holtmann.org>
+References: <201006151416.36686.Sebastian.Smolorz@gmx.de> <201006151549.41963.Sebastian.Smolorz@gmx.de> <1276610211.3648.234.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1276610211.3648.234.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201006151611.56061.Sebastian.Smolorz@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-netdev_ops for iwmc3200wifi is backported now.
-CONFIG_WL1271_SDIO does not depend on ARM any more in mainline, but it
-needs at least kernel 2.6.32.
+Johannes Berg wrote:
+> On Tue, 2010-06-15 at 15:49 +0200, Sebastian Smolorz wrote:
+> > Johannes Berg wrote:
+> > > On Tue, 2010-06-15 at 09:26 -0400, John W. Linville wrote:
+> > > > On Tue, Jun 15, 2010 at 02:16:36PM +0200, Sebastian Smolorz wrote:
+> > > > > Hi,
+> > > > >
+> > > > > the at76c50x-usb driver fails to authenticate with an AP.
+> > >
+> > > We need more information on how it fails.
+> >
+> > The problem is that the following if-statement is never true:
+> >
+> > http://lxr.linux.no/#linux+v2.6.34/drivers/net/wireless/at76c50x-usb.c#L1986
+> 
+> That link doesn't work.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- config.mk |    6 +-----
- 1 files changed, 1 insertions(+), 5 deletions(-)
+Hm, for me it works. Alternatively:
+http://lxr.free-electrons.com/source/drivers/net/wireless/at76c50x-usb.c#L1986
 
-diff --git a/config.mk b/config.mk
-index 04a6f7e..e8ec458 100644
---- a/config.mk
-+++ b/config.mk
-@@ -433,7 +433,7 @@ CONFIG_SSB_SDIOHOST=y
- CONFIG_B43_SDIO=y
- CONFIG_WL1251_SDIO=m
- 
--ifneq ($(CONFIG_ARM),)
-+ifndef CONFIG_COMPAT_KERNEL_32
- CONFIG_WL1271_SDIO=m
- endif
- 
-@@ -445,12 +445,8 @@ CONFIG_LIBERTAS_SDIO=m
- NEED_LIBERTAS=y
- endif
- 
--# Activate iwmc3200wifi support only on kernel >= 2.6.29.
--# iwmc3200wifi uses new netdev_ops api no supported by old kernel.
--ifndef CONFIG_COMPAT_KERNEL_29
- CONFIG_IWM=m
- # CONFIG_IWM_DEBUG=y
--endif
- 
- endif # end of SDIO driver list
- 
+Anyway, it is line 1986 in drivers/net/wireless/at76c50x-usb.c, kernel version 2.6.34.
+
 -- 
-1.7.0.4
-
+Sebastian
