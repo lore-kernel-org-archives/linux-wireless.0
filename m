@@ -1,59 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:33007 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755050Ab0FNUPM (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:43082 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754836Ab0FOARh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jun 2010 16:15:12 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 40so4235810wyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Jun 2010 13:15:11 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 03/14] rt2x00: only set TXDONE_FALLBACK in rt2800pci if the frame was retried
-Date: Mon, 14 Jun 2010 22:09:41 +0200
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-References: <201006142208.31736.IvDoorn@gmail.com> <201006142209.09943.IvDoorn@gmail.com>
-In-Reply-To: <201006142209.09943.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201006142209.42709.IvDoorn@gmail.com>
+	Mon, 14 Jun 2010 20:17:37 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH] ath9k_hw: avoid setting cwmin/cwmax to 0 for IBSS for AR9003
+Date: Mon, 14 Jun 2010 20:17:36 -0400
+Message-Id: <1276561056-2976-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+IBSS requires the cwmin and cwmax to be respected when
+we reset the txqueues on AR9003 otherwise the distribution
+of beacons will be balanced towards the AR9003 card first
+preventing equal contention for air time for other peers
+on the IBSS.
 
-TXDONE_FALLBACK expresses that fallback rates were used for retries. Hence,
-it only makes sense to set the flag if retries > 0.
+Without this IBSS will work but only the AR9003 card will be
+be issuing beacons on the IBSS.
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/rt2x00/rt2800pci.c |    8 ++++++--
- 1 files changed, 6 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/mac.c |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index b5a871e..eeecedb 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -903,8 +903,12 @@ static void rt2800pci_txdone(struct rt2x00_dev *rt2x00dev)
- 			txdesc.retry = 7;
- 		}
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index 1550591..e955bb9 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -555,8 +555,13 @@ bool ath9k_hw_resettxqueue(struct ath_hw *ah, u32 q)
+ 		REGWRITE_BUFFER_FLUSH(ah);
+ 		DISABLE_REGWRITE_BUFFER(ah);
  
--		__set_bit(TXDONE_FALLBACK, &txdesc.flags);
--
+-		/* cwmin and cwmax should be 0 for beacon queue */
+-		if (AR_SREV_9300_20_OR_LATER(ah)) {
 +		/*
-+		 * the frame was retried at least once
-+		 * -> hw used fallback rates
++		 * cwmin and cwmax should be 0 for beacon queue
++		 * but not for IBSS as we would create an imbalance
++		 * on beaconing fairness for participating nodes.
 +		 */
-+		if (txdesc.retry)
-+			__set_bit(TXDONE_FALLBACK, &txdesc.flags);
- 
- 		rt2x00pci_txdone(entry, &txdesc);
- 	}
++		if (AR_SREV_9300_20_OR_LATER(ah) &&
++		    ah->opmode != NL80211_IFTYPE_ADHOC) {
+ 			REG_WRITE(ah, AR_DLCL_IFS(q), SM(0, AR_D_LCL_IFS_CWMIN)
+ 				  | SM(0, AR_D_LCL_IFS_CWMAX)
+ 				  | SM(qi->tqi_aifs, AR_D_LCL_IFS_AIFS));
 -- 
-1.6.6.1
+1.6.3.3
 
