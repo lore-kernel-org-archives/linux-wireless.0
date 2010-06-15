@@ -1,54 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:33007 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755089Ab0FNUPP (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:39635 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755158Ab0FOXyK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jun 2010 16:15:15 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 40so4235810wyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Jun 2010 13:15:14 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 05/14] rt2x00: Add comment about BBP1_TX_POWER
-Date: Mon, 14 Jun 2010 22:10:42 +0200
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-References: <201006142208.31736.IvDoorn@gmail.com> <201006142209.42709.IvDoorn@gmail.com> <201006142210.10378.IvDoorn@gmail.com>
-In-Reply-To: <201006142210.10378.IvDoorn@gmail.com>
+	Tue, 15 Jun 2010 19:54:10 -0400
+Received: by pwi1 with SMTP id 1so3603735pwi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Jun 2010 16:54:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201006142210.43525.IvDoorn@gmail.com>
+In-Reply-To: <1276635464-27982-1-git-send-email-hauke@hauke-m.de>
+References: <1276635464-27982-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 15 Jun 2010 16:53:50 -0700
+Message-ID: <AANLkTimHGt0jL46mWrbIZ28IQ6FhPbMKpwnIwcnPcurq@mail.gmail.com>
+Subject: Re: [PATCH] compat: backport lockdep_assert_held
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+On Tue, Jun 15, 2010 at 1:57 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-Add a comment about the meaning of BBP1_TX_POWER stating all possible values.
+applied, thanks!
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800.h |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index 16bfaa8..b308421 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -1557,7 +1557,9 @@ struct mac_iveiv_entry {
-  */
- 
- /*
-- * BBP 1: TX Antenna
-+ * BBP 1: TX Antenna & Power
-+ * POWER: 0 - normal, 1 - drop tx power by 6dBm, 2 - drop tx power by 12dBm,
-+ *	3 - increase tx power by 6dBm
-  */
- #define BBP1_TX_POWER			FIELD8(0x07)
- #define BBP1_TX_ANTENNA			FIELD8(0x18)
--- 
-1.6.6.1
-
+  Luis
