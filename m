@@ -1,42 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:37733 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756900Ab0FQRWh convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f46.google.com ([74.125.82.46]:58776 "EHLO
+	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753368Ab0FOOdl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jun 2010 13:22:37 -0400
-Received: by pxi12 with SMTP id 12so75087pxi.19
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Jun 2010 10:22:36 -0700 (PDT)
+	Tue, 15 Jun 2010 10:33:41 -0400
+Received: by wwb18 with SMTP id 18so4833322wwb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Jun 2010 07:33:40 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1276764667.19131.10.camel@hephaestion>
-References: <1276649713.6127.276.camel@emiko> <1276764667.19131.10.camel@hephaestion>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 17 Jun 2010 10:22:00 -0700
-Message-ID: <AANLkTilsgC66yen8wSrWeBK07pHR-rvLr-PqGHbfjzcW@mail.gmail.com>
-Subject: Re: [PATCH] ipw2200: Enable LED by default
-To: TJ <ubuntu@tjworld.net>
-Cc: Leann Ogasawara <leann.ogasawara@canonical.com>,
-	reinette.chatre@intel.com, ilw@linux.intel.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1276609006.3648.233.camel@jlt3.sipsolutions.net>
+References: <201006151416.36686.Sebastian.Smolorz@gmx.de>
+	<20100615132619.GB12885@tuxdriver.com>
+	<1276609006.3648.233.camel@jlt3.sipsolutions.net>
+Date: Tue, 15 Jun 2010 17:26:14 +0300
+Message-ID: <AANLkTinHK_MbKZd9HUDoiWuWs5AmDOQiza0poofzYeDn@mail.gmail.com>
+Subject: Re: [RFC] Changes in mac80211 to make at76c50x-usb working again
+From: Kalle Valo <kvalo@adurom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Sebastian Smolorz <Sebastian.Smolorz@gmx.de>,
+	linux-wireless@vger.kernel.org,
+	Marcel Holtmann <marcel@holtmann.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 17, 2010 at 1:51 AM, TJ <ubuntu@tjworld.net> wrote:
-> On Tue, 2010-06-15 at 17:55 -0700, Leann Ogasawara wrote:
->> propose the following patch to enable the LED by default.  This patch
->> was originally authored by TJ.  I apologize in advance that I do not
->> have TJ's full first and last name for provenance.
+On 15 June 2010 16:36, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2010-06-15 at 09:26 -0400, John W. Linville wrote:
+>> On Tue, Jun 15, 2010 at 02:16:36PM +0200, Sebastian Smolorz wrote:
+>> > the at76c50x-usb driver fails to authenticate with an AP.
 >
-> You've already got it. TJ is my full name.
+> We need more information on how it fails.
 
-Also from the SubmittingPatches documentation on the kernel:
+I debugged this a long time ago. The problem is that firmware's
+CMD_JOIN only works if bssid is correct one. I remember trying
+ff:ff:ff:ff:ff:ff, but that didn't work for some reason. The join
+command needs to be sent before association, otherwise transmission
+won't work at all. And if I use a random bssid the firmware will
+filter the replies. But I tested this a long time ago, I might
+remember something wrong.
 
-then you just add a line saying
+I was thinking a hack which would get bssid from association frames
+and then send CMD_JOIN, before the association frame. IMHO no need to
+change mac80211 because of this old hardware.
 
-        Signed-off-by: Random J Developer <random@developer.example.org>
-
-using your real name (sorry, no pseudonyms or anonymous contributions.)
-
-TJ is your full name?
-
-  Luis
+Kalle
