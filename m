@@ -1,112 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46547 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754661Ab0FIPHK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jun 2010 11:07:10 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.71)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1OMMs1-00088P-8z
-	for linux-wireless@vger.kernel.org; Wed, 09 Jun 2010 17:07:09 +0200
-Message-Id: <20100609150454.475624320@sipsolutions.net>
-Date: Wed, 09 Jun 2010 17:01:50 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC v2 08/22] mac80211: move blockack stop due to fragmentation
-References: <20100609150142.227469359@sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.gmx.net ([213.165.64.20]:48447 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752095Ab0FOMPz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Jun 2010 08:15:55 -0400
+From: Sebastian Smolorz <Sebastian.Smolorz@gmx.de>
+To: kalle.valo@iki.fi
+Subject: [RFC] Changes in mac80211 to make at76c50x-usb working again
+Date: Tue, 15 Jun 2010 14:16:36 +0200
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201006151416.36686.Sebastian.Smolorz@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi,
 
-There's a corner case where we receive a fragmented
-frame during a blockack session, in which case we
-will terminate that session. To simplify future work
-in this area that will culminate in allowing the
-driver callbacks for aggregation to sleep, move the
-processing of this case out of the RX path into the
-interface work.
+the at76c50x-usb driver fails to authenticate with an AP. The last working 
+major kernel version was 2.6.30. I investigated the problem and found out 
+that the driver needs to send a join command (CMD_JOIN) prior to the actual 
+authentication process. For the join command, the driver needs to know the 
+bssid of the AP. The problem is now that the mac80211 layer does not inform 
+the driver about the bssid prior to the authentication. So we have a 
+chicken-and-egg dilemma.
 
-This will simplify future work because the new place
-for this code doesn't require that the function will
-always be atomic, which the RX path needs.
+The following patch solves the described problem. As it modifies generic 
+mac80211 code and thus has influence on all drivers I'm open for comments on 
+how to make a proper, probably less intrusive patch.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Sebastian
+
 ---
- net/mac80211/iface.c |   32 +++++++++++++++++++++++++++++++-
- net/mac80211/rx.c    |    5 ++---
- 2 files changed, 33 insertions(+), 4 deletions(-)
-
---- wireless-testing.orig/net/mac80211/iface.c	2010-06-09 12:57:25.000000000 +0200
-+++ wireless-testing/net/mac80211/iface.c	2010-06-09 12:57:25.000000000 +0200
-@@ -707,6 +707,7 @@ static void ieee80211_iface_work(struct
- 		container_of(work, struct ieee80211_sub_if_data, work);
- 	struct ieee80211_local *local = sdata->local;
- 	struct sk_buff *skb;
-+	struct sta_info *sta;
- 
- 	if (!ieee80211_sdata_running(sdata))
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index a1bf46c..6c34b4f 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -180,17 +180,9 @@ void ieee80211_bss_info_change_notify(struct ieee80211_sub_if_data *sdata,
+ 	if (!changed)
  		return;
-@@ -729,7 +730,6 @@ static void ieee80211_iface_work(struct
- 		if (ieee80211_is_action(mgmt->frame_control) &&
- 		    mgmt->u.action.category == WLAN_CATEGORY_BACK) {
- 			int len = skb->len;
--			struct sta_info *sta;
  
- 			rcu_read_lock();
- 			sta = sta_info_get(sdata, mgmt->sa);
-@@ -753,6 +753,36 @@ static void ieee80211_iface_work(struct
- 				}
- 			}
- 			rcu_read_unlock();
-+		} else if (ieee80211_is_data_qos(mgmt->frame_control)) {
-+			struct ieee80211_hdr *hdr = (void *)mgmt;
-+			/*
-+			 * So the frame isn't mgmt, but frame_control
-+			 * is at the right place anyway, of course, so
-+			 * the if statement is correct.
-+			 *
-+			 * Warn if we have other data frame types here,
-+			 * they must not get here.
-+			 */
-+			WARN_ON(hdr->frame_control &
-+					cpu_to_le16(IEEE80211_STYPE_NULLFUNC));
-+			WARN_ON(!(hdr->seq_ctrl &
-+					cpu_to_le16(IEEE80211_SCTL_FRAG)));
-+			/*
-+			 * This was a fragment of a frame, received while
-+			 * a block-ack session was active. That cannot be
-+			 * right, so terminate the session.
-+			 */
-+			rcu_read_lock();
-+			sta = sta_info_get(sdata, mgmt->sa);
-+			if (sta) {
-+				u16 tid = *ieee80211_get_qos_ctl(hdr) &
-+						IEEE80211_QOS_CTL_TID_MASK;
+-	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+-		/*
+-		 * While not associated, claim a BSSID of all-zeroes
+-		 * so that drivers don't do any weird things with the
+-		 * BSSID at that time.
+-		 */
+-		if (sdata->vif.bss_conf.assoc)
+-			sdata->vif.bss_conf.bssid = sdata->u.mgd.bssid;
+-		else
+-			sdata->vif.bss_conf.bssid = zero;
+-	} else if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
++	if (sdata->vif.type == NL80211_IFTYPE_STATION)
++		sdata->vif.bss_conf.bssid = sdata->u.mgd.bssid;
++	else if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
+ 		sdata->vif.bss_conf.bssid = sdata->u.ibss.bssid;
+ 	else if (sdata->vif.type == NL80211_IFTYPE_AP)
+ 		sdata->vif.bss_conf.bssid = sdata->vif.addr;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 4dad08f..b06b175 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2042,6 +2042,9 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
+ 	wk->sdata = sdata;
+ 	wk->done = ieee80211_probe_auth_done;
+ 
++	memcpy(sdata->u.mgd.bssid, req->bss->bssid, ETH_ALEN);
++	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BSSID);
 +
-+				__ieee80211_stop_rx_ba_session(
-+					sta, tid, WLAN_BACK_RECIPIENT,
-+					WLAN_REASON_QSTA_REQUIRE_SETUP);
-+			}
-+			rcu_read_unlock();
- 		} else switch (sdata->vif.type) {
- 		case NL80211_IFTYPE_STATION:
- 			ieee80211_sta_rx_queued_mgmt(sdata, skb);
---- wireless-testing.orig/net/mac80211/rx.c	2010-06-09 12:57:25.000000000 +0200
-+++ wireless-testing/net/mac80211/rx.c	2010-06-09 12:57:25.000000000 +0200
-@@ -741,9 +741,8 @@ static void ieee80211_rx_reorder_ampdu(s
- 	sc = le16_to_cpu(hdr->seq_ctrl);
- 	if (sc & IEEE80211_SCTL_FRAG) {
- 		spin_unlock(&sta->lock);
--		__ieee80211_stop_rx_ba_session(sta, tid, WLAN_BACK_RECIPIENT,
--					       WLAN_REASON_QSTA_REQUIRE_SETUP);
--		dev_kfree_skb(skb);
-+		skb_queue_tail(&rx->sdata->skb_queue, skb);
-+		ieee80211_queue_work(&local->hw, &rx->sdata->work);
- 		return;
- 	}
- 
-
-
+ 	ieee80211_add_work(wk);
+ 	return 0;
+ }
