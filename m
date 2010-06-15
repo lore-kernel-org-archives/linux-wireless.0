@@ -1,50 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx04.teleca.com ([212.92.145.6]:34033 "EHLO mx04.teleca.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755312Ab0F2Kux (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jun 2010 06:50:53 -0400
-From: Yuri Ershov <ext-yuri.ershov@nokia.com>
-To: johannes@sipsolutions.net
-Cc: ext-yuri.kululin@nokia.com, linux-wireless@vger.kernel.org
-Subject: [RFC 3/3] cfg80211: Update of regulatory request initiator handling
-Date: Tue, 29 Jun 2010 15:08:08 +0400
-Message-Id: <cf988b7054a5c2449b2824c628c7bd3a5ac82ee4.1277808543.git.ext-yuri.ershov@nokia.com>
-In-Reply-To: <cover.1277808543.git.ext-yuri.ershov@nokia.com>
-References: <cover.1277808543.git.ext-yuri.ershov@nokia.com>
-In-Reply-To: <cover.1277808543.git.ext-yuri.ershov@nokia.com>
-References: <cover.1277808543.git.ext-yuri.ershov@nokia.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58718 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752217Ab0FOUAN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Jun 2010 16:00:13 -0400
+Date: Tue, 15 Jun 2010 15:46:10 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Leann Ogasawara <leann.ogasawara@canonical.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>, flamingice@sourmilk.net,
+	linux-wireless@vger.kernel.org,
+	Ben Collins <ben.collins@ubuntu.com>
+Subject: Re: [PATCH] p54usb: Remove duplicate Medion MD40900 device id
+Message-ID: <20100615194610.GB2415@tuxdriver.com>
+References: <1276208913.1221.3646.camel@emiko>
+ <4C1173E7.6010201@lwfinger.net>
+ <20100614185549.GB2216@tuxdriver.com>
+ <1276624745.6127.61.camel@emiko>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1276624745.6127.61.camel@emiko>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In some cases there could be possible dereferencing freed pointer. The
-update is intended to avoid this issue.
+On Tue, Jun 15, 2010 at 10:59:05AM -0700, Leann Ogasawara wrote:
+> On Mon, 2010-06-14 at 14:55 -0400, John W. Linville wrote:
 
-Signed-off-by: Yuri Ershov <ext-yuri.ershov@nokia.com>
----
- net/wireless/reg.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+> > So, I guess you are concerned about the groupings because of the
+> > different firmwares or something like that?  Perhaps a comment that
+> > says "this could be a version 2 device" is just as handy?  Since the
+> > driver prints the name of the firmware it wants, is there any real
+> > need for grouping the IDs?
+> > 
+> > OTOH, is there any actual harm from the duplicate entry?  It "seems"
+> > wrong to me too, but I guess it does no harm...?
+> 
+> I don't believe there is any harm from the duplicate entry, it just
+> seemed unnecessary.
+> 
+> > Leann and/or Ben, was this just tidying-up?  I'm guessing there wasn't
+> > an actual bug involved?
+> 
+> Indeed, this was just a patch we'd been carrying to tidy things up.
+> There was no actual bug involved.  I'd be happy to send a v2 of the
+> patch which comments out the duplicate entry and adds a note as to why.
+> Or I'd be fine just leaving the code as is and we'll drop the patch
+> we're carrying locally in Ubuntu.
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 1ac2bdd..9ee2be9 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1831,6 +1831,7 @@ static void reg_process_hint(struct regulatory_request *reg_request)
- {
- 	int r = 0;
- 	struct wiphy *wiphy = NULL;
-+	enum nl80211_reg_initiator initiator = reg_request->initiator;
- 
- 	BUG_ON(!reg_request->alpha2);
- 
-@@ -1850,7 +1851,7 @@ static void reg_process_hint(struct regulatory_request *reg_request)
- 	/* This is required so that the orig_* parameters are saved */
- 	if (r == -EALREADY && wiphy &&
- 	    wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY)
--		wiphy_update_regulatory(wiphy, reg_request->initiator);
-+		wiphy_update_regulatory(wiphy, initiator);
- out:
- 	mutex_unlock(&reg_mutex);
- 	mutex_unlock(&cfg80211_mutex);
+FWIW, I like the 'comment-out and add a note' option.
+
+Thanks!
+
+John
 -- 
-1.7.0.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
