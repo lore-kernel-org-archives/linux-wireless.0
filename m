@@ -1,62 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:38421 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755341Ab0F2Tu4 (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:2892 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754970Ab0FOBHc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jun 2010 15:50:56 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 38so2999627wyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Jun 2010 12:50:55 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 04/21] rt2x00: Fix frame dumping for USB devices.
-Date: Tue, 29 Jun 2010 21:40:02 +0200
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-References: <201006292138.13509.IvDoorn@gmail.com> <201006292138.56463.IvDoorn@gmail.com> <201006292139.30199.IvDoorn@gmail.com>
-In-Reply-To: <201006292139.30199.IvDoorn@gmail.com>
+	Mon, 14 Jun 2010 21:07:32 -0400
+Received: from vs3002.wh2.ocn.ne.jp (125.206.180.165)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-070754049
+	for <linux-wireless@vger.kernel.org>; Tue, 15 Jun 2010 10:07:30 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Bob Copeland <me@bobcopeland.com>
+Subject: Re: [ath5k-devel] [PATCH] ath5k: disable all tasklets while resetting
+Date: Tue, 15 Jun 2010 10:07:21 +0900
+References: <20100611101221.26538.46913.stgit@tt-desk> <201006141050.59607.br1@einfach.org> <20100614114302.GA15017@hash.localnet>
+In-Reply-To: <20100614114302.GA15017@hash.localnet>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
 MIME-Version: 1.0
 Content-Type: Text/Plain;
   charset="iso-8859-1"
-Message-Id: <201006292140.03875.IvDoorn@gmail.com>
+Message-Id: <201006151007.21708.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+On Mon June 14 2010 20:43:02 you wrote:
+> On Mon, Jun 14, 2010 at 10:50:59AM +0900, Bruno Randolf wrote:
+> > we disable interrupts right after disabling the tasklets, so they should
+> > not be scheduled again, right? actually, we should disable interrupts
+> > first, and then disable tasklets... but then it should be safe, no?
+> 
+> Disable interrupts then tasklet_kill should do it.
 
-We forgot to clear the SKBDESC_DESC_IN_SKB when the descriptor was removed
-from the front of the skb.
+what's wrong with first disable interrupts and tasklet_disable?
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00usb.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index b45bc24..9759754 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -171,6 +171,7 @@ static void rt2x00usb_interrupt_txdone(struct urb *urb)
- {
- 	struct queue_entry *entry = (struct queue_entry *)urb->context;
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
-+	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
- 	struct txdone_entry_desc txdesc;
- 
- 	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags) ||
-@@ -183,6 +184,11 @@ static void rt2x00usb_interrupt_txdone(struct urb *urb)
- 	skb_pull(entry->skb, entry->queue->desc_size);
- 
- 	/*
-+	 * Signal that the TX descriptor is no longer in the skb.
-+	 */
-+	skbdesc->flags &= ~SKBDESC_DESC_IN_SKB;
-+
-+	/*
- 	 * Obtain the status about this packet.
- 	 * Note that when the status is 0 it does not mean the
- 	 * frame was send out correctly. It only means the frame
--- 
-1.6.6.1
-
+bruno
