@@ -1,78 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52786 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753568Ab0FRJ2w (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:46159 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755186Ab0FOWfJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jun 2010 05:28:52 -0400
-Subject: Re: IWL3945 problems in 2.6.35-rc1
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Reinette Chatre <reinette.chatre@intel.com>
-In-Reply-To: <1275395142.14385.6.camel@maxim-laptop>
-References: <1275395142.14385.6.camel@maxim-laptop>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 18 Jun 2010 11:28:47 +0200
-Message-ID: <1276853327.3638.17.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 15 Jun 2010 18:35:09 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: stable@kernel.org, greg@kroah.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 2.6.32..2.6.33] ath5k: drop warning on jumbo frames
+Date: Tue, 15 Jun 2010 18:35:07 -0400
+Message-Id: <1276641307-10287-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maxim,
+commit 9637e516d16a58b13f6098cfe899e22963132be3 upstream.
 
-> 2. mulicast/broadcast is broken.
-> this results in DHCP non working on open access point.
-> It seems that DHCP does work on my home wireless, but avahi-autoipd
-> doesn't see any neighbours, and this is annoying.
-> It can be worked around by doing (sudo ifconfig wlan0 promisc)
+Jumbo frames are not supported, and if they are seen it is likely
+a bogus frame so just silently discard them instead of warning on
+them all time. Also, instead of dropping them immediately though
+move the check *after* we check for all sort of frame errors. This
+should enable us to discard these frames if the hardware picks
+other bogus items first. Lets see if we still get those jumbo
+counters increasing still with this.
 
-Reinette has reverted the patch in iwlwifi-2.6, but I think I actually
-just now identified the problem. Can you try one or two things for me?
+Jumbo frames would happen if we tell hardware we can support
+a small 802.11 chunks of DMA'd frame, hardware would split RX'd
+frames into parts and we'd have to reconstruct them in software.
+This is done with USB due to the bulk size but with ath5k we
+already provide a good limit to hardware and this should not be
+happening.
 
- 1) with the patch reverted, which is what presumably you're running
-    now, can you try
-    ifconfig wlan0 allmulti
-    ifconfig wlan0 -allmulti
+This is reported quite often and if it fills the logs then this
+needs to be addressed and to avoid spurious reports.
 
-    I think this will *break* the driver right now.
-
- 2) with the patch *not* reverted, apply the patch below and see if that
-    fixes the problem as well (if it gets mangled, just remove the one
-    CHK() line manually)
-
-Actually, (2) is obviously more important to me, but (1) would indicate
-that my guess is correct wrt. what's causing the problem
-
-Thanks,
-Johannes
-
+Cc: stable@kernel.org
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-core.c |    7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
 
---- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-core.c	2010-06-18 11:22:34.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-core.c	2010-06-18 11:27:00.000000000 +0200
-@@ -1331,7 +1331,6 @@ void iwl_configure_filter(struct ieee802
- 			changed_flags, *total_flags);
- 
- 	CHK(FIF_OTHER_BSS | FIF_PROMISC_IN_BSS, RXON_FILTER_PROMISC_MSK);
--	CHK(FIF_ALLMULTI, RXON_FILTER_ACCEPT_GRP_MSK);
- 	CHK(FIF_CONTROL, RXON_FILTER_CTL2HOST_MSK);
- 	CHK(FIF_BCN_PRBRESP_PROMISC, RXON_FILTER_BCON_AWARE_MSK);
- 
-@@ -1346,6 +1345,12 @@ void iwl_configure_filter(struct ieee802
- 
- 	mutex_unlock(&priv->mutex);
- 
-+	/*
-+	 * Receiving all multicast frames is always enabled by the
-+	 * default flags setup in iwl_connection_init_rx_config()
-+	 * since we currently do not support programming multicast
-+	 * filters into the device.
-+	 */
- 	*total_flags &= FIF_OTHER_BSS | FIF_ALLMULTI | FIF_PROMISC_IN_BSS |
- 			FIF_BCN_PRBRESP_PROMISC | FIF_CONTROL;
- }
+Greg, here's a stable ath5k patch which required some manual
+backport. The backported was needed since the sc->stats.rxerr_jumbo
+counter was not available until 2.6.34 and it was used on the upstream
+commit. This goes only compile tested against 2.6.32.y and 2.6.33.y.
 
+ drivers/net/wireless/ath/ath5k/base.c |    7 ++-----
+ 1 files changed, 2 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 6313788..9846e8b 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1818,11 +1818,6 @@ ath5k_tasklet_rx(unsigned long data)
+ 			return;
+ 		}
+ 
+-		if (unlikely(rs.rs_more)) {
+-			ATH5K_WARN(sc, "unsupported jumbo\n");
+-			goto next;
+-		}
+-
+ 		if (unlikely(rs.rs_status)) {
+ 			if (rs.rs_status & AR5K_RXERR_PHY)
+ 				goto next;
+@@ -1852,6 +1847,8 @@ ath5k_tasklet_rx(unsigned long data)
+ 					sc->opmode != NL80211_IFTYPE_MONITOR)
+ 				goto next;
+ 		}
++		if (unlikely(rs.rs_more))
++			goto next;
+ accept:
+ 		next_skb = ath5k_rx_skb_alloc(sc, &next_skb_addr);
+ 
+-- 
+1.6.3.3
 
