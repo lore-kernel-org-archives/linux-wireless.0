@@ -1,47 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:52352 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753762Ab0FPFdt (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:48746 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757459Ab0FOLvU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jun 2010 01:33:49 -0400
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	"Justin P. Mattock" <justinmattock@gmail.com>
-Subject: [PATCH 1/5]wireless:hostap_main.c warning: variable 'iface' set but not used
-Date: Tue, 15 Jun 2010 22:33:50 -0700
-Message-Id: <1276666434-11227-2-git-send-email-justinmattock@gmail.com>
-In-Reply-To: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>
-References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>
+	Tue, 15 Jun 2010 07:51:20 -0400
+Received: by iwn9 with SMTP id 9so4430369iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Jun 2010 04:51:19 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1276593467-28309-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1276593467-28309-1-git-send-email-juuso.oikarinen@nokia.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 15 Jun 2010 21:50:58 +1000
+Message-ID: <AANLkTilMwuYujJ1vhVGdoop8ZbgHeJRGcWEYECPLcx-B@mail.gmail.com>
+Subject: Re: [RFC PATCH] iw: Add support for setting transmit power
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch below fixes a warning message Im seeing with gcc 4.6.0
- CC [M]  drivers/net/wireless/hostap/hostap_main.o
-drivers/net/wireless/hostap/hostap_main.c: In function 'hostap_set_multicast_list_queue':
-drivers/net/wireless/hostap/hostap_main.c:744:27: warning: variable 'iface' set but not used
+On Tue, Jun 15, 2010 at 19:17, Juuso Oikarinen
+<juuso.oikarinen@nokia.com> wrote:
+> This patch adds the "set tx_power" command to allow specifying the transmit
+> power level to the WLAN stack. The transmit power configuration consists of
+> a mode (automatic, fixed, limited) and the limit mBm value.
+>
+> Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> ---
+>  Makefile  |    3 ++-
+>  nl80211.h |   27 ++++++++++++++++++++++++++-
+>  2 files changed, 28 insertions(+), 2 deletions(-)
+>
+> diff --git a/Makefile b/Makefile
+> index d303f45..cbb9504 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -17,7 +17,8 @@ CFLAGS += -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs -fno-strict-aliasing
+>  OBJS = iw.o genl.o event.o info.o phy.o \
+>        interface.o ibss.o station.o survey.o util.o \
+>        mesh.o mpath.o scan.o reg.o version.o \
+> -       reason.o status.o connect.o link.o offch.o ps.o cqm.o
+> +       reason.o status.o connect.o link.o offch.o ps.o cqm.o \
+> +       txpower.o
+>  OBJS += sections.o
+>  ALL = iw
+>
 
- Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+Call me stupid, but is there a txpower.c?
 
----
- drivers/net/wireless/hostap/hostap_main.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+Thanks,
 
-diff --git a/drivers/net/wireless/hostap/hostap_main.c b/drivers/net/wireless/hostap/hostap_main.c
-index eb57d1e..eaee84b 100644
---- a/drivers/net/wireless/hostap/hostap_main.c
-+++ b/drivers/net/wireless/hostap/hostap_main.c
-@@ -741,9 +741,7 @@ void hostap_set_multicast_list_queue(struct work_struct *work)
- 	local_info_t *local =
- 		container_of(work, local_info_t, set_multicast_list_queue);
- 	struct net_device *dev = local->dev;
--	struct hostap_interface *iface;
- 
--	iface = netdev_priv(dev);
- 	if (hostap_set_word(dev, HFA384X_RID_PROMISCUOUSMODE,
- 			    local->is_promisc)) {
- 		printk(KERN_INFO "%s: %sabling promiscuous mode failed\n",
 -- 
-1.7.1.rc1.21.gf3bd6
 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+.Plan: http://sites.google.com/site/juliancalaby/
