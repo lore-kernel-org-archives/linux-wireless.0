@@ -1,98 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:39294 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753416Ab0FGW3O convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jun 2010 18:29:14 -0400
-Received: by wyi11 with SMTP id 11so2777880wyi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Jun 2010 15:29:11 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1275940207.29978.24.camel@jlt3.sipsolutions.net>
-References: <1275940207.29978.24.camel@jlt3.sipsolutions.net>
-Date: Mon, 7 Jun 2010 18:29:10 -0400
-Message-ID: <AANLkTim-ML9b8yvuSVQbr1Qr5kokkzZyjrnjECdUGDF5@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: fix deauth before assoc
-From: Miles Lane <miles.lane@gmail.com>
+Received: from mail.gmx.net ([213.165.64.20]:39274 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752892Ab0FONtC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Jun 2010 09:49:02 -0400
+From: Sebastian Smolorz <Sebastian.Smolorz@gmx.de>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: [RFC] Changes in mac80211 to make at76c50x-usb working again
+Date: Tue, 15 Jun 2010 15:49:41 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>, kalle.valo@iki.fi,
+	linux-wireless@vger.kernel.org,
+	Marcel Holtmann <marcel@holtmann.org>
+References: <201006151416.36686.Sebastian.Smolorz@gmx.de> <20100615132619.GB12885@tuxdriver.com> <1276609006.3648.233.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1276609006.3648.233.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201006151549.41963.Sebastian.Smolorz@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tested.  Looks good.
+Johannes Berg wrote:
+> On Tue, 2010-06-15 at 09:26 -0400, John W. Linville wrote:
+> > On Tue, Jun 15, 2010 at 02:16:36PM +0200, Sebastian Smolorz wrote:
+> > > Hi,
+> > >
+> > > the at76c50x-usb driver fails to authenticate with an AP.
+> 
+> We need more information on how it fails.
 
-On Mon, Jun 7, 2010 at 3:50 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> When we receive a deauthentication frame before
-> having successfully associated, we neither print
-> a message nor abort assocation. The former makes
-> it hard to debug, while the latter later causes
-> a warning in cfg80211 when, as will typically be
-> the case, association timed out.
->
-> This warning was reported by many, e.g. in
-> https://bugzilla.kernel.org/show_bug.cgi?id=15981,
-> but I couldn't initially pinpoint it. I verified
-> the fix by hacking hostapd to send a deauth frame
-> instead of an association response.
->
-> Cc: stable@kernel.org
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
->  net/mac80211/mlme.c |   39 ++++++++++++++++++++++++++++++++++++++-
->  1 file changed, 38 insertions(+), 1 deletion(-)
->
-> --- wireless-testing.orig/net/mac80211/mlme.c   2010-06-07 21:35:41.000000000 +0200
-> +++ wireless-testing/net/mac80211/mlme.c        2010-06-07 21:46:00.000000000 +0200
-> @@ -1695,8 +1695,45 @@ void ieee80211_sta_rx_queued_mgmt(struct
->        mutex_unlock(&ifmgd->mtx);
->
->        if (skb->len >= 24 + 2 /* mgmt + deauth reason */ &&
-> -           (fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_DEAUTH)
-> +           (fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_DEAUTH) {
-> +               struct ieee80211_local *local = sdata->local;
-> +               struct ieee80211_work *wk;
-> +
-> +               mutex_lock(&local->work_mtx);
-> +               list_for_each_entry(wk, &local->work_list, list) {
-> +                       if (wk->sdata != sdata)
-> +                               continue;
-> +
-> +                       if (wk->type != IEEE80211_WORK_ASSOC)
-> +                               continue;
-> +
-> +                       if (memcmp(mgmt->bssid, wk->filter_ta, ETH_ALEN))
-> +                               continue;
-> +                       if (memcmp(mgmt->sa, wk->filter_ta, ETH_ALEN))
-> +                               continue;
-> +
-> +                       /*
-> +                        * Printing the message only here means we can't
-> +                        * spuriously print it, but it also means that it
-> +                        * won't be printed when the frame comes in before
-> +                        * we even tried to associate or in similar cases.
-> +                        *
-> +                        * Ultimately, I suspect cfg80211 should print the
-> +                        * messages instead.
-> +                        */
-> +                       printk(KERN_DEBUG
-> +                              "%s: deauthenticated from %pM (Reason: %u)\n",
-> +                              sdata->name, mgmt->bssid,
-> +                              le16_to_cpu(mgmt->u.deauth.reason_code));
-> +
-> +                       list_del_rcu(&wk->list);
-> +                       free_work(wk);
-> +                       break;
-> +               }
-> +               mutex_unlock(&local->work_mtx);
-> +
->                cfg80211_send_deauth(sdata->dev, (u8 *)mgmt, skb->len);
-> +       }
->  }
->
->  static void ieee80211_sta_timer(unsigned long data)
->
->
->
+The problem is that the following if-statement is never true:
+
+http://lxr.linux.no/#linux+v2.6.34/drivers/net/wireless/at76c50x-usb.c#L1986
+
+What else information do you need? dmesg output, debugfs trace?
+
+> 
+> > > The last working
+> > > major kernel version was 2.6.30. I investigated the problem and found
+> > > out that the driver needs to send a join command (CMD_JOIN) prior to
+> > > the actual authentication process. For the join command, the driver
+> > > needs to know the bssid of the AP. The problem is now that the
+> > > mac80211 layer does not inform the driver about the bssid prior to
+> > > the authentication. So we have a chicken-and-egg dilemma.
+
+-- 
+Sebastian
