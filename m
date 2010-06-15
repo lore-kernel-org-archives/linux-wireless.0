@@ -1,77 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:65316 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755000Ab0FCSoV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jun 2010 14:44:21 -0400
-Subject: Re: linux-next: Tree for June 3 (iwlwifi)
-From: reinette chatre <reinette.chatre@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-In-Reply-To: <20100603172114.GA14597@tuxdriver.com>
-References: <20100603134753.710a64b3.sfr@canb.auug.org.au>
-	 <20100603085501.ac113779.randy.dunlap@oracle.com>
-	 <20100603172114.GA14597@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 03 Jun 2010 10:45:57 -0700
-Message-ID: <1275587157.2091.31847.camel@rchatre-DESK>
+Received: from www.clear-code.com ([219.94.198.64]:47100 "EHLO
+	mail.clear-code.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757860Ab0FOO0L convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Jun 2010 10:26:11 -0400
+Date: Tue, 15 Jun 2010 23:25:58 +0900 (JST)
+Message-Id: <20100615.232558.867740727379709943.kou@clear-code.com>
+To: mcgrof@gmail.com
+Cc: Stephen.Chen@atheros.com, David.Quan@atheros.com,
+	linux-wireless@vger.kernel.org, Michael.Green@atheros.com
+Subject: Re: [PATCH] zd1211rw: ignore unknown regulatory domain.
+From: Kouhei Sutou <kou@clear-code.com>
+In-Reply-To: <AANLkTinEMAQu33Tlv81-Cdx9fLZK-a-7uJlbAo7te2_w@mail.gmail.com>
+References: <20100613.145200.1459063883179763823.kou@clear-code.com>
+	<AANLkTinEMAQu33Tlv81-Cdx9fLZK-a-7uJlbAo7te2_w@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Hi,
 
-On Thu, 2010-06-03 at 10:21 -0700, John W. Linville wrote:
-> On Thu, Jun 03, 2010 at 08:55:01AM -0700, Randy Dunlap wrote:
-> > On Thu, 3 Jun 2010 13:47:53 +1000 Stephen Rothwell wrote:
-> > 
-> > > Hi all,
-> > > 
-> > > Changes since 20100602:
-> > 
-> > 
-> > when CONFIG_IWLAGN=n:
-> > 
-> > drivers/net/wireless/iwlwifi/iwl-rx.c:254: error: 'struct iwl_priv' has no member named '_agn'
-> > drivers/net/wireless/iwlwifi/iwl-rx.c:303: error: 'struct iwl_priv' has no member named '_agn'
-> > drivers/net/wireless/iwlwifi/iwl-rx.c:304: error: 'struct iwl_priv' has no member named '_agn'
-> > drivers/net/wireless/iwlwifi/iwl-rx.c:305: error: 'struct iwl_priv' has no member named '_agn'
-> > drivers/net/wireless/iwlwifi/iwl-rx.c:306: error: 'struct iwl_priv' has no member named '_agn'
-> > 
-> > and many more.
-> > 
-> > Haven't we seen this movie before?
+In <AANLkTinEMAQu33Tlv81-Cdx9fLZK-a-7uJlbAo7te2_w@mail.gmail.com>
+  "Re: [PATCH] zd1211rw: ignore unknown regulatory domain." on Sun, 13 Jun 2010 13:23:20 -0700,
+  "Luis R. Rodriguez" <mcgrof@gmail.com> wrote:
+
+>> I'm using PLANEX GW-US54GXS (2019:5303) and it works with
+>> the attached patch. Could you consider to merge the attached
+>> patch?
+>>
+>> Problem: GW-US54GXS uses zd1211rw but zd1211rw doesn't have
+>> a regulatory domain reported by GW-US54GXS (0x49).
+>>
+>> Solutions:
+>>
+>>  (1) add a new regulatory domain (0x49). Here is a patch to
+>>      use the approach:
 > 
-> Ugh...caused be this:
-> 
-> commit a2064b7a4a22d118087898e4308670da7ac07911
-> Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> Date:   Fri Apr 30 14:21:48 2010 -0700
-> 
->     iwlwifi: move _agn statistics related structure
->     
->     agn and 3945 has different statistics_notif data structure; since 3945
->     has it statistics_notif data structure inside the _3945 portion of
->     iwl_priv, it make sense to move the agn statistics_notif into _agn portion.
->     
->     Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
->     Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
-> 
-> Since iwl-rx.o is part of iwlcore.ko, this change seems wrong.
+> Stephen, David, does 0x49 map to JP for zd1211 ? Are there other ones?
+> Here is our list so far:
+...
+> Kouhei, if no regulatory domain is found, instead we should world
+> roam, we cannot allow letting the user change regulatory domains at
+> their whim. We can, however let them choose one to help compliance,
+> but you can only help compliance once you know your actual regulatory
+> domain.
 
-Indeed. Sorry about this.
+Luis, thanks for your input.
+It seems that we can't use GW-US54GXS until 0x49 regulatory
+domain is registered to zd1211rw. Is it right?
 
-> Reinette, any reason why I shouldn't just revert it?
-
-No - please do revert it. I am getting an unfamiliar error when I tried
-to revert it from linux-2.6 as well as wireless-testing, but perhaps it
-is something your are familiar with. Please let me know if you need a
-patch that will take care of the revert.
-
-Reinette
+If it is right, what I can do for GW-US54GXS? Should I wait
+a response from Stephen and/or David?
 
 
+Thanks,
+--
+kou
