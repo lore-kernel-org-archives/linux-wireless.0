@@ -1,76 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37788 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753624Ab0FATTf (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:62873 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751833Ab0FOJqz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jun 2010 15:19:35 -0400
-Subject: Re: Path for fixed channel issue in aircrack-ng suite [V2]
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: Richard Farina <sidhayn@gmail.com>,
-	=?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
-	Joker Joker <jokesareonyou@gmail.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1275416907.3778.11.camel@maxim-laptop>
-References: <AANLkTinAnMwY0ZCetUmUbuhsp3rB360xvlaGM5ifdFHz@mail.gmail.com>
-	 <1274775071.3635.4.camel@jlt3.sipsolutions.net>
-	 <AANLkTilPIt59FhAuVlhisUR7QDabCtnZwahjxWbUysiG@mail.gmail.com>
-	 <1274860275.3658.0.camel@jlt3.sipsolutions.net>
-	 <4C000B68.9000305@gmail.com>  <1275416907.3778.11.camel@maxim-laptop>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 01 Jun 2010 21:19:33 +0200
-Message-ID: <1275419973.3634.7.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 15 Jun 2010 05:46:55 -0400
+From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Subject: [PATCH v2] iw: Configure basic rates when joining ibss network
+Date: Tue, 15 Jun 2010 12:46:09 +0300
+Message-Id: <1276595169-3669-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-06-01 at 21:28 +0300, Maxim Levitsky wrote:
+This patch adds option to configure basic rates when joining ibss network.
 
->     wireless: allow to retrieve the channel set on monitor interface
->     
->     This will allow to preserve compatibility with userspace
->     
->     Signed-off-by: Maxim Levitsky <maximlevitsky@gmail.com>
-> 
-> diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-> index b01a6f6..09d979b 100644
-> --- a/net/wireless/chan.c
-> +++ b/net/wireless/chan.c
-> @@ -49,9 +49,12 @@ int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
->  {
->  	struct ieee80211_channel *chan;
->  	int result;
-> +	struct wireless_dev *mon_dev = NULL;
->  
-> -	if (wdev && wdev->iftype == NL80211_IFTYPE_MONITOR)
-> +	if (wdev && wdev->iftype == NL80211_IFTYPE_MONITOR) {
-> +		mon_dev = wdev;
->  		wdev = NULL;
-> +	}
->  
->  	if (wdev) {
->  		ASSERT_WDEV_LOCK(wdev);
-> @@ -76,5 +79,8 @@ int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
->  	if (wdev)
->  		wdev->channel = chan;
->  
-> +	if (mon_dev)
-> +		mon_dev->channel = chan;
-> +
+Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+---
+ ibss.c |   35 ++++++++++++++++++++++++++++++++++-
+ 1 files changed, 34 insertions(+), 1 deletions(-)
 
-This won't quite work. monitor interfaces are always slaves in the sense
-that their channel setting never takes precedence over anything, so if
-you add another interface and do something there, the hardware will
-happily channel switch away from the monitor channel, but it will still
-report the old channel here that you set.
-
-I have no idea how to _properly_ fix this though, since eventually we'll
-have a situation where you can have multiple interfaces active on
-different channels, so that monitors don't have a fixed channel anyway.
-
-Maybe this patch is sufficient since it works in the case people care
-about when they _only_ have a monitor interface, but I think it'd be
-nicer if it wouldn't report anything in the other cases.
-
-johannes
+diff --git a/ibss.c b/ibss.c
+index 4715ac8..9260a9f 100644
+--- a/ibss.c
++++ b/ibss.c
+@@ -18,6 +18,11 @@ static int join_ibss(struct nl80211_state *state,
+ {
+ 	char *end;
+ 	unsigned char abssid[6];
++	unsigned char rates[NL80211_MAX_SUPP_RATES];
++	int n_rates = 0;
++	char *value = NULL, *sptr = NULL;
++	float rate;
++
+ 
+ 	if (argc < 2)
+ 		return 1;
+@@ -41,6 +46,32 @@ static int join_ibss(struct nl80211_state *state,
+ 		argc--;
+ 	}
+ 
++	/* basic rates */
++	if (argc > 1 && strcmp(argv[0], "basic-rates") == 0) {
++		argv++;
++		argc--;
++
++		value = strtok_r(argv[0], ",", &sptr);
++
++		while (value && n_rates < NL80211_MAX_SUPP_RATES) {
++			rate = strtod(value, &end);
++			rates[n_rates] = rate * 2;
++
++			/* filter out suspicious values  */
++			if (*end != '\0' || !rates[n_rates] ||
++			    rate*2 != rates[n_rates])
++				return 1;
++
++			n_rates++;
++			value = strtok_r(NULL, ",", &sptr);
++		}
++
++		NLA_PUT(msg, NL80211_ATTR_BSS_BASIC_RATES, n_rates, rates);
++
++		argv++;
++		argc--;
++	}
++
+ 	if (argc) {
+ 		if (mac_addr_a2n(abssid, argv[0]) == 0) {
+ 			NLA_PUT(msg, NL80211_ATTR_MAC, 6, abssid);
+@@ -73,7 +104,9 @@ static int leave_ibss(struct nl80211_state *state,
+ COMMAND(ibss, leave, NULL,
+ 	NL80211_CMD_LEAVE_IBSS, 0, CIB_NETDEV, leave_ibss,
+ 	"Leave the current IBSS cell.");
+-COMMAND(ibss, join, "<SSID> <freq in MHz> [fixed-freq] [<fixed bssid>] [key d:0:abcde]",
++COMMAND(ibss, join,
++	"<SSID> <freq in MHz> [fixed-freq] [<fixed bssid>] "
++	"[basic-rates <rate in Mbps,rate2,...>] [key d:0:abcde]",
+ 	NL80211_CMD_JOIN_IBSS, 0, CIB_NETDEV, join_ibss,
+ 	"Join the IBSS cell with the given SSID, if it doesn't exist create\n"
+ 	"it on the given frequency. When fixed frequency is requested, don't\n"
+-- 
+1.5.6.3
 
