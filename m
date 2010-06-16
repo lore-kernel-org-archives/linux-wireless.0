@@ -1,55 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:34864 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751986Ab0FXTzs (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:46675 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756290Ab0FPFxT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jun 2010 15:55:48 -0400
-Message-ID: <4C23B877.4060209@lwfinger.net>
-Date: Thu, 24 Jun 2010 14:56:39 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 16 Jun 2010 01:53:19 -0400
 MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, mb@bu3sch.de, zajec5@gmail.com
-Subject: Re: [PATCH 0/3] b43: logging cleanups
-References: <cover.1276988387.git.joe@perches.com>	 <20100624185339.GC2368@tuxdriver.com> <1277408432.1654.80.camel@Joe-Laptop.home>
-In-Reply-To: <1277408432.1654.80.camel@Joe-Laptop.home>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>
+References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 16 Jun 2010 15:52:58 +1000
+Message-ID: <AANLkTikwKHITQJDaSf9BnHQ9FLiQ-KYlCWNiH438otsV@mail.gmail.com>
+Subject: Re: [PATCH 0/5] Fix set but unused variable warnings
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/24/2010 02:40 PM, Joe Perches wrote:
-> On Thu, 2010-06-24 at 14:53 -0400, John W. Linville wrote:
->> On Sat, Jun 19, 2010 at 04:30:08PM -0700, Joe Perches wrote:
->>> Just some small cleanups
->>> Joe Perches (3):
->>>   drivers/net/wireless/b43: Use local ratelimit_state
->>>   drivers/net/wireless/b43: Logging cleanups
->>>   drivers/net/wireless/b43: Rename b43_debug to b43_debugging
->> Any of the b43 guys want to express an opinion on these?
-> 
-> Stefano, are you active here?
-> Your last ack for b43 was Feb 2008.
-> There have been 400+ commits to b43 without your ack.
-> 
-> Should your name be moved from MAINTAINERS to CREDITS?
-> 
-> $ ./scripts/get_maintainer.pl --rolestats -f drivers/net/wireless/b43/
-> Stefano Brivio <stefano.brivio@polimi.it> (maintainer:B43 WIRELESS DRIVER)
-> "John W. Linville" <linville@tuxdriver.com> (maintainer:NETWORKING [WIREL...,commit_signer:204/240=85%)
-> "Rafał Miłecki" <zajec5@gmail.com> (commit_signer:83/240=35%)
-> "Gábor Stefanik" <netrolller.3d@gmail.com> (commit_signer:44/240=18%)
-> Michael Buesch <mb@bu3sch.de> (commit_signer:39/240=16%)
-> Larry Finger <Larry.Finger@lwfinger.net> (commit_signer:13/240=5%)
-> linux-wireless@vger.kernel.org (open list:B43 WIRELESS DRIVER)
-> netdev@vger.kernel.org (open list:NETWORKING DRIVERS)
-> linux-kernel@vger.kernel.org (open list)
+On Wed, Jun 16, 2010 at 15:33, Justin P. Mattock
+<justinmattock@gmail.com> wrote:
+> Here is another set of patches fixing some warning messages generated
+> when building the kernel when using gcc 4.6.0.
+>
+> This set just focuses in on the variables warnings that are reported
+> to be unused. Keep in mind there are still lots more warning messages
+> that I'm seeing, and will try my hardest to see if I can come up with
+> a fix, but if things become too difficult and so forth then a bug should
+> be filled etc..
 
-The primary arbitrator for patches to the subtle parts of b43 is Michael
-Buesch; however, he is no longer an official MAINTAINER. I can ACK some
-things; however, any changes that are associated with my reverse
-engineering of the Broadcom drivers are off limits.
+Given that patches 3, 4 and 5 seem to be a cases of missing error
+handling, (3 and 4 in particular seem to be breaking things rather
+than fixing them) in my humble opinion, I think this set needs some
+work and discussion.
 
-Larry
+Justin, maybe you'd be better off posting the actual error messages
+(split up by subsystem) and letting the lists discuss them, rather
+than posting patches which are obviously wrong. (like the ones I've
+pointed out)
+
+I'm sure that everyone here is as committed as you are to eliminating
+compile warnings and errors and, in my opinion, more good will come
+from a healthy discussion of the warnings than maintainers NAKing your
+patches out of hand.
+
+Thanks,
+
+-- 
+
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+.Plan: http://sites.google.com/site/juliancalaby/
