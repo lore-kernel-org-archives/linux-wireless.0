@@ -1,44 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:52720 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933011Ab0FRN7W (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:25687 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752255Ab0FPFEa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jun 2010 09:59:22 -0400
-MIME-Version: 1.0
-In-Reply-To: <1276859156.19554.2.camel@maxim-laptop>
-References: <20100528100901.14580.1322.stgit@fate.lan>
-	<1276806785.20754.8.camel@maxim-laptop>
-	<20100618112026.17623g6uhdjk8hts@naisho.dyndns.info>
-	<1276856142.9114.1.camel@maxim-laptop>
-	<20100618134930.124225d4fsi8w1fk@naisho.dyndns.info>
-	<1276859156.19554.2.camel@maxim-laptop>
-Date: Fri, 18 Jun 2010 09:59:20 -0400
-Message-ID: <AANLkTimdTjedtoeKAp5tcTqefrUB6k373Kx9EacuYFcO@mail.gmail.com>
-Subject: Re: [PATCH] ath5k: disable ASPM
-From: Bob Copeland <me@bobcopeland.com>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 16 Jun 2010 01:04:30 -0400
+Subject: Re: [RFC PATCH] iw: Add support for setting transmit power
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Julian Calaby <julian.calaby@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTilMwuYujJ1vhVGdoop8ZbgHeJRGcWEYECPLcx-B@mail.gmail.com>
+References: <1276593467-28309-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <AANLkTilMwuYujJ1vhVGdoop8ZbgHeJRGcWEYECPLcx-B@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 16 Jun 2010 08:04:24 +0300
+Message-ID: <1276664664.5277.43000.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 18, 2010 at 7:05 AM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
->> Patch I made uses GPL code from e1000e, but since ath5k is
->> dual-licensed so patch can't be accepted. So if I got it right, patch
->> has to be remade from scratch by someone who really knows about pci
->> registers etc. I don't, and learning this to fix something that is
->> already fixed in my point of view is waste of (my) time.
-> Sure, regardless of licensing, this patch has to be redone (and e1000
-> with it)
+On Tue, 2010-06-15 at 13:50 +0200, ext Julian Calaby wrote:
+> On Tue, Jun 15, 2010 at 19:17, Juuso Oikarinen
+> <juuso.oikarinen@nokia.com> wrote:
+> > This patch adds the "set tx_power" command to allow specifying the transmit
+> > power level to the WLAN stack. The transmit power configuration consists of
+> > a mode (automatic, fixed, limited) and the limit mBm value.
+> >
+> > Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+> > ---
+> >  Makefile  |    3 ++-
+> >  nl80211.h |   27 ++++++++++++++++++++++++++-
+> >  2 files changed, 28 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/Makefile b/Makefile
+> > index d303f45..cbb9504 100644
+> > --- a/Makefile
+> > +++ b/Makefile
+> > @@ -17,7 +17,8 @@ CFLAGS += -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs -fno-strict-aliasing
+> >  OBJS = iw.o genl.o event.o info.o phy.o \
+> >        interface.o ibss.o station.o survey.o util.o \
+> >        mesh.o mpath.o scan.o reg.o version.o \
+> > -       reason.o status.o connect.o link.o offch.o ps.o cqm.o
+> > +       reason.o status.o connect.o link.o offch.o ps.o cqm.o \
+> > +       txpower.o
+> >  OBJS += sections.o
+> >  ALL = iw
+> >
+> 
+> Call me stupid, but is there a txpower.c?
 
-At any rate, Jussi, thanks a bundle for tracking it down.  I owe you a
-beer, lots of bugs have been reported on these devices.
+No I won't call you stupid. It seems I have forgotten to commit again,
+but no worries: The corresponding kernel patch went back to the drawing
+board, so I'll to redo this patch anyway. I'll be sure also commit
+then ;)
 
-Maxim, this device was always broken in the same way, right?  Just
-curious if anything made it worse recently.
+-Juuso
 
--- 
-Bob Copeland %% www.bobcopeland.com
+> Thanks,
+> 
+
+
