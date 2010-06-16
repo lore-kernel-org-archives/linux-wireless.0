@@ -1,68 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:52903 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755643Ab0FRU0e (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:27164 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754759Ab0FPGBx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jun 2010 16:26:34 -0400
-Message-ID: <4C1BD678.1020405@gmail.com>
-Date: Fri, 18 Jun 2010 13:26:32 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-MIME-Version: 1.0
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-CC: Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 4/5]pci:setup_bus.c Fix warning: variable 'retval' set
- but not used
-References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>	<1276666434-11227-5-git-send-email-justinmattock@gmail.com>	<20100618102330.29eccb5b@virtuousgeek.org>	<4C1BBF7D.8090904@kernel.org>	<20100618124956.40c869a0@virtuousgeek.org>	<4C1BD024.1030707@gmail.com> <20100618130538.0fc562ee@virtuousgeek.org>
-In-Reply-To: <20100618130538.0fc562ee@virtuousgeek.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 16 Jun 2010 02:01:53 -0400
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCHv2] mac80211: Add interface for driver to temporarily disable dynamic ps
+Date: Wed, 16 Jun 2010 09:01:32 +0300
+Message-Id: <1276668092-28872-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/18/2010 01:05 PM, Jesse Barnes wrote:
-> On Fri, 18 Jun 2010 12:59:32 -0700
-> "Justin P. Mattock"<justinmattock@gmail.com>  wrote:
->> just added this in(as a test), and the retval warning still shows up.
->> with the last post I just added a printk was that legit, and if so what
->> else might be added to it to make it complete and proper?
->
-> What's the full warning?  Seems like printing the value should have
-> been enough to shut up gcc...
->
+This mechanism introduced in this patch applies (at least) for hardware
+designs using a single shared antenna for both WLAN and BT. In these designs,
+the antenna must be toggled between WLAN and BT.
 
-this is the warning messg after applying yinghai's patch:
+In those hardware, managing WLAN co-existence with Bluetooth requires WLAN
+full power save whenever there is Bluetooth activity in order for WLAN to be
+able to periodically relinquish the antenna to be used for BT. This is because
+BT can only access the shared antenna when WLAN is idle or asleep.
 
-   CC      drivers/pci/setup-bus.o
-drivers/pci/setup-bus.c: In function 
-'pci_assign_unassigned_bridge_resources':
-drivers/pci/setup-bus.c:868:6: warning: variable 'retval' set but not used
+Some hardware, for instance the wl1271, are able to indicate to the host
+whenever there is BT traffic. In essence, the hardware will send an indication
+to the host whenever there is, for example, SCO traffic or A2DP traffic, and
+will send another indication when the traffic is over.
 
+The hardware gets information of Bluetooth traffic via hardware co-existence
+control lines - these lines are used to negotiate the shared antenna
+ownership. The hardware will give the antenna to BT whenever WLAN is sleeping.
 
-if I add a printk then gcc is content.. patch below, but not the best at 
-creating printk's(the whole % thing messes me up) but here goes:
+This patch adds the interface to mac80211 to facilitate temporarily disabling
+of dynamic power save as per request of the WLAN driver. This interface will
+immediately force WLAN to full powersave, hence allowing BT coexistence as
+described above.
 
- From 48e15b87072c6b4286d943c55bfe2ae26d358795 Mon Sep 17 00:00:00 2001
-From: Justin P. Mattock <justinmattock@gmail.com>
-Date: Fri, 18 Jun 2010 13:23:27 -0700
-Subject: [PATCH 4/4] bus.c_add_print
-  Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+In these kind of shared antenna desings, when WLAN powersave is fully disabled,
+Bluetooth will not work simultaneously with WLAN at all. This patch does not
+address that problem. This interface will not change PSM state, so if PSM is
+disabled it will remain so. Solving this problem requires knowledge about BT
+state, and is best done in user-space.
 
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 ---
-  drivers/pci/setup-bus.c |    1 +
-  1 files changed, 1 insertions(+), 0 deletions(-)
+v2: moved dynamic_ps_user_timeout and disable_dynamic_ps to local
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 66cb8f4..806b766 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -919,6 +919,7 @@ again:
+ include/net/mac80211.h     |   27 +++++++++++++++++++++++++++
+ net/mac80211/ieee80211_i.h |    3 +++
+ net/mac80211/mlme.c        |   29 ++++++++++++++++++++++++++++-
+ 3 files changed, 58 insertions(+), 1 deletions(-)
 
-  enable_all:
-  	retval = pci_reenable_device(bridge);
-+	printk(KERN_DEBUG "PCI%d: re-enabling device\n", retval);
-  	pci_set_master(bridge);
-  	pci_enable_bridges(parent);
-  }
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index fe1a3a6..2628550 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1271,6 +1271,15 @@ ieee80211_get_alt_retry_rate(const struct ieee80211_hw *hw,
+  * dynamic PS feature in stack and will just keep %IEEE80211_CONF_PS
+  * enabled whenever user has enabled powersave.
+  *
++ * Some hardware need to toggle a single shared antenna between WLAN and
++ * Bluetooth to facilitate co-existence. These types of hardware set
++ * limitations on the use of host controlled dynamic powersave whenever there
++ * is simultaneous WLAN and Bluetooth traffic. For these types of hardware, the
++ * driver may request temporarily going into full power save, in order to
++ * enable toggling the antenna between BT and WLAN. If the driver requests
++ * disabling dynamic powersave, the @dynamic_ps_timeout value will be
++ * temporarily set to zero until the driver re-enables dynamic powersave.
++ *
+  * Driver informs U-APSD client support by enabling
+  * %IEEE80211_HW_SUPPORTS_UAPSD flag. The mode is configured through the
+  * uapsd paramater in conf_tx() operation. Hardware needs to send the QoS
+@@ -2447,6 +2456,24 @@ void ieee80211_beacon_loss(struct ieee80211_vif *vif);
+ void ieee80211_connection_loss(struct ieee80211_vif *vif);
+ 
+ /**
++ * ieee80211_disable_dyn_ps - force mac80211 to temporarily disable dynamic psm
++ *
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
++ *
++ * Some hardware require full power save to manage simultaneous BT traffic
++ * on the WLAN frequency. Full PSM is required periodically, whenever there are
++ * burst of BT traffic. The hardware gets information of BT traffic via
++ * hardware co-existence lines, and consequentially requests mac80211 to
++ * (temporarily) enter full psm.
++ * This function will only temporarily disable dynamic PS, not enable PSM if
++ * it was not already enabled.
++ * The driver must make sure to re-enable dynamic PS if the driver has disabled
++ * it.
++ *
++ */
++void ieee80211_disable_dyn_ps(struct ieee80211_vif *vif, bool disable);
++
++/**
+  * ieee80211_cqm_rssi_notify - inform a configured connection quality monitoring
+  *	rssi threshold triggered
+  *
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index fb54301..f90c48c 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -856,6 +856,9 @@ struct ieee80211_local {
+ 	 */
+ 	int dynamic_ps_forced_timeout;
+ 
++	int dynamic_ps_user_timeout;
++	bool disable_dynamic_ps;
++
+ 	int user_power_level; /* in dBm */
+ 	int power_constr_level; /* in dBm */
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 85c3ca3..dd16dad 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -478,6 +478,29 @@ static void ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
+ 	}
+ }
+ 
++void ieee80211_disable_dyn_ps(struct ieee80211_vif *vif, bool disable)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_conf *conf = &local->hw.conf;
++
++	WARN_ON(sdata->vif.type != NL80211_IFTYPE_STATION ||
++		!(local->hw.flags & IEEE80211_HW_SUPPORTS_PS) ||
++		(local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_PS));
++
++	local->disable_dynamic_ps = disable;
++
++	if (disable) {
++		conf->dynamic_ps_timeout = 0;
++		del_timer_sync(&local->dynamic_ps_timer);
++		ieee80211_queue_work(&local->hw,
++				     &local->dynamic_ps_enable_work);
++	} else {
++		conf->dynamic_ps_timeout = local->dynamic_ps_user_timeout;
++	}
++}
++EXPORT_SYMBOL(ieee80211_disable_dyn_ps);
++
+ /* powersave */
+ static void ieee80211_enable_ps(struct ieee80211_local *local,
+ 				struct ieee80211_sub_if_data *sdata)
+@@ -553,6 +576,7 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
+ 	    found->u.mgd.associated->beacon_ies &&
+ 	    !(found->u.mgd.flags & (IEEE80211_STA_BEACON_POLL |
+ 				    IEEE80211_STA_CONNECTION_POLL))) {
++		struct ieee80211_conf *conf = &local->hw.conf;
+ 		s32 beaconint_us;
+ 
+ 		if (latency < 0)
+@@ -575,7 +599,10 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
+ 			else
+ 				timeout = 100;
+ 		}
+-		local->hw.conf.dynamic_ps_timeout = timeout;
++		local->dynamic_ps_user_timeout = timeout;
++		if (!local->disable_dynamic_ps)
++			conf->dynamic_ps_timeout =
++				local->dynamic_ps_user_timeout;
+ 
+ 		if (beaconint_us > latency) {
+ 			local->ps_sdata = NULL;
 -- 
-1.7.1.rc1.21.gf3bd6
+1.6.3.3
+
