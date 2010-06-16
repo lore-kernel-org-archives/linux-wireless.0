@@ -1,51 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:25007 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755536Ab0FCQ1W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jun 2010 12:27:22 -0400
-Subject: Re: [PATCH] iwlwifi: use the DMA state API instead of the pci
- equivalents
-From: reinette chatre <reinette.chatre@intel.com>
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: "Zhu, Yi" <yi.zhu@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-In-Reply-To: <20100603141853Z.fujita.tomonori@lab.ntt.co.jp>
-References: <20100603141853Z.fujita.tomonori@lab.ntt.co.jp>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 03 Jun 2010 09:27:21 -0700
-Message-ID: <1275582441.2091.31678.camel@rchatre-DESK>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:32909 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752189Ab0FPOpJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Jun 2010 10:45:09 -0400
+Date: Wed, 16 Jun 2010 10:21:58 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dennis Borgmann <dennis.borgmann@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, hostap@lists.shmoo.com
+Subject: Re: "ressource temporarily unavailable" on 2.4 GHz, not on 5GHz
+Message-ID: <20100616142158.GC2404@tuxdriver.com>
+References: <4C18DA3D.1030303@googlemail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4C18DA3D.1030303@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-06-02 at 22:19 -0700, FUJITA Tomonori wrote:
-> This can be cleanly applied to wireless-2.6 and iwlwifi git trees.
+On Wed, Jun 16, 2010 at 04:05:49PM +0200, Dennis Borgmann wrote:
+> Hello wireless-list!
+> Hello hostapd-list!
 > 
-> =
-> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Subject: [PATCH] iwlwifi: use the DMA state API instead of the pci equivalents
+> I am using ath5k with hostapd-0.6.9 on a debian running kernel 2.6.34
+> and I am observing a "ressource temporarily unavailable" - error code 11
+> if I pump out multicast-packets quite fast. I wrote a small
+> test-program, that handles this test and as soon as I go down to a
+> 8ms-pause or below in betweens the packets, the error is thrown quite
+> soon after starting the program. Funny thing is, that this error only
+> occurs in g-band (2.4 GHz), not in a-band (5GHz).
 > 
-> This replace the PCI DMA state API (include/linux/pci-dma.h) with the
-> DMA equivalents since the PCI DMA state API will be obsolete.
+> What could be the problem? Is this due to backoff-times in 2.4 GHz, that
+> don't occur on 5 GHz? Or could this be a bug?
 
-Does that mean we need to modify out other PCI DMA calls (eg.
-pci_unmap_single etc.) also?
+My only initial thought is that the 2.5GHz band is usually more
+utilized.  So there is more likely to be retransmissions, etc.
 
-> 
-> No functional change.
-> 
-> For further information about the background:
-> 
-> http://marc.info/?l=linux-netdev&m=127037540020276&w=2
-> 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Find attached my small piece of code to test and reproduce this effect.
 
-Thank you
+Perhaps you could include actual dmesg output?
 
-Acked-by: Reinette Chatre <reinette.chatre@intel.com>
-
-Reinette
-
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
