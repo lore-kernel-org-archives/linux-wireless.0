@@ -1,94 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay01.mx.bawue.net ([193.7.176.67]:54365 "EHLO
-	relay01.mx.bawue.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753381Ab0FDQ5i (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:31357 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756232Ab0FPGWb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jun 2010 12:57:38 -0400
-Date: Fri, 4 Jun 2010 18:57:32 +0200
-From: Nils Radtke <Nils.Radtke@Think-Future.de>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: linville@tuxdriver.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: kernel BUG in iwl-agn-rs.c:2076, WAS: iwlagn + some
- accesspoint == hardlock
-Message-ID: <20100604165732.GB28003@localhost>
-Reply-To: Nils Radtke <Nils.Radtke@Think-Future.de>
-References: <20100531201225.GA6327@localhost>
- <1275501085.2091.28873.camel@rchatre-DESK>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1275501085.2091.28873.camel@rchatre-DESK>
+	Wed, 16 Jun 2010 02:22:31 -0400
+From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Subject: [PATCH v3] iw: Configure basic rates when joining ibss network
+Date: Wed, 16 Jun 2010 09:22:16 +0300
+Message-Id: <1276669336-32266-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  Hi Reinette,
+This patch adds option to configure basic rates when joining ibss network.
 
-  BTW, this:
-  Jun  3 12:05:43 localhost kernel: [174170.391756] iwlagn 0000:03:00.0: 
-    TX Power requested while scanning!
-  happened even w/o toggling radio switch, so this seems not uniquely
-  related to toggling the radio switch.
+Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+---
+ ibss.c |   35 ++++++++++++++++++++++++++++++++++-
+ 1 files changed, 34 insertions(+), 1 deletions(-)
 
-On mer 2010-06-02 @ 10-51-25 -0700, reinette chatre wrote: 
-# On Mon, 2010-05-31 at 13:12 -0700, Nils Radtke wrote:
-# 
-# > This line indicates the first timestamp _after_ the crash:
-# > May 31 17:35:19 localhost kernel: [   69.488456]
-# > 
-# > The crash happened after site A and on site B. Just arrived, opened lid and *crash*.
-# > 
-# > I noticed in iwl-agn-rs.c:2080:
-# >   BUG_ON(window->average_tpt != ((window->success_ratio *
-# >         tbl->expected_tpt[index] + 64) / 128));
-# > Could that be again the point that hit me today when the machine crashed once?
-# > Would you mind changing this into a milder WARN? That way I wouldn't hit the wall 
-# > that hard. And I would notice it anyway while skimming the logs as we still are on the
-# > hunt. It's more maintainable if it's a WARN in the src instead of me patching it w/ any
-# > update..
-# > 
-# > Wasn't this BUG_ON a WARNING in .33.3? (didn't check..)
-# 
-# Seems like you performed the testing without the patch that we used to
-# address the hang issue from the beginning of this thread. Please see
-Indeed, that's what it feels like. It is just so annoying, that one..
-You can't work w/ the kernel drivers. That's a shame.
-BTW, iff the patch for the BUG_ON is in kernel src since 2.6.28, that might
-explain a lot of crashes before where I haven't never been able to track it down.
-Even more, those days I hadn't a chance to do more on this. Unlike now.
-
-# http://marc.info/?l=linux-wireless&m=127290931304496&w=2 - that thread
-# also explains why the patch is not in 2.6.34.
-It should definitely and absolutely be merged (change the BUG_ON into WARNING).
-Even if, like hypothesized, the bug is hidden elsewhere, a BUG_ON doesn't get
-me far, it's killing every chance to advance to a solution. How am I supposed
-to investigate w/ the kernel crashing? BTW, I don't like working w/ a Linux
-kernel that kills my work regularly, I think that's understandable. If I needed
-a break from work, I'd set an alarm.
-
-I've seen a bugreport on this issue on the redhat bts referencing my word about
-this BUG_ON only getting hit w/ cisco APs. There's a wide range of AP manufacturers 
-out there in the city. But only cisco APs are crashing this driver. Admittedly, only 
-on one single location, but anyway it's a cisco. Always the same MAC, unless they 
-use to reassign MAC addresses, though.. 
-
-I think it's a tough one, if an AP is able to crash the driver. 
-
-I haven't yet received a comment of yours regarding my many other questions in
-my previous message. I am willing to help investigate more, assist in other ways 
-than testing only (always only doing testing isn't a way to keep up fun..)
-
-# I think it is time to move this discussion to a bug report so that it
-# can be tracked better. Please open a new bug at
-# http://bugzilla.intellinuxwireless.org/
-As you wish. It's probably a good idea. But I still miss the registration mail
-from bz, did register yesterday.
-
-So, please see to it, that the patch rendering the BUG_ON into a
-WARNING finds it's way back in.
-
-    Thank you very much,
-
-
-            Nils Radtke
-
+diff --git a/ibss.c b/ibss.c
+index 4715ac8..7e3ff89 100644
+--- a/ibss.c
++++ b/ibss.c
+@@ -18,6 +18,11 @@ static int join_ibss(struct nl80211_state *state,
+ {
+ 	char *end;
+ 	unsigned char abssid[6];
++	unsigned char rates[NL80211_MAX_SUPP_RATES];
++	int n_rates = 0;
++	char *value = NULL, *sptr = NULL;
++	float rate;
++
+ 
+ 	if (argc < 2)
+ 		return 1;
+@@ -49,6 +54,32 @@ static int join_ibss(struct nl80211_state *state,
+ 		}
+ 	}
+ 
++	/* basic rates */
++	if (argc > 1 && strcmp(argv[0], "basic-rates") == 0) {
++		argv++;
++		argc--;
++
++		value = strtok_r(argv[0], ",", &sptr);
++
++		while (value && n_rates < NL80211_MAX_SUPP_RATES) {
++			rate = strtod(value, &end);
++			rates[n_rates] = rate * 2;
++
++			/* filter out suspicious values  */
++			if (*end != '\0' || !rates[n_rates] ||
++			    rate*2 != rates[n_rates])
++				return 1;
++
++			n_rates++;
++			value = strtok_r(NULL, ",", &sptr);
++		}
++
++		NLA_PUT(msg, NL80211_ATTR_BSS_BASIC_RATES, n_rates, rates);
++
++		argv++;
++		argc--;
++	}
++
+ 	if (!argc)
+ 		return 0;
+ 
+@@ -73,7 +104,9 @@ static int leave_ibss(struct nl80211_state *state,
+ COMMAND(ibss, leave, NULL,
+ 	NL80211_CMD_LEAVE_IBSS, 0, CIB_NETDEV, leave_ibss,
+ 	"Leave the current IBSS cell.");
+-COMMAND(ibss, join, "<SSID> <freq in MHz> [fixed-freq] [<fixed bssid>] [key d:0:abcde]",
++COMMAND(ibss, join,
++	"<SSID> <freq in MHz> [fixed-freq] [<fixed bssid>] "
++	"[basic-rates <rate in Mbps,rate2,...>] [key d:0:abcde]",
+ 	NL80211_CMD_JOIN_IBSS, 0, CIB_NETDEV, join_ibss,
+ 	"Join the IBSS cell with the given SSID, if it doesn't exist create\n"
+ 	"it on the given frequency. When fixed frequency is requested, don't\n"
+-- 
+1.5.6.3
 
