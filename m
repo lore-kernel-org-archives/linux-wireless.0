@@ -1,106 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:39511 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756827Ab0FYWnI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jun 2010 18:43:08 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 3/8] iwlwifi: add a mechanism to disable plcp error checking
-Date: Fri, 25 Jun 2010 15:42:56 -0700
-Message-Id: <1277505781-25268-4-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1277505781-25268-1-git-send-email-reinette.chatre@intel.com>
-References: <1277505781-25268-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-px0-f174.google.com ([209.85.212.174]:60999 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752189Ab0FPO4G convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Jun 2010 10:56:06 -0400
+Received: by pxi8 with SMTP id 8so3916391pxi.19
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jun 2010 07:56:04 -0700 (PDT)
+From: Ben Gamari <bgamari.foss@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: Compat-wireless build on 2.6.34
+Date: Wed, 16 Jun 2010 10:49:25 -0400
+Message-ID: <87r5k76nii.fsf@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Is the latest compat-wireless package known to build against 2.6.34? I
+have tried both June 15 and June 14 and both fail with errors similar
+to the following. Thanks for your help!
 
-For some devices, especially the upcoming new devices, the plcp error
-rate is different. Before the correct error rate can be determine, also
-for the debugging purpose; add the mechanism to disable plcp error checking
-which cause radio reset happen.
+- Ben
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-3945.c    |    5 +++++
- drivers/net/wireless/iwlwifi/iwl-agn-rx.c  |    6 ++++++
- drivers/net/wireless/iwlwifi/iwl-debugfs.c |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-dev.h     |    3 ++-
- 4 files changed, 15 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index 93d513e..a07310f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -406,6 +406,11 @@ static bool iwl3945_good_plcp_health(struct iwl_priv *priv,
- 	unsigned int plcp_msec;
- 	unsigned long plcp_received_jiffies;
- 
-+	if (priv->cfg->plcp_delta_threshold ==
-+	    IWL_MAX_PLCP_ERR_THRESHOLD_DISABLE) {
-+		IWL_DEBUG_RADIO(priv, "plcp_err check disabled\n");
-+		return rc;
-+	}
- 	memcpy(&current_stat, pkt->u.raw, sizeof(struct
- 			iwl3945_notif_statistics));
- 	/*
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
-index ad2bead..d54edc3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
-@@ -166,6 +166,12 @@ bool iwl_good_plcp_health(struct iwl_priv *priv,
- 	unsigned int plcp_msec;
- 	unsigned long plcp_received_jiffies;
- 
-+	if (priv->cfg->plcp_delta_threshold ==
-+	    IWL_MAX_PLCP_ERR_THRESHOLD_DISABLE) {
-+		IWL_DEBUG_RADIO(priv, "plcp_err check disabled\n");
-+		return rc;
-+	}
-+
- 	/*
- 	 * check for plcp_err and trigger radio reset if it exceeds
- 	 * the plcp error threshold plcp_delta.
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index cee3d12..7d9ffc1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -1430,10 +1430,10 @@ static ssize_t iwl_dbgfs_plcp_delta_write(struct file *file,
- 		return -EFAULT;
- 	if (sscanf(buf, "%d", &plcp) != 1)
- 		return -EINVAL;
--	if ((plcp <= IWL_MAX_PLCP_ERR_THRESHOLD_MIN) ||
-+	if ((plcp < IWL_MAX_PLCP_ERR_THRESHOLD_MIN) ||
- 		(plcp > IWL_MAX_PLCP_ERR_THRESHOLD_MAX))
- 		priv->cfg->plcp_delta_threshold =
--			IWL_MAX_PLCP_ERR_THRESHOLD_DEF;
-+			IWL_MAX_PLCP_ERR_THRESHOLD_DISABLE;
- 	else
- 		priv->cfg->plcp_delta_threshold = plcp;
- 	return count;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 1af845c..df07a14 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1036,11 +1036,12 @@ struct iwl_event_log {
-  * This is the threshold value of plcp error rate per 100mSecs.  It is
-  * used to set and check for the validity of plcp_delta.
-  */
--#define IWL_MAX_PLCP_ERR_THRESHOLD_MIN	(0)
-+#define IWL_MAX_PLCP_ERR_THRESHOLD_MIN	(1)
- #define IWL_MAX_PLCP_ERR_THRESHOLD_DEF	(50)
- #define IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF	(100)
- #define IWL_MAX_PLCP_ERR_EXT_LONG_THRESHOLD_DEF	(200)
- #define IWL_MAX_PLCP_ERR_THRESHOLD_MAX	(255)
-+#define IWL_MAX_PLCP_ERR_THRESHOLD_DISABLE	(0)
- 
- #define IWL_DELAY_NEXT_FORCE_RF_RESET  (HZ*3)
- #define IWL_DELAY_NEXT_FORCE_FW_RELOAD (HZ*5)
--- 
-1.7.0.4
-
+make -C /lib/modules/2.6.34-ben/build
+M=/home/ben/compat-wireless-2010-06-15 modules
+make[1]: Entering directory `/home/ben/linux-stable'
+  CC [M]
+  /home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/ipw2100.o
+  CC [M]
+  /home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/ipw2200.o
+  CC [M]
+  /home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/libipw_module.o
+  CC [M]
+  /home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/libipw_tx.o
+/home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/ipw2100.c:
+In function ‘ipw2100_alloc_device’:
+/home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/ipw2100.c:6138:
+error: ‘struct net_device’ has no member named ‘wireless_handlers’
+/home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/ipw2100.c:6144:
+error: ‘struct net_device’ has no member named ‘wireless_data’
+/home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/ipw2100.c:
+At top level:
+/home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/ipw2100.c:8406:
+error: unknown field ‘num_private’ specified in initializer
+/home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/ipw2100.c:8406:
+warning: initialization makes pointer from integer without a cast
+/home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/ipw2100.c:8407:
+error: unknown field ‘num_private_args’ specified in initializer
+/home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/ipw2100.c:8407:
+warning: excess elements in struct initializer
+/home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/ipw2100.c:8407:
+warning: (near initialization for ‘ipw2100_wx_handler_def’)
+/home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/ipw2100.c:8408:
+error: unknown field ‘private’ specified in initializer
+/home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/ipw2100.c:8408:
+warning: excess elements in struct initializer
+/home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/ipw2100.c:8408:
+warning: (near initialization for ‘ipw2100_wx_handler_def’)
+/home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/ipw2100.c:8409:
+error: unknown field ‘private_args’ specified in initializer
+/home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/ipw2100.c:8409:
+warning: excess elements in struct initializer
+/home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/ipw2100.c:8409:
+warning: (near initialization for ‘ipw2100_wx_handler_def’)
+/home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/ipw2200.c:10118:
+error: unknown field ‘num_private’ specified in initializer
+/home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/ipw2200.c:10118:
+warning: initialization makes pointer from integer without a cast
+/home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/ipw2200.c:10119:
+error: unknown field ‘num_private_args’ specified in initializer
+/home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/ipw2200.c:10119:
+warning: excess elements in struct initializer
+/home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/ipw2200.c:10119:
+warning: (near initialization for ‘ipw_wx_handler_def’)
+/home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/ipw2200.c:10120:
+error: unknown field ‘private’ specified in initializer
+/home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/ipw2200.c:10120:
+warning: excess elements in struct initializer
+/home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/ipw2200.c:10120:
+warning: (near initialization for ‘ipw_wx_handler_def’)
+/home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/ipw2200.c:10121:
+error: unknown field ‘private_args’ specified in initializer
+/home/ben/compat-wireless-2010-06-15/drivers/net/wireless/ipw2x00/ipw2200.c:10121:
+warning: excess elements in struct initializer
+/home/ben/c
