@@ -1,39 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49383
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757605Ab0FISRO (ORCPT
+Received: from palinux.external.hp.com ([192.25.206.14]:35595 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755620Ab0FPLJQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jun 2010 14:17:14 -0400
-Date: Wed, 09 Jun 2010 11:17:23 -0700 (PDT)
-Message-Id: <20100609.111723.183033775.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2010-06-08
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20100608190214.GD2422@tuxdriver.com>
-References: <20100608190214.GD2422@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 16 Jun 2010 07:09:16 -0400
+Date: Wed, 16 Jun 2010 05:09:15 -0600
+From: Matthew Wilcox <matthew@wil.cx>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: "Justin P. Mattock" <justinmattock@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 0/5] Fix set but unused variable warnings
+Message-ID: <20100616110914.GF9298@parisc-linux.org>
+References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com> <AANLkTikwKHITQJDaSf9BnHQ9FLiQ-KYlCWNiH438otsV@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTikwKHITQJDaSf9BnHQ9FLiQ-KYlCWNiH438otsV@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 8 Jun 2010 15:02:14 -0400
-
-> Dave,
+On Wed, Jun 16, 2010 at 03:52:58PM +1000, Julian Calaby wrote:
+> Given that patches 3, 4 and 5 seem to be a cases of missing error
+> handling, (3 and 4 in particular seem to be breaking things rather
+> than fixing them) in my humble opinion, I think this set needs some
+> work and discussion.
 > 
-> Here is a flurry of fixes intended for 2.6.35.  Most of them are small
-> and obvious, but there are a few exceptions...I'll include some text from
-> the iwlwifi pull request:
-...
-> The iwlwifi bits are bigger than I would like to see, but the fixes
-> seem worthwhile.  Also included is a revert of a hostap patch that
-> introduced failures with some devices, a NULL pointer dereference fix,
-> a memory leak fix, a fix for an incorrect check of function pointer,
-> a USB ID for p54, and a fix for an association failure 'corner case'
-> from Johannes.
+> Justin, maybe you'd be better off posting the actual error messages
+> (split up by subsystem) and letting the lists discuss them, rather
+> than posting patches which are obviously wrong. (like the ones I've
+> pointed out)
 
-Pulled, thanks John.
+My first impression of patch 5 was "that can't be right", but upon review,
+I concluded that was the best solution.  If we return the PTR_ERR, this
+is going to confuse every user of scsi_host_alloc who are currently only
+checking for NULL.
 
-Please try to keep things a lot smaller from here on out, thank you.
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
