@@ -1,44 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:22880 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752578Ab0FFG4p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jun 2010 02:56:45 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 21/23] iwlwifi: remove unused parameter
-Date: Sat,  5 Jun 2010 23:56:36 -0700
-Message-Id: <1275807398-18184-22-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1275807398-18184-1-git-send-email-reinette.chatre@intel.com>
-References: <1275807398-18184-1-git-send-email-reinette.chatre@intel.com>
+Received: from external1.orbit-lab.org ([128.6.192.131]:49681 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755356Ab0FPAiO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Jun 2010 20:38:14 -0400
+Subject: Compat-wireless release for 2010-06-15v2 is baked
+To: <linux-wireless@vger.kernel.org>, <linux-bluetooth@vger.kernel.org>
+Message-Id: <20100616003813.77B0E42E2C@repository3.localdomain>
+Date: Tue, 15 Jun 2010 20:38:13 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-framecnt_to_us is not used, remove it
+compat-wireless code metrics
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-dev.h |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+    498409 - Total upstream lines of code being pulled
+      1398 - backport code changes
+      1167 - backport code additions
+       231 - backport code deletions
+      5748 - backport from compat module
+      7146 - total backport code
+    1.4338 - % of code consists of backport work
+        13 - Code changes posted but not yet merged
+         8 - Code additions posted but not yet merged
+         5 - Code deletions posted but not yet merged
+    0.0026 - % of code not yet merged
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet merged
+        39 - Crap deletions not yet posted
+    0.2444 - % of crap code
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 45ceb27..55bd2fa 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1361,7 +1361,6 @@ struct iwl_priv {
- 	/* debugging info */
- 	u32 debug_level; /* per device debugging will override global
- 			    iwl_debug_level if set */
--	u32 framecnt_to_us;
- #endif /* CONFIG_IWLWIFI_DEBUG */
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- 	/* debugfs */
--- 
-1.7.0.4
-
+Base tree: linux-next.git
+Base tree version: next-20100615
+compat-wireless release: compat-wireless-2010-06-10-11-gd1c4956
