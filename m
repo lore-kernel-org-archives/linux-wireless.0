@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:54519 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750748Ab0FAQWm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jun 2010 12:22:42 -0400
-Subject: Re: pull request: wireless-2.6 2010-05-28
-From: reinette chatre <reinette.chatre@intel.com>
-To: "sedat.dilek@gmail.com" <sedat.dilek@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Zheng, Jiajia" <jiajia.zheng@intel.com>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-In-Reply-To: <AANLkTil8SLseSeq1M_Xg7P4AqMy3V_0jxc7by2Xuaqnb@mail.gmail.com>
-References: <20100528180952.GC2405@tuxdriver.com>
-	 <AANLkTil8SLseSeq1M_Xg7P4AqMy3V_0jxc7by2Xuaqnb@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 01 Jun 2010 09:22:41 -0700
-Message-ID: <1275409361.2091.27208.camel@rchatre-DESK>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57952 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753704Ab0FPOaN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Jun 2010 10:30:13 -0400
+Date: Wed, 16 Jun 2010 10:23:25 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dennis Borgmann <dennis.borgmann@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, hostap@lists.shmoo.com
+Subject: Re: "ressource temporarily unavailable" on 2.4 GHz, not on 5GHz
+Message-ID: <20100616142325.GA3129@tuxdriver.com>
+References: <4C18DA3D.1030303@googlemail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4C18DA3D.1030303@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sedat,
-
-On Sat, 2010-05-29 at 06:34 -0700, Sedat Dilek wrote:
-> Two people confirmed the patch in [2] fixes:
-> 1. iwlwifi-2.6 GIT master (commit f10a237c95abd6d64a3a24553bd1d3bcddd9108b)
-> 2. compat-wireless (2010-05-21)
+On Wed, Jun 16, 2010 at 04:05:49PM +0200, Dennis Borgmann wrote:
+> Hello wireless-list!
+> Hello hostapd-list!
 > 
-> And it fixes also the above mentionned combination.
+> I am using ath5k with hostapd-0.6.9 on a debian running kernel 2.6.34
+> and I am observing a "ressource temporarily unavailable" - error code 11
+> if I pump out multicast-packets quite fast. I wrote a small
+> test-program, that handles this test and as soon as I go down to a
+> 8ms-pause or below in betweens the packets, the error is thrown quite
+> soon after starting the program. Funny thing is, that this error only
+> occurs in g-band (2.4 GHz), not in a-band (5GHz).
+> 
+> What could be the problem? Is this due to backoff-times in 2.4 GHz, that
+> don't occur on 5 GHz? Or could this be a bug?
 
-We are working on getting this patch upstream. The version tested
-contains a significant amount of duplicated code as well as some cleanup
-code mixed in. It is thus not appropriate for an upstream submission at
-this time.
+My only initial thought is that the 2.5GHz band is usually more
+utilized.  So there is more likely to be retransmissions, etc.
 
-> As a suggestion:
-> What about "copying" bug-reports (incl. its history) from IWL-BTS into
-> linux-wireless ML?
-> For example (dri-devel related) bug-reports from
-> bugzilla.freedesktop.org are "copied" into dri-devel ML.
+> Find attached my small piece of code to test and reproduce this effect.
 
-Pointing people to the bug report seems to work ok. What benefit does
-the above have?
+Perhaps you could include actual dmesg output?
 
-Reinette
-
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
