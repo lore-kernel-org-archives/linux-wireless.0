@@ -1,106 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:39703
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750959Ab0FHEqD (ORCPT
+Received: from mail-ww0-f46.google.com ([74.125.82.46]:57840 "EHLO
+	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751143Ab0FPILY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jun 2010 00:46:03 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by sunset.davemloft.net (Postfix) with ESMTP id 875BF24C08E
-	for <linux-wireless@vger.kernel.org>; Mon,  7 Jun 2010 21:46:12 -0700 (PDT)
-Date: Mon, 07 Jun 2010 21:46:12 -0700 (PDT)
-Message-Id: <20100607.214612.26938385.davem@davemloft.net>
-To: linux-wireless@vger.kernel.org
-Subject: iwlagn fails to assoc with nexus one in ad-hoc mode
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 16 Jun 2010 04:11:24 -0400
+Received: by wwb18 with SMTP id 18so5419591wwb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jun 2010 01:11:21 -0700 (PDT)
+Date: Wed, 16 Jun 2010 10:12:27 +0200
+From: Kristoffer Ericson <kristoffer.ericson@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: stable@kernel.org, greg@kroah.com, linux-wireless@vger.kernel.org,
+	Peter Stuge <peter@stuge.se>,
+	"Justin P. Mattock" <justinmattock@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 2.6.32.y] ath9k: re-enable ps by default for new single
+ chip families
+Message-ID: <20100616081227.GA1118@boggieman>
+Reply-To: Kristoffer Ericson <kristoffer.ericson@gmail.com>
+References: <1276640359-25360-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1276640359-25360-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Jun 15, 2010 at 06:19:19PM -0400, Luis R. Rodriguez wrote:
+> commit 14acdde6e527950f66c084dbf19bad6fbfcaeedc upstream.
+> 
+> The newer single chip hardware family of chipsets have not been
+> experiencing issues with power saving set by default with recent
+> fixes merged (even into stable). The remaining issues are only
+> reported with AR5416 and since enabling PS by default can increase
+> power savings considerably best to take advantage of that feature
+> as this has been tested properly.
 
-When I try to associate the wireless activity light blinks like
-crazy and I get kernel log dumps like the one at the end of
-this email.
+I havent had any issues lately. But that said Ive moved on to
+2.6.33, 2.6.34 which seems to work fine. Believe you set
+to disabled by default on those?
 
-The nexus one uses a Broadcom BCM4328 for wireless.
+/Kristoffer
 
-Windows 7 users report the same problem with Intel wireless, and that
-upgrading to the Intel wireless windows driver, version 13.1.1.1,
-fixes the problem.
-
-For example, see here:
-
-http://code.google.com/p/android-wifi-tether/issues/detail?id=244
-
-Can we make sure whatever got fixed in the windows driver propagates
-into our Linux drivers too? :-)
-
-Thanks!
-
---------------------
-iwlagn 0000:03:00.0: Microcode SW error detected.  Restarting 0x2000000.
-iwlagn 0000:03:00.0: Start IWL Error Log Dump:
-iwlagn 0000:03:00.0: Status: 0x000212E4, count: 5
-iwlagn 0000:03:00.0: Desc                               Time       data1      data2      line
-iwlagn 0000:03:00.0: SYSASSERT                    (#05) 0010614736 0x00000080 0x00000010 854
-iwlagn 0000:03:00.0: blink1  blink2  ilink1  ilink2
-iwlagn 0000:03:00.0: 0x03870 0x03870 0x008B2 0x00000
-iwlagn 0000:03:00.0: CSR values:
-iwlagn 0000:03:00.0: (2nd byte of CSR_INT_COALESCING is CSR_INT_PERIODIC_REG)
-iwlagn 0000:03:00.0:        CSR_HW_IF_CONFIG_REG: 0X00480302
-iwlagn 0000:03:00.0:          CSR_INT_COALESCING: 0X00000040
-iwlagn 0000:03:00.0:                     CSR_INT: 0X00000000
-iwlagn 0000:03:00.0:                CSR_INT_MASK: 0X00000000
-iwlagn 0000:03:00.0:           CSR_FH_INT_STATUS: 0X00000000
-iwlagn 0000:03:00.0:                 CSR_GPIO_IN: 0X00000000
-iwlagn 0000:03:00.0:                   CSR_RESET: 0X00000000
-iwlagn 0000:03:00.0:                CSR_GP_CNTRL: 0X080403c5
-iwlagn 0000:03:00.0:                  CSR_HW_REV: 0X00000024
-iwlagn 0000:03:00.0:              CSR_EEPROM_REG: 0X00000000
-iwlagn 0000:03:00.0:               CSR_EEPROM_GP: 0X90000004
-iwlagn 0000:03:00.0:              CSR_OTP_GP_REG: 0X00060000
-iwlagn 0000:03:00.0:                 CSR_GIO_REG: 0X00080046
-iwlagn 0000:03:00.0:            CSR_GP_UCODE_REG: 0X00000029
-iwlagn 0000:03:00.0:           CSR_GP_DRIVER_REG: 0X00000000
-iwlagn 0000:03:00.0:           CSR_UCODE_DRV_GP1: 0X00000000
-iwlagn 0000:03:00.0:           CSR_UCODE_DRV_GP2: 0X00000000
-iwlagn 0000:03:00.0:                 CSR_LED_REG: 0X00000078
-iwlagn 0000:03:00.0:        CSR_DRAM_INT_TBL_REG: 0X88034db0
-iwlagn 0000:03:00.0:        CSR_GIO_CHICKEN_BITS: 0X27800200
-iwlagn 0000:03:00.0:             CSR_ANA_PLL_CFG: 0X00880300
-iwlagn 0000:03:00.0:           CSR_HW_REV_WA_REG: 0X0001001a
-iwlagn 0000:03:00.0:        CSR_DBG_HPET_MEM_REG: 0Xffff0000
-iwlagn 0000:03:00.0: FH register values:
-iwlagn 0000:03:00.0:         FH_RSCSR_CHNL0_STTS_WPTR_REG: 0X034c7900
-iwlagn 0000:03:00.0:        FH_RSCSR_CHNL0_RBDCB_BASE_REG: 0X0034ccc0
-iwlagn 0000:03:00.0:                  FH_RSCSR_CHNL0_WPTR: 0X00000040
-iwlagn 0000:03:00.0:         FH_MEM_RCSR_CHNL0_CONFIG_REG: 0X80819104
-iwlagn 0000:03:00.0:          FH_MEM_RSSR_SHARED_CTRL_REG: 0X000000fc
-iwlagn 0000:03:00.0:            FH_MEM_RSSR_RX_STATUS_REG: 0X07030000
-iwlagn 0000:03:00.0:    FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV: 0X00000000
-iwlagn 0000:03:00.0:                FH_TSSR_TX_STATUS_REG: 0X07ff0001
-iwlagn 0000:03:00.0:                 FH_TSSR_TX_ERROR_REG: 0X00000000
-iwlagn 0000:03:00.0: Start IWL Event Log Dump: display last 20 entries
-iwlagn 0000:03:00.0: EVT_LOGT:0000054936:0x00000001:0353
-iwlagn 0000:03:00.0: EVT_LOGT:0000054953:0x0000010f:0106
-iwlagn 0000:03:00.0: EVT_LOGT:0000054955:0x00000000:0301
-iwlagn 0000:03:00.0: EVT_LOGT:0000055026:0x0000000d:0353
-iwlagn 0000:03:00.0: EVT_LOGT:0000055037:0x00000000:0302
-iwlagn 0000:03:00.0: EVT_LOGT:0000055057:0x00000c1d:0352
-iwlagn 0000:03:00.0: EVT_LOGT:0000055058:0x00000002:0353
-iwlagn 0000:03:00.0: EVT_LOGT:0000055070:0x00000000:0302
-iwlagn 0000:03:00.0: EVT_LOGT:0000055094:0x00000d48:0352
-iwlagn 0000:03:00.0: EVT_LOGT:0000055095:0x00000003:0353
-iwlagn 0000:03:00.0: EVT_LOGT:0000055157:0x0000010f:0106
-iwlagn 0000:03:00.0: EVT_LOGT:0000055159:0x00000000:0302
-iwlagn 0000:03:00.0: EVT_LOGT:0000055171:0x00002000:0350
-iwlagn 0000:03:00.0: EVT_LOGT:0000079297:0x0000010f:0106
-iwlagn 0000:03:00.0: EVT_LOGT:0000079299:0x00000000:0301
-iwlagn 0000:03:00.0: EVT_LOGT:0000079679:0x00000080:0313
-iwlagn 0000:03:00.0: EVT_LOGT:0000079681:0x000005b4:0501
-iwlagn 0000:03:00.0: EVT_LOGT:0000081109:0x00000000:0356
-iwlagn 0000:03:00.0: EVT_LOGT:0000081141:0x000002ef:0501
-iwlagn 0000:03:00.0: EVT_LOGT:0000081150:0x00000000:0125
-iwlagn 0000:03:00.0: Unable to find TIM Element in beacon
-iwlagn 0000:03:00.0: Unable to find TIM Element in beacon
-iwlagn 0000:03:00.0: index 0 already used in uCode key table.
+> 
+> For more details on this issue see the bug report:
+> 
+> http://bugzilla.kernel.org/show_bug.cgi?id=14267
+> 
+> We leave AR5416 with PS disabled by default, that seems to require
+> some more work.
+> 
+> Cc: stable@kernel.org
+> Cc: Peter Stuge <peter@stuge.se>
+> Cc: Justin P. Mattock  <justinmattock@gmail.com>
+> Cc: Kristoffer Ericson <kristoffer.ericson@gmail.com>
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+> 
+> Greg, this is the long promised backport of the patch titled
+> "ath9k: re-enable ps by default for new single chip families" backported
+> down to 2.6.32.y. This just goes test compiled. Manual backport
+> was required from the upstream Linus patch since the flag
+> WIPHY_FLAG_PS_ON_BY_DEFAULT was not used back on 2.6.32 so instead
+> we use the equivalent hw->wiphy->ps_default bool.
+> 
+> Apologies for the delay, was just stuck with other stuff.
+> 
+> I'll remove this from the stable pending list for 802.11 [1] once
+> this gets sucked in.
+> 
+> [1] http://wireless.kernel.org/en/developers/stable-pending
+> 
+>  drivers/net/wireless/ath/ath9k/main.c |    7 ++++++-
+>  1 files changed, 6 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> index 15eb245..dba27b7 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -1538,6 +1538,8 @@ bad_no_ah:
+>  
+>  void ath_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+>  {
+> +	struct ath_hw *ah = sc->sc_ah;
+> +
+>  	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
+>  		IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+>  		IEEE80211_HW_SIGNAL_DBM |
+> @@ -1556,7 +1558,10 @@ void ath_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+>  		BIT(NL80211_IFTYPE_ADHOC) |
+>  		BIT(NL80211_IFTYPE_MESH_POINT);
+>  
+> -	hw->wiphy->ps_default = false;
+> +	if (AR_SREV_5416(ah))
+> +		hw->wiphy->ps_default = false;
+> +	else
+> +		hw->wiphy->ps_default = true;
+>  
+>  	hw->queues = 4;
+>  	hw->max_rates = 4;
+> -- 
+> 1.6.3.3
