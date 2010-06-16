@@ -1,74 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cp-out12.libero.it ([212.52.84.112]:41180 "EHLO
-	cp-out12.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756569Ab0FBJgM (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:52352 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754598Ab0FPFdx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jun 2010 05:36:12 -0400
-Received: from pcfabio2.localnet (151.48.10.118) by cp-out12.libero.it (8.5.119) (authenticated as rossi.f@inwind.it)
-        id 4B0BAAC221486CAB for linux-wireless@vger.kernel.org; Wed, 2 Jun 2010 11:30:17 +0200
-From: Fabio Rossi <rossi.f@inwind.it>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: WARNING: at drivers/base/core.c:130 device_release+0x82/0x90()
-Date: Wed, 2 Jun 2010 11:29:43 +0200
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <201006021129.43621.rossi.f@inwind.it>
+	Wed, 16 Jun 2010 01:33:53 -0400
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	"Justin P. Mattock" <justinmattock@gmail.com>
+Subject: [PATCH 3/5]pci:bus.c Fix variable 'retval' set but not used
+Date: Tue, 15 Jun 2010 22:33:52 -0700
+Message-Id: <1276666434-11227-4-git-send-email-justinmattock@gmail.com>
+In-Reply-To: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>
+References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Compiling the kernel without ACPI (CONFIG_ACPI=n) gives the following warning:
+The patch below fixes the warning message I am seeing with gcc 4.6.0
+  CC      drivers/pci/bus.o
+drivers/pci/bus.c: In function 'pci_enable_bridges':
+drivers/pci/bus.c:237:6: warning: variable 'retval' set but not used
 
-cfg80211: Calling CRDA to update world regulatory domain
-cfg80211: World regulatory domain updated:
-    (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-    (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-ath5k 0000:08:01.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-ath5k 0000:08:01.0: registered as 'phy0'
-ath5k phy0: request_irq failed
-------------[ cut here ]------------
-WARNING: at drivers/base/core.c:130 device_release+0x82/0x90()
-Hardware name: System Product Name
-Device 'phy0' does not have a release() function, it is broken and must be 
-fixed.
-Modules linked in: ath5k(+) mac80211 ath cfg80211 vmnet vsock vmci vmmon 
-gspca_zc3xx gspca_main [last unloaded: cfg80211]
-Pid: 8607, comm: modprobe Tainted: G        W   2.6.35-rc1-wl #50
-Call Trace:
- [<ffffffff8103917a>] warn_slowpath_common+0x7a/0xb0
- [<ffffffff81039251>] warn_slowpath_fmt+0x41/0x50
- [<ffffffff8138c4a2>] device_release+0x82/0x90
- [<ffffffff81225fc7>] kobject_release+0x47/0x90
- [<ffffffff81225f80>] ? kobject_release+0x0/0x90
- [<ffffffff81227187>] kref_put+0x37/0x70
- [<ffffffff81225e87>] kobject_put+0x27/0x60
- [<ffffffff8138be22>] put_device+0x12/0x20
- [<ffffffffa00eb790>] wiphy_free+0x10/0x20 [cfg80211]
- [<ffffffffa011102d>] ieee80211_free_hw+0xd/0x10 [mac80211]
- [<ffffffffa016f891>] ath5k_pci_probe+0x16da/0x1710 [ath5k]
- [<ffffffff811089da>] ? __sysfs_add_one+0x2a/0xe0
- [<ffffffff81108b07>] ? sysfs_add_one+0x27/0xd0
- [<ffffffff8123e322>] local_pci_probe+0x12/0x20
- [<ffffffff8123e5d0>] pci_device_probe+0x80/0xb0
- [<ffffffff8138f98a>] ? driver_sysfs_add+0x5a/0x90                                                                                   
- [<ffffffff8138facd>] driver_probe_device+0x8d/0x1a0                                                                                 
- [<ffffffff8138fc73>] __driver_attach+0x93/0xa0                                                                                      
- [<ffffffff8138fbe0>] ? __driver_attach+0x0/0xa0                                                                                     
- [<ffffffff8138f1e8>] bus_for_each_dev+0x68/0x90
- [<ffffffff8138f929>] driver_attach+0x19/0x20
- [<ffffffff8138e9a8>] bus_add_driver+0xb8/0x260
- [<ffffffff8138ff68>] driver_register+0x78/0x140
- [<ffffffff8123e841>] __pci_register_driver+0x51/0xd0
- [<ffffffff811f2996>] ? debugfs_create_dir+0x16/0x20
- [<ffffffffa0180000>] ? init_ath5k_pci+0x0/0x43 [ath5k]
- [<ffffffffa0180028>] init_ath5k_pci+0x28/0x43 [ath5k]
- [<ffffffff810001d7>] do_one_initcall+0x37/0x190
- [<ffffffff81066fc6>] sys_init_module+0xd6/0x250
- [<ffffffff810023ab>] system_call_fastpath+0x16/0x1b
----[ end trace a6ef611dbd725746 ]---
-ath5k 0000:08:01.0: PCI INT A disabled
-ath5k: probe of 0000:08:01.0 failed with error -22
+ Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
 
-It is not possible to use the wireless network.
+---
+ drivers/pci/bus.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-Fabio
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 628ea20..84bdb48 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -234,12 +234,10 @@ void pci_bus_add_devices(const struct pci_bus *bus)
+ void pci_enable_bridges(struct pci_bus *bus)
+ {
+ 	struct pci_dev *dev;
+-	int retval;
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		if (dev->subordinate) {
+ 			if (!pci_is_enabled(dev)) {
+-				retval = pci_enable_device(dev);
+ 				pci_set_master(dev);
+ 			}
+ 			pci_enable_bridges(dev->subordinate);
+-- 
+1.7.1.rc1.21.gf3bd6
+
