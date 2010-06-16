@@ -1,141 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46555 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754661Ab0FIPHV (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:53541 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753762Ab0FPFdq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jun 2010 11:07:21 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.71)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1OMMsC-00089r-1k
-	for linux-wireless@vger.kernel.org; Wed, 09 Jun 2010 17:07:20 +0200
-Message-Id: <20100609150456.003185959@sipsolutions.net>
-Date: Wed, 09 Jun 2010 17:01:58 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC v2 16/22] mac80211: defer RX agg session teardown to work
-References: <20100609150142.227469359@sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 16 Jun 2010 01:33:46 -0400
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH 0/5] Fix set but unused variable warnings 
+Date: Tue, 15 Jun 2010 22:33:49 -0700
+Message-Id: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-Since we want the code to be able to sleep
-in the future, it must not be called from
-the timer directly. To prepare, move it out
-into the aggregation work.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/agg-rx.c      |   24 ++++++++++--------------
- net/mac80211/ht.c          |    5 +++++
- net/mac80211/ieee80211_i.h |    2 ++
- net/mac80211/sta_info.h    |    3 +++
- 4 files changed, 20 insertions(+), 14 deletions(-)
-
---- wireless-testing.orig/net/mac80211/agg-rx.c	2010-06-09 12:57:26.000000000 +0200
-+++ wireless-testing/net/mac80211/agg-rx.c	2010-06-09 12:57:30.000000000 +0200
-@@ -32,21 +32,18 @@ static void ieee80211_free_tid_rx(struct
- 	kfree(tid_rx);
- }
- 
--static void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
--					    u16 initiator, u16 reason,
--					    bool from_timer)
-+void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
-+				     u16 initiator, u16 reason)
- {
- 	struct ieee80211_local *local = sta->local;
- 	struct tid_ampdu_rx *tid_rx;
- 
--	spin_lock_bh(&sta->lock);
-+	lockdep_assert_held(&sta->lock);
- 
- 	tid_rx = sta->ampdu_mlme.tid_rx[tid];
- 
--	if (!tid_rx) {
--		spin_unlock_bh(&sta->lock);
-+	if (!tid_rx)
- 		return;
--	}
- 
- 	rcu_assign_pointer(sta->ampdu_mlme.tid_rx[tid], NULL);
- 
-@@ -65,10 +62,7 @@ static void ___ieee80211_stop_rx_ba_sess
- 		ieee80211_send_delba(sta->sdata, sta->sta.addr,
- 				     tid, 0, reason);
- 
--	spin_unlock_bh(&sta->lock);
--
--	if (!from_timer)
--		del_timer_sync(&tid_rx->session_timer);
-+	del_timer_sync(&tid_rx->session_timer);
- 
- 	call_rcu(&tid_rx->rcu_head, ieee80211_free_tid_rx);
- }
-@@ -76,7 +70,9 @@ static void ___ieee80211_stop_rx_ba_sess
- void __ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
- 				    u16 initiator, u16 reason)
- {
--	___ieee80211_stop_rx_ba_session(sta, tid, initiator, reason, false);
-+	spin_lock_bh(&sta->lock);
-+	___ieee80211_stop_rx_ba_session(sta, tid, initiator, reason);
-+	spin_unlock_bh(&sta->lock);
- }
- 
- /*
-@@ -97,8 +93,8 @@ static void sta_rx_agg_session_timer_exp
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 	printk(KERN_DEBUG "rx session timer expired on tid %d\n", (u16)*ptid);
- #endif
--	___ieee80211_stop_rx_ba_session(sta, *ptid, WLAN_BACK_RECIPIENT,
--					WLAN_REASON_QSTA_TIMEOUT, true);
-+	set_bit(*ptid, sta->ampdu_mlme.tid_rx_timer_expired);
-+	ieee80211_queue_work(&sta->local->hw, &sta->ampdu_mlme.work);
- }
- 
- static void ieee80211_send_addba_resp(struct ieee80211_sub_if_data *sdata, u8 *da, u16 tid,
---- wireless-testing.orig/net/mac80211/ht.c	2010-06-09 12:57:30.000000000 +0200
-+++ wireless-testing/net/mac80211/ht.c	2010-06-09 12:57:30.000000000 +0200
-@@ -132,6 +132,11 @@ void ieee80211_ba_session_work(struct wo
- 
- 	spin_lock_bh(&sta->lock);
- 	for (tid = 0; tid < STA_TID_NUM; tid++) {
-+		if (test_and_clear_bit(tid, sta->ampdu_mlme.tid_rx_timer_expired))
-+			___ieee80211_stop_rx_ba_session(
-+				sta, tid, WLAN_BACK_RECIPIENT,
-+				WLAN_REASON_QSTA_TIMEOUT);
-+
- 		tid_tx = sta->ampdu_mlme.tid_tx[tid];
- 		if (!tid_tx)
- 			continue;
---- wireless-testing.orig/net/mac80211/sta_info.h	2010-06-09 12:57:29.000000000 +0200
-+++ wireless-testing/net/mac80211/sta_info.h	2010-06-09 12:57:30.000000000 +0200
-@@ -140,10 +140,13 @@ struct tid_ampdu_rx {
-  * @addba_req_num: number of times addBA request has been sent.
-  * @dialog_token_allocator: dialog token enumerator for each new session;
-  * @work: work struct for starting/stopping aggregation
-+ * @tid_rx_timer_expired: bitmap indicating on which TIDs the
-+ *	RX timer expired until the work for it runs
-  */
- struct sta_ampdu_mlme {
- 	/* rx */
- 	struct tid_ampdu_rx *tid_rx[STA_TID_NUM];
-+	unsigned long tid_rx_timer_expired[BITS_TO_LONGS(STA_TID_NUM)];
- 	/* tx */
- 	struct work_struct work;
- 	struct tid_ampdu_tx *tid_tx[STA_TID_NUM];
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2010-06-09 12:57:30.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2010-06-09 12:57:30.000000000 +0200
-@@ -1101,6 +1101,8 @@ int ieee80211_send_smps_action(struct ie
- 			       enum ieee80211_smps_mode smps, const u8 *da,
- 			       const u8 *bssid);
- 
-+void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
-+				     u16 initiator, u16 reason);
- void __ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
- 				    u16 initiator, u16 reason);
- void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta);
 
 
+Here is another set of patches fixing some warning messages generated 
+when building the kernel when using gcc 4.6.0.
+
+This set just focuses in on the variables warnings that are reported
+to be unused. Keep in mind there are still lots more warning messages
+that I'm seeing, and will try my hardest to see if I can come up with
+a fix, but if things become too difficult and so forth then a bug should
+be filled etc..
+ 
+And lastly I want to Thank the people who helped me out on the last patch
+set I had sent out and so forth.
+Please look if you have the time, and let me know.
+
+Thanks!!
+
+Justin P. Mattock
