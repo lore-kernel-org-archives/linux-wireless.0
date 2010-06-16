@@ -1,114 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:29514 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754402Ab0FXJmv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jun 2010 05:42:51 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 24 Jun 2010 02:42:51 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/3] ath9k: Fix bug in paprd
-Date: Thu, 24 Jun 2010 02:42:44 -0700
-Message-ID: <1277372566-22883-1-git-send-email-vasanth@atheros.com>
+Received: from mail-px0-f174.google.com ([209.85.212.174]:62888 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755694Ab0FPG5y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Jun 2010 02:57:54 -0400
+Message-ID: <4C187603.10203@gmail.com>
+Date: Tue, 15 Jun 2010 23:58:11 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Junchang Wang <junchangwang@gmail.com>
+CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 3/5]pci:bus.c Fix variable 'retval' set but not used
+References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com> <1276666434-11227-4-git-send-email-justinmattock@gmail.com> <20100616060738.GA12461@host-a-229.ustcsz.edu.cn>
+In-Reply-To: <20100616060738.GA12461@host-a-229.ustcsz.edu.cn>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is possbile that the transmission of paprd test frame
-might not get completed in 100ms if tx is stuck. Freeing
-this skb upon timeout in ath_paprd_calibrate() will result
-in accessing already freed memory when the associated pending
-buffer is drained in txq. This patch fixes this issue.
+On 06/15/2010 11:07 PM, Junchang Wang wrote:
+> On Tue, Jun 15, 2010 at 10:33:52PM -0700, Justin P. Mattock wrote:
+>> @@ -234,12 +234,10 @@ void pci_bus_add_devices(const struct pci_bus *bus)
+>> void pci_enable_bridges(struct pci_bus *bus)
+>> {
+>> 	struct pci_dev *dev;
+>> -	int retval;
+>>
+>> 	list_for_each_entry(dev,&bus->devices, bus_list) {
+>> 		if (dev->subordinate) {
+>> 			if (!pci_is_enabled(dev)) {
+>> -				retval = pci_enable_device(dev);
+> Hi Justin,
+>
+> pci_enable_device initializes device before it's used by a driver.
+>
+> I think you should add check instead of eliminating pci_enable_device.
+>
+> For example,
+> retval = pci_enable_device(dev);
+> if (retval<  0) {
+> 	goto handle_err;
+> }
+>
+> --Junchang
+>
+>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    3 +++
- drivers/net/wireless/ath/ath9k/main.c  |    5 +++--
- drivers/net/wireless/ath/ath9k/xmit.c  |   12 ++++++++++--
- 3 files changed, 16 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 6218890..6c561fa 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -226,6 +226,7 @@ struct ath_buf_state {
- 	int bfs_retries;
- 	u8 bf_type;
- 	u8 bfs_paprd;
-+	unsigned long bfs_paprd_timestamp;
- 	u32 bfs_keyix;
- 	enum ath9k_key_type bfs_keytype;
- };
-@@ -425,6 +426,8 @@ int ath_beaconq_config(struct ath_softc *sc);
- #define ATH_LONG_CALINTERVAL      30000   /* 30 seconds */
- #define ATH_RESTART_CALINTERVAL   1200000 /* 20 minutes */
- 
-+#define ATH_PAPRD_TIMEOUT	100 /* msecs */
-+
- void ath_paprd_calibrate(struct work_struct *work);
- void ath_ani_calibrate(unsigned long data);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 41a317d..6d57877 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -310,13 +310,13 @@ void ath_paprd_calibrate(struct work_struct *work)
- 			break;
- 
- 		time_left = wait_for_completion_timeout(&sc->paprd_complete,
--							100);
-+				msecs_to_jiffies(ATH_PAPRD_TIMEOUT));
- 		if (!time_left) {
- 			ath_print(ath9k_hw_common(ah), ATH_DBG_CALIBRATE,
- 				  "Timeout waiting for paprd training on "
- 				  "TX chain %d\n",
- 				  chain);
--			break;
-+			goto fail_paprd;
- 		}
- 
- 		if (!ar9003_paprd_is_done(ah))
-@@ -334,6 +334,7 @@ void ath_paprd_calibrate(struct work_struct *work)
- 		ath_paprd_activate(sc);
- 	}
- 
-+fail_paprd:
- 	ath9k_ps_restore(sc);
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 20221b8..edbeffb 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1644,6 +1644,8 @@ static int ath_tx_setup_buffer(struct ieee80211_hw *hw, struct ath_buf *bf,
- 	}
- 
- 	bf->bf_state.bfs_paprd = txctl->paprd;
-+	if (txctl->paprd)
-+		bf->bf_state.bfs_paprd_timestamp = jiffies;
- 	bf->bf_flags = setup_tx_flags(skb, use_ldpc);
- 
- 	bf->bf_keytype = get_hw_crypto_keytype(skb);
-@@ -1944,8 +1946,14 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
- 	dma_unmap_single(sc->dev, bf->bf_dmacontext, skb->len, DMA_TO_DEVICE);
- 
- 	if (bf->bf_state.bfs_paprd) {
--		sc->paprd_txok = txok;
--		complete(&sc->paprd_complete);
-+		if (time_after(jiffies,
-+			       bf->bf_state.bfs_paprd_timestamp +
-+			       msecs_to_jiffies(ATH_PAPRD_TIMEOUT))) {
-+			dev_kfree_skb_any(skb);
-+		} else {
-+			sc->paprd_txok = txok;
-+			complete(&sc->paprd_complete);
-+		}
- 	} else {
- 		ath_tx_complete(sc, skb, bf->aphy, tx_flags);
- 		ath_debug_stat_tx(sc, txq, bf, ts);
--- 
-1.7.0.4
+cool, thanks for the example and info on this. I'll play around with 
+this to see if I come up with anything.
 
+cheers,
+
+Justin P. Mattock
