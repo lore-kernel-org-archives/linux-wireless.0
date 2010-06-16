@@ -1,117 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:38984 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751243Ab0FRSs4 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60611 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757075Ab0FPNpK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jun 2010 14:48:56 -0400
-Message-ID: <4C1BBF7D.8090904@kernel.org>
-Date: Fri, 18 Jun 2010 11:48:29 -0700
-From: Yinghai Lu <yinghai@kernel.org>
+	Wed, 16 Jun 2010 09:45:10 -0400
+Date: Wed, 16 Jun 2010 09:38:24 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Vivek Natarajan <vivek.natraj@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k: Modify LED blinking pattern during wifi activity.
+Message-ID: <20100616133824.GA2404@tuxdriver.com>
+References: <1276579217-6837-1-git-send-email-vnatarajan@atheros.com>
+ <20100615195157.GC2415@tuxdriver.com>
+ <AANLkTimprPdviZPX26qcH-uM8FyNY09JEH3kRvqwDi-S@mail.gmail.com>
 MIME-Version: 1.0
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-CC: "Justin P. Mattock" <justinmattock@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 4/5]pci:setup_bus.c Fix warning: variable 'retval' set
- but not used
-References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>	<1276666434-11227-5-git-send-email-justinmattock@gmail.com> <20100618102330.29eccb5b@virtuousgeek.org>
-In-Reply-To: <20100618102330.29eccb5b@virtuousgeek.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTimprPdviZPX26qcH-uM8FyNY09JEH3kRvqwDi-S@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/18/2010 10:23 AM, Jesse Barnes wrote:
-> On Tue, 15 Jun 2010 22:33:53 -0700
-> "Justin P. Mattock" <justinmattock@gmail.com> wrote:
+On Wed, Jun 16, 2010 at 11:21:27AM +0530, Vivek Natarajan wrote:
+> On Wed, Jun 16, 2010 at 1:21 AM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+> > On Tue, Jun 15, 2010 at 10:50:17AM +0530, Vivek Natarajan wrote:
+> >> Some vendors require the LED to be ON always irrespective of any
+> >> radio activity. Introducing a module parameter to enable this,
+> >> so that one can choose between always on or led blink during
+> >> activity.
+> >>
+> >> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+> >
+> > Any particular reason the always-on behaviour is the default?
 > 
->> The below patch fixes a warning message when using gcc 4.6.0
->>   CC      drivers/pci/setup-bus.o
->> drivers/pci/setup-bus.c: In function 'pci_assign_unassigned_bridge_resources':
->> drivers/pci/setup-bus.c:868:6: warning: variable 'retval' set but not used
->>  
->>  Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
->>
->> ---
->>  drivers/pci/setup-bus.c |    2 --
->>  1 files changed, 0 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
->> index 19b1113..215590b 100644
->> --- a/drivers/pci/setup-bus.c
->> +++ b/drivers/pci/setup-bus.c
->> @@ -865,7 +865,6 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
->>  	struct pci_bus *parent = bridge->subordinate;
->>  	int tried_times = 0;
->>  	struct resource_list_x head, *list;
->> -	int retval;
->>  	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
->>  				  IORESOURCE_PREFETCH;
->>  
->> @@ -874,7 +873,6 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
->>  again:
->>  	pci_bus_size_bridges(parent);
->>  	__pci_bridge_assign_resources(bridge, &head);
->> -	retval = pci_reenable_device(bridge);
->>  	pci_set_master(bridge);
->>  	pci_enable_bridges(parent);
->>  
+> There is no specific reason for setting it as default. It is only that
+> some customers preferred the led to be always on instead of blinking.
 
-I sent following patch several weeks ago, can you put that in pci-next?
+Well it is just that as I read the patch, you are changing the
+behaviour for everyone rather than simply giving a new option for
+those that don't like it that way it already is.
 
-Subject: [PATCH] pciehp: Enable bridges at last for multiple try assigning
+Look, I don't particular care about the behaviour.  Blinking w/
+activity makes sense to me.  But I also get to read the seemingly
+endless, whining complaints about how the blinking is distracting for
+laptop users.  I just would rather not add another endless stream of
+complaints that say "my wifi LED used to blink w/ activity, now it
+doesn't -- fix it!"
 
-Found one PCIe Module with several bridges "cold" hotadd doesn't work.
+Perhaps we could standardize this somehow?  Anyone care to make
+a proposal?
 
-the root cause:
-1. BIOS assign small range the parent bridges.
-2. First try for hotadd only can make some bridges get resource assigned.
-3. Second will update parent bridge res, get right sizes for all child bridges
-    and devices, but resource for child bridges are not set to HW register.
-    Because first try already enable those bridges, so __pci_bridge_assign_resource
-    skip the setting step.
-
-So try to move enabling of child bridges to last and only do that one time
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-
----
- drivers/pci/setup-bus.c |   12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
-
-Index: linux-2.6/drivers/pci/setup-bus.c
-===================================================================
---- linux-2.6.orig/drivers/pci/setup-bus.c
-+++ linux-2.6/drivers/pci/setup-bus.c
-@@ -866,19 +866,16 @@ void pci_assign_unassigned_bridge_resour
- again:
- 	pci_bus_size_bridges(parent);
- 	__pci_bridge_assign_resources(bridge, &head);
--	retval = pci_reenable_device(bridge);
--	pci_set_master(bridge);
--	pci_enable_bridges(parent);
- 
- 	tried_times++;
- 
- 	if (!head.next)
--		return;
-+		goto enable_all;
- 
- 	if (tried_times >= 2) {
- 		/* still fail, don't need to try more */
- 		free_failed_list(&head);
--		return;
-+		goto enable_all;
- 	}
- 
- 	printk(KERN_DEBUG "PCI: No. %d try to assign unassigned res\n",
-@@ -911,5 +908,10 @@ again:
- 	free_failed_list(&head);
- 
- 	goto again;
-+
-+enable_all:
-+	retval = pci_reenable_device(bridge);
-+	pci_set_master(bridge);
-+	pci_enable_bridges(parent);
- }
- EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
