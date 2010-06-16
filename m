@@ -1,33 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:49354 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932298Ab0FEA5P (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jun 2010 20:57:15 -0400
-To: mcgrof@gmail.com, linux-wireless@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org
-Subject: Compat-wireless release for 2010-06-04 is baked
-Message-Id: <20100605004644.88F252FAF7@repository2.localdomain>
-Date: Fri,  4 Jun 2010 20:46:44 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mail.atheros.com ([12.36.123.2]:44779 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756484Ab0FPSQY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Jun 2010 14:16:24 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 16 Jun 2010 11:16:24 -0700
+Date: Wed, 16 Jun 2010 11:16:22 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Kristoffer Ericson <kristoffer.ericson@gmail.com>,
+	"stable@kernel.org" <stable@kernel.org>,
+	"greg@kroah.com" <greg@kroah.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Peter Stuge <peter@stuge.se>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 2.6.32.y] ath9k: re-enable ps by default for new single
+ chip families
+Message-ID: <20100616181622.GD26198@tux>
+References: <1276640359-25360-1-git-send-email-lrodriguez@atheros.com>
+ <20100616081227.GA1118@boggieman>
+ <4C18D2A5.5080702@gmail.com>
+ <AANLkTimDp52ULRcO9NMgeV34olfpD97wYfmr_atOQ5AF@mail.gmail.com>
+ <4C18F560.1010408@gmail.com>
+ <20100616175318.GA26198@tux>
+ <4C1914C1.602@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4C1914C1.602@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Jun 16, 2010 at 11:15:29AM -0700, Justin P. Mattock wrote:
+> On 06/16/2010 10:53 AM, Luis R. Rodriguez wrote:
+> > On Wed, Jun 16, 2010 at 09:01:36AM -0700, Justin P. Mattock wrote:
+> >> On 06/16/2010 08:49 AM, Luis R. Rodriguez wrote:
+> >>> On Wed, Jun 16, 2010 at 6:33 AM, Justin P. Mattock
+> >>> <justinmattock@gmail.com>   wrote:
+> >>>> On 06/16/2010 01:12 AM, Kristoffer Ericson wrote:
+> >>>>>
+> >>>>> On Tue, Jun 15, 2010 at 06:19:19PM -0400, Luis R. Rodriguez wrote:
+> >>>>>>
+> >>>>>> commit 14acdde6e527950f66c084dbf19bad6fbfcaeedc upstream.
+> >>>>>>
+> >>>>>> The newer single chip hardware family of chipsets have not been
+> >>>>>> experiencing issues with power saving set by default with recent
+> >>>>>> fixes merged (even into stable). The remaining issues are only
+> >>>>>> reported with AR5416 and since enabling PS by default can increase
+> >>>>>> power savings considerably best to take advantage of that feature
+> >>>>>> as this has been tested properly.
+> >>>>>
+> >>>>> I havent had any issues lately. But that said Ive moved on to
+> >>>>> 2.6.33, 2.6.34 which seems to work fine. Believe you set
+> >>>>> to disabled by default on those?
+> >>>>>
+> >>>>> /Kristoffer
+> >>>>>
+> >>>>
+> >>>> just tried to add this patch to the latest HEAD, but realized
+> >>>> ath_set_hw_capab is missing(or I cant seem to grep it)
+> >>>> if you have a patch for the latest tree let me know I can see if I'm hitting
+> >>>> anything like before.
+> >>>
+> >>> The patch would already be merged since 2.6.33.y, this patch is a
+> >>> backport for 2.6.32.y. I just hadn't had time to backport it yet,
+> >>> until today.
+> >>>
+> >>>     Luis
+> >>>
+> >>
+> >> so its already in there then..
+> >
+> > Right
+> >
+> >> if that's the case then the system runs
+> >> good with powersave on then..
+> >
+> > Did you read the patch by chance? It only enables power save for
+> > non-AR5416 hardware. What do you have?
+> >
+> >    Luis
+> >
+> 
+> mine is the AR5008
 
-compat-wireless code metrics
+Ok I should say, all AR5008 and AR9001 family chipsets have
+power save disabled still. Only AR9002 and up have it enabled
+now. The patch was doing the same for 2.6.32.
 
-    495683 - Total upstream code being pulled
-      1393 - backport code changes
-      1163 - backport code additions
-       230 - backport code deletions
-      5685 - backport from compat module
-      7078 - total backport code
-      1.43 - % of code consists of backport work
-      1222 - Crap changes not yet posted
-      1181 - Crap additions not yet merged
-        41 - Crap deletions not yet posted
-      0.25 - % of crap code
-
-Base tree: linux-next.git
-Base tree version: next-20100604
-compat-wireless release: compat-wireless-2010-06-04
+  Luis
