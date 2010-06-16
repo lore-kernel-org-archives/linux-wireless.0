@@ -1,84 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46560 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755598Ab0FIPH2 (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:52352 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753762Ab0FPFdt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jun 2010 11:07:28 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.71)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1OMMsJ-0008BP-On
-	for linux-wireless@vger.kernel.org; Wed, 09 Jun 2010 17:07:27 +0200
-Message-Id: <20100609150456.978159079@sipsolutions.net>
-Date: Wed, 09 Jun 2010 17:02:03 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC v2 21/22] mac80211: allow drivers to sleep in ampdu_action
-References: <20100609150142.227469359@sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 16 Jun 2010 01:33:49 -0400
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	"Justin P. Mattock" <justinmattock@gmail.com>
+Subject: [PATCH 1/5]wireless:hostap_main.c warning: variable 'iface' set but not used
+Date: Tue, 15 Jun 2010 22:33:50 -0700
+Message-Id: <1276666434-11227-2-git-send-email-justinmattock@gmail.com>
+In-Reply-To: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>
+References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+The patch below fixes a warning message Im seeing with gcc 4.6.0
+ CC [M]  drivers/net/wireless/hostap/hostap_main.o
+drivers/net/wireless/hostap/hostap_main.c: In function 'hostap_set_multicast_list_queue':
+drivers/net/wireless/hostap/hostap_main.c:744:27: warning: variable 'iface' set but not used
 
-Allow drivers to sleep, and indicate this in
-the documentation. ath9k has some locking I
-don't understand, so keep it safe and disable
-BHs in it, all other drivers look fine with
-the context change.
+ Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c |    4 ++++
- include/net/mac80211.h                |    2 +-
- net/mac80211/driver-ops.h             |    3 +--
- 3 files changed, 6 insertions(+), 3 deletions(-)
+ drivers/net/wireless/hostap/hostap_main.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
---- wireless-testing.orig/include/net/mac80211.h	2010-06-09 14:20:07.000000000 +0200
-+++ wireless-testing/include/net/mac80211.h	2010-06-09 14:20:22.000000000 +0200
-@@ -1640,7 +1640,7 @@ enum ieee80211_ampdu_mlme_action {
-  * 	is the first frame we expect to perform the action on. Notice
-  * 	that TX/RX_STOP can pass NULL for this parameter.
-  *	Returns a negative error code on failure.
-- *	The callback must be atomic.
-+ *	The callback can sleep.
-  *
-  * @get_survey: Return per-channel survey information
-  *
---- wireless-testing.orig/drivers/net/wireless/ath/ath9k/main.c	2010-06-09 14:20:07.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath/ath9k/main.c	2010-06-09 14:20:22.000000000 +0200
-@@ -1769,6 +1769,8 @@ static int ath9k_ampdu_action(struct iee
- 	struct ath_softc *sc = aphy->sc;
- 	int ret = 0;
+diff --git a/drivers/net/wireless/hostap/hostap_main.c b/drivers/net/wireless/hostap/hostap_main.c
+index eb57d1e..eaee84b 100644
+--- a/drivers/net/wireless/hostap/hostap_main.c
++++ b/drivers/net/wireless/hostap/hostap_main.c
+@@ -741,9 +741,7 @@ void hostap_set_multicast_list_queue(struct work_struct *work)
+ 	local_info_t *local =
+ 		container_of(work, local_info_t, set_multicast_list_queue);
+ 	struct net_device *dev = local->dev;
+-	struct hostap_interface *iface;
  
-+	local_bh_disable();
-+
- 	switch (action) {
- 	case IEEE80211_AMPDU_RX_START:
- 		if (!(sc->sc_flags & SC_OP_RXAGGR))
-@@ -1798,6 +1800,8 @@ static int ath9k_ampdu_action(struct iee
- 			  "Unknown AMPDU action\n");
- 	}
- 
-+	local_bh_enable();
-+
- 	return ret;
- }
- 
---- wireless-testing.orig/net/mac80211/driver-ops.h	2010-06-09 14:20:07.000000000 +0200
-+++ wireless-testing/net/mac80211/driver-ops.h	2010-06-09 14:20:22.000000000 +0200
-@@ -352,11 +352,10 @@ static inline int drv_ampdu_action(struc
- 
- 	might_sleep();
- 
--	local_bh_disable();
- 	if (local->ops->ampdu_action)
- 		ret = local->ops->ampdu_action(&local->hw, &sdata->vif, action,
- 					       sta, tid, ssn);
--	local_bh_enable();
-+
- 	trace_drv_ampdu_action(local, sdata, action, sta, tid, ssn, ret);
- 	return ret;
- }
-
+-	iface = netdev_priv(dev);
+ 	if (hostap_set_word(dev, HFA384X_RID_PROMISCUOUSMODE,
+ 			    local->is_promisc)) {
+ 		printk(KERN_INFO "%s: %sabling promiscuous mode failed\n",
+-- 
+1.7.1.rc1.21.gf3bd6
 
