@@ -1,90 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42751 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755624Ab0FJI0E (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49935 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759427Ab0FPTAI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jun 2010 04:26:04 -0400
-Message-Id: <20100610082229.632383239@sipsolutions.net>
-Date: Thu, 10 Jun 2010 10:21:33 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
+	Wed, 16 Jun 2010 15:00:08 -0400
+Date: Wed, 16 Jun 2010 14:57:06 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 05/23] mac80211: common work skb freeing
-References: <20100610082128.641664439@sipsolutions.net>
-Mime-Version: 1.0
+Subject: Re: [PATCHv2] mac80211: Add interface for driver to temporarily
+ disable dynamic ps
+Message-ID: <20100616185706.GC3138@tuxdriver.com>
+References: <1276668092-28872-1-git-send-email-juuso.oikarinen@nokia.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1276668092-28872-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, Jun 16, 2010 at 09:01:32AM +0300, Juuso Oikarinen wrote:
+> This mechanism introduced in this patch applies (at least) for hardware
+> designs using a single shared antenna for both WLAN and BT. In these designs,
+> the antenna must be toggled between WLAN and BT.
+> 
+> In those hardware, managing WLAN co-existence with Bluetooth requires WLAN
+> full power save whenever there is Bluetooth activity in order for WLAN to be
+> able to periodically relinquish the antenna to be used for BT. This is because
+> BT can only access the shared antenna when WLAN is idle or asleep.
 
-All the management processing functions free the
-skb after they are done, so this can be done in
-the new common code instead.
+Maybe it is just me, but
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ibss.c  |    2 --
- net/mac80211/iface.c |    3 ++-
- net/mac80211/mesh.c  |    2 --
- net/mac80211/mlme.c  |    5 +----
- 4 files changed, 3 insertions(+), 9 deletions(-)
+void ieee80211_enable_dyn_ps(struct ieee80211_vif *vif)
+void ieee80211_disable_dyn_ps(struct ieee80211_vif *vif)
 
---- wireless-testing.orig/net/mac80211/ibss.c	2010-06-09 17:21:07.000000000 +0200
-+++ wireless-testing/net/mac80211/ibss.c	2010-06-09 17:21:08.000000000 +0200
-@@ -754,8 +754,6 @@ void ieee80211_ibss_rx_queued_mgmt(struc
- 		ieee80211_rx_mgmt_auth_ibss(sdata, mgmt, skb->len);
- 		break;
- 	}
--
--	kfree_skb(skb);
- }
- 
- void ieee80211_ibss_work(struct ieee80211_sub_if_data *sdata)
---- wireless-testing.orig/net/mac80211/mesh.c	2010-06-09 17:21:07.000000000 +0200
-+++ wireless-testing/net/mac80211/mesh.c	2010-06-09 17:21:08.000000000 +0200
-@@ -620,8 +620,6 @@ void ieee80211_mesh_rx_queued_mgmt(struc
- 		ieee80211_mesh_rx_mgmt_action(sdata, mgmt, skb->len, rx_status);
- 		break;
- 	}
--
--	kfree_skb(skb);
- }
- 
- void ieee80211_mesh_work(struct ieee80211_sub_if_data *sdata)
---- wireless-testing.orig/net/mac80211/mlme.c	2010-06-09 17:21:07.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2010-06-09 17:21:08.000000000 +0200
-@@ -1754,7 +1754,7 @@ void ieee80211_sta_rx_queued_mgmt(struct
- 		default:
- 			WARN(1, "unexpected: %d", rma);
- 		}
--		goto out;
-+		return;
- 	}
- 
- 	mutex_unlock(&ifmgd->mtx);
-@@ -1799,9 +1799,6 @@ void ieee80211_sta_rx_queued_mgmt(struct
- 
- 		cfg80211_send_deauth(sdata->dev, (u8 *)mgmt, skb->len);
- 	}
--
-- out:
--	kfree_skb(skb);
- }
- 
- static void ieee80211_sta_timer(unsigned long data)
---- wireless-testing.orig/net/mac80211/iface.c	2010-06-09 17:21:07.000000000 +0200
-+++ wireless-testing/net/mac80211/iface.c	2010-06-09 17:21:08.000000000 +0200
-@@ -738,9 +738,10 @@ static void ieee80211_iface_work(struct
- 			break;
- 		default:
- 			WARN(1, "frame for unexpected interface type");
--			kfree_skb(skb);
- 			break;
- 		}
-+
-+		kfree_skb(skb);
- 	}
- 
- 	/* then other type-dependent work */
+would make more sense than
 
+void ieee80211_disable_dyn_ps(struct ieee80211_vif *vif, bool disable)
 
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
