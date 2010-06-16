@@ -1,34 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:54187 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752285Ab0FQFlY (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:52194 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759510Ab0FPVfc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Jun 2010 01:41:24 -0400
-Subject: Compat-wireless release for 2010-06-17-v2 is baked
-To: <linux-wireless@vger.kernel.org>, <linux-bluetooth@vger.kernel.org>
-Message-Id: <20100617054121.57B6D42E2C@repository3.localdomain>
-Date: Thu, 17 Jun 2010 01:41:21 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Wed, 16 Jun 2010 17:35:32 -0400
+Date: Wed, 16 Jun 2010 14:34:27 -0700
+From: Andrew Morton <akpm@linux-foundation.org>
+To: sedat.dilek@gmail.com
+Cc: Sedat Dilek <sedat.dilek@googlemail.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>, dmonakhov@openvz.org
+Subject: Re: 2.6.35-rc2-git2: Reported regressions from 2.6.34
+Message-Id: <20100616143427.a0323701.akpm@linux-foundation.org>
+In-Reply-To: <AANLkTil-X5IMZMer7fHVPOMalsTJNliv-gMimzKmJ3Od@mail.gmail.com>
+References: <Rlf_Qjov7bG.A.a8F.I8rDMB@chimera>
+	<AANLkTiksbL1qHg7Q0A-6TbX0uUrxra4jctUoIGVk5vnE@mail.gmail.com>
+	<201006091122.35304.rjw@sisk.pl>
+	<20100616134231.23ff30da.akpm@linux-foundation.org>
+	<AANLkTil-X5IMZMer7fHVPOMalsTJNliv-gMimzKmJ3Od@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   90bb273..d584ab0  wl         -> origin/wl
+On Wed, 16 Jun 2010 23:00:37 +0200
+Sedat Dilek <sedat.dilek@googlemail.com> wrote:
 
-compat-wireless code metrics
+> On Wed, Jun 16, 2010 at 10:42 PM, Andrew Morton
+> <akpm@linux-foundation.org> wrote:
+> > On Wed, 9 Jun 2010 11:22:35 +0200
+> > "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
+> >
+> >> On Wednesday 09 June 2010, Sedat Dilek wrote:
+> >> > The patch from [1] is still missing.
+> >> >
+> >> > __ __"cpufreq-call-nr_iowait_cpu-with-disabled-preemption.patch" from
+> >> > Dmitry Monakhoc
+> >> >
+> >> > Tested-by: Sedat Dilek <sedat.dilek@gmail.com>
+> >> > Tested-by Maciej Rutecki <maciej.rutecki@gmail.com>
+> >> >
+> >> > I have already reported this issue on LKML [2] and cpufreq ML [3].
+> >> >
+> >> > - Sedat -
+> >> >
+> >> > [1] http://www.spinics.net/lists/cpufreq/msg01631.html
+> >> > [2] http://lkml.org/lkml/2010/5/31/77
+> >> > [3] http://www.spinics.net/lists/cpufreq/msg01637.html
+> >>
+> >> Thanks, added.
+> >
+> > I just merged a different patch whcih should address this:
+>
+> How do cpu-freq related stuff find its way into mainline?
+> Is there a GIT repository/branch on <git.kernel.org> where you can pull from?
+> 
 
-    498472 - Total upstream lines of code being pulled
-      1410 - backport code changes
-      1177 - backport code additions
-       233 - backport code deletions
-      5748 - backport from compat module
-      7158 - total backport code
-    1.4360 - % of code consists of backport work
-      1218 - Crap changes not yet posted
-      1179 - Crap additions not yet merged
-        39 - Crap deletions not yet posted
-    0.2443 - % of crap code
+(top-posting repaired.  Please don't)
 
-Base tree: linux-next.git
-Base tree version: next-20100617
-compat-wireless release: compat-wireless-2010-06-17
+Usually via the cpufreq git tree, mailing list and maintainer, as
+described in ./MAINTAINERS.
+
+But for a patch like this one, I'll just scoot it into mainline unless
+Dave happens to grab it before I do that.
+
