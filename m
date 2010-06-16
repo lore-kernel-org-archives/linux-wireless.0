@@ -1,51 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.158]:34241 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756453Ab0FNRYb convert rfc822-to-8bit (ORCPT
+Received: from adelie.canonical.com ([91.189.90.139]:46872 "EHLO
+	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755402Ab0FPAzW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jun 2010 13:24:31 -0400
-From: Maciej Rutecki <maciej.rutecki@gmail.com>
-Reply-To: maciej.rutecki@gmail.com
-To: LKML <linux-kernel@vger.kernel.org>, reinette.chatre@intel.com,
-	wey-yi.w.guy@intel.com, ilw@linux.intel.com,
-	linux-wireless@vger.kernel.org
-Subject: [REGRESSION] [IWL3945] Broadcast is broken?
-Date: Mon, 14 Jun 2010 19:24:23 +0200
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201006141924.24061.maciej.rutecki@gmail.com>
+	Tue, 15 Jun 2010 20:55:22 -0400
+Subject: [PATCH] ipw2200: Enable LED by default
+From: Leann Ogasawara <leann.ogasawara@canonical.com>
+To: reinette.chatre@intel.com, ilw@linux.intel.com
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	TJ <ubuntu@tjworld.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 15 Jun 2010 17:55:13 -0700
+Message-ID: <1276649713.6127.276.camel@emiko>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hardware:
-08:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG [Golan] 
-Network Connection (rev 02)
+Hi All,
 
-Last known good kernel: 2.6.34
+As documented in 2005 in Documentation/networking/README.ipw2200, "The
+LED code has been reported to hang some systems when running ifconfig
+and is therefore disabled by default."  We've however been carrying the
+following patch in our Ubuntu kernel for quite some time which enables
+the ipw2200 LED by default.  This was a result of numerous user
+requests.  We've seen no subsequent bug reports of systems hanging due
+to the the LED code being enabled by default.  I'd therefore like to
+propose the following patch to enable the LED by default.  This patch
+was originally authored by TJ.  I apologize in advance that I do not
+have TJ's full first and last name for provenance.
 
-Failing kernels: since 2.6.35-rc1 to 2.6.35-rc3
+Thanks,
+Leann
 
-Symptoms:
-During connect do wireless network authentication seems be OK, but I cannot 
-get IP from dhcp serwer. I do:
-echo 0x43fff > /sys/class/net/wlan0/device/debug_level
+>From 315246037a0edab4d626de6ccb68c73d3fe61ce3 Mon Sep 17 00:00:00 2001
+From: ubuntu@tjworld.net <ubuntu@tjworld.net>
+Date: Mon, 23 Mar 2009 20:29:28 +0000
+Subject: [PATCH] ipw2200: Enable LED by default
 
-Syslog is here:
-http://unixy.pl/maciek/download/kernel/2.6.35-rc3/gumis/syslog-before.txt
+BugLink: http://bugs.launchpad.net/bugs/21367
 
->From syslog I guess the problem is that it doesn't receive broadcast frames 
-(but I'm not sure), so I try:
-sudo ifconfig wlan0 promisc
+Enable LED by default and update the MODULE_PARM_DESC.  The original
+reason for defaulting to disabled was documented in 2005 and noted, "The
+LED code has been reported to hang some systems when running ifconfig
+and is therefore disabled by default."  This no longer appears
+applicable and users have been requesting this be enabled for several
+years.
 
-Syslog:
-http://unixy.pl/maciek/download/kernel/2.6.35-rc3/gumis/syslog-after.txt
+Originally-by: TJ <ubuntu@tjworld.net>
+Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+Signed-off-by: Andy Whitcroft <apw@canonical.com>
+Acked-by: Stefan Bader <stefan.bader@canonical.com>
+Signed-off-by: Leann Ogasawara <leann.ogasawara@canonical.com>
+---
+ Documentation/networking/README.ipw2200 |    2 +-
+ drivers/net/wireless/ipw2x00/ipw2200.c  |    4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-And then I can get IP address.
-
-Any advice?
-
-Regards
+diff --git a/Documentation/networking/README.ipw2200 b/Documentation/networking/README.ipw2200
+index 80c7285..e4d3267 100644
+--- a/Documentation/networking/README.ipw2200
++++ b/Documentation/networking/README.ipw2200
+@@ -171,7 +171,7 @@ Where the supported parameter are:
+   
+   led
+ 	Can be used to turn on experimental LED code.
+-	0 = Off, 1 = On.  Default is 0.
++	0 = Off, 1 = On.  Default is 1.
+ 
+   mode
+ 	Can be used to set the default mode of the adapter.  
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+index 3aa3bb1..0805569 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+@@ -96,7 +96,7 @@ static int network_mode = 0;
+ static u32 ipw_debug_level;
+ static int associate;
+ static int auto_create = 1;
+-static int led_support = 0;
++static int led_support = 1;
+ static int disable = 0;
+ static int bt_coexist = 0;
+ static int hwcrypto = 0;
+@@ -12083,7 +12083,7 @@ module_param(auto_create, int, 0444);
+ MODULE_PARM_DESC(auto_create, "auto create adhoc network (default on)");
+ 
+ module_param_named(led, led_support, int, 0444);
+-MODULE_PARM_DESC(led, "enable led control on some systems (default 0 off)");
++MODULE_PARM_DESC(led, "enable led control on some systems (default 1 on)");
+ 
+ module_param(debug, int, 0444);
+ MODULE_PARM_DESC(debug, "debug output mask");
 -- 
-Maciej Rutecki
-http://www.maciek.unixy.pl
+1.7.0.4
+
+
+
