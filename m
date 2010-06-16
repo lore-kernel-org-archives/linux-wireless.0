@@ -1,44 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:52425 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751312Ab0FXXet convert rfc822-to-8bit (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:52353 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752438Ab0FPPrJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jun 2010 19:34:49 -0400
-Received: by bwz7 with SMTP id 7so452239bwz.19
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Jun 2010 16:34:47 -0700 (PDT)
+	Wed, 16 Jun 2010 11:47:09 -0400
+Received: by pwi1 with SMTP id 1so3928707pwi.19
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jun 2010 08:47:09 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1277420940.28625.30.camel@gnutoo-laptop>
-References: <1275693948-3189-1-git-send-email-notasas@gmail.com>
-	<1275693948-3189-2-git-send-email-notasas@gmail.com>
-	<AANLkTinqgUGCjCBzg8j7bXGY05EW3-jfW7vlnrvCuwRd@mail.gmail.com>
-	<1277124410.28895.23.camel@gnutoo-laptop>
-	<AANLkTimLKDqDn_97BbOYr1cdxbFdPvyTz_lxJ59LVJ1b@mail.gmail.com>
-	<1277145901.28895.29.camel@gnutoo-laptop>
-	<AANLkTildbagKqzTQbcZ8cT53s4L2OWpJ5fkBUTcejj0h@mail.gmail.com>
-	<1277249607.2233.270.camel@gnutoo-laptop>
-	<1277420940.28625.30.camel@gnutoo-laptop>
-Date: Fri, 25 Jun 2010 02:34:47 +0300
-Message-ID: <AANLkTinGVsGRFZ5J06Y_s13TGjJcIRbm2ugfNfgSCIEw@mail.gmail.com>
-Subject: Re: [PATCH 2/2] wl1251: fix ELP_CTRL register reads
-From: Grazvydas Ignotas <notasas@gmail.com>
-To: "Denis 'GNUtoo' Carikli" <GNUtoo@no-log.org>
-Cc: Bob Copeland <me@bobcopeland.com>, Kalle Valo <kvalo@adurom.com>,
-	"John W.Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20100616152903.GA3138@tuxdriver.com>
+References: <AANLkTin9bG4qDEKwgOXmlR3k9wZ-JBSIlh3JzYjzVDeY@mail.gmail.com>
+	<20100616.215523.1718341995174283889.kou@clear-code.com> <20100616134421.GB2404@tuxdriver.com>
+	<20100617.000223.656204364469558896.kou@clear-code.com> <20100616152903.GA3138@tuxdriver.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 16 Jun 2010 08:46:49 -0700
+Message-ID: <AANLkTikkZQa37Y3DTMQlb1mzYE7qN9hqABvU2Tvwuobq@mail.gmail.com>
+Subject: Re: [PATCH] zd1211rw: ignore unknown regulatory domain.
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Kouhei Sutou <kou@clear-code.com>, Stephen.Chen@atheros.com,
+	David.Quan@atheros.com, linux-wireless@vger.kernel.org,
+	Michael.Green@atheros.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I've changed that struct to wl12xx_platform_Data and added the irq
-> int,and I've still the following errors:
-> [  541.676849] wl1251: ERROR sdio_writeb failed (-84)
-> [  542.006378] mmc0: Command timeout
-> [  542.011444] mmc0:0001: error -110 reading SDIO_CCCR_INTx
-> [  543.016357] mmc0: Command CRC error
-> [  543.016418] mmc0:0001: error -84 reading SDIO_CCCR_INTx
-> [  544.026367] mmc0: Command timeout
-> [  544.031433] mmc0:0001: error -110 reading SDIO_CCCR_INTx
-> [  545.036376] mmc0: Command CRC error
+On Wed, Jun 16, 2010 at 8:29 AM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Thu, Jun 17, 2010 at 12:02:23AM +0900, Kouhei Sutou wrote:
+>> Hi,
+>>
+>> In <20100616134421.GB2404@tuxdriver.com>
+>> Â  "Re: [PATCH] zd1211rw: ignore unknown regulatory domain." on Wed, 16 Jun 2010 09:44:22 -0400,
+>> Â  "John W. Linville" <linville@tuxdriver.com> wrote:
+>>
+>> > On Wed, Jun 16, 2010 at 09:55:23PM +0900, Kouhei Sutou wrote:
+>> >
+>> >> I used 'ZD_REGDOMAIN_JAPAN_GW_US54GXS' as a macro name for
+>> >> 0x49 because 0x49 is used by GW-US54GXS. Is it OK? Or should
+>> >> I use other name for it?
+>> >
+>> > Hopefully someone can suggest a better name. Â Anyone know what inspired
+>> > "ZD_REGDOMAIN_JAPAN_ADD"?
+>>
+>> 'ZD_REGDOMAIN_JAPAN_3' was used in another patch:
+>> Â  https://patchwork.kernel.org/patch/47220/
+>>
+>> But I don't know why '3' was used...
+>
+> '3' makes sense to me. Â The better question is why not change 'ADD' to '2'? :-)
 
-Has powersaving ever worked on your device with this driver? It does
-work fine on pandora (OMAP3).
+2 is fine to replace ADD, I think "ADD" is additional :P
+
+  Luis
