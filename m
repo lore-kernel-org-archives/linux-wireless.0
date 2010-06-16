@@ -1,46 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:35584 "EHLO
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:37858 "EHLO
 	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752199Ab0FVVLh convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1758761Ab0FPG4b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jun 2010 17:11:37 -0400
-Received: by pvh11 with SMTP id 11so577597pvh.19
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Jun 2010 14:11:36 -0700 (PDT)
+	Wed, 16 Jun 2010 02:56:31 -0400
+Message-ID: <4C1875B0.1050007@gmail.com>
+Date: Tue, 15 Jun 2010 23:56:48 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20100622204048.5228.76910.stgit@mj.roinet.com>
-References: <20100622204048.5228.76910.stgit@mj.roinet.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 22 Jun 2010 14:11:16 -0700
-Message-ID: <AANLkTinf85gI-k4ojeCnZHjVAbXquDZ-al5sxSZTy2ud@mail.gmail.com>
-Subject: Re: [PATCH] compat-wireless: "crap" code is "not yet posted", not
-	"not yet merged"
-To: Pavel Roskin <proski@gnu.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 3/5]pci:bus.c Fix variable 'retval' set but not used
+References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com> 	<1276666434-11227-4-git-send-email-justinmattock@gmail.com> <AANLkTik27fbCY0pMJdcbuCaEXr-902WiqiFPkju4Bet0@mail.gmail.com>
+In-Reply-To: <AANLkTik27fbCY0pMJdcbuCaEXr-902WiqiFPkju4Bet0@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 22, 2010 at 1:40 PM, Pavel Roskin <proski@gnu.org> wrote:
+On 06/15/2010 10:42 PM, Julian Calaby wrote:
+> On Wed, Jun 16, 2010 at 15:33, Justin P. Mattock
+> <justinmattock@gmail.com>  wrote:
+>> The patch below fixes the warning message I am seeing with gcc 4.6.0
+>>   CC      drivers/pci/bus.o
+>> drivers/pci/bus.c: In function 'pci_enable_bridges':
+>> drivers/pci/bus.c:237:6: warning: variable 'retval' set but not used
+>>
+>>   Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
+>>
+>> ---
+>>   drivers/pci/bus.c |    2 --
+>>   1 files changed, 0 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+>> index 628ea20..84bdb48 100644
+>> --- a/drivers/pci/bus.c
+>> +++ b/drivers/pci/bus.c
+>> @@ -234,12 +234,10 @@ void pci_bus_add_devices(const struct pci_bus *bus)
+>>   void pci_enable_bridges(struct pci_bus *bus)
+>>   {
+>>         struct pci_dev *dev;
+>> -       int retval;
+>>
+>>         list_for_each_entry(dev,&bus->devices, bus_list) {
+>>                 if (dev->subordinate) {
+>>                         if (!pci_is_enabled(dev)) {
+>> -                               retval = pci_enable_device(dev);
+>>                                 pci_set_master(dev);
+>>                         }
+>>                         pci_enable_bridges(dev->subordinate);
 >
-> ---
->  scripts/admin-update.sh |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+> Er, this appears to be bogus: I'm only guessing, but I'd expect that
+> the pci_enable_device() call is actually doing something useful, and
+> removing it is going to break *something* - Have you booted a kernel
+> with this code enabled and these patches applied?
 >
-> diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
-> index 7592546..4eb7c3e 100755
-> --- a/scripts/admin-update.sh
-> +++ b/scripts/admin-update.sh
-> @@ -85,7 +85,7 @@ nag_pending() {
+> As for this warning, I think that there is a better solution.
 >
->  nag_crap() {
->        printf "${RED}%10s${NORMAL} - Crap changes not yet posted\n" $2
-> -       printf "${RED}%10s${NORMAL} - Crap additions not yet merged\n" $3
-> +       printf "${RED}%10s${NORMAL} - Crap additions not yet posted\n" $3
->        printf "${RED}%10s${NORMAL} - Crap deletions not yet posted\n" $4
->        printf "${RED}%10s${NORMAL} - %% of crap code\n" $(perl -e 'printf("%.4f", 100 * '$2' / '$1');')
->  }
+> Thanks,
 >
 
-applied, thanks!
+alright!!
 
-  Luis
+Justin P. Mattock
