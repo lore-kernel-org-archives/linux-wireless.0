@@ -1,71 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:29064 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756830Ab0FYWnW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jun 2010 18:43:22 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:32774 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758615Ab0FPKM0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Jun 2010 06:12:26 -0400
+Received: from vs3013.wh2.ocn.ne.jp (125.206.180.245)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0980503145
+	for <linux-wireless@vger.kernel.org>; Wed, 16 Jun 2010 19:12:25 +0900 (JST)
+Subject: [PATCH 11/17] ath5k: cosmetic changes in
+	ath5k_hw_proc_5212_rx_status()
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 2/2] iwlwifi: set TX_CMD_FLAG_PROT_REQUIRE_MSK in tx_flag
-Date: Fri, 25 Jun 2010 15:43:19 -0700
-Message-Id: <1277505799-25306-3-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1277505799-25306-1-git-send-email-reinette.chatre@intel.com>
-References: <1277505799-25306-1-git-send-email-reinette.chatre@intel.com>
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Wed, 16 Jun 2010 19:12:07 +0900
+Message-ID: <20100616101207.10067.97179.stgit@tt-desk>
+In-Reply-To: <20100616100809.10067.34787.stgit@tt-desk>
+References: <20100616100809.10067.34787.stgit@tt-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Just whitespace and indentation.
 
-When building tx command, always set TX_CMD_FLAG_PROT_REQUIRE_MSK
-for 5000 series and up.
-
-Without setting this bit the firmware will not examine the RTS/CTS setting
-and thus not send traffic with the appropriate protection. RTS/CTS is is
-required for HT traffic in a noisy environment where, without this setting,
-connections will stall on some hardware as documented in the patch that
-initially attempted to address this:
-
-    commit 1152dcc28c66a74b5b3f1a3ede0aa6729bfd48e4
-    Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-    Date:   Fri Jan 15 13:42:58 2010 -0800
-
-    iwlwifi: Fix throughput stall issue in HT mode for 5000
-
-    Similar to 6000 and 1000 series, RTS/CTS is the recommended
-    protection mechanism for 5000 series in HT mode based on the HW design.
-    Using RTS/CTS will better protect the inner exchange from interference,
-    especially in highly-congested environment, it also prevent uCode encounter
-    TX FIFO underrun and other HT mode related performance issues.
-
-For 3945 and 4965, different flags are used for RTS/CTS or CTS-to-Self
-protection.
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+Acked-by: Bob Copeland <me@bobcopeland.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c |    6 +-----
- 1 files changed, 1 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath5k/desc.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-index 44ef5d9..01658cf 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-@@ -212,11 +212,7 @@ static void iwlagn_chain_noise_reset(struct iwl_priv *priv)
- static void iwlagn_rts_tx_cmd_flag(struct ieee80211_tx_info *info,
- 			__le32 *tx_flags)
+diff --git a/drivers/net/wireless/ath/ath5k/desc.c b/drivers/net/wireless/ath/ath5k/desc.c
+index b5a5d45..50fc931 100644
+--- a/drivers/net/wireless/ath/ath5k/desc.c
++++ b/drivers/net/wireless/ath/ath5k/desc.c
+@@ -577,7 +577,8 @@ static int ath5k_hw_proc_5210_rx_status(struct ath5k_hw *ah,
+  * Proccess the rx status descriptor on 5212
+  */
+ static int ath5k_hw_proc_5212_rx_status(struct ath5k_hw *ah,
+-		struct ath5k_desc *desc, struct ath5k_rx_status *rs)
++					struct ath5k_desc *desc,
++					struct ath5k_rx_status *rs)
  {
--	if ((info->control.rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS) ||
--	    (info->control.rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT))
--		*tx_flags |= TX_CMD_FLG_RTS_CTS_MSK;
--	else
--		*tx_flags &= ~TX_CMD_FLG_RTS_CTS_MSK;
-+	*tx_flags |= TX_CMD_FLG_RTS_CTS_MSK;
+ 	struct ath5k_hw_rx_status *rx_status;
+ 	struct ath5k_hw_rx_error *rx_err;
+@@ -589,7 +590,7 @@ static int ath5k_hw_proc_5212_rx_status(struct ath5k_hw *ah,
+ 
+ 	/* No frame received / not ready */
+ 	if (unlikely(!(rx_status->rx_status_1 &
+-	AR5K_5212_RX_DESC_STATUS1_DONE)))
++				AR5K_5212_RX_DESC_STATUS1_DONE)))
+ 		return -EINPROGRESS;
+ 
+ 	/*
+@@ -615,7 +616,7 @@ static int ath5k_hw_proc_5212_rx_status(struct ath5k_hw *ah,
+ 	 */
+ 	if (rx_status->rx_status_1 & AR5K_5212_RX_DESC_STATUS1_KEY_INDEX_VALID)
+ 		rs->rs_keyix = AR5K_REG_MS(rx_status->rx_status_1,
+-				AR5K_5212_RX_DESC_STATUS1_KEY_INDEX);
++					   AR5K_5212_RX_DESC_STATUS1_KEY_INDEX);
+ 	else
+ 		rs->rs_keyix = AR5K_RXKEYIX_INVALID;
+ 
+@@ -623,7 +624,7 @@ static int ath5k_hw_proc_5212_rx_status(struct ath5k_hw *ah,
+ 	 * Receive/descriptor errors
+ 	 */
+ 	if (!(rx_status->rx_status_1 &
+-	AR5K_5212_RX_DESC_STATUS1_FRAME_RECEIVE_OK)) {
++	    AR5K_5212_RX_DESC_STATUS1_FRAME_RECEIVE_OK)) {
+ 		if (rx_status->rx_status_1 &
+ 				AR5K_5212_RX_DESC_STATUS1_CRC_ERROR)
+ 			rs->rs_status |= AR5K_RXERR_CRC;
+@@ -644,7 +645,6 @@ static int ath5k_hw_proc_5212_rx_status(struct ath5k_hw *ah,
+ 				AR5K_5212_RX_DESC_STATUS1_MIC_ERROR)
+ 			rs->rs_status |= AR5K_RXERR_MIC;
+ 	}
+-
+ 	return 0;
  }
  
- /* Calc max signal level (dBm) among 3 possible receivers */
--- 
-1.7.0.4
 
