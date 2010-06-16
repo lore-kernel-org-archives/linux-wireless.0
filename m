@@ -1,93 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpoproxy1-pub.bluehost.com ([69.89.21.11]:59309 "HELO
-	cpoproxy1-pub.bluehost.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S933121Ab0FRTvd (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:46536 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759605Ab0FPUkZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jun 2010 15:51:33 -0400
-Date: Fri, 18 Jun 2010 12:49:56 -0700
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "Justin P. Mattock" <justinmattock@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 4/5]pci:setup_bus.c Fix warning: variable 'retval' set
- but not used
-Message-ID: <20100618124956.40c869a0@virtuousgeek.org>
-In-Reply-To: <4C1BBF7D.8090904@kernel.org>
-References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>
-	<1276666434-11227-5-git-send-email-justinmattock@gmail.com>
-	<20100618102330.29eccb5b@virtuousgeek.org>
-	<4C1BBF7D.8090904@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Wed, 16 Jun 2010 16:40:25 -0400
+Received: by pva4 with SMTP id 4so856876pva.19
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jun 2010 13:40:18 -0700 (PDT)
+Message-ID: <4C1936BE.9030504@gmail.com>
+Date: Wed, 16 Jun 2010 13:40:30 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Kristoffer Ericson <kristoffer.ericson@gmail.com>,
+	"stable@kernel.org" <stable@kernel.org>,
+	"greg@kroah.com" <greg@kroah.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Peter Stuge <peter@stuge.se>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 2.6.32.y] ath9k: re-enable ps by default for new single
+ chip families
+References: <1276640359-25360-1-git-send-email-lrodriguez@atheros.com> <20100616081227.GA1118@boggieman> <4C18D2A5.5080702@gmail.com> <AANLkTimDp52ULRcO9NMgeV34olfpD97wYfmr_atOQ5AF@mail.gmail.com> <4C18F560.1010408@gmail.com> <20100616175318.GA26198@tux> <4C1914C1.602@gmail.com> <20100616181622.GD26198@tux> <4C1922AB.9090604@gmail.com> <20100616200624.GE26198@tux>
+In-Reply-To: <20100616200624.GE26198@tux>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 18 Jun 2010 11:48:29 -0700
-Yinghai Lu <yinghai@kernel.org> wrote:
+On 06/16/2010 01:06 PM, Luis R. Rodriguez wrote:
+> On Wed, Jun 16, 2010 at 12:14:51PM -0700, Justin P. Mattock wrote:
+>> On 06/16/2010 11:16 AM, Luis R. Rodriguez wrote:
+>>> On Wed, Jun 16, 2010 at 11:15:29AM -0700, Justin P. Mattock wrote:
+>>>> On 06/16/2010 10:53 AM, Luis R. Rodriguez wrote:
+>>>>> On Wed, Jun 16, 2010 at 09:01:36AM -0700, Justin P. Mattock wrote:
+>>>>>> On 06/16/2010 08:49 AM, Luis R. Rodriguez wrote:
+>>>>>>> On Wed, Jun 16, 2010 at 6:33 AM, Justin P. Mattock
+>>>>>>> <justinmattock@gmail.com>     wrote:
+>>>>>>>> On 06/16/2010 01:12 AM, Kristoffer Ericson wrote:
+>>>>>>>>>
+>>>>>>>>> On Tue, Jun 15, 2010 at 06:19:19PM -0400, Luis R. Rodriguez wrote:
+>>>>>>>>>>
+>>>>>>>>>> commit 14acdde6e527950f66c084dbf19bad6fbfcaeedc upstream.
+>>>>>>>>>>
+>>>>>>>>>> The newer single chip hardware family of chipsets have not been
+>>>>>>>>>> experiencing issues with power saving set by default with recent
+>>>>>>>>>> fixes merged (even into stable). The remaining issues are only
+>>>>>>>>>> reported with AR5416 and since enabling PS by default can increase
+>>>>>>>>>> power savings considerably best to take advantage of that feature
+>>>>>>>>>> as this has been tested properly.
+>>>>>>>>>
+>>>>>>>>> I havent had any issues lately. But that said Ive moved on to
+>>>>>>>>> 2.6.33, 2.6.34 which seems to work fine. Believe you set
+>>>>>>>>> to disabled by default on those?
+>>>>>>>>>
+>>>>>>>>> /Kristoffer
+>>>>>>>>>
+>>>>>>>>
+>>>>>>>> just tried to add this patch to the latest HEAD, but realized
+>>>>>>>> ath_set_hw_capab is missing(or I cant seem to grep it)
+>>>>>>>> if you have a patch for the latest tree let me know I can see if I'm hitting
+>>>>>>>> anything like before.
+>>>>>>>
+>>>>>>> The patch would already be merged since 2.6.33.y, this patch is a
+>>>>>>> backport for 2.6.32.y. I just hadn't had time to backport it yet,
+>>>>>>> until today.
+>>>>>>>
+>>>>>>>       Luis
+>>>>>>>
+>>>>>>
+>>>>>> so its already in there then..
+>>>>>
+>>>>> Right
+>>>>>
+>>>>>> if that's the case then the system runs
+>>>>>> good with powersave on then..
+>>>>>
+>>>>> Did you read the patch by chance? It only enables power save for
+>>>>> non-AR5416 hardware. What do you have?
+>>>>>
+>>>>>      Luis
+>>>>>
+>>>>
+>>>> mine is the AR5008
+>>>
+>>> Ok I should say, all AR5008 and AR9001 family chipsets have
+>>> power save disabled still. Only AR9002 and up have it enabled
+>>> now. The patch was doing the same for 2.6.32.
+>>>
+>>>     Luis
+>>>
+>>
+>> o.k. I have not tried what powersave does since the last time I looked
+>> into this bug(if I remember 2.6.31/2 or so) I can manually
+>> turn it on with iwconfig and see..
+>
+> Thanks but no need, its not the purpose of the patch.
+>
+>    Luis
+>
 
-> On 06/18/2010 10:23 AM, Jesse Barnes wrote:
-> > On Tue, 15 Jun 2010 22:33:53 -0700
-> > "Justin P. Mattock" <justinmattock@gmail.com> wrote:
-> > 
-> >> The below patch fixes a warning message when using gcc 4.6.0
-> >>   CC      drivers/pci/setup-bus.o
-> >> drivers/pci/setup-bus.c: In function 'pci_assign_unassigned_bridge_resources':
-> >> drivers/pci/setup-bus.c:868:6: warning: variable 'retval' set but not used
-> >>  
-> >>  Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
-> >>
-> >> ---
-> >>  drivers/pci/setup-bus.c |    2 --
-> >>  1 files changed, 0 insertions(+), 2 deletions(-)
-> >>
-> >> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> >> index 19b1113..215590b 100644
-> >> --- a/drivers/pci/setup-bus.c
-> >> +++ b/drivers/pci/setup-bus.c
-> >> @@ -865,7 +865,6 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
-> >>  	struct pci_bus *parent = bridge->subordinate;
-> >>  	int tried_times = 0;
-> >>  	struct resource_list_x head, *list;
-> >> -	int retval;
-> >>  	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
-> >>  				  IORESOURCE_PREFETCH;
-> >>  
-> >> @@ -874,7 +873,6 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
-> >>  again:
-> >>  	pci_bus_size_bridges(parent);
-> >>  	__pci_bridge_assign_resources(bridge, &head);
-> >> -	retval = pci_reenable_device(bridge);
-> >>  	pci_set_master(bridge);
-> >>  	pci_enable_bridges(parent);
-> >>  
-> 
-> I sent following patch several weeks ago, can you put that in pci-next?
-> 
-> Subject: [PATCH] pciehp: Enable bridges at last for multiple try assigning
-> 
-> Found one PCIe Module with several bridges "cold" hotadd doesn't work.
-> 
-> the root cause:
-> 1. BIOS assign small range the parent bridges.
-> 2. First try for hotadd only can make some bridges get resource assigned.
-> 3. Second will update parent bridge res, get right sizes for all child bridges
->     and devices, but resource for child bridges are not set to HW register.
->     Because first try already enable those bridges, so __pci_bridge_assign_resource
->     skip the setting step.
-> 
-> So try to move enabling of child bridges to last and only do that one time
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+o.k.
 
-Yeah I had a hard time following the changelog, but just looked it
-over.  Looks safe, but Justin will still need to check the return value
-on pci_reenable_device.
-
-Justin, we don't want a message on every reenable, just on ones that
-fail.  So can you protect your printk with if (retval) instead?  You'll
-need to refresh it based on my linux-next branch in a few minutes, as
-I'm pushing Yinghai's patch now.
-
--- 
-Jesse Barnes, Intel Open Source Technology Center
+Justin P. Mattock
