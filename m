@@ -1,59 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:42155 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751179Ab0F1KUe convert rfc822-to-8bit (ORCPT
+Received: from mail.elliptictech.com ([209.217.122.41]:46350 "EHLO
+	emergent.ellipticsemi.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1759029Ab0FPSb3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Jun 2010 06:20:34 -0400
-Received: by iwn39 with SMTP id 39so42240iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Jun 2010 03:20:33 -0700 (PDT)
+	Wed, 16 Jun 2010 14:31:29 -0400
+Date: Wed, 16 Jun 2010 14:30:51 -0400
+From: Nick Bowler <nbowler@elliptictech.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+Subject: Re: 2.6.35-rc3: Reported regressions 2.6.33 -> 2.6.34
+Message-ID: <20100616183051.GA19635@elliptictech.com>
+References: <g77CuMUl7QI.A.5wF.V5OFMB@chimera>
 MIME-Version: 1.0
-In-Reply-To: <4C27E8E8.8040606@openwrt.org>
-References: <4B8C3A21.2050105@openwrt.org>
-	<133e8d7e1003020419r6fab7b13kd77b06407c8c1380@mail.gmail.com>
-	<4B8D25DC.8070502@openwrt.org>
-	<133e8d7e1003020747w348dbee0g60a25a86393972d7@mail.gmail.com>
-	<4B8D396B.5040007@openwrt.org>
-	<AANLkTilWfp6LzCYhxFweqAP_GceRz5PQBIBl5AksLKUf@mail.gmail.com>
-	<4C223F58.3060509@openwrt.org>
-	<AANLkTikmXoEnHb1K9StEgszdllAxdsAbm9WdtSUiwKWE@mail.gmail.com>
-	<4C27E8E8.8040606@openwrt.org>
-Date: Mon, 28 Jun 2010 12:20:33 +0200
-Message-ID: <AANLkTinoz66aXYBSlwVtTnJBs1u-4FfOCphHTZONHc4B@mail.gmail.com>
-Subject: Re: [RFC/RFT] minstrel_ht: new rate control module for 802.11n
-From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Derek Smithies <derek@indranet.co.nz>,
-	Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <g77CuMUl7QI.A.5wF.V5OFMB@chimera>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/6/28 Felix Fietkau <nbd@openwrt.org>:
-> On 2010-06-28 2:01 AM, Björn Smedman wrote:
-[snip]
->> I guess the real solution is your rewrite... But in the mean time
->> perhaps we can memcpy the tx_info control from the last subframe to
->> the first before calling ath_buf_set_rate() in ath_tx_sched_aggr()?
->> Could that have any side effects? It could make the aggregate size go
->> over the 4 ms limit I guess... How bad is that?
-> There's an easy solution which would take into account the 4ms frame
-> limit properly, and which could work without any memcpy() hacks:
->
-> I could just grab a pointer to the last buffer in the tid queue in the
-> ath_tx_sched_aggr() function, then pass it to ath_lookup_rate() via
-> ath_tx_form_aggr(), and also to ath_buf_set_rate(). Then I make those
-> functions use this last buffer as reference for the rate lookup.
+On 16:45 Sun 13 Jun     , Rafael J. Wysocki wrote:
+>  * This report has been delayed, because I had to go through all of the
+>    entries and filter out the fixed ones, invalid ones etc.  Of course, I might
+>    have missed some, but hopefully not too many.
 
-Sounds better to use the rate control from the last buffer in the tid
-queue. But be careful if you don't memcpy it to the first frame of the
-aggregate then the feedback calculated in ath_tx_rc_status() after tx
-will be incorrect again, no?
+This regression from 2.6.33 still seems to be missing from the list, and
+is still present in 2.6.35-rc3.
 
-> - Felix
+  r600 CS checker rejects narrow FBO renderbuffers.
+  https://bugs.freedesktop.org/show_bug.cgi?id=27609
 
-/Björn
+-- 
+Nick Bowler, Elliptic Technologies (http://www.elliptictech.com/)
