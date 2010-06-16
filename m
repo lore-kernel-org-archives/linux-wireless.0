@@ -1,67 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48762 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750937Ab0FNTAK (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:41460 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756125Ab0FPSeN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jun 2010 15:00:10 -0400
-Date: Mon, 14 Jun 2010 14:55:49 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Leann Ogasawara <leann.ogasawara@canonical.com>,
-	flamingice@sourmilk.net, linux-wireless@vger.kernel.org,
-	Ben Collins <ben.collins@ubuntu.com>
-Subject: Re: [PATCH] p54usb: Remove duplicate Medion MD40900 device id
-Message-ID: <20100614185549.GB2216@tuxdriver.com>
-References: <1276208913.1221.3646.camel@emiko>
- <4C1173E7.6010201@lwfinger.net>
+	Wed, 16 Jun 2010 14:34:13 -0400
+From: Maciej Rutecki <maciej.rutecki@gmail.com>
+Reply-To: maciej.rutecki@gmail.com
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Subject: Re: [REGRESSION] [IWL3945] Broadcast is broken?
+Date: Wed, 16 Jun 2010 20:34:06 +0200
+Cc: LKML <linux-kernel@vger.kernel.org>, reinette.chatre@intel.com,
+	wey-yi.w.guy@intel.com, ilw@linux.intel.com,
+	linux-wireless@vger.kernel.org,
+	Berg Johannes <johannes.berg@intel.com>,
+	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
+References: <201006141924.24061.maciej.rutecki@gmail.com> <1276538138.7931.3.camel@maxim-laptop>
+In-Reply-To: <1276538138.7931.3.camel@maxim-laptop>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4C1173E7.6010201@lwfinger.net>
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201006162034.06754.maciej.rutecki@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 10, 2010 at 06:23:19PM -0500, Larry Finger wrote:
-> On 06/10/2010 05:28 PM, Leann Ogasawara wrote:
-> > The Medion MD40900 device id [0x0cde, 0x0006] is defined twice.  Remove
-> > the duplicate.
+On poniedziałek, 14 czerwca 2010 o 19:55:38 Maxim Levitsky wrote:
+> On Mon, 2010-06-14 at 19:24 +0200, Maciej Rutecki wrote:
+> > Hardware:
+> > 08:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG
+> > [Golan] Network Connection (rev 02)
 > > 
-> > Originally-by: Ben Collins <ben.collins@ubuntu.com>
-> > Signed-off-by: Leann Ogasawara <leann.ogasawara@canonical.com>
-> > ---
-> >  drivers/net/wireless/p54/p54usb.c |    1 -
-> >  1 files changed, 0 insertions(+), 1 deletions(-)
+> > Last known good kernel: 2.6.34
 > > 
-> > diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
-> > index 7307325..d6d8713 100644
-> > --- a/drivers/net/wireless/p54/p54usb.c
-> > +++ b/drivers/net/wireless/p54/p54usb.c
-> > @@ -69,7 +69,6 @@ static struct usb_device_id p54u_table[] __devinitdata = {
-> >  	{USB_DEVICE(0x0915, 0x2002)},	/* Cohiba Proto board */
-> >  	{USB_DEVICE(0x0baf, 0x0118)},   /* U.S. Robotics U5 802.11g Adapter*/
-> >  	{USB_DEVICE(0x0bf8, 0x1009)},   /* FUJITSU E-5400 USB D1700*/
-> > -	{USB_DEVICE(0x0cde, 0x0006)},   /* Medion MD40900 */
-> >  	{USB_DEVICE(0x0cde, 0x0008)},	/* Sagem XG703A */
-> >  	{USB_DEVICE(0x0cde, 0x0015)},	/* Zcomax XG-705A */
-> >  	{USB_DEVICE(0x0d8e, 0x3762)},	/* DLink DWL-G120 Cohiba */
+> > Failing kernels: since 2.6.35-rc1 to 2.6.35-rc3
+> > 
+> > Symptoms:
+> > During connect do wireless network authentication seems be OK, but I
+> > cannot get IP from dhcp serwer. I do:
+> > echo 0x43fff > /sys/class/net/wlan0/device/debug_level
+> > 
+> > Syslog is here:
+> > http://unixy.pl/maciek/download/kernel/2.6.35-rc3/gumis/syslog-before.txt
+> > 
+> > From syslog I guess the problem is that it doesn't receive broadcast
+> > frames (but I'm not sure), so I try:
+> > sudo ifconfig wlan0 promisc
+> > 
+> > Syslog:
+> > http://unixy.pl/maciek/download/kernel/2.6.35-rc3/gumis/syslog-after.txt
+> > 
+> > And then I can get IP address.
+> > 
+> > Any advice?
 > 
-> Do you know for certain that this device is a Version 1 chip, and for
-> that reason, you are removing it from the version 2 list?
+> Very likely commit 3474ad635db371b0d8d0ee40086f15d223d5b6a4,
+> because I have same problem.
 > 
-> If not, NACK.
+> Try to revert it.
 
-So, I guess you are concerned about the groupings because of the
-different firmwares or something like that?  Perhaps a comment that
-says "this could be a version 2 device" is just as handy?  Since the
-driver prints the name of the firmware it wants, is there any real
-need for grouping the IDs?
+Thanks for information; revert this commit solves problem.
 
-OTOH, is there any actual harm from the duplicate entry?  It "seems"
-wrong to me too, but I guess it does no harm...?
+> 
+> Best regards,
+> Maxim Levitsky
 
-Leann and/or Ben, was this just tidying-up?  I'm guessing there wasn't
-an actual bug involved?
-
-John
+Regards
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Maciej Rutecki
+http://www.maciek.unixy.pl
