@@ -1,53 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:58468 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756685Ab0FPLao convert rfc822-to-8bit (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:15045 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757792Ab0FPKMG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jun 2010 07:30:44 -0400
+	Wed, 16 Jun 2010 06:12:06 -0400
+Received: from vs3001.wh2.ocn.ne.jp (125.206.180.229)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0578023124
+	for <linux-wireless@vger.kernel.org>; Wed, 16 Jun 2010 19:12:05 +0900 (JST)
+Subject: [PATCH 07/17] ath5k: unify rx descriptor error handling
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Wed, 16 Jun 2010 19:11:46 +0900
+Message-ID: <20100616101146.10067.1272.stgit@tt-desk>
+In-Reply-To: <20100616100809.10067.34787.stgit@tt-desk>
+References: <20100616100809.10067.34787.stgit@tt-desk>
 MIME-Version: 1.0
-In-Reply-To: <20100616110914.GF9298@parisc-linux.org>
-References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>
-	<AANLkTikwKHITQJDaSf9BnHQ9FLiQ-KYlCWNiH438otsV@mail.gmail.com>
-	<20100616110914.GF9298@parisc-linux.org>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 16 Jun 2010 21:30:23 +1000
-Message-ID: <AANLkTil-d7LqofvvB9_QGd7Quy4kPucWGpJ5LHl94LoP@mail.gmail.com>
-Subject: Re: [PATCH 0/5] Fix set but unused variable warnings
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: "Justin P. Mattock" <justinmattock@gmail.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 16, 2010 at 21:09, Matthew Wilcox <matthew@wil.cx> wrote:
-> On Wed, Jun 16, 2010 at 03:52:58PM +1000, Julian Calaby wrote:
->> Given that patches 3, 4 and 5 seem to be a cases of missing error
->> handling, (3 and 4 in particular seem to be breaking things rather
->> than fixing them) in my humble opinion, I think this set needs some
->> work and discussion.
->>
->> Justin, maybe you'd be better off posting the actual error messages
->> (split up by subsystem) and letting the lists discuss them, rather
->> than posting patches which are obviously wrong. (like the ones I've
->> pointed out)
->
-> My first impression of patch 5 was "that can't be right", but upon review,
-> I concluded that was the best solution.  If we return the PTR_ERR, this
-> is going to confuse every user of scsi_host_alloc who are currently only
-> checking for NULL.
+There is no reason for a special handling (return) here, just break like we do
+with the checks before.
 
-I did a double take at patch 4 when skimming over them, then took a
-proper look at the lot of them. Whilst I agree that 5 isn't doing
-anything particularly bad, it does seem wrong, especially in the
-context of 3 and 4.
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+Acked-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath/ath5k/base.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-Thanks,
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 5479f85..d9df114 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1937,8 +1937,7 @@ ath5k_tasklet_rx(unsigned long data)
+ 		else if (unlikely(ret)) {
+ 			ATH5K_ERR(sc, "error in processing rx descriptor\n");
+ 			sc->stats.rxerr_proc++;
+-			spin_unlock(&sc->rxbuflock);
+-			return;
++			break;
+ 		}
+ 
+ 		sc->stats.rx_all_count++;
 
--- 
-
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-.Plan: http://sites.google.com/site/juliancalaby/
