@@ -1,57 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:55252 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752168Ab0FDAPe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jun 2010 20:15:34 -0400
-Date: Fri, 4 Jun 2010 09:15:16 +0900
-To: reinette.chatre@intel.com
-Cc: fujita.tomonori@lab.ntt.co.jp, yi.zhu@intel.com,
-	ilw@linux.intel.com, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-Subject: Re: [PATCH] iwlwifi: use the DMA state API instead of the pci
- equivalents
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-In-Reply-To: <1275582441.2091.31678.camel@rchatre-DESK>
-References: <20100603141853Z.fujita.tomonori@lab.ntt.co.jp>
-	<1275582441.2091.31678.camel@rchatre-DESK>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Message-Id: <20100604091433Y.fujita.tomonori@lab.ntt.co.jp>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:57090 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755374Ab0FPAlp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Jun 2010 20:41:45 -0400
+MIME-Version: 1.0
+In-Reply-To: <20100616003813.77B0E42E2C@repository3.localdomain>
+References: <20100616003813.77B0E42E2C@repository3.localdomain>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 15 Jun 2010 17:41:25 -0700
+Message-ID: <AANLkTik49vfTI7UHzCOGJRXdAYJN9fLmwS-xNcHeBcAu@mail.gmail.com>
+Subject: Re: Compat-wireless release for 2010-06-15v2 is baked
+To: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 03 Jun 2010 09:27:21 -0700
-reinette chatre <reinette.chatre@intel.com> wrote:
+Ok if you don't see any more of these daily please kick me or Haukes.
+Both of us should have access to fix pushing these out now from orbit.
+The backup in case orbit goes down is:
 
-> On Wed, 2010-06-02 at 22:19 -0700, FUJITA Tomonori wrote:
-> > This can be cleanly applied to wireless-2.6 and iwlwifi git trees.
-> > 
-> > =
-> > From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > Subject: [PATCH] iwlwifi: use the DMA state API instead of the pci equivalents
-> > 
-> > This replace the PCI DMA state API (include/linux/pci-dma.h) with the
-> > DMA equivalents since the PCI DMA state API will be obsolete.
-> 
-> Does that mean we need to modify out other PCI DMA calls (eg.
-> pci_unmap_single etc.) also?
+http://wireless.kernel.org/download/compat-wireless-2.6/
 
-Yeah, in the long term. PCI DMA API is just the wrapper of DMA API
-(all the architectures use include/asm-generic/pci-dma-compat.h) so
-you can safely move to DMA API.
+  Luis
 
-
-> > 
-> > No functional change.
-> > 
-> > For further information about the background:
-> > 
-> > http://marc.info/?l=linux-netdev&m=127037540020276&w=2
-> > 
-> > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> 
-> Thank you
-> 
-> Acked-by: Reinette Chatre <reinette.chatre@intel.com>
-
-Thanks!
+On Tue, Jun 15, 2010 at 5:38 PM, Compat-wireless cronjob account
+<compat@orbit-lab.org> wrote:
+>
+> compat-wireless code metrics
+>
+>    498409 - Total upstream lines of code being pulled
+>      1398 - backport code changes
+>      1167 - backport code additions
+>       231 - backport code deletions
+>      5748 - backport from compat module
+>      7146 - total backport code
+>    1.4338 - % of code consists of backport work
+>        13 - Code changes posted but not yet merged
+>         8 - Code additions posted but not yet merged
+>         5 - Code deletions posted but not yet merged
+>    0.0026 - % of code not yet merged
+>      1218 - Crap changes not yet posted
+>      1179 - Crap additions not yet merged
+>        39 - Crap deletions not yet posted
+>    0.2444 - % of crap code
+>
+> Base tree: linux-next.git
+> Base tree version: next-20100615
+> compat-wireless release: compat-wireless-2010-06-10-11-gd1c4956
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
