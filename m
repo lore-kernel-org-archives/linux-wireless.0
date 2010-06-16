@@ -1,57 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:58902 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753122Ab0FUW6z (ORCPT
+Received: from www.clear-code.com ([219.94.198.64]:47051 "EHLO
+	mail.clear-code.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754791Ab0FPPCi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jun 2010 18:58:55 -0400
-MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 21 Jun 2010 15:58:35 -0700
-Message-ID: <AANLkTikmFJAHEBwAZ_lPosAZH3JO2zA5KetXuHvfe4WT@mail.gmail.com>
-Subject: Linux script to enable ASPM / Documentation for ASPM
-To: linux-kernel@vger.kernel.org
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Martin Mares <mj@ucw.cz>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 16 Jun 2010 11:02:38 -0400
+Date: Thu, 17 Jun 2010 00:02:23 +0900 (JST)
+Message-Id: <20100617.000223.656204364469558896.kou@clear-code.com>
+To: linville@tuxdriver.com
+Cc: mcgrof@gmail.com, Stephen.Chen@atheros.com, David.Quan@atheros.com,
+	linux-wireless@vger.kernel.org, Michael.Green@atheros.com
+Subject: Re: [PATCH] zd1211rw: ignore unknown regulatory domain.
+From: Kouhei Sutou <kou@clear-code.com>
+In-Reply-To: <20100616134421.GB2404@tuxdriver.com>
+References: <AANLkTin9bG4qDEKwgOXmlR3k9wZ-JBSIlh3JzYjzVDeY@mail.gmail.com>
+	<20100616.215523.1718341995174283889.kou@clear-code.com>
+	<20100616134421.GB2404@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ASPM was a dark magic when I first started looking at it. Some of it
-is still dark but what I was able to understand with the help of
-colleagues at work I've managed to stash here for now:
+Hi,
 
-http://wireless.kernel.org/en/users/Documentation/ASPM
+In <20100616134421.GB2404@tuxdriver.com>
+  "Re: [PATCH] zd1211rw: ignore unknown regulatory domain." on Wed, 16 Jun 2010 09:44:22 -0400,
+  "John W. Linville" <linville@tuxdriver.com> wrote:
 
-Then enabling ASPM was also quite a challenge and I always had to go
-back and revisit the procedures, so to help with that instead I wrote
-a script to do this for you correctly:
+> On Wed, Jun 16, 2010 at 09:55:23PM +0900, Kouhei Sutou wrote:
+> 
+>> I used 'ZD_REGDOMAIN_JAPAN_GW_US54GXS' as a macro name for
+>> 0x49 because 0x49 is used by GW-US54GXS. Is it OK? Or should
+>> I use other name for it?
+> 
+> Hopefully someone can suggest a better name.  Anyone know what inspired
+> "ZD_REGDOMAIN_JAPAN_ADD"?
 
-http://kernel.org/pub/linux/kernel/people/mcgrof/aspm/enable-aspm
+'ZD_REGDOMAIN_JAPAN_3' was used in another patch:
+  https://patchwork.kernel.org/patch/47220/
 
-Its sha1sum is: f5804fdab512065f219e55addf78c6654f1fc045
+But I don't know why '3' was used...
 
-If any of that looks confusing refer to the documentation above.
 
-There's a TODO there, so I'll get to the different items when I can
-but if you like feel free to send me patches as well:
-
- TODO: patches are welcomed to me until we submit to to
-       PCI Utilities upstream.
-
- This can be improved by in this order:
-
-        * Accept arguments for endpoint and root complex address, and
-          desired ASPM settings
-        * Look for your ASPM capabilities by quering your
-          LnkCap register first. Use these values to let you
-          select whether you want to enable only L1 or L1 & L0s
-        * Searching for your root complex for you
-        * Search for your PCI device by using the driver
-        * Disable your driver and ask to reboot ?
-        * Rewrite in C
-        * Write ncurses interface [ wishlist ]
-        * Write GTK/QT interface [ wishlist ]
-        * Submit upstream as aspm.c to the PCI Utilities, which are
-          maintained by Martin Mares <mj@ucw.cz>
-
-  Luis
+Thanks,
+--
+kou
