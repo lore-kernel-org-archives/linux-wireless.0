@@ -1,133 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:43237 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752325Ab0FLEeF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jun 2010 00:34:05 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH 16/24] ath9k: fix extending the rx timestamp with the hardware TSF
-Date: Sat, 12 Jun 2010 00:33:54 -0400
-Message-Id: <1276317242-15540-17-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
-References: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail.gmx.net ([213.165.64.20]:42377 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1756869Ab0FQHun (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Jun 2010 03:50:43 -0400
+From: Sebastian Smolorz <Sebastian.Smolorz@gmx.de>
+To: Kalle Valo <kvalo@adurom.com>
+Subject: Re: [RFC] Changes in mac80211 to make at76c50x-usb working again
+Date: Thu, 17 Jun 2010 09:51:24 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Marcel Holtmann <marcel@holtmann.org>
+References: <201006151416.36686.Sebastian.Smolorz@gmx.de> <201006160946.54197.Sebastian.Smolorz@gmx.de> <87typ2fa2j.fsf@purkki.valot.fi>
+In-Reply-To: <87typ2fa2j.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201006170951.25067.Sebastian.Smolorz@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+Kalle Valo wrote:
+> Sebastian Smolorz <Sebastian.Smolorz@gmx.de> writes:
+> > Kalle Valo wrote:
+> >> I debugged this a long time ago. The problem is that firmware's
+> >> CMD_JOIN only works if bssid is correct one. I remember trying
+> >> ff:ff:ff:ff:ff:ff, but that didn't work for some reason. The join
+> >> command needs to be sent before association, otherwise transmission
+> >> won't work at all. And if I use a random bssid the firmware will
+> >> filter the replies. But I tested this a long time ago, I might
+> >> remember something wrong.
+> >>
+> >> I was thinking a hack which would get bssid from association frames
+> >> and then send CMD_JOIN, before the association frame.
+> >
+> > Could you elaborate a little bit on this?
+> 
+> Basically my idea is this (all in tx path):
+> 
+> 1. if tx frame is an association frame, get bssid from the frame
+> 2. if bssid == priv->bssid, goto step 6
+> 3. store tx frame, don't transmit it yet
+> 4. send CMD_JOIN with new bssid
+> 5. wait for command completion
+> 6. priv->bssid = bssid
+> 7. transmit tx frame
+> 8. done
+> 
+> Ugly as hell, but one option to get the driver working again.
+> 
+> > How do we proceed to make the driver working again? Do you want to work
+> > on this issue?
+> 
+> Sorry, currently I only have time to review patches and send comments.
+> If you have the time, it would be great to if you could fix the driver
+> finally.
 
-AR5416 and all newer chipsets use a 32 bit rx timestamp, so there
-is no need to keep the 15 bit timestamp extending logic around.
+OK, I will write a patch.
 
-This patch removes ath9k_hw_extend_tsf (replaced by a call to
-ath9k_hw_gettsf64), and reduces the frequency of TSF reads, which
-can improve performance in some cases.
-
-This change also has the side effect of making rx timestamps
-more accurate.
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/hw.c   |   15 ---------------
- drivers/net/wireless/ath/ath9k/hw.h   |    1 -
- drivers/net/wireless/ath/ath9k/recv.c |   17 ++++++++++++++---
- 3 files changed, 14 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 874c4e9..1fa3fe7 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2616,21 +2616,6 @@ void ath9k_hw_set_tsfadjust(struct ath_hw *ah, u32 setting)
- }
- EXPORT_SYMBOL(ath9k_hw_set_tsfadjust);
- 
--/*
-- *  Extend 15-bit time stamp from rx descriptor to
-- *  a full 64-bit TSF using the current h/w TSF.
--*/
--u64 ath9k_hw_extend_tsf(struct ath_hw *ah, u32 rstamp)
--{
--	u64 tsf;
--
--	tsf = ath9k_hw_gettsf64(ah);
--	if ((tsf & 0x7fff) < rstamp)
--		tsf -= 0x8000;
--	return (tsf & ~0x7fff) | rstamp;
--}
--EXPORT_SYMBOL(ath9k_hw_extend_tsf);
--
- void ath9k_hw_set11nmac2040(struct ath_hw *ah)
- {
- 	struct ieee80211_conf *conf = &ath9k_hw_common(ah)->hw->conf;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 009f0fa..ba84ac7 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -894,7 +894,6 @@ u64 ath9k_hw_gettsf64(struct ath_hw *ah);
- void ath9k_hw_settsf64(struct ath_hw *ah, u64 tsf64);
- void ath9k_hw_reset_tsf(struct ath_hw *ah);
- void ath9k_hw_set_tsfadjust(struct ath_hw *ah, u32 setting);
--u64 ath9k_hw_extend_tsf(struct ath_hw *ah, u32 rstamp);
- void ath9k_hw_init_global_settings(struct ath_hw *ah);
- void ath9k_hw_set11nmac2040(struct ath_hw *ah);
- void ath9k_hw_beaconinit(struct ath_hw *ah, u32 next_beacon, u32 beacon_period);
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 5141cd8..78ef1ae 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1002,8 +1002,6 @@ static int ath9k_rx_skb_preprocess(struct ath_common *common,
- 				   struct ieee80211_rx_status *rx_status,
- 				   bool *decrypt_error)
- {
--	struct ath_hw *ah = common->ah;
--
- 	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
- 
- 	/*
-@@ -1018,7 +1016,6 @@ static int ath9k_rx_skb_preprocess(struct ath_common *common,
- 	if (ath9k_process_rate(common, hw, rx_stats, rx_status))
- 		return -EINVAL;
- 
--	rx_status->mactime = ath9k_hw_extend_tsf(ah, rx_stats->rs_tstamp);
- 	rx_status->band = hw->conf.channel->band;
- 	rx_status->freq = hw->conf.channel->center_freq;
- 	rx_status->signal = ATH_DEFAULT_NOISE_FLOOR + rx_stats->rs_rssi;
-@@ -1100,6 +1097,8 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 	bool edma = !!(ah->caps.hw_caps & ATH9K_HW_CAP_EDMA);
- 	int dma_type;
- 	u8 rx_status_len = ah->caps.rx_status_len;
-+	u64 tsf = 0;
-+	u32 tsf_lower = 0;
- 
- 	if (edma)
- 		dma_type = DMA_BIDIRECTIONAL;
-@@ -1109,6 +1108,9 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 	qtype = hp ? ATH9K_RX_QUEUE_HP : ATH9K_RX_QUEUE_LP;
- 	spin_lock_bh(&sc->rx.rxbuflock);
- 
-+	tsf = ath9k_hw_gettsf64(ah);
-+	tsf_lower = tsf & 0xffffffff;
-+
- 	do {
- 		/* If handling rx interrupt and flush is in progress => exit */
- 		if ((sc->sc_flags & SC_OP_RXFLUSH) && (flush == 0))
-@@ -1141,6 +1143,15 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 		if (flush)
- 			goto requeue;
- 
-+		rxs->mactime = (tsf & ~0xffffffffULL) | rs.rs_tstamp;
-+		if (rs.rs_tstamp > tsf_lower &&
-+		    unlikely(rs.rs_tstamp - tsf_lower > 0x10000000))
-+			rxs->mactime -= 0x100000000ULL;
-+
-+		if (rs.rs_tstamp < tsf_lower &&
-+		    unlikely(tsf_lower - rs.rs_tstamp > 0x10000000))
-+			rxs->mactime += 0x100000000ULL;
-+
- 		retval = ath9k_rx_skb_preprocess(common, hw, hdr, &rs,
- 						 rxs, &decrypt_error);
- 		if (retval)
 -- 
-1.6.3.3
-
+Sebastian
