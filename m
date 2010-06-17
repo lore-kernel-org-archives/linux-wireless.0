@@ -1,64 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:36665 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755786Ab0F2Qwg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jun 2010 12:52:36 -0400
-Message-ID: <4C2A24D2.4070007@openwrt.org>
-Date: Tue, 29 Jun 2010 18:52:34 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:11169 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751120Ab0FQEsZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Jun 2010 00:48:25 -0400
+Received: from vs3013.wh2.ocn.ne.jp (125.206.180.245)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-035170103
+	for <linux-wireless@vger.kernel.org>; Thu, 17 Jun 2010 13:48:24 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	=?utf-8?q?Luk=C3=A1=C5=A1_Turek?= <8an@praha12.net>
+Subject: Re: [ath5k-devel] Race condition in CRDA calls?
+Date: Thu, 17 Jun 2010 13:47:58 +0900
+Cc: "ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+References: <201003251801.57951.8an@praha12.net> <20100526214658.GB10931@tux>
+In-Reply-To: <20100526214658.GB10931@tux>
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org
-Subject: Re: ath9k: ap tsf seems random and only uses lower 24 bits or so
-References: <AANLkTilG4qxjX0e5u_BGp0YcPoVBbsqd6Hlb8E0j_S8S@mail.gmail.com>	<4C29284C.5050707@openwrt.org>	<AANLkTint2L1xSMughBA5aHCFMRB5KMC8EfwcxJJU5XYW@mail.gmail.com>	<4C2A1776.2080508@openwrt.org> <AANLkTik_d6tIKj3otsgaojVBPfvW1lz9OBRujeZLyv1U@mail.gmail.com>
-In-Reply-To: <AANLkTik_d6tIKj3otsgaojVBPfvW1lz9OBRujeZLyv1U@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201006171347.58712.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-06-29 6:36 PM, Bj�rn Smedman wrote:
-> 2010/6/29 Felix Fietkau <nbd@openwrt.org>:
->> One beacon miss should never cause a TSF reset. Only a lot of
->> consecutive beacon misses trigger a hardware reset, which then resets
->> the TSF. Looking at your log, it appears that the beacon miss is a
->> symptom rather than a cause of the TSF jumps.
->> Can you add a debug statement to the hw reset function to see if it's
->> called before the TSF jumps?
-> 
-> Yup, seems to be a hardware reset. Added an ath_print ("Reset HW!") at
-> the beginning of ath9k_hw_reset() and used debug mask 0x101:
-> 
-> ...
-> Jan  1 00:01:59 OpenWrt user.debug kernel: ath: slot 3 [tsf 14863367
-> tsftu 14515 intval 100] vif (null)
-> Jan  1 00:01:59 OpenWrt user.debug kernel: ath: slot 2 [tsf 14888967
-> tsftu 14540 intval 100] vif (null)
-> Jan  1 00:01:59 OpenWrt user.debug kernel: ath: slot 1 [tsf 14914568
-> tsftu 14565 intval 100] vif (null)
-> Jan  1 00:01:59 OpenWrt user.debug kernel: ath: Reset HW!
-> Jan  1 00:01:59 OpenWrt user.debug kernel: ath: ah->misc_mode 0xc
-> Jan  1 00:01:59 OpenWrt user.debug kernel: ath: Setting CFG 0x10a
-> Jan  1 00:01:59 OpenWrt user.debug kernel: ath: slot 0 [tsf 80123
-> tsftu 78 intval 100] vif 80945e70
-> Jan  1 00:01:59 OpenWrt user.debug kernel: ath: missed 1 consecutive beacons
-> Jan  1 00:01:59 OpenWrt user.debug kernel: ath: Reset HW!
-> Jan  1 00:01:59 OpenWrt user.debug kernel: ath: ah->misc_mode 0xc
-> Jan  1 00:01:59 OpenWrt user.debug kernel: ath: Setting CFG 0x10a
-> Jan  1 00:01:59 OpenWrt user.debug kernel: ath: slot 0 [tsf 80989
-> tsftu 79 intval 100] vif 80945e70
-> Jan  1 00:01:59 OpenWrt user.debug kernel: ath: missed 1 consecutive beacons
-> Jan  1 00:01:59 OpenWrt user.debug kernel: ath: resume beacon xmit
-> after 1 misses
-> Jan  1 00:01:59 OpenWrt user.debug kernel: ath: slot 3 [tsf 117792
-> tsftu 115 intval 100] vif (null)
-> Jan  1 00:01:59 OpenWrt user.debug kernel: ath: slot 2 [tsf 143368
-> tsftu 140 intval 100] vif (null)
-> Jan  1 00:01:59 OpenWrt user.debug kernel: ath: slot 1 [tsf 168967
-> tsftu 165 intval 100] vif (null)
-> ...
-Please add another print to the end of ath9k_hw_check_alive() before the
-'return false'. Make sure it prints the value of the 'reg' variable.
-If you see it in the log, then it's probably the baseband getting stuck.
+hi!
 
-- Felix
+are there any news on that? i think i hit the same bug, now...
+
+thanks,
+bruno
+
+On Thu May 27 2010 06:46:58 Luis R. Rodriguez wrote:
+> Just FYI, you want to use linux-wireless for reporting such things,
+> not ath5k-devel. Also I have been real busy in March (and stil am but
+> just trying to reply) so if I do not reply maybe others can. In
+> linux-wireless you'll likely get much more review/help than ath5k-devel
+> for this.
+> 
+> More below.
+> 
+> On Thu, Mar 25, 2010 at 10:01:54AM -0700, Lukáš Turek wrote:
+> > Hi,
+> > 
+> > I've been testing current vanilla 2.6.34 from git today on a computer
+> > with three Atheros PCI cards and noticed a strange behavior: although
+> > all the cards have the same regulatory domain (0x36), only the last one
+> > (phy2) had the correct channels enabled, the other two (phy0 and phy1)
+> > stayed in US regulatory domain with channels 52-140 disabled.
+> > 
+> > It seems the reply from CRDA for the first request gets into the kernel
+> > after the last card is detected and all the replies get mixed up some
+> > way:
+> > 
+> > ath5k 0000:02:01.0: PCI INT A -> GSI 22 (level, low) -> IRQ 22
+> > ath5k 0000:02:01.0: registered as 'phy0'
+> > ath: EEPROM regdomain: 0x36
+> > ath: EEPROM indicates we should expect a direct regpair map
+> > ath: Country alpha2 being used: CZ
+> > ath: Regpair used: 0x36
+> > udev: renamed network interface eth0 to eth2
+> > udev: renamed network interface eth1_rename to eth0
+> > phy0: Selected rate control algorithm 'minstrel'
+> > ath5k phy0: Atheros AR5414 chip found (MAC: 0xa5, PHY: 0x61)
+> > ath5k 0000:02:02.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+> > ath5k 0000:02:02.0: registered as 'phy1'
+> > ath: EEPROM regdomain: 0x36
+> > ath: EEPROM indicates we should expect a direct regpair map
+> > ath: Country alpha2 being used: CZ
+> > ath: Regpair used: 0x36
+> > cfg80211: Calling CRDA for country: CZ
+> > phy1: Selected rate control algorithm 'minstrel'
+> > ath5k phy1: Atheros AR5414 chip found (MAC: 0xa5, PHY: 0x61)
+> > ath5k 0000:02:03.0: PCI INT A -> GSI 19 (level, low) -> IRQ 19
+> > ath5k 0000:02:03.0: registered as 'phy2'
+> > ath: EEPROM regdomain: 0x36
+> > ath: EEPROM indicates we should expect a direct regpair map
+> > ath: Country alpha2 being used: CZ
+> > ath: Regpair used: 0x36
+> > cfg80211: Calling CRDA for country: CZ
+> > udev: renamed network interface wlan1 to wlan3
+> > phy2: Selected rate control algorithm 'minstrel'
+> > ath5k phy2: Atheros AR5414 chip found (MAC: 0xa5, PHY: 0x61)
+> > cfg80211: Calling CRDA for country: CZ
+> > udev: renamed network interface wlan1 to wlan2
+> > cfg80211: Current regulatory domain intersected:
+> > (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+> > (2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+> > (2457000 KHz - 2482000 KHz @ 20000 KHz), (N/A, 2000 mBm)
+> > (2474000 KHz - 2483500 KHz @ 9500 KHz), (N/A, 2000 mBm)
+> > (5170000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+> > cfg80211: Current regulatory domain intersected:
+> > (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+> > (2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+> > (2457000 KHz - 2482000 KHz @ 20000 KHz), (N/A, 2000 mBm)
+> > (2474000 KHz - 2483500 KHz @ 9500 KHz), (N/A, 2000 mBm)
+> > (5170000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+> > cfg80211: Current regulatory domain intersected:
+> > (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+> > (2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+> > (2457000 KHz - 2482000 KHz @ 20000 KHz), (N/A, 2000 mBm)
+> > (2474000 KHz - 2483500 KHz @ 9500 KHz), (N/A, 2000 mBm)
+> > (5170000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+> > 
+> > Another reason might be udev messing up with device names. I will try to
+> > debug this, but any hints would be greatly appreciated, because there's
+> > not much info about the CRDA <-> kernel interaction.
+> 
+> You forgot to supply the kernel log of when cfg80211 loads, that
+> would have been helpful. After cfg80211 loads then leave a window
+> open with 'iw event -t' running. Then load ath5k, and if you want to
+> debug udev you can use udevadm, for example to debug only
+> kernel messages:
+> 
+> udevadm monitor --environment kernel
+> 
+> In short cfg80211 will do an intersection if the core had a regulatory
+> domain set for some reason and then a driver suggested to use another
+> country. If cfg80211 was world roaming and a driver then just used
+> a request for CZ then it shuld stick to CZ. If a second device comes
+> up with CZ then -EALREADY should be expected IIRC, if this is not happening
+> it smells like a bug.
+> 
+>   Luis
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+> in the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
