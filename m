@@ -1,44 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cp-out12.libero.it ([212.52.84.112]:48115 "EHLO
-	cp-out12.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753261Ab0FDIZN (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:35123 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933163Ab0FQTYf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jun 2010 04:25:13 -0400
-From: Fabio Rossi <rossi.f@inwind.it>
-To: linux-wireless@vger.kernel.org
-Subject: Re: WARNING: at drivers/base/core.c:130 device_release+0x82/0x90()
-Date: Fri, 4 Jun 2010 10:25:08 +0200
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>
-References: <201006021129.43621.rossi.f@inwind.it> <AANLkTik0A8qhlIi1pjvo0DKXhxjBEYEwOCn6iIsLXFJi@mail.gmail.com>
-In-Reply-To: <AANLkTik0A8qhlIi1pjvo0DKXhxjBEYEwOCn6iIsLXFJi@mail.gmail.com>
+	Thu, 17 Jun 2010 15:24:35 -0400
+Received: by vws3 with SMTP id 3so70211vws.19
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Jun 2010 12:24:34 -0700 (PDT)
 MIME-Version: 1.0
-Message-Id: <201006041025.08348.rossi.f@inwind.it>
-Content-Type: Text/Plain;
-  charset="utf-8"
+In-Reply-To: <4C1A6E4F.6000708@cortland.com>
+References: <4C1926E7.1070503@cortland.com>
+	<AANLkTil-qhJ7fO3RNm4xwG1fA6uKeTkrD352ICU-z8Ab@mail.gmail.com>
+	<4C1A6E4F.6000708@cortland.com>
+Date: Thu, 17 Jun 2010 15:24:34 -0400
+Message-ID: <AANLkTilD7x8a17kN2jxTX5pHwrrIGy0tUHTcWAdbfaBo@mail.gmail.com>
+Subject: Re: OOPS in ath5k when setting coverage class
+From: Bob Copeland <me@bobcopeland.com>
+To: Steve Brown <sbrown@cortland.com>
+Cc: ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 02 June 2010 23:42:14 Luis R. Rodriguez wrote:
+On Thu, Jun 17, 2010 at 2:49 PM, Steve Brown <sbrown@cortland.com> wrote:
+> I went a little further and tested the following patch.
+>
+> If it makes sense to you, I'll submit it.
 
-> On Wed, Jun 2, 2010 at 2:29 AM, Fabio Rossi <rossi.f@inwind.it> wrote:
-> > Compiling the kernel without ACPI (CONFIG_ACPI=n) gives the following
-> > warning:
-> > 
-> > cfg80211: Calling CRDA to update world regulatory domain
-> > cfg80211: World regulatory domain updated:
-> >    (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-> >    (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
-> > ath5k 0000:08:01.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-> > ath5k 0000:08:01.0: registered as 'phy0'
-> > ath5k phy0: request_irq failed
-> > ------------[ cut here ]------------
-> 
-> Since traces are printed reversed you will have to read my logic from
-> bottom to top:
-> 
-> Seems we need to implement the dev_release() op for the class of our
-> devices.
 
-Shall I open a bug in kernel bugzilla to keep trace of this?
+Looks fine to me, but I do want to do a quick audit of the driver
+to see if there are others.  We just fixed another one in setting
+the antenna mode with the same root cause.
 
-Fabio
+-- 
+Bob Copeland %% www.bobcopeland.com
