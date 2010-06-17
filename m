@@ -1,134 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:38539 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756136Ab0FNLCD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jun 2010 07:02:03 -0400
-Received: from MSI-MTA.marvell.com (msi-mta.marvell.com [10.68.76.91]) by dakia2.marvell.com with ESMTP id lNKedUQxzyUCyNfo for <linux-wireless@vger.kernel.org>; Mon, 14 Jun 2010 04:02:02 -0700 (PDT)
-Subject: [PATCH 2/3] Libertas: fix WARN_ON issues in cfg80211 support
-From: Kiran Divekar <dkiran@marvell.com>
-Reply-To: dkiran@marvell.com
-To: <linux-wireless@vger.kernel.org>
-Content-Type: text/plain
-Date: Mon, 14 Jun 2010 22:01:30 +0530
-Message-ID: <1276533090.18884.10.camel@pe-lt028>
+Received: from mail.atheros.com ([12.36.123.2]:34096 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932805Ab0FQJsA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Jun 2010 05:48:00 -0400
+Received: from mail.atheros.com ([10.10.20.104])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 17 Jun 2010 02:48:00 -0700
+From: Vivek Natarajan <vnatarajan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath: Update the regulatory domain information for a few countries.
+Date: Thu, 17 Jun 2010 15:17:52 +0530
+Message-ID: <1276768074-4366-1-git-send-email-vnatarajan@atheros.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In following scenarios WARN_ON() in cfg80211 code was triggered.
-a) Driver unload or card removal.
-b) Disconnect from infra network
-c) Adhoc start/join
-d) Adhoc stop
-Added following fixes to avoid WARN_ON() in cfg80211 code.
-a) Ensured that cfg80211_disconnected() function defined in cfg80211
-code will be called only in infra mode.
-b) Solved timing issue by moving cfg80211_disconnected() call inside
-lbs_cfg_disconnect().
-c) Updated "wdev->ssid" in driver code after Adhoc join/start
-d) Removed unnecessory cfg80211_disconnected() call in lbs_remove_card.
+Add Kenya(KE) with APL1_WORLD.
+Change Honduras(HN) to FCC3_WORLD.
+Change Lebanon(LB) to  APL1_WORLD,
+Change Macedonia(MK) to ETSI1_WORLD.
+Change Pakistan(PK) to APL1_WORLD.
+Change Romania(RO) to ETSI1_WORLD.
+Change Russia(RU) to FCC3_WORLD.
+Change Saudi Arabia(SA) to FCC2_WORLD.
+Change UAE(AE) to ETSI1_WORLD.
+Change Venezuela(VE) to FCC1_WORLD.
+Change Vietnam(VN) to ETSI3_WORLD.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
 ---
- drivers/net/wireless/libertas/cfg.c     |   37 ++++++++++---------------------
- drivers/net/wireless/libertas/cmdresp.c |    4 ++-
- drivers/net/wireless/libertas/main.c    |    2 -
- 3 files changed, 15 insertions(+), 28 deletions(-)
+ drivers/net/wireless/ath/regd_common.h |   21 +++++++++++----------
+ 1 files changed, 11 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
-index 7322e0d..e4b0409 100644
---- a/drivers/net/wireless/libertas/cfg.c
-+++ b/drivers/net/wireless/libertas/cfg.c
-@@ -1238,28 +1238,6 @@ static int lbs_cfg_connect(struct wiphy *wiphy, struct net_device *dev,
- 	return ret;
- }
+diff --git a/drivers/net/wireless/ath/regd_common.h b/drivers/net/wireless/ath/regd_common.h
+index 248c670..b59b690 100644
+--- a/drivers/net/wireless/ath/regd_common.h
++++ b/drivers/net/wireless/ath/regd_common.h
+@@ -333,7 +333,7 @@ static struct country_code_to_enum_rd allCountries[] = {
+ 	{CTRY_GUAM, FCC1_FCCA, "GU"},
+ 	{CTRY_GUATEMALA, FCC1_FCCA, "GT"},
+ 	{CTRY_HAITI, ETSI1_WORLD, "HT"},
+-	{CTRY_HONDURAS, NULL1_WORLD, "HN"},
++	{CTRY_HONDURAS, FCC3_WORLD, "HN"},
+ 	{CTRY_HONG_KONG, FCC3_WORLD, "HK"},
+ 	{CTRY_HUNGARY, ETSI1_WORLD, "HU"},
+ 	{CTRY_ICELAND, ETSI1_WORLD, "IS"},
+@@ -406,18 +406,19 @@ static struct country_code_to_enum_rd allCountries[] = {
  
--
--
--
--/* callback from lbs_cfg_disconnect() */
--static int lbs_cfg_ret_disconnect(struct lbs_private *priv, unsigned long dummy,
--			      struct cmd_header *resp)
--{
--	lbs_deb_enter(LBS_DEB_CFG80211);
--
--	cfg80211_disconnected(priv->dev,
--			      priv->disassoc_reason,
--			      NULL, 0, /* TODO? */
--			      GFP_KERNEL);
--
--	/* TODO: get rid of priv->connect_status */
--	priv->connect_status = LBS_CONNECTED;
--
--	lbs_deb_leave(LBS_DEB_CFG80211);
--	return 0;
--}
--
--
- static int lbs_cfg_disconnect(struct wiphy *wiphy, struct net_device *dev,
- 	u16 reason_code)
- {
-@@ -1277,9 +1255,14 @@ static int lbs_cfg_disconnect(struct wiphy *wiphy, struct net_device *dev,
- 	memcpy(cmd.macaddr, &priv->assoc_bss, ETH_ALEN);
- 	cmd.reasoncode = cpu_to_le16(reason_code);
- 
--	__lbs_cmd_async(priv, CMD_802_11_DEAUTHENTICATE,
--			&cmd.hdr, sizeof(cmd),
--			lbs_cfg_ret_disconnect, 0);
-+	if (lbs_cmd_with_response(priv, CMD_802_11_DEAUTHENTICATE, &cmd))
-+		return -EFAULT;
-+
-+	cfg80211_disconnected(priv->dev,
-+			priv->disassoc_reason,
-+			NULL, 0,
-+			GFP_KERNEL);
-+	priv->connect_status = LBS_DISCONNECTED;
- 
- 	return 0;
- }
-@@ -1673,6 +1656,10 @@ static void lbs_join_post(struct lbs_private *priv,
- 			    params->beacon_interval,
- 			    fake_ie, fake - fake_ie,
- 			    0, GFP_KERNEL);
-+
-+	memcpy(priv->wdev->ssid, params->ssid, params->ssid_len);
-+	priv->wdev->ssid_len = params->ssid_len;
-+
- 	cfg80211_ibss_joined(priv->dev, bssid, GFP_KERNEL);
- 
- 	/* TODO: consider doing this at MACREG_INT_CODE_LINK_SENSED time */
-diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-index 9c18227..52b543c 100644
---- a/drivers/net/wireless/libertas/cmdresp.c
-+++ b/drivers/net/wireless/libertas/cmdresp.c
-@@ -31,7 +31,9 @@ void lbs_mac_event_disconnected(struct lbs_private *priv)
- 	 * It causes problem in the Supplicant
- 	 */
- 	msleep_interruptible(1000);
--	lbs_send_disconnect_notification(priv);
-+
-+	if (priv->wdev->iftype == NL80211_IFTYPE_STATION)
-+		lbs_send_disconnect_notification(priv);
- 
- 	/* report disconnect to upper layer */
- 	netif_stop_queue(priv->dev);
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index 51b7e19..58b031c 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -932,8 +932,6 @@ void lbs_remove_card(struct lbs_private *priv)
- 		lbs_ps_wakeup(priv, CMD_OPTION_WAITFORRSP);
- 	}
- 
--	lbs_send_disconnect_notification(priv);
--
- 	if (priv->is_deep_sleep) {
- 		priv->is_deep_sleep = 0;
- 		wake_up_interruptible(&priv->ds_awake_q);
+ 	{CTRY_JORDAN, ETSI2_WORLD, "JO"},
+ 	{CTRY_KAZAKHSTAN, NULL1_WORLD, "KZ"},
++	{CTRY_KENYA, APL1_WORLD, "KE"},
+ 	{CTRY_KOREA_NORTH, APL9_WORLD, "KP"},
+ 	{CTRY_KOREA_ROC, APL9_WORLD, "KR"},
+ 	{CTRY_KOREA_ROC2, APL2_WORLD, "K2"},
+ 	{CTRY_KOREA_ROC3, APL9_WORLD, "K3"},
+ 	{CTRY_KUWAIT, ETSI3_WORLD, "KW"},
+ 	{CTRY_LATVIA, ETSI1_WORLD, "LV"},
+-	{CTRY_LEBANON, NULL1_WORLD, "LB"},
++	{CTRY_LEBANON, APL1_WORLD, "LB"},
+ 	{CTRY_LIECHTENSTEIN, ETSI1_WORLD, "LI"},
+ 	{CTRY_LITHUANIA, ETSI1_WORLD, "LT"},
+ 	{CTRY_LUXEMBOURG, ETSI1_WORLD, "LU"},
+ 	{CTRY_MACAU, FCC2_WORLD, "MO"},
+-	{CTRY_MACEDONIA, NULL1_WORLD, "MK"},
++	{CTRY_MACEDONIA, ETSI1_WORLD, "MK"},
+ 	{CTRY_MALAYSIA, APL8_WORLD, "MY"},
+ 	{CTRY_MALTA, ETSI1_WORLD, "MT"},
+ 	{CTRY_MEXICO, FCC1_FCCA, "MX"},
+@@ -429,7 +430,7 @@ static struct country_code_to_enum_rd allCountries[] = {
+ 	{CTRY_NEW_ZEALAND, FCC2_ETSIC, "NZ"},
+ 	{CTRY_NORWAY, ETSI1_WORLD, "NO"},
+ 	{CTRY_OMAN, FCC3_WORLD, "OM"},
+-	{CTRY_PAKISTAN, NULL1_WORLD, "PK"},
++	{CTRY_PAKISTAN, APL1_WORLD, "PK"},
+ 	{CTRY_PANAMA, FCC1_FCCA, "PA"},
+ 	{CTRY_PAPUA_NEW_GUINEA, FCC1_WORLD, "PG"},
+ 	{CTRY_PERU, APL1_WORLD, "PE"},
+@@ -438,9 +439,9 @@ static struct country_code_to_enum_rd allCountries[] = {
+ 	{CTRY_PORTUGAL, ETSI1_WORLD, "PT"},
+ 	{CTRY_PUERTO_RICO, FCC1_FCCA, "PR"},
+ 	{CTRY_QATAR, APL1_WORLD, "QA"},
+-	{CTRY_ROMANIA, NULL1_WORLD, "RO"},
+-	{CTRY_RUSSIA, NULL1_WORLD, "RU"},
+-	{CTRY_SAUDI_ARABIA, NULL1_WORLD, "SA"},
++	{CTRY_ROMANIA, ETSI1_WORLD, "RO"},
++	{CTRY_RUSSIA, FCC3_WORLD, "RU"},
++	{CTRY_SAUDI_ARABIA, FCC2_WORLD, "SA"},
+ 	{CTRY_SERBIA_MONTENEGRO, ETSI1_WORLD, "CS"},
+ 	{CTRY_SINGAPORE, APL6_WORLD, "SG"},
+ 	{CTRY_SLOVAKIA, ETSI1_WORLD, "SK"},
+@@ -457,7 +458,7 @@ static struct country_code_to_enum_rd allCountries[] = {
+ 	{CTRY_TUNISIA, ETSI3_WORLD, "TN"},
+ 	{CTRY_TURKEY, ETSI3_WORLD, "TR"},
+ 	{CTRY_UKRAINE, NULL1_WORLD, "UA"},
+-	{CTRY_UAE, NULL1_WORLD, "AE"},
++	{CTRY_UAE, ETSI1_WORLD, "AE"},
+ 	{CTRY_UNITED_KINGDOM, ETSI1_WORLD, "GB"},
+ 	{CTRY_UNITED_STATES, FCC3_FCCA, "US"},
+ 	/* This "PS" is for US public safety actually... to support this we
+@@ -466,8 +467,8 @@ static struct country_code_to_enum_rd allCountries[] = {
+ 	{CTRY_UNITED_STATES_FCC49, FCC4_FCCA, "PS"},
+ 	{CTRY_URUGUAY, FCC3_WORLD, "UY"},
+ 	{CTRY_UZBEKISTAN, FCC3_FCCA, "UZ"},
+-	{CTRY_VENEZUELA, APL2_ETSIC, "VE"},
+-	{CTRY_VIET_NAM, NULL1_WORLD, "VN"},
++	{CTRY_VENEZUELA, FCC1_WORLD, "VE"},
++	{CTRY_VIET_NAM, ETSI3_WORLD, "VN"},
+ 	{CTRY_YEMEN, NULL1_WORLD, "YE"},
+ 	{CTRY_ZIMBABWE, NULL1_WORLD, "ZW"},
+ };
 -- 
-1.7.1
-
-
+1.6.3.3
 
