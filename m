@@ -1,184 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36442 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758508Ab0FUVPP (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:39377 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752600Ab0FQFnP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jun 2010 17:15:15 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Javier Cardona <javier@cozybit.com>,
-	Andrey Yurovsky <andrey@cozybit.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v2] mac80211: avoid scheduling while atomic in mesh_rx_plink_frame
-Date: Mon, 21 Jun 2010 17:14:07 -0400
-Message-Id: <1277154847-6395-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1277154547-5851-1-git-send-email-linville@tuxdriver.com>
-References: <1277154547-5851-1-git-send-email-linville@tuxdriver.com>
+	Thu, 17 Jun 2010 01:43:15 -0400
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCHv3] mac80211: Add interface for driver to temporarily disable dynamic ps
+Date: Thu, 17 Jun 2010 08:42:33 +0300
+Message-Id: <1276753353-30310-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While mesh_rx_plink_frame holds sta->lock...
+This mechanism introduced in this patch applies (at least) for hardware
+designs using a single shared antenna for both WLAN and BT. In these designs,
+the antenna must be toggled between WLAN and BT.
 
-mesh_rx_plink_frame ->
-	mesh_plink_inc_estab_count ->
-		ieee80211_bss_info_change_notify
+In those hardware, managing WLAN co-existence with Bluetooth requires WLAN
+full power save whenever there is Bluetooth activity in order for WLAN to be
+able to periodically relinquish the antenna to be used for BT. This is because
+BT can only access the shared antenna when WLAN is idle or asleep.
 
-...but ieee80211_bss_info_change_notify is allowed to sleep.  A driver
-taking advantage of that allowance can cause a scheduling while
-atomic bug.  Similar paths exist for mesh_plink_dec_estab_count,
-so work around those as well.
+Some hardware, for instance the wl1271, are able to indicate to the host
+whenever there is BT traffic. In essence, the hardware will send an indication
+to the host whenever there is, for example, SCO traffic or A2DP traffic, and
+will send another indication when the traffic is over.
 
-http://bugzilla.kernel.org/show_bug.cgi?id=16099
+The hardware gets information of Bluetooth traffic via hardware co-existence
+control lines - these lines are used to negotiate the shared antenna
+ownership. The hardware will give the antenna to BT whenever WLAN is sleeping.
 
-Also, correct a minor kerneldoc comment error (mismatched function names).
+This patch adds the interface to mac80211 to facilitate temporarily disabling
+of dynamic power save as per request of the WLAN driver. This interface will
+immediately force WLAN to full powersave, hence allowing BT coexistence as
+described above.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+In these kind of shared antenna desings, when WLAN powersave is fully disabled,
+Bluetooth will not work simultaneously with WLAN at all. This patch does not
+address that problem. This interface will not change PSM state, so if PSM is
+disabled it will remain so. Solving this problem requires knowledge about BT
+state, and is best done in user-space.
+
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 ---
-v2 -> move ieee80211_bss_info_change_notify call outside of
-	mesh_plink_inc_estab_count to balance the API with the modifications
-	to mesh_plink_dec_estab_count.
+v3: separate ieee80211_dyn_ps_enable/ieee80211_dyn_ps_enable functions
 
- net/mac80211/mesh_plink.c |   42 +++++++++++++++++++++++++++++++-----------
- 1 files changed, 31 insertions(+), 11 deletions(-)
+ include/net/mac80211.h     |   39 +++++++++++++++++++++++++++++++++++++++
+ net/mac80211/ieee80211_i.h |    3 +++
+ net/mac80211/mlme.c        |   41 +++++++++++++++++++++++++++++++++++++++--
+ 3 files changed, 81 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 3cd5f7b..ea13a80 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -65,7 +65,6 @@ void mesh_plink_inc_estab_count(struct ieee80211_sub_if_data *sdata)
- {
- 	atomic_inc(&sdata->u.mesh.mshstats.estab_plinks);
- 	mesh_accept_plinks_update(sdata);
--	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
- }
- 
- static inline
-@@ -73,7 +72,6 @@ void mesh_plink_dec_estab_count(struct ieee80211_sub_if_data *sdata)
- {
- 	atomic_dec(&sdata->u.mesh.mshstats.estab_plinks);
- 	mesh_accept_plinks_update(sdata);
--	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
- }
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index e3c1d47..204975c 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1254,6 +1254,15 @@ ieee80211_get_alt_retry_rate(const struct ieee80211_hw *hw,
+  * dynamic PS feature in stack and will just keep %IEEE80211_CONF_PS
+  * enabled whenever user has enabled powersave.
+  *
++ * Some hardware need to toggle a single shared antenna between WLAN and
++ * Bluetooth to facilitate co-existence. These types of hardware set
++ * limitations on the use of host controlled dynamic powersave whenever there
++ * is simultaneous WLAN and Bluetooth traffic. For these types of hardware, the
++ * driver may request temporarily going into full power save, in order to
++ * enable toggling the antenna between BT and WLAN. If the driver requests
++ * disabling dynamic powersave, the @dynamic_ps_timeout value will be
++ * temporarily set to zero until the driver re-enables dynamic powersave.
++ *
+  * Driver informs U-APSD client support by enabling
+  * %IEEE80211_HW_SUPPORTS_UAPSD flag. The mode is configured through the
+  * uapsd paramater in conf_tx() operation. Hardware needs to send the QoS
+@@ -2465,6 +2474,36 @@ void ieee80211_beacon_loss(struct ieee80211_vif *vif);
+ void ieee80211_connection_loss(struct ieee80211_vif *vif);
  
  /**
-@@ -115,7 +113,7 @@ static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
++ * ieee80211_disable_dyn_ps - force mac80211 to temporarily disable dynamic psm
++ *
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
++ *
++ * Some hardware require full power save to manage simultaneous BT traffic
++ * on the WLAN frequency. Full PSM is required periodically, whenever there are
++ * burst of BT traffic. The hardware gets information of BT traffic via
++ * hardware co-existence lines, and consequentially requests mac80211 to
++ * (temporarily) enter full psm.
++ * This function will only temporarily disable dynamic PS, not enable PSM if
++ * it was not already enabled.
++ * The driver must make sure to re-enable dynamic PS using
++ * ieee80211_enable_dyn_ps() if the driver has disabled it.
++ *
++ */
++void ieee80211_disable_dyn_ps(struct ieee80211_vif *vif);
++
++/**
++ * ieee80211_enable_dyn_ps - restore dynamic psm after being disabled
++ *
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
++ *
++ * This function restores dynamic PS after being temporarily disabled via
++ * ieee80211_disable_dyn_ps(). Each ieee80211_disable_dyn_ps() call must
++ * be coupled with an eventual call to this function.
++ *
++ */
++void ieee80211_enable_dyn_ps(struct ieee80211_vif *vif);
++
++/**
+  * ieee80211_cqm_rssi_notify - inform a configured connection quality monitoring
+  *	rssi threshold triggered
+  *
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 4d3883e..f21e9b3 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -853,6 +853,9 @@ struct ieee80211_local {
+ 	struct notifier_block network_latency_notifier;
+ 	struct notifier_block ifa_notifier;
+ 
++	int dynamic_ps_user_timeout;
++	bool disable_dynamic_ps;
++
+ 	int user_power_level; /* in dBm */
+ 	int power_constr_level; /* in dBm */
+ 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 2ab4e86..f9afdbb 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -478,6 +478,39 @@ static void ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
+ 	}
  }
  
- /**
-- * mesh_plink_deactivate - deactivate mesh peer link
-+ * __mesh_plink_deactivate - deactivate mesh peer link
-  *
-  * @sta: mesh peer link to deactivate
-  *
-@@ -123,18 +121,23 @@ static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
-  *
-  * Locking: the caller must hold sta->lock
-  */
--static void __mesh_plink_deactivate(struct sta_info *sta)
-+static bool __mesh_plink_deactivate(struct sta_info *sta)
- {
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
-+	bool deactivated = false;
- 
--	if (sta->plink_state == PLINK_ESTAB)
-+	if (sta->plink_state == PLINK_ESTAB) {
- 		mesh_plink_dec_estab_count(sdata);
-+		deactivated = true;
-+	}
- 	sta->plink_state = PLINK_BLOCKED;
- 	mesh_path_flush_by_nexthop(sta);
++void ieee80211_enable_dyn_ps(struct ieee80211_vif *vif)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_conf *conf = &local->hw.conf;
 +
-+	return deactivated;
- }
- 
- /**
-- * __mesh_plink_deactivate - deactivate mesh peer link
-+ * mesh_plink_deactivate - deactivate mesh peer link
-  *
-  * @sta: mesh peer link to deactivate
-  *
-@@ -142,9 +145,15 @@ static void __mesh_plink_deactivate(struct sta_info *sta)
-  */
- void mesh_plink_deactivate(struct sta_info *sta)
- {
-+	struct ieee80211_sub_if_data *sdata = sta->sdata;
-+	bool deactivated;
++	WARN_ON(sdata->vif.type != NL80211_IFTYPE_STATION ||
++		!(local->hw.flags & IEEE80211_HW_SUPPORTS_PS) ||
++		(local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_PS));
 +
- 	spin_lock_bh(&sta->lock);
--	__mesh_plink_deactivate(sta);
-+	deactivated = __mesh_plink_deactivate(sta);
- 	spin_unlock_bh(&sta->lock);
++	local->disable_dynamic_ps = false;
++	conf->dynamic_ps_timeout = local->dynamic_ps_user_timeout;
++}
++EXPORT_SYMBOL(ieee80211_enable_dyn_ps);
 +
-+	if (deactivated)
-+		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
- }
- 
- static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
-@@ -381,10 +390,16 @@ int mesh_plink_open(struct sta_info *sta)
- 
- void mesh_plink_block(struct sta_info *sta)
- {
-+	struct ieee80211_sub_if_data *sdata = sta->sdata;
-+	bool deactivated;
++void ieee80211_disable_dyn_ps(struct ieee80211_vif *vif)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_conf *conf = &local->hw.conf;
 +
- 	spin_lock_bh(&sta->lock);
--	__mesh_plink_deactivate(sta);
-+	deactivated = __mesh_plink_deactivate(sta);
- 	sta->plink_state = PLINK_BLOCKED;
- 	spin_unlock_bh(&sta->lock);
++	WARN_ON(sdata->vif.type != NL80211_IFTYPE_STATION ||
++		!(local->hw.flags & IEEE80211_HW_SUPPORTS_PS) ||
++		(local->hw.flags & IEEE80211_HW_SUPPORTS_DYNAMIC_PS));
 +
-+	if (deactivated)
-+		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
- }
++	local->disable_dynamic_ps = true;
++	conf->dynamic_ps_timeout = 0;
++	del_timer_sync(&local->dynamic_ps_timer);
++	ieee80211_queue_work(&local->hw,
++			     &local->dynamic_ps_enable_work);
++}
++EXPORT_SYMBOL(ieee80211_disable_dyn_ps);
++
+ /* powersave */
+ static void ieee80211_enable_ps(struct ieee80211_local *local,
+ 				struct ieee80211_sub_if_data *sdata)
+@@ -553,6 +586,7 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
+ 	    found->u.mgd.associated->beacon_ies &&
+ 	    !(found->u.mgd.flags & (IEEE80211_STA_BEACON_POLL |
+ 				    IEEE80211_STA_CONNECTION_POLL))) {
++		struct ieee80211_conf *conf = &local->hw.conf;
+ 		s32 beaconint_us;
  
+ 		if (latency < 0)
+@@ -561,7 +595,7 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
+ 		beaconint_us = ieee80211_tu_to_usec(
+ 					found->vif.bss_conf.beacon_int);
  
-@@ -397,6 +412,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 	enum plink_event event;
- 	enum plink_frame_type ftype;
- 	size_t baselen;
-+	bool deactivated;
- 	u8 ie_len;
- 	u8 *baseaddr;
- 	__le16 plid, llid, reason;
-@@ -651,8 +667,9 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 		case CNF_ACPT:
- 			del_timer(&sta->plink_timer);
- 			sta->plink_state = PLINK_ESTAB;
--			mesh_plink_inc_estab_count(sdata);
- 			spin_unlock_bh(&sta->lock);
-+			mesh_plink_inc_estab_count(sdata);
-+			ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
- 			mpl_dbg("Mesh plink with %pM ESTABLISHED\n",
- 				sta->sta.addr);
- 			break;
-@@ -684,8 +701,9 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 		case OPN_ACPT:
- 			del_timer(&sta->plink_timer);
- 			sta->plink_state = PLINK_ESTAB;
--			mesh_plink_inc_estab_count(sdata);
- 			spin_unlock_bh(&sta->lock);
-+			mesh_plink_inc_estab_count(sdata);
-+			ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
- 			mpl_dbg("Mesh plink with %pM ESTABLISHED\n",
- 				sta->sta.addr);
- 			mesh_plink_frame_tx(sdata, PLINK_CONFIRM, sta->sta.addr, llid,
-@@ -702,11 +720,13 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 		case CLS_ACPT:
- 			reason = cpu_to_le16(MESH_CLOSE_RCVD);
- 			sta->reason = reason;
--			__mesh_plink_deactivate(sta);
-+			deactivated = __mesh_plink_deactivate(sta);
- 			sta->plink_state = PLINK_HOLDING;
- 			llid = sta->llid;
- 			mod_plink_timer(sta, dot11MeshHoldingTimeout(sdata));
- 			spin_unlock_bh(&sta->lock);
-+			if (deactivated)
-+				ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
- 			mesh_plink_frame_tx(sdata, PLINK_CLOSE, sta->sta.addr, llid,
- 					    plid, reason);
- 			break;
+-		timeout = local->hw.conf.dynamic_ps_forced_timeout;
++		timeout = conf->dynamic_ps_forced_timeout;
+ 		if (timeout < 0) {
+ 			/*
+ 			 * The 2 second value is there for compatibility until
+@@ -579,7 +613,10 @@ void ieee80211_recalc_ps(struct ieee80211_local *local, s32 latency)
+ 			else
+ 				timeout = 0;
+ 		}
+-		local->hw.conf.dynamic_ps_timeout = timeout;
++		local->dynamic_ps_user_timeout = timeout;
++		if (!local->disable_dynamic_ps)
++			conf->dynamic_ps_timeout =
++				local->dynamic_ps_user_timeout;
+ 
+ 		if (beaconint_us > latency) {
+ 			local->ps_sdata = NULL;
 -- 
-1.7.0.1
+1.6.3.3
 
