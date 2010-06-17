@@ -1,71 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:57546 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:34002 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757776Ab0FBKW0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jun 2010 06:22:26 -0400
-Received: from mail.atheros.com ([10.10.20.105])
+	id S1755912Ab0FQJ05 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Jun 2010 05:26:57 -0400
+Received: from mail.atheros.com ([10.10.20.108])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 02 Jun 2010 03:22:26 -0700
+	for <linux-wireless@vger.kernel.org>; Thu, 17 Jun 2010 02:26:57 -0700
 From: Sujith <Sujith.Manoharan@atheros.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19462.12588.699806.245206@gargle.gargle.HOWL>
-Date: Wed, 2 Jun 2010 15:53:40 +0530
+Message-ID: <19481.60102.659111.953695@gargle.gargle.HOWL>
+Date: Thu, 17 Jun 2010 14:58:38 +0530
 To: <linville@tuxdriver.com>
 CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 5/8] ath9k_htc: Setup HT capabilites for 2-stream devices
+Subject: [PATCH 1/2] ath9k_htc: Add AP mode to supported modes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The supported MCS rate set has to be setup properly
-for 2-stream devices.
-
 Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |   23 ++++++++++++++++++++++-
- 1 files changed, 22 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |    3 ++-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |    3 +++
+ 2 files changed, 5 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index ff6c080..acd9cb9 100644
+index 148b433..e1840b1 100644
 --- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
 +++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -398,6 +398,10 @@ static const struct ath_bus_ops ath9k_usb_bus_ops = {
- static void setup_ht_cap(struct ath9k_htc_priv *priv,
- 			 struct ieee80211_sta_ht_cap *ht_info)
- {
-+	struct ath_common *common = ath9k_hw_common(priv->ah);
-+	u8 tx_streams, rx_streams;
-+	int i;
-+
- 	ht_info->ht_supported = true;
- 	ht_info->cap = IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
- 		       IEEE80211_HT_CAP_SM_PS |
-@@ -413,7 +417,24 @@ static void setup_ht_cap(struct ath9k_htc_priv *priv,
- 	ht_info->ampdu_density = IEEE80211_HT_MPDU_DENSITY_8;
+@@ -700,7 +700,8 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
  
- 	memset(&ht_info->mcs, 0, sizeof(ht_info->mcs));
--	ht_info->mcs.rx_mask[0] = 0xff;
-+
-+	/* ath9k_htc supports only 1 or 2 stream devices */
-+	tx_streams = ath9k_cmn_count_streams(common->tx_chainmask, 2);
-+	rx_streams = ath9k_cmn_count_streams(common->rx_chainmask, 2);
-+
-+	ath_print(common, ATH_DBG_CONFIG,
-+		  "TX streams %d, RX streams: %d\n",
-+		  tx_streams, rx_streams);
-+
-+	if (tx_streams != rx_streams) {
-+		ht_info->mcs.tx_params |= IEEE80211_HT_MCS_TX_RX_DIFF;
-+		ht_info->mcs.tx_params |= ((tx_streams - 1) <<
-+					   IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT);
-+	}
-+
-+	for (i = 0; i < rx_streams; i++)
-+		ht_info->mcs.rx_mask[i] = 0xff;
-+
- 	ht_info->mcs.tx_params |= IEEE80211_HT_MCS_TX_DEFINED;
- }
+ 	hw->wiphy->interface_modes =
+ 		BIT(NL80211_IFTYPE_STATION) |
+-		BIT(NL80211_IFTYPE_ADHOC);
++		BIT(NL80211_IFTYPE_ADHOC) |
++		BIT(NL80211_IFTYPE_AP);
  
+ 	hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 05445d8..2869cff 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1283,6 +1283,9 @@ static int ath9k_htc_add_interface(struct ieee80211_hw *hw,
+ 	case NL80211_IFTYPE_ADHOC:
+ 		hvif.opmode = cpu_to_be32(HTC_M_IBSS);
+ 		break;
++	case NL80211_IFTYPE_AP:
++		hvif.opmode = cpu_to_be32(HTC_M_HOSTAP);
++		break;
+ 	default:
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			"Interface type %d not yet supported\n", vif->type);
 -- 
 1.7.1
 
