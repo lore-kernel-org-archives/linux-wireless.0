@@ -1,48 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35577 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755667Ab0FGLDY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jun 2010 07:03:24 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.71)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1OLa71-0007EU-7Z
-	for linux-wireless@vger.kernel.org; Mon, 07 Jun 2010 13:03:23 +0200
-Message-Id: <20100607110202.206072320@sipsolutions.net>
-Date: Mon, 07 Jun 2010 13:01:50 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 17/21] mac80211: fix RX aggregation timer
-References: <20100607110133.472649120@sipsolutions.net>
-Mime-Version: 1.0
+Received: from purkki.adurom.net ([80.68.90.206]:49887 "EHLO purkki.valot.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752945Ab0FQG1T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Jun 2010 02:27:19 -0400
+To: Sebastian Smolorz <Sebastian.Smolorz@gmx.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Marcel Holtmann <marcel@holtmann.org>
+Subject: Re: [RFC] Changes in mac80211 to make at76c50x-usb working again
+References: <201006151416.36686.Sebastian.Smolorz@gmx.de>
+	<1276609006.3648.233.camel@jlt3.sipsolutions.net>
+	<AANLkTinHK_MbKZd9HUDoiWuWs5AmDOQiza0poofzYeDn@mail.gmail.com>
+	<201006160946.54197.Sebastian.Smolorz@gmx.de>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Thu, 17 Jun 2010 09:27:16 +0300
+In-Reply-To: <201006160946.54197.Sebastian.Smolorz@gmx.de> (Sebastian Smolorz's message of "Wed\, 16 Jun 2010 09\:46\:54 +0200")
+Message-ID: <87typ2fa2j.fsf@purkki.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Sebastian Smolorz <Sebastian.Smolorz@gmx.de> writes:
 
-I noticed that when there was _no_ traffic at
-all on a given aggregation session, it would
-never time out. This won't happen unless you
-forced creating a session, but fix it anyway.
+> Kalle Valo wrote:
+>
+>> I debugged this a long time ago. The problem is that firmware's
+>> CMD_JOIN only works if bssid is correct one. I remember trying
+>> ff:ff:ff:ff:ff:ff, but that didn't work for some reason. The join
+>> command needs to be sent before association, otherwise transmission
+>> won't work at all. And if I use a random bssid the firmware will
+>> filter the replies. But I tested this a long time ago, I might
+>> remember something wrong.
+>> 
+>> I was thinking a hack which would get bssid from association frames
+>> and then send CMD_JOIN, before the association frame.
+>
+> Could you elaborate a little bit on this?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/agg-rx.c |    4 ++++
- 1 file changed, 4 insertions(+)
+Basically my idea is this (all in tx path):
 
---- wireless-testing.orig/net/mac80211/agg-rx.c	2010-06-06 13:22:28.000000000 +0200
-+++ wireless-testing/net/mac80211/agg-rx.c	2010-06-06 13:22:29.000000000 +0200
-@@ -274,6 +274,10 @@ void ieee80211_process_addba_request(str
- 
- 	/* activate it for RX */
- 	rcu_assign_pointer(sta->ampdu_mlme.tid_rx[tid], tid_agg_rx);
-+
-+	if (timeout)
-+		mod_timer(&tid_agg_rx->session_timer, TU_TO_EXP_TIME(timeout));
-+
- end:
- 	spin_unlock_bh(&sta->lock);
- 
+1. if tx frame is an association frame, get bssid from the frame
+2. if bssid == priv->bssid, goto step 6
+3. store tx frame, don't transmit it yet
+4. send CMD_JOIN with new bssid
+5. wait for command completion
+6. priv->bssid = bssid
+7. transmit tx frame
+8. done
 
+Ugly as hell, but one option to get the driver working again.
 
+> How do we proceed to make the driver working again? Do you want to work on 
+> this issue?
+
+Sorry, currently I only have time to review patches and send comments.
+If you have the time, it would be great to if you could fix the driver
+finally.
+
+-- 
+Kalle Valo
