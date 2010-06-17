@@ -1,33 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57783 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751717Ab0FWIZQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jun 2010 04:25:16 -0400
-Subject: Re: [PATCH 1/3] Libertas: cfg80211 support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: dkiran@marvell.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1276533086.18884.9.camel@pe-lt028>
-References: <1276533086.18884.9.camel@pe-lt028>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 23 Jun 2010 10:25:56 +0200
-Message-ID: <1277281556.3642.6.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:64656 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753123Ab0FQW6o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Jun 2010 18:58:44 -0400
+Message-ID: <4C1AA6BC.8000702@redhat.com>
+Date: Thu, 17 Jun 2010 18:50:36 -0400
+From: Prarit Bhargava <prarit@redhat.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+CC: "John W. Linville" <linville@tuxdriver.com>
+Subject: wireless-next-2.6 compile broken
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-06-14 at 22:01 +0530, Kiran Divekar wrote:
-> Holger Schurig's patch (https://patchwork.kernel.org/patch/64286/)
-> is rebased to latest wireless-testing tree.
+John, as I mentioned in my previous email, the wireless-next-2.6 kernel
+tree is not compiling.
 
+This is because the wireless-next-2.6 tree is missing linux-2.6 commit
+6c1f716e8154ee9315534782b9b1eedea0559a24,  but has wireless-next-2.6
+commit 832c10fd733893f86c63bde1c65b005d5a2fe346 ... which explicitly
+depends on the linux-2.6 commit.
 
-+drivers/net/wireless/libertas/cfg.c:1844:13: warning: incorrect type in assignment (different base types)
-+drivers/net/wireless/libertas/cfg.c:1844:13:    expected unsigned short [unsigned] [usertype] capability
-+drivers/net/wireless/libertas/cfg.c:1844:13:    got restricted __le16 [usertype] <noident>
-+drivers/net/wireless/libertas/cmdresp.c:106:5: warning: symbol 'lbs_ret_802_11d_domain_info' was not declared. Should it be static?
+FYI,
 
-I'm guessing this patchset is at fault.
-
-johannes
-
+P.
