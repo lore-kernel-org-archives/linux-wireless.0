@@ -1,100 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:26502 "EHLO mga02.intel.com"
+Received: from parez.praha12.net ([78.108.102.1]:35568 "EHLO parez.praha12.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756639Ab0FCPzK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jun 2010 11:55:10 -0400
-Subject: Re: IWL3945 problems in 2.6.35-rc1
-From: reinette chatre <reinette.chatre@intel.com>
-To: "sedat.dilek@gmail.com" <sedat.dilek@gmail.com>
-Cc: "Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	Maxim Levitsky <maximlevitsky@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <AANLkTinDduWj_BbLINeMmF3hChf4x2znxDLhWDDJzQqY@mail.gmail.com>
-References: <1275395142.14385.6.camel@maxim-laptop>
-	 <1275404221.2839.2.camel@maxim-laptop>
-	 <AANLkTinmjlukRABwWWVuO6VRHrULcqB7Zk_HQZSDicKr@mail.gmail.com>
-	 <1275419000.5225.0.camel@abhi-desktop>
-	 <AANLkTimRt-8d5RkBtGVyReASZqBFIjSzOHPFV6RVjYlV@mail.gmail.com>
-	 <1275544803.2091.30386.camel@rchatre-DESK>
-	 <AANLkTinDduWj_BbLINeMmF3hChf4x2znxDLhWDDJzQqY@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 03 Jun 2010 08:55:08 -0700
-Message-ID: <1275580508.2091.31607.camel@rchatre-DESK>
-Mime-Version: 1.0
+	id S1757305Ab0FQKES (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Jun 2010 06:04:18 -0400
+From: =?utf-8?q?Luk=C3=A1=C5=A1_Turek?= <8an@praha12.net>
+Reply-To: 8an@praha12.net
+To: Bruno Randolf <br1@einfach.org>
+Subject: Re: [ath5k-devel] Race condition in CRDA calls?
+Date: Thu, 17 Jun 2010 12:04:03 +0200
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
+References: <201003251801.57951.8an@praha12.net> <20100526214658.GB10931@tux> <201006171347.58712.br1@einfach.org>
+In-Reply-To: <201006171347.58712.br1@einfach.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart1550743.mYYqGx2k0C";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <201006171204.11831.8an@praha12.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sedat,
+--nextPart1550743.mYYqGx2k0C
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-On Thu, 2010-06-03 at 02:18 -0700, Sedat Dilek wrote:
-> The good news at first:
-> Your patch applies against 2.6.35-rc1 vanilla (tested with linux-2.6 GIT).
+On 17.6.2010 06:47 Bruno Randolf wrote:
+> are there any news on that? i think i hit the same bug, now...
 
-That was what you asked for.
+I have an ugly workaround that works for me, unfortunately I didn't have=20
+enough time to really fix it. It may involve rethinking the communication=20
+with CRDA, I think the global variable last_request will have to go away.
+I reported it in linux-wireless, because it's a generic mac80211 problem,
+but I also didn't receive any useful reply there:=20
+https://patchwork.kernel.org/patch/102727/
 
-> BUT....
-> This patch should be renamed to "iwl3945-fix-internal-scan-2.6.35-rc1.patch".
+Lukas Turek
 
-Feel free to rename it.
+--nextPart1550743.mYYqGx2k0C
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.15 (GNU/Linux)
 
-> It differs from the one in iwiwifi-2.6 (see below).
+iQIcBAABAgAGBQJMGfMbAAoJEEBjvk/UOfYwYEUQAIUCLSCatUBGu3VDskJv6YDM
+DPYeOB8hhWg8Yoyfo8cg5LezdAMzJMvDHRXfXuR7wRSR3wbXD19z4/d+Bw0IeH2f
+V/n5hSIqFpFiqk0VTqlVW3NkqIr3smAF6O5sMOkeM/KdTjnJODWkTwGMF/HTwdlH
+TXEIw2XeqnrgbTSmJOXIppRgbEvos+Kf4KWLh0JMswAnwp6iLZmzkfDKBEBNQBU3
+BNHGwWcU8qrtONIpUsyNQmTgBplMim6KcfgtsOgBLfu/rPWcodRWh/oAhJdFP8OB
+3zfeg09tjKB3tHGexvT1qDicf1eWUtwyUOAVWX6gIPqUdgUxqh7I1h3D/mW08w12
++aTHqYqQD8wgTc9qnC27jxXX1KbrZElPfw6nMbyuBdI1h6y2KHXYjsCUoXmGDbKS
+AkyBZyon0Lmntr1mOX2ltwokn/BOS2QUkBqXPQDMB4TUNTFH8mJrzZFzHLg1PxVb
+C277ESUKNyRPGD54C5bT25fKPd1QL6hEraI6EHhuvM7WQSTCvvrteIZ69kHSeCZz
+m0XDLDJ8EXRhbKnIc2xcf+rOaB9K/p6Jvz7eGMouhGeEm6SHanXv+XSSIYbz1w6H
+fLs+5tjsPlWqEfBmdW1Uci3a1Pec2MrqZNSjlsdffYQGrquZ5MstKQ2wvDARkn8R
+bWnnO9bGptfj4MWuJEhF
+=M0uY
+-----END PGP SIGNATURE-----
 
-Right, I had to make a change to the patch to get it to apply to
-2.6.35-rc1.
-
-> Thus, I said to myself let's dig deeper into it.
-> 
-> First, here is my GIT workflow (I use linux-2.6 rcX, later pull in
-> wireless-2.6 and finally iwlwifi-2.6 master GIT)
-> 
-> [CODE]
-> $ git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git
-> 
-> $ git reset --hard v2.6.35-rc1
-> 
-> $ git pull git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git
-> master:wireless-2.6
-
-ok so far.
-
-> 
-> $ git pull http://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-> master:iwlwifi-2.6
-
-Don't do this. iwlwifi-2.6's master branch is a clone of
-wireless-testing's master branch plus all the iwlwifi patches that has
-not been sent to wireless-testing yet.
-
-> [/CODE]
-> 
-> If I do so, I get NON-iwlwifi related stuff pulled in and that should
-> not be the case?
-
-This is how we work. iwlwifi-2.6's master branch tracks upstream
-wireless development from wireless-testing. 
-
-> I am not a git tool expert, there might be some magic tricks I do not know.
-> Thanks for any hints on git tool :-).
-> 
-> It would be very helpfull (if you want people to follow iwlwifi
-> development) to have something similiar like in linux-wireless GIT
-> trees - just a proposal:
-> 
-> iwlwifi-2.6 -> wireless-2.6 -> net-2.6 -> linux-2.6
-> iwlwifi-next-2.6 -> wireless-next-2.6 -> net-next-2.6 -> linux-next
-> iwlwifi-testing -> wireless-testing
-
-iwlwifi-2.6 has a wireless-2.6 and wireless-next-2.6 branch that
-accomplishes this. We do not see the need for more repositories.
-
-> As I said I am no git expert, so I don't know if you want to setup 3
-> diverse GIT repsoitories (as John did for wireless-* trees) or have 3
-> different GIT branches within existing iwlwifi-2.6 GIT repository as
-> in drm-2.6 [1].
-
-We have three branches.
-
-Reinette
-
+--nextPart1550743.mYYqGx2k0C--
