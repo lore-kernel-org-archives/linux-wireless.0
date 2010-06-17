@@ -1,53 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:43235 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752310Ab0FLEeF (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:38548 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751099Ab0FQFFy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jun 2010 00:34:05 -0400
+	Thu, 17 Jun 2010 01:05:54 -0400
+Received: by pxi12 with SMTP id 12so9987pxi.19
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Jun 2010 22:05:52 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201006171347.58712.br1@einfach.org>
+References: <201003251801.57951.8an@praha12.net> <20100526214658.GB10931@tux>
+	<201006171347.58712.br1@einfach.org>
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH 15/24] ath9k: make ath_get_hal_qnum static
-Date: Sat, 12 Jun 2010 00:33:53 -0400
-Message-Id: <1276317242-15540-16-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
-References: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
+Date: Wed, 16 Jun 2010 22:05:32 -0700
+Message-ID: <AANLkTik7ckoex4pP1IkY0Vx1j-S4k0WVV62h7Sn4uGCx@mail.gmail.com>
+Subject: Re: [ath5k-devel] Race condition in CRDA calls?
+To: Bruno Randolf <br1@einfach.org>
+Cc: =?UTF-8?B?THVrw6HFoSBUdXJlaw==?= <8an@praha12.net>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Felix Fietkau <nbd@openwrt.org>
+On Wed, Jun 16, 2010 at 9:47 PM, Bruno Randolf <br1@einfach.org> wrote:
+> hi!
+>
+> are there any news on that? i think i hit the same bug, now...
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 -
- drivers/net/wireless/ath/ath9k/main.c  |    2 +-
- 2 files changed, 1 insertions(+), 2 deletions(-)
+I provided verbose instructions what can be done to further debug this.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 6b5a26f..6aa8fa6 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -612,7 +612,6 @@ struct ath_wiphy {
- 
- void ath9k_tasklet(unsigned long data);
- int ath_reset(struct ath_softc *sc, bool retry_tx);
--int ath_get_hal_qnum(u16 queue, struct ath_softc *sc);
- int ath_get_mac80211_qnum(u32 queue, struct ath_softc *sc);
- int ath_cabq_update(struct ath_softc *);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 200e390..52ed4c8 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -808,7 +808,7 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
- 	return r;
- }
- 
--int ath_get_hal_qnum(u16 queue, struct ath_softc *sc)
-+static int ath_get_hal_qnum(u16 queue, struct ath_softc *sc)
- {
- 	int qnum;
- 
--- 
-1.6.3.3
-
+  Luis
