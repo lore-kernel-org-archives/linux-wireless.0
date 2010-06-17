@@ -1,49 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:64560 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752178Ab0FUSCx (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:45813 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760106Ab0FQOik (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jun 2010 14:02:53 -0400
-Received: by pwj8 with SMTP id 8so419382pwj.19
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Jun 2010 11:02:52 -0700 (PDT)
+	Thu, 17 Jun 2010 10:38:40 -0400
+Received: by fxm10 with SMTP id 10so1654391fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Jun 2010 07:38:38 -0700 (PDT)
+Message-ID: <4C1A336B.9040708@googlemail.com>
+Date: Thu, 17 Jun 2010 16:38:35 +0200
+From: Dennis Borgmann <dennis.borgmann@googlemail.com>
 MIME-Version: 1.0
-In-Reply-To: <4C1F51A3.5000407@gmail.com>
-References: <4C1F51A3.5000407@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 21 Jun 2010 11:02:32 -0700
-Message-ID: <AANLkTim7zJFbV0N0yoV--F3-8_fuv3jWFilozC9wmuP-@mail.gmail.com>
-Subject: Re: [RFC] refactor ath9k_platform to sound sane for use in both ath9k
-	and ath5k
-To: Daniel Golle <daniel.golle@gmail.com>
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org, hostap@lists.shmoo.com
+Subject: Re: "ressource temporarily unavailable" on 2.4 GHz, not on 5GHz
+References: <4C18DA3D.1030303@googlemail.com> <AANLkTimtZBRfkAOnz2vPXp71Z03DfPQniY2qFHCsgI44@mail.gmail.com> <4C1A1175.7010708@googlemail.com>
+In-Reply-To: <4C1A1175.7010708@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 21, 2010 at 4:48 AM, Daniel Golle <daniel.golle@gmail.com> wrote:
-> I'm developing on OpenWrt to work with EEPROM-less ath5k mini-pci devices.
-> This is needed to support the ar71xx-based Senao EAP7660D board which got
-> two AR5413 modules soldered into its mini-pci slots. In the original
-> Firmware, MAC addresses as well as calibration-data seems to be part of the
-> firmware blob stored on the board flash.
-> See https://lists.openwrt.org/pipermail/openwrt-devel/2010-June/007366.html
-> for the corresponding discussion on OpenWrt-devel.
+Okay, let's say, we have a crowded medium, lots of clients transmitting
+traffic and therefore we have backoff times of around 50ms. Let's say,
+we have such a backoff only ONCE(just for theoretical discussion) -
+transmission of this packet would take at least 50ms. With the amount of
+data I want to transmit in my example program, I am running at around
+3,2 kbps, which is not that much(I send out 800 bytes each 2ms -> 800
+bytes/2ms = 400 bytes/ms * 8 = 3,2 kbps). Now for 50ms there can be no
+transmission due to the backoff time. The buffer of the wireless card -
+or the buffer of the socket, I do not exactly know - gets filled 25
+times with 800 byte-packets. That's in total 25 * 800 byte = 10000 byte.
+So in this scenario, I would at least need a buffer 10kbyte of size. The
+buffer of the socket should be sufficient, since an SO_SNDBUF call gives
+114688 of size. That should be sufficient. Anyway, Wright and Stevens
+(TCP/IP Illustrated Volume 2, Chapter 16.7 - "Unreliable Protocol
+Buffering") state:
 
-I don't see much "discussion" there.
+"With unreliable protocols (e.g. UDP), no data is ever stored in the
+send buffer and no ACK is ever expected. Each message is passed
+immediately to the protocol where it is queued for transmission on the
+appropriate network device".
 
-> Similarly to the way this happens for ath9k, I managed to get ath5k to use
-> the MAC address and eeprom-data supplied by ath9k_platform_data.
-> Including ath9k_platform.h in ath5k-sources looks confusing as the name
-> ath9k_platform suggests that the supplied ath9k_platform_info struct is
-> specific to ath9k devices.
-> Consequently, I believe ath9k_platform.h should be renamed into
-> ath_platform.h, the macro ATH9K_PLAT_EEP_MAX_WORDS into
-> ATH_PLAT_EEP_MAX_WORDS and struct ath9k_platform_data should be refactored
-> to be struct ath_platform_data.
-> Please let me know if you agree with this in theory; if yes, I'll start
-> posting the patches to OpenWrt.
+This tells me, that the driver buffer seems to be too small for this
+frequency of packets (every 2ms) with this size (800 bytes), if I work
+on a band, that is loaded with backoff times due to carrier sense
+multiple access(CSMA). Is there a way to increase its size for ath5k?
 
-You can stuff any general stuff into the ath module which is shared by both.
+Kind regards,
+Dennis
 
-  Luis
+Dennis Borgmann schrieb:
+> Hey guys!
+>
+> I just reproduced the error with a transmit frequency of 4ms and dmesg
+> doesn't show up with any new output. I will append dmesg to this mail
+> anyway.
+>
+> Apart from that, I will go ahead and search for handling EAGAIN.
+>
+> Kind regards,
+> Dennis
+>
+>
+> Bob Copeland schrieb:
+>   
+>> On Wed, Jun 16, 2010 at 10:05 AM, Dennis Borgmann
+>> <dennis.borgmann@googlemail.com> wrote:
+>>   
+>>     
+>>> Hello wireless-list!
+>>> Hello hostapd-list!
+>>>
+>>> I am using ath5k with hostapd-0.6.9 on a debian running kernel 2.6.34
+>>> and I am observing a "ressource temporarily unavailable" - error code 11
+>>>     
+>>>       
+>> [...]
+>>   
+>>     
+>>> What could be the problem? Is this due to backoff-times in 2.4 GHz, that
+>>> don't occur on 5 GHz? Or could this be a bug?
+>>>     
+>>>       
+>> Does dmesg report any error (e.g. no available txbuf)?
+>>
+>> My guess is you have more frequent successful delivery in 5 GHz than in
+>> ISM band so you aren't running out of send buffers somewhere in the stack.
+>>
+>> Of course, your program should expect and handle EAGAIN if you are
+>> using MSG_DONTWAIT.
+>>
+>>   
+>>     
+>
+>   
+
