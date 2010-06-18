@@ -1,72 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:54617 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753652Ab0FFJqS convert rfc822-to-8bit (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:52903 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755643Ab0FRU0e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jun 2010 05:46:18 -0400
-Received: by vws5 with SMTP id 5so1908612vws.19
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Jun 2010 02:46:17 -0700 (PDT)
+	Fri, 18 Jun 2010 16:26:34 -0400
+Message-ID: <4C1BD678.1020405@gmail.com>
+Date: Fri, 18 Jun 2010 13:26:32 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <201006061143.56259.rossi.f@inwind.it>
-References: <201006021129.43621.rossi.f@inwind.it> <AANLkTim6tx9plm0tqqms64iUboSRxo9KnTGbHmwKrhQK@mail.gmail.com>
-	<AANLkTimTGPFL_1qAn4YEtYPogOkbZIr_C1YHOtKoHzxw@mail.gmail.com>
-	<201006061143.56259.rossi.f@inwind.it>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sun, 6 Jun 2010 02:45:57 -0700
-Message-ID: <AANLkTimjH4ogHHMCSumlWdIENe978KN2gulAU3rMUC3H@mail.gmail.com>
-Subject: Re: WARNING: at drivers/base/core.c:130 device_release+0x82/0x90()
-To: Fabio Rossi <rossi.f@inwind.it>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+CC: Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 4/5]pci:setup_bus.c Fix warning: variable 'retval' set
+ but not used
+References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>	<1276666434-11227-5-git-send-email-justinmattock@gmail.com>	<20100618102330.29eccb5b@virtuousgeek.org>	<4C1BBF7D.8090904@kernel.org>	<20100618124956.40c869a0@virtuousgeek.org>	<4C1BD024.1030707@gmail.com> <20100618130538.0fc562ee@virtuousgeek.org>
+In-Reply-To: <20100618130538.0fc562ee@virtuousgeek.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 6, 2010 at 2:43 AM, Fabio Rossi <rossi.f@inwind.it> wrote:
-> On Sunday 06 June 2010 11:29:54 Luis R. Rodriguez wrote:
+On 06/18/2010 01:05 PM, Jesse Barnes wrote:
+> On Fri, 18 Jun 2010 12:59:32 -0700
+> "Justin P. Mattock"<justinmattock@gmail.com>  wrote:
+>> just added this in(as a test), and the retval warning still shows up.
+>> with the last post I just added a printk was that legit, and if so what
+>> else might be added to it to make it complete and proper?
 >
->> On Sun, Jun 6, 2010 at 2:28 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> > On Fri, Jun 4, 2010 at 1:25 AM, Fabio Rossi <rossi.f@inwind.it> wrote:
->> >> On Wednesday 02 June 2010 23:42:14 Luis R. Rodriguez wrote:
->> >>> On Wed, Jun 2, 2010 at 2:29 AM, Fabio Rossi <rossi.f@inwind.it> wrote:
->> >>> > Compiling the kernel without ACPI (CONFIG_ACPI=n) gives the following
->> >>> > warning:
->> >>> >
->> >>> > cfg80211: Calling CRDA to update world regulatory domain
->> >>> > cfg80211: World regulatory domain updated:
->> >>> >    (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
->> >>> >    (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
->> >>> > ath5k 0000:08:01.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
->> >>> > ath5k 0000:08:01.0: registered as 'phy0'
->> >>> > ath5k phy0: request_irq failed
->> >>> > ------------[ cut here ]------------
->> >>>
->> >>> Since traces are printed reversed you will have to read my logic from
->> >>> bottom to top:
->> >>>
->> >>> Seems we need to implement the dev_release() op for the class of our
->> >>> devices.
->> >>
->> >> Shall I open a bug in kernel bugzilla to keep trace of this?
->> >
->> > Nah something else is up...
->> >
->> > struct class ieee80211_class = {
->> >        .name = "ieee80211",
->> >        .owner = THIS_MODULE,
->> >        .dev_release = wiphy_dev_release,
->> >        .dev_attrs = ieee80211_dev_attrs,
->> > #ifdef CONFIG_HOTPLUG
->> >        .dev_uevent = wiphy_uevent,
->> > #endif
->> >        .suspend = wiphy_suspend,
->> >        .resume = wiphy_resume,
->> > };
->>
->> This is wireless-testing, not compat-wireless right?
+> What's the full warning?  Seems like printing the value should have
+> been enough to shut up gcc...
 >
-> Yes, I'm using the latest wireless-testing.git
 
-Then I don't know WTF is going on, some sort of class corruption...
-anyone else have another idea?
+this is the warning messg after applying yinghai's patch:
 
-  Luis
+   CC      drivers/pci/setup-bus.o
+drivers/pci/setup-bus.c: In function 
+'pci_assign_unassigned_bridge_resources':
+drivers/pci/setup-bus.c:868:6: warning: variable 'retval' set but not used
+
+
+if I add a printk then gcc is content.. patch below, but not the best at 
+creating printk's(the whole % thing messes me up) but here goes:
+
+ From 48e15b87072c6b4286d943c55bfe2ae26d358795 Mon Sep 17 00:00:00 2001
+From: Justin P. Mattock <justinmattock@gmail.com>
+Date: Fri, 18 Jun 2010 13:23:27 -0700
+Subject: [PATCH 4/4] bus.c_add_print
+  Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+
+---
+  drivers/pci/setup-bus.c |    1 +
+  1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 66cb8f4..806b766 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -919,6 +919,7 @@ again:
+
+  enable_all:
+  	retval = pci_reenable_device(bridge);
++	printk(KERN_DEBUG "PCI%d: re-enabling device\n", retval);
+  	pci_set_master(bridge);
+  	pci_enable_bridges(parent);
+  }
+-- 
+1.7.1.rc1.21.gf3bd6
