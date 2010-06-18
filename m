@@ -1,56 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from saarni.dnainternet.net ([83.102.40.136]:58962 "EHLO
-	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758214Ab0FUUBy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jun 2010 16:01:54 -0400
-Message-ID: <20100621230152.41123y9y8dt1v968@hayate.sektori.org>
-Date: Mon, 21 Jun 2010 23:01:52 +0300
-From: "Jussi Kivilinna" <jussi.kivilinna@mbnet.fi>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "Maxim Levitsky" <maximlevitsky@gmail.com>,
-	"David Quan" <David.Quan@atheros.com>,
-	"Bob Copeland" <me@bobcopeland.com>,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Subject: Re: [ath5k-devel] [PATCH v2] ath5k: disable ASPM
-References: <20100528100901.14580.1322.stgit@fate.lan>
-	<1276806785.20754.8.camel@maxim-laptop>
-	<20100618112026.17623g6uhdjk8hts@naisho.dyndns.info>
-	<1276856142.9114.1.camel@maxim-laptop>
-	<20100618134930.124225d4fsi8w1fk@naisho.dyndns.info>
-	<1276859156.19554.2.camel@maxim-laptop>
-	<AANLkTimdTjedtoeKAp5tcTqefrUB6k373Kx9EacuYFcO@mail.gmail.com>
-	<1276870309.23783.3.camel@maxim-laptop>
-	<1276933774.16697.11.camel@maxim-laptop>
-	<AANLkTimIjaxq7IDWwIl1vv93k9bNQ2i89Sb5R5TiJmmA@mail.gmail.com>
-	<1277032723.9555.12.camel@maxim-laptop>
-	<AANLkTim8iZmm8pEERJUsrQWOiLSjPUfCN-TFFzZZQWx2@mail.gmail.com>
-In-Reply-To: <AANLkTim8iZmm8pEERJUsrQWOiLSjPUfCN-TFFzZZQWx2@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=UTF-8;
-	DelSp="Yes";
-	format="flowed"
+Received: from c60.cesmail.net ([216.154.195.49]:31520 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761286Ab0FRQdz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Jun 2010 12:33:55 -0400
+Subject: Re: [PATCH 1/2] ath9k_htc: Add AP mode to supported modes
+From: Pavel Roskin <proski@gnu.org>
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <19481.60102.659111.953695@gargle.gargle.HOWL>
+References: <19481.60102.659111.953695@gargle.gargle.HOWL>
+Content-Type: text/plain
+Date: Fri, 18 Jun 2010 12:33:51 -0400
+Message-Id: <1276878831.5110.4.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting "Luis R. Rodriguez" <mcgrof@gmail.com>:
+On Thu, 2010-06-17 at 14:58 +0530, Sujith wrote:
+> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/htc_drv_init.c |    3 ++-
+>  drivers/net/wireless/ath/ath9k/htc_drv_main.c |    3 +++
+>  2 files changed, 5 insertions(+), 1 deletions(-)
 
->> Also Jussi Kivilinna said that he found that in windows .inf file there
->> are some instructions to enable L1 but not L0s.
->
-> For which chipsets?
+I confirm that the AP mode is working on TP-Link TL-WN422G (0cf3:1006).
+I tested both patched of the series at once.
 
-I uploaded windows driver I have to:
-   
-http://www.student.oulu.fi/~jukivili/ath5k/XP32_XP64_WHQL_Dri-7-6-1-149_ACU-7-0-2-48_LEAP_Acer_81024
+That's great news!  TL-WN422G has an external antenna, connects over USB
+and supports AP mode.  Users keep asking about that combination of
+features.  Now we have an answer :-)
 
-In inf, all ASPM entries are either ASPM off or ASPM L0s:off/L1:on.  
-There is also user option for changing ASPM setting with options  
-L0s:off/L1:off and L0s:off/L1:on.
-
--Jussi
-
-
+-- 
+Regards,
+Pavel Roskin
