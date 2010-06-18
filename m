@@ -1,35 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:31593 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752202Ab0FYQBm (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:44559 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754278Ab0FRTzl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jun 2010 12:01:42 -0400
-Received: by fg-out-1718.google.com with SMTP id d23so322925fga.1
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Jun 2010 09:01:40 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: rt2x00 & mac80211: correct usage of ieee80211_beacon_get_tim?
-Date: Fri, 25 Jun 2010 18:01:06 +0200
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-References: <201006241521.47623.helmut.schaa@googlemail.com> <1277394714.3870.8.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1277394714.3870.8.camel@jlt3.sipsolutions.net>
+	Fri, 18 Jun 2010 15:55:41 -0400
+Message-ID: <4C1BCF3B.3010006@gmail.com>
+Date: Fri, 18 Jun 2010 12:55:39 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201006251801.06209.helmut.schaa@googlemail.com>
+To: James Bottomley <James.Bottomley@suse.de>
+CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 5/5]scsi:hosts.c Fix warning: variable 'rval' set but
+ not used
+References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>	 <1276666434-11227-6-git-send-email-justinmattock@gmail.com>	 <1276702443.2847.153.camel@mulgrave.site>  <4C18F524.4000902@gmail.com>	 <1276709590.2847.176.camel@mulgrave.site>  <4C1A4A69.7060801@gmail.com> <1276889827.2850.331.camel@mulgrave.site>
+In-Reply-To: <1276889827.2850.331.camel@mulgrave.site>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Donnerstag 24 Juni 2010 schrieb Johannes Berg:
->  b) You need to get a new beacon frame from mac80211 only when it
->     changes. You can do this from set_tim(). HOWEVER: since you're not
->     getting a new one from mac80211 all the time anyway, you NEED to
->     have the driver or firmware overwrite the DTIM count, like b43's
->     firmware for example will do.
+On 06/18/2010 12:37 PM, James Bottomley wrote:
+> On Thu, 2010-06-17 at 09:16 -0700, Justin P. Mattock wrote:
+>>> Erm, well, as I said, error code and the fact that the thread failed to
+>>> start, so more
+>>>
+>>> printk(KERN_WARNING "scsi%d: error handler thread failed to spawn, error
+>>> = %d\n", host->host_no, PTR_ERR(shost->ehandler));
+>>>
+>>> James
+>>>
+>>
+>> o.k. I looked at this a bit more and finally got the thing to build
+>> through without a warning, using what you had sent, but keep in mind I
+>> still need to add error  = %d\n", host->host_no, to the printk
+>>
+>> here's what I have so far:
+>>
+>>
+>>    drivers/scsi/hosts.c |    3 ++-
+>>    1 files changed, 2 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+>> index 6660fa9..c1ff708 100644
+>> --- a/drivers/scsi/hosts.c
+>> +++ b/drivers/scsi/hosts.c
+>> @@ -419,8 +419,9 @@ struct Scsi_Host *scsi_host_alloc(struct
+>> scsi_host_template *sht, int privsize)
+>>
+>>    	shost->ehandler = kthread_run(scsi_error_handler, shost,
+>>    			"scsi_eh_%d", shost->host_no);
+>> +	rval = PTR_ERR(shost->ehandler);
+>>    	if (IS_ERR(shost->ehandler)) {
+>> -		rval = PTR_ERR(shost->ehandler);
+>> +		printk(KERN_WARNING "scsi%d: error handler thread failed to spawn\n",
+>> rval);
+>
+> So this isn't really an improvement over the suggestion.  What you
+> wanted was shost->host_no, as you deduced, but the %d becomes %ld to
+> quiet the type warning.
+>
+> James
 
-And the broad- and multicast buffering also needs to be done in the driver
-(when the fw/hw cannot handle it) as mac80211 uses its own DTIM count for
-deciding when to "release" buffered frames to the driver.
+ahh.. was reading the manual but couldn't make sense of the % then 
+letter to use.
 
-Helmut
+let me add these in, then if good I'll send it out for review etc..
+
+Justin P. Mattock
