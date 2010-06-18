@@ -1,111 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:41935 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751882Ab0FOFUX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jun 2010 01:20:23 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 14 Jun 2010 22:20:23 -0700
-From: Vivek Natarajan <vnatarajan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath9k: Modify LED blinking pattern during wifi activity.
-Date: Tue, 15 Jun 2010 10:50:17 +0530
-Message-ID: <1276579217-6837-1-git-send-email-vnatarajan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from cpoproxy1-pub.bluehost.com ([69.89.21.11]:34114 "HELO
+	cpoproxy1-pub.bluehost.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S933816Ab0FRRZH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Jun 2010 13:25:07 -0400
+Date: Fri, 18 Jun 2010 10:23:30 -0700
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH 4/5]pci:setup_bus.c Fix warning: variable 'retval' set
+ but not used
+Message-ID: <20100618102330.29eccb5b@virtuousgeek.org>
+In-Reply-To: <1276666434-11227-5-git-send-email-justinmattock@gmail.com>
+References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>
+	<1276666434-11227-5-git-send-email-justinmattock@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some vendors require the LED to be ON always irrespective of any
-radio activity. Introducing a module parameter to enable this,
-so that one can choose between always on or led blink during
-activity.
+On Tue, 15 Jun 2010 22:33:53 -0700
+"Justin P. Mattock" <justinmattock@gmail.com> wrote:
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
- drivers/net/wireless/ath/ath9k/gpio.c  |    9 ++++++---
- drivers/net/wireless/ath/ath9k/init.c  |    4 ++++
- drivers/net/wireless/ath/ath9k/main.c  |    4 +++-
- 4 files changed, 14 insertions(+), 4 deletions(-)
+> The below patch fixes a warning message when using gcc 4.6.0
+>   CC      drivers/pci/setup-bus.o
+> drivers/pci/setup-bus.c: In function 'pci_assign_unassigned_bridge_resources':
+> drivers/pci/setup-bus.c:868:6: warning: variable 'retval' set but not used
+>  
+>  Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+> 
+> ---
+>  drivers/pci/setup-bus.c |    2 --
+>  1 files changed, 0 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 19b1113..215590b 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -865,7 +865,6 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+>  	struct pci_bus *parent = bridge->subordinate;
+>  	int tried_times = 0;
+>  	struct resource_list_x head, *list;
+> -	int retval;
+>  	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+>  				  IORESOURCE_PREFETCH;
+>  
+> @@ -874,7 +873,6 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+>  again:
+>  	pci_bus_size_bridges(parent);
+>  	__pci_bridge_assign_resources(bridge, &head);
+> -	retval = pci_reenable_device(bridge);
+>  	pci_set_master(bridge);
+>  	pci_enable_bridges(parent);
+>  
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 8d163ae..3a14630 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -628,6 +628,7 @@ static inline void ath_read_cachesize(struct ath_common *common, int *csz)
- 
- extern struct ieee80211_ops ath9k_ops;
- extern int modparam_nohwcrypt;
-+extern int led_blink;
- 
- irqreturn_t ath_isr(int irq, void *dev);
- int ath9k_init_device(u16 devid, struct ath_softc *sc, u16 subsysid,
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 0ee75e7..3a8ee99 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -76,7 +76,8 @@ static void ath_led_brightness(struct led_classdev *led_cdev,
- 	case LED_FULL:
- 		if (led->led_type == ATH_LED_ASSOC) {
- 			sc->sc_flags |= SC_OP_LED_ASSOCIATED;
--			ieee80211_queue_delayed_work(sc->hw,
-+			if (led_blink)
-+				ieee80211_queue_delayed_work(sc->hw,
- 						     &sc->ath_led_blink_work, 0);
- 		} else if (led->led_type == ATH_LED_RADIO) {
- 			ath9k_hw_set_gpio(sc->sc_ah, sc->sc_ah->led_pin, 0);
-@@ -143,7 +144,8 @@ void ath_init_leds(struct ath_softc *sc)
- 	/* LED off, active low */
- 	ath9k_hw_set_gpio(sc->sc_ah, sc->sc_ah->led_pin, 1);
- 
--	INIT_DELAYED_WORK(&sc->ath_led_blink_work, ath_led_blink_work);
-+	if (led_blink)
-+		INIT_DELAYED_WORK(&sc->ath_led_blink_work, ath_led_blink_work);
- 
- 	trigger = ieee80211_get_radio_led_name(sc->hw);
- 	snprintf(sc->radio_led.name, sizeof(sc->radio_led.name),
-@@ -180,7 +182,8 @@ void ath_init_leds(struct ath_softc *sc)
- 	return;
- 
- fail:
--	cancel_delayed_work_sync(&sc->ath_led_blink_work);
-+	if (led_blink)
-+		cancel_delayed_work_sync(&sc->ath_led_blink_work);
- 	ath_deinit_leds(sc);
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 514a401..b2bf0e8 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -33,6 +33,10 @@ int modparam_nohwcrypt;
- module_param_named(nohwcrypt, modparam_nohwcrypt, int, 0444);
- MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption");
- 
-+int led_blink;
-+module_param_named(blink, led_blink, int, 0444);
-+MODULE_PARM_DESC(blink, "Enable LED blink on activity");
-+
- /* We use the hw_value as an index into our private channel structure */
- 
- #define CHAN2G(_freq, _idx)  { \
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index c8de50f..5af2596 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1241,7 +1241,9 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 
- 	aphy->state = ATH_WIPHY_INACTIVE;
- 
--	cancel_delayed_work_sync(&sc->ath_led_blink_work);
-+	if (led_blink)
-+		cancel_delayed_work_sync(&sc->ath_led_blink_work);
-+
- 	cancel_delayed_work_sync(&sc->tx_complete_work);
- 	cancel_work_sync(&sc->paprd_work);
- 
+This has the same problem as your earlier bridge_enable patch; you need
+to keep the call to pci_reenable_device.  I should have caught this
+issue when Yinghai's patch went in: the right way to silence a warning
+about not checking a return value isn't to simply assign it to
+something, you really should *do* something as well, at least some
+debug output would be nice, but ideally handling the error in a sane
+way. 
+
 -- 
-1.7.1
-
+Jesse Barnes, Intel Open Source Technology Center
