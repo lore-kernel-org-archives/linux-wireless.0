@@ -1,66 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:37561 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753511Ab0FBTqr convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47205 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751056Ab0FRSpM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jun 2010 15:46:47 -0400
-Received: by wyi11 with SMTP id 11so2176506wyi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Jun 2010 12:46:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTilHP9QwNPWVgJhVxYxQF8hzM9cd6-eVKOJc9qC3@mail.gmail.com>
-References: <1274856569-13436-1-git-send-email-emmanuel.grumbach@intel.com>
-	<AANLkTikzEywcDi9zyJknMWkKymCVYnWQa2YXbbSDVx5o@mail.gmail.com>
-	<4825B8A2C4E264489E57869F0DCFB22343E33E611F@hasmsx502.ger.corp.intel.com>
-	<AANLkTinG2zWHE8l-ZPBnyrFq5gs4nZX59zhF3AVh7h_4@mail.gmail.com>
-	<4825B8A2C4E264489E57869F0DCFB22343E33E6133@hasmsx502.ger.corp.intel.com>
-	<AANLkTilHP9QwNPWVgJhVxYxQF8hzM9cd6-eVKOJc9qC3@mail.gmail.com>
-Date: Wed, 2 Jun 2010 22:46:45 +0300
-Message-ID: <AANLkTikxoZxZVp-1gLjXLy2XFrBz47SR6temPfBVDG-I@mail.gmail.com>
-Subject: Re: [RFC] wireless-regdb: Add A band in IL
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Fri, 18 Jun 2010 14:45:12 -0400
+Date: Fri, 18 Jun 2010 14:42:58 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org,
 	Michael Green <Michael.Green@atheros.com>,
 	David Quan <David.Quan@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: [RFC] wireless-regdb: Add A band in IL
+Message-ID: <20100618184257.GB6282@tuxdriver.com>
+References: <1274856569-13436-1-git-send-email-emmanuel.grumbach@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1274856569-13436-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> <emmanuel.grumbach@intel.com> wrote:
-> >>On Wed, May 26, 2010 at 10:32 AM, Grumbach, Emmanuel
-> >><emmanuel.grumbach@intel.com> wrote:
-> >>>>>  country IL:
-> >>>>>        (2402 - 2482 @ 40), (N/A, 20)
-> >>>>> +       (5150 - 5250 @ 40). (N/A, 200 mW), NO-OUTDOOR
-> >>>>> +       (5250 - 5350 @ 40). (N/A, 200 mW), NO-OUTDOOR, DFS
-> >>>>
-> >>>>I believe the one standing issue here is you are enabling HT40 on 5
-> >>>>GHz, how about enabling 2.4 GHz first, and then through a separate
-> >>>>patch and time/review we review the HT40 stuff, unless you are in no
-> >>>>rush to get 2.4 GHz enabled.
-> >>>>
-> >>>
-> >>> I am not following... HT40 on 2.4 GHz is already enabled...
-> >>> What should I enable in 2.4 GHz ?
-> >>
-> >>Sorry I meant 5 GHz.
-> >
-> > Actually 40GHz is less a problem in 5GHz than in 2.4GHz since in 2.4GHz
-> > I need to have a "Coexistence mechanism", which is not required in 5GHz.
-> > This Coexistence mechanism is apparently implemented by one OEM under the
-> > name "Clear Channel Assessment (CCA)".
-> >
-> > In short, I don't think there is any special issue with 40MHz in 5GHz, but
-> > I may miss something here... In any case, I have no problem with sending
-> > a patch that allows 5GHz in 20MHz for the moment.
-> > I can also have a look at the EEPROM in our NICs which is supposed to have
-> > all the needed limitations. Details to follow tomorrow.
->
-> OK thanks for the clarification Emmanuel, please give Michael some
-> time to review.
->
+On Wed, May 26, 2010 at 09:49:29AM +0300, Emmanuel Grumbach wrote:
+> A band in allowed in IL, according to official document issued by the Ministry
+> of Communications: http://www.moc.gov.il/sip_storage/FILES/1/1061.pdf.
+> 
+> 5150 - 5250 200mW e.i.r.p. OUTDOOR forbidden
+> 5250 - 5350 200mW e.i.r.p. OUTDOOR forbidden DFS mandatory
+> 
+> 40Mhz is allowed in A band for every WiFi-Alliance certified equipment.
+> 
+> ***************************************************************
+> Not to be merged for the moment
+> ***************************************************************
+> 
+> CC: Michael Green <Michael.Green@atheros.com>
+> CC: David Quan <David.Quan@atheros.com>
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> ---
+>  db.txt |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
+> 
+> diff --git a/db.txt b/db.txt
+> index e63a43e..d49c397 100644
+> --- a/db.txt
+> +++ b/db.txt
+> @@ -319,6 +319,8 @@ country IE:
+>  
+>  country IL:
+>  	(2402 - 2482 @ 40), (N/A, 20)
+> +	(5150 - 5250 @ 40). (N/A, 200 mW), NO-OUTDOOR
+> +	(5250 - 5350 @ 40). (N/A, 200 mW), NO-OUTDOOR, DFS
+>  
+>  country IN:
+>  	(2402 - 2482 @ 40), (N/A, 20)
 
+Is this issue now settled?
 
-How much time ? :-)
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
