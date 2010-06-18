@@ -1,57 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:37088 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755859Ab0F2TvQ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41529 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760133Ab0FRKb7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jun 2010 15:51:16 -0400
-Received: by mail-ww0-f46.google.com with SMTP id 18so553wwb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Jun 2010 12:51:15 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 15/21] rt2x00: Fix beacon updates in rt61pci
-Date: Tue, 29 Jun 2010 21:47:10 +0200
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-References: <201006292138.13509.IvDoorn@gmail.com> <201006292145.32554.IvDoorn@gmail.com> <201006292146.44952.IvDoorn@gmail.com>
-In-Reply-To: <201006292146.44952.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201006292147.11774.IvDoorn@gmail.com>
+	Fri, 18 Jun 2010 06:31:59 -0400
+Subject: [PATCH] mac80211_hwsim: fix fake_hw_scan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 18 Jun 2010 12:31:56 +0200
+Message-ID: <1276857116.3638.21.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Fix rt61pci beacon updates in the same way as rt2800pci. rt61pci didn't
-update the beacon template after each beacon interval, resulting in the
-DTIM count being incorrect (if DTIM period > 1). Fix this by calling
-rt2x00lib_beacondone after the current beacon was sent out.
+Since mac80211 will not set the max_scan parameters
+if hw scan is enabled, hwsim needs to do it so that
+cfg80211 won't reject the scan.
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/rt2x00/rt61pci.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 1e74f8c..0123fbc 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -2200,6 +2200,12 @@ static irqreturn_t rt61pci_interrupt(int irq, void *dev_instance)
- 	if (rt2x00_get_field32(reg_mcu, MCU_INT_SOURCE_CSR_TWAKEUP))
- 		rt61pci_wakeup(rt2x00dev);
+--- wireless-testing.orig/drivers/net/wireless/mac80211_hwsim.c	2010-06-18 12:02:50.000000000 +0200
++++ wireless-testing/drivers/net/wireless/mac80211_hwsim.c	2010-06-18 12:17:43.000000000 +0200
+@@ -1291,6 +1291,11 @@ static int __init init_mac80211_hwsim(vo
+ 		hw->wiphy->n_addresses = 2;
+ 		hw->wiphy->addresses = data->addresses;
  
-+	/*
-+	 * 5 - Beacon done interrupt.
-+	 */
-+	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_BEACON_DONE))
-+		rt2x00lib_beacondone(rt2x00dev);
++		if (fake_hw_scan) {
++			hw->wiphy->max_scan_ssids = 255;
++			hw->wiphy->max_scan_ie_len = IEEE80211_MAX_DATA_LEN;
++		}
 +
- 	return IRQ_HANDLED;
- }
- 
--- 
-1.6.6.1
+ 		hw->channel_change_time = 1;
+ 		hw->queues = 4;
+ 		hw->wiphy->interface_modes =
+
 
