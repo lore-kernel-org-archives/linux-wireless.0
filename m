@@ -1,44 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49605 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752387Ab0FDGyT (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:38015 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755359Ab0FRSCM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jun 2010 02:54:19 -0400
-Subject: Re: Problems connectring to an AP with Acer Aspire Revo
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Christian P. Schmidt" <schmidt@digadd.de>
-Cc: reinette chatre <reinette.chatre@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4C07D0C7.8010907@digadd.de>
-References: <4BF795EB.9070902@digadd.de>
-	 <1274729665.2091.15280.camel@rchatre-DESK>  <4BFD1ED0.9050309@digadd.de>
-	 <1275003105.2091.20102.camel@rchatre-DESK>  <4BFF9B93.5010308@digadd.de>
-	 <1275043274.3909.71.camel@jlt3.sipsolutions.net>
-	 <4BFF9FC6.4030101@digadd.de>
-	 <1275044074.3909.72.camel@jlt3.sipsolutions.net> <4BFFA490.90600@digadd.de>
-	 <1275045843.3909.92.camel@jlt3.sipsolutions.net>
-	 <4C07D0C7.8010907@digadd.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 04 Jun 2010 08:48:24 +0200
-Message-ID: <1275634104.3694.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 18 Jun 2010 14:02:12 -0400
+Received: by fxm10 with SMTP id 10so757577fxm.19
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Jun 2010 11:02:10 -0700 (PDT)
+MIME-Version: 1.0
+Date: Fri, 18 Jun 2010 14:02:10 -0400
+Message-ID: <AANLkTimZTGvPuWPTXSOfOjvxzQh5tSnlqNBpueASLAUF@mail.gmail.com>
+Subject: rt61pci AP performance issues
+From: David Ellingsworth <david@identd.dyndns.org>
+To: rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-06-03 at 17:56 +0200, Christian P. Schmidt wrote:
+I've been trying unsuccessfully for some time to use a rt61pci based
+wireless card as an Access Point for my network. With kernel version
+2.6.32-4 (Debian version) the AP works but has intermittent problems.
+Notably, that version continuously prints the message
+"ieee80211_tx_status: headroom too small" to my system log and the
+driver simply stops working after a random amount of time. The first
+of these errors was fixed some time ago after I reported it, but the
+other still remains, even with the latest wireless-testing driver, and
+there's no indication as to the cause of the issue. With regards to
+this issue, it appears that performance steadily drops until it
+becomes unusable. With the latest wireless-testing driver I can
+reliably reproduce this issue by trying to transfer a large file from
+my server to a client. Any help diagnosing and correcting this issue
+would be greatly appreciated.
 
-> > Maybe try the rfkill tool:
-> > http://wireless.kernel.org/en/users/Documentation/rfkill
-> 
-> Yes, it was the rfkill tool that caused my attempts to fail. However,
-> this didn't change my association attempt problems.
-> I also took my time to look at the PCIe port - steady 3.3V on the RFKILL
-> pin, which means "no RFKILL".
-> 
-> Any further ideas?
+Regards,
 
-Unfortunately not. It would seem that something is causing your frames
-not to be transmitted correctly, but I see no reason for that right now.
-
-johannes
-
+David Ellingsworth
