@@ -1,47 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50738 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753226Ab0F0IVF (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:55607 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755759Ab0FRKlB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Jun 2010 04:21:05 -0400
-Subject: Re: rt2x00 & mac80211: correct usage of ieee80211_beacon_get_tim?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-In-Reply-To: <201006251801.06209.helmut.schaa@googlemail.com>
-References: <201006241521.47623.helmut.schaa@googlemail.com>
-	 <1277394714.3870.8.camel@jlt3.sipsolutions.net>
-	 <201006251801.06209.helmut.schaa@googlemail.com>
+	Fri, 18 Jun 2010 06:41:01 -0400
+Received: by fxm10 with SMTP id 10so510271fxm.19
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Jun 2010 03:40:59 -0700 (PDT)
+Subject: Re: IWL3945 problems in 2.6.35-rc1
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Reinette Chatre <reinette.chatre@intel.com>
+In-Reply-To: <1276857009.3638.20.camel@jlt3.sipsolutions.net>
+References: <1275395142.14385.6.camel@maxim-laptop>
+	 <1276853327.3638.17.camel@jlt3.sipsolutions.net>
+	 <1276856384.9114.3.camel@maxim-laptop>
+	 <1276857009.3638.20.camel@jlt3.sipsolutions.net>
 Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 27 Jun 2010 10:21:02 +0200
-Message-ID: <1277626862.3684.3.camel@jlt3.sipsolutions.net>
+Date: Fri, 18 Jun 2010 13:40:57 +0300
+Message-ID: <1276857657.19036.0.camel@maxim-laptop>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-06-25 at 18:01 +0200, Helmut Schaa wrote:
-> Am Donnerstag 24 Juni 2010 schrieb Johannes Berg:
-> >  b) You need to get a new beacon frame from mac80211 only when it
-> >     changes. You can do this from set_tim(). HOWEVER: since you're not
-> >     getting a new one from mac80211 all the time anyway, you NEED to
-> >     have the driver or firmware overwrite the DTIM count, like b43's
-> >     firmware for example will do.
+On Fri, 2010-06-18 at 12:30 +0200, Johannes Berg wrote: 
+> Maxim,
 > 
-> And the broad- and multicast buffering also needs to be done in the driver
-> (when the fw/hw cannot handle it) as mac80211 uses its own DTIM count for
-> deciding when to "release" buffered frames to the driver.
+> Thanks for the quick reply!
+> 
+> > >  1) with the patch reverted, which is what presumably you're running
+> > >     now, can you try
+> > >     ifconfig wlan0 allmulti
+> > >     ifconfig wlan0 -allmulti
+> > > 
+> > >     I think this will *break* the driver right now.
+> > 
+> > I didn't exactly understand how this supposed to break it.
+> 
+> Ok this needs some more explaining.
+> 
+> The old code did:
+> 
+> if (allmulti changed)
+> 	"set grp-filter in hw according to allmulti"
+> 
+> the new code just did
+> 
+> "set grp-filter in hw according to allmulti"
+> 
+> 
+> During normal operation the "allmulti changed" condition is never true.
+> Therefore, the old code, despite being incorrect, never broke things.
+> The above would make the condition true, and lead to it being broken
+> because it would change to on/off and then the grp-filter in hw would be
+> off, although it's required to be on.
+> 
+> Thus the real bug was there before my change, but it never triggered,
+> and when I "optimised away" the condition I broke it.
+Got it.
 
-Well, yes, but I don't get it. Are you trying to conjure a third way of
-doing things? How would you like it to work?
+> 
+> > >  2) with the patch *not* reverted, apply the patch below and see if that
+> > >     fixes the problem as well (if it gets mangled, just remove the one
+> > >     CHK() line manually)
+> > > 
+> > > Actually, (2) is obviously more important to me, but (1) would indicate
+> > > that my guess is correct wrt. what's causing the problem
+> 
+> > I tested (2) and it works.
+> 
+> Thank you. I'll submit this patch instead.
+> 
+> johannes
+> 
 
-I don't understand why you expect to have a correct DTIM count field
-when you don't pull every beacon from mac80211. If you pull each beacon
-it's all correct. If you don't, you need to take care of everything DTIM
-related, there's simply no way to do it differently.
-
-Does your device fill the DTIM count field or does it not? That's really
-the only thing you need to know, no?
-
-johannes
+Best regards,
+Maxim Levitsky
 
