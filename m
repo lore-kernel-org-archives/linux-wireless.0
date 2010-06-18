@@ -1,50 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:46461 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755452Ab0FCWm2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jun 2010 18:42:28 -0400
-Date: Thu, 3 Jun 2010 15:09:47 -0700
-From: Greg KH <greg@kroah.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	stable@kernel.org
-Subject: Re: [stable] [PATCH] ath5k: drop warning on jumbo frames
-Message-ID: <20100603220947.GA22595@kroah.com>
-References: <1273519587-25740-1-git-send-email-lrodriguez@atheros.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:59654 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751327Ab0FRTAL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Jun 2010 15:00:11 -0400
+Date: Fri, 18 Jun 2010 14:56:15 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Vivek Natarajan <vnatarajan@atheros.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] wireless-regdb: Update the regulatory domain for a
+ few countries.
+Message-ID: <20100618185614.GE6282@tuxdriver.com>
+References: <1276768074-4366-1-git-send-email-vnatarajan@atheros.com>
+ <1276768074-4366-2-git-send-email-vnatarajan@atheros.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1273519587-25740-1-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1276768074-4366-2-git-send-email-vnatarajan@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 10, 2010 at 03:26:27PM -0400, Luis R. Rodriguez wrote:
-> Jumbo frames are not supported, and if they are seen it is likely
-> a bogus frame so just silently discard them instead of warning on
-> them all time. Also, instead of dropping them immediately though
-> move the check *after* we check for all sort of frame errors. This
-> should enable us to discard these frames if the hardware picks
-> other bogus items first. Lets see if we still get those jumbo
-> counters increasing still with this.
+On Thu, Jun 17, 2010 at 03:17:53PM +0530, Vivek Natarajan wrote:
+> Add Bangladesh(BD) with NULL1_WORLD.
+> Add Kenya(KE) with APL1_WORLD.
+> Change Honduras(HN) to FCC3_WORLD.
+> Change Lebanon(LB) to  APL1_WORLD,
+> Change Macedonia(MK) to ETSI1_WORLD.
+> Change Pakistan(PK) to APL1_WORLD.
+> Change Romania(RO) to ETSI1_WORLD.
+> Change Russia(RU) to FCC3_WORLD.
+> Change Saudi Arabia(SA) to FCC2_WORLD.
+> Change UAE(AE) to ETSI1_WORLD.
+> Change Venezuela(VE) to FCC1_WORLD.
+> Change Vietnam(VN) to ETSI3_WORLD.
 > 
-> Jumbo frames would happen if we tell hardware we can support
-> a small 802.11 chunks of DMA'd frame, hardware would split RX'd
-> frames into parts and we'd have to reconstruct them in software.
-> This is done with USB due to the bulk size but with ath5k we
-> already provide a good limit to hardware and this should not be
-> happening.
-> 
-> This is reported quite often and if it fills the logs then this
-> needs to be addressed and to avoid spurious reports.
-> 
-> Cc: stable@kernel.org
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
->  drivers/net/wireless/ath/ath5k/base.c |   12 ++++++------
+> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
 
-This is now upstream, but doesn't seem to apply to any of the .32, .33,
-or .34 trees.  If you want it there, please send me a backported version
-of it.
+It would be nice to have some reference for these changes...
 
-thanks,
-
-greg k-h
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
