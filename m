@@ -1,89 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:36368 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750709Ab0FGNmq (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:41362 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754305Ab0FRT7e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jun 2010 09:42:46 -0400
-Subject: Re: [RFC PATCH] mac80211: Fix circular locking dependency in ARP
- filter handling
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"reinette.chatre@intel.com" <reinette.chatre@intel.com>
-In-Reply-To: <1275916761.29978.15.camel@jlt3.sipsolutions.net>
-References: <1275915965-10124-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1275916761.29978.15.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 07 Jun 2010 16:42:24 +0300
-Message-ID: <1275918144.5277.30408.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+	Fri, 18 Jun 2010 15:59:34 -0400
+Message-ID: <4C1BD024.1030707@gmail.com>
+Date: Fri, 18 Jun 2010 12:59:32 -0700
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+MIME-Version: 1.0
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+CC: Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 4/5]pci:setup_bus.c Fix warning: variable 'retval' set
+ but not used
+References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>	<1276666434-11227-5-git-send-email-justinmattock@gmail.com>	<20100618102330.29eccb5b@virtuousgeek.org>	<4C1BBF7D.8090904@kernel.org> <20100618124956.40c869a0@virtuousgeek.org>
+In-Reply-To: <20100618124956.40c869a0@virtuousgeek.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-06-07 at 15:19 +0200, ext Johannes Berg wrote:
-> On Mon, 2010-06-07 at 16:06 +0300, Juuso Oikarinen wrote:
-> 
-> > --- a/net/mac80211/iface.c
-> > +++ b/net/mac80211/iface.c
-> > @@ -477,6 +477,9 @@ static int ieee80211_stop(struct net_device *dev)
-> >  		cancel_work_sync(&sdata->u.mgd.chswitch_work);
-> >  		cancel_work_sync(&sdata->u.mgd.monitor_work);
-> >  		cancel_work_sync(&sdata->u.mgd.beacon_connection_loss_work);
-> > +#ifdef CONFIG_INET
-> > +		cancel_work_sync(&sdata->u.mgd.arp_config_work);
-> > +#endif
-> 
-> No can do, this is under RTNL and thus can't block waiting for a work
-> that acquires the RTNL ... the work might already be running, waiting
-> for the RTNL, by the time you get here. This will also get you a lockdep
-> complaint.
+On 06/18/2010 12:49 PM, Jesse Barnes wrote:
+> On Fri, 18 Jun 2010 11:48:29 -0700
+> Yinghai Lu<yinghai@kernel.org>  wrote:
+>
+>> On 06/18/2010 10:23 AM, Jesse Barnes wrote:
+>>> On Tue, 15 Jun 2010 22:33:53 -0700
+>>> "Justin P. Mattock"<justinmattock@gmail.com>  wrote:
+>>>
+>>>> The below patch fixes a warning message when using gcc 4.6.0
+>>>>    CC      drivers/pci/setup-bus.o
+>>>> drivers/pci/setup-bus.c: In function 'pci_assign_unassigned_bridge_resources':
+>>>> drivers/pci/setup-bus.c:868:6: warning: variable 'retval' set but not used
+>>>>
+>>>>   Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
+>>>>
+>>>> ---
+>>>>   drivers/pci/setup-bus.c |    2 --
+>>>>   1 files changed, 0 insertions(+), 2 deletions(-)
+>>>>
+>>>> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+>>>> index 19b1113..215590b 100644
+>>>> --- a/drivers/pci/setup-bus.c
+>>>> +++ b/drivers/pci/setup-bus.c
+>>>> @@ -865,7 +865,6 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+>>>>   	struct pci_bus *parent = bridge->subordinate;
+>>>>   	int tried_times = 0;
+>>>>   	struct resource_list_x head, *list;
+>>>> -	int retval;
+>>>>   	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+>>>>   				  IORESOURCE_PREFETCH;
+>>>>
+>>>> @@ -874,7 +873,6 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+>>>>   again:
+>>>>   	pci_bus_size_bridges(parent);
+>>>>   	__pci_bridge_assign_resources(bridge,&head);
+>>>> -	retval = pci_reenable_device(bridge);
+>>>>   	pci_set_master(bridge);
+>>>>   	pci_enable_bridges(parent);
+>>>>
+>>
+>> I sent following patch several weeks ago, can you put that in pci-next?
+>>
+>> Subject: [PATCH] pciehp: Enable bridges at last for multiple try assigning
+>>
+>> Found one PCIe Module with several bridges "cold" hotadd doesn't work.
+>>
+>> the root cause:
+>> 1. BIOS assign small range the parent bridges.
+>> 2. First try for hotadd only can make some bridges get resource assigned.
+>> 3. Second will update parent bridge res, get right sizes for all child bridges
+>>      and devices, but resource for child bridges are not set to HW register.
+>>      Because first try already enable those bridges, so __pci_bridge_assign_resource
+>>      skip the setting step.
+>>
+>> So try to move enabling of child bridges to last and only do that one time
+>>
+>> Signed-off-by: Yinghai Lu<yinghai@kernel.org>
+>
+> Yeah I had a hard time following the changelog, but just looked it
+> over.  Looks safe, but Justin will still need to check the return value
+> on pci_reenable_device.
+>
+> Justin, we don't want a message on every reenable, just on ones that
+> fail.  So can you protect your printk with if (retval) instead?  You'll
+> need to refresh it based on my linux-next branch in a few minutes, as
+> I'm pushing Yinghai's patch now.
+>
 
-The work-func escapes based on ieee80211_sdata_running before acquiring
-the rtnl - hence here it should never get to the lock. I saw the same
-being used in those other work funcs too. I was beginning work to try to
-validate that, so it's not enough?
 
-> This is why 
-> 
-> > @@ -379,7 +379,8 @@ static int ieee80211_ifa_changed(struct notifier_block *nb,
-> >  	ifmgd = &sdata->u.mgd;
-> >  	mutex_lock(&ifmgd->mtx);
-> >  	if (ifmgd->associated)
-> > -		ieee80211_set_arp_filter(sdata);
-> > +		ieee80211_queue_work(&sdata->local->hw,
-> > +				     &sdata->u.mgd.arp_config_work);
-> >  	mutex_unlock(&ifmgd->mtx);
-> 
-> No need to do change it here since the rtnl is held outside.
+just added this in(as a test), and the retval warning still shows up.
+with the last post I just added a printk was that legit, and if so what 
+else might be added to it to make it complete and proper?
 
-Yes, I know rtnl is held outside. I changed this for two reasons. First,
-I think it maybe better if the driver function is always called in the
-same scope. Secondly, this gets rid of inetdevs intermediate
-configurations (if you change IP address, it will first remove the
-previous one, and immediately after add a new one, resulting in two
-calls to the driver config function.)
-
-> Also, and this applies to the change in mlme.c too, you must never put
-> work that acquires the rtnl onto the mac80211 workqueue ... that's what
-> you were trying to fix to start with!
-
-> But because the interface might go away before your work runs, you're in
-> a stupid situation where you can't really use a per-interface work
-> either ... I think you probably need to have the work in ieee80211_local
-> and iterate the interface list.
-
-I thought about iterating the interface list. I assume you imply calling
-the configure function for every interface.
-
-Going still back to the current patch: assuming that you overlooked the
-sdata_running() call in the arp_config_work() function, and we can after
-all cancel_work_sync in _stop(), would using the kernel's default
-workqueue solve the rtnl problem, or are the rtnl dependencies there
-too?
-
--Juuso
-
-> johannes
-> 
-
-
+Justin P. Mattock
