@@ -1,68 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:2734 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753192Ab0FAVKH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jun 2010 17:10:07 -0400
-Subject: Re: [PATCH] mac80211: process station blockack action frames from
- work
-From: reinette chatre <reinette.chatre@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	"Zhu, Yi" <yi.zhu@intel.com>
-In-Reply-To: <1275052978.3909.105.camel@jlt3.sipsolutions.net>
-References: <1275052978.3909.105.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 01 Jun 2010 14:10:05 -0700
-Message-ID: <1275426605.2091.27516.camel@rchatre-DESK>
-Mime-Version: 1.0
+Received: from osmium.mv.net ([199.125.85.152]:56026 "HELO shell.mv.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1759107Ab0FRJbS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Jun 2010 05:31:18 -0400
+Date: Fri, 18 Jun 2010 05:09:23 -0400 (EDT)
+From: RHS Linux User <xxx@nei.mv.com>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+cc: Maxim Levitsky <maximlevitsky@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Subject: Re: [ath5k-devel] [PATCH] ath5k: disable ASPM
+In-Reply-To: <20100618112026.17623g6uhdjk8hts@naisho.dyndns.info>
+Message-ID: <Pine.LNX.3.95.1100618050609.1393G-100000@nei>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
 
-On Fri, 2010-05-28 at 06:22 -0700, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+Hi All,
+
+   Let's hear it for chips without available specs!
+
+   Does anyone remember the days when paper specs arrived in plain
+envelopes with no return address when you asked the manufacturer for some
+real support?
+
+   And lets hope they are REAL low in price!
+
+   wiz
+
+
+On Fri, 18 Jun 2010, Jussi Kivilinna wrote:
+
+> Quoting "Maxim Levitsky" <maximlevitsky@gmail.com>:
 > 
-> Processing an association response could take a bit
-> of time while we set up the hardware etc. During that
-> time, the AP might already send a blockack request.
-> If this happens very quickly on a fairly slow machine,
-> we can end up processing the blockack request before
-> the association processing has finished. Since the
-> blockack processing cannot sleep right now, we also
-> cannot make it wait in the driver.
+> > On Fri, 2010-05-28 at 13:09 +0300, Jussi Kivilinna wrote:
+> >> Atheros card on Acer Aspire One (AOA150, Atheros Communications Inc. AR5001
+> >> Wireless Network Adapter [168c:001c] (rev 01)) doesn't work well with ASPM
+> >> enabled. With ASPM ath5k will eventually stall on heavy traffic with often
+> >> 'unsupported jumbo' warnings appearing. Disabling ASPM L0s/L1 in ath5k fixes
+> >> these problems.
+> >>
+> >> Reproduced with pcie_aspm=force and by using 'nc < /dev/zero > /dev/null' at
+> >> both ends (usually stalls within seconds).
+> >
+> > This fixes the same nasty problem on my AR2425.
+> >
+> > My AR2425 will stall if it transmits for about 1~2 minutes.
+> >
+> > It sends storm of RXORN interrupts although it only transmits.
+> >
+> > I see that now lspci calls it AR5001.
+> >
+> > Jussi Kivilinna, million thanks to you. I would never think of going
+> > this direction.
+> >
+> > Luis, so I was right after all, wasn't I?
+> > It is a hardware bug that is worked around in windows driver by
+> > disabling PCIE ASPM L0S.
 > 
-> As a result, sometimes on slow machines the iwlagn
-> driver gets totally confused, and no traffic can pass
-> when the aggregation setup was done before the assoc
-> setup completed.
+> I noticed this L0s disabling in windows driver too. I cannot test this  
+> anymore, since I don't have ath5k hw installed anymore (I switched to  
+> b43).
 > 
-> I'm working on a proper fix for this, which involves
-> queuing all blockack category action frames from a
-> work struct, and also allowing the ampdu_action driver
-> callback to sleep, which will generally clean up the
-> code and make things easier.
+> (ok, I might switch back ath5k to work on this, but opening AAO is  
+> pain.. on the other hand, I'm just user in this case and pretty  
+> unwilling to work with dual-license)
 > 
-> However, this is a very involved and complex change.
-> To fix the problem at hand in a way that can also be
-> backported to stable, I've come up with this patch.
-> Here, I simply process all aggregation action frames
-> from the managed interface skb queue, which means
-> their processing will be serialized with processing
-> the association response, thereby fixing the problem.
+> I did test device with L0s+L1 enabled (aspm=force), on this setup  
+> device fails within seconds. I tested patch with disabling L1 but not  
+> L0s, still fails but after longer time. I did _not_ test with L0s off  
+> but L1 enabled. So maybe it would be worth to test this patch with  
+> just disabling L0s.
 > 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> Cc: stable@kernel.org
-> ---
-
-Could you please consider this patch for wireless-2.6/2.6.34 ? Without
-this patch no data transfer is possible on some slow machines.
-
-Thank you
-
-Reinette
-
-
+> AAO150 seems to enable L0s from BIOS, so this happens without  
+> aspm=force or CONFIG_.._ASPM at all.
+> 
+>   -Jussi
+> 
+> _______________________________________________
+> ath5k-devel mailing list
+> ath5k-devel@lists.ath5k.org
+> https://lists.ath5k.org/mailman/listinfo/ath5k-devel
+> 
 
