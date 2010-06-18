@@ -1,52 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:49407 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755089Ab0FNUPT (ORCPT
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:41010 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756170Ab0FRHjd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jun 2010 16:15:19 -0400
-Received: by wwb18 with SMTP id 18so4215976wwb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Jun 2010 13:15:17 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 07/14] rt2x00: Fix typo in rt2800_config_txpower
-Date: Mon, 14 Jun 2010 22:11:32 +0200
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-References: <201006142208.31736.IvDoorn@gmail.com> <201006142210.43525.IvDoorn@gmail.com> <201006142211.09880.IvDoorn@gmail.com>
-In-Reply-To: <201006142211.09880.IvDoorn@gmail.com>
+	Fri, 18 Jun 2010 03:39:33 -0400
+From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?=
+	<u.kleine-koenig@pengutronix.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] wireless: move regulatory_init to .init.text
+Date: Fri, 18 Jun 2010 09:38:55 +0200
+Message-Id: <1276846735-12105-2-git-send-email-u.kleine-koenig@pengutronix.de>
+In-Reply-To: <1276846735-12105-1-git-send-email-u.kleine-koenig@pengutronix.de>
+References: <1276846735-12105-1-git-send-email-u.kleine-koenig@pengutronix.de>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201006142211.33421.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+regulatory_init is only called by cfg80211_init which is in .init.text,
+too.
 
-Fix typo in rt2800_config_txpower.
-
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ net/wireless/reg.c |    4 ++--
+ net/wireless/reg.h |    2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index ae20e67..f158322 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -1079,7 +1079,7 @@ static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
- 	u8 r1;
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 8f0d97d..994c7c5 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -2630,7 +2630,7 @@ out:
+ 	mutex_unlock(&reg_mutex);
+ }
  
- 	rt2800_bbp_read(rt2x00dev, 1, &r1);
--	rt2x00_set_field8(&reg, BBP1_TX_POWER, 0);
-+	rt2x00_set_field8(&r1, BBP1_TX_POWER, 0);
- 	rt2800_bbp_write(rt2x00dev, 1, r1);
+-int regulatory_init(void)
++int __init regulatory_init(void)
+ {
+ 	int err = 0;
  
- 	rt2800_register_read(rt2x00dev, TX_PWR_CFG_0, &reg);
+@@ -2676,7 +2676,7 @@ int regulatory_init(void)
+ 	return 0;
+ }
+ 
+-void regulatory_exit(void)
++void /* __init_or_exit */ regulatory_exit(void)
+ {
+ 	struct regulatory_request *reg_request, *tmp;
+ 	struct reg_beacon *reg_beacon, *btmp;
+diff --git a/net/wireless/reg.h b/net/wireless/reg.h
+index b26224a..c4695d0 100644
+--- a/net/wireless/reg.h
++++ b/net/wireless/reg.h
+@@ -10,7 +10,7 @@ int regulatory_hint_user(const char *alpha2);
+ 
+ void reg_device_remove(struct wiphy *wiphy);
+ 
+-int regulatory_init(void);
++int __init regulatory_init(void);
+ void regulatory_exit(void);
+ 
+ int set_regdom(const struct ieee80211_regdomain *rd);
 -- 
-1.6.6.1
+1.7.1
 
