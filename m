@@ -1,78 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:37709 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755220Ab0FGHCu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jun 2010 03:02:50 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 07 Jun 2010 00:02:50 -0700
-From: Vivek Natarajan <vnatarajan@atheros.com>
-To: <greg@kroah.com>
-CC: <linux-wireless@vger.kernel.org>, <stable@kernel.org>,
-	Ranga Rao Ravuri <ranga.ravuri@atheros.com>
-Subject: [stable 2.6.33 and 2.6.34][PATCH] ath9k: Avoid corrupt frames being forwarded to mac80211.
-Date: Mon, 7 Jun 2010 12:32:42 +0530
-Message-ID: <1275894163-3348-1-git-send-email-vnatarajan@atheros.com>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:38984 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751243Ab0FRSs4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Jun 2010 14:48:56 -0400
+Message-ID: <4C1BBF7D.8090904@kernel.org>
+Date: Fri, 18 Jun 2010 11:48:29 -0700
+From: Yinghai Lu <yinghai@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+CC: "Justin P. Mattock" <justinmattock@gmail.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 4/5]pci:setup_bus.c Fix warning: variable 'retval' set
+ but not used
+References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>	<1276666434-11227-5-git-send-email-justinmattock@gmail.com> <20100618102330.29eccb5b@virtuousgeek.org>
+In-Reply-To: <20100618102330.29eccb5b@virtuousgeek.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If bit 29 is set, MAC H/W can attempt to decrypt the received aggregate
-with WEP or TKIP, eventhough the received frame may be a CRC failed
-corrupted frame. If this bit is set, H/W obeys key type in keycache.
-If it is not set and if the key type in keycache is neither open nor
-AES, H/W forces key type to be open.  But bit 29 should be set to 1
-for AsyncFIFO feature to encrypt/decrypt the aggregate with WEP or TKIP.
+On 06/18/2010 10:23 AM, Jesse Barnes wrote:
+> On Tue, 15 Jun 2010 22:33:53 -0700
+> "Justin P. Mattock" <justinmattock@gmail.com> wrote:
+> 
+>> The below patch fixes a warning message when using gcc 4.6.0
+>>   CC      drivers/pci/setup-bus.o
+>> drivers/pci/setup-bus.c: In function 'pci_assign_unassigned_bridge_resources':
+>> drivers/pci/setup-bus.c:868:6: warning: variable 'retval' set but not used
+>>  
+>>  Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+>>
+>> ---
+>>  drivers/pci/setup-bus.c |    2 --
+>>  1 files changed, 0 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+>> index 19b1113..215590b 100644
+>> --- a/drivers/pci/setup-bus.c
+>> +++ b/drivers/pci/setup-bus.c
+>> @@ -865,7 +865,6 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+>>  	struct pci_bus *parent = bridge->subordinate;
+>>  	int tried_times = 0;
+>>  	struct resource_list_x head, *list;
+>> -	int retval;
+>>  	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+>>  				  IORESOURCE_PREFETCH;
+>>  
+>> @@ -874,7 +873,6 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+>>  again:
+>>  	pci_bus_size_bridges(parent);
+>>  	__pci_bridge_assign_resources(bridge, &head);
+>> -	retval = pci_reenable_device(bridge);
+>>  	pci_set_master(bridge);
+>>  	pci_enable_bridges(parent);
+>>  
 
-Cc: stable@kernel.org
-Reported-by: Johan Hovold <johan.hovold@lundinova.se>
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
-Signed-off-by: Ranga Rao Ravuri <ranga.ravuri@atheros.com>
+I sent following patch several weeks ago, can you put that in pci-next?
+
+Subject: [PATCH] pciehp: Enable bridges at last for multiple try assigning
+
+Found one PCIe Module with several bridges "cold" hotadd doesn't work.
+
+the root cause:
+1. BIOS assign small range the parent bridges.
+2. First try for hotadd only can make some bridges get resource assigned.
+3. Second will update parent bridge res, get right sizes for all child bridges
+    and devices, but resource for child bridges are not set to HW register.
+    Because first try already enable those bridges, so __pci_bridge_assign_resource
+    skip the setting step.
+
+So try to move enabling of child bridges to last and only do that one time
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
 ---
- drivers/net/wireless/ath/ath9k/initvals.h |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/pci/setup-bus.c |   12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/initvals.h b/drivers/net/wireless/ath/ath9k/initvals.h
-index 8a3bf3a..7203f00 100644
---- a/drivers/net/wireless/ath/ath9k/initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/initvals.h
-@@ -246,7 +246,7 @@ static const u32 ar5416Common[][2] = {
-     { 0x00008258, 0x00000000 },
-     { 0x0000825c, 0x400000ff },
-     { 0x00008260, 0x00080922 },
--    { 0x00008264, 0xa8000010 },
-+    { 0x00008264, 0x88000010 },
-     { 0x00008270, 0x00000000 },
-     { 0x00008274, 0x40000000 },
-     { 0x00008278, 0x003e4180 },
-@@ -2766,7 +2766,7 @@ static const u32 ar9280Common_9280_2[][2] = {
-     { 0x00008258, 0x00000000 },
-     { 0x0000825c, 0x400000ff },
-     { 0x00008260, 0x00080922 },
--    { 0x00008264, 0xa8a00010 },
-+    { 0x00008264, 0x88a00010 },
-     { 0x00008270, 0x00000000 },
-     { 0x00008274, 0x40000000 },
-     { 0x00008278, 0x003e4180 },
-@@ -3936,7 +3936,7 @@ static const u_int32_t ar9285Common_9285[][2] = {
-     { 0x00008258, 0x00000000 },
-     { 0x0000825c, 0x400000ff },
-     { 0x00008260, 0x00080922 },
--    { 0x00008264, 0xa8a00010 },
-+    { 0x00008264, 0x88a00010 },
-     { 0x00008270, 0x00000000 },
-     { 0x00008274, 0x40000000 },
-     { 0x00008278, 0x003e4180 },
-@@ -5073,7 +5073,7 @@ static const u_int32_t ar9287Common_9287_1_0[][2] = {
-     { 0x00008258, 0x00000000 },
-     { 0x0000825c, 0x400000ff },
-     { 0x00008260, 0x00080922 },
--    { 0x00008264, 0xa8a00010 },
-+    { 0x00008264, 0x88a00010 },
-     { 0x00008270, 0x00000000 },
-     { 0x00008274, 0x40000000 },
-     { 0x00008278, 0x003e4180 },
--- 
-1.7.1
-
+Index: linux-2.6/drivers/pci/setup-bus.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/setup-bus.c
++++ linux-2.6/drivers/pci/setup-bus.c
+@@ -866,19 +866,16 @@ void pci_assign_unassigned_bridge_resour
+ again:
+ 	pci_bus_size_bridges(parent);
+ 	__pci_bridge_assign_resources(bridge, &head);
+-	retval = pci_reenable_device(bridge);
+-	pci_set_master(bridge);
+-	pci_enable_bridges(parent);
+ 
+ 	tried_times++;
+ 
+ 	if (!head.next)
+-		return;
++		goto enable_all;
+ 
+ 	if (tried_times >= 2) {
+ 		/* still fail, don't need to try more */
+ 		free_failed_list(&head);
+-		return;
++		goto enable_all;
+ 	}
+ 
+ 	printk(KERN_DEBUG "PCI: No. %d try to assign unassigned res\n",
+@@ -911,5 +908,10 @@ again:
+ 	free_failed_list(&head);
+ 
+ 	goto again;
++
++enable_all:
++	retval = pci_reenable_device(bridge);
++	pci_set_master(bridge);
++	pci_enable_bridges(parent);
+ }
+ EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
