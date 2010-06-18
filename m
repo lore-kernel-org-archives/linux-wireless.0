@@ -1,57 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:62815 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751862Ab0FDVVr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jun 2010 17:21:47 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 04 Jun 2010 14:21:47 -0700
-Date: Fri, 4 Jun 2010 14:21:45 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Bruno Randolf <br1@einfach.org>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	David Quan <David.Quan@atheros.com>,
-	Aeolus Yang <Aeolus.Yang@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [ath5k-devel] [PATCH v2 13/20] cfg80211: Add nl80211 antenna
- configuration
-Message-ID: <20100604212145.GB4069@tux>
-References: <20100519012528.22206.77550.stgit@tt-desk>
- <20100519013147.22206.71360.stgit@tt-desk>
- <20100604193009.GD2492@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20100604193009.GD2492@tuxdriver.com>
+Received: from external1.orbit-lab.org ([128.6.192.131]:55371 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751490Ab0FRTDW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Jun 2010 15:03:22 -0400
+Subject: Compat-wireless release for 2010-06-18 is baked
+To: <linux-wireless@vger.kernel.org>, <linux-bluetooth@vger.kernel.org>
+Message-Id: <20100618190319.249D942E2C@repository3.localdomain>
+Date: Fri, 18 Jun 2010 15:03:19 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 04, 2010 at 12:30:09PM -0700, John W. Linville wrote:
-> On Wed, May 19, 2010 at 10:31:48AM +0900, Bruno Randolf wrote:
-> > Allow setting TX and RX antenna configuration via nl80211/cfg80211.
-> > 
-> > The antenna configuration is defined as a bitmap of allowed antennas. This
-> > bitmap is 8 bit at the moment, each bit representing one antenna. If multiple
-> > antennas are selected, the driver may use diversity for receive and transmit.
-> > This allows for a simple, yet flexible configuration interface for antennas,
-> > while drivers may reject configurations they cannot support.
-> > 
-> > Signed-off-by: Bruno Randolf <br1@einfach.org>
-> 
-> This spawned a long thread, that isn't clearly resolved IMHO.  So, I
-> haven't merged it, or the other patches that follow it in this series.
-> 
-> Am I mistaken?  Did this get resolved?  If not, are some of the later
-> patches still interesting?
-> 
-> Unless I hear otherwise, I'll be dropping the rest of this series...
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   11542b5..75bb510  master     -> origin/master
+   d584ab0..3eaa500  wl         -> origin/wl
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   67eac11..49bc196  history    -> origin/history
+ + 8668718...d568ec36 master     -> origin/master  (forced update)
+ * [new tag]         next-20100618 -> next-20100618
 
-I don't think the API is defined clean enough yet and can yield
-inconsistant interpretations. I'd like to see this clarified on
-the documentation for both legacy and 802.11n. If the plan is
-to support only legacy right now then I think the API can be
-simpler and clearer with only three options passed, Fixed_A
-Fixed_B and diversity.
+compat-wireless code metrics
 
-  Luis
+    498472 - Total upstream lines of code being pulled
+      1410 - backport code changes
+      1177 - backport code additions
+       233 - backport code deletions
+      5748 - backport from compat module
+      7158 - total backport code
+    1.4360 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet merged
+        39 - Crap deletions not yet posted
+    0.2443 - % of crap code
+
+Base tree: linux-next.git
+Base tree version: next-20100618
+compat-wireless release: compat-wireless-2010-06-17-1-g75bb510
