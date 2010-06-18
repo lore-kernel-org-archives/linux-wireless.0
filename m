@@ -1,66 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35579 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755667Ab0FGLD0 (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:42201 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932998Ab0FROL6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jun 2010 07:03:26 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.71)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1OLa73-0007FC-TM
-	for linux-wireless@vger.kernel.org; Mon, 07 Jun 2010 13:03:26 +0200
-Message-Id: <20100607110202.597388000@sipsolutions.net>
-Date: Mon, 07 Jun 2010 13:01:52 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 19/21] mac80211: defer TX agg session teardown to work
-References: <20100607110133.472649120@sipsolutions.net>
+	Fri, 18 Jun 2010 10:11:58 -0400
+Subject: Re: [PATCH] ath5k: disable ASPM
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+In-Reply-To: <AANLkTimdTjedtoeKAp5tcTqefrUB6k373Kx9EacuYFcO@mail.gmail.com>
+References: <20100528100901.14580.1322.stgit@fate.lan>
+	 <1276806785.20754.8.camel@maxim-laptop>
+	 <20100618112026.17623g6uhdjk8hts@naisho.dyndns.info>
+	 <1276856142.9114.1.camel@maxim-laptop>
+	 <20100618134930.124225d4fsi8w1fk@naisho.dyndns.info>
+	 <1276859156.19554.2.camel@maxim-laptop>
+	 <AANLkTimdTjedtoeKAp5tcTqefrUB6k373Kx9EacuYFcO@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 18 Jun 2010 17:11:49 +0300
+Message-ID: <1276870309.23783.3.camel@maxim-laptop>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, 2010-06-18 at 09:59 -0400, Bob Copeland wrote: 
+> On Fri, Jun 18, 2010 at 7:05 AM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
+> >> Patch I made uses GPL code from e1000e, but since ath5k is
+> >> dual-licensed so patch can't be accepted. So if I got it right, patch
+> >> has to be remade from scratch by someone who really knows about pci
+> >> registers etc. I don't, and learning this to fix something that is
+> >> already fixed in my point of view is waste of (my) time.
+> > Sure, regardless of licensing, this patch has to be redone (and e1000
+> > with it)
+> 
+> At any rate, Jussi, thanks a bundle for tracking it down.  I owe you a
+> beer, lots of bugs have been reported on these devices.
+> 
+> Maxim, this device was always broken in the same way, right?  Just
+> curious if anything made it worse recently.
 
-Since we want the code to be able to sleep
-in the future, it must not be called from
-the timer directly. To achieve that, simply
-call the function drivers would call, and
-also use RCU in the timer to get the struct
-so we don't need to rely on the spinlock in
-the future.
+Always was broken, of course even with madwifi.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/agg-tx.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+Recently I think driver stopped doing reset on RXORN, which sometimes
+helped. This did made things a bit worse.
 
---- wireless-testing.orig/net/mac80211/agg-tx.c	2010-06-06 13:22:27.000000000 +0200
-+++ wireless-testing/net/mac80211/agg-tx.c	2010-06-06 13:22:31.000000000 +0200
-@@ -200,11 +200,11 @@ static void sta_addba_resp_timer_expired
- 	struct tid_ampdu_tx *tid_tx;
- 
- 	/* check if the TID waits for addBA response */
--	spin_lock_bh(&sta->lock);
--	tid_tx = sta->ampdu_mlme.tid_tx[tid];
-+	rcu_read_lock();
-+	tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[tid]);
- 	if (!tid_tx ||
- 	    test_bit(HT_AGG_STATE_RESPONSE_RECEIVED, &tid_tx->state)) {
--		spin_unlock_bh(&sta->lock);
-+		rcu_read_unlock();
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 		printk(KERN_DEBUG "timer expired on tid %d but we are not "
- 				"(or no longer) expecting addBA response there\n",
-@@ -217,8 +217,8 @@ static void sta_addba_resp_timer_expired
- 	printk(KERN_DEBUG "addBA response timer expired on tid %d\n", tid);
- #endif
- 
--	___ieee80211_stop_tx_ba_session(sta, tid, WLAN_BACK_INITIATOR);
--	spin_unlock_bh(&sta->lock);
-+	ieee80211_stop_tx_ba_session(&sta->sta, tid);
-+	rcu_read_unlock();
- }
- 
- static inline int ieee80211_ac_from_tid(int tid)
+Anyway, just disable L0S, and card works perfectly.
 
+Best regards,
+Maxim Levitsky
 
