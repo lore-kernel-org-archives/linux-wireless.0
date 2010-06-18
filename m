@@ -1,214 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42761 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754515Ab0FJI0J (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:59656 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753841Ab0FRTAL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jun 2010 04:26:09 -0400
-Message-Id: <20100610082230.387128759@sipsolutions.net>
-Date: Thu, 10 Jun 2010 10:21:37 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
+	Fri, 18 Jun 2010 15:00:11 -0400
+Date: Fri, 18 Jun 2010 14:56:27 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Vivek Natarajan <vnatarajan@atheros.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 09/23] mac80211: move aggregation callback processing
-References: <20100610082128.641664439@sipsolutions.net>
-Mime-Version: 1.0
+Subject: Re: [PATCH 2/2] wireless-regdb: Enable 40MHz operation for some
+ countries.
+Message-ID: <20100618185626.GF6282@tuxdriver.com>
+References: <1276768074-4366-1-git-send-email-vnatarajan@atheros.com>
+ <1276768074-4366-2-git-send-email-vnatarajan@atheros.com>
+ <1276768074-4366-3-git-send-email-vnatarajan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1276768074-4366-3-git-send-email-vnatarajan@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, Jun 17, 2010 at 03:17:54PM +0530, Vivek Natarajan wrote:
+> Enable 40MHz operation for Argentina, Brazil, Colombia, Algeria,
+> India, Malaysia, Peru and South Africa.
+> 
+> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
 
-This moves the aggregation callback processing
-to the per-sdata skb queue and a work function
-rather than the tasklet.
+These too...
 
-Unfortunately, this means that it extends the
-pkt_type hack to that skb queue. However, it
-will enable making ampdu_action API changes
-gradually, my current plan is to get rid of
-this again by forcing drivers to only return
-from ampdu_action() when everything is done,
-thus removing the callbacks completely.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/agg-tx.c      |   14 ++++++--------
- net/mac80211/ieee80211_i.h |   11 +++++++----
- net/mac80211/iface.c       |   15 ++++++++++++---
- net/mac80211/main.c        |   13 -------------
- net/mac80211/rx.c          |    5 +++++
- 5 files changed, 30 insertions(+), 28 deletions(-)
-
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2010-06-09 17:21:08.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2010-06-09 17:21:10.000000000 +0200
-@@ -564,11 +564,15 @@ ieee80211_sdata_set_mesh_id(struct ieee8
- #endif
- }
- 
-+enum sdata_queue_type {
-+	IEEE80211_SDATA_QUEUE_TYPE_FRAME	= 0,
-+	IEEE80211_SDATA_QUEUE_AGG_START		= 1,
-+	IEEE80211_SDATA_QUEUE_AGG_STOP		= 2,
-+};
-+
- enum {
- 	IEEE80211_RX_MSG	= 1,
- 	IEEE80211_TX_STATUS_MSG	= 2,
--	IEEE80211_DELBA_MSG	= 3,
--	IEEE80211_ADDBA_MSG	= 4,
- };
- 
- enum queue_stop_reason {
-@@ -870,9 +874,8 @@ IEEE80211_DEV_TO_SUB_IF(struct net_devic
- 	return netdev_priv(dev);
- }
- 
--/* this struct represents 802.11n's RA/TID combination along with our vif */
-+/* this struct represents 802.11n's RA/TID combination */
- struct ieee80211_ra_tid {
--	struct ieee80211_vif *vif;
- 	u8 ra[ETH_ALEN];
- 	u16 tid;
- };
---- wireless-testing.orig/net/mac80211/main.c	2010-06-09 17:20:49.000000000 +0200
-+++ wireless-testing/net/mac80211/main.c	2010-06-09 17:21:10.000000000 +0200
-@@ -259,7 +259,6 @@ static void ieee80211_tasklet_handler(un
- {
- 	struct ieee80211_local *local = (struct ieee80211_local *) data;
- 	struct sk_buff *skb;
--	struct ieee80211_ra_tid *ra_tid;
- 
- 	while ((skb = skb_dequeue(&local->skb_queue)) ||
- 	       (skb = skb_dequeue(&local->skb_queue_unreliable))) {
-@@ -274,18 +273,6 @@ static void ieee80211_tasklet_handler(un
- 			skb->pkt_type = 0;
- 			ieee80211_tx_status(local_to_hw(local), skb);
- 			break;
--		case IEEE80211_DELBA_MSG:
--			ra_tid = (struct ieee80211_ra_tid *) &skb->cb;
--			ieee80211_stop_tx_ba_cb(ra_tid->vif, ra_tid->ra,
--						ra_tid->tid);
--			dev_kfree_skb(skb);
--			break;
--		case IEEE80211_ADDBA_MSG:
--			ra_tid = (struct ieee80211_ra_tid *) &skb->cb;
--			ieee80211_start_tx_ba_cb(ra_tid->vif, ra_tid->ra,
--						 ra_tid->tid);
--			dev_kfree_skb(skb);
--			break ;
- 		default:
- 			WARN(1, "mac80211: Packet is of unknown type %d\n",
- 			     skb->pkt_type);
---- wireless-testing.orig/net/mac80211/agg-tx.c	2010-06-09 17:21:05.000000000 +0200
-+++ wireless-testing/net/mac80211/agg-tx.c	2010-06-09 17:21:10.000000000 +0200
-@@ -502,11 +502,10 @@ void ieee80211_start_tx_ba_cb_irqsafe(st
- 	ra_tid = (struct ieee80211_ra_tid *) &skb->cb;
- 	memcpy(&ra_tid->ra, ra, ETH_ALEN);
- 	ra_tid->tid = tid;
--	ra_tid->vif = vif;
- 
--	skb->pkt_type = IEEE80211_ADDBA_MSG;
--	skb_queue_tail(&local->skb_queue, skb);
--	tasklet_schedule(&local->tasklet);
-+	skb->pkt_type = IEEE80211_SDATA_QUEUE_AGG_START;
-+	skb_queue_tail(&sdata->skb_queue, skb);
-+	ieee80211_queue_work(&local->hw, &sdata->work);
- }
- EXPORT_SYMBOL(ieee80211_start_tx_ba_cb_irqsafe);
- 
-@@ -637,11 +636,10 @@ void ieee80211_stop_tx_ba_cb_irqsafe(str
- 	ra_tid = (struct ieee80211_ra_tid *) &skb->cb;
- 	memcpy(&ra_tid->ra, ra, ETH_ALEN);
- 	ra_tid->tid = tid;
--	ra_tid->vif = vif;
- 
--	skb->pkt_type = IEEE80211_DELBA_MSG;
--	skb_queue_tail(&local->skb_queue, skb);
--	tasklet_schedule(&local->tasklet);
-+	skb->pkt_type = IEEE80211_SDATA_QUEUE_AGG_STOP;
-+	skb_queue_tail(&sdata->skb_queue, skb);
-+	ieee80211_queue_work(&local->hw, &sdata->work);
- }
- EXPORT_SYMBOL(ieee80211_stop_tx_ba_cb_irqsafe);
- 
---- wireless-testing.orig/net/mac80211/rx.c	2010-06-09 17:21:10.000000000 +0200
-+++ wireless-testing/net/mac80211/rx.c	2010-06-09 17:21:10.000000000 +0200
-@@ -741,6 +741,7 @@ static void ieee80211_rx_reorder_ampdu(s
- 	sc = le16_to_cpu(hdr->seq_ctrl);
- 	if (sc & IEEE80211_SCTL_FRAG) {
- 		spin_unlock(&sta->lock);
-+		skb->pkt_type = IEEE80211_SDATA_QUEUE_TYPE_FRAME;
- 		skb_queue_tail(&rx->sdata->skb_queue, skb);
- 		ieee80211_queue_work(&local->hw, &rx->sdata->work);
- 		return;
-@@ -1969,6 +1970,7 @@ ieee80211_rx_h_action(struct ieee80211_r
- 			goto invalid;
- 		}
- 
-+		rx->skb->pkt_type = IEEE80211_SDATA_QUEUE_TYPE_FRAME;
- 		skb_queue_tail(&sdata->skb_queue, rx->skb);
- 		ieee80211_queue_work(&local->hw, &sdata->work);
- 		return RX_QUEUED;
-@@ -2001,6 +2003,7 @@ ieee80211_rx_h_action(struct ieee80211_r
- 			if (memcmp(mgmt->bssid, sdata->u.mgd.bssid, ETH_ALEN))
- 				break;
- 
-+			rx->skb->pkt_type = IEEE80211_SDATA_QUEUE_TYPE_FRAME;
- 			skb_queue_tail(&sdata->skb_queue, rx->skb);
- 			ieee80211_queue_work(&local->hw, &sdata->work);
- 			return RX_QUEUED;
-@@ -2023,6 +2026,7 @@ ieee80211_rx_h_action(struct ieee80211_r
- 	case WLAN_CATEGORY_MESH_PATH_SEL:
- 		if (!ieee80211_vif_is_mesh(&sdata->vif))
- 			break;
-+		rx->skb->pkt_type = IEEE80211_SDATA_QUEUE_TYPE_FRAME;
- 		skb_queue_tail(&sdata->skb_queue, rx->skb);
- 		ieee80211_queue_work(&local->hw, &sdata->work);
- 		return RX_QUEUED;
-@@ -2128,6 +2132,7 @@ ieee80211_rx_h_mgmt(struct ieee80211_rx_
- 	}
- 
- 	/* queue up frame and kick off work to process it */
-+	rx->skb->pkt_type = IEEE80211_SDATA_QUEUE_TYPE_FRAME;
- 	skb_queue_tail(&sdata->skb_queue, rx->skb);
- 	ieee80211_queue_work(&rx->local->hw, &sdata->work);
- 
---- wireless-testing.orig/net/mac80211/iface.c	2010-06-09 17:21:10.000000000 +0200
-+++ wireless-testing/net/mac80211/iface.c	2010-06-09 17:21:10.000000000 +0200
-@@ -482,7 +482,7 @@ static int ieee80211_stop(struct net_dev
- 		}
- 		/* fall through */
- 	default:
--		cancel_work_sync(&sdata->work);
-+		flush_work(&sdata->work);
- 		/*
- 		 * When we get here, the interface is marked down.
- 		 * Call synchronize_rcu() to wait for the RX path
-@@ -708,6 +708,7 @@ static void ieee80211_iface_work(struct
- 	struct ieee80211_local *local = sdata->local;
- 	struct sk_buff *skb;
- 	struct sta_info *sta;
-+	struct ieee80211_ra_tid *ra_tid;
- 
- 	if (!ieee80211_sdata_running(sdata))
- 		return;
-@@ -727,8 +728,16 @@ static void ieee80211_iface_work(struct
- 	while ((skb = skb_dequeue(&sdata->skb_queue))) {
- 		struct ieee80211_mgmt *mgmt = (void *)skb->data;
- 
--		if (ieee80211_is_action(mgmt->frame_control) &&
--		    mgmt->u.action.category == WLAN_CATEGORY_BACK) {
-+		if (skb->pkt_type == IEEE80211_SDATA_QUEUE_AGG_START) {
-+			ra_tid = (void *)&skb->cb;
-+			ieee80211_start_tx_ba_cb(&sdata->vif, ra_tid->ra,
-+						 ra_tid->tid);
-+		} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_AGG_STOP) {
-+			ra_tid = (void *)&skb->cb;
-+			ieee80211_stop_tx_ba_cb(&sdata->vif, ra_tid->ra,
-+						ra_tid->tid);
-+		} else if (ieee80211_is_action(mgmt->frame_control) &&
-+			   mgmt->u.action.category == WLAN_CATEGORY_BACK) {
- 			int len = skb->len;
- 
- 			rcu_read_lock();
-
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
