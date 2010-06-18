@@ -1,57 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:39294 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751057Ab0FUWix (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:59659 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754201Ab0FRTAO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jun 2010 18:38:53 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Aeolus Yang <aeolus.yang@atheros.com>,
-	Madhan Jaganathan <madhan.jaganathan@atheros.com>
-Subject: [PATCH 4/5] ath9k_hw: dynamically choose the SERDES array for low power
-Date: Mon, 21 Jun 2010 18:38:50 -0400
-Message-Id: <1277159931-7797-5-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1277159931-7797-1-git-send-email-lrodriguez@atheros.com>
-References: <1277159931-7797-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 18 Jun 2010 15:00:14 -0400
+Date: Fri, 18 Jun 2010 14:57:13 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ozan =?utf-8?B?w4dhxJ9sYXlhbg==?= <ozan@pardus.org.tr>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	flamingice@sourmilk.net
+Subject: Re: [PATCH] p54usb: Drop duplicate USBID 0xcde:0x0006
+Message-ID: <20100618185713.GG6282@tuxdriver.com>
+References: <1276771049-2187-1-git-send-email-ozan@pardus.org.tr>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1276771049-2187-1-git-send-email-ozan@pardus.org.tr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The array we use will vary depending on whether or not we are
-to go to lower power or not. The default values (iniPcieSerdes)
-are a copy or what go into the registers through the INI files.
+On Thu, Jun 17, 2010 at 01:37:29PM +0300, Ozan Çağlayan wrote:
+> Drop the duplicate USB ID 0xcde:0x0006 which is written at two
+> different places in p54usb.c
+> 
+> Signed-off-by: Ozan Çağlayan <ozan@pardus.org.tr>
 
-Cc: Aeolus Yang <aeolus.yang@atheros.com>
-Cc: Madhan Jaganathan <madhan.jaganathan@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_hw.c |   10 +++++++---
- 1 files changed, 7 insertions(+), 3 deletions(-)
+Someone beat you to it already...
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index 99bde5f..0641689 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -305,11 +305,15 @@ static void ar9003_hw_configpcipowersave(struct ath_hw *ah,
- 	 */
- 	if (ah->config.pcieSerDesWrite) {
- 		unsigned int i;
-+		struct ar5416IniArray *array;
- 
--		for (i = 0; i < ah->iniPcieSerdesLowPower.ia_rows; i++) {
-+		array = power_off ? &ah->iniPcieSerdes :
-+				    &ah->iniPcieSerdesLowPower;
-+
-+		for (i = 0; i < array->ia_rows; i++) {
- 			REG_WRITE(ah,
--				  INI_RA(&ah->iniPcieSerdesLowPower, i, 0),
--				  INI_RA(&ah->iniPcieSerdesLowPower, i, 1));
-+				  INI_RA(array, i, 0),
-+				  INI_RA(array, i, 1));
- 		}
- 	}
- }
+John
 -- 
-1.6.3.3
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
