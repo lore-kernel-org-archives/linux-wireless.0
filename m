@@ -1,72 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:51274 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754399Ab0F3AHv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jun 2010 20:07:51 -0400
-Message-ID: <4C2A8AD4.8070504@openwrt.org>
-Date: Wed, 30 Jun 2010 02:07:48 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	=?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-Subject: [PATCH] ath9k: fix TSF after reset on AR913x
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:41521 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760139Ab0FRKaM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Jun 2010 06:30:12 -0400
+Subject: Re: IWL3945 problems in 2.6.35-rc1
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Reinette Chatre <reinette.chatre@intel.com>
+In-Reply-To: <1276856384.9114.3.camel@maxim-laptop>
+References: <1275395142.14385.6.camel@maxim-laptop>
+	 <1276853327.3638.17.camel@jlt3.sipsolutions.net>
+	 <1276856384.9114.3.camel@maxim-laptop>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 18 Jun 2010 12:30:09 +0200
+Message-ID: <1276857009.3638.20.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When issuing a reset, the TSF value is lost in the hardware because of 
-the 913x specific cold reset. As with some AR9280 cards, the TSF needs 
-to be preserved in software here.
+Maxim,
 
-Additionally, there's an issue that frequently prevents a successful
-TSF write directly after the chip reset. In this case, repeating the
-TSF write after the initval-writes usually works.
+Thanks for the quick reply!
 
-This patch detects failed TSF writes and recovers from them, taking
-into account the delay caused by the initval writes.
+> >  1) with the patch reverted, which is what presumably you're running
+> >     now, can you try
+> >     ifconfig wlan0 allmulti
+> >     ifconfig wlan0 -allmulti
+> > 
+> >     I think this will *break* the driver right now.
+> 
+> I didn't exactly understand how this supposed to break it.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Reported-by: Björn Smedman <bjorn.smedman@venatech.se>
-Cc: stable@kernel.org
----
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1280,7 +1280,8 @@ int ath9k_hw_reset(struct ath_hw *ah, st
- 	macStaId1 = REG_READ(ah, AR_STA_ID1) & AR_STA_ID1_BASE_RATE_11B;
- 
- 	/* For chips on which RTC reset is done, save TSF before it gets cleared */
--	if (AR_SREV_9280(ah) && ah->eep_ops->get_eeprom(ah, EEP_OL_PWRCTRL))
-+	if (AR_SREV_9100(ah) ||
-+	    (AR_SREV_9280(ah) && ah->eep_ops->get_eeprom(ah, EEP_OL_PWRCTRL)))
- 		tsf = ath9k_hw_gettsf64(ah);
- 
- 	saveLedState = REG_READ(ah, AR_CFG_LED) &
-@@ -1312,7 +1313,7 @@ int ath9k_hw_reset(struct ath_hw *ah, st
- 	}
- 
- 	/* Restore TSF */
--	if (tsf && AR_SREV_9280(ah) && ah->eep_ops->get_eeprom(ah, EEP_OL_PWRCTRL))
-+	if (tsf)
- 		ath9k_hw_settsf64(ah, tsf);
- 
- 	if (AR_SREV_9280_10_OR_LATER(ah))
-@@ -1325,6 +1326,17 @@ int ath9k_hw_reset(struct ath_hw *ah, st
- 	if (r)
- 		return r;
- 
-+	/*
-+	 * Some AR91xx SoC devices frequently fail to accept TSF writes
-+	 * right after the chip reset. When that happens, write a new
-+	 * value after the initvals have been applied, with an offset
-+	 * based on measured time difference
-+	 */
-+	if (AR_SREV_9100(ah) && (ath9k_hw_gettsf64(ah) < tsf)) {
-+		tsf += 1500;
-+		ath9k_hw_settsf64(ah, tsf);
-+	}
-+
- 	/* Setup MFP options for CCMP */
- 	if (AR_SREV_9280_20_OR_LATER(ah)) {
- 		/* Mask Retry(b11), PwrMgt(b12), MoreData(b13) to 0 in mgmt
+Ok this needs some more explaining.
+
+The old code did:
+
+if (allmulti changed)
+	"set grp-filter in hw according to allmulti"
+
+the new code just did
+
+"set grp-filter in hw according to allmulti"
+
+
+During normal operation the "allmulti changed" condition is never true.
+Therefore, the old code, despite being incorrect, never broke things.
+The above would make the condition true, and lead to it being broken
+because it would change to on/off and then the grp-filter in hw would be
+off, although it's required to be on.
+
+Thus the real bug was there before my change, but it never triggered,
+and when I "optimised away" the condition I broke it.
+
+> >  2) with the patch *not* reverted, apply the patch below and see if that
+> >     fixes the problem as well (if it gets mangled, just remove the one
+> >     CHK() line manually)
+> > 
+> > Actually, (2) is obviously more important to me, but (1) would indicate
+> > that my guess is correct wrt. what's causing the problem
+
+> I tested (2) and it works.
+
+Thank you. I'll submit this patch instead.
+
+johannes
+
