@@ -1,156 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46551 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755284Ab0FIPHP (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:34086 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755844Ab0FSN0O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jun 2010 11:07:15 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.71)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1OMMs6-00089H-Lu
-	for linux-wireless@vger.kernel.org; Wed, 09 Jun 2010 17:07:14 +0200
-Message-Id: <20100609150455.233186760@sipsolutions.net>
-Date: Wed, 09 Jun 2010 17:01:54 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC v2 12/22] mac80211: remove non-irqsafe aggregation callbacks
-References: <20100609150142.227469359@sipsolutions.net>
-Mime-Version: 1.0
+	Sat, 19 Jun 2010 09:26:14 -0400
+Received: by pvg6 with SMTP id 6so807661pvg.19
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Jun 2010 06:26:13 -0700 (PDT)
+Message-ID: <4C1CC5A0.7080600@lwfinger.net>
+Date: Sat, 19 Jun 2010 08:26:56 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Magnus Therning <magnus@therning.org>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	b43-dev@lists.infradead.org,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Problems with b43 wirelesss
+References: <AANLkTimIkTaIrdXHulE6YVnB3ZwWrMBCNnCK1SKdyctL@mail.gmail.com>	<AANLkTimvdtruvFaugHTYcSNhL5pBZXPYtzEF3qolO_qW@mail.gmail.com> <AANLkTimxOgQySTag7u4DlZugbveWr7csDSAERkewAYhp@mail.gmail.com>
+In-Reply-To: <AANLkTimxOgQySTag7u4DlZugbveWr7csDSAERkewAYhp@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 06/19/2010 07:35 AM, Magnus Therning wrote:
+> 2010/6/19 Rafał Miłecki <zajec5@gmail.com>:
+>> You can Google for b43 & DMA errors. Simply try "pio" option for b43
+>> module. Or switch to newer kernel, which will pick up pio for you
+>> after first DMA error.
+> 
+> Given the following messages in dmesg, I thought this was already happening:
+> 
+> b43-phy0 ERROR: Fatal DMA error: 0x00000800, 0x00000000, 0x00000000,
+> 0x00000000, 0x00000000, 0x00000000
+> b43-phy0 ERROR: This device does not support DMA on your system.
+> Please use PIO instead.
+> b43-phy0: Controller RESET (DMA error) ...
+> b43-phy0: Loading firmware version 478.104 (2008-07-01 00:50:23)
+> b43-phy0: Controller restarted
+> 
+> I'm running the 2.6.33 (latest stable is 2.6.34), but I am using the
+> latest daily (2010-06-17) from compat-wireless[1], so unless I'm
+> missing something there isn't much to be gained from switching to the
+> latest kernel.  In any case I will try it to see if that improves the
+> situation.
+> 
+> My naive reading of the messages tells me that this *isn't* a DMA
+> error... I also don't really understand how I could ever get an
+> initial connection, which I do, if that were the problem I'm having.
 
-The non-irqsafe aggregation start/stop done
-callbacks are currently only used by ath9k_htc,
-and can cause callbacks into the driver again.
-This might lead to locking issues, which will
-only get worse as we modify locking. To avoid
-trouble, remove the non-irqsafe versions and
-change ath9k_htc to use those instead.
+No, it is a fatal DMA error and your device did switch to PIO mode. The
+dmesg output does not make that clear. I'm sending a patch to change the
+logged message.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    6 ++--
- include/net/mac80211.h                        |   32 ++++----------------------
- net/mac80211/agg-tx.c                         |    2 -
- net/mac80211/ieee80211_i.h                    |    2 +
- 4 files changed, 10 insertions(+), 32 deletions(-)
+> It looks like the following is more relevant to my problem:
+> 
+> No probe response from AP 00:22:3f:c3:99:a8 after 500ms, disconnecting.
+> cfg80211: Calling CRDA to update world regulatory domain
+> wlan0: authenticate with 00:22:3f:c3:99:a8 (try 1)
+> wlan0: authenticated
+> wlan0: associate with 00:22:3f:c3:99:a8 (try 1)
+> wlan0: RX AssocResp from 00:22:3f:c3:99:a8 (capab=0x431 status=0 aid=1)
+> wlan0: associated
+> wlan0: deauthenticated from 00:22:3f:c3:99:a8 (Reason: 15)
+> 
+> Especially since that sequence of messages is repeated over an over.
+> 
+> My next test will be to turn off all security on the wireless, just to
+> rule out WPA completley.
 
---- wireless-testing.orig/include/net/mac80211.h	2010-06-09 12:51:27.000000000 +0200
-+++ wireless-testing/include/net/mac80211.h	2010-06-09 12:57:28.000000000 +0200
-@@ -1445,7 +1445,7 @@ enum ieee80211_filter_flags {
-  *
-  * Note that drivers MUST be able to deal with a TX aggregation
-  * session being stopped even before they OK'ed starting it by
-- * calling ieee80211_start_tx_ba_cb(_irqsafe), because the peer
-+ * calling ieee80211_start_tx_ba_cb_irqsafe, because the peer
-  * might receive the addBA frame and send a delBA right away!
-  *
-  * @IEEE80211_AMPDU_RX_START: start Rx aggregation
-@@ -2314,25 +2314,14 @@ void ieee80211_queue_delayed_work(struct
- int ieee80211_start_tx_ba_session(struct ieee80211_sta *sta, u16 tid);
- 
- /**
-- * ieee80211_start_tx_ba_cb - low level driver ready to aggregate.
-- * @vif: &struct ieee80211_vif pointer from the add_interface callback
-- * @ra: receiver address of the BA session recipient.
-- * @tid: the TID to BA on.
-- *
-- * This function must be called by low level driver once it has
-- * finished with preparations for the BA session.
-- */
--void ieee80211_start_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u16 tid);
--
--/**
-  * ieee80211_start_tx_ba_cb_irqsafe - low level driver ready to aggregate.
-  * @vif: &struct ieee80211_vif pointer from the add_interface callback
-  * @ra: receiver address of the BA session recipient.
-  * @tid: the TID to BA on.
-  *
-  * This function must be called by low level driver once it has
-- * finished with preparations for the BA session.
-- * This version of the function is IRQ-safe.
-+ * finished with preparations for the BA session. It can be called
-+ * from any context.
-  */
- void ieee80211_start_tx_ba_cb_irqsafe(struct ieee80211_vif *vif, const u8 *ra,
- 				      u16 tid);
-@@ -2351,25 +2340,14 @@ void ieee80211_start_tx_ba_cb_irqsafe(st
- int ieee80211_stop_tx_ba_session(struct ieee80211_sta *sta, u16 tid);
- 
- /**
-- * ieee80211_stop_tx_ba_cb - low level driver ready to stop aggregate.
-- * @vif: &struct ieee80211_vif pointer from the add_interface callback
-- * @ra: receiver address of the BA session recipient.
-- * @tid: the desired TID to BA on.
-- *
-- * This function must be called by low level driver once it has
-- * finished with preparations for the BA session tear down.
-- */
--void ieee80211_stop_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u8 tid);
--
--/**
-  * ieee80211_stop_tx_ba_cb_irqsafe - low level driver ready to stop aggregate.
-  * @vif: &struct ieee80211_vif pointer from the add_interface callback
-  * @ra: receiver address of the BA session recipient.
-  * @tid: the desired TID to BA on.
-  *
-  * This function must be called by low level driver once it has
-- * finished with preparations for the BA session tear down.
-- * This version of the function is IRQ-safe.
-+ * finished with preparations for the BA session tear down. It
-+ * can be called from any context.
-  */
- void ieee80211_stop_tx_ba_cb_irqsafe(struct ieee80211_vif *vif, const u8 *ra,
- 				     u16 tid);
---- wireless-testing.orig/net/mac80211/agg-tx.c	2010-06-09 12:57:27.000000000 +0200
-+++ wireless-testing/net/mac80211/agg-tx.c	2010-06-09 12:57:28.000000000 +0200
-@@ -479,7 +479,6 @@ void ieee80211_start_tx_ba_cb(struct iee
- 	spin_unlock_bh(&sta->lock);
- 	rcu_read_unlock();
- }
--EXPORT_SYMBOL(ieee80211_start_tx_ba_cb);
- 
- void ieee80211_start_tx_ba_cb_irqsafe(struct ieee80211_vif *vif,
- 				      const u8 *ra, u16 tid)
-@@ -619,7 +618,6 @@ void ieee80211_stop_tx_ba_cb(struct ieee
- 	spin_unlock_bh(&sta->lock);
- 	rcu_read_unlock();
- }
--EXPORT_SYMBOL(ieee80211_stop_tx_ba_cb);
- 
- void ieee80211_stop_tx_ba_cb_irqsafe(struct ieee80211_vif *vif,
- 				     const u8 *ra, u16 tid)
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2010-06-09 12:57:27.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2010-06-09 12:57:28.000000000 +0200
-@@ -1124,6 +1124,8 @@ void ieee80211_process_addba_request(str
- 
- int __ieee80211_stop_tx_ba_session(struct sta_info *sta, u16 tid,
- 				   enum ieee80211_back_parties initiator);
-+void ieee80211_start_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u16 tid);
-+void ieee80211_stop_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u8 tid);
- 
- /* Spectrum management */
- void ieee80211_process_measurement_req(struct ieee80211_sub_if_data *sdata,
---- wireless-testing.orig/drivers/net/wireless/ath/ath9k/htc_drv_main.c	2010-06-09 12:51:28.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/ath/ath9k/htc_drv_main.c	2010-06-09 12:57:28.000000000 +0200
-@@ -510,13 +510,13 @@ void ath9k_htc_aggr_work(struct work_str
- 		ret = ath9k_htc_aggr_oper(priv, wk->vif, wk->sta_addr,
- 					  wk->tid, true);
- 		if (!ret)
--			ieee80211_start_tx_ba_cb(wk->vif, wk->sta_addr,
--						 wk->tid);
-+			ieee80211_start_tx_ba_cb_irqsafe(wk->vif, wk->sta_addr,
-+							 wk->tid);
- 		break;
- 	case IEEE80211_AMPDU_TX_STOP:
- 		ath9k_htc_aggr_oper(priv, wk->vif, wk->sta_addr,
- 				    wk->tid, false);
--		ieee80211_stop_tx_ba_cb(wk->vif, wk->sta_addr, wk->tid);
-+		ieee80211_stop_tx_ba_cb_irqsafe(wk->vif, wk->sta_addr, wk->tid);
- 		break;
- 	default:
- 		ath_print(ath9k_hw_common(priv->ah), ATH_DBG_FATAL,
+I looked for an explanation of Reason 15 deauthentications. Perhaps
+someone on the wireless ML will know the answer.
+
+Larry
 
 
