@@ -1,28 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:40232 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1755913Ab0FVOul (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jun 2010 10:50:41 -0400
-From: Sebastian Smolorz <Sebastian.Smolorz@gmx.de>
-To: kalle.valo@iki.fi
-Subject: [PATCH 0/2] at76c50x-usb.c: Fix broken authentication process
-Date: Tue, 22 Jun 2010 16:51:24 +0200
-Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201006221651.24853.Sebastian.Smolorz@gmx.de>
+Received: from fg-out-1718.google.com ([72.14.220.153]:35999 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755753Ab0FSNCj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Jun 2010 09:02:39 -0400
+Subject: Re: [PATCH v2] ath5k: disable ASPM
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+In-Reply-To: <20100619123841.GA31838@hash.localnet>
+References: <20100528100901.14580.1322.stgit@fate.lan>
+	 <1276806785.20754.8.camel@maxim-laptop>
+	 <20100618112026.17623g6uhdjk8hts@naisho.dyndns.info>
+	 <1276856142.9114.1.camel@maxim-laptop>
+	 <20100618134930.124225d4fsi8w1fk@naisho.dyndns.info>
+	 <1276859156.19554.2.camel@maxim-laptop>
+	 <AANLkTimdTjedtoeKAp5tcTqefrUB6k373Kx9EacuYFcO@mail.gmail.com>
+	 <1276870309.23783.3.camel@maxim-laptop>
+	 <1276933774.16697.11.camel@maxim-laptop>
+	 <20100619123841.GA31838@hash.localnet>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 19 Jun 2010 16:02:34 +0300
+Message-ID: <1276952554.3332.3.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix authentication process of wireless driver at76c50x-usb.c which was broken
-since kernel 2.6.31
+On Sat, 2010-06-19 at 08:38 -0400, Bob Copeland wrote: 
+> On Sat, Jun 19, 2010 at 10:49:34AM +0300, Maxim Levitsky wrote:
+> > How this patch?
+> 
+> Looks fine to me.  Some nitpicking below but feel free to add my
+> 
+> Acked-by: Bob Copeland <me@bobcopeland.com>
+> 
+> to this or a later version.
+> 
+> >     Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+> >     Signed-off-by: Maxim Levitsky <maximlevitsky@gmail.com>
+> 
+> I believe maintaining the s-o-b is usually reserved for the case when the
+> patch only has minor edits; here your patch while same in spirit has
+> some 30 fewer lines.  Maybe should use "From:" or mention Jussi in the
+> commit log to maintain attribution instead?
+OK
 
-Sebastian Smolorz (2):
-  at76c50x-usb: Move function at76_join() several lines up
-  at76c50x-usb: Extract bssid from authentication frame
 
- drivers/net/wireless/at76c50x-usb.c |  108 +++++++++++++++++++++++------------
- drivers/net/wireless/at76c50x-usb.h |    1 +
- 2 files changed, 73 insertions(+), 36 deletions(-)
+> 
+> > +	/* Disable PCIE ASPM L0S. It is never enabled by windows driver */
+> > +	pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S);
+> > +
+> 
+> Would be good to expand this comment as to why (just copy another
+> sentence from the commit log or so).
+OK 
+> 
+> >  	ret = pci_enable_device(pdev);
+> >  	if (ret) {
+> >  		dev_err(&pdev->dev, "can't enable device\n");
+> > @@ -722,6 +726,8 @@ static int ath5k_pci_resume(struct device *dev)
+> >  	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
+> >  	struct ath5k_softc *sc = hw->priv;
+> >  
+> > +	pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S);
+> > +
+> 
+> Did you test that it did get lost over suspend/resume?  A glance at
+> pci_save_pcie_state seems to indicate it's saved.
+Will test.
+
+
+Best regards,
+Maxim Levitsky
 
