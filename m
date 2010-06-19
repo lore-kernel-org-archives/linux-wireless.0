@@ -1,40 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3039 "EHLO
+Received: from mail.deathmatch.net ([72.66.92.28]:3122 "EHLO
 	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750855Ab0FOEUW (ORCPT
+	with ESMTP id S1755633Ab0FSMpL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jun 2010 00:20:22 -0400
-Date: Tue, 15 Jun 2010 00:10:16 -0400
+	Sat, 19 Jun 2010 08:45:11 -0400
+Date: Sat, 19 Jun 2010 08:38:41 -0400
 From: Bob Copeland <me@bobcopeland.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
 	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-Subject: Re: [ath5k-devel] [PATCH] ath5k: disable all tasklets while
-	resetting
-Message-ID: <20100615041016.GA13984@hash.localnet>
-References: <20100611101221.26538.46913.stgit@tt-desk> <201006141050.59607.br1@einfach.org> <20100614114302.GA15017@hash.localnet> <201006151007.21708.br1@einfach.org>
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2] ath5k: disable ASPM
+Message-ID: <20100619123841.GA31838@hash.localnet>
+References: <20100528100901.14580.1322.stgit@fate.lan> <1276806785.20754.8.camel@maxim-laptop> <20100618112026.17623g6uhdjk8hts@naisho.dyndns.info> <1276856142.9114.1.camel@maxim-laptop> <20100618134930.124225d4fsi8w1fk@naisho.dyndns.info> <1276859156.19554.2.camel@maxim-laptop> <AANLkTimdTjedtoeKAp5tcTqefrUB6k373Kx9EacuYFcO@mail.gmail.com> <1276870309.23783.3.camel@maxim-laptop> <1276933774.16697.11.camel@maxim-laptop>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201006151007.21708.br1@einfach.org>
+In-Reply-To: <1276933774.16697.11.camel@maxim-laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 15, 2010 at 10:07:21AM +0900, Bruno Randolf wrote:
-> On Mon June 14 2010 20:43:02 you wrote:
-> > On Mon, Jun 14, 2010 at 10:50:59AM +0900, Bruno Randolf wrote:
-> > > we disable interrupts right after disabling the tasklets, so they should
-> > > not be scheduled again, right? actually, we should disable interrupts
-> > > first, and then disable tasklets... but then it should be safe, no?
-> > 
-> > Disable interrupts then tasklet_kill should do it.
-> 
-> what's wrong with first disable interrupts and tasklet_disable?
+On Sat, Jun 19, 2010 at 10:49:34AM +0300, Maxim Levitsky wrote:
+> How this patch?
 
-Look at the code for tasklet_disable... it only waits for tasks that
-are in the run state but doesn't do anything for scheduled tasks.
-So you can still get the spinning behavior if the interrupt runs and
-schedules the tasklet on another CPU.
+Looks fine to me.  Some nitpicking below but feel free to add my
+
+Acked-by: Bob Copeland <me@bobcopeland.com>
+
+to this or a later version.
+
+>     Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+>     Signed-off-by: Maxim Levitsky <maximlevitsky@gmail.com>
+
+I believe maintaining the s-o-b is usually reserved for the case when the
+patch only has minor edits; here your patch while same in spirit has
+some 30 fewer lines.  Maybe should use "From:" or mention Jussi in the
+commit log to maintain attribution instead?
+
+> +	/* Disable PCIE ASPM L0S. It is never enabled by windows driver */
+> +	pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S);
+> +
+
+Would be good to expand this comment as to why (just copy another
+sentence from the commit log or so).
+
+>  	ret = pci_enable_device(pdev);
+>  	if (ret) {
+>  		dev_err(&pdev->dev, "can't enable device\n");
+> @@ -722,6 +726,8 @@ static int ath5k_pci_resume(struct device *dev)
+>  	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
+>  	struct ath5k_softc *sc = hw->priv;
+>  
+> +	pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S);
+> +
+
+Did you test that it did get lost over suspend/resume?  A glance at
+pci_save_pcie_state seems to indicate it's saved.
 
 -- 
 Bob Copeland %% www.bobcopeland.com
