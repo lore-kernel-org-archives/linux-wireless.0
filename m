@@ -1,40 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:58709 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752219Ab0FEHUj convert rfc822-to-8bit (ORCPT
+Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:1304 "EHLO
+	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756150Ab0FTSaV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Jun 2010 03:20:39 -0400
-Received: by vws5 with SMTP id 5so736106vws.19
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Jun 2010 00:20:38 -0700 (PDT)
+	Sun, 20 Jun 2010 14:30:21 -0400
+Message-ID: <4C1E5E3B.8040105@gmail.com>
+Date: Sun, 20 Jun 2010 20:30:19 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1275642369-5024-1-git-send-email-vnatarajan@atheros.com>
-References: <1275642369-5024-1-git-send-email-vnatarajan@atheros.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sat, 5 Jun 2010 00:20:16 -0700
-Message-ID: <AANLkTildAN_AYlUV6l34TcWdVVelRIn9sWe5IEaLO5fS@mail.gmail.com>
-Subject: Re: [stable][PATCH] ath9k: Avoid corrupt frames being forwarded to
-	mac80211.
-To: Vivek Natarajan <vnatarajan@atheros.com>
-Cc: greg@kroah.com, stable@kernel.org, linux-wireless@vger.kernel.org,
-	Ranga Rao Ravuri <ranga.ravuri@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 11/11] mac80211: Fix compile warning in scan.c.
+References: <1277058487-11803-1-git-send-email-gwingerde@gmail.com>
+In-Reply-To: <1277058487-11803-1-git-send-email-gwingerde@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 4, 2010 at 2:06 AM, Vivek Natarajan <vnatarajan@atheros.com> wrote:
-> If bit 29 is set, MAC H/W can attempt to decrypt the received aggregate
-> with WEP or TKIP, eventhough the received frame may be a CRC failed
-> corrupted frame. If this bit is set, H/W obeys key type in keycache.
-> If it is not set and if the key type in keycache is neither open nor
-> AES, H/W forces key type to be open.  But bit 29 should be set to 1
-> for AsyncFIFO feature to encrypt/decrypt the aggregate with WEP or TKIP.
->
-> Reported-by: Johan Hovold <johan.hovold@lundinova.se>
-> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
-> Signed-off-by: Ranga Rao Ravuri <ranga.ravuri@atheros.com>
+On 06/20/10 20:28, Gertjan van Wingerde wrote:
+> Fix the following compile warning:
+> 
+> CC [M]  net/mac80211/scan.o
+> net/mac80211/scan.c: In function 'ieee80211_request_internal_scan':
+> net/mac80211/scan.c:749:23: warning: comparison between 'enum nl80211_band' and 'enum ieee80211_band'
+> 
+> caused by the local variable band not being of the proper 'ieee80211_band' type.
+> 
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 > ---
-> Applies on top of 2.6.33 and 2.6.34
+>  net/mac80211/scan.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+> index 30d4c0d..9aa19ec 100644
+> --- a/net/mac80211/scan.c
+> +++ b/net/mac80211/scan.c
+> @@ -735,7 +735,7 @@ int ieee80211_request_internal_scan(struct ieee80211_sub_if_data *sdata,
+>  {
+>  	struct ieee80211_local *local = sdata->local;
+>  	int ret = -EBUSY;
+> -	enum nl80211_band band;
+> +	enum ieee80211_band band;
+>  
+>  	mutex_lock(&local->scan_mtx);
+>  
 
-You need to Cc: stable@kernel.org on the commit log.
 
-  Luis
+Sorry about the 11/11 in the subject. This patch is completely on its own. It is just part of the ongoing
+work in my own tree and I forgot to remove the 11/11 marking before sending out the patch.
+
+---
+Gertjan.
