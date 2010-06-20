@@ -1,53 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:52352 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754775Ab0FPFdz (ORCPT
+Received: from mail-ww0-f46.google.com ([74.125.82.46]:48588 "EHLO
+	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751108Ab0FTMey convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jun 2010 01:33:55 -0400
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	"Justin P. Mattock" <justinmattock@gmail.com>
-Subject: [PATCH 4/5]pci:setup_bus.c Fix warning: variable 'retval' set but not used
-Date: Tue, 15 Jun 2010 22:33:53 -0700
-Message-Id: <1276666434-11227-5-git-send-email-justinmattock@gmail.com>
-In-Reply-To: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>
-References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>
+	Sun, 20 Jun 2010 08:34:54 -0400
+Received: by wwb22 with SMTP id 22so1152214wwb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Jun 2010 05:34:53 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1274730624-22922-1-git-send-email-zajec5@gmail.com>
+References: <1274730624-22922-1-git-send-email-zajec5@gmail.com>
+Date: Sun, 20 Jun 2010 14:34:52 +0200
+Message-ID: <AANLkTilXBLwE85KLEAM2aRqdeQoO4uK2D-B_dr5Jr2pR@mail.gmail.com>
+Subject: Re: [PATCH 0/2] ssb: updates matching specs, fix for hangs?
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The below patch fixes a warning message when using gcc 4.6.0
-  CC      drivers/pci/setup-bus.o
-drivers/pci/setup-bus.c: In function 'pci_assign_unassigned_bridge_resources':
-drivers/pci/setup-bus.c:868:6: warning: variable 'retval' set but not used
- 
- Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+W dniu 24 maja 2010 21:50 użytkownik Rafał Miłecki <zajec5@gmail.com> napisał:
+> John, I don't really know w-t policy, so please decide where we should apply
+> these patches. I'll try to provide some description.
 
----
- drivers/pci/setup-bus.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+John, I think you missed that two patches. It was already some time
+ago, but AFAIR there wasn't any reason against commiting them, am I
+wrong here?
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 19b1113..215590b 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -865,7 +865,6 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
- 	struct pci_bus *parent = bridge->subordinate;
- 	int tried_times = 0;
- 	struct resource_list_x head, *list;
--	int retval;
- 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
- 				  IORESOURCE_PREFETCH;
- 
-@@ -874,7 +873,6 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
- again:
- 	pci_bus_size_bridges(parent);
- 	__pci_bridge_assign_resources(bridge, &head);
--	retval = pci_reenable_device(bridge);
- 	pci_set_master(bridge);
- 	pci_enable_bridges(parent);
- 
 -- 
-1.7.1.rc1.21.gf3bd6
-
+Rafał
