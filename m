@@ -1,51 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:40879 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751181Ab0FFFc0 (ORCPT
+Received: from mail-ww0-f46.google.com ([74.125.82.46]:39253 "EHLO
+	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756033Ab0FTS2e convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jun 2010 01:32:26 -0400
-Received: by vws5 with SMTP id 5so1770477vws.19
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Jun 2010 22:32:25 -0700 (PDT)
-Message-ID: <4C0B32E8.4080208@gmail.com>
-Date: Sun, 06 Jun 2010 01:32:24 -0400
-From: Richard Farina <sidhayn@gmail.com>
+	Sun, 20 Jun 2010 14:28:34 -0400
+Received: by wwb22 with SMTP id 22so1289759wwb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 20 Jun 2010 11:28:33 -0700 (PDT)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [Patch] Enable rt2800usb in compat-wireless stable branch
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20100620162014.GB2386@tuxdriver.com>
+References: <1274730624-22922-1-git-send-email-zajec5@gmail.com>
+	<AANLkTilXBLwE85KLEAM2aRqdeQoO4uK2D-B_dr5Jr2pR@mail.gmail.com>
+	<4C1E0C5E.7070407@hauke-m.de>
+	<AANLkTilYIRMalJXji9OCerjSdZJpj45JNa8XngKB9eyC@mail.gmail.com>
+	<20100620162014.GB2386@tuxdriver.com>
+Date: Sun, 20 Jun 2010 20:28:32 +0200
+Message-ID: <AANLkTinh0GjYiGm30QCjAUcQEDsHHhN6Niq5FYBsrOhw@mail.gmail.com>
+Subject: Re: [PATCH 0/2] ssb: updates matching specs, fix for hangs?
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch enables the new RT307x and RT357x chips in compat-wireless 
-stable.  I'd like to enable the same for rt2800pci as well but right now 
-it doesn't seem to build so I'll wait till it does to submit the diff.
+W dniu 20 czerwca 2010 18:20 użytkownik John W. Linville
+<linville@tuxdriver.com> napisał:
+> On Sun, Jun 20, 2010 at 02:56:09PM +0200, Rafał Miłecki wrote:
+>> W dniu 20 czerwca 2010 14:41 użytkownik Hauke Mehrtens
+>> <hauke@hauke-m.de> napisał:
+>> > Am 20.06.2010 14:34, schrieb Rafał Miłecki:
+>> >> W dniu 24 maja 2010 21:50 użytkownik Rafał Miłecki <zajec5@gmail.com> napisał:
+>> >>> John, I don't really know w-t policy, so please decide where we should apply
+>> >>> these patches. I'll try to provide some description.
+>> >>
+>> >> John, I think you missed that two patches. It was already some time
+>> >> ago, but AFAIR there wasn't any reason against commiting them, am I
+>> >> wrong here?
+>> >>
+>> > Hi Rafał,
+>> >
+>> > They are aleardy in the wireless-next-2.6 tree and in linux-next:
+>> >
+>> > http://git.kernel.org/?p=linux/kernel/git/linville/wireless-next-2.6.git;a=commitdiff;h=fd515941cfaf949b55086a36943afe085d7268e6
+>> >
+>> > http://git.kernel.org/?p=linux/kernel/git/linville/wireless-next-2.6.git;a=commitdiff;h=c35deb4e70d52ed564c58569fe059dd7ca5f4eec
+>>
+>> Whoops, OK, thanks for pointing. I just checked Linus's git and
+>> wireless-testing.
+>
+> Must not have checked the latter too closely, since the exact same
+> commits are there as well... :-)
 
-Thanks,
-Rick Farina
+Oh, that's right! Sorry for noise :)
 
-Don't see why this is needed to patch config.mk but:
-Signed-off-by: Rick Farina
-
-
-Enable rt3[05]7x support in compat-wireless stable branch.
-diff -Naur compat-wireless-2.6.35-rc1/config.mk 
-compat-wireless-2.6.35-rc1-fixed/config.mk
---- compat-wireless-2.6.35-rc1/config.mk        2010-05-31 
-18:30:39.000000000 -0400
-+++ compat-wireless-2.6.35-rc1-fixed/config.mk  2010-06-05 
-23:48:50.000000000 -0400
-@@ -366,9 +366,9 @@
- CONFIG_RT2500USB=m
- ifneq ($(CONFIG_CRC_CCITT),)
- CONFIG_RT2800USB=m
--# CONFIG_RT2800USB_RT30XX=y
--# CONFIG_RT2800USB_RT35XX=y
--# CONFIG_RT2800USB_UNKNOWN=y
-+CONFIG_RT2800USB_RT30XX=y
-+CONFIG_RT2800USB_RT35XX=y
-+CONFIG_RT2800USB_UNKNOWN=y
- endif
- CONFIG_RT2X00_LIB_USB=m
- NEED_RT2X00=y
-
+-- 
+Rafał
