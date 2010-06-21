@@ -1,48 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:42041 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932458Ab0FEHVb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Jun 2010 03:21:31 -0400
-Received: by mail-vw0-f46.google.com with SMTP id 5so736549vws.19
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Jun 2010 00:21:30 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:15219 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753449Ab0FUIcj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jun 2010 04:32:39 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Jun 2010 01:32:39 -0700
+Date: Mon, 21 Jun 2010 14:02:33 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: "linville@tuxdriver.com" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath9k: Fix kernel panic during rmmod ath9k
+Message-ID: <20100621083233.GB9292@vasanth-laptop>
+References: <1277105768-1980-1-git-send-email-vasanth@atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTimorQtjCmyiTpimfa4qx0F-cSLaQNO0V4Dv8CH3@mail.gmail.com>
-References: <1275642369-5024-1-git-send-email-vnatarajan@atheros.com>
-	<AANLkTildAN_AYlUV6l34TcWdVVelRIn9sWe5IEaLO5fS@mail.gmail.com>
-	<AANLkTimorQtjCmyiTpimfa4qx0F-cSLaQNO0V4Dv8CH3@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sat, 5 Jun 2010 00:21:10 -0700
-Message-ID: <AANLkTikfoBorEiKhJDra2cwr-TfwriRgbRrbEnAUKDgQ@mail.gmail.com>
-Subject: Re: [stable][PATCH] ath9k: Avoid corrupt frames being forwarded to
-	mac80211.
-To: Vivek Natarajan <vnatarajan@atheros.com>
-Cc: greg@kroah.com, stable@kernel.org, linux-wireless@vger.kernel.org,
-	Ranga Rao Ravuri <ranga.ravuri@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1277105768-1980-1-git-send-email-vasanth@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 5, 2010 at 12:20 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Sat, Jun 5, 2010 at 12:20 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> On Fri, Jun 4, 2010 at 2:06 AM, Vivek Natarajan <vnatarajan@atheros.com> wrote:
->>> If bit 29 is set, MAC H/W can attempt to decrypt the received aggregate
->>> with WEP or TKIP, eventhough the received frame may be a CRC failed
->>> corrupted frame. If this bit is set, H/W obeys key type in keycache.
->>> If it is not set and if the key type in keycache is neither open nor
->>> AES, H/W forces key type to be open.  But bit 29 should be set to 1
->>> for AsyncFIFO feature to encrypt/decrypt the aggregate with WEP or TKIP.
->>>
->>> Reported-by: Johan Hovold <johan.hovold@lundinova.se>
->>> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
->>> Signed-off-by: Ranga Rao Ravuri <ranga.ravuri@atheros.com>
->>> ---
->>> Applies on top of 2.6.33 and 2.6.34
->>
->> You need to Cc: stable@kernel.org on the commit log.
->
-> Does 2.6.32 not have this issue?
+On Mon, Jun 21, 2010 at 01:06:08PM +0530, Vasanthakumar Thiagarajan wrote:
+> This panic was introduced in ar9003 family chipsets
+> by the following commit
+> 
+> 	Author: Felix Fietkau <nbd@openwrt.org>
+> 	Date:   Sat Jun 12 00:34:01 2010 -0400
+> 
+> 	ath9k: implement PA predistortion support
+> 
+> Above patch does kfree_skb on a PA predistortion frame
+> in ath_paprd_calibrate(). This is fine for the cases
+> where this frame could not be queued onto sw/hw queues
+> or the tx of this frame is completed. But freeing this
+> frame upon a failed completion event will result in
+> dereferencing a freed memory in ath_tx_complete_buf()
+> while draining pending tx frames.
+> 
+> This patch fixes this issue by moving kfree_skb to
+> ath_tx_complete_buf() once the frame is successfully
+> queued.
+> 
+> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/main.c |    5 +++--
+>  drivers/net/wireless/ath/ath9k/xmit.c |    1 +
+>  2 files changed, 4 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> index c8de50f..37933d3 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -306,8 +306,10 @@ void ath_paprd_calibrate(struct work_struct *work)
+>  		init_completion(&sc->paprd_complete);
+>  		ar9003_paprd_setup_gain_table(ah, chain);
+>  		txctl.paprd = BIT(chain);
+> -		if (ath_tx_start(hw, skb, &txctl) != 0)
+> +		if (ath_tx_start(hw, skb, &txctl) != 0) {
+> +			kfree_skb(skb);
+>  			break;
+> +		}
+>  
+>  		time_left = wait_for_completion_timeout(&sc->paprd_complete,
+>  							100);
+> @@ -327,7 +329,6 @@ void ath_paprd_calibrate(struct work_struct *work)
+>  
+>  		chain_ok = 1;
+>  	}
+> -	kfree_skb(skb);
+>  
+>  	if (chain_ok) {
+>  		ah->curchan->paprd_done = true;
+> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+> index 8c7c615..197e898 100644
+> --- a/drivers/net/wireless/ath/ath9k/xmit.c
+> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+> @@ -1946,6 +1946,7 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+>  	if (bf->bf_state.bfs_paprd) {
+>  		sc->paprd_txok = txok;
+>  		complete(&sc->paprd_complete);
+> +		dev_kfree_skb_any(skb);
 
-If not, why not?
+Please ignore this patch, this is buggy.
 
-  Luis
+Vasanth
