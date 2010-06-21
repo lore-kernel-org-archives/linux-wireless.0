@@ -1,51 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:31776 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756754Ab0FUB1v (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jun 2010 21:27:51 -0400
-Received: from vs3011.wh2.ocn.ne.jp (125.206.180.239)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0857913665
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Jun 2010 10:27:49 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: "Jaroslav Fojtik" <jafojtik@seznam.cz>
-Subject: Re: ATH5k - Signal measurement reports wrong values
-Date: Mon, 21 Jun 2010 10:26:48 +0900
-Cc: linux-wireless@vger.kernel.org
-References: <4C1E6A13.4259.24AF3C@jafojtik.seznam.cz>
-In-Reply-To: <4C1E6A13.4259.24AF3C@jafojtik.seznam.cz>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201006211026.48484.br1@einfach.org>
+Received: from mga01.intel.com ([192.55.52.88]:23873 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750704Ab0FUWHZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jun 2010 18:07:25 -0400
+Subject: Re: 2.6.35-rc3: Reported regressions from 2.6.34
+From: reinette chatre <reinette.chatre@intel.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>
+In-Reply-To: <AANLkTikVpTyNyYWf5xIO_3ok4OwbhxoiD40G3PAK8zp8@mail.gmail.com>
+References: <lc60d4toGTL.A.QzD._LpHMB@chimera>
+	 <AANLkTikVpTyNyYWf5xIO_3ok4OwbhxoiD40G3PAK8zp8@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 21 Jun 2010 15:07:24 -0700
+Message-ID: <1277158044.25793.2177.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon June 21 2010 04:20:51 Jaroslav Fojtik wrote:
-> Dears,
+On Mon, 2010-06-21 at 11:49 -0700, Luis R. Rodriguez wrote:
+> On Sun, Jun 20, 2010 at 3:11 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16235
+> > Subject         : [REGRESSION] [IWL3945] Broadcast is broken?
+> > Submitter       : Maciej Rutecki <maciej.rutecki@gmail.com>
+> > Date            : 2010-06-14 17:24 (7 days old)
+> > Message-ID      : <201006141924.24061.maciej.rutecki@gmail.com>
+> > References      : http://marc.info/?l=linux-kernel&m=127653628301300&w=2
 > 
-> Look at the attached chart.
-> 
-> After upgrading from compat-wireless-2010-06-13 to
-> compat-wireless-2010-06-18 the reported signal drops from -65dB to -77dB.
-> 
-> The ATH5k simply lies, because green line in reverse direction did not
-> change. The second point has bullet.
-> 
-> Only purple line dropped.
-> 
-> But from my point of view the purple line should be comparable with green
-> line (measured by bullet). If somebody is interested in experiment, I could
-> fiddle with Tx power on a bullet and chart a response.
+> As noted by Maxim, the fix is in some Intel tree, but not upstream yet
+> (if so why ?)
 
-hi jara!
+The patch was merged into our tree a few days ago. It will be sent
+upstream after our validation passes, which should be by the end of this
+week. The repo in which it was merged is accessible to all if the patch
+is needed sooner - a link is now included in that bug report.
 
-are you sure it has to do with the upgrade from compat-wireless-2010-06-13 to 
-compat-wireless-2010-06-18? i don't see any relevant differences in the code 
-between these two versions...
+Reinette
 
-it might be interresting to see what results you get from noise calibration. 
-you can enable calibration debugging with "echo calib > 
-/sys/kernel/debug/ath5k/phy0/debug"
 
-bruno
