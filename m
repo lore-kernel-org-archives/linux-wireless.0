@@ -1,55 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60611 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757075Ab0FPNpK (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:38553 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758119Ab0FUUhZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jun 2010 09:45:10 -0400
-Date: Wed, 16 Jun 2010 09:38:24 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Vivek Natarajan <vivek.natraj@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k: Modify LED blinking pattern during wifi activity.
-Message-ID: <20100616133824.GA2404@tuxdriver.com>
-References: <1276579217-6837-1-git-send-email-vnatarajan@atheros.com>
- <20100615195157.GC2415@tuxdriver.com>
- <AANLkTimprPdviZPX26qcH-uM8FyNY09JEH3kRvqwDi-S@mail.gmail.com>
+	Mon, 21 Jun 2010 16:37:25 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTimprPdviZPX26qcH-uM8FyNY09JEH3kRvqwDi-S@mail.gmail.com>
+In-Reply-To: <1277151410.5409.33.camel@maxim-laptop>
+References: <20100528100901.14580.1322.stgit@fate.lan> <1276806785.20754.8.camel@maxim-laptop>
+	<20100618112026.17623g6uhdjk8hts@naisho.dyndns.info> <1276856142.9114.1.camel@maxim-laptop>
+	<20100618134930.124225d4fsi8w1fk@naisho.dyndns.info> <1276859156.19554.2.camel@maxim-laptop>
+	<AANLkTimdTjedtoeKAp5tcTqefrUB6k373Kx9EacuYFcO@mail.gmail.com>
+	<1276870309.23783.3.camel@maxim-laptop> <1276933774.16697.11.camel@maxim-laptop>
+	<AANLkTimIjaxq7IDWwIl1vv93k9bNQ2i89Sb5R5TiJmmA@mail.gmail.com>
+	<1277032723.9555.12.camel@maxim-laptop> <AANLkTim8iZmm8pEERJUsrQWOiLSjPUfCN-TFFzZZQWx2@mail.gmail.com>
+	<1277151410.5409.33.camel@maxim-laptop>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 21 Jun 2010 13:37:04 -0700
+Message-ID: <AANLkTin3fKn0_4mrhmPOlTeN--1EZbKECGF3NVdh9h1t@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH v2] ath5k: disable ASPM
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: David Quan <David.Quan@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Jonathan May <jonathan.may@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 16, 2010 at 11:21:27AM +0530, Vivek Natarajan wrote:
-> On Wed, Jun 16, 2010 at 1:21 AM, John W. Linville
-> <linville@tuxdriver.com> wrote:
-> > On Tue, Jun 15, 2010 at 10:50:17AM +0530, Vivek Natarajan wrote:
-> >> Some vendors require the LED to be ON always irrespective of any
-> >> radio activity. Introducing a module parameter to enable this,
-> >> so that one can choose between always on or led blink during
-> >> activity.
-> >>
-> >> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
-> >
-> > Any particular reason the always-on behaviour is the default?
-> 
-> There is no specific reason for setting it as default. It is only that
-> some customers preferred the led to be always on instead of blinking.
+On Mon, Jun 21, 2010 at 1:16 PM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
+> Luis, let me explain again, exactly the situation:
+>
+> First of all AR5001 and AR5001X devices (former was usualy listed as
+> AR2425, and I have it, later I don't know about much), don't work well
+> with ASPM L0s enabled.
 
-Well it is just that as I read the patch, you are changing the
-behaviour for everyone rather than simply giving a new option for
-those that don't like it that way it already is.
+Thanks for the clarification. David, do you see this as well on your end?
 
-Look, I don't particular care about the behaviour.  Blinking w/
-activity makes sense to me.  But I also get to read the seemingly
-endless, whining complaints about how the blinking is distracting for
-laptop users.  I just would rather not add another endless stream of
-complaints that say "my wifi LED used to blink w/ activity, now it
-doesn't -- fix it!"
+> I told that many times, but I tell again.
+> As soon as card it put on medium to high transmit load
+> (for example even if transmission consists mostly of TCP ACK packets),
+> it dies.
+>
+> Usualy it will stop transmitting, and then after few seconds it will
+> send RXORN intrrupt to the host, even though the channel was idle.
+> (Tested by sending a stream of UDP packets on channel that is neighbor
+> free).
+>
+> I didn't see it, but some users reported seeing jumbo frames at this
+> time as well.
+> Overall it doesn't matter because card just goes south.
+>
+> A reset sometimes brings card to life, sometimes causes another storm of
+> RXORN and sometimes just results in quiet dead card.
+> A next reset might bring it to life, or not.
+>
+> Card (at least mine) advertises its as a 'pre pci 1.1 device'.
+> Therefore if I enable CONFIG_PCIEASPM, the pci core will automaticly
+> disable ASPM (both L0s and L1) on this card.
+> I won't be surprised that windows does the same.
 
-Perhaps we could standardize this somehow?  Anyone care to make
-a proposal?
+I am not sure when L0s was enabled as per the spec as mandatory, I
+thought it was optional. Interesting to hear this behavior on Linux
+with CONFIG_PCIEASPM. That Kconfig description and code really need
+some spit shining.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+> Therefore the patch I sent it useless because it only works when
+> CONFIG_PCIEASPM is enabled.
+
+How so ? Your patch disables L0s, I can use ASPM with L0s and L1 with
+or without CONFIG_PCIEASPM. If I added your calls to ath9k I would
+disable L0s.
+
+  Luis
