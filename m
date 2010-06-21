@@ -1,51 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:59441 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751461Ab0FYTD0 (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:34748 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753782Ab0FUHvu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jun 2010 15:03:26 -0400
-Subject: Compat-wireless release for 2010-06-25 is baked
-To: <linux-wireless@vger.kernel.org>, <linux-bluetooth@vger.kernel.org>
-Message-Id: <20100625190323.2299742E2C@repository3.orbit-lab.org>
-Date: Fri, 25 Jun 2010 15:03:23 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Mon, 21 Jun 2010 03:51:50 -0400
+Received: from vs3014.wh2.ocn.ne.jp (125.206.180.187)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-0518656707
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Jun 2010 16:51:48 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: "Jaroslav Fojtik" <jafojtik@seznam.cz>
+Subject: Re: ATH5k - Signal measurement reports wrong values
+Date: Mon, 21 Jun 2010 16:50:50 +0900
+Cc: linux-wireless@vger.kernel.org
+References: <4C1E6A13.4259.24AF3C@jafojtik.seznam.cz> <201006211026.48484.br1@einfach.org> <4C1F135A.26516.F45AB@jafojtik.seznam.cz>
+In-Reply-To: <4C1F135A.26516.F45AB@jafojtik.seznam.cz>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201006211650.50766.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   87dca92..8a97897  master     -> origin/master
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
-   b6af507..126c387  master     -> origin/master
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   2e58c02..138f35f  history    -> origin/history
- + df17781...c3116ae master     -> origin/master  (forced update)
- * [new tag]         next-20100625 -> next-20100625
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
+On Mon June 21 2010 16:23:06 Jaroslav Fojtik wrote:
+> Dear Bruno,
+> 
+> > hi jara!
+> > 
+> > are you sure it has to do with the upgrade from
+> > compat-wireless-2010-06-13 to compat-wireless-2010-06-18? i don't see
+> > any relevant differences in the code between these two versions...
+> 
+>   Sorry, it might be compat-wireless-2010-05-30.
 
-compat-wireless code metrics
+that would make more sense. there are changes in noise floor calibration and 
+in antenna diversity setup between these two (2010-05-30 and 2010-06-18). 
+either one may be the reason...
 
-    494345 - Total upstream lines of code being pulled
-      1407 - backport code changes
-      1174 - backport code additions
-       233 - backport code deletions
-      5765 - backport from compat module
-      7172 - total backport code
-    1.4508 - % of code consists of backport work
-      1218 - Crap changes not yet posted
-      1179 - Crap additions not yet posted
-        39 - Crap deletions not yet posted
-    0.2464 - % of crap code
+> I have tested only 3 versions.
+> 
+> Anyway, I have observed "false" signal drop even for client stations.
+> 
+> You could see that purple line als dropped from -61 to -71 without any
+> reason: http://78.108.103.11:11080/cgi-bin/klienti_year.cgi
+> 
+> > it might be interresting to see what results you get from noise
+> > calibration. you can enable calibration debugging with "echo calib >
+> > /sys/kernel/debug/ath5k/phy0/debug"
+> 
+> The directory /sys/kernel/debug is empty.
+> It looks that I have to recompile kernel. Or do you know any option to
+> pass to kernel to allow this feature?
 
-Base tree: linux-next.git
-Base tree version: next-20100625
-compat-wireless release: compat-wireless-2010-06-17-6-g8a97897
+maybe you need to:
+  mount -t debugfs debugfs /sys/kernel/debug
+?
+
+also you need to compile ath5k with debugging enabled.
+
+can you tell us which chipset you are using (output of dmesg |grep 
+"ath5.*chip")?
+
+also it would be interesting to know how you generate your graphs?
+
+bruno
+
+
