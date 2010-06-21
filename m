@@ -1,31 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:62215 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752056Ab0FJQKG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jun 2010 12:10:06 -0400
-Subject: Re: [PATCH] wireless: orphan ipw2x00 drivers
-From: reinette chatre <reinette.chatre@intel.com>
-To: Zhu Yi <yi.zhu@intel.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1276134269-2273-1-git-send-email-yi.zhu@intel.com>
-References: <1276134269-2273-1-git-send-email-yi.zhu@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 10 Jun 2010 09:10:01 -0700
-Message-ID: <1276186201.1835.17488.camel@rchatre-DESK>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36443 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758569Ab0FUVPP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jun 2010 17:15:15 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Javier Cardona <javier@cozybit.com>,
+	Andrey Yurovsky <andrey@cozybit.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: avoid scheduling while atomic in mesh_rx_plink_frame
+Date: Mon, 21 Jun 2010 17:09:07 -0400
+Message-Id: <1277154547-5851-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-06-09 at 18:44 -0700, Zhu Yi wrote:
-> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
+While mesh_rx_plink_frame holds sta->lock...
 
-Not sure if it is needed but the sourceforge pages will still have the
-firmware available for download. We are in process of cleaning those
-pages up.
+mesh_rx_plink_frame ->
+	mesh_plink_inc_estab_count ->
+		ieee80211_bss_info_change_notify
 
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+...but ieee80211_bss_info_change_notify is allowed to sleep.  A driver
+taking advantage of that allowance can cause a scheduling while
+atomic bug.  Similar paths exist for mesh_plink_dec_estab_count,
+so work around those as well.
 
-Reinette
+http://bugzilla.kernel.org/show_bug.cgi?id=16099
 
+Also, correct a minor kerneldoc comment error (mismatched function names).
+
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/mac80211/mesh_plink.c |   39 +++++++++++++++++++++++++++++----------
+ 1 files changed, 29 insertions(+), 10 deletions(-)
+
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 3cd5f7b..350f9a8 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -73,7 +73,6 @@ void mesh_plink_dec_estab_count(struct ieee80211_sub_if_data *sdata)
+ {
+ 	atomic_dec(&sdata->u.mesh.mshstats.estab_plinks);
+ 	mesh_accept_plinks_update(sdata);
+-	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
+ }
+ 
+ /**
+@@ -115,7 +114,7 @@ static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
+ }
+ 
+ /**
+- * mesh_plink_deactivate - deactivate mesh peer link
++ * __mesh_plink_deactivate - deactivate mesh peer link
+  *
+  * @sta: mesh peer link to deactivate
+  *
+@@ -123,18 +122,23 @@ static struct sta_info *mesh_plink_alloc(struct ieee80211_sub_if_data *sdata,
+  *
+  * Locking: the caller must hold sta->lock
+  */
+-static void __mesh_plink_deactivate(struct sta_info *sta)
++static bool __mesh_plink_deactivate(struct sta_info *sta)
+ {
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	bool deactivated = false;
+ 
+-	if (sta->plink_state == PLINK_ESTAB)
++	if (sta->plink_state == PLINK_ESTAB) {
+ 		mesh_plink_dec_estab_count(sdata);
++		deactivated = true;
++	}
+ 	sta->plink_state = PLINK_BLOCKED;
+ 	mesh_path_flush_by_nexthop(sta);
++
++	return deactivated;
+ }
+ 
+ /**
+- * __mesh_plink_deactivate - deactivate mesh peer link
++ * mesh_plink_deactivate - deactivate mesh peer link
+  *
+  * @sta: mesh peer link to deactivate
+  *
+@@ -142,9 +146,15 @@ static void __mesh_plink_deactivate(struct sta_info *sta)
+  */
+ void mesh_plink_deactivate(struct sta_info *sta)
+ {
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	bool deactivated;
++
+ 	spin_lock_bh(&sta->lock);
+-	__mesh_plink_deactivate(sta);
++	deactivated = __mesh_plink_deactivate(sta);
+ 	spin_unlock_bh(&sta->lock);
++
++	if (deactivated)
++		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
+ }
+ 
+ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+@@ -381,10 +391,16 @@ int mesh_plink_open(struct sta_info *sta)
+ 
+ void mesh_plink_block(struct sta_info *sta)
+ {
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
++	bool deactivated;
++
+ 	spin_lock_bh(&sta->lock);
+-	__mesh_plink_deactivate(sta);
++	deactivated = __mesh_plink_deactivate(sta);
+ 	sta->plink_state = PLINK_BLOCKED;
+ 	spin_unlock_bh(&sta->lock);
++
++	if (deactivated)
++		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
+ }
+ 
+ 
+@@ -397,6 +413,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 	enum plink_event event;
+ 	enum plink_frame_type ftype;
+ 	size_t baselen;
++	bool deactivated;
+ 	u8 ie_len;
+ 	u8 *baseaddr;
+ 	__le16 plid, llid, reason;
+@@ -651,8 +668,8 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 		case CNF_ACPT:
+ 			del_timer(&sta->plink_timer);
+ 			sta->plink_state = PLINK_ESTAB;
+-			mesh_plink_inc_estab_count(sdata);
+ 			spin_unlock_bh(&sta->lock);
++			mesh_plink_inc_estab_count(sdata);
+ 			mpl_dbg("Mesh plink with %pM ESTABLISHED\n",
+ 				sta->sta.addr);
+ 			break;
+@@ -684,8 +701,8 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 		case OPN_ACPT:
+ 			del_timer(&sta->plink_timer);
+ 			sta->plink_state = PLINK_ESTAB;
+-			mesh_plink_inc_estab_count(sdata);
+ 			spin_unlock_bh(&sta->lock);
++			mesh_plink_inc_estab_count(sdata);
+ 			mpl_dbg("Mesh plink with %pM ESTABLISHED\n",
+ 				sta->sta.addr);
+ 			mesh_plink_frame_tx(sdata, PLINK_CONFIRM, sta->sta.addr, llid,
+@@ -702,11 +719,13 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 		case CLS_ACPT:
+ 			reason = cpu_to_le16(MESH_CLOSE_RCVD);
+ 			sta->reason = reason;
+-			__mesh_plink_deactivate(sta);
++			deactivated = __mesh_plink_deactivate(sta);
+ 			sta->plink_state = PLINK_HOLDING;
+ 			llid = sta->llid;
+ 			mod_plink_timer(sta, dot11MeshHoldingTimeout(sdata));
+ 			spin_unlock_bh(&sta->lock);
++			if (deactivated)
++				ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON);
+ 			mesh_plink_frame_tx(sdata, PLINK_CLOSE, sta->sta.addr, llid,
+ 					    plid, reason);
+ 			break;
+-- 
+1.7.0.1
 
