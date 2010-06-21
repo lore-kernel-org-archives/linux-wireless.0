@@ -1,55 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:59689
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759693Ab0FPVmv (ORCPT
+Received: from server.heaven-czfree.net ([78.108.102.201]:42984 "EHLO
+	smtp.heaven-czfree.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752501Ab0FUHVB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jun 2010 17:42:51 -0400
-Date: Wed, 16 Jun 2010 14:43:02 -0700 (PDT)
-Message-Id: <20100616.144302.28808006.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2010-06-16 v2
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20100616201300.GD3138@tuxdriver.com>
-References: <20100616182847.GB3138@tuxdriver.com>
-	<20100616.115008.226776050.davem@davemloft.net>
-	<20100616201300.GD3138@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 21 Jun 2010 03:21:01 -0400
+From: "Jaroslav Fojtik" <jafojtik@seznam.cz>
+To: linux-wireless@vger.kernel.org
+Date: Mon, 21 Jun 2010 09:23:06 +0200
+MIME-Version: 1.0
+Subject: Re: ATH5k - Signal measurement reports wrong values
+CC: Bruno Randolf <br1@einfach.org>
+Message-ID: <4C1F135A.26516.F45AB@jafojtik.seznam.cz>
+In-reply-to: <201006211026.48484.br1@einfach.org>
+References: <4C1E6A13.4259.24AF3C@jafojtik.seznam.cz>, <201006211026.48484.br1@einfach.org>
+Content-type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 16 Jun 2010 16:13:00 -0400
+Dear Bruno,
 
-> On Wed, Jun 16, 2010 at 11:50:08AM -0700, David Miller wrote:
->> From: "John W. Linville" <linville@tuxdriver.com>
->> Date: Wed, 16 Jun 2010 14:28:48 -0400
->> 
->> > Here is another passel of of fixes intended for 2.6.35.  Included are
->> > some build warning fixes, a PCI identifier, a fix for premature
->> > IRQs during hostap initialization, a fix for a warning caused by
->> > failing to cancel a scan watchdog in iwlwifi, a fix for a null
->> > pointer dereference in iwlwifi, and a fix for a race condition in
->> > the same driver.  Also included is the MAINTAINERS change for the
->> > orphaning of the older Intel wireless drivers.  All but the last few
->> > warning fixes have spent some time in linux-next already.
->> > 
->> > Please let me know if there are problems!
->> 
->> The patches removing unused function variables just to kill compile
->> warnings are not appropriate, _at_ _all_.  They don't fix any real
->> bug, and they definitely don't fix entries in the regression list do
->> they?
->> 
->> Kill all of those and resend this pull request.
+> hi jara!
 > 
-> Fair enough...I dropped the warning fixes for the unused variables.
-> But I kept the ones related to uninitialized variables, since
-> those seem potentially more dangerous to ignore.  Hopefully that
-> is acceptable.
-> 
-> Please let me know if there are problems!
+> are you sure it has to do with the upgrade from compat-wireless-2010-06-13 to 
+> compat-wireless-2010-06-18? i don't see any relevant differences in the code 
+> between these two versions...
+  Sorry, it might be compat-wireless-2010-05-30. 
+I have tested only 3 versions.
 
-Pulled, thanks!
+Anyway, I have observed "false" signal drop even for client stations.
+
+You could see that purple line als dropped from -61 to -71 without any reason:
+http://78.108.103.11:11080/cgi-bin/klienti_year.cgi
+
+
+> it might be interresting to see what results you get from noise calibration. 
+> you can enable calibration debugging with "echo calib > 
+> /sys/kernel/debug/ath5k/phy0/debug"
+The directory /sys/kernel/debug is empty. 
+It looks that I have to recompile kernel. Or do you know any option to 
+pass to kernel to allow this feature?
+
+regards
+   Jara
+
