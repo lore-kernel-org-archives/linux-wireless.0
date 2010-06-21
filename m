@@ -1,96 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:37286 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756821Ab0FDAzy (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:39295 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751121Ab0FUWix (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jun 2010 20:55:54 -0400
-Received: by bwz11 with SMTP id 11so226398bwz.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Jun 2010 17:55:52 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: "Gordon, Charles" <Charles.Gordon@digi.com>
-Subject: Re: Power save mode in 2.6.32-22
-Date: Fri, 4 Jun 2010 02:55:46 +0200
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <8DCC153EAFE67A4B990A840E829F704B017C658D620C@mtk-sms-exch01.digi.com>
-In-Reply-To: <8DCC153EAFE67A4B990A840E829F704B017C658D620C@mtk-sms-exch01.digi.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201006040255.46964.chunkeey@googlemail.com>
+	Mon, 21 Jun 2010 18:38:53 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Aeolus Yang <aeolus.yang@atheros.com>,
+	Madhan Jaganathan <madhan.jaganathan@atheros.com>
+Subject: [PATCH 1/5] ath9k_hw: fix ASPM setting for AR9003
+Date: Mon, 21 Jun 2010 18:38:47 -0400
+Message-Id: <1277159931-7797-2-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1277159931-7797-1-git-send-email-lrodriguez@atheros.com>
+References: <1277159931-7797-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 04 June 2010 01:27:38 Gordon, Charles wrote:
-> Hi,
-> 
-> I'm trying to get power save mode to work in a wireless driver on Linux
-> 2.6.32.  What I'm seeing is that the wireless stack is sending null-data
-> frames with the power management bit on or off from time to time.  It does
-> this regardless of whether flags IEEE80211_HW_SUPPORTS_PS and
-> IEEE80211_HW_SUPPORTS_DYNAMIC_PS are set.  This is not how I would expect
-> it to work.  If IEEE80211_HW_SUPPORTS_PS is set, I would expect it to let
-> the driver handle the sending of these frames.  If IEEE80211_HW_SUPPORTS_PS
-> is not set, then this would indicate that the driver cannot power down, in
-> which case I still would not expect the stack to be sending these frames. 
-> The documentation for power save is very thin and it seems the
-> implementation has changed recently. 
-> 
-> Why is the stack sending these frames when the driver says the H/W does not
-> support powering down?
+The AR_WA register should not be read when in sleep state so
+add a variable we can stash its value into for when we need
+to set it. Additionally the AR_WA_D3_TO_L1_DISABLE_REAL
+(bit 16) needs to be removed.
 
-well, could this be a periodic scan / site survey? (perhaps
-NM/wicd/wpa_supplicant is running in the background?).
+Cc: Aeolus Yang <aeolus.yang@atheros.com>
+Cc: Madhan Jaganathan <madhan.jaganathan@atheros.com>
+signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c |    2 +
+ drivers/net/wireless/ath/ath9k/hw.c        |   45 ++++++++++++++++++++++++----
+ drivers/net/wireless/ath/ath9k/hw.h        |    6 ++++
+ drivers/net/wireless/ath/ath9k/reg.h       |    5 +++
+ 4 files changed, 52 insertions(+), 6 deletions(-)
 
-The device signalize the AP that it goes "off-channel" to scan on other
-frequencies. Therefore the AP should be prepared to buffer any traffic,
-until the STA resumes normal operation.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index 82c3ab7..b4a9441 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -295,6 +295,8 @@ static void ar9003_hw_configpcipowersave(struct ath_hw *ah,
+ 		/* Several PCIe massages to ensure proper behaviour */
+ 		if (ah->config.pcie_waen)
+ 			REG_WRITE(ah, AR_WA, ah->config.pcie_waen);
++		else
++			REG_WRITE(ah, AR_WA, ah->WARegVal);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 62597f4..fb09042 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -575,14 +575,8 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	 * This enables PCIe low power mode.
+ 	 */
+ 	if (AR_SREV_9300_20_OR_LATER(ah)) {
+-		u32 regval;
+ 		unsigned int i;
+ 
+-		/* Set Bits 16 and 17 in the AR_WA register. */
+-		regval = REG_READ(ah, AR_WA);
+-		regval |= 0x00030000;
+-		REG_WRITE(ah, AR_WA, regval);
+-
+ 		for (i = 0; i < ah->iniPcieSerdesLowPower.ia_rows; i++) {
+ 			REG_WRITE(ah,
+ 				  INI_RA(&ah->iniPcieSerdesLowPower, i, 0),
+@@ -590,6 +584,15 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 		}
+ 	}
+ 
++	/*
++	 * Read back AR_WA into a permanent copy and set bits 14 and 17.
++	 * We need to do this to avoid RMW of this register. We cannot
++	 * read the reg when chip is asleep.
++	 */
++	ah->WARegVal = REG_READ(ah, AR_WA);
++	ah->WARegVal |= (AR_WA_D3_L1_DISABLE |
++			 AR_WA_ASPM_TIMER_BASED_DISABLE);
++
+ 	if (ah->is_pciexpress)
+ 		ath9k_hw_configpcipowersave(ah, 0, 0);
+ 	else
+@@ -1009,6 +1012,11 @@ static bool ath9k_hw_set_reset(struct ath_hw *ah, int type)
+ 
+ 	ENABLE_REGWRITE_BUFFER(ah);
+ 
++	if (AR_SREV_9300_20_OR_LATER(ah)) {
++		REG_WRITE(ah, AR_WA, ah->WARegVal);
++		udelay(10);
++	}
++
+ 	REG_WRITE(ah, AR_RTC_FORCE_WAKE, AR_RTC_FORCE_WAKE_EN |
+ 		  AR_RTC_FORCE_WAKE_ON_INT);
+ 
+@@ -1063,6 +1071,11 @@ static bool ath9k_hw_set_reset_power_on(struct ath_hw *ah)
+ {
+ 	ENABLE_REGWRITE_BUFFER(ah);
+ 
++	if (AR_SREV_9300_20_OR_LATER(ah)) {
++		REG_WRITE(ah, AR_WA, ah->WARegVal);
++		udelay(10);
++	}
++
+ 	REG_WRITE(ah, AR_RTC_FORCE_WAKE, AR_RTC_FORCE_WAKE_EN |
+ 		  AR_RTC_FORCE_WAKE_ON_INT);
+ 
+@@ -1099,6 +1112,11 @@ static bool ath9k_hw_set_reset_power_on(struct ath_hw *ah)
+ 
+ static bool ath9k_hw_set_reset_reg(struct ath_hw *ah, u32 type)
+ {
++	if (AR_SREV_9300_20_OR_LATER(ah)) {
++		REG_WRITE(ah, AR_WA, ah->WARegVal);
++		udelay(10);
++	}
++
+ 	REG_WRITE(ah, AR_RTC_FORCE_WAKE,
+ 		  AR_RTC_FORCE_WAKE_EN | AR_RTC_FORCE_WAKE_ON_INT);
+ 
+@@ -1768,6 +1786,11 @@ static void ath9k_set_power_sleep(struct ath_hw *ah, int setChip)
+ 			REG_CLR_BIT(ah, (AR_RTC_RESET),
+ 				    AR_RTC_RESET_EN);
+ 	}
++
++	/* Clear Bit 14 of AR_WA after putting chip into Full Sleep mode. */
++	if (AR_SREV_9300_20_OR_LATER(ah))
++		REG_WRITE(ah, AR_WA,
++			  ah->WARegVal & ~AR_WA_D3_L1_DISABLE);
+ }
+ 
+ /*
+@@ -1794,6 +1817,10 @@ static void ath9k_set_power_network_sleep(struct ath_hw *ah, int setChip)
+ 				    AR_RTC_FORCE_WAKE_EN);
+ 		}
+ 	}
++
++	/* Clear Bit 14 of AR_WA after putting chip into Net Sleep mode. */
++	if (AR_SREV_9300_20_OR_LATER(ah))
++		REG_WRITE(ah, AR_WA, ah->WARegVal & ~AR_WA_D3_L1_DISABLE);
+ }
+ 
+ static bool ath9k_hw_set_power_awake(struct ath_hw *ah, int setChip)
+@@ -1801,6 +1828,12 @@ static bool ath9k_hw_set_power_awake(struct ath_hw *ah, int setChip)
+ 	u32 val;
+ 	int i;
+ 
++	/* Set Bits 14 and 17 of AR_WA before powering on the chip. */
++	if (AR_SREV_9300_20_OR_LATER(ah)) {
++		REG_WRITE(ah, AR_WA, ah->WARegVal);
++		udelay(10);
++	}
++
+ 	if (setChip) {
+ 		if ((REG_READ(ah, AR_RTC_STATUS) &
+ 		     AR_RTC_STATUS_M) == AR_RTC_STATUS_SHUTDOWN) {
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 5ecbfcf..6c6d47b 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -819,6 +819,12 @@ struct ath_hw {
+ 
+ 	u32 paprd_gain_table_entries[PAPRD_GAIN_TABLE_ENTRIES];
+ 	u8 paprd_gain_table_index[PAPRD_GAIN_TABLE_ENTRIES];
++	/*
++	 * Store the permanent value of Reg 0x4004in WARegVal
++	 * so we dont have to R/M/W. We should not be reading
++	 * this register when in sleep states.
++	 */
++	u32 WARegVal;
+ };
+ 
+ static inline struct ath_common *ath9k_hw_common(struct ath_hw *ah)
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 3e3ccef..47be667 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -704,6 +704,11 @@
+ #define AR_WA_BIT7			(1 << 7)
+ #define AR_WA_BIT23			(1 << 23)
+ #define AR_WA_D3_L1_DISABLE		(1 << 14)
++#define AR_WA_D3_TO_L1_DISABLE_REAL     (1 << 16)
++#define AR_WA_ASPM_TIMER_BASED_DISABLE  (1 << 17)
++#define AR_WA_RESET_EN                  (1 << 18) /* Sw Control to enable PCI-Reset to POR (bit 15) */
++#define AR_WA_ANALOG_SHIFT              (1 << 20)
++#define AR_WA_POR_SHORT                 (1 << 21) /* PCI-E Phy reset control */
+ #define AR9285_WA_DEFAULT		0x004a050b
+ #define AR9280_WA_DEFAULT           	0x0040073b
+ #define AR_WA_DEFAULT               	0x0000073f
+-- 
+1.6.3.3
 
-This can be easily tested with the help of a sniffer,
-because you should then get probe requests from the interface.
-
-> Why is the stack sending these frames when it would seem that the driver
-> could better handle them?
-> 
-> The reason why I think the driver can better handle them is that if the
-> stack sends a frame with the power-mgmt bit set, and then tells the driver
-> to power down, there will be a race condition where the interface could
-> receive a frame before the hardware is powered down.  The AP may send such
-> a frame after it receives the null-data frame because some could be in a
-> H/W queue.  I have seen this happen.  In this case, the interface H/W on
-> the station will send an ACK and since the H/W does not know that it is
-> about to be powered down, that ACK will be sent with the power-mgmt bit
-> clear, which may confuse the access point.
-
-> In short, sending these frames
-> is something the driver should do since it will know that it should adjust
-> the H/W so that any ACKs or other control frames will be sent with the
-> power mgmt bit correctly set until such time as the H/W is actually powered
-> down.
-
-quote from: 802.11-2007 "11.2.1 Power management in an infrastructure network"
-
-"A STA shall remain in its current Power Management mode until it informs the AP of
- a Power Management mode change via a frame exchange that includes an acknowledgment
- from the AP. Power Management mode shall not change during any single frame exchange
- sequence as described in 9.12"
-
-The way I read it, it means two things:
-
-Firstly, the STA has to initiate a "frame exchange" in order to
-notify the AP about its new power state. (And importantly, that
-frame exchange has to succeed, before the STA can actually
-go off-channel/sleep! - This is important, because not all
-drivers/HW do support an accurate *frame success* report.)
-
-Secondly: The AP should only consider the PSM bit setting,
-if the "exchange" was actually initiated by the STA and not
-by the AP. (Furthermore, for most control frames timing is
-critical. Therefore they have to be implemented in the
-hardware/firmware and this makes it nearly impossible to
-do what you are describing in your last _quoted_ sentence) 
-
-BTW: have you tried to reproduce your "timing" problem with
-a recent compat-wireless?
-
-Regards,
-	Chr
