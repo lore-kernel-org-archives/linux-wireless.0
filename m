@@ -1,88 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:61359 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753601Ab0FJLiU (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:39297 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751490Ab0FUWix (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jun 2010 07:38:20 -0400
-Subject: Re: [RFC 3/3] mac80211: Store basic rates for bss when joining
- ibss network
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1276069016.3727.3.camel@jlt3.sipsolutions.net>
-References: <1276000459-1121-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-	 <1276000459-1121-2-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-	 <1276000459-1121-3-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-	 <1276000459-1121-4-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-	 <1276001318.3706.130.camel@jlt3.sipsolutions.net>
-	 <1276058714.495.35.camel@paavo-desktop>
-	 <1276069016.3727.3.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain
-Date: Thu, 10 Jun 2010 14:37:30 +0300
-Message-Id: <1276169851.495.89.camel@paavo-desktop>
-Mime-Version: 1.0
+	Mon, 21 Jun 2010 18:38:53 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Aeolus Yang <aeolus.yang@atheros.com>,
+	Madhan Jaganathan <madhan.jaganathan@atheros.com>
+Subject: [PATCH 2/5] ath9k_hw: move LowPower array writes to ar9003_hw_configpcipowersave()
+Date: Mon, 21 Jun 2010 18:38:48 -0400
+Message-Id: <1277159931-7797-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1277159931-7797-1-git-send-email-lrodriguez@atheros.com>
+References: <1277159931-7797-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-06-09 at 09:36 +0200, ext Johannes Berg wrote:
-> On Wed, 2010-06-09 at 07:45 +0300, Teemu Paasikivi wrote:
-> 
-> > > However this kinda confuses me.
-> > > 
-> > > We had a long-standing TODO item on our list at
-> > > http://wireless.kernel.org/en/developers/todo-list
-> > > 
-> > > "when leaving an IBSS and we were the only member, remove it from
-> > > cfg80211's BSS list"
-> > > 
-> > > Maybe that would help here too?
-> > > 
-> > 
-> > Yes, I think that would propably solve that issue where IBSS was
-> > recreated and requested basic rates are changed.
-> 
-> Want to take a look at it? It shouldn't be too hard -- just call
-> cfg80211_unlink_bss() somewhere where we still have the BSS pointer.
-> Actually we don't keep it as you saw with the update, so need to find it
-> first and then unlink it.
-> 
+The LowPower array writes disables the PLL when ASPM is enabled.
+The host driver makes quite a few calls to ath9k_hw_configpcipowersave()
+and these same calls also need to ensure the PLL is off when they issue
+it.
 
-I'll take a look at this. I think BSS can be got by the same method as
-in the ieee80211_sta_find_ibss function.
+Cc: Aeolus Yang <aeolus.yang@atheros.com>
+Cc: Madhan Jaganathan <madhan.jaganathan@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c |   14 ++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.c        |   14 --------------
+ 2 files changed, 14 insertions(+), 14 deletions(-)
 
-> > > However I don't understand the scenario anyway. If you create an IBSS,
-> > > you start beaconing and tell cfg80211 about it with a frame that
-> > > includes the supported and basic rates. Then you leave, but the BSS
-> > > stays around in cfg80211 for 15 seconds. If you re-join within those 15
-> > > seconds, the scan results will pick up the old IBSS that no longer
-> > > exists, and we "join" it rather than creating it.
-> > > 
-> > > However -- joining it will take the basic rates from it. So wouldn't you
-> > > get the old basic rates which is fine? What do you mean by "left unset"?
-> > > 
-> > 
-> > By "left unset" I mean that in the sniffer logs there's no rates marked
-> > as basic rates in the beacons. No old ones or new ones.
-> 
-> Ok that's what I thought. But ... are they marked in our TX beacons when
-> we _first_ created the IBSS?
-
-Yes those were marked. In any case, lets see if this is an issue after
-implementing that removal of the BSS from the cfg80211's list.
-
-> 
-> > > What happens if you join an IBSS that already exists?
-> > > 
-> > 
-> > It works, but I haven't captured what's in the air. That's one reason
-> > why I sent these patches as RFC.
-> 
-> I don't really see how the two scenarios differ, so that's odd...
-> 
-> johannes
-> 
-
-Teemu
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index b4a9441..efabab8 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -298,6 +298,20 @@ static void ar9003_hw_configpcipowersave(struct ath_hw *ah,
+ 		else
+ 			REG_WRITE(ah, AR_WA, ah->WARegVal);
+ 	}
++
++	/*
++	 * Configire PCIE after Ini init. SERDES values now come from ini file
++	 * This enables PCIe low power mode.
++	 */
++	if (AR_SREV_9300_20_OR_LATER(ah)) {
++		unsigned int i;
++
++		for (i = 0; i < ah->iniPcieSerdesLowPower.ia_rows; i++) {
++			REG_WRITE(ah,
++				  INI_RA(&ah->iniPcieSerdesLowPower, i, 0),
++				  INI_RA(&ah->iniPcieSerdesLowPower, i, 1));
++		}
++	}
+ }
+ 
+ /* Sets up the AR9003 hardware familiy callbacks */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index fb09042..3ee7d4e 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -571,20 +571,6 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	ath9k_hw_init_mode_regs(ah);
+ 
+ 	/*
+-	 * Configire PCIE after Ini init. SERDES values now come from ini file
+-	 * This enables PCIe low power mode.
+-	 */
+-	if (AR_SREV_9300_20_OR_LATER(ah)) {
+-		unsigned int i;
+-
+-		for (i = 0; i < ah->iniPcieSerdesLowPower.ia_rows; i++) {
+-			REG_WRITE(ah,
+-				  INI_RA(&ah->iniPcieSerdesLowPower, i, 0),
+-				  INI_RA(&ah->iniPcieSerdesLowPower, i, 1));
+-		}
+-	}
+-
+-	/*
+ 	 * Read back AR_WA into a permanent copy and set bits 14 and 17.
+ 	 * We need to do this to avoid RMW of this register. We cannot
+ 	 * read the reg when chip is asleep.
+-- 
+1.6.3.3
 
