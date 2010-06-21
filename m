@@ -1,60 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:42204 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753881Ab0FPHBG (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:36375 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753046Ab0FUTSk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jun 2010 03:01:06 -0400
-Message-ID: <4C1876BB.9030807@gmail.com>
-Date: Wed, 16 Jun 2010 00:01:15 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+	Mon, 21 Jun 2010 15:18:40 -0400
+Received: by fxm10 with SMTP id 10so2031822fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Jun 2010 12:18:38 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH] mac80211: allow selection of minstrel_ht as default rc algo
+Date: Mon, 21 Jun 2010 21:18:06 +0200
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felix Fietkau <nbd@openwrt.org>
+References: <201006211059.58879.helmut.schaa@googlemail.com> <AANLkTinj36oA6QpEiYywGGkRqCmNRHSeR643HpiUsXC-@mail.gmail.com>
+In-Reply-To: <AANLkTinj36oA6QpEiYywGGkRqCmNRHSeR643HpiUsXC-@mail.gmail.com>
 MIME-Version: 1.0
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 0/5] Fix set but unused variable warnings
-References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com> <AANLkTikwKHITQJDaSf9BnHQ9FLiQ-KYlCWNiH438otsV@mail.gmail.com>
-In-Reply-To: <AANLkTikwKHITQJDaSf9BnHQ9FLiQ-KYlCWNiH438otsV@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201006212118.06767.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/15/2010 10:52 PM, Julian Calaby wrote:
-> On Wed, Jun 16, 2010 at 15:33, Justin P. Mattock
-> <justinmattock@gmail.com>  wrote:
->> Here is another set of patches fixing some warning messages generated
->> when building the kernel when using gcc 4.6.0.
->>
->> This set just focuses in on the variables warnings that are reported
->> to be unused. Keep in mind there are still lots more warning messages
->> that I'm seeing, and will try my hardest to see if I can come up with
->> a fix, but if things become too difficult and so forth then a bug should
->> be filled etc..
->
-> Given that patches 3, 4 and 5 seem to be a cases of missing error
-> handling, (3 and 4 in particular seem to be breaking things rather
-> than fixing them) in my humble opinion, I think this set needs some
-> work and discussion.
->
+Am Montag 21 Juni 2010 schrieb Luis R. Rodriguez:
+> On Mon, Jun 21, 2010 at 1:59 AM, Helmut Schaa
+> <helmut.schaa@googlemail.com> wrote:
+> > Allow selection of minstrel_ht as default rate control algorithm. At the
+> > moment minstrel_ht can only be requested by the driver code but not selected
+> > as default in make menuconfig.
+> >
+> > Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+> 
+> Shouldn't this just be enabled when you enable minstrel? I don't get
+> why we would split up the two.
 
-alright..
+Would be fine for me as well. But I'm not sure if we want minstrel_ht already
+as default and we want definitely keep the possibility to only select minstrel
+(if compiling on an embedded system with just bg wifi for example).
 
-> Justin, maybe you'd be better off posting the actual error messages
-> (split up by subsystem) and letting the lists discuss them, rather
-> than posting patches which are obviously wrong. (like the ones I've
-> pointed out)
->
+Felix, any objections against selecting minstrel_ht as default if minstrel
+was selected as default rc algo and minstrel_ht is compiled in?
 
-yeah I'm a newbie!! alright so just file bugs for all these then.
+In case of an embedded system without minstrel_ht minstrel would stay as default.
 
-> I'm sure that everyone here is as committed as you are to eliminating
-> compile warnings and errors and, in my opinion, more good will come
-> from a healthy discussion of the warnings than maintainers NAKing your
-> patches out of hand.
->
-> Thanks,
->
+diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
+index 83eec7a..4d6f865 100644
+--- a/net/mac80211/Kconfig
++++ b/net/mac80211/Kconfig
+@@ -69,6 +69,7 @@ endchoice
+ 
+ config MAC80211_RC_DEFAULT
+ 	string
++	default "minstrel_ht" if MAC80211_RC_DEFAULT_MINSTREL && MAC80211_RC_MINSTREL_HT
+ 	default "minstrel" if MAC80211_RC_DEFAULT_MINSTREL
+ 	default "pid" if MAC80211_RC_DEFAULT_PID
+ 	default ""
 
-
-NAKing is o.k. but having discussions is better..
-
-Justin P. Mattock
+Thanks,
+Helmut
