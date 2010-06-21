@@ -1,89 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:39213 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751470Ab0FOWTX (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:48337 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757594Ab0FUKje (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jun 2010 18:19:23 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: stable@kernel.org, greg@kroah.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Peter Stuge <peter@stuge.se>,
-	"Justin P. Mattock" <justinmattock@gmail.com>,
-	Kristoffer Ericson <kristoffer.ericson@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 2.6.32.y] ath9k: re-enable ps by default for new single chip families
-Date: Tue, 15 Jun 2010 18:19:19 -0400
-Message-Id: <1276640359-25360-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 21 Jun 2010 06:39:34 -0400
+Received: from esebh105.NOE.Nokia.com (esebh105.ntc.nokia.com [172.21.138.211])
+	by mgw-mx06.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o5LAd8x3023271
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Jun 2010 13:39:31 +0300
+Received: from localhost.localdomain (wimaxnb.nmp.nokia.com [172.22.211.32])
+	by mgw-sa01.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o5LAdQNT023572
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Jun 2010 13:39:27 +0300
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC PATCHv2 2/2] nl80211: Add option to adjust transmit power
+Date: Mon, 21 Jun 2010 13:39:26 +0300
+Message-Id: <1277116766-4764-2-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1277116766-4764-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1277116766-4764-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit 14acdde6e527950f66c084dbf19bad6fbfcaeedc upstream.
+This patch adds transmit power setting type and transmit power level attributes
+to NL80211_CMD_SET_WIPHY in order to facilitate adjusting of the transmit power
+level of the device.
 
-The newer single chip hardware family of chipsets have not been
-experiencing issues with power saving set by default with recent
-fixes merged (even into stable). The remaining issues are only
-reported with AR5416 and since enabling PS by default can increase
-power savings considerably best to take advantage of that feature
-as this has been tested properly.
+The added attributes allow selection of automatic, limited or fixed transmit
+power level, with the level definable in signed mBm format.
 
-For more details on this issue see the bug report:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=14267
-
-We leave AR5416 with PS disabled by default, that seems to require
-some more work.
-
-Cc: stable@kernel.org
-Cc: Peter Stuge <peter@stuge.se>
-Cc: Justin P. Mattock  <justinmattock@gmail.com>
-Cc: Kristoffer Ericson <kristoffer.ericson@gmail.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 ---
+ include/linux/nl80211.h |    9 +++++++++
+ net/wireless/nl80211.c  |   31 +++++++++++++++++++++++++++++++
+ 2 files changed, 40 insertions(+), 0 deletions(-)
 
-Greg, this is the long promised backport of the patch titled
-"ath9k: re-enable ps by default for new single chip families" backported
-down to 2.6.32.y. This just goes test compiled. Manual backport
-was required from the upstream Linus patch since the flag
-WIPHY_FLAG_PS_ON_BY_DEFAULT was not used back on 2.6.32 so instead
-we use the equivalent hw->wiphy->ps_default bool.
-
-Apologies for the delay, was just stuck with other stuff.
-
-I'll remove this from the stable pending list for 802.11 [1] once
-this gets sucked in.
-
-[1] http://wireless.kernel.org/en/developers/stable-pending
-
- drivers/net/wireless/ath/ath9k/main.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 15eb245..dba27b7 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1538,6 +1538,8 @@ bad_no_ah:
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 07aa046..2c87016 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -725,6 +725,12 @@ enum nl80211_commands {
+  * @NL80211_ATTR_AP_ISOLATE: (AP mode) Do not forward traffic between stations
+  *	connected to this BSS.
+  *
++ * @NL80211_ATTR_WIPHY_TX_POWER_SETTING: Transmit power setting type. See
++ *      &enum nl80211_tx_power_setting for possible values.
++ * @NL80211_ATTR_WIPHY_TX_POWER_LEVEL: Transmit power level in signed mBm units.
++ *      This is used in association with @NL80211_ATTR_WIPHY_TX_POWER_SETTING
++ *      for non-automatic settings.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -882,6 +888,9 @@ enum nl80211_attrs {
  
- void ath_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- {
-+	struct ath_hw *ah = sc->sc_ah;
+ 	NL80211_ATTR_AP_ISOLATE,
+ 
++	NL80211_ATTR_WIPHY_TX_POWER_SETTING,
++	NL80211_ATTR_WIPHY_TX_POWER_LEVEL,
 +
- 	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
- 		IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
- 		IEEE80211_HW_SIGNAL_DBM |
-@@ -1556,7 +1558,10 @@ void ath_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 		BIT(NL80211_IFTYPE_ADHOC) |
- 		BIT(NL80211_IFTYPE_MESH_POINT);
+ 	/* add attributes here, update the policy in nl80211.c */
  
--	hw->wiphy->ps_default = false;
-+	if (AR_SREV_5416(ah))
-+		hw->wiphy->ps_default = false;
-+	else
-+		hw->wiphy->ps_default = true;
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 41529ac..a999fc1 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -153,6 +153,9 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_CQM] = { .type = NLA_NESTED, },
+ 	[NL80211_ATTR_LOCAL_STATE_CHANGE] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_AP_ISOLATE] = { .type = NLA_U8 },
++
++	[NL80211_ATTR_WIPHY_TX_POWER_SETTING] = { .type = NLA_U32 },
++	[NL80211_ATTR_WIPHY_TX_POWER_LEVEL] = { .type = NLA_U32 },
+ };
  
- 	hw->queues = 4;
- 	hw->max_rates = 4;
+ /* policy for the attributes */
+@@ -869,6 +872,34 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
+ 			goto bad_res;
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_WIPHY_TX_POWER_SETTING]) {
++		enum nl80211_tx_power_setting type;
++		int idx, mbm = 0;
++
++		if (!rdev->ops->set_tx_power) {
++			return -EOPNOTSUPP;
++			goto bad_res;
++		}
++
++		idx = NL80211_ATTR_WIPHY_TX_POWER_SETTING;
++		type = nla_get_u32(info->attrs[idx]);
++
++		if (!info->attrs[NL80211_ATTR_WIPHY_TX_POWER_LEVEL] &&
++		    (type != NL80211_TX_POWER_AUTOMATIC)) {
++			result = -EINVAL;
++			goto bad_res;
++		}
++
++		if (type != NL80211_TX_POWER_AUTOMATIC) {
++			idx = NL80211_ATTR_WIPHY_TX_POWER_LEVEL;
++			mbm = nla_get_u32(info->attrs[idx]);
++		}
++
++		result = rdev->ops->set_tx_power(&rdev->wiphy, type, mbm);
++		if (result)
++			goto bad_res;
++	}
++
+ 	changed = 0;
+ 
+ 	if (info->attrs[NL80211_ATTR_WIPHY_RETRY_SHORT]) {
 -- 
 1.6.3.3
 
