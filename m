@@ -1,60 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:58403 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756579Ab0FYRne convert rfc822-to-8bit (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:19568 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756284Ab0FUArj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jun 2010 13:43:34 -0400
-Received: by iwn41 with SMTP id 41so2219693iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Jun 2010 10:43:32 -0700 (PDT)
+	Sun, 20 Jun 2010 20:47:39 -0400
+Received: from vs3005.wh2.ocn.ne.jp (125.206.180.233)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0536371256
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Jun 2010 09:47:37 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: ath5k-devel@lists.ath5k.org
+Subject: Re: [ath5k-devel] [PATCH] ath5k: initialize ah->ah_current_channel
+Date: Mon, 21 Jun 2010 09:46:41 +0900
+Cc: Bob Copeland <me@bobcopeland.com>, linville@tuxdriver.com,
+	sbrown@cortland.com, linux-wireless@vger.kernel.org,
+	stable@kernel.org
+References: <1276881323-31807-1-git-send-email-me@bobcopeland.com>
+In-Reply-To: <1276881323-31807-1-git-send-email-me@bobcopeland.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTinHfFVr45OV3V6CT9auK3L-JfrCYUMQpeo9toTw@mail.gmail.com>
-References: <AANLkTinHfFVr45OV3V6CT9auK3L-JfrCYUMQpeo9toTw@mail.gmail.com>
-Date: Fri, 25 Jun 2010 14:43:31 -0300
-Message-ID: <AANLkTimeR5kQX2hSNw0Ud0QOF0-nsqCFMkSNul9wwa7C@mail.gmail.com>
-Subject: Fwd: mesh configuration information element is wrong?
-From: Iuri Diniz <iuridiniz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201006210946.41547.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello folks,
+On Sat June 19 2010 02:15:23 Bob Copeland wrote:
+> ath5k assumes ah_current_channel is always a valid pointer in
+> several places, but a newly created interface may not have a
+> channel.  To avoid null pointer dereferences, set it up to point
+> to the first available channel until later reconfigured.
+> 
+> This fixes the following oops:
+> $ rmmod ath5k
+> $ insmod ath5k
+> $ iw phy0 set distance 11000
+> 
+> BUG: unable to handle kernel NULL pointer dereference at 00000006
+> IP: [<d0a1ff24>] ath5k_hw_set_coverage_class+0x74/0x1b0 [ath5k]
+> *pde = 00000000
+> Oops: 0000 [#1]
+> last sysfs file: /sys/devices/pci0000:00/0000:00:0e.0/ieee80211/phy0/index
+> Modules linked in: usbhid option usb_storage usbserial usblp evdev lm90
+> scx200_acb i2c_algo_bit i2c_dev i2c_core via_rhine ohci_hcd ne2k_pci
+> 8390 leds_alix2 xt_IMQ imq nf_nat_tftp nf_conntrack_tftp nf_nat_irc nf_cc
+> 
+> Pid: 1597, comm: iw Not tainted (2.6.32.14 #8)
+> EIP: 0060:[<d0a1ff24>] EFLAGS: 00010296 CPU: 0
+> EIP is at ath5k_hw_set_coverage_class+0x74/0x1b0 [ath5k]
+> EAX: 000000c2 EBX: 00000000 ECX: ffffffff EDX: c12d2080
+> ESI: 00000019 EDI: cf8c0000 EBP: d0a30edc ESP: cfa09bf4
+>   DS: 007b ES: 007b FS: 0000 GS: 0000 SS: 0068
+> Process iw (pid: 1597, ti=cfa09000 task=cf88a000 task.ti=cfa09000)
+> Stack:
+>   d0a34f35 d0a353f8 d0a30edc 000000fe cf8c0000 00000000 1900063d cfa8c9e0
+> <0> cfa8c9e8 cfa8c0c0 cfa8c000 d0a27f0c 199d84b4 cfa8c200 00000010 d09bfdc7
+> <0> 00000000 00000000 ffffffff d08e0d28 cf9263c0 00000001 cfa09cc4 00000000
+> Call Trace:
+>   [<d0a27f0c>] ? ath5k_hw_attach+0xc8c/0x3c10 [ath5k]
+>   [<d09bfdc7>] ? __ieee80211_request_smps+0x1347/0x1580 [mac80211]
+>   [<d08e0d28>] ? nl80211_send_scan_start+0x7b8/0x4520 [cfg80211]
+>   [<c10f5db9>] ? nla_parse+0x59/0xc0
+>   [<c11ca8d9>] ? genl_rcv_msg+0x169/0x1a0
+>   [<c11ca770>] ? genl_rcv_msg+0x0/0x1a0
+>   [<c11c7e68>] ? netlink_rcv_skb+0x38/0x90
+>   [<c11c9649>] ? genl_rcv+0x19/0x30
+>   [<c11c7c03>] ? netlink_unicast+0x1b3/0x220
+>   [<c11c893e>] ? netlink_sendmsg+0x26e/0x290
+>   [<c11a409e>] ? sock_sendmsg+0xbe/0xf0
+>   [<c1032780>] ? autoremove_wake_function+0x0/0x50
+>   [<c104d846>] ? __alloc_pages_nodemask+0x106/0x530
+>   [<c1074933>] ? do_lookup+0x53/0x1b0
+>   [<c10766f9>] ? __link_path_walk+0x9b9/0x9e0
+>   [<c11acab0>] ? verify_iovec+0x50/0x90
+>   [<c11a42b1>] ? sys_sendmsg+0x1e1/0x270
+>   [<c1048e50>] ? find_get_page+0x10/0x50
+>   [<c104a96f>] ? filemap_fault+0x5f/0x370
+>   [<c1059159>] ? __do_fault+0x319/0x370
+>   [<c11a55b4>] ? sys_socketcall+0x244/0x290
+>   [<c101962c>] ? do_page_fault+0x1ec/0x270
+>   [<c1019440>] ? do_page_fault+0x0/0x270
+>   [<c1002ae5>] ? syscall_call+0x7/0xb
+> Code: 00 b8 fe 00 00 00 b9 f8 53 a3 d0 89 5c 24 14 89 7c 24 10 89 44 24
+> 0c 89 6c 24 08 89 4c 24 04 c7 04 24 35 4f a3 d0 e8 7c 30 60 f0 <0f> b7
+> 43 06 ba 06 00 00 00 a8 10 75 0e 83 e0 20 83 f8 01 19 d2
+> EIP: [<d0a1ff24>] ath5k_hw_set_coverage_class+0x74/0x1b0 [ath5k] SS:ESP
+> 0068:cfa09bf4
+> CR2: 0000000000000006
+> ---[ end trace 54f73d6b10ceb87b ]---
+> 
+> Cc: stable@kernel.org
+> Reported-by: Steve Brown <sbrown@cortland.com>
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+> ---
+>  drivers/net/wireless/ath/ath5k/attach.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath5k/attach.c
+> b/drivers/net/wireless/ath/ath5k/attach.c index ef2dc1d..b32e28c 100644
+> --- a/drivers/net/wireless/ath/ath5k/attach.c
+> +++ b/drivers/net/wireless/ath/ath5k/attach.c
+> @@ -126,6 +126,7 @@ int ath5k_hw_attach(struct ath5k_softc *sc)
+>  	ah->ah_ant_mode = AR5K_ANTMODE_DEFAULT;
+>  	ah->ah_noise_floor = -95;	/* until first NF calibration is run */
+>  	sc->ani_state.ani_mode = ATH5K_ANI_MODE_AUTO;
+> +	ah->ah_current_channel = &sc->channels[0];
+> 
+>  	/*
+>  	 * Find the mac version
 
-I'm analyzing the 802.11s code and I think I've found that mesh
-configuration information element has wrongs sizes.
-
-It is not according to my copy of 802.11s draft 3.
-
-on linux-wireless-testing/linux/include/ieee80211.h we have:
---------
-/**
- * struct ieee80211_meshconf_ie
- *
- * This structure refers to "Mesh Configuration information element"
- */
-struct ieee80211_meshconf_ie {
-    u8 meshconf_psel;
-    u8 meshconf_pmetric;
-    u8 meshconf_congest;
-    u8 meshconf_synch;
-    u8 meshconf_auth;
-    u8 meshconf_form;
-    u8 meshconf_cap;
-} __attribute__ ((packed));
-----------
-
-All fields have 1 byte, but according to
-http://i45.tinypic.com/4ghhd1.jpg some of they must have 4 or 2 bytes
-
-the function mesh.c:mesh_mgmt_ies_add uses those wrong sizes to
-prepare the management frame.
-
-Is there a new draft? or is there any reason to use those sizes?
-
-(March 2009) Draft 3 802.11s MESH CONFIGURATION ELEMENT:
-http://i45.tinypic.com/4ghhd1.jpg
-
---
-Iuri Diniz
-http://iuridiniz.com [Sou um agitador, não um advogado]
-http://blog.igdium.com [Linux on Limbo]
+Acked-by: Bruno Randolf <br1@einfach.org>
