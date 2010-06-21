@@ -1,70 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bar.sig21.net ([80.81.252.164]:54280 "EHLO bar.sig21.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751708Ab0FWTIQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jun 2010 15:08:16 -0400
-Date: Wed, 23 Jun 2010 21:07:43 +0200
-From: Johannes Stezenbach <js@sig21.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	Maxim Levitsky <maximlevitsky@gmail.com>,
-	David Quan <David.Quan@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Jonathan May <jonathan.may@atheros.com>,
-	Tim Gardner <tim.gardner@canonical.com>
-Subject: Re: [ath5k-devel] [PATCH v2] ath5k: disable ASPM
-Message-ID: <20100623190743.GA22855@sig21.net>
-References: <20100622172545.GA22680@srcf.ucam.org>
- <AANLkTilEHJ5qRD8ov0gIK0Zc4o-gJUPYkvHdyD1uZUon@mail.gmail.com>
- <20100622175058.GA23499@srcf.ucam.org>
- <AANLkTinE0BiOa5cpcIerbias7K-aDzj3x4qaeDpzy2CQ@mail.gmail.com>
- <20100622184426.GA24546@srcf.ucam.org>
- <20100622193143.GA17803@sig21.net>
- <AANLkTin1fAAgYTYegqaadkYIYP2NXRNRzCR48e-uIgYV@mail.gmail.com>
- <AANLkTimsEkff4sMiMB_VyWqkZOjy9PIuJ4AiC95PASOZ@mail.gmail.com>
- <20100623143940.GA5424@sig21.net>
- <AANLkTilyQB-q8Xf9Mu3F5SnKbRqbBuLjbdx8EcyCt_0v@mail.gmail.com>
+Received: from mail-px0-f174.google.com ([209.85.212.174]:53095 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755360Ab0FUILS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jun 2010 04:11:18 -0400
+Received: by pxi12 with SMTP id 12so1271415pxi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Jun 2010 01:11:18 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTilyQB-q8Xf9Mu3F5SnKbRqbBuLjbdx8EcyCt_0v@mail.gmail.com>
+In-Reply-To: <1277002793.18385.6.camel@100.103.161.25.in-addr.arpa>
+References: <AANLkTik5z5SL_JB2-_elmbdyt1rDSxY3IHVEi2V_4uLD@mail.gmail.com>
+	<1277002793.18385.6.camel@100.103.161.25.in-addr.arpa>
+Date: Mon, 21 Jun 2010 10:11:18 +0200
+Message-ID: <AANLkTimwSH0Xy92KBZRicLUVBU3uyCvAjwapM9M0jOAk@mail.gmail.com>
+Subject: Re: Bad performance for libertas on Murata combo.
+From: =?UTF-8?Q?Enric_Balletb=C3=B2_i_Serra?= <eballetbo@gmail.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 23, 2010 at 09:28:57AM -0700, Luis R. Rodriguez wrote:
-> On Wed, Jun 23, 2010 at 7:39 AM, Johannes Stezenbach <js@sig21.net> wrote:
-> >
-> > If enabling ASPM comes with a performance penalty (which is not unexpected,
-> > there is usually a tradeoff between performance and power consumption),
-> > do you think a boot time option (pcie_aspm=) or compile time option
-> > (CONFIG_PCIEASPM) is the right user interface?
-> >
-> >
-> > But meanwhile I found that CONFIG_PCIEASPM has a runtime
-> > interface, /sys/module/pcie_aspm/parameters/policy.
-> > http://lwn.net/Articles/266585/
-> 
-> Same thing, its to be used by developers not users, damn it we should
-> just remove this crap.
+Hello,
 
-Hopefully I got at least the message across that there is
-a good reason to have an interface where the user can
-select the ASPM policy?
+2010/6/20 Dan Williams <dcbw@redhat.com>:
+> On Sat, 2010-06-19 at 15:53 +0200, Enric Balletbò i Serra wrote:
+>> Hi all,
+>>
+>> Maybe someone can help me ...
+>>
+>> I am in the process of enabling WLAN for a target board. It has a WLAN
+>> Bluetooth (WLAN-BT) combo module from MuRata which has a Marvell WLAN
+>> (88W8686) + CSR Bluetooth chipset.
+>
+> What SDIO host controller?  Does the host controller support interrupts
+> and 4-bit mode?  We've always been able to get good performance out of
+> laptop host controllers (Ricoh mostly) and the largest source of
+> performance issues has always been quirky hardware or non-optimized SDHC
+> drivers.  Are there any errata for your SDHC that you're aware of?
 
-If your answer is "reboot and change the BIOS setting" then
-you didn't get what I was talking about _at all_.
+I'm using the OMAP controller (omap_hsmmc). The controller is using
+4-bit mode but does not support interrupts. Exist some experimental
+patches to add support for IRQ to controller which increases the
+performance but still is not good.
 
-Also, having now briefly looked at pcie/aspm.c, I do not share your
-opinion that it is crap, except maybe for the force enable.
-If I read it correctly it will by default keep the BIOS settings,
-but offers a per-device sysfs attribute to change the ASPM link
-state, and it seems to do sanity checking, and takes care that
-both ends of the link agree.
+On the other hand, I'm a bit puzzled with excessive 'Rx invalid crypt'
+, 'Invalid misc' and 'Tx excessive retries' reported by iwconfig. Just
+going to one web page produces more than 100K "Invalid Misc" errors.
+I'm not sure what this means but I think is not a good thing.
 
-(disclaimer: I haven't tested any of it, only briefly looked at the code)
+Anyone can explain me what exactly means 'Rx invalid crypt' , 'Invalid
+misc' and 'Tx excessive retries'  ? What could be wrong? Or how can I
+investigate more ?
 
+Thanks in advance,
 
-Johannes
+Enric
+
+>
+> If you also turn on kernel MMC debugging and the 'dmesg' output of the
+> controller and the libertas device being recognized, that can sometimes
+> help determine where the problem lies.
+>
+> Dan
+>
+>
+>> I can connect to an AP, but the performance is too low. Pinging my AP
+>> I see a lot of 'Rx invalid crypt' and 'Invalid misc' packets.
+>>
+>> I'm using the libertas driver from mainline kernel (2.6.35-rc3) with
+>> SDIO interface and these errors are reported using the iwconfig
+>> command.
+>>
+>> I also tested with 2.6.34 and 2.6.33 with same result.
+>>
+>> Any idea about what this means ? What could be wrong? Or how can I
+>> investigate more ?
+>>
+>> Thanks in advance,
+>>
+>> Enric
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+>
