@@ -1,62 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42782 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754679Ab0FJI0X (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jun 2010 04:26:23 -0400
-Message-Id: <20100610082232.287876519@sipsolutions.net>
-Date: Thu, 10 Jun 2010 10:21:47 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 19/23] mac80211: defer TX agg session teardown to work
-References: <20100610082128.641664439@sipsolutions.net>
-Mime-Version: 1.0
+Received: from nbd.name ([88.198.39.176]:46428 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753046Ab0FUT0b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Jun 2010 15:26:31 -0400
+Message-ID: <4C1FBCDE.5090908@openwrt.org>
+Date: Mon, 21 Jun 2010 21:26:22 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: allow selection of minstrel_ht as default rc
+ algo
+References: <201006211059.58879.helmut.schaa@googlemail.com> <AANLkTinj36oA6QpEiYywGGkRqCmNRHSeR643HpiUsXC-@mail.gmail.com> <201006212118.06767.helmut.schaa@googlemail.com>
+In-Reply-To: <201006212118.06767.helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 2010-06-21 9:18 PM, Helmut Schaa wrote:
+> Am Montag 21 Juni 2010 schrieb Luis R. Rodriguez:
+>> On Mon, Jun 21, 2010 at 1:59 AM, Helmut Schaa
+>> <helmut.schaa@googlemail.com> wrote:
+>> > Allow selection of minstrel_ht as default rate control algorithm. At the
+>> > moment minstrel_ht can only be requested by the driver code but not selected
+>> > as default in make menuconfig.
+>> >
+>> > Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+>> 
+>> Shouldn't this just be enabled when you enable minstrel? I don't get
+>> why we would split up the two.
+> 
+> Would be fine for me as well. But I'm not sure if we want minstrel_ht already
+> as default and we want definitely keep the possibility to only select minstrel
+> (if compiling on an embedded system with just bg wifi for example).
+> 
+> Felix, any objections against selecting minstrel_ht as default if minstrel
+> was selected as default rc algo and minstrel_ht is compiled in?
+> 
+> In case of an embedded system without minstrel_ht minstrel would stay as default.
+> 
+> diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
+> index 83eec7a..4d6f865 100644
+> --- a/net/mac80211/Kconfig
+> +++ b/net/mac80211/Kconfig
+> @@ -69,6 +69,7 @@ endchoice
+>  
+>  config MAC80211_RC_DEFAULT
+>  	string
+> +	default "minstrel_ht" if MAC80211_RC_DEFAULT_MINSTREL && MAC80211_RC_MINSTREL_HT
+>  	default "minstrel" if MAC80211_RC_DEFAULT_MINSTREL
+>  	default "pid" if MAC80211_RC_DEFAULT_PID
+>  	default ""
+Looks good, I think we should do it this way.
 
-Since we want the code to be able to sleep
-in the future, it must not be called from
-the timer directly. To achieve that, simply
-call the function drivers would call, and
-also use RCU in the timer to get the struct
-so we don't need to rely on the spinlock in
-the future.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/agg-tx.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
---- wireless-testing.orig/net/mac80211/agg-tx.c	2010-06-09 17:21:14.000000000 +0200
-+++ wireless-testing/net/mac80211/agg-tx.c	2010-06-09 17:21:16.000000000 +0200
-@@ -200,11 +200,11 @@ static void sta_addba_resp_timer_expired
- 	struct tid_ampdu_tx *tid_tx;
- 
- 	/* check if the TID waits for addBA response */
--	spin_lock_bh(&sta->lock);
--	tid_tx = sta->ampdu_mlme.tid_tx[tid];
-+	rcu_read_lock();
-+	tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[tid]);
- 	if (!tid_tx ||
- 	    test_bit(HT_AGG_STATE_RESPONSE_RECEIVED, &tid_tx->state)) {
--		spin_unlock_bh(&sta->lock);
-+		rcu_read_unlock();
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 		printk(KERN_DEBUG "timer expired on tid %d but we are not "
- 				"(or no longer) expecting addBA response there\n",
-@@ -217,8 +217,8 @@ static void sta_addba_resp_timer_expired
- 	printk(KERN_DEBUG "addBA response timer expired on tid %d\n", tid);
- #endif
- 
--	___ieee80211_stop_tx_ba_session(sta, tid, WLAN_BACK_INITIATOR);
--	spin_unlock_bh(&sta->lock);
-+	ieee80211_stop_tx_ba_session(&sta->sta, tid);
-+	rcu_read_unlock();
- }
- 
- static inline int ieee80211_ac_from_tid(int tid)
-
-
+- Felix
