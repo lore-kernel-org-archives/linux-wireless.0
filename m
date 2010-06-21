@@ -1,182 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46546 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754535Ab0FIPHJ (ORCPT
+Received: from mail.atheros.com ([12.36.123.2]:25611 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932343Ab0FUOvy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jun 2010 11:07:09 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.71)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1OMMrz-000883-Te
-	for linux-wireless@vger.kernel.org; Wed, 09 Jun 2010 17:07:08 +0200
-Message-Id: <20100609150454.273811480@sipsolutions.net>
-Date: Wed, 09 Jun 2010 17:01:49 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC v2 07/22] mac80211: always process blockack action from
- workqueue
-References: <20100609150142.227469359@sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 21 Jun 2010 10:51:54 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Jun 2010 07:51:54 -0700
+From: Michael Green <Michael.Green@Atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	David Quan <David.Quan@Atheros.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+Date: Mon, 21 Jun 2010 07:51:56 -0700
+Subject: wireless-regdb: Add A band in IL - And general point regarding tx
+ power limits in the dbase
+Message-ID: <93781E992CBA7843962D8B0E7D683F3C1172BD0B6D@SC1EXMB-MBCL.global.atheros.com>
+References: <1274856569-13436-1-git-send-email-emmanuel.grumbach@intel.com>
+	<20100618184257.GB6282@tuxdriver.com>
+ <AANLkTimN8oZ63m7cp2lE5MuFiEJ8iAGKswKIENTjIhMg@mail.gmail.com>
+In-Reply-To: <AANLkTimN8oZ63m7cp2lE5MuFiEJ8iAGKswKIENTjIhMg@mail.gmail.com>
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Here are my comments on the proposed patch...
 
-To prepare for making the ampdu_action callback
-sleep, make mac80211 always process blockack
-action frames from the skb queue. This gets rid
-of the current special case for managed mode
-interfaces as well.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/iface.c |   31 ++++++++++++++++++++++++++++++-
- net/mac80211/mlme.c  |   38 --------------------------------------
- net/mac80211/rx.c    |   29 +++++++++++++----------------
- 3 files changed, 43 insertions(+), 55 deletions(-)
-
---- wireless-testing.orig/net/mac80211/iface.c	2010-06-09 12:56:48.000000000 +0200
-+++ wireless-testing/net/mac80211/iface.c	2010-06-09 12:57:25.000000000 +0200
-@@ -724,7 +724,36 @@ static void ieee80211_iface_work(struct
- 
- 	/* first process frames */
- 	while ((skb = skb_dequeue(&sdata->skb_queue))) {
--		switch (sdata->vif.type) {
-+		struct ieee80211_mgmt *mgmt = (void *)skb->data;
-+
-+		if (ieee80211_is_action(mgmt->frame_control) &&
-+		    mgmt->u.action.category == WLAN_CATEGORY_BACK) {
-+			int len = skb->len;
-+			struct sta_info *sta;
-+
-+			rcu_read_lock();
-+			sta = sta_info_get(sdata, mgmt->sa);
-+			if (sta) {
-+				switch (mgmt->u.action.u.addba_req.action_code) {
-+				case WLAN_ACTION_ADDBA_REQ:
-+					ieee80211_process_addba_request(
-+							local, sta, mgmt, len);
-+					break;
-+				case WLAN_ACTION_ADDBA_RESP:
-+					ieee80211_process_addba_resp(local, sta,
-+								     mgmt, len);
-+					break;
-+				case WLAN_ACTION_DELBA:
-+					ieee80211_process_delba(sdata, sta,
-+								mgmt, len);
-+					break;
-+				default:
-+					WARN_ON(1);
-+					break;
-+				}
-+			}
-+			rcu_read_unlock();
-+		} else switch (sdata->vif.type) {
- 		case NL80211_IFTYPE_STATION:
- 			ieee80211_sta_rx_queued_mgmt(sdata, skb);
- 			break;
---- wireless-testing.orig/net/mac80211/mlme.c	2010-06-09 12:57:21.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2010-06-09 12:57:25.000000000 +0200
-@@ -1666,44 +1666,6 @@ void ieee80211_sta_rx_queued_mgmt(struct
- 			break;
- 		case IEEE80211_STYPE_ACTION:
- 			switch (mgmt->u.action.category) {
--			case WLAN_CATEGORY_BACK: {
--				struct ieee80211_local *local = sdata->local;
--				int len = skb->len;
--				struct sta_info *sta;
--
--				rcu_read_lock();
--				sta = sta_info_get(sdata, mgmt->sa);
--				if (!sta) {
--					rcu_read_unlock();
--					break;
--				}
--
--				local_bh_disable();
--
--				switch (mgmt->u.action.u.addba_req.action_code) {
--				case WLAN_ACTION_ADDBA_REQ:
--					if (len < (IEEE80211_MIN_ACTION_SIZE +
--						   sizeof(mgmt->u.action.u.addba_req)))
--						break;
--					ieee80211_process_addba_request(local, sta, mgmt, len);
--					break;
--				case WLAN_ACTION_ADDBA_RESP:
--					if (len < (IEEE80211_MIN_ACTION_SIZE +
--						   sizeof(mgmt->u.action.u.addba_resp)))
--						break;
--					ieee80211_process_addba_resp(local, sta, mgmt, len);
--					break;
--				case WLAN_ACTION_DELBA:
--					if (len < (IEEE80211_MIN_ACTION_SIZE +
--						   sizeof(mgmt->u.action.u.delba)))
--						break;
--					ieee80211_process_delba(sdata, sta, mgmt, len);
--					break;
--				}
--				local_bh_enable();
--				rcu_read_unlock();
--				break;
--				}
- 			case WLAN_CATEGORY_SPECTRUM_MGMT:
- 				ieee80211_sta_process_chanswitch(sdata,
- 						&mgmt->u.action.u.chan_switch.sw_elem,
---- wireless-testing.orig/net/mac80211/rx.c	2010-06-09 12:57:21.000000000 +0200
-+++ wireless-testing/net/mac80211/rx.c	2010-06-09 12:57:25.000000000 +0200
-@@ -1950,33 +1950,29 @@ ieee80211_rx_h_action(struct ieee80211_r
- 		if (len < IEEE80211_MIN_ACTION_SIZE + 1)
- 			break;
- 
--		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
--			skb_queue_tail(&sdata->skb_queue, rx->skb);
--			ieee80211_queue_work(&local->hw, &sdata->work);
--			return RX_QUEUED;
--		}
--
- 		switch (mgmt->u.action.u.addba_req.action_code) {
- 		case WLAN_ACTION_ADDBA_REQ:
- 			if (len < (IEEE80211_MIN_ACTION_SIZE +
- 				   sizeof(mgmt->u.action.u.addba_req)))
--				return RX_DROP_MONITOR;
--			ieee80211_process_addba_request(local, rx->sta, mgmt, len);
--			goto handled;
-+				goto invalid;
-+			break;
- 		case WLAN_ACTION_ADDBA_RESP:
- 			if (len < (IEEE80211_MIN_ACTION_SIZE +
- 				   sizeof(mgmt->u.action.u.addba_resp)))
--				break;
--			ieee80211_process_addba_resp(local, rx->sta, mgmt, len);
--			goto handled;
-+				goto invalid;
-+			break;
- 		case WLAN_ACTION_DELBA:
- 			if (len < (IEEE80211_MIN_ACTION_SIZE +
- 				   sizeof(mgmt->u.action.u.delba)))
--				break;
--			ieee80211_process_delba(sdata, rx->sta, mgmt, len);
--			goto handled;
-+				goto invalid;
-+			break;
-+		default:
-+			goto invalid;
- 		}
--		break;
-+
-+		skb_queue_tail(&sdata->skb_queue, rx->skb);
-+		ieee80211_queue_work(&local->hw, &sdata->work);
-+		return RX_QUEUED;
- 	case WLAN_CATEGORY_SPECTRUM_MGMT:
- 		if (local->hw.conf.channel->band != IEEE80211_BAND_5GHZ)
- 			break;
-@@ -2033,6 +2029,7 @@ ieee80211_rx_h_action(struct ieee80211_r
- 		return RX_QUEUED;
- 	}
- 
-+ invalid:
- 	/*
- 	 * For AP mode, hostapd is responsible for handling any action
- 	 * frames that we didn't handle, including returning unknown
+country IL:
+> >       (2402 - 2482 @ 40), (N/A, 20)
+> > +     (5150 - 5250 @ 40). (N/A, 200 mW), NO-OUTDOOR
+> > +     (5250 - 5350 @ 40). (N/A, 200 mW), NO-OUTDOOR, DFS
 
 
+a) I agree with channels above and enabling HT40 per above.
+
+b) I think all entries in the dbase should be in dBm (not mW).   dBm vs. mW are absolutely equivalent. No reason to retain "mW" unit from the source docs.  I think this was agreed by all before, but wanted to reiterate. 
+
+c) I don't understand why "Indoor/Outdoor" is stated in the table for any/all countries.   5150-5250 is globally allocated for indoor use.  So I am not reviewing/commenting on the indoor/outdoor comments in the dbase.
+
+
+d) Reminder...Israel and most other countries state max tx power limit in 'EIRP' (ie takes into account actual antenna gain of the end device).  Therefore, the entire dbase must be clearly flagged so developers know the tx power limits in this dbase only apply when devices have 0dB (or negative) gain antennas.  
+
+In other words, the software (or the hw/sw developer) must somehow reduce tx powers below the values in the dbase, dB-for-dB, when antenna+cable has positive gain.
+
+The exception is FCC target power, where FCC (and the dBase) quotes "conducted power" rather than EIRP.
+
+Issue d) is not a concern for manufacturers/developers who produce products that limit regulatory tx powers in the hw (factory set/limited). In that case they take into account actual antenna gains during original conformance testing and program in compliant tx powers into hw (and don't rely at all on the tx powers in the dbase).
+
+But developers who don't have tx powers limited in hw, who actually use the tx power in the dbase, must take into account antenna gain as explained above, else the product may not comply with tx limits for most countries.  
+
+Fine if you want to discuss point d) separately since it's a global issue (not limited to this particular IL patch).
+
+tks,
+
+Michael Green
+Atheros Communications, Inc.
+mgreen@atheros.com
+Desk:   +1-781-400-1491
+Mobile: +1-508-380-4921
+
+
+-----Original Message-----
+From: Emmanuel Grumbach [mailto:egrumbach@gmail.com] 
+Sent: Sunday, June 20, 2010 1:41 AM
+To: John W. Linville
+Cc: Emmanuel Grumbach; linux-wireless@vger.kernel.org; Michael Green; David Quan
+Subject: Re: [RFC] wireless-regdb: Add A band in IL
+
+Emmanuel Grumbach
+egrumbach@gmail.com
+
+
+On Fri, Jun 18, 2010 at 21:42, John W. Linville <linville@tuxdriver.com> wrote:
+>
+> On Wed, May 26, 2010 at 09:49:29AM +0300, Emmanuel Grumbach wrote:
+> > A band in allowed in IL, according to official document issued by the Ministry
+> > of Communications: http://www.moc.gov.il/sip_storage/FILES/1/1061.pdf.
+> >
+> > 5150 - 5250 200mW e.i.r.p. OUTDOOR forbidden
+> > 5250 - 5350 200mW e.i.r.p. OUTDOOR forbidden DFS mandatory
+> >
+> > 40Mhz is allowed in A band for every WiFi-Alliance certified equipment.
+> >
+> > ***************************************************************
+> > Not to be merged for the moment
+> > ***************************************************************
+> >
+> > CC: Michael Green <Michael.Green@atheros.com>
+> > CC: David Quan <David.Quan@atheros.com>
+> > Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> > ---
+> >  db.txt |    2 ++
+> >  1 files changed, 2 insertions(+), 0 deletions(-)
+> >
+> > diff --git a/db.txt b/db.txt
+> > index e63a43e..d49c397 100644
+> > --- a/db.txt
+> > +++ b/db.txt
+> > @@ -319,6 +319,8 @@ country IE:
+> >
+> >  country IL:
+> >       (2402 - 2482 @ 40), (N/A, 20)
+> > +     (5150 - 5250 @ 40). (N/A, 200 mW), NO-OUTDOOR
+> > +     (5250 - 5350 @ 40). (N/A, 200 mW), NO-OUTDOOR, DFS
+> >
+> >  country IN:
+> >       (2402 - 2482 @ 40), (N/A, 20)
+>
+> Is this issue now settled?
+
+Yes, I think that Michael Green agreed for this patch. Once he will
+reply to make sure, we will be able to move on to a real patch.
