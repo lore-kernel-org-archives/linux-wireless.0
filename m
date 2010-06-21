@@ -1,66 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39625 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751303Ab0FWTAM (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:57494 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757700Ab0FUKun (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jun 2010 15:00:12 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
+	Mon, 21 Jun 2010 06:50:43 -0400
+Received: from esebh105.NOE.Nokia.com (esebh105.ntc.nokia.com [172.21.138.211])
+	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o5LAoWTc030829
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Jun 2010 05:50:42 -0500
+Received: from localhost.localdomain (wimaxnb.nmp.nokia.com [172.22.211.32])
+	by mgw-da02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o5LAoH1O004280
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Jun 2010 13:50:18 +0300
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@atheros.com,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v2] ath9k: declare MODULE_FIRMWARE for ath9k_htc
-Date: Wed, 23 Jun 2010 14:50:39 -0400
-Message-Id: <1277319039-20837-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1277317393-20245-1-git-send-email-linville@tuxdriver.com>
-References: <1277317393-20245-1-git-send-email-linville@tuxdriver.com>
+Subject: [RFC PATCHv2] iw: Add support for setting transmit power level
+Date: Mon, 21 Jun 2010 13:50:17 +0300
+Message-Id: <1277117417-3126-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Add a "set txpower" option to specify the current transmit power level. Modes
+supported are automatic, fixed and limited, and the limit may be specified
+in signed mBm units.
+
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 ---
-v2 -> avoid duplicate strings for firmware names and simultaneously
-	attract attention to MODULE_FIRMWARE section in the even of
-	any updates
+ nl80211.h |   22 ++++++++++++++++++++++
+ phy.c     |   50 +++++++++++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 71 insertions(+), 1 deletions(-)
 
- drivers/net/wireless/ath/ath9k/hif_usb.c |   15 ++++++++++++---
- 1 files changed, 12 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 74bc80f..ad9134b 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -16,6 +16,15 @@
+diff --git a/nl80211.h b/nl80211.h
+index 64fb32b..2c87016 100644
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -725,6 +725,12 @@ enum nl80211_commands {
+  * @NL80211_ATTR_AP_ISOLATE: (AP mode) Do not forward traffic between stations
+  *	connected to this BSS.
+  *
++ * @NL80211_ATTR_WIPHY_TX_POWER_SETTING: Transmit power setting type. See
++ *      &enum nl80211_tx_power_setting for possible values.
++ * @NL80211_ATTR_WIPHY_TX_POWER_LEVEL: Transmit power level in signed mBm units.
++ *      This is used in association with @NL80211_ATTR_WIPHY_TX_POWER_SETTING
++ *      for non-automatic settings.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -882,6 +888,9 @@ enum nl80211_attrs {
  
- #include "htc.h"
+ 	NL80211_ATTR_AP_ISOLATE,
  
-+/* identify firmware images */
-+#define FIRMWARE_AR7010		"ar7010.fw"
-+#define FIRMWARE_AR7010_1_1	"ar7010_1_1.fw"
-+#define FIRMWARE_AR9271		"ar9271.fw"
++	NL80211_ATTR_WIPHY_TX_POWER_SETTING,
++	NL80211_ATTR_WIPHY_TX_POWER_LEVEL,
 +
-+MODULE_FIRMWARE(FIRMWARE_AR7010);
-+MODULE_FIRMWARE(FIRMWARE_AR7010_1_1);
-+MODULE_FIRMWARE(FIRMWARE_AR9271);
-+
- static struct usb_device_id ath9k_hif_usb_ids[] = {
- 	{ USB_DEVICE(0x0cf3, 0x9271) }, /* Atheros */
- 	{ USB_DEVICE(0x0cf3, 0x1006) }, /* Atheros */
-@@ -890,12 +899,12 @@ static int ath9k_hif_usb_probe(struct usb_interface *interface,
- 	case 0x7010:
- 	case 0x9018:
- 		if (le16_to_cpu(udev->descriptor.bcdDevice) == 0x0202)
--			hif_dev->fw_name = "ar7010_1_1.fw";
-+			hif_dev->fw_name = FIRMWARE_AR7010_1_1;
- 		else
--			hif_dev->fw_name = "ar7010.fw";
-+			hif_dev->fw_name = FIRMWARE_AR7010;
- 		break;
- 	default:
--		hif_dev->fw_name = "ar9271.fw";
-+		hif_dev->fw_name = FIRMWARE_AR9271;
- 		break;
- 	}
+ 	/* add attributes here, update the policy in nl80211.c */
  
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -1659,4 +1668,17 @@ enum nl80211_cqm_rssi_threshold_event {
+ 	NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
+ };
+ 
++
++/**
++ * enum nl80211_tx_power_setting - TX power adjustment
++ * @NL80211_TX_POWER_AUTOMATIC: automatically determine transmit power
++ * @NL80211_TX_POWER_LIMITED: limit TX power by the mBm parameter
++ * @NL80211_TX_POWER_FIXED: fix TX power to the mBm parameter
++ */
++enum nl80211_tx_power_setting {
++	NL80211_TX_POWER_AUTOMATIC,
++	NL80211_TX_POWER_LIMITED,
++	NL80211_TX_POWER_FIXED,
++};
++
+ #endif /* __LINUX_NL80211_H */
+diff --git a/phy.c b/phy.c
+index 8f8d757..f042dc2 100644
+--- a/phy.c
++++ b/phy.c
+@@ -175,7 +175,7 @@ static int handle_netns(struct nl80211_state *state,
+ 		return 1;
+ 
+ 	NLA_PUT_U32(msg, NL80211_ATTR_PID,
+-		    strtoul(argv[0], &end, 10)); 
++		    strtoul(argv[0], &end, 10));
+ 
+ 	if (*end != '\0')
+ 		return 1;
+@@ -258,3 +258,51 @@ COMMAND(set, distance, "<distance>",
+ 	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_distance,
+ 	"Set appropriate coverage class for given link distance in meters.\n"
+ 	"Valid values: 0 - 114750");
++
++static int handle_txpower(struct nl80211_state *state,
++			  struct nl_cb *cb,
++			  struct nl_msg *msg,
++			  int argc, char **argv)
++{
++	enum nl80211_tx_power_setting type;
++	int ret = -ENOSPC;
++	int mbm;
++
++	/* get the required args */
++	if (argc != 1 && argc != 2)
++		return 1;
++
++	if (!strcmp(argv[0], "auto"))
++		type = NL80211_TX_POWER_AUTOMATIC;
++	else if (!strcmp(argv[0], "fixed"))
++		type = NL80211_TX_POWER_FIXED;
++	else if (!strcmp(argv[0], "limit"))
++		type = NL80211_TX_POWER_LIMITED;
++	else {
++		printf("Invalid parameter: %s\n", argv[0]);
++		return 2;
++	}
++
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_TX_POWER_SETTING, type);
++
++	if (type != NL80211_TX_POWER_AUTOMATIC) {
++		if (argc != 2) {
++			printf("Missing TX power level argument.\n");
++			return 2;
++		}
++
++		mbm = atoi(argv[1]);
++		NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_TX_POWER_LEVEL, mbm);
++	}
++
++	ret = 0;
++
++ nla_put_failure:
++	return ret;
++}
++COMMAND(set, txpower, "<auto|fixed|limit> [<tx power in mBm>]",
++	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_txpower,
++	"Specify transmit power level and setting type.");
++COMMAND(set, txpower, "<auto|fixed|limit> [<tx power in mBm>]",
++	NL80211_CMD_SET_WIPHY, 0, CIB_NETDEV, handle_txpower,
++	"Specify transmit power level and setting type.");
 -- 
-1.7.0.1
+1.6.3.3
 
