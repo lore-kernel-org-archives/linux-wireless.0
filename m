@@ -1,60 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:47882 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753404Ab0FNRzx (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:64560 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752178Ab0FUSCx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jun 2010 13:55:53 -0400
-Subject: Re: [REGRESSION] [IWL3945] Broadcast is broken?
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: maciej.rutecki@gmail.com
-Cc: LKML <linux-kernel@vger.kernel.org>, reinette.chatre@intel.com,
-	wey-yi.w.guy@intel.com, ilw@linux.intel.com,
-	linux-wireless@vger.kernel.org,
-	Berg Johannes <johannes.berg@intel.com>,
-	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <201006141924.24061.maciej.rutecki@gmail.com>
-References: <201006141924.24061.maciej.rutecki@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 14 Jun 2010 20:55:38 +0300
-Message-ID: <1276538138.7931.3.camel@maxim-laptop>
-Mime-Version: 1.0
+	Mon, 21 Jun 2010 14:02:53 -0400
+Received: by pwj8 with SMTP id 8so419382pwj.19
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Jun 2010 11:02:52 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4C1F51A3.5000407@gmail.com>
+References: <4C1F51A3.5000407@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 21 Jun 2010 11:02:32 -0700
+Message-ID: <AANLkTim7zJFbV0N0yoV--F3-8_fuv3jWFilozC9wmuP-@mail.gmail.com>
+Subject: Re: [RFC] refactor ath9k_platform to sound sane for use in both ath9k
+	and ath5k
+To: Daniel Golle <daniel.golle@gmail.com>
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-06-14 at 19:24 +0200, Maciej Rutecki wrote: 
-> Hardware:
-> 08:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG [Golan] 
-> Network Connection (rev 02)
-> 
-> Last known good kernel: 2.6.34
-> 
-> Failing kernels: since 2.6.35-rc1 to 2.6.35-rc3
-> 
-> Symptoms:
-> During connect do wireless network authentication seems be OK, but I cannot 
-> get IP from dhcp serwer. I do:
-> echo 0x43fff > /sys/class/net/wlan0/device/debug_level
-> 
-> Syslog is here:
-> http://unixy.pl/maciek/download/kernel/2.6.35-rc3/gumis/syslog-before.txt
-> 
-> From syslog I guess the problem is that it doesn't receive broadcast frames 
-> (but I'm not sure), so I try:
-> sudo ifconfig wlan0 promisc
-> 
-> Syslog:
-> http://unixy.pl/maciek/download/kernel/2.6.35-rc3/gumis/syslog-after.txt
-> 
-> And then I can get IP address.
-> 
-> Any advice?
+On Mon, Jun 21, 2010 at 4:48 AM, Daniel Golle <daniel.golle@gmail.com> wrote:
+> I'm developing on OpenWrt to work with EEPROM-less ath5k mini-pci devices.
+> This is needed to support the ar71xx-based Senao EAP7660D board which got
+> two AR5413 modules soldered into its mini-pci slots. In the original
+> Firmware, MAC addresses as well as calibration-data seems to be part of the
+> firmware blob stored on the board flash.
+> See https://lists.openwrt.org/pipermail/openwrt-devel/2010-June/007366.html
+> for the corresponding discussion on OpenWrt-devel.
 
-Very likely commit 3474ad635db371b0d8d0ee40086f15d223d5b6a4, 
-because I have same problem.
+I don't see much "discussion" there.
 
-Try to revert it.
+> Similarly to the way this happens for ath9k, I managed to get ath5k to use
+> the MAC address and eeprom-data supplied by ath9k_platform_data.
+> Including ath9k_platform.h in ath5k-sources looks confusing as the name
+> ath9k_platform suggests that the supplied ath9k_platform_info struct is
+> specific to ath9k devices.
+> Consequently, I believe ath9k_platform.h should be renamed into
+> ath_platform.h, the macro ATH9K_PLAT_EEP_MAX_WORDS into
+> ATH_PLAT_EEP_MAX_WORDS and struct ath9k_platform_data should be refactored
+> to be struct ath_platform_data.
+> Please let me know if you agree with this in theory; if yes, I'll start
+> posting the patches to OpenWrt.
 
-Best regards,
-Maxim Levitsky
+You can stuff any general stuff into the ath module which is shared by both.
 
-
+  Luis
