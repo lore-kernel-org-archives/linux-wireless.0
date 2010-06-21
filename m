@@ -1,31 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:51528 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756972Ab0FIIfo convert rfc822-to-8bit (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:64808 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756758Ab0FUSnO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jun 2010 04:35:44 -0400
-Received: from MSI-MTA.marvell.com (msi-mta.marvell.com [10.68.76.91]) by dakia2.marvell.com with ESMTP id a2mMstOpavwASCZd for <linux-wireless@vger.kernel.org>; Wed, 09 Jun 2010 01:35:44 -0700 (PDT)
-From: Nishant Sarmukadam <nishants@marvell.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 9 Jun 2010 01:35:42 -0700
-Subject: Possible leak in the ampdu aggregation code?
-Message-ID: <EC64E4604C8024438259B683BB2514E1079C16BCC6@SC-VEXCH1.marvell.com>
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 21 Jun 2010 14:43:14 -0400
+Received: by pxi12 with SMTP id 12so1497071pxi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Jun 2010 11:43:14 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <201006211059.58879.helmut.schaa@googlemail.com>
+References: <201006211059.58879.helmut.schaa@googlemail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 21 Jun 2010 11:37:53 -0700
+Message-ID: <AANLkTinj36oA6QpEiYywGGkRqCmNRHSeR643HpiUsXC-@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: allow selection of minstrel_ht as default rc
+	algo
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felix Fietkau <nbd@openwrt.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, Jun 21, 2010 at 1:59 AM, Helmut Schaa
+<helmut.schaa@googlemail.com> wrote:
+> Allow selection of minstrel_ht as default rate control algorithm. At the
+> moment minstrel_ht can only be requested by the driver code but not selected
+> as default in make menuconfig.
+>
+> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 
+Shouldn't this just be enabled when you enable minstrel? I don't get
+why we would split up the two.
 
-I wanted to get some views on a possible issue while using mac80211 ampdu support. 
-skb's from pending queue for a TID are spliced onto the local pending queue when tearing down a block ack session.
-If aggregation is stopped before the ampdu state becomes HT_AGG_STATE_OPERATIONAL say on addba timer expiry or if the addba request is declined, the state is changed to HT_AGG_STATE_REQ_STOP_BA_MSK |(initiator <<
-HT_AGG_STATE_INITIATOR_SHIFT) in ___ieee80211_stop_tx_ba_session. 
-After commit 416fbdff2137e8d8cc8f23f517bee3a26b11526f, the ampdu state needs to have HT_ADDBA_REQUESTED_MSK set, else the skb's are not spliced.
-Since the ampdu state got changed in ___ieee80211_stop_tx_ba_session, this condition is not met due to which the skb's are not spliced.
-tid_tx[tid] which has a pointer to the pending skb queue then gets freed leaving the skb's in the pending queue allocated forever resulting in a memory leak. Does this make sense? If yes, one way to fix the issue is modify the state in ___ieee80211_stop_tx_ba_session preserving the earlier state. This way HT_ADDBA_REQUESTED_MSK will be set and skb's will be spliced. Any other way to fix this issue? Thoughts?
-
-
-Regards,
-Nishant
+  Luis
