@@ -1,141 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35576 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755609Ab0FGLDW (ORCPT
+Received: from saarni.dnainternet.net ([83.102.40.136]:58962 "EHLO
+	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758214Ab0FUUBy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jun 2010 07:03:22 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.71)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1OLa6z-0007Dq-Uo
-	for linux-wireless@vger.kernel.org; Mon, 07 Jun 2010 13:03:22 +0200
-Message-Id: <20100607110202.012113320@sipsolutions.net>
-Date: Mon, 07 Jun 2010 13:01:49 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 16/21] mac80211: defer RX agg session teardown to work
-References: <20100607110133.472649120@sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 21 Jun 2010 16:01:54 -0400
+Message-ID: <20100621230152.41123y9y8dt1v968@hayate.sektori.org>
+Date: Mon, 21 Jun 2010 23:01:52 +0300
+From: "Jussi Kivilinna" <jussi.kivilinna@mbnet.fi>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "Maxim Levitsky" <maximlevitsky@gmail.com>,
+	"David Quan" <David.Quan@atheros.com>,
+	"Bob Copeland" <me@bobcopeland.com>,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Subject: Re: [ath5k-devel] [PATCH v2] ath5k: disable ASPM
+References: <20100528100901.14580.1322.stgit@fate.lan>
+	<1276806785.20754.8.camel@maxim-laptop>
+	<20100618112026.17623g6uhdjk8hts@naisho.dyndns.info>
+	<1276856142.9114.1.camel@maxim-laptop>
+	<20100618134930.124225d4fsi8w1fk@naisho.dyndns.info>
+	<1276859156.19554.2.camel@maxim-laptop>
+	<AANLkTimdTjedtoeKAp5tcTqefrUB6k373Kx9EacuYFcO@mail.gmail.com>
+	<1276870309.23783.3.camel@maxim-laptop>
+	<1276933774.16697.11.camel@maxim-laptop>
+	<AANLkTimIjaxq7IDWwIl1vv93k9bNQ2i89Sb5R5TiJmmA@mail.gmail.com>
+	<1277032723.9555.12.camel@maxim-laptop>
+	<AANLkTim8iZmm8pEERJUsrQWOiLSjPUfCN-TFFzZZQWx2@mail.gmail.com>
+In-Reply-To: <AANLkTim8iZmm8pEERJUsrQWOiLSjPUfCN-TFFzZZQWx2@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset=UTF-8;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Quoting "Luis R. Rodriguez" <mcgrof@gmail.com>:
 
-Since we want the code to be able to sleep
-in the future, it must not be called from
-the timer directly. To prepare, move it out
-into the aggregation work.
+>> Also Jussi Kivilinna said that he found that in windows .inf file there
+>> are some instructions to enable L1 but not L0s.
+>
+> For which chipsets?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/agg-rx.c      |   24 ++++++++++--------------
- net/mac80211/ht.c          |    5 +++++
- net/mac80211/ieee80211_i.h |    2 ++
- net/mac80211/sta_info.h    |    3 +++
- 4 files changed, 20 insertions(+), 14 deletions(-)
+I uploaded windows driver I have to:
+   
+http://www.student.oulu.fi/~jukivili/ath5k/XP32_XP64_WHQL_Dri-7-6-1-149_ACU-7-0-2-48_LEAP_Acer_81024
 
---- wireless-testing.orig/net/mac80211/agg-rx.c	2010-06-06 15:30:23.000000000 +0200
-+++ wireless-testing/net/mac80211/agg-rx.c	2010-06-06 15:43:50.000000000 +0200
-@@ -32,21 +32,18 @@ static void ieee80211_free_tid_rx(struct
- 	kfree(tid_rx);
- }
- 
--static void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
--					    u16 initiator, u16 reason,
--					    bool from_timer)
-+void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
-+				     u16 initiator, u16 reason)
- {
- 	struct ieee80211_local *local = sta->local;
- 	struct tid_ampdu_rx *tid_rx;
- 
--	spin_lock_bh(&sta->lock);
-+	lockdep_assert_held(&sta->lock);
- 
- 	tid_rx = sta->ampdu_mlme.tid_rx[tid];
- 
--	if (!tid_rx) {
--		spin_unlock_bh(&sta->lock);
-+	if (!tid_rx)
- 		return;
--	}
- 
- 	rcu_assign_pointer(sta->ampdu_mlme.tid_rx[tid], NULL);
- 
-@@ -65,10 +62,7 @@ static void ___ieee80211_stop_rx_ba_sess
- 		ieee80211_send_delba(sta->sdata, sta->sta.addr,
- 				     tid, 0, reason);
- 
--	spin_unlock_bh(&sta->lock);
--
--	if (!from_timer)
--		del_timer_sync(&tid_rx->session_timer);
-+	del_timer_sync(&tid_rx->session_timer);
- 
- 	call_rcu(&tid_rx->rcu_head, ieee80211_free_tid_rx);
- }
-@@ -76,7 +70,9 @@ static void ___ieee80211_stop_rx_ba_sess
- void __ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
- 				    u16 initiator, u16 reason)
- {
--	___ieee80211_stop_rx_ba_session(sta, tid, initiator, reason, false);
-+	spin_lock_bh(&sta->lock);
-+	___ieee80211_stop_rx_ba_session(sta, tid, initiator, reason);
-+	spin_unlock_bh(&sta->lock);
- }
- 
- /*
-@@ -97,8 +93,8 @@ static void sta_rx_agg_session_timer_exp
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 	printk(KERN_DEBUG "rx session timer expired on tid %d\n", (u16)*ptid);
- #endif
--	___ieee80211_stop_rx_ba_session(sta, *ptid, WLAN_BACK_RECIPIENT,
--					WLAN_REASON_QSTA_TIMEOUT, true);
-+	set_bit(*ptid, sta->ampdu_mlme.tid_rx_timer_expired);
-+	ieee80211_queue_work(&sta->local->hw, &sta->ampdu_mlme.work);
- }
- 
- static void ieee80211_send_addba_resp(struct ieee80211_sub_if_data *sdata, u8 *da, u16 tid,
---- wireless-testing.orig/net/mac80211/ht.c	2010-06-06 15:30:23.000000000 +0200
-+++ wireless-testing/net/mac80211/ht.c	2010-06-06 15:43:50.000000000 +0200
-@@ -132,6 +132,11 @@ void ieee80211_ba_session_work(struct wo
- 
- 	spin_lock_bh(&sta->lock);
- 	for (tid = 0; tid < STA_TID_NUM; tid++) {
-+		if (test_and_clear_bit(tid, sta->ampdu_mlme.tid_rx_timer_expired))
-+			___ieee80211_stop_rx_ba_session(
-+				sta, tid, WLAN_BACK_RECIPIENT,
-+				WLAN_REASON_QSTA_TIMEOUT);
-+
- 		tid_tx = sta->ampdu_mlme.tid_tx[tid];
- 		if (!tid_tx)
- 			continue;
---- wireless-testing.orig/net/mac80211/sta_info.h	2010-06-06 15:30:23.000000000 +0200
-+++ wireless-testing/net/mac80211/sta_info.h	2010-06-06 15:44:11.000000000 +0200
-@@ -140,10 +140,13 @@ struct tid_ampdu_rx {
-  * @addba_req_num: number of times addBA request has been sent.
-  * @dialog_token_allocator: dialog token enumerator for each new session;
-  * @work: work struct for starting/stopping aggregation
-+ * @tid_rx_timer_expired: bitmap indicating on which TIDs the
-+ *	RX timer expired until the work for it runs
-  */
- struct sta_ampdu_mlme {
- 	/* rx */
- 	struct tid_ampdu_rx *tid_rx[STA_TID_NUM];
-+	unsigned long tid_rx_timer_expired[BITS_TO_LONGS(STA_TID_NUM)];
- 	/* tx */
- 	struct work_struct work;
- 	struct tid_ampdu_tx *tid_tx[STA_TID_NUM];
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2010-06-06 15:30:23.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2010-06-06 15:43:49.000000000 +0200
-@@ -1101,6 +1101,8 @@ int ieee80211_send_smps_action(struct ie
- 			       enum ieee80211_smps_mode smps, const u8 *da,
- 			       const u8 *bssid);
- 
-+void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
-+				     u16 initiator, u16 reason);
- void __ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
- 				    u16 initiator, u16 reason);
- void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta);
+In inf, all ASPM entries are either ASPM off or ASPM L0s:off/L1:on.  
+There is also user option for changing ASPM setting with options  
+L0s:off/L1:off and L0s:off/L1:on.
+
+-Jussi
 
 
