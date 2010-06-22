@@ -1,87 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:53681 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751715Ab0F1AiR convert rfc822-to-8bit (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:57985 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751757Ab0FVPy0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Jun 2010 20:38:17 -0400
-Received: by vws19 with SMTP id 19so445713vws.19
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Jun 2010 17:38:17 -0700 (PDT)
+	Tue, 22 Jun 2010 11:54:26 -0400
+Received: by pvh11 with SMTP id 11so438208pvh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jun 2010 08:54:26 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <201006221651.24853.Sebastian.Smolorz@gmx.de>
-References: <201006221651.24853.Sebastian.Smolorz@gmx.de>
-Date: Sun, 27 Jun 2010 20:38:16 -0400
-Message-ID: <AANLkTilsEl-smRtQEU8obOO6GDoWzKYHyFYQYO5Lfpps@mail.gmail.com>
-Subject: Re: [PATCH 0/2] at76c50x-usb.c: Fix broken authentication process
-From: Jason Andryuk <jandryuk@gmail.com>
-To: Sebastian Smolorz <Sebastian.Smolorz@gmx.de>
-Cc: kalle.valo@iki.fi, linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTilpqUnWG2CnMNZR7a45rY9cbqks3W-gkjsMbYOQ@mail.gmail.com>
+References: <AANLkTilpqUnWG2CnMNZR7a45rY9cbqks3W-gkjsMbYOQ@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 22 Jun 2010 08:54:05 -0700
+Message-ID: <AANLkTilUuEtNWhzP-HUrUFjXqLpMkU_2_mp2uOcaBDGz@mail.gmail.com>
+Subject: Re: ASPM status for iwlwifi and power-management (in general)
+To: sedat.dilek@gmail.com
+Cc: wireless <linux-wireless@vger.kernel.org>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	John Linville <linville@tuxdriver.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 22, 2010 at 10:51 AM, Sebastian Smolorz
-<Sebastian.Smolorz@gmx.de> wrote:
-> Fix authentication process of wireless driver at76c50x-usb.c which was broken
-> since kernel 2.6.31
+On Tue, Jun 22, 2010 at 3:44 AM, Sedat Dilek <sedat.dilek@googlemail.com> wrote:
+> Hi,
+>
+> yesterday, I was playing with PowerTop and my iwl3945 still is in the
+> TOP 3 of energy user.
+>
+> Inspired by the recently published ASPM doc from Luis [2] I played a
+> bit with ASPM.
+>
+> Currently, I am using a 2.6.35-rc3 Linux-kernel with latest
+> acpi-2.6/release fixes.
+>
+> # dmesg | grep -i aspm
+> [    0.226963] pci 0000:01:00.0: disabling ASPM on pre-1.1 PCIe
+> device.  You can enable it with 'pcie_aspm=force'
+> [    0.227629] pci 0000:08:00.0: disabling ASPM on pre-1.1 PCIe
+> device.  You can enable it with 'pcie_aspm=force'
+> [    0.228205] pci 0000:10:00.0: disabling ASPM on pre-1.1 PCIe
+> device.  You can enable it with 'pcie_aspm=force'
+>
+> # for i in 01:00.0 08:00.0 10:00.0 ; do lspci -v | grep $i ; done
+> 01:00.0 VGA compatible controller: ATI Technologies Inc M52 [Mobility
+> Radeon X1300] (prog-if 00 [VGA controller])
+> 08:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM5753M
+> Gigabit Ethernet PCI Express (rev 21)
+> 10:00.0 Network controller: Intel Corporation PRO/Wireless 3945ABG
+> [Golan] Network Connection (rev 02)
+>
+> # lspci -vvvv -s 10:00.0 | grep -i aspm
+>                LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0
+> <128ns, L1 <64us
+>                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
+>
+> Before I will try 'pcie_aspm=force' cheat-code
 
-Thanks for working on this, but unfortunately it does not work with my
-Linksys WUSB11.  Does it work for you?
+I should note I discourage the usage of pcie_aspm=force, it will try
+to enable ASPM for all devices which do have the capability, and this
+means when you are enabling it you are not only testing ASPM on the
+device you had in mind but *all* devices capable of it.
 
-[  168.420082] usb 4-1: new full speed USB device using uhci_hcd and address 2
-[  168.719582] Atmel at76x USB Wireless LAN Driver 0.17 loading
-[  168.743011] usb 4-1: using firmware atmel_at76c503-i3861.bin
-(version 0.90.0-44)
-[  168.746784] phy1: Selected rate control algorithm 'minstrel'
-[  168.747410] phy1: USB 4-1:1.0, MAC 00:06:25:00:6a:7a, firmware 0.90.0-2
-[  168.747413] phy1: regulatory domain 0x10: FCC (USA)
-[  168.747434] usbcore: registered new interface driver at76c50x-usb
-[  168.803980] udev: renamed network interface wlan0 to wlan3
-[  168.837883] ADDRCONF(NETDEV_UP): wlan3: link is not ready
-[  274.423484] wlan3: direct probe to 00:13:46:08:8a:6e (try 1)
-[  274.622558] wlan3: direct probe to 00:13:46:08:8a:6e (try 2)
-[  274.822600] wlan3: direct probe to 00:13:46:08:8a:6e (try 3)
-[  275.022557] wlan3: direct probe to 00:13:46:08:8a:6e timed out
-[  284.694487] wlan3: direct probe to 00:13:46:08:8a:6e (try 1)
-[  284.900075] wlan3: direct probe to 00:13:46:08:8a:6e (try 2)
-[  285.105548] wlan3: direct probe to 00:13:46:08:8a:6e (try 3)
-[  285.302565] wlan3: direct probe to 00:13:46:08:8a:6e timed out
-[  294.954450] wlan3: direct probe to 00:13:46:08:8a:6e (try 1)
-[  295.152564] wlan3: direct probe to 00:13:46:08:8a:6e (try 2)
-[  295.352559] wlan3: direct probe to 00:13:46:08:8a:6e (try 3)
-[  295.552556] wlan3: direct probe to 00:13:46:08:8a:6e timed out
+> I wanted to ask about
+> the status of iwlwifi and ASPM.
+> Is there code available. yet?
 
-> +       /* The following code lines are important when the device is going to
-> +        * authenticate with a new bssid. The driver must send CMD_JOIN before
-> +        * an authentication frame is transmitted. For this to succeed, the
-> +        * correct bssid of the AP must be known. As mac80211 does not inform
-> +        * drivers about the bssid prior to the authentication process the
-> +        * following workaround is necessary. If the TX frame is an
-> +        * authentication frame extract the bssid and send the CMD_JOIN. */
-> +       if (mgmt->frame_control & cpu_to_le16(IEEE80211_STYPE_AUTH)) {
-> +               if (compare_ether_addr(priv->bssid, mgmt->bssid)) {
-> +                       memcpy(priv->bssid, mgmt->bssid, ETH_ALEN);
-> +                       ieee80211_queue_work(hw, &priv->work_join_bssid);
-> +                       return NETDEV_TX_BUSY;
-> +               }
-> +       }
-> +
+Driver code for ASPM only exists to help tweak it if for whatever
+reason it does need tweaking. An example is ath9k which disables the
+PLL when it uses ASPM to save power. iwlagn or iwl3945 might have
+similar stuff, but not sure. Technically drivers should not need any
+code for ASPM unless its driver specific tweaks.
 
-The check for IEEE80211_STYPE_AUTH may be insufficient since direct
-probe is sent with frame control IEEE80211_STYPE_PROBE_REQ.  Maybe a
-better check would be comparing struct ieee80211_work.type to
-IEEE80211_WORK_DIRECT_PROBE or IEEE80211_WORK_AUTH?  I am not sure if
-that is accessible in the driver's tx function though.
+> Which kernel has it - linux-next,
+> wireless-testing GIT, iwlwifi GIT?
 
-With the frame_control check modified for either IEEE80211_STYPE_AUTH
-or IEEE80211_STYPE_PROBE_REQ, it is still unsuccessful.
-at76_work_join_bssid is called between the first and second direct
-probe attempt.  However, the CMD_JOIN command is not in the log.
-Presumably that occurs because the BSSID pulled from the PROBE_REQ is
-ff:ff:ff:ff:ff:ff which fails the is_valid_ether_addr(priv->bssid)
-check in at76_work_join_bssid.
+ASPM can be used so long as you just have a PCIE bus. If the driver
+has ASPM tweaks that's a different thing.
 
-http://lxr.linux.no/#linux+v2.6.34/include/linux/etherdevice.h#L100
+> Which user-space apps are required?
 
-I'm glad someone is working on this.
+None.
 
-Jason
+> IIRC iw [3] from GIT has already "iw: add set/get power_save commands" [4].
+
+That's different. Read:
+
+http://wireless.kernel.org/en/users/Documentation/Power-consumption
+
+  Luis
+
+> Anyone tested ASPM with iwlwifi hardware? Experiences?
+>
+> Beyond ASPM code, what is the actual status on power-mangement for
+> wifi-hardware in general?
+> IIRC it was turned off by default (with 2.6.33?)?
+>
+> Thanks for any help in advance.
+>
+>
+> Kind Regards,
+> - Sedat -
+>
+>
+> [1] http://wireless.kernel.org/en/users/Documentation/ASPM
+> [2] http://marc.info/?l=linux-wireless&m=127716115227206&w=2
+> [3] http://git.sipsolutions.net/?p=iw.git
+> [4] http://git.sipsolutions.net/?p=iw.git;a=commit;h=cf40ef379fd6c74a01092d1dfdd936385ea402b0
+>
