@@ -1,129 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:38012 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754296Ab0F2Tut (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jun 2010 15:50:49 -0400
-Received: by wyb38 with SMTP id 38so2999610wyb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Jun 2010 12:50:47 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 01/21] rt2x00: Implement tx mpdu aggregation
-Date: Tue, 29 Jun 2010 21:38:12 +0200
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
+Received: from mail.gmx.net ([213.165.64.20]:57615 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1756236Ab0FVOyf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Jun 2010 10:54:35 -0400
+From: Sebastian Smolorz <Sebastian.Smolorz@gmx.de>
+To: kalle.valo@iki.fi
+Subject: [PATCH 2/2] at76c50x-usb: Extract bssid from authentication frame
+Date: Tue, 22 Jun 2010 16:55:17 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <201006221651.24853.Sebastian.Smolorz@gmx.de>
+In-Reply-To: <201006221651.24853.Sebastian.Smolorz@gmx.de>
 MIME-Version: 1.0
 Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201006292138.13509.IvDoorn@gmail.com>
+  charset="utf-8"
+Message-Id: <201006221655.17697.Sebastian.Smolorz@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+The driver at76c50x-usb is unable to authenticate with an AP since
+kernel 2.6.31 for the following reason: The join command of the firmware
+needs to be sent with the right bssid before any transmission can start.
+Before kernel 2.6.31 mac80211 informed its drivers about the changing
+bssid early enough for at76c50x-usb but during the development of 2.6.31
+mac80211's behaviour changed. Now a new bssid is set after the
+association.
 
-In order to implement tx mpdu aggregation we only have to implement
-the ampdu_action callback such that mac80211 allows negotiation of
-blockack sessions.
+This patch changes the tx routine of the driver at76c50x-usb in such a
+way that a new bssid is extracted from an authentication frame and the
+join command with that bssid is processed.
 
-The hardware will handle everything on its own as long as the ampdu
-flag in the TXWI struct is set up correctly and we translate the tx
-status correctly.
-
-For now, refuse requests to start rx aggregation.
-
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Sebastian Smolorz <sesmo@gmx.net>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |   34 ++++++++++++++++++++++++++++++-
- drivers/net/wireless/rt2x00/rt2x00dev.c |   15 +++++++++++++
- 2 files changed, 48 insertions(+), 1 deletions(-)
+ drivers/net/wireless/at76c50x-usb.c |   36 +++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/at76c50x-usb.h |    1 +
+ 2 files changed, 37 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 14c361a..14ff706 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -2499,7 +2499,8 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	    IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
- 	    IEEE80211_HW_SIGNAL_DBM |
- 	    IEEE80211_HW_SUPPORTS_PS |
--	    IEEE80211_HW_PS_NULLFUNC_STACK;
-+	    IEEE80211_HW_PS_NULLFUNC_STACK |
-+	    IEEE80211_HW_AMPDU_AGGREGATION;
- 
- 	SET_IEEE80211_DEV(rt2x00dev->hw, rt2x00dev->dev);
- 	SET_IEEE80211_PERM_ADDR(rt2x00dev->hw,
-@@ -2751,6 +2752,36 @@ static u64 rt2800_get_tsf(struct ieee80211_hw *hw)
- 	return tsf;
+diff --git a/drivers/net/wireless/at76c50x-usb.c b/drivers/net/wireless/at76c50x-usb.c
+index cb3d4b7..98328b7 100644
+--- a/drivers/net/wireless/at76c50x-usb.c
++++ b/drivers/net/wireless/at76c50x-usb.c
+@@ -7,6 +7,7 @@
+  * Copyright (c) 2004 Balint Seeber <n0_5p4m_p13453@hotmail.com>
+  * Copyright (c) 2007 Guido Guenther <agx@sigxcpu.org>
+  * Copyright (c) 2007 Kalle Valo <kalle.valo@iki.fi>
++ * Copyright (c) 2010 Sebastian Smolorz <sesmo@gmx.net>
+  *
+  * This program is free software; you can redistribute it and/or
+  * modify it under the terms of the GNU General Public License as
+@@ -1685,6 +1686,22 @@ static int at76_join(struct at76_priv *priv)
+ 	return 0;
  }
  
-+static int rt2800_ampdu_action(struct ieee80211_hw *hw,
-+			       struct ieee80211_vif *vif,
-+			       enum ieee80211_ampdu_mlme_action action,
-+			       struct ieee80211_sta *sta,
-+			       u16 tid, u16 *ssn)
++static void at76_work_join_bssid(struct work_struct *work)
 +{
-+	struct rt2x00_dev *rt2x00dev = hw->priv;
-+	int ret = 0;
++	struct at76_priv *priv = container_of(work, struct at76_priv,
++					      work_join_bssid);
 +
-+	switch (action) {
-+	case IEEE80211_AMPDU_RX_START:
-+	case IEEE80211_AMPDU_RX_STOP:
-+		/* we don't support RX aggregation yet */
-+		ret = -ENOTSUPP;
-+		break;
-+	case IEEE80211_AMPDU_TX_START:
-+		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
-+		break;
-+	case IEEE80211_AMPDU_TX_STOP:
-+		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
-+		break;
-+	case IEEE80211_AMPDU_TX_OPERATIONAL:
-+		break;
-+	default:
-+		WARNING(rt2x00dev, "Unknown AMPDU action\n");
-+	}
++	if (priv->device_unplugged)
++		return;
 +
-+	return ret;
++	mutex_lock(&priv->mtx);
++
++	if (is_valid_ether_addr(priv->bssid))
++		at76_join(priv);
++
++	mutex_unlock(&priv->mtx);
 +}
 +
- const struct ieee80211_ops rt2800_mac80211_ops = {
- 	.tx			= rt2x00mac_tx,
- 	.start			= rt2x00mac_start,
-@@ -2768,6 +2799,7 @@ const struct ieee80211_ops rt2800_mac80211_ops = {
- 	.conf_tx		= rt2800_conf_tx,
- 	.get_tsf		= rt2800_get_tsf,
- 	.rfkill_poll		= rt2x00mac_rfkill_poll,
-+	.ampdu_action		= rt2800_ampdu_action,
- };
- EXPORT_SYMBOL_GPL(rt2800_mac80211_ops);
+ static void at76_mac80211_tx_callback(struct urb *urb)
+ {
+ 	struct at76_priv *priv = urb->context;
+@@ -1722,6 +1739,7 @@ static int at76_mac80211_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	struct at76_priv *priv = hw->priv;
+ 	struct at76_tx_buffer *tx_buffer = priv->bulk_out_buffer;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)skb->data;
+ 	int padding, submit_len, ret;
  
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 339cc84..a914855 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -286,6 +286,21 @@ void rt2x00lib_txdone(struct queue_entry *entry,
- 			rt2x00dev->low_level_stats.dot11ACKFailureCount++;
+ 	at76_dbg(DBG_MAC80211, "%s()", __func__);
+@@ -1732,6 +1750,21 @@ static int at76_mac80211_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		return NETDEV_TX_BUSY;
  	}
  
-+	/*
-+	 * Every single frame has it's own tx status, hence report
-+	 * every frame as ampdu of size 1.
-+	 *
-+	 * TODO: if we can find out how many frames were aggregated
-+	 * by the hw we could provide the real ampdu_len to mac80211
-+	 * which would allow the rc algorithm to better decide on
-+	 * which rates are suitable.
-+	 */
-+	if (tx_info->flags & IEEE80211_TX_CTL_AMPDU) {
-+		tx_info->flags |= IEEE80211_TX_STAT_AMPDU;
-+		tx_info->status.ampdu_len = 1;
-+		tx_info->status.ampdu_ack_len = success ? 1 : 0;
++	/* The following code lines are important when the device is going to
++	 * authenticate with a new bssid. The driver must send CMD_JOIN before
++	 * an authentication frame is transmitted. For this to succeed, the
++	 * correct bssid of the AP must be known. As mac80211 does not inform
++	 * drivers about the bssid prior to the authentication process the
++	 * following workaround is necessary. If the TX frame is an
++	 * authentication frame extract the bssid and send the CMD_JOIN. */
++	if (mgmt->frame_control & cpu_to_le16(IEEE80211_STYPE_AUTH)) {
++		if (compare_ether_addr(priv->bssid, mgmt->bssid)) {
++			memcpy(priv->bssid, mgmt->bssid, ETH_ALEN);
++			ieee80211_queue_work(hw, &priv->work_join_bssid);
++			return NETDEV_TX_BUSY;
++		}
 +	}
 +
- 	if (rate_flags & IEEE80211_TX_RC_USE_RTS_CTS) {
- 		if (success)
- 			rt2x00dev->low_level_stats.dot11RTSSuccessCount++;
+ 	ieee80211_stop_queues(hw);
+ 
+ 	at76_ledtrig_tx_activity();	/* tell ledtrigger we send a packet */
+@@ -1806,6 +1839,7 @@ static void at76_mac80211_stop(struct ieee80211_hw *hw)
+ 	at76_dbg(DBG_MAC80211, "%s()", __func__);
+ 
+ 	cancel_delayed_work(&priv->dwork_hw_scan);
++	cancel_work_sync(&priv->work_join_bssid);
+ 	cancel_work_sync(&priv->work_set_promisc);
+ 
+ 	mutex_lock(&priv->mtx);
+@@ -2107,6 +2141,7 @@ static struct at76_priv *at76_alloc_new_device(struct usb_device *udev)
+ 	mutex_init(&priv->mtx);
+ 	INIT_WORK(&priv->work_set_promisc, at76_work_set_promisc);
+ 	INIT_WORK(&priv->work_submit_rx, at76_work_submit_rx);
++	INIT_WORK(&priv->work_join_bssid, at76_work_join_bssid);
+ 	INIT_DELAYED_WORK(&priv->dwork_hw_scan, at76_dwork_hw_scan);
+ 
+ 	tasklet_init(&priv->rx_tasklet, at76_rx_tasklet, 0);
+@@ -2508,5 +2543,6 @@ MODULE_AUTHOR("Balint Seeber <n0_5p4m_p13453@hotmail.com>");
+ MODULE_AUTHOR("Pavel Roskin <proski@gnu.org>");
+ MODULE_AUTHOR("Guido Guenther <agx@sigxcpu.org>");
+ MODULE_AUTHOR("Kalle Valo <kalle.valo@iki.fi>");
++MODULE_AUTHOR("Sebastian Smolorz <sesmo@gmx.net>");
+ MODULE_DESCRIPTION(DRIVER_DESC);
+ MODULE_LICENSE("GPL");
+diff --git a/drivers/net/wireless/at76c50x-usb.h b/drivers/net/wireless/at76c50x-usb.h
+index 1ec5ccf..db89d72 100644
+--- a/drivers/net/wireless/at76c50x-usb.h
++++ b/drivers/net/wireless/at76c50x-usb.h
+@@ -387,6 +387,7 @@ struct at76_priv {
+ 	/* work queues */
+ 	struct work_struct work_set_promisc;
+ 	struct work_struct work_submit_rx;
++	struct work_struct work_join_bssid;
+ 	struct delayed_work dwork_hw_scan;
+ 
+ 	struct tasklet_struct rx_tasklet;
 -- 
-1.6.6.1
+1.6.4.4
 
