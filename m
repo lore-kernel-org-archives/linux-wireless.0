@@ -1,51 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:47173 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756825Ab0FOIuX (ORCPT
+Received: from cavan.codon.org.uk ([93.93.128.6]:44564 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750833Ab0FVQwp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jun 2010 04:50:23 -0400
-Subject: Re: [PATCH] iw: Configure basic rates when joining ibss network
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1276586335.3648.3.camel@jlt3.sipsolutions.net>
-References: <1276583053-30638-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-	 <1276586335.3648.3.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain
-Date: Tue, 15 Jun 2010 11:50:05 +0300
-Message-Id: <1276591805.4314.28.camel@paavo-desktop>
-Mime-Version: 1.0
+	Tue, 22 Jun 2010 12:52:45 -0400
+Date: Tue, 22 Jun 2010 17:52:13 +0100
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	Maxim Levitsky <maximlevitsky@gmail.com>,
+	David Quan <David.Quan@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Subject: Re: [ath5k-devel] [PATCH v2] ath5k: disable ASPM
+Message-ID: <20100622165213.GA21842@srcf.ucam.org>
+References: <1276870309.23783.3.camel@maxim-laptop> <1276933774.16697.11.camel@maxim-laptop> <AANLkTimIjaxq7IDWwIl1vv93k9bNQ2i89Sb5R5TiJmmA@mail.gmail.com> <1277032723.9555.12.camel@maxim-laptop> <AANLkTim8iZmm8pEERJUsrQWOiLSjPUfCN-TFFzZZQWx2@mail.gmail.com> <1277151410.5409.33.camel@maxim-laptop> <20100621233333.21262abjfxl8j1xc@hayate.sektori.org> <AANLkTikkt4dqYWrwtTCJ8tJZLB1kZXgF1KvaPsIOO3Dl@mail.gmail.com> <20100622163138.GD20668@srcf.ucam.org> <AANLkTikQkLFdpusfcLVOpyZHFrxwB5akr-ggFB7Fjm08@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTikQkLFdpusfcLVOpyZHFrxwB5akr-ggFB7Fjm08@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-06-15 at 09:18 +0200, ext Johannes Berg wrote:
-> On Tue, 2010-06-15 at 09:24 +0300, Teemu Paasikivi wrote:
-> 
-> > @@ -41,6 +46,31 @@ static int join_ibss(struct nl80211_state *state,
-> >  		argc--;
-> >  	}
-> >  
-> > +	/* basic rates */
-> > +	if (argc > 1 && strcmp(argv[0], "basic-rates") == 0) {
-> > +		argv++;
-> > +		argc--;
-> > +
-> > +		value = strtok_r(argv[0], ",", &sptr);
-> > +
-> > +		while (value && n_rates < NL80211_MAX_SUPP_RATES) {
-> > +			rate = atof(value);
-> 
-> should that use strtod() to check you didn't give "1a,2b,6c,11d"?
-> 
-Sure, it can be used. I think I'll change it to use that. I was just
-wondering that how much the values given by the user should/could be
-checked here.
+On Tue, Jun 22, 2010 at 09:48:40AM -0700, Luis R. Rodriguez wrote:
 
-> johannes
-> 
+> Sure, I agree with that, but it also will enable ASPM for *all*
+> devices which have the capability which IMHO is a terrible idea for
+> users when all they want to do is enable ASPM for one device. Instead
+> I recommend users to enable ASPM for their devices selectively and
+> from userspace.
 
-Br,
+Why would you only want to enable ASPM for one device?
 
-Teemu
-
-
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
