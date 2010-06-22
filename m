@@ -1,46 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews04.kpnxchange.com ([213.75.39.7]:2751 "EHLO
-	cpsmtpb-ews04.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753889Ab0FTS2S (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Jun 2010 14:28:18 -0400
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 11/11] mac80211: Fix compile warning in scan.c.
-Date: Sun, 20 Jun 2010 20:28:07 +0200
-Message-Id: <1277058487-11803-1-git-send-email-gwingerde@gmail.com>
+Received: from mail.gmx.net ([213.165.64.20]:40232 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1755913Ab0FVOul (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Jun 2010 10:50:41 -0400
+From: Sebastian Smolorz <Sebastian.Smolorz@gmx.de>
+To: kalle.valo@iki.fi
+Subject: [PATCH 0/2] at76c50x-usb.c: Fix broken authentication process
+Date: Tue, 22 Jun 2010 16:51:24 +0200
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201006221651.24853.Sebastian.Smolorz@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix the following compile warning:
+Fix authentication process of wireless driver at76c50x-usb.c which was broken
+since kernel 2.6.31
 
-CC [M]  net/mac80211/scan.o
-net/mac80211/scan.c: In function 'ieee80211_request_internal_scan':
-net/mac80211/scan.c:749:23: warning: comparison between 'enum nl80211_band' and 'enum ieee80211_band'
+Sebastian Smolorz (2):
+  at76c50x-usb: Move function at76_join() several lines up
+  at76c50x-usb: Extract bssid from authentication frame
 
-caused by the local variable band not being of the proper 'ieee80211_band' type.
-
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- net/mac80211/scan.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 30d4c0d..9aa19ec 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -735,7 +735,7 @@ int ieee80211_request_internal_scan(struct ieee80211_sub_if_data *sdata,
- {
- 	struct ieee80211_local *local = sdata->local;
- 	int ret = -EBUSY;
--	enum nl80211_band band;
-+	enum ieee80211_band band;
- 
- 	mutex_lock(&local->scan_mtx);
- 
--- 
-1.7.1
+ drivers/net/wireless/at76c50x-usb.c |  108 +++++++++++++++++++++++------------
+ drivers/net/wireless/at76c50x-usb.h |    1 +
+ 2 files changed, 73 insertions(+), 36 deletions(-)
 
