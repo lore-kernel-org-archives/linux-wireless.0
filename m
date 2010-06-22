@@ -1,59 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:65294 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750709Ab0FFJ3L convert rfc822-to-8bit (ORCPT
+Received: from cavan.codon.org.uk ([93.93.128.6]:45637 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752199Ab0FVQcI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jun 2010 05:29:11 -0400
-Received: by vws5 with SMTP id 5so1900073vws.19
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Jun 2010 02:29:10 -0700 (PDT)
+	Tue, 22 Jun 2010 12:32:08 -0400
+Date: Tue, 22 Jun 2010 17:31:38 +0100
+From: Matthew Garrett <mjg@redhat.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	Maxim Levitsky <maximlevitsky@gmail.com>,
+	David Quan <David.Quan@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Subject: Re: [ath5k-devel] [PATCH v2] ath5k: disable ASPM
+Message-ID: <20100622163138.GD20668@srcf.ucam.org>
+References: <1276859156.19554.2.camel@maxim-laptop> <AANLkTimdTjedtoeKAp5tcTqefrUB6k373Kx9EacuYFcO@mail.gmail.com> <1276870309.23783.3.camel@maxim-laptop> <1276933774.16697.11.camel@maxim-laptop> <AANLkTimIjaxq7IDWwIl1vv93k9bNQ2i89Sb5R5TiJmmA@mail.gmail.com> <1277032723.9555.12.camel@maxim-laptop> <AANLkTim8iZmm8pEERJUsrQWOiLSjPUfCN-TFFzZZQWx2@mail.gmail.com> <1277151410.5409.33.camel@maxim-laptop> <20100621233333.21262abjfxl8j1xc@hayate.sektori.org> <AANLkTikkt4dqYWrwtTCJ8tJZLB1kZXgF1KvaPsIOO3Dl@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <201006041025.08348.rossi.f@inwind.it>
-References: <201006021129.43621.rossi.f@inwind.it> <AANLkTik0A8qhlIi1pjvo0DKXhxjBEYEwOCn6iIsLXFJi@mail.gmail.com>
-	<201006041025.08348.rossi.f@inwind.it>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sun, 6 Jun 2010 02:28:50 -0700
-Message-ID: <AANLkTim6tx9plm0tqqms64iUboSRxo9KnTGbHmwKrhQK@mail.gmail.com>
-Subject: Re: WARNING: at drivers/base/core.c:130 device_release+0x82/0x90()
-To: Fabio Rossi <rossi.f@inwind.it>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTikkt4dqYWrwtTCJ8tJZLB1kZXgF1KvaPsIOO3Dl@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 4, 2010 at 1:25 AM, Fabio Rossi <rossi.f@inwind.it> wrote:
-> On Wednesday 02 June 2010 23:42:14 Luis R. Rodriguez wrote:
->
->> On Wed, Jun 2, 2010 at 2:29 AM, Fabio Rossi <rossi.f@inwind.it> wrote:
->> > Compiling the kernel without ACPI (CONFIG_ACPI=n) gives the following
->> > warning:
->> >
->> > cfg80211: Calling CRDA to update world regulatory domain
->> > cfg80211: World regulatory domain updated:
->> >    (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
->> >    (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
->> > ath5k 0000:08:01.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
->> > ath5k 0000:08:01.0: registered as 'phy0'
->> > ath5k phy0: request_irq failed
->> > ------------[ cut here ]------------
->>
->> Since traces are printed reversed you will have to read my logic from
->> bottom to top:
->>
->> Seems we need to implement the dev_release() op for the class of our
->> devices.
->
-> Shall I open a bug in kernel bugzilla to keep trace of this?
+On Mon, Jun 21, 2010 at 01:39:07PM -0700, Luis R. Rodriguez wrote:
+> Last I reviewed CONFIG_PCIEASPM won't buy you *anything* other than
+> debugging knobs. With it you can force all devices to enable ASPM
+> completely on or disable it. Both of which I think are not really
+> useful and instead should be done in userspace given that if you are
+> testing ASPM you likely want to test only one one device and its
+> respective root complex, not all at the same time.
 
-Nah something else is up...
+It buys you enabling of ASPM on devices that the BIOS hasn't configured, 
+which is legitimate and useful.
 
-struct class ieee80211_class = {
-        .name = "ieee80211",
-        .owner = THIS_MODULE,
-        .dev_release = wiphy_dev_release,
-        .dev_attrs = ieee80211_dev_attrs,
-#ifdef CONFIG_HOTPLUG
-        .dev_uevent = wiphy_uevent,
-#endif
-        .suspend = wiphy_suspend,
-        .resume = wiphy_resume,
-};
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
