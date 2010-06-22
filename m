@@ -1,114 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:25611 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932343Ab0FUOvy convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:37752 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751099Ab0FVWsP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jun 2010 10:51:54 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 21 Jun 2010 07:51:54 -0700
-From: Michael Green <Michael.Green@Atheros.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	David Quan <David.Quan@Atheros.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>
-Date: Mon, 21 Jun 2010 07:51:56 -0700
-Subject: wireless-regdb: Add A band in IL - And general point regarding tx
- power limits in the dbase
-Message-ID: <93781E992CBA7843962D8B0E7D683F3C1172BD0B6D@SC1EXMB-MBCL.global.atheros.com>
-References: <1274856569-13436-1-git-send-email-emmanuel.grumbach@intel.com>
-	<20100618184257.GB6282@tuxdriver.com>
- <AANLkTimN8oZ63m7cp2lE5MuFiEJ8iAGKswKIENTjIhMg@mail.gmail.com>
-In-Reply-To: <AANLkTimN8oZ63m7cp2lE5MuFiEJ8iAGKswKIENTjIhMg@mail.gmail.com>
-Content-Type: text/plain; charset="iso-8859-1"
+	Tue, 22 Jun 2010 18:48:15 -0400
+Received: by fxm10 with SMTP id 10so2756674fxm.19
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Jun 2010 15:48:13 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <4C20D884.3010501@lwfinger.net>
+References: <4C20D884.3010501@lwfinger.net>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Wed, 23 Jun 2010 00:47:53 +0200
+Message-ID: <AANLkTikjzHcT9L472CFJ2LKtOiEUIk2S78_S_s-IxHjl@mail.gmail.com>
+Subject: Re: Recent results with BCM4312 on Netbook
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Michael Buesch <mb@bu3sch.de>,
+	wireless <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here are my comments on the proposed patch...
-
-country IL:
-> >       (2402 - 2482 @ 40), (N/A, 20)
-> > +     (5150 - 5250 @ 40). (N/A, 200 mW), NO-OUTDOOR
-> > +     (5250 - 5350 @ 40). (N/A, 200 mW), NO-OUTDOOR, DFS
-
-
-a) I agree with channels above and enabling HT40 per above.
-
-b) I think all entries in the dbase should be in dBm (not mW).   dBm vs. mW are absolutely equivalent. No reason to retain "mW" unit from the source docs.  I think this was agreed by all before, but wanted to reiterate. 
-
-c) I don't understand why "Indoor/Outdoor" is stated in the table for any/all countries.   5150-5250 is globally allocated for indoor use.  So I am not reviewing/commenting on the indoor/outdoor comments in the dbase.
-
-
-d) Reminder...Israel and most other countries state max tx power limit in 'EIRP' (ie takes into account actual antenna gain of the end device).  Therefore, the entire dbase must be clearly flagged so developers know the tx power limits in this dbase only apply when devices have 0dB (or negative) gain antennas.  
-
-In other words, the software (or the hw/sw developer) must somehow reduce tx powers below the values in the dbase, dB-for-dB, when antenna+cable has positive gain.
-
-The exception is FCC target power, where FCC (and the dBase) quotes "conducted power" rather than EIRP.
-
-Issue d) is not a concern for manufacturers/developers who produce products that limit regulatory tx powers in the hw (factory set/limited). In that case they take into account actual antenna gains during original conformance testing and program in compliant tx powers into hw (and don't rely at all on the tx powers in the dbase).
-
-But developers who don't have tx powers limited in hw, who actually use the tx power in the dbase, must take into account antenna gain as explained above, else the product may not comply with tx limits for most countries.  
-
-Fine if you want to discuss point d) separately since it's a global issue (not limited to this particular IL patch).
-
-tks,
-
-Michael Green
-Atheros Communications, Inc.
-mgreen@atheros.com
-Desk:   +1-781-400-1491
-Mobile: +1-508-380-4921
-
-
------Original Message-----
-From: Emmanuel Grumbach [mailto:egrumbach@gmail.com] 
-Sent: Sunday, June 20, 2010 1:41 AM
-To: John W. Linville
-Cc: Emmanuel Grumbach; linux-wireless@vger.kernel.org; Michael Green; David Quan
-Subject: Re: [RFC] wireless-regdb: Add A band in IL
-
-Emmanuel Grumbach
-egrumbach@gmail.com
-
-
-On Fri, Jun 18, 2010 at 21:42, John W. Linville <linville@tuxdriver.com> wrote:
+On Tue, Jun 22, 2010 at 5:36 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> Michael,
 >
-> On Wed, May 26, 2010 at 09:49:29AM +0300, Emmanuel Grumbach wrote:
-> > A band in allowed in IL, according to official document issued by the Ministry
-> > of Communications: http://www.moc.gov.il/sip_storage/FILES/1/1061.pdf.
-> >
-> > 5150 - 5250 200mW e.i.r.p. OUTDOOR forbidden
-> > 5250 - 5350 200mW e.i.r.p. OUTDOOR forbidden DFS mandatory
-> >
-> > 40Mhz is allowed in A band for every WiFi-Alliance certified equipment.
-> >
-> > ***************************************************************
-> > Not to be merged for the moment
-> > ***************************************************************
-> >
-> > CC: Michael Green <Michael.Green@atheros.com>
-> > CC: David Quan <David.Quan@atheros.com>
-> > Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> > ---
-> >  db.txt |    2 ++
-> >  1 files changed, 2 insertions(+), 0 deletions(-)
-> >
-> > diff --git a/db.txt b/db.txt
-> > index e63a43e..d49c397 100644
-> > --- a/db.txt
-> > +++ b/db.txt
-> > @@ -319,6 +319,8 @@ country IE:
-> >
-> >  country IL:
-> >       (2402 - 2482 @ 40), (N/A, 20)
-> > +     (5150 - 5250 @ 40). (N/A, 200 mW), NO-OUTDOOR
-> > +     (5250 - 5350 @ 40). (N/A, 200 mW), NO-OUTDOOR, DFS
-> >
-> >  country IN:
-> >       (2402 - 2482 @ 40), (N/A, 20)
->
-> Is this issue now settled?
+> I have some good news. The Netbook that came from John is suddenly
+> developing DMA errors for the BCM4312, even though it does not have a
+> Phoenix BIOS. I have no idea why it did not fail this way earlier, but at
+> least I have a machine to debug that failure.
 
-Yes, I think that Michael Green agreed for this patch. Once he will
-reply to make sure, we will be able to move on to a real patch.
+Suddenly developing DMA errors? Hmm... maybe it's a hardware issue
+with the card, from which wl can silently recover?
+
+>
+> My first discovery is that if PIO mode is to be used, it is not sufficient
+> to load the module with the "pio=1" option, but that both "qos=0" and
+> "nohwcrypt=1" options must also be used, at least for WPA/WPA2 networks.
+> No other combination works. In addition, the automatic failover to PIO
+> mode does not work unless those two options were used when the module was
+> loaded. Thus both of the following work:
+>
+> modprobe b43 pio=1 qos=0 nohwcrypt=1
+> modprobe b43 qos=0 hwcrypt=1
+>
+> The second example gets a fatal DMA error and resets the controller before
+> the network comes up. I tried setting the latter two options before the
+> controller reset call in the failover, but that did not work.
+>
+> If you have suggestions on changes in the switch from DMA to PIO mode,
+> please send them to me. In the meantime, I will be looking at differences
+> in the MMIO traces between wl and b43 to try to fix the DMA problem at the
+> source of the trouble.
+>
+> Larry
+>
+> _______________________________________________
+> b43-dev mailing list
+> b43-dev@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/b43-dev
+>
+
+
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
