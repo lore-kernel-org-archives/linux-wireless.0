@@ -1,133 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:57541 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757125Ab0FBKWT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jun 2010 06:22:19 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 02 Jun 2010 03:22:19 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:48920 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750729Ab0FVECM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Jun 2010 00:02:12 -0400
+Received: from vs3011.wh2.ocn.ne.jp (125.206.180.239)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0294119328
+	for <linux-wireless@vger.kernel.org>; Tue, 22 Jun 2010 13:02:10 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: "Jaroslav Fojtik" <jafojtik@seznam.cz>
+Subject: Re: ATH5k - Signal measurement reports wrong values
+Date: Tue, 22 Jun 2010 13:01:02 +0900
+Cc: linux-wireless@vger.kernel.org
+References: <4C1E6A13.4259.24AF3C@jafojtik.seznam.cz> <201006211650.50766.br1@einfach.org> <4C1FBD42.20217.106AB2@jafojtik.seznam.cz>
+In-Reply-To: <4C1FBD42.20217.106AB2@jafojtik.seznam.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19462.12578.143627.398866@gargle.gargle.HOWL>
-Date: Wed, 2 Jun 2010 15:53:30 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/8] ath9k: Determine Firmware on probe
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201006221301.03254.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do not assign the FW name to driver_info but determine
-it dynamically on device probe. This facilitates adding new
-firmware.
+On Tue June 22 2010 04:28:02 Jaroslav Fojtik wrote:
+> root@dvouramenna:~# dmesg |grep "ath5.*chip"
+> [    6.632843] ath5k phy0: Atheros AR2413 chip found (MAC: 0x78, PHY: 0x45)
+> [    7.101528] ath5k phy1: Atheros AR5213A chip found (MAC: 0x59, PHY:
+> 0x43)
+> 
+> Both chipsets suffer with a same problem.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hif_usb.c |   39 ++++++++++++++++++++----------
- drivers/net/wireless/ath/ath9k/hif_usb.h |    1 +
- 2 files changed, 27 insertions(+), 13 deletions(-)
+hi jara!
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 77b3591..7da55eb 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -16,12 +16,9 @@
- 
- #include "htc.h"
- 
--#define ATH9K_FW_USB_DEV(devid, fw)					\
--	{ USB_DEVICE(0x0cf3, devid), .driver_info = (unsigned long) fw }
--
- static struct usb_device_id ath9k_hif_usb_ids[] = {
--	ATH9K_FW_USB_DEV(0x9271, "ar9271.fw"),
--	ATH9K_FW_USB_DEV(0x1006, "ar9271.fw"),
-+	{ USB_DEVICE(0x0cf3, 0x9271) },
-+	{ USB_DEVICE(0x0cf3, 0x1006) },
- 	{ },
- };
- 
-@@ -790,21 +787,21 @@ static int ath9k_hif_usb_download_fw(struct hif_device_usb *hif_dev)
- 		return -EIO;
- 
- 	dev_info(&hif_dev->udev->dev, "ath9k_htc: Transferred FW: %s, size: %ld\n",
--		 "ar9271.fw", (unsigned long) hif_dev->firmware->size);
-+		 hif_dev->fw_name, (unsigned long) hif_dev->firmware->size);
- 
- 	return 0;
- }
- 
--static int ath9k_hif_usb_dev_init(struct hif_device_usb *hif_dev,
--				  const char *fw_name)
-+static int ath9k_hif_usb_dev_init(struct hif_device_usb *hif_dev)
- {
- 	int ret;
- 
- 	/* Request firmware */
--	ret = request_firmware(&hif_dev->firmware, fw_name, &hif_dev->udev->dev);
-+	ret = request_firmware(&hif_dev->firmware, hif_dev->fw_name,
-+			       &hif_dev->udev->dev);
- 	if (ret) {
- 		dev_err(&hif_dev->udev->dev,
--			"ath9k_htc: Firmware - %s not found\n", fw_name);
-+			"ath9k_htc: Firmware - %s not found\n", hif_dev->fw_name);
- 		goto err_fw_req;
- 	}
- 
-@@ -820,7 +817,8 @@ static int ath9k_hif_usb_dev_init(struct hif_device_usb *hif_dev,
- 	ret = ath9k_hif_usb_download_fw(hif_dev);
- 	if (ret) {
- 		dev_err(&hif_dev->udev->dev,
--			"ath9k_htc: Firmware - %s download failed\n", fw_name);
-+			"ath9k_htc: Firmware - %s download failed\n",
-+			hif_dev->fw_name);
- 		goto err_fw_download;
- 	}
- 
-@@ -847,7 +845,6 @@ static int ath9k_hif_usb_probe(struct usb_interface *interface,
- {
- 	struct usb_device *udev = interface_to_usbdev(interface);
- 	struct hif_device_usb *hif_dev;
--	const char *fw_name = (const char *) id->driver_info;
- 	int ret = 0;
- 
- 	hif_dev = kzalloc(sizeof(struct hif_device_usb), GFP_KERNEL);
-@@ -872,7 +869,23 @@ static int ath9k_hif_usb_probe(struct usb_interface *interface,
- 		goto err_htc_hw_alloc;
- 	}
- 
--	ret = ath9k_hif_usb_dev_init(hif_dev, fw_name);
-+	/* Find out which firmware to load */
-+
-+	switch(hif_dev->device_id) {
-+	case 0x9271:
-+	case 0x1006:
-+		hif_dev->fw_name = "ar9271.fw";
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	if (!hif_dev->fw_name) {
-+		dev_err(&udev->dev, "Can't determine firmware !\n");
-+		goto err_htc_hw_alloc;
-+	}
-+
-+	ret = ath9k_hif_usb_dev_init(hif_dev);
- 	if (ret) {
- 		ret = -EINVAL;
- 		goto err_hif_init_usb;
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.h b/drivers/net/wireless/ath/ath9k/hif_usb.h
-index 0aca49b..b2647e8 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.h
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.h
-@@ -90,6 +90,7 @@ struct hif_device_usb {
- 	struct usb_anchor regout_submitted;
- 	struct usb_anchor rx_submitted;
- 	struct sk_buff *remain_skb;
-+	const char *fw_name;
- 	int rx_remain_len;
- 	int rx_pkt_len;
- 	int rx_transfer_len;
--- 
-1.7.1
+thanks, i was able to reproduce the problem here. can you try this patch, it 
+should fix it. it's just one line, so you could also change that 1 to a 4 in 
+the code directly. please let me know if it helps...
 
+bruno
+
+commit 36c597b80813988f6a9c47ca4a5cb5306bbc67fa
+Author: Bruno Randolf <br1@einfach.org>
+Date:   Tue Jun 22 12:37:34 2010 +0900
+
+    ath5k: fix antenna div gc for <= AR5K_SREV_PHY_2413
+    
+    Commit 39d5b2c83ca8904b6826a0713263a4e5a9c0730a "ath5k: update
+    AR5K_PHY_RESTART_DIV_GC values to match masks" introduced a regression on 
+PHY
+    chips older than AR5K_SREV_PHY_5413, which caused signal values to be 
+about
+    10dB less that before. This patch reverts the AR5K_PHY_RESTART_DIV_GC 
+values to
+    the same values which were effectively used before (without the bitmask
+    mistake). This brings signal levels back to normal on these PHY chips.
+    
+    Signed-off-by: Bruno Randolf <br1@einfach.org>
+
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c 
+b/drivers/net/wireless/ath/ath5k/phy.c
+index 82720fc..2254cd1 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -1768,7 +1768,7 @@ ath5k_hw_set_fast_div(struct ath5k_hw *ah, u8 ee_mode, 
+bool enable)
+ 
+ 	if (enable) {
+ 		AR5K_REG_WRITE_BITS(ah, AR5K_PHY_RESTART,
+-				AR5K_PHY_RESTART_DIV_GC, 1);
++				AR5K_PHY_RESTART_DIV_GC, 4);
+ 
+ 		AR5K_REG_ENABLE_BITS(ah, AR5K_PHY_FAST_ANT_DIV,
+ 					AR5K_PHY_FAST_ANT_DIV_EN);
