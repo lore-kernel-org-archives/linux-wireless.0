@@ -1,81 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bar.sig21.net ([80.81.252.164]:34204 "EHLO bar.sig21.net"
+Received: from mga14.intel.com ([143.182.124.37]:12380 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752611Ab0FWTXZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jun 2010 15:23:25 -0400
-Date: Wed, 23 Jun 2010 21:23:04 +0200
-From: Johannes Stezenbach <js@sig21.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	Maxim Levitsky <maximlevitsky@gmail.com>,
-	David Quan <David.Quan@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Jonathan May <jonathan.may@atheros.com>,
-	Tim Gardner <tim.gardner@canonical.com>
-Subject: Re: [ath5k-devel] [PATCH v2] ath5k: disable ASPM
-Message-ID: <20100623192304.GA23113@sig21.net>
-References: <AANLkTikQkLFdpusfcLVOpyZHFrxwB5akr-ggFB7Fjm08@mail.gmail.com>
- <20100622165213.GA21842@srcf.ucam.org>
- <AANLkTikHLBBWrhCP_1f5Jv7zE9RKPvdsl5nSyfkeMfLl@mail.gmail.com>
- <20100622172545.GA22680@srcf.ucam.org>
- <AANLkTilEHJ5qRD8ov0gIK0Zc4o-gJUPYkvHdyD1uZUon@mail.gmail.com>
- <20100622175058.GA23499@srcf.ucam.org>
- <AANLkTinE0BiOa5cpcIerbias7K-aDzj3x4qaeDpzy2CQ@mail.gmail.com>
- <20100622184426.GA24546@srcf.ucam.org>
- <20100622193143.GA17803@sig21.net>
- <AANLkTin1fAAgYTYegqaadkYIYP2NXRNRzCR48e-uIgYV@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <AANLkTin1fAAgYTYegqaadkYIYP2NXRNRzCR48e-uIgYV@mail.gmail.com>
+	id S1753371Ab0FVQsW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Jun 2010 12:48:22 -0400
+Subject: Re: intel 5100/iwlagn bug in 2.6.35-rc2 during large file transfer
+From: reinette chatre <reinette.chatre@intel.com>
+To: Richard Farina <sidhayn@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4C198EF0.5080807@gmail.com>
+References: <4C198EF0.5080807@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 22 Jun 2010 09:48:13 -0700
+Message-ID: <1277225293.25793.2257.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 22, 2010 at 12:37:01PM -0700, Luis R. Rodriguez wrote:
-> On Tue, Jun 22, 2010 at 12:31 PM, Johannes Stezenbach <js@sig21.net> wrote:
-> > I have a Samsung N130 netbook which has a BIOS setting
-> > called "CPU Power Saving Mode".  When enabled it activates
-> > ASPM L1 and L0s for the ethernet chip (Realtek RTL8102e, 100Mbit)
-> > and the PCIE bridge (with the BIOS setting off it's just L1).
-> > The result is that the ethernet througput is reduced to 25Mbit/s.
-> > (The BIOS setting does not activa L0s for the Atheros AR9285 WLAN.)
+On Wed, 2010-06-16 at 19:56 -0700, Richard Farina wrote:
+> The repeated line appears ad infinitum filling my dmesg buffer.  This of 
+> hangcheck timer seem to trigger with every large file transfer on my 
+> intel 5100.  What would you like me to do to provide a more useful 
+> output as this is currently extremely easy to reproduce.  Kernel 2.6.34 
+> using compat-wireless stable 2.6.35-rc2
 > 
-> L0s is not going to buy you much gains, getting at least L1 will
-> however. L0s is just a further enhancement. I recommend you test by
-> enabling L1 and L0s, check how longer your battery lasts and then test
-> again with just L1. Then test without both L1 and L0s.
+> Thanks,
+> Rick Farina
+> 
+> phy0: failed to reallocate TX buffer
+> phy0: failed to reallocate TX buffer
+> phy0: failed to reallocate TX buffer
+> phy0: failed to reallocate TX buffer
+> phy0: failed to reallocate TX buffer
+> phy0: failed to reallocate TX buffer
+> phy0: failed to reallocate TX buffer
 
-What I did was to dump lspci output to a file, for both settings
-of the BIOS option, and then diff.
+First mac80211 runs out of memory ... it cannot even allocate enough
+memory for a skb header.
 
-00:1c.2 PCI bridge: Intel Corporation 82801G (ICH7 Family) PCI Express Port 3 (rev 02) (prog-if 00 [Normal decode])
-		...
-                LnkCap: Port #3, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <256ns, L1 <4us
-                        ClockPM- Surprise- LLActRep+ BwNot-
--               LnkCtl: ASPM L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk+
-+               LnkCtl: ASPM L0s L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk+
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+ BWMgmt- ABWMgmt-
+> net_ratelimit: 22 callbacks suppressed
+> __alloc_pages_slowpath: 3799 callbacks suppressed
+> swapper: page allocation failure. order:1, mode:0x4020
+> Pid: 0, comm: swapper Not tainted 2.6.34-pentoo #5
+> Call Trace:
+>  <IRQ>  [<ffffffff8109cb74>] __alloc_pages_nodemask+0x571/0x5b9
+>  [<ffffffff816732e9>] ? skb_release_data+0xc4/0xc9
+>  [<ffffffffa04701e4>] iwlagn_rx_allocate+0x98/0x25a [iwlagn]
 
-03:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8101E/RTL8102E PCI Express Fast Ethernet controller (rev 02)
-		...
-                LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <512ns, L1 <64us
-                        ClockPM+ Surprise- LLActRep- BwNot-
--               LnkCtl: ASPM L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk+
-+               LnkCtl: ASPM L0s L1 Enabled; RCB 64 bytes Disabled- Retrain- CommClk+
-                        ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+Next driver runs out of memory.
 
-I suspect the performance penalty is because L0s is entered very often
-even during ethernet bulk transfer, whereas L1 is only entered
-when the link is idle for longer time.
+Note that the above are all atomic allocations that fail and should be
+able to recover. 
 
-The difference in battery run time due to the BIOS option is
-significant (IIRC, it's been a while back), but I don't know
-what else the BIOS option changes.
+Is your system low on memory? Are you running applications that take a
+lot of memory? Does your wifi connection drop or otherwise suffer at the
+time you see these messages?
+
+Reinette
 
 
-Johannes
+
