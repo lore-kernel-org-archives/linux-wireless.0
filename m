@@ -1,44 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:17352 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753647Ab0FASMQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jun 2010 14:12:16 -0400
-Received: by fg-out-1718.google.com with SMTP id d23so1891984fga.1
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Jun 2010 11:12:15 -0700 (PDT)
-Subject: Re: IWL3945 problems in 2.6.35-rc1
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: sedat.dilek@gmail.com
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	iwlwifi maling list <ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <AANLkTinmjlukRABwWWVuO6VRHrULcqB7Zk_HQZSDicKr@mail.gmail.com>
-References: <1275395142.14385.6.camel@maxim-laptop>
-	 <1275404221.2839.2.camel@maxim-laptop>
-	 <AANLkTinmjlukRABwWWVuO6VRHrULcqB7Zk_HQZSDicKr@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 01 Jun 2010 21:12:09 +0300
-Message-ID: <1275415929.3778.1.camel@maxim-laptop>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:40363 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753641Ab0FVGiH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Jun 2010 02:38:07 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 21 Jun 2010 23:38:07 -0700
+Date: Tue, 22 Jun 2010 12:08:00 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Vivek Natarajan <Vivek.Natarajan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath9k: Modify LED blinking pattern during wifi
+	activity.
+Message-ID: <20100622063800.GC9292@vasanth-laptop>
+References: <1276579217-6837-1-git-send-email-vnatarajan@atheros.com> <1276587140.3648.6.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1276587140.3648.6.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-06-01 at 17:21 +0200, Sedat Dilek wrote: 
-> Hi Maxim,
+On Tue, Jun 15, 2010 at 01:02:20PM +0530, Johannes Berg wrote:
+> On Tue, 2010-06-15 at 10:50 +0530, Vivek Natarajan wrote:
 > 
-> that's a known issue... and there were several mails to LKML and here
-> on the ML (as I see you are very active on both lists :-)).
-> Unfortunately, the patch in [1] didnt go into any (GIT) reposoitory. I know.
+> >  	case LED_FULL:
 > 
-> I am attaching the original patch and give it a meaningfull name, so
-> people see it on patchwork.kernel.org (linux-wireless).
+> I wonder if you can just use different triggers which may be easier?
+> Look at what I suggested earlier for integrating the LEDs with iwlwifi:
+> 
+> http://thread.gmane.org/gmane.linux.kernel.wireless.general/51218/focus=51520
 
-The patch appears the work, Thanks!
+Sorry for a late reply. LED implementation with ath9k is completely
+manual, fully controlled by driver (We have to set/clear a particular
+gpio pin to turn on/off the LED every time). on/off period during blink
+is based on the number of brightness_set() on tx/rx led trigger. Do
+you think your suggested implementation would help in this case too? 
 
-Now the only problem remains is that I can associate only when device is
-in promisc mode.
-I think it doesn't receive broadcast frames.
+thanks,
 
-Best regards,
-Maxim Levitsky
-
-
+Vasanth
