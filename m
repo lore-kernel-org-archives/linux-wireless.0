@@ -1,90 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:56429 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758218Ab0FORlK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jun 2010 13:41:10 -0400
-Received: by fxm10 with SMTP id 10so327018fxm.19
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Jun 2010 10:41:08 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTinEMAQu33Tlv81-Cdx9fLZK-a-7uJlbAo7te2_w@mail.gmail.com>
-References: <20100613.145200.1459063883179763823.kou@clear-code.com>
-	<AANLkTinEMAQu33Tlv81-Cdx9fLZK-a-7uJlbAo7te2_w@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Tue, 15 Jun 2010 19:40:48 +0200
-Message-ID: <AANLkTimxIlLYrNnXJ6mIvmBYGAL7Fv9T0uCY_2yszRQ2@mail.gmail.com>
-Subject: Re: [PATCH] zd1211rw: ignore unknown regulatory domain.
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Kouhei Sutou <kou@clear-code.com>,
-	Stephen Chen <Stephen.Chen@atheros.com>,
+Received: from bar.sig21.net ([80.81.252.164]:40746 "EHLO bar.sig21.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750986Ab0FVTcL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Jun 2010 15:32:11 -0400
+Date: Tue, 22 Jun 2010 21:31:43 +0200
+From: Johannes Stezenbach <js@sig21.net>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	Maxim Levitsky <maximlevitsky@gmail.com>,
 	David Quan <David.Quan@atheros.com>,
-	linux-wireless@vger.kernel.org,
-	Michael Green <Michael.Green@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Bob Copeland <me@bobcopeland.com>,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Jonathan May <jonathan.may@atheros.com>,
+	Tim Gardner <tim.gardner@canonical.com>
+Subject: Re: [ath5k-devel] [PATCH v2] ath5k: disable ASPM
+Message-ID: <20100622193143.GA17803@sig21.net>
+References: <AANLkTikkt4dqYWrwtTCJ8tJZLB1kZXgF1KvaPsIOO3Dl@mail.gmail.com>
+ <20100622163138.GD20668@srcf.ucam.org>
+ <AANLkTikQkLFdpusfcLVOpyZHFrxwB5akr-ggFB7Fjm08@mail.gmail.com>
+ <20100622165213.GA21842@srcf.ucam.org>
+ <AANLkTikHLBBWrhCP_1f5Jv7zE9RKPvdsl5nSyfkeMfLl@mail.gmail.com>
+ <20100622172545.GA22680@srcf.ucam.org>
+ <AANLkTilEHJ5qRD8ov0gIK0Zc4o-gJUPYkvHdyD1uZUon@mail.gmail.com>
+ <20100622175058.GA23499@srcf.ucam.org>
+ <AANLkTinE0BiOa5cpcIerbias7K-aDzj3x4qaeDpzy2CQ@mail.gmail.com>
+ <20100622184426.GA24546@srcf.ucam.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100622184426.GA24546@srcf.ucam.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 13, 2010 at 10:23 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> Note: this e-mail is on a public mailing list!
->
-> On Sat, Jun 12, 2010 at 10:52 PM, Kouhei Sutou <kou@clear-code.com> wrote:
->> Hi,
->>
->> I'm using PLANEX GW-US54GXS (2019:5303) and it works with
->> the attached patch. Could you consider to merge the attached
->> patch?
->>
->> Problem: GW-US54GXS uses zd1211rw but zd1211rw doesn't have
->> a regulatory domain reported by GW-US54GXS (0x49).
->>
->> Solutions:
->>
->>  (1) add a new regulatory domain (0x49). Here is a patch to
->>      use the approach:
->
-> Stephen, David, does 0x49 map to JP for zd1211 ? Are there other ones?
-> Here is our list so far:
->
-> #define ZD_REGDOMAIN_FCC        0x10
-> #define ZD_REGDOMAIN_IC         0x20
-> #define ZD_REGDOMAIN_ETSI       0x30
-> #define ZD_REGDOMAIN_SPAIN      0x31
-> #define ZD_REGDOMAIN_FRANCE     0x32
-> #define ZD_REGDOMAIN_JAPAN_ADD  0x40
-> #define ZD_REGDOMAIN_JAPAN      0x41
->
-> This is what they map to:
->
-> static struct zd_reg_alpha2_map reg_alpha2_map[] = {
->        { ZD_REGDOMAIN_FCC, "US" },
->        { ZD_REGDOMAIN_IC, "CA" },
->        { ZD_REGDOMAIN_ETSI, "DE" }, /* Generic ETSI, use most restrictive */
+On Tue, Jun 22, 2010 at 07:44:26PM +0100, Matthew Garrett wrote:
+> On Tue, Jun 22, 2010 at 11:28:20AM -0700, Luis R. Rodriguez wrote:
+> > 
+> > Heh, this whole patch and thread was started because Jussi tested
+> > ath5k with  pcie_aspm=force (on a pre PCIE 1.1 device (?)) . I have
+> > been trying to explain all along why this is a terrible idea to the
+> > point we should probably just remove that code from the kernel. Hence
+> > my side rants and explanations to justify my reasonings.
+> 
+> Well, there's two things here. If you use force then you might get 
+> inappropriate ASPM. But if your BIOS enables ASPM on an old device, then 
+> booting *without* CONFIG_PCIE_ASPM will leave it turned on, and booting 
+> *with* CONFIG_PCIE_ASPM will turn it off. The Kconfig description is 
+> confusing - reality is that CONFIG_PCIE_ASPM enables logic that allows 
+> the kernel to modify the BIOS default, and disabling it makes the 
+> assumption that your BIOS did something sensible.
 
-Note: This one is causing me problems here in Hungary, as it keeps
-resetting my regdomain to Germany. I believe we should implement
-allowing the user to choose regdomain in this case, but allowing only
-regdomains in ETSI.
+Does CONFIG_PCIEASPM provide a way for the user to modifiy
+the settings at runtime?
 
->        { ZD_REGDOMAIN_JAPAN, "JP" },
->        { ZD_REGDOMAIN_JAPAN_ADD, "JP" },
->        { ZD_REGDOMAIN_SPAIN, "ES" },
->        { ZD_REGDOMAIN_FRANCE, "FR" },
-> };
->
-> Kouhei, if no regulatory domain is found, instead we should world
-> roam, we cannot allow letting the user change regulatory domains at
-> their whim. We can, however let them choose one to help compliance,
-> but you can only help compliance once you know your actual regulatory
-> domain.
->
->  Luis
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+I have a Samsung N130 netbook which has a BIOS setting
+called "CPU Power Saving Mode".  When enabled it activates
+ASPM L1 and L0s for the ethernet chip (Realtek RTL8102e, 100Mbit)
+and the PCIE bridge (with the BIOS setting off it's just L1).
+The result is that the ethernet througput is reduced to 25Mbit/s.
+(The BIOS setting does not activa L0s for the Atheros AR9285 WLAN.)
+
+99,9% of the time I want to enjoy the power savings,
+but occationally I have to transfer some bulk data and would
+like to switch the setting for a few minutes.
+
+Or, well, ideally I'd like to have power savings _and_ performance
+at the same time without any manual intervention.  I'm not sure
+if this is a quirk of the N130 or if ASPM L0s always causes
+performance degradation?
 
 
-
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Thanks
+Johannes
