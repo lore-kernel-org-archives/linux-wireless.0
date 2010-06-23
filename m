@@ -1,75 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:61538 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752190Ab0FFG4n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jun 2010 02:56:43 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 08/23] iwlwifi: remove unused parameter in iwl_priv
-Date: Sat,  5 Jun 2010 23:56:23 -0700
-Message-Id: <1275807398-18184-9-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1275807398-18184-1-git-send-email-reinette.chatre@intel.com>
-References: <1275807398-18184-1-git-send-email-reinette.chatre@intel.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56344 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753189Ab0FWOpP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jun 2010 10:45:15 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: dkiran@marvell.com, Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 1/3] libertas: fix build error due to undefined symbol
+Date: Wed, 23 Jun 2010 10:37:24 -0400
+Message-Id: <1277303846-17257-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1277281556.3642.6.camel@jlt3.sipsolutions.net>
+References: <1277281556.3642.6.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+ERROR: "mesh_handler_def" [drivers/net/wireless/libertas/libertas.ko] undefined!
 
-restrict_refcnt is no longer used, remove it from iwl_priv
-structure
+Caused by a hunk missed by "Libertas: cfg80211 support" when building
+with CONFIG_WIRELESS_EXT enabled.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    3 ---
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    1 -
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    3 ---
- 3 files changed, 0 insertions(+), 7 deletions(-)
+ drivers/net/wireless/libertas/mesh.c |    3 ---
+ drivers/net/wireless/libertas/mesh.h |    5 -----
+ 2 files changed, 0 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 7c63c06..021b014 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3686,9 +3686,6 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	priv->pci_dev = pdev;
- 	priv->inta_mask = CSR_INI_SET_MASK;
+diff --git a/drivers/net/wireless/libertas/mesh.c b/drivers/net/wireless/libertas/mesh.c
+index 00b36b0..bc5bc13 100644
+--- a/drivers/net/wireless/libertas/mesh.c
++++ b/drivers/net/wireless/libertas/mesh.c
+@@ -370,9 +370,6 @@ int lbs_add_mesh(struct lbs_private *priv)
  
--#ifdef CONFIG_IWLWIFI_DEBUG
--	atomic_set(&priv->restrict_refcnt, 0);
+ 	SET_NETDEV_DEV(priv->mesh_dev, priv->dev->dev.parent);
+ 
+-#ifdef	WIRELESS_EXT
+-	mesh_dev->wireless_handlers = &mesh_handler_def;
 -#endif
- 	if (iwl_alloc_traffic_mem(priv))
- 		IWL_ERR(priv, "Not enough memory to generate traffic log\n");
+ 	mesh_dev->flags |= IFF_BROADCAST | IFF_MULTICAST;
+ 	/* Register virtual mesh interface */
+ 	ret = register_netdev(mesh_dev);
+diff --git a/drivers/net/wireless/libertas/mesh.h b/drivers/net/wireless/libertas/mesh.h
+index e257330..84ea248 100644
+--- a/drivers/net/wireless/libertas/mesh.h
++++ b/drivers/net/wireless/libertas/mesh.h
+@@ -70,11 +70,6 @@ void lbs_persist_config_init(struct net_device *net);
+ void lbs_persist_config_remove(struct net_device *net);
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index f359d9f..8b7731a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1346,7 +1346,6 @@ struct iwl_priv {
- 	u32 debug_level; /* per device debugging will override global
- 			    iwl_debug_level if set */
- 	u32 framecnt_to_us;
--	atomic_t restrict_refcnt;
- #endif /* CONFIG_IWLWIFI_DEBUG */
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- 	/* debugfs */
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 35471cf..f2ec752 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -3946,9 +3946,6 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 	priv->pci_dev = pdev;
- 	priv->inta_mask = CSR_INI_SET_MASK;
  
--#ifdef CONFIG_IWLWIFI_DEBUG
--	atomic_set(&priv->restrict_refcnt, 0);
--#endif
- 	if (iwl_alloc_traffic_mem(priv))
- 		IWL_ERR(priv, "Not enough memory to generate traffic log\n");
+-/* WEXT handler */
+-
+-extern struct iw_handler_def mesh_handler_def;
+-
+-
+ /* Ethtool statistics */
  
+ struct ethtool_stats;
 -- 
-1.7.0.4
+1.7.0.1
 
