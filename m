@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:53099 "EHLO ds10.nbd.name"
+Received: from mx1.redhat.com ([209.132.183.28]:33192 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751523Ab0FDPAy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jun 2010 11:00:54 -0400
-Message-ID: <4C09151C.7040509@openwrt.org>
-Date: Fri, 04 Jun 2010 17:00:44 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Roberto Riggio <roberto.riggio@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Strange ACK Behaviour with ath9k
-References: <4BEC2318.5050701@create-net.org> <AANLkTimnzAJd9Y02m8OBVLHphL5pbFw56M2LfB1L5oKz@mail.gmail.com> <4BEE684F.2070707@create-net.org> <loom.20100604T153747-904@post.gmane.org>
-In-Reply-To: <loom.20100604T153747-904@post.gmane.org>
-Content-Type: text/plain; charset=UTF-8
+	id S1753879Ab0FWXYh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jun 2010 19:24:37 -0400
+Subject: Re: [PATCH 2/3] libertas: unmangle capability value
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, dkiran@marvell.com,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <1277303846-17257-2-git-send-email-linville@tuxdriver.com>
+References: <1277281556.3642.6.camel@jlt3.sipsolutions.net>
+	 <1277303846-17257-2-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 23 Jun 2010 16:24:49 -0700
+Message-ID: <1277335489.25126.30.camel@dcbw.foobar.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-06-04 3:59 PM, Roberto Riggio wrote:
+On Wed, 2010-06-23 at 10:37 -0400, John W. Linville wrote:
+> Address fall-out from patch converting libertas to use cfg80211...
 > 
->> On 05/14/2010 01:15 AM, Björn Smedman wrote:
->> > Hi Roberto,
->> >
->> > When I've seen this it has been caused by a mismatch between the
->> > addresses in the injected frame and that configured in the hardware.
->> > The transmitting radio doesn't understand it is the intended recipient
->> > of the ack and continues retrying.
+> +drivers/net/wireless/libertas/cfg.c:1844:13: warning: incorrect type in assignment (different base types)
+> +drivers/net/wireless/libertas/cfg.c:1844:13:    expected unsigned short [unsigned] [usertype] capability
+> +drivers/net/wireless/libertas/cfg.c:1844:13:    got restricted __le16 [usertype] <noident>
 > 
-> It seems that the problem is related to the ack timeout. The strange thing is 
-> that if is use (on the transmitter)
-> 
-> iw phy phy0 set distance 600
-> 
-> everything works fine
-> 
-> however if I use:
-> 
-> iw phy phy0 set distance 300
-> 
-> ack are ignored. 
-Are you using 2.4 or 5 GHz?
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-- Felix
+Acked-by: Dan Williams <dcbw@redhat.com>
+
+> ---
+>  drivers/net/wireless/libertas/cfg.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
+> index 23c1dc6..f36cc97 100644
+> --- a/drivers/net/wireless/libertas/cfg.c
+> +++ b/drivers/net/wireless/libertas/cfg.c
+> @@ -1841,7 +1841,7 @@ static int lbs_ibss_start_new(struct lbs_private *priv,
+>  	if (MRVL_FW_MAJOR_REV(priv->fwrelease) <= 8)
+>  		cmd.probedelay = cpu_to_le16(CMD_SCAN_PROBE_DELAY_TIME);
+>  	/* TODO: mix in WLAN_CAPABILITY_PRIVACY */
+> -	capability = cpu_to_le16(WLAN_CAPABILITY_IBSS);
+> +	capability = WLAN_CAPABILITY_IBSS;
+>  	cmd.capability = cpu_to_le16(capability);
+>  	lbs_add_rates(cmd.rates);
+>  
+
+
