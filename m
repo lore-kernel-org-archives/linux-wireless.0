@@ -1,50 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:26094 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751405Ab0FXE4o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jun 2010 00:56:44 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 23 Jun 2010 21:56:44 -0700
-Date: Thu, 24 Jun 2010 10:26:36 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Pavel Roskin <proski@gnu.org>
-CC: Vivek Natarajan <Vivek.Natarajan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k: Fix the LED behaviour in idle unassociated
-	state.
-Message-ID: <20100624045636.GA19657@vasanth-laptop>
-References: <1277275109-4662-1-git-send-email-vnatarajan@atheros.com> <1277315740.3562.6.camel@mj>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:54669 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752770Ab0FWSrB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jun 2010 14:47:01 -0400
+Received: by iwn1 with SMTP id 1so23409iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jun 2010 11:47:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1277315740.3562.6.camel@mj>
+In-Reply-To: <4C223F58.3060509@openwrt.org>
+References: <4B8C3A21.2050105@openwrt.org>
+	<133e8d7e1003020419r6fab7b13kd77b06407c8c1380@mail.gmail.com>
+	<4B8D25DC.8070502@openwrt.org>
+	<133e8d7e1003020747w348dbee0g60a25a86393972d7@mail.gmail.com>
+	<4B8D396B.5040007@openwrt.org>
+	<AANLkTilWfp6LzCYhxFweqAP_GceRz5PQBIBl5AksLKUf@mail.gmail.com>
+	<4C223F58.3060509@openwrt.org>
+Date: Wed, 23 Jun 2010 20:47:00 +0200
+Message-ID: <AANLkTilDTZRUk_3iI5NPX0JhqG7N8LtKcE3VSSnqFGk9@mail.gmail.com>
+Subject: Re: [RFC/RFT] minstrel_ht: new rate control module for 802.11n
+From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Benoit PAPILLAULT <benoit.papillault@free.fr>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 23, 2010 at 11:25:40PM +0530, Pavel Roskin wrote:
-> On Wed, 2010-06-23 at 12:08 +0530, Vivek Natarajan wrote:
-> > LED should be ON when the radio is put into FULL SLEEP mode during the idle
-> > unassociated state.
-> 
-> Why?  Is there any written policy for the LED behavior?  I think we want
-> to conserve power if sleeping, which means turning LEDs off.
+2010/6/23 Felix Fietkau <nbd@openwrt.org>:
+> On 2010-06-23 6:36 PM, Björn Smedman wrote:
+[snip]
+>> If I'm not wrong above then the rate control feedback must also be
+>> incorrect: a disaster of that magnitude simply cannot be conveyed to
+>> the rate control algorithm through the thin tx status interface. As
+>> far as I can tell, whenever the first subframe of an aggregate fails
+>> and is software retried, the rate control feedback for that aggregate
+>> is lost (ath_tx_rc_status() is never called with update_rc = true in
+>> xmit.c).
+> I think you misread that part. The loop iterates over all subframes in
+> the aggregate, and the first successful or swretry-expired frame will
+> trigger an AMPDU status report, which will update the RC. The first
+> subframe of the A-MPDU is not getting any special treatment here.
 
-There is no written policy for this behaviour, may be the comment
-needs to be changed. It makes sense to turn off the LED to save
-power but turning off the LED while wireless interface is still up
-is kind of misleading, also this one we got as a requirement
-internally and did not want to maintain any private patch.
+You're right, I missed that part. And I guess that's also why the
+worst case is so rare.
 
-> 
-> Or is it a workaround for some quirk in Atheros hardware?
+But on the other hand doesn't that also mean that MRR rates and counts
+in the tx status will be incorrect? I.e. one set of rates/counts used
+to transmit the aggregate (first subframe) and (possibly) another set
+reported back in tx status (first acked/expired subframe)?
 
-nope.
+Also, bf->bf_retries is used in ath_tx_rc_status() but the logic makes
+no sense if bf_retries holds the number of software retries...
 
-> 
-> In any case, I don't like the new comment.  The comment says "Keep the
-> LED on...", but the code is still turning the LED off.
+>> Any ideas on how to fix this? To me the aggregation and rate control
+>> code seems to need a major overhaul, something which would require
+>> changes to the interface between mac80211 and drivers, e.g. ath9k.
+>> That's out of my league unfortunately...
+> I've already made a lot of progress rewriting the entire aggregation
+> logic (it'll be in mac80211 instead of ath9k).
+> As soon as I'm done fixing the current batch of bugs that I'm debugging
+> at the moment, I will post my changes as RFC on the linux-wireless list.
 
-yeah, this comment seems to be implicit. thanks for the review.
+Very nice to hear a rewrite is in progress. :) Looking forward to those patches.
 
-Vasanth
+> - Felix
+>
+
+/Björn
