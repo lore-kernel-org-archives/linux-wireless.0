@@ -1,44 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:40327 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750743Ab0F3Fqe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jun 2010 01:46:34 -0400
-Subject: Re: Problem with firmware load on ipw2200
-From: Pavel Roskin <proski@gnu.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4C29F711.1090306@lwfinger.net>
-References: <4C29F711.1090306@lwfinger.net>
-Content-Type: text/plain
-Date: Wed, 30 Jun 2010 01:46:13 -0400
-Message-Id: <1277876773.2536.5.camel@ct>
-Mime-Version: 1.0
+Received: from mail-px0-f174.google.com ([209.85.212.174]:33957 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752188Ab0FWUsN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jun 2010 16:48:13 -0400
+Received: by pxi7 with SMTP id 7so428862pxi.19
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jun 2010 13:48:13 -0700 (PDT)
+Message-ID: <4C227340.2000302@lwfinger.net>
+Date: Wed, 23 Jun 2010 15:49:04 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?Michael_B=FCsch?= <mb@bu3sch.de>
+CC: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: Recent results with BCM4312 on Netbook
+References: <4C20D884.3010501@lwfinger.net> <AANLkTikjzHcT9L472CFJ2LKtOiEUIk2S78_S_s-IxHjl@mail.gmail.com> (sfid-20100623_004823_485864_1D673701) <4C22014A.3000102@bu3sch.de>
+In-Reply-To: <4C22014A.3000102@bu3sch.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-06-29 at 08:37 -0500, Larry Finger wrote:
-> I'm trying to help an ipw2200 user on the openSUSE Wireless Forum and I'm
-> stuck. The system is failing to load the firmware with error -2 (File or
-> directory not found). The difficulty is that the required files are
-> present with the correct permissions.
-> 
-> What system component might be missing and/or borked to get this symptom?
+On 06/23/2010 07:42 AM, Michael Büsch wrote:
+> Please note that there were some rewrites recently in the kernel
+> DMA subsystem. b43 does now use the generic DMA interface, which
+> should work on all busses. I would not rule out an error in
+> that area, though it's unlikely.
 
-Older versions of compat-wireless had a race condition in the firmware
-code that could cause that.  From the log of the compat repository:
+I don't think that is a problem. None of my other 3 systems developed an
+error with that change. In addition, the Netbook started working as
+mysteriously as it had failed earlier. I just love intermittent cases. ;-)
 
-commit 524449c0184d44773d4947db8cd3bfd98a0a215f
-Author: Grazvydas Ignotas <notasas@gmail.com>
-Date:   Thu Apr 22 16:54:02 2010 +0300
-
-    compat: fix uevent_suppress on 2.6.29 or older kernels
-    
-    Missing uevent_suppress is causing two uevents instead of one, which is
-    confusing udev and sometimes causing firmware load to fail due to race
-    condition, so let's add it.
-    
-    Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
-
--- 
-Regards,
-Pavel Roskin
+Larry
