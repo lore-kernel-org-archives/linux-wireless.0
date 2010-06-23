@@ -1,47 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:37088 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755803Ab0F2TvI (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44156 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752403Ab0FWSaM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jun 2010 15:51:08 -0400
-Received: by wwb18 with SMTP id 18so553wwb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Jun 2010 12:51:06 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 10/21] eeprom_93cx6: Add support for 93c86 EEPROMs.
-Date: Tue, 29 Jun 2010 21:43:44 +0200
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-References: <201006292138.13509.IvDoorn@gmail.com> <201006292142.24144.IvDoorn@gmail.com> <201006292143.04173.IvDoorn@gmail.com>
-In-Reply-To: <201006292143.04173.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201006292143.45392.IvDoorn@gmail.com>
+	Wed, 23 Jun 2010 14:30:12 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@atheros.com,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] ath9k: declare MODULE_FIRMWARE for ath9k_htc
+Date: Wed, 23 Jun 2010 14:23:13 -0400
+Message-Id: <1277317393-20245-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- include/linux/eeprom_93cx6.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/hif_usb.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-diff --git a/include/linux/eeprom_93cx6.h b/include/linux/eeprom_93cx6.h
-index a55c873..c4627cb 100644
---- a/include/linux/eeprom_93cx6.h
-+++ b/include/linux/eeprom_93cx6.h
-@@ -30,6 +30,7 @@
- #define PCI_EEPROM_WIDTH_93C46	6
- #define PCI_EEPROM_WIDTH_93C56	8
- #define PCI_EEPROM_WIDTH_93C66	8
-+#define PCI_EEPROM_WIDTH_93C86	8
- #define PCI_EEPROM_WIDTH_OPCODE	3
- #define PCI_EEPROM_WRITE_OPCODE	0x05
- #define PCI_EEPROM_READ_OPCODE	0x06
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 74bc80f..4949f83 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -16,6 +16,11 @@
+ 
+ #include "htc.h"
+ 
++/* identify firmware images */
++MODULE_FIRMWARE("ar7010.fw");
++MODULE_FIRMWARE("ar7010_1_1.fw");
++MODULE_FIRMWARE("ar9271.fw");
++
+ static struct usb_device_id ath9k_hif_usb_ids[] = {
+ 	{ USB_DEVICE(0x0cf3, 0x9271) }, /* Atheros */
+ 	{ USB_DEVICE(0x0cf3, 0x1006) }, /* Atheros */
 -- 
-1.6.6.1
+1.7.0.1
 
