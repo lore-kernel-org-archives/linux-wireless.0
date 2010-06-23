@@ -1,178 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34807 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751598Ab0FNGaM (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:41925 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751478Ab0FWQg3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jun 2010 02:30:12 -0400
-Subject: Re: [PATCH 1/3] mac80211: Set basic rates while joining ibss
- network
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1276496145-5623-2-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-References: <1276496145-5623-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-	 <1276496145-5623-2-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 14 Jun 2010 08:30:01 +0200
-Message-ID: <1276497001.3926.4.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 23 Jun 2010 12:36:29 -0400
+Received: by gwaa18 with SMTP id a18so88747gwa.19
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jun 2010 09:36:28 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4B8D396B.5040007@openwrt.org>
+References: <4B8C3A21.2050105@openwrt.org>
+	<133e8d7e1003020419r6fab7b13kd77b06407c8c1380@mail.gmail.com>
+	<4B8D25DC.8070502@openwrt.org>
+	<133e8d7e1003020747w348dbee0g60a25a86393972d7@mail.gmail.com>
+	<4B8D396B.5040007@openwrt.org>
+Date: Wed, 23 Jun 2010 18:36:28 +0200
+Message-ID: <AANLkTilWfp6LzCYhxFweqAP_GceRz5PQBIBl5AksLKUf@mail.gmail.com>
+Subject: Re: [RFC/RFT] minstrel_ht: new rate control module for 802.11n
+From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Benoit PAPILLAULT <benoit.papillault@free.fr>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-06-14 at 09:15 +0300, Teemu Paasikivi wrote:
-> This patch adds support to nl80211 and mac80211 to set basic rates when
-> joining/creating ibss network.
-> 
-> Original patch was posted by Johannes Berg on the linux-wireless posting list.
+2010/3/2 Felix Fietkau <nbd@openwrt.org>:
+> On 2010-03-02 4:47 PM, Björn Smedman wrote:
+>> 2010/3/2 Felix Fietkau <nbd@openwrt.org>:
+[snip]
+>> You mean the hardware interprets the block-ack and keeps retrying the
+>> un-acked frames? I thought it stopped as soon as it got a block-ack to
+>> let software sort out the acked and un-acked frames and handle the
+>> "partial" A-MPDU retry.
+> Not sure, actually. I just looked at the ath9k tx path again, and it
+> seems that you're right. However it looks like it's not sending rate
+> control updates until it's done with the software retry, so that's
+> probably the reason why I wasn't able to make it more precise yet.
 
-Did you actually change it at all? (Ok I see you did make a bugfix, good
-catch)
+I had another look at the code now and if I read it correctly this
+delay in the rate control feedback is really scary. In the extreme
+case where all the rates in the MRR stop working you have to make 10
+(ATH_MAX_SW_RETRIES) aggregate software retries (of about 20 frames
+each) with approx 10 hardware retries each before you give the rate
+control algorithm any feedback whatsoever. That is a worst case of
+several thousand (pointless) subframe retransmissions before the rate
+control algorithm has a chance to adjust...
 
-I personally don't care at all, but I guess generally you should
-attribute it to the person who actually did (most of) the work.
+If I'm not wrong above then the rate control feedback must also be
+incorrect: a disaster of that magnitude simply cannot be conveyed to
+the rate control algorithm through the thin tx status interface. As
+far as I can tell, whenever the first subframe of an aggregate fails
+and is software retried, the rate control feedback for that aggregate
+is lost (ath_tx_rc_status() is never called with update_rc = true in
+xmit.c).
 
-In any case, John will need this:
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-
-
-> Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-> ---
->  include/net/cfg80211.h     |    2 +
->  net/mac80211/ibss.c        |    4 ++-
->  net/mac80211/ieee80211_i.h |    2 +
->  net/wireless/nl80211.c     |   49 ++++++++++++++++++++++++++++++++++++++++++++
->  4 files changed, 56 insertions(+), 1 deletions(-)
-> 
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index 22ab9d8..64374f4 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -810,6 +810,7 @@ struct cfg80211_disassoc_request {
->   * @beacon_interval: beacon interval to use
->   * @privacy: this is a protected network, keys will be configured
->   *	after joining
-> + * @basic_rates: bitmap of basic rates to use when creating the IBSS
->   */
->  struct cfg80211_ibss_params {
->  	u8 *ssid;
-> @@ -818,6 +819,7 @@ struct cfg80211_ibss_params {
->  	u8 *ie;
->  	u8 ssid_len, ie_len;
->  	u16 beacon_interval;
-> +	u32 basic_rates;
->  	bool channel_fixed;
->  	bool privacy;
->  };
-> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-> index d7a96ce..8be5a96 100644
-> --- a/net/mac80211/ibss.c
-> +++ b/net/mac80211/ibss.c
-> @@ -172,6 +172,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
->  	rcu_assign_pointer(ifibss->presp, skb);
->  
->  	sdata->vif.bss_conf.beacon_int = beacon_int;
-> +	sdata->vif.bss_conf.basic_rates = basic_rates;
->  	bss_change = BSS_CHANGED_BEACON_INT;
->  	bss_change |= ieee80211_reset_erp_info(sdata);
->  	bss_change |= BSS_CHANGED_BSSID;
-> @@ -529,7 +530,7 @@ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
->  		sdata->drop_unencrypted = 0;
->  
->  	__ieee80211_sta_join_ibss(sdata, bssid, sdata->vif.bss_conf.beacon_int,
-> -				  ifibss->channel, 3, /* first two are basic */
-> +				  ifibss->channel, ifibss->basic_rates,
->  				  capability, 0);
->  }
->  
-> @@ -910,6 +911,7 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
->  		sdata->u.ibss.fixed_bssid = false;
->  
->  	sdata->u.ibss.privacy = params->privacy;
-> +	sdata->u.ibss.basic_rates = params->basic_rates;
->  
->  	sdata->vif.bss_conf.beacon_int = params->beacon_interval;
->  
-> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-> index 4d3883e..fde058b 100644
-> --- a/net/mac80211/ieee80211_i.h
-> +++ b/net/mac80211/ieee80211_i.h
-> @@ -393,6 +393,8 @@ struct ieee80211_if_ibss {
->  	unsigned long request;
->  	unsigned long last_scan_completed;
->  
-> +	u32 basic_rates;
-> +
->  	bool timer_running;
->  
->  	bool fixed_bssid;
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index 90ab3c8..324b4a5 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -3955,6 +3955,55 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
->  		}
->  	}
->  
-> +	if (info->attrs[NL80211_ATTR_BSS_BASIC_RATES]) {
-> +		u8 *rates =
-> +			nla_data(info->attrs[NL80211_ATTR_BSS_BASIC_RATES]);
-> +		int n_rates =
-> +			nla_len(info->attrs[NL80211_ATTR_BSS_BASIC_RATES]);
-> +		struct ieee80211_supported_band *sband =
-> +			wiphy->bands[ibss.channel->band];
-> +		int i, j;
-> +
-> +		if (n_rates == 0) {
-> +			err = -EINVAL;
-> +			goto out;
-> +		}
-> +
-> +		for (i = 0; i < n_rates; i++) {
-> +			int rate = (rates[i] & 0x7f) * 5;
-> +			bool found = false;
-> +
-> +			for (j = 0; j < sband->n_bitrates; j++) {
-> +				if (sband->bitrates[j].bitrate == rate) {
-> +					found = true;
-> +					ibss.basic_rates |= BIT(j);
-> +					break;
-> +				}
-> +			}
-> +			if (!found) {
-> +				err = -EINVAL;
-> +				goto out;
-> +			}
-> +		}
-> +	} else {
-> +		/*
-> +		* If no rates were explicitly configured,
-> +		* use the mandatory rate set for 11b or
-> +		* 11a for maximum compatibility.
-> +		*/
-> +		struct ieee80211_supported_band *sband =
-> +			wiphy->bands[ibss.channel->band];
-> +		int j;
-> +		u32 flag = ibss.channel->band == IEEE80211_BAND_5GHZ ?
-> +			IEEE80211_RATE_MANDATORY_A :
-> +			IEEE80211_RATE_MANDATORY_B;
-> +
-> +		for (j = 0; j < sband->n_bitrates; j++) {
-> +			if (sband->bitrates[j].flags & flag)
-> +				ibss.basic_rates |= BIT(j);
-> +		}
-> +	}
-> +
->  	err = cfg80211_join_ibss(rdev, dev, &ibss, connkeys);
->  
->  out:
-> -- 
-> 1.5.6.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-
+Any ideas on how to fix this? To me the aggregation and rate control
+code seems to need a major overhaul, something which would require
+changes to the interface between mac80211 and drivers, e.g. ath9k.
+That's out of my league unfortunately...
