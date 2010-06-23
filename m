@@ -1,45 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:44439
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758219Ab0FITL5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jun 2010 15:11:57 -0400
-Date: Wed, 09 Jun 2010 12:12:07 -0700 (PDT)
-Message-Id: <20100609.121207.193693646.davem@davemloft.net>
-To: reinette.chatre@intel.com
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: iwlagn fails to assoc with nexus one in ad-hoc mode
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1276110641.1835.14891.camel@rchatre-DESK>
-References: <1276102692.1835.14610.camel@rchatre-DESK>
-	<20100609.103326.189711649.davem@davemloft.net>
-	<1276110641.1835.14891.camel@rchatre-DESK>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from bar.sig21.net ([80.81.252.164]:54280 "EHLO bar.sig21.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751708Ab0FWTIQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jun 2010 15:08:16 -0400
+Date: Wed, 23 Jun 2010 21:07:43 +0200
+From: Johannes Stezenbach <js@sig21.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	Maxim Levitsky <maximlevitsky@gmail.com>,
+	David Quan <David.Quan@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Jonathan May <jonathan.may@atheros.com>,
+	Tim Gardner <tim.gardner@canonical.com>
+Subject: Re: [ath5k-devel] [PATCH v2] ath5k: disable ASPM
+Message-ID: <20100623190743.GA22855@sig21.net>
+References: <20100622172545.GA22680@srcf.ucam.org>
+ <AANLkTilEHJ5qRD8ov0gIK0Zc4o-gJUPYkvHdyD1uZUon@mail.gmail.com>
+ <20100622175058.GA23499@srcf.ucam.org>
+ <AANLkTinE0BiOa5cpcIerbias7K-aDzj3x4qaeDpzy2CQ@mail.gmail.com>
+ <20100622184426.GA24546@srcf.ucam.org>
+ <20100622193143.GA17803@sig21.net>
+ <AANLkTin1fAAgYTYegqaadkYIYP2NXRNRzCR48e-uIgYV@mail.gmail.com>
+ <AANLkTimsEkff4sMiMB_VyWqkZOjy9PIuJ4AiC95PASOZ@mail.gmail.com>
+ <20100623143940.GA5424@sig21.net>
+ <AANLkTilyQB-q8Xf9Mu3F5SnKbRqbBuLjbdx8EcyCt_0v@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTilyQB-q8Xf9Mu3F5SnKbRqbBuLjbdx8EcyCt_0v@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: reinette chatre <reinette.chatre@intel.com>
-Date: Wed, 09 Jun 2010 12:10:41 -0700
-
-> Hi David,
+On Wed, Jun 23, 2010 at 09:28:57AM -0700, Luis R. Rodriguez wrote:
+> On Wed, Jun 23, 2010 at 7:39 AM, Johannes Stezenbach <js@sig21.net> wrote:
+> >
+> > If enabling ASPM comes with a performance penalty (which is not unexpected,
+> > there is usually a tradeoff between performance and power consumption),
+> > do you think a boot time option (pcie_aspm=) or compile time option
+> > (CONFIG_PCIEASPM) is the right user interface?
+> >
+> >
+> > But meanwhile I found that CONFIG_PCIEASPM has a runtime
+> > interface, /sys/module/pcie_aspm/parameters/policy.
+> > http://lwn.net/Articles/266585/
 > 
-> On Wed, 2010-06-09 at 10:33 -0700, David Miller wrote:
->> From: reinette chatre <reinette.chatre@intel.com>
->> > Which hardware are you using? This information is needed to decode the
->> > firmware assert you are posting.
->> 
->> 5300
-> 
-> The firmware assert you are encountering is something that we have fixed
-> before. This may be a new instance of it or you may not be running with
-> the fix. What repo/kernel version are you using for your testing?
+> Same thing, its to be used by developers not users, damn it we should
+> just remove this crap.
 
-Upstream 2.6.34 vanilla.
+Hopefully I got at least the message across that there is
+a good reason to have an interface where the user can
+select the ASPM policy?
 
-> Also, to confirm things, could you ensure driver is compiled with
-> CONFIG_IWLWIFI_DEBUG and load module with "modprobe iwlagn
-> debug=0x43fff" to get us some more data? It may help to compile mac80211
-> with verbose debugging (CONFIG_MAC80211_VERBOSE_DEBUG) also.
+If your answer is "reboot and change the BIOS setting" then
+you didn't get what I was talking about _at all_.
 
-I'll try to find time to do this.
+Also, having now briefly looked at pcie/aspm.c, I do not share your
+opinion that it is crap, except maybe for the force enable.
+If I read it correctly it will by default keep the BIOS settings,
+but offers a per-device sysfs attribute to change the ASPM link
+state, and it seems to do sanity checking, and takes care that
+both ends of the link agree.
+
+(disclaimer: I haven't tested any of it, only briefly looked at the code)
+
+
+Johannes
