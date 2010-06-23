@@ -1,36 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:59095 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752748Ab0FUTDg (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55488 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751866Ab0FWOaN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jun 2010 15:03:36 -0400
-Subject: Compat-wireless release for 2010-06-21 is baked
-To: <linux-wireless@vger.kernel.org>, <linux-bluetooth@vger.kernel.org>
-Message-Id: <20100621190331.3640542E2C@repository3.localdomain>
-Date: Mon, 21 Jun 2010 15:03:31 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Wed, 23 Jun 2010 10:30:13 -0400
+Date: Wed, 23 Jun 2010 10:16:22 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Justin Mattock <justinmattock@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: BUG: unable to handle kernel NULL pointer dereference at
+ 00000000000000a0
+Message-ID: <20100623141622.GC15205@tuxdriver.com>
+References: <AANLkTilf41JrFwN1veRDifNA78S2LQ6SO0g3YLOONd2W@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTilf41JrFwN1veRDifNA78S2LQ6SO0g3YLOONd2W@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   49bc196..fd729ff  history    -> origin/history
- + d568ec36...13f4704 master     -> origin/master  (forced update)
- * [new tag]         next-20100621 -> next-20100621
+On Tue, Jun 22, 2010 at 04:16:53PM -0700, Justin Mattock wrote:
+> I remember ipsec was able to work cleanly on my machines probably
+> about 4/6 months ago
+> now I get this:
 
-compat-wireless code metrics
+<snip>
 
-    498479 - Total upstream lines of code being pulled
-      1410 - backport code changes
-      1177 - backport code additions
-       233 - backport code deletions
-      5748 - backport from compat module
-      7158 - total backport code
-    1.4360 - % of code consists of backport work
-      1218 - Crap changes not yet posted
-      1179 - Crap additions not yet merged
-        39 - Crap deletions not yet posted
-    0.2443 - % of crap code
+Perhaps netdev would be a more appropriate list than linux-wireless
+for this?
 
-Base tree: linux-next.git
-Base tree version: next-20100621
-compat-wireless release: compat-wireless-2010-06-17-1-g75bb510
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
