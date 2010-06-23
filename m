@@ -1,279 +1,184 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:43222 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751895Ab0FLEeF (ORCPT
+Received: from mail1-out1.atlantis.sk ([80.94.52.55]:38908 "EHLO
+	mail.atlantis.sk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751940Ab0FWK5Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jun 2010 00:34:05 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 04/24] ath9k_hw: allow for spliting up ANI operations by family
-Date: Sat, 12 Jun 2010 00:33:42 -0400
-Message-Id: <1276317242-15540-5-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
-References: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 23 Jun 2010 06:57:24 -0400
+From: Ondrej Zary <linux@rainbow-software.org>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH] rt2500usb: fallback to SW encryption for TKIP+AES
+Date: Wed, 23 Jun 2010 12:57:15 +0200
+Cc: Ivo Van Doorn <ivdoorn@gmail.com>,
+	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
+	linux-wireless@vger.kernel.org
+References: <201006221238.32745.linux@rainbow-software.org> <4C211076.9060804@gmail.com> <201006222346.06150.linux@rainbow-software.org>
+In-Reply-To: <201006222346.06150.linux@rainbow-software.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Message-Id: <201006231257.17684.linux@rainbow-software.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The AR9003 hardware family will use a slightly modified ANI
-implementation which has not yet been tested on the other hardware
-families. To allow for this new ANI implementation a few ANI
-calls need to be abstracted away. This patch just allows for
-each hardware family to declare their own ANI ops and annotates
-the current ANI implementation as old.
+On Tuesday 22 June 2010, Ondrej Zary wrote:
+> On Tuesday 22 June 2010 21:35:18 Gertjan van Wingerde wrote:
+> > On 06/22/10 12:38, Ondrej Zary wrote:
+> > > Hello,
+> > > I'm (again) trying to solve (debug) a weird problem with Asus WL-167G:
+> > > 0b05:1706 ASUSTek Computer, Inc. WL-167G v1 802.11g Adapter [Ralink
+> > > RT2500USB]
+> > >
+> > > The problem only appears when HW encryption is enabled and connecting
+> > > to an AP configured as WPA2 TKIP+AES.
+> > >
+> > > HW encryption works when the AP is configured as TKIP-only or AES-only.
+> > > It also works when AP is configured as TKIP+AES but wpa_supplicant is
+> > > forced to use TKIP as pairwise cipher (pairwise=TKIP)
+> > >
+> > > SW encryption works always.
+> > >
+> > > The problem is that no packets are transmitted. I can't see DHCP
+> > > broadcasts on other machine using tcpdump. But when I run tcpdump on
+> > > the rt2500usb, I see broadcasts from the other machine, so receive
+> > > seems to work fine.
+> > >
+> > > Added some printk()s to the driver, 6 packets from unsuccessful DHCP:
+> > > [  371.760073] rt2500usb_write_tx_desc: key_idx=0
+> > > [  371.852062] rt2500usb_write_tx_desc: key_idx=0
+> > > [  371.944054] rt2500usb_write_tx_desc: key_idx=0
+> > > [  372.036068] rt2500usb_write_tx_desc: key_idx=0
+> > > [  372.128056] rt2500usb_write_tx_desc: key_idx=0
+> > > [  372.220053] rt2500usb_write_tx_desc: key_idx=0
+> > > [  372.312053] rt2500usb_write_tx_desc: key_idx=0
+> > > [  372.404055] rt2500usb_write_tx_desc: key_idx=0
+> > > [  372.496101] rt2500usb_write_tx_desc: key_idx=0
+> > > [  372.588077] rt2500usb_write_tx_desc: key_idx=0
+> > > [  372.688073] rt2500usb_write_tx_desc: key_idx=0
+> > > [  373.272513] wlan1: authenticate with 00:13:d4:0f:f3:19 (try 1)
+> > > [  373.272552] rt2500usb_write_tx_desc: key_idx=0
+> > > [  373.274533] wlan1: authenticated
+> > > [  373.274564] wlan1: associate with 00:13:d4:0f:f3:19 (try 1)
+> > > [  373.274581] rt2500usb_write_tx_desc: key_idx=0
+> > > [  373.277696] wlan1: RX AssocResp from 00:13:d4:0f:f3:19 (capab=0x411
+> > > status=0 aid=1) [  373.277704] wlan1: associated
+> > > [  373.308247] rt2500usb_write_tx_desc: key_idx=0
+> > > [  373.308392] rt2500usb_write_tx_desc: key_idx=0
+> > > [  373.315999] rt2500usb_write_tx_desc: key_idx=0
+> > > [  373.340306] rt2x00crypto_key_to_cipher: ALG_CCMP
+> > > [  373.340318] rt2500usb_config_key key->hw_key_idx=0 SET_KEY
+> > > hw_key_idx = 0 OK [  373.344521] rt2x00crypto_key_to_cipher: ALG_TKIP
+> > > [  373.344527] rt2500usb_config_key key->hw_key_idx=0 SET_KEY
+> > > hw_key_idx = 1 OK [  373.412083] rt2500usb_write_tx_desc: key_idx=0
+> > > [  375.160233] rt2x00crypto_key_to_cipher: ALG_CCMP
+> > > [  375.160246] rt2x00crypto_tx_overhead=8
+> > > [  375.160254] rt2500usb_write_tx_desc: key_idx=0
+> > > [  375.240078] rt2500usb_write_tx_desc: key_idx=0
+> > > [  381.163494] rt2x00crypto_key_to_cipher: ALG_CCMP
+> > > [  381.163507] rt2x00crypto_tx_overhead=8
+> > > [  381.163515] rt2500usb_write_tx_desc: key_idx=0
+> > > [  381.244066] rt2500usb_write_tx_desc: key_idx=0
+> > > [  388.165180] rt2x00crypto_key_to_cipher: ALG_CCMP
+> > > [  388.165194] rt2x00crypto_tx_overhead=8
+> > > [  388.165201] rt2500usb_write_tx_desc: key_idx=0
+> > > [  388.244069] rt2500usb_write_tx_desc: key_idx=0
+> > > [  399.169468] rt2x00crypto_key_to_cipher: ALG_CCMP
+> > > [  399.169481] rt2x00crypto_tx_overhead=8
+> > > [  399.169489] rt2500usb_write_tx_desc: key_idx=0
+> > > [  399.248067] rt2500usb_write_tx_desc: key_idx=0
+> > > [  404.080428] rt2500usb_write_tx_desc: key_idx=0
+> > > [  404.180066] rt2500usb_write_tx_desc: key_idx=0
+> > > [  410.168836] rt2x00crypto_key_to_cipher: ALG_CCMP
+> > > [  410.168850] rt2x00crypto_tx_overhead=8
+> > > [  410.168858] rt2500usb_write_tx_desc: key_idx=0
+> > > [  410.248068] rt2500usb_write_tx_desc: key_idx=0
+> > > [  414.374545] rt2500usb_write_tx_desc: key_idx=0
+> > > [  414.472061] rt2500usb_write_tx_desc: key_idx=0
+> > > [  422.169686] rt2x00crypto_key_to_cipher: ALG_CCMP
+> > > [  422.169699] rt2x00crypto_tx_overhead=8
+> > > [  422.169706] rt2500usb_write_tx_desc: key_idx=0
+> > > [  422.252069] rt2500usb_write_tx_desc: key_idx=0
+> > >
+> > > Seems that it's trying to use CCMP, which is good. I wonder if the keys
+> > > are properly handled in rt2500usb_config_key. They seem to be uploaded
+> > > to the HW correctly (one at index 0, one at 1) - but can't tell without
+> > > any HW docs.
+> > >
+> > > I did some framedumps before but don't know what to do with them (what
+> > > to look for):
+> > > http://www.rainbow-software.org/linux_files/rt2500usb/dump-wpa2-bad.txt
+> > > http://www.rainbow-software.org/linux_files/rt2500usb/dump-wpa2-good.tx
+> > >t
+> > >
+> > > Anything else I can try?
+> >
+> > Hi Ondrej,
+> >
+> > Did you also test what happens if you configure the AP to be TKIP+AES and
+> > force wpa-supplicant to use AES pairwise key?
+> > If my analysis below is correct then that may work as well.
+>
+> That does not work - it's probably the same case as default options (TKIP
+> group key + AES pairwise key).
+>
+> > If my reading of the rt2570 data sheet is correct, then the rt2570 will
+> > only support one encryption mechanism at the time. That means that it is
+> > not possible to upload 1 TKIP key and 1 AES key at the same time to the
+> > hardware. All the configured keys have to be of the same encryption
+> > algorithm.
+> > Presumably this is why the HW encryption engine fails, as the keys are
+> > set with mixed settings.
+> > Based on that, I don't think that rt2500usb can support this TKIP+AES
+> > setting on wpa-supplicant.
+>
+> If this is true, then the driver should fall back to SW encryption in this
+> case.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ani.c       |   30 +++++++++++++++++++++------
- drivers/net/wireless/ath/ath9k/ani.h       |    4 ---
- drivers/net/wireless/ath/ath9k/ar9002_hw.c |    2 +
- drivers/net/wireless/ath/ath9k/ar9003_hw.c |    2 +
- drivers/net/wireless/ath/ath9k/hw-ops.h    |   16 ++++++++++++++
- drivers/net/wireless/ath/ath9k/hw.h        |   29 +++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/mac.c       |    1 +
- 7 files changed, 73 insertions(+), 11 deletions(-)
+HW crypto in rt2500usb does not seem to support keys with different ciphers,
+which breaks TKIP+AES mode. Fall back to software encryption to fix it.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 66d0b88..28a1dc3 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -17,6 +17,12 @@
- #include "hw.h"
- #include "hw-ops.h"
+This should fix long-standing problems with rt2500usb and WPA, such as:
+http://rt2x00.serialmonkey.com/phpBB/viewtopic.php?f=4&t=4834
+https://bugzilla.redhat.com/show_bug.cgi?id=484888
+
+Also tested that it does not break WEP, TKIP-only and AES-only modes.
+
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+
+diff -urp linux-2.6.35-rc3-orig/drivers/net/wireless/rt2x00/rt2500usb.c linux-2.6.35-rc3/drivers/net/wireless/rt2x00/rt2500usb.c
+--- linux-2.6.35-rc3-orig/drivers/net/wireless/rt2x00/rt2500usb.c	2010-06-12 04:14:04.000000000 +0200
++++ linux-2.6.35-rc3/drivers/net/wireless/rt2x00/rt2500usb.c	2010-06-23 12:18:43.000000000 +0200
+@@ -348,6 +348,7 @@ static int rt2500usb_config_key(struct r
+ 	int timeout;
+ 	u32 mask;
+ 	u16 reg;
++	enum cipher curr_cipher;
  
-+/* Private to ani.c */
-+static inline void ath9k_hw_ani_lower_immunity(struct ath_hw *ah)
-+{
-+	ath9k_hw_private_ops(ah)->ani_lower_immunity(ah);
-+}
-+
- static int ath9k_hw_get_ani_channel_idx(struct ath_hw *ah,
- 					struct ath9k_channel *chan)
- {
-@@ -206,7 +212,7 @@ static void ath9k_hw_ani_cck_err_trigger(struct ath_hw *ah)
- 	}
- }
+ 	if (crypto->cmd == SET_KEY) {
+ 		/*
+@@ -358,6 +359,7 @@ static int rt2500usb_config_key(struct r
+ 		mask = TXRX_CSR0_KEY_ID.bit_mask;
  
--static void ath9k_hw_ani_lower_immunity(struct ath_hw *ah)
-+static void ath9k_hw_ani_lower_immunity_old(struct ath_hw *ah)
- {
- 	struct ar5416AniState *aniState;
- 	int32_t rssi;
-@@ -316,7 +322,7 @@ static int32_t ath9k_hw_ani_get_listen_time(struct ath_hw *ah)
- 	return listenTime;
- }
+ 		rt2500usb_register_read(rt2x00dev, TXRX_CSR0, &reg);
++		curr_cipher = rt2x00_get_field16(reg, TXRX_CSR0_ALGORITHM);
+ 		reg &= mask;
  
--void ath9k_ani_reset(struct ath_hw *ah)
-+static void ath9k_ani_reset_old(struct ath_hw *ah)
- {
- 	struct ar5416AniState *aniState;
- 	struct ath9k_channel *chan = ah->curchan;
-@@ -402,8 +408,8 @@ void ath9k_ani_reset(struct ath_hw *ah)
- 	DISABLE_REGWRITE_BUFFER(ah);
- }
+ 		if (reg && reg == mask)
+@@ -366,6 +368,14 @@ static int rt2500usb_config_key(struct r
+ 		reg = rt2x00_get_field16(reg, TXRX_CSR0_KEY_ID);
  
--void ath9k_hw_ani_monitor(struct ath_hw *ah,
--			  struct ath9k_channel *chan)
-+static void ath9k_hw_ani_monitor_old(struct ath_hw *ah,
-+				     struct ath9k_channel *chan)
- {
- 	struct ar5416AniState *aniState;
- 	struct ath_common *common = ath9k_hw_common(ah);
-@@ -487,7 +493,6 @@ void ath9k_hw_ani_monitor(struct ath_hw *ah,
- 		}
- 	}
- }
--EXPORT_SYMBOL(ath9k_hw_ani_monitor);
+ 		key->hw_key_idx += reg ? ffz(reg) : 0;
++		/*
++		 * Hardware requires that all keys use the same cipher
++		 * (e.g. TKIP-only, AES-only, but not TKIP+AES).
++		 * If this is not the first key, compare the cipher with the
++		 * first one and fall back to SW crypto if not the same.
++		 */
++		if (key->hw_key_idx > 0 && crypto->cipher != curr_cipher)
++			return -EOPNOTSUPP;
  
- void ath9k_enable_mib_counters(struct ath_hw *ah)
- {
-@@ -572,7 +577,7 @@ u32 ath9k_hw_GetMibCycleCountsPct(struct ath_hw *ah,
-  * any of the MIB counters overflow/trigger so don't assume we're
-  * here because a PHY error counter triggered.
-  */
--void ath9k_hw_procmibevent(struct ath_hw *ah)
-+static void ath9k_hw_proc_mib_event_old(struct ath_hw *ah)
- {
- 	u32 phyCnt1, phyCnt2;
- 
-@@ -628,7 +633,6 @@ void ath9k_hw_procmibevent(struct ath_hw *ah)
- 		ath9k_ani_restart(ah);
- 	}
- }
--EXPORT_SYMBOL(ath9k_hw_procmibevent);
- 
- void ath9k_hw_ani_setup(struct ath_hw *ah)
- {
-@@ -694,3 +698,15 @@ void ath9k_hw_ani_init(struct ath_hw *ah)
- 	if (ah->config.enable_ani)
- 		ah->proc_phyerr |= HAL_PROCESS_ANI;
- }
-+
-+void ath9k_hw_attach_ani_ops_old(struct ath_hw *ah)
-+{
-+	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
-+	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
-+
-+	priv_ops->ani_reset = ath9k_ani_reset_old;
-+	priv_ops->ani_lower_immunity = ath9k_hw_ani_lower_immunity_old;
-+
-+	ops->ani_proc_mib_event = ath9k_hw_proc_mib_event_old;
-+	ops->ani_monitor = ath9k_hw_ani_monitor_old;
-+}
-diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
-index 3356762..4631ab2 100644
---- a/drivers/net/wireless/ath/ath9k/ani.h
-+++ b/drivers/net/wireless/ath/ath9k/ani.h
-@@ -108,14 +108,10 @@ struct ar5416Stats {
- };
- #define ah_mibStats stats.ast_mibstats
- 
--void ath9k_ani_reset(struct ath_hw *ah);
--void ath9k_hw_ani_monitor(struct ath_hw *ah,
--			  struct ath9k_channel *chan);
- void ath9k_enable_mib_counters(struct ath_hw *ah);
- void ath9k_hw_disable_mib_counters(struct ath_hw *ah);
- u32 ath9k_hw_GetMibCycleCountsPct(struct ath_hw *ah, u32 *rxc_pcnt,
- 				  u32 *rxf_pcnt, u32 *txf_pcnt);
--void ath9k_hw_procmibevent(struct ath_hw *ah);
- void ath9k_hw_ani_setup(struct ath_hw *ah);
- void ath9k_hw_ani_init(struct ath_hw *ah);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-index 7ba9dd6..917eae0 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-@@ -636,4 +636,6 @@ void ar9002_hw_attach_ops(struct ath_hw *ah)
- 
- 	ar9002_hw_attach_calib_ops(ah);
- 	ar9002_hw_attach_mac_ops(ah);
-+
-+	ath9k_hw_attach_ani_ops_old(ah);
- }
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index 863f61e..b757470 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -313,4 +313,6 @@ void ar9003_hw_attach_ops(struct ath_hw *ah)
- 	ar9003_hw_attach_phy_ops(ah);
- 	ar9003_hw_attach_calib_ops(ah);
- 	ar9003_hw_attach_mac_ops(ah);
-+
-+	ath9k_hw_attach_ani_ops_old(ah);
- }
-diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
-index 624422a..65d2c66 100644
---- a/drivers/net/wireless/ath/ath9k/hw-ops.h
-+++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
-@@ -128,6 +128,17 @@ static inline void ath9k_hw_set11n_virtualmorefrag(struct ath_hw *ah, void *ds,
- 	ath9k_hw_ops(ah)->set11n_virtualmorefrag(ah, ds, vmf);
- }
- 
-+static inline void ath9k_hw_procmibevent(struct ath_hw *ah)
-+{
-+	ath9k_hw_ops(ah)->ani_proc_mib_event(ah);
-+}
-+
-+static inline void ath9k_hw_ani_monitor(struct ath_hw *ah,
-+					struct ath9k_channel *chan)
-+{
-+	ath9k_hw_ops(ah)->ani_monitor(ah, chan);
-+}
-+
- /* Private hardware call ops */
- 
- /* PHY ops */
-@@ -277,4 +288,9 @@ static inline bool ath9k_hw_iscal_supported(struct ath_hw *ah,
- 	return ath9k_hw_private_ops(ah)->iscal_supported(ah, calType);
- }
- 
-+static inline void ath9k_ani_reset(struct ath_hw *ah)
-+{
-+	ath9k_hw_private_ops(ah)->ani_reset(ah);
-+}
-+
- #endif /* ATH9K_HW_OPS_H */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 3a28cdc..a207a70 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -511,6 +511,15 @@ struct ath_gen_timer_table {
-  * @setup_calibration: set up calibration
-  * @iscal_supported: used to query if a type of calibration is supported
-  * @loadnf: load noise floor read from each chain on the CCA registers
-+ *
-+ * @ani_reset: reset ANI parameters to default values
-+ * @ani_lower_immunity: lower the noise immunity level. The level controls
-+ *	the power-based packet detection on hardware. If a power jump is
-+ *	detected the adapter takes it as an indication that a packet has
-+ *	arrived. The level ranges from 0-5. Each level corresponds to a
-+ *	few dB more of noise immunity. If you have a strong time-varying
-+ *	interference that is causing false detections (OFDM timing errors or
-+ *	CCK timing errors) the level can be increased.
-  */
- struct ath_hw_private_ops {
- 	/* Calibration ops */
-@@ -554,6 +563,10 @@ struct ath_hw_private_ops {
- 			    int param);
- 	void (*do_getnf)(struct ath_hw *ah, int16_t nfarray[NUM_NF_READINGS]);
- 	void (*loadnf)(struct ath_hw *ah, struct ath9k_channel *chan);
-+
-+	/* ANI */
-+	void (*ani_reset)(struct ath_hw *ah);
-+	void (*ani_lower_immunity)(struct ath_hw *ah);
- };
- 
- /**
-@@ -564,6 +577,11 @@ struct ath_hw_private_ops {
-  *
-  * @config_pci_powersave:
-  * @calibrate: periodic calibration for NF, ANI, IQ, ADC gain, ADC-DC
-+ *
-+ * @ani_proc_mib_event: process MIB events, this would happen upon specific ANI
-+ *	thresholds being reached or having overflowed.
-+ * @ani_monitor: called periodically by the core driver to collect
-+ *	MIB stats and adjust ANI if specific thresholds have been reached.
-  */
- struct ath_hw_ops {
- 	void (*config_pci_powersave)(struct ath_hw *ah,
-@@ -604,6 +622,9 @@ struct ath_hw_ops {
- 				     u32 burstDuration);
- 	void (*set11n_virtualmorefrag)(struct ath_hw *ah, void *ds,
- 				       u32 vmf);
-+
-+	void (*ani_proc_mib_event)(struct ath_hw *ah);
-+	void (*ani_monitor)(struct ath_hw *ah, struct ath9k_channel *chan);
- };
- 
- struct ath_hw {
-@@ -934,6 +955,14 @@ void ar9003_hw_attach_calib_ops(struct ath_hw *ah);
- void ar9002_hw_attach_ops(struct ath_hw *ah);
- void ar9003_hw_attach_ops(struct ath_hw *ah);
- 
-+/*
-+ * ANI work can be shared between all families but a next
-+ * generation implementation of ANI will be used only for AR9003 only
-+ * for now as the other families still need to be tested with the same
-+ * next generation ANI.
-+ */
-+void ath9k_hw_attach_ani_ops_old(struct ath_hw *ah);
-+
- #define ATH_PCIE_CAP_LINK_CTRL	0x70
- #define ATH_PCIE_CAP_LINK_L0S	1
- #define ATH_PCIE_CAP_LINK_L1	2
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index 0e425cb..b4d0198 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -15,6 +15,7 @@
-  */
- 
- #include "hw.h"
-+#include "hw-ops.h"
- 
- static void ath9k_hw_set_txq_interrupts(struct ath_hw *ah,
- 					struct ath9k_tx_queue_info *qi)
+ 		/*
+ 		 * The encryption key doesn't fit within the CSR cache,
+
+
 -- 
-1.6.3.3
-
+Ondrej Zary
