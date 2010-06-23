@@ -1,47 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52166 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750861Ab0FKKmC (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39625 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751303Ab0FWTAM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jun 2010 06:42:02 -0400
-Subject: Re: [PATCH] ath5k: disable all tasklets while resetting
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20100611101221.26538.46913.stgit@tt-desk>
-References: <20100611101221.26538.46913.stgit@tt-desk>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 11 Jun 2010 12:41:53 +0200
-Message-ID: <1276252913.3640.12.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 23 Jun 2010 15:00:12 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@atheros.com,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v2] ath9k: declare MODULE_FIRMWARE for ath9k_htc
+Date: Wed, 23 Jun 2010 14:50:39 -0400
+Message-Id: <1277319039-20837-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1277317393-20245-1-git-send-email-linville@tuxdriver.com>
+References: <1277317393-20245-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-06-11 at 19:12 +0900, Bruno Randolf wrote:
-> Make sure no tasklets can run concurrently to a reset.
-> 
-> Signed-off-by: Bruno Randolf <br1@einfach.org>
-> ---
->  drivers/net/wireless/ath/ath5k/base.c |   12 ++++++++++++
->  1 files changed, 12 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-> index 9d37c1a..585c517 100644
-> --- a/drivers/net/wireless/ath/ath5k/base.c
-> +++ b/drivers/net/wireless/ath/ath5k/base.c
-> @@ -2908,6 +2908,12 @@ ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan)
->  
->  	ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "resetting\n");
->  
-> +	tasklet_disable(&sc->rxtq);		/* ath5k_tasklet_rx */
-> +	tasklet_disable(&sc->txtq);		/* ath5k_tasklet_tx */
-> +	tasklet_disable(&sc->calib);		/* ath5k_tasklet_calibrate */
-> +	tasklet_disable(&sc->beacontq);		/* ath5k_tasklet_beacon */
-> +	tasklet_disable(&sc->ani_tasklet);	/* ath5k_tasklet_ani */
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+v2 -> avoid duplicate strings for firmware names and simultaneously
+	attract attention to MODULE_FIRMWARE section in the even of
+	any updates
 
-I have no idea how long a reset can take, but this means that all these
-tasklets will spin while your reset is running if they were scheduled.
+ drivers/net/wireless/ath/ath9k/hif_usb.c |   15 ++++++++++++---
+ 1 files changed, 12 insertions(+), 3 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 74bc80f..ad9134b 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -16,6 +16,15 @@
+ 
+ #include "htc.h"
+ 
++/* identify firmware images */
++#define FIRMWARE_AR7010		"ar7010.fw"
++#define FIRMWARE_AR7010_1_1	"ar7010_1_1.fw"
++#define FIRMWARE_AR9271		"ar9271.fw"
++
++MODULE_FIRMWARE(FIRMWARE_AR7010);
++MODULE_FIRMWARE(FIRMWARE_AR7010_1_1);
++MODULE_FIRMWARE(FIRMWARE_AR9271);
++
+ static struct usb_device_id ath9k_hif_usb_ids[] = {
+ 	{ USB_DEVICE(0x0cf3, 0x9271) }, /* Atheros */
+ 	{ USB_DEVICE(0x0cf3, 0x1006) }, /* Atheros */
+@@ -890,12 +899,12 @@ static int ath9k_hif_usb_probe(struct usb_interface *interface,
+ 	case 0x7010:
+ 	case 0x9018:
+ 		if (le16_to_cpu(udev->descriptor.bcdDevice) == 0x0202)
+-			hif_dev->fw_name = "ar7010_1_1.fw";
++			hif_dev->fw_name = FIRMWARE_AR7010_1_1;
+ 		else
+-			hif_dev->fw_name = "ar7010.fw";
++			hif_dev->fw_name = FIRMWARE_AR7010;
+ 		break;
+ 	default:
+-		hif_dev->fw_name = "ar9271.fw";
++		hif_dev->fw_name = FIRMWARE_AR9271;
+ 		break;
+ 	}
+ 
+-- 
+1.7.0.1
 
