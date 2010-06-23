@@ -1,46 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:58776 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753368Ab0FOOdl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Jun 2010 10:33:41 -0400
-Received: by wwb18 with SMTP id 18so4833322wwb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Jun 2010 07:33:40 -0700 (PDT)
+Received: from nbd.name ([88.198.39.176]:35227 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752532Ab0FWRHt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jun 2010 13:07:49 -0400
+Message-ID: <4C223F58.3060509@openwrt.org>
+Date: Wed, 23 Jun 2010 19:07:36 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <1276609006.3648.233.camel@jlt3.sipsolutions.net>
-References: <201006151416.36686.Sebastian.Smolorz@gmx.de>
-	<20100615132619.GB12885@tuxdriver.com>
-	<1276609006.3648.233.camel@jlt3.sipsolutions.net>
-Date: Tue, 15 Jun 2010 17:26:14 +0300
-Message-ID: <AANLkTinHK_MbKZd9HUDoiWuWs5AmDOQiza0poofzYeDn@mail.gmail.com>
-Subject: Re: [RFC] Changes in mac80211 to make at76c50x-usb working again
-From: Kalle Valo <kvalo@adurom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Sebastian Smolorz <Sebastian.Smolorz@gmx.de>,
-	linux-wireless@vger.kernel.org,
-	Marcel Holtmann <marcel@holtmann.org>
+To: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Benoit PAPILLAULT <benoit.papillault@free.fr>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	ath9k-devel@lists.ath9k.org
+Subject: Re: [RFC/RFT] minstrel_ht: new rate control module for 802.11n
+References: <4B8C3A21.2050105@openwrt.org>	<133e8d7e1003020419r6fab7b13kd77b06407c8c1380@mail.gmail.com>	<4B8D25DC.8070502@openwrt.org>	<133e8d7e1003020747w348dbee0g60a25a86393972d7@mail.gmail.com>	<4B8D396B.5040007@openwrt.org> <AANLkTilWfp6LzCYhxFweqAP_GceRz5PQBIBl5AksLKUf@mail.gmail.com>
+In-Reply-To: <AANLkTilWfp6LzCYhxFweqAP_GceRz5PQBIBl5AksLKUf@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15 June 2010 16:36, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2010-06-15 at 09:26 -0400, John W. Linville wrote:
->> On Tue, Jun 15, 2010 at 02:16:36PM +0200, Sebastian Smolorz wrote:
->> > the at76c50x-usb driver fails to authenticate with an AP.
->
-> We need more information on how it fails.
+On 2010-06-23 6:36 PM, Björn Smedman wrote:
+> 2010/3/2 Felix Fietkau <nbd@openwrt.org>:
+>> On 2010-03-02 4:47 PM, Björn Smedman wrote:
+>>> 2010/3/2 Felix Fietkau <nbd@openwrt.org>:
+> [snip]
+>>> You mean the hardware interprets the block-ack and keeps retrying the
+>>> un-acked frames? I thought it stopped as soon as it got a block-ack to
+>>> let software sort out the acked and un-acked frames and handle the
+>>> "partial" A-MPDU retry.
+>> Not sure, actually. I just looked at the ath9k tx path again, and it
+>> seems that you're right. However it looks like it's not sending rate
+>> control updates until it's done with the software retry, so that's
+>> probably the reason why I wasn't able to make it more precise yet.
+> 
+> I had another look at the code now and if I read it correctly this
+> delay in the rate control feedback is really scary. In the extreme
+> case where all the rates in the MRR stop working you have to make 10
+> (ATH_MAX_SW_RETRIES) aggregate software retries (of about 20 frames
+> each) with approx 10 hardware retries each before you give the rate
+> control algorithm any feedback whatsoever. That is a worst case of
+> several thousand (pointless) subframe retransmissions before the rate
+> control algorithm has a chance to adjust...
+Yes, the extreme case is currently not handled properly. However the
+extreme case is also extremely unlikely to trigger. With minstrel_ht,
+the max_prob_rate is always in the MRR series. If the conditions jump
+from all rates working down to even max_prob_rate failing, then
+something must be so wrong with the radio, that there's probably no
+possibility of a graceful fallback at all. I do agree that this should
+be fixed, though.
 
-I debugged this a long time ago. The problem is that firmware's
-CMD_JOIN only works if bssid is correct one. I remember trying
-ff:ff:ff:ff:ff:ff, but that didn't work for some reason. The join
-command needs to be sent before association, otherwise transmission
-won't work at all. And if I use a random bssid the firmware will
-filter the replies. But I tested this a long time ago, I might
-remember something wrong.
+> If I'm not wrong above then the rate control feedback must also be
+> incorrect: a disaster of that magnitude simply cannot be conveyed to
+> the rate control algorithm through the thin tx status interface. As
+> far as I can tell, whenever the first subframe of an aggregate fails
+> and is software retried, the rate control feedback for that aggregate
+> is lost (ath_tx_rc_status() is never called with update_rc = true in
+> xmit.c).
+I think you misread that part. The loop iterates over all subframes in
+the aggregate, and the first successful or swretry-expired frame will
+trigger an AMPDU status report, which will update the RC. The first
+subframe of the A-MPDU is not getting any special treatment here.
 
-I was thinking a hack which would get bssid from association frames
-and then send CMD_JOIN, before the association frame. IMHO no need to
-change mac80211 because of this old hardware.
+> Any ideas on how to fix this? To me the aggregation and rate control
+> code seems to need a major overhaul, something which would require
+> changes to the interface between mac80211 and drivers, e.g. ath9k.
+> That's out of my league unfortunately...
+I've already made a lot of progress rewriting the entire aggregation
+logic (it'll be in mac80211 instead of ath9k).
+As soon as I'm done fixing the current batch of bugs that I'm debugging
+at the moment, I will post my changes as RFC on the linux-wireless list.
 
-Kalle
+- Felix
+
+
