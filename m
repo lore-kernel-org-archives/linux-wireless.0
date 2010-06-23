@@ -1,57 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server.heaven-czfree.net ([78.108.102.201]:50563 "EHLO
-	smtp.heaven-czfree.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752365Ab0FZRv5 (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:64256 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751327Ab0FWJM7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Jun 2010 13:51:57 -0400
-From: "Jaroslav Fojtik" <jafojtik@seznam.cz>
-To: Bruno Randolf <br1@einfach.org>, linux-wireless@vger.kernel.org
-Date: Sat, 26 Jun 2010 19:54:17 +0200
-MIME-Version: 1.0
-Subject: Re: ATH5k - Signal measurement reports wrong values - thanks for a fix
-Message-ID: <4C263EC9.12342.C4FBB@jafojtik.seznam.cz>
-In-reply-to: <201006270107.59150.br1@einfach.org>
-References: <4C1E6A13.4259.24AF3C@jafojtik.seznam.cz>, <4C25F603.29925.1365B7A@jafojtik.seznam.cz>, <201006270107.59150.br1@einfach.org>
-Content-type: text/plain; charset=US-ASCII
+	Wed, 23 Jun 2010 05:12:59 -0400
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] nl80211: Add option to adjust transmit power
+Date: Wed, 23 Jun 2010 12:12:38 +0300
+Message-Id: <1277284358-11014-2-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1277284358-11014-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1277284358-11014-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Bruno,
+This patch adds transmit power setting type and transmit power level attributes
+to NL80211_CMD_SET_WIPHY in order to facilitate adjusting of the transmit power
+level of the device.
 
-> > If it is not, please Email me such patch.
-> 
-> i dont have it here right now, but i sent it in a previous reply to you:
-> 
-> http://marc.info/?l=linux-wireless&m=127717933410893&w=2
-> 
-> it's just one line, so you can also change the same line in your compat-
-> wireless source code.
-Yes, I have patched it now.
+The added attributes allow selection of automatic, limited or fixed transmit
+power level, with the level definable in signed mBm format.
 
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ include/linux/nl80211.h |    9 +++++++++
+ net/wireless/nl80211.c  |   31 +++++++++++++++++++++++++++++++
+ 2 files changed, 40 insertions(+), 0 deletions(-)
 
-> > I am currently using compat-wireless-2010-06-22 and it is still affected by
-> > wrong signal measurement.
-> 
-> yes, my patch is not part of compat-wireless yet. if you confirm that it fixes 
-> your problem i will send it for inclusion.
-It looks, that your patch really returns back proper signal values.
-
-I will not poison Email with png files, feel free to look at here:
-  http://78.108.103.11:11080/cgi-bin/rodga_1day_big.cgi
-Magenta line returned back to green line from other direction.
-
-
-Even in an AP mode the magenta line also jumped to expected value:
-  http://78.108.103.11:11080/tmp/klienti-day-big.png
-
-I hope that this patch would not influence performance or any other
-functionality.
-
-regards
-   Jara
-
-
->  
-> bruno
-
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 07aa046..2c87016 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -725,6 +725,12 @@ enum nl80211_commands {
+  * @NL80211_ATTR_AP_ISOLATE: (AP mode) Do not forward traffic between stations
+  *	connected to this BSS.
+  *
++ * @NL80211_ATTR_WIPHY_TX_POWER_SETTING: Transmit power setting type. See
++ *      &enum nl80211_tx_power_setting for possible values.
++ * @NL80211_ATTR_WIPHY_TX_POWER_LEVEL: Transmit power level in signed mBm units.
++ *      This is used in association with @NL80211_ATTR_WIPHY_TX_POWER_SETTING
++ *      for non-automatic settings.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -882,6 +888,9 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_AP_ISOLATE,
+ 
++	NL80211_ATTR_WIPHY_TX_POWER_SETTING,
++	NL80211_ATTR_WIPHY_TX_POWER_LEVEL,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 41529ac..a999fc1 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -153,6 +153,9 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 	[NL80211_ATTR_CQM] = { .type = NLA_NESTED, },
+ 	[NL80211_ATTR_LOCAL_STATE_CHANGE] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_AP_ISOLATE] = { .type = NLA_U8 },
++
++	[NL80211_ATTR_WIPHY_TX_POWER_SETTING] = { .type = NLA_U32 },
++	[NL80211_ATTR_WIPHY_TX_POWER_LEVEL] = { .type = NLA_U32 },
+ };
+ 
+ /* policy for the attributes */
+@@ -869,6 +872,34 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
+ 			goto bad_res;
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_WIPHY_TX_POWER_SETTING]) {
++		enum nl80211_tx_power_setting type;
++		int idx, mbm = 0;
++
++		if (!rdev->ops->set_tx_power) {
++			return -EOPNOTSUPP;
++			goto bad_res;
++		}
++
++		idx = NL80211_ATTR_WIPHY_TX_POWER_SETTING;
++		type = nla_get_u32(info->attrs[idx]);
++
++		if (!info->attrs[NL80211_ATTR_WIPHY_TX_POWER_LEVEL] &&
++		    (type != NL80211_TX_POWER_AUTOMATIC)) {
++			result = -EINVAL;
++			goto bad_res;
++		}
++
++		if (type != NL80211_TX_POWER_AUTOMATIC) {
++			idx = NL80211_ATTR_WIPHY_TX_POWER_LEVEL;
++			mbm = nla_get_u32(info->attrs[idx]);
++		}
++
++		result = rdev->ops->set_tx_power(&rdev->wiphy, type, mbm);
++		if (result)
++			goto bad_res;
++	}
++
+ 	changed = 0;
+ 
+ 	if (info->attrs[NL80211_ATTR_WIPHY_RETRY_SHORT]) {
+-- 
+1.6.3.3
 
