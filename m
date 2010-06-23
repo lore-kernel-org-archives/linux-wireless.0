@@ -1,45 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:39370 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753116Ab0FNGQN (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:38913 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752566Ab0FWTDg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jun 2010 02:16:13 -0400
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Subject: [PATCH 2/3] mac80211: Set changed basic rates flag
-Date: Mon, 14 Jun 2010 09:15:44 +0300
-Message-Id: <1276496145-5623-3-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-In-Reply-To: <1276496145-5623-2-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-References: <1276496145-5623-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
- <1276496145-5623-2-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	Wed, 23 Jun 2010 15:03:36 -0400
+Subject: Compat-wireless release for 2010-06-23 is baked
+To: <linux-wireless@vger.kernel.org>, <linux-bluetooth@vger.kernel.org>
+Message-Id: <20100623190334.CB1FB42E2C@repository3.orbit-lab.org>
+Date: Wed, 23 Jun 2010 15:03:34 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add changed basic rates flag to bss_changed while joinig ibss network.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   7df472d..87dca92  master     -> origin/master
+   8e2a8ea..dac1811  wl         -> origin/wl
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   41d99c6..951149c  history    -> origin/history
+ + d82e647...fca5ab0 master     -> origin/master  (forced update)
+ * [new tag]         next-20100623 -> next-20100623
 
-This patch is split from the patch containing support for setting basic
-rates when creating ibss network. Original patch was posted by Johannes
-Berg on the linux-wireless posting list.
+compat-wireless code metrics
 
-Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
----
- net/mac80211/ibss.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+    498619 - Total upstream lines of code being pulled
+      1410 - backport code changes
+      1177 - backport code additions
+       233 - backport code deletions
+      5748 - backport from compat module
+      7158 - total backport code
+    1.4356 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2443 - % of crap code
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 8be5a96..ff91265 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -178,6 +178,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 	bss_change |= BSS_CHANGED_BSSID;
- 	bss_change |= BSS_CHANGED_BEACON;
- 	bss_change |= BSS_CHANGED_BEACON_ENABLED;
-+	bss_change |= BSS_CHANGED_BASIC_RATES;
- 	bss_change |= BSS_CHANGED_IBSS;
- 	sdata->vif.bss_conf.ibss_joined = true;
- 	ieee80211_bss_info_change_notify(sdata, bss_change);
--- 
-1.5.6.3
-
+Base tree: linux-next.git
+Base tree version: next-20100623
+compat-wireless release: compat-wireless-2010-06-17-4-g87dca92
