@@ -1,69 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41521 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760139Ab0FRKaM (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:19744 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752552Ab0FWKJC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jun 2010 06:30:12 -0400
-Subject: Re: IWL3945 problems in 2.6.35-rc1
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Reinette Chatre <reinette.chatre@intel.com>
-In-Reply-To: <1276856384.9114.3.camel@maxim-laptop>
-References: <1275395142.14385.6.camel@maxim-laptop>
-	 <1276853327.3638.17.camel@jlt3.sipsolutions.net>
-	 <1276856384.9114.3.camel@maxim-laptop>
+	Wed, 23 Jun 2010 06:09:02 -0400
+Subject: Re: [PATCH 2/2] nl80211: Add option to adjust transmit power
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Artem Mygaiev <joculator@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <op.veqxtlvunp38ce@conquistador-pc.synapse.com>
+References: <1277284358-11014-1-git-send-email-juuso.oikarinen@nokia.com>
+	 <1277284358-11014-2-git-send-email-juuso.oikarinen@nokia.com>
+	 <op.veqxtlvunp38ce@conquistador-pc.synapse.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 18 Jun 2010 12:30:09 +0200
-Message-ID: <1276857009.3638.20.camel@jlt3.sipsolutions.net>
+Date: Wed, 23 Jun 2010 13:08:48 +0300
+Message-ID: <1277287728.5277.43208.camel@wimaxnb.nmp.nokia.com>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maxim,
+Hi Artem,
 
-Thanks for the quick reply!
-
-> >  1) with the patch reverted, which is what presumably you're running
-> >     now, can you try
-> >     ifconfig wlan0 allmulti
-> >     ifconfig wlan0 -allmulti
-> > 
-> >     I think this will *break* the driver right now.
+On Wed, 2010-06-23 at 11:26 +0200, ext Artem Mygaiev wrote:
+> Hello Juuso
 > 
-> I didn't exactly understand how this supposed to break it.
+> A very minor comment - why do you need 'idx' here? Can't you just directly
+> access array by NL80211_* index without adding an index variable?
 
-Ok this needs some more explaining.
+The idx is there for pure beautification - there's no way to decently
+fit onto one line without it ;)
 
-The old code did:
+-Juuso
 
-if (allmulti changed)
-	"set grp-filter in hw according to allmulti"
+> 
+> > +	if (info->attrs[NL80211_ATTR_WIPHY_TX_POWER_SETTING]) {
+> > +		enum nl80211_tx_power_setting type;
+> > +		int idx, mbm = 0;
+> > +
+> > +		if (!rdev->ops->set_tx_power) {
+> > +			return -EOPNOTSUPP;
+> > +			goto bad_res;
+> > +		}
+> > +
+> > +		idx = NL80211_ATTR_WIPHY_TX_POWER_SETTING;
+> > +		type = nla_get_u32(info->attrs[idx]);
+> > +
+> > +		if (!info->attrs[NL80211_ATTR_WIPHY_TX_POWER_LEVEL] &&
+> > +		    (type != NL80211_TX_POWER_AUTOMATIC)) {
+> > +			result = -EINVAL;
+> > +			goto bad_res;
+> > +		}
+> > +
+> > +		if (type != NL80211_TX_POWER_AUTOMATIC) {
+> > +			idx = NL80211_ATTR_WIPHY_TX_POWER_LEVEL;
+> > +			mbm = nla_get_u32(info->attrs[idx]);
+> > +		}
+> > +
+> > +		result = rdev->ops->set_tx_power(&rdev->wiphy, type, mbm);
+> > +		if (result)
+> > +			goto bad_res;
+> > +	}
+> 
 
-the new code just did
-
-"set grp-filter in hw according to allmulti"
-
-
-During normal operation the "allmulti changed" condition is never true.
-Therefore, the old code, despite being incorrect, never broke things.
-The above would make the condition true, and lead to it being broken
-because it would change to on/off and then the grp-filter in hw would be
-off, although it's required to be on.
-
-Thus the real bug was there before my change, but it never triggered,
-and when I "optimised away" the condition I broke it.
-
-> >  2) with the patch *not* reverted, apply the patch below and see if that
-> >     fixes the problem as well (if it gets mangled, just remove the one
-> >     CHK() line manually)
-> > 
-> > Actually, (2) is obviously more important to me, but (1) would indicate
-> > that my guess is correct wrt. what's causing the problem
-
-> I tested (2) and it works.
-
-Thank you. I'll submit this patch instead.
-
-johannes
 
