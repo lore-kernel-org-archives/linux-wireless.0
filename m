@@ -1,44 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:9598 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759106Ab0FJQXW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jun 2010 12:23:22 -0400
-Subject: Re: [PATCHv4] mac80211: Fix circular locking dependency in ARP
- filter handling
-From: reinette chatre <reinette.chatre@intel.com>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1276147838.5277.34297.camel@wimaxnb.nmp.nokia.com>
-References: <1276080206-29562-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1276126067.1835.15473.camel@rchatre-DESK>
-	 <1276147255.5277.34285.camel@wimaxnb.nmp.nokia.com>
-	 <1276147838.5277.34297.camel@wimaxnb.nmp.nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 10 Jun 2010 09:23:21 -0700
-Message-ID: <1276187001.1835.17525.camel@rchatre-DESK>
-Mime-Version: 1.0
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:40110 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751059Ab0FWJ0J (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Jun 2010 05:26:09 -0400
+Received: by fxm10 with SMTP id 10so2924231fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Jun 2010 02:26:07 -0700 (PDT)
+Content-Type: text/plain; charset=iso-8859-15; format=flowed; delsp=yes
+To: "Juuso Oikarinen" <juuso.oikarinen@nokia.com>
+Subject: Re: [PATCH 2/2] nl80211: Add option to adjust transmit power
+References: <1277284358-11014-1-git-send-email-juuso.oikarinen@nokia.com>
+ <1277284358-11014-2-git-send-email-juuso.oikarinen@nokia.com>
+Date: Wed, 23 Jun 2010 12:26:00 +0300
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+From: "Artem Mygaiev" <joculator@gmail.com>
+Message-ID: <op.veqxtlvunp38ce@conquistador-pc.synapse.com>
+In-Reply-To: <1277284358-11014-2-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-06-09 at 22:30 -0700, Juuso Oikarinen wrote:
-> On Thu, 2010-06-10 at 07:21 +0200, Juuso Oikarinen wrote:
-> > On Thu, 2010-06-10 at 01:27 +0200, ext reinette chatre wrote:
-> > > Even so, I tested your new patch and for some reason the BUG returned
-> > > (even though I am now running with "mac80211: Add netif state checking
-> > > to ieee80211_ifa_changed"
-> > 
-> > This is curious. In your source (mine does not seem to fully match what
-> > you are using) what is the BUG that is getting triggered, main.c:437 ?
-> 
-> Oh, and did you remember to apply the fix patch for the bug too, as it
-> seems not yet be integrated to wireless-testing:
-> 
-> "mac80211: Add netif state checking to ieee80211_ifa_changed"
-> 
+Hello Juuso
 
-I am running with that patch  .... see my comment above ;)
+A very minor comment - why do you need 'idx' here? Can't you just directly
+access array by NL80211_* index without adding an index variable?
 
-Reinette
+> +	if (info->attrs[NL80211_ATTR_WIPHY_TX_POWER_SETTING]) {
+> +		enum nl80211_tx_power_setting type;
+> +		int idx, mbm = 0;
+> +
+> +		if (!rdev->ops->set_tx_power) {
+> +			return -EOPNOTSUPP;
+> +			goto bad_res;
+> +		}
+> +
+> +		idx = NL80211_ATTR_WIPHY_TX_POWER_SETTING;
+> +		type = nla_get_u32(info->attrs[idx]);
+> +
+> +		if (!info->attrs[NL80211_ATTR_WIPHY_TX_POWER_LEVEL] &&
+> +		    (type != NL80211_TX_POWER_AUTOMATIC)) {
+> +			result = -EINVAL;
+> +			goto bad_res;
+> +		}
+> +
+> +		if (type != NL80211_TX_POWER_AUTOMATIC) {
+> +			idx = NL80211_ATTR_WIPHY_TX_POWER_LEVEL;
+> +			mbm = nla_get_u32(info->attrs[idx]);
+> +		}
+> +
+> +		result = rdev->ops->set_tx_power(&rdev->wiphy, type, mbm);
+> +		if (result)
+> +			goto bad_res;
+> +	}
 
-
+-- 
+Best regards,
+Artem
