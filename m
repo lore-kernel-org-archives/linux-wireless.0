@@ -1,156 +1,265 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:44203 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751506Ab0FVS2m convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:64264 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751327Ab0FWJNB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jun 2010 14:28:42 -0400
-MIME-Version: 1.0
-In-Reply-To: <20100622175058.GA23499@srcf.ucam.org>
-References: <AANLkTim8iZmm8pEERJUsrQWOiLSjPUfCN-TFFzZZQWx2@mail.gmail.com>
-	<1277151410.5409.33.camel@maxim-laptop> <20100621233333.21262abjfxl8j1xc@hayate.sektori.org>
-	<AANLkTikkt4dqYWrwtTCJ8tJZLB1kZXgF1KvaPsIOO3Dl@mail.gmail.com>
-	<20100622163138.GD20668@srcf.ucam.org> <AANLkTikQkLFdpusfcLVOpyZHFrxwB5akr-ggFB7Fjm08@mail.gmail.com>
-	<20100622165213.GA21842@srcf.ucam.org> <AANLkTikHLBBWrhCP_1f5Jv7zE9RKPvdsl5nSyfkeMfLl@mail.gmail.com>
-	<20100622172545.GA22680@srcf.ucam.org> <AANLkTilEHJ5qRD8ov0gIK0Zc4o-gJUPYkvHdyD1uZUon@mail.gmail.com>
-	<20100622175058.GA23499@srcf.ucam.org>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 22 Jun 2010 11:28:20 -0700
-Message-ID: <AANLkTinE0BiOa5cpcIerbias7K-aDzj3x4qaeDpzy2CQ@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH v2] ath5k: disable ASPM
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	Maxim Levitsky <maximlevitsky@gmail.com>,
-	David Quan <David.Quan@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Jonathan May <jonathan.may@atheros.com>,
-	Tim Gardner <tim.gardner@canonical.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 23 Jun 2010 05:13:01 -0400
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/2] cfg80211/mac80211: Update set_tx_power to use mBm instead of dBm units
+Date: Wed, 23 Jun 2010 12:12:37 +0300
+Message-Id: <1277284358-11014-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 22, 2010 at 10:50 AM, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
-> On Tue, Jun 22, 2010 at 10:40:15AM -0700, Luis R. Rodriguez wrote:
->> On Tue, Jun 22, 2010 at 10:25 AM, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
->> > Right, which we have to deal with by having drivers disable ASPM on
->> > broken devices.
->>
->> Agreed, but then the assumption would be drivers are ASPM bug free
->> which is expect to be false with Video and 802.11 given that only a
->> handful of vendors do actually get involved with their drivers
->> upstream. Safe thing of course is to just disable it, of course, but
->> if you are going to use pcie_aspm=force good luck!
->
-> People who use "force" deserve whatever they get,
+In preparation for a TX power setting interface in the nl80211, change the
+.set_tx_power function to use mBm units instead of dBm for greater accuracy and
+smaller power levels.
 
-Heh, this whole patch and thread was started because Jussi tested
-ath5k with  pcie_aspm=force (on a pre PCIE 1.1 device (?)) . I have
-been trying to explain all along why this is a terrible idea to the
-point we should probably just remove that code from the kernel. Hence
-my side rants and explanations to justify my reasonings.
+Also, already in advance move the tx_power_setting enumeration to nl80211.
 
-> but "powersave" really ought to work.
+This change affects the .tx_set_power function prototype. As a result, the
+corresponding changes are needed to modules using it. These are mac80211,
+iwmc3200wifi and rndis_wlan.
 
-Interesting, as per Documentation/kernel-parameters.txt we have:
+Cc: Samuel Ortiz <samuel.ortiz@intel.com>
+Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Acked-by: Samuel Ortiz <samuel.ortiz@intel.com>
+Acked-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+---
+ drivers/net/wireless/iwmc3200wifi/cfg80211.c |   12 ++++++++----
+ drivers/net/wireless/rndis_wlan.c            |   20 +++++++++++++-------
+ include/linux/nl80211.h                      |   13 +++++++++++++
+ include/net/cfg80211.h                       |   15 +--------------
+ net/mac80211/cfg.c                           |   22 +++++++++++-----------
+ net/wireless/wext-compat.c                   |   10 +++++-----
+ 6 files changed, 51 insertions(+), 41 deletions(-)
 
-        pcie_aspm=      [PCIE] Forcibly enable or disable PCIe Active
-State Power
-                        Management.
-                off     Disable ASPM.
-                force   Enable ASPM even on devices that claim not to
-support it.
-                        WARNING: Forcing ASPM on may cause system lockups.
+diff --git a/drivers/net/wireless/iwmc3200wifi/cfg80211.c b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
+index 902e95f..6061967 100644
+--- a/drivers/net/wireless/iwmc3200wifi/cfg80211.c
++++ b/drivers/net/wireless/iwmc3200wifi/cfg80211.c
+@@ -670,20 +670,24 @@ static int iwm_cfg80211_disconnect(struct wiphy *wiphy, struct net_device *dev,
+ }
+ 
+ static int iwm_cfg80211_set_txpower(struct wiphy *wiphy,
+-				    enum tx_power_setting type, int dbm)
++				    enum nl80211_tx_power_setting type, int mbm)
+ {
+ 	struct iwm_priv *iwm = wiphy_to_iwm(wiphy);
+ 	int ret;
+ 
+ 	switch (type) {
+-	case TX_POWER_AUTOMATIC:
++	case NL80211_TX_POWER_AUTOMATIC:
+ 		return 0;
+-	case TX_POWER_FIXED:
++	case NL80211_TX_POWER_FIXED:
++		if (mbm < 0 || (mbm % 100))
++			return -EOPNOTSUPP;
++
+ 		if (!test_bit(IWM_STATUS_READY, &iwm->status))
+ 			return 0;
+ 
+ 		ret = iwm_umac_set_config_fix(iwm, UMAC_PARAM_TBL_CFG_FIX,
+-					      CFG_TX_PWR_LIMIT_USR, dbm * 2);
++					      CFG_TX_PWR_LIMIT_USR,
++					      MBM_TO_DBM(mbm) * 2);
+ 		if (ret < 0)
+ 			return ret;
+ 
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 4102cca..5e26edb 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -520,8 +520,9 @@ static int rndis_scan(struct wiphy *wiphy, struct net_device *dev,
+ 
+ static int rndis_set_wiphy_params(struct wiphy *wiphy, u32 changed);
+ 
+-static int rndis_set_tx_power(struct wiphy *wiphy, enum tx_power_setting type,
+-				int dbm);
++static int rndis_set_tx_power(struct wiphy *wiphy,
++			      enum nl80211_tx_power_setting type,
++			      int mbm);
+ static int rndis_get_tx_power(struct wiphy *wiphy, int *dbm);
+ 
+ static int rndis_connect(struct wiphy *wiphy, struct net_device *dev,
+@@ -1856,20 +1857,25 @@ static int rndis_set_wiphy_params(struct wiphy *wiphy, u32 changed)
+ 	return 0;
+ }
+ 
+-static int rndis_set_tx_power(struct wiphy *wiphy, enum tx_power_setting type,
+-				int dbm)
++static int rndis_set_tx_power(struct wiphy *wiphy,
++			      enum nl80211_tx_power_setting type,
++			      int mbm)
+ {
+ 	struct rndis_wlan_private *priv = wiphy_priv(wiphy);
+ 	struct usbnet *usbdev = priv->usbdev;
+ 
+-	netdev_dbg(usbdev->net, "%s(): type:0x%x dbm:%i\n",
+-		   __func__, type, dbm);
++	netdev_dbg(usbdev->net, "%s(): type:0x%x mbm:%i\n",
++		   __func__, type, mbm);
++
++	if (mbm < 0 || (mbm % 100))
++		return -ENOTSUPP;
+ 
+ 	/* Device doesn't support changing txpower after initialization, only
+ 	 * turn off/on radio. Support 'auto' mode and setting same dBm that is
+ 	 * currently used.
+ 	 */
+-	if (type == TX_POWER_AUTOMATIC || dbm == get_bcm4320_power_dbm(priv)) {
++	if (type == NL80211_TX_POWER_AUTOMATIC ||
++	    MBM_TO_DBM(mbm) == get_bcm4320_power_dbm(priv)) {
+ 		if (!priv->radio_on)
+ 			disassociate(usbdev, true); /* turn on radio */
+ 
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 64fb32b..07aa046 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1659,4 +1659,17 @@ enum nl80211_cqm_rssi_threshold_event {
+ 	NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
+ };
+ 
++
++/**
++ * enum nl80211_tx_power_setting - TX power adjustment
++ * @NL80211_TX_POWER_AUTOMATIC: automatically determine transmit power
++ * @NL80211_TX_POWER_LIMITED: limit TX power by the mBm parameter
++ * @NL80211_TX_POWER_FIXED: fix TX power to the mBm parameter
++ */
++enum nl80211_tx_power_setting {
++	NL80211_TX_POWER_AUTOMATIC,
++	NL80211_TX_POWER_LIMITED,
++	NL80211_TX_POWER_FIXED,
++};
++
+ #endif /* __LINUX_NL80211_H */
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 64374f4..9b8b3f4 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -875,19 +875,6 @@ enum wiphy_params_flags {
+ 	WIPHY_PARAM_COVERAGE_CLASS	= 1 << 4,
+ };
+ 
+-/**
+- * enum tx_power_setting - TX power adjustment
+- *
+- * @TX_POWER_AUTOMATIC: the dbm parameter is ignored
+- * @TX_POWER_LIMITED: limit TX power by the dbm parameter
+- * @TX_POWER_FIXED: fix TX power to the dbm parameter
+- */
+-enum tx_power_setting {
+-	TX_POWER_AUTOMATIC,
+-	TX_POWER_LIMITED,
+-	TX_POWER_FIXED,
+-};
+-
+ /*
+  * cfg80211_bitrate_mask - masks for bitrate control
+  */
+@@ -1149,7 +1136,7 @@ struct cfg80211_ops {
+ 	int	(*set_wiphy_params)(struct wiphy *wiphy, u32 changed);
+ 
+ 	int	(*set_tx_power)(struct wiphy *wiphy,
+-				enum tx_power_setting type, int dbm);
++				enum nl80211_tx_power_setting type, int mbm);
+ 	int	(*get_tx_power)(struct wiphy *wiphy, int *dbm);
+ 
+ 	int	(*set_wds_peer)(struct wiphy *wiphy, struct net_device *dev,
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 003b6ad..f4efbfa 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1329,28 +1329,28 @@ static int ieee80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
+ }
+ 
+ static int ieee80211_set_tx_power(struct wiphy *wiphy,
+-				  enum tx_power_setting type, int dbm)
++				  enum nl80211_tx_power_setting type, int mbm)
+ {
+ 	struct ieee80211_local *local = wiphy_priv(wiphy);
+ 	struct ieee80211_channel *chan = local->hw.conf.channel;
+ 	u32 changes = 0;
+ 
+ 	switch (type) {
+-	case TX_POWER_AUTOMATIC:
++	case NL80211_TX_POWER_AUTOMATIC:
+ 		local->user_power_level = -1;
+ 		break;
+-	case TX_POWER_LIMITED:
+-		if (dbm < 0)
+-			return -EINVAL;
+-		local->user_power_level = dbm;
++	case NL80211_TX_POWER_LIMITED:
++		if (mbm < 0 || (mbm % 100))
++			return -EOPNOTSUPP;
++		local->user_power_level = MBM_TO_DBM(mbm);
+ 		break;
+-	case TX_POWER_FIXED:
+-		if (dbm < 0)
+-			return -EINVAL;
++	case NL80211_TX_POWER_FIXED:
++		if (mbm < 0 || (mbm % 100))
++			return -EOPNOTSUPP;
+ 		/* TODO: move to cfg80211 when it knows the channel */
+-		if (dbm > chan->max_power)
++		if (MBM_TO_DBM(mbm) > chan->max_power)
+ 			return -EINVAL;
+-		local->user_power_level = dbm;
++		local->user_power_level = MBM_TO_DBM(mbm);
+ 		break;
+ 	}
+ 
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index 9634299..1ff1e9f 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -829,7 +829,7 @@ int cfg80211_wext_siwtxpower(struct net_device *dev,
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
+-	enum tx_power_setting type;
++	enum nl80211_tx_power_setting type;
+ 	int dbm = 0;
+ 
+ 	if ((data->txpower.flags & IW_TXPOW_TYPE) != IW_TXPOW_DBM)
+@@ -852,7 +852,7 @@ int cfg80211_wext_siwtxpower(struct net_device *dev,
+ 			if (data->txpower.value < 0)
+ 				return -EINVAL;
+ 			dbm = data->txpower.value;
+-			type = TX_POWER_FIXED;
++			type = NL80211_TX_POWER_FIXED;
+ 			/* TODO: do regulatory check! */
+ 		} else {
+ 			/*
+@@ -860,10 +860,10 @@ int cfg80211_wext_siwtxpower(struct net_device *dev,
+ 			 * passed in from userland.
+ 			 */
+ 			if (data->txpower.value < 0) {
+-				type = TX_POWER_AUTOMATIC;
++				type = NL80211_TX_POWER_AUTOMATIC;
+ 			} else {
+ 				dbm = data->txpower.value;
+-				type = TX_POWER_LIMITED;
++				type = NL80211_TX_POWER_LIMITED;
+ 			}
+ 		}
+ 	} else {
+@@ -872,7 +872,7 @@ int cfg80211_wext_siwtxpower(struct net_device *dev,
+ 		return 0;
+ 	}
+ 
+-	return rdev->ops->set_tx_power(wdev->wiphy, type, dbm);
++	return rdev->ops->set_tx_power(wdev->wiphy, type, DBM_TO_MBM(dbm));
+ }
+ EXPORT_SYMBOL_GPL(cfg80211_wext_siwtxpower);
+ 
+-- 
+1.6.3.3
 
-I was unaware of a "powersave" option to the pcie_aspm kernel
-parameter. In fact:
-
-static int __init pcie_aspm_disable(char *str)
-{
-        if (!strcmp(str, "off")) {
-                aspm_disabled = 1;
-                printk(KERN_INFO "PCIe ASPM is disabled\n");
-        } else if (!strcmp(str, "force")) {
-                aspm_force = 1;
-                printk(KERN_INFO "PCIe ASPM is forcedly enabled\n");
-        }
-        return 1;
-}
-
-__setup("pcie_aspm=", pcie_aspm_disable);
-
-Where is "powersave"?
-
-I do see a "powersave" but its an ASPM policy string and it implies
-you want to enable L1 and L0s when the device's LinkCap supports it,
-see pcie_config_aspm_link() and its users. So in other words powersave
-seems to imply you are using pcie_aspm=force, no?
-
-> Fedora's defaulted to that for a while now - we've hit
-> issues with aacraid, but that's pretty much it in terms of cases where
-> the heuristics don't work. Maxim's problems wouldn't be triggered
-> because CONFIG_PCIE_ASPM disables it on pre-1.1 devices regardless of
-> the BIOS setup.
-
-I don't expect all distributions to have CONFIG_PCIE_ASPM enabled, in
-fact I was unaware of this sanity check being included as part of
-CONFIG_PCIE_ASPM, I recommend we consider just enabling the sanity
-check all the time. The fact that CONFIG_PCIE_ASPM is even an option
-seems confusing to me given that apart from this sanity check the only
-other thing that I see useful in it is the forcing of ASPM settings
-and as I noted I think pcie_aspm=force is pretty dangerous.
-
->> > Having looked into this, Windows will enable ASPM on external
->> > controllers unless there's some reason for it not to - where that may be
->> > either the appropriate bit in the FADT being set, the device not being
->> > PCIe 1.1 or later, there being no _OSC method on the appropriate root
->> > bridge or the _OSC method not giving it full control over PCIe, the
->> > driver disabling ASPM or the device not advertising it in the first
->> > place.
->>
->> I was unaware of all this root complex sanity checks on Windows,
->> thanks for sharing.
->
-> With the patch I've just sent, they should also all be used for Linux as
-> well.
-
-Oh nice! It'll be part of 2.6.36?
-
->> I suspect these tweaks will go away as the industry produces cards
->> with both L1 and L0s enabled all the time (devices being produced
->> today), but for devices caught in that middle of time between whether
->> or not L0s would be *required*  (last 2 years) I suspect we'll run
->> into these issues.
->
-> If the same problems would appear under Windows then it's not a problem
-> that I'm hugely concerned about as yet
-
-Yes, these issues would also be part of Windows. But should also note
-this also means for those people working on their own BIOSes it means
-you also have to take these things into more serious consideration.
-
-> - we'll wait a bit longer and
-> then change the ASPM defaults to be more aggressive under Linux, and if
-> it turns out to be a significant problem in the real world we'll have to
-> reconsider it.
-
-The problem is the tweaks in question are device specific. I can see
-if I can get you concrete examples.
-
-> But I don't think we should be depending on userspace
-> bashing hardware registers in order to be able to enable power
-> management.
-
-Me neither, ASPM should just work with default settings, which is why
-I also do not like that the sanity check on the PCIE 1.1 spec is done
-through CONFIG_PCIE_ASPM, it makes no sense given that ASPM *will*
-work even if you do not have CONFIG_PCIE_ASPM but the device has
-functional ASPM.
-
-I do think we should be depending on userspace to do development
-testing and forcing ASPM on, because the only other alternative is
-pcie_aspm=force and as noted this is just not a good idea unless you
-*seriously* know what you are doing.
-
-  Luis
