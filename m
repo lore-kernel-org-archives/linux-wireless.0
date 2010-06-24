@@ -1,75 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bar.sig21.net ([80.81.252.164]:40746 "EHLO bar.sig21.net"
+Received: from mga02.intel.com ([134.134.136.20]:35856 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750986Ab0FVTcL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jun 2010 15:32:11 -0400
-Date: Tue, 22 Jun 2010 21:31:43 +0200
-From: Johannes Stezenbach <js@sig21.net>
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	Maxim Levitsky <maximlevitsky@gmail.com>,
-	David Quan <David.Quan@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Jonathan May <jonathan.may@atheros.com>,
-	Tim Gardner <tim.gardner@canonical.com>
-Subject: Re: [ath5k-devel] [PATCH v2] ath5k: disable ASPM
-Message-ID: <20100622193143.GA17803@sig21.net>
-References: <AANLkTikkt4dqYWrwtTCJ8tJZLB1kZXgF1KvaPsIOO3Dl@mail.gmail.com>
- <20100622163138.GD20668@srcf.ucam.org>
- <AANLkTikQkLFdpusfcLVOpyZHFrxwB5akr-ggFB7Fjm08@mail.gmail.com>
- <20100622165213.GA21842@srcf.ucam.org>
- <AANLkTikHLBBWrhCP_1f5Jv7zE9RKPvdsl5nSyfkeMfLl@mail.gmail.com>
- <20100622172545.GA22680@srcf.ucam.org>
- <AANLkTilEHJ5qRD8ov0gIK0Zc4o-gJUPYkvHdyD1uZUon@mail.gmail.com>
- <20100622175058.GA23499@srcf.ucam.org>
- <AANLkTinE0BiOa5cpcIerbias7K-aDzj3x4qaeDpzy2CQ@mail.gmail.com>
- <20100622184426.GA24546@srcf.ucam.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100622184426.GA24546@srcf.ucam.org>
+	id S1753020Ab0FXRsw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jun 2010 13:48:52 -0400
+Subject: Re: intel 5100/iwlagn bug in 2.6.35-rc2 during large file transfer
+From: reinette chatre <reinette.chatre@intel.com>
+To: Richard Farina <sidhayn@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4C23961D.7050500@gmail.com>
+References: <4C198EF0.5080807@gmail.com>
+	 <1277225293.25793.2257.camel@rchatre-DESK>  <4C2383E2.8000909@gmail.com>
+	 <1277399636.25793.2389.camel@rchatre-DESK>  <4C23961D.7050500@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 24 Jun 2010 10:48:51 -0700
+Message-ID: <1277401731.25793.2391.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 22, 2010 at 07:44:26PM +0100, Matthew Garrett wrote:
-> On Tue, Jun 22, 2010 at 11:28:20AM -0700, Luis R. Rodriguez wrote:
-> > 
-> > Heh, this whole patch and thread was started because Jussi tested
-> > ath5k with  pcie_aspm=force (on a pre PCIE 1.1 device (?)) . I have
-> > been trying to explain all along why this is a terrible idea to the
-> > point we should probably just remove that code from the kernel. Hence
-> > my side rants and explanations to justify my reasonings.
-> 
-> Well, there's two things here. If you use force then you might get 
-> inappropriate ASPM. But if your BIOS enables ASPM on an old device, then 
-> booting *without* CONFIG_PCIE_ASPM will leave it turned on, and booting 
-> *with* CONFIG_PCIE_ASPM will turn it off. The Kconfig description is 
-> confusing - reality is that CONFIG_PCIE_ASPM enables logic that allows 
-> the kernel to modify the BIOS default, and disabling it makes the 
-> assumption that your BIOS did something sensible.
-
-Does CONFIG_PCIEASPM provide a way for the user to modifiy
-the settings at runtime?
-
-I have a Samsung N130 netbook which has a BIOS setting
-called "CPU Power Saving Mode".  When enabled it activates
-ASPM L1 and L0s for the ethernet chip (Realtek RTL8102e, 100Mbit)
-and the PCIE bridge (with the BIOS setting off it's just L1).
-The result is that the ethernet througput is reduced to 25Mbit/s.
-(The BIOS setting does not activa L0s for the Atheros AR9285 WLAN.)
-
-99,9% of the time I want to enjoy the power savings,
-but occationally I have to transfer some bulk data and would
-like to switch the setting for a few minutes.
-
-Or, well, ideally I'd like to have power savings _and_ performance
-at the same time without any manual intervention.  I'm not sure
-if this is a quirk of the N130 or if ASPM L0s always causes
-performance degradation?
+On Thu, 2010-06-24 at 10:30 -0700, Richard Farina wrote:
+> There were two compat-wireless releases for 2.6.35_rc2 because Luis had 
+> asked me to test and then he changed it for the official release.  I'll 
+> use the official 2.6.35_rc2 release for the current testing so if there 
+> are any patches you wish to toss my way please base them on that.  The 
+> other option is you tell me what to do, I can run any kernel, any git 
+> snapshot, whatever you say.  Like I said, all I have to do is download 
+> something or transfer something large so it is pretty easily 
+> reproducible here so I'll test whatever you like.
 
 
-Thanks
-Johannes
+Could you please try out this patch? It is based on the latest linux-2.6
+so should apply cleanly to your latest 2.6.35 stable compat.
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 0f292a2..028db74 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -613,7 +613,7 @@ void iwlagn_rx_allocate(struct iwl_priv *priv, gfp_t priority)
+ 		}
+ 		spin_unlock_irqrestore(&rxq->lock, flags);
+ 
+-		if (rxq->free_count > RX_LOW_WATERMARK)
++		if (rxq->free_count > 8)
+ 			gfp_mask |= __GFP_NOWARN;
+ 
+ 		if (priv->hw_params.rx_page_order > 0)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fh.h b/drivers/net/wireless/iwlwifi/iwl-fh.h
+index 113c366..396a16c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fh.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fh.h
+@@ -426,7 +426,7 @@
+  * RX related structures and functions
+  */
+ #define RX_FREE_BUFFERS 64
+-#define RX_LOW_WATERMARK 8
++#define RX_LOW_WATERMARK 64
+ 
+ /* Size of one Rx buffer in host DRAM */
+ #define IWL_RX_BUF_SIZE_3K (3 * 1000) /* 3945 only */
+
+
