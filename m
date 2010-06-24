@@ -1,33 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48791 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753949Ab0F2OAN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jun 2010 10:00:13 -0400
-Date: Tue, 29 Jun 2010 09:49:30 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Problem with firmware load on ipw2200
-Message-ID: <20100629134930.GC5296@tuxdriver.com>
-References: <4C29F711.1090306@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4C29F711.1090306@lwfinger.net>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:46981 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752338Ab0FXVAM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jun 2010 17:00:12 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/2] compat-wireless: activate iwmc3200wifi and WL1271_SDIO
+Date: Thu, 24 Jun 2010 23:00:05 +0200
+Message-Id: <1277413205-6753-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1277413205-6753-1-git-send-email-hauke@hauke-m.de>
+References: <1277413205-6753-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 29, 2010 at 08:37:21AM -0500, Larry Finger wrote:
-> I'm trying to help an ipw2200 user on the openSUSE Wireless Forum and I'm
-> stuck. The system is failing to load the firmware with error -2 (File or
-> directory not found). The difficulty is that the required files are
-> present with the correct permissions.
-> 
-> What system component might be missing and/or borked to get this symptom?
+netdev_ops for iwmc3200wifi is backported now.
+CONFIG_WL1271_SDIO does not depend on ARM any more in mainline, but it
+needs at least kernel 2.6.32.
 
-selinux?
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ config.mk |    6 +-----
+ 1 files changed, 1 insertions(+), 5 deletions(-)
 
-John
+diff --git a/config.mk b/config.mk
+index 04a6f7e..e8ec458 100644
+--- a/config.mk
++++ b/config.mk
+@@ -433,7 +433,7 @@ CONFIG_SSB_SDIOHOST=y
+ CONFIG_B43_SDIO=y
+ CONFIG_WL1251_SDIO=m
+ 
+-ifneq ($(CONFIG_ARM),)
++ifndef CONFIG_COMPAT_KERNEL_32
+ CONFIG_WL1271_SDIO=m
+ endif
+ 
+@@ -445,12 +445,8 @@ CONFIG_LIBERTAS_SDIO=m
+ NEED_LIBERTAS=y
+ endif
+ 
+-# Activate iwmc3200wifi support only on kernel >= 2.6.29.
+-# iwmc3200wifi uses new netdev_ops api no supported by old kernel.
+-ifndef CONFIG_COMPAT_KERNEL_29
+ CONFIG_IWM=m
+ # CONFIG_IWM_DEBUG=y
+-endif
+ 
+ endif # end of SDIO driver list
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.0.4
+
