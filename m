@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:39852 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750756Ab0FNEo7 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42367 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755628Ab0FXOpS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jun 2010 00:44:59 -0400
-Received: by vws14 with SMTP id 14so113542vws.19
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Jun 2010 21:44:58 -0700 (PDT)
-Message-ID: <4C15B3C4.4030602@gmail.com>
-Date: Mon, 14 Jun 2010 00:44:52 -0400
-From: Richard Farina <sidhayn@gmail.com>
+	Thu, 24 Jun 2010 10:45:18 -0400
+Date: Thu, 24 Jun 2010 10:32:45 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: rt2x00 & mac80211: correct usage of ieee80211_beacon_get_tim?
+Message-ID: <20100624143245.GA2368@tuxdriver.com>
+References: <201006241521.47623.helmut.schaa@googlemail.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: [PATCH]compat: trivial fix for typo in config.mk
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201006241521.47623.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit e96ac45542ab5f02d2b13981df3a9c34d990afbf
-Author: Rick Farina <sidhayn@gmail.com>
-Date:   Mon Jun 14 00:40:03 2010 -0400
+On Thu, Jun 24, 2010 at 03:21:47PM +0200, Helmut Schaa wrote:
 
-    [PATCH]compat: trivial fix for typo in config.mk
-    
-    In config.mk we find "# CONFIG_RT2X00_LIB_DEBUGFS" which clearly
-    should have an "=y" at the end like ever other config line.
-    
-    Signed-off-by: Rick Farina <sidhayn@gmail.com>
+> So, is the current implementation in rt2x00 supposed to work and mac80211
+> needs fixing?
+> 
+> Could we add a parameter to ieee80211_beacon_get_tim that indicates if a _new_
+> beacon should be generated or if the _current_ beacon should be updated in
+> response to the set_tim callback?
+> 
+> Any other ideas?
 
-diff --git a/config.mk b/config.mk
-index 0001a7d..adebbbf 100644
---- a/config.mk
-+++ b/config.mk
-@@ -453,7 +453,7 @@ CONFIG_RT2X00_LIB_FIRMWARE=y
- CONFIG_RT2X00_LIB_CRYPTO=y
- CONFIG_RT2X00_LIB_LEDS=y
- # CONFIG_RT2X00_DEBUG=y
--# CONFIG_RT2X00_LIB_DEBUGFS
-+# CONFIG_RT2X00_LIB_DEBUGFS=y
- endif
- 
- ifeq ($(NEED_RT2X00_FIRMWARE),y)
+Since we seem to want to allow ieee80211_beacon_get_tim to be called
+from the set_tim callbacks, maybe we could manage bss->dtim_count
+somewhere other than ieee80211_beacon_add_tim?
 
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
