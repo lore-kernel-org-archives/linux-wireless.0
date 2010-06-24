@@ -1,32 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lider.pardus.org.tr ([193.140.100.216]:58014 "EHLO
-	lider.pardus.org.tr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751710Ab0FRVUs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jun 2010 17:20:48 -0400
-Message-ID: <4C1BE32D.4090403@pardus.org.tr>
-Date: Sat, 19 Jun 2010 00:20:45 +0300
-From: =?UTF-8?B?T3phbiDDh2HEn2xheWFu?= <ozan@pardus.org.tr>
+Received: from nbd.name ([88.198.39.176]:41038 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751940Ab0FXXog (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jun 2010 19:44:36 -0400
+Message-ID: <4C23EDE1.3030505@openwrt.org>
+Date: Fri, 25 Jun 2010 01:44:33 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] p54usb: Drop duplicate USBID 0xcde:0x0006
-References: <1276771049-2187-1-git-send-email-ozan@pardus.org.tr> <20100618185713.GG6282@tuxdriver.com>
-In-Reply-To: <20100618185713.GG6282@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: fix the for_each_sta_info macro
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Thu, Jun 17, 2010 at 01:37:29PM +0300, Ozan Çağlayan wrote:
->> Drop the duplicate USB ID 0xcde:0x0006 which is written at two
->> different places in p54usb.c
->>
->> Signed-off-by: Ozan Çağlayan <ozan@pardus.org.tr>
-> 
-> Someone beat you to it already...
+Because of an ambiguity in the for_each_sta_info macro, it can
+currently only be used if the third parameter is set to 'sta'.
+Fix this by renaming the parameter to '_sta'.
 
-Ah, no problem ;)
-
-Regards,
-Ozan Caglayan
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -427,20 +427,20 @@ void for_each_sta_info_type_check(struct ieee80211_local *local,
+ {
+ }
+ 
+-#define for_each_sta_info(local, _addr, sta, nxt) 			\
++#define for_each_sta_info(local, _addr, _sta, nxt) 			\
+ 	for (	/* initialise loop */					\
+-		sta = rcu_dereference(local->sta_hash[STA_HASH(_addr)]),\
+-		nxt = sta ? rcu_dereference(sta->hnext) : NULL;		\
++		_sta = rcu_dereference(local->sta_hash[STA_HASH(_addr)]),\
++		nxt = _sta ? rcu_dereference(_sta->hnext) : NULL;	\
+ 		/* typecheck */						\
+-		for_each_sta_info_type_check(local, (_addr), sta, nxt),	\
++		for_each_sta_info_type_check(local, (_addr), _sta, nxt),\
+ 		/* continue condition */				\
+-		sta;							\
++		_sta;							\
+ 		/* advance loop */					\
+-		sta = nxt,						\
+-		nxt = sta ? rcu_dereference(sta->hnext) : NULL		\
++		_sta = nxt,						\
++		nxt = _sta ? rcu_dereference(_sta->hnext) : NULL	\
+ 	     )								\
+ 	/* compare address and run code only if it matches */		\
+-	if (memcmp(sta->sta.addr, (_addr), ETH_ALEN) == 0)
++	if (memcmp(_sta->sta.addr, (_addr), ETH_ALEN) == 0)
+ 
+ /*
+  * Get STA info by index, BROKEN!
