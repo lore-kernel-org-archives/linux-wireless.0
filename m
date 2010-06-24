@@ -1,55 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:13214 "EHLO mga01.intel.com"
+Received: from mail.perches.com ([173.55.12.10]:1283 "EHLO mail.perches.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753202Ab0FNSY4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jun 2010 14:24:56 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 6/6] iwlwifi: print warning about disconnected antennas
-Date: Mon, 14 Jun 2010 11:24:52 -0700
-Message-Id: <1276539892-12471-7-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1276539892-12471-1-git-send-email-reinette.chatre@intel.com>
-References: <1276539892-12471-1-git-send-email-reinette.chatre@intel.com>
+	id S1754752Ab0FXTkg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jun 2010 15:40:36 -0400
+Subject: Re: [PATCH 0/3] b43: logging cleanups
+From: Joe Perches <joe@perches.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Larry.Finger@lwfinger.net,
+	mb@bu3sch.de, zajec5@gmail.com
+In-Reply-To: <20100624185339.GC2368@tuxdriver.com>
+References: <cover.1276988387.git.joe@perches.com>
+	 <20100624185339.GC2368@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 24 Jun 2010 12:40:32 -0700
+Message-ID: <1277408432.1654.80.camel@Joe-Laptop.home>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, 2010-06-24 at 14:53 -0400, John W. Linville wrote:
+> On Sat, Jun 19, 2010 at 04:30:08PM -0700, Joe Perches wrote:
+> > Just some small cleanups
+> > Joe Perches (3):
+> >   drivers/net/wireless/b43: Use local ratelimit_state
+> >   drivers/net/wireless/b43: Logging cleanups
+> >   drivers/net/wireless/b43: Rename b43_debug to b43_debugging
+> Any of the b43 guys want to express an opinion on these?
 
-When we detect that not all antennas are
-properly connected, we simply disable the
-associated chains, but never notify the
-user at all. Print out a warning so it is
-obvious that happened and we know where
-to start looking for related issues.
+Stefano, are you active here?
+Your last ack for b43 was Feb 2008.
+There have been 400+ commits to b43 without your ack.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-calib.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+Should your name be moved from MAINTAINERS to CREDITS?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-calib.c b/drivers/net/wireless/iwlwifi/iwl-calib.c
-index 7e82277..22fa947 100644
---- a/drivers/net/wireless/iwlwifi/iwl-calib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-calib.c
-@@ -846,6 +846,13 @@ void iwl_chain_noise_calibration(struct iwl_priv *priv,
- 		}
- 	}
- 
-+	if (active_chains != priv->hw_params.valid_rx_ant &&
-+	    active_chains != priv->chain_noise_data.active_chains)
-+		IWL_WARN(priv,
-+			 "Detected that not all antennas are connected! "
-+			 "Connected: %#x, valid: %#x.\n",
-+			 active_chains, priv->hw_params.valid_rx_ant);
-+
- 	/* Save for use within RXON, TX, SCAN commands, etc. */
- 	priv->chain_noise_data.active_chains = active_chains;
- 	IWL_DEBUG_CALIB(priv, "active_chains (bitwise) = 0x%x\n",
--- 
-1.7.0.4
+$ ./scripts/get_maintainer.pl --rolestats -f drivers/net/wireless/b43/
+Stefano Brivio <stefano.brivio@polimi.it> (maintainer:B43 WIRELESS DRIVER)
+"John W. Linville" <linville@tuxdriver.com> (maintainer:NETWORKING [WIREL...,commit_signer:204/240=85%)
+"Rafał Miłecki" <zajec5@gmail.com> (commit_signer:83/240=35%)
+"Gábor Stefanik" <netrolller.3d@gmail.com> (commit_signer:44/240=18%)
+Michael Buesch <mb@bu3sch.de> (commit_signer:39/240=16%)
+Larry Finger <Larry.Finger@lwfinger.net> (commit_signer:13/240=5%)
+linux-wireless@vger.kernel.org (open list:B43 WIRELESS DRIVER)
+netdev@vger.kernel.org (open list:NETWORKING DRIVERS)
+linux-kernel@vger.kernel.org (open list)
+
 
