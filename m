@@ -1,47 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:46465 "EHLO coco.kroah.org"
+Received: from nbd.name ([88.198.39.176]:34106 "EHLO ds10.nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755452Ab0FCWm3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jun 2010 18:42:29 -0400
-Date: Thu, 3 Jun 2010 15:17:51 -0700
-From: Greg KH <greg@kroah.com>
-To: Vivek Natarajan <vnatarajan@Atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	stable@kernel.org, Ranga Rao Ravuri <ranga.ravuri@Atheros.com>
-Subject: Re: [stable] [PATCH 2/2] ath9k: Avoid corrupt frames being
- forwarded to mac80211.
-Message-ID: <20100603221751.GB22595@kroah.com>
-References: <1272353738-17084-1-git-send-email-vnatarajan@atheros.com>
- <1272353738-17084-2-git-send-email-vnatarajan@atheros.com>
+	id S1755206Ab0FXQr7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jun 2010 12:47:59 -0400
+Message-ID: <4C238C3A.6090905@openwrt.org>
+Date: Thu, 24 Jun 2010 18:47:54 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1272353738-17084-2-git-send-email-vnatarajan@atheros.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] minstrel_ht: mark minstrel_mcs_groups as static
+References: <1277392602-10578-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1277392602-10578-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 27, 2010 at 01:05:38PM +0530, Vivek Natarajan wrote:
-> If bit 29 is set, MAC H/W can attempt to decrypt the received aggregate
-> with WEP or TKIP, eventhough the received frame may be a CRC failed
-> corrupted frame. If this bit is set, H/W obeys key type in keycache.
-> If it is not set and if the key type in keycache is neither open nor
-> AES, H/W forces key type to be open.  But bit 29 should be set to 1
-> for AsyncFIFO feature to encrypt/decrypt the aggregate with WEP or TKIP. 
-> 
-> Cc: stable@kernel.org
-> Reported-by: Johan Hovold <johan.hovold@lundinova.se>
-> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
-> Signed-off-by: Ranga Rao Ravuri <ranga.ravuri@atheros.com>
+On 2010-06-24 5:16 PM, John W. Linville wrote:
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 > ---
->  drivers/net/wireless/ath/ath9k/ar5008_initvals.h |    2 +-
->  drivers/net/wireless/ath/ath9k/ar9002_initvals.h |    8 ++++----
+>  net/mac80211/rc80211_minstrel_ht.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+> index 7a04951..a8f658c 100644
+> --- a/net/mac80211/rc80211_minstrel_ht.c
+> +++ b/net/mac80211/rc80211_minstrel_ht.c
+> @@ -59,7 +59,7 @@
+>   * groups, based on the number of streams and flags (HT40, SGI) that they
+>   * use.
+>   */
+> -const struct mcs_group minstrel_mcs_groups[] = {
+> +static const struct mcs_group minstrel_mcs_groups[] = {
+NACK. minstrel_ht debugfs needs this. The proper fix for the warning is
+to add this one to a header file instead.
 
-This is now upstream in Linus's tree, but does not apply to the .32,
-.32, or .34 kernel trees due to the file movements in this area.  I
-tried to apply this by hand, but didn't get it correct.
-
-Can someone please send me a properly backported version of this patch
-to apply to the -stable tree?
-
-thanks,
-
-greg k-h
+- Felix
