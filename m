@@ -1,39 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:45957
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751733Ab0FJFwc (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56676 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751546Ab0FXRPO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jun 2010 01:52:32 -0400
-Date: Wed, 09 Jun 2010 22:52:43 -0700 (PDT)
-Message-Id: <20100609.225243.179940910.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: yi.zhu@intel.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wireless: orphan ipw2x00 drivers
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20100610014547.GA2318@tuxdriver.com>
-References: <1276134269-2273-1-git-send-email-yi.zhu@intel.com>
-	<20100610014547.GA2318@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 24 Jun 2010 13:15:14 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] minstrel_ht: move minstrel_mcs_groups declaration to header file
+Date: Thu, 24 Jun 2010 13:06:47 -0400
+Message-Id: <1277399207-17462-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1277392602-10578-1-git-send-email-linville@tuxdriver.com>
+References: <1277392602-10578-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 9 Jun 2010 21:45:47 -0400
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/mac80211/rc80211_minstrel_ht.h         |    2 ++
+ net/mac80211/rc80211_minstrel_ht_debugfs.c |    2 --
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-> On Thu, Jun 10, 2010 at 09:44:29AM +0800, Zhu Yi wrote:
->> Signed-off-by: Zhu Yi <yi.zhu@intel.com>
->> ---
->> Please let us know if someone is interested in maintaining these drivers.
-> 
-> Any chance of getting some hardware/firmware documentation?
+diff --git a/net/mac80211/rc80211_minstrel_ht.h b/net/mac80211/rc80211_minstrel_ht.h
+index 696c0fc..462d2b2 100644
+--- a/net/mac80211/rc80211_minstrel_ht.h
++++ b/net/mac80211/rc80211_minstrel_ht.h
+@@ -29,6 +29,8 @@ struct mcs_group {
+ 	unsigned int duration[MCS_GROUP_RATES];
+ };
+ 
++extern const struct mcs_group minstrel_mcs_groups[];
++
+ struct minstrel_rate_stats {
+ 	/* current / last sampling period attempts/success counters */
+ 	unsigned int attempts, last_attempts;
+diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
+index 4fb3ccb..4a5a4b3 100644
+--- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
++++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
+@@ -14,8 +14,6 @@
+ #include "rc80211_minstrel.h"
+ #include "rc80211_minstrel_ht.h"
+ 
+-extern const struct mcs_group minstrel_mcs_groups[];
+-
+ static int
+ minstrel_ht_stats_open(struct inode *inode, struct file *file)
+ {
+-- 
+1.7.0.1
 
-Indeed.
-
-I'm extremely disappointed that the only organization currently even
-capable of fixing low level bugs in these drivers no longer is willing
-to do so.
-
-If documentation can't be provided so that others can maintain this
-driver (not just few specific people, because some day those folks
-might tire of maintaining this too) that would be a serious crime.
