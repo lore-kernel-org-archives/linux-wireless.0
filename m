@@ -1,75 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:50715 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757036Ab0FDCi3 (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:33949 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753736Ab0FXNWX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jun 2010 22:38:29 -0400
-Message-Id: <201006040237.o542bOww001409@imap1.linux-foundation.org>
-Subject: [patch 1/5] ssb: add dma_dev to ssb_device structure
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, akpm@linux-foundation.org,
-	fujita.tomonori@lab.ntt.co.jp, Larry.Finger@lwfinger.net,
-	davem@davemloft.net, mb@bu3sch.de, stefano.brivio@polimi.it,
-	zambrano@broadcom.com
-From: akpm@linux-foundation.org
-Date: Thu, 03 Jun 2010 19:37:27 -0700
+	Thu, 24 Jun 2010 09:22:23 -0400
+Received: by bwz7 with SMTP id 7so212702bwz.19
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Jun 2010 06:22:20 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Subject: rt2x00 & mac80211: correct usage of ieee80211_beacon_get_tim?
+Date: Thu, 24 Jun 2010 15:21:47 +0200
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Ivo van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ANSI_X3.4-1968
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201006241521.47623.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Hi,
 
-Add dma_dev, a pointer to struct device, to struct ssb_device.  We pass it
-to the generic DMA API with SSB_BUSTYPE_PCI and SSB_BUSTYPE_SSB. 
-ssb_devices_register() sets up it properly.
+I've just reviewed the beacon handling in rt2x00 in AP mode and experienced
+some inconsistencies. The DTIM count is not correctly updated: sometimes
+multiple beacons are sent out using the same DTIM count.
 
-This is preparation for replacing the ssb bus specific DMA API (ssb_dma_*)
-with the generic DMA API.
+rt2x00 calls ieee80211_beacon_get_tim right after the current beacon was
+sent out to fetch the next one. However, rt2x00 also implements the set_tim
+callback and updates the beacon in each call to set_tim. As far as I
+understood the code in mac80211 the set_tim callback is called when the
+first frame for a powersaving station gets queued.
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Acked-by: Michael Buesch <mb@bu3sch.de>
-Cc: Gary Zambrano <zambrano@broadcom.com>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W. Linville <linville@tuxdriver.com>
-Acked-by: David S. Miller <davem@davemloft.net>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
+Since every call to ieee80211_beacon_get_tim updates the DTIM count the
+following can happen (assuming a DTIM period of 2):
 
- drivers/ssb/main.c      |    2 ++
- include/linux/ssb/ssb.h |    2 +-
- 2 files changed, 3 insertions(+), 1 deletion(-)
+- the hw sends out the current beacon (DTIM count == 0)
+- call to ieee80211_beacon_get_tim fetches the next beacon (DTIM count == 1)
+- the first frame for a PS STA gets queued -> set_tim
+- again call ieee80211_beacon_get_tim (DTIM count == 0)
+- hw sends out the beacon with incorrect DTIM count
 
-diff -puN drivers/ssb/main.c~ssb-add-dma_dev-to-ssb_device-structure drivers/ssb/main.c
---- a/drivers/ssb/main.c~ssb-add-dma_dev-to-ssb_device-structure
-+++ a/drivers/ssb/main.c
-@@ -486,6 +486,7 @@ static int ssb_devices_register(struct s
- #ifdef CONFIG_SSB_PCIHOST
- 			sdev->irq = bus->host_pci->irq;
- 			dev->parent = &bus->host_pci->dev;
-+			sdev->dma_dev = dev->parent;
- #endif
- 			break;
- 		case SSB_BUSTYPE_PCMCIA:
-@@ -501,6 +502,7 @@ static int ssb_devices_register(struct s
- 			break;
- 		case SSB_BUSTYPE_SSB:
- 			dev->dma_mask = &dev->coherent_dma_mask;
-+			sdev->dma_dev = dev;
- 			break;
- 		}
- 
-diff -puN include/linux/ssb/ssb.h~ssb-add-dma_dev-to-ssb_device-structure include/linux/ssb/ssb.h
---- a/include/linux/ssb/ssb.h~ssb-add-dma_dev-to-ssb_device-structure
-+++ a/include/linux/ssb/ssb.h
-@@ -167,7 +167,7 @@ struct ssb_device {
- 	 * is an optimization. */
- 	const struct ssb_bus_ops *ops;
- 
--	struct device *dev;
-+	struct device *dev, *dma_dev;
- 
- 	struct ssb_bus *bus;
- 	struct ssb_device_id id;
-_
+A proper way of fixing this issue would be not to use the set_tim callback but
+just fetch the next beacon right before it gets send out (like ath* does).
+However, that's not easily possible with rt2x00 devices older then rt2800 as
+they only generate beacon_done interrupts (which is obviously too late for
+fetching the current beacon ;) ).
+
+So, is the current implementation in rt2x00 supposed to work and mac80211
+needs fixing?
+
+Could we add a parameter to ieee80211_beacon_get_tim that indicates if a _new_
+beacon should be generated or if the _current_ beacon should be updated in
+response to the set_tim callback?
+
+Any other ideas?
+
+Thanks,
+Helmut
