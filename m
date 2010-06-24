@@ -1,33 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52182 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:45248 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755991Ab0FXPx5 (ORCPT
+	with ESMTP id S1751760Ab0FXGDc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jun 2010 11:53:57 -0400
-Subject: Re: rt2x00 & mac80211: correct usage of ieee80211_beacon_get_tim?
+	Thu, 24 Jun 2010 02:03:32 -0400
+Subject: RE: [PATCH 1/3] Libertas: cfg80211 support
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-In-Reply-To: <1277394714.3870.8.camel@jlt3.sipsolutions.net>
-References: <201006241521.47623.helmut.schaa@googlemail.com>
-	 <1277394714.3870.8.camel@jlt3.sipsolutions.net>
+To: Kiran Divekar <dkiran@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <25B60CDC2F704E4E9D88FFD52780CB4C04D64A250E@SC-VEXCH1.marvell.com>
+References: <25B60CDC2F704E4E9D88FFD52780CB4C04D64A250E@SC-VEXCH1.marvell.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 24 Jun 2010 17:53:57 +0200
-Message-ID: <1277394837.3870.9.camel@jlt3.sipsolutions.net>
+Date: Thu, 24 Jun 2010 08:03:28 +0200
+Message-ID: <1277359408.3870.0.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-06-24 at 17:51 +0200, Johannes Berg wrote:
+On Wed, 2010-06-23 at 22:38 -0700, Kiran Divekar wrote:
 
->  b) You need to get a new beacon frame from mac80211 only when it
->     changes. You can do this from set_tim(). HOWEVER: since you're not
->     getting a new one from mac80211 all the time anyway, you NEED to
->     have the driver or firmware overwrite the DTIM count, like b43's
->     firmware for example will do.
+> > +drivers/net/wireless/libertas/cfg.c:1844:13: warning: incorrect type in
+> > assignment (different base types)
+> > +drivers/net/wireless/libertas/cfg.c:1844:13:    expected unsigned short
+> > [unsigned] [usertype] capability
+> > +drivers/net/wireless/libertas/cfg.c:1844:13:    got restricted __le16
+> > [usertype] <noident>
+> > +drivers/net/wireless/libertas/cmdresp.c:106:5: warning: symbol
+> > 'lbs_ret_802_11d_domain_info' was not declared. Should it be static?
+> > 
+> 
+> These errors did not show up during my compilation. I will now make
+> sure to check with various kernel configs. Any other things should I
+> test?
 
-Oh and "when it changes" doesn't include DTIM period changes, obviously.
+These are sparse errors, you need to
+
+make C=2 CF=-D__CHECK_ENDIAN__ drivers/net/wireless/libertas/
 
 johannes
 
