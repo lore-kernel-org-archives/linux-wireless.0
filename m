@@ -1,69 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:15284 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751385Ab0FGELZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jun 2010 00:11:25 -0400
-Received: from vs3007.wh2.ocn.ne.jp (125.206.180.235)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-0996923883
-	for <linux-wireless@vger.kernel.org>; Mon,  7 Jun 2010 13:11:23 +0900 (JST)
-Subject: [PATCH 4/5] ath5k: no need to save/restore the default antenna
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Mon, 07 Jun 2010 13:11:35 +0900
-Message-ID: <20100607041135.18667.97545.stgit@tt-desk>
-In-Reply-To: <20100607041012.18667.6859.stgit@tt-desk>
-References: <20100607041012.18667.6859.stgit@tt-desk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mga11.intel.com ([192.55.52.93]:12966 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752793Ab0FXV5M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jun 2010 17:57:12 -0400
+Subject: Re: Problems connectring to an AP with Acer Aspire Revo
+From: reinette chatre <reinette.chatre@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Christian P. Schmidt" <schmidt@digadd.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1275669638.2091.34633.camel@rchatre-DESK>
+References: <4BF795EB.9070902@digadd.de>
+	 <1274729665.2091.15280.camel@rchatre-DESK>  <4BFD1ED0.9050309@digadd.de>
+	 <1275003105.2091.20102.camel@rchatre-DESK>  <4BFF9B93.5010308@digadd.de>
+	 <1275043274.3909.71.camel@jlt3.sipsolutions.net>
+	 <4BFF9FC6.4030101@digadd.de>
+	 <1275044074.3909.72.camel@jlt3.sipsolutions.net> <4BFFA490.90600@digadd.de>
+	 <1275045843.3909.92.camel@jlt3.sipsolutions.net>
+	 <4C07D0C7.8010907@digadd.de>
+	 <1275634104.3694.0.camel@jlt3.sipsolutions.net>
+	 <1275669638.2091.34633.camel@rchatre-DESK>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 24 Jun 2010 14:57:11 -0700
+Message-ID: <1277416631.13673.91.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since ath5k_hw_set_antenna_mode() always writes the default antenna register
-and is called at the end of reset, there is no need to separately save and
-restore the default antenna.
+On Fri, 2010-06-04 at 09:40 -0700, reinette chatre wrote:
+> On Thu, 2010-06-03 at 23:48 -0700, Johannes Berg wrote:
+> > On Thu, 2010-06-03 at 17:56 +0200, Christian P. Schmidt wrote:
+> > 
+> > > > Maybe try the rfkill tool:
+> > > > http://wireless.kernel.org/en/users/Documentation/rfkill
+> > > 
+> > > Yes, it was the rfkill tool that caused my attempts to fail. However,
+> > > this didn't change my association attempt problems.
+> > > I also took my time to look at the PCIe port - steady 3.3V on the RFKILL
+> > > pin, which means "no RFKILL".
+> > > 
+> > > Any further ideas?
+> > 
+> > Unfortunately not. It would seem that something is causing your frames
+> > not to be transmitted correctly, but I see no reason for that right now.
+> 
+> The logs provided contains a lot of useful information. Among this is
+> that the device is unable to transmit data with the firmware returning a
+> "TX_LOCKED" status. From what I understand this is a regulatory check
+> failure based on the channel type, which does not make sense in this
+> regard since from what I can tell channel 8, which is an active channel,
+> is used. I passed this question to our firmware folks and now waiting
+> for an answer.
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- drivers/net/wireless/ath/ath5k/reset.c |    8 +-------
- 1 files changed, 1 insertions(+), 7 deletions(-)
+Unfortunately, since the firmware does not actually assert, the firmware
+folks are unable to dig into this. I tried to take a second look at your
+logs and one thing that I was able to see that is interesting is that,
+when scanning, the device picks up very few frames that are good. I see
+that there were five scans, none of which contained a since good frame
+on 5GHz. On 2.4GHz there was a bit better success, but not consistent.
+In the five scans there was the following on 2.4GHz:
+1st scan: one good frame each on channels 5, 7, and 8.
+2st scan: one good frame on channel 1
+3st scan: one good frame each on channels 2, 7, and 9.
+4st scan: one good frame each on channels 3, 5, 7, and 8.
+5st scan: one good frame each on channels 1, 8, and 9.
 
-diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-index d561f7c..498aa28 100644
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -877,12 +877,11 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
- 	struct ieee80211_channel *channel, bool change_channel)
- {
- 	struct ath_common *common = ath5k_hw_common(ah);
--	u32 s_seq[10], s_ant, s_led[3], staid1_flags, tsf_up, tsf_lo;
-+	u32 s_seq[10], s_led[3], staid1_flags, tsf_up, tsf_lo;
- 	u32 phy_tst1;
- 	u8 mode, freq, ee_mode;
- 	int i, ret;
- 
--	s_ant = 0;
- 	ee_mode = 0;
- 	staid1_flags = 0;
- 	tsf_up = 0;
-@@ -979,9 +978,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
- 			}
- 		}
- 
--		/* Save default antenna */
--		s_ant = ath5k_hw_reg_read(ah, AR5K_DEFAULT_ANTENNA);
--
- 		if (ah->ah_version == AR5K_AR5212) {
- 			/* Restore normal 32/40MHz clock operation
- 			 * to avoid register access delay on certain
-@@ -1141,8 +1137,6 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
- 				ath5k_hw_reg_write(ah, tsf_lo, AR5K_TSF_L32);
- 			}
- 		}
--
--		ath5k_hw_reg_write(ah, s_ant, AR5K_DEFAULT_ANTENNA);
- 	}
- 
- 	/* Ledstate */
+If you want to check on this yourself, take a look at the lines:
+[223263.179493] ieee80211 phy2: I iwl_rx_scan_results_notif Scan ch.res:
+2 [802.11bg] (TSF: 0x00000000:05627B90) - 1 elapsed=33837 usec
+
+The number before "elapsed" indicates the number of good frames seen
+while scanning the channel. In the above example there was one.
+
+This seems to indicate that there is some trouble on this platform ...
+and makes me start thinking that this card may not work well on this
+platform.
+
+Some things you can try:
+- are any APs on A band? If not, can you try to activate an AP on A band
+to see if you have better success there?
+- monitor the RX statistics ...
+(/sys/kernel/debug/ieee80211/phy0/iwlagn/debug/ucode_rx_stats) to see if
+there is an issue with crc checks and perhaps false alarms and plcp
+also.
+- something that you could try ... not sure how much it will help if you
+are having noise issues ... is to vary how you scan. Since you know
+which AP you are associating with, perhaps you can try to limit your
+scan to that channel ... and also try passive instead of active. This
+can be done with iw.
+
+These are the only things I can think of.
+
+Reinette
+
+
 
