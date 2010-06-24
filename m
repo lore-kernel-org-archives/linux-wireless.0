@@ -1,40 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:49482 "EHLO mga03.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:26094 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751997Ab0FKQ1a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Jun 2010 12:27:30 -0400
-Subject: Re: iwl3945 bug in 2.6.34
-From: reinette chatre <reinette.chatre@intel.com>
-To: Satish Eerpini <eerpini@gmail.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>,
+	id S1751405Ab0FXE4o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jun 2010 00:56:44 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 23 Jun 2010 21:56:44 -0700
+Date: Thu, 24 Jun 2010 10:26:36 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Pavel Roskin <proski@gnu.org>
+CC: Vivek Natarajan <Vivek.Natarajan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <AANLkTillaEGISTjW4iqpsNsJbaE6ZW7pqYvAzoBrkI69@mail.gmail.com>
-References: <AANLkTik_7rxDBc0TKlAfoYyM5S6Cf_Hyxbr4W5ORnTsq@mail.gmail.com>
-	 <1274726029.2091.15160.camel@rchatre-DESK>
-	 <1274738896.2091.15438.camel@rchatre-DESK>
-	 <1274830187.2091.17034.camel@rchatre-DESK>
-	 <1275600737.2091.32332.camel@rchatre-DESK>
-	 <AANLkTinfoyhEyFjxReR6Oza7r_AQhcyMlpaXYB4ZjjlU@mail.gmail.com>
-	 <AANLkTillaEGISTjW4iqpsNsJbaE6ZW7pqYvAzoBrkI69@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 11 Jun 2010 09:27:27 -0700
-Message-ID: <1276273647.25793.1210.camel@rchatre-DESK>
-Mime-Version: 1.0
+Subject: Re: [PATCH] ath9k: Fix the LED behaviour in idle unassociated
+	state.
+Message-ID: <20100624045636.GA19657@vasanth-laptop>
+References: <1277275109-4662-1-git-send-email-vnatarajan@atheros.com> <1277315740.3562.6.camel@mj>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1277315740.3562.6.camel@mj>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-06-11 at 04:39 -0700, Satish Eerpini wrote:
-> The 2.6.34 vanilla kernel with the above patches applied crashed again
-> today, I was amidst a conference on webex when this happened, still
-> not able to figure out what is the kind of traffic that causes the
-> driver to give up ... here is output from dmesg :
+On Wed, Jun 23, 2010 at 11:25:40PM +0530, Pavel Roskin wrote:
+> On Wed, 2010-06-23 at 12:08 +0530, Vivek Natarajan wrote:
+> > LED should be ON when the radio is put into FULL SLEEP mode during the idle
+> > unassociated state.
+> 
+> Why?  Is there any written policy for the LED behavior?  I think we want
+> to conserve power if sleeping, which means turning LEDs off.
 
-Instead of duplicate posts to the list and bugzilla, lets just continue
-debugging this at https://bugzilla.kernel.org/show_bug.cgi?id=16084 - I
-responded there to your message.
+There is no written policy for this behaviour, may be the comment
+needs to be changed. It makes sense to turn off the LED to save
+power but turning off the LED while wireless interface is still up
+is kind of misleading, also this one we got as a requirement
+internally and did not want to maintain any private patch.
 
-Thanks
+> 
+> Or is it a workaround for some quirk in Atheros hardware?
 
-Reinette
+nope.
 
+> 
+> In any case, I don't like the new comment.  The comment says "Keep the
+> LED on...", but the code is still turning the LED off.
 
+yeah, this comment seems to be implicit. thanks for the review.
+
+Vasanth
