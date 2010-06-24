@@ -1,80 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:45053 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756484Ab0F2PUQ convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33594 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754185Ab0FXPvy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jun 2010 11:20:16 -0400
-Received: by iwn7 with SMTP id 7so1299612iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Jun 2010 08:20:15 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4C29284C.5050707@openwrt.org>
-References: <AANLkTilG4qxjX0e5u_BGp0YcPoVBbsqd6Hlb8E0j_S8S@mail.gmail.com>
-	<4C29284C.5050707@openwrt.org>
-Date: Tue, 29 Jun 2010 17:20:15 +0200
-Message-ID: <AANLkTint2L1xSMughBA5aHCFMRB5KMC8EfwcxJJU5XYW@mail.gmail.com>
-Subject: Re: ath9k: ap tsf seems random and only uses lower 24 bits or so
-From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 24 Jun 2010 11:51:54 -0400
+Subject: Re: rt2x00 & mac80211: correct usage of ieee80211_beacon_get_tim?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+In-Reply-To: <201006241521.47623.helmut.schaa@googlemail.com>
+References: <201006241521.47623.helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 24 Jun 2010 17:51:54 +0200
+Message-ID: <1277394714.3870.8.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/6/29 Felix Fietkau <nbd@openwrt.org>:
-> IMHO the most likely problem source is stuck beacons. Please compile the
-> driver with the debug option enabled and load it with
-> insmod ath9k debug=0x00000100
+On Thu, 2010-06-24 at 15:21 +0200, Helmut Schaa wrote:
 
-It looks like it could be:
+> I've just reviewed the beacon handling in rt2x00 in AP mode and experienced
+> some inconsistencies. The DTIM count is not correctly updated: sometimes
+> multiple beacons are sent out using the same DTIM count.
 
-...
-Jan  1 00:06:21 OpenWrt user.debug kernel: ath: slot 2 [tsf 1986567
-tsftu 1940 intval 100] vif (null)
-Jan  1 00:06:21 OpenWrt user.debug kernel: ath: slot 1 [tsf 2012168
-tsftu 1965 intval 100] vif (null)
-Jan  1 00:06:21 OpenWrt user.debug kernel: ath: slot 0 [tsf 2037767
-tsftu 1990 intval 100] vif 80945e70
-Jan  1 00:06:21 OpenWrt user.debug kernel: ath: slot 0 [tsf 79033
-tsftu 77 intval 100] vif 80945e70
-Jan  1 00:06:21 OpenWrt user.debug kernel: ath: missed 1 consecutive beacons
-Jan  1 00:06:21 OpenWrt user.debug kernel: ath: resume beacon xmit
-after 1 misses
-Jan  1 00:06:21 OpenWrt user.debug kernel: ath: slot 3 [tsf 117790
-tsftu 115 intval 100] vif (null)
-Jan  1 00:06:21 OpenWrt user.debug kernel: ath: slot 2 [tsf 143368
-tsftu 140 intval 100] vif (null)
-Jan  1 00:06:21 OpenWrt user.debug kernel: ath: slot 1 [tsf 168967
-tsftu 165 intval 100] vif (null)
-...
-Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 1 [tsf 14197768
-tsftu 13865 intval 100] vif (null)
-Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 0 [tsf 14223368
-tsftu 13890 intval 100] vif 80945e70
-Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 3 [tsf 14248967
-tsftu 13915 intval 100] vif (null)
-Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 0 [tsf 79180
-tsftu 77 intval 100] vif 80945e70
-Jan  1 00:09:08 OpenWrt user.debug kernel: ath: missed 1 consecutive beacons
-Jan  1 00:09:08 OpenWrt user.debug kernel: ath: resume beacon xmit
-after 1 misses
-Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 3 [tsf 117791
-tsftu 115 intval 100] vif (null)
-Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 2 [tsf 143366
-tsftu 140 intval 100] vif (null)
-Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 1 [tsf 168967
-tsftu 165 intval 100] vif (null)
-Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 0 [tsf 194567
-tsftu 190 intval 100] vif 80945e70
-...
+Er, so there's your problem already.
 
-What can cause a missed beacon? Are they just a "fact of life"?
+> rt2x00 calls ieee80211_beacon_get_tim right after the current beacon was
+> sent out to fetch the next one. However, rt2x00 also implements the set_tim
+> callback and updates the beacon in each call to set_tim. As far as I
+> understood the code in mac80211 the set_tim callback is called when the
+> first frame for a powersaving station gets queued.
+> 
+> Since every call to ieee80211_beacon_get_tim updates the DTIM count the
+> following can happen (assuming a DTIM period of 2):
+> 
+> - the hw sends out the current beacon (DTIM count == 0)
+> - call to ieee80211_beacon_get_tim fetches the next beacon (DTIM count == 1)
+> - the first frame for a PS STA gets queued -> set_tim
+> - again call ieee80211_beacon_get_tim (DTIM count == 0)
+> - hw sends out the beacon with incorrect DTIM count
+> 
+> A proper way of fixing this issue would be not to use the set_tim callback but
+> just fetch the next beacon right before it gets send out (like ath* does).
+> However, that's not easily possible with rt2x00 devices older then rt2800 as
+> they only generate beacon_done interrupts (which is obviously too late for
+> fetching the current beacon ;) ).
+> 
+> So, is the current implementation in rt2x00 supposed to work and mac80211
+> needs fixing?
+> 
+> Could we add a parameter to ieee80211_beacon_get_tim that indicates if a _new_
+> beacon should be generated or if the _current_ beacon should be updated in
+> response to the set_tim callback?
+> 
+> Any other ideas?
 
-In any case I can't find any code that resets the tsf in this (single
-missed beacon) case. Will the hardware reset the tsf automatically
-whenever a single beacon is missed? Isn't that a bit overkill? Will it
-not cause problems for clients?
+No, your entire description makes no sense. There are two possibilities:
 
-> - Felix
+ a) You get a new beacon from mac80211 each time you send it. Then you
+    don't have to worry about the set_tim() callback at all -- don't
+    assign it!
 
-/Björn
+ b) You need to get a new beacon frame from mac80211 only when it
+    changes. You can do this from set_tim(). HOWEVER: since you're not
+    getting a new one from mac80211 all the time anyway, you NEED to
+    have the driver or firmware overwrite the DTIM count, like b43's
+    firmware for example will do.
+
+Ok so maybe there are more possibilities like the firmware filling the
+TIM IE differently and you would use set_tim() differently then.
+
+However, *fundamentally*, any time you don't get a new skb from mac80211
+for each transmitted beacon you NEED to overwrite the DTIM count in it.
+
+johannes
+
