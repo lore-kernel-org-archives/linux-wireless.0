@@ -1,83 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:49407 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755186Ab0FNUPZ (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:52425 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751312Ab0FXXet convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jun 2010 16:15:25 -0400
-Received: by mail-ww0-f46.google.com with SMTP id 18so4215976wwb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Jun 2010 13:15:24 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 12/14] rt2x00: Limit TX done looping to number of TX ring entries
-Date: Mon, 14 Jun 2010 22:13:37 +0200
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-References: <201006142208.31736.IvDoorn@gmail.com> <201006142212.55156.IvDoorn@gmail.com> <201006142213.16315.IvDoorn@gmail.com>
-In-Reply-To: <201006142213.16315.IvDoorn@gmail.com>
+	Thu, 24 Jun 2010 19:34:49 -0400
+Received: by bwz7 with SMTP id 7so452239bwz.19
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Jun 2010 16:34:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201006142213.38654.IvDoorn@gmail.com>
+In-Reply-To: <1277420940.28625.30.camel@gnutoo-laptop>
+References: <1275693948-3189-1-git-send-email-notasas@gmail.com>
+	<1275693948-3189-2-git-send-email-notasas@gmail.com>
+	<AANLkTinqgUGCjCBzg8j7bXGY05EW3-jfW7vlnrvCuwRd@mail.gmail.com>
+	<1277124410.28895.23.camel@gnutoo-laptop>
+	<AANLkTimLKDqDn_97BbOYr1cdxbFdPvyTz_lxJ59LVJ1b@mail.gmail.com>
+	<1277145901.28895.29.camel@gnutoo-laptop>
+	<AANLkTildbagKqzTQbcZ8cT53s4L2OWpJ5fkBUTcejj0h@mail.gmail.com>
+	<1277249607.2233.270.camel@gnutoo-laptop>
+	<1277420940.28625.30.camel@gnutoo-laptop>
+Date: Fri, 25 Jun 2010 02:34:47 +0300
+Message-ID: <AANLkTinGVsGRFZ5J06Y_s13TGjJcIRbm2ugfNfgSCIEw@mail.gmail.com>
+Subject: Re: [PATCH 2/2] wl1251: fix ELP_CTRL register reads
+From: Grazvydas Ignotas <notasas@gmail.com>
+To: "Denis 'GNUtoo' Carikli" <GNUtoo@no-log.org>
+Cc: Bob Copeland <me@bobcopeland.com>, Kalle Valo <kvalo@adurom.com>,
+	"John W.Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ivo van Doorn <IvDoorn@gmail.com>
+> I've changed that struct to wl12xx_platform_Data and added the irq
+> int,and I've still the following errors:
+> [  541.676849] wl1251: ERROR sdio_writeb failed (-84)
+> [  542.006378] mmc0: Command timeout
+> [  542.011444] mmc0:0001: error -110 reading SDIO_CCCR_INTx
+> [  543.016357] mmc0: Command CRC error
+> [  543.016418] mmc0:0001: error -84 reading SDIO_CCCR_INTx
+> [  544.026367] mmc0: Command timeout
+> [  544.031433] mmc0:0001: error -110 reading SDIO_CCCR_INTx
+> [  545.036376] mmc0: Command CRC error
 
-Similar to rt2800pci, remove the check for duplicate
-register reading, and instead limit the for-loop to
-the maximum number of TX entries inside a queue.
-
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt61pci.c |   23 +++++++++--------------
- 1 files changed, 9 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index d127011..f7ee31e 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -2052,29 +2052,24 @@ static void rt61pci_txdone(struct rt2x00_dev *rt2x00dev)
- 	struct txdone_entry_desc txdesc;
- 	u32 word;
- 	u32 reg;
--	u32 old_reg;
- 	int type;
- 	int index;
-+	int i;
- 
- 	/*
--	 * During each loop we will compare the freshly read
--	 * STA_CSR4 register value with the value read from
--	 * the previous loop. If the 2 values are equal then
--	 * we should stop processing because the chance is
--	 * quite big that the device has been unplugged and
--	 * we risk going into an endless loop.
-+	 * TX_STA_FIFO is a stack of X entries, hence read TX_STA_FIFO
-+	 * at most X times and also stop processing once the TX_STA_FIFO_VALID
-+	 * flag is not set anymore.
-+	 *
-+	 * The legacy drivers use X=TX_RING_SIZE but state in a comment
-+	 * that the TX_STA_FIFO stack has a size of 16. We stick to our
-+	 * tx ring size for now.
- 	 */
--	old_reg = 0;
--
--	while (1) {
-+	for (i = 0; i < TX_ENTRIES; i++) {
- 		rt2x00pci_register_read(rt2x00dev, STA_CSR4, &reg);
- 		if (!rt2x00_get_field32(reg, STA_CSR4_VALID))
- 			break;
- 
--		if (old_reg == reg)
--			break;
--		old_reg = reg;
--
- 		/*
- 		 * Skip this entry when it contains an invalid
- 		 * queue identication number.
--- 
-1.6.6.1
-
+Has powersaving ever worked on your device with this driver? It does
+work fine on pandora (OMAP3).
