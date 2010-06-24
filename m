@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46524 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754383Ab0FILja (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56673 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751239Ab0FXRPO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jun 2010 07:39:30 -0400
-Subject: Re: Possible leak in the ampdu aggregation code?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Nishant Sarmukadam <nishants@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <EC64E4604C8024438259B683BB2514E1079C16BCC6@SC-VEXCH1.marvell.com>
-References: <EC64E4604C8024438259B683BB2514E1079C16BCC6@SC-VEXCH1.marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 09 Jun 2010 13:39:28 +0200
-Message-ID: <1276083568.14580.13.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 24 Jun 2010 13:15:14 -0400
+Date: Thu, 24 Jun 2010 13:07:10 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] minstrel_ht: mark minstrel_mcs_groups as static
+Message-ID: <20100624170710.GB2368@tuxdriver.com>
+References: <1277392602-10578-1-git-send-email-linville@tuxdriver.com>
+ <4C238C3A.6090905@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4C238C3A.6090905@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-06-09 at 01:35 -0700, Nishant Sarmukadam wrote:
+On Thu, Jun 24, 2010 at 06:47:54PM +0200, Felix Fietkau wrote:
+> On 2010-06-24 5:16 PM, John W. Linville wrote:
+> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> > ---
+> >  net/mac80211/rc80211_minstrel_ht.c |    2 +-
+> >  1 files changed, 1 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+> > index 7a04951..a8f658c 100644
+> > --- a/net/mac80211/rc80211_minstrel_ht.c
+> > +++ b/net/mac80211/rc80211_minstrel_ht.c
+> > @@ -59,7 +59,7 @@
+> >   * groups, based on the number of streams and flags (HT40, SGI) that they
+> >   * use.
+> >   */
+> > -const struct mcs_group minstrel_mcs_groups[] = {
+> > +static const struct mcs_group minstrel_mcs_groups[] = {
+> NACK. minstrel_ht debugfs needs this. The proper fix for the warning is
+> to add this one to a header file instead.
 
-> I wanted to get some views on a possible issue while using mac80211
-> ampdu support. 
-> skb's from pending queue for a TID are spliced onto the local pending
-> queue when tearing down a block ack session.
+Yup, fair enough.  Replacement patch to follow.
 
-Right.
-
-> If aggregation is stopped before the ampdu state becomes
-> HT_AGG_STATE_OPERATIONAL say on addba timer expiry or if the addba
-> request is declined, the state is changed to
-> HT_AGG_STATE_REQ_STOP_BA_MSK |(initiator <<
-> HT_AGG_STATE_INITIATOR_SHIFT) in ___ieee80211_stop_tx_ba_session. 
-
-Right.
-
-> After commit 416fbdff2137e8d8cc8f23f517bee3a26b11526f, the ampdu state
-> needs to have HT_ADDBA_REQUESTED_MSK set, else the skb's are not
-> spliced.
-
-Bleh. That commit is bogus. I didn't even know it existed. It looks like
-that commit was trying to fix the issue fixed by
-827d42c9ac91ddd728e4f4a31fefb906ef2ceff7 but ended up just hiding it
-enough that we didn't really find the cause of issue for a long time
-still... we shouldn't even have been stopping the aggregation session
-when it was never started!!
-
-I think that commit should just be reverted.
-
-johannes
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
