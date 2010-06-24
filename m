@@ -1,41 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:11138 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754673Ab0F3Kv2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jun 2010 06:51:28 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 30 Jun 2010 03:51:28 -0700
-Date: Wed, 30 Jun 2010 03:51:19 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] mac80211: Dont allow to wake up netif tx queues
- while on off channel
-Message-ID: <20100630105118.GB2192@vasanth-laptop>
-References: <1277892907-2401-1-git-send-email-vasanth@atheros.com>
- <1277893026.7823.7.camel@jlt3.sipsolutions.net>
- <1277893571.7823.9.camel@jlt3.sipsolutions.net>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56536 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755198Ab0FXTAS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jun 2010 15:00:18 -0400
+Date: Thu, 24 Jun 2010 14:53:39 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Joe Perches <joe@perches.com>
+Cc: Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Larry.Finger@lwfinger.net,
+	mb@bu3sch.de, zajec5@gmail.com
+Subject: Re: [PATCH 0/3] b43: logging cleanups
+Message-ID: <20100624185339.GC2368@tuxdriver.com>
+References: <cover.1276988387.git.joe@perches.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1277893571.7823.9.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1276988387.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 30, 2010 at 03:56:11PM +0530, Johannes Berg wrote:
-> On Wed, 2010-06-30 at 12:17 +0200, Johannes Berg wrote:
-> > On Wed, 2010-06-30 at 03:15 -0700, Vasanthakumar Thiagarajan wrote:
-> > > Drivers are not supposed to call ieee80211_wake_queue() while operating
-> > > on off channel during sw scanning,
+On Sat, Jun 19, 2010 at 04:30:08PM -0700, Joe Perches wrote:
+> Just some small cleanups
 > 
-> > That doesn't seem to make sense, since we treat driver and scan stop
-> > status separately via wake_queue_by_reason()
-> 
-> IOW, the above assertion would seem to be false already.
+> Joe Perches (3):
+>   drivers/net/wireless/b43: Use local ratelimit_state
+>   drivers/net/wireless/b43: Logging cleanups
+>   drivers/net/wireless/b43: Rename b43_debug to b43_debugging
 
-Sorry, I mean the existing code assumes that ieee80211_wake_queue() while
-operating on off channel during scanning.
+Any of the b43 guys want to express an opinion on these?
 
-Vasanth
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
