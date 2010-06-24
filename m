@@ -1,556 +1,357 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:59662 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753458Ab0FIGus (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jun 2010 02:50:48 -0400
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, reinette.chatre@intel.com
-Subject: [PATCHv3] mac80211: Fix circular locking dependency in ARP filter handling
-Date: Wed,  9 Jun 2010 09:50:24 +0300
-Message-Id: <1276066224-17880-1-git-send-email-juuso.oikarinen@nokia.com>
+Received: from smtp205.alice.it ([82.57.200.101]:55886 "EHLO smtp205.alice.it"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752918Ab0FXXJw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jun 2010 19:09:52 -0400
+Subject: Re: [PATCH 2/2] wl1251: fix ELP_CTRL register reads
+From: Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+To: Grazvydas Ignotas <notasas@gmail.com>
+Cc: Bob Copeland <me@bobcopeland.com>, Kalle Valo <kvalo@adurom.com>,
+	"John W.Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1277249607.2233.270.camel@gnutoo-laptop>
+References: <1275693948-3189-1-git-send-email-notasas@gmail.com>
+	 <1275693948-3189-2-git-send-email-notasas@gmail.com>
+	 <AANLkTinqgUGCjCBzg8j7bXGY05EW3-jfW7vlnrvCuwRd@mail.gmail.com>
+	 <1277124410.28895.23.camel@gnutoo-laptop>
+	 <AANLkTimLKDqDn_97BbOYr1cdxbFdPvyTz_lxJ59LVJ1b@mail.gmail.com>
+	 <1277145901.28895.29.camel@gnutoo-laptop>
+	 <AANLkTildbagKqzTQbcZ8cT53s4L2OWpJ5fkBUTcejj0h@mail.gmail.com>
+	 <1277249607.2233.270.camel@gnutoo-laptop>
+Content-Type: multipart/mixed; boundary="=-L3JgMbisHPdyvBGm1B+J"
+Date: Fri, 25 Jun 2010 01:09:00 +0200
+Message-ID: <1277420940.28625.30.camel@gnutoo-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is a circular locking dependency when configuring the
-hardware ARP filters on association, occurring when flushing the mac80211
-workqueue. This is what happens:
 
-[   92.026800] =======================================================
-[   92.030507] [ INFO: possible circular locking dependency detected ]
-[   92.030507] 2.6.34-04781-g2b2c009 #85
-[   92.030507] -------------------------------------------------------
-[   92.030507] modprobe/5225 is trying to acquire lock:
-[   92.030507]  ((wiphy_name(local->hw.wiphy))){+.+.+.}, at: [<ffffffff8105b5c0>] flush_workq
-ueue+0x0/0xb0
-[   92.030507]
-[   92.030507] but task is already holding lock:
-[   92.030507]  (rtnl_mutex){+.+.+.}, at: [<ffffffff812b9ce2>] rtnl_lock+0x12/0x20
-[   92.030507]
-[   92.030507] which lock already depends on the new lock.
-[   92.030507]
-[   92.030507]
-[   92.030507] the existing dependency chain (in reverse order) is:
-[   92.030507]
-[   92.030507] -> #2 (rtnl_mutex){+.+.+.}:
-[   92.030507]        [<ffffffff810761fb>] lock_acquire+0xdb/0x110
-[   92.030507]        [<ffffffff81341754>] mutex_lock_nested+0x44/0x300
-[   92.030507]        [<ffffffff812b9ce2>] rtnl_lock+0x12/0x20
-[   92.030507]        [<ffffffffa022d47c>] ieee80211_assoc_done+0x6c/0xe0 [mac80211]
-[   92.030507]        [<ffffffffa022f2ad>] ieee80211_work_work+0x31d/0x1280 [mac80211]
+--=-L3JgMbisHPdyvBGm1B+J
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 
-[   92.030507] -> #1 ((&local->work_work)){+.+.+.}:
-[   92.030507]        [<ffffffff810761fb>] lock_acquire+0xdb/0x110
-[   92.030507]        [<ffffffff8105a51a>] worker_thread+0x22a/0x370
-[   92.030507]        [<ffffffff8105ecc6>] kthread+0x96/0xb0
-[   92.030507]        [<ffffffff81003a94>] kernel_thread_helper+0x4/0x10
-[   92.030507]
-[   92.030507] -> #0 ((wiphy_name(local->hw.wiphy))){+.+.+.}:
-[   92.030507]        [<ffffffff81075fdc>] __lock_acquire+0x1c0c/0x1d50
-[   92.030507]        [<ffffffff810761fb>] lock_acquire+0xdb/0x110
-[   92.030507]        [<ffffffff8105b60e>] flush_workqueue+0x4e/0xb0
-[   92.030507]        [<ffffffffa023ff7b>] ieee80211_stop_device+0x2b/0xb0 [mac80211]
-[   92.030507]        [<ffffffffa0231635>] ieee80211_stop+0x3e5/0x680 [mac80211]
+On Wed, 2010-06-23 at 01:33 +0200, Denis 'GNUtoo' Carikli wrote:
+> On Tue, 2010-06-22 at 01:48 +0300, Grazvydas Ignotas wrote:
+> > >> Probably not relevant to power saving, but:
+> > >>
+> > >> Are you using the dedicated irq line or sdio interrupt?
+> > >> It makes a big difference in overall throughput to use
+> > >> the former.
+> > > I don't know. what should I grep for?
+> > 
+> > It might actually be related.. Try adding this to your board file to
+> > enable GPIO irq:
+> > 
+> > static void wl1251_set_power(bool enable)
+> > {
+> > }
+> > 
+> > static struct wl12xx_platform_data wl1251_pdata = {
+> >         .set_power      = wl1251_set_power,
+> > };
+> > 
+> > static struct platform_device wl1251_data = {
+> >         .name           = "wl1251_data",
+> >         .id             = -1,
+> >         .dev            = {
+> >                 .platform_data  = &wl1251_pdata,
+> >         },
+> > };
+> > 
+> > .. then from some init function:
+> > 
+> > // WIFI_IRQ_GPIO is the GPIO number connected to wl1251 irq line
+> > wl1251_pdata.irq = gpio_to_irq(WIFI_IRQ_GPIO);
+> > platform_device_register(&wl1251_pdata);
+> Thanks a lot for the infos,they were really helpfull.
+> 
+> I've applied that patch(as it was not for submitting,just for reading I
+> didn't bother sending with git-send-email): 
+> Index: sources/arch/arm/mach-msm/board-trout.c
+> ===================================================================
+> --- sources.orig/arch/arm/mach-msm/board-trout.c	2010-06-23
+> 00:41:54.601288614 +0200
+> +++ sources/arch/arm/mach-msm/board-trout.c	2010-06-23
+> 00:43:59.893158944 +0200
+> @@ -52,6 +52,7 @@
+>  #include <asm/mach/mmc.h>
+>  #include <linux/mmc/sdio_ids.h>
+>  #include <linux/msm_audio.h>
+> +#include <linux/spi/wl12xx.h>
+>  
+>  #include "board-trout.h"
+>  
+> @@ -363,6 +364,17 @@
+>  	},
+>  };
+>  
+> +struct wl12xx_platform_data wl12xx_data = {
+> +};
+> +
+> +static struct platform_device  wl12xx = {
+> +	.name		= "wl1251_data",
+> +	.id		= -1,
+> +	.dev		= {
+> +		.platform_data = &wl12xx_data,
+> +	},
+> +};
+> +
+>  #ifdef CONFIG_HTC_HEADSET
+>  static void h2w_config_cpld(int route)
+>  {
+> @@ -650,6 +662,7 @@
+>  	&trout_pwr_sink,
+>  #endif
+>  	&trout_snd,
+> +	&wl12xx,
+>  };
+>  
+>  extern struct sys_timer msm_timer;
+> @@ -745,6 +758,7 @@
+>  
+>  static void __init config_gpios(void)
+>  {
+> +	wl12xx_data.irq = gpio_to_irq(29);
+>  	config_gpio_table(gpio_table, ARRAY_SIZE(gpio_table));
+>  	config_camera_off_gpios();
+>  }
+> Index: sources/include/linux/spi/wl12xx.h
+> ===================================================================
+> --- sources.orig/include/linux/spi/wl12xx.h	2010-06-23
+> 00:42:03.641283312 +0200
+> +++ sources/include/linux/spi/wl12xx.h	2010-06-23 00:42:48.103178185
+> +0200
+> @@ -26,6 +26,7 @@
+>  
+>  struct wl12xx_platform_data {
+>  	void (*set_power)(bool enable);
+> +	int irq;
+>  };
+>  
+>  #endif
+> 
+> The patch was made from someone in irc and modified by me later.
+> 
+> Then I load the wifi as usual:
+> modprobe wl1251_sdio #it doesn't crash
+> modprobe msm_wifi
+> the modprobe msm_wifi gives the following result:
+> [ 1366.500427] wifi probe start
+> [ 1366.500457] trout_wifi_power: 1
+> [ 1366.927185] trout_wifi_reset: 0
+> [ 1367.030944] trout_wifi_set_carddetect: 1
+> [ 1367.030975] mmc0: card_present 1
+> [ 1367.030975] mmc0: Slot status change detected (0 -> 1)
+> [ 1367.031036] wifi probe done
+> And then I've an invisible crash/kernel panic which result in the
+> machine lockup and then reboot(so it should be a kernel panic).
+> Note that I've no serial yet(I think I should really get a serial cable
+> for this machine)
+> 
+> msm_wifi comes from here:
+> http://bobcopeland.com/srcs/android/msm_wifi.patch
+> 
+> I had already some wifi structures which may have conflicted:
+> 
+> struct wifi_platform_data trout_wifi_control = {
+> 	.set_power		= trout_wifi_power,
+> 	.set_reset		= trout_wifi_reset,
+> 	.set_carddetect		= trout_wifi_set_carddetect,
+> #ifdef CONFIG_WIFI_MEM_PREALLOC
+> 	.mem_prealloc		= trout_wifi_mem_prealloc,
+> #else
+> 	.mem_prealloc		= NULL,
+> #endif	
+> };
+I've changed that struct to wl12xx_platform_Data and added the irq
+int,and I've still the following errors:
+[  541.676849] wl1251: ERROR sdio_writeb failed (-84)
+[  542.006378] mmc0: Command timeout
+[  542.011444] mmc0:0001: error -110 reading SDIO_CCCR_INTx
+[  543.016357] mmc0: Command CRC error
+[  543.016418] mmc0:0001: error -84 reading SDIO_CCCR_INTx
+[  544.026367] mmc0: Command timeout
+[  544.031433] mmc0:0001: error -110 reading SDIO_CCCR_INTx
+[  545.036376] mmc0: Command CRC error
+[  545.036437] mmc0:0001: error -84 reading SDIO_CCCR_INTx
+[  546.066345] mmc0: Command timeout
+[  546.071411] mmc0:0001: error -110 reading SDIO_CCCR_INTx
+[  547.076354] mmc0: Command CRC error
+[  547.076416] mmc0:0001: error -84 reading SDIO_CCCR_INTx
+[  548.106384] mmc0: Command timeout
+[  548.111450] mmc0:0001: error -110 reading SDIO_CCCR_INTx
+[  548.706665] mmc0: Command CRC error
+[  548.706726] wl1251: ERROR sdio_writeb failed (-84)
+[  549.136383] mmc0: Command timeout
+[  549.141479] mmc0:0001: error -110 reading SDIO_CCCR_INTx
+[  549.676635] mmc0: Command CRC error
+[  549.676696] wl1251: ERROR sdio_writeb failed (-84)
+[  550.166381] mmc0: Command timeout
+[  550.171447] mmc0:0001: error -110 reading SDIO_CCCR_INTx
+[  550.676269] wlan0: no IPv6 routers present
+[  551.176361] mmc0: Command CRC error
+[  551.176422] mmc0:0001: error -84 reading SDIO_CCCR_INTx
+[  552.186340] mmc0: Command timeout
 
-The locking in this case is quite complex. Fix the problem by rewriting the
-way the hardware ARP filter list is handled - i.e. make a copy of the address
-list to the bss_conf struct, and provide that list to the hardware driver
-when needed.
+The patch is attached.
 
-Additionally, this patch ensures that hardware ARP filtering is not enabled
-when promiscuous mode is set.
+Denis.
 
-Reported-by: Reinette Chatre <reinette.chatre@intel.com>
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
-v3: - queue reconfig filter work to kernel default wq instead of mac80211 wq
-    - initialize arp_filter_state to "true" in if_add
 
- include/net/mac80211.h      |   34 +++++----
- net/mac80211/driver-ops.h   |   17 -----
- net/mac80211/driver-trace.h |   25 -------
- net/mac80211/ieee80211_i.h  |    2 +
- net/mac80211/iface.c        |    8 ++-
- net/mac80211/main.c         |  166 +++++++++++++++++++++++++++++--------------
- net/mac80211/mlme.c         |   39 ++++++----
- 7 files changed, 164 insertions(+), 127 deletions(-)
+--=-L3JgMbisHPdyvBGm1B+J
+Content-Disposition: attachment; filename="cleaner_wifi_patch_quilt.patch"
+Content-Type: text/x-patch; name="cleaner_wifi_patch_quilt.patch"; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index e3c1d47..f409d00 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -19,7 +19,6 @@
- #include <linux/wireless.h>
- #include <linux/device.h>
- #include <linux/ieee80211.h>
--#include <linux/inetdevice.h>
- #include <net/cfg80211.h>
+Index: sources/arch/arm/mach-msm/board-trout-wifi.c
+===================================================================
+--- sources.orig/arch/arm/mach-msm/board-trout-wifi.c	2010-06-24 23:58:13.194099802 +0200
++++ sources/arch/arm/mach-msm/board-trout-wifi.c	2010-06-24 23:58:21.385931197 +0200
+@@ -20,7 +20,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/vmalloc.h>
+ #include <linux/err.h>
+-#include <linux/wifi_tiwlan.h>
++#include <linux/spi/wl12xx.h>
  
- /**
-@@ -147,6 +146,7 @@ struct ieee80211_low_level_stats {
-  *	enabled/disabled (beaconing modes)
-  * @BSS_CHANGED_CQM: Connection quality monitor config changed
-  * @BSS_CHANGED_IBSS: IBSS join status changed
-+ * @BSS_CHANGED_ARP_FILTER: Hardware ARP filter address list or state changed.
-  */
- enum ieee80211_bss_change {
- 	BSS_CHANGED_ASSOC		= 1<<0,
-@@ -161,10 +161,18 @@ enum ieee80211_bss_change {
- 	BSS_CHANGED_BEACON_ENABLED	= 1<<9,
- 	BSS_CHANGED_CQM			= 1<<10,
- 	BSS_CHANGED_IBSS		= 1<<11,
-+	BSS_CHANGED_ARP_FILTER		= 1<<12,
+ extern int trout_wifi_set_carddetect(int val);
+ extern int trout_wifi_power(int on);
+@@ -60,7 +60,7 @@
+ }
+ #endif
  
- 	/* when adding here, make sure to change ieee80211_reconfig */
+-struct wifi_platform_data trout_wifi_control = {
++struct wl12xx_platform_data trout_wifi_control = {
+ 	.set_power		= trout_wifi_power,
+ 	.set_reset		= trout_wifi_reset,
+ 	.set_carddetect		= trout_wifi_set_carddetect,
+Index: sources/arch/arm/mach-msm/board-trout.c
+===================================================================
+--- sources.orig/arch/arm/mach-msm/board-trout.c	2010-06-24 23:58:13.234055563 +0200
++++ sources/arch/arm/mach-msm/board-trout.c	2010-06-25 00:40:37.324053664 +0200
+@@ -66,7 +66,7 @@
+ #include <mach/htc_headset.h>
+ #endif
+ #ifdef CONFIG_WIFI_CONTROL_FUNC
+-#include <linux/wifi_tiwlan.h>
++#include <linux/spi/wl12xx.h>
+ #endif
+ 
+ #include "proc_comm.h"
+@@ -80,7 +80,7 @@
+ #ifdef CONFIG_WIFI_MEM_PREALLOC
+ extern int trout_init_wifi_mem(void);
+ #endif
+-extern struct wifi_platform_data trout_wifi_control;
++extern struct wl12xx_platform_data trout_wifi_control;
+ #endif
+ 
+ struct trout_axis_info {
+@@ -545,6 +545,28 @@
+ 	.ram_console_size = MSM_RAM_CONSOLE_SIZE,
  };
  
-+/*
-+ * The maximum number of IPv4 addresses listed for ARP filtering. If the number
-+ * of addresses for an interface increase beyond this value, hardware ARP
-+ * filtering will be disabled.
-+ */
-+#define IEEE80211_BSS_ARP_ADDR_LIST_LEN 4
 +
- /**
-  * struct ieee80211_bss_conf - holds the BSS's changing parameters
-  *
-@@ -200,6 +208,14 @@ enum ieee80211_bss_change {
-  * @cqm_rssi_thold: Connection quality monitor RSSI threshold, a zero value
-  *	implies disabled
-  * @cqm_rssi_hyst: Connection quality monitor RSSI hysteresis
-+ * @arp_addr_list: List of IPv4 addresses for hardware ARP filtering. The
-+ *	may filter ARP queries targeted for other addresses than listed here.
-+ *	The driver must allow ARP queries targeted for all address listed here
-+ *	to pass through. An empty list implies no ARP queries need to pass.
-+ * @arp_addr_cnt: Number of addresses currently on the list.
-+ * @arp_filter_enabled: Enable ARP filtering - if enabled, the hardware may
-+ *      filter ARP queries based on the @arp_addr_list, if disabled, the
-+ *      hardware must not perform any ARP filtering.
++static void trout_wl1251_init(void)
++{
++	int ret;
++
++	ret = gpio_request(TROUT_WIFI_IRQ_GPIO, "wl1251 irq");
++	if (ret < 0)
++		goto fail_irq;
++
++	ret = gpio_direction_input(TROUT_WIFI_IRQ_GPIO);
++	if (ret < 0)
++		goto fail_irq;
++
++	trout_wifi_control.irq = gpio_to_irq(TROUT_WIFI_IRQ_GPIO);
++	if (trout_wifi_control.irq < 0)
++		goto fail_irq;
++
++	return;
++
++fail_irq:
++	gpio_free(TROUT_WIFI_IRQ_GPIO);
++}
+ #ifdef CONFIG_WIFI_CONTROL_FUNC
+ static struct platform_device trout_wifi = {
+ 	.name		= "msm_wifi",
+@@ -823,6 +845,7 @@
+ 
+ 	/* SD card door should wake the device */
+ 	set_irq_wake(TROUT_GPIO_TO_INT(TROUT_GPIO_SD_DOOR_N), 1);
++	trout_wl1251_init();
+ }
+ 
+ static struct map_desc trout_io_desc[] __initdata = {
+Index: sources/arch/arm/mach-msm/board-trout.h
+===================================================================
+--- sources.orig/arch/arm/mach-msm/board-trout.h	2010-06-24 23:58:13.294049700 +0200
++++ sources/arch/arm/mach-msm/board-trout.h	2010-06-24 23:58:21.385931197 +0200
+@@ -74,6 +74,7 @@
+ 
+ #define TROUT_GPIO_HAPTIC_PWM               (28)
+ #define TROUT_GPIO_PS_HOLD                  (25)
++#define TROUT_WIFI_IRQ_GPIO	            (29)
+ 
+ #define TROUT_GPIO_MISC2_BASE               (TROUT_GPIO_START + 0x00)
+ #define TROUT_GPIO_MISC3_BASE               (TROUT_GPIO_START + 0x08)
+Index: sources/arch/arm/mach-msm/msm_wifi.c
+===================================================================
+--- sources.orig/arch/arm/mach-msm/msm_wifi.c	2010-06-24 23:58:13.344052459 +0200
++++ sources/arch/arm/mach-msm/msm_wifi.c	2010-06-24 23:58:21.385931197 +0200
+@@ -18,12 +18,12 @@
+  * Copyright (C) 2008 Google Inc
   */
- struct ieee80211_bss_conf {
- 	const u8 *bssid;
-@@ -220,6 +236,9 @@ struct ieee80211_bss_conf {
- 	s32 cqm_rssi_thold;
- 	u32 cqm_rssi_hyst;
- 	enum nl80211_channel_type channel_type;
-+	__be32 arp_addr_list[IEEE80211_BSS_ARP_ADDR_LIST_LEN];
-+	u8 arp_addr_cnt;
-+	bool arp_filter_enabled;
+ #include <linux/platform_device.h>
+-#include <linux/wifi_tiwlan.h>
++#include <linux/spi/wl12xx.h>
+ 
+ static int wifi_probe(struct platform_device *pdev)
+ {
+-	struct wifi_platform_data *wifi_ctrl =
+-		(struct wifi_platform_data *)(pdev->dev.platform_data);
++	struct wl12xx_platform_data *wifi_ctrl =
++		(struct wl12xx_platform_data *)(pdev->dev.platform_data);
+ 
+ 	printk(KERN_DEBUG "wifi probe start\n");
+ 
+@@ -43,8 +43,8 @@
+ 
+ static int wifi_remove(struct platform_device *pdev)
+ {
+-	struct wifi_platform_data *wifi_ctrl =
+-		(struct wifi_platform_data *)(pdev->dev.platform_data);
++	struct wl12xx_platform_data *wifi_ctrl =
++		(struct w12xx_platform_data *)(pdev->dev.platform_data);
+ 
+ 	printk(KERN_DEBUG "wifi remove start\n");
+ 	if (!wifi_ctrl)
+Index: sources/include/linux/spi/wl12xx.h
+===================================================================
+--- sources.orig/include/linux/spi/wl12xx.h	2010-06-24 23:58:13.404053597 +0200
++++ sources/include/linux/spi/wl12xx.h	2010-06-24 23:58:21.385931197 +0200
+@@ -24,8 +24,19 @@
+ #ifndef _LINUX_SPI_WL12XX_H
+ #define _LINUX_SPI_WL12XX_H
+ 
++#define WMPA_NUMBER_OF_SECTIONS	3
++#define WMPA_NUMBER_OF_BUFFERS	160
++#define WMPA_SECTION_HEADER	24
++#define WMPA_SECTION_SIZE_0	(WMPA_NUMBER_OF_BUFFERS * 64)
++#define WMPA_SECTION_SIZE_1	(WMPA_NUMBER_OF_BUFFERS * 256)
++#define WMPA_SECTION_SIZE_2	(WMPA_NUMBER_OF_BUFFERS * 2048)
++
+ struct wl12xx_platform_data {
+-	void (*set_power)(bool enable);
++        int (*set_power)(bool enable);
++        int (*set_reset)(bool enable);
++        int (*set_carddetect)(bool enable);
++	void *(*mem_prealloc)(int section, unsigned long size);
++	int irq;
  };
  
- /**
-@@ -1529,16 +1548,6 @@ enum ieee80211_ampdu_mlme_action {
-  *	of the bss parameters has changed when a call is made. The callback
-  *	can sleep.
-  *
-- * @configure_arp_filter: Configuration function for hardware ARP query filter.
-- *	This function is called with all the IP addresses configured to the
-- *	interface as argument - all ARP queries targeted to any of these
-- *	addresses must pass through. If the hardware filter does not support
-- *	enought addresses, hardware filtering must be disabled. The ifa_list
-- *	argument may be NULL, indicating that filtering must be disabled.
-- *	This function is called upon association complete with current
-- *	address(es), and while associated whenever the IP address(es) change.
-- *	The callback can sleep.
-- *
-  * @prepare_multicast: Prepare for multicast filter configuration.
-  *	This callback is optional, and its return value is passed
-  *	to configure_filter(). This callback must be atomic.
-@@ -1678,9 +1687,6 @@ struct ieee80211_ops {
- 				 struct ieee80211_vif *vif,
- 				 struct ieee80211_bss_conf *info,
- 				 u32 changed);
--	int (*configure_arp_filter)(struct ieee80211_hw *hw,
--				    struct ieee80211_vif *vif,
--				    struct in_ifaddr *ifa_list);
- 	u64 (*prepare_multicast)(struct ieee80211_hw *hw,
- 				 struct netdev_hw_addr_list *mc_list);
- 	void (*configure_filter)(struct ieee80211_hw *hw,
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index d1139e4..bbea3bc 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -83,23 +83,6 @@ static inline void drv_bss_info_changed(struct ieee80211_local *local,
- 	trace_drv_bss_info_changed(local, sdata, info, changed);
- }
- 
--struct in_ifaddr;
--static inline int drv_configure_arp_filter(struct ieee80211_local *local,
--					   struct ieee80211_vif *vif,
--					   struct in_ifaddr *ifa_list)
--{
--	int ret = 0;
--
--	might_sleep();
--
--	if (local->ops->configure_arp_filter)
--		ret = local->ops->configure_arp_filter(&local->hw, vif,
--						       ifa_list);
--
--	trace_drv_configure_arp_filter(local, vif_to_sdata(vif), ifa_list, ret);
--	return ret;
--}
--
- static inline u64 drv_prepare_multicast(struct ieee80211_local *local,
- 					struct netdev_hw_addr_list *mc_list)
- {
-diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
-index 6b90630..1e293df 100644
---- a/net/mac80211/driver-trace.h
-+++ b/net/mac80211/driver-trace.h
-@@ -219,31 +219,6 @@ TRACE_EVENT(drv_bss_info_changed,
- 	)
- );
- 
--TRACE_EVENT(drv_configure_arp_filter,
--	TP_PROTO(struct ieee80211_local *local,
--		 struct ieee80211_sub_if_data *sdata,
--		 struct in_ifaddr *ifa_list, int ret),
--
--	TP_ARGS(local, sdata, ifa_list, ret),
--
--	TP_STRUCT__entry(
--		LOCAL_ENTRY
--		VIF_ENTRY
--		__field(int, ret)
--	),
--
--	TP_fast_assign(
--		LOCAL_ASSIGN;
--		VIF_ASSIGN;
--		__entry->ret = ret;
--	),
--
--	TP_printk(
--		VIF_PR_FMT LOCAL_PR_FMT " ret:%d",
--		VIF_PR_ARG, LOCAL_PR_ARG, __entry->ret
--	)
--);
--
- TRACE_EVENT(drv_prepare_multicast,
- 	TP_PROTO(struct ieee80211_local *local, int mc_count, u64 ret),
- 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 4d3883e..79e366e 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -517,6 +517,8 @@ struct ieee80211_sub_if_data {
- 
- 	u16 sequence_number;
- 
-+	bool arp_filter_state;
-+
- 	/*
- 	 * AP this belongs to: self in AP mode and
- 	 * corresponding AP in VLAN mode, NULL for
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 1afa9ec..4b64d85 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -588,7 +588,12 @@ static void ieee80211_set_multicast_list(struct net_device *dev)
- 	spin_lock_bh(&local->filter_lock);
- 	__hw_addr_sync(&local->mc_list, &dev->mc, dev->addr_len);
- 	spin_unlock_bh(&local->filter_lock);
--	ieee80211_queue_work(&local->hw, &local->reconfig_filter);
-+
-+	/*
-+	 * This work cannot be queued in the mac80211 workqueue as it requires
-+	 * rtnl_lock().
-+	 */
-+	schedule_work(&local->reconfig_filter);
- }
- 
- /*
-@@ -959,6 +964,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 	sdata->wdev.wiphy = local->hw.wiphy;
- 	sdata->local = local;
- 	sdata->dev = ndev;
-+	sdata->arp_filter_state = true;
- 
- 	for (i = 0; i < IEEE80211_FRAGMENT_MAX; i++)
- 		skb_queue_head_init(&sdata->fragments[i].skb_list);
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 5706156..b64066c 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -20,6 +20,7 @@
- #include <linux/rtnetlink.h>
- #include <linux/bitmap.h>
- #include <linux/pm_qos_params.h>
-+#include <linux/inetdevice.h>
- #include <net/net_namespace.h>
- #include <net/cfg80211.h>
- 
-@@ -84,12 +85,123 @@ void ieee80211_configure_filter(struct ieee80211_local *local)
- 	local->filter_flags = new_flags & ~(1<<31);
- }
- 
-+#ifdef CONFIG_INET
-+static void ieee80211_reconfig_arp_filter(struct ieee80211_local *local)
-+{
-+	struct ieee80211_sub_if_data *sdata;
-+	struct ieee80211_if_managed *ifmgd;
-+	struct ieee80211_bss_conf *bss_conf;
-+	u32 changed;
-+	bool promisc;
-+	bool old_state, new_state;
-+
-+	/* Check ARP filtering state for each interface */
-+	rtnl_lock();
-+	list_for_each_entry(sdata, &local->interfaces, list) {
-+		if (sdata->vif.type != NL80211_IFTYPE_STATION)
-+				continue;
-+
-+		ifmgd = &sdata->u.mgd;
-+		mutex_lock(&ifmgd->mtx);
-+		if (!ifmgd->associated) {
-+			mutex_unlock(&ifmgd->mtx);
-+			continue;
-+		}
-+
-+		bss_conf = &sdata->vif.bss_conf;
-+
-+		old_state = !!(bss_conf->arp_filter_enabled);
-+
-+		promisc = sdata->flags & IEEE80211_SDATA_PROMISC;
-+		new_state = !promisc && sdata->arp_filter_state;
-+		bss_conf->arp_filter_enabled = new_state;
-+
-+		if (old_state != new_state) {
-+			changed = BSS_CHANGED_ARP_FILTER;
-+			ieee80211_bss_info_change_notify(sdata, changed);
-+		}
-+
-+		mutex_unlock(&ifmgd->mtx);
-+	}
-+	rtnl_unlock();
-+}
-+
-+static int ieee80211_ifa_changed(struct notifier_block *nb,
-+				 unsigned long data, void *arg)
-+{
-+	struct in_ifaddr *ifa = arg;
-+	struct ieee80211_local *local =
-+		container_of(nb, struct ieee80211_local,
-+			     ifa_notifier);
-+	struct net_device *ndev = ifa->ifa_dev->dev;
-+	struct wireless_dev *wdev = ndev->ieee80211_ptr;
-+	struct in_device *idev;
-+	struct ieee80211_sub_if_data *sdata;
-+	struct ieee80211_bss_conf *bss_conf;
-+	struct ieee80211_if_managed *ifmgd;
-+	int c = 0;
-+
-+	/* Make sure it's our interface that got changed */
-+	if (!wdev)
-+		return NOTIFY_DONE;
-+
-+	if (wdev->wiphy != local->hw.wiphy)
-+		return NOTIFY_DONE;
-+
-+	sdata = IEEE80211_DEV_TO_SUB_IF(ndev);
-+	bss_conf = &sdata->vif.bss_conf;
-+
-+	/* ARP filtering is only supported in managed mode */
-+	if (sdata->vif.type != NL80211_IFTYPE_STATION)
-+		return NOTIFY_DONE;
-+
-+	idev = sdata->dev->ip_ptr;
-+	if (!idev)
-+		return NOTIFY_DONE;
-+
-+	ifmgd = &sdata->u.mgd;
-+	mutex_lock(&ifmgd->mtx);
-+
-+	/* Copy the addresses to the bss_conf list */
-+	ifa = idev->ifa_list;
-+	while (c < IEEE80211_BSS_ARP_ADDR_LIST_LEN && ifa) {
-+		bss_conf->arp_addr_list[c] = ifa->ifa_address;
-+		ifa = ifa->ifa_next;
-+		c++;
-+	}
-+
-+	/* If not all addresses fit the list, disable filtering */
-+	if (ifa) {
-+		sdata->arp_filter_state = false;
-+		c = 0;
-+	} else {
-+		sdata->arp_filter_state = true;
-+	}
-+	bss_conf->arp_addr_cnt = c;
-+
-+	/* Configure driver only if associated and not in promiscuous mode */
-+	if (ifmgd->associated && !(sdata->flags & IEEE80211_SDATA_PROMISC)) {
-+		bss_conf->arp_filter_enabled = sdata->arp_filter_state;
-+		ieee80211_bss_info_change_notify(sdata,
-+						 BSS_CHANGED_ARP_FILTER);
-+	}
-+
-+	mutex_unlock(&ifmgd->mtx);
-+
-+	return NOTIFY_DONE;
-+}
-+#endif
-+
- static void ieee80211_reconfig_filter(struct work_struct *work)
- {
- 	struct ieee80211_local *local =
- 		container_of(work, struct ieee80211_local, reconfig_filter);
- 
- 	ieee80211_configure_filter(local);
-+
-+#ifdef CONFIG_INET
-+	ieee80211_reconfig_arp_filter(local);
-+#endif
- }
- 
- int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
-@@ -329,60 +441,6 @@ static void ieee80211_recalc_smps_work(struct work_struct *work)
- 	mutex_unlock(&local->iflist_mtx);
- }
- 
--#ifdef CONFIG_INET
--int ieee80211_set_arp_filter(struct ieee80211_sub_if_data *sdata)
--{
--	struct in_device *idev;
--	int ret = 0;
--
--	BUG_ON(!sdata);
--	ASSERT_RTNL();
--
--	idev = sdata->dev->ip_ptr;
--	if (!idev)
--		return 0;
--
--	ret = drv_configure_arp_filter(sdata->local, &sdata->vif,
--				       idev->ifa_list);
--	return ret;
--}
--
--static int ieee80211_ifa_changed(struct notifier_block *nb,
--				 unsigned long data, void *arg)
--{
--	struct in_ifaddr *ifa = arg;
--	struct ieee80211_local *local =
--		container_of(nb, struct ieee80211_local,
--			     ifa_notifier);
--	struct net_device *ndev = ifa->ifa_dev->dev;
--	struct wireless_dev *wdev = ndev->ieee80211_ptr;
--	struct ieee80211_sub_if_data *sdata;
--	struct ieee80211_if_managed *ifmgd;
--
--	/* Make sure it's our interface that got changed */
--	if (!wdev)
--		return NOTIFY_DONE;
--
--	if (wdev->wiphy != local->hw.wiphy)
--		return NOTIFY_DONE;
--
--	/* We are concerned about IP addresses only when associated */
--	sdata = IEEE80211_DEV_TO_SUB_IF(ndev);
--
--	/* ARP filtering is only supported in managed mode */
--	if (sdata->vif.type != NL80211_IFTYPE_STATION)
--		return NOTIFY_DONE;
--
--	ifmgd = &sdata->u.mgd;
--	mutex_lock(&ifmgd->mtx);
--	if (ifmgd->associated)
--		ieee80211_set_arp_filter(sdata);
--	mutex_unlock(&ifmgd->mtx);
--
--	return NOTIFY_DONE;
--}
--#endif
--
- struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 					const struct ieee80211_ops *ops)
- {
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index ac68c41..d328e9a 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -806,11 +806,12 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
- {
- 	struct ieee80211_bss *bss = (void *)cbss->priv;
- 	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_bss_conf *bss_conf = &sdata->vif.bss_conf;
- 
- 	bss_info_changed |= BSS_CHANGED_ASSOC;
- 	/* set timing information */
--	sdata->vif.bss_conf.beacon_int = cbss->beacon_interval;
--	sdata->vif.bss_conf.timestamp = cbss->tsf;
-+	bss_conf->beacon_int = cbss->beacon_interval;
-+	bss_conf->timestamp = cbss->tsf;
- 
- 	bss_info_changed |= BSS_CHANGED_BEACON_INT;
- 	bss_info_changed |= ieee80211_handle_bss_capability(sdata,
-@@ -835,7 +836,7 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
- 
- 	ieee80211_led_assoc(local, 1);
- 
--	sdata->vif.bss_conf.assoc = 1;
-+	bss_conf->assoc = 1;
- 	/*
- 	 * For now just always ask the driver to update the basic rateset
- 	 * when we have associated, we aren't checking whether it actually
-@@ -848,9 +849,18 @@ static void ieee80211_set_associated(struct ieee80211_sub_if_data *sdata,
- 
- 	/* Tell the driver to monitor connection quality (if supported) */
- 	if ((local->hw.flags & IEEE80211_HW_SUPPORTS_CQM_RSSI) &&
--	    sdata->vif.bss_conf.cqm_rssi_thold)
-+	    bss_conf->cqm_rssi_thold)
- 		bss_info_changed |= BSS_CHANGED_CQM;
- 
-+#ifdef CONFIG_INET
-+	/* Enable ARP filtering unless in promisc mode */
-+	if (!(sdata->flags & IEEE80211_SDATA_PROMISC) &&
-+	    bss_conf->arp_filter_enabled != sdata->arp_filter_state) {
-+		bss_conf->arp_filter_enabled = sdata->arp_filter_state;
-+		bss_info_changed |= BSS_CHANGED_ARP_FILTER;
-+	}
-+#endif
-+
- 	ieee80211_bss_info_change_notify(sdata, bss_info_changed);
- 
- 	mutex_lock(&local->iflist_mtx);
-@@ -932,6 +942,13 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 
- 	ieee80211_hw_config(local, config_changed);
- 
-+	/* Disable ARP filtering */
-+	if (sdata->vif.bss_conf.arp_filter_enabled) {
-+		sdata->vif.bss_conf.arp_filter_enabled = false;
-+		changed |= BSS_CHANGED_ARP_FILTER;
-+	}
-+
-+
- 	/* The BSSID (not really interesting) and HT changed */
- 	changed |= BSS_CHANGED_BSSID | BSS_CHANGED_HT;
- 	ieee80211_bss_info_change_notify(sdata, changed);
-@@ -2116,19 +2133,9 @@ static enum work_done_result ieee80211_assoc_done(struct ieee80211_work *wk,
- 			cfg80211_send_assoc_timeout(wk->sdata->dev,
- 						    wk->filter_ta);
- 			return WORK_DONE_DESTROY;
--#ifdef CONFIG_INET
--		} else {
--			mutex_unlock(&wk->sdata->u.mgd.mtx);
--
--			/*
--			 * configure ARP filter IP addresses to the driver,
--			 * intentionally outside the mgd mutex.
--			 */
--			rtnl_lock();
--			ieee80211_set_arp_filter(wk->sdata);
--			rtnl_unlock();
--#endif
- 		}
-+
-+		mutex_unlock(&wk->sdata->u.mgd.mtx);
- 	}
- 
- 	cfg80211_send_rx_assoc(wk->sdata->dev, skb->data, skb->len);
--- 
-1.6.3.3
+ #endif
+
+--=-L3JgMbisHPdyvBGm1B+J--
 
