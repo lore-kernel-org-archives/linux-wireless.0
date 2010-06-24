@@ -1,70 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:34441 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751972Ab0FJFR0 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52182 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755991Ab0FXPx5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jun 2010 01:17:26 -0400
-Received: by mail-pw0-f46.google.com with SMTP id 5so2253189pwj.19
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Jun 2010 22:17:26 -0700 (PDT)
-Message-ID: <4C107563.3010709@yatharthgupta.com>
-Date: Wed, 09 Jun 2010 22:17:23 -0700
-From: Yatharth <y@yatharthgupta.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: issues while attempting ath9k_htc to work with ubuntu 10.04, device
- TL-WN721N
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 24 Jun 2010 11:53:57 -0400
+Subject: Re: rt2x00 & mac80211: correct usage of ieee80211_beacon_get_tim?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+In-Reply-To: <1277394714.3870.8.camel@jlt3.sipsolutions.net>
+References: <201006241521.47623.helmut.schaa@googlemail.com>
+	 <1277394714.3870.8.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 24 Jun 2010 17:53:57 +0200
+Message-ID: <1277394837.3870.9.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am trying to install driver for the TP-LINK : TL-WN721N (Wi-Fi USB
-Device). If this is not the sort of issues this mailing list is for,
-please let me know.
+On Thu, 2010-06-24 at 17:51 +0200, Johannes Berg wrote:
 
-This device should use the ath9k_htc driver
+>  b) You need to get a new beacon frame from mac80211 only when it
+>     changes. You can do this from set_tim(). HOWEVER: since you're not
+>     getting a new one from mac80211 all the time anyway, you NEED to
+>     have the driver or firmware overwrite the DTIM count, like b43's
+>     firmware for example will do.
 
-./lsusb
-Bus 001 Device 003: ID 0cf3:9271 Atheros Communications, Inc.
+Oh and "when it changes" doesn't include DTIM period changes, obviously.
 
-I have followed the instruction from 
-http://linuxwireless.org/en/users/Download 
-<http://linuxwireless.org/en/users/Download> But they do not seem to 
-work for me
+johannes
 
-When I modprobe ath9k_htc
-
-Ubu-VM:/lib/modules/2.6.32-22-generic/build$ sudo modprobe ath9k_htc
-
-FATAL: Error inserting ath9k_htc
-(/lib/modules/2.6.32-22-generic/updates/drivers/net/wireless/ath/ath9k/ath9k_htc.ko):
-Unknown symbol in module, or unknown parameter (see dmesg)
-
-Here is the output of dmesg
-
-
-Ubu-VM:/lib/modules/2.6.32-22-generic/build$ dmesg | grep ath9k
-
-[ 1926.917944] ath9k_htc: disagrees about version of symbol
-ath9k_hw_set_txpowerlimit
-[ 1926.917947] ath9k_htc: Unknown symbol ath9k_hw_set_txpowerlimit
-[ 1926.918248] ath9k_htc: disagrees about version of symbol
-ath9k_hw_reset_calvalid
-[ 1926.918250] ath9k_htc: Unknown symbol ath9k_hw_reset_calvalid
-[ 1926.918377] ath9k_htc: disagrees about version of symbol
-ath9k_hw_setcapability
-[ 1926.918379] ath9k_htc: Unknown symbol ath9k_hw_setcapability
-[ 1926.918603] ath9k_htc: disagrees about version of symbol
-ieee80211_free_hw
-[ 1926.918605] ath9k_htc: Unknown symbol ieee80211_free_hw
-[ 1926.918680] ath9k_htc: disagrees about version of symbol ath9k_hw_reset
-[ 1926.918682] ath9k_htc: Unknown symbol ath9k_hw_reset
-[ 1926.919176] ath9k_htc: disagrees about version of symbol
-ath9k_hw_setuptxqueue
-[ 1926.919179] ath9k_htc: Unknown symbol ath9k_hw_setuptxqueue
-[ 1926.919256] ath9k_htc: disagrees about version of symbol
-ath9k_hw_startpcureceive
-[ 1926.919257] ath9k_htc: Unknown symbol ath9k_hw_startpcureceive
-[ 1926.919352] ath9k_htc: Unknown symbol ath9k_cmn_key_delete
-[ 1926.919477] ath9k_htc: Unknown symbol ath9k_cmn_key_config
-[ 1926.919559] ath9k_htc: disagrees about version of symbol
-ath9k_hw_keyreset
