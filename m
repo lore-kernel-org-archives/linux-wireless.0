@@ -1,81 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:36936 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755801Ab0F2Pzj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jun 2010 11:55:39 -0400
-Message-ID: <4C2A1776.2080508@openwrt.org>
-Date: Tue, 29 Jun 2010 17:55:34 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:57291 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754314Ab0FXQUj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jun 2010 12:20:39 -0400
+Received: by fxm3 with SMTP id 3so493490fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Jun 2010 09:20:37 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: rt2x00 & mac80211: correct usage of ieee80211_beacon_get_tim?
+Date: Thu, 24 Jun 2010 18:20:03 +0200
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+References: <201006241521.47623.helmut.schaa@googlemail.com> <1277394714.3870.8.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1277394714.3870.8.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org
-Subject: Re: ath9k: ap tsf seems random and only uses lower 24 bits or so
-References: <AANLkTilG4qxjX0e5u_BGp0YcPoVBbsqd6Hlb8E0j_S8S@mail.gmail.com>	<4C29284C.5050707@openwrt.org> <AANLkTint2L1xSMughBA5aHCFMRB5KMC8EfwcxJJU5XYW@mail.gmail.com>
-In-Reply-To: <AANLkTint2L1xSMughBA5aHCFMRB5KMC8EfwcxJJU5XYW@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201006241820.03539.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-06-29 5:20 PM, Björn Smedman wrote:
-> 2010/6/29 Felix Fietkau <nbd@openwrt.org>:
->> IMHO the most likely problem source is stuck beacons. Please compile the
->> driver with the debug option enabled and load it with
->> insmod ath9k debug=0x00000100
+Am Donnerstag 24 Juni 2010 schrieb Johannes Berg:
+>  a) You get a new beacon from mac80211 each time you send it. Then you
+>     don't have to worry about the set_tim() callback at all -- don't
+>     assign it!
 > 
-> It looks like it could be:
+>  b) You need to get a new beacon frame from mac80211 only when it
+>     changes. You can do this from set_tim(). HOWEVER: since you're not
+>     getting a new one from mac80211 all the time anyway, you NEED to
+>     have the driver or firmware overwrite the DTIM count, like b43's
+>     firmware for example will do.
 > 
-> ...
-> Jan  1 00:06:21 OpenWrt user.debug kernel: ath: slot 2 [tsf 1986567
-> tsftu 1940 intval 100] vif (null)
-> Jan  1 00:06:21 OpenWrt user.debug kernel: ath: slot 1 [tsf 2012168
-> tsftu 1965 intval 100] vif (null)
-> Jan  1 00:06:21 OpenWrt user.debug kernel: ath: slot 0 [tsf 2037767
-> tsftu 1990 intval 100] vif 80945e70
-> Jan  1 00:06:21 OpenWrt user.debug kernel: ath: slot 0 [tsf 79033
-> tsftu 77 intval 100] vif 80945e70
-> Jan  1 00:06:21 OpenWrt user.debug kernel: ath: missed 1 consecutive beacons
-> Jan  1 00:06:21 OpenWrt user.debug kernel: ath: resume beacon xmit
-> after 1 misses
-> Jan  1 00:06:21 OpenWrt user.debug kernel: ath: slot 3 [tsf 117790
-> tsftu 115 intval 100] vif (null)
-> Jan  1 00:06:21 OpenWrt user.debug kernel: ath: slot 2 [tsf 143368
-> tsftu 140 intval 100] vif (null)
-> Jan  1 00:06:21 OpenWrt user.debug kernel: ath: slot 1 [tsf 168967
-> tsftu 165 intval 100] vif (null)
-> ...
-> Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 1 [tsf 14197768
-> tsftu 13865 intval 100] vif (null)
-> Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 0 [tsf 14223368
-> tsftu 13890 intval 100] vif 80945e70
-> Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 3 [tsf 14248967
-> tsftu 13915 intval 100] vif (null)
-> Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 0 [tsf 79180
-> tsftu 77 intval 100] vif 80945e70
-> Jan  1 00:09:08 OpenWrt user.debug kernel: ath: missed 1 consecutive beacons
-> Jan  1 00:09:08 OpenWrt user.debug kernel: ath: resume beacon xmit
-> after 1 misses
-> Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 3 [tsf 117791
-> tsftu 115 intval 100] vif (null)
-> Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 2 [tsf 143366
-> tsftu 140 intval 100] vif (null)
-> Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 1 [tsf 168967
-> tsftu 165 intval 100] vif (null)
-> Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 0 [tsf 194567
-> tsftu 190 intval 100] vif 80945e70
-> ...
+> Ok so maybe there are more possibilities like the firmware filling the
+> TIM IE differently and you would use set_tim() differently then.
 > 
-> What can cause a missed beacon? Are they just a "fact of life"?
-> 
-> In any case I can't find any code that resets the tsf in this (single
-> missed beacon) case. Will the hardware reset the tsf automatically
-> whenever a single beacon is missed? Isn't that a bit overkill? Will it
-> not cause problems for clients?
-One beacon miss should never cause a TSF reset. Only a lot of
-consecutive beacon misses trigger a hardware reset, which then resets
-the TSF. Looking at your log, it appears that the beacon miss is a
-symptom rather than a cause of the TSF jumps.
-Can you add a debug statement to the hw reset function to see if it's
-called before the TSF jumps?
+> However, *fundamentally*, any time you don't get a new skb from mac80211
+> for each transmitted beacon you NEED to overwrite the DTIM count in it.
 
-- Felix
+So, to answer my own question:
+
+mac80211 behaves as designed and we need to fix rt2x00 to correctly update
+the DTIM parameters when we stick to the set_tim callback for updating the
+beacon template (option b).
+
+Or we would implement option a) to get a new beacon prior to transmission
+and would get a correct DTIM count from mac80211.
+
+Thanks for the clarification,
+Helmut
