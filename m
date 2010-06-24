@@ -1,96 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:41362 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754305Ab0FRT7e (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56523 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750799Ab0FXTAN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jun 2010 15:59:34 -0400
-Message-ID: <4C1BD024.1030707@gmail.com>
-Date: Fri, 18 Jun 2010 12:59:32 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-MIME-Version: 1.0
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-CC: Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 4/5]pci:setup_bus.c Fix warning: variable 'retval' set
- but not used
-References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>	<1276666434-11227-5-git-send-email-justinmattock@gmail.com>	<20100618102330.29eccb5b@virtuousgeek.org>	<4C1BBF7D.8090904@kernel.org> <20100618124956.40c869a0@virtuousgeek.org>
-In-Reply-To: <20100618124956.40c869a0@virtuousgeek.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 24 Jun 2010 15:00:13 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 2/2] mac80211: use netif_receive_skb in ieee80211_tx_status callpath
+Date: Thu, 24 Jun 2010 14:47:33 -0400
+Message-Id: <1277405253-23735-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/18/2010 12:49 PM, Jesse Barnes wrote:
-> On Fri, 18 Jun 2010 11:48:29 -0700
-> Yinghai Lu<yinghai@kernel.org>  wrote:
->
->> On 06/18/2010 10:23 AM, Jesse Barnes wrote:
->>> On Tue, 15 Jun 2010 22:33:53 -0700
->>> "Justin P. Mattock"<justinmattock@gmail.com>  wrote:
->>>
->>>> The below patch fixes a warning message when using gcc 4.6.0
->>>>    CC      drivers/pci/setup-bus.o
->>>> drivers/pci/setup-bus.c: In function 'pci_assign_unassigned_bridge_resources':
->>>> drivers/pci/setup-bus.c:868:6: warning: variable 'retval' set but not used
->>>>
->>>>   Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
->>>>
->>>> ---
->>>>   drivers/pci/setup-bus.c |    2 --
->>>>   1 files changed, 0 insertions(+), 2 deletions(-)
->>>>
->>>> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
->>>> index 19b1113..215590b 100644
->>>> --- a/drivers/pci/setup-bus.c
->>>> +++ b/drivers/pci/setup-bus.c
->>>> @@ -865,7 +865,6 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
->>>>   	struct pci_bus *parent = bridge->subordinate;
->>>>   	int tried_times = 0;
->>>>   	struct resource_list_x head, *list;
->>>> -	int retval;
->>>>   	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
->>>>   				  IORESOURCE_PREFETCH;
->>>>
->>>> @@ -874,7 +873,6 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
->>>>   again:
->>>>   	pci_bus_size_bridges(parent);
->>>>   	__pci_bridge_assign_resources(bridge,&head);
->>>> -	retval = pci_reenable_device(bridge);
->>>>   	pci_set_master(bridge);
->>>>   	pci_enable_bridges(parent);
->>>>
->>
->> I sent following patch several weeks ago, can you put that in pci-next?
->>
->> Subject: [PATCH] pciehp: Enable bridges at last for multiple try assigning
->>
->> Found one PCIe Module with several bridges "cold" hotadd doesn't work.
->>
->> the root cause:
->> 1. BIOS assign small range the parent bridges.
->> 2. First try for hotadd only can make some bridges get resource assigned.
->> 3. Second will update parent bridge res, get right sizes for all child bridges
->>      and devices, but resource for child bridges are not set to HW register.
->>      Because first try already enable those bridges, so __pci_bridge_assign_resource
->>      skip the setting step.
->>
->> So try to move enabling of child bridges to last and only do that one time
->>
->> Signed-off-by: Yinghai Lu<yinghai@kernel.org>
->
-> Yeah I had a hard time following the changelog, but just looked it
-> over.  Looks safe, but Justin will still need to check the return value
-> on pci_reenable_device.
->
-> Justin, we don't want a message on every reenable, just on ones that
-> fail.  So can you protect your printk with if (retval) instead?  You'll
-> need to refresh it based on my linux-next branch in a few minutes, as
-> I'm pushing Yinghai's patch now.
->
+This avoids the extra queueing from calling netif_rx.
 
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/mac80211/status.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-just added this in(as a test), and the retval warning still shows up.
-with the last post I just added a printk was that legit, and if so what 
-else might be added to it to make it complete and proper?
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 34da679..10caec5 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -377,7 +377,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 				skb2 = skb_clone(skb, GFP_ATOMIC);
+ 				if (skb2) {
+ 					skb2->dev = prev_dev;
+-					netif_rx(skb2);
++					netif_receive_skb(skb2);
+ 				}
+ 			}
+ 
+@@ -386,7 +386,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	}
+ 	if (prev_dev) {
+ 		skb->dev = prev_dev;
+-		netif_rx(skb);
++		netif_receive_skb(skb);
+ 		skb = NULL;
+ 	}
+ 	rcu_read_unlock();
+-- 
+1.7.0.1
 
-Justin P. Mattock
