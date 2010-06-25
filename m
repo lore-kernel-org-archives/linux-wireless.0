@@ -1,76 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13996 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753853Ab0FGKCi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jun 2010 06:02:38 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: stable@kernel.org
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 4/4 2.6.34.y] mac80211: fix supported rates IE if AP doesn't give us it's rates
-Date: Mon,  7 Jun 2010 12:01:09 +0200
-Message-Id: <1275904869-6634-4-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1275904869-6634-3-git-send-email-sgruszka@redhat.com>
-References: <1275904869-6634-1-git-send-email-sgruszka@redhat.com>
- <1275904869-6634-2-git-send-email-sgruszka@redhat.com>
- <1275904869-6634-3-git-send-email-sgruszka@redhat.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:36372 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751791Ab0FYWji convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jun 2010 18:39:38 -0400
+Received: by iwn41 with SMTP id 41so2467646iwn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Jun 2010 15:39:38 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTimeR5kQX2hSNw0Ud0QOF0-nsqCFMkSNul9wwa7C@mail.gmail.com>
+References: <AANLkTinHfFVr45OV3V6CT9auK3L-JfrCYUMQpeo9toTw@mail.gmail.com>
+	<AANLkTimeR5kQX2hSNw0Ud0QOF0-nsqCFMkSNul9wwa7C@mail.gmail.com>
+Date: Fri, 25 Jun 2010 19:39:37 -0300
+Message-ID: <AANLkTinhl-J6kUCxdjjAFyAoXRcHAhum8asBPuhwiveF@mail.gmail.com>
+Subject: Re: mesh configuration information element is wrong?
+From: Iuri Diniz <iuridiniz@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit 76f273640134f3eb8257179cd5b3bc6ba5fe4a96 upstream.
+On Fri, Jun 25, 2010 at 2:43 PM, Iuri Diniz <iuridiniz@gmail.com> wrote:
+> I'm analyzing the 802.11s code and I think I've found that mesh
+> configuration information element has wrongs sizes.
+>
+> It is not according to my copy of 802.11s draft 3.
 
-If AP do not provide us supported rates before assiociation, send
-all rates we are supporting instead of empty information element.
+It seems that (in the past) the code had that sizes I think right.
 
-v1 -> v2: Add comment.
+http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=blobdiff;f=net/mac80211/mesh.c;h=c8a4f19ed13bb810a97bb5e25200a74cdd55a31c;hp=79425182c2903a70f355f1bdb34fe9fe8239fe05;hb=10f8f42ece65ba964ca14e794e5f45ad98d56cf1;hpb=8f2fda9594f083981ad54c1994863875fe680925
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/mac80211/work.c |   28 +++++++++++++++++++---------
- 1 files changed, 19 insertions(+), 9 deletions(-)
+so I'll assume that the last draft has changed the size of this IE.
 
-diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-index 15e1ba9..949c2d1 100644
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -213,15 +213,25 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata,
- 
- 	sband = local->hw.wiphy->bands[wk->chan->band];
- 
--	/*
--	 * Get all rates supported by the device and the AP as
--	 * some APs don't like getting a superset of their rates
--	 * in the association request (e.g. D-Link DAP 1353 in
--	 * b-only mode)...
--	 */
--	rates_len = ieee80211_compatible_rates(wk->assoc.supp_rates,
--					       wk->assoc.supp_rates_len,
--					       sband, &rates);
-+	if (wk->assoc.supp_rates_len) {
-+		/*
-+		 * Get all rates supported by the device and the AP as
-+		 * some APs don't like getting a superset of their rates
-+		 * in the association request (e.g. D-Link DAP 1353 in
-+		 * b-only mode)...
-+		 */
-+		rates_len = ieee80211_compatible_rates(wk->assoc.supp_rates,
-+						       wk->assoc.supp_rates_len,
-+						       sband, &rates);
-+	} else {
-+		/*
-+		 * In case AP not provide any supported rates information
-+		 * before association, we send information element(s) with
-+		 * all rates that we support.
-+		 */
-+		rates = ~0;
-+		rates_len = sband->n_bitrates;
-+	}
- 
- 	skb = alloc_skb(local->hw.extra_tx_headroom +
- 			sizeof(*mgmt) + /* bit too much but doesn't matter */
+But could someone with access to the last draft draft confirm it?
+
+Sorry for annoying you guys, I don't have the last draft.
+
 -- 
-1.6.2.5
-
+Iuri Diniz
+http://iuridiniz.com [Sou um agitador, não um advogado]
+http://blog.igdium.com [Linux on Limbo]
