@@ -1,109 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:59200 "EHLO mga02.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:39511 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750970Ab0FXRN5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jun 2010 13:13:57 -0400
-Subject: Re: intel 5100/iwlagn bug in 2.6.35-rc2 during large file transfer
-From: reinette chatre <reinette.chatre@intel.com>
-To: Richard Farina <sidhayn@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4C2383E2.8000909@gmail.com>
-References: <4C198EF0.5080807@gmail.com>
-	 <1277225293.25793.2257.camel@rchatre-DESK>  <4C2383E2.8000909@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 24 Jun 2010 10:13:56 -0700
-Message-ID: <1277399636.25793.2389.camel@rchatre-DESK>
-Mime-Version: 1.0
+	id S1752177Ab0FYWnK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jun 2010 18:43:10 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 6/8] iwlwifi: turn on RTS/CTS after aggregation become operational
+Date: Fri, 25 Jun 2010 15:42:59 -0700
+Message-Id: <1277505781-25268-7-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1277505781-25268-1-git-send-email-reinette.chatre@intel.com>
+References: <1277505781-25268-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Richard,
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-On Thu, 2010-06-24 at 09:12 -0700, Richard Farina wrote:
-> reinette chatre wrote:
-> > On Wed, 2010-06-16 at 19:56 -0700, Richard Farina wrote:
-> >   
-> >> The repeated line appears ad infinitum filling my dmesg buffer.  This of 
-> >> hangcheck timer seem to trigger with every large file transfer on my 
-> >> intel 5100.  What would you like me to do to provide a more useful 
-> >> output as this is currently extremely easy to reproduce.  Kernel 2.6.34 
-> >> using compat-wireless stable 2.6.35-rc2
-> >>
-> >> Thanks,
-> >> Rick Farina
-> >>
-> >> phy0: failed to reallocate TX buffer
-> >> phy0: failed to reallocate TX buffer
-> >> phy0: failed to reallocate TX buffer
-> >> phy0: failed to reallocate TX buffer
-> >> phy0: failed to reallocate TX buffer
-> >> phy0: failed to reallocate TX buffer
-> >> phy0: failed to reallocate TX buffer
-> >>     
-> >
-> > First mac80211 runs out of memory ... it cannot even allocate enough
-> > memory for a skb header.
-> >
-> >   
-> >> net_ratelimit: 22 callbacks suppressed
-> >> __alloc_pages_slowpath: 3799 callbacks suppressed
-> >> swapper: page allocation failure. order:1, mode:0x4020
-> >> Pid: 0, comm: swapper Not tainted 2.6.34-pentoo #5
-> >> Call Trace:
-> >>  <IRQ>  [<ffffffff8109cb74>] __alloc_pages_nodemask+0x571/0x5b9
-> >>  [<ffffffff816732e9>] ? skb_release_data+0xc4/0xc9
-> >>  [<ffffffffa04701e4>] iwlagn_rx_allocate+0x98/0x25a [iwlagn]
-> >>     
-> >
-> > Next driver runs out of memory.
-> >
-> > Note that the above are all atomic allocations that fail and should be
-> > able to recover. 
-> >
-> > Is your system low on memory? Are you running applications that take a
-> > lot of memory? Does your wifi connection drop or otherwise suffer at the
-> > time you see these messages?
-> >
-> >   
-> I have 4GB of RAM on this system, I often run a VM which wastes like 
-> half that but that still leaves 2GB for linux and I'm running XFCE4 so 
-> not exactly a memory hog. It's possible that firefox leaks ram until I'm 
-> out but that would be a LOT of leak, much more than I usually see.
+If RTS/CTS protection is needed for HT, wait until get operational
+notification from mac80211, then inform uCode to switch to RTS/CTS
+through RXON command.
 
-There has been an issue with atomic memory allocations ever since
-2.6.31. This used to be easy to trigger with iwlagn, but we fixed a
-number of issues. There are still issue with any atomic memory
-allocation (not just iwlagn) and this issue is still open. You can find
-more information at https://bugzilla.kernel.org/show_bug.cgi?id=14141
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |   17 +++++------------
+ drivers/net/wireless/iwlwifi/iwl-agn.c    |   28 +++++++++++++++++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-scan.c   |    9 +++++++++
+ 3 files changed, 41 insertions(+), 13 deletions(-)
 
-> Yeah, as you may guess these errors cause my wifi connection to slow 
-> drastically.
-
-The driver, when unable to allocate memory atomically, will reattempt
-the allocation later when it can use GFP_KERNEL. I think there may be
-ways in which we can try to optimize this since right now it will only
-schedule this when there are about 8 buffers remaining. I was looking at
-your trace again and even though you state "Kernel 2.6.34 using
-compat-wireless stable 2.6.35-rc2" ... the trace you provide does not
-seem to match the driver code from 2.6.35-rc2. Could you please confirm
-which version of driver you are running so that I can prepare a patch?
-
->  If I had to guess, since this happens when I make a large 
-> file transfer it is likely that something related is leaking RAM.  I'm 
-> using wget or axel to download and NFS to dump the files on a NAS.  I'll 
-> try to trigger this again
-
-Does this happen every time you run this test? I would like to get an
-idea whether we will get a clear indication whether our changes will
-help or not.
-
->  and watch memory usage to see if I can find 
-> something other than the driver that could be leaking.  Failing that, 
-> what do I need to enable to find a leak in the driver?
-
-Perhaps kmemleak?
-
-Reinette
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 40933a5..35c86d2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -324,18 +324,11 @@ static void rs_tl_turn_on_agg(struct iwl_priv *priv, u8 tid,
+ 			      struct iwl_lq_sta *lq_data,
+ 			      struct ieee80211_sta *sta)
+ {
+-	if ((tid < TID_MAX_LOAD_COUNT) &&
+-	    !rs_tl_turn_on_agg_for_tid(priv, lq_data, tid, sta)) {
+-		if (priv->cfg->use_rts_for_ht) {
+-			/*
+-			 * switch to RTS/CTS if it is the prefer protection
+-			 * method for HT traffic
+-			 */
+-			IWL_DEBUG_HT(priv, "use RTS/CTS protection for HT\n");
+-			priv->staging_rxon.flags &= ~RXON_FLG_SELF_CTS_EN;
+-			iwlcore_commit_rxon(priv);
+-		}
+-	}
++	if (tid < TID_MAX_LOAD_COUNT)
++		rs_tl_turn_on_agg_for_tid(priv, lq_data, tid, sta);
++	else
++		IWL_ERR(priv, "tid exceeds max load count: %d/%d\n",
++			tid, TID_MAX_LOAD_COUNT);
+ }
+ 
+ static inline int get_num_of_ant_from_rate(u32 rate_n_flags)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 7488a68..3368cfd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3368,6 +3368,25 @@ static int iwl_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	return ret;
+ }
+ 
++/*
++ * switch to RTS/CTS for TX
++ */
++static void iwl_enable_rts_cts(struct iwl_priv *priv)
++{
++
++	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
++		return;
++
++	priv->staging_rxon.flags &= ~RXON_FLG_SELF_CTS_EN;
++	if (!test_bit(STATUS_SCANNING, &priv->status)) {
++		IWL_DEBUG_INFO(priv, "use RTS/CTS protection\n");
++		iwlcore_commit_rxon(priv);
++	} else {
++		/* scanning, defer the request until scan completed */
++		IWL_DEBUG_INFO(priv, "defer setting RTS/CTS protection\n");
++	}
++}
++
+ static int iwl_mac_ampdu_action(struct ieee80211_hw *hw,
+ 				struct ieee80211_vif *vif,
+ 				enum ieee80211_ampdu_mlme_action action,
+@@ -3416,7 +3435,14 @@ static int iwl_mac_ampdu_action(struct ieee80211_hw *hw,
+ 			ret = 0;
+ 		break;
+ 	case IEEE80211_AMPDU_TX_OPERATIONAL:
+-		/* do nothing, return value ignored */
++		if (priv->cfg->use_rts_for_ht) {
++			/*
++			 * switch to RTS/CTS if it is the prefer protection
++			 * method for HT traffic
++			 */
++			iwl_enable_rts_cts(priv);
++		}
++		ret = 0;
+ 		break;
+ 	}
+ 	mutex_unlock(&priv->mutex);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 798f93e..2a7c399 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -537,6 +537,15 @@ void iwl_bg_scan_completed(struct work_struct *work)
+ 	/* Since setting the TXPOWER may have been deferred while
+ 	 * performing the scan, fire one off */
+ 	iwl_set_tx_power(priv, priv->tx_power_user_lmt, true);
++
++	/*
++	 * Since setting the RXON may have been deferred while
++	 * performing the scan, fire one off if needed
++	 */
++	if (memcmp(&priv->active_rxon,
++		   &priv->staging_rxon, sizeof(priv->staging_rxon)))
++		iwlcore_commit_rxon(priv);
++
+  out:
+ 	mutex_unlock(&priv->mutex);
+ 
+-- 
+1.7.0.4
 
