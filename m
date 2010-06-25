@@ -1,91 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47354 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751239Ab0FDSaQ (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:59441 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751461Ab0FYTD0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jun 2010 14:30:16 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: make ARP filtering depend on CONFIG_INET
-Date: Fri,  4 Jun 2010 14:28:07 -0400
-Message-Id: <1275676087-20039-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <20100604153006.fa15c770.sfr@canb.auug.org.au>
-References: <20100604153006.fa15c770.sfr@canb.auug.org.au>
+	Fri, 25 Jun 2010 15:03:26 -0400
+Subject: Compat-wireless release for 2010-06-25 is baked
+To: <linux-wireless@vger.kernel.org>, <linux-bluetooth@vger.kernel.org>
+Message-Id: <20100625190323.2299742E2C@repository3.orbit-lab.org>
+Date: Fri, 25 Jun 2010 15:03:23 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/mac80211/main.c |    6 ++++++
- net/mac80211/mlme.c |    2 ++
- 2 files changed, 8 insertions(+), 0 deletions(-)
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   87dca92..8a97897  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+   b6af507..126c387  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   2e58c02..138f35f  history    -> origin/history
+ + df17781...c3116ae master     -> origin/master  (forced update)
+ * [new tag]         next-20100625 -> next-20100625
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 045ead9..5706156 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -329,6 +329,7 @@ static void ieee80211_recalc_smps_work(struct work_struct *work)
- 	mutex_unlock(&local->iflist_mtx);
- }
- 
-+#ifdef CONFIG_INET
- int ieee80211_set_arp_filter(struct ieee80211_sub_if_data *sdata)
- {
- 	struct in_device *idev;
-@@ -380,6 +381,7 @@ static int ieee80211_ifa_changed(struct notifier_block *nb,
- 
- 	return NOTIFY_DONE;
- }
-+#endif
- 
- struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 					const struct ieee80211_ops *ops)
-@@ -669,10 +671,12 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 		goto fail_pm_qos;
- 	}
- 
-+#ifdef CONFIG_INET
- 	local->ifa_notifier.notifier_call = ieee80211_ifa_changed;
- 	result = register_inetaddr_notifier(&local->ifa_notifier);
- 	if (result)
- 		goto fail_ifa;
-+#endif
- 
- 	return 0;
- 
-@@ -707,7 +711,9 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
- 
- 	pm_qos_remove_notifier(PM_QOS_NETWORK_LATENCY,
- 			       &local->network_latency_notifier);
-+#ifdef CONFIG_INET
- 	unregister_inetaddr_notifier(&local->ifa_notifier);
-+#endif
- 
- 	rtnl_lock();
- 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 7e72013..3623bb7 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2078,6 +2078,7 @@ static enum work_done_result ieee80211_assoc_done(struct ieee80211_work *wk,
- 			cfg80211_send_assoc_timeout(wk->sdata->dev,
- 						    wk->filter_ta);
- 			return WORK_DONE_DESTROY;
-+#ifdef CONFIG_INET
- 		} else {
- 			mutex_unlock(&wk->sdata->u.mgd.mtx);
- 
-@@ -2088,6 +2089,7 @@ static enum work_done_result ieee80211_assoc_done(struct ieee80211_work *wk,
- 			rtnl_lock();
- 			ieee80211_set_arp_filter(wk->sdata);
- 			rtnl_unlock();
-+#endif
- 		}
- 	}
- 
--- 
-1.6.6.1
+compat-wireless code metrics
 
+    494345 - Total upstream lines of code being pulled
+      1407 - backport code changes
+      1174 - backport code additions
+       233 - backport code deletions
+      5765 - backport from compat module
+      7172 - total backport code
+    1.4508 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2464 - % of crap code
+
+Base tree: linux-next.git
+Base tree version: next-20100625
+compat-wireless release: compat-wireless-2010-06-17-6-g8a97897
