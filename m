@@ -1,75 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:54558 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754768Ab0FFJMi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Jun 2010 05:12:38 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/4] compat: move kparam_{block,unblock}_sysfs_write
-Date: Sun,  6 Jun 2010 11:12:25 +0200
-Message-Id: <1275815547-30313-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1275815547-30313-1-git-send-email-hauke@hauke-m.de>
-References: <1275815547-30313-1-git-send-email-hauke@hauke-m.de>
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:59642 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754504Ab0FYN3s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jun 2010 09:29:48 -0400
+Message-ID: <4C24AF41.3080101@bu3sch.de>
+Date: Fri, 25 Jun 2010 15:29:37 +0200
+From: =?ISO-8859-1?Q?Michael_B=FCsch?= <mb@bu3sch.de>
+MIME-Version: 1.0
+To: Magnus Damm <magnus.damm@gmail.com>
+CC: linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Albert Herranz <albert_herranz@yahoo.es>
+Subject: Re: [PATCH] b43: Add SDIO_DEVICE() for EW-CG1102GC
+References: <20100625093254.9484.69877.sendpatchset@t400s> (sfid-20100625_113248_442184_13EC6E79)
+In-Reply-To: <20100625093254.9484.69877.sendpatchset@t400s> (sfid-20100625_113248_442184_13EC6E79)
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-kparam_block_sysfs_write and kparam_unblock_sysfs_write are not in
-kernel 2.6.35, move them to backport from kernel 2.6.36.
+On 06/25/2010 11:32 AM, Magnus Damm wrote:
+> From: Magnus Damm<damm@opensource.se>
+>
+> This patch enables the EW-CG1102GC SDIO card in the b43 driver.
+>
+> b43-sdio mmc0:0001:1: Chip ID 14e4:4318
+> ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x0D, vendor 0x4243)
+> ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x09, vendor 0x4243)
+> ssb: Core 2 found: PCI (cc 0x804, rev 0x0C, vendor 0x4243)
+> ssb: Core 3 found: PCMCIA (cc 0x80D, rev 0x07, vendor 0x4243)
+> b43-phy0: Broadcom 4318 WLAN found (core revision 9)
+> b43-phy0 debug: Found PHY: Analog 3, Type 2, Revision 7
+> b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2050, Revision 8
+>
+> Tested with openfwwf-5.2 using a SuperH SDHI host controller.
+>
+> Signed-off-by: Magnus Damm<damm@opensource.se>
+> ---
+>
+>   drivers/net/wireless/b43/sdio.c |    1 +
+>   1 file changed, 1 insertion(+)
+>
+> --- 0001/drivers/net/wireless/b43/sdio.c
+> +++ work/drivers/net/wireless/b43/sdio.c	2010-06-25 18:20:46.000000000 +0900
+> @@ -182,6 +182,7 @@ static void b43_sdio_remove(struct sdio_
+>
+>   static const struct sdio_device_id b43_sdio_ids[] = {
+>   	{ SDIO_DEVICE(0x02d0, 0x044b) }, /* Nintendo Wii WLAN daughter card */
+> +	{ SDIO_DEVICE(0x0092, 0x0004) }, /* C-guys, Inc. EW-CG1102GC */
+>   	{ },
+>   };
+>
+>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/compat-2.6.35.h |    3 ---
- include/linux/compat-2.6.36.h |   13 +++++++++++++
- include/linux/compat-2.6.h    |    1 +
- 3 files changed, 14 insertions(+), 3 deletions(-)
- create mode 100644 include/linux/compat-2.6.36.h
+ack
 
-diff --git a/include/linux/compat-2.6.35.h b/include/linux/compat-2.6.35.h
-index b38d6de..886815d 100644
---- a/include/linux/compat-2.6.35.h
-+++ b/include/linux/compat-2.6.35.h
-@@ -23,9 +23,6 @@ static inline wait_queue_head_t *sk_sleep(struct sock *sk)
- 	return sk->sk_sleep;
- }
- 
--#define kparam_block_sysfs_write(a)
--#define kparam_unblock_sysfs_write(a)
--
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,35)) */
- 
- #endif /* LINUX_26_35_COMPAT_H */
-diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
-new file mode 100644
-index 0000000..0307108
---- /dev/null
-+++ b/include/linux/compat-2.6.36.h
-@@ -0,0 +1,13 @@
-+#ifndef LINUX_26_36_COMPAT_H
-+#define LINUX_26_36_COMPAT_H
-+
-+#include <linux/version.h>
-+
-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36))
-+
-+#define kparam_block_sysfs_write(a)
-+#define kparam_unblock_sysfs_write(a)
-+
-+#endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36)) */
-+
-+#endif /* LINUX_26_36_COMPAT_H */
-diff --git a/include/linux/compat-2.6.h b/include/linux/compat-2.6.h
-index 6171cd9..ef51195 100644
---- a/include/linux/compat-2.6.h
-+++ b/include/linux/compat-2.6.h
-@@ -28,5 +28,6 @@
- #include <linux/compat-2.6.33.h>
- #include <linux/compat-2.6.34.h>
- #include <linux/compat-2.6.35.h>
-+#include <linux/compat-2.6.36.h>
- 
- #endif /* LINUX_26_COMPAT_H */
 -- 
-1.7.0.4
-
+Greetings Michael.
