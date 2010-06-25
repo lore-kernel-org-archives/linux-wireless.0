@@ -1,47 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:12595 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758730Ab0FPKM7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jun 2010 06:12:59 -0400
-Received: from vs3015.wh2.ocn.ne.jp (125.206.180.247)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0860683177
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Jun 2010 19:12:57 +0900 (JST)
-Subject: [PATCH 17/17] ath5k: report PHY error frames only for chips which
-	need it
+Received: from mga11.intel.com ([192.55.52.93]:29064 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752177Ab0FYWnW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jun 2010 18:43:22 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Wed, 16 Jun 2010 19:12:39 +0900
-Message-ID: <20100616101239.10067.76859.stgit@tt-desk>
-In-Reply-To: <20100616100809.10067.34787.stgit@tt-desk>
-References: <20100616100809.10067.34787.stgit@tt-desk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 0/2] iwlwifi fixes for 2.6.35
+Date: Fri, 25 Jun 2010 15:43:17 -0700
+Message-Id: <1277505799-25306-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Only report PHY error frames for ANI on chipsets which do not have PHY error
-counters in hardware.
+We include a much anticipated fix for an issue introduced that
+broke multicast. This was particularly severe in 3945.
+Some references about this issue:
+https://bugzilla.kernel.org/show_bug.cgi?id=16235
+http://marc.info/?l=linux-kernel&m=127653628301300&w=2
+http://thread.gmane.org/gmane.linux.kernel.wireless.general/51614
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
-Acked-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath/ath5k/desc.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+The second fix is a required change to make all of our current RTS/CTS
+settings take effect. Previously we would only modify the RXON setting, but
+this setting would only be viewed by firmware if the TX flags have the
+TX_CMD_FLAG_PROT_REQUIRE_MSK bit set, which we have not done until now.
 
-diff --git a/drivers/net/wireless/ath/ath5k/desc.c b/drivers/net/wireless/ath/ath5k/desc.c
-index c0037b6..4324438 100644
---- a/drivers/net/wireless/ath/ath5k/desc.c
-+++ b/drivers/net/wireless/ath/ath5k/desc.c
-@@ -651,7 +651,8 @@ static int ath5k_hw_proc_5212_rx_status(struct ath5k_hw *ah,
- 			rs->rs_status |= AR5K_RXERR_PHY;
- 			rs->rs_phyerr = AR5K_REG_MS(rx_status->rx_status_1,
- 				AR5K_5212_RX_DESC_STATUS1_PHY_ERROR_CODE);
--			ath5k_ani_phy_error_report(ah, rs->rs_phyerr);
-+			if (!ah->ah_capabilities.cap_has_phyerr_counters)
-+				ath5k_ani_phy_error_report(ah, rs->rs_phyerr);
- 		}
- 
- 		if (rx_status->rx_status_1 &
+
+These patches are also available from wireless-2.6 branch on
+git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+
+Johannes Berg (1):
+  iwlwifi: fix multicast
+
+Wey-Yi Guy (1):
+  iwlwifi: set TX_CMD_FLAG_PROT_REQUIRE_MSK in tx_flag
+
+ drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c |    6 +-----
+ drivers/net/wireless/iwlwifi/iwl-core.c     |    7 ++++++-
+ 2 files changed, 7 insertions(+), 6 deletions(-)
 
