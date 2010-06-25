@@ -1,79 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:48660 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751406Ab0FHMj6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Jun 2010 08:39:58 -0400
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Subject: [RFC] iw: Configure basic rates when joining ibss network
-Date: Tue,  8 Jun 2010 15:37:58 +0300
-Message-Id: <1276000678-1230-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+Received: from kroah.org ([198.145.64.141]:35278 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751312Ab0FYA0S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Jun 2010 20:26:18 -0400
+Date: Thu, 24 Jun 2010 17:16:33 -0700
+From: Greg KH <greg@kroah.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Nils Radtke <lkml@Think-Future.de>, reinette.chatre@intel.com,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	stable@kernel.org
+Subject: Re: [stable] [PATCH] iwlwifi: recalculate average tpt if not
+ current
+Message-ID: <20100625001633.GI11656@kroah.com>
+References: <20100604163218.GA28003@localhost>
+ <20100604180328.GB2492@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100604180328.GB2492@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds configuration option to configure basic rates when
-joining ibss network.
+On Fri, Jun 04, 2010 at 02:03:28PM -0400, John W. Linville wrote:
+> On Fri, Jun 04, 2010 at 06:32:18PM +0200, Nils Radtke wrote:
+> >   Hi John,
+> > 
+> > http://marc.info/?l=linux-wireless&m=127317062320707&w=2 :
+> > > > > The BUG_ON was introduced by:
+> > > > > commit 3110bef78cb4282c58245bc8fd6d95d9ccb19749
+> > > > > Author: Guy Cohen <guy.cohen@intel.com>
+> > > > > Date:   Tue Sep 9 10:54:54 2008 +0800
+> > > > > 
+> > > > >     iwlwifi: Added support for 3 antennas
+> > > > > 
+> > > > > ... the portion adding the BUG_ON is reverted since we are encountering the error
+> > > > > and BUG_ON was created with assumption that error is not encountered.
+> > > > > 
+> > > > > Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+> > > > > ---
+> > > > 
+> > > > I noticed this patch in your wireless-next-2.6 pull request. Since it is
+> > > > addressing a system hang issue, could it perhaps be included in
+> > > > wireless-2.6 also? I should have included the bug report reference for
+> > > > this purpose, sorry ... it is
+> > > > https://bugzilla.redhat.com/show_bug.cgi?id=588021
+> > > 
+> > > I didn't send it that way because a) that code has been there for a
+> > > really long time; and b) the reporter couldn't reliably reproduce
+> > > the bug and therefore can't reliably test the fix.  While I agree
+> > > that the fix looks harmless, no update is zero-risk.
+> > > 
+> > > Can you reliably hit that code?  Has it been tested enough that we
+> > > should risk holding-up 2.6.34's release for it?
+> > I'm one of those _very reliably_ hitting this BUG. I can tell how 
+> > annoying it is. I have to backport the patch w/ every kernel release
+> > to be able to use the wireless link _at all_. So please consider
+> > it as somewhat urgent to get the patch included. 
+> > 
+> > I'm still in contact w/ Reinette regularly to get those problems fixed.
+> > It involves physically moving around the city for testing any modification
+> > so this working is slowly processing as it takes every time an enormous 
+> > amount of time to do so. Work in (slow) progress, but it's alive..
+> > C.f. http://permalink.gmane.org/gmane.linux.kernel/992941
+> > 
+> > BTW, https://bugzilla.redhat.com/show_bug.cgi?id=588021 this isn't fixed.
+> > Maybe RH did fix it. kernel.org sources haven't. This is a blocker ever 
+> > since.
+> 
+> The patch is in linux-2.6.  I suppose it could go to stable@kernel.org.
 
-Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
----
- ibss.c |   27 ++++++++++++++++++++++++++-
- 1 files changed, 26 insertions(+), 1 deletions(-)
+Now queued up, thanks.
 
-diff --git a/ibss.c b/ibss.c
-index 4715ac8..edc83fd 100644
---- a/ibss.c
-+++ b/ibss.c
-@@ -18,6 +18,11 @@ static int join_ibss(struct nl80211_state *state,
- {
- 	char *end;
- 	unsigned char abssid[6];
-+	unsigned char rates[NL80211_MAX_SUPP_RATES];
-+	int n_rates = 0;
-+	char *value = NULL, *sptr = NULL;
-+	float rate;
-+
- 
- 	if (argc < 2)
- 		return 1;
-@@ -41,6 +46,24 @@ static int join_ibss(struct nl80211_state *state,
- 		argc--;
- 	}
- 
-+	if (argc > 1 && strcmp(argv[0], "basic-rates") == 0) {
-+		argv++;
-+		argc--;
-+
-+		value = strtok_r(argv[0], ",", &sptr);
-+
-+		while (value && n_rates < NL80211_MAX_SUPP_RATES) {
-+			rate = atof(value);
-+			rates[n_rates++] = rate * 2;
-+			value = strtok_r(NULL, ",", &sptr);
-+		}
-+
-+		NLA_PUT(msg, NL80211_ATTR_BSS_BASIC_RATES, n_rates, rates);
-+
-+		argv++;
-+		argc--;
-+	}
-+
- 	if (argc) {
- 		if (mac_addr_a2n(abssid, argv[0]) == 0) {
- 			NLA_PUT(msg, NL80211_ATTR_MAC, 6, abssid);
-@@ -73,7 +96,9 @@ static int leave_ibss(struct nl80211_state *state,
- COMMAND(ibss, leave, NULL,
- 	NL80211_CMD_LEAVE_IBSS, 0, CIB_NETDEV, leave_ibss,
- 	"Leave the current IBSS cell.");
--COMMAND(ibss, join, "<SSID> <freq in MHz> [fixed-freq] [<fixed bssid>] [key d:0:abcde]",
-+COMMAND(ibss, join,
-+	"<SSID> <freq in MHz> [fixed-freq] [<fixed bssid>] "
-+	"[basic-rates <rate in Mbps,rate2,...>] [key d:0:abcde]",
- 	NL80211_CMD_JOIN_IBSS, 0, CIB_NETDEV, join_ibss,
- 	"Join the IBSS cell with the given SSID, if it doesn't exist create\n"
- 	"it on the given frequency. When fixed frequency is requested, don't\n"
--- 
-1.5.6.3
-
+greg k-h
