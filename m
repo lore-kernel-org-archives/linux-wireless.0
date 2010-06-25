@@ -1,50 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:13214 "EHLO mga01.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:50072 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751916Ab0FNSYz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jun 2010 14:24:55 -0400
+	id S1756839Ab0FYWnK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jun 2010 18:43:10 -0400
 From: Reinette Chatre <reinette.chatre@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
 	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
 	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/6] iwlwifi updates for 2.6.36
-Date: Mon, 14 Jun 2010 11:24:46 -0700
-Message-Id: <1276539892-12471-1-git-send-email-reinette.chatre@intel.com>
+Subject: [PATCH 5/8] iwlwifi: read rfkill during resume
+Date: Fri, 25 Jun 2010 15:42:58 -0700
+Message-Id: <1277505781-25268-6-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1277505781-25268-1-git-send-email-reinette.chatre@intel.com>
+References: <1277505781-25268-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In this series we address a potential null pointer access in the debugfs
-code. Some variable renaming is included to make code easier to follow.
-Tracing received one fix in its reporting. If an antenna is disconnected
-user will now see a warning. We include a safety to cancel some work that
-may be running when exiting.
+From: Johannes Berg <johannes.berg@intel.com>
 
-These patches are also available from wireless-next-2.6 branch on
-git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+When resuming from hibernate or suspend,
+the status of the rfkill switch isn't
+known since it might have been toggled
+while the system was asleep. Therefore,
+we need to read out the status at resume
+time to make sure the system knows about
+an up-to-date status.
 
-Dor Shaish (1):
-  iwlwifi: Fix null pointer referencing in iwl_dbgfs_rx_queue_read.
+Reported-by: Mark Tung <mark.y.tung@intel.com>
+Tested-by: Mark Tung <mark.y.tung@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
-Emmanuel Grumbach (2):
-  iwlwifi: rename rxq->dma_addr
-  iwlwifi: rename iwl4965_rx_mpdu_res_start
-
-Johannes Berg (2):
-  iwlwifi: trace full RX
-  iwlwifi: print warning about disconnected antennas
-
-Wey-Yi Guy (1):
-  iwlwifi: cancel run time calibration work when going down
-
- drivers/net/wireless/iwlwifi/iwl-3945.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    8 ++++----
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    8 ++++++--
- drivers/net/wireless/iwlwifi/iwl-calib.c    |    7 +++++++
- drivers/net/wireless/iwlwifi/iwl-commands.h |    2 +-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c  |    7 ++++++-
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-rx.c       |    4 ++--
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    9 ++++++---
- 9 files changed, 35 insertions(+), 16 deletions(-)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index f47a58f..a56fb46 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2845,6 +2845,7 @@ int iwl_pci_resume(struct pci_dev *pdev)
+ {
+ 	struct iwl_priv *priv = pci_get_drvdata(pdev);
+ 	int ret;
++	bool hw_rfkill = false;
+ 
+ 	/*
+ 	 * We disable the RETRY_TIMEOUT register (0x41) to keep
+@@ -2859,6 +2860,17 @@ int iwl_pci_resume(struct pci_dev *pdev)
+ 	pci_restore_state(pdev);
+ 	iwl_enable_interrupts(priv);
+ 
++	if (!(iwl_read32(priv, CSR_GP_CNTRL) &
++				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW))
++		hw_rfkill = true;
++
++	if (hw_rfkill)
++		set_bit(STATUS_RF_KILL_HW, &priv->status);
++	else
++		clear_bit(STATUS_RF_KILL_HW, &priv->status);
++
++	wiphy_rfkill_set_hw_state(priv->hw->wiphy, hw_rfkill);
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL(iwl_pci_resume);
+-- 
+1.7.0.4
 
