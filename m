@@ -1,80 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bar.sig21.net ([80.81.252.164]:45946 "EHLO bar.sig21.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751824Ab0FWOkG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Jun 2010 10:40:06 -0400
-Date: Wed, 23 Jun 2010 16:39:40 +0200
-From: Johannes Stezenbach <js@sig21.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	Maxim Levitsky <maximlevitsky@gmail.com>,
-	David Quan <David.Quan@atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Jonathan May <jonathan.may@atheros.com>,
-	Tim Gardner <tim.gardner@canonical.com>
-Subject: Re: [ath5k-devel] [PATCH v2] ath5k: disable ASPM
-Message-ID: <20100623143940.GA5424@sig21.net>
-References: <20100622165213.GA21842@srcf.ucam.org>
- <AANLkTikHLBBWrhCP_1f5Jv7zE9RKPvdsl5nSyfkeMfLl@mail.gmail.com>
- <20100622172545.GA22680@srcf.ucam.org>
- <AANLkTilEHJ5qRD8ov0gIK0Zc4o-gJUPYkvHdyD1uZUon@mail.gmail.com>
- <20100622175058.GA23499@srcf.ucam.org>
- <AANLkTinE0BiOa5cpcIerbias7K-aDzj3x4qaeDpzy2CQ@mail.gmail.com>
- <20100622184426.GA24546@srcf.ucam.org>
- <20100622193143.GA17803@sig21.net>
- <AANLkTin1fAAgYTYegqaadkYIYP2NXRNRzCR48e-uIgYV@mail.gmail.com>
- <AANLkTimsEkff4sMiMB_VyWqkZOjy9PIuJ4AiC95PASOZ@mail.gmail.com>
+Received: from smtp-out.google.com ([74.125.121.35]:53328 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751734Ab0FYHdI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jun 2010 03:33:08 -0400
+Received: from wpaz24.hot.corp.google.com (wpaz24.hot.corp.google.com [172.24.198.88])
+	by smtp-out.google.com with ESMTP id o5P7X6Zu002457
+	for <linux-wireless@vger.kernel.org>; Fri, 25 Jun 2010 00:33:06 -0700
+Received: from iwn3 (iwn3.prod.google.com [10.241.68.67])
+	by wpaz24.hot.corp.google.com with ESMTP id o5P7WO7b028080
+	for <linux-wireless@vger.kernel.org>; Fri, 25 Jun 2010 00:33:05 -0700
+Received: by iwn3 with SMTP id 3so3130075iwn.41
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Jun 2010 00:33:05 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <AANLkTimsEkff4sMiMB_VyWqkZOjy9PIuJ4AiC95PASOZ@mail.gmail.com>
+Date: Fri, 25 Jun 2010 00:33:04 -0700
+Message-ID: <AANLkTilhbYTH2gKJsvqDaMzLG2cIt2tNV-GW-X0K3pNJ@mail.gmail.com>
+Subject: [PATCH] mac80211: auth retries if AP sends temporary deauth
+From: Paul Stewart <pstew@google.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 22, 2010 at 12:38:03PM -0700, Luis R. Rodriguez wrote:
-> On Tue, Jun 22, 2010 at 12:37 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> > On Tue, Jun 22, 2010 at 12:31 PM, Johannes Stezenbach <js@sig21.net> wrote:
-> >>
-> >> Does CONFIG_PCIEASPM provide a way for the user to modifiy
-> >> the settings at runtime?
-> >
-> > You can tune ASPM settings at runtime, regardless of CONFIG_PCIEASPM. See:
-> >
-> > http://kernel.org/pub/linux/kernel/people/mcgrof/aspm/enable-aspm
-> > http://wireless.kernel.org/en/users/Documentation/ASPM
-> >
-> >> I have a Samsung N130 netbook which has a BIOS setting
-> >> called "CPU Power Saving Mode".  When enabled it activates
-> >> ASPM L1 and L0s for the ethernet chip (Realtek RTL8102e, 100Mbit)
-> >> and the PCIE bridge (with the BIOS setting off it's just L1).
-> >> The result is that the ethernet througput is reduced to 25Mbit/s.
-> >
-> > L0s is not going to buy you much gains, getting at least L1 will
-> > however. L0s is just a further enhancement. I recommend you test by
-> > enabling L1 and L0s, check how longer your battery lasts and then test
-> > again with just L1. Then test without both L1 and L0s.
-> 
-> So defaults should always be sane and you should not have to play with
-> this stuff, unless you're a hacker, or are testing something for
-> development purposes. Tweaking ASPM settings is not something a user
-> should have to worry about. Period.
+Hi folks.
 
-OK, let me put the question another way:
+If a STA gets sent a DEAUTH from an AP it is actively trying to
+authenticate to, mac80211 currently shoots itself in the foot by
+letting  ieee80211_sta_rx_mgmt() clean up state for the connection
+(removing an entry from authtry_bsses[] in wireless/mlme.c),
+but the retry loop contiinues, leading to a kernel warning but no
+connection.
 
-If enabling ASPM comes with a performance penalty (which is not unexpected,
-there is usually a tradeoff between performance and power consumption),
-do you think a boot time option (pcie_aspm=) or compile time option
-(CONFIG_PCIEASPM) is the right user interface?
+An AP is allowed by the spec to return DEAUTH as a result of a
+temporary failure, one of which is "you are already authenticated
+-- what are you talking about?"
 
+The scenario I've been running into works like this: we try to auth
+to an AP that still has state about us (we may have shut down
+uncleanly without sending a DEAUTH).  So we send the AUTH, the server
+replies with the DEAUTH above.  At this point we have a stalemate
+-- the state for the AP is gone, but the STA retry mechanism is still
+actively repeating AUTH attempts.  In fact, the "try 2" AUTH
+succeeds, and the AP sends a successful AUTH response, but we don't
+have the state anymore and cfg80211_send_rx_auth bombs out
+with the "WARN(!done)" because the authtry_bsses entry was
+deleted when we processed the DEAUTH. Therefore we don't proceed
+to the association phase, and when the upper level decides to retry
+with a directed probe and AUTH, the AP replies "you are already
+authenticated", since from its perspective the STA has AUTHed
+successfully on the previous attempt and so the cycle goes on.
 
-But meanwhile I found that CONFIG_PCIEASPM has a runtime
-interface, /sys/module/pcie_aspm/parameters/policy.
-http://lwn.net/Articles/266585/
+There are two possible solutions that I thought of. One is that if
+we get a DEAUTH as a response to an AUTH, we can not only drop
+the bss state, but also kill the retry process. This slows down
+the overall retry process since in most cases we need to do a
+scan again as well, but then we don't perform a pointless second
+(or third) AUTH. The second way is to recognize that we got
+a DEAUTH while we wer AUTHing and suppress further processing,
+letting the retry process continue as it has before.
 
-I have not tested it on my N130 yet.
+The patch attached below goes the route of the latter approach.
+It turns out to be a very small change. As an extension, I suppose
+one could delve into the REASON code and determine whether the
+failure is likely to be temporary, and choose from the above two
+approaches. I considered that a bigger change, and didn't want
+to go that far. Since the retry count is so small, I believe
+ignoring the DEAUTH does very limited harm (hopefully it does,
+because whether we like it or not, that is the current behavior).
 
+--
+Paul
 
-Johannes
+--- a/compat-wireless/net/mac80211/work.c
++++ b/compat-wireless/net/mac80211/work.c
+@@ -1030,6 +1030,23 @@ ieee80211_rx_result
+ieee80211_work_rx_mgmt(struct ieee80211_sub_if_data *sdata,
+ 			skb_queue_tail(&local->work_skb_queue, skb);
+ 			ieee80211_queue_work(&local->hw, &local->work_work);
+ 			return RX_QUEUED;
++		case IEEE80211_STYPE_DEAUTH:
++			/*
++			 * If we get sent a DEAUTH while we are
++			 * actively trying to authenticate to this
++			 * station, we shoot ourselves in the foot if
++			 * we fall through using RX_CONTINUE and allow
++			 * the bss context to disappear
++			 * (ieee80211_sta_rx_mgmt()).  This is
++			 * especially true if the reason for the
++			 * DEAUTH was a negative but temporary direct
++			 * response to an AUTH attempt. Let the retry
++			 * mechanism run its course instead.
++			 */
++			if (wk->type == IEEE80211_WORK_AUTH) {
++				return RX_DROP_MONITOR;
++			}
++			break;
+ 		}
+ 	}
