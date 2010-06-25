@@ -1,54 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:46675 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756290Ab0FPFxT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jun 2010 01:53:19 -0400
-MIME-Version: 1.0
-In-Reply-To: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>
-References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 16 Jun 2010 15:52:58 +1000
-Message-ID: <AANLkTikwKHITQJDaSf9BnHQ9FLiQ-KYlCWNiH438otsV@mail.gmail.com>
-Subject: Re: [PATCH 0/5] Fix set but unused variable warnings
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:29064 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756830Ab0FYWnW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jun 2010 18:43:22 -0400
+From: Reinette Chatre <reinette.chatre@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 2/2] iwlwifi: set TX_CMD_FLAG_PROT_REQUIRE_MSK in tx_flag
+Date: Fri, 25 Jun 2010 15:43:19 -0700
+Message-Id: <1277505799-25306-3-git-send-email-reinette.chatre@intel.com>
+In-Reply-To: <1277505799-25306-1-git-send-email-reinette.chatre@intel.com>
+References: <1277505799-25306-1-git-send-email-reinette.chatre@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 16, 2010 at 15:33, Justin P. Mattock
-<justinmattock@gmail.com> wrote:
-> Here is another set of patches fixing some warning messages generated
-> when building the kernel when using gcc 4.6.0.
->
-> This set just focuses in on the variables warnings that are reported
-> to be unused. Keep in mind there are still lots more warning messages
-> that I'm seeing, and will try my hardest to see if I can come up with
-> a fix, but if things become too difficult and so forth then a bug should
-> be filled etc..
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Given that patches 3, 4 and 5 seem to be a cases of missing error
-handling, (3 and 4 in particular seem to be breaking things rather
-than fixing them) in my humble opinion, I think this set needs some
-work and discussion.
+When building tx command, always set TX_CMD_FLAG_PROT_REQUIRE_MSK
+for 5000 series and up.
 
-Justin, maybe you'd be better off posting the actual error messages
-(split up by subsystem) and letting the lists discuss them, rather
-than posting patches which are obviously wrong. (like the ones I've
-pointed out)
+Without setting this bit the firmware will not examine the RTS/CTS setting
+and thus not send traffic with the appropriate protection. RTS/CTS is is
+required for HT traffic in a noisy environment where, without this setting,
+connections will stall on some hardware as documented in the patch that
+initially attempted to address this:
 
-I'm sure that everyone here is as committed as you are to eliminating
-compile warnings and errors and, in my opinion, more good will come
-from a healthy discussion of the warnings than maintainers NAKing your
-patches out of hand.
+    commit 1152dcc28c66a74b5b3f1a3ede0aa6729bfd48e4
+    Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+    Date:   Fri Jan 15 13:42:58 2010 -0800
 
-Thanks,
+    iwlwifi: Fix throughput stall issue in HT mode for 5000
 
+    Similar to 6000 and 1000 series, RTS/CTS is the recommended
+    protection mechanism for 5000 series in HT mode based on the HW design.
+    Using RTS/CTS will better protect the inner exchange from interference,
+    especially in highly-congested environment, it also prevent uCode encounter
+    TX FIFO underrun and other HT mode related performance issues.
+
+For 3945 and 4965, different flags are used for RTS/CTS or CTS-to-Self
+protection.
+
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c |    6 +-----
+ 1 files changed, 1 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
+index 44ef5d9..01658cf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
+@@ -212,11 +212,7 @@ static void iwlagn_chain_noise_reset(struct iwl_priv *priv)
+ static void iwlagn_rts_tx_cmd_flag(struct ieee80211_tx_info *info,
+ 			__le32 *tx_flags)
+ {
+-	if ((info->control.rates[0].flags & IEEE80211_TX_RC_USE_RTS_CTS) ||
+-	    (info->control.rates[0].flags & IEEE80211_TX_RC_USE_CTS_PROTECT))
+-		*tx_flags |= TX_CMD_FLG_RTS_CTS_MSK;
+-	else
+-		*tx_flags &= ~TX_CMD_FLG_RTS_CTS_MSK;
++	*tx_flags |= TX_CMD_FLG_RTS_CTS_MSK;
+ }
+ 
+ /* Calc max signal level (dBm) among 3 possible receivers */
 -- 
+1.7.0.4
 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-.Plan: http://sites.google.com/site/juliancalaby/
