@@ -1,96 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:12966 "EHLO mga11.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:64952 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752793Ab0FXV5M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Jun 2010 17:57:12 -0400
-Subject: Re: Problems connectring to an AP with Acer Aspire Revo
+	id S1751253Ab0FYS5K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Jun 2010 14:57:10 -0400
+Subject: Re: intel 5100/iwlagn bug in 2.6.35-rc2 during large file transfer
 From: reinette chatre <reinette.chatre@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Christian P. Schmidt" <schmidt@digadd.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1275669638.2091.34633.camel@rchatre-DESK>
-References: <4BF795EB.9070902@digadd.de>
-	 <1274729665.2091.15280.camel@rchatre-DESK>  <4BFD1ED0.9050309@digadd.de>
-	 <1275003105.2091.20102.camel@rchatre-DESK>  <4BFF9B93.5010308@digadd.de>
-	 <1275043274.3909.71.camel@jlt3.sipsolutions.net>
-	 <4BFF9FC6.4030101@digadd.de>
-	 <1275044074.3909.72.camel@jlt3.sipsolutions.net> <4BFFA490.90600@digadd.de>
-	 <1275045843.3909.92.camel@jlt3.sipsolutions.net>
-	 <4C07D0C7.8010907@digadd.de>
-	 <1275634104.3694.0.camel@jlt3.sipsolutions.net>
-	 <1275669638.2091.34633.camel@rchatre-DESK>
+To: Richard Farina <sidhayn@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4C24D926.7010806@gmail.com>
+References: <4C198EF0.5080807@gmail.com>
+	 <1277225293.25793.2257.camel@rchatre-DESK>  <4C2383E2.8000909@gmail.com>
+	 <1277399636.25793.2389.camel@rchatre-DESK>  <4C23961D.7050500@gmail.com>
+	 <1277401731.25793.2391.camel@rchatre-DESK>  <4C24D926.7010806@gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 24 Jun 2010 14:57:11 -0700
-Message-ID: <1277416631.13673.91.camel@rchatre-DESK>
+Date: Fri, 25 Jun 2010 11:57:09 -0700
+Message-ID: <1277492229.13673.1297.camel@rchatre-DESK>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-06-04 at 09:40 -0700, reinette chatre wrote:
-> On Thu, 2010-06-03 at 23:48 -0700, Johannes Berg wrote:
-> > On Thu, 2010-06-03 at 17:56 +0200, Christian P. Schmidt wrote:
-> > 
-> > > > Maybe try the rfkill tool:
-> > > > http://wireless.kernel.org/en/users/Documentation/rfkill
-> > > 
-> > > Yes, it was the rfkill tool that caused my attempts to fail. However,
-> > > this didn't change my association attempt problems.
-> > > I also took my time to look at the PCIe port - steady 3.3V on the RFKILL
-> > > pin, which means "no RFKILL".
-> > > 
-> > > Any further ideas?
-> > 
-> > Unfortunately not. It would seem that something is causing your frames
-> > not to be transmitted correctly, but I see no reason for that right now.
+On Fri, 2010-06-25 at 09:28 -0700, Richard Farina wrote:
+> reinette chatre wrote:
+> > On Thu, 2010-06-24 at 10:30 -0700, Richard Farina wrote:
+
+> I've added this patch to my system.  I'm about 5GB into a download right
+> now and here are the issues. First, and relatively quickly this line
+> showed up in dmesg:
+> [ 1589.605470] CE: hpet increased min_delta_ns to 7500 nsec
+
+I googled a bit for this string and found a few mentions where it is
+connected to system hangs. I do not know if you are running into the
+same issue as these people (did not spend much time reading through all
+the bug reports), but I did notice that sometimes the people were able
+to work around the issue by booting with a different clock source (eg.
+clocksource=jiffies) or disabling hpet (eg. hpet=disable). I am very
+unfamiliar with this aspect so if this is giving you issues I'd propose
+you go to lkml or kernel.org bugzilla.
+
+> I've been carefully monitoring my system and I have loads of RAM spare.
+> Things have been much smoother but the system still freezes up for a few
+> seconds at a time. Mind you, this is an improvement as the freezes are
+> slightly less frequent and before the patch the freezes were hitting the
+> 120s hangcheck timer in the kernel and now they last like 20-60 seconds.
 > 
-> The logs provided contains a lot of useful information. Among this is
-> that the device is unable to transmit data with the firmware returning a
-> "TX_LOCKED" status. From what I understand this is a regulatory check
-> failure based on the channel type, which does not make sense in this
-> regard since from what I can tell channel 8, which is an active channel,
-> is used. I passed this question to our firmware folks and now waiting
-> for an answer.
+> I finally managed to trigger the oops again but it does seem that it
+> took much longer this time. Pasted at the bottom. (please note the
+> timestamps included are accurate to show the time difference bettween
+> the hpet warning and the oops).
 
-Unfortunately, since the firmware does not actually assert, the firmware
-folks are unable to dig into this. I tried to take a second look at your
-logs and one thing that I was able to see that is interesting is that,
-when scanning, the device picks up very few frames that are good. I see
-that there were five scans, none of which contained a since good frame
-on 5GHz. On 2.4GHz there was a bit better success, but not consistent.
-In the five scans there was the following on 2.4GHz:
-1st scan: one good frame each on channels 5, 7, and 8.
-2st scan: one good frame on channel 1
-3st scan: one good frame each on channels 2, 7, and 9.
-4st scan: one good frame each on channels 3, 5, 7, and 8.
-5st scan: one good frame each on channels 1, 8, and 9.
+They seem pretty far apart so may not be related ...
 
-If you want to check on this yourself, take a look at the lines:
-[223263.179493] ieee80211 phy2: I iwl_rx_scan_results_notif Scan ch.res:
-2 [802.11bg] (TSF: 0x00000000:05627B90) - 1 elapsed=33837 usec
+> 
+> What else can I do to provide useful information? Or do you just want to
+> update the thresholds again?
 
-The number before "elapsed" indicates the number of good frames seen
-while scanning the channel. In the above example there was one.
+Sure ... let's try that. Patch is below. I also made things less noisy
+when it does fail in atomic.
 
-This seems to indicate that there is some trouble on this platform ...
-and makes me start thinking that this card may not work well on this
-platform.
+> 
+> Thanks,
+> Rick Farina
+> 
+> PS> The patch does look at bit odd as you change RX_LOW_WATERMARK while
+> at the same time removing one of the places that uses it.  I'm sure that
+> is on purpose just seems odd to me as I don't understand.
 
-Some things you can try:
-- are any APs on A band? If not, can you try to activate an AP on A band
-to see if you have better success there?
-- monitor the RX statistics ...
-(/sys/kernel/debug/ieee80211/phy0/iwlagn/debug/ucode_rx_stats) to see if
-there is an issue with crc checks and perhaps false alarms and plcp
-also.
-- something that you could try ... not sure how much it will help if you
-are having noise issues ... is to vary how you scan. Since you know
-which AP you are associating with, perhaps you can try to limit your
-scan to that channel ... and also try passive instead of active. This
-can be done with iw.
+That was on purpose. Since I increased the watermark I did not want to
+increase the threshold used to print warnings to the user also. That is
+why I just made that a hard 8 so that if memory allocation fails we will
+only start seeing the dumps when we are down to 8 buffers and not the
+new high watermark.
 
-These are the only things I can think of.
 
-Reinette
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    5 +++--
+ drivers/net/wireless/iwlwifi/iwl-fh.h      |    2 +-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 0f292a2..2815ee7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -613,7 +613,8 @@ void iwlagn_rx_allocate(struct iwl_priv *priv, gfp_t priority)
+ 		}
+ 		spin_unlock_irqrestore(&rxq->lock, flags);
+ 
+-		if (rxq->free_count > RX_LOW_WATERMARK)
++		if ((priority == GFP_ATOMIC) ||
++		    (rxq->free_count > RX_LOW_WATERMARK / 4))
+ 			gfp_mask |= __GFP_NOWARN;
+ 
+ 		if (priv->hw_params.rx_page_order > 0)
+@@ -627,7 +628,7 @@ void iwlagn_rx_allocate(struct iwl_priv *priv, gfp_t priority)
+ 					       "order: %d\n",
+ 					       priv->hw_params.rx_page_order);
+ 
+-			if ((rxq->free_count <= RX_LOW_WATERMARK) &&
++			if ((rxq->free_count <= RX_LOW_WATERMARK / 4) &&
+ 			    net_ratelimit())
+ 				IWL_CRIT(priv, "Failed to alloc_pages with %s. Only %u free buffers remaining.\n",
+ 					 priority == GFP_ATOMIC ?  "GFP_ATOMIC" : "GFP_KERNEL",
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fh.h b/drivers/net/wireless/iwlwifi/iwl-fh.h
+index 113c366..431bc58 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fh.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fh.h
+@@ -426,7 +426,7 @@
+  * RX related structures and functions
+  */
+ #define RX_FREE_BUFFERS 64
+-#define RX_LOW_WATERMARK 8
++#define RX_LOW_WATERMARK 128
+ 
+ /* Size of one Rx buffer in host DRAM */
+ #define IWL_RX_BUF_SIZE_3K (3 * 1000) /* 3945 only */
+-- 
+1.7.0.4
+
 
 
 
