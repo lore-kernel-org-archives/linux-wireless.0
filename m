@@ -1,66 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:33007 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754820Ab0FNUPN (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:49848 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753343Ab0FZQM0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jun 2010 16:15:13 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 40so4235810wyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Jun 2010 13:15:13 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 04/14] rt2x00: Fix IEEE80211_TX_CTL_MORE_FRAMES handling
-Date: Mon, 14 Jun 2010 22:10:09 +0200
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-References: <201006142208.31736.IvDoorn@gmail.com> <201006142209.09943.IvDoorn@gmail.com> <201006142209.42709.IvDoorn@gmail.com>
-In-Reply-To: <201006142209.42709.IvDoorn@gmail.com>
+	Sat, 26 Jun 2010 12:12:26 -0400
+Date: Sat, 26 Jun 2010 08:08:00 -0700
+From: Jouni Malinen <j@w1.fi>
+To: Iuri Diniz <iuridiniz@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Fwd: mesh configuration information element is wrong?
+Message-ID: <20100626150800.GA20900@jm.kir.nu>
+References: <AANLkTinHfFVr45OV3V6CT9auK3L-JfrCYUMQpeo9toTw@mail.gmail.com>
+ <AANLkTimeR5kQX2hSNw0Ud0QOF0-nsqCFMkSNul9wwa7C@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201006142210.10378.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <AANLkTimeR5kQX2hSNw0Ud0QOF0-nsqCFMkSNul9wwa7C@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+On Fri, Jun 25, 2010 at 02:43:31PM -0300, Iuri Diniz wrote:
 
-IEEE80211_TX_CTL_MORE_FRAMES indicates that more frames are queued for tx
-but has nothing to do with fragmentation. Hence, don't set ENTRY_TXD_MORE_FRAG
-but only ENTRY_TXD_BURST to not kick the tx queues immediately.
+> I'm analyzing the 802.11s code and I think I've found that mesh
+> configuration information element has wrongs sizes.
+> 
+> It is not according to my copy of 802.11s draft 3.
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00queue.c |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
+Draft 3 is quite old..
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 35858b1..f916371 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -353,13 +353,18 @@ static void rt2x00queue_create_tx_descriptor(struct queue_entry *entry,
- 	/*
- 	 * Check if more fragments are pending
- 	 */
--	if (ieee80211_has_morefrags(hdr->frame_control) ||
--	    (tx_info->flags & IEEE80211_TX_CTL_MORE_FRAMES)) {
-+	if (ieee80211_has_morefrags(hdr->frame_control)) {
- 		__set_bit(ENTRY_TXD_BURST, &txdesc->flags);
- 		__set_bit(ENTRY_TXD_MORE_FRAG, &txdesc->flags);
- 	}
- 
- 	/*
-+	 * Check if more frames (!= fragments) are pending
-+	 */
-+	if (tx_info->flags & IEEE80211_TX_CTL_MORE_FRAMES)
-+		__set_bit(ENTRY_TXD_BURST, &txdesc->flags);
-+
-+	/*
- 	 * Beacons and probe responses require the tsf timestamp
- 	 * to be inserted into the frame, except for a frame that has been injected
- 	 * through a monitor interface. This latter is needed for testing a
+> on linux-wireless-testing/linux/include/ieee80211.h we have:
+>  * struct ieee80211_meshconf_ie
+>  * This structure refers to "Mesh Configuration information element"
+
+> struct ieee80211_meshconf_ie {
+>     u8 meshconf_psel;
+>     u8 meshconf_pmetric;
+>     u8 meshconf_congest;
+>     u8 meshconf_synch;
+>     u8 meshconf_auth;
+>     u8 meshconf_form;
+>     u8 meshconf_cap;
+> } __attribute__ ((packed));
+
+That matches otherwise with the latest draft (P802.11s/D6.0), but it
+lacks one field. There is a 1-octet field "Mesh Peering Protocol
+Identifier" between the _auth and _form fields in the latest draft.
+
 -- 
-1.6.6.1
-
+Jouni Malinen                                            PGP id EFC895FA
