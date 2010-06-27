@@ -1,36 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zinan.dashjr.org ([173.242.112.54]:39637 "EHLO zinan.dashjr.org"
+Received: from postler.einfach.org ([86.59.21.14]:46807 "EHLO home.einfach.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756081Ab0FBTIo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jun 2010 15:08:44 -0400
-From: "Luke-Jr" <luke@dashjr.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] p54spi: replace internal "cx3110x" name with "p54spi"
-Date: Wed, 2 Jun 2010 14:06:05 -0500
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	torvalds@linux-foundation.org
-References: <201006012117.00432.luke@dashjr.org> <1275465299.3915.0.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1275465299.3915.0.camel@jlt3.sipsolutions.net>
+	id S1753648Ab0F0CUV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Jun 2010 22:20:21 -0400
+From: Bruno Randolf <br1@einfach.org>
+To: "Jaroslav Fojtik" <jafojtik@seznam.cz>
+Subject: Re: ATH5k - Signal measurement reports wrong values - thanks for a fix
+Date: Sun, 27 Jun 2010 11:20:11 +0900
+References: <4C1E6A13.4259.24AF3C@jafojtik.seznam.cz> <201006270107.59150.br1@einfach.org> <4C263EC9.12342.C4FBB@jafojtik.seznam.cz>
+In-Reply-To: <4C263EC9.12342.C4FBB@jafojtik.seznam.cz>
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
 Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201006021406.15393.luke@dashjr.org>
+  charset="iso-8859-1"
+Message-Id: <201006271120.11785.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 02 June 2010 02:54:59 am Johannes Berg wrote:
-> On Tue, 2010-06-01 at 21:16 -0500, Luke-Jr wrote:
-> >  static struct spi_driver p54spi_driver = {
-> >  	.driver = {
-> > -		/* use cx3110x name because board-n800.c uses that for the
-> > -		 * SPI port */
-> > -		.name		= "cx3110x",
-> > +		.name		= "p54spi",
-> >  		.bus		= &spi_bus_type,
+On Sunday 27 June 2010 02:54:17 you wrote:
+> It looks, that your patch really returns back proper signal values.
 > 
-> maybe that comment wasn't clear enough ... it needs to be that way to be
-> properly linked up against SPI.
+> I will not poison Email with png files, feel free to look at here:
+>   http://78.108.103.11:11080/cgi-bin/rodga_1day_big.cgi
+> Magenta line returned back to green line from other direction.
+> 
+> 
+> Even in an AP mode the magenta line also jumped to expected value:
+>   http://78.108.103.11:11080/tmp/klienti-day-big.png
+> 
+> I hope that this patch would not influence performance or any other
+> functionality.
 
-I don't understand what you mean here. Does the hardware-side of SPI use 
-string identifiers? These are the only two instances of "cx3110x" in the 
-kernel source; N8x0 board files expect "p54spi"
+no it just fixes a regression i have introduced in an earlier change. thanks 
+for reporting and testing this! i will send the patch for inclusion on monday, 
+then it might take some time (few days to weeks) until it apperars in compat-
+wireless.
+
+bruno
