@@ -1,70 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay01.mx.bawue.net ([193.7.176.67]:38439 "EHLO
-	relay01.mx.bawue.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759148Ab0FJOW5 (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:46537 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752399Ab0F1LNp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jun 2010 10:22:57 -0400
-Date: Thu, 10 Jun 2010 16:22:54 +0200
-From: Nils Radtke <lkml@Think-Future.de>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: kernel BUG in iwl-agn-rs.c:2076, WAS: iwlagn + some
- accesspoint == hardlock
-Message-ID: <20100610142254.GD4452@localhost>
-Reply-To: Nils Radtke <lkml@Think-Future.de>
-References: <20100531201225.GA6327@localhost>
- <1275501085.2091.28873.camel@rchatre-DESK>
- <20100604165732.GB28003@localhost>
- <1276019189.1835.11781.camel@rchatre-DESK>
+	Mon, 28 Jun 2010 07:13:45 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1276019189.1835.11781.camel@rchatre-DESK>
+In-Reply-To: <20100626190240.648EA42E2C@repository3.orbit-lab.org>
+References: <20100626190240.648EA42E2C@repository3.orbit-lab.org>
+Date: Mon, 28 Jun 2010 14:13:43 +0300
+Message-ID: <AANLkTinJS2MXv3VF_m5IF67mCIXWQN9TmaAlKi771i6d@mail.gmail.com>
+Subject: Re: Compat-wireless release for 2010-06-26 is baked
+From: Andrei Emeltchenko <andrei.emeltchenko.news@gmail.com>
+To: Compat-wireless cronjob account <compat@orbit-lab.org>
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi
 
-  Hi Reinette,
+On Sat, Jun 26, 2010 at 10:02 PM, Compat-wireless cronjob account
+<compat@orbit-lab.org> wrote:
 
-  Thanks for your message.
+Looks like the mail is sent to wrong ML?
 
-  Yes, you're right about the multiple bugs one thread thing.
+-- Andrei
 
-  Just today I got registered w/ the wireless ml because the
-  system just did not send me a registration message. 
-
-  For the bug reports to be created it will take me some time.
-  I'll firstly report the main issue, the 2 other ones afterwards.
-  Would it be ok cross referencing i.e. to the log and such 
-  between the reports?
-
-  Should I paste all the mail messages in separate report messages 
-  (belonging to one bug report, of course) or should I paste some
-  links to the thread?
-
-  Cheers,
-
-        Nils
-
-@John: Yes, you're right but the 2.6.33.4 tree which for me still
-  has the bug_on in.
-
-
-On Tue 2010-06-08 @ 10-46-29AM -0700, reinette chatre wrote: 
-# On Fri, 2010-06-04 at 09:57 -0700, Nils Radtke wrote:
-# > I haven't yet received a comment of yours regarding my many other questions in
-# > my previous message. I am willing to help investigate more, assist in other ways 
-# > than testing only (always only doing testing isn't a way to keep up fun..)
-# 
-# Your messages contain references to many issues and it is becoming
-# increasingly hard to keep track of them all in a single email thread.
-# Since the system crash is clearly the big issue I would like to focus on
-# that and get that resolved. This is why I proposed that you create bug
-# reports to help track your various issues better.
-# 
-# Reinette
-# 
-# 
-
--- 
+>
+> compat-wireless code metrics
+>
+>    494345 - Total upstream lines of code being pulled
+>      1407 - backport code changes
+>      1174 - backport code additions
+>       233 - backport code deletions
+>      5765 - backport from compat module
+>      7172 - total backport code
+>    1.4508 - % of code consists of backport work
+>      1218 - Crap changes not yet posted
+>      1179 - Crap additions not yet posted
+>        39 - Crap deletions not yet posted
+>    0.2464 - % of crap code
+>
+> Base tree: linux-next.git
+> Base tree version: next-20100625
+> compat-wireless release: compat-wireless-2010-06-17-6-g8a97897
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-bluetooth" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
