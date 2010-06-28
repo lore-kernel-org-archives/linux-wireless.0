@@ -1,65 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:59381 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753046Ab0FUSGo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jun 2010 14:06:44 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 0/9] iwlwifi updates for 2.6.36
-Date: Mon, 21 Jun 2010 11:06:31 -0700
-Message-Id: <1277143600-32554-1-git-send-email-reinette.chatre@intel.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:53681 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751715Ab0F1AiR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Jun 2010 20:38:17 -0400
+Received: by vws19 with SMTP id 19so445713vws.19
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Jun 2010 17:38:17 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201006221651.24853.Sebastian.Smolorz@gmx.de>
+References: <201006221651.24853.Sebastian.Smolorz@gmx.de>
+Date: Sun, 27 Jun 2010 20:38:16 -0400
+Message-ID: <AANLkTilsEl-smRtQEU8obOO6GDoWzKYHyFYQYO5Lfpps@mail.gmail.com>
+Subject: Re: [PATCH 0/2] at76c50x-usb.c: Fix broken authentication process
+From: Jason Andryuk <jandryuk@gmail.com>
+To: Sebastian Smolorz <Sebastian.Smolorz@gmx.de>
+Cc: kalle.valo@iki.fi, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211 recently received changes to enable driver's ampdu actions to
-sleep. In this series we include changes in driver to make use of this
-feature for better data protection and error handling. The key management
-calls can also sleep and driver is now modified to utilize this also.
-Better error reporting is added to station management also. The rest of
-this series consist of code cleanup where, for example, we are moving a
-significant amount of code to the appropriate module (agn specific code
-to iwlagn module).
+On Tue, Jun 22, 2010 at 10:51 AM, Sebastian Smolorz
+<Sebastian.Smolorz@gmx.de> wrote:
+> Fix authentication process of wireless driver at76c50x-usb.c which was broken
+> since kernel 2.6.31
 
-These patches are also available from wireless-next-2.6 branch on
-git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+Thanks for working on this, but unfortunately it does not work with my
+Linksys WUSB11.  Does it work for you?
 
-Jay Sternberg (1):
-  iwlwifi: display ucode SW Error in hex
+[  168.420082] usb 4-1: new full speed USB device using uhci_hcd and address 2
+[  168.719582] Atmel at76x USB Wireless LAN Driver 0.17 loading
+[  168.743011] usb 4-1: using firmware atmel_at76c503-i3861.bin
+(version 0.90.0-44)
+[  168.746784] phy1: Selected rate control algorithm 'minstrel'
+[  168.747410] phy1: USB 4-1:1.0, MAC 00:06:25:00:6a:7a, firmware 0.90.0-2
+[  168.747413] phy1: regulatory domain 0x10: FCC (USA)
+[  168.747434] usbcore: registered new interface driver at76c50x-usb
+[  168.803980] udev: renamed network interface wlan0 to wlan3
+[  168.837883] ADDRCONF(NETDEV_UP): wlan3: link is not ready
+[  274.423484] wlan3: direct probe to 00:13:46:08:8a:6e (try 1)
+[  274.622558] wlan3: direct probe to 00:13:46:08:8a:6e (try 2)
+[  274.822600] wlan3: direct probe to 00:13:46:08:8a:6e (try 3)
+[  275.022557] wlan3: direct probe to 00:13:46:08:8a:6e timed out
+[  284.694487] wlan3: direct probe to 00:13:46:08:8a:6e (try 1)
+[  284.900075] wlan3: direct probe to 00:13:46:08:8a:6e (try 2)
+[  285.105548] wlan3: direct probe to 00:13:46:08:8a:6e (try 3)
+[  285.302565] wlan3: direct probe to 00:13:46:08:8a:6e timed out
+[  294.954450] wlan3: direct probe to 00:13:46:08:8a:6e (try 1)
+[  295.152564] wlan3: direct probe to 00:13:46:08:8a:6e (try 2)
+[  295.352559] wlan3: direct probe to 00:13:46:08:8a:6e (try 3)
+[  295.552556] wlan3: direct probe to 00:13:46:08:8a:6e timed out
 
-Johannes Berg (3):
-  iwlagn: use mutex for aggregation
-  iwlwifi: use sync commands for keys
-  iwlwifi: return ucode errors from station management
+> +       /* The following code lines are important when the device is going to
+> +        * authenticate with a new bssid. The driver must send CMD_JOIN before
+> +        * an authentication frame is transmitted. For this to succeed, the
+> +        * correct bssid of the AP must be known. As mac80211 does not inform
+> +        * drivers about the bssid prior to the authentication process the
+> +        * following workaround is necessary. If the TX frame is an
+> +        * authentication frame extract the bssid and send the CMD_JOIN. */
+> +       if (mgmt->frame_control & cpu_to_le16(IEEE80211_STYPE_AUTH)) {
+> +               if (compare_ether_addr(priv->bssid, mgmt->bssid)) {
+> +                       memcpy(priv->bssid, mgmt->bssid, ETH_ALEN);
+> +                       ieee80211_queue_work(hw, &priv->work_join_bssid);
+> +                       return NETDEV_TX_BUSY;
+> +               }
+> +       }
+> +
 
-Wey-Yi Guy (5):
-  iwlwifi: move agn specific rx related code to iwl-agn-rx.c
-  iwlwifi: move _agn statistics related structure
-  iwlwifi: move calibration from iwlcore to iwlagn
-  iwlwifi: code cleanup to remove un-necessary "goto"
-  iwlwifi: remove non-exist reference
+The check for IEEE80211_STYPE_AUTH may be insufficient since direct
+probe is sent with frame control IEEE80211_STYPE_PROBE_REQ.  Maybe a
+better check would be comparing struct ieee80211_work.type to
+IEEE80211_WORK_DIRECT_PROBE or IEEE80211_WORK_AUTH?  I am not sure if
+that is accessible in the driver's tx function though.
 
- drivers/net/wireless/iwlwifi/Makefile          |    4 +-
- drivers/net/wireless/iwlwifi/iwl-4965.c        |   12 +-
- drivers/net/wireless/iwlwifi/iwl-5000.c        |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-calib.c   |  910 +++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c |   72 +-
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c     |    3 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rx.c      |  278 +++++++
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c      |    5 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c         |   47 +-
- drivers/net/wireless/iwlwifi/iwl-agn.h         |   10 +
- drivers/net/wireless/iwlwifi/iwl-calib.c       |  919 ------------------------
- drivers/net/wireless/iwlwifi/iwl-core.h        |   10 -
- drivers/net/wireless/iwlwifi/iwl-dev.h         |   14 +-
- drivers/net/wireless/iwlwifi/iwl-rx.c          |  238 ------
- drivers/net/wireless/iwlwifi/iwl-sta.c         |   76 ++-
- drivers/net/wireless/iwlwifi/iwl-sta.h         |    2 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c    |    2 +-
- 17 files changed, 1333 insertions(+), 1271 deletions(-)
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-agn-calib.c
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-agn-rx.c
- delete mode 100644 drivers/net/wireless/iwlwifi/iwl-calib.c
+With the frame_control check modified for either IEEE80211_STYPE_AUTH
+or IEEE80211_STYPE_PROBE_REQ, it is still unsuccessful.
+at76_work_join_bssid is called between the first and second direct
+probe attempt.  However, the CMD_JOIN command is not in the log.
+Presumably that occurs because the BSSID pulled from the PROBE_REQ is
+ff:ff:ff:ff:ff:ff which fails the is_valid_ether_addr(priv->bssid)
+check in at76_work_join_bssid.
 
+http://lxr.linux.no/#linux+v2.6.34/include/linux/etherdevice.h#L100
+
+I'm glad someone is working on this.
+
+Jason
