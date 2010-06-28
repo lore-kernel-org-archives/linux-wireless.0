@@ -1,55 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sd-11162.dedibox.fr ([88.191.70.230]:55311 "EHLO
-	sd-11162.dedibox.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755292Ab0FETDD convert rfc822-to-8bit (ORCPT
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:30116 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751885Ab0F1BXk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Jun 2010 15:03:03 -0400
-Date: Sat, 5 Jun 2010 20:50:15 +0200
-From: Frederic Leroy <fredo@starox.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John Linville <linville@tuxdriver.com>, Greg KH <greg@kroah.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Conversion of driver for Realtek 8192SU
-Message-ID: <20100605205015.65979235@devel>
-In-Reply-To: <4BFE9A22.5040005@lwfinger.net>
-References: <4BFE9A22.5040005@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Sun, 27 Jun 2010 21:23:40 -0400
+Received: from vs3005.wh2.ocn.ne.jp (125.206.180.233)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0121368217
+	for <linux-wireless@vger.kernel.org>; Mon, 28 Jun 2010 10:23:38 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: "Jaroslav Fojtik" <jafojtik@seznam.cz>
+Subject: Re: ATH5k - Signal measurement reports wrong values - thanks for a fix
+Date: Mon, 28 Jun 2010 10:21:47 +0900
+Cc: linux-wireless@vger.kernel.org
+References: <4C1E6A13.4259.24AF3C@jafojtik.seznam.cz> <201006271120.11785.br1@einfach.org> <4C26FD91.10140.F4D6B@jafojtik.seznam.cz>
+In-Reply-To: <4C26FD91.10140.F4D6B@jafojtik.seznam.cz>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201006281021.47132.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le Thu, 27 May 2010 11:13:22 -0500,
-Larry Finger <Larry.Finger@lwfinger.net> a écrit :
-
-> I am in the process of converting the driver contained in the file
-> RTL8192SU_usb_linux_v2.6.0006.20100511.zip obtained from the Realtek
-> site. This driver is used for the following USB IDs:
+On Sun June 27 2010 16:28:17 Jaroslav Fojtik wrote:
+> Dear Bruno,
 > 
-> Realtek (0x0bda)  0x8171, 0x8172, 0x8173, 0x8174, 0x8712,
-> 0x8713,
-> [...]
-> My test device is a D-Link DWA-130 (14b2:3300). The Realtek driver
-> compiles cleanly and works as-is for this device on i386 architecture;
+> > > I hope that this patch would not influence performance or any other
+> > > functionality.
+> > 
+> > no it just fixes a regression i have introduced in an earlier change.
+> > thanks for reporting and testing this! i will send the patch for
+> > inclusion on monday, then it might take some time (few days to weeks)
+> > until it apperars in compat- wireless.
+> 
+> Thank you for explanation.
+> The patch surely improves signal strength measurement and I recomend it.
+>
+> Anyway, when you look at the magenta line here:
+>   http://78.108.103.11:11080/cgi-bin/rodga_1day_big.cgi
+> 
+> There are big drops in measured signal. Did you fix all places?
+> 
+> Before this patch there were short peeks from -78dB to -71dB.
+> After patch there are short measurement drops from -62dB to -70dB.
+> 
+> The week charting simply averages it:
+>   http://78.108.103.11:11080/cgi-bin/rodga_1week_big.cgi
 
-I own a Trendnet TEW-649UB (usb ids : 0bda:8172).
-I got the staging driver working only once. Since then, I found that the
-function which sets the channel didn't work.
-The 20100511 driver has the same behaviour at first sight, looking at
-wireshark trace.
+i guess this must be the same situation as before, no?
 
-> My initial plan is to modify this driver code for inclusion in
-> drivers/staging. The above list includes some, but not all, of the IDs
-> in the driver currently in drivers/staging/rtl8192su. I will likely
-> put this in as drivers/staging/rtl8712u, which is the name used in
-> the code, and remove the duplicate IDs from rtl8192su. Once this step
-> is done, I will then work at modifying it to use mac80211 so that it
-> can go into mainline.
+how many antennas do you have attached to your device? it might be interesting 
+to check if you get more consistent signal measurements by disabling antenna 
+diversity, setting it to a fixed antenna. you can do this by using a debugfs 
+file "echo fixed-a > /sys/kernel/debug/ath5k/phy0/antenna" (or "fixed-b")...
 
-Some work has been made in the staging driver. Can it be a better
-start ?
+btw: when the signal measurement was low, did you see any negative impact on 
+the thruput as well?
 
-Have you a repository with your work ? I would like to test it again my
-device and if possible join our effort.
-
--- 
-Frédéric Leroy
+bruno
