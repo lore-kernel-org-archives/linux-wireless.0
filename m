@@ -1,41 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:41007 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754214Ab0FRHjC (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:42155 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751179Ab0F1KUe convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jun 2010 03:39:02 -0400
-From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?=
-	<u.kleine-koenig@pengutronix.de>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] cfg80211: move cfg80211_exit to .exit.text
-Date: Fri, 18 Jun 2010 09:38:54 +0200
-Message-Id: <1276846735-12105-1-git-send-email-u.kleine-koenig@pengutronix.de>
+	Mon, 28 Jun 2010 06:20:34 -0400
+Received: by iwn39 with SMTP id 39so42240iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Jun 2010 03:20:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <4C27E8E8.8040606@openwrt.org>
+References: <4B8C3A21.2050105@openwrt.org>
+	<133e8d7e1003020419r6fab7b13kd77b06407c8c1380@mail.gmail.com>
+	<4B8D25DC.8070502@openwrt.org>
+	<133e8d7e1003020747w348dbee0g60a25a86393972d7@mail.gmail.com>
+	<4B8D396B.5040007@openwrt.org>
+	<AANLkTilWfp6LzCYhxFweqAP_GceRz5PQBIBl5AksLKUf@mail.gmail.com>
+	<4C223F58.3060509@openwrt.org>
+	<AANLkTikmXoEnHb1K9StEgszdllAxdsAbm9WdtSUiwKWE@mail.gmail.com>
+	<4C27E8E8.8040606@openwrt.org>
+Date: Mon, 28 Jun 2010 12:20:33 +0200
+Message-ID: <AANLkTinoz66aXYBSlwVtTnJBs1u-4FfOCphHTZONHc4B@mail.gmail.com>
+Subject: Re: [RFC/RFT] minstrel_ht: new rate control module for 802.11n
+From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Benoit PAPILLAULT <benoit.papillault@free.fr>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cfg80211_exit is only used as module_exit function, so it can go to
-.exit.text saving a few bytes when CONFIG_CFG80211=y.
+2010/6/28 Felix Fietkau <nbd@openwrt.org>:
+> On 2010-06-28 2:01 AM, Björn Smedman wrote:
+[snip]
+>> I guess the real solution is your rewrite... But in the mean time
+>> perhaps we can memcpy the tx_info control from the last subframe to
+>> the first before calling ath_buf_set_rate() in ath_tx_sched_aggr()?
+>> Could that have any side effects? It could make the aggregate size go
+>> over the 4 ms limit I guess... How bad is that?
+> There's an easy solution which would take into account the 4ms frame
+> limit properly, and which could work without any memcpy() hacks:
+>
+> I could just grab a pointer to the last buffer in the tid queue in the
+> ath_tx_sched_aggr() function, then pass it to ath_lookup_rate() via
+> ath_tx_form_aggr(), and also to ath_buf_set_rate(). Then I make those
+> functions use this last buffer as reference for the rate lookup.
 
-Signed-off-by: Uwe Kleine-KÃ¶nig <u.kleine-koenig@pengutronix.de>
----
- net/wireless/core.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Sounds better to use the rate control from the last buffer in the tid
+queue. But be careful if you don't memcpy it to the first frame of the
+aggregate then the feedback calculated in ath_tx_rc_status() after tx
+will be incorrect again, no?
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 37d0e0a..47fcfd0 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -894,7 +894,7 @@ out_fail_pernet:
- }
- subsys_initcall(cfg80211_init);
- 
--static void cfg80211_exit(void)
-+static void __exit cfg80211_exit(void)
- {
- 	debugfs_remove(ieee80211_debugfs_dir);
- 	nl80211_exit();
--- 
-1.7.1
+> - Felix
 
+/Björn
