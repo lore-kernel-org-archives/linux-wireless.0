@@ -1,55 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:38089 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756538Ab0FCWwx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Jun 2010 18:52:53 -0400
-Received: by vws11 with SMTP id 11so727219vws.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Jun 2010 15:52:52 -0700 (PDT)
+Received: from nbd.name ([88.198.39.176]:56491 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751990Ab0F1K1r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Jun 2010 06:27:47 -0400
+Message-ID: <4C287913.8070405@openwrt.org>
+Date: Mon, 28 Jun 2010 12:27:31 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <20100603221751.GB22595@kroah.com>
-References: <1272353738-17084-1-git-send-email-vnatarajan@atheros.com>
-	<1272353738-17084-2-git-send-email-vnatarajan@atheros.com>
-	<20100603221751.GB22595@kroah.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 3 Jun 2010 15:52:32 -0700
-Message-ID: <AANLkTik58ZkbSV7HH_-VjcC2eaePghXNiVw7OW9gNtP0@mail.gmail.com>
-Subject: Re: [stable] [PATCH 2/2] ath9k: Avoid corrupt frames being forwarded
-	to mac80211.
-To: Greg KH <greg@kroah.com>
-Cc: Vivek Natarajan <vnatarajan@atheros.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, stable@kernel.org,
-	Ranga Rao Ravuri <ranga.ravuri@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+To: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Derek Smithies <derek@indranet.co.nz>,
+	Benoit PAPILLAULT <benoit.papillault@free.fr>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	ath9k-devel@lists.ath9k.org
+Subject: Re: [RFC/RFT] minstrel_ht: new rate control module for 802.11n
+References: <4B8C3A21.2050105@openwrt.org>	<133e8d7e1003020419r6fab7b13kd77b06407c8c1380@mail.gmail.com>	<4B8D25DC.8070502@openwrt.org>	<133e8d7e1003020747w348dbee0g60a25a86393972d7@mail.gmail.com>	<4B8D396B.5040007@openwrt.org>	<AANLkTilWfp6LzCYhxFweqAP_GceRz5PQBIBl5AksLKUf@mail.gmail.com>	<4C223F58.3060509@openwrt.org>	<AANLkTikmXoEnHb1K9StEgszdllAxdsAbm9WdtSUiwKWE@mail.gmail.com>	<4C27E8E8.8040606@openwrt.org> <AANLkTinoz66aXYBSlwVtTnJBs1u-4FfOCphHTZONHc4B@mail.gmail.com>
+In-Reply-To: <AANLkTinoz66aXYBSlwVtTnJBs1u-4FfOCphHTZONHc4B@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 3, 2010 at 3:17 PM, Greg KH <greg@kroah.com> wrote:
-> On Tue, Apr 27, 2010 at 01:05:38PM +0530, Vivek Natarajan wrote:
->> If bit 29 is set, MAC H/W can attempt to decrypt the received aggregate
->> with WEP or TKIP, eventhough the received frame may be a CRC failed
->> corrupted frame. If this bit is set, H/W obeys key type in keycache.
->> If it is not set and if the key type in keycache is neither open nor
->> AES, H/W forces key type to be open.  But bit 29 should be set to 1
->> for AsyncFIFO feature to encrypt/decrypt the aggregate with WEP or TKIP.
+On 2010-06-28 12:20 PM, Bj�rn Smedman wrote:
+> 2010/6/28 Felix Fietkau <nbd@openwrt.org>:
+>> On 2010-06-28 2:01 AM, Bj�rn Smedman wrote:
+> [snip]
+>>> I guess the real solution is your rewrite... But in the mean time
+>>> perhaps we can memcpy the tx_info control from the last subframe to
+>>> the first before calling ath_buf_set_rate() in ath_tx_sched_aggr()?
+>>> Could that have any side effects? It could make the aggregate size go
+>>> over the 4 ms limit I guess... How bad is that?
+>> There's an easy solution which would take into account the 4ms frame
+>> limit properly, and which could work without any memcpy() hacks:
 >>
->> Cc: stable@kernel.org
->> Reported-by: Johan Hovold <johan.hovold@lundinova.se>
->> Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
->> Signed-off-by: Ranga Rao Ravuri <ranga.ravuri@atheros.com>
->> ---
->>  drivers/net/wireless/ath/ath9k/ar5008_initvals.h |    2 +-
->>  drivers/net/wireless/ath/ath9k/ar9002_initvals.h |    8 ++++----
->
-> This is now upstream in Linus's tree, but does not apply to the .32,
-> .32, or .34 kernel trees due to the file movements in this area.  I
-> tried to apply this by hand, but didn't get it correct.
->
-> Can someone please send me a properly backported version of this patch
-> to apply to the -stable tree?
+>> I could just grab a pointer to the last buffer in the tid queue in the
+>> ath_tx_sched_aggr() function, then pass it to ath_lookup_rate() via
+>> ath_tx_form_aggr(), and also to ath_buf_set_rate(). Then I make those
+>> functions use this last buffer as reference for the rate lookup.
+> 
+> Sounds better to use the rate control from the last buffer in the tid
+> queue. But be careful if you don't memcpy it to the first frame of the
+> aggregate then the feedback calculated in ath_tx_rc_status() after tx
+> will be incorrect again, no?
+Right. I intend to let ath_buf_set_rate() set the rates array of the
+first subframe accordingly.
 
-I've stashed this here for book keeping:
-
-http://wireless.kernel.org/en/developers/stable-pending
-
-  Luis
+- Felix
