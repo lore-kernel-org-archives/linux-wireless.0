@@ -1,273 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:6991 "EHLO mga02.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:48413 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754983Ab0FUSGq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jun 2010 14:06:46 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 1/9] iwlagn: use mutex for aggregation
-Date: Mon, 21 Jun 2010 11:06:32 -0700
-Message-Id: <1277143600-32554-2-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1277143600-32554-1-git-send-email-reinette.chatre@intel.com>
-References: <1277143600-32554-1-git-send-email-reinette.chatre@intel.com>
+	id S1753062Ab0F1Ujd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Jun 2010 16:39:33 -0400
+Subject: Re: intel 5100/iwlagn bug in 2.6.35-rc2 during large file transfer
+From: reinette chatre <reinette.chatre@intel.com>
+To: Richard Farina <sidhayn@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4C28D552.30000@gmail.com>
+References: <4C198EF0.5080807@gmail.com>
+	 <1277225293.25793.2257.camel@rchatre-DESK>  <4C2383E2.8000909@gmail.com>
+	 <1277399636.25793.2389.camel@rchatre-DESK>  <4C23961D.7050500@gmail.com>
+	 <1277401731.25793.2391.camel@rchatre-DESK>  <4C24D926.7010806@gmail.com>
+	 <1277492229.13673.1297.camel@rchatre-DESK>  <4C278704.5040604@gmail.com>
+	 <1277742425.13673.1376.camel@rchatre-DESK>  <4C28D552.30000@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 28 Jun 2010 13:39:23 -0700
+Message-ID: <1277757563.4197.11.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, 2010-06-28 at 10:01 -0700, Richard Farina wrote:
+> reinette chatre wrote:
+> > On Sun, 2010-06-27 at 10:14 -0700, Richard Farina wrote:
+> >   
+> >>> ---
+> >>>  drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    5 +++--
+> >>>  drivers/net/wireless/iwlwifi/iwl-fh.h      |    2 +-
+> >>>  2 files changed, 4 insertions(+), 3 deletions(-)
+> >>>
+> >>> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+> >>> index 0f292a2..2815ee7 100644
+> >>> --- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+> >>> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+> >>> @@ -613,7 +613,8 @@ void iwlagn_rx_allocate(struct iwl_priv *priv, gfp_t priority)
+> >>>               }
+> >>>               spin_unlock_irqrestore(&rxq->lock, flags);
+> >>>
+> >>> -             if (rxq->free_count > RX_LOW_WATERMARK)
+> >>> +             if ((priority == GFP_ATOMIC) ||
+> >>> +                 (rxq->free_count > RX_LOW_WATERMARK / 4))
+> >>>                       gfp_mask |= __GFP_NOWARN;
+> >>>
+> >>>       
+> >
+> > Here I set the allocation mask to not print _any_ warnings when
+> > allocation is atomic ...
+> >
+> >
+> >   
+> >> [180257.090410] swapper: page allocation failure. order:1, mode:0x4020
+> >> [180257.090414] Pid: 0, comm: swapper Not tainted 2.6.34-pentoo-r2 #2
+> >> [180257.090416] Call Trace:
+> >>     
+> >
+> > ... clearly this is an allocation warning ...
+> >
+> >   
+> >> [180257.090418]  <IRQ>  [<ffffffff810984c0>]
+> >> __alloc_pages_nodemask+0x571/0x5b9
+> >> [180257.090437]  [<ffffffffa05162f3>] iwlagn_rx_allocate+0x98/0x2e0 [iwlagn]
+> >> [180257.090445]  [<ffffffffa051668c>] iwlagn_rx_replenish_now+0x16/0x23
+> >> [iwlagn]
+> >>     
+> >
+> > ... but it is an atomic one, which after the patch should not be
+> > printing _any_ warning ...
+> >
+> >   
+> I dunno, I really don't. but I did just verify the patch and it is 
+> correct and applied.
 
-Now that the ampdu_action callback can sleep,
-we can use the mutex to properly protect the
-aggregation data, and return useful errors if
-they should happen.
+Could you please verify that it is the patch below and not an earlier
+patch I sent? Apart from what I mention above there is another strange
+thing in the logs you provide. In your logs you have the message:
 
-Also, add some sleep and mutex debugging so
-we won't call any of the functions that now
-require being able to sleep and/or the mutex
-to be held in an invalid context.
+iwlagn 0000:02:00.0: Failed to alloc_pages with
+GFP_ATOMIC. Only 40 free buffers remaining.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+while the code is:
+
+»-------»-------»-------if ((rxq->free_count <= RX_LOW_WATERMARK / 4) &&
+»-------»-------»-------    net_ratelimit())
+»-------»-------»-------»-------IWL_CRIT(priv, "Failed to alloc_pages with %s. Only %u free buffers remaining.\n",
+»-------»-------»-------»-------»------- priority == GFP_ATOMIC ?  "GFP_ATOMIC" : "GFP_KERNEL",
+»-------»-------»-------»-------»------- rxq->free_count);
+
+with :
+#define RX_LOW_WATERMARK 128
+
+The message in your log should thus not be there since it should only
+print the message if the free_count less than or equal to 32.
+
+>From 65c459c35332c7039cc84a980e6e04118ba81c04 Mon Sep 17 00:00:00 2001
+From: Reinette Chatre <reinette.chatre@intel.com>
+Date: Thu, 24 Jun 2010 10:48:59 -0700
+Subject: [PATCH] increase low watermark
+
 ---
- drivers/net/wireless/iwlwifi/iwl-4965.c   |    5 +++-
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    5 +++-
- drivers/net/wireless/iwlwifi/iwl-agn.c    |   29 +++++++++++++--------------
- drivers/net/wireless/iwlwifi/iwl-sta.c    |   31 ++++++++++++++++++++--------
- drivers/net/wireless/iwlwifi/iwl-sta.h    |    2 +-
- 5 files changed, 45 insertions(+), 27 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    5 +++--
+ drivers/net/wireless/iwlwifi/iwl-fh.h      |    2 +-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
-index 83e6a42..fee276b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-4965.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
-@@ -1785,6 +1785,7 @@ static int iwl4965_txq_agg_enable(struct iwl_priv *priv, int txq_id,
- {
- 	unsigned long flags;
- 	u16 ra_tid;
-+	int ret;
- 
- 	if ((IWL49_FIRST_AMPDU_QUEUE > txq_id) ||
- 	    (IWL49_FIRST_AMPDU_QUEUE + priv->cfg->num_of_ampdu_queues
-@@ -1800,7 +1801,9 @@ static int iwl4965_txq_agg_enable(struct iwl_priv *priv, int txq_id,
- 	ra_tid = BUILD_RAxTID(sta_id, tid);
- 
- 	/* Modify device's station table to Tx this TID */
--	iwl_sta_tx_modify_enable_tid(priv, sta_id, tid);
-+	ret = iwl_sta_tx_modify_enable_tid(priv, sta_id, tid);
-+	if (ret)
-+		return ret;
- 
- 	spin_lock_irqsave(&priv->lock, flags);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index 84df7fc..2573234 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -233,6 +233,7 @@ int iwlagn_txq_agg_enable(struct iwl_priv *priv, int txq_id,
- {
- 	unsigned long flags;
- 	u16 ra_tid;
-+	int ret;
- 
- 	if ((IWLAGN_FIRST_AMPDU_QUEUE > txq_id) ||
- 	    (IWLAGN_FIRST_AMPDU_QUEUE + priv->cfg->num_of_ampdu_queues
-@@ -248,7 +249,9 @@ int iwlagn_txq_agg_enable(struct iwl_priv *priv, int txq_id,
- 	ra_tid = BUILD_RAxTID(sta_id, tid);
- 
- 	/* Modify device's station table to Tx this TID */
--	iwl_sta_tx_modify_enable_tid(priv, sta_id, tid);
-+	ret = iwl_sta_tx_modify_enable_tid(priv, sta_id, tid);
-+	if (ret)
-+		return ret;
- 
- 	spin_lock_irqsave(&priv->lock, flags);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index d857f84..294b7ed 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3374,7 +3374,7 @@ static int iwl_mac_ampdu_action(struct ieee80211_hw *hw,
- 				struct ieee80211_sta *sta, u16 tid, u16 *ssn)
- {
- 	struct iwl_priv *priv = hw->priv;
--	int ret;
-+	int ret = -EINVAL;
- 
- 	IWL_DEBUG_HT(priv, "A-MPDU action on addr %pM tid %d\n",
- 		     sta->addr, tid);
-@@ -3382,17 +3382,19 @@ static int iwl_mac_ampdu_action(struct ieee80211_hw *hw,
- 	if (!(priv->cfg->sku & IWL_SKU_N))
- 		return -EACCES;
- 
-+	mutex_lock(&priv->mutex);
-+
- 	switch (action) {
- 	case IEEE80211_AMPDU_RX_START:
- 		IWL_DEBUG_HT(priv, "start Rx\n");
--		return iwl_sta_rx_agg_start(priv, sta, tid, *ssn);
-+		ret = iwl_sta_rx_agg_start(priv, sta, tid, *ssn);
-+		break;
- 	case IEEE80211_AMPDU_RX_STOP:
- 		IWL_DEBUG_HT(priv, "stop Rx\n");
- 		ret = iwl_sta_rx_agg_stop(priv, sta, tid);
- 		if (test_bit(STATUS_EXIT_PENDING, &priv->status))
--			return 0;
--		else
--			return ret;
-+			ret = 0;
-+		break;
- 	case IEEE80211_AMPDU_TX_START:
- 		IWL_DEBUG_HT(priv, "start Tx\n");
- 		ret = iwlagn_tx_agg_start(priv, vif, sta, tid, ssn);
-@@ -3401,7 +3403,7 @@ static int iwl_mac_ampdu_action(struct ieee80211_hw *hw,
- 			IWL_DEBUG_HT(priv, "priv->_agn.agg_tids_count = %u\n",
- 				     priv->_agn.agg_tids_count);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 0f292a2..2815ee7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -613,7 +613,8 @@ void iwlagn_rx_allocate(struct iwl_priv *priv, gfp_t priority)
  		}
--		return ret;
-+		break;
- 	case IEEE80211_AMPDU_TX_STOP:
- 		IWL_DEBUG_HT(priv, "stop Tx\n");
- 		ret = iwlagn_tx_agg_stop(priv, vif, sta, tid);
-@@ -3411,18 +3413,15 @@ static int iwl_mac_ampdu_action(struct ieee80211_hw *hw,
- 				     priv->_agn.agg_tids_count);
- 		}
- 		if (test_bit(STATUS_EXIT_PENDING, &priv->status))
--			return 0;
--		else
--			return ret;
-+			ret = 0;
-+		break;
- 	case IEEE80211_AMPDU_TX_OPERATIONAL:
--		/* do nothing */
--		return -EOPNOTSUPP;
--	default:
--		IWL_DEBUG_HT(priv, "unknown\n");
--		return -EINVAL;
-+		/* do nothing, return value ignored */
- 		break;
- 	}
--	return 0;
-+	mutex_unlock(&priv->mutex);
-+
-+	return ret;
- }
+ 		spin_unlock_irqrestore(&rxq->lock, flags);
  
- static void iwl_mac_sta_notify(struct ieee80211_hw *hw,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index d57df6c..a62a032 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -30,6 +30,7 @@
- #include <net/mac80211.h>
- #include <linux/etherdevice.h>
- #include <linux/sched.h>
-+#include <linux/lockdep.h>
+-		if (rxq->free_count > RX_LOW_WATERMARK)
++		if ((priority == GFP_ATOMIC) ||
++		    (rxq->free_count > RX_LOW_WATERMARK / 4))
+ 			gfp_mask |= __GFP_NOWARN;
  
- #include "iwl-dev.h"
- #include "iwl-core.h"
-@@ -145,8 +146,10 @@ int iwl_send_add_sta(struct iwl_priv *priv,
+ 		if (priv->hw_params.rx_page_order > 0)
+@@ -627,7 +628,7 @@ void iwlagn_rx_allocate(struct iwl_priv *priv, gfp_t priority)
+ 					       "order: %d\n",
+ 					       priv->hw_params.rx_page_order);
  
- 	if (flags & CMD_ASYNC)
- 		cmd.callback = iwl_add_sta_callback;
--	else
-+	else {
- 		cmd.flags |= CMD_WANT_SKB;
-+		might_sleep();
-+	}
- 
- 	cmd.len = priv->cfg->ops->utils->build_addsta_hcmd(sta, data);
- 	ret = iwl_send_cmd(priv, &cmd);
-@@ -1268,17 +1271,22 @@ EXPORT_SYMBOL_GPL(iwl_dealloc_bcast_station);
- /**
-  * iwl_sta_tx_modify_enable_tid - Enable Tx for this TID in station table
+-			if ((rxq->free_count <= RX_LOW_WATERMARK) &&
++			if ((rxq->free_count <= RX_LOW_WATERMARK / 4) &&
+ 			    net_ratelimit())
+ 				IWL_CRIT(priv, "Failed to alloc_pages with %s. Only %u free buffers remaining.\n",
+ 					 priority == GFP_ATOMIC ?  "GFP_ATOMIC" : "GFP_KERNEL",
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fh.h b/drivers/net/wireless/iwlwifi/iwl-fh.h
+index 113c366..431bc58 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fh.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fh.h
+@@ -426,7 +426,7 @@
+  * RX related structures and functions
   */
--void iwl_sta_tx_modify_enable_tid(struct iwl_priv *priv, int sta_id, int tid)
-+int iwl_sta_tx_modify_enable_tid(struct iwl_priv *priv, int sta_id, int tid)
- {
- 	unsigned long flags;
-+	struct iwl_addsta_cmd sta_cmd;
-+
-+	lockdep_assert_held(&priv->mutex);
+ #define RX_FREE_BUFFERS 64
+-#define RX_LOW_WATERMARK 8
++#define RX_LOW_WATERMARK 128
  
- 	/* Remove "disable" flag, to enable Tx for this TID */
- 	spin_lock_irqsave(&priv->sta_lock, flags);
- 	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_TID_DISABLE_TX;
- 	priv->stations[sta_id].sta.tid_disable_tx &= cpu_to_le16(~(1 << tid));
- 	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
--	iwl_send_add_sta(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
-+	memcpy(&sta_cmd, &priv->stations[sta_id].sta, sizeof(struct iwl_addsta_cmd));
- 	spin_unlock_irqrestore(&priv->sta_lock, flags);
-+
-+	return iwl_send_add_sta(priv, &sta_cmd, CMD_SYNC);
- }
- EXPORT_SYMBOL(iwl_sta_tx_modify_enable_tid);
- 
-@@ -1287,6 +1295,9 @@ int iwl_sta_rx_agg_start(struct iwl_priv *priv, struct ieee80211_sta *sta,
- {
- 	unsigned long flags;
- 	int sta_id;
-+	struct iwl_addsta_cmd sta_cmd;
-+
-+	lockdep_assert_held(&priv->mutex);
- 
- 	sta_id = iwl_sta_id(sta);
- 	if (sta_id == IWL_INVALID_STATION)
-@@ -1298,10 +1309,10 @@ int iwl_sta_rx_agg_start(struct iwl_priv *priv, struct ieee80211_sta *sta,
- 	priv->stations[sta_id].sta.add_immediate_ba_tid = (u8)tid;
- 	priv->stations[sta_id].sta.add_immediate_ba_ssn = cpu_to_le16(ssn);
- 	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
-+	memcpy(&sta_cmd, &priv->stations[sta_id].sta, sizeof(struct iwl_addsta_cmd));
- 	spin_unlock_irqrestore(&priv->sta_lock, flags);
- 
--	return iwl_send_add_sta(priv, &priv->stations[sta_id].sta,
--				CMD_ASYNC);
-+	return iwl_send_add_sta(priv, &sta_cmd, CMD_SYNC);
- }
- EXPORT_SYMBOL(iwl_sta_rx_agg_start);
- 
-@@ -1309,7 +1320,10 @@ int iwl_sta_rx_agg_stop(struct iwl_priv *priv, struct ieee80211_sta *sta,
- 			int tid)
- {
- 	unsigned long flags;
--	int sta_id, ret;
-+	int sta_id;
-+	struct iwl_addsta_cmd sta_cmd;
-+
-+	lockdep_assert_held(&priv->mutex);
- 
- 	sta_id = iwl_sta_id(sta);
- 	if (sta_id == IWL_INVALID_STATION) {
-@@ -1322,11 +1336,10 @@ int iwl_sta_rx_agg_stop(struct iwl_priv *priv, struct ieee80211_sta *sta,
- 	priv->stations[sta_id].sta.sta.modify_mask = STA_MODIFY_DELBA_TID_MSK;
- 	priv->stations[sta_id].sta.remove_immediate_ba_tid = (u8)tid;
- 	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
--	ret = iwl_send_add_sta(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
-+	memcpy(&sta_cmd, &priv->stations[sta_id].sta, sizeof(struct iwl_addsta_cmd));
- 	spin_unlock_irqrestore(&priv->sta_lock, flags);
- 
--	return ret;
--
-+	return iwl_send_add_sta(priv, &sta_cmd, CMD_SYNC);
- }
- EXPORT_SYMBOL(iwl_sta_rx_agg_stop);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
-index 5b1b1e4..619bb99 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.h
-@@ -73,7 +73,7 @@ int iwl_remove_station(struct iwl_priv *priv, const u8 sta_id,
- 		       const u8 *addr);
- int iwl_mac_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		       struct ieee80211_sta *sta);
--void iwl_sta_tx_modify_enable_tid(struct iwl_priv *priv, int sta_id, int tid);
-+int iwl_sta_tx_modify_enable_tid(struct iwl_priv *priv, int sta_id, int tid);
- int iwl_sta_rx_agg_start(struct iwl_priv *priv, struct ieee80211_sta *sta,
- 			 int tid, u16 ssn);
- int iwl_sta_rx_agg_stop(struct iwl_priv *priv, struct ieee80211_sta *sta,
+ /* Size of one Rx buffer in host DRAM */
+ #define IWL_RX_BUF_SIZE_3K (3 * 1000) /* 3945 only */
 -- 
 1.7.0.4
+
+
+
+
 
