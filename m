@@ -1,41 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:36372 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751791Ab0FYWji convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Jun 2010 18:39:38 -0400
-Received: by iwn41 with SMTP id 41so2467646iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Jun 2010 15:39:38 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTimeR5kQX2hSNw0Ud0QOF0-nsqCFMkSNul9wwa7C@mail.gmail.com>
-References: <AANLkTinHfFVr45OV3V6CT9auK3L-JfrCYUMQpeo9toTw@mail.gmail.com>
-	<AANLkTimeR5kQX2hSNw0Ud0QOF0-nsqCFMkSNul9wwa7C@mail.gmail.com>
-Date: Fri, 25 Jun 2010 19:39:37 -0300
-Message-ID: <AANLkTinhl-J6kUCxdjjAFyAoXRcHAhum8asBPuhwiveF@mail.gmail.com>
-Subject: Re: mesh configuration information element is wrong?
-From: Iuri Diniz <iuridiniz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:22324 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750955Ab0F1Q1I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Jun 2010 12:27:08 -0400
+Subject: Re: intel 5100/iwlagn bug in 2.6.35-rc2 during large file transfer
+From: reinette chatre <reinette.chatre@intel.com>
+To: Richard Farina <sidhayn@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4C278704.5040604@gmail.com>
+References: <4C198EF0.5080807@gmail.com>
+	 <1277225293.25793.2257.camel@rchatre-DESK>  <4C2383E2.8000909@gmail.com>
+	 <1277399636.25793.2389.camel@rchatre-DESK>  <4C23961D.7050500@gmail.com>
+	 <1277401731.25793.2391.camel@rchatre-DESK>  <4C24D926.7010806@gmail.com>
+	 <1277492229.13673.1297.camel@rchatre-DESK>  <4C278704.5040604@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 28 Jun 2010 09:27:05 -0700
+Message-ID: <1277742425.13673.1376.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 25, 2010 at 2:43 PM, Iuri Diniz <iuridiniz@gmail.com> wrote:
-> I'm analyzing the 802.11s code and I think I've found that mesh
-> configuration information element has wrongs sizes.
->
-> It is not according to my copy of 802.11s draft 3.
+On Sun, 2010-06-27 at 10:14 -0700, Richard Farina wrote:
+> > ---
+> >  drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    5 +++--
+> >  drivers/net/wireless/iwlwifi/iwl-fh.h      |    2 +-
+> >  2 files changed, 4 insertions(+), 3 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+> > index 0f292a2..2815ee7 100644
+> > --- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+> > +++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+> > @@ -613,7 +613,8 @@ void iwlagn_rx_allocate(struct iwl_priv *priv, gfp_t priority)
+> >               }
+> >               spin_unlock_irqrestore(&rxq->lock, flags);
+> >
+> > -             if (rxq->free_count > RX_LOW_WATERMARK)
+> > +             if ((priority == GFP_ATOMIC) ||
+> > +                 (rxq->free_count > RX_LOW_WATERMARK / 4))
+> >                       gfp_mask |= __GFP_NOWARN;
+> >
 
-It seems that (in the past) the code had that sizes I think right.
+Here I set the allocation mask to not print _any_ warnings when
+allocation is atomic ...
 
-http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=blobdiff;f=net/mac80211/mesh.c;h=c8a4f19ed13bb810a97bb5e25200a74cdd55a31c;hp=79425182c2903a70f355f1bdb34fe9fe8239fe05;hb=10f8f42ece65ba964ca14e794e5f45ad98d56cf1;hpb=8f2fda9594f083981ad54c1994863875fe680925
 
-so I'll assume that the last draft has changed the size of this IE.
+> [180257.090410] swapper: page allocation failure. order:1, mode:0x4020
+> [180257.090414] Pid: 0, comm: swapper Not tainted 2.6.34-pentoo-r2 #2
+> [180257.090416] Call Trace:
 
-But could someone with access to the last draft draft confirm it?
+... clearly this is an allocation warning ...
 
-Sorry for annoying you guys, I don't have the last draft.
+> [180257.090418]  <IRQ>  [<ffffffff810984c0>]
+> __alloc_pages_nodemask+0x571/0x5b9
+> [180257.090437]  [<ffffffffa05162f3>] iwlagn_rx_allocate+0x98/0x2e0 [iwlagn]
+> [180257.090445]  [<ffffffffa051668c>] iwlagn_rx_replenish_now+0x16/0x23
+> [iwlagn]
 
--- 
-Iuri Diniz
-http://iuridiniz.com [Sou um agitador, não um advogado]
-http://blog.igdium.com [Linux on Limbo]
+... but it is an atomic one, which after the patch should not be
+printing _any_ warning ...
+
+I am very confused now.
+
+Reinette
+
+
