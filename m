@@ -1,30 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:33203 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932266Ab0FEHAO (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48791 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753949Ab0F2OAN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Jun 2010 03:00:14 -0400
-Received: by wwc33 with SMTP id 33so48301wwc.19
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Jun 2010 00:00:12 -0700 (PDT)
+	Tue, 29 Jun 2010 10:00:13 -0400
+Date: Tue, 29 Jun 2010 09:49:30 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Problem with firmware load on ipw2200
+Message-ID: <20100629134930.GC5296@tuxdriver.com>
+References: <4C29F711.1090306@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1275693948-3189-1-git-send-email-notasas@gmail.com>
-References: <1275693948-3189-1-git-send-email-notasas@gmail.com>
-Date: Sat, 5 Jun 2010 10:00:12 +0300
-Message-ID: <AANLkTin7Pfn0od-m9gQbq992uwC217eVWvmmifCNs-KF@mail.gmail.com>
-Subject: Re: [PATCH 1/2] wl1251: fix a memory leak in probe
-From: Kalle Valo <kvalo@adurom.com>
-To: Grazvydas Ignotas <notasas@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4C29F711.1090306@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5 June 2010 02:25, Grazvydas Ignotas <notasas@gmail.com> wrote:
-> wl1251_sdio_probe() error path is missing wl1251_free_hw, add it.
+On Tue, Jun 29, 2010 at 08:37:21AM -0500, Larry Finger wrote:
+> I'm trying to help an ipw2200 user on the openSUSE Wireless Forum and I'm
+> stuck. The system is failing to load the firmware with error -2 (File or
+> directory not found). The difficulty is that the required files are
+> present with the correct permissions.
+> 
+> What system component might be missing and/or borked to get this symptom?
 
-Looks good, thanks.
+selinux?
 
-> Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
-
-Acked-by: Kalle Valo <kvalo@adurom.com>
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
