@@ -1,71 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:26952 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752048Ab0FGUk2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jun 2010 16:40:28 -0400
-Message-ID: <4C0D58C6.2060505@oracle.com>
-Date: Mon, 07 Jun 2010 13:38:30 -0700
-From: Randy Dunlap <randy.dunlap@oracle.com>
+Received: from nbd.name ([88.198.39.176]:36936 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755801Ab0F2Pzj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Jun 2010 11:55:39 -0400
+Message-ID: <4C2A1776.2080508@openwrt.org>
+Date: Tue, 29 Jun 2010 17:55:34 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] iwlwifi: fix-up botched revert
-References: <20100607090230.deed8bd1.randy.dunlap@oracle.com> <1275936576-15590-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1275936576-15590-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset=UTF-8
+To: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org
+Subject: Re: ath9k: ap tsf seems random and only uses lower 24 bits or so
+References: <AANLkTilG4qxjX0e5u_BGp0YcPoVBbsqd6Hlb8E0j_S8S@mail.gmail.com>	<4C29284C.5050707@openwrt.org> <AANLkTint2L1xSMughBA5aHCFMRB5KMC8EfwcxJJU5XYW@mail.gmail.com>
+In-Reply-To: <AANLkTint2L1xSMughBA5aHCFMRB5KMC8EfwcxJJU5XYW@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/07/10 11:49, John W. Linville wrote:
-> In the revert of "iwlwifi: move _agn statistics related structure", I
-> need to use CONFIG_IWLWIFI_DEBUGFS instead of CONFIG_IWLWIFI_DEBUG in
-> the private structure definition.  Without this patch, it is possible
-> to get this:
+On 2010-06-29 5:20 PM, Björn Smedman wrote:
+> 2010/6/29 Felix Fietkau <nbd@openwrt.org>:
+>> IMHO the most likely problem source is stuck beacons. Please compile the
+>> driver with the debug option enabled and load it with
+>> insmod ath9k debug=0x00000100
 > 
-> drivers/net/wireless/iwlwifi/iwl-rx.c: In function 'iwl_accumulative_statistics':
-> drivers/net/wireless/iwlwifi/iwl-rx.c:304: error: 'struct iwl_priv' has no member named 'accum_statistics'
-> drivers/net/wireless/iwlwifi/iwl-rx.c:305: error: 'struct iwl_priv' has no member named 'delta_statistics'
-> drivers/net/wireless/iwlwifi/iwl-rx.c:306: error: 'struct iwl_priv' has no member named 'max_delta'
-> drivers/net/wireless/iwlwifi/iwl-rx.c:321: error: 'struct iwl_priv' has no member named 'accum_statistics'
-> drivers/net/wireless/iwlwifi/iwl-rx.c:323: error: 'struct iwl_priv' has no member named 'accum_statistics'
-> drivers/net/wireless/iwlwifi/iwl-rx.c:325: error: 'struct iwl_priv' has no member named 'accum_statistics'
-> drivers/net/wireless/iwlwifi/iwl-rx.c:327: error: 'struct iwl_priv' has no member named 'accum_statistics'
-> drivers/net/wireless/iwlwifi/iwl-rx.c:329: error: 'struct iwl_priv' has no member named 'accum_statistics'
-> drivers/net/wireless/iwlwifi/iwl-rx.c:331: error: 'struct iwl_priv' has no member named 'accum_statistics'
-> drivers/net/wireless/iwlwifi/iwl-rx.c: In function 'iwl_reply_statistics':
-> drivers/net/wireless/iwlwifi/iwl-rx.c:484: error: 'struct iwl_priv' has no member named 'accum_statistics'
-> drivers/net/wireless/iwlwifi/iwl-rx.c:486: error: 'struct iwl_priv' has no member named 'delta_statistics'
-> drivers/net/wireless/iwlwifi/iwl-rx.c:488: error: 'struct iwl_priv' has no member named 'max_delta'
+> It looks like it could be:
 > 
-> Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-Acked-by: Randy Dunlap <randy.dunlap@oracle.com>
-
-Thanks.
-
-> ---
->  drivers/net/wireless/iwlwifi/iwl-dev.h |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+> ...
+> Jan  1 00:06:21 OpenWrt user.debug kernel: ath: slot 2 [tsf 1986567
+> tsftu 1940 intval 100] vif (null)
+> Jan  1 00:06:21 OpenWrt user.debug kernel: ath: slot 1 [tsf 2012168
+> tsftu 1965 intval 100] vif (null)
+> Jan  1 00:06:21 OpenWrt user.debug kernel: ath: slot 0 [tsf 2037767
+> tsftu 1990 intval 100] vif 80945e70
+> Jan  1 00:06:21 OpenWrt user.debug kernel: ath: slot 0 [tsf 79033
+> tsftu 77 intval 100] vif 80945e70
+> Jan  1 00:06:21 OpenWrt user.debug kernel: ath: missed 1 consecutive beacons
+> Jan  1 00:06:21 OpenWrt user.debug kernel: ath: resume beacon xmit
+> after 1 misses
+> Jan  1 00:06:21 OpenWrt user.debug kernel: ath: slot 3 [tsf 117790
+> tsftu 115 intval 100] vif (null)
+> Jan  1 00:06:21 OpenWrt user.debug kernel: ath: slot 2 [tsf 143368
+> tsftu 140 intval 100] vif (null)
+> Jan  1 00:06:21 OpenWrt user.debug kernel: ath: slot 1 [tsf 168967
+> tsftu 165 intval 100] vif (null)
+> ...
+> Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 1 [tsf 14197768
+> tsftu 13865 intval 100] vif (null)
+> Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 0 [tsf 14223368
+> tsftu 13890 intval 100] vif 80945e70
+> Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 3 [tsf 14248967
+> tsftu 13915 intval 100] vif (null)
+> Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 0 [tsf 79180
+> tsftu 77 intval 100] vif 80945e70
+> Jan  1 00:09:08 OpenWrt user.debug kernel: ath: missed 1 consecutive beacons
+> Jan  1 00:09:08 OpenWrt user.debug kernel: ath: resume beacon xmit
+> after 1 misses
+> Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 3 [tsf 117791
+> tsftu 115 intval 100] vif (null)
+> Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 2 [tsf 143366
+> tsftu 140 intval 100] vif (null)
+> Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 1 [tsf 168967
+> tsftu 165 intval 100] vif (null)
+> Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 0 [tsf 194567
+> tsftu 190 intval 100] vif 80945e70
+> ...
 > 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-> index f359d9f..a00248c 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-> +++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-> @@ -1208,7 +1208,7 @@ struct iwl_priv {
->  	struct iwl_tt_mgmt thermal_throttle;
->  
->  	struct iwl_notif_statistics statistics;
-> -#ifdef CONFIG_IWLWIFI_DEBUG
-> +#ifdef CONFIG_IWLWIFI_DEBUGFS
->  	struct iwl_notif_statistics accum_statistics;
->  	struct iwl_notif_statistics delta_statistics;
->  	struct iwl_notif_statistics max_delta;
+> What can cause a missed beacon? Are they just a "fact of life"?
+> 
+> In any case I can't find any code that resets the tsf in this (single
+> missed beacon) case. Will the hardware reset the tsf automatically
+> whenever a single beacon is missed? Isn't that a bit overkill? Will it
+> not cause problems for clients?
+One beacon miss should never cause a TSF reset. Only a lot of
+consecutive beacon misses trigger a hardware reset, which then resets
+the TSF. Looking at your log, it appears that the beacon miss is a
+symptom rather than a cause of the TSF jumps.
+Can you add a debug statement to the hw reset function to see if it's
+called before the TSF jumps?
 
-
--- 
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+- Felix
