@@ -1,181 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35567 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754912Ab0FGLDJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Jun 2010 07:03:09 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.71)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1OLa6m-0007BS-75
-	for linux-wireless@vger.kernel.org; Mon, 07 Jun 2010 13:03:08 +0200
-Message-Id: <20100607110200.244244160@sipsolutions.net>
-Date: Mon, 07 Jun 2010 13:01:40 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC 07/21] mac80211: always process blockack action from workqueue
-References: <20100607110133.472649120@sipsolutions.net>
-Mime-Version: 1.0
+Received: from nbd.name ([88.198.39.176]:43270 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755842Ab0F2Vyq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Jun 2010 17:54:46 -0400
+Message-ID: <4C2A6BA4.8080000@openwrt.org>
+Date: Tue, 29 Jun 2010 23:54:44 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org
+Subject: Re: ath9k: ap tsf seems random and only uses lower 24 bits or so
+References: <AANLkTilG4qxjX0e5u_BGp0YcPoVBbsqd6Hlb8E0j_S8S@mail.gmail.com>	<4C29284C.5050707@openwrt.org>	<AANLkTint2L1xSMughBA5aHCFMRB5KMC8EfwcxJJU5XYW@mail.gmail.com>	<4C2A1776.2080508@openwrt.org>	<AANLkTik_d6tIKj3otsgaojVBPfvW1lz9OBRujeZLyv1U@mail.gmail.com>	<4C2A24D2.4070007@openwrt.org>	<AANLkTikw3l6FIxLtIwxofGaqGQD_b7LO25uu-JV45UL6@mail.gmail.com> <AANLkTikQz34vgfweDrzH_9_a-BU4dPXbX2UGR61jtJ9n@mail.gmail.com>
+In-Reply-To: <AANLkTikQz34vgfweDrzH_9_a-BU4dPXbX2UGR61jtJ9n@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 2010-06-29 11:40 PM, Björn Smedman wrote:
+> 2010/6/29 Björn Smedman <bjorn.smedman@venatech.se>:
+>> Yes, hw reset is due to reg = 0x01702400 every 4 - 40 seconds or so:
+>> ...
+> 
+> When the chip is really stuck, does 'reg' (at 'return false') change
+> over time? If I add a second requirement that ath9k_hw_check_alive()
+> must fail three times in a row (in different invocations of
+> ath9k_tasklet()) before we reset the chip the ap seems fine. I
+> sometimes get several of these reg = 0x01702400 every second but only
+> one or at the max two in a row.
+> 
+> Under load I sometimes see some reg = 0x00f02400 as well. I also see
+> an occasional reset now and then (about once a minute) that must be
+> caused by something else.
+> 
+> Any insight into what these reg values mean? Do you think they can
+> safely be ignored as per above?
+I had a similar thought about the multiple invocations thing. I think
+that's a good approach in general, but we need to ensure that we make it
+safe.
+The main point of this function is to detect baseband hangs. If we
+experience such a hang, I'm not sure we will always get enough
+interrupts to do multiple consecutive tests.
+One way to make it safe would be to reschedule the tasklet each time we
+ignore the result of the ath9k_hw_check_alive(), that way we keep the
+detection time low as well. Maybe we could also use a timer for leaving
+10 ms time between attempts.
 
-To prepare for making the ampdu_action callback
-sleep, make mac80211 always process blockack
-action frames from the skb queue. This gets rid
-of the current special case for managed mode
-interfaces as well.
+Another thing that I'm working on right now is to ensure that the TSF
+gets preserved across resets. For some AR9280 based cards the code
+already preserves TSF in software over the chip reset, I could simply
+extend that to cover SoC as well.
+But before I post such a patch, I'll do a test on AR9160 - to see if it
+would be better to make the TSF preserve unconditional.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/iface.c |   31 ++++++++++++++++++++++++++++++-
- net/mac80211/mlme.c  |   38 --------------------------------------
- net/mac80211/rx.c    |   29 +++++++++++++----------------
- 3 files changed, 43 insertions(+), 55 deletions(-)
-
---- wireless-testing.orig/net/mac80211/iface.c	2010-06-06 13:22:14.000000000 +0200
-+++ wireless-testing/net/mac80211/iface.c	2010-06-06 13:22:19.000000000 +0200
-@@ -724,7 +724,36 @@ static void ieee80211_iface_work(struct
- 
- 	/* first process frames */
- 	while ((skb = skb_dequeue(&sdata->skb_queue))) {
--		switch (sdata->vif.type) {
-+		struct ieee80211_mgmt *mgmt = (void *)skb->data;
-+
-+		if (ieee80211_is_action(mgmt->frame_control) &&
-+		    mgmt->u.action.category == WLAN_CATEGORY_BACK) {
-+			int len = skb->len;
-+			struct sta_info *sta;
-+
-+			rcu_read_lock();
-+			sta = sta_info_get(sdata, mgmt->sa);
-+			if (sta) {
-+				switch (mgmt->u.action.u.addba_req.action_code) {
-+				case WLAN_ACTION_ADDBA_REQ:
-+					ieee80211_process_addba_request(
-+							local, sta, mgmt, len);
-+					break;
-+				case WLAN_ACTION_ADDBA_RESP:
-+					ieee80211_process_addba_resp(local, sta,
-+								     mgmt, len);
-+					break;
-+				case WLAN_ACTION_DELBA:
-+					ieee80211_process_delba(sdata, sta,
-+								mgmt, len);
-+					break;
-+				default:
-+					WARN_ON(1);
-+					break;
-+				}
-+			}
-+			rcu_read_unlock();
-+		} else switch (sdata->vif.type) {
- 		case NL80211_IFTYPE_STATION:
- 			ieee80211_sta_rx_queued_mgmt(sdata, skb);
- 			break;
---- wireless-testing.orig/net/mac80211/mlme.c	2010-06-06 13:22:15.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2010-06-06 13:22:19.000000000 +0200
-@@ -1666,44 +1666,6 @@ void ieee80211_sta_rx_queued_mgmt(struct
- 			break;
- 		case IEEE80211_STYPE_ACTION:
- 			switch (mgmt->u.action.category) {
--			case WLAN_CATEGORY_BACK: {
--				struct ieee80211_local *local = sdata->local;
--				int len = skb->len;
--				struct sta_info *sta;
--
--				rcu_read_lock();
--				sta = sta_info_get(sdata, mgmt->sa);
--				if (!sta) {
--					rcu_read_unlock();
--					break;
--				}
--
--				local_bh_disable();
--
--				switch (mgmt->u.action.u.addba_req.action_code) {
--				case WLAN_ACTION_ADDBA_REQ:
--					if (len < (IEEE80211_MIN_ACTION_SIZE +
--						   sizeof(mgmt->u.action.u.addba_req)))
--						break;
--					ieee80211_process_addba_request(local, sta, mgmt, len);
--					break;
--				case WLAN_ACTION_ADDBA_RESP:
--					if (len < (IEEE80211_MIN_ACTION_SIZE +
--						   sizeof(mgmt->u.action.u.addba_resp)))
--						break;
--					ieee80211_process_addba_resp(local, sta, mgmt, len);
--					break;
--				case WLAN_ACTION_DELBA:
--					if (len < (IEEE80211_MIN_ACTION_SIZE +
--						   sizeof(mgmt->u.action.u.delba)))
--						break;
--					ieee80211_process_delba(sdata, sta, mgmt, len);
--					break;
--				}
--				local_bh_enable();
--				rcu_read_unlock();
--				break;
--				}
- 			case WLAN_CATEGORY_SPECTRUM_MGMT:
- 				ieee80211_sta_process_chanswitch(sdata,
- 						&mgmt->u.action.u.chan_switch.sw_elem,
---- wireless-testing.orig/net/mac80211/rx.c	2010-06-06 13:22:15.000000000 +0200
-+++ wireless-testing/net/mac80211/rx.c	2010-06-06 13:22:19.000000000 +0200
-@@ -1950,33 +1950,29 @@ ieee80211_rx_h_action(struct ieee80211_r
- 		if (len < IEEE80211_MIN_ACTION_SIZE + 1)
- 			break;
- 
--		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
--			skb_queue_tail(&sdata->skb_queue, rx->skb);
--			ieee80211_queue_work(&local->hw, &sdata->work);
--			return RX_QUEUED;
--		}
--
- 		switch (mgmt->u.action.u.addba_req.action_code) {
- 		case WLAN_ACTION_ADDBA_REQ:
- 			if (len < (IEEE80211_MIN_ACTION_SIZE +
- 				   sizeof(mgmt->u.action.u.addba_req)))
--				return RX_DROP_MONITOR;
--			ieee80211_process_addba_request(local, rx->sta, mgmt, len);
--			goto handled;
-+				goto invalid;
-+			break;
- 		case WLAN_ACTION_ADDBA_RESP:
- 			if (len < (IEEE80211_MIN_ACTION_SIZE +
- 				   sizeof(mgmt->u.action.u.addba_resp)))
--				break;
--			ieee80211_process_addba_resp(local, rx->sta, mgmt, len);
--			goto handled;
-+				goto invalid;
-+			break;
- 		case WLAN_ACTION_DELBA:
- 			if (len < (IEEE80211_MIN_ACTION_SIZE +
- 				   sizeof(mgmt->u.action.u.delba)))
--				break;
--			ieee80211_process_delba(sdata, rx->sta, mgmt, len);
--			goto handled;
-+				goto invalid;
-+			break;
-+		default:
-+			goto invalid;
- 		}
--		break;
-+
-+		skb_queue_tail(&sdata->skb_queue, rx->skb);
-+		ieee80211_queue_work(&local->hw, &sdata->work);
-+		return RX_QUEUED;
- 	case WLAN_CATEGORY_SPECTRUM_MGMT:
- 		if (local->hw.conf.channel->band != IEEE80211_BAND_5GHZ)
- 			break;
-@@ -2033,6 +2029,7 @@ ieee80211_rx_h_action(struct ieee80211_r
- 		return RX_QUEUED;
- 	}
- 
-+ invalid:
- 	/*
- 	 * For AP mode, hostapd is responsible for handling any action
- 	 * frames that we didn't handle, including returning unknown
-
-
+- Felix
