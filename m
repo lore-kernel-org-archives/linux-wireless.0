@@ -1,48 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46556 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755516Ab0FIPHW (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:45053 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756484Ab0F2PUQ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jun 2010 11:07:22 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.71)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1OMMsD-00089x-GP
-	for linux-wireless@vger.kernel.org; Wed, 09 Jun 2010 17:07:21 +0200
-Message-Id: <20100609150456.191611399@sipsolutions.net>
-Date: Wed, 09 Jun 2010 17:01:59 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC v2 17/22] mac80211: fix RX aggregation timer
-References: <20100609150142.227469359@sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 29 Jun 2010 11:20:16 -0400
+Received: by iwn7 with SMTP id 7so1299612iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Jun 2010 08:20:15 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4C29284C.5050707@openwrt.org>
+References: <AANLkTilG4qxjX0e5u_BGp0YcPoVBbsqd6Hlb8E0j_S8S@mail.gmail.com>
+	<4C29284C.5050707@openwrt.org>
+Date: Tue, 29 Jun 2010 17:20:15 +0200
+Message-ID: <AANLkTint2L1xSMughBA5aHCFMRB5KMC8EfwcxJJU5XYW@mail.gmail.com>
+Subject: Re: ath9k: ap tsf seems random and only uses lower 24 bits or so
+From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+2010/6/29 Felix Fietkau <nbd@openwrt.org>:
+> IMHO the most likely problem source is stuck beacons. Please compile the
+> driver with the debug option enabled and load it with
+> insmod ath9k debug=0x00000100
 
-I noticed that when there was _no_ traffic at
-all on a given aggregation session, it would
-never time out. This won't happen unless you
-forced creating a session, but fix it anyway.
+It looks like it could be:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/agg-rx.c |    4 ++++
- 1 file changed, 4 insertions(+)
+...
+Jan  1 00:06:21 OpenWrt user.debug kernel: ath: slot 2 [tsf 1986567
+tsftu 1940 intval 100] vif (null)
+Jan  1 00:06:21 OpenWrt user.debug kernel: ath: slot 1 [tsf 2012168
+tsftu 1965 intval 100] vif (null)
+Jan  1 00:06:21 OpenWrt user.debug kernel: ath: slot 0 [tsf 2037767
+tsftu 1990 intval 100] vif 80945e70
+Jan  1 00:06:21 OpenWrt user.debug kernel: ath: slot 0 [tsf 79033
+tsftu 77 intval 100] vif 80945e70
+Jan  1 00:06:21 OpenWrt user.debug kernel: ath: missed 1 consecutive beacons
+Jan  1 00:06:21 OpenWrt user.debug kernel: ath: resume beacon xmit
+after 1 misses
+Jan  1 00:06:21 OpenWrt user.debug kernel: ath: slot 3 [tsf 117790
+tsftu 115 intval 100] vif (null)
+Jan  1 00:06:21 OpenWrt user.debug kernel: ath: slot 2 [tsf 143368
+tsftu 140 intval 100] vif (null)
+Jan  1 00:06:21 OpenWrt user.debug kernel: ath: slot 1 [tsf 168967
+tsftu 165 intval 100] vif (null)
+...
+Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 1 [tsf 14197768
+tsftu 13865 intval 100] vif (null)
+Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 0 [tsf 14223368
+tsftu 13890 intval 100] vif 80945e70
+Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 3 [tsf 14248967
+tsftu 13915 intval 100] vif (null)
+Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 0 [tsf 79180
+tsftu 77 intval 100] vif 80945e70
+Jan  1 00:09:08 OpenWrt user.debug kernel: ath: missed 1 consecutive beacons
+Jan  1 00:09:08 OpenWrt user.debug kernel: ath: resume beacon xmit
+after 1 misses
+Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 3 [tsf 117791
+tsftu 115 intval 100] vif (null)
+Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 2 [tsf 143366
+tsftu 140 intval 100] vif (null)
+Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 1 [tsf 168967
+tsftu 165 intval 100] vif (null)
+Jan  1 00:09:08 OpenWrt user.debug kernel: ath: slot 0 [tsf 194567
+tsftu 190 intval 100] vif 80945e70
+...
 
---- wireless-testing.orig/net/mac80211/agg-rx.c	2010-06-09 12:57:30.000000000 +0200
-+++ wireless-testing/net/mac80211/agg-rx.c	2010-06-09 12:57:31.000000000 +0200
-@@ -274,6 +274,10 @@ void ieee80211_process_addba_request(str
- 
- 	/* activate it for RX */
- 	rcu_assign_pointer(sta->ampdu_mlme.tid_rx[tid], tid_agg_rx);
-+
-+	if (timeout)
-+		mod_timer(&tid_agg_rx->session_timer, TU_TO_EXP_TIME(timeout));
-+
- end:
- 	spin_unlock_bh(&sta->lock);
- 
+What can cause a missed beacon? Are they just a "fact of life"?
 
+In any case I can't find any code that resets the tsf in this (single
+missed beacon) case. Will the hardware reset the tsf automatically
+whenever a single beacon is missed? Isn't that a bit overkill? Will it
+not cause problems for clients?
 
+> - Felix
+
+/Björn
