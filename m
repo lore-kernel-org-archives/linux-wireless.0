@@ -1,81 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:43219 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751909Ab0FLEeF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Jun 2010 00:34:05 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 02/24] ath9k_hw: fix clock rate calculations for ANI
-Date: Sat, 12 Jun 2010 00:33:40 -0400
-Message-Id: <1276317242-15540-3-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
-References: <1276317242-15540-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail.gmx.net ([213.165.64.20]:60506 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752354Ab0F2JRL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Jun 2010 05:17:11 -0400
+From: Sebastian Smolorz <Sebastian.Smolorz@gmx.de>
+To: Jason Andryuk <jandryuk@gmail.com>
+Subject: Re: [PATCH 0/2] at76c50x-usb.c: Fix broken authentication process
+Date: Tue, 29 Jun 2010 11:17:46 +0200
+Cc: kalle.valo@iki.fi, linux-wireless@vger.kernel.org
+References: <201006221651.24853.Sebastian.Smolorz@gmx.de> <201006281747.00128.Sebastian.Smolorz@gmx.de> <AANLkTilyntO2L8LPOd_1BO73PLiDQBNbOv3e10gXI0N8@mail.gmail.com>
+In-Reply-To: <AANLkTilyntO2L8LPOd_1BO73PLiDQBNbOv3e10gXI0N8@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201006291117.46947.Sebastian.Smolorz@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The clock rate was assumed to be static but it actually
-changes depending on the mode of operation, correct this
-to help improve the calcuation of the listenTime for ANI.
-This change will help adjust ANI more accurately on different
-PHY thresholds.
+Jason Andryuk wrote:
+> On Mon, Jun 28, 2010 at 11:46 AM, Sebastian Smolorz
+> 
+> <Sebastian.Smolorz@gmx.de> wrote:
+> > Jason Andryuk wrote:
+> >> On Tue, Jun 22, 2010 at 10:51 AM, Sebastian Smolorz
+> > 
+> > It does but I must admit that I did not test the direct probing, only
+> > the authentication.
+> > 
+> > Which kernel version did you patch?
+> 
+> I used John Linville's wireless-testing tag master-2010-06-24
+> (2.6.35-rc3).  Your patches were included in the tree.
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ani.c |   31 ++++++++++++++++++++++++++++++-
- 1 files changed, 30 insertions(+), 1 deletions(-)
+OK.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 3da820f..e879055 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -259,6 +259,27 @@ static void ath9k_hw_ani_lower_immunity(struct ath_hw *ah)
- 	}
- }
- 
-+static u8 ath9k_hw_chan_2_clockrate_mhz(struct ath_hw *ah)
-+{
-+	struct ath9k_channel *chan = ah->curchan;
-+	struct ieee80211_conf *conf = &ath9k_hw_common(ah)->hw->conf;
-+	u8 clockrate; /* in MHz */
-+
-+	if (!ah->curchan) /* should really check for CCK instead */
-+		clockrate = ATH9K_CLOCK_RATE_CCK;
-+	else if (conf->channel->band == IEEE80211_BAND_2GHZ)
-+		clockrate = ATH9K_CLOCK_RATE_2GHZ_OFDM;
-+	else if (IS_CHAN_A_FAST_CLOCK(ah, chan))
-+		clockrate = ATH9K_CLOCK_FAST_RATE_5GHZ_OFDM;
-+	else
-+		clockrate = ATH9K_CLOCK_RATE_5GHZ_OFDM;
-+
-+	if (conf_is_ht40(conf))
-+		return clockrate * 2;
-+
-+	return clockrate * 2;
-+}
-+
- static int32_t ath9k_hw_ani_get_listen_time(struct ath_hw *ah)
- {
- 	struct ar5416AniState *aniState;
-@@ -278,7 +299,15 @@ static int32_t ath9k_hw_ani_get_listen_time(struct ath_hw *ah)
- 		int32_t ccdelta = cycleCount - aniState->cycleCount;
- 		int32_t rfdelta = rxFrameCount - aniState->rxFrameCount;
- 		int32_t tfdelta = txFrameCount - aniState->txFrameCount;
--		listenTime = (ccdelta - rfdelta - tfdelta) / 44000;
-+		int32_t clock_rate = ath9k_hw_chan_2_clockrate_mhz(ah) * 1000;;
-+
-+		/*
-+		 * convert HW counter values to ms using mode
-+		 * specifix clock rate
-+		 */
-+		clock_rate = ath9k_hw_chan_2_clockrate_mhz(ah) * 1000;;
-+
-+		listenTime = (ccdelta - rfdelta - tfdelta) / clock_rate;
- 	}
- 	aniState->cycleCount = cycleCount;
- 	aniState->txFrameCount = txFrameCount;
+> > The problem is that when probed directly, no (real) bssid is coded in
+> > the frame, only the multicast address. So with a frame of type
+> > IEEE80211_STYPE_PROBE_REQ we have no chance to decode the bssid because
+> > mac80211 doesn't give us the needed information. I think in the case of
+> > direct probing we are lost, only the authentication works with the
+> > patch I sent. Another solution would be to change mac80211 but that
+> > would be a special solution for just one driver. It's questionable if
+> > this is a viable way. On the other hand it would be great to have a
+> > working driver again.
+> 
+> How do you bypass the direct probe and go immediately to
+> authentication?  NetworkManager/mac80211 tries the direct probe before
+> authentication.  Without a probe response, mac80211 does not progress
+> to the actual authentication.
+
+I have one computer on which authentication is always processed without any 
+preliminary direct probe. I tried that several times and with another 
+wireless stick, too. On my laptop, the direct probe is processed first but I 
+use the following workaround:
+
+modprobe at76c50x-usb
+iwconfig wlan0 essid <ESSID>
+ifconfig wlan0 <IP>
+ifconfig wlan0 down
+ifconfig wlan0 <IP>
+ifconfig wlan0 down
+ifconfig wlan0 <IP>
+
+So for me it's necessary to set the IP three times before the interface 
+works. After the first time the direct probe is processed and fails. After 
+the second time authentication is tried - but now the direct probe 
+responses. After the third time, finally, the authentication is successful.
+
+I know, this is very ugly, but maybe a feasible workaround for you, too.
+
 -- 
-1.6.3.3
-
+Sebastian
