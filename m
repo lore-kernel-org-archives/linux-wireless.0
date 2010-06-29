@@ -1,49 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:62798 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932835Ab0FCA5H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jun 2010 20:57:07 -0400
-From: Sujith <Sujith.Manoharan@atheros.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:52496 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755183Ab0F2Wut convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Jun 2010 18:50:49 -0400
+Received: by iwn7 with SMTP id 7so165745iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Jun 2010 15:50:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19462.65068.93701.741079@gargle.gargle.HOWL>
-Date: Thu, 3 Jun 2010 06:28:20 +0530
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Marcel Holtmann <marcel@holtmann.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [PATCH 1/8] ath9k: Determine Firmware on probe
-In-Reply-To: <AANLkTiky9UF-aqeZCFleOFSIVw3vDiYbLUdTkkYEWN2B@mail.gmail.com>
-References: <19462.12578.143627.398866@gargle.gargle.HOWL>
-	<AANLkTiky9UF-aqeZCFleOFSIVw3vDiYbLUdTkkYEWN2B@mail.gmail.com>
+In-Reply-To: <4C2A6BA4.8080000@openwrt.org>
+References: <AANLkTilG4qxjX0e5u_BGp0YcPoVBbsqd6Hlb8E0j_S8S@mail.gmail.com>
+	<4C29284C.5050707@openwrt.org>
+	<AANLkTint2L1xSMughBA5aHCFMRB5KMC8EfwcxJJU5XYW@mail.gmail.com>
+	<4C2A1776.2080508@openwrt.org>
+	<AANLkTik_d6tIKj3otsgaojVBPfvW1lz9OBRujeZLyv1U@mail.gmail.com>
+	<4C2A24D2.4070007@openwrt.org>
+	<AANLkTikw3l6FIxLtIwxofGaqGQD_b7LO25uu-JV45UL6@mail.gmail.com>
+	<AANLkTikQz34vgfweDrzH_9_a-BU4dPXbX2UGR61jtJ9n@mail.gmail.com>
+	<4C2A6BA4.8080000@openwrt.org>
+Date: Wed, 30 Jun 2010 00:50:48 +0200
+Message-ID: <AANLkTimhHK461U_qguBGuJjppy5RP2tx5ApasJWVLgr4@mail.gmail.com>
+Subject: Re: ath9k: ap tsf seems random and only uses lower 24 bits or so
+From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> I had done some something similar for ar9170 a while back [1] when
-> adding AVM FRITZ support to ar9170 and then got complaints from Marcel
-> on this approach since it requires synching the PCI device IDs in two
-> places. I frankly don't care how we do this but we should try to at
-> least stick to one way of doing this.
-> 
-> [1] http://osdir.com/ml/linux-wireless/2009-05/msg01219.html
+2010/6/29 Felix Fietkau <nbd@openwrt.org>:
+> I had a similar thought about the multiple invocations thing. I think
+> that's a good approach in general, but we need to ensure that we make it
+> safe.
+> The main point of this function is to detect baseband hangs. If we
+> experience such a hang, I'm not sure we will always get enough
+> interrupts to do multiple consecutive tests.
+> One way to make it safe would be to reschedule the tasklet each time we
+> ignore the result of the ath9k_hw_check_alive(), that way we keep the
+> detection time low as well. Maybe we could also use a timer for leaving
+> 10 ms time between attempts.
 
-I did look at using the device_id table (using USB_DEVICE_VER),
-but our case is like this:
+The xmit logic has sc->tx_complete_work that periodically checks if
+the tx is hung and resets the chip if so. Maybe we could refactor that
+into a common periodic health checkup task in main.c that could call
+into both xmit.c and recv.c? Or does ath9k_hw_check_alive() have to
+run in the interrupt context in some way?
 
-* for prodId, version 2.2 load foo_1_1.fw
-* for prodId, version everything else, load foo.fw
+> - Felix
 
-This requires a bit of handling in the driver, hence this patch.
-
-But thinking about it, will this work ?
-
-USB_DEVICE_VER(vend, 0x7010, 2, 2); [set .driver_info to "foo_1_1.fw]
-USB_DEVICE(vend, 0x7010);           [set .driver_info to "foo.fw"]
-
-That is, will the second registration be the fallback case in case
-bcdLo and bcdHi are _anything_ other than 2.2 ?
-
-Sujith
+/Björn
