@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:37794 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753739Ab0FPHqN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jun 2010 03:46:13 -0400
-From: Sebastian Smolorz <Sebastian.Smolorz@gmx.de>
-To: Kalle Valo <kvalo@adurom.com>
-Subject: Re: [RFC] Changes in mac80211 to make at76c50x-usb working again
-Date: Wed, 16 Jun 2010 09:46:54 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Marcel Holtmann <marcel@holtmann.org>
-References: <201006151416.36686.Sebastian.Smolorz@gmx.de> <1276609006.3648.233.camel@jlt3.sipsolutions.net> <AANLkTinHK_MbKZd9HUDoiWuWs5AmDOQiza0poofzYeDn@mail.gmail.com>
-In-Reply-To: <AANLkTinHK_MbKZd9HUDoiWuWs5AmDOQiza0poofzYeDn@mail.gmail.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:35426 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751903Ab0F2VkQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Jun 2010 17:40:16 -0400
+Received: by iwn7 with SMTP id 7so103358iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Jun 2010 14:40:16 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201006160946.54197.Sebastian.Smolorz@gmx.de>
+In-Reply-To: <AANLkTikw3l6FIxLtIwxofGaqGQD_b7LO25uu-JV45UL6@mail.gmail.com>
+References: <AANLkTilG4qxjX0e5u_BGp0YcPoVBbsqd6Hlb8E0j_S8S@mail.gmail.com>
+	<4C29284C.5050707@openwrt.org>
+	<AANLkTint2L1xSMughBA5aHCFMRB5KMC8EfwcxJJU5XYW@mail.gmail.com>
+	<4C2A1776.2080508@openwrt.org>
+	<AANLkTik_d6tIKj3otsgaojVBPfvW1lz9OBRujeZLyv1U@mail.gmail.com>
+	<4C2A24D2.4070007@openwrt.org>
+	<AANLkTikw3l6FIxLtIwxofGaqGQD_b7LO25uu-JV45UL6@mail.gmail.com>
+Date: Tue, 29 Jun 2010 23:40:16 +0200
+Message-ID: <AANLkTikQz34vgfweDrzH_9_a-BU4dPXbX2UGR61jtJ9n@mail.gmail.com>
+Subject: Re: ath9k: ap tsf seems random and only uses lower 24 bits or so
+From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo wrote:
-> On 15 June 2010 16:36, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > On Tue, 2010-06-15 at 09:26 -0400, John W. Linville wrote:
-> >> On Tue, Jun 15, 2010 at 02:16:36PM +0200, Sebastian Smolorz wrote:
-> >> > the at76c50x-usb driver fails to authenticate with an AP.
-> >
-> > We need more information on how it fails.
-> 
-> I debugged this a long time ago. The problem is that firmware's
-> CMD_JOIN only works if bssid is correct one. I remember trying
-> ff:ff:ff:ff:ff:ff, but that didn't work for some reason. The join
-> command needs to be sent before association, otherwise transmission
-> won't work at all. And if I use a random bssid the firmware will
-> filter the replies. But I tested this a long time ago, I might
-> remember something wrong.
-> 
-> I was thinking a hack which would get bssid from association frames
-> and then send CMD_JOIN, before the association frame.
+2010/6/29 Björn Smedman <bjorn.smedman@venatech.se>:
+> Yes, hw reset is due to reg = 0x01702400 every 4 - 40 seconds or so:
+> ...
 
-Could you elaborate a little bit on this?
+When the chip is really stuck, does 'reg' (at 'return false') change
+over time? If I add a second requirement that ath9k_hw_check_alive()
+must fail three times in a row (in different invocations of
+ath9k_tasklet()) before we reset the chip the ap seems fine. I
+sometimes get several of these reg = 0x01702400 every second but only
+one or at the max two in a row.
 
-How do we proceed to make the driver working again? Do you want to work on 
-this issue?
+Under load I sometimes see some reg = 0x00f02400 as well. I also see
+an occasional reset now and then (about once a minute) that must be
+caused by something else.
 
--- 
-Sebastian
+Any insight into what these reg values mean? Do you think they can
+safely be ignored as per above?
+
+/Björn
