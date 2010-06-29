@@ -1,81 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:44963 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759360Ab0FPSPM (ORCPT
+Received: from 30.mail-out.ovh.net ([213.186.62.213]:40630 "HELO
+	30.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751069Ab0F2GPH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Jun 2010 14:15:12 -0400
-Received: by pxi8 with SMTP id 8so4026322pxi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Jun 2010 11:15:11 -0700 (PDT)
-Message-ID: <4C1914C1.602@gmail.com>
-Date: Wed, 16 Jun 2010 11:15:29 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+	Tue, 29 Jun 2010 02:15:07 -0400
+Message-ID: <4C298DD2.8010704@free.fr>
+Date: Tue, 29 Jun 2010 08:08:18 +0200
+From: Benoit Papillault <benoit.papillault@free.fr>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Kristoffer Ericson <kristoffer.ericson@gmail.com>,
-	"stable@kernel.org" <stable@kernel.org>,
-	"greg@kroah.com" <greg@kroah.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Peter Stuge <peter@stuge.se>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 2.6.32.y] ath9k: re-enable ps by default for new single
- chip families
-References: <1276640359-25360-1-git-send-email-lrodriguez@atheros.com> <20100616081227.GA1118@boggieman> <4C18D2A5.5080702@gmail.com> <AANLkTimDp52ULRcO9NMgeV34olfpD97wYfmr_atOQ5AF@mail.gmail.com> <4C18F560.1010408@gmail.com> <20100616175318.GA26198@tux>
-In-Reply-To: <20100616175318.GA26198@tux>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>,
+	ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] ath9k: ap tsf seems random and only uses lower
+ 24	bits or so
+References: <AANLkTilG4qxjX0e5u_BGp0YcPoVBbsqd6Hlb8E0j_S8S@mail.gmail.com> <4C29284C.5050707@openwrt.org>
+In-Reply-To: <4C29284C.5050707@openwrt.org>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/16/2010 10:53 AM, Luis R. Rodriguez wrote:
-> On Wed, Jun 16, 2010 at 09:01:36AM -0700, Justin P. Mattock wrote:
->> On 06/16/2010 08:49 AM, Luis R. Rodriguez wrote:
->>> On Wed, Jun 16, 2010 at 6:33 AM, Justin P. Mattock
->>> <justinmattock@gmail.com>   wrote:
->>>> On 06/16/2010 01:12 AM, Kristoffer Ericson wrote:
->>>>>
->>>>> On Tue, Jun 15, 2010 at 06:19:19PM -0400, Luis R. Rodriguez wrote:
->>>>>>
->>>>>> commit 14acdde6e527950f66c084dbf19bad6fbfcaeedc upstream.
->>>>>>
->>>>>> The newer single chip hardware family of chipsets have not been
->>>>>> experiencing issues with power saving set by default with recent
->>>>>> fixes merged (even into stable). The remaining issues are only
->>>>>> reported with AR5416 and since enabling PS by default can increase
->>>>>> power savings considerably best to take advantage of that feature
->>>>>> as this has been tested properly.
->>>>>
->>>>> I havent had any issues lately. But that said Ive moved on to
->>>>> 2.6.33, 2.6.34 which seems to work fine. Believe you set
->>>>> to disabled by default on those?
->>>>>
->>>>> /Kristoffer
->>>>>
->>>>
->>>> just tried to add this patch to the latest HEAD, but realized
->>>> ath_set_hw_capab is missing(or I cant seem to grep it)
->>>> if you have a patch for the latest tree let me know I can see if I'm hitting
->>>> anything like before.
->>>
->>> The patch would already be merged since 2.6.33.y, this patch is a
->>> backport for 2.6.32.y. I just hadn't had time to backport it yet,
->>> until today.
->>>
->>>     Luis
->>>
+Le 29/06/2010 00:55, Felix Fietkau a écrit :
+> On 2010-06-29 12:31 AM, Björn Smedman wrote:
+>> Hi all,
 >>
->> so its already in there then..
+>> I'm getting weird values from the debugfs file ieee80211/phy0/tsf: the
+>> value goes up and down rather randomly and only the lower 24 bits or
+>> so seem to ever be used (see below for details).
+>>
+>> The only thing running on phy0 is a single ap interface (and the
+>> monitor companion that hostapd sets up). I was expecting tsf to
+>> increase monotonically until all 64 bits had been used.
+>>
+>> For a moment I thought it might be the kernel snprintf (on mips)
+>> playing a trick on me so I tried the following patch. But the result
+>> is the same.
+> IMHO the most likely problem source is stuck beacons. Please compile the
+> driver with the debug option enabled and load it with
+> insmod ath9k debug=0x00000100
 >
-> Right
->
->> if that's the case then the system runs
->> good with powersave on then..
->
-> Did you read the patch by chance? It only enables power save for
-> non-AR5416 hardware. What do you have?
->
->    Luis
->
+> - Felix
 
-mine is the AR5008
+Humm... I observed a similar behavior a while ago because only the 15 
+lower bits of rstamp were used when being extended (but rstamp is 32 
+bits in fact). If so, it has been fixed by Felix in the following commit :
 
-Justin P. Mattock
+commit a6d2055b02dde1067075795274672720baadd3ca
+Author: Felix Fietkau <nbd@openwrt.org>
+Date:   Sat Jun 12 00:33:54 2010 -0400
+
+     ath9k: fix extending the rx timestamp with the hardware TSF
+
+Regards,
+Benoit
