@@ -1,50 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f185.google.com ([209.85.222.185]:58791 "EHLO
-	mail-pz0-f185.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755467Ab0FBCUp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Jun 2010 22:20:45 -0400
-MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 1 Jun 2010 19:20:25 -0700
-Message-ID: <AANLkTinuODBgl8Yqntq29BhBms8S17BuRRAx72UoJaV2@mail.gmail.com>
-Subject: compat-wireless branch for wireless-testing, "wl"
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>
-Cc: Senthil Balasubramanian <senthilkumar@atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx04.teleca.com ([212.92.145.6]:34034 "EHLO mx04.teleca.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755341Ab0F2Kux (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Jun 2010 06:50:53 -0400
+From: Yuri Ershov <ext-yuri.ershov@nokia.com>
+To: johannes@sipsolutions.net
+Cc: ext-yuri.kululin@nokia.com, linux-wireless@vger.kernel.org
+Subject: [RFC 2/3] nl80211: Fix memory leaks
+Date: Tue, 29 Jun 2010 15:08:07 +0400
+Message-Id: <8123f79aa6e6c6d5634ae86396cfd020c0e2bbb9.1277808543.git.ext-yuri.ershov@nokia.com>
+In-Reply-To: <cover.1277808543.git.ext-yuri.ershov@nokia.com>
+References: <cover.1277808543.git.ext-yuri.ershov@nokia.com>
+In-Reply-To: <cover.1277808543.git.ext-yuri.ershov@nokia.com>
+References: <cover.1277808543.git.ext-yuri.ershov@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some developers or users may not have linux-next.git or the
-linux-2.6-allstable.git trees around and only keep a local
-wireless-testing.git tree around. For those there is a branch now on
-compat-wireless called "wl" (I got it from the localversion-wireless
-file) which you can use to generate tarballs based on only the latest
-wireless-testing updates. I've kept the pending and crap patches on it
-for now but those will likely be removed once John starts merging
-stuff back in.
+In case of errors during message composing msg should be freed after canceling.
 
-I would prefer if people who do contribute on compat-wireless work
-more on the master branch of compat-wireless and linux-next.git
-instead though as this allows us to start backporting the next kernel
-release headaches early on and not at cram time during or right after
-the merge window. The "wl" branch is there to aid developers who do
-not have the linux-next.git tree around or for Linux distributions who
-currently may not care about updates on the kernel development cycle
-on the other subsystems since wireless-testing only gets only 802.11
-updates. An example is openwrt which uses only wireless-testing.git.
+Signed-off-by: Yuri Kululin <ext-yuri.kululin@nokia.com>
+Signed-off-by: Yuri Ershov <ext-yuri.ershov@nokia.com>
+---
+ net/wireless/nl80211.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-If you send me patches I will assume they are for the master branch of
-compat-wireless unless otherwise specified. I will try to keep it the
-wireless-testing branch updated but patches for it are always
-welcomed. I will try to follow the upstream model though so would
-first want the patches on the master branch of compat-wireless and
-only then trickle them down for the "wl" branch. Since there is a time
-delay between patches getting in wireless-next.git and linux-next.git
-there may be an inherent delay between propagating patches down to the
-"wl" branch. Not sure, we'll see. If you have a better idea of how to
-handle this please let me know.
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index a999fc1..c6bff6b 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2769,6 +2769,7 @@ static int nl80211_get_mesh_params(struct sk_buff *skb,
+ 
+  nla_put_failure:
+ 	genlmsg_cancel(msg, hdr);
++	nlmsg_free(msg);
+ 	err = -EMSGSIZE;
+  out:
+ 	/* Cleanup */
+@@ -2960,6 +2961,7 @@ static int nl80211_get_reg(struct sk_buff *skb, struct genl_info *info)
+ 
+ nla_put_failure:
+ 	genlmsg_cancel(msg, hdr);
++	nlmsg_free(msg);
+ 	err = -EMSGSIZE;
+ out:
+ 	mutex_unlock(&cfg80211_mutex);
+-- 
+1.7.0.4
 
-  Luis
