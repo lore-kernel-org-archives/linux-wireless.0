@@ -1,52 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58858
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757163Ab0F3TFh (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41176 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755636Ab0F2TpP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jun 2010 15:05:37 -0400
-Date: Wed, 30 Jun 2010 12:05:51 -0700 (PDT)
-Message-Id: <20100630.120551.170116973.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2010-06-30
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20100630185319.GA2618@tuxdriver.com>
-References: <20100630185319.GA2618@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 29 Jun 2010 15:45:15 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] iwlwifi: do not export iwl_leds_background
+Date: Tue, 29 Jun 2010 15:39:38 -0400
+Message-Id: <1277840378-18305-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1266572413.3991.55.camel@jlt3.sipsolutions.net>
+References: <1266572413.3991.55.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 30 Jun 2010 14:53:20 -0400
+It is only used from within the iwlcore module.
 
-> Here are a few more fixes intended for 2.6.35.  Included are a couple of
-> small regression fixes for iwlwifi, one that causes connection stalls with
-> 802.11n on some devices and another which could disable multicast traffic.
-> Also included is an ath9k fix which avoids a null pointer dereference
-> resulting from a timer leak.
-> 
-> Please let me know if there are problems!
-...
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-led.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-Pulled, thanks John.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-led.c b/drivers/net/wireless/iwlwifi/iwl-led.c
+index db5bfcb..486244b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-led.c
++++ b/drivers/net/wireless/iwlwifi/iwl-led.c
+@@ -214,7 +214,6 @@ void iwl_leds_background(struct iwl_priv *priv)
+ 	priv->last_blink_time = jiffies;
+ 	priv->last_blink_rate = blink_idx;
+ }
+-EXPORT_SYMBOL(iwl_leds_background);
+ 
+ void iwl_leds_init(struct iwl_priv *priv)
+ {
+-- 
+1.7.0.1
 
-> @@ -1329,6 +1328,12 @@ void iwl_configure_filter(struct ieee80211_hw *hw,
->  
->  	mutex_unlock(&priv->mutex);
->  
-> +	/*
-> +	 * Receiving all multicast frames is always enabled by the
-> +	 * default flags setup in iwl_connection_init_rx_config()
-> +	 * since we currently do not support programming multicast
-> +	 * filters into the device.
-> +	 */
->  	*total_flags &= FIF_OTHER_BSS | FIF_ALLMULTI | FIF_PROMISC_IN_BSS |
->  			FIF_BCN_PRBRESP_PROMISC | FIF_CONTROL;
-
-Note that this is an amazingly serious limitation.
-
-This basically makes iwl chips unsuitable for use on networks where
-real multicast use is common.
