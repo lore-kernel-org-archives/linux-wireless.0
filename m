@@ -1,108 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42758 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758628Ab0FJI0I (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Jun 2010 04:26:08 -0400
-Message-Id: <20100610082230.200071519@sipsolutions.net>
-Date: Thu, 10 Jun 2010 10:21:36 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 08/23] mac80211: move blockack stop due to fragmentation
-References: <20100610082128.641664439@sipsolutions.net>
-Mime-Version: 1.0
+Received: from nbd.name ([88.198.39.176]:52612 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753493Ab0F2LpN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Jun 2010 07:45:13 -0400
+Message-ID: <4C29DCC1.2060707@openwrt.org>
+Date: Tue, 29 Jun 2010 13:45:05 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Benoit Papillault <benoit.papillault@free.fr>
+CC: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>,
+	ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] ath9k: ap tsf seems random and only uses lower
+ 24	bits or so
+References: <AANLkTilG4qxjX0e5u_BGp0YcPoVBbsqd6Hlb8E0j_S8S@mail.gmail.com> <4C29284C.5050707@openwrt.org> <4C298DD2.8010704@free.fr>
+In-Reply-To: <4C298DD2.8010704@free.fr>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 2010-06-29 8:08 AM, Benoit Papillault wrote:
+> Le 29/06/2010 00:55, Felix Fietkau a écrit :
+>> On 2010-06-29 12:31 AM, Björn Smedman wrote:
+>>> Hi all,
+>>>
+>>> I'm getting weird values from the debugfs file ieee80211/phy0/tsf: the
+>>> value goes up and down rather randomly and only the lower 24 bits or
+>>> so seem to ever be used (see below for details).
+>>>
+>>> The only thing running on phy0 is a single ap interface (and the
+>>> monitor companion that hostapd sets up). I was expecting tsf to
+>>> increase monotonically until all 64 bits had been used.
+>>>
+>>> For a moment I thought it might be the kernel snprintf (on mips)
+>>> playing a trick on me so I tried the following patch. But the result
+>>> is the same.
+>> IMHO the most likely problem source is stuck beacons. Please compile the
+>> driver with the debug option enabled and load it with
+>> insmod ath9k debug=0x00000100
+>>
+>> - Felix
+> 
+> Humm... I observed a similar behavior a while ago because only the 15 
+> lower bits of rstamp were used when being extended (but rstamp is 32 
+> bits in fact). If so, it has been fixed by Felix in the following commit :
+Nope, different issue. The TSF extending applies only to rx timestamps,
+however Björn has been observing weird TSF values from the hw register.
+The Rx TSF timestamp is pretty much irrelevant in AP mode.
 
-There's a corner case where we receive a fragmented
-frame during a blockack session, in which case we
-will terminate that session. To simplify future work
-in this area that will culminate in allowing the
-driver callbacks for aggregation to sleep, move the
-processing of this case out of the RX path into the
-interface work.
-
-This will simplify future work because the new place
-for this code doesn't require that the function will
-always be atomic, which the RX path needs.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/iface.c |   32 +++++++++++++++++++++++++++++++-
- net/mac80211/rx.c    |    5 ++---
- 2 files changed, 33 insertions(+), 4 deletions(-)
-
---- wireless-testing.orig/net/mac80211/iface.c	2010-06-09 17:21:09.000000000 +0200
-+++ wireless-testing/net/mac80211/iface.c	2010-06-09 17:21:10.000000000 +0200
-@@ -707,6 +707,7 @@ static void ieee80211_iface_work(struct
- 		container_of(work, struct ieee80211_sub_if_data, work);
- 	struct ieee80211_local *local = sdata->local;
- 	struct sk_buff *skb;
-+	struct sta_info *sta;
- 
- 	if (!ieee80211_sdata_running(sdata))
- 		return;
-@@ -729,7 +730,6 @@ static void ieee80211_iface_work(struct
- 		if (ieee80211_is_action(mgmt->frame_control) &&
- 		    mgmt->u.action.category == WLAN_CATEGORY_BACK) {
- 			int len = skb->len;
--			struct sta_info *sta;
- 
- 			rcu_read_lock();
- 			sta = sta_info_get(sdata, mgmt->sa);
-@@ -753,6 +753,36 @@ static void ieee80211_iface_work(struct
- 				}
- 			}
- 			rcu_read_unlock();
-+		} else if (ieee80211_is_data_qos(mgmt->frame_control)) {
-+			struct ieee80211_hdr *hdr = (void *)mgmt;
-+			/*
-+			 * So the frame isn't mgmt, but frame_control
-+			 * is at the right place anyway, of course, so
-+			 * the if statement is correct.
-+			 *
-+			 * Warn if we have other data frame types here,
-+			 * they must not get here.
-+			 */
-+			WARN_ON(hdr->frame_control &
-+					cpu_to_le16(IEEE80211_STYPE_NULLFUNC));
-+			WARN_ON(!(hdr->seq_ctrl &
-+					cpu_to_le16(IEEE80211_SCTL_FRAG)));
-+			/*
-+			 * This was a fragment of a frame, received while
-+			 * a block-ack session was active. That cannot be
-+			 * right, so terminate the session.
-+			 */
-+			rcu_read_lock();
-+			sta = sta_info_get(sdata, mgmt->sa);
-+			if (sta) {
-+				u16 tid = *ieee80211_get_qos_ctl(hdr) &
-+						IEEE80211_QOS_CTL_TID_MASK;
-+
-+				__ieee80211_stop_rx_ba_session(
-+					sta, tid, WLAN_BACK_RECIPIENT,
-+					WLAN_REASON_QSTA_REQUIRE_SETUP);
-+			}
-+			rcu_read_unlock();
- 		} else switch (sdata->vif.type) {
- 		case NL80211_IFTYPE_STATION:
- 			ieee80211_sta_rx_queued_mgmt(sdata, skb);
---- wireless-testing.orig/net/mac80211/rx.c	2010-06-09 17:21:09.000000000 +0200
-+++ wireless-testing/net/mac80211/rx.c	2010-06-09 17:21:10.000000000 +0200
-@@ -741,9 +741,8 @@ static void ieee80211_rx_reorder_ampdu(s
- 	sc = le16_to_cpu(hdr->seq_ctrl);
- 	if (sc & IEEE80211_SCTL_FRAG) {
- 		spin_unlock(&sta->lock);
--		__ieee80211_stop_rx_ba_session(sta, tid, WLAN_BACK_RECIPIENT,
--					       WLAN_REASON_QSTA_REQUIRE_SETUP);
--		dev_kfree_skb(skb);
-+		skb_queue_tail(&rx->sdata->skb_queue, skb);
-+		ieee80211_queue_work(&local->hw, &rx->sdata->work);
- 		return;
- 	}
- 
-
-
+- Felix
