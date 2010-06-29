@@ -1,69 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:44559 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754278Ab0FRTzl (ORCPT
+Received: from mail.atheros.com ([12.36.123.2]:44359 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755782Ab0F2Q0F convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Jun 2010 15:55:41 -0400
-Message-ID: <4C1BCF3B.3010006@gmail.com>
-Date: Fri, 18 Jun 2010 12:55:39 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+	Tue, 29 Jun 2010 12:26:05 -0400
+From: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-bluetooth@vger.kernel.org" <linux-bluetooth@vger.kernel.org>
+Date: Tue, 29 Jun 2010 21:56:00 +0530
+Subject: RE: [PATCH] compat: Fix panic caused by NULL pointer derefence in
+ rtnl_fill_ifinfo
+Message-ID: <44EE5C37ADC36343B0625A05DD408C4850DAB4D6BD@CHEXMB-01.global.atheros.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: James Bottomley <James.Bottomley@suse.de>
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 5/5]scsi:hosts.c Fix warning: variable 'rval' set but
- not used
-References: <1276666434-11227-1-git-send-email-justinmattock@gmail.com>	 <1276666434-11227-6-git-send-email-justinmattock@gmail.com>	 <1276702443.2847.153.camel@mulgrave.site>  <4C18F524.4000902@gmail.com>	 <1276709590.2847.176.camel@mulgrave.site>  <4C1A4A69.7060801@gmail.com> <1276889827.2850.331.camel@mulgrave.site>
-In-Reply-To: <1276889827.2850.331.camel@mulgrave.site>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/18/2010 12:37 PM, James Bottomley wrote:
-> On Thu, 2010-06-17 at 09:16 -0700, Justin P. Mattock wrote:
->>> Erm, well, as I said, error code and the fact that the thread failed to
->>> start, so more
->>>
->>> printk(KERN_WARNING "scsi%d: error handler thread failed to spawn, error
->>> = %d\n", host->host_no, PTR_ERR(shost->ehandler));
->>>
->>> James
->>>
->>
->> o.k. I looked at this a bit more and finally got the thing to build
->> through without a warning, using what you had sent, but keep in mind I
->> still need to add error  = %d\n", host->host_no, to the printk
->>
->> here's what I have so far:
->>
->>
->>    drivers/scsi/hosts.c |    3 ++-
->>    1 files changed, 2 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
->> index 6660fa9..c1ff708 100644
->> --- a/drivers/scsi/hosts.c
->> +++ b/drivers/scsi/hosts.c
->> @@ -419,8 +419,9 @@ struct Scsi_Host *scsi_host_alloc(struct
->> scsi_host_template *sht, int privsize)
->>
->>    	shost->ehandler = kthread_run(scsi_error_handler, shost,
->>    			"scsi_eh_%d", shost->host_no);
->> +	rval = PTR_ERR(shost->ehandler);
->>    	if (IS_ERR(shost->ehandler)) {
->> -		rval = PTR_ERR(shost->ehandler);
->> +		printk(KERN_WARNING "scsi%d: error handler thread failed to spawn\n",
->> rval);
+>________________________________________
+>From: Luis R. Rodriguez [mcgrof@gmail.com]
+>Sent: Tuesday, June 29, 2010 8:51 PM
+>To: Rajkumar Manoharan
+>Cc: mcgrof@kernel.org; linux-wireless@vger.kernel.org; linux-bluetooth@vger.kernel.org
+>Subject: Re: [PATCH] compat: Fix panic caused by NULL pointer derefence in      rtnl_fill_ifinfo
+
+>On Mon, Jun 28, 2010 at 11:38 PM, Rajkumar Manoharan
+<rmanoharan@atheros.com> wrote:
+> get stats netdev ops is blindy called for older kernels (< 2.6.29) and
+> so assigning a NULL pointer from netdev_attach_ops causes a NULL pointer
+> dereference.
 >
-> So this isn't really an improvement over the suggestion.  What you
-> wanted was shost->host_no, as you deduced, but the %d becomes %ld to
-> quiet the type warning.
+> By default, netdev alloc provides an internal stats reference. So fill
+> this only if ndo_get_stats is defined.
 >
-> James
+> Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+> ---
+>  compat/compat-2.6.29.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+>
+> diff --git a/compat/compat-2.6.29.c b/compat/compat-2.6.29.c
+> index f94aed8..2e7e623 100644
+> --- a/compat/compat-2.6.29.c
+> +++ b/compat/compat-2.6.29.c
+> @@ -35,7 +35,8 @@ void netdev_attach_ops(struct net_device *dev,
+>        dev->change_mtu = ops->ndo_change_mtu;
+>        dev->set_mac_address = ops->ndo_set_mac_address;
+>        dev->tx_timeout = ops->ndo_tx_timeout;
+> -       dev->get_stats = ops->ndo_get_stats;
+> +       if (ops->ndo_get_stats)
+> +               dev->get_stats = ops->ndo_get_stats;
+>
+> If ops->ndo_get_stats is NULL then dev->get_stats will be set to NULL.
+> Do you know for sure this fixes something? If so can you explain how?
+> I used to have a macro that checked for not NULL and if true set the
+> callback but then later realized after Johannes poked me that this is
+> silly given that if the op is NULL you are just setting it to NULL.
+>
+> I don't see the potential crash here.
+>
+>  Luis
 
-ahh.. was reading the manual but couldn't make sense of the % then 
-letter to use.
+During alloc_netdev, get_stats is set to default callback (internal_stats). 
+It won't be NULL. Based on this assumption, get_stats is
+invoked blindly in rtnl_fill_ifinfo without NULL check. So either
+get_stats set with default callback or callback assigned by module.
+It shouldn't be NULL.
 
-let me add these in, then if good I'll send it out for review etc..
-
-Justin P. Mattock
+Rajkumar
