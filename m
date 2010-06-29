@@ -1,49 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:41429 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753454Ab0FIJVS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Jun 2010 05:21:18 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: sedat.dilek@gmail.com
-Subject: Re: 2.6.35-rc2-git2: Reported regressions from 2.6.34
-Date: Wed, 9 Jun 2010 11:22:35 +0200
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>, dmonakhov@openvz.org
-References: <Rlf_Qjov7bG.A.a8F.I8rDMB@chimera> <AANLkTiksbL1qHg7Q0A-6TbX0uUrxra4jctUoIGVk5vnE@mail.gmail.com>
-In-Reply-To: <AANLkTiksbL1qHg7Q0A-6TbX0uUrxra4jctUoIGVk5vnE@mail.gmail.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48793 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756066Ab0F2OAN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Jun 2010 10:00:13 -0400
+Date: Tue, 29 Jun 2010 09:48:29 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Yuri Ershov <ext-yuri.ershov@nokia.com>
+Cc: johannes@sipsolutions.net, ext-yuri.kululin@nokia.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC 0/3] Update for some defects
+Message-ID: <20100629134829.GB5296@tuxdriver.com>
+References: <cover.1277808543.git.ext-yuri.ershov@nokia.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201006091122.35304.rjw@sisk.pl>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1277808543.git.ext-yuri.ershov@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 09 June 2010, Sedat Dilek wrote:
-> The patch from [1] is still missing.
-> 
->    "cpufreq-call-nr_iowait_cpu-with-disabled-preemption.patch" from
-> Dmitry Monakhoc
-> 
-> Tested-by: Sedat Dilek <sedat.dilek@gmail.com>
-> Tested-by Maciej Rutecki <maciej.rutecki@gmail.com>
-> 
-> I have already reported this issue on LKML [2] and cpufreq ML [3].
-> 
-> - Sedat -
-> 
-> [1] http://www.spinics.net/lists/cpufreq/msg01631.html
-> [2] http://lkml.org/lkml/2010/5/31/77
-> [3] http://www.spinics.net/lists/cpufreq/msg01637.html
+On Tue, Jun 29, 2010 at 03:08:05PM +0400, Yuri Ershov wrote:
 
-Thanks, added.
+> Yuri Ershov (3):
+>   mac80211: Put some code under MESH macro
+>   nl80211: Fix memory leaks
+>   cfg80211: Update of regulatory request initiator handling
 
-Rafael
+These all seem fine to me.
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
