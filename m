@@ -1,48 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:61731 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754196Ab0FMURO (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:39329 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756528Ab0F2PVs convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jun 2010 16:17:14 -0400
-Received: by pvg16 with SMTP id 16so2312871pvg.19
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Jun 2010 13:17:14 -0700 (PDT)
+	Tue, 29 Jun 2010 11:21:48 -0400
 MIME-Version: 1.0
-In-Reply-To: <AANLkTincbrPV9DTY0qIM1iBZ6byvsSV1t84OVoFNZ2Bq@mail.gmail.com>
-References: <AANLkTincbrPV9DTY0qIM1iBZ6byvsSV1t84OVoFNZ2Bq@mail.gmail.com>
+In-Reply-To: <1277793487-9071-1-git-send-email-rmanoharan@atheros.com>
+References: <1277793487-9071-1-git-send-email-rmanoharan@atheros.com>
 From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sun, 13 Jun 2010 13:16:54 -0700
-Message-ID: <AANLkTinWtINkUig1AmNldv28CSxD2O2kFChZbv0lwsGa@mail.gmail.com>
-Subject: Re: DHCPDISCOVER on wlan0 to 255.255.255.255 port 67 interval 19
-To: sundar mahadevan <sundarmahadevan82@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@redhat.com>
+Date: Tue, 29 Jun 2010 08:21:28 -0700
+Message-ID: <AANLkTikLB4nxUzUAlVeKDC3owHYCIqmBba-JbsFkrIJn@mail.gmail.com>
+Subject: Re: [PATCH] compat: Fix panic caused by NULL pointer derefence in
+	rtnl_fill_ifinfo
+To: Rajkumar Manoharan <rmanoharan@atheros.com>
+Cc: mcgrof@kernel.org, linux-wireless@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 13, 2010 at 10:08 AM, sundar mahadevan
-<sundarmahadevan82@gmail.com> wrote:
-> Hi All,
-> Greetings. I am on Oracle Enterprise Linux (OEL 5.5 x86_64) same as
-> Redhat 5.5. I must use OEL5.5 because of my software installation
-> requirements. NetworkManager detects my ssid but its just not getting
-> ip from my router assigned. I use a Belkin 54g router with WPA/WPA2
-> encryption. The other options available on my router are WPA2 only,
-> WEP and Disabled. I have spent more than 20 hours trying to get wifi
-> working but no luck. Your help is highly appreciated.
+On Mon, Jun 28, 2010 at 11:38 PM, Rajkumar Manoharan
+<rmanoharan@atheros.com> wrote:
+> get stats netdev ops is blindy called for older kernels (< 2.6.29) and
+> so assigning a NULL pointer from netdev_attach_ops causes a NULL pointer
+> dereference.
 >
-> [root@localhost ~]$uname -a
-> Linux localhost.localdomain 2.6.18-194.el5 #1 SMP Mon Mar 29 22:10:29
-> EDT 2010 x86_64 x86_64 x86_64 GNU/Linux
+> By default, netdev alloc provides an internal stats reference. So fill
+> this only if ndo_get_stats is defined.
 >
-> [root@localhost /etc/wpa_supplicant]$lspci | grep -i ath
-> 04:00.0 Network controller: Atheros Communications Inc. AR928X
-> Wireless Network Adapter (PCI-Express) (rev 01)
+> Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+> ---
+>  compat/compat-2.6.29.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+>
+> diff --git a/compat/compat-2.6.29.c b/compat/compat-2.6.29.c
+> index f94aed8..2e7e623 100644
+> --- a/compat/compat-2.6.29.c
+> +++ b/compat/compat-2.6.29.c
+> @@ -35,7 +35,8 @@ void netdev_attach_ops(struct net_device *dev,
+>        dev->change_mtu = ops->ndo_change_mtu;
+>        dev->set_mac_address = ops->ndo_set_mac_address;
+>        dev->tx_timeout = ops->ndo_tx_timeout;
+> -       dev->get_stats = ops->ndo_get_stats;
+> +       if (ops->ndo_get_stats)
+> +               dev->get_stats = ops->ndo_get_stats;
 
-Please see:
+If ops->ndo_get_stats is NULL then dev->get_stats will be set to NULL.
+Do you know for sure this fixes something? If so can you explain how?
+I used to have a macro that checked for not NULL and if true set the
+callback but then later realized after Johannes poked me that this is
+silly given that if the op is NULL you are just setting it to NULL.
 
-http://wireless.kernel.org/en/users/Drivers/ath9k/RHEL5#Known_issues
-
-Seems like the same issue.
+I don't see the potential crash here.
 
   Luis
