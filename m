@@ -1,47 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:27445 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755937Ab0FNJ4o (ORCPT
+Received: from mail-ww0-f46.google.com ([74.125.82.46]:37088 "EHLO
+	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755803Ab0F2TvI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Jun 2010 05:56:44 -0400
-From: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2 2/3] mac80211: Set changed basic rates flag
-Date: Mon, 14 Jun 2010 12:55:32 +0300
-Message-Id: <1276509333-19023-3-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-In-Reply-To: <1276509333-19023-2-git-send-email-ext-teemu.3.paasikivi@nokia.com>
-References: <1276509333-19023-1-git-send-email-ext-teemu.3.paasikivi@nokia.com>
- <1276509333-19023-2-git-send-email-ext-teemu.3.paasikivi@nokia.com>
+	Tue, 29 Jun 2010 15:51:08 -0400
+Received: by wwb18 with SMTP id 18so553wwb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Jun 2010 12:51:06 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 10/21] eeprom_93cx6: Add support for 93c86 EEPROMs.
+Date: Tue, 29 Jun 2010 21:43:44 +0200
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+References: <201006292138.13509.IvDoorn@gmail.com> <201006292142.24144.IvDoorn@gmail.com> <201006292143.04173.IvDoorn@gmail.com>
+In-Reply-To: <201006292143.04173.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201006292143.45392.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add changed basic rates flag to bss_changed while joinig ibss network.
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 
-This patch is split from the patch containing support for setting basic
-rates when creating ibss network. Original patch was posted by Johannes
-Berg on the linux-wireless posting list.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- net/mac80211/ibss.c |    1 +
+ include/linux/eeprom_93cx6.h |    1 +
  1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 8be5a96..ff91265 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -178,6 +178,7 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 	bss_change |= BSS_CHANGED_BSSID;
- 	bss_change |= BSS_CHANGED_BEACON;
- 	bss_change |= BSS_CHANGED_BEACON_ENABLED;
-+	bss_change |= BSS_CHANGED_BASIC_RATES;
- 	bss_change |= BSS_CHANGED_IBSS;
- 	sdata->vif.bss_conf.ibss_joined = true;
- 	ieee80211_bss_info_change_notify(sdata, bss_change);
+diff --git a/include/linux/eeprom_93cx6.h b/include/linux/eeprom_93cx6.h
+index a55c873..c4627cb 100644
+--- a/include/linux/eeprom_93cx6.h
++++ b/include/linux/eeprom_93cx6.h
+@@ -30,6 +30,7 @@
+ #define PCI_EEPROM_WIDTH_93C46	6
+ #define PCI_EEPROM_WIDTH_93C56	8
+ #define PCI_EEPROM_WIDTH_93C66	8
++#define PCI_EEPROM_WIDTH_93C86	8
+ #define PCI_EEPROM_WIDTH_OPCODE	3
+ #define PCI_EEPROM_WRITE_OPCODE	0x05
+ #define PCI_EEPROM_READ_OPCODE	0x06
 -- 
-1.5.6.3
+1.6.6.1
 
