@@ -1,30 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:54262
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751633Ab0FVRym (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jun 2010 13:54:42 -0400
-Date: Tue, 22 Jun 2010 10:54:53 -0700 (PDT)
-Message-Id: <20100622.105453.35051747.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2010-06-22
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20100622174136.GC2583@tuxdriver.com>
-References: <20100622174136.GC2583@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mail.atheros.com ([12.36.123.2]:29640 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752874Ab0F2GiP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Jun 2010 02:38:15 -0400
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <mcgrof@kernel.org>
+CC: <linux-wireless@vger.kernel.org>,
+	<linux-bluetooth@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH] compat: Fix panic caused by NULL pointer derefence in rtnl_fill_ifinfo
+Date: Tue, 29 Jun 2010 12:08:07 +0530
+Message-ID: <1277793487-9071-1-git-send-email-rmanoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 22 Jun 2010 13:41:37 -0400
+get stats netdev ops is blindy called for older kernels (< 2.6.29) and
+so assigning a NULL pointer from netdev_attach_ops causes a NULL pointer
+dereference.
 
-> Just a single fix this time, a patch for ath5k to avoid a null pointer
-> dereference that can happen when executing certain operations against a
-> newly created interface.  This is, of course, intended for 2.6.35.
-> 
-> Please let me know if there are problems!
+By default, netdev alloc provides an internal stats reference. So fill
+this only if ndo_get_stats is defined.
 
-Pulled, thanks John.
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+---
+ compat/compat-2.6.29.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/compat/compat-2.6.29.c b/compat/compat-2.6.29.c
+index f94aed8..2e7e623 100644
+--- a/compat/compat-2.6.29.c
++++ b/compat/compat-2.6.29.c
+@@ -35,7 +35,8 @@ void netdev_attach_ops(struct net_device *dev,
+ 	dev->change_mtu = ops->ndo_change_mtu;
+ 	dev->set_mac_address = ops->ndo_set_mac_address;
+ 	dev->tx_timeout = ops->ndo_tx_timeout;
+-	dev->get_stats = ops->ndo_get_stats;
++	if (ops->ndo_get_stats)
++		dev->get_stats = ops->ndo_get_stats;
+ 	dev->vlan_rx_register = ops->ndo_vlan_rx_register;
+ 	dev->vlan_rx_add_vid = ops->ndo_vlan_rx_add_vid;
+ 	dev->vlan_rx_kill_vid = ops->ndo_vlan_rx_kill_vid;
+-- 
+1.7.0.4
+
