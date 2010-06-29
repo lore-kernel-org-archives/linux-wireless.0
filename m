@@ -1,43 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:43134 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754228Ab0FMT5A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Jun 2010 15:57:00 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] compat: backport dma_set_coherent_mask
-Date: Sun, 13 Jun 2010 21:56:48 +0200
-Message-Id: <1276459009-17168-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-ww0-f46.google.com ([74.125.82.46]:37088 "EHLO
+	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755874Ab0F2TvS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Jun 2010 15:51:18 -0400
+Received: by mail-ww0-f46.google.com with SMTP id 18so553wwb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Jun 2010 12:51:18 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 18/21] rt2x00: Fix IEEE80211_HT_CAP_RX_STBC assignment
+Date: Tue, 29 Jun 2010 21:48:37 +0200
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+References: <201006292138.13509.IvDoorn@gmail.com> <201006292147.38367.IvDoorn@gmail.com> <201006292148.07594.IvDoorn@gmail.com>
+In-Reply-To: <201006292148.07594.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201006292148.38803.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Ivo van Doorn <IvDoorn@gmail.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+IEEE80211_HT_CAP_RX_STBC is a 2 bit flag, and should thus
+never be set as normal flag. Instead we must read the number
+of RX paths from the EEPROM and set the IEEE80211_HT_CAP_RX_STBC
+with the correct value (using the same logic as the number of TX
+streams).
+
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- include/linux/compat-2.6.34.h |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800lib.c |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/compat-2.6.34.h b/include/linux/compat-2.6.34.h
-index b1c15a7..336c61b 100644
---- a/include/linux/compat-2.6.34.h
-+++ b/include/linux/compat-2.6.34.h
-@@ -216,6 +216,14 @@ do {							\
- #define dma_unmap_len_set(PTR, LEN_NAME, VAL)    do { } while (0)
- #endif
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 5125315..2d0a216 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2572,12 +2572,15 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 	    IEEE80211_HT_CAP_SUP_WIDTH_20_40 |
+ 	    IEEE80211_HT_CAP_GRN_FLD |
+ 	    IEEE80211_HT_CAP_SGI_20 |
+-	    IEEE80211_HT_CAP_SGI_40 |
+-	    IEEE80211_HT_CAP_RX_STBC;
++	    IEEE80211_HT_CAP_SGI_40;
  
-+static inline int dma_set_coherent_mask(struct device *dev, u64 mask)
-+{
-+	if (!dma_supported(dev, mask))
-+		return -EIO;
-+	dev->coherent_dma_mask = mask;
-+	return 0;
-+}
+ 	if (rt2x00_get_field16(eeprom, EEPROM_ANTENNA_TXPATH) >= 2)
+ 		spec->ht.cap |= IEEE80211_HT_CAP_TX_STBC;
+ 
++	spec->ht.cap |=
++	    rt2x00_get_field16(eeprom, EEPROM_ANTENNA_RXPATH) <<
++		IEEE80211_HT_CAP_RX_STBC_SHIFT;
 +
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,34)) */
- 
- #endif /* LINUX_26_34_COMPAT_H */
+ 	spec->ht.ampdu_factor = 3;
+ 	spec->ht.ampdu_density = 4;
+ 	spec->ht.mcs.tx_params =
 -- 
-1.7.0.4
+1.6.6.1
 
