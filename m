@@ -1,40 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:56403 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754133Ab0FVQbf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jun 2010 12:31:35 -0400
-Message-ID: <4C20E561.4090203@bu3sch.de>
-Date: Tue, 22 Jun 2010 18:31:29 +0200
-From: =?ISO-8859-1?Q?Michael_B=FCsch?= <mb@bu3sch.de>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: b43-dev <b43-dev@lists.infradead.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: Recent results with BCM4312 on Netbook
-References: <4C20D884.3010501@lwfinger.net> (sfid-20100622_173557_635889_3487F3F3)
-In-Reply-To: <4C20D884.3010501@lwfinger.net> (sfid-20100622_173557_635889_3487F3F3)
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga14.intel.com ([143.182.124.37]:49427 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750699Ab0F2UTA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Jun 2010 16:19:00 -0400
+Subject: Re: [PATCH] iwlwifi: do not export iwl_leds_background
+From: reinette chatre <reinette.chatre@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <1277840378-18305-1-git-send-email-linville@tuxdriver.com>
+References: <1266572413.3991.55.camel@jlt3.sipsolutions.net>
+	 <1277840378-18305-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 29 Jun 2010 13:18:59 -0700
+Message-ID: <1277842739.4197.54.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/22/2010 05:36 PM, Larry Finger wrote:
-> My first discovery is that if PIO mode is to be used, it is not sufficient
-> to load the module with the "pio=1" option, but that both "qos=0" and
-> "nohwcrypt=1" options must also be used, at least for WPA/WPA2 networks.
+On Tue, 2010-06-29 at 12:39 -0700, John W. Linville wrote:
+> It is only used from within the iwlcore module.
+> 
+> Reported-by: Johannes Berg <johannes@sipsolutions.net>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-led.c |    1 -
+>  1 files changed, 0 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-led.c b/drivers/net/wireless/iwlwifi/iwl-led.c
+> index db5bfcb..486244b 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-led.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-led.c
+> @@ -214,7 +214,6 @@ void iwl_leds_background(struct iwl_priv *priv)
+>  	priv->last_blink_time = jiffies;
+>  	priv->last_blink_rate = blink_idx;
+>  }
+> -EXPORT_SYMBOL(iwl_leds_background);
+>  
+>  void iwl_leds_init(struct iwl_priv *priv)
+>  {
 
-That is known. I posted it once or twice. It is b43 making bad
-assumptions about mac80211 behavior. And mac80211 behavior changed...
-b43 does modify the number of queues in the data structure after it
-registered things to mac80211. That used to work properly in the past.
-But it breaks now. The init does have to be re-ordered and implementation
-of async firmware loading is required to fix that.
+Nack.
 
-> No other combination works. In addition, the automatic failover to PIO
-> mode does not work unless those two options were used when the module was
-> loaded. Thus both of the following work:
+Please take a closer look at how it is used ... it is used in iwl-core.h
+in an inline (iwl_update_stats) function that is used by both iwlagn and
+iwl3945.
 
-It only works by accident anyway. But I already said that several times.
+Reinette
 
--- 
-Greetings Michael.
+
+
