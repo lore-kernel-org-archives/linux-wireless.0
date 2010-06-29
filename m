@@ -1,42 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35998 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750696Ab0FVSPR (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:38772 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755819Ab0F2TvI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jun 2010 14:15:17 -0400
-Date: Tue, 22 Jun 2010 14:13:20 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/5 v2]wireless:hostap_main.c warning: variable 'iface'
- set but not used
-Message-ID: <20100622181320.GD2583@tuxdriver.com>
-References: <1277157733-14071-1-git-send-email-justinmattock@gmail.com>
+	Tue, 29 Jun 2010 15:51:08 -0400
+Received: by ewy23 with SMTP id 23so2589ewy.19
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Jun 2010 12:51:07 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 12/21] rt2x00: Align rt2800 EEPROM validation to Ralink vendor driver.
+Date: Tue, 29 Jun 2010 21:44:50 +0200
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+References: <201006292138.13509.IvDoorn@gmail.com> <201006292143.45392.IvDoorn@gmail.com> <201006292144.19486.IvDoorn@gmail.com>
+In-Reply-To: <201006292144.19486.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1277157733-14071-1-git-send-email-justinmattock@gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201006292144.51636.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 21, 2010 at 03:02:13PM -0700, Justin P. Mattock wrote:
-> This is a resend from version one due to trying a different approach
-> than the original(probably important to leave netdev_priv() in).
-> 
-> In any case have a look, if there's another approach let me know
-> and ill test it out. The below patch fixes a warning im seeing
-> when compiling with gcc 4.6.0
-> 
-> CC [M]  drivers/net/wireless/hostap/hostap_main.o
-> drivers/net/wireless/hostap/hostap_main.c: In function 'hostap_set_multicast_list_queue':
-> drivers/net/wireless/hostap/hostap_main.c:744:27: warning: variable 'iface' set but not used
->  Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 
-I already applied the other version to wireless-next-2.6.  I can't
-imagine what you mean to accomplish by leaving in a call to netdev_priv
-w/o assigning the result to something.
+Align with the latest versions of the Ralink legacy driver(s).
 
-John
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    8 +++++++-
+ 1 files changed, 7 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 14ff706..f25997e 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2185,6 +2185,8 @@ int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ 		rt2x00_set_field16(&word, EEPROM_NIC_WPS_PBC, 0);
+ 		rt2x00_set_field16(&word, EEPROM_NIC_BW40M_BG, 0);
+ 		rt2x00_set_field16(&word, EEPROM_NIC_BW40M_A, 0);
++		rt2x00_set_field16(&word, EEPROM_NIC_ANT_DIVERSITY, 0);
++		rt2x00_set_field16(&word, EEPROM_NIC_DAC_TEST, 0);
+ 		rt2x00_eeprom_write(rt2x00dev, EEPROM_NIC, word);
+ 		EEPROM(rt2x00dev, "NIC: 0x%04x\n", word);
+ 	}
+@@ -2192,6 +2194,10 @@ int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00_eeprom_read(rt2x00dev, EEPROM_FREQ, &word);
+ 	if ((word & 0x00ff) == 0x00ff) {
+ 		rt2x00_set_field16(&word, EEPROM_FREQ_OFFSET, 0);
++		rt2x00_eeprom_write(rt2x00dev, EEPROM_FREQ, word);
++		EEPROM(rt2x00dev, "Freq: 0x%04x\n", word);
++	}
++	if ((word & 0xff00) == 0xff00) {
+ 		rt2x00_set_field16(&word, EEPROM_FREQ_LED_MODE,
+ 				   LED_MODE_TXRX_ACTIVITY);
+ 		rt2x00_set_field16(&word, EEPROM_FREQ_LED_POLARITY, 0);
+@@ -2199,7 +2205,7 @@ int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ 		rt2x00_eeprom_write(rt2x00dev, EEPROM_LED1, 0x5555);
+ 		rt2x00_eeprom_write(rt2x00dev, EEPROM_LED2, 0x2221);
+ 		rt2x00_eeprom_write(rt2x00dev, EEPROM_LED3, 0xa9f8);
+-		EEPROM(rt2x00dev, "Freq: 0x%04x\n", word);
++		EEPROM(rt2x00dev, "Led Mode: 0x%04x\n", word);
+ 	}
+ 
+ 	/*
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.6.1
+
