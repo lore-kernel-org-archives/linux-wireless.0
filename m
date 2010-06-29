@@ -1,64 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:62801 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751604Ab0FBIrp (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:55031 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755070Ab0F2TDG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jun 2010 04:47:45 -0400
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <1275409361.2091.27208.camel@rchatre-DESK>
-References: <20100528180952.GC2405@tuxdriver.com>
-	<AANLkTil8SLseSeq1M_Xg7P4AqMy3V_0jxc7by2Xuaqnb@mail.gmail.com>
-	<1275409361.2091.27208.camel@rchatre-DESK>
-Date: Wed, 2 Jun 2010 10:42:02 +0200
-Message-ID: <AANLkTimo_CpVC0B99GMJtIllAye5Yqa5yiIAiFBY-pIN@mail.gmail.com>
-Subject: Re: pull request: wireless-2.6 2010-05-28
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: reinette chatre <reinette.chatre@intel.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Zheng, Jiajia" <jiajia.zheng@intel.com>,
-	"Kolekar, Abhijeet" <abhijeet.kolekar@intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 29 Jun 2010 15:03:06 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 9A53C4285C
+	for <linux-wireless@vger.kernel.org>; Tue, 29 Jun 2010 15:05:56 -0400 (EDT)
+Subject: Compat-wireless release for 2010-06-29 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100629190302.6BCFD42E2B@repository3.orbit-lab.org>
+Date: Tue, 29 Jun 2010 15:03:02 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 1, 2010 at 6:22 PM, reinette chatre
-<reinette.chatre@intel.com> wrote:
-> Hi Sedat,
->
-> On Sat, 2010-05-29 at 06:34 -0700, Sedat Dilek wrote:
->> Two people confirmed the patch in [2] fixes:
->> 1. iwlwifi-2.6 GIT master (commit f10a237c95abd6d64a3a24553bd1d3bcddd9108b)
->> 2. compat-wireless (2010-05-21)
->>
->> And it fixes also the above mentionned combination.
->
-> We are working on getting this patch upstream. The version tested
-> contains a significant amount of duplicated code as well as some cleanup
-> code mixed in. It is thus not appropriate for an upstream submission at
-> this time.
->
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+   a78b3af..464e8d5  linux-2.6.35.y -> origin/linux-2.6.35.y
+   126c387..776ba1d  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   b698fdf..4570588  history    -> origin/history
+ + 6dc1a02...1b72384 master     -> origin/master  (forced update)
+   b4322e7..5904b3b  stable     -> origin/stable
+ * [new tag]         next-20100629 -> next-20100629
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
 
-What do you mean by "upstream"?
-upstream for me is Linus-tree (linux-2.6 GIT master).
-Patches against iwlwifi-2.6 GIT trees are not very helpful in my case.
+compat-wireless code metrics
 
->> As a suggestion:
->> What about "copying" bug-reports (incl. its history) from IWL-BTS into
->> linux-wireless ML?
->> For example (dri-devel related) bug-reports from
->> bugzilla.freedesktop.org are "copied" into dri-devel ML.
->
-> Pointing people to the bug report seems to work ok. What benefit does
-> the above have?
->
-
-[+] People - not subscribed to the BR - can follow "on change".
-[-] Blow up linux-wireless ML?
-
-- Sedat -
+    494378 - Total upstream lines of code being pulled
