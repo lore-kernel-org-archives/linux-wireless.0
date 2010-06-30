@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:29640 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752874Ab0F2GiP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Jun 2010 02:38:15 -0400
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <mcgrof@kernel.org>
-CC: <linux-wireless@vger.kernel.org>,
-	<linux-bluetooth@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH] compat: Fix panic caused by NULL pointer derefence in rtnl_fill_ifinfo
-Date: Tue, 29 Jun 2010 12:08:07 +0530
-Message-ID: <1277793487-9071-1-git-send-email-rmanoharan@atheros.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:36107 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751182Ab0F3Doo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Jun 2010 23:44:44 -0400
+Received: by qwi4 with SMTP id 4so111715qwi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Jun 2010 20:44:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <AANLkTikC3saJNwAFhHvSyJNqVF1fGPcVfn-hwGpR5V30@mail.gmail.com>
+References: <AANLkTikC3saJNwAFhHvSyJNqVF1fGPcVfn-hwGpR5V30@mail.gmail.com>
+From: Jono <koppah@gmail.com>
+Date: Wed, 30 Jun 2010 13:44:22 +1000
+Message-ID: <AANLkTinTDPyeV2QWWmXskp4504nxPIm1neJdxdLat51p@mail.gmail.com>
+Subject: ath5k Register Question
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath5k-devel <ath5k-devel@lists.ath5k.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-get stats netdev ops is blindy called for older kernels (< 2.6.29) and
-so assigning a NULL pointer from netdev_attach_ops causes a NULL pointer
-dereference.
+Hi,
 
-By default, netdev alloc provides an internal stats reference. So fill
-this only if ndo_get_stats is defined.
+I'm not sure if this is the right place to ask, but I'm looking for
+information on a specific register on Atheros cards.
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
----
- compat/compat-2.6.29.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+I've been told that there is a register that Atheros chips update with
+information about how much of a set period has been detected as 'CCA'
+time. Unfortunately, I cannot find this information in the source
+code. The only register I found that matches this even closely appears
+to only be used during noise calibration, and not updated
+continuously.
 
-diff --git a/compat/compat-2.6.29.c b/compat/compat-2.6.29.c
-index f94aed8..2e7e623 100644
---- a/compat/compat-2.6.29.c
-+++ b/compat/compat-2.6.29.c
-@@ -35,7 +35,8 @@ void netdev_attach_ops(struct net_device *dev,
- 	dev->change_mtu = ops->ndo_change_mtu;
- 	dev->set_mac_address = ops->ndo_set_mac_address;
- 	dev->tx_timeout = ops->ndo_tx_timeout;
--	dev->get_stats = ops->ndo_get_stats;
-+	if (ops->ndo_get_stats)
-+		dev->get_stats = ops->ndo_get_stats;
- 	dev->vlan_rx_register = ops->ndo_vlan_rx_register;
- 	dev->vlan_rx_add_vid = ops->ndo_vlan_rx_add_vid;
- 	dev->vlan_rx_kill_vid = ops->ndo_vlan_rx_kill_vid;
--- 
-1.7.0.4
+Any help would be greatly appreciated!
 
+Thank you,
+
+--
+Jonathan Guerin
