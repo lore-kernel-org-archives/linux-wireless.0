@@ -1,57 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:6991 "EHLO mga02.intel.com"
+Received: from mail.atheros.com ([12.36.123.2]:11167 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755920Ab0FUSGr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Jun 2010 14:06:47 -0400
-From: Reinette Chatre <reinette.chatre@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 8/9] iwlwifi: code cleanup to remove un-necessary "goto"
-Date: Mon, 21 Jun 2010 11:06:39 -0700
-Message-Id: <1277143600-32554-9-git-send-email-reinette.chatre@intel.com>
-In-Reply-To: <1277143600-32554-1-git-send-email-reinette.chatre@intel.com>
-References: <1277143600-32554-1-git-send-email-reinette.chatre@intel.com>
+	id S1755494Ab0F3K5e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jun 2010 06:57:34 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Jun 2010 03:57:34 -0700
+Date: Wed, 30 Jun 2010 03:57:28 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] mac80211: Dont allow to wake up netif tx queues
+ while on off channel
+Message-ID: <20100630105728.GC2192@vasanth-laptop>
+References: <1277892907-2401-1-git-send-email-vasanth@atheros.com>
+ <1277893026.7823.7.camel@jlt3.sipsolutions.net>
+ <1277893571.7823.9.camel@jlt3.sipsolutions.net>
+ <20100630105118.GB2192@vasanth-laptop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20100630105118.GB2192@vasanth-laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On Wed, Jun 30, 2010 at 04:21:19PM +0530, Vasanth Thiagarajan wrote:
+> On Wed, Jun 30, 2010 at 03:56:11PM +0530, Johannes Berg wrote:
+> > On Wed, 2010-06-30 at 12:17 +0200, Johannes Berg wrote:
+> > > On Wed, 2010-06-30 at 03:15 -0700, Vasanthakumar Thiagarajan wrote:
+> > > > Drivers are not supposed to call ieee80211_wake_queue() while operating
+> > > > on off channel during sw scanning,
+> > 
+> > > That doesn't seem to make sense, since we treat driver and scan stop
+> > > status separately via wake_queue_by_reason()
+> > 
+> > IOW, the above assertion would seem to be false already.
+> 
+> Sorry, I mean the existing code assumes that ieee80211_wake_queue() while
+> operating on off channel during scanning.
 
-Break out of loop and log the error message when encounter error; this is
-better approach than using "goto".
+I mean the existing code assumes that ieee80211_wake_queue() is not
+supposed to be called while operating on off channel during
+scanning as it is not right to pass packets to the drivers when
+hw is on different channel.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-calib.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-calib.c b/drivers/net/wireless/iwlwifi/iwl-agn-calib.c
-index d03b5e5..400eb31 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-calib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-calib.c
-@@ -96,14 +96,14 @@ int iwl_send_calib_results(struct iwl_priv *priv)
- 			hcmd.len = priv->calib_results[i].buf_len;
- 			hcmd.data = priv->calib_results[i].buf;
- 			ret = iwl_send_cmd_sync(priv, &hcmd);
--			if (ret)
--				goto err;
-+			if (ret) {
-+				IWL_ERR(priv, "Error %d iteration %d\n",
-+					ret, i);
-+				break;
-+			}
- 		}
- 	}
- 
--	return 0;
--err:
--	IWL_ERR(priv, "Error %d iteration %d\n", ret, i);
- 	return ret;
- }
- 
--- 
-1.7.0.4
-
+Vasanth
