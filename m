@@ -1,78 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:35999 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755753Ab0FSNCj (ORCPT
+Received: from server.heaven-czfree.net ([78.108.102.201]:43881 "EHLO
+	smtp.heaven-czfree.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751238Ab0F3HNW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Jun 2010 09:02:39 -0400
-Subject: Re: [PATCH v2] ath5k: disable ASPM
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-In-Reply-To: <20100619123841.GA31838@hash.localnet>
-References: <20100528100901.14580.1322.stgit@fate.lan>
-	 <1276806785.20754.8.camel@maxim-laptop>
-	 <20100618112026.17623g6uhdjk8hts@naisho.dyndns.info>
-	 <1276856142.9114.1.camel@maxim-laptop>
-	 <20100618134930.124225d4fsi8w1fk@naisho.dyndns.info>
-	 <1276859156.19554.2.camel@maxim-laptop>
-	 <AANLkTimdTjedtoeKAp5tcTqefrUB6k373Kx9EacuYFcO@mail.gmail.com>
-	 <1276870309.23783.3.camel@maxim-laptop>
-	 <1276933774.16697.11.camel@maxim-laptop>
-	 <20100619123841.GA31838@hash.localnet>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 19 Jun 2010 16:02:34 +0300
-Message-ID: <1276952554.3332.3.camel@maxim-laptop>
-Mime-Version: 1.0
+	Wed, 30 Jun 2010 03:13:22 -0400
+From: "Jaroslav Fojtik" <jafojtik@seznam.cz>
+To: Bruno Randolf <br1@einfach.org>, linux-wireless@vger.kernel.org
+Date: Wed, 30 Jun 2010 09:15:49 +0200
+MIME-Version: 1.0
+Subject: Re: ATH5k - Signal measurement reports wrong values - thanks for a fix
+Message-ID: <4C2AEF25.1702.2DF7E2@jafojtik.seznam.cz>
+In-reply-to: <201006281021.47132.br1@einfach.org>
+References: <4C1E6A13.4259.24AF3C@jafojtik.seznam.cz>, <4C26FD91.10140.F4D6B@jafojtik.seznam.cz>, <201006281021.47132.br1@einfach.org>
+Content-type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2010-06-19 at 08:38 -0400, Bob Copeland wrote: 
-> On Sat, Jun 19, 2010 at 10:49:34AM +0300, Maxim Levitsky wrote:
-> > How this patch?
+Dear Bruno,
+
+> > Anyway, when you look at the magenta line here:
+> >   http://78.108.103.11:11080/cgi-bin/rodga_1day_big.cgi
+> > 
+> > There are big drops in measured signal. Did you fix all places?
+> > 
+> > Before this patch there were short peeks from -78dB to -71dB.
+> > After patch there are short measurement drops from -62dB to -70dB.
+> > 
+> > The week charting simply averages it:
+> >   http://78.108.103.11:11080/cgi-bin/rodga_1week_big.cgi
 > 
-> Looks fine to me.  Some nitpicking below but feel free to add my
-> 
-> Acked-by: Bob Copeland <me@bobcopeland.com>
-> 
-> to this or a later version.
-> 
-> >     Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-> >     Signed-off-by: Maxim Levitsky <maximlevitsky@gmail.com>
-> 
-> I believe maintaining the s-o-b is usually reserved for the case when the
-> patch only has minor edits; here your patch while same in spirit has
-> some 30 fewer lines.  Maybe should use "From:" or mention Jussi in the
-> commit log to maintain attribution instead?
-OK
+> i guess this must be the same situation as before, no?
+Just repeat:
+## Before this patch there were short peeks from -78dB to -71dB.
+
+## After patch there are short measurement drops from -62dB to -70dB.
+
+MadWiFi does not produce such drops.
+
+ 
+> how many antennas do you have attached to your device? 
+One miniPCI device has only one antenna attached. Second U.FL. connector 
+is empty.
 
 
-> 
-> > +	/* Disable PCIE ASPM L0S. It is never enabled by windows driver */
-> > +	pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S);
-> > +
-> 
-> Would be good to expand this comment as to why (just copy another
-> sentence from the commit log or so).
-OK 
-> 
-> >  	ret = pci_enable_device(pdev);
-> >  	if (ret) {
-> >  		dev_err(&pdev->dev, "can't enable device\n");
-> > @@ -722,6 +726,8 @@ static int ath5k_pci_resume(struct device *dev)
-> >  	struct ieee80211_hw *hw = pci_get_drvdata(pdev);
-> >  	struct ath5k_softc *sc = hw->priv;
-> >  
-> > +	pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S);
-> > +
-> 
-> Did you test that it did get lost over suspend/resume?  A glance at
-> pci_save_pcie_state seems to indicate it's saved.
-Will test.
+> it might be interesting to check if you get more consistent 
+> signal measurements by disabling antenna 
+> diversity, setting it to a fixed antenna. you can do this by using a debugfs 
+> file "echo fixed-a > /sys/kernel/debug/ath5k/phy0/antenna" (or "fixed-b")...
+I have found that "fixed-b" is a right connector. There is a stupid question why?
+When I am using "out" and not "aux". I just guess that "out" should be 'a'
+and 'aux' should be 'b'.
+
+Please again have a look at:
+  http://78.108.103.11:11080/cgi-bin/rodga_1day_big.cgi
+It looks like signal power jumped to -46dB.
+It seems that ATH5k never switched to "fixed-b" and I has been receiving
+garbage from empty U.FL. It is a miracle that it has been worked.
 
 
-Best regards,
-Maxim Levitsky
+MadWiFi is much more intelligent. It tests both inputs and selects better one.
+
+ 
+> btw: when the signal measurement was low, did you see any negative impact on 
+> the thruput as well?
+Nope.
+ http://78.108.103.11:11080/cgi-bin/pktloss_1day_big.cgi
+But the line is so overpowered that I would not notify 8dB drop.
+
+regards
+   Jara
+
+ 
+> bruno
+
 
