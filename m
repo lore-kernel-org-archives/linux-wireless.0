@@ -1,118 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:57557 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.36.123.2]:11103 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932365Ab0FBKWm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Jun 2010 06:22:42 -0400
+	id S1752367Ab0F3KrV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jun 2010 06:47:21 -0400
 Received: from mail.atheros.com ([10.10.20.108])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 02 Jun 2010 03:22:42 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Jun 2010 03:47:21 -0700
+Date: Wed, 30 Jun 2010 03:47:15 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] mac80211: Dont allow to wake up netif tx queues
+ while on off channel
+Message-ID: <20100630104715.GA2192@vasanth-laptop>
+References: <1277892907-2401-1-git-send-email-vasanth@atheros.com>
+ <1277893026.7823.7.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19462.12602.481326.129620@gargle.gargle.HOWL>
-Date: Wed, 2 Jun 2010 15:53:54 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 8/8] ath9k_htc: Configure credit size for AR7010
+In-Reply-To: <1277893026.7823.7.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For non-AR9271 chips, the credit size is different
-and has to be configured appropriately.
+On Wed, Jun 30, 2010 at 03:47:06PM +0530, Johannes Berg wrote:
+> On Wed, 2010-06-30 at 03:15 -0700, Vasanthakumar Thiagarajan wrote:
+> > Drivers are not supposed to call ieee80211_wake_queue() while operating
+> > on off channel during sw scanning, but there is no clear way for
+> > the driver to know that it is operating on off channel during scanning.
+> > There are cases (unavailablity/availability of tx buffers in ath9k, for
+> > example) where driver needs to stop/restart tx queues during background
+> > scanning state, this might result in waking up the corresponding netif
+> > tx queue when the device is on off channel which is not desired. This
+> > patches fixes this by checking SCAN_OFF_CHANNEL bit in scanning before
+> > restarting the tx queue.
+> > 
+> > Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+> > ---
+> >  net/mac80211/util.c |    3 ++-
+> >  1 files changed, 2 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+> > index a54cf14..1938a67 100644
+> > --- a/net/mac80211/util.c
+> > +++ b/net/mac80211/util.c
+> > @@ -277,7 +277,8 @@ static void __ieee80211_wake_queue(struct ieee80211_hw *hw, int queue,
+> >  
+> >  	__clear_bit(reason, &local->queue_stop_reasons[queue]);
+> >  
+> > -	if (local->queue_stop_reasons[queue] != 0)
+> > +	if ((local->queue_stop_reasons[queue] != 0) ||
+> > +	    test_bit(SCAN_OFF_CHANNEL, &local->scanning))
+> >  		/* someone still has this queue stopped */
+> >  		return;
+> 
+> That doesn't seem to make sense, since we treat driver and scan stop
+> status separately via wake_queue_by_reason()
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |   30 ++++++++++++++++++++++--
- drivers/net/wireless/ath/ath9k/htc_hst.c      |    3 +-
- 2 files changed, 28 insertions(+), 5 deletions(-)
+I dont know if I explained the issue properly. The issue here is
+waking up the queues by driver during scan, particularly when
+operating on off channel. With ath9k, there is a possibility that
+ieee80211_wake_queue() can be called while moving from operational
+channel (during channel set in driver). In this case driver still
+needs to be allowed to clear the bit in queue_stop_reasons[] but
+not wake up the tx queue.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index cda3041..7339439 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -179,7 +179,7 @@ static inline int ath9k_htc_connect_svc(struct ath9k_htc_priv *priv,
- 	return htc_connect_service(priv->htc, &req, ep_id);
- }
- 
--static int ath9k_init_htc_services(struct ath9k_htc_priv *priv)
-+static int ath9k_init_htc_services(struct ath9k_htc_priv *priv, u16 devid)
- {
- 	int ret;
- 
-@@ -237,10 +237,33 @@ static int ath9k_init_htc_services(struct ath9k_htc_priv *priv)
- 	if (ret)
- 		goto err;
- 
-+	/*
-+	 * Setup required credits before initializing HTC.
-+	 * This is a bit hacky, but, since queuing is done in
-+	 * the HIF layer, shouldn't matter much.
-+	 */
-+
-+	switch(devid) {
-+	case 0x9271:
-+	case 0x1006:
-+		priv->htc->credits = 33;
-+		break;
-+	case 0x7010:
-+		priv->htc->credits = 45;
-+		break;
-+	default:
-+		dev_err(priv->dev, "ath9k_htc: Unsupported device id: 0x%x\n",
-+			devid);
-+		goto err;
-+	}
-+
- 	ret = htc_init(priv->htc);
- 	if (ret)
- 		goto err;
- 
-+	dev_info(priv->dev, "ath9k_htc: HTC initialized with %d credits\n",
-+		 priv->htc->credits);
-+
- 	return 0;
- 
- err:
-@@ -842,7 +865,7 @@ int ath9k_htc_probe_device(struct htc_target *htc_handle, struct device *dev,
- 		goto err_free;
- 	}
- 
--	ret = ath9k_init_htc_services(priv);
-+	ret = ath9k_init_htc_services(priv, devid);
- 	if (ret)
- 		goto err_init;
- 
-@@ -885,7 +908,8 @@ int ath9k_htc_resume(struct htc_target *htc_handle)
- 	if (ret)
- 		return ret;
- 
--	ret = ath9k_init_htc_services(htc_handle->drv_priv);
-+	ret = ath9k_init_htc_services(htc_handle->drv_priv,
-+			      htc_handle->drv_priv->ah->hw_version.devid);
- 	return ret;
- }
- #endif
-diff --git a/drivers/net/wireless/ath/ath9k/htc_hst.c b/drivers/net/wireless/ath/ath9k/htc_hst.c
-index 2173196..705c0f3 100644
---- a/drivers/net/wireless/ath/ath9k/htc_hst.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_hst.c
-@@ -89,7 +89,6 @@ static void htc_process_target_rdy(struct htc_target *target,
- 	struct htc_endpoint *endpoint;
- 	struct htc_ready_msg *htc_ready_msg = (struct htc_ready_msg *) buf;
- 
--	target->credits = be16_to_cpu(htc_ready_msg->credits);
- 	target->credit_size = be16_to_cpu(htc_ready_msg->credit_size);
- 
- 	endpoint = &target->endpoint[ENDPOINT0];
-@@ -159,7 +158,7 @@ static int htc_config_pipe_credits(struct htc_target *target)
- 
- 	cp_msg->message_id = cpu_to_be16(HTC_MSG_CONFIG_PIPE_ID);
- 	cp_msg->pipe_id = USB_WLAN_TX_PIPE;
--	cp_msg->credits = 33;
-+	cp_msg->credits = target->credits;
- 
- 	target->htc_flags |= HTC_OP_CONFIG_PIPE_CREDITS;
- 
--- 
-1.7.1
-
+Vasanth
