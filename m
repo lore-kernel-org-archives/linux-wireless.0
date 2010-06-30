@@ -1,92 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:62618 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752087Ab0GJTkO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Jul 2010 15:40:14 -0400
-Received: by gye5 with SMTP id 5so1993345gye.19
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Jul 2010 12:40:13 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4C38BE1D.2020107@openwrt.org>
-References: <AANLkTilq_VFbOPHmMuf1EFmewc_WBBpgvW0t7ogZdbdl@mail.gmail.com>
-	<4C38BE1D.2020107@openwrt.org>
-Date: Sat, 10 Jul 2010 20:40:13 +0100
-Message-ID: <AANLkTinNmQONdkT_f7aNykH0t4o7Zdybi96hcd4K4UUp@mail.gmail.com>
-Subject: Re: Issues with ath9k dropping connectivity - now no connectivity
-From: Norman Henderson <norm.audrey@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:11948 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752159Ab0F3XcI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Jun 2010 19:32:08 -0400
+Subject: Re: intel 5100/iwlagn bug in 2.6.35-rc2 during large file transfer
+From: reinette chatre <reinette.chatre@intel.com>
+To: Richard Farina <sidhayn@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4C296F44.9050000@gmail.com>
+References: <4C198EF0.5080807@gmail.com>
+	 <1277225293.25793.2257.camel@rchatre-DESK>  <4C2383E2.8000909@gmail.com>
+	 <1277399636.25793.2389.camel@rchatre-DESK>  <4C23961D.7050500@gmail.com>
+	 <1277401731.25793.2391.camel@rchatre-DESK>  <4C24D926.7010806@gmail.com>
+	 <1277492229.13673.1297.camel@rchatre-DESK>  <4C278704.5040604@gmail.com>
+	 <1277742425.13673.1376.camel@rchatre-DESK>  <4C28D552.30000@gmail.com>
+	 <1277757563.4197.11.camel@rchatre-DESK>  <4C296F44.9050000@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 30 Jun 2010 16:32:05 -0700
+Message-ID: <1277940725.4197.86.camel@rchatre-DESK>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks very much Felix for the quick comment. I'll follow up on it
-over the next few days as I get time to move to "bleeding edge"
-(something I've sworn from my youth to never do...).
+On Mon, 2010-06-28 at 20:57 -0700, Richard Farina wrote:
+> [ 3091.463559] iwlagn 0000:02:00.0: Failed to alloc_pages with 
+> GFP_ATOMIC. Only 21 free buffers remaining.
+> [ 3091.534626] iwlagn 0000:02:00.0: Failed to alloc_pages with 
+> GFP_ATOMIC. Only 0 free buffers remaining.
+> [ 3593.179843] iwlagn 0000:02:00.0: Failed to alloc_pages with 
+> GFP_ATOMIC. Only 1 free buffers remaining.
+> [ 3593.307837] iwlagn 0000:02:00.0: Failed to alloc_pages with 
+> GFP_ATOMIC. Only 26 free buffers remaining.
+> [ 4091.542698] net_ratelimit: 34 callbacks suppressed
+> [ 4091.542702] iwlagn 0000:02:00.0: Failed to alloc_pages with 
+> GFP_ATOMIC. Only 25 free buffers remaining.
+> [ 4091.542724] iwlagn 0000:02:00.0: Failed to alloc_pages with 
+> GFP_ATOMIC. Only 3 free buffers remaining.
+> [ 4091.555285] iwlagn 0000:02:00.0: Failed to alloc_pages with 
+> GFP_ATOMIC. Only 26 free buffers remaining.
+> [ 4091.555305] iwlagn 0000:02:00.0: Failed to alloc_pages with 
+> GFP_ATOMIC. Only 0 free buffers remaining.
+> [ 4258.724351] net_ratelimit: 2073 callbacks suppressed
+> [ 4258.724372] iwlagn 0000:02:00.0: Failed to alloc_pages with 
+> GFP_ATOMIC. Only 0 free buffers remaining.
+> [ 4258.753286] iwlagn 0000:02:00.0: Failed to alloc_pages with 
+> GFP_ATOMIC. Only 31 free buffers remaining.
+> [ 4258.753309] iwlagn 0000:02:00.0: Failed to alloc_pages with 
+> GFP_ATOMIC. Only 2 free buffers remaining.
+> [ 4258.774133] iwlagn 0000:02:00.0: Failed to alloc_pages with 
+> GFP_ATOMIC. Only 28 free buffers remaining.
+> [ 5165.260524] net_ratelimit: 21 callbacks suppressed
+> [ 5166.400305] iwlagn 0000:02:00.0: Failed to alloc_pages with 
+> GFP_ATOMIC. Only 4 free buffers remaining.
+> [ 5167.126059] iwlagn 0000:02:00.0: Failed to alloc_pages with 
+> GFP_ATOMIC. Only 13 free buffers remaining.
+> [ 5454.561708] net_ratelimit: 4 callbacks suppressed
+> [ 5455.245019] iwlagn 0000:02:00.0: Failed to alloc_pages with 
+> GFP_ATOMIC. Only 1 free buffers remaining.
+> 
+> 
+> I'd certainly list it as improved as it hardly freezes and those aren't 
+> kernel oops.
 
-However I guess I was more concerned about the regression from an
-environment that worked (with disconnections) to one that doesn't
-connect at all - is that just the luck of the draw or did I do
-something stupid? (more precisely, what was it that I did stupid,
-because that's inevitably true :~
+Some good news is always welcome.
 
-- Norm Henderson
+>   However it should be noted that this test didn't seem to 
+> have nearly the same speed as the previous test (which may well be due 
+> to my internet connection or any number of things having nothing to do 
+> with this patch). Point is, I'd definately like to get a faster test it 
+> to see if it explodes.
 
-On Sat, Jul 10, 2010 at 7:38 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2010-07-10 8:32 PM, Norman Henderson wrote:
->> Hi,
->>
->> I'm a bit new to all of this - here's the short story. I would
->> appreciate any help available!
->>
->> I was building a WAP using a PC Engines ALIX board (AMD Geode LX800),
->> DNMA92 wireless card (Atheros 92xx) and Voyage Linux (based on Debian
->> Lenny, 2.6.30 kernel with hostapd 0.6.9 and libnl1.1). It was all
->> working but, the wireless card would drop connectivity for no apparent
->> reason after an undetermined time (minutes to hours). Stations (Win or
->> cellphone) would no longer see it at all, as if it was no longer
->> transmitting.
->>
->> The Voyage maintainer advised that ath9k isn't that stable at 2.6.30.
->> So, I upgraded the kernel to 2.6.32 using the Debian Lenny backport. I
->> then installed the "stable" compat-wireless, 2.6.32.16.
->>
->> Hostapd appears to start OK. However, the wireless SSID is only
->> visible to the Windows clients for a short time - seconds/minutes -
->> and they aren't able to connect. There were no errors in the hostapd
->> startup and it does its key rotations periodically. All that's logged
->> from hostapd -dd during the actual time that the Win clients can see
->> it and are trying to connect is:
->> 1278785975.350851: STA 00:13:02:be:7b:f9 sent probe request for broadcast SSID
->> 1278785975.353034: MGMT (TX callback) ACK
->> 1278785975.353073: mgmt::proberesp cb
->> (repeated a few times)
->>
->> The Win7 station used to connect automatically but now doesn't and
->> when I click "connect" it fails and shortly thereafter the SSID
->> disappears from the list.
->>
->> Nothing in /var/log. iw phy phy0 info and iw dev wlan0 info appear to
->> report sensible info as does iwconfig.
->>
->> During boot I do get messages about "VIA Padlock Hash Engine not detected" and
->> modprobe: FATAL: Error inserting padlock_sha
->> (/lib/modules/2.6.32-bpo.5-686/kern...): No such device
->> From googling it's not clear to me at least whether this is relevant.
->>
->> Suggestions? What further diagnostics could I do?
-> I'd suggest using a 'bleeding edge' compat-wireless along with hostapd
-> version 0.7.2.
->
-> In OpenWrt we're using a compat-wireless based on wireless-testing
-> 2010-07-06, along with two ath9k patches that were merged in a later
-> version.
->
-> According to my own testing and various user feedback, this is the most
-> stable version that we had so far.
->
-> I think 2.6.36 is probably going to be the first Linux Kernel version
-> with ath9k working in AP mode *reliably*.
->
-> - Felix
->
+I do not like the idea that this is making your connection slower
+though ... this could be because we are not more likely to attempt
+memory allocation when there is still a large number of buffers left ...
+so we do memory allocation more (too?) often.
+
+>   Assuming it doesn't, how can I help you find out 
+> why it keeps running out of buffers? I'm guessing  this isn't expected 
+> behavior...
+
+Well, the good news seems to be that your system is not running out of
+memory completely ... it is just that the memory available to atomic
+allocations is not enough to satisfy all requests. This really sounds
+like https://bugzilla.kernel.org/show_bug.cgi?id=14141 , which has
+unfortunately not been resolved yet.
+
+Since the patch below appears to be the one making your system
+slower ... could you modify the patch to set RX_LOW_WATERMARK to 64? I
+know it is what we had before, but hopefully that together with the the
+other changes in this patch will help to make system faster as well as
+less noisy.
+
+Thank you
+
+Reinette
+
+
+> Thanks,
+> Rick Farina
+> 
+> > >From 65c459c35332c7039cc84a980e6e04118ba81c04 Mon Sep 17 00:00:00 2001
+> > From: Reinette Chatre <reinette.chatre@intel.com>
+> > Date: Thu, 24 Jun 2010 10:48:59 -0700
+> > Subject: [PATCH] increase low watermark
+> >
+> > ---
+> >  drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    5 +++--
+> >  drivers/net/wireless/iwlwifi/iwl-fh.h      |    2 +-
+> >  2 files changed, 4 insertions(+), 3 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+> > index 0f292a2..2815ee7 100644
+> > --- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+> > +++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+> > @@ -613,7 +613,8 @@ void iwlagn_rx_allocate(struct iwl_priv *priv, gfp_t priority)
+> >  		}
+> >  		spin_unlock_irqrestore(&rxq->lock, flags);
+> >  
+> > -		if (rxq->free_count > RX_LOW_WATERMARK)
+> > +		if ((priority == GFP_ATOMIC) ||
+> > +		    (rxq->free_count > RX_LOW_WATERMARK / 4))
+> >  			gfp_mask |= __GFP_NOWARN;
+> >  
+> >  		if (priv->hw_params.rx_page_order > 0)
+> > @@ -627,7 +628,7 @@ void iwlagn_rx_allocate(struct iwl_priv *priv, gfp_t priority)
+> >  					       "order: %d\n",
+> >  					       priv->hw_params.rx_page_order);
+> >  
+> > -			if ((rxq->free_count <= RX_LOW_WATERMARK) &&
+> > +			if ((rxq->free_count <= RX_LOW_WATERMARK / 4) &&
+> >  			    net_ratelimit())
+> >  				IWL_CRIT(priv, "Failed to alloc_pages with %s. Only %u free buffers remaining.\n",
+> >  					 priority == GFP_ATOMIC ?  "GFP_ATOMIC" : "GFP_KERNEL",
+> > diff --git a/drivers/net/wireless/iwlwifi/iwl-fh.h b/drivers/net/wireless/iwlwifi/iwl-fh.h
+> > index 113c366..431bc58 100644
+> > --- a/drivers/net/wireless/iwlwifi/iwl-fh.h
+> > +++ b/drivers/net/wireless/iwlwifi/iwl-fh.h
+> > @@ -426,7 +426,7 @@
+> >   * RX related structures and functions
+> >   */
+> >  #define RX_FREE_BUFFERS 64
+> > -#define RX_LOW_WATERMARK 8
+> > +#define RX_LOW_WATERMARK 128
+> >  
+> >  /* Size of one Rx buffer in host DRAM */
+> >  #define IWL_RX_BUF_SIZE_3K (3 * 1000) /* 3945 only */
+> >   
+> 
+
+
