@@ -1,157 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:34774 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757477Ab0FDXZ6 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41484 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752401Ab0F3TPK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Jun 2010 19:25:58 -0400
-Received: by wwb28 with SMTP id 28so1264770wwb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Jun 2010 16:25:57 -0700 (PDT)
-From: Grazvydas Ignotas <notasas@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kalle.valo@iki.fi>,
-	Grazvydas Ignotas <notasas@gmail.com>
-Subject: [PATCH 2/2] wl1251: fix ELP_CTRL register reads
-Date: Sat,  5 Jun 2010 02:25:48 +0300
-Message-Id: <1275693948-3189-2-git-send-email-notasas@gmail.com>
-In-Reply-To: <1275693948-3189-1-git-send-email-notasas@gmail.com>
-References: <1275693948-3189-1-git-send-email-notasas@gmail.com>
+	Wed, 30 Jun 2010 15:15:10 -0400
+Subject: Re: pull request: wireless-2.6 2010-06-30
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20100630.120551.170116973.davem@davemloft.net>
+References: <20100630185319.GA2618@tuxdriver.com>
+	 <20100630.120551.170116973.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 30 Jun 2010 21:15:04 +0200
+Message-ID: <1277925304.7823.16.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reading the ELP_CTRL register with sdio_readb causes problems because
-hardware seems to be performing a write using stuff bits in the request
-(those bits contain write data in write request). This indicates that it
-actually expects RAW (read after write) type of request, so perform that
-when reading ELP_CTRL instead. Also cache last written value so we know
-what to write when doing RAW request.
+On Wed, 2010-06-30 at 12:05 -0700, David Miller wrote:
 
-Because of the above it was not possible to wake the chip from ELP power
-saving mode, PM had to be disabled to have the driver usable in SDIO
-mode. After this patch PM is functional.
+> > +	/*
+> > +	 * Receiving all multicast frames is always enabled by the
+> > +	 * default flags setup in iwl_connection_init_rx_config()
+> > +	 * since we currently do not support programming multicast
+> > +	 * filters into the device.
+> > +	 */
+> >  	*total_flags &= FIF_OTHER_BSS | FIF_ALLMULTI | FIF_PROMISC_IN_BSS |
+> >  			FIF_BCN_PRBRESP_PROMISC | FIF_CONTROL;
+> 
+> Note that this is an amazingly serious limitation.
+> 
+> This basically makes iwl chips unsuitable for use on networks where
+> real multicast use is common.
 
-Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
----
-this patch is not suitable for backporting because reqiured SDIO function
-was only merged during the last merge window.
+Lots of wireless devices have this limitation unfortunately. I think we
+-might- be able to have proper filters for iwl, but haven't found out
+quite how yet unfortunately, if it's actually implemented properly on
+the device and there's not just some fake API.
 
- drivers/net/wireless/wl12xx/wl1251_sdio.c |   40 ++++++++++++++++++++++++----
- 1 files changed, 34 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1251_sdio.c b/drivers/net/wireless/wl12xx/wl1251_sdio.c
-index c561332..b901b61 100644
---- a/drivers/net/wireless/wl12xx/wl1251_sdio.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_sdio.c
-@@ -37,11 +37,17 @@
- #define SDIO_DEVICE_ID_TI_WL1251	0x9066
- #endif
- 
-+struct wl1251_sdio {
-+	struct sdio_func *func;
-+	u32 elp_val;
-+};
-+
- static struct wl12xx_platform_data *wl12xx_board_data;
- 
- static struct sdio_func *wl_to_func(struct wl1251 *wl)
- {
--	return wl->if_priv;
-+	struct wl1251_sdio *wl_sdio = wl->if_priv;
-+	return wl_sdio->func;
- }
- 
- static void wl1251_sdio_interrupt(struct sdio_func *func)
-@@ -90,10 +96,17 @@ static void wl1251_sdio_write(struct wl1251 *wl, int addr,
- static void wl1251_sdio_read_elp(struct wl1251 *wl, int addr, u32 *val)
- {
- 	int ret = 0;
--	struct sdio_func *func = wl_to_func(wl);
--
-+	struct wl1251_sdio *wl_sdio = wl->if_priv;
-+	struct sdio_func *func = wl_sdio->func;
-+
-+	/*
-+	 * The hardware only supports RAW (read after write) access for
-+	 * reading, regular sdio_readb won't work here (it interprets
-+	 * the unused bits of CMD52 as write data even if we send read
-+	 * request).
-+	 */
- 	sdio_claim_host(func);
--	*val = sdio_readb(func, addr, &ret);
-+	*val = sdio_writeb_readb(func, wl_sdio->elp_val, addr, &ret);
- 	sdio_release_host(func);
- 
- 	if (ret)
-@@ -103,7 +116,8 @@ static void wl1251_sdio_read_elp(struct wl1251 *wl, int addr, u32 *val)
- static void wl1251_sdio_write_elp(struct wl1251 *wl, int addr, u32 val)
- {
- 	int ret = 0;
--	struct sdio_func *func = wl_to_func(wl);
-+	struct wl1251_sdio *wl_sdio = wl->if_priv;
-+	struct sdio_func *func = wl_sdio->func;
- 
- 	sdio_claim_host(func);
- 	sdio_writeb(func, val, addr, &ret);
-@@ -111,6 +125,8 @@ static void wl1251_sdio_write_elp(struct wl1251 *wl, int addr, u32 val)
- 
- 	if (ret)
- 		wl1251_error("sdio_writeb failed (%d)", ret);
-+	else
-+		wl_sdio->elp_val = val;
- }
- 
- static void wl1251_sdio_reset(struct wl1251 *wl)
-@@ -197,6 +213,7 @@ static int wl1251_sdio_probe(struct sdio_func *func,
- 	int ret;
- 	struct wl1251 *wl;
- 	struct ieee80211_hw *hw;
-+	struct wl1251_sdio *wl_sdio;
- 
- 	hw = wl1251_alloc_hw();
- 	if (IS_ERR(hw))
-@@ -204,6 +221,12 @@ static int wl1251_sdio_probe(struct sdio_func *func,
- 
- 	wl = hw->priv;
- 
-+	wl_sdio = kzalloc(sizeof(*wl_sdio), GFP_KERNEL);
-+	if (wl_sdio == NULL) {
-+		ret = -ENOMEM;
-+		goto out_free_hw;
-+	}
-+
- 	sdio_claim_host(func);
- 	ret = sdio_enable_func(func);
- 	if (ret)
-@@ -213,7 +236,8 @@ static int wl1251_sdio_probe(struct sdio_func *func,
- 	sdio_release_host(func);
- 
- 	SET_IEEE80211_DEV(hw, &func->dev);
--	wl->if_priv = func;
-+	wl_sdio->func = func;
-+	wl->if_priv = wl_sdio;
- 	wl->if_ops = &wl1251_sdio_ops;
- 	wl->set_power = wl1251_sdio_set_power;
- 
-@@ -259,6 +283,8 @@ disable:
- 	sdio_disable_func(func);
- release:
- 	sdio_release_host(func);
-+	kfree(wl_sdio);
-+out_free_hw:
- 	wl1251_free_hw(wl);
- 	return ret;
- }
-@@ -266,9 +292,11 @@ release:
- static void __devexit wl1251_sdio_remove(struct sdio_func *func)
- {
- 	struct wl1251 *wl = sdio_get_drvdata(func);
-+	struct wl1251_sdio *wl_sdio = wl->if_priv;
- 
- 	if (wl->irq)
- 		free_irq(wl->irq, wl);
-+	kfree(wl_sdio);
- 	wl1251_free_hw(wl);
- 
- 	sdio_claim_host(func);
--- 
-1.6.3.3
+johannes
 
