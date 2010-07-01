@@ -1,79 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:60656 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753398Ab0G0Wvs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 18:51:48 -0400
-Date: Tue, 27 Jul 2010 15:39:32 -0700
-From: Greg KH <greg@kroah.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: stable@kernel.org, linux-wireless@vger.kernel.org,
-	Ben Hutchings <ben@decadent.org.uk>
-Subject: Re: [stable] [PATCH 2/2 2.6.32.y] mac80211: fix supported rates IE
- if AP doesn't give us it's rates
-Message-ID: <20100727223932.GL14257@kroah.com>
-References: <1275904783-6563-1-git-send-email-sgruszka@redhat.com>
- <1275904783-6563-2-git-send-email-sgruszka@redhat.com>
+Received: from mail.candelatech.com ([208.74.158.172]:42710 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932871Ab0GAVCH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Jul 2010 17:02:07 -0400
+Received: from [71.117.12.23] (pool-71-117-12-23.sttlwa.dsl-w.verizon.net [71.117.12.23])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id o61KUZJn021379
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Thu, 1 Jul 2010 13:30:36 -0700
+Message-ID: <4C2CFAEB.9070302@candelatech.com>
+Date: Thu, 01 Jul 2010 13:30:35 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1275904783-6563-2-git-send-email-sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Subject: Question on 'iw reg get/set'
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 07, 2010 at 11:59:43AM +0200, Stanislaw Gruszka wrote:
-> If AP do not provide us supported rates before assiociation, send
-> all rates we are supporting instead of empty information element.
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  net/mac80211/mlme.c |   17 +++++++++++------
+I'm using an ath9k NIC on a slightly hacked 2.6.34 kernel, Fedora 13 32-bit.
+I'm using the stock 'iw' command that comes with Fedora 13.
 
-What is the commit id of this patch upstream?
+As far as I can tell, the results of 'iw reg get'
+are funky:
 
-thanks,
+[root@atom lanforge]# iw reg get
+country 98:
+	(2402 - 2472 @ 40), (N/A, 20)
+	(5170 - 5250 @ 20), (N/A, 17)
+	(5250 - 5330 @ 20), (N/A, 18), DFS
 
-greg k-h
+What is '98'?  It doesn't correspond to anything I can find
+in the numeric or ascii lists of country codes.
 
->  1 files changed, 11 insertions(+), 6 deletions(-)
-> 
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index d3950b7..abd62fc 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -269,12 +269,6 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata,
->  	if (wk->bss->wmm_used)
->  		wmm = 1;
->  
-> -	/* get all rates supported by the device and the AP as
-> -	 * some APs don't like getting a superset of their rates
-> -	 * in the association request (e.g. D-Link DAP 1353 in
-> -	 * b-only mode) */
-> -	rates_len = ieee80211_compatible_rates(wk->bss, sband, &rates);
-> -
->  	if ((wk->bss->cbss.capability & WLAN_CAPABILITY_SPECTRUM_MGMT) &&
->  	    (local->hw.flags & IEEE80211_HW_SPECTRUM_MGMT))
->  		capab |= WLAN_CAPABILITY_SPECTRUM_MGMT;
-> @@ -309,6 +303,17 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata,
->  	*pos++ = wk->ssid_len;
->  	memcpy(pos, wk->ssid, wk->ssid_len);
->  
-> +	if (wk->bss->supp_rates_len) {
-> +		/* get all rates supported by the device and the AP as
-> +		 * some APs don't like getting a superset of their rates
-> +		 * in the association request (e.g. D-Link DAP 1353 in
-> +		 * b-only mode) */
-> +		rates_len = ieee80211_compatible_rates(wk->bss, sband, &rates);
-> +	} else {
-> +		rates = ~0;
-> +		rates_len = sband->n_bitrates;
-> +	}
-> +
->  	/* add all rates which were marked to be used above */
->  	supp_rates_len = rates_len;
->  	if (supp_rates_len > 8)
-> -- 
-> 1.6.2.5
-> 
-> _______________________________________________
-> stable mailing list
-> stable@linux.kernel.org
-> http://linux.kernel.org/mailman/listinfo/stable
+Also, setting the domain doesn't seem to do anything, although
+there are no errors:
+
+[root@atom lanforge]# iw reg get
+country 98:
+	(2402 - 2472 @ 40), (N/A, 20)
+	(5170 - 5250 @ 20), (N/A, 17)
+	(5250 - 5330 @ 20), (N/A, 18), DFS
+[root@atom lanforge]# iw reg set US
+[root@atom lanforge]# iw reg get
+country 98:
+	(2402 - 2472 @ 40), (N/A, 20)
+	(5170 - 5250 @ 20), (N/A, 17)
+	(5250 - 5330 @ 20), (N/A, 18), DFS
+
+Anyone know if this is *supposed* to work?
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
