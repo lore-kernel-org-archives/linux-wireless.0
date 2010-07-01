@@ -1,63 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:54670 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751124Ab0GCQfy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Jul 2010 12:35:54 -0400
-Received: by pvc7 with SMTP id 7so1660273pvc.19
-        for <linux-wireless@vger.kernel.org>; Sat, 03 Jul 2010 09:35:53 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:13023 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751174Ab0GAJeo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Jul 2010 05:34:44 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 01 Jul 2010 02:31:35 -0700
+Date: Thu, 1 Jul 2010 15:04:38 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <johannes@sipsolutions.net>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] mac80211: Dont allow to wake up netif tx queues
+	while on off channel
+Message-ID: <20100701093438.GA4563@vasanth-laptop>
+References: <1277892907-2401-1-git-send-email-vasanth@atheros.com> <1277893026.7823.7.camel@jlt3.sipsolutions.net> <20100630104715.GA2192@vasanth-laptop>
 MIME-Version: 1.0
-In-Reply-To: <20100702164759.GE2381@tuxdriver.com>
-References: <4C2CFAEB.9070302@candelatech.com> <20100702141216.GB2381@tuxdriver.com>
-	<4C2E170E.6040207@candelatech.com> <20100702164759.GE2381@tuxdriver.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sat, 3 Jul 2010 09:35:32 -0700
-Message-ID: <AANLkTikKkA7u636p6geS8lAoJEXY51QUGb2hQ6RwnLbN@mail.gmail.com>
-Subject: Re: Question on 'iw reg get/set'
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Ben Greear <greearb@candelatech.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20100630104715.GA2192@vasanth-laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 2, 2010 at 9:48 AM, John W. Linville <linville@tuxdriver.com> wrote:
-> On Fri, Jul 02, 2010 at 09:42:54AM -0700, Ben Greear wrote:
->> On 07/02/2010 07:12 AM, John W. Linville wrote:
->
->> >The ath9k driver is setting its own regulatory restrictions based on
->> >its EEPROM.  Setting the domain from userland can only further restrict
->> >the regulatory settings.  The '98' value represents a synthesized
->> >regulatory domain, based on the intersection of the available source
->> >of regulatory information (which can include the EEPROM, the userland
->> >setting, and a country IE from your AP).
->>
->> Is there any way to get/set these raw settings (like, whatever it has in EEPROM)?
->>
->> I expect we may ship some of these systems overseas, and would like the flexibility
->> to set the country-code for testing purposes, if nothing else.
->
-> I'll leave it to the Atheros guys to address this.
+On Wed, Jun 30, 2010 at 04:17:15PM +0530, Vasanth Thiagarajan wrote:
+> On Wed, Jun 30, 2010 at 03:47:06PM +0530, Johannes Berg wrote:
+> > On Wed, 2010-06-30 at 03:15 -0700, Vasanthakumar Thiagarajan wrote:
+> > > Drivers are not supposed to call ieee80211_wake_queue() while operating
+> > > on off channel during sw scanning, but there is no clear way for
+> > > the driver to know that it is operating on off channel during scanning.
+> > > There are cases (unavailablity/availability of tx buffers in ath9k, for
+> > > example) where driver needs to stop/restart tx queues during background
+> > > scanning state, this might result in waking up the corresponding netif
+> > > tx queue when the device is on off channel which is not desired. This
+> > > patches fixes this by checking SCAN_OFF_CHANNEL bit in scanning before
+> > > restarting the tx queue.
+> > > 
+> > > Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+> > > ---
+> > >  net/mac80211/util.c |    3 ++-
+> > >  1 files changed, 2 insertions(+), 1 deletions(-)
+> > > 
+> > > diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+> > > index a54cf14..1938a67 100644
+> > > --- a/net/mac80211/util.c
+> > > +++ b/net/mac80211/util.c
+> > > @@ -277,7 +277,8 @@ static void __ieee80211_wake_queue(struct ieee80211_hw *hw, int queue,
+> > >  
+> > >  	__clear_bit(reason, &local->queue_stop_reasons[queue]);
+> > >  
+> > > -	if (local->queue_stop_reasons[queue] != 0)
+> > > +	if ((local->queue_stop_reasons[queue] != 0) ||
+> > > +	    test_bit(SCAN_OFF_CHANNEL, &local->scanning))
+> > >  		/* someone still has this queue stopped */
+> > >  		return;
+> > 
+> > That doesn't seem to make sense, since we treat driver and scan stop
+> > status separately via wake_queue_by_reason()
+> 
+> I dont know if I explained the issue properly. The issue here is
+> waking up the queues by driver during scan, particularly when
+> operating on off channel. With ath9k, there is a possibility that
+> ieee80211_wake_queue() can be called while moving from operational
+> channel (during channel set in driver). In this case driver still
+> needs to be allowed to clear the bit in queue_stop_reasons[] but
+> not wake up the tx queue.
 
-Your "expectation" of having the freedom to modify the EEPROM is valid
-as I agree with it too but current legislation does not allow for it.
-So to support upstream drivers we just cannot allow for those type of
-changes. You won't get any support if you try to mess with that stuff
-unless we get a change in legislation that says otherwise. Please
-refer to:
+The actual issue here is
 
-http://wireless.kernel.org/en/vendors/VendorSupport
-http://wireless.kernel.org/en/developers/Regulatory/statement
-http://wireless.kernel.org/en/developers/Regulatory
+ - ath9k does a ieee80211_stop_queue() upon detecting the shortage
+    in tx buffer.
 
-  Luis
+ - by the time it wakes up the queue, network manager issues a
+   background scanning. tx buffers become available again by
+   draining the driver's tx queues while configuring the hw with
+   a non-operational channel. As driver can not really clear its
+   queue stop request by calling ieee80211_wake_queue() during
+   off channel, the stopped queue would remain stopped by driver
+   for ever.
 
->> Is there any documentation as to what '98' really means, or do we just ignore that
->> value and look at the info printed out after that?
->
-> '98' pretty much means "look at the info" :-)
+My patch makes ieee80211_wake_queue() callable any time by driver.
+This would just clear the driver's stop req bit in queue_stop_reasons[]
+when on non-operational channel so that the frames coming from that
+queue would be passed to driver when the interface is put back on
+operational channel. The commit description in that patch is
+misleading. If you are ok with this fix, I will resend the patch
+with proper commit message. I could not even come up with a decent
+workaround in ath9k as there is no clean way for driver to know
+if it is moving in/out of operational channel.
 
-Maybe userspace should be changed to interpret these. I'm on vacation
-right now though, patch welcomed for iw.
+This issue is easily seen with ath9k from latest wireless-testing and
+NM. With a simple iperf traffic, tx from mac80211 to driver would stop
+with in 20 secs.
 
-  Luis
+Vasanth
