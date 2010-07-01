@@ -1,73 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from DMZ-MAILSEC-SCANNER-6.MIT.EDU ([18.7.68.35]:55624 "EHLO
-	dmz-mailsec-scanner-6.mit.edu" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750919Ab0GYRTi (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:37848 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752069Ab0GADAH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Jul 2010 13:19:38 -0400
-From: Andy Lutomirski <luto@MIT.EDU>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>, ilw@linux.intel.com,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Cc: Andy Lutomirski <luto@mit.edu>
-Subject: [PATCH 2.6.35] iwlagn: Improve aggregation failure error messages
-Date: Sun, 25 Jul 2010 13:14:29 -0400
-Message-Id: <4f999350050decc0901e6f23ae3f06d35bc3fbc0.1280077759.git.luto@mit.edu>
+	Wed, 30 Jun 2010 23:00:07 -0400
+Received: by pwj8 with SMTP id 8so529252pwj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Jun 2010 20:00:06 -0700 (PDT)
+MIME-Version: 1.0
+From: Andrew Lutomirski <andy@luto.us>
+Date: Wed, 30 Jun 2010 22:59:46 -0400
+Message-ID: <AANLkTikqJzkFFtmOowq-OzzDFSC9_1SFuAfT4UGZBhqW@mail.gmail.com>
+Subject: rfkill failure in 2.6.35-rc3+
+To: linux-wireless@vger.kernel.org, ilw@linux.intel.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-82ca9341763107615a15da6e59b9535d49eb91c3 added scary looking
-but harmless error messages.  Make them clearer and make the
-actual failure message show up with the same severity as the
-harmless one.
+I just toggled rfkill on and back off on my X200s (WiFi Link 5350, rev
+0x24) and the link didn't come up.  Toggling rfkill again didn't fix
+it, but rmmod + modprobe did.
 
-Signed-off-by: Andy Lutomirski <luto@mit.edu>
----
+dmesg said:
 
-This is probably 2.6.35 material.  There is no functional regression
-here, but 2.6.34 worked pretty well and 2.6.35 *looks* like it's not
-working if you read the logs.
+[13629.424869] iwlagn 0000:03:00.0: RF_KILL bit toggled to disable radio.
+[13629.432761] iwlagn 0000:03:00.0: Not sending command - RF KILL
+[13629.432771] iwlagn 0000:03:00.0: Error sending REPLY_RXON:
+enqueue_hcmd failed: -5
+[13629.432778] iwlagn 0000:03:00.0: Error setting new RXON (-5)
+[13631.268646] iwlagn 0000:03:00.0: RF_KILL bit toggled to enable radio.
+[13631.311232] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[13675.710821] iwlagn 0000:03:00.0: RF_KILL bit toggled to disable radio.
+[13675.713438] iwlagn 0000:03:00.0: Not sending command - RF KILL
+[13675.713448] iwlagn 0000:03:00.0: Error sending REPLY_RXON:
+enqueue_hcmd failed: -5
+[13675.713455] iwlagn 0000:03:00.0: Error setting new RXON (-5)
+[13683.090789] iwlagn 0000:03:00.0: RF_KILL bit toggled to enable radio.
+[13683.145267] ADDRCONF(NETDEV_UP): wlan0: link is not ready
 
-There is no functional change in this patch.
-
-Thanks,
-Andy
-
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c |   11 +++++++----
- 1 files changed, 7 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index cf4a95b..f38ee24 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -300,8 +300,9 @@ static int rs_tl_turn_on_agg_for_tid(struct iwl_priv *priv,
- 				      struct ieee80211_sta *sta)
- {
- 	int ret = -EAGAIN;
-+	u32 load = rs_tl_get_load(lq_data, tid);
- 
--	if (rs_tl_get_load(lq_data, tid) > IWL_AGG_LOAD_THRESHOLD) {
-+	if (load > IWL_AGG_LOAD_THRESHOLD) {
- 		IWL_DEBUG_HT(priv, "Starting Tx agg: STA: %pM tid: %d\n",
- 				sta->addr, tid);
- 		ret = ieee80211_start_tx_ba_session(sta, tid);
-@@ -311,13 +312,15 @@ static int rs_tl_turn_on_agg_for_tid(struct iwl_priv *priv,
- 			 * this might be cause by reloading firmware
- 			 * stop the tx ba session here
- 			 */
--			IWL_DEBUG_HT(priv, "Fail start Tx agg on tid: %d\n",
-+			IWL_ERR(priv, "Fail start Tx agg on tid: %d\n",
- 				tid);
- 			ieee80211_stop_tx_ba_session(sta, tid,
- 						WLAN_BACK_INITIATOR);
- 		}
--	} else
--		IWL_ERR(priv, "Fail finding valid aggregation tid: %d\n", tid);
-+	} else {
-+		IWL_ERR(priv, "Aggregation not enabled for tid %d "
-+			"because load = %u\n", tid, load);
-+	}
- 	return ret;
- }
- 
--- 
-1.7.1.1
-
+This is 2.6.35-rc3+ with firmware 8.24.2.12.  I've never seen this before.
