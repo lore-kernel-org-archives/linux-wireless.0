@@ -1,89 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:45685 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752131Ab0GZVTj (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:52509 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751979Ab0GATC7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jul 2010 17:19:39 -0400
-Received: by iwn7 with SMTP id 7so3046336iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Jul 2010 14:19:38 -0700 (PDT)
-MIME-Version: 1.0
-From: Malthe Borch <mborch@gmail.com>
-Date: Mon, 26 Jul 2010 17:19:18 -0400
-Message-ID: <AANLkTimrv507n5-WmikUOhPE95wM1p1_Qtd65rOA1hei@mail.gmail.com>
-Subject: Intel Wireless: Microcode SW error detected.
-To: linux-wireless@vger.kernel.org
-Content-Type: multipart/mixed; boundary=0050450167782d7531048c50f17f
+	Thu, 1 Jul 2010 15:02:59 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id A5D4042042
+	for <linux-wireless@vger.kernel.org>; Thu,  1 Jul 2010 15:06:01 -0400 (EDT)
+Subject: Compat-wireless release for 2010-07-01 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100701190257.6256B42E2C@repository3.orbit-lab.org>
+Date: Thu,  1 Jul 2010 15:02:57 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---0050450167782d7531048c50f17f
-Content-Type: text/plain; charset=UTF-8
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   85e0e99..a348d8b  history    -> origin/history
+ + 7a6353a...fb4cbff master     -> origin/master  (forced update)
+ * [new tag]         next-20100701 -> next-20100701
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
+/usr/bin/sha1sum: *.tar.bz2: No such file or directory
 
-I get this with the latest and greatest Intel firmware 9.221.4.1 build 25532.
+compat-wireless code metrics
 
-Ultimately enabling the device fails with: "uCode did not respond OK."
-
---0050450167782d7531048c50f17f
-Content-Type: application/octet-stream; name=dmesg
-Content-Disposition: attachment; filename=dmesg
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gc3tj67p0
-
-WyAgIDM1Ljg4MjMwNV0gaXdsYWduIDAwMDA6MDI6MDAuMDogTWljcm9jb2RlIFNXIGVycm9yIGRl
-dGVjdGVkLiAgUmVzdGFydGluZyAweDgyMDAwMDAwLgpbICAgMzUuODgyMzEzXSBpd2xhZ24gMDAw
-MDowMjowMC4wOiBMb2FkZWQgZmlybXdhcmUgdmVyc2lvbjogOS4yMjEuNC4xIGJ1aWxkIDI1NTMy
-ClsgICAzNS44ODIzMThdIGl3bGFnbiAwMDAwOjAyOjAwLjA6IE5vdCB2YWxpZCBlcnJvciBsb2cg
-cG9pbnRlciAweDAwMDAwMDAwIGZvciBSVCB1Q29kZQpbICAgMzUuODgyMzIyXSBpd2xhZ24gMDAw
-MDowMjowMC4wOiBDU1IgdmFsdWVzOgpbICAgMzUuODgyMzI1XSBpd2xhZ24gMDAwMDowMjowMC4w
-OiAoMm5kIGJ5dGUgb2YgQ1NSX0lOVF9DT0FMRVNDSU5HIGlzIENTUl9JTlRfUEVSSU9ESUNfUkVH
-KQpbICAgMzUuODgyMzMzXSBpd2xhZ24gMDAwMDowMjowMC4wOiAgICAgICAgQ1NSX0hXX0lGX0NP
-TkZJR19SRUc6IDBYMDA0ODAzMDMKWyAgIDM1Ljg4MjMzOV0gaXdsYWduIDAwMDA6MDI6MDAuMDog
-ICAgICAgICAgQ1NSX0lOVF9DT0FMRVNDSU5HOiAwWDAwMDAwMDQwClsgICAzNS44ODIzNDZdIGl3
-bGFnbiAwMDAwOjAyOjAwLjA6ICAgICAgICAgICAgICAgICAgICAgQ1NSX0lOVDogMFg4MDAwMDAw
-MApbICAgMzUuODgyMzUzXSBpd2xhZ24gMDAwMDowMjowMC4wOiAgICAgICAgICAgICAgICBDU1Jf
-SU5UX01BU0s6IDBYMDAwMDAwMDAKWyAgIDM1Ljg4MjM1OV0gaXdsYWduIDAwMDA6MDI6MDAuMDog
-ICAgICAgICAgIENTUl9GSF9JTlRfU1RBVFVTOiAwWDQwMDEwMDAwClsgICAzNS44ODIzNjVdIGl3
-bGFnbiAwMDAwOjAyOjAwLjA6ICAgICAgICAgICAgICAgICBDU1JfR1BJT19JTjogMFgwMDAwMDAw
-ZgpbICAgMzUuODgyMzcxXSBpd2xhZ24gMDAwMDowMjowMC4wOiAgICAgICAgICAgICAgICAgICBD
-U1JfUkVTRVQ6IDBYMDAwMDAwMDAKWyAgIDM1Ljg4MjM3N10gaXdsYWduIDAwMDA6MDI6MDAuMDog
-ICAgICAgICAgICAgICAgQ1NSX0dQX0NOVFJMOiAwWDA4MDQwM2M1ClsgICAzNS44ODIzODNdIGl3
-bGFnbiAwMDAwOjAyOjAwLjA6ICAgICAgICAgICAgICAgICAgQ1NSX0hXX1JFVjogMFgwMDAwMDA3
-NApbICAgMzUuODgyMzg5XSBpd2xhZ24gMDAwMDowMjowMC4wOiAgICAgICAgICAgICAgQ1NSX0VF
-UFJPTV9SRUc6IDBYMDAwMDAwMDAKWyAgIDM1Ljg4MjM5Nl0gaXdsYWduIDAwMDA6MDI6MDAuMDog
-ICAgICAgICAgICAgICBDU1JfRUVQUk9NX0dQOiAwWDkwMDAwMDA0ClsgICAzNS44ODI0MDNdIGl3
-bGFnbiAwMDAwOjAyOjAwLjA6ICAgICAgICAgICAgICBDU1JfT1RQX0dQX1JFRzogMFgwMDAyMDAw
-MApbICAgMzUuODgyNDA4XSBpd2xhZ24gMDAwMDowMjowMC4wOiAgICAgICAgICAgICAgICAgQ1NS
-X0dJT19SRUc6IDBYMDAwODAwNDYKWyAgIDM1Ljg4MjQxNV0gaXdsYWduIDAwMDA6MDI6MDAuMDog
-ICAgICAgICAgICBDU1JfR1BfVUNPREVfUkVHOiAwWDAwMDAwMDAwClsgICAzNS44ODI0MjFdIGl3
-bGFnbiAwMDAwOjAyOjAwLjA6ICAgICAgICAgICBDU1JfR1BfRFJJVkVSX1JFRzogMFgwMDAwMDAw
-MApbICAgMzUuODgyNDI3XSBpd2xhZ24gMDAwMDowMjowMC4wOiAgICAgICAgICAgQ1NSX1VDT0RF
-X0RSVl9HUDE6IDBYMDAwMDAwMDAKWyAgIDM1Ljg4MjQzM10gaXdsYWduIDAwMDA6MDI6MDAuMDog
-ICAgICAgICAgIENTUl9VQ09ERV9EUlZfR1AyOiAwWDAwMDAwMDAwClsgICAzNS44ODI0MzldIGl3
-bGFnbiAwMDAwOjAyOjAwLjA6ICAgICAgICAgICAgICAgICBDU1JfTEVEX1JFRzogMFgwMDAwMDAx
-OApbICAgMzUuODgyNDQ2XSBpd2xhZ24gMDAwMDowMjowMC4wOiAgICAgICAgQ1NSX0RSQU1fSU5U
-X1RCTF9SRUc6IDBYMDAwMDAwMDAKWyAgIDM1Ljg4MjQ1Ml0gaXdsYWduIDAwMDA6MDI6MDAuMDog
-ICAgICAgIENTUl9HSU9fQ0hJQ0tFTl9CSVRTOiAwWDI3ODAwMjAwClsgICAzNS44ODI0NThdIGl3
-bGFnbiAwMDAwOjAyOjAwLjA6ICAgICAgICAgICAgIENTUl9BTkFfUExMX0NGRzogMFgwMDAwMDAw
-MApbICAgMzUuODgyNDY2XSBpd2xhZ24gMDAwMDowMjowMC4wOiAgICAgICAgICAgQ1NSX0hXX1JF
-Vl9XQV9SRUc6IDBYMDAwMTAwMWEKWyAgIDM1Ljg4MjQ3MF0gaXdsYWduIDAwMDA6MDI6MDAuMDog
-ICAgICAgIENTUl9EQkdfSFBFVF9NRU1fUkVHOiAwWGZmZmYwMDAwClsgICAzNS44ODI0NzJdIGl3
-bGFnbiAwMDAwOjAyOjAwLjA6IEZIIHJlZ2lzdGVyIHZhbHVlczoKWyAgIDM1Ljg4MjQ4NF0gaXds
-YWduIDAwMDA6MDI6MDAuMDogICAgICAgICBGSF9SU0NTUl9DSE5MMF9TVFRTX1dQVFJfUkVHOiAw
-WDAyNTliMjAwClsgICAzNS44ODI0OTddIGl3bGFnbiAwMDAwOjAyOjAwLjA6ICAgICAgICBGSF9S
-U0NTUl9DSE5MMF9SQkRDQl9CQVNFX1JFRzogMFgwMDI1OWI1MApbICAgMzUuODgyNTEwXSBpd2xh
-Z24gMDAwMDowMjowMC4wOiAgICAgICAgICAgICAgICAgIEZIX1JTQ1NSX0NITkwwX1dQVFI6IDBY
-MDAwMDAwZjgKWyAgIDM1Ljg4MjUyM10gaXdsYWduIDAwMDA6MDI6MDAuMDogICAgICAgICBGSF9N
-RU1fUkNTUl9DSE5MMF9DT05GSUdfUkVHOiAwWDgwODE5MTA0ClsgICAzNS44ODI1MzVdIGl3bGFn
-biAwMDAwOjAyOjAwLjA6ICAgICAgICAgIEZIX01FTV9SU1NSX1NIQVJFRF9DVFJMX1JFRzogMFgw
-MDAwMDBmYwpbICAgMzUuODgyNTQ4XSBpd2xhZ24gMDAwMDowMjowMC4wOiAgICAgICAgICAgIEZI
-X01FTV9SU1NSX1JYX1NUQVRVU19SRUc6IDBYMDcwMzAwMDAKWyAgIDM1Ljg4MjU2MF0gaXdsYWdu
-IDAwMDA6MDI6MDAuMDogICAgRkhfTUVNX1JTU1JfUlhfRU5BQkxFX0VSUl9JUlEyRFJWOiAwWDAw
-MDAwMDAwClsgICAzNS44ODI1NzNdIGl3bGFnbiAwMDAwOjAyOjAwLjA6ICAgICAgICAgICAgICAg
-IEZIX1RTU1JfVFhfU1RBVFVTX1JFRzogMFgwN2ZmMDAwMQpbICAgMzUuODgyNTg2XSBpd2xhZ24g
-MDAwMDowMjowMC4wOiAgICAgICAgICAgICAgICAgRkhfVFNTUl9UWF9FUlJPUl9SRUc6IDBYMDAw
-MDAwMDAKWyAgIDM1Ljg4MjU4OF0gaXdsYWduIDAwMDA6MDI6MDAuMDogSW52YWxpZCBldmVudCBs
-b2cgcG9pbnRlciAweDAwMDAwMDAwIGZvciBSVCB1Q29kZQpbICAgMzUuODgyNTk0XSBpd2xhZ24g
-MDAwMDowMjowMC4wOiB1Q29kZSBkaWQgbm90IHJlc3BvbmQgT0suClsgICAzNy4zODEwNjFdIGV0
-aDA6IG5vIElQdjYgcm91dGVycyBwcmVzZW50ClsgICAzOS44NDgyMDNdIGl3bGFnbiAwMDAwOjAy
-OjAwLjA6IFNUQVJUX0FMSVZFIHRpbWVvdXQgYWZ0ZXIgNDAwMG1zLgo=
---0050450167782d7531048c50f17f--
+    494454 - Total upstream lines of code being pulled
