@@ -1,59 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:41897 "EHLO mail.atheros.com"
+Received: from nbd.name ([88.198.39.176]:49467 "EHLO ds10.nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759055Ab0FVJad (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Jun 2010 05:30:33 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 22 Jun 2010 02:30:33 -0700
-Date: Tue, 22 Jun 2010 15:00:26 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	Vivek Natarajan <Vivek.Natarajan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k: Modify LED blinking pattern during wifi
-	activity.
-Message-ID: <20100622093026.GD9292@vasanth-laptop>
-References: <1276579217-6837-1-git-send-email-vnatarajan@atheros.com> <1276587140.3648.6.camel@jlt3.sipsolutions.net> <20100622063800.GC9292@vasanth-laptop> <1277190087.3637.7.camel@jlt3.sipsolutions.net>
+	id S1754235Ab0GAHv3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Jul 2010 03:51:29 -0400
+Message-ID: <4C2C48F5.70307@openwrt.org>
+Date: Thu, 01 Jul 2010 09:51:17 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1277190087.3637.7.camel@jlt3.sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: =?UTF-8?B?QmrDtnJuIFNtZWRtYW4=?= <bjorn.smedman@venatech.se>,
+	Pavel Roskin <proski@gnu.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] ath9k: fix TSF after reset on AR913x
+References: <4C2A8AD4.8070504@openwrt.org>	<1277935351.17170.1.camel@mj>	 <AANLkTim8NrVZfcJGi4NK_OhXBxEY0Lw9fdg1bcbzDU0X@mail.gmail.com>	 <4C2BE5A8.9030003@openwrt.org> <1277966396.3788.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1277966396.3788.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 22, 2010 at 12:31:27PM +0530, Johannes Berg wrote:
-> On Tue, 2010-06-22 at 12:08 +0530, Vasanthakumar Thiagarajan wrote:
+On 2010-07-01 8:39 AM, Johannes Berg wrote:
+> On Thu, 2010-07-01 at 02:47 +0200, Felix Fietkau wrote:
 > 
-> > > http://thread.gmane.org/gmane.linux.kernel.wireless.general/51218/focus=51520
-> > 
-> > Sorry for a late reply. LED implementation with ath9k is completely
-> > manual, fully controlled by driver (We have to set/clear a particular
-> > gpio pin to turn on/off the LED every time). on/off period during blink
-> > is based on the number of brightness_set() on tx/rx led trigger. Do
-> > you think your suggested implementation would help in this case too? 
+>> No, the TSF value at this point is not accurate. It differs
+>> semi-randomly by a few orders of magnitude from the time measured by the
+>> CPU timer. The value I put in above is just an approximation, but since
+>> making it completely accurate is impossible, I figured this is good
+>> enough, especially since the value will most likely not deviate much
+>> from what I've measured here.
 > 
-> I'm not sure. I was mostly describing the use in iwlwifi, and since I
-> don't know how ath9k works I can't really comment much.
+> Are you sure it doesn't depend on CPU speed as well since the driver is
+> involved here? Or DMA speed?
+Yes, it depends on CPU speed, but there's not a lot of variation
+possible, because this only affects one, maybe two different SoC types
+with similar CPU speed, and a large part of the delay is probably
+constant because of udelay calls.
+As I said, being precise here is impossible anyway, this is only a
+workaround for a hw issue, and this simple approximation should not
+cause any problems for anything. Even if the AP's TSF jumps by a few
+microseconds, the clients will catch on to that pretty quickly.
 
-With ath9k hw itself does not blink LED based on the traffic, it is
-the driver which turns on/off LED based on tx/rx.
-
-> It just seemed 
-> to me that the driver was also hard-coding the behaviour of the LEDs,
-> which the user in that thread didn't like for iwlwifi.
-
-Yeah, before Vivek's patch the driver was hard-coding the LED
-behaviour. After this patch, the behaviour would be based on
-a modparam.
-
-> so integrating
-> with the LED trigger stuff could be worthwhile for ath9k? Or maybe it
-> does and I'm reading the patches incorrectly.
-
-The existing LED implementation looks simple. As the blink rate is
-determined in driver dynamically, I'm not quite sure integrating LED
-trigger, would review this in detail later.
-
-Vasanth
+- Felix
