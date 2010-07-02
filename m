@@ -1,72 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:12390 "EHLO mail.atheros.com"
+Received: from mga11.intel.com ([192.55.52.93]:19755 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756222Ab0GND2d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jul 2010 23:28:33 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 13 Jul 2010 20:28:33 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19517.12171.792656.215696@gargle.gargle.HOWL>
-Date: Wed, 14 Jul 2010 09:01:23 +0530
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/3] ath9k_htc: implement mac80211 flush op
-In-Reply-To: <1279070845-29442-3-git-send-email-lrodriguez@atheros.com>
-References: <1279070845-29442-1-git-send-email-lrodriguez@atheros.com>
-	<1279070845-29442-3-git-send-email-lrodriguez@atheros.com>
+	id S1756678Ab0GBQIp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Jul 2010 12:08:45 -0400
+Subject: Re: iwlwifi and 802.11s
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Iuri Diniz <iuridiniz@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTim89kFmpafv2UsmanpiysGw8W1nfKZGXPsjPpXZ@mail.gmail.com>
+References: <AANLkTim89kFmpafv2UsmanpiysGw8W1nfKZGXPsjPpXZ@mail.gmail.com>
+Content-Type: text/plain
+Date: Fri, 02 Jul 2010 09:08:02 -0700
+Message-Id: <1278086882.2657.18.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez wrote:
-> This implements the mac80211 flush callback to let mac80211
-> flush the hardware queues when it deems appropriate.
+Hi Iuri,
+
+Yes, it is possible to add "mesh" support to iwlwifi, but currently it
+is not in our (Intel) schedule to enable/support this feature.
+
+If you or anybody from community would like to implement and support
+this feature, it is very welcome and we will consider the patches for
+inclusion, but base on few requirements:
+
+ * We assume the patches make "mesh" works since we are not testing the
+mesh functions
+ * The mesh feature should not break any of the normal WiFi operations
+which we _do_ test for
+ * Since we are not testing the "mesh" function and would rely on the
+author to resolve any issues. We will disable the feature if "mesh"
+break any of the normal WiFi operation and both ourselves and the author
+are not be able to address the issues.
+
+The best place to start is base on the latest iwlwifi driver which you
+can find in the following location:
+
+http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-2.6.git;a=summary
+
+Good luck and looking forward for your patches.
+
+Thanks
+Wey
+
+On Thu, 2010-07-01 at 08:29 -0700, Iuri Diniz wrote:
+> Is possible to add mesh support to iwlwifi (I have a intel wireless
+> 4965AGN hardware) ?
 > 
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> ---
->  drivers/net/wireless/ath/ath9k/htc_drv_main.c |   24 ++++++++++++++++++++++++
->  1 files changed, 24 insertions(+), 0 deletions(-)
+> if so, where can I get start?
+> is this information
+> http://linuxwireless.org/en/developers/Documentation/mac80211/API
+> sufficient?
 > 
-> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-> index e38ca66..fc234a7 100644
-> --- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-> @@ -1803,6 +1803,29 @@ static void ath9k_htc_set_coverage_class(struct ieee80211_hw *hw,
->  	mutex_unlock(&priv->mutex);
->  }
->  
-> +static void ath9k_htc_flush(struct ieee80211_hw *hw, bool drop)
-> +{
-> +	struct ath9k_htc_priv *priv = hw->priv;
-> +	u8 cmd_rsp;
-> +	int ret;
-> +
-> +	mutex_lock(&priv->mutex);
-> +
-> +	if (priv->op_flags & OP_INVALID)
-> +		goto err;
-> +
-> +	ath9k_htc_ps_wakeup(priv);
-> +
-> +	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
-> +	if (drop)
-> +		skb_queue_purge(&priv->tx_queue);
-> +
-> +	ath9k_htc_ps_restore(priv);
-> +
-> +err:
-> +	mutex_unlock(&priv->mutex);
-> +}
-> +
+> thanks in advance.
+> 
 
-I don't think this would work.
-
-Queuing of packets is done in the HIF (USB) layer.
-Flushing would require dropping (or not) the buffered packets in the
-USB layer. Also, we don't actually require this, since IDLE state
-is handled in radio_disable(), where everything is flushed properly ...
-
-Sujith
