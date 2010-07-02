@@ -1,74 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:55495 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932729Ab0GOIml (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47580 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757244Ab0GBR3I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jul 2010 04:42:41 -0400
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH 01/11] Removing dead RT2800PCI_SOC
-Date: Thu, 15 Jul 2010 10:41:55 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Ivo Van Doorn <ivdoorn@gmail.com>,
-	Christoph Egger <siccegge@cs.fau.de>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	vamos-dev@i4.informatik.uni-erlangen.de,
-	Luis Correia <luis.f.correia@gmail.com>
-References: <cover.1279110894.git.siccegge@cs.fau.de> <20100714131527.GB2352@tuxdriver.com> <4C3DCD5C.1080705@openwrt.org>
-In-Reply-To: <4C3DCD5C.1080705@openwrt.org>
-MIME-Version: 1.0
-Message-Id: <201007151041.55112.bzolnier@gmail.com>
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+	Fri, 2 Jul 2010 13:29:08 -0400
+Subject: Re: [PATCH 2.6.34] mac80211: Fix auth retries if AP sends
+ temporary deauth
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Paul Stewart <pstew@google.com>
+Cc: linux-wireless@vger.kernel.org,
+	Michael Wu <flamingice@sourmilk.net>,
+	Jiri Benc <jbenc@suse.cz>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <AANLkTilV1t1737ciSPyyETeBEcN_QXsYxgEwpZIIucR2@mail.gmail.com>
+References: <AANLkTilV1t1737ciSPyyETeBEcN_QXsYxgEwpZIIucR2@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 02 Jul 2010 19:29:03 +0200
+Message-ID: <1278091743.15412.17.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 14 July 2010 04:44:44 pm Felix Fietkau wrote:
-> On 2010-07-14 3:15 PM, John W. Linville wrote:
-> > On Wed, Jul 14, 2010 at 02:52:14PM +0200, Ivo Van Doorn wrote:
-> >> On Wed, Jul 14, 2010 at 2:46 PM, Luis Correia <luis.f.correia@gmail.com> wrote:
-> >> > On Wed, Jul 14, 2010 at 13:39, Christoph Egger <siccegge@cs.fau.de> wrote:
-> >> >> While RT2800PCI_SOC exists in Kconfig, it depends on either
-> >> >> RALINK_RT288X or RALINK_RT305X which are both not available in Kconfig
-> >> >> so all Code depending on that can't ever be selected and, if there's
-> >> >> no plan to add these options, should be cleaned up
-> >> >>
-> >> >> Signed-off-by: Christoph Egger <siccegge@cs.fau.de>
-> >> >
-> >> > NAK,
-> >> >
-> >> > this is not dead code, it is needed for the Ralink System-on-Chip
-> >> > Platform devices.
-> >> >
-> >> > While I can't fix Kconfig errors and the current KConfig file may be
-> >> > wrong, this code cannot and will not be deleted.
-> >> 
-> >> When the config option was introduced, the config options RALINK_RT288X and
-> >> RALINK_RT305X were supposed to be merged as well soon after by somebody (Felix?)
-> >> 
-> >> But since testing is done on SoC boards by Helmut and Felix, I assume the code
-> >> isn't dead but actually in use.
-> > 
-> > Perhaps Helmut and Felix can send us the missing code?
-> The missing code is a MIPS platform port, which is currently being
-> maintained in OpenWrt, but is not ready for upstream submission yet.
-> I'm not working on this code at the moment, but I think it will be
-> submitted once it's ready.
+On Thu, 2010-07-01 at 10:21 -0700, Paul Stewart wrote:
+> @@ -1030,6 +1030,25 @@ ieee80211_rx_result
+> ieee80211_work_rx_mgmt(struct ieee80211_sub_if_data *sdata,
+>  			skb_queue_tail(&local->work_skb_queue, skb);
+>  			ieee80211_queue_work(&local->hw, &local->work_work);
+>  			return RX_QUEUED;
+> +		case IEEE80211_STYPE_DEAUTH:
+> +			/*
+> +			 * If we get sent a DEAUTH while we are
+> +			 * actively trying to authenticate to this
+> +			 * station, we shoot ourselves in the foot if
+> +			 * we fall through using RX_CONTINUE and allow
+> +			 * the bss context to disappear
+> +			 * (ieee80211_sta_rx_mgmt()).  This is
+> +			 * especially true if the reason for the
+> +			 * DEAUTH was a negative but temporary direct
+> +			 * response to an AUTH attempt. Let the retry
+> +			 * mechanism run its course instead.
+> +			 */
+> +                        reason_code = le16_to_cpu(mgmt->u.deauth.reason_code);
+> +			if (wk->type == IEEE80211_WORK_AUTH &&
+> +                            reason_code == WLAN_REASON_PREV_AUTH_NOT_VALID) {
+> +				return RX_DROP_MONITOR;
+> +			}
+> +			break;
 
-People are using automatic scripts to catch unused config options nowadays
-so the issue is quite likely to come back again sooner or later..
+Ok, wow, I finally understand this patch, but is it weird!! You're
+modifying work.c to avoid having the mlme.c code send this frame to
+cfg80211? That's really confusing.
 
-Would it be possible to improve situation somehow till the missing parts
-get merged?  Maybe by adding a tiny comment documenting RT2800PCI_SOC
-situation to Kconfig (if the config option itself really cannot be removed)
-until all code is ready etc.?
+The real reason for this is that we send up the deauth frame even when
+we're not even authenticated. This happens in mlme.c. Therefore, we
+should improve the logic in ieee80211_sta_rx_queued_mgmt() to make sure
+it only triggers when we're authenticated with the BSS?
 
-I bet that Christoph would be willing to update his patch if you ask him
-nicely..
+Alternatively, since cfg80211 tracks this, it would be easier to modify
+cfg80211_send_rx_auth() to not send the event to userspace in the !done
+case I guess.
 
-Thanks,
---
-Bartlomiej Zolnierkiewicz
+johannes
+
