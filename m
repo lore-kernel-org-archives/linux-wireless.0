@@ -1,54 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:50674 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751373Ab0GMSTs convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jul 2010 14:19:48 -0400
-Date: Tue, 13 Jul 2010 20:19:27 +0200
-From: Alejandro Riveira =?UTF-8?B?RmVybsOhbmRleg==?=
-	<ariveira@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>,
-	Martin Steigerwald <Martin@lichtvoll.de>,
-	linux-kernel@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: rt2x00: slow wifi with correct basic rate bitmap (was Re:
- stable? quality assurance?)
-Message-ID: <20100713201927.78674c4a@varda>
-In-Reply-To: <20100713153530.GC3835@tuxdriver.com>
-References: <201007110918.42120.Martin@lichtvoll.de>
-	<AANLkTimCwi2uJqqPaq3U30f3rvdDizu1BnaaXgvNeC9k@mail.gmail.com>
-	<201007111651.42963.Martin@lichtvoll.de>
-	<20100713131112.26a3da54@varda>
-	<4C3C6106.3000909@s5r6.in-berlin.de>
-	<20100713153530.GC3835@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mga03.intel.com ([143.182.124.21]:64101 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759521Ab0GBSoe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Jul 2010 14:44:34 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 2/8] iwlwifi: add debug print for parsing firmware TLV
+Date: Fri,  2 Jul 2010 11:45:34 -0700
+Message-Id: <1278096340-2546-3-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1278096340-2546-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1278096340-2546-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-El Tue, 13 Jul 2010 11:35:31 -0400
-"John W. Linville" <linville@tuxdriver.com> escribió:
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
+When parsing TLV during loading firmware, if encounter any TLV error,
+log the error message to help debugging.
 
-> 
-> The patch (7e0986c1) corrects an obvious error.  Reverting it might
-> improve your (i.e. Alejandro) performance, but it seems likely to
-> cause connectivity problems for others.
-> 
-> The fact that reverting 7e098c1 helps you suggests that rt2500usb
-  
-  my card is pci so it would be rt2500pci
-  
-> isn't using the basic_rates map properly.  But after reviewing the
-> code and the data I have, I can't see what would be causing that.
-> It is at least possible that your AP is sending bad rate information.
-> Have you tried this device with other APs?
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |  101 ++++++++++++++++++++------------
+ 1 files changed, 63 insertions(+), 38 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 3368cfd..22c0149 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1806,12 +1806,21 @@ static int iwlagn_load_firmware(struct iwl_priv *priv,
+ 	const u8 *data;
+ 	int wanted_alternative = iwlagn_wanted_ucode_alternative, tmp;
+ 	u64 alternatives;
++	u32 tlv_len;
++	enum iwl_ucode_tlv_type tlv_type;
++	const u8 *tlv_data;
++	int ret = 0;
  
- No; this is a desktop pc that connects to my home router/AP. A new wifi
- card is cheaper than a new AP ...
+-	if (len < sizeof(*ucode))
++	if (len < sizeof(*ucode)) {
++		IWL_ERR(priv, "uCode has invalid length: %zd\n", len);
+ 		return -EINVAL;
++	}
+ 
+-	if (ucode->magic != cpu_to_le32(IWL_TLV_UCODE_MAGIC))
++	if (ucode->magic != cpu_to_le32(IWL_TLV_UCODE_MAGIC)) {
++		IWL_ERR(priv, "invalid uCode magic: 0X%x\n",
++			le32_to_cpu(ucode->magic));
+ 		return -EINVAL;
++	}
+ 
+ 	/*
+ 	 * Check which alternatives are present, and "downgrade"
+@@ -1836,11 +1845,9 @@ static int iwlagn_load_firmware(struct iwl_priv *priv,
+ 
+ 	len -= sizeof(*ucode);
+ 
+-	while (len >= sizeof(*tlv)) {
+-		u32 tlv_len;
+-		enum iwl_ucode_tlv_type tlv_type;
++	while (len >= sizeof(*tlv) && !ret) {
+ 		u16 tlv_alt;
+-		const u8 *tlv_data;
++		u32 fixed_tlv_size = 4;
+ 
+ 		len -= sizeof(*tlv);
+ 		tlv = (void *)data;
+@@ -1850,8 +1857,11 @@ static int iwlagn_load_firmware(struct iwl_priv *priv,
+ 		tlv_alt = le16_to_cpu(tlv->alternative);
+ 		tlv_data = tlv->data;
+ 
+-		if (len < tlv_len)
++		if (len < tlv_len) {
++			IWL_ERR(priv, "invalid TLV len: %zd/%u\n",
++				len, tlv_len);
+ 			return -EINVAL;
++		}
+ 		len -= ALIGN(tlv_len, 4);
+ 		data += sizeof(*tlv) + ALIGN(tlv_len, 4);
+ 
+@@ -1885,56 +1895,71 @@ static int iwlagn_load_firmware(struct iwl_priv *priv,
+ 			pieces->boot_size = tlv_len;
+ 			break;
+ 		case IWL_UCODE_TLV_PROBE_MAX_LEN:
+-			if (tlv_len != 4)
+-				return -EINVAL;
+-			capa->max_probe_length =
+-				le32_to_cpup((__le32 *)tlv_data);
++			if (tlv_len != fixed_tlv_size)
++				ret = -EINVAL;
++			else
++				capa->max_probe_length =
++					le32_to_cpup((__le32 *)tlv_data);
+ 			break;
+ 		case IWL_UCODE_TLV_INIT_EVTLOG_PTR:
+-			if (tlv_len != 4)
+-				return -EINVAL;
+-			pieces->init_evtlog_ptr =
+-				le32_to_cpup((__le32 *)tlv_data);
++			if (tlv_len != fixed_tlv_size)
++				ret = -EINVAL;
++			else
++				pieces->init_evtlog_ptr =
++					le32_to_cpup((__le32 *)tlv_data);
+ 			break;
+ 		case IWL_UCODE_TLV_INIT_EVTLOG_SIZE:
+-			if (tlv_len != 4)
+-				return -EINVAL;
+-			pieces->init_evtlog_size =
+-				le32_to_cpup((__le32 *)tlv_data);
++			if (tlv_len != fixed_tlv_size)
++				ret = -EINVAL;
++			else
++				pieces->init_evtlog_size =
++					le32_to_cpup((__le32 *)tlv_data);
+ 			break;
+ 		case IWL_UCODE_TLV_INIT_ERRLOG_PTR:
+-			if (tlv_len != 4)
+-				return -EINVAL;
+-			pieces->init_errlog_ptr =
+-				le32_to_cpup((__le32 *)tlv_data);
++			if (tlv_len != fixed_tlv_size)
++				ret = -EINVAL;
++			else
++				pieces->init_errlog_ptr =
++					le32_to_cpup((__le32 *)tlv_data);
+ 			break;
+ 		case IWL_UCODE_TLV_RUNT_EVTLOG_PTR:
+-			if (tlv_len != 4)
+-				return -EINVAL;
+-			pieces->inst_evtlog_ptr =
+-				le32_to_cpup((__le32 *)tlv_data);
++			if (tlv_len != fixed_tlv_size)
++				ret = -EINVAL;
++			else
++				pieces->inst_evtlog_ptr =
++					le32_to_cpup((__le32 *)tlv_data);
+ 			break;
+ 		case IWL_UCODE_TLV_RUNT_EVTLOG_SIZE:
+-			if (tlv_len != 4)
+-				return -EINVAL;
+-			pieces->inst_evtlog_size =
+-				le32_to_cpup((__le32 *)tlv_data);
++			if (tlv_len != fixed_tlv_size)
++				ret = -EINVAL;
++			else
++				pieces->inst_evtlog_size =
++					le32_to_cpup((__le32 *)tlv_data);
+ 			break;
+ 		case IWL_UCODE_TLV_RUNT_ERRLOG_PTR:
+-			if (tlv_len != 4)
+-				return -EINVAL;
+-			pieces->inst_errlog_ptr =
+-				le32_to_cpup((__le32 *)tlv_data);
++			if (tlv_len != fixed_tlv_size)
++				ret = -EINVAL;
++			else
++				pieces->inst_errlog_ptr =
++					le32_to_cpup((__le32 *)tlv_data);
+ 			break;
+ 		default:
++			IWL_WARN(priv, "unknown TLV: %d\n", tlv_type);
+ 			break;
+ 		}
+ 	}
+ 
+-	if (len)
+-		return -EINVAL;
++	if (len) {
++		IWL_ERR(priv, "invalid TLV after parsing: %zd\n", len);
++		iwl_print_hex_dump(priv, IWL_DL_FW, (u8 *)data, len);
++		ret = -EINVAL;
++	} else if (ret) {
++		IWL_ERR(priv, "TLV %d has invalid size: %u\n",
++			tlv_type, tlv_len);
++		iwl_print_hex_dump(priv, IWL_DL_FW, (u8 *)tlv_data, tlv_len);
++	}
+ 
+-	return 0;
++	return ret;
+ }
+ 
+ /**
+-- 
+1.7.0.4
 
-
-> 
-> John
