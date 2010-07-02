@@ -1,68 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server.heaven-czfree.net ([78.108.102.201]:43111 "EHLO
-	smtp.heaven-czfree.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752388Ab0GAUIz (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37916 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755002Ab0GBSNY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Jul 2010 16:08:55 -0400
-From: "Jaroslav Fojtik" <jafojtik@seznam.cz>
-To: Bruno Randolf <br1@einfach.org>, linux-wireless@vger.kernel.org
-Date: Thu, 01 Jul 2010 22:11:26 +0200
-MIME-Version: 1.0
-Subject: Re: ATH5k - Signal measurement drops
-CC: Nick Kossifidis <mickflemm@gmail.com>
-Message-ID: <4C2CF66E.3933.2ADE4D@jafojtik.seznam.cz>
-In-reply-to: <201006301626.57547.br1@einfach.org>
-References: <4C1E6A13.4259.24AF3C@jafojtik.seznam.cz>, <4C2AEF25.1702.2DF7E2@jafojtik.seznam.cz>, <201006301626.57547.br1@einfach.org>
-Content-type: text/plain; charset=US-ASCII
+	Fri, 2 Jul 2010 14:13:24 -0400
+Subject: Re: [PATCH 2.6.34] mac80211: Fix auth retries if AP sends
+ temporary deauth
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Paul Stewart <pstew@google.com>
+Cc: linux-wireless@vger.kernel.org,
+	Michael Wu <flamingice@sourmilk.net>,
+	Jiri Benc <jbenc@suse.cz>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <AANLkTikfegnc1gAwIUiZKaMeDoUYOFqK8eSc6_3wUggm@mail.gmail.com>
+References: <AANLkTilV1t1737ciSPyyETeBEcN_QXsYxgEwpZIIucR2@mail.gmail.com>
+	 <1278091743.15412.17.camel@jlt3.sipsolutions.net>
+	 <AANLkTikfegnc1gAwIUiZKaMeDoUYOFqK8eSc6_3wUggm@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 02 Jul 2010 20:13:21 +0200
+Message-ID: <1278094401.15412.27.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Randolf,
+On Fri, 2010-07-02 at 11:09 -0700, Paul Stewart wrote:
+> It may be a weird patch, but probably just because I'm still wrapping
+> my head around how things work.  
 
-> > I have found that "fixed-b" is a right connector. There is a stupid
-> > question why? When I am using "out" and not "aux". I just guess that "out"
-> > should be 'a' and 'aux' should be 'b'.
+Sure.
 
-> yes, i have noticed the same thing on some cards. maybe a wrong setting in 
-> eeprom, or some bug in ath5k.
+> The problem is ultimately the call to
+> __cfg80211_send_deauth() in wireless/mlme.c that is triggered by
+> reception of the DEAUTH.  
 
-I hope this to be a defect of ATH5k. ATH5k cannot find proper connector automatically.
-But without using debugfs, connectors cannot be switched. So I hope that it cripples
-signal for many users that do not know about this peculiarity.
+Is it? I thought it was without double underscore from another code
+path?
 
+> That function removes wdev->auth_bsses[i],
 
-> > Please again have a look at:
-> >   http://78.108.103.11:11080/cgi-bin/rodga_1day_big.cgi
+No, the BSS can't be in auth_bsses yet. I think the problem is more
+complex, and wpa_supplicant itself will remove it from auth_bsses
+because the kernel erroneously told it we got deauthenticated.
 
-> i have also had problems with diversity in ath5k when there is only one 
-> antenna attached and in this case i always need to set a fixed antenna for 
-> optimal performance.
-I have no longer observe any drops in signal. Signal is pretty flat now.
+> which is needed in order for an auth to succeed.  The code path that
+> gets us there is:
+> 
+>     mac80211/rx.c: ieee80211_rx_h_mgmt()
+>     mac80211/mlme.c: ieee80211_sta_rx_mgmt()
+>     ...then through the queued work and...
+>     ieee80211_sta_rx_queued_mgmt()
+> 
+> At the bottom of the latter function, outside of the block that checks
+> for our authentication state, we call cfg80211_send_deauth() in
+> response to IEEE80211_STYPE_DEAUTH, which quite arguably should never
+> be called if we're authenticated.  The only time this issue touches
+> cfg80211 is that final call to send_deauth() which I believe is done
+> in error.  I think the fix should be in mac80211 somewhere.
+> 
+> I didn't find a way to tell where we were in the authentication proces
+> from within ieee80211_sta_rx_queued_mgmt(), so I swallowed the packet
+> much earlier in the process from within ieee80211_work_rx_mgmt(),
+> which has access to that state, and can indeed claim packets for
+> itself it it believes it knows best what to do with them.
+> 
+> I hope this clears up my thinking on this.  I'd be happy to change the
+> patch in whatever way makes sense.
 
+Can you try the patch below instead of yours? I'll explain it a bit more
+later, but my church wedding ceremony is tomorrow :)
 
+johannes
 
-> > > i guess this must be the same situation as before, no?
-> i meant: did you see the same kind of drops with the older compat-wireless 
-> versions, before you reported the problem?
-I has been used MadWiFi before. I have moved to ATH5k because madwifi caused kernel 
-to crash for more than two atheros devices and it has other strange functionality
-and it is no longer supported. Last MadWiFi versions are no longer functional at all.
-For example a new MadWiFi-ng cannot recognise 2nd device.
-
+--- wireless-testing.orig/net/wireless/mlme.c	2010-07-02 20:12:19.000000000 +0200
++++ wireless-testing/net/wireless/mlme.c	2010-07-02 20:12:43.000000000 +0200
+@@ -44,10 +44,10 @@ void cfg80211_send_rx_auth(struct net_de
+ 		}
+ 	}
  
-> > MadWiFi is much more intelligent. It tests both inputs and selects better
-> > one.
-> glad to hear it works for you; i had many inconsistencies with antenna 
-> diversity on madwifi as well..
-  For me, madwifi did 15 switches, selected better connector, ant then it 
-no longer changed connector.
-  But after one month of uninterrupted run, MadWiFi suddenly switched back
-and signal has been dropped for unknown reason :(.
+-	WARN_ON(!done);
+-
+-	nl80211_send_rx_auth(rdev, dev, buf, len, GFP_KERNEL);
+-	cfg80211_sme_rx_auth(dev, buf, len);
++	if (done) {
++		nl80211_send_rx_auth(rdev, dev, buf, len, GFP_KERNEL);
++		cfg80211_sme_rx_auth(dev, buf, len);
++	}
+ 
+ 	wdev_unlock(wdev);
+ }
 
-
-> PS: CC'ing nick, maybe he has some idea?
-OK.
-
-regards
-   Jara
 
