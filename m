@@ -1,52 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37758 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751296Ab0G0SPW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 14:15:22 -0400
-Date: Tue, 27 Jul 2010 14:05:56 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Joe Perches <joe@perches.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH net-next 4/4] wireless: Convert wiphy_debug macro to
- function
-Message-ID: <20100727180556.GE31694@tuxdriver.com>
-References: <cover.1280177971.git.joe@perches.com>
- <8e7aa541ec8fb92e1166920a4eb704aa5f851b71.1280177971.git.joe@perches.com>
+Received: from nbd.name ([88.198.39.176]:47719 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757181Ab0GBMp2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Jul 2010 08:45:28 -0400
+Message-ID: <4C2DDF62.6050503@openwrt.org>
+Date: Fri, 02 Jul 2010 14:45:22 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8e7aa541ec8fb92e1166920a4eb704aa5f851b71.1280177971.git.joe@perches.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>
+Subject: [PATCH] ath9k: fix crash with WEP in ad-hoc mode
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 26, 2010 at 02:40:00PM -0700, Joe Perches wrote:
-> Save a few bytes of text
-> 
-> (allyesconfig)
-> $ size drivers/net/wireless/built-in.o*
->    text	   data	    bss	    dec	    hex	filename
-> 3924568	 100548	 871056	4896172	 4ab5ac	drivers/net/wireless/built-in.o.new
-> 3926520	 100548	 871464	4898532	 4abee4	drivers/net/wireless/built-in.o.old
-> 
-> $ size net/wireless/core.o*
->    text	   data	    bss	    dec	    hex	filename
->   12843	    216	   3768	  16827	   41bb	net/wireless/core.o.new
->   12328	    216	   3656	  16200	   3f48	net/wireless/core.o
-> 
-> Signed-off-by: Joe Perches <joe@perches.com>
+Commit eed8e22f0133e8278b1f8079fcb452f1f9692f9d added support for using
+multicast key lookup to support per-vif/sta keys for AP and ad-hoc.
+Unfortunately, it also introduced a crash in ad-hoc mode when the sta
+pointer is NULL, which happens when setting up an interface with WEP
+keys. This patch fixes it by falling back to the assigned key index.
 
-> --- a/net/wireless/core.c
-> +++ b/net/wireless/core.c
-> @@ -907,3 +907,56 @@ static void __exit cfg80211_exit(void)
->  	destroy_workqueue(cfg80211_wq);
->  }
->  module_exit(cfg80211_exit);
-> +
-> +#ifdef __KERNEL__
-
-Do we need this part?
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Reported-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+---
+--- a/drivers/net/wireless/ath/ath9k/common.c
++++ b/drivers/net/wireless/ath/ath9k/common.c
+@@ -319,6 +319,10 @@ int ath9k_cmn_key_config(struct ath_comm
+ 			idx = ath_reserve_key_cache_slot(common, key->alg);
+ 			break;
+ 		case NL80211_IFTYPE_ADHOC:
++			if (!sta) {
++				idx = key->keyidx;
++				break;
++			}
+ 			memcpy(gmac, sta->addr, ETH_ALEN);
+ 			gmac[0] |= 0x01;
+ 			mac = gmac;
