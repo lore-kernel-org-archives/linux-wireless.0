@@ -1,245 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server.heaven-czfree.net ([78.108.102.201]:49598 "EHLO
-	smtp.heaven-czfree.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752588Ab0GBRam (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42048 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756352Ab0GBRMw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jul 2010 13:30:42 -0400
-Received: from [10.23.202.43] (unknown [10.23.202.43])
-	by smtp.heaven-czfree.net (Postfix) with ESMTP id 957D5147657
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Jul 2010 19:30:40 +0200 (CEST)
-From: "Jaroslav Fojtik" <jafojtik@seznam.cz>
-To: linux-wireless@vger.kernel.org
-Date: Fri, 02 Jul 2010 19:33:15 +0200
-MIME-Version: 1.0
-Subject: How to enable channels 12,13?
-Message-ID: <4C2E22DB.13996.20C5ABD@jafojtik.seznam.cz>
-Content-type: text/plain; charset=US-ASCII
+	Fri, 2 Jul 2010 13:12:52 -0400
+Subject: Re: rt2x00 & mac80211: correct usage of ieee80211_beacon_get_tim?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+In-Reply-To: <201006272100.22216.helmut.schaa@googlemail.com>
+References: <201006241521.47623.helmut.schaa@googlemail.com>
+	 <201006251801.06209.helmut.schaa@googlemail.com>
+	 <1277626862.3684.3.camel@jlt3.sipsolutions.net>
+	 <201006272100.22216.helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 02 Jul 2010 19:12:50 +0200
+Message-ID: <1278090770.15412.4.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dears,
+On Sun, 2010-06-27 at 21:00 +0200, Helmut Schaa wrote:
 
-My device ignores channels 12,13, but they are allowed in our country.
-Is it possible to shut down defective regdomain policy?
+> rt2x00 pulls every beacon. But not directly _prior_ to transmission as the 
+> hw lacks an interrupt for that. Instead the next beacon gets pulled _after_
+> the beacondone interrupt (which is obviously triggered directly after the
+> beacon was sent). So, all TIM changes that happen during the next beacon
+> interval won't be included in the next beacon. Hence, rt2x00 also implements
+> the set_tim callback and updates the beacon through these as well.
+> 
+> This gives us a correct TIM but as I explained earlier breaks the DTIM
+> count (and thus bc/mc buffering which is done in mac80211 fot rt2x00).
+> 
+> One possible option to fix this in rt2x00 would be to delay the beacon
+> update (as it is already put on a workqueue we could simply replace it by
+> a delayed work) by beaconinterval - 10ms or something. But I'm not how
+> accurate that would be (and of course remove the set_tim callback).
 
-The proper regdomain is already set:
-[    5.809776] ath5k 0000:02:0a.0: registered as 'phy1'
-[    6.276736] ath: EEPROM regdomain: 0x36
-.....
-[    5.152196] ath5k 0000:02:08.0: registered as 'phy0'
-[    5.749710] ath: EEPROM regdomain: 0x36
-.....
-[    6.278376] ath5k phy1: Atheros AR5213A chip found (MAC: 0x59, PHY: 0x43)
-[    6.278440] ath5k phy1: RF5112B multiband radio found (0x36)
-[    6.278539] ath5k 0000:02:0b.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
-[    6.278679] ath5k 0000:02:0b.0: registered as 'phy2'
-[    6.745533] ath: EEPROM regdomain: 0x36
-[    6.745538] ath: EEPROM indicates we should expect a direct regpair map
-[    6.745547] ath: Country alpha2 being used: CZ
-[    6.745553] ath: Regpair used: 0x36
-[    6.745661] cfg80211: Calling CRDA for country: CZ
+Well, after a beacon is before a beacon. I think iwlwifi also pulls the
+next beacon after the previous one was sent. That just means you get a
+potential higher delay, but otherwise it doesn't really matter that
+much. You'll never be able to close the race fully anyway, unless your
+device itself is capable of generating the TIM IE _right before_ the
+beacon gets transmitted.
 
+Therefore, with standard beacon intervals of 100 TU, I don't think it
+matters all that much whether it's before or after?
 
-Strange ???
-
-root@dvouramenna:~# iw reg get
-country 00:
-        (2402 - 2472 @ 40), (6, 20)
-        (2457 - 2482 @ 20), (6, 20), PASSIVE-SCAN, NO-IBSS
-        (2474 - 2494 @ 20), (6, 20), NO-OFDM, PASSIVE-SCAN, NO-IBSS
-        (5170 - 5250 @ 40), (6, 20), PASSIVE-SCAN, NO-IBSS
-        (5735 - 5835 @ 40), (6, 20), PASSIVE-SCAN, NO-IBSS
-
-Hmmm?? What is it:
-
-root@dvouramenna:~# iw reg set CZ
-root@dvouramenna:~# iw reg get
-country 00:
-        (2402 - 2472 @ 40), (6, 20)
-        (2457 - 2482 @ 20), (6, 20), PASSIVE-SCAN, NO-IBSS
-        (2474 - 2494 @ 20), (6, 20), NO-OFDM, PASSIVE-SCAN, NO-IBSS
-        (5170 - 5250 @ 40), (6, 20), PASSIVE-SCAN, NO-IBSS
-        (5735 - 5835 @ 40), (6, 20), PASSIVE-SCAN, NO-IBSS
-
-
-Even attempt of rewriting regdomain shows that a device has proper 
-domain in EEPROM:
-
-root@dvouramenna:~#ath_info -g 1:0 -w 0xfdee0000 regdomain 36
-......................................
-new GPIO CR 00000303 DO 00000001 DI 00000007
-           regdomain (0x00bf) := 0x0036
-WARNING: The write function may easy brick your device or
-violate state regulation on frequency usage.
-Proceed on your own risk!
-Shall I write the above value(s)? (y/n)  y
-pair 0: skipped, value already there
-restoring GPIO CR 303 -> 3
-
-
-But channels are somehow blocked from unknown reason.
-
-regards
-   Jara
-
-iw list:
-
-Wiphy phy1
-        Band 1:
-                Frequencies:
-                        * 2412 MHz [1] (20.0 dBm)
-                        * 2417 MHz [2] (20.0 dBm)
-                        * 2422 MHz [3] (20.0 dBm)
-                        * 2427 MHz [4] (20.0 dBm)
-                        * 2432 MHz [5] (20.0 dBm)
-                        * 2437 MHz [6] (20.0 dBm)
-                        * 2442 MHz [7] (20.0 dBm)
-                        * 2447 MHz [8] (20.0 dBm)
-                        * 2452 MHz [9] (20.0 dBm)
-                        * 2457 MHz [10] (20.0 dBm)
-                        * 2462 MHz [11] (20.0 dBm)
-                        * 2467 MHz [12] (disabled)
-                        * 2472 MHz [13] (disabled)
-                        * 2484 MHz [14] (disabled)
-                Bitrates (non-HT):
-                        * 1.0 Mbps
-                        * 2.0 Mbps (short preamble supported)
-                        * 5.5 Mbps (short preamble supported)
-                        * 11.0 Mbps (short preamble supported)
-                        * 6.0 Mbps
-                        * 9.0 Mbps
-                        * 12.0 Mbps
-                        * 18.0 Mbps
-                        * 24.0 Mbps
-                        * 36.0 Mbps
-                        * 48.0 Mbps
-                        * 54.0 Mbps
-        Band 2:
-                Frequencies:
-                        * 5180 MHz [36] (30.0 dBm)
-                        * 5200 MHz [40] (30.0 dBm) (passive scanning, no IBSS)
-                        * 5220 MHz [44] (30.0 dBm) (passive scanning, no IBSS)
-                        * 5240 MHz [48] (30.0 dBm) (passive scanning, no IBSS)
-                        * 5260 MHz [52] (30.0 dBm) (passive scanning, no IBSS, radar 
-detection)
-                        * 5280 MHz [56] (30.0 dBm) (passive scanning, no IBSS, radar 
-detection)
-                        * 5300 MHz [60] (30.0 dBm) (passive scanning, no IBSS, radar 
-detection)
-                        * 5320 MHz [64] (30.0 dBm) (passive scanning, no IBSS, radar 
-detection)
-                        * 5500 MHz [100] (disabled)
-                        * 5520 MHz [104] (disabled)
-                        * 5540 MHz [108] (disabled)
-                        * 5560 MHz [112] (disabled)
-                        * 5580 MHz [116] (disabled)
-                        * 5600 MHz [120] (disabled)
-                        * 5620 MHz [124] (disabled)
-                        * 5640 MHz [128] (disabled)
-                        * 5660 MHz [132] (disabled)
-                        * 5680 MHz [136] (disabled)
-                        * 5700 MHz [140] (disabled)
-                        * 5745 MHz [149] (30.0 dBm) (passive scanning, no IBSS)
-                        * 5765 MHz [153] (30.0 dBm) (passive scanning, no IBSS)
-                        * 5785 MHz [157] (30.0 dBm) (passive scanning, no IBSS)
-                        * 5805 MHz [161] (30.0 dBm) (passive scanning, no IBSS)
-                        * 5825 MHz [165] (30.0 dBm) (passive scanning, no IBSS)
-                Bitrates (non-HT):
-                        * 6.0 Mbps
-                        * 9.0 Mbps
-                        * 12.0 Mbps
-                        * 18.0 Mbps
-                        * 24.0 Mbps
-                        * 36.0 Mbps
-                        * 48.0 Mbps
-                        * 54.0 Mbps
-        max # scan SSIDs: 4
-        Supported interface modes:
-                 * IBSS
-                 * managed
-                 * AP
-                 * AP/VLAN
-                 * monitor
-                 * mesh point
-        Supported commands:
-                 * new_interface
-                 * set_interface
-                 * new_key
-                 * new_beacon
-                 * new_station
-                 * new_mpath
-                 * set_mesh_params
-                 * set_bss
-                 * authenticate
-                 * associate
-                 * deauthenticate
-                 * disassociate
-                 * join_ibss
-                 * Unknown command (55)
-                 * Unknown command (57)
-                 * Unknown command (59)
-                 * set_wiphy_netns
-                 * Unknown command (65)
-                 * connect
-                 * disconnect
-Wiphy phy0
-        Band 1:
-                Frequencies:
-                        * 2412 MHz [1] (20.0 dBm)
-                        * 2417 MHz [2] (20.0 dBm)
-                        * 2422 MHz [3] (20.0 dBm)
-                        * 2427 MHz [4] (20.0 dBm)
-                        * 2432 MHz [5] (20.0 dBm)
-                        * 2437 MHz [6] (20.0 dBm)
-                        * 2442 MHz [7] (20.0 dBm)
-                        * 2447 MHz [8] (20.0 dBm)
-                        * 2452 MHz [9] (20.0 dBm)
-                        * 2457 MHz [10] (20.0 dBm)
-                        * 2462 MHz [11] (20.0 dBm)
-                        * 2467 MHz [12] (disabled)
-                        * 2472 MHz [13] (disabled)
-                        * 2484 MHz [14] (disabled)
-                Bitrates (non-HT):
-                        * 1.0 Mbps
-                        * 2.0 Mbps (short preamble supported)
-                        * 5.5 Mbps (short preamble supported)
-                        * 11.0 Mbps (short preamble supported)
-                        * 6.0 Mbps
-                        * 9.0 Mbps
-                        * 12.0 Mbps
-                        * 18.0 Mbps
-                        * 24.0 Mbps
-                        * 36.0 Mbps
-                        * 48.0 Mbps
-                        * 54.0 Mbps
-        max # scan SSIDs: 4
-        Supported interface modes:
-                 * IBSS
-                 * managed
-                 * AP
-                 * AP/VLAN
-                 * monitor
-                 * mesh point
-        Supported commands:
-                 * new_interface
-                 * set_interface
-                 * new_key
-                 * new_beacon
-                 * new_station
-                 * new_mpath
-                 * set_mesh_params
-                 * set_bss
-                 * authenticate
-                 * associate
-                 * deauthenticate
-                 * disassociate
-                 * join_ibss
-                 * Unknown command (55)
-                 * Unknown command (57)
-                 * Unknown command (59)
-                 * set_wiphy_netns
-                 * Unknown command (65)
-                 * connect
-                 * disconnect
-root@dvouramenna:~#
+johannes
 
