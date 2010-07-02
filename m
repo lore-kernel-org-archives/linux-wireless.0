@@ -1,32 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:58022 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752152Ab0GHVSI (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:32957 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753170Ab0GBSVf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jul 2010 17:18:08 -0400
-Received: by pvc7 with SMTP id 7so480548pvc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Jul 2010 14:18:06 -0700 (PDT)
+	Fri, 2 Jul 2010 14:21:35 -0400
+Received: by bwz1 with SMTP id 1so1745906bwz.19
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Jul 2010 11:21:34 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: rt2x00 & mac80211: correct usage of ieee80211_beacon_get_tim?
+Date: Fri, 2 Jul 2010 20:20:57 +0200
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+References: <201006241521.47623.helmut.schaa@googlemail.com> <201007021959.45704.helmut.schaa@googlemail.com> <1278093964.15412.24.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1278093964.15412.24.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <1278623518-18964-1-git-send-email-hauke@hauke-m.de>
-References: <1278623518-18964-1-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 8 Jul 2010 14:17:46 -0700
-Message-ID: <AANLkTikdSMwgSU8zoC_NtVGC96Wq_Jd-hVkA-D8Rd6wJ@mail.gmail.com>
-Subject: Re: [PATCH] compat: fix tracpoint building
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201007022020.57398.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 8, 2010 at 2:11 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> trace/define_trace.h can be included more often and it have to.
->
-> This fixes some errors like this:
-> WARNING: "__tracepoint_iwlwifi_dev_rx" [/home/hauke/compat-wireless/compat-wireless-git/drivers/net/wireless/iwlwifi/iwlcore.ko] undefined!
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Am Freitag 02 Juli 2010 schrieb Johannes Berg:
+> On Fri, 2010-07-02 at 19:59 +0200, Helmut Schaa wrote:
+> 
+> > > unless your
+> > > device itself is capable of generating the TIM IE _right before_ the
+> > > beacon gets transmitted.
+> > 
+> > Agreed. At least on rt2800 we can use the pre tbtt interrupt to update the
+> > beacon just before it is sent out.
+> 
+> Careful though. You don't know how far in advance it is triggered (or
+> maybe you do) or if the time will be sufficient to generate and upload
+> the beacon to the device. You could even hit lock contention I think.
 
-Thanks, applied and pushed new tarball out.
+Yeah, the delay is configurable. And yes, we cannot be 100% sure but
+I already did some tests and on my MIPS board anything >1ms was
+enough to generate + upload a new beacon to the device. And we can still
+increase that to a safe default of maybe 5ms or so.
 
-  Luis
+Helmut
