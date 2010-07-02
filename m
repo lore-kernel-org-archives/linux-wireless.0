@@ -1,36 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:59454 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934217Ab0GOSvD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jul 2010 14:51:03 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] compat-wireless: refresh patch
-Date: Thu, 15 Jul 2010 20:50:54 +0200
-Message-Id: <1279219854-18193-1-git-send-email-hauke@hauke-m.de>
+Received: from lo.gmane.org ([80.91.229.12]:40833 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758309Ab0GBJuM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Jul 2010 05:50:12 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1OUcsm-0001Kq-UJ
+	for linux-wireless@vger.kernel.org; Fri, 02 Jul 2010 11:50:05 +0200
+Received: from host179-164-static.104-82-b.business.telecomitalia.it ([82.104.164.179])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Jul 2010 11:50:04 +0200
+Received: from massimiliano.cialdi by host179-164-static.104-82-b.business.telecomitalia.it with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Jul 2010 11:50:04 +0200
+To: linux-wireless@vger.kernel.org
+From: max <massimiliano.cialdi@powersoft.it>
+Subject: Re: wl1271 firmware
+Date: Fri, 2 Jul 2010 09:47:47 +0000 (UTC)
+Message-ID: <loom.20100702T114312-713@post.gmane.org>
+References: <AANLkTinOcy-n6EVzAasAJO1I2yNeWOiaCid0tGdxnuwa@mail.gmail.com> <AC090B9732AB2B4DB7FF476E907FE660010673660C@dnce02.ent.ti.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Levi, Shahar <shahar_levi@...> writes:
+> I am checking the way to access the FW and NVS file of wl1271.
+> Let me find more details on that and get back to you.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/03-rfkill.patch |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Hi I'm also searching for that file
+Please let me know when it will be available
 
-diff --git a/patches/03-rfkill.patch b/patches/03-rfkill.patch
-index 236891d..e8a9fe8 100644
---- a/patches/03-rfkill.patch
-+++ b/patches/03-rfkill.patch
-@@ -228,6 +228,6 @@ This would do the policing from within mac80211.
- +#else
- +#include <linux/rfkill_backport.h>
- +#endif
-+ #include <linux/workqueue.h>
-  
-  #include "ath5k.h"
-- #include "debug.h"
--- 
-1.7.0.4
+thanks
 
