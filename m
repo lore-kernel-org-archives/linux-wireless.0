@@ -1,65 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:41607 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751768Ab0G1XsY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jul 2010 19:48:24 -0400
-Subject: Re: [ath5k-devel] [PATCH v3] ath5k: disable ASPM
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	David Quan <David.Quan@atheros.com>,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"kernel-team@lists.ubuntu.com" <kernel-team@lists.ubuntu.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	"tim.gardner@canonical.com" <tim.gardner@canonical.com>
-In-Reply-To: <AANLkTim1sZ5ZoGcrsdCw8dFSzUj4igZOiq7irKsdbfXR@mail.gmail.com>
-References: <20100726210651.GJ14855@tux>
-	 <1280179033.3721.15.camel@maxim-laptop>
-	 <20100726212543.GA5424@srcf.ucam.org>
-	 <AANLkTi=5_Dc8SumPi7cr8u7=DmnOHgSo6C76w9b0E4Kj@mail.gmail.com>
-	 <20100726222113.GA6487@srcf.ucam.org>
-	 <AANLkTinq-SxMHTrJM23WaeRMkU-2cySiVrkwCjDRS_o+@mail.gmail.com>
-	 <20100726222909.GA6773@srcf.ucam.org>
-	 <AANLkTinysGjYS7RKN4X_7T2q+rw_-OWdn-UJYM0poWXu@mail.gmail.com>
-	 <20100726223326.GA6904@srcf.ucam.org>
-	 <AANLkTinChEx_B9wa-n+a6xDr1vLOBOD3Mhcs=iqcYwen@mail.gmail.com>
-	 <20100726225057.GA7268@srcf.ucam.org>
-	 <1280223313.3721.83.camel@maxim-laptop>
-	 <AANLkTim1sZ5ZoGcrsdCw8dFSzUj4igZOiq7irKsdbfXR@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 29 Jul 2010 02:48:15 +0300
-Message-ID: <1280360895.8891.19.camel@maxim-laptop>
-Mime-Version: 1.0
+Received: from mga03.intel.com ([143.182.124.21]:64101 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759533Ab0GBSoi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Jul 2010 14:44:38 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>
+Subject: [PATCH 6/8] iwlwifi: debugfs file for txfifo command testing
+Date: Fri,  2 Jul 2010 11:45:38 -0700
+Message-Id: <1278096340-2546-7-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1278096340-2546-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1278096340-2546-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-07-27 at 08:57 -0700, Luis R. Rodriguez wrote: 
-> On Tue, Jul 27, 2010 at 2:35 AM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
-> > On Mon, 2010-07-26 at 23:50 +0100, Matthew Garrett wrote:
-> >> On Mon, Jul 26, 2010 at 03:43:04PM -0700, Luis R. Rodriguez wrote:
-> >>
-> >> > I see.. thanks Mathew... in that case since L1 works on all devices we
-> >> > could just force enable L1 for all PCIE devices. What do you think?
-> >>
-> >> Works for me.
-> >>
-> >
-> > On the second thought, there is no 'pci_enable_link_state' :-)
-> > I afraid that if I add it, I might not do that right for all cases, thus
-> > do more harm that good...
-> 
-> I'm sorry, can you elaborate?
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-I mean ASPM code doesn't have a function to undo effects of the
-blacklist (due to pre 1.1 pcie device).
+Add debugfs file for REPLY_TXFIFO_FLUSH host command testing.
 
-Its not that simple to write such function.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c |   27 +++++++++++++++++++++++++++
+ 1 files changed, 27 insertions(+), 0 deletions(-)
 
-Best regards,
-Maxim Levitsky
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index 48f8908..088a2c1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -1495,6 +1495,30 @@ static ssize_t iwl_dbgfs_force_reset_write(struct file *file,
+ 	return ret ? ret : count;
+ }
+ 
++static ssize_t iwl_dbgfs_txfifo_flush_write(struct file *file,
++					const char __user *user_buf,
++					size_t count, loff_t *ppos) {
++
++	struct iwl_priv *priv = file->private_data;
++	char buf[8];
++	int buf_size;
++	int flush;
++
++	memset(buf, 0, sizeof(buf));
++	buf_size = min(count, sizeof(buf) -  1);
++	if (copy_from_user(buf, user_buf, buf_size))
++		return -EFAULT;
++	if (sscanf(buf, "%d", &flush) != 1)
++		return -EINVAL;
++
++	if (iwl_is_rfkill(priv))
++		return -EFAULT;
++
++	priv->cfg->ops->lib->dev_txfifo_flush(priv, IWL_DROP_ALL);
++
++	return count;
++}
++
+ DEBUGFS_READ_FILE_OPS(rx_statistics);
+ DEBUGFS_READ_FILE_OPS(tx_statistics);
+ DEBUGFS_READ_WRITE_FILE_OPS(traffic_log);
+@@ -1516,6 +1540,7 @@ DEBUGFS_READ_WRITE_FILE_OPS(plcp_delta);
+ DEBUGFS_READ_WRITE_FILE_OPS(force_reset);
+ DEBUGFS_READ_FILE_OPS(rxon_flags);
+ DEBUGFS_READ_FILE_OPS(rxon_filter_flags);
++DEBUGFS_WRITE_FILE_OPS(txfifo_flush);
+ 
+ /*
+  * Create the debugfs files and directories
+@@ -1574,6 +1599,8 @@ int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
+ 	DEBUGFS_ADD_FILE(ucode_rx_stats, dir_debug, S_IRUSR);
+ 	DEBUGFS_ADD_FILE(ucode_tx_stats, dir_debug, S_IRUSR);
+ 	DEBUGFS_ADD_FILE(ucode_general_stats, dir_debug, S_IRUSR);
++	if (priv->cfg->ops->lib->dev_txfifo_flush)
++		DEBUGFS_ADD_FILE(txfifo_flush, dir_debug, S_IWUSR);
+ 
+ 	if (priv->cfg->sensitivity_calib_by_driver)
+ 		DEBUGFS_ADD_FILE(sensitivity, dir_debug, S_IRUSR);
+-- 
+1.7.0.4
 
