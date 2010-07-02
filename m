@@ -1,37 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:49001 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934274Ab0GOTJD convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:53236 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753450Ab0GBRAL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jul 2010 15:09:03 -0400
-Received: by vws5 with SMTP id 5so1527619vws.19
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Jul 2010 12:09:02 -0700 (PDT)
+	Fri, 2 Jul 2010 13:00:11 -0400
+Date: Fri, 2 Jul 2010 12:48:00 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Question on 'iw reg get/set'
+Message-ID: <20100702164759.GE2381@tuxdriver.com>
+References: <4C2CFAEB.9070302@candelatech.com>
+ <20100702141216.GB2381@tuxdriver.com>
+ <4C2E170E.6040207@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <20100715190302.C6699404F0@repository3.orbit-lab.org>
-References: <20100715190302.C6699404F0@repository3.orbit-lab.org>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 15 Jul 2010 12:08:42 -0700
-Message-ID: <AANLkTiltTSZsMJREUwpMwh8ZK28Pb3-HaiWx-2h6NWoO@mail.gmail.com>
-Subject: Re: Compat-wireless release for 2010-07-15 is baked
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4C2E170E.6040207@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 15, 2010 at 12:03 PM, Compat-wireless cronjob account
-<compat@orbit-lab.org> wrote:
-> From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
->   73374eb..5f9a783  master     -> origin/master
->   f88f925..4b87329  wl         -> origin/wl
-> From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
->   521acd5..bc3e7ea  history    -> origin/history
->  + c9ce0c0...732f7b0 master     -> origin/master  (forced update)
->  * [new tag]         next-20100715 -> next-20100715
->
-> compat-wireless code metrics
->
->    494061 - Total upstream lines of code being pulled
+On Fri, Jul 02, 2010 at 09:42:54AM -0700, Ben Greear wrote:
+> On 07/02/2010 07:12 AM, John W. Linville wrote:
 
-This didn't get Hauke's last patch, will force a new one out shortly.
+> >The ath9k driver is setting its own regulatory restrictions based on
+> >its EEPROM.  Setting the domain from userland can only further restrict
+> >the regulatory settings.  The '98' value represents a synthesized
+> >regulatory domain, based on the intersection of the available source
+> >of regulatory information (which can include the EEPROM, the userland
+> >setting, and a country IE from your AP).
+> 
+> Is there any way to get/set these raw settings (like, whatever it has in EEPROM)?
+> 
+> I expect we may ship some of these systems overseas, and would like the flexibility
+> to set the country-code for testing purposes, if nothing else.
 
-  Luis
+I'll leave it to the Atheros guys to address this.
+
+> Is there any documentation as to what '98' really means, or do we just ignore that
+> value and look at the info printed out after that?
+
+'98' pretty much means "look at the info" :-)
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
