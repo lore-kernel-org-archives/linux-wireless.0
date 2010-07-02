@@ -1,56 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:35560 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751113Ab0GUQhG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jul 2010 12:37:06 -0400
-Subject: Re: [PATCH] zd1211rw: make CR_INTERRUPT cast explicit
-From: Pavel Roskin <proski@gnu.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
-	Ulrich Kunitz <kune@deine-taler.de>
-In-Reply-To: <1279724935-16581-1-git-send-email-linville@tuxdriver.com>
-References: <1279724935-16581-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 21 Jul 2010 12:36:58 -0400
-Message-ID: <1279730218.9003.7.camel@mj>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:34915
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750965Ab0GBAfi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Jul 2010 20:35:38 -0400
+Date: Thu, 01 Jul 2010 17:35:50 -0700 (PDT)
+Message-Id: <20100701.173550.172604489.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2010-07-01
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20100701181526.GA2356@tuxdriver.com>
+References: <20100701181526.GA2356@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-07-21 at 11:08 -0400, John W. Linville wrote:
-> CHECK   drivers/net/wireless/zd1211rw/zd_usb.c
-> drivers/net/wireless/zd1211rw/zd_usb.c:376:24: warning: implicit cast from nocast type
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Thu, 1 Jul 2010 14:15:27 -0400
+
+> Two weeks since the last request, plenty of new stuff intended for
+> 2.6.36...
 > 
-> The value comparison is intentional, so forcing the cast seems warranted
-> in order to silence the sparse warning.
+> Included are the usual bunch of driver updates, including a big
+> dump from the rt2x00 team.  This also includes cfg80211 support
+> for libertas, a flurry of (mostly trivial) stuff from me, and a
+> wireless-2.6 pull to resolve some patch dependencies.
 > 
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
->  drivers/net/wireless/zd1211rw/zd_usb.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
-> index 818e148..acbf4d9 100644
-> --- a/drivers/net/wireless/zd1211rw/zd_usb.c
-> +++ b/drivers/net/wireless/zd1211rw/zd_usb.c
-> @@ -373,7 +373,7 @@ static inline void handle_regs_int(struct urb *urb)
->  	spin_lock(&intr->lock);
->  
->  	int_num = le16_to_cpu(*(__le16 *)(urb->transfer_buffer+2));
-> -	if (int_num == CR_INTERRUPT) {
-> +	if (int_num == (u16 __force) CR_INTERRUPT) {
+> Please let me know if there are problems!
 
-I think __force should be used sparingly, especially outside headers.  I
-tried other ways to prevent the warning.  I tried declaring int_num as
-zd_addr_t, but sparse keeps complaining about the same comparison.
+This failed to pull cleanly, I got a conflict in
+drivers/net/wireless/libertas/host.h  It was the
+usual "__packed" vs. "__attribute__((packed))" thing.
 
-I can rewrite "if" as "switch" to suppress the warning, but it makes the
-code less readable.  I think it's a bug in sparse.  There should be no
-casts when comparing values of the same type.
-
-I understand the benefits of fixing sparse warnings, but this patch
-works around a sparse bug and sets a bad example.
-
--- 
-Regards,
-Pavel Roskin
+I resolved it but I wonder if this happened because you
+did the wireless-2.6 --> wireless-next-2.6 merge here.
