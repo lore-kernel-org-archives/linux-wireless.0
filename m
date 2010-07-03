@@ -1,78 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39958 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751745Ab0GVPAP (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:35651 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751124Ab0GCQeL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 11:00:15 -0400
-Date: Thu, 22 Jul 2010 10:47:23 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Sven Geggus <sven@gegg.us>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	nbd@openwrt.org
-Subject: Re: minstrel_tx_status mac80211 WARNINGs in vanilla 2.6.34.1
-Message-ID: <20100722144723.GA2616@tuxdriver.com>
-References: <20100722123000.GA16657@geggus.net>
+	Sat, 3 Jul 2010 12:34:11 -0400
+Message-ID: <4C2F6681.7070202@candelatech.com>
+Date: Sat, 03 Jul 2010 09:34:09 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100722123000.GA16657@geggus.net>
+To: Vasanthakumar Thiagarajan <vasanth@Atheros.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k doesn't clean up virtual wifis on rmmod, and crashes.
+References: <4C2ED806.9000105@candelatech.com> <20100703070259.GA15479@vasanth-laptop>
+In-Reply-To: <20100703070259.GA15479@vasanth-laptop>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 22, 2010 at 02:30:01PM +0200, Sven Geggus wrote:
-> Hello,
-> 
-> running vanilla 2.6.34.1 I get the following warnings in  kernel log:
-> 
-> WARNING: at net/mac80211/rc80211_minstrel.c:70 minstrel_tx_status+0x67/0xd1 [mac80211]()
-> Hardware name: SCENIC E300/E600
-> Modules linked in: i915 drm_kms_helper drm video backlight output lp loop
-> snd_intel8x0 snd_ac97_codec ac97_bus snd_pcm_oss snd_mixer_oss snd_pcm
-> snd_seq_dummy zd1211rw snd_seq_oss usbhid mac80211 option cfg80211
-> snd_seq_midi usbserial snd_rawmidi snd_seq_midi_event snd_seq snd_timer
-> snd_seq_device snd parport_pc ehci_hcd uhci_hcd soundcore intel_agp parport
-> usbcore nls_base snd_page_alloc agpgart rng_core floppy sg
-> Pid: 0, comm: swapper Tainted: G        W  2.6.34.1 #3
-> Call Trace:
->  [<c102af25>] warn_slowpath_common+0x60/0x90
->  [<c102af62>] warn_slowpath_null+0xd/0x10
->  [<f83cbd48>] minstrel_tx_status+0x67/0xd1 [mac80211]
->  [<f83b6eb1>] ieee80211_tx_status+0x1f6/0x5ac [mac80211]
->  [<c1261533>] ? skb_dequeue+0x45/0x4c
->  [<f83b6896>] ieee80211_tasklet_handler+0x61/0xd6 [mac80211]
->  [<c102ed7d>] tasklet_action+0x62/0x9f
->  [<c102f331>] __do_softirq+0x77/0xe5
->  [<c102f3c5>] do_softirq+0x26/0x2b
->  [<c102f52f>] irq_exit+0x29/0x66
->  [<c1003e90>] do_IRQ+0x85/0x9b
->  [<c1002d29>] common_interrupt+0x29/0x30
->  [<c10083ac>] ? default_idle+0x2d/0x42
->  [<c1001a9b>] cpu_idle+0x44/0x71
->  [<c12e00de>] rest_init+0x96/0x98
->  [<c1498862>] start_kernel+0x2a5/0x2aa
->  [<c14980b7>] i386_start_kernel+0xb7/0xbf
-> ---[ end trace f22ceacef336878f ]---
-> 
-> Wireless driver is zd1211rw.
-> 
-> Did not test with older kernel because this device has not been in user on
-> this machine before.
-> 
-> WLAN does however seem to work anyway.
+On 07/03/2010 12:02 AM, Vasanthakumar Thiagarajan wrote:
+> On Sat, Jul 03, 2010 at 11:56:14AM +0530, Ben Greear wrote:
+>> It seems to me that in 2.6.34, there is no code to clean up
+>> virtual wiphys in ath9k on rmmod.  Also, ath9k mailing list
+>> is returning error about mis-configured DNS server.
+>>
+>> This is with un-modified ath9k driver and is repeatable
+>> every time on my system (crash is often different, but
+>> it always crashes very quickly).
+>>
+>> [root@atom ~]# echo add=5>  /debug/ath9k/phy1/wiphy
+>> -bash: /debug/ath9k/phy1/wiphy: No such file or directory
+>> [root@atom ~]# echo add=5>  /debug/ath9k/phy0/wiphy
+>> Jul  2 23:22:19 atom kernel: phy1: Selected rate control algorithm 'ath9k_rate_control'
+>> [root@atom ~]# Jul  2 23:22:19 atom kernel: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+>> rmmod ath9k
+>> Jul  2 23:22:24 atom kernel: ath9k 0000:05:00.0: PCI INT A disabled
+>> Jul  2 23:22:24 atom kernel: ath9k: Driver unloaded
+>> [root@atom ~]# BUG: spinlock bad magic on CPU#1, iw/2877
+>>    lock: f8a476c0, .magic: 00000000, .owner:<none>/-1, .owner_cpu: 0
+>> Pid: 2877, comm: iw Not tainted 2.6.34 #7
+>> Call Trace:
+>>    [<c0730e34>] ? printk+0xf/0x13
+>>    [<c05710d6>] spin_bug+0x7b/0x86
+>>    [<c0440b76>] ? delayed_work_timer_fn+0x0/0x30
+>>    [<c0571171>] do_raw_spin_lock+0x1e/0x125
+>>    [<c042f91e>] ? scheduler_tick+0xd6/0x1c9
+>>    [<c0440b76>] ? delayed_work_timer_fn+0x0/0x30
+>>    [<c0732a6d>] _raw_spin_lock_irqsave+0x1b/0x20
+>>    [<c0440b59>] __queue_work+0x12/0x2f
+>>    [<c0440b76>] ? delayed_work_timer_fn+0x0/0x30
+>>    [<c0440ba4>] delayed_work_timer_fn+0x2e/0x30
+>>
+>> I'm new to hacking on this driver..but would love to test
+>> patches, and if someone wants to suggest a good point in
+>> the code to remove the virtual phys, I'll make the attempt.
+>
+> Can you please try this patch?
 
-Well, I just took a quick look -- so, I'm not 100% sure...
+It still crashes for me, and backtraces look similar.
 
-But, it looks to me like zd1211rw is reporting tx status on a rate
-that minstrel didn't expect it to use.  It seems like the hardware
-is pre-wired to do retries on sequentially lower rates, which seems
-a bit incompatible with minstrel's worldview.
-
-Felix, can we accomodate this?  The "WLAN does however seem to work
-anyway" seems to suggest things work, so can we at least not yell
-about it?
+Were you able to reproduce the crash?
 
 Thanks,
+Ben
 
-John
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
