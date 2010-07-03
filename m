@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:2090 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752689Ab0GZVkD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jul 2010 17:40:03 -0400
-From: Joe Perches <joe@perches.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH net-next 0/4] wireless: Add and use wiphy_<level> logging macros
-Date: Mon, 26 Jul 2010 14:39:56 -0700
-Message-Id: <cover.1280177971.git.joe@perches.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:62931 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753840Ab0GCAxX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Jul 2010 20:53:23 -0400
+Received: by iwn7 with SMTP id 7so3795998iwn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Jul 2010 17:53:22 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1278022192-83277-6-git-send-email-nbd@openwrt.org>
+References: <1278022192-83277-1-git-send-email-nbd@openwrt.org>
+	<1278022192-83277-2-git-send-email-nbd@openwrt.org>
+	<1278022192-83277-3-git-send-email-nbd@openwrt.org>
+	<1278022192-83277-4-git-send-email-nbd@openwrt.org>
+	<1278022192-83277-5-git-send-email-nbd@openwrt.org>
+	<1278022192-83277-6-git-send-email-nbd@openwrt.org>
+Date: Sat, 3 Jul 2010 02:53:12 +0200
+Message-ID: <AANLkTim0QXRVcOcl8gZFEh7JC8G8npuhw7oxf7X6w1Fg@mail.gmail.com>
+Subject: Re: [PATCH 6/6] ath9k: fix false positives in the baseband hang check
+From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	lrodriguez@atheros.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add some consistent use styles to wiphy messages
+On Fri, Jul 2, 2010 at 12:09 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> ath9k_hw_check_alive() occasionally returns false, as the hardware
+> is still processing data in a specific state. Fix this issue by
+> repeating the test a few times with longer delay inbetween attempts.
+> This gets rid of excessive hardware resets that appear frequently on
+> some AR9132 based devices, but could also happen on AR9280.
+>
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> Reported-by: Björn Smedman <bjorn.smedman@venatech.se>
+> Cc: stable@kernel.org
 
-Joe Perches (4):
-  include/net/cfg80211.h: Add wiphy_<level> printk equivalents
-  drivers/net/wireless: Use wiphy_<level>
-  drivers/net/wireless/at76c50x-usb.c: Neaten macros
-  wireless: Convert wiphy_debug macro to function
+Tested-by: Björn Smedman <bjorn.smedman@venatech.se>
 
- drivers/net/wireless/adm8211.c                 |   53 ++++----
- drivers/net/wireless/at76c50x-usb.c            |  168 +++++++++++------------
- drivers/net/wireless/ath/ar9170/cmd.c          |    7 +-
- drivers/net/wireless/ath/ar9170/led.c          |    4 +-
- drivers/net/wireless/ath/ar9170/main.c         |  172 +++++++++++-------------
- drivers/net/wireless/ath/ar9170/phy.c          |    8 +-
- drivers/net/wireless/ath/ath9k/ahb.c           |    7 +-
- drivers/net/wireless/ath/ath9k/pci.c           |    7 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c         |   11 +-
- drivers/net/wireless/iwlwifi/iwl-core.c        |    2 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c    |   13 +-
- drivers/net/wireless/mac80211_hwsim.c          |   99 +++++++-------
- drivers/net/wireless/mwl8k.c                   |  123 +++++++----------
- drivers/net/wireless/orinoco/cfg.c             |    5 +-
- drivers/net/wireless/p54/eeprom.c              |   76 +++++------
- drivers/net/wireless/p54/fwio.c                |   53 ++++----
- drivers/net/wireless/p54/led.c                 |    8 +-
- drivers/net/wireless/p54/p54pci.c              |    3 +-
- drivers/net/wireless/p54/txrx.c                |   36 +++---
- drivers/net/wireless/rtl818x/rtl8180_dev.c     |   17 +--
- drivers/net/wireless/rtl818x/rtl8187_dev.c     |   11 +-
- drivers/net/wireless/rtl818x/rtl8187_rtl8225.c |    8 +-
- include/net/cfg80211.h                         |   65 +++++++++-
- net/wireless/core.c                            |   53 +++++++
- 24 files changed, 528 insertions(+), 481 deletions(-)
+No false positives.
 
+By the way, ath9k has never felt so solid on AR9100 as after this
+patch series. Huge thanx, especially for the initvals update! :)
+
+/Björn
