@@ -1,58 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:47625 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751433Ab0GURH6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jul 2010 13:07:58 -0400
-Received: by bwz1 with SMTP id 1so354930bwz.19
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jul 2010 10:07:56 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:63543 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756299Ab0GDJfm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Jul 2010 05:35:42 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Sun, 04 Jul 2010 02:35:42 -0700
+Date: Sun, 4 Jul 2010 15:05:35 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k doesn't clean up virtual wifis on rmmod, and crashes.
+Message-ID: <20100704093535.GE5053@vasanth-laptop>
+References: <4C2ED806.9000105@candelatech.com> <20100703070259.GA15479@vasanth-laptop> <4C2F6681.7070202@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <20100721133320.GB2355@tuxdriver.com>
-References: <AANLkTiknLRzt2bdhcin5WRzwPXSWqEs8dIUe5imlN0I9@mail.gmail.com>
-	<1279572443-14361-1-git-send-email-linville@tuxdriver.com>
-	<AANLkTino_4FKtMWZU7_lKGzPUXNOtfrmlw_rmmr836eA@mail.gmail.com>
-	<20100721133320.GB2355@tuxdriver.com>
-Date: Wed, 21 Jul 2010 20:07:56 +0300
-Message-ID: <AANLkTint5uT6PQ8pmEIVSoVYOSCZE5k-TGB1knwHtupw@mail.gmail.com>
-Subject: Re: [PATCH] rtl8180: improve signal reporting for rtl8185 hardware
-From: Pauli Nieminen <suokkos@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4C2F6681.7070202@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 21, 2010 at 4:33 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Wed, Jul 21, 2010 at 08:08:41AM +0300, Pauli Nieminen wrote:
->> On Mon, Jul 19, 2010 at 11:47 PM, John W. Linville
->> <linville@tuxdriver.com> wrote:
->> > The existing code seemed to be somewhat based on the datasheet, but
->> > varied substantially from the vendor-provided driver.  This mirrors the
->> > handling of the rtl8185 case from that driver, but still neglects the
->> > specifics for the rtl8180 hardware.  Those details are a bit muddled...
->> >
->> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
->> > ---
->> >  drivers/net/wireless/rtl818x/rtl8180_dev.c |   11 ++++++++---
->> >  1 files changed, 8 insertions(+), 3 deletions(-)
->
->> I tested this version of patch. Patch didn't apply cleanly for some
->> reason even tough when I mnauly typed it diff looks same.
->
-> Please try the v2 version of the patch.  Some "back of the envelope"
-> math suggests that the v2 version of the patch will give numbers more
-> to your liking.
->
-> John
-> --
-> John W. Linville                Someday the world will need a hero, and you
-> linville@tuxdriver.com                  might be all we have.  Be ready.
->
+On Sat, Jul 03, 2010 at 10:04:09PM +0530, Ben Greear wrote:
+> On 07/03/2010 12:02 AM, Vasanthakumar Thiagarajan wrote:
+> > On Sat, Jul 03, 2010 at 11:56:14AM +0530, Ben Greear wrote:
+> >> It seems to me that in 2.6.34, there is no code to clean up
+> >> virtual wiphys in ath9k on rmmod.  Also, ath9k mailing list
+> >> is returning error about mis-configured DNS server.
+> >>
+> >> This is with un-modified ath9k driver and is repeatable
+> >> every time on my system (crash is often different, but
+> >> it always crashes very quickly).
+> >>
+> >> [root@atom ~]# echo add=5>  /debug/ath9k/phy1/wiphy
+> >> -bash: /debug/ath9k/phy1/wiphy: No such file or directory
+> >> [root@atom ~]# echo add=5>  /debug/ath9k/phy0/wiphy
+> >> Jul  2 23:22:19 atom kernel: phy1: Selected rate control algorithm 'ath9k_rate_control'
+> >> [root@atom ~]# Jul  2 23:22:19 atom kernel: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+> >> rmmod ath9k
+> >> Jul  2 23:22:24 atom kernel: ath9k 0000:05:00.0: PCI INT A disabled
+> >> Jul  2 23:22:24 atom kernel: ath9k: Driver unloaded
+> >> [root@atom ~]# BUG: spinlock bad magic on CPU#1, iw/2877
+> >>    lock: f8a476c0, .magic: 00000000, .owner:<none>/-1, .owner_cpu: 0
+> >> Pid: 2877, comm: iw Not tainted 2.6.34 #7
+> >> Call Trace:
+> >>    [<c0730e34>] ? printk+0xf/0x13
+> >>    [<c05710d6>] spin_bug+0x7b/0x86
+> >>    [<c0440b76>] ? delayed_work_timer_fn+0x0/0x30
+> >>    [<c0571171>] do_raw_spin_lock+0x1e/0x125
+> >>    [<c042f91e>] ? scheduler_tick+0xd6/0x1c9
+> >>    [<c0440b76>] ? delayed_work_timer_fn+0x0/0x30
+> >>    [<c0732a6d>] _raw_spin_lock_irqsave+0x1b/0x20
+> >>    [<c0440b59>] __queue_work+0x12/0x2f
+> >>    [<c0440b76>] ? delayed_work_timer_fn+0x0/0x30
+> >>    [<c0440ba4>] delayed_work_timer_fn+0x2e/0x30
+> >>
+> >> I'm new to hacking on this driver..but would love to test
+> >> patches, and if someone wants to suggest a good point in
+> >> the code to remove the virtual phys, I'll make the attempt.
+> >
+> > Can you please try this patch?
+> 
+> It still crashes for me, and backtraces look similar.
+> 
+> Were you able to reproduce the crash?
 
-But version 2 doesn't change the fact that driver is going to report
-same signal strength even tough I know that only one wifi should have
-100 % strength and others less than 50 %. There is only one router in
-same room with me and all others routers are a lot more father away.
-So driver is either reading wrong bits from hardware or my hardware is
-broken.
+with my patch, no. Can you please give the steps to trigger
+this crash?
+
+Vasanth 
