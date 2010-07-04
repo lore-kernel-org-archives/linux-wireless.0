@@ -1,96 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:37901 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756838Ab0GFAjz (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:54273 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757781Ab0GDP7O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jul 2010 20:39:55 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>
-Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Ohad Ben-Cohen <ohadb@ti.com>
-Subject: [PATCH 03/15] omap: mmc: prepare for software card detect support
-Date: Tue,  6 Jul 2010 03:37:34 +0300
-Message-Id: <1278376666-3509-4-git-send-email-ohad@wizery.com>
-In-Reply-To: <1278376666-3509-1-git-send-email-ohad@wizery.com>
-References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
+	Sun, 4 Jul 2010 11:59:14 -0400
+Message-ID: <4C30AFD0.80100@candelatech.com>
+Date: Sun, 04 Jul 2010 08:59:12 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k doesn't clean up virtual wifis on rmmod, and crashes.
+References: <4C2ED806.9000105@candelatech.com> <20100703070259.GA15479@vasanth-laptop> <4C2F6681.7070202@candelatech.com> <20100704093535.GE5053@vasanth-laptop>
+In-Reply-To: <20100704093535.GE5053@vasanth-laptop>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ohad Ben-Cohen <ohadb@ti.com>
+On 07/04/2010 02:35 AM, Vasanthakumar Thiagarajan wrote:
+> On Sat, Jul 03, 2010 at 10:04:09PM +0530, Ben Greear wrote:
+>> On 07/03/2010 12:02 AM, Vasanthakumar Thiagarajan wrote:
+>>> On Sat, Jul 03, 2010 at 11:56:14AM +0530, Ben Greear wrote:
+>>>> It seems to me that in 2.6.34, there is no code to clean up
+>>>> virtual wiphys in ath9k on rmmod.  Also, ath9k mailing list
+>>>> is returning error about mis-configured DNS server.
+>>>>
+>>>> This is with un-modified ath9k driver and is repeatable
+>>>> every time on my system (crash is often different, but
+>>>> it always crashes very quickly).
+>>>>
+>>>> [root@atom ~]# echo add=5>   /debug/ath9k/phy1/wiphy
+>>>> -bash: /debug/ath9k/phy1/wiphy: No such file or directory
+>>>> [root@atom ~]# echo add=5>   /debug/ath9k/phy0/wiphy
+>>>> Jul  2 23:22:19 atom kernel: phy1: Selected rate control algorithm 'ath9k_rate_control'
+>>>> [root@atom ~]# Jul  2 23:22:19 atom kernel: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+>>>> rmmod ath9k
+>>>> Jul  2 23:22:24 atom kernel: ath9k 0000:05:00.0: PCI INT A disabled
+>>>> Jul  2 23:22:24 atom kernel: ath9k: Driver unloaded
+>>>> [root@atom ~]# BUG: spinlock bad magic on CPU#1, iw/2877
+>>>>     lock: f8a476c0, .magic: 00000000, .owner:<none>/-1, .owner_cpu: 0
+>>>> Pid: 2877, comm: iw Not tainted 2.6.34 #7
+>>>> Call Trace:
+>>>>     [<c0730e34>] ? printk+0xf/0x13
+>>>>     [<c05710d6>] spin_bug+0x7b/0x86
+>>>>     [<c0440b76>] ? delayed_work_timer_fn+0x0/0x30
+>>>>     [<c0571171>] do_raw_spin_lock+0x1e/0x125
+>>>>     [<c042f91e>] ? scheduler_tick+0xd6/0x1c9
+>>>>     [<c0440b76>] ? delayed_work_timer_fn+0x0/0x30
+>>>>     [<c0732a6d>] _raw_spin_lock_irqsave+0x1b/0x20
+>>>>     [<c0440b59>] __queue_work+0x12/0x2f
+>>>>     [<c0440b76>] ? delayed_work_timer_fn+0x0/0x30
+>>>>     [<c0440ba4>] delayed_work_timer_fn+0x2e/0x30
+>>>>
+>>>> I'm new to hacking on this driver..but would love to test
+>>>> patches, and if someone wants to suggest a good point in
+>>>> the code to remove the virtual phys, I'll make the attempt.
+>>>
+>>> Can you please try this patch?
+>>
+>> It still crashes for me, and backtraces look similar.
+>>
+>> Were you able to reproduce the crash?
+>
+> with my patch, no. Can you please give the steps to trigger
+> this crash?
 
-Make it possible for board files to give the
-host controller two handlers needed for emulating
-card detect events in software:
+It happens every time if I:
 
-* The virtual_get_cd handler will allow the host
-controller to query the status of the software
-card detect (for the given controller/slot).
+echo add >   /debug/ath9k/phy0/wiphy
+rmmod ath9k
 
-* The register_embedded_control will allow the host
-controller to register handlers that will be used by
-board devices to:
-    1. trigger a software card detect event
-    2. set private data (e.g. device context) that can later
-       be used by an sdio function driver
+I notice the patch applied with offsets.  What kernel/driver
+version are you testing?  I tried .34 kernel as well as the top-of-tree
+2.6.35-rcX.
 
-Signed-off-by: Ohad Ben-Cohen <ohadb@ti.com>
----
- arch/arm/mach-omap2/hsmmc.c           |    4 ++++
- arch/arm/mach-omap2/hsmmc.h           |    5 +++++
- arch/arm/plat-omap/include/plat/mmc.h |    5 +++++
- 3 files changed, 14 insertions(+), 0 deletions(-)
+Thanks,
+Ben
 
-diff --git a/arch/arm/mach-omap2/hsmmc.c b/arch/arm/mach-omap2/hsmmc.c
-index 1ef54b0..1361128 100644
---- a/arch/arm/mach-omap2/hsmmc.c
-+++ b/arch/arm/mach-omap2/hsmmc.c
-@@ -269,6 +269,10 @@ void __init omap2_hsmmc_init(struct omap2_hsmmc_info *controllers)
- 
- 		mmc->slots[0].remux = c->remux;
- 
-+		mmc->slots[0].register_embedded_control =
-+						c->register_embedded_control;
-+		mmc->slots[0].virtual_get_cd = c->virtual_get_cd;
-+
- 		if (c->cover_only)
- 			mmc->slots[0].cover = 1;
- 
-diff --git a/arch/arm/mach-omap2/hsmmc.h b/arch/arm/mach-omap2/hsmmc.h
-index 36f0ba8..dc12c90 100644
---- a/arch/arm/mach-omap2/hsmmc.h
-+++ b/arch/arm/mach-omap2/hsmmc.h
-@@ -23,6 +23,11 @@ struct omap2_hsmmc_info {
- 	int	ocr_mask;	/* temporary HACK */
- 	/* Remux (pad configuation) when powering on/off */
- 	void (*remux)(struct device *dev, int slot, int power_on);
-+	/* following methods are for embedded sdio devices, e.g. wl1271 */
-+	int (*register_embedded_control)(void *dev_id,
-+			void (*set_virtual_cd)(void *dev_id, int card_present),
-+			void (*set_embedded_data)(void *dev_id, void *priv));
-+	int (*virtual_get_cd)(void);
- };
- 
- #if defined(CONFIG_MMC_OMAP_HS) || defined(CONFIG_MMC_OMAP_HS_MODULE)
-diff --git a/arch/arm/plat-omap/include/plat/mmc.h b/arch/arm/plat-omap/include/plat/mmc.h
-index c835f1e..0f5bf12 100644
---- a/arch/arm/plat-omap/include/plat/mmc.h
-+++ b/arch/arm/plat-omap/include/plat/mmc.h
-@@ -140,6 +140,11 @@ struct omap_mmc_platform_data {
- 
- 		unsigned int ban_openended:1;
- 
-+		/* Embedded SDIO devices control */
-+		int (*register_embedded_control)(void *dev_id,
-+			void (*set_virtual_cd)(void *dev_id, int card_present),
-+			void (*set_embedded_data)(void *dev_id, void *priv));
-+		int (*virtual_get_cd)(void);
- 	} slots[OMAP_MMC_MAX_SLOTS];
- };
- 
 -- 
-1.7.0.4
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
