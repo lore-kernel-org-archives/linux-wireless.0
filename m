@@ -1,32 +1,24 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:55546 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751308Ab0G0UdM (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:63989 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757665Ab0GDTN5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 16:33:12 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 0/3] Revert of mac80211 scan complete callback move
-Date: Tue, 27 Jul 2010 16:33:05 -0400
-Message-Id: <1280262788-9890-1-git-send-email-lrodriguez@atheros.com>
+	Sun, 4 Jul 2010 15:13:57 -0400
+Received: by fxm14 with SMTP id 14so3240861fxm.19
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Jul 2010 12:13:55 -0700 (PDT)
+MIME-Version: 1.0
+Date: Sun, 4 Jul 2010 21:13:55 +0200
+Message-ID: <AANLkTikZD45RTEGz8_pzqLsuIPGEk0RAwl3zQphKAQwx@mail.gmail.com>
+Subject: Re: Problems connectring to an AP with Acer Aspire Revo
+From: Carlos Balseiro <hamletpod@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The two virtual wiphy messages seen on both ath9k and mac80211_hwsim was
-debugged by Johannes and fixed but required a little more work on the
-drivers end. So for now revert that fix and supress the messages.
+> This seems to indicate that there is some trouble on this platform ...
+> and makes me start thinking that this card may not work well on this
+> platform.
 
-We can address this for the next kernel release.
-
-Luis R. Rodriguez (3):
-  ath9k: remove the two wiphys scanning at the same time message
-  mac80211_hwsim: supress scan conflict message
-  Revert "mac80211: fix sw scan bracketing"
-
- drivers/net/wireless/ath/ath9k/main.c |   13 +++++++++----
- drivers/net/wireless/mac80211_hwsim.c |    4 +---
- net/mac80211/scan.c                   |    4 ++--
- 3 files changed, 12 insertions(+), 9 deletions(-)
-
+Just installed Windows 7 on my machine to test this and efectively,
+the problem also exist.
