@@ -1,42 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45833 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758518Ab0GONaL (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:35421 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753929Ab0GEQtl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jul 2010 09:30:11 -0400
-Date: Thu, 15 Jul 2010 09:28:05 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: yogeshp <yogeshp@marvell.com>
-Cc: Nishant Sarmukadam <nishants@marvell.com>,
-	Pradeep Nemavat <pnemavat@marvell.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC] mac80211: indicate BA window size with
- IEEE80211_AMPDU_TX_OPERATIONAL drv_ampud_action
-Message-ID: <20100715132804.GA2370@tuxdriver.com>
-References: <4C3F0AA3.4050706@marvell.com>
+	Mon, 5 Jul 2010 12:49:41 -0400
+Received: by fxm14 with SMTP id 14so3886432fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Jul 2010 09:49:40 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4C3F0AA3.4050706@marvell.com>
+In-Reply-To: <AANLkTimcFgxOmw4oOa28unhmSpTt0jNacFKXRXycKKA9@mail.gmail.com>
+References: <AANLkTinOcy-n6EVzAasAJO1I2yNeWOiaCid0tGdxnuwa@mail.gmail.com>
+	<AC090B9732AB2B4DB7FF476E907FE660010673660C@dnce02.ent.ti.com>
+	<AANLkTimcFgxOmw4oOa28unhmSpTt0jNacFKXRXycKKA9@mail.gmail.com>
+Date: Mon, 5 Jul 2010 18:49:39 +0200
+Message-ID: <AANLkTikWzx5SZUxZ9qg5Y9jY44YzZlDvs1kSwbFET76H@mail.gmail.com>
+Subject: Re: wl1271 firmware
+From: Pazzo Da Legare <pazzodalegare@gmail.com>
+To: "Levi, Shahar" <shahar_levi@ti.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 15, 2010 at 06:48:27PM +0530, yogeshp wrote:
-> BA window size for a successful BA setup is not made available to the driver by
-> mac80211. The patch below gets the BA window size from addba response and
-> indicates it to driver through IEEE80211_AMPDU_TX_OPERATIONAL drv_ampdu_action.
-> 
-> Signed-off-by: yogeshp@marvell.com
-> Signed-off-by: nishants@marvell.com
+Dear Shahar,
 
-This patch seems to have a lot of whitespace damage.  Please
-follow the normal practices, etc.  Also, the Signed-off-by: line
-typically includes the full name (e.g.  "Signed-off-by: Full Name
-<namef@marvell.com>").
+I start from tiwlan.ini file for tiwlan driver to produce an nvs file.
 
-I didn't look too closely at the code itself, so I'll leave it to
-others to comment on that...
+Could you please indicate values to use for the following parameters
+of struct wl1271_nvs_file: general_params.srf1[],
+general_params.srf2[], general_params.srf3[],
+dyn_radio_params_2[].params.degraded_low_to_normal_thr,
+dyn_radio_params_2[].params.normal_to_degraded_high_thr,
+dyn_radio_params_5[i].params.degraded_low_to_normal_thr,
+dyn_radio_params_5[i].params.normal_to_degraded_high_thr
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Thank you very much for your time,
+
+Best Regards,
+
+pz
+
+
+2010/7/5 Pazzo Da Legare <pazzodalegare@gmail.com>:
+> Hi Shahar,
+>
+> Did you have any news about nvs file? I wrote an email to driver's
+> mantaneir too,
+>
+> Thank you in advance,
+>
+> pz
+>
+> 2010/6/30 Levi, Shahar <shahar_levi@ti.com>:
+>> Hi pz,
+>> I am checking the way to access the FW and NVS file of wl1271.
+>> Let me find more details on that and get back to you.
+>> Regards,
+>> Shahar
+>> -----Original Message-----
+>> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Pazzo Da Legare
+>> Sent: Wednesday, June 30, 2010 2:27 PM
+>> To: linux-wireless@vger.kernel.org
+>> Subject: wl1271 firmware
+>>
+>> Hi all,
+>>
+>> I'm looking for wl1271 firmwares. I found wl1271-fw.bin but I cannot
+>> find wl1271-nvs.bin needed to use the wl1271's driver.
+>> Could you please indicate where I can get it?
+>>
+>> Thank in advance,
+>>
+>> pz
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
