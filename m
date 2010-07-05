@@ -1,44 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:14750 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752504Ab0GMRjI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jul 2010 13:39:08 -0400
-Received: from mail.atheros.com ([10.10.20.104])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 13 Jul 2010 10:39:08 -0700
-Date: Tue, 13 Jul 2010 10:39:06 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Bob Copeland <me@bobcopeland.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"br1@einfach.org" <br1@einfach.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"jirislaby@gmail.com" <jirislaby@gmail.com>,
-	"mickflemm@gmail.com" <mickflemm@gmail.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [PATCH 1/2] ath5k: move reset to mac80211 workqueue
-Message-ID: <20100713173906.GB11519@tux>
-References: <1279035161-10802-1-git-send-email-me@bobcopeland.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1279035161-10802-1-git-send-email-me@bobcopeland.com>
+Received: from external1.orbit-lab.org ([128.6.192.131]:47327 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751102Ab0GETDF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jul 2010 15:03:05 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id AC52B42042
+	for <linux-wireless@vger.kernel.org>; Mon,  5 Jul 2010 15:06:24 -0400 (EDT)
+Subject: Compat-wireless release for 2010-07-05 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100705190300.2A16242E2C@repository3.orbit-lab.org>
+Date: Mon,  5 Jul 2010 15:03:00 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 13, 2010 at 08:32:40AM -0700, Bob Copeland wrote:
-> We currently trigger a reset via a tasklet when certain error
-> conditions are detected so that the card will (eventually)
-> restart.  Unfortunately this makes locking complicated since
-> reset can also be called in process context (e.g. for channel
-> change).  Currently nothing protects against concurrent resets,
-> which can be the source of corruption bugs.
-> 
-> Reset takes too long to spinlock the whole thing, so this
-> patch moves deferred resets into the mac80211 workqueue to
-> enable use of sc->lock mutex.
-> 
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   c48fe0c..39a2e97  history    -> origin/history
+ + 4985a03...2880928 master     -> origin/master  (forced update)
+   9fbd7f9..123f94f  stable     -> origin/stable
+ * [new tag]         next-20100705 -> next-20100705
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
+/usr/bin/sha1sum: *.tar.bz2: No such file or directory
 
-Neat! Good idea.
+compat-wireless code metrics
 
-  Luis
+    494471 - Total upstream lines of code being pulled
