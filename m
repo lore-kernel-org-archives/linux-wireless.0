@@ -1,66 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:48824 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753913Ab0GFPen (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jul 2010 11:34:43 -0400
-From: "Madhusudhan" <madhu.cr@ti.com>
-To: "'Ohad Ben-Cohen'" <ohad@wizery.com>,
-	"'Nicolas Pitre'" <nico@fluxnic.net>
-Cc: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
-	"'Luciano Coelho'" <luciano.coelho@nokia.com>,
-	"'Andrew Morton'" <akpm@linux-foundation.org>,
-	"'San Mehat'" <san@google.com>,
-	"'Pandita, Vikram'" <vikram.pandita@ti.com>
-References: <1278376666-3509-1-git-send-email-ohad@wizery.com> <1278376666-3509-6-git-send-email-ohad@wizery.com> <alpine.LFD.2.00.1007052134460.6020@xanadu.home> <AANLkTim4E4LlFERmfYA1M0HLBOoRAsQuvdW6QBNu6pC0@mail.gmail.com> <AANLkTinE5LygUWJsJSEE2miZF1GK58LTr8zErkuu_7yM@mail.gmail.com>
-Subject: RE: [PATCH 05/15] omap: hsmmc: add virtual card detect support
-Date: Tue, 6 Jul 2010 10:34:09 -0500
-Message-ID: <822D79B5C25543B1A6F148B39E061459@am.dhcp.ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-In-reply-to: <AANLkTinE5LygUWJsJSEE2miZF1GK58LTr8zErkuu_7yM@mail.gmail.com>
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:61205 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753821Ab0GETwc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jul 2010 15:52:32 -0400
+Received: by pwi5 with SMTP id 5so1598384pwi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Jul 2010 12:52:32 -0700 (PDT)
+From: greearb@gmail.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [ath9k] ath9k:  Expose virtual wiphy indexes to debugfs.
+Date: Mon,  5 Jul 2010 12:52:25 -0700
+Message-Id: <1278359545-29013-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Ben Greear <greearb@candelatech.com>
 
+It is very difficult to map phyX devices to real/virtual
+entities because the phyX devices change on module
+reload.  This patch makes it slightly easier to
+associate virtual phy devices with phyX entities.
 
-> -----Original Message-----
-> From: Ohad Ben-Cohen [mailto:ohad@wizery.com]
-> Sent: Tuesday, July 06, 2010 6:48 AM
-> To: Nicolas Pitre
-> Cc: linux-wireless@vger.kernel.org; linux-mmc@vger.kernel.org; linux-
-> omap@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
-> linux@arm.linux.org.uk; Chikkature Rajashekar Madhusudhan; Luciano Coelho;
-> Andrew Morton; San Mehat; Pandita, Vikram
-> Subject: Re: [PATCH 05/15] omap: hsmmc: add virtual card detect support
-> 
-> On Tue, Jul 6, 2010 at 1:22 PM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
-> > Note: the wl1271 device does support standard card detection, but
-> > AFAIK there's a limitation to use that with the specific omap
-> > controller the device is hardwired to. I will try to get more info
-> > about that, but probably Madhu can comment on that better.
-> 
-> 
-> Some correction and additional info:
-> 
-> The wl1271 device has an issue which makes the standard card detect
-> mechanism irrelevant: it is always up, even if the power enable gpio
-> input of the device is down (the power enable input does not supply
-> the power to the chip, it's just logical digital high/low input upon
-> which the device reacts).  That's why we must use software control for
-> emulating card detect with that device.
-> 
-> In addition, as far as I could find out, the card detect mechanism on
-> the ZOOM is implemented by mechanical means, and thus is not relevant
-> for hardwired embedded SDIO devices (I'm not even sure card detect is
-> supported for the 3rd mmc controller).
+ # echo add=5 > /debug/ath9k/phy0/wiphy
+ # cat /debug/ath9k/phy0/wiphy
+primary: phy0 (ACTIVE chan=0 ht=0)
+secondary[5]: phy1 (ACTIVE chan=0 ht=0)
+addr: ef:be:ad:de:ef:be
+addrmask: ef:be:ad:de:ef:be
 
-The card detect is supported through T2 GPIO interrupts only for MMC1 and
-MMC2. Such a mechanism is not present for MMC3 to which the WLAN chip is
-hardwired.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 6e486a5... a58ff60... M	drivers/net/wireless/ath/ath9k/ath9k.h
+:100644 100644 54aae93... f63423c... M	drivers/net/wireless/ath/ath9k/debug.c
+:100644 100644 89423ca... 03fd64d... M	drivers/net/wireless/ath/ath9k/virtual.c
+ drivers/net/wireless/ath/ath9k/ath9k.h   |    2 +-
+ drivers/net/wireless/ath/ath9k/debug.c   |   12 ++++++++----
+ drivers/net/wireless/ath/ath9k/virtual.c |   26 ++++++++++++++++++++------
+ 3 files changed, 29 insertions(+), 11 deletions(-)
 
-Regards,
-Madhu
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 6e486a5..a58ff60 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -670,7 +670,7 @@ void ath9k_ps_wakeup(struct ath_softc *sc);
+ void ath9k_ps_restore(struct ath_softc *sc);
+ 
+ void ath9k_set_bssid_mask(struct ieee80211_hw *hw);
+-int ath9k_wiphy_add(struct ath_softc *sc);
++int ath9k_wiphy_add(struct ath_softc *sc, const char* id);
+ int ath9k_wiphy_del(struct ath_wiphy *aphy);
+ void ath9k_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb);
+ int ath9k_wiphy_pause(struct ath_wiphy *aphy);
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 54aae93..f63423c 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -503,8 +503,8 @@ static ssize_t read_file_wiphy(struct file *file, char __user *user_buf,
+ 		if (aphy == NULL)
+ 			continue;
+ 		len += snprintf(buf + len, sizeof(buf) - len,
+-				"secondary: %s (%s chan=%d ht=%d)\n",
+-				wiphy_name(aphy->hw->wiphy),
++				"secondary[%i]: %s (%s chan=%d ht=%d)\n",
++				i, wiphy_name(aphy->hw->wiphy),
+ 				ath_wiphy_state_str(aphy->state),
+ 				aphy->chan_idx, aphy->chan_is_ht);
+ 	}
+@@ -589,8 +589,12 @@ static ssize_t write_file_wiphy(struct file *file, const char __user *user_buf,
+ 	if (len > 0 && buf[len - 1] == '\n')
+ 		buf[len - 1] = '\0';
+ 
+-	if (strncmp(buf, "add", 3) == 0) {
+-		int res = ath9k_wiphy_add(sc);
++	if (strncmp(buf, "add=", 4) == 0) {
++		int res = ath9k_wiphy_add(sc, buf + 4);
++		if (res < 0)
++			return res;
++	} else if (strncmp(buf, "add", 3) == 0) {
++		int res = ath9k_wiphy_add(sc, NULL);
+ 		if (res < 0)
+ 			return res;
+ 	} else if (strncmp(buf, "del=", 4) == 0) {
+diff --git a/drivers/net/wireless/ath/ath9k/virtual.c b/drivers/net/wireless/ath/ath9k/virtual.c
+index 89423ca..03fd64d 100644
+--- a/drivers/net/wireless/ath/ath9k/virtual.c
++++ b/drivers/net/wireless/ath/ath9k/virtual.c
+@@ -99,9 +99,10 @@ void ath9k_set_bssid_mask(struct ieee80211_hw *hw)
+ 	ath_hw_setbssidmask(common);
+ }
+ 
+-int ath9k_wiphy_add(struct ath_softc *sc)
++int ath9k_wiphy_add(struct ath_softc *sc, const char* id)
+ {
+ 	int i, error;
++	int nid = 0;
+ 	struct ath_wiphy *aphy;
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ieee80211_hw *hw;
+@@ -112,16 +113,26 @@ int ath9k_wiphy_add(struct ath_softc *sc)
+ 		return -ENOMEM;
+ 
+ 	spin_lock_bh(&sc->wiphy_lock);
+-	for (i = 0; i < sc->num_sec_wiphy; i++) {
++	if (id && id[0]) {
++		nid = simple_strtoul(id, NULL, 0);
++		if (nid < 0 || nid > 10000) { /* 10,000 should be plenty! */
++			printk("ath9k: id out of range in wiphy_add:"
++                               " %i, ignoring.", nid);
++			nid = 0;
++		}
++	}
++	
++	for (i = nid; i < sc->num_sec_wiphy; i++) {
+ 		if (sc->sec_wiphy[i] == NULL)
+ 			break;
+ 	}
+ 
+-	if (i == sc->num_sec_wiphy) {
++	if (i >= sc->num_sec_wiphy) {
+ 		/* No empty slot available; increase array length */
+ 		struct ath_wiphy **n;
++		int q;
+ 		n = krealloc(sc->sec_wiphy,
+-			     (sc->num_sec_wiphy + 1) *
++			     (i + 1) *
+ 			     sizeof(struct ath_wiphy *),
+ 			     GFP_ATOMIC);
+ 		if (n == NULL) {
+@@ -129,9 +140,12 @@ int ath9k_wiphy_add(struct ath_softc *sc)
+ 			ieee80211_free_hw(hw);
+ 			return -ENOMEM;
+ 		}
+-		n[i] = NULL;
++		// Null out any new memory allocated.
++		for (q = sc->num_sec_wiphy; q <= i; q++) {
++			n[q] = NULL;
++		}
+ 		sc->sec_wiphy = n;
+-		sc->num_sec_wiphy++;
++		sc->num_sec_wiphy = i+1;
+ 	}
+ 
+ 	SET_IEEE80211_DEV(hw, sc->dev);
+-- 
+1.7.0.1
 
