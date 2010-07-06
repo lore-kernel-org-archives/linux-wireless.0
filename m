@@ -1,103 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:40389 "EHLO
+Received: from smtp.nokia.com ([192.100.122.233]:16668 "EHLO
 	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754368Ab0GHOuq (ORCPT
+	with ESMTP id S1751311Ab0GFLDH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jul 2010 10:50:46 -0400
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 08/13] wl1271: Disable dynamic PS based on BT co-ext sense events
-Date: Thu,  8 Jul 2010 17:50:03 +0300
-Message-Id: <1278600608-22411-9-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1278600608-22411-1-git-send-email-luciano.coelho@nokia.com>
-References: <1278600608-22411-1-git-send-email-luciano.coelho@nokia.com>
+	Tue, 6 Jul 2010 07:03:07 -0400
+Message-ID: <4C330D37.4090104@nokia.com>
+Date: Tue, 06 Jul 2010 14:02:15 +0300
+From: Roger Quadros <roger.quadros@nokia.com>
+MIME-Version: 1.0
+To: ext Ohad Ben-Cohen <ohad@wizery.com>
+CC: Nicolas Pitre <nico@fluxnic.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	San Mehat <san@google.com>,
+	"Pandita, Vikram" <vikram.pandita@ti.com>
+Subject: Re: [PATCH 05/15] omap: hsmmc: add virtual card detect support
+References: <1278376666-3509-1-git-send-email-ohad@wizery.com> 	<1278376666-3509-6-git-send-email-ohad@wizery.com> <alpine.LFD.2.00.1007052134460.6020@xanadu.home> <AANLkTim4E4LlFERmfYA1M0HLBOoRAsQuvdW6QBNu6pC0@mail.gmail.com>
+In-Reply-To: <AANLkTim4E4LlFERmfYA1M0HLBOoRAsQuvdW6QBNu6pC0@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On 07/06/2010 01:22 PM, ext Ohad Ben-Cohen wrote:
+> Hi Nicolas,
+>
+> On Tue, Jul 6, 2010 at 4:45 AM, Nicolas Pitre<nico@fluxnic.net>  wrote:
+>> On Tue, 6 Jul 2010, Ohad Ben-Cohen wrote:
+>>
+>>> From: Ohad Ben-Cohen<ohadb@ti.com>
+>>>
+>>> Add support for software emulation of card detect
+>>> events.
+>>>
+>>> This is required for specific controllers
+>>> that are hard wired with embedded SDIO devices
+>>> (such as TI's wl1271 WLAN device).
+>>
+>> Why?
+>>
+>> Many instances of hardwired SDIO based WLAN devices do exist already,
+>> and they don't need extra card detect events to be generated.  The core
+>> MMC code already triggers a probe for cards whenever a new host
+>> controller is registered.
+>
+> We prefer not to power up the chip as early as boot time; instead, we
+Why? if the card is hard wired with no card detect then it should be powered up. 
+The function driver should power it down later if required. no?
 
-This patch requests mac80211 to disable dynamic PSM based on sense events
-coming from the firmware. Effectively, whenever there is bluetooth traffic,
-the mac80211 is forced into full PSM mode.
+> would like to have it powered off until the wlan interface is brought
+> up, power it on when the interface is brought up,
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_boot.c  |    3 ++-
- drivers/net/wireless/wl12xx/wl1271_event.c |    9 +++++++++
- drivers/net/wireless/wl12xx/wl1271_main.c  |    8 +++++++-
- 3 files changed, 18 insertions(+), 2 deletions(-)
+If it was powered OFF then how did the wlan interface come into picture?
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.c b/drivers/net/wireless/wl12xx/wl1271_boot.c
-index f44ccaf..f36430b 100644
---- a/drivers/net/wireless/wl12xx/wl1271_boot.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
-@@ -415,7 +415,8 @@ static int wl1271_boot_run_firmware(struct wl1271 *wl)
- 		JOIN_EVENT_COMPLETE_ID |
- 		DISCONNECT_EVENT_COMPLETE_ID |
- 		RSSI_SNR_TRIGGER_0_EVENT_ID |
--		PSPOLL_DELIVERY_FAILURE_EVENT_ID;
-+		PSPOLL_DELIVERY_FAILURE_EVENT_ID |
-+		SOFT_GEMINI_SENSE_EVENT_ID;
- 
- 	ret = wl1271_event_unmask(wl);
- 	if (ret < 0) {
-diff --git a/drivers/net/wireless/wl12xx/wl1271_event.c b/drivers/net/wireless/wl12xx/wl1271_event.c
-index 15f6b86..525ba1a 100644
---- a/drivers/net/wireless/wl12xx/wl1271_event.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_event.c
-@@ -225,6 +225,15 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
- 			return ret;
- 	}
- 
-+	/* disable dynamic PS when requested by the firmware */
-+	if (vector & SOFT_GEMINI_SENSE_EVENT_ID &&
-+	    wl->bss_type == BSS_TYPE_STA_BSS) {
-+		if (mbox->soft_gemini_sense_info)
-+			ieee80211_disable_dyn_ps(wl->vif, true);
-+		else
-+			ieee80211_disable_dyn_ps(wl->vif, false);
-+	}
-+
- 	/*
- 	 * The BSS_LOSE_EVENT_ID is only needed while psm (and hence beacon
- 	 * filtering) is enabled. Without PSM, the stack will receive all
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 15c99dd..366e415 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -54,7 +54,7 @@ static struct conf_drv_settings default_conf = {
- 			[CONF_SG_HV3_MAX_OVERRIDE]                  = 0,
- 			[CONF_SG_BT_NFS_SAMPLE_INTERVAL]            = 400,
- 			[CONF_SG_BT_LOAD_RATIO]                     = 50,
--			[CONF_SG_AUTO_PS_MODE]                      = 0,
-+			[CONF_SG_AUTO_PS_MODE]                      = 1,
- 			[CONF_SG_AUTO_SCAN_PROBE_REQ]               = 170,
- 			[CONF_SG_ACTIVE_SCAN_DURATION_FACTOR_HV3]   = 50,
- 			[CONF_SG_ANTENNA_CONFIGURATION]             = 0,
-@@ -937,6 +937,9 @@ static void wl1271_op_remove_interface(struct ieee80211_hw *hw,
- 
- 	WARN_ON(wl->state != WL1271_STATE_ON);
- 
-+	/* enable dyn ps just in case (if left on due to fw crash etc) */
-+	ieee80211_disable_dyn_ps(wl->vif, false);
-+
- 	if (test_and_clear_bit(WL1271_FLAG_SCANNING, &wl->flags)) {
- 		mutex_unlock(&wl->mutex);
- 		ieee80211_scan_completed(wl->hw, true);
-@@ -1774,6 +1777,9 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 			clear_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags);
- 			wl->aid = 0;
- 
-+			/* re-enable dynamic ps - just in case */
-+			ieee80211_disable_dyn_ps(wl->vif, false);
-+
- 			/* revert back to minimum rates for the current band */
- 			wl1271_set_band_rate(wl);
- 			wl->basic_rate = wl1271_min_rate_get(wl);
--- 
-1.6.3.3
-
+> and power it off again as soon as the interface is brought down again
+> (to minimize power consumption when the wlan is not in use).
+I agree, we some how need to power down the card when not in use in the right way.
