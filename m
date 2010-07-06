@@ -1,57 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:63386 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755563Ab0GVL1p (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:45806 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751038Ab0GFFPh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 07:27:45 -0400
-Date: Thu, 22 Jul 2010 13:26:50 +0200
-From: Dan Carpenter <error27@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Benoit PAPILLAULT <benoit.papillault@free.fr>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch -next] wireless: remove unneeded variable from
-	regulatory_hint_11d()
-Message-ID: <20100722112650.GE17585@bicker>
+	Tue, 6 Jul 2010 01:15:37 -0400
+Message-ID: <4C32BBF4.9090907@candelatech.com>
+Date: Mon, 05 Jul 2010 22:15:32 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Vasanthakumar Thiagarajan <vasanth@Atheros.com>
+CC: "greearb@gmail.com" <greearb@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k] ath9k:  Expose virtual wiphy indexes to debugfs.
+References: <1278359545-29013-1-git-send-email-greearb@candelatech.com> <20100706045945.GF5053@vasanth-laptop>
+In-Reply-To: <20100706045945.GF5053@vasanth-laptop>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The "rd" variable isn't needed any more since 4f366c5dabcb 
-"wireless: only use alpha2 regulatory information from country IE"
+On 07/05/2010 09:59 PM, Vasanthakumar Thiagarajan wrote:
+> On Tue, Jul 06, 2010 at 01:22:25AM +0530, greearb@gmail.com wrote:
+>> From: Ben Greear<greearb@candelatech.com>
+>>
+>> It is very difficult to map phyX devices to real/virtual
+>> entities because the phyX devices change on module
+>> reload.  This patch makes it slightly easier to
+>> associate virtual phy devices with phyX entities.
+>>
+>
+> It does not make much sense to give an index while creating a new
+> virtual wiphy interface. This is unncessary, only wiphy name
+> matters.
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
+Will the underlying code allow you to specify a phy name though?  It
+seems to me that once a phyX is used, you cannot have a new phy
+with that name again, even if the old one has been unloaded:
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 48baf28..ec4e76f 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1492,7 +1492,6 @@ void regulatory_hint_11d(struct wiphy *wiphy,
- 			 u8 *country_ie,
- 			 u8 country_ie_len)
- {
--	struct ieee80211_regdomain *rd = NULL;
- 	char alpha2[2];
- 	enum environment_cap env = ENVIRON_ANY;
- 	struct regulatory_request *request;
-@@ -1529,7 +1528,7 @@ void regulatory_hint_11d(struct wiphy *wiphy,
- 
- 	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
- 	if (!request)
--		goto free_rd_out;
-+		goto out;
- 
- 	request->wiphy_idx = get_wiphy_idx(wiphy);
- 	request->alpha2[0] = alpha2[0];
-@@ -1543,8 +1542,6 @@ void regulatory_hint_11d(struct wiphy *wiphy,
- 
- 	return;
- 
--free_rd_out:
--	kfree(rd);
- out:
- 	mutex_unlock(&reg_mutex);
- }
+modprobe ath9k
+rmmod ath9k
+modprobe ath9k, and the now it's using phy1 instead of phy0,
+and you cannot even rename the phy1 to phy0 with 'iw'.
+
+It would be great if phy names were reusable like network
+device names, but I'm guessing that must be difficult or
+it would already be like that.
+
+For virtual PHYs at least, the parent phy and index is a unique
+identifier, so it sort of helps work around the phy naming
+issues.
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
