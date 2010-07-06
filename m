@@ -1,88 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:52671 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759123Ab0GWNSu (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:33149 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754081Ab0GFMF2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jul 2010 09:18:50 -0400
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-To: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Andy Shevchenko <andy.shevchenko@gmail.com>,
-	Corey Thomas <coreythomas@charter.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 4/5] wireless: use newly introduced hex_to_bin()
-Date: Fri, 23 Jul 2010 16:18:09 +0300
-Message-Id: <9d7821ff7791c30772667681c0eab829e6e93e59.1279890832.git.andy.shevchenko@gmail.com>
-In-Reply-To: <cover.1279890832.git.andy.shevchenko@gmail.com>
-References: <cover.1279890832.git.andy.shevchenko@gmail.com>
-In-Reply-To: <cover.1279890832.git.andy.shevchenko@gmail.com>
-References: <cover.1279890832.git.andy.shevchenko@gmail.com>
+	Tue, 6 Jul 2010 08:05:28 -0400
+Message-ID: <4C331C06.2040708@candelatech.com>
+Date: Tue, 06 Jul 2010 05:05:26 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Rajkumar Manoharan <rmanoharan@atheros.com>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k doesn't clean up virtual wifis on rmmod, and crashes.
+References: <4C2ED806.9000105@candelatech.com> <20100703070259.GA15479@vasanth-laptop> <4C2F6681.7070202@candelatech.com> <20100704093535.GE5053@vasanth-laptop> <4C30AFD0.80100@candelatech.com> <4C322B26.7080701@candelatech.com> <20100706083621.GA11134@vmraj-laptop>
+In-Reply-To: <20100706083621.GA11134@vmraj-laptop>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Corey Thomas <coreythomas@charter.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
----
- drivers/net/wireless/ray_cs.c |   23 ++---------------------
- 1 files changed, 2 insertions(+), 21 deletions(-)
+On 07/06/2010 01:36 AM, Rajkumar Manoharan wrote:
+> On Tue, Jul 06, 2010 at 12:27:42AM +0530, Ben Greear wrote:
+>> I ran the same test on wireless-testing, and it still crashes.
+>>
+>> It appears that the patch you sent is already in wireless-testing,
+>> so I did not apply it.
 
-diff --git a/drivers/net/wireless/ray_cs.c b/drivers/net/wireless/ray_cs.c
-index abff893..9c38fc3 100644
---- a/drivers/net/wireless/ray_cs.c
-+++ b/drivers/net/wireless/ray_cs.c
-@@ -97,7 +97,6 @@ static iw_stats *ray_get_wireless_stats(struct net_device *dev);
- static const struct iw_handler_def ray_handler_def;
- 
- /***** Prototypes for raylink functions **************************************/
--static int asc_to_int(char a);
- static void authenticate(ray_dev_t *local);
- static int build_auth_frame(ray_dev_t *local, UCHAR *dest, int auth_type);
- static void authenticate_timeout(u_long);
-@@ -1717,24 +1716,6 @@ static void authenticate_timeout(u_long data)
- }
- 
- /*===========================================================================*/
--static int asc_to_int(char a)
--{
--	if (a < '0')
--		return -1;
--	if (a <= '9')
--		return (a - '0');
--	if (a < 'A')
--		return -1;
--	if (a <= 'F')
--		return (10 + a - 'A');
--	if (a < 'a')
--		return -1;
--	if (a <= 'f')
--		return (10 + a - 'a');
--	return -1;
--}
--
--/*===========================================================================*/
- static int parse_addr(char *in_str, UCHAR *out)
- {
- 	int len;
-@@ -1754,14 +1735,14 @@ static int parse_addr(char *in_str, UCHAR *out)
- 	i = 5;
- 
- 	while (j > 0) {
--		if ((k = asc_to_int(in_str[j--])) != -1)
-+		if ((k = hex_to_bin(in_str[j--])) != -1)
- 			out[i] = k;
- 		else
- 			return 0;
- 
- 		if (j == 0)
- 			break;
--		if ((k = asc_to_int(in_str[j--])) != -1)
-+		if ((k = hex_to_bin(in_str[j--])) != -1)
- 			out[i] += k << 4;
- 		else
- 			return 0;
+> Can you please try this patch?
+
+That patch appears to fix the problem.  I was able to rmmod
+ath9k after adding a virtual phy and no crashes.  It used to
+immediately crash every time.
+
+I'll do some more testing later today if all goes according to plan.
+
+Thanks!
+Ben
+
 -- 
-1.7.1.1
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
