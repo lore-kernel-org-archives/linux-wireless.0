@@ -1,48 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eyas.biff.org.uk ([80.68.92.121]:44358 "EHLO eyas.biff.org.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753268Ab0GXS7W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jul 2010 14:59:22 -0400
-Message-ID: <4C4B3801.6010509@thekelleys.org.uk>
-Date: Sat, 24 Jul 2010 19:59:13 +0100
-From: Simon Kelley <simon@thekelleys.org.uk>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] MAINTAINERS: orphan the atmel wireless driver
-References: <1279823468-21366-1-git-send-email-linville@tuxdriver.com> <1279837721.4829.19.camel@dcbw.foobar.com> <4C495BD7.2080004@thekelleys.org.uk> <20100723132847.GC6678@tuxdriver.com>
-In-Reply-To: <20100723132847.GC6678@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from smtp.nokia.com ([192.100.105.134]:28624 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753907Ab0GFHF5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jul 2010 03:05:57 -0400
+Subject: Re: [PATCH 02/15] wireless: wl1271: remove SDIO IDs from driver
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Ohad Ben-Cohen <ohad@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	San Mehat <san@google.com>, Ohad Ben-Cohen <ohadb@ti.com>
+In-Reply-To: <1278376666-3509-3-git-send-email-ohad@wizery.com>
+References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
+	 <1278376666-3509-3-git-send-email-ohad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 06 Jul 2010 10:04:54 +0300
+Message-ID: <1278399894.18287.10.camel@chilepepper>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> On Fri, Jul 23, 2010 at 10:07:35AM +0100, Simon Kelley wrote:
->> Dan Williams wrote:
->>> On Thu, 2010-07-22 at 14:31 -0400, John W. Linville wrote:
->>>> Signed-off-by: John W. Linville <linville@tuxdriver.com>
->>> Aww,  how sad :(.  I'll take it since I still have some of this
->>> hardware.  Not that I'll do much with it, but if the patches are simple
->>> I'm happy to test+ack them.
->>>
->> Thanks Dan, whilst I still have the hardware, I no longer have a
->> convenient PCMCIA slot into which to plug it.
->>
->> This hardware is well orphaned: it never made is past 802.11b, and there
->> have been no new models for a long time. Nevertheless, if the existing
->> code can be kept functional, that would be good.
+On Tue, 2010-07-06 at 02:37 +0200, ext Ohad Ben-Cohen wrote:
+> From: Ohad Ben-Cohen <ohadb@ti.com>
 > 
-> Is the existing code functional?  The device I have seems to only
-> half work -- I suppose I need to figure that out...
+> Remove SDIO IDs from the driver code since now it is
+> included in linux/mmc/sdio_ids.h.
 > 
-> John
+> Signed-off-by: Ohad Ben-Cohen <ohadb@ti.com>
+> ---
 
-I'm not aware of any problems. I'll try and test a new kernel when I can 
-find a PCMCIA-full laptop. If the problem turns out to be your hardware, 
-John, I can send you another card.
+Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
 
-
+-- 
 Cheers,
-
-Simon.
+Luca.
 
