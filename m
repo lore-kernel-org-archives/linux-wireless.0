@@ -1,38 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:60299 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751128Ab0GMFhP (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:37901 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757095Ab0GFAkj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jul 2010 01:37:15 -0400
-Received: by iwn7 with SMTP id 7so5474402iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jul 2010 22:37:15 -0700 (PDT)
-Message-ID: <4C3BFB87.5030907@lwfinger.net>
-Date: Tue, 13 Jul 2010 00:37:11 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Simon Richter <sjr@debian.org>
-CC: Ben Hutchings <ben@decadent.org.uk>, Michael Buesch <mb@bu3sch.de>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	linux-wireless@vger.kernel.org, 588196@bugs.debian.org
-Subject: Re: Bug#588196: b43: does not join multicast groups
-References: <20100706021937.11147.78230.reportbug@debian.hogyros.de> <1278887148.6139.91.camel@localhost> <4C3A4C6E.6060801@lwfinger.net> <20100713051430.GA2625@honey.hogyros.de>
-In-Reply-To: <20100713051430.GA2625@honey.hogyros.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 5 Jul 2010 20:40:39 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>
+Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
+	Ohad Ben-Cohen <ohadb@ti.com>
+Subject: [PATCH 10/15] wireless: wl1271: support return value for the set power func
+Date: Tue,  6 Jul 2010 03:37:41 +0300
+Message-Id: <1278376666-3509-11-git-send-email-ohad@wizery.com>
+In-Reply-To: <1278376666-3509-1-git-send-email-ohad@wizery.com>
+References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/13/2010 12:14 AM, Simon Richter wrote:
-> Hi,
->
-> On Sun, Jul 11, 2010 at 05:57:50PM -0500, Larry Finger wrote:
->
->> When you get the FATAL DMA error, the controller is reset; however,
->> that is just a simple work around that does not work on all systems.
->> To get your system to work, you need to load b43 with the following
->> options: pio=1 qos=0 nohwcrypy=1
->
-> That appears to work, at least I have v6 addresses now.
+From: Ohad Ben-Cohen <ohadb@ti.com>
 
-Unlike before, you now have communication.
+Make it possible for the set power method to indicate a
+success/failure return value. This is needed to support
+more complex power on/off operations such as bringing up
+(and down) sdio functions.
 
-Larry
+Signed-off-by: Ohad Ben-Cohen <ohadb@ti.com>
+---
+ drivers/net/wireless/wl12xx/wl1271.h      |    2 +-
+ drivers/net/wireless/wl12xx/wl1271_io.h   |    8 +++++---
+ drivers/net/wireless/wl12xx/wl1271_main.c |    4 +++-
+ drivers/net/wireless/wl12xx/wl1271_sdio.c |    4 +++-
+ drivers/net/wireless/wl12xx/wl1271_spi.c  |    4 +++-
+ 5 files changed, 15 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+index fc4d122..5250361 100644
+--- a/drivers/net/wireless/wl12xx/wl1271.h
++++ b/drivers/net/wireless/wl12xx/wl1271.h
+@@ -340,7 +340,7 @@ struct wl1271_if_operations {
+ 		     bool fixed);
+ 	void (*reset)(struct wl1271 *wl);
+ 	void (*init)(struct wl1271 *wl);
+-	void (*power)(struct wl1271 *wl, bool enable);
++	int (*power)(struct wl1271 *wl, bool enable);
+ 	struct device* (*dev)(struct wl1271 *wl);
+ 	void (*enable_irq)(struct wl1271 *wl);
+ 	void (*disable_irq)(struct wl1271 *wl);
+diff --git a/drivers/net/wireless/wl12xx/wl1271_io.h b/drivers/net/wireless/wl12xx/wl1271_io.h
+index bc806c7..4a5b92c 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_io.h
++++ b/drivers/net/wireless/wl12xx/wl1271_io.h
+@@ -144,10 +144,12 @@ static inline void wl1271_power_off(struct wl1271 *wl)
+ 	clear_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
+ }
+ 
+-static inline void wl1271_power_on(struct wl1271 *wl)
++static inline int wl1271_power_on(struct wl1271 *wl)
+ {
+-	wl->if_ops->power(wl, true);
+-	set_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
++	int ret = wl->if_ops->power(wl, true);
++	if (ret == 0)
++		set_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
++	return ret;
+ }
+ 
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index b7d9137..6bd748e 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -620,7 +620,9 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
+ 	int ret = 0;
+ 
+ 	msleep(WL1271_PRE_POWER_ON_SLEEP);
+-	wl1271_power_on(wl);
++	ret = wl1271_power_on(wl);
++	if (ret < 0)
++		goto out;
+ 	msleep(WL1271_POWER_ON_SLEEP);
+ 	wl1271_io_reset(wl);
+ 	wl1271_io_init(wl);
+diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
+index 9903ae9..571c6b9 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_sdio.c
++++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
+@@ -144,7 +144,7 @@ static void wl1271_sdio_raw_write(struct wl1271 *wl, int addr, void *buf,
+ 
+ }
+ 
+-static void wl1271_sdio_set_power(struct wl1271 *wl, bool enable)
++static int wl1271_sdio_set_power(struct wl1271 *wl, bool enable)
+ {
+ 	struct sdio_func *func = wl_to_func(wl);
+ 
+@@ -159,6 +159,8 @@ static void wl1271_sdio_set_power(struct wl1271 *wl, bool enable)
+ 		sdio_disable_func(func);
+ 		sdio_release_host(func);
+ 	}
++
++	return 0;
+ }
+ 
+ static struct wl1271_if_operations sdio_ops = {
+diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
+index e866049..85a167f 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_spi.c
++++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
+@@ -313,10 +313,12 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static void wl1271_spi_set_power(struct wl1271 *wl, bool enable)
++static int wl1271_spi_set_power(struct wl1271 *wl, bool enable)
+ {
+ 	if (wl->set_power)
+ 		wl->set_power(enable);
++
++	return 0;
+ }
+ 
+ static struct wl1271_if_operations spi_ops = {
+-- 
+1.7.0.4
+
