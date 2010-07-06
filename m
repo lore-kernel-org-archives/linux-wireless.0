@@ -1,94 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42694 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756305Ab0G3LV5 (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:23290 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750761Ab0GFMjl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jul 2010 07:21:57 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.72)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Oenf1-0000b7-9N
-	for linux-wireless@vger.kernel.org; Fri, 30 Jul 2010 13:21:55 +0200
-Subject: [PATCH] mac80211: don't check rates on PLCP error frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 30 Jul 2010 13:23:12 +0200
-Message-ID: <1280488992.3710.8.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 6 Jul 2010 08:39:41 -0400
+Message-ID: <4C3323EA.902@nokia.com>
+Date: Tue, 06 Jul 2010 15:39:06 +0300
+From: Roger Quadros <roger.quadros@nokia.com>
+MIME-Version: 1.0
+To: ext Ohad Ben-Cohen <ohad@wizery.com>
+CC: Nicolas Pitre <nico@fluxnic.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	San Mehat <san@google.com>,
+	"Pandita, Vikram" <vikram.pandita@ti.com>
+Subject: Re: [PATCH 05/15] omap: hsmmc: add virtual card detect support
+References: <1278376666-3509-1-git-send-email-ohad@wizery.com> 	<1278376666-3509-6-git-send-email-ohad@wizery.com> <alpine.LFD.2.00.1007052134460.6020@xanadu.home> 	<AANLkTim4E4LlFERmfYA1M0HLBOoRAsQuvdW6QBNu6pC0@mail.gmail.com> <AANLkTinE5LygUWJsJSEE2miZF1GK58LTr8zErkuu_7yM@mail.gmail.com>
+In-Reply-To: <AANLkTinE5LygUWJsJSEE2miZF1GK58LTr8zErkuu_7yM@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi,
 
-Frames that failed PLCP error checks are most likely
-microwave transmissions (well, maybe not ...) and
-don't have a proper rate detected, so ignore it.
+On 07/06/2010 02:48 PM, ext Ohad Ben-Cohen wrote:
+> On Tue, Jul 6, 2010 at 1:22 PM, Ohad Ben-Cohen<ohad@wizery.com>  wrote:
+>> Note: the wl1271 device does support standard card detection, but
+>> AFAIK there's a limitation to use that with the specific omap
+>> controller the device is hardwired to. I will try to get more info
+>> about that, but probably Madhu can comment on that better.
+>
+>
+> Some correction and additional info:
+>
+> The wl1271 device has an issue which makes the standard card detect
+> mechanism irrelevant: it is always up, even if the power enable gpio
+> input of the device is down (the power enable input does not supply
+> the power to the chip, it's just logical digital high/low input upon
+> which the device reacts).  That's why we must use software control for
+> emulating card detect with that device.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rx.c |   49 +++++++++++++++++++++++++++++--------------------
- 1 file changed, 29 insertions(+), 20 deletions(-)
+Just to clarify, is the wl1271 device always powered on the board?
 
---- wireless-testing.orig/net/mac80211/rx.c	2010-07-30 08:42:22.000000000 +0200
-+++ wireless-testing/net/mac80211/rx.c	2010-07-30 08:43:38.000000000 +0200
-@@ -2615,28 +2615,37 @@ void ieee80211_rx(struct ieee80211_hw *h
- 	if (WARN_ON(!local->started))
- 		goto drop;
- 
--	if (status->flag & RX_FLAG_HT) {
-+	if (likely(!(status->flag & RX_FLAG_FAILED_PLCP_CRC))) {
- 		/*
--		 * rate_idx is MCS index, which can be [0-76] as documented on:
--		 *
--		 * http://wireless.kernel.org/en/developers/Documentation/ieee80211/802.11n
--		 *
--		 * Anything else would be some sort of driver or hardware error.
--		 * The driver should catch hardware errors.
-+		 * Validate the rate, unless a PLCP error means that
-+		 * we probably can't have a valid rate here anyway.
- 		 */
--		if (WARN((status->rate_idx < 0 ||
--			 status->rate_idx > 76),
--			 "Rate marked as an HT rate but passed "
--			 "status->rate_idx is not "
--			 "an MCS index [0-76]: %d (0x%02x)\n",
--			 status->rate_idx,
--			 status->rate_idx))
--			goto drop;
--	} else {
--		if (WARN_ON(status->rate_idx < 0 ||
--			    status->rate_idx >= sband->n_bitrates))
--			goto drop;
--		rate = &sband->bitrates[status->rate_idx];
-+
-+		if (status->flag & RX_FLAG_HT) {
-+			/*
-+			 * rate_idx is MCS index, which can be [0-76]
-+			 * as documented on:
-+			 *
-+			 * http://wireless.kernel.org/en/developers/Documentation/ieee80211/802.11n
-+			 *
-+			 * Anything else would be some sort of driver or
-+			 * hardware error. The driver should catch hardware
-+			 * errors.
-+			 */
-+			if (WARN((status->rate_idx < 0 ||
-+				 status->rate_idx > 76),
-+				 "Rate marked as an HT rate but passed "
-+				 "status->rate_idx is not "
-+				 "an MCS index [0-76]: %d (0x%02x)\n",
-+				 status->rate_idx,
-+				 status->rate_idx))
-+				goto drop;
-+		} else {
-+			if (WARN_ON(status->rate_idx < 0 ||
-+				    status->rate_idx >= sband->n_bitrates))
-+				goto drop;
-+			rate = &sband->bitrates[status->rate_idx];
-+		}
- 	}
- 
- 	/*
+And this GPIO power enable (OMAP_ZOOM_WLAN_PMENA_GPIO) is used to gate this 
+supply internally?
 
+and what do these do ?
 
+set_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
+
+clear_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
+
+regards,
+-roger
