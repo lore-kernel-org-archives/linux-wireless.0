@@ -1,57 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58851 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758512Ab0GTQaM (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:35849 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754862Ab0GFKWs convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jul 2010 12:30:12 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] wireless: correct sparse warning in wext-compat.c
-Date: Tue, 20 Jul 2010 12:26:55 -0400
-Message-Id: <1279643215-13498-1-git-send-email-linville@tuxdriver.com>
+	Tue, 6 Jul 2010 06:22:48 -0400
+MIME-Version: 1.0
+In-Reply-To: <alpine.LFD.2.00.1007052134460.6020@xanadu.home>
+References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
+	<1278376666-3509-6-git-send-email-ohad@wizery.com> <alpine.LFD.2.00.1007052134460.6020@xanadu.home>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Tue, 6 Jul 2010 13:22:26 +0300
+Message-ID: <AANLkTim4E4LlFERmfYA1M0HLBOoRAsQuvdW6QBNu6pC0@mail.gmail.com>
+Subject: Re: [PATCH 05/15] omap: hsmmc: add virtual card detect support
+To: Nicolas Pitre <nico@fluxnic.net>
+Cc: linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux@arm.linux.org.uk,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	San Mehat <san@google.com>,
+	"Pandita, Vikram" <vikram.pandita@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  CHECK   net/wireless/wext-compat.c
-net/wireless/wext-compat.c:1434:5: warning: symbol 'cfg80211_wext_siwpmksa' was not declared. Should it be static?
+Hi Nicolas,
 
-Add declaration in cfg80211.h.  Also add an EXPORT_SYMBOL_GPL, since all
-the peer functions have it.
+On Tue, Jul 6, 2010 at 4:45 AM, Nicolas Pitre <nico@fluxnic.net> wrote:
+> On Tue, 6 Jul 2010, Ohad Ben-Cohen wrote:
+>
+>> From: Ohad Ben-Cohen <ohadb@ti.com>
+>>
+>> Add support for software emulation of card detect
+>> events.
+>>
+>> This is required for specific controllers
+>> that are hard wired with embedded SDIO devices
+>> (such as TI's wl1271 WLAN device).
+>
+> Why?
+>
+> Many instances of hardwired SDIO based WLAN devices do exist already,
+> and they don't need extra card detect events to be generated.  The core
+> MMC code already triggers a probe for cards whenever a new host
+> controller is registered.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- include/net/cfg80211.h     |    4 ++++
- net/wireless/wext-compat.c |    1 +
- 2 files changed, 5 insertions(+), 0 deletions(-)
+We prefer not to power up the chip as early as boot time; instead, we
+would like to have it powered off until the wlan interface is brought
+up, power it on when the interface is brought up,
+and power it off again as soon as the interface is brought down again
+(to minimize power consumption when the wlan is not in use).
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 9b8b3f4..f68ae54 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1963,6 +1963,10 @@ int cfg80211_wext_giwap(struct net_device *dev,
- 			struct iw_request_info *info,
- 			struct sockaddr *ap_addr, char *extra);
- 
-+int cfg80211_wext_siwpmksa(struct net_device *dev,
-+			   struct iw_request_info *info,
-+			   struct iw_point *data, char *extra);
-+
- /*
-  * callbacks for asynchronous cfg80211 methods, notification
-  * functions and BSS handling helpers
-diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-index 1ff1e9f..bb5e0a5 100644
---- a/net/wireless/wext-compat.c
-+++ b/net/wireless/wext-compat.c
-@@ -1471,6 +1471,7 @@ int cfg80211_wext_siwpmksa(struct net_device *dev,
- 		return -EOPNOTSUPP;
- 	}
- }
-+EXPORT_SYMBOL_GPL(cfg80211_wext_siwpmksa);
- 
- static const iw_handler cfg80211_handlers[] = {
- 	[IW_IOCTL_IDX(SIOCGIWNAME)]	= (iw_handler) cfg80211_wext_giwname,
--- 
-1.7.1.1
+For that we can't rely on the probing done when the controller is
+registered, we want to have a mechanism to allow dynamic detection and
+removal of the card.
 
+Note: the wl1271 device does support standard card detection, but
+AFAIK there's a limitation to use that with the specific omap
+controller the device is hardwired to. I will try to get more info
+about that, but probably Madhu can comment on that better.
+
+>> Board-specific configuration is required to
+>> enable this software card detect control.
+>
+> Could you elaborate please?
+
+Please check out the last patch - that patch is doing that configuration.
+In essence, this virtual card detect mechanism is enabled only for
+specific controllers which we know there's an embedded sdio device
+hardwired to. This knowledge is board-specific, and that's why we
+enable this mechanism in the board files, per a specific mmc
+controller.
+
+Thanks,
+Ohad.
+
+
+>
+>
+> Nicolas
+>
