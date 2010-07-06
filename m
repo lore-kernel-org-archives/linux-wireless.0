@@ -1,39 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:34915
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750965Ab0GBAfi (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:37901 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756960Ab0GFAkU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Jul 2010 20:35:38 -0400
-Date: Thu, 01 Jul 2010 17:35:50 -0700 (PDT)
-Message-Id: <20100701.173550.172604489.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2010-07-01
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20100701181526.GA2356@tuxdriver.com>
-References: <20100701181526.GA2356@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 5 Jul 2010 20:40:20 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>
+Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
+	Ohad Ben-Cohen <ohadb@ti.com>
+Subject: [PATCH 07/15] omap zoom3: wlan board muxing
+Date: Tue,  6 Jul 2010 03:37:38 +0300
+Message-Id: <1278376666-3509-8-git-send-email-ohad@wizery.com>
+In-Reply-To: <1278376666-3509-1-git-send-email-ohad@wizery.com>
+References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 1 Jul 2010 14:15:27 -0400
+From: Ohad Ben-Cohen <ohadb@ti.com>
 
-> Two weeks since the last request, plenty of new stuff intended for
-> 2.6.36...
-> 
-> Included are the usual bunch of driver updates, including a big
-> dump from the rt2x00 team.  This also includes cfg80211 support
-> for libertas, a flurry of (mostly trivial) stuff from me, and a
-> wireless-2.6 pull to resolve some patch dependencies.
-> 
-> Please let me know if there are problems!
+Add board muxing to support the wlan wl1271 chip that is
+hardwired to mmc2 (third mmc controller) on the ZOOM3.
 
-This failed to pull cleanly, I got a conflict in
-drivers/net/wireless/libertas/host.h  It was the
-usual "__packed" vs. "__attribute__((packed))" thing.
+Signed-off-by: Ohad Ben-Cohen <ohadb@ti.com>
+---
+ arch/arm/mach-omap2/board-zoom3.c |   15 +++++++++++++++
+ 1 files changed, 15 insertions(+), 0 deletions(-)
 
-I resolved it but I wonder if this happened because you
-did the wireless-2.6 --> wireless-next-2.6 merge here.
+diff --git a/arch/arm/mach-omap2/board-zoom3.c b/arch/arm/mach-omap2/board-zoom3.c
+index 3314704..0b62663 100644
+--- a/arch/arm/mach-omap2/board-zoom3.c
++++ b/arch/arm/mach-omap2/board-zoom3.c
+@@ -46,6 +46,21 @@ static void __init omap_zoom_init_irq(void)
+ 
+ #ifdef CONFIG_OMAP_MUX
+ static struct omap_board_mux board_mux[] __initdata = {
++#ifdef CONFIG_OMAP_ZOOM_WLAN
++	/* WLAN IRQ - GPIO 162 */
++	OMAP3_MUX(MCBSP1_CLKX, OMAP_MUX_MODE4 | OMAP_PIN_INPUT_PULLUP),
++	/* WLAN POWER ENABLE - GPIO 101 */
++	OMAP3_MUX(CAM_D2, OMAP_MUX_MODE4 | OMAP_PIN_OUTPUT),
++	/* WLAN SDIO: MMC3 CMD */
++	OMAP3_MUX(MCSPI1_CS1, OMAP_MUX_MODE3 | OMAP_PIN_INPUT_PULLUP),
++	/* WLAN SDIO: MMC3 CLK */
++	OMAP3_MUX(ETK_CLK, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
++	/* WLAN SDIO: MMC3 DAT[0-3] */
++	OMAP3_MUX(ETK_D3, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
++	OMAP3_MUX(ETK_D4, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
++	OMAP3_MUX(ETK_D5, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
++	OMAP3_MUX(ETK_D6, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
++#endif
+ 	{ .reg_offset = OMAP_MUX_TERMINATOR },
+ };
+ #else
+-- 
+1.7.0.4
+
