@@ -1,56 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:56202 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756292Ab0GMVzK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jul 2010 17:55:10 -0400
-Received: by pxi14 with SMTP id 14so2463031pxi.19
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jul 2010 14:55:09 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:17093 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751094Ab0GFGSP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jul 2010 02:18:15 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 05 Jul 2010 23:18:15 -0700
+Date: Tue, 6 Jul 2010 11:48:05 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"greearb@gmail.com" <greearb@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k] ath9k:  Expose virtual wiphy indexes to debugfs.
+Message-ID: <20100706061805.GG5053@vasanth-laptop>
+References: <1278359545-29013-1-git-send-email-greearb@candelatech.com> <20100706045945.GF5053@vasanth-laptop> <4C32BBF4.9090907@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <4C3B6AAE.4070204@redfish-solutions.com>
-References: <1278879791-12646-1-git-send-email-hauke@hauke-m.de>
-	<AANLkTimLweydYTbS-O6Q2sX-W0H5z7cWOLUqQphSTO1s@mail.gmail.com>
-	<4C3B6AAE.4070204@redfish-solutions.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 13 Jul 2010 14:54:49 -0700
-Message-ID: <AANLkTilfUKMido8N4vRF4Em7ewtoUAlkrsp1uaKTx6H9@mail.gmail.com>
-Subject: Re: [PATCH] compat-wireless: fix build of ath5k for CONFIG_PM_SLEEP=n
-To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org,
-	mcgrof@infradead.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4C32BBF4.9090907@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 12, 2010 at 12:19 PM, Philip A. Prindeville
-<philipp_subx@redfish-solutions.com> wrote:
-> On 07/12/2010 09:30 AM, Luis R. Rodriguez wrote:
->> On Sun, Jul 11, 2010 at 1:23 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->>> suspend and resume are activated in ath5k if CONFIG_PM_SLEEP is set and
->>> not if just CONFIG_PM is set.
->>>
->>> This should fix the problems reported by Philip Prindeville.
->>>
->>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
->>
->> Thanks! Applied and pushed out, at noon we'll have a new tarball with this.
->>
->>   Luis
->
-> And...
->
->
->  CC [M]  /home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth/l2cap.o
-> /home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth/l2cap.c: In function 'l2cap_data_channel':
-> /home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth/l2cap.c:4352: error: void value not ignored as it ought to be
-> make[4]: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth/l2cap.o] Error 1
-> make[3]: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth] Error 2
-> make[2]: *** [_module_/home/philipp/kernel/build_i586/compat-wireless-2010-07-12] Error 2
-> make[2]: Leaving directory `/home/philipp/kernel/build_i586/linux-2.6.27.48-astlinux'
-> make[1]: *** [modules] Error 2
-> make[1]: Leaving directory `/home/philipp/kernel/build_i586/compat-wireless-2010-07-12'
-> make: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/wireless/lib80211.ko] Error 2
+On Tue, Jul 06, 2010 at 10:45:32AM +0530, Ben Greear wrote:
+> On 07/05/2010 09:59 PM, Vasanthakumar Thiagarajan wrote:
+> > On Tue, Jul 06, 2010 at 01:22:25AM +0530, greearb@gmail.com wrote:
+> >> From: Ben Greear<greearb@candelatech.com>
+> >>
+> >> It is very difficult to map phyX devices to real/virtual
+> >> entities because the phyX devices change on module
+> >> reload.  This patch makes it slightly easier to
+> >> associate virtual phy devices with phyX entities.
+> >>
+> >
+> > It does not make much sense to give an index while creating a new
+> > virtual wiphy interface. This is unncessary, only wiphy name
+> > matters.
+> 
+> Will the underlying code allow you to specify a phy name though?  It
+> seems to me that once a phyX is used, you cannot have a new phy
+> with that name again, even if the old one has been unloaded
 
-Thanks for reporting this, I am working on it now.
+Driver has nothing to do with assigning phy names. This is done in
+cfg80211.
 
-  Luis
+
+Vasanth
