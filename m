@@ -1,53 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:46133 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753559Ab0GKKtA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Jul 2010 06:49:00 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, linville@tuxdriver.com
-Subject: [PATCH 4/7] ath9k_hw: prevent a fast channel change after a rx DMA stuck issue
-Date: Sun, 11 Jul 2010 12:48:42 +0200
-Message-Id: <1278845325-62000-4-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1278845325-62000-3-git-send-email-nbd@openwrt.org>
-References: <1278845325-62000-1-git-send-email-nbd@openwrt.org>
- <1278845325-62000-2-git-send-email-nbd@openwrt.org>
- <1278845325-62000-3-git-send-email-nbd@openwrt.org>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:40288 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752619Ab0GFJbM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jul 2010 05:31:12 -0400
+MIME-Version: 1.0
+In-Reply-To: <4C32EF19.1000604@nokia.com>
+References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
+	<1278376666-3509-12-git-send-email-ohad@wizery.com> <4C32EF19.1000604@nokia.com>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Tue, 6 Jul 2010 12:30:50 +0300
+Message-ID: <AANLkTintIz-N7MwwtqhVq2LR3Ln5JTNYSbJUBSSClcA-@mail.gmail.com>
+Subject: Re: [PATCH 11/15] wireless: wl1271: introduce platform device support
+To: Roger Quadros <roger.quadros@nokia.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	San Mehat <san@google.com>, Ohad Ben-Cohen <ohadb@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the receive path gets stuck, a full hardware reset is necessary to
-recover from it. If this happens during a scan, the whole scan might fail,
-as each channel change bypasses the full reset sequence.
-Fix this by resetting the fast channel change flag if stopping the
-receive path fails.
+Hi Roger,
 
-This will reduce the number of error messages that look like this:
-ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x40000020
+On Tue, Jul 6, 2010 at 11:53 AM, Roger Quadros <roger.quadros@nokia.com> wrote:
+> Could you please explain why you need to do this?
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@kernel.org
----
- drivers/net/wireless/ath/ath9k/hw.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+To minimize power consumption when the wlan device is not in use, we
+would like to keep the device powered off as long as the interface is
+down, and only power it on when the user brings up the interface.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 2acd799..2f83f97 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1232,9 +1232,11 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 
- 	if (!ah->chip_fullsleep) {
- 		ath9k_hw_abortpcurecv(ah);
--		if (!ath9k_hw_stopdmarecv(ah))
-+		if (!ath9k_hw_stopdmarecv(ah)) {
- 			ath_print(common, ATH_DBG_XMIT,
- 				"Failed to stop receive dma\n");
-+			bChannelChange = false;
-+		}
- 	}
- 
- 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE))
--- 
-1.6.4.2
+Whenever the chip is powered on, it must be initialized and
+reconfigured by mmc_attach_sdio, and the wl1271 driver have to wait
+for that phase to successfully complete (essentially waiting for the
+sdio_driver's probe function to be called).
 
+To make sure this SDIO init step occurs correctly every time we toggle
+the device's power back on, and to prevent potential races, we also
+have to make sure that the sdio function is removed every time we
+power off the chip (the driver waits for the sdio_driver's remove
+function to be called).
+
+That's why we let the mmc layer think that the card is removed:
+physically it is still there, but for all practical purposes it is
+really removed, because once you power off the chip, you must
+reinitialize it again next time you power it on, as if the card was
+really removed and re-inserted.
+
+Thanks,
+Ohad.
+
+>
+> br,
+> -roger
+>
