@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:23666 "EHLO mga03.intel.com"
+Received: from c60.cesmail.net ([216.154.195.49]:30577 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752886Ab0G1SKI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jul 2010 14:10:08 -0400
-Subject: Re: [BUG] after starting wimaxd at boot iwlagn module will crash
- for intel 6250 card
-From: Inaky Perez-Gonzalez <inaky@linux.intel.com>
-To: alexxy@gentoo.org
-Cc: wimax@linuxwimax.org, linux-wireless@vger.kernel.org
-In-Reply-To: <201007282154.06383.alexxy@gentoo.org>
-References: <201007280028.48674.alexxy@gentoo.org>
-	 <1280270313.26204.288.camel@localhost.localdomain>
-	 <201007282154.06383.alexxy@gentoo.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 28 Jul 2010 11:09:57 -0700
-Message-ID: <1280340597.26204.300.camel@localhost.localdomain>
+	id S1752766Ab0GFQgE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jul 2010 12:36:04 -0400
+Subject: Re: ath: Fix uninitialized variable warnings [v2]
+From: Pavel Roskin <proski@gnu.org>
+To: Prarit Bhargava <prarit@redhat.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@atheros.com,
+	linville@tuxdriver.com
+In-Reply-To: <4C331BB9.5010005@redhat.com>
+References: <20100701160048.23795.39782.sendpatchset@prarit.bos.redhat.com>
+	 <1278165872.6710.1.camel@mj>  <4C331BB9.5010005@redhat.com>
+Content-Type: text/plain
+Date: Tue, 06 Jul 2010 12:35:58 -0400
+Message-Id: <1278434158.20061.1.camel@mj>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Alexey
+On Tue, 2010-07-06 at 08:04 -0400, Prarit Bhargava wrote:
 
-On Wed, 2010-07-28 at 21:53 +0400, Alexey Shvetsov wrote: 
-> Updated relevant part of logs for this bug
-> 
+> New patch with updated description.
 
-My concern here is that I am not seeing why the i2400m is failing to
-initialize; there are no i2400m relevant messages. If I remember
-correctly, over IRC you said that a grep of messages for i2400m only
-turned:
+Your patch doesn't apply anymore.
 
-Jul 22 16:20:03 x201 kernel: i2400m_usb: probe of 2-1.3:1.0 failed with
-error -22
+> Fix 'make CONFIG_DEBUG_SECTION_MISMATCH=y' warning:
 
-It that's the case, I missed to make the code properly report an error
-condition, and we need to find out which one is it.
+I tried to reproduce the warning, but could not.  I guess my gcc is old
+(4.4.1) or you used more options that enable warnings.
 
-Can you enable debugging?:
+> Pavel pointed out that tMinCalPower or pMinCalPower isn't used anywhere, so
+> the simplest way to fix these warnings is to get rid of the code.
 
-1. unload the i2400m and i2400m-usb modules
-2. $ modprobe i2400m debug='driver:8 control:3'
-3. $ modprobe i2400m-usb debug='usb:8'
+That alone is the best reason.  I'll resend the updated patch.
 
-that should be printing way more logs to the console
-
-
+-- 
+Regards,
+Pavel Roskin
