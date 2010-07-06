@@ -1,99 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:34626 "EHLO mail.atheros.com"
+Received: from c60.cesmail.net ([216.154.195.49]:21927 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753443Ab0G2M5G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jul 2010 08:57:06 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 29 Jul 2010 05:57:06 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/3] ath9k_hw: Add capability flag for Antenna diversity and combining feature
-Date: Thu, 29 Jul 2010 05:56:57 -0700
-Message-ID: <1280408219-5293-1-git-send-email-vasanth@atheros.com>
+	id S1751348Ab0GFQvd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jul 2010 12:51:33 -0400
+Subject: [PATCH] ath9k: remove unneeded calculation of minimal calibration
+ power
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+From: Pavel Roskin <proski@gnu.org>
+Cc: Prarit Bhargava <prarit@redhat.com>
+Date: Tue, 06 Jul 2010 12:51:27 -0400
+Message-ID: <20100706165127.31444.5131.stgit@mj.roinet.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is enabled only for ar9285.
+Remove tMinCalPower from ath9k_hw_set_def_power_cal_table(), as it's
+never used.  Remove corresponding arguments of the functions calculating
+that value.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Original patch by Prarit Bhargava <prarit@redhat.com>
+
+Signed-off-by: Pavel Roskin <proski@gnu.org>
 ---
- drivers/net/wireless/ath/ath9k/eeprom.h    |    2 ++
- drivers/net/wireless/ath/ath9k/eeprom_4k.c |    4 ++++
- drivers/net/wireless/ath/ath9k/hw.c        |    9 +++++++++
- drivers/net/wireless/ath/ath9k/hw.h        |    1 +
- 4 files changed, 16 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c   |    7 ++-----
+ drivers/net/wireless/ath/ath9k/eeprom_9287.c |    4 ----
+ drivers/net/wireless/ath/ath9k/eeprom_def.c  |    7 ++-----
+ 3 files changed, 4 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-index 8750c55..b2223a6 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-@@ -265,6 +265,8 @@ enum eeprom_param {
- 	EEP_INTERNAL_REGULATOR,
- 	EEP_SWREG,
- 	EEP_PAPRD,
-+	EEP_MODAL_VER,
-+	EEP_ANT_DIV_CTL1,
- };
- 
- enum ar5416_rates {
 diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index 9cccd12..2e1397b 100644
+index e25a2ab..00cc3db 100644
 --- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
 +++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -213,6 +213,10 @@ static u32 ath9k_hw_4k_get_eeprom(struct ath_hw *ah,
- 		return 0;
- 	case EEP_PWR_TABLE_OFFSET:
- 		return AR5416_PWR_TABLE_OFFSET_DB;
-+	case EEP_MODAL_VER:
-+		return pModal->version;
-+	case EEP_ANT_DIV_CTL1:
-+		return pModal->antdiv_ctl1;
- 	default:
- 		return 0;
+@@ -222,7 +222,7 @@ static void ath9k_hw_get_4k_gain_boundaries_pdadcs(struct ath_hw *ah,
+ 				struct ath9k_channel *chan,
+ 				struct cal_data_per_freq_4k *pRawDataSet,
+ 				u8 *bChans, u16 availPiers,
+-				u16 tPdGainOverlap, int16_t *pMinCalPower,
++				u16 tPdGainOverlap,
+ 				u16 *pPdGainBoundaries, u8 *pPDADCValues,
+ 				u16 numXpdGains)
+ {
+@@ -308,8 +308,6 @@ static void ath9k_hw_get_4k_gain_boundaries_pdadcs(struct ath_hw *ah,
+ 		}
  	}
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 2f83f97..d9e9344 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2052,6 +2052,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
  
- 	u16 capField = 0, eeval;
-+	u8 ant_div_ctl1;
+-	*pMinCalPower = (int16_t)(minPwrT4[0] / 2);
+-
+ 	k = 0;
  
- 	eeval = ah->eep_ops->get_eeprom(ah, EEP_REG_0);
- 	regulatory->current_rd = eeval;
-@@ -2276,6 +2277,14 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 	if (AR_SREV_9287_10_OR_LATER(ah) || AR_SREV_9271(ah))
- 		pCap->hw_caps |= ATH9K_HW_CAP_SGI_20;
+ 	for (i = 0; i < numXpdGains; i++) {
+@@ -399,7 +397,6 @@ static void ath9k_hw_set_4k_power_cal_table(struct ath_hw *ah,
+ 	static u8 pdadcValues[AR5416_NUM_PDADC_VALUES];
+ 	u16 gainBoundaries[AR5416_EEP4K_PD_GAINS_IN_MASK];
+ 	u16 numPiers, i, j;
+-	int16_t tMinCalPower;
+ 	u16 numXpdGain, xpdMask;
+ 	u16 xpdGainValues[AR5416_EEP4K_NUM_PD_GAINS] = { 0, 0 };
+ 	u32 reg32, regOffset, regChainOffset;
+@@ -452,7 +449,7 @@ static void ath9k_hw_set_4k_power_cal_table(struct ath_hw *ah,
+ 			ath9k_hw_get_4k_gain_boundaries_pdadcs(ah, chan,
+ 					    pRawDataset, pCalBChans,
+ 					    numPiers, pdGainOverlap_t2,
+-					    &tMinCalPower, gainBoundaries,
++					    gainBoundaries,
+ 					    pdadcValues, numXpdGain);
  
-+	if (AR_SREV_9285(ah))
-+		if (ah->eep_ops->get_eeprom(ah, EEP_MODAL_VER) >= 3) {
-+			ant_div_ctl1 =
-+				ah->eep_ops->get_eeprom(ah, EEP_ANT_DIV_CTL1);
-+			if ((ant_div_ctl1 & 0x1) && ((ant_div_ctl1 >> 3) & 0x1))
-+				pCap->hw_caps |= ATH9K_HW_CAP_ANT_DIV_COMB;
-+		}
-+
- 	return 0;
- }
+ 			ENABLE_REGWRITE_BUFFER(ah);
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+index 39a4105..cb388d2 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+@@ -223,7 +223,6 @@ static void ath9k_hw_get_ar9287_gain_boundaries_pdadcs(struct ath_hw *ah,
+ 			       struct cal_data_per_freq_ar9287 *pRawDataSet,
+ 			       u8 *bChans, u16 availPiers,
+ 			       u16 tPdGainOverlap,
+-			       int16_t *pMinCalPower,
+ 			       u16 *pPdGainBoundaries,
+ 			       u8 *pPDADCValues,
+ 			       u16 numXpdGains)
+@@ -303,7 +302,6 @@ static void ath9k_hw_get_ar9287_gain_boundaries_pdadcs(struct ath_hw *ah,
+ 		}
+ 	}
  
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 2d30efc..3f19148 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -204,6 +204,7 @@ enum ath9k_hw_caps {
- 	ATH9K_HW_CAP_FASTCLOCK			= BIT(20),
- 	ATH9K_HW_CAP_SGI_20			= BIT(21),
- 	ATH9K_HW_CAP_PAPRD			= BIT(22),
-+	ATH9K_HW_CAP_ANT_DIV_COMB		= BIT(23),
- };
+-	*pMinCalPower = (int16_t)(minPwrT4[0] / 2);
+ 	k = 0;
  
- struct ath9k_hw_capabilities {
--- 
-1.7.0.4
-
+ 	for (i = 0; i < numXpdGains; i++) {
+@@ -458,7 +456,6 @@ static void ath9k_hw_set_ar9287_power_cal_table(struct ath_hw *ah,
+ 	u8 pdadcValues[AR9287_NUM_PDADC_VALUES];
+ 	u16 gainBoundaries[AR9287_PD_GAINS_IN_MASK];
+ 	u16 numPiers = 0, i, j;
+-	int16_t tMinCalPower;
+ 	u16 numXpdGain, xpdMask;
+ 	u16 xpdGainValues[AR9287_NUM_PD_GAINS] = {0, 0, 0, 0};
+ 	u32 reg32, regOffset, regChainOffset, regval;
+@@ -530,7 +527,6 @@ static void ath9k_hw_set_ar9287_power_cal_table(struct ath_hw *ah,
+ 							   pRawDataset,
+ 							   pCalBChans, numPiers,
+ 							   pdGainOverlap_t2,
+-							   &tMinCalPower,
+ 							   gainBoundaries,
+ 							   pdadcValues,
+ 							   numXpdGain);
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+index 77b1433..57d86d4 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+@@ -593,7 +593,7 @@ static void ath9k_hw_get_def_gain_boundaries_pdadcs(struct ath_hw *ah,
+ 				struct ath9k_channel *chan,
+ 				struct cal_data_per_freq *pRawDataSet,
+ 				u8 *bChans, u16 availPiers,
+-				u16 tPdGainOverlap, int16_t *pMinCalPower,
++				u16 tPdGainOverlap,
+ 				u16 *pPdGainBoundaries, u8 *pPDADCValues,
+ 				u16 numXpdGains)
+ {
+@@ -675,8 +675,6 @@ static void ath9k_hw_get_def_gain_boundaries_pdadcs(struct ath_hw *ah,
+ 		}
+ 	}
+ 
+-	*pMinCalPower = (int16_t)(minPwrT4[0] / 2);
+-
+ 	k = 0;
+ 
+ 	for (i = 0; i < numXpdGains; i++) {
+@@ -838,7 +836,7 @@ static void ath9k_hw_set_def_power_cal_table(struct ath_hw *ah,
+ 	static u8 pdadcValues[AR5416_NUM_PDADC_VALUES];
+ 	u16 gainBoundaries[AR5416_PD_GAINS_IN_MASK];
+ 	u16 numPiers, i, j;
+-	int16_t tMinCalPower, diff = 0;
++	int16_t diff = 0;
+ 	u16 numXpdGain, xpdMask;
+ 	u16 xpdGainValues[AR5416_NUM_PD_GAINS] = { 0, 0, 0, 0 };
+ 	u32 reg32, regOffset, regChainOffset;
+@@ -923,7 +921,6 @@ static void ath9k_hw_set_def_power_cal_table(struct ath_hw *ah,
+ 							chan, pRawDataset,
+ 							pCalBChans, numPiers,
+ 							pdGainOverlap_t2,
+-							&tMinCalPower,
+ 							gainBoundaries,
+ 							pdadcValues,
+ 							numXpdGain);
