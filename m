@@ -1,125 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:60660 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753398Ab0G0Wvt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 18:51:49 -0400
-Date: Tue, 27 Jul 2010 15:40:08 -0700
-From: Greg KH <greg@kroah.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: stable@kernel.org, linux-wireless@vger.kernel.org,
-	Ben Hutchings <ben@decadent.org.uk>
-Subject: Re: [stable] [PATCH 1/4 2.6.33.y] mac80211: explicitly
- disable/enable QoS
-Message-ID: <20100727224008.GM14257@kroah.com>
-References: <1275904827-6598-1-git-send-email-sgruszka@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1275904827-6598-1-git-send-email-sgruszka@redhat.com>
+Received: from relais.videotron.ca ([24.201.245.36]:59601 "EHLO
+	relais.videotron.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756591Ab0GFRmh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jul 2010 13:42:37 -0400
+MIME-version: 1.0
+Content-type: TEXT/PLAIN; charset=US-ASCII
+Date: Tue, 06 Jul 2010 13:42:26 -0400 (EDT)
+From: Nicolas Pitre <nico@fluxnic.net>
+To: Roger Quadros <roger.quadros@nokia.com>
+Cc: ext Ohad Ben-Cohen <ohad@wizery.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	San Mehat <san@google.com>
+Subject: Re: [PATCH 11/15] wireless: wl1271: introduce platform device support
+In-reply-to: <4C333E0D.2070601@nokia.com>
+Message-id: <alpine.LFD.2.00.1007061316010.6020@xanadu.home>
+References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
+ <1278376666-3509-12-git-send-email-ohad@wizery.com>
+ <4C32EF19.1000604@nokia.com>
+ <AANLkTintIz-N7MwwtqhVq2LR3Ln5JTNYSbJUBSSClcA-@mail.gmail.com>
+ <4C3306F4.8060907@nokia.com>
+ <AANLkTin5W52fPzWToRrAzm56SLZI-taSuI16rCEhLWqH@mail.gmail.com>
+ <4C333E0D.2070601@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 07, 2010 at 12:00:24PM +0200, Stanislaw Gruszka wrote:
-> commit e1b3ec1a2a336c328c336cfa5485a5f0484cc90d upstream.
-> 
-> Add interface to disable/enable QoS (aka WMM or WME). Currently drivers
-> enable it explicitly when ->conf_tx method is called, and newer disable.
-> Disabling is needed for some APs, which do not support QoS, such
-> we should send QoS frames to them.
+On Tue, 6 Jul 2010, Roger Quadros wrote:
 
-Why is this a patch for a -stable tree?  It looks like it adds a new api
-for a new feature, right?
-
-confused,
-
-greg k-h
-
+> On 07/06/2010 03:53 PM, ext Ohad Ben-Cohen wrote:
+> > Hi Roger,
+> > 
+> > On Tue, Jul 6, 2010 at 1:35 PM, Roger Quadros<roger.quadros@nokia.com>
+> > wrote:
+> > > My point is that shouldn't this be handled by SDIO core?
+> > 
+> > Care to explain what you mean / give a code example ?
 > 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  include/net/mac80211.h |    5 +++++
->  net/mac80211/mlme.c    |    9 ++++++++-
->  net/mac80211/util.c    |    5 +++++
->  3 files changed, 18 insertions(+), 1 deletions(-)
+> If the Power enable GPIO can be treated as SDIO slot supply (i.e. vmmc), then
+> the SDIO/MMC core should tackle it, just like it deals with supply for slots
+> with removable cards.
+
+Exact.
+
+> > You need card detect events in order to trigger card&  sdio function
+> > initialization and removals.
+
+Why would you trigger function initialization and removal?  Just to turn 
+off power?  That's a bit like pulling off the battery from your laptop 
+when you want to suspend it.  There is a better way to go about things.
+
+> > Please share any alternative approach you may be thinking on.
 > 
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index f39b303..8c1f0ee 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -577,11 +577,15 @@ struct ieee80211_rx_status {
->   *	may turn the device off as much as possible. Typically, this flag will
->   *	be set when an interface is set UP but not associated or scanning, but
->   *	it can also be unset in that case when monitor interfaces are active.
-> + * @IEEE80211_CONF_QOS: Enable 802.11e QoS also know as WMM (Wireless
-> + *      Multimedia). On some drivers (iwlwifi is one of know) we have
-> + *      to enable/disable QoS explicitly.
->   */
->  enum ieee80211_conf_flags {
->  	IEEE80211_CONF_MONITOR		= (1<<0),
->  	IEEE80211_CONF_PS		= (1<<1),
->  	IEEE80211_CONF_IDLE		= (1<<2),
-> +	IEEE80211_CONF_QOS		= (1<<3),
->  };
->  
->  
-> @@ -604,6 +608,7 @@ enum ieee80211_conf_changed {
->  	IEEE80211_CONF_CHANGE_CHANNEL		= BIT(6),
->  	IEEE80211_CONF_CHANGE_RETRY_LIMITS	= BIT(7),
->  	IEEE80211_CONF_CHANGE_IDLE		= BIT(8),
-> +	IEEE80211_CONF_CHANGE_QOS		= BIT(9),
->  };
->  
->  /**
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index 1a209ac..950088d 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -798,6 +798,9 @@ static void ieee80211_sta_wmm_params(struct ieee80211_local *local,
->  	int count;
->  	u8 *pos;
->  
-> +	if (!local->ops->conf_tx)
-> +		return;
-> +
->  	if (!(ifmgd->flags & IEEE80211_STA_WMM_ENABLED))
->  		return;
->  
-> @@ -856,11 +859,15 @@ static void ieee80211_sta_wmm_params(struct ieee80211_local *local,
->  		       wiphy_name(local->hw.wiphy), queue, aci, acm,
->  		       params.aifs, params.cw_min, params.cw_max, params.txop);
->  #endif
-> -		if (drv_conf_tx(local, queue, &params) && local->ops->conf_tx)
-> +		if (drv_conf_tx(local, queue, &params))
->  			printk(KERN_DEBUG "%s: failed to set TX queue "
->  			       "parameters for queue %d\n",
->  			       wiphy_name(local->hw.wiphy), queue);
->  	}
-> +
-> +	/* enable WMM or activate new settings */
-> +	local->hw.conf.flags |=	IEEE80211_CONF_QOS;
-> +	drv_config(local, IEEE80211_CONF_CHANGE_QOS);
->  }
->  
->  static u32 ieee80211_handle_bss_capability(struct ieee80211_sub_if_data *sdata,
-> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-> index 27212e8..9e35dcb 100644
-> --- a/net/mac80211/util.c
-> +++ b/net/mac80211/util.c
-> @@ -795,6 +795,11 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata)
->  
->  		drv_conf_tx(local, queue, &qparam);
->  	}
-> +
-> +	/* after reinitialize QoS TX queues setting to default,
-> +	 * disable QoS at all */
-> +	local->hw.conf.flags &=	~IEEE80211_CONF_QOS;
-> +	drv_config(local, IEEE80211_CONF_CHANGE_QOS);
->  }
->  
->  void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
-> -- 
-> 1.6.2.5
+> OK, this is how I see it.
 > 
-> _______________________________________________
-> stable mailing list
-> stable@linux.kernel.org
-> http://linux.kernel.org/mailman/listinfo/stable
+> - Treat the non-removable card as non-removable. So no need to do card detect
+> emulation.
+> 
+> - Treat the GPIO power enable on wl1271 as VMMC supply. Use fixed regulator
+> framework to define this regulator & supply. Even though you mention that it
+> is not actually a supply, it fits well in the fixed supply framework.
+> 
+> - When the host controller is enumerated, the mmc core will power up the slot,
+> find the sdio card, and probe the function driver (i.e. wl1271_sdio).
+> 
+> - if interface is not in use, the function driver must release the sdio host,
+> and this should eventually disable the vmmc supply.
+> 
+> - Whenever the wlan interface must be brought up, wl1271_sdio, can claim the
+> sdio host. this will cause the vmmc supply to be enabled, for as long as the
+> interface is up.
+> 
+> Does this address all issues?
+
+This is mostly all good, except that claiming/releasing the SDIO host is 
+about access to the bus.  It must be claimed right before doing any IO, 
+and released right after that, even when the card is expected to remain 
+powered.  This is not the proper place to hook power control.
+
+Another function pair would be needed instead, which would do almost 
+like the suspend/resume code is already doing.  Something like:
+
+/*
+ * Indicate to the core SDIO layer that we're not requiring that the
+ * function remain powered.  If all functions for the card are in the 
+ * same "no power" state, then the host controller can remove power from
+ * the card.  Note: the function driver must preserve hardware states if
+ * necessary.
+ */
+int sdio_release_power(struct sdio_func *func);
+
+/*
+ * Indicate to the core SDIO layer that we want power back for this
+ * SDIO function.  The power may or may not actually have been removed
+ * since last call to sdio_release_power(), so the function driver must 
+ * not assume any preserved state at the hardware level and re-perform
+ * all the necessary hardware config.  This function returns 0 when
+ * power is actually restored, or some error code if this cannot be 
+ * achieved.  One error reason might be that the card is no longer 
+ * available on the bus (was removed while powered down and card 
+ * detection didn't trigger yet).
+ */
+int sdio_claim_power(struct sdio_func *func);
+
+That's it.  When the network interface is down and the hardware is not 
+needed, you call sdio_release_power().  When the request to activate the 
+network interface is received, you call sdio_claim_power() and configure 
+the hardware appropriately.  If sdio_claim_power() returns an error, 
+then you just return an error to the network request, and eventually the 
+driver's remove method will be called if this is indeed because the card 
+was removed.
+
+In the core SDIO code, this is almost identical to a suspend/resume 
+request, except that the request comes from the function driver instead 
+of the core MMC code.
+
+
+Nicolas
