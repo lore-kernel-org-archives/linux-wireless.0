@@ -1,23 +1,15 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:64219 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751823Ab0GFNpM (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:31411 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752860Ab0GFOb2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jul 2010 09:45:12 -0400
+	Tue, 6 Jul 2010 10:31:28 -0400
+Message-ID: <4C333E0D.2070601@nokia.com>
+Date: Tue, 06 Jul 2010 17:30:37 +0300
+From: Roger Quadros <roger.quadros@nokia.com>
 MIME-Version: 1.0
-In-Reply-To: <4C3323EA.902@nokia.com>
-References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
-	<1278376666-3509-6-git-send-email-ohad@wizery.com> <alpine.LFD.2.00.1007052134460.6020@xanadu.home>
-	<AANLkTim4E4LlFERmfYA1M0HLBOoRAsQuvdW6QBNu6pC0@mail.gmail.com>
-	<AANLkTinE5LygUWJsJSEE2miZF1GK58LTr8zErkuu_7yM@mail.gmail.com>
-	<4C3323EA.902@nokia.com>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Tue, 6 Jul 2010 16:44:48 +0300
-Message-ID: <AANLkTikyeaVRxLDVjGmCOtcw9vZtHspKDK22Xojk7n8x@mail.gmail.com>
-Subject: Re: [PATCH 05/15] omap: hsmmc: add virtual card detect support
-To: Roger Quadros <roger.quadros@nokia.com>
-Cc: Nicolas Pitre <nico@fluxnic.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+To: ext Ohad Ben-Cohen <ohad@wizery.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
 	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
 	"linux-arm-kernel@lists.infradead.org"
@@ -25,30 +17,67 @@ Cc: Nicolas Pitre <nico@fluxnic.net>,
 	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
 	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
 	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	San Mehat <san@google.com>,
-	"Pandita, Vikram" <vikram.pandita@ti.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	San Mehat <san@google.com>
+Subject: Re: [PATCH 11/15] wireless: wl1271: introduce platform device support
+References: <1278376666-3509-1-git-send-email-ohad@wizery.com> 	<1278376666-3509-12-git-send-email-ohad@wizery.com> <4C32EF19.1000604@nokia.com> 	<AANLkTintIz-N7MwwtqhVq2LR3Ln5JTNYSbJUBSSClcA-@mail.gmail.com> 	<4C3306F4.8060907@nokia.com> <AANLkTin5W52fPzWToRrAzm56SLZI-taSuI16rCEhLWqH@mail.gmail.com>
+In-Reply-To: <AANLkTin5W52fPzWToRrAzm56SLZI-taSuI16rCEhLWqH@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 6, 2010 at 3:39 PM, Roger Quadros <roger.quadros@nokia.com> wrote:
-> Just to clarify, is the wl1271 device always powered on the board?
-
-Yes.
-
-> And this GPIO power enable (OMAP_ZOOM_WLAN_PMENA_GPIO) is used to gate this
-> supply internally?
-
-Yes. It's a digital input that the chip does not draw current from
-(well, only a very minimal one).
-
-> and what do these do ?
+On 07/06/2010 03:53 PM, ext Ohad Ben-Cohen wrote:
+> Hi Roger,
 >
-> set_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
+> On Tue, Jul 6, 2010 at 1:35 PM, Roger Quadros<roger.quadros@nokia.com>  wrote:
+>> My point is that shouldn't this be handled by SDIO core?
 >
-> clear_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
+> Care to explain what you mean / give a code example ?
 
-This is an internal driver bit that maintains the power state of the chip.
-AFAICT, it does not "do" anything. The only place I can see it is
-being used is in a debugfs entry.
+If the Power enable GPIO can be treated as SDIO slot supply (i.e. vmmc), then 
+the SDIO/MMC core should tackle it, just like it deals with supply for slots 
+with removable cards.
+
+see mmc_regulator_set_ocr()
+mmc_power_up()
+mmc_set_ios()
+
+in drivers/mmc/core/core.c
+
+and omap_hsmmc_set_ios()
+
+in drivers/mmc/host/omap_hsmmc.c
+
+>
+>> If there are no users for the SDIO function and the card, doesn't the SDIO
+>> core power down the slot and take care of re-initialization when it is
+>> powered up?
+>
+> You need card detect events in order to trigger card&  sdio function
+> initialization and removals.
+>
+> Please share any alternative approach you may be thinking on.
+
+OK, this is how I see it.
+
+- Treat the non-removable card as non-removable. So no need to do card detect 
+emulation.
+
+- Treat the GPIO power enable on wl1271 as VMMC supply. Use fixed regulator 
+framework to define this regulator & supply. Even though you mention that it is 
+not actually a supply, it fits well in the fixed supply framework.
+
+- When the host controller is enumerated, the mmc core will power up the slot, 
+find the sdio card, and probe the function driver (i.e. wl1271_sdio).
+
+- if interface is not in use, the function driver must release the sdio host, 
+and this should eventually disable the vmmc supply.
+
+- Whenever the wlan interface must be brought up, wl1271_sdio, can claim the 
+sdio host. this will cause the vmmc supply to be enabled, for as long as the 
+interface is up.
+
+Does this address all issues?
+
+regards,
+-roger
