@@ -1,48 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:42629 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753516Ab0GLSyK convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:17545 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753941Ab0GFIzj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jul 2010 14:54:10 -0400
-Received: by bwz1 with SMTP id 1so2541664bwz.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jul 2010 11:54:09 -0700 (PDT)
+	Tue, 6 Jul 2010 04:55:39 -0400
+Message-ID: <4C32EF19.1000604@nokia.com>
+Date: Tue, 06 Jul 2010 11:53:45 +0300
+From: Roger Quadros <roger.quadros@nokia.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTilFB6o-Qq0VTVNhd01TpdLX4JUYCAlZu-RgKH1I@mail.gmail.com>
-References: <AANLkTinubmjYu9FyDU0B81F0gHmFPLnDUWYGmZ9Rodss@mail.gmail.com>
-	<AANLkTilFB6o-Qq0VTVNhd01TpdLX4JUYCAlZu-RgKH1I@mail.gmail.com>
-Date: Mon, 12 Jul 2010 20:54:09 +0200
-Message-ID: <AANLkTilTr6OkquGQJtMCu4_yur3NLu8JFThLVpLrWaMU@mail.gmail.com>
-Subject: Re: Rate control & USB
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Steve deRosier <steve@cozybit.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: ext Ohad Ben-Cohen <ohad@wizery.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	San Mehat <san@google.com>, Ohad Ben-Cohen <ohadb@ti.com>
+Subject: Re: [PATCH 11/15] wireless: wl1271: introduce platform device support
+References: <1278376666-3509-1-git-send-email-ohad@wizery.com> <1278376666-3509-12-git-send-email-ohad@wizery.com>
+In-Reply-To: <1278376666-3509-12-git-send-email-ohad@wizery.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Hi,
 
-> I don't know much about the details of either the rate control
-> algorithms, or other USB devices, but the usb8388 with the libertas_tf
-> driver _does_ report per skb tx feedback, not just that the frame has
-> been sent to the hardware.  Perhaps there's other USB devices that
-> also have good feedback?
+On 07/06/2010 03:37 AM, ext Ohad Ben-Cohen wrote:
+> From: Ohad Ben-Cohen<ohadb@ti.com>
+>
+> Introduce a platform device support which is decoupled
+> from the life cycle of the sdio function.
+>
+> The platform device objective is to deliver board-specific
+> values (like irq, ref_clock, and software card-detect
+> emulation control).
+>
+> The driver can then dynamically create (or destroy)
+> the sdio function whenever the wlan interface is
+> brought up (or down), as part of the power() operation.
 
-Ah ok, I wasn't aware that libertas had a working TX status reporting. :)
+Is this the right approach? Why should you emulate a card disconnect event when 
+the wlan interface is brought down?
 
-> In any case, I'm just asking that nothing gets broken in the case
-> where the USB devices _do_ provide the tx feedback information.  I
-> assume you weren't going to break anything, but I just wanted to make
-> sure you knew that some USB devices did have this feature.
+Physically the card is never disconnected. So I don't see why we should fake it.
+Could you please explain why you need to do this?
 
-Well my plans were to enable the batch TX updating through a mac80211 flag,
-or some other methoed where it is up to the driver to enable the batch TX
-status updating. So nothing should change for the other drivers which do not
-need this feature. :)
-
-But it is good to know that at least some USB hardware do not have the
-TX status problem. :)
-
-Ivo
+br,
+-roger
