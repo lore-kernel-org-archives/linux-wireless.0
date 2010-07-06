@@ -1,36 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:5451 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754138Ab0G1CGz (ORCPT
+Received: from relais.videotron.ca ([24.201.245.36]:46818 "EHLO
+	relais.videotron.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753914Ab0GFBpO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 22:06:55 -0400
-Received: from vs3011.wh2.ocn.ne.jp (125.206.180.239)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-038862813
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Jul 2010 11:06:53 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 2/2] iw: Add antenna configuration commands
-Date: Wed, 28 Jul 2010 11:07:04 +0900
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-References: <20100727094932.27300.10253.stgit@tt-desk> <20100727094937.27300.97445.stgit@tt-desk> <1280225061.19098.8.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1280225061.19098.8.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201007281107.04455.br1@einfach.org>
+	Mon, 5 Jul 2010 21:45:14 -0400
+MIME-version: 1.0
+Content-type: TEXT/PLAIN; charset=US-ASCII
+Date: Mon, 05 Jul 2010 21:45:12 -0400 (EDT)
+From: Nicolas Pitre <nico@fluxnic.net>
+To: Ohad Ben-Cohen <ohad@wizery.com>
+Cc: linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux@arm.linux.org.uk,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	San Mehat <san@google.com>, Ohad Ben-Cohen <ohadb@ti.com>
+Subject: Re: [PATCH 05/15] omap: hsmmc: add virtual card detect support
+In-reply-to: <1278376666-3509-6-git-send-email-ohad@wizery.com>
+Message-id: <alpine.LFD.2.00.1007052134460.6020@xanadu.home>
+References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
+ <1278376666-3509-6-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue July 27 2010 19:04:21 Johannes Berg wrote:
-> On Tue, 2010-07-27 at 18:49 +0900, Bruno Randolf wrote:
-> > +	if (tb_msg[NL80211_ATTR_WIPHY_ANTENNA_TX] &&
-> > +	    tb_msg[NL80211_ATTR_WIPHY_ANTENNA_RX]) {
-> > +		printf("\tAntenna: TX %d RX %d\n",
-> > +		       nla_get_u8(tb_msg[NL80211_ATTR_WIPHY_ANTENNA_TX]),
-> > +		       nla_get_u8(tb_msg[NL80211_ATTR_WIPHY_ANTENNA_RX]));
+On Tue, 6 Jul 2010, Ohad Ben-Cohen wrote:
+
+> From: Ohad Ben-Cohen <ohadb@ti.com>
 > 
-> That's like the worst possible way to show the info.
+> Add support for software emulation of card detect
+> events.
+> 
+> This is required for specific controllers
+> that are hard wired with embedded SDIO devices
+> (such as TI's wl1271 WLAN device).
 
-which way would you prefer?
+Why?
 
-bruno
+Many instances of hardwired SDIO based WLAN devices do exist already, 
+and they don't need extra card detect events to be generated.  The core 
+MMC code already triggers a probe for cards whenever a new host 
+controller is registered.
+
+> Board-specific configuration is required to
+> enable this software card detect control.
+
+Could you elaborate please?
+
+
+Nicolas
