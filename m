@@ -1,46 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44288 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756517Ab0G2SAP (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:37901 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757167Ab0GFAlL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jul 2010 14:00:15 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] p54: update fw version info in wiphy struct
-Date: Thu, 29 Jul 2010 13:45:58 -0400
-Message-Id: <1280425558-19585-1-git-send-email-linville@tuxdriver.com>
+	Mon, 5 Jul 2010 20:41:11 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>
+Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
+	Ohad Ben-Cohen <ohadb@ti.com>
+Subject: [PATCH 15/15] omap: zoom: enable WLAN device
+Date: Tue,  6 Jul 2010 03:37:46 +0300
+Message-Id: <1278376666-3509-16-git-send-email-ohad@wizery.com>
+In-Reply-To: <1278376666-3509-1-git-send-email-ohad@wizery.com>
+References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes the information available through ethtool...
+From: Ohad Ben-Cohen <ohadb@ti.com>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Make it possible to build and use TI's wl1271
+device on the ZOOM boards.
+
+The device is an embedded SDIO WLAN chip
+that is hardwired to the 3rd mmc controller
+of the ZOOM2/3 boards.
+
+Signed-off-by: Ohad Ben-Cohen <ohadb@ti.com>
 ---
- drivers/net/wireless/p54/fwio.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+ arch/arm/mach-omap2/Kconfig                  |    5 +++++
+ arch/arm/mach-omap2/Makefile                 |    1 +
+ arch/arm/mach-omap2/board-zoom-peripherals.c |   15 +++++++++++++++
+ 3 files changed, 21 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/p54/fwio.c b/drivers/net/wireless/p54/fwio.c
-index 47006bc..6f027ab 100644
---- a/drivers/net/wireless/p54/fwio.c
-+++ b/drivers/net/wireless/p54/fwio.c
-@@ -123,10 +123,14 @@ int p54_parse_firmware(struct ieee80211_hw *dev, const struct firmware *fw)
- 		bootrec = (struct bootrec *)&bootrec->data[len];
- 	}
+diff --git a/arch/arm/mach-omap2/Kconfig b/arch/arm/mach-omap2/Kconfig
+index b31b6f1..7fee11b 100644
+--- a/arch/arm/mach-omap2/Kconfig
++++ b/arch/arm/mach-omap2/Kconfig
+@@ -131,6 +131,11 @@ config MACH_OMAP_ZOOM3
+ 	depends on ARCH_OMAP3
+ 	select OMAP_PACKAGE_CBP
  
--	if (fw_version)
-+	if (fw_version) {
- 		wiphy_info(priv->hw->wiphy,
- 			   "fw rev %s - softmac protocol %x.%x\n",
- 			   fw_version, priv->fw_var >> 8, priv->fw_var & 0xff);
-+		snprintf(dev->wiphy->fw_version, sizeof(dev->wiphy->fw_version),
-+				"%s - %x.%x", fw_version,
-+				priv->fw_var >> 8, priv->fw_var & 0xff);
-+	}
++config OMAP_ZOOM_WLAN
++	bool "OMAP Zoom board WLAN support"
++	depends on MACH_OMAP_ZOOM2 || MACH_OMAP_ZOOM3
++	select MMC_EMBEDDED_SDIO
++
+ config MACH_CM_T35
+ 	bool "CompuLab CM-T35 module"
+ 	depends on ARCH_OMAP3
+diff --git a/arch/arm/mach-omap2/Makefile b/arch/arm/mach-omap2/Makefile
+index ea52b03..ac1bad9 100644
+--- a/arch/arm/mach-omap2/Makefile
++++ b/arch/arm/mach-omap2/Makefile
+@@ -129,6 +129,7 @@ obj-$(CONFIG_MACH_OMAP_ZOOM3)		+= board-zoom3.o \
+ 					   board-zoom-peripherals.o \
+ 					   hsmmc.o \
+ 					   board-zoom-debugboard.o
++obj-y					+= board-zoom-wlan.o
+ obj-$(CONFIG_MACH_OMAP_3630SDP)		+= board-3630sdp.o \
+ 					   board-zoom-peripherals.o \
+ 					   hsmmc.o
+diff --git a/arch/arm/mach-omap2/board-zoom-peripherals.c b/arch/arm/mach-omap2/board-zoom-peripherals.c
+index 6b39849..3128cd4 100644
+--- a/arch/arm/mach-omap2/board-zoom-peripherals.c
++++ b/arch/arm/mach-omap2/board-zoom-peripherals.c
+@@ -16,11 +16,13 @@
+ #include <linux/gpio.h>
+ #include <linux/i2c/twl.h>
+ #include <linux/regulator/machine.h>
++#include <linux/mmc/host.h>
  
- 	if (priv->fw_var < 0x500)
- 		wiphy_info(priv->hw->wiphy,
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+ #include <asm/mach/map.h>
+ 
++#include <mach/board-zoom.h>
+ #include <plat/common.h>
+ #include <plat/usb.h>
+ 
+@@ -168,6 +170,18 @@ static struct omap2_hsmmc_info mmc[] __initdata = {
+ 		.nonremovable	= true,
+ 		.power_saving	= true,
+ 	},
++#ifdef CONFIG_OMAP_ZOOM_WLAN
++	{
++		.mmc		= 3,
++		.wires		= 4,
++		.gpio_cd	= -EINVAL,
++		.gpio_wp	= -EINVAL,
++		.register_embedded_control =
++				omap_zoom_wlan_register_embedded_control,
++		.virtual_get_cd = omap_zoom_wlan_get_virtual_cd,
++		.ocr_mask	= MMC_VDD_165_195,
++	},
++#endif
+ 	{}      /* Terminator */
+ };
+ 
+@@ -282,4 +296,5 @@ void __init zoom_peripherals_init(void)
+ 	omap_i2c_init();
+ 	usb_musb_init(&musb_board_data);
+ 	enable_board_wakeup_source();
++	omap_zoom_wlan_init();
+ }
 -- 
-1.7.1.1
+1.7.0.4
 
