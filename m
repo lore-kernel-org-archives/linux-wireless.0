@@ -1,101 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51571 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965813Ab0GSTaL (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:37901 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754846Ab0GFAkD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jul 2010 15:30:11 -0400
-Date: Mon, 19 Jul 2010 15:17:09 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: wireless-2.6 2010-07-19
-Message-ID: <20100719191709.GA6115@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 5 Jul 2010 20:40:03 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>
+Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
+	Ohad Ben-Cohen <ohadb@ti.com>
+Subject: [PATCH 04/15] mmc: support embedded data field in mmc_host
+Date: Tue,  6 Jul 2010 03:37:35 +0300
+Message-Id: <1278376666-3509-5-git-send-email-ohad@wizery.com>
+In-Reply-To: <1278376666-3509-1-git-send-email-ohad@wizery.com>
+References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+From: Ohad Ben-Cohen <ohadb@ti.com>
 
-In this round we have two more-or-less-one-liners intended for 2.6.25.
+Add support to set/get mmc_host private embedded
+data.
 
-The hostap fix is the third (and hopefully final) bite at the apple
-for correcting an initialization failure.  The first two attempts
-created and then reinstated a regression caused by a discrepency
-between the PCI and PCMCIA support within hostap.  The regression
-was caused by checking the value of dev->base_addr, which the PCI
-code was not setting.  Testing by the regression reporter indicates
-that his device is finally working again with this fix.
+This is needed to allow software to dynamically
+create (and remove) SDIO functions which represents
+embedded SDIO devices.
 
-The rt2x00 fix merely reorders some initialization so that unwinding
-that init in an error path works as expected.
+Typically, it will be used to set the context of
+a driver that is creating a new SDIO function
+(and would then expect to be able to get that context
+back upon creation of the new sdio func).
 
-Please let me know if there are problems!
-
-Thanks,
-
-John
-
+Signed-off-by: Ohad Ben-Cohen <ohadb@ti.com>
 ---
+ drivers/mmc/core/Kconfig |    8 ++++++++
+ include/linux/mmc/host.h |   16 ++++++++++++++++
+ 2 files changed, 24 insertions(+), 0 deletions(-)
 
-The following changes since commit 91a72a70594e5212c97705ca6a694bd307f7a26b:
-
-  net/core: neighbour update Oops (2010-07-14 18:02:16 -0700)
-
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
-
-John W. Linville (1):
-      hostap_pci: set dev->base_addr during probe
-
-Stephen Boyd (1):
-      rt2x00: Fix lockdep warning in rt2x00lib_probe_dev()
-
- drivers/net/wireless/hostap/hostap_pci.c |    1 +
- drivers/net/wireless/rt2x00/rt2x00dev.c  |   10 +++++-----
- 2 files changed, 6 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/hostap/hostap_pci.c b/drivers/net/wireless/hostap/hostap_pci.c
-index d24dc7d..972a9c3 100644
---- a/drivers/net/wireless/hostap/hostap_pci.c
-+++ b/drivers/net/wireless/hostap/hostap_pci.c
-@@ -330,6 +330,7 @@ static int prism2_pci_probe(struct pci_dev *pdev,
+diff --git a/drivers/mmc/core/Kconfig b/drivers/mmc/core/Kconfig
+index bb22ffd..ab27eb3 100644
+--- a/drivers/mmc/core/Kconfig
++++ b/drivers/mmc/core/Kconfig
+@@ -16,3 +16,11 @@ config MMC_UNSAFE_RESUME
  
-         dev->irq = pdev->irq;
-         hw_priv->mem_start = mem;
-+	dev->base_addr = (unsigned long) mem;
- 
- 	prism2_pci_cor_sreset(local);
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 3ae468c..f20d3ee 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -854,6 +854,11 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
- 		    BIT(NL80211_IFTYPE_WDS);
- 
- 	/*
-+	 * Initialize configuration work.
-+	 */
-+	INIT_WORK(&rt2x00dev->intf_work, rt2x00lib_intf_scheduled);
+ 	  This option sets a default which can be overridden by the
+ 	  module parameter "removable=0" or "removable=1".
 +
-+	/*
- 	 * Let the driver probe the device to detect the capabilities.
- 	 */
- 	retval = rt2x00dev->ops->lib->probe_hw(rt2x00dev);
-@@ -863,11 +868,6 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
- 	}
++config MMC_EMBEDDED_SDIO
++	boolean "MMC embedded SDIO device support"
++	help
++	  If you say Y here, support will be added for embedded SDIO
++	  devices (e.g. hardwired embedded WLAN SDIO devices).
++	  Such devices require software support for emulating
++	  card detect events.
+diff --git a/include/linux/mmc/host.h b/include/linux/mmc/host.h
+index f65913c..9a48486 100644
+--- a/include/linux/mmc/host.h
++++ b/include/linux/mmc/host.h
+@@ -209,6 +209,10 @@ struct mmc_host {
+ 	struct led_trigger	*led;		/* activity led */
+ #endif
  
- 	/*
--	 * Initialize configuration work.
--	 */
--	INIT_WORK(&rt2x00dev->intf_work, rt2x00lib_intf_scheduled);
--
--	/*
- 	 * Allocate queue array.
- 	 */
- 	retval = rt2x00queue_allocate(rt2x00dev);
++#ifdef CONFIG_MMC_EMBEDDED_SDIO
++	void			*embedded_data;
++#endif
++
+ 	struct dentry		*debugfs_root;
+ 
+ 	unsigned long		private[0] ____cacheline_aligned;
+@@ -264,5 +268,17 @@ static inline void mmc_set_disable_delay(struct mmc_host *host,
+ 	host->disable_delay = disable_delay;
+ }
+ 
++#ifdef CONFIG_MMC_EMBEDDED_SDIO
++static inline void *mmc_get_embedded_data(struct mmc_host *host)
++{
++	return host->embedded_data;
++}
++
++static inline void mmc_set_embedded_data(struct mmc_host *host, void *data)
++{
++	host->embedded_data = data;
++}
++#endif
++
+ #endif
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.0.4
+
