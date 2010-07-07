@@ -1,68 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:58274 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750987Ab0GIXtM (ORCPT
+Received: from relais.videotron.ca ([24.201.245.36]:16372 "EHLO
+	relais.videotron.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757274Ab0GGPqx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jul 2010 19:49:12 -0400
-Received: by pzk26 with SMTP id 26so592298pzk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Jul 2010 16:49:11 -0700 (PDT)
-From: Steve deRosier <steve@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: javier@cozybit.com, Steve deRosier <steve@cozybit.com>
-Subject: [PATCH] mac80211: update mesh information element values
-Date: Fri,  9 Jul 2010 16:48:50 -0700
-Message-Id: <1278719330-56441-1-git-send-email-steve@cozybit.com>
+	Wed, 7 Jul 2010 11:46:53 -0400
+MIME-version: 1.0
+Content-type: TEXT/PLAIN; charset=US-ASCII
+Date: Wed, 07 Jul 2010 11:46:51 -0400 (EDT)
+From: Nicolas Pitre <nico@fluxnic.net>
+To: Madhusudhan <madhu.cr@ti.com>
+Cc: 'Roger Quadros' <roger.quadros@nokia.com>,
+	"'Hunter Adrian (Nokia-MS/Helsinki)'" <adrian.hunter@nokia.com>,
+	'Ohad Ben-Cohen' <ohad@wizery.com>,
+	linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux@arm.linux.org.uk,
+	"'Coelho Luciano (Nokia-MS/Helsinki)'" <Luciano.Coelho@nokia.com>,
+	akpm@linux-foundation.org, 'San Mehat' <san@google.com>
+Subject: RE: [PATCH 11/15] wireless: wl1271: introduce platform device support
+In-reply-to: <E6AFC02D8D114C129C8140932818E578@am.dhcp.ti.com>
+Message-id: <alpine.LFD.2.00.1007071120351.6020@xanadu.home>
+References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
+ <1278376666-3509-12-git-send-email-ohad@wizery.com>
+ <4C32EF19.1000604@nokia.com>
+ <AANLkTintIz-N7MwwtqhVq2LR3Ln5JTNYSbJUBSSClcA-@mail.gmail.com>
+ <4C3306F4.8060907@nokia.com>
+ <AANLkTin5W52fPzWToRrAzm56SLZI-taSuI16rCEhLWqH@mail.gmail.com>
+ <4C333E0D.2070601@nokia.com> <alpine.LFD.2.00.1007061316010.6020@xanadu.home>
+ <4C338927.5020400@nokia.com> <4C34347F.8030000@nokia.com>
+ <alpine.LFD.2.00.1007070954010.6020@xanadu.home>
+ <E6AFC02D8D114C129C8140932818E578@am.dhcp.ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The old values conflicted with ANA approved values. The new values
-were chosen to be consistent with those for the ANA request plan
-for 802.11s.
+On Wed, 7 Jul 2010, Madhusudhan wrote:
 
-The Peer Link IE no longer exists in draft standards, replaced by
-the Peer Management IE.  Leaving the old definition in was prudent
-until mesh code can be changed to match.
+> 
+> 
+> > -----Original Message-----
+> > From: Nicolas Pitre [mailto:nico@fluxnic.net]
+> > Sent: Wednesday, July 07, 2010 9:03 AM
+> > To: Roger Quadros
+> > Cc: Hunter Adrian (Nokia-MS/Helsinki); Ohad Ben-Cohen; linux-
+> > wireless@vger.kernel.org; linux-mmc@vger.kernel.org; linux-
+> > omap@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
+> > linux@arm.linux.org.uk; Chikkature Rajashekar Madhusudhan; Coelho Luciano
+> > (Nokia-MS/Helsinki); akpm@linux-foundation.org; San Mehat
+> > Subject: Re: [PATCH 11/15] wireless: wl1271: introduce platform device
+> > support
+> > 
+> > On Wed, 7 Jul 2010, Roger Quadros wrote:
+> > 
+> > > On 07/06/2010 10:51 PM, Hunter Adrian (Nokia-MS/Helsinki) wrote:
+> > > > For eMMC in omap_hsmmc, this is all done via claim_host / release_host
+> > > > which call ->enable() / ->disable() methods.  omap_hsmmc makes use of
+> > > > mmc_power_restore_host() which calls host->bus_ops->power_restore()
+> > > > which is not implemented for SDIO, but for MMC and SD it reinitializes
+> > > > the card.
+> > 
+> > This is IMHO a really bad design.  The power control decision has to
+> > come from the top, not from the bottom.  And certainly not with a
+> > U-turn dependency the omap_hsmmc is using.
+> > 
+> > I regret to say this, but the omap_hsmmc driver is becoming a total
+> > mess.  The host controller driver has to be a dumb interface serving
+> > requests from the hardware used by the upper layer stack, not the place
+> > where decisions such as power handling should be made.  Think of it like
+> > an ethernet driver.  No ethernet driver in Linux is telling the IP stack
+> > when to shut down.
+> > 
+> 
+> The point is that MMC/SD core files were patched to provide this kind of a
+> support. Any controller driver can use that framework today, right?. As an
+> example omap_hsmmc driver was patched and it works fine.
 
-Signed-off-by: Steve deRosier <steve@cozybit.com>
----
- include/linux/ieee80211.h |   23 +++++++++++++----------
- 1 files changed, 13 insertions(+), 10 deletions(-)
+It is not because you are twisting the layers and customizing the core 
+stack around your own controller that it is good software design.
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 97b2eae..1ed60b5 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1142,17 +1142,20 @@ enum ieee80211_eid {
- 	/* 802.11s
- 	 *
- 	 * All mesh EID numbers are pending IEEE 802.11 ANA approval.
--	 * The numbers have been incremented from those suggested in
--	 * 802.11s/D2.0 so that MESH_CONFIG does not conflict with
--	 * EXT_SUPP_RATES.
-+	 * The numbers have been taken from ANA request plan for 802.11s
-+	 *
-+	 * Note that the Peer Link IE has been replaced with the similar
-+	 * Peer Management IE.  We will keep the former definition until mesh
-+	 * code is changed to comply with latest 802.11s drafts.
- 	 */
--	WLAN_EID_MESH_CONFIG = 51,
--	WLAN_EID_MESH_ID = 52,
--	WLAN_EID_PEER_LINK = 55,
--	WLAN_EID_PREQ = 68,
--	WLAN_EID_PREP = 69,
--	WLAN_EID_PERR = 70,
--	WLAN_EID_RANN = 49,	/* compatible with FreeBSD */
-+	WLAN_EID_MESH_CONFIG = 113,
-+	WLAN_EID_MESH_ID = 114,
-+	WLAN_EID_PEER_MGMT = 115,
-+	WLAN_EID_PEER_LINK = 55,  /* no longer in 802.11s drafts */
-+	WLAN_EID_PREQ = 130,
-+	WLAN_EID_PREP = 131,
-+	WLAN_EID_PERR = 132,
-+	WLAN_EID_RANN = 126,
- 
- 	WLAN_EID_PWR_CONSTRAINT = 32,
- 	WLAN_EID_PWR_CAPABILITY = 33,
--- 
-1.7.0
+And the presence of the mmc_power_restore_host() code doesn't mean it is 
+sane.  My point is that no one should ever use that, not even 
+omap_hsmmc.
 
+Proof: it works so fine that now you must come up with yet another 
+contorted hack piled on top called "fake^H^H^H^Hsoftware insert/remove 
+events" to support power handling with SDIO cards.
+
+This MMC_CAP_DISABLE is ridiculous.  Why would this have to be a host 
+capability?  This should be a core feature that should be _transparent_ 
+to all hosts with no changes to any of the host drivers.  When the core 
+code knows that the card can be shut down after some idle period, it 
+should do so with the *existing* API calls, namely the set_ios method.  
+In the SDIO case it would be a simple matter of mapping the 
+sdio_release_power() onto that.  Instead, some contorted power 
+management support was sneaked in, which is misdesigned to the point of 
+breaking proper SDIO support for which more misdesigned features are now 
+needed to work around the former ones.
+
+Now the OMAP driver is becoming a stack of its own, making decisions 
+that clearly should be made at a higher level of abstraction.  To me 
+this denotes some laziness from the involved developers who didn't take 
+the time to design something sensible and generic in the core code, but 
+rather hacked a quick solution specific to omap_hmmc.c.  Of course the 
+former would require a greater understanding of common code and some 
+additional effort to make the solution truly generic.  Instead, the easy 
+solution was taken which is to stuff magic behaviors in a host driver 
+while other people are not paying as much attention to it than core 
+code.
+
+Needless to say that I'm not impressed at all.
+
+
+Nicolas
