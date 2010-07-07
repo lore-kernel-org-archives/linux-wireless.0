@@ -1,59 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:56139 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755298Ab0GZW06 (ORCPT
+Received: from relais.videotron.ca ([24.201.245.36]:16366 "EHLO
+	relais.videotron.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755650Ab0GGOCn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jul 2010 18:26:58 -0400
-MIME-Version: 1.0
-In-Reply-To: <20100726222113.GA6487@srcf.ucam.org>
-References: <1276933774.16697.11.camel@maxim-laptop> <20100619123841.GA31838@hash.localnet>
-	<1276952554.3332.3.camel@maxim-laptop> <1276961564.5173.12.camel@maxim-laptop>
-	<20100726201322.GI14855@tux> <1280177362.3721.7.camel@maxim-laptop>
-	<20100726210651.GJ14855@tux> <1280179033.3721.15.camel@maxim-laptop>
-	<20100726212543.GA5424@srcf.ucam.org> <AANLkTi=5_Dc8SumPi7cr8u7=DmnOHgSo6C76w9b0E4Kj@mail.gmail.com>
-	<20100726222113.GA6487@srcf.ucam.org>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 26 Jul 2010 15:26:37 -0700
-Message-ID: <AANLkTinq-SxMHTrJM23WaeRMkU-2cySiVrkwCjDRS_o+@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH v3] ath5k: disable ASPM
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	Wed, 7 Jul 2010 10:02:43 -0400
+MIME-version: 1.0
+Content-type: TEXT/PLAIN; charset=US-ASCII
+Date: Wed, 07 Jul 2010 10:02:42 -0400 (EDT)
+From: Nicolas Pitre <nico@fluxnic.net>
+To: Roger Quadros <roger.quadros@nokia.com>
+Cc: "Hunter Adrian (Nokia-MS/Helsinki)" <adrian.hunter@nokia.com>,
+	Ohad Ben-Cohen <ohad@wizery.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	David Quan <David.Quan@atheros.com>,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"kernel-team@lists.ubuntu.com" <kernel-team@lists.ubuntu.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	"tim.gardner@canonical.com" <tim.gardner@canonical.com>
-Content-Type: text/plain; charset=UTF-8
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	San Mehat <san@google.com>
+Subject: Re: [PATCH 11/15] wireless: wl1271: introduce platform device support
+In-reply-to: <4C34347F.8030000@nokia.com>
+Message-id: <alpine.LFD.2.00.1007070954010.6020@xanadu.home>
+References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
+ <1278376666-3509-12-git-send-email-ohad@wizery.com>
+ <4C32EF19.1000604@nokia.com>
+ <AANLkTintIz-N7MwwtqhVq2LR3Ln5JTNYSbJUBSSClcA-@mail.gmail.com>
+ <4C3306F4.8060907@nokia.com>
+ <AANLkTin5W52fPzWToRrAzm56SLZI-taSuI16rCEhLWqH@mail.gmail.com>
+ <4C333E0D.2070601@nokia.com> <alpine.LFD.2.00.1007061316010.6020@xanadu.home>
+ <4C338927.5020400@nokia.com> <4C34347F.8030000@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 26, 2010 at 3:21 PM, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
-> On Mon, Jul 26, 2010 at 03:15:32PM -0700, Luis R. Rodriguez wrote:
->> On Mon, Jul 26, 2010 at 2:25 PM, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
->> > This may need to be done on a chip by chip basis. Take a look at
->> > http://www.atheros.cz/inffile.php?inf=68&bit=32&atheros=AR5002G&system=4
->> > and some of the other inf files on that site to see which devices
->> > provide the PciASPMOptIn flag - those should support ASPM states even if
->> > they're pre-1.1 devices.
->>
->> I rather we not bother with these, lets simply follow the kernel's
->> lead here for its rule matching.
->
-> Sorry? The idea is to indicate which chips support ASPM even though
-> they're pre-PCIe 1.1. If all Atheros parts work fine with L1 then that
-> makes things much easier, but it would be good to know the correct set
-> of chips that are broken with L0s.
+On Wed, 7 Jul 2010, Roger Quadros wrote:
 
-What I meant was that the PCI config space would already have L1
-enabled if L1 worked, so I don't see why we would need to nitpick out
-specifics here. All Atheros PCIE chips should work with L1. The advise
-given is to disable L0s though. I believe AR2425 would be one which
-likely had L0s enabled but requires it to be disabled. Not sure of
-others. But this is why I am saying this can be done globally for all
-ath5k chipsets.
+> On 07/06/2010 10:51 PM, Hunter Adrian (Nokia-MS/Helsinki) wrote:
+> > For eMMC in omap_hsmmc, this is all done via claim_host / release_host
+> > which call ->enable() / ->disable() methods.  omap_hsmmc makes use of
+> > mmc_power_restore_host() which calls host->bus_ops->power_restore()
+> > which is not implemented for SDIO, but for MMC and SD it reinitializes
+> > the card.
 
-  Luis
+This is IMHO a really bad design.  The power control decision has to 
+come from the top, not from the bottom.  And certainly not with a 
+U-turn dependency the omap_hsmmc is using.
+
+I regret to say this, but the omap_hsmmc driver is becoming a total 
+mess.  The host controller driver has to be a dumb interface serving 
+requests from the hardware used by the upper layer stack, not the place 
+where decisions such as power handling should be made.  Think of it like 
+an ethernet driver.  No ethernet driver in Linux is telling the IP stack 
+when to shut down.
+
+> Shouldn't the power control intelligence (i.e. when to turn power ON/OFF) lie
+> with the bus drivers?
+
+Absolutely!  And in the SDIO case that should lie with each function 
+drivers.  Please let's stop this omap_hsmmc madness.
+
+
+Nicolas
