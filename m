@@ -1,46 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52901 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751767Ab0GWIeH (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:28413 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752299Ab0GGHsq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jul 2010 04:34:07 -0400
-Subject: Re: 2.6.35-rc5+ WARNING at net/mac80211/scan.c:262
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20100723082710.GA20251@comet.dominikbrodowski.net>
-References: <20100721184040.GA22968@comet.dominikbrodowski.net>
-	 <1279802055.12439.16.camel@jlt3.sipsolutions.net>
-	 <20100722134048.GA28231@isilmar-3.linta.de>
-	 <1279807678.12439.17.camel@jlt3.sipsolutions.net>
-	 <20100723082710.GA20251@comet.dominikbrodowski.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 23 Jul 2010 10:33:10 +0200
-Message-ID: <1279873990.3745.1.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 7 Jul 2010 03:48:46 -0400
+Message-ID: <4C343135.1090101@nokia.com>
+Date: Wed, 07 Jul 2010 10:48:05 +0300
+From: Roger Quadros <roger.quadros@nokia.com>
+MIME-Version: 1.0
+To: ext Nicolas Pitre <nico@fluxnic.net>
+CC: ext Ohad Ben-Cohen <ohad@wizery.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	San Mehat <san@google.com>
+Subject: Re: [PATCH 11/15] wireless: wl1271: introduce platform device support
+References: <1278376666-3509-1-git-send-email-ohad@wizery.com> <1278376666-3509-12-git-send-email-ohad@wizery.com> <4C32EF19.1000604@nokia.com> <AANLkTintIz-N7MwwtqhVq2LR3Ln5JTNYSbJUBSSClcA-@mail.gmail.com> <4C3306F4.8060907@nokia.com> <AANLkTin5W52fPzWToRrAzm56SLZI-taSuI16rCEhLWqH@mail.gmail.com> <4C333E0D.2070601@nokia.com> <alpine.LFD.2.00.1007061316010.6020@xanadu.home>
+In-Reply-To: <alpine.LFD.2.00.1007061316010.6020@xanadu.home>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-07-23 at 10:27 +0200, Dominik Brodowski wrote:
-> On Thu, Jul 22, 2010 at 04:07:58PM +0200, Johannes Berg wrote:
-> > On Thu, 2010-07-22 at 15:40 +0200, Dominik Brodowski wrote:
-> > 
-> > > > http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-mac80211-hw-scan-locking.patch
-> > > 
-> > > patching file drivers/net/wireless/iwlwifi/iwl-core.c
-> > > Hunk #1 succeeded at 2103 (offset 102 lines).
-> > > Hunk #2 FAILED at 2015.
-> > > Hunk #3 succeeded at 2120 (offset 97 lines).
-> > > 1 out of 3 hunks FAILED -- saving rejects to file
-> > > drivers/net/wireless/iwlwifi/iwl-core.c.rej
-> > 
-> > Oh, it's against wireless-testing, which apparently has some other mods
-> > there. I'll have to see if any other patch needs to go into .35 too.
-> 
-> That's fine, I'll just test wireless-testing plus your patch from now on ;)
+On 07/06/2010 08:42 PM, ext Nicolas Pitre wrote:
+> On Tue, 6 Jul 2010, Roger Quadros wrote:
+>
+>> On 07/06/2010 03:53 PM, ext Ohad Ben-Cohen wrote:
+>>> Hi Roger,
+>>>
+>>> On Tue, Jul 6, 2010 at 1:35 PM, Roger Quadros<roger.quadros@nokia.com>
+>>> wrote:
+>>>> My point is that shouldn't this be handled by SDIO core?
+>>>
+>>> Care to explain what you mean / give a code example ?
+>>
+>> If the Power enable GPIO can be treated as SDIO slot supply (i.e. vmmc), then
+>> the SDIO/MMC core should tackle it, just like it deals with supply for slots
+>> with removable cards.
+>
+> Exact.
+>
+>>> You need card detect events in order to trigger card&   sdio function
+>>> initialization and removals.
+>
+> Why would you trigger function initialization and removal?  Just to turn
+> off power?  That's a bit like pulling off the battery from your laptop
+> when you want to suspend it.  There is a better way to go about things.
+>
+>>> Please share any alternative approach you may be thinking on.
+>>
+>> OK, this is how I see it.
+>>
+>> - Treat the non-removable card as non-removable. So no need to do card detect
+>> emulation.
+>>
+>> - Treat the GPIO power enable on wl1271 as VMMC supply. Use fixed regulator
+>> framework to define this regulator&  supply. Even though you mention that it
+>> is not actually a supply, it fits well in the fixed supply framework.
+>>
+>> - When the host controller is enumerated, the mmc core will power up the slot,
+>> find the sdio card, and probe the function driver (i.e. wl1271_sdio).
+>>
+>> - if interface is not in use, the function driver must release the sdio host,
+>> and this should eventually disable the vmmc supply.
+>>
+>> - Whenever the wlan interface must be brought up, wl1271_sdio, can claim the
+>> sdio host. this will cause the vmmc supply to be enabled, for as long as the
+>> interface is up.
+>>
+>> Does this address all issues?
+>
+> This is mostly all good, except that claiming/releasing the SDIO host is
+> about access to the bus.  It must be claimed right before doing any IO,
+> and released right after that, even when the card is expected to remain
+> powered.  This is not the proper place to hook power control.
 
-Hah, ok, I made a note to backport the patch for you, guess I'll delete
-it. Wouldn't have gotten around to it today anyway I think.
+Agreed, but is it so that SDIO power may be removed between a host_release and 
+claim? This appears so from omap_hsmmc host controller.
 
-johannes
+if we have sdio_claim_power() and sdio_release_power() in place then power 
+control should depend on it.
 
+regards,
+-roger
