@@ -1,87 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:61124 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761153Ab0GURfc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jul 2010 13:35:32 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>
-Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v2 18/20] mmc: sdio: enable a default power off mode of the card
-Date: Wed, 21 Jul 2010 20:33:52 +0300
-Message-Id: <1279733634-21974-19-git-send-email-ohad@wizery.com>
-In-Reply-To: <1279733634-21974-1-git-send-email-ohad@wizery.com>
-References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+Received: from nbd.name ([88.198.39.176]:48126 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753121Ab0GGRmU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Jul 2010 13:42:20 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 2/2] ath9k: fix a buffer leak in A-MPDU completion
+Date: Wed,  7 Jul 2010 19:42:09 +0200
+Message-Id: <1278524529-30246-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1278524529-30246-1-git-send-email-nbd@openwrt.org>
+References: <1278524529-30246-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support for an SDIO device to stay powered off even without
-the presence of an SDIO function driver. A host should explicitly
-ask for it by means of MMC_CAP_DONT_POWER_CARD, and the SDIO
-function driver should know it needs to call sdio_claim_power
-before accessing the device.
+When ath_tx_complete_aggr() is called, it's responsible for returning
+all buffers in the linked list. This was not done when the STA lookup
+failed, leading to a race condition that could leak a few buffers when
+a STA just disconnected.
+Fix this by immediately returning all buffers to the free list in this case.
 
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc: stable@kernel.org
 ---
- drivers/mmc/core/sdio.c  |   15 +++++++++++++--
- include/linux/mmc/host.h |    1 +
- 2 files changed, 14 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/xmit.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/mmc/core/sdio.c b/drivers/mmc/core/sdio.c
-index 5c0fbfa..164353f 100644
---- a/drivers/mmc/core/sdio.c
-+++ b/drivers/mmc/core/sdio.c
-@@ -80,8 +80,9 @@ static int sdio_init_func(struct mmc_card *card, unsigned int fn)
- 		return ret;
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 408d1c5..05ec36a 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -329,6 +329,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 	int isaggr, txfail, txpending, sendbar = 0, needreset = 0, nbad = 0;
+ 	bool rc_update = true;
+ 	struct ieee80211_tx_rate rates[4];
++	unsigned long flags;
  
- 	/* For each SDIO function initialized, increase the power claim
--	 * reference count of the card */
--	atomic_inc(&card->power_claims);
-+	 * reference count of the card, unless explicitly requested not to */
-+	if (!(card->host->caps & MMC_CAP_DONT_POWER_CARD))
-+		atomic_inc(&card->power_claims);
- 
- 	return 0;
- 
-@@ -607,6 +608,16 @@ int mmc_attach_sdio(struct mmc_host *host, u32 ocr)
- 	mmc_release_host(host);
- 
- 	/*
-+	 * If power is not required for this card, power it off.
-+	 * The sdio function will need to call sdio_claim_power.
-+	 */
-+	if (!atomic_read(&card->power_claims)) {
-+		pr_info("%s: power is not claimed, releasing\n",
-+						mmc_hostname(host));
-+		mmc_release_power(host);
-+	}
+ 	skb = bf->bf_mpdu;
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+@@ -344,6 +345,10 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 	sta = ieee80211_find_sta_by_hw(hw, hdr->addr1);
+ 	if (!sta) {
+ 		rcu_read_unlock();
 +
-+	/*
- 	 * First add the card to the driver model...
- 	 */
- 	err = mmc_add_card(host->card);
-diff --git a/include/linux/mmc/host.h b/include/linux/mmc/host.h
-index 3675d58..756cf38 100644
---- a/include/linux/mmc/host.h
-+++ b/include/linux/mmc/host.h
-@@ -155,6 +155,7 @@ struct mmc_host {
- #define MMC_CAP_DISABLE		(1 << 7)	/* Can the host be disabled */
- #define MMC_CAP_NONREMOVABLE	(1 << 8)	/* Nonremovable e.g. eMMC */
- #define MMC_CAP_WAIT_WHILE_BUSY	(1 << 9)	/* Waits while card is busy */
-+#define MMC_CAP_DONT_POWER_CARD	(1 << 10)	/* Keep the card powered off */
- 
- 	mmc_pm_flag_t		pm_caps;	/* supported pm features */
++		spin_lock_irqsave(&sc->tx.txbuflock, flags);
++		list_splice_tail_init(bf_q, &sc->tx.txbuf);
++		spin_unlock_irqrestore(&sc->tx.txbuflock, flags);
+ 		return;
+ 	}
  
 -- 
-1.7.0.4
+1.6.4.2
 
