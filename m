@@ -1,191 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:64101 "EHLO mga03.intel.com"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:34769 "EHLO arroyo.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759521Ab0GBSoe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jul 2010 14:44:34 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 2/8] iwlwifi: add debug print for parsing firmware TLV
-Date: Fri,  2 Jul 2010 11:45:34 -0700
-Message-Id: <1278096340-2546-3-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1278096340-2546-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1278096340-2546-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1755479Ab0GGOzS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Jul 2010 10:55:18 -0400
+From: "Madhusudhan" <madhu.cr@ti.com>
+To: "'Nicolas Pitre'" <nico@fluxnic.net>,
+	"'Roger Quadros'" <roger.quadros@nokia.com>
+Cc: "'Hunter Adrian \(Nokia-MS/Helsinki\)'" <adrian.hunter@nokia.com>,
+	"'Ohad Ben-Cohen'" <ohad@wizery.com>,
+	<linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
+	"'Coelho Luciano \(Nokia-MS/Helsinki\)'" <Luciano.Coelho@nokia.com>,
+	<akpm@linux-foundation.org>, "'San Mehat'" <san@google.com>
+References: <1278376666-3509-1-git-send-email-ohad@wizery.com> <1278376666-3509-12-git-send-email-ohad@wizery.com> <4C32EF19.1000604@nokia.com> <AANLkTintIz-N7MwwtqhVq2LR3Ln5JTNYSbJUBSSClcA-@mail.gmail.com> <4C3306F4.8060907@nokia.com> <AANLkTin5W52fPzWToRrAzm56SLZI-taSuI16rCEhLWqH@mail.gmail.com> <4C333E0D.2070601@nokia.com> <alpine.LFD.2.00.1007061316010.6020@xanadu.home> <4C338927.5020400@nokia.com> <4C34347F.8030000@nokia.com> <alpine.LFD.2.00.1007070954010.6020@xanadu.home>
+Subject: RE: [PATCH 11/15] wireless: wl1271: introduce platform device support
+Date: Wed, 7 Jul 2010 09:54:08 -0500
+Message-ID: <E6AFC02D8D114C129C8140932818E578@am.dhcp.ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+In-reply-to: <alpine.LFD.2.00.1007070954010.6020@xanadu.home>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-When parsing TLV during loading firmware, if encounter any TLV error,
-log the error message to help debugging.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |  101 ++++++++++++++++++++------------
- 1 files changed, 63 insertions(+), 38 deletions(-)
+> -----Original Message-----
+> From: Nicolas Pitre [mailto:nico@fluxnic.net]
+> Sent: Wednesday, July 07, 2010 9:03 AM
+> To: Roger Quadros
+> Cc: Hunter Adrian (Nokia-MS/Helsinki); Ohad Ben-Cohen; linux-
+> wireless@vger.kernel.org; linux-mmc@vger.kernel.org; linux-
+> omap@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
+> linux@arm.linux.org.uk; Chikkature Rajashekar Madhusudhan; Coelho Luciano
+> (Nokia-MS/Helsinki); akpm@linux-foundation.org; San Mehat
+> Subject: Re: [PATCH 11/15] wireless: wl1271: introduce platform device
+> support
+> 
+> On Wed, 7 Jul 2010, Roger Quadros wrote:
+> 
+> > On 07/06/2010 10:51 PM, Hunter Adrian (Nokia-MS/Helsinki) wrote:
+> > > For eMMC in omap_hsmmc, this is all done via claim_host / release_host
+> > > which call ->enable() / ->disable() methods.  omap_hsmmc makes use of
+> > > mmc_power_restore_host() which calls host->bus_ops->power_restore()
+> > > which is not implemented for SDIO, but for MMC and SD it reinitializes
+> > > the card.
+> 
+> This is IMHO a really bad design.  The power control decision has to
+> come from the top, not from the bottom.  And certainly not with a
+> U-turn dependency the omap_hsmmc is using.
+> 
+> I regret to say this, but the omap_hsmmc driver is becoming a total
+> mess.  The host controller driver has to be a dumb interface serving
+> requests from the hardware used by the upper layer stack, not the place
+> where decisions such as power handling should be made.  Think of it like
+> an ethernet driver.  No ethernet driver in Linux is telling the IP stack
+> when to shut down.
+> 
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 3368cfd..22c0149 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1806,12 +1806,21 @@ static int iwlagn_load_firmware(struct iwl_priv *priv,
- 	const u8 *data;
- 	int wanted_alternative = iwlagn_wanted_ucode_alternative, tmp;
- 	u64 alternatives;
-+	u32 tlv_len;
-+	enum iwl_ucode_tlv_type tlv_type;
-+	const u8 *tlv_data;
-+	int ret = 0;
- 
--	if (len < sizeof(*ucode))
-+	if (len < sizeof(*ucode)) {
-+		IWL_ERR(priv, "uCode has invalid length: %zd\n", len);
- 		return -EINVAL;
-+	}
- 
--	if (ucode->magic != cpu_to_le32(IWL_TLV_UCODE_MAGIC))
-+	if (ucode->magic != cpu_to_le32(IWL_TLV_UCODE_MAGIC)) {
-+		IWL_ERR(priv, "invalid uCode magic: 0X%x\n",
-+			le32_to_cpu(ucode->magic));
- 		return -EINVAL;
-+	}
- 
- 	/*
- 	 * Check which alternatives are present, and "downgrade"
-@@ -1836,11 +1845,9 @@ static int iwlagn_load_firmware(struct iwl_priv *priv,
- 
- 	len -= sizeof(*ucode);
- 
--	while (len >= sizeof(*tlv)) {
--		u32 tlv_len;
--		enum iwl_ucode_tlv_type tlv_type;
-+	while (len >= sizeof(*tlv) && !ret) {
- 		u16 tlv_alt;
--		const u8 *tlv_data;
-+		u32 fixed_tlv_size = 4;
- 
- 		len -= sizeof(*tlv);
- 		tlv = (void *)data;
-@@ -1850,8 +1857,11 @@ static int iwlagn_load_firmware(struct iwl_priv *priv,
- 		tlv_alt = le16_to_cpu(tlv->alternative);
- 		tlv_data = tlv->data;
- 
--		if (len < tlv_len)
-+		if (len < tlv_len) {
-+			IWL_ERR(priv, "invalid TLV len: %zd/%u\n",
-+				len, tlv_len);
- 			return -EINVAL;
-+		}
- 		len -= ALIGN(tlv_len, 4);
- 		data += sizeof(*tlv) + ALIGN(tlv_len, 4);
- 
-@@ -1885,56 +1895,71 @@ static int iwlagn_load_firmware(struct iwl_priv *priv,
- 			pieces->boot_size = tlv_len;
- 			break;
- 		case IWL_UCODE_TLV_PROBE_MAX_LEN:
--			if (tlv_len != 4)
--				return -EINVAL;
--			capa->max_probe_length =
--				le32_to_cpup((__le32 *)tlv_data);
-+			if (tlv_len != fixed_tlv_size)
-+				ret = -EINVAL;
-+			else
-+				capa->max_probe_length =
-+					le32_to_cpup((__le32 *)tlv_data);
- 			break;
- 		case IWL_UCODE_TLV_INIT_EVTLOG_PTR:
--			if (tlv_len != 4)
--				return -EINVAL;
--			pieces->init_evtlog_ptr =
--				le32_to_cpup((__le32 *)tlv_data);
-+			if (tlv_len != fixed_tlv_size)
-+				ret = -EINVAL;
-+			else
-+				pieces->init_evtlog_ptr =
-+					le32_to_cpup((__le32 *)tlv_data);
- 			break;
- 		case IWL_UCODE_TLV_INIT_EVTLOG_SIZE:
--			if (tlv_len != 4)
--				return -EINVAL;
--			pieces->init_evtlog_size =
--				le32_to_cpup((__le32 *)tlv_data);
-+			if (tlv_len != fixed_tlv_size)
-+				ret = -EINVAL;
-+			else
-+				pieces->init_evtlog_size =
-+					le32_to_cpup((__le32 *)tlv_data);
- 			break;
- 		case IWL_UCODE_TLV_INIT_ERRLOG_PTR:
--			if (tlv_len != 4)
--				return -EINVAL;
--			pieces->init_errlog_ptr =
--				le32_to_cpup((__le32 *)tlv_data);
-+			if (tlv_len != fixed_tlv_size)
-+				ret = -EINVAL;
-+			else
-+				pieces->init_errlog_ptr =
-+					le32_to_cpup((__le32 *)tlv_data);
- 			break;
- 		case IWL_UCODE_TLV_RUNT_EVTLOG_PTR:
--			if (tlv_len != 4)
--				return -EINVAL;
--			pieces->inst_evtlog_ptr =
--				le32_to_cpup((__le32 *)tlv_data);
-+			if (tlv_len != fixed_tlv_size)
-+				ret = -EINVAL;
-+			else
-+				pieces->inst_evtlog_ptr =
-+					le32_to_cpup((__le32 *)tlv_data);
- 			break;
- 		case IWL_UCODE_TLV_RUNT_EVTLOG_SIZE:
--			if (tlv_len != 4)
--				return -EINVAL;
--			pieces->inst_evtlog_size =
--				le32_to_cpup((__le32 *)tlv_data);
-+			if (tlv_len != fixed_tlv_size)
-+				ret = -EINVAL;
-+			else
-+				pieces->inst_evtlog_size =
-+					le32_to_cpup((__le32 *)tlv_data);
- 			break;
- 		case IWL_UCODE_TLV_RUNT_ERRLOG_PTR:
--			if (tlv_len != 4)
--				return -EINVAL;
--			pieces->inst_errlog_ptr =
--				le32_to_cpup((__le32 *)tlv_data);
-+			if (tlv_len != fixed_tlv_size)
-+				ret = -EINVAL;
-+			else
-+				pieces->inst_errlog_ptr =
-+					le32_to_cpup((__le32 *)tlv_data);
- 			break;
- 		default:
-+			IWL_WARN(priv, "unknown TLV: %d\n", tlv_type);
- 			break;
- 		}
- 	}
- 
--	if (len)
--		return -EINVAL;
-+	if (len) {
-+		IWL_ERR(priv, "invalid TLV after parsing: %zd\n", len);
-+		iwl_print_hex_dump(priv, IWL_DL_FW, (u8 *)data, len);
-+		ret = -EINVAL;
-+	} else if (ret) {
-+		IWL_ERR(priv, "TLV %d has invalid size: %u\n",
-+			tlv_type, tlv_len);
-+		iwl_print_hex_dump(priv, IWL_DL_FW, (u8 *)tlv_data, tlv_len);
-+	}
- 
--	return 0;
-+	return ret;
- }
- 
- /**
--- 
-1.7.0.4
+The point is that MMC/SD core files were patched to provide this kind of a
+support. Any controller driver can use that framework today, right?. As an
+example omap_hsmmc driver was patched and it works fine.
+
+Why blame the controller driver for using a support provided by core files?
+
+Regards,
+Madhu
+
+> > Shouldn't the power control intelligence (i.e. when to turn power
+> ON/OFF) lie
+> > with the bus drivers?
+> 
+> Absolutely!  And in the SDIO case that should lie with each function
+> drivers.  Please let's stop this omap_hsmmc madness.
+> 
+> 
+> Nicolas
 
