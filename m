@@ -1,58 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:19755 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756678Ab0GBQIp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jul 2010 12:08:45 -0400
-Subject: Re: iwlwifi and 802.11s
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Iuri Diniz <iuridiniz@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <AANLkTim89kFmpafv2UsmanpiysGw8W1nfKZGXPsjPpXZ@mail.gmail.com>
-References: <AANLkTim89kFmpafv2UsmanpiysGw8W1nfKZGXPsjPpXZ@mail.gmail.com>
-Content-Type: text/plain
-Date: Fri, 02 Jul 2010 09:08:02 -0700
-Message-Id: <1278086882.2657.18.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:39393 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753252Ab0GHV2l convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Jul 2010 17:28:41 -0400
+Received: by pwi5 with SMTP id 5so483003pwi.19
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Jul 2010 14:28:41 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1278623628-25477-1-git-send-email-hauke@hauke-m.de>
+References: <1278623628-25477-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 8 Jul 2010 14:28:20 -0700
+Message-ID: <AANLkTim9AMJv8BKyjLKxHn6nlz7jqlDbu8nR-mR_0pcu@mail.gmail.com>
+Subject: Re: [PATCH 1/2] compat-wireless: activate CONFIG_CFG80211_WEXT if
+	possible
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Iuri,
+On Thu, Jul 8, 2010 at 2:13 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> CONFIG_CFG80211_WEXT depends on CONFIG_WIRELESS_EXT for every kernel
+> version,
 
-Yes, it is possible to add "mesh" support to iwlwifi, but currently it
-is not in our (Intel) schedule to enable/support this feature.
+This can't be true since CONFIG_WIRELESS_EXT is gone on recent kernels.
 
-If you or anybody from community would like to implement and support
-this feature, it is very welcome and we will consider the patches for
-inclusion, but base on few requirements:
+> because we use the wireless_handlers attribute.
+> CONFIG_CFG80211_WEXT should be set here every time it will be set in
+> config.mk.
+> The build was failing for kernel > 2.6.32 with CONFIG_WIRELESS_EXT=y
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  scripts/gen-compat-autoconf.sh |    5 +----
+>  1 files changed, 1 insertions(+), 4 deletions(-)
+>
+> diff --git a/scripts/gen-compat-autoconf.sh b/scripts/gen-compat-autoconf.sh
+> index 1e3002e..277467f 100755
+> --- a/scripts/gen-compat-autoconf.sh
+> +++ b/scripts/gen-compat-autoconf.sh
+> @@ -191,10 +191,7 @@ if [ -f $KLIB_BUILD/Makefile ]; then
+>                echo CONFIG_NETDEVICES_MULTIQUEUE >> $MULT_DEP_FILE
+>                define_config_multiple_deps CONFIG_MAC80211_QOS y $ALL_DEPS
+>                rm -f $MULT_DEP_FILE
+> -               # Kernels >= 2.6.32 can disable WEXT :D
+> -               if [ $SUBLEVEL -le 32 ]; then
+> -                       define_config_dep CONFIG_CFG80211_WEXT 1 CONFIG_WIRELESS_EXT
+> -               fi
+> +               define_config_dep CONFIG_CFG80211_WEXT 1 CONFIG_WIRELESS_EXT
+>        fi
+>  fi
+>  echo "#endif /* COMPAT_AUTOCONF_INCLUDED */"
 
- * We assume the patches make "mesh" works since we are not testing the
-mesh functions
- * The mesh feature should not break any of the normal WiFi operations
-which we _do_ test for
- * Since we are not testing the "mesh" function and would rely on the
-author to resolve any issues. We will disable the feature if "mesh"
-break any of the normal WiFi operation and both ourselves and the author
-are not be able to address the issues.
+What this is expressing is we need CONFIG_WIRELESS_EXT if we are <
+2.6.32 and want CONFIG_CFG80211_WEXT. What happened on 2.6.32 is we
+allowed for CONFIG_WIRELESS_EXT to be disabled on the kernel, but this
+same config option was renamed on future kernels or removed, I forget
+which.
 
-The best place to start is base on the latest iwlwifi driver which you
-can find in the following location:
+Your patch would not allow kernels to use compat-wireless that have
+wireless extensions disabled, so there seems to be another way we need
+to address this.
 
-http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-2.6.git;a=summary
-
-Good luck and looking forward for your patches.
-
-Thanks
-Wey
-
-On Thu, 2010-07-01 at 08:29 -0700, Iuri Diniz wrote:
-> Is possible to add mesh support to iwlwifi (I have a intel wireless
-> 4965AGN hardware) ?
-> 
-> if so, where can I get start?
-> is this information
-> http://linuxwireless.org/en/developers/Documentation/mac80211/API
-> sufficient?
-> 
-> thanks in advance.
-> 
-
+  Luis
