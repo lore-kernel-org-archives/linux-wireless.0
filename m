@@ -1,56 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:45320 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751192Ab0GVFUw (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:32075 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753662Ab0GHOui (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 01:20:52 -0400
-Received: from vs3003.wh2.ocn.ne.jp (125.206.180.231)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0408976049
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Jul 2010 14:20:50 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Jonathan Guerin <jonathan@guerin.id.au>
-Subject: Re: ath5k debug mode
-Date: Thu, 22 Jul 2010 14:23:28 +0900
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-References: <AANLkTimWWGlhEhIRol_5kjhIIEILLgDuMmUXUHCCVUC1@mail.gmail.com>
-In-Reply-To: <AANLkTimWWGlhEhIRol_5kjhIIEILLgDuMmUXUHCCVUC1@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201007221423.28805.br1@einfach.org>
+	Thu, 8 Jul 2010 10:50:38 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 13/13] wl1271: use per-channel max tx power passed by mac80211 when scanning
+Date: Thu,  8 Jul 2010 17:50:08 +0300
+Message-Id: <1278600608-22411-14-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1278600608-22411-1-git-send-email-luciano.coelho@nokia.com>
+References: <1278600608-22411-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu July 22 2010 13:55:36 Jonathan Guerin wrote:
-> Hi all,
-> 
-> I'm not sure if I'm just misunderstanding something, or if they
-> documentation is older than what's happening in practice. I'm trying
-> to enable ath5k debug mode so that I can have a poke around in debufs.
-> 
-> Unfortunately, enabling debug in the compat-wireless distro doesn't
-> seem to output the same information as I've been reading about
-> elsewhere on the 'net. My understanding is that ath5k should load an
-> ath5k directory tree into debugfs:
-> http://www.mail-archive.com/ath5k-devel@lists.ath5k.org/msg00266.html
-> 
-> This doesn't seem to be happening at the moment - what I CAN see in
-> the /debug tree is:
-> bdi  gpio  ieee80211  kprobes  mce  pktcdvd  sched_features  tracing  usb 
-> x86
-> 
-> Some of the stuff I expect to see in ath5k is in ieee8022, but I
-> cannot write to this tree. Trying to replicate the cat mentioned in
-> the link above to set the debug level in this tree fails with a
-> 'permission denied' error.
-> 
-> Trying to load the module with the debug param fails with the following
-> error: ath5k: Unknown parameter `debug'
-> 
-> I'm wondering if someone would be able to point me in the right
-> direction to get this working.
+We were always using the max transmit power when scanning.  Now we use the
+values passed to the driver by the mac80211 stack, so that we comply with
+regulations.
 
-seems like ath5k is not compiled with debugging enabled (did you set 
-CONFIG_ATH5K_DEBUG=y?), or you are using the wrong (old) module?
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Reviewed-by: Saravanan Dhanabal <ext-saravanan.dhanabal@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_scan.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-bruno
+diff --git a/drivers/net/wireless/wl12xx/wl1271_scan.c b/drivers/net/wireless/wl12xx/wl1271_scan.c
+index 567d759..e13c559 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_scan.c
++++ b/drivers/net/wireless/wl12xx/wl1271_scan.c
+@@ -65,7 +65,7 @@ static int wl1271_get_scan_channels(struct wl1271 *wl,
+ 			channels[j].max_duration =
+ 				cpu_to_le32(WL1271_SCAN_CHAN_MAX_DURATION);
+ 			channels[j].early_termination = 0;
+-			channels[j].tx_power_att = WL1271_SCAN_CURRENT_TX_PWR;
++			channels[j].tx_power_att = req->channels[i]->max_power;
+ 			channels[j].channel = req->channels[i]->hw_value;
+ 
+ 			memset(&channels[j].bssid_lsb, 0xff, 4);
+-- 
+1.6.3.3
+
