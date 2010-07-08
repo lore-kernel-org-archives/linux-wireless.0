@@ -1,79 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:37814 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751418Ab0GZTXH convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:40418 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754368Ab0GHOvE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jul 2010 15:23:07 -0400
-Received: by ewy23 with SMTP id 23so1001523ewy.19
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Jul 2010 12:23:06 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4C4DC98E.6090002@openwrt.org>
-References: <AANLkTimWoSTAtb0m9V=0CNowhy=KtpiKj-O3vdmV8qxB@mail.gmail.com>
-	<4C4DC98E.6090002@openwrt.org>
-Date: Mon, 26 Jul 2010 21:23:01 +0200
-Message-ID: <AANLkTinZ=KDo4aJU6Z93p1DXghF_MzE9CeBN6OuC_LnD@mail.gmail.com>
-Subject: Re: [ath9k-devel] [RFC] ath9k: improve aggregation throughput by
-	using only first rate
-From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 8 Jul 2010 10:51:04 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 06/13] wl1271: read fem manufacturer value from nvs
+Date: Thu,  8 Jul 2010 17:50:01 +0300
+Message-Id: <1278600608-22411-7-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1278600608-22411-1-git-send-email-luciano.coelho@nokia.com>
+References: <1278600608-22411-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/7/26 Felix Fietkau <nbd@openwrt.org>:
-> On 2010-07-26 7:10 PM, Björn Smedman wrote:
->> I think there are some (in theory) simple improvements that can be
->> done to the tx aggregation / rate control logic. A proof of concept of
->> one such improvement is provided below. Basically, it's a hack that
-> I think it makes sense to rely less on on-chip MRR for fallback, but I
-> think to make this workable, we really should use the MRR table for
-> something, otherwise the rate control algorithm will take much longer to
-> adapt.
-> It's probably better to fix this properly after I'm done with my A-MPDU
-> rewrite, because then I can more easily push parts of the software
-> retransmission behaviour into minstrel_ht directly.
+We should read the fem manufacturer value from the NVS, so we can modify it
+easily and use a consistent value throughout the configuration.  Previously
+we had to set the FEM value in the NVS and in the driver's initialization
+parameters.  This patch removes the latter.
 
-Sounds very reasonable. I'm sure you've thought of it but now that
-it's fresh in my head it would be great if the new aggregation design
-allowed us to experiment with stuff like this:
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_cmd.c  |    6 +++---
+ drivers/net/wireless/wl12xx/wl1271_conf.h |    9 ---------
+ drivers/net/wireless/wl12xx/wl1271_main.c |    5 -----
+ 3 files changed, 3 insertions(+), 17 deletions(-)
 
-* The rate control logic treats the average aggregate length as a
-measured independent variable, when in fact it depends heavily on the
-rates selected (via the 4 ms txop limit).
+diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
+index 834f7f8..23c7598 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
++++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
+@@ -132,7 +132,7 @@ int wl1271_cmd_general_parms(struct wl1271 *wl)
+ int wl1271_cmd_radio_parms(struct wl1271 *wl)
+ {
+ 	struct wl1271_radio_parms_cmd *radio_parms;
+-	struct conf_radio_parms *rparam = &wl->conf.init.radioparam;
++	struct wl1271_ini_general_params *gp = &wl->nvs->general_params;
+ 	int ret;
+ 
+ 	if (!wl->nvs)
+@@ -148,7 +148,7 @@ int wl1271_cmd_radio_parms(struct wl1271 *wl)
+ 	memcpy(&radio_parms->static_params_2, &wl->nvs->stat_radio_params_2,
+ 	       sizeof(struct wl1271_ini_band_params_2));
+ 	memcpy(&radio_parms->dyn_params_2,
+-	       &wl->nvs->dyn_radio_params_2[rparam->fem].params,
++	       &wl->nvs->dyn_radio_params_2[gp->tx_bip_fem_manufacturer].params,
+ 	       sizeof(struct wl1271_ini_fem_params_2));
+ 
+ 	/* 5GHz parameters */
+@@ -156,7 +156,7 @@ int wl1271_cmd_radio_parms(struct wl1271 *wl)
+ 	       &wl->nvs->stat_radio_params_5,
+ 	       sizeof(struct wl1271_ini_band_params_5));
+ 	memcpy(&radio_parms->dyn_params_5,
+-	       &wl->nvs->dyn_radio_params_5[rparam->fem].params,
++	       &wl->nvs->dyn_radio_params_5[gp->tx_bip_fem_manufacturer].params,
+ 	       sizeof(struct wl1271_ini_fem_params_5));
+ 
+ 	wl1271_dump(DEBUG_CMD, "TEST_CMD_INI_FILE_RADIO_PARAM: ",
+diff --git a/drivers/net/wireless/wl12xx/wl1271_conf.h b/drivers/net/wireless/wl12xx/wl1271_conf.h
+index 84b0de7..0435ffd 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_conf.h
++++ b/drivers/net/wireless/wl12xx/wl1271_conf.h
+@@ -955,14 +955,6 @@ struct conf_radio_parms {
+ 	u8 fem;
+ };
+ 
+-struct conf_init_settings {
+-	/*
+-	 * Configure radio parameters.
+-	 */
+-	struct conf_radio_parms radioparam;
+-
+-};
+-
+ struct conf_itrim_settings {
+ 	/* enable dco itrim */
+ 	u8 enable;
+@@ -1029,7 +1021,6 @@ struct conf_drv_settings {
+ 	struct conf_rx_settings rx;
+ 	struct conf_tx_settings tx;
+ 	struct conf_conn_settings conn;
+-	struct conf_init_settings init;
+ 	struct conf_itrim_settings itrim;
+ 	struct conf_pm_config_settings pm_config;
+ 	struct conf_roam_trigger_settings roam_trigger;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 8a4b17f..3a64896 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -241,11 +241,6 @@ static struct conf_drv_settings default_conf = {
+ 		.keep_alive_interval         = 55000,
+ 		.max_listen_interval         = 20,
+ 	},
+-	.init = {
+-		.radioparam = {
+-			.fem                 = 1,
+-		}
+-	},
+ 	.itrim = {
+ 		.enable = false,
+ 		.timeout = 50000,
+-- 
+1.6.3.3
 
-* When tx is aggregated most rate control probe frames end up inside
-aggregates and are never used for probing (effective probe frequency
-is divided by average aggregate length).
-
-* When setting up a hardware MRR for an aggregate the focus should be
-on throughput (as explained earlier in this thread). But there are
-situations when reliability is important: e.g. when a subframe in the
-aggregate is about to expire (because of time or block ack window). It
-may even be advantageous to tx the subframes that are about to expire
-in their own aggregate with lower / more reliable bitrate?
-
-* In many busy radio environments the packet success rate depends very
-much on the protection method being used (none, cts-to-self or
-rts-cts), often more so than on the bitrate itself. It would be
-interesting to experiment with including the protection method in the
-rate selection, i.e. to probe for the optimal protection method and
-bitrate combination.
-
-* In order to have the best possible rate control in very dynamic rf
-environments it's important to keep the hardware queue short and
-select rates as late as possible (to not introduce unnecessary delay
-when selecting new rates). I have no idea how to do this but it would
-be great if the tx queue could be kept long enough to never stall tx,
-but no longer.
-
-* If I understand correctly the Atheros hardware does not adjust the
-rts / cts-to-self duration field when going through the MRR
-(correct?). In that case it may be even more advantageous to use
-software retry as much as possible when some form of protection is
-enabled.
-
-Looking forward to the new aggregation code!
-
-/Björn
