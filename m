@@ -1,121 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:46130 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753696Ab0GKKs6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Jul 2010 06:48:58 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, linville@tuxdriver.com
-Subject: [PATCH 1/7] ath9k_hw: fix antenna diversity on AR9285
-Date: Sun, 11 Jul 2010 12:48:39 +0200
-Message-Id: <1278845325-62000-1-git-send-email-nbd@openwrt.org>
+Received: from smtp.nokia.com ([192.100.122.233]:40347 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754241Ab0GHOub (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Jul 2010 10:50:31 -0400
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Subject: [PATCH 10/13] wl1271: Update interface to temporarily disable dynamic PS
+Date: Thu,  8 Jul 2010 17:50:05 +0300
+Message-Id: <1278600608-22411-11-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <1278600608-22411-1-git-send-email-luciano.coelho@nokia.com>
+References: <1278600608-22411-1-git-send-email-luciano.coelho@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On AR9285, the antenna switch configuration register uses more than just
-16 bits. Because of an arbitrary mask applied to the EEPROM value that
-stores this configuration, diversity was broken in some cases, leading
-to a significant degradation in signal strength.
-Fix this by changing the callback to return a 32 bit value and remove
-the arbitrary mask.
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@kernel.org
+The mac80211 interface to temporarily disable dynamic PS changed, make
+corresponding changes to the driver.
+
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Reviewed-by: Saravanan Dhanabal <ext-saravanan.dhanabal@nokia.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    2 +-
- drivers/net/wireless/ath/ath9k/eeprom.h        |    2 +-
- drivers/net/wireless/ath/ath9k/eeprom_4k.c     |    4 ++--
- drivers/net/wireless/ath/ath9k/eeprom_9287.c   |    4 ++--
- drivers/net/wireless/ath/ath9k/eeprom_def.c    |    4 ++--
- 5 files changed, 8 insertions(+), 8 deletions(-)
+ drivers/net/wireless/wl12xx/wl1271_event.c |    4 ++--
+ drivers/net/wireless/wl12xx/wl1271_main.c  |    4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 343c9a4..ace8d26 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -951,7 +951,7 @@ static u8 ath9k_hw_ar9300_get_num_ant_config(struct ath_hw *ah,
- 	return 1;
- }
- 
--static u16 ath9k_hw_ar9300_get_eeprom_antenna_cfg(struct ath_hw *ah,
-+static u32 ath9k_hw_ar9300_get_eeprom_antenna_cfg(struct ath_hw *ah,
- 						  struct ath9k_channel *chan)
- {
- 	return -EINVAL;
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-index bdd8aa0..8750c55 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-@@ -670,7 +670,7 @@ struct eeprom_ops {
- 	int (*get_eeprom_ver)(struct ath_hw *hw);
- 	int (*get_eeprom_rev)(struct ath_hw *hw);
- 	u8 (*get_num_ant_config)(struct ath_hw *hw, enum ieee80211_band band);
--	u16 (*get_eeprom_antenna_cfg)(struct ath_hw *hw,
-+	u32 (*get_eeprom_antenna_cfg)(struct ath_hw *hw,
- 				      struct ath9k_channel *chan);
- 	void (*set_board_values)(struct ath_hw *hw, struct ath9k_channel *chan);
- 	void (*set_addac)(struct ath_hw *hw, struct ath9k_channel *chan);
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index e25a2ab..afafc4d 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -1150,13 +1150,13 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
+diff --git a/drivers/net/wireless/wl12xx/wl1271_event.c b/drivers/net/wireless/wl12xx/wl1271_event.c
+index 525ba1a..2d60d22 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_event.c
++++ b/drivers/net/wireless/wl12xx/wl1271_event.c
+@@ -229,9 +229,9 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
+ 	if (vector & SOFT_GEMINI_SENSE_EVENT_ID &&
+ 	    wl->bss_type == BSS_TYPE_STA_BSS) {
+ 		if (mbox->soft_gemini_sense_info)
+-			ieee80211_disable_dyn_ps(wl->vif, true);
++			ieee80211_disable_dyn_ps(wl->vif);
+ 		else
+-			ieee80211_disable_dyn_ps(wl->vif, false);
++			ieee80211_enable_dyn_ps(wl->vif);
  	}
- }
  
--static u16 ath9k_hw_4k_get_eeprom_antenna_cfg(struct ath_hw *ah,
-+static u32 ath9k_hw_4k_get_eeprom_antenna_cfg(struct ath_hw *ah,
- 					      struct ath9k_channel *chan)
- {
- 	struct ar5416_eeprom_4k *eep = &ah->eeprom.map4k;
- 	struct modal_eep_4k_header *pModal = &eep->modalHeader;
+ 	/*
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index d50c0a9..70c6b0d 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -939,7 +939,7 @@ static void wl1271_op_remove_interface(struct ieee80211_hw *hw,
  
--	return pModal->antCtrlCommon & 0xFFFF;
-+	return pModal->antCtrlCommon;
- }
+ 	/* enable dyn ps just in case (if left on due to fw crash etc) */
+ 	if (wl->bss_type == BSS_TYPE_STA_BSS)
+-		ieee80211_disable_dyn_ps(wl->vif, false);
++		ieee80211_enable_dyn_ps(wl->vif);
  
- static u8 ath9k_hw_4k_get_num_ant_config(struct ath_hw *ah,
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index 39a4105..37207df 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -1130,13 +1130,13 @@ static u8 ath9k_hw_ar9287_get_num_ant_config(struct ath_hw *ah,
- 	return 1;
- }
+ 	if (test_and_clear_bit(WL1271_FLAG_SCANNING, &wl->flags)) {
+ 		mutex_unlock(&wl->mutex);
+@@ -1779,7 +1779,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ 			wl->aid = 0;
  
--static u16 ath9k_hw_ar9287_get_eeprom_antenna_cfg(struct ath_hw *ah,
-+static u32 ath9k_hw_ar9287_get_eeprom_antenna_cfg(struct ath_hw *ah,
- 						  struct ath9k_channel *chan)
- {
- 	struct ar9287_eeprom *eep = &ah->eeprom.map9287;
- 	struct modal_eep_ar9287_header *pModal = &eep->modalHeader;
+ 			/* re-enable dynamic ps - just in case */
+-			ieee80211_disable_dyn_ps(wl->vif, false);
++			ieee80211_enable_dyn_ps(wl->vif);
  
--	return pModal->antCtrlCommon & 0xFFFF;
-+	return pModal->antCtrlCommon;
- }
- 
- static u16 ath9k_hw_ar9287_get_spur_channel(struct ath_hw *ah,
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index 77b1433..60480a1 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -1438,14 +1438,14 @@ static u8 ath9k_hw_def_get_num_ant_config(struct ath_hw *ah,
- 	return num_ant_config;
- }
- 
--static u16 ath9k_hw_def_get_eeprom_antenna_cfg(struct ath_hw *ah,
-+static u32 ath9k_hw_def_get_eeprom_antenna_cfg(struct ath_hw *ah,
- 					       struct ath9k_channel *chan)
- {
- 	struct ar5416_eeprom_def *eep = &ah->eeprom.def;
- 	struct modal_eep_header *pModal =
- 		&(eep->modalHeader[IS_CHAN_2GHZ(chan)]);
- 
--	return pModal->antCtrlCommon & 0xFFFF;
-+	return pModal->antCtrlCommon;
- }
- 
- static u16 ath9k_hw_def_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
+ 			/* revert back to minimum rates for the current band */
+ 			wl1271_set_band_rate(wl);
 -- 
-1.6.4.2
+1.6.3.3
 
