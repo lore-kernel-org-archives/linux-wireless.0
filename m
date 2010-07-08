@@ -1,83 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:47660 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754770Ab0GVXiW convert rfc822-to-8bit (ORCPT
+Received: from arroyo.ext.ti.com ([192.94.94.40]:43527 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753050Ab0GHDjs convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 19:38:22 -0400
-MIME-Version: 1.0
-In-Reply-To: <1279735134.3035.9.camel@localhost.localdomain>
-References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
-	<1279733634-21974-2-git-send-email-ohad@wizery.com> <1279735134.3035.9.camel@localhost.localdomain>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Fri, 23 Jul 2010 02:38:01 +0300
-Message-ID: <AANLkTilNefqQ08SgI9i_ZzjNTAU2ggd813DU0Hh22JlX@mail.gmail.com>
-Subject: Re: [PATCH v2 01/20] sdio: add TI + wl1271 ids
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux@arm.linux.org.uk,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Wed, 7 Jul 2010 23:39:48 -0400
+From: "Ghorai, Sukumar" <s-ghorai@ti.com>
+To: Ohad Ben-Cohen <ohad@wizery.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"Chikkature Rajashekar, Madhusudhan" <madhu.cr@ti.com>,
 	Luciano Coelho <luciano.coelho@nokia.com>,
-	akpm@linux-foundation.org, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>
-Content-Type: text/plain; charset=ISO-8859-1
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	San Mehat <san@google.com>, "Ben-cohen, Ohad" <ohadb@ti.com>
+Date: Thu, 8 Jul 2010 09:09:21 +0530
+Subject: RE: [PATCH 06/15] omap zoom2: wlan board muxing
+Message-ID: <2A3DCF3DA181AD40BDE86A3150B27B6B030E10C9B3@dbde02.ent.ti.com>
+References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
+ <1278376666-3509-7-git-send-email-ohad@wizery.com>
+In-Reply-To: <1278376666-3509-7-git-send-email-ohad@wizery.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Marcel,
-
-On Wed, Jul 21, 2010 at 8:58 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
->> Add SDIO IDs for TI and for TI's wl1271 wlan device.
->>
->> Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
->> ---
->>  include/linux/mmc/sdio_ids.h |    3 +++
->>  1 files changed, 3 insertions(+), 0 deletions(-)
->>
->> diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
->> index 33b2ea0..0d313c6 100644
->> --- a/include/linux/mmc/sdio_ids.h
->> +++ b/include/linux/mmc/sdio_ids.h
->> @@ -43,4 +43,7 @@
->>  #define SDIO_DEVICE_ID_SIANO_NOVA_A0         0x1100
->>  #define SDIO_DEVICE_ID_SIANO_STELLAR                 0x5347
->>
->> +#define SDIO_VENDOR_ID_TI                    0x0097
->> +#define SDIO_DEVICE_ID_TI_WL1271             0x4076
->> +
->
-> are we still doing this non-sense for no real reason.  What is so wrong
-> with keeping the IDs inside the driver code?
-
-Either way we can't go so wrong here (having global VENDOR_IDs can
-potentially prevent redefinitions of the same ID in different drivers,
-but that's probably not that big of an
-issue too).
-
-But if we prefer people to stop adding IDs to this global pool, let's
-at least make it clear. We can probably seal it with some "please
-don't add new IDs if you don't have to" footnote (care to send such
-patch ? :)
-
-Thanks,
-Ohad.
 
 
-> Personally I don't even see a point for these ID defines at all. Just
-> use the bare numbers in SDIO_DEVICE and put a comment above what kind of
-> device this is.
->
-> Regards
->
-> Marcel
->
->
+> -----Original Message-----
+> From: linux-mmc-owner@vger.kernel.org [mailto:linux-mmc-
+> owner@vger.kernel.org] On Behalf Of Ohad Ben-Cohen
+> Sent: Tuesday, July 06, 2010 6:08 AM
+> To: linux-wireless@vger.kernel.org; linux-mmc@vger.kernel.org; linux-
+> omap@vger.kernel.org
+> Cc: linux-arm-kernel@lists.infradead.org; linux@arm.linux.org.uk;
+> Chikkature Rajashekar, Madhusudhan; Luciano Coelho; akpm@linux-
+> foundation.org; San Mehat; Ben-cohen, Ohad
+> Subject: [PATCH 06/15] omap zoom2: wlan board muxing
+> 
+> From: Ohad Ben-Cohen <ohadb@ti.com>
+> 
+> Add board muxing to support the wlan wl1271 chip that is
+> hardwired to mmc2 (third mmc controller) on the ZOOM2.
+> 
+> Signed-off-by: Ohad Ben-Cohen <ohadb@ti.com>
+> ---
+>  arch/arm/mach-omap2/board-zoom2.c |   15 +++++++++++++++
+>  1 files changed, 15 insertions(+), 0 deletions(-)
+> 
+> diff --git a/arch/arm/mach-omap2/board-zoom2.c b/arch/arm/mach-
+> omap2/board-zoom2.c
+> index 803ef14..00871be 100644
+> --- a/arch/arm/mach-omap2/board-zoom2.c
+> +++ b/arch/arm/mach-omap2/board-zoom2.c
+> @@ -71,6 +71,21 @@ static struct twl4030_platform_data zoom2_twldata = {
+> 
+>  #ifdef CONFIG_OMAP_MUX
+>  static struct omap_board_mux board_mux[] __initdata = {
+> +#ifdef CONFIG_OMAP_ZOOM_WLAN
+[Ghorai] This is zoom board specific file, So why need this additional flag?
+
+> +	/* WLAN IRQ - GPIO 162 */
+> +	OMAP3_MUX(MCBSP1_CLKX, OMAP_MUX_MODE4 | OMAP_PIN_INPUT_PULLUP),
+> +	/* WLAN POWER ENABLE - GPIO 101 */
+> +	OMAP3_MUX(CAM_D2, OMAP_MUX_MODE4 | OMAP_PIN_OUTPUT),
+> +	/* WLAN SDIO: MMC3 CMD */
+> +	OMAP3_MUX(MCSPI1_CS1, OMAP_MUX_MODE3 | OMAP_PIN_INPUT_PULLUP),
+> +	/* WLAN SDIO: MMC3 CLK */
+> +	OMAP3_MUX(ETK_CLK, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
+> +	/* WLAN SDIO: MMC3 DAT[0-3] */
+> +	OMAP3_MUX(ETK_D3, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
+> +	OMAP3_MUX(ETK_D4, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
+> +	OMAP3_MUX(ETK_D5, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
+> +	OMAP3_MUX(ETK_D6, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
+> +#endif
+>  	{ .reg_offset = OMAP_MUX_TERMINATOR },
+>  };
+>  #else
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-omap" in
+> 1.7.0.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-mmc" in
 > the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
