@@ -1,50 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:22509 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752238Ab0GWFN6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jul 2010 01:13:58 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Jul 2010 22:13:58 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19529.9687.183293.284789@gargle.gargle.HOWL>
-Date: Fri, 23 Jul 2010 10:47:11 +0530
-To: <linville@tuxdriver.com>
-CC: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: Don't set per-BSS QoS for monitor interfaces
+Received: from server19320154104.serverpool.info ([193.201.54.104]:44941 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756927Ab0GHVML (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Jul 2010 17:12:11 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] compat: fix tracpoint building
+Date: Thu,  8 Jul 2010 23:11:58 +0200
+Message-Id: <1278623518-18964-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In AP mode, there is no need to notify the driver about QoS
-changes for the monitor interface that is created. The warning
-in ieee80211_bss_info_change_notify() would be hit otherwise.
+trace/define_trace.h can be included more often and it have to.
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+This fixes some errors like this:
+WARNING: "__tracepoint_iwlwifi_dev_rx" [/home/hauke/compat-wireless/compat-wireless-git/drivers/net/wireless/iwlwifi/iwlcore.ko] undefined!
+
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- net/mac80211/util.c |    8 ++++++--
- 1 files changed, 6 insertions(+), 2 deletions(-)
+ include/trace/define_trace.h |    5 -----
+ 1 files changed, 0 insertions(+), 5 deletions(-)
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 7947921..748387d 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -803,8 +803,12 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata)
+diff --git a/include/trace/define_trace.h b/include/trace/define_trace.h
+index a31105a..7d03ccf 100644
+--- a/include/trace/define_trace.h
++++ b/include/trace/define_trace.h
+@@ -1,10 +1,5 @@
+-#ifndef _COMPAT_TRACE_DEFINE_TRACE_H
+-#define _COMPAT_TRACE_DEFINE_TRACE_H 1
+-
+ #include <linux/version.h>
  
- 	/* after reinitialize QoS TX queues setting to default,
- 	 * disable QoS at all */
--	sdata->vif.bss_conf.qos = sdata->vif.type != NL80211_IFTYPE_STATION;
--	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_QOS);
-+
-+	if (sdata->vif.type != NL80211_IFTYPE_MONITOR) {
-+		sdata->vif.bss_conf.qos =
-+			sdata->vif.type != NL80211_IFTYPE_STATION;
-+		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_QOS);
-+	}
- }
- 
- void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
+ #if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30))
+ #include_next <trace/define_trace.h>
+ #endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30)) */
+-
+-#endif	/* _COMPAT_TRACE_DEFINE_TRACE_H */
 -- 
-1.7.1.1
+1.7.0.4
 
