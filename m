@@ -1,55 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:37298 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751351Ab0GMOF1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jul 2010 10:05:27 -0400
-Message-ID: <4C3C7296.3070700@bu3sch.de>
-Date: Tue, 13 Jul 2010 16:05:10 +0200
-From: =?ISO-8859-1?Q?Michael_B=FCsch?= <mb@bu3sch.de>
+Received: from mail.atheros.com ([12.36.123.2]:59844 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753420Ab0GHGmh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Jul 2010 02:42:37 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 07 Jul 2010 23:42:32 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH] ath9k: fix panic while cleaning up virtaul wifis
+Date: Thu, 8 Jul 2010 12:12:29 +0530
+Message-ID: <1278571349-10873-1-git-send-email-rmanoharan@atheros.com>
 MIME-Version: 1.0
-To: Simon Richter <sjr@debian.org>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	linux-wireless@vger.kernel.org, 588196@bugs.debian.org
-Subject: Re: Bug#588196: b43: does not join multicast groups
-References: <20100706021937.11147.78230.reportbug@debian.hogyros.de> <1278887148.6139.91.camel@localhost> <4C3A4C6E.6060801@lwfinger.net> <20100713051430.GA2625@honey.hogyros.de> <4C3BFB87.5030907@lwfinger.net> <20100713073751.GB3089@richter> <4C3C6350.50304@bu3sch.de> <20100713130614.GB25565@richter> (sfid-20100713_150638_259090_128768E3)
-In-Reply-To: <20100713130614.GB25565@richter> (sfid-20100713_150638_259090_128768E3)
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/13/2010 03:06 PM, Simon Richter wrote:
-> Hi,
->
-> On Tue, Jul 13, 2010 at 03:00:00PM +0200, Michael Büsch wrote:
->
->> But I wanna say again that this all is expected behavior. The PIO
->> fallback workaround randomly drops packets when switching modes.
->> So it is expected that certain handshaking packages may be lost.
->
-> So if the handshake to join a MC group is lost for whatever reason, it
-> is lost forever, or is that just in the "shit happened, reset
-> everything" code path?
+num_sec_wiphy means max secondary wifis that the driver can accomudate.
+So cancelling wiphy work should be based on the presence of
+secondary wifis.
 
-It's not entirely possible to answer that question from a b43 point of view.
-What happens in b43 is:
-It tries to transmit through DMA. If that fails, it drops all queued
-packets (but does not tell any upper layer about that) and resets the
-hardware to PIO mode and waits for further work.
-So it is up to the upper layer to detect the failure. I don't think
-it's possible to automatically detect such incidents for multicast
-transmissions. So the mechanism fails here.
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/init.c |    2 +-
+ drivers/net/wireless/ath/ath9k/main.c |    8 +++++++-
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
->>> I was also having some suspend related issues, I'm going to give it a
->>> few days now to see whether they also disappear now.
->
->> Please open a new bug for this. Thanks.
->
-> If they keep appearing; this may also be related to lost packets.
-
-I'm pretty sure that any suspend issue is not related to the PIO
-fallback mechanism.
-
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index fe730cb..243c177 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -787,12 +787,12 @@ void ath9k_deinit_device(struct ath_softc *sc)
+ 		ieee80211_unregister_hw(aphy->hw);
+ 		ieee80211_free_hw(aphy->hw);
+ 	}
+-	kfree(sc->sec_wiphy);
+ 
+ 	ieee80211_unregister_hw(hw);
+ 	ath_rx_cleanup(sc);
+ 	ath_tx_cleanup(sc);
+ 	ath9k_deinit_softc(sc);
++	kfree(sc->sec_wiphy);
+ }
+ 
+ void ath_descdma_cleanup(struct ath_softc *sc,
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 4c0831f..bca8c5a 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1264,6 +1264,7 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 	struct ath_softc *sc = aphy->sc;
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
++	int i;
+ 
+ 	mutex_lock(&sc->mutex);
+ 
+@@ -1276,7 +1277,12 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 	cancel_work_sync(&sc->paprd_work);
+ 	cancel_work_sync(&sc->hw_check_work);
+ 
+-	if (!sc->num_sec_wiphy) {
++	for (i = 0; i < sc->num_sec_wiphy; i++) {
++		if (sc->sec_wiphy[i])
++			break;
++	}
++
++	if (i == sc->num_sec_wiphy) {
+ 		cancel_delayed_work_sync(&sc->wiphy_work);
+ 		cancel_work_sync(&sc->chan_work);
+ 	}
 -- 
-Greetings Michael.
+1.7.0.4
+
