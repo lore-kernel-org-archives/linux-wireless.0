@@ -1,69 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:43262 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756462Ab0GXV0N (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:41973 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756929Ab0GHTRc convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jul 2010 17:26:13 -0400
-Received: by wwj40 with SMTP id 40so5778487wwj.1
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Jul 2010 14:26:11 -0700 (PDT)
+	Thu, 8 Jul 2010 15:17:32 -0400
+Received: by pwi5 with SMTP id 5so446698pwi.19
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Jul 2010 12:17:32 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4C474851.4000809@lwfinger.net>
-References: <87vd88n1i8.fsf@gmail.com>
-	<4C474851.4000809@lwfinger.net>
-Date: Sat, 24 Jul 2010 22:26:11 +0100
-Message-ID: <AANLkTinZG-kHrS-s_94Bq4JNXuyf6kWzqsVRAVjdGQ3c@mail.gmail.com>
-Subject: Re: Master mode in rtl8187
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ben Gamari <bgamari.foss@gmail.com>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20100708190302.0577F42E2D@repository3.orbit-lab.org>
+References: <20100708190302.0577F42E2D@repository3.orbit-lab.org>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 8 Jul 2010 12:17:12 -0700
+Message-ID: <AANLkTikhTHFQw9OPaoVfeWywzZXefWL_kiPmsP2IgZLz@mail.gmail.com>
+Subject: Re: Compat-wireless release for 2010-07-08 is baked
+To: Compat-wireless cronjob account <compat@orbit-lab.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7/21/10, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 07/21/2010 01:17 PM, Ben Gamari wrote:
->> Hey all,
->>
->> I recently purchased a Netgear WG111v2 (based on rtl8187b) and after
->> seeing scattered reports[1] that master mode may be supported by the
->> rtl8187 driver. Unfortunately, hostapd throws up when it attempts to put
->> the card into master mode. Is master mode supported by this driver? I've
->> tried both 2.6.34 as well as the latest wireless-testing tree and
->> neither seem to work.
->
-> My WG111V2 has an RTL8187L chip in it, not an RTL8187B. No, master mode is
-> NOT
-> supported by this driver. Adding that feature has been on my list of things
-> to
-> do, but the priority is very low. I really have little desire to convert my
-> $600
-> laptop into a $40 access point.
->
->> I noticed there was a patch[2] sent out a few years back, but it seems
->> no one followed up. While I don't have much experience working with
->> wireless hardware I've done kernel driver work before, so with some
->> guidance I might be able to finish up that patch. Any input would be
->> greatly appreciated. Thanks!
->
->> [1]
->> http://osdir.com/ml/linux.kernel.wireless.general/2007-07/msg00289.html
->> [2]
->> http://osdir.com/ml/linux.kernel.wireless.general/2007-06/msg00455.html
->
-> That patch is useless. The rtl8187 driver and mac80211 have changed so much
-> that
-> it cannot be made to apply, and would not be likely to work.
->
-> One other thing to consider. The RTL8187L has only a single transmit queue.
-> Will
-> the device be able to transmit beacons with an appropriate timing accuracy?
->
-> To modify the driver, you will need to study some other driver that does
-> work in
-> master mode.
+I'm fixing this right now, sorry for the delay.
 
-There were some discussion a while back that some generic master mode
-support for all mac80211-based drivers might eventually happen.  Is
-that still the case?
+  Luis
 
-Hin-Tak
+On Thu, Jul 8, 2010 at 12:03 PM, Compat-wireless cronjob account
+<compat@orbit-lab.org> wrote:
+> From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+>   8a97897..12f89ed  master     -> origin/master
+> From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+>   b396362..59d8d6f  history    -> origin/history
+>  + 55fcd2c...95a7e04 master     -> origin/master  (forced update)
+>   815c416..78178c7  stable     -> origin/stable
+>  * [new tag]         next-20100708 -> next-20100708
+> cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+> cat: compat_base_tree: No such file or directory
+> cat: compat_base_tree_version: No such file or directory
+> cat: compat_version: No such file or directory
+> cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+> scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+> make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+> make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+> make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+> make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+> make: *** [clean] Error 2
+> /usr/bin/sha1sum: *.tar.bz2: No such file or directory
+>
+> compat-wireless code metrics
+>
+>    494880 - Total upstream lines of code being pulled
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
