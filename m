@@ -1,89 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:7089 "EHLO mga02.intel.com"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:43538 "EHLO arroyo.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750745Ab0GXEeq convert rfc822-to-8bit (ORCPT
+	id S1753050Ab0GHDjy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jul 2010 00:34:46 -0400
-From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-To: drago01 <drago01@gmail.com>
-CC: Marcel Holtmann <marcel@holtmann.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 23 Jul 2010 21:34:43 -0700
-Subject: RE: iwlagn and many firmware restarts with Fedora kernel
-Message-ID: <E9954878DD1FB34FAE5187FB88C58A350120C54D7D@orsmsx506.amr.corp.intel.com>
-References: <1279565034.4572.36.camel@localhost.localdomain>
-	<AANLkTinGUQjPoMRmt_jeFgpxLhzma7qhfR14t_tWLvO1@mail.gmail.com>
-	<1279582174.4572.43.camel@localhost.localdomain>
-	<1279583798.28066.3.camel@wwguy-ubuntu>
-	<AANLkTinJrjvSUuOSeb6fQESN-T789wWCU1ezRXwQ3KXK@mail.gmail.com>
-	<1279744628.6548.0.camel@wwguy-ubuntu>
-	<AANLkTilxa09Cqn3icsTRAULhKBPzv5evOVPTqI-GrYiU@mail.gmail.com>
-	<1279823849.32290.1.camel@wwguy-ubuntu>
- <AANLkTi=qKLVEKKKopWdnxS41ny5S6zV6RSCptSE+a8Sf@mail.gmail.com>
-In-Reply-To: <AANLkTi=qKLVEKKKopWdnxS41ny5S6zV6RSCptSE+a8Sf@mail.gmail.com>
+	Wed, 7 Jul 2010 23:39:54 -0400
+From: "Ghorai, Sukumar" <s-ghorai@ti.com>
+To: Ohad Ben-Cohen <ohad@wizery.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"Chikkature Rajashekar, Madhusudhan" <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	San Mehat <san@google.com>, "Ben-cohen, Ohad" <ohadb@ti.com>
+Date: Thu, 8 Jul 2010 09:09:22 +0530
+Subject: RE: [PATCH 04/15] mmc: support embedded data field in mmc_host
+Message-ID: <2A3DCF3DA181AD40BDE86A3150B27B6B030E10C9B5@dbde02.ent.ti.com>
+References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
+ <1278376666-3509-5-git-send-email-ohad@wizery.com>
+In-Reply-To: <1278376666-3509-5-git-send-email-ohad@wizery.com>
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi drago,
 
------Original Message-----
-From: drago01 [mailto:drago01@gmail.com]
-Sent: Friday, July 23, 2010 3:32 PM
-To: Guy, Wey-Yi W
-Cc: Marcel Holtmann; linux-wireless@vger.kernel.org
-Subject: Re: iwlagn and many firmware restarts with Fedora kernel
 
-On Thu, Jul 22, 2010 at 8:37 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> Hi drago,
->
->
-> On Wed, 2010-07-21 at 14:00 -0700, drago01 wrote:
->> On Wed, Jul 21, 2010 at 10:37 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
->> > Hi drago,
->> > On Wed, 2010-07-21 at 12:59 -0700, drago01 wrote:
->> >> On Tue, Jul 20, 2010 at 1:56 AM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
->> >> > Hi drago,
->> >> >
->> >> >
->> >> > Are you using 5350? here I attach a "RFC patch", could you give a try to
->> >> > see if it help?
->> >>
->> >> Not quite I am on 5300; your patch seem to only touch the 5350 code
->> >> ... should I try the same change for 5300?
->> >
->> > Yes, please
->>
->> Hi,
->>
->> As there is no such field in .34 I patched the .35 driver which seems
->> to be fine with the change ... I couldn't trigger it using the close
->> lid (no suspend) and wait a bit trick ... but I have not used it for
->> long enough to say for certain that its gone.
->>
->> But unfortunately the driver has a different issue it spams my log with tons of:
->>
->> iwlagn 0000:02:00.0: BA scd_flow 0 does not match txq_id 10
->> iwlagn 0000:02:00.0: BA scd_flow 0 does not match txq_id 10
->> iwlagn 0000:02:00.0: BA scd_flow 0 does not match txq_id 10
->> iwlagn 0000:02:00.0: BA scd_flow 0 does not match txq_id 10
->> iwlagn 0000:02:00.0: BA scd_flow 0 does not match txq_id 10
->> iwlagn 0000:02:00.0: BA scd_flow 0 does not match txq_id 10
->> iwlagn 0000:02:00.0: BA scd_flow 0 does not match txq_id 10
->> iwlagn 0000:02:00.0: BA scd_flow 0 does not match txq_id 10
->> iwlagn 0000:02:00.0: BA scd_flow 0 does not match txq_id 10
->>
-> Yes, I aware of this, this is introduced by a recent patch
-> commit d9763a384216336e180399b69461eae37f6c4f54
->
-> I will work on a new patch to help address this.
-
-OK, as for the other patch after a day in use I could not trigger the
-problem so it does indeed fix it.
-
-Great, thank you very much for testing it. I will prepare the patch for upstream.
-
-Btw, I also have patch to help the other problem you encounter.
-
-Wey
+> -----Original Message-----
+> From: linux-mmc-owner@vger.kernel.org [mailto:linux-mmc-
+> owner@vger.kernel.org] On Behalf Of Ohad Ben-Cohen
+> Sent: Tuesday, July 06, 2010 6:08 AM
+> To: linux-wireless@vger.kernel.org; linux-mmc@vger.kernel.org; linux-
+> omap@vger.kernel.org
+> Cc: linux-arm-kernel@lists.infradead.org; linux@arm.linux.org.uk;
+> Chikkature Rajashekar, Madhusudhan; Luciano Coelho; akpm@linux-
+> foundation.org; San Mehat; Ben-cohen, Ohad
+> Subject: [PATCH 04/15] mmc: support embedded data field in mmc_host
+> 
+> From: Ohad Ben-Cohen <ohadb@ti.com>
+> 
+> Add support to set/get mmc_host private embedded
+> data.
+> 
+> This is needed to allow software to dynamically
+> create (and remove) SDIO functions which represents
+> embedded SDIO devices.
+> 
+> Typically, it will be used to set the context of
+> a driver that is creating a new SDIO function
+> (and would then expect to be able to get that context
+> back upon creation of the new sdio func).
+> 
+> Signed-off-by: Ohad Ben-Cohen <ohadb@ti.com>
+> ---
+>  drivers/mmc/core/Kconfig |    8 ++++++++
+>  include/linux/mmc/host.h |   16 ++++++++++++++++
+>  2 files changed, 24 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/mmc/core/Kconfig b/drivers/mmc/core/Kconfig
+> index bb22ffd..ab27eb3 100644
+> --- a/drivers/mmc/core/Kconfig
+> +++ b/drivers/mmc/core/Kconfig
+> @@ -16,3 +16,11 @@ config MMC_UNSAFE_RESUME
+> 
+>  	  This option sets a default which can be overridden by the
+>  	  module parameter "removable=0" or "removable=1".
+> +
+> +config MMC_EMBEDDED_SDIO
+> +	boolean "MMC embedded SDIO device support"
+> +	help
+> +	  If you say Y here, support will be added for embedded SDIO
+> +	  devices (e.g. hardwired embedded WLAN SDIO devices).
+> +	  Such devices require software support for emulating
+> +	  card detect events.
+> diff --git a/include/linux/mmc/host.h b/include/linux/mmc/host.h
+> index f65913c..9a48486 100644
+> --- a/include/linux/mmc/host.h
+> +++ b/include/linux/mmc/host.h
+> @@ -209,6 +209,10 @@ struct mmc_host {
+>  	struct led_trigger	*led;		/* activity led */
+>  #endif
+> 
+> +#ifdef CONFIG_MMC_EMBEDDED_SDIO
+> +	void			*embedded_data;
+> +#endif
+> +
+>  	struct dentry		*debugfs_root;
+> 
+>  	unsigned long		private[0] ____cacheline_aligned;
+> @@ -264,5 +268,17 @@ static inline void mmc_set_disable_delay(struct
+> mmc_host *host,
+>  	host->disable_delay = disable_delay;
+>  }
+> 
+> +#ifdef CONFIG_MMC_EMBEDDED_SDIO
+> +static inline void *mmc_get_embedded_data(struct mmc_host *host)
+> +{
+> +	return host->embedded_data;
+> +}
+> +
+> +static inline void mmc_set_embedded_data(struct mmc_host *host, void
+> *data)
+> +{
+> +	host->embedded_data = data;
+> +}
+> +#endif
+> +
+[Ghorai] we can avoid CONFIG_MMC_EMBEDDED_SDIO flag itself. Why we are passing fixed data? We can enquire form card for the functions, features,.. and at runtime itself. And we are adding many compile-time/kconfig options in this patch series.
+>  #endif
+> 
+> --
+> 1.7.0.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-mmc" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
