@@ -1,39 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:33435 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750719Ab0GOEWQ (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:51840 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752438Ab0GHUOP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jul 2010 00:22:16 -0400
-Received: by pxi14 with SMTP id 14so241276pxi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Jul 2010 21:22:16 -0700 (PDT)
+	Thu, 8 Jul 2010 16:14:15 -0400
 MIME-Version: 1.0
-In-Reply-To: <003201cb23cd$527f3f90$aa01a8c0@satya>
-References: <1279152521-10805-1-git-send-email-lrodriguez@atheros.com>
-	<003201cb23cd$527f3f90$aa01a8c0@satya>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 14 Jul 2010 21:21:54 -0700
-Message-ID: <AANLkTimc0k8SmNnyRpa05luw6nKR-qy0rLBe09TBi4qS@mail.gmail.com>
-Subject: Re: [PATCH] ath9k_hw: Fix AR9003 MPDU delimeter CRC check for middle
-	subframes
-To: Satya <satya.rao@redpinesignals.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Tushit Jain <tushit.jain@atheros.com>,
-	Kyungwan Nam <kyungwan.nam@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <2A3DCF3DA181AD40BDE86A3150B27B6B030E10C9B7@dbde02.ent.ti.com>
+References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
+	<1278376666-3509-16-git-send-email-ohad@wizery.com> <2A3DCF3DA181AD40BDE86A3150B27B6B030E10C9B7@dbde02.ent.ti.com>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Thu, 8 Jul 2010 23:13:52 +0300
+Message-ID: <AANLkTikAq9wgsfxP7LMObEMuaNM9YjhDfk9MzK8tLoXs@mail.gmail.com>
+Subject: Re: [PATCH 15/15] omap: zoom: enable WLAN device
+To: "Ghorai, Sukumar" <s-ghorai@ti.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"Chikkature Rajashekar, Madhusudhan" <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	San Mehat <san@google.com>, "Ben-cohen, Ohad" <ohadb@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 14, 2010 at 8:24 PM, Satya <satya.rao@redpinesignals.com> wrote:
+On Thu, Jul 8, 2010 at 6:39 AM, Ghorai, Sukumar <s-ghorai@ti.com> wrote:
+> [Ghorai] In general we can avoid OMAP_ZOOM_WLAN and MMC_EMBEDDED_SDIO as kconfig option. 1st one is board specific and 2nd one could be generic sdio code. As I mentioned in other patch too.
+
+
+Thanks, will get rid of the extra config options.
+
+
+>> --
+>> 1.7.0.4
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-mmc" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
-> I just wonder if the delimiter length CRC is wrong, where from we
-> get the length of the data packet to get to a state where we say
-> we have received the data packet with correct CRC ?
->
-> I am not sure about this. I appreciate if someone could clarify this.
-> Thanks.
-
-Great question  :), Kyungwan, Kyungwan?
-
-PS. This e-mail thread is on a public mailing list.
-
-  Luis
