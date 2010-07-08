@@ -1,50 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52943 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934377Ab0GOUQh (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:59310 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752152Ab0GHUNP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jul 2010 16:16:37 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: improve error checking if WEP fails to init
-Date: Thu, 15 Jul 2010 16:16:17 -0400
-Message-Id: <1279224977-23100-1-git-send-email-linville@tuxdriver.com>
+	Thu, 8 Jul 2010 16:13:15 -0400
+MIME-Version: 1.0
+In-Reply-To: <20100708094548.GB1920@atomide.com>
+References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
+	<1278376666-3509-7-git-send-email-ohad@wizery.com> <2A3DCF3DA181AD40BDE86A3150B27B6B030E10C9B3@dbde02.ent.ti.com>
+	<20100708094548.GB1920@atomide.com>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Thu, 8 Jul 2010 23:12:53 +0300
+Message-ID: <AANLkTikHwy5d1-Wamt-dmjPRlrwyzuKw_9eJEN01SvBE@mail.gmail.com>
+Subject: Re: [PATCH 06/15] omap zoom2: wlan board muxing
+To: Tony Lindgren <tony@atomide.com>
+Cc: "Ghorai, Sukumar" <s-ghorai@ti.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"Chikkature Rajashekar, Madhusudhan" <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	San Mehat <san@google.com>, "Ben-cohen, Ohad" <ohadb@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do this by poisoning the values of wep_tx_tfm and wep_rx_tfm if either
-crypto allocation fails.
+On Thu, Jul 8, 2010 at 12:45 PM, Tony Lindgren <tony@atomide.com> wrote:
+>
+> * Ghorai, Sukumar <s-ghorai@ti.com> [100708 06:34]:
+> > > @@ -71,6 +71,21 @@ static struct twl4030_platform_data zoom2_twldata = {
+> > >
+> > >  #ifdef CONFIG_OMAP_MUX
+> > >  static struct omap_board_mux board_mux[] __initdata = {
+> > > +#ifdef CONFIG_OMAP_ZOOM_WLAN
+> >
+> > [Ghorai] This is zoom board specific file, So why need this additional flag?
+>
+> Good point, the ifdef is unnecessary in for both zoom2 and zoom3.
+> Will update in my queue to remove the ifdefs.
 
-Reported-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/mac80211/wep.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+Thanks a lot, Tony.
 
-diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
-index 6d133b6..9ebc8d8 100644
---- a/net/mac80211/wep.c
-+++ b/net/mac80211/wep.c
-@@ -32,13 +32,16 @@ int ieee80211_wep_init(struct ieee80211_local *local)
- 
- 	local->wep_tx_tfm = crypto_alloc_blkcipher("ecb(arc4)", 0,
- 						CRYPTO_ALG_ASYNC);
--	if (IS_ERR(local->wep_tx_tfm))
-+	if (IS_ERR(local->wep_tx_tfm)) {
-+		local->wep_rx_tfm = ERR_PTR(-EINVAL);
- 		return PTR_ERR(local->wep_tx_tfm);
-+	}
- 
- 	local->wep_rx_tfm = crypto_alloc_blkcipher("ecb(arc4)", 0,
- 						CRYPTO_ALG_ASYNC);
- 	if (IS_ERR(local->wep_rx_tfm)) {
- 		crypto_free_blkcipher(local->wep_tx_tfm);
-+		local->wep_tx_tfm = ERR_PTR(-EINVAL);
- 		return PTR_ERR(local->wep_rx_tfm);
- 	}
- 
--- 
-1.7.1.1
-
+>
+> Tony
