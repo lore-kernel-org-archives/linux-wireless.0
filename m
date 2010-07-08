@@ -1,84 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([74.125.121.35]:53630 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751422Ab0GARVe (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:16495 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752613Ab0GHIzq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Jul 2010 13:21:34 -0400
-Received: from wpaz1.hot.corp.google.com (wpaz1.hot.corp.google.com [172.24.198.65])
-	by smtp-out.google.com with ESMTP id o61HLWfd004475
-	for <linux-wireless@vger.kernel.org>; Thu, 1 Jul 2010 10:21:32 -0700
-Received: from iwn7 (iwn7.prod.google.com [10.241.68.71])
-	by wpaz1.hot.corp.google.com with ESMTP id o61HLQXZ009705
-	for <linux-wireless@vger.kernel.org>; Thu, 1 Jul 2010 10:21:31 -0700
-Received: by iwn7 with SMTP id 7so3200416iwn.33
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Jul 2010 10:21:31 -0700 (PDT)
+	Thu, 8 Jul 2010 04:55:46 -0400
+Message-ID: <4C359256.3080704@nokia.com>
+Date: Thu, 08 Jul 2010 11:54:46 +0300
+From: Roger Quadros <roger.quadros@nokia.com>
 MIME-Version: 1.0
-Date: Thu, 1 Jul 2010 10:21:31 -0700
-Message-ID: <AANLkTilV1t1737ciSPyyETeBEcN_QXsYxgEwpZIIucR2@mail.gmail.com>
-Subject: [PATCH 2.6.34] mac80211: Fix auth retries if AP sends temporary
-	deauth
-From: Paul Stewart <pstew@google.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>,
-	Jiri Benc <jbenc@suse.cz>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: ext Nicolas Pitre <nico@fluxnic.net>
+CC: ext Ohad Ben-Cohen <ohad@wizery.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	San Mehat <san@google.com>
+Subject: Re: [PATCH 11/15] wireless: wl1271: introduce platform device support
+References: <1278376666-3509-1-git-send-email-ohad@wizery.com> <1278376666-3509-12-git-send-email-ohad@wizery.com> <4C32EF19.1000604@nokia.com> <AANLkTintIz-N7MwwtqhVq2LR3Ln5JTNYSbJUBSSClcA-@mail.gmail.com> <4C3306F4.8060907@nokia.com> <AANLkTin5W52fPzWToRrAzm56SLZI-taSuI16rCEhLWqH@mail.gmail.com> <4C333E0D.2070601@nokia.com> <alpine.LFD.2.00.1007061316010.6020@xanadu.home> <4C343135.1090101@nokia.com> <alpine.LFD.2.00.1007070937040.6020@xanadu.home>
+In-Reply-To: <alpine.LFD.2.00.1007070937040.6020@xanadu.home>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This bypasses destruction of BSS state if a temporary DEAUTH packet is
-received while performing an AUTH.  This will allow the retry mechanism
-(which runs regardless of this patch) to succeed, since we do not remove
-the BSS state which is required to complete authentication on the client
-side in cfg80211_send_rx_auth().
+On 07/07/2010 04:52 PM, ext Nicolas Pitre wrote:
+> On Wed, 7 Jul 2010, Roger Quadros wrote:
+>
+>> On 07/06/2010 08:42 PM, ext Nicolas Pitre wrote:
+>>> On Tue, 6 Jul 2010, Roger Quadros wrote:
+>>>
+>>>> OK, this is how I see it.
+>>>>
+>>>> - Treat the non-removable card as non-removable. So no need to do card
+>>>> detect
+>>>> emulation.
+>>>>
+>>>> - Treat the GPIO power enable on wl1271 as VMMC supply. Use fixed
+>>>> regulator
+>>>> framework to define this regulator&   supply. Even though you mention that
+>>>> it
+>>>> is not actually a supply, it fits well in the fixed supply framework.
+>>>>
+>>>> - When the host controller is enumerated, the mmc core will power up the
+>>>> slot,
+>>>> find the sdio card, and probe the function driver (i.e. wl1271_sdio).
+>>>>
+>>>> - if interface is not in use, the function driver must release the sdio
+>>>> host,
+>>>> and this should eventually disable the vmmc supply.
+>>>>
+>>>> - Whenever the wlan interface must be brought up, wl1271_sdio, can claim
+>>>> the
+>>>> sdio host. this will cause the vmmc supply to be enabled, for as long as
+>>>> the
+>>>> interface is up.
+>>>>
+>>>> Does this address all issues?
+>>>
+>>> This is mostly all good, except that claiming/releasing the SDIO host is
+>>> about access to the bus.  It must be claimed right before doing any IO,
+>>> and released right after that, even when the card is expected to remain
+>>> powered.  This is not the proper place to hook power control.
+>>
+>> Agreed, but is it so that SDIO power may be removed between a host_release and
+>> claim? This appears so from omap_hsmmc host controller.
+>
+> No, it is not because a host is not claimed that power should be
+> dropped.  The host claim/release is meant to provide exclusive access to
+> the card that's all.
+>
+> If the OMAP controller is dropping power to the card upon
+> host->disable() then it is wrong.  AFAICS only the OMAP controller is
+> playing such games at the moment and I suspect the semantics might not
+> be all right.  Shutting down the _controller_ when it is idle might be a
+> good thing, but not power to the _card_.  Only the function driver might
+> know when it is fine to lose power.
+>
+>
+I completely agree with you Nicolas. omap_hsmmc needs to be fixed so that it 
+does not control MMC/SDIO slot supply voltage. It should deal with only the mmc 
+controller power savings and not the card/function power savings.
 
-The specific case handled here is "Previous authentication no longer
-valid", which is usually generated by an AP if the AP still has saved
-state of the STA being authenticated.  Usually a retry will be successful.
-
-Signed-off-by: Paul Stewart <pstew@google.com>
----
-net/mac80211/work.c |   21 ++++++++++++++++++++-
- 1 files changed, 20 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-index 15e1ba9..800929e 100644
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -1006,7 +1006,7 @@ ieee80211_rx_result
-ieee80211_work_rx_mgmt(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_mgmt *mgmt;
- 	struct ieee80211_work *wk;
--	u16 fc;
-+	u16 fc, reason_code;
-
- 	if (skb->len < 24)
- 		return RX_DROP_MONITOR;
-@@ -1030,6 +1030,25 @@ ieee80211_rx_result
-ieee80211_work_rx_mgmt(struct ieee80211_sub_if_data *sdata,
- 			skb_queue_tail(&local->work_skb_queue, skb);
- 			ieee80211_queue_work(&local->hw, &local->work_work);
- 			return RX_QUEUED;
-+		case IEEE80211_STYPE_DEAUTH:
-+			/*
-+			 * If we get sent a DEAUTH while we are
-+			 * actively trying to authenticate to this
-+			 * station, we shoot ourselves in the foot if
-+			 * we fall through using RX_CONTINUE and allow
-+			 * the bss context to disappear
-+			 * (ieee80211_sta_rx_mgmt()).  This is
-+			 * especially true if the reason for the
-+			 * DEAUTH was a negative but temporary direct
-+			 * response to an AUTH attempt. Let the retry
-+			 * mechanism run its course instead.
-+			 */
-+                        reason_code = le16_to_cpu(mgmt->u.deauth.reason_code);
-+			if (wk->type == IEEE80211_WORK_AUTH &&
-+                            reason_code == WLAN_REASON_PREV_AUTH_NOT_VALID) {
-+				return RX_DROP_MONITOR;
-+			}
-+			break;
- 		}
- 	}
+regards,
+-roger
