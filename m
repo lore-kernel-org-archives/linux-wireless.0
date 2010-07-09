@@ -1,47 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:41937 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751416Ab0G0XYf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 19:24:35 -0400
-Received: by pxi14 with SMTP id 14so667384pxi.19
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 16:24:35 -0700 (PDT)
+Received: from ogre.sisk.pl ([217.79.144.158]:34018 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753466Ab0GIVhJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Jul 2010 17:37:09 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Frederic Weisbecker <fweisbec@gmail.com>
+Subject: Re: 2.6.35-rc4-git3: Reported regressions from 2.6.34
+Date: Fri, 9 Jul 2010 23:35:50 +0200
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Shawn Starr <shawn.starr@rogers.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Dave Airlie <airlied@redhat.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Patrick McHardy <kaber@trash.net>, Jens Axboe <axboe@kernel.dk>
+References: <-IGZ64uxA6G.A.P0H.bLmNMB@chimera> <AANLkTiknnzWyVpqnPCpyiEVHLgkewd0zaGzLInABRe2G@mail.gmail.com> <20100709020440.GJ6405@nowhere>
+In-Reply-To: <20100709020440.GJ6405@nowhere>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTimr-tyyNfLz7c9hKVMwWm-5qQcsUniKmv8kvC8U@mail.gmail.com>
-References: <AANLkTimo4RV6UMgti0ng1rQYE2eUVh2WLv_WHQZkz30j@mail.gmail.com>
-	<AANLkTimr-tyyNfLz7c9hKVMwWm-5qQcsUniKmv8kvC8U@mail.gmail.com>
-From: Andrew Lutomirski <luto@mit.edu>
-Date: Tue, 27 Jul 2010 19:24:15 -0400
-Message-ID: <AANLkTi=rNVifMZ_8UzmWH=f26X0pT9UM5XT7U7wE2FWd@mail.gmail.com>
-Subject: Re: iwlagn: two regressions 2.6.34->2.6.35-rc6
-To: linux-wireless@vger.kernel.org, ilw@linux.intel.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201007092335.50486.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 26, 2010 at 3:48 PM, Andrew Lutomirski <luto@mit.edu> wrote:
->> In the attached log, you'll see the one successful connection to
->> 00:02:6f:6e:d7:6c as well as a failure.  The failure is just:
->>
->> [  668.569218] wlan0: authenticate with 00:02:6f:6e:d7:6c (try 1)
->> [  668.769269] wlan0: authenticate with 00:02:6f:6e:d7:6c (try 2)
->> [  668.969150] wlan0: authenticate with 00:02:6f:6e:d7:6c (try 3)
->> [  669.169262] wlan0: authentication with 00:02:6f:6e:d7:6c timed out
->
-> This time with actual attachment.
+On Friday, July 09, 2010, Frederic Weisbecker wrote:
+> On Thu, Jul 08, 2010 at 06:34:25PM -0700, Linus Torvalds wrote:
+> > On Thu, Jul 8, 2010 at 4:33 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16284
+> > > Subject         : Hitting WARN_ON in hw_breakpoint code
+> > > Submitter       : Paul Mackerras <paulus@samba.org>
+> > > Date            : 2010-06-23 12:57 (16 days old)
+> > > Message-ID      : <20100623125740.GA3368@brick.ozlabs.ibm.com>
+> > > References      : http://marc.info/?l=linux-kernel&m=127729789113432&w=2
+> > 
+> > This has "I have a fix, will post it very soon." in the thread from
+> > Frederic, but I'm not seeing anything else. Frederic?
+> 
+> 
+> 
+> Right. In fact it wasn't a regression. The per task breakpoint reservation
+> design was broken from the beginning and this warning has revealed the
+> problem. This only touched perf, and it did since perf support breakpoints.
+> Fortunately ptrace wasn't concerned by this problem, even not by side effects
+> of this.
+> 
+> The fix is invasive as it's a rewrite of a (little) part of the breakpoint
+> reservation. And since the symptom is only a warning and also breakpoints
+> never released from the constraint table (just a counter, no memory leak),
+> the fix is headed for 2.6.36.
+> 
+> It is ready in tip:/perf/core:
+> 
+> http://git.kernel.org/?p=linux/kernel/git/tip/linux-2.6-tip.git;a=commitdiff;h=45a73372efe4a63f44aa2e1125d4a777c2fdc8d8
+> 
+> I think this ticket can be safely closed.
 
-Not sure if this is the same issue, but I've got another AP here
-(Ubiquiti RouterStation Pro + R52N ath9k minipci card running latest
-OpenWRT "backfire") that works quite nicely on 2.6.34 but requires me
-to reconnect every minute or so on 2.6.35-rc6+ to keep it working.
+OK, closing.
 
-I'm getting tempted to just revert the whole driver back to 2.6.34 and
-use the rest of 2.6.35 when it comes out.  I can also try to bisect,
-either the normal way or just the iwlwifi driver, but that'll have to
-wait until the Monday after next at least because I'm leaving town.
-If any of you have any ideas to test *today*, I can do it.
-
-This is a 5350, which I guess is somewhat rare given the general lack
-of WiMAX coverage.
-
---Andy
+Rafael
