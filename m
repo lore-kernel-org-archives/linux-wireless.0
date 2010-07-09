@@ -1,54 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:60640 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751518Ab0G0Wvo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 18:51:44 -0400
-Date: Tue, 27 Jul 2010 15:18:02 -0700
-From: Greg KH <greg@kroah.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: stable@kernel.org, linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [stable] [PATCH 2.6.32..2.6.33] ath5k: drop warning on jumbo
- frames
-Message-ID: <20100727221802.GH14257@kroah.com>
-References: <1276641307-10287-1-git-send-email-lrodriguez@atheros.com>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:53912 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750985Ab0GIDE7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Jul 2010 23:04:59 -0400
+Date: Fri, 9 Jul 2010 04:56:30 +0200
+From: Frederic Weisbecker <fweisbec@gmail.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Shawn Starr <shawn.starr@rogers.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Dave Airlie <airlied@redhat.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Patrick McHardy <kaber@trash.net>, Jens Axboe <axboe@kernel.dk>
+Subject: Re: 2.6.35-rc4-git3: Reported regressions from 2.6.34
+Message-ID: <20100709025628.GK6405@nowhere>
+References: <-IGZ64uxA6G.A.P0H.bLmNMB@chimera> <AANLkTiknnzWyVpqnPCpyiEVHLgkewd0zaGzLInABRe2G@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1276641307-10287-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <AANLkTiknnzWyVpqnPCpyiEVHLgkewd0zaGzLInABRe2G@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 15, 2010 at 06:35:07PM -0400, Luis R. Rodriguez wrote:
-> commit 9637e516d16a58b13f6098cfe899e22963132be3 upstream.
+On Thu, Jul 08, 2010 at 06:34:25PM -0700, Linus Torvalds wrote:
+> On Thu, Jul 8, 2010 at 4:33 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16334
+> > Subject         : reiserfs locking (v2)
+> > Submitter       : Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+> > Date            : 2010-07-02 9:34 (7 days old)
+> > Message-ID      : <20100702093451.GA3973@swordfish.minsk.epam.com>
+> > References      : http://marc.info/?l=linux-kernel&m=127806306303590&w=2
 > 
-> Jumbo frames are not supported, and if they are seen it is likely
-> a bogus frame so just silently discard them instead of warning on
-> them all time. Also, instead of dropping them immediately though
-> move the check *after* we check for all sort of frame errors. This
-> should enable us to discard these frames if the hardware picks
-> other bogus items first. Lets see if we still get those jumbo
-> counters increasing still with this.
+> Frederic? Al? I assume this is some late fallout from the BKL removal
+> ages ago.. It's the old filldir-vs-mmap crud, but normally it should
+> be impossible to trigger because the inode for a directory should
+> never be mmap'able, so we should never have the same i_mutex lock used
+> for both mmap and for filldir protection.
 > 
-> Jumbo frames would happen if we tell hardware we can support
-> a small 802.11 chunks of DMA'd frame, hardware would split RX'd
-> frames into parts and we'd have to reconstruct them in software.
-> This is done with USB due to the bulk size but with ath5k we
-> already provide a good limit to hardware and this should not be
-> happening.
-> 
-> This is reported quite often and if it fills the logs then this
-> needs to be addressed and to avoid spurious reports.
-> 
-> Cc: stable@kernel.org
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
-> 
-> Greg, here's a stable ath5k patch which required some manual
-> backport. The backported was needed since the sc->stats.rxerr_jumbo
-> counter was not available until 2.6.34 and it was used on the upstream
-> commit. This goes only compile tested against 2.6.32.y and 2.6.33.y.
+> We saw some of that oddity long ago, I wonder if it's lockdep being
+> confused about some inodes.
 
-Many thanks, I've now commited this one.
 
-greg k-h
+
+I think it has been there from the beginning. At least it was there before
+the reiserfs bkl removal in .32.
+
+
+Indeed the readdir <-> unmap/release inversion problem can not happen.
+But Al said that can happen between write and release. (Although I don't see
+where write takes the inode mutex).
+
+He also highlighted the fact that reiserfs refcounting based on i_count
+was totally broken.
+
+He has a fix the whole in the vfs tree, in the for-next branch on commit
+6c2bdaf089a3876226893fab00dd83596c465ad2
+"Fix reiserfs_file_release()"
+
+No more uses of the i_mutex on release after that, nor i_count, but a private
+openers refcount and a tailpack mutex per reiserfs inode.
+
