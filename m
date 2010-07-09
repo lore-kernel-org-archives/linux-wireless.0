@@ -1,58 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:44073 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754647Ab0GZOa6 (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:42276 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753913Ab0GIW3U convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jul 2010 10:30:58 -0400
-Date: Mon, 26 Jul 2010 07:30:48 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	Coelho Luciano Roth <luciano.coelho@nokia.com>
-Subject: Re: Hardware needs to know when EAP nego is complete
-Message-ID: <20100726143047.GB7324@jm.kir.nu>
-References: <1280142400.6475.33.camel@wimaxnb.nmp.nokia.com>
+	Fri, 9 Jul 2010 18:29:20 -0400
+Received: by pzk26 with SMTP id 26so577754pzk.19
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Jul 2010 15:29:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1280142400.6475.33.camel@wimaxnb.nmp.nokia.com>
+In-Reply-To: <1278712573.9411.4.camel@mj>
+References: <20100709190222.115F242E2D@repository3.orbit-lab.org>
+	<1278712573.9411.4.camel@mj>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 9 Jul 2010 15:29:00 -0700
+Message-ID: <AANLkTingMmay_a0ZpwxRi2AQ6tVMJLiBSz_bm9HZVFUn@mail.gmail.com>
+Subject: Re: Compat-wireless release for 2010-07-09 is baked
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 26, 2010 at 02:06:40PM +0300, Juuso Oikarinen wrote:
-> There are lots of timing issues involved, and there is a priority
-> between WLAN an BT. To ensure BT A2DP and SCO work properly, BT needs to
-> have enough priority at the expense of WLAN performance. While this
-> works well enough when connected, during WLAN association and especially
-> during EAP negotiation the priority needs to be more on the WLAN side to
-> ensure reliability.
+On Fri, Jul 9, 2010 at 2:56 PM, Pavel Roskin <proski@gnu.org> wrote:
+> On Fri, 2010-07-09 at 15:02 -0400, Compat-wireless cronjob account
+> wrote:
+>> Base tree: linux-next.git
+>> Base tree version: next-20100708
+>> compat-wireless release: compat-wireless-2010-07-08-1-g469f74f
+>> ssh: Could not resolve hostname wireless.kernel.org: Name or service not known
+>> rsync: connection unexpectedly closed (0 bytes received so far) [sender]
+>> rsync error: unexplained error (code 255) at io.c(600) [sender=3.0.6]
+>
+> Still not good.  The 2010-07-09 release is not on the download site.  I
+> assume the upload failed.
 
-Could you please explain why EAP negotiation is a special case? It is
-using data frames just like any other operation after it..
+I'll take a look.
 
-> So, what this all boils down to is that the wl1271 driver needs to know
-> when the association, including the possible EAP negotations are fully
-> complete, to be able to adjust the priority.
+> Perhaps only successful reports should go to the list, and unsuccessful
+> reports should go to those who can fix the problem?
 
-This sounds like a horrible hack and really, the unreliability during
-EAP should likely fixed in some other way.
+Sure, I'll try to address this, but also feel free to send patches against:
 
-> Currently, there is no such information available to the driver. In fact
-> this information is not available anywhere in the kernel level either
-> (as the details of the EAP negotiation, needed keys etc are controlled
-> in user-space), so the trigger would need to come from user-space.
+http://git.kernel.org/?p=linux/kernel/git/mcgrof/compat-user.git;a=summary
 
-That's not actually true.. At least when run with wpa_supplicant is
-setting operation state to IF_OPER_UP when the full authentication
-sequence (i.e., not only EAP, but also the following 4-way handshake
-with EAPOL-Key frames) is done (and IF_OPER_DORMANT when not ready).
-This is needed for other purposes to indicate when real data traffic can
-be sent, e.g., for DHCP clients.
-
-I don't think I would support the idea of using that information to
-change the WLAN vs. BT priority without some additional data on what
-exactly goes wrong during EAP negotiation, but at least the information
-should already be in the kernel, so we do not need to change nl80211 for
-this.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+  Luis
