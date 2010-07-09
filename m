@@ -1,570 +1,382 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:57913 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753983Ab0GKKcO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Jul 2010 06:32:14 -0400
-Received: by mail-ew0-f46.google.com with SMTP id 23so640186ewy.19
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Jul 2010 03:32:13 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 16/17] rt2x00: Move common firmware loading into rt2800lib
-Date: Sun, 11 Jul 2010 12:30:37 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-References: <201007111223.11190.IvDoorn@gmail.com> <201007111229.50936.IvDoorn@gmail.com> <201007111230.14710.IvDoorn@gmail.com>
-In-Reply-To: <201007111230.14710.IvDoorn@gmail.com>
+Received: from smtp104.rog.mail.re2.yahoo.com ([206.190.36.82]:39389 "HELO
+	smtp104.rog.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751442Ab0GIDmo convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Jul 2010 23:42:44 -0400
+From: Shawn Starr <shawn.starr@rogers.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: 2.6.35-rc4-git3: Reported regressions from 2.6.34
+Date: Thu, 8 Jul 2010 23:36:25 -0400
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>,
+	Frederic Weisbecker <fweisbec@gmail.com>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Dave Airlie <airlied@redhat.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Patrick McHardy <kaber@trash.net>, Jens Axboe <axboe@kernel.dk>
+References: <-IGZ64uxA6G.A.P0H.bLmNMB@chimera> <AANLkTiknnzWyVpqnPCpyiEVHLgkewd0zaGzLInABRe2G@mail.gmail.com>
+In-Reply-To: <AANLkTiknnzWyVpqnPCpyiEVHLgkewd0zaGzLInABRe2G@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: Text/Plain;
   charset="iso-8859-1"
-Message-Id: <201007111230.38605.IvDoorn@gmail.com>
+Message-Id: <201007082336.25201.shawn.starr@rogers.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Large parts of the firmware initialization are shared
-between rt2800pci and rt2800usb. Move this code into
-rt2800lib.
+On Thursday, July 08, 2010 09:34:25 pm Linus Torvalds wrote:
+> On Thu, Jul 8, 2010 at 4:33 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > Unresolved regressions
+> > ----------------------
+> > 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16353
+> > Subject         : 2.6.35 regression
+> > Submitter       : Zeev Tarantov <zeev.tarantov@gmail.com>
+> > Date            : 2010-07-05 13:04 (4 days old)
+> > Message-ID      : <loom.20100705T144459-919@post.gmane.org>
+> > References      : http://marc.info/?l=linux-kernel&m=127836002702522&w=2
+> 
+> This is a gcc-4.5 issue. Whether it's also something that we should
+> change in the kernel is unclear, but at least as of now, the rule is
+> that you cannot compile the kernel with gcc-4.5. No idea whether the
+> compiler is just entirely broken, or whether it's just that it
+> triggers something iffy by being overly clever.
+> 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16346
+> > Subject         : 2.6.35-rc3-git8 - include/linux/fdtable.h:88 invoked
+> > rcu_dereference_check() without protection! Submitter       : Miles Lane
+> > <miles.lane@gmail.com>
+> > Date            : 2010-07-04 22:04 (5 days old)
+> > Message-ID      :
+> > <AANLkTinof0k28rk4rMr66aubxcRL2rFa5ZEArj1lqD3o@mail.gmail.com>
+> > References      : http://marc.info/?l=linux-kernel&m=127828107815930&w=2
+> 
+> I'm not entirely sure if these RCU proving things should count as
+> regressions.
+> 
+> Sure, the option to enable RCU proving is new, but the things it
+> reports about generally are not new - and they are usually not even
+> bugs in the sense that they necessarily cause any real problems.
+> 
+> That particular one is in the single-thread optimizated case for
+> fget_light, ie
+> 
+>         if (likely((atomic_read(&files->count) == 1))) {
+>                 file = fcheck_files(files, fd);
+> 
+> where I think it should be entirely safe in all ways without any
+> locking. So I think it's a false positive too.
+> 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16334
+> > Subject         : reiserfs locking (v2)
+> > Submitter       : Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+> > Date            : 2010-07-02 9:34 (7 days old)
+> > Message-ID      : <20100702093451.GA3973@swordfish.minsk.epam.com>
+> > References      : http://marc.info/?l=linux-kernel&m=127806306303590&w=2
+> 
+> Frederic? Al? I assume this is some late fallout from the BKL removal
+> ages ago.. It's the old filldir-vs-mmap crud, but normally it should
+> be impossible to trigger because the inode for a directory should
+> never be mmap'able, so we should never have the same i_mutex lock used
+> for both mmap and for filldir protection.
+> 
+> We saw some of that oddity long ago, I wonder if it's lockdep being
+> confused about some inodes.
+> 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16333
+> > Subject         : iwl3945: HARDWARE GONE??
+> > Submitter       : Priit Laes <plaes@plaes.org>
+> > Date            : 2010-07-02 16:02 (7 days old)
+> > Message-ID      : <1278086575.2889.8.camel@chi>
+> > References      : http://marc.info/?l=linux-kernel&m=127808659705983&w=2
+> 
+> This either got fixed, or will be practically impossible to debug. The
+> reporter ends up being unable to reproduce the issue.
+> 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16332
+> > Subject         : Kernel crashes in tty code (tty_open)
+> > Submitter       : werner@guyane.yi.org
+> > Date            : 2010-07-02 3:34 (7 days old)
+> > Message-ID      : <1278041650.12788@guyane.yi.org>
+> > References      : http://marc.info/?l=linux-kernel&m=127804167511930&w=2
+> 
+> This seems to be due to CONFIG_MRST (Moorestown).
+> 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16330
+> > Subject         : Dynamic Debug broken on 2.6.35-rc3?
+> > Submitter       : Thomas Renninger <trenn@suse.de>
+> > Date            : 2010-07-01 15:44 (8 days old)
+> > Message-ID      : <201007011744.19564.trenn@suse.de>
+> > References      : http://marc.info/?l=linux-kernel&m=127799907218877&w=2
+> 
+> There's a suggested patch in
+> 
+>   http://marc.info/?l=linux-kernel&m=127862524404291&w=2
+> 
+> but no reply to it yet.
+> 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16329
+> > Subject         : 2.6.35-rc3: Load average climbing to 3+ with no
+> > apparent reason: CPU 98% idle, with hardly no I/O Submitter       :
+> > Török Edwin <edwintorok@gmail.com>
+> > Date            : 2010-07-01 7:40 (8 days old)
+> > Message-ID      : <20100701104022.404410d6@debian>
+> > References      : http://marc.info/?l=linux-kernel&m=127797005030536&w=2
+> 
+> This seems to be partly a confusion about what "load average" is. It's
+> not a CPU load, it's a system load average, and disk-wait processes
+> count towards it. He has some problem with his CD-ROM, and it sounds
+> like it might be hardware on the verge of going bad.
+> 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16324
+> > Subject         : Oops while running fs_racer test on a POWER6 box
+> > against latest git Submitter       : divya <dipraksh@linux.vnet.ibm.com>
+> > Date            : 2010-06-30 11:34 (9 days old)
+> > Message-ID      : <4C2B28F3.7000006@linux.vnet.ibm.com>
+> > References      : http://marc.info/?l=linux-kernel&m=127789697303061&w=2
+> 
+> I wonder if this is the writeback problem. That POWER crash dump is
+> unreadable, so it's hard to tell, but the load in question makes that
+> at least likely.
+> 
+> If so, it should hopefully be fixed in today's git (commit
+> 83ba7b071f30f7c01f72518ad72d5cd203c27502 and friends).
+> 
+> > Bug-entry    : http://bugzilla.kernel.org/show_bug.cgi?id=16323
+> > Subject         : 2.6.35-rc3-git4 - kernel/sched.c:616 invoked
+> > rcu_dereference_check() without protection! Submitter       : Miles Lane
+> > <miles.lane@gmail.com>
+> > Date            : 2010-07-01 12:21 (8 days old)
+> > Message-ID      :
+> > <AANLkTini6hz2LFeZi8CMUmY3xw1MU7NxmyesuxZ4oCdo@mail.gmail.com>
+> > References      : http://marc.info/?l=linux-kernel&m=127798693125541&w=2
+> 
+> See earlier about these being marked as regressions, but it should be
+> fixed by commit dc61b1d6 ("sched: Fix PROVE_RCU vs cpu_cgroup").
+> 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16322
+> > Subject         : WARNING: at /arch/x86/include/asm/processor.h:1005
+> > read_measured_perf_ctrs+0x5a/0x70() Submitter       : boris64
+> > <bugzilla.kernel.org@boris64.net>
+> > Date            : 2010-07-01 13:54 (8 days old)
+> > Handled-By      : H. Peter Anvin <hpa@zytor.com>
+> 
+> Magic. Strange and dark magic.
+> 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16311
+> > Subject         : [REGRESSION][SUSPEND] 2.6.35-rcX won't suspend Lenovo
+> > W500 laptop Submitter       : Shawn Starr <shawn.starr@rogers.com>
+> > Date            : 2010-06-28 0:45 (11 days old)
+> > Message-ID      : <201006272045.17004.shawn.starr@rogers.com>
+> > References      : http://marc.info/?l=linux-kernel&m=127768633705286&w=2
+> 
+> I think this might be usefully bisected. Shawn?
+> 
+I'll have to try bisecting this weekend. It continues in Linux sh0n.net 
+2.6.35-rc4+ #1 SMP Wed Jul 7 23:58:41 EDT 2010 x86_64 x86_64 x86_64 GNU/Linux
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |  155 +++++++++++++++++++++++++++++++
- drivers/net/wireless/rt2x00/rt2800lib.h |   15 +++
- drivers/net/wireless/rt2x00/rt2800pci.c |  101 +-------------------
- drivers/net/wireless/rt2x00/rt2800usb.c |  119 +-----------------------
- 4 files changed, 179 insertions(+), 211 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 9587236..b66e0fd 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -33,6 +33,7 @@
- 	Abstract: rt2800 generic device routines.
-  */
- 
-+#include <linux/crc-ccitt.h>
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/slab.h>
-@@ -272,6 +273,160 @@ int rt2800_wait_wpdma_ready(struct rt2x00_dev *rt2x00dev)
- }
- EXPORT_SYMBOL_GPL(rt2800_wait_wpdma_ready);
- 
-+static bool rt2800_check_firmware_crc(const u8 *data, const size_t len)
-+{
-+	u16 fw_crc;
-+	u16 crc;
-+
-+	/*
-+	 * The last 2 bytes in the firmware array are the crc checksum itself,
-+	 * this means that we should never pass those 2 bytes to the crc
-+	 * algorithm.
-+	 */
-+	fw_crc = (data[len - 2] << 8 | data[len - 1]);
-+
-+	/*
-+	 * Use the crc ccitt algorithm.
-+	 * This will return the same value as the legacy driver which
-+	 * used bit ordering reversion on the both the firmware bytes
-+	 * before input input as well as on the final output.
-+	 * Obviously using crc ccitt directly is much more efficient.
-+	 */
-+	crc = crc_ccitt(~0, data, len - 2);
-+
-+	/*
-+	 * There is a small difference between the crc-itu-t + bitrev and
-+	 * the crc-ccitt crc calculation. In the latter method the 2 bytes
-+	 * will be swapped, use swab16 to convert the crc to the correct
-+	 * value.
-+	 */
-+	crc = swab16(crc);
-+
-+	return fw_crc == crc;
-+}
-+
-+int rt2800_check_firmware(struct rt2x00_dev *rt2x00dev,
-+			  const u8 *data, const size_t len)
-+{
-+	size_t offset = 0;
-+	size_t fw_len;
-+	bool multiple;
-+
-+	/*
-+	 * PCI(e) & SOC devices require firmware with a length
-+	 * of 8kb. USB devices require firmware files with a length
-+	 * of 4kb. Certain USB chipsets however require different firmware,
-+	 * which Ralink only provides attached to the original firmware
-+	 * file. Thus for USB devices, firmware files have a length
-+	 * which is a multiple of 4kb.
-+	 */
-+	if (rt2x00_is_usb(rt2x00dev)) {
-+		fw_len = 4096;
-+		multiple = true;
-+	} else {
-+		fw_len = 8192;
-+		multiple = true;
-+	}
-+
-+	/*
-+	 * Validate the firmware length
-+	 */
-+	if (len != fw_len && (!multiple || (len % fw_len) != 0))
-+		return FW_BAD_LENGTH;
-+
-+	/*
-+	 * Check if the chipset requires one of the upper parts
-+	 * of the firmware.
-+	 */
-+	if (rt2x00_is_usb(rt2x00dev) &&
-+	    !rt2x00_rt(rt2x00dev, RT2860) &&
-+	    !rt2x00_rt(rt2x00dev, RT2872) &&
-+	    !rt2x00_rt(rt2x00dev, RT3070) &&
-+	    ((len / fw_len) == 1))
-+		return FW_BAD_VERSION;
-+
-+	/*
-+	 * 8kb firmware files must be checked as if it were
-+	 * 2 separate firmware files.
-+	 */
-+	while (offset < len) {
-+		if (!rt2800_check_firmware_crc(data + offset, fw_len))
-+			return FW_BAD_CRC;
-+
-+		offset += fw_len;
-+	}
-+
-+	return FW_OK;
-+}
-+EXPORT_SYMBOL_GPL(rt2800_check_firmware);
-+
-+int rt2800_load_firmware(struct rt2x00_dev *rt2x00dev,
-+			 const u8 *data, const size_t len)
-+{
-+	unsigned int i;
-+	u32 reg;
-+
-+	/*
-+	 * Wait for stable hardware.
-+	 */
-+	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
-+		rt2800_register_read(rt2x00dev, MAC_CSR0, &reg);
-+		if (reg && reg != ~0)
-+			break;
-+		msleep(1);
-+	}
-+
-+	if (i == REGISTER_BUSY_COUNT) {
-+		ERROR(rt2x00dev, "Unstable hardware.\n");
-+		return -EBUSY;
-+	}
-+
-+	if (rt2x00_is_pci(rt2x00dev))
-+		rt2800_register_write(rt2x00dev, PWR_PIN_CFG, 0x00000002);
-+
-+	/*
-+	 * Disable DMA, will be reenabled later when enabling
-+	 * the radio.
-+	 */
-+	rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
-+	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_TX_DMA, 0);
-+	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_TX_DMA_BUSY, 0);
-+	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_RX_DMA, 0);
-+	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_RX_DMA_BUSY, 0);
-+	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_TX_WRITEBACK_DONE, 1);
-+	rt2800_register_write(rt2x00dev, WPDMA_GLO_CFG, reg);
-+
-+	/*
-+	 * Write firmware to the device.
-+	 */
-+	rt2800_drv_write_firmware(rt2x00dev, data, len);
-+
-+	/*
-+	 * Wait for device to stabilize.
-+	 */
-+	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
-+		rt2800_register_read(rt2x00dev, PBF_SYS_CTRL, &reg);
-+		if (rt2x00_get_field32(reg, PBF_SYS_CTRL_READY))
-+			break;
-+		msleep(1);
-+	}
-+
-+	if (i == REGISTER_BUSY_COUNT) {
-+		ERROR(rt2x00dev, "PBF system register not ready.\n");
-+		return -EBUSY;
-+	}
-+
-+	/*
-+	 * Initialize firmware.
-+	 */
-+	rt2800_register_write(rt2x00dev, H2M_BBP_AGENT, 0);
-+	rt2800_register_write(rt2x00dev, H2M_MAILBOX_CSR, 0);
-+	msleep(1);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(rt2800_load_firmware);
-+
- void rt2800_write_txwi(__le32 *txwi, struct txentry_desc *txdesc)
- {
- 	u32 word;
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/rt2x00/rt2800lib.h
-index 10f8f2f..cecbd3a 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.h
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.h
-@@ -41,6 +41,8 @@ struct rt2800_ops {
- 			    const unsigned int offset,
- 			    const struct rt2x00_field32 field, u32 *reg);
- 
-+	int (*drv_write_firmware)(struct rt2x00_dev *rt2x00dev,
-+				  const u8 *data, const size_t len);
- 	int (*drv_init_registers)(struct rt2x00_dev *rt2x00dev);
- };
- 
-@@ -109,6 +111,14 @@ static inline int rt2800_regbusy_read(struct rt2x00_dev *rt2x00dev,
- 	return rt2800ops->regbusy_read(rt2x00dev, offset, field, reg);
- }
- 
-+static inline int rt2800_drv_write_firmware(struct rt2x00_dev *rt2x00dev,
-+					    const u8 *data, const size_t len)
-+{
-+	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
-+
-+	return rt2800ops->drv_write_firmware(rt2x00dev, data, len);
-+}
-+
- static inline int rt2800_drv_init_registers(struct rt2x00_dev *rt2x00dev)
- {
- 	const struct rt2800_ops *rt2800ops = rt2x00dev->priv;
-@@ -120,6 +130,11 @@ void rt2800_mcu_request(struct rt2x00_dev *rt2x00dev,
- 			const u8 command, const u8 token,
- 			const u8 arg0, const u8 arg1);
- 
-+int rt2800_check_firmware(struct rt2x00_dev *rt2x00dev,
-+			  const u8 *data, const size_t len);
-+int rt2800_load_firmware(struct rt2x00_dev *rt2x00dev,
-+			 const u8 *data, const size_t len);
-+
- void rt2800_write_txwi(__le32 *txwi, struct txentry_desc *txdesc);
- void rt2800_process_rxwi(struct queue_entry *entry, struct rxdone_entry_desc *txdesc);
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 520236d..0fdd58b 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -31,7 +31,6 @@
- 	Supported chipsets: RT2800E & RT2800ED.
-  */
- 
--#include <linux/crc-ccitt.h>
- #include <linux/delay.h>
- #include <linux/etherdevice.h>
- #include <linux/init.h>
-@@ -192,82 +191,14 @@ static char *rt2800pci_get_firmware_name(struct rt2x00_dev *rt2x00dev)
- 	return FIRMWARE_RT2860;
- }
- 
--static int rt2800pci_check_firmware(struct rt2x00_dev *rt2x00dev,
-+static int rt2800pci_write_firmware(struct rt2x00_dev *rt2x00dev,
- 				    const u8 *data, const size_t len)
- {
--	u16 fw_crc;
--	u16 crc;
--
--	/*
--	 * Only support 8kb firmware files.
--	 */
--	if (len != 8192)
--		return FW_BAD_LENGTH;
--
--	/*
--	 * The last 2 bytes in the firmware array are the crc checksum itself,
--	 * this means that we should never pass those 2 bytes to the crc
--	 * algorithm.
--	 */
--	fw_crc = (data[len - 2] << 8 | data[len - 1]);
--
--	/*
--	 * Use the crc ccitt algorithm.
--	 * This will return the same value as the legacy driver which
--	 * used bit ordering reversion on the both the firmware bytes
--	 * before input input as well as on the final output.
--	 * Obviously using crc ccitt directly is much more efficient.
--	 */
--	crc = crc_ccitt(~0, data, len - 2);
--
--	/*
--	 * There is a small difference between the crc-itu-t + bitrev and
--	 * the crc-ccitt crc calculation. In the latter method the 2 bytes
--	 * will be swapped, use swab16 to convert the crc to the correct
--	 * value.
--	 */
--	crc = swab16(crc);
--
--	return (fw_crc == crc) ? FW_OK : FW_BAD_CRC;
--}
--
--static int rt2800pci_load_firmware(struct rt2x00_dev *rt2x00dev,
--				   const u8 *data, const size_t len)
--{
--	unsigned int i;
- 	u32 reg;
- 
--	/*
--	 * Wait for stable hardware.
--	 */
--	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
--		rt2800_register_read(rt2x00dev, MAC_CSR0, &reg);
--		if (reg && reg != ~0)
--			break;
--		msleep(1);
--	}
--
--	if (i == REGISTER_BUSY_COUNT) {
--		ERROR(rt2x00dev, "Unstable hardware.\n");
--		return -EBUSY;
--	}
--
--	rt2800_register_write(rt2x00dev, PWR_PIN_CFG, 0x00000002);
- 	rt2800_register_write(rt2x00dev, AUTOWAKEUP_CFG, 0x00000000);
- 
- 	/*
--	 * Disable DMA, will be reenabled later when enabling
--	 * the radio.
--	 */
--	rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
--	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_TX_DMA, 0);
--	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_TX_DMA_BUSY, 0);
--	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_RX_DMA, 0);
--	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_RX_DMA_BUSY, 0);
--	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_TX_WRITEBACK_DONE, 1);
--	rt2800_register_write(rt2x00dev, WPDMA_GLO_CFG, reg);
--
--	/*
- 	 * enable Host program ram write selection
- 	 */
- 	reg = 0;
-@@ -278,34 +209,11 @@ static int rt2800pci_load_firmware(struct rt2x00_dev *rt2x00dev,
- 	 * Write firmware to device.
- 	 */
- 	rt2800_register_multiwrite(rt2x00dev, FIRMWARE_IMAGE_BASE,
--				      data, len);
-+				   data, len);
- 
- 	rt2800_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00000);
- 	rt2800_register_write(rt2x00dev, PBF_SYS_CTRL, 0x00001);
- 
--	/*
--	 * Wait for device to stabilize.
--	 */
--	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
--		rt2800_register_read(rt2x00dev, PBF_SYS_CTRL, &reg);
--		if (rt2x00_get_field32(reg, PBF_SYS_CTRL_READY))
--			break;
--		msleep(1);
--	}
--
--	if (i == REGISTER_BUSY_COUNT) {
--		ERROR(rt2x00dev, "PBF system register not ready.\n");
--		return -EBUSY;
--	}
--
--	/*
--	 * Disable interrupts
--	 */
--	rt2x00dev->ops->lib->set_device_state(rt2x00dev, STATE_RADIO_IRQ_OFF);
--
--	/*
--	 * Initialize BBP R/W access agent
--	 */
- 	rt2800_register_write(rt2x00dev, H2M_BBP_AGENT, 0);
- 	rt2800_register_write(rt2x00dev, H2M_MAILBOX_CSR, 0);
- 
-@@ -1029,6 +937,7 @@ static const struct rt2800_ops rt2800pci_rt2800_ops = {
- 
- 	.regbusy_read		= rt2x00pci_regbusy_read,
- 
-+	.drv_write_firmware	= rt2800pci_write_firmware,
- 	.drv_init_registers	= rt2800pci_init_registers,
- };
- 
-@@ -1114,8 +1023,8 @@ static const struct rt2x00lib_ops rt2800pci_rt2x00_ops = {
- 	.irq_handler_thread	= rt2800pci_interrupt_thread,
- 	.probe_hw		= rt2800pci_probe_hw,
- 	.get_firmware_name	= rt2800pci_get_firmware_name,
--	.check_firmware		= rt2800pci_check_firmware,
--	.load_firmware		= rt2800pci_load_firmware,
-+	.check_firmware		= rt2800_check_firmware,
-+	.load_firmware		= rt2800_load_firmware,
- 	.initialize		= rt2x00pci_initialize,
- 	.uninitialize		= rt2x00pci_uninitialize,
- 	.get_entry_state	= rt2800pci_get_entry_state,
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index f8eb6d7..7b8d51f 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -28,7 +28,6 @@
- 	Supported chipsets: RT2800U.
-  */
- 
--#include <linux/crc-ccitt.h>
- #include <linux/delay.h>
- #include <linux/etherdevice.h>
- #include <linux/init.h>
-@@ -57,84 +56,10 @@ static char *rt2800usb_get_firmware_name(struct rt2x00_dev *rt2x00dev)
- 	return FIRMWARE_RT2870;
- }
- 
--static bool rt2800usb_check_crc(const u8 *data, const size_t len)
--{
--	u16 fw_crc;
--	u16 crc;
--
--	/*
--	 * The last 2 bytes in the firmware array are the crc checksum itself,
--	 * this means that we should never pass those 2 bytes to the crc
--	 * algorithm.
--	 */
--	fw_crc = (data[len - 2] << 8 | data[len - 1]);
--
--	/*
--	 * Use the crc ccitt algorithm.
--	 * This will return the same value as the legacy driver which
--	 * used bit ordering reversion on the both the firmware bytes
--	 * before input input as well as on the final output.
--	 * Obviously using crc ccitt directly is much more efficient.
--	 */
--	crc = crc_ccitt(~0, data, len - 2);
--
--	/*
--	 * There is a small difference between the crc-itu-t + bitrev and
--	 * the crc-ccitt crc calculation. In the latter method the 2 bytes
--	 * will be swapped, use swab16 to convert the crc to the correct
--	 * value.
--	 */
--	crc = swab16(crc);
--
--	return fw_crc == crc;
--}
--
--static int rt2800usb_check_firmware(struct rt2x00_dev *rt2x00dev,
-+static int rt2800usb_write_firmware(struct rt2x00_dev *rt2x00dev,
- 				    const u8 *data, const size_t len)
- {
--	size_t offset = 0;
--
--	/*
--	 * Firmware files:
--	 * There are 2 variations of the rt2870 firmware.
--	 * a) size: 4kb
--	 * b) size: 8kb
--	 * Note that (b) contains 2 separate firmware blobs of 4k
--	 * within the file. The first blob is the same firmware as (a),
--	 * but the second blob is for the additional chipsets.
--	 */
--	if (len != 4096 && len != 8192)
--		return FW_BAD_LENGTH;
--
--	/*
--	 * Check if we need the upper 4kb firmware data or not.
--	 */
--	if ((len == 4096) &&
--	    !rt2x00_rt(rt2x00dev, RT2860) &&
--	    !rt2x00_rt(rt2x00dev, RT2872) &&
--	    !rt2x00_rt(rt2x00dev, RT3070))
--		return FW_BAD_VERSION;
--
--	/*
--	 * 8kb firmware files must be checked as if it were
--	 * 2 separate firmware files.
--	 */
--	while (offset < len) {
--		if (!rt2800usb_check_crc(data + offset, 4096))
--			return FW_BAD_CRC;
--
--		offset += 4096;
--	}
--
--	return FW_OK;
--}
--
--static int rt2800usb_load_firmware(struct rt2x00_dev *rt2x00dev,
--				   const u8 *data, const size_t len)
--{
--	unsigned int i;
- 	int status;
--	u32 reg;
- 	u32 offset;
- 	u32 length;
- 
-@@ -152,21 +77,6 @@ static int rt2800usb_load_firmware(struct rt2x00_dev *rt2x00dev,
- 	}
- 
- 	/*
--	 * Wait for stable hardware.
--	 */
--	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
--		rt2800_register_read(rt2x00dev, MAC_CSR0, &reg);
--		if (reg && reg != ~0)
--			break;
--		msleep(1);
--	}
--
--	if (i == REGISTER_BUSY_COUNT) {
--		ERROR(rt2x00dev, "Unstable hardware.\n");
--		return -EBUSY;
--	}
--
--	/*
- 	 * Write firmware to device.
- 	 */
- 	rt2800_register_multiwrite(rt2x00dev, FIRMWARE_IMAGE_BASE,
-@@ -203,28 +113,6 @@ static int rt2800usb_load_firmware(struct rt2x00_dev *rt2x00dev,
- 		udelay(10);
- 	}
- 
--	/*
--	 * Wait for device to stabilize.
--	 */
--	for (i = 0; i < REGISTER_BUSY_COUNT; i++) {
--		rt2800_register_read(rt2x00dev, PBF_SYS_CTRL, &reg);
--		if (rt2x00_get_field32(reg, PBF_SYS_CTRL_READY))
--			break;
--		msleep(1);
--	}
--
--	if (i == REGISTER_BUSY_COUNT) {
--		ERROR(rt2x00dev, "PBF system register not ready.\n");
--		return -EBUSY;
--	}
--
--	/*
--	 * Initialize firmware.
--	 */
--	rt2800_register_write(rt2x00dev, H2M_BBP_AGENT, 0);
--	rt2800_register_write(rt2x00dev, H2M_MAILBOX_CSR, 0);
--	msleep(1);
--
- 	return 0;
- }
- 
-@@ -593,6 +481,7 @@ static const struct rt2800_ops rt2800usb_rt2800_ops = {
- 
- 	.regbusy_read		= rt2x00usb_regbusy_read,
- 
-+	.drv_write_firmware	= rt2800usb_write_firmware,
- 	.drv_init_registers	= rt2800usb_init_registers,
- };
- 
-@@ -670,8 +559,8 @@ static const struct ieee80211_ops rt2800usb_mac80211_ops = {
- static const struct rt2x00lib_ops rt2800usb_rt2x00_ops = {
- 	.probe_hw		= rt2800usb_probe_hw,
- 	.get_firmware_name	= rt2800usb_get_firmware_name,
--	.check_firmware		= rt2800usb_check_firmware,
--	.load_firmware		= rt2800usb_load_firmware,
-+	.check_firmware		= rt2800_check_firmware,
-+	.load_firmware		= rt2800_load_firmware,
- 	.initialize		= rt2x00usb_initialize,
- 	.uninitialize		= rt2x00usb_uninitialize,
- 	.clear_entry		= rt2x00usb_clear_entry,
--- 
-1.7.1.1
-
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16309
+> > Subject         : 2.6.35-rc3 oops trying to suspend.
+> > Submitter       : Andrew Hendry <andrew.hendry@gmail.com>
+> > Date            : 2010-06-27 12:40 (12 days old)
+> > Message-ID      :
+> > <AANLkTinUH2p33-AWxOVDrLsNkn9rgEVrlwn5mfK7P8NH@mail.gmail.com>
+> > References      : http://marc.info/?l=linux-kernel&m=127764249926781&w=2
+> 
+> I'm pretty sure this was fixed by Nick in commit 57439f878afa ("fs:
+> fix superblock iteration race").
+> 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16307
+> > Subject         : i915 in kernel 2.6.35-rc3, high number of wakeups
+> > Submitter       : Enrico Bandiello <enban@postal.uv.es>
+> > Date            : 2010-06-26 16:57 (13 days old)
+> > Message-ID      : <4C26317A.5070309@postal.uv.es>
+> > References      : http://marc.info/?l=linux-kernel&m=127757403404259&w=2
+> 
+> I don't think anybody noticed this one. Jesse?
+> 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16304
+> > Subject         : i915 - high number of wakeups
+> > Submitter       : Enrico Bandiello <enban@postal.uv.es>
+> > Date            : 2010-06-27 09:52 (12 days old)
+> 
+> Duplicate of that 16307 one.
+> 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16284
+> > Subject         : Hitting WARN_ON in hw_breakpoint code
+> > Submitter       : Paul Mackerras <paulus@samba.org>
+> > Date            : 2010-06-23 12:57 (16 days old)
+> > Message-ID      : <20100623125740.GA3368@brick.ozlabs.ibm.com>
+> > References      : http://marc.info/?l=linux-kernel&m=127729789113432&w=2
+> 
+> This has "I have a fix, will post it very soon." in the thread from
+> Frederic, but I'm not seeing anything else. Frederic?
+> 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16265
+> > Subject         : Why is kslowd accumulating so much CPU time?
+> > Submitter       : Theodore Ts'o <tytso@mit.edu>
+> > Date            : 2010-06-09 18:36 (30 days old)
+> > First-Bad-Commit:
+> > http://git.kernel.org/linus/fbf81762e385d3d45acad057b654d56972acf58c
+> > Message-ID      : <E1OMQ88-0002a1-Gb@closure.thunk.org>
+> > References      : http://marc.info/?l=linux-kernel&m=127610857819033&w=4
+> 
+> Dave, Jesse?
+> 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16234
+> > Subject         : [2.6.35-rc3] reboot mutex 'bug'...
+> > Submitter       : Daniel J Blueman <daniel.blueman@gmail.com>
+> > Date            : 2010-06-14 15:16 (25 days old)
+> > Message-ID      :
+> > <AANLkTimDcTnyEPmt2ZcCM1UWtn4AYKotiqyjobJApkO7@mail.gmail.com>
+> > References      : http://marc.info/?l=linux-kernel&m=127652861118933&w=2
+> 
+> Ok, this is definitely harmless. Whether we should silence the warning
+> somehow is a separate question.
+> 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16230
+> > Subject         : inconsistent IN-HARDIRQ-W -> HARDIRQ-ON-W usage:
+> > fasync, 2.6.35-rc3 Submitter       : Dominik Brodowski
+> > <linux@dominikbrodowski.net> Date            : 2010-06-13 9:53 (26 days
+> > old)
+> > Message-ID      : <20100613095305.GA13231@comet.dominikbrodowski.net>
+> > References      : http://marc.info/?l=linux-kernel&m=127642282208277&w=2
+> 
+> Fixed by commit f4985dc714d7.
+> 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16228
+> > Subject         : BUG/boot failure on Dell Precision T3500
+> > (pci/ahci_stop_engine) Submitter       : Brian Bloniarz
+> > <phunge0@hotmail.com>
+> > Date            : 2010-06-16 17:57 (23 days old)
+> > Handled-By      : Bjorn Helgaas <bjorn.helgaas@hp.com>
+> 
+> This has a butt-ugly suggested patch that certainly won't be applied.
+> I saw the thread, but lost sight of it. Jesse, did that end up with
+> some resolution?
+> 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16221
+> > Subject         : 2.6.35-rc2-git5 -- [drm:drm_mode_getfb] *ERROR* invalid
+> > framebuffer id Submitter       : Miles Lane <miles.lane@gmail.com>
+> > Date            : 2010-06-11 20:31 (28 days old)
+> > Message-ID      :
+> > <AANLkTim0jVRyqkwlGOcrg_XTvUQwcBYfWJX-aRzkkrLG@mail.gmail.com>
+> > References      : http://marc.info/?l=linux-kernel&m=127628828119623&w=2
+> 
+> I dunno. Old, and apparently seen by two people. Dave?
+> 
+> Might be helped by bisection.
+> 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16205
+> > Subject         : acpi: freeing invalid memtype bf799000-bf79a000
+> > Submitter       : Marcin Slusarz <marcin.slusarz@gmail.com>
+> > Date            : 2010-06-09 20:09 (30 days old)
+> > Message-ID      : <20100609200910.GA2876@joi.lan>
+> > References      : http://marc.info/?l=linux-kernel&m=127611427029914&w=2
+> >                  http://marc.info/?l=linux-kernel&m=127688398513862&w=2
+> 
+> This should be fixed by commit b945d6b2554d ("rbtree: Undo augmented
+> trees performance damage and regression").
+> 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16199
+> > Subject         : 2.6.35-rc2-git1 - include/linux/cgroup.h:534 invoked
+> > rcu_dereference_check() without protection! Submitter       : Miles Lane
+> > <miles.lane@gmail.com>
+> > Date            : 2010-06-07 18:14 (32 days old)
+> > Message-ID      :
+> > <AANLkTin2pPqOUx--9fIX3BH3e-cU6oCRufijcx_4ozx5@mail.gmail.com>
+> > References      : http://marc.info/?l=linux-kernel&m=127593447812015&w=2
+> 
+> Another RCU proving thing.  And this one looks the same as the 16323
+> one above, and fixed by the same commit as that one.
+> 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16197
+> > Subject         : [BUG on 2.6.35-rc2] sysfs: cannot create duplicate
+> > filename '/devices/pci0000:00/0000:00:11.0/0000:02:03.0/slot' Submitter
+> >       : Ryan Wang <openspace.wang@gmail.com>
+> > Date            : 2010-06-07 0:23 (32 days old)
+> > Message-ID      :
+> > <AANLkTincwMZPnYW3S4uz4k2GOn52RpgBIBRfzyD010Yo@mail.gmail.com>
+> > References      : http://marc.info/?l=linux-kernel&m=127587022219378&w=2
+> 
+> These should all be gone. See commit 3be434f0244ee by Jesse ('Revert
+> "PCI: create function symlinks in /sys/bus/pci/slots/N/"').
+> 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16187
+> > Subject         : Carrier detection failed in dhcpcd when link is up
+> > Submitter       : Christian Casteyde <casteyde.christian@free.fr>
+> > Date            : 2010-06-12 15:15 (27 days old)
+> > First-Bad-Commit:
+> > http://git.kernel.org/linus/10708f37ae729baba9b67bd134c3720709d4ae62
+> > Handled-By      : Andrew Morton <akpm@linux-foundation.org>
+> 
+> David? This bisects to a networking commit. Doesn't look sensible, but
+> what do I know?
+> 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16184
+> > Subject         : Container, X86-64, i386, iptables rule
+> > Submitter       : Jean-Marc Pigeon <jmp@safe.ca>
+> > Date            : 2010-06-12 04:17 (27 days old)
+> > Handled-By      : Patrick McHardy <kaber@trash.net>
+> 
+> Patrick, Davem? Ping?
+> 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16179
+> > Subject         : 2.6.35-rc2 completely hosed on intel gfx?
+> > Submitter       : Norbert Preining <preining@logic.at>
+> > Date            : 2010-06-06 11:55 (33 days old)
+> > Message-ID      : <20100606115534.GA9399@gamma.logic.tuwien.ac.at>
+> > References      : http://marc.info/?l=linux-kernel&m=127582534931581&w=2
+> 
+> Hmm. That one is the vt.c bug coupled with another problem, which in
+> turn got opened as a separate bugzilla entry:
+> 
+>    http://bugzilla.kernel.org/show_bug.cgi?id=16252
+> 
+> which in turn then got closed. I dunno.
+> 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16175
+> > Subject         : 2.6.35-rc1 system oom, many processes killed but memory
+> > not free Submitter       : andrew hendry <andrew.hendry@gmail.com>
+> > Date            : 2010-06-05 0:46 (34 days old)
+> > Message-ID      :
+> > <AANLkTim7CiW-yfugZUAHZCqLvXKgt9CwolCvbLGdCLAk@mail.gmail.com>
+> > References      : http://marc.info/?l=linux-kernel&m=127569877714937&w=2
+> 
+> Not a regression or a kernel bug at all. See the thread. Big ramdisk
+> filled up all of memory when it was filled by the builds.
+> 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16145
+> > Subject         : Unable to boot unless "notsc" or "clocksource=hpet", or
+> > acpi_pad disabling the TSC Submitter       : Tom Gundersen <teg@jklm.no>
+> > Date            : 2010-06-07 13:11 (32 days old)
+> > Handled-By      : Venkatesh Pallipadi <venki@google.com>
+> >                  Len Brown <lenb@kernel.org>
+> 
+> This is not a regression. See the full bugzilla details. The same
+> problem persists at least back to 2.6.30 with his config. So it's
+> somehow specific to his particular config use that requires "notsc" to
+> boot.
+> 
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16122
+> > Subject         : 2.6.35-rc1: WARNING at fs/fs-writeback.c:1142
+> > __mark_inode_dirty+0x103/0x170 Submitter       : Larry Finger
+> > <Larry.Finger@lwfinger.net>
+> > Date            : 2010-06-04 13:18 (35 days old)
+> > Handled-By      : Jens Axboe <axboe@kernel.dk>
+> 
+> This looks like a duplicate of that 16312 bugzilla entry. Jens, has
+> this been resolved?
+> 
+>                                Linus
