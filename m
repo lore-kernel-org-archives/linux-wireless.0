@@ -1,40 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35501 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751475Ab0GTSaL (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:43709 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755582Ab0GIARB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jul 2010 14:30:11 -0400
-Date: Tue, 20 Jul 2010 14:29:04 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Lennert Buytenhek <buytenh@wantstofly.org>
-Subject: Re: [PATCH] mwl8k: correct/silence sparse warnings
-Message-ID: <20100720182903.GA3468@tuxdriver.com>
-References: <1279649222-3042-1-git-send-email-linville@tuxdriver.com>
- <1279650123.3706.45.camel@jlt3.sipsolutions.net>
+	Thu, 8 Jul 2010 20:17:01 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1279650123.3706.45.camel@jlt3.sipsolutions.net>
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <-IGZ64uxA6G.A.P0H.bLmNMB@chimera>
+References: <-IGZ64uxA6G.A.P0H.bLmNMB@chimera>
+Date: Fri, 9 Jul 2010 02:16:57 +0200
+Message-ID: <AANLkTimmGRikJAWmVeYRkvr9-3AoeO9APN-oDlCJUpvl@mail.gmail.com>
+Subject: Re: 2.6.35-rc4-git3: Reported regressions from 2.6.34
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 20, 2010 at 08:22:03PM +0200, Johannes Berg wrote:
-> On Tue, 2010-07-20 at 14:07 -0400, John W. Linville wrote:
-> 
-> >  		off = le32_to_cpu(cmd->rxwrptr) & 0xffff;
-> > -		iowrite32(cpu_to_le32(priv->rxq[0].rxd_dma), priv->sram + off);
-> > +		iowrite32((__force __u32) cpu_to_le32(priv->rxq[0].rxd_dma),
-> > +				priv->sram + off);
-> 
-> Those don't seem right, it looks more like somebody thought they needed
-> to byteswap the iowrite because PCI(e) is little endian, and were wrong?
+Hi Rafael,
 
-Yeah, I agree.  I was going with the thought that "it's working, so
-I guess it is right".  But then, development was probably done on an
-LE system...
+On Fri, Jul 9, 2010 at 1:33 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+[...]
+Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16169
+Subject         : Complain from preemptive debug
+Submitter       : Sedat Dilek <sedat.dilek@googlemail.com>
+Date            : 2010-05-31 10:10 (39 days old)
+Message-ID      : <AANLkTilTnAAZIizKinYsxFkNTkrmPqk6XJJuUjjhJ7EP@mail.gmail.com>
+References      : http://lkml.org/lkml/2010/5/31/77
+Handled-By      : Dmitry Monakhov <dmonakhov@openvz.org>
+                 Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+Patch           : http://www.spinics.net/lists/cpufreq/msg01631.html
+                 https://patchwork.kernel.org/patch/106555/
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+This bug is fixed Upstream [1]:
+
+commit 8c215bd3890c347dfb6a2db4779755f8b9c298a9
+"sched: Cure nr_iowait_cpu() users"
+
+- Sedat -
+
+[1] http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=8c215bd3890c347dfb6a2db4779755f8b9c298a9
