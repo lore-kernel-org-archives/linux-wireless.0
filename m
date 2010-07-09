@@ -1,44 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:50188 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752613Ab0GHJqF (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:48254 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751946Ab0GICEx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jul 2010 05:46:05 -0400
-Date: Thu, 8 Jul 2010 12:45:48 +0300
-From: Tony Lindgren <tony@atomide.com>
-To: "Ghorai, Sukumar" <s-ghorai@ti.com>
-Cc: Ohad Ben-Cohen <ohad@wizery.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"Chikkature Rajashekar, Madhusudhan" <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	San Mehat <san@google.com>, "Ben-cohen, Ohad" <ohadb@ti.com>
-Subject: Re: [PATCH 06/15] omap zoom2: wlan board muxing
-Message-ID: <20100708094548.GB1920@atomide.com>
-References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
- <1278376666-3509-7-git-send-email-ohad@wizery.com>
- <2A3DCF3DA181AD40BDE86A3150B27B6B030E10C9B3@dbde02.ent.ti.com>
+	Thu, 8 Jul 2010 22:04:53 -0400
+Date: Fri, 9 Jul 2010 04:04:42 +0200
+From: Frederic Weisbecker <fweisbec@gmail.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Shawn Starr <shawn.starr@rogers.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Dave Airlie <airlied@redhat.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Patrick McHardy <kaber@trash.net>, Jens Axboe <axboe@kernel.dk>
+Subject: Re: 2.6.35-rc4-git3: Reported regressions from 2.6.34
+Message-ID: <20100709020440.GJ6405@nowhere>
+References: <-IGZ64uxA6G.A.P0H.bLmNMB@chimera> <AANLkTiknnzWyVpqnPCpyiEVHLgkewd0zaGzLInABRe2G@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2A3DCF3DA181AD40BDE86A3150B27B6B030E10C9B3@dbde02.ent.ti.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <AANLkTiknnzWyVpqnPCpyiEVHLgkewd0zaGzLInABRe2G@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Ghorai, Sukumar <s-ghorai@ti.com> [100708 06:34]:
-> > @@ -71,6 +71,21 @@ static struct twl4030_platform_data zoom2_twldata = {
-> > 
-> >  #ifdef CONFIG_OMAP_MUX
-> >  static struct omap_board_mux board_mux[] __initdata = {
-> > +#ifdef CONFIG_OMAP_ZOOM_WLAN
->
-> [Ghorai] This is zoom board specific file, So why need this additional flag?
+On Thu, Jul 08, 2010 at 06:34:25PM -0700, Linus Torvalds wrote:
+> On Thu, Jul 8, 2010 at 4:33 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16284
+> > Subject         : Hitting WARN_ON in hw_breakpoint code
+> > Submitter       : Paul Mackerras <paulus@samba.org>
+> > Date            : 2010-06-23 12:57 (16 days old)
+> > Message-ID      : <20100623125740.GA3368@brick.ozlabs.ibm.com>
+> > References      : http://marc.info/?l=linux-kernel&m=127729789113432&w=2
+> 
+> This has "I have a fix, will post it very soon." in the thread from
+> Frederic, but I'm not seeing anything else. Frederic?
 
-Good point, the ifdef is unnecessary in for both zoom2 and zoom3.
-Will update in my queue to remove the ifdefs.
 
-Tony
+
+Right. In fact it wasn't a regression. The per task breakpoint reservation
+design was broken from the beginning and this warning has revealed the
+problem. This only touched perf, and it did since perf support breakpoints.
+Fortunately ptrace wasn't concerned by this problem, even not by side effects
+of this.
+
+The fix is invasive as it's a rewrite of a (little) part of the breakpoint
+reservation. And since the symptom is only a warning and also breakpoints
+never released from the constraint table (just a counter, no memory leak),
+the fix is headed for 2.6.36.
+
+It is ready in tip:/perf/core:
+
+http://git.kernel.org/?p=linux/kernel/git/tip/linux-2.6-tip.git;a=commitdiff;h=45a73372efe4a63f44aa2e1125d4a777c2fdc8d8
+
+I think this ticket can be safely closed.
+
+Thanks.
+
