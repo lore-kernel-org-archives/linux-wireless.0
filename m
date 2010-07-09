@@ -1,79 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:64176 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754638Ab0GaVFp (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:35652 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751333Ab0GIINJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Jul 2010 17:05:45 -0400
+	Fri, 9 Jul 2010 04:13:09 -0400
+Message-ID: <4C36DA04.3090209@nokia.com>
+Date: Fri, 09 Jul 2010 11:12:52 +0300
+From: Roger Quadros <roger.quadros@nokia.com>
 MIME-Version: 1.0
-In-Reply-To: <201007311448.06959.d.haid@gogi.tv>
-References: <201007311448.06959.d.haid@gogi.tv>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sat, 31 Jul 2010 14:05:24 -0700
-Message-ID: <AANLkTimA8JH2Ctw+dDtLMX3AUH-GKrEHtQQmMd-q7=0x@mail.gmail.com>
-Subject: Re: iw reg set does not work because udev and crda do not respond to
-	boot-time request.
-To: Daniel Haid <d.haid@gogi.tv>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, Kay Sievers <kay.sievers@suse.de>
-Content-Type: text/plain; charset=UTF-8
+To: ext Ohad Ben-Cohen <ohad@wizery.com>
+CC: Nicolas Pitre <nico@fluxnic.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	San Mehat <san@google.com>
+Subject: Re: [PATCH 11/15] wireless: wl1271: introduce platform device support
+References: <1278376666-3509-1-git-send-email-ohad@wizery.com> 	<1278376666-3509-12-git-send-email-ohad@wizery.com> <4C32EF19.1000604@nokia.com> 	<AANLkTintIz-N7MwwtqhVq2LR3Ln5JTNYSbJUBSSClcA-@mail.gmail.com> 	<4C3306F4.8060907@nokia.com> <AANLkTin5W52fPzWToRrAzm56SLZI-taSuI16rCEhLWqH@mail.gmail.com> 	<4C333E0D.2070601@nokia.com> <alpine.LFD.2.00.1007061316010.6020@xanadu.home> <AANLkTin7jIAIiN_JHMxX74K-EBDtDNwUQMlIf4C6RCHD@mail.gmail.com>
+In-Reply-To: <AANLkTin7jIAIiN_JHMxX74K-EBDtDNwUQMlIf4C6RCHD@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Netlink / udev folks, please review.
+Hi Ohad,
 
-On Sat, Jul 31, 2010 at 5:48 AM, Daniel Haid <d.haid@gogi.tv> wrote:
-> Hello,
+On 07/08/2010 11:10 PM, ext Ohad Ben-Cohen wrote:
+> Hi Nicolas and Roger,
 >
-> the driver of my wireless card seems to ask for "US"
-> regulatory data during boot, but since udev is not
-> running at that point (I think not even the root filesystem
-> is mounted) crda does not respond.
+> On Tue, Jul 6, 2010 at 8:42 PM, Nicolas Pitre<nico@fluxnic.net>  wrote:
+>> On Tue, 6 Jul 2010, Roger Quadros wrote:
+>>> If the Power enable GPIO can be treated as SDIO slot supply (i.e. vmmc), then
+>>> the SDIO/MMC core should tackle it, just like it deals with supply for slots
+>>> with removable cards.
+>>
+> ...
+>> Another function pair would be needed instead, which would do almost
+>> like the suspend/resume code is already doing.  Something like:
+>
+> Thanks a lot for your review and comments, and for taking the time to
+> present your approach.
 
-CRDA is not the only thing called by the kernel where there would be
-an issue due to a delay with udev during bootup to react to a message.
-The kernel calls CRDA for udev through kobject_uevent_env(). Uevent
-messages are now broadcasted through
-netlinknetlink_broadcast_filtered() since the old method of using a
-direct call to /sbin/hotplug would lead to many processes being
-spawned and in some cases OOM. You can still use this though through
-CONFIG_UEVENT_HELPER_PATH which will issue call_usermodehelper()
-during early boot on an initramfs for example, if you so need it.
+you're welcome :)
+>
+> I like it !
+>
+> It'd allow us to lose the software (or fake if you want ;) card detect
+> mechanism, which is something that should have been added to each
+> platform we wanted to support.
+>
+> We would only need to make it possible to deliver board-specific data
+> to the function driver (e.g., in the case of the wl1271, we need irq
+> and board_ref_clock data).  That would require some board-level
+> platform-data configuration, which will be specific to the controller
+> to which the device is hardwired to. This data should propagate
+> through the host controller to the SDIO core so it would eventually be
 
-I am not sure though if netlink broadcast messages would be reissued
-by the kernel during early boot if no one replied back to the send
-message but it is worth looking into. As far as I can tell you would
-be the first to notice this. In fact we actually had reports of two
-consecutive messages being being sent to userspace when only one was
-being sent to userspace so it may indeed be in fact true that messages
-are rebroadcasted somehow, I am just not sure so Cc'ing netdev and
-lkml.
+why should platform data go through the host controller? You are already 
+creating a new platform device for wl1271_sdio just to pass platform_data so the 
+platform data for that can be passed directly from board files to this platform 
+device. It doesn't need to go via host controller.
 
-> The effect is that "iw reg set" does not work, because
-> the kernel seems to be still waiting for the "US"
-> regulatory data. Running
-> COUNTRY="US" crda
-> manually once fixes the problem (until the next reboot).
+I think this case is specific to wl1271. Ideally wl1271 should have used the 
+SDIO's in-band interrupt delivery mechanism and SDIO Configuration space to 
+provide this information to make it truly plug n play.
 
-iw reg set will be ignored by net/wireless/reg.c as it is still
-waiting for last_request to be processed. It seems in your case the
-assumption that the request will be reissued in case udev is running
-at early boot is incorrect and we need to further understand exactly
-how these messages get queued and perhaps reissued or not.
-
-I considered recently changing the way we handle requests to userspace
-to use a completion handler but that would sit idle there for a while
-blocking on the reg_mutex... so decided against it. But could take a
-look again.
-
-> What is the correct way of solving this? Should udev not
-> pick up the request later when it is started?
-
-We need a better understanding of how netlink broadcast messages get
-processed during early boot. Right now cfg80211 will drop duplicate
-requests or any request while we're still pending for the last one.
-Once we find out more details about how netlink broadcast messages get
-processed during early boot we can then rework things a bit. In the
-meantime can you try using CONFIG_UEVENT_HELPER_PATH during the
-initramfs?
-
-  Luis
+br,
+-roger
