@@ -1,58 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:44064 "EHLO ds10.nbd.name"
+Received: from mx3.mail.elte.hu ([157.181.1.138]:48086 "EHLO mx3.mail.elte.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753161Ab0GNOo4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jul 2010 10:44:56 -0400
-Message-ID: <4C3DCD5C.1080705@openwrt.org>
-Date: Wed, 14 Jul 2010 16:44:44 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1751337Ab0GIHM0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Jul 2010 03:12:26 -0400
+Date: Fri, 9 Jul 2010 09:11:31 +0200
+From: Ingo Molnar <mingo@elte.hu>
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+	"Paul E. McKenney" <paulmck@us.ibm.com>,
+	Peter Zijlstra <a.p.zijlstra@chello.nl>,
+	Thomas Gleixner <tglx@linutronix.de>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.sourceforge.net>,
+	Frederic Weisbecker <fweisbec@gmail.com>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Shawn Starr <shawn.starr@rogers.com>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Dave Airlie <airlied@redhat.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Patrick McHardy <kaber@trash.net>, Jens Axboe <axboe@kernel.dk>
+Subject: Re: 2.6.35-rc4-git3: Reported regressions from 2.6.34
+Message-ID: <20100709071131.GB10743@elte.hu>
+References: <-IGZ64uxA6G.A.P0H.bLmNMB@chimera>
+ <AANLkTiknnzWyVpqnPCpyiEVHLgkewd0zaGzLInABRe2G@mail.gmail.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Ivo Van Doorn <ivdoorn@gmail.com>,
-	Christoph Egger <siccegge@cs.fau.de>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	vamos-dev@i4.informatik.uni-erlangen.de,
-	Luis Correia <luis.f.correia@gmail.com>
-Subject: Re: [PATCH 01/11] Removing dead RT2800PCI_SOC
-References: <cover.1279110894.git.siccegge@cs.fau.de> <29013fb6eab9e95e95d61df894797d2455dfa10c.1279110894.git.siccegge@cs.fau.de> <AANLkTinO32CIe0HBTXjP_bcAz0nMEw6wvcZwcob1fX3r@mail.gmail.com> <AANLkTikCeDys9e1EnE9GdiJtDRcbqW3gzvsmjzvB_yDs@mail.gmail.com> <20100714131527.GB2352@tuxdriver.com>
-In-Reply-To: <20100714131527.GB2352@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTiknnzWyVpqnPCpyiEVHLgkewd0zaGzLInABRe2G@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-07-14 3:15 PM, John W. Linville wrote:
-> On Wed, Jul 14, 2010 at 02:52:14PM +0200, Ivo Van Doorn wrote:
->> On Wed, Jul 14, 2010 at 2:46 PM, Luis Correia <luis.f.correia@gmail.com> wrote:
->> > On Wed, Jul 14, 2010 at 13:39, Christoph Egger <siccegge@cs.fau.de> wrote:
->> >> While RT2800PCI_SOC exists in Kconfig, it depends on either
->> >> RALINK_RT288X or RALINK_RT305X which are both not available in Kconfig
->> >> so all Code depending on that can't ever be selected and, if there's
->> >> no plan to add these options, should be cleaned up
->> >>
->> >> Signed-off-by: Christoph Egger <siccegge@cs.fau.de>
->> >
->> > NAK,
->> >
->> > this is not dead code, it is needed for the Ralink System-on-Chip
->> > Platform devices.
->> >
->> > While I can't fix Kconfig errors and the current KConfig file may be
->> > wrong, this code cannot and will not be deleted.
->> 
->> When the config option was introduced, the config options RALINK_RT288X and
->> RALINK_RT305X were supposed to be merged as well soon after by somebody (Felix?)
->> 
->> But since testing is done on SoC boards by Helmut and Felix, I assume the code
->> isn't dead but actually in use.
-> 
-> Perhaps Helmut and Felix can send us the missing code?
-The missing code is a MIPS platform port, which is currently being
-maintained in OpenWrt, but is not ready for upstream submission yet.
-I'm not working on this code at the moment, but I think it will be
-submitted once it's ready.
 
-- Felix
+* Linus Torvalds <torvalds@linux-foundation.org> wrote:
+
+> > Bug-Entry ? ? ? : http://bugzilla.kernel.org/show_bug.cgi?id=16346
+> > Subject ? ? ? ? : 2.6.35-rc3-git8 - include/linux/fdtable.h:88 invoked rcu_dereference_check() without protection!
+> > Submitter ? ? ? : Miles Lane <miles.lane@gmail.com>
+> > Date ? ? ? ? ? ?: 2010-07-04 22:04 (5 days old)
+> > Message-ID ? ? ?: <AANLkTinof0k28rk4rMr66aubxcRL2rFa5ZEArj1lqD3o@mail.gmail.com>
+> > References ? ? ?: http://marc.info/?l=linux-kernel&m=127828107815930&w=2
+> 
+> I'm not entirely sure if these RCU proving things should count as 
+> regressions.
+
+Generally not - and we've delayed at least one more complex (cgroups) fix to 
+v2.6.36 because the patch itself was riskier than the warning.
+
+Still most of the warning fixes turned out to be simple, so we merged the 
+very-low-risk ones and right now we seem to be on top of them.
+
+But in general the default rule is that we delay these fixes to v2.6.36.
+
+> Sure, the option to enable RCU proving is new, but the things it reports 
+> about generally are not new - and they are usually not even bugs in the 
+> sense that they necessarily cause any real problems.
+> 
+> That particular one is in the single-thread optimizated case for fget_light, ie
+> 
+>         if (likely((atomic_read(&files->count) == 1))) {
+>                 file = fcheck_files(files, fd);
+> 
+> where I think it should be entirely safe in all ways without any locking. So 
+> I think it's a false positive too.
+
+Yeah, it's a bit like with lockdep (and it's a bit like with compiler warning 
+fixes): we had to punch through a large stack of false positives that 
+accumulated in the past 10 years.
+
+( Because real bugs eventually get fixed, while false positives always just
+  accumulate. So almost by definition we always start with a very assymetric
+  collection of warnings and a large stack of false positives. )
+
+Having said that, it appears we got most of the false positives and are 
+beginning to be in a more representative equilibrium now. If v2.6.35 isnt 
+going to be warning-free then v2.6.36 certainly will be and new warnings will 
+have a much higher likelyhood of being real (and new) bugs (not just 
+accumulated false-positives).
+
+	Ingo
