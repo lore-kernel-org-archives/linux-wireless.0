@@ -1,39 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:28138 "EHLO mga01.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:50611 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966632Ab0GSWX4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jul 2010 18:23:56 -0400
-From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-To: Marcel Holtmann <marcel@holtmann.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 19 Jul 2010 15:23:55 -0700
-Subject: RE: iwlagn and many firmware restarts with Fedora kernel
-Message-ID: <E9954878DD1FB34FAE5187FB88C58A350120692494@orsmsx506.amr.corp.intel.com>
-References: <1279565034.4572.36.camel@localhost.localdomain>
-In-Reply-To: <1279565034.4572.36.camel@localhost.localdomain>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	id S1750870Ab0GITXb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Jul 2010 15:23:31 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 0/4]  iwlwifi update for 2.6.36
+Date: Fri,  9 Jul 2010 12:24:36 -0700
+Message-Id: <1278703480-13363-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgTWFyY2VsLA0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogbGludXgtd2ly
-ZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtd2lyZWxlc3Mtb3duZXJA
-dmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgTWFyY2VsIEhvbHRtYW5uDQpTZW50OiBNb25k
-YXksIEp1bHkgMTksIDIwMTAgMTE6NDQgQU0NClRvOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5l
-bC5vcmcNClN1YmplY3Q6IGl3bGFnbiBhbmQgbWFueSBmaXJtd2FyZSByZXN0YXJ0cyB3aXRoIEZl
-ZG9yYSBrZXJuZWwNCg0KSGksDQoNCnNvIGR1cmluZyB0aGUgbGFzdCBmZXcgd2Vla3MsIEkgaGF2
-ZSBzZWVuIGEgaHVnZSBhbW91bnQgb2YgZmlybXdhcmUNCnJlc3RhcnRzIHdpdGggbXkgSW50ZWwg
-NTM1MCBjYXJkIGFuZCBGZWRvcmEgMTMga2VybmVsICgyLjYuMzMuNi0xNDcpLg0KDQppd2xhZ24g
-MDAwMDowMzowMC4wOiBsb3cgYWNrIGNvdW50IGRldGVjdGVkLCByZXN0YXJ0IGZpcm13YXJlDQpp
-d2xhZ24gMDAwMDowMzowMC4wOiBPbiBkZW1hbmQgZmlybXdhcmUgcmVsb2FkDQppd2xhZ24gMDAw
-MDowMzowMC4wOiBTdG9wcGluZyBBR0cgd2hpbGUgc3RhdGUgbm90IE9OIG9yIHN0YXJ0aW5nDQpp
-d2xhZ24gMDAwMDowMzowMC4wOiBxdWV1ZSBudW1iZXIgb3V0IG9mIHJhbmdlOiAwLCBtdXN0IGJl
-IDEwIHRvIDE5DQoNCklmIHRoaXMgaGFwcGVucyB0aGVuIEkgZG9uJ3Qgc2VlIGl0IG9uY2UsIEkg
-bm9ybWFsbHkgc2VlIHRoaXMgMTAtMjANCnRpbWVzIGFuZCB0aGUgY29ubmVjdGl2aXR5IGlzIHN0
-YWxsZWQgdW50aWwgdGhlIGNhcmRzIGNvbWVzIGJhY2sgdG8NCmxpZmUuIEkgaGF2ZSBzZWVuIHBh
-dGNoZXMgdGhhdCBzaG91bGQgaGF2ZSBmaXhlZCB0aGlzIHN5bXB0b20sIGJ1dCB0aGV5DQptaWdo
-dCBiZSBhbHNvIHNlbmQgdG8gLXN0YWJsZSBzaW5jZSB0aGlzIGlzIGEgbWFqb3IgaGFzc2xlLg0K
-DQpUaGUgdGltZSB3aXRob3V0IGNvbm5lY3Rpdml0eSBpcyBzb21ldGhpbmcgYXJvdW5kIDQtNSBt
-aW51dGVzIG9yIGxvbmdlcg0Kd2hlbiB0aGlzIGhhcHBlbnMuIE5vdCByZWFsbHkgZnVubnkuDQoN
-CldoaWNoIHBhdGNoIHlvdSByZWZlcnJpbmcgdG8/IEkgd2lsbCB0cnkgdG8gd29yayBvbiBzdWJt
-aXQgaXQgdG8gc3RhYmxlLg0KDQpUaGFua3MNCldleQ0K
+We add support for 6050 series Gen2 devices
+We also fix the bit mask of a FH register which will
+cause timeout by polling unused bits
+Newer version of uCode has advance error codes; we adding
+support for these.
+
+Emmanuel Grumbach (1):
+  iwlagn: fix the bit mask of a FH register in stop Tx DMA flow
+
+Jay Sternberg (1):
+  iwlwifi: correct descriptions of advanced ucode errors
+
+Shanyu Zhao (1):
+  iwlwifi: enable 6050 series Gen2 devices
+
+Wey-Yi Guy (1):
+  iwlagn: more generic description for iwlagn devices
+
+these patches are also available from wireless-next-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+
+ drivers/net/wireless/iwlwifi/Kconfig      |    9 ++++-
+ drivers/net/wireless/iwlwifi/iwl-6000.c   |   38 +++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    7 +++-
+ drivers/net/wireless/iwlwifi/iwl-agn.c    |   44 +++++++++++++++++++++++++----
+ drivers/net/wireless/iwlwifi/iwl-agn.h    |    1 +
+ drivers/net/wireless/iwlwifi/iwl-csr.h    |    1 +
+ drivers/net/wireless/iwlwifi/iwl-eeprom.h |    4 ++
+ drivers/net/wireless/iwlwifi/iwl-fh.h     |    7 +----
+ 8 files changed, 95 insertions(+), 16 deletions(-)
+
