@@ -1,104 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:45435 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751947Ab0GWUDX convert rfc822-to-8bit (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:52727 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752862Ab0GIJYI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jul 2010 16:03:23 -0400
-Received: by pvc7 with SMTP id 7so3647154pvc.19
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jul 2010 13:03:22 -0700 (PDT)
+	Fri, 9 Jul 2010 05:24:08 -0400
 MIME-Version: 1.0
-In-Reply-To: <AANLkTinfMiS=+dqi=azF2exJbkrSLYT9nN0aor7gff-Q@mail.gmail.com>
-References: <AANLkTimdDhHudW6_7Hwcf6UCumY_EgqGd7CLtmSgOzEz@mail.gmail.com>
-	<AANLkTinfMiS=+dqi=azF2exJbkrSLYT9nN0aor7gff-Q@mail.gmail.com>
-From: Andrew Lutomirski <luto@mit.edu>
-Date: Fri, 23 Jul 2010 16:03:02 -0400
-Message-ID: <AANLkTi=Wy1r2C1xL289QQX10aVZaYfF7A1K8sd93ZXOd@mail.gmail.com>
-Subject: Re: regulatory hiccup
-To: linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTik7eGRREWlokHenj-hGlwJXwc7IBWpSqNpoMwGI@mail.gmail.com>
+References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
+	<1278376666-3509-12-git-send-email-ohad@wizery.com>
+	<4C32EF19.1000604@nokia.com>
+	<AANLkTintIz-N7MwwtqhVq2LR3Ln5JTNYSbJUBSSClcA-@mail.gmail.com>
+	<4C3306F4.8060907@nokia.com>
+	<AANLkTin5W52fPzWToRrAzm56SLZI-taSuI16rCEhLWqH@mail.gmail.com>
+	<4C333E0D.2070601@nokia.com>
+	<alpine.LFD.2.00.1007061316010.6020@xanadu.home>
+	<AANLkTin7jIAIiN_JHMxX74K-EBDtDNwUQMlIf4C6RCHD@mail.gmail.com>
+	<4C36DA04.3090209@nokia.com>
+	<AANLkTik7eGRREWlokHenj-hGlwJXwc7IBWpSqNpoMwGI@mail.gmail.com>
+Date: Fri, 9 Jul 2010 12:24:06 +0300
+Message-ID: <AANLkTikviJTV-jPVwxu5HG_QT6jXyFDNE4MEADgUaoWV@mail.gmail.com>
+Subject: Re: [PATCH 11/15] wireless: wl1271: introduce platform device support
+From: Grazvydas Ignotas <notasas@gmail.com>
+To: Ohad Ben-Cohen <ohad@wizery.com>
+Cc: Roger Quadros <roger.quadros@nokia.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	San Mehat <san@google.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 23, 2010 at 3:35 PM, Andrew Lutomirski <luto@mit.edu> wrote:
-> On Fri, Jul 23, 2010 at 3:30 PM, Andrew Lutomirski <luto@mit.edu> wrote:
->>
->> Then, after fiddling with an AP for a bit, I got:
->>
->> [11747.264221] cfg80211: Calling CRDA for country: US
->> [11747.282664] cfg80211: Current regulatory domain updated by AP to: US
->> [11747.282672]     (start_freq - end_freq @ bandwidth),
->> (max_antenna_gain, max_eirp)
->> [11747.282680]     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 1600 mBm)
->> [11747.282688]     (5250000 KHz - 5330000 KHz @ 40000 KHz), (300 mBi, 1600 mBm)
->>
+On Fri, Jul 9, 2010 at 11:32 AM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
+> Hi Roger,
 >
-> It's worse than that.  I reconnected to the AP (it appeared to work
-> for a few seconds) and I saw:
+> On Fri, Jul 9, 2010 at 11:12 AM, Roger Quadros <roger.quadros@nokia.com> wrote:
+>> You are already
+>> creating a new platform device for wl1271_sdio just to pass platform_data
 >
-> Wiphy phy0
-> [...]
->        Band 2:
->                Capabilities: 0x872
->                        HT20/HT40
->                        Static SM Power Save
->                        RX Greenfield
->                        RX HT20 SGI
->                        RX HT40 SGI
->                        No RX STBC
->                        Max AMSDU length: 3839 bytes
->                        No DSSS/CCK HT40
->                Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
->                Minimum RX AMPDU time spacing: 4 usec (0x05)
->                HT TX/RX MCS rate indexes supported: 0-23, 32
->                Frequencies:
->                        * 5180 MHz [36] (15.0 dBm) (passive scanning, no IBSS)
->                        * 5200 MHz [40] (15.0 dBm) (passive scanning, no IBSS)
->                        * 5220 MHz [44] (15.0 dBm) (passive scanning, no IBSS)
->                        * 5240 MHz [48] (15.0 dBm) (passive scanning, no IBSS)
->                        * 5260 MHz [52] (15.0 dBm) (passive scanning, no IBSS, radar detection)
->                        * 5280 MHz [56] (15.0 dBm) (passive scanning, no IBSS, radar detection)
->                        * 5300 MHz [60] (15.0 dBm) (passive scanning, no IBSS, radar detection)
->                        * 5320 MHz [64] (15.0 dBm) (passive scanning, no IBSS, radar detection)
->                        * 5500 MHz [100] (disabled)
->                        * 5520 MHz [104] (disabled)
->                        * 5540 MHz [108] (disabled)
->                        * 5560 MHz [112] (disabled)
->                        * 5580 MHz [116] (disabled)
->                        * 5600 MHz [120] (disabled)
->                        * 5620 MHz [124] (disabled)
->                        * 5640 MHz [128] (disabled)
->                        * 5660 MHz [132] (disabled)
->                        * 5680 MHz [136] (disabled)
->                        * 5700 MHz [140] (disabled)
->                        * 5745 MHz [149] (disabled)
->                        * 5765 MHz [153] (disabled)
->                        * 5785 MHz [157] (disabled)
->                        * 5805 MHz [161] (disabled)
->                        * 5825 MHz [165] (disabled)
+> With the new approach, I can remove this platform device altogether,
+> and completely rely on the sdio function device for driver probing (as
+> it was before). I just need to add this little support of delivering
+> small bits of platform data - the mechanism should be simple and
+> generic, and would considerably simplify the driver.
 >
-> Which is absurd, because:
+>> I think this case is specific to wl1271.
 >
-> Connected to 00:02:6f:6e:d7:6c (on wlan0)
->        SSID: FFTT5
->        freq: 5785        [!!!!!!!!!!!]
->        RX: 72058 bytes (310 packets)
->        TX: 2568 bytes (20 packets)
->        signal: -33 dBm
->        tx bitrate: 6.0 MBit/s
->
-> The connection died after a little while, presumably because the AP
-> was outside of its own allowed band.
->
+> Yes, it is.
 
-Here's the offending country IE:
-
-Country Information: Country Code: US, Indoor Environment
-Tag Number: 7 (Country Information)
-Tag length: 6
-Tag interpretation: Country Code: US, Indoor Environment
-  Start Channel: 36, Channels: 13, Max TX Power: 16 dBm
-
-AFAICT net/wireless/reg.c ignores the last bit, and the other APs that
-work correctly here don't send country IEs.
-
---Andy
+wl1251 also has this issue. In fact it's even worse there as it's
+missing all SDIO registers and cannot be probed at all.. Those devices
+are not plug n play at all.
