@@ -1,41 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:39676 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751847Ab0GZUlR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jul 2010 16:41:17 -0400
-Message-ID: <4C4DF2E8.7060502@openwrt.org>
-Date: Mon, 26 Jul 2010 22:41:12 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-CC: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] [RFC] ath9k: improve aggregation throughput by
- 	using only first rate
-References: <AANLkTimWoSTAtb0m9V=0CNowhy=KtpiKj-O3vdmV8qxB@mail.gmail.com>	<4C4DC98E.6090002@openwrt.org>	<AANLkTinZ=KDo4aJU6Z93p1DXghF_MzE9CeBN6OuC_LnD@mail.gmail.com>	<4C4DE4F5.3010907@openwrt.org> <AANLkTikcW5Gx6P2-6w_Vmeh7kEDGuEHcY=U_jbH3tYhT@mail.gmail.com>
-In-Reply-To: <AANLkTikcW5Gx6P2-6w_Vmeh7kEDGuEHcY=U_jbH3tYhT@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:48162 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751403Ab0GJMed (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Jul 2010 08:34:33 -0400
+From: Kulikov Vasiliy <segooon@gmail.com>
+To: kernel-janitors@vger.kernel.org
+Cc: Michael Wu <flamingice@sourmilk.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH] adm8211: fix memory leak
+Date: Sat, 10 Jul 2010 16:28:57 +0400
+Message-Id: <1278764938-9417-1-git-send-email-segooon@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-07-26 10:37 PM, Björn Smedman wrote:
-> 2010/7/26 Felix Fietkau <nbd@openwrt.org>:
->> On 2010-07-26 9:23 PM, Björn Smedman wrote:
->>> 2010/7/26 Felix Fietkau <nbd@openwrt.org>:
->>> * When tx is aggregated most rate control probe frames end up inside
->>> aggregates and are never used for probing (effective probe frequency
->>> is divided by average aggregate length).
->> Nope, a probing frame never ends up inside an aggregate. It's always
->> sent out as a single frame, which is why I had to make the decision
->> about sending a probing frame more complex in minstrel_ht, compared to
->> minstrel - the previous 10% stuff was limiting aggregation size.
-> 
-> Ok, I must have jumped to conclusions. I looked quickly at the code
-> and had the impression that it only cared about the RATE_PROBE flag if
-> it was on the first subframe of the aggregate, and then I compared
-> debug output from rc and xmit like this:
-Oh, wait. It seems that you may be right after all. I think I was
-remembering stuff from the wrong codebase again Well, at least what I
-described is what I think the code should be doing ;)
+We must free priv->eeprom allocated in adm8211_read_eeprom().
 
-- Felix
+Signed-off-by: Kulikov Vasiliy <segooon@gmail.com>
+---
+ drivers/net/wireless/adm8211.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
+index 880ad9d..bde2fa8 100644
+--- a/drivers/net/wireless/adm8211.c
++++ b/drivers/net/wireless/adm8211.c
+@@ -1903,7 +1903,7 @@ static int __devinit adm8211_probe(struct pci_dev *pdev,
+ 	if (err) {
+ 		printk(KERN_ERR "%s (adm8211): Cannot register device\n",
+ 		       pci_name(pdev));
+-		goto err_free_desc;
++		goto err_free_eeprom;
+ 	}
+ 
+ 	printk(KERN_INFO "%s: hwaddr %pM, Rev 0x%02x\n",
+@@ -1912,6 +1912,9 @@ static int __devinit adm8211_probe(struct pci_dev *pdev,
+ 
+ 	return 0;
+ 
++ err_free_eeprom:
++	kfree(priv->eeprom);
++
+  err_free_desc:
+ 	pci_free_consistent(pdev,
+ 			    sizeof(struct adm8211_desc) * priv->rx_ring_size +
+-- 
+1.7.0.4
+
