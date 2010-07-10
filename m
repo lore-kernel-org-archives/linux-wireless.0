@@ -1,112 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:35218 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752707Ab0GUFr4 (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:45410 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752035Ab0GJTEA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jul 2010 01:47:56 -0400
-Received: by vws14 with SMTP id 14so1255985vws.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Jul 2010 22:47:55 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTinr0RbmNLgM_pRsa0WrSqQ_Mr9aQhKGuK63xIJ6@mail.gmail.com>
-References: <AANLkTilmifjH5Zopo82LhjidzsYfT_xRgKJzjGCZZPlq@mail.gmail.com>
-	<AANLkTintLd8YTgMQuzbEB36t_i5AL4TePBSDAa7G2zvl@mail.gmail.com>
-	<AANLkTimgt_HdXyGneQMOz7wR7Xs7BBrDUCGoxP1qDcYg@mail.gmail.com>
-	<20100720112041.GA7049@hash.localnet> <AANLkTinr0RbmNLgM_pRsa0WrSqQ_Mr9aQhKGuK63xIJ6@mail.gmail.com>
-From: Jonathan Guerin <jonathan@guerin.id.au>
-Date: Wed, 21 Jul 2010 15:47:35 +1000
-Message-ID: <AANLkTinCVJBxl1sspRpGFIiyclS0c-8Q97vmRtbHvroB@mail.gmail.com>
-Subject: Re: ath5k Ad Hoc Association
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 10 Jul 2010 15:04:00 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 8CE29403DA
+	for <linux-wireless@vger.kernel.org>; Sat, 10 Jul 2010 15:07:46 -0400 (EDT)
+Subject: Compat-wireless release for 2010-07-10 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100710190356.D2B39404EC@repository3.orbit-lab.org>
+Date: Sat, 10 Jul 2010 15:03:56 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-TXkgYXBvbG9naWVzIGFsbCwgSSBoYWQgdGhlIGFudGVubmEgcGx1Z2dlZCBpbiB0byB0aGUgZmly
-c3QgY29ubmVjdG9yLgphdGg1ayBhcHBlYXJzIHRvIG9ubHkgdXNlIHRoZSBzZWNvbmQuIFBsdWdn
-aW5nIGluIHRvIHRoZSBzZWNvbmQgb25lCmZpeGVzIG1vc3QgcHJvYmxlbXMuIEkgZGlkbid0IGdl
-dCBhIGNoYW5jZSB0byBzZWUgaWYgdGhlIGF0aDVrIHdheSBvZgpjcmVhdGluZyBhbmQgam9pbmlu
-ZyBhbiBpYnNzIHdvcmtzIG5vdywgYnV0IHdlIGNhbiBub3cgZ2V0IGZ1bGwKdGhyb3VnaHB1dCBp
-biBhZGhvYyBtb2RlLiBJIHdpbGwgdHJ5IHRoZSBpYnNzIGpvaW5pbmcgd2l0aG91dCBNYWRXaWZp
-CnRvbW9ycm93LgoKVGhhbmtzIGZvciBhbGwgdGhlIGhlbHAuCgotLQpKb25hdGhhbiBHdWVyaW4K
-CgoKT24gV2VkLCBKdWwgMjEsIDIwMTAgYXQgMTE6MTYgQU0sIEpvbmF0aGFuIEd1ZXJpbiA8am9u
-YXRoYW5AZ3VlcmluLmlkLmF1PiB3cm90ZToKPiBPbiBUdWUsIEp1bCAyMCwgMjAxMCBhdCA5OjIw
-IFBNLCBCb2IgQ29wZWxhbmQgPG1lQGJvYmNvcGVsYW5kLmNvbT4gd3JvdGU6Cj4+PiBZZXMsIEkn
-dmUgY2hlY2tlZCB0aGUgY2hhbm5lbCAoMzYsIDUxODApIGFsbG93cyBiZWFjb25pbmcuIEkndmUg
-dHJpZWQKPj4+IHRoZSBjb21tYW5kcyB5b3UgbWVudGlvbmVkLCBidXQgbm8gbHVjay4gSWYgSSBt
-b25pdG9yIHRoZSBpbnRlcmZhY2UKPj4+IGZyb20gYW5vdGhlciBzdGF0aW9uLCB0aGUgYXRoNWsg
-ZHJpdmUgbmV2ZXIgYXBwZWFycyB0byBiZWFjb24uCj4+Cj4+IFdoYXQgZG9lcyAiaXcgcGh5IHBo
-eTAgaW5mbyIgc2hvdz8KPgo+IGl3IHBoeSBwaHkwIGluZm8KPiBXaXBoeSBwaHkwCj4goCCgIKAg
-oEJhbmQgMToKPiCgIKAgoCCgIKAgoCCgIKBGcmVxdWVuY2llczoKPiCgIKAgoCCgIKAgoCCgIKAg
-oCCgIKAgoCogMjQxMiBNSHogWzFdICgyMC4wIGRCbSkKPiCgIKAgoCCgIKAgoCCgIKAgoCCgIKAg
-oCogMjQxNyBNSHogWzJdICgyMC4wIGRCbSkKPiCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCogMjQy
-MiBNSHogWzNdICgyMC4wIGRCbSkKPiCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCogMjQyNyBNSHog
-WzRdICgyMC4wIGRCbSkKPiCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCogMjQzMiBNSHogWzVdICgy
-MC4wIGRCbSkKPiCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCogMjQzNyBNSHogWzZdICgyMC4wIGRC
-bSkKPiCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCogMjQ0MiBNSHogWzddICgyMC4wIGRCbSkKPiCg
-IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCogMjQ0NyBNSHogWzhdICgyMC4wIGRCbSkKPiCgIKAgoCCg
-IKAgoCCgIKAgoCCgIKAgoCogMjQ1MiBNSHogWzldICgyMC4wIGRCbSkKPiCgIKAgoCCgIKAgoCCg
-IKAgoCCgIKAgoCogMjQ1NyBNSHogWzEwXSAoMjAuMCBkQm0pCj4goCCgIKAgoCCgIKAgoCCgIKAg
-oCCgIKAqIDI0NjIgTUh6IFsxMV0gKDIwLjAgZEJtKQo+IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCg
-KiAyNDY3IE1IeiBbMTJdIChkaXNhYmxlZCkKPiCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCogMjQ3
-MiBNSHogWzEzXSAoZGlzYWJsZWQpCj4goCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAqIDI0ODQgTUh6
-IFsxNF0gKGRpc2FibGVkKQo+IKAgoCCgIKAgoCCgIKAgoEJpdHJhdGVzIChub24tSFQpOgo+IKAg
-oCCgIKAgoCCgIKAgoCCgIKAgoCCgKiAxLjAgTWJwcwo+IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCg
-KiAyLjAgTWJwcyAoc2hvcnQgcHJlYW1ibGUgc3VwcG9ydGVkKQo+IKAgoCCgIKAgoCCgIKAgoCCg
-IKAgoCCgKiA1LjUgTWJwcyAoc2hvcnQgcHJlYW1ibGUgc3VwcG9ydGVkKQo+IKAgoCCgIKAgoCCg
-IKAgoCCgIKAgoCCgKiAxMS4wIE1icHMgKHNob3J0IHByZWFtYmxlIHN1cHBvcnRlZCkKPiCgIKAg
-oCCgIKAgoCCgIKAgoCCgIKAgoCogNi4wIE1icHMKPiCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCog
-OS4wIE1icHMKPiCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCogMTIuMCBNYnBzCj4goCCgIKAgoCCg
-IKAgoCCgIKAgoCCgIKAqIDE4LjAgTWJwcwo+IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgKiAyNC4w
-IE1icHMKPiCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCogMzYuMCBNYnBzCj4goCCgIKAgoCCgIKAg
-oCCgIKAgoCCgIKAqIDQ4LjAgTWJwcwo+IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgKiA1NC4wIE1i
-cHMKPiCgIKAgoCCgQmFuZCAyOgo+IKAgoCCgIKAgoCCgIKAgoEZyZXF1ZW5jaWVzOgo+IKAgoCCg
-IKAgoCCgIKAgoCCgIKAgoCCgKiA1MTgwIE1IeiBbMzZdICgxNy4wIGRCbSkKPiCgIKAgoCCgIKAg
-oCCgIKAgoCCgIKAgoCogNTIwMCBNSHogWzQwXSAoMTcuMCBkQm0pCj4goCCgIKAgoCCgIKAgoCCg
-IKAgoCCgIKAqIDUyMjAgTUh6IFs0NF0gKDE3LjAgZEJtKQo+IKAgoCCgIKAgoCCgIKAgoCCgIKAg
-oCCgKiA1MjQwIE1IeiBbNDhdICgxNy4wIGRCbSkKPiCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCog
-NTI2MCBNSHogWzUyXSAoMjAuMCBkQm0pIChwYXNzaXZlIHNjYW5uaW5nLAo+IG5vIElCU1MsIHJh
-ZGFyIGRldGVjdGlvbikKPiCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCogNTI4MCBNSHogWzU2XSAo
-MjAuMCBkQm0pIChwYXNzaXZlIHNjYW5uaW5nLAo+IG5vIElCU1MsIHJhZGFyIGRldGVjdGlvbikK
-PiCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCogNTMwMCBNSHogWzYwXSAoMjAuMCBkQm0pIChwYXNz
-aXZlIHNjYW5uaW5nLAo+IG5vIElCU1MsIHJhZGFyIGRldGVjdGlvbikKPiCgIKAgoCCgIKAgoCCg
-IKAgoCCgIKAgoCogNTMyMCBNSHogWzY0XSAoMjAuMCBkQm0pIChwYXNzaXZlIHNjYW5uaW5nLAo+
-IG5vIElCU1MsIHJhZGFyIGRldGVjdGlvbikKPiCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCogNTUw
-MCBNSHogWzEwMF0gKGRpc2FibGVkKQo+IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgKiA1NTIwIE1I
-eiBbMTA0XSAoZGlzYWJsZWQpCj4goCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAqIDU1NDAgTUh6IFsx
-MDhdIChkaXNhYmxlZCkKPiCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCogNTU2MCBNSHogWzExMl0g
-KGRpc2FibGVkKQo+IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgKiA1NTgwIE1IeiBbMTE2XSAoZGlz
-YWJsZWQpCj4goCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAqIDU2MDAgTUh6IFsxMjBdIChkaXNhYmxl
-ZCkKPiCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCogNTYyMCBNSHogWzEyNF0gKGRpc2FibGVkKQo+
-IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgKiA1NjQwIE1IeiBbMTI4XSAoZGlzYWJsZWQpCj4goCCg
-IKAgoCCgIKAgoCCgIKAgoCCgIKAqIDU2NjAgTUh6IFsxMzJdIChkaXNhYmxlZCkKPiCgIKAgoCCg
-IKAgoCCgIKAgoCCgIKAgoCogNTY4MCBNSHogWzEzNl0gKGRpc2FibGVkKQo+IKAgoCCgIKAgoCCg
-IKAgoCCgIKAgoCCgKiA1NzAwIE1IeiBbMTQwXSAoZGlzYWJsZWQpCj4goCCgIKAgoCCgIKAgoCCg
-IKAgoCCgIKAqIDU3NDUgTUh6IFsxNDldICgzMC4wIGRCbSkKPiCgIKAgoCCgIKAgoCCgIKAgoCCg
-IKAgoCogNTc2NSBNSHogWzE1M10gKDMwLjAgZEJtKQo+IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCg
-KiA1Nzg1IE1IeiBbMTU3XSAoMzAuMCBkQm0pCj4goCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAqIDU4
-MDUgTUh6IFsxNjFdICgzMC4wIGRCbSkKPiCgIKAgoCCgIKAgoCCgIKAgoCCgIKAgoCogNTgyNSBN
-SHogWzE2NV0gKDMwLjAgZEJtKQo+IKAgoCCgIKAgoCCgIKAgoEJpdHJhdGVzIChub24tSFQpOgo+
-IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgKiA2LjAgTWJwcwo+IKAgoCCgIKAgoCCgIKAgoCCgIKAg
-oCCgKiA5LjAgTWJwcwo+IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgKiAxMi4wIE1icHMKPiCgIKAg
-oCCgIKAgoCCgIKAgoCCgIKAgoCogMTguMCBNYnBzCj4goCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAq
-IDI0LjAgTWJwcwo+IKAgoCCgIKAgoCCgIKAgoCCgIKAgoCCgKiAzNi4wIE1icHMKPiCgIKAgoCCg
-IKAgoCCgIKAgoCCgIKAgoCogNDguMCBNYnBzCj4goCCgIKAgoCCgIKAgoCCgIKAgoCCgIKAqIDU0
-LjAgTWJwcwo+IKAgoCCgIKBtYXggIyBzY2FuIFNTSURzOiA0Cj4goCCgIKAgoFN1cHBvcnRlZCBp
-bnRlcmZhY2UgbW9kZXM6Cj4goCCgIKAgoCCgIKAgoCCgICogSUJTUwo+IKAgoCCgIKAgoCCgIKAg
-oCAqIG1hbmFnZWQKPiCgIKAgoCCgIKAgoCCgIKAgKiBBUAo+IKAgoCCgIKAgoCCgIKAgoCAqIEFQ
-L1ZMQU4KPiCgIKAgoCCgIKAgoCCgIKAgKiBtb25pdG9yCj4goCCgIKAgoCCgIKAgoCCgICogbWVz
-aCBwb2ludAo+IKAgoCCgIKBTdXBwb3J0ZWQgY29tbWFuZHM6Cj4goCCgIKAgoCCgIKAgoCCgICog
-bmV3X2ludGVyZmFjZQo+IKAgoCCgIKAgoCCgIKAgoCAqIHNldF9pbnRlcmZhY2UKPiCgIKAgoCCg
-IKAgoCCgIKAgKiBuZXdfa2V5Cj4goCCgIKAgoCCgIKAgoCCgICogbmV3X2JlYWNvbgo+IKAgoCCg
-IKAgoCCgIKAgoCAqIG5ld19zdGF0aW9uCj4goCCgIKAgoCCgIKAgoCCgICogbmV3X21wYXRoCj4g
-oCCgIKAgoCCgIKAgoCCgICogc2V0X21lc2hfcGFyYW1zCj4goCCgIKAgoCCgIKAgoCCgICogc2V0
-X2Jzcwo+IKAgoCCgIKAgoCCgIKAgoCAqIGF1dGhlbnRpY2F0ZQo+IKAgoCCgIKAgoCCgIKAgoCAq
-IGFzc29jaWF0ZQo+IKAgoCCgIKAgoCCgIKAgoCAqIGRlYXV0aGVudGljYXRlCj4goCCgIKAgoCCg
-IKAgoCCgICogZGlzYXNzb2NpYXRlCj4goCCgIKAgoCCgIKAgoCCgICogam9pbl9pYnNzCj4goCCg
-IKAgoCCgIKAgoCCgICogc2V0X3dpcGh5X25ldG5zCj4goCCgIKAgoCCgIKAgoCCgICogY29ubmVj
-dAo+IKAgoCCgIKAgoCCgIKAgoCAqIGRpc2Nvbm5lY3QKPgo+IKBpdyByZWcgZ2V0Cj4gY291bnRy
-eSBBVToKPiCgIKAgoCCgKDI0MDIgLSAyNDgyIEAgNDApLCAoTi9BLCAyMCkKPiCgIKAgoCCgKDUx
-NzAgLSA1MjUwIEAgNDApLCAoMywgMjMpCj4goCCgIKAgoCg1MjUwIC0gNTMzMCBAIDQwKSwgKDMs
-IDIzKSwgREZTCj4goCCgIKAgoCg1NzM1IC0gNTgzNSBAIDQwKSwgKDMsIDMwKQo+Cj4gQ2hlZXJz
-LAo+Cj4gSm9uYXRoYW4KPgo=
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   55cfa0f..948cf60  linux-2.6.32.y -> origin/linux-2.6.32.y
+   4db5fad..91d8dae  linux-2.6.33.y -> origin/linux-2.6.33.y
+   5789d0f..9923049  linux-2.6.34.y -> origin/linux-2.6.34.y
+   5ba7a3f..8302dc6  linux-2.6.35.y -> origin/linux-2.6.35.y
+   469f74f..bea1297  master     -> origin/master
+ * [new tag]         compat-wireless-2.6.33.6 -> compat-wireless-2.6.33.6
+ * [new tag]         compat-wireless-v2.6.32.16 -> compat-wireless-v2.6.32.16
+ * [new tag]         compat-wireless-v2.6.35-rc4 -> compat-wireless-v2.6.35-rc4
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+ * [new tag]         compat-wireless-v2.6.34.1 -> compat-wireless-v2.6.34.1
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   59d8d6f..cb6fa5f  history    -> origin/history
+ + 95a7e04...0811daa master     -> origin/master  (forced update)
+   78178c7..e467e10  stable     -> origin/stable
+ * [new tag]         next-20100709 -> next-20100709
+
+compat-wireless code metrics
+
+    495293 - Total upstream lines of code being pulled
+      1419 - backport code changes
+      1186 - backport code additions
+       233 - backport code deletions
+      5766 - backport from compat module
+      7185 - total backport code
+    1.4507 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2459 - % of crap code
+
+Base tree: linux-next.git
+Base tree version: next-20100709
+compat-wireless release: compat-wireless-2010-07-08-2-gbea1297
