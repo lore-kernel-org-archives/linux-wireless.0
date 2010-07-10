@@ -1,56 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40842 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755635Ab0G3CAM (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:59856 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754989Ab0GJNMM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jul 2010 22:00:12 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] rtl8180: use RTL818X_MSR_ADHOC for IBSS connection
-Date: Thu, 29 Jul 2010 21:56:06 -0400
-Message-Id: <1280454966-25996-1-git-send-email-linville@tuxdriver.com>
+	Sat, 10 Jul 2010 09:12:12 -0400
+From: Kulikov Vasiliy <segooon@gmail.com>
+To: kernel-janitors@vger.kernel.org
+Cc: Simon Kelley <simon@thekelleys.org.uk>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH] atmel: unregister_netdev() on error
+Date: Sat, 10 Jul 2010 17:11:47 +0400
+Message-Id: <1278767508-10164-1-git-send-email-segooon@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/rtl818x/rtl8180_dev.c |   15 +++++++++------
- 1 files changed, 9 insertions(+), 6 deletions(-)
+We must unregister registered device if probe_atmel_card() fails.
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8180_dev.c b/drivers/net/wireless/rtl818x/rtl8180_dev.c
-index c879660..2c44753 100644
---- a/drivers/net/wireless/rtl818x/rtl8180_dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8180_dev.c
-@@ -788,6 +788,7 @@ static void rtl8180_bss_info_changed(struct ieee80211_hw *dev,
- 	struct rtl8180_priv *priv = dev->priv;
- 	struct rtl8180_vif *vif_priv;
- 	int i;
-+	u8 reg;
+Signed-off-by: Kulikov Vasiliy <segooon@gmail.com>
+---
+ drivers/net/wireless/atmel.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/atmel.c b/drivers/net/wireless/atmel.c
+index c8f7090..b9334a3 100644
+--- a/drivers/net/wireless/atmel.c
++++ b/drivers/net/wireless/atmel.c
+@@ -1626,7 +1626,7 @@ struct net_device *init_atmel_card(unsigned short irq, unsigned long port,
  
- 	vif_priv = (struct rtl8180_vif *)&vif->drv_priv;
- 
-@@ -796,12 +797,14 @@ static void rtl8180_bss_info_changed(struct ieee80211_hw *dev,
- 			rtl818x_iowrite8(priv, &priv->map->BSSID[i],
- 					 info->bssid[i]);
- 
--		if (is_valid_ether_addr(info->bssid))
--			rtl818x_iowrite8(priv, &priv->map->MSR,
--					 RTL818X_MSR_INFRA);
--		else
--			rtl818x_iowrite8(priv, &priv->map->MSR,
--					 RTL818X_MSR_NO_LINK);
-+		if (is_valid_ether_addr(info->bssid)) {
-+			if (vif->type == NL80211_IFTYPE_ADHOC)
-+				reg = RTL818X_MSR_ADHOC;
-+			else
-+				reg = RTL818X_MSR_INFRA;
-+		} else
-+			reg = RTL818X_MSR_NO_LINK;
-+		rtl818x_iowrite8(priv, &priv->map->MSR, reg);
+ 	if (!probe_atmel_card(dev)) {
+ 		unregister_netdev(dev);
+-		goto err_out_res;
++		goto err_out_unreg;
  	}
  
- 	if (changed & BSS_CHANGED_ERP_SLOT && priv->rf->conf_erp)
+ 	netif_carrier_off(dev);
+@@ -1640,6 +1640,9 @@ struct net_device *init_atmel_card(unsigned short irq, unsigned long port,
+ 
+ 	return dev;
+ 
++err_out_unreg:
++	unregister_netdev(dev);
++
+ err_out_res:
+ 	release_region(dev->base_addr, 32);
+ err_out_irq:
 -- 
-1.7.1.1
+1.7.0.4
 
