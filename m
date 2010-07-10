@@ -1,61 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:55871 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751318Ab0G1T6E (ORCPT
+Received: from lager.deltatee.com ([207.54.116.66]:59948 "EHLO
+	porter.deltatee.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752652Ab0GJATs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jul 2010 15:58:04 -0400
-Received: by bwz1 with SMTP id 1so4145834bwz.19
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Jul 2010 12:58:02 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] ar9170: add get_survey callback in order to get channel noise
-Date: Wed, 28 Jul 2010 21:57:56 +0200
-Cc: linux-wireless@vger.kernel.org,
-	Benoit Papillault <benoit.papillault@free.fr>
-References: <1280342924-22811-1-git-send-email-linville@tuxdriver.com> <201007282110.31458.chunkeey@googlemail.com> <20100728191552.GA2668@tuxdriver.com>
-In-Reply-To: <20100728191552.GA2668@tuxdriver.com>
+	Fri, 9 Jul 2010 20:19:48 -0400
+Message-ID: <4C37BCA0.5090607@deltatee.com>
+Date: Fri, 09 Jul 2010 18:19:44 -0600
+From: Logan Gunthorpe <logang@deltatee.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201007282157.57068.chunkeey@googlemail.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>
+CC: linux-wireless@vger.kernel.org
+In-Reply-To: 1278578525.8576.19.camel@chilepepper
+Content-Type: text/plain; charset=ISO-8859-1
+Subject: RE: wl1271 firmware
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 28 July 2010 21:15:53 John W. Linville wrote:
-> On Wed, Jul 28, 2010 at 09:10:31PM +0200, Christian Lamparter wrote:
-> > On Wednesday 28 July 2010 20:48:44 John W. Linville wrote:
-> > > Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> > > ---
-> > >  drivers/net/wireless/ath/ar9170/main.c |   17 +++++++++++++++++
-> > >  1 files changed, 17 insertions(+), 0 deletions(-)
-> > >  [...]
-> > One problem: the noisefloor stays at the same level and
-> > is not updated. You would have to call ar9170_set_channel,
-> > but I don't recommend that because that may lockup
-> > the device :(.
+Hi Everyone,
+
+
+Luciano Coelho Wrote:
+> You need to get the firmware (wl1271-fw.bin) directly from TI or from
+> your device manufacturer.  I don't have the permission to redistribute
+> it.  The latest version that we are using is Rev. 6.1.0.0.310 (you can
+> check this by running strings on and grepping the binary file).
 > 
-> I'm not sure I understand -- isn't ar9170_set_channel already called
-> from ar9170_op_config? Or are you saying that the value will be
-> stale unless you call ar9170_set_channel again?
-the latter... come to think of it, I wrote a RFT a while back:
-"[RFT] ar9170: implement get_survey" <- 27. April
+> The NVS file is another story.  It contains device-specific calibration
+> values and you should probably get those from the device manufacturer.
+> There is a common part (which is the INI file in tiwlan's terms), which
+> you need to use to create the binary (check wl1271_ini.h for the binary
+> file structure).  The more problematic part is the device-specific self
+> generated calibration.  You need to run a specific sequence of commands
+> in order to get these values and then apply these values to the correct
+> place in the binary file.
+> 
+> Shahar, maybe you could contribute a tool to generate the NVS file in
+> the correct format for wl1271? That would be very cool and would help
+> lots of people.  Please let me know if you have interest and we can
+> discuss this in more details.
 
-and Benoit joined in to point out that he has/had the same
-issue with ath9k hardware. Was this ever sorted out? 
+I too am working with a WL1271 module and have just today got it
+connected to an Atmel ARM9 development kit (AT91SAM9G45-EKES). So far it
+appears to work but I have been gated by the firmware and NVS file issues.
 
-> How is this patch any worse than the situation was before commit
-> 5d6566ff356a19fb6ad994717cb937ff88063fa6?
+I have a firmware binary, but it seems to be a newer version
+(6.1.3.01.5) than what you are using. Does anyone have any idea if this
+version will work? It seems to be the only one available on TI's
+website. Additionally, our device manufacturer has been hesitant to
+provide any support because we are on an unsupported platform and opted
+to use the open source driver. Are there any other ways to obtain an
+older version of the firmware?
 
-Well, a dodgy value is hardly an improvement, right?
-Sure it is _just_ the noise *floor* and people
-might argue that any value is better than nothing at all. 
+The NVS file is another problem. TI's website has instructions to use a
+cryptic tool that appears to come with their driver package. There is no
+source for this tool and for obvious reasons would not work for us.
 
-Therefore, yes:
+Anyway, I'd like to help in anyway I can. I've taken a look at the
+twilan.ini file and I see the commonality with wl1271_ini.h. It would be
+relatively easy to write a tool that parses the INI file and generates
+the common part of the NVS file. However, I'd have no idea how to
+generate the device specific calibration or the few fields missing from
+the INI file.
 
-Acked-by: Christian Lamparter <chunkeey@googlemail.com>
+Thanks,
 
-and add the nf-update to the TODO-list...
-Or wait and look how ath9k(_htc) does/did it. 
+Logan
 
-Regards,
-	Christian
+P.S. I was not subscribed to this list when the message I'm replying to
+was sent. I apologize if I broke the thread. I am subscribed now.
+
