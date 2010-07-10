@@ -1,82 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:52089 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755838Ab0GZXbD convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:54597 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751039Ab0GJFqw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jul 2010 19:31:03 -0400
-Received: by pxi14 with SMTP id 14so264291pxi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Jul 2010 16:31:01 -0700 (PDT)
+	Sat, 10 Jul 2010 01:46:52 -0400
+Received: by wwb24 with SMTP id 24so5591570wwb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Jul 2010 22:46:50 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4C4E1784.3030702@candelatech.com>
-References: <4C4DE6B5.5080307@candelatech.com> <4C4E0580.3060404@candelatech.com>
-	<AANLkTi=qJXCxtMZcEm3VQT1s7ioJsdhj2kJzkgGSf3ND@mail.gmail.com>
-	<4C4E1784.3030702@candelatech.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 26 Jul 2010 16:30:41 -0700
-Message-ID: <AANLkTimnZ9pSfVLsEPgiDPyc=_eUnyLj89RHCC6rsaX8@mail.gmail.com>
-Subject: Re: ath9k: /proc/net/wireless always shows status of 0
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <AANLkTilE2uM6UoHe0UZo20CYfc8DCxpHLlSdQyzyJw2J@mail.gmail.com>
+References: <AANLkTim3gow5YFI1L-AwUMwGVb-MHkfZTXIIg3mitWne@mail.gmail.com>
+	<AANLkTilE2uM6UoHe0UZo20CYfc8DCxpHLlSdQyzyJw2J@mail.gmail.com>
+Date: Sat, 10 Jul 2010 00:46:49 -0500
+Message-ID: <AANLkTilWbGRye3yddyZ8mG4ZWz-fu5wKrTDaVLOCKKpY@mail.gmail.com>
+Subject: Re: BCM4311 in Ad-hoc Mode - Connection Unsuccessful
+From: Nicholas Betcher <nbetcher@gmail.com>
+To: Linux-Wireless Mailing List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 26, 2010 at 4:17 PM, Ben Greear <greearb@candelatech.com> wrote:
-> On 07/26/2010 03:54 PM, Luis R. Rodriguez wrote:
->>
->> On Mon, Jul 26, 2010 at 3:00 PM, Ben Greear<greearb@candelatech.com>
->> Â wrote:
->>>
->>> On 07/26/2010 12:49 PM, Ben Greear wrote:
->>>>
->>>> This is with today's wireless-testing (with no extra hacks)
->>>
->>> Maybe a better question: Â In 2.6.31 you could mount debugfs at /debug
->>> and get the state with:
->>> cat /debug/ieee80211/sta0/state
->>
->> debugfs is not static API. In fact that's a big reason why we use it.
->> I considered defining a filesystem API for 802.11 using configfs but
->> our priority is to first get nl80211 feature-complete with respect to
->> wext, which we have completed now. But anyway, debugfs is *not* API
->> and you should not rely on it, if you want to define API consider
->> configfs.
->>
->>> It seems in .34 there is only phy0 info in debugfs. Â Or, am I
->>> just not looking in the right place?
->>>
->>> I don't mind hacking code, but I'd appreciate a pointer to the
->>> right part of the code if anyone has suggestions.
->>
->> The other thing you pointed out with wext, you should stop using wext
->> and instead rely on nl80211. It is true that if you see something on
->> /proc/net/wireless/ that was there before but not there now it is a
->> regression and it should be addressed. Not sure where the status crap
->> comes from on wext.
->
-> I really don't care what API I end up using..I am just looking for some
-> way to report to users whether the STA is in the various states that
-> used to be defined as something similar to:
->
-> enum ieee80211_state {
-> Â  Â  Â  Â IEEE80211_UNINITIALIZED = 0,
-> Â  Â  Â  Â IEEE80211_INITIALIZED,
-> Â  Â  Â  Â IEEE80211_ASSOCIATING,
-> Â  Â  Â  Â IEEE80211_ASSOCIATED,
-> Â  Â  Â  Â IEEE80211_AUTHENTICATING,
-> Â  Â  Â  Â IEEE80211_AUTHENTICATED,
-> Â  Â  Â  Â IEEE80211_SHUTDOWN
-> };
->
-> I have been reading the net/wireless code, but so far I don't see
-> any state machine type logic where this state might be kept. Â Maybe
-> it would have to be inferred from something else?
+Some updates:
 
-You can use nl28011 and register for netlink multicast messages which
-broadcast device state changes like the ones you mentioned. These come
-in on iw via event.c, see print_event() and see the case statements
-for NL80211_CMD_ASSOCIATE, NL80211_CMD_DEAUTHENTICATE,
-NL80211_CMD_DISASSOCIATE, etc, you even get reason codes parsed for
-you too.
+- I am using kernel version 2.6.34 from openSUSE 11.3 RC2.
+- Per the advice of a user on IRC I tried compat-wireless (from
+07/08/2010) and the problem still persists.
+- My firmware is 478.104 (as recommended on the Wiki)
+- This problem persists with or without WEP enabled on the phone.
+- Scanning networks before connecting DOES reveal other networks.
+- iw event -t shows:
+1278739983.002762: wlan0 (phy #0): scan started
+1278739984.284008: wlan0 (phy #0): scan finished: 2412 2417 2422 2427
+2432 2437 2442 2447 2452 2457 2462 2467 2472 2484, ""
+- I have no access to another Ad-hoc device/software.
 
-  Luis
+Any help on this is greatly appreciated!
+Thanks.
+
+
+
+On Sun, Jul 4, 2010 at 5:37 AM, Nicholas Betcher <nbetcher@gmail.com> wrote:
+> Hello,
+> I have recently been using (lightly) tethering on my Android phone and
+> it uses Ad-hoc to provide wireless tethering. Unfortunately openSUSE
+> 11.3 RC1 seems to be unable to connect to it. I haven't quite pinned
+> down at what point it is failing, but it isn't failing at obtaining a
+> DHCP lease, it's something more problematic. I have verified my
+> settings are all correct on both sides (computer and phone). Also - to
+> rule out hardware issues - I have used Windows 7 on the same system to
+> successfully connect to the phone.
+> Here are various logs/etc:
+>
+> lspci -v -nn:
+> 03:00.0 Network controller [0280]: Broadcom Corporation BCM4311
+> 802.11b/g WLAN [14e4:4311] (rev 02)
+>         Subsystem: Hewlett-Packard Company BCM4311 802.11b/g Wireless
+> LAN Controller [103c:1374]
+>         Flags: bus master, fast devsel, latency 0, IRQ 18
+>         Memory at b8000000 (64-bit, non-prefetchable) [size=16K]
+>         Capabilities: [40] Power Management version 3
+>         Capabilities: [58] Vendor Specific Information: Len=78 <?>
+>         Capabilities: [e8] MSI: Enable- Count=1/1 Maskable- 64bit+
+>         Capabilities: [d0] Express Endpoint, MSI 00
+>         Capabilities: [100] Advanced Error Reporting
+>         Capabilities: [13c] Virtual Channel
+>         Capabilities: [160] Device Serial Number [REMOVED INTENTIONALLY]
+>         Capabilities: [16c] Power Budgeting <?>
+>         Kernel driver in use: b43-pci-bridge
+>
+> dmesg:
+> [  328.352293] b43-phy0: Loading firmware version 478.104 (2008-07-01 00:50:23)
+> [  328.384141] b43-pci-bridge 0000:03:00.0: PCI: Disallowing DAC for device
+> [  328.384147] b43-phy0: DMA mask fallback from 64-bit to 32-bit
+> [  328.398967] wlan0: Trigger new scan to find an IBSS to join
+> [  331.704086] wlan0: Trigger new scan to find an IBSS to join
+> [  335.704063] wlan0: Trigger new scan to find an IBSS to join
+> [  336.996057] wlan0: Creating new IBSS network, BSSID [REMOVED INTENTIONALLY]
+> [  367.704079] wlan0: No active IBSS STAs - trying to scan for other
+> IBSS networks with same SSID (merge)
+> [  399.704089] wlan0: No active IBSS STAs - trying to scan for other
+> IBSS networks with same SSID (merge)
+>
+>
+> /var/log/messages:
+> Jul  3 01:57:53 NickB-Laptop ifup:     wlan0     name: BCM4311 802.11b/g WLAN
+> Jul  3 01:57:53 NickB-Laptop ifup-wireless:     wlan0     warning:
+> using NO encryption
+> Jul  3 01:57:53 NickB-Laptop kernel: [  684.963046] b43-phy0: Loading
+> firmware version 478.104 (2008-07-01 00:50:23)
+> Jul  3 01:57:53 NickB-Laptop kernel: [  684.995149] b43-pci-bridge
+> 0000:03:00.0: PCI: Disallowing DAC for device
+> Jul  3 01:57:53 NickB-Laptop kernel: [  684.995153] b43-phy0: DMA mask
+> fallback from 64-bit to 32-bit
+> Jul  3 01:57:53 NickB-Laptop kernel: [  685.008172] wlan0: Selected
+> IBSS BSSID [REMOVED INTENTIONALLY] based on configured SSID
+> Jul  3 01:57:54 NickB-Laptop ifup-dhcp:     wlan0     Starting DHCP4 client
+> Jul  3 01:57:54 NickB-Laptop dhcpcd[5932]: wlan0: dhcpcd 3.2.3 starting
+> Jul  3 01:57:54 NickB-Laptop dhcpcd[5932]: wlan0: hardware address =
+> [REMOVED INTENTIONALLY]
+> Jul  3 01:57:54 NickB-Laptop dhcpcd[5932]: wlan0: broadcasting for a lease
+> Jul  3 01:58:14 NickB-Laptop dhcpcd[5932]: wlan0: timed out
+> Jul  3 01:58:15 NickB-Laptop ifup-dhcp:     wlan0     DHCP4 continues
+> in background
+> Jul  3 01:58:24 NickB-Laptop kernel: [  715.701300] wlan0: No active
+> IBSS STAs - trying to scan for other IBSS networks with same SSID
+> (merge)
+> Jul  3 01:58:31 NickB-Laptop dhcpcd[4983]: eth0: timed out
+> Jul  3 01:58:31 NickB-Laptop dhcpcd[4983]: eth0: lease expired 1799145
+> seconds ago
+> Jul  3 01:58:31 NickB-Laptop dhcpcd[4983]: eth0: broadcasting for a lease
+> Jul  3 01:58:34 NickB-Laptop dhcpcd[5932]: wlan0: timed out
+> Jul  3 01:58:34 NickB-Laptop dhcpcd[5932]: wlan0: broadcasting for a lease
+> Jul  3 01:58:54 NickB-Laptop dhcpcd[5932]: wlan0: timed out
+> Jul  3 01:58:54 NickB-Laptop dhcpcd[5932]: wlan0: broadcasting for a lease
+> Jul  3 01:58:56 NickB-Laptop kernel: [  747.704067] wlan0: No active
+> IBSS STAs - trying to scan for other IBSS networks with same SSID
+> (merge)
+>
+> More is probably needed to truly debug this problem, so please CC me
+> and let me know what more is needed.
+> Thanks a million for the great driver, (seriously) :)
+> Nick Betcher, CPhT
+> Certified Pharmacy Technician
+>
