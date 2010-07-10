@@ -1,55 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:58769 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752953Ab0GZWdg (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:44183 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752892Ab0GJDG4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jul 2010 18:33:36 -0400
-Date: Mon, 26 Jul 2010 23:33:26 +0100
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	David Quan <David.Quan@atheros.com>,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"kernel-team@lists.ubuntu.com" <kernel-team@lists.ubuntu.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	"tim.gardner@canonical.com" <tim.gardner@canonical.com>
-Subject: Re: [ath5k-devel] [PATCH v3] ath5k: disable ASPM
-Message-ID: <20100726223326.GA6904@srcf.ucam.org>
-References: <20100726201322.GI14855@tux> <1280177362.3721.7.camel@maxim-laptop> <20100726210651.GJ14855@tux> <1280179033.3721.15.camel@maxim-laptop> <20100726212543.GA5424@srcf.ucam.org> <AANLkTi=5_Dc8SumPi7cr8u7=DmnOHgSo6C76w9b0E4Kj@mail.gmail.com> <20100726222113.GA6487@srcf.ucam.org> <AANLkTinq-SxMHTrJM23WaeRMkU-2cySiVrkwCjDRS_o+@mail.gmail.com> <20100726222909.GA6773@srcf.ucam.org> <AANLkTinysGjYS7RKN4X_7T2q+rw_-OWdn-UJYM0poWXu@mail.gmail.com>
+	Fri, 9 Jul 2010 23:06:56 -0400
+Received: by pxi14 with SMTP id 14so1108163pxi.19
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Jul 2010 20:06:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTinysGjYS7RKN4X_7T2q+rw_-OWdn-UJYM0poWXu@mail.gmail.com>
+In-Reply-To: <xkNyyYrLiTN.A.s_G.7p7NMB@chimera>
+References: <xkNyyYrLiTN.A.s_G.7p7NMB@chimera>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 9 Jul 2010 20:06:33 -0700
+Message-ID: <AANLkTimFLbMn-X59Ff_m6Pv-cS9-Oal-ml2ZbT8xqFg-@mail.gmail.com>
+Subject: Re: 2.6.35-rc4-git4: Reported regressions 2.6.33 -> 2.6.34
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	reinette chatre <reinette.chatre@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 26, 2010 at 03:31:28PM -0700, Luis R. Rodriguez wrote:
-> On Mon, Jul 26, 2010 at 3:29 PM, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
-> > On Mon, Jul 26, 2010 at 03:26:37PM -0700, Luis R. Rodriguez wrote:
-> >
-> >> What I meant was that the PCI config space would already have L1
-> >> enabled if L1 worked, so I don't see why we would need to nitpick out
-> >> specifics here. All Atheros PCIE chips should work with L1. The advise
-> >> given is to disable L0s though. I believe AR2425 would be one which
-> >> likely had L0s enabled but requires it to be disabled. Not sure of
-> >> others. But this is why I am saying this can be done globally for all
-> >> ath5k chipsets.
-> >
-> > If L1 is set but the chip is pre-PCIe 1.1 then we'll disable L1 unless
-> > the driver tells us that it's functional. The .inf from the Windows
-> > driver seemed to suggest that only a subset of the chips re-enabled L1
-> > there, but if it's ok in general then that's a straightforward one-line
-> > patch.
-> 
-> But why can't we just rely on what the device already has on its PCI
-> config space and only ensure to disable L0s?
+Below are the 802.11 ones only. One for iwl3945, the other for iwlagn:
 
-Because we globally disable ASPM on pre-1.1 devices, because that's what 
-Windows does. It makes it easier for us to figure out what level of 
-support we can expect from different hardware revisions.
+On Fri, Jul 9, 2010 at 5:24 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> Unresolved regressions
+> ----------------------
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16320
+> Subject         : iwl3945 crashes, seems to be disconnecting from the PCI bus
+> Submitter       : Satish <eerpini@gmail.com>
+> Date            : 2010-07-01 08:24 (9 days old)
+
+> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=15862
+> Subject         : 2.6.34-rc4/5: iwlagn unusable until reload
+> Submitter       : Nico Schottelius <nico-linux-20100427@schottelius.org>
+> Date            : 2010-04-27 7:49 (74 days old)
+> Message-ID      : <20100427074934.GB3261@ikn.schottelius.org>
+> References      : http://marc.info/?l=linux-kernel&m=127235784004839&w=2
+> Handled-By      : Johannes Berg <johannes@sipsolutions.net>
+
+  Luis
