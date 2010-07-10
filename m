@@ -1,87 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:51214 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752411Ab0GZWaP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jul 2010 18:30:15 -0400
-MIME-Version: 1.0
-In-Reply-To: <20100726222451.GB6487@srcf.ucam.org>
-References: <1276870309.23783.3.camel@maxim-laptop> <1276933774.16697.11.camel@maxim-laptop>
-	<20100619123841.GA31838@hash.localnet> <1276952554.3332.3.camel@maxim-laptop>
-	<1276961564.5173.12.camel@maxim-laptop> <20100726201322.GI14855@tux>
-	<1280177362.3721.7.camel@maxim-laptop> <20100726210651.GJ14855@tux>
-	<20100726211424.GA5197@srcf.ucam.org> <AANLkTimn1XvpfUrgdgkO-E3kX55fz7N8w+_24Lz1ySLn@mail.gmail.com>
-	<20100726222451.GB6487@srcf.ucam.org>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 26 Jul 2010 15:29:55 -0700
-Message-ID: <AANLkTi=WdWshDx2t0X1oLpZ1WweCJNYxgH8o71BDOOYc@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH v3] ath5k: disable ASPM
-To: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	David Quan <David.Quan@atheros.com>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"kernel-team@lists.ubuntu.com" <kernel-team@lists.ubuntu.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	"tim.gardner@canonical.com" <tim.gardner@canonical.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from c60.cesmail.net ([216.154.195.49]:6929 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750908Ab0GJAwk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Jul 2010 20:52:40 -0400
+Subject: Re: Compat-wireless release for 2010-07-09 is baked
+From: Pavel Roskin <proski@gnu.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTingMmay_a0ZpwxRi2AQ6tVMJLiBSz_bm9HZVFUn@mail.gmail.com>
+References: <20100709190222.115F242E2D@repository3.orbit-lab.org>
+	 <1278712573.9411.4.camel@mj>
+	 <AANLkTingMmay_a0ZpwxRi2AQ6tVMJLiBSz_bm9HZVFUn@mail.gmail.com>
+Content-Type: text/plain
+Date: Fri, 09 Jul 2010 20:52:35 -0400
+Message-Id: <1278723155.10671.7.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 26, 2010 at 3:24 PM, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
-> On Mon, Jul 26, 2010 at 03:20:23PM -0700, Luis R. Rodriguez wrote:
->> On Mon, Jul 26, 2010 at 2:14 PM, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
->> > On Mon, Jul 26, 2010 at 02:06:51PM -0700, Luis R. Rodriguez wrote:
->> >
->> >> No, ASPM must be enabled by the Systems Integrator through the BIOS, there are
->> >> other settings that have to be taken care of like modifying some PCI entrance and
->> >> exit latency timers, the number of FTS packets we send to exit L0s, amongst
->> >> other things. If a user selectively enables L1 but the BIOS had it disabled on
->> >> the device it may not work correctly.
->> >
->> > That's really the job of the driver.
->>
->> The problem is that sometimes tweaks need to be done on the PCI
->> controller/root complex, not the PCIE device/endpoint. Today these
->> sort of changes *are* handled by the respective  systems
->> integrator/BIOS team and varies depending on the root complex used.
->> Atheros does not handle these at all in the driver.
->
-> Really? Your Windows drivers declare that they support ASPM for some
-> parts, which will trigger Vista and later to program L0s and L1
-> (depending on system config) without further reference to the driver. If
-> we need hooks in the kernel for drivers to provide further feedback to
-> make sure this works correctly then we can certainly provide them...
+On Fri, 2010-07-09 at 15:29 -0700, Luis R. Rodriguez wrote:
 
-Sure, agreed, I'm just pointing out today there are other changes made
-and even Microsoft does not get involved with them, so it is the same
-for us. However I do agree if the kernel can expose API to tweak
-things then great.
+> >> ssh: Could not resolve hostname wireless.kernel.org: Name or service not known
+...
+> > Perhaps only successful reports should go to the list, and unsuccessful
+> > reports should go to those who can fix the problem?
+> 
+> Sure, I'll try to address this, but also feel free to send patches against:
+> 
+> http://git.kernel.org/?p=linux/kernel/git/mcgrof/compat-user.git;a=summary
 
->> > If the ASPM policy is set to
->> > powersave, the fadt doesn't indicate that ASPM should be disabled and
->> > the bus's _OSC method grants full control then the kernel will enable
->> > whatever combination of L states meet the latency constraints. If the
->> > hardware has additional constraints then the hardware-specific driver
->> > needs to handle them.
->>
->> This makes sense but Is there an API for this?
->
-> Right now, no. What do you need?
+Thanks for the tip!
 
-Not sure, let me check internally and see if I can get the exact details.
+I don't think I can fix DNS resolution of wireless.kernel.org from the
+scripts.
 
->> > We don't rely on the BIOS to set up ASPM states. Nor does Windows.
->>
->> Understood, but today some tweaks seem to be done on the BIOS
->> depending on the endpoint / root complex.
->
-> The current situation is that we won't modify anything that the BIOS has
-> done, other than the link and clock pm bits. So if the BIOS has done
-> something for us, we won't (currently) step on it.
+cron-compat could be rewritten to call "mail" explicitly, so that
+different addresses are used for different outcomes.  crontab will need
+to be changed accordingly.
 
-Sure, understood.
-
-  Luis
+-- 
+Regards,
+Pavel Roskin
