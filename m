@@ -1,151 +1,242 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:15001 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756704Ab0GAQJ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Jul 2010 12:09:27 -0400
-Received: from int-mx01.intmail.prod.int.phx2.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o61G9Obd004550
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Thu, 1 Jul 2010 12:09:25 -0400
-Date: Thu, 1 Jul 2010 12:09:23 -0400
-From: Prarit Bhargava <prarit@redhat.com>
-To: linux-wireless@vger.kernel.org, ath9k-devel@atheros.com,
-	linville@tuxdriver.com, proski@gnu.org
-Cc: Prarit Bhargava <prarit@redhat.com>
-Message-Id: <20100701160048.23795.39782.sendpatchset@prarit.bos.redhat.com>
-Subject: ath: Fix uninitialized variable warnings [v2]
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:36634 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753982Ab0GKKcI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Jul 2010 06:32:08 -0400
+Received: by mail-ew0-f46.google.com with SMTP id 23so640223ewy.19
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Jul 2010 03:32:07 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 12/17] rt2x00: Use separate mac80211_ops for rt2800pci and rt2800usb
+Date: Sun, 11 Jul 2010 12:28:54 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+References: <201007111223.11190.IvDoorn@gmail.com> <201007111227.58927.IvDoorn@gmail.com> <201007111228.24393.IvDoorn@gmail.com>
+In-Reply-To: <201007111228.24393.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201007111228.56050.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix 'make CONFIG_DEBUG_SECTION_MISMATCH=y' warning:
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-drivers/net/wireless/mwl8k.c: In function 'mwl8k_bss_info_changed_sta':
-drivers/net/wireless/mwl8k.c:3404: warning: 'ap_legacy_rates' may be used uninitialized in this function
-drivers/net/wireless/ath/ath9k/eeprom_4k.c: In function 'ath9k_hw_get_4k_gain_boundaries_pdadcs.clone.1':
-drivers/net/wireless/ath/ath9k/eeprom_4k.c:310: warning: 'minPwrT4' may be used uninitialized in this function
-drivers/net/wireless/ath/ath9k/eeprom_def.c: In function 'ath9k_hw_get_def_gain_boundaries_pdadcs.clone.0':
-drivers/net/wireless/ath/ath9k/eeprom_def.c:677: warning: 'minPwrT4' may be used uninitialized in this function
-drivers/net/wireless/ath/ath9k/eeprom_9287.c: In function 'ath9k_hw_get_AR9287_gain_boundaries_pdadcs':
-drivers/net/wireless/ath/ath9k/eeprom_9287.c:301: warning: 'minPwrT4' may be used uninitialized in this function
+Use separate mac80211_ops for rt2800pci and rt2800usb in preparation
+for further fixes. This shouldn't introduce functional changes.
 
-Pavel pointed out that tMinCalPower or pMinCalPower isn't used anywhere, so
-the simplest way to fix these warnings is to get rid of the code.
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   48 +++++++++----------------------
+ drivers/net/wireless/rt2x00/rt2800lib.h |   10 ++++++-
+ drivers/net/wireless/rt2x00/rt2800pci.c |   24 +++++++++++++++-
+ drivers/net/wireless/rt2x00/rt2800usb.c |   24 +++++++++++++++-
+ 4 files changed, 69 insertions(+), 37 deletions(-)
 
-Signed-off-by: Prarit Bhargava <prarit@redhat.com>
-
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index 41a77d1..393f8c5 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -222,7 +222,7 @@ static void ath9k_hw_get_4k_gain_boundaries_pdadcs(struct ath_hw *ah,
- 				struct ath9k_channel *chan,
- 				struct cal_data_per_freq_4k *pRawDataSet,
- 				u8 *bChans, u16 availPiers,
--				u16 tPdGainOverlap, int16_t *pMinCalPower,
-+				u16 tPdGainOverlap,
- 				u16 *pPdGainBoundaries, u8 *pPDADCValues,
- 				u16 numXpdGains)
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 5572732..64bfa6e 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -2740,8 +2740,8 @@ EXPORT_SYMBOL_GPL(rt2800_probe_hw_mode);
+ /*
+  * IEEE80211 stack callback functions.
+  */
+-static void rt2800_get_tkip_seq(struct ieee80211_hw *hw, u8 hw_key_idx,
+-				u32 *iv32, u16 *iv16)
++void rt2800_get_tkip_seq(struct ieee80211_hw *hw, u8 hw_key_idx, u32 *iv32,
++			 u16 *iv16)
  {
-@@ -307,8 +307,6 @@ static void ath9k_hw_get_4k_gain_boundaries_pdadcs(struct ath_hw *ah,
- 		}
- 	}
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+ 	struct mac_iveiv_entry iveiv_entry;
+@@ -2754,8 +2754,9 @@ static void rt2800_get_tkip_seq(struct ieee80211_hw *hw, u8 hw_key_idx,
+ 	memcpy(iv16, &iveiv_entry.iv[0], sizeof(*iv16));
+ 	memcpy(iv32, &iveiv_entry.iv[4], sizeof(*iv32));
+ }
++EXPORT_SYMBOL_GPL(rt2800_get_tkip_seq);
  
--	*pMinCalPower = (int16_t)(minPwrT4[0] / 2);
+-static int rt2800_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
++int rt2800_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
+ {
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+ 	u32 reg;
+@@ -2791,9 +2792,10 @@ static int rt2800_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(rt2800_set_rts_threshold);
+ 
+-static int rt2800_conf_tx(struct ieee80211_hw *hw, u16 queue_idx,
+-			  const struct ieee80211_tx_queue_params *params)
++int rt2800_conf_tx(struct ieee80211_hw *hw, u16 queue_idx,
++		   const struct ieee80211_tx_queue_params *params)
+ {
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+ 	struct data_queue *queue;
+@@ -2858,8 +2860,9 @@ static int rt2800_conf_tx(struct ieee80211_hw *hw, u16 queue_idx,
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(rt2800_conf_tx);
+ 
+-static u64 rt2800_get_tsf(struct ieee80211_hw *hw)
++u64 rt2800_get_tsf(struct ieee80211_hw *hw)
+ {
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+ 	u64 tsf;
+@@ -2872,12 +2875,11 @@ static u64 rt2800_get_tsf(struct ieee80211_hw *hw)
+ 
+ 	return tsf;
+ }
++EXPORT_SYMBOL_GPL(rt2800_get_tsf);
+ 
+-static int rt2800_ampdu_action(struct ieee80211_hw *hw,
+-			       struct ieee80211_vif *vif,
+-			       enum ieee80211_ampdu_mlme_action action,
+-			       struct ieee80211_sta *sta,
+-			       u16 tid, u16 *ssn)
++int rt2800_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++			enum ieee80211_ampdu_mlme_action action,
++			struct ieee80211_sta *sta, u16 tid, u16 *ssn)
+ {
+ 	int ret = 0;
+ 
+@@ -2901,29 +2903,7 @@ static int rt2800_ampdu_action(struct ieee80211_hw *hw,
+ 
+ 	return ret;
+ }
 -
- 	k = 0;
+-const struct ieee80211_ops rt2800_mac80211_ops = {
+-	.tx			= rt2x00mac_tx,
+-	.start			= rt2x00mac_start,
+-	.stop			= rt2x00mac_stop,
+-	.add_interface		= rt2x00mac_add_interface,
+-	.remove_interface	= rt2x00mac_remove_interface,
+-	.config			= rt2x00mac_config,
+-	.configure_filter	= rt2x00mac_configure_filter,
+-	.set_tim		= rt2x00mac_set_tim,
+-	.set_key		= rt2x00mac_set_key,
+-	.sw_scan_start		= rt2x00mac_sw_scan_start,
+-	.sw_scan_complete	= rt2x00mac_sw_scan_complete,
+-	.get_stats		= rt2x00mac_get_stats,
+-	.get_tkip_seq		= rt2800_get_tkip_seq,
+-	.set_rts_threshold	= rt2800_set_rts_threshold,
+-	.bss_info_changed	= rt2x00mac_bss_info_changed,
+-	.conf_tx		= rt2800_conf_tx,
+-	.get_tsf		= rt2800_get_tsf,
+-	.rfkill_poll		= rt2x00mac_rfkill_poll,
+-	.ampdu_action		= rt2800_ampdu_action,
+-};
+-EXPORT_SYMBOL_GPL(rt2800_mac80211_ops);
++EXPORT_SYMBOL_GPL(rt2800_ampdu_action);
  
- 	for (i = 0; i < numXpdGains; i++) {
-@@ -398,7 +396,6 @@ static void ath9k_hw_set_4k_power_cal_table(struct ath_hw *ah,
- 	static u8 pdadcValues[AR5416_NUM_PDADC_VALUES];
- 	u16 gainBoundaries[AR5416_EEP4K_PD_GAINS_IN_MASK];
- 	u16 numPiers, i, j;
--	int16_t tMinCalPower;
- 	u16 numXpdGain, xpdMask;
- 	u16 xpdGainValues[AR5416_EEP4K_NUM_PD_GAINS] = { 0, 0 };
- 	u32 reg32, regOffset, regChainOffset;
-@@ -451,7 +448,7 @@ static void ath9k_hw_set_4k_power_cal_table(struct ath_hw *ah,
- 			ath9k_hw_get_4k_gain_boundaries_pdadcs(ah, chan,
- 					    pRawDataset, pCalBChans,
- 					    numPiers, pdGainOverlap_t2,
--					    &tMinCalPower, gainBoundaries,
-+					    gainBoundaries,
- 					    pdadcValues, numXpdGain);
+ MODULE_AUTHOR(DRV_PROJECT ", Bartlomiej Zolnierkiewicz");
+ MODULE_VERSION(DRV_VERSION);
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/rt2x00/rt2800lib.h
+index eb3a4f5..10f8f2f 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.h
++++ b/drivers/net/wireless/rt2x00/rt2800lib.h
+@@ -159,6 +159,14 @@ int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev);
+ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev);
+ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev);
  
- 			ENABLE_REGWRITE_BUFFER(ah);
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index b471db5..6d6b1c5 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -219,7 +219,7 @@ static void ath9k_hw_get_AR9287_gain_boundaries_pdadcs(struct ath_hw *ah,
- 				   struct ath9k_channel *chan,
- 				   struct cal_data_per_freq_ar9287 *pRawDataSet,
- 				   u8 *bChans,  u16 availPiers,
--				   u16 tPdGainOverlap, int16_t *pMinCalPower,
-+				   u16 tPdGainOverlap,
- 				   u16 *pPdGainBoundaries, u8 *pPDADCValues,
- 				   u16 numXpdGains)
- {
-@@ -298,7 +298,6 @@ static void ath9k_hw_get_AR9287_gain_boundaries_pdadcs(struct ath_hw *ah,
- 			}
- 		}
- 	}
--	*pMinCalPower = (int16_t)(minPwrT4[0] / 2);
+-extern const struct ieee80211_ops rt2800_mac80211_ops;
++void rt2800_get_tkip_seq(struct ieee80211_hw *hw, u8 hw_key_idx, u32 *iv32,
++			 u16 *iv16);
++int rt2800_set_rts_threshold(struct ieee80211_hw *hw, u32 value);
++int rt2800_conf_tx(struct ieee80211_hw *hw, u16 queue_idx,
++		   const struct ieee80211_tx_queue_params *params);
++u64 rt2800_get_tsf(struct ieee80211_hw *hw);
++int rt2800_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++			enum ieee80211_ampdu_mlme_action action,
++			struct ieee80211_sta *sta, u16 tid, u16 *ssn);
  
- 	k = 0;
- 	for (i = 0; i < numXpdGains; i++) {
-@@ -448,7 +447,6 @@ static void ath9k_hw_set_AR9287_power_cal_table(struct ath_hw *ah,
- 	u8  pdadcValues[AR9287_NUM_PDADC_VALUES];
- 	u16 gainBoundaries[AR9287_PD_GAINS_IN_MASK];
- 	u16 numPiers = 0, i, j;
--	int16_t  tMinCalPower;
- 	u16 numXpdGain, xpdMask;
- 	u16 xpdGainValues[AR9287_NUM_PD_GAINS] = {0, 0, 0, 0};
- 	u32 reg32, regOffset, regChainOffset;
-@@ -514,7 +512,7 @@ static void ath9k_hw_set_AR9287_power_cal_table(struct ath_hw *ah,
- 						  ah, chan, pRawDataset,
- 						  pCalBChans, numPiers,
- 						  pdGainOverlap_t2,
--						  &tMinCalPower, gainBoundaries,
-+						  gainBoundaries,
- 						  pdadcValues, numXpdGain);
- 			}
+ #endif /* RT2800LIB_H */
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index c0c38f9..4c138eb 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -1088,6 +1088,28 @@ static int rt2800pci_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 	return 0;
+ }
  
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index 7e1ed78..6ff2742 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -593,7 +593,7 @@ static void ath9k_hw_get_def_gain_boundaries_pdadcs(struct ath_hw *ah,
- 				struct ath9k_channel *chan,
- 				struct cal_data_per_freq *pRawDataSet,
- 				u8 *bChans, u16 availPiers,
--				u16 tPdGainOverlap, int16_t *pMinCalPower,
-+				u16 tPdGainOverlap,
- 				u16 *pPdGainBoundaries, u8 *pPDADCValues,
- 				u16 numXpdGains)
- {
-@@ -674,8 +674,6 @@ static void ath9k_hw_get_def_gain_boundaries_pdadcs(struct ath_hw *ah,
- 		}
- 	}
++static const struct ieee80211_ops rt2800pci_mac80211_ops = {
++	.tx			= rt2x00mac_tx,
++	.start			= rt2x00mac_start,
++	.stop			= rt2x00mac_stop,
++	.add_interface		= rt2x00mac_add_interface,
++	.remove_interface	= rt2x00mac_remove_interface,
++	.config			= rt2x00mac_config,
++	.configure_filter	= rt2x00mac_configure_filter,
++	.set_tim		= rt2x00mac_set_tim,
++	.set_key		= rt2x00mac_set_key,
++	.sw_scan_start		= rt2x00mac_sw_scan_start,
++	.sw_scan_complete	= rt2x00mac_sw_scan_complete,
++	.get_stats		= rt2x00mac_get_stats,
++	.get_tkip_seq		= rt2800_get_tkip_seq,
++	.set_rts_threshold	= rt2800_set_rts_threshold,
++	.bss_info_changed	= rt2x00mac_bss_info_changed,
++	.conf_tx		= rt2800_conf_tx,
++	.get_tsf		= rt2800_get_tsf,
++	.rfkill_poll		= rt2x00mac_rfkill_poll,
++	.ampdu_action		= rt2800_ampdu_action,
++};
++
+ static const struct rt2x00lib_ops rt2800pci_rt2x00_ops = {
+ 	.irq_handler		= rt2800pci_interrupt,
+ 	.irq_handler_thread	= rt2800pci_interrupt_thread,
+@@ -1152,7 +1174,7 @@ static const struct rt2x00_ops rt2800pci_ops = {
+ 	.tx			= &rt2800pci_queue_tx,
+ 	.bcn			= &rt2800pci_queue_bcn,
+ 	.lib			= &rt2800pci_rt2x00_ops,
+-	.hw			= &rt2800_mac80211_ops,
++	.hw			= &rt2800pci_mac80211_ops,
+ #ifdef CONFIG_RT2X00_LIB_DEBUGFS
+ 	.debugfs		= &rt2800_rt2x00debug,
+ #endif /* CONFIG_RT2X00_LIB_DEBUGFS */
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index df78e28..f8eb6d7 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -645,6 +645,28 @@ static int rt2800usb_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 	return 0;
+ }
  
--	*pMinCalPower = (int16_t)(minPwrT4[0] / 2);
--
- 	k = 0;
- 
- 	for (i = 0; i < numXpdGains; i++) {
-@@ -837,7 +835,7 @@ static void ath9k_hw_set_def_power_cal_table(struct ath_hw *ah,
- 	static u8 pdadcValues[AR5416_NUM_PDADC_VALUES];
- 	u16 gainBoundaries[AR5416_PD_GAINS_IN_MASK];
- 	u16 numPiers, i, j;
--	int16_t tMinCalPower, diff = 0;
-+	int16_t diff = 0;
- 	u16 numXpdGain, xpdMask;
- 	u16 xpdGainValues[AR5416_NUM_PD_GAINS] = { 0, 0, 0, 0 };
- 	u32 reg32, regOffset, regChainOffset;
-@@ -922,7 +920,6 @@ static void ath9k_hw_set_def_power_cal_table(struct ath_hw *ah,
- 							chan, pRawDataset,
- 							pCalBChans, numPiers,
- 							pdGainOverlap_t2,
--							&tMinCalPower,
- 							gainBoundaries,
- 							pdadcValues,
- 							numXpdGain);
++static const struct ieee80211_ops rt2800usb_mac80211_ops = {
++	.tx			= rt2x00mac_tx,
++	.start			= rt2x00mac_start,
++	.stop			= rt2x00mac_stop,
++	.add_interface		= rt2x00mac_add_interface,
++	.remove_interface	= rt2x00mac_remove_interface,
++	.config			= rt2x00mac_config,
++	.configure_filter	= rt2x00mac_configure_filter,
++	.set_tim		= rt2x00mac_set_tim,
++	.set_key		= rt2x00mac_set_key,
++	.sw_scan_start		= rt2x00mac_sw_scan_start,
++	.sw_scan_complete	= rt2x00mac_sw_scan_complete,
++	.get_stats		= rt2x00mac_get_stats,
++	.get_tkip_seq		= rt2800_get_tkip_seq,
++	.set_rts_threshold	= rt2800_set_rts_threshold,
++	.bss_info_changed	= rt2x00mac_bss_info_changed,
++	.conf_tx		= rt2800_conf_tx,
++	.get_tsf		= rt2800_get_tsf,
++	.rfkill_poll		= rt2x00mac_rfkill_poll,
++	.ampdu_action		= rt2800_ampdu_action,
++};
++
+ static const struct rt2x00lib_ops rt2800usb_rt2x00_ops = {
+ 	.probe_hw		= rt2800usb_probe_hw,
+ 	.get_firmware_name	= rt2800usb_get_firmware_name,
+@@ -708,7 +730,7 @@ static const struct rt2x00_ops rt2800usb_ops = {
+ 	.tx			= &rt2800usb_queue_tx,
+ 	.bcn			= &rt2800usb_queue_bcn,
+ 	.lib			= &rt2800usb_rt2x00_ops,
+-	.hw			= &rt2800_mac80211_ops,
++	.hw			= &rt2800usb_mac80211_ops,
+ #ifdef CONFIG_RT2X00_LIB_DEBUGFS
+ 	.debugfs		= &rt2800_rt2x00debug,
+ #endif /* CONFIG_RT2X00_LIB_DEBUGFS */
+-- 
+1.7.1.1
+
