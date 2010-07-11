@@ -1,59 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:46747 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750865Ab0G0QUT (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:57913 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754049Ab0GKKcF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 12:20:19 -0400
-Message-ID: <4C4F0731.9080607@candelatech.com>
-Date: Tue, 27 Jul 2010 09:20:01 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Sun, 11 Jul 2010 06:32:05 -0400
+Received: by mail-ew0-f46.google.com with SMTP id 23so640186ewy.19
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Jul 2010 03:32:04 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 10/17] rt2x00: Implement broad- and multicast buffering
+Date: Sun, 11 Jul 2010 12:27:58 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+References: <201007111223.11190.IvDoorn@gmail.com> <201007111226.49015.IvDoorn@gmail.com> <201007111227.27070.IvDoorn@gmail.com>
+In-Reply-To: <201007111227.27070.IvDoorn@gmail.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: ath9k: /proc/net/wireless always shows status of 0
-References: <4C4DE6B5.5080307@candelatech.com> <4C4E0580.3060404@candelatech.com> 	<AANLkTi=qJXCxtMZcEm3VQT1s7ioJsdhj2kJzkgGSf3ND@mail.gmail.com> 	<4C4E1784.3030702@candelatech.com> <AANLkTimnZ9pSfVLsEPgiDPyc=_eUnyLj89RHCC6rsaX8@mail.gmail.com> 	<4C4E1C0B.9040608@candelatech.com> <1280213303.19098.3.camel@jlt3.sipsolutions.net> <AANLkTinh7JvGmx0s-A1ZKgGY+2WDPnptqt53=73PRzHD@mail.gmail.com>
-In-Reply-To: <AANLkTinh7JvGmx0s-A1ZKgGY+2WDPnptqt53=73PRzHD@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201007111227.58927.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/26/2010 11:54 PM, Luis R. Rodriguez wrote:
-> On Mon, Jul 26, 2010 at 11:48 PM, Johannes Berg
-> <johannes@sipsolutions.net>  wrote:
->> On Mon, 2010-07-26 at 16:36 -0700, Ben Greear wrote:
->>
->>>> You can use nl28011 and register for netlink multicast messages which
->>>> broadcast device state changes like the ones you mentioned. These come
->>>> in on iw via event.c, see print_event() and see the case statements
->>>> for NL80211_CMD_ASSOCIATE, NL80211_CMD_DEAUTHENTICATE,
->>>> NL80211_CMD_DISASSOCIATE, etc, you even get reason codes parsed for
->>>> you too.
->>>
->>> Ahhh, that is the kind of thing I'm looking for.  I'll check out that
->>> code in detail tomorrow.
->>
->> Keep in mind though that not all drivers can give you the difference
->> between AUTH and ASSOC, and will ONLY report "CONNECTED" events. This is
->> those drivers that do roaming and all that in firmware rather than in
->> mac80211. Therefore, generally speaking, you cannot get the states
->> you're after.
->
-> FWIW I think he's on ath9k.
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-My real goal is to support lots (128+ hopefully) of
-virtual stations on ath5k and ath9k.  We had this working
-for ath5k in .31 kernel, but too much has changed to make it
-a straight-forward upgrade to .34.
+Although mac80211 buffers broad- and mutlicast frames for us in AP mode
+we still have to send them out after a DTIM beacon. Implement this
+behavior by sending out the buffered frames when the beacondone
+interrupt is processed.
 
-As soon as I can get the management logic fixed up (ie, libnl
-to listen to wireless events, etc), we should be able to start
-on the virtualization work in earnest.
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c |   32 +++++++++++++++++++++++++++++-
+ 1 files changed, 30 insertions(+), 2 deletions(-)
 
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index e255725..ae0adff 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -178,6 +178,28 @@ static void rt2x00lib_intf_scheduled(struct work_struct *work)
+ /*
+  * Interrupt context handlers.
+  */
++static void rt2x00lib_bc_buffer_iter(void *data, u8 *mac,
++				     struct ieee80211_vif *vif)
++{
++	struct rt2x00_dev *rt2x00dev = data;
++	struct sk_buff *skb;
++
++	/*
++	 * Only AP mode interfaces do broad- and multicast buffering
++	 */
++	if (vif->type != NL80211_IFTYPE_AP)
++		return;
++
++	/*
++	 * Send out buffered broad- and multicast frames
++	 */
++	skb = ieee80211_get_buffered_bc(rt2x00dev->hw, vif);
++	while (skb) {
++		rt2x00mac_tx(rt2x00dev->hw, skb);
++		skb = ieee80211_get_buffered_bc(rt2x00dev->hw, vif);
++	}
++}
++
+ static void rt2x00lib_beacondone_iter(void *data, u8 *mac,
+ 				      struct ieee80211_vif *vif)
+ {
+@@ -197,9 +219,15 @@ void rt2x00lib_beacondone(struct rt2x00_dev *rt2x00dev)
+ 	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
+ 		return;
+ 
++	/* send buffered bc/mc frames out for every bssid */
+ 	ieee80211_iterate_active_interfaces(rt2x00dev->hw,
+-					   rt2x00lib_beacondone_iter,
+-					   rt2x00dev);
++					    rt2x00lib_bc_buffer_iter,
++					    rt2x00dev);
++
++	/* fetch next beacon */
++	ieee80211_iterate_active_interfaces(rt2x00dev->hw,
++					    rt2x00lib_beacondone_iter,
++					    rt2x00dev);
+ 
+ }
+ EXPORT_SYMBOL_GPL(rt2x00lib_beacondone);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.1.1
 
