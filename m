@@ -1,50 +1,430 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:45600 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S933427Ab0GUFPB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jul 2010 01:15:01 -0400
-Received: from vs3013.wh2.ocn.ne.jp (125.206.180.245)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-074339296
-	for <linux-wireless@vger.kernel.org>; Wed, 21 Jul 2010 14:14:57 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Bob Copeland <me@bobcopeland.com>
-Subject: Re: [PATCH/RFC 3/3] ath5k: trace resets
-Date: Wed, 21 Jul 2010 14:17:23 +0900
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	johannes@sipsolutions.net
-References: <1279395336-856-1-git-send-email-me@bobcopeland.com> <201007211004.59372.br1@einfach.org> <20100721034150.GA16632@hash.localnet>
-In-Reply-To: <20100721034150.GA16632@hash.localnet>
+Received: from nbd.name ([88.198.39.176]:45474 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750845Ab0GKNot (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Jul 2010 09:44:49 -0400
+Message-ID: <4C39CACA.9030901@openwrt.org>
+Date: Sun, 11 Jul 2010 15:44:42 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201007211417.23512.br1@einfach.org>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] ath9k: merge noisefloor load implementations
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed July 21 2010 12:41:50 Bob Copeland wrote:
-> On Wed, Jul 21, 2010 at 10:04:59AM +0900, Bruno Randolf wrote:
-> > the difference. without tracing you can get 22Mbps, with tracing max
-> > 15Mbps UDP thruput.
-> 
-> If so, and it's not an i-cache effect, then something is wrong with
-> the tracing subsystem.  It's supposed to compile to something like
-> 
-> if (tracing) {
->    trace_callback();
-> }
-> 
-> That is exactly what we have with the debug infrastructure, but
-> the debug stuff is theoretically a bit worse since it tests for
-> tracing inside the callback.
+AR5008+ and AR9003 currently use two separate implementations of the
+ath9k_hw_loadnf function. There are three main differences:
 
-but that's for all tracepoints all over the kernel... i think it's natural 
-that this takes some CPU time. note that on these boards even the 22Mbps are 
-limited by the CPU processing power.
+ - PHY registers for AR9003 are different
+ - AR9003 always uses 3 chains, earlier versions are more selective
+ - The AR9003 variant contains a fix for NF load timeouts
 
-> Oh well, I guess I need to get my hands on one of these boards.
+This patch merges the two implementations into one, storing the
+register array in the ath_hw struct. The fix for NF load timeouts is
+not just relevant for AR9003, but also important for earlier hardware,
+so it's better to just keep one common implementation.
 
-could be helpful, allthough i have to admit that these boards are getting old 
-and more current embedded boards usually do have faster CPUs...
-
-bruno
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -1518,77 +1518,6 @@ static void ar5008_hw_do_getnf(struct at
+ 	nfarray[5] = sign_extend(nf, 9);
+ }
+ 
+-static void ar5008_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
+-{
+-	struct ath9k_nfcal_hist *h;
+-	int i, j;
+-	int32_t val;
+-	const u32 ar5416_cca_regs[6] = {
+-		AR_PHY_CCA,
+-		AR_PHY_CH1_CCA,
+-		AR_PHY_CH2_CCA,
+-		AR_PHY_EXT_CCA,
+-		AR_PHY_CH1_EXT_CCA,
+-		AR_PHY_CH2_EXT_CCA
+-	};
+-	u8 chainmask, rx_chain_status;
+-
+-	rx_chain_status = REG_READ(ah, AR_PHY_RX_CHAINMASK);
+-	if (AR_SREV_9285(ah) || AR_SREV_9271(ah))
+-		chainmask = 0x9;
+-	else if (AR_SREV_9280(ah) || AR_SREV_9287(ah)) {
+-		if ((rx_chain_status & 0x2) || (rx_chain_status & 0x4))
+-			chainmask = 0x1B;
+-		else
+-			chainmask = 0x09;
+-	} else {
+-		if (rx_chain_status & 0x4)
+-			chainmask = 0x3F;
+-		else if (rx_chain_status & 0x2)
+-			chainmask = 0x1B;
+-		else
+-			chainmask = 0x09;
+-	}
+-
+-	h = ah->nfCalHist;
+-
+-	for (i = 0; i < NUM_NF_READINGS; i++) {
+-		if (chainmask & (1 << i)) {
+-			val = REG_READ(ah, ar5416_cca_regs[i]);
+-			val &= 0xFFFFFE00;
+-			val |= (((u32) (h[i].privNF) << 1) & 0x1ff);
+-			REG_WRITE(ah, ar5416_cca_regs[i], val);
+-		}
+-	}
+-
+-	REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
+-		    AR_PHY_AGC_CONTROL_ENABLE_NF);
+-	REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
+-		    AR_PHY_AGC_CONTROL_NO_UPDATE_NF);
+-	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_NF);
+-
+-	for (j = 0; j < 5; j++) {
+-		if ((REG_READ(ah, AR_PHY_AGC_CONTROL) &
+-		     AR_PHY_AGC_CONTROL_NF) == 0)
+-			break;
+-		udelay(50);
+-	}
+-
+-	ENABLE_REGWRITE_BUFFER(ah);
+-
+-	for (i = 0; i < NUM_NF_READINGS; i++) {
+-		if (chainmask & (1 << i)) {
+-			val = REG_READ(ah, ar5416_cca_regs[i]);
+-			val &= 0xFFFFFE00;
+-			val |= (((u32) (-50) << 1) & 0x1ff);
+-			REG_WRITE(ah, ar5416_cca_regs[i], val);
+-		}
+-	}
+-
+-	REGWRITE_BUFFER_FLUSH(ah);
+-	DISABLE_REGWRITE_BUFFER(ah);
+-}
+-
+ /*
+  * Initialize the ANI register values with default (ini) values.
+  * This routine is called during a (full) hardware reset after
+@@ -1666,6 +1595,14 @@ static void ar5008_hw_set_nf_limits(stru
+ void ar5008_hw_attach_phy_ops(struct ath_hw *ah)
+ {
+ 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
++	const u32 ar5416_cca_regs[6] = {
++		AR_PHY_CCA,
++		AR_PHY_CH1_CCA,
++		AR_PHY_CH2_CCA,
++		AR_PHY_EXT_CCA,
++		AR_PHY_CH1_EXT_CCA,
++		AR_PHY_CH2_EXT_CCA
++	};
+ 
+ 	priv_ops->rf_set_freq = ar5008_hw_set_channel;
+ 	priv_ops->spur_mitigate_freq = ar5008_hw_spur_mitigate;
+@@ -1685,7 +1622,6 @@ void ar5008_hw_attach_phy_ops(struct ath
+ 	priv_ops->restore_chainmask = ar5008_restore_chainmask;
+ 	priv_ops->set_diversity = ar5008_set_diversity;
+ 	priv_ops->do_getnf = ar5008_hw_do_getnf;
+-	priv_ops->loadnf = ar5008_hw_loadnf;
+ 
+ 	if (modparam_force_new_ani) {
+ 		priv_ops->ani_control = ar5008_hw_ani_control_new;
+@@ -1701,4 +1637,5 @@ void ar5008_hw_attach_phy_ops(struct ath
+ 		priv_ops->compute_pll_control = ar5008_hw_compute_pll_control;
+ 
+ 	ar5008_hw_set_nf_limits(ah);
++	memcpy(ah->nf_regs, ar5416_cca_regs, sizeof(ah->nf_regs));
+ }
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -1050,106 +1050,6 @@ static void ar9003_hw_set_nf_limits(stru
+ }
+ 
+ /*
+- * Find out which of the RX chains are enabled
+- */
+-static u32 ar9003_hw_get_rx_chainmask(struct ath_hw *ah)
+-{
+-	u32 chain = REG_READ(ah, AR_PHY_RX_CHAINMASK);
+-	/*
+-	 * The bits [2:0] indicate the rx chain mask and are to be
+-	 * interpreted as follows:
+-	 * 00x => Only chain 0 is enabled
+-	 * 01x => Chain 1 and 0 enabled
+-	 * 1xx => Chain 2,1 and 0 enabled
+-	 */
+-	return chain & 0x7;
+-}
+-
+-static void ar9003_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
+-{
+-	struct ath9k_nfcal_hist *h;
+-	unsigned i, j;
+-	int32_t val;
+-	const u32 ar9300_cca_regs[6] = {
+-		AR_PHY_CCA_0,
+-		AR_PHY_CCA_1,
+-		AR_PHY_CCA_2,
+-		AR_PHY_EXT_CCA,
+-		AR_PHY_EXT_CCA_1,
+-		AR_PHY_EXT_CCA_2,
+-	};
+-	u8 chainmask, rx_chain_status;
+-	struct ath_common *common = ath9k_hw_common(ah);
+-
+-	rx_chain_status = ar9003_hw_get_rx_chainmask(ah);
+-
+-	chainmask = 0x3F;
+-	h = ah->nfCalHist;
+-
+-	for (i = 0; i < NUM_NF_READINGS; i++) {
+-		if (chainmask & (1 << i)) {
+-			val = REG_READ(ah, ar9300_cca_regs[i]);
+-			val &= 0xFFFFFE00;
+-			val |= (((u32) (h[i].privNF) << 1) & 0x1ff);
+-			REG_WRITE(ah, ar9300_cca_regs[i], val);
+-		}
+-	}
+-
+-	/*
+-	 * Load software filtered NF value into baseband internal minCCApwr
+-	 * variable.
+-	 */
+-	REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
+-		    AR_PHY_AGC_CONTROL_ENABLE_NF);
+-	REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
+-		    AR_PHY_AGC_CONTROL_NO_UPDATE_NF);
+-	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_NF);
+-
+-	/*
+-	 * Wait for load to complete, should be fast, a few 10s of us.
+-	 * The max delay was changed from an original 250us to 10000us
+-	 * since 250us often results in NF load timeout and causes deaf
+-	 * condition during stress testing 12/12/2009
+-	 */
+-	for (j = 0; j < 1000; j++) {
+-		if ((REG_READ(ah, AR_PHY_AGC_CONTROL) &
+-		     AR_PHY_AGC_CONTROL_NF) == 0)
+-			break;
+-		udelay(10);
+-	}
+-
+-	/*
+-	 * We timed out waiting for the noisefloor to load, probably due to an
+-	 * in-progress rx. Simply return here and allow the load plenty of time
+-	 * to complete before the next calibration interval.  We need to avoid
+-	 * trying to load -50 (which happens below) while the previous load is
+-	 * still in progress as this can cause rx deafness. Instead by returning
+-	 * here, the baseband nf cal will just be capped by our present
+-	 * noisefloor until the next calibration timer.
+-	 */
+-	if (j == 1000) {
+-		ath_print(common, ATH_DBG_ANY, "Timeout while waiting for nf "
+-			  "to load: AR_PHY_AGC_CONTROL=0x%x\n",
+-			  REG_READ(ah, AR_PHY_AGC_CONTROL));
+-		return;
+-	}
+-
+-	/*
+-	 * Restore maxCCAPower register parameter again so that we're not capped
+-	 * by the median we just loaded.  This will be initial (and max) value
+-	 * of next noise floor calibration the baseband does.
+-	 */
+-	for (i = 0; i < NUM_NF_READINGS; i++) {
+-		if (chainmask & (1 << i)) {
+-			val = REG_READ(ah, ar9300_cca_regs[i]);
+-			val &= 0xFFFFFE00;
+-			val |= (((u32) (-50) << 1) & 0x1ff);
+-			REG_WRITE(ah, ar9300_cca_regs[i], val);
+-		}
+-	}
+-}
+-
+-/*
+  * Initialize the ANI register values with default (ini) values.
+  * This routine is called during a (full) hardware reset after
+  * all the registers are initialised from the INI.
+@@ -1216,6 +1116,14 @@ static void ar9003_hw_ani_cache_ini_regs
+ void ar9003_hw_attach_phy_ops(struct ath_hw *ah)
+ {
+ 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
++	const u32 ar9300_cca_regs[6] = {
++		AR_PHY_CCA_0,
++		AR_PHY_CCA_1,
++		AR_PHY_CCA_2,
++		AR_PHY_EXT_CCA,
++		AR_PHY_EXT_CCA_1,
++		AR_PHY_EXT_CCA_2,
++	};
+ 
+ 	priv_ops->rf_set_freq = ar9003_hw_set_channel;
+ 	priv_ops->spur_mitigate_freq = ar9003_hw_spur_mitigate;
+@@ -1232,10 +1140,10 @@ void ar9003_hw_attach_phy_ops(struct ath
+ 	priv_ops->set_diversity = ar9003_hw_set_diversity;
+ 	priv_ops->ani_control = ar9003_hw_ani_control;
+ 	priv_ops->do_getnf = ar9003_hw_do_getnf;
+-	priv_ops->loadnf = ar9003_hw_loadnf;
+ 	priv_ops->ani_cache_ini_regs = ar9003_hw_ani_cache_ini_regs;
+ 
+ 	ar9003_hw_set_nf_limits(ah);
++	memcpy(ah->nf_regs, ar9300_cca_regs, sizeof(ah->nf_regs));
+ }
+ 
+ void ar9003_hw_bb_watchdog_config(struct ath_hw *ah)
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -167,6 +167,100 @@ void ath9k_hw_start_nfcal(struct ath_hw 
+ 	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_NF);
+ }
+ 
++void ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
++{
++	struct ath9k_nfcal_hist *h;
++	unsigned i, j;
++	int32_t val;
++	u8 chainmask;
++	struct ath_common *common = ath9k_hw_common(ah);
++
++	if (AR_SREV_9300_20_OR_LATER(ah))
++		chainmask = 0x3F;
++	else if (AR_SREV_9285(ah) || AR_SREV_9271(ah))
++		chainmask = 0x9;
++	else if (AR_SREV_9280(ah) || AR_SREV_9287(ah)) {
++		if ((ah->rxchainmask & 0x2) || (ah->rxchainmask & 0x4))
++			chainmask = 0x1B;
++		else
++			chainmask = 0x09;
++	} else {
++		if (ah->rxchainmask & 0x4)
++			chainmask = 0x3F;
++		else if (ah->rxchainmask & 0x2)
++			chainmask = 0x1B;
++		else
++			chainmask = 0x09;
++	}
++	h = ah->nfCalHist;
++
++	for (i = 0; i < NUM_NF_READINGS; i++) {
++		if (chainmask & (1 << i)) {
++			val = REG_READ(ah, ah->nf_regs[i]);
++			val &= 0xFFFFFE00;
++			val |= (((u32) (h[i].privNF) << 1) & 0x1ff);
++			REG_WRITE(ah, ah->nf_regs[i], val);
++		}
++	}
++
++	/*
++	 * Load software filtered NF value into baseband internal minCCApwr
++	 * variable.
++	 */
++	REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
++		    AR_PHY_AGC_CONTROL_ENABLE_NF);
++	REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
++		    AR_PHY_AGC_CONTROL_NO_UPDATE_NF);
++	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_NF);
++
++	/*
++	 * Wait for load to complete, should be fast, a few 10s of us.
++	 * The max delay was changed from an original 250us to 10000us
++	 * since 250us often results in NF load timeout and causes deaf
++	 * condition during stress testing 12/12/2009
++	 */
++	for (j = 0; j < 1000; j++) {
++		if ((REG_READ(ah, AR_PHY_AGC_CONTROL) &
++		     AR_PHY_AGC_CONTROL_NF) == 0)
++			break;
++		udelay(10);
++	}
++
++	/*
++	 * We timed out waiting for the noisefloor to load, probably due to an
++	 * in-progress rx. Simply return here and allow the load plenty of time
++	 * to complete before the next calibration interval.  We need to avoid
++	 * trying to load -50 (which happens below) while the previous load is
++	 * still in progress as this can cause rx deafness. Instead by returning
++	 * here, the baseband nf cal will just be capped by our present
++	 * noisefloor until the next calibration timer.
++	 */
++	if (j == 1000) {
++		ath_print(common, ATH_DBG_ANY, "Timeout while waiting for nf "
++			  "to load: AR_PHY_AGC_CONTROL=0x%x\n",
++			  REG_READ(ah, AR_PHY_AGC_CONTROL));
++		return;
++	}
++
++	/*
++	 * Restore maxCCAPower register parameter again so that we're not capped
++	 * by the median we just loaded.  This will be initial (and max) value
++	 * of next noise floor calibration the baseband does.
++	 */
++	ENABLE_REGWRITE_BUFFER(ah);
++	for (i = 0; i < NUM_NF_READINGS; i++) {
++		if (chainmask & (1 << i)) {
++			val = REG_READ(ah, ah->nf_regs[i]);
++			val &= 0xFFFFFE00;
++			val |= (((u32) (-50) << 1) & 0x1ff);
++			REG_WRITE(ah, ah->nf_regs[i], val);
++		}
++	}
++	REGWRITE_BUFFER_FLUSH(ah);
++	DISABLE_REGWRITE_BUFFER(ah);
++}
++
++
+ static void ath9k_hw_nf_sanitize(struct ath_hw *ah, s16 *nf)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+--- a/drivers/net/wireless/ath/ath9k/calib.h
++++ b/drivers/net/wireless/ath/ath9k/calib.h
+@@ -109,6 +109,7 @@ struct ath9k_pacal_info{
+ 
+ bool ath9k_hw_reset_calvalid(struct ath_hw *ah);
+ void ath9k_hw_start_nfcal(struct ath_hw *ah);
++void ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan);
+ int16_t ath9k_hw_getnf(struct ath_hw *ah,
+ 		       struct ath9k_channel *chan);
+ void ath9k_init_nfcal_hist_buffer(struct ath_hw *ah);
+--- a/drivers/net/wireless/ath/ath9k/hw-ops.h
++++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
+@@ -264,12 +264,6 @@ static inline void ath9k_hw_do_getnf(str
+ 	ath9k_hw_private_ops(ah)->do_getnf(ah, nfarray);
+ }
+ 
+-static inline void ath9k_hw_loadnf(struct ath_hw *ah,
+-				   struct ath9k_channel *chan)
+-{
+-	ath9k_hw_private_ops(ah)->loadnf(ah, chan);
+-}
+-
+ static inline bool ath9k_hw_init_cal(struct ath_hw *ah,
+ 				     struct ath9k_channel *chan)
+ {
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -510,7 +510,6 @@ struct ath_gen_timer_table {
+  *	AR_RTC_PLL_CONTROL for a given channel
+  * @setup_calibration: set up calibration
+  * @iscal_supported: used to query if a type of calibration is supported
+- * @loadnf: load noise floor read from each chain on the CCA registers
+  *
+  * @ani_reset: reset ANI parameters to default values
+  * @ani_lower_immunity: lower the noise immunity level. The level controls
+@@ -564,7 +563,6 @@ struct ath_hw_private_ops {
+ 	bool (*ani_control)(struct ath_hw *ah, enum ath9k_ani_cmd cmd,
+ 			    int param);
+ 	void (*do_getnf)(struct ath_hw *ah, int16_t nfarray[NUM_NF_READINGS]);
+-	void (*loadnf)(struct ath_hw *ah, struct ath9k_channel *chan);
+ 
+ 	/* ANI */
+ 	void (*ani_reset)(struct ath_hw *ah, bool is_scanning);
+@@ -658,6 +656,7 @@ struct ath_hw {
+ 	bool need_an_top2_fixup;
+ 	u16 tx_trig_level;
+ 
++	u32 nf_regs[6];
+ 	struct ath_nf_limits nf_2g;
+ 	struct ath_nf_limits nf_5g;
+ 	u16 rfsilent;
