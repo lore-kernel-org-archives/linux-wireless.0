@@ -1,34 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56511 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753896Ab0G3GgG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jul 2010 02:36:06 -0400
-Subject: Re: [wt PATCH 5/5] libertas: scan before assocation if no BSSID
- was given
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Williams <dcbw@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1280470711.14523.16.camel@dcbw.foobar.com>
-References: <1280470034.14523.4.camel@dcbw.foobar.com>
-	 <1280470711.14523.16.camel@dcbw.foobar.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 30 Jul 2010 08:37:18 +0200
-Message-ID: <1280471838.3710.6.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from nbd.name ([88.198.39.176]:46131 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753735Ab0GKKs7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Jul 2010 06:48:59 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: lrodriguez@atheros.com, linville@tuxdriver.com
+Subject: [PATCH 5/7] ath9k_hw: report the TID in the tx status on AR5008-AR9002
+Date: Sun, 11 Jul 2010 12:48:43 +0200
+Message-Id: <1278845325-62000-5-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1278845325-62000-4-git-send-email-nbd@openwrt.org>
+References: <1278845325-62000-1-git-send-email-nbd@openwrt.org>
+ <1278845325-62000-2-git-send-email-nbd@openwrt.org>
+ <1278845325-62000-3-git-send-email-nbd@openwrt.org>
+ <1278845325-62000-4-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-07-29 at 23:18 -0700, Dan Williams wrote:
-> Fix this leftover TODO from the cfg80211 conversion by doing a scan
-> if cfg80211 didn't pass in the BSSID for us.  Since the scan code
-> uses so much of the cfg80211_scan_request structure to build up the
-> firmware command, we just fake one when the scan request is triggered
-> internally.  But we need to make sure that internal 'fake' cfg82011
-> scan request does get back to cfg82011 via cfg80211_scan_done().
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9002_mac.c |    1 +
+ drivers/net/wireless/ath/ath9k/ar9003_mac.h |    3 ---
+ drivers/net/wireless/ath/ath9k/mac.h        |    3 +++
+ 3 files changed, 4 insertions(+), 3 deletions(-)
 
-I think you mean "does _not_ get back".
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_mac.c b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
+index 2be20d2..50dda39 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
+@@ -287,6 +287,7 @@ static int ar9002_hw_proc_txdesc(struct ath_hw *ah, void *ds,
+ 	ts->ts_shortretry = MS(ads->ds_txstatus1, AR_RTSFailCnt);
+ 	ts->ts_longretry = MS(ads->ds_txstatus1, AR_DataFailCnt);
+ 	ts->ts_virtcol = MS(ads->ds_txstatus1, AR_VirtRetryCnt);
++	ts->tid = MS(ads->ds_txstatus9, AR_TxTid);
+ 	ts->ts_antenna = 0;
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.h b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
+index f76f27d..9f2cea7 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
+@@ -33,9 +33,6 @@
+ #define AR_TxDescId_S	16
+ #define AR_TxPtrChkSum	0x0000ffff
+ 
+-#define AR_TxTid	0xf0000000
+-#define AR_TxTid_S	28
+-
+ #define AR_LowRxChain	0x00004000
+ 
+ #define AR_Not_Sounding	0x20000000
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index 7559fb2..2633896 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -485,6 +485,9 @@ struct ar5416_desc {
+ #define AR_TxRSSICombined   0xff000000
+ #define AR_TxRSSICombined_S 24
+ 
++#define AR_TxTid	0xf0000000
++#define AR_TxTid_S	28
++
+ #define AR_TxEVM0           ds_txstatus5
+ #define AR_TxEVM1           ds_txstatus6
+ #define AR_TxEVM2           ds_txstatus7
+-- 
+1.6.4.2
 
