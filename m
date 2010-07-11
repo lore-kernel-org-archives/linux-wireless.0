@@ -1,96 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42071 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751649Ab0GLUaM (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:35907 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754664Ab0GKTCr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jul 2010 16:30:12 -0400
-Date: Mon, 12 Jul 2010 16:16:38 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: wireless-2.6 2010-07-12
-Message-ID: <20100712201637.GD2442@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sun, 11 Jul 2010 15:02:47 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 3BDFF403DA
+	for <linux-wireless@vger.kernel.org>; Sun, 11 Jul 2010 15:06:39 -0400 (EDT)
+Subject: Compat-wireless release for 2010-07-11 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100711190244.7CDFB404EC@repository3.orbit-lab.org>
+Date: Sun, 11 Jul 2010 15:02:44 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
 
-Here are a couple of small fixes for resource leaks in 2.6.35.
+compat-wireless code metrics
 
-Please let me know if there are problems!
+    495293 - Total upstream lines of code being pulled
+      1419 - backport code changes
+      1186 - backport code additions
+       233 - backport code deletions
+      5766 - backport from compat module
+      7185 - total backport code
+    1.4507 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2459 - % of crap code
 
-Thanks,
-
-John
-
----
-
-The following changes since commit 17c99297212a2d1b1779a08caf4b0d83a85545df:
-
-  r8169: incorrect identifier for a 8168dp (2010-07-11 17:10:09 -0700)
-
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
-
-Rajkumar Manoharan (1):
-      ath9k_htc: fix memory leak in ath9k_hif_usb_alloc_urbs
-
-Reinette Chatre (1):
-      iwlwifi: remove key information during device restart
-
- drivers/net/wireless/ath/ath9k/hif_usb.c |    8 ++++++--
- drivers/net/wireless/iwlwifi/iwl-sta.h   |   11 +++++++++++
- 2 files changed, 17 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 77b3591..23c15aa 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -730,13 +730,17 @@ static int ath9k_hif_usb_alloc_urbs(struct hif_device_usb *hif_dev)
- 
- 	/* RX */
- 	if (ath9k_hif_usb_alloc_rx_urbs(hif_dev) < 0)
--		goto err;
-+		goto err_rx;
- 
- 	/* Register Read */
- 	if (ath9k_hif_usb_alloc_reg_in_urb(hif_dev) < 0)
--		goto err;
-+		goto err_reg;
- 
- 	return 0;
-+err_reg:
-+	ath9k_hif_usb_dealloc_rx_urbs(hif_dev);
-+err_rx:
-+	ath9k_hif_usb_dealloc_tx_urbs(hif_dev);
- err:
- 	return -ENOMEM;
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
-index c2a453a..dc43ebd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.h
-@@ -97,6 +97,17 @@ static inline void iwl_clear_driver_stations(struct iwl_priv *priv)
- 	spin_lock_irqsave(&priv->sta_lock, flags);
- 	memset(priv->stations, 0, sizeof(priv->stations));
- 	priv->num_stations = 0;
-+
-+	/*
-+	 * Remove all key information that is not stored as part of station
-+	 * information since mac80211 may not have had a
-+	 * chance to remove all the keys. When device is reconfigured by
-+	 * mac80211 after an error all keys will be reconfigured.
-+	 */
-+	priv->ucode_key_table = 0;
-+	priv->key_mapping_key = 0;
-+	memset(priv->wep_keys, 0, sizeof(priv->wep_keys));
-+
- 	spin_unlock_irqrestore(&priv->sta_lock, flags);
- }
- 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Base tree: linux-next.git
+Base tree version: next-20100709
+compat-wireless release: compat-wireless-2010-07-08-2-gbea1297
