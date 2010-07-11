@@ -1,63 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:6187 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753608Ab0G0Jtd (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:41261 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754036Ab0GKKcM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 05:49:33 -0400
-Received: from vs3007.wh2.ocn.ne.jp (125.206.180.235)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0554064172
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 18:49:32 +0900 (JST)
-Subject: [PATCH 1/2] iw: Sync nl80211.h with wireless-testing
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 27 Jul 2010 18:49:32 +0900
-Message-ID: <20100727094932.27300.10253.stgit@tt-desk>
+	Sun, 11 Jul 2010 06:32:12 -0400
+Received: by mail-ey0-f174.google.com with SMTP id 25so426224eya.19
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Jul 2010 03:32:11 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 15/17] rt2x00: Add missing TSF sync mode for AP operation
+Date: Sun, 11 Jul 2010 12:30:13 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+References: <201007111223.11190.IvDoorn@gmail.com> <201007111229.27800.IvDoorn@gmail.com> <201007111229.50936.IvDoorn@gmail.com>
+In-Reply-To: <201007111229.50936.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201007111230.14710.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding antenna attributes.
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
+Currently rt2x00 uses the TSF_SYNC_BEACON mode for all beaconing
+interface types. However, TSF_SYNC_BEACON is meant for IBSS networks and
+thus implements TSF merging in the hardware. Rename TSF_SYNC_BEACON to
+TSF_SYNC_ADHOC to better express its purpose and introduce the missing
+TSF sync mode TSF_SYNC_AP_NONE which should be used for beaconing modes
+that don't need TSF merging.
+
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- nl80211.h |   17 +++++++++++++++++
- 1 files changed, 17 insertions(+), 0 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800lib.c    |    5 +++--
+ drivers/net/wireless/rt2x00/rt2x00config.c |    4 +++-
+ drivers/net/wireless/rt2x00/rt2x00reg.h    |    3 ++-
+ 3 files changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/nl80211.h b/nl80211.h
-index 2c87016..b9de53c 100644
---- a/nl80211.h
-+++ b/nl80211.h
-@@ -731,6 +731,20 @@ enum nl80211_commands {
-  *      This is used in association with @NL80211_ATTR_WIPHY_TX_POWER_SETTING
-  *      for non-automatic settings.
-  *
-+ * @NL80211_ATTR_WIPHY_ANTENNA_TX: Bitmap of allowed antennas for transmitting.
-+ *	Each bit represents one antenna, starting with antenna 1 at the first
-+ *	bit. If the bitmap is zero (0), the TX antenna follows RX diversity.
-+ *	If multiple antennas are selected all selected antennas have to be used
-+ *	for transmitting (801.11n multiple TX chains).
-+ *	Drivers may reject configurations they cannot support.
-+ *
-+ * @NL80211_ATTR_WIPHY_ANTENNA_RX: Bitmap of allowed antennas for receiving.
-+ *	Each bit represents one antenna, starting with antenna 1 at the first
-+ *	bit. If multiple antennas are selected in the bitmap, 802.11n devices
-+ *	should use multiple RX chains on these antennas, while non-802.11n
-+ *	drivers should use antenna diversity between these antennas.
-+ *	Drivers may reject configurations they cannot support.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -891,6 +905,9 @@ enum nl80211_attrs {
- 	NL80211_ATTR_WIPHY_TX_POWER_SETTING,
- 	NL80211_ATTR_WIPHY_TX_POWER_LEVEL,
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index cfe199b..9587236 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -805,7 +805,8 @@ void rt2800_config_intf(struct rt2x00_dev *rt2x00dev, struct rt2x00_intf *intf,
+ 		rt2x00_set_field32(&reg, BCN_TIME_CFG_TSF_TICKING, 1);
+ 		rt2x00_set_field32(&reg, BCN_TIME_CFG_TSF_SYNC, conf->sync);
+ 		rt2x00_set_field32(&reg, BCN_TIME_CFG_TBTT_ENABLE,
+-				   (conf->sync == TSF_SYNC_BEACON));
++				   (conf->sync == TSF_SYNC_ADHOC ||
++				    conf->sync == TSF_SYNC_AP_NONE));
+ 		rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
  
-+	NL80211_ATTR_WIPHY_ANTENNA_TX,
-+	NL80211_ATTR_WIPHY_ANTENNA_RX,
-+
- 	/* add attributes here, update the policy in nl80211.c */
+ 		/*
+@@ -813,7 +814,7 @@ void rt2800_config_intf(struct rt2x00_dev *rt2x00dev, struct rt2x00_intf *intf,
+ 		 */
+ 		rt2800_register_read(rt2x00dev, INT_TIMER_EN, &reg);
+ 		rt2x00_set_field32(&reg, INT_TIMER_EN_PRE_TBTT_TIMER,
+-				   (conf->sync == TSF_SYNC_BEACON));
++				   (conf->sync == TSF_SYNC_AP_NONE));
+ 		rt2800_register_write(rt2x00dev, INT_TIMER_EN, reg);
  
- 	__NL80211_ATTR_AFTER_LAST,
+ 	}
+diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
+index 8dbd634..953dc4f 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00config.c
++++ b/drivers/net/wireless/rt2x00/rt2x00config.c
+@@ -41,10 +41,12 @@ void rt2x00lib_config_intf(struct rt2x00_dev *rt2x00dev,
+ 
+ 	switch (type) {
+ 	case NL80211_IFTYPE_ADHOC:
++		conf.sync = TSF_SYNC_ADHOC;
++		break;
+ 	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_MESH_POINT:
+ 	case NL80211_IFTYPE_WDS:
+-		conf.sync = TSF_SYNC_BEACON;
++		conf.sync = TSF_SYNC_AP_NONE;
+ 		break;
+ 	case NL80211_IFTYPE_STATION:
+ 		conf.sync = TSF_SYNC_INFRA;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00reg.h b/drivers/net/wireless/rt2x00/rt2x00reg.h
+index 055501c..cef9462 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00reg.h
++++ b/drivers/net/wireless/rt2x00/rt2x00reg.h
+@@ -63,7 +63,8 @@ enum led_mode {
+ enum tsf_sync {
+ 	TSF_SYNC_NONE = 0,
+ 	TSF_SYNC_INFRA = 1,
+-	TSF_SYNC_BEACON = 2,
++	TSF_SYNC_ADHOC = 2,
++	TSF_SYNC_AP_NONE = 3,
+ };
+ 
+ /*
+-- 
+1.7.1.1
 
