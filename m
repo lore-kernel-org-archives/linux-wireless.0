@@ -1,145 +1,248 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:37901 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757167Ab0GFAk5 (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:57913 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753581Ab0GKKbj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jul 2010 20:40:57 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>
-Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Ohad Ben-Cohen <ohadb@ti.com>
-Subject: [PATCH 13/15] wireless: wl1271: make ref_clock configurable by board
-Date: Tue,  6 Jul 2010 03:37:44 +0300
-Message-Id: <1278376666-3509-14-git-send-email-ohad@wizery.com>
-In-Reply-To: <1278376666-3509-1-git-send-email-ohad@wizery.com>
-References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
+	Sun, 11 Jul 2010 06:31:39 -0400
+Received: by ewy23 with SMTP id 23so640186ewy.19
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Jul 2010 03:31:37 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 01/17] rt2x00: Limit txpower by eeprom values
+Date: Sun, 11 Jul 2010 12:23:09 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+MIME-Version: 1.0
+Message-Id: <201007111223.11190.IvDoorn@gmail.com>
+Content-Type: Text/Plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ohad Ben-Cohen <ohadb@ti.com>
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-The wl1271 device is using a reference clock that may change
-between board to board.
+Limit the txpower per rate by the approriate values in the eeprom.
+This avoids too high txpower values resulting in bad tx performance.
 
-Make the ref_clock parameter configurable by the board
-files that set up the device, instead of having a hard coded
-value in the driver source itself.
-
-Signed-off-by: Ohad Ben-Cohen <ohadb@ti.com>
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/wl12xx/wl1271.h      |    1 +
- drivers/net/wireless/wl12xx/wl1271_boot.c |   13 +++++++++----
- drivers/net/wireless/wl12xx/wl1271_boot.h |    1 -
- drivers/net/wireless/wl12xx/wl1271_sdio.c |    2 ++
- drivers/net/wireless/wl12xx/wl1271_spi.c  |    2 ++
- include/linux/wl12xx.h                    |    1 +
- 6 files changed, 15 insertions(+), 5 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800.h    |   20 ++++-
+ drivers/net/wireless/rt2x00/rt2800lib.c |  153 ++++++++++++++++++++-----------
+ 2 files changed, 120 insertions(+), 53 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
-index 2df57cc..cb3126d 100644
---- a/drivers/net/wireless/wl12xx/wl1271.h
-+++ b/drivers/net/wireless/wl12xx/wl1271.h
-@@ -362,6 +362,7 @@ struct wl1271 {
- 	void (*set_embedded_data)(void *priv);
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index 3ed87ba..3cda229 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -803,6 +803,18 @@
+ #define EDCA_TID_AC_MAP			0x1310
  
- 	int irq;
-+	int ref_clock;
+ /*
++ * TX_PWR_CFG:
++ */
++#define TX_PWR_CFG_RATE0		FIELD32(0x0000000f)
++#define TX_PWR_CFG_RATE1		FIELD32(0x000000f0)
++#define TX_PWR_CFG_RATE2		FIELD32(0x00000f00)
++#define TX_PWR_CFG_RATE3		FIELD32(0x0000f000)
++#define TX_PWR_CFG_RATE4		FIELD32(0x000f0000)
++#define TX_PWR_CFG_RATE5		FIELD32(0x00f00000)
++#define TX_PWR_CFG_RATE6		FIELD32(0x0f000000)
++#define TX_PWR_CFG_RATE7		FIELD32(0xf0000000)
++
++/*
+  * TX_PWR_CFG_0:
+  */
+ #define TX_PWR_CFG_0			0x1314
+@@ -1853,9 +1865,15 @@ struct mac_iveiv_entry {
+ #define EEPROM_TXPOWER_A_2		FIELD16(0xff00)
  
- 	spinlock_t wl_lock;
+ /*
+- * EEPROM TXpower byrate: 20MHZ power
++ * EEPROM TXPOWER by rate: tx power per tx rate for HT20 mode
+  */
+ #define EEPROM_TXPOWER_BYRATE		0x006f
++#define EEPROM_TXPOWER_BYRATE_SIZE	9
++
++#define EEPROM_TXPOWER_BYRATE_RATE0	FIELD16(0x000f)
++#define EEPROM_TXPOWER_BYRATE_RATE1	FIELD16(0x00f0)
++#define EEPROM_TXPOWER_BYRATE_RATE2	FIELD16(0x0f00)
++#define EEPROM_TXPOWER_BYRATE_RATE3	FIELD16(0xf000)
  
-diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.c b/drivers/net/wireless/wl12xx/wl1271_boot.c
-index 1a36d8a..fa1b8b9 100644
---- a/drivers/net/wireless/wl12xx/wl1271_boot.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
-@@ -455,17 +455,22 @@ int wl1271_boot(struct wl1271 *wl)
+ /*
+  * EEPROM BBP.
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index d3cf0cc..9030eef 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -1086,66 +1086,115 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ }
+ 
+ static void rt2800_config_txpower(struct rt2x00_dev *rt2x00dev,
+-				  const int txpower)
++				  const int max_txpower)
  {
- 	int ret = 0;
- 	u32 tmp, clk, pause;
-+	int ref_clock = wl->ref_clock;
++	u8 txpower;
++	u8 max_value = (u8)max_txpower;
++	u16 eeprom;
++	int i;
+ 	u32 reg;
+-	u32 value = TXPOWER_G_TO_DEV(txpower);
+ 	u8 r1;
++	u32 offset;
  
- 	wl1271_boot_hw_version(wl);
++	/*
++	 * set to normal tx power mode: +/- 0dBm
++	 */
+ 	rt2800_bbp_read(rt2x00dev, 1, &r1);
+ 	rt2x00_set_field8(&r1, BBP1_TX_POWER, 0);
+ 	rt2800_bbp_write(rt2x00dev, 1, r1);
  
--	if (REF_CLOCK == 0 || REF_CLOCK == 2 || REF_CLOCK == 4)
-+	if (ref_clock == 0 || ref_clock == 2 || ref_clock == 4)
- 		/* ref clk: 19.2/38.4/38.4-XTAL */
- 		clk = 0x3;
--	else if (REF_CLOCK == 1 || REF_CLOCK == 3)
-+	else if (ref_clock == 1 || ref_clock == 3)
- 		/* ref clk: 26/52 */
- 		clk = 0x5;
-+	else {
-+		ret = -EINVAL;
-+		goto out;
+-	rt2800_register_read(rt2x00dev, TX_PWR_CFG_0, &reg);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_0_1MBS, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_0_2MBS, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_0_55MBS, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_0_11MBS, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_0_6MBS, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_0_9MBS, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_0_12MBS, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_0_18MBS, value);
+-	rt2800_register_write(rt2x00dev, TX_PWR_CFG_0, reg);
+-
+-	rt2800_register_read(rt2x00dev, TX_PWR_CFG_1, &reg);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_1_24MBS, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_1_36MBS, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_1_48MBS, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_1_54MBS, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_1_MCS0, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_1_MCS1, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_1_MCS2, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_1_MCS3, value);
+-	rt2800_register_write(rt2x00dev, TX_PWR_CFG_1, reg);
+-
+-	rt2800_register_read(rt2x00dev, TX_PWR_CFG_2, &reg);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_2_MCS4, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_2_MCS5, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_2_MCS6, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_2_MCS7, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_2_MCS8, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_2_MCS9, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_2_MCS10, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_2_MCS11, value);
+-	rt2800_register_write(rt2x00dev, TX_PWR_CFG_2, reg);
+-
+-	rt2800_register_read(rt2x00dev, TX_PWR_CFG_3, &reg);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_3_MCS12, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_3_MCS13, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_3_MCS14, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_3_MCS15, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_3_UKNOWN1, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_3_UKNOWN2, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_3_UKNOWN3, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_3_UKNOWN4, value);
+-	rt2800_register_write(rt2x00dev, TX_PWR_CFG_3, reg);
+-
+-	rt2800_register_read(rt2x00dev, TX_PWR_CFG_4, &reg);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_4_UKNOWN5, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_4_UKNOWN6, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_4_UKNOWN7, value);
+-	rt2x00_set_field32(&reg, TX_PWR_CFG_4_UKNOWN8, value);
+-	rt2800_register_write(rt2x00dev, TX_PWR_CFG_4, reg);
++	/*
++	 * The eeprom contains the tx power values for each rate. These
++	 * values map to 100% tx power. Each 16bit word contains four tx
++	 * power values and the order is the same as used in the TX_PWR_CFG
++	 * registers.
++	 */
++	offset = TX_PWR_CFG_0;
++
++	for (i = 0; i < EEPROM_TXPOWER_BYRATE_SIZE; i += 2) {
++		/* just to be safe */
++		if (offset > TX_PWR_CFG_4)
++			break;
++
++		rt2800_register_read(rt2x00dev, offset, &reg);
++
++		/* read the next four txpower values */
++		rt2x00_eeprom_read(rt2x00dev, EEPROM_TXPOWER_BYRATE + i,
++				   &eeprom);
++
++		/* TX_PWR_CFG_0: 1MBS, TX_PWR_CFG_1: 24MBS,
++		 * TX_PWR_CFG_2: MCS4, TX_PWR_CFG_3: MCS12,
++		 * TX_PWR_CFG_4: unknown */
++		txpower = rt2x00_get_field16(eeprom,
++					     EEPROM_TXPOWER_BYRATE_RATE0);
++		rt2x00_set_field32(&reg, TX_PWR_CFG_RATE0,
++				   min(txpower, max_value));
++
++		/* TX_PWR_CFG_0: 2MBS, TX_PWR_CFG_1: 36MBS,
++		 * TX_PWR_CFG_2: MCS5, TX_PWR_CFG_3: MCS13,
++		 * TX_PWR_CFG_4: unknown */
++		txpower = rt2x00_get_field16(eeprom,
++					     EEPROM_TXPOWER_BYRATE_RATE1);
++		rt2x00_set_field32(&reg, TX_PWR_CFG_RATE1,
++				   min(txpower, max_value));
++
++		/* TX_PWR_CFG_0: 55MBS, TX_PWR_CFG_1: 48MBS,
++		 * TX_PWR_CFG_2: MCS6,  TX_PWR_CFG_3: MCS14,
++		 * TX_PWR_CFG_4: unknown */
++		txpower = rt2x00_get_field16(eeprom,
++					     EEPROM_TXPOWER_BYRATE_RATE2);
++		rt2x00_set_field32(&reg, TX_PWR_CFG_RATE2,
++				   min(txpower, max_value));
++
++		/* TX_PWR_CFG_0: 11MBS, TX_PWR_CFG_1: 54MBS,
++		 * TX_PWR_CFG_2: MCS7,  TX_PWR_CFG_3: MCS15,
++		 * TX_PWR_CFG_4: unknown */
++		txpower = rt2x00_get_field16(eeprom,
++					     EEPROM_TXPOWER_BYRATE_RATE3);
++		rt2x00_set_field32(&reg, TX_PWR_CFG_RATE3,
++				   min(txpower, max_value));
++
++		/* read the next four txpower values */
++		rt2x00_eeprom_read(rt2x00dev, EEPROM_TXPOWER_BYRATE + i + 1,
++				   &eeprom);
++
++		/* TX_PWR_CFG_0: 6MBS, TX_PWR_CFG_1: MCS0,
++		 * TX_PWR_CFG_2: MCS8, TX_PWR_CFG_3: unknown,
++		 * TX_PWR_CFG_4: unknown */
++		txpower = rt2x00_get_field16(eeprom,
++					     EEPROM_TXPOWER_BYRATE_RATE0);
++		rt2x00_set_field32(&reg, TX_PWR_CFG_RATE4,
++				   min(txpower, max_value));
++
++		/* TX_PWR_CFG_0: 9MBS, TX_PWR_CFG_1: MCS1,
++		 * TX_PWR_CFG_2: MCS9, TX_PWR_CFG_3: unknown,
++		 * TX_PWR_CFG_4: unknown */
++		txpower = rt2x00_get_field16(eeprom,
++					     EEPROM_TXPOWER_BYRATE_RATE1);
++		rt2x00_set_field32(&reg, TX_PWR_CFG_RATE5,
++				   min(txpower, max_value));
++
++		/* TX_PWR_CFG_0: 12MBS, TX_PWR_CFG_1: MCS2,
++		 * TX_PWR_CFG_2: MCS10, TX_PWR_CFG_3: unknown,
++		 * TX_PWR_CFG_4: unknown */
++		txpower = rt2x00_get_field16(eeprom,
++					     EEPROM_TXPOWER_BYRATE_RATE2);
++		rt2x00_set_field32(&reg, TX_PWR_CFG_RATE6,
++				   min(txpower, max_value));
++
++		/* TX_PWR_CFG_0: 18MBS, TX_PWR_CFG_1: MCS3,
++		 * TX_PWR_CFG_2: MCS11, TX_PWR_CFG_3: unknown,
++		 * TX_PWR_CFG_4: unknown */
++		txpower = rt2x00_get_field16(eeprom,
++					     EEPROM_TXPOWER_BYRATE_RATE3);
++		rt2x00_set_field32(&reg, TX_PWR_CFG_RATE7,
++				   min(txpower, max_value));
++
++		rt2800_register_write(rt2x00dev, offset, reg);
++
++		/* next TX_PWR_CFG register */
++		offset += 4;
 +	}
+ }
  
--	if (REF_CLOCK != 0) {
-+	if (ref_clock != 0) {
- 		u16 val;
- 		/* Set clock type (open drain) */
- 		val = wl1271_top_reg_read(wl, OCP_REG_CLK_TYPE);
-@@ -514,7 +519,7 @@ int wl1271_boot(struct wl1271 *wl)
- 	wl1271_debug(DEBUG_BOOT, "clk2 0x%x", clk);
- 
- 	/* 2 */
--	clk |= (REF_CLOCK << 1) << 4;
-+	clk |= (ref_clock << 1) << 4;
- 	wl1271_write32(wl, DRPW_SCRATCH_START, clk);
- 
- 	wl1271_set_partition(wl, &part_table[PART_WORK]);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.h b/drivers/net/wireless/wl12xx/wl1271_boot.h
-index f829699..f73b0b1 100644
---- a/drivers/net/wireless/wl12xx/wl1271_boot.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_boot.h
-@@ -46,7 +46,6 @@ struct wl1271_static_data {
- /* delay between retries */
- #define INIT_LOOP_DELAY 50
- 
--#define REF_CLOCK            2
- #define WU_COUNTER_PAUSE_VAL 0x3FF
- #define WELP_ARM_COMMAND_VAL 0x4
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-index 0af0dce..4ed097f 100644
---- a/drivers/net/wireless/wl12xx/wl1271_sdio.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-@@ -270,6 +270,8 @@ static int wl1271_plat_probe(struct platform_device *pdev)
- 	wl->if_plat_priv = pdev;
- 	platform_set_drvdata(pdev, wl);
- 
-+	wl->ref_clock = pdata->board_ref_clock;
-+
- 	wl->set_embedded_data = pdata->set_embedded_data;
- 	if (!wl->set_embedded_data) {
- 		wl1271_error("set embedded_data func missing in platform data");
-diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
-index 85a167f..2cb125b 100644
---- a/drivers/net/wireless/wl12xx/wl1271_spi.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
-@@ -373,6 +373,8 @@ static int __devinit wl1271_probe(struct spi_device *spi)
- 		goto out_free;
- 	}
- 
-+	wl->ref_clock = pdata->ref_clock;
-+
- 	wl->irq = spi->irq;
- 	if (wl->irq < 0) {
- 		wl1271_error("irq missing in platform data");
-diff --git a/include/linux/wl12xx.h b/include/linux/wl12xx.h
-index 4106184..9053d9c 100644
---- a/include/linux/wl12xx.h
-+++ b/include/linux/wl12xx.h
-@@ -31,6 +31,7 @@ struct wl12xx_platform_data {
- 	/* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
- 	int irq;
- 	bool use_eeprom;
-+	int board_ref_clock;
- };
- 
- #endif
+ static void rt2800_config_retry_limit(struct rt2x00_dev *rt2x00dev,
 -- 
-1.7.0.4
+1.7.1.1
 
