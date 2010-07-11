@@ -1,66 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:29002 "EHLO mga01.intel.com"
+Received: from nbd.name ([88.198.39.176]:46129 "EHLO ds10.nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757051Ab0GNP31 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jul 2010 11:29:27 -0400
-Subject: Re: commit 062bee448bd539580ef9f64efe50fdfe04eeb103 broke my
- iwlagn 5100
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Florian Klink <flokli@flokli.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <e5d3a4df03d6582ddc18af249ed3a2f2@imap.flokli.de>
-References: <1279100021.7275.24.camel@flokli-laptop>
-	 <1279101655.3719.12.camel@jlt3.sipsolutions.net>
-	 <e5d3a4df03d6582ddc18af249ed3a2f2@imap.flokli.de>
-Content-Type: text/plain
-Date: Wed, 14 Jul 2010 08:28:48 -0700
-Message-Id: <1279121328.19725.27.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+	id S1753559Ab0GKKs5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Jul 2010 06:48:57 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: lrodriguez@atheros.com, linville@tuxdriver.com
+Subject: [PATCH 3/7] ath9k_hw: fix an off-by-one error in the PDADC boundaries calculation
+Date: Sun, 11 Jul 2010 12:48:41 +0200
+Message-Id: <1278845325-62000-3-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1278845325-62000-2-git-send-email-nbd@openwrt.org>
+References: <1278845325-62000-1-git-send-email-nbd@openwrt.org>
+ <1278845325-62000-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Florian,
+PDADC values were only generated for values surrounding the target
+index, however not for the target index itself, leading to a minor
+error in the generated curve.
 
-On Wed, 2010-07-14 at 03:06 -0700, Florian Klink wrote:
-> Thanks ;-)
-> 
-> On Wed, 14 Jul 2010 12:00:55 +0200, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > [correct wey-yi's address, remove reinette]
-> > 
-> > On Wed, 2010-07-14 at 11:33 +0200, Florian Klink wrote:
-> >> Hi,
-> >>
-> >> I hope I'm writing to the right addresses, this is my first kernel bug
-> >> report :-)
-> >>
-> >> I regulary build linus' tree from git. One day, my wireless card was
-> >> unable to connect to the access point. dmesg showed something like this:
-> >>
-> >> [  122.290949] wlan0: direct probe to 00:15:0c:xx:xx:xx (try 1)
-> >> [  122.490158] wlan0: direct probe to 00:15:0c:xx:xx:xx (try 2)
-> >> [  122.690057] wlan0: direct probe to 00:15:0c:xx:xx:xx (try 3)
-> >> [  122.890031] wlan0: direct probe to 00:15:0c:xx:xx:xx timed out
-> >>
-> >> At first, I thought is was some link quality problem and tried it next
-> >> to the access point, but it still didn't work.
-> >> I booted another (older) kernel and with this one, the card was able to
-> >> connect without any problems.
-> >>
-> >> I bisected the problem and came to commit
-> >> 062bee448bd539580ef9f64efe50fdfe04eeb103
-> >> iwlwifi: set TX_CMD_FLAG_PROT_REQUIRE_MSK in tx_flag
-> >> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=062bee448bd539580ef9f64efe50fdfe04eeb103
-> >>
-> >> My wireless card is a Intel Corporation Wireless WiFi Link 5100.
-> >>
-> >> Will provide more info if needed.
-> >>
-Could you please load the iwlagn module with module parameter
-debug=0x43fff and forward us the dmesg log
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc: stable@kernel.org
+---
+ drivers/net/wireless/ath/ath9k/eeprom_def.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Thanks
-Wey
-> 
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+index 60480a1..02e6c2a 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+@@ -730,7 +730,7 @@ static void ath9k_hw_get_def_gain_boundaries_pdadcs(struct ath_hw *ah,
+ 				    vpdTableI[i][sizeCurrVpdTable - 2]);
+ 		vpdStep = (int16_t)((vpdStep < 1) ? 1 : vpdStep);
+ 
+-		if (tgtIndex > maxIndex) {
++		if (tgtIndex >= maxIndex) {
+ 			while ((ss <= tgtIndex) &&
+ 			       (k < (AR5416_NUM_PDADC_VALUES - 1))) {
+ 				tmpVal = (int16_t)((vpdTableI[i][sizeCurrVpdTable - 1] +
+-- 
+1.6.4.2
 
