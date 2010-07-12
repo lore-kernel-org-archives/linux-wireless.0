@@ -1,37 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57460
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751143Ab0GaEsp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Jul 2010 00:48:45 -0400
-Date: Fri, 30 Jul 2010 21:49:03 -0700 (PDT)
-Message-Id: <20100730.214903.193713586.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2010-07-29
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20100729191245.GF2424@tuxdriver.com>
-References: <20100729191245.GF2424@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mail.atheros.com ([12.36.123.2]:35171 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755809Ab0GLOvv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Jul 2010 10:51:51 -0400
+Date: Mon, 12 Jul 2010 07:51:49 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Kulikov Vasiliy <segooon@gmail.com>
+CC: "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
+	Michael Wu <flamingice@sourmilk.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [PATCH] adm8211: fix memory leak
+Message-ID: <20100712145149.GA2273@tux>
+References: <1278764938-9417-1-git-send-email-segooon@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1278764938-9417-1-git-send-email-segooon@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 29 Jul 2010 15:12:46 -0400
+On Sat, Jul 10, 2010 at 05:28:57AM -0700, Kulikov Vasiliy wrote:
+> We must free priv->eeprom allocated in adm8211_read_eeprom().
+> 
+> Signed-off-by: Kulikov Vasiliy <segooon@gmail.com>
 
-> Yet another slew of changes intended for 2.6.36...
-> 
-> For the first time, this pull request includes a batch of bluetooth
-> stuff by way of Marcel.  Some upcoming developments are likely to
-> require more extensive integration between 802.11 and Bluetooth bits, so
-> Marcel's tree will be feeding wireless-next-2.6 for a while.
-> 
-> The rest is the usual stuff from the usual suspects -- mostly driver
-> updates with the usual strong showings from ath9k and iwlwifi, this time
-> joined by libertas in particular.
-> 
-> This is a "for-davem" branch, so hopefully there will be no pain for you
-> to pull this time. :-)
+Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-Pulled, thanks a lot John.
+Good catch.
+
+  Luis
