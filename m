@@ -1,68 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:48254 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751946Ab0GICEx (ORCPT
+Received: from lager.deltatee.com ([207.54.116.66]:48358 "EHLO
+	porter.deltatee.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751273Ab0GLFf2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jul 2010 22:04:53 -0400
-Date: Fri, 9 Jul 2010 04:04:42 +0200
-From: Frederic Weisbecker <fweisbec@gmail.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	Shawn Starr <shawn.starr@rogers.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Dave Airlie <airlied@redhat.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Patrick McHardy <kaber@trash.net>, Jens Axboe <axboe@kernel.dk>
-Subject: Re: 2.6.35-rc4-git3: Reported regressions from 2.6.34
-Message-ID: <20100709020440.GJ6405@nowhere>
-References: <-IGZ64uxA6G.A.P0H.bLmNMB@chimera> <AANLkTiknnzWyVpqnPCpyiEVHLgkewd0zaGzLInABRe2G@mail.gmail.com>
+	Mon, 12 Jul 2010 01:35:28 -0400
+Message-ID: <4C3AA99C.7030406@deltatee.com>
+Date: Sun, 11 Jul 2010 23:35:24 -0600
+From: Logan Gunthorpe <logang@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <AANLkTiknnzWyVpqnPCpyiEVHLgkewd0zaGzLInABRe2G@mail.gmail.com>
+To: "Levi, Shahar" <shahar_levi@ti.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: 1278578525.8576.19.camel@chilepepper <4C37BCA0.5090607@deltatee.com> <AC090B9732AB2B4DB7FF476E907FE660010685F34E@dnce02.ent.ti.com>
+In-Reply-To: <AC090B9732AB2B4DB7FF476E907FE660010685F34E@dnce02.ent.ti.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: wl1271 firmware
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 08, 2010 at 06:34:25PM -0700, Linus Torvalds wrote:
-> On Thu, Jul 8, 2010 at 4:33 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16284
-> > Subject         : Hitting WARN_ON in hw_breakpoint code
-> > Submitter       : Paul Mackerras <paulus@samba.org>
-> > Date            : 2010-06-23 12:57 (16 days old)
-> > Message-ID      : <20100623125740.GA3368@brick.ozlabs.ibm.com>
-> > References      : http://marc.info/?l=linux-kernel&m=127729789113432&w=2
+Shahar,
+
+Excellent news.
+
+Thank you very much.
+
+Logan
+
+Levi, Shahar wrote:
+>> -----Original Message-----
+>> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
+>> owner@vger.kernel.org] On Behalf Of Logan Gunthorpe
+>> Sent: Saturday, July 10, 2010 3:20 AM
+>> To: Luciano Coelho
+>> Cc: linux-wireless@vger.kernel.org
+>> Subject: RE: wl1271 firmware
+>>
+>> Hi Everyone,
+>>
+>> I too am working with a WL1271 module and have just today got it
+>> connected to an Atmel ARM9 development kit (AT91SAM9G45-EKES). So far it
+>> appears to work but I have been gated by the firmware and NVS file issues.
+>>
+>> I have a firmware binary, but it seems to be a newer version
+>> (6.1.3.01.5) than what you are using. Does anyone have any idea if this
+>> version will work? It seems to be the only one available on TI's
+>> website. Additionally, our device manufacturer has been hesitant to
+>> provide any support because we are on an unsupported platform and opted
+>> to use the open source driver. Are there any other ways to obtain an
+>> older version of the firmware?
+>>
+>> The NVS file is another problem. TI's website has instructions to use a
+>> cryptic tool that appears to come with their driver package. There is no
+>> source for this tool and for obvious reasons would not work for us.
+>>
+>> Anyway, I'd like to help in anyway I can. I've taken a look at the
+>> twilan.ini file and I see the commonality with wl1271_ini.h. It would be
+>> relatively easy to write a tool that parses the INI file and generates
+>> the common part of the NVS file. However, I'd have no idea how to
+>> generate the device specific calibration or the few fields missing from
+>> the INI file.
+>>
+>> Thanks,
+>>
+>> Logan
+>>
 > 
-> This has "I have a fix, will post it very soon." in the thread from
-> Frederic, but I'm not seeing anything else. Frederic?
-
-
-
-Right. In fact it wasn't a regression. The per task breakpoint reservation
-design was broken from the beginning and this warning has revealed the
-problem. This only touched perf, and it did since perf support breakpoints.
-Fortunately ptrace wasn't concerned by this problem, even not by side effects
-of this.
-
-The fix is invasive as it's a rewrite of a (little) part of the breakpoint
-reservation. And since the symptom is only a warning and also breakpoints
-never released from the constraint table (just a counter, no memory leak),
-the fix is headed for 2.6.36.
-
-It is ready in tip:/perf/core:
-
-http://git.kernel.org/?p=linux/kernel/git/tip/linux-2.6-tip.git;a=commitdiff;h=45a73372efe4a63f44aa2e1125d4a777c2fdc8d8
-
-I think this ticket can be safely closed.
-
-Thanks.
-
+> Hi Logan,
+> I am pushing to get access to the correct FW and NVS files version in TI web. I believe the community wills nave access of those files this week.
+> Regarding the tool to generate the NVS file in the correct format, I will check that and reply.
+> Regards,
+> Shahar
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
