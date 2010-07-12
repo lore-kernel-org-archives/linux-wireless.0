@@ -1,45 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60971 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756385Ab0GVTAN (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:58207 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753141Ab0GLRuL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 15:00:13 -0400
-Date: Thu, 22 Jul 2010 14:56:16 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linux-wireless@vger.kernel.org,
-	Christian Lamparter <chunkeey@googlemail.com>
-Subject: Re: [PATCH] wireless: remove prism54
-Message-ID: <20100722185616.GC2616@tuxdriver.com>
-References: <1279735518-12515-1-git-send-email-linville@tuxdriver.com>
- <AANLkTikWo6tjyYCDMgoA9WXvbNaWIe_oSp180jcdtWgy@mail.gmail.com>
+	Mon, 12 Jul 2010 13:50:11 -0400
+Date: Mon, 12 Jul 2010 19:48:02 +0200
+From: Dan Carpenter <error27@gmail.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	=?iso-8859-1?Q?Andr=E9?= Goddard Rosa <andre.goddard@gmail.com>,
+	Jiri Kosina <jkosina@suse.cz>, linux-wireless@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+Subject: Re: [patch] prism54: call BUG_ON() earlier
+Message-ID: <20100712174802.GE5658@bicker>
+References: <20100710085338.GQ19184@bicker> <AANLkTikJ9Ae2HRIwdcc8oVgAc2zoVHUL7ZY9k2QO2QpS@mail.gmail.com> <20100712173714.GD5658@bicker>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <AANLkTikWo6tjyYCDMgoA9WXvbNaWIe_oSp180jcdtWgy@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100712173714.GD5658@bicker>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 21, 2010 at 01:58:40PM -0700, Luis R. Rodriguez wrote:
-> On Wed, Jul 21, 2010 at 11:05 AM, John W. Linville
-> <linville@tuxdriver.com> wrote:
-> > This driver is no longer necessary due to p54pci.  It has seen very
-> > little maintenance for some time, and at least Fedora has had it
-> > disabled without any user complaints.
-> >
-> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> 
-> Hm, we had a few users report back that only with prism54 and not
-> p54pci could they get their device functional. IIRC Christian noted
-> some issues with the EEPROM, and it seems the fault was on the
-> manufacturer. My memory may be foggy but indeed I do remember a few
-> users did complain about the feature removal plan. I can dig these
-> e-mails up if needed.
+Of course the main reasons is that it silences a static checkers
+warning.  :P
 
-I think I found some of that in the archive.  Do we have any sort of
-plan for resolving these EEPROM-related (i.e. missing and/or damaged
-EEPROM) issue?
+drivers/net/wireless/prism54/isl_ioctl.c +2073 send_simple_event(12)
+	error: strcpy() 'str' too large for 'memptr' (257 vs 256)
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+regards,
+dan carpenter
