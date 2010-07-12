@@ -1,57 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:45806 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751038Ab0GFFPh (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:53824 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751889Ab0GLKsd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jul 2010 01:15:37 -0400
-Message-ID: <4C32BBF4.9090907@candelatech.com>
-Date: Mon, 05 Jul 2010 22:15:32 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 12 Jul 2010 06:48:33 -0400
+Received: by bwz1 with SMTP id 1so2231045bwz.19
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Jul 2010 03:48:32 -0700 (PDT)
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vasanth@Atheros.com>
-CC: "greearb@gmail.com" <greearb@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k] ath9k:  Expose virtual wiphy indexes to debugfs.
-References: <1278359545-29013-1-git-send-email-greearb@candelatech.com> <20100706045945.GF5053@vasanth-laptop>
-In-Reply-To: <20100706045945.GF5053@vasanth-laptop>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Date: Mon, 12 Jul 2010 12:48:32 +0200
+Message-ID: <AANLkTinubmjYu9FyDU0B81F0gHmFPLnDUWYGmZ9Rodss@mail.gmail.com>
+Subject: Rate control & USB
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Felix Fietkau <nbd@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/05/2010 09:59 PM, Vasanthakumar Thiagarajan wrote:
-> On Tue, Jul 06, 2010 at 01:22:25AM +0530, greearb@gmail.com wrote:
->> From: Ben Greear<greearb@candelatech.com>
->>
->> It is very difficult to map phyX devices to real/virtual
->> entities because the phyX devices change on module
->> reload.  This patch makes it slightly easier to
->> associate virtual phy devices with phyX entities.
->>
->
-> It does not make much sense to give an index while creating a new
-> virtual wiphy interface. This is unncessary, only wiphy name
-> matters.
+Hi,
 
-Will the underlying code allow you to specify a phy name though?  It
-seems to me that once a phyX is used, you cannot have a new phy
-with that name again, even if the old one has been unloaded:
+I am currently looking into the old problem of the mac80211 rate
+control algorithms
+and USB devices. The Ralink USB devices (and as far as I know, the
+other USB devices
+as well), do not work well with the PID and Minstrel algorithms. This
+is caused by the
+fact that USB devices do not report the TX status to mac80211.
 
-modprobe ath9k
-rmmod ath9k
-modprobe ath9k, and the now it's using phy1 instead of phy0,
-and you cannot even rename the phy1 to phy0 with 'iw'.
+When the URB callback function is called, it only indicates the frame
+was uploaded
+to the hardware, and the frame has been enqueued in the hardware queue
+within the
+USB device itself. The statistics about the number of retries and the
+ACK status are
+therefor lost.
 
-It would be great if phy names were reusable like network
-device names, but I'm guessing that must be difficult or
-it would already be like that.
+These statistics are however often still available (in a limited form)
+within the device
+registers. Although these statistics cannot be obtained per frame, it
+might still be
+possible to control a working rate control algorithm with it.
 
-For virtual PHYs at least, the parent phy and index is a unique
-identifier, so it sort of helps work around the phy naming
-issues.
+My current idea for this, is not to generate a completely new
+algorithm, but base
+it on the currently existing rate controls. For this I want to
+introduce a new flag:
+IEEE80211_HW_REQUIRES_BATCH_TX_STATUS, This flag will enable
+polling in mac80211, where the callback function ieee80211_ops->get_tx_stats
+is called. In this function the driver can fill in a structure
+containing the number
+of Acked frames, non-acked frames and retries. This structure can then be
+passed to a new function in the rate_control_ops structure.
 
-Thanks,
-Ben
+The problem here is that we have lost the per-sta statistics. However using the
+single TX status reports, we can count the number of frames which are sent for
+a given STA during the poll interval. We can then determine the percentage of
+frames sent for that STA, We can then add the percentage of the retry and ACK
+count to each STA. Throughout poll interval the rate algorithm would send all
+frames to the same STA with the same TX rate, but between polls, the rate will
+be updated.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Overall these changes will not make the optimal use of PID or
+Minstrel, but it would
+at least improve the situation for USB.
+
+Any thoughts about this solution?
+
+Ivo
