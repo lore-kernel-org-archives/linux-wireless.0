@@ -1,57 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:59315 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757616Ab0GURe2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jul 2010 13:34:28 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>
-Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v2 02/20] wireless: wl1271: remove SDIO IDs from driver
-Date: Wed, 21 Jul 2010 20:33:36 +0300
-Message-Id: <1279733634-21974-3-git-send-email-ohad@wizery.com>
-In-Reply-To: <1279733634-21974-1-git-send-email-ohad@wizery.com>
-References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+Received: from mail.atheros.com ([12.36.123.2]:36509 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751397Ab0GLP0v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Jul 2010 11:26:51 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 12 Jul 2010 08:26:51 -0700
+Date: Mon, 12 Jul 2010 08:26:50 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Michael Wu <aluminum.tape@gmail.com>,
+	Christian Lamparter <chunkeey@googlemail.com>
+Subject: Re: [PATCH] wireless: mark adm8211 and p54 orphaned
+Message-ID: <20100712152650.GE3492@tux>
+References: <1278947189-14833-1-git-send-email-lrodriguez@atheros.com>
+ <4C3B3342.3060801@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4C3B3342.3060801@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove SDIO IDs from the driver code since now it is
-included in linux/mmc/sdio_ids.h.
+On Mon, Jul 12, 2010 at 08:22:42AM -0700, Larry Finger wrote:
+> On 07/12/2010 10:06 AM, Luis R. Rodriguez wrote:
+> > Michael has been out of the scene for a while now, these
+> > drivers are really orphaned so mark them as such.
+> >
+> > Cc: Michael Wu<aluminum.tape@gmail.com>
+> > Cc: Larry Finger<Larry.Finger@lwfinger.net>
+> > Cc: Christian Lamparter<chunkeey@googlemail.com>
+> > Signed-off-by: Luis R. Rodriguez<lrodriguez@atheros.com>
+> > ---
+> >   MAINTAINERS |    6 ++----
+> >   1 files changed, 2 insertions(+), 4 deletions(-)
+> >
+> > diff --git a/MAINTAINERS b/MAINTAINERS
+> > index a07a49d..6ed6135 100644
+> > --- a/MAINTAINERS
+> > +++ b/MAINTAINERS
+> > @@ -4270,11 +4269,10 @@ F:	include/scsi/osd_*
+> >   F:	fs/exofs/
+> >
+> >   P54 WIRELESS DRIVER
+> > -M:	Michael Wu<flamingice@sourmilk.net>
+> >   L:	linux-wireless@vger.kernel.org
+> >   W:	http://prism54.org
+> >   T:	git git://git.kernel.org/pub/scm/linux/kernel/git/mwu/mac80211-drivers.git
+> > -S:	Maintained
+> > +S:	Orphan
+> >   F:	drivers/net/wireless/p54/
+> 
+> Despite Michael's absence, p54 is still maintained. Christian is the most 
+> obvious choice for the position. If he is not willing to take on the 
+> responsibility, then I will.
 
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
----
- drivers/net/wireless/wl12xx/wl1271_sdio.c |    8 --------
- 1 files changed, 0 insertions(+), 8 deletions(-)
+Awesome! If either of you guys do decide to do so, please send a
+respective patch.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-index d3d6f30..9903ae9 100644
---- a/drivers/net/wireless/wl12xx/wl1271_sdio.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-@@ -37,14 +37,6 @@
- 
- #define RX71_WL1271_IRQ_GPIO		42
- 
--#ifndef SDIO_VENDOR_ID_TI
--#define SDIO_VENDOR_ID_TI		0x0097
--#endif
--
--#ifndef SDIO_DEVICE_ID_TI_WL1271
--#define SDIO_DEVICE_ID_TI_WL1271	0x4076
--#endif
--
- static const struct sdio_device_id wl1271_devices[] = {
- 	{ SDIO_DEVICE(SDIO_VENDOR_ID_TI, SDIO_DEVICE_ID_TI_WL1271) },
- 	{}
--- 
-1.7.0.4
-
+  Luis
