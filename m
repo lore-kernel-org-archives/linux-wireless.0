@@ -1,43 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:46129 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753559Ab0GKKs5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Jul 2010 06:48:57 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, linville@tuxdriver.com
-Subject: [PATCH 3/7] ath9k_hw: fix an off-by-one error in the PDADC boundaries calculation
-Date: Sun, 11 Jul 2010 12:48:41 +0200
-Message-Id: <1278845325-62000-3-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1278845325-62000-2-git-send-email-nbd@openwrt.org>
-References: <1278845325-62000-1-git-send-email-nbd@openwrt.org>
- <1278845325-62000-2-git-send-email-nbd@openwrt.org>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:42411 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752126Ab0GLQZe convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Jul 2010 12:25:34 -0400
+Received: by qwh6 with SMTP id 6so1345222qwh.19
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Jul 2010 09:25:33 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTinubmjYu9FyDU0B81F0gHmFPLnDUWYGmZ9Rodss@mail.gmail.com>
+References: <AANLkTinubmjYu9FyDU0B81F0gHmFPLnDUWYGmZ9Rodss@mail.gmail.com>
+Date: Mon, 12 Jul 2010 09:25:33 -0700
+Message-ID: <AANLkTilFB6o-Qq0VTVNhd01TpdLX4JUYCAlZu-RgKH1I@mail.gmail.com>
+Subject: Re: Rate control & USB
+From: Steve deRosier <steve@cozybit.com>
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felix Fietkau <nbd@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PDADC values were only generated for values surrounding the target
-index, however not for the target index itself, leading to a minor
-error in the generated curve.
+Ivo,
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@kernel.org
----
- drivers/net/wireless/ath/ath9k/eeprom_def.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+I don't know much about the details of either the rate control
+algorithms, or other USB devices, but the usb8388 with the libertas_tf
+driver _does_ report per skb tx feedback, not just that the frame has
+been sent to the hardware.  Perhaps there's other USB devices that
+also have good feedback?
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index 60480a1..02e6c2a 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -730,7 +730,7 @@ static void ath9k_hw_get_def_gain_boundaries_pdadcs(struct ath_hw *ah,
- 				    vpdTableI[i][sizeCurrVpdTable - 2]);
- 		vpdStep = (int16_t)((vpdStep < 1) ? 1 : vpdStep);
- 
--		if (tgtIndex > maxIndex) {
-+		if (tgtIndex >= maxIndex) {
- 			while ((ss <= tgtIndex) &&
- 			       (k < (AR5416_NUM_PDADC_VALUES - 1))) {
- 				tmpVal = (int16_t)((vpdTableI[i][sizeCurrVpdTable - 1] +
--- 
-1.6.4.2
+In any case, I'm just asking that nothing gets broken in the case
+where the USB devices _do_ provide the tx feedback information.  I
+assume you weren't going to break anything, but I just wanted to make
+sure you knew that some USB devices did have this feature.
 
+- Steve
+
+On Mon, Jul 12, 2010 at 3:48 AM, Ivo Van Doorn <ivdoorn@gmail.com> wrote:
+> Hi,
+>
+> I am currently looking into the old problem of the mac80211 rate
+> control algorithms
+> and USB devices. The Ralink USB devices (and as far as I know, the
+> other USB devices
+> as well), do not work well with the PID and Minstrel algorithms. This
+> is caused by the
+> fact that USB devices do not report the TX status to mac80211.
+>
+> When the URB callback function is called, it only indicates the frame
+> was uploaded
+> to the hardware, and the frame has been enqueued in the hardware queue
+> within the
+> USB device itself. The statistics about the number of retries and the
+> ACK status are
+> therefor lost.
+>
+> These statistics are however often still available (in a limited form)
+> within the device
+> registers. Although these statistics cannot be obtained per frame, it
+> might still be
+> possible to control a working rate control algorithm with it.
+>
+> My current idea for this, is not to generate a completely new
+> algorithm, but base
+> it on the currently existing rate controls. For this I want to
+> introduce a new flag:
+> IEEE80211_HW_REQUIRES_BATCH_TX_STATUS, This flag will enable
+> polling in mac80211, where the callback function ieee80211_ops->get_tx_stats
+> is called. In this function the driver can fill in a structure
+> containing the number
+> of Acked frames, non-acked frames and retries. This structure can then be
+> passed to a new function in the rate_control_ops structure.
+>
+> The problem here is that we have lost the per-sta statistics. However using the
+> single TX status reports, we can count the number of frames which are sent for
+> a given STA during the poll interval. We can then determine the percentage of
+> frames sent for that STA, We can then add the percentage of the retry and ACK
+> count to each STA. Throughout poll interval the rate algorithm would send all
+> frames to the same STA with the same TX rate, but between polls, the rate will
+> be updated.
+>
+> Overall these changes will not make the optimal use of PID or
+> Minstrel, but it would
+> at least improve the situation for USB.
+>
+> Any thoughts about this solution?
+>
+> Ivo
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
