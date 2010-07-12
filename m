@@ -1,41 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:51801 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752069Ab0GIBS1 (ORCPT
+Received: from mail.redfish-solutions.com ([66.232.79.143]:45552 "EHLO
+	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751598Ab0GLTTc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jul 2010 21:18:27 -0400
+	Mon, 12 Jul 2010 15:19:32 -0400
+Message-ID: <4C3B6AAE.4070204@redfish-solutions.com>
+Date: Mon, 12 Jul 2010 13:19:10 -0600
+From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 8 Jul 2010 18:18:07 -0700
-Message-ID: <AANLkTinLdu_pDfdyluDqkMywhQ66HhMv5Lg5JikHL4Sr@mail.gmail.com>
-Subject: Compat-wireless for 2.6.32.y, 2.6.33.y, 2.6.34.y and 2.6.35-rc
-	updated
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>
-Cc: linux-kernel@vger.kernel.org
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org,
+	mcgrof@infradead.org
+Subject: Re: [PATCH] compat-wireless: fix build of ath5k for CONFIG_PM_SLEEP=n
+References: <1278879791-12646-1-git-send-email-hauke@hauke-m.de> <AANLkTimLweydYTbS-O6Q2sX-W0H5z7cWOLUqQphSTO1s@mail.gmail.com>
+In-Reply-To: <AANLkTimLweydYTbS-O6Q2sX-W0H5z7cWOLUqQphSTO1s@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Each of these kernel releases have been used as bases for new
-respective compat-wireless updates:
+On 07/12/2010 09:30 AM, Luis R. Rodriguez wrote:
+> On Sun, Jul 11, 2010 at 1:23 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>> suspend and resume are activated in ath5k if CONFIG_PM_SLEEP is set and
+>> not if just CONFIG_PM is set.
+>>
+>> This should fix the problems reported by Philip Prindeville.
+>>
+>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> 
+> Thanks! Applied and pushed out, at noon we'll have a new tarball with this.
+> 
+>   Luis
 
-  * compat-wireless-2.6.32.16.tar.bz2
-  * compat-wireless-2.6.33.6.tar.bz2
-  * compat-wireless-2.6.34.1.tar.bz2
-  * compat-wireless-2.6.35-rc4.tar.bz2
+And...
 
-The last one actually has a bit extra stuff, whatever Linus has merged
-as of today after rc4.
 
-For details of the changelog between each release and for download
-location check the stable compat-wireless page.
+  CC [M]  /home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth/l2cap.o
+/home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth/l2cap.c: In function 'l2cap_data_channel':
+/home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth/l2cap.c:4352: error: void value not ignored as it ought to be
+make[4]: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth/l2cap.o] Error 1
+make[3]: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth] Error 2
+make[2]: *** [_module_/home/philipp/kernel/build_i586/compat-wireless-2010-07-12] Error 2
+make[2]: Leaving directory `/home/philipp/kernel/build_i586/linux-2.6.27.48-astlinux'
+make[1]: *** [modules] Error 2
+make[1]: Leaving directory `/home/philipp/kernel/build_i586/compat-wireless-2010-07-12'
+make: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/wireless/lib80211.ko] Error 2
 
-http://wireless.kernel.org/en/users/Download/stable
 
-Additionally bleeding edge compat-wireless which uses linux-next
-should now be up to date, the "wl" branch should also be up to date
-with today's wireless-testing. If there are any issues please let me
-know.
+oh, well.
 
-  Luis
