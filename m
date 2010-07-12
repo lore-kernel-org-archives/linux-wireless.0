@@ -1,43 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:32957 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753170Ab0GBSVf (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45663 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754052Ab0GLNpT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jul 2010 14:21:35 -0400
-Received: by bwz1 with SMTP id 1so1745906bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Jul 2010 11:21:34 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: rt2x00 & mac80211: correct usage of ieee80211_beacon_get_tim?
-Date: Fri, 2 Jul 2010 20:20:57 +0200
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-References: <201006241521.47623.helmut.schaa@googlemail.com> <201007021959.45704.helmut.schaa@googlemail.com> <1278093964.15412.24.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1278093964.15412.24.camel@jlt3.sipsolutions.net>
+	Mon, 12 Jul 2010 09:45:19 -0400
+Date: Mon, 12 Jul 2010 09:43:36 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Philip Prindeville <philipp_subx@redfish-solutions.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Ath5k breaking in ath5k_pci_suspend_compat going on 2 weeks
+Message-ID: <20100712134335.GA2442@tuxdriver.com>
+References: <4C3926F7.5070606@redfish-solutions.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201007022020.57398.helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4C3926F7.5070606@redfish-solutions.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Freitag 02 Juli 2010 schrieb Johannes Berg:
-> On Fri, 2010-07-02 at 19:59 +0200, Helmut Schaa wrote:
+On Sat, Jul 10, 2010 at 08:05:43PM -0600, Philip Prindeville wrote:
+> This still seems to be broken, a couple of weeks later:
 > 
-> > > unless your
-> > > device itself is capable of generating the TIM IE _right before_ the
-> > > beacon gets transmitted.
-> > 
-> > Agreed. At least on rt2800 we can use the pre tbtt interrupt to update the
-> > beacon just before it is sent out.
+>   CC [M]  /home/philipp/kernel/build_i586/compat-wireless-2010-06-26/drivers/net/wireless/ath/ath5k/attach.o
+>   CC [M]  /home/philipp/kernel/build_i586/compat-wireless-2010-06-26/drivers/net/wireless/ath/ath5k/base.o
+> /home/philipp/kernel/build_i586/compat-wireless-2010-06-26/drivers/net/wireless/ath/ath5k/base.c:243: error: 'ath5k_pci_suspend_compat' undeclared here (not in a function)
+> /home/philipp/kernel/build_i586/compat-wireless-2010-06-26/drivers/net/wireless/ath/ath5k/base.c:244: error: 'ath5k_pci_resume_compat' undeclared here (not in a function)
+> make[6]: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-06-26/drivers/net/wireless/ath/ath5k/base.o] Error 1
+> make[5]: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-06-26/drivers/net/wireless/ath/ath5k] Error 2
+> make[4]: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-06-26/drivers/net/wireless/ath] Error 2
+> make[3]: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-06-26/drivers/net/wireless] Error 2
 > 
-> Careful though. You don't know how far in advance it is triggered (or
-> maybe you do) or if the time will be sufficient to generate and upload
-> the beacon to the device. You could even hit lock contention I think.
+> 
+> and from today's tarball:
+> 
+> 
+>   CC [M]  /home/philipp/kernel/build_i586/compat-wireless-2010-07-10/drivers/net/wireless/ath/ath5k/base.o
+> /home/philipp/kernel/build_i586/compat-wireless-2010-07-10/drivers/net/wireless/ath/ath5k/base.c:243: error: 'ath5k_pci_suspend_compat' undeclared here (not in a function)
+> /home/philipp/kernel/build_i586/compat-wireless-2010-07-10/drivers/net/wireless/ath/ath5k/base.c:244: error: 'ath5k_pci_resume_compat' undeclared here (not in a function)
+> make[6]: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-07-10/drivers/net/wireless/ath/ath5k/base.o] Error 1
+> make[5]: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-07-10/drivers/net/wireless/ath/ath5k] Error 2
+> make[4]: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-07-10/drivers/net/wireless/ath] Error 2
+> make[3]: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-07-10/drivers/net/wireless] Error 2
+> 
+> 
+> Can someone please have a look and fix their regression?
 
-Yeah, the delay is configurable. And yes, we cannot be 100% sure but
-I already did some tests and on my MIPS board anything >1ms was
-enough to generate + upload a new beacon to the device. And we can still
-increase that to a safe default of maybe 5ms or so.
+Judging from the function names, this seems like a compat-specific
+patch.  Judging from the type of build failure, I would suspect that
+those functions are defined inside of a #ifdef block somewhere and
+need empty definitions for use for the opposite configuration.
 
-Helmut
+Perhaps you could use my cursory analysis as a starting point for
+investigating the source of the build failure?  And propose a patch?
+Or at the least you might figure-out how to change your build
+configuration to avoid the issue.
+
+Good luck!
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
