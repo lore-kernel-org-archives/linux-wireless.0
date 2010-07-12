@@ -1,48 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40853 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755671Ab0G3CAl (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:42629 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753516Ab0GLSyK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jul 2010 22:00:41 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] rtl8187: consolidate MSR writes in rtl8187_bss_info_changed
-Date: Thu, 29 Jul 2010 21:57:24 -0400
-Message-Id: <1280455044-26073-1-git-send-email-linville@tuxdriver.com>
+	Mon, 12 Jul 2010 14:54:10 -0400
+Received: by bwz1 with SMTP id 1so2541664bwz.19
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Jul 2010 11:54:09 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTilFB6o-Qq0VTVNhd01TpdLX4JUYCAlZu-RgKH1I@mail.gmail.com>
+References: <AANLkTinubmjYu9FyDU0B81F0gHmFPLnDUWYGmZ9Rodss@mail.gmail.com>
+	<AANLkTilFB6o-Qq0VTVNhd01TpdLX4JUYCAlZu-RgKH1I@mail.gmail.com>
+Date: Mon, 12 Jul 2010 20:54:09 +0200
+Message-ID: <AANLkTilTr6OkquGQJtMCu4_yur3NLu8JFThLVpLrWaMU@mail.gmail.com>
+Subject: Re: Rate control & USB
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Steve deRosier <steve@cozybit.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felix Fietkau <nbd@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/rtl818x/rtl8187_dev.c |    9 ++++-----
- 1 files changed, 4 insertions(+), 5 deletions(-)
+Hi,
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-index 5738a55..0801c1d 100644
---- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-@@ -1176,13 +1176,12 @@ static void rtl8187_bss_info_changed(struct ieee80211_hw *dev,
- 		else
- 			reg = 0;
- 
--		if (is_valid_ether_addr(info->bssid)) {
-+		if (is_valid_ether_addr(info->bssid))
- 			reg |= RTL818X_MSR_INFRA;
--			rtl818x_iowrite8(priv, &priv->map->MSR, reg);
--		} else {
-+		else
- 			reg |= RTL818X_MSR_NO_LINK;
--			rtl818x_iowrite8(priv, &priv->map->MSR, reg);
--		}
-+
-+		rtl818x_iowrite8(priv, &priv->map->MSR, reg);
- 
- 		mutex_unlock(&priv->conf_mutex);
- 	}
--- 
-1.7.1.1
+> I don't know much about the details of either the rate control
+> algorithms, or other USB devices, but the usb8388 with the libertas_tf
+> driver _does_ report per skb tx feedback, not just that the frame has
+> been sent to the hardware.  Perhaps there's other USB devices that
+> also have good feedback?
 
+Ah ok, I wasn't aware that libertas had a working TX status reporting. :)
+
+> In any case, I'm just asking that nothing gets broken in the case
+> where the USB devices _do_ provide the tx feedback information.  I
+> assume you weren't going to break anything, but I just wanted to make
+> sure you knew that some USB devices did have this feature.
+
+Well my plans were to enable the batch TX updating through a mac80211 flag,
+or some other methoed where it is up to the driver to enable the batch TX
+status updating. So nothing should change for the other drivers which do not
+need this feature. :)
+
+But it is good to know that at least some USB hardware do not have the
+TX status problem. :)
+
+Ivo
