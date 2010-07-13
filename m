@@ -1,46 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40438 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753119Ab0GZIVn (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50637 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752172Ab0GMPpN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jul 2010 04:21:43 -0400
-Subject: Re: 2.6.35-rc5+ WARNING at net/mac80211/scan.c:262
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20100726081713.GA14192@comet.dominikbrodowski.net>
-References: <20100721184040.GA22968@comet.dominikbrodowski.net>
-	 <1279802055.12439.16.camel@jlt3.sipsolutions.net>
-	 <20100722134048.GA28231@isilmar-3.linta.de>
-	 <1279807678.12439.17.camel@jlt3.sipsolutions.net>
-	 <20100723082710.GA20251@comet.dominikbrodowski.net>
-	 <1279873990.3745.1.camel@jlt3.sipsolutions.net>
-	 <20100726081713.GA14192@comet.dominikbrodowski.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 26 Jul 2010 10:21:38 +0200
-Message-ID: <1280132498.3693.2.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 13 Jul 2010 11:45:13 -0400
+Date: Tue, 13 Jul 2010 11:35:31 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Alejandro Riveira =?iso-8859-1?Q?Fern=E1ndez?=
+	<ariveira@gmail.com>, Martin Steigerwald <Martin@lichtvoll.de>,
+	linux-kernel@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rt2x00: slow wifi with correct basic rate bitmap (was Re:
+ stable? quality assurance?)
+Message-ID: <20100713153530.GC3835@tuxdriver.com>
+References: <201007110918.42120.Martin@lichtvoll.de>
+ <AANLkTimCwi2uJqqPaq3U30f3rvdDizu1BnaaXgvNeC9k@mail.gmail.com>
+ <201007111651.42963.Martin@lichtvoll.de>
+ <20100713131112.26a3da54@varda>
+ <4C3C6106.3000909@s5r6.in-berlin.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <4C3C6106.3000909@s5r6.in-berlin.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-07-26 at 10:17 +0200, Dominik Brodowski wrote:
-> Hey,
+On Tue, Jul 13, 2010 at 02:50:14PM +0200, Stefan Richter wrote:
+> Alejandro Riveira Fernández wrote:
+> >  I for one stopped booting into -rc kernels.
+> >  The fact that still have to patch my kernels with a *one* liner
+> >  since 2.6.29 kernel [1] does not give me confidence on the "test
+> >  report/bisect and it will be fixed" promise some have made in this
+> >  threath
+> >  
+> >  [1] https://bugzilla.kernel.org/show_bug.cgi?id=13362
 > 
-> On Fri, Jul 23, 2010 at 10:33:10AM +0200, Johannes Berg wrote:
-> > > > Oh, it's against wireless-testing, which apparently has some other mods
-> > > > there. I'll have to see if any other patch needs to go into .35 too.
-> > > 
-> > > That's fine, I'll just test wireless-testing plus your patch from now on ;)
-> > 
-> > Hah, ok, I made a note to backport the patch for you, guess I'll delete
-> > it. Wouldn't have gotten around to it today anyway I think.
+> There were promises made in this thread?  Then I must have read a
+> different mailinglist or so.
 > 
-> the problem didn't reappear when using wireless-testing plus your patch. As
-> I can't reproduce it -- it just happened every once in a while (maybe once a
-> day?) -- this doesn't necessarily mean the bug is fixed, but...
+> I do not know why your WLAN regression has not been fixed yet, but at
+> least it seems rather plausible why commit
+> 7e0986c17f695952ce5d61ed793ce048ba90a661 is not going to be reverted (if
+> such a revert is the one-liner that you are referring to).
+> 
+> Why is one reporter's rt2500 OK now though but not yours?  Are there
+> different card revisions or firmwares out there that require quirk handling?
 
-Alright, thanks. I don't suppose you tried wireless-testing w/o the
-patch?
+The patch (7e0986c1) corrects an obvious error.  Reverting it might
+improve your (i.e. Alejandro) performance, but it seems likely to
+cause connectivity problems for others.
 
-johannes
+The fact that reverting 7e098c1 helps you suggests that rt2500usb
+isn't using the basic_rates map properly.  But after reviewing the
+code and the data I have, I can't see what would be causing that.
+It is at least possible that your AP is sending bad rate information.
+Have you tried this device with other APs?
 
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
