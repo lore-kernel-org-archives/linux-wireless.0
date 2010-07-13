@@ -1,54 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58126 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755827Ab0GVNaM (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:3700 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756838Ab0GMPdm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 09:30:12 -0400
-Date: Thu, 22 Jul 2010 09:16:27 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Kalle Valo <kalle.valo@iki.fi>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] wl1251: fix sparse-generated warnings
-Message-ID: <20100722131627.GA18742@tuxdriver.com>
-References: <1279729917-4451-1-git-send-email-linville@tuxdriver.com>
- <1279780458.2322.25.camel@powerslave>
- <4C47F706.4060102@iki.fi>
- <AANLkTimh-2cuWdJKgf2TUkCQmGXDC0-86xVhbA-kiPGR@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <AANLkTimh-2cuWdJKgf2TUkCQmGXDC0-86xVhbA-kiPGR@mail.gmail.com>
+	Tue, 13 Jul 2010 11:33:42 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com, br1@einfach.org
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 2/2] ath5k: disable tasklets during reset
+Date: Tue, 13 Jul 2010 11:32:41 -0400
+Message-Id: <1279035161-10802-2-git-send-email-me@bobcopeland.com>
+In-Reply-To: <1279035161-10802-1-git-send-email-me@bobcopeland.com>
+References: <1279035161-10802-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 22, 2010 at 08:04:02AM -0400, Bob Copeland wrote:
-> On Thu, Jul 22, 2010 at 3:45 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
-> >>> @@ -191,11 +191,13 @@ static int wl1251_tx_send_packet(struct wl1251 *wl, struct sk_buff *skb,
-> >>>      if (control->control.hw_key &&
-> >>>          control->control.hw_key->alg == ALG_TKIP) {
-> >>>              int hdrlen;
-> >>> -            u16 fc;
-> >>> +            __le16 fc;
-> >>> +            u16 length;
-> >>>              u8 *pos;
-> [...]
-> >>> +            length = le16_to_cpu(tx_hdr->length) + WL1251_TKIP_IV_SPACE;
-> >>> +            tx_hdr->length = cpu_to_le16(length);
-> >>
-> >> ...which is treated correctly here.
-> >
-> > This is different. Here we are adding something to a __le16 value, not
-> > calculating with pointers.
-> 
-> Just throwing in my 2 cents, unless there's some other reason to add the
-> length temporary, here you can just do:
-> 
->     le16_add_cpu(&tx_hdr->length, WL1251_TKIP_IV_SPACE);
+Based on a patch from Bruno Randolf, attempting useful
+work while we are resetting the chip just leads to interface
+lockups and bad descriptor data, and possibly DMAing to
+freed buffers.  Let's suspend all tasklets while
+reprogramming the registers in the card to avoid such
+problems.
 
-Ah, thanks!  I thought there was something like that, but I couldn't remember. :-)
+In the future we can convert the tasklets to threaded
+interrupt handlers to simplify things.
 
-John
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath/ath5k/base.c |   20 ++++++++++++++------
+ 1 files changed, 14 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index b290cc6..b0e1ca9 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2639,6 +2639,15 @@ ath5k_stop_locked(struct ath5k_softc *sc)
+ 	return 0;
+ }
+ 
++static void stop_tasklets(struct ath5k_softc *sc)
++{
++	tasklet_kill(&sc->rxtq);
++	tasklet_kill(&sc->txtq);
++	tasklet_kill(&sc->calib);
++	tasklet_kill(&sc->beacontq);
++	tasklet_kill(&sc->ani_tasklet);
++}
++
+ /*
+  * Stop the device, grabbing the top-level lock to protect
+  * against concurrent entry through ath5k_init (which can happen
+@@ -2683,11 +2692,7 @@ ath5k_stop_hw(struct ath5k_softc *sc)
+ 	mmiowb();
+ 	mutex_unlock(&sc->lock);
+ 
+-	tasklet_kill(&sc->rxtq);
+-	tasklet_kill(&sc->txtq);
+-	tasklet_kill(&sc->calib);
+-	tasklet_kill(&sc->beacontq);
+-	tasklet_kill(&sc->ani_tasklet);
++	stop_tasklets(sc);
+ 
+ 	ath5k_rfkill_hw_stop(sc->ah);
+ 
+@@ -2937,8 +2942,11 @@ ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan)
+ 
+ 	ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "resetting\n");
+ 
++	ath5k_hw_set_imr(ah, 0);
++	synchronize_irq(sc->pdev->irq);
++	stop_tasklets(sc);
++
+ 	if (chan) {
+-		ath5k_hw_set_imr(ah, 0);
+ 		ath5k_txq_cleanup(sc);
+ 		ath5k_rx_stop(sc);
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.6.3.3
+
+
