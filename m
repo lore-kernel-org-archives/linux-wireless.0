@@ -1,102 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:59211 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755084Ab0GDKhT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Jul 2010 06:37:19 -0400
-Received: by wwb24 with SMTP id 24so1217129wwb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 04 Jul 2010 03:37:15 -0700 (PDT)
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:37298 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751351Ab0GMOF1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Jul 2010 10:05:27 -0400
+Message-ID: <4C3C7296.3070700@bu3sch.de>
+Date: Tue, 13 Jul 2010 16:05:10 +0200
+From: =?ISO-8859-1?Q?Michael_B=FCsch?= <mb@bu3sch.de>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTim3gow5YFI1L-AwUMwGVb-MHkfZTXIIg3mitWne@mail.gmail.com>
-References: <AANLkTim3gow5YFI1L-AwUMwGVb-MHkfZTXIIg3mitWne@mail.gmail.com>
-Date: Sun, 4 Jul 2010 05:37:15 -0500
-Message-ID: <AANLkTilE2uM6UoHe0UZo20CYfc8DCxpHLlSdQyzyJw2J@mail.gmail.com>
-Subject: BCM4311 in Ad-hoc Mode - Connection Unsuccessful
-From: Nicholas Betcher <nbetcher@gmail.com>
-To: Linux-Wireless Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Simon Richter <sjr@debian.org>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless@vger.kernel.org, 588196@bugs.debian.org
+Subject: Re: Bug#588196: b43: does not join multicast groups
+References: <20100706021937.11147.78230.reportbug@debian.hogyros.de> <1278887148.6139.91.camel@localhost> <4C3A4C6E.6060801@lwfinger.net> <20100713051430.GA2625@honey.hogyros.de> <4C3BFB87.5030907@lwfinger.net> <20100713073751.GB3089@richter> <4C3C6350.50304@bu3sch.de> <20100713130614.GB25565@richter> (sfid-20100713_150638_259090_128768E3)
+In-Reply-To: <20100713130614.GB25565@richter> (sfid-20100713_150638_259090_128768E3)
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-I have recently been using (lightly) tethering on my Android phone and
-it uses Ad-hoc to provide wireless tethering. Unfortunately openSUSE
-11.3 RC1 seems to be unable to connect to it. I haven't quite pinned
-down at what point it is failing, but it isn't failing at obtaining a
-DHCP lease, it's something more problematic. I have verified my
-settings are all correct on both sides (computer and phone). Also - to
-rule out hardware issues - I have used Windows 7 on the same system to
-successfully connect to the phone.
-Here are various logs/etc:
+On 07/13/2010 03:06 PM, Simon Richter wrote:
+> Hi,
+>
+> On Tue, Jul 13, 2010 at 03:00:00PM +0200, Michael Büsch wrote:
+>
+>> But I wanna say again that this all is expected behavior. The PIO
+>> fallback workaround randomly drops packets when switching modes.
+>> So it is expected that certain handshaking packages may be lost.
+>
+> So if the handshake to join a MC group is lost for whatever reason, it
+> is lost forever, or is that just in the "shit happened, reset
+> everything" code path?
 
-lspci -v -nn:
-03:00.0 Network controller [0280]: Broadcom Corporation BCM4311
-802.11b/g WLAN [14e4:4311] (rev 02)
-        Subsystem: Hewlett-Packard Company BCM4311 802.11b/g Wireless
-LAN Controller [103c:1374]
-        Flags: bus master, fast devsel, latency 0, IRQ 18
-        Memory at b8000000 (64-bit, non-prefetchable) [size=16K]
-        Capabilities: [40] Power Management version 3
-        Capabilities: [58] Vendor Specific Information: Len=78 <?>
-        Capabilities: [e8] MSI: Enable- Count=1/1 Maskable- 64bit+
-        Capabilities: [d0] Express Endpoint, MSI 00
-        Capabilities: [100] Advanced Error Reporting
-        Capabilities: [13c] Virtual Channel
-        Capabilities: [160] Device Serial Number [REMOVED INTENTIONALLY]
-        Capabilities: [16c] Power Budgeting <?>
-        Kernel driver in use: b43-pci-bridge
+It's not entirely possible to answer that question from a b43 point of view.
+What happens in b43 is:
+It tries to transmit through DMA. If that fails, it drops all queued
+packets (but does not tell any upper layer about that) and resets the
+hardware to PIO mode and waits for further work.
+So it is up to the upper layer to detect the failure. I don't think
+it's possible to automatically detect such incidents for multicast
+transmissions. So the mechanism fails here.
 
-dmesg:
-[  328.352293] b43-phy0: Loading firmware version 478.104 (2008-07-01 00:50:23)
-[  328.384141] b43-pci-bridge 0000:03:00.0: PCI: Disallowing DAC for device
-[  328.384147] b43-phy0: DMA mask fallback from 64-bit to 32-bit
-[  328.398967] wlan0: Trigger new scan to find an IBSS to join
-[  331.704086] wlan0: Trigger new scan to find an IBSS to join
-[  335.704063] wlan0: Trigger new scan to find an IBSS to join
-[  336.996057] wlan0: Creating new IBSS network, BSSID [REMOVED INTENTIONALLY]
-[  367.704079] wlan0: No active IBSS STAs - trying to scan for other
-IBSS networks with same SSID (merge)
-[  399.704089] wlan0: No active IBSS STAs - trying to scan for other
-IBSS networks with same SSID (merge)
+>>> I was also having some suspend related issues, I'm going to give it a
+>>> few days now to see whether they also disappear now.
+>
+>> Please open a new bug for this. Thanks.
+>
+> If they keep appearing; this may also be related to lost packets.
 
+I'm pretty sure that any suspend issue is not related to the PIO
+fallback mechanism.
 
-/var/log/messages:
-Jul  3 01:57:53 NickB-Laptop ifup:     wlan0     name: BCM4311 802.11b/g WLAN
-Jul  3 01:57:53 NickB-Laptop ifup-wireless:     wlan0     warning:
-using NO encryption
-Jul  3 01:57:53 NickB-Laptop kernel: [  684.963046] b43-phy0: Loading
-firmware version 478.104 (2008-07-01 00:50:23)
-Jul  3 01:57:53 NickB-Laptop kernel: [  684.995149] b43-pci-bridge
-0000:03:00.0: PCI: Disallowing DAC for device
-Jul  3 01:57:53 NickB-Laptop kernel: [  684.995153] b43-phy0: DMA mask
-fallback from 64-bit to 32-bit
-Jul  3 01:57:53 NickB-Laptop kernel: [  685.008172] wlan0: Selected
-IBSS BSSID [REMOVED INTENTIONALLY] based on configured SSID
-Jul  3 01:57:54 NickB-Laptop ifup-dhcp:     wlan0     Starting DHCP4 client
-Jul  3 01:57:54 NickB-Laptop dhcpcd[5932]: wlan0: dhcpcd 3.2.3 starting
-Jul  3 01:57:54 NickB-Laptop dhcpcd[5932]: wlan0: hardware address =
-[REMOVED INTENTIONALLY]
-Jul  3 01:57:54 NickB-Laptop dhcpcd[5932]: wlan0: broadcasting for a lease
-Jul  3 01:58:14 NickB-Laptop dhcpcd[5932]: wlan0: timed out
-Jul  3 01:58:15 NickB-Laptop ifup-dhcp:     wlan0     DHCP4 continues
-in background
-Jul  3 01:58:24 NickB-Laptop kernel: [  715.701300] wlan0: No active
-IBSS STAs - trying to scan for other IBSS networks with same SSID
-(merge)
-Jul  3 01:58:31 NickB-Laptop dhcpcd[4983]: eth0: timed out
-Jul  3 01:58:31 NickB-Laptop dhcpcd[4983]: eth0: lease expired 1799145
-seconds ago
-Jul  3 01:58:31 NickB-Laptop dhcpcd[4983]: eth0: broadcasting for a lease
-Jul  3 01:58:34 NickB-Laptop dhcpcd[5932]: wlan0: timed out
-Jul  3 01:58:34 NickB-Laptop dhcpcd[5932]: wlan0: broadcasting for a lease
-Jul  3 01:58:54 NickB-Laptop dhcpcd[5932]: wlan0: timed out
-Jul  3 01:58:54 NickB-Laptop dhcpcd[5932]: wlan0: broadcasting for a lease
-Jul  3 01:58:56 NickB-Laptop kernel: [  747.704067] wlan0: No active
-IBSS STAs - trying to scan for other IBSS networks with same SSID
-(merge)
-
-More is probably needed to truly debug this problem, so please CC me
-and let me know what more is needed.
-Thanks a million for the great driver, (seriously) :)
-Nick Betcher, CPhT
-Certified Pharmacy Technician
+-- 
+Greetings Michael.
