@@ -1,44 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp137.mail.ukl.yahoo.com ([77.238.184.68]:32162 "HELO
-	smtp137.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754203Ab0G2UwY (ORCPT
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:60521 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752471Ab0GMTHz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jul 2010 16:52:24 -0400
-Message-ID: <4C51EA06.3010905@users.sourceforge.net>
-Date: Thu, 29 Jul 2010 21:52:22 +0100
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Kirill Zut <kirill.zut@promwad.com>,
-	linux-wireless@vger.kernel.org,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Subject: Re: [PATCH 2.6.34] rtl8187: ad-hoc mode support
-References: <201007291835.46159.kirill.zut@promwad.com> <20100729180426.GC2424@tuxdriver.com> <4C51D096.7090607@lwfinger.net>
-In-Reply-To: <4C51D096.7090607@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 13 Jul 2010 15:07:55 -0400
+Date: Tue, 13 Jul 2010 21:07:42 +0200
+From: Alejandro Riveira =?UTF-8?B?RmVybsOhbmRleg==?=
+	<ariveira@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>,
+	Martin Steigerwald <Martin@lichtvoll.de>,
+	linux-kernel@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rt2x00: slow wifi with correct basic rate bitmap (was Re:
+ stable? quality assurance?)
+Message-ID: <20100713210742.3048ad79@varda>
+In-Reply-To: <20100713183851.GD3835@tuxdriver.com>
+References: <201007110918.42120.Martin@lichtvoll.de>
+	<AANLkTimCwi2uJqqPaq3U30f3rvdDizu1BnaaXgvNeC9k@mail.gmail.com>
+	<201007111651.42963.Martin@lichtvoll.de>
+	<20100713131112.26a3da54@varda>
+	<4C3C6106.3000909@s5r6.in-berlin.de>
+	<20100713153530.GC3835@tuxdriver.com>
+	<20100713201927.78674c4a@varda>
+	<20100713183851.GD3835@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
-> On 07/29/2010 01:04 PM, John W. Linville wrote:
->> Don't you need something to make it beacon?
+El Tue, 13 Jul 2010 14:38:52 -0400
+"John W. Linville" <linville@tuxdriver.com> escribió:
+
 > 
-> Indeed he does. This code allows the user to set ad-hoc mode, but I could not
-> establish a connection. The setup that I used worked for a b43 - b43 link, but
-> failed if either end used rtl8187. NACK.
+> > > isn't using the basic_rates map properly.  But after reviewing the
+> > > code and the data I have, I can't see what would be causing that.
+> > > It is at least possible that your AP is sending bad rate information.
+> > > Have you tried this device with other APs?
 
-I supposed I need to withdrawn my "Ached-by:" - I was using it in the minimal 
-sense of "I have seen the patch and aware of its existence".
+ I do no know; i captured some debug data for Ivo back in the day and from
+ what he said all the info passed to the card was correct...
+ See http://lkml.org/lkml/2009/5/25/163 ( link is in bugzilla) in case
+ you missed it
 
-Is the beacon code driver-specific, or is it back to my older question, some 
-part of mac80211 need to have some generic support for it? or both? My 
-impression is that master mode for mac80211-based drivers - if it is ever going 
-to happen - requires some substantial changes to both mac80211 and hostapd and 
-is not happening any time soon.
+> >  
+> >  No; this is a desktop pc that connects to my home router/AP. A new wifi
+> >  card is cheaper than a new AP ...
+> 
+> Perhaps you could capture some beacons from that AP?
 
-OTOH, I have the impression that the windows driver claims to support Ad-Hoc 
-mode but I could be wrong - it has been a long time since I looked at the 
-options and choices under windows.
+  f you explain how; I can try.
 
-Hin-Tak
+> 
