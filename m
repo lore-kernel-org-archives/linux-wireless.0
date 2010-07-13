@@ -1,53 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx01.sz.bfs.de ([194.94.69.103]:12516 "EHLO mx01.sz.bfs.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756515Ab0GWQLI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jul 2010 12:11:08 -0400
-Message-ID: <4C49BF18.4040106@bfs.de>
-Date: Fri, 23 Jul 2010 18:11:04 +0200
-From: walter harms <wharms@bfs.de>
-Reply-To: wharms@bfs.de
+Received: from mail-px0-f174.google.com ([209.85.212.174]:56202 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756292Ab0GMVzK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Jul 2010 17:55:10 -0400
+Received: by pxi14 with SMTP id 14so2463031pxi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jul 2010 14:55:09 -0700 (PDT)
 MIME-Version: 1.0
-To: Bruno Randolf <br1@einfach.org>
-CC: Dan Carpenter <error27@gmail.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	kernel-janitors@vger.kernel.org
-Subject: Re: [patch -next] ath5k: snprintf() returns largish values
-References: <20100722085202.GV17585@bicker> <201007231744.14922.br1@einfach.org>
-In-Reply-To: <201007231744.14922.br1@einfach.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <4C3B6AAE.4070204@redfish-solutions.com>
+References: <1278879791-12646-1-git-send-email-hauke@hauke-m.de>
+	<AANLkTimLweydYTbS-O6Q2sX-W0H5z7cWOLUqQphSTO1s@mail.gmail.com>
+	<4C3B6AAE.4070204@redfish-solutions.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 13 Jul 2010 14:54:49 -0700
+Message-ID: <AANLkTilfUKMido8N4vRF4Em7ewtoUAlkrsp1uaKTx6H9@mail.gmail.com>
+Subject: Re: [PATCH] compat-wireless: fix build of ath5k for CONFIG_PM_SLEEP=n
+To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org,
+	mcgrof@infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-Bruno Randolf schrieb:
-
+On Mon, Jul 12, 2010 at 12:19 PM, Philip A. Prindeville
+<philipp_subx@redfish-solutions.com> wrote:
+> On 07/12/2010 09:30 AM, Luis R. Rodriguez wrote:
+>> On Sun, Jul 11, 2010 at 1:23 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>>> suspend and resume are activated in ath5k if CONFIG_PM_SLEEP is set and
+>>> not if just CONFIG_PM is set.
+>>>
+>>> This should fix the problems reported by Philip Prindeville.
+>>>
+>>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 >>
->> @@ -766,6 +781,9 @@ static ssize_t read_file_queue(struct file *file, char
->> __user *user_buf, len += snprintf(buf+len, sizeof(buf)-len, "  len: %d\n",
->> n);
->>  	}
+>> Thanks! Applied and pushed out, at noon we'll have a new tarball with this.
 >>
->> +	if (len > sizeof(buf))
->> +		len = sizeof(buf);
->> +
->>  	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
->>  }
-> 
-> i think it would be better to make sure the buffer is always big enough to 
-> hold all the output (it's not very variable in length), but as a safety net 
-> this can't hurt.
-> 
+>>   Luis
+>
+> And...
+>
+>
+>  CC [M]  /home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth/l2cap.o
+> /home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth/l2cap.c: In function 'l2cap_data_channel':
+> /home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth/l2cap.c:4352: error: void value not ignored as it ought to be
+> make[4]: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth/l2cap.o] Error 1
+> make[3]: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth] Error 2
+> make[2]: *** [_module_/home/philipp/kernel/build_i586/compat-wireless-2010-07-12] Error 2
+> make[2]: Leaving directory `/home/philipp/kernel/build_i586/linux-2.6.27.48-astlinux'
+> make[1]: *** [modules] Error 2
+> make[1]: Leaving directory `/home/philipp/kernel/build_i586/compat-wireless-2010-07-12'
+> make: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/wireless/lib80211.ko] Error 2
 
+Thanks for reporting this, I am working on it now.
 
-glibc provides open_memstream()/fmemopen() to write into large buffers.
-I feel this as a better way than  len += snprintf(buf+len)
-
-re,
- wh
+  Luis
