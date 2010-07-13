@@ -1,71 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:36594 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753623Ab0GWXTy convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45573 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753599Ab0GMI4D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jul 2010 19:19:54 -0400
-Received: by fxm14 with SMTP id 14so5282692fxm.19
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jul 2010 16:19:53 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1279816465.1630.9.camel@powerslave>
-References: <4C37BCA0.5090607@deltatee.com>
-	<AC090B9732AB2B4DB7FF476E907FE660010685F34E@dnce02.ent.ti.com>
-	<AANLkTilHNKeRZX5CMplyriTo2hTPBrz_z1_Zpwoy3SZx@mail.gmail.com>
-	<AC090B9732AB2B4DB7FF476E907FE66001069662F2@dnce02.ent.ti.com>
-	<AC090B9732AB2B4DB7FF476E907FE6600106966BA5@dnce02.ent.ti.com>
-	<4C45ED36.2090604@deltatee.com>
-	<AANLkTinjvF9UeV7d2aBUy6HfexuAeL_cdsVPGVxSRVMp@mail.gmail.com>
-	<AANLkTinnYeJPV-xxg7DdPXnWW_kD7X1TVcd9HrhupJWS@mail.gmail.com>
-	<1279780848.2322.31.camel@powerslave>
-	<AANLkTilZhvGg2SUk5btpQQA3qj2k4rob4rTychDu7gXM@mail.gmail.com>
-	<1279816465.1630.9.camel@powerslave>
-Date: Sat, 24 Jul 2010 01:19:53 +0200
-Message-ID: <AANLkTikHUe3qcon_sgnSpoNY=d5OVS9oBPLioNp0F5Kn@mail.gmail.com>
-Subject: Re: wl1271 firmware
-From: Pazzo Da Legare <pazzodalegare@gmail.com>
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Levi, Shahar" <shahar_levi@ti.com>,
-	Logan Gunthorpe <logang@deltatee.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 13 Jul 2010 04:56:03 -0400
+Subject: [PATCH] cfg80211: don't get expired BSSes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	jiajia.zheng@intel.com
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 13 Jul 2010 10:55:38 +0200
+Message-ID: <1279011338.3758.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Luciano,
+From: Johannes Berg <johannes.berg@intel.com>
 
-Obviously you are right: I did a stupid error (I modified wrong
-wl1271.h file, the one for and older compact-wireless...), sorry for
-that.
+When kernel-internal users use cfg80211_get_bss()
+to get a reference to a BSS struct, they may end
+up getting one that would have been removed from
+the list if there had been any userspace access
+to the list. This leads to inconsistencies and
+problems.
 
-I attached what I got. Note that I have a limited buffer for system
-log so this is the last part only, I hope is enough.
+Fix it by making cfg80211_get_bss() ignore BSSes
+that cfg80211_bss_expire() would remove.
 
-http://pastebin.com/7nLJeXkb
+Fixes http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2180
 
-Thank you again,
+Cc: stable@kernel.org
+Reported-by: Jiajia Zheng <jiajia.zheng@intel.com>
+Tested-by: Jiajia Zheng <jiajia.zheng@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/scan.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-pz
+--- wireless-testing.orig/net/wireless/scan.c	2010-07-13 10:21:04.000000000 +0200
++++ wireless-testing/net/wireless/scan.c	2010-07-13 10:25:23.000000000 +0200
+@@ -275,6 +275,7 @@ struct cfg80211_bss *cfg80211_get_bss(st
+ {
+ 	struct cfg80211_registered_device *dev = wiphy_to_dev(wiphy);
+ 	struct cfg80211_internal_bss *bss, *res = NULL;
++	unsigned long now = jiffies;
+ 
+ 	spin_lock_bh(&dev->bss_lock);
+ 
+@@ -283,6 +284,10 @@ struct cfg80211_bss *cfg80211_get_bss(st
+ 			continue;
+ 		if (channel && bss->pub.channel != channel)
+ 			continue;
++		/* Don't get expired BSS structs */
++		if (time_after(now, bss->ts + IEEE80211_SCAN_RESULT_EXPIRE) &&
++		    !atomic_read(&bss->hold))
++			continue;
+ 		if (is_bss(&bss->pub, bssid, ssid, ssid_len)) {
+ 			res = bss;
+ 			kref_get(&res->ref);
 
-2010/7/22 Luciano Coelho <luciano.coelho@nokia.com>:
-> On Thu, 2010-07-22 at 17:41 +0200, ext Pazzo Da Legare wrote:
->> I enabled the DEBUG_LEVEL as you advice me but I have no additional
->> information....
->>
->> [  186.230000] wl1271_sdio mmc0:0001:2: firmware: requesting
->> wl1271-fw.bin
->> [  186.420000] wl1271_sdio mmc0:0001:2: firmware: requesting
->> wl1271-nvs.bin
->> [  186.860000] wl1271: firmware booted (Rev 6.1.0.0.310)
->> [  186.880000] ADDRCONF(NETDEV_UP): wlan0: link is not ready
->> [  187.380000] wl1271: ERROR ELP wakeup timeout!
->> [  187.880000] wl1271: ERROR ELP wakeup timeout!
->
-> There's something wrong.  There should have been a lot more traces with
-> the DEBUG_LEVEL I proposed.  Please try again.
->
->
-> --
-> Cheers,
-> Luca.
->
->
+
