@@ -1,108 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:59315 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761124Ab0GURf3 (ORCPT
+Received: from einhorn.in-berlin.de ([192.109.42.8]:47619 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754171Ab0GMMue (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jul 2010 13:35:29 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>
-Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v2 19/20] omap: zoom: keep the MMC3 wl1271 device powered off
-Date: Wed, 21 Jul 2010 20:33:53 +0300
-Message-Id: <1279733634-21974-20-git-send-email-ohad@wizery.com>
-In-Reply-To: <1279733634-21974-1-git-send-email-ohad@wizery.com>
-References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+	Tue, 13 Jul 2010 08:50:34 -0400
+Message-ID: <4C3C6106.3000909@s5r6.in-berlin.de>
+Date: Tue, 13 Jul 2010 14:50:14 +0200
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?Alejandro_Riveira_Fern=E1ndez?= <ariveira@gmail.com>
+CC: Martin Steigerwald <Martin@lichtvoll.de>,
+	linux-kernel@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: rt2x00: slow wifi with correct basic rate bitmap (was Re: stable?
+ quality assurance?)
+References: <201007110918.42120.Martin@lichtvoll.de>	<AANLkTimCwi2uJqqPaq3U30f3rvdDizu1BnaaXgvNeC9k@mail.gmail.com>	<201007111651.42963.Martin@lichtvoll.de> <20100713131112.26a3da54@varda>
+In-Reply-To: <20100713131112.26a3da54@varda>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Keep the MMC3 wl1271 WLAN device powered off until its
-SDIO function driver requests otherwise.
+Alejandro Riveira Fernández wrote:
+>  I for one stopped booting into -rc kernels.
+>  The fact that still have to patch my kernels with a *one* liner
+>  since 2.6.29 kernel [1] does not give me confidence on the "test
+>  report/bisect and it will be fixed" promise some have made in this
+>  threath
+>  
+>  [1] https://bugzilla.kernel.org/show_bug.cgi?id=13362
 
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
----
- arch/arm/mach-omap2/board-zoom-peripherals.c |    1 +
- arch/arm/mach-omap2/hsmmc.c                  |    3 +++
- arch/arm/mach-omap2/hsmmc.h                  |    1 +
- arch/arm/plat-omap/include/plat/mmc.h        |    3 +++
- drivers/mmc/host/omap_hsmmc.c                |    3 +++
- 5 files changed, 11 insertions(+), 0 deletions(-)
+There were promises made in this thread?  Then I must have read a
+different mailinglist or so.
 
-diff --git a/arch/arm/mach-omap2/board-zoom-peripherals.c b/arch/arm/mach-omap2/board-zoom-peripherals.c
-index 3230801..3ab9125 100644
---- a/arch/arm/mach-omap2/board-zoom-peripherals.c
-+++ b/arch/arm/mach-omap2/board-zoom-peripherals.c
-@@ -217,6 +217,7 @@ static struct omap2_hsmmc_info mmc[] __initdata = {
- 		.gpio_wp	= -EINVAL,
- 		.gpio_cd	= -EINVAL,
- 		.ocr_mask	= MMC_VDD_165_195,
-+		.dont_power_card = true,
- 		.priv_data	= &omap_zoom_wlan_data,
- 	},
- 	{}      /* Terminator */
-diff --git a/arch/arm/mach-omap2/hsmmc.c b/arch/arm/mach-omap2/hsmmc.c
-index f06ddd2..24c4144 100644
---- a/arch/arm/mach-omap2/hsmmc.c
-+++ b/arch/arm/mach-omap2/hsmmc.c
-@@ -284,6 +284,9 @@ void __init omap2_hsmmc_init(struct omap2_hsmmc_info *controllers)
- 		if (c->vcc_aux_disable_is_sleep)
- 			mmc->slots[0].vcc_aux_disable_is_sleep = 1;
- 
-+		if (c->dont_power_card)
-+			mmc->slots[0].dont_power_card = 1;
-+
- 		mmc->slots[0].priv_data = c->priv_data;
- 
- 		/* NOTE:  MMC slots should have a Vcc regulator set up.
-diff --git a/arch/arm/mach-omap2/hsmmc.h b/arch/arm/mach-omap2/hsmmc.h
-index 434a3ed..e200786 100644
---- a/arch/arm/mach-omap2/hsmmc.h
-+++ b/arch/arm/mach-omap2/hsmmc.h
-@@ -23,6 +23,7 @@ struct omap2_hsmmc_info {
- 	int	ocr_mask;	/* temporary HACK */
- 	/* Remux (pad configuation) when powering on/off */
- 	void (*remux)(struct device *dev, int slot, int power_on);
-+	bool	dont_power_card;/* keep card power off at boot (default is n)*/
- 	void	*priv_data;	/* private data to SDIO function driver */
- };
- 
-diff --git a/arch/arm/plat-omap/include/plat/mmc.h b/arch/arm/plat-omap/include/plat/mmc.h
-index 9db1617..d042494 100644
---- a/arch/arm/plat-omap/include/plat/mmc.h
-+++ b/arch/arm/plat-omap/include/plat/mmc.h
-@@ -140,6 +140,9 @@ struct omap_mmc_platform_data {
- 
- 		unsigned int ban_openended:1;
- 
-+		/* keep this card powered off at boot (default is n) */
-+		unsigned int dont_power_card:1;
-+
- 		/* card private data that should be used by function driver */
- 		void *priv_data;
- 	} slots[OMAP_MMC_MAX_SLOTS];
-diff --git a/drivers/mmc/host/omap_hsmmc.c b/drivers/mmc/host/omap_hsmmc.c
-index 4ac548e..4fb6634 100644
---- a/drivers/mmc/host/omap_hsmmc.c
-+++ b/drivers/mmc/host/omap_hsmmc.c
-@@ -2157,6 +2157,9 @@ static int __init omap_hsmmc_probe(struct platform_device *pdev)
- 	if (mmc_slot(host).nonremovable)
- 		mmc->caps |= MMC_CAP_NONREMOVABLE;
- 
-+	if (mmc_slot(host).dont_power_card)
-+		mmc->caps |= MMC_CAP_DONT_POWER_CARD;
-+
- 	mmc_set_embedded_data(mmc, mmc_slot(host).priv_data);
- 
- 	omap_hsmmc_conf_bus_power(host);
+I do not know why your WLAN regression has not been fixed yet, but at
+least it seems rather plausible why commit
+7e0986c17f695952ce5d61ed793ce048ba90a661 is not going to be reverted (if
+such a revert is the one-liner that you are referring to).
+
+Why is one reporter's rt2500 OK now though but not yours?  Are there
+different card revisions or firmwares out there that require quirk handling?
 -- 
-1.7.0.4
-
+Stefan Richter
+-=====-==-=- -=== -==-=
+http://arcgraph.de/sr/
