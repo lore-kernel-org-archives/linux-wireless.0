@@ -1,54 +1,196 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from astoria.ccjclearline.com ([64.235.106.9]:50639 "EHLO
-	astoria.ccjclearline.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964971Ab0GPK5x (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:3701 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756844Ab0GMPdm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jul 2010 06:57:53 -0400
-Date: Fri, 16 Jul 2010 06:57:45 -0400 (EDT)
-From: "Robert P. J. Day" <rpjday@crashcourse.ca>
-To: Felix Fietkau <nbd@openwrt.org>
-cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: Re: what's the status of ATHEROS_AR71XX config variable?
-In-Reply-To: <4C403859.70201@openwrt.org>
-Message-ID: <alpine.DEB.2.00.1007160656240.18878@lynx>
-References: <alpine.DEB.2.00.1007160440530.13924@lynx> <4C403859.70201@openwrt.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	Tue, 13 Jul 2010 11:33:42 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com, br1@einfach.org
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 1/2] ath5k: move reset to mac80211 workqueue
+Date: Tue, 13 Jul 2010 11:32:40 -0400
+Message-Id: <1279035161-10802-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 16 Jul 2010, Felix Fietkau wrote:
+We currently trigger a reset via a tasklet when certain error
+conditions are detected so that the card will (eventually)
+restart.  Unfortunately this makes locking complicated since
+reset can also be called in process context (e.g. for channel
+change).  Currently nothing protects against concurrent resets,
+which can be the source of corruption bugs.
 
-> On 2010-07-16 10:43 AM, Robert P. J. Day wrote:
-> >
-> >   from drivers/net/wireless/ath/ath9k/Makefile:
-> >
-> > ath9k-$(CONFIG_ATHEROS_AR71XX) += ahb.o
-> >
-> > but there is no such config variable.  so i'm thinking *something*
-> > should be removed.
+Reset takes too long to spinlock the whole thing, so this
+patch moves deferred resets into the mac80211 workqueue to
+enable use of sc->lock mutex.
 
-> The platform port for AR71xx hasn't been submitted upstream yet. But
-> the code in ahb.c is actively being used in OpenWrt.
->
-> I don't know what the status on submitting the code to linux-mips
-> is, but I've Cc'd Gabor, he should know ;)
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath/ath5k/base.c  |   38 +++++++++++++++++--------------
+ drivers/net/wireless/ath/ath5k/base.h  |    3 +-
+ drivers/net/wireless/ath/ath5k/debug.c |    2 +-
+ 3 files changed, 24 insertions(+), 19 deletions(-)
 
-  ok.  i wasn't passing judgment one way or the other, just making an
-observation that the mainstream kernel doesn't define that config
-variable.  you can take it from here.
-
-rday
-
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 20328bd..b290cc6 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -388,7 +388,7 @@ static int 	ath5k_init(struct ath5k_softc *sc);
+ static int 	ath5k_stop_locked(struct ath5k_softc *sc);
+ static int 	ath5k_stop_hw(struct ath5k_softc *sc);
+ static irqreturn_t ath5k_intr(int irq, void *dev_id);
+-static void 	ath5k_tasklet_reset(unsigned long data);
++static void ath5k_reset_work(struct work_struct *work);
+ 
+ static void 	ath5k_tasklet_calibrate(unsigned long data);
+ 
+@@ -831,11 +831,12 @@ ath5k_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
+ 
+ 	tasklet_init(&sc->rxtq, ath5k_tasklet_rx, (unsigned long)sc);
+ 	tasklet_init(&sc->txtq, ath5k_tasklet_tx, (unsigned long)sc);
+-	tasklet_init(&sc->restq, ath5k_tasklet_reset, (unsigned long)sc);
+ 	tasklet_init(&sc->calib, ath5k_tasklet_calibrate, (unsigned long)sc);
+ 	tasklet_init(&sc->beacontq, ath5k_tasklet_beacon, (unsigned long)sc);
+ 	tasklet_init(&sc->ani_tasklet, ath5k_tasklet_ani, (unsigned long)sc);
+ 
++	INIT_WORK(&sc->reset_work, ath5k_reset_work);
++
+ 	ret = ath5k_eeprom_read_mac(ah, mac);
+ 	if (ret) {
+ 		ATH5K_ERR(sc, "unable to read address from EEPROM: 0x%04x\n",
+@@ -2294,8 +2295,8 @@ err_unmap:
+  * frame contents are done as needed and the slot time is
+  * also adjusted based on current state.
+  *
+- * This is called from software irq context (beacontq or restq
+- * tasklets) or user context from ath5k_beacon_config.
++ * This is called from software irq context (beacontq tasklets)
++ * or user context from ath5k_beacon_config.
+  */
+ static void
+ ath5k_beacon_send(struct ath5k_softc *sc)
+@@ -2328,7 +2329,7 @@ ath5k_beacon_send(struct ath5k_softc *sc)
+ 				sc->bmisscount);
+ 			ATH5K_DBG(sc, ATH5K_DEBUG_RESET,
+ 				  "stuck beacon, resetting\n");
+-			tasklet_schedule(&sc->restq);
++			ieee80211_queue_work(sc->hw, &sc->reset_work);
+ 		}
+ 		return;
+ 	}
+@@ -2684,7 +2685,6 @@ ath5k_stop_hw(struct ath5k_softc *sc)
+ 
+ 	tasklet_kill(&sc->rxtq);
+ 	tasklet_kill(&sc->txtq);
+-	tasklet_kill(&sc->restq);
+ 	tasklet_kill(&sc->calib);
+ 	tasklet_kill(&sc->beacontq);
+ 	tasklet_kill(&sc->ani_tasklet);
+@@ -2737,7 +2737,7 @@ ath5k_intr(int irq, void *dev_id)
+ 			 */
+ 			ATH5K_DBG(sc, ATH5K_DEBUG_RESET,
+ 				  "fatal int, resetting\n");
+-			tasklet_schedule(&sc->restq);
++			ieee80211_queue_work(sc->hw, &sc->reset_work);
+ 		} else if (unlikely(status & AR5K_INT_RXORN)) {
+ 			/*
+ 			 * Receive buffers are full. Either the bus is busy or
+@@ -2752,7 +2752,7 @@ ath5k_intr(int irq, void *dev_id)
+ 			if (ah->ah_mac_srev < AR5K_SREV_AR5212) {
+ 				ATH5K_DBG(sc, ATH5K_DEBUG_RESET,
+ 					  "rx overrun, resetting\n");
+-				tasklet_schedule(&sc->restq);
++				ieee80211_queue_work(sc->hw, &sc->reset_work);
+ 			}
+ 			else
+ 				tasklet_schedule(&sc->rxtq);
+@@ -2799,14 +2799,6 @@ ath5k_intr(int irq, void *dev_id)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static void
+-ath5k_tasklet_reset(unsigned long data)
+-{
+-	struct ath5k_softc *sc = (void *)data;
+-
+-	ath5k_reset(sc, sc->curchan);
+-}
+-
+ /*
+  * Periodically recalibrate the PHY to account
+  * for temperature/environment changes.
+@@ -2830,7 +2822,7 @@ ath5k_tasklet_calibrate(unsigned long data)
+ 		 * to load new gain values.
+ 		 */
+ 		ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "calibration, resetting\n");
+-		ath5k_reset(sc, sc->curchan);
++		ieee80211_queue_work(sc->hw, &sc->reset_work);
+ 	}
+ 	if (ath5k_hw_phy_calibrate(ah, sc->curchan))
+ 		ATH5K_ERR(sc, "calibration of channel %u failed\n",
+@@ -2934,6 +2926,8 @@ drop_packet:
+ /*
+  * Reset the hardware.  If chan is not NULL, then also pause rx/tx
+  * and change to the given channel.
++ *
++ * This should be called with sc->lock.
+  */
+ static int
+ ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan)
+@@ -2990,6 +2984,16 @@ err:
+ 	return ret;
+ }
+ 
++static void ath5k_reset_work(struct work_struct *work)
++{
++	struct ath5k_softc *sc = container_of(work, struct ath5k_softc,
++		reset_work);
++
++	mutex_lock(&sc->lock);
++	ath5k_reset(sc, sc->curchan);
++	mutex_unlock(&sc->lock);
++}
++
+ static int ath5k_start(struct ieee80211_hw *hw)
+ {
+ 	return ath5k_init(hw->priv);
+diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
+index 56221bc..86c90f4 100644
+--- a/drivers/net/wireless/ath/ath5k/base.h
++++ b/drivers/net/wireless/ath/ath5k/base.h
+@@ -47,6 +47,7 @@
+ #include <linux/if_ether.h>
+ #include <linux/leds.h>
+ #include <linux/rfkill.h>
++#include <linux/workqueue.h>
+ 
+ #include "ath5k.h"
+ #include "debug.h"
+@@ -189,7 +190,7 @@ struct ath5k_softc {
+ 	unsigned int		led_pin,	/* GPIO pin for driving LED */
+ 				led_on;		/* pin setting for LED on */
+ 
+-	struct tasklet_struct	restq;		/* reset tasklet */
++	struct work_struct	reset_work;	/* deferred chip reset */
+ 
+ 	unsigned int		rxbufsize;	/* rx size based on mtu */
+ 	struct list_head	rxbuf;		/* receive buffer */
+diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
+index 8c63886..ebb9c23 100644
+--- a/drivers/net/wireless/ath/ath5k/debug.c
++++ b/drivers/net/wireless/ath/ath5k/debug.c
+@@ -279,7 +279,7 @@ static ssize_t write_file_reset(struct file *file,
+ {
+ 	struct ath5k_softc *sc = file->private_data;
+ 	ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "debug file triggered reset\n");
+-	tasklet_schedule(&sc->restq);
++	ieee80211_queue_work(sc->hw, &sc->reset_work);
+ 	return count;
+ }
+ 
 -- 
+1.6.3.3
 
-========================================================================
-Robert P. J. Day                               Waterloo, Ontario, CANADA
 
-        Top-notch, inexpensive online Linux/OSS/kernel courses
-                        http://crashcourse.ca
-
-Twitter:                                       http://twitter.com/rpjday
-LinkedIn:                               http://ca.linkedin.com/in/rpjday
-========================================================================
