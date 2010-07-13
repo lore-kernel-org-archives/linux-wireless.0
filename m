@@ -1,45 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:60801 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752930Ab0GaNXx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Jul 2010 09:23:53 -0400
-To: Pazzo Da Legare <pazzodalegare@gmail.com>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Levi\, Shahar" <shahar_levi@ti.com>,
-	Logan Gunthorpe <logang@deltatee.com>
-Subject: Re: wl1271 firmware
-References: <4C37BCA0.5090607@deltatee.com>
-	<AC090B9732AB2B4DB7FF476E907FE660010685F34E@dnce02.ent.ti.com>
-	<AANLkTilHNKeRZX5CMplyriTo2hTPBrz_z1_Zpwoy3SZx@mail.gmail.com>
-	<AC090B9732AB2B4DB7FF476E907FE66001069662F2@dnce02.ent.ti.com>
-	<AC090B9732AB2B4DB7FF476E907FE6600106966BA5@dnce02.ent.ti.com>
-	<4C45ED36.2090604@deltatee.com>
-	<AANLkTinjvF9UeV7d2aBUy6HfexuAeL_cdsVPGVxSRVMp@mail.gmail.com>
-	<AANLkTinnYeJPV-xxg7DdPXnWW_kD7X1TVcd9HrhupJWS@mail.gmail.com>
-	<1279780848.2322.31.camel@powerslave>
-	<AANLkTilZhvGg2SUk5btpQQA3qj2k4rob4rTychDu7gXM@mail.gmail.com>
-	<1279816465.1630.9.camel@powerslave>
-	<AANLkTikHUe3qcon_sgnSpoNY=d5OVS9oBPLioNp0F5Kn@mail.gmail.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Sat, 31 Jul 2010 16:23:45 +0300
-In-Reply-To: <AANLkTikHUe3qcon_sgnSpoNY=d5OVS9oBPLioNp0F5Kn@mail.gmail.com> (Pazzo Da Legare's message of "Sat\, 24 Jul 2010 01\:19\:53 +0200")
-Message-ID: <87eiejeqe6.fsf@purkki.adurom.net>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:53306 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751542Ab0GMTQE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Jul 2010 15:16:04 -0400
+Received: by bwz1 with SMTP id 1so483454bwz.19
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jul 2010 12:16:03 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Subject: Re: Rate control & USB
+Date: Tue, 13 Jul 2010 21:15:16 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felix Fietkau <nbd@openwrt.org>
+References: <AANLkTinubmjYu9FyDU0B81F0gHmFPLnDUWYGmZ9Rodss@mail.gmail.com> <201007122114.09571.helmut.schaa@googlemail.com> <AANLkTil9g4VT2tROcjSYu1hGNQ04M5psSzxLfpOGE9DS@mail.gmail.com>
+In-Reply-To: <AANLkTil9g4VT2tROcjSYu1hGNQ04M5psSzxLfpOGE9DS@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201007132115.16101.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pazzo Da Legare <pazzodalegare@gmail.com> writes:
+Am Dienstag 13 Juli 2010 schrieb Ivo Van Doorn:
+> On Mon, Jul 12, 2010 at 9:14 PM, Helmut Schaa
+> <helmut.schaa@googlemail.com> wrote:
+> > Am Montag 12 Juli 2010 schrieb Ivo Van Doorn:
+> >> I am currently looking into the old problem of the mac80211 rate
+> >> control algorithms
+> >> and USB devices. The Ralink USB devices (and as far as I know, the
+> >> other USB devices
+> >> as well), do not work well with the PID and Minstrel algorithms. This
+> >> is caused by the
+> >> fact that USB devices do not report the TX status to mac80211.
+> >
+> > Ivo, do you know by any chance if the USB devices also have a TX_STA_FIFO
+> > register like the PCI variants? Does it contain useful data or just crap?
+> 
+> Well I guess he has the registers (we don't have rt2870 specific specsheets,
+> but the register definitions from the original Ralink driver to
+> suggest the register
+> is there). However, even if it contains valid data, how do you want to match
+> the contents of that register with the sent frames in the queue?
 
-> I attached what I got. Note that I have a limited buffer for system
-> log so this is the last part only, I hope is enough.
->
-> http://pastebin.com/7nLJeXkb
+We could stuff a unique packet ID into the TXWI and the TX_STA_FIFO should
+contain the same ID alongside the TX status after the frame was processed
+by the hw.
 
-wl1271 sdio needs a special SDIO command to wakeup the firmware
-properly from ELP. I recommend to check that your platform is using
-that.
+> And another downside, is that the above only applies to rt2800usb, and not
+> for rt73usb and rt2500usb, which neither have the TX status register, and were
+> replaced with statistics registers (which I want to read for the batch
+> TX status).
 
--- 
-Kalle Valo
+Ok, that's a valid argument ...
+
+Helmut
