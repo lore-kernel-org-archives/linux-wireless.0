@@ -1,54 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:39346 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755305Ab0GJONh (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:45781 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751542Ab0GMTDl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Jul 2010 10:13:37 -0400
-Date: Sat, 10 Jul 2010 16:12:04 +0200
-From: Dan Carpenter <error27@gmail.com>
-To: Kulikov Vasiliy <segooon@gmail.com>
-Cc: kernel-janitors@vger.kernel.org,
-	Simon Kelley <simon@thekelleys.org.uk>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH] atmel: unregister_netdev() on error
-Message-ID: <20100710141204.GY19184@bicker>
-References: <1278767508-10164-1-git-send-email-segooon@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1278767508-10164-1-git-send-email-segooon@gmail.com>
+	Tue, 13 Jul 2010 15:03:41 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 235B3403DA
+	for <linux-wireless@vger.kernel.org>; Tue, 13 Jul 2010 15:07:43 -0400 (EDT)
+Subject: Compat-wireless release for 2010-07-13 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100713190338.3C49D404F0@repository3.orbit-lab.org>
+Date: Tue, 13 Jul 2010 15:03:38 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 10, 2010 at 05:11:47PM +0400, Kulikov Vasiliy wrote:
-> We must unregister registered device if probe_atmel_card() fails.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   5819544..122c2ee  history    -> origin/history
+ + dfab7fb...7e28ebb master     -> origin/master  (forced update)
+   589643b..1c5474a  stable     -> origin/stable
+ * [new tag]         next-20100713 -> next-20100713
+ * [new tag]         v2.6.35-rc5 -> v2.6.35-rc5
 
-I think you hit send accidentally on this one?
+compat-wireless code metrics
 
->  	if (!probe_atmel_card(dev)) {
->  		unregister_netdev(dev);
-		^^^^^^^^^^^^^^^^^^^^^^^
+    495975 - Total upstream lines of code being pulled
+      1419 - backport code changes
+      1186 - backport code additions
+       233 - backport code deletions
+      5766 - backport from compat module
+      7185 - total backport code
+    1.4487 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2456 - % of crap code
 
-> -		goto err_out_res;
-> +		goto err_out_unreg;
->  	}
->  
->  	netif_carrier_off(dev);
-> @@ -1640,6 +1640,9 @@ struct net_device *init_atmel_card(unsigned short irq, unsigned long port,
->  
->  	return dev;
->  
-> +err_out_unreg:
-> +	unregister_netdev(dev);
-	^^^^^^^^^^^^^^^^^^^^^^
-> +
-
-What the pants?  :P
-
-regards,
-dan carpenter
-
+Base tree: linux-next.git
+Base tree version: next-20100713
+compat-wireless release: compat-wireless-2010-07-12
