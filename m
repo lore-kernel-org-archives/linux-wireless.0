@@ -1,45 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47408 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51358 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753670Ab0GUNpP (ORCPT
+	with ESMTP id S1754039Ab0GMSpU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jul 2010 09:45:15 -0400
-Date: Wed, 21 Jul 2010 09:33:20 -0400
+	Tue, 13 Jul 2010 14:45:20 -0400
+Date: Tue, 13 Jul 2010 14:38:52 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Pauli Nieminen <suokkos@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtl8180: improve signal reporting for rtl8185 hardware
-Message-ID: <20100721133320.GB2355@tuxdriver.com>
-References: <AANLkTiknLRzt2bdhcin5WRzwPXSWqEs8dIUe5imlN0I9@mail.gmail.com>
- <1279572443-14361-1-git-send-email-linville@tuxdriver.com>
- <AANLkTino_4FKtMWZU7_lKGzPUXNOtfrmlw_rmmr836eA@mail.gmail.com>
+To: Alejandro Riveira =?iso-8859-1?Q?Fern=E1ndez?=
+	<ariveira@gmail.com>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>,
+	Martin Steigerwald <Martin@lichtvoll.de>,
+	linux-kernel@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rt2x00: slow wifi with correct basic rate bitmap (was Re:
+ stable? quality assurance?)
+Message-ID: <20100713183851.GD3835@tuxdriver.com>
+References: <201007110918.42120.Martin@lichtvoll.de>
+ <AANLkTimCwi2uJqqPaq3U30f3rvdDizu1BnaaXgvNeC9k@mail.gmail.com>
+ <201007111651.42963.Martin@lichtvoll.de>
+ <20100713131112.26a3da54@varda>
+ <4C3C6106.3000909@s5r6.in-berlin.de>
+ <20100713153530.GC3835@tuxdriver.com>
+ <20100713201927.78674c4a@varda>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <AANLkTino_4FKtMWZU7_lKGzPUXNOtfrmlw_rmmr836eA@mail.gmail.com>
+In-Reply-To: <20100713201927.78674c4a@varda>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 21, 2010 at 08:08:41AM +0300, Pauli Nieminen wrote:
-> On Mon, Jul 19, 2010 at 11:47 PM, John W. Linville
-> <linville@tuxdriver.com> wrote:
-> > The existing code seemed to be somewhat based on the datasheet, but
-> > varied substantially from the vendor-provided driver.  This mirrors the
-> > handling of the rtl8185 case from that driver, but still neglects the
-> > specifics for the rtl8180 hardware.  Those details are a bit muddled...
-> >
-> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> > ---
-> >  drivers/net/wireless/rtl818x/rtl8180_dev.c |   11 ++++++++---
-> >  1 files changed, 8 insertions(+), 3 deletions(-)
+On Tue, Jul 13, 2010 at 08:19:27PM +0200, Alejandro Riveira Fernández wrote:
+> El Tue, 13 Jul 2010 11:35:31 -0400
+> "John W. Linville" <linville@tuxdriver.com> escribió:
+> 
+> 
+> > 
+> > The patch (7e0986c1) corrects an obvious error.  Reverting it might
+> > improve your (i.e. Alejandro) performance, but it seems likely to
+> > cause connectivity problems for others.
+> > 
+> > The fact that reverting 7e098c1 helps you suggests that rt2500usb
+>   
+>   my card is pci so it would be rt2500pci
+  
+Sorry, typo...
 
-> I tested this version of patch. Patch didn't apply cleanly for some
-> reason even tough when I mnauly typed it diff looks same.
+> > isn't using the basic_rates map properly.  But after reviewing the
+> > code and the data I have, I can't see what would be causing that.
+> > It is at least possible that your AP is sending bad rate information.
+> > Have you tried this device with other APs?
+>  
+>  No; this is a desktop pc that connects to my home router/AP. A new wifi
+>  card is cheaper than a new AP ...
 
-Please try the v2 version of the patch.  Some "back of the envelope"
-math suggests that the v2 version of the patch will give numbers more
-to your liking.
+Perhaps you could capture some beacons from that AP?
 
-John
 -- 
 John W. Linville		Someday the world will need a hero, and you
 linville@tuxdriver.com			might be all we have.  Be ready.
