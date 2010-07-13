@@ -1,65 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:52160 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752489Ab0G1Akw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 20:40:52 -0400
-Message-ID: <4C4F7C91.9000300@openwrt.org>
-Date: Wed, 28 Jul 2010 02:40:49 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] mac80211: inform drivers about the off-channel status on
- channel changes
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:50674 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751373Ab0GMSTs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Jul 2010 14:19:48 -0400
+Date: Tue, 13 Jul 2010 20:19:27 +0200
+From: Alejandro Riveira =?UTF-8?B?RmVybsOhbmRleg==?=
+	<ariveira@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>,
+	Martin Steigerwald <Martin@lichtvoll.de>,
+	linux-kernel@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rt2x00: slow wifi with correct basic rate bitmap (was Re:
+ stable? quality assurance?)
+Message-ID: <20100713201927.78674c4a@varda>
+In-Reply-To: <20100713153530.GC3835@tuxdriver.com>
+References: <201007110918.42120.Martin@lichtvoll.de>
+	<AANLkTimCwi2uJqqPaq3U30f3rvdDizu1BnaaXgvNeC9k@mail.gmail.com>
+	<201007111651.42963.Martin@lichtvoll.de>
+	<20100713131112.26a3da54@varda>
+	<4C3C6106.3000909@s5r6.in-berlin.de>
+	<20100713153530.GC3835@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For some drivers it can be useful to know whether the channel they're
-supposed to switch to is going to be used for short off-channel work or
-scanning, or whether the hardware is expected to stay on it for a while
-longer. This is important for various kinds of calibration work, which
-takes longer to complete and should keep some persistent state, even if
-the channel temporarily changes.
+El Tue, 13 Jul 2010 11:35:31 -0400
+"John W. Linville" <linville@tuxdriver.com> escribió:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
-I need something like this for properly getting rid of the ath9k sw
-scanning callback and for fixing various calibration bugs.
 
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -625,11 +625,14 @@ struct ieee80211_rx_status {
-  *	may turn the device off as much as possible. Typically, this flag will
-  *	be set when an interface is set UP but not associated or scanning, but
-  *	it can also be unset in that case when monitor interfaces are active.
-+ * @IEEE80211_CONF_OFFCHANNEL: The device is currently not on its main
-+ *	operating channel.
-  */
- enum ieee80211_conf_flags {
- 	IEEE80211_CONF_MONITOR		= (1<<0),
- 	IEEE80211_CONF_PS		= (1<<1),
- 	IEEE80211_CONF_IDLE		= (1<<2),
-+	IEEE80211_CONF_OFFCHANNEL	= (1<<3),
- };
+> 
+> The patch (7e0986c1) corrects an obvious error.  Reverting it might
+> improve your (i.e. Alejandro) performance, but it seems likely to
+> cause connectivity problems for others.
+> 
+> The fact that reverting 7e098c1 helps you suggests that rt2500usb
+  
+  my card is pci so it would be rt2500pci
+  
+> isn't using the basic_rates map properly.  But after reviewing the
+> code and the data I have, I can't see what would be causing that.
+> It is at least possible that your AP is sending bad rate information.
+> Have you tried this device with other APs?
  
- 
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -111,12 +111,15 @@ int ieee80211_hw_config(struct ieee80211
- 	if (scan_chan) {
- 		chan = scan_chan;
- 		channel_type = NL80211_CHAN_NO_HT;
-+		local->hw.conf.flags |= IEEE80211_CONF_OFFCHANNEL;
- 	} else if (local->tmp_channel) {
- 		chan = scan_chan = local->tmp_channel;
- 		channel_type = local->tmp_channel_type;
-+		local->hw.conf.flags |= IEEE80211_CONF_OFFCHANNEL;
- 	} else {
- 		chan = local->oper_channel;
- 		channel_type = local->_oper_channel_type;
-+		local->hw.conf.flags &= ~IEEE80211_CONF_OFFCHANNEL;
- 	}
- 
- 	if (chan != local->hw.conf.channel ||
+ No; this is a desktop pc that connects to my home router/AP. A new wifi
+ card is cheaper than a new AP ...
+
+
+> 
+> John
