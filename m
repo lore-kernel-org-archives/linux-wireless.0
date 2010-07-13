@@ -1,74 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:50611 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750870Ab0GITXc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jul 2010 15:23:32 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 4/4] iwlagn: fix the bit mask of a FH register in stop Tx DMA flow
-Date: Fri,  9 Jul 2010 12:24:40 -0700
-Message-Id: <1278703480-13363-5-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1278703480-13363-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1278703480-13363-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:40823 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751275Ab0GMSPD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Jul 2010 14:15:03 -0400
+Date: Tue, 13 Jul 2010 20:06:43 +0200
+From: Alejandro Riveira =?UTF-8?B?RmVybsOhbmRleg==?=
+	<ariveira@gmail.com>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Martin Steigerwald <Martin@lichtvoll.de>,
+	linux-kernel@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rt2x00: slow wifi with correct basic rate bitmap (was Re:
+ stable? quality assurance?)
+Message-ID: <20100713200643.24ce019e@varda>
+In-Reply-To: <4C3C6106.3000909@s5r6.in-berlin.de>
+References: <201007110918.42120.Martin@lichtvoll.de>
+	<AANLkTimCwi2uJqqPaq3U30f3rvdDizu1BnaaXgvNeC9k@mail.gmail.com>
+	<201007111651.42963.Martin@lichtvoll.de>
+	<20100713131112.26a3da54@varda>
+	<4C3C6106.3000909@s5r6.in-berlin.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+El Tue, 13 Jul 2010 14:50:14 +0200
+Stefan Richter <stefanr@s5r6.in-berlin.de> escribió:
 
-When we stop the Tx DMA channels, we poll bits 16:31 in
-FH_TSSR_RX_STATUS_REG. From 4965 and up, only the bits 16:26 are legal.
-Bits 27:31 are not used and are always unset.
-Polling them will lead to fail on timeout but since the timeout is quite
-small, the stall was not felt.
+> Alejandro Riveira Fernández wrote:
+> >  I for one stopped booting into -rc kernels.
+> >  The fact that still have to patch my kernels with a *one* liner
+> >  since 2.6.29 kernel [1] does not give me confidence on the "test
+> >  report/bisect and it will be fixed" promise some have made in this
+> >  threath
+> >  
+> >  [1] https://bugzilla.kernel.org/show_bug.cgi?id=13362
+> 
+> There were promises made in this thread?  Then I must have read a
+> different mailinglist or so.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    7 +++++--
- drivers/net/wireless/iwlwifi/iwl-fh.h     |    7 +------
- 2 files changed, 6 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index 2573234..55a1b31 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -950,9 +950,12 @@ void iwlagn_txq_ctx_stop(struct iwl_priv *priv)
- 	/* Stop each Tx DMA channel, and wait for it to be idle */
- 	for (ch = 0; ch < priv->hw_params.dma_chnl_num; ch++) {
- 		iwl_write_direct32(priv, FH_TCSR_CHNL_TX_CONFIG_REG(ch), 0x0);
--		iwl_poll_direct_bit(priv, FH_TSSR_TX_STATUS_REG,
-+		if (iwl_poll_direct_bit(priv, FH_TSSR_TX_STATUS_REG,
- 				    FH_TSSR_TX_STATUS_REG_MSK_CHNL_IDLE(ch),
--				    1000);
-+				    1000))
-+			IWL_ERR(priv, "Failing on timeout while stopping"
-+			    " DMA channel %d [0x%08x]", ch,
-+			    iwl_read_direct32(priv, FH_TSSR_TX_STATUS_REG));
- 	}
- 	spin_unlock_irqrestore(&priv->lock, flags);
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fh.h b/drivers/net/wireless/iwlwifi/iwl-fh.h
-index 113c366..dd896f2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fh.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fh.h
-@@ -398,12 +398,7 @@
-  */
- #define FH_TSSR_TX_ERROR_REG		(FH_TSSR_LOWER_BOUND + 0x018)
+ Ok no promises.
+ Maybe I read to much in to Mr Tso previous mail. My apologies
+ [quote]
+ > So I tend to use -rc3, -rc4, and -rc5 kernels on my laptops, and when
+ > I find bugs, I report them and I help fix them.  If more people did
+ > that, then the 2.6.X.0 releases would be more stable.  But kernel
+ > development is a volunteer effort, so it's up to the volunteers to
+ > test and fix bugs during the rc4, -rc5 and -rc6 time frame. 
  
--#define FH_TSSR_TX_STATUS_REG_BIT_BUFS_EMPTY(_chnl) ((1 << (_chnl)) << 24)
--#define FH_TSSR_TX_STATUS_REG_BIT_NO_PEND_REQ(_chnl) ((1 << (_chnl)) << 16)
--
--#define FH_TSSR_TX_STATUS_REG_MSK_CHNL_IDLE(_chnl) \
--	(FH_TSSR_TX_STATUS_REG_BIT_BUFS_EMPTY(_chnl) | \
--	FH_TSSR_TX_STATUS_REG_BIT_NO_PEND_REQ(_chnl))
-+#define FH_TSSR_TX_STATUS_REG_MSK_CHNL_IDLE(_chnl) ((1 << (_chnl)) << 16)
- 
- /* Tx service channels */
- #define FH_SRVC_CHNL		(9)
--- 
-1.7.0.4
+ [...]
+ > [...]                         Linux may be a very good bargain (look
+ > at how much Oracle has increased its support contracts for Solaris!),
+ > but it's still not a free lunch.  At the end of the day, you get what
+ > you put into it.
+
+  I tested the kernels i reported the bugs and helped (to the best of my
+  knowledge; I'm not a programmer) 
+  I got no result.
 
