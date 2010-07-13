@@ -1,40 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:2081 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932940Ab0GUDlG (ORCPT
+Received: from static.88-198-202-190.clients.your-server.de ([88.198.202.190]:42751
+	"EHLO kleinhenz.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752227Ab0GMIIE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jul 2010 23:41:06 -0400
-Date: Tue, 20 Jul 2010 23:41:50 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	johannes@sipsolutions.net
-Subject: Re: [PATCH/RFC 3/3] ath5k: trace resets
-Message-ID: <20100721034150.GA16632@hash.localnet>
-References: <1279395336-856-1-git-send-email-me@bobcopeland.com> <201007201420.49305.br1@einfach.org> <20100720145200.GB7049@hash.localnet> <201007211004.59372.br1@einfach.org>
+	Tue, 13 Jul 2010 04:08:04 -0400
+Date: Tue, 13 Jul 2010 09:37:51 +0200
+From: Simon Richter <sjr@debian.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ben Hutchings <ben@decadent.org.uk>, Michael Buesch <mb@bu3sch.de>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless@vger.kernel.org, 588196@bugs.debian.org
+Subject: Re: Bug#588196: b43: does not join multicast groups
+Message-ID: <20100713073751.GB3089@richter>
+References: <20100706021937.11147.78230.reportbug@debian.hogyros.de>
+ <1278887148.6139.91.camel@localhost>
+ <4C3A4C6E.6060801@lwfinger.net>
+ <20100713051430.GA2625@honey.hogyros.de>
+ <4C3BFB87.5030907@lwfinger.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201007211004.59372.br1@einfach.org>
+In-Reply-To: <4C3BFB87.5030907@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 21, 2010 at 10:04:59AM +0900, Bruno Randolf wrote:
-> the difference. without tracing you can get 22Mbps, with tracing max 15Mbps 
-> UDP thruput.
+Hi,
 
-If so, and it's not an i-cache effect, then something is wrong with
-the tracing subsystem.  It's supposed to compile to something like
+On Tue, Jul 13, 2010 at 12:37:11AM -0500, Larry Finger wrote:
 
-if (tracing) {
-   trace_callback();
-}
+> >That appears to work, at least I have v6 addresses now.
 
-That is exactly what we have with the debug infrastructure, but
-the debug stuff is theoretically a bit worse since it tests for
-tracing inside the callback.
+> Unlike before, you now have communication.
 
-Oh well, I guess I need to get my hands on one of these boards.
+Well, v4 worked fine before. :)
 
--- 
-Bob Copeland %% www.bobcopeland.com
+I was also having some suspend related issues, I'm going to give it a
+few days now to see whether they also disappear now.
 
+   Simon
