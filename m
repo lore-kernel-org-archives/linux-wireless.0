@@ -1,100 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews05.kpnxchange.com ([213.75.39.8]:4219 "EHLO
-	cpsmtpb-ews05.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965833Ab0GPPqb (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33242 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752526Ab0GNRFj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jul 2010 11:46:31 -0400
-Message-ID: <4C407ED4.6000002@gmail.com>
-Date: Fri, 16 Jul 2010 17:46:28 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ivo Van Doorn <ivdoorn@gmail.com>,
-	Christoph Egger <siccegge@cs.fau.de>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	vamos-dev@i4.informatik.uni-erlangen.de,
-	Luis Correia <luis.f.correia@gmail.com>
-Subject: Re: [PATCH 01/11] Removing dead RT2800PCI_SOC
-References: <cover.1279110894.git.siccegge@cs.fau.de>	<20100714131527.GB2352@tuxdriver.com>	<4C3DCD5C.1080705@openwrt.org>	<201007151041.55112.bzolnier@gmail.com>	<AANLkTilqoYMMKYJT-YYbEzdnytUSYa0EylEiJ4x5xXXH@mail.gmail.com>	<4C4007CD.2070504@gmail.com> <AANLkTik8M0gNipi_rwVJYbmo_3FfdHs-H4H_XDgTcbhI@mail.gmail.com>
-In-Reply-To: <AANLkTik8M0gNipi_rwVJYbmo_3FfdHs-H4H_XDgTcbhI@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 14 Jul 2010 13:05:39 -0400
+Received: from wireless by sipsolutions.net with local (Exim 4.72)
+	(envelope-from <wireless@sipsolutions.net>)
+	id 1OZ5Nm-0006OF-Fi
+	for linux-wireless@vger.kernel.org; Wed, 14 Jul 2010 19:04:30 +0200
+Date: Wed, 14 Jul 2010 19:04:30 +0200
+Message-Id: <E1OZ5Nm-0006OF-Fi@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [ANN] iw: v0.9.20
+Reply-to: linux-wireless@vger.kernel.org
+From: wireless@sipsolutions.net
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/16/10 12:08, Helmut Schaa wrote:
-> On Fri, Jul 16, 2010 at 9:18 AM, Gertjan van Wingerde
-> <gwingerde@gmail.com> wrote:
->>
->> On 07/16/10 08:57, Helmut Schaa wrote:
->>> On Thu, Jul 15, 2010 at 10:41 AM, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com <mailto:bzolnier@gmail.com>> wrote:
->>>
->>>     On Wednesday 14 July 2010 04:44:44 pm Felix Fietkau wrote:
->>>     > On 2010-07-14 3:15 PM, John W. Linville wrote:
->>>     > > On Wed, Jul 14, 2010 at 02:52:14PM +0200, Ivo Van Doorn wrote:
->>>     > >> On Wed, Jul 14, 2010 at 2:46 PM, Luis Correia <luis.f.correia@gmail.com <mailto:luis.f.correia@gmail.com>> wrote:
->>>     > >> > On Wed, Jul 14, 2010 at 13:39, Christoph Egger <siccegge@cs.fau.de <mailto:siccegge@cs.fau.de>> wrote:
->>>     > >> >> While RT2800PCI_SOC exists in Kconfig, it depends on either
->>>     > >> >> RALINK_RT288X or RALINK_RT305X which are both not available in Kconfig
->>>     > >> >> so all Code depending on that can't ever be selected and, if there's
->>>     > >> >> no plan to add these options, should be cleaned up
->>>     > >> >>
->>>     > >> >> Signed-off-by: Christoph Egger <siccegge@cs.fau.de <mailto:siccegge@cs.fau.de>>
->>>     > >> >
->>>     > >> > NAK,
->>>     > >> >
->>>     > >> > this is not dead code, it is needed for the Ralink System-on-Chip
->>>     > >> > Platform devices.
->>>     > >> >
->>>     > >> > While I can't fix Kconfig errors and the current KConfig file may be
->>>     > >> > wrong, this code cannot and will not be deleted.
->>>     > >>
->>>     > >> When the config option was introduced, the config options RALINK_RT288X and
->>>     > >> RALINK_RT305X were supposed to be merged as well soon after by somebody (Felix?)
->>>     > >>
->>>     > >> But since testing is done on SoC boards by Helmut and Felix, I assume the code
->>>     > >> isn't dead but actually in use.
->>>     > >
->>>     > > Perhaps Helmut and Felix can send us the missing code?
->>>     > The missing code is a MIPS platform port, which is currently being
->>>     > maintained in OpenWrt, but is not ready for upstream submission yet.
->>>     > I'm not working on this code at the moment, but I think it will be
->>>     > submitted once it's ready.
->>>
->>>     People are using automatic scripts to catch unused config options nowadays
->>>     so the issue is quite likely to come back again sooner or later..
->>>
->>>     Would it be possible to improve situation somehow till the missing parts
->>>     get merged?  Maybe by adding a tiny comment documenting RT2800PCI_SOC
->>>     situation to Kconfig (if the config option itself really cannot be removed)
->>>     until all code is ready etc.?
->>>
->>>
->>> Or we could just remove RT2800PCI_SOC completely and build the soc specific
->>> parts always as part of rt2800pci. I mean it's not much code, just the platform
->>> driver stuff and the eeprom access.
->>>
->>
->> I'm not sure if that is feasible. Sure, we can reduce the usage of the variable by
->> unconditionally compiling in the generic SOC code, but we should not unconditionally
->> register the SOC platform device, which is currently also under the scope of this
->> Kconfig variable.
-> 
-> Ehm, no, the platform device is not registered in rt2800pci at all,
-> it's just the platform
-> driver that gets registered there. The platform device will be
-> registered in the according
-> board init code (that only resides in openwrt at the moment).
-> 
 
-OK. Didn't know that. Sounds good then.
+A new release of iw (v0.9.20) is available at:
 
-However, I've tried this in my local tree, and now compilation fails on the x86 platform
-due to a missing KSEG1ADDR macro. How do you suggest to handle the potentially missing
-macro?
+http://wireless.kernel.org/download/iw/iw-0.9.20.tar.bz2
 
----
-Gertjan.
+SHA1 sum: 75baf7d5fda2fb4e82c8c979caccc489d0170e45
+
+Here is the short log of the changes included in this 
+release:
+
+Bruno Randolf (2):
+      iw: fix makefile for cqm
+      iw: add channel command name
+
+Christian Lamparter (1):
+      iw: fix ampdu spacing & max amsdu length reporting
+
+Johannes Berg (19):
+      update nl80211.h
+      print unknown commands in supported list with number
+      add off-channel command
+      fix scan show_both_ie_sets
+      update nl80211.h
+      make commands array easier to handle
+      update nl80211.h
+      display unknown WPS TLVs
+      print max scan IE length
+      add hex parser util
+      allow adding IEs to scan
+      sync nl80211.h from wireless-testing
+      fix number parsing bugs
+      update nl80211.h from wireless-testing
+      allow "link" command to print something for ibss
+      split out multicast group adding
+      improve connect vs. notification race behaviour
+      update nl80211.h
+      version 0.9.20
+
+Jouni Malinen (2):
+      iw: Add support for showing Beacon IEs and TIM IE
+      iw: Parse some common WPS attributes
+
+Juuso Oikarinen (1):
+      iw: Add support for connection quality monitor configuation
+
+Kalle Valo (1):
+      iw: add set/get power_save commands
+
+Luciano Coelho (1):
+      iw: change install command to make it compatible with ancient coreutils
+
+Luis R. Rodriguez (2):
+      iw: add country IE parsing
+      iw: fix typo on LDPC capability
+
+Lukáš Turek (1):
+      iw: Add support for NL80211_ATTR_WIPHY_COVERAGE_CLASS
+
+Teemu Paasikivi (1):
+      iw: Configure basic rates when joining ibss network
+
