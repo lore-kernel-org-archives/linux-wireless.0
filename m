@@ -1,39 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:52111 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753988Ab0GITCc (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47040 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753947Ab0GNOpM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jul 2010 15:02:32 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id B3EA5403DA
-	for <linux-wireless@vger.kernel.org>; Fri,  9 Jul 2010 15:06:06 -0400 (EDT)
-Subject: Compat-wireless release for 2010-07-09 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20100709190222.115F242E2D@repository3.orbit-lab.org>
-Date: Fri,  9 Jul 2010 15:02:21 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Wed, 14 Jul 2010 10:45:12 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] iwlwifi: convert new uses of __attribute__ ((packed)) to __packed
+Date: Wed, 14 Jul 2010 10:37:32 -0400
+Message-Id: <1279118252-10258-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-fatal: Unable to look up git.kernel.org (port 9418) (Name or service not known)
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-compat-wireless code metrics
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index 8d2db9d..f1c0e68 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -1245,7 +1245,7 @@ struct iwl_txfifo_flush_cmd {
+ 	__le32 fifo_control;
+ 	__le16 flush_control;
+ 	__le16 reserved;
+-} __attribute__ ((packed));
++} __packed;
+ 
+ /*
+  * REPLY_WEP_KEY = 0x20
+@@ -3547,7 +3547,7 @@ struct iwl_sensitivity_cmd {
+ struct iwl_enhance_sensitivity_cmd {
+ 	__le16 control;			/* always use "1" */
+ 	__le16 enhance_table[ENHANCE_HD_TABLE_SIZE];	/* use HD_* as index */
+-} __attribute__ ((packed));
++} __packed;
+ 
+ 
+ /**
+-- 
+1.7.1.1
 
-    494875 - Total upstream lines of code being pulled
-      1419 - backport code changes
-      1186 - backport code additions
-       233 - backport code deletions
-      5766 - backport from compat module
-      7185 - total backport code
-    1.4519 - % of code consists of backport work
-      1218 - Crap changes not yet posted
-      1179 - Crap additions not yet posted
-        39 - Crap deletions not yet posted
-    0.2461 - % of crap code
-
-Base tree: linux-next.git
-Base tree version: next-20100708
-compat-wireless release: compat-wireless-2010-07-08-1-g469f74f
-ssh: Could not resolve hostname wireless.kernel.org: Name or service not known
-rsync: connection unexpectedly closed (0 bytes received so far) [sender]
-rsync error: unexplained error (code 255) at io.c(600) [sender=3.0.6]
