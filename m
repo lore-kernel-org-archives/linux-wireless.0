@@ -1,50 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:33610 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752195Ab0GLRBv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jul 2010 13:01:51 -0400
-Received: by bwz1 with SMTP id 1so2483834bwz.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jul 2010 10:01:49 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] p54: update MAINTAINERS
-Date: Mon, 12 Jul 2010 19:01:41 +0200
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Michael Wu <aluminum.tape@gmail.com>
-References: <1278947189-14833-1-git-send-email-lrodriguez@atheros.com> <4C3B3342.3060801@lwfinger.net> <20100712152650.GE3492@tux>
-In-Reply-To: <20100712152650.GE3492@tux>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201007121901.41717.chunkeey@googlemail.com>
+Received: from mga01.intel.com ([192.55.52.88]:29002 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757051Ab0GNP31 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Jul 2010 11:29:27 -0400
+Subject: Re: commit 062bee448bd539580ef9f64efe50fdfe04eeb103 broke my
+ iwlagn 5100
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Florian Klink <flokli@flokli.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <e5d3a4df03d6582ddc18af249ed3a2f2@imap.flokli.de>
+References: <1279100021.7275.24.camel@flokli-laptop>
+	 <1279101655.3719.12.camel@jlt3.sipsolutions.net>
+	 <e5d3a4df03d6582ddc18af249ed3a2f2@imap.flokli.de>
+Content-Type: text/plain
+Date: Wed, 14 Jul 2010 08:28:48 -0700
+Message-Id: <1279121328.19725.27.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael has been out of the scene for a while now,
-but despite Michael's absence, p54 is still maintained.
+Hi Florian,
 
-Cc: Michael Wu <aluminum.tape@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Luis R. Rodriguez <lrodriguez@atheros.com>
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-diff --git a/MAINTAINERS b/MAINTAINERS
-index a07a49d..ece5563 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -4270,10 +4270,9 @@ F:	include/scsi/osd_*
- F:	fs/exofs/
- 
- P54 WIRELESS DRIVER
--M:	Michael Wu <flamingice@sourmilk.net>
-+M:	Christian Lamparter <chunkeey@googlemail.com>
- L:	linux-wireless@vger.kernel.org
--W:	http://prism54.org
--T:	git git://git.kernel.org/pub/scm/linux/kernel/git/mwu/mac80211-drivers.git
-+W:	http://wireless.kernel.org/en/users/Drivers/p54
- S:	Maintained
- F:	drivers/net/wireless/p54/
- 
+On Wed, 2010-07-14 at 03:06 -0700, Florian Klink wrote:
+> Thanks ;-)
+> 
+> On Wed, 14 Jul 2010 12:00:55 +0200, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > [correct wey-yi's address, remove reinette]
+> > 
+> > On Wed, 2010-07-14 at 11:33 +0200, Florian Klink wrote:
+> >> Hi,
+> >>
+> >> I hope I'm writing to the right addresses, this is my first kernel bug
+> >> report :-)
+> >>
+> >> I regulary build linus' tree from git. One day, my wireless card was
+> >> unable to connect to the access point. dmesg showed something like this:
+> >>
+> >> [  122.290949] wlan0: direct probe to 00:15:0c:xx:xx:xx (try 1)
+> >> [  122.490158] wlan0: direct probe to 00:15:0c:xx:xx:xx (try 2)
+> >> [  122.690057] wlan0: direct probe to 00:15:0c:xx:xx:xx (try 3)
+> >> [  122.890031] wlan0: direct probe to 00:15:0c:xx:xx:xx timed out
+> >>
+> >> At first, I thought is was some link quality problem and tried it next
+> >> to the access point, but it still didn't work.
+> >> I booted another (older) kernel and with this one, the card was able to
+> >> connect without any problems.
+> >>
+> >> I bisected the problem and came to commit
+> >> 062bee448bd539580ef9f64efe50fdfe04eeb103
+> >> iwlwifi: set TX_CMD_FLAG_PROT_REQUIRE_MSK in tx_flag
+> >> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=062bee448bd539580ef9f64efe50fdfe04eeb103
+> >>
+> >> My wireless card is a Intel Corporation Wireless WiFi Link 5100.
+> >>
+> >> Will provide more info if needed.
+> >>
+Could you please load the iwlagn module with module parameter
+debug=0x43fff and forward us the dmesg log
+
+Thanks
+Wey
+> 
+
