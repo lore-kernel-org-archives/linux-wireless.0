@@ -1,64 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:55161 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751178Ab0G2AG5 (ORCPT
+Received: from mail.redfish-solutions.com ([66.232.79.143]:34545 "EHLO
+	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752526Ab0GNTmV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jul 2010 20:06:57 -0400
+	Wed, 14 Jul 2010 15:42:21 -0400
+Message-ID: <4C3E1315.5050607@redfish-solutions.com>
+Date: Wed, 14 Jul 2010 13:42:13 -0600
+From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
 MIME-Version: 1.0
-In-Reply-To: <1280360895.8891.19.camel@maxim-laptop>
-References: <20100726210651.GJ14855@tux> <1280179033.3721.15.camel@maxim-laptop>
-	<20100726212543.GA5424@srcf.ucam.org> <AANLkTi=5_Dc8SumPi7cr8u7=DmnOHgSo6C76w9b0E4Kj@mail.gmail.com>
-	<20100726222113.GA6487@srcf.ucam.org> <AANLkTinq-SxMHTrJM23WaeRMkU-2cySiVrkwCjDRS_o+@mail.gmail.com>
-	<20100726222909.GA6773@srcf.ucam.org> <AANLkTinysGjYS7RKN4X_7T2q+rw_-OWdn-UJYM0poWXu@mail.gmail.com>
-	<20100726223326.GA6904@srcf.ucam.org> <AANLkTinChEx_B9wa-n+a6xDr1vLOBOD3Mhcs=iqcYwen@mail.gmail.com>
-	<20100726225057.GA7268@srcf.ucam.org> <1280223313.3721.83.camel@maxim-laptop>
-	<AANLkTim1sZ5ZoGcrsdCw8dFSzUj4igZOiq7irKsdbfXR@mail.gmail.com>
-	<1280360895.8891.19.camel@maxim-laptop>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 28 Jul 2010 17:06:36 -0700
-Message-ID: <AANLkTikkN4qZefACF+piz-a4sdABd85rYUbjQG295u4L@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH v3] ath5k: disable ASPM
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	David Quan <David.Quan@atheros.com>,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"kernel-team@lists.ubuntu.com" <kernel-team@lists.ubuntu.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	"tim.gardner@canonical.com" <tim.gardner@canonical.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org,
+	mcgrof@infradead.org
+Subject: Re: [PATCH] compat-wireless: fix build of ath5k for CONFIG_PM_SLEEP=n
+References: <1278879791-12646-1-git-send-email-hauke@hauke-m.de> 	<AANLkTimLweydYTbS-O6Q2sX-W0H5z7cWOLUqQphSTO1s@mail.gmail.com> 	<4C3B6AAE.4070204@redfish-solutions.com> <AANLkTilfUKMido8N4vRF4Em7ewtoUAlkrsp1uaKTx6H9@mail.gmail.com> 	<AANLkTilVf_eOMqvYwcz5XrSVFuk3RNLl7SoVOj-6L6Fu@mail.gmail.com> 	<4C3DFDB5.10904@redfish-solutions.com> <AANLkTikzEMY_Ya_QY7XkaNv441YxBcJngEoBYJUYJUA1@mail.gmail.com>
+In-Reply-To: <AANLkTikzEMY_Ya_QY7XkaNv441YxBcJngEoBYJUYJUA1@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 28, 2010 at 4:48 PM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
-> On Tue, 2010-07-27 at 08:57 -0700, Luis R. Rodriguez wrote:
->> On Tue, Jul 27, 2010 at 2:35 AM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
->> > On Mon, 2010-07-26 at 23:50 +0100, Matthew Garrett wrote:
->> >> On Mon, Jul 26, 2010 at 03:43:04PM -0700, Luis R. Rodriguez wrote:
->> >>
->> >> > I see.. thanks Mathew... in that case since L1 works on all devices we
->> >> > could just force enable L1 for all PCIE devices. What do you think?
->> >>
->> >> Works for me.
->> >>
->> >
->> > On the second thought, there is no 'pci_enable_link_state' :-)
->> > I afraid that if I add it, I might not do that right for all cases, thus
->> > do more harm that good...
+On 07/14/2010 12:33 PM, Luis R. Rodriguez wrote:
+> On Wed, Jul 14, 2010 at 11:11 AM, Philip A. Prindeville
+> <philipp_subx@redfish-solutions.com> wrote:
+>> On 07/13/2010 04:44 PM, Luis R. Rodriguez wrote:
+>>> On Tue, Jul 13, 2010 at 2:54 PM, Luis R. Rodriguez
+>>> <lrodriguez@atheros.com> wrote:
+>>>> On Mon, Jul 12, 2010 at 12:19 PM, Philip A. Prindeville
+>>>> <philipp_subx@redfish-solutions.com> wrote:
+>>>>> On 07/12/2010 09:30 AM, Luis R. Rodriguez wrote:
+>>>>>> On Sun, Jul 11, 2010 at 1:23 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>>>>>>> suspend and resume are activated in ath5k if CONFIG_PM_SLEEP is set and
+>>>>>>> not if just CONFIG_PM is set.
+>>>>>>>
+>>>>>>> This should fix the problems reported by Philip Prindeville.
+>>>>>>>
+>>>>>>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>>>>>>
+>>>>>> Thanks! Applied and pushed out, at noon we'll have a new tarball with this.
+>>>>>>
+>>>>>>   Luis
+>>>>>
+>>>>> And...
+>>>>>
+>>>>>
+>>>>>  CC [M]  /home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth/l2cap.o
+>>>>> /home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth/l2cap.c: In function 'l2cap_data_channel':
+>>>>> /home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth/l2cap.c:4352: error: void value not ignored as it ought to be
+>>>>> make[4]: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth/l2cap.o] Error 1
+>>>>> make[3]: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth] Error 2
+>>>>> make[2]: *** [_module_/home/philipp/kernel/build_i586/compat-wireless-2010-07-12] Error 2
+>>>>> make[2]: Leaving directory `/home/philipp/kernel/build_i586/linux-2.6.27.48-astlinux'
+>>>>> make[1]: *** [modules] Error 2
+>>>>> make[1]: Leaving directory `/home/philipp/kernel/build_i586/compat-wireless-2010-07-12'
+>>>>> make: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/wireless/lib80211.ko] Error 2
+>>>>
+>>>> Thanks for reporting this, I am working on it now.
+>>>
+>>> This is now fixed, I'll push out a new tarball shortly.
+>>>
+>>>   Luis
 >>
->> I'm sorry, can you elaborate?
->
-> I mean ASPM code doesn't have a function to undo effects of the
-> blacklist (due to pre 1.1 pcie device).
->
-> Its not that simple to write such function.
+>> That tarball never made it out...  can you please retry?
+> 
+> The cronjob kicks off at noon PST time.
+> 
+>   Luis
 
-Ah good catch... pcie_aspm_sanity_check() will actually be used to
-adjust the device link capability... So even if we do try to insist it
-wouldn't work. I'm happy if we deal with this separately, its a
-reasonable compromise to fix issues with existing devices out there.
+Just picked up the tarball:
 
-  Luis
+/home/philipp/kernel/build_i586/compat-wireless-2010-07-14/drivers/net/wireless/rt2x00/rt2x00pci.c: In function 'rt2x00pci_initialize':
+/home/philipp/kernel/build_i586/compat-wireless-2010-07-14/drivers/net/wireless/rt2x00/rt2x00pci.c:156: error: implicit declaration of function 'request_threaded_irq'
+make[5]: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-07-14/drivers/net/wireless/rt2x00/rt2x00pci.o] Error 1
+make[4]: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-07-14/drivers/net/wireless/rt2x00] Error 2
+make[4]: *** Waiting for unfinished jobs....
+
+
+I'm thinking that it might be good to have a variety of nightly builds to detect damage.  Do you all have infrastructure for that?
+
+This is building against 2.6.27.48
+
+
