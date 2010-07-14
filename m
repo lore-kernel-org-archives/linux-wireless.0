@@ -1,53 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:33152 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751361Ab0G0RsV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 13:48:21 -0400
-Received: by bwz1 with SMTP id 1so3496689bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 10:48:20 -0700 (PDT)
+Received: from flokli.de ([78.46.104.9]:38681 "EHLO asterix.flokli.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751399Ab0GNQgV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Jul 2010 12:36:21 -0400
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Subject: Re: commit 062bee448bd539580ef9f64efe50fdfe04eeb103 broke my iwlagn  5100
 MIME-Version: 1.0
-In-Reply-To: <20100727144804.6012.94740.send-patch@dhcp-lab-109.englab.brq.redhat.com>
-References: <20100727144804.6012.94740.send-patch@dhcp-lab-109.englab.brq.redhat.com>
-Date: Tue, 27 Jul 2010 19:48:19 +0200
-Message-ID: <AANLkTimLmQjyypfRWrRs80P7o7Rozzhb4_fcu-KccdSH@mail.gmail.com>
-Subject: Re: [PATCH w-t 1/3] rt2500usb: write keys to proper registers
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+ charset=UTF-8
+Date: Wed, 14 Jul 2010 18:36:20 +0200
+From: Florian Klink <flokli@flokli.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>, <flokli@flokli.de>
+In-Reply-To: <1279121328.19725.27.camel@wwguy-ubuntu>
+References: <1279100021.7275.24.camel@flokli-laptop>
+ <1279101655.3719.12.camel@jlt3.sipsolutions.net>
+ <e5d3a4df03d6582ddc18af249ed3a2f2@imap.flokli.de>
+ <1279121328.19725.27.camel@wwguy-ubuntu>
+Message-ID: <2af581f49d0d7786326de05682b92382@imap.flokli.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 27, 2010 at 4:48 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> Fix rt2500usb hardware encryption broken by commit
-> 96b61bafe22b2f2abcc833d651739edb977f1b1e
-> "rt2x00: Clean up USB vendor request buffer functions"
->
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Hi,
 
-> ---
->  drivers/net/wireless/rt2x00/rt2500usb.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-> index 4b2fef3..7892647 100644
-> --- a/drivers/net/wireless/rt2x00/rt2500usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-> @@ -376,7 +376,7 @@ static int rt2500usb_config_key(struct rt2x00_dev *rt2x00dev,
->                if (key->hw_key_idx > 0 && crypto->cipher != curr_cipher)
->                        return -EOPNOTSUPP;
->
-> -               rt2500usb_register_multiwrite(rt2x00dev, reg,
-> +               rt2500usb_register_multiwrite(rt2x00dev, KEY_ENTRY(key->hw_key_idx),
->                                              crypto->key, sizeof(crypto->key));
->
->                /*
-> --
-> 1.7.1
->
->
+I did a dmesg with 2.6.35-rc5 and debug=0x43fff.
+You can get it here: http://pastebin.com/Q6eCdPZR
+
+Florian
+
+
+On Wed, 14 Jul 2010 08:28:48 -0700, "Guy, Wey-Yi"
+<wey-yi.w.guy@intel.com> wrote:
+> Hi Florian,
+> 
+> On Wed, 2010-07-14 at 03:06 -0700, Florian Klink wrote:
+>> Thanks ;-)
+>>
+>> On Wed, 14 Jul 2010 12:00:55 +0200, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> > [correct wey-yi's address, remove reinette]
+>> >
+>> > On Wed, 2010-07-14 at 11:33 +0200, Florian Klink wrote:
+>> >> Hi,
+>> >>
+>> >> I hope I'm writing to the right addresses, this is my first kernel bug
+>> >> report :-)
+>> >>
+>> >> I regulary build linus' tree from git. One day, my wireless card was
+>> >> unable to connect to the access point. dmesg showed something like this:
+>> >>
+>> >> [  122.290949] wlan0: direct probe to 00:15:0c:xx:xx:xx (try 1)
+>> >> [  122.490158] wlan0: direct probe to 00:15:0c:xx:xx:xx (try 2)
+>> >> [  122.690057] wlan0: direct probe to 00:15:0c:xx:xx:xx (try 3)
+>> >> [  122.890031] wlan0: direct probe to 00:15:0c:xx:xx:xx timed out
+>> >>
+>> >> At first, I thought is was some link quality problem and tried it next
+>> >> to the access point, but it still didn't work.
+>> >> I booted another (older) kernel and with this one, the card was able to
+>> >> connect without any problems.
+>> >>
+>> >> I bisected the problem and came to commit
+>> >> 062bee448bd539580ef9f64efe50fdfe04eeb103
+>> >> iwlwifi: set TX_CMD_FLAG_PROT_REQUIRE_MSK in tx_flag
+>> >> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=062bee448bd539580ef9f64efe50fdfe04eeb103
+>> >>
+>> >> My wireless card is a Intel Corporation Wireless WiFi Link 5100.
+>> >>
+>> >> Will provide more info if needed.
+>> >>
+> Could you please load the iwlagn module with module parameter
+> debug=0x43fff and forward us the dmesg log
+> 
+> Thanks
+> Wey
+>>
+
