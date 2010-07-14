@@ -1,67 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:43166 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752847Ab0GVX43 convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:62184 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752853Ab0GNByB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 19:56:29 -0400
+	Tue, 13 Jul 2010 21:54:01 -0400
+Received: by iwn7 with SMTP id 7so6470939iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jul 2010 18:54:01 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <alpine.LFD.2.00.1007230052320.12562@xanadu.home>
-References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
-	<alpine.LFD.2.00.1007230052320.12562@xanadu.home>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Fri, 23 Jul 2010 02:56:07 +0300
-Message-ID: <AANLkTinQa8-SePaCmqmMMOcTtJOVfKHq0yH4YCRMuqPg@mail.gmail.com>
-Subject: Re: [PATCH v2 00/20] native support for wl1271 on ZOOM
-To: Nicolas Pitre <nico@fluxnic.net>
-Cc: linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux@arm.linux.org.uk,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	akpm@linux-foundation.org, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>
+In-Reply-To: <AANLkTikP6mK-S5kLVrRDiQGX9MAgOt-uyUn0A1Z-593A@mail.gmail.com>
+References: <AANLkTinubmjYu9FyDU0B81F0gHmFPLnDUWYGmZ9Rodss@mail.gmail.com>
+	<201007122114.09571.helmut.schaa@googlemail.com> <AANLkTil9g4VT2tROcjSYu1hGNQ04M5psSzxLfpOGE9DS@mail.gmail.com>
+	<201007132115.16101.helmut.schaa@googlemail.com> <AANLkTikP6mK-S5kLVrRDiQGX9MAgOt-uyUn0A1Z-593A@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 14 Jul 2010 11:53:40 +1000
+Message-ID: <AANLkTilWtwXuJ8ZA_QHDGURnbTOwlJXivBewSvAr4ncj@mail.gmail.com>
+Subject: Re: Rate control & USB
+To: Ivo Van Doorn <ivdoorn@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Felix Fietkau <nbd@openwrt.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 23, 2010 at 1:56 AM, Nicolas Pitre <nico@fluxnic.net> wrote:
-> On Wed, 21 Jul 2010, Ohad Ben-Cohen wrote:
+On Wed, Jul 14, 2010 at 05:51, Ivo Van Doorn <ivdoorn@gmail.com> wrote:
+> On Tue, Jul 13, 2010 at 9:15 PM, Helmut Schaa
+> <helmut.schaa@googlemail.com> wrote:
+>> Am Dienstag 13 Juli 2010 schrieb Ivo Van Doorn:
+>>> On Mon, Jul 12, 2010 at 9:14 PM, Helmut Schaa
+>>> <helmut.schaa@googlemail.com> wrote:
+>>> > Am Montag 12 Juli 2010 schrieb Ivo Van Doorn:
+>>> >> I am currently looking into the old problem of the mac80211 rate
+>>> >> control algorithms
+>>> >> and USB devices. The Ralink USB devices (and as far as I know, the
+>>> >> other USB devices
+>>> >> as well), do not work well with the PID and Minstrel algorithms. This
+>>> >> is caused by the
+>>> >> fact that USB devices do not report the TX status to mac80211.
+>>> >
+>>> > Ivo, do you know by any chance if the USB devices also have a TX_STA_FIFO
+>>> > register like the PCI variants? Does it contain useful data or just crap?
+>>>
+>>> Well I guess he has the registers (we don't have rt2870 specific specsheets,
+>>> but the register definitions from the original Ralink driver to
+>>> suggest the register
+>>> is there). However, even if it contains valid data, how do you want to match
+>>> the contents of that register with the sent frames in the queue?
+>>
+>> We could stuff a unique packet ID into the TXWI and the TX_STA_FIFO should
+>> contain the same ID alongside the TX status after the frame was processed
+>> by the hw.
 >
->> This patch series adds native support for wl1271 on ZOOM.
->>
->> Changes since v1:
->>
->> - introduce a fixed regulator device to control the power of wl1271
->> - allow to propagate private board-specific data to SDIO function drivers
->> - allow SDIO function driver to control the card's power via new API
->> - make it possible to keep the card's power down (without depending
->>   on an explicit SDIO function driver power-down request)
->>
->> Thanks to these changes, we no longer need a separate platform
->> device (carrying e.g. the external irq information of the device),
->> and no longer need to emulate virtual card detect events.
->>
->> The two "board muxing" pathces were already taken by Tony, and
->> are resent here just to make it easier for people to use/test these pathces.
->>
->> The changes to the MMC core really needs careful review; there still
->> might be some pitfalls that haven't been covered. E.g., one thing
->> we plan to look at next is their bahvior together with SDIO Suspend/Resume.
->>
->> Special thanks to Roger Quadros and Nicolas Pitre for their extensive
->> review and helpful suggestions.
->
-> FYI, I do intend to review those patches, but I'll be flying home in a
-> couple hours, and once there I'll be gone on vacation for 2 weeks.  So
-> this review won't happen right away.
+> True, but we would have the same problem in rt2800pci, that the number
+> of bits is too limited to completely identify a queue + queue index correctly.
 
-Thanks, Nicolas.
+We could have a table that matches queue and queue index to the
+packet's ID. So if we're sending packet #47 from queue #1, and it gets
+assigned id #9, then we drop that information into the table - so when
+the hardware tells us the status of packet id #9 we can look up which
+queue it is and send it to the right place.
 
+Of course, this means storing a stack of extra data in system memory,
+as well as having the complexity of looking up the queue data when we
+get the status back, but if we've only got limited bits, then that'll
+set a hard limit on the amount of data and time to retrieve, and we
+may not even need all of it unless the hardware's running at full
+capacity. We could reduce it further if we don't need a status of
+*every* packet - we could potentially get away with only storing data
+for, let's say, every fourth packet or something.
 
->
->
-> Nicolas
->
+As we're likely to see similarly crippled devices elsewhere, maybe we
+could incorporate this type of accounting into mac80211 somewhere.
+
+Of course, this could just be a huge stack of overhead for a problem
+that could be solved much more elegantly, but yeah.
+
+*hands over $0.02*
+
+Thanks,
+
+-- 
+
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+.Plan: http://sites.google.com/site/juliancalaby/
