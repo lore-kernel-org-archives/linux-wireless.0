@@ -1,62 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52709 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751497Ab0GLMrK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jul 2010 08:47:10 -0400
-Subject: [PATCH] cfg80211: ignore spurious deauth
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Stewart <pstew@google.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <AANLkTikWA9YeoTgYWrpE5J7RW3BJGu2LPqP-iBIdAUHs@mail.gmail.com>
-References: <AANLkTilV1t1737ciSPyyETeBEcN_QXsYxgEwpZIIucR2@mail.gmail.com>
-	 <1278091743.15412.17.camel@jlt3.sipsolutions.net>
-	 <AANLkTikfegnc1gAwIUiZKaMeDoUYOFqK8eSc6_3wUggm@mail.gmail.com>
-	 <1278094401.15412.27.camel@jlt3.sipsolutions.net>
-	 <AANLkTikWA9YeoTgYWrpE5J7RW3BJGu2LPqP-iBIdAUHs@mail.gmail.com>
+Received: from flokli.de ([78.46.104.9]:58878 "EHLO asterix.flokli.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753315Ab0GNJmR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Jul 2010 05:42:17 -0400
+Subject: commit 062bee448bd539580ef9f64efe50fdfe04eeb103 broke my iwlagn
+ 5100
+From: Florian Klink <flokli@flokli.de>
+To: linux-wireless@vger.kernel.org
+Cc: ey-yi.w.guy@intel.com, reinette.chatre@intel.com, flokli@flokli.de
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 12 Jul 2010 14:46:43 +0200
-Message-ID: <1278938803.5870.24.camel@jlt3.sipsolutions.net>
+Date: Wed, 14 Jul 2010 11:33:41 +0200
+Message-ID: <1279100021.7275.24.camel@flokli-laptop>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi,
 
-Ever since mac80211/drivers are no longer
-fully in charge of keeping track of the
-auth status, trying to make them do so will
-fail. Instead of warning and reporting the
-deauthentication to userspace, cfg80211 must
-simply ignore it so that spurious
-deauthentications, e.g. before starting
-authentication, aren't seen by userspace as
-actual deauthentications.
+I hope I'm writing to the right addresses, this is my first kernel bug
+report :-)
 
-Cc: stable@kernel.org
-Reported-by: Paul Stewart <pstew@google.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/mlme.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+I regulary build linus' tree from git. One day, my wireless card was
+unable to connect to the access point. dmesg showed something like this:
 
---- wireless-testing.orig/net/wireless/mlme.c	2010-07-12 14:34:22.000000000 +0200
-+++ wireless-testing/net/wireless/mlme.c	2010-07-12 14:42:27.000000000 +0200
-@@ -44,10 +44,10 @@ void cfg80211_send_rx_auth(struct net_de
- 		}
- 	}
- 
--	WARN_ON(!done);
--
--	nl80211_send_rx_auth(rdev, dev, buf, len, GFP_KERNEL);
--	cfg80211_sme_rx_auth(dev, buf, len);
-+	if (done) {
-+		nl80211_send_rx_auth(rdev, dev, buf, len, GFP_KERNEL);
-+		cfg80211_sme_rx_auth(dev, buf, len);
-+	}
- 
- 	wdev_unlock(wdev);
- }
+[  122.290949] wlan0: direct probe to 00:15:0c:xx:xx:xx (try 1)
+[  122.490158] wlan0: direct probe to 00:15:0c:xx:xx:xx (try 2)
+[  122.690057] wlan0: direct probe to 00:15:0c:xx:xx:xx (try 3)
+[  122.890031] wlan0: direct probe to 00:15:0c:xx:xx:xx timed out
 
+At first, I thought is was some link quality problem and tried it next
+to the access point, but it still didn't work.
+I booted another (older) kernel and with this one, the card was able to
+connect without any problems.
+
+I bisected the problem and came to commit
+062bee448bd539580ef9f64efe50fdfe04eeb103
+iwlwifi: set TX_CMD_FLAG_PROT_REQUIRE_MSK in tx_flag
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=062bee448bd539580ef9f64efe50fdfe04eeb103
+
+My wireless card is a Intel Corporation Wireless WiFi Link 5100.
+
+Will provide more info if needed.
+
+Florian
+
+PS: Please CC me, i'm not on linux-wireless.
 
