@@ -1,51 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:55850 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753177Ab0GWTWc convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jul 2010 15:22:32 -0400
+Received: from nbd.name ([88.198.39.176]:44064 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753161Ab0GNOo4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Jul 2010 10:44:56 -0400
+Message-ID: <4C3DCD5C.1080705@openwrt.org>
+Date: Wed, 14 Jul 2010 16:44:44 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <1279907297.24768.1678.camel@Joe-Laptop.home>
-References: <20100722085202.GV17585@bicker> <201007231744.14922.br1@einfach.org>
-	<20100723095252.GA26313@bicker> <1279907297.24768.1678.camel@Joe-Laptop.home>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Fri, 23 Jul 2010 12:21:35 -0700
-Message-ID: <AANLkTi==h70Cgj-SzRShVU1eJ1CGkL93-5XV55Ry6-eD@mail.gmail.com>
-Subject: Re: [patch -next] ath5k: snprintf() returns largish values
-To: Joe Perches <joe@perches.com>
-Cc: Dan Carpenter <error27@gmail.com>, Bruno Randolf <br1@einfach.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
-	kernel-janitors <kernel-janitors@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Ivo Van Doorn <ivdoorn@gmail.com>,
+	Christoph Egger <siccegge@cs.fau.de>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	vamos-dev@i4.informatik.uni-erlangen.de,
+	Luis Correia <luis.f.correia@gmail.com>
+Subject: Re: [PATCH 01/11] Removing dead RT2800PCI_SOC
+References: <cover.1279110894.git.siccegge@cs.fau.de> <29013fb6eab9e95e95d61df894797d2455dfa10c.1279110894.git.siccegge@cs.fau.de> <AANLkTinO32CIe0HBTXjP_bcAz0nMEw6wvcZwcob1fX3r@mail.gmail.com> <AANLkTikCeDys9e1EnE9GdiJtDRcbqW3gzvsmjzvB_yDs@mail.gmail.com> <20100714131527.GB2352@tuxdriver.com>
+In-Reply-To: <20100714131527.GB2352@tuxdriver.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 23, 2010 at 10:48 AM, Joe Perches <joe@perches.com> wrote:
->
-> There are also many repeated uses of snprintf in kernel sources
-> that could similarly be a problem.
->
->        bar += snprintf(foo + bar, ...)
->        bar += snprintf(foo + bar, ...)
-> or
->        foo += snprintf(foo, ...)
->        foo += snprintf(foo, ...)
+On 2010-07-14 3:15 PM, John W. Linville wrote:
+> On Wed, Jul 14, 2010 at 02:52:14PM +0200, Ivo Van Doorn wrote:
+>> On Wed, Jul 14, 2010 at 2:46 PM, Luis Correia <luis.f.correia@gmail.com> wrote:
+>> > On Wed, Jul 14, 2010 at 13:39, Christoph Egger <siccegge@cs.fau.de> wrote:
+>> >> While RT2800PCI_SOC exists in Kconfig, it depends on either
+>> >> RALINK_RT288X or RALINK_RT305X which are both not available in Kconfig
+>> >> so all Code depending on that can't ever be selected and, if there's
+>> >> no plan to add these options, should be cleaned up
+>> >>
+>> >> Signed-off-by: Christoph Egger <siccegge@cs.fau.de>
+>> >
+>> > NAK,
+>> >
+>> > this is not dead code, it is needed for the Ralink System-on-Chip
+>> > Platform devices.
+>> >
+>> > While I can't fix Kconfig errors and the current KConfig file may be
+>> > wrong, this code cannot and will not be deleted.
+>> 
+>> When the config option was introduced, the config options RALINK_RT288X and
+>> RALINK_RT305X were supposed to be merged as well soon after by somebody (Felix?)
+>> 
+>> But since testing is done on SoC boards by Helmut and Felix, I assume the code
+>> isn't dead but actually in use.
+> 
+> Perhaps Helmut and Felix can send us the missing code?
+The missing code is a MIPS platform port, which is currently being
+maintained in OpenWrt, but is not ready for upstream submission yet.
+I'm not working on this code at the moment, but I think it will be
+submitted once it's ready.
 
-As long as the number of bytes is updated correctly, this won't be a
-security problem, although it can cause a (single) warning. The kernel
-vsnprintf does
-
-        if (WARN_ON_ONCE((int) size < 0))
-                return 0;
-
-so if somebody overflows a buffer with multiple snprintf calls, it
-will all be ok as long as the buffer size thing is updated the natural
-way (possibly using pointer arithmetic, eg "end - bar").
-
-                Linus
+- Felix
