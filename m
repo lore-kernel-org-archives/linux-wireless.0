@@ -1,38 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60110 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753627Ab0G2RAM (ORCPT
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:38972 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754121Ab0GNBwd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jul 2010 13:00:12 -0400
-Date: Thu, 29 Jul 2010 12:58:35 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
-Subject: wireless-next-2.6 rebase -- Re: [PATCH 1/3] ath9k: prevent
- calibration during off-channel activity
-Message-ID: <20100729165835.GB2424@tuxdriver.com>
-References: <1280339151-37084-1-git-send-email-nbd@openwrt.org>
- <AANLkTimZ8zTZWDcXwr7Hu2FT=gDPeCiiUFXcBmpYpp7M@mail.gmail.com>
- <4C509C65.4020305@openwrt.org>
- <AANLkTimqsXoynA2CPJ1tFmj6wUetztDUJ3iKCpQHJKCe@mail.gmail.com>
- <4C50AEF4.4060905@openwrt.org>
- <AANLkTin+sPu45teiAiePPWdBp3huffds3v_uzJBtKmLO@mail.gmail.com>
- <AANLkTikxs8LfQDw4juPRZV3DU1_mX2CMC6vYHYu1n5as@mail.gmail.com>
+	Tue, 13 Jul 2010 21:52:33 -0400
+Received: from vs3004.wh2.ocn.ne.jp (125.206.180.167)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0561072352
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Jul 2010 10:52:32 +0900 (JST)
+Subject: [PATCH] ath5k: clean up rxlink handling
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Wed, 14 Jul 2010 10:53:29 +0900
+Message-ID: <20100714015329.10457.31186.stgit@tt-desk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTikxs8LfQDw4juPRZV3DU1_mX2CMC6vYHYu1n5as@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 28, 2010 at 03:48:18PM -0700, Luis R. Rodriguez wrote:
+There were a few places where the sc->rxlink pointer was set to NULL "just in
+case". This helps nothing - quite to the contrary it is problematic since it
+can create self-linked rx descriptors in the middle of the list of receive
+buffers.
 
-> Also without these patches I get 0% packet loss, with the patches
-> applied I get some packet loss.
+Here is an example how this could happen (thanks Bob!):
 
-Based on this report, I'm dropping this series from wireless-next-2.6
-(requiring a rebase) -- FYI...
+cpu 0:                                      cpu 1:
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+ath5k_rx_stop
+                                            ath5k_tasklet_rx
+sc->rxlink = NULL;   /* just in case */
+                                              // following doesn't link used
+                                              // buffer to prev.
+                                              ath5k_rxbuf_setup()
+
+In the case of ath5k_rx_stop() and ath5k_stop_locked() buffers/descriptors are
+not changed so rxlink should not be changed as well.
+
+In ath5k_intr() we seem to  try to work around a hardware bug, as the comment
+(which is copied 1:1 from the HAL) suggests. I don't see how this could help.
+Also the HAL does not set rxlink in this case (So where does this code come
+from? It has been there since the first import of ath5k). Changed to just
+increment a statistics counter.
+
+After this patch rxlink is only set to NULL before we initialize rx descriptors
+and updated when the descriptors are linked together.
+
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ drivers/net/wireless/ath/ath5k/base.c |    7 ++-----
+ drivers/net/wireless/ath/ath5k/base.h |    1 +
+ 2 files changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index b0e1ca9..0d5de25 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1728,8 +1728,6 @@ ath5k_rx_stop(struct ath5k_softc *sc)
+ 	ath5k_hw_stop_rx_dma(ah);	/* disable DMA engine */
+ 
+ 	ath5k_debug_printrxbuffs(sc, ah);
+-
+-	sc->rxlink = NULL;		/* just in case */
+ }
+ 
+ static unsigned int
+@@ -2633,8 +2631,7 @@ ath5k_stop_locked(struct ath5k_softc *sc)
+ 	if (!test_bit(ATH_STAT_INVALID, sc->status)) {
+ 		ath5k_rx_stop(sc);
+ 		ath5k_hw_phy_disable(ah);
+-	} else
+-		sc->rxlink = NULL;
++	}
+ 
+ 	return 0;
+ }
+@@ -2771,7 +2768,7 @@ ath5k_intr(int irq, void *dev_id)
+ 				*     RXE bit is written, but it doesn't work at
+ 				*     least on older hardware revs.
+ 				*/
+-				sc->rxlink = NULL;
++				sc->stats.rxeol_intr++;
+ 			}
+ 			if (status & AR5K_INT_TXURN) {
+ 				/* bump tx trigger level */
+diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
+index 86c90f4..dc1241f 100644
+--- a/drivers/net/wireless/ath/ath5k/base.h
++++ b/drivers/net/wireless/ath/ath5k/base.h
+@@ -137,6 +137,7 @@ struct ath5k_statistics {
+ 
+ 	unsigned int mib_intr;
+ 	unsigned int rxorn_intr;
++	unsigned int rxeol_intr;
+ };
+ 
+ #if CHAN_DEBUG
+
