@@ -1,53 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52054 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750791Ab0G2HsU (ORCPT
+Received: from mail.redfish-solutions.com ([66.232.79.143]:39293 "EHLO
+	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757194Ab0GNSLM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jul 2010 03:48:20 -0400
-Subject: Re: [PATCH v5] cfg80211: Add nl80211 antenna configuration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Bruno Randolf <br1@einfach.org>, linville@tuxdriver.com,
-	nbd@openwrt.org, linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTika8nD5oEXt-nHx7BHzZzCK1i8VQ9b-ubmcMze+@mail.gmail.com>
-References: <20100729035820.5930.29864.stgit@tt-desk>
-	 <AANLkTika8nD5oEXt-nHx7BHzZzCK1i8VQ9b-ubmcMze+@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 29 Jul 2010 09:48:14 +0200
-Message-ID: <1280389694.3823.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 14 Jul 2010 14:11:12 -0400
+Message-ID: <4C3DFDB5.10904@redfish-solutions.com>
+Date: Wed, 14 Jul 2010 12:11:01 -0600
+From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org,
+	mcgrof@infradead.org
+Subject: Re: [PATCH] compat-wireless: fix build of ath5k for CONFIG_PM_SLEEP=n
+References: <1278879791-12646-1-git-send-email-hauke@hauke-m.de> 	<AANLkTimLweydYTbS-O6Q2sX-W0H5z7cWOLUqQphSTO1s@mail.gmail.com> 	<4C3B6AAE.4070204@redfish-solutions.com> <AANLkTilfUKMido8N4vRF4Em7ewtoUAlkrsp1uaKTx6H9@mail.gmail.com> <AANLkTilVf_eOMqvYwcz5XrSVFuk3RNLl7SoVOj-6L6Fu@mail.gmail.com>
+In-Reply-To: <AANLkTilVf_eOMqvYwcz5XrSVFuk3RNLl7SoVOj-6L6Fu@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-07-28 at 23:12 -0700, Luis R. Rodriguez wrote:
-> On Wed, Jul 28, 2010 at 8:58 PM, Bruno Randolf <br1@einfach.org> wrote:
-> > diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-> > index 2c87016..8a88921 100644
-> > --- a/include/linux/nl80211.h
-> > +++ b/include/linux/nl80211.h
-> > @@ -731,6 +731,28 @@ enum nl80211_commands {
-> >  *      This is used in association with @NL80211_ATTR_WIPHY_TX_POWER_SETTING
-> >  *      for non-automatic settings.
-> >  *
-> > + * @NL80211_ATTR_WIPHY_ANTENNA_TX: Bitmap of allowed antennas for transmitting.
-> > + *     This can be used to mask out antennas which are not attached or should
-> > + *     not be used for transmitting. If an antenna is not selected in this
-> > + *     bitmap the hardware is not allowed to transmit on this antenna.
-> > + *
-> > + *     Each bit represents one antenna, starting with antenna 1 at the first
-> > + *     bit. Depending on which antennas are selected in the bitmap, 802.11n
-> > + *     drivers can derive which chainmasks to use (if all antennas belonging to
-> > + *     a particular chain are disabled this chain should be disabled) and if
-> > + *     a chain has diversity antennas wether diversity should be used or not.
-> > + *     HT capabilities (STBC, TX Beamforming, Antenna selection) can be
-> > + *     derived from the available chains after applying the antenna mask.
+On 07/13/2010 04:44 PM, Luis R. Rodriguez wrote:
+> On Tue, Jul 13, 2010 at 2:54 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com> wrote:
+>> On Mon, Jul 12, 2010 at 12:19 PM, Philip A. Prindeville
+>> <philipp_subx@redfish-solutions.com> wrote:
+>>> On 07/12/2010 09:30 AM, Luis R. Rodriguez wrote:
+>>>> On Sun, Jul 11, 2010 at 1:23 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>>>>> suspend and resume are activated in ath5k if CONFIG_PM_SLEEP is set and
+>>>>> not if just CONFIG_PM is set.
+>>>>>
+>>>>> This should fix the problems reported by Philip Prindeville.
+>>>>>
+>>>>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>>>>
+>>>> Thanks! Applied and pushed out, at noon we'll have a new tarball with this.
+>>>>
+>>>>   Luis
+>>>
+>>> And...
+>>>
+>>>
+>>>  CC [M]  /home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth/l2cap.o
+>>> /home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth/l2cap.c: In function 'l2cap_data_channel':
+>>> /home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth/l2cap.c:4352: error: void value not ignored as it ought to be
+>>> make[4]: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth/l2cap.o] Error 1
+>>> make[3]: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth] Error 2
+>>> make[2]: *** [_module_/home/philipp/kernel/build_i586/compat-wireless-2010-07-12] Error 2
+>>> make[2]: Leaving directory `/home/philipp/kernel/build_i586/linux-2.6.27.48-astlinux'
+>>> make[1]: *** [modules] Error 2
+>>> make[1]: Leaving directory `/home/philipp/kernel/build_i586/compat-wireless-2010-07-12'
+>>> make: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/wireless/lib80211.ko] Error 2
+>>
+>> Thanks for reporting this, I am working on it now.
 > 
-> I don't want to do any work myself on drivers for this, can we have
-> cfg80211/mac80211 do this for us?
+> This is now fixed, I'll push out a new tarball shortly.
+> 
+>   Luis
 
-Also, this is a serious issue when you want to support this call -- it
-may not be done while you're associated since you cannot change those
-things properly then.
+That tarball never made it out...  can you please retry?
 
-johannes
+Thanks.
+
 
