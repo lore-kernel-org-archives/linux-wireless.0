@@ -1,48 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:47282 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751762Ab0GZVOz (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:36895 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754095Ab0GNB10 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jul 2010 17:14:55 -0400
-Date: Mon, 26 Jul 2010 22:14:24 +0100
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"kernel-team@lists.ubuntu.com" <kernel-team@lists.ubuntu.com>,
-	"tim.gardner@canonical.com" <tim.gardner@canonical.com>,
-	David Quan <David.Quan@Atheros.com>
-Subject: Re: [ath5k-devel] [PATCH v3] ath5k: disable ASPM
-Message-ID: <20100726211424.GA5197@srcf.ucam.org>
-References: <1276859156.19554.2.camel@maxim-laptop> <AANLkTimdTjedtoeKAp5tcTqefrUB6k373Kx9EacuYFcO@mail.gmail.com> <1276870309.23783.3.camel@maxim-laptop> <1276933774.16697.11.camel@maxim-laptop> <20100619123841.GA31838@hash.localnet> <1276952554.3332.3.camel@maxim-laptop> <1276961564.5173.12.camel@maxim-laptop> <20100726201322.GI14855@tux> <1280177362.3721.7.camel@maxim-laptop> <20100726210651.GJ14855@tux>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100726210651.GJ14855@tux>
+	Tue, 13 Jul 2010 21:27:26 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 2/3] ath9k_htc: implement mac80211 flush op
+Date: Tue, 13 Jul 2010 21:27:24 -0400
+Message-Id: <1279070845-29442-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1279070845-29442-1-git-send-email-lrodriguez@atheros.com>
+References: <1279070845-29442-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 26, 2010 at 02:06:51PM -0700, Luis R. Rodriguez wrote:
+This implements the mac80211 flush callback to let mac80211
+flush the hardware queues when it deems appropriate.
 
-> No, ASPM must be enabled by the Systems Integrator through the BIOS, there are
-> other settings that have to be taken care of like modifying some PCI entrance and
-> exit latency timers, the number of FTS packets we send to exit L0s, amongst
-> other things. If a user selectively enables L1 but the BIOS had it disabled on
-> the device it may not work correctly.
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |   24 ++++++++++++++++++++++++
+ 1 files changed, 24 insertions(+), 0 deletions(-)
 
-That's really the job of the driver. If the ASPM policy is set to 
-powersave, the fadt doesn't indicate that ASPM should be disabled and 
-the bus's _OSC method grants full control then the kernel will enable 
-whatever combination of L states meet the latency constraints. If the 
-hardware has additional constraints then the hardware-specific driver 
-needs to handle them.
-
-We don't rely on the BIOS to set up ASPM states. Nor does Windows.
-
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index e38ca66..fc234a7 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1803,6 +1803,29 @@ static void ath9k_htc_set_coverage_class(struct ieee80211_hw *hw,
+ 	mutex_unlock(&priv->mutex);
+ }
+ 
++static void ath9k_htc_flush(struct ieee80211_hw *hw, bool drop)
++{
++	struct ath9k_htc_priv *priv = hw->priv;
++	u8 cmd_rsp;
++	int ret;
++
++	mutex_lock(&priv->mutex);
++
++	if (priv->op_flags & OP_INVALID)
++		goto err;
++
++	ath9k_htc_ps_wakeup(priv);
++
++	WMI_CMD(WMI_DRAIN_TXQ_ALL_CMDID);
++	if (drop)
++		skb_queue_purge(&priv->tx_queue);
++
++	ath9k_htc_ps_restore(priv);
++
++err:
++	mutex_unlock(&priv->mutex);
++}
++
+ struct ieee80211_ops ath9k_htc_ops = {
+ 	.tx                 = ath9k_htc_tx,
+ 	.start              = ath9k_htc_start,
+@@ -1825,4 +1848,5 @@ struct ieee80211_ops ath9k_htc_ops = {
+ 	.set_rts_threshold  = ath9k_htc_set_rts_threshold,
+ 	.rfkill_poll        = ath9k_htc_rfkill_poll_state,
+ 	.set_coverage_class = ath9k_htc_set_coverage_class,
++	.flush		    = ath9k_htc_flush,
+ };
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+1.7.0.4
+
