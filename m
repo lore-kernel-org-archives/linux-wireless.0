@@ -1,76 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35470 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753034Ab0GURaM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jul 2010 13:30:12 -0400
-Date: Wed, 21 Jul 2010 13:19:26 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Pauli Nieminen <suokkos@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtl8180: improve signal reporting for rtl8185 hardware
-Message-ID: <20100721171926.GE2355@tuxdriver.com>
-References: <AANLkTiknLRzt2bdhcin5WRzwPXSWqEs8dIUe5imlN0I9@mail.gmail.com>
- <1279572443-14361-1-git-send-email-linville@tuxdriver.com>
- <AANLkTino_4FKtMWZU7_lKGzPUXNOtfrmlw_rmmr836eA@mail.gmail.com>
- <20100721133320.GB2355@tuxdriver.com>
- <AANLkTint5uT6PQ8pmEIVSoVYOSCZE5k-TGB1knwHtupw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <AANLkTint5uT6PQ8pmEIVSoVYOSCZE5k-TGB1knwHtupw@mail.gmail.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:41396 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757883Ab0GNUuI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Jul 2010 16:50:08 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	philipp_subx@redfish-solutions.com,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] compat-wireless: backport threaded-irq for rt2x00
+Date: Wed, 14 Jul 2010 22:49:58 +0200
+Message-Id: <1279140598-6509-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 21, 2010 at 08:07:56PM +0300, Pauli Nieminen wrote:
-> On Wed, Jul 21, 2010 at 4:33 PM, John W. Linville
-> <linville@tuxdriver.com> wrote:
-> > On Wed, Jul 21, 2010 at 08:08:41AM +0300, Pauli Nieminen wrote:
-> >> On Mon, Jul 19, 2010 at 11:47 PM, John W. Linville
-> >> <linville@tuxdriver.com> wrote:
-> >> > The existing code seemed to be somewhat based on the datasheet, but
-> >> > varied substantially from the vendor-provided driver.  This mirrors the
-> >> > handling of the rtl8185 case from that driver, but still neglects the
-> >> > specifics for the rtl8180 hardware.  Those details are a bit muddled...
-> >> >
-> >> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> >> > ---
-> >> >  drivers/net/wireless/rtl818x/rtl8180_dev.c |   11 ++++++++---
-> >> >  1 files changed, 8 insertions(+), 3 deletions(-)
-> >
-> >> I tested this version of patch. Patch didn't apply cleanly for some
-> >> reason even tough when I mnauly typed it diff looks same.
-> >
-> > Please try the v2 version of the patch.  Some "back of the envelope"
-> > math suggests that the v2 version of the patch will give numbers more
-> > to your liking.
-> >
-> > John
-> > --
-> > John W. Linville                Someday the world will need a hero, and you
-> > linville@tuxdriver.com                  might be all we have.  Be ready.
-> >
-> 
-> But version 2 doesn't change the fact that driver is going to report
-> same signal strength even tough I know that only one wifi should have
-> 100 % strength and others less than 50 %. There is only one router in
-> same room with me and all others routers are a lot more father away.
-> So driver is either reading wrong bits from hardware or my hardware is
-> broken.
- 
-Did you try the patch?  I suspect not.
+This backport was done like for the b43 driver. This was just build tested.
 
-I can't really decipher what problem you are reporting here with "100 %
-strength and others less than 50 %".  In any case, if you have RTL8185
-hardware then this patch changes the signal calculation to match what
-the Realtek-provided vendor driver does (which doesn't seem to match
-their datasheet, FWIW).  If you have a better source of information
-then I am happy to receive it.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/09-threaded-irq.patch |   55 +++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 55 insertions(+), 0 deletions(-)
 
-If you have RTL8180 (i.e. not RTL8185) hardware then neither version of
-the patch is likely to help you much (beyond avoiding the warning you
-originally reported).  I hope to improve that as well in the future.
-
-John
+diff --git a/patches/09-threaded-irq.patch b/patches/09-threaded-irq.patch
+index c1a33e1..cdc506d 100644
+--- a/patches/09-threaded-irq.patch
++++ b/patches/09-threaded-irq.patch
+@@ -61,3 +61,58 @@ thread in process context as well.
+  };
+  
+  /* Data structure for the WLAN parts (802.11 cores) of the b43 chip. */
++--- a/drivers/net/wireless/rt2x00/rt2x00.h
+++++ b/drivers/net/wireless/rt2x00/rt2x00.h
++@@ -882,6 +882,9 @@ struct rt2x00_dev {
++ 	 * and interrupt thread routine.
++ 	 */
++ 	u32 irqvalue[2];
+++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
+++	struct compat_threaded_irq irq_compat;
+++#endif
++ };
++ 
++ /*
++--- a/drivers/net/wireless/rt2x00/rt2x00pci.c
+++++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
++@@ -153,10 +153,18 @@ int rt2x00pci_initialize(struct rt2x00_d
++ 	/*
++ 	 * Register interrupt handler.
++ 	 */
+++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
+++	status = compat_request_threaded_irq(&rt2x00dev->irq_compat,
+++					  rt2x00dev->irq,
+++					  rt2x00dev->ops->lib->irq_handler,
+++					  rt2x00dev->ops->lib->irq_handler_thread,
+++					  IRQF_SHARED, rt2x00dev->name, rt2x00dev);
+++#else
++ 	status = request_threaded_irq(rt2x00dev->irq,
++ 				      rt2x00dev->ops->lib->irq_handler,
++ 				      rt2x00dev->ops->lib->irq_handler_thread,
++ 				      IRQF_SHARED, rt2x00dev->name, rt2x00dev);
+++#endif
++ 	if (status) {
++ 		ERROR(rt2x00dev, "IRQ %d allocation failed (error %d).\n",
++ 		      rt2x00dev->irq, status);
++@@ -180,7 +188,11 @@ void rt2x00pci_uninitialize(struct rt2x0
++ 	/*
++ 	 * Free irq line.
++ 	 */
+++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
+++	compat_free_threaded_irq(&rt2x00dev->irq_compat);
+++#else
++ 	free_irq(rt2x00dev->irq, rt2x00dev);
+++#endif
++ 
++ 	/*
++ 	 * Free DMA
++@@ -195,6 +207,9 @@ EXPORT_SYMBOL_GPL(rt2x00pci_uninitialize
++  */
++ static void rt2x00pci_free_reg(struct rt2x00_dev *rt2x00dev)
++ {
+++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
+++	compat_destroy_threaded_irq(&rt2x00dev->irq_compat);
+++#endif
++ 	kfree(rt2x00dev->rf);
++ 	rt2x00dev->rf = NULL;
++ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.0.4
+
