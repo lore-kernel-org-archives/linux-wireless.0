@@ -1,50 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:18328 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751915Ab0GVHjK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 03:39:10 -0400
-Subject: Re: [PATCH] wl1251: fix sparse-generated warnings
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: "ext John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kalle.valo@iki.fi>
-In-Reply-To: <1279780458.2322.25.camel@powerslave>
-References: <1279729917-4451-1-git-send-email-linville@tuxdriver.com>
-	 <1279780458.2322.25.camel@powerslave>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 22 Jul 2010 10:38:47 +0300
-Message-ID: <1279784327.2322.33.camel@powerslave>
+Received: from mga11.intel.com ([192.55.52.93]:31720 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751565Ab0GNR2T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Jul 2010 13:28:19 -0400
+Subject: Re: commit 062bee448bd539580ef9f64efe50fdfe04eeb103 broke my
+ iwlagn 5100
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Florian Klink <flokli@flokli.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <2af581f49d0d7786326de05682b92382@imap.flokli.de>
+References: <1279100021.7275.24.camel@flokli-laptop>
+	 <1279101655.3719.12.camel@jlt3.sipsolutions.net>
+	 <e5d3a4df03d6582ddc18af249ed3a2f2@imap.flokli.de>
+	 <1279121328.19725.27.camel@wwguy-ubuntu>
+	 <2af581f49d0d7786326de05682b92382@imap.flokli.de>
+Content-Type: text/plain
+Date: Wed, 14 Jul 2010 10:27:41 -0700
+Message-Id: <1279128461.19725.34.camel@wwguy-ubuntu>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-07-22 at 08:34 +0200, Coelho Luciano (Nokia-MS/Helsinki)
-wrote:
-> > @@ -191,11 +191,13 @@ static int wl1251_tx_send_packet(struct wl1251 *wl, struct sk_buff *skb,
-> >  	if (control->control.hw_key &&
-> >  	    control->control.hw_key->alg == ALG_TKIP) {
-> >  		int hdrlen;
-> > -		u16 fc;
-> > +		__le16 fc;
-> > +		u16 length;
-> >  		u8 *pos;
-> >  
-> > -		fc = *(u16 *)(skb->data + sizeof(*tx_hdr));
-> > -		tx_hdr->length += WL1251_TKIP_IV_SPACE;
-> > +		fc = *(__le16 *)(skb->data + sizeof(*tx_hdr));
+Johannes,
+
+On Wed, 2010-07-14 at 09:36 -0700, Florian Klink wrote:
+> Hi,
 > 
-> Is this going to work? sizeof(*tx_hdr), and the operation, will be in
-> the cpu's endianess, right? Wouldn't the following be the right thing to
-> do then?
+> I did a dmesg with 2.6.35-rc5 and debug=0x43fff.
+> You can get it here: http://pastebin.com/Q6eCdPZR
+
 > 
-> fc = cpu_to_le16(le16_to_cpu(skb->data) + sizeof(*tx_hdr));
+> 
+based on the log sent by Florian, I did not see bss_info_change with
+current BSSID from mac80211. any thought?
 
-Ugh, as Johannes pointed out, what I said here is completely non-sense.
-Please ignore this before-my-morning-coffee lapse. ;)
+I am expected to see something like this,
 
+[165796.572969] ieee80211 phy3: U iwl_bss_info_changed changes =
+0xFD                                                                    
+[165796.572972] ieee80211 phy3: U iwl_bss_info_changed BSSID
+00:25:9c:d0:9f:e1                                                           
+[165796.572976] ieee80211 phy3: U iwl_bss_info_changed ERP_PREAMBLE 1 
 
--- 
-Cheers,
-Luca.
+Regards
+Wey
 
