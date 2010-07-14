@@ -1,33 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:64230 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756917Ab0G2TD1 (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:56134 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752782Ab0GNVlY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jul 2010 15:03:27 -0400
-Received: by wwj40 with SMTP id 40so697949wwj.1
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Jul 2010 12:03:24 -0700 (PDT)
-Message-ID: <4C51D096.7090607@lwfinger.net>
-Date: Thu, 29 Jul 2010 14:03:50 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 14 Jul 2010 17:41:24 -0400
+Received: by pwi5 with SMTP id 5so28428pwi.19
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Jul 2010 14:41:23 -0700 (PDT)
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Kirill Zut <kirill.zut@promwad.com>,
-	linux-wireless@vger.kernel.org,
-	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Subject: Re: [PATCH 2.6.34] rtl8187: ad-hoc mode support
-References: <201007291835.46159.kirill.zut@promwad.com> <20100729180426.GC2424@tuxdriver.com>
-In-Reply-To: <20100729180426.GC2424@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1279140598-6509-1-git-send-email-hauke@hauke-m.de>
+References: <1279140598-6509-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 14 Jul 2010 14:41:00 -0700
+Message-ID: <AANLkTil55aehvC7LfXjWyklj56c3UPChHM1PWBh1sFjJ@mail.gmail.com>
+Subject: Re: [PATCH] compat-wireless: backport threaded-irq for rt2x00
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	philipp_subx@redfish-solutions.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/29/2010 01:04 PM, John W. Linville wrote:
-> Don't you need something to make it beacon?
+On Wed, Jul 14, 2010 at 1:49 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> This backport was done like for the b43 driver. This was just build tested.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-Indeed he does. This code allows the user to set ad-hoc mode, but I could not
-establish a connection. The setup that I used worked for a b43 - b43 link, but
-failed if either end used rtl8187. NACK.
+Thanks!!! Applied
 
-Larry
-
+  Luis
