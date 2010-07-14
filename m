@@ -1,40 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59911 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753693Ab0GZJRy (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:39419 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756872Ab0GNShF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jul 2010 05:17:54 -0400
-Subject: Re: iwlwifi connection problems
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: Alex Romosan <romosan@sycorax.lbl.gov>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1279917523.10769.1.camel@wwguy-huron>
-References: <87tynqvtu6.fsf@sycorax.lbl.gov>
-	 <1279917523.10769.1.camel@wwguy-huron>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 26 Jul 2010 11:17:47 +0200
-Message-ID: <1280135867.3693.5.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 14 Jul 2010 14:37:05 -0400
+Received: by pzk26 with SMTP id 26so18708pzk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Jul 2010 11:37:04 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1279070845-29442-2-git-send-email-lrodriguez@atheros.com>
+References: <1279070845-29442-1-git-send-email-lrodriguez@atheros.com>
+	<1279070845-29442-2-git-send-email-lrodriguez@atheros.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 14 Jul 2010 11:36:44 -0700
+Message-ID: <AANLkTimU48KppNBqaSyYF0gSu_ddplu0AOTaypO0wEZc@mail.gmail.com>
+Subject: Re: [PATCH 1/3] ath9k: implement mac80211 flush op
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-07-23 at 13:38 -0700, Guy, Wey-Yi wrote:
-> Hi Johannes,
-> 
-> On Fri, 2010-07-23 at 13:14 -0700, Alex Romosan wrote:
-> > since kernel 2.6.35-rc3 (i didn't try 1 or 2) i haven't been able to
-> > connect to a hidden wireless access point using the iwlwifi driver. i
-> > can connect to open ones though (the ones that broadcast their name).
-> > 2.6.34 worked without any problems. any ideas?
-> > 
-> > this is with the driver in the standard linux kernel (2.6.35-rc6 is the
-> > latest one i tried).
-> 
-> Do you aware any changes?
+On Tue, Jul 13, 2010 at 6:27 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> This implements the mac80211 flush callback to let mac80211
+> flush the hardware queues when it deems appropriate.
+>
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-Nope, and it works fine here on wireless-testing.
+John, sorry, please hold off on this one, I need to do some more tests.
 
-johannes
-
-
+  Luis
