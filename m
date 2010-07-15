@@ -1,58 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:57566 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755156Ab0GHVcv convert rfc822-to-8bit (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:59375 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934036Ab0GOS1s convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jul 2010 17:32:51 -0400
-Received: by pxi14 with SMTP id 14so485588pxi.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Jul 2010 14:32:51 -0700 (PDT)
+	Thu, 15 Jul 2010 14:27:48 -0400
+Received: by vws5 with SMTP id 5so1485659vws.19
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Jul 2010 11:27:46 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1278623628-25477-2-git-send-email-hauke@hauke-m.de>
-References: <1278623628-25477-1-git-send-email-hauke@hauke-m.de>
-	<1278623628-25477-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <AANLkTimc0k8SmNnyRpa05luw6nKR-qy0rLBe09TBi4qS@mail.gmail.com>
+References: <1279152521-10805-1-git-send-email-lrodriguez@atheros.com>
+	<003201cb23cd$527f3f90$aa01a8c0@satya> <AANLkTimc0k8SmNnyRpa05luw6nKR-qy0rLBe09TBi4qS@mail.gmail.com>
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Thu, 8 Jul 2010 14:32:26 -0700
-Message-ID: <AANLkTim2NY3vJEJVQh3ubiPidGEZi3ZRMKUK39j3HSb_@mail.gmail.com>
-Subject: Re: [PATCH 2/2] compat-wireless: fix build problems
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
+Date: Thu, 15 Jul 2010 11:27:26 -0700
+Message-ID: <AANLkTilzdXd1uUHwvY5TIm1kFylk4zRwfPKyujOz0_nZ@mail.gmail.com>
+Subject: Re: [PATCH] ath9k_hw: Fix AR9003 MPDU delimeter CRC check for middle
+	subframes
+To: Satya <satya.rao@redpinesignals.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Tushit Jain <tushit.jain@atheros.com>,
+	Kyungwan Nam <kyungwan.nam@atheros.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 8, 2010 at 2:13 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> Fix some minor build problems in patch.
+On Wed, Jul 14, 2010 at 9:21 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Wed, Jul 14, 2010 at 8:24 PM, Satya <satya.rao@redpinesignals.com> wrote:
+>>
+>> I just wonder if the delimiter length CRC is wrong, where from we
+>> get the length of the data packet to get to a state where we say
+>> we have received the data packet with correct CRC ?
+>>
+>> I am not sure about this. I appreciate if someone could clarify this.
+>> Thanks.
 >
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
->  patches/28-pm-qos-params.patch |    6 +++---
->  1 files changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/patches/28-pm-qos-params.patch b/patches/28-pm-qos-params.patch
-> index c5f8fd2..438bdd8 100644
-> --- a/patches/28-pm-qos-params.patch
-> +++ b/patches/28-pm-qos-params.patch
-> @@ -47,9 +47,9 @@ little wierd.
->        spin_unlock_irqrestore(&priv->low_lock, flags);
->
->  +#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
-> -+      pm_qos_update_request(ipw2100_pm_qos_req, PM_QOS_DEFAULT_VALUE);
-> -+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
->        pm_qos_update_request(&ipw2100_pm_qos_req, PM_QOS_DEFAULT_VALUE);
-> ++#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
-> ++      pm_qos_update_request(ipw2100_pm_qos_req, PM_QOS_DEFAULT_VALUE);
->  +#else
->  +      pm_qos_update_requirement(PM_QOS_CPU_DMA_LATENCY, "ipw2100",
->  +                                PM_QOS_DEFAULT_VALUE);
-> @@ -83,7 +83,7 @@ little wierd.
->  +#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
->  +      pm_qos_remove_request(ipw2100_pm_qos_req);
->  +#else
-> -+      pm_qos_remove_requirement(PM_QOS_CPU_DMA_LATENCY, "ipw2100")
-> ++      pm_qos_remove_requirement(PM_QOS_CPU_DMA_LATENCY, "ipw2100");
->  +#endif
->  }
+> Great question  :), Kyungwan?
 
-Oops thanks, applied, and forced out a new tarball.
+---- Kyungwan wrote:
+Actually, the scenario we are addressing here is, delimiter "after" good
+crc subframe has crc error such that AR9003 keeps searching next
+delimiter but in a meanwhile, restart PHY error occurs and receiving stops.
+In this case, by design, AR9003 reports these PHY error and delimiter crc
+error by using Rx descriptor of good crc subframe and S/W used to discard
+this good crc subframe because of PHY error. But after more investigation,
+we found this scenario and we could save this good crc subframe with
+the attached patch.
+
+Please note that this happens only if AR9003 advanced feature
+(restart PHY error) is enabled.excemption
+----
+
+So it seems that by design the delimiter CRC error status is just
+borrowed for this exception by our MAC hardware folks to annotate this
+specific situation.
 
   Luis
