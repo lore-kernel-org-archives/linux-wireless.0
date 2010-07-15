@@ -1,40 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:46810 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753561Ab0GWKFR (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52943 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934377Ab0GOUQh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jul 2010 06:05:17 -0400
-Date: Fri, 23 Jul 2010 12:04:42 +0200
-From: Dan Carpenter <error27@gmail.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	kernel-janitors@vger.kernel.org
-Subject: Re: [patch -next] ath5k: snprintf() returns largish values
-Message-ID: <20100723095252.GA26313@bicker>
-References: <20100722085202.GV17585@bicker> <201007231744.14922.br1@einfach.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201007231744.14922.br1@einfach.org>
+	Thu, 15 Jul 2010 16:16:37 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: improve error checking if WEP fails to init
+Date: Thu, 15 Jul 2010 16:16:17 -0400
+Message-Id: <1279224977-23100-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 23, 2010 at 05:44:14PM +0900, Bruno Randolf wrote:
-> 
-> i think it would be better to make sure the buffer is always big enough to 
-> hold all the output (it's not very variable in length), but as a safety net 
-> this can't hurt.
-> 
+Do this by poisoning the values of wep_tx_tfm and wep_rx_tfm if either
+crypto allocation fails.
 
-This is a smatch thing.  I suppose someday I will fix smatch to
-evaulate the strings themselves and verify that the buffer is large
-enough.  But for now it's nice to be able to automatically check that
-the buffers don't overflow.  
+Reported-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/mac80211/wep.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-regards,
-dan carpenter
+diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
+index 6d133b6..9ebc8d8 100644
+--- a/net/mac80211/wep.c
++++ b/net/mac80211/wep.c
+@@ -32,13 +32,16 @@ int ieee80211_wep_init(struct ieee80211_local *local)
+ 
+ 	local->wep_tx_tfm = crypto_alloc_blkcipher("ecb(arc4)", 0,
+ 						CRYPTO_ALG_ASYNC);
+-	if (IS_ERR(local->wep_tx_tfm))
++	if (IS_ERR(local->wep_tx_tfm)) {
++		local->wep_rx_tfm = ERR_PTR(-EINVAL);
+ 		return PTR_ERR(local->wep_tx_tfm);
++	}
+ 
+ 	local->wep_rx_tfm = crypto_alloc_blkcipher("ecb(arc4)", 0,
+ 						CRYPTO_ALG_ASYNC);
+ 	if (IS_ERR(local->wep_rx_tfm)) {
+ 		crypto_free_blkcipher(local->wep_tx_tfm);
++		local->wep_tx_tfm = ERR_PTR(-EINVAL);
+ 		return PTR_ERR(local->wep_rx_tfm);
+ 	}
+ 
+-- 
+1.7.1.1
 
