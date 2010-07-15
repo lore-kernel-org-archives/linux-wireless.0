@@ -1,115 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:58946 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753905Ab0G0JXI convert rfc822-to-8bit (ORCPT
+Received: from static.88-198-202-190.clients.your-server.de ([88.198.202.190]:36180
+	"EHLO kleinhenz.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932652Ab0GOIvz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 05:23:08 -0400
-Received: by pwi5 with SMTP id 5so361005pwi.19
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 02:23:06 -0700 (PDT)
+	Thu, 15 Jul 2010 04:51:55 -0400
+Date: Thu, 15 Jul 2010 10:51:50 +0200
+From: Simon Richter <sjr@debian.org>
+To: Michael =?iso-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	linux-wireless@vger.kernel.org, 588196@bugs.debian.org
+Subject: Re: Bug#588196: b43: does not join multicast groups
+Message-ID: <20100715085149.GA9922@richter>
+References: <1278887148.6139.91.camel@localhost>
+ <4C3A4C6E.6060801@lwfinger.net>
+ <20100713051430.GA2625@honey.hogyros.de>
+ <4C3BFB87.5030907@lwfinger.net>
+ <20100713073751.GB3089@richter>
+ <4C3C6350.50304@bu3sch.de>
+ <20100713130614.GB25565@richter>
+ <4C3C7296.3070700@bu3sch.de>
+ <20100714075037.GA6128@richter>
+ <4C3DB065.70009@bu3sch.de>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTinch-sygnRmB6LKi6xLNYVKY6Ap3YL4_PMNdmKQ@mail.gmail.com>
-References: <1276857140.3638.22.camel@jlt3.sipsolutions.net>
-	<AANLkTinHXxhwrOmhRxveekG7_C7WeydUdSBL2R7DwOvJ@mail.gmail.com>
-	<AANLkTinch-sygnRmB6LKi6xLNYVKY6Ap3YL4_PMNdmKQ@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 27 Jul 2010 02:22:46 -0700
-Message-ID: <AANLkTik=1LX_12ZskP5vwkSrTVFO9jH6uu8pyByGmLg6@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: fix sw scan bracketing
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <4C3DB065.70009@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 27, 2010 at 1:27 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Tue, Jul 27, 2010 at 1:04 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> On Fri, Jun 18, 2010 at 3:32 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->>> From: Johannes Berg <johannes.berg@intel.com>
->>>
->>> Currently, detection in hwsim and ath9k can
->>> detect that two sw scans are in flight at the
->>> same time, which isn't really true. It is
->>> caused by a race condition, because the scan
->>> complete callback is called too late, after
->>> the lock has been dropped, so that a new scan
->>> can be started before it is called.
->>>
->>> It is also called too early semantically, as
->>> it is currently called _after_ the return to
->>> the operating channel -- it should be before
->>> so that drivers know this is the operating
->>> channel again.
->>>
->>> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
->>> ---
->>>  net/mac80211/scan.c |    4 ++--
->>>  1 file changed, 2 insertions(+), 2 deletions(-)
->>>
->>> --- wireless-testing.orig/net/mac80211/scan.c   2010-06-18 12:22:56.000000000 +0200
->>> +++ wireless-testing/net/mac80211/scan.c        2010-06-18 12:23:25.000000000 +0200
->>> @@ -287,6 +287,8 @@ void ieee80211_scan_completed(struct iee
->>>        local->scanning = 0;
->>>        local->scan_channel = NULL;
->>>
->>> +       drv_sw_scan_complete(local);
->>> +
->>>        /* we only have to protect scan_req and hw/sw scan */
->>>        mutex_unlock(&local->scan_mtx);
->>>
->>> @@ -296,8 +298,6 @@ void ieee80211_scan_completed(struct iee
->>>
->>>        ieee80211_configure_filter(local);
->>>
->>> -       drv_sw_scan_complete(local);
->>> -
->>>        ieee80211_offchannel_return(local, true);
->>>
->>>  done:
->>
->> Leaving the entire patch in the e-mail reply as the patch is small to
->> help with context.
->>
->> Turns out this patch broke ath9k in the sense that right after a scan
->> we get disconnected from the AP. I just bisected wireless-testing by
->> master-tag dates and found 2010-06-18 to be where we hit poo in. I
->> reverted this patch and its cured. I'm going to test a recent
->> wireless-testing now and then just try reverting this to see if its OK
->> even on a recent wireless-testing, and then see if we can fix this
->> properly on ath9k or whatever.
->
-> Yeap, reverting this patch alone today on wireless-testing makes me
-> ath9k happy once again.
+Hi,
 
-So after some though and review in order to fix this we need a little
-more time and thought. The above patch changes the order in which we
-configure hardware upon a scan complete. It used to be we would
-configure the hardware, configure the filter and then scan complete.
-By then we'd be on the home channel and the filters would be set
-correctly. ath9k's scan complete routine does a few things which
-depend on the channel and will make hardware poo otherwise or do
-stupid things:
+On Wed, Jul 14, 2010 at 02:41:09PM +0200, Michael B�sch wrote:
 
-  * start TX poll routine, due to the new latency introduced to
-configure hardware and configure the RX filter the TX polll routine
-now has some extra work done by hardware before it actually starts
-TXing. I don't suspect this could introduce a huge regression but it
-is worth noting.
-  * ANI gets started, and the wrong channel is used if we're not yet
-on the home channel. A simple patch to test if this may be causing the
-disconnect issue I am seeing I just tried was to increase the delay
-before starting ANI, this did indeed help.
-  * ath_beacon_config() which I suspect means that if we now scan in
-AP mode/IBSS mode we could potentially be leaking beacons on the last
-channel of a scan, prior to sending them on the actual desired home
-channel.
+> The same applies to receiving. The RX queue is also dropped on switch
+> from DMA to PIO.
 
-To address and review all this I need more time and instead I think
-its easier to ask for revert of this patch. I think we should more
-carefully address these issues acanll together in one patch to avoid
-these regressions. Right now ath9k is just completely useless with
-this. It disconnects upon every scan, so for network manager users
-this is every 60 seconds.
+Sure, but the packet is repeated every ten seconds. The problem is that
+none of those packets is received, even long after the switch to PIO.
 
-  Luis
+> >advertisement, sent to 33:33:00:00:00:01). I have no idea where the
+> >packet is dropped; from my somewhat limited understanding of 802.11, I'd
+> >expect the frames to be treated like broadcast frames by the AP, so it'd
+> >be the receiver dropping them in the MAC filter.
+
+> The actual switch from DMA to PIO mode completely reinitializes
+> the hardware and drops all queues.
+
+Would it be possible to reinitialize the multicast filter at this point?
+
+   Simon
