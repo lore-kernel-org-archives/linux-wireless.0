@@ -1,137 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:29533 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752301Ab0GGICV (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:49001 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934274Ab0GOTJD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jul 2010 04:02:21 -0400
-Message-ID: <4C34347F.8030000@nokia.com>
-Date: Wed, 07 Jul 2010 11:02:07 +0300
-From: Roger Quadros <roger.quadros@nokia.com>
+	Thu, 15 Jul 2010 15:09:03 -0400
+Received: by vws5 with SMTP id 5so1527619vws.19
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Jul 2010 12:09:02 -0700 (PDT)
 MIME-Version: 1.0
-To: "Hunter Adrian (Nokia-MS/Helsinki)" <adrian.hunter@nokia.com>
-CC: Nicolas Pitre <nico@fluxnic.net>, Ohad Ben-Cohen <ohad@wizery.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	San Mehat <san@google.com>
-Subject: Re: [PATCH 11/15] wireless: wl1271: introduce platform device support
-References: <1278376666-3509-1-git-send-email-ohad@wizery.com> <1278376666-3509-12-git-send-email-ohad@wizery.com> <4C32EF19.1000604@nokia.com> <AANLkTintIz-N7MwwtqhVq2LR3Ln5JTNYSbJUBSSClcA-@mail.gmail.com> <4C3306F4.8060907@nokia.com> <AANLkTin5W52fPzWToRrAzm56SLZI-taSuI16rCEhLWqH@mail.gmail.com> <4C333E0D.2070601@nokia.com> <alpine.LFD.2.00.1007061316010.6020@xanadu.home> <4C338927.5020400@nokia.com>
-In-Reply-To: <4C338927.5020400@nokia.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20100715190302.C6699404F0@repository3.orbit-lab.org>
+References: <20100715190302.C6699404F0@repository3.orbit-lab.org>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 15 Jul 2010 12:08:42 -0700
+Message-ID: <AANLkTiltTSZsMJREUwpMwh8ZK28Pb3-HaiWx-2h6NWoO@mail.gmail.com>
+Subject: Re: Compat-wireless release for 2010-07-15 is baked
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/06/2010 10:51 PM, Hunter Adrian (Nokia-MS/Helsinki) wrote:
-> Nicolas Pitre wrote:
->> On Tue, 6 Jul 2010, Roger Quadros wrote:
->>
->>> On 07/06/2010 03:53 PM, ext Ohad Ben-Cohen wrote:
->>>> Hi Roger,
->>>>
->>>> On Tue, Jul 6, 2010 at 1:35 PM, Roger Quadros<roger.quadros@nokia.com>
->>>> wrote:
->>>>> My point is that shouldn't this be handled by SDIO core?
->>>> Care to explain what you mean / give a code example ?
->>> If the Power enable GPIO can be treated as SDIO slot supply (i.e. vmmc), then
->>> the SDIO/MMC core should tackle it, just like it deals with supply for slots
->>> with removable cards.
->>
->> Exact.
->>
->>>> You need card detect events in order to trigger card&   sdio function
->>>> initialization and removals.
->>
->> Why would you trigger function initialization and removal?  Just to turn
->> off power?  That's a bit like pulling off the battery from your laptop
->> when you want to suspend it.  There is a better way to go about things.
->>
->>>> Please share any alternative approach you may be thinking on.
->>> OK, this is how I see it.
->>>
->>> - Treat the non-removable card as non-removable. So no need to do card detect
->>> emulation.
->>>
->>> - Treat the GPIO power enable on wl1271 as VMMC supply. Use fixed regulator
->>> framework to define this regulator&  supply. Even though you mention that it
->>> is not actually a supply, it fits well in the fixed supply framework.
->>>
->>> - When the host controller is enumerated, the mmc core will power up the slot,
->>> find the sdio card, and probe the function driver (i.e. wl1271_sdio).
->>>
->>> - if interface is not in use, the function driver must release the sdio host,
->>> and this should eventually disable the vmmc supply.
->>>
->>> - Whenever the wlan interface must be brought up, wl1271_sdio, can claim the
->>> sdio host. this will cause the vmmc supply to be enabled, for as long as the
->>> interface is up.
->>>
->>> Does this address all issues?
->>
->> This is mostly all good, except that claiming/releasing the SDIO host is
->> about access to the bus.  It must be claimed right before doing any IO,
->> and released right after that, even when the card is expected to remain
->> powered.  This is not the proper place to hook power control.
->>
->> Another function pair would be needed instead, which would do almost
->> like the suspend/resume code is already doing.  Something like:
->>
->> /*
->>   * Indicate to the core SDIO layer that we're not requiring that the
->>   * function remain powered.  If all functions for the card are in the
->>   * same "no power" state, then the host controller can remove power from
->>   * the card.  Note: the function driver must preserve hardware states if
->>   * necessary.
->>   */
->> int sdio_release_power(struct sdio_func *func);
->>
->> /*
->>   * Indicate to the core SDIO layer that we want power back for this
->>   * SDIO function.  The power may or may not actually have been removed
->>   * since last call to sdio_release_power(), so the function driver must
->>   * not assume any preserved state at the hardware level and re-perform
->>   * all the necessary hardware config.  This function returns 0 when
->>   * power is actually restored, or some error code if this cannot be
->>   * achieved.  One error reason might be that the card is no longer
->>   * available on the bus (was removed while powered down and card
->>   * detection didn't trigger yet).
->>   */
->> int sdio_claim_power(struct sdio_func *func);
->>
->> That's it.  When the network interface is down and the hardware is not
->> needed, you call sdio_release_power().  When the request to activate the
->> network interface is received, you call sdio_claim_power() and configure
->> the hardware appropriately.  If sdio_claim_power() returns an error,
->> then you just return an error to the network request, and eventually the
->> driver's remove method will be called if this is indeed because the card
->> was removed.
->>
->> In the core SDIO code, this is almost identical to a suspend/resume
->> request, except that the request comes from the function driver instead
->> of the core MMC code.
+On Thu, Jul 15, 2010 at 12:03 PM, Compat-wireless cronjob account
+<compat@orbit-lab.org> wrote:
+> From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+>   73374eb..5f9a783  master     -> origin/master
+>   f88f925..4b87329  wl         -> origin/wl
+> From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+>   521acd5..bc3e7ea  history    -> origin/history
+>  + c9ce0c0...732f7b0 master     -> origin/master  (forced update)
+>  * [new tag]         next-20100715 -> next-20100715
 >
-> For eMMC in omap_hsmmc, this is all done via claim_host / release_host
-> which call ->enable() / ->disable() methods.  omap_hsmmc makes use of
-> mmc_power_restore_host() which calls host->bus_ops->power_restore()
-> which is not implemented for SDIO, but for MMC and SD it reinitializes
-> the card.
-
-Shouldn't the power control intelligence (i.e. when to turn power ON/OFF) lie 
-with the bus drivers?
-
+> compat-wireless code metrics
 >
-> Set omap2_hsmmc_info mmc[x] {.nonremovable=true, .power_saving=true} and
-> implement host->bus_ops->power_restore() for SDIO, then the power will
-> go off 9 seconds after sdio_release_host() is called.  Then tweak omap_hsmmc
-> so that it doesn't wait 9 seconds for the SDIO case
->
-is the wl1271 supposed to be used only with omap_hsmmc? We need to have a 
-solution that works neatly irrespective of which host controller is being used.
+>    494061 - Total upstream lines of code being pulled
 
-regards,
--roger
+This didn't get Hauke's last patch, will force a new one out shortly.
+
+  Luis
