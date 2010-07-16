@@ -1,64 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:59715 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755316Ab0GVTaM (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:42735 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752319Ab0GPRNF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 15:30:12 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Dan Carpenter <error27@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] iwlwifi: assume vif is NULL for internal scans and non-NULL otherwise
-Date: Thu, 22 Jul 2010 15:28:57 -0400
-Message-Id: <1279826937-24581-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <20100721221616.GT17585@bicker>
-References: <20100721221616.GT17585@bicker>
+	Fri, 16 Jul 2010 13:13:05 -0400
+Received: by pxi14 with SMTP id 14so1007056pxi.19
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jul 2010 10:13:04 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4C402360.5050502@marvell.com>
+References: <4C3F0AA3.4050706@marvell.com> <AANLkTiljhQpDh_20zEf8HjYnk82BpUi4Gctu9G90aqpS@mail.gmail.com>
+	<4C402360.5050502@marvell.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 16 Jul 2010 10:12:44 -0700
+Message-ID: <AANLkTim2fLLZfD5xrUtioY5mZaF-PgLwrVlMHQHwsL41@mail.gmail.com>
+Subject: Re: [RFC] mac80211: indicate BA window size with IEEE80211_AMPDU_TX_OPERATIONAL
+	drv_ampud_action
+To: yogeshp <yogeshp@marvell.com>
+Cc: Pradeep Nemavat <pnemavat@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current practice of checking vif for NULL in one place but not
-another seems to confuse some static checkers, smatch in particular.
-Since vif will only be NULL in the case of internal scans, adjust the
-checks accordingly.
+On Fri, Jul 16, 2010 at 2:16 AM, yogeshp <yogeshp@marvell.com> wrote:
+> Hi Luis,
+>  Please see inline comments
+>
+> Luis R. Rodriguez wrote:
+>> On Thu, Jul 15, 2010 at 6:18 AM, yogeshp <yogeshp@marvell.com> wrote:
+>>> BA window size for a successful BA setup is not made available to the driver by
+>>> mac80211. The patch below gets the BA window size from addba response and
+>>> indicates it to driver through IEEE80211_AMPDU_TX_OPERATIONAL drv_ampdu_action.
+>
+>> But why do you want that? Your patch and commit log do not mention why
+>> you need this.
+> BA window size from ADDBA response defines how many outstanding MPDUs are allowed for the BA stream by recipient. Since ADDBA response is processed in mac80211 stack, mac80211 should communicate the BA window size to driver (and may be from driver it is further communicated to firmware/hardware) to control the number of outstanding MPDUs while transmitting MPDUs for the stream.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    5 ++++-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    5 ++++-
- 2 files changed, 8 insertions(+), 2 deletions(-)
+What driver requires this? Your patch does all these changes but do
+not show any secondary patch of a user, so the patch is pointless
+right now.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 74623e0..0ca0df4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -1234,7 +1234,10 @@ void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- 
- 		IWL_DEBUG_INFO(priv, "Scanning while associated...\n");
- 		spin_lock_irqsave(&priv->lock, flags);
--		interval = vif ? vif->bss_conf.beacon_int : 0;
-+		if (priv->is_internal_short_scan)
-+			interval = 0;
-+		else
-+			interval = vif->bss_conf.beacon_int;
- 		spin_unlock_irqrestore(&priv->lock, flags);
- 
- 		scan->suspend_time = 0;
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 8eb3471..b102bab 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -2883,7 +2883,10 @@ void iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- 		IWL_DEBUG_INFO(priv, "Scanning while associated...\n");
- 
- 		spin_lock_irqsave(&priv->lock, flags);
--		interval = vif ? vif->bss_conf.beacon_int : 0;
-+		if (priv->is_internal_short_scan)
-+			interval = 0;
-+		else
-+			interval = vif->bss_conf.beacon_int;
- 		spin_unlock_irqrestore(&priv->lock, flags);
- 
- 		scan->suspend_time = 0;
--- 
-1.7.1.1
+>> When I compile mac80211 with your patch it fails compilation
+> I do not see this compilation error, I think the patch did not apply cleanly. I will send out another patch without extra white spaces that should solve the compilation issue. If the change is fine, we can then send patches to fix the compilation issues for other drivers too.
+>
 
+..
+
+  Luis
