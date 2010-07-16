@@ -1,38 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:52414 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754249Ab0GUU7B convert rfc822-to-8bit (ORCPT
+Received: from cpsmtpb-ews04.kpnxchange.com ([213.75.39.7]:4296 "EHLO
+	cpsmtpb-ews04.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S935716Ab0GPHSk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jul 2010 16:59:01 -0400
-Received: by pzk26 with SMTP id 26so2245776pzk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jul 2010 13:59:00 -0700 (PDT)
+	Fri, 16 Jul 2010 03:18:40 -0400
+Message-ID: <4C4007CD.2070504@gmail.com>
+Date: Fri, 16 Jul 2010 09:18:37 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1279735518-12515-1-git-send-email-linville@tuxdriver.com>
-References: <1279735518-12515-1-git-send-email-linville@tuxdriver.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 21 Jul 2010 13:58:40 -0700
-Message-ID: <AANLkTikWo6tjyYCDMgoA9WXvbNaWIe_oSp180jcdtWgy@mail.gmail.com>
-Subject: Re: [PATCH] wireless: remove prism54
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Christian Lamparter <chunkeey@googlemail.com>
-Content-Type: text/plain; charset=UTF-8
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ivo Van Doorn <ivdoorn@gmail.com>,
+	Christoph Egger <siccegge@cs.fau.de>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	vamos-dev@i4.informatik.uni-erlangen.de,
+	Luis Correia <luis.f.correia@gmail.com>
+Subject: Re: [PATCH 01/11] Removing dead RT2800PCI_SOC
+References: <cover.1279110894.git.siccegge@cs.fau.de>	<20100714131527.GB2352@tuxdriver.com>	<4C3DCD5C.1080705@openwrt.org>	<201007151041.55112.bzolnier@gmail.com> <AANLkTilqoYMMKYJT-YYbEzdnytUSYa0EylEiJ4x5xXXH@mail.gmail.com>
+In-Reply-To: <AANLkTilqoYMMKYJT-YYbEzdnytUSYa0EylEiJ4x5xXXH@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 21, 2010 at 11:05 AM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> This driver is no longer necessary due to p54pci.  It has seen very
-> little maintenance for some time, and at least Fedora has had it
-> disabled without any user complaints.
->
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+On 07/16/10 08:57, Helmut Schaa wrote:
+> On Thu, Jul 15, 2010 at 10:41 AM, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com <mailto:bzolnier@gmail.com>> wrote:
+> 
+>     On Wednesday 14 July 2010 04:44:44 pm Felix Fietkau wrote:
+>     > On 2010-07-14 3:15 PM, John W. Linville wrote:
+>     > > On Wed, Jul 14, 2010 at 02:52:14PM +0200, Ivo Van Doorn wrote:
+>     > >> On Wed, Jul 14, 2010 at 2:46 PM, Luis Correia <luis.f.correia@gmail.com <mailto:luis.f.correia@gmail.com>> wrote:
+>     > >> > On Wed, Jul 14, 2010 at 13:39, Christoph Egger <siccegge@cs.fau.de <mailto:siccegge@cs.fau.de>> wrote:
+>     > >> >> While RT2800PCI_SOC exists in Kconfig, it depends on either
+>     > >> >> RALINK_RT288X or RALINK_RT305X which are both not available in Kconfig
+>     > >> >> so all Code depending on that can't ever be selected and, if there's
+>     > >> >> no plan to add these options, should be cleaned up
+>     > >> >>
+>     > >> >> Signed-off-by: Christoph Egger <siccegge@cs.fau.de <mailto:siccegge@cs.fau.de>>
+>     > >> >
+>     > >> > NAK,
+>     > >> >
+>     > >> > this is not dead code, it is needed for the Ralink System-on-Chip
+>     > >> > Platform devices.
+>     > >> >
+>     > >> > While I can't fix Kconfig errors and the current KConfig file may be
+>     > >> > wrong, this code cannot and will not be deleted.
+>     > >>
+>     > >> When the config option was introduced, the config options RALINK_RT288X and
+>     > >> RALINK_RT305X were supposed to be merged as well soon after by somebody (Felix?)
+>     > >>
+>     > >> But since testing is done on SoC boards by Helmut and Felix, I assume the code
+>     > >> isn't dead but actually in use.
+>     > >
+>     > > Perhaps Helmut and Felix can send us the missing code?
+>     > The missing code is a MIPS platform port, which is currently being
+>     > maintained in OpenWrt, but is not ready for upstream submission yet.
+>     > I'm not working on this code at the moment, but I think it will be
+>     > submitted once it's ready.
+> 
+>     People are using automatic scripts to catch unused config options nowadays
+>     so the issue is quite likely to come back again sooner or later..
+> 
+>     Would it be possible to improve situation somehow till the missing parts
+>     get merged?  Maybe by adding a tiny comment documenting RT2800PCI_SOC
+>     situation to Kconfig (if the config option itself really cannot be removed)
+>     until all code is ready etc.?
+> 
+> 
+> Or we could just remove RT2800PCI_SOC completely and build the soc specific
+> parts always as part of rt2800pci. I mean it's not much code, just the platform
+> driver stuff and the eeprom access.
+> 
 
-Hm, we had a few users report back that only with prism54 and not
-p54pci could they get their device functional. IIRC Christian noted
-some issues with the EEPROM, and it seems the fault was on the
-manufacturer. My memory may be foggy but indeed I do remember a few
-users did complain about the feature removal plan. I can dig these
-e-mails up if needed.
+I'm not sure if that is feasible. Sure, we can reduce the usage of the variable by
+unconditionally compiling in the generic SOC code, but we should not unconditionally
+register the SOC platform device, which is currently also under the scope of this
+Kconfig variable.
 
-  Luis
+---
+Gertjan.
+
