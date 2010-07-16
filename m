@@ -1,50 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36112 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754026Ab0G0OPN (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:61029 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965788Ab0GPPAI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 10:15:13 -0400
-Date: Tue, 27 Jul 2010 10:01:40 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Confused - bisecting wireless-testing
-Message-ID: <20100727140139.GA31694@tuxdriver.com>
-References: <AANLkTim-0qoS7o+fcQ6uA18AC_gQSiiDe4Tv_L1FT1Ae@mail.gmail.com>
+	Fri, 16 Jul 2010 11:00:08 -0400
+Received: by pvc7 with SMTP id 7so819035pvc.19
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jul 2010 08:00:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTim-0qoS7o+fcQ6uA18AC_gQSiiDe4Tv_L1FT1Ae@mail.gmail.com>
+In-Reply-To: <1277999967.4197.92.camel@rchatre-DESK>
+References: <AANLkTikqJzkFFtmOowq-OzzDFSC9_1SFuAfT4UGZBhqW@mail.gmail.com>
+	<1277999967.4197.92.camel@rchatre-DESK>
+From: Andrew Lutomirski <andy@luto.us>
+Date: Fri, 16 Jul 2010 10:59:43 -0400
+Message-ID: <AANLkTil5UKUG0687dmtDA32Kp3qGJaIRN78ueVd8YCLn@mail.gmail.com>
+Subject: Re: rfkill failure in 2.6.35-rc3+
+To: reinette chatre <reinette.chatre@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 26, 2010 at 08:27:06PM -0700, Luis R. Rodriguez wrote:
-> 04:23  * mcgrof is confused, I just did a git bisect -i on
-> wireless-testing on some patch on Fri Jul 2 00:09:49 2010  and ended
-> up with a 2.6.34 top level
->           Makefile
-> 04:23 < mcgrof> it was git rebase -i ba17bc5e55ba541d2a8765fca53b6883b667ab21
-> 04:23 < mcgrof> eh
-> 04:24 < mcgrof> how am I supposed to bisect wl now
-> 04:24 < mcgrof> the odd thing though is that the top commit is ancient
-> 04:24 < mcgrof> http://paste.pocoo.org/show/242077/
-> 04:24 < mcgrof> but the other ones are OK
-> 
-> I realize we should use wireless-2.6.git to bisect stable but I need
-> to bisect against recent patches that spans different master- tags
-> from you, I figured git bisecting wireless-testing would work now that
-> you are using a different method to move your tree forward but am I
-> wrong? Should I only bisect between master tags still?
+I haven't been able to reproduce this, so I haven't tried unloading
+the platform driver.  I will if it happens again, though.
 
-wireless-testing is a nasty mess when it comes to bisection.
-I am considering a one-time rebase of wireless-testing after the
-next -rc1, now that the current process is working reasonably well.
-wireless-testing will continue to have a messy history, but it should
-be a bit less nasty after a rebase.
+--Andy
 
-As for right now, it sounds like you should just use wireless-next-2.6
-instead?
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+On Thu, Jul 1, 2010 at 11:59 AM, reinette chatre
+<reinette.chatre@intel.com> wrote:
+> On Wed, 2010-06-30 at 19:59 -0700, Andrew Lutomirski wrote:
+>> I just toggled rfkill on and back off on my X200s (WiFi Link 5350, rev
+>> 0x24) and the link didn't come up.  Toggling rfkill again didn't fix
+>> it, but rmmod + modprobe did.
+>>
+>> dmesg said:
+>>
+>> [13629.424869] iwlagn 0000:03:00.0: RF_KILL bit toggled to disable radio.
+>> [13629.432761] iwlagn 0000:03:00.0: Not sending command - RF KILL
+>> [13629.432771] iwlagn 0000:03:00.0: Error sending REPLY_RXON:
+>> enqueue_hcmd failed: -5
+>> [13629.432778] iwlagn 0000:03:00.0: Error setting new RXON (-5)
+>> [13631.268646] iwlagn 0000:03:00.0: RF_KILL bit toggled to enable radio.
+>> [13631.311232] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+>> [13675.710821] iwlagn 0000:03:00.0: RF_KILL bit toggled to disable radio.
+>> [13675.713438] iwlagn 0000:03:00.0: Not sending command - RF KILL
+>> [13675.713448] iwlagn 0000:03:00.0: Error sending REPLY_RXON:
+>> enqueue_hcmd failed: -5
+>> [13675.713455] iwlagn 0000:03:00.0: Error setting new RXON (-5)
+>> [13683.090789] iwlagn 0000:03:00.0: RF_KILL bit toggled to enable radio.
+>> [13683.145267] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+>>
+>> This is 2.6.35-rc3+ with firmware 8.24.2.12.  I've never seen this before.
+>
+> Recently we have seen a few issues with rfkill state changes not being
+> seen by the driver. In all cases it was "resolved" by unloading (or not
+> loading from the beginning via blacklisting) of the platform driver. Can
+> you try that?
+>
+> Reinette
+>
+>
+>
