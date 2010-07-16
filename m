@@ -1,50 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:42285 "EHLO
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:57891 "EHLO
 	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754037Ab0GVJVS (ORCPT
+	with ESMTP id S1756223Ab0GPRpa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 05:21:18 -0400
-Received: by bwz1 with SMTP id 1so735882bwz.19
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jul 2010 02:21:17 -0700 (PDT)
-Message-ID: <4C480D94.9090401@adurom.com>
-Date: Thu, 22 Jul 2010 11:21:24 +0200
-From: Kalle Valo <kvalo@adurom.com>
+	Fri, 16 Jul 2010 13:45:30 -0400
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH 01/11] Removing dead RT2800PCI_SOC
+Date: Fri, 16 Jul 2010 19:44:45 +0200
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ivo Van Doorn <ivdoorn@gmail.com>,
+	Christoph Egger <siccegge@cs.fau.de>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	vamos-dev@i4.informatik.uni-erlangen.de,
+	Luis Correia <luis.f.correia@gmail.com>
+References: <cover.1279110894.git.siccegge@cs.fau.de> <AANLkTik8M0gNipi_rwVJYbmo_3FfdHs-H4H_XDgTcbhI@mail.gmail.com> <4C407ED4.6000002@gmail.com>
+In-Reply-To: <4C407ED4.6000002@gmail.com>
 MIME-Version: 1.0
-To: Luciano Coelho <luciano.coelho@nokia.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] wl1251: fix sparse-generated warnings
-References: <1279729917-4451-1-git-send-email-linville@tuxdriver.com>	 <4C48053A.6080504@adurom.com> <1279788739.2322.39.camel@powerslave>
-In-Reply-To: <1279788739.2322.39.camel@powerslave>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201007161944.45825.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/22/2010 10:52 AM, Luciano Coelho wrote:
-> On Thu, 2010-07-22 at 10:45 +0200, ext Kalle Valo wrote:
->> Hi John,
->>
->> On 07/21/2010 06:31 PM, John W. Linville wrote:
->>> @@ -225,7 +225,7 @@ static void wl1251_boot_set_ecpu_ctrl(struct wl1251 *wl, u32 flag)
->>>  int wl1251_boot_run_firmware(struct wl1251 *wl)
->>>  {
->>>  	int loop, ret;
->>> -	u32 chip_id, interrupt;
->>> +	u32 chip_id, acx_intr;
->>
->> I don't get why you did this change. I don't object renaming the
->> variable, but I can't figure out the reasoning behind it.
+Am Freitag 16 Juli 2010 schrieb Gertjan van Wingerde:
+> On 07/16/10 12:08, Helmut Schaa wrote:
+> > On Fri, Jul 16, 2010 at 9:18 AM, Gertjan van Wingerde
+> > <gwingerde@gmail.com> wrote:
+> >>
+> >> On 07/16/10 08:57, Helmut Schaa wrote:
+> >>> On Thu, Jul 15, 2010 at 10:41 AM, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com <mailto:bzolnier@gmail.com>> wrote:
+> >>>
+> >>>     On Wednesday 14 July 2010 04:44:44 pm Felix Fietkau wrote:
+> >>>     > On 2010-07-14 3:15 PM, John W. Linville wrote:
+> >>>     > > On Wed, Jul 14, 2010 at 02:52:14PM +0200, Ivo Van Doorn wrote:
+> >>>     > >> On Wed, Jul 14, 2010 at 2:46 PM, Luis Correia <luis.f.correia@gmail.com <mailto:luis.f.correia@gmail.com>> wrote:
+> >>>     > >> > On Wed, Jul 14, 2010 at 13:39, Christoph Egger <siccegge@cs.fau.de <mailto:siccegge@cs.fau.de>> wrote:
+> >>>     > >> >> While RT2800PCI_SOC exists in Kconfig, it depends on either
+> >>>     > >> >> RALINK_RT288X or RALINK_RT305X which are both not available in Kconfig
+> >>>     > >> >> so all Code depending on that can't ever be selected and, if there's
+> >>>     > >> >> no plan to add these options, should be cleaned up
+> >>>     > >> >>
+> >>>     > >> >> Signed-off-by: Christoph Egger <siccegge@cs.fau.de <mailto:siccegge@cs.fau.de>>
+> >>>     > >> >
+> >>>     > >> > NAK,
+> >>>     > >> >
+> >>>     > >> > this is not dead code, it is needed for the Ralink System-on-Chip
+> >>>     > >> > Platform devices.
+> >>>     > >> >
+> >>>     > >> > While I can't fix Kconfig errors and the current KConfig file may be
+> >>>     > >> > wrong, this code cannot and will not be deleted.
+> >>>     > >>
+> >>>     > >> When the config option was introduced, the config options RALINK_RT288X and
+> >>>     > >> RALINK_RT305X were supposed to be merged as well soon after by somebody (Felix?)
+> >>>     > >>
+> >>>     > >> But since testing is done on SoC boards by Helmut and Felix, I assume the code
+> >>>     > >> isn't dead but actually in use.
+> >>>     > >
+> >>>     > > Perhaps Helmut and Felix can send us the missing code?
+> >>>     > The missing code is a MIPS platform port, which is currently being
+> >>>     > maintained in OpenWrt, but is not ready for upstream submission yet.
+> >>>     > I'm not working on this code at the moment, but I think it will be
+> >>>     > submitted once it's ready.
+> >>>
+> >>>     People are using automatic scripts to catch unused config options nowadays
+> >>>     so the issue is quite likely to come back again sooner or later..
+> >>>
+> >>>     Would it be possible to improve situation somehow till the missing parts
+> >>>     get merged?  Maybe by adding a tiny comment documenting RT2800PCI_SOC
+> >>>     situation to Kconfig (if the config option itself really cannot be removed)
+> >>>     until all code is ready etc.?
+> >>>
+> >>>
+> >>> Or we could just remove RT2800PCI_SOC completely and build the soc specific
+> >>> parts always as part of rt2800pci. I mean it's not much code, just the platform
+> >>> driver stuff and the eeprom access.
+> >>>
+> >>
+> >> I'm not sure if that is feasible. Sure, we can reduce the usage of the variable by
+> >> unconditionally compiling in the generic SOC code, but we should not unconditionally
+> >> register the SOC platform device, which is currently also under the scope of this
+> >> Kconfig variable.
+> > 
+> > Ehm, no, the platform device is not registered in rt2800pci at all,
+> > it's just the platform
+> > driver that gets registered there. The platform device will be
+> > registered in the according
+> > board init code (that only resides in openwrt at the moment).
+> > 
 > 
-> Sparse complains that interrupt is shadowing the definition in hw_irq.h:
+> OK. Didn't know that. Sounds good then.
 > 
->> drivers/net/wireless/wl12xx/wl1251_boot.c:228:22: warning: symbol
->> 'interrupt' shadows an earlier one
->> /home/linville/git/wireless-next-2.6/arch/x86/include/asm/hw_irq.h:132:13: originally declared here
-> 
-> So, it's just a cosmetic change, I guess.
+> However, I've tried this in my local tree, and now compilation fails on the x86 platform
+> due to a missing KSEG1ADDR macro. How do you suggest to handle the potentially missing
+> macro?
 
-Ah, I was blind as usual. It makes all sense now, thanks.
+We can convert it to an ioremap call, that should be available on all platforms.
 
-Kalle
-
+Helmut
 
