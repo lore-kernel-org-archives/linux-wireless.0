@@ -1,85 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:35479 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753424Ab0G1OfS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jul 2010 10:35:18 -0400
-Subject: Re: [RFC] iwlwifi: fix scan abort
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:55697 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751526Ab0GPQu2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Jul 2010 12:50:28 -0400
+From: Stephen Boyd <bebarino@gmail.com>
+To: users@rt2x00.serialmonkey.com
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20100728154509.77e8e85b@dhcp-lab-109.englab.brq.redhat.com>
-References: <20100728154509.77e8e85b@dhcp-lab-109.englab.brq.redhat.com>
-Content-Type: text/plain
-Date: Wed, 28 Jul 2010 07:34:42 -0700
-Message-Id: <1280327682.26765.6.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] rt2x00: Fix lockdep warning in rt2x00lib_probe_dev()
+Date: Fri, 16 Jul 2010 09:50:10 -0700
+Message-Id: <1279299010-4723-1-git-send-email-bebarino@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Gruszka,
+The rt2x00dev->intf_work workqueue is never initialized when a driver is
+probed for a non-existent device (in this case rt2500usb). On such a
+path we call rt2x00lib_remove_dev() to free any resources initialized
+during the probe before we use INIT_WORK to initialize the workqueue.
+This causes lockdep to get confused since the lock used in the workqueue
+hasn't been initialized yet but is now being acquired during
+cancel_work_sync() called by rt2x00lib_remove_dev().
 
-On Wed, 2010-07-28 at 06:45 -0700, Stanislaw Gruszka wrote:
-> We can not call cancel_delayed_work_sync(&priv->scan_check) with 
-> priv->mutex locked because workqueue function iwl_bg_scan_check()
-> take that lock internally.
-> 
-> We do not need to synchronize when canceling priv->scan_check work. 
-> We can avoid races (sending double abort command or send no
-> command at all) using STATUS_SCAN_ABORT bit. Moreover
-> current iwl_bg_scan_check() code seems to be broken, as
-> we should not send abort commands when currently aborting.
-> 
-> I did not test patch yet, just want to know if it is theoretically
-> correct. Except obvious circular priv->mutex locking fix, maybe it
-> can help with warning in ieee80211_scan_completed, which is still
-> reported by the users from time to time.
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-> index 2a7c399..b0c6b04 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-> @@ -429,11 +429,10 @@ void iwl_bg_scan_check(struct work_struct *data)
->  		return;
->  
->  	mutex_lock(&priv->mutex);
-> -	if (test_bit(STATUS_SCANNING, &priv->status) ||
-> -	    test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
-> -		IWL_DEBUG_SCAN(priv, "Scan completion watchdog resetting "
-> -			"adapter (%dms)\n",
-> -			jiffies_to_msecs(IWL_SCAN_CHECK_WATCHDOG));
-> +	if (test_bit(STATUS_SCANNING, &priv->status) &&
-> +	    !test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
-> +		IWL_DEBUG_SCAN(priv, "Scan completion watchdog (%dms)\n",
-> +			       jiffies_to_msecs(IWL_SCAN_CHECK_WATCHDOG));
+Fix this by initializing the workqueue first before we attempt to probe
+the device. This should make lockdep happy and avoid breaking any
+assumptions about how the library cleans up after a probe fails.
 
-make sense here, the code is broken, we should not abort scan if already
-doing it.
+phy0 -> rt2x00lib_probe_dev: Error - Failed to allocate device.
+INFO: trying to register non-static key.
+the code is fine but needs lockdep annotation.
+turning off the locking correctness validator.
+Pid: 2027, comm: modprobe Not tainted 2.6.35-rc5+ #60
+Call Trace:
+ [<ffffffff8105fe59>] register_lock_class+0x152/0x31f
+ [<ffffffff81344a00>] ? usb_control_msg+0xd5/0x111
+ [<ffffffff81061bde>] __lock_acquire+0xce/0xcf4
+ [<ffffffff8105f6fd>] ? trace_hardirqs_off+0xd/0xf
+ [<ffffffff81492aef>] ?  _raw_spin_unlock_irqrestore+0x33/0x41
+ [<ffffffff810628d5>] lock_acquire+0xd1/0xf7
+ [<ffffffff8104f037>] ? __cancel_work_timer+0x99/0x17e
+ [<ffffffff8104f06e>] __cancel_work_timer+0xd0/0x17e
+ [<ffffffff8104f037>] ? __cancel_work_timer+0x99/0x17e
+ [<ffffffff8104f136>] cancel_work_sync+0xb/0xd
+ [<ffffffffa0096675>] rt2x00lib_remove_dev+0x25/0xb0 [rt2x00lib]
+ [<ffffffffa0096bf7>] rt2x00lib_probe_dev+0x380/0x3ed [rt2x00lib]
+ [<ffffffff811d78a7>] ? __raw_spin_lock_init+0x31/0x52
+ [<ffffffffa00bbd2c>] ? T.676+0xe/0x10 [rt2x00usb]
+ [<ffffffffa00bbe4f>] rt2x00usb_probe+0x121/0x15e [rt2x00usb]
+ [<ffffffff813468bd>] usb_probe_interface+0x151/0x19e
+ [<ffffffff812ea08e>] driver_probe_device+0xa7/0x136
+ [<ffffffff812ea167>] __driver_attach+0x4a/0x66
+ [<ffffffff812ea11d>] ? __driver_attach+0x0/0x66
+ [<ffffffff812e96ca>] bus_for_each_dev+0x54/0x89
+ [<ffffffff812e9efd>] driver_attach+0x19/0x1b
+ [<ffffffff812e9b64>] bus_add_driver+0xb4/0x204
+ [<ffffffff812ea41b>] driver_register+0x98/0x109
+ [<ffffffff813465dd>] usb_register_driver+0xb2/0x173
+ [<ffffffffa00ca000>] ? rt2500usb_init+0x0/0x20 [rt2500usb]
+ [<ffffffffa00ca01e>] rt2500usb_init+0x1e/0x20 [rt2500usb]
+ [<ffffffff81000203>] do_one_initcall+0x6d/0x17a
+ [<ffffffff8106cae8>] sys_init_module+0x9c/0x1e0
+ [<ffffffff8100296b>] system_call_fastpath+0x16/0x1b
 
->  
->  		if (!test_bit(STATUS_EXIT_PENDING, &priv->status))
->  			iwl_send_scan_abort(priv);
-> @@ -498,12 +497,11 @@ void iwl_bg_abort_scan(struct work_struct *work)
->  	    !test_bit(STATUS_GEO_CONFIGURED, &priv->status))
->  		return;
->  
-> -	mutex_lock(&priv->mutex);
-> -
-> -	cancel_delayed_work_sync(&priv->scan_check);
-> -	set_bit(STATUS_SCAN_ABORTING, &priv->status);
-> -	iwl_send_scan_abort(priv);
-> +	cancel_delayed_work(&priv->scan_check);
->  
-> +	mutex_lock(&priv->mutex);
-> +	if (test_bit(STATUS_SCAN_ABORTING, &priv->status))
-> +		iwl_send_scan_abort(priv);
->  	mutex_unlock(&priv->mutex);
->  }
+Signed-off-by: Stephen Boyd <bebarino@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00dev.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
 
-Looks right to me, thanks a lot to catch this one.
-
-Wey
-
-
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 3ae468c..f20d3ee 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -854,6 +854,11 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
+ 		    BIT(NL80211_IFTYPE_WDS);
+ 
+ 	/*
++	 * Initialize configuration work.
++	 */
++	INIT_WORK(&rt2x00dev->intf_work, rt2x00lib_intf_scheduled);
++
++	/*
+ 	 * Let the driver probe the device to detect the capabilities.
+ 	 */
+ 	retval = rt2x00dev->ops->lib->probe_hw(rt2x00dev);
+@@ -863,11 +868,6 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
+ 	}
+ 
+ 	/*
+-	 * Initialize configuration work.
+-	 */
+-	INIT_WORK(&rt2x00dev->intf_work, rt2x00lib_intf_scheduled);
+-
+-	/*
+ 	 * Allocate queue array.
+ 	 */
+ 	retval = rt2x00queue_allocate(rt2x00dev);
+-- 
+1.7.2.rc2.10.g637ab
 
