@@ -1,40 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:47719 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757181Ab0GBMp2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jul 2010 08:45:28 -0400
-Message-ID: <4C2DDF62.6050503@openwrt.org>
-Date: Fri, 02 Jul 2010 14:45:22 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:61893 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964898Ab0GPKI0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Jul 2010 06:08:26 -0400
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>
-Subject: [PATCH] ath9k: fix crash with WEP in ad-hoc mode
+In-Reply-To: <4C4007CD.2070504@gmail.com>
+References: <cover.1279110894.git.siccegge@cs.fau.de>
+	<20100714131527.GB2352@tuxdriver.com>
+	<4C3DCD5C.1080705@openwrt.org>
+	<201007151041.55112.bzolnier@gmail.com>
+	<AANLkTilqoYMMKYJT-YYbEzdnytUSYa0EylEiJ4x5xXXH@mail.gmail.com>
+	<4C4007CD.2070504@gmail.com>
+Date: Fri, 16 Jul 2010 12:08:23 +0200
+Message-ID: <AANLkTik8M0gNipi_rwVJYbmo_3FfdHs-H4H_XDgTcbhI@mail.gmail.com>
+Subject: Re: [PATCH 01/11] Removing dead RT2800PCI_SOC
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ivo Van Doorn <ivdoorn@gmail.com>,
+	Christoph Egger <siccegge@cs.fau.de>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	vamos-dev@i4.informatik.uni-erlangen.de,
+	Luis Correia <luis.f.correia@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit eed8e22f0133e8278b1f8079fcb452f1f9692f9d added support for using
-multicast key lookup to support per-vif/sta keys for AP and ad-hoc.
-Unfortunately, it also introduced a crash in ad-hoc mode when the sta
-pointer is NULL, which happens when setting up an interface with WEP
-keys. This patch fixes it by falling back to the assigned key index.
+On Fri, Jul 16, 2010 at 9:18 AM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+>
+> On 07/16/10 08:57, Helmut Schaa wrote:
+> > On Thu, Jul 15, 2010 at 10:41 AM, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com <mailto:bzolnier@gmail.com>> wrote:
+> >
+> >     On Wednesday 14 July 2010 04:44:44 pm Felix Fietkau wrote:
+> >     > On 2010-07-14 3:15 PM, John W. Linville wrote:
+> >     > > On Wed, Jul 14, 2010 at 02:52:14PM +0200, Ivo Van Doorn wrote:
+> >     > >> On Wed, Jul 14, 2010 at 2:46 PM, Luis Correia <luis.f.correia@gmail.com <mailto:luis.f.correia@gmail.com>> wrote:
+> >     > >> > On Wed, Jul 14, 2010 at 13:39, Christoph Egger <siccegge@cs.fau.de <mailto:siccegge@cs.fau.de>> wrote:
+> >     > >> >> While RT2800PCI_SOC exists in Kconfig, it depends on either
+> >     > >> >> RALINK_RT288X or RALINK_RT305X which are both not available in Kconfig
+> >     > >> >> so all Code depending on that can't ever be selected and, if there's
+> >     > >> >> no plan to add these options, should be cleaned up
+> >     > >> >>
+> >     > >> >> Signed-off-by: Christoph Egger <siccegge@cs.fau.de <mailto:siccegge@cs.fau.de>>
+> >     > >> >
+> >     > >> > NAK,
+> >     > >> >
+> >     > >> > this is not dead code, it is needed for the Ralink System-on-Chip
+> >     > >> > Platform devices.
+> >     > >> >
+> >     > >> > While I can't fix Kconfig errors and the current KConfig file may be
+> >     > >> > wrong, this code cannot and will not be deleted.
+> >     > >>
+> >     > >> When the config option was introduced, the config options RALINK_RT288X and
+> >     > >> RALINK_RT305X were supposed to be merged as well soon after by somebody (Felix?)
+> >     > >>
+> >     > >> But since testing is done on SoC boards by Helmut and Felix, I assume the code
+> >     > >> isn't dead but actually in use.
+> >     > >
+> >     > > Perhaps Helmut and Felix can send us the missing code?
+> >     > The missing code is a MIPS platform port, which is currently being
+> >     > maintained in OpenWrt, but is not ready for upstream submission yet.
+> >     > I'm not working on this code at the moment, but I think it will be
+> >     > submitted once it's ready.
+> >
+> >     People are using automatic scripts to catch unused config options nowadays
+> >     so the issue is quite likely to come back again sooner or later..
+> >
+> >     Would it be possible to improve situation somehow till the missing parts
+> >     get merged?  Maybe by adding a tiny comment documenting RT2800PCI_SOC
+> >     situation to Kconfig (if the config option itself really cannot be removed)
+> >     until all code is ready etc.?
+> >
+> >
+> > Or we could just remove RT2800PCI_SOC completely and build the soc specific
+> > parts always as part of rt2800pci. I mean it's not much code, just the platform
+> > driver stuff and the eeprom access.
+> >
+>
+> I'm not sure if that is feasible. Sure, we can reduce the usage of the variable by
+> unconditionally compiling in the generic SOC code, but we should not unconditionally
+> register the SOC platform device, which is currently also under the scope of this
+> Kconfig variable.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Reported-by: Senthil Balasubramanian <senthilkumar@atheros.com>
----
---- a/drivers/net/wireless/ath/ath9k/common.c
-+++ b/drivers/net/wireless/ath/ath9k/common.c
-@@ -319,6 +319,10 @@ int ath9k_cmn_key_config(struct ath_comm
- 			idx = ath_reserve_key_cache_slot(common, key->alg);
- 			break;
- 		case NL80211_IFTYPE_ADHOC:
-+			if (!sta) {
-+				idx = key->keyidx;
-+				break;
-+			}
- 			memcpy(gmac, sta->addr, ETH_ALEN);
- 			gmac[0] |= 0x01;
- 			mac = gmac;
+Ehm, no, the platform device is not registered in rt2800pci at all,
+it's just the platform
+driver that gets registered there. The platform device will be
+registered in the according
+board init code (that only resides in openwrt at the moment).
+
+Helmut
