@@ -1,65 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49066 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757230Ab0GBOPL (ORCPT
+Received: from cpsmtpb-ews05.kpnxchange.com ([213.75.39.8]:4219 "EHLO
+	cpsmtpb-ews05.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965833Ab0GPPqb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jul 2010 10:15:11 -0400
-Date: Fri, 2 Jul 2010 10:12:16 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Question on 'iw reg get/set'
-Message-ID: <20100702141216.GB2381@tuxdriver.com>
-References: <4C2CFAEB.9070302@candelatech.com>
+	Fri, 16 Jul 2010 11:46:31 -0400
+Message-ID: <4C407ED4.6000002@gmail.com>
+Date: Fri, 16 Jul 2010 17:46:28 +0200
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4C2CFAEB.9070302@candelatech.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ivo Van Doorn <ivdoorn@gmail.com>,
+	Christoph Egger <siccegge@cs.fau.de>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	vamos-dev@i4.informatik.uni-erlangen.de,
+	Luis Correia <luis.f.correia@gmail.com>
+Subject: Re: [PATCH 01/11] Removing dead RT2800PCI_SOC
+References: <cover.1279110894.git.siccegge@cs.fau.de>	<20100714131527.GB2352@tuxdriver.com>	<4C3DCD5C.1080705@openwrt.org>	<201007151041.55112.bzolnier@gmail.com>	<AANLkTilqoYMMKYJT-YYbEzdnytUSYa0EylEiJ4x5xXXH@mail.gmail.com>	<4C4007CD.2070504@gmail.com> <AANLkTik8M0gNipi_rwVJYbmo_3FfdHs-H4H_XDgTcbhI@mail.gmail.com>
+In-Reply-To: <AANLkTik8M0gNipi_rwVJYbmo_3FfdHs-H4H_XDgTcbhI@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 01, 2010 at 01:30:35PM -0700, Ben Greear wrote:
-> I'm using an ath9k NIC on a slightly hacked 2.6.34 kernel, Fedora 13 32-bit.
-> I'm using the stock 'iw' command that comes with Fedora 13.
+On 07/16/10 12:08, Helmut Schaa wrote:
+> On Fri, Jul 16, 2010 at 9:18 AM, Gertjan van Wingerde
+> <gwingerde@gmail.com> wrote:
+>>
+>> On 07/16/10 08:57, Helmut Schaa wrote:
+>>> On Thu, Jul 15, 2010 at 10:41 AM, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com <mailto:bzolnier@gmail.com>> wrote:
+>>>
+>>>     On Wednesday 14 July 2010 04:44:44 pm Felix Fietkau wrote:
+>>>     > On 2010-07-14 3:15 PM, John W. Linville wrote:
+>>>     > > On Wed, Jul 14, 2010 at 02:52:14PM +0200, Ivo Van Doorn wrote:
+>>>     > >> On Wed, Jul 14, 2010 at 2:46 PM, Luis Correia <luis.f.correia@gmail.com <mailto:luis.f.correia@gmail.com>> wrote:
+>>>     > >> > On Wed, Jul 14, 2010 at 13:39, Christoph Egger <siccegge@cs.fau.de <mailto:siccegge@cs.fau.de>> wrote:
+>>>     > >> >> While RT2800PCI_SOC exists in Kconfig, it depends on either
+>>>     > >> >> RALINK_RT288X or RALINK_RT305X which are both not available in Kconfig
+>>>     > >> >> so all Code depending on that can't ever be selected and, if there's
+>>>     > >> >> no plan to add these options, should be cleaned up
+>>>     > >> >>
+>>>     > >> >> Signed-off-by: Christoph Egger <siccegge@cs.fau.de <mailto:siccegge@cs.fau.de>>
+>>>     > >> >
+>>>     > >> > NAK,
+>>>     > >> >
+>>>     > >> > this is not dead code, it is needed for the Ralink System-on-Chip
+>>>     > >> > Platform devices.
+>>>     > >> >
+>>>     > >> > While I can't fix Kconfig errors and the current KConfig file may be
+>>>     > >> > wrong, this code cannot and will not be deleted.
+>>>     > >>
+>>>     > >> When the config option was introduced, the config options RALINK_RT288X and
+>>>     > >> RALINK_RT305X were supposed to be merged as well soon after by somebody (Felix?)
+>>>     > >>
+>>>     > >> But since testing is done on SoC boards by Helmut and Felix, I assume the code
+>>>     > >> isn't dead but actually in use.
+>>>     > >
+>>>     > > Perhaps Helmut and Felix can send us the missing code?
+>>>     > The missing code is a MIPS platform port, which is currently being
+>>>     > maintained in OpenWrt, but is not ready for upstream submission yet.
+>>>     > I'm not working on this code at the moment, but I think it will be
+>>>     > submitted once it's ready.
+>>>
+>>>     People are using automatic scripts to catch unused config options nowadays
+>>>     so the issue is quite likely to come back again sooner or later..
+>>>
+>>>     Would it be possible to improve situation somehow till the missing parts
+>>>     get merged?  Maybe by adding a tiny comment documenting RT2800PCI_SOC
+>>>     situation to Kconfig (if the config option itself really cannot be removed)
+>>>     until all code is ready etc.?
+>>>
+>>>
+>>> Or we could just remove RT2800PCI_SOC completely and build the soc specific
+>>> parts always as part of rt2800pci. I mean it's not much code, just the platform
+>>> driver stuff and the eeprom access.
+>>>
+>>
+>> I'm not sure if that is feasible. Sure, we can reduce the usage of the variable by
+>> unconditionally compiling in the generic SOC code, but we should not unconditionally
+>> register the SOC platform device, which is currently also under the scope of this
+>> Kconfig variable.
 > 
-> As far as I can tell, the results of 'iw reg get'
-> are funky:
+> Ehm, no, the platform device is not registered in rt2800pci at all,
+> it's just the platform
+> driver that gets registered there. The platform device will be
+> registered in the according
+> board init code (that only resides in openwrt at the moment).
 > 
-> [root@atom lanforge]# iw reg get
-> country 98:
-> 	(2402 - 2472 @ 40), (N/A, 20)
-> 	(5170 - 5250 @ 20), (N/A, 17)
-> 	(5250 - 5330 @ 20), (N/A, 18), DFS
-> 
-> What is '98'?  It doesn't correspond to anything I can find
-> in the numeric or ascii lists of country codes.
-> 
-> Also, setting the domain doesn't seem to do anything, although
-> there are no errors:
-> 
-> [root@atom lanforge]# iw reg get
-> country 98:
-> 	(2402 - 2472 @ 40), (N/A, 20)
-> 	(5170 - 5250 @ 20), (N/A, 17)
-> 	(5250 - 5330 @ 20), (N/A, 18), DFS
-> [root@atom lanforge]# iw reg set US
-> [root@atom lanforge]# iw reg get
-> country 98:
-> 	(2402 - 2472 @ 40), (N/A, 20)
-> 	(5170 - 5250 @ 20), (N/A, 17)
-> 	(5250 - 5330 @ 20), (N/A, 18), DFS
-> 
-> Anyone know if this is *supposed* to work?
 
-The ath9k driver is setting its own regulatory restrictions based on
-its EEPROM.  Setting the domain from userland can only further restrict
-the regulatory settings.  The '98' value represents a synthesized
-regulatory domain, based on the intersection of the available source
-of regulatory information (which can include the EEPROM, the userland
-setting, and a country IE from your AP).
+OK. Didn't know that. Sounds good then.
 
-Hth!
+However, I've tried this in my local tree, and now compilation fails on the x86 platform
+due to a missing KSEG1ADDR macro. How do you suggest to handle the potentially missing
+macro?
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+---
+Gertjan.
