@@ -1,39 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:40231 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752733Ab0GFTDT (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:44587 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753350Ab0GPROc convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jul 2010 15:03:19 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 4299042042
-	for <linux-wireless@vger.kernel.org>; Tue,  6 Jul 2010 15:06:45 -0400 (EDT)
-Subject: Compat-wireless release for 2010-07-06 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20100706190315.A0BC042E2C@repository3.orbit-lab.org>
-Date: Tue,  6 Jul 2010 15:03:15 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Fri, 16 Jul 2010 13:14:32 -0400
+Received: by pvc7 with SMTP id 7so879158pvc.19
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jul 2010 10:14:31 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4C403859.70201@openwrt.org>
+References: <alpine.DEB.2.00.1007160440530.13924@lynx> <4C403859.70201@openwrt.org>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 16 Jul 2010 10:14:06 -0700
+Message-ID: <AANLkTinQPAyPD-27KFAhTzklVhV3zcDqizWbSj1Bdw0C@mail.gmail.com>
+Subject: Re: what's the status of ATHEROS_AR71XX config variable?
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: "Robert P. J. Day" <rpjday@crashcourse.ca>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Gabor Juhos <juhosg@openwrt.org>, linux-mips@linux-mips.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   39a2e97..5aff268  history    -> origin/history
- + 2880928...03c604f master     -> origin/master  (forced update)
-   123f94f..815c416  stable     -> origin/stable
- * [new tag]         next-20100706 -> next-20100706
- * [new tag]         v2.6.35-rc4 -> v2.6.35-rc4
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
-/usr/bin/sha1sum: *.tar.bz2: No such file or directory
+On Fri, Jul 16, 2010 at 3:45 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> On 2010-07-16 10:43 AM, Robert P. J. Day wrote:
+>>
+>>   from drivers/net/wireless/ath/ath9k/Makefile:
+>>
+>> ath9k-$(CONFIG_ATHEROS_AR71XX) += ahb.o
+>>
+>> but there is no such config variable.  so i'm thinking *something*
+>> should be removed.
+> The platform port for AR71xx hasn't been submitted upstream yet. But the
+> code in ahb.c is actively being used in OpenWrt.
+>
+> I don't know what the status on submitting the code to linux-mips is,
+> but I've Cc'd Gabor, he should know ;)
 
-compat-wireless code metrics
+If its actively being supporting and tested, why not submit it now?
+Any particular large pending blockers?
 
-    494471 - Total upstream lines of code being pulled
+  Luis
