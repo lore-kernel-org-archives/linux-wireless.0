@@ -1,116 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:59128 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932732Ab0G3R51 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jul 2010 13:57:27 -0400
-Message-Id: <20100730175149.193511268@clark.site>
-Date: Fri, 30 Jul 2010 10:53:05 -0700
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: stable-review@kernel.org, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	Daniel Mack <daniel@caiaq.de>,
-	Alagu Sankar <alagusankar@embwise.com>,
-	Volker Ernst <volker.ernst@txtr.com>,
-	Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	Bing Zhao <bzhao@marvell.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-mmc@vger.kernel.org
-Subject: [168/205] libertas/sdio: 8686: set ECSI bit for 1-bit transfers
-In-Reply-To: <20100730175238.GA3924@kroah.com>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:59329 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965078Ab0GPLBc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Jul 2010 07:01:32 -0400
+Received: by wyb42 with SMTP id 42so1627206wyb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jul 2010 04:01:29 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH] mac80211: skip HT parsing if HW does not support HT
+Date: Fri, 16 Jul 2010 13:01:24 +0200
+Cc: linux-wireless@vger.kernel.org,
+	John W Linville <linville@tuxdriver.com>
+References: <201007142343.33937.chunkeey@googlemail.com> <4C3E311B.7070402@openwrt.org>
+In-Reply-To: <4C3E311B.7070402@openwrt.org>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201007161301.24940.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2.6.34-stable review patch.  If anyone has any objections, please let us know.
+This patch will also fix the odd freeze which occurred
+when minstrel_ht connects to an 802.11n network with
+legacy hardware.
 
-------------------
-
-From: Daniel Mack <daniel@caiaq.de>
-
-commit 8a64c0f6b7ec7f758c4ef445e49f479e27fa2236 upstream.
-
-When operating in 1-bit mode, SDAT1 is used as dedicated interrupt line.
-However, the 8686 will only drive this line when the ECSI bit is set in
-the CCCR_IF register.
-
-Thanks to Alagu Sankar for pointing me in the right direction.
-
-Signed-off-by: Daniel Mack <daniel@caiaq.de>
-Cc: Alagu Sankar <alagusankar@embwise.com>
-Cc: Volker Ernst <volker.ernst@txtr.com>
-Cc: Dan Williams <dcbw@redhat.com>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: Bing Zhao <bzhao@marvell.com>
-Cc: libertas-dev@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Cc: linux-mmc@vger.kernel.org
-Acked-by: Dan Williams <dcbw@redhat.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 ---
- drivers/net/wireless/libertas/if_sdio.c |   22 ++++++++++++++++++++++
- include/linux/mmc/sdio.h                |    2 ++
- 2 files changed, 24 insertions(+)
+John,
 
---- a/drivers/net/wireless/libertas/if_sdio.c
-+++ b/drivers/net/wireless/libertas/if_sdio.c
-@@ -35,6 +35,8 @@
- #include <linux/mmc/card.h>
- #include <linux/mmc/sdio_func.h>
- #include <linux/mmc/sdio_ids.h>
-+#include <linux/mmc/sdio.h>
-+#include <linux/mmc/host.h>
- 
- #include "host.h"
- #include "decl.h"
-@@ -943,6 +945,7 @@ static int if_sdio_probe(struct sdio_fun
- 	int ret, i;
- 	unsigned int model;
- 	struct if_sdio_packet *packet;
-+	struct mmc_host *host = func->card->host;
- 
- 	lbs_deb_enter(LBS_DEB_SDIO);
- 
-@@ -1023,6 +1026,25 @@ static int if_sdio_probe(struct sdio_fun
- 	if (ret)
- 		goto disable;
- 
-+	/* For 1-bit transfers to the 8686 model, we need to enable the
-+	 * interrupt flag in the CCCR register. Set the MMC_QUIRK_LENIENT_FN0
-+	 * bit to allow access to non-vendor registers. */
-+	if ((card->model == IF_SDIO_MODEL_8686) &&
-+	    (host->caps & MMC_CAP_SDIO_IRQ) &&
-+	    (host->ios.bus_width == MMC_BUS_WIDTH_1)) {
-+		u8 reg;
-+
-+		func->card->quirks |= MMC_QUIRK_LENIENT_FN0;
-+		reg = sdio_f0_readb(func, SDIO_CCCR_IF, &ret);
-+		if (ret)
-+			goto release_int;
-+
-+		reg |= SDIO_BUS_ECSI;
-+		sdio_f0_writeb(func, reg, SDIO_CCCR_IF, &ret);
-+		if (ret)
-+			goto release_int;
-+	}
-+
- 	card->ioport = sdio_readb(func, IF_SDIO_IOPORT, &ret);
- 	if (ret)
- 		goto release_int;
---- a/include/linux/mmc/sdio.h
-+++ b/include/linux/mmc/sdio.h
-@@ -94,6 +94,8 @@
- 
- #define  SDIO_BUS_WIDTH_1BIT	0x00
- #define  SDIO_BUS_WIDTH_4BIT	0x02
-+#define  SDIO_BUS_ECSI		0x20	/* Enable continuous SPI interrupt */
-+#define  SDIO_BUS_SCSI		0x40	/* Support continuous SPI interrupt */
- 
- #define  SDIO_BUS_ASYNC_INT	0x20
- 
+As you know Felix has favored the alternative.
+Therefore, can you please ignore
+[PATCH] minstrel_ht: fix freeze with legacy hardware
+and use this one instead?
 
-
+Regards,
+	Chr
+---
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index be928ef..9d101fb 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -29,7 +29,7 @@ void ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_supported_band *sband,
+ 
+ 	memset(ht_cap, 0, sizeof(*ht_cap));
+ 
+-	if (!ht_cap_ie)
++	if (!ht_cap_ie || !sband->ht_cap.ht_supported)
+ 		return;
+ 
+ 	ht_cap->ht_supported = true;
