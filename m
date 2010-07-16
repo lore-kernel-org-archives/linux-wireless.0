@@ -1,87 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.mail.elte.hu ([157.181.1.138]:48086 "EHLO mx3.mail.elte.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751337Ab0GIHM0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jul 2010 03:12:26 -0400
-Date: Fri, 9 Jul 2010 09:11:31 +0200
-From: Ingo Molnar <mingo@elte.hu>
-To: Linus Torvalds <torvalds@linux-foundation.org>,
-	"Paul E. McKenney" <paulmck@us.ibm.com>,
-	Peter Zijlstra <a.p.zijlstra@chello.nl>,
-	Thomas Gleixner <tglx@linutronix.de>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>,
-	Frederic Weisbecker <fweisbec@gmail.com>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	Shawn Starr <shawn.starr@rogers.com>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Dave Airlie <airlied@redhat.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Patrick McHardy <kaber@trash.net>, Jens Axboe <axboe@kernel.dk>
-Subject: Re: 2.6.35-rc4-git3: Reported regressions from 2.6.34
-Message-ID: <20100709071131.GB10743@elte.hu>
-References: <-IGZ64uxA6G.A.P0H.bLmNMB@chimera>
- <AANLkTiknnzWyVpqnPCpyiEVHLgkewd0zaGzLInABRe2G@mail.gmail.com>
+Received: from astoria.ccjclearline.com ([64.235.106.9]:50639 "EHLO
+	astoria.ccjclearline.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964971Ab0GPK5x (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Jul 2010 06:57:53 -0400
+Date: Fri, 16 Jul 2010 06:57:45 -0400 (EDT)
+From: "Robert P. J. Day" <rpjday@crashcourse.ca>
+To: Felix Fietkau <nbd@openwrt.org>
+cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: Re: what's the status of ATHEROS_AR71XX config variable?
+In-Reply-To: <4C403859.70201@openwrt.org>
+Message-ID: <alpine.DEB.2.00.1007160656240.18878@lynx>
+References: <alpine.DEB.2.00.1007160440530.13924@lynx> <4C403859.70201@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTiknnzWyVpqnPCpyiEVHLgkewd0zaGzLInABRe2G@mail.gmail.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 16 Jul 2010, Felix Fietkau wrote:
 
-* Linus Torvalds <torvalds@linux-foundation.org> wrote:
+> On 2010-07-16 10:43 AM, Robert P. J. Day wrote:
+> >
+> >   from drivers/net/wireless/ath/ath9k/Makefile:
+> >
+> > ath9k-$(CONFIG_ATHEROS_AR71XX) += ahb.o
+> >
+> > but there is no such config variable.  so i'm thinking *something*
+> > should be removed.
 
-> > Bug-Entry ? ? ? : http://bugzilla.kernel.org/show_bug.cgi?id=16346
-> > Subject ? ? ? ? : 2.6.35-rc3-git8 - include/linux/fdtable.h:88 invoked rcu_dereference_check() without protection!
-> > Submitter ? ? ? : Miles Lane <miles.lane@gmail.com>
-> > Date ? ? ? ? ? ?: 2010-07-04 22:04 (5 days old)
-> > Message-ID ? ? ?: <AANLkTinof0k28rk4rMr66aubxcRL2rFa5ZEArj1lqD3o@mail.gmail.com>
-> > References ? ? ?: http://marc.info/?l=linux-kernel&m=127828107815930&w=2
-> 
-> I'm not entirely sure if these RCU proving things should count as 
-> regressions.
+> The platform port for AR71xx hasn't been submitted upstream yet. But
+> the code in ahb.c is actively being used in OpenWrt.
+>
+> I don't know what the status on submitting the code to linux-mips
+> is, but I've Cc'd Gabor, he should know ;)
 
-Generally not - and we've delayed at least one more complex (cgroups) fix to 
-v2.6.36 because the patch itself was riskier than the warning.
+  ok.  i wasn't passing judgment one way or the other, just making an
+observation that the mainstream kernel doesn't define that config
+variable.  you can take it from here.
 
-Still most of the warning fixes turned out to be simple, so we merged the 
-very-low-risk ones and right now we seem to be on top of them.
+rday
 
-But in general the default rule is that we delay these fixes to v2.6.36.
+-- 
 
-> Sure, the option to enable RCU proving is new, but the things it reports 
-> about generally are not new - and they are usually not even bugs in the 
-> sense that they necessarily cause any real problems.
-> 
-> That particular one is in the single-thread optimizated case for fget_light, ie
-> 
->         if (likely((atomic_read(&files->count) == 1))) {
->                 file = fcheck_files(files, fd);
-> 
-> where I think it should be entirely safe in all ways without any locking. So 
-> I think it's a false positive too.
+========================================================================
+Robert P. J. Day                               Waterloo, Ontario, CANADA
 
-Yeah, it's a bit like with lockdep (and it's a bit like with compiler warning 
-fixes): we had to punch through a large stack of false positives that 
-accumulated in the past 10 years.
+        Top-notch, inexpensive online Linux/OSS/kernel courses
+                        http://crashcourse.ca
 
-( Because real bugs eventually get fixed, while false positives always just
-  accumulate. So almost by definition we always start with a very assymetric
-  collection of warnings and a large stack of false positives. )
-
-Having said that, it appears we got most of the false positives and are 
-beginning to be in a more representative equilibrium now. If v2.6.35 isnt 
-going to be warning-free then v2.6.36 certainly will be and new warnings will 
-have a much higher likelyhood of being real (and new) bugs (not just 
-accumulated false-positives).
-
-	Ingo
+Twitter:                                       http://twitter.com/rpjday
+LinkedIn:                               http://ca.linkedin.com/in/rpjday
+========================================================================
