@@ -1,35 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:10920 "EHLO c60.cesmail.net"
+Received: from mga02.intel.com ([134.134.136.20]:26340 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750855Ab0GCOEh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Jul 2010 10:04:37 -0400
-Subject: Re: ath: Fix uninitialized variable warnings [v2]
-From: Pavel Roskin <proski@gnu.org>
-To: Prarit Bhargava <prarit@redhat.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@atheros.com,
-	linville@tuxdriver.com
-In-Reply-To: <20100701160048.23795.39782.sendpatchset@prarit.bos.redhat.com>
-References: <20100701160048.23795.39782.sendpatchset@prarit.bos.redhat.com>
-Content-Type: text/plain
-Date: Sat, 03 Jul 2010 10:04:32 -0400
-Message-Id: <1278165872.6710.1.camel@mj>
-Mime-Version: 1.0
+	id S1759977Ab0GQOxk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Jul 2010 10:53:40 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 3/3] iwlwifi: "recover_from_tx_stall" function for 4965
+Date: Sat, 17 Jul 2010 07:55:16 -0700
+Message-Id: <1279378516-31290-4-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1279378516-31290-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1279378516-31290-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-07-01 at 12:09 -0400, Prarit Bhargava wrote:
-> Fix 'make CONFIG_DEBUG_SECTION_MISMATCH=y' warning:
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-I don't think the warnings you are fixing have anything to do with
-CONFIG_DEBUG_SECTION_MISMATCH.
+"Recover from tx stall" function is available for all devices except
+4965, here add the functionality to 4965.
 
-> drivers/net/wireless/mwl8k.c: In function 'mwl8k_bss_info_changed_sta':
-> drivers/net/wireless/mwl8k.c:3404: warning: 'ap_legacy_rates' may be used uninitialized in this function
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-4965.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-The patch doesn't appear to touch mwl8k.c at all.
-
-Please fix the description.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index 1dd3bc4..3a0d0ad 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -2286,6 +2286,7 @@ static struct iwl_lib_ops iwl4965_lib = {
+ 		.tx_stats_read = iwl_ucode_tx_stats_read,
+ 		.general_stats_read = iwl_ucode_general_stats_read,
+ 	},
++	.recover_from_tx_stall = iwl_bg_monitor_recover,
+ 	.check_plcp_health = iwl_good_plcp_health,
+ };
+ 
 -- 
-Regards,
-Pavel Roskin
+1.7.0.4
+
