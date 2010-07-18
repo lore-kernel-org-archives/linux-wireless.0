@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:54823 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753510Ab0GVSaM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 14:30:12 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] MAINTAINERS: mark prism54 obsolete
-Date: Thu, 22 Jul 2010 14:27:43 -0400
-Message-Id: <1279823263-21201-1-git-send-email-linville@tuxdriver.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:59757 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757158Ab0GRTJa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Jul 2010 15:09:30 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] compat: fix build if CONFIG_PCCARD=y and CONFIG_PCMCIA=n
+Date: Sun, 18 Jul 2010 21:09:22 +0200
+Message-Id: <1279480162-20673-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The prism54 driver had an entry in feature-removal-schedule.txt and it
-sees very little activity other than API-change "bombing runs".  The
-mac80211-based p54 driver should be used instead.
+The includes are needed for pccard_loop_tuple.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- MAINTAINERS |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ include/linux/compat-2.6.33.h |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 7faf729..3148b71 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -4499,7 +4499,7 @@ PRISM54 WIRELESS DRIVER
- M:	"Luis R. Rodriguez" <mcgrof@gmail.com>
- L:	linux-wireless@vger.kernel.org
- W:	http://prism54.org
--S:	Maintained
-+S:	Obsolete
- F:	drivers/net/wireless/prism54/
+diff --git a/include/linux/compat-2.6.33.h b/include/linux/compat-2.6.33.h
+index 0b434fc..e4dff72 100644
+--- a/include/linux/compat-2.6.33.h
++++ b/include/linux/compat-2.6.33.h
+@@ -7,12 +7,10 @@
  
- PROMISE DC4030 CACHING DISK CONTROLLER DRIVER
+ #include <linux/skbuff.h>
+ #if defined(CONFIG_PCCARD) || defined(CONFIG_PCCARD_MODULE)
+-#if defined(CONFIG_PCMCIA) || defined(CONFIG_PCMCIA_MODULE)
+ #include <pcmcia/cs_types.h>
+ #include <pcmcia/cistpl.h>
+ #include <pcmcia/ds.h>
+ #endif
+-#endif
+ #include <linux/kfifo.h>
+ #include <linux/firmware.h>
+ 
 -- 
-1.7.1.1
+1.7.0.4
 
