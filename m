@@ -1,79 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44939 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751006Ab0G1TaO (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:35906 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966638Ab0GSUNJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jul 2010 15:30:14 -0400
-Date: Wed, 28 Jul 2010 15:15:53 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ar9170: add get_survey callback in order to get channel
- noise
-Message-ID: <20100728191552.GA2668@tuxdriver.com>
-References: <1280342924-22811-1-git-send-email-linville@tuxdriver.com>
- <201007282110.31458.chunkeey@googlemail.com>
+	Mon, 19 Jul 2010 16:13:09 -0400
+Received: by fxm14 with SMTP id 14so2399738fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Jul 2010 13:13:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201007282110.31458.chunkeey@googlemail.com>
+In-Reply-To: <4C449C67.6010004@davizone.at>
+References: <4C449C67.6010004@davizone.at>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Mon, 19 Jul 2010 22:12:48 +0200
+Message-ID: <AANLkTimj6DhVK7WePrpoJap6M_OtteoHtS8UMYcVloIV@mail.gmail.com>
+Subject: Re: [PATCH] cfg80211: fix WEXT ioctl GIWFREQ for monitor interfaces
+To: David Gnedt <david.gnedt@davizone.at>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 28, 2010 at 09:10:31PM +0200, Christian Lamparter wrote:
-> On Wednesday 28 July 2010 20:48:44 John W. Linville wrote:
-> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> > ---
-> >  drivers/net/wireless/ath/ar9170/main.c |   17 +++++++++++++++++
-> >  1 files changed, 17 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
-> > index 5e2c514..e089d9f 100644
-> > --- a/drivers/net/wireless/ath/ar9170/main.c
-> > +++ b/drivers/net/wireless/ath/ar9170/main.c
-> > @@ -1905,6 +1905,22 @@ static int ar9170_get_stats(struct ieee80211_hw *hw,
-> >  	return 0;
-> >  }
-> >  
-> > +static int ar9170_get_survey(struct ieee80211_hw *hw, int idx,
-> > +				struct survey_info *survey)
-> > +{
-> > +	struct ar9170 *ar = hw->priv;
-> > +	struct ieee80211_conf *conf = &hw->conf;
-> > +
-> > +	if (idx != 0)
-> > +		return -ENOENT;
-> > +
-> > +	survey->channel = conf->channel;
-> > +	survey->filled = SURVEY_INFO_NOISE_DBM;
-> > +	survey->noise = ar->noise[0];
-> > +
-> > +	return 0;
-> > +}
-> > +
-> >  static int ar9170_conf_tx(struct ieee80211_hw *hw, u16 queue,
-> >  			  const struct ieee80211_tx_queue_params *param)
-> >  {
-> > @@ -1957,6 +1973,7 @@ static const struct ieee80211_ops ar9170_ops = {
-> >  	.get_tsf		= ar9170_op_get_tsf,
-> >  	.set_key		= ar9170_set_key,
-> >  	.get_stats		= ar9170_get_stats,
-> > +	.get_survey		= ar9170_get_survey,
-> >  	.ampdu_action		= ar9170_ampdu_action,
-> >  };
-> 
-> One problem: the noisefloor stays at the same level and
-> is not updated. You would have to call ar9170_set_channel,
-> but I don't recommend that because that may lockup
-> the device :(.
+On Mon, Jul 19, 2010 at 8:41 PM, David Gnedt <david.gnedt@davizone.at> wrote:
+> The cfg80211_set_freq function now also saves the channel for monitor
+> interfaces.
+> This fixes a issue were the WEXT ioctl GIWFREQ doesn't report the correct
+> channel when the channel was switched in monitor mode.
+>
+> Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+> ---
+>  net/wireless/chan.c |    7 +++----
+>  1 files changed, 3 insertions(+), 4 deletions(-)
+>
+> diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+> index d0c92dd..fd05938 100644
+> --- a/net/wireless/chan.c
+> +++ b/net/wireless/chan.c
+> @@ -51,9 +51,6 @@ int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
+>        struct ieee80211_channel *chan;
+>        int result;
+>
+> -       if (wdev && wdev->iftype == NL80211_IFTYPE_MONITOR)
+> -               wdev = NULL;
+> -
+>        if (wdev) {
+>                ASSERT_WDEV_LOCK(wdev);
+>
+> @@ -69,7 +66,9 @@ int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
+>                return -EINVAL;
+>
+>        result = rdev->ops->set_channel(&rdev->wiphy,
+> -                                       wdev ? wdev->netdev : NULL,
+> +                                       wdev && wdev->iftype !=
+> +                                               NL80211_IFTYPE_MONITOR ?
+> +                                                       wdev->netdev : NULL,
 
-I'm not sure I understand -- isn't ar9170_set_channel already called
-from ar9170_op_config?  Or are you saying that the value will be
-stale unless you call ar9170_set_channel again?
+Just out of curiosity: why is it important to pass NULL as netdev for
+monitor interfaces?
 
-How is this patch any worse than the situation was before commit
-5d6566ff356a19fb6ad994717cb937ff88063fa6?
+>                                        chan, channel_type);
+>        if (result)
+>                return result;
+> --
+> 1.6.3.3
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-John
+
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
