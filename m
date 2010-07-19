@@ -1,57 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44030 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754567Ab0GTNFZ (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:45564 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754567Ab0GSX3i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jul 2010 09:05:25 -0400
-Subject: Re: [PATCH] cfg80211: fix WEXT ioctl GIWFREQ for monitor interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Gnedt <david.gnedt@davizone.at>
-Cc: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <4C44DFBB.6070604@davizone.at>
-References: <4C449C67.6010004@davizone.at>
-	 <1279571235.30478.5.camel@jlt3.sipsolutions.net>
-	 <AANLkTimxBt7dPcZrmAihWq9UKs77qS0cnAxQXIY_55ci@mail.gmail.com>
-	 <4C44DFBB.6070604@davizone.at>
+	Mon, 19 Jul 2010 19:29:38 -0400
+Subject: Re: iwlagn and many firmware restarts with Fedora kernel
+From: Marcel Holtmann <marcel@holtmann.org>
+To: drago01 <drago01@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTinGUQjPoMRmt_jeFgpxLhzma7qhfR14t_tWLvO1@mail.gmail.com>
+References: <1279565034.4572.36.camel@localhost.localdomain>
+	 <AANLkTinGUQjPoMRmt_jeFgpxLhzma7qhfR14t_tWLvO1@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 20 Jul 2010 15:04:56 +0200
-Message-ID: <1279631096.3706.33.camel@jlt3.sipsolutions.net>
+Date: Mon, 19 Jul 2010 16:29:34 -0700
+Message-ID: <1279582174.4572.43.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-07-20 at 01:28 +0200, David Gnedt wrote:
-> Am 2010-07-19 23:06, schrieb Gábor Stefanik:
-> > (BTW, I say that a GIWFREQ on a monitor interface should always return
-> > the channel the PHY is tuned to at the moment when it is issued. Most
-> > tools seem to expect this behavior.)
+Hi,
+
+> > so during the last few weeks, I have seen a huge amount of firmware
+> > restarts with my Intel 5350 card and Fedora 13 kernel (2.6.33.6-147).
+> >
+> > iwlagn 0000:03:00.0: low ack count detected, restart firmware
+> > iwlagn 0000:03:00.0: On demand firmware reload
+> > iwlagn 0000:03:00.0: Stopping AGG while state not ON or starting
+> > iwlagn 0000:03:00.0: queue number out of range: 0, must be 10 to 19
+> >
+> > If this happens then I don't see it once, I normally see this 10-20
+> > times and the connectivity is stalled until the cards comes back to
+> > life. I have seen patches that should have fixed this symptom, but they
+> > might be also send to -stable since this is a major hassle.
+> >
+> > The time without connectivity is something around 4-5 minutes or longer
+> > when this happens. Not really funny.
 > 
-> I agree, that would be the expected behaviour.
-> 
-> I am not very familar with the entire wireless subsystem yet, but wouldn't that
-> imply a interface change in cfg80211 and mac80211 to add an "get_channel" function?
+> This happens here too even with the 2.6.34.1-9.fc13.x86_64 kernel;
+> when this happens reloading the iwlagn module seems to be the only
+> (quick) way to get it back to life.
 
-Yes, I think so.
+the quick way is re-loading the module, that is true. Otherwise you have
+to sit it out. It always comes back nicely and starts working again.
 
-> Because if the card is hopping channels (e.g. because of 2 station interfaces on
-> different channels), only the driver itself can tell what's really the current
-> channel.
+Regards
 
-Right. Although in that case I'm not sure we should be telling userspace
-what channel the monitor interface is on, since there's no single
-channel it is on, and I certainly hope userspace won't be requesting the
-channel many times per second!
+Marcel
 
-> Nevertheless a default implementation for this new "get_channel" can be written
-> at mac80211 level (or even cfg80211?), which tries to find the current channel
-> by looking at all virtual interfaces, so only mac80211 drivers which allow
-> multiple channels (and non-mac80211 drivers) need to implement it.
-
-Indeed, but I think mac80211 would be more appropriate than cfg80211
-since the latter won't really have all the information unless it makes a
-whole bunch of assumptions that we'll eventually have to reconsider.
-
-johannes
 
