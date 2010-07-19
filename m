@@ -1,49 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49068 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757172Ab0GBOPL (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:58333 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965559Ab0GSTWQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jul 2010 10:15:11 -0400
-Date: Fri, 2 Jul 2010 10:08:05 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2010-07-01
-Message-ID: <20100702140805.GA2381@tuxdriver.com>
-References: <20100701181526.GA2356@tuxdriver.com>
- <20100701.173550.172604489.davem@davemloft.net>
+	Mon, 19 Jul 2010 15:22:16 -0400
+Received: by vws5 with SMTP id 5so5028347vws.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Jul 2010 12:22:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100701.173550.172604489.davem@davemloft.net>
+In-Reply-To: <AANLkTilmifjH5Zopo82LhjidzsYfT_xRgKJzjGCZZPlq@mail.gmail.com>
+References: <AANLkTilmifjH5Zopo82LhjidzsYfT_xRgKJzjGCZZPlq@mail.gmail.com>
+Date: Mon, 19 Jul 2010 15:22:15 -0400
+Message-ID: <AANLkTintLd8YTgMQuzbEB36t_i5AL4TePBSDAa7G2zvl@mail.gmail.com>
+Subject: Re: ath5k Ad Hoc Association
+From: Bob Copeland <me@bobcopeland.com>
+To: Jonathan Guerin <jonathan@guerin.id.au>
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 01, 2010 at 05:35:50PM -0700, David Miller wrote:
-> From: "John W. Linville" <linville@tuxdriver.com>
-> Date: Thu, 1 Jul 2010 14:15:27 -0400
-> 
-> > Two weeks since the last request, plenty of new stuff intended for
-> > 2.6.36...
-> > 
-> > Included are the usual bunch of driver updates, including a big
-> > dump from the rt2x00 team.  This also includes cfg80211 support
-> > for libertas, a flurry of (mostly trivial) stuff from me, and a
-> > wireless-2.6 pull to resolve some patch dependencies.
-> > 
-> > Please let me know if there are problems!
-> 
-> This failed to pull cleanly, I got a conflict in
-> drivers/net/wireless/libertas/host.h  It was the
-> usual "__packed" vs. "__attribute__((packed))" thing.
-> 
-> I resolved it but I wonder if this happened because you
-> did the wireless-2.6 --> wireless-next-2.6 merge here.
+On Mon, Jul 19, 2010 at 12:35 AM, Jonathan Guerin <jonathan@guerin.id.au> wrote:
+> Hi,
+>
+> I'm trying to get my wireless nodes to associate in ad hoc mode.
+[...]
+> I've built and installed the compat package for this kernel version:
+> compat-wireless-2.6.32.16
 
-Sorry, Dave!  I probably should have done 'for-davem' branch for you.
-Thanks for resolving it!
+Ok, I'm not sure which mainline kernel this corresponds to, but I
+just tested ath5k adhoc with success in the latest wireless-testing
+kernel.  Here's what I did:
 
-John
+(had dnsmasq running dhcp for 192.168.10.x, network manager disabled)
+
+$ su
+# modprobe -r ath5k
+# modprobe ath5k
+# iw dev wlan0 set type ibss
+# ifconfig wlan0 192.168.10.1 up
+# iw dev wlan0 ibss join myibss 2462
+
+Then on the other machine (Vista) I just located 'myibss' (so beacons
+are working) and selected it, then successfully pinged 192.168.10.1.
+
+It may depend on which channel you are trying to use; are you on
+a channel that allows beaconing in your regulatory domain?
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Bob Copeland %% www.bobcopeland.com
