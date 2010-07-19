@@ -1,100 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp4-g21.free.fr ([212.27.42.4]:54596 "EHLO smtp4-g21.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754709Ab0GQWYi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Jul 2010 18:24:38 -0400
-Subject: Re: [RFC] cfg80211: fix race between sysfs and cfg80211
-From: Maxime Bizon <mbizon@freebox.fr>
-Reply-To: mbizon@freebox.fr
-To: Johannes Berg <johannes@sipsolutions.net>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:48159 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966620Ab0GSWdF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Jul 2010 18:33:05 -0400
+Received: by wwj40 with SMTP id 40so1656wwj.1
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Jul 2010 15:33:04 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1279565034.4572.36.camel@localhost.localdomain>
+References: <1279565034.4572.36.camel@localhost.localdomain>
+Date: Tue, 20 Jul 2010 00:33:04 +0200
+Message-ID: <AANLkTinGUQjPoMRmt_jeFgpxLhzma7qhfR14t_tWLvO1@mail.gmail.com>
+Subject: Re: iwlagn and many firmware restarts with Fedora kernel
+From: drago01 <drago01@gmail.com>
+To: Marcel Holtmann <marcel@holtmann.org>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1279394982.3931.0.camel@jlt3.sipsolutions.net>
-References: <1279336415.1941.6.camel@kero>
-	 <1279394982.3931.0.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 18 Jul 2010 00:24:28 +0200
-Message-ID: <1279405468.1907.6.camel@kero>
-Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Jul 19, 2010 at 8:43 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
+> Hi,
+>
+> so during the last few weeks, I have seen a huge amount of firmware
+> restarts with my Intel 5350 card and Fedora 13 kernel (2.6.33.6-147).
+>
+> iwlagn 0000:03:00.0: low ack count detected, restart firmware
+> iwlagn 0000:03:00.0: On demand firmware reload
+> iwlagn 0000:03:00.0: Stopping AGG while state not ON or starting
+> iwlagn 0000:03:00.0: queue number out of range: 0, must be 10 to 19
+>
+> If this happens then I don't see it once, I normally see this 10-20
+> times and the connectivity is stalled until the cards comes back to
+> life. I have seen patches that should have fixed this symptom, but they
+> might be also send to -stable since this is a major hassle.
+>
+> The time without connectivity is something around 4-5 minutes or longer
+> when this happens. Not really funny.
 
-On Sat, 2010-07-17 at 21:29 +0200, Johannes Berg wrote:
-
-> Maybe we should hold the mutex around the debugfs stuff as well? Then
-> tools could even access that race-free, and we can simplify the code by
-> having an "out_unlock" label.
-
-device_add() is called before adding the phy to the cfg80211 device
-list.
-
-So if a userspace program uses sysfs uevents to detect new phy
-devices, and queries nl80211 to get phy info, it can get ENODEV even
-though the phy exists in sysfs.
-
-An easy workaround is to hold the cfg80211 mutex until the phy is
-present both in sysfs and cfg80211 device list.
-
-Signed-off-by: Maxime Bizon <mbizon@freebox.fr>
----
- net/wireless/core.c |   14 ++++++++------
- 1 files changed, 8 insertions(+), 6 deletions(-)
-
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 6ac70c1..fd164db 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -472,24 +472,22 @@ int wiphy_register(struct wiphy *wiphy)
- 	/* check and set up bitrates */
- 	ieee80211_set_bitrate_flags(wiphy);
- 
-+	mutex_lock(&cfg80211_mutex);
-+
- 	res = device_add(&rdev->wiphy.dev);
- 	if (res)
--		return res;
-+		goto out_unlock;
- 
- 	res = rfkill_register(rdev->rfkill);
- 	if (res)
- 		goto out_rm_dev;
- 
--	mutex_lock(&cfg80211_mutex);
--
- 	/* set up regulatory info */
- 	wiphy_update_regulatory(wiphy, NL80211_REGDOM_SET_BY_CORE);
- 
- 	list_add_rcu(&rdev->list, &cfg80211_rdev_list);
- 	cfg80211_rdev_list_generation++;
- 
--	mutex_unlock(&cfg80211_mutex);
--
- 	/* add to debugfs */
- 	rdev->wiphy.debugfsdir =
- 		debugfs_create_dir(wiphy_name(&rdev->wiphy),
-@@ -509,11 +507,15 @@ int wiphy_register(struct wiphy *wiphy)
- 	}
- 
- 	cfg80211_debugfs_rdev_add(rdev);
-+	mutex_unlock(&cfg80211_mutex);
- 
- 	return 0;
- 
-- out_rm_dev:
-+out_rm_dev:
- 	device_del(&rdev->wiphy.dev);
-+
-+out_unlock:
-+	mutex_unlock(&cfg80211_mutex);
- 	return res;
- }
- EXPORT_SYMBOL(wiphy_register);
--- 
-1.7.1
-
-
-
-
--- 
-Maxime
-
+This happens here too even with the 2.6.34.1-9.fc13.x86_64 kernel;
+when this happens reloading the iwlagn module seems to be the only
+(quick) way to get it back to life.
