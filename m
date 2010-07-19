@@ -1,94 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:37901 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754846Ab0GFAkD (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:56170 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S965036Ab0GSTDa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jul 2010 20:40:03 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>
-Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Ohad Ben-Cohen <ohadb@ti.com>
-Subject: [PATCH 04/15] mmc: support embedded data field in mmc_host
-Date: Tue,  6 Jul 2010 03:37:35 +0300
-Message-Id: <1278376666-3509-5-git-send-email-ohad@wizery.com>
-In-Reply-To: <1278376666-3509-1-git-send-email-ohad@wizery.com>
-References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
+	Mon, 19 Jul 2010 15:03:30 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 4F769421C8
+	for <linux-wireless@vger.kernel.org>; Mon, 19 Jul 2010 15:03:27 -0400 (EDT)
+Subject: Compat-wireless release for 2010-07-19 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100719190327.0A577404F0@repository3.orbit-lab.org>
+Date: Mon, 19 Jul 2010 15:03:26 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ohad Ben-Cohen <ohadb@ti.com>
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   91f06bd..c6d612697 history    -> origin/history
+ + c221ef7...058395f master     -> origin/master  (forced update)
+   2f7989e..a9f7f2e  stable     -> origin/stable
+ * [new tag]         next-20100719 -> next-20100719
 
-Add support to set/get mmc_host private embedded
-data.
+compat-wireless code metrics
 
-This is needed to allow software to dynamically
-create (and remove) SDIO functions which represents
-embedded SDIO devices.
+    494092 - Total upstream lines of code being pulled
+      1447 - backport code changes
+      1211 - backport code additions
+       236 - backport code deletions
+      5766 - backport from compat module
+      7213 - total backport code
+    1.4598 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2465 - % of crap code
 
-Typically, it will be used to set the context of
-a driver that is creating a new SDIO function
-(and would then expect to be able to get that context
-back upon creation of the new sdio func).
-
-Signed-off-by: Ohad Ben-Cohen <ohadb@ti.com>
----
- drivers/mmc/core/Kconfig |    8 ++++++++
- include/linux/mmc/host.h |   16 ++++++++++++++++
- 2 files changed, 24 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/mmc/core/Kconfig b/drivers/mmc/core/Kconfig
-index bb22ffd..ab27eb3 100644
---- a/drivers/mmc/core/Kconfig
-+++ b/drivers/mmc/core/Kconfig
-@@ -16,3 +16,11 @@ config MMC_UNSAFE_RESUME
- 
- 	  This option sets a default which can be overridden by the
- 	  module parameter "removable=0" or "removable=1".
-+
-+config MMC_EMBEDDED_SDIO
-+	boolean "MMC embedded SDIO device support"
-+	help
-+	  If you say Y here, support will be added for embedded SDIO
-+	  devices (e.g. hardwired embedded WLAN SDIO devices).
-+	  Such devices require software support for emulating
-+	  card detect events.
-diff --git a/include/linux/mmc/host.h b/include/linux/mmc/host.h
-index f65913c..9a48486 100644
---- a/include/linux/mmc/host.h
-+++ b/include/linux/mmc/host.h
-@@ -209,6 +209,10 @@ struct mmc_host {
- 	struct led_trigger	*led;		/* activity led */
- #endif
- 
-+#ifdef CONFIG_MMC_EMBEDDED_SDIO
-+	void			*embedded_data;
-+#endif
-+
- 	struct dentry		*debugfs_root;
- 
- 	unsigned long		private[0] ____cacheline_aligned;
-@@ -264,5 +268,17 @@ static inline void mmc_set_disable_delay(struct mmc_host *host,
- 	host->disable_delay = disable_delay;
- }
- 
-+#ifdef CONFIG_MMC_EMBEDDED_SDIO
-+static inline void *mmc_get_embedded_data(struct mmc_host *host)
-+{
-+	return host->embedded_data;
-+}
-+
-+static inline void mmc_set_embedded_data(struct mmc_host *host, void *data)
-+{
-+	host->embedded_data = data;
-+}
-+#endif
-+
- #endif
- 
--- 
-1.7.0.4
-
+Base tree: linux-next.git
+Base tree version: next-20100719
+compat-wireless release: compat-wireless-2010-07-13-3-g1a05138
