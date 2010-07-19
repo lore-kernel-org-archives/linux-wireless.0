@@ -1,77 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:59844 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753420Ab0GHGmh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jul 2010 02:42:37 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 07 Jul 2010 23:42:32 -0700
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH] ath9k: fix panic while cleaning up virtaul wifis
-Date: Thu, 8 Jul 2010 12:12:29 +0530
-Message-ID: <1278571349-10873-1-git-send-email-rmanoharan@atheros.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:34857 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750848Ab0GSEfu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Jul 2010 00:35:50 -0400
+Received: by qwh6 with SMTP id 6so1551958qwh.19
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Jul 2010 21:35:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+From: Jonathan Guerin <jonathan@guerin.id.au>
+Date: Mon, 19 Jul 2010 14:35:28 +1000
+Message-ID: <AANLkTilmifjH5Zopo82LhjidzsYfT_xRgKJzjGCZZPlq@mail.gmail.com>
+Subject: ath5k Ad Hoc Association
+To: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-num_sec_wiphy means max secondary wifis that the driver can accomudate.
-So cancelling wiphy work should be based on the presence of
-secondary wifis.
+Hi,
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/init.c |    2 +-
- drivers/net/wireless/ath/ath9k/main.c |    8 +++++++-
- 2 files changed, 8 insertions(+), 2 deletions(-)
+I'm trying to get my wireless nodes to associate in ad hoc mode. They
+were able to work correctly with madwifi-ng, but with ath5k, they
+simply will not associate. I've tried monitoring the interface for any
+frames being sent out, but no beacons appear to be going out. I'm
+currently running Ubuntu 10.04 with the following kernel:
+ 2.6.32-23-generic-pae
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index fe730cb..243c177 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -787,12 +787,12 @@ void ath9k_deinit_device(struct ath_softc *sc)
- 		ieee80211_unregister_hw(aphy->hw);
- 		ieee80211_free_hw(aphy->hw);
- 	}
--	kfree(sc->sec_wiphy);
- 
- 	ieee80211_unregister_hw(hw);
- 	ath_rx_cleanup(sc);
- 	ath_tx_cleanup(sc);
- 	ath9k_deinit_softc(sc);
-+	kfree(sc->sec_wiphy);
- }
- 
- void ath_descdma_cleanup(struct ath_softc *sc,
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 4c0831f..bca8c5a 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1264,6 +1264,7 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 	struct ath_softc *sc = aphy->sc;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
-+	int i;
- 
- 	mutex_lock(&sc->mutex);
- 
-@@ -1276,7 +1277,12 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 	cancel_work_sync(&sc->paprd_work);
- 	cancel_work_sync(&sc->hw_check_work);
- 
--	if (!sc->num_sec_wiphy) {
-+	for (i = 0; i < sc->num_sec_wiphy; i++) {
-+		if (sc->sec_wiphy[i])
-+			break;
-+	}
-+
-+	if (i == sc->num_sec_wiphy) {
- 		cancel_delayed_work_sync(&sc->wiphy_work);
- 		cancel_work_sync(&sc->chan_work);
- 	}
--- 
-1.7.0.4
+I've built and installed the compat package for this kernel version:
+compat-wireless-2.6.32.16
 
+Any help with this would be greatly appreciated, or at least some
+points to assist me in troubleshooting this issue.
+
+Many thanks,
+
+--
+Jonathan
