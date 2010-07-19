@@ -1,41 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:45781 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751542Ab0GMTDl (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51571 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965813Ab0GSTaL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jul 2010 15:03:41 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 235B3403DA
-	for <linux-wireless@vger.kernel.org>; Tue, 13 Jul 2010 15:07:43 -0400 (EDT)
-Subject: Compat-wireless release for 2010-07-13 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20100713190338.3C49D404F0@repository3.orbit-lab.org>
-Date: Tue, 13 Jul 2010 15:03:38 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Mon, 19 Jul 2010 15:30:11 -0400
+Date: Mon, 19 Jul 2010 15:17:09 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless-2.6 2010-07-19
+Message-ID: <20100719191709.GA6115@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   5819544..122c2ee  history    -> origin/history
- + dfab7fb...7e28ebb master     -> origin/master  (forced update)
-   589643b..1c5474a  stable     -> origin/stable
- * [new tag]         next-20100713 -> next-20100713
- * [new tag]         v2.6.35-rc5 -> v2.6.35-rc5
+Dave,
 
-compat-wireless code metrics
+In this round we have two more-or-less-one-liners intended for 2.6.25.
 
-    495975 - Total upstream lines of code being pulled
-      1419 - backport code changes
-      1186 - backport code additions
-       233 - backport code deletions
-      5766 - backport from compat module
-      7185 - total backport code
-    1.4487 - % of code consists of backport work
-      1218 - Crap changes not yet posted
-      1179 - Crap additions not yet posted
-        39 - Crap deletions not yet posted
-    0.2456 - % of crap code
+The hostap fix is the third (and hopefully final) bite at the apple
+for correcting an initialization failure.  The first two attempts
+created and then reinstated a regression caused by a discrepency
+between the PCI and PCMCIA support within hostap.  The regression
+was caused by checking the value of dev->base_addr, which the PCI
+code was not setting.  Testing by the regression reporter indicates
+that his device is finally working again with this fix.
 
-Base tree: linux-next.git
-Base tree version: next-20100713
-compat-wireless release: compat-wireless-2010-07-12
+The rt2x00 fix merely reorders some initialization so that unwinding
+that init in an error path works as expected.
+
+Please let me know if there are problems!
+
+Thanks,
+
+John
+
+---
+
+The following changes since commit 91a72a70594e5212c97705ca6a694bd307f7a26b:
+
+  net/core: neighbour update Oops (2010-07-14 18:02:16 -0700)
+
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
+
+John W. Linville (1):
+      hostap_pci: set dev->base_addr during probe
+
+Stephen Boyd (1):
+      rt2x00: Fix lockdep warning in rt2x00lib_probe_dev()
+
+ drivers/net/wireless/hostap/hostap_pci.c |    1 +
+ drivers/net/wireless/rt2x00/rt2x00dev.c  |   10 +++++-----
+ 2 files changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/hostap/hostap_pci.c b/drivers/net/wireless/hostap/hostap_pci.c
+index d24dc7d..972a9c3 100644
+--- a/drivers/net/wireless/hostap/hostap_pci.c
++++ b/drivers/net/wireless/hostap/hostap_pci.c
+@@ -330,6 +330,7 @@ static int prism2_pci_probe(struct pci_dev *pdev,
+ 
+         dev->irq = pdev->irq;
+         hw_priv->mem_start = mem;
++	dev->base_addr = (unsigned long) mem;
+ 
+ 	prism2_pci_cor_sreset(local);
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 3ae468c..f20d3ee 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -854,6 +854,11 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
+ 		    BIT(NL80211_IFTYPE_WDS);
+ 
+ 	/*
++	 * Initialize configuration work.
++	 */
++	INIT_WORK(&rt2x00dev->intf_work, rt2x00lib_intf_scheduled);
++
++	/*
+ 	 * Let the driver probe the device to detect the capabilities.
+ 	 */
+ 	retval = rt2x00dev->ops->lib->probe_hw(rt2x00dev);
+@@ -863,11 +868,6 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
+ 	}
+ 
+ 	/*
+-	 * Initialize configuration work.
+-	 */
+-	INIT_WORK(&rt2x00dev->intf_work, rt2x00lib_intf_scheduled);
+-
+-	/*
+ 	 * Allocate queue array.
+ 	 */
+ 	retval = rt2x00queue_allocate(rt2x00dev);
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
