@@ -1,97 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:47794 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932946Ab0GTWyl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jul 2010 18:54:41 -0400
-Received: by qwh6 with SMTP id 6so2211818qwh.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Jul 2010 15:54:40 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.00.1007211002410.21858@kauri.acheron.indranet.co.nz>
-References: <AANLkTilmifjH5Zopo82LhjidzsYfT_xRgKJzjGCZZPlq@mail.gmail.com>
-	<AANLkTintLd8YTgMQuzbEB36t_i5AL4TePBSDAa7G2zvl@mail.gmail.com>
-	<alpine.DEB.2.00.1007211002410.21858@kauri.acheron.indranet.co.nz>
-From: Jonathan Guerin <jonathan@guerin.id.au>
-Date: Wed, 21 Jul 2010 08:54:19 +1000
-Message-ID: <AANLkTimkmomMzzolCe7SFJssgbOchjZHcByhJHW1RnA4@mail.gmail.com>
-Subject: Re: [ath5k-devel] ath5k Ad Hoc Association
-To: Derek Smithies <derek@indranet.co.nz>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	"Ath5k Devel issues." <ath5k-devel@lists.ath5k.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:49101 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756791Ab0GSX5Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Jul 2010 19:57:16 -0400
+Subject: Re: iwlagn and many firmware restarts with Fedora kernel
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: drago01 <drago01@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1279582174.4572.43.camel@localhost.localdomain>
+References: <1279565034.4572.36.camel@localhost.localdomain>
+	 <AANLkTinGUQjPoMRmt_jeFgpxLhzma7qhfR14t_tWLvO1@mail.gmail.com>
+	 <1279582174.4572.43.camel@localhost.localdomain>
+Content-Type: multipart/mixed; boundary="=-MCUlmAADUH/HR60gvu0p"
+Date: Mon, 19 Jul 2010 16:56:38 -0700
+Message-Id: <1279583798.28066.3.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am happy to provide such data. Tell me what config you want me to
-put in place and I'll set up a capture.
 
-Cheers,
+--=-MCUlmAADUH/HR60gvu0p
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
---
-Jonathan Guerin
+Hi drago,
 
-
-
-On Wed, Jul 21, 2010 at 8:11 AM, Derek Smithies <derek@indranet.co.nz> wrote:
+On Mon, 2010-07-19 at 16:29 -0700, Marcel Holtmann wrote:
 > Hi,
-> On Mon, 19 Jul 2010, Bob Copeland wrote:
->
->> On Mon, Jul 19, 2010 at 12:35 AM, Jonathan Guerin <jonathan@guerin.id.au>
->> wrote:
->>>
->>> Hi,
->>>
->>> I'm trying to get my wireless nodes to associate in ad hoc mode.
->
-> [[[snipped]]]
->>
->> $ su
->> # modprobe -r ath5k
->> # modprobe ath5k
->> # iw dev wlan0 set type ibss
->> # ifconfig wlan0 192.168.10.1 up
->> # iw dev wlan0 ibss join myibss 2462
->>
->> Then on the other machine (Vista) I just located 'myibss' (so beacons
->> are working) and selected it, then successfully pinged 192.168.10.1.
->
-> Wrong.
-> If the other machine located your node, then one of the four statements is
-> true:
->  a)beacons are working
->  b)probes are working - which means a scan is happening.
->  c)beacons and probes are working
->  d)beacons and probes are not working. The vista machine saw a data
->   packet, and sent a probe request, which your machine answered.
->
->>>>>>>>>
->
-> My colleague here did some work with a slightly older kernel.
->
-> He found that the association process worked sometimes - not always.
-> There was a time dependency - both nodes have to go through this at the same
-> time.
->
-> Further - scans - it seems that nodes have to scan to find things. Old
-> information in the mac80211 has to be expired and removed.
->
-> A scan should not be necessary - if both ends are put on channel 2462- a
-> scan should not be required - there is no channel changing. Yet - my
-> colleague noted a scan helped nodes to associate.
->
-> I would say this:::
->  I cannot deduce what is happening from the initial posters report. I need a
-> packet dump of the beacons/probes and all the other packets on the air.
->
-> Cheers,
->  Derek.
-> --
-> Derek Smithies Ph.D.
-> IndraNet Technologies Ltd.
-> ph +64 3 365 6485
-> Web: http://www.indranet-technologies.com/
->
-> "How did you make it work??"
->      "Oh, the usual, get everything right".
->
+> 
+> > > so during the last few weeks, I have seen a huge amount of firmware
+> > > restarts with my Intel 5350 card and Fedora 13 kernel (2.6.33.6-147).
+> > >
+> > > iwlagn 0000:03:00.0: low ack count detected, restart firmware
+> > > iwlagn 0000:03:00.0: On demand firmware reload
+> > > iwlagn 0000:03:00.0: Stopping AGG while state not ON or starting
+> > > iwlagn 0000:03:00.0: queue number out of range: 0, must be 10 to 19
+> > >
+> > > If this happens then I don't see it once, I normally see this 10-20
+> > > times and the connectivity is stalled until the cards comes back to
+> > > life. I have seen patches that should have fixed this symptom, but they
+> > > might be also send to -stable since this is a major hassle.
+> > >
+> > > The time without connectivity is something around 4-5 minutes or longer
+> > > when this happens. Not really funny.
+> > 
+> > This happens here too even with the 2.6.34.1-9.fc13.x86_64 kernel;
+> > when this happens reloading the iwlagn module seems to be the only
+> > (quick) way to get it back to life.
+> 
+> the quick way is re-loading the module, that is true. Otherwise you have
+> to sit it out. It always comes back nicely and starts working again.
+> 
+Are you using 5350? here I attach a "RFC patch", could you give a try to
+see if it help?
+
+Regards
+Wey
+
+--=-MCUlmAADUH/HR60gvu0p
+Content-Disposition: attachment; filename*0=0001-iwlwifi-extend-the-stuck-queue-monitor-timer-for-53.patc; filename*1=h
+Content-Type: text/x-patch; name="0001-iwlwifi-extend-the-stuck-queue-monitor-timer-for-53.patch"; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+>From d399851898df57fc03d513c2a336d3f3745b0d10 Mon Sep 17 00:00:00 2001
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Date: Mon, 19 Jul 2010 16:38:19 -0700
+Subject: [PATCH 1/1] iwlwifi: extend the stuck queue monitor timer for 5350 device
+
+Different hardware has differnet behavior, extend the monitor period
+timer from 1 second to 5 seconds to avoid the un-necessary firmware reload
+
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h  |    1 +
+ 2 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 68e282b..4325a53 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -642,7 +642,7 @@ struct iwl_cfg iwl5350_agn_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_LONG_MONITORING_PERIOD,
+ 	.max_event_log_size = 512,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 30853c8..d439b80 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1051,6 +1051,7 @@ struct iwl_event_log {
+ 
+ /* timer constants use to monitor and recover stuck tx queues in mSecs */
+ #define IWL_MONITORING_PERIOD  (1000)
++#define IWL_LONG_MONITORING_PERIOD  (5000)
+ #define IWL_ONE_HUNDRED_MSECS   (100)
+ #define IWL_SIXTY_SECS          (60000)
+ 
+-- 
+1.5.6.3
+
+
+--=-MCUlmAADUH/HR60gvu0p--
+
