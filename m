@@ -1,79 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:48285 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753912Ab0GFPt0 convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:60450 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932207Ab0GTLu5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jul 2010 11:49:26 -0400
+	Tue, 20 Jul 2010 07:50:57 -0400
+Received: by bwz1 with SMTP id 1so2797981bwz.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Jul 2010 04:50:55 -0700 (PDT)
+From: Holger Schurig <holgerschurig@googlemail.com>
+To: Jonathan Guerin <jonathan@guerin.id.au>
+Subject: Re: ath5k Ad Hoc Association
+Date: Tue, 20 Jul 2010 13:50:48 +0200
+Cc: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org
+References: <AANLkTilmifjH5Zopo82LhjidzsYfT_xRgKJzjGCZZPlq@mail.gmail.com> <AANLkTintLd8YTgMQuzbEB36t_i5AL4TePBSDAa7G2zvl@mail.gmail.com> <AANLkTimgt_HdXyGneQMOz7wR7Xs7BBrDUCGoxP1qDcYg@mail.gmail.com>
+In-Reply-To: <AANLkTimgt_HdXyGneQMOz7wR7Xs7BBrDUCGoxP1qDcYg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1278376666-3509-5-git-send-email-ohad@wizery.com>
-References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
-	<1278376666-3509-5-git-send-email-ohad@wizery.com>
-Date: Tue, 6 Jul 2010 18:49:24 +0300
-Message-ID: <AANLkTilfjBIbylUDKlTGiEC_U6pJnkC6HoENOzK2eFFq@mail.gmail.com>
-Subject: Re: [PATCH 04/15] mmc: support embedded data field in mmc_host
-From: Grazvydas Ignotas <notasas@gmail.com>
-To: Ohad Ben-Cohen <ohad@wizery.com>
-Cc: linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux@arm.linux.org.uk,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	akpm@linux-foundation.org, San Mehat <san@google.com>,
-	Ohad Ben-Cohen <ohadb@ti.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201007201350.48923.holgerschurig@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 6, 2010 at 3:37 AM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
-> From: Ohad Ben-Cohen <ohadb@ti.com>
->
-> Add support to set/get mmc_host private embedded
-> data.
->
-> This is needed to allow software to dynamically
-> create (and remove) SDIO functions which represents
-> embedded SDIO devices.
->
-> Typically, it will be used to set the context of
-> a driver that is creating a new SDIO function
-> (and would then expect to be able to get that context
-> back upon creation of the new sdio func).
->
-> Signed-off-by: Ohad Ben-Cohen <ohadb@ti.com>
-> ---
->  drivers/mmc/core/Kconfig |    8 ++++++++
->  include/linux/mmc/host.h |   16 ++++++++++++++++
->  2 files changed, 24 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/mmc/core/Kconfig b/drivers/mmc/core/Kconfig
-> index bb22ffd..ab27eb3 100644
-> --- a/drivers/mmc/core/Kconfig
-> +++ b/drivers/mmc/core/Kconfig
-> @@ -16,3 +16,11 @@ config MMC_UNSAFE_RESUME
->
->          This option sets a default which can be overridden by the
->          module parameter "removable=0" or "removable=1".
-> +
-> +config MMC_EMBEDDED_SDIO
-> +       boolean "MMC embedded SDIO device support"
-> +       help
-> +         If you say Y here, support will be added for embedded SDIO
-> +         devices (e.g. hardwired embedded WLAN SDIO devices).
-> +         Such devices require software support for emulating
-> +         card detect events.
-> diff --git a/include/linux/mmc/host.h b/include/linux/mmc/host.h
-> index f65913c..9a48486 100644
-> --- a/include/linux/mmc/host.h
-> +++ b/include/linux/mmc/host.h
-> @@ -209,6 +209,10 @@ struct mmc_host {
->        struct led_trigger      *led;           /* activity led */
->  #endif
->
-> +#ifdef CONFIG_MMC_EMBEDDED_SDIO
-> +       void                    *embedded_data;
-> +#endif
-> +
+> iw phy phy0 interface add wlan0 type adhoc
+> iw wlan0 set channel 36
+> iwconfig wlan0 channel 36
+> iwconfig wlan0 essid txctest
 
-Hm, do we really need a Kconfig option just for a single pointer? It
-only saves sizeof(void *) bytes per host, but adds rather confusing
-config option for users and some ifdef complexity.
+I can't think of ANY reason why you do that. Use "iw", not "iwconfig". 
+
+All the last three commands should be replaced with one single "iw dev wlan0 
+ibss join myibss XXXX", where XXXX is the frequency for channel 36. If in 
+doubt what this is, just do "iw list" and you'll see it.
