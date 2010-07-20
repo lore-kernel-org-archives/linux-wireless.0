@@ -1,54 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:48126 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753121Ab0GGRmU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jul 2010 13:42:20 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 2/2] ath9k: fix a buffer leak in A-MPDU completion
-Date: Wed,  7 Jul 2010 19:42:09 +0200
-Message-Id: <1278524529-30246-2-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1278524529-30246-1-git-send-email-nbd@openwrt.org>
-References: <1278524529-30246-1-git-send-email-nbd@openwrt.org>
+Received: from external1.orbit-lab.org ([128.6.192.131]:41413 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753917Ab0GTTGL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Jul 2010 15:06:11 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 02124421C8
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Jul 2010 15:06:08 -0400 (EDT)
+Subject: Compat-wireless release for 2010-07-20 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100720190608.18E0A404F0@repository3.orbit-lab.org>
+Date: Tue, 20 Jul 2010 15:06:07 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When ath_tx_complete_aggr() is called, it's responsible for returning
-all buffers in the linked list. This was not done when the STA lookup
-failed, leading to a race condition that could leak a few buffers when
-a STA just disconnected.
-Fix this by immediately returning all buffers to the free list in this case.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+   7b8245a..8444e0f  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   c6d612697..ce38023 history    -> origin/history
+ + 058395f...d8d58e7 master     -> origin/master  (forced update)
+   a9f7f2e..d0c6f62  stable     -> origin/stable
+ * [new tag]         next-20100720 -> next-20100720
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@kernel.org
----
- drivers/net/wireless/ath/ath9k/xmit.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+compat-wireless code metrics
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 408d1c5..05ec36a 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -329,6 +329,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 	int isaggr, txfail, txpending, sendbar = 0, needreset = 0, nbad = 0;
- 	bool rc_update = true;
- 	struct ieee80211_tx_rate rates[4];
-+	unsigned long flags;
- 
- 	skb = bf->bf_mpdu;
- 	hdr = (struct ieee80211_hdr *)skb->data;
-@@ -344,6 +345,10 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 	sta = ieee80211_find_sta_by_hw(hw, hdr->addr1);
- 	if (!sta) {
- 		rcu_read_unlock();
-+
-+		spin_lock_irqsave(&sc->tx.txbuflock, flags);
-+		list_splice_tail_init(bf_q, &sc->tx.txbuf);
-+		spin_unlock_irqrestore(&sc->tx.txbuflock, flags);
- 		return;
- 	}
- 
--- 
-1.6.4.2
+    494339 - Total upstream lines of code being pulled
+      1447 - backport code changes
+      1211 - backport code additions
+       236 - backport code deletions
+      5764 - backport from compat module
+      7211 - total backport code
+    1.4587 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2464 - % of crap code
 
+Base tree: linux-next.git
+Base tree version: next-20100720
+compat-wireless release: compat-wireless-2010-07-13-3-g1a05138
