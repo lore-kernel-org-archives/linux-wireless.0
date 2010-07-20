@@ -1,102 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpoproxy3-pub.bluehost.com ([67.222.54.6]:56228 "HELO
-	cpoproxy3-pub.bluehost.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756380Ab0GIPNL convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jul 2010 11:13:11 -0400
-Date: Fri, 9 Jul 2010 08:12:39 -0700
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>,
-	Frederic Weisbecker <fweisbec@gmail.com>,
-	Al Viro <viro@zeniv.linux.org.uk>,
-	Shawn Starr <shawn.starr@rogers.com>,
-	Dave Airlie <airlied@redhat.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Patrick McHardy <kaber@trash.net>,
-	Jens Axboe <axboe@kernel.dk>,
-	Enrico Bandiello <enban@postal.uv.es>,
-	Norbert Preining <preining@logic.at>
-Subject: Re: 2.6.35-rc4-git3: Reported regressions from 2.6.34
-Message-ID: <20100709081239.4eb8fddd@virtuousgeek.org>
-In-Reply-To: <AANLkTiknnzWyVpqnPCpyiEVHLgkewd0zaGzLInABRe2G@mail.gmail.com>
-References: <-IGZ64uxA6G.A.P0H.bLmNMB@chimera>
-	<AANLkTiknnzWyVpqnPCpyiEVHLgkewd0zaGzLInABRe2G@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:51873 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758366Ab0GTMFY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Jul 2010 08:05:24 -0400
+Received: by vws14 with SMTP id 14so163272vws.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Jul 2010 05:05:22 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201007201350.48923.holgerschurig@gmail.com>
+References: <AANLkTilmifjH5Zopo82LhjidzsYfT_xRgKJzjGCZZPlq@mail.gmail.com>
+	<AANLkTintLd8YTgMQuzbEB36t_i5AL4TePBSDAa7G2zvl@mail.gmail.com>
+	<AANLkTimgt_HdXyGneQMOz7wR7Xs7BBrDUCGoxP1qDcYg@mail.gmail.com>
+	<201007201350.48923.holgerschurig@gmail.com>
+From: Jonathan Guerin <jonathan@guerin.id.au>
+Date: Tue, 20 Jul 2010 22:05:02 +1000
+Message-ID: <AANLkTinytWGuChBFYuU5V6EPVKCJPMPlt6PTD2_jLAmX@mail.gmail.com>
+Subject: Re: ath5k Ad Hoc Association
+To: Holger Schurig <holgerschurig@googlemail.com>
+Cc: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 8 Jul 2010 18:34:25 -0700
-Linus Torvalds <torvalds@linux-foundation.org> wrote:
+I understand that it's not the way I'm supposed to do it. What I'm
+saying is that it's not working, whereas the other way is! :(
 
-> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16307
-> > Subject         : i915 in kernel 2.6.35-rc3, high number of wakeups
-> > Submitter       : Enrico Bandiello <enban@postal.uv.es>
-> > Date            : 2010-06-26 16:57 (13 days old)
-> > Message-ID      : <4C26317A.5070309@postal.uv.es>
-> > References      : http://marc.info/?l=linux-kernel&m=127757403404259&w=2  
-> 
-> I don't think anybody noticed this one. Jesse?
+I will play around some more with it tomorrow. It's still baffling as
+to why the driver is not beaconing until there is another node tho...
 
-Oh I hadn't seen that...  Enrico, can you bisect this issue?  It could
-be some spurious hotplug events or possibly a stuck vblank interrupt...
-
-> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16265
-> > Subject         : Why is kslowd accumulating so much CPU time?
-> > Submitter       : Theodore Ts'o <tytso@mit.edu>
-> > Date            : 2010-06-09 18:36 (30 days old)
-> > First-Bad-Commit: http://git.kernel.org/linus/fbf81762e385d3d45acad057b654d56972acf58c
-> > Message-ID      : <E1OMQ88-0002a1-Gb@closure.thunk.org>
-> > References      : http://marc.info/?l=linux-kernel&m=127610857819033&w=4  
-> 
-> Dave, Jesse?
-
-I haven't looked at the switchable graphics stuff, hopefully Dave has
-an idea here.
-
-> Fixed by commit f4985dc714d7.
-> 
-> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16228
-> > Subject         : BUG/boot failure on Dell Precision T3500 (pci/ahci_stop_engine)
-> > Submitter       : Brian Bloniarz <phunge0@hotmail.com>
-> > Date            : 2010-06-16 17:57 (23 days old)
-> > Handled-By      : Bjorn Helgaas <bjorn.helgaas@hp.com>  
-> 
-> This has a butt-ugly suggested patch that certainly won't be applied.
-> I saw the thread, but lost sight of it. Jesse, did that end up with
-> some resolution?
-
-I'll follow up with Yinghai, we were pretty clear about what we wanted
-from that patch.
-
-> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16179
-> > Subject         : 2.6.35-rc2 completely hosed on intel gfx?
-> > Submitter       : Norbert Preining <preining@logic.at>
-> > Date            : 2010-06-06 11:55 (33 days old)
-> > Message-ID      : <20100606115534.GA9399@gamma.logic.tuwien.ac.at>
-> > References      : http://marc.info/?l=linux-kernel&m=127582534931581&w=2  
-> 
-> Hmm. That one is the vt.c bug coupled with another problem, which in
-> turn got opened as a separate bugzilla entry:
-> 
->    http://bugzilla.kernel.org/show_bug.cgi?id=16252
-> 
-> which in turn then got closed. I dunno.
-
-Yeah, this is weird.  Norbert, do you still see this?  Have you tried
-to bisect it?
+--
+Jonathan Guerin
 
 
--- 
-Jesse Barnes, Intel Open Source Technology Center
+
+On Tue, Jul 20, 2010 at 9:50 PM, Holger Schurig
+<holgerschurig@googlemail.com> wrote:
+>> iw phy phy0 interface add wlan0 type adhoc
+>> iw wlan0 set channel 36
+>> iwconfig wlan0 channel 36
+>> iwconfig wlan0 essid txctest
+>
+> I can't think of ANY reason why you do that. Use "iw", not "iwconfig".
+>
+> All the last three commands should be replaced with one single "iw dev wlan0
+> ibss join myibss XXXX", where XXXX is the frequency for channel 36. If in
+> doubt what this is, just do "iw list" and you'll see it.
+>
