@@ -1,50 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:54295 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751260Ab0GVMEG convert rfc822-to-8bit (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:47726 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761243Ab0GTSyA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 08:04:06 -0400
-Received: by vws3 with SMTP id 3so46052vws.19
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jul 2010 05:04:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4C47F706.4060102@iki.fi>
-References: <1279729917-4451-1-git-send-email-linville@tuxdriver.com>
-	<1279780458.2322.25.camel@powerslave>
-	<4C47F706.4060102@iki.fi>
-Date: Thu, 22 Jul 2010 08:04:02 -0400
-Message-ID: <AANLkTimh-2cuWdJKgf2TUkCQmGXDC0-86xVhbA-kiPGR@mail.gmail.com>
-Subject: Re: [PATCH] wl1251: fix sparse-generated warnings
-From: Bob Copeland <me@bobcopeland.com>
-To: Kalle Valo <kalle.valo@iki.fi>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	"ext John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 20 Jul 2010 14:54:00 -0400
+Date: Tue, 20 Jul 2010 20:53:56 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] mwl8k: correct/silence sparse warnings
+Message-ID: <20100720185356.GE21121@mail.wantstofly.org>
+References: <1279650123.3706.45.camel@jlt3.sipsolutions.net> <1279651154-11985-1-git-send-email-linville@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1279651154-11985-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 22, 2010 at 3:45 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
->>> @@ -191,11 +191,13 @@ static int wl1251_tx_send_packet(struct wl1251 *wl, struct sk_buff *skb,
->>>      if (control->control.hw_key &&
->>>          control->control.hw_key->alg == ALG_TKIP) {
->>>              int hdrlen;
->>> -            u16 fc;
->>> +            __le16 fc;
->>> +            u16 length;
->>>              u8 *pos;
-[...]
->>> +            length = le16_to_cpu(tx_hdr->length) + WL1251_TKIP_IV_SPACE;
->>> +            tx_hdr->length = cpu_to_le16(length);
->>
->> ...which is treated correctly here.
->
-> This is different. Here we are adding something to a __le16 value, not
-> calculating with pointers.
+On Tue, Jul 20, 2010 at 02:39:14PM -0400, John W. Linville wrote:
 
-Just throwing in my 2 cents, unless there's some other reason to add the
-length temporary, here you can just do:
+> drivers/net/wireless/mwl8k.c:1541:21: warning: incorrect type in assignment (different base types)
+> drivers/net/wireless/mwl8k.c:1541:21:    expected restricted __le16 [usertype] result
+> drivers/net/wireless/mwl8k.c:1541:21:    got int
+> drivers/net/wireless/mwl8k.c:1575:42:    expected unsigned short [unsigned] [usertype] cmd
+> drivers/net/wireless/mwl8k.c:1575:42:    got restricted __le16 [usertype] code
+> drivers/net/wireless/mwl8k.c:1587:50: warning: incorrect type in argument 1 (different base types)
+> drivers/net/wireless/mwl8k.c:1587:50:    expected unsigned short [unsigned] [usertype] cmd
+> drivers/net/wireless/mwl8k.c:1587:50:    got restricted __le16 [usertype] code
+> drivers/net/wireless/mwl8k.c:1592:50: warning: incorrect type in argument 1 (different base types)
+> drivers/net/wireless/mwl8k.c:1592:50:    expected unsigned short [unsigned] [usertype] cmd
+> drivers/net/wireless/mwl8k.c:1592:50:    got restricted __le16 [usertype] code
+> drivers/net/wireless/mwl8k.c:1845:27: warning: incorrect type in argument 1 (different base types)
+> drivers/net/wireless/mwl8k.c:1845:27:    expected unsigned int [unsigned] [usertype] <noident>
+> drivers/net/wireless/mwl8k.c:1845:27:    got restricted __le32 [usertype] <noident>
+> drivers/net/wireless/mwl8k.c:1848:27: warning: incorrect type in argument 1 (different base types)
+> drivers/net/wireless/mwl8k.c:1848:27:    expected unsigned int [unsigned] [usertype] <noident>
+> drivers/net/wireless/mwl8k.c:1848:27:    got restricted __le32 [usertype] <noident>
+> drivers/net/wireless/mwl8k.c:1851:27: warning: incorrect type in argument 1 (different base types)
+> drivers/net/wireless/mwl8k.c:1851:27:    expected unsigned int [unsigned] [usertype] <noident>
+> drivers/net/wireless/mwl8k.c:1851:27:    got restricted __le32 [usertype] <noident>
+> drivers/net/wireless/mwl8k.c:1854:27: warning: incorrect type in argument 1 (different base types)
+> drivers/net/wireless/mwl8k.c:1854:27:    expected unsigned int [unsigned] [usertype] <noident>
+> drivers/net/wireless/mwl8k.c:1854:27:    got restricted __le32 [usertype] <noident>
+> drivers/net/wireless/mwl8k.c:1857:27: warning: incorrect type in argument 1 (different base types)
+> drivers/net/wireless/mwl8k.c:1857:27:    expected unsigned int [unsigned] [usertype] <noident>
+> drivers/net/wireless/mwl8k.c:1857:27:    got restricted __le32 [usertype] <noident>
+> drivers/net/wireless/mwl8k.c:1860:27: warning: incorrect type in argument 1 (different base types)
+> drivers/net/wireless/mwl8k.c:1860:27:    expected unsigned int [unsigned] [usertype] <noident>
+> drivers/net/wireless/mwl8k.c:1860:27:    got restricted __le32 [usertype] <noident>
+> drivers/net/wireless/mwl8k.c:3055:20: warning: incorrect type in assignment (different base types)
+> drivers/net/wireless/mwl8k.c:3055:20:    expected restricted __le16 [usertype] ht_caps
+> drivers/net/wireless/mwl8k.c:3055:20:    got unsigned short [unsigned] [usertype] cap
+> 
+> At least the last one looks like a real bug...
+> 
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-    le16_add_cpu(&tx_hdr->length, WL1251_TKIP_IV_SPACE);
+Looks good!
 
--- 
-Bob Copeland %% www.bobcopeland.com
+Acked-by: Lennert Buytenhek <buytenh@wantstofly.org>
