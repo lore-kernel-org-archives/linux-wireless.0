@@ -1,45 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38915
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754951Ab0GZUOt (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:4085 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932142Ab0GTLUE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jul 2010 16:14:49 -0400
-Date: Mon, 26 Jul 2010 13:15:06 -0700 (PDT)
-Message-Id: <20100726.131506.245381776.davem@davemloft.net>
-To: netdev@vger.kernel.org
-CC: linux-wireless@vger.kernel.org
-Subject: [PATCH] wireless: Make COMPAT_NETLINK_MESSAGES depend upon
- WEXT_CORE
-From: David Miller <davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 20 Jul 2010 07:20:04 -0400
+Date: Tue, 20 Jul 2010 07:20:41 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Jonathan Guerin <jonathan@guerin.id.au>
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+Subject: Re: ath5k Ad Hoc Association
+Message-ID: <20100720112041.GA7049@hash.localnet>
+References: <AANLkTilmifjH5Zopo82LhjidzsYfT_xRgKJzjGCZZPlq@mail.gmail.com> <AANLkTintLd8YTgMQuzbEB36t_i5AL4TePBSDAa7G2zvl@mail.gmail.com> <AANLkTimgt_HdXyGneQMOz7wR7Xs7BBrDUCGoxP1qDcYg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTimgt_HdXyGneQMOz7wR7Xs7BBrDUCGoxP1qDcYg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+[please don't top post]
+On Tue, Jul 20, 2010 at 04:39:29PM +1000, Jonathan Guerin wrote:
+> Yes, I've checked the channel (36, 5180) allows beaconing. I've tried
+> the commands you mentioned, but no luck. If I monitor the interface
+> from another station, the ath5k drive never appears to beacon.
 
-WIRELESS_EXT is not the correct dependency.
+What does "iw phy phy0 info" show?
 
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
-
-Wireless folks, just FYI, I will commit this to net-next-2.6
-
- net/Kconfig |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/net/Kconfig b/net/Kconfig
-index b325094..e24fa08 100644
---- a/net/Kconfig
-+++ b/net/Kconfig
-@@ -32,7 +32,7 @@ config WANT_COMPAT_NETLINK_MESSAGES
- config COMPAT_NETLINK_MESSAGES
- 	def_bool y
- 	depends on COMPAT
--	depends on WIRELESS_EXT || WANT_COMPAT_NETLINK_MESSAGES
-+	depends on WEXT_CORE || WANT_COMPAT_NETLINK_MESSAGES
- 	help
- 	  This option makes it possible to send different netlink messages
- 	  to tasks depending on whether the task is a compat task or not. To
 -- 
-1.7.1.1
+Bob Copeland %% www.bobcopeland.com
 
