@@ -1,43 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55915 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752127Ab0GZIcu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jul 2010 04:32:50 -0400
-Subject: Re: 2.6.35-rc5+ WARNING at net/mac80211/scan.c:262
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20100726082754.GA14881@comet.dominikbrodowski.net>
-References: <20100721184040.GA22968@comet.dominikbrodowski.net>
-	 <1279802055.12439.16.camel@jlt3.sipsolutions.net>
-	 <20100722134048.GA28231@isilmar-3.linta.de>
-	 <1279807678.12439.17.camel@jlt3.sipsolutions.net>
-	 <20100723082710.GA20251@comet.dominikbrodowski.net>
-	 <1279873990.3745.1.camel@jlt3.sipsolutions.net>
-	 <20100726081713.GA14192@comet.dominikbrodowski.net>
-	 <1280132498.3693.2.camel@jlt3.sipsolutions.net>
-	 <20100726082754.GA14881@comet.dominikbrodowski.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 26 Jul 2010 10:32:46 +0200
-Message-ID: <1280133166.3693.3.camel@jlt3.sipsolutions.net>
+Received: from smtp4-g21.free.fr ([212.27.42.4]:55851 "EHLO smtp4-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932946Ab0GTXIB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Jul 2010 19:08:01 -0400
+Subject: Re: [RFC] cfg80211: fix race between sysfs and cfg80211
+From: Maxime Bizon <mbizon@freebox.fr>
+Reply-To: mbizon@freebox.fr
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1279394982.3931.0.camel@jlt3.sipsolutions.net>
+References: <1279336415.1941.6.camel@kero>
+	 <1279394982.3931.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="ANSI_X3.4-1968"
+Date: Wed, 21 Jul 2010 01:07:52 +0200
+Message-ID: <1279667272.32146.21.camel@sakura.staff.proxad.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-07-26 at 10:27 +0200, Dominik Brodowski wrote:
 
-> > > the problem didn't reappear when using wireless-testing plus your patch. As
-> > > I can't reproduce it -- it just happened every once in a while (maybe once a
-> > > day?) -- this doesn't necessarily mean the bug is fixed, but...
-> > 
-> > Alright, thanks. I don't suppose you tried wireless-testing w/o the
-> > patch?
-> 
-> No. Shall I?
+On Sat, 2010-07-17 at 21:29 +0200, Johannes Berg wrote:
 
-Well, I'd be interested in whether or not my patch fixed it, but I think
-I'll push it upstream anyway.
+Hi Johannes,
 
-johannes
+> Maybe we should hold the mutex around the debugfs stuff as well? Then
+> tools could even access that race-free, and we can simplify the code by
+> having an "out_unlock" label.
+
+Any comment on the last patch I sent ?
+
+Thanks !
+
+-- 
+Maxime
+
 
