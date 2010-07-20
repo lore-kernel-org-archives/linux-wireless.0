@@ -1,72 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:55547 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752019Ab0G0UdM (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:48102 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761375Ab0GTQt0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 16:33:12 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/3] ath9k: remove the two wiphys scanning at the same time message
-Date: Tue, 27 Jul 2010 16:33:06 -0400
-Message-Id: <1280262788-9890-2-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1280262788-9890-1-git-send-email-lrodriguez@atheros.com>
-References: <1280262788-9890-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 20 Jul 2010 12:49:26 -0400
+Received: by fxm14 with SMTP id 14so2977466fxm.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Jul 2010 09:49:25 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1279631096.3706.33.camel@jlt3.sipsolutions.net>
+References: <4C449C67.6010004@davizone.at> <1279571235.30478.5.camel@jlt3.sipsolutions.net>
+	<AANLkTimxBt7dPcZrmAihWq9UKs77qS0cnAxQXIY_55ci@mail.gmail.com>
+	<4C44DFBB.6070604@davizone.at> <1279631096.3706.33.camel@jlt3.sipsolutions.net>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Tue, 20 Jul 2010 18:49:05 +0200
+Message-ID: <AANLkTik6B-Il7Slcw0V08wvynoe7w-70IZjZiG9amqyN@mail.gmail.com>
+Subject: Re: [PATCH] cfg80211: fix WEXT ioctl GIWFREQ for monitor interfaces
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: David Gnedt <david.gnedt@davizone.at>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When issuing two consecutive scans you could often end up
-getting in the logs:
+On Tue, Jul 20, 2010 at 3:04 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2010-07-20 at 01:28 +0200, David Gnedt wrote:
+>> Am 2010-07-19 23:06, schrieb Gábor Stefanik:
+>> > (BTW, I say that a GIWFREQ on a monitor interface should always return
+>> > the channel the PHY is tuned to at the moment when it is issued. Most
+>> > tools seem to expect this behavior.)
+>>
+>> I agree, that would be the expected behaviour.
+>>
+>> I am not very familar with the entire wireless subsystem yet, but wouldn't that
+>> imply a interface change in cfg80211 and mac80211 to add an "get_channel" function?
+>
+> Yes, I think so.
+>
+>> Because if the card is hopping channels (e.g. because of 2 station interfaces on
+>> different channels), only the driver itself can tell what's really the current
+>> channel.
+>
+> Right. Although in that case I'm not sure we should be telling userspace
+> what channel the monitor interface is on, since there's no single
+> channel it is on, and I certainly hope userspace won't be requesting the
+> channel many times per second!
 
-"ath9k: Two wiphys trying to scan at the same time"
+Well, there is no reason why channel-hopping due to multiple virtual
+PHYs and channel-hopping by userspace control (see Kismet) should
+behave differently GIWFREQ-wise. Also, userspace (apart from maybe
+hostapd - I haven't looked into that at all) seems to expect GIWFREQ
+on a monitor interface to unconditionally return the channel the radio
+is tuned to at the moment.
 
-This message is due to a race in mac80211 but addressing
-that race requires some more major changes on the driver
-and perhaps optimizations on mac80211 like removing the
-scan complete callback alltogether. Its too late to address
-this this kernel release so supress the complaint and annotate
-this needs fixing for later.
+>
+>> Nevertheless a default implementation for this new "get_channel" can be written
+>> at mac80211 level (or even cfg80211?), which tries to find the current channel
+>> by looking at all virtual interfaces, so only mac80211 drivers which allow
+>> multiple channels (and non-mac80211 drivers) need to implement it.
+>
+> Indeed, but I think mac80211 would be more appropriate than cfg80211
+> since the latter won't really have all the information unless it makes a
+> whole bunch of assumptions that we'll eventually have to reconsider.
+>
+> johannes
+>
+>
 
-Cc: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |   13 +++++++++----
- 1 files changed, 9 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 6cf0410..0429dda 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1994,11 +1994,12 @@ static void ath9k_sw_scan_start(struct ieee80211_hw *hw)
- 
- 	mutex_lock(&sc->mutex);
- 	if (ath9k_wiphy_scanning(sc)) {
--		printk(KERN_DEBUG "ath9k: Two wiphys trying to scan at the "
--		       "same time\n");
- 		/*
--		 * Do not allow the concurrent scanning state for now. This
--		 * could be improved with scanning control moved into ath9k.
-+		 * There is a race here in mac80211 but fixing it requires
-+		 * we revisit how we handle the scan complete callback.
-+		 * After mac80211 fixes we will not have configured hardware
-+		 * to the home channel nor would we have configured the RX
-+		 * filter yet.
- 		 */
- 		mutex_unlock(&sc->mutex);
- 		return;
-@@ -2014,6 +2015,10 @@ static void ath9k_sw_scan_start(struct ieee80211_hw *hw)
- 	mutex_unlock(&sc->mutex);
- }
- 
-+/*
-+ * XXX: this requires a revisit after the driver
-+ * scan_complete gets moved to another place/removed in mac80211.
-+ */
- static void ath9k_sw_scan_complete(struct ieee80211_hw *hw)
- {
- 	struct ath_wiphy *aphy = hw->priv;
+
 -- 
-1.7.0.4
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
