@@ -1,136 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47902 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36878 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751417Ab0G2UWk (ORCPT
+	with ESMTP id S1755552Ab0GTVAM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jul 2010 16:22:40 -0400
+	Tue, 20 Jul 2010 17:00:12 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
 To: linux-wireless@vger.kernel.org
 Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 1/2] mac80211: support use of NAPI for bottom-half processing
-Date: Thu, 29 Jul 2010 16:14:13 -0400
-Message-Id: <1280434454-3597-1-git-send-email-linville@tuxdriver.com>
+Subject: [PATCH v2] rtl8180: improve signal reporting for rtl8185 hardware
+Date: Tue, 20 Jul 2010 16:56:25 -0400
+Message-Id: <1279659385-25650-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1279572443-14361-1-git-send-email-linville@tuxdriver.com>
+References: <1279572443-14361-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch implement basic infrastructure to support use of NAPI by
-mac80211-based hardware drivers.
-
-Because mac80211 devices can support multiple netdevs, a dummy netdev
-is used for interfacing with the NAPI code in the core of the network
-stack.  That structure is hidden from the hardware drivers, but the
-actual napi_struct is exposed in the ieee80211_hw structure so that the
-poll routines in drivers can retrieve that structure.  Hardware drivers
-can also specify their own weight value for NAPI polling.
+The existing code seemed to be somewhat based on the datasheet, but
+varied substantially from the vendor-provided driver.  This mirrors the
+handling of the rtl8185 case from that driver, but still neglects the
+specifics for the rtl8180 hardware.  Those details are a bit muddled...
 
 Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- include/net/mac80211.h     |    8 ++++++++
- net/mac80211/ieee80211_i.h |    3 +++
- net/mac80211/iface.c       |    4 ++++
- net/mac80211/main.c        |    6 ++++++
- 4 files changed, 21 insertions(+), 0 deletions(-)
+v2 -- Add missing "subtract from constant" pieces of the signal formulas...
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 20d372e..88223b4 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1094,6 +1094,9 @@ enum ieee80211_hw_flags {
-  *
-  * @max_rates: maximum number of alternate rate retry stages
-  * @max_rate_tries: maximum number of tries for each stage
-+ *
-+ * @napi: NAPI control structure
-+ * @napi_weight: weight used for NAPI polling
-  */
- struct ieee80211_hw {
- 	struct ieee80211_conf conf;
-@@ -1105,6 +1108,8 @@ struct ieee80211_hw {
- 	int channel_change_time;
- 	int vif_data_size;
- 	int sta_data_size;
-+	struct napi_struct napi;
-+	int napi_weight;
- 	u16 queues;
- 	u16 max_listen_interval;
- 	s8 max_signal;
-@@ -1679,6 +1684,8 @@ enum ieee80211_ampdu_mlme_action {
-  *	switch operation for CSAs received from the AP may implement this
-  *	callback. They must then call ieee80211_chswitch_done() to indicate
-  *	completion of the channel switch.
-+ *
-+ * @napi_poll: Poll Rx queue for incoming data frames.
-  */
- struct ieee80211_ops {
- 	int (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
-@@ -1744,6 +1751,7 @@ struct ieee80211_ops {
- 	void (*flush)(struct ieee80211_hw *hw, bool drop);
- 	void (*channel_switch)(struct ieee80211_hw *hw,
- 			       struct ieee80211_channel_switch *ch_switch);
-+	int (*napi_poll)(struct napi_struct *napi, int budget);
- };
+ drivers/net/wireless/rtl818x/rtl8180_dev.c |   11 ++++++++---
+ 1 files changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/rtl818x/rtl8180_dev.c b/drivers/net/wireless/rtl818x/rtl8180_dev.c
+index 4270502..31808f9 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180_dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8180_dev.c
+@@ -103,6 +103,7 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
+ {
+ 	struct rtl8180_priv *priv = dev->priv;
+ 	unsigned int count = 32;
++	u8 signal;
  
- /**
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index c6b5c2d..2c6ac97 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -869,6 +869,9 @@ struct ieee80211_local {
- 		struct dentry *keys;
- 	} debugfs;
- #endif
-+
-+	/* dummy netdev for use w/ NAPI */
-+	struct net_device napi_dev;
- };
+ 	while (count--) {
+ 		struct rtl8180_rx_desc *entry = &priv->rx_ring[priv->rx_idx];
+@@ -130,10 +131,14 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
+ 			skb_put(skb, flags & 0xFFF);
  
- static inline struct ieee80211_sub_if_data *
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index ebbe264..827f25d 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -187,6 +187,8 @@ static int ieee80211_open(struct net_device *dev)
- 		res = drv_start(local);
- 		if (res)
- 			goto err_del_bss;
-+		if (local->ops->napi_poll)
-+			napi_enable(&local->hw.napi);
- 		/* we're brought up, everything changes */
- 		hw_reconf_flags = ~0;
- 		ieee80211_led_radio(local, true);
-@@ -519,6 +521,8 @@ static int ieee80211_stop(struct net_device *dev)
- 	ieee80211_recalc_ps(local, -1);
- 
- 	if (local->open_count == 0) {
-+		if (local->ops->napi_poll)
-+			napi_disable(&local->hw.napi);
- 		ieee80211_clear_tx_pending(local);
- 		ieee80211_stop_device(local);
- 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 0e95c75..79ca2ba 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -491,6 +491,9 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
- 	skb_queue_head_init(&local->skb_queue);
- 	skb_queue_head_init(&local->skb_queue_unreliable);
- 
-+	/* init dummy netdev for use w/ NAPI */
-+	init_dummy_netdev(&local->napi_dev);
-+
- 	return local_to_hw(local);
- }
- EXPORT_SYMBOL(ieee80211_alloc_hw);
-@@ -680,6 +683,9 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 		goto fail_ifa;
- #endif
- 
-+	netif_napi_add(&local->napi_dev, &local->hw.napi, local->ops->napi_poll,
-+			local->hw.napi_weight);
-+
- 	return 0;
- 
-  fail_ifa:
+ 			rx_status.antenna = (flags2 >> 15) & 1;
+-			/* TODO: improve signal/rssi reporting */
+-			rx_status.signal = (flags2 >> 8) & 0x7F;
+-			/* XXX: is this correct? */
+ 			rx_status.rate_idx = (flags >> 20) & 0xF;
++			/* TODO: improve signal/rssi reporting for !rtl8185 */
++			signal = (flags2 >> 17) & 0x7F;
++			if (rx_status.rate_idx > 3)
++				signal = 90 - clamp_t(u8, signal, 25, 90);
++			else
++				signal = 95 - clamp_t(u8, signal, 30, 95);
++			rx_status.signal = signal;
+ 			rx_status.freq = dev->conf.channel->center_freq;
+ 			rx_status.band = dev->conf.channel->band;
+ 			rx_status.mactime = le64_to_cpu(entry->tsft);
 -- 
 1.7.1.1
 
