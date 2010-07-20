@@ -1,32 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:30486 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756315Ab0G0Okw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 10:40:52 -0400
-From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-To: Malthe Borch <mborch@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Sternberg, Jay E" <jay.e.sternberg@intel.com>
-Date: Tue, 27 Jul 2010 07:40:39 -0700
-Subject: RE: Intel Wireless: Microcode SW error detected.
-Message-ID: <E9954878DD1FB34FAE5187FB88C58A350122DF3C44@orsmsx506.amr.corp.intel.com>
-References: <AANLkTimrv507n5-WmikUOhPE95wM1p1_Qtd65rOA1hei@mail.gmail.com>
-In-Reply-To: <AANLkTimrv507n5-WmikUOhPE95wM1p1_Qtd65rOA1hei@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58851 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758512Ab0GTQaM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Jul 2010 12:30:12 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] wireless: correct sparse warning in wext-compat.c
+Date: Tue, 20 Jul 2010 12:26:55 -0400
+Message-Id: <1279643215-13498-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-QWRkIEpheSB0byB0aGUgdGhyZWFkLA0KDQpKYXksIGNvdWxkIHlvdSBoZWxwIHRvIHRha2UgYSBs
-b29rIGF0IGl0LiBUaGFua3MNCg0KV2V5LVlpIEd1eQ0KSW50ZWwgQ29ycG9yYXRpb24NCjIxMTEg
-Ti5FLiAyNXRoIEF2ZW51ZSAgTS9TIEpGMy0zMDggICAgICAgICAgICAgICAgIA0KSGlsbHNib3Jv
-IE9SIDk3MTI0LTU5NjENClVTQQ0KV29yayBQaG9uZTogNTAzLTI2NC02MDIzIChPUikNCkNlbGwg
-UGhvbmU6IDUwMy0zMjktODQxMA0KRW1haWw6IHdleS15aS53Lmd1eUBpbnRlbC5jb20NCiANCg0K
-LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IGxpbnV4LXdpcmVsZXNzLW93bmVyQHZn
-ZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXdpcmVsZXNzLW93bmVyQHZnZXIua2VybmVsLm9y
-Z10gT24gQmVoYWxmIE9mIE1hbHRoZSBCb3JjaA0KU2VudDogTW9uZGF5LCBKdWx5IDI2LCAyMDEw
-IDI6MTkgUE0NClRvOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNClN1YmplY3Q6IElu
-dGVsIFdpcmVsZXNzOiBNaWNyb2NvZGUgU1cgZXJyb3IgZGV0ZWN0ZWQuDQoNCkkgZ2V0IHRoaXMg
-d2l0aCB0aGUgbGF0ZXN0IGFuZCBncmVhdGVzdCBJbnRlbCBmaXJtd2FyZSA5LjIyMS40LjEgYnVp
-bGQgMjU1MzIuDQoNClVsdGltYXRlbHkgZW5hYmxpbmcgdGhlIGRldmljZSBmYWlscyB3aXRoOiAi
-dUNvZGUgZGlkIG5vdCByZXNwb25kIE9LLiINCg==
+  CHECK   net/wireless/wext-compat.c
+net/wireless/wext-compat.c:1434:5: warning: symbol 'cfg80211_wext_siwpmksa' was not declared. Should it be static?
+
+Add declaration in cfg80211.h.  Also add an EXPORT_SYMBOL_GPL, since all
+the peer functions have it.
+
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ include/net/cfg80211.h     |    4 ++++
+ net/wireless/wext-compat.c |    1 +
+ 2 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 9b8b3f4..f68ae54 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1963,6 +1963,10 @@ int cfg80211_wext_giwap(struct net_device *dev,
+ 			struct iw_request_info *info,
+ 			struct sockaddr *ap_addr, char *extra);
+ 
++int cfg80211_wext_siwpmksa(struct net_device *dev,
++			   struct iw_request_info *info,
++			   struct iw_point *data, char *extra);
++
+ /*
+  * callbacks for asynchronous cfg80211 methods, notification
+  * functions and BSS handling helpers
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index 1ff1e9f..bb5e0a5 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -1471,6 +1471,7 @@ int cfg80211_wext_siwpmksa(struct net_device *dev,
+ 		return -EOPNOTSUPP;
+ 	}
+ }
++EXPORT_SYMBOL_GPL(cfg80211_wext_siwpmksa);
+ 
+ static const iw_handler cfg80211_handlers[] = {
+ 	[IW_IOCTL_IDX(SIOCGIWNAME)]	= (iw_handler) cfg80211_wext_giwname,
+-- 
+1.7.1.1
+
