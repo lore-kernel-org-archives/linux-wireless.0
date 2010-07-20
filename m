@@ -1,83 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redfish-solutions.com ([66.232.79.143]:54016 "EHLO
-	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750822Ab0GKGEw (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35505 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756131Ab0GTSaM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Jul 2010 02:04:52 -0400
-Received: from Philip-Prindevilles-MacBook-Pro.local ([192.168.1.114])
-	(authenticated bits=0)
-	by mail.redfish-solutions.com (8.14.4/8.14.4) with ESMTP id o6B64pWU018178
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Sun, 11 Jul 2010 00:04:51 -0600
-Message-ID: <4C395F03.40200@redfish-solutions.com>
-Date: Sun, 11 Jul 2010 00:04:51 -0600
-From: Philip Prindeville <philipp_subx@redfish-solutions.com>
-MIME-Version: 1.0
+	Tue, 20 Jul 2010 14:30:12 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
 To: linux-wireless@vger.kernel.org
-Subject: Re: Ath5k breaking in ath5k_pci_suspend_compat going on 2 weeks
-References: <4C3926F7.5070606@redfish-solutions.com>
-In-Reply-To: <4C3926F7.5070606@redfish-solutions.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] libipw: correct sparse warnings and mark some variables static
+Date: Tue, 20 Jul 2010 14:17:52 -0400
+Message-Id: <1279649872-6998-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I take it back... it seems to go back at least to 2010-06-12.
+  CHECK   drivers/net/wireless/ipw2x00/libipw_module.c
+drivers/net/wireless/ipw2x00/libipw_module.c:65:21: warning: symbol 'libipw_config_ops' was not declared. Should it be static?
+drivers/net/wireless/ipw2x00/libipw_module.c:66:6: warning: symbol 'libipw_wiphy_privid' was not declared. Should it be static?
+  CHECK   drivers/net/wireless/ipw2x00/libipw_wx.c
+drivers/net/wireless/ipw2x00/libipw_wx.c:415:17: warning: symbol 'ssid' shadows an earlier one
+drivers/net/wireless/ipw2x00/libipw_wx.c:324:9: originally declared here
 
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/ipw2x00/libipw_module.c |    4 ++--
+ drivers/net/wireless/ipw2x00/libipw_wx.c     |    4 ----
+ 2 files changed, 2 insertions(+), 6 deletions(-)
 
-On 7/10/10 8:05 PM, Philip Prindeville wrote:
-> This still seems to be broken, a couple of weeks later:
->
->   CC [M]  
-> /home/philipp/kernel/build_i586/compat-wireless-2010-06-26/drivers/net/wireless/ath/ath5k/attach.o 
->
->   CC [M]  
-> /home/philipp/kernel/build_i586/compat-wireless-2010-06-26/drivers/net/wireless/ath/ath5k/base.o 
->
-> /home/philipp/kernel/build_i586/compat-wireless-2010-06-26/drivers/net/wireless/ath/ath5k/base.c:243: 
-> error: 'ath5k_pci_suspend_compat' undeclared here (not in a function)
-> /home/philipp/kernel/build_i586/compat-wireless-2010-06-26/drivers/net/wireless/ath/ath5k/base.c:244: 
-> error: 'ath5k_pci_resume_compat' undeclared here (not in a function)
-> make[6]: *** 
-> [/home/philipp/kernel/build_i586/compat-wireless-2010-06-26/drivers/net/wireless/ath/ath5k/base.o] 
-> Error 1
-> make[5]: *** 
-> [/home/philipp/kernel/build_i586/compat-wireless-2010-06-26/drivers/net/wireless/ath/ath5k] 
-> Error 2
-> make[4]: *** 
-> [/home/philipp/kernel/build_i586/compat-wireless-2010-06-26/drivers/net/wireless/ath] 
-> Error 2
-> make[3]: *** 
-> [/home/philipp/kernel/build_i586/compat-wireless-2010-06-26/drivers/net/wireless] 
-> Error 2
->
->
-> and from today's tarball:
->
->
->   CC [M]  
-> /home/philipp/kernel/build_i586/compat-wireless-2010-07-10/drivers/net/wireless/ath/ath5k/base.o 
->
-> /home/philipp/kernel/build_i586/compat-wireless-2010-07-10/drivers/net/wireless/ath/ath5k/base.c:243: 
-> error: 'ath5k_pci_suspend_compat' undeclared here (not in a function)
-> /home/philipp/kernel/build_i586/compat-wireless-2010-07-10/drivers/net/wireless/ath/ath5k/base.c:244: 
-> error: 'ath5k_pci_resume_compat' undeclared here (not in a function)
-> make[6]: *** 
-> [/home/philipp/kernel/build_i586/compat-wireless-2010-07-10/drivers/net/wireless/ath/ath5k/base.o] 
-> Error 1
-> make[5]: *** 
-> [/home/philipp/kernel/build_i586/compat-wireless-2010-07-10/drivers/net/wireless/ath/ath5k] 
-> Error 2
-> make[4]: *** 
-> [/home/philipp/kernel/build_i586/compat-wireless-2010-07-10/drivers/net/wireless/ath] 
-> Error 2
-> make[3]: *** 
-> [/home/philipp/kernel/build_i586/compat-wireless-2010-07-10/drivers/net/wireless] 
-> Error 2
->
->
-> Can someone please have a look and fix their regression?
->
-> Thanks,
->
-> -Philip
+diff --git a/drivers/net/wireless/ipw2x00/libipw_module.c b/drivers/net/wireless/ipw2x00/libipw_module.c
+index 5596540..32dee2c 100644
+--- a/drivers/net/wireless/ipw2x00/libipw_module.c
++++ b/drivers/net/wireless/ipw2x00/libipw_module.c
+@@ -62,8 +62,8 @@ MODULE_DESCRIPTION(DRV_DESCRIPTION);
+ MODULE_AUTHOR(DRV_COPYRIGHT);
+ MODULE_LICENSE("GPL");
+ 
+-struct cfg80211_ops libipw_config_ops = { };
+-void *libipw_wiphy_privid = &libipw_wiphy_privid;
++static struct cfg80211_ops libipw_config_ops = { };
++static void *libipw_wiphy_privid = &libipw_wiphy_privid;
+ 
+ static int libipw_networks_allocate(struct libipw_device *ieee)
+ {
+diff --git a/drivers/net/wireless/ipw2x00/libipw_wx.c b/drivers/net/wireless/ipw2x00/libipw_wx.c
+index 3633c66..8a4bae4 100644
+--- a/drivers/net/wireless/ipw2x00/libipw_wx.c
++++ b/drivers/net/wireless/ipw2x00/libipw_wx.c
+@@ -411,10 +411,6 @@ int libipw_wx_set_encode(struct libipw_device *ieee,
+ 
+ 	/* If a new key was provided, set it up */
+ 	if (erq->length > 0) {
+-#ifdef CONFIG_LIBIPW_DEBUG
+-		DECLARE_SSID_BUF(ssid);
+-#endif
+-
+ 		len = erq->length <= 5 ? 5 : 13;
+ 		memcpy(sec.keys[key], keybuf, erq->length);
+ 		if (len > erq->length)
+-- 
+1.7.1.1
 
