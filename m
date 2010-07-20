@@ -1,47 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:52617 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753049Ab0GVKVV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 06:21:21 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Jul 2010 03:21:21 -0700
-Date: Thu, 22 Jul 2010 15:50:55 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] ath9k: Fix stop in tx date traffic after scan
-Message-ID: <20100722102049.GB4355@vasanth-laptop>
-References: <1279790703-11521-1-git-send-email-vasanth@atheros.com> <1279792601.12439.1.camel@jlt3.sipsolutions.net> <20100722101142.GA4355@vasanth-laptop> <1279793694.12439.4.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1279793694.12439.4.camel@jlt3.sipsolutions.net>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51691 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932099Ab0GTSpQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Jul 2010 14:45:16 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Lennert Buytenhek <buytenh@wantstofly.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v2] mwl8k: correct/silence sparse warnings
+Date: Tue, 20 Jul 2010 14:39:14 -0400
+Message-Id: <1279651154-11985-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1279650123.3706.45.camel@jlt3.sipsolutions.net>
+References: <1279650123.3706.45.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 22, 2010 at 03:44:54PM +0530, Johannes Berg wrote:
-> On Thu, 2010-07-22 at 15:41 +0530, Vasanthakumar Thiagarajan wrote:
-> > > Just go and implement flush() and all these issues will go away and you
-> > > will stop thinking that you need to touch queues from channel switching.
-> > > They have nothing to do with each other.
-> > 
-> > 
-> > I thought about it also, but i'll hit the same issue 
-> > when ieee80211_scan_state_leave_oper_channel() flushes
-> > the hw tx queues where driver is not supposed to wake
-> > up the queues as drv_flush() is called only after stopping
-> > all queues.
-> 
-> I don't get it. The driver can start/stop queues at _any_ time it wants
-> to. Regardless of what mac80211 is doing, all that goes via
-> IEEE80211_QUEUE_STOP_REASON_DRIVER which is never touched by mac80211
-> itself.
+drivers/net/wireless/mwl8k.c:1541:21: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/mwl8k.c:1541:21:    expected restricted __le16 [usertype] result
+drivers/net/wireless/mwl8k.c:1541:21:    got int
+drivers/net/wireless/mwl8k.c:1575:42:    expected unsigned short [unsigned] [usertype] cmd
+drivers/net/wireless/mwl8k.c:1575:42:    got restricted __le16 [usertype] code
+drivers/net/wireless/mwl8k.c:1587:50: warning: incorrect type in argument 1 (different base types)
+drivers/net/wireless/mwl8k.c:1587:50:    expected unsigned short [unsigned] [usertype] cmd
+drivers/net/wireless/mwl8k.c:1587:50:    got restricted __le16 [usertype] code
+drivers/net/wireless/mwl8k.c:1592:50: warning: incorrect type in argument 1 (different base types)
+drivers/net/wireless/mwl8k.c:1592:50:    expected unsigned short [unsigned] [usertype] cmd
+drivers/net/wireless/mwl8k.c:1592:50:    got restricted __le16 [usertype] code
+drivers/net/wireless/mwl8k.c:1845:27: warning: incorrect type in argument 1 (different base types)
+drivers/net/wireless/mwl8k.c:1845:27:    expected unsigned int [unsigned] [usertype] <noident>
+drivers/net/wireless/mwl8k.c:1845:27:    got restricted __le32 [usertype] <noident>
+drivers/net/wireless/mwl8k.c:1848:27: warning: incorrect type in argument 1 (different base types)
+drivers/net/wireless/mwl8k.c:1848:27:    expected unsigned int [unsigned] [usertype] <noident>
+drivers/net/wireless/mwl8k.c:1848:27:    got restricted __le32 [usertype] <noident>
+drivers/net/wireless/mwl8k.c:1851:27: warning: incorrect type in argument 1 (different base types)
+drivers/net/wireless/mwl8k.c:1851:27:    expected unsigned int [unsigned] [usertype] <noident>
+drivers/net/wireless/mwl8k.c:1851:27:    got restricted __le32 [usertype] <noident>
+drivers/net/wireless/mwl8k.c:1854:27: warning: incorrect type in argument 1 (different base types)
+drivers/net/wireless/mwl8k.c:1854:27:    expected unsigned int [unsigned] [usertype] <noident>
+drivers/net/wireless/mwl8k.c:1854:27:    got restricted __le32 [usertype] <noident>
+drivers/net/wireless/mwl8k.c:1857:27: warning: incorrect type in argument 1 (different base types)
+drivers/net/wireless/mwl8k.c:1857:27:    expected unsigned int [unsigned] [usertype] <noident>
+drivers/net/wireless/mwl8k.c:1857:27:    got restricted __le32 [usertype] <noident>
+drivers/net/wireless/mwl8k.c:1860:27: warning: incorrect type in argument 1 (different base types)
+drivers/net/wireless/mwl8k.c:1860:27:    expected unsigned int [unsigned] [usertype] <noident>
+drivers/net/wireless/mwl8k.c:1860:27:    got restricted __le32 [usertype] <noident>
+drivers/net/wireless/mwl8k.c:3055:20: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/mwl8k.c:3055:20:    expected restricted __le16 [usertype] ht_caps
+drivers/net/wireless/mwl8k.c:3055:20:    got unsigned short [unsigned] [usertype] cap
 
-My understanding is, if driver wakes up the queues when operating on
-a off-channel, it would get data frames from upper layer for
-transmission but it should not send out these frames as the hw is on
-non-operating channel.
+At least the last one looks like a real bug...
 
-Vasanth
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/mwl8k.c |   22 ++++++++++++----------
+ 1 files changed, 12 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index cd37b2a..e3f130c 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -314,13 +314,15 @@ static const struct ieee80211_rate mwl8k_rates_50[] = {
+ #define MWL8K_CMD_SET_NEW_STN		0x1111		/* per-vif */
+ #define MWL8K_CMD_UPDATE_STADB		0x1123
+ 
+-static const char *mwl8k_cmd_name(u16 cmd, char *buf, int bufsize)
++static const char *mwl8k_cmd_name(__le16 cmd, char *buf, int bufsize)
+ {
++	u16 command = le16_to_cpu(cmd);
++
+ #define MWL8K_CMDNAME(x)	case MWL8K_CMD_##x: do {\
+ 					snprintf(buf, bufsize, "%s", #x);\
+ 					return buf;\
+ 					} while (0)
+-	switch (cmd & ~0x8000) {
++	switch (command & ~0x8000) {
+ 		MWL8K_CMDNAME(CODE_DNLD);
+ 		MWL8K_CMDNAME(GET_HW_SPEC);
+ 		MWL8K_CMDNAME(SET_HW_SPEC);
+@@ -1538,7 +1540,7 @@ static int mwl8k_post_cmd(struct ieee80211_hw *hw, struct mwl8k_cmd_pkt *cmd)
+ 	unsigned long timeout = 0;
+ 	u8 buf[32];
+ 
+-	cmd->result = 0xffff;
++	cmd->result = (__force __le16) 0xffff;
+ 	dma_size = le16_to_cpu(cmd->length);
+ 	dma_addr = pci_map_single(priv->pdev, cmd, dma_size,
+ 				  PCI_DMA_BIDIRECTIONAL);
+@@ -1842,22 +1844,22 @@ static int mwl8k_cmd_get_hw_spec_ap(struct ieee80211_hw *hw)
+ 		priv->sta_macids_supported = 0x00000000;
+ 
+ 		off = le32_to_cpu(cmd->wcbbase0) & 0xffff;
+-		iowrite32(cpu_to_le32(priv->txq[0].txd_dma), priv->sram + off);
++		iowrite32(priv->txq[0].txd_dma, priv->sram + off);
+ 
+ 		off = le32_to_cpu(cmd->rxwrptr) & 0xffff;
+-		iowrite32(cpu_to_le32(priv->rxq[0].rxd_dma), priv->sram + off);
++		iowrite32(priv->rxq[0].rxd_dma, priv->sram + off);
+ 
+ 		off = le32_to_cpu(cmd->rxrdptr) & 0xffff;
+-		iowrite32(cpu_to_le32(priv->rxq[0].rxd_dma), priv->sram + off);
++		iowrite32(priv->rxq[0].rxd_dma, priv->sram + off);
+ 
+ 		off = le32_to_cpu(cmd->wcbbase1) & 0xffff;
+-		iowrite32(cpu_to_le32(priv->txq[1].txd_dma), priv->sram + off);
++		iowrite32(priv->txq[1].txd_dma, priv->sram + off);
+ 
+ 		off = le32_to_cpu(cmd->wcbbase2) & 0xffff;
+-		iowrite32(cpu_to_le32(priv->txq[2].txd_dma), priv->sram + off);
++		iowrite32(priv->txq[2].txd_dma, priv->sram + off);
+ 
+ 		off = le32_to_cpu(cmd->wcbbase3) & 0xffff;
+-		iowrite32(cpu_to_le32(priv->txq[3].txd_dma), priv->sram + off);
++		iowrite32(priv->txq[3].txd_dma, priv->sram + off);
+ 	}
+ 
+ 	kfree(cmd);
+@@ -3052,7 +3054,7 @@ static int mwl8k_cmd_update_stadb_add(struct ieee80211_hw *hw,
+ 	p->peer_type = MWL8K_PEER_TYPE_ACCESSPOINT;
+ 	p->basic_caps = cpu_to_le16(vif->bss_conf.assoc_capability);
+ 	p->ht_support = sta->ht_cap.ht_supported;
+-	p->ht_caps = sta->ht_cap.cap;
++	p->ht_caps = cpu_to_le16(sta->ht_cap.cap);
+ 	p->extended_ht_caps = (sta->ht_cap.ampdu_factor & 3) |
+ 		((sta->ht_cap.ampdu_density & 7) << 2);
+ 	if (hw->conf.channel->band == IEEE80211_BAND_2GHZ)
+-- 
+1.7.1.1
+
