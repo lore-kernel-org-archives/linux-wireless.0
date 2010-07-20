@@ -1,71 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:47980 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752530Ab0GNSdb convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44030 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754567Ab0GTNFZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jul 2010 14:33:31 -0400
-Received: by pvc7 with SMTP id 7so2868249pvc.19
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Jul 2010 11:33:30 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4C3DFDB5.10904@redfish-solutions.com>
-References: <1278879791-12646-1-git-send-email-hauke@hauke-m.de>
-	<AANLkTimLweydYTbS-O6Q2sX-W0H5z7cWOLUqQphSTO1s@mail.gmail.com>
-	<4C3B6AAE.4070204@redfish-solutions.com> <AANLkTilfUKMido8N4vRF4Em7ewtoUAlkrsp1uaKTx6H9@mail.gmail.com>
-	<AANLkTilVf_eOMqvYwcz5XrSVFuk3RNLl7SoVOj-6L6Fu@mail.gmail.com>
-	<4C3DFDB5.10904@redfish-solutions.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 14 Jul 2010 11:33:10 -0700
-Message-ID: <AANLkTikzEMY_Ya_QY7XkaNv441YxBcJngEoBYJUYJUA1@mail.gmail.com>
-Subject: Re: [PATCH] compat-wireless: fix build of ath5k for CONFIG_PM_SLEEP=n
-To: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org,
-	mcgrof@infradead.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 20 Jul 2010 09:05:25 -0400
+Subject: Re: [PATCH] cfg80211: fix WEXT ioctl GIWFREQ for monitor interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Gnedt <david.gnedt@davizone.at>
+Cc: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <4C44DFBB.6070604@davizone.at>
+References: <4C449C67.6010004@davizone.at>
+	 <1279571235.30478.5.camel@jlt3.sipsolutions.net>
+	 <AANLkTimxBt7dPcZrmAihWq9UKs77qS0cnAxQXIY_55ci@mail.gmail.com>
+	 <4C44DFBB.6070604@davizone.at>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 20 Jul 2010 15:04:56 +0200
+Message-ID: <1279631096.3706.33.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 14, 2010 at 11:11 AM, Philip A. Prindeville
-<philipp_subx@redfish-solutions.com> wrote:
-> On 07/13/2010 04:44 PM, Luis R. Rodriguez wrote:
->> On Tue, Jul 13, 2010 at 2:54 PM, Luis R. Rodriguez
->> <lrodriguez@atheros.com> wrote:
->>> On Mon, Jul 12, 2010 at 12:19 PM, Philip A. Prindeville
->>> <philipp_subx@redfish-solutions.com> wrote:
->>>> On 07/12/2010 09:30 AM, Luis R. Rodriguez wrote:
->>>>> On Sun, Jul 11, 2010 at 1:23 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->>>>>> suspend and resume are activated in ath5k if CONFIG_PM_SLEEP is set and
->>>>>> not if just CONFIG_PM is set.
->>>>>>
->>>>>> This should fix the problems reported by Philip Prindeville.
->>>>>>
->>>>>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
->>>>>
->>>>> Thanks! Applied and pushed out, at noon we'll have a new tarball with this.
->>>>>
->>>>>   Luis
->>>>
->>>> And...
->>>>
->>>>
->>>>  CC [M]  /home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth/l2cap.o
->>>> /home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth/l2cap.c: In function 'l2cap_data_channel':
->>>> /home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth/l2cap.c:4352: error: void value not ignored as it ought to be
->>>> make[4]: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth/l2cap.o] Error 1
->>>> make[3]: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth] Error 2
->>>> make[2]: *** [_module_/home/philipp/kernel/build_i586/compat-wireless-2010-07-12] Error 2
->>>> make[2]: Leaving directory `/home/philipp/kernel/build_i586/linux-2.6.27.48-astlinux'
->>>> make[1]: *** [modules] Error 2
->>>> make[1]: Leaving directory `/home/philipp/kernel/build_i586/compat-wireless-2010-07-12'
->>>> make: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/wireless/lib80211.ko] Error 2
->>>
->>> Thanks for reporting this, I am working on it now.
->>
->> This is now fixed, I'll push out a new tarball shortly.
->>
->>   Luis
->
-> That tarball never made it out...  can you please retry?
+On Tue, 2010-07-20 at 01:28 +0200, David Gnedt wrote:
+> Am 2010-07-19 23:06, schrieb Gábor Stefanik:
+> > (BTW, I say that a GIWFREQ on a monitor interface should always return
+> > the channel the PHY is tuned to at the moment when it is issued. Most
+> > tools seem to expect this behavior.)
+> 
+> I agree, that would be the expected behaviour.
+> 
+> I am not very familar with the entire wireless subsystem yet, but wouldn't that
+> imply a interface change in cfg80211 and mac80211 to add an "get_channel" function?
 
-The cronjob kicks off at noon PST time.
+Yes, I think so.
 
-  Luis
+> Because if the card is hopping channels (e.g. because of 2 station interfaces on
+> different channels), only the driver itself can tell what's really the current
+> channel.
+
+Right. Although in that case I'm not sure we should be telling userspace
+what channel the monitor interface is on, since there's no single
+channel it is on, and I certainly hope userspace won't be requesting the
+channel many times per second!
+
+> Nevertheless a default implementation for this new "get_channel" can be written
+> at mac80211 level (or even cfg80211?), which tries to find the current channel
+> by looking at all virtual interfaces, so only mac80211 drivers which allow
+> multiple channels (and non-mac80211 drivers) need to implement it.
+
+Indeed, but I think mac80211 would be more appropriate than cfg80211
+since the latter won't really have all the information unless it makes a
+whole bunch of assumptions that we'll eventually have to reconsider.
+
+johannes
+
