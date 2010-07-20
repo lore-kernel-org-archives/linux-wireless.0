@@ -1,129 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:37901 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757095Ab0GFAkj (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:47794 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932946Ab0GTWyl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jul 2010 20:40:39 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>
-Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Ohad Ben-Cohen <ohadb@ti.com>
-Subject: [PATCH 10/15] wireless: wl1271: support return value for the set power func
-Date: Tue,  6 Jul 2010 03:37:41 +0300
-Message-Id: <1278376666-3509-11-git-send-email-ohad@wizery.com>
-In-Reply-To: <1278376666-3509-1-git-send-email-ohad@wizery.com>
-References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
+	Tue, 20 Jul 2010 18:54:41 -0400
+Received: by qwh6 with SMTP id 6so2211818qwh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Jul 2010 15:54:40 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <alpine.DEB.2.00.1007211002410.21858@kauri.acheron.indranet.co.nz>
+References: <AANLkTilmifjH5Zopo82LhjidzsYfT_xRgKJzjGCZZPlq@mail.gmail.com>
+	<AANLkTintLd8YTgMQuzbEB36t_i5AL4TePBSDAa7G2zvl@mail.gmail.com>
+	<alpine.DEB.2.00.1007211002410.21858@kauri.acheron.indranet.co.nz>
+From: Jonathan Guerin <jonathan@guerin.id.au>
+Date: Wed, 21 Jul 2010 08:54:19 +1000
+Message-ID: <AANLkTimkmomMzzolCe7SFJssgbOchjZHcByhJHW1RnA4@mail.gmail.com>
+Subject: Re: [ath5k-devel] ath5k Ad Hoc Association
+To: Derek Smithies <derek@indranet.co.nz>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	"Ath5k Devel issues." <ath5k-devel@lists.ath5k.org>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ohad Ben-Cohen <ohadb@ti.com>
+I am happy to provide such data. Tell me what config you want me to
+put in place and I'll set up a capture.
 
-Make it possible for the set power method to indicate a
-success/failure return value. This is needed to support
-more complex power on/off operations such as bringing up
-(and down) sdio functions.
+Cheers,
 
-Signed-off-by: Ohad Ben-Cohen <ohadb@ti.com>
----
- drivers/net/wireless/wl12xx/wl1271.h      |    2 +-
- drivers/net/wireless/wl12xx/wl1271_io.h   |    8 +++++---
- drivers/net/wireless/wl12xx/wl1271_main.c |    4 +++-
- drivers/net/wireless/wl12xx/wl1271_sdio.c |    4 +++-
- drivers/net/wireless/wl12xx/wl1271_spi.c  |    4 +++-
- 5 files changed, 15 insertions(+), 7 deletions(-)
+--
+Jonathan Guerin
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
-index fc4d122..5250361 100644
---- a/drivers/net/wireless/wl12xx/wl1271.h
-+++ b/drivers/net/wireless/wl12xx/wl1271.h
-@@ -340,7 +340,7 @@ struct wl1271_if_operations {
- 		     bool fixed);
- 	void (*reset)(struct wl1271 *wl);
- 	void (*init)(struct wl1271 *wl);
--	void (*power)(struct wl1271 *wl, bool enable);
-+	int (*power)(struct wl1271 *wl, bool enable);
- 	struct device* (*dev)(struct wl1271 *wl);
- 	void (*enable_irq)(struct wl1271 *wl);
- 	void (*disable_irq)(struct wl1271 *wl);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_io.h b/drivers/net/wireless/wl12xx/wl1271_io.h
-index bc806c7..4a5b92c 100644
---- a/drivers/net/wireless/wl12xx/wl1271_io.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_io.h
-@@ -144,10 +144,12 @@ static inline void wl1271_power_off(struct wl1271 *wl)
- 	clear_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
- }
- 
--static inline void wl1271_power_on(struct wl1271 *wl)
-+static inline int wl1271_power_on(struct wl1271 *wl)
- {
--	wl->if_ops->power(wl, true);
--	set_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
-+	int ret = wl->if_ops->power(wl, true);
-+	if (ret == 0)
-+		set_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
-+	return ret;
- }
- 
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index b7d9137..6bd748e 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -620,7 +620,9 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
- 	int ret = 0;
- 
- 	msleep(WL1271_PRE_POWER_ON_SLEEP);
--	wl1271_power_on(wl);
-+	ret = wl1271_power_on(wl);
-+	if (ret < 0)
-+		goto out;
- 	msleep(WL1271_POWER_ON_SLEEP);
- 	wl1271_io_reset(wl);
- 	wl1271_io_init(wl);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-index 9903ae9..571c6b9 100644
---- a/drivers/net/wireless/wl12xx/wl1271_sdio.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-@@ -144,7 +144,7 @@ static void wl1271_sdio_raw_write(struct wl1271 *wl, int addr, void *buf,
- 
- }
- 
--static void wl1271_sdio_set_power(struct wl1271 *wl, bool enable)
-+static int wl1271_sdio_set_power(struct wl1271 *wl, bool enable)
- {
- 	struct sdio_func *func = wl_to_func(wl);
- 
-@@ -159,6 +159,8 @@ static void wl1271_sdio_set_power(struct wl1271 *wl, bool enable)
- 		sdio_disable_func(func);
- 		sdio_release_host(func);
- 	}
-+
-+	return 0;
- }
- 
- static struct wl1271_if_operations sdio_ops = {
-diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
-index e866049..85a167f 100644
---- a/drivers/net/wireless/wl12xx/wl1271_spi.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
-@@ -313,10 +313,12 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
- 	return IRQ_HANDLED;
- }
- 
--static void wl1271_spi_set_power(struct wl1271 *wl, bool enable)
-+static int wl1271_spi_set_power(struct wl1271 *wl, bool enable)
- {
- 	if (wl->set_power)
- 		wl->set_power(enable);
-+
-+	return 0;
- }
- 
- static struct wl1271_if_operations spi_ops = {
--- 
-1.7.0.4
 
+
+On Wed, Jul 21, 2010 at 8:11 AM, Derek Smithies <derek@indranet.co.nz> wrote:
+> Hi,
+> On Mon, 19 Jul 2010, Bob Copeland wrote:
+>
+>> On Mon, Jul 19, 2010 at 12:35 AM, Jonathan Guerin <jonathan@guerin.id.au>
+>> wrote:
+>>>
+>>> Hi,
+>>>
+>>> I'm trying to get my wireless nodes to associate in ad hoc mode.
+>
+> [[[snipped]]]
+>>
+>> $ su
+>> # modprobe -r ath5k
+>> # modprobe ath5k
+>> # iw dev wlan0 set type ibss
+>> # ifconfig wlan0 192.168.10.1 up
+>> # iw dev wlan0 ibss join myibss 2462
+>>
+>> Then on the other machine (Vista) I just located 'myibss' (so beacons
+>> are working) and selected it, then successfully pinged 192.168.10.1.
+>
+> Wrong.
+> If the other machine located your node, then one of the four statements is
+> true:
+>  a)beacons are working
+>  b)probes are working - which means a scan is happening.
+>  c)beacons and probes are working
+>  d)beacons and probes are not working. The vista machine saw a data
+>   packet, and sent a probe request, which your machine answered.
+>
+>>>>>>>>>
+>
+> My colleague here did some work with a slightly older kernel.
+>
+> He found that the association process worked sometimes - not always.
+> There was a time dependency - both nodes have to go through this at the same
+> time.
+>
+> Further - scans - it seems that nodes have to scan to find things. Old
+> information in the mac80211 has to be expired and removed.
+>
+> A scan should not be necessary - if both ends are put on channel 2462- a
+> scan should not be required - there is no channel changing. Yet - my
+> colleague noted a scan helped nodes to associate.
+>
+> I would say this:::
+>  I cannot deduce what is happening from the initial posters report. I need a
+> packet dump of the beacons/probes and all the other packets on the air.
+>
+> Cheers,
+>  Derek.
+> --
+> Derek Smithies Ph.D.
+> IndraNet Technologies Ltd.
+> ph +64 3 365 6485
+> Web: http://www.indranet-technologies.com/
+>
+> "How did you make it work??"
+>      "Oh, the usual, get everything right".
+>
