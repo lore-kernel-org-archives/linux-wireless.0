@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50685 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750908Ab0G0Gs3 (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:4490 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932998Ab0GTXQI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 02:48:29 -0400
-Subject: Re: ath9k: /proc/net/wireless always shows status of 0
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Tue, 20 Jul 2010 19:16:08 -0400
+Date: Tue, 20 Jul 2010 19:16:29 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Derek Smithies <derek@indranet.co.nz>
+Cc: Jonathan Guerin <jonathan@guerin.id.au>,
+	"Ath5k Devel issues." <ath5k-devel@lists.ath5k.org>,
 	linux-wireless@vger.kernel.org
-In-Reply-To: <4C4E1C0B.9040608@candelatech.com>
-References: <4C4DE6B5.5080307@candelatech.com>
-	 <4C4E0580.3060404@candelatech.com>
-	 <AANLkTi=qJXCxtMZcEm3VQT1s7ioJsdhj2kJzkgGSf3ND@mail.gmail.com>
-	 <4C4E1784.3030702@candelatech.com>
-	 <AANLkTimnZ9pSfVLsEPgiDPyc=_eUnyLj89RHCC6rsaX8@mail.gmail.com>
-	 <4C4E1C0B.9040608@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 27 Jul 2010 08:48:23 +0200
-Message-ID: <1280213303.19098.3.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Subject: Re: [ath5k-devel] ath5k Ad Hoc Association
+Message-ID: <20100720231629.GC7049@hash.localnet>
+References: <AANLkTilmifjH5Zopo82LhjidzsYfT_xRgKJzjGCZZPlq@mail.gmail.com> <AANLkTintLd8YTgMQuzbEB36t_i5AL4TePBSDAa7G2zvl@mail.gmail.com> <alpine.DEB.2.00.1007211002410.21858@kauri.acheron.indranet.co.nz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.00.1007211002410.21858@kauri.acheron.indranet.co.nz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-07-26 at 16:36 -0700, Ben Greear wrote:
+On Wed, Jul 21, 2010 at 10:11:14AM +1200, Derek Smithies wrote:
+>> Then on the other machine (Vista) I just located 'myibss' (so beacons
+>> are working) and selected it, then successfully pinged 192.168.10.1.
+> Wrong.
+> If the other machine located your node, then one of the four statements  
+> is true:
 
-> > You can use nl28011 and register for netlink multicast messages which
-> > broadcast device state changes like the ones you mentioned. These come
-> > in on iw via event.c, see print_event() and see the case statements
-> > for NL80211_CMD_ASSOCIATE, NL80211_CMD_DEAUTHENTICATE,
-> > NL80211_CMD_DISASSOCIATE, etc, you even get reason codes parsed for
-> > you too.
-> 
-> Ahhh, that is the kind of thing I'm looking for.  I'll check out that
-> code in detail tomorrow.
+Ok, fine, I just set up a monitor interface and I see beacons
+(and probe responses) for my setup on that channel.
 
-Keep in mind though that not all drivers can give you the difference
-between AUTH and ASSOC, and will ONLY report "CONNECTED" events. This is
-those drivers that do roaming and all that in firmware rather than in
-mac80211. Therefore, generally speaking, you cannot get the states
-you're after.
+> A scan should not be necessary - if both ends are put on channel 2462- a  
+> scan should not be required - there is no channel changing. Yet - my  
+> colleague noted a scan helped nodes to associate.
 
-johannes
+There was a bug in older kernels that wouldn't fully configure the
+beacons until after a reset, which scanning happens to do.  It's
+possible something similar is going on.
+
+Also, scanning might open a previously passive channel because we might
+get lucky and receive a beacon from another node on it.  The 'iw phy
+phy0 info' can show this kind of thing.
+
+-- 
+Bob Copeland %% www.bobcopeland.com
 
