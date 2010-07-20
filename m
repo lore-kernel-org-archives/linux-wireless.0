@@ -1,62 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:44509 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754743Ab0G1VVf (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36291 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754043Ab0GTHya (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jul 2010 17:21:35 -0400
-Received: by gxk23 with SMTP id 23so1893845gxk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Jul 2010 14:21:34 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4C509CE1.90503@openwrt.org>
-References: <1280339151-37084-1-git-send-email-nbd@openwrt.org>
-	<1280339151-37084-2-git-send-email-nbd@openwrt.org> <AANLkTi=8UX5B9+nLymSdJS2J-gRwMsYT_SVnviHX9Zi3@mail.gmail.com>
-	<4C509CE1.90503@openwrt.org>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 28 Jul 2010 14:21:14 -0700
-Message-ID: <AANLkTi==nB+Wqe3KcmDf6P=JUYnLzc2PeAuOZQE3v9bn@mail.gmail.com>
-Subject: Re: [PATCH 2/3] ath9k_hw: clean up per-channel calibration data
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Jouni Malinen <Jouni.Malinen@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 20 Jul 2010 03:54:30 -0400
+Subject: Re: [ath5k-devel] [PATCH/RFC 0/3] ath5k: add driver tracepoints
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, Bob Copeland <me@bobcopeland.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <201007201411.51259.br1@einfach.org>
+References: <1279395336-856-1-git-send-email-me@bobcopeland.com>
+	 <201007201411.51259.br1@einfach.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 20 Jul 2010 09:54:19 +0200
+Message-ID: <1279612459.3706.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 28, 2010 at 2:10 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2010-07-28 10:52 PM, Luis R. Rodriguez wrote:
->> On Wed, Jul 28, 2010 at 10:45 AM, Felix Fietkau <nbd@openwrt.org> wrote:
->>> The noise floor history buffer is currently not kept per channel, which
->>> can lead to problems when changing channels from a clean channel to a
->>> noisy one. Also when switching from HT20 to HT40, the noise floor
->>> history buffer is full of measurements, but none of them contain data
->>> for the extension channel, which it needs quite a bit of time to recover
->>> from.
->>>
->>> This patch puts all the per-channel calibration data into a single data
->>> structure, and gives the the driver control over whether that is used
->>> per-channel or even not used for some channels.
->>>
->>> For ath9k_htc, I decided to keep this per-channel in order to avoid
->>> creating regressions.
->>>
->>> For ath9k, the data is kept only for the operating channel, which saves
->>> some space. ath9k_hw takes care of wiping old data when the operating
->>> channel or its channel flags change.
->>>
->>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->>
->> But this also means every time we want to get operational on a channel
->> we have to learn the current noise all over again. This means for WiFi
->> Direct every channel swap we'd have to learn to walk, which happens
->> quite often. What do you think? Sorry, I know we discussed this
->> approach and I seemed fine but this just occurred to me now, and will
->> become really important later when we support WiFi Direct.
-> When we get to implementing per-vif channel settings with switching
-> being done in mac80211, we can just move the calibration data to ath9k's
-> virtual interface data and thus keep the calibration for multiple
-> operating channels.
+On Tue, 2010-07-20 at 14:11 +0900, Bruno Randolf wrote:
 
-Sounds good. This would currently break the ath9k virtual wiphy's
-calibration stuff :P (not like I care), Jouni?
+> hmm, this is really nice stuff, but i'm not sure what to do on embedded boards 
+> where we don't have python or where it's not possible to use tracing in 
+> general due to (low) performance reasons
 
-  Luis
+err, tracing has much better performance than printk, and you can get
+the trace into a file that you can analyse offline on a "real" machine.
+No need for python on the board, and tracing improves performance over
+printk.
+
+johannes
+
