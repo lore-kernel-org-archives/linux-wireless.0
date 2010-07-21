@@ -1,94 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:13023 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751174Ab0GAJeo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Jul 2010 05:34:44 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 01 Jul 2010 02:31:35 -0700
-Date: Thu, 1 Jul 2010 15:04:38 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <johannes@sipsolutions.net>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] mac80211: Dont allow to wake up netif tx queues
-	while on off channel
-Message-ID: <20100701093438.GA4563@vasanth-laptop>
-References: <1277892907-2401-1-git-send-email-vasanth@atheros.com> <1277893026.7823.7.camel@jlt3.sipsolutions.net> <20100630104715.GA2192@vasanth-laptop>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:42106 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752235Ab0GUR1H convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Jul 2010 13:27:07 -0400
+Received: by fxm14 with SMTP id 14so3748984fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jul 2010 10:27:05 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20100630104715.GA2192@vasanth-laptop>
+In-Reply-To: <AANLkTinjvF9UeV7d2aBUy6HfexuAeL_cdsVPGVxSRVMp@mail.gmail.com>
+References: <4C37BCA0.5090607@deltatee.com>
+	<AC090B9732AB2B4DB7FF476E907FE660010685F34E@dnce02.ent.ti.com>
+	<AANLkTilHNKeRZX5CMplyriTo2hTPBrz_z1_Zpwoy3SZx@mail.gmail.com>
+	<AC090B9732AB2B4DB7FF476E907FE66001069662F2@dnce02.ent.ti.com>
+	<AC090B9732AB2B4DB7FF476E907FE6600106966BA5@dnce02.ent.ti.com>
+	<4C45ED36.2090604@deltatee.com>
+	<AANLkTinjvF9UeV7d2aBUy6HfexuAeL_cdsVPGVxSRVMp@mail.gmail.com>
+Date: Wed, 21 Jul 2010 19:27:04 +0200
+Message-ID: <AANLkTinnYeJPV-xxg7DdPXnWW_kD7X1TVcd9HrhupJWS@mail.gmail.com>
+Subject: Re: wl1271 firmware
+From: Pazzo Da Legare <pazzodalegare@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: "Levi, Shahar" <shahar_levi@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	Logan Gunthorpe <logang@deltatee.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 30, 2010 at 04:17:15PM +0530, Vasanth Thiagarajan wrote:
-> On Wed, Jun 30, 2010 at 03:47:06PM +0530, Johannes Berg wrote:
-> > On Wed, 2010-06-30 at 03:15 -0700, Vasanthakumar Thiagarajan wrote:
-> > > Drivers are not supposed to call ieee80211_wake_queue() while operating
-> > > on off channel during sw scanning, but there is no clear way for
-> > > the driver to know that it is operating on off channel during scanning.
-> > > There are cases (unavailablity/availability of tx buffers in ath9k, for
-> > > example) where driver needs to stop/restart tx queues during background
-> > > scanning state, this might result in waking up the corresponding netif
-> > > tx queue when the device is on off channel which is not desired. This
-> > > patches fixes this by checking SCAN_OFF_CHANNEL bit in scanning before
-> > > restarting the tx queue.
-> > > 
-> > > Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> > > ---
-> > >  net/mac80211/util.c |    3 ++-
-> > >  1 files changed, 2 insertions(+), 1 deletions(-)
-> > > 
-> > > diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-> > > index a54cf14..1938a67 100644
-> > > --- a/net/mac80211/util.c
-> > > +++ b/net/mac80211/util.c
-> > > @@ -277,7 +277,8 @@ static void __ieee80211_wake_queue(struct ieee80211_hw *hw, int queue,
-> > >  
-> > >  	__clear_bit(reason, &local->queue_stop_reasons[queue]);
-> > >  
-> > > -	if (local->queue_stop_reasons[queue] != 0)
-> > > +	if ((local->queue_stop_reasons[queue] != 0) ||
-> > > +	    test_bit(SCAN_OFF_CHANNEL, &local->scanning))
-> > >  		/* someone still has this queue stopped */
-> > >  		return;
-> > 
-> > That doesn't seem to make sense, since we treat driver and scan stop
-> > status separately via wake_queue_by_reason()
-> 
-> I dont know if I explained the issue properly. The issue here is
-> waking up the queues by driver during scan, particularly when
-> operating on off channel. With ath9k, there is a possibility that
-> ieee80211_wake_queue() can be called while moving from operational
-> channel (during channel set in driver). In this case driver still
-> needs to be allowed to clear the bit in queue_stop_reasons[] but
-> not wake up the tx queue.
+Dear All again,
 
-The actual issue here is
+I've just test with compact-wireless-2010-07-20 but I've the same problem:
 
- - ath9k does a ieee80211_stop_queue() upon detecting the shortage
-    in tx buffer.
+root@hawkboard:~# ifconfig wlan0 192.168.0.1 up
+[   68.920000] wl1271_sdio mmc0:0001:2: firmware: requesting wl1271-fw.bin
+[   69.100000] wl1271_sdio mmc0:0001:2: firmware: requesting wl1271-nvs.bin
+[   69.510000] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+root@hawkboard:~# [   70.020000] wl1271: ERROR ELP wakeup timeout!
+[   70.520000] wl1271: ERROR ELP wakeup timeout!
 
- - by the time it wakes up the queue, network manager issues a
-   background scanning. tx buffers become available again by
-   draining the driver's tx queues while configuring the hw with
-   a non-operational channel. As driver can not really clear its
-   queue stop request by calling ieee80211_wake_queue() during
-   off channel, the stopped queue would remain stopped by driver
-   for ever.
 
-My patch makes ieee80211_wake_queue() callable any time by driver.
-This would just clear the driver's stop req bit in queue_stop_reasons[]
-when on non-operational channel so that the frames coming from that
-queue would be passed to driver when the interface is put back on
-operational channel. The commit description in that patch is
-misleading. If you are ok with this fix, I will resend the patch
-with proper commit message. I could not even come up with a decent
-workaround in ath9k as there is no clean way for driver to know
-if it is moving in/out of operational channel.
+looking at dmesg:
 
-This issue is easily seen with ath9k from latest wireless-testing and
-NM. With a simple iperf traffic, tx from mac80211 to driver would stop
-with in 20 secs.
+[  68.920000] wl1271_sdio mmc0:0001:2: firmware: requesting wl1271-fw.bin
+[   69.100000] wl1271_sdio mmc0:0001:2: firmware: requesting wl1271-nvs.bin
+[   69.500000] wl1271: firmware booted (Rev 6.1.0.0.310)
+[   69.510000] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[   70.020000] wl1271: ERROR ELP wakeup timeout!
+[   70.520000] wl1271: ERROR ELP wakeup timeout!
 
-Vasanth
+[   68.920000] wl1271_sdio mmc0:0001:2: firmware: requesting wl1271-fw.bin
+[   69.100000] wl1271_sdio mmc0:0001:2: firmware: requesting wl1271-nvs.bin
+[   69.500000] wl1271: firmware booted (Rev 6.1.0.0.310)
+[   70.020000] wl1271: ERROR ELP wakeup timeout!
+[   70.520000] wl1271: ERROR ELP wakeup timeout!
+
+Do you have any clue?
+
+pz
+
+
+2010/7/21 Pazzo Da Legare <pazzodalegare@gmail.com>:
+> Dear All,
+> Dear Shahar,
+>
+> I tried your files but I had errors from the driver.
+>
+> # ifconfig wlan0 up
+>
+> [  194.470000] wl1271_sdio mmc0:0001:2: firmware: requesting wl1271-fw.bin
+> [  194.620000] wl1271_sdio mmc0:0001:2: firmware: requesting wl1271-nvs.bin
+> [  195.080000] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> root@hawkboard:~# [  195.590000] wl1271: ERROR ELP wakeup timeout!
+>
+> I tried to scan but it doesn't work. Note that I'm using a driver
+> built from compact-wireless-2010-06-20 and I'm going to try to update.
+>
+> Thank you for your help again,
+>
+> pz
+>
+>
+> 2010/7/20 Logan Gunthorpe <logang@deltatee.com>:
+>> Hi Sharar,
+>>
+>> Thanks a lot. I'm pleased to report that our module appears to be working
+>> with the firmware and NVS files you supplied.
+>>
+>> Logan
+>>
+>> Levi, Shahar wrote:
+>>>>
+>>>> -----Original Message-----
+>>>> From: Levi, Shahar
+>>>> Sent: Saturday, July 17, 2010 3:20 PM
+>>>> To: Pazzo Da Legare
+>>>> Cc: linux-wireless@vger.kernel.org; Logan Gunthorpe; Luciano Coelho
+>>>> Subject: RE: wl1271 firmware
+>>>> Hi Pazzo,
+>>>> I am still pushing the legal stuff to make it happened. I hope to close
+>>>> that in a few days.
+>>>> Regards,
+>>>> Shahar
+>>>
+>>> Hi Pazzo and Logan,
+>>> Until the file will publish in TI web I am enclosing the file for you in
+>>> the mail.
+>>> I will publish link to the community as soon it will be in the TI web.
+>>>
+>>> Regards,
+>>> Shahar
+>>>
+>>
+>
