@@ -1,56 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:38308 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751585Ab0GWCb6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 22:31:58 -0400
-Message-ID: <4C48FF1C.6030108@openwrt.org>
-Date: Fri, 23 Jul 2010 04:31:56 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] ath9k_hw: simplify noisefloor calibration chainmask calculation
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:55466 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753113Ab0GUIws (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Jul 2010 04:52:48 -0400
+Subject: [PATCH] mac80211: fix IBSS lockdep complaint
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 21 Jul 2010 10:52:40 +0200
+Message-ID: <1279702360.3707.8.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The noisefloor array index always corresponds to the rx chain number it
-belongs to (with an offset of 3 for the extension chain).
+From: Johannes Berg <johannes.berg@intel.com>
 
-It's much simpler (and actually more correct) to directly use the
-chainmask to calculate the bitmask for the noisefloor array, instead of
-using these weird chip revision checks and hardcoded mask values.
+Bob reported a lockdep complaint originating in
+the mac80211 IBSS code due to the common work
+struct patch. The reason is that the IBSS and
+station mode code have different locking orders
+for the cfg80211 wdev lock and the work struct
+(where "locking" implies running/canceling).
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Fix this by simply not canceling the work in
+the IBSS code, it is not necessary since when
+the REQ_RUN bit is cleared, the work will run
+without effect if it runs. When the interface
+is set down, it is flushed anyway, so there's
+no concern about it running after memory has
+been invalidated either.
+
+This fixes
+https://bugzilla.kernel.org/show_bug.cgi?id=16419
+
+Additionally, looking into this I noticed that
+there's a small window while the IBSS is torn
+down in which the work may be rescheduled and
+the REQ_RUN bit be set again after leave() has
+cleared it when a scan finishes at exactly the
+same time. Avoid that by setting the ssid_len
+to zero before clearing REQ_RUN which signals
+to the scan finish code that this interface is
+not active.
+
+Reported-by: Bob Copeland <me@bobcopeland.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -172,26 +172,9 @@ void ath9k_hw_loadnf(struct ath_hw *ah,
- 	struct ath9k_nfcal_hist *h;
- 	unsigned i, j;
- 	int32_t val;
--	u8 chainmask;
-+	u8 chainmask = (ah->rxchainmask << 3) | ah->rxchainmask;
- 	struct ath_common *common = ath9k_hw_common(ah);
+ net/mac80211/ibss.c |   19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
 
--	if (AR_SREV_9300_20_OR_LATER(ah))
--		chainmask = 0x3F;
--	else if (AR_SREV_9285(ah) || AR_SREV_9271(ah))
--		chainmask = 0x9;
--	else if (AR_SREV_9280(ah) || AR_SREV_9287(ah)) {
--		if ((ah->rxchainmask & 0x2) || (ah->rxchainmask & 0x4))
--			chainmask = 0x1B;
--		else
--			chainmask = 0x09;
--	} else {
--		if (ah->rxchainmask & 0x4)
--			chainmask = 0x3F;
--		else if (ah->rxchainmask & 0x2)
--			chainmask = 0x1B;
--		else
--			chainmask = 0x09;
--	}
- 	h = ah->nfCalHist;
+--- wireless-testing.orig/net/mac80211/ibss.c	2010-07-20 10:25:03.000000000 +0200
++++ wireless-testing/net/mac80211/ibss.c	2010-07-20 10:27:56.000000000 +0200
+@@ -943,11 +943,6 @@ int ieee80211_ibss_leave(struct ieee8021
+ 		}
+ 	}
+ 
+-	del_timer_sync(&sdata->u.ibss.timer);
+-	clear_bit(IEEE80211_IBSS_REQ_RUN, &sdata->u.ibss.request);
+-	cancel_work_sync(&sdata->work);
+-	clear_bit(IEEE80211_IBSS_REQ_RUN, &sdata->u.ibss.request);
+-
+ 	sta_info_flush(sdata->local, sdata);
+ 
+ 	/* remove beacon */
+@@ -964,6 +959,20 @@ int ieee80211_ibss_leave(struct ieee8021
+ 	memset(sdata->u.ibss.bssid, 0, ETH_ALEN);
+ 	sdata->u.ibss.ssid_len = 0;
+ 
++	/*
++	 * ssid_len indicates active or not, so needs to be visible to
++	 * everybody, especially ieee80211_ibss_notify_scan_completed,
++	 * so it won't restart the timer after we remove it here.
++	 */
++	mb();
++
++	del_timer_sync(&sdata->u.ibss.timer);
++	clear_bit(IEEE80211_IBSS_REQ_RUN, &sdata->u.ibss.request);
++	/*
++	 * Since the REQ_RUN bit is clear, the work won't do
++	 * anything if it runs after this.
++	 */
++
+ 	ieee80211_recalc_idle(sdata->local);
+ 
+ 	return 0;
 
- 	for (i = 0; i < NUM_NF_READINGS; i++) {
+
