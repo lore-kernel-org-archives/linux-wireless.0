@@ -1,33 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:60450 "EHLO
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:59315 "EHLO
 	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932207Ab0GTLu5 (ORCPT
+	with ESMTP id S1758499Ab0GURe7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jul 2010 07:50:57 -0400
-Received: by bwz1 with SMTP id 1so2797981bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Jul 2010 04:50:55 -0700 (PDT)
-From: Holger Schurig <holgerschurig@googlemail.com>
-To: Jonathan Guerin <jonathan@guerin.id.au>
-Subject: Re: ath5k Ad Hoc Association
-Date: Tue, 20 Jul 2010 13:50:48 +0200
-Cc: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org
-References: <AANLkTilmifjH5Zopo82LhjidzsYfT_xRgKJzjGCZZPlq@mail.gmail.com> <AANLkTintLd8YTgMQuzbEB36t_i5AL4TePBSDAa7G2zvl@mail.gmail.com> <AANLkTimgt_HdXyGneQMOz7wR7Xs7BBrDUCGoxP1qDcYg@mail.gmail.com>
-In-Reply-To: <AANLkTimgt_HdXyGneQMOz7wR7Xs7BBrDUCGoxP1qDcYg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201007201350.48923.holgerschurig@gmail.com>
+	Wed, 21 Jul 2010 13:34:59 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>
+Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Pandita Vikram <vikram.pandita@ti.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH v2 10/20] omap: zoom: add fixed regulator device for wlan
+Date: Wed, 21 Jul 2010 20:33:44 +0300
+Message-Id: <1279733634-21974-11-git-send-email-ohad@wizery.com>
+In-Reply-To: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> iw phy phy0 interface add wlan0 type adhoc
-> iw wlan0 set channel 36
-> iwconfig wlan0 channel 36
-> iwconfig wlan0 essid txctest
+Add a fixed regulator vmmc device to enable power control
+of the wl1271 wlan device.
 
-I can't think of ANY reason why you do that. Use "iw", not "iwconfig". 
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+---
+ arch/arm/mach-omap2/board-zoom-peripherals.c |   34 ++++++++++++++++++++++++++
+ 1 files changed, 34 insertions(+), 0 deletions(-)
 
-All the last three commands should be replaced with one single "iw dev wlan0 
-ibss join myibss XXXX", where XXXX is the frequency for channel 36. If in 
-doubt what this is, just do "iw list" and you'll see it.
+diff --git a/arch/arm/mach-omap2/board-zoom-peripherals.c b/arch/arm/mach-omap2/board-zoom-peripherals.c
+index 6b39849..2fc0f4a 100644
+--- a/arch/arm/mach-omap2/board-zoom-peripherals.c
++++ b/arch/arm/mach-omap2/board-zoom-peripherals.c
+@@ -16,6 +16,7 @@
+ #include <linux/gpio.h>
+ #include <linux/i2c/twl.h>
+ #include <linux/regulator/machine.h>
++#include <linux/regulator/fixed.h>
+ 
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+@@ -27,6 +28,8 @@
+ #include "mux.h"
+ #include "hsmmc.h"
+ 
++#define OMAP_ZOOM_WLAN_PMENA_GPIO	(101)
++
+ /* Zoom2 has Qwerty keyboard*/
+ static int board_keymap[] = {
+ 	KEY(0, 0, KEY_E),
+@@ -106,6 +109,10 @@ static struct regulator_consumer_supply zoom_vmmc2_supply = {
+ 	.supply		= "vmmc",
+ };
+ 
++static struct regulator_consumer_supply zoom_vmmc3_supply = {
++	.supply		= "vmmc",
++};
++
+ /* VMMC1 for OMAP VDD_MMC1 (i/o) and MMC1 card */
+ static struct regulator_init_data zoom_vmmc1 = {
+ 	.constraints = {
+@@ -151,6 +158,32 @@ static struct regulator_init_data zoom_vsim = {
+ 	.consumer_supplies      = &zoom_vsim_supply,
+ };
+ 
++static struct regulator_init_data zoom_vmmc3 = {
++	.constraints = {
++		.valid_ops_mask	= REGULATOR_CHANGE_STATUS,
++	},
++	.num_consumer_supplies = 1,
++	.consumer_supplies = &zoom_vmmc3_supply,
++};
++
++static struct fixed_voltage_config zoom_vwlan = {
++	.supply_name = "vwl1271",
++	.microvolts = 1800000, /* 1.8V */
++	.gpio = OMAP_ZOOM_WLAN_PMENA_GPIO,
++	.startup_delay = 70000, /* 70msec */
++	.enable_high = 1,
++	.enabled_at_boot = 0,
++	.init_data = &zoom_vmmc3,
++};
++
++static struct platform_device omap_vwlan_device = {
++	.name		= "reg-fixed-voltage",
++	.id		= 1,
++	.dev = {
++		.platform_data = &zoom_vwlan,
++	},
++};
++
+ static struct omap2_hsmmc_info mmc[] __initdata = {
+ 	{
+ 		.name		= "external",
+@@ -280,6 +313,7 @@ static void enable_board_wakeup_source(void)
+ void __init zoom_peripherals_init(void)
+ {
+ 	omap_i2c_init();
++	platform_device_register(&omap_vwlan_device);
+ 	usb_musb_init(&musb_board_data);
+ 	enable_board_wakeup_source();
+ }
+-- 
+1.7.0.4
+
