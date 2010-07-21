@@ -1,48 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:35797 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754934Ab0GQN7M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Jul 2010 09:59:12 -0400
-Message-ID: <4C41B72B.8020306@openwrt.org>
-Date: Sat, 17 Jul 2010 15:59:07 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:38351 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752774Ab0GUS7B (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Jul 2010 14:59:01 -0400
+Received: by ewy23 with SMTP id 23so2550021ewy.19
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jul 2010 11:58:59 -0700 (PDT)
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: fix aggregation action frame handling with AP VLANs
+Date: Wed, 21 Jul 2010 14:58:59 -0400
+Message-ID: <AANLkTil3u8uFbH7WyPuvqu0wee4KsojqPUsAH2kupZhJ@mail.gmail.com>
+Subject: ath9k - D-link DWA-552
+From: Andy Pyles <andy.pyles@gmail.com>
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When aggregation related action frames are enqueued for further work,
-and they originate from a STA that is part of an AP VLAN, they are
-currently enqueued for the AP interface. This breaks the sta_info_get()
-lookup in the actual work function, and because of that, aggregation
-sessions are not established for this STA.
+I have recently purchased two of these cards. ( the markings on the
+outside indicate they have are same hardware revision). I am noticing
+some strange behavior on one of them:
 
-Fix this by replacing the sta_info_get call with a call to
-sta_info_get_bss.
+Card One ( this one works)
+$lspci -v output"
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+
+05:02.0 Network controller: Atheros Communications Inc. AR5008
+Wireless Network Adapter (rev 01)
+	Subsystem: D-Link System Inc Device 3a6d
+	Flags: bus master, 66MHz, medium devsel, latency 168, IRQ 18
+	Memory at fbde0000 (32-bit, non-prefetchable) [size=64K]
+	Capabilities: [40] #80 [0000]
+	Kernel driver in use: ath9k
+	Kernel modules: ath9k
+
+$lspci -n output:
+05:02.0 0280: 168c:0023 (rev 01)
+
+
+Card Two ( this one doesn't work )
+$lspci -v output:
+
+05:05.0 Ethernet controller: Atheros Communications Inc. AR5008
+Wireless Network Adapter (rev 01)
+	Subsystem: Atheros Communications Inc. Device ee1c
+	Flags: 66MHz, medium devsel, IRQ 17
+	Memory at fbdf0000 (32-bit, non-prefetchable) [size=64K]
+	Capabilities: [40] #80 [0000]
+	Kernel modules: ath9k
+
+$lspci -n output:
+05:05.0 0200: 168c:ff1d (rev 01)
 ---
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -756,7 +756,7 @@ static void ieee80211_iface_work(struct 
- 			int len = skb->len;
- 
- 			mutex_lock(&local->sta_mtx);
--			sta = sta_info_get(sdata, mgmt->sa);
-+			sta = sta_info_get_bss(sdata, mgmt->sa);
- 			if (sta) {
- 				switch (mgmt->u.action.u.addba_req.action_code) {
- 				case WLAN_ACTION_ADDBA_REQ:
-@@ -797,7 +797,7 @@ static void ieee80211_iface_work(struct 
- 			 * right, so terminate the session.
- 			 */
- 			mutex_lock(&local->sta_mtx);
--			sta = sta_info_get(sdata, mgmt->sa);
-+			sta = sta_info_get_bss(sdata, mgmt->sa);
- 			if (sta) {
- 				u16 tid = *ieee80211_get_qos_ctl(hdr) &
- 						IEEE80211_QOS_CTL_TID_MASK;
+
+Has anyone else seen this behavior with Card Two? I tried swapping to
+a different PCI slot, even to a different PC.
+Same symptom. I also tried modifying pci.c in ath9k driver to no effect.
