@@ -1,58 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38797 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:32940 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750959Ab0GNNaS (ORCPT
+	with ESMTP id S1750986Ab0GUQp1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jul 2010 09:30:18 -0400
-Date: Wed, 14 Jul 2010 09:15:27 -0400
+	Wed, 21 Jul 2010 12:45:27 -0400
+Date: Wed, 21 Jul 2010 12:38:03 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Cc: Christoph Egger <siccegge@cs.fau.de>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	vamos-dev@i4.informatik.uni-erlangen.de,
-	Luis Correia <luis.f.correia@gmail.com>
-Subject: Re: [PATCH 01/11] Removing dead RT2800PCI_SOC
-Message-ID: <20100714131527.GB2352@tuxdriver.com>
-References: <cover.1279110894.git.siccegge@cs.fau.de>
- <29013fb6eab9e95e95d61df894797d2455dfa10c.1279110894.git.siccegge@cs.fau.de>
- <AANLkTinO32CIe0HBTXjP_bcAz0nMEw6wvcZwcob1fX3r@mail.gmail.com>
- <AANLkTikCeDys9e1EnE9GdiJtDRcbqW3gzvsmjzvB_yDs@mail.gmail.com>
+To: Michael =?iso-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	=?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Subject: Re: [PATCH] b43: silense most sparse warnings
+Message-ID: <20100721163803.GC2355@tuxdriver.com>
+References: <1279727142-25234-1-git-send-email-linville@tuxdriver.com>
+ <4C471AC2.5040003@bu3sch.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTikCeDys9e1EnE9GdiJtDRcbqW3gzvsmjzvB_yDs@mail.gmail.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <4C471AC2.5040003@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 14, 2010 at 02:52:14PM +0200, Ivo Van Doorn wrote:
-> On Wed, Jul 14, 2010 at 2:46 PM, Luis Correia <luis.f.correia@gmail.com> wrote:
-> > On Wed, Jul 14, 2010 at 13:39, Christoph Egger <siccegge@cs.fau.de> wrote:
-> >> While RT2800PCI_SOC exists in Kconfig, it depends on either
-> >> RALINK_RT288X or RALINK_RT305X which are both not available in Kconfig
-> >> so all Code depending on that can't ever be selected and, if there's
-> >> no plan to add these options, should be cleaned up
-> >>
-> >> Signed-off-by: Christoph Egger <siccegge@cs.fau.de>
+On Wed, Jul 21, 2010 at 06:05:22PM +0200, Michael Büsch wrote:
+> On 07/21/2010 05:45 PM, John W. Linville wrote:
+> >diff --git a/drivers/net/wireless/b43/phy_g.c b/drivers/net/wireless/b43/phy_g.c
+> >index 29bf34c..0dc33b6 100644
+> >--- a/drivers/net/wireless/b43/phy_g.c
+> >+++ b/drivers/net/wireless/b43/phy_g.c
+> >@@ -972,7 +972,7 @@ b43_radio_interference_mitigation_enable(struct b43_wldev *dev, int mode)
+> >  		b43_phy_maskset(dev, 0x04A2, 0xFFF0, 0x000B);
 > >
-> > NAK,
-> >
-> > this is not dead code, it is needed for the Ralink System-on-Chip
-> > Platform devices.
-> >
-> > While I can't fix Kconfig errors and the current KConfig file may be
-> > wrong, this code cannot and will not be deleted.
+> >  		if (phy->rev>= 3) {
+> >-			b43_phy_mask(dev, 0x048A, (u16)~0x8000);
+> >+			b43_phy_mask(dev, 0x048A, 0x7FFF);
 > 
-> When the config option was introduced, the config options RALINK_RT288X and
-> RALINK_RT305X were supposed to be merged as well soon after by somebody (Felix?)
-> 
-> But since testing is done on SoC boards by Helmut and Felix, I assume the code
-> isn't dead but actually in use.
+> This cast was introduced to silense a GCC warning. Do we end up in an
+> infinite loop now? ;)
 
-Perhaps Helmut and Felix can send us the missing code?
+This version has the beauty of pleasing both gcc and sparse. :-)
 
 John
 -- 
