@@ -1,72 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:17076 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750952Ab0G2ALB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jul 2010 20:11:01 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Jul 2010 17:11:01 -0700
-Date: Wed, 28 Jul 2010 17:10:59 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Bruno Randolf <br1@einfach.org>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v4 1/3] cfg80211: Add nl80211 antenna configuration
-Message-ID: <20100729001059.GA2421@tux>
-References: <20100727094732.27186.30900.stgit@tt-desk>
- <4C4F0BB1.6030002@openwrt.org>
- <AANLkTi=QWMwVTqOqL3wNUnLAWHDw60HmYXtngXJrQOu+@mail.gmail.com>
- <201007281106.06813.br1@einfach.org>
- <AANLkTimBu2=9XhzKwUi1ZpRmGWA+C4GCDgXqp-YJVLxt@mail.gmail.com>
- <4C506DF7.9020907@openwrt.org>
- <AANLkTi=HyyA0oqVRRsh2_ad_0zLGCSBQ6CK=fCg=g=ad@mail.gmail.com>
- <4C50A08B.2080002@openwrt.org>
- <20100728213939.GB8033@tux>
- <4C50A9B9.5070708@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4C50A9B9.5070708@openwrt.org>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:59315 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753633Ab0GUReV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Jul 2010 13:34:21 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>
+Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Pandita Vikram <vikram.pandita@ti.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH v2 00/20] native support for wl1271 on ZOOM
+Date: Wed, 21 Jul 2010 20:33:34 +0300
+Message-Id: <1279733634-21974-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 28, 2010 at 03:05:45PM -0700, Felix Fietkau wrote:
-> On 2010-07-28 11:39 PM, Luis R. Rodriguez wrote:
-> > On Wed, Jul 28, 2010 at 02:26:35PM -0700, Felix Fietkau wrote:
-> >> We don't need any special case handling for this at all. Drivers already
-> >> calculate their HT capabilities based on the number of available chains.
-> >> Once the antenna selection stuff is actually used, they will have some
-> >> internal information about which chains have how many antennas.
-> >> 
-> >> The reason why we can ignore *all* of this stuff for the API is simple:
-> >> We only need to refactor the code to calculate these settings based on
-> >> effective chainmask / antenna mask instead of pure hardware capability.
-> >> 
-> >> The effective chainmask / antenna mask is basically the same as the
-> >> hardware settings, except that it gets masked with the values that are
-> >> configured through this API. That leaves us with something that's easy
-> >> to configure, easy to implement for drivers, and doesn't need special
-> >> case stuff for various 802.11n features.
-> > 
-> > Consider the case of an already associated STA in 3x3 mode, and someone
-> > uses this API to limit it to a 1 stream 1x1 chaimask setting using
-> > only one antenna. How would the AP find out about this RX setting
-> > from the STA? Are we going to deny mucking with this prior to association?
-> > What about if you're the AP?
-> > 
-> > If you are using STBC and the user tunes the device to 1 stream 1x1 chainmask
-> > settings, who deals with the required adaptations?
-> I think we should simply not accept runtime modifications of this stuff.
-> The user should bring down the interface, change the value, then bring
-> it back up again. That allows the driver to recalculate all the HT stuff
-> based on the updated chainmask/antenna mask without special cases.
+This patch series adds native support for wl1271 on ZOOM.
 
-Works with me.
+Changes since v1:
 
-Would we keep two values for some of these settings, an "actual hw"
-capablity and then also a "configured" values? Would this be exposed
-and visible through iw?
+- introduce a fixed regulator device to control the power of wl1271
+- allow to propagate private board-specific data to SDIO function drivers
+- allow SDIO function driver to control the card's power via new API
+- make it possible to keep the card's power down (without depending
+  on an explicit SDIO function driver power-down request)
 
-  Luis
+Thanks to these changes, we no longer need a separate platform
+device (carrying e.g. the external irq information of the device),
+and no longer need to emulate virtual card detect events.
+
+The two "board muxing" pathces were already taken by Tony, and
+are resent here just to make it easier for people to use/test these pathces.
+
+The changes to the MMC core really needs careful review; there still
+might be some pitfalls that haven't been covered. E.g., one thing
+we plan to look at next is their bahvior together with SDIO Suspend/Resume.
+
+Special thanks to Roger Quadros and Nicolas Pitre for their extensive
+review and helpful suggestions.
+
+The patches are based on 2.6.35-rc5, and were tested on ZOOM3.
+
+Thanks,
+
+Ohad Ben-Cohen (20):
+  sdio: add TI + wl1271 ids
+  wireless: wl1271: remove SDIO IDs from driver
+  mmc: support embedded data field in mmc_host
+  omap zoom2: wlan board muxing
+  omap zoom3: wlan board muxing
+  wireless: wl1271: make wl12xx.h common to both spi and sdio
+  wireless: wl1271: support return value for the set power func
+  wireless: wl1271: take irq info from private board data
+  wireless: wl1271: make ref_clock configurable by board
+  omap: zoom: add fixed regulator device for wlan
+  omap: hsmmc: support mmc3 regulator power control
+  omap: hsmmc: allow board-specific settings of private mmc data
+  omap: zoom: add mmc3/wl1271 device support
+  mmc: sdio: fully reconfigure oldcard on resume
+  mmc: sdio: verify existence of resume handler
+  mmc: introduce API to control the card's power
+  mmc: sdio: relocate sdio_set_block_size call
+  mmc: sdio: enable a default power off mode of the card
+  omap: zoom: keep the MMC3 wl1271 device powered off
+  wireless: wl1271: call SDIO claim/release power API
+
+ arch/arm/mach-omap2/board-zoom-peripherals.c |   54 +++++++++++++++++++
+ arch/arm/mach-omap2/board-zoom2.c            |   13 +++++
+ arch/arm/mach-omap2/board-zoom3.c            |   13 +++++
+ arch/arm/mach-omap2/hsmmc.c                  |   15 ++++--
+ arch/arm/mach-omap2/hsmmc.h                  |    2 +
+ arch/arm/plat-omap/include/plat/mmc.h        |    5 ++
+ drivers/mmc/core/bus.c                       |    3 +
+ drivers/mmc/core/core.c                      |   50 ++++++++++++++++++
+ drivers/mmc/core/sdio.c                      |   36 +++++++++++--
+ drivers/mmc/core/sdio_bus.c                  |    9 ---
+ drivers/mmc/core/sdio_io.c                   |   50 ++++++++++++++++++
+ drivers/mmc/host/omap_hsmmc.c                |   72 +++++++++++++++++++++++---
+ drivers/net/wireless/wl12xx/wl1251_sdio.c    |    2 +-
+ drivers/net/wireless/wl12xx/wl1251_spi.c     |    2 +-
+ drivers/net/wireless/wl12xx/wl1271.h         |    3 +-
+ drivers/net/wireless/wl12xx/wl1271_boot.c    |    9 ++--
+ drivers/net/wireless/wl12xx/wl1271_boot.h    |    1 -
+ drivers/net/wireless/wl12xx/wl1271_io.h      |    8 ++-
+ drivers/net/wireless/wl12xx/wl1271_main.c    |    4 +-
+ drivers/net/wireless/wl12xx/wl1271_sdio.c    |   31 +++++------
+ drivers/net/wireless/wl12xx/wl1271_spi.c     |    8 ++-
+ include/linux/mmc/card.h                     |    2 +
+ include/linux/mmc/host.h                     |   15 +++++
+ include/linux/mmc/sdio_func.h                |    3 +
+ include/linux/mmc/sdio_ids.h                 |    3 +
+ include/linux/spi/wl12xx.h                   |   34 ------------
+ include/linux/wl12xx.h                       |   35 ++++++++++++
+ 27 files changed, 393 insertions(+), 89 deletions(-)
+ delete mode 100644 include/linux/spi/wl12xx.h
+ create mode 100644 include/linux/wl12xx.h
+
