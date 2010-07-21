@@ -1,93 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:64619 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751877Ab0G0XdL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 19:33:11 -0400
-Received: by mail-pw0-f46.google.com with SMTP id 5so668865pwi.19
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 16:33:11 -0700 (PDT)
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:49411 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751872Ab0GUQF0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Jul 2010 12:05:26 -0400
+Message-ID: <4C471AC2.5040003@bu3sch.de>
+Date: Wed, 21 Jul 2010 18:05:22 +0200
+From: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <mb@bu3sch.de>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTinfMiS=+dqi=azF2exJbkrSLYT9nN0aor7gff-Q@mail.gmail.com>
-References: <AANLkTimdDhHudW6_7Hwcf6UCumY_EgqGd7CLtmSgOzEz@mail.gmail.com>
-	<AANLkTinfMiS=+dqi=azF2exJbkrSLYT9nN0aor7gff-Q@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 27 Jul 2010 16:32:50 -0700
-Message-ID: <AANLkTinGmv6vPnvYNqe6z-hPspQGAPSHAGiPbEDoHXE+@mail.gmail.com>
-Subject: Re: regulatory hiccup
-To: Andrew Lutomirski <luto@mit.edu>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@wfinger.net>,
+	=?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Subject: Re: [PATCH] b43: silense most sparse warnings
+References: <1279727142-25234-1-git-send-email-linville@tuxdriver.com> (sfid-20100721_180034_804844_FFFFFFFF8CC2B4DB)
+In-Reply-To: <1279727142-25234-1-git-send-email-linville@tuxdriver.com> (sfid-20100721_180034_804844_FFFFFFFF8CC2B4DB)
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gRnJpLCBKdWwgMjMsIDIwMTAgYXQgMTI6MzUgUE0sIEFuZHJldyBMdXRvbWlyc2tpIDxsdXRv
-QG1pdC5lZHU+IHdyb3RlOgo+IE9uIEZyaSwgSnVsIDIzLCAyMDEwIGF0IDM6MzAgUE0sIEFuZHJl
-dyBMdXRvbWlyc2tpIDxsdXRvQG1pdC5lZHU+IHdyb3RlOgo+Pgo+PiBUaGVuLCBhZnRlciBmaWRk
-bGluZyB3aXRoIGFuIEFQIGZvciBhIGJpdCwgSSBnb3Q6Cj4+Cj4+IFsxMTc0Ny4yNjQyMjFdIGNm
-ZzgwMjExOiBDYWxsaW5nIENSREEgZm9yIGNvdW50cnk6IFVTCj4+IFsxMTc0Ny4yODI2NjRdIGNm
-ZzgwMjExOiBDdXJyZW50IHJlZ3VsYXRvcnkgZG9tYWluIHVwZGF0ZWQgYnkgQVAgdG86IFVTCj4+
-IFsxMTc0Ny4yODI2NzJdIMKgIMKgIChzdGFydF9mcmVxIC0gZW5kX2ZyZXEgQCBiYW5kd2lkdGgp
-LAo+PiAobWF4X2FudGVubmFfZ2FpbiwgbWF4X2VpcnApCj4+IFsxMTc0Ny4yODI2ODBdIMKgIMKg
-ICg1MTcwMDAwIEtIeiAtIDUyNTAwMDAgS0h6IEAgNDAwMDAgS0h6KSwgKDMwMCBtQmksIDE2MDAg
-bUJtKQo+PiBbMTE3NDcuMjgyNjg4XSDCoCDCoCAoNTI1MDAwMCBLSHogLSA1MzMwMDAwIEtIeiBA
-IDQwMDAwIEtIeiksICgzMDAgbUJpLCAxNjAwIG1CbSkKPj4KPgo+IEl0J3Mgd29yc2UgdGhhbiB0
-aGF0LiDCoEkgcmVjb25uZWN0ZWQgdG8gdGhlIEFQIChpdCBhcHBlYXJlZCB0byB3b3JrCj4gZm9y
-IGEgZmV3IHNlY29uZHMpIGFuZCBJIHNhdzoKPgo+IFdpcGh5IHBoeTAKPiBbLi4uXQo+IMKgIMKg
-IMKgIMKgQmFuZCAyOgo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgQ2FwYWJpbGl0aWVzOiAweDg3
-Mgo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgSFQyMC9IVDQwCj4gwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBTdGF0aWMgU00gUG93ZXIgU2F2ZQo+IMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgUlggR3JlZW5maWVsZAo+IMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgUlggSFQyMCBTR0kKPiDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoFJYIEhUNDAgU0dJCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqBObyBSWCBTVEJDCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBN
-YXggQU1TRFUgbGVuZ3RoOiAzODM5IGJ5dGVzCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqBObyBEU1NTL0NDSyBIVDQwCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBNYXhpbXVt
-IFJYIEFNUERVIGxlbmd0aCA2NTUzNSBieXRlcyAoZXhwb25lbnQ6IDB4MDAzKQo+IMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgTWluaW11bSBSWCBBTVBEVSB0aW1lIHNwYWNpbmc6IDQgdXNlYyAoMHgw
-NSkKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoEhUIFRYL1JYIE1DUyByYXRlIGluZGV4ZXMgc3Vw
-cG9ydGVkOiAwLTIzLCAzMgo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgRnJlcXVlbmNpZXM6Cj4g
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDUxODAgTUh6IFszNl0gKDE1LjAg
-ZEJtKSAocGFzc2l2ZSBzY2FubmluZywgbm8gSUJTUykKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCogNTIwMCBNSHogWzQwXSAoMTUuMCBkQm0pIChwYXNzaXZlIHNjYW5uaW5n
-LCBubyBJQlNTKQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1MjIwIE1I
-eiBbNDRdICgxNS4wIGRCbSkgKHBhc3NpdmUgc2Nhbm5pbmcsIG5vIElCU1MpCj4gwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDUyNDAgTUh6IFs0OF0gKDE1LjAgZEJtKSAocGFz
-c2l2ZSBzY2FubmluZywgbm8gSUJTUykKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCogNTI2MCBNSHogWzUyXSAoMTUuMCBkQm0pIChwYXNzaXZlIHNjYW5uaW5nLCBubyBJQlNT
-LCByYWRhciBkZXRlY3Rpb24pCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAq
-IDUyODAgTUh6IFs1Nl0gKDE1LjAgZEJtKSAocGFzc2l2ZSBzY2FubmluZywgbm8gSUJTUywgcmFk
-YXIgZGV0ZWN0aW9uKQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1MzAw
-IE1IeiBbNjBdICgxNS4wIGRCbSkgKHBhc3NpdmUgc2Nhbm5pbmcsIG5vIElCU1MsIHJhZGFyIGRl
-dGVjdGlvbikKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCogNTMyMCBNSHog
-WzY0XSAoMTUuMCBkQm0pIChwYXNzaXZlIHNjYW5uaW5nLCBubyBJQlNTLCByYWRhciBkZXRlY3Rp
-b24pCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU1MDAgTUh6IFsxMDBd
-IChkaXNhYmxlZCkKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCogNTUyMCBN
-SHogWzEwNF0gKGRpc2FibGVkKQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-KiA1NTQwIE1IeiBbMTA4XSAoZGlzYWJsZWQpCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAqIDU1NjAgTUh6IFsxMTJdIChkaXNhYmxlZCkKPiDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCogNTU4MCBNSHogWzExNl0gKGRpc2FibGVkKQo+IMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1NjAwIE1IeiBbMTIwXSAoZGlzYWJsZWQpCj4gwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU2MjAgTUh6IFsxMjRdIChkaXNhYmxl
-ZCkKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCogNTY0MCBNSHogWzEyOF0g
-KGRpc2FibGVkKQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1NjYwIE1I
-eiBbMTMyXSAoZGlzYWJsZWQpCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAq
-IDU2ODAgTUh6IFsxMzZdIChkaXNhYmxlZCkKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCogNTcwMCBNSHogWzE0MF0gKGRpc2FibGVkKQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgKiA1NzQ1IE1IeiBbMTQ5XSAoZGlzYWJsZWQpCj4gwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU3NjUgTUh6IFsxNTNdIChkaXNhYmxlZCkKPiDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCogNTc4NSBNSHogWzE1N10gKGRpc2FibGVk
-KQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1ODA1IE1IeiBbMTYxXSAo
-ZGlzYWJsZWQpCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU4MjUgTUh6
-IFsxNjVdIChkaXNhYmxlZCkKPgo+IFdoaWNoIGlzIGFic3VyZCwgYmVjYXVzZToKPgo+IENvbm5l
-Y3RlZCB0byAwMDowMjo2Zjo2ZTpkNzo2YyAob24gd2xhbjApCj4gwqAgwqAgwqAgwqBTU0lEOiBG
-RlRUNQo+IMKgIMKgIMKgIMKgZnJlcTogNTc4NSDCoCDCoCDCoCDCoFshISEhISEhISEhIV0KPiDC
-oCDCoCDCoCDCoFJYOiA3MjA1OCBieXRlcyAoMzEwIHBhY2tldHMpCj4gwqAgwqAgwqAgwqBUWDog
-MjU2OCBieXRlcyAoMjAgcGFja2V0cykKPiDCoCDCoCDCoCDCoHNpZ25hbDogLTMzIGRCbQo+IMKg
-IMKgIMKgIMKgdHggYml0cmF0ZTogNi4wIE1CaXQvcwo+Cj4gVGhlIGNvbm5lY3Rpb24gZGllZCBh
-ZnRlciBhIGxpdHRsZSB3aGlsZSwgcHJlc3VtYWJseSBiZWNhdXNlIHRoZSBBUAo+IHdhcyBvdXRz
-aWRlIG9mIGl0cyBvd24gYWxsb3dlZCBiYW5kLgoKSGVoIHllYWggaXQgY291bGQgYmUgdGhlIEFQ
-IHNlbmRzIGEgY291bnRyeSBJRSB3aGljaCBkb2VzIG5vdCBoYXZlIHRoZQpjaGFubmVsIGl0IGl0
-c2VsZiBpcyBvbiwgd291bGQgYmUgcmVhbGx5IG9kZCBidXQgYXQgdGhpcyBwb2ludCBJJ3ZlCnNl
-ZW4gb3RoZXIgZHVtYiB0aGluZ3MgdGhhdCBBUHMgZG8uIFRoZSBJRSBkdW1wIHlvdSBnb3QgaXMg
-T0sgYnV0IGRvZXMKbm90IGdpdmUgbWUgZW5vdWdoIGluZm8gYWJvdXQgaG93IGl0IGlzIGV4YWN0
-bHkgc3RydWN0dXJlZC4gSSdsbCByZXBseQp0byB0aGF0IHRocmVhZCBuZXh0LgoKICBMdWlzCg==
+On 07/21/2010 05:45 PM, John W. Linville wrote:
+> diff --git a/drivers/net/wireless/b43/phy_g.c b/drivers/net/wireless/b43/phy_g.c
+> index 29bf34c..0dc33b6 100644
+> --- a/drivers/net/wireless/b43/phy_g.c
+> +++ b/drivers/net/wireless/b43/phy_g.c
+> @@ -972,7 +972,7 @@ b43_radio_interference_mitigation_enable(struct b43_wldev *dev, int mode)
+>   		b43_phy_maskset(dev, 0x04A2, 0xFFF0, 0x000B);
+>
+>   		if (phy->rev>= 3) {
+> -			b43_phy_mask(dev, 0x048A, (u16)~0x8000);
+> +			b43_phy_mask(dev, 0x048A, 0x7FFF);
+
+This cast was introduced to silense a GCC warning. Do we end up in an
+infinite loop now? ;)
+
+>   			b43_phy_maskset(dev, 0x0415, 0x8000, 0x36D8);
+>   			b43_phy_maskset(dev, 0x0416, 0x8000, 0x36D8);
+>   			b43_phy_maskset(dev, 0x0417, 0xFE00, 0x016D);
+> diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
+> index c6afe9d..fd50eb1 100644
+> --- a/drivers/net/wireless/b43/phy_lp.c
+> +++ b/drivers/net/wireless/b43/phy_lp.c
+> @@ -1145,7 +1145,7 @@ static void lpphy_write_tx_pctl_mode_to_hardware(struct b43_wldev *dev)
+>   		B43_WARN_ON(1);
+>   	}
+>   	b43_phy_maskset(dev, B43_LPPHY_TX_PWR_CTL_CMD,
+> -			(u16)~B43_LPPHY_TX_PWR_CTL_CMD_MODE, ctl);
+> +			~B43_LPPHY_TX_PWR_CTL_CMD_MODE&  0xFFFF, ctl);
+>   }
+
+>
+>   static void lpphy_set_tx_power_control(struct b43_wldev *dev,
+> @@ -1522,11 +1522,11 @@ static void lpphy_tx_pctl_init_hw(struct b43_wldev *dev)
+>   	b43_phy_mask(dev, B43_LPPHY_TX_PWR_CTL_DELTAPWR_LIMIT, 0xFF);
+>   	b43_phy_write(dev, B43_LPPHY_TX_PWR_CTL_DELTAPWR_LIMIT, 0xA);
+>   	b43_phy_maskset(dev, B43_LPPHY_TX_PWR_CTL_CMD,
+> -			(u16)~B43_LPPHY_TX_PWR_CTL_CMD_MODE,
+> +			~B43_LPPHY_TX_PWR_CTL_CMD_MODE&  0xFFFF,
+>   			B43_LPPHY_TX_PWR_CTL_CMD_MODE_OFF);
+>   	b43_phy_mask(dev, B43_LPPHY_TX_PWR_CTL_NNUM, 0xF8FF);
+>   	b43_phy_maskset(dev, B43_LPPHY_TX_PWR_CTL_CMD,
+> -			(u16)~B43_LPPHY_TX_PWR_CTL_CMD_MODE,
+> +			~B43_LPPHY_TX_PWR_CTL_CMD_MODE&  0xFFFF,
+>   			B43_LPPHY_TX_PWR_CTL_CMD_MODE_SW);
+
+> diff --git a/drivers/net/wireless/b43/wa.c b/drivers/net/wireless/b43/wa.c
+> index 97c7916..9a335da 100644
+> --- a/drivers/net/wireless/b43/wa.c
+> +++ b/drivers/net/wireless/b43/wa.c
+> @@ -382,7 +382,7 @@ static void b43_wa_altagc(struct b43_wldev *dev)
+>   		b43_ofdmtab_write16(dev, B43_OFDMTAB_AGC1, 3, 25);
+>   	}
+>
+> -	b43_phy_maskset(dev, B43_PHY_CCKSHIFTBITS_WA, (u16)~0xFF00, 0x5700);
+> +	b43_phy_maskset(dev, B43_PHY_CCKSHIFTBITS_WA, 0x00FF, 0x5700);
+>   	b43_phy_maskset(dev, B43_PHY_OFDM(0x1A), ~0x007F, 0x000F);
+>   	b43_phy_maskset(dev, B43_PHY_OFDM(0x1A), ~0x3F80, 0x2B80);
+>   	b43_phy_maskset(dev, B43_PHY_ANTWRSETT, 0xF0FF, 0x0300);
+> @@ -400,9 +400,9 @@ static void b43_wa_altagc(struct b43_wldev *dev)
+>   	b43_phy_maskset(dev, B43_PHY_OFDM(0x89), ~0x00FF, 0x0020);
+>   	b43_phy_maskset(dev, B43_PHY_OFDM(0x89), ~0x3F00, 0x0200);
+>   	b43_phy_maskset(dev, B43_PHY_OFDM(0x82), ~0x00FF, 0x002E);
+> -	b43_phy_maskset(dev, B43_PHY_OFDM(0x96), (u16)~0xFF00, 0x1A00);
+> +	b43_phy_maskset(dev, B43_PHY_OFDM(0x96), 0x00FF, 0x1A00);
+>   	b43_phy_maskset(dev, B43_PHY_OFDM(0x81), ~0x00FF, 0x0028);
+> -	b43_phy_maskset(dev, B43_PHY_OFDM(0x81), (u16)~0xFF00, 0x2C00);
+> +	b43_phy_maskset(dev, B43_PHY_OFDM(0x81), 0x00FF, 0x2C00);
+>   	if (phy->rev == 1) {
+>   		b43_phy_write(dev, B43_PHY_PEAK_COUNT, 0x092B);
+>   		b43_phy_maskset(dev, B43_PHY_OFDM(0x1B), ~0x001E, 0x0002);
+> @@ -412,7 +412,7 @@ static void b43_wa_altagc(struct b43_wldev *dev)
+>   		b43_phy_maskset(dev, B43_PHY_LPFGAINCTL, ~0x000F, 0x0004);
+>   		if (phy->rev>= 6) {
+>   			b43_phy_write(dev, B43_PHY_OFDM(0x22), 0x287A);
+> -			b43_phy_maskset(dev, B43_PHY_LPFGAINCTL, (u16)~0xF000, 0x3000);
+> +			b43_phy_maskset(dev, B43_PHY_LPFGAINCTL, 0x0FFF, 0x3000);
+>   		}
+>   	}
+>   	b43_phy_maskset(dev, B43_PHY_DIVSRCHIDX, 0x8080, 0x7874);
+
+Same for all of these.
+
+-- 
+Greetings Michael.
