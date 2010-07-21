@@ -1,56 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.platinumzone24.at ([88.198.159.93]:49442 "EHLO
-	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934942Ab0GSTKv (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:52442 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751955Ab0GUT7F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jul 2010 15:10:51 -0400
-Message-ID: <4C449C67.6010004@davizone.at>
-Date: Mon, 19 Jul 2010 20:41:43 +0200
-From: David Gnedt <david.gnedt@davizone.at>
+	Wed, 21 Jul 2010 15:59:05 -0400
+Received: by fxm14 with SMTP id 14so3870713fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jul 2010 12:59:02 -0700 (PDT)
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] cfg80211: fix WEXT ioctl GIWFREQ for monitor interfaces
-Content-Type: text/plain; charset=ISO-8859-15
+In-Reply-To: <1279583798.28066.3.camel@wwguy-ubuntu>
+References: <1279565034.4572.36.camel@localhost.localdomain>
+	<AANLkTinGUQjPoMRmt_jeFgpxLhzma7qhfR14t_tWLvO1@mail.gmail.com>
+	<1279582174.4572.43.camel@localhost.localdomain>
+	<1279583798.28066.3.camel@wwguy-ubuntu>
+Date: Wed, 21 Jul 2010 21:59:02 +0200
+Message-ID: <AANLkTinJrjvSUuOSeb6fQESN-T789wWCU1ezRXwQ3KXK@mail.gmail.com>
+Subject: Re: iwlagn and many firmware restarts with Fedora kernel
+From: drago01 <drago01@gmail.com>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The cfg80211_set_freq function now also saves the channel for monitor
-interfaces.
-This fixes a issue were the WEXT ioctl GIWFREQ doesn't report the correct
-channel when the channel was switched in monitor mode.
+On Tue, Jul 20, 2010 at 1:56 AM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
+> Hi drago,
+>
+>
+> Are you using 5350? here I attach a "RFC patch", could you give a try to
+> see if it help?
 
-Signed-off-by: David Gnedt <david.gnedt@davizone.at>
----
- net/wireless/chan.c |    7 +++----
- 1 files changed, 3 insertions(+), 4 deletions(-)
-
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index d0c92dd..fd05938 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -51,9 +51,6 @@ int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
- 	struct ieee80211_channel *chan;
- 	int result;
-
--	if (wdev && wdev->iftype == NL80211_IFTYPE_MONITOR)
--		wdev = NULL;
--
- 	if (wdev) {
- 		ASSERT_WDEV_LOCK(wdev);
-
-@@ -69,7 +66,9 @@ int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
- 		return -EINVAL;
-
- 	result = rdev->ops->set_channel(&rdev->wiphy,
--					wdev ? wdev->netdev : NULL,
-+					wdev && wdev->iftype !=
-+						NL80211_IFTYPE_MONITOR ?
-+							wdev->netdev : NULL,
- 					chan, channel_type);
- 	if (result)
- 		return result;
--- 
-1.6.3.3
-
+Not quite I am on 5300; your patch seem to only touch the 5350 code
+... should I try the same change for 5300?
