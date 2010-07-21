@@ -1,65 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:46132 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753784Ab0GKKs7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Jul 2010 06:48:59 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, linville@tuxdriver.com
-Subject: [PATCH 7/7] ath9k_hw: handle an rx key miss properly
-Date: Sun, 11 Jul 2010 12:48:45 +0200
-Message-Id: <1278845325-62000-7-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1278845325-62000-6-git-send-email-nbd@openwrt.org>
-References: <1278845325-62000-1-git-send-email-nbd@openwrt.org>
- <1278845325-62000-2-git-send-email-nbd@openwrt.org>
- <1278845325-62000-3-git-send-email-nbd@openwrt.org>
- <1278845325-62000-4-git-send-email-nbd@openwrt.org>
- <1278845325-62000-5-git-send-email-nbd@openwrt.org>
- <1278845325-62000-6-git-send-email-nbd@openwrt.org>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:59315 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756699Ab0GUReg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Jul 2010 13:34:36 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>
+Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Pandita Vikram <vikram.pandita@ti.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH v2 04/20] omap zoom2: wlan board muxing
+Date: Wed, 21 Jul 2010 20:33:38 +0300
+Message-Id: <1279733634-21974-5-git-send-email-ohad@wizery.com>
+In-Reply-To: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the hardware reports an rx key miss, then the frame has not been
-decrypted at all, and this must be recognized by the software, otherwise
-mac80211 can generate bogus MIC failure events.
+Add board muxing to support the wlan wl1271 chip that is
+hardwired to mmc2 (third mmc controller) on the ZOOM2.
 
-Fix this by reporting an invalid key index if a key miss is detected
-in the rx status.
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@kernel.org
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_mac.c |    3 +++
- drivers/net/wireless/ath/ath9k/mac.c        |    2 ++
- 2 files changed, 5 insertions(+), 0 deletions(-)
+ arch/arm/mach-omap2/board-zoom2.c |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-index 06ef710..9de8554 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-@@ -578,6 +578,9 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
- 	if (rxsp->status11 & AR_DecryptBusyErr)
- 		rxs->rs_flags |= ATH9K_RX_DECRYPT_BUSY;
+diff --git a/arch/arm/mach-omap2/board-zoom2.c b/arch/arm/mach-omap2/board-zoom2.c
+index 803ef14..1520a2c 100644
+--- a/arch/arm/mach-omap2/board-zoom2.c
++++ b/arch/arm/mach-omap2/board-zoom2.c
+@@ -71,6 +71,19 @@ static struct twl4030_platform_data zoom2_twldata = {
  
-+	if (rxsp->status11 & AR_KeyMiss)
-+		rxs->rs_keyix = ATH9K_RXKEYIX_INVALID;
-+
- 	if ((rxsp->status11 & AR_RxFrameOK) == 0) {
- 		if (rxsp->status11 & AR_CRCErr) {
- 			rxs->rs_status |= ATH9K_RXERR_CRC;
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index e955bb9..8d0bb5a 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -701,6 +701,8 @@ int ath9k_hw_rxprocdesc(struct ath_hw *ah, struct ath_desc *ds,
- 		rs->rs_flags |= ATH9K_RX_DELIM_CRC_POST;
- 	if (ads.ds_rxstatus8 & AR_DecryptBusyErr)
- 		rs->rs_flags |= ATH9K_RX_DECRYPT_BUSY;
-+	if (ads.ds_rxstatus8 & AR_KeyMiss)
-+		rs->rs_keyix = ATH9K_RXKEYIX_INVALID;
- 
- 	if ((ads.ds_rxstatus8 & AR_RxFrameOK) == 0) {
- 		if (ads.ds_rxstatus8 & AR_CRCErr)
+ #ifdef CONFIG_OMAP_MUX
+ static struct omap_board_mux board_mux[] __initdata = {
++	/* WLAN IRQ - GPIO 162 */
++	OMAP3_MUX(MCBSP1_CLKX, OMAP_MUX_MODE4 | OMAP_PIN_INPUT_PULLUP),
++	/* WLAN POWER ENABLE - GPIO 101 */
++	OMAP3_MUX(CAM_D2, OMAP_MUX_MODE4 | OMAP_PIN_OUTPUT),
++	/* WLAN SDIO: MMC3 CMD */
++	OMAP3_MUX(MCSPI1_CS1, OMAP_MUX_MODE3 | OMAP_PIN_INPUT_PULLUP),
++	/* WLAN SDIO: MMC3 CLK */
++	OMAP3_MUX(ETK_CLK, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
++	/* WLAN SDIO: MMC3 DAT[0-3] */
++	OMAP3_MUX(ETK_D3, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
++	OMAP3_MUX(ETK_D4, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
++	OMAP3_MUX(ETK_D5, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
++	OMAP3_MUX(ETK_D6, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
+ 	{ .reg_offset = OMAP_MUX_TERMINATOR },
+ };
+ #else
 -- 
-1.6.4.2
+1.7.0.4
 
