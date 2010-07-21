@@ -1,70 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:53824 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751889Ab0GLKsd (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:2081 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932940Ab0GUDlG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jul 2010 06:48:33 -0400
-Received: by bwz1 with SMTP id 1so2231045bwz.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jul 2010 03:48:32 -0700 (PDT)
+	Tue, 20 Jul 2010 23:41:06 -0400
+Date: Tue, 20 Jul 2010 23:41:50 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	johannes@sipsolutions.net
+Subject: Re: [PATCH/RFC 3/3] ath5k: trace resets
+Message-ID: <20100721034150.GA16632@hash.localnet>
+References: <1279395336-856-1-git-send-email-me@bobcopeland.com> <201007201420.49305.br1@einfach.org> <20100720145200.GB7049@hash.localnet> <201007211004.59372.br1@einfach.org>
 MIME-Version: 1.0
-Date: Mon, 12 Jul 2010 12:48:32 +0200
-Message-ID: <AANLkTinubmjYu9FyDU0B81F0gHmFPLnDUWYGmZ9Rodss@mail.gmail.com>
-Subject: Rate control & USB
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201007211004.59372.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, Jul 21, 2010 at 10:04:59AM +0900, Bruno Randolf wrote:
+> the difference. without tracing you can get 22Mbps, with tracing max 15Mbps 
+> UDP thruput.
 
-I am currently looking into the old problem of the mac80211 rate
-control algorithms
-and USB devices. The Ralink USB devices (and as far as I know, the
-other USB devices
-as well), do not work well with the PID and Minstrel algorithms. This
-is caused by the
-fact that USB devices do not report the TX status to mac80211.
+If so, and it's not an i-cache effect, then something is wrong with
+the tracing subsystem.  It's supposed to compile to something like
 
-When the URB callback function is called, it only indicates the frame
-was uploaded
-to the hardware, and the frame has been enqueued in the hardware queue
-within the
-USB device itself. The statistics about the number of retries and the
-ACK status are
-therefor lost.
+if (tracing) {
+   trace_callback();
+}
 
-These statistics are however often still available (in a limited form)
-within the device
-registers. Although these statistics cannot be obtained per frame, it
-might still be
-possible to control a working rate control algorithm with it.
+That is exactly what we have with the debug infrastructure, but
+the debug stuff is theoretically a bit worse since it tests for
+tracing inside the callback.
 
-My current idea for this, is not to generate a completely new
-algorithm, but base
-it on the currently existing rate controls. For this I want to
-introduce a new flag:
-IEEE80211_HW_REQUIRES_BATCH_TX_STATUS, This flag will enable
-polling in mac80211, where the callback function ieee80211_ops->get_tx_stats
-is called. In this function the driver can fill in a structure
-containing the number
-of Acked frames, non-acked frames and retries. This structure can then be
-passed to a new function in the rate_control_ops structure.
+Oh well, I guess I need to get my hands on one of these boards.
 
-The problem here is that we have lost the per-sta statistics. However using the
-single TX status reports, we can count the number of frames which are sent for
-a given STA during the poll interval. We can then determine the percentage of
-frames sent for that STA, We can then add the percentage of the retry and ACK
-count to each STA. Throughout poll interval the rate algorithm would send all
-frames to the same STA with the same TX rate, but between polls, the rate will
-be updated.
+-- 
+Bob Copeland %% www.bobcopeland.com
 
-Overall these changes will not make the optimal use of PID or
-Minstrel, but it would
-at least improve the situation for USB.
-
-Any thoughts about this solution?
-
-Ivo
