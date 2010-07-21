@@ -1,40 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:33896 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756483Ab0GBQHI (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34270 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751775Ab0GURPR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jul 2010 12:07:08 -0400
-Received: by pvc7 with SMTP id 7so1338103pvc.19
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Jul 2010 09:07:07 -0700 (PDT)
-Message-ID: <4C2E0EEB.7030605@lwfinger.net>
-Date: Fri, 02 Jul 2010 11:08:11 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 21 Jul 2010 13:15:17 -0400
+Date: Wed, 21 Jul 2010 13:11:53 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Michael =?iso-8859-1?Q?B=FCsch?= <mb@bu3sch.de>,
+	linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@wfinger.net>,
+	=?iso-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Subject: Re: [PATCH] b43: silense most sparse warnings
+Message-ID: <20100721171153.GD2355@tuxdriver.com>
+References: <1279727142-25234-1-git-send-email-linville@tuxdriver.com>
+ <4C471AC2.5040003@bu3sch.de>
+ <4C4724C5.4080400@lwfinger.net>
 MIME-Version: 1.0
-To: Pavel Roskin <proski@gnu.org>
-CC: wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: Problem with firmware load on ipw2200
-References: <4C29F711.1090306@lwfinger.net> <1277876773.2536.5.camel@ct>
-In-Reply-To: <1277876773.2536.5.camel@ct>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <4C4724C5.4080400@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/30/2010 12:46 AM, Pavel Roskin wrote:
-> On Tue, 2010-06-29 at 08:37 -0500, Larry Finger wrote:
->> I'm trying to help an ipw2200 user on the openSUSE Wireless Forum and I'm
->> stuck. The system is failing to load the firmware with error -2 (File or
->> directory not found). The difficulty is that the required files are
->> present with the correct permissions.
->>
->> What system component might be missing and/or borked to get this symptom?
+On Wed, Jul 21, 2010 at 11:48:05AM -0500, Larry Finger wrote:
+> On 07/21/2010 11:05 AM, Michael Büsch wrote:
+> >On 07/21/2010 05:45 PM, John W. Linville wrote:
+> >>diff --git a/drivers/net/wireless/b43/phy_g.c b/drivers/net/wireless/b43/phy_g.c
+> >>index 29bf34c..0dc33b6 100644
+> >>--- a/drivers/net/wireless/b43/phy_g.c
+> >>+++ b/drivers/net/wireless/b43/phy_g.c
+> >>@@ -972,7 +972,7 @@ b43_radio_interference_mitigation_enable(struct b43_wldev
+> >>*dev, int mode)
+> >>b43_phy_maskset(dev, 0x04A2, 0xFFF0, 0x000B);
+> >>
+> >>if (phy->rev>= 3) {
+> >>- b43_phy_mask(dev, 0x048A, (u16)~0x8000);
+> >>+ b43_phy_mask(dev, 0x048A, 0x7FFF);
+> >
+> >This cast was introduced to silense a GCC warning. Do we end up in an
+> >infinite loop now? ;)
 > 
-> Older versions of compat-wireless had a race condition in the firmware
-> code that could cause that.  From the log of the compat repository:
+> I get no GCC warnings here with the change. I think it is OK.
+> 
+> Is silense a valid British spelling? I prefer silence.
 
-Thanks to all that responded. The problem turned out to be a missing
-package that contained the compat-wireless scripts. The device is now
-running - another satisfied "customer" that just converted his wife from
-Windows to Linux. We get em one box at a time.
+Just a typo. :-)
 
-Larry
+> Do you wish to clean up the warnings from the N-PHY code as well?
+> Ignoring the "should it be static?" parts, I get the following
+> sparse warnings:
+> 
+> drivers/net/wireless/b43/phy_n.c:512:53: warning: cast truncates
+> bits from constant value (ffff0fff becomes fff)
+> drivers/net/wireless/b43/phy_n.c:765:66: warning: cast truncates
+> bits from constant value (ffff7fff becomes 7fff)
+> drivers/net/wireless/b43/phy_n.c:1012:38: warning: cast truncates
+> bits from constant value (ffff00ff becomes ff)
+> drivers/net/wireless/b43/phy_n.c:1119:38: warning: cast truncates
+> bits from constant value (ffff0fff becomes fff)
+> drivers/net/wireless/b43/phy_n.c:2458:56: warning: cast truncates
+> bits from constant value (ffff7fff becomes 7fff)
+> drivers/net/wireless/b43/phy_n.c:2933:38: warning: cast truncates
+> bits from constant value (ffff0fff becomes fff)
+> drivers/net/wireless/b43/phy_n.c:3294:57: warning: cast truncates
+> bits from constant value (ffff3fff becomes 3fff)
+> 
+> The patch for them is below.
+
+Seems fine -- shall I add your Signed-off-by?
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
