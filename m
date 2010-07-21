@@ -1,202 +1,221 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41290 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:32951 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752896Ab0GFUaO (ORCPT
+	with ESMTP id S1750986Ab0GUQpk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jul 2010 16:30:14 -0400
+	Wed, 21 Jul 2010 12:45:40 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
+Cc: Kalle Valo <kalle.valo@iki.fi>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
 	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: remove wep dependency
-Date: Tue,  6 Jul 2010 16:19:11 -0400
-Message-Id: <1278447551-4981-1-git-send-email-linville@tuxdriver.com>
+Subject: [PATCH] wl1251: fix sparse-generated warnings
+Date: Wed, 21 Jul 2010 12:31:57 -0400
+Message-Id: <1279729917-4451-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current mac80211 code assumes that WEP is always available.  If WEP
-fails to initialize, ieee80211_register_hw will always fail.
-
-In some cases (e.g. FIPS certification), the cryptography used by WEP is
-unavailable.  However, in such cases there is no good reason why CCMP
-encryption (or even no link level encryption) cannot be used.  So, this
-patch removes mac80211's assumption that WEP (and TKIP) will always be
-available for use.
+  CHECK   drivers/net/wireless/wl12xx/wl1251_tx.c
+drivers/net/wireless/wl12xx/wl1251_tx.c:118:32: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/wl12xx/wl1251_tx.c:118:32:    expected unsigned short [unsigned] [usertype] frag_threshold
+drivers/net/wireless/wl12xx/wl1251_tx.c:118:32:    got restricted __le16 [usertype] <noident>
+drivers/net/wireless/wl12xx/wl1251_tx.c:164:24: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/wl12xx/wl1251_tx.c:164:24:    expected unsigned short [unsigned] [usertype] length
+drivers/net/wireless/wl12xx/wl1251_tx.c:164:24:    got restricted __le16 [usertype] <noident>
+drivers/net/wireless/wl12xx/wl1251_tx.c:166:22: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/wl12xx/wl1251_tx.c:166:22:    expected unsigned short [unsigned] [usertype] rate
+drivers/net/wireless/wl12xx/wl1251_tx.c:166:22:    got restricted __le16 [usertype] <noident>
+drivers/net/wireless/wl12xx/wl1251_tx.c:167:29: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/wl12xx/wl1251_tx.c:167:29:    expected unsigned int [unsigned] [usertype] expiry_time
+drivers/net/wireless/wl12xx/wl1251_tx.c:167:29:    got restricted __le32 [usertype] <noident>
+drivers/net/wireless/wl12xx/wl1251_tx.c:200:43: warning: incorrect type in argument 1 (different base types)
+drivers/net/wireless/wl12xx/wl1251_tx.c:200:43:    expected restricted __le16 [usertype] fc
+drivers/net/wireless/wl12xx/wl1251_tx.c:200:43:    got unsigned short [unsigned] [assigned] [usertype] fc
+  CHECK   drivers/net/wireless/wl12xx/wl1251_cmd.c
+drivers/net/wireless/wl12xx/wl1251_cmd.c:428:39: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/wl12xx/wl1251_cmd.c:428:39:    expected unsigned int [unsigned] [usertype] rx_config_options
+drivers/net/wireless/wl12xx/wl1251_cmd.c:428:39:    got restricted __le32 [usertype] <noident>
+drivers/net/wireless/wl12xx/wl1251_cmd.c:429:39: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/wl12xx/wl1251_cmd.c:429:39:    expected unsigned int [unsigned] [usertype] rx_filter_options
+drivers/net/wireless/wl12xx/wl1251_cmd.c:429:39:    got restricted __le32 [usertype] <noident>
+drivers/net/wireless/wl12xx/wl1251_cmd.c:435:29: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/wl12xx/wl1251_cmd.c:435:29:    expected unsigned short [unsigned] [usertype] tx_rate
+drivers/net/wireless/wl12xx/wl1251_cmd.c:435:29:    got restricted __le16 [usertype] <noident>
+drivers/net/wireless/wl12xx/wl1251_cmd.c:439:47: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/wl12xx/wl1251_cmd.c:439:47:    expected unsigned int [unsigned] [usertype] min_duration
+drivers/net/wireless/wl12xx/wl1251_cmd.c:439:47:    got restricted __le32 [usertype] <noident>
+drivers/net/wireless/wl12xx/wl1251_cmd.c:441:47: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/wl12xx/wl1251_cmd.c:441:47:    expected unsigned int [unsigned] [usertype] max_duration
+drivers/net/wireless/wl12xx/wl1251_cmd.c:441:47:    got restricted __le32 [usertype] <noident>
+  CHECK   drivers/net/wireless/wl12xx/wl1251_boot.c
+drivers/net/wireless/wl12xx/wl1251_boot.c:228:22: warning: symbol 'interrupt' shadows an earlier one
+/home/linville/git/wireless-next-2.6/arch/x86/include/asm/hw_irq.h:132:13: originally declared here
+drivers/net/wireless/wl12xx/wl1251_boot.c:470:21: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/wl12xx/wl1251_boot.c:470:21:    expected unsigned int [unsigned] [assigned] [usertype] val
+drivers/net/wireless/wl12xx/wl1251_boot.c:470:21:    got restricted __le32 [usertype] <noident>
 
 Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- net/mac80211/cfg.c  |    5 +++++
- net/mac80211/main.c |    5 +----
- net/mac80211/tkip.c |    8 ++++----
- net/mac80211/tkip.h |    2 +-
- net/mac80211/wep.c  |   18 ++++++++++++------
- net/mac80211/wep.h  |    2 +-
- net/mac80211/wpa.c  |    5 ++---
- 7 files changed, 26 insertions(+), 19 deletions(-)
+I made some assumptions about the endian-ness of some structure members
+-- please verify!  Also, I'm reasonably certain there are more endian
+issues lurking...
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index e55970b..5b8b446 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -143,6 +143,11 @@ static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
- 		return -EINVAL;
- 	}
- 
-+	/* reject WEP and TKIP keys if WEP failed to initialize */
-+	if ((alg == ALG_WEP || alg == ALG_TKIP) &&
-+	    IS_ERR(sdata->local->wep_tx_tfm))
-+		return -EINVAL;
-+
- 	key = ieee80211_key_alloc(alg, key_idx, params->key_len, params->key,
- 				  params->seq_len, params->seq);
- 	if (!key)
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index edf7aff..0e95c75 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -637,11 +637,9 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 		goto fail_sta_info;
- 
- 	result = ieee80211_wep_init(local);
--	if (result < 0) {
-+	if (result < 0)
- 		printk(KERN_DEBUG "%s: Failed to initialize wep: %d\n",
- 		       wiphy_name(local->hw.wiphy), result);
--		goto fail_wep;
--	}
- 
- 	rtnl_lock();
- 
-@@ -694,7 +692,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
-  fail_rate:
- 	rtnl_unlock();
- 	ieee80211_wep_free(local);
-- fail_wep:
- 	sta_info_stop(local);
-  fail_sta_info:
- 	destroy_workqueue(local->workqueue);
-diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
-index 7ef491e..e840c9c 100644
---- a/net/mac80211/tkip.c
-+++ b/net/mac80211/tkip.c
-@@ -202,9 +202,9 @@ EXPORT_SYMBOL(ieee80211_get_tkip_key);
-  * @payload_len is the length of payload (_not_ including IV/ICV length).
-  * @ta is the transmitter addresses.
-  */
--void ieee80211_tkip_encrypt_data(struct crypto_blkcipher *tfm,
--				 struct ieee80211_key *key,
--				 u8 *pos, size_t payload_len, u8 *ta)
-+int ieee80211_tkip_encrypt_data(struct crypto_blkcipher *tfm,
-+				struct ieee80211_key *key,
-+				u8 *pos, size_t payload_len, u8 *ta)
+ drivers/net/wireless/wl12xx/wl1251_boot.c |   10 +++++-----
+ drivers/net/wireless/wl12xx/wl1251_cmd.h  |   12 ++++++------
+ drivers/net/wireless/wl12xx/wl1251_tx.c   |   10 ++++++----
+ drivers/net/wireless/wl12xx/wl1251_tx.h   |    8 ++++----
+ 4 files changed, 21 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1251_boot.c b/drivers/net/wireless/wl12xx/wl1251_boot.c
+index 2545123..c688895 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_boot.c
++++ b/drivers/net/wireless/wl12xx/wl1251_boot.c
+@@ -225,7 +225,7 @@ static void wl1251_boot_set_ecpu_ctrl(struct wl1251 *wl, u32 flag)
+ int wl1251_boot_run_firmware(struct wl1251 *wl)
  {
- 	u8 rc4key[16];
- 	struct tkip_ctx *ctx = &key->u.tkip.tx;
-@@ -216,7 +216,7 @@ void ieee80211_tkip_encrypt_data(struct crypto_blkcipher *tfm,
+ 	int loop, ret;
+-	u32 chip_id, interrupt;
++	u32 chip_id, acx_intr;
  
- 	tkip_mixing_phase2(tk, ctx, ctx->iv16, rc4key);
+ 	wl1251_boot_set_ecpu_ctrl(wl, ECPU_CONTROL_HALT);
  
--	ieee80211_wep_encrypt_data(tfm, rc4key, 16, pos, payload_len);
-+	return ieee80211_wep_encrypt_data(tfm, rc4key, 16, pos, payload_len);
- }
+@@ -242,15 +242,15 @@ int wl1251_boot_run_firmware(struct wl1251 *wl)
+ 	loop = 0;
+ 	while (loop++ < INIT_LOOP) {
+ 		udelay(INIT_LOOP_DELAY);
+-		interrupt = wl1251_reg_read32(wl, ACX_REG_INTERRUPT_NO_CLEAR);
++		acx_intr = wl1251_reg_read32(wl, ACX_REG_INTERRUPT_NO_CLEAR);
  
- /* Decrypt packet payload with TKIP using @key. @pos is a pointer to the
-diff --git a/net/mac80211/tkip.h b/net/mac80211/tkip.h
-index d471438..7e83dee 100644
---- a/net/mac80211/tkip.h
-+++ b/net/mac80211/tkip.h
-@@ -15,7 +15,7 @@
+-		if (interrupt == 0xffffffff) {
++		if (acx_intr == 0xffffffff) {
+ 			wl1251_error("error reading hardware complete "
+ 				     "init indication");
+ 			return -EIO;
+ 		}
+ 		/* check that ACX_INTR_INIT_COMPLETE is enabled */
+-		else if (interrupt & WL1251_ACX_INTR_INIT_COMPLETE) {
++		else if (acx_intr & WL1251_ACX_INTR_INIT_COMPLETE) {
+ 			wl1251_reg_write32(wl, ACX_REG_INTERRUPT_ACK,
+ 					   WL1251_ACX_INTR_INIT_COMPLETE);
+ 			break;
+@@ -467,7 +467,7 @@ static int wl1251_boot_upload_nvs(struct wl1251 *wl)
+ 		val = (nvs_ptr[0] | (nvs_ptr[1] << 8)
+ 		       | (nvs_ptr[2] << 16) | (nvs_ptr[3] << 24));
  
- u8 *ieee80211_tkip_add_iv(u8 *pos, struct ieee80211_key *key, u16 iv16);
+-		val = cpu_to_le32(val);
++		val = (u32 __force) cpu_to_le32(val);
  
--void ieee80211_tkip_encrypt_data(struct crypto_blkcipher *tfm,
-+int ieee80211_tkip_encrypt_data(struct crypto_blkcipher *tfm,
- 				 struct ieee80211_key *key,
- 				 u8 *pos, size_t payload_len, u8 *ta);
- enum {
-diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
-index 5f3a411..54263db 100644
---- a/net/mac80211/wep.c
-+++ b/net/mac80211/wep.c
-@@ -122,19 +122,24 @@ static void ieee80211_wep_remove_iv(struct ieee80211_local *local,
- /* Perform WEP encryption using given key. data buffer must have tailroom
-  * for 4-byte ICV. data_len must not include this ICV. Note: this function
-  * does _not_ add IV. data = RC4(data | CRC32(data)) */
--void ieee80211_wep_encrypt_data(struct crypto_blkcipher *tfm, u8 *rc4key,
--				size_t klen, u8 *data, size_t data_len)
-+int ieee80211_wep_encrypt_data(struct crypto_blkcipher *tfm, u8 *rc4key,
-+			       size_t klen, u8 *data, size_t data_len)
- {
- 	struct blkcipher_desc desc = { .tfm = tfm };
- 	struct scatterlist sg;
- 	__le32 icv;
+ 		wl1251_debug(DEBUG_BOOT,
+ 			     "nvs write table 0x%x: 0x%x",
+diff --git a/drivers/net/wireless/wl12xx/wl1251_cmd.h b/drivers/net/wireless/wl12xx/wl1251_cmd.h
+index 4ad67ca..ca1cb24 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_cmd.h
++++ b/drivers/net/wireless/wl12xx/wl1251_cmd.h
+@@ -175,8 +175,8 @@ struct cmd_read_write_memory {
+ #define WL1251_SCAN_NUM_PROBES 3
  
-+	if (IS_ERR(tfm))
-+		return -1;
-+
- 	icv = cpu_to_le32(~crc32_le(~0, data, data_len));
- 	put_unaligned(icv, (__le32 *)(data + data_len));
+ struct wl1251_scan_parameters {
+-	u32 rx_config_options;
+-	u32 rx_filter_options;
++	__le32 rx_config_options;
++	__le32 rx_filter_options;
  
- 	crypto_blkcipher_setkey(tfm, rc4key, klen);
- 	sg_init_one(&sg, data, data_len + WEP_ICV_LEN);
- 	crypto_blkcipher_encrypt(&desc, &sg, &sg, sg.length);
-+
-+	return 0;
- }
+ 	/*
+ 	 * Scan options:
+@@ -186,7 +186,7 @@ struct wl1251_scan_parameters {
+ 	 * bit 2: voice mode, 0 for normal scan.
+ 	 * bit 3: scan priority, 1 for high priority.
+ 	 */
+-	u16 scan_options;
++	__le16 scan_options;
  
+ 	/* Number of channels to scan */
+ 	u8 num_channels;
+@@ -195,7 +195,7 @@ struct wl1251_scan_parameters {
+ 	u8 num_probe_requests;
  
-@@ -168,10 +173,8 @@ int ieee80211_wep_encrypt(struct ieee80211_local *local,
- 	/* Add room for ICV */
- 	skb_put(skb, WEP_ICV_LEN);
+ 	/* Rate and modulation for probe requests */
+-	u16 tx_rate;
++	__le16 tx_rate;
  
--	ieee80211_wep_encrypt_data(local->wep_tx_tfm, rc4key, keylen + 3,
--				   iv + WEP_IV_LEN, len);
--
--	return 0;
-+	return ieee80211_wep_encrypt_data(local->wep_tx_tfm, rc4key, keylen + 3,
-+					  iv + WEP_IV_LEN, len);
- }
+ 	u8 tid_trigger;
+ 	u8 ssid_len;
+@@ -204,8 +204,8 @@ struct wl1251_scan_parameters {
+ } __attribute__ ((packed));
  
+ struct wl1251_scan_ch_parameters {
+-	u32 min_duration; /* in TU */
+-	u32 max_duration; /* in TU */
++	__le32 min_duration; /* in TU */
++	__le32 max_duration; /* in TU */
+ 	u32 bssid_lsb;
+ 	u16 bssid_msb;
  
-@@ -185,6 +188,9 @@ int ieee80211_wep_decrypt_data(struct crypto_blkcipher *tfm, u8 *rc4key,
- 	struct scatterlist sg;
- 	__le32 crc;
+diff --git a/drivers/net/wireless/wl12xx/wl1251_tx.c b/drivers/net/wireless/wl12xx/wl1251_tx.c
+index c822318..a38ec19 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_tx.c
++++ b/drivers/net/wireless/wl12xx/wl1251_tx.c
+@@ -117,7 +117,7 @@ static void wl1251_tx_frag_block_num(struct tx_double_buffer_desc *tx_hdr)
+ 	frag_threshold = IEEE80211_MAX_FRAG_THRESHOLD;
+ 	tx_hdr->frag_threshold = cpu_to_le16(frag_threshold);
  
-+	if (IS_ERR(tfm))
-+		return -1;
-+
- 	crypto_blkcipher_setkey(tfm, rc4key, klen);
- 	sg_init_one(&sg, data, data_len + WEP_ICV_LEN);
- 	crypto_blkcipher_decrypt(&desc, &sg, &sg, sg.length);
-diff --git a/net/mac80211/wep.h b/net/mac80211/wep.h
-index fe29d7e..58654ee 100644
---- a/net/mac80211/wep.h
-+++ b/net/mac80211/wep.h
-@@ -18,7 +18,7 @@
+-	payload_len = tx_hdr->length + MAX_MSDU_SECURITY_LENGTH;
++	payload_len = le16_to_cpu(tx_hdr->length) + MAX_MSDU_SECURITY_LENGTH;
  
- int ieee80211_wep_init(struct ieee80211_local *local);
- void ieee80211_wep_free(struct ieee80211_local *local);
--void ieee80211_wep_encrypt_data(struct crypto_blkcipher *tfm, u8 *rc4key,
-+int ieee80211_wep_encrypt_data(struct crypto_blkcipher *tfm, u8 *rc4key,
- 				size_t klen, u8 *data, size_t data_len);
- int ieee80211_wep_encrypt(struct ieee80211_local *local,
- 			  struct sk_buff *skb,
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index a14e677..8d59d27 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -183,9 +183,8 @@ static int tkip_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- 	skb_put(skb, TKIP_ICV_LEN);
+ 	if (payload_len > frag_threshold) {
+ 		mem_blocks_per_frag =
+@@ -191,11 +191,13 @@ static int wl1251_tx_send_packet(struct wl1251 *wl, struct sk_buff *skb,
+ 	if (control->control.hw_key &&
+ 	    control->control.hw_key->alg == ALG_TKIP) {
+ 		int hdrlen;
+-		u16 fc;
++		__le16 fc;
++		u16 length;
+ 		u8 *pos;
  
- 	hdr = (struct ieee80211_hdr *) skb->data;
--	ieee80211_tkip_encrypt_data(tx->local->wep_tx_tfm,
--				    key, pos, len, hdr->addr2);
--	return 0;
-+	return ieee80211_tkip_encrypt_data(tx->local->wep_tx_tfm,
-+					   key, pos, len, hdr->addr2);
- }
+-		fc = *(u16 *)(skb->data + sizeof(*tx_hdr));
+-		tx_hdr->length += WL1251_TKIP_IV_SPACE;
++		fc = *(__le16 *)(skb->data + sizeof(*tx_hdr));
++		length = le16_to_cpu(tx_hdr->length) + WL1251_TKIP_IV_SPACE;
++		tx_hdr->length = cpu_to_le16(length);
  
+ 		hdrlen = ieee80211_hdrlen(fc);
  
+diff --git a/drivers/net/wireless/wl12xx/wl1251_tx.h b/drivers/net/wireless/wl12xx/wl1251_tx.h
+index 55856c6..dff127f 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_tx.h
++++ b/drivers/net/wireless/wl12xx/wl1251_tx.h
+@@ -114,7 +114,7 @@ struct tx_control {
+ 
+ struct tx_double_buffer_desc {
+ 	/* Length of payload, including headers. */
+-	u16 length;
++	__le16 length;
+ 
+ 	/*
+ 	 * A bit mask that specifies the initial rate to be used
+@@ -133,10 +133,10 @@ struct tx_double_buffer_desc {
+ 	 * 0x0800 - 48Mbits
+ 	 * 0x1000 - 54Mbits
+ 	 */
+-	u16 rate;
++	__le16 rate;
+ 
+ 	/* Time in us that a packet can spend in the target */
+-	u32 expiry_time;
++	__le32 expiry_time;
+ 
+ 	/* index of the TX queue used for this packet */
+ 	u8 xmit_queue;
+@@ -150,7 +150,7 @@ struct tx_double_buffer_desc {
+ 	 * The FW should cut the packet into fragments
+ 	 * of this size.
+ 	 */
+-	u16 frag_threshold;
++	__le16 frag_threshold;
+ 
+ 	/* Numbers of HW queue blocks to be allocated */
+ 	u8 num_mem_blocks;
 -- 
-1.7.1
+1.7.1.1
 
