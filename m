@@ -1,83 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:52953 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751706Ab0GZTPN (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:59315 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758554Ab0GURfJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jul 2010 15:15:13 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: wey-yi.w.guy@intel.com, "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] iwlagn: use __packed on new structure definitions
-Date: Mon, 26 Jul 2010 15:12:50 -0400
-Message-Id: <1280171570-12141-1-git-send-email-linville@tuxdriver.com>
+	Wed, 21 Jul 2010 13:35:09 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>
+Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Pandita Vikram <vikram.pandita@ti.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH v2 13/20] omap: zoom: add mmc3/wl1271 device support
+Date: Wed, 21 Jul 2010 20:33:47 +0300
+Message-Id: <1279733634-21974-14-git-send-email-ohad@wizery.com>
+In-Reply-To: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"iwlagn: add statistic notification structure for WiFi/BT devices" added
-several new '__attribute__ ((packed))' lines.  Change them to the
-generic __packed.
+Add MMC3 support on ZOOM, which has the wl1271 device hardwired to.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+The wl1271 is a 4-wire, 1.8V, embedded SDIO WLAN device with an
+external IRQ line, and power-controlled by a GPIO-based fixed regulator.
+
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-commands.h |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+ arch/arm/mach-omap2/board-zoom-peripherals.c |   19 +++++++++++++++++++
+ 1 files changed, 19 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 798bf9e..9c44ab5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -3132,7 +3132,7 @@ struct statistics_rx_non_phy_bt {
- 	/* additional stats for bt */
- 	__le32 num_bt_kills;
- 	__le32 reserved[2];
--} __attribute__ ((packed));
-+} __packed;
+diff --git a/arch/arm/mach-omap2/board-zoom-peripherals.c b/arch/arm/mach-omap2/board-zoom-peripherals.c
+index 2fc0f4a..3230801 100644
+--- a/arch/arm/mach-omap2/board-zoom-peripherals.c
++++ b/arch/arm/mach-omap2/board-zoom-peripherals.c
+@@ -17,6 +17,8 @@
+ #include <linux/i2c/twl.h>
+ #include <linux/regulator/machine.h>
+ #include <linux/regulator/fixed.h>
++#include <linux/mmc/host.h>
++#include <linux/wl12xx.h>
  
- struct statistics_rx {
- 	struct statistics_rx_phy ofdm;
-@@ -3146,7 +3146,7 @@ struct statistics_rx_bt {
- 	struct statistics_rx_phy cck;
- 	struct statistics_rx_non_phy_bt general;
- 	struct statistics_rx_ht_phy ofdm_ht;
--} __attribute__ ((packed));
-+} __packed;
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+@@ -29,6 +31,7 @@
+ #include "hsmmc.h"
  
- /**
-  * struct statistics_tx_power - current tx power
-@@ -3226,7 +3226,7 @@ struct statistics_general_common {
- 	 *  in order to get out of bad PHY status
- 	 */
- 	__le32 num_of_sos_states;
--} __attribute__ ((packed));
-+} __packed;
+ #define OMAP_ZOOM_WLAN_PMENA_GPIO	(101)
++#define OMAP_ZOOM_WLAN_IRQ_GPIO		(162)
  
- struct statistics_bt_activity {
- 	/* Tx statistics */
-@@ -3239,13 +3239,13 @@ struct statistics_bt_activity {
- 	__le32 hi_priority_rx_denied_cnt;
- 	__le32 lo_priority_rx_req_cnt;
- 	__le32 lo_priority_rx_denied_cnt;
--} __attribute__ ((packed));
-+} __packed;
+ /* Zoom2 has Qwerty keyboard*/
+ static int board_keymap[] = {
+@@ -184,6 +187,12 @@ static struct platform_device omap_vwlan_device = {
+ 	},
+ };
  
- struct statistics_general {
- 	struct statistics_general_common common;
- 	__le32 reserved2;
- 	__le32 reserved3;
--} __attribute__ ((packed));
-+} __packed;
++struct wl12xx_platform_data omap_zoom_wlan_data = {
++	.irq = OMAP_GPIO_IRQ(OMAP_ZOOM_WLAN_IRQ_GPIO),
++	/* ZOOM ref clock is 26 MHz */
++	.board_ref_clock = 1,
++};
++
+ static struct omap2_hsmmc_info mmc[] __initdata = {
+ 	{
+ 		.name		= "external",
+@@ -201,6 +210,15 @@ static struct omap2_hsmmc_info mmc[] __initdata = {
+ 		.nonremovable	= true,
+ 		.power_saving	= true,
+ 	},
++	{
++		.name		= "wl1271",
++		.mmc		= 3,
++		.wires		= 4,
++		.gpio_wp	= -EINVAL,
++		.gpio_cd	= -EINVAL,
++		.ocr_mask	= MMC_VDD_165_195,
++		.priv_data	= &omap_zoom_wlan_data,
++	},
+ 	{}      /* Terminator */
+ };
  
- struct statistics_general_bt {
- 	struct statistics_general_common common;
-@@ -3316,7 +3316,7 @@ struct iwl_bt_notif_statistics {
- 	struct statistics_rx_bt rx;
- 	struct statistics_tx tx;
- 	struct statistics_general_bt general;
--} __attribute__ ((packed));
-+} __packed;
+@@ -217,6 +235,7 @@ static int zoom_twl_gpio_setup(struct device *dev,
+ 	zoom_vmmc1_supply.dev = mmc[0].dev;
+ 	zoom_vsim_supply.dev = mmc[0].dev;
+ 	zoom_vmmc2_supply.dev = mmc[1].dev;
++	zoom_vmmc3_supply.dev = mmc[2].dev;
  
- /*
-  * MISSED_BEACONS_NOTIFICATION = 0xa2 (notification only, not a command)
+ 	return 0;
+ }
 -- 
-1.7.1.1
+1.7.0.4
 
