@@ -1,41 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43611 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758478Ab0GTQpM (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:59315 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756699Ab0GURep (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jul 2010 12:45:12 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] wireless: mark cfg80211_is_all_idle as static
-Date: Tue, 20 Jul 2010 12:33:54 -0400
-Message-Id: <1279643634-14556-1-git-send-email-linville@tuxdriver.com>
+	Wed, 21 Jul 2010 13:34:45 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>
+Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Pandita Vikram <vikram.pandita@ti.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH v2 06/20] wireless: wl1271: make wl12xx.h common to both spi and sdio
+Date: Wed, 21 Jul 2010 20:33:40 +0300
+Message-Id: <1279733634-21974-7-git-send-email-ohad@wizery.com>
+In-Reply-To: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  CHECK   net/wireless/sme.c
-net/wireless/sme.c:38:6: warning: symbol 'cfg80211_is_all_idle' was not declared. Should it be static?
+Move wl12xx.h outside of the spi-specific location,
+so it can be shared with both spi and sdio solutions.
 
-It is not used elsewhere, so mark it static.
-
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
 ---
- net/wireless/sme.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/wl12xx/wl1251_sdio.c |    2 +-
+ drivers/net/wireless/wl12xx/wl1251_spi.c  |    2 +-
+ drivers/net/wireless/wl12xx/wl1271_spi.c  |    2 +-
+ include/linux/spi/wl12xx.h                |   34 -----------------------------
+ include/linux/wl12xx.h                    |   34 +++++++++++++++++++++++++++++
+ 5 files changed, 37 insertions(+), 37 deletions(-)
+ delete mode 100644 include/linux/spi/wl12xx.h
+ create mode 100644 include/linux/wl12xx.h
 
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 72222f0..a8c2d6b 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -35,7 +35,7 @@ struct cfg80211_conn {
- 	bool auto_auth, prev_bssid_valid;
- };
+diff --git a/drivers/net/wireless/wl12xx/wl1251_sdio.c b/drivers/net/wireless/wl12xx/wl1251_sdio.c
+index c561332..416d5aa 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_sdio.c
++++ b/drivers/net/wireless/wl12xx/wl1251_sdio.c
+@@ -24,7 +24,7 @@
+ #include <linux/mmc/sdio_func.h>
+ #include <linux/mmc/sdio_ids.h>
+ #include <linux/platform_device.h>
+-#include <linux/spi/wl12xx.h>
++#include <linux/wl12xx.h>
+ #include <linux/irq.h>
  
--bool cfg80211_is_all_idle(void)
-+static bool cfg80211_is_all_idle(void)
- {
- 	struct cfg80211_registered_device *rdev;
- 	struct wireless_dev *wdev;
+ #include "wl1251.h"
+diff --git a/drivers/net/wireless/wl12xx/wl1251_spi.c b/drivers/net/wireless/wl12xx/wl1251_spi.c
+index e814742..4847b6a 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_spi.c
++++ b/drivers/net/wireless/wl12xx/wl1251_spi.c
+@@ -26,7 +26,7 @@
+ #include <linux/slab.h>
+ #include <linux/crc7.h>
+ #include <linux/spi/spi.h>
+-#include <linux/spi/wl12xx.h>
++#include <linux/wl12xx.h>
+ 
+ #include "wl1251.h"
+ #include "wl1251_reg.h"
+diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
+index 5189b81..e866049 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_spi.c
++++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
+@@ -25,7 +25,7 @@
+ #include <linux/module.h>
+ #include <linux/crc7.h>
+ #include <linux/spi/spi.h>
+-#include <linux/spi/wl12xx.h>
++#include <linux/wl12xx.h>
+ #include <linux/slab.h>
+ 
+ #include "wl1271.h"
+diff --git a/include/linux/spi/wl12xx.h b/include/linux/spi/wl12xx.h
+deleted file mode 100644
+index a223ecb..0000000
+--- a/include/linux/spi/wl12xx.h
++++ /dev/null
+@@ -1,34 +0,0 @@
+-/*
+- * This file is part of wl12xx
+- *
+- * Copyright (C) 2009 Nokia Corporation
+- *
+- * Contact: Kalle Valo <kalle.valo@nokia.com>
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License
+- * version 2 as published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+- * 02110-1301 USA
+- *
+- */
+-
+-#ifndef _LINUX_SPI_WL12XX_H
+-#define _LINUX_SPI_WL12XX_H
+-
+-struct wl12xx_platform_data {
+-	void (*set_power)(bool enable);
+-	/* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
+-	int irq;
+-	bool use_eeprom;
+-};
+-
+-#endif
+diff --git a/include/linux/wl12xx.h b/include/linux/wl12xx.h
+new file mode 100644
+index 0000000..137ac89
+--- /dev/null
++++ b/include/linux/wl12xx.h
+@@ -0,0 +1,34 @@
++/*
++ * This file is part of wl12xx
++ *
++ * Copyright (C) 2009 Nokia Corporation
++ *
++ * Contact: Kalle Valo <kalle.valo@nokia.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * version 2 as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
++ * 02110-1301 USA
++ *
++ */
++
++#ifndef _LINUX_WL12XX_H
++#define _LINUX_WL12XX_H
++
++struct wl12xx_platform_data {
++	void (*set_power)(bool enable);
++	/* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
++	int irq;
++	bool use_eeprom;
++};
++
++#endif
 -- 
-1.7.1.1
+1.7.0.4
 
