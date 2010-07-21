@@ -1,62 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:45690 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752935Ab0GCG0P (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:59315 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757616Ab0GURe2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Jul 2010 02:26:15 -0400
-Received: from [71.117.12.23] (pool-71-117-12-23.sttlwa.dsl-w.verizon.net [71.117.12.23])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id o636QEWM027215
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Fri, 2 Jul 2010 23:26:14 -0700
-Message-ID: <4C2ED806.9000105@candelatech.com>
-Date: Fri, 02 Jul 2010 23:26:14 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: ath9k doesn't clean up virtual wifis on rmmod, and crashes.
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 21 Jul 2010 13:34:28 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>
+Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Pandita Vikram <vikram.pandita@ti.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH v2 02/20] wireless: wl1271: remove SDIO IDs from driver
+Date: Wed, 21 Jul 2010 20:33:36 +0300
+Message-Id: <1279733634-21974-3-git-send-email-ohad@wizery.com>
+In-Reply-To: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It seems to me that in 2.6.34, there is no code to clean up
-virtual wiphys in ath9k on rmmod.  Also, ath9k mailing list
-is returning error about mis-configured DNS server.
+Remove SDIO IDs from the driver code since now it is
+included in linux/mmc/sdio_ids.h.
 
-This is with un-modified ath9k driver and is repeatable
-every time on my system (crash is often different, but
-it always crashes very quickly).
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_sdio.c |    8 --------
+ 1 files changed, 0 insertions(+), 8 deletions(-)
 
-[root@atom ~]# echo add=5 > /debug/ath9k/phy1/wiphy
--bash: /debug/ath9k/phy1/wiphy: No such file or directory
-[root@atom ~]# echo add=5 > /debug/ath9k/phy0/wiphy
-Jul  2 23:22:19 atom kernel: phy1: Selected rate control algorithm 'ath9k_rate_control'
-[root@atom ~]# Jul  2 23:22:19 atom kernel: ADDRCONF(NETDEV_UP): wlan1: link is not ready
-rmmod ath9k
-Jul  2 23:22:24 atom kernel: ath9k 0000:05:00.0: PCI INT A disabled
-Jul  2 23:22:24 atom kernel: ath9k: Driver unloaded
-[root@atom ~]# BUG: spinlock bad magic on CPU#1, iw/2877
-  lock: f8a476c0, .magic: 00000000, .owner: <none>/-1, .owner_cpu: 0
-Pid: 2877, comm: iw Not tainted 2.6.34 #7
-Call Trace:
-  [<c0730e34>] ? printk+0xf/0x13
-  [<c05710d6>] spin_bug+0x7b/0x86
-  [<c0440b76>] ? delayed_work_timer_fn+0x0/0x30
-  [<c0571171>] do_raw_spin_lock+0x1e/0x125
-  [<c042f91e>] ? scheduler_tick+0xd6/0x1c9
-  [<c0440b76>] ? delayed_work_timer_fn+0x0/0x30
-  [<c0732a6d>] _raw_spin_lock_irqsave+0x1b/0x20
-  [<c0440b59>] __queue_work+0x12/0x2f
-  [<c0440b76>] ? delayed_work_timer_fn+0x0/0x30
-  [<c0440ba4>] delayed_work_timer_fn+0x2e/0x30
-
-I'm new to hacking on this driver..but would love to test
-patches, and if someone wants to suggest a good point in
-the code to remove the virtual phys, I'll make the attempt.
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
+index d3d6f30..9903ae9 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_sdio.c
++++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
+@@ -37,14 +37,6 @@
+ 
+ #define RX71_WL1271_IRQ_GPIO		42
+ 
+-#ifndef SDIO_VENDOR_ID_TI
+-#define SDIO_VENDOR_ID_TI		0x0097
+-#endif
+-
+-#ifndef SDIO_DEVICE_ID_TI_WL1271
+-#define SDIO_DEVICE_ID_TI_WL1271	0x4076
+-#endif
+-
+ static const struct sdio_device_id wl1271_devices[] = {
+ 	{ SDIO_DEVICE(SDIO_VENDOR_ID_TI, SDIO_DEVICE_ID_TI_WL1271) },
+ 	{}
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.0.4
+
