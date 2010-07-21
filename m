@@ -1,51 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:53296 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757214Ab0GAP7o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Jul 2010 11:59:44 -0400
-Subject: Re: rfkill failure in 2.6.35-rc3+
-From: reinette chatre <reinette.chatre@intel.com>
-To: Andrew Lutomirski <andy@luto.us>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-In-Reply-To: <AANLkTikqJzkFFtmOowq-OzzDFSC9_1SFuAfT4UGZBhqW@mail.gmail.com>
-References: <AANLkTikqJzkFFtmOowq-OzzDFSC9_1SFuAfT4UGZBhqW@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 01 Jul 2010 08:59:27 -0700
-Message-ID: <1277999967.4197.92.camel@rchatre-DESK>
-Mime-Version: 1.0
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:59315 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761093Ab0GURfW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Jul 2010 13:35:22 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>
+Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Pandita Vikram <vikram.pandita@ti.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH v2 17/20] mmc: sdio: relocate sdio_set_block_size call
+Date: Wed, 21 Jul 2010 20:33:51 +0300
+Message-Id: <1279733634-21974-18-git-send-email-ohad@wizery.com>
+In-Reply-To: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-06-30 at 19:59 -0700, Andrew Lutomirski wrote:
-> I just toggled rfkill on and back off on my X200s (WiFi Link 5350, rev
-> 0x24) and the link didn't come up.  Toggling rfkill again didn't fix
-> it, but rmmod + modprobe did.
-> 
-> dmesg said:
-> 
-> [13629.424869] iwlagn 0000:03:00.0: RF_KILL bit toggled to disable radio.
-> [13629.432761] iwlagn 0000:03:00.0: Not sending command - RF KILL
-> [13629.432771] iwlagn 0000:03:00.0: Error sending REPLY_RXON:
-> enqueue_hcmd failed: -5
-> [13629.432778] iwlagn 0000:03:00.0: Error setting new RXON (-5)
-> [13631.268646] iwlagn 0000:03:00.0: RF_KILL bit toggled to enable radio.
-> [13631.311232] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> [13675.710821] iwlagn 0000:03:00.0: RF_KILL bit toggled to disable radio.
-> [13675.713438] iwlagn 0000:03:00.0: Not sending command - RF KILL
-> [13675.713448] iwlagn 0000:03:00.0: Error sending REPLY_RXON:
-> enqueue_hcmd failed: -5
-> [13675.713455] iwlagn 0000:03:00.0: Error setting new RXON (-5)
-> [13683.090789] iwlagn 0000:03:00.0: RF_KILL bit toggled to enable radio.
-> [13683.145267] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> 
-> This is 2.6.35-rc3+ with firmware 8.24.2.12.  I've never seen this before.
+To support probing of SDIO function driver while the device
+is powered off, we need to relocate the sdio_set_block_size call
+from the bus probe to an earlier point where we know the device
+is still powered. In addition, we want the block size set also
+when cards are resumed.
 
-Recently we have seen a few issues with rfkill state changes not being
-seen by the driver. In all cases it was "resolved" by unloading (or not
-loading from the beginning via blacklisting) of the platform driver. Can
-you try that?
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+---
+ drivers/mmc/core/sdio.c     |   14 +++++++++++++-
+ drivers/mmc/core/sdio_bus.c |    9 ---------
+ 2 files changed, 13 insertions(+), 10 deletions(-)
 
-Reinette
-
+diff --git a/drivers/mmc/core/sdio.c b/drivers/mmc/core/sdio.c
+index 79e6fa1..5c0fbfa 100644
+--- a/drivers/mmc/core/sdio.c
++++ b/drivers/mmc/core/sdio.c
+@@ -73,6 +73,12 @@ static int sdio_init_func(struct mmc_card *card, unsigned int fn)
+ 
+ 	card->sdio_func[fn - 1] = func;
+ 
++	/* Set the default block size so the driver is sure it's something
++	 * sensible. */
++	ret = sdio_set_block_size(func, 0);
++	if (ret)
++		return ret;
++
+ 	/* For each SDIO function initialized, increase the power claim
+ 	 * reference count of the card */
+ 	atomic_inc(&card->power_claims);
+@@ -510,7 +516,13 @@ static int mmc_sdio_resume(struct mmc_host *host)
+ 		if (func && sdio_func_present(func) && func->dev.driver) {
+ 			const struct dev_pm_ops *pmops = func->dev.driver->pm;
+ 
+-			if (pmops && pmops->resume)
++			/* Set the default block size so the driver is sure
++			 * it's something sensible. */
++			mmc_claim_host(host);
++			err = sdio_set_block_size(func, 0);
++			mmc_release_host(host);
++
++			if (!err && pmops && pmops->resume)
+ 				err = pmops->resume(&func->dev);
+ 		}
+ 	}
+diff --git a/drivers/mmc/core/sdio_bus.c b/drivers/mmc/core/sdio_bus.c
+index 4a890dc..87269f6 100644
+--- a/drivers/mmc/core/sdio_bus.c
++++ b/drivers/mmc/core/sdio_bus.c
+@@ -119,20 +119,11 @@ static int sdio_bus_probe(struct device *dev)
+ 	struct sdio_driver *drv = to_sdio_driver(dev->driver);
+ 	struct sdio_func *func = dev_to_sdio_func(dev);
+ 	const struct sdio_device_id *id;
+-	int ret;
+ 
+ 	id = sdio_match_device(func, drv);
+ 	if (!id)
+ 		return -ENODEV;
+ 
+-	/* Set the default block size so the driver is sure it's something
+-	 * sensible. */
+-	sdio_claim_host(func);
+-	ret = sdio_set_block_size(func, 0);
+-	sdio_release_host(func);
+-	if (ret)
+-		return ret;
+-
+ 	return drv->probe(func, id);
+ }
+ 
+-- 
+1.7.0.4
 
