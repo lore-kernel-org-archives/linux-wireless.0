@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:34173 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751557Ab0GBKAE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jul 2010 06:00:04 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1OUd2R-0007LB-E5
-	for linux-wireless@vger.kernel.org; Fri, 02 Jul 2010 12:00:03 +0200
-Received: from host179-164-static.104-82-b.business.telecomitalia.it ([82.104.164.179])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Jul 2010 12:00:03 +0200
-Received: from mastupristi by host179-164-static.104-82-b.business.telecomitalia.it with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Jul 2010 12:00:03 +0200
-To: linux-wireless@vger.kernel.org
-From: mastupristi <mastupristi@gmail.com>
-Subject: Re: wl1271 firmware
-Date: Fri, 2 Jul 2010 09:54:49 +0000 (UTC)
-Message-ID: <loom.20100702T114939-227@post.gmane.org>
-References: <AANLkTinOcy-n6EVzAasAJO1I2yNeWOiaCid0tGdxnuwa@mail.gmail.com> <AC090B9732AB2B4DB7FF476E907FE660010673660C@dnce02.ent.ti.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47408 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753670Ab0GUNpP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Jul 2010 09:45:15 -0400
+Date: Wed, 21 Jul 2010 09:33:20 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Pauli Nieminen <suokkos@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtl8180: improve signal reporting for rtl8185 hardware
+Message-ID: <20100721133320.GB2355@tuxdriver.com>
+References: <AANLkTiknLRzt2bdhcin5WRzwPXSWqEs8dIUe5imlN0I9@mail.gmail.com>
+ <1279572443-14361-1-git-send-email-linville@tuxdriver.com>
+ <AANLkTino_4FKtMWZU7_lKGzPUXNOtfrmlw_rmmr836eA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <AANLkTino_4FKtMWZU7_lKGzPUXNOtfrmlw_rmmr836eA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Levi, Shahar <shahar_levi@...> writes:
-> Hi pz,
-> I am checking the way to access the FW and NVS file of wl1271.
-> Let me find more details on that and get back to you.
-Hi all,
+On Wed, Jul 21, 2010 at 08:08:41AM +0300, Pauli Nieminen wrote:
+> On Mon, Jul 19, 2010 at 11:47 PM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+> > The existing code seemed to be somewhat based on the datasheet, but
+> > varied substantially from the vendor-provided driver.  This mirrors the
+> > handling of the rtl8185 case from that driver, but still neglects the
+> > specifics for the rtl8180 hardware.  Those details are a bit muddled...
+> >
+> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> > ---
+> >  drivers/net/wireless/rtl818x/rtl8180_dev.c |   11 ++++++++---
+> >  1 files changed, 8 insertions(+), 3 deletions(-)
 
-I have the same problem searching wl1271-nvs.bin.
-I hope that it will be possible to find it.
+> I tested this version of patch. Patch didn't apply cleanly for some
+> reason even tough when I mnauly typed it diff looks same.
 
-Please I would like to have your feedback
+Please try the v2 version of the patch.  Some "back of the envelope"
+math suggests that the v2 version of the patch will give numbers more
+to your liking.
 
-best regards,
-bye
-
-
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
