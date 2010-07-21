@@ -1,56 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sycorax.lbl.gov ([128.3.11.121]:47601 "EHLO sycorax.lbl.gov"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751452Ab0G0E7T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 00:59:19 -0400
-From: Alex Romosan <romosan@sycorax.lbl.gov>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Guy\, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlwifi connection problems
-References: <87tynqvtu6.fsf@sycorax.lbl.gov>
-	<1279917523.10769.1.camel@wwguy-huron>
-	<1280135867.3693.5.camel@jlt3.sipsolutions.net>
-Date: Mon, 26 Jul 2010 21:59:13 -0700
-In-Reply-To: <1280135867.3693.5.camel@jlt3.sipsolutions.net> (message from
-	Johannes Berg on Mon, 26 Jul 2010 11:17:47 +0200)
-Message-ID: <87mxtd5xlq.fsf@sycorax.lbl.gov>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:43580 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751633Ab0GUWQe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Jul 2010 18:16:34 -0400
+Received: by fxm14 with SMTP id 14so3934768fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jul 2010 15:16:33 -0700 (PDT)
+Date: Thu, 22 Jul 2010 00:16:16 +0200
+From: Dan Carpenter <error27@gmail.com>
+To: johannes.berg@intel.com
+Cc: linux-wireless@vger.kernel.org
+Subject: potential null deref in iwlagn_request_scan()?
+Message-ID: <20100721221616.GT17585@bicker>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Smatch complains about iwlagn_request_scan().
 
-> On Fri, 2010-07-23 at 13:38 -0700, Guy, Wey-Yi wrote:
->> Hi Johannes,
->> 
->> On Fri, 2010-07-23 at 13:14 -0700, Alex Romosan wrote:
->> > since kernel 2.6.35-rc3 (i didn't try 1 or 2) i haven't been able to
->> > connect to a hidden wireless access point using the iwlwifi driver. i
->> > can connect to open ones though (the ones that broadcast their name).
->> > 2.6.34 worked without any problems. any ideas?
->> > 
->> > this is with the driver in the standard linux kernel (2.6.35-rc6 is the
->> > latest one i tried).
->> 
->> Do you aware any changes?
->
-> Nope, and it works fine here on wireless-testing.
+drivers/net/wireless/iwlwifi/iwl-agn-lib.c +1354 iwlagn_request_scan(204)
+	error: we previously assumed 'vif' could be null.
 
-any ideas on how i can debug this? i tried to do a git-bisect but i
-didn't get anywhere. i have the driver compiled in the kernel if that
-makes any difference. as i played with the later kernels (after 2.6.34)
-i discovered that if kept bringing the interface down and then up again
-eventually i would get "cfg80211: Calling CRDA to update world
-regulatory domain" the antenna light on the laptop (i have a thinkpad
-t61) would go off and then at the next ifup the driver connected. looks
-like some kind of reset/initialization problem to me.
+  1351          if (!priv->is_internal_short_scan) {
+  1352                  cmd_len = iwl_fill_probe_req(priv,
+  1353                                          (struct ieee80211_mgmt *)scan->data,
+  1354                                          vif->addr,
+						^^^^^^^^^
 
---alex--
+  1355                                          priv->scan_request->ie, 
+  1356						priv->scan_request->ie_len,
+  1357                                          IWL_MAX_SCAN_SIZE - sizeof(*scan));
+  1358          } else {
+  1359                  /* use bcast addr, will not be transmitted but must be valid */
 
--- 
-| I believe the moment is at hand when, by a paranoiac and active |
-|  advance of the mind, it will be possible (simultaneously with  |
-|  automatism and other passive states) to systematize confusion  |
-|  and thus to help to discredit completely the world of reality. |
+This was added in 3a0b9aad0a8166e9f "iwlwifi: use virtual interface
+address for scan".  Prior to that commit the function assumed that vif
+could be NULL throughout.
+
+I don't know the code well enough to know what to do about this.
+
+Also the same thing for:
+drivers/net/wireless/iwlwifi/iwl3945-base.c +2963 iwl3945_request_scan(158)
+	error: we previously assumed 'vif' could be null.
+
+  2962          if (!priv->is_internal_short_scan) {
+  2963                  scan->tx_cmd.len = cpu_to_le16(
+  2964                          iwl_fill_probe_req(priv,
+  2965                                  (struct ieee80211_mgmt *)scan->data,
+  2966                                  vif->addr,
+					^^^^^^^^^
+  2967                                  priv->scan_request->ie,
+  2968                                  priv->scan_request->ie_len,
+  2969                                  IWL_MAX_SCAN_SIZE - sizeof(*scan)));
+  2970          } else {
+
+This is from the above commit as well.
+
+regards,
+dan carpenter
+
