@@ -1,155 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:25946 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759159Ab0GBSoe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jul 2010 14:44:34 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>
-Subject: [PATCH 1/8] iwlwifi: fix fw_restart module parameter
-Date: Fri,  2 Jul 2010 11:45:33 -0700
-Message-Id: <1278096340-2546-2-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1278096340-2546-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1278096340-2546-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:59315 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756699Ab0GURes (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Jul 2010 13:34:48 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>
+Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Pandita Vikram <vikram.pandita@ti.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH v2 07/20] wireless: wl1271: support return value for the set power func
+Date: Wed, 21 Jul 2010 20:33:41 +0300
+Message-Id: <1279733634-21974-8-git-send-email-ohad@wizery.com>
+In-Reply-To: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Make it possible for the set power method to indicate a
+success/failure return value. This is needed to support
+more complex power on/off operations such as bringing up
+(and down) sdio functions.
 
-fw_restart module parameter was broken by the recent check for stuck
-queue patch, driver check the fx_restart module parameter
-before reload the firmware; but the stuck queue timer kick in after
-firmware error and reload the firmware even fw_restart=0. In this case,
-driver should not reload the firmware, it is important to help debugging
-uCode error.
-
-The only case we can ignore the module parameter is when user request
-firmware reload from debugfs, which can bypass the checking and perform
-firmware reload all the time.
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Reinette Chatre <reinette.chatre@intel.com>
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-core.c    |   31 ++++++++++++++++++++-------
- drivers/net/wireless/iwlwifi/iwl-core.h    |    2 +-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-rx.c      |    4 +-
- 4 files changed, 27 insertions(+), 12 deletions(-)
+ drivers/net/wireless/wl12xx/wl1271.h      |    2 +-
+ drivers/net/wireless/wl12xx/wl1271_io.h   |    8 +++++---
+ drivers/net/wireless/wl12xx/wl1271_main.c |    4 +++-
+ drivers/net/wireless/wl12xx/wl1271_sdio.c |    4 +++-
+ drivers/net/wireless/wl12xx/wl1271_spi.c  |    4 +++-
+ 5 files changed, 15 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index a56fb46..f73eb08 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2627,7 +2627,7 @@ static void iwl_force_rf_reset(struct iwl_priv *priv)
+diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+index 6f1b6b5..a21cdb2 100644
+--- a/drivers/net/wireless/wl12xx/wl1271.h
++++ b/drivers/net/wireless/wl12xx/wl1271.h
+@@ -340,7 +340,7 @@ struct wl1271_if_operations {
+ 		     bool fixed);
+ 	void (*reset)(struct wl1271 *wl);
+ 	void (*init)(struct wl1271 *wl);
+-	void (*power)(struct wl1271 *wl, bool enable);
++	int (*power)(struct wl1271 *wl, bool enable);
+ 	struct device* (*dev)(struct wl1271 *wl);
+ 	void (*enable_irq)(struct wl1271 *wl);
+ 	void (*disable_irq)(struct wl1271 *wl);
+diff --git a/drivers/net/wireless/wl12xx/wl1271_io.h b/drivers/net/wireless/wl12xx/wl1271_io.h
+index bc806c7..4a5b92c 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_io.h
++++ b/drivers/net/wireless/wl12xx/wl1271_io.h
+@@ -144,10 +144,12 @@ static inline void wl1271_power_off(struct wl1271 *wl)
+ 	clear_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
+ }
+ 
+-static inline void wl1271_power_on(struct wl1271 *wl)
++static inline int wl1271_power_on(struct wl1271 *wl)
+ {
+-	wl->if_ops->power(wl, true);
+-	set_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
++	int ret = wl->if_ops->power(wl, true);
++	if (ret == 0)
++		set_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
++	return ret;
  }
  
  
--int iwl_force_reset(struct iwl_priv *priv, int mode)
-+int iwl_force_reset(struct iwl_priv *priv, int mode, bool external)
- {
- 	struct iwl_force_reset *force_reset;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index b7d9137..6bd748e 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -620,7 +620,9 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
+ 	int ret = 0;
  
-@@ -2640,12 +2640,14 @@ int iwl_force_reset(struct iwl_priv *priv, int mode)
+ 	msleep(WL1271_PRE_POWER_ON_SLEEP);
+-	wl1271_power_on(wl);
++	ret = wl1271_power_on(wl);
++	if (ret < 0)
++		goto out;
+ 	msleep(WL1271_POWER_ON_SLEEP);
+ 	wl1271_io_reset(wl);
+ 	wl1271_io_init(wl);
+diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
+index 9903ae9..571c6b9 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_sdio.c
++++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
+@@ -144,7 +144,7 @@ static void wl1271_sdio_raw_write(struct wl1271 *wl, int addr, void *buf,
+ 
+ }
+ 
+-static void wl1271_sdio_set_power(struct wl1271 *wl, bool enable)
++static int wl1271_sdio_set_power(struct wl1271 *wl, bool enable)
+ {
+ 	struct sdio_func *func = wl_to_func(wl);
+ 
+@@ -159,6 +159,8 @@ static void wl1271_sdio_set_power(struct wl1271 *wl, bool enable)
+ 		sdio_disable_func(func);
+ 		sdio_release_host(func);
  	}
- 	force_reset = &priv->force_reset[mode];
- 	force_reset->reset_request_count++;
--	if (force_reset->last_force_reset_jiffies &&
--	    time_after(force_reset->last_force_reset_jiffies +
--	    force_reset->reset_duration, jiffies)) {
--		IWL_DEBUG_INFO(priv, "force reset rejected\n");
--		force_reset->reset_reject_count++;
--		return -EAGAIN;
-+	if (!external) {
-+		if (force_reset->last_force_reset_jiffies &&
-+		    time_after(force_reset->last_force_reset_jiffies +
-+		    force_reset->reset_duration, jiffies)) {
-+			IWL_DEBUG_INFO(priv, "force reset rejected\n");
-+			force_reset->reset_reject_count++;
-+			return -EAGAIN;
-+		}
- 	}
- 	force_reset->reset_success_count++;
- 	force_reset->last_force_reset_jiffies = jiffies;
-@@ -2655,6 +2657,19 @@ int iwl_force_reset(struct iwl_priv *priv, int mode)
- 		iwl_force_rf_reset(priv);
- 		break;
- 	case IWL_FW_RESET:
-+		/*
-+		 * if the request is from external(ex: debugfs),
-+		 * then always perform the request in regardless the module
-+		 * parameter setting
-+		 * if the request is from internal (uCode error or driver
-+		 * detect failure), then fw_restart module parameter
-+		 * need to be check before performing firmware reload
-+		 */
-+		if (!external && !priv->cfg->mod_params->restart_fw) {
-+			IWL_DEBUG_INFO(priv, "Cancel firmware reload based on "
-+				       "module parameter setting\n");
-+			break;
-+		}
- 		IWL_ERR(priv, "On demand firmware reload\n");
- 		/* Set the FW error flag -- cleared on iwl_down */
- 		set_bit(STATUS_FW_ERROR, &priv->status);
-@@ -2713,7 +2728,7 @@ static int iwl_check_stuck_queue(struct iwl_priv *priv, int cnt)
- 					"queue %d stuck %d time. Fw reload.\n",
- 					q->id, q->repeat_same_read_ptr);
- 				q->repeat_same_read_ptr = 0;
--				iwl_force_reset(priv, IWL_FW_RESET);
-+				iwl_force_reset(priv, IWL_FW_RESET, false);
- 			} else {
- 				q->repeat_same_read_ptr++;
- 				IWL_DEBUG_RADIO(priv,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 15930e0..bfa3456 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -525,7 +525,7 @@ int iwl_mac_hw_scan(struct ieee80211_hw *hw,
- 		    struct cfg80211_scan_request *req);
- void iwl_bg_start_internal_scan(struct work_struct *work);
- void iwl_internal_short_hw_scan(struct iwl_priv *priv);
--int iwl_force_reset(struct iwl_priv *priv, int mode);
-+int iwl_force_reset(struct iwl_priv *priv, int mode, bool external);
- u16 iwl_fill_probe_req(struct iwl_priv *priv, struct ieee80211_mgmt *frame,
- 		       const u8 *ta, const u8 *ie, int ie_len, int left);
- void iwl_setup_rx_scan_handlers(struct iwl_priv *priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index 7d9ffc1..48f8908 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -1487,7 +1487,7 @@ static ssize_t iwl_dbgfs_force_reset_write(struct file *file,
- 	switch (reset) {
- 	case IWL_RF_RESET:
- 	case IWL_FW_RESET:
--		ret = iwl_force_reset(priv, reset);
-+		ret = iwl_force_reset(priv, reset, true);
- 		break;
- 	default:
- 		return -EINVAL;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-rx.c b/drivers/net/wireless/iwlwifi/iwl-rx.c
-index b437f31..79773e3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-rx.c
-@@ -238,7 +238,7 @@ void iwl_recover_from_statistics(struct iwl_priv *priv,
- 				 */
- 				IWL_ERR(priv, "low ack count detected, "
- 					"restart firmware\n");
--				if (!iwl_force_reset(priv, IWL_FW_RESET))
-+				if (!iwl_force_reset(priv, IWL_FW_RESET, false))
- 					return;
- 			}
- 		}
-@@ -249,7 +249,7 @@ void iwl_recover_from_statistics(struct iwl_priv *priv,
- 				 * high plcp error detected
- 				 * reset Radio
- 				 */
--				iwl_force_reset(priv, IWL_RF_RESET);
-+				iwl_force_reset(priv, IWL_RF_RESET, false);
- 			}
- 		}
- 	}
++
++	return 0;
+ }
+ 
+ static struct wl1271_if_operations sdio_ops = {
+diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
+index e866049..85a167f 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_spi.c
++++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
+@@ -313,10 +313,12 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static void wl1271_spi_set_power(struct wl1271 *wl, bool enable)
++static int wl1271_spi_set_power(struct wl1271 *wl, bool enable)
+ {
+ 	if (wl->set_power)
+ 		wl->set_power(enable);
++
++	return 0;
+ }
+ 
+ static struct wl1271_if_operations spi_ops = {
 -- 
 1.7.0.4
 
