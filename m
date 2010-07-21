@@ -1,51 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:6670 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752031Ab0GVUXq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 16:23:46 -0400
-Subject: Re: [patch -next] libertas: precedence bug
-From: Dan Williams <dcbw@redhat.com>
-To: Dan Carpenter <error27@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Holger Schurig <holgerschurig@gmail.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-In-Reply-To: <20100722122102.GH17585@bicker>
-References: <20100722122102.GH17585@bicker>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 22 Jul 2010 15:24:54 -0700
-Message-ID: <1279837494.4829.18.camel@dcbw.foobar.com>
-Mime-Version: 1.0
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:62331 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752126Ab0GURBo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Jul 2010 13:01:44 -0400
+Received: by bwz1 with SMTP id 1so349842bwz.19
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jul 2010 10:01:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4C45ED36.2090604@deltatee.com>
+References: <4C37BCA0.5090607@deltatee.com>
+	<AC090B9732AB2B4DB7FF476E907FE660010685F34E@dnce02.ent.ti.com>
+	<AANLkTilHNKeRZX5CMplyriTo2hTPBrz_z1_Zpwoy3SZx@mail.gmail.com>
+	<AC090B9732AB2B4DB7FF476E907FE66001069662F2@dnce02.ent.ti.com>
+	<AC090B9732AB2B4DB7FF476E907FE6600106966BA5@dnce02.ent.ti.com>
+	<4C45ED36.2090604@deltatee.com>
+Date: Wed, 21 Jul 2010 19:01:42 +0200
+Message-ID: <AANLkTinjvF9UeV7d2aBUy6HfexuAeL_cdsVPGVxSRVMp@mail.gmail.com>
+Subject: Re: wl1271 firmware
+From: Pazzo Da Legare <pazzodalegare@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: "Levi, Shahar" <shahar_levi@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	Logan Gunthorpe <logang@deltatee.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-07-22 at 14:21 +0200, Dan Carpenter wrote:
-> Negate has precedence over comparison so the original test was always
-> false.  (Neither 0 nor 1 are equal to NL80211_IFTYPE_MONITOR).
-> 
-> Signed-off-by: Dan Carpenter <error27@gmail.com>
+Dear All,
+Dear Shahar,
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+I tried your files but I had errors from the driver.
 
-> diff --git a/drivers/net/wireless/libertas/tx.c b/drivers/net/wireless/libertas/tx.c
-> index 411a3bb..8000ca6 100644
-> --- a/drivers/net/wireless/libertas/tx.c
-> +++ b/drivers/net/wireless/libertas/tx.c
-> @@ -180,7 +180,7 @@ void lbs_send_tx_feedback(struct lbs_private *priv, u32 try_count)
->  {
->  	struct tx_radiotap_hdr *radiotap_hdr;
->  
-> -	if (!priv->wdev->iftype == NL80211_IFTYPE_MONITOR ||
-> +	if (priv->wdev->iftype != NL80211_IFTYPE_MONITOR ||
->  	    priv->currenttxskb == NULL)
->  		return;
->  
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+# ifconfig wlan0 up
+
+[  194.470000] wl1271_sdio mmc0:0001:2: firmware: requesting wl1271-fw.bin
+[  194.620000] wl1271_sdio mmc0:0001:2: firmware: requesting wl1271-nvs.bin
+[  195.080000] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+root@hawkboard:~# [  195.590000] wl1271: ERROR ELP wakeup timeout!
+
+I tried to scan but it doesn't work. Note that I'm using a driver
+built from compact-wireless-2010-06-20 and I'm going to try to update.
+
+Thank you for your help again,
+
+pz
 
 
+2010/7/20 Logan Gunthorpe <logang@deltatee.com>:
+> Hi Sharar,
+>
+> Thanks a lot. I'm pleased to report that our module appears to be working
+> with the firmware and NVS files you supplied.
+>
+> Logan
+>
+> Levi, Shahar wrote:
+>>>
+>>> -----Original Message-----
+>>> From: Levi, Shahar
+>>> Sent: Saturday, July 17, 2010 3:20 PM
+>>> To: Pazzo Da Legare
+>>> Cc: linux-wireless@vger.kernel.org; Logan Gunthorpe; Luciano Coelho
+>>> Subject: RE: wl1271 firmware
+>>> Hi Pazzo,
+>>> I am still pushing the legal stuff to make it happened. I hope to close
+>>> that in a few days.
+>>> Regards,
+>>> Shahar
+>>
+>> Hi Pazzo and Logan,
+>> Until the file will publish in TI web I am enclosing the file for you in
+>> the mail.
+>> I will publish link to the community as soon it will be in the TI web.
+>>
+>> Regards,
+>> Shahar
+>>
+>
