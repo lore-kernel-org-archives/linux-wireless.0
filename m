@@ -1,66 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:62259 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932709Ab0GUBMa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jul 2010 21:12:30 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 20 Jul 2010 18:12:30 -0700
-Date: Tue, 20 Jul 2010 18:12:28 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Bruno Randolf <br1@einfach.org>
-CC: Bob Copeland <me@bobcopeland.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath5k-devel] [PATCH/RFC 3/3] ath5k: trace resets
-Message-ID: <20100721011227.GB1999@tux>
-References: <1279395336-856-1-git-send-email-me@bobcopeland.com>
- <201007201420.49305.br1@einfach.org>
- <20100720145200.GB7049@hash.localnet>
- <201007211004.59372.br1@einfach.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <201007211004.59372.br1@einfach.org>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:59315 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761124Ab0GURf3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Jul 2010 13:35:29 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>
+Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Pandita Vikram <vikram.pandita@ti.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH v2 19/20] omap: zoom: keep the MMC3 wl1271 device powered off
+Date: Wed, 21 Jul 2010 20:33:53 +0300
+Message-Id: <1279733634-21974-20-git-send-email-ohad@wizery.com>
+In-Reply-To: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 20, 2010 at 06:04:59PM -0700, Bruno Randolf wrote:
-> On Tue July 20 2010 23:52:00 Bob Copeland wrote:
-> > > again, here my same concerns: printing the reasons for resets is
-> > > something which is useful on embedded boards and production setups which
-> > > can't have tracing enabled. which is why i want to object against this
-> > > change!
-> > 
-> > What Johannes said wrt performance: during tracing, only the binary
-> > representations of the data are written to the trace ring buffer, so
-> > unlike the current debug code, we aren't doing printk formatting until
-> > the trace buffer is read.  You can save the raw binary data from the
-> > trace and do formatting on another machine.
-> 
-> that's true, but try to run a kernel with tracing compiled in and NOT runtime 
-> enabled on a small embedded board (soekris net48xx for example) and you'll see 
-> the difference. without tracing you can get 22Mbps, with tracing max 15Mbps 
-> UDP thruput. that means you cannot run a kernel with tracing enabled on a 
-> production system, which also means you cannot log the reasons for a reset 
-> there any more. and most of the problems we what to trace (e.g. stuck queue) 
-> happen only after days or weeks of operation in production environments...
->  
-> > Another advantage is better granularity: if you only care about watching
-> > tx on the cab queue, you can dynamically filter based on the tracepoint
-> > arguments, something like:
-> > 
-> >   # echo "qnum == 6" > /debug/tracing/events/ath5k/ath5k_tx/filter
-> > 
-> > With the debug printks, you have to hack the driver or grep and hope
-> > the printk buffer didn't overflow and spill what you were looking for.
-> 
-> no doubt, i can see the advantages...
-> 
-> so let's go ahead with tracing, since we can always build less performant 
-> tracing kernels when we want to track down problems.
+Keep the MMC3 wl1271 WLAN device powered off until its
+SDIO function driver requests otherwise.
 
-FWIW I intend on adding tracing as well to ath9k_hw on the hw-ops.
-Hence the hw-ops.h file, etc.
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+---
+ arch/arm/mach-omap2/board-zoom-peripherals.c |    1 +
+ arch/arm/mach-omap2/hsmmc.c                  |    3 +++
+ arch/arm/mach-omap2/hsmmc.h                  |    1 +
+ arch/arm/plat-omap/include/plat/mmc.h        |    3 +++
+ drivers/mmc/host/omap_hsmmc.c                |    3 +++
+ 5 files changed, 11 insertions(+), 0 deletions(-)
 
-  Luis
+diff --git a/arch/arm/mach-omap2/board-zoom-peripherals.c b/arch/arm/mach-omap2/board-zoom-peripherals.c
+index 3230801..3ab9125 100644
+--- a/arch/arm/mach-omap2/board-zoom-peripherals.c
++++ b/arch/arm/mach-omap2/board-zoom-peripherals.c
+@@ -217,6 +217,7 @@ static struct omap2_hsmmc_info mmc[] __initdata = {
+ 		.gpio_wp	= -EINVAL,
+ 		.gpio_cd	= -EINVAL,
+ 		.ocr_mask	= MMC_VDD_165_195,
++		.dont_power_card = true,
+ 		.priv_data	= &omap_zoom_wlan_data,
+ 	},
+ 	{}      /* Terminator */
+diff --git a/arch/arm/mach-omap2/hsmmc.c b/arch/arm/mach-omap2/hsmmc.c
+index f06ddd2..24c4144 100644
+--- a/arch/arm/mach-omap2/hsmmc.c
++++ b/arch/arm/mach-omap2/hsmmc.c
+@@ -284,6 +284,9 @@ void __init omap2_hsmmc_init(struct omap2_hsmmc_info *controllers)
+ 		if (c->vcc_aux_disable_is_sleep)
+ 			mmc->slots[0].vcc_aux_disable_is_sleep = 1;
+ 
++		if (c->dont_power_card)
++			mmc->slots[0].dont_power_card = 1;
++
+ 		mmc->slots[0].priv_data = c->priv_data;
+ 
+ 		/* NOTE:  MMC slots should have a Vcc regulator set up.
+diff --git a/arch/arm/mach-omap2/hsmmc.h b/arch/arm/mach-omap2/hsmmc.h
+index 434a3ed..e200786 100644
+--- a/arch/arm/mach-omap2/hsmmc.h
++++ b/arch/arm/mach-omap2/hsmmc.h
+@@ -23,6 +23,7 @@ struct omap2_hsmmc_info {
+ 	int	ocr_mask;	/* temporary HACK */
+ 	/* Remux (pad configuation) when powering on/off */
+ 	void (*remux)(struct device *dev, int slot, int power_on);
++	bool	dont_power_card;/* keep card power off at boot (default is n)*/
+ 	void	*priv_data;	/* private data to SDIO function driver */
+ };
+ 
+diff --git a/arch/arm/plat-omap/include/plat/mmc.h b/arch/arm/plat-omap/include/plat/mmc.h
+index 9db1617..d042494 100644
+--- a/arch/arm/plat-omap/include/plat/mmc.h
++++ b/arch/arm/plat-omap/include/plat/mmc.h
+@@ -140,6 +140,9 @@ struct omap_mmc_platform_data {
+ 
+ 		unsigned int ban_openended:1;
+ 
++		/* keep this card powered off at boot (default is n) */
++		unsigned int dont_power_card:1;
++
+ 		/* card private data that should be used by function driver */
+ 		void *priv_data;
+ 	} slots[OMAP_MMC_MAX_SLOTS];
+diff --git a/drivers/mmc/host/omap_hsmmc.c b/drivers/mmc/host/omap_hsmmc.c
+index 4ac548e..4fb6634 100644
+--- a/drivers/mmc/host/omap_hsmmc.c
++++ b/drivers/mmc/host/omap_hsmmc.c
+@@ -2157,6 +2157,9 @@ static int __init omap_hsmmc_probe(struct platform_device *pdev)
+ 	if (mmc_slot(host).nonremovable)
+ 		mmc->caps |= MMC_CAP_NONREMOVABLE;
+ 
++	if (mmc_slot(host).dont_power_card)
++		mmc->caps |= MMC_CAP_DONT_POWER_CARD;
++
+ 	mmc_set_embedded_data(mmc, mmc_slot(host).priv_data);
+ 
+ 	omap_hsmmc_conf_bus_power(host);
+-- 
+1.7.0.4
+
