@@ -1,101 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:62779 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751195Ab0G0Xdw (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35470 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753034Ab0GURaM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 19:33:52 -0400
-Received: by pzk26 with SMTP id 26so1588399pzk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 16:33:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTi=Wy1r2C1xL289QQX10aVZaYfF7A1K8sd93ZXOd@mail.gmail.com>
-References: <AANLkTimdDhHudW6_7Hwcf6UCumY_EgqGd7CLtmSgOzEz@mail.gmail.com>
-	<AANLkTinfMiS=+dqi=azF2exJbkrSLYT9nN0aor7gff-Q@mail.gmail.com>
-	<AANLkTi=Wy1r2C1xL289QQX10aVZaYfF7A1K8sd93ZXOd@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 27 Jul 2010 16:33:31 -0700
-Message-ID: <AANLkTik2njXen5go8v2d8UPejC7THJiDJAvVunS7T5WU@mail.gmail.com>
-Subject: Re: regulatory hiccup
-To: Andrew Lutomirski <luto@mit.edu>
+	Wed, 21 Jul 2010 13:30:12 -0400
+Date: Wed, 21 Jul 2010 13:19:26 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Pauli Nieminen <suokkos@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [PATCH] rtl8180: improve signal reporting for rtl8185 hardware
+Message-ID: <20100721171926.GE2355@tuxdriver.com>
+References: <AANLkTiknLRzt2bdhcin5WRzwPXSWqEs8dIUe5imlN0I9@mail.gmail.com>
+ <1279572443-14361-1-git-send-email-linville@tuxdriver.com>
+ <AANLkTino_4FKtMWZU7_lKGzPUXNOtfrmlw_rmmr836eA@mail.gmail.com>
+ <20100721133320.GB2355@tuxdriver.com>
+ <AANLkTint5uT6PQ8pmEIVSoVYOSCZE5k-TGB1knwHtupw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <AANLkTint5uT6PQ8pmEIVSoVYOSCZE5k-TGB1knwHtupw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gRnJpLCBKdWwgMjMsIDIwMTAgYXQgMTowMyBQTSwgQW5kcmV3IEx1dG9taXJza2kgPGx1dG9A
-bWl0LmVkdT4gd3JvdGU6Cj4gT24gRnJpLCBKdWwgMjMsIDIwMTAgYXQgMzozNSBQTSwgQW5kcmV3
-IEx1dG9taXJza2kgPGx1dG9AbWl0LmVkdT4gd3JvdGU6Cj4+IE9uIEZyaSwgSnVsIDIzLCAyMDEw
-IGF0IDM6MzAgUE0sIEFuZHJldyBMdXRvbWlyc2tpIDxsdXRvQG1pdC5lZHU+IHdyb3RlOgo+Pj4K
-Pj4+IFRoZW4sIGFmdGVyIGZpZGRsaW5nIHdpdGggYW4gQVAgZm9yIGEgYml0LCBJIGdvdDoKPj4+
-Cj4+PiBbMTE3NDcuMjY0MjIxXSBjZmc4MDIxMTogQ2FsbGluZyBDUkRBIGZvciBjb3VudHJ5OiBV
-Uwo+Pj4gWzExNzQ3LjI4MjY2NF0gY2ZnODAyMTE6IEN1cnJlbnQgcmVndWxhdG9yeSBkb21haW4g
-dXBkYXRlZCBieSBBUCB0bzogVVMKPj4+IFsxMTc0Ny4yODI2NzJdIMKgIMKgIChzdGFydF9mcmVx
-IC0gZW5kX2ZyZXEgQCBiYW5kd2lkdGgpLAo+Pj4gKG1heF9hbnRlbm5hX2dhaW4sIG1heF9laXJw
-KQo+Pj4gWzExNzQ3LjI4MjY4MF0gwqAgwqAgKDUxNzAwMDAgS0h6IC0gNTI1MDAwMCBLSHogQCA0
-MDAwMCBLSHopLCAoMzAwIG1CaSwgMTYwMCBtQm0pCj4+PiBbMTE3NDcuMjgyNjg4XSDCoCDCoCAo
-NTI1MDAwMCBLSHogLSA1MzMwMDAwIEtIeiBAIDQwMDAwIEtIeiksICgzMDAgbUJpLCAxNjAwIG1C
-bSkKPj4+Cj4+Cj4+IEl0J3Mgd29yc2UgdGhhbiB0aGF0LiDCoEkgcmVjb25uZWN0ZWQgdG8gdGhl
-IEFQIChpdCBhcHBlYXJlZCB0byB3b3JrCj4+IGZvciBhIGZldyBzZWNvbmRzKSBhbmQgSSBzYXc6
-Cj4+Cj4+IFdpcGh5IHBoeTAKPj4gWy4uLl0KPj4gwqAgwqAgwqAgwqBCYW5kIDI6Cj4+IMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgQ2FwYWJpbGl0aWVzOiAweDg3Mgo+PiDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoEhUMjAvSFQ0MAo+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoFN0YXRpYyBTTSBQb3dlciBTYXZlCj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgUlggR3JlZW5maWVsZAo+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoFJYIEhUMjAgU0dJCj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-UlggSFQ0MCBTR0kKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBObyBSWCBT
-VEJDCj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgTWF4IEFNU0RVIGxlbmd0
-aDogMzgzOSBieXRlcwo+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoE5vIERT
-U1MvQ0NLIEhUNDAKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBNYXhpbXVtIFJYIEFNUERVIGxl
-bmd0aCA2NTUzNSBieXRlcyAoZXhwb25lbnQ6IDB4MDAzKQo+PiDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoE1pbmltdW0gUlggQU1QRFUgdGltZSBzcGFjaW5nOiA0IHVzZWMgKDB4MDUpCj4+IMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgSFQgVFgvUlggTUNTIHJhdGUgaW5kZXhlcyBzdXBwb3J0ZWQ6IDAt
-MjMsIDMyCj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgRnJlcXVlbmNpZXM6Cj4+IMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1MTgwIE1IeiBbMzZdICgxNS4wIGRCbSkgKHBh
-c3NpdmUgc2Nhbm5pbmcsIG5vIElCU1MpCj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgKiA1MjAwIE1IeiBbNDBdICgxNS4wIGRCbSkgKHBhc3NpdmUgc2Nhbm5pbmcsIG5vIElC
-U1MpCj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1MjIwIE1IeiBbNDRd
-ICgxNS4wIGRCbSkgKHBhc3NpdmUgc2Nhbm5pbmcsIG5vIElCU1MpCj4+IMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1MjQwIE1IeiBbNDhdICgxNS4wIGRCbSkgKHBhc3NpdmUg
-c2Nhbm5pbmcsIG5vIElCU1MpCj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-KiA1MjYwIE1IeiBbNTJdICgxNS4wIGRCbSkgKHBhc3NpdmUgc2Nhbm5pbmcsIG5vIElCU1MsIHJh
-ZGFyIGRldGVjdGlvbikKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDUy
-ODAgTUh6IFs1Nl0gKDE1LjAgZEJtKSAocGFzc2l2ZSBzY2FubmluZywgbm8gSUJTUywgcmFkYXIg
-ZGV0ZWN0aW9uKQo+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCogNTMwMCBN
-SHogWzYwXSAoMTUuMCBkQm0pIChwYXNzaXZlIHNjYW5uaW5nLCBubyBJQlNTLCByYWRhciBkZXRl
-Y3Rpb24pCj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1MzIwIE1IeiBb
-NjRdICgxNS4wIGRCbSkgKHBhc3NpdmUgc2Nhbm5pbmcsIG5vIElCU1MsIHJhZGFyIGRldGVjdGlv
-bikKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU1MDAgTUh6IFsxMDBd
-IChkaXNhYmxlZCkKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU1MjAg
-TUh6IFsxMDRdIChkaXNhYmxlZCkKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAqIDU1NDAgTUh6IFsxMDhdIChkaXNhYmxlZCkKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAqIDU1NjAgTUh6IFsxMTJdIChkaXNhYmxlZCkKPj4gwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU1ODAgTUh6IFsxMTZdIChkaXNhYmxlZCkKPj4gwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU2MDAgTUh6IFsxMjBdIChkaXNhYmxlZCkK
-Pj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU2MjAgTUh6IFsxMjRdIChk
-aXNhYmxlZCkKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU2NDAgTUh6
-IFsxMjhdIChkaXNhYmxlZCkKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAq
-IDU2NjAgTUh6IFsxMzJdIChkaXNhYmxlZCkKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAqIDU2ODAgTUh6IFsxMzZdIChkaXNhYmxlZCkKPj4gwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAqIDU3MDAgTUh6IFsxNDBdIChkaXNhYmxlZCkKPj4gwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU3NDUgTUh6IFsxNDldIChkaXNhYmxlZCkKPj4g
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU3NjUgTUh6IFsxNTNdIChkaXNh
-YmxlZCkKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU3ODUgTUh6IFsx
-NTddIChkaXNhYmxlZCkKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU4
-MDUgTUh6IFsxNjFdIChkaXNhYmxlZCkKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAqIDU4MjUgTUh6IFsxNjVdIChkaXNhYmxlZCkKPj4KPj4gV2hpY2ggaXMgYWJzdXJkLCBi
-ZWNhdXNlOgo+Pgo+PiBDb25uZWN0ZWQgdG8gMDA6MDI6NmY6NmU6ZDc6NmMgKG9uIHdsYW4wKQo+
-PiDCoCDCoCDCoCDCoFNTSUQ6IEZGVFQ1Cj4+IMKgIMKgIMKgIMKgZnJlcTogNTc4NSDCoCDCoCDC
-oCDCoFshISEhISEhISEhIV0KPj4gwqAgwqAgwqAgwqBSWDogNzIwNTggYnl0ZXMgKDMxMCBwYWNr
-ZXRzKQo+PiDCoCDCoCDCoCDCoFRYOiAyNTY4IGJ5dGVzICgyMCBwYWNrZXRzKQo+PiDCoCDCoCDC
-oCDCoHNpZ25hbDogLTMzIGRCbQo+PiDCoCDCoCDCoCDCoHR4IGJpdHJhdGU6IDYuMCBNQml0L3MK
-Pj4KPj4gVGhlIGNvbm5lY3Rpb24gZGllZCBhZnRlciBhIGxpdHRsZSB3aGlsZSwgcHJlc3VtYWJs
-eSBiZWNhdXNlIHRoZSBBUAo+PiB3YXMgb3V0c2lkZSBvZiBpdHMgb3duIGFsbG93ZWQgYmFuZC4K
-Pj4KPgo+IEhlcmUncyB0aGUgb2ZmZW5kaW5nIGNvdW50cnkgSUU6Cj4KPiBDb3VudHJ5IEluZm9y
-bWF0aW9uOiBDb3VudHJ5IENvZGU6IFVTLCBJbmRvb3IgRW52aXJvbm1lbnQKPiBUYWcgTnVtYmVy
-OiA3IChDb3VudHJ5IEluZm9ybWF0aW9uKQo+IFRhZyBsZW5ndGg6IDYKPiBUYWcgaW50ZXJwcmV0
-YXRpb246IENvdW50cnkgQ29kZTogVVMsIEluZG9vciBFbnZpcm9ubWVudAo+IMKgU3RhcnQgQ2hh
-bm5lbDogMzYsIENoYW5uZWxzOiAxMywgTWF4IFRYIFBvd2VyOiAxNiBkQm0KPgo+IEFGQUlDVCBu
-ZXQvd2lyZWxlc3MvcmVnLmMgaWdub3JlcyB0aGUgbGFzdCBiaXQsIGFuZCB0aGUgb3RoZXIgQVBz
-IHRoYXQKPiB3b3JrIGNvcnJlY3RseSBoZXJlIGRvbid0IHNlbmQgY291bnRyeSBJRXMuCgpDYW4g
-eW91IHByb3ZpZGUgdGhlIG91dHB1dCBvZiBpdyBkZXYgd2xhbjAgc2NhbiBmcm9tIGEgZnJlc2gg
-Z2l0CnZlcnNpb24gb2YgaXc/IFRoYXQgd2lsbCBhY3R1YWxseSB0ZWxsIG1lIG1vcmUgdGhhbiB5
-b3VyIGxpc3RpbmcuCgogIEx1aXMK
+On Wed, Jul 21, 2010 at 08:07:56PM +0300, Pauli Nieminen wrote:
+> On Wed, Jul 21, 2010 at 4:33 PM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+> > On Wed, Jul 21, 2010 at 08:08:41AM +0300, Pauli Nieminen wrote:
+> >> On Mon, Jul 19, 2010 at 11:47 PM, John W. Linville
+> >> <linville@tuxdriver.com> wrote:
+> >> > The existing code seemed to be somewhat based on the datasheet, but
+> >> > varied substantially from the vendor-provided driver.  This mirrors the
+> >> > handling of the rtl8185 case from that driver, but still neglects the
+> >> > specifics for the rtl8180 hardware.  Those details are a bit muddled...
+> >> >
+> >> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> >> > ---
+> >> >  drivers/net/wireless/rtl818x/rtl8180_dev.c |   11 ++++++++---
+> >> >  1 files changed, 8 insertions(+), 3 deletions(-)
+> >
+> >> I tested this version of patch. Patch didn't apply cleanly for some
+> >> reason even tough when I mnauly typed it diff looks same.
+> >
+> > Please try the v2 version of the patch.  Some "back of the envelope"
+> > math suggests that the v2 version of the patch will give numbers more
+> > to your liking.
+> >
+> > John
+> > --
+> > John W. Linville                Someday the world will need a hero, and you
+> > linville@tuxdriver.com                  might be all we have.  Be ready.
+> >
+> 
+> But version 2 doesn't change the fact that driver is going to report
+> same signal strength even tough I know that only one wifi should have
+> 100 % strength and others less than 50 %. There is only one router in
+> same room with me and all others routers are a lot more father away.
+> So driver is either reading wrong bits from hardware or my hardware is
+> broken.
+ 
+Did you try the patch?  I suspect not.
+
+I can't really decipher what problem you are reporting here with "100 %
+strength and others less than 50 %".  In any case, if you have RTL8185
+hardware then this patch changes the signal calculation to match what
+the Realtek-provided vendor driver does (which doesn't seem to match
+their datasheet, FWIW).  If you have a better source of information
+then I am happy to receive it.
+
+If you have RTL8180 (i.e. not RTL8185) hardware then neither version of
+the patch is likely to help you much (beyond avoiding the warning you
+originally reported).  I hope to improve that as well in the future.
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
