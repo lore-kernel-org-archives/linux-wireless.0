@@ -1,80 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:38944 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753717Ab0G2Nxu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jul 2010 09:53:50 -0400
-Subject: Re: [PATCH] iwlwifi: fix scan abort
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"stable@kernel.org" <stable@kernel.org>
-In-Reply-To: <20100729113741.152e986a@dhcp-lab-109.englab.brq.redhat.com>
-References: <20100729113741.152e986a@dhcp-lab-109.englab.brq.redhat.com>
-Content-Type: text/plain
-Date: Thu, 29 Jul 2010 06:53:14 -0700
-Message-Id: <1280411594.24402.1.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from mailhub-lb1.unibe.ch ([130.92.0.82]:52524 "EHLO
+	mailhub-lb1.unibe.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755417Ab0GVQbH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jul 2010 12:31:07 -0400
+Received: from localhost (scanhub-lb1.unibe.ch [130.92.5.65])
+	by mailhub-lb1.unibe.ch (Postfix) with ESMTP id 18D4E11C187
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Jul 2010 18:31:04 +0200 (CEST)
+Received: from mailhub-lb1.unibe.ch ([130.92.0.82])
+	by localhost (scanhub-lb1.unibe.ch [130.92.5.65]) (amavisd-new, port 10024)
+	with LMTP id xDvZMrG3ssSr for <linux-wireless@vger.kernel.org>;
+	Thu, 22 Jul 2010 18:31:01 +0200 (CEST)
+Received: from mail.iam.unibe.ch (asterix.unibe.ch [130.92.64.4])
+	by mailhub-lb1.unibe.ch (Postfix) with ESMTP id DC2D511C0F0
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Jul 2010 18:31:01 +0200 (CEST)
+Message-ID: <4C487243.4070908@iam.unibe.ch>
+Date: Thu, 22 Jul 2010 18:30:59 +0200
+From: Zhongliang Zhao <zhao@iam.unibe.ch>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+CC: Staub Thomas <staub@iam.unibe.ch>
+Subject: How to Get Channel within iw-tool
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-07-29 at 02:37 -0700, Stanislaw Gruszka wrote:
-> Fix possible double priv->mutex lock introduced by commit
-> a69b03e941abae00380fc6bc1877fb797a1b31e6
-> "iwlwifi: cancel scan watchdog in iwl_bg_abort_scan" .
-> We can not call cancel_delayed_work_sync(&priv->scan_check) with 
-> priv->mutex locked because workqueue function iwl_bg_scan_check()
-> take that lock internally.
-> 
-> We do not need to synchronize when canceling priv->scan_check work.
-> We can avoid races (sending double abort command or send no
-> command at all) using STATUS_SCAN_ABORT bit. Moreover
-> current iwl_bg_scan_check() code seems to be broken, as
-> we should not send abort commands when currently aborting.
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> CC: stable@kernel.org
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-> index 2a7c399..b0c6b04 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-> @@ -429,11 +429,10 @@ void iwl_bg_scan_check(struct work_struct *data)
->  		return;
->  
->  	mutex_lock(&priv->mutex);
-> -	if (test_bit(STATUS_SCANNING, &priv->status) ||
-> -	    test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
-> -		IWL_DEBUG_SCAN(priv, "Scan completion watchdog resetting "
-> -			"adapter (%dms)\n",
-> -			jiffies_to_msecs(IWL_SCAN_CHECK_WATCHDOG));
-> +	if (test_bit(STATUS_SCANNING, &priv->status) &&
-> +	    !test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
-> +		IWL_DEBUG_SCAN(priv, "Scan completion watchdog (%dms)\n",
-> +			       jiffies_to_msecs(IWL_SCAN_CHECK_WATCHDOG));
->  
->  		if (!test_bit(STATUS_EXIT_PENDING, &priv->status))
->  			iwl_send_scan_abort(priv);
-> @@ -498,12 +497,11 @@ void iwl_bg_abort_scan(struct work_struct *work)
->  	    !test_bit(STATUS_GEO_CONFIGURED, &priv->status))
->  		return;
->  
-> -	mutex_lock(&priv->mutex);
-> -
-> -	cancel_delayed_work_sync(&priv->scan_check);
-> -	set_bit(STATUS_SCAN_ABORTING, &priv->status);
-> -	iwl_send_scan_abort(priv);
-> +	cancel_delayed_work(&priv->scan_check);
->  
-> +	mutex_lock(&priv->mutex);
-> +	if (test_bit(STATUS_SCAN_ABORTING, &priv->status))
-> +		iwl_send_scan_abort(priv);
->  	mutex_unlock(&priv->mutex);
->  }
->  EXPORT_SYMBOL(iwl_bg_abort_scan);
+Hi all,
 
-looks good and thanks
+We have a small system with iw-tool installed, and we wrote a program to 
+set the channel of wireless interface. However we're currently lost in 
+the iw web page about  how to check the currently used channel of 
+certain interface, namely the "get channel" functionality.
 
-Wey
+Does anyone have experience on this or please give us a hint on how to 
+see which channel the wireless interface is currently using within iw-tool?
+
+Many thanks in advance.
+
+Zhongliang & Thomas
+
+-- 
+Zhongliang Zhao, Research Assistant
+Institute of Computer Science and Applied Mathematics
+University of Bern, Neubrueckstrasse 10, CH-3012 Bern, Switzerland
+Email: zhao@iam.unibe.ch
+Phone: +41 (0)31 511 2639
+Fax: +41 (0)31 631 3261
 
