@@ -1,50 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:46009 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751417Ab0G2RpN (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51026 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753618Ab0GVJ4q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jul 2010 13:45:13 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Michael Buesch <mb@bu3sch.de>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] b43legacy: update hw/fw version info in wiphy struct
-Date: Thu, 29 Jul 2010 13:34:50 -0400
-Message-Id: <1280424890-18995-1-git-send-email-linville@tuxdriver.com>
+	Thu, 22 Jul 2010 05:56:46 -0400
+Subject: Re: [PATCH 2/2] ath9k: Fix stop in tx date traffic after scan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1279790703-11521-1-git-send-email-vasanth@atheros.com>
+References: <1279790703-11521-1-git-send-email-vasanth@atheros.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 22 Jul 2010 11:56:41 +0200
+Message-ID: <1279792601.12439.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes the information available through ethtool...
+On Thu, 2010-07-22 at 02:25 -0700, Vasanthakumar Thiagarajan wrote:
+> When moving off channel during background scanning, driver
+> can not clear IEEE80211_QUEUE_STOP_REASON_DRIVER which was
+> set earliar due to a shortage in tx buffer, this will lead
+> to a situation where no data frames will be passed down to
+> driver when the hw is put back into operating channel. This
+> patch make sure no txq is stopped after moving to operating
+> channel after scan. This issue is seen only when NM is used
+> and exposed by the following commit
+> 
+> Author: Felix Fietkau <nbd@openwrt.org>
+> Date:   Tue Jun 1 21:33:13 2010 +0200
+> ath9k: fix queue stop/start based on the number of pending frames
+> 
+> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+> ---
+> 
+> This is not a clean fix for this issue, but best available
+> from driver. For a decent fix from driver, the following
+> changes in mac80211 may be required
+> 
+> 1. Make ieee80211_wake_queue() callable when moving to off channel
+> also just to clear IEEE80211_QUEUE_STOP_REASON_DRIVER or
+> 
+> 2. For drivers which does not support hw scan, add a way to
+> tell them if the hw is being configured into operating channel
+> (driver can detect this, but this would be a hack in driver)
+> so that the driver can wake up the stopped queues after the
+> hw is configured back to operating channel.
+> 
+> Johannes, if the above mac80211 changes make any sense, I'll send
+> a new set of patches to fix this problem.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/b43legacy/main.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+Really, that all doesn't make a whole lot of sense to me.
 
-diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
-index 1713f5f..0b8a3b5 100644
---- a/drivers/net/wireless/b43legacy/main.c
-+++ b/drivers/net/wireless/b43legacy/main.c
-@@ -1623,6 +1623,7 @@ error:
- 
- static int b43legacy_upload_microcode(struct b43legacy_wldev *dev)
- {
-+	struct wiphy *wiphy = dev->wl->hw->wiphy;
- 	const size_t hdr_len = sizeof(struct b43legacy_fw_header);
- 	const __be32 *data;
- 	unsigned int i;
-@@ -1732,6 +1733,10 @@ static int b43legacy_upload_microcode(struct b43legacy_wldev *dev)
- 	dev->fw.rev = fwrev;
- 	dev->fw.patch = fwpatch;
- 
-+	snprintf(wiphy->fw_version, sizeof(wiphy->fw_version), "%u.%u",
-+			dev->fw.rev, dev->fw.patch);
-+	wiphy->hw_version = dev->dev->bus->chip_id;
-+
- 	return 0;
- 
- error:
--- 
-1.7.1.1
+Just go and implement flush() and all these issues will go away and you
+will stop thinking that you need to touch queues from channel switching.
+They have nothing to do with each other.
+
+johannes
 
