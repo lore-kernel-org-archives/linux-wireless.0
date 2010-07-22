@@ -1,65 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f66.google.com ([74.125.83.66]:51946 "EHLO
-	mail-gw0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751170Ab0G1SUs convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:43211 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755134Ab0GVKpU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jul 2010 14:20:48 -0400
-Received: by gwb11 with SMTP id 11so326399gwb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Jul 2010 11:20:47 -0700 (PDT)
+	Thu, 22 Jul 2010 06:45:20 -0400
+Date: Thu, 22 Jul 2010 12:44:19 +0200
+From: Dan Carpenter <error27@gmail.com>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Bruno Randolf <br1@einfach.org>,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	kernel-janitors@vger.kernel.org
+Subject: Re: [patch -next] ath5k: snprintf() returns largish values
+Message-ID: <20100722104419.GZ17585@bicker>
+References: <20100722085202.GV17585@bicker> <4C4807AD.5090302@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4C500460.5000505@iam.unibe.ch>
-References: <4C4D5560.2040201@iam.unibe.ch> <AANLkTinfWZaiMsmPTmm5qrBRcqMAvQpv1Xq86fxo+S3Z@mail.gmail.com>
-	<4C500460.5000505@iam.unibe.ch>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 28 Jul 2010 10:30:21 -0700
-Message-ID: <AANLkTindXiF6pjzSgz7Gp_w7qy1EeOqNgq8safE00FvG@mail.gmail.com>
-Subject: Re: iw dev wlan0 link - "Not connected"
-To: Zhongliang Zhao <zhao@iam.unibe.ch>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4C4807AD.5090302@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 28, 2010 at 3:20 AM, Zhongliang Zhao <zhao@iam.unibe.ch> wrote:
-> On 07/26/2010 07:23 PM, Luis R. Rodriguez wrote:
->>
->> On Mon, Jul 26, 2010 at 2:29 AM, Zhongliang Zhao<zhao@iam.unibe.ch>
->>  wrote:
->>
->>>
->>> Dear all,
->>>
->>> When I use "iw dev wlan0 link" to get information on wlan0 (basically to
->>> check the channel used on wlan0),
->>> it says: " Not connected "
->>>
->>> Can someone tell me how to fix this?
->>>
->>
->> Refer to:
->>
->> http://wireless.kernel.org/en/users/Documentation/iw#Getting_link_status
->>
->> And then:
->>
->>
->> http://wireless.kernel.org/en/users/Documentation/iw#Establishing_a_basic_connection
->>
->> What you really want to use is:
->>
->> http://wireless.kernel.org/en/users/Documentation/wpa_supplicant
->>
->>   Luis
->>
->
->
-> Luis, thanks for the reply. But actually we're working on mesh nodes with
-> the iw-tool installed, so maybe we should use the "mesh" interface mode. In
-> this case, how to solve the problem?
+On Thu, Jul 22, 2010 at 10:56:13AM +0200, Jiri Slaby wrote:
+> On 07/22/2010 10:52 AM, Dan Carpenter wrote:
+> > snprintf() returns the number of characters that would have been written
+> > (not counting the NUL character).  So we can't use it as the limiter to 
+> > simple_read_from_buffer() without capping it first at sizeof(buf).
+> 
+> Doesn't scnprintf make more sense here?
+> 
 
-http://wireless.kernel.org/en/users/Documentation/iw#Creating_and_inspecting_Mesh_Point_interfaces_with_iw
+Not really...  It's nice to pass a negative number as the buffer size to
+snprintf() instead of having to make that a special case.
 
-Note for ath9k you currently have to issue a scan to kick the card to
-beacon, its a bug, not dealt with yet.
+regards,
+dan carpenter
 
-  Luis
+> thanks,
+> -- 
+> js
