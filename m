@@ -1,71 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:33190 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756231Ab0GBT5w convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:16926 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751572Ab0GVQeo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jul 2010 15:57:52 -0400
-Received: from wpaz13.hot.corp.google.com (wpaz13.hot.corp.google.com [172.24.198.77])
-	by smtp-out.google.com with ESMTP id o62Jvpog020512
-	for <linux-wireless@vger.kernel.org>; Fri, 2 Jul 2010 12:57:52 -0700
-Received: from iwn8 (iwn8.prod.google.com [10.241.68.72])
-	by wpaz13.hot.corp.google.com with ESMTP id o62JvoWY020822
-	for <linux-wireless@vger.kernel.org>; Fri, 2 Jul 2010 12:57:51 -0700
-Received: by iwn8 with SMTP id 8so4609491iwn.11
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Jul 2010 12:57:50 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1278094401.15412.27.camel@jlt3.sipsolutions.net>
-References: <AANLkTilV1t1737ciSPyyETeBEcN_QXsYxgEwpZIIucR2@mail.gmail.com>
-	<1278091743.15412.17.camel@jlt3.sipsolutions.net>
-	<AANLkTikfegnc1gAwIUiZKaMeDoUYOFqK8eSc6_3wUggm@mail.gmail.com>
-	<1278094401.15412.27.camel@jlt3.sipsolutions.net>
-Date: Fri, 2 Jul 2010 12:57:50 -0700
-Message-ID: <AANLkTikWA9YeoTgYWrpE5J7RW3BJGu2LPqP-iBIdAUHs@mail.gmail.com>
-Subject: Re: [PATCH 2.6.34] mac80211: Fix auth retries if AP sends temporary
-	deauth
-From: Paul Stewart <pstew@google.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>,
-	Jiri Benc <jbenc@suse.cz>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 22 Jul 2010 12:34:44 -0400
+Subject: Re: wl1271 firmware
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Pazzo Da Legare <pazzodalegare@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Levi, Shahar" <shahar_levi@ti.com>,
+	Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <AANLkTilZhvGg2SUk5btpQQA3qj2k4rob4rTychDu7gXM@mail.gmail.com>
+References: <4C37BCA0.5090607@deltatee.com>
+	 <AC090B9732AB2B4DB7FF476E907FE660010685F34E@dnce02.ent.ti.com>
+	 <AANLkTilHNKeRZX5CMplyriTo2hTPBrz_z1_Zpwoy3SZx@mail.gmail.com>
+	 <AC090B9732AB2B4DB7FF476E907FE66001069662F2@dnce02.ent.ti.com>
+	 <AC090B9732AB2B4DB7FF476E907FE6600106966BA5@dnce02.ent.ti.com>
+	 <4C45ED36.2090604@deltatee.com>
+	 <AANLkTinjvF9UeV7d2aBUy6HfexuAeL_cdsVPGVxSRVMp@mail.gmail.com>
+	 <AANLkTinnYeJPV-xxg7DdPXnWW_kD7X1TVcd9HrhupJWS@mail.gmail.com>
+	 <1279780848.2322.31.camel@powerslave>
+	 <AANLkTilZhvGg2SUk5btpQQA3qj2k4rob4rTychDu7gXM@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 22 Jul 2010 19:34:25 +0300
+Message-ID: <1279816465.1630.9.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sure enough, your patch works well.  The end effect is correct, in
-that despite the reception of the DEAUTH, we are successfully able to
-process a successful auth response on the second try.  Do I take it
-that this change will make it upstream since this is the case?  Have a
-happy wedding, and no git merge until after the ceremony! :-)
+On Thu, 2010-07-22 at 17:41 +0200, ext Pazzo Da Legare wrote:
+> I enabled the DEBUG_LEVEL as you advice me but I have no additional
+> information....
+> 
+> [  186.230000] wl1271_sdio mmc0:0001:2: firmware: requesting
+> wl1271-fw.bin
+> [  186.420000] wl1271_sdio mmc0:0001:2: firmware: requesting
+> wl1271-nvs.bin
+> [  186.860000] wl1271: firmware booted (Rev 6.1.0.0.310)
+> [  186.880000] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+> [  187.380000] wl1271: ERROR ELP wakeup timeout!
+> [  187.880000] wl1271: ERROR ELP wakeup timeout!
 
---
-Paul
+There's something wrong.  There should have been a lot more traces with
+the DEBUG_LEVEL I proposed.  Please try again.
 
-On Fri, Jul 2, 2010 at 11:13 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2010-07-02 at 11:09 -0700, Paul Stewart wrote:
-> Can you try the patch below instead of yours? I'll explain it a bit more
-> later, but my church wedding ceremony is tomorrow :)
->
-> johannes
->
-> --- wireless-testing.orig/net/wireless/mlme.c   2010-07-02 20:12:19.000000000 +0200
-> +++ wireless-testing/net/wireless/mlme.c        2010-07-02 20:12:43.000000000 +0200
-> @@ -44,10 +44,10 @@ void cfg80211_send_rx_auth(struct net_de
->                }
->        }
->
-> -       WARN_ON(!done);
-> -
-> -       nl80211_send_rx_auth(rdev, dev, buf, len, GFP_KERNEL);
-> -       cfg80211_sme_rx_auth(dev, buf, len);
-> +       if (done) {
-> +               nl80211_send_rx_auth(rdev, dev, buf, len, GFP_KERNEL);
-> +               cfg80211_sme_rx_auth(dev, buf, len);
-> +       }
->
->        wdev_unlock(wdev);
->  }
->
->
->
+
+-- 
+Cheers,
+Luca.
+
