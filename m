@@ -1,132 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:59315 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756699Ab0GURes (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jul 2010 13:34:48 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>
-Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v2 07/20] wireless: wl1271: support return value for the set power func
-Date: Wed, 21 Jul 2010 20:33:41 +0300
-Message-Id: <1279733634-21974-8-git-send-email-ohad@wizery.com>
-In-Reply-To: <1279733634-21974-1-git-send-email-ohad@wizery.com>
-References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+Received: from mail.atheros.com ([12.36.123.2]:50721 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751926Ab0GVJYQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jul 2010 05:24:16 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Jul 2010 02:24:16 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/2] ath9k: Fix inconsistency between txq->stopped and the actual queue state
+Date: Thu, 22 Jul 2010 02:24:11 -0700
+Message-ID: <1279790651-11486-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make it possible for the set power method to indicate a
-success/failure return value. This is needed to support
-more complex power on/off operations such as bringing up
-(and down) sdio functions.
+Sometimes txq state(txq->stopped) can be marked as started but the actual
+queue may not be started (in ATH_WIPHY_SCAN state, for example). Fix this.
 
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
 ---
- drivers/net/wireless/wl12xx/wl1271.h      |    2 +-
- drivers/net/wireless/wl12xx/wl1271_io.h   |    8 +++++---
- drivers/net/wireless/wl12xx/wl1271_main.c |    4 +++-
- drivers/net/wireless/wl12xx/wl1271_sdio.c |    4 +++-
- drivers/net/wireless/wl12xx/wl1271_spi.c  |    4 +++-
- 5 files changed, 15 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h   |    2 +-
+ drivers/net/wireless/ath/ath9k/virtual.c |    6 +++++-
+ drivers/net/wireless/ath/ath9k/xmit.c    |    4 ++--
+ 3 files changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
-index 6f1b6b5..a21cdb2 100644
---- a/drivers/net/wireless/wl12xx/wl1271.h
-+++ b/drivers/net/wireless/wl12xx/wl1271.h
-@@ -340,7 +340,7 @@ struct wl1271_if_operations {
- 		     bool fixed);
- 	void (*reset)(struct wl1271 *wl);
- 	void (*init)(struct wl1271 *wl);
--	void (*power)(struct wl1271 *wl, bool enable);
-+	int (*power)(struct wl1271 *wl, bool enable);
- 	struct device* (*dev)(struct wl1271 *wl);
- 	void (*enable_irq)(struct wl1271 *wl);
- 	void (*disable_irq)(struct wl1271 *wl);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_io.h b/drivers/net/wireless/wl12xx/wl1271_io.h
-index bc806c7..4a5b92c 100644
---- a/drivers/net/wireless/wl12xx/wl1271_io.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_io.h
-@@ -144,10 +144,12 @@ static inline void wl1271_power_off(struct wl1271 *wl)
- 	clear_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
- }
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 6e486a5..998ae2c 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -687,7 +687,7 @@ bool ath9k_all_wiphys_idle(struct ath_softc *sc);
+ void ath9k_set_wiphy_idle(struct ath_wiphy *aphy, bool idle);
  
--static inline void wl1271_power_on(struct wl1271 *wl)
-+static inline int wl1271_power_on(struct wl1271 *wl)
+ void ath_mac80211_stop_queue(struct ath_softc *sc, u16 skb_queue);
+-void ath_mac80211_start_queue(struct ath_softc *sc, u16 skb_queue);
++bool ath_mac80211_start_queue(struct ath_softc *sc, u16 skb_queue);
+ 
+ void ath_start_rfkill_poll(struct ath_softc *sc);
+ extern void ath9k_rfkill_poll_state(struct ieee80211_hw *hw);
+diff --git a/drivers/net/wireless/ath/ath9k/virtual.c b/drivers/net/wireless/ath/ath9k/virtual.c
+index 89423ca..fd20241 100644
+--- a/drivers/net/wireless/ath/ath9k/virtual.c
++++ b/drivers/net/wireless/ath/ath9k/virtual.c
+@@ -695,16 +695,18 @@ void ath9k_set_wiphy_idle(struct ath_wiphy *aphy, bool idle)
+ 		  idle ? "idle" : "not-idle");
+ }
+ /* Only bother starting a queue on an active virtual wiphy */
+-void ath_mac80211_start_queue(struct ath_softc *sc, u16 skb_queue)
++bool ath_mac80211_start_queue(struct ath_softc *sc, u16 skb_queue)
  {
--	wl->if_ops->power(wl, true);
--	set_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
-+	int ret = wl->if_ops->power(wl, true);
-+	if (ret == 0)
-+		set_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
-+	return ret;
- }
+ 	struct ieee80211_hw *hw = sc->pri_wiphy->hw;
+ 	unsigned int i;
++	bool txq_started = false;
  
+ 	spin_lock_bh(&sc->wiphy_lock);
  
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index b7d9137..6bd748e 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -620,7 +620,9 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
- 	int ret = 0;
- 
- 	msleep(WL1271_PRE_POWER_ON_SLEEP);
--	wl1271_power_on(wl);
-+	ret = wl1271_power_on(wl);
-+	if (ret < 0)
-+		goto out;
- 	msleep(WL1271_POWER_ON_SLEEP);
- 	wl1271_io_reset(wl);
- 	wl1271_io_init(wl);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-index 9903ae9..571c6b9 100644
---- a/drivers/net/wireless/wl12xx/wl1271_sdio.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-@@ -144,7 +144,7 @@ static void wl1271_sdio_raw_write(struct wl1271 *wl, int addr, void *buf,
- 
- }
- 
--static void wl1271_sdio_set_power(struct wl1271 *wl, bool enable)
-+static int wl1271_sdio_set_power(struct wl1271 *wl, bool enable)
- {
- 	struct sdio_func *func = wl_to_func(wl);
- 
-@@ -159,6 +159,8 @@ static void wl1271_sdio_set_power(struct wl1271 *wl, bool enable)
- 		sdio_disable_func(func);
- 		sdio_release_host(func);
+ 	/* Start the primary wiphy */
+ 	if (sc->pri_wiphy->state == ATH_WIPHY_ACTIVE) {
+ 		ieee80211_wake_queue(hw, skb_queue);
++		txq_started = true;
+ 		goto unlock;
  	}
-+
-+	return 0;
+ 
+@@ -718,11 +720,13 @@ void ath_mac80211_start_queue(struct ath_softc *sc, u16 skb_queue)
+ 
+ 		hw = aphy->hw;
+ 		ieee80211_wake_queue(hw, skb_queue);
++		txq_started = true;
+ 		break;
+ 	}
+ 
+ unlock:
+ 	spin_unlock_bh(&sc->wiphy_lock);
++	return txq_started;
  }
  
- static struct wl1271_if_operations sdio_ops = {
-diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
-index e866049..85a167f 100644
---- a/drivers/net/wireless/wl12xx/wl1271_spi.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
-@@ -313,10 +313,12 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
- 	return IRQ_HANDLED;
- }
+ /* Go ahead and propagate information to all virtual wiphys, it won't hurt */
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 0644f1e..21aa5bd 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2077,8 +2077,8 @@ static void ath_wake_mac80211_queue(struct ath_softc *sc, struct ath_txq *txq)
  
--static void wl1271_spi_set_power(struct wl1271 *wl, bool enable)
-+static int wl1271_spi_set_power(struct wl1271 *wl, bool enable)
- {
- 	if (wl->set_power)
- 		wl->set_power(enable);
-+
-+	return 0;
+ 	spin_lock_bh(&txq->axq_lock);
+ 	if (txq->stopped && sc->tx.pending_frames[qnum] < ATH_MAX_QDEPTH) {
+-		ath_mac80211_start_queue(sc, qnum);
+-		txq->stopped = 0;
++		if (ath_mac80211_start_queue(sc, qnum))
++			txq->stopped = 0;
+ 	}
+ 	spin_unlock_bh(&txq->axq_lock);
  }
- 
- static struct wl1271_if_operations spi_ops = {
 -- 
 1.7.0.4
 
