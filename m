@@ -1,77 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:34474 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751655Ab0G0TEh (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:56913 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755563Ab0GVLXZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 15:04:37 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] Revert "mac80211: fix sw scan bracketing"
-Date: Tue, 27 Jul 2010 15:04:31 -0400
-Message-Id: <1280257471-9126-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 22 Jul 2010 07:23:25 -0400
+Message-ID: <4C48287D.1000603@nokia.com>
+Date: Thu, 22 Jul 2010 14:16:13 +0300
+From: Roger Quadros <roger.quadros@nokia.com>
+MIME-Version: 1.0
+To: ext Mark Brown <broonie@opensource.wolfsonmicro.com>
+CC: Ohad Ben-Cohen <ohad@wizery.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Pandita Vikram <vikram.pandita@ti.com>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Tony Lindgren <tony@atomide.com>, San Mehat <san@google.com>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v2 10/20] omap: zoom: add fixed regulator device for	wlan
+References: <1279733634-21974-1-git-send-email-ohad@wizery.com> <1279733634-21974-11-git-send-email-ohad@wizery.com> <20100721175930.GD10930@sirena.org.uk>
+In-Reply-To: <20100721175930.GD10930@sirena.org.uk>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reverts this commit. While in theory the change is
-correct the patch does not address current assumptions made
-by some drivers, one which is definitley affected is ath9k.
+On 07/21/2010 08:59 PM, ext Mark Brown wrote:
+> On Wed, Jul 21, 2010 at 08:33:44PM +0300, Ohad Ben-Cohen wrote:
+>
+>> +static struct regulator_consumer_supply zoom_vmmc3_supply = {
+>> +	.supply		= "vmmc",
+>> +};
+>
+> This looks like a misconfiguration on the consumer - I'd strongly expect
+> the consumer to have a dev_name specified also with the name being in
+> terms of the consumer device.
 
-Prior to this change the scan complete callback would be
-called after we returned to the home channel and configured
-the hardware filters. After this change we call the scan
-complete callback prior to both the hw config and the config
-filter.
+you need to add something like
 
-At least for ath9k this breaks quite a few assumptions on the
-callback, leading to disconnects to the AP after every scan
-making the driver pretty useless on STA mode. The goal behind
-this commit was to address the now understood spurious warnings
-from ath9k and mac80211_hwsim on scanning on two wiphys at the
-same time. The issue was that the scan complete callback was
-called after the lock was released. The spurious warnings
-will come up still but since they are wrapped under KERN_DEBUG
-and this will be addressed in the next kernel release we leave
-then in place.
+.dev_name       = "mmci-omap-hs.2"
 
-When fixing this for good next we must first review the other
-driver's dependence on this logic and perhaps consider removal
-of the scan complete callback all together.
-
-Cc: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
-
-John, without this ath9k is useless in STA mode, please consider
-as a regresion fix for for 2.6.36.
-
- net/mac80211/scan.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 4dcbf8b..9aa19ec 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -287,8 +287,6 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
- 	local->scanning = 0;
- 	local->scan_channel = NULL;
- 
--	drv_sw_scan_complete(local);
--
- 	/* we only have to protect scan_req and hw/sw scan */
- 	mutex_unlock(&local->scan_mtx);
- 
-@@ -298,6 +296,8 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
- 
- 	ieee80211_configure_filter(local);
- 
-+	drv_sw_scan_complete(local);
-+
- 	ieee80211_offchannel_return(local, true);
- 
-  done:
--- 
-1.7.0.4
-
+regards,
+-roger
