@@ -1,132 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:54821 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753450Ab0GVSaM (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:42978 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757210Ab0GVLKF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 14:30:12 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] atmel: silence sparse warnings
-Date: Thu, 22 Jul 2010 14:24:01 -0400
-Message-Id: <1279823041-21156-1-git-send-email-linville@tuxdriver.com>
+	Thu, 22 Jul 2010 07:10:05 -0400
+Received: by fxm14 with SMTP id 14so4182880fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Jul 2010 04:10:02 -0700 (PDT)
+Date: Thu, 22 Jul 2010 13:09:33 +0200
+From: Dan Carpenter <error27@gmail.com>
+To: nbd@openwrt.org
+Cc: linux-wireless@vger.kernel.org
+Subject: potential null deref in minstrel_ht_update_caps()?
+Message-ID: <20100722110933.GA17585@bicker>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  CHECK   drivers/net/wireless/atmel.c
-drivers/net/wireless/atmel.c:3694:30: warning: cast to restricted __le16
-drivers/net/wireless/atmel.c:3695:31: warning: cast to restricted __le16
-drivers/net/wireless/atmel.c:3696:30: warning: cast to restricted __le16
-drivers/net/wireless/atmel.c:3697:32: warning: cast to restricted __le16
-drivers/net/wireless/atmel.c:3698:30: warning: cast to restricted __le16
-drivers/net/wireless/atmel.c:3699:31: warning: cast to restricted __le16
-drivers/net/wireless/atmel.c:3700:30: warning: cast to restricted __le16
-drivers/net/wireless/atmel.c:3701:32: warning: cast to restricted __le16
-drivers/net/wireless/atmel.c:3702:32: warning: cast to restricted __le16
-drivers/net/wireless/atmel.c:3703:30: warning: cast to restricted __le16
-drivers/net/wireless/atmel.c:3704:32: warning: cast to restricted __le16
-drivers/net/wireless/atmel.c:3705:32: warning: cast to restricted __le16
-drivers/net/wireless/atmel.c:3706:28: warning: cast to restricted __le16
-drivers/net/wireless/atmel.c:3707:29: warning: cast to restricted __le16
+This is a smatch thing.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
-Is this any better than what we have now??
+net/mac80211/rc80211_minstrel_ht.c +639 minstrel_ht_update_caps(15)
+	warn: variable dereferenced before check 'sta'
+   631          struct ieee80211_mcs_info *mcs = &sta->ht_cap.mcs;
+   632          struct ieee80211_local *local = hw_to_local(mp->hw);
+   633          u16 sta_cap = sta->ht_cap.cap;
+                              ^^^^^^^^^^^^^^^
+	Dereferenced here.
 
- drivers/net/wireless/atmel.c |   73 ++++++++++++++++++++++++++++++++----------
- 1 files changed, 56 insertions(+), 17 deletions(-)
+   634          int ack_dur;
+   635          int stbc;
+   636          int i;
+   637
+   638          /* fall back to the old minstrel for legacy stations */
+   639          if (sta && !sta->ht_cap.ht_supported) {
+                    ^^^
+	Checked here.
 
-diff --git a/drivers/net/wireless/atmel.c b/drivers/net/wireless/atmel.c
-index c8f7090..008d712 100644
---- a/drivers/net/wireless/atmel.c
-+++ b/drivers/net/wireless/atmel.c
-@@ -3617,6 +3617,7 @@ static void atmel_command_irq(struct atmel_private *priv)
- static int atmel_wakeup_firmware(struct atmel_private *priv)
- {
- 	struct host_info_struct *iface = &priv->host_info;
-+	u8 buf[sizeof(struct host_info_struct)];
- 	u16 mr1, mr3;
- 	int i;
- 
-@@ -3688,23 +3689,61 @@ static int atmel_wakeup_firmware(struct atmel_private *priv)
- 		return -EIO;
- 	}
- 
--	atmel_copy_to_host(priv->dev, (unsigned char *)iface,
--			   priv->host_info_base, sizeof(*iface));
--
--	iface->tx_buff_pos = le16_to_cpu(iface->tx_buff_pos);
--	iface->tx_buff_size = le16_to_cpu(iface->tx_buff_size);
--	iface->tx_desc_pos = le16_to_cpu(iface->tx_desc_pos);
--	iface->tx_desc_count = le16_to_cpu(iface->tx_desc_count);
--	iface->rx_buff_pos = le16_to_cpu(iface->rx_buff_pos);
--	iface->rx_buff_size = le16_to_cpu(iface->rx_buff_size);
--	iface->rx_desc_pos = le16_to_cpu(iface->rx_desc_pos);
--	iface->rx_desc_count = le16_to_cpu(iface->rx_desc_count);
--	iface->build_version = le16_to_cpu(iface->build_version);
--	iface->command_pos = le16_to_cpu(iface->command_pos);
--	iface->major_version = le16_to_cpu(iface->major_version);
--	iface->minor_version = le16_to_cpu(iface->minor_version);
--	iface->func_ctrl = le16_to_cpu(iface->func_ctrl);
--	iface->mac_status = le16_to_cpu(iface->mac_status);
-+	atmel_copy_to_host(priv->dev, (unsigned char *)&buf,
-+			   priv->host_info_base, sizeof(buf));
-+
-+	iface->int_status = buf[offsetof(struct host_info_struct,
-+						int_status)];
-+	iface->int_mask = buf[offsetof(struct host_info_struct, int_mask)];
-+	iface->lockout_host = buf[offsetof(struct host_info_struct,
-+						lockout_host)];
-+	iface->lockout_mac = buf[offsetof(struct host_info_struct,
-+						lockout_mac)];
-+	iface->tx_buff_pos =
-+		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-+						tx_buff_pos)]);
-+	iface->tx_buff_size =
-+		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-+						tx_buff_size)]);
-+	iface->tx_desc_pos =
-+		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-+						tx_desc_pos)]);
-+	iface->tx_desc_count =
-+		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-+						tx_desc_count)]);
-+	iface->rx_buff_pos =
-+		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-+						rx_buff_pos)]);
-+	iface->rx_buff_size =
-+		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-+						rx_buff_size)]);
-+	iface->rx_desc_pos =
-+		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-+						rx_desc_pos)]);
-+	iface->rx_desc_count =
-+		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-+						rx_desc_count)]);
-+	iface->build_version =
-+		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-+						build_version)]);
-+	iface->command_pos =
-+		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-+						command_pos)]);
-+	iface->major_version =
-+		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-+						major_version)]);
-+	iface->minor_version =
-+		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-+						minor_version)]);
-+	iface->func_ctrl =
-+		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-+						func_ctrl)]);
-+	iface->mac_status =
-+		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-+						mac_status)]);
-+	iface->generic_IRQ_type =
-+		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-+						generic_IRQ_type)]);
- 
- 	return 0;
- }
--- 
-1.7.1.1
+   640                  msp->is_ht = false;
+   641                  memset(&msp->legacy, 0, sizeof(msp->legacy));
 
+It seems like a bug, but I'm not sure how to deal with it.
+
+regards,
+dan carpenter
