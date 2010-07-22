@@ -1,50 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47277 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754553Ab0G1VP0 (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:47660 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754770Ab0GVXiW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jul 2010 17:15:26 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kalle.valo@iki.fi>,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] wl1251: update hw/fw version info in wiphy struct
-Date: Wed, 28 Jul 2010 17:07:45 -0400
-Message-Id: <1280351265-27791-1-git-send-email-linville@tuxdriver.com>
+	Thu, 22 Jul 2010 19:38:22 -0400
+MIME-Version: 1.0
+In-Reply-To: <1279735134.3035.9.camel@localhost.localdomain>
+References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+	<1279733634-21974-2-git-send-email-ohad@wizery.com> <1279735134.3035.9.camel@localhost.localdomain>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Fri, 23 Jul 2010 02:38:01 +0300
+Message-ID: <AANLkTilNefqQ08SgI9i_ZzjNTAU2ggd813DU0Hh22JlX@mail.gmail.com>
+Subject: Re: [PATCH v2 01/20] sdio: add TI + wl1271 ids
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux@arm.linux.org.uk,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	akpm@linux-foundation.org, San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Pandita Vikram <vikram.pandita@ti.com>,
+	Kalle Valo <kalle.valo@iki.fi>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes the information available through ethtool...
+Hi Marcel,
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/wl12xx/wl1251_main.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+On Wed, Jul 21, 2010 at 8:58 PM, Marcel Holtmann <marcel@holtmann.org> wrote:
+>> Add SDIO IDs for TI and for TI's wl1271 wlan device.
+>>
+>> Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+>> ---
+>>  include/linux/mmc/sdio_ids.h |    3 +++
+>>  1 files changed, 3 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
+>> index 33b2ea0..0d313c6 100644
+>> --- a/include/linux/mmc/sdio_ids.h
+>> +++ b/include/linux/mmc/sdio_ids.h
+>> @@ -43,4 +43,7 @@
+>>  #define SDIO_DEVICE_ID_SIANO_NOVA_A0         0x1100
+>>  #define SDIO_DEVICE_ID_SIANO_STELLAR                 0x5347
+>>
+>> +#define SDIO_VENDOR_ID_TI                    0x0097
+>> +#define SDIO_DEVICE_ID_TI_WL1271             0x4076
+>> +
+>
+> are we still doing this non-sense for no real reason.  What is so wrong
+> with keeping the IDs inside the driver code?
 
-diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
-index a6d8d1a..861a5f3 100644
---- a/drivers/net/wireless/wl12xx/wl1251_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_main.c
-@@ -411,6 +411,7 @@ static int wl1251_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- static int wl1251_op_start(struct ieee80211_hw *hw)
- {
- 	struct wl1251 *wl = hw->priv;
-+	struct wiphy *wiphy = hw->wiphy;
- 	int ret = 0;
- 
- 	wl1251_debug(DEBUG_MAC80211, "mac80211 start");
-@@ -444,6 +445,10 @@ static int wl1251_op_start(struct ieee80211_hw *hw)
- 
- 	wl1251_info("firmware booted (%s)", wl->fw_ver);
- 
-+	/* update hw/fw version info in wiphy struct */
-+	wiphy->hw_version = wl->chip_id;
-+	strncpy(wiphy->fw_version, wl->fw_ver, sizeof(wiphy->fw_version));
-+
- out:
- 	if (ret < 0)
- 		wl1251_power_off(wl);
--- 
-1.7.1.1
+Either way we can't go so wrong here (having global VENDOR_IDs can
+potentially prevent redefinitions of the same ID in different drivers,
+but that's probably not that big of an
+issue too).
 
+But if we prefer people to stop adding IDs to this global pool, let's
+at least make it clear. We can probably seal it with some "please
+don't add new IDs if you don't have to" footnote (care to send such
+patch ? :)
+
+Thanks,
+Ohad.
+
+
+> Personally I don't even see a point for these ID defines at all. Just
+> use the bare numbers in SDIO_DEVICE and put a comment above what kind of
+> device this is.
+>
+> Regards
+>
+> Marcel
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-omap" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
