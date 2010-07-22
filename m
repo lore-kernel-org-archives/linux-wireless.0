@@ -1,33 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:34123 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750935Ab0GJUVt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Jul 2010 16:21:49 -0400
-Message-ID: <4C38D657.8060700@openwrt.org>
-Date: Sat, 10 Jul 2010 22:21:43 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58126 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755827Ab0GVNaM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jul 2010 09:30:12 -0400
+Date: Thu, 22 Jul 2010 09:16:27 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Kalle Valo <kalle.valo@iki.fi>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] wl1251: fix sparse-generated warnings
+Message-ID: <20100722131627.GA18742@tuxdriver.com>
+References: <1279729917-4451-1-git-send-email-linville@tuxdriver.com>
+ <1279780458.2322.25.camel@powerslave>
+ <4C47F706.4060102@iki.fi>
+ <AANLkTimh-2cuWdJKgf2TUkCQmGXDC0-86xVhbA-kiPGR@mail.gmail.com>
 MIME-Version: 1.0
-To: Norman Henderson <norm.audrey@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Issues with ath9k dropping connectivity - now no connectivity
-References: <AANLkTilq_VFbOPHmMuf1EFmewc_WBBpgvW0t7ogZdbdl@mail.gmail.com>	<4C38BE1D.2020107@openwrt.org> <AANLkTinNmQONdkT_f7aNykH0t4o7Zdybi96hcd4K4UUp@mail.gmail.com>
-In-Reply-To: <AANLkTinNmQONdkT_f7aNykH0t4o7Zdybi96hcd4K4UUp@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <AANLkTimh-2cuWdJKgf2TUkCQmGXDC0-86xVhbA-kiPGR@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-07-10 9:40 PM, Norman Henderson wrote:
-> Thanks very much Felix for the quick comment. I'll follow up on it
-> over the next few days as I get time to move to "bleeding edge"
-> (something I've sworn from my youth to never do...).
+On Thu, Jul 22, 2010 at 08:04:02AM -0400, Bob Copeland wrote:
+> On Thu, Jul 22, 2010 at 3:45 AM, Kalle Valo <kalle.valo@iki.fi> wrote:
+> >>> @@ -191,11 +191,13 @@ static int wl1251_tx_send_packet(struct wl1251 *wl, struct sk_buff *skb,
+> >>>      if (control->control.hw_key &&
+> >>>          control->control.hw_key->alg == ALG_TKIP) {
+> >>>              int hdrlen;
+> >>> -            u16 fc;
+> >>> +            __le16 fc;
+> >>> +            u16 length;
+> >>>              u8 *pos;
+> [...]
+> >>> +            length = le16_to_cpu(tx_hdr->length) + WL1251_TKIP_IV_SPACE;
+> >>> +            tx_hdr->length = cpu_to_le16(length);
+> >>
+> >> ...which is treated correctly here.
+> >
+> > This is different. Here we are adding something to a __le16 value, not
+> > calculating with pointers.
 > 
-> However I guess I was more concerned about the regression from an
-> environment that worked (with disconnections) to one that doesn't
-> connect at all - is that just the luck of the draw or did I do
-> something stupid? (more precisely, what was it that I did stupid,
-> because that's inevitably true :~
-No idea if it was a configuration error or if it broke somewhere. To be
-honest, I stopped caring about AP mode in old kernels completely,
-because of the large number of known bugs that are fixed in newer versions.
+> Just throwing in my 2 cents, unless there's some other reason to add the
+> length temporary, here you can just do:
+> 
+>     le16_add_cpu(&tx_hdr->length, WL1251_TKIP_IV_SPACE);
 
-- Felix
+Ah, thanks!  I thought there was something like that, but I couldn't remember. :-)
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
