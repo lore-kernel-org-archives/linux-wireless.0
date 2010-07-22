@@ -1,54 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:51466 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752816Ab0G0Rsx convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60971 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756385Ab0GVTAN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 13:48:53 -0400
-Received: by bwz1 with SMTP id 1so3496923bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 10:48:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20100727144811.6012.56633.send-patch@dhcp-lab-109.englab.brq.redhat.com>
-References: <20100727144804.6012.94740.send-patch@dhcp-lab-109.englab.brq.redhat.com>
-	<20100727144811.6012.56633.send-patch@dhcp-lab-109.englab.brq.redhat.com>
-Date: Tue, 27 Jul 2010 19:48:52 +0200
-Message-ID: <AANLkTi=_wYb0h_+jK596+EopqNbSArVqmd6e4ahBWE2A@mail.gmail.com>
-Subject: Re: [PATCH w-t 2/3] rt2500usb: truly disable encryption when
-	initialize
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
+	Thu, 22 Jul 2010 15:00:13 -0400
+Date: Thu, 22 Jul 2010 14:56:16 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
 Cc: linux-wireless@vger.kernel.org,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Christian Lamparter <chunkeey@googlemail.com>
+Subject: Re: [PATCH] wireless: remove prism54
+Message-ID: <20100722185616.GC2616@tuxdriver.com>
+References: <1279735518-12515-1-git-send-email-linville@tuxdriver.com>
+ <AANLkTikWo6tjyYCDMgoA9WXvbNaWIe_oSp180jcdtWgy@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <AANLkTikWo6tjyYCDMgoA9WXvbNaWIe_oSp180jcdtWgy@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 27, 2010 at 4:48 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> Without cipher part nullify of TXRX_CSR0 register we can receive
-> corrupted frames (removed IV or IVC), after reloading rt2500usb module
-> with nohwcrypt=1 option, if previous some keys were configured into
-> the hardware.
->
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+On Wed, Jul 21, 2010 at 01:58:40PM -0700, Luis R. Rodriguez wrote:
+> On Wed, Jul 21, 2010 at 11:05 AM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+> > This driver is no longer necessary due to p54pci.  It has seen very
+> > little maintenance for some time, and at least Fedora has had it
+> > disabled without any user complaints.
+> >
+> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> 
+> Hm, we had a few users report back that only with prism54 and not
+> p54pci could they get their device functional. IIRC Christian noted
+> some issues with the EEPROM, and it seems the fault was on the
+> manufacturer. My memory may be foggy but indeed I do remember a few
+> users did complain about the feature removal plan. I can dig these
+> e-mails up if needed.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+I think I found some of that in the archive.  Do we have any sort of
+plan for resolving these EEPROM-related (i.e. missing and/or damaged
+EEPROM) issue?
 
-> ---
->  drivers/net/wireless/rt2x00/rt2500usb.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-> index 7892647..3028abb 100644
-> --- a/drivers/net/wireless/rt2x00/rt2500usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-> @@ -813,6 +813,7 @@ static int rt2500usb_init_registers(struct rt2x00_dev *rt2x00dev)
->        rt2500usb_register_write(rt2x00dev, MAC_CSR8, reg);
->
->        rt2500usb_register_read(rt2x00dev, TXRX_CSR0, &reg);
-> +       rt2x00_set_field16(&reg, TXRX_CSR0_ALGORITHM, CIPHER_NONE);
->        rt2x00_set_field16(&reg, TXRX_CSR0_IV_OFFSET, IEEE80211_HEADER);
->        rt2x00_set_field16(&reg, TXRX_CSR0_KEY_ID, 0);
->        rt2500usb_register_write(rt2x00dev, TXRX_CSR0, reg);
-> --
-> 1.7.1
->
->
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
