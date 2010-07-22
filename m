@@ -1,84 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews04.kpnxchange.com ([213.75.39.7]:4296 "EHLO
-	cpsmtpb-ews04.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S935716Ab0GPHSk (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58124 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755779Ab0GVNaM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jul 2010 03:18:40 -0400
-Message-ID: <4C4007CD.2070504@gmail.com>
-Date: Fri, 16 Jul 2010 09:18:37 +0200
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Thu, 22 Jul 2010 09:30:12 -0400
+Date: Thu, 22 Jul 2010 09:21:51 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kalle.valo@iki.fi>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] wl1251: fix sparse-generated warnings
+Message-ID: <20100722132150.GB18742@tuxdriver.com>
+References: <1279729917-4451-1-git-send-email-linville@tuxdriver.com>
+ <1279780458.2322.25.camel@powerslave>
+ <4C47F706.4060102@iki.fi>
 MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ivo Van Doorn <ivdoorn@gmail.com>,
-	Christoph Egger <siccegge@cs.fau.de>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	vamos-dev@i4.informatik.uni-erlangen.de,
-	Luis Correia <luis.f.correia@gmail.com>
-Subject: Re: [PATCH 01/11] Removing dead RT2800PCI_SOC
-References: <cover.1279110894.git.siccegge@cs.fau.de>	<20100714131527.GB2352@tuxdriver.com>	<4C3DCD5C.1080705@openwrt.org>	<201007151041.55112.bzolnier@gmail.com> <AANLkTilqoYMMKYJT-YYbEzdnytUSYa0EylEiJ4x5xXXH@mail.gmail.com>
-In-Reply-To: <AANLkTilqoYMMKYJT-YYbEzdnytUSYa0EylEiJ4x5xXXH@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4C47F706.4060102@iki.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/16/10 08:57, Helmut Schaa wrote:
-> On Thu, Jul 15, 2010 at 10:41 AM, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com <mailto:bzolnier@gmail.com>> wrote:
-> 
->     On Wednesday 14 July 2010 04:44:44 pm Felix Fietkau wrote:
->     > On 2010-07-14 3:15 PM, John W. Linville wrote:
->     > > On Wed, Jul 14, 2010 at 02:52:14PM +0200, Ivo Van Doorn wrote:
->     > >> On Wed, Jul 14, 2010 at 2:46 PM, Luis Correia <luis.f.correia@gmail.com <mailto:luis.f.correia@gmail.com>> wrote:
->     > >> > On Wed, Jul 14, 2010 at 13:39, Christoph Egger <siccegge@cs.fau.de <mailto:siccegge@cs.fau.de>> wrote:
->     > >> >> While RT2800PCI_SOC exists in Kconfig, it depends on either
->     > >> >> RALINK_RT288X or RALINK_RT305X which are both not available in Kconfig
->     > >> >> so all Code depending on that can't ever be selected and, if there's
->     > >> >> no plan to add these options, should be cleaned up
->     > >> >>
->     > >> >> Signed-off-by: Christoph Egger <siccegge@cs.fau.de <mailto:siccegge@cs.fau.de>>
->     > >> >
->     > >> > NAK,
->     > >> >
->     > >> > this is not dead code, it is needed for the Ralink System-on-Chip
->     > >> > Platform devices.
->     > >> >
->     > >> > While I can't fix Kconfig errors and the current KConfig file may be
->     > >> > wrong, this code cannot and will not be deleted.
->     > >>
->     > >> When the config option was introduced, the config options RALINK_RT288X and
->     > >> RALINK_RT305X were supposed to be merged as well soon after by somebody (Felix?)
->     > >>
->     > >> But since testing is done on SoC boards by Helmut and Felix, I assume the code
->     > >> isn't dead but actually in use.
->     > >
->     > > Perhaps Helmut and Felix can send us the missing code?
->     > The missing code is a MIPS platform port, which is currently being
->     > maintained in OpenWrt, but is not ready for upstream submission yet.
->     > I'm not working on this code at the moment, but I think it will be
->     > submitted once it's ready.
-> 
->     People are using automatic scripts to catch unused config options nowadays
->     so the issue is quite likely to come back again sooner or later..
-> 
->     Would it be possible to improve situation somehow till the missing parts
->     get merged?  Maybe by adding a tiny comment documenting RT2800PCI_SOC
->     situation to Kconfig (if the config option itself really cannot be removed)
->     until all code is ready etc.?
-> 
-> 
-> Or we could just remove RT2800PCI_SOC completely and build the soc specific
-> parts always as part of rt2800pci. I mean it's not much code, just the platform
-> driver stuff and the eeprom access.
-> 
+On Thu, Jul 22, 2010 at 09:45:10AM +0200, Kalle Valo wrote:
+> On 07/22/2010 08:34 AM, Luciano Coelho wrote:
 
-I'm not sure if that is feasible. Sure, we can reduce the usage of the variable by
-unconditionally compiling in the generic SOC code, but we should not unconditionally
-register the SOC platform device, which is currently also under the scope of this
-Kconfig variable.
+> >> @@ -467,7 +467,7 @@ static int wl1251_boot_upload_nvs(struct wl1251 *wl)
+> >>  		val = (nvs_ptr[0] | (nvs_ptr[1] << 8)
+> >>  		       | (nvs_ptr[2] << 16) | (nvs_ptr[3] << 24));
+> >>  
+> >> -		val = cpu_to_le32(val);
+> >> +		val = (u32 __force) cpu_to_le32(val);
+> > 
+> > This will work, but such casts always make me a bit suspicious.  I think
+> > this is fine for now
+> 
+> This line was very suspicious already from beginning, I can't remember
+> why it was added and I don't see why it's needed here.
 
----
-Gertjan.
+It certainly is a bit strange, and rather ugly as well.  I agree that
+the write should probably just take the le32 instead, but I was more
+interested in silencing sparse than in rewriting a driver for which
+I have not hardware. :-)
 
+I could drop that hunk for the time being?
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
