@@ -1,45 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.platinumzone24.at ([88.198.159.93]:41899 "EHLO
-	mail.platinumzone24.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933436Ab0GSTKv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jul 2010 15:10:51 -0400
-Message-ID: <4C449CF2.7090800@davizone.at>
-Date: Mon, 19 Jul 2010 20:44:02 +0200
-From: David Gnedt <david.gnedt@davizone.at>
+Received: from nbd.name ([88.198.39.176]:58191 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751029Ab0GVTHI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jul 2010 15:07:08 -0400
+Message-ID: <4C4896D5.8010802@openwrt.org>
+Date: Thu, 22 Jul 2010 21:07:01 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
 To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] mac80211: set carrier on for monitor interfaces on ieee80211_open
-Content-Type: text/plain; charset=ISO-8859-15
+CC: Sven Geggus <sven@gegg.us>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: minstrel_tx_status mac80211 WARNINGs in vanilla 2.6.34.1
+References: <20100722123000.GA16657@geggus.net> <20100722144723.GA2616@tuxdriver.com>
+In-Reply-To: <20100722144723.GA2616@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If a station interface is reused as monitor interface it is possible that
-the carrier is still set to off. This breaks packet injection on that
-monitor interface.
-Force the carrier on in monitor interface initialisation like it is also done
-for other interface types (e.g. adhoc, mesh point, ap).
+On 2010-07-22 4:47 PM, John W. Linville wrote:
+> On Thu, Jul 22, 2010 at 02:30:01PM +0200, Sven Geggus wrote:
+>> Hello,
+>> 
+>> running vanilla 2.6.34.1 I get the following warnings in  kernel log:
+>> 
+>> WARNING: at net/mac80211/rc80211_minstrel.c:70 minstrel_tx_status+0x67/0xd1 [mac80211]()
+>> Hardware name: SCENIC E300/E600
+>> Modules linked in: i915 drm_kms_helper drm video backlight output lp loop
+>> snd_intel8x0 snd_ac97_codec ac97_bus snd_pcm_oss snd_mixer_oss snd_pcm
+>> snd_seq_dummy zd1211rw snd_seq_oss usbhid mac80211 option cfg80211
+>> snd_seq_midi usbserial snd_rawmidi snd_seq_midi_event snd_seq snd_timer
+>> snd_seq_device snd parport_pc ehci_hcd uhci_hcd soundcore intel_agp parport
+>> usbcore nls_base snd_page_alloc agpgart rng_core floppy sg
+>> Pid: 0, comm: swapper Tainted: G        W  2.6.34.1 #3
+>> Call Trace:
+>>  [<c102af25>] warn_slowpath_common+0x60/0x90
+>>  [<c102af62>] warn_slowpath_null+0xd/0x10
+>>  [<f83cbd48>] minstrel_tx_status+0x67/0xd1 [mac80211]
+>>  [<f83b6eb1>] ieee80211_tx_status+0x1f6/0x5ac [mac80211]
+>>  [<c1261533>] ? skb_dequeue+0x45/0x4c
+>>  [<f83b6896>] ieee80211_tasklet_handler+0x61/0xd6 [mac80211]
+>>  [<c102ed7d>] tasklet_action+0x62/0x9f
+>>  [<c102f331>] __do_softirq+0x77/0xe5
+>>  [<c102f3c5>] do_softirq+0x26/0x2b
+>>  [<c102f52f>] irq_exit+0x29/0x66
+>>  [<c1003e90>] do_IRQ+0x85/0x9b
+>>  [<c1002d29>] common_interrupt+0x29/0x30
+>>  [<c10083ac>] ? default_idle+0x2d/0x42
+>>  [<c1001a9b>] cpu_idle+0x44/0x71
+>>  [<c12e00de>] rest_init+0x96/0x98
+>>  [<c1498862>] start_kernel+0x2a5/0x2aa
+>>  [<c14980b7>] i386_start_kernel+0xb7/0xbf
+>> ---[ end trace f22ceacef336878f ]---
+>> 
+>> Wireless driver is zd1211rw.
+>> 
+>> Did not test with older kernel because this device has not been in user on
+>> this machine before.
+>> 
+>> WLAN does however seem to work anyway.
+> 
+> Well, I just took a quick look -- so, I'm not 100% sure...
+> 
+> But, it looks to me like zd1211rw is reporting tx status on a rate
+> that minstrel didn't expect it to use.  It seems like the hardware
+> is pre-wired to do retries on sequentially lower rates, which seems
+> a bit incompatible with minstrel's worldview.
+> 
+> Felix, can we accomodate this?  The "WLAN does however seem to work
+> anyway" seems to suggest things work, so can we at least not yell
+> about it?
+I think we should just drop that WARN_ON(). It's not problematic if
+minstrel gets feedback for rates that it doesn't have in its list, it
+should just ignore it.
 
-Signed-off-by: David Gnedt <david.gnedt@davizone.at>
----
- net/mac80211/iface.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 910729f..d07d223 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -249,6 +249,8 @@ static int ieee80211_open(struct net_device *dev)
- 			local->fif_other_bss++;
-
- 		ieee80211_configure_filter(local);
-+
-+		netif_carrier_on(dev);
- 		break;
- 	default:
- 		res = drv_add_interface(local, &sdata->vif);
--- 
-1.6.3.3
-
+- Felix
