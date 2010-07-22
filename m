@@ -1,95 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:47172 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752551Ab0G0Xsw convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:58993 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754037Ab0GVLOv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 19:48:52 -0400
-Received: by pwi5 with SMTP id 5so673533pwi.19
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 16:48:52 -0700 (PDT)
+	Thu, 22 Jul 2010 07:14:51 -0400
+Date: Thu, 22 Jul 2010 13:14:19 +0200
+From: Dan Carpenter <error27@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ming Lei <tom.leiming@gmail.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch net-next] mac80211: freeing the wrong variable
+Message-ID: <20100722111419.GC17585@bicker>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTimWKV28m5aRFZzCkHoVkNBDV+0uGky8UdREJxHK@mail.gmail.com>
-References: <AANLkTimo4RV6UMgti0ng1rQYE2eUVh2WLv_WHQZkz30j@mail.gmail.com>
-	<AANLkTimr-tyyNfLz7c9hKVMwWm-5qQcsUniKmv8kvC8U@mail.gmail.com>
-	<AANLkTi=rNVifMZ_8UzmWH=f26X0pT9UM5XT7U7wE2FWd@mail.gmail.com>
-	<AANLkTimb0r0LJCpU76rrLibG=1o7j+UtcsFTmHeUHdXH@mail.gmail.com>
-	<AANLkTimWKV28m5aRFZzCkHoVkNBDV+0uGky8UdREJxHK@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 27 Jul 2010 16:48:32 -0700
-Message-ID: <AANLkTin2kzbNxdgqSzUZXZW4O37tJHnWZJbM46c7epkK@mail.gmail.com>
-Subject: Re: iwlagn: two regressions 2.6.34->2.6.35-rc6
-To: Andrew Lutomirski <luto@mit.edu>
-Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 27, 2010 at 4:42 PM, Andrew Lutomirski <luto@mit.edu> wrote:
-> On Tue, Jul 27, 2010 at 7:26 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> On Tue, Jul 27, 2010 at 4:24 PM, Andrew Lutomirski <luto@mit.edu> wrote:
->>> On Mon, Jul 26, 2010 at 3:48 PM, Andrew Lutomirski <luto@mit.edu> wrote:
->>>>> In the attached log, you'll see the one successful connection to
->>>>> 00:02:6f:6e:d7:6c as well as a failure.  The failure is just:
->>>>>
->>>>> [  668.569218] wlan0: authenticate with 00:02:6f:6e:d7:6c (try 1)
->>>>> [  668.769269] wlan0: authenticate with 00:02:6f:6e:d7:6c (try 2)
->>>>> [  668.969150] wlan0: authenticate with 00:02:6f:6e:d7:6c (try 3)
->>>>> [  669.169262] wlan0: authentication with 00:02:6f:6e:d7:6c timed out
->>>>
->>>> This time with actual attachment.
->>>
->>> Not sure if this is the same issue, but I've got another AP here
->>> (Ubiquiti RouterStation Pro + R52N ath9k minipci card running latest
->>> OpenWRT "backfire") that works quite nicely on 2.6.34 but requires me
->>> to reconnect every minute or so on 2.6.35-rc6+ to keep it working.
->>
->> Define 2.6.35-rc6+
->>
->> If you are using wireless-testing there was a regression there that I
->> just sent patches for.
->
-> It's just Linus' kernel (specifically
-> 6aa033d7efb85830535bb83cf6713d6025ae6e59) plus a few local i915
-> patches.  (I also have my aggregation failure warning patch in there,
-> but that just changes a couple of printks.)
+The intent was to free "msp->ratelist" here.  "msp->sample_table" is
+always NULL at this point.
 
-If you can test vanilla Linus and post a bug report that would help
-for sure. I do not think we are aware of existing pending issues on
-2.6.35, and in fact the regression list often posted by Rafael shows 0
-regressions for 2.6.34 and 2.6.35-rc so far so you're issue is
-certainly not reported until now, but we need more details, like
-chipset, how to reproduce, etc.
+Signed-off-by: Dan Carpenter <error27@gmail.com>
 
->> Reporting issues is the way to go which BTW i have yet to get to your
->> other e-mail, sorry just got back from vacation and still catching up.
->
-> No problem.  (I didn't think you worked on iwlwifi anyway...)
-
-No, but if its regulatory yes.
-
->>> I'm getting tempted to just revert the whole driver back to 2.6.34 and
->>> use the rest of 2.6.35 when it comes out.  I can also try to bisect,
->>> either the normal way or just the iwlwifi driver, but that'll have to
->>> wait until the Monday after next at least because I'm leaving town.
->>> If any of you have any ideas to test *today*, I can do it.
->
-> Do you know how hard it is to bisect compat-wireless?
-
-Sure by date, it also has the specific dates it pulls stuff from
-linux-next.git so you can use that as reference.
-
-> Bisecting just
-> the iwlwifi directory is a bit of a pain because I have to manually
-> fix up everything that doesn't compile, and it's also a pain to bisect
-> the whole tree because I need some local i915 patches to get a working
-> system.  (Also, IIRC, 2.6.35 was very broken around -rc2 or -rc3.)
-
-I would just say to use wireless-testing directly and bisect that, I
-did that yesterday night. You bisect wireless-testing by the
-^master-$(date -I) tags. A little of a pain but its not so bad. As
-John noted also you can just use his wireless-next.git too and you
-should be able to bisect that regularly.
-
-I understand your requirements for i915 changes.. but maybe you can
-test with vesa in the meantime?
-
-  Luis
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index b5ace24..0ec0584 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -748,7 +748,7 @@ minstrel_ht_alloc_sta(void *priv, struct ieee80211_sta *sta, gfp_t gfp)
+ 	return msp;
+ 
+ error1:
+-	kfree(msp->sample_table);
++	kfree(msp->ratelist);
+ error:
+ 	kfree(msp);
+ 	return NULL;
