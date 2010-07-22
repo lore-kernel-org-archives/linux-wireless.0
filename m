@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:39008 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755284Ab0G3GZB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jul 2010 02:25:01 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 29 Jul 2010 23:24:37 -0700
-From: Sujith <Sujith.Manoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <19538.29109.343550.81421@gargle.gargle.HOWL>
-Date: Fri, 30 Jul 2010 12:01:17 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath9k: Remove myself from the MAINTAINERS list
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44143 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756704Ab0GVTpn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jul 2010 15:45:43 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Dan Carpenter <error27@gmail.com>, Felix Fietkau <nbd@openwrt.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] minstrel_ht: remove unnecessary NULL check in minstrel_ht_update_caps
+Date: Thu, 22 Jul 2010 15:39:24 -0400
+Message-Id: <1279827564-24742-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <20100722110933.GA17585@bicker>
+References: <20100722110933.GA17585@bicker>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So long.
+If sta is NULL, we will have problems long before we get here...
 
-Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Reported-by: Dan Carpenter <error27@gmail.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Cc: Felix Fietkau <nbd@openwrt.org>
 ---
- MAINTAINERS |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+ net/mac80211/rc80211_minstrel_ht.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index aa6545e..2bc8657 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -1087,7 +1087,6 @@ F:	drivers/net/wireless/ath/ath5k/
- ATHEROS ATH9K WIRELESS DRIVER
- M:	"Luis R. Rodriguez" <lrodriguez@atheros.com>
- M:	Jouni Malinen <jmalinen@atheros.com>
--M:	Sujith Manoharan <Sujith.Manoharan@atheros.com>
- M:	Vasanthakumar Thiagarajan <vasanth@atheros.com>
- M:	Senthil Balasubramanian <senthilkumar@atheros.com>
- L:	linux-wireless@vger.kernel.org
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index b5ace24..a16694b 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -636,7 +636,7 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
+ 	int i;
+ 
+ 	/* fall back to the old minstrel for legacy stations */
+-	if (sta && !sta->ht_cap.ht_supported) {
++	if (!sta->ht_cap.ht_supported) {
+ 		msp->is_ht = false;
+ 		memset(&msp->legacy, 0, sizeof(msp->legacy));
+ 		msp->legacy.r = msp->ratelist;
 -- 
-1.7.2.1
+1.7.1.1
 
