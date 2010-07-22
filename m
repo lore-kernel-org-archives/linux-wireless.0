@@ -1,54 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:48162 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751403Ab0GJMed (ORCPT
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:27189 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751926Ab0GVJSr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Jul 2010 08:34:33 -0400
-From: Kulikov Vasiliy <segooon@gmail.com>
-To: kernel-janitors@vger.kernel.org
-Cc: Michael Wu <flamingice@sourmilk.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH] adm8211: fix memory leak
-Date: Sat, 10 Jul 2010 16:28:57 +0400
-Message-Id: <1278764938-9417-1-git-send-email-segooon@gmail.com>
+	Thu, 22 Jul 2010 05:18:47 -0400
+Received: from vs3008.wh2.ocn.ne.jp (125.206.180.171)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-014788324
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Jul 2010 18:18:45 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH/RFC 3/3] ath5k: trace resets
+Date: Thu, 22 Jul 2010 18:21:26 +0900
+Cc: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org, Ben Gamari <bgamari@gmail.com>
+References: <1279395336-856-1-git-send-email-me@bobcopeland.com> <201007211417.23512.br1@einfach.org> <1279698801.3707.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1279698801.3707.1.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201007221821.26129.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We must free priv->eeprom allocated in adm8211_read_eeprom().
+On Wed July 21 2010 16:53:21 Johannes Berg wrote:
+> On Wed, 2010-07-21 at 14:17 +0900, Bruno Randolf wrote:
+> > but that's for all tracepoints all over the kernel...
+> 
+> Well you definitely don't want to enable like function graph tracing,
+> that's expected to be more expensive unless you also have the callsite
+> patching version of it. But _just_ enabling tracing + the ath5k tracer
+> definitely will not have this effect.
 
-Signed-off-by: Kulikov Vasiliy <segooon@gmail.com>
----
- drivers/net/wireless/adm8211.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+true. i just checked it again and enabling tracing does not affect the 
+performance as i have wrongly stated before. i must have had some other 
+debugging stuff enabled as well. sorry...
 
-diff --git a/drivers/net/wireless/adm8211.c b/drivers/net/wireless/adm8211.c
-index 880ad9d..bde2fa8 100644
---- a/drivers/net/wireless/adm8211.c
-+++ b/drivers/net/wireless/adm8211.c
-@@ -1903,7 +1903,7 @@ static int __devinit adm8211_probe(struct pci_dev *pdev,
- 	if (err) {
- 		printk(KERN_ERR "%s (adm8211): Cannot register device\n",
- 		       pci_name(pdev));
--		goto err_free_desc;
-+		goto err_free_eeprom;
- 	}
- 
- 	printk(KERN_INFO "%s: hwaddr %pM, Rev 0x%02x\n",
-@@ -1912,6 +1912,9 @@ static int __devinit adm8211_probe(struct pci_dev *pdev,
- 
- 	return 0;
- 
-+ err_free_eeprom:
-+	kfree(priv->eeprom);
-+
-  err_free_desc:
- 	pci_free_consistent(pdev,
- 			    sizeof(struct adm8211_desc) * priv->rx_ring_size +
--- 
-1.7.0.4
-
+bruno
