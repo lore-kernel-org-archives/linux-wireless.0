@@ -1,188 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:59315 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758554Ab0GURfE (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:35651 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751761Ab0GVPlZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jul 2010 13:35:04 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>
-Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v2 11/20] omap: hsmmc: support mmc3 regulator power control
-Date: Wed, 21 Jul 2010 20:33:45 +0300
-Message-Id: <1279733634-21974-12-git-send-email-ohad@wizery.com>
-In-Reply-To: <1279733634-21974-1-git-send-email-ohad@wizery.com>
-References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+	Thu, 22 Jul 2010 11:41:25 -0400
+Received: by fxm14 with SMTP id 14so4388057fxm.19
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Jul 2010 08:41:24 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1279780848.2322.31.camel@powerslave>
+References: <4C37BCA0.5090607@deltatee.com>
+	<AC090B9732AB2B4DB7FF476E907FE660010685F34E@dnce02.ent.ti.com>
+	<AANLkTilHNKeRZX5CMplyriTo2hTPBrz_z1_Zpwoy3SZx@mail.gmail.com>
+	<AC090B9732AB2B4DB7FF476E907FE66001069662F2@dnce02.ent.ti.com>
+	<AC090B9732AB2B4DB7FF476E907FE6600106966BA5@dnce02.ent.ti.com>
+	<4C45ED36.2090604@deltatee.com>
+	<AANLkTinjvF9UeV7d2aBUy6HfexuAeL_cdsVPGVxSRVMp@mail.gmail.com>
+	<AANLkTinnYeJPV-xxg7DdPXnWW_kD7X1TVcd9HrhupJWS@mail.gmail.com>
+	<1279780848.2322.31.camel@powerslave>
+Date: Thu, 22 Jul 2010 17:41:24 +0200
+Message-ID: <AANLkTilZhvGg2SUk5btpQQA3qj2k4rob4rTychDu7gXM@mail.gmail.com>
+Subject: Re: wl1271 firmware
+From: Pazzo Da Legare <pazzodalegare@gmail.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Levi, Shahar" <shahar_levi@ti.com>,
+	Logan Gunthorpe <logang@deltatee.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prepare for mmc3 regulator power control by splitting the power
-control functions of mmc2 and mmc3, and expecting mmc3 to have
-a single, dedicated, regulator support.
+Dear Luciano,
+Dear All,
 
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
----
- arch/arm/mach-omap2/hsmmc.c   |   10 ++++--
- drivers/mmc/host/omap_hsmmc.c |   67 ++++++++++++++++++++++++++++++++++++----
- 2 files changed, 66 insertions(+), 11 deletions(-)
+I enabled the DEBUG_LEVEL as you advice me but I have no additional
+information....
 
-diff --git a/arch/arm/mach-omap2/hsmmc.c b/arch/arm/mach-omap2/hsmmc.c
-index 1ef54b0..5d3d789 100644
---- a/arch/arm/mach-omap2/hsmmc.c
-+++ b/arch/arm/mach-omap2/hsmmc.c
-@@ -174,7 +174,7 @@ static void omap4_hsmmc1_after_set_reg(struct device *dev, int slot,
- 	}
- }
- 
--static void hsmmc23_before_set_reg(struct device *dev, int slot,
-+static void hsmmc2_before_set_reg(struct device *dev, int slot,
- 				   int power_on, int vdd)
- {
- 	struct omap_mmc_platform_data *mmc = dev->platform_data;
-@@ -325,14 +325,16 @@ void __init omap2_hsmmc_init(struct omap2_hsmmc_info *controllers)
- 				c->transceiver = 1;
- 			if (c->transceiver && c->wires > 4)
- 				c->wires = 4;
--			/* FALLTHROUGH */
--		case 3:
- 			if (mmc->slots[0].features & HSMMC_HAS_PBIAS) {
- 				/* off-chip level shifting, or none */
--				mmc->slots[0].before_set_reg = hsmmc23_before_set_reg;
-+				mmc->slots[0].before_set_reg = hsmmc2_before_set_reg;
- 				mmc->slots[0].after_set_reg = NULL;
- 			}
- 			break;
-+		case 3:
-+			mmc->slots[0].before_set_reg = NULL;
-+			mmc->slots[0].after_set_reg = NULL;
-+			break;
- 		default:
- 			pr_err("MMC%d configuration not supported!\n", c->mmc);
- 			kfree(mmc);
-diff --git a/drivers/mmc/host/omap_hsmmc.c b/drivers/mmc/host/omap_hsmmc.c
-index b032828..4c5a669 100644
---- a/drivers/mmc/host/omap_hsmmc.c
-+++ b/drivers/mmc/host/omap_hsmmc.c
-@@ -258,7 +258,7 @@ static int omap_hsmmc_1_set_power(struct device *dev, int slot, int power_on,
- 	return ret;
- }
- 
--static int omap_hsmmc_23_set_power(struct device *dev, int slot, int power_on,
-+static int omap_hsmmc_2_set_power(struct device *dev, int slot, int power_on,
- 				   int vdd)
- {
- 	struct omap_hsmmc_host *host =
-@@ -309,6 +309,31 @@ static int omap_hsmmc_23_set_power(struct device *dev, int slot, int power_on,
- 	return ret;
- }
- 
-+static int omap_hsmmc_3_set_power(struct device *dev, int slot, int power_on,
-+				   int vdd)
-+{
-+	struct omap_hsmmc_host *host =
-+		platform_get_drvdata(to_platform_device(dev));
-+	int ret = 0;
-+
-+	if (power_on) {
-+		ret = mmc_regulator_set_ocr(host->vcc, vdd);
-+		/* Enable interface voltage rail, if needed */
-+		if (ret == 0 && host->vcc) {
-+			ret = regulator_enable(host->vcc);
-+			if (ret < 0)
-+				ret = mmc_regulator_set_ocr(host->vcc, 0);
-+		}
-+	} else {
-+		if (host->vcc)
-+			ret = regulator_disable(host->vcc);
-+		if (ret == 0)
-+			ret = mmc_regulator_set_ocr(host->vcc, 0);
-+	}
-+
-+	return ret;
-+}
-+
- static int omap_hsmmc_1_set_sleep(struct device *dev, int slot, int sleep,
- 				  int vdd, int cardsleep)
- {
-@@ -319,7 +344,7 @@ static int omap_hsmmc_1_set_sleep(struct device *dev, int slot, int sleep,
- 	return regulator_set_mode(host->vcc, mode);
- }
- 
--static int omap_hsmmc_23_set_sleep(struct device *dev, int slot, int sleep,
-+static int omap_hsmmc_2_set_sleep(struct device *dev, int slot, int sleep,
- 				   int vdd, int cardsleep)
- {
- 	struct omap_hsmmc_host *host =
-@@ -358,6 +383,31 @@ static int omap_hsmmc_23_set_sleep(struct device *dev, int slot, int sleep,
- 		return regulator_enable(host->vcc_aux);
- }
- 
-+static int omap_hsmmc_3_set_sleep(struct device *dev, int slot, int sleep,
-+				   int vdd, int cardsleep)
-+{
-+	struct omap_hsmmc_host *host =
-+		platform_get_drvdata(to_platform_device(dev));
-+	int err = 0;
-+
-+	/*
-+	 * If we don't see a Vcc regulator, assume it's a fixed
-+	 * voltage always-on regulator.
-+	 */
-+	if (!host->vcc)
-+		return 0;
-+
-+	if (cardsleep) {
-+		/* VCC can be turned off if card is asleep */
-+		if (sleep)
-+			err = mmc_regulator_set_ocr(host->vcc, 0);
-+		else
-+			err = mmc_regulator_set_ocr(host->vcc, vdd);
-+	}
-+
-+	return err;
-+}
-+
- static int omap_hsmmc_reg_get(struct omap_hsmmc_host *host)
- {
- 	struct regulator *reg;
-@@ -370,10 +420,13 @@ static int omap_hsmmc_reg_get(struct omap_hsmmc_host *host)
- 		mmc_slot(host).set_sleep = omap_hsmmc_1_set_sleep;
- 		break;
- 	case OMAP_MMC2_DEVID:
--	case OMAP_MMC3_DEVID:
- 		/* Off-chip level shifting, or none */
--		mmc_slot(host).set_power = omap_hsmmc_23_set_power;
--		mmc_slot(host).set_sleep = omap_hsmmc_23_set_sleep;
-+		mmc_slot(host).set_power = omap_hsmmc_2_set_power;
-+		mmc_slot(host).set_sleep = omap_hsmmc_2_set_sleep;
-+		break;
-+	case OMAP_MMC3_DEVID:
-+		mmc_slot(host).set_power = omap_hsmmc_3_set_power;
-+		mmc_slot(host).set_sleep = omap_hsmmc_3_set_sleep;
- 		break;
- 	default:
- 		pr_err("MMC%d configuration not supported!\n", host->id);
-@@ -386,9 +439,9 @@ static int omap_hsmmc_reg_get(struct omap_hsmmc_host *host)
- 		/*
- 		* HACK: until fixed.c regulator is usable,
- 		* we don't require a main regulator
--		* for MMC2 or MMC3
-+		* for MMC2
- 		*/
--		if (host->id == OMAP_MMC1_DEVID) {
-+		if (host->id != OMAP_MMC2_DEVID) {
- 			ret = PTR_ERR(reg);
- 			goto err;
- 		}
--- 
-1.7.0.4
+[  186.230000] wl1271_sdio mmc0:0001:2: firmware: requesting
+wl1271-fw.bin
+[  186.420000] wl1271_sdio mmc0:0001:2: firmware: requesting
+wl1271-nvs.bin
+[  186.860000] wl1271: firmware booted (Rev 6.1.0.0.310)
+[  186.880000] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[  187.380000] wl1271: ERROR ELP wakeup timeout!
+[  187.880000] wl1271: ERROR ELP wakeup timeout!
 
+Pazzo
+
+2010/7/22 Luciano Coelho <luciano.coelho@nokia.com>:
+> Hi Pazzo,
+>
+>
+> On Wed, 2010-07-21 at 19:27 +0200, ext Pazzo Da Legare wrote:
+>> Dear All again,
+>>
+>> I've just test with compact-wireless-2010-07-20 but I've the same problem:
+>>
+>> root@hawkboard:~# ifconfig wlan0 192.168.0.1 up
+>> [   68.920000] wl1271_sdio mmc0:0001:2: firmware: requesting wl1271-fw.bin
+>> [   69.100000] wl1271_sdio mmc0:0001:2: firmware: requesting wl1271-nvs.bin
+>> [   69.510000] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+>> root@hawkboard:~# [   70.020000] wl1271: ERROR ELP wakeup timeout!
+>> [   70.520000] wl1271: ERROR ELP wakeup timeout!
+>>
+>>
+>> looking at dmesg:
+>>
+>> [  68.920000] wl1271_sdio mmc0:0001:2: firmware: requesting wl1271-fw.bin
+>> [   69.100000] wl1271_sdio mmc0:0001:2: firmware: requesting wl1271-nvs.bin
+>> [   69.500000] wl1271: firmware booted (Rev 6.1.0.0.310)
+>> [   69.510000] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+>> [   70.020000] wl1271: ERROR ELP wakeup timeout!
+>> [   70.520000] wl1271: ERROR ELP wakeup timeout!
+>>
+>> [   68.920000] wl1271_sdio mmc0:0001:2: firmware: requesting wl1271-fw.bin
+>> [   69.100000] wl1271_sdio mmc0:0001:2: firmware: requesting wl1271-nvs.bin
+>> [   69.500000] wl1271: firmware booted (Rev 6.1.0.0.310)
+>> [   70.020000] wl1271: ERROR ELP wakeup timeout!
+>> [   70.520000] wl1271: ERROR ELP wakeup timeout!
+>>
+>> Do you have any clue?
+>
+> I'm not sure what this is, but usually an ERROR ELP wakeup timeout means
+> that the firmware has crashed.
+>
+> Could you enable the following DEBUG flags in wl1271.h and send the logs
+> again? Maybe they provide more clues...
+>
+> #define DEBUG_LEVEL (DEBUG_BOOT | DEBUG_ACX | DEBUG_CMD | DEBUG_PSM | \
+>                     DEBUG_IRQ | DEBUG_EVENT)
+>
+>
+> --
+> Cheers,
+> Luca.
+>
+>
