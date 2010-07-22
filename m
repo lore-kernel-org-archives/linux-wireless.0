@@ -1,65 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39858 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751655Ab0G0QpL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 12:45:11 -0400
-Date: Tue, 27 Jul 2010 12:31:41 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Confused - bisecting wireless-testing
-Message-ID: <20100727163141.GC31694@tuxdriver.com>
-References: <AANLkTim-0qoS7o+fcQ6uA18AC_gQSiiDe4Tv_L1FT1Ae@mail.gmail.com>
- <20100727140139.GA31694@tuxdriver.com>
- <AANLkTimS2d0jZnu-44+cbFQXvitj_3Rq3egttgOzEiRh@mail.gmail.com>
- <20100727160434.GB31694@tuxdriver.com>
- <AANLkTi=x7FzdRoC6DxeahvSm+2teN__TsoKjxphOMiPP@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTi=x7FzdRoC6DxeahvSm+2teN__TsoKjxphOMiPP@mail.gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:24634 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755701Ab0GVThQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jul 2010 15:37:16 -0400
+Subject: Re: [PATCH] iwlwifi: assume vif is NULL for internal scans and
+ non-NULL otherwise
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Dan Carpenter <error27@gmail.com>
+In-Reply-To: <1279826937-24581-1-git-send-email-linville@tuxdriver.com>
+References: <20100721221616.GT17585@bicker>
+	 <1279826937-24581-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain
+Date: Thu, 22 Jul 2010 12:36:39 -0700
+Message-Id: <1279827399.9034.0.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 27, 2010 at 09:21:40AM -0700, Luis R. Rodriguez wrote:
-> On Tue, Jul 27, 2010 at 9:04 AM, John W. Linville
-> <linville@tuxdriver.com> wrote:
-> > On Tue, Jul 27, 2010 at 08:56:54AM -0700, Luis R. Rodriguez wrote:
-> >> On Tue, Jul 27, 2010 at 7:01 AM, John W. Linville
-> >> <linville@tuxdriver.com> wrote:
+Hi John,
 
-> >> > As for right now, it sounds like you should just use wireless-next-2.6
-> >> > instead?
-> >>
-> >> Oh OK, didn't realize that was bisectable, thanks. Also was unsure if
-> >> I'd get other subsystems's -next components. Is wireless-next.git just
-> >> the -next bits for 802.11 or does it also suck up net-next?
-> >
-> > Usually just the wireless bits, but I did just pull the bluetooth stuff
-> > (which included some net-next stuff).
+On Thu, 2010-07-22 at 12:28 -0700, John W. Linville wrote:
+> The current practice of checking vif for NULL in one place but not
+> another seems to confuse some static checkers, smatch in particular.
+> Since vif will only be NULL in the case of internal scans, adjust the
+> checks accordingly.
 > 
-> Oh neat. OK so which net-next.git release was wireless-next.git based
-> on and what net-next.git release was bluetooth-next.git based on? Did
-> it bump your next-next.git or do you routinely pull next-next.git into
-> your own wireless-next.git?
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    5 ++++-
+>  drivers/net/wireless/iwlwifi/iwl3945-base.c |    5 ++++-
+>  2 files changed, 8 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+> index 74623e0..0ca0df4 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+> @@ -1234,7 +1234,10 @@ void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+>  
+>  		IWL_DEBUG_INFO(priv, "Scanning while associated...\n");
+>  		spin_lock_irqsave(&priv->lock, flags);
+> -		interval = vif ? vif->bss_conf.beacon_int : 0;
+> +		if (priv->is_internal_short_scan)
+> +			interval = 0;
+> +		else
+> +			interval = vif->bss_conf.beacon_int;
+>  		spin_unlock_irqrestore(&priv->lock, flags);
+>  
+>  		scan->suspend_time = 0;
+> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> index 8eb3471..b102bab 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> @@ -2883,7 +2883,10 @@ void iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+>  		IWL_DEBUG_INFO(priv, "Scanning while associated...\n");
+>  
+>  		spin_lock_irqsave(&priv->lock, flags);
+> -		interval = vif ? vif->bss_conf.beacon_int : 0;
+> +		if (priv->is_internal_short_scan)
+> +			interval = 0;
+> +		else
+> +			interval = vif->bss_conf.beacon_int;
+>  		spin_unlock_irqrestore(&priv->lock, flags);
+>  
+>  		scan->suspend_time = 0;
 
-I don't have those exact commit IDs.  How badly do you need them?
+Make sense, Thanks.
 
-I don't normally pull net-next into wireless-next, but this release
-not doing that has been a source of pain due to the __packed patch
-in net-next and the addition of __attribute__ ((packed)) in various
-places in wireless-next.  Since Marcel had already based on a net-next
-that had that patch and since it is close to the end of the release
-I decided it would be acceptable to pull it this time.
+Wey
 
-I have been considering making regular net-next pulls a standard
-practice.  That would make my life easier, but would add some
-non-wireless instability into wireless-testing (which pulls from
-wireless-next).  I don't think that would be a big problem _most_
-of the time, but I'm sure there would be some occasional pain from
-doing that.
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
