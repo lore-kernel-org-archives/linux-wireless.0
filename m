@@ -1,51 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:61101 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754105Ab0GKKcL (ORCPT
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:45320 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751192Ab0GVFUw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Jul 2010 06:32:11 -0400
-Received: by mail-ey0-f174.google.com with SMTP id 25so426234eya.19
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Jul 2010 03:32:11 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 14/17] rt2x00: Don't initialize beacon interval to 0 on rt2800 devices
-Date: Sun, 11 Jul 2010 12:29:49 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-References: <201007111223.11190.IvDoorn@gmail.com> <201007111228.56050.IvDoorn@gmail.com> <201007111229.27800.IvDoorn@gmail.com>
-In-Reply-To: <201007111229.27800.IvDoorn@gmail.com>
+	Thu, 22 Jul 2010 01:20:52 -0400
+Received: from vs3003.wh2.ocn.ne.jp (125.206.180.231)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0408976049
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Jul 2010 14:20:50 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Jonathan Guerin <jonathan@guerin.id.au>
+Subject: Re: ath5k debug mode
+Date: Thu, 22 Jul 2010 14:23:28 +0900
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+References: <AANLkTimWWGlhEhIRol_5kjhIIEILLgDuMmUXUHCCVUC1@mail.gmail.com>
+In-Reply-To: <AANLkTimWWGlhEhIRol_5kjhIIEILLgDuMmUXUHCCVUC1@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: Text/Plain;
   charset="iso-8859-1"
-Message-Id: <201007111229.50936.IvDoorn@gmail.com>
+Message-Id: <201007221423.28805.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+On Thu July 22 2010 13:55:36 Jonathan Guerin wrote:
+> Hi all,
+> 
+> I'm not sure if I'm just misunderstanding something, or if they
+> documentation is older than what's happening in practice. I'm trying
+> to enable ath5k debug mode so that I can have a poke around in debufs.
+> 
+> Unfortunately, enabling debug in the compat-wireless distro doesn't
+> seem to output the same information as I've been reading about
+> elsewhere on the 'net. My understanding is that ath5k should load an
+> ath5k directory tree into debugfs:
+> http://www.mail-archive.com/ath5k-devel@lists.ath5k.org/msg00266.html
+> 
+> This doesn't seem to be happening at the moment - what I CAN see in
+> the /debug tree is:
+> bdi  gpio  ieee80211  kprobes  mce  pktcdvd  sched_features  tracing  usb 
+> x86
+> 
+> Some of the stuff I expect to see in ath5k is in ieee8022, but I
+> cannot write to this tree. Trying to replicate the cat mentioned in
+> the link above to set the debug level in this tree fails with a
+> 'permission denied' error.
+> 
+> Trying to load the module with the debug param fails with the following
+> error: ath5k: Unknown parameter `debug'
+> 
+> I'm wondering if someone would be able to point me in the right
+> direction to get this working.
 
-Activating the TBTT interrupt when a beacon interval of 0 is configured
-results in an interrupt storm causing the machine to hang. Hence,
-initialize the beacon interval to a reasonable default of 100TUs.
+seems like ath5k is not compiled with debugging enabled (did you set 
+CONFIG_ATH5K_DEBUG=y?), or you are using the wrong (old) module?
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 64bfa6e..cfe199b 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -1419,7 +1419,7 @@ int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- 	rt2800_register_write(rt2x00dev, MAC_SYS_CTRL, 0x00000000);
- 
- 	rt2800_register_read(rt2x00dev, BCN_TIME_CFG, &reg);
--	rt2x00_set_field32(&reg, BCN_TIME_CFG_BEACON_INTERVAL, 0);
-+	rt2x00_set_field32(&reg, BCN_TIME_CFG_BEACON_INTERVAL, 1600);
- 	rt2x00_set_field32(&reg, BCN_TIME_CFG_TSF_TICKING, 0);
- 	rt2x00_set_field32(&reg, BCN_TIME_CFG_TSF_SYNC, 0);
- 	rt2x00_set_field32(&reg, BCN_TIME_CFG_TBTT_ENABLE, 0);
--- 
-1.7.1.1
-
+bruno
