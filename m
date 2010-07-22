@@ -1,65 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:38847 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751260Ab0GVIvP (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:37402 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751483Ab0GVXSa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 04:51:15 -0400
-Date: Thu, 22 Jul 2010 10:50:28 +0200
-From: Dan Carpenter <error27@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Jouni Malinen <jmalinen@atheros.com>,
-	Sujith Manoharan <Sujith.Manoharan@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Senthil Balasubramanian <senthilkumar@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Vivek Natarajan <vnatarajan@atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	kernel-janitors@vger.kernel.org
-Subject: [patch -next] ath9k: snprintf() returns largish values
-Message-ID: <20100722085027.GU17585@bicker>
+	Thu, 22 Jul 2010 19:18:30 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <676FD6AA0F002F49B89E70F0C5EFD22C1311192A47@dlee04.ent.ti.com>
+References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+	<1279733634-21974-20-git-send-email-ohad@wizery.com> <676FD6AA0F002F49B89E70F0C5EFD22C1311192A47@dlee04.ent.ti.com>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Fri, 23 Jul 2010 02:18:08 +0300
+Message-ID: <AANLkTim3RWv2-qi9UMg1imwKTJuh3GstdjMTxz64uOHf@mail.gmail.com>
+Subject: Re: [PATCH v2 19/20] omap: zoom: keep the MMC3 wl1271 device powered
+	off
+To: "Gabay, Benzy" <benzyg@ti.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"Chikkature Rajashekar, Madhusudhan" <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	"Pandita, Vikram" <vikram.pandita@ti.com>,
+	Kalle Valo <kalle.valo@iki.fi>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The snprintf() function returns the number of characters that would have
-been written (not counting the NUL character on the end).  It could
-potentially be larger than the size of the buffer.
+Hi Gever,
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
+On Wed, Jul 21, 2010 at 9:55 PM, Gabay, Benzy <benzyg@ti.com> wrote:
+> From: Ohad Ben-Cohen [mailto:ohad@wizery.com]
+> Sent: Wednesday, July 21, 2010 12:34 PM
+> To: linux-wireless@vger.kernel.org; linux-mmc@vger.kernel.org; linux-omap@vger.kernel.org
+> Cc: linux-arm-kernel@lists.infradead.org; linux@arm.linux.org.uk; Chikkature Rajashekar, Madhusudhan; Luciano Coelho; akpm@linux-foundation.org; San Mehat; Roger Quadros; Tony Lindgren; Nicolas Pitre; Pandita, Vikram; Kalle Valo; Ohad Ben-Cohen
+> Subject: [PATCH v2 19/20] omap: zoom: keep the MMC3 wl1271 device powered off
+>
+> Keep the MMC3 wl1271 WLAN device powered off until its
+> SDIO function driver requests otherwise.
+>
+> Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+> ---
+>  arch/arm/mach-omap2/board-zoom-peripherals.c |    1 +
+>  arch/arm/mach-omap2/hsmmc.c                  |    3 +++
+>  arch/arm/mach-omap2/hsmmc.h                  |    1 +
+>  arch/arm/plat-omap/include/plat/mmc.h        |    3 +++
+>  drivers/mmc/host/omap_hsmmc.c                |    3 +++
+>  5 files changed, 11 insertions(+), 0 deletions(-)
+>
+> diff --git a/arch/arm/mach-omap2/board-zoom-peripherals.c b/arch/arm/mach-omap2/board-zoom-peripherals.c
+> index 3230801..3ab9125 100644
+> --- a/arch/arm/mach-omap2/board-zoom-peripherals.c
+> +++ b/arch/arm/mach-omap2/board-zoom-peripherals.c
+> @@ -217,6 +217,7 @@ static struct omap2_hsmmc_info mmc[] __initdata = {
+>                .gpio_wp        = -EINVAL,
+>                .gpio_cd        = -EINVAL,
+>                .ocr_mask       = MMC_VDD_165_195,
+> +               .dont_power_card = true,
+>                .priv_data      = &omap_zoom_wlan_data,
+>        },
+>        {}      /* Terminator */
+...
+> --
+> 1.7.0.4
+>
+> [Benzy Gabay] small comment: Please make sure that all 127x related changes are not bounded only to MMC3.
+> On OMAP4 WLAN is used on MMC5.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 3243877..cf9bcc6 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -524,6 +524,9 @@ static ssize_t read_file_tgt_stats(struct file *file, char __user *user_buf,
- 	len += snprintf(buf + len, sizeof(buf) - len,
- 			"%19s : %10u\n", "TX Rate", priv->debug.txrate);
- 
-+	if (len > sizeof(buf))
-+		len = sizeof(buf);
-+
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
- }
- 
-@@ -569,6 +572,9 @@ static ssize_t read_file_xmit(struct file *file, char __user *user_buf,
- 			"%20s : %10u\n", "VO queued",
- 			priv->debug.tx_stats.queue_stats[WME_AC_VO]);
- 
-+	if (len > sizeof(buf))
-+		len = sizeof(buf);
-+
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
- }
- 
-@@ -595,6 +601,9 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
- 			"%20s : %10u\n", "SKBs Dropped",
- 			priv->debug.rx_stats.skb_dropped);
- 
-+	if (len > sizeof(buf))
-+		len = sizeof(buf);
-+
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
- }
- 
+
+The only place MMC3 is bound is in the board files (see code snippet
+above), so that should be ok.
+
+I can probably split this patch to make this more obvious just by
+reading the diffstat if you prefer.
+
+
+Thanks,
+Ohad.
+
+
+>
