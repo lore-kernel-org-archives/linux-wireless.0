@@ -1,79 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:35421 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753929Ab0GEQtl convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56915 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754037Ab0GVKcK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jul 2010 12:49:41 -0400
-Received: by fxm14 with SMTP id 14so3886432fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Jul 2010 09:49:40 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTimcFgxOmw4oOa28unhmSpTt0jNacFKXRXycKKA9@mail.gmail.com>
-References: <AANLkTinOcy-n6EVzAasAJO1I2yNeWOiaCid0tGdxnuwa@mail.gmail.com>
-	<AC090B9732AB2B4DB7FF476E907FE660010673660C@dnce02.ent.ti.com>
-	<AANLkTimcFgxOmw4oOa28unhmSpTt0jNacFKXRXycKKA9@mail.gmail.com>
-Date: Mon, 5 Jul 2010 18:49:39 +0200
-Message-ID: <AANLkTikWzx5SZUxZ9qg5Y9jY44YzZlDvs1kSwbFET76H@mail.gmail.com>
-Subject: Re: wl1271 firmware
-From: Pazzo Da Legare <pazzodalegare@gmail.com>
-To: "Levi, Shahar" <shahar_levi@ti.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 22 Jul 2010 06:32:10 -0400
+Subject: Re: [PATCH 2/2] ath9k: Fix stop in tx date traffic after scan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Cc: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20100722102049.GB4355@vasanth-laptop>
+References: <1279790703-11521-1-git-send-email-vasanth@atheros.com>
+	 <1279792601.12439.1.camel@jlt3.sipsolutions.net>
+	 <20100722101142.GA4355@vasanth-laptop>
+	 <1279793694.12439.4.camel@jlt3.sipsolutions.net>
+	 <20100722102049.GB4355@vasanth-laptop>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 22 Jul 2010 12:32:04 +0200
+Message-ID: <1279794724.12439.5.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Shahar,
+On Thu, 2010-07-22 at 15:50 +0530, Vasanthakumar Thiagarajan wrote:
+> On Thu, Jul 22, 2010 at 03:44:54PM +0530, Johannes Berg wrote:
+> > On Thu, 2010-07-22 at 15:41 +0530, Vasanthakumar Thiagarajan wrote:
+> > > > Just go and implement flush() and all these issues will go away and you
+> > > > will stop thinking that you need to touch queues from channel switching.
+> > > > They have nothing to do with each other.
+> > > 
+> > > 
+> > > I thought about it also, but i'll hit the same issue 
+> > > when ieee80211_scan_state_leave_oper_channel() flushes
+> > > the hw tx queues where driver is not supposed to wake
+> > > up the queues as drv_flush() is called only after stopping
+> > > all queues.
+> > 
+> > I don't get it. The driver can start/stop queues at _any_ time it wants
+> > to. Regardless of what mac80211 is doing, all that goes via
+> > IEEE80211_QUEUE_STOP_REASON_DRIVER which is never touched by mac80211
+> > itself.
+> 
+> My understanding is, if driver wakes up the queues when operating on
+> a off-channel, it would get data frames from upper layer for
+> transmission but it should not send out these frames as the hw is on
+> non-operating channel.
 
-I start from tiwlan.ini file for tiwlan driver to produce an nvs file.
+Ok, that seems to be true, but only because we don't properly manage the
+interface queue stop in mac80211. Should be an easy fix there.
 
-Could you please indicate values to use for the following parameters
-of struct wl1271_nvs_file: general_params.srf1[],
-general_params.srf2[], general_params.srf3[],
-dyn_radio_params_2[].params.degraded_low_to_normal_thr,
-dyn_radio_params_2[].params.normal_to_degraded_high_thr,
-dyn_radio_params_5[i].params.degraded_low_to_normal_thr,
-dyn_radio_params_5[i].params.normal_to_degraded_high_thr
+johannes
 
-Thank you very much for your time,
-
-Best Regards,
-
-pz
-
-
-2010/7/5 Pazzo Da Legare <pazzodalegare@gmail.com>:
-> Hi Shahar,
->
-> Did you have any news about nvs file? I wrote an email to driver's
-> mantaneir too,
->
-> Thank you in advance,
->
-> pz
->
-> 2010/6/30 Levi, Shahar <shahar_levi@ti.com>:
->> Hi pz,
->> I am checking the way to access the FW and NVS file of wl1271.
->> Let me find more details on that and get back to you.
->> Regards,
->> Shahar
->> -----Original Message-----
->> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Pazzo Da Legare
->> Sent: Wednesday, June 30, 2010 2:27 PM
->> To: linux-wireless@vger.kernel.org
->> Subject: wl1271 firmware
->>
->> Hi all,
->>
->> I'm looking for wl1271 firmwares. I found wl1271-fw.bin but I cannot
->> find wl1271-nvs.bin needed to use the wl1271's driver.
->> Could you please indicate where I can get it?
->>
->> Thank in advance,
->>
->> pz
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
