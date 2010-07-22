@@ -1,26 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:50273 "EHLO ds10.nbd.name"
+Received: from mx1.redhat.com ([209.132.183.28]:6670 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758142Ab0GAT7j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Jul 2010 15:59:39 -0400
-Message-ID: <4C2CF3A9.1090408@openwrt.org>
-Date: Thu, 01 Jul 2010 21:59:37 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: tom.leiming@gmail.com
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH] minstrel_ht: fix check for downgrading of top2 rate
-References: <1277997590-3512-1-git-send-email-tom.leiming@gmail.com>
-In-Reply-To: <1277997590-3512-1-git-send-email-tom.leiming@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1752031Ab0GVUXq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jul 2010 16:23:46 -0400
+Subject: Re: [patch -next] libertas: precedence bug
+From: Dan Williams <dcbw@redhat.com>
+To: Dan Carpenter <error27@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Holger Schurig <holgerschurig@gmail.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+In-Reply-To: <20100722122102.GH17585@bicker>
+References: <20100722122102.GH17585@bicker>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 22 Jul 2010 15:24:54 -0700
+Message-ID: <1279837494.4829.18.camel@dcbw.foobar.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-07-01 5:19 PM, tom.leiming@gmail.com wrote:
-> From: Ming Lei <tom.leiming@gmail.com>
+On Thu, 2010-07-22 at 14:21 +0200, Dan Carpenter wrote:
+> Negate has precedence over comparison so the original test was always
+> false.  (Neither 0 nor 1 are equal to NL80211_IFTYPE_MONITOR).
 > 
-> The check should be against current top2 rate, instead of
-> current top rate.
-> 
-> Signed-off-by: Ming Lei <tom.leiming@gmail.com>
-Acked-by: Felix Fietkau <nbd@openwrt.org>
+> Signed-off-by: Dan Carpenter <error27@gmail.com>
+
+Acked-by: Dan Williams <dcbw@redhat.com>
+
+> diff --git a/drivers/net/wireless/libertas/tx.c b/drivers/net/wireless/libertas/tx.c
+> index 411a3bb..8000ca6 100644
+> --- a/drivers/net/wireless/libertas/tx.c
+> +++ b/drivers/net/wireless/libertas/tx.c
+> @@ -180,7 +180,7 @@ void lbs_send_tx_feedback(struct lbs_private *priv, u32 try_count)
+>  {
+>  	struct tx_radiotap_hdr *radiotap_hdr;
+>  
+> -	if (!priv->wdev->iftype == NL80211_IFTYPE_MONITOR ||
+> +	if (priv->wdev->iftype != NL80211_IFTYPE_MONITOR ||
+>  	    priv->currenttxskb == NULL)
+>  		return;
+>  
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
