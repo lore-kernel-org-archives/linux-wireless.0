@@ -1,64 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:47140 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753482Ab0GLVQh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jul 2010 17:16:37 -0400
-Message-ID: <4C3B8632.20305@openwrt.org>
-Date: Mon, 12 Jul 2010 23:16:34 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44136 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755705Ab0GVTpn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jul 2010 15:45:43 -0400
+Date: Thu, 22 Jul 2010 15:35:43 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dan Carpenter <error27@gmail.com>
+Cc: nbd@openwrt.org, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net
+Subject: Re: potential null deref in minstrel_ht_update_caps()?
+Message-ID: <20100722193543.GF2616@tuxdriver.com>
+References: <20100722110933.GA17585@bicker>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] ath9k: another fix for the A-MPDU buffer leak
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100722110933.GA17585@bicker>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch 'ath9k: fix a buffer leak in A-MPDU completion' addressed the
-issue of running out of buffers/descriptors in the tx path if a STA is
-deleted while tx status feedback is still pending.
-The remaining issue is that the skbs of the buffers are not reclaimed,
-leaving a memory leak.
-This patch fixes this issue by running the buffers through
-ath_tx_complete_buf(), ensuring that the pending frames counter is also
-updated.
+On Thu, Jul 22, 2010 at 01:09:33PM +0200, Dan Carpenter wrote:
+> This is a smatch thing.
+> 
+> net/mac80211/rc80211_minstrel_ht.c +639 minstrel_ht_update_caps(15)
+> 	warn: variable dereferenced before check 'sta'
+>    631          struct ieee80211_mcs_info *mcs = &sta->ht_cap.mcs;
+>    632          struct ieee80211_local *local = hw_to_local(mp->hw);
+>    633          u16 sta_cap = sta->ht_cap.cap;
+>                               ^^^^^^^^^^^^^^^
+> 	Dereferenced here.
+> 
+>    634          int ack_dur;
+>    635          int stbc;
+>    636          int i;
+>    637
+>    638          /* fall back to the old minstrel for legacy stations */
+>    639          if (sta && !sta->ht_cap.ht_supported) {
+>                     ^^^
+> 	Checked here.
+> 
+>    640                  msp->is_ht = false;
+>    641                  memset(&msp->legacy, 0, sizeof(msp->legacy));
+> 
+> It seems like a bug, but I'm not sure how to deal with it.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@kernel.org
----
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -329,7 +329,6 @@ static void ath_tx_complete_aggr(struct 
- 	int isaggr, txfail, txpending, sendbar = 0, needreset = 0, nbad = 0;
- 	bool rc_update = true;
- 	struct ieee80211_tx_rate rates[4];
--	unsigned long flags;
- 
- 	skb = bf->bf_mpdu;
- 	hdr = (struct ieee80211_hdr *)skb->data;
-@@ -346,9 +345,21 @@ static void ath_tx_complete_aggr(struct 
- 	if (!sta) {
- 		rcu_read_unlock();
- 
--		spin_lock_irqsave(&sc->tx.txbuflock, flags);
--		list_splice_tail_init(bf_q, &sc->tx.txbuf);
--		spin_unlock_irqrestore(&sc->tx.txbuflock, flags);
-+		INIT_LIST_HEAD(&bf_head);
-+		while (bf) {
-+			bf_next = bf->bf_next;
-+
-+			bf->bf_state.bf_type |= BUF_XRETRY;
-+			if ((sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) ||
-+			    !bf->bf_stale || bf_next != NULL)
-+				list_move_tail(&bf->list, &bf_head);
-+
-+			ath_tx_rc_status(bf, ts, 0, 0, false);
-+			ath_tx_complete_buf(sc, bf, txq, &bf_head, ts,
-+				0, 0);
-+
-+			bf = bf_next;
-+		}
- 		return;
- 	}
- 
+I think that sta NULL check is unnecessary there.
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
