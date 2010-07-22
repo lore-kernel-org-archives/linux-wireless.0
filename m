@@ -1,104 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:57891 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756223Ab0GPRpa (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:60432 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751270Ab0GVTDq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jul 2010 13:45:30 -0400
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH 01/11] Removing dead RT2800PCI_SOC
-Date: Fri, 16 Jul 2010 19:44:45 +0200
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ivo Van Doorn <ivdoorn@gmail.com>,
-	Christoph Egger <siccegge@cs.fau.de>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	vamos-dev@i4.informatik.uni-erlangen.de,
-	Luis Correia <luis.f.correia@gmail.com>
-References: <cover.1279110894.git.siccegge@cs.fau.de> <AANLkTik8M0gNipi_rwVJYbmo_3FfdHs-H4H_XDgTcbhI@mail.gmail.com> <4C407ED4.6000002@gmail.com>
-In-Reply-To: <4C407ED4.6000002@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201007161944.45825.helmut.schaa@googlemail.com>
+	Thu, 22 Jul 2010 15:03:46 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 41DF1421C8
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Jul 2010 15:03:45 -0400 (EDT)
+Subject: Compat-wireless release for 2010-07-22 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100722190343.1E4BD404F0@repository3.orbit-lab.org>
+Date: Thu, 22 Jul 2010 15:03:43 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Freitag 16 Juli 2010 schrieb Gertjan van Wingerde:
-> On 07/16/10 12:08, Helmut Schaa wrote:
-> > On Fri, Jul 16, 2010 at 9:18 AM, Gertjan van Wingerde
-> > <gwingerde@gmail.com> wrote:
-> >>
-> >> On 07/16/10 08:57, Helmut Schaa wrote:
-> >>> On Thu, Jul 15, 2010 at 10:41 AM, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com <mailto:bzolnier@gmail.com>> wrote:
-> >>>
-> >>>     On Wednesday 14 July 2010 04:44:44 pm Felix Fietkau wrote:
-> >>>     > On 2010-07-14 3:15 PM, John W. Linville wrote:
-> >>>     > > On Wed, Jul 14, 2010 at 02:52:14PM +0200, Ivo Van Doorn wrote:
-> >>>     > >> On Wed, Jul 14, 2010 at 2:46 PM, Luis Correia <luis.f.correia@gmail.com <mailto:luis.f.correia@gmail.com>> wrote:
-> >>>     > >> > On Wed, Jul 14, 2010 at 13:39, Christoph Egger <siccegge@cs.fau.de <mailto:siccegge@cs.fau.de>> wrote:
-> >>>     > >> >> While RT2800PCI_SOC exists in Kconfig, it depends on either
-> >>>     > >> >> RALINK_RT288X or RALINK_RT305X which are both not available in Kconfig
-> >>>     > >> >> so all Code depending on that can't ever be selected and, if there's
-> >>>     > >> >> no plan to add these options, should be cleaned up
-> >>>     > >> >>
-> >>>     > >> >> Signed-off-by: Christoph Egger <siccegge@cs.fau.de <mailto:siccegge@cs.fau.de>>
-> >>>     > >> >
-> >>>     > >> > NAK,
-> >>>     > >> >
-> >>>     > >> > this is not dead code, it is needed for the Ralink System-on-Chip
-> >>>     > >> > Platform devices.
-> >>>     > >> >
-> >>>     > >> > While I can't fix Kconfig errors and the current KConfig file may be
-> >>>     > >> > wrong, this code cannot and will not be deleted.
-> >>>     > >>
-> >>>     > >> When the config option was introduced, the config options RALINK_RT288X and
-> >>>     > >> RALINK_RT305X were supposed to be merged as well soon after by somebody (Felix?)
-> >>>     > >>
-> >>>     > >> But since testing is done on SoC boards by Helmut and Felix, I assume the code
-> >>>     > >> isn't dead but actually in use.
-> >>>     > >
-> >>>     > > Perhaps Helmut and Felix can send us the missing code?
-> >>>     > The missing code is a MIPS platform port, which is currently being
-> >>>     > maintained in OpenWrt, but is not ready for upstream submission yet.
-> >>>     > I'm not working on this code at the moment, but I think it will be
-> >>>     > submitted once it's ready.
-> >>>
-> >>>     People are using automatic scripts to catch unused config options nowadays
-> >>>     so the issue is quite likely to come back again sooner or later..
-> >>>
-> >>>     Would it be possible to improve situation somehow till the missing parts
-> >>>     get merged?  Maybe by adding a tiny comment documenting RT2800PCI_SOC
-> >>>     situation to Kconfig (if the config option itself really cannot be removed)
-> >>>     until all code is ready etc.?
-> >>>
-> >>>
-> >>> Or we could just remove RT2800PCI_SOC completely and build the soc specific
-> >>> parts always as part of rt2800pci. I mean it's not much code, just the platform
-> >>> driver stuff and the eeprom access.
-> >>>
-> >>
-> >> I'm not sure if that is feasible. Sure, we can reduce the usage of the variable by
-> >> unconditionally compiling in the generic SOC code, but we should not unconditionally
-> >> register the SOC platform device, which is currently also under the scope of this
-> >> Kconfig variable.
-> > 
-> > Ehm, no, the platform device is not registered in rt2800pci at all,
-> > it's just the platform
-> > driver that gets registered there. The platform device will be
-> > registered in the according
-> > board init code (that only resides in openwrt at the moment).
-> > 
-> 
-> OK. Didn't know that. Sounds good then.
-> 
-> However, I've tried this in my local tree, and now compilation fails on the x86 platform
-> due to a missing KSEG1ADDR macro. How do you suggest to handle the potentially missing
-> macro?
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   1a05138..04898a5  master     -> origin/master
+   0442f68..c7ecb8a  wl         -> origin/wl
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   5f11688..afdbfed  history    -> origin/history
+ + fecd01b...dd5c869 master     -> origin/master  (forced update)
+   e095937..cd5b8f8  stable     -> origin/stable
+ * [new tag]         next-20100722 -> next-20100722
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
 
-We can convert it to an ioremap call, that should be available on all platforms.
+compat-wireless code metrics
 
-Helmut
+    493727 - Total upstream lines of code being pulled
+      1447 - backport code changes
+      1211 - backport code additions
+       236 - backport code deletions
+      5764 - backport from compat module
+      7211 - total backport code
+    1.4605 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2467 - % of crap code
 
+Base tree: linux-next.git
+Base tree version: next-20100722
+compat-wireless release: compat-wireless-2010-07-13-4-g04898a5
