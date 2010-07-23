@@ -1,59 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lager.deltatee.com ([207.54.116.66]:55600 "EHLO
-	porter.deltatee.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756188Ab0GVSdQ (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:46810 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753561Ab0GWKFR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 14:33:16 -0400
-Message-ID: <4C488EEA.5020505@deltatee.com>
-Date: Thu, 22 Jul 2010 12:33:14 -0600
-From: Logan Gunthorpe <logang@deltatee.com>
+	Fri, 23 Jul 2010 06:05:17 -0400
+Date: Fri, 23 Jul 2010 12:04:42 +0200
+From: Dan Carpenter <error27@gmail.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	kernel-janitors@vger.kernel.org
+Subject: Re: [patch -next] ath5k: snprintf() returns largish values
+Message-ID: <20100723095252.GA26313@bicker>
+References: <20100722085202.GV17585@bicker> <201007231744.14922.br1@einfach.org>
 MIME-Version: 1.0
-To: Luciano Coelho <luciano.coelho@nokia.com>
-CC: linux-wireless@vger.kernel.org
-Subject: wl1271 with atmel-mci
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201007231744.14922.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luciano,
+On Fri, Jul 23, 2010 at 05:44:14PM +0900, Bruno Randolf wrote:
+> 
+> i think it would be better to make sure the buffer is always big enough to 
+> hold all the output (it's not very variable in length), but as a safety net 
+> this can't hurt.
+> 
 
-I've had the wl1271 working for the most part on an Atmel 
-micro-controller, but I've been fighting with a bug for the past couple 
-of days.
+This is a smatch thing.  I suppose someday I will fix smatch to
+evaulate the strings themselves and verify that the buffer is large
+enough.  But for now it's nice to be able to automatically check that
+the buffers don't overflow.  
 
-The problem happens whenever I try to transmit large packets of data 
-(using iperf, or nc, etc) the driver would hang and no longer be able to 
-send packets. tx_queue_len in the debugfs would then grow as I tried to 
-send packets but nothing would actually be sent to the device. At the 
-same time receiving packets would consistently work all of the time.
+regards,
+dan carpenter
 
-When this occurred I usually got the following messages:
-
-atmel_mci atmel_mci.0: data CRC error
-wl1271: ERROR sdio write failed (-84) - addr 0x14fd8, 1076 bytes, 1
-
-(Note: I added the bit at the end of the wl1271 write failed message in 
-order to try and debug this problem.)
-
-Upon further investigation I found that any calls to sdio_writesb with a 
-length greater than or equal to 1024 will occasionally fail with a data 
-CRC error and this would cause the device to stop working.
-
-I have also found that the following ugly hack in wl1271_sdio_raw_write 
-seems to fix the problem:
-
-if (len <= 1000) {
-     ret = sdio_writesb(func, addr, buf, len);
-} else {
-     ret = sdio_writesb(func, addr, buf, 1000);
-     ret |= sdio_writesb(func, addr, &buf[1000], len-1000);
-}
-
-Based on the above, I am currently thinking there may be a bug in the 
-atmel-mci driver that causes this problem. Therefore, I will likely 
-contact that driver's maintainer next. I was just hoping to get your 
-insight in case there is something I am missing on the wl1271 side.
-
-Thanks,
-
-Logan
