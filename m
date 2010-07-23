@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:50611 "EHLO mga11.intel.com"
+Received: from c60.cesmail.net ([216.154.195.49]:38861 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750870Ab0GITXb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jul 2010 15:23:31 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 0/4]  iwlwifi update for 2.6.36
-Date: Fri,  9 Jul 2010 12:24:36 -0700
-Message-Id: <1278703480-13363-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1757486Ab0GWW4G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jul 2010 18:56:06 -0400
+Subject: Re: [PATCH] zd1211rw: make CR_INTERRUPT cast explicit
+From: Pavel Roskin <proski@gnu.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
+	Ulrich Kunitz <kune@deine-taler.de>
+In-Reply-To: <20100722190339.GD2616@tuxdriver.com>
+References: <1279724935-16581-1-git-send-email-linville@tuxdriver.com>
+	 <1279730218.9003.7.camel@mj>  <20100722190339.GD2616@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 23 Jul 2010 18:55:36 -0400
+Message-ID: <1279925736.23722.5.camel@mj>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We add support for 6050 series Gen2 devices
-We also fix the bit mask of a FH register which will
-cause timeout by polling unused bits
-Newer version of uCode has advance error codes; we adding
-support for these.
+On Thu, 2010-07-22 at 15:03 -0400, John W. Linville wrote:
+> On Wed, Jul 21, 2010 at 12:36:58PM -0400, Pavel Roskin wrote:
+> > I think __force should be used sparingly, especially outside headers.  I
+> > tried other ways to prevent the warning.  I tried declaring int_num as
+> > zd_addr_t, but sparse keeps complaining about the same comparison.
+> 
+> Actually, it looks like it works w/o the "__force" as well.
+> Any objection to a version like that?
 
-Emmanuel Grumbach (1):
-  iwlagn: fix the bit mask of a FH register in stop Tx DMA flow
+Ideally, I would avoid any workarounds for sparse.  The bug was
+acknowledged by a sparse developer, so I expect it to be fixed.
+http://www.spinics.net/lists/linux-sparse/msg02167.html
 
-Jay Sternberg (1):
-  iwlwifi: correct descriptions of advanced ucode errors
+However, a version without __force would be more acceptable than a
+version with __force.
 
-Shanyu Zhao (1):
-  iwlwifi: enable 6050 series Gen2 devices
-
-Wey-Yi Guy (1):
-  iwlagn: more generic description for iwlagn devices
-
-these patches are also available from wireless-next-2.6 branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-
- drivers/net/wireless/iwlwifi/Kconfig      |    9 ++++-
- drivers/net/wireless/iwlwifi/iwl-6000.c   |   38 +++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    7 +++-
- drivers/net/wireless/iwlwifi/iwl-agn.c    |   44 +++++++++++++++++++++++++----
- drivers/net/wireless/iwlwifi/iwl-agn.h    |    1 +
- drivers/net/wireless/iwlwifi/iwl-csr.h    |    1 +
- drivers/net/wireless/iwlwifi/iwl-eeprom.h |    4 ++
- drivers/net/wireless/iwlwifi/iwl-fh.h     |    7 +----
- 8 files changed, 95 insertions(+), 16 deletions(-)
-
+-- 
+Regards,
+Pavel Roskin
