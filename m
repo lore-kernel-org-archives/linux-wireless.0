@@ -1,58 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:64237 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754905Ab0GZSaB convert rfc822-to-8bit (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:44689 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754611Ab0GWTfv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jul 2010 14:30:01 -0400
-Received: by pxi14 with SMTP id 14so186443pxi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Jul 2010 11:30:01 -0700 (PDT)
+	Fri, 23 Jul 2010 15:35:51 -0400
+Received: by pwi5 with SMTP id 5so3642292pwi.19
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jul 2010 12:35:50 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <AANLkTin7cn_TgEeepaWrE4sTuu5YxqPNDTDs-hxCs0vC@mail.gmail.com>
-References: <AANLkTimfc3NY46aYqPM5Ys2i9vpm2_qr5-kgsvc3sdkx@mail.gmail.com>
-	<AANLkTimpwMyfcvRGnJ1JfZP+F=4nFNT5Ra3pB3vse1LM@mail.gmail.com>
-	<loom.20100724T095719-176@post.gmane.org> <AANLkTin7cn_TgEeepaWrE4sTuu5YxqPNDTDs-hxCs0vC@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 26 Jul 2010 11:29:41 -0700
-Message-ID: <AANLkTi=NocpbHp2zcZtFONAWQMXbdxtFtNRroU-yRoKF@mail.gmail.com>
-Subject: Re: Atheros 0cf3:b003
-To: sergi <sergitfe1974@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stephen Chen <Stephen.Chen@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <AANLkTimdDhHudW6_7Hwcf6UCumY_EgqGd7CLtmSgOzEz@mail.gmail.com>
+References: <AANLkTimdDhHudW6_7Hwcf6UCumY_EgqGd7CLtmSgOzEz@mail.gmail.com>
+From: Andrew Lutomirski <luto@mit.edu>
+Date: Fri, 23 Jul 2010 15:35:30 -0400
+Message-ID: <AANLkTinfMiS=+dqi=azF2exJbkrSLYT9nN0aor7gff-Q@mail.gmail.com>
+Subject: Re: regulatory hiccup
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 26, 2010 at 11:29 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
-> On Sat, Jul 24, 2010 at 1:04 AM, sergi <sergitfe1974@gmail.com> wrote:
->> Luis R. Rodriguez <mcgrof@...> writes:
->>
->>>
->>> 2010/7/23 Maximi89 <maximi89@...>:
->>> > Hola Luis, conoces ese ID?, Atheros 0cf3:b003
->>> > Es efectivamente un AR9271?
->>>
->>> No, cual tarjeta es esa? Las que tenemos son estos:
->>>
->>
->>> Â  Â  Â  Â  { },
->>> };
->>>
->>> Stephen, have you heard of 0cf3:b003 as an ar9271 or HB94 card?
->>>
->>> Â  Luis
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->>> the body of a message to majordomo@...
->>> More majordomo info at Â http://vger.kernel.org/majordomo-info.html
->>>
->>> Hola Luis yo fui quien le mando la consulta a maximiliano,,mi lapiz usb es de
->> la casa Ubiquiti modelo wifistation ext y ahi dicen k tiene el atheros 9271..y
->> el id k me sale es el mencionado,,tanto en Mac,Linux y con Everest en win,uso
->> Ubuntu Ultimate 2.7 con kernel 2.6.32-24 y nada k no me funciona,Podria cmbiar
->> el Id para k sea compatible?? ..bueno muchas gracias por tu atencion
+On Fri, Jul 23, 2010 at 3:30 PM, Andrew Lutomirski <luto@mit.edu> wrote:
 >
-> Can you please share your Windows driver INF file ?
+> Then, after fiddling with an AP for a bit, I got:
+>
+> [11747.264221] cfg80211: Calling CRDA for country: US
+> [11747.282664] cfg80211: Current regulatory domain updated by AP to: US
+> [11747.282672]     (start_freq - end_freq @ bandwidth),
+> (max_antenna_gain, max_eirp)
+> [11747.282680]     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 1600 mBm)
+> [11747.282688]     (5250000 KHz - 5330000 KHz @ 40000 KHz), (300 mBi, 1600 mBm)
+>
 
-Forgot to CC Stephen, please include him in your replies.
+It's worse than that.  I reconnected to the AP (it appeared to work
+for a few seconds) and I saw:
 
-  Luis
+Wiphy phy0
+[...]
+	Band 2:
+		Capabilities: 0x872
+			HT20/HT40
+			Static SM Power Save
+			RX Greenfield
+			RX HT20 SGI
+			RX HT40 SGI
+			No RX STBC
+			Max AMSDU length: 3839 bytes
+			No DSSS/CCK HT40
+		Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
+		Minimum RX AMPDU time spacing: 4 usec (0x05)
+		HT TX/RX MCS rate indexes supported: 0-23, 32
+		Frequencies:
+			* 5180 MHz [36] (15.0 dBm) (passive scanning, no IBSS)
+			* 5200 MHz [40] (15.0 dBm) (passive scanning, no IBSS)
+			* 5220 MHz [44] (15.0 dBm) (passive scanning, no IBSS)
+			* 5240 MHz [48] (15.0 dBm) (passive scanning, no IBSS)
+			* 5260 MHz [52] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5280 MHz [56] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5300 MHz [60] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5320 MHz [64] (15.0 dBm) (passive scanning, no IBSS, radar detection)
+			* 5500 MHz [100] (disabled)
+			* 5520 MHz [104] (disabled)
+			* 5540 MHz [108] (disabled)
+			* 5560 MHz [112] (disabled)
+			* 5580 MHz [116] (disabled)
+			* 5600 MHz [120] (disabled)
+			* 5620 MHz [124] (disabled)
+			* 5640 MHz [128] (disabled)
+			* 5660 MHz [132] (disabled)
+			* 5680 MHz [136] (disabled)
+			* 5700 MHz [140] (disabled)
+			* 5745 MHz [149] (disabled)
+			* 5765 MHz [153] (disabled)
+			* 5785 MHz [157] (disabled)
+			* 5805 MHz [161] (disabled)
+			* 5825 MHz [165] (disabled)
+
+Which is absurd, because:
+
+Connected to 00:02:6f:6e:d7:6c (on wlan0)
+	SSID: FFTT5
+	freq: 5785        [!!!!!!!!!!!]
+	RX: 72058 bytes (310 packets)
+	TX: 2568 bytes (20 packets)
+	signal: -33 dBm
+	tx bitrate: 6.0 MBit/s
+
+The connection died after a little while, presumably because the AP
+was outside of its own allowed band.
