@@ -1,54 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:58269 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754562Ab0G2Pgv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jul 2010 11:36:51 -0400
-Message-ID: <4C51A00B.3020200@openwrt.org>
-Date: Thu, 29 Jul 2010 17:36:43 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34588 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753724Ab0GWNpN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jul 2010 09:45:13 -0400
+Date: Fri, 23 Jul 2010 09:33:11 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	nuh <nuh@mailinator.net>
+Subject: Re: 2.6.35-rc6: Reported regressions from 2.6.34
+Message-ID: <20100723133310.GD6678@tuxdriver.com>
+References: <Lupw7pePXBO.A.fZH.G2XSMB@chimera>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] mac80211: fix driver offchannel notification when the channel
- does not change
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <Lupw7pePXBO.A.fZH.G2XSMB@chimera>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When running in client mode and associating to an AP, the channel
-change is usually performed with the offchannel flag still set.
-However after the assoc is complete, the following channel change event
-is suppressed because the run time channel is already set to the operating channel.
-Fix this by sending channel change notifications to the driver even if
-only the offchannel flag changes.
+On Fri, Jul 23, 2010 at 01:42:26PM +0200, Rafael J. Wysocki wrote:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -103,11 +103,13 @@ int ieee80211_hw_config(struct ieee80211
- 	int ret = 0;
- 	int power;
- 	enum nl80211_channel_type channel_type;
-+	u32 offchannel_flag;
- 
- 	might_sleep();
- 
- 	scan_chan = local->scan_channel;
- 
-+	offchannel_flag = local->hw.conf.flags & IEEE80211_CONF_OFFCHANNEL;
- 	if (scan_chan) {
- 		chan = scan_chan;
- 		channel_type = NL80211_CHAN_NO_HT;
-@@ -121,8 +123,9 @@ int ieee80211_hw_config(struct ieee80211
- 		channel_type = local->_oper_channel_type;
- 		local->hw.conf.flags &= ~IEEE80211_CONF_OFFCHANNEL;
- 	}
-+	offchannel_flag ^= local->hw.conf.flags & IEEE80211_CONF_OFFCHANNEL;
- 
--	if (chan != local->hw.conf.channel ||
-+	if (offchannel_flag || chan != local->hw.conf.channel ||
- 	    channel_type != local->hw.conf.channel_type) {
- 		local->hw.conf.channel = chan;
- 		local->hw.conf.channel_type = channel_type;
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16201
+> Subject		: SIOCGIWFREQ ioctl fails to get frequency info
+> Submitter	: nuh <nuh@mailinator.net>
+> Date		: 2010-06-14 10:45 (40 days old)
+
+Also 40 days since I posted a comment requesting some information, with
+no response from the poster...  Honestly, if SIOCGIWFREQ were actually
+broken I would think there would be a lot of unhappy iwconfig users?
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
