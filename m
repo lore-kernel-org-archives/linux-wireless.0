@@ -1,76 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:35906 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966638Ab0GSUNJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jul 2010 16:13:09 -0400
-Received: by fxm14 with SMTP id 14so2399738fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jul 2010 13:13:08 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4C449C67.6010004@davizone.at>
-References: <4C449C67.6010004@davizone.at>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Mon, 19 Jul 2010 22:12:48 +0200
-Message-ID: <AANLkTimj6DhVK7WePrpoJap6M_OtteoHtS8UMYcVloIV@mail.gmail.com>
-Subject: Re: [PATCH] cfg80211: fix WEXT ioctl GIWFREQ for monitor interfaces
-To: David Gnedt <david.gnedt@davizone.at>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:47891 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759778Ab0GWQN5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jul 2010 12:13:57 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 07/10] iwlwifi: make iwl_mac_beacon_update static
+Date: Fri, 23 Jul 2010 09:15:36 -0700
+Message-Id: <1279901739-10541-8-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1279901739-10541-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1279901739-10541-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 19, 2010 at 8:41 PM, David Gnedt <david.gnedt@davizone.at> wrote:
-> The cfg80211_set_freq function now also saves the channel for monitor
-> interfaces.
-> This fixes a issue were the WEXT ioctl GIWFREQ doesn't report the correct
-> channel when the channel was switched in monitor mode.
->
-> Signed-off-by: David Gnedt <david.gnedt@davizone.at>
-> ---
->  net/wireless/chan.c |    7 +++----
->  1 files changed, 3 insertions(+), 4 deletions(-)
->
-> diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-> index d0c92dd..fd05938 100644
-> --- a/net/wireless/chan.c
-> +++ b/net/wireless/chan.c
-> @@ -51,9 +51,6 @@ int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
->        struct ieee80211_channel *chan;
->        int result;
->
-> -       if (wdev && wdev->iftype == NL80211_IFTYPE_MONITOR)
-> -               wdev = NULL;
-> -
->        if (wdev) {
->                ASSERT_WDEV_LOCK(wdev);
->
-> @@ -69,7 +66,9 @@ int cfg80211_set_freq(struct cfg80211_registered_device *rdev,
->                return -EINVAL;
->
->        result = rdev->ops->set_channel(&rdev->wiphy,
-> -                                       wdev ? wdev->netdev : NULL,
-> +                                       wdev && wdev->iftype !=
-> +                                               NL80211_IFTYPE_MONITOR ?
-> +                                                       wdev->netdev : NULL,
+From: Johannes Berg <johannes.berg@intel.com>
 
-Just out of curiosity: why is it important to pass NULL as netdev for
-monitor interfaces?
+This function is only needed in the same
+file it is defined in, i.e. iwl-core.c
 
->                                        chan, channel_type);
->        if (result)
->                return result;
-> --
-> 1.6.3.3
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |   63 +++++++++++++++----------------
+ drivers/net/wireless/iwlwifi/iwl-core.h |    1 -
+ 2 files changed, 31 insertions(+), 33 deletions(-)
 
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 676d49d..cb2d48a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1748,6 +1748,37 @@ static inline void iwl_set_no_assoc(struct iwl_priv *priv)
+ 	iwlcore_commit_rxon(priv);
+ }
+ 
++static int iwl_mac_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb)
++{
++	struct iwl_priv *priv = hw->priv;
++	unsigned long flags;
++	__le64 timestamp;
++
++	IWL_DEBUG_MAC80211(priv, "enter\n");
++
++	if (!iwl_is_ready_rf(priv)) {
++		IWL_DEBUG_MAC80211(priv, "leave - RF not ready\n");
++		return -EIO;
++	}
++
++	spin_lock_irqsave(&priv->lock, flags);
++
++	if (priv->ibss_beacon)
++		dev_kfree_skb(priv->ibss_beacon);
++
++	priv->ibss_beacon = skb;
++
++	timestamp = ((struct ieee80211_mgmt *)skb->data)->u.beacon.timestamp;
++	priv->timestamp = le64_to_cpu(timestamp);
++
++	IWL_DEBUG_MAC80211(priv, "leave\n");
++	spin_unlock_irqrestore(&priv->lock, flags);
++
++	priv->cfg->ops->lib->post_associate(priv, priv->vif);
++
++	return 0;
++}
++
+ void iwl_bss_info_changed(struct ieee80211_hw *hw,
+ 			  struct ieee80211_vif *vif,
+ 			  struct ieee80211_bss_conf *bss_conf,
+@@ -1914,38 +1945,6 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
+ }
+ EXPORT_SYMBOL(iwl_bss_info_changed);
+ 
+-int iwl_mac_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb)
+-{
+-	struct iwl_priv *priv = hw->priv;
+-	unsigned long flags;
+-	__le64 timestamp;
+-
+-	IWL_DEBUG_MAC80211(priv, "enter\n");
+-
+-	if (!iwl_is_ready_rf(priv)) {
+-		IWL_DEBUG_MAC80211(priv, "leave - RF not ready\n");
+-		return -EIO;
+-	}
+-
+-	spin_lock_irqsave(&priv->lock, flags);
+-
+-	if (priv->ibss_beacon)
+-		dev_kfree_skb(priv->ibss_beacon);
+-
+-	priv->ibss_beacon = skb;
+-
+-	timestamp = ((struct ieee80211_mgmt *)skb->data)->u.beacon.timestamp;
+-	priv->timestamp = le64_to_cpu(timestamp);
+-
+-	IWL_DEBUG_MAC80211(priv, "leave\n");
+-	spin_unlock_irqrestore(&priv->lock, flags);
+-
+-	priv->cfg->ops->lib->post_associate(priv, priv->vif);
+-
+-	return 0;
+-}
+-EXPORT_SYMBOL(iwl_mac_beacon_update);
+-
+ static int iwl_set_mode(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ {
+ 	iwl_connection_init_rx_config(priv, vif);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index b60cf45..e9d23f2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -380,7 +380,6 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
+ 				     struct ieee80211_vif *vif,
+ 				     struct ieee80211_bss_conf *bss_conf,
+ 				     u32 changes);
+-int iwl_mac_beacon_update(struct ieee80211_hw *hw, struct sk_buff *skb);
+ int iwl_commit_rxon(struct iwl_priv *priv);
+ int iwl_mac_add_interface(struct ieee80211_hw *hw,
+ 			  struct ieee80211_vif *vif);
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.7.0.4
+
