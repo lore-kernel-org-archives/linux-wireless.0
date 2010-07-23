@@ -1,51 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:42735 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752319Ab0GPRNF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jul 2010 13:13:05 -0400
-Received: by pxi14 with SMTP id 14so1007056pxi.19
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jul 2010 10:13:04 -0700 (PDT)
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:55850 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753177Ab0GWTWc convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jul 2010 15:22:32 -0400
 MIME-Version: 1.0
-In-Reply-To: <4C402360.5050502@marvell.com>
-References: <4C3F0AA3.4050706@marvell.com> <AANLkTiljhQpDh_20zEf8HjYnk82BpUi4Gctu9G90aqpS@mail.gmail.com>
-	<4C402360.5050502@marvell.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 16 Jul 2010 10:12:44 -0700
-Message-ID: <AANLkTim2fLLZfD5xrUtioY5mZaF-PgLwrVlMHQHwsL41@mail.gmail.com>
-Subject: Re: [RFC] mac80211: indicate BA window size with IEEE80211_AMPDU_TX_OPERATIONAL
-	drv_ampud_action
-To: yogeshp <yogeshp@marvell.com>
-Cc: Pradeep Nemavat <pnemavat@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1279907297.24768.1678.camel@Joe-Laptop.home>
+References: <20100722085202.GV17585@bicker> <201007231744.14922.br1@einfach.org>
+	<20100723095252.GA26313@bicker> <1279907297.24768.1678.camel@Joe-Laptop.home>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Fri, 23 Jul 2010 12:21:35 -0700
+Message-ID: <AANLkTi==h70Cgj-SzRShVU1eJ1CGkL93-5XV55Ry6-eD@mail.gmail.com>
+Subject: Re: [patch -next] ath5k: snprintf() returns largish values
+To: Joe Perches <joe@perches.com>
+Cc: Dan Carpenter <error27@gmail.com>, Bruno Randolf <br1@einfach.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Jiri Slaby <jirislaby@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, ath5k-devel@venema.h4ckr.net,
+	kernel-janitors <kernel-janitors@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 16, 2010 at 2:16 AM, yogeshp <yogeshp@marvell.com> wrote:
-> Hi Luis,
-> Â Please see inline comments
+On Fri, Jul 23, 2010 at 10:48 AM, Joe Perches <joe@perches.com> wrote:
 >
-> Luis R. Rodriguez wrote:
->> On Thu, Jul 15, 2010 at 6:18 AM, yogeshp <yogeshp@marvell.com> wrote:
->>> BA window size for a successful BA setup is not made available to the driver by
->>> mac80211. The patch below gets the BA window size from addba response and
->>> indicates it to driver through IEEE80211_AMPDU_TX_OPERATIONAL drv_ampdu_action.
+> There are also many repeated uses of snprintf in kernel sources
+> that could similarly be a problem.
 >
->> But why do you want that? Your patch and commit log do not mention why
->> you need this.
-> BA window size from ADDBA response defines how many outstanding MPDUs are allowed for the BA stream by recipient. Since ADDBA response is processed in mac80211 stack, mac80211 should communicate the BA window size to driver (and may be from driver it is further communicated to firmware/hardware) to control the number of outstanding MPDUs while transmitting MPDUs for the stream.
+>        bar += snprintf(foo + bar, ...)
+>        bar += snprintf(foo + bar, ...)
+> or
+>        foo += snprintf(foo, ...)
+>        foo += snprintf(foo, ...)
 
-What driver requires this? Your patch does all these changes but do
-not show any secondary patch of a user, so the patch is pointless
-right now.
+As long as the number of bytes is updated correctly, this won't be a
+security problem, although it can cause a (single) warning. The kernel
+vsnprintf does
 
->> When I compile mac80211 with your patch it fails compilation
-> I do not see this compilation error, I think the patch did not apply cleanly. I will send out another patch without extra white spaces that should solve the compilation issue. If the change is fine, we can then send patches to fix the compilation issues for other drivers too.
->
+        if (WARN_ON_ONCE((int) size < 0))
+                return 0;
 
-..
+so if somebody overflows a buffer with multiple snprintf calls, it
+will all be ok as long as the buffer size thing is updated the natural
+way (possibly using pointer arithmetic, eg "end - bar").
 
-  Luis
+                Linus
