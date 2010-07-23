@@ -1,94 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:42411 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752126Ab0GLQZe convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38649 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750788Ab0GWGBl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jul 2010 12:25:34 -0400
-Received: by qwh6 with SMTP id 6so1345222qwh.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jul 2010 09:25:33 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTinubmjYu9FyDU0B81F0gHmFPLnDUWYGmZ9Rodss@mail.gmail.com>
-References: <AANLkTinubmjYu9FyDU0B81F0gHmFPLnDUWYGmZ9Rodss@mail.gmail.com>
-Date: Mon, 12 Jul 2010 09:25:33 -0700
-Message-ID: <AANLkTilFB6o-Qq0VTVNhd01TpdLX4JUYCAlZu-RgKH1I@mail.gmail.com>
-Subject: Re: Rate control & USB
-From: Steve deRosier <steve@cozybit.com>
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 23 Jul 2010 02:01:41 -0400
+Subject: Re: [PATCH] mac80211: Don't set per-BSS QoS for monitor interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <19529.9687.183293.284789@gargle.gargle.HOWL>
+References: <19529.9687.183293.284789@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 23 Jul 2010 08:01:08 +0200
+Message-ID: <1279864868.3745.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ivo,
+On Fri, 2010-07-23 at 10:47 +0530, Sujith wrote:
+> In AP mode, there is no need to notify the driver about QoS
+> changes for the monitor interface that is created. The warning
+> in ieee80211_bss_info_change_notify() would be hit otherwise.
 
-I don't know much about the details of either the rate control
-algorithms, or other USB devices, but the usb8388 with the libertas_tf
-driver _does_ report per skb tx feedback, not just that the frame has
-been sent to the hardware.  Perhaps there's other USB devices that
-also have good feedback?
+Makes sense.
 
-In any case, I'm just asking that nothing gets broken in the case
-where the USB devices _do_ provide the tx feedback information.  I
-assume you weren't going to break anything, but I just wanted to make
-sure you knew that some USB devices did have this feature.
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-- Steve
+> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+> ---
+>  net/mac80211/util.c |    8 ++++++--
+>  1 files changed, 6 insertions(+), 2 deletions(-)
+> 
+> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+> index 7947921..748387d 100644
+> --- a/net/mac80211/util.c
+> +++ b/net/mac80211/util.c
+> @@ -803,8 +803,12 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata)
+>  
+>  	/* after reinitialize QoS TX queues setting to default,
+>  	 * disable QoS at all */
+> -	sdata->vif.bss_conf.qos = sdata->vif.type != NL80211_IFTYPE_STATION;
+> -	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_QOS);
+> +
+> +	if (sdata->vif.type != NL80211_IFTYPE_MONITOR) {
+> +		sdata->vif.bss_conf.qos =
+> +			sdata->vif.type != NL80211_IFTYPE_STATION;
+> +		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_QOS);
+> +	}
+>  }
+>  
+>  void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
 
-On Mon, Jul 12, 2010 at 3:48 AM, Ivo Van Doorn <ivdoorn@gmail.com> wrote:
-> Hi,
->
-> I am currently looking into the old problem of the mac80211 rate
-> control algorithms
-> and USB devices. The Ralink USB devices (and as far as I know, the
-> other USB devices
-> as well), do not work well with the PID and Minstrel algorithms. This
-> is caused by the
-> fact that USB devices do not report the TX status to mac80211.
->
-> When the URB callback function is called, it only indicates the frame
-> was uploaded
-> to the hardware, and the frame has been enqueued in the hardware queue
-> within the
-> USB device itself. The statistics about the number of retries and the
-> ACK status are
-> therefor lost.
->
-> These statistics are however often still available (in a limited form)
-> within the device
-> registers. Although these statistics cannot be obtained per frame, it
-> might still be
-> possible to control a working rate control algorithm with it.
->
-> My current idea for this, is not to generate a completely new
-> algorithm, but base
-> it on the currently existing rate controls. For this I want to
-> introduce a new flag:
-> IEEE80211_HW_REQUIRES_BATCH_TX_STATUS, This flag will enable
-> polling in mac80211, where the callback function ieee80211_ops->get_tx_stats
-> is called. In this function the driver can fill in a structure
-> containing the number
-> of Acked frames, non-acked frames and retries. This structure can then be
-> passed to a new function in the rate_control_ops structure.
->
-> The problem here is that we have lost the per-sta statistics. However using the
-> single TX status reports, we can count the number of frames which are sent for
-> a given STA during the poll interval. We can then determine the percentage of
-> frames sent for that STA, We can then add the percentage of the retry and ACK
-> count to each STA. Throughout poll interval the rate algorithm would send all
-> frames to the same STA with the same TX rate, but between polls, the rate will
-> be updated.
->
-> Overall these changes will not make the optimal use of PID or
-> Minstrel, but it would
-> at least improve the situation for USB.
->
-> Any thoughts about this solution?
->
-> Ivo
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+
