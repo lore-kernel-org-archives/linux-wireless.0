@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:48459
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751081Ab0GMVgl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jul 2010 17:36:41 -0400
-Date: Tue, 13 Jul 2010 14:36:55 -0700 (PDT)
-Message-Id: <20100713.143655.226786247.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next-2.6 2010-07-13
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20100713203639.GE3835@tuxdriver.com>
-References: <20100713203639.GE3835@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mail.atheros.com ([12.36.123.2]:22509 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752238Ab0GWFN6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jul 2010 01:13:58 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Jul 2010 22:13:58 -0700
+From: Sujith <Sujith.Manoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <19529.9687.183293.284789@gargle.gargle.HOWL>
+Date: Fri, 23 Jul 2010 10:47:11 +0530
+To: <linville@tuxdriver.com>
+CC: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: Don't set per-BSS QoS for monitor interfaces
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 13 Jul 2010 16:36:40 -0400
+In AP mode, there is no need to notify the driver about QoS
+changes for the monitor interface that is created. The warning
+in ieee80211_bss_info_change_notify() would be hit otherwise.
 
-> Here is the latest batch of wireless LAN goodies intended for 2.6.36.
-> It is more-or-less the usual batch of driver updates, including ath9k,
-> iwlwifi, rt2x00, and wl1271.  The usual flurry of mac80211 updates is
-> missing, due mostly to Johannes attending to a personal obligation of a
-> happy nature. :-)
-> 
-> Please let me know if there are problems!
+Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+---
+ net/mac80211/util.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
 
-Pulled, but please be on the lookout for things that add uses
-of "attribute ((packed))" instead of "__packed".
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 7947921..748387d 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -803,8 +803,12 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata)
+ 
+ 	/* after reinitialize QoS TX queues setting to default,
+ 	 * disable QoS at all */
+-	sdata->vif.bss_conf.qos = sdata->vif.type != NL80211_IFTYPE_STATION;
+-	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_QOS);
++
++	if (sdata->vif.type != NL80211_IFTYPE_MONITOR) {
++		sdata->vif.bss_conf.qos =
++			sdata->vif.type != NL80211_IFTYPE_STATION;
++		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_QOS);
++	}
+ }
+ 
+ void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
+-- 
+1.7.1.1
 
-Eric Dumazet converted all of drivers/net and I've been endlessly
-seeing partial reverts and new additions of the explicit attribute in
-wireless commits.
-
-For example, see the things that got added to iwlwifi this time around.
-
-Please fix them up, all of them, for the next pull request I see from
-you.
-
-Thanks!
