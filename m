@@ -1,61 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:24164 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754152Ab0GZLnN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jul 2010 07:43:13 -0400
-Subject: Re: Hardware needs to know when EAP nego is complete
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>
-In-Reply-To: <1280143430.3693.7.camel@jlt3.sipsolutions.net>
-References: <1280142400.6475.33.camel@wimaxnb.nmp.nokia.com>
-	 <1280143430.3693.7.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 26 Jul 2010 14:42:30 +0300
-Message-ID: <1280144550.6475.48.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:25118 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756515Ab0GWQNz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jul 2010 12:13:55 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 00/10] iwlwifi update for 2.6.36
+Date: Fri, 23 Jul 2010 09:15:29 -0700
+Message-Id: <1279901739-10541-1-git-send-email-wey-yi.w.guy@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-07-26 at 13:23 +0200, ext Johannes Berg wrote:
-> On Mon, 2010-07-26 at 14:06 +0300, Juuso Oikarinen wrote:
-> > 
-> > 
-> > Thoughts? Ideas? Would this be acceptable?
-> 
-> I really don't like this. You _can_ figure out if a given frame is EAP
-> by looking at its ethertype (but don't implement WAPI then!) ... can't
-> you just give it priority _by frame_?
+We add statistics notification support for WiFi/BT combo devices.
+We also add the capability to read multiple MAC address from EEPROM and
+advertise them to cfg80211.
+We also fix the gcc complains about the firmware loading on parsing TLV.
 
-I don't like it either, but my hands are bound. With this chip I cannot
-give priority by frame. The way it works on that chip is that after
-association you tell the chip to change mode, and that's it - no going
-back.
+Johannes Berg (4):
+  iwlagn: fix firmware loading TLV error path
+  iwlwifi: make iwl_mac_beacon_update static
+  iwlwifi: reduce beacon fill conditions
+  iwlwifi: remove spurious semicolons
 
-> Also, it doesn't make any sense, since if you really care then you want
-> rekeying to also have priority...
+Wey-Yi Guy (6):
+  iwlagn: add statistic notification structure for WiFi/BT devices
+  iwlagn: add .cfg flag to idenfity the need for bt statistics
+  iwlagn: Add support for bluetooth statistics notification
+  iwlagn: add bluetooth stats to debugfs
+  iwlwifi: add TLV to specify the size of phy calibration table
+  iwlwifi: read multiple MAC addresses
 
-Yep, this is a problem I too have been thinking about. However, with
-this chip, you cannot change the priority back for re-keying. So
-essentially, those negotiations are done with the "lowered"  WLAN
-priority, and if they happen to fail the connection manager will as
-result end up associating again with increased priority.
+these patches are also available from wireless-next-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
 
-The fact is we need this to be done this way. I have been thinking about
-all possible ways to do this hack inside the driver, triggering on
-setting of keys etc, but as far as I can tell it's not doable without
-assumptions having unacceptable impact on functionality.
-
-We'll have to consider some driver-specific hack-interface then, along
-with a correspondingly hacked user-space connection manager. This will
-just cause other users of the wl1271 driver ending up with dysfunctional
-BT-WLAN coex.
-
--Juuso
-
-> johannes
-> 
-
+ drivers/net/wireless/iwlwifi/iwl-1000.c        |    1 +
+ drivers/net/wireless/iwlwifi/iwl-4965.c        |    5 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c        |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-6000.c        |    7 +
+ drivers/net/wireless/iwlwifi/iwl-agn-calib.c   |   64 +++++--
+ drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c |  225 +++++++++++++++++++-----
+ drivers/net/wireless/iwlwifi/iwl-agn-debugfs.h |    7 +
+ drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c    |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rx.c      |  167 ++++++++++++------
+ drivers/net/wireless/iwlwifi/iwl-agn.c         |  130 +++++++++------
+ drivers/net/wireless/iwlwifi/iwl-calib.h       |    6 +-
+ drivers/net/wireless/iwlwifi/iwl-commands.h    |   55 ++++++-
+ drivers/net/wireless/iwlwifi/iwl-core.c        |   63 ++++----
+ drivers/net/wireless/iwlwifi/iwl-core.h        |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c     |   13 ++
+ drivers/net/wireless/iwlwifi/iwl-dev.h         |   16 ++
+ drivers/net/wireless/iwlwifi/iwl-eeprom.h      |    1 +
+ drivers/net/wireless/iwlwifi/iwl3945-base.c    |    4 +-
+ 19 files changed, 561 insertions(+), 216 deletions(-)
 
