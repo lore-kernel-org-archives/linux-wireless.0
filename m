@@ -1,62 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60748 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751230Ab0G0QPM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 12:15:12 -0400
-Date: Tue, 27 Jul 2010 12:04:34 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Confused - bisecting wireless-testing
-Message-ID: <20100727160434.GB31694@tuxdriver.com>
-References: <AANLkTim-0qoS7o+fcQ6uA18AC_gQSiiDe4Tv_L1FT1Ae@mail.gmail.com>
- <20100727140139.GA31694@tuxdriver.com>
- <AANLkTimS2d0jZnu-44+cbFQXvitj_3Rq3egttgOzEiRh@mail.gmail.com>
+Received: from eyas.biff.org.uk ([80.68.92.121]:49189 "EHLO eyas.biff.org.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753033Ab0GWJ3V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jul 2010 05:29:21 -0400
+Message-ID: <4C495BD7.2080004@thekelleys.org.uk>
+Date: Fri, 23 Jul 2010 10:07:35 +0100
+From: Simon Kelley <simon@thekelleys.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <AANLkTimS2d0jZnu-44+cbFQXvitj_3Rq3egttgOzEiRh@mail.gmail.com>
+To: Dan Williams <dcbw@redhat.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] MAINTAINERS: orphan the atmel wireless driver
+References: <1279823468-21366-1-git-send-email-linville@tuxdriver.com> <1279837721.4829.19.camel@dcbw.foobar.com>
+In-Reply-To: <1279837721.4829.19.camel@dcbw.foobar.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 27, 2010 at 08:56:54AM -0700, Luis R. Rodriguez wrote:
-> On Tue, Jul 27, 2010 at 7:01 AM, John W. Linville
-> <linville@tuxdriver.com> wrote:
-> > On Mon, Jul 26, 2010 at 08:27:06PM -0700, Luis R. Rodriguez wrote:
-> >> 04:23  * mcgrof is confused, I just did a git bisect -i on
-> >> wireless-testing on some patch on Fri Jul 2 00:09:49 2010  and ended
-> >> up with a 2.6.34 top level
-> >>           Makefile
-> >> 04:23 < mcgrof> it was git rebase -i ba17bc5e55ba541d2a8765fca53b6883b667ab21
-> >> 04:23 < mcgrof> eh
-> >> 04:24 < mcgrof> how am I supposed to bisect wl now
-> >> 04:24 < mcgrof> the odd thing though is that the top commit is ancient
-> >> 04:24 < mcgrof> http://paste.pocoo.org/show/242077/
-> >> 04:24 < mcgrof> but the other ones are OK
-> >>
-> >> I realize we should use wireless-2.6.git to bisect stable but I need
-> >> to bisect against recent patches that spans different master- tags
-> >> from you, I figured git bisecting wireless-testing would work now that
-> >> you are using a different method to move your tree forward but am I
-> >> wrong? Should I only bisect between master tags still?
-> >
-> > wireless-testing is a nasty mess when it comes to bisection.
-> > I am considering a one-time rebase of wireless-testing after the
-> > next -rc1, now that the current process is working reasonably well.
-> > wireless-testing will continue to have a messy history, but it should
-> > be a bit less nasty after a rebase.
-> >
-> > As for right now, it sounds like you should just use wireless-next-2.6
-> > instead?
+Dan Williams wrote:
+> On Thu, 2010-07-22 at 14:31 -0400, John W. Linville wrote:
+>> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 > 
-> Oh OK, didn't realize that was bisectable, thanks. Also was unsure if
-> I'd get other subsystems's -next components. Is wireless-next.git just
-> the -next bits for 802.11 or does it also suck up net-next?
+> Aww,  how sad :(.  I'll take it since I still have some of this
+> hardware.  Not that I'll do much with it, but if the patches are simple
+> I'm happy to test+ack them.
+> 
+Thanks Dan, whilst I still have the hardware, I no longer have a
+convenient PCMCIA slot into which to plug it.
 
-Usually just the wireless bits, but I did just pull the bluetooth stuff
-(which included some net-next stuff).
+This hardware is well orphaned: it never made is past 802.11b, and there
+have been no new models for a long time. Nevertheless, if the existing
+code can be kept functional, that would be good.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+
+Cheers,
+
+Simon.
