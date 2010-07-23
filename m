@@ -1,48 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56988 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751080Ab0G0TAN (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:34786 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755466Ab0GWP2S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 15:00:13 -0400
-Date: Tue, 27 Jul 2010 14:57:28 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Joe Perches <joe@perches.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH net-next 4/4] wireless: Convert wiphy_debug macro to
- function
-Message-ID: <20100727185728.GF31694@tuxdriver.com>
-References: <cover.1280177971.git.joe@perches.com>
- <8e7aa541ec8fb92e1166920a4eb704aa5f851b71.1280177971.git.joe@perches.com>
- <20100727180556.GE31694@tuxdriver.com>
- <1280255665.2082.119.camel@Joe-Laptop.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1280255665.2082.119.camel@Joe-Laptop.home>
+	Fri, 23 Jul 2010 11:28:18 -0400
+Subject: Re: [PATCH 6/6] pcmcia: remove cs_types.h
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Dominik Brodowski <linux@dominikbrodowski.net>
+Cc: linux-pcmcia@lists.infradead.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-usb@vger.kernel.org, laforge@gnumonks.org,
+	linux-mtd@lists.infradead.org, linux-bluetooth@vger.kernel.org,
+	alsa-devel@alsa-project.org, linux-serial@vger.kernel.org
+In-Reply-To: <1279874305-21191-6-git-send-email-linux@dominikbrodowski.net>
+References: <20100723083726.GA20947@comet.dominikbrodowski.net>
+	 <1279874305-21191-6-git-send-email-linux@dominikbrodowski.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 23 Jul 2010 08:28:08 -0700
+Message-ID: <1279898888.2621.18.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 27, 2010 at 11:34:25AM -0700, Joe Perches wrote:
-> On Tue, 2010-07-27 at 14:05 -0400, John W. Linville wrote:
-> > > --- a/net/wireless/core.c
-> > > +++ b/net/wireless/core.c
-> > > @@ -907,3 +907,56 @@ static void __exit cfg80211_exit(void)
-> > >  	destroy_workqueue(cfg80211_wq);
-> > >  }
-> > >  module_exit(cfg80211_exit);
-> > > +
-> > > +#ifdef __KERNEL__
-> > 
-> > Do we need this part?
-> 
-> No, not really.
-> 
-> I'm not too sure about the need for the added
-> cfg80211.h #ifdef __KERNEL__ either.
+Hi Dominik,
 
-Good point -- I'll remove both of them.
+> Remove cs_types.h which is no longer needed: Most definitions aren't
+> used at all, a few can be made away with, and two remaining definitions
+> (typedefs, unfortunatley) may be moved to more specific places.
+> 
+> CC: netdev@vger.kernel.org
+> CC: linux-wireless@vger.kernel.org
+> CC: linux-ide@vger.kernel.org
+> CC: linux-usb@vger.kernel.org
+> CC: laforge@gnumonks.org
+> CC: linux-mtd@lists.infradead.org
+> CC: linux-bluetooth@vger.kernel.org
+> CC: alsa-devel@alsa-project.org
+> CC: linux-serial@vger.kernel.org
+> Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
+> ---
+>  Documentation/pcmcia/driver-changes.txt          |    5 +++
+>  drivers/ata/pata_pcmcia.c                        |    1 -
+>  drivers/bluetooth/bluecard_cs.c                  |    1 -
+>  drivers/bluetooth/bt3c_cs.c                      |    1 -
+>  drivers/bluetooth/btuart_cs.c                    |    1 -
+>  drivers/bluetooth/dtl1_cs.c                      |    1 -
+>  drivers/char/pcmcia/cm4000_cs.c                  |    1 -
+>  drivers/char/pcmcia/cm4040_cs.c                  |    1 -
+>  drivers/char/pcmcia/ipwireless/main.h            |    1 -
+>  drivers/char/pcmcia/ipwireless/tty.h             |    1 -
+>  drivers/char/pcmcia/synclink_cs.c                |    1 -
+>  drivers/ide/ide-cs.c                             |    1 -
+>  drivers/isdn/hardware/avm/avm_cs.c               |    1 -
+>  drivers/isdn/hisax/avma1_cs.c                    |    1 -
+>  drivers/isdn/hisax/elsa_cs.c                     |    1 -
+>  drivers/isdn/hisax/sedlbauer_cs.c                |    1 -
+>  drivers/isdn/hisax/teles_cs.c                    |    1 -
+>  drivers/mmc/host/sdricoh_cs.c                    |    1 -
+>  drivers/mtd/maps/pcmciamtd.c                     |    1 -
+>  drivers/net/pcmcia/3c574_cs.c                    |    1 -
+>  drivers/net/pcmcia/3c589_cs.c                    |    1 -
+>  drivers/net/pcmcia/axnet_cs.c                    |    1 -
+>  drivers/net/pcmcia/com20020_cs.c                 |    1 -
+>  drivers/net/pcmcia/fmvj18x_cs.c                  |    1 -
+>  drivers/net/pcmcia/ibmtr_cs.c                    |    1 -
+>  drivers/net/pcmcia/nmclan_cs.c                   |    1 -
+>  drivers/net/pcmcia/pcnet_cs.c                    |    5 +--
+>  drivers/net/pcmcia/smc91c92_cs.c                 |    1 -
+>  drivers/net/pcmcia/xirc2ps_cs.c                  |    1 -
+>  drivers/net/wireless/airo_cs.c                   |    1 -
+>  drivers/net/wireless/atmel_cs.c                  |    1 -
+>  drivers/net/wireless/b43/pcmcia.c                |    1 -
+>  drivers/net/wireless/hostap/hostap_cs.c          |    3 +-
+>  drivers/net/wireless/libertas/if_cs.c            |    1 -
+>  drivers/net/wireless/orinoco/orinoco_cs.c        |    1 -
+>  drivers/net/wireless/orinoco/spectrum_cs.c       |    1 -
+>  drivers/net/wireless/ray_cs.c                    |    1 -
+>  drivers/net/wireless/wl3501_cs.c                 |   10 +-----
+>  drivers/parport/parport_cs.c                     |    1 -
+>  drivers/pcmcia/au1000_generic.h                  |    1 -
+>  drivers/pcmcia/au1000_pb1x00.c                   |    2 -
+>  drivers/pcmcia/cistpl.c                          |    1 -
+>  drivers/pcmcia/cs.c                              |    1 -
+>  drivers/pcmcia/db1xxx_ss.c                       |    1 -
+>  drivers/pcmcia/ds.c                              |    1 -
+>  drivers/pcmcia/i82092.c                          |    1 -
+>  drivers/pcmcia/i82365.c                          |    1 -
+>  drivers/pcmcia/m32r_cfc.c                        |    1 -
+>  drivers/pcmcia/m32r_pcc.c                        |    1 -
+>  drivers/pcmcia/m8xx_pcmcia.c                     |    1 -
+>  drivers/pcmcia/pcmcia_cis.c                      |    1 -
+>  drivers/pcmcia/pcmcia_resource.c                 |    1 -
+>  drivers/pcmcia/pd6729.c                          |    1 -
+>  drivers/pcmcia/pxa2xx_base.c                     |    1 -
+>  drivers/pcmcia/rsrc_iodyn.c                      |    1 -
+>  drivers/pcmcia/rsrc_mgr.c                        |    1 -
+>  drivers/pcmcia/rsrc_nonstatic.c                  |    1 -
+>  drivers/pcmcia/sa1100_generic.c                  |    1 -
+>  drivers/pcmcia/soc_common.h                      |    1 -
+>  drivers/pcmcia/socket_sysfs.c                    |    1 -
+>  drivers/pcmcia/tcic.c                            |    1 -
+>  drivers/pcmcia/xxs1500_ss.c                      |    1 -
+>  drivers/pcmcia/yenta_socket.c                    |    1 -
+>  drivers/scsi/pcmcia/aha152x_stub.c               |    1 -
+>  drivers/scsi/pcmcia/fdomain_stub.c               |    1 -
+>  drivers/scsi/pcmcia/nsp_cs.c                     |    1 -
+>  drivers/scsi/pcmcia/qlogic_stub.c                |    1 -
+>  drivers/scsi/pcmcia/sym53c500_cs.c               |    1 -
+>  drivers/serial/serial_cs.c                       |    1 -
+>  drivers/ssb/main.c                               |    1 -
+>  drivers/ssb/pcmcia.c                             |    1 -
+>  drivers/ssb/scan.c                               |    1 -
+>  drivers/staging/comedi/drivers/cb_das16_cs.c     |    1 -
+>  drivers/staging/comedi/drivers/das08_cs.c        |    1 -
+>  drivers/staging/comedi/drivers/ni_daq_700.c      |    1 -
+>  drivers/staging/comedi/drivers/ni_daq_dio24.c    |    1 -
+>  drivers/staging/comedi/drivers/ni_labpc_cs.c     |    1 -
+>  drivers/staging/comedi/drivers/ni_mio_cs.c       |    1 -
+>  drivers/staging/comedi/drivers/quatech_daqp_cs.c |    1 -
+>  drivers/staging/wlags49_h2/wl_cs.c               |    1 -
+>  drivers/staging/wlags49_h2/wl_internal.h         |    1 -
+>  drivers/telephony/ixj_pcmcia.c                   |    1 -
+>  drivers/usb/host/sl811_cs.c                      |    5 +--
+>  include/pcmcia/cistpl.h                          |    2 +
+>  include/pcmcia/cs.h                              |   10 +-----
+>  include/pcmcia/cs_types.h                        |   40 ----------------------
+>  include/pcmcia/ds.h                              |    3 +-
+>  include/pcmcia/ss.h                              |    1 -
+>  sound/pcmcia/pdaudiocf/pdaudiocf.h               |    1 -
+>  sound/pcmcia/vx/vxpocket.h                       |    1 -
+>  90 files changed, 14 insertions(+), 151 deletions(-)
+>  delete mode 100644 include/pcmcia/cs_types.h
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+for drivers/bluetooth/
+
+Acked-by: Marcel Holtmann <marcel@holtmann.org>
+
+Regards
+
+Marcel
+
+
