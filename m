@@ -1,77 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50446 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751830Ab0G1GuM (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42480 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754244Ab0GWVpQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jul 2010 02:50:12 -0400
-Subject: Re: [PATCH] mac80211: inform drivers about the off-channel status
- on channel changes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <4C4F7C91.9000300@openwrt.org>
-References: <4C4F7C91.9000300@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 28 Jul 2010 08:50:08 +0200
-Message-ID: <1280299808.3832.1.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 23 Jul 2010 17:45:16 -0400
+Date: Fri, 23 Jul 2010 17:39:31 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2010-07-23
+Message-ID: <20100723213931.GF2426@tuxdriver.com>
+References: <20100723204029.GD2426@tuxdriver.com>
+ <20100723.140320.116366019.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100723.140320.116366019.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-07-28 at 02:40 +0200, Felix Fietkau wrote:
-> For some drivers it can be useful to know whether the channel they're
-> supposed to switch to is going to be used for short off-channel work or
-> scanning, or whether the hardware is expected to stay on it for a while
-> longer. This is important for various kinds of calibration work, which
-> takes longer to complete and should keep some persistent state, even if
-> the channel temporarily changes.
+On Fri, Jul 23, 2010 at 02:03:20PM -0700, David Miller wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Fri, 23 Jul 2010 16:40:29 -0400
 > 
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
-> I need something like this for properly getting rid of the ath9k sw
-> scanning callback and for fixing various calibration bugs.
-
-Fine with me, I'll just have to hope people don't abuse it too
-much... :-)
-
-johannes
-
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -625,11 +625,14 @@ struct ieee80211_rx_status {
->   *	may turn the device off as much as possible. Typically, this flag will
->   *	be set when an interface is set UP but not associated or scanning, but
->   *	it can also be unset in that case when monitor interfaces are active.
-> + * @IEEE80211_CONF_OFFCHANNEL: The device is currently not on its main
-> + *	operating channel.
->   */
->  enum ieee80211_conf_flags {
->  	IEEE80211_CONF_MONITOR		= (1<<0),
->  	IEEE80211_CONF_PS		= (1<<1),
->  	IEEE80211_CONF_IDLE		= (1<<2),
-> +	IEEE80211_CONF_OFFCHANNEL	= (1<<3),
->  };
->  
+> > Yet another batch intended for 2.6.36...  Mostly the usual random lot
+> > of stuff, mostly driver updates.  This batch also includes a flurry
+> > of Sparse-inspired patches from me -- it is hard to resist once the
+> > "bug" bites!  As usual, all of these have been cooking in linux-next
+> > for at least several days.
+> > 
+> > Please let me know if there are problems!
 > 
-> --- a/net/mac80211/main.c
-> +++ b/net/mac80211/main.c
-> @@ -111,12 +111,15 @@ int ieee80211_hw_config(struct ieee80211
->  	if (scan_chan) {
->  		chan = scan_chan;
->  		channel_type = NL80211_CHAN_NO_HT;
-> +		local->hw.conf.flags |= IEEE80211_CONF_OFFCHANNEL;
->  	} else if (local->tmp_channel) {
->  		chan = scan_chan = local->tmp_channel;
->  		channel_type = local->tmp_channel_type;
-> +		local->hw.conf.flags |= IEEE80211_CONF_OFFCHANNEL;
->  	} else {
->  		chan = local->oper_channel;
->  		channel_type = local->_oper_channel_type;
-> +		local->hw.conf.flags &= ~IEEE80211_CONF_OFFCHANNEL;
->  	}
->  
->  	if (chan != local->hw.conf.channel ||
+> Auto-merging drivers/net/wireless/iwlwifi/iwl-commands.h
+> CONFLICT (content): Merge conflict in drivers/net/wireless/iwlwifi/iwl-commands.h
 > 
+> I don't even have to look at the file to know that it's
+> another one of those __packed things.
+> 
+> I'll fix it up again, but I know you can sense how tiring
+> this has become for me.
 
+I'm sorry, Dave!  I should have done a for-davem branch.  FWIW,
+I intended to do a test merge but it must have slipped my fragile
+mind. :-(
 
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
