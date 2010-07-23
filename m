@@ -1,72 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:24634 "EHLO mga02.intel.com"
+Received: from c60.cesmail.net ([216.154.195.49]:45891 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755701Ab0GVThQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 15:37:16 -0400
-Subject: Re: [PATCH] iwlwifi: assume vif is NULL for internal scans and
- non-NULL otherwise
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Dan Carpenter <error27@gmail.com>
-In-Reply-To: <1279826937-24581-1-git-send-email-linville@tuxdriver.com>
-References: <20100721221616.GT17585@bicker>
-	 <1279826937-24581-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain
-Date: Thu, 22 Jul 2010 12:36:39 -0700
-Message-Id: <1279827399.9034.0.camel@wwguy-ubuntu>
+	id S1757545Ab0GWX1P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jul 2010 19:27:15 -0400
+Subject: Re: Wireless card on Debian squeeze
+From: Pavel Roskin <proski@gnu.org>
+To: Nicholas Syrotiuk <syrotiuk@manchester.ac.uk>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4C488BD9.8040809@manchester.ac.uk>
+References: <4C488BD9.8040809@manchester.ac.uk>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 23 Jul 2010 19:27:10 -0400
+Message-ID: <1279927630.23722.24.camel@mj>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
-
-On Thu, 2010-07-22 at 12:28 -0700, John W. Linville wrote:
-> The current practice of checking vif for NULL in one place but not
-> another seems to confuse some static checkers, smatch in particular.
-> Since vif will only be NULL in the case of internal scans, adjust the
-> checks accordingly.
+On Thu, 2010-07-22 at 19:20 +0100, Nicholas Syrotiuk wrote:
+> Dear Linux Wireless users,
 > 
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    5 ++++-
->  drivers/net/wireless/iwlwifi/iwl3945-base.c |    5 ++++-
->  2 files changed, 8 insertions(+), 2 deletions(-)
+> I'm having some trouble installing the correct driver on my laptop.  I'm 
+> slightly confused about the revision numbering of my wireless hardware; 
+> that is, I'm not sure if it's revision 2 or 3.
 > 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> index 74623e0..0ca0df4 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> @@ -1234,7 +1234,10 @@ void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
->  
->  		IWL_DEBUG_INFO(priv, "Scanning while associated...\n");
->  		spin_lock_irqsave(&priv->lock, flags);
-> -		interval = vif ? vif->bss_conf.beacon_int : 0;
-> +		if (priv->is_internal_short_scan)
-> +			interval = 0;
-> +		else
-> +			interval = vif->bss_conf.beacon_int;
->  		spin_unlock_irqrestore(&priv->lock, flags);
->  
->  		scan->suspend_time = 0;
-> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> index 8eb3471..b102bab 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> @@ -2883,7 +2883,10 @@ void iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
->  		IWL_DEBUG_INFO(priv, "Scanning while associated...\n");
->  
->  		spin_lock_irqsave(&priv->lock, flags);
-> -		interval = vif ? vif->bss_conf.beacon_int : 0;
-> +		if (priv->is_internal_short_scan)
-> +			interval = 0;
-> +		else
-> +			interval = vif->bss_conf.beacon_int;
->  		spin_unlock_irqrestore(&priv->lock, flags);
->  
->  		scan->suspend_time = 0;
+> My kernel is: 2.6.32-5
+> Relevant output from lspci is:
+> 02:03.0 Network controller [0280]: Broadcom Corporation BCM4306 
+> 802.11b/g Wireless LAN Controller [14e4:4320] (rev 02)
+> 	Subsystem: Dell TrueMobile 1300 WLAN Mini-PCI Card [1028:0001]
+> 	Flags: bus master, fast devsel, latency 32, IRQ 5
+> 	Memory at fafee000 (32-bit, non-prefetchable) [size=8K]
+> 	Kernel driver in use: b43-pci-bridge
+> -----------------------------------------------
+> 
+> It looks like I need the b43legacy driver, which comes in a separate 
+> Debian package called "firmware-b43legacy-installer."  When I install 
+> this package, computer says: "Not supported card.  Use b43 firmware."
+> 
+> When I install b43 firmware, configure the interface and bring it up, 
+> computer says: "Firmware file b43legacy/ucode4.fw not found or load failed."
 
-Make sense, Thanks.
+I believe the drivers should be trusted since there they access the
+actual hardware.  The above message is from b43legacy.  It must have
+found the card, so the card needs b43legacy.
 
-Wey
+That means that firmware-b43legacy-installer is wrong.  I don't have
+Debian handy, but I checked its source, and it should work for your
+card.
 
+That's the page:
+http://packages.debian.org/sid/firmware-b43legacy-installer
+
+And that's the source:
+http://ftp.de.debian.org/debian/pool/contrib/b/b43-fwcutter/b43-fwcutter_013-2.debian.tar.gz
+
+I ran your "lspci -n" output through the
+firmware-b43legacy-installer.postinst script and it doesn't complain.
+
+> So, I am slightly confounded.  However, it has occurred to me that I may 
+> be getting the packages from the wrong source, which are currently:
+> 
+> deb http://debian.man.ac.uk/debian squeeze main
+> deb http://ftp.us.debian.org/debian squeeze main contrib
+
+Make sure your apt-get knows about the latest packages, that is run
+"apt-get update".  Then try installing firmware-b43legacy-installer.
+
+If it doesn't work, download the package from the above page and install
+it with dpkg.  Alternatively, you could generate the firmware manually,
+as described at http://linuxwireless.org/en/users/Drivers/b43
+
+-- 
+Regards,
+Pavel Roskin
