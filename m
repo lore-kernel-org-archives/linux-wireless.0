@@ -1,95 +1,198 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:49613 "EHLO ds10.nbd.name"
+Received: from mga09.intel.com ([134.134.136.24]:25118 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751973Ab0GZTls (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jul 2010 15:41:48 -0400
-Message-ID: <4C4DE4F5.3010907@openwrt.org>
-Date: Mon, 26 Jul 2010 21:41:41 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1757085Ab0GWQN5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jul 2010 12:13:57 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 06/10] iwlagn: fix firmware loading TLV error path
+Date: Fri, 23 Jul 2010 09:15:35 -0700
+Message-Id: <1279901739-10541-7-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1279901739-10541-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1279901739-10541-1-git-send-email-wey-yi.w.guy@intel.com>
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-CC: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] [RFC] ath9k: improve aggregation throughput by
- 	using only first rate
-References: <AANLkTimWoSTAtb0m9V=0CNowhy=KtpiKj-O3vdmV8qxB@mail.gmail.com>	<4C4DC98E.6090002@openwrt.org> <AANLkTinZ=KDo4aJU6Z93p1DXghF_MzE9CeBN6OuC_LnD@mail.gmail.com>
-In-Reply-To: <AANLkTinZ=KDo4aJU6Z93p1DXghF_MzE9CeBN6OuC_LnD@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-07-26 9:23 PM, Bj�rn Smedman wrote:
-> 2010/7/26 Felix Fietkau <nbd@openwrt.org>:
->> On 2010-07-26 7:10 PM, Bj�rn Smedman wrote:
->>> I think there are some (in theory) simple improvements that can be
->>> done to the tx aggregation / rate control logic. A proof of concept of
->>> one such improvement is provided below. Basically, it's a hack that
->> I think it makes sense to rely less on on-chip MRR for fallback, but I
->> think to make this workable, we really should use the MRR table for
->> something, otherwise the rate control algorithm will take much longer to
->> adapt.
->> It's probably better to fix this properly after I'm done with my A-MPDU
->> rewrite, because then I can more easily push parts of the software
->> retransmission behaviour into minstrel_ht directly.
-> 
-> Sounds very reasonable. I'm sure you've thought of it but now that
-> it's fresh in my head it would be great if the new aggregation design
-> allowed us to experiment with stuff like this:
-> 
-> * The rate control logic treats the average aggregate length as a
-> measured independent variable, when in fact it depends heavily on the
-> rates selected (via the 4 ms txop limit).
-Yes, with the new design maybe we could use the initial rate lookup only
-for setting the sampling flag, and then doing a separate per-AMPDU
-lookup, which properly takes the AMPDU length into account.
+From: Johannes Berg <johannes.berg@intel.com>
 
-> * When tx is aggregated most rate control probe frames end up inside
-> aggregates and are never used for probing (effective probe frequency
-> is divided by average aggregate length).
-Nope, a probing frame never ends up inside an aggregate. It's always
-sent out as a single frame, which is why I had to make the decision
-about sending a probing frame more complex in minstrel_ht, compared to
-minstrel - the previous 10% stuff was limiting aggregation size.
+gcc complains about the firmware loading:
 
-> * When setting up a hardware MRR for an aggregate the focus should be
-> on throughput (as explained earlier in this thread). But there are
-> situations when reliability is important: e.g. when a subframe in the
-> aggregate is about to expire (because of time or block ack window). It
-> may even be advantageous to tx the subframes that are about to expire
-> in their own aggregate with lower / more reliable bitrate?
-Yes, that's what I was thinking as well. We should probably make this
-decision based on the number of sw-retransmitted frames, and maybe
-consider the offset of seqno vs baw_tail as well.
+iwl-agn.c: In function ‘iwlagn_load_firmware’:
+iwl-agn.c:1860: warning: ‘tlv_len’ may be used uninitialized in this function
+iwl-agn.c:1861: warning: ‘tlv_type’ may be used uninitialized in this function
+iwl-agn.c:1862: warning: ‘tlv_data’ may be used uninitialized in this function
 
-> * In many busy radio environments the packet success rate depends very
-> much on the protection method being used (none, cts-to-self or
-> rts-cts), often more so than on the bitrate itself. It would be
-> interesting to experiment with including the protection method in the
-> rate selection, i.e. to probe for the optimal protection method and
-> bitrate combination.
-Sounds good.
+This is almost correct but we do do break out of the TLV
+parsing loop when setting ret. However, the code is hard
+to follow, and clearly even the compiler is having issues
+with it too.
 
-> * In order to have the best possible rate control in very dynamic rf
-> environments it's important to keep the hardware queue short and
-> select rates as late as possible (to not introduce unnecessary delay
-> when selecting new rates). I have no idea how to do this but it would
-> be great if the tx queue could be kept long enough to never stall tx,
-> but no longer.
-This would work with what I suggested above - per-AMPDU rate lookup.
-With software scheduling that's easy to do, since we already restrict
-the queue to max. 2 AMPDUs
+Additionally, however, the current code is wrong. If there
+is a TLV length check error, the code will report
+	invalid TLV after parsing: ...
+because "len" will still be non-zero as we broke out of
+the loop.
 
-> * If I understand correctly the Atheros hardware does not adjust the
-> rts / cts-to-self duration field when going through the MRR
-> (correct?). In that case it may be even more advantageous to use
-> software retry as much as possible when some form of protection is
-> enabled.
-Not sure, but I think it does adjust the duration field according to the
-rate, while transmitting.
+So to remove the warning and fix that issue, make the code
+easier to read by doing length checking with an error label.
+As a result, we can completely remove the "ret" variable.
 
-> Looking forward to the new aggregation code!
-That will still take some time, I recently came up with some better
-design ideas, which require some larger changes to the code that I
-already wrote.
+Also, while at it, remove the "fixed_tlv_size" variable
+since each TLV type has its own specified length, it just
+happens that we have only variable length, flags (0 length)
+and u32 TLVs right now. It should still be checked with more
+explicit length checks to make it easier to understand.
 
-- Felix
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |   79 ++++++++++++++------------------
+ 1 files changed, 35 insertions(+), 44 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index db86f70..573a81b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1828,7 +1828,6 @@ static int iwlagn_load_firmware(struct iwl_priv *priv,
+ 	u32 tlv_len;
+ 	enum iwl_ucode_tlv_type tlv_type;
+ 	const u8 *tlv_data;
+-	int ret = 0;
+ 
+ 	if (len < sizeof(*ucode)) {
+ 		IWL_ERR(priv, "uCode has invalid length: %zd\n", len);
+@@ -1864,9 +1863,8 @@ static int iwlagn_load_firmware(struct iwl_priv *priv,
+ 
+ 	len -= sizeof(*ucode);
+ 
+-	while (len >= sizeof(*tlv) && !ret) {
++	while (len >= sizeof(*tlv)) {
+ 		u16 tlv_alt;
+-		u32 fixed_tlv_size = 4;
+ 
+ 		len -= sizeof(*tlv);
+ 		tlv = (void *)data;
+@@ -1914,65 +1912,56 @@ static int iwlagn_load_firmware(struct iwl_priv *priv,
+ 			pieces->boot_size = tlv_len;
+ 			break;
+ 		case IWL_UCODE_TLV_PROBE_MAX_LEN:
+-			if (tlv_len != fixed_tlv_size)
+-				ret = -EINVAL;
+-			else
+-				capa->max_probe_length =
++			if (tlv_len != sizeof(u32))
++				goto invalid_tlv_len;
++			capa->max_probe_length =
+ 					le32_to_cpup((__le32 *)tlv_data);
+ 			break;
+ 		case IWL_UCODE_TLV_INIT_EVTLOG_PTR:
+-			if (tlv_len != fixed_tlv_size)
+-				ret = -EINVAL;
+-			else
+-				pieces->init_evtlog_ptr =
++			if (tlv_len != sizeof(u32))
++				goto invalid_tlv_len;
++			pieces->init_evtlog_ptr =
+ 					le32_to_cpup((__le32 *)tlv_data);
+ 			break;
+ 		case IWL_UCODE_TLV_INIT_EVTLOG_SIZE:
+-			if (tlv_len != fixed_tlv_size)
+-				ret = -EINVAL;
+-			else
+-				pieces->init_evtlog_size =
++			if (tlv_len != sizeof(u32))
++				goto invalid_tlv_len;
++			pieces->init_evtlog_size =
+ 					le32_to_cpup((__le32 *)tlv_data);
+ 			break;
+ 		case IWL_UCODE_TLV_INIT_ERRLOG_PTR:
+-			if (tlv_len != fixed_tlv_size)
+-				ret = -EINVAL;
+-			else
+-				pieces->init_errlog_ptr =
++			if (tlv_len != sizeof(u32))
++				goto invalid_tlv_len;
++			pieces->init_errlog_ptr =
+ 					le32_to_cpup((__le32 *)tlv_data);
+ 			break;
+ 		case IWL_UCODE_TLV_RUNT_EVTLOG_PTR:
+-			if (tlv_len != fixed_tlv_size)
+-				ret = -EINVAL;
+-			else
+-				pieces->inst_evtlog_ptr =
++			if (tlv_len != sizeof(u32))
++				goto invalid_tlv_len;
++			pieces->inst_evtlog_ptr =
+ 					le32_to_cpup((__le32 *)tlv_data);
+ 			break;
+ 		case IWL_UCODE_TLV_RUNT_EVTLOG_SIZE:
+-			if (tlv_len != fixed_tlv_size)
+-				ret = -EINVAL;
+-			else
+-				pieces->inst_evtlog_size =
++			if (tlv_len != sizeof(u32))
++				goto invalid_tlv_len;
++			pieces->inst_evtlog_size =
+ 					le32_to_cpup((__le32 *)tlv_data);
+ 			break;
+ 		case IWL_UCODE_TLV_RUNT_ERRLOG_PTR:
+-			if (tlv_len != fixed_tlv_size)
+-				ret = -EINVAL;
+-			else
+-				pieces->inst_errlog_ptr =
++			if (tlv_len != sizeof(u32))
++				goto invalid_tlv_len;
++			pieces->inst_errlog_ptr =
+ 					le32_to_cpup((__le32 *)tlv_data);
+ 			break;
+ 		case IWL_UCODE_TLV_ENHANCE_SENS_TBL:
+ 			if (tlv_len)
+-				ret = -EINVAL;
+-			else
+-				priv->enhance_sensitivity_table = true;
++				goto invalid_tlv_len;
++			priv->enhance_sensitivity_table = true;
+ 			break;
+ 		case IWL_UCODE_TLV_PHY_CALIBRATION_SIZE:
+-			if (tlv_len != fixed_tlv_size)
+-				ret = -EINVAL;
+-			else
+-				capa->standard_phy_calibration_size =
++			if (tlv_len != sizeof(u32))
++				goto invalid_tlv_len;
++			capa->standard_phy_calibration_size =
+ 					le32_to_cpup((__le32 *)tlv_data);
+ 			break;
+ 		default:
+@@ -1984,14 +1973,16 @@ static int iwlagn_load_firmware(struct iwl_priv *priv,
+ 	if (len) {
+ 		IWL_ERR(priv, "invalid TLV after parsing: %zd\n", len);
+ 		iwl_print_hex_dump(priv, IWL_DL_FW, (u8 *)data, len);
+-		ret = -EINVAL;
+-	} else if (ret) {
+-		IWL_ERR(priv, "TLV %d has invalid size: %u\n",
+-			tlv_type, tlv_len);
+-		iwl_print_hex_dump(priv, IWL_DL_FW, (u8 *)tlv_data, tlv_len);
++		return -EINVAL;
+ 	}
+ 
+-	return ret;
++	return 0;
++
++ invalid_tlv_len:
++	IWL_ERR(priv, "TLV %d has invalid size: %u\n", tlv_type, tlv_len);
++	iwl_print_hex_dump(priv, IWL_DL_FW, tlv_data, tlv_len);
++
++	return -EINVAL;
+ }
+ 
+ /**
+-- 
+1.7.0.4
+
