@@ -1,93 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42485 "EHLO mx1.redhat.com"
+Received: from sycorax.lbl.gov ([128.3.11.121]:47622 "EHLO sycorax.lbl.gov"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756494Ab0GUR5U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jul 2010 13:57:20 -0400
-Subject: Re: [PATCH] libertas: convert new uses of __attribute__ ((packed))
- to __packed
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Holger Schurig <holgerschurig@gmail.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	libertas-dev@lists.infradead.org
-In-Reply-To: <1279118223-10219-1-git-send-email-linville@tuxdriver.com>
-References: <1279118223-10219-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 21 Jul 2010 12:58:26 -0700
-Message-ID: <1279742306.7267.4.camel@dcbw.foobar.com>
-Mime-Version: 1.0
+	id S1757114Ab0GWUXq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jul 2010 16:23:46 -0400
+Received: from sycorax.lbl.gov (romosan@localhost [127.0.0.1])
+	by sycorax.lbl.gov (8.14.3/8.14.3/Debian-9.2) with ESMTP id o6NKEflF024517
+	for <linux-wireless@vger.kernel.org>; Fri, 23 Jul 2010 13:14:41 -0700
+From: Alex Romosan <romosan@sycorax.lbl.gov>
+To: linux-wireless@vger.kernel.org
+Subject: iwlwifi connection problems
+Date: Fri, 23 Jul 2010 13:14:41 -0700
+Message-ID: <87tynqvtu6.fsf@sycorax.lbl.gov>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-07-14 at 10:37 -0400, John W. Linville wrote:
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+since kernel 2.6.35-rc3 (i didn't try 1 or 2) i haven't been able to
+connect to a hidden wireless access point using the iwlwifi driver. i
+can connect to open ones though (the ones that broadcast their name).
+2.6.34 worked without any problems. any ideas?
 
-Looks fine to me.
+this is with the driver in the standard linux kernel (2.6.35-rc6 is the
+latest one i tried).
 
-> ---
->  drivers/net/wireless/libertas/cfg.c  |    6 +++---
->  drivers/net/wireless/libertas/host.h |    6 +++---
->  2 files changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
-> index f36cc97..7e07416 100644
-> --- a/drivers/net/wireless/libertas/cfg.c
-> +++ b/drivers/net/wireless/libertas/cfg.c
-> @@ -891,7 +891,7 @@ struct cmd_key_material {
->  
->  	__le16 action;
->  	struct MrvlIEtype_keyParamSet param;
-> -} __attribute__ ((packed));
-> +} __packed;
->  
->  static int lbs_set_key_material(struct lbs_private *priv,
->  				int key_type,
-> @@ -1395,7 +1395,7 @@ struct cmd_monitor_mode {
->  
->  	__le16 action;
->  	__le16 mode;
-> -} __attribute__ ((packed));
-> +} __packed;
->  
->  static int lbs_enable_monitor_mode(struct lbs_private *priv, int mode)
->  {
-> @@ -1450,7 +1450,7 @@ struct cmd_rssi {
->  	__le16 nf;
->  	__le16 avg_snr;
->  	__le16 avg_nf;
-> -} __attribute__ ((packed));
-> +} __packed;
->  
->  static int lbs_get_signal(struct lbs_private *priv, s8 *signal, s8 *noise)
->  {
-> diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
-> index db8e209..43d020c 100644
-> --- a/drivers/net/wireless/libertas/host.h
-> +++ b/drivers/net/wireless/libertas/host.h
-> @@ -398,12 +398,12 @@ struct mrvl_ie_domain_param_set {
->  
->  	u8 countrycode[COUNTRY_CODE_LEN];
->  	struct ieee80211_country_ie_triplet triplet[1];
-> -} __attribute__ ((packed));
-> +} __packed;
->  
->  struct cmd_ds_802_11d_domain_info {
->  	__le16 action;
->  	struct mrvl_ie_domain_param_set domain;
-> -} __attribute__ ((packed));
-> +} __packed;
->  
->  struct lbs_802_11d_domain_reg {
->  	/** Country code*/
-> @@ -411,7 +411,7 @@ struct lbs_802_11d_domain_reg {
->  	/** No. of triplet*/
->  	u8 no_triplet;
->  	struct ieee80211_country_ie_triplet triplet[MRVDRV_MAX_TRIPLET_802_11D];
-> -} __attribute__ ((packed));
-> +} __packed;
->  
->  /*
->   * Define data structure for CMD_GET_HW_SPEC
+--alex--
 
-
+-- 
+| I believe the moment is at hand when, by a paranoiac and active |
+|  advance of the mind, it will be possible (simultaneously with  |
+|  automatism and other passive states) to systematize confusion  |
+|  and thus to help to discredit completely the world of reality. |
