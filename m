@@ -1,52 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:42086 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753534Ab0GFMxX (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52901 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751767Ab0GWIeH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jul 2010 08:53:23 -0400
-MIME-Version: 1.0
-In-Reply-To: <4C3306F4.8060907@nokia.com>
-References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
-	<1278376666-3509-12-git-send-email-ohad@wizery.com> <4C32EF19.1000604@nokia.com>
-	<AANLkTintIz-N7MwwtqhVq2LR3Ln5JTNYSbJUBSSClcA-@mail.gmail.com>
-	<4C3306F4.8060907@nokia.com>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Tue, 6 Jul 2010 15:53:03 +0300
-Message-ID: <AANLkTin5W52fPzWToRrAzm56SLZI-taSuI16rCEhLWqH@mail.gmail.com>
-Subject: Re: [PATCH 11/15] wireless: wl1271: introduce platform device support
-To: Roger Quadros <roger.quadros@nokia.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	San Mehat <san@google.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 23 Jul 2010 04:34:07 -0400
+Subject: Re: 2.6.35-rc5+ WARNING at net/mac80211/scan.c:262
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dominik Brodowski <linux@dominikbrodowski.net>
+Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20100723082710.GA20251@comet.dominikbrodowski.net>
+References: <20100721184040.GA22968@comet.dominikbrodowski.net>
+	 <1279802055.12439.16.camel@jlt3.sipsolutions.net>
+	 <20100722134048.GA28231@isilmar-3.linta.de>
+	 <1279807678.12439.17.camel@jlt3.sipsolutions.net>
+	 <20100723082710.GA20251@comet.dominikbrodowski.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 23 Jul 2010 10:33:10 +0200
+Message-ID: <1279873990.3745.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Roger,
+On Fri, 2010-07-23 at 10:27 +0200, Dominik Brodowski wrote:
+> On Thu, Jul 22, 2010 at 04:07:58PM +0200, Johannes Berg wrote:
+> > On Thu, 2010-07-22 at 15:40 +0200, Dominik Brodowski wrote:
+> > 
+> > > > http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-mac80211-hw-scan-locking.patch
+> > > 
+> > > patching file drivers/net/wireless/iwlwifi/iwl-core.c
+> > > Hunk #1 succeeded at 2103 (offset 102 lines).
+> > > Hunk #2 FAILED at 2015.
+> > > Hunk #3 succeeded at 2120 (offset 97 lines).
+> > > 1 out of 3 hunks FAILED -- saving rejects to file
+> > > drivers/net/wireless/iwlwifi/iwl-core.c.rej
+> > 
+> > Oh, it's against wireless-testing, which apparently has some other mods
+> > there. I'll have to see if any other patch needs to go into .35 too.
+> 
+> That's fine, I'll just test wireless-testing plus your patch from now on ;)
 
-On Tue, Jul 6, 2010 at 1:35 PM, Roger Quadros <roger.quadros@nokia.com> wrote:
-> My point is that shouldn't this be handled by SDIO core?
+Hah, ok, I made a note to backport the patch for you, guess I'll delete
+it. Wouldn't have gotten around to it today anyway I think.
 
-Care to explain what you mean / give a code example ?
+johannes
 
-> If there are no users for the SDIO function and the card, doesn't the SDIO
-> core power down the slot and take care of re-initialization when it is
-> powered up?
-
-You need card detect events in order to trigger card & sdio function
-initialization and removals.
-
-Please share any alternative approach you may be thinking on.
-
-Thanks,
-Ohad.
-
-
->
