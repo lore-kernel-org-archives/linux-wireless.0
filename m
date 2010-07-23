@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:49067 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754818Ab0GNMlY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jul 2010 08:41:24 -0400
-Message-ID: <4C3DB065.70009@bu3sch.de>
-Date: Wed, 14 Jul 2010 14:41:09 +0200
-From: =?ISO-8859-1?Q?Michael_B=FCsch?= <mb@bu3sch.de>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:33805 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751756Ab0GWIOg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jul 2010 04:14:36 -0400
+Received: by bwz1 with SMTP id 1so1414400bwz.19
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jul 2010 01:14:35 -0700 (PDT)
+Message-ID: <4C494F50.4050808@adurom.com>
+Date: Fri, 23 Jul 2010 10:14:08 +0200
+From: Kalle Valo <kvalo@adurom.com>
 MIME-Version: 1.0
-To: Simon Richter <Simon.Richter@hogyros.de>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	linux-wireless@vger.kernel.org, 588196@bugs.debian.org
-Subject: Re: Bug#588196: b43: does not join multicast groups
-References: <20100706021937.11147.78230.reportbug@debian.hogyros.de> <1278887148.6139.91.camel@localhost> <4C3A4C6E.6060801@lwfinger.net> <20100713051430.GA2625@honey.hogyros.de> <4C3BFB87.5030907@lwfinger.net> <20100713073751.GB3089@richter> <4C3C6350.50304@bu3sch.de> <20100713130614.GB25565@richter> <4C3C7296.3070700@bu3sch.de> <20100714075037.GA6128@richter> (sfid-20100714_095042_113832_34B70D3D)
-In-Reply-To: <20100714075037.GA6128@richter> (sfid-20100714_095042_113832_34B70D3D)
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Luciano Coelho <luciano.coelho@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] wl1251: fix sparse-generated warnings
+References: <1279729917-4451-1-git-send-email-linville@tuxdriver.com> <1279780458.2322.25.camel@powerslave> <4C47F706.4060102@iki.fi> <20100722132150.GB18742@tuxdriver.com>
+In-Reply-To: <20100722132150.GB18742@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/14/2010 09:50 AM, Simon Richter wrote:
-> Hi,
->
-> On Tue, Jul 13, 2010 at 04:05:10PM +0200, Michael Büsch wrote:
->
->> So it is up to the upper layer to detect the failure. I don't think
->> it's possible to automatically detect such incidents for multicast
->> transmissions. So the mechanism fails here.
->
-> Well, it is about *receiving* a multicast transmission
+On 07/22/2010 03:21 PM, John W. Linville wrote:
+> On Thu, Jul 22, 2010 at 09:45:10AM +0200, Kalle Valo wrote:
+>> On 07/22/2010 08:34 AM, Luciano Coelho wrote:
+> 
+>>>> @@ -467,7 +467,7 @@ static int wl1251_boot_upload_nvs(struct wl1251 *wl)
+>>>>  		val = (nvs_ptr[0] | (nvs_ptr[1] << 8)
+>>>>  		       | (nvs_ptr[2] << 16) | (nvs_ptr[3] << 24));
+>>>>  
+>>>> -		val = cpu_to_le32(val);
+>>>> +		val = (u32 __force) cpu_to_le32(val);
+>>>
+>>> This will work, but such casts always make me a bit suspicious.  I think
+>>> this is fine for now
+>>
+>> This line was very suspicious already from beginning, I can't remember
+>> why it was added and I don't see why it's needed here.
+> 
+> It certainly is a bit strange, and rather ugly as well.  I agree that
+> the write should probably just take the le32 instead, but I was more
+> interested in silencing sparse than in rewriting a driver for which
+> I have not hardware. :-)
+> 
+> I could drop that hunk for the time being?
 
-The same applies to receiving. The RX queue is also dropped on switch
-from DMA to PIO.
+Yeah, drop that hunk for now.  Better to create a separate patch which
+removes that val = cpu_to_le32(val) line altogether.
 
-> advertisement, sent to 33:33:00:00:00:01). I have no idea where the
-> packet is dropped; from my somewhat limited understanding of 802.11, I'd
-> expect the frames to be treated like broadcast frames by the AP, so it'd
-> be the receiver dropping them in the MAC filter.
-
-The actual switch from DMA to PIO mode completely reinitializes
-the hardware and drops all queues.
-
--- 
-Greetings Michael.
+Kalle
