@@ -1,52 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47276 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750889Ab0G1VPY (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:47685 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753286Ab0GXCa6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jul 2010 17:15:24 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] wl1271: update hw/fw version info in wiphy struct
-Date: Wed, 28 Jul 2010 17:10:43 -0400
-Message-Id: <1280351443-28535-1-git-send-email-linville@tuxdriver.com>
+	Fri, 23 Jul 2010 22:30:58 -0400
+Received: by wwj40 with SMTP id 40so5255806wwj.1
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jul 2010 19:30:56 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1279936945.27462.2.camel@mj>
+References: <AANLkTil3u8uFbH7WyPuvqu0wee4KsojqPUsAH2kupZhJ@mail.gmail.com>
+	<1279936945.27462.2.camel@mj>
+Date: Fri, 23 Jul 2010 22:30:56 -0400
+Message-ID: <AANLkTimnFGidxLvnR+=WXykQyf4NNAJBkxuqZ3HWRdeh@mail.gmail.com>
+Subject: Re: ath9k - D-link DWA-552
+From: Andy Pyles <andy.pyles@gmail.com>
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes the information available through ethtool...
+Hi Pavel,
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/wl12xx/wl1271_main.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+Incidentally this is the output after adding that id to pci.c:
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 374abf0..9d68f00 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -839,6 +839,7 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
- 				   struct ieee80211_vif *vif)
- {
- 	struct wl1271 *wl = hw->priv;
-+	struct wiphy *wiphy = hw->wiphy;
- 	int retries = WL1271_BOOT_RETRIES;
- 	int ret = 0;
- 
-@@ -892,6 +893,12 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
- 
- 		wl->state = WL1271_STATE_ON;
- 		wl1271_info("firmware booted (%s)", wl->chip.fw_ver);
-+
-+		/* update hw/fw version info in wiphy struct */
-+		wiphy->hw_version = wl->chip.id;
-+		strncpy(wiphy->fw_version, wl->chip.fw_ver,
-+			sizeof(wiphy->fw_version));
-+
- 		goto out;
- 
- irq_disable:
--- 
-1.7.1.1
+[ 1211.423855] Backport based on linux-next.git next-20100720
+[ 1211.437076] cfg80211: World regulatory domain updated:
+[ 1211.437080]     (start_freq - end_freq @ bandwidth),
+(max_antenna_gain, max_eirp)
+[ 1211.437084]     (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[ 1211.437087]     (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+[ 1211.437089]     (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+[ 1211.437092]     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[ 1211.437095]     (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[ 1211.447705] ath9k 0000:05:02.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
+[ 1211.447794] ath9k 0000:05:02.0: Failed to initialize device
+[ 1211.447830] ath9k 0000:05:02.0: PCI INT A disabled
+[ 1211.447859] ath9k: probe of 0000:05:02.0 failed with error -95
 
+
+
+On Fri, Jul 23, 2010 at 10:02 PM, Pavel Roskin <proski@gnu.org> wrote:
+> On Wed, 2010-07-21 at 14:58 -0400, Andy Pyles wrote:
+>> I have recently purchased two of these cards. ( the markings on the
+>> outside indicate they have are same hardware revision). I am noticing
+>> some strange behavior on one of them:
+> ...
+>> $lspci -n output:
+>> 05:05.0 0200: 168c:ff1d (rev 01)
+>
+> This looks like some experimental version that was not meant to be sold.
+>
+>> Has anyone else seen this behavior with Card Two? I tried swapping to
+>> a different PCI slot, even to a different PC.
+>> Same symptom. I also tried modifying pci.c in ath9k driver to no effect.
+>
+> If you add the PCI ID to the driver, something should change.  The
+> driver would try to initialize the card.  If it fails, you should get
+> some message in the kernel log, which can be seen by running dmesg.
+>
+> --
+> Regards,
+> Pavel Roskin
+>
