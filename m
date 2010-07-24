@@ -1,89 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:41396 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757883Ab0GNUuI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jul 2010 16:50:08 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	philipp_subx@redfish-solutions.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] compat-wireless: backport threaded-irq for rt2x00
-Date: Wed, 14 Jul 2010 22:49:58 +0200
-Message-Id: <1279140598-6509-1-git-send-email-hauke@hauke-m.de>
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:59203 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751114Ab0GXFdN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Jul 2010 01:33:13 -0400
+Date: Fri, 23 Jul 2010 22:33:01 -0700
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: simplify key locking
+Message-ID: <20100724053301.GA6773@jm.kir.nu>
+References: <1275380359.3621.17.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1275380359.3621.17.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This backport was done like for the b43 driver. This was just build tested.
+On Tue, Jun 01, 2010 at 10:19:19AM +0200, Johannes Berg wrote:
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/09-threaded-irq.patch |   55 +++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 55 insertions(+), 0 deletions(-)
+> net/mac80211/key.c
+commit ad0e2b5a00dbec303e4682b403bb6703d11dcdb2
 
-diff --git a/patches/09-threaded-irq.patch b/patches/09-threaded-irq.patch
-index c1a33e1..cdc506d 100644
---- a/patches/09-threaded-irq.patch
-+++ b/patches/09-threaded-irq.patch
-@@ -61,3 +61,58 @@ thread in process context as well.
-  };
-  
-  /* Data structure for the WLAN parts (802.11 cores) of the b43 chip. */
-+--- a/drivers/net/wireless/rt2x00/rt2x00.h
-++++ b/drivers/net/wireless/rt2x00/rt2x00.h
-+@@ -882,6 +882,9 @@ struct rt2x00_dev {
-+ 	 * and interrupt thread routine.
-+ 	 */
-+ 	u32 irqvalue[2];
-++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
-++	struct compat_threaded_irq irq_compat;
-++#endif
-+ };
-+ 
-+ /*
-+--- a/drivers/net/wireless/rt2x00/rt2x00pci.c
-++++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
-+@@ -153,10 +153,18 @@ int rt2x00pci_initialize(struct rt2x00_d
-+ 	/*
-+ 	 * Register interrupt handler.
-+ 	 */
-++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
-++	status = compat_request_threaded_irq(&rt2x00dev->irq_compat,
-++					  rt2x00dev->irq,
-++					  rt2x00dev->ops->lib->irq_handler,
-++					  rt2x00dev->ops->lib->irq_handler_thread,
-++					  IRQF_SHARED, rt2x00dev->name, rt2x00dev);
-++#else
-+ 	status = request_threaded_irq(rt2x00dev->irq,
-+ 				      rt2x00dev->ops->lib->irq_handler,
-+ 				      rt2x00dev->ops->lib->irq_handler_thread,
-+ 				      IRQF_SHARED, rt2x00dev->name, rt2x00dev);
-++#endif
-+ 	if (status) {
-+ 		ERROR(rt2x00dev, "IRQ %d allocation failed (error %d).\n",
-+ 		      rt2x00dev->irq, status);
-+@@ -180,7 +188,11 @@ void rt2x00pci_uninitialize(struct rt2x0
-+ 	/*
-+ 	 * Free irq line.
-+ 	 */
-++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
-++	compat_free_threaded_irq(&rt2x00dev->irq_compat);
-++#else
-+ 	free_irq(rt2x00dev->irq, rt2x00dev);
-++#endif
-+ 
-+ 	/*
-+ 	 * Free DMA
-+@@ -195,6 +207,9 @@ EXPORT_SYMBOL_GPL(rt2x00pci_uninitialize
-+  */
-+ static void rt2x00pci_free_reg(struct rt2x00_dev *rt2x00dev)
-+ {
-++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)
-++	compat_destroy_threaded_irq(&rt2x00dev->irq_compat);
-++#endif
-+ 	kfree(rt2x00dev->rf);
-+ 	rt2x00dev->rf = NULL;
-+ 
+>  void ieee80211_key_free(struct ieee80211_key *key)
+
+> -	if (!key->sdata) {
+> -		/* The key has not been linked yet, simply free it
+> -		 * and don't Oops */
+
+It looks like this function can still be called with key->sdata == NULL
+in some cases and that does indeed result in an oops below:
+
+> +	local = key->sdata->local;
+
+
+I've seen this issue pop up in FT testing and based on a quick code
+review, at least ieee80211_add_key() calls ieee80211_key_free() in an
+error case (sta not found) without having first called
+ieee80211_key_link(). Which one is wrong - the caller or the freeing
+function? Should we just restore the previous key->sdata == NULL handler
+here?
+
+I'd guess that the sta-not-found part is caused by FT trying to
+configure PTK before association in the FT protocol roaming case
+(wpa_supplicant tries to do this as soon as it knows the key because
+that works with some drivers and is needed to avoid race condition with
+encrypted frames; as a workaround, it will do this again after
+association if the previous attempt failed).
+
 -- 
-1.7.0.4
-
+Jouni Malinen                                            PGP id EFC895FA
