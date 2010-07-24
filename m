@@ -1,38 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:46134 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753909Ab0GKKtD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Jul 2010 06:49:03 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: lrodriguez@atheros.com, linville@tuxdriver.com
-Subject: [PATCH 2/7] ath9k_hw: fix a sign error in the IQ calibration code
-Date: Sun, 11 Jul 2010 12:48:40 +0200
-Message-Id: <1278845325-62000-2-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1278845325-62000-1-git-send-email-nbd@openwrt.org>
-References: <1278845325-62000-1-git-send-email-nbd@openwrt.org>
+Received: from senator.holtmann.net ([87.106.208.187]:49034 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754462Ab0GXCXJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jul 2010 22:23:09 -0400
+Subject: Re: new stuff for 2.6.36 needs to be posted _now_
+From: Marcel Holtmann <marcel@holtmann.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20100723204529.GE2426@tuxdriver.com>
+References: <20100723204529.GE2426@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 23 Jul 2010 19:23:01 -0700
+Message-ID: <1279938181.2621.22.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@kernel.org
----
- drivers/net/wireless/ath/ath9k/ar9002_calib.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Hi John,
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-index 5fdbb53..dabafb8 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-@@ -239,7 +239,7 @@ static void ar9002_hw_iqcalibrate(struct ath_hw *ah, u8 numChains)
- 			if (qCoff > 15)
- 				qCoff = 15;
- 			else if (qCoff <= -16)
--				qCoff = 16;
-+				qCoff = -16;
- 
- 			ath_print(common, ATH_DBG_CALIBRATE,
- 				  "Chn %d : iCoff = 0x%x  qCoff = 0x%x\n",
--- 
-1.6.4.2
+> You may have noticed that when Linus released 2.6.35-rc6, he
+> optimistically predicted that it will be the last -rc for 2.6.35.
+> So, the merge window is around the corner!
+> 
+> For those that need a reminder, the opening of the merge window is a
+> _deadline_ for new features.  Once the merge window opens, only fixes
+> will be accepted for 2.6.36.  In fact, any non-fix patches need to
+> already be in wireless-next-2.6 when the merge window opens if you want
+> them in 2.6.36.  That means you need to get them posted _now_, so they
+> can be reviewed and I can find time to merge them before the deadline.
+
+you did see my pull request for bluetooth-next-2.6 tree? I have two
+additional patches that should go in, but I wait until you pulled that
+one first.
+
+Regards
+
+Marcel
+
 
