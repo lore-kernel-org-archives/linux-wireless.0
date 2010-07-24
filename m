@@ -1,149 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1025 "EHLO mx1.redhat.com"
+Received: from lo.gmane.org ([80.91.229.12]:57453 "EHLO lo.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752031Ab0GVUez (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 16:34:55 -0400
-Subject: Re: [PATCH] atmel: silence sparse warnings
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1279823041-21156-1-git-send-email-linville@tuxdriver.com>
-References: <1279823041-21156-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 22 Jul 2010 15:36:16 -0700
-Message-ID: <1279838176.4829.25.camel@dcbw.foobar.com>
+	id S1752415Ab0GXIuH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Jul 2010 04:50:07 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1OcaQl-00026N-79
+	for linux-wireless@vger.kernel.org; Sat, 24 Jul 2010 10:50:03 +0200
+Received: from 105.Red-88-1-80.dynamicIP.rima-tde.net ([88.1.80.105])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Jul 2010 10:50:03 +0200
+Received: from sergitfe1974 by 105.Red-88-1-80.dynamicIP.rima-tde.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Jul 2010 10:50:03 +0200
+To: linux-wireless@vger.kernel.org
+From: sergi <sergitfe1974@gmail.com>
+Subject: Re: Atheros 0cf3:b003
+Date: Sat, 24 Jul 2010 08:04:39 +0000 (UTC)
+Message-ID: <loom.20100724T095719-176@post.gmane.org>
+References: <AANLkTimfc3NY46aYqPM5Ys2i9vpm2_qr5-kgsvc3sdkx@mail.gmail.com> <AANLkTimpwMyfcvRGnJ1JfZP+F=4nFNT5Ra3pB3vse1LM@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-07-22 at 14:24 -0400, John W. Linville wrote:
-> CHECK   drivers/net/wireless/atmel.c
-> drivers/net/wireless/atmel.c:3694:30: warning: cast to restricted __le16
-> drivers/net/wireless/atmel.c:3695:31: warning: cast to restricted __le16
-> drivers/net/wireless/atmel.c:3696:30: warning: cast to restricted __le16
-> drivers/net/wireless/atmel.c:3697:32: warning: cast to restricted __le16
-> drivers/net/wireless/atmel.c:3698:30: warning: cast to restricted __le16
-> drivers/net/wireless/atmel.c:3699:31: warning: cast to restricted __le16
-> drivers/net/wireless/atmel.c:3700:30: warning: cast to restricted __le16
-> drivers/net/wireless/atmel.c:3701:32: warning: cast to restricted __le16
-> drivers/net/wireless/atmel.c:3702:32: warning: cast to restricted __le16
-> drivers/net/wireless/atmel.c:3703:30: warning: cast to restricted __le16
-> drivers/net/wireless/atmel.c:3704:32: warning: cast to restricted __le16
-> drivers/net/wireless/atmel.c:3705:32: warning: cast to restricted __le16
-> drivers/net/wireless/atmel.c:3706:28: warning: cast to restricted __le16
-> drivers/net/wireless/atmel.c:3707:29: warning: cast to restricted __le16
+Luis R. Rodriguez <mcgrof@...> writes:
 
-Eww.  All the atmel code predates sparse, but it certainly looks like we
-need to le16_to_cpu() everything that comes from the device here.  Is
-the sparse problem coming from the fact that the code copies LE data
-into a non-tagged struct?
-
-I think what we should do here is to (a) make host_info_struct __packed,
-and (b) annotate its members as __le16 where appropriate.  But since
-that structure's members are used fairly often, I think we may want to
-do the endian conversion just once like the code already does, but
-certainly without trying to do the conversion in-place on the struct
-that's making sparse complain.
-
-Dan
-
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
-> Is this any better than what we have now??
 > 
->  drivers/net/wireless/atmel.c |   73 ++++++++++++++++++++++++++++++++----------
->  1 files changed, 56 insertions(+), 17 deletions(-)
+> 2010/7/23 Maximi89 <maximi89@...>:
+> > Hola Luis, conoces ese ID?, Atheros 0cf3:b003
+> > Es efectivamente un AR9271?
 > 
-> diff --git a/drivers/net/wireless/atmel.c b/drivers/net/wireless/atmel.c
-> index c8f7090..008d712 100644
-> --- a/drivers/net/wireless/atmel.c
-> +++ b/drivers/net/wireless/atmel.c
-> @@ -3617,6 +3617,7 @@ static void atmel_command_irq(struct atmel_private *priv)
->  static int atmel_wakeup_firmware(struct atmel_private *priv)
->  {
->  	struct host_info_struct *iface = &priv->host_info;
-> +	u8 buf[sizeof(struct host_info_struct)];
->  	u16 mr1, mr3;
->  	int i;
->  
-> @@ -3688,23 +3689,61 @@ static int atmel_wakeup_firmware(struct atmel_private *priv)
->  		return -EIO;
->  	}
->  
-> -	atmel_copy_to_host(priv->dev, (unsigned char *)iface,
-> -			   priv->host_info_base, sizeof(*iface));
-> -
-> -	iface->tx_buff_pos = le16_to_cpu(iface->tx_buff_pos);
-> -	iface->tx_buff_size = le16_to_cpu(iface->tx_buff_size);
-> -	iface->tx_desc_pos = le16_to_cpu(iface->tx_desc_pos);
-> -	iface->tx_desc_count = le16_to_cpu(iface->tx_desc_count);
-> -	iface->rx_buff_pos = le16_to_cpu(iface->rx_buff_pos);
-> -	iface->rx_buff_size = le16_to_cpu(iface->rx_buff_size);
-> -	iface->rx_desc_pos = le16_to_cpu(iface->rx_desc_pos);
-> -	iface->rx_desc_count = le16_to_cpu(iface->rx_desc_count);
-> -	iface->build_version = le16_to_cpu(iface->build_version);
-> -	iface->command_pos = le16_to_cpu(iface->command_pos);
-> -	iface->major_version = le16_to_cpu(iface->major_version);
-> -	iface->minor_version = le16_to_cpu(iface->minor_version);
-> -	iface->func_ctrl = le16_to_cpu(iface->func_ctrl);
-> -	iface->mac_status = le16_to_cpu(iface->mac_status);
-> +	atmel_copy_to_host(priv->dev, (unsigned char *)&buf,
-> +			   priv->host_info_base, sizeof(buf));
-> +
-> +	iface->int_status = buf[offsetof(struct host_info_struct,
-> +						int_status)];
-> +	iface->int_mask = buf[offsetof(struct host_info_struct, int_mask)];
-> +	iface->lockout_host = buf[offsetof(struct host_info_struct,
-> +						lockout_host)];
-> +	iface->lockout_mac = buf[offsetof(struct host_info_struct,
-> +						lockout_mac)];
-> +	iface->tx_buff_pos =
-> +		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-> +						tx_buff_pos)]);
-> +	iface->tx_buff_size =
-> +		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-> +						tx_buff_size)]);
-> +	iface->tx_desc_pos =
-> +		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-> +						tx_desc_pos)]);
-> +	iface->tx_desc_count =
-> +		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-> +						tx_desc_count)]);
-> +	iface->rx_buff_pos =
-> +		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-> +						rx_buff_pos)]);
-> +	iface->rx_buff_size =
-> +		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-> +						rx_buff_size)]);
-> +	iface->rx_desc_pos =
-> +		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-> +						rx_desc_pos)]);
-> +	iface->rx_desc_count =
-> +		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-> +						rx_desc_count)]);
-> +	iface->build_version =
-> +		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-> +						build_version)]);
-> +	iface->command_pos =
-> +		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-> +						command_pos)]);
-> +	iface->major_version =
-> +		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-> +						major_version)]);
-> +	iface->minor_version =
-> +		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-> +						minor_version)]);
-> +	iface->func_ctrl =
-> +		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-> +						func_ctrl)]);
-> +	iface->mac_status =
-> +		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-> +						mac_status)]);
-> +	iface->generic_IRQ_type =
-> +		le16_to_cpu(*(__le16 *)&buf[offsetof(struct host_info_struct,
-> +						generic_IRQ_type)]);
->  
->  	return 0;
->  }
+> No, cual tarjeta es esa? Las que tenemos son estos:
+> 
+
+>         { },
+> };
+> 
+> Stephen, have you heard of 0cf3:b003 as an ar9271 or HB94 card?
+> 
+>   Luis
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@...
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> Hola Luis yo fui quien le mando la consulta a maximiliano,,mi lapiz usb es de
+la casa Ubiquiti modelo wifistation ext y ahi dicen k tiene el atheros 9271..y
+el id k me sale es el mencionado,,tanto en Mac,Linux y con Everest en win,uso
+Ubuntu Ultimate 2.7 con kernel 2.6.32-24 y nada k no me funciona,Podria cmbiar
+el Id para k sea compatible?? ..bueno muchas gracias por tu atencion
+
+
 
 
