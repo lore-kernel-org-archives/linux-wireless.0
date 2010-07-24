@@ -1,42 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:64530 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753513Ab0G0OsY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 10:48:24 -0400
-Date: Tue, 27 Jul 2010 10:48:17 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: sgruszka@redhat.com, Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Message-Id: <20100727144811.6012.56633.send-patch@dhcp-lab-109.englab.brq.redhat.com>
-In-Reply-To: <20100727144804.6012.94740.send-patch@dhcp-lab-109.englab.brq.redhat.com>
-References: <20100727144804.6012.94740.send-patch@dhcp-lab-109.englab.brq.redhat.com>
-Subject: [PATCH w-t 2/3] rt2500usb: truly disable encryption when initialize
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:43262 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756462Ab0GXV0N (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Jul 2010 17:26:13 -0400
+Received: by wwj40 with SMTP id 40so5778487wwj.1
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Jul 2010 14:26:11 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4C474851.4000809@lwfinger.net>
+References: <87vd88n1i8.fsf@gmail.com>
+	<4C474851.4000809@lwfinger.net>
+Date: Sat, 24 Jul 2010 22:26:11 +0100
+Message-ID: <AANLkTinZG-kHrS-s_94Bq4JNXuyf6kWzqsVRAVjdGQ3c@mail.gmail.com>
+Subject: Re: Master mode in rtl8187
+From: Hin-Tak Leung <hintak.leung@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ben Gamari <bgamari.foss@gmail.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Without cipher part nullify of TXRX_CSR0 register we can receive
-corrupted frames (removed IV or IVC), after reloading rt2500usb module
-with nohwcrypt=1 option, if previous some keys were configured into
-the hardware.
+On 7/21/10, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 07/21/2010 01:17 PM, Ben Gamari wrote:
+>> Hey all,
+>>
+>> I recently purchased a Netgear WG111v2 (based on rtl8187b) and after
+>> seeing scattered reports[1] that master mode may be supported by the
+>> rtl8187 driver. Unfortunately, hostapd throws up when it attempts to put
+>> the card into master mode. Is master mode supported by this driver? I've
+>> tried both 2.6.34 as well as the latest wireless-testing tree and
+>> neither seem to work.
+>
+> My WG111V2 has an RTL8187L chip in it, not an RTL8187B. No, master mode is
+> NOT
+> supported by this driver. Adding that feature has been on my list of things
+> to
+> do, but the priority is very low. I really have little desire to convert my
+> $600
+> laptop into a $40 access point.
+>
+>> I noticed there was a patch[2] sent out a few years back, but it seems
+>> no one followed up. While I don't have much experience working with
+>> wireless hardware I've done kernel driver work before, so with some
+>> guidance I might be able to finish up that patch. Any input would be
+>> greatly appreciated. Thanks!
+>
+>> [1]
+>> http://osdir.com/ml/linux.kernel.wireless.general/2007-07/msg00289.html
+>> [2]
+>> http://osdir.com/ml/linux.kernel.wireless.general/2007-06/msg00455.html
+>
+> That patch is useless. The rtl8187 driver and mac80211 have changed so much
+> that
+> it cannot be made to apply, and would not be likely to work.
+>
+> One other thing to consider. The RTL8187L has only a single transmit queue.
+> Will
+> the device be able to transmit beacons with an appropriate timing accuracy?
+>
+> To modify the driver, you will need to study some other driver that does
+> work in
+> master mode.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/rt2x00/rt2500usb.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+There were some discussion a while back that some generic master mode
+support for all mac80211-based drivers might eventually happen.  Is
+that still the case?
 
-diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
-index 7892647..3028abb 100644
---- a/drivers/net/wireless/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2500usb.c
-@@ -813,6 +813,7 @@ static int rt2500usb_init_registers(struct rt2x00_dev *rt2x00dev)
- 	rt2500usb_register_write(rt2x00dev, MAC_CSR8, reg);
- 
- 	rt2500usb_register_read(rt2x00dev, TXRX_CSR0, &reg);
-+	rt2x00_set_field16(&reg, TXRX_CSR0_ALGORITHM, CIPHER_NONE);
- 	rt2x00_set_field16(&reg, TXRX_CSR0_IV_OFFSET, IEEE80211_HEADER);
- 	rt2x00_set_field16(&reg, TXRX_CSR0_KEY_ID, 0);
- 	rt2500usb_register_write(rt2x00dev, TXRX_CSR0, reg);
--- 
-1.7.1
-
+Hin-Tak
