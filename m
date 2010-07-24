@@ -1,61 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:37901 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756960Ab0GFAkO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jul 2010 20:40:14 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>
-Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Ohad Ben-Cohen <ohadb@ti.com>
-Subject: [PATCH 06/15] omap zoom2: wlan board muxing
-Date: Tue,  6 Jul 2010 03:37:37 +0300
-Message-Id: <1278376666-3509-7-git-send-email-ohad@wizery.com>
-In-Reply-To: <1278376666-3509-1-git-send-email-ohad@wizery.com>
-References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
+Received: from eyas.biff.org.uk ([80.68.92.121]:44358 "EHLO eyas.biff.org.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753268Ab0GXS7W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Jul 2010 14:59:22 -0400
+Message-ID: <4C4B3801.6010509@thekelleys.org.uk>
+Date: Sat, 24 Jul 2010 19:59:13 +0100
+From: Simon Kelley <simon@thekelleys.org.uk>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] MAINTAINERS: orphan the atmel wireless driver
+References: <1279823468-21366-1-git-send-email-linville@tuxdriver.com> <1279837721.4829.19.camel@dcbw.foobar.com> <4C495BD7.2080004@thekelleys.org.uk> <20100723132847.GC6678@tuxdriver.com>
+In-Reply-To: <20100723132847.GC6678@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ohad Ben-Cohen <ohadb@ti.com>
+John W. Linville wrote:
+> On Fri, Jul 23, 2010 at 10:07:35AM +0100, Simon Kelley wrote:
+>> Dan Williams wrote:
+>>> On Thu, 2010-07-22 at 14:31 -0400, John W. Linville wrote:
+>>>> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>>> Aww,  how sad :(.  I'll take it since I still have some of this
+>>> hardware.  Not that I'll do much with it, but if the patches are simple
+>>> I'm happy to test+ack them.
+>>>
+>> Thanks Dan, whilst I still have the hardware, I no longer have a
+>> convenient PCMCIA slot into which to plug it.
+>>
+>> This hardware is well orphaned: it never made is past 802.11b, and there
+>> have been no new models for a long time. Nevertheless, if the existing
+>> code can be kept functional, that would be good.
+> 
+> Is the existing code functional?  The device I have seems to only
+> half work -- I suppose I need to figure that out...
+> 
+> John
 
-Add board muxing to support the wlan wl1271 chip that is
-hardwired to mmc2 (third mmc controller) on the ZOOM2.
+I'm not aware of any problems. I'll try and test a new kernel when I can 
+find a PCMCIA-full laptop. If the problem turns out to be your hardware, 
+John, I can send you another card.
 
-Signed-off-by: Ohad Ben-Cohen <ohadb@ti.com>
----
- arch/arm/mach-omap2/board-zoom2.c |   15 +++++++++++++++
- 1 files changed, 15 insertions(+), 0 deletions(-)
 
-diff --git a/arch/arm/mach-omap2/board-zoom2.c b/arch/arm/mach-omap2/board-zoom2.c
-index 803ef14..00871be 100644
---- a/arch/arm/mach-omap2/board-zoom2.c
-+++ b/arch/arm/mach-omap2/board-zoom2.c
-@@ -71,6 +71,21 @@ static struct twl4030_platform_data zoom2_twldata = {
- 
- #ifdef CONFIG_OMAP_MUX
- static struct omap_board_mux board_mux[] __initdata = {
-+#ifdef CONFIG_OMAP_ZOOM_WLAN
-+	/* WLAN IRQ - GPIO 162 */
-+	OMAP3_MUX(MCBSP1_CLKX, OMAP_MUX_MODE4 | OMAP_PIN_INPUT_PULLUP),
-+	/* WLAN POWER ENABLE - GPIO 101 */
-+	OMAP3_MUX(CAM_D2, OMAP_MUX_MODE4 | OMAP_PIN_OUTPUT),
-+	/* WLAN SDIO: MMC3 CMD */
-+	OMAP3_MUX(MCSPI1_CS1, OMAP_MUX_MODE3 | OMAP_PIN_INPUT_PULLUP),
-+	/* WLAN SDIO: MMC3 CLK */
-+	OMAP3_MUX(ETK_CLK, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
-+	/* WLAN SDIO: MMC3 DAT[0-3] */
-+	OMAP3_MUX(ETK_D3, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
-+	OMAP3_MUX(ETK_D4, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
-+	OMAP3_MUX(ETK_D5, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
-+	OMAP3_MUX(ETK_D6, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
-+#endif
- 	{ .reg_offset = OMAP_MUX_TERMINATOR },
- };
- #else
--- 
-1.7.0.4
+Cheers,
+
+Simon.
 
