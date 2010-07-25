@@ -1,73 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:33950 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752330Ab0GZXR1 (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:40246 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752251Ab0GYTCn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jul 2010 19:17:27 -0400
-Message-ID: <4C4E1784.3030702@candelatech.com>
-Date: Mon, 26 Jul 2010 16:17:24 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: ath9k: /proc/net/wireless always shows status of 0
-References: <4C4DE6B5.5080307@candelatech.com> <4C4E0580.3060404@candelatech.com> <AANLkTi=qJXCxtMZcEm3VQT1s7ioJsdhj2kJzkgGSf3ND@mail.gmail.com>
-In-Reply-To: <AANLkTi=qJXCxtMZcEm3VQT1s7ioJsdhj2kJzkgGSf3ND@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Sun, 25 Jul 2010 15:02:43 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 3EB92421C8
+	for <linux-wireless@vger.kernel.org>; Sun, 25 Jul 2010 15:02:44 -0400 (EDT)
+Subject: Compat-wireless release for 2010-07-25 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100725190240.3B1E7404F0@repository3.orbit-lab.org>
+Date: Sun, 25 Jul 2010 15:02:40 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/26/2010 03:54 PM, Luis R. Rodriguez wrote:
-> On Mon, Jul 26, 2010 at 3:00 PM, Ben Greear<greearb@candelatech.com>  wrote:
->> On 07/26/2010 12:49 PM, Ben Greear wrote:
->>>
->>> This is with today's wireless-testing (with no extra hacks)
->>
->> Maybe a better question:  In 2.6.31 you could mount debugfs at /debug
->> and get the state with:
->> cat /debug/ieee80211/sta0/state
->
-> debugfs is not static API. In fact that's a big reason why we use it.
-> I considered defining a filesystem API for 802.11 using configfs but
-> our priority is to first get nl80211 feature-complete with respect to
-> wext, which we have completed now. But anyway, debugfs is *not* API
-> and you should not rely on it, if you want to define API consider
-> configfs.
->
->> It seems in .34 there is only phy0 info in debugfs.  Or, am I
->> just not looking in the right place?
->>
->> I don't mind hacking code, but I'd appreciate a pointer to the
->> right part of the code if anyone has suggestions.
->
-> The other thing you pointed out with wext, you should stop using wext
-> and instead rely on nl80211. It is true that if you see something on
-> /proc/net/wireless/ that was there before but not there now it is a
-> regression and it should be addressed. Not sure where the status crap
-> comes from on wext.
 
-I really don't care what API I end up using..I am just looking for some
-way to report to users whether the STA is in the various states that
-used to be defined as something similar to:
+compat-wireless code metrics
 
-enum ieee80211_state {
-         IEEE80211_UNINITIALIZED = 0,
-         IEEE80211_INITIALIZED,
-         IEEE80211_ASSOCIATING,
-         IEEE80211_ASSOCIATED,
-         IEEE80211_AUTHENTICATING,
-         IEEE80211_AUTHENTICATED,
-         IEEE80211_SHUTDOWN
-};
+    493730 - Total upstream lines of code being pulled
+      1447 - backport code changes
+      1211 - backport code additions
+       236 - backport code deletions
+      5764 - backport from compat module
+      7211 - total backport code
+    1.4605 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2467 - % of crap code
 
-I have been reading the net/wireless code, but so far I don't see
-any state machine type logic where this state might be kept.  Maybe
-it would have to be inferred from something else?
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Base tree: linux-next.git
+Base tree version: next-20100723
+compat-wireless release: compat-wireless-2010-07-13-4-g04898a5
