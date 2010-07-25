@@ -1,69 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:35651 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751124Ab0GCQeL (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:58681 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751036Ab0GYOGB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Jul 2010 12:34:11 -0400
-Message-ID: <4C2F6681.7070202@candelatech.com>
-Date: Sat, 03 Jul 2010 09:34:09 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Sun, 25 Jul 2010 10:06:01 -0400
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vasanth@Atheros.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k doesn't clean up virtual wifis on rmmod, and crashes.
-References: <4C2ED806.9000105@candelatech.com> <20100703070259.GA15479@vasanth-laptop>
-In-Reply-To: <20100703070259.GA15479@vasanth-laptop>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <alpine.LFD.2.00.1007250953400.25246@xanadu.home>
+References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+	<1279733634-21974-19-git-send-email-ohad@wizery.com> <4C482D01.1040109@nokia.com>
+	<AANLkTimfJnC7onDT83DWLb7sR7+evJB3eymt5Z6JYkAt@mail.gmail.com>
+	<alpine.LFD.2.00.1007250953400.25246@xanadu.home>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Sun, 25 Jul 2010 17:05:39 +0300
+Message-ID: <AANLkTimjoMFwc=Bu=vfoODW2XiiuRN9iPcAAOwU6Sfpz@mail.gmail.com>
+Subject: Re: [PATCH v2 18/20] mmc: sdio: enable a default power off mode of
+	the card
+To: Nicolas Pitre <nico@fluxnic.net>
+Cc: Roger Quadros <roger.quadros@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	San Mehat <san@google.com>, Tony Lindgren <tony@atomide.com>,
+	Pandita Vikram <vikram.pandita@ti.com>,
+	Kalle Valo <kalle.valo@iki.fi>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/03/2010 12:02 AM, Vasanthakumar Thiagarajan wrote:
-> On Sat, Jul 03, 2010 at 11:56:14AM +0530, Ben Greear wrote:
->> It seems to me that in 2.6.34, there is no code to clean up
->> virtual wiphys in ath9k on rmmod.  Also, ath9k mailing list
->> is returning error about mis-configured DNS server.
->>
->> This is with un-modified ath9k driver and is repeatable
->> every time on my system (crash is often different, but
->> it always crashes very quickly).
->>
->> [root@atom ~]# echo add=5>  /debug/ath9k/phy1/wiphy
->> -bash: /debug/ath9k/phy1/wiphy: No such file or directory
->> [root@atom ~]# echo add=5>  /debug/ath9k/phy0/wiphy
->> Jul  2 23:22:19 atom kernel: phy1: Selected rate control algorithm 'ath9k_rate_control'
->> [root@atom ~]# Jul  2 23:22:19 atom kernel: ADDRCONF(NETDEV_UP): wlan1: link is not ready
->> rmmod ath9k
->> Jul  2 23:22:24 atom kernel: ath9k 0000:05:00.0: PCI INT A disabled
->> Jul  2 23:22:24 atom kernel: ath9k: Driver unloaded
->> [root@atom ~]# BUG: spinlock bad magic on CPU#1, iw/2877
->>    lock: f8a476c0, .magic: 00000000, .owner:<none>/-1, .owner_cpu: 0
->> Pid: 2877, comm: iw Not tainted 2.6.34 #7
->> Call Trace:
->>    [<c0730e34>] ? printk+0xf/0x13
->>    [<c05710d6>] spin_bug+0x7b/0x86
->>    [<c0440b76>] ? delayed_work_timer_fn+0x0/0x30
->>    [<c0571171>] do_raw_spin_lock+0x1e/0x125
->>    [<c042f91e>] ? scheduler_tick+0xd6/0x1c9
->>    [<c0440b76>] ? delayed_work_timer_fn+0x0/0x30
->>    [<c0732a6d>] _raw_spin_lock_irqsave+0x1b/0x20
->>    [<c0440b59>] __queue_work+0x12/0x2f
->>    [<c0440b76>] ? delayed_work_timer_fn+0x0/0x30
->>    [<c0440ba4>] delayed_work_timer_fn+0x2e/0x30
->>
->> I'm new to hacking on this driver..but would love to test
->> patches, and if someone wants to suggest a good point in
->> the code to remove the virtual phys, I'll make the attempt.
+On Sun, Jul 25, 2010 at 4:56 PM, Nicolas Pitre <nico@fluxnic.net> wrote:
+> On Sun, 25 Jul 2010, Ohad Ben-Cohen wrote:
 >
-> Can you please try this patch?
+>> On Thu, Jul 22, 2010 at 2:35 PM, Roger Quadros <roger.quadros@nokia.com> wrote:
+>> > On 07/21/2010 08:33 PM, ext Ohad Ben-Cohen wrote:
+>> >>
+>> >> Add support for an SDIO device to stay powered off even without
+>> >> the presence of an SDIO function driver. A host should explicitly
+>> >> ask for it by means of MMC_CAP_DONT_POWER_CARD, and the SDIO
+>> >> function driver should know it needs to call sdio_claim_power
+>> >> before accessing the device.
+>> >>
+>> >> Signed-off-by: Ohad Ben-Cohen<ohad@wizery.com>
+>> >
+>> > Shouldn't this be the default behaviour? If there is no function driver for
+>> > any of the functions of the card, then sdio core shold power off the card.
+>> >
+>> > I don't see a need for a special capability flag for this.
+>> >
+>> > in fact MMC_CAP_DONT_POWER_CARD does not seem like an mmc host's capability
+>>
+>> Totally agree.
+>>
+>> I didn't want to change the current behavior of the cards/funcs so I
+>> looked for a way to explicitly power down only specific cards.
+>>
+>> Alternatively we could power down all cards at the end
+>> mmc_attach_sdio, and then power them up selectively in sdio_bus_probe,
+>> just before calling probe. If the probe succeeds, the function driver
+>> takes over. If the probe fails, we can power them down again.
+>
+> Exactly!
 
-It still crashes for me, and backtraces look similar.
+Ok, v3 is on the way :)
 
-Were you able to reproduce the crash?
-
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+(featuring no special host CAP, fix locking issues, and power down
+unclaimed cards also on resume)
