@@ -1,62 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:37996 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750757Ab0GJScW (ORCPT
+Received: from DMZ-MAILSEC-SCANNER-6.MIT.EDU ([18.7.68.35]:55624 "EHLO
+	dmz-mailsec-scanner-6.mit.edu" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750919Ab0GYRTi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Jul 2010 14:32:22 -0400
-Received: by qyk38 with SMTP id 38so3695046qyk.19
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Jul 2010 11:32:21 -0700 (PDT)
-MIME-Version: 1.0
-Date: Sat, 10 Jul 2010 19:32:20 +0100
-Message-ID: <AANLkTilq_VFbOPHmMuf1EFmewc_WBBpgvW0t7ogZdbdl@mail.gmail.com>
-Subject: Issues with ath9k dropping connectivity - now no connectivity
-From: Norman Henderson <norm.audrey@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 25 Jul 2010 13:19:38 -0400
+From: Andy Lutomirski <luto@MIT.EDU>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>, ilw@linux.intel.com,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Cc: Andy Lutomirski <luto@mit.edu>
+Subject: [PATCH 2.6.35] iwlagn: Improve aggregation failure error messages
+Date: Sun, 25 Jul 2010 13:14:29 -0400
+Message-Id: <4f999350050decc0901e6f23ae3f06d35bc3fbc0.1280077759.git.luto@mit.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+82ca9341763107615a15da6e59b9535d49eb91c3 added scary looking
+but harmless error messages.  Make them clearer and make the
+actual failure message show up with the same severity as the
+harmless one.
 
-I'm a bit new to all of this - here's the short story. I would
-appreciate any help available!
+Signed-off-by: Andy Lutomirski <luto@mit.edu>
+---
 
-I was building a WAP using a PC Engines ALIX board (AMD Geode LX800),
-DNMA92 wireless card (Atheros 92xx) and Voyage Linux (based on Debian
-Lenny, 2.6.30 kernel with hostapd 0.6.9 and libnl1.1). It was all
-working but, the wireless card would drop connectivity for no apparent
-reason after an undetermined time (minutes to hours). Stations (Win or
-cellphone) would no longer see it at all, as if it was no longer
-transmitting.
+This is probably 2.6.35 material.  There is no functional regression
+here, but 2.6.34 worked pretty well and 2.6.35 *looks* like it's not
+working if you read the logs.
 
-The Voyage maintainer advised that ath9k isn't that stable at 2.6.30.
-So, I upgraded the kernel to 2.6.32 using the Debian Lenny backport. I
-then installed the "stable" compat-wireless, 2.6.32.16.
-
-Hostapd appears to start OK. However, the wireless SSID is only
-visible to the Windows clients for a short time - seconds/minutes -
-and they aren't able to connect. There were no errors in the hostapd
-startup and it does its key rotations periodically. All that's logged
-from hostapd -dd during the actual time that the Win clients can see
-it and are trying to connect is:
-1278785975.350851: STA 00:13:02:be:7b:f9 sent probe request for broadcast SSID
-1278785975.353034: MGMT (TX callback) ACK
-1278785975.353073: mgmt::proberesp cb
-(repeated a few times)
-
-The Win7 station used to connect automatically but now doesn't and
-when I click "connect" it fails and shortly thereafter the SSID
-disappears from the list.
-
-Nothing in /var/log. iw phy phy0 info and iw dev wlan0 info appear to
-report sensible info as does iwconfig.
-
-During boot I do get messages about "VIA Padlock Hash Engine not detected" and
-modprobe: FATAL: Error inserting padlock_sha
-(/lib/modules/2.6.32-bpo.5-686/kern...): No such device
->From googling it's not clear to me at least whether this is relevant.
-
-Suggestions? What further diagnostics could I do?
+There is no functional change in this patch.
 
 Thanks,
-Norm Henderson
+Andy
+
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |   11 +++++++----
+ 1 files changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index cf4a95b..f38ee24 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -300,8 +300,9 @@ static int rs_tl_turn_on_agg_for_tid(struct iwl_priv *priv,
+ 				      struct ieee80211_sta *sta)
+ {
+ 	int ret = -EAGAIN;
++	u32 load = rs_tl_get_load(lq_data, tid);
+ 
+-	if (rs_tl_get_load(lq_data, tid) > IWL_AGG_LOAD_THRESHOLD) {
++	if (load > IWL_AGG_LOAD_THRESHOLD) {
+ 		IWL_DEBUG_HT(priv, "Starting Tx agg: STA: %pM tid: %d\n",
+ 				sta->addr, tid);
+ 		ret = ieee80211_start_tx_ba_session(sta, tid);
+@@ -311,13 +312,15 @@ static int rs_tl_turn_on_agg_for_tid(struct iwl_priv *priv,
+ 			 * this might be cause by reloading firmware
+ 			 * stop the tx ba session here
+ 			 */
+-			IWL_DEBUG_HT(priv, "Fail start Tx agg on tid: %d\n",
++			IWL_ERR(priv, "Fail start Tx agg on tid: %d\n",
+ 				tid);
+ 			ieee80211_stop_tx_ba_session(sta, tid,
+ 						WLAN_BACK_INITIATOR);
+ 		}
+-	} else
+-		IWL_ERR(priv, "Fail finding valid aggregation tid: %d\n", tid);
++	} else {
++		IWL_ERR(priv, "Aggregation not enabled for tid %d "
++			"because load = %u\n", tid, load);
++	}
+ 	return ret;
+ }
+ 
+-- 
+1.7.1.1
+
