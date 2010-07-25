@@ -1,52 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-202-190.clients.your-server.de ([88.198.202.190]:36180
-	"EHLO kleinhenz.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932652Ab0GOIvz (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:41886 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751797Ab0GYKkf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jul 2010 04:51:55 -0400
-Date: Thu, 15 Jul 2010 10:51:50 +0200
-From: Simon Richter <sjr@debian.org>
-To: Michael =?iso-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	linux-wireless@vger.kernel.org, 588196@bugs.debian.org
-Subject: Re: Bug#588196: b43: does not join multicast groups
-Message-ID: <20100715085149.GA9922@richter>
-References: <1278887148.6139.91.camel@localhost>
- <4C3A4C6E.6060801@lwfinger.net>
- <20100713051430.GA2625@honey.hogyros.de>
- <4C3BFB87.5030907@lwfinger.net>
- <20100713073751.GB3089@richter>
- <4C3C6350.50304@bu3sch.de>
- <20100713130614.GB25565@richter>
- <4C3C7296.3070700@bu3sch.de>
- <20100714075037.GA6128@richter>
- <4C3DB065.70009@bu3sch.de>
+	Sun, 25 Jul 2010 06:40:35 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <4C3DB065.70009@bu3sch.de>
+In-Reply-To: <20100723091503.GA12300@rakim.wolfsonmicro.main>
+References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+	<1279733634-21974-11-git-send-email-ohad@wizery.com> <20100721175930.GD10930@sirena.org.uk>
+	<4C48287D.1000603@nokia.com> <AANLkTin2dyLNo1RMQgLG-4DtN-CsXqNNLAfITXDbMIvl@mail.gmail.com>
+	<20100723091503.GA12300@rakim.wolfsonmicro.main>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Sun, 25 Jul 2010 13:40:13 +0300
+Message-ID: <AANLkTi=qnAy+c7-xqcscyuy7Q4sgVsedZToEmZHo=y9y@mail.gmail.com>
+Subject: Re: [PATCH v2 10/20] omap: zoom: add fixed regulator device for wlan
+To: Mark Brown <broonie@opensource.wolfsonmicro.com>
+Cc: Roger Quadros <roger.quadros@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Pandita Vikram <vikram.pandita@ti.com>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Tony Lindgren <tony@atomide.com>, San Mehat <san@google.com>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Fri, Jul 23, 2010 at 12:15 PM, Mark Brown
+<broonie@opensource.wolfsonmicro.com> wrote:
+> On Fri, Jul 23, 2010 at 02:13:38AM +0300, Ohad Ben-Cohen wrote:
+>> On Thu, Jul 22, 2010 at 2:16 PM, Roger Quadros <roger.quadros@nokia.com> wrote:
+>> > .dev_name       = "mmci-omap-hs.2"
+>
+>> I already set the .dev member of the consumer in a similar manner to
+>> how all other regulators are configured in this board - please check
+>> out patch 13:
+>
+>> https://patchwork.kernel.org/patch/113418/
+>
+>> Does this look reasonable to you ?
+>
+> You should really be using dev_name in preference to dev these days
+> unless there's a *very* good reason.
 
-On Wed, Jul 14, 2010 at 02:41:09PM +0200, Michael Büsch wrote:
+Changed, thank you.
 
-> The same applies to receiving. The RX queue is also dropped on switch
-> from DMA to PIO.
+I'll submit the updated patch now as a standalone patch as it has no
+dependencies on the whole series, and it could only help to start
+trimming that series down.
 
-Sure, but the packet is repeated every ten seconds. The problem is that
-none of those packets is received, even long after the switch to PIO.
-
-> >advertisement, sent to 33:33:00:00:00:01). I have no idea where the
-> >packet is dropped; from my somewhat limited understanding of 802.11, I'd
-> >expect the frames to be treated like broadcast frames by the AP, so it'd
-> >be the receiver dropping them in the MAC filter.
-
-> The actual switch from DMA to PIO mode completely reinitializes
-> the hardware and drops all queues.
-
-Would it be possible to reinitialize the multicast filter at this point?
-
-   Simon
+>
