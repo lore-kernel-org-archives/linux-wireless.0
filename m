@@ -1,196 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3701 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756844Ab0GMPdm (ORCPT
+Received: from relais.videotron.ca ([24.201.245.36]:43992 "EHLO
+	relais.videotron.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751140Ab0GYN5O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jul 2010 11:33:42 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com, br1@einfach.org
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	jirislaby@gmail.com, mickflemm@gmail.com, lrodriguez@atheros.com,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 1/2] ath5k: move reset to mac80211 workqueue
-Date: Tue, 13 Jul 2010 11:32:40 -0400
-Message-Id: <1279035161-10802-1-git-send-email-me@bobcopeland.com>
+	Sun, 25 Jul 2010 09:57:14 -0400
+MIME-version: 1.0
+Content-type: TEXT/PLAIN; charset=US-ASCII
+Date: Sun, 25 Jul 2010 09:56:28 -0400 (EDT)
+From: Nicolas Pitre <nico@fluxnic.net>
+To: Ohad Ben-Cohen <ohad@wizery.com>
+Cc: Roger Quadros <roger.quadros@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	San Mehat <san@google.com>, Tony Lindgren <tony@atomide.com>,
+	Pandita Vikram <vikram.pandita@ti.com>,
+	Kalle Valo <kalle.valo@iki.fi>
+Subject: Re: [PATCH v2 18/20] mmc: sdio: enable a default power off mode of the
+ card
+In-reply-to: <AANLkTimfJnC7onDT83DWLb7sR7+evJB3eymt5Z6JYkAt@mail.gmail.com>
+Message-id: <alpine.LFD.2.00.1007250953400.25246@xanadu.home>
+References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+ <1279733634-21974-19-git-send-email-ohad@wizery.com>
+ <4C482D01.1040109@nokia.com>
+ <AANLkTimfJnC7onDT83DWLb7sR7+evJB3eymt5Z6JYkAt@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We currently trigger a reset via a tasklet when certain error
-conditions are detected so that the card will (eventually)
-restart.  Unfortunately this makes locking complicated since
-reset can also be called in process context (e.g. for channel
-change).  Currently nothing protects against concurrent resets,
-which can be the source of corruption bugs.
+On Sun, 25 Jul 2010, Ohad Ben-Cohen wrote:
 
-Reset takes too long to spinlock the whole thing, so this
-patch moves deferred resets into the mac80211 workqueue to
-enable use of sc->lock mutex.
+> On Thu, Jul 22, 2010 at 2:35 PM, Roger Quadros <roger.quadros@nokia.com> wrote:
+> > On 07/21/2010 08:33 PM, ext Ohad Ben-Cohen wrote:
+> >>
+> >> Add support for an SDIO device to stay powered off even without
+> >> the presence of an SDIO function driver. A host should explicitly
+> >> ask for it by means of MMC_CAP_DONT_POWER_CARD, and the SDIO
+> >> function driver should know it needs to call sdio_claim_power
+> >> before accessing the device.
+> >>
+> >> Signed-off-by: Ohad Ben-Cohen<ohad@wizery.com>
+> >
+> > Shouldn't this be the default behaviour? If there is no function driver for
+> > any of the functions of the card, then sdio core shold power off the card.
+> >
+> > I don't see a need for a special capability flag for this.
+> >
+> > in fact MMC_CAP_DONT_POWER_CARD does not seem like an mmc host's capability
+> 
+> Totally agree.
+> 
+> I didn't want to change the current behavior of the cards/funcs so I
+> looked for a way to explicitly power down only specific cards.
+> 
+> Alternatively we could power down all cards at the end
+> mmc_attach_sdio, and then power them up selectively in sdio_bus_probe,
+> just before calling probe. If the probe succeeds, the function driver
+> takes over. If the probe fails, we can power them down again.
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath/ath5k/base.c  |   38 +++++++++++++++++--------------
- drivers/net/wireless/ath/ath5k/base.h  |    3 +-
- drivers/net/wireless/ath/ath5k/debug.c |    2 +-
- 3 files changed, 24 insertions(+), 19 deletions(-)
+Exactly!
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 20328bd..b290cc6 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -388,7 +388,7 @@ static int 	ath5k_init(struct ath5k_softc *sc);
- static int 	ath5k_stop_locked(struct ath5k_softc *sc);
- static int 	ath5k_stop_hw(struct ath5k_softc *sc);
- static irqreturn_t ath5k_intr(int irq, void *dev_id);
--static void 	ath5k_tasklet_reset(unsigned long data);
-+static void ath5k_reset_work(struct work_struct *work);
- 
- static void 	ath5k_tasklet_calibrate(unsigned long data);
- 
-@@ -831,11 +831,12 @@ ath5k_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
- 
- 	tasklet_init(&sc->rxtq, ath5k_tasklet_rx, (unsigned long)sc);
- 	tasklet_init(&sc->txtq, ath5k_tasklet_tx, (unsigned long)sc);
--	tasklet_init(&sc->restq, ath5k_tasklet_reset, (unsigned long)sc);
- 	tasklet_init(&sc->calib, ath5k_tasklet_calibrate, (unsigned long)sc);
- 	tasklet_init(&sc->beacontq, ath5k_tasklet_beacon, (unsigned long)sc);
- 	tasklet_init(&sc->ani_tasklet, ath5k_tasklet_ani, (unsigned long)sc);
- 
-+	INIT_WORK(&sc->reset_work, ath5k_reset_work);
-+
- 	ret = ath5k_eeprom_read_mac(ah, mac);
- 	if (ret) {
- 		ATH5K_ERR(sc, "unable to read address from EEPROM: 0x%04x\n",
-@@ -2294,8 +2295,8 @@ err_unmap:
-  * frame contents are done as needed and the slot time is
-  * also adjusted based on current state.
-  *
-- * This is called from software irq context (beacontq or restq
-- * tasklets) or user context from ath5k_beacon_config.
-+ * This is called from software irq context (beacontq tasklets)
-+ * or user context from ath5k_beacon_config.
-  */
- static void
- ath5k_beacon_send(struct ath5k_softc *sc)
-@@ -2328,7 +2329,7 @@ ath5k_beacon_send(struct ath5k_softc *sc)
- 				sc->bmisscount);
- 			ATH5K_DBG(sc, ATH5K_DEBUG_RESET,
- 				  "stuck beacon, resetting\n");
--			tasklet_schedule(&sc->restq);
-+			ieee80211_queue_work(sc->hw, &sc->reset_work);
- 		}
- 		return;
- 	}
-@@ -2684,7 +2685,6 @@ ath5k_stop_hw(struct ath5k_softc *sc)
- 
- 	tasklet_kill(&sc->rxtq);
- 	tasklet_kill(&sc->txtq);
--	tasklet_kill(&sc->restq);
- 	tasklet_kill(&sc->calib);
- 	tasklet_kill(&sc->beacontq);
- 	tasklet_kill(&sc->ani_tasklet);
-@@ -2737,7 +2737,7 @@ ath5k_intr(int irq, void *dev_id)
- 			 */
- 			ATH5K_DBG(sc, ATH5K_DEBUG_RESET,
- 				  "fatal int, resetting\n");
--			tasklet_schedule(&sc->restq);
-+			ieee80211_queue_work(sc->hw, &sc->reset_work);
- 		} else if (unlikely(status & AR5K_INT_RXORN)) {
- 			/*
- 			 * Receive buffers are full. Either the bus is busy or
-@@ -2752,7 +2752,7 @@ ath5k_intr(int irq, void *dev_id)
- 			if (ah->ah_mac_srev < AR5K_SREV_AR5212) {
- 				ATH5K_DBG(sc, ATH5K_DEBUG_RESET,
- 					  "rx overrun, resetting\n");
--				tasklet_schedule(&sc->restq);
-+				ieee80211_queue_work(sc->hw, &sc->reset_work);
- 			}
- 			else
- 				tasklet_schedule(&sc->rxtq);
-@@ -2799,14 +2799,6 @@ ath5k_intr(int irq, void *dev_id)
- 	return IRQ_HANDLED;
- }
- 
--static void
--ath5k_tasklet_reset(unsigned long data)
--{
--	struct ath5k_softc *sc = (void *)data;
--
--	ath5k_reset(sc, sc->curchan);
--}
--
- /*
-  * Periodically recalibrate the PHY to account
-  * for temperature/environment changes.
-@@ -2830,7 +2822,7 @@ ath5k_tasklet_calibrate(unsigned long data)
- 		 * to load new gain values.
- 		 */
- 		ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "calibration, resetting\n");
--		ath5k_reset(sc, sc->curchan);
-+		ieee80211_queue_work(sc->hw, &sc->reset_work);
- 	}
- 	if (ath5k_hw_phy_calibrate(ah, sc->curchan))
- 		ATH5K_ERR(sc, "calibration of channel %u failed\n",
-@@ -2934,6 +2926,8 @@ drop_packet:
- /*
-  * Reset the hardware.  If chan is not NULL, then also pause rx/tx
-  * and change to the given channel.
-+ *
-+ * This should be called with sc->lock.
-  */
- static int
- ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan)
-@@ -2990,6 +2984,16 @@ err:
- 	return ret;
- }
- 
-+static void ath5k_reset_work(struct work_struct *work)
-+{
-+	struct ath5k_softc *sc = container_of(work, struct ath5k_softc,
-+		reset_work);
-+
-+	mutex_lock(&sc->lock);
-+	ath5k_reset(sc, sc->curchan);
-+	mutex_unlock(&sc->lock);
-+}
-+
- static int ath5k_start(struct ieee80211_hw *hw)
- {
- 	return ath5k_init(hw->priv);
-diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
-index 56221bc..86c90f4 100644
---- a/drivers/net/wireless/ath/ath5k/base.h
-+++ b/drivers/net/wireless/ath/ath5k/base.h
-@@ -47,6 +47,7 @@
- #include <linux/if_ether.h>
- #include <linux/leds.h>
- #include <linux/rfkill.h>
-+#include <linux/workqueue.h>
- 
- #include "ath5k.h"
- #include "debug.h"
-@@ -189,7 +190,7 @@ struct ath5k_softc {
- 	unsigned int		led_pin,	/* GPIO pin for driving LED */
- 				led_on;		/* pin setting for LED on */
- 
--	struct tasklet_struct	restq;		/* reset tasklet */
-+	struct work_struct	reset_work;	/* deferred chip reset */
- 
- 	unsigned int		rxbufsize;	/* rx size based on mtu */
- 	struct list_head	rxbuf;		/* receive buffer */
-diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
-index 8c63886..ebb9c23 100644
---- a/drivers/net/wireless/ath/ath5k/debug.c
-+++ b/drivers/net/wireless/ath/ath5k/debug.c
-@@ -279,7 +279,7 @@ static ssize_t write_file_reset(struct file *file,
- {
- 	struct ath5k_softc *sc = file->private_data;
- 	ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "debug file triggered reset\n");
--	tasklet_schedule(&sc->restq);
-+	ieee80211_queue_work(sc->hw, &sc->reset_work);
- 	return count;
- }
- 
--- 
-1.6.3.3
+> Is that what you meant ?
+> 
+> This would work both if the sdio function driver is already loaded, or
+> will only be loaded at a later time. But I'm not too fond of the extra
+> power on/off cycles that it will introduce for each card..
+
+This is still way better than introducing knowledge about specific cards 
+in the host drivers.
 
 
+Nicolas
