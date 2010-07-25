@@ -1,79 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:50230 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756316Ab0G1V0i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jul 2010 17:26:38 -0400
-Message-ID: <4C50A08B.2080002@openwrt.org>
-Date: Wed, 28 Jul 2010 23:26:35 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:60070 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750868Ab0GYMk5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Jul 2010 08:40:57 -0400
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: Bruno Randolf <br1@einfach.org>, johannes@sipsolutions.net,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v4 1/3] cfg80211: Add nl80211 antenna configuration
-References: <20100727094732.27186.30900.stgit@tt-desk> <4C4F0BB1.6030002@openwrt.org> 	<AANLkTi=QWMwVTqOqL3wNUnLAWHDw60HmYXtngXJrQOu+@mail.gmail.com> 	<201007281106.06813.br1@einfach.org> <AANLkTimBu2=9XhzKwUi1ZpRmGWA+C4GCDgXqp-YJVLxt@mail.gmail.com> 	<4C506DF7.9020907@openwrt.org> <AANLkTi=HyyA0oqVRRsh2_ad_0zLGCSBQ6CK=fCg=g=ad@mail.gmail.com>
-In-Reply-To: <AANLkTi=HyyA0oqVRRsh2_ad_0zLGCSBQ6CK=fCg=g=ad@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <4C482D01.1040109@nokia.com>
+References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+	<1279733634-21974-19-git-send-email-ohad@wizery.com> <4C482D01.1040109@nokia.com>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Sun, 25 Jul 2010 15:40:35 +0300
+Message-ID: <AANLkTimfJnC7onDT83DWLb7sR7+evJB3eymt5Z6JYkAt@mail.gmail.com>
+Subject: Re: [PATCH v2 18/20] mmc: sdio: enable a default power off mode of
+	the card
+To: Roger Quadros <roger.quadros@nokia.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	San Mehat <san@google.com>, Tony Lindgren <tony@atomide.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Pandita Vikram <vikram.pandita@ti.com>,
+	Kalle Valo <kalle.valo@iki.fi>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-07-28 11:15 PM, Luis R. Rodriguez wrote:
-> On Wed, Jul 28, 2010 at 10:50 AM, Felix Fietkau <nbd@openwrt.org> wrote:
->> This is easy to handle, it can work like this:
->> We treat the setting not as a raw chainmask, but actually as an antenna
->> mask. The chainmask gets calculated from that. If we disable all
->> antennas belonging to a particular chain, we disable the entire chain.
-> 
-> Fair enough. Would cfg80211 deal with this logic then? That would be
-> my preference. But then, do we even expose enough hardware
-> capabilities for cfg80211 to make this decision already?
-There isn't much for cfg80211 to deal with, really.
+On Thu, Jul 22, 2010 at 2:35 PM, Roger Quadros <roger.quadros@nokia.com> wrote:
+> On 07/21/2010 08:33 PM, ext Ohad Ben-Cohen wrote:
+>>
+>> Add support for an SDIO device to stay powered off even without
+>> the presence of an SDIO function driver. A host should explicitly
+>> ask for it by means of MMC_CAP_DONT_POWER_CARD, and the SDIO
+>> function driver should know it needs to call sdio_claim_power
+>> before accessing the device.
+>>
+>> Signed-off-by: Ohad Ben-Cohen<ohad@wizery.com>
+>
+> Shouldn't this be the default behaviour? If there is no function driver for
+> any of the functions of the card, then sdio core shold power off the card.
+>
+> I don't see a need for a special capability flag for this.
+>
+> in fact MMC_CAP_DONT_POWER_CARD does not seem like an mmc host's capability
 
->> For AR9285 we will already deviate from treating this as a chainmask,
->> because it has one chain with rx diversity.
-> 
-> Good point but the single stream 802.11n case just needs to be
-> documented as well, it'll be like that for other single stream 802.11n
-> devices, if there are others, not sure if Atheros has the only ones in
-> the market or what.
-> 
->> Please accept this API
-> 
-> If you really need some knobs without detailed review and discussion
-> shoot for debugfs, otherwise I will take my time reviewing carefully
-> all the details because once its API then.. well its set in stone and
-> we have to deal with it. I realize I'm being a real big fucking pain
-> in the ass with this but.. I believe these discussions have also been
-> helpful.
-> 
->> I'm sure the API can be used to handle everything related to 802.11n
->> antenna/chain selection properly. :)
-> 
-> Sure, but who deals with the 11n stuff? Right now this patches just
-> pass two variables, TX and RX antenna mask, and has no special case
-> handling for the different 802.11n cases, nor does it document who
-> should handle that.
-> 
->   * STBC (11n 9.6.0.c, 9.7g, etc)
->   * TX Beamforming (11n 19.19)
->   * Antenna selection (11n 19.20)
-> 
-> IMHO we should be thinking about this if we want to define an API that
-> *all* 802.11 drivers can use if the API will be used for 802.11n as
-> well.
-We don't need any special case handling for this at all. Drivers already
-calculate their HT capabilities based on the number of available chains.
-Once the antenna selection stuff is actually used, they will have some
-internal information about which chains have how many antennas.
+Totally agree.
 
-The reason why we can ignore *all* of this stuff for the API is simple:
-We only need to refactor the code to calculate these settings based on
-effective chainmask / antenna mask instead of pure hardware capability.
+I didn't want to change the current behavior of the cards/funcs so I
+looked for a way to explicitly power down only specific cards.
 
-The effective chainmask / antenna mask is basically the same as the
-hardware settings, except that it gets masked with the values that are
-configured through this API. That leaves us with something that's easy
-to configure, easy to implement for drivers, and doesn't need special
-case stuff for various 802.11n features.
+Alternatively we could power down all cards at the end
+mmc_attach_sdio, and then power them up selectively in sdio_bus_probe,
+just before calling probe. If the probe succeeds, the function driver
+takes over. If the probe fails, we can power them down again.
 
-- Felix
+Is that what you meant ?
+
+This would work both if the sdio function driver is already loaded, or
+will only be loaded at a later time. But I'm not too fond of the extra
+power on/off cycles that it will introduce for each card..
+
+Thanks,
+Ohad.
+
+> flag, it seems more like a request from the board to keep the card powered
+> off.
+>
+> regards,
+> -roger
+>
