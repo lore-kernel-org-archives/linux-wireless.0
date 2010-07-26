@@ -1,33 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:48005 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757561Ab0GDTCZ (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:54137 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754281Ab0GZRbI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Jul 2010 15:02:25 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 5CF4042042
-	for <linux-wireless@vger.kernel.org>; Sun,  4 Jul 2010 15:05:41 -0400 (EDT)
-Subject: Compat-wireless release for 2010-07-04 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20100704190221.E386A42E2C@repository3.orbit-lab.org>
-Date: Sun,  4 Jul 2010 15:02:21 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Mon, 26 Jul 2010 13:31:08 -0400
+Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id o6QHV5gt011126
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Jul 2010 10:31:06 -0700
+Message-ID: <4C4DC659.7090006@candelatech.com>
+Date: Mon, 26 Jul 2010 10:31:05 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: linux-wireless compile broken
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
-/usr/bin/sha1sum: *.tar.bz2: No such file or directory
+Pulled and attempted to build linux-wireless this morning:
 
-compat-wireless code metrics
+[greearb@build-32 linux-wireless.p4s]$ make bzImage modules
+make -C /home/greearb/git/wireless-2.6 O=/home/greearb/kernel/2.6/linux-wireless.p4s/. bzImage modules
+   Using /home/greearb/git/wireless-2.6 as source for kernel
+   GEN     /home/greearb/kernel/2.6/linux-wireless.p4s/Makefile
+   CHK     include/linux/version.h
+   CHK     include/generated/utsrelease.h
+   CALL    /home/greearb/git/wireless-2.6/scripts/checksyscalls.sh
+   CHK     include/generated/compile.h
+   LD      drivers/staging/built-in.o
+   CC [M]  drivers/staging/netwave/netwave_cs.o
+/home/greearb/git/wireless-2.6/drivers/staging/netwave/netwave_cs.c:250: error: expected specifier-qualifier-list before ‘dev_node_t’
+/home/greearb/git/wireless-2.6/drivers/staging/netwave/netwave_cs.c: In function ‘netwave_snapshot’:
+/home/greearb/git/wireless-2.6/drivers/staging/netwave/netwave_cs.c:291: error: ‘netwave_private’ has no member named ‘lastExec’
+/home/greearb/git/wireless-2.6/drivers/staging/netwave/netwave_cs.c:302: error: implicit declaration of function ‘copy_from_pc’
+/home/greearb/git/wireless-2.6/drivers/staging/netwave/netwave_cs.c:302: error: ‘netwave_private’ has no member named ‘nss’
+/home/greearb/git/wireless-2.6/drivers/staging/netwave/netwave_cs.c: In function ‘netwave_get_wireless_stats’:
+/home/greearb/git/wireless-2.6/drivers/staging/netwave/netwave_cs.c:318: error: ‘netwave_private’ has no member named ‘ramBase’
 
-    494455 - Total upstream lines of code being pulled
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
