@@ -1,52 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:50611 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751469Ab0GITXb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jul 2010 15:23:31 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 3/4] iwlagn: more generic description for iwlagn devices
-Date: Fri,  9 Jul 2010 12:24:39 -0700
-Message-Id: <1278703480-13363-4-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1278703480-13363-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1278703480-13363-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from cavan.codon.org.uk ([93.93.128.6]:47178 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752437Ab0GZWvJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jul 2010 18:51:09 -0400
+Date: Mon, 26 Jul 2010 23:50:57 +0100
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	David Quan <David.Quan@atheros.com>,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"kernel-team@lists.ubuntu.com" <kernel-team@lists.ubuntu.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	"tim.gardner@canonical.com" <tim.gardner@canonical.com>
+Subject: Re: [ath5k-devel] [PATCH v3] ath5k: disable ASPM
+Message-ID: <20100726225057.GA7268@srcf.ucam.org>
+References: <20100726210651.GJ14855@tux> <1280179033.3721.15.camel@maxim-laptop> <20100726212543.GA5424@srcf.ucam.org> <AANLkTi=5_Dc8SumPi7cr8u7=DmnOHgSo6C76w9b0E4Kj@mail.gmail.com> <20100726222113.GA6487@srcf.ucam.org> <AANLkTinq-SxMHTrJM23WaeRMkU-2cySiVrkwCjDRS_o+@mail.gmail.com> <20100726222909.GA6773@srcf.ucam.org> <AANLkTinysGjYS7RKN4X_7T2q+rw_-OWdn-UJYM0poWXu@mail.gmail.com> <20100726223326.GA6904@srcf.ucam.org> <AANLkTinChEx_B9wa-n+a6xDr1vLOBOD3Mhcs=iqcYwen@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTinChEx_B9wa-n+a6xDr1vLOBOD3Mhcs=iqcYwen@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Intel Wireless WiFi Next Gen AGN support two major categories:
- 1. Intel Wireless WiFi 4965 AGN device
- 2. Intel Wireless-N/Advanced-N/Ultimate-N family
+On Mon, Jul 26, 2010 at 03:43:04PM -0700, Luis R. Rodriguez wrote:
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/Kconfig |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
+> I see.. thanks Mathew... in that case since L1 works on all devices we
+> could just force enable L1 for all PCIE devices. What do you think?
 
-diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
-index 6491e27..a51e4da 100644
---- a/drivers/net/wireless/iwlwifi/Kconfig
-+++ b/drivers/net/wireless/iwlwifi/Kconfig
-@@ -87,10 +87,15 @@ config IWL4965
- 	  This option enables support for Intel Wireless WiFi Link 4965AGN
- 
- config IWL5000
--	bool "Intel Wireless WiFi 5000AGN; Intel WiFi Link 1000, 6000, and 6050 Series"
-+	bool "Intel Wireless-N/Advanced-N/Ultimate-N WiFi Link"
- 	depends on IWLAGN
- 	---help---
--	  This option enables support for Intel Wireless WiFi Link 5000AGN Family
-+	  This option enables support for use with the following hardware:
-+		Intel Wireless WiFi Link 6250AGN Adapter
-+		Intel 6000 Series Wi-Fi Adapters (6200AGN and 6300AGN)
-+		Intel WiFi Link 1000BGN
-+		Intel Wireless WiFi 5150AGN
-+		Intel Wireless WiFi 5100AGN, 5300AGN, and 5350AGN
- 
- config IWL3945
- 	tristate "Intel PRO/Wireless 3945ABG/BG Network Connection (iwl3945)"
+Works for me.
+
 -- 
-1.7.0.4
-
+Matthew Garrett | mjg59@srcf.ucam.org
