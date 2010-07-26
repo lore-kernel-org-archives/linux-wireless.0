@@ -1,64 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47580 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757244Ab0GBR3I (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jul 2010 13:29:08 -0400
-Subject: Re: [PATCH 2.6.34] mac80211: Fix auth retries if AP sends
- temporary deauth
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Stewart <pstew@google.com>
-Cc: linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>,
-	Jiri Benc <jbenc@suse.cz>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <AANLkTilV1t1737ciSPyyETeBEcN_QXsYxgEwpZIIucR2@mail.gmail.com>
-References: <AANLkTilV1t1737ciSPyyETeBEcN_QXsYxgEwpZIIucR2@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 02 Jul 2010 19:29:03 +0200
-Message-ID: <1278091743.15412.17.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from nbd.name ([88.198.39.176]:49613 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751973Ab0GZTls (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jul 2010 15:41:48 -0400
+Message-ID: <4C4DE4F5.3010907@openwrt.org>
+Date: Mon, 26 Jul 2010 21:41:41 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+CC: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] [RFC] ath9k: improve aggregation throughput by
+ 	using only first rate
+References: <AANLkTimWoSTAtb0m9V=0CNowhy=KtpiKj-O3vdmV8qxB@mail.gmail.com>	<4C4DC98E.6090002@openwrt.org> <AANLkTinZ=KDo4aJU6Z93p1DXghF_MzE9CeBN6OuC_LnD@mail.gmail.com>
+In-Reply-To: <AANLkTinZ=KDo4aJU6Z93p1DXghF_MzE9CeBN6OuC_LnD@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-07-01 at 10:21 -0700, Paul Stewart wrote:
-> @@ -1030,6 +1030,25 @@ ieee80211_rx_result
-> ieee80211_work_rx_mgmt(struct ieee80211_sub_if_data *sdata,
->  			skb_queue_tail(&local->work_skb_queue, skb);
->  			ieee80211_queue_work(&local->hw, &local->work_work);
->  			return RX_QUEUED;
-> +		case IEEE80211_STYPE_DEAUTH:
-> +			/*
-> +			 * If we get sent a DEAUTH while we are
-> +			 * actively trying to authenticate to this
-> +			 * station, we shoot ourselves in the foot if
-> +			 * we fall through using RX_CONTINUE and allow
-> +			 * the bss context to disappear
-> +			 * (ieee80211_sta_rx_mgmt()).  This is
-> +			 * especially true if the reason for the
-> +			 * DEAUTH was a negative but temporary direct
-> +			 * response to an AUTH attempt. Let the retry
-> +			 * mechanism run its course instead.
-> +			 */
-> +                        reason_code = le16_to_cpu(mgmt->u.deauth.reason_code);
-> +			if (wk->type == IEEE80211_WORK_AUTH &&
-> +                            reason_code == WLAN_REASON_PREV_AUTH_NOT_VALID) {
-> +				return RX_DROP_MONITOR;
-> +			}
-> +			break;
+On 2010-07-26 9:23 PM, Björn Smedman wrote:
+> 2010/7/26 Felix Fietkau <nbd@openwrt.org>:
+>> On 2010-07-26 7:10 PM, Björn Smedman wrote:
+>>> I think there are some (in theory) simple improvements that can be
+>>> done to the tx aggregation / rate control logic. A proof of concept of
+>>> one such improvement is provided below. Basically, it's a hack that
+>> I think it makes sense to rely less on on-chip MRR for fallback, but I
+>> think to make this workable, we really should use the MRR table for
+>> something, otherwise the rate control algorithm will take much longer to
+>> adapt.
+>> It's probably better to fix this properly after I'm done with my A-MPDU
+>> rewrite, because then I can more easily push parts of the software
+>> retransmission behaviour into minstrel_ht directly.
+> 
+> Sounds very reasonable. I'm sure you've thought of it but now that
+> it's fresh in my head it would be great if the new aggregation design
+> allowed us to experiment with stuff like this:
+> 
+> * The rate control logic treats the average aggregate length as a
+> measured independent variable, when in fact it depends heavily on the
+> rates selected (via the 4 ms txop limit).
+Yes, with the new design maybe we could use the initial rate lookup only
+for setting the sampling flag, and then doing a separate per-AMPDU
+lookup, which properly takes the AMPDU length into account.
 
-Ok, wow, I finally understand this patch, but is it weird!! You're
-modifying work.c to avoid having the mlme.c code send this frame to
-cfg80211? That's really confusing.
+> * When tx is aggregated most rate control probe frames end up inside
+> aggregates and are never used for probing (effective probe frequency
+> is divided by average aggregate length).
+Nope, a probing frame never ends up inside an aggregate. It's always
+sent out as a single frame, which is why I had to make the decision
+about sending a probing frame more complex in minstrel_ht, compared to
+minstrel - the previous 10% stuff was limiting aggregation size.
 
-The real reason for this is that we send up the deauth frame even when
-we're not even authenticated. This happens in mlme.c. Therefore, we
-should improve the logic in ieee80211_sta_rx_queued_mgmt() to make sure
-it only triggers when we're authenticated with the BSS?
+> * When setting up a hardware MRR for an aggregate the focus should be
+> on throughput (as explained earlier in this thread). But there are
+> situations when reliability is important: e.g. when a subframe in the
+> aggregate is about to expire (because of time or block ack window). It
+> may even be advantageous to tx the subframes that are about to expire
+> in their own aggregate with lower / more reliable bitrate?
+Yes, that's what I was thinking as well. We should probably make this
+decision based on the number of sw-retransmitted frames, and maybe
+consider the offset of seqno vs baw_tail as well.
 
-Alternatively, since cfg80211 tracks this, it would be easier to modify
-cfg80211_send_rx_auth() to not send the event to userspace in the !done
-case I guess.
+> * In many busy radio environments the packet success rate depends very
+> much on the protection method being used (none, cts-to-self or
+> rts-cts), often more so than on the bitrate itself. It would be
+> interesting to experiment with including the protection method in the
+> rate selection, i.e. to probe for the optimal protection method and
+> bitrate combination.
+Sounds good.
 
-johannes
+> * In order to have the best possible rate control in very dynamic rf
+> environments it's important to keep the hardware queue short and
+> select rates as late as possible (to not introduce unnecessary delay
+> when selecting new rates). I have no idea how to do this but it would
+> be great if the tx queue could be kept long enough to never stall tx,
+> but no longer.
+This would work with what I suggested above - per-AMPDU rate lookup.
+With software scheduling that's easy to do, since we already restrict
+the queue to max. 2 AMPDUs
 
+> * If I understand correctly the Atheros hardware does not adjust the
+> rts / cts-to-self duration field when going through the MRR
+> (correct?). In that case it may be even more advantageous to use
+> software retry as much as possible when some form of protection is
+> enabled.
+Not sure, but I think it does adjust the duration field according to the
+rate, while transmitting.
+
+> Looking forward to the new aggregation code!
+That will still take some time, I recently came up with some better
+design ideas, which require some larger changes to the code that I
+already wrote.
+
+- Felix
