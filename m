@@ -1,76 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:60675 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755378Ab0G1Vkn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jul 2010 17:40:43 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 28 Jul 2010 14:40:43 -0700
-Date: Wed, 28 Jul 2010 14:40:41 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>
-Subject: Re: [PATCH 2/3] ath9k_hw: clean up per-channel calibration data
-Message-ID: <20100728214041.GC8033@tux>
-References: <1280339151-37084-1-git-send-email-nbd@openwrt.org>
- <1280339151-37084-2-git-send-email-nbd@openwrt.org>
- <AANLkTi=8UX5B9+nLymSdJS2J-gRwMsYT_SVnviHX9Zi3@mail.gmail.com>
- <4C509CE1.90503@openwrt.org>
- <AANLkTi==nB+Wqe3KcmDf6P=JUYnLzc2PeAuOZQE3v9bn@mail.gmail.com>
- <4C50A170.1070902@openwrt.org>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:63050 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755551Ab0GZWPx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jul 2010 18:15:53 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4C50A170.1070902@openwrt.org>
+In-Reply-To: <20100726212543.GA5424@srcf.ucam.org>
+References: <AANLkTimdTjedtoeKAp5tcTqefrUB6k373Kx9EacuYFcO@mail.gmail.com>
+	<1276870309.23783.3.camel@maxim-laptop> <1276933774.16697.11.camel@maxim-laptop>
+	<20100619123841.GA31838@hash.localnet> <1276952554.3332.3.camel@maxim-laptop>
+	<1276961564.5173.12.camel@maxim-laptop> <20100726201322.GI14855@tux>
+	<1280177362.3721.7.camel@maxim-laptop> <20100726210651.GJ14855@tux>
+	<1280179033.3721.15.camel@maxim-laptop> <20100726212543.GA5424@srcf.ucam.org>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 26 Jul 2010 15:15:32 -0700
+Message-ID: <AANLkTi=5_Dc8SumPi7cr8u7=DmnOHgSo6C76w9b0E4Kj@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH v3] ath5k: disable ASPM
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	David Quan <David.Quan@atheros.com>,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"kernel-team@lists.ubuntu.com" <kernel-team@lists.ubuntu.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	"tim.gardner@canonical.com" <tim.gardner@canonical.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 28, 2010 at 02:30:24PM -0700, Felix Fietkau wrote:
-> On 2010-07-28 11:21 PM, Luis R. Rodriguez wrote:
-> > On Wed, Jul 28, 2010 at 2:10 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> >> On 2010-07-28 10:52 PM, Luis R. Rodriguez wrote:
-> >>> On Wed, Jul 28, 2010 at 10:45 AM, Felix Fietkau <nbd@openwrt.org> wrote:
-> >>>> The noise floor history buffer is currently not kept per channel, which
-> >>>> can lead to problems when changing channels from a clean channel to a
-> >>>> noisy one. Also when switching from HT20 to HT40, the noise floor
-> >>>> history buffer is full of measurements, but none of them contain data
-> >>>> for the extension channel, which it needs quite a bit of time to recover
-> >>>> from.
-> >>>>
-> >>>> This patch puts all the per-channel calibration data into a single data
-> >>>> structure, and gives the the driver control over whether that is used
-> >>>> per-channel or even not used for some channels.
-> >>>>
-> >>>> For ath9k_htc, I decided to keep this per-channel in order to avoid
-> >>>> creating regressions.
-> >>>>
-> >>>> For ath9k, the data is kept only for the operating channel, which saves
-> >>>> some space. ath9k_hw takes care of wiping old data when the operating
-> >>>> channel or its channel flags change.
-> >>>>
-> >>>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> >>>
-> >>> But this also means every time we want to get operational on a channel
-> >>> we have to learn the current noise all over again. This means for WiFi
-> >>> Direct every channel swap we'd have to learn to walk, which happens
-> >>> quite often. What do you think? Sorry, I know we discussed this
-> >>> approach and I seemed fine but this just occurred to me now, and will
-> >>> become really important later when we support WiFi Direct.
-> >> When we get to implementing per-vif channel settings with switching
-> >> being done in mac80211, we can just move the calibration data to ath9k's
-> >> virtual interface data and thus keep the calibration for multiple
-> >> operating channels.
-> > 
-> > Sounds good. This would currently break the ath9k virtual wiphy's
-> > calibration stuff :P (not like I care), Jouni?
+On Mon, Jul 26, 2010 at 2:25 PM, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
+> On Tue, Jul 27, 2010 at 12:17:13AM +0300, Maxim Levitsky wrote:
 >
-> My current patch should work just fine with virtual wiphy's, since I
-> store the calibration data in the ath_wiphy struct.
+>> However, it is possible, (and that what I asked you) that some ath5k
+>> devices aren't 'pre 1.1 pcie devices' so linux won't disable ASPM L0s
+>> for them.
+>> So indeed for 'good feeling' it is ok to disable L0s from ath5k
+>> explicitly, but most of the time (or always) it will be no-op.
+>>
+>> In *addition* to that, since you said that ASPM L1 *does* work, and is
+>> enabled by BIOS, but linux disables it, that it might be worthy to
+>> enable it again from ath5k driver explicitly.
+>> As long as wireless works I don't really care if this done or not.
+>
+> This may need to be done on a chip by chip basis. Take a look at
+> http://www.atheros.cz/inffile.php?inf=68&bit=32&atheros=AR5002G&system=4
+> and some of the other inf files on that site to see which devices
+> provide the PciASPMOptIn flag - those should support ASPM states even if
+> they're pre-1.1 devices.
 
-Ah neat, this approach seems fine in the long run then. My only remaining
-questions is how effective our scans are in a noisy environemnt with what
-I suppose are some default settings?
+I rather we not bother with these, lets simply follow the kernel's
+lead here for its rule matching.
 
   Luis
