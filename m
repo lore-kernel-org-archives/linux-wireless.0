@@ -1,49 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:54184 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751928Ab0GVW4q convert rfc822-to-8bit (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:64237 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754905Ab0GZSaB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 18:56:46 -0400
-Received: by ewy23 with SMTP id 23so3143209ewy.19
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jul 2010 15:56:43 -0700 (PDT)
+	Mon, 26 Jul 2010 14:30:01 -0400
+Received: by pxi14 with SMTP id 14so186443pxi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Jul 2010 11:30:01 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4C4791AF.8040909@openwrt.org>
-References: <AANLkTimQ7O2nOmh2Rda3d_PKWbS2WlGVBHYMCuhxW10W@mail.gmail.com>
-	<4C4791AF.8040909@openwrt.org>
-Date: Fri, 23 Jul 2010 00:56:43 +0200
-Message-ID: <AANLkTimGvPtolVncEu_csK22xvf1SIFFPusCSqxYiU-A@mail.gmail.com>
-Subject: Re: [ath9k-devel] ath9k: performance regressions / tx semi-stuck
-	somehow
-From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <AANLkTin7cn_TgEeepaWrE4sTuu5YxqPNDTDs-hxCs0vC@mail.gmail.com>
+References: <AANLkTimfc3NY46aYqPM5Ys2i9vpm2_qr5-kgsvc3sdkx@mail.gmail.com>
+	<AANLkTimpwMyfcvRGnJ1JfZP+F=4nFNT5Ra3pB3vse1LM@mail.gmail.com>
+	<loom.20100724T095719-176@post.gmane.org> <AANLkTin7cn_TgEeepaWrE4sTuu5YxqPNDTDs-hxCs0vC@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 26 Jul 2010 11:29:41 -0700
+Message-ID: <AANLkTi=NocpbHp2zcZtFONAWQMXbdxtFtNRroU-yRoKF@mail.gmail.com>
+Subject: Re: Atheros 0cf3:b003
+To: sergi <sergitfe1974@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stephen Chen <Stephen.Chen@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/7/22 Felix Fietkau <nbd@openwrt.org>:
-> On 2010-07-22 12:17 AM, Bj�rn Smedman wrote:
->> Hi all,
+On Mon, Jul 26, 2010 at 11:29 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Sat, Jul 24, 2010 at 1:04 AM, sergi <sergitfe1974@gmail.com> wrote:
+>> Luis R. Rodriguez <mcgrof@...> writes:
 >>
->> I just tried out compat-wireless-2010-07-16 on AR913x (with
->> openwrt/trunk@r22321) and saw some weird performance problems.
+>>>
+>>> 2010/7/23 Maximi89 <maximi89@...>:
+>>> > Hola Luis, conoces ese ID?, Atheros 0cf3:b003
+>>> > Es efectivamente un AR9271?
+>>>
+>>> No, cual tarjeta es esa? Las que tenemos son estos:
+>>>
 >>
-> Could you please try if the earlier version that was in OpenWrt
-> (2010-07-06) has the same issues?
+>>>         { },
+>>> };
+>>>
+>>> Stephen, have you heard of 0cf3:b003 as an ar9271 or HB94 card?
+>>>
+>>>   Luis
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>>> the body of a message to majordomo@...
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>> Hola Luis yo fui quien le mando la consulta a maximiliano,,mi lapiz usb es de
+>> la casa Ubiquiti modelo wifistation ext y ahi dicen k tiene el atheros 9271..y
+>> el id k me sale es el mencionado,,tanto en Mac,Linux y con Everest en win,uso
+>> Ubuntu Ultimate 2.7 con kernel 2.6.32-24 y nada k no me funciona,Podria cmbiar
+>> el Id para k sea compatible?? ..bueno muchas gracias por tu atencion
 >
+> Can you please share your Windows driver INF file ?
 
-Quickly flashing the builds I have on hand I came up with this small
-table comparing MacBook 11g and 11n clients for various openwrt/trunk
-versions:
+Forgot to CC Stephen, please include him in your replies.
 
-r21960P (compat-wireless-2010-06-15): 11g = 12Mbps, 11n = 7.2Mbps
-r22286 (compat-wireless-2010-07-06): 11g = 7.2Mbps*, 11n = 4.2Mbps*
-r22321 (compat-wireless-2010-07-16): 11g = 12Mbps*, 11n = 2.9Mbps*
-
-(*) Bursty / unstable performance.
-(P) Some patches of my own on top of openwrt.
-
-I realize it doesn't say very much unfortunately...
-
-/Bj�rn
+  Luis
