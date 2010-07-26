@@ -1,54 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56915 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754037Ab0GVKcK (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:46902 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752388Ab0GZVRT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 06:32:10 -0400
-Subject: Re: [PATCH 2/2] ath9k: Fix stop in tx date traffic after scan
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Cc: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20100722102049.GB4355@vasanth-laptop>
-References: <1279790703-11521-1-git-send-email-vasanth@atheros.com>
-	 <1279792601.12439.1.camel@jlt3.sipsolutions.net>
-	 <20100722101142.GA4355@vasanth-laptop>
-	 <1279793694.12439.4.camel@jlt3.sipsolutions.net>
-	 <20100722102049.GB4355@vasanth-laptop>
+	Mon, 26 Jul 2010 17:17:19 -0400
+Subject: Re: [ath5k-devel] [PATCH v3] ath5k: disable ASPM
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"kernel-team@lists.ubuntu.com" <kernel-team@lists.ubuntu.com>,
+	"tim.gardner@canonical.com" <tim.gardner@canonical.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	David Quan <David.Quan@Atheros.com>
+In-Reply-To: <20100726210651.GJ14855@tux>
+References: <20100618134930.124225d4fsi8w1fk@naisho.dyndns.info>
+	 <1276859156.19554.2.camel@maxim-laptop>
+	 <AANLkTimdTjedtoeKAp5tcTqefrUB6k373Kx9EacuYFcO@mail.gmail.com>
+	 <1276870309.23783.3.camel@maxim-laptop>
+	 <1276933774.16697.11.camel@maxim-laptop>
+	 <20100619123841.GA31838@hash.localnet>
+	 <1276952554.3332.3.camel@maxim-laptop>
+	 <1276961564.5173.12.camel@maxim-laptop> <20100726201322.GI14855@tux>
+	 <1280177362.3721.7.camel@maxim-laptop>  <20100726210651.GJ14855@tux>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 22 Jul 2010 12:32:04 +0200
-Message-ID: <1279794724.12439.5.camel@jlt3.sipsolutions.net>
+Date: Tue, 27 Jul 2010 00:17:13 +0300
+Message-ID: <1280179033.3721.15.camel@maxim-laptop>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-07-22 at 15:50 +0530, Vasanthakumar Thiagarajan wrote:
-> On Thu, Jul 22, 2010 at 03:44:54PM +0530, Johannes Berg wrote:
-> > On Thu, 2010-07-22 at 15:41 +0530, Vasanthakumar Thiagarajan wrote:
-> > > > Just go and implement flush() and all these issues will go away and you
-> > > > will stop thinking that you need to touch queues from channel switching.
-> > > > They have nothing to do with each other.
+On Mon, 2010-07-26 at 14:06 -0700, Luis R. Rodriguez wrote: 
+> On Mon, Jul 26, 2010 at 01:49:22PM -0700, Maxim Levitsky wrote:
+> > On Mon, 2010-07-26 at 13:13 -0700, Luis R. Rodriguez wrote: 
+> > > On Sat, Jun 19, 2010 at 08:32:44AM -0700, Maxim Levitsky wrote:
+> > > > On Sat, 2010-06-19 at 16:02 +0300, Maxim Levitsky wrote: 
+> > > > > On Sat, 2010-06-19 at 08:38 -0400, Bob Copeland wrote: 
+> > > > > > On Sat, Jun 19, 2010 at 10:49:34AM +0300, Maxim Levitsky wrote:
+> > > > > > > How this patch?
+> > > > > > 
+> > > > > > Looks fine to me.  Some nitpicking below but feel free to add my
+> > > > > > 
+> > > > > > Acked-by: Bob Copeland <me@bobcopeland.com>
+> > > > > > 
+> > > > Done.
+> > > > 
+> > > > Best regards,
+> > > > Maxim Levitsky
+> > > > 
+> > > > --- 
+> > > > 
+> > > > commit 616afa397b3e843f2aba06be12a30e72dfff7740
+> > > > Author: Maxim Levitsky <maximlevitsky@gmail.com>
+> > > > Date:   Thu Jun 17 23:21:42 2010 +0300
+> > > > 
+> > > >     ath5k: disable ASPM
+> > > >     
+> > > >     Atheros card on Acer Aspire One (AOA150, Atheros Communications Inc. AR5001
+> > > >     Wireless Network Adapter [168c:001c] (rev 01)) doesn't work well with ASPM
+> > > >     enabled. With ASPM ath5k will eventually stall on heavy traffic with often
+> > > >     'unsupported jumbo' warnings appearing. Disabling ASPM L0s in ath5k fixes
+> > > >     these problems.
+> > > >     Also card sends a storm of RXORN interrupts even though medium is idle.
+> > > >     
+> > > >     Reproduced with pcie_aspm=force and by using 'nc < /dev/zero > /dev/null' at
+> > > >     both ends (usually stalls within seconds).
+> > > >     
+> > > >     Unfortunately BIOS enables ASPM on this card by default on these machines
+> > > >     This means that, problem shows up (less often) without pcie_aspm=force too. 
+> > > >     Therefore to benefit from this fix you need to _enable_ CONFIG_PCIEASPM
+> > > >     
+> > > > 
+> > > >     All credit for this patch goes to Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+> > > >     for finding and fixing this bug.
+> > > >     
+> > > >     Based on patch that is
+> > > >     From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+> > > >     
+> > > >     
+> > > >     Signed-off-by: Maxim Levitsky <maximlevitsky@gmail.com>
+> > > >     Acked-by: Bob Copeland <me@bobcopeland.com>
 > > > 
+> > > Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 > > > 
-> > > I thought about it also, but i'll hit the same issue 
-> > > when ieee80211_scan_state_leave_oper_channel() flushes
-> > > the hw tx queues where driver is not supposed to wake
-> > > up the queues as drv_flush() is called only after stopping
-> > > all queues.
+> > > But please resubmit and completley modify the commit log to indicate
+> > > ath5k cards support ASPM but L0s must be disabled, only L1
+> > > works correctly.
+> > > 
+> > > The comments about ASPM force should be removed as it would
+> > > lead others to try to use the same and the fact of the matter is
+> > > that ASPM force should never be used. As was clarified out of
+> > > some of these discussions worth noting also is that in newer
+> > > kernels CONFIG_PCIEASPM=y will always become the default, for
+> > > older kernels this was never the default and some distributions
+> > > (Ubunutu) do not have this enabled, the benefit of having it
+> > > enabled is it will disable ASPM for these cases:
+> > > 
+> > > (a) the PCIE device is pre PCIE 1.1
+> > > (b) the firmware has the FADT flag set to tell you not to and
+> > > (c) the firmware doesn't grant control via _OSC. The powersave policy will
+> > > enable ASPM even if the BIOS didn't, but only if something else doesn't
+> > > tell us not to.
+> > > 
+> > > The last two checks were only recently added by Mathew and forcing
+> > > CONFIG_PCIEASPM=y was also only recently made default.
+> > > 
+> > > In short, Linux distributions should also start enabling
+> > > CONFIG_PCIEASPM=y on older kernels.
 > > 
-> > I don't get it. The driver can start/stop queues at _any_ time it wants
-> > to. Regardless of what mac80211 is doing, all that goes via
-> > IEEE80211_QUEUE_STOP_REASON_DRIVER which is never touched by mac80211
-> > itself.
+> > 
+> > Just one note that since at least my ath5k device is pre 1.1, and you
+> > say that L1 can be enabled, and should, I probably need to enable L1
+> > explicitly in the driver.
+> > 
+> > OK?
 > 
-> My understanding is, if driver wakes up the queues when operating on
-> a off-channel, it would get data frames from upper layer for
-> transmission but it should not send out these frames as the hw is on
-> non-operating channel.
+> No, ASPM must be enabled by the Systems Integrator through the BIOS, there are
+> other settings that have to be taken care of like modifying some PCI entrance and
+> exit latency timers, the number of FTS packets we send to exit L0s, amongst
+> other things. If a user selectively enables L1 but the BIOS had it disabled on
+> the device it may not work correctly.
+> 
+> In other words leave the settings as-is on your card unless you developing
+> for a company to enable ASPM yourself or you are willing to take the risks.
+> Tweaks like force enabling a device to use ASPM should only then be done in
+> userspace and by an end user. This is not something Linux distributions should
+> let users tweak. Its a hacker task.
+> 
+> However, it is reasonable to force disable L0s, for example, completley on
+> the driver if it is known that L0s does not work for all chisets supported
+> on that driver.
 
-Ok, that seems to be true, but only because we don't properly manage the
-interface queue stop in mac80211. Should be an easy fix there.
+You didn't understand me.
 
-johannes
+
+On my notebook, the AR5001 device is marked as pre 1.1 PCIE device.
+
+ASPM *is* enabled for both L0s and L1 by BIOS.
+
+Linux disables ASPM because the device is pre 1.1, and things work fine
+with no more patching (assuming that CONFIG_PCIEASPM is set)
+
+
+However, it is possible, (and that what I asked you) that some ath5k
+devices aren't 'pre 1.1 pcie devices' so linux won't disable ASPM L0s
+for them.
+So indeed for 'good feeling' it is ok to disable L0s from ath5k
+explicitly, but most of the time (or always) it will be no-op.
+
+In *addition* to that, since you said that ASPM L1 *does* work, and is
+enabled by BIOS, but linux disables it, that it might be worthy to
+enable it again from ath5k driver explicitly.
+As long as wireless works I don't really care if this done or not.
+
+
+Best regards,
+Maxim Levitsky
 
