@@ -1,187 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49492 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753320Ab0GUUpN (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:56050 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754043Ab0GZLHT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jul 2010 16:45:13 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Pauli Nieminen <suokkos@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [RFT] rtl8180: improve signal reporting for actual rtl8180 hardware
-Date: Wed, 21 Jul 2010 16:30:50 -0400
-Message-Id: <1279744250-31397-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <20100721171926.GE2355@tuxdriver.com>
-References: <20100721171926.GE2355@tuxdriver.com>
+	Mon, 26 Jul 2010 07:07:19 -0400
+Subject: Hardware needs to know when EAP nego is complete
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Cc: Coelho Luciano Roth <luciano.coelho@nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 26 Jul 2010 14:06:40 +0300
+Message-ID: <1280142400.6475.33.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adapted from Realtek-provided driver...
+Hello Johannes, hello all,
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/rtl818x/rtl8180_dev.c     |   18 +++++++++------
- drivers/net/wireless/rtl818x/rtl8180_grf5101.c |   12 +++++++++-
- drivers/net/wireless/rtl818x/rtl8180_max2820.c |   19 +++++++++++++++-
- drivers/net/wireless/rtl818x/rtl8180_sa2400.c  |   28 +++++++++++++++++++++++-
- drivers/net/wireless/rtl818x/rtl818x.h         |    1 +
- 5 files changed, 68 insertions(+), 10 deletions(-)
+As you may know the wl1271 hardware implements WLAN-Bluetooth
+co-existence by toggling a single antenna between WLAN and Bluetooth.
 
-diff --git a/drivers/net/wireless/rtl818x/rtl8180_dev.c b/drivers/net/wireless/rtl818x/rtl8180_dev.c
-index 31808f9..d8b186a 100644
---- a/drivers/net/wireless/rtl818x/rtl8180_dev.c
-+++ b/drivers/net/wireless/rtl818x/rtl8180_dev.c
-@@ -103,7 +103,7 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
- {
- 	struct rtl8180_priv *priv = dev->priv;
- 	unsigned int count = 32;
--	u8 signal;
-+	u8 signal, agc, sq;
- 
- 	while (count--) {
- 		struct rtl8180_rx_desc *entry = &priv->rx_ring[priv->rx_idx];
-@@ -132,12 +132,16 @@ static void rtl8180_handle_rx(struct ieee80211_hw *dev)
- 
- 			rx_status.antenna = (flags2 >> 15) & 1;
- 			rx_status.rate_idx = (flags >> 20) & 0xF;
--			/* TODO: improve signal/rssi reporting for !rtl8185 */
--			signal = (flags2 >> 17) & 0x7F;
--			if (rx_status.rate_idx > 3)
--				signal = 90 - clamp_t(u8, signal, 25, 90);
--			else
--				signal = 95 - clamp_t(u8, signal, 30, 95);
-+			agc = (flags2 >> 17) & 0x7F;
-+			if (priv->r8185) {
-+				if (rx_status.rate_idx > 3)
-+					signal = 90 - clamp_t(u8, agc, 25, 90);
-+				else
-+					signal = 95 - clamp_t(u8, agc, 30, 95);
-+			} else {
-+				sq = flags2 & 0xff;
-+				signal = priv->rf->calc_rssi(agc, sq);
-+			}
- 			rx_status.signal = signal;
- 			rx_status.freq = dev->conf.channel->center_freq;
- 			rx_status.band = dev->conf.channel->band;
-diff --git a/drivers/net/wireless/rtl818x/rtl8180_grf5101.c b/drivers/net/wireless/rtl818x/rtl8180_grf5101.c
-index 947ee55..5cab9df 100644
---- a/drivers/net/wireless/rtl818x/rtl8180_grf5101.c
-+++ b/drivers/net/wireless/rtl818x/rtl8180_grf5101.c
-@@ -69,6 +69,15 @@ static void grf5101_write_phy_antenna(struct ieee80211_hw *dev, short chan)
- 	rtl8180_write_phy(dev, 0x10, ant);
- }
- 
-+static u8 grf5101_rf_calc_rssi(u8 agc, u8 sq)
-+{
-+	if (agc > 60)
-+		return 65;
-+
-+	/* TODO(?): just return agc (or agc + 5) to avoid mult / div */
-+	return 65 * agc / 60;
-+}
-+
- static void grf5101_rf_set_channel(struct ieee80211_hw *dev,
- 				   struct ieee80211_conf *conf)
- {
-@@ -176,5 +185,6 @@ const struct rtl818x_rf_ops grf5101_rf_ops = {
- 	.name		= "GCT",
- 	.init		= grf5101_rf_init,
- 	.stop		= grf5101_rf_stop,
--	.set_chan	= grf5101_rf_set_channel
-+	.set_chan	= grf5101_rf_set_channel,
-+	.calc_rssi	= grf5101_rf_calc_rssi,
- };
-diff --git a/drivers/net/wireless/rtl818x/rtl8180_max2820.c b/drivers/net/wireless/rtl818x/rtl8180_max2820.c
-index 6c825fd..16c4655 100644
---- a/drivers/net/wireless/rtl818x/rtl8180_max2820.c
-+++ b/drivers/net/wireless/rtl818x/rtl8180_max2820.c
-@@ -74,6 +74,22 @@ static void max2820_write_phy_antenna(struct ieee80211_hw *dev, short chan)
- 	rtl8180_write_phy(dev, 0x10, ant);
- }
- 
-+static u8 max2820_rf_calc_rssi(u8 agc, u8 sq)
-+{
-+	bool odd;
-+
-+	odd = !!(agc & 1);
-+
-+	agc >>= 1;
-+	if (odd)
-+		agc += 76;
-+	else
-+		agc += 66;
-+
-+	/* TODO: change addends above to avoid mult / div below */
-+	return 65 * agc / 100;
-+}
-+
- static void max2820_rf_set_channel(struct ieee80211_hw *dev,
- 				   struct ieee80211_conf *conf)
- {
-@@ -148,5 +164,6 @@ const struct rtl818x_rf_ops max2820_rf_ops = {
- 	.name		= "Maxim",
- 	.init		= max2820_rf_init,
- 	.stop		= max2820_rf_stop,
--	.set_chan	= max2820_rf_set_channel
-+	.set_chan	= max2820_rf_set_channel,
-+	.calc_rssi	= max2820_rf_calc_rssi,
- };
-diff --git a/drivers/net/wireless/rtl818x/rtl8180_sa2400.c b/drivers/net/wireless/rtl818x/rtl8180_sa2400.c
-index cea4e0c..d064fcc 100644
---- a/drivers/net/wireless/rtl818x/rtl8180_sa2400.c
-+++ b/drivers/net/wireless/rtl818x/rtl8180_sa2400.c
-@@ -76,6 +76,31 @@ static void sa2400_write_phy_antenna(struct ieee80211_hw *dev, short chan)
- 
- }
- 
-+static u8 sa2400_rf_rssi_map[] = {
-+	0x64, 0x64, 0x63, 0x62, 0x61, 0x60, 0x5f, 0x5e,
-+	0x5d, 0x5c, 0x5b, 0x5a, 0x57, 0x54, 0x52, 0x50,
-+	0x4e, 0x4c, 0x4a, 0x48, 0x46, 0x44, 0x41, 0x3f,
-+	0x3c, 0x3a, 0x37, 0x36, 0x36, 0x1c, 0x1c, 0x1b,
-+	0x1b, 0x1a, 0x1a, 0x19, 0x19, 0x18, 0x18, 0x17,
-+	0x17, 0x16, 0x16, 0x15, 0x15, 0x14, 0x14, 0x13,
-+	0x13, 0x12, 0x12, 0x11, 0x11, 0x10, 0x10, 0x0f,
-+	0x0f, 0x0e, 0x0e, 0x0d, 0x0d, 0x0c, 0x0c, 0x0b,
-+	0x0b, 0x0a, 0x0a, 0x09, 0x09, 0x08, 0x08, 0x07,
-+	0x07, 0x06, 0x06, 0x05, 0x04, 0x03, 0x02,
-+};
-+
-+static u8 sa2400_rf_calc_rssi(u8 agc, u8 sq)
-+{
-+	if (sq == 0x80)
-+		return 1;
-+
-+	if (sq > 78)
-+		return 32;
-+
-+	/* TODO: recalc sa2400_rf_rssi_map to avoid mult / div */
-+	return 65 * sa2400_rf_rssi_map[sq] / 100;
-+}
-+
- static void sa2400_rf_set_channel(struct ieee80211_hw *dev,
- 				  struct ieee80211_conf *conf)
- {
-@@ -198,5 +223,6 @@ const struct rtl818x_rf_ops sa2400_rf_ops = {
- 	.name		= "Philips",
- 	.init		= sa2400_rf_init,
- 	.stop		= sa2400_rf_stop,
--	.set_chan	= sa2400_rf_set_channel
-+	.set_chan	= sa2400_rf_set_channel,
-+	.calc_rssi	= sa2400_rf_calc_rssi,
- };
-diff --git a/drivers/net/wireless/rtl818x/rtl818x.h b/drivers/net/wireless/rtl818x/rtl818x.h
-index 8522490..22d9384 100644
---- a/drivers/net/wireless/rtl818x/rtl818x.h
-+++ b/drivers/net/wireless/rtl818x/rtl818x.h
-@@ -193,6 +193,7 @@ struct rtl818x_rf_ops {
- 	void (*stop)(struct ieee80211_hw *);
- 	void (*set_chan)(struct ieee80211_hw *, struct ieee80211_conf *);
- 	void (*conf_erp)(struct ieee80211_hw *, struct ieee80211_bss_conf *);
-+	u8 (*calc_rssi)(u8 agc, u8 sq);
- };
- 
- /**
--- 
-1.7.1.1
+To pull this off, several quirks are required, for instance WLAN must be
+forced to full-PSM so that antenna-time for BT can be made available.
+This is implemented by the wl1271 driver with the help of the mac80211.
+
+There are lots of timing issues involved, and there is a priority
+between WLAN an BT. To ensure BT A2DP and SCO work properly, BT needs to
+have enough priority at the expense of WLAN performance. While this
+works well enough when connected, during WLAN association and especially
+during EAP negotiation the priority needs to be more on the WLAN side to
+ensure reliability.
+
+The wl1271 driver starts association with the priority on WLAN, which
+means that BT performance is compromised. The wl1271 driver should
+change the priority to BT after association and the EAP negotiations are
+complete, to make sure BT is performing acceptably.
+
+So, what this all boils down to is that the wl1271 driver needs to know
+when the association, including the possible EAP negotations are fully
+complete, to be able to adjust the priority.
+
+Currently, there is no such information available to the driver. In fact
+this information is not available anywhere in the kernel level either
+(as the details of the EAP negotiation, needed keys etc are controlled
+in user-space), so the trigger would need to come from user-space.
+
+To enable this, an operand would be needed to nl80211 to indicate
+completion of association (including the EAP negotiations.)
+Corresponding functions would then be needed on the cfg80211 ops and
+mac80211 ops.
+
+User-space would then call the operand when association is complete. For
+open/WEP AP's the operand would be called immediately after association,
+and for WPA AP's the operand would be called once the EAP negotiations
+are complete.
+
+
+Thoughts? Ideas? Would this be acceptable?
+
+-Juuso
 
