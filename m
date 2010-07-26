@@ -1,116 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:52166 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758797Ab0G3RUJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jul 2010 13:20:09 -0400
-Message-Id: <20100730171512.517341960@clark.site>
-Date: Fri, 30 Jul 2010 10:16:10 -0700
-From: Greg KH <gregkh@suse.de>
-To: linux-kernel@vger.kernel.org, stable@kernel.org
-Cc: stable-review@kernel.org, torvalds@linux-foundation.org,
-	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
-	Daniel Mack <daniel@caiaq.de>,
-	Alagu Sankar <alagusankar@embwise.com>,
-	Volker Ernst <volker.ernst@txtr.com>,
-	Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Holger Schurig <hs4233@mail.mn-solutions.de>,
-	Bing Zhao <bzhao@marvell.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-mmc@vger.kernel.org
-Subject: [142/165] libertas/sdio: 8686: set ECSI bit for 1-bit transfers
-In-Reply-To: <20100730171550.GA1299@kroah.com
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51176 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751349Ab0GZUAM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jul 2010 16:00:12 -0400
+Date: Mon, 26 Jul 2010 15:49:20 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless-2.6 2010-07-26
+Message-ID: <20100726194919.GH3903@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2.6.32-stable review patch.  If anyone has any objections, please let us know.
+Dave,
 
-------------------
+Here are two more late-bloomers for 2.6.35.  Both are tiny and isolated,
+and they fix documented regression BUGs as indicated in their commit logs.
 
-From: Daniel Mack <daniel@caiaq.de>
+The one from me changes a netif_rx to a netif_rx_ni -- the execution
+path is in process context, coming from userland.  The bug reporter
+confirmed that it addressed the problem he reported.
 
-commit 8a64c0f6b7ec7f758c4ef445e49f479e27fa2236 upstream.
+The one from Ming Lei has been in net-next-2.6 for a while already.
+More recently, someone posted an identical patch indicated it addressed
+the BUG as reported in the cited LKML thread.
 
-When operating in 1-bit mode, SDAT1 is used as dedicated interrupt line.
-However, the 8686 will only drive this line when the ECSI bit is set in
-the CCCR_IF register.
+I think it would be best to get these into 2.6.35 if at all possible.
+Please let me know if there are problems!
 
-Thanks to Alagu Sankar for pointing me in the right direction.
+Thanks,
 
-Signed-off-by: Daniel Mack <daniel@caiaq.de>
-Cc: Alagu Sankar <alagusankar@embwise.com>
-Cc: Volker Ernst <volker.ernst@txtr.com>
-Cc: Dan Williams <dcbw@redhat.com>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: Holger Schurig <hs4233@mail.mn-solutions.de>
-Cc: Bing Zhao <bzhao@marvell.com>
-Cc: libertas-dev@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Cc: linux-mmc@vger.kernel.org
-Acked-by: Dan Williams <dcbw@redhat.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+John
 
 ---
- drivers/net/wireless/libertas/if_sdio.c |   22 ++++++++++++++++++++++
- include/linux/mmc/sdio.h                |    2 ++
- 2 files changed, 24 insertions(+)
 
---- a/drivers/net/wireless/libertas/if_sdio.c
-+++ b/drivers/net/wireless/libertas/if_sdio.c
-@@ -34,6 +34,8 @@
- #include <linux/mmc/card.h>
- #include <linux/mmc/sdio_func.h>
- #include <linux/mmc/sdio_ids.h>
-+#include <linux/mmc/sdio.h>
-+#include <linux/mmc/host.h>
- 
- #include "host.h"
- #include "decl.h"
-@@ -883,6 +885,7 @@ static int if_sdio_probe(struct sdio_fun
- 	int ret, i;
- 	unsigned int model;
- 	struct if_sdio_packet *packet;
-+	struct mmc_host *host = func->card->host;
- 
- 	lbs_deb_enter(LBS_DEB_SDIO);
- 
-@@ -963,6 +966,25 @@ static int if_sdio_probe(struct sdio_fun
- 	if (ret)
- 		goto disable;
- 
-+	/* For 1-bit transfers to the 8686 model, we need to enable the
-+	 * interrupt flag in the CCCR register. Set the MMC_QUIRK_LENIENT_FN0
-+	 * bit to allow access to non-vendor registers. */
-+	if ((card->model == IF_SDIO_MODEL_8686) &&
-+	    (host->caps & MMC_CAP_SDIO_IRQ) &&
-+	    (host->ios.bus_width == MMC_BUS_WIDTH_1)) {
-+		u8 reg;
-+
-+		func->card->quirks |= MMC_QUIRK_LENIENT_FN0;
-+		reg = sdio_f0_readb(func, SDIO_CCCR_IF, &ret);
-+		if (ret)
-+			goto release_int;
-+
-+		reg |= SDIO_BUS_ECSI;
-+		sdio_f0_writeb(func, reg, SDIO_CCCR_IF, &ret);
-+		if (ret)
-+			goto release_int;
-+	}
-+
- 	card->ioport = sdio_readb(func, IF_SDIO_IOPORT, &ret);
- 	if (ret)
- 		goto release_int;
---- a/include/linux/mmc/sdio.h
-+++ b/include/linux/mmc/sdio.h
-@@ -94,6 +94,8 @@
- 
- #define  SDIO_BUS_WIDTH_1BIT	0x00
- #define  SDIO_BUS_WIDTH_4BIT	0x02
-+#define  SDIO_BUS_ECSI		0x20	/* Enable continuous SPI interrupt */
-+#define  SDIO_BUS_SCSI		0x40	/* Support continuous SPI interrupt */
- 
- #define  SDIO_BUS_CD_DISABLE     0x80	/* disable pull-up on DAT3 (pin 1) */
- 
+The following changes since commit 3b87956ea645fb4de7e59c7d0aa94de04be72615:
 
+  net sched: fix race in mirred device removal (2010-07-24 21:04:20 -0700)
 
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
+
+John W. Linville (1):
+      wireless: use netif_rx_ni in ieee80211_send_layer2_update
+
+Ming Lei (1):
+      ath9k: fix dma direction for map/unmap in ath_rx_tasklet
+
+ drivers/net/wireless/ath/ath9k/recv.c |    4 ++--
+ net/mac80211/cfg.c                    |    2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index ca6065b..e3e5291 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -844,9 +844,9 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 	int dma_type;
+ 
+ 	if (edma)
+-		dma_type = DMA_FROM_DEVICE;
+-	else
+ 		dma_type = DMA_BIDIRECTIONAL;
++	else
++		dma_type = DMA_FROM_DEVICE;
+ 
+ 	qtype = hp ? ATH9K_RX_QUEUE_HP : ATH9K_RX_QUEUE_LP;
+ 	spin_lock_bh(&sc->rx.rxbuflock);
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index c7000a6..67ee34f 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -632,7 +632,7 @@ static void ieee80211_send_layer2_update(struct sta_info *sta)
+ 	skb->dev = sta->sdata->dev;
+ 	skb->protocol = eth_type_trans(skb, sta->sdata->dev);
+ 	memset(skb->cb, 0, sizeof(skb->cb));
+-	netif_rx(skb);
++	netif_rx_ni(skb);
+ }
+ 
+ static void sta_apply_parameters(struct ieee80211_local *local,
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
