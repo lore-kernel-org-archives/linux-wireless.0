@@ -1,36 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:35171 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755809Ab0GLOvv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jul 2010 10:51:51 -0400
-Date: Mon, 12 Jul 2010 07:51:49 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Kulikov Vasiliy <segooon@gmail.com>
-CC: "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
-	Michael Wu <flamingice@sourmilk.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [PATCH] adm8211: fix memory leak
-Message-ID: <20100712145149.GA2273@tux>
-References: <1278764938-9417-1-git-send-email-segooon@gmail.com>
+Received: from mail.candelatech.com ([208.74.158.172]:48760 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751083Ab0GZSBy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jul 2010 14:01:54 -0400
+Message-ID: <4C4DCD87.1070108@candelatech.com>
+Date: Mon, 26 Jul 2010 11:01:43 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1278764938-9417-1-git-send-email-segooon@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: linux-wireless compile broken
+References: <4C4DC659.7090006@candelatech.com> <20100726174902.GD3903@tuxdriver.com>
+In-Reply-To: <20100726174902.GD3903@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 10, 2010 at 05:28:57AM -0700, Kulikov Vasiliy wrote:
-> We must free priv->eeprom allocated in adm8211_read_eeprom().
-> 
-> Signed-off-by: Kulikov Vasiliy <segooon@gmail.com>
+On 07/26/2010 10:49 AM, John W. Linville wrote:
+> On Mon, Jul 26, 2010 at 10:31:05AM -0700, Ben Greear wrote:
 
-Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+>      Cc: John W. Linville<linville@tuxdriver.com>
+>      Signed-off-by: Greg Kroah-Hartman<gregkh@suse.de>
+>
+> You should probably just turn-off that driver in your .config.
+> Anyway, I normally recommend that people use wireless-testing for
+> actual development.
 
-Good catch.
+Ok, I'll dig up wireless-testing.
 
-  Luis
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
