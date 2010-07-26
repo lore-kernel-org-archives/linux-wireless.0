@@ -1,68 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:47108 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751134Ab0G0QWB convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:24164 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754152Ab0GZLnN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 12:22:01 -0400
-Received: by pwi5 with SMTP id 5so521753pwi.19
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 09:22:00 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20100727160434.GB31694@tuxdriver.com>
-References: <AANLkTim-0qoS7o+fcQ6uA18AC_gQSiiDe4Tv_L1FT1Ae@mail.gmail.com>
-	<20100727140139.GA31694@tuxdriver.com> <AANLkTimS2d0jZnu-44+cbFQXvitj_3Rq3egttgOzEiRh@mail.gmail.com>
-	<20100727160434.GB31694@tuxdriver.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 27 Jul 2010 09:21:40 -0700
-Message-ID: <AANLkTi=x7FzdRoC6DxeahvSm+2teN__TsoKjxphOMiPP@mail.gmail.com>
-Subject: Re: Confused - bisecting wireless-testing
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 26 Jul 2010 07:43:13 -0400
+Subject: Re: Hardware needs to know when EAP nego is complete
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>
+In-Reply-To: <1280143430.3693.7.camel@jlt3.sipsolutions.net>
+References: <1280142400.6475.33.camel@wimaxnb.nmp.nokia.com>
+	 <1280143430.3693.7.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 26 Jul 2010 14:42:30 +0300
+Message-ID: <1280144550.6475.48.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 27, 2010 at 9:04 AM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Tue, Jul 27, 2010 at 08:56:54AM -0700, Luis R. Rodriguez wrote:
->> On Tue, Jul 27, 2010 at 7:01 AM, John W. Linville
->> <linville@tuxdriver.com> wrote:
->> > On Mon, Jul 26, 2010 at 08:27:06PM -0700, Luis R. Rodriguez wrote:
->> >> 04:23  * mcgrof is confused, I just did a git bisect -i on
->> >> wireless-testing on some patch on Fri Jul 2 00:09:49 2010  and ended
->> >> up with a 2.6.34 top level
->> >>           Makefile
->> >> 04:23 < mcgrof> it was git rebase -i ba17bc5e55ba541d2a8765fca53b6883b667ab21
->> >> 04:23 < mcgrof> eh
->> >> 04:24 < mcgrof> how am I supposed to bisect wl now
->> >> 04:24 < mcgrof> the odd thing though is that the top commit is ancient
->> >> 04:24 < mcgrof> http://paste.pocoo.org/show/242077/
->> >> 04:24 < mcgrof> but the other ones are OK
->> >>
->> >> I realize we should use wireless-2.6.git to bisect stable but I need
->> >> to bisect against recent patches that spans different master- tags
->> >> from you, I figured git bisecting wireless-testing would work now that
->> >> you are using a different method to move your tree forward but am I
->> >> wrong? Should I only bisect between master tags still?
->> >
->> > wireless-testing is a nasty mess when it comes to bisection.
->> > I am considering a one-time rebase of wireless-testing after the
->> > next -rc1, now that the current process is working reasonably well.
->> > wireless-testing will continue to have a messy history, but it should
->> > be a bit less nasty after a rebase.
->> >
->> > As for right now, it sounds like you should just use wireless-next-2.6
->> > instead?
->>
->> Oh OK, didn't realize that was bisectable, thanks. Also was unsure if
->> I'd get other subsystems's -next components. Is wireless-next.git just
->> the -next bits for 802.11 or does it also suck up net-next?
->
-> Usually just the wireless bits, but I did just pull the bluetooth stuff
-> (which included some net-next stuff).
+On Mon, 2010-07-26 at 13:23 +0200, ext Johannes Berg wrote:
+> On Mon, 2010-07-26 at 14:06 +0300, Juuso Oikarinen wrote:
+> > 
+> > 
+> > Thoughts? Ideas? Would this be acceptable?
+> 
+> I really don't like this. You _can_ figure out if a given frame is EAP
+> by looking at its ethertype (but don't implement WAPI then!) ... can't
+> you just give it priority _by frame_?
 
-Oh neat. OK so which net-next.git release was wireless-next.git based
-on and what net-next.git release was bluetooth-next.git based on? Did
-it bump your next-next.git or do you routinely pull next-next.git into
-your own wireless-next.git?
+I don't like it either, but my hands are bound. With this chip I cannot
+give priority by frame. The way it works on that chip is that after
+association you tell the chip to change mode, and that's it - no going
+back.
 
-  Luis
+> Also, it doesn't make any sense, since if you really care then you want
+> rekeying to also have priority...
+
+Yep, this is a problem I too have been thinking about. However, with
+this chip, you cannot change the priority back for re-keying. So
+essentially, those negotiations are done with the "lowered"  WLAN
+priority, and if they happen to fail the connection manager will as
+result end up associating again with increased priority.
+
+The fact is we need this to be done this way. I have been thinking about
+all possible ways to do this hack inside the driver, triggering on
+setting of keys etc, but as far as I can tell it's not doable without
+assumptions having unacceptable impact on functionality.
+
+We'll have to consider some driver-specific hack-interface then, along
+with a correspondingly hacked user-space connection manager. This will
+just cause other users of the wl1271 driver ending up with dysfunctional
+BT-WLAN coex.
+
+-Juuso
+
+> johannes
+> 
+
+
