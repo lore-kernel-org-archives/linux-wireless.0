@@ -1,87 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:25689 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753094Ab0GGUAR (ORCPT
+Received: from cavan.codon.org.uk ([93.93.128.6]:58769 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752953Ab0GZWdg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jul 2010 16:00:17 -0400
-Message-ID: <4C34DC92.80908@nokia.com>
-Date: Wed, 07 Jul 2010 22:59:14 +0300
-From: Adrian Hunter <adrian.hunter@nokia.com>
-MIME-Version: 1.0
-To: Nicolas Pitre <nico@fluxnic.net>
-CC: "Quadros Roger (Nokia-MS/Helsinki)" <roger.quadros@nokia.com>,
-	Ohad Ben-Cohen <ohad@wizery.com>,
+	Mon, 26 Jul 2010 18:33:36 -0400
+Date: Mon, 26 Jul 2010 23:33:26 +0100
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	San Mehat <san@google.com>
-Subject: Re: [PATCH 11/15] wireless: wl1271: introduce platform device support
-References: <1278376666-3509-1-git-send-email-ohad@wizery.com> <1278376666-3509-12-git-send-email-ohad@wizery.com> <4C32EF19.1000604@nokia.com> <AANLkTintIz-N7MwwtqhVq2LR3Ln5JTNYSbJUBSSClcA-@mail.gmail.com> <4C3306F4.8060907@nokia.com> <AANLkTin5W52fPzWToRrAzm56SLZI-taSuI16rCEhLWqH@mail.gmail.com> <4C333E0D.2070601@nokia.com> <alpine.LFD.2.00.1007061316010.6020@xanadu.home> <4C338927.5020400@nokia.com> <4C34347F.8030000@nokia.com> <alpine.LFD.2.00.1007070954010.6020@xanadu.home>
-In-Reply-To: <alpine.LFD.2.00.1007070954010.6020@xanadu.home>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	David Quan <David.Quan@atheros.com>,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"kernel-team@lists.ubuntu.com" <kernel-team@lists.ubuntu.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	"tim.gardner@canonical.com" <tim.gardner@canonical.com>
+Subject: Re: [ath5k-devel] [PATCH v3] ath5k: disable ASPM
+Message-ID: <20100726223326.GA6904@srcf.ucam.org>
+References: <20100726201322.GI14855@tux> <1280177362.3721.7.camel@maxim-laptop> <20100726210651.GJ14855@tux> <1280179033.3721.15.camel@maxim-laptop> <20100726212543.GA5424@srcf.ucam.org> <AANLkTi=5_Dc8SumPi7cr8u7=DmnOHgSo6C76w9b0E4Kj@mail.gmail.com> <20100726222113.GA6487@srcf.ucam.org> <AANLkTinq-SxMHTrJM23WaeRMkU-2cySiVrkwCjDRS_o+@mail.gmail.com> <20100726222909.GA6773@srcf.ucam.org> <AANLkTinysGjYS7RKN4X_7T2q+rw_-OWdn-UJYM0poWXu@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTinysGjYS7RKN4X_7T2q+rw_-OWdn-UJYM0poWXu@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nicolas Pitre wrote:
-> On Wed, 7 Jul 2010, Roger Quadros wrote:
+On Mon, Jul 26, 2010 at 03:31:28PM -0700, Luis R. Rodriguez wrote:
+> On Mon, Jul 26, 2010 at 3:29 PM, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
+> > On Mon, Jul 26, 2010 at 03:26:37PM -0700, Luis R. Rodriguez wrote:
+> >
+> >> What I meant was that the PCI config space would already have L1
+> >> enabled if L1 worked, so I don't see why we would need to nitpick out
+> >> specifics here. All Atheros PCIE chips should work with L1. The advise
+> >> given is to disable L0s though. I believe AR2425 would be one which
+> >> likely had L0s enabled but requires it to be disabled. Not sure of
+> >> others. But this is why I am saying this can be done globally for all
+> >> ath5k chipsets.
+> >
+> > If L1 is set but the chip is pre-PCIe 1.1 then we'll disable L1 unless
+> > the driver tells us that it's functional. The .inf from the Windows
+> > driver seemed to suggest that only a subset of the chips re-enabled L1
+> > there, but if it's ok in general then that's a straightforward one-line
+> > patch.
 > 
->> On 07/06/2010 10:51 PM, Hunter Adrian (Nokia-MS/Helsinki) wrote:
->>> For eMMC in omap_hsmmc, this is all done via claim_host / release_host
->>> which call ->enable() / ->disable() methods.  omap_hsmmc makes use of
->>> mmc_power_restore_host() which calls host->bus_ops->power_restore()
->>> which is not implemented for SDIO, but for MMC and SD it reinitializes
->>> the card.
-> 
-> This is IMHO a really bad design.  The power control decision has to 
-> come from the top, not from the bottom.  And certainly not with a 
-> U-turn dependency the omap_hsmmc is using.
+> But why can't we just rely on what the device already has on its PCI
+> config space and only ensure to disable L0s?
 
-The power control decision does come from the top via mmc_claim_host /
-mmc_release_host.
+Because we globally disable ASPM on pre-1.1 devices, because that's what 
+Windows does. It makes it easier for us to figure out what level of 
+support we can expect from different hardware revisions.
 
-> 
-> I regret to say this, but the omap_hsmmc driver is becoming a total 
-> mess.  The host controller driver has to be a dumb interface serving 
-> requests from the hardware used by the upper layer stack, not the place 
-> where decisions such as power handling should be made.  Think of it like 
-> an ethernet driver.  No ethernet driver in Linux is telling the IP stack 
-> when to shut down.
-
-The omap_hsmmc driver does not tell the core to shut down the upper layers.
-Instead the core tells the omap_hsmmc driver that it is "disabled" i.e.
-not currently being used so it can start taking steps to save power.
-That is sensible because not even the upper layers know when the next
-activity will be.
-
-> 
->> Shouldn't the power control intelligence (i.e. when to turn power ON/OFF) lie
->> with the bus drivers?
-> 
-> Absolutely!  And in the SDIO case that should lie with each function 
-> drivers.  Please let's stop this omap_hsmmc madness.
-
-You are dealing with a trivial case - turn off the power when not in use.
-We have 3 power saving actions: enable DPS, put the card to sleep,
-and finally power it off.  Each increases the latency to start up
-again and so must be staggered.  With DPS-enabled the host controller can
-be powered off at any time.  In that case the controller registers must be
-restored.  There are numerous entry points to the driver.  Checking whether
-to restore registers at every entry point is error prone and messy.
-Instead we require that the core tells the driver when to enable and
-disable.
-
-> 
-> 
-> Nicolas
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-mmc" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
