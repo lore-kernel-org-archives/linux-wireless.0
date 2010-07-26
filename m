@@ -1,130 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:57415 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753134Ab0GZBkG (ORCPT
+Received: from cavan.codon.org.uk ([93.93.128.6]:47282 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751762Ab0GZVOz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Jul 2010 21:40:06 -0400
-Date: Sun, 25 Jul 2010 18:39:53 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: simplify key locking
-Message-ID: <20100726013953.GA29386@jm.kir.nu>
-References: <1275380359.3621.17.camel@jlt3.sipsolutions.net>
- <20100724053301.GA6773@jm.kir.nu>
- <1279962385.8223.2.camel@jlt3.sipsolutions.net>
+	Mon, 26 Jul 2010 17:14:55 -0400
+Date: Mon, 26 Jul 2010 22:14:24 +0100
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"kernel-team@lists.ubuntu.com" <kernel-team@lists.ubuntu.com>,
+	"tim.gardner@canonical.com" <tim.gardner@canonical.com>,
+	David Quan <David.Quan@Atheros.com>
+Subject: Re: [ath5k-devel] [PATCH v3] ath5k: disable ASPM
+Message-ID: <20100726211424.GA5197@srcf.ucam.org>
+References: <1276859156.19554.2.camel@maxim-laptop> <AANLkTimdTjedtoeKAp5tcTqefrUB6k373Kx9EacuYFcO@mail.gmail.com> <1276870309.23783.3.camel@maxim-laptop> <1276933774.16697.11.camel@maxim-laptop> <20100619123841.GA31838@hash.localnet> <1276952554.3332.3.camel@maxim-laptop> <1276961564.5173.12.camel@maxim-laptop> <20100726201322.GI14855@tux> <1280177362.3721.7.camel@maxim-laptop> <20100726210651.GJ14855@tux>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1279962385.8223.2.camel@jlt3.sipsolutions.net>
+In-Reply-To: <20100726210651.GJ14855@tux>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 24, 2010 at 11:06:25AM +0200, Johannes Berg wrote:
-> The fix should be passing in the local pointer to ieee80211_key_free() I
-> guess. Can you try that?
+On Mon, Jul 26, 2010 at 02:06:51PM -0700, Luis R. Rodriguez wrote:
 
-The following seems to be more or less minimal patch with that
-approach to get rid of this oops with FT protocol.. Is this what you
-were looking for?
+> No, ASPM must be enabled by the Systems Integrator through the BIOS, there are
+> other settings that have to be taken care of like modifying some PCI entrance and
+> exit latency timers, the number of FTS packets we send to exit L0s, amongst
+> other things. If a user selectively enables L1 but the BIOS had it disabled on
+> the device it may not work correctly.
 
----
- net/mac80211/cfg.c      |    6 +++---
- net/mac80211/key.c      |   13 ++++++-------
- net/mac80211/key.h      |    3 ++-
- net/mac80211/sta_info.c |    2 +-
- 4 files changed, 12 insertions(+), 12 deletions(-)
+That's really the job of the driver. If the ASPM policy is set to 
+powersave, the fadt doesn't indicate that ASPM should be disabled and 
+the bus's _OSC method grants full control then the kernel will enable 
+whatever combination of L states meet the latency constraints. If the 
+hardware has additional constraints then the hardware-specific driver 
+needs to handle them.
 
---- wireless-testing.orig/net/mac80211/cfg.c	2010-07-24 10:48:00.000000000 -0700
-+++ wireless-testing/net/mac80211/cfg.c	2010-07-24 10:49:20.000000000 -0700
-@@ -158,7 +158,7 @@ static int ieee80211_add_key(struct wiph
- 	if (mac_addr) {
- 		sta = sta_info_get_bss(sdata, mac_addr);
- 		if (!sta) {
--			ieee80211_key_free(key);
-+			ieee80211_key_free(sdata->local, key);
- 			err = -ENOENT;
- 			goto out_unlock;
- 		}
-@@ -192,7 +192,7 @@ static int ieee80211_del_key(struct wiph
- 			goto out_unlock;
- 
- 		if (sta->key) {
--			ieee80211_key_free(sta->key);
-+			ieee80211_key_free(sdata->local, sta->key);
- 			WARN_ON(sta->key);
- 			ret = 0;
- 		}
-@@ -205,7 +205,7 @@ static int ieee80211_del_key(struct wiph
- 		goto out_unlock;
- 	}
- 
--	ieee80211_key_free(sdata->keys[key_idx]);
-+	ieee80211_key_free(sdata->local, sdata->keys[key_idx]);
- 	WARN_ON(sdata->keys[key_idx]);
- 
- 	ret = 0;
---- wireless-testing.orig/net/mac80211/key.c	2010-07-24 10:47:31.000000000 -0700
-+++ wireless-testing/net/mac80211/key.c	2010-07-25 18:05:57.000000000 -0700
-@@ -323,13 +323,15 @@ static void __ieee80211_key_destroy(stru
- 	if (!key)
- 		return;
- 
--	ieee80211_key_disable_hw_accel(key);
-+	if (key->local)
-+		ieee80211_key_disable_hw_accel(key);
- 
- 	if (key->conf.alg == ALG_CCMP)
- 		ieee80211_aes_key_free(key->u.ccmp.tfm);
- 	if (key->conf.alg == ALG_AES_CMAC)
- 		ieee80211_aes_cmac_key_free(key->u.aes_cmac.tfm);
--	ieee80211_debugfs_key_remove(key);
-+	if (key->local)
-+		ieee80211_debugfs_key_remove(key);
- 
- 	kfree(key);
- }
-@@ -410,15 +412,12 @@ static void __ieee80211_key_free(struct 
- 	__ieee80211_key_destroy(key);
- }
- 
--void ieee80211_key_free(struct ieee80211_key *key)
-+void ieee80211_key_free(struct ieee80211_local *local,
-+			struct ieee80211_key *key)
- {
--	struct ieee80211_local *local;
--
- 	if (!key)
- 		return;
- 
--	local = key->sdata->local;
--
- 	mutex_lock(&local->key_mtx);
- 	__ieee80211_key_free(key);
- 	mutex_unlock(&local->key_mtx);
---- wireless-testing.orig/net/mac80211/key.h	2010-07-24 10:47:52.000000000 -0700
-+++ wireless-testing/net/mac80211/key.h	2010-07-24 10:48:55.000000000 -0700
-@@ -135,7 +135,8 @@ struct ieee80211_key *ieee80211_key_allo
- void ieee80211_key_link(struct ieee80211_key *key,
- 			struct ieee80211_sub_if_data *sdata,
- 			struct sta_info *sta);
--void ieee80211_key_free(struct ieee80211_key *key);
-+void ieee80211_key_free(struct ieee80211_local *local,
-+			struct ieee80211_key *key);
- void ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata, int idx);
- void ieee80211_set_default_mgmt_key(struct ieee80211_sub_if_data *sdata,
- 				    int idx);
---- wireless-testing.orig/net/mac80211/sta_info.c	2010-07-24 10:48:03.000000000 -0700
-+++ wireless-testing/net/mac80211/sta_info.c	2010-07-24 10:49:33.000000000 -0700
-@@ -647,7 +647,7 @@ static int __must_check __sta_info_destr
- 		return ret;
- 
- 	if (sta->key) {
--		ieee80211_key_free(sta->key);
-+		ieee80211_key_free(local, sta->key);
- 		WARN_ON(sta->key);
- 	}
- 
+We don't rely on the BIOS to set up ASPM states. Nor does Windows.
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Matthew Garrett | mjg59@srcf.ucam.org
