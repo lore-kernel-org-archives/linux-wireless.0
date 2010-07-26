@@ -1,40 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:37848 "EHLO
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:60758 "EHLO
 	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752069Ab0GADAH (ORCPT
+	with ESMTP id S1752953Ab0GZWbs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jun 2010 23:00:07 -0400
-Received: by pwj8 with SMTP id 8so529252pwj.19
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Jun 2010 20:00:06 -0700 (PDT)
+	Mon, 26 Jul 2010 18:31:48 -0400
 MIME-Version: 1.0
-From: Andrew Lutomirski <andy@luto.us>
-Date: Wed, 30 Jun 2010 22:59:46 -0400
-Message-ID: <AANLkTikqJzkFFtmOowq-OzzDFSC9_1SFuAfT4UGZBhqW@mail.gmail.com>
-Subject: rfkill failure in 2.6.35-rc3+
-To: linux-wireless@vger.kernel.org, ilw@linux.intel.com
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20100726222909.GA6773@srcf.ucam.org>
+References: <1276952554.3332.3.camel@maxim-laptop> <1276961564.5173.12.camel@maxim-laptop>
+	<20100726201322.GI14855@tux> <1280177362.3721.7.camel@maxim-laptop>
+	<20100726210651.GJ14855@tux> <1280179033.3721.15.camel@maxim-laptop>
+	<20100726212543.GA5424@srcf.ucam.org> <AANLkTi=5_Dc8SumPi7cr8u7=DmnOHgSo6C76w9b0E4Kj@mail.gmail.com>
+	<20100726222113.GA6487@srcf.ucam.org> <AANLkTinq-SxMHTrJM23WaeRMkU-2cySiVrkwCjDRS_o+@mail.gmail.com>
+	<20100726222909.GA6773@srcf.ucam.org>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 26 Jul 2010 15:31:28 -0700
+Message-ID: <AANLkTinysGjYS7RKN4X_7T2q+rw_-OWdn-UJYM0poWXu@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH v3] ath5k: disable ASPM
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	David Quan <David.Quan@atheros.com>,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"kernel-team@lists.ubuntu.com" <kernel-team@lists.ubuntu.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	"tim.gardner@canonical.com" <tim.gardner@canonical.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I just toggled rfkill on and back off on my X200s (WiFi Link 5350, rev
-0x24) and the link didn't come up.  Toggling rfkill again didn't fix
-it, but rmmod + modprobe did.
+On Mon, Jul 26, 2010 at 3:29 PM, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
+> On Mon, Jul 26, 2010 at 03:26:37PM -0700, Luis R. Rodriguez wrote:
+>
+>> What I meant was that the PCI config space would already have L1
+>> enabled if L1 worked, so I don't see why we would need to nitpick out
+>> specifics here. All Atheros PCIE chips should work with L1. The advise
+>> given is to disable L0s though. I believe AR2425 would be one which
+>> likely had L0s enabled but requires it to be disabled. Not sure of
+>> others. But this is why I am saying this can be done globally for all
+>> ath5k chipsets.
+>
+> If L1 is set but the chip is pre-PCIe 1.1 then we'll disable L1 unless
+> the driver tells us that it's functional. The .inf from the Windows
+> driver seemed to suggest that only a subset of the chips re-enabled L1
+> there, but if it's ok in general then that's a straightforward one-line
+> patch.
 
-dmesg said:
+But why can't we just rely on what the device already has on its PCI
+config space and only ensure to disable L0s?
 
-[13629.424869] iwlagn 0000:03:00.0: RF_KILL bit toggled to disable radio.
-[13629.432761] iwlagn 0000:03:00.0: Not sending command - RF KILL
-[13629.432771] iwlagn 0000:03:00.0: Error sending REPLY_RXON:
-enqueue_hcmd failed: -5
-[13629.432778] iwlagn 0000:03:00.0: Error setting new RXON (-5)
-[13631.268646] iwlagn 0000:03:00.0: RF_KILL bit toggled to enable radio.
-[13631.311232] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[13675.710821] iwlagn 0000:03:00.0: RF_KILL bit toggled to disable radio.
-[13675.713438] iwlagn 0000:03:00.0: Not sending command - RF KILL
-[13675.713448] iwlagn 0000:03:00.0: Error sending REPLY_RXON:
-enqueue_hcmd failed: -5
-[13675.713455] iwlagn 0000:03:00.0: Error setting new RXON (-5)
-[13683.090789] iwlagn 0000:03:00.0: RF_KILL bit toggled to enable radio.
-[13683.145267] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-
-This is 2.6.35-rc3+ with firmware 8.24.2.12.  I've never seen this before.
+  Luis
