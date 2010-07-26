@@ -1,35 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:41387 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753584Ab0G1WDO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jul 2010 18:03:14 -0400
-Message-ID: <4C50A922.3010500@openwrt.org>
-Date: Thu, 29 Jul 2010 00:03:14 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:58440 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753263Ab0GZWy3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jul 2010 18:54:29 -0400
+Received: by pzk26 with SMTP id 26so1177339pzk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Jul 2010 15:54:29 -0700 (PDT)
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	Jouni Malinen <Jouni.Malinen@Atheros.com>
-Subject: Re: [PATCH 2/3] ath9k_hw: clean up per-channel calibration data
-References: <1280339151-37084-1-git-send-email-nbd@openwrt.org> <1280339151-37084-2-git-send-email-nbd@openwrt.org> <AANLkTi=8UX5B9+nLymSdJS2J-gRwMsYT_SVnviHX9Zi3@mail.gmail.com> <4C509CE1.90503@openwrt.org> <AANLkTi==nB+Wqe3KcmDf6P=JUYnLzc2PeAuOZQE3v9bn@mail.gmail.com> <4C50A170.1070902@openwrt.org> <20100728214041.GC8033@tux>
-In-Reply-To: <20100728214041.GC8033@tux>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <4C4E0580.3060404@candelatech.com>
+References: <4C4DE6B5.5080307@candelatech.com> <4C4E0580.3060404@candelatech.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 26 Jul 2010 15:54:08 -0700
+Message-ID: <AANLkTi=qJXCxtMZcEm3VQT1s7ioJsdhj2kJzkgGSf3ND@mail.gmail.com>
+Subject: Re: ath9k: /proc/net/wireless always shows status of 0
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-07-28 11:40 PM, Luis R. Rodriguez wrote:
-> On Wed, Jul 28, 2010 at 02:30:24PM -0700, Felix Fietkau wrote:
->> My current patch should work just fine with virtual wiphy's, since I
->> store the calibration data in the ath_wiphy struct.
-> 
-> Ah neat, this approach seems fine in the long run then. My only remaining
-> questions is how effective our scans are in a noisy environemnt with what
-> I suppose are some default settings?
-Scans in noisy environments should be fine. The hardware reset kicks off
-an initial NF calibration that lets the baseband use the result
-immediately and unfiltered by software. That is much more appropriate
-than a calibration history of a channel that is almost never used.
+On Mon, Jul 26, 2010 at 3:00 PM, Ben Greear <greearb@candelatech.com> wrote:
+> On 07/26/2010 12:49 PM, Ben Greear wrote:
+>>
+>> This is with today's wireless-testing (with no extra hacks)
+>
+> Maybe a better question:  In 2.6.31 you could mount debugfs at /debug
+> and get the state with:
+> cat /debug/ieee80211/sta0/state
 
-- Felix
+debugfs is not static API. In fact that's a big reason why we use it.
+I considered defining a filesystem API for 802.11 using configfs but
+our priority is to first get nl80211 feature-complete with respect to
+wext, which we have completed now. But anyway, debugfs is *not* API
+and you should not rely on it, if you want to define API consider
+configfs.
+
+> It seems in .34 there is only phy0 info in debugfs.  Or, am I
+> just not looking in the right place?
+>
+> I don't mind hacking code, but I'd appreciate a pointer to the
+> right part of the code if anyone has suggestions.
+
+The other thing you pointed out with wext, you should stop using wext
+and instead rely on nl80211. It is true that if you see something on
+/proc/net/wireless/ that was there before but not there now it is a
+regression and it should be addressed. Not sure where the status crap
+comes from on wext.
+
+  Luis
