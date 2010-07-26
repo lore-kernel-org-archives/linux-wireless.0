@@ -1,50 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:49166 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751253Ab0GMG7s (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:43282 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755826Ab0GZXgp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jul 2010 02:59:48 -0400
-Received: by bwz1 with SMTP id 1so2806bwz.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jul 2010 23:59:47 -0700 (PDT)
+	Mon, 26 Jul 2010 19:36:45 -0400
+Message-ID: <4C4E1C0B.9040608@candelatech.com>
+Date: Mon, 26 Jul 2010 16:36:43 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <201007122114.09571.helmut.schaa@googlemail.com>
-References: <AANLkTinubmjYu9FyDU0B81F0gHmFPLnDUWYGmZ9Rodss@mail.gmail.com>
-	<201007122114.09571.helmut.schaa@googlemail.com>
-Date: Tue, 13 Jul 2010 08:59:46 +0200
-Message-ID: <AANLkTil9g4VT2tROcjSYu1hGNQ04M5psSzxLfpOGE9DS@mail.gmail.com>
-Subject: Re: Rate control & USB
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: ath9k: /proc/net/wireless always shows status of 0
+References: <4C4DE6B5.5080307@candelatech.com> <4C4E0580.3060404@candelatech.com> 	<AANLkTi=qJXCxtMZcEm3VQT1s7ioJsdhj2kJzkgGSf3ND@mail.gmail.com> 	<4C4E1784.3030702@candelatech.com> <AANLkTimnZ9pSfVLsEPgiDPyc=_eUnyLj89RHCC6rsaX8@mail.gmail.com>
+In-Reply-To: <AANLkTimnZ9pSfVLsEPgiDPyc=_eUnyLj89RHCC6rsaX8@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 12, 2010 at 9:14 PM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> Am Montag 12 Juli 2010 schrieb Ivo Van Doorn:
->> I am currently looking into the old problem of the mac80211 rate
->> control algorithms
->> and USB devices. The Ralink USB devices (and as far as I know, the
->> other USB devices
->> as well), do not work well with the PID and Minstrel algorithms. This
->> is caused by the
->> fact that USB devices do not report the TX status to mac80211.
+On 07/26/2010 04:30 PM, Luis R. Rodriguez wrote:
+> On Mon, Jul 26, 2010 at 4:17 PM, Ben Greear<greearb@candelatech.com>  wrote:
+>> On 07/26/2010 03:54 PM, Luis R. Rodriguez wrote:
+>>>
+>>> On Mon, Jul 26, 2010 at 3:00 PM, Ben Greear<greearb@candelatech.com>
+>>>   wrote:
+>>>>
+>>>> On 07/26/2010 12:49 PM, Ben Greear wrote:
+>>>>>
+>>>>> This is with today's wireless-testing (with no extra hacks)
+>>>>
+>>>> Maybe a better question:  In 2.6.31 you could mount debugfs at /debug
+>>>> and get the state with:
+>>>> cat /debug/ieee80211/sta0/state
+>>>
+>>> debugfs is not static API. In fact that's a big reason why we use it.
+>>> I considered defining a filesystem API for 802.11 using configfs but
+>>> our priority is to first get nl80211 feature-complete with respect to
+>>> wext, which we have completed now. But anyway, debugfs is *not* API
+>>> and you should not rely on it, if you want to define API consider
+>>> configfs.
+>>>
+>>>> It seems in .34 there is only phy0 info in debugfs.  Or, am I
+>>>> just not looking in the right place?
+>>>>
+>>>> I don't mind hacking code, but I'd appreciate a pointer to the
+>>>> right part of the code if anyone has suggestions.
+>>>
+>>> The other thing you pointed out with wext, you should stop using wext
+>>> and instead rely on nl80211. It is true that if you see something on
+>>> /proc/net/wireless/ that was there before but not there now it is a
+>>> regression and it should be addressed. Not sure where the status crap
+>>> comes from on wext.
+>>
+>> I really don't care what API I end up using..I am just looking for some
+>> way to report to users whether the STA is in the various states that
+>> used to be defined as something similar to:
+>>
+>> enum ieee80211_state {
+>>         IEEE80211_UNINITIALIZED = 0,
+>>         IEEE80211_INITIALIZED,
+>>         IEEE80211_ASSOCIATING,
+>>         IEEE80211_ASSOCIATED,
+>>         IEEE80211_AUTHENTICATING,
+>>         IEEE80211_AUTHENTICATED,
+>>         IEEE80211_SHUTDOWN
+>> };
+>>
+>> I have been reading the net/wireless code, but so far I don't see
+>> any state machine type logic where this state might be kept.  Maybe
+>> it would have to be inferred from something else?
 >
-> Ivo, do you know by any chance if the USB devices also have a TX_STA_FIFO
-> register like the PCI variants? Does it contain useful data or just crap?
+> You can use nl28011 and register for netlink multicast messages which
+> broadcast device state changes like the ones you mentioned. These come
+> in on iw via event.c, see print_event() and see the case statements
+> for NL80211_CMD_ASSOCIATE, NL80211_CMD_DEAUTHENTICATE,
+> NL80211_CMD_DISASSOCIATE, etc, you even get reason codes parsed for
+> you too.
 
-Well I guess he has the registers (we don'[t have rt2870 specific specsheets,
-but the register definitions from the original Ralink driver to
-suggest the register
-is there). However, even if it contains valid data, how do you want to match
-the contents of that register with the sent frames in the queue?
+Ahhh, that is the kind of thing I'm looking for.  I'll check out that
+code in detail tomorrow.
 
-And another downside, is that the above only applies to rt2800usb, and not
-for rt73usb and rt2500usb, which neither have the TX status register, and were
-replaced with statistics registers (which I want to read for the batch
-TX status).
+Thanks,
+Ben
 
-Ivo
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
