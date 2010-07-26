@@ -1,41 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:49034 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754462Ab0GXCXJ (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:58172 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752245Ab0GZS3g convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jul 2010 22:23:09 -0400
-Subject: Re: new stuff for 2.6.36 needs to be posted _now_
-From: Marcel Holtmann <marcel@holtmann.org>
-To: "John W. Linville" <linville@tuxdriver.com>
+	Mon, 26 Jul 2010 14:29:36 -0400
+Received: by pwi5 with SMTP id 5so186997pwi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Jul 2010 11:29:36 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <loom.20100724T095719-176@post.gmane.org>
+References: <AANLkTimfc3NY46aYqPM5Ys2i9vpm2_qr5-kgsvc3sdkx@mail.gmail.com>
+	<AANLkTimpwMyfcvRGnJ1JfZP+F=4nFNT5Ra3pB3vse1LM@mail.gmail.com>
+	<loom.20100724T095719-176@post.gmane.org>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 26 Jul 2010 11:29:15 -0700
+Message-ID: <AANLkTin7cn_TgEeepaWrE4sTuu5YxqPNDTDs-hxCs0vC@mail.gmail.com>
+Subject: Re: Atheros 0cf3:b003
+To: sergi <sergitfe1974@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20100723204529.GE2426@tuxdriver.com>
-References: <20100723204529.GE2426@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 23 Jul 2010 19:23:01 -0700
-Message-ID: <1279938181.2621.22.camel@localhost.localdomain>
-Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Sat, Jul 24, 2010 at 1:04 AM, sergi <sergitfe1974@gmail.com> wrote:
+> Luis R. Rodriguez <mcgrof@...> writes:
+>
+>>
+>> 2010/7/23 Maximi89 <maximi89@...>:
+>> > Hola Luis, conoces ese ID?, Atheros 0cf3:b003
+>> > Es efectivamente un AR9271?
+>>
+>> No, cual tarjeta es esa? Las que tenemos son estos:
+>>
+>
+>>         { },
+>> };
+>>
+>> Stephen, have you heard of 0cf3:b003 as an ar9271 or HB94 card?
+>>
+>>   Luis
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@...
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>> Hola Luis yo fui quien le mando la consulta a maximiliano,,mi lapiz usb es de
+> la casa Ubiquiti modelo wifistation ext y ahi dicen k tiene el atheros 9271..y
+> el id k me sale es el mencionado,,tanto en Mac,Linux y con Everest en win,uso
+> Ubuntu Ultimate 2.7 con kernel 2.6.32-24 y nada k no me funciona,Podria cmbiar
+> el Id para k sea compatible?? ..bueno muchas gracias por tu atencion
 
-> You may have noticed that when Linus released 2.6.35-rc6, he
-> optimistically predicted that it will be the last -rc for 2.6.35.
-> So, the merge window is around the corner!
-> 
-> For those that need a reminder, the opening of the merge window is a
-> _deadline_ for new features.  Once the merge window opens, only fixes
-> will be accepted for 2.6.36.  In fact, any non-fix patches need to
-> already be in wireless-next-2.6 when the merge window opens if you want
-> them in 2.6.36.  That means you need to get them posted _now_, so they
-> can be reviewed and I can find time to merge them before the deadline.
+Can you please share your Windows driver INF file ?
 
-you did see my pull request for bluetooth-next-2.6 tree? I have two
-additional patches that should go in, but I wait until you pulled that
-one first.
-
-Regards
-
-Marcel
-
-
+  Luis
