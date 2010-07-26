@@ -1,71 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lager.deltatee.com ([207.54.116.66]:59948 "EHLO
-	porter.deltatee.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752652Ab0GJATs (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55915 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752127Ab0GZIcu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jul 2010 20:19:48 -0400
-Message-ID: <4C37BCA0.5090607@deltatee.com>
-Date: Fri, 09 Jul 2010 18:19:44 -0600
-From: Logan Gunthorpe <logang@deltatee.com>
-MIME-Version: 1.0
-To: Luciano Coelho <luciano.coelho@nokia.com>
-CC: linux-wireless@vger.kernel.org
-In-Reply-To: 1278578525.8576.19.camel@chilepepper
-Content-Type: text/plain; charset=ISO-8859-1
-Subject: RE: wl1271 firmware
+	Mon, 26 Jul 2010 04:32:50 -0400
+Subject: Re: 2.6.35-rc5+ WARNING at net/mac80211/scan.c:262
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dominik Brodowski <linux@dominikbrodowski.net>
+Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20100726082754.GA14881@comet.dominikbrodowski.net>
+References: <20100721184040.GA22968@comet.dominikbrodowski.net>
+	 <1279802055.12439.16.camel@jlt3.sipsolutions.net>
+	 <20100722134048.GA28231@isilmar-3.linta.de>
+	 <1279807678.12439.17.camel@jlt3.sipsolutions.net>
+	 <20100723082710.GA20251@comet.dominikbrodowski.net>
+	 <1279873990.3745.1.camel@jlt3.sipsolutions.net>
+	 <20100726081713.GA14192@comet.dominikbrodowski.net>
+	 <1280132498.3693.2.camel@jlt3.sipsolutions.net>
+	 <20100726082754.GA14881@comet.dominikbrodowski.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 26 Jul 2010 10:32:46 +0200
+Message-ID: <1280133166.3693.3.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Everyone,
+On Mon, 2010-07-26 at 10:27 +0200, Dominik Brodowski wrote:
 
-
-Luciano Coelho Wrote:
-> You need to get the firmware (wl1271-fw.bin) directly from TI or from
-> your device manufacturer.  I don't have the permission to redistribute
-> it.  The latest version that we are using is Rev. 6.1.0.0.310 (you can
-> check this by running strings on and grepping the binary file).
+> > > the problem didn't reappear when using wireless-testing plus your patch. As
+> > > I can't reproduce it -- it just happened every once in a while (maybe once a
+> > > day?) -- this doesn't necessarily mean the bug is fixed, but...
+> > 
+> > Alright, thanks. I don't suppose you tried wireless-testing w/o the
+> > patch?
 > 
-> The NVS file is another story.  It contains device-specific calibration
-> values and you should probably get those from the device manufacturer.
-> There is a common part (which is the INI file in tiwlan's terms), which
-> you need to use to create the binary (check wl1271_ini.h for the binary
-> file structure).  The more problematic part is the device-specific self
-> generated calibration.  You need to run a specific sequence of commands
-> in order to get these values and then apply these values to the correct
-> place in the binary file.
-> 
-> Shahar, maybe you could contribute a tool to generate the NVS file in
-> the correct format for wl1271? That would be very cool and would help
-> lots of people.  Please let me know if you have interest and we can
-> discuss this in more details.
+> No. Shall I?
 
-I too am working with a WL1271 module and have just today got it
-connected to an Atmel ARM9 development kit (AT91SAM9G45-EKES). So far it
-appears to work but I have been gated by the firmware and NVS file issues.
+Well, I'd be interested in whether or not my patch fixed it, but I think
+I'll push it upstream anyway.
 
-I have a firmware binary, but it seems to be a newer version
-(6.1.3.01.5) than what you are using. Does anyone have any idea if this
-version will work? It seems to be the only one available on TI's
-website. Additionally, our device manufacturer has been hesitant to
-provide any support because we are on an unsupported platform and opted
-to use the open source driver. Are there any other ways to obtain an
-older version of the firmware?
-
-The NVS file is another problem. TI's website has instructions to use a
-cryptic tool that appears to come with their driver package. There is no
-source for this tool and for obvious reasons would not work for us.
-
-Anyway, I'd like to help in anyway I can. I've taken a look at the
-twilan.ini file and I see the commonality with wl1271_ini.h. It would be
-relatively easy to write a tool that parses the INI file and generates
-the common part of the NVS file. However, I'd have no idea how to
-generate the device specific calibration or the few fields missing from
-the INI file.
-
-Thanks,
-
-Logan
-
-P.S. I was not subscribed to this list when the message I'm replying to
-was sent. I apologize if I broke the thread. I am subscribed now.
+johannes
 
