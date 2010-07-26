@@ -1,40 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isilmar-3.linta.de ([188.40.101.200]:33258 "EHLO linta.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751733Ab0GWI1Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jul 2010 04:27:25 -0400
-Date: Fri, 23 Jul 2010 10:27:10 +0200
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org
-Subject: Re: 2.6.35-rc5+ WARNING at net/mac80211/scan.c:262
-Message-ID: <20100723082710.GA20251@comet.dominikbrodowski.net>
-References: <20100721184040.GA22968@comet.dominikbrodowski.net>
- <1279802055.12439.16.camel@jlt3.sipsolutions.net>
- <20100722134048.GA28231@isilmar-3.linta.de>
- <1279807678.12439.17.camel@jlt3.sipsolutions.net>
+Received: from mail.atheros.com ([12.36.123.2]:29683 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751492Ab0GZUNY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jul 2010 16:13:24 -0400
+Date: Mon, 26 Jul 2010 13:13:22 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+CC: Bob Copeland <me@bobcopeland.com>,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	<kernel-team@lists.ubuntu.com>, <tim.gardner@canonical.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	David Quan <David.Quan@atheros.com>
+Subject: Re: [ath5k-devel] [PATCH v3] ath5k: disable ASPM
+Message-ID: <20100726201322.GI14855@tux>
+References: <20100618112026.17623g6uhdjk8hts@naisho.dyndns.info>
+ <1276856142.9114.1.camel@maxim-laptop>
+ <20100618134930.124225d4fsi8w1fk@naisho.dyndns.info>
+ <1276859156.19554.2.camel@maxim-laptop>
+ <AANLkTimdTjedtoeKAp5tcTqefrUB6k373Kx9EacuYFcO@mail.gmail.com>
+ <1276870309.23783.3.camel@maxim-laptop>
+ <1276933774.16697.11.camel@maxim-laptop>
+ <20100619123841.GA31838@hash.localnet>
+ <1276952554.3332.3.camel@maxim-laptop>
+ <1276961564.5173.12.camel@maxim-laptop>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1279807678.12439.17.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1276961564.5173.12.camel@maxim-laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 22, 2010 at 04:07:58PM +0200, Johannes Berg wrote:
-> On Thu, 2010-07-22 at 15:40 +0200, Dominik Brodowski wrote:
+On Sat, Jun 19, 2010 at 08:32:44AM -0700, Maxim Levitsky wrote:
+> On Sat, 2010-06-19 at 16:02 +0300, Maxim Levitsky wrote: 
+> > On Sat, 2010-06-19 at 08:38 -0400, Bob Copeland wrote: 
+> > > On Sat, Jun 19, 2010 at 10:49:34AM +0300, Maxim Levitsky wrote:
+> > > > How this patch?
+> > > 
+> > > Looks fine to me.  Some nitpicking below but feel free to add my
+> > > 
+> > > Acked-by: Bob Copeland <me@bobcopeland.com>
+> > > 
+> Done.
 > 
-> > > http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-mac80211-hw-scan-locking.patch
-> > 
-> > patching file drivers/net/wireless/iwlwifi/iwl-core.c
-> > Hunk #1 succeeded at 2103 (offset 102 lines).
-> > Hunk #2 FAILED at 2015.
-> > Hunk #3 succeeded at 2120 (offset 97 lines).
-> > 1 out of 3 hunks FAILED -- saving rejects to file
-> > drivers/net/wireless/iwlwifi/iwl-core.c.rej
+> Best regards,
+> Maxim Levitsky
 > 
-> Oh, it's against wireless-testing, which apparently has some other mods
-> there. I'll have to see if any other patch needs to go into .35 too.
+> --- 
+> 
+> commit 616afa397b3e843f2aba06be12a30e72dfff7740
+> Author: Maxim Levitsky <maximlevitsky@gmail.com>
+> Date:   Thu Jun 17 23:21:42 2010 +0300
+> 
+>     ath5k: disable ASPM
+>     
+>     Atheros card on Acer Aspire One (AOA150, Atheros Communications Inc. AR5001
+>     Wireless Network Adapter [168c:001c] (rev 01)) doesn't work well with ASPM
+>     enabled. With ASPM ath5k will eventually stall on heavy traffic with often
+>     'unsupported jumbo' warnings appearing. Disabling ASPM L0s in ath5k fixes
+>     these problems.
+>     Also card sends a storm of RXORN interrupts even though medium is idle.
+>     
+>     Reproduced with pcie_aspm=force and by using 'nc < /dev/zero > /dev/null' at
+>     both ends (usually stalls within seconds).
+>     
+>     Unfortunately BIOS enables ASPM on this card by default on these machines
+>     This means that, problem shows up (less often) without pcie_aspm=force too. 
+>     Therefore to benefit from this fix you need to _enable_ CONFIG_PCIEASPM
+>     
+> 
+>     All credit for this patch goes to Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+>     for finding and fixing this bug.
+>     
+>     Based on patch that is
+>     From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+>     
+>     
+>     Signed-off-by: Maxim Levitsky <maximlevitsky@gmail.com>
+>     Acked-by: Bob Copeland <me@bobcopeland.com>
 
-That's fine, I'll just test wireless-testing plus your patch from now on ;)
+Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-Best,
-	Dominik
+But please resubmit and completley modify the commit log to indicate
+ath5k cards support ASPM but L0s must be disabled, only L1
+works correctly.
+
+The comments about ASPM force should be removed as it would
+lead others to try to use the same and the fact of the matter is
+that ASPM force should never be used. As was clarified out of
+some of these discussions worth noting also is that in newer
+kernels CONFIG_PCIEASPM=y will always become the default, for
+older kernels this was never the default and some distributions
+(Ubunutu) do not have this enabled, the benefit of having it
+enabled is it will disable ASPM for these cases:
+
+(a) the PCIE device is pre PCIE 1.1
+(b) the firmware has the FADT flag set to tell you not to and
+(c) the firmware doesn't grant control via _OSC. The powersave policy will
+enable ASPM even if the BIOS didn't, but only if something else doesn't
+tell us not to.
+
+The last two checks were only recently added by Mathew and forcing
+CONFIG_PCIEASPM=y was also only recently made default.
+
+In short, Linux distributions should also start enabling
+CONFIG_PCIEASPM=y on older kernels.
+
+  Luis
+
+> 
+> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+> index 3abbe75..4f6bd7c 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.c
+> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> @@ -48,6 +48,7 @@
+>  #include <linux/netdevice.h>
+>  #include <linux/cache.h>
+>  #include <linux/pci.h>
+> +#include <linux/pci-aspm.h>
+>  #include <linux/ethtool.h>
+>  #include <linux/uaccess.h>
+>  #include <linux/slab.h>
+> @@ -469,6 +470,19 @@ ath5k_pci_probe(struct pci_dev *pdev,
+>  	int ret;
+>  	u8 csz;
+>  
+> +	/*
+> +	 * Disable PCIE ASPM L0S on the card.
+> +	 * ASPM triggers hardware bug, that makes card stall transmission
+> +	 * untill reset, and even that doesn't always help.
+> +	 * This happens on meduim to heavy transmit utilization.
+> +	 * In addition to stall, hardware usually gives a storm of
+> +	 * RXORN interrupts, despite idle channel, and otherwise doesn't work.
+> +	 * Windows driver also disables the L0s ASPM,
+> +	 * probably due to same reason
+> +	 * Note: to benefit from this fix, please _enable_ CONFIG_PCIEASPM
+> +	 */
+> +	pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S);
+> +
+>  	ret = pci_enable_device(pdev);
+>  	if (ret) {
+>  		dev_err(&pdev->dev, "can't enable device\n");
+> 
+> 
+> _______________________________________________
+> ath5k-devel mailing list
+> ath5k-devel@lists.ath5k.org
+> https://lists.ath5k.org/mailman/listinfo/ath5k-devel
