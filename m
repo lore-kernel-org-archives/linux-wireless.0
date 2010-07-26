@@ -1,48 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:63790 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755047Ab0GFLsu (ORCPT
+Received: from cavan.codon.org.uk ([93.93.128.6]:41524 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752411Ab0GZW3T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jul 2010 07:48:50 -0400
+	Mon, 26 Jul 2010 18:29:19 -0400
+Date: Mon, 26 Jul 2010 23:29:09 +0100
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	David Quan <David.Quan@atheros.com>,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"kernel-team@lists.ubuntu.com" <kernel-team@lists.ubuntu.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	"tim.gardner@canonical.com" <tim.gardner@canonical.com>
+Subject: Re: [ath5k-devel] [PATCH v3] ath5k: disable ASPM
+Message-ID: <20100726222909.GA6773@srcf.ucam.org>
+References: <1276952554.3332.3.camel@maxim-laptop> <1276961564.5173.12.camel@maxim-laptop> <20100726201322.GI14855@tux> <1280177362.3721.7.camel@maxim-laptop> <20100726210651.GJ14855@tux> <1280179033.3721.15.camel@maxim-laptop> <20100726212543.GA5424@srcf.ucam.org> <AANLkTi=5_Dc8SumPi7cr8u7=DmnOHgSo6C76w9b0E4Kj@mail.gmail.com> <20100726222113.GA6487@srcf.ucam.org> <AANLkTinq-SxMHTrJM23WaeRMkU-2cySiVrkwCjDRS_o+@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTim4E4LlFERmfYA1M0HLBOoRAsQuvdW6QBNu6pC0@mail.gmail.com>
-References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
-	<1278376666-3509-6-git-send-email-ohad@wizery.com> <alpine.LFD.2.00.1007052134460.6020@xanadu.home>
-	<AANLkTim4E4LlFERmfYA1M0HLBOoRAsQuvdW6QBNu6pC0@mail.gmail.com>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Tue, 6 Jul 2010 14:48:29 +0300
-Message-ID: <AANLkTinE5LygUWJsJSEE2miZF1GK58LTr8zErkuu_7yM@mail.gmail.com>
-Subject: Re: [PATCH 05/15] omap: hsmmc: add virtual card detect support
-To: Nicolas Pitre <nico@fluxnic.net>
-Cc: linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux@arm.linux.org.uk,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	San Mehat <san@google.com>,
-	"Pandita, Vikram" <vikram.pandita@ti.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTinq-SxMHTrJM23WaeRMkU-2cySiVrkwCjDRS_o+@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 6, 2010 at 1:22 PM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
-> Note: the wl1271 device does support standard card detection, but
-> AFAIK there's a limitation to use that with the specific omap
-> controller the device is hardwired to. I will try to get more info
-> about that, but probably Madhu can comment on that better.
+On Mon, Jul 26, 2010 at 03:26:37PM -0700, Luis R. Rodriguez wrote:
 
+> What I meant was that the PCI config space would already have L1
+> enabled if L1 worked, so I don't see why we would need to nitpick out
+> specifics here. All Atheros PCIE chips should work with L1. The advise
+> given is to disable L0s though. I believe AR2425 would be one which
+> likely had L0s enabled but requires it to be disabled. Not sure of
+> others. But this is why I am saying this can be done globally for all
+> ath5k chipsets.
 
-Some correction and additional info:
+If L1 is set but the chip is pre-PCIe 1.1 then we'll disable L1 unless 
+the driver tells us that it's functional. The .inf from the Windows 
+driver seemed to suggest that only a subset of the chips re-enabled L1 
+there, but if it's ok in general then that's a straightforward one-line 
+patch.
 
-The wl1271 device has an issue which makes the standard card detect
-mechanism irrelevant: it is always up, even if the power enable gpio
-input of the device is down (the power enable input does not supply
-the power to the chip, it's just logical digital high/low input upon
-which the device reacts).  That's why we must use software control for
-emulating card detect with that device.
-
-In addition, as far as I could find out, the card detect mechanism on
-the ZOOM is implemented by mechanical means, and thus is not relevant
-for hardwired embedded SDIO devices (I'm not even sure card detect is
-supported for the 3rd mmc controller).
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
