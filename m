@@ -1,40 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:43626 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757182Ab0GHTDF (ORCPT
+Received: from lager.deltatee.com ([207.54.116.66]:53614 "EHLO
+	porter.deltatee.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755452Ab0GZVkd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jul 2010 15:03:05 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 9E578421E1
-	for <linux-wireless@vger.kernel.org>; Thu,  8 Jul 2010 15:06:41 -0400 (EDT)
-Subject: Compat-wireless release for 2010-07-08 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20100708190302.0577F42E2D@repository3.orbit-lab.org>
-Date: Thu,  8 Jul 2010 15:03:01 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Mon, 26 Jul 2010 17:40:33 -0400
+Message-ID: <4C4E00CE.5050105@deltatee.com>
+Date: Mon, 26 Jul 2010 15:40:30 -0600
+From: Logan Gunthorpe <logang@deltatee.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+CC: Luciano Coelho <luciano.coelho@nokia.com>,
+	"Levi, Shahar" <shahar_levi@ti.com>
+Subject: Re: wl1271 with atmel-mci
+References: <4C488EEA.5020505@deltatee.com>
+In-Reply-To: <4C488EEA.5020505@deltatee.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   8a97897..12f89ed  master     -> origin/master
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   b396362..59d8d6f  history    -> origin/history
- + 55fcd2c...95a7e04 master     -> origin/master  (forced update)
-   815c416..78178c7  stable     -> origin/stable
- * [new tag]         next-20100708 -> next-20100708
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
-/usr/bin/sha1sum: *.tar.bz2: No such file or directory
+Hi Everyone,
 
-compat-wireless code metrics
 
-    494880 - Total upstream lines of code being pulled
+> I've had the wl1271 working for the most part on an Atmel 
+> micro-controller, but I've been fighting with a bug for the past couple 
+> of days.
+> 
+> The problem happens whenever I try to transmit large packets of data 
+> (using iperf, or nc, etc) the driver would hang and no longer be able to 
+> send packets. tx_queue_len in the debugfs would then grow as I tried to 
+> send packets but nothing would actually be sent to the device. At the 
+> same time receiving packets would consistently work all of the time.
+> 
+> When this occurred I usually got the following messages:
+> 
+> atmel_mci atmel_mci.0: data CRC error
+> wl1271: ERROR sdio write failed (-84) - addr 0x14fd8, 1076 bytes, 1
+
+Firstly, I'd like to let anyone who's interested know that the problem I 
+had above turned out to be a hardware issue. I tried two newly populated 
+boards which both turned out not to exhibit this problem. I now have the 
+wl1271 working on two AT91SAM9G45-EKES development kits.
+
+Using iperf I have gathered some performance data. I am seeing between a 
+wl1271 device and a host PC (connected via a dlink router):
+
+PC to Device: ~23.0Mbit/s
+Device to PC: ~21.7Mbit/s
+
+When running in Ad-Hoc mode between two devices I am getting between 
+about 15Mbit/s and 17Mbit/s.
+
+Does anyone have any insight as to why the Ad-Hoc mode between two 
+devices is noticeably slower? Can anything be done to improve this?
+
+
+Thanks,
+
+Logan
+
+
