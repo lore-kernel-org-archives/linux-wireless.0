@@ -1,40 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:47458 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751706Ab0GZTET (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:53819 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752485Ab0GZQeN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jul 2010 15:04:19 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 4C14941969
-	for <linux-wireless@vger.kernel.org>; Mon, 26 Jul 2010 15:04:21 -0400 (EDT)
-Subject: Compat-wireless release for 2010-07-26 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20100726190416.94224404F0@repository3.orbit-lab.org>
-Date: Mon, 26 Jul 2010 15:04:16 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Mon, 26 Jul 2010 12:34:13 -0400
+Received: by fxm14 with SMTP id 14so217139fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Jul 2010 09:34:12 -0700 (PDT)
+Subject: Re: [PATCH] ath5k: disable ASPM
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
+In-Reply-To: <20100528100901.14580.1322.stgit@fate.lan>
+References: <20100528100901.14580.1322.stgit@fate.lan>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 26 Jul 2010 19:34:04 +0300
+Message-ID: <1280162044.3492.14.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   f435fa7..d40de6c  history    -> origin/history
- + 80e9579...f0fbdf0 master     -> origin/master  (forced update)
-   b37fa16..86c65a7  stable     -> origin/stable
- * [new tag]         next-20100726 -> next-20100726
+Hi,
 
-compat-wireless code metrics
+Just want to summarize and finally put that problem to rest.
 
-    493710 - Total upstream lines of code being pulled
-      1447 - backport code changes
-      1211 - backport code additions
-       236 - backport code deletions
-      5764 - backport from compat module
-      7211 - total backport code
-    1.4606 - % of code consists of backport work
-      1218 - Crap changes not yet posted
-      1179 - Crap additions not yet posted
-        39 - Crap deletions not yet posted
-    0.2467 - % of crap code
+Was the patch that removes & sets on CONFIG_PCIEASPM? accepted?
 
-Base tree: linux-next.git
-Base tree version: next-20100726
-compat-wireless release: compat-wireless-2010-07-13-4-g04898a5
+Is it possible to check that all ath5k pcie devices that must not use
+L0s actually have the 'PCI_EXP_DEVCAP_RBER' disabled (this bit causes
+pcie device be marked as legacy, and ASPM is disabled on it)
+
+Best regards,
+Maxim Levitsky
+
