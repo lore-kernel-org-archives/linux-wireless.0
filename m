@@ -1,43 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:53907 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755667Ab0G3C4X (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40438 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753119Ab0GZIVn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jul 2010 22:56:23 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH] ath9k: add fastcc to debug print for channel change
-Date: Thu, 29 Jul 2010 22:56:22 -0400
-Message-Id: <1280458582-5435-1-git-send-email-lrodriguez@atheros.com>
+	Mon, 26 Jul 2010 04:21:43 -0400
+Subject: Re: 2.6.35-rc5+ WARNING at net/mac80211/scan.c:262
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dominik Brodowski <linux@dominikbrodowski.net>
+Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20100726081713.GA14192@comet.dominikbrodowski.net>
+References: <20100721184040.GA22968@comet.dominikbrodowski.net>
+	 <1279802055.12439.16.camel@jlt3.sipsolutions.net>
+	 <20100722134048.GA28231@isilmar-3.linta.de>
+	 <1279807678.12439.17.camel@jlt3.sipsolutions.net>
+	 <20100723082710.GA20251@comet.dominikbrodowski.net>
+	 <1279873990.3745.1.camel@jlt3.sipsolutions.net>
+	 <20100726081713.GA14192@comet.dominikbrodowski.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 26 Jul 2010 10:21:38 +0200
+Message-ID: <1280132498.3693.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This helps us debug channel changes better.
+On Mon, 2010-07-26 at 10:17 +0200, Dominik Brodowski wrote:
+> Hey,
+> 
+> On Fri, Jul 23, 2010 at 10:33:10AM +0200, Johannes Berg wrote:
+> > > > Oh, it's against wireless-testing, which apparently has some other mods
+> > > > there. I'll have to see if any other patch needs to go into .35 too.
+> > > 
+> > > That's fine, I'll just test wireless-testing plus your patch from now on ;)
+> > 
+> > Hah, ok, I made a note to backport the patch for you, guess I'll delete
+> > it. Wouldn't have gotten around to it today anyway I think.
+> 
+> the problem didn't reappear when using wireless-testing plus your patch. As
+> I can't reproduce it -- it just happened every once in a while (maybe once a
+> day?) -- this doesn't necessarily mean the bug is fixed, but...
 
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+Alright, thanks. I don't suppose you tried wireless-testing w/o the
+patch?
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 0429dda..5999a61 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -195,9 +195,10 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 		fastcc = false;
- 
- 	ath_print(common, ATH_DBG_CONFIG,
--		  "(%u MHz) -> (%u MHz), conf_is_ht40: %d\n",
-+		  "(%u MHz) -> (%u MHz), conf_is_ht40: %d fastcc: %d\n",
- 		  sc->sc_ah->curchan->channel,
--		  channel->center_freq, conf_is_ht40(conf));
-+		  channel->center_freq, conf_is_ht40(conf),
-+		  fastcc);
- 
- 	spin_lock_bh(&sc->sc_resetlock);
- 
--- 
-1.7.0.4
+johannes
 
