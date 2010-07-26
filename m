@@ -1,34 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:52442 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751955Ab0GUT7F (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jul 2010 15:59:05 -0400
-Received: by fxm14 with SMTP id 14so3870713fxm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jul 2010 12:59:02 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:49655 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753909Ab0GZW44 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jul 2010 18:56:56 -0400
+Date: Mon, 26 Jul 2010 15:56:52 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+CC: Matthew Garrett <mjg59@srcf.ucam.org>,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	David Quan <David.Quan@Atheros.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"David@venema.h4ckr.net" <David@venema.h4ckr.net>,
+	"kernel-team@lists.ubuntu.com" <kernel-team@lists.ubuntu.com>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	"tim.gardner@canonical.com" <tim.gardner@canonical.com>
+Subject: Re: [ath5k-devel] [PATCH v3] ath5k: disable ASPM
+Message-ID: <20100726225652.GB17698@tux>
+References: <1276856142.9114.1.camel@maxim-laptop>
+ <20100618134930.124225d4fsi8w1fk@naisho.dyndns.info>
+ <1276859156.19554.2.camel@maxim-laptop>
+ <AANLkTimdTjedtoeKAp5tcTqefrUB6k373Kx9EacuYFcO@mail.gmail.com>
+ <1276870309.23783.3.camel@maxim-laptop>
+ <1276933774.16697.11.camel@maxim-laptop>
+ <20100619123841.GA31838@hash.localnet>
+ <1276952554.3332.3.camel@maxim-laptop>
+ <1276961564.5173.12.camel@maxim-laptop>
+ <20100726201322.GI14855@tux>
 MIME-Version: 1.0
-In-Reply-To: <1279583798.28066.3.camel@wwguy-ubuntu>
-References: <1279565034.4572.36.camel@localhost.localdomain>
-	<AANLkTinGUQjPoMRmt_jeFgpxLhzma7qhfR14t_tWLvO1@mail.gmail.com>
-	<1279582174.4572.43.camel@localhost.localdomain>
-	<1279583798.28066.3.camel@wwguy-ubuntu>
-Date: Wed, 21 Jul 2010 21:59:02 +0200
-Message-ID: <AANLkTinJrjvSUuOSeb6fQESN-T789wWCU1ezRXwQ3KXK@mail.gmail.com>
-Subject: Re: iwlagn and many firmware restarts with Fedora kernel
-From: drago01 <drago01@gmail.com>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20100726201322.GI14855@tux>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 20, 2010 at 1:56 AM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> Hi drago,
->
->
-> Are you using 5350? here I attach a "RFC patch", could you give a try to
-> see if it help?
+On Mon, Jul 26, 2010 at 01:13:22PM -0700, Luis R. Rodriguez wrote:
+> On Sat, Jun 19, 2010 at 08:32:44AM -0700, Maxim Levitsky wrote:
+> > On Sat, 2010-06-19 at 16:02 +0300, Maxim Levitsky wrote: 
+> > > On Sat, 2010-06-19 at 08:38 -0400, Bob Copeland wrote: 
+> > > > On Sat, Jun 19, 2010 at 10:49:34AM +0300, Maxim Levitsky wrote:
+> > > > > How this patch?
+> > > > 
+> > > > Looks fine to me.  Some nitpicking below but feel free to add my
+> > > > 
+> > > > Acked-by: Bob Copeland <me@bobcopeland.com>
+> > > > 
+> > Done.
+> > 
+> > Best regards,
+> > Maxim Levitsky
+> > 
+> > --- 
+> > 
+> > commit 616afa397b3e843f2aba06be12a30e72dfff7740
+> > Author: Maxim Levitsky <maximlevitsky@gmail.com>
+> > Date:   Thu Jun 17 23:21:42 2010 +0300
+> > 
+> >     ath5k: disable ASPM
+> >     
+> >     Atheros card on Acer Aspire One (AOA150, Atheros Communications Inc. AR5001
+> >     Wireless Network Adapter [168c:001c] (rev 01)) doesn't work well with ASPM
+> >     enabled. With ASPM ath5k will eventually stall on heavy traffic with often
+> >     'unsupported jumbo' warnings appearing. Disabling ASPM L0s in ath5k fixes
+> >     these problems.
+> >     Also card sends a storm of RXORN interrupts even though medium is idle.
+> >     
+> >     Reproduced with pcie_aspm=force and by using 'nc < /dev/zero > /dev/null' at
+> >     both ends (usually stalls within seconds).
+> >     
+> >     Unfortunately BIOS enables ASPM on this card by default on these machines
+> >     This means that, problem shows up (less often) without pcie_aspm=force too. 
+> >     Therefore to benefit from this fix you need to _enable_ CONFIG_PCIEASPM
+> >     
+> > 
+> >     All credit for this patch goes to Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+> >     for finding and fixing this bug.
+> >     
+> >     Based on patch that is
+> >     From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+> >     
+> >     
+> >     Signed-off-by: Maxim Levitsky <maximlevitsky@gmail.com>
+> >     Acked-by: Bob Copeland <me@bobcopeland.com>
+> 
+> Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-Not quite I am on 5300; your patch seem to only touch the 5350 code
-... should I try the same change for 5300?
+So NACK now, to really fix this correctly its best to instead disable L0s but
+to force enable also L1 if the device is a PCI Express device. All Atheros legacy
+devices (ath5k) should work correctly with L1. Kernels with CONFIG_PCIEASPM
+would end up disabling even L1 for pre PCI 1.1 devices.
+
+  Luis
