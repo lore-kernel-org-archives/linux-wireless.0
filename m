@@ -1,88 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:39755 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752675Ab0G0JsM (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:37814 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751418Ab0GZTXH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 05:48:12 -0400
-Received: from vs3013.wh2.ocn.ne.jp (125.206.180.245)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0546644090
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 18:48:10 +0900 (JST)
-Subject: [PATCH v4 3/3] ath5k: Add support for antenna configuration
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
-Date: Tue, 27 Jul 2010 18:48:10 +0900
-Message-ID: <20100727094810.27186.52753.stgit@tt-desk>
-In-Reply-To: <20100727094732.27186.30900.stgit@tt-desk>
-References: <20100727094732.27186.30900.stgit@tt-desk>
+	Mon, 26 Jul 2010 15:23:07 -0400
+Received: by ewy23 with SMTP id 23so1001523ewy.19
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Jul 2010 12:23:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <4C4DC98E.6090002@openwrt.org>
+References: <AANLkTimWoSTAtb0m9V=0CNowhy=KtpiKj-O3vdmV8qxB@mail.gmail.com>
+	<4C4DC98E.6090002@openwrt.org>
+Date: Mon, 26 Jul 2010 21:23:01 +0200
+Message-ID: <AANLkTinZ=KDo4aJU6Z93p1DXghF_MzE9CeBN6OuC_LnD@mail.gmail.com>
+Subject: Re: [ath9k-devel] [RFC] ath9k: improve aggregation throughput by
+	using only first rate
+From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Support setting the antenna configuration via cfg/mac80211. At the moment only
-allow the simple pre-defined configurations we already have (fixed antenna A/B
-or diversity), but more advanced settings are possible to implement.
+2010/7/26 Felix Fietkau <nbd@openwrt.org>:
+> On 2010-07-26 7:10 PM, Björn Smedman wrote:
+>> I think there are some (in theory) simple improvements that can be
+>> done to the tx aggregation / rate control logic. A proof of concept of
+>> one such improvement is provided below. Basically, it's a hack that
+> I think it makes sense to rely less on on-chip MRR for fallback, but I
+> think to make this workable, we really should use the MRR table for
+> something, otherwise the rate control algorithm will take much longer to
+> adapt.
+> It's probably better to fix this properly after I'm done with my A-MPDU
+> rewrite, because then I can more easily push parts of the software
+> retransmission behaviour into minstrel_ht directly.
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- drivers/net/wireless/ath/ath5k/base.c |   34 +++++++++++++++++++++++++++++++++
- 1 files changed, 34 insertions(+), 0 deletions(-)
+Sounds very reasonable. I'm sure you've thought of it but now that
+it's fresh in my head it would be great if the new aggregation design
+allowed us to experiment with stuff like this:
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 0d5de25..9150d1a 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -256,6 +256,8 @@ static void ath5k_sw_scan_start(struct ieee80211_hw *hw);
- static void ath5k_sw_scan_complete(struct ieee80211_hw *hw);
- static void ath5k_set_coverage_class(struct ieee80211_hw *hw,
- 		u8 coverage_class);
-+static int ath5k_set_antenna(struct ieee80211_hw *hw, u8 tx_ant, u8 rx_ant);
-+static int ath5k_get_antenna(struct ieee80211_hw *hw, u8 *tx_ant, u8 *rx_ant);
- 
- static const struct ieee80211_ops ath5k_hw_ops = {
- 	.tx 		= ath5k_tx,
-@@ -277,6 +279,8 @@ static const struct ieee80211_ops ath5k_hw_ops = {
- 	.sw_scan_start	= ath5k_sw_scan_start,
- 	.sw_scan_complete = ath5k_sw_scan_complete,
- 	.set_coverage_class = ath5k_set_coverage_class,
-+	.set_antenna	= ath5k_set_antenna,
-+	.get_antenna	= ath5k_get_antenna,
- };
- 
- /*
-@@ -3526,3 +3530,33 @@ static void ath5k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
- 	ath5k_hw_set_coverage_class(sc->ah, coverage_class);
- 	mutex_unlock(&sc->lock);
- }
-+
-+static int ath5k_set_antenna(struct ieee80211_hw *hw, u8 tx_ant, u8 rx_ant)
-+{
-+	struct ath5k_softc *sc = hw->priv;
-+
-+	if (tx_ant == 1 && rx_ant == 1)
-+		ath5k_hw_set_antenna_mode(sc->ah, AR5K_ANTMODE_FIXED_A);
-+	else if (tx_ant == 2 && rx_ant == 2)
-+		ath5k_hw_set_antenna_mode(sc->ah, AR5K_ANTMODE_FIXED_B);
-+	else if (tx_ant == 0 && (rx_ant & 3) == 3)
-+		ath5k_hw_set_antenna_mode(sc->ah, AR5K_ANTMODE_DEFAULT);
-+	else
-+		return -EINVAL;
-+	return 0;
-+}
-+
-+static int ath5k_get_antenna(struct ieee80211_hw *hw, u8 *tx_ant, u8 *rx_ant)
-+{
-+	struct ath5k_softc *sc = hw->priv;
-+
-+	switch (sc->ah->ah_ant_mode) {
-+	case AR5K_ANTMODE_FIXED_A:
-+		*tx_ant = 1; *rx_ant = 1; break;
-+	case AR5K_ANTMODE_FIXED_B:
-+		*tx_ant = 2; *rx_ant = 2; break;
-+	case AR5K_ANTMODE_DEFAULT:
-+		*tx_ant = 0; *rx_ant = 3; break;
-+	}
-+	return 0;
-+}
+* The rate control logic treats the average aggregate length as a
+measured independent variable, when in fact it depends heavily on the
+rates selected (via the 4 ms txop limit).
 
+* When tx is aggregated most rate control probe frames end up inside
+aggregates and are never used for probing (effective probe frequency
+is divided by average aggregate length).
+
+* When setting up a hardware MRR for an aggregate the focus should be
+on throughput (as explained earlier in this thread). But there are
+situations when reliability is important: e.g. when a subframe in the
+aggregate is about to expire (because of time or block ack window). It
+may even be advantageous to tx the subframes that are about to expire
+in their own aggregate with lower / more reliable bitrate?
+
+* In many busy radio environments the packet success rate depends very
+much on the protection method being used (none, cts-to-self or
+rts-cts), often more so than on the bitrate itself. It would be
+interesting to experiment with including the protection method in the
+rate selection, i.e. to probe for the optimal protection method and
+bitrate combination.
+
+* In order to have the best possible rate control in very dynamic rf
+environments it's important to keep the hardware queue short and
+select rates as late as possible (to not introduce unnecessary delay
+when selecting new rates). I have no idea how to do this but it would
+be great if the tx queue could be kept long enough to never stall tx,
+but no longer.
+
+* If I understand correctly the Atheros hardware does not adjust the
+rts / cts-to-self duration field when going through the MRR
+(correct?). In that case it may be even more advantageous to use
+software retry as much as possible when some form of protection is
+enabled.
+
+Looking forward to the new aggregation code!
+
+/Björn
