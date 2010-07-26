@@ -1,50 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:26901 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752205Ab0GVU1U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 16:27:20 -0400
-Subject: Re: [PATCH] MAINTAINERS: orphan the atmel wireless driver
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Simon Kelley <simon@thekelleys.org.uk>
-In-Reply-To: <1279823468-21366-1-git-send-email-linville@tuxdriver.com>
-References: <1279823468-21366-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 22 Jul 2010 15:28:41 -0700
-Message-ID: <1279837721.4829.19.camel@dcbw.foobar.com>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36161 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755010Ab0GZSpT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jul 2010 14:45:19 -0400
+Date: Mon, 26 Jul 2010 14:37:35 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>
+Subject: Re: [PATCH] ath5k: disable ASPM
+Message-ID: <20100726183735.GF3903@tuxdriver.com>
+References: <20100528100901.14580.1322.stgit@fate.lan>
+ <1280162044.3492.14.camel@maxim-laptop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1280162044.3492.14.camel@maxim-laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-07-22 at 14:31 -0400, John W. Linville wrote:
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+On Mon, Jul 26, 2010 at 07:34:04PM +0300, Maxim Levitsky wrote:
 
-Aww,  how sad :(.  I'll take it since I still have some of this
-hardware.  Not that I'll do much with it, but if the patches are simple
-I'm happy to test+ack them.
-
-Dan
-
->  MAINTAINERS |    3 +--
->  1 files changed, 1 insertions(+), 2 deletions(-)
+> Just want to summarize and finally put that problem to rest.
 > 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 3148b71..2911648 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -1170,11 +1170,10 @@ S:	Supported
->  F:	drivers/usb/gadget/atmel_usba_udc.*
->  
->  ATMEL WIRELESS DRIVER
-> -M:	Simon Kelley <simon@thekelleys.org.uk>
->  L:	linux-wireless@vger.kernel.org
->  W:	http://www.thekelleys.org.uk/atmel
->  W:	http://atmelwlandriver.sourceforge.net/
-> -S:	Maintained
-> +S:	Orphan
->  F:	drivers/net/wireless/atmel*
->  
->  AUDIT SUBSYSTEM
+> Was the patch that removes & sets on CONFIG_PCIEASPM? accepted?
+> 
+> Is it possible to check that all ath5k pcie devices that must not use
+> L0s actually have the 'PCI_EXP_DEVCAP_RBER' disabled (this bit causes
+> pcie device be marked as legacy, and ASPM is disabled on it)
 
+http://marc.info/?l=linux-wireless&m=127507083106814&w=2
 
+"Sorry, I meant to this to be RFC patch."
+
+So, I dropped it.
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
