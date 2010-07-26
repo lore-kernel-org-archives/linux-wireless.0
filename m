@@ -1,99 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:19912 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753177Ab0G0R4i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 13:56:38 -0400
-Subject: [wt PATCH 6/16] libertas: remove Beacon Control
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1280260357.19686.13.camel@dcbw.foobar.com>
-References: <1280260357.19686.13.camel@dcbw.foobar.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 27 Jul 2010 12:58:08 -0700
-Message-ID: <1280260688.19686.19.camel@dcbw.foobar.com>
-Mime-Version: 1.0
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:44188 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755066Ab0GZWUn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jul 2010 18:20:43 -0400
+MIME-Version: 1.0
+In-Reply-To: <20100726211424.GA5197@srcf.ucam.org>
+References: <1276859156.19554.2.camel@maxim-laptop> <AANLkTimdTjedtoeKAp5tcTqefrUB6k373Kx9EacuYFcO@mail.gmail.com>
+	<1276870309.23783.3.camel@maxim-laptop> <1276933774.16697.11.camel@maxim-laptop>
+	<20100619123841.GA31838@hash.localnet> <1276952554.3332.3.camel@maxim-laptop>
+	<1276961564.5173.12.camel@maxim-laptop> <20100726201322.GI14855@tux>
+	<1280177362.3721.7.camel@maxim-laptop> <20100726210651.GJ14855@tux>
+	<20100726211424.GA5197@srcf.ucam.org>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 26 Jul 2010 15:20:23 -0700
+Message-ID: <AANLkTimn1XvpfUrgdgkO-E3kX55fz7N8w+_24Lz1ySLn@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH v3] ath5k: disable ASPM
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"kernel-team@lists.ubuntu.com" <kernel-team@lists.ubuntu.com>,
+	"tim.gardner@canonical.com" <tim.gardner@canonical.com>,
+	David Quan <David.Quan@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For now; it's a pretty easy command to hook up and whenever OLPC
-figures out how they want the userspace interface to look (ie,
-not iwpriv commands) we can easily add it back in.  Since the
-cfg80211 conversion it wasn't working anyway.
+On Mon, Jul 26, 2010 at 2:14 PM, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
+> On Mon, Jul 26, 2010 at 02:06:51PM -0700, Luis R. Rodriguez wrote:
+>
+>> No, ASPM must be enabled by the Systems Integrator through the BIOS, there are
+>> other settings that have to be taken care of like modifying some PCI entrance and
+>> exit latency timers, the number of FTS packets we send to exit L0s, amongst
+>> other things. If a user selectively enables L1 but the BIOS had it disabled on
+>> the device it may not work correctly.
+>
+> That's really the job of the driver.
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
----
- drivers/net/wireless/libertas/cfg.h     |    4 ----
- drivers/net/wireless/libertas/cmd.c     |    3 ---
- drivers/net/wireless/libertas/cmdresp.c |    3 ---
- drivers/net/wireless/libertas/host.h    |    3 ++-
- 4 files changed, 2 insertions(+), 11 deletions(-)
+The problem is that sometimes tweaks need to be done on the PCI
+controller/root complex, not the PCIE device/endpoint. Today these
+sort of changes *are* handled by the respective  systems
+integrator/BIOS team and varies depending on the root complex used.
+Atheros does not handle these at all in the driver.
 
-diff --git a/drivers/net/wireless/libertas/cfg.h b/drivers/net/wireless/libertas/cfg.h
-index e7ba4d8..4f46bb7 100644
---- a/drivers/net/wireless/libertas/cfg.h
-+++ b/drivers/net/wireless/libertas/cfg.h
-@@ -13,10 +13,6 @@ void lbs_cfg_free(struct lbs_private *priv);
- int lbs_reg_notifier(struct wiphy *wiphy,
- 		struct regulatory_request *request);
- 
--/* All of those are TODOs: */
--#define lbs_cmd_bcn_ctrl(priv, cmdptr, cmd_action) (0)
--#define lbs_ret_802_11_bcn_ctrl(priv, resp) (0)
--
- void lbs_send_disconnect_notification(struct lbs_private *priv);
- void lbs_send_mic_failureevent(struct lbs_private *priv, u32 event);
- 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index 15cfc52..a09ee6b 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -1216,9 +1216,6 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
- 
- #endif
- 
--	case CMD_802_11_BEACON_CTRL:
--		ret = lbs_cmd_bcn_ctrl(priv, cmdptr, cmd_action);
--		break;
- 	case CMD_802_11_DEEP_SLEEP:
- 		cmdptr->command = cpu_to_le16(CMD_802_11_DEEP_SLEEP);
- 		cmdptr->size = cpu_to_le16(sizeof(struct cmd_header));
-diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-index c3cbc8a..6196e54 100644
---- a/drivers/net/wireless/libertas/cmdresp.c
-+++ b/drivers/net/wireless/libertas/cmdresp.c
-@@ -130,9 +130,6 @@ static inline int handle_cmd_response(struct lbs_private *priv,
- 			       sizeof(resp->params.fwt));
- 		spin_unlock_irqrestore(&priv->driver_lock, flags);
- 		break;
--	case CMD_RET(CMD_802_11_BEACON_CTRL):
--		ret = lbs_ret_802_11_bcn_ctrl(priv, resp);
--		break;
- 
- 	default:
- 		lbs_pr_err("CMD_RESP: unknown cmd response 0x%04x\n",
-diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
-index 76bbcec..680a5f5 100644
---- a/drivers/net/wireless/libertas/host.h
-+++ b/drivers/net/wireless/libertas/host.h
-@@ -595,6 +595,8 @@ struct cmd_ds_802_11_radio_control {
- } __attribute__ ((packed));
- 
- struct cmd_ds_802_11_beacon_control {
-+	struct cmd_header hdr;
-+
- 	__le16 action;
- 	__le16 beacon_enable;
- 	__le16 beacon_period;
-@@ -972,7 +974,6 @@ struct cmd_ds_command {
- 
- 		struct cmd_ds_bt_access bt;
- 		struct cmd_ds_fwt_access fwt;
--		struct cmd_ds_802_11_beacon_control bcn_ctrl;
- 	} params;
- } __attribute__ ((packed));
- #endif
--- 
-1.7.1.1
+> If the ASPM policy is set to
+> powersave, the fadt doesn't indicate that ASPM should be disabled and
+> the bus's _OSC method grants full control then the kernel will enable
+> whatever combination of L states meet the latency constraints. If the
+> hardware has additional constraints then the hardware-specific driver
+> needs to handle them.
 
+This makes sense but Is there an API for this?
 
+> We don't rely on the BIOS to set up ASPM states. Nor does Windows.
+
+Understood, but today some tweaks seem to be done on the BIOS
+depending on the endpoint / root complex.
+
+  Luis
