@@ -1,71 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:2549 "EHLO mx1.redhat.com"
+Received: from mail.atheros.com ([12.36.123.2]:36267 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752958Ab0G2JiE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jul 2010 05:38:04 -0400
-Date: Thu, 29 Jul 2010 11:37:41 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, stable@kernel.org
-Subject: [PATCH] iwlwifi: fix scan abort
-Message-ID: <20100729113741.152e986a@dhcp-lab-109.englab.brq.redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S1751762Ab0GZVGy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jul 2010 17:06:54 -0400
+Date: Mon, 26 Jul 2010 14:06:51 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"kernel-team@lists.ubuntu.com" <kernel-team@lists.ubuntu.com>,
+	"tim.gardner@canonical.com" <tim.gardner@canonical.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	David Quan <David.Quan@Atheros.com>
+Subject: Re: [ath5k-devel] [PATCH v3] ath5k: disable ASPM
+Message-ID: <20100726210651.GJ14855@tux>
+References: <20100618134930.124225d4fsi8w1fk@naisho.dyndns.info>
+ <1276859156.19554.2.camel@maxim-laptop>
+ <AANLkTimdTjedtoeKAp5tcTqefrUB6k373Kx9EacuYFcO@mail.gmail.com>
+ <1276870309.23783.3.camel@maxim-laptop>
+ <1276933774.16697.11.camel@maxim-laptop>
+ <20100619123841.GA31838@hash.localnet>
+ <1276952554.3332.3.camel@maxim-laptop>
+ <1276961564.5173.12.camel@maxim-laptop>
+ <20100726201322.GI14855@tux>
+ <1280177362.3721.7.camel@maxim-laptop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1280177362.3721.7.camel@maxim-laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix possible double priv->mutex lock introduced by commit
-a69b03e941abae00380fc6bc1877fb797a1b31e6
-"iwlwifi: cancel scan watchdog in iwl_bg_abort_scan" .
-We can not call cancel_delayed_work_sync(&priv->scan_check) with 
-priv->mutex locked because workqueue function iwl_bg_scan_check()
-take that lock internally.
+On Mon, Jul 26, 2010 at 01:49:22PM -0700, Maxim Levitsky wrote:
+> On Mon, 2010-07-26 at 13:13 -0700, Luis R. Rodriguez wrote: 
+> > On Sat, Jun 19, 2010 at 08:32:44AM -0700, Maxim Levitsky wrote:
+> > > On Sat, 2010-06-19 at 16:02 +0300, Maxim Levitsky wrote: 
+> > > > On Sat, 2010-06-19 at 08:38 -0400, Bob Copeland wrote: 
+> > > > > On Sat, Jun 19, 2010 at 10:49:34AM +0300, Maxim Levitsky wrote:
+> > > > > > How this patch?
+> > > > > 
+> > > > > Looks fine to me.  Some nitpicking below but feel free to add my
+> > > > > 
+> > > > > Acked-by: Bob Copeland <me@bobcopeland.com>
+> > > > > 
+> > > Done.
+> > > 
+> > > Best regards,
+> > > Maxim Levitsky
+> > > 
+> > > --- 
+> > > 
+> > > commit 616afa397b3e843f2aba06be12a30e72dfff7740
+> > > Author: Maxim Levitsky <maximlevitsky@gmail.com>
+> > > Date:   Thu Jun 17 23:21:42 2010 +0300
+> > > 
+> > >     ath5k: disable ASPM
+> > >     
+> > >     Atheros card on Acer Aspire One (AOA150, Atheros Communications Inc. AR5001
+> > >     Wireless Network Adapter [168c:001c] (rev 01)) doesn't work well with ASPM
+> > >     enabled. With ASPM ath5k will eventually stall on heavy traffic with often
+> > >     'unsupported jumbo' warnings appearing. Disabling ASPM L0s in ath5k fixes
+> > >     these problems.
+> > >     Also card sends a storm of RXORN interrupts even though medium is idle.
+> > >     
+> > >     Reproduced with pcie_aspm=force and by using 'nc < /dev/zero > /dev/null' at
+> > >     both ends (usually stalls within seconds).
+> > >     
+> > >     Unfortunately BIOS enables ASPM on this card by default on these machines
+> > >     This means that, problem shows up (less often) without pcie_aspm=force too. 
+> > >     Therefore to benefit from this fix you need to _enable_ CONFIG_PCIEASPM
+> > >     
+> > > 
+> > >     All credit for this patch goes to Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+> > >     for finding and fixing this bug.
+> > >     
+> > >     Based on patch that is
+> > >     From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+> > >     
+> > >     
+> > >     Signed-off-by: Maxim Levitsky <maximlevitsky@gmail.com>
+> > >     Acked-by: Bob Copeland <me@bobcopeland.com>
+> > 
+> > Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> > 
+> > But please resubmit and completley modify the commit log to indicate
+> > ath5k cards support ASPM but L0s must be disabled, only L1
+> > works correctly.
+> > 
+> > The comments about ASPM force should be removed as it would
+> > lead others to try to use the same and the fact of the matter is
+> > that ASPM force should never be used. As was clarified out of
+> > some of these discussions worth noting also is that in newer
+> > kernels CONFIG_PCIEASPM=y will always become the default, for
+> > older kernels this was never the default and some distributions
+> > (Ubunutu) do not have this enabled, the benefit of having it
+> > enabled is it will disable ASPM for these cases:
+> > 
+> > (a) the PCIE device is pre PCIE 1.1
+> > (b) the firmware has the FADT flag set to tell you not to and
+> > (c) the firmware doesn't grant control via _OSC. The powersave policy will
+> > enable ASPM even if the BIOS didn't, but only if something else doesn't
+> > tell us not to.
+> > 
+> > The last two checks were only recently added by Mathew and forcing
+> > CONFIG_PCIEASPM=y was also only recently made default.
+> > 
+> > In short, Linux distributions should also start enabling
+> > CONFIG_PCIEASPM=y on older kernels.
+> 
+> 
+> Just one note that since at least my ath5k device is pre 1.1, and you
+> say that L1 can be enabled, and should, I probably need to enable L1
+> explicitly in the driver.
+> 
+> OK?
 
-We do not need to synchronize when canceling priv->scan_check work.
-We can avoid races (sending double abort command or send no
-command at all) using STATUS_SCAN_ABORT bit. Moreover
-current iwl_bg_scan_check() code seems to be broken, as
-we should not send abort commands when currently aborting.
+No, ASPM must be enabled by the Systems Integrator through the BIOS, there are
+other settings that have to be taken care of like modifying some PCI entrance and
+exit latency timers, the number of FTS packets we send to exit L0s, amongst
+other things. If a user selectively enables L1 but the BIOS had it disabled on
+the device it may not work correctly.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: stable@kernel.org
+In other words leave the settings as-is on your card unless you developing
+for a company to enable ASPM yourself or you are willing to take the risks.
+Tweaks like force enabling a device to use ASPM should only then be done in
+userspace and by an end user. This is not something Linux distributions should
+let users tweak. Its a hacker task.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 2a7c399..b0c6b04 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -429,11 +429,10 @@ void iwl_bg_scan_check(struct work_struct *data)
- 		return;
- 
- 	mutex_lock(&priv->mutex);
--	if (test_bit(STATUS_SCANNING, &priv->status) ||
--	    test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
--		IWL_DEBUG_SCAN(priv, "Scan completion watchdog resetting "
--			"adapter (%dms)\n",
--			jiffies_to_msecs(IWL_SCAN_CHECK_WATCHDOG));
-+	if (test_bit(STATUS_SCANNING, &priv->status) &&
-+	    !test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
-+		IWL_DEBUG_SCAN(priv, "Scan completion watchdog (%dms)\n",
-+			       jiffies_to_msecs(IWL_SCAN_CHECK_WATCHDOG));
- 
- 		if (!test_bit(STATUS_EXIT_PENDING, &priv->status))
- 			iwl_send_scan_abort(priv);
-@@ -498,12 +497,11 @@ void iwl_bg_abort_scan(struct work_struct *work)
- 	    !test_bit(STATUS_GEO_CONFIGURED, &priv->status))
- 		return;
- 
--	mutex_lock(&priv->mutex);
--
--	cancel_delayed_work_sync(&priv->scan_check);
--	set_bit(STATUS_SCAN_ABORTING, &priv->status);
--	iwl_send_scan_abort(priv);
-+	cancel_delayed_work(&priv->scan_check);
- 
-+	mutex_lock(&priv->mutex);
-+	if (test_bit(STATUS_SCAN_ABORTING, &priv->status))
-+		iwl_send_scan_abort(priv);
- 	mutex_unlock(&priv->mutex);
- }
- EXPORT_SYMBOL(iwl_bg_abort_scan);
+However, it is reasonable to force disable L0s, for example, completley on
+the driver if it is known that L0s does not work for all chisets supported
+on that driver.
+
+  Luis
