@@ -1,53 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:59203 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751114Ab0GXFdN (ORCPT
+Received: from cavan.codon.org.uk ([93.93.128.6]:54986 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752922Ab0GZV0I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jul 2010 01:33:13 -0400
-Date: Fri, 23 Jul 2010 22:33:01 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: simplify key locking
-Message-ID: <20100724053301.GA6773@jm.kir.nu>
-References: <1275380359.3621.17.camel@jlt3.sipsolutions.net>
+	Mon, 26 Jul 2010 17:26:08 -0400
+Date: Mon, 26 Jul 2010 22:25:43 +0100
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"kernel-team@lists.ubuntu.com" <kernel-team@lists.ubuntu.com>,
+	"tim.gardner@canonical.com" <tim.gardner@canonical.com>,
+	David Quan <David.Quan@Atheros.com>
+Subject: Re: [ath5k-devel] [PATCH v3] ath5k: disable ASPM
+Message-ID: <20100726212543.GA5424@srcf.ucam.org>
+References: <AANLkTimdTjedtoeKAp5tcTqefrUB6k373Kx9EacuYFcO@mail.gmail.com> <1276870309.23783.3.camel@maxim-laptop> <1276933774.16697.11.camel@maxim-laptop> <20100619123841.GA31838@hash.localnet> <1276952554.3332.3.camel@maxim-laptop> <1276961564.5173.12.camel@maxim-laptop> <20100726201322.GI14855@tux> <1280177362.3721.7.camel@maxim-laptop> <20100726210651.GJ14855@tux> <1280179033.3721.15.camel@maxim-laptop>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1275380359.3621.17.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1280179033.3721.15.camel@maxim-laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 01, 2010 at 10:19:19AM +0200, Johannes Berg wrote:
+On Tue, Jul 27, 2010 at 12:17:13AM +0300, Maxim Levitsky wrote:
 
-> net/mac80211/key.c
-commit ad0e2b5a00dbec303e4682b403bb6703d11dcdb2
+> However, it is possible, (and that what I asked you) that some ath5k
+> devices aren't 'pre 1.1 pcie devices' so linux won't disable ASPM L0s
+> for them.
+> So indeed for 'good feeling' it is ok to disable L0s from ath5k
+> explicitly, but most of the time (or always) it will be no-op.
+> 
+> In *addition* to that, since you said that ASPM L1 *does* work, and is
+> enabled by BIOS, but linux disables it, that it might be worthy to
+> enable it again from ath5k driver explicitly.
+> As long as wireless works I don't really care if this done or not.
 
->  void ieee80211_key_free(struct ieee80211_key *key)
-
-> -	if (!key->sdata) {
-> -		/* The key has not been linked yet, simply free it
-> -		 * and don't Oops */
-
-It looks like this function can still be called with key->sdata == NULL
-in some cases and that does indeed result in an oops below:
-
-> +	local = key->sdata->local;
-
-
-I've seen this issue pop up in FT testing and based on a quick code
-review, at least ieee80211_add_key() calls ieee80211_key_free() in an
-error case (sta not found) without having first called
-ieee80211_key_link(). Which one is wrong - the caller or the freeing
-function? Should we just restore the previous key->sdata == NULL handler
-here?
-
-I'd guess that the sta-not-found part is caused by FT trying to
-configure PTK before association in the FT protocol roaming case
-(wpa_supplicant tries to do this as soon as it knows the key because
-that works with some drivers and is needed to avoid race condition with
-encrypted frames; as a workaround, it will do this again after
-association if the previous attempt failed).
+This may need to be done on a chip by chip basis. Take a look at 
+http://www.atheros.cz/inffile.php?inf=68&bit=32&atheros=AR5002G&system=4 
+and some of the other inf files on that site to see which devices 
+provide the PciASPMOptIn flag - those should support ASPM states even if 
+they're pre-1.1 devices.
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Matthew Garrett | mjg59@srcf.ucam.org
