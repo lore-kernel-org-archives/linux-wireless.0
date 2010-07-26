@@ -1,75 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:62712 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751270Ab0GVGlM (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:54530 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753175Ab0GZGNs convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 02:41:12 -0400
-Subject: Re: wl1271 firmware
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Pazzo Da Legare <pazzodalegare@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Levi, Shahar" <shahar_levi@ti.com>,
-	Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <AANLkTinnYeJPV-xxg7DdPXnWW_kD7X1TVcd9HrhupJWS@mail.gmail.com>
-References: <4C37BCA0.5090607@deltatee.com>
-	 <AC090B9732AB2B4DB7FF476E907FE660010685F34E@dnce02.ent.ti.com>
-	 <AANLkTilHNKeRZX5CMplyriTo2hTPBrz_z1_Zpwoy3SZx@mail.gmail.com>
-	 <AC090B9732AB2B4DB7FF476E907FE66001069662F2@dnce02.ent.ti.com>
-	 <AC090B9732AB2B4DB7FF476E907FE6600106966BA5@dnce02.ent.ti.com>
-	 <4C45ED36.2090604@deltatee.com>
-	 <AANLkTinjvF9UeV7d2aBUy6HfexuAeL_cdsVPGVxSRVMp@mail.gmail.com>
-	 <AANLkTinnYeJPV-xxg7DdPXnWW_kD7X1TVcd9HrhupJWS@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 22 Jul 2010 09:40:48 +0300
-Message-ID: <1279780848.2322.31.camel@powerslave>
-Mime-Version: 1.0
+	Mon, 26 Jul 2010 02:13:48 -0400
+MIME-Version: 1.0
+In-Reply-To: <4C499E6F.8030507@odi.ch>
+References: <4C3D5F3F.7070901@odi.ch>
+	<AANLkTimn7Z3LqhLOt4_6ggFgjdzIZQPd_CznOIW-6D1N@mail.gmail.com>
+	<4C499E6F.8030507@odi.ch>
+Date: Mon, 26 Jul 2010 14:13:47 +0800
+Message-ID: <AANLkTikrmM0pwBLLMWTCO-stRnoCxwQf0M3ZByc7=8_b@mail.gmail.com>
+Subject: Re: BUG at arch/x86/mm/physaddr.c:5
+From: Jike Song <albcamus@gmail.com>
+To: =?UTF-8?Q?Ortwin_Gl=C3=BCck?= <odi@odi.ch>
+Cc: linux-kernel@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	lrodriguez@atheros.com, jmalinen@atheros.com,
+	Sujith.Manoharan@atheros.com, senthilkumar@atheros.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Pazzo,
+2010/7/23 Ortwin Glück <odi@odi.ch>:
+> On 23.07.2010 10:04, Jike Song wrote:
+>> Seems to be a logical error?  Does the following patch remove your Oops?
+>
+> Looking at the init code I agree. Yes, the patch fixes the OOPS. I am sure
+> because the OOPS occurred at every boot and now it's gone.
+>
+> Thanks!
+>
+> Ortwin
 
+Hi Maintainers,
 
-On Wed, 2010-07-21 at 19:27 +0200, ext Pazzo Da Legare wrote:
-> Dear All again,
-> 
-> I've just test with compact-wireless-2010-07-20 but I've the same problem:
-> 
-> root@hawkboard:~# ifconfig wlan0 192.168.0.1 up
-> [   68.920000] wl1271_sdio mmc0:0001:2: firmware: requesting wl1271-fw.bin
-> [   69.100000] wl1271_sdio mmc0:0001:2: firmware: requesting wl1271-nvs.bin
-> [   69.510000] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> root@hawkboard:~# [   70.020000] wl1271: ERROR ELP wakeup timeout!
-> [   70.520000] wl1271: ERROR ELP wakeup timeout!
-> 
-> 
-> looking at dmesg:
-> 
-> [  68.920000] wl1271_sdio mmc0:0001:2: firmware: requesting wl1271-fw.bin
-> [   69.100000] wl1271_sdio mmc0:0001:2: firmware: requesting wl1271-nvs.bin
-> [   69.500000] wl1271: firmware booted (Rev 6.1.0.0.310)
-> [   69.510000] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> [   70.020000] wl1271: ERROR ELP wakeup timeout!
-> [   70.520000] wl1271: ERROR ELP wakeup timeout!
-> 
-> [   68.920000] wl1271_sdio mmc0:0001:2: firmware: requesting wl1271-fw.bin
-> [   69.100000] wl1271_sdio mmc0:0001:2: firmware: requesting wl1271-nvs.bin
-> [   69.500000] wl1271: firmware booted (Rev 6.1.0.0.310)
-> [   70.020000] wl1271: ERROR ELP wakeup timeout!
-> [   70.520000] wl1271: ERROR ELP wakeup timeout!
-> 
-> Do you have any clue?
-
-I'm not sure what this is, but usually an ERROR ELP wakeup timeout means
-that the firmware has crashed.
-
-Could you enable the following DEBUG flags in wl1271.h and send the logs
-again? Maybe they provide more clues...
-
-#define DEBUG_LEVEL (DEBUG_BOOT | DEBUG_ACX | DEBUG_CMD | DEBUG_PSM | \
-		     DEBUG_IRQ | DEBUG_EVENT)
+ Since Ortwin has confirmed this patch , would you give me an ACK/NAK please?
 
 
 -- 
-Cheers,
-Luca.
+Thanks,
+Jike
 
+
+>From 1414829dcc5b53ef4802f5de2b9be58e2ca0fb23 Mon Sep 17 00:00:00 2001
+From: Jike Song <albcamus@gmail.com>
+Date: Mon, 26 Jul 2010 13:42:41 +0800
+Subject: [PATCH] ath9k: fix wrong DMA direction in RX tasklet
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+
+Commit b5c80475abaad015699384ca64ef8229fdd88758 introduced edma
+support for RX, hence bidirectional DMA support. But it
+specified the DMA type as DMA_FROM_DEVICE by mistake.
+
+Reported-and-tested-by: Ortwin Glück <odi@odi.ch>
+Signed-off-by: Jike Song <albcamus@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/recv.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c
+b/drivers/net/wireless/ath/ath9k/recv.c
+index ca6065b..e3e5291 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -844,9 +844,9 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 	int dma_type;
+
+ 	if (edma)
+-		dma_type = DMA_FROM_DEVICE;
+-	else
+ 		dma_type = DMA_BIDIRECTIONAL;
++	else
++		dma_type = DMA_FROM_DEVICE;
+
+ 	qtype = hp ? ATH9K_RX_QUEUE_HP : ATH9K_RX_QUEUE_LP;
+ 	spin_lock_bh(&sc->rx.rxbuflock);
+-- 
+1.6.2
