@@ -1,59 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:43916 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753367Ab0G0Wx0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 18:53:26 -0400
-From: Marcel Holtmann <marcel@holtmann.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Pull request: bluetooth-next-2.6 2010-07-27
-Date: Tue, 27 Jul 2010 15:53:11 -0700
-Message-Id: <cover.1280270806.git.marcel@holtmann.org>
+Received: from isilmar-3.linta.de ([188.40.101.200]:36314 "EHLO linta.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753148Ab0GZI2M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jul 2010 04:28:12 -0400
+Date: Mon, 26 Jul 2010 10:27:54 +0200
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org
+Subject: Re: 2.6.35-rc5+ WARNING at net/mac80211/scan.c:262
+Message-ID: <20100726082754.GA14881@comet.dominikbrodowski.net>
+References: <20100721184040.GA22968@comet.dominikbrodowski.net>
+ <1279802055.12439.16.camel@jlt3.sipsolutions.net>
+ <20100722134048.GA28231@isilmar-3.linta.de>
+ <1279807678.12439.17.camel@jlt3.sipsolutions.net>
+ <20100723082710.GA20251@comet.dominikbrodowski.net>
+ <1279873990.3745.1.camel@jlt3.sipsolutions.net>
+ <20100726081713.GA14192@comet.dominikbrodowski.net>
+ <1280132498.3693.2.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1280132498.3693.2.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Mon, Jul 26, 2010 at 10:21:38AM +0200, Johannes Berg wrote:
+> On Mon, 2010-07-26 at 10:17 +0200, Dominik Brodowski wrote:
+> > Hey,
+> > 
+> > On Fri, Jul 23, 2010 at 10:33:10AM +0200, Johannes Berg wrote:
+> > > > > Oh, it's against wireless-testing, which apparently has some other mods
+> > > > > there. I'll have to see if any other patch needs to go into .35 too.
+> > > > 
+> > > > That's fine, I'll just test wireless-testing plus your patch from now on ;)
+> > > 
+> > > Hah, ok, I made a note to backport the patch for you, guess I'll delete
+> > > it. Wouldn't have gotten around to it today anyway I think.
+> > 
+> > the problem didn't reappear when using wireless-testing plus your patch. As
+> > I can't reproduce it -- it just happened every once in a while (maybe once a
+> > day?) -- this doesn't necessarily mean the bug is fixed, but...
+> 
+> Alright, thanks. I don't suppose you tried wireless-testing w/o the
+> patch?
 
-I have a few more patches for the 2.6.36 merge window. Besides the SCO
-setup fix they are just cleanups anyway.
+No. Shall I?
 
-Regards
-
-Marcel
-
-
-Please pull from
-
-    git://git.kernel.org/pub/scm/linux/kernel/git/holtmann/bluetooth-next-2.6.git master
-
-This will update the following files:
-
- drivers/bluetooth/hci_ath.c      |    6 +-
- drivers/bluetooth/hci_bcsp.c     |    4 +-
- drivers/bluetooth/hci_h4.c       |  107 ++------------------------------------
- drivers/bluetooth/hci_ll.c       |    4 +-
- include/net/bluetooth/hci_core.h |    2 +
- net/bluetooth/hci_conn.c         |   32 ++++++++++--
- net/bluetooth/hci_core.c         |    8 ++--
- net/bluetooth/hci_event.c        |   31 +++++------
- net/bluetooth/rfcomm/sock.c      |    2 +-
- net/bluetooth/rfcomm/tty.c       |    4 +-
- 10 files changed, 63 insertions(+), 137 deletions(-)
- mode change 100755 => 100644 drivers/bluetooth/hci_ath.c
-
-through these ChangeSets:
-
-Dan Carpenter (1):
-    Bluetooth: Fix kfree() => kfree_skb() in hci_ath.c
-
-Gustavo F. Padovan (5):
-    Bluetooth: Fix permission of hci_ath.c
-    Bluetooth: Test 'count' value before enter the loop
-    Bluetooth: Use hci_recv_stream_fragment() in UART driver
-    Bluetooth: Add __init and __exit marks to UART drivers
-    Bluetooth: Add __init and __exit marks to RFCOMM
-
-Marcel Holtmann (1):
-    Bluetooth: Defer SCO setup if mode change is pending
-
+Best,
+	Dominik
