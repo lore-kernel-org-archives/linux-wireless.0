@@ -1,138 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:34497 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753225Ab0GHDj6 convert rfc822-to-8bit (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:57290 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752658Ab0GZQ4T convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jul 2010 23:39:58 -0400
-From: "Ghorai, Sukumar" <s-ghorai@ti.com>
-To: Ohad Ben-Cohen <ohad@wizery.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"Chikkature Rajashekar, Madhusudhan" <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	San Mehat <san@google.com>, "Ben-cohen, Ohad" <ohadb@ti.com>
-Date: Thu, 8 Jul 2010 09:09:22 +0530
-Subject: RE: [PATCH 00/15] wlan+omap+mmc: out-of-the-box WLAN support for
- ZOOM2/3
-Message-ID: <2A3DCF3DA181AD40BDE86A3150B27B6B030E10C9B6@dbde02.ent.ti.com>
-References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
-In-Reply-To: <1278376666-3509-1-git-send-email-ohad@wizery.com>
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 26 Jul 2010 12:56:19 -0400
 MIME-Version: 1.0
+In-Reply-To: <AANLkTikrmM0pwBLLMWTCO-stRnoCxwQf0M3ZByc7=8_b@mail.gmail.com>
+References: <4C3D5F3F.7070901@odi.ch> <AANLkTimn7Z3LqhLOt4_6ggFgjdzIZQPd_CznOIW-6D1N@mail.gmail.com>
+	<4C499E6F.8030507@odi.ch> <AANLkTikrmM0pwBLLMWTCO-stRnoCxwQf0M3ZByc7=8_b@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 26 Jul 2010 09:55:58 -0700
+Message-ID: <AANLkTi=Ga2Sy60=wXKQT3nv_PRYw-og7279bD9LTWENE@mail.gmail.com>
+Subject: Re: BUG at arch/x86/mm/physaddr.c:5
+To: Jike Song <albcamus@gmail.com>
+Cc: =?UTF-8?Q?Ortwin_Gl=C3=BCck?= <odi@odi.ch>,
+	linux-kernel@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
+	jmalinen@atheros.com, Sujith.Manoharan@atheros.com,
+	senthilkumar@atheros.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-> -----Original Message-----
-> From: linux-mmc-owner@vger.kernel.org [mailto:linux-mmc-
-> owner@vger.kernel.org] On Behalf Of Ohad Ben-Cohen
-> Sent: Tuesday, July 06, 2010 6:08 AM
-> To: linux-wireless@vger.kernel.org; linux-mmc@vger.kernel.org; linux-
-> omap@vger.kernel.org
-> Cc: linux-arm-kernel@lists.infradead.org; linux@arm.linux.org.uk;
-> Chikkature Rajashekar, Madhusudhan; Luciano Coelho; akpm@linux-
-> foundation.org; San Mehat; Ben-cohen, Ohad
-> Subject: [PATCH 00/15] wlan+omap+mmc: out-of-the-box WLAN support for
-> ZOOM2/3
-> 
-> From: Ohad Ben-Cohen <ohadb@ti.com>
-> 
-> The ZOOM2/3 boards include TI's wl1271 wlan sdio device,
-> hardwired to the 3rd mmc controller.
-> 
-> These patches add support for WLAN on the ZOOM2/3 boards
-> using only mainline components (most notably mac80211 and wl1271).
-> 
-> Patches were tested on both ZOOM2 and ZOOM3.
-> 
-> In short, these patches add software control for emulating
-> card detect events, add board configurations to support the
-> wl1271 device, and update the wl1271 driver to make use of
-> these new mechanisms.
-> 
-> Software card detect emulation is based on Android's
-> EMBEDDED_SDIO patch by San Mehat <san@google.com> (thanks, San!).
-> 
-> These patches span over several differnt subsystems, but since
-> they are highly dependent on each other, it is preferrable
-> to pull them all together into a single tree (once approved).
-> 
-> Patches are available at:
-> 
-> git://wizery.com/pub/linux-2.6.git wl1271
-> 
-> And will also be sent as a follow-on to this message to the
-> omap, mmc, arm and wireless mailing lists.
-> 
-> Patches are based on mainline 2.6.35-rc4, but can easily be applied
-> on wireless-testing (with two minor conflicts). If desired, I can
-> rebase to wireless-testing and resend.
-> 
-> Note: last missing part for full mainline community support
-> of the wl1271 on ZOOM is the firmware, and for that there is already
-> on-going TI work to provide it in linux-firmware. Hopefully
-> that would be resolved soon.
-> 
-> Thanks,
-> 
-> Ohad Ben-Cohen (15):
->   sdio: add TI + wl1271 ids
->   wireless: wl1271: remove SDIO IDs from driver
->   omap: mmc: prepare for software card detect support
->   mmc: support embedded data field in mmc_host
->   omap: hsmmc: add virtual card detect support
->   omap zoom2: wlan board muxing
->   omap zoom3: wlan board muxing
->   wireless: wl1271: make wl12xx.h common to both spi and sdio
->   wireless: wl12xx: support pdata SDIO handlers
->   wireless: wl1271: support return value for the set power func
->   wireless: wl1271: introduce platform device support
->   wireless: wl1271: take irq info from platform data
->   wireless: wl1271: make ref_clock configurable by board
->   omap: zoom: add WLAN device
->   omap: zoom: enable WLAN device
-> 
->  arch/arm/mach-omap2/Kconfig                   |    5 +
->  arch/arm/mach-omap2/Makefile                  |    1 +
->  arch/arm/mach-omap2/board-zoom-peripherals.c  |   15 ++
->  arch/arm/mach-omap2/board-zoom-wlan.c         |  129 ++++++++++++++++
->  arch/arm/mach-omap2/board-zoom2.c             |   15 ++
->  arch/arm/mach-omap2/board-zoom3.c             |   15 ++
->  arch/arm/mach-omap2/hsmmc.c                   |    4 +
->  arch/arm/mach-omap2/hsmmc.h                   |    5 +
->  arch/arm/mach-omap2/include/mach/board-zoom.h |    5 +
->  arch/arm/plat-omap/include/plat/mmc.h         |    5 +
->  drivers/mmc/core/Kconfig                      |    8 +
->  drivers/mmc/host/omap_hsmmc.c                 |   37 +++++-
->  drivers/net/wireless/wl12xx/Kconfig           |    1 +
->  drivers/net/wireless/wl12xx/wl1251_sdio.c     |    2 +-
->  drivers/net/wireless/wl12xx/wl1251_spi.c      |    2 +-
->  drivers/net/wireless/wl12xx/wl1271.h          |    8 +-
->  drivers/net/wireless/wl12xx/wl1271_boot.c     |   13 +-
->  drivers/net/wireless/wl12xx/wl1271_boot.h     |    1 -
->  drivers/net/wireless/wl12xx/wl1271_io.h       |    8 +-
->  drivers/net/wireless/wl12xx/wl1271_main.c     |    4 +-
->  drivers/net/wireless/wl12xx/wl1271_sdio.c     |  204 +++++++++++++++++++-
-> -----
->  drivers/net/wireless/wl12xx/wl1271_spi.c      |    8 +-
->  include/linux/mmc/host.h                      |   16 ++
->  include/linux/mmc/sdio_ids.h                  |    3 +
->  include/linux/spi/wl12xx.h                    |   34 ----
->  include/linux/wl12xx.h                        |   37 +++++
->  26 files changed, 486 insertions(+), 99 deletions(-)
->  create mode 100644 arch/arm/mach-omap2/board-zoom-wlan.c
->  delete mode 100644 include/linux/spi/wl12xx.h
->  create mode 100644 include/linux/wl12xx.h
+2010/7/25 Jike Song <albcamus@gmail.com>:
+> 2010/7/23 Ortwin Glück <odi@odi.ch>:
+>> On 23.07.2010 10:04, Jike Song wrote:
+>>> Seems to be a logical error?  Does the following patch remove your Oops?
+>>
+>> Looking at the init code I agree. Yes, the patch fixes the OOPS. I am sure
+>> because the OOPS occurred at every boot and now it's gone.
+>>
+>> Thanks!
+>>
+>> Ortwin
 >
-[Ghorai] This patch series having the CONFIG_MMC_EMBEDDED_SDIO as kconfig option and I feel we should void this. This could be a generic and can be get from sdio card at runtime. Quite long codes are adding in this patch series under this flag.
- 
+> Hi Maintainers,
+>
+>  Since Ortwin has confirmed this patch , would you give me an ACK/NAK please?
+>
+>
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-mmc" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Thanks,
+> Jike
+>
+>
+> From 1414829dcc5b53ef4802f5de2b9be58e2ca0fb23 Mon Sep 17 00:00:00 2001
+> From: Jike Song <albcamus@gmail.com>
+> Date: Mon, 26 Jul 2010 13:42:41 +0800
+> Subject: [PATCH] ath9k: fix wrong DMA direction in RX tasklet
+> MIME-Version: 1.0
+> Content-Type: text/plain; charset=utf-8
+> Content-Transfer-Encoding: 8bit
+>
+> Commit b5c80475abaad015699384ca64ef8229fdd88758 introduced edma
+> support for RX, hence bidirectional DMA support. But it
+> specified the DMA type as DMA_FROM_DEVICE by mistake.
+>
+> Reported-and-tested-by: Ortwin Glück <odi@odi.ch>
+> Signed-off-by: Jike Song <albcamus@gmail.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/recv.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/recv.c
+> b/drivers/net/wireless/ath/ath9k/recv.c
+> index ca6065b..e3e5291 100644
+> --- a/drivers/net/wireless/ath/ath9k/recv.c
+> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+> @@ -844,9 +844,9 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+>        int dma_type;
+>
+>        if (edma)
+> -               dma_type = DMA_FROM_DEVICE;
+> -       else
+>                dma_type = DMA_BIDIRECTIONAL;
+> +       else
+> +               dma_type = DMA_FROM_DEVICE;
+>
+>        qtype = hp ? ATH9K_RX_QUEUE_HP : ATH9K_RX_QUEUE_LP;
+>        spin_lock_bh(&sc->rx.rxbuflock);
+> --
+
+I'll let Felix chime in on this one as he last reviewed this path.
+There were some serious issues with MIPs and DMA that at this point I
+think only he grocked.
+
+  Luis
