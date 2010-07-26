@@ -1,27 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:2155 "EHLO mail.perches.com"
+Received: from mail.perches.com ([173.55.12.10]:2090 "EHLO mail.perches.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751194Ab0G2Ck7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jul 2010 22:40:59 -0400
-Subject: Re: [PATCH] cfg80211: fix dev <-> wiphy typo
+	id S1752689Ab0GZVkD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jul 2010 17:40:03 -0400
 From: Joe Perches <joe@perches.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <201007290128.46773.chunkeey@googlemail.com>
-References: <201007290128.46773.chunkeey@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 28 Jul 2010 19:40:56 -0700
-Message-ID: <1280371256.24054.129.camel@Joe-Laptop.home>
-Mime-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH net-next 0/4] wireless: Add and use wiphy_<level> logging macros
+Date: Mon, 26 Jul 2010 14:39:56 -0700
+Message-Id: <cover.1280177971.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-07-29 at 01:28 +0200, Christian Lamparter wrote:
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index ae80f8f..2fd06c6 100644
-> -	dynamic_pr_debug("%s: " format,	wiphy_name(dev), ##args)
-> +	dynamic_pr_debug("%s: " format,	wiphy_name(wiphy), ##args)
+Add some consistent use styles to wiphy messages
 
-Thanks for noticing that Christian.
+Joe Perches (4):
+  include/net/cfg80211.h: Add wiphy_<level> printk equivalents
+  drivers/net/wireless: Use wiphy_<level>
+  drivers/net/wireless/at76c50x-usb.c: Neaten macros
+  wireless: Convert wiphy_debug macro to function
+
+ drivers/net/wireless/adm8211.c                 |   53 ++++----
+ drivers/net/wireless/at76c50x-usb.c            |  168 +++++++++++------------
+ drivers/net/wireless/ath/ar9170/cmd.c          |    7 +-
+ drivers/net/wireless/ath/ar9170/led.c          |    4 +-
+ drivers/net/wireless/ath/ar9170/main.c         |  172 +++++++++++-------------
+ drivers/net/wireless/ath/ar9170/phy.c          |    8 +-
+ drivers/net/wireless/ath/ath9k/ahb.c           |    7 +-
+ drivers/net/wireless/ath/ath9k/pci.c           |    7 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c         |   11 +-
+ drivers/net/wireless/iwlwifi/iwl-core.c        |    2 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c    |   13 +-
+ drivers/net/wireless/mac80211_hwsim.c          |   99 +++++++-------
+ drivers/net/wireless/mwl8k.c                   |  123 +++++++----------
+ drivers/net/wireless/orinoco/cfg.c             |    5 +-
+ drivers/net/wireless/p54/eeprom.c              |   76 +++++------
+ drivers/net/wireless/p54/fwio.c                |   53 ++++----
+ drivers/net/wireless/p54/led.c                 |    8 +-
+ drivers/net/wireless/p54/p54pci.c              |    3 +-
+ drivers/net/wireless/p54/txrx.c                |   36 +++---
+ drivers/net/wireless/rtl818x/rtl8180_dev.c     |   17 +--
+ drivers/net/wireless/rtl818x/rtl8187_dev.c     |   11 +-
+ drivers/net/wireless/rtl818x/rtl8187_rtl8225.c |    8 +-
+ include/net/cfg80211.h                         |   65 +++++++++-
+ net/wireless/core.c                            |   53 +++++++
+ 24 files changed, 528 insertions(+), 481 deletions(-)
 
