@@ -1,50 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55832 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752765Ab0GVL6z (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:49012 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752519Ab0GZBOu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 07:58:55 -0400
-Subject: [PATCH] mac80211: remove bogus rcu_read_lock()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 22 Jul 2010 13:58:51 +0200
-Message-ID: <1279799931.12439.14.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Sun, 25 Jul 2010 21:14:50 -0400
+Received: by gyg10 with SMTP id 10so670466gyg.19
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Jul 2010 18:14:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTinZG-kHrS-s_94Bq4JNXuyf6kWzqsVRAVjdGQ3c@mail.gmail.com>
+References: <87vd88n1i8.fsf@gmail.com>
+	<4C474851.4000809@lwfinger.net>
+	<AANLkTinZG-kHrS-s_94Bq4JNXuyf6kWzqsVRAVjdGQ3c@mail.gmail.com>
+Date: Mon, 26 Jul 2010 09:14:48 +0800
+Message-ID: <AANLkTinVBYj5tjz9EzxYPoz6A9s8sTJLN3hN3MB=kACY@mail.gmail.com>
+Subject: Re: Master mode in rtl8187
+From: August <august.seu@gmail.com>
+To: Hin-Tak Leung <hintak.leung@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=GB2312
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-Another remnant of the previous key locking scheme
-needs to be removed -- this causes a warning
-otherwise as ieee80211_set_default_mgmt_key will
-acquire a mutex.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c |    7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
-
---- wireless-testing.orig/net/mac80211/cfg.c	2010-07-22 12:24:38.000000000 +0200
-+++ wireless-testing/net/mac80211/cfg.c	2010-07-22 13:56:19.000000000 +0200
-@@ -324,15 +324,10 @@ static int ieee80211_config_default_mgmt
- 					     struct net_device *dev,
- 					     u8 key_idx)
- {
--	struct ieee80211_sub_if_data *sdata;
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 
--	rcu_read_lock();
--
--	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	ieee80211_set_default_mgmt_key(sdata, key_idx);
- 
--	rcu_read_unlock();
--
- 	return 0;
- }
- 
+I've followed the driver of the rtl818x in 26.34 and draw some
+pictures of source.However, some additional work interrupted me.
+The address is http://augustseu-blog.appspot.com/2010/06/6/Wlan.html
+If it was any helpful,
 
 
+
+2010/7/25 Hin-Tak Leung <hintak.leung@gmail.com>:
+> On 7/21/10, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>> On 07/21/2010 01:17 PM, Ben Gamari wrote:
+>>> Hey all,
+>>>
+>>> I recently purchased a Netgear WG111v2 (based on rtl8187b) and after
+>>> seeing scattered reports[1] that master mode may be supported by the
+>>> rtl8187 driver. Unfortunately, hostapd throws up when it attempts to put
+>>> the card into master mode. Is master mode supported by this driver? I've
+>>> tried both 2.6.34 as well as the latest wireless-testing tree and
+>>> neither seem to work.
+>>
+>> My WG111V2 has an RTL8187L chip in it, not an RTL8187B. No, master mode is
+>> NOT
+>> supported by this driver. Adding that feature has been on my list of things
+>> to
+>> do, but the priority is very low. I really have little desire to convert my
+>> $600
+>> laptop into a $40 access point.
+>>
+>>> I noticed there was a patch[2] sent out a few years back, but it seems
+>>> no one followed up. While I don't have much experience working with
+>>> wireless hardware I've done kernel driver work before, so with some
+>>> guidance I might be able to finish up that patch. Any input would be
+>>> greatly appreciated. Thanks!
+>>
+>>> [1]
+>>> http://osdir.com/ml/linux.kernel.wireless.general/2007-07/msg00289.html
+>>> [2]
+>>> http://osdir.com/ml/linux.kernel.wireless.general/2007-06/msg00455.html
+>>
+>> That patch is useless. The rtl8187 driver and mac80211 have changed so much
+>> that
+>> it cannot be made to apply, and would not be likely to work.
+>>
+>> One other thing to consider. The RTL8187L has only a single transmit queue.
+>> Will
+>> the device be able to transmit beacons with an appropriate timing accuracy?
+>>
+>> To modify the driver, you will need to study some other driver that does
+>> work in
+>> master mode.
+>
+> There were some discussion a while back that some generic master mode
+> support for all mac80211-based drivers might eventually happen.  Is
+> that still the case?
+>
+> Hin-Tak
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+
+-- 
+---------------------------------
+Best Regards
+张杰
+ADD：苏州 工业园区 文景路 东南大学苏州研究院
