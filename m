@@ -1,61 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:25118 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756515Ab0GWQNz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jul 2010 12:13:55 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 00/10] iwlwifi update for 2.6.36
-Date: Fri, 23 Jul 2010 09:15:29 -0700
-Message-Id: <1279901739-10541-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mailhub-lb3.unibe.ch ([130.92.0.84]:41510 "EHLO
+	mailhub-lb3.unibe.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753971Ab0GZJ3I (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jul 2010 05:29:08 -0400
+Received: from localhost (scanhub-lb3.unibe.ch [130.92.5.67])
+	by mailhub-lb3.unibe.ch (Postfix) with ESMTP id CF8E5C4602
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Jul 2010 11:29:06 +0200 (CEST)
+Received: from mailhub-lb3.unibe.ch ([130.92.0.84])
+	by localhost (scanhub-lb3.unibe.ch [130.92.5.67]) (amavisd-new, port 10024)
+	with LMTP id l90KA2Thlazu for <linux-wireless@vger.kernel.org>;
+	Mon, 26 Jul 2010 11:29:06 +0200 (CEST)
+Received: from mail.iam.unibe.ch (asterix.unibe.ch [130.92.64.4])
+	by mailhub-lb3.unibe.ch (Postfix) with ESMTP id 1CB8CC45A6
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Jul 2010 11:29:06 +0200 (CEST)
+Received: from [130.92.64.14] (baghira [130.92.64.14])
+	by mail.iam.unibe.ch (8.13.8+Sun/8.13.8) with ESMTP id o6Q9T5AK019536
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Jul 2010 11:29:05 +0200 (MEST)
+Message-ID: <4C4D5560.2040201@iam.unibe.ch>
+Date: Mon, 26 Jul 2010 11:29:04 +0200
+From: Zhongliang Zhao <zhao@iam.unibe.ch>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org
+Subject: iw dev wlan0 link - "Not connected"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We add statistics notification support for WiFi/BT combo devices.
-We also add the capability to read multiple MAC address from EEPROM and
-advertise them to cfg80211.
-We also fix the gcc complains about the firmware loading on parsing TLV.
+Dear all,
 
-Johannes Berg (4):
-  iwlagn: fix firmware loading TLV error path
-  iwlwifi: make iwl_mac_beacon_update static
-  iwlwifi: reduce beacon fill conditions
-  iwlwifi: remove spurious semicolons
+When I use "iw dev wlan0 link" to get information on wlan0 (basically to 
+check the channel used on wlan0),
+it says: " Not connected "
 
-Wey-Yi Guy (6):
-  iwlagn: add statistic notification structure for WiFi/BT devices
-  iwlagn: add .cfg flag to idenfity the need for bt statistics
-  iwlagn: Add support for bluetooth statistics notification
-  iwlagn: add bluetooth stats to debugfs
-  iwlwifi: add TLV to specify the size of phy calibration table
-  iwlwifi: read multiple MAC addresses
+Can someone tell me how to fix this?
 
-these patches are also available from wireless-next-2.6 branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+Many thanks.
 
- drivers/net/wireless/iwlwifi/iwl-1000.c        |    1 +
- drivers/net/wireless/iwlwifi/iwl-4965.c        |    5 +-
- drivers/net/wireless/iwlwifi/iwl-5000.c        |    3 +-
- drivers/net/wireless/iwlwifi/iwl-6000.c        |    7 +
- drivers/net/wireless/iwlwifi/iwl-agn-calib.c   |   64 +++++--
- drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c |  225 +++++++++++++++++++-----
- drivers/net/wireless/iwlwifi/iwl-agn-debugfs.h |    7 +
- drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c    |    4 +-
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rx.c      |  167 ++++++++++++------
- drivers/net/wireless/iwlwifi/iwl-agn.c         |  130 +++++++++------
- drivers/net/wireless/iwlwifi/iwl-calib.h       |    6 +-
- drivers/net/wireless/iwlwifi/iwl-commands.h    |   55 ++++++-
- drivers/net/wireless/iwlwifi/iwl-core.c        |   63 ++++----
- drivers/net/wireless/iwlwifi/iwl-core.h        |    4 +-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c     |   13 ++
- drivers/net/wireless/iwlwifi/iwl-dev.h         |   16 ++
- drivers/net/wireless/iwlwifi/iwl-eeprom.h      |    1 +
- drivers/net/wireless/iwlwifi/iwl3945-base.c    |    4 +-
- 19 files changed, 561 insertions(+), 216 deletions(-)
+Zhongliang Zhao
 
