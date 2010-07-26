@@ -1,38 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eyas.biff.org.uk ([80.68.92.121]:49189 "EHLO eyas.biff.org.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753033Ab0GWJ3V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jul 2010 05:29:21 -0400
-Message-ID: <4C495BD7.2080004@thekelleys.org.uk>
-Date: Fri, 23 Jul 2010 10:07:35 +0100
-From: Simon Kelley <simon@thekelleys.org.uk>
-MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] MAINTAINERS: orphan the atmel wireless driver
-References: <1279823468-21366-1-git-send-email-linville@tuxdriver.com> <1279837721.4829.19.camel@dcbw.foobar.com>
-In-Reply-To: <1279837721.4829.19.camel@dcbw.foobar.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from he.sipsolutions.net ([78.46.109.217]:39164 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752581Ab0GZHnG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jul 2010 03:43:06 -0400
+Subject: Re: [PATCH] mac80211: simplify key locking
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20100726013953.GA29386@jm.kir.nu>
+References: <1275380359.3621.17.camel@jlt3.sipsolutions.net>
+	 <20100724053301.GA6773@jm.kir.nu>
+	 <1279962385.8223.2.camel@jlt3.sipsolutions.net>
+	 <20100726013953.GA29386@jm.kir.nu>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 26 Jul 2010 09:42:58 +0200
+Message-ID: <1280130178.3693.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Williams wrote:
-> On Thu, 2010-07-22 at 14:31 -0400, John W. Linville wrote:
->> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> 
-> Aww,  how sad :(.  I'll take it since I still have some of this
-> hardware.  Not that I'll do much with it, but if the patches are simple
-> I'm happy to test+ack them.
-> 
-Thanks Dan, whilst I still have the hardware, I no longer have a
-convenient PCMCIA slot into which to plug it.
+On Sun, 2010-07-25 at 18:39 -0700, Jouni Malinen wrote:
 
-This hardware is well orphaned: it never made is past 802.11b, and there
-have been no new models for a long time. Nevertheless, if the existing
-code can be kept functional, that would be good.
+> The following seems to be more or less minimal patch with that
+> approach to get rid of this oops with FT protocol.. Is this what you
+> were looking for?
 
+Well so to answer both your emails :-)
 
-Cheers,
+> -	ieee80211_key_disable_hw_accel(key);
+> +	if (key->local)
+> +		ieee80211_key_disable_hw_accel(key);
 
-Simon.
+ 
+> -	ieee80211_debugfs_key_remove(key);
+> +	if (key->local)
+> +		ieee80211_debugfs_key_remove(key);
+
+These might look odd, but they're fine on a key that hasn't been used
+since it couldn't have been uploaded to hardware, or put into debugfs,
+so they'll just exit right away.
+
+The rest of the patch is exactly what I was thinking of.
+
+johannes
+
