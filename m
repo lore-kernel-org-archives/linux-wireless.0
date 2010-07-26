@@ -1,97 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:25118 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760151Ab0GWQN5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jul 2010 12:13:57 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 08/10] iwlwifi: read multiple MAC addresses
-Date: Fri, 23 Jul 2010 09:15:37 -0700
-Message-Id: <1279901739-10541-9-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1279901739-10541-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1279901739-10541-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail.candelatech.com ([208.74.158.172]:47643 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754109Ab0GZTtL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jul 2010 15:49:11 -0400
+Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id o6QJnAir023061
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Mon, 26 Jul 2010 12:49:10 -0700
+Message-ID: <4C4DE6B5.5080307@candelatech.com>
+Date: Mon, 26 Jul 2010 12:49:09 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: ath9k:  /proc/net/wireless always shows status of 0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+This is with today's wireless-testing (with no extra hacks)
 
-Some devices may have multiple MAC
-addresses in their EEPROM, read them
-and advertise them to cfg80211.
+[root@a230-ath9k ~]# cat /proc/net/wireless
+Inter-| sta-|   Quality        |   Discarded packets               | Missed | WE
+  face | tus | link level noise |  nwid  crypt   frag  retry   misc | beacon | 22
+  wlan0: 0000   67.  -43.  -256        0      0      0      0      0        0
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c    |   17 ++++++++++++-----
- drivers/net/wireless/iwlwifi/iwl-dev.h    |    3 +++
- drivers/net/wireless/iwlwifi/iwl-eeprom.h |    1 +
- 3 files changed, 16 insertions(+), 5 deletions(-)
+The interface is running WPA and is passing traffic, so I'd expect some sort of
+useful status.  Is this a known issue?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 573a81b..f8f8ea2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3932,8 +3932,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	struct ieee80211_hw *hw;
- 	struct iwl_cfg *cfg = (struct iwl_cfg *)(ent->driver_data);
- 	unsigned long flags;
--	u16 pci_cmd;
--	u8 perm_addr[ETH_ALEN];
-+	u16 pci_cmd, num_mac;
- 
- 	/************************
- 	 * 1. Allocating HW data
-@@ -4051,9 +4050,17 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		goto out_free_eeprom;
- 
- 	/* extract MAC Address */
--	iwl_eeprom_get_mac(priv, perm_addr);
--	IWL_DEBUG_INFO(priv, "MAC address: %pM\n", perm_addr);
--	SET_IEEE80211_PERM_ADDR(priv->hw, perm_addr);
-+	iwl_eeprom_get_mac(priv, priv->addresses[0].addr);
-+	IWL_DEBUG_INFO(priv, "MAC address: %pM\n", priv->addresses[0].addr);
-+	priv->hw->wiphy->addresses = priv->addresses;
-+	priv->hw->wiphy->n_addresses = 1;
-+	num_mac = iwl_eeprom_query16(priv, EEPROM_NUM_MAC_ADDRESS);
-+	if (num_mac > 1) {
-+		memcpy(priv->addresses[1].addr, priv->addresses[0].addr,
-+		       ETH_ALEN);
-+		priv->addresses[1].addr[5]++;
-+		priv->hw->wiphy->n_addresses++;
-+	}
- 
- 	/************************
- 	 * 5. Setup HW constants
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 4fa8cdd..5e4745d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1154,6 +1154,9 @@ struct iwl_priv {
- 	u32  hw_wa_rev;
- 	u8   rev_id;
- 
-+	/* EEPROM MAC addresses */
-+	struct mac_address addresses[2];
-+
- 	/* uCode images, save to reload in case of failure */
- 	int fw_index;			/* firmware we're trying to load */
- 	u32 ucode_ver;			/* version of ucode, copy of
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-index f8b707d..3209b37 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
-@@ -402,6 +402,7 @@ struct iwl_eeprom_calib_info {
- #define EEPROM_WOWLAN_MODE                  (2*0x47)	/* 2  bytes */
- #define EEPROM_RADIO_CONFIG                 (2*0x48)	/* 2  bytes */
- #define EEPROM_3945_M_VERSION               (2*0x4A)	/* 1  bytes */
-+#define EEPROM_NUM_MAC_ADDRESS              (2*0x4C)	/* 2  bytes */
- 
- /* The following masks are to be applied on EEPROM_RADIO_CONFIG */
- #define EEPROM_RF_CFG_TYPE_MSK(x)   (x & 0x3)         /* bits 0-1   */
+[root@a230-ath9k ~]# iwconfig wlan0
+wlan0     IEEE 802.11bgn  ESSID:"candela-n"
+           Mode:Managed  Frequency:2.412 GHz  Access Point: 00:14:D1:C6:D2:54
+           Bit Rate=117 Mb/s   Tx-Power=27 dBm
+           Retry  long limit:7   RTS thr:off   Fragment thr:off
+           Encryption key:off
+           Power Management:off
+           Link Quality=66/70  Signal level=-44 dBm
+           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+Thanks,
+Ben
+
 -- 
-1.7.0.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
