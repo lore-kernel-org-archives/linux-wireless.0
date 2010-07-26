@@ -1,24 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:63989 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757665Ab0GDTN5 (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:38008 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752542Ab0GZRX5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Jul 2010 15:13:57 -0400
-Received: by fxm14 with SMTP id 14so3240861fxm.19
-        for <linux-wireless@vger.kernel.org>; Sun, 04 Jul 2010 12:13:55 -0700 (PDT)
+	Mon, 26 Jul 2010 13:23:57 -0400
+Received: by pzk26 with SMTP id 26so1075523pzk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Jul 2010 10:23:57 -0700 (PDT)
 MIME-Version: 1.0
-Date: Sun, 4 Jul 2010 21:13:55 +0200
-Message-ID: <AANLkTikZD45RTEGz8_pzqLsuIPGEk0RAwl3zQphKAQwx@mail.gmail.com>
-Subject: Re: Problems connectring to an AP with Acer Aspire Revo
-From: Carlos Balseiro <hamletpod@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <4C4D5560.2040201@iam.unibe.ch>
+References: <4C4D5560.2040201@iam.unibe.ch>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 26 Jul 2010 10:23:37 -0700
+Message-ID: <AANLkTinfWZaiMsmPTmm5qrBRcqMAvQpv1Xq86fxo+S3Z@mail.gmail.com>
+Subject: Re: iw dev wlan0 link - "Not connected"
+To: Zhongliang Zhao <zhao@iam.unibe.ch>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> This seems to indicate that there is some trouble on this platform ...
-> and makes me start thinking that this card may not work well on this
-> platform.
+On Mon, Jul 26, 2010 at 2:29 AM, Zhongliang Zhao <zhao@iam.unibe.ch> wrote:
+> Dear all,
+>
+> When I use "iw dev wlan0 link" to get information on wlan0 (basically to
+> check the channel used on wlan0),
+> it says: " Not connected "
+>
+> Can someone tell me how to fix this?
 
-Just installed Windows 7 on my machine to test this and efectively,
-the problem also exist.
+Refer to:
+
+http://wireless.kernel.org/en/users/Documentation/iw#Getting_link_status
+
+And then:
+
+http://wireless.kernel.org/en/users/Documentation/iw#Establishing_a_basic_connection
+
+What you really want to use is:
+
+http://wireless.kernel.org/en/users/Documentation/wpa_supplicant
+
+  Luis
