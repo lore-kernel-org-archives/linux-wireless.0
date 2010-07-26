@@ -1,44 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:39876 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936078Ab0GPJRa (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:45685 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752131Ab0GZVTj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jul 2010 05:17:30 -0400
-Message-ID: <4C402360.5050502@marvell.com>
-Date: Fri, 16 Jul 2010 14:46:16 +0530
-From: yogeshp <yogeshp@marvell.com>
+	Mon, 26 Jul 2010 17:19:39 -0400
+Received: by iwn7 with SMTP id 7so3046336iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Jul 2010 14:19:38 -0700 (PDT)
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Pradeep Nemavat <pnemavat@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] mac80211: indicate BA window size with IEEE80211_AMPDU_TX_OPERATIONAL
- 	drv_ampud_action
-References: <4C3F0AA3.4050706@marvell.com> <AANLkTiljhQpDh_20zEf8HjYnk82BpUi4Gctu9G90aqpS@mail.gmail.com>
-In-Reply-To: <AANLkTiljhQpDh_20zEf8HjYnk82BpUi4Gctu9G90aqpS@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+From: Malthe Borch <mborch@gmail.com>
+Date: Mon, 26 Jul 2010 17:19:18 -0400
+Message-ID: <AANLkTimrv507n5-WmikUOhPE95wM1p1_Qtd65rOA1hei@mail.gmail.com>
+Subject: Intel Wireless: Microcode SW error detected.
+To: linux-wireless@vger.kernel.org
+Content-Type: multipart/mixed; boundary=0050450167782d7531048c50f17f
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis, 
- Please see inline comments
+--0050450167782d7531048c50f17f
+Content-Type: text/plain; charset=UTF-8
 
-Luis R. Rodriguez wrote:
-> On Thu, Jul 15, 2010 at 6:18 AM, yogeshp <yogeshp@marvell.com> wrote:
->> BA window size for a successful BA setup is not made available to the driver by
->> mac80211. The patch below gets the BA window size from addba response and
->> indicates it to driver through IEEE80211_AMPDU_TX_OPERATIONAL drv_ampdu_action.
- 
-> But why do you want that? Your patch and commit log do not mention why
-> you need this. 
-BA window size from ADDBA response defines how many outstanding MPDUs are allowed for the BA stream by recipient. Since ADDBA response is processed in mac80211 stack, mac80211 should communicate the BA window size to driver (and may be from driver it is further communicated to firmware/hardware) to control the number of outstanding MPDUs while transmitting MPDUs for the stream. 
+I get this with the latest and greatest Intel firmware 9.221.4.1 build 25532.
 
+Ultimately enabling the device fails with: "uCode did not respond OK."
 
-> When I compile mac80211 with your patch it fails compilation
-I do not see this compilation error, I think the patch did not apply cleanly. I will send out another patch without extra white spaces that should solve the compilation issue. If the change is fine, we can then send patches to fix the compilation issues for other drivers too. 
+--0050450167782d7531048c50f17f
+Content-Type: application/octet-stream; name=dmesg
+Content-Disposition: attachment; filename=dmesg
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_gc3tj67p0
 
-
-Thanks
-Yogesh 
-
+WyAgIDM1Ljg4MjMwNV0gaXdsYWduIDAwMDA6MDI6MDAuMDogTWljcm9jb2RlIFNXIGVycm9yIGRl
+dGVjdGVkLiAgUmVzdGFydGluZyAweDgyMDAwMDAwLgpbICAgMzUuODgyMzEzXSBpd2xhZ24gMDAw
+MDowMjowMC4wOiBMb2FkZWQgZmlybXdhcmUgdmVyc2lvbjogOS4yMjEuNC4xIGJ1aWxkIDI1NTMy
+ClsgICAzNS44ODIzMThdIGl3bGFnbiAwMDAwOjAyOjAwLjA6IE5vdCB2YWxpZCBlcnJvciBsb2cg
+cG9pbnRlciAweDAwMDAwMDAwIGZvciBSVCB1Q29kZQpbICAgMzUuODgyMzIyXSBpd2xhZ24gMDAw
+MDowMjowMC4wOiBDU1IgdmFsdWVzOgpbICAgMzUuODgyMzI1XSBpd2xhZ24gMDAwMDowMjowMC4w
+OiAoMm5kIGJ5dGUgb2YgQ1NSX0lOVF9DT0FMRVNDSU5HIGlzIENTUl9JTlRfUEVSSU9ESUNfUkVH
+KQpbICAgMzUuODgyMzMzXSBpd2xhZ24gMDAwMDowMjowMC4wOiAgICAgICAgQ1NSX0hXX0lGX0NP
+TkZJR19SRUc6IDBYMDA0ODAzMDMKWyAgIDM1Ljg4MjMzOV0gaXdsYWduIDAwMDA6MDI6MDAuMDog
+ICAgICAgICAgQ1NSX0lOVF9DT0FMRVNDSU5HOiAwWDAwMDAwMDQwClsgICAzNS44ODIzNDZdIGl3
+bGFnbiAwMDAwOjAyOjAwLjA6ICAgICAgICAgICAgICAgICAgICAgQ1NSX0lOVDogMFg4MDAwMDAw
+MApbICAgMzUuODgyMzUzXSBpd2xhZ24gMDAwMDowMjowMC4wOiAgICAgICAgICAgICAgICBDU1Jf
+SU5UX01BU0s6IDBYMDAwMDAwMDAKWyAgIDM1Ljg4MjM1OV0gaXdsYWduIDAwMDA6MDI6MDAuMDog
+ICAgICAgICAgIENTUl9GSF9JTlRfU1RBVFVTOiAwWDQwMDEwMDAwClsgICAzNS44ODIzNjVdIGl3
+bGFnbiAwMDAwOjAyOjAwLjA6ICAgICAgICAgICAgICAgICBDU1JfR1BJT19JTjogMFgwMDAwMDAw
+ZgpbICAgMzUuODgyMzcxXSBpd2xhZ24gMDAwMDowMjowMC4wOiAgICAgICAgICAgICAgICAgICBD
+U1JfUkVTRVQ6IDBYMDAwMDAwMDAKWyAgIDM1Ljg4MjM3N10gaXdsYWduIDAwMDA6MDI6MDAuMDog
+ICAgICAgICAgICAgICAgQ1NSX0dQX0NOVFJMOiAwWDA4MDQwM2M1ClsgICAzNS44ODIzODNdIGl3
+bGFnbiAwMDAwOjAyOjAwLjA6ICAgICAgICAgICAgICAgICAgQ1NSX0hXX1JFVjogMFgwMDAwMDA3
+NApbICAgMzUuODgyMzg5XSBpd2xhZ24gMDAwMDowMjowMC4wOiAgICAgICAgICAgICAgQ1NSX0VF
+UFJPTV9SRUc6IDBYMDAwMDAwMDAKWyAgIDM1Ljg4MjM5Nl0gaXdsYWduIDAwMDA6MDI6MDAuMDog
+ICAgICAgICAgICAgICBDU1JfRUVQUk9NX0dQOiAwWDkwMDAwMDA0ClsgICAzNS44ODI0MDNdIGl3
+bGFnbiAwMDAwOjAyOjAwLjA6ICAgICAgICAgICAgICBDU1JfT1RQX0dQX1JFRzogMFgwMDAyMDAw
+MApbICAgMzUuODgyNDA4XSBpd2xhZ24gMDAwMDowMjowMC4wOiAgICAgICAgICAgICAgICAgQ1NS
+X0dJT19SRUc6IDBYMDAwODAwNDYKWyAgIDM1Ljg4MjQxNV0gaXdsYWduIDAwMDA6MDI6MDAuMDog
+ICAgICAgICAgICBDU1JfR1BfVUNPREVfUkVHOiAwWDAwMDAwMDAwClsgICAzNS44ODI0MjFdIGl3
+bGFnbiAwMDAwOjAyOjAwLjA6ICAgICAgICAgICBDU1JfR1BfRFJJVkVSX1JFRzogMFgwMDAwMDAw
+MApbICAgMzUuODgyNDI3XSBpd2xhZ24gMDAwMDowMjowMC4wOiAgICAgICAgICAgQ1NSX1VDT0RF
+X0RSVl9HUDE6IDBYMDAwMDAwMDAKWyAgIDM1Ljg4MjQzM10gaXdsYWduIDAwMDA6MDI6MDAuMDog
+ICAgICAgICAgIENTUl9VQ09ERV9EUlZfR1AyOiAwWDAwMDAwMDAwClsgICAzNS44ODI0MzldIGl3
+bGFnbiAwMDAwOjAyOjAwLjA6ICAgICAgICAgICAgICAgICBDU1JfTEVEX1JFRzogMFgwMDAwMDAx
+OApbICAgMzUuODgyNDQ2XSBpd2xhZ24gMDAwMDowMjowMC4wOiAgICAgICAgQ1NSX0RSQU1fSU5U
+X1RCTF9SRUc6IDBYMDAwMDAwMDAKWyAgIDM1Ljg4MjQ1Ml0gaXdsYWduIDAwMDA6MDI6MDAuMDog
+ICAgICAgIENTUl9HSU9fQ0hJQ0tFTl9CSVRTOiAwWDI3ODAwMjAwClsgICAzNS44ODI0NThdIGl3
+bGFnbiAwMDAwOjAyOjAwLjA6ICAgICAgICAgICAgIENTUl9BTkFfUExMX0NGRzogMFgwMDAwMDAw
+MApbICAgMzUuODgyNDY2XSBpd2xhZ24gMDAwMDowMjowMC4wOiAgICAgICAgICAgQ1NSX0hXX1JF
+Vl9XQV9SRUc6IDBYMDAwMTAwMWEKWyAgIDM1Ljg4MjQ3MF0gaXdsYWduIDAwMDA6MDI6MDAuMDog
+ICAgICAgIENTUl9EQkdfSFBFVF9NRU1fUkVHOiAwWGZmZmYwMDAwClsgICAzNS44ODI0NzJdIGl3
+bGFnbiAwMDAwOjAyOjAwLjA6IEZIIHJlZ2lzdGVyIHZhbHVlczoKWyAgIDM1Ljg4MjQ4NF0gaXds
+YWduIDAwMDA6MDI6MDAuMDogICAgICAgICBGSF9SU0NTUl9DSE5MMF9TVFRTX1dQVFJfUkVHOiAw
+WDAyNTliMjAwClsgICAzNS44ODI0OTddIGl3bGFnbiAwMDAwOjAyOjAwLjA6ICAgICAgICBGSF9S
+U0NTUl9DSE5MMF9SQkRDQl9CQVNFX1JFRzogMFgwMDI1OWI1MApbICAgMzUuODgyNTEwXSBpd2xh
+Z24gMDAwMDowMjowMC4wOiAgICAgICAgICAgICAgICAgIEZIX1JTQ1NSX0NITkwwX1dQVFI6IDBY
+MDAwMDAwZjgKWyAgIDM1Ljg4MjUyM10gaXdsYWduIDAwMDA6MDI6MDAuMDogICAgICAgICBGSF9N
+RU1fUkNTUl9DSE5MMF9DT05GSUdfUkVHOiAwWDgwODE5MTA0ClsgICAzNS44ODI1MzVdIGl3bGFn
+biAwMDAwOjAyOjAwLjA6ICAgICAgICAgIEZIX01FTV9SU1NSX1NIQVJFRF9DVFJMX1JFRzogMFgw
+MDAwMDBmYwpbICAgMzUuODgyNTQ4XSBpd2xhZ24gMDAwMDowMjowMC4wOiAgICAgICAgICAgIEZI
+X01FTV9SU1NSX1JYX1NUQVRVU19SRUc6IDBYMDcwMzAwMDAKWyAgIDM1Ljg4MjU2MF0gaXdsYWdu
+IDAwMDA6MDI6MDAuMDogICAgRkhfTUVNX1JTU1JfUlhfRU5BQkxFX0VSUl9JUlEyRFJWOiAwWDAw
+MDAwMDAwClsgICAzNS44ODI1NzNdIGl3bGFnbiAwMDAwOjAyOjAwLjA6ICAgICAgICAgICAgICAg
+IEZIX1RTU1JfVFhfU1RBVFVTX1JFRzogMFgwN2ZmMDAwMQpbICAgMzUuODgyNTg2XSBpd2xhZ24g
+MDAwMDowMjowMC4wOiAgICAgICAgICAgICAgICAgRkhfVFNTUl9UWF9FUlJPUl9SRUc6IDBYMDAw
+MDAwMDAKWyAgIDM1Ljg4MjU4OF0gaXdsYWduIDAwMDA6MDI6MDAuMDogSW52YWxpZCBldmVudCBs
+b2cgcG9pbnRlciAweDAwMDAwMDAwIGZvciBSVCB1Q29kZQpbICAgMzUuODgyNTk0XSBpd2xhZ24g
+MDAwMDowMjowMC4wOiB1Q29kZSBkaWQgbm90IHJlc3BvbmQgT0suClsgICAzNy4zODEwNjFdIGV0
+aDA6IG5vIElQdjYgcm91dGVycyBwcmVzZW50ClsgICAzOS44NDgyMDNdIGl3bGFnbiAwMDAwOjAy
+OjAwLjA6IFNUQVJUX0FMSVZFIHRpbWVvdXQgYWZ0ZXIgNDAwMG1zLgo=
+--0050450167782d7531048c50f17f--
