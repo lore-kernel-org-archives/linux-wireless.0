@@ -1,34 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36291 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754043Ab0GTHya (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41593 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754608Ab0GZSAN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jul 2010 03:54:30 -0400
-Subject: Re: [ath5k-devel] [PATCH/RFC 0/3] ath5k: add driver tracepoints
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, Bob Copeland <me@bobcopeland.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <201007201411.51259.br1@einfach.org>
-References: <1279395336-856-1-git-send-email-me@bobcopeland.com>
-	 <201007201411.51259.br1@einfach.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 20 Jul 2010 09:54:19 +0200
-Message-ID: <1279612459.3706.1.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 26 Jul 2010 14:00:13 -0400
+Date: Mon, 26 Jul 2010 13:49:03 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: linux-wireless compile broken
+Message-ID: <20100726174902.GD3903@tuxdriver.com>
+References: <4C4DC659.7090006@candelatech.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4C4DC659.7090006@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-07-20 at 14:11 +0900, Bruno Randolf wrote:
+On Mon, Jul 26, 2010 at 10:31:05AM -0700, Ben Greear wrote:
+> Pulled and attempted to build linux-wireless this morning:
+> 
+> [greearb@build-32 linux-wireless.p4s]$ make bzImage modules
+> make -C /home/greearb/git/wireless-2.6 O=/home/greearb/kernel/2.6/linux-wireless.p4s/. bzImage modules
+>   Using /home/greearb/git/wireless-2.6 as source for kernel
+>   GEN     /home/greearb/kernel/2.6/linux-wireless.p4s/Makefile
+>   CHK     include/linux/version.h
+>   CHK     include/generated/utsrelease.h
+>   CALL    /home/greearb/git/wireless-2.6/scripts/checksyscalls.sh
+>   CHK     include/generated/compile.h
+>   LD      drivers/staging/built-in.o
+>   CC [M]  drivers/staging/netwave/netwave_cs.o
+> /home/greearb/git/wireless-2.6/drivers/staging/netwave/netwave_cs.c:250: error: expected specifier-qualifier-list before ‘dev_node_t’
+> /home/greearb/git/wireless-2.6/drivers/staging/netwave/netwave_cs.c: In function ‘netwave_snapshot’:
+> /home/greearb/git/wireless-2.6/drivers/staging/netwave/netwave_cs.c:291: error: ‘netwave_private’ has no member named ‘lastExec’
+> /home/greearb/git/wireless-2.6/drivers/staging/netwave/netwave_cs.c:302: error: implicit declaration of function ‘copy_from_pc’
+> /home/greearb/git/wireless-2.6/drivers/staging/netwave/netwave_cs.c:302: error: ‘netwave_private’ has no member named ‘nss’
+> /home/greearb/git/wireless-2.6/drivers/staging/netwave/netwave_cs.c: In function ‘netwave_get_wireless_stats’:
+> /home/greearb/git/wireless-2.6/drivers/staging/netwave/netwave_cs.c:318: error: ‘netwave_private’ has no member named ‘ramBase’
 
-> hmm, this is really nice stuff, but i'm not sure what to do on embedded boards 
-> where we don't have python or where it's not possible to use tracing in 
-> general due to (low) performance reasons
+wireless-2.6 doesn't have this:
 
-err, tracing has much better performance than printk, and you can get
-the trace into a file that you can analyse offline on a "real" machine.
-No need for python on the board, and tracing improves performance over
-printk.
+commit e5b3e80016198ee55c82dfd653c1dee99a38964b
+Author: Greg Kroah-Hartman <gregkh@suse.de>
+Date:   Wed May 5 23:17:29 2010 -0700
 
-johannes
+    Staging: netwave: delete the driver
+    
+    It has sat in the staging directory since October of 2009, and no one
+    has stepped up to take it over, so odds are, no one cares about it
+    anymore.  So, it is now deleted as scheduled, and documented in the TODO
+    file.
+    
+    Cc: John W. Linville <linville@tuxdriver.com>
+    Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 
+You should probably just turn-off that driver in your .config.
+Anyway, I normally recommend that people use wireless-testing for
+actual development.
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
