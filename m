@@ -1,106 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:64453 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752785Ab0G1Wrs convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:55547 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752019Ab0G0UdM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jul 2010 18:47:48 -0400
-Received: by iwn7 with SMTP id 7so5016262iwn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Jul 2010 15:47:48 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4C50AEF4.4060905@openwrt.org>
-References: <1280339151-37084-1-git-send-email-nbd@openwrt.org>
-	<AANLkTimZ8zTZWDcXwr7Hu2FT=gDPeCiiUFXcBmpYpp7M@mail.gmail.com>
-	<4C509C65.4020305@openwrt.org> <AANLkTimqsXoynA2CPJ1tFmj6wUetztDUJ3iKCpQHJKCe@mail.gmail.com>
-	<4C50AEF4.4060905@openwrt.org>
+	Tue, 27 Jul 2010 16:33:12 -0400
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 28 Jul 2010 15:47:27 -0700
-Message-ID: <AANLkTin+sPu45teiAiePPWdBp3huffds3v_uzJBtKmLO@mail.gmail.com>
-Subject: Re: [PATCH 1/3] ath9k: prevent calibration during off-channel
-	activity
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=UTF-8
+To: linville@tuxdriver.com, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/3] ath9k: remove the two wiphys scanning at the same time message
+Date: Tue, 27 Jul 2010 16:33:06 -0400
+Message-Id: <1280262788-9890-2-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1280262788-9890-1-git-send-email-lrodriguez@atheros.com>
+References: <1280262788-9890-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 28, 2010 at 3:28 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2010-07-29 12:12 AM, Luis R. Rodriguez wrote:
->> On Wed, Jul 28, 2010 at 2:08 PM, Felix Fietkau <nbd@openwrt.org> wrote:
->>> On 2010-07-28 10:43 PM, Luis R. Rodriguez wrote:
->>>> On Wed, Jul 28, 2010 at 10:45 AM, Felix Fietkau <nbd@openwrt.org> wrote:
->>>>> Previously the software scan callback was used to indicate to the hardware,
->>>>> when it was safe to calibrate. This didn't really work properly, because it
->>>>> depends on a specific order of software scan callbacks vs. channel changes.
->>>>> Also, software scans are not the only thing that triggers off-channel
->>>>> activity, so it's better to use the newly added indication from mac80211 for
->>>>> this and not use the software scan callback for anything calibration related.
->>>>>
->>>>> This fixes at least some of the invalid noise floor readings that I've seen
->>>>> in AP mode on AR9160
->>>>
->>>> Neat!
->>>>
->>>>> --- a/drivers/net/wireless/ath/ath9k/main.c
->>>>> +++ b/drivers/net/wireless/ath/ath9k/main.c
->>>>> @@ -154,6 +154,27 @@ void ath9k_ps_restore(struct ath_softc *sc)
->>>>>        spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
->>>>>  }
->>>>>        spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
->>>>>  }
->>>>>
->>>>> +static void ath_start_ani(struct ath_common *common)
->>>>> +{
->>>>> +       struct ath_hw *ah = common->ah;
->>>>> +       unsigned long timestamp = jiffies_to_msecs(jiffies);
->>>>> +       struct ath_softc *sc = (struct ath_softc *) common->priv;
->>>>> +
->>>>> +       if (!(sc->sc_flags & SC_OP_ANI_RUN))
->>>>> +               return;
->>>>> +
->>>>> +       if (sc->sc_flags & SC_OP_OFFCHANNEL)
->>>>> +               return;
->>>>> +
->>>>> +       common->ani.longcal_timer = timestamp;
->>>>> +       common->ani.shortcal_timer = timestamp;
->>>>> +       common->ani.checkani_timer = timestamp;
->>>>> +
->>>>> +       mod_timer(&common->ani.timer,
->>>>> +                 jiffies +
->>>>> +                       msecs_to_jiffies((u32)ah->config.ani_poll_interval));
->>>>> +}
->>>>
->>>> I would prefer if you do this sort of code shift in a separate patch.
->>>> In this case its pretty easy to see the code is the same so I think
->>>> its fine the way it is now but for next time please. Otherwise looks
->>>> good, thanks!!
->>> If it had been a bigger function, I'd have made a separate patch, but I
->>> figured for something as trivial as this it wouldn't matter.
->>
->> iw event -t while  pinging and then issuing a scan:
->>
->> 1280354915.820607: wlan32 (phy #0): scan started
->> 1280354920.390438: wlan32 (phy #0): scan finished: 2412 2417 2422 2427
->> 2432 2437 2442 2447 2452 2457 2462 5180 5200 5220 5240 5260 5280 5300
->> 5320 5500 5520 5540 5560 5580 5660 5680 5700 5745 5765 5785 5805 5825,
->> ""
->> 1280354923.103628: wlan32 (phy #0): deauth FOO -> BAR reason 4:
->> Disassociated due to inactivity
->> 1280354923.103736: wlan32 (phy #0): disconnected (local request)
->> 1280354923.111251: phy #0: regulatory domain change: set to world
->> roaming by the wireless core upon initialization request
->>
->> So this seems to re-introduce the same issue I was seeing before.
->
-> Are you sure it's this change?
+When issuing two consecutive scans you could often end up
+getting in the logs:
 
-Just reverted the changes and it works without these issues.
+"ath9k: Two wiphys trying to scan at the same time"
 
-> Can you make a log with debug=0x8?
+This message is due to a race in mac80211 but addressing
+that race requires some more major changes on the driver
+and perhaps optimizations on mac80211 like removing the
+scan complete callback alltogether. Its too late to address
+this this kernel release so supress the complaint and annotate
+this needs fixing for later.
 
-Sure, one sec let me open that branch up again and recompile again.
+Cc: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |   13 +++++++++----
+ 1 files changed, 9 insertions(+), 4 deletions(-)
 
-> What's the specific symptom here? Does the rx path turn deaf?
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 6cf0410..0429dda 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1994,11 +1994,12 @@ static void ath9k_sw_scan_start(struct ieee80211_hw *hw)
+ 
+ 	mutex_lock(&sc->mutex);
+ 	if (ath9k_wiphy_scanning(sc)) {
+-		printk(KERN_DEBUG "ath9k: Two wiphys trying to scan at the "
+-		       "same time\n");
+ 		/*
+-		 * Do not allow the concurrent scanning state for now. This
+-		 * could be improved with scanning control moved into ath9k.
++		 * There is a race here in mac80211 but fixing it requires
++		 * we revisit how we handle the scan complete callback.
++		 * After mac80211 fixes we will not have configured hardware
++		 * to the home channel nor would we have configured the RX
++		 * filter yet.
+ 		 */
+ 		mutex_unlock(&sc->mutex);
+ 		return;
+@@ -2014,6 +2015,10 @@ static void ath9k_sw_scan_start(struct ieee80211_hw *hw)
+ 	mutex_unlock(&sc->mutex);
+ }
+ 
++/*
++ * XXX: this requires a revisit after the driver
++ * scan_complete gets moved to another place/removed in mac80211.
++ */
+ static void ath9k_sw_scan_complete(struct ieee80211_hw *hw)
+ {
+ 	struct ath_wiphy *aphy = hw->priv;
+-- 
+1.7.0.4
 
-Not sure exactly, but what I immediately see is disconnects right after scans.
-
-  Luis
