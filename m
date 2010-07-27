@@ -1,138 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:36267 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751762Ab0GZVGy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jul 2010 17:06:54 -0400
-Date: Mon, 26 Jul 2010 14:06:51 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"kernel-team@lists.ubuntu.com" <kernel-team@lists.ubuntu.com>,
-	"tim.gardner@canonical.com" <tim.gardner@canonical.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	David Quan <David.Quan@Atheros.com>
-Subject: Re: [ath5k-devel] [PATCH v3] ath5k: disable ASPM
-Message-ID: <20100726210651.GJ14855@tux>
-References: <20100618134930.124225d4fsi8w1fk@naisho.dyndns.info>
- <1276859156.19554.2.camel@maxim-laptop>
- <AANLkTimdTjedtoeKAp5tcTqefrUB6k373Kx9EacuYFcO@mail.gmail.com>
- <1276870309.23783.3.camel@maxim-laptop>
- <1276933774.16697.11.camel@maxim-laptop>
- <20100619123841.GA31838@hash.localnet>
- <1276952554.3332.3.camel@maxim-laptop>
- <1276961564.5173.12.camel@maxim-laptop>
- <20100726201322.GI14855@tux>
- <1280177362.3721.7.camel@maxim-laptop>
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:64619 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751877Ab0G0XdL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jul 2010 19:33:11 -0400
+Received: by mail-pw0-f46.google.com with SMTP id 5so668865pwi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 16:33:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1280177362.3721.7.camel@maxim-laptop>
+In-Reply-To: <AANLkTinfMiS=+dqi=azF2exJbkrSLYT9nN0aor7gff-Q@mail.gmail.com>
+References: <AANLkTimdDhHudW6_7Hwcf6UCumY_EgqGd7CLtmSgOzEz@mail.gmail.com>
+	<AANLkTinfMiS=+dqi=azF2exJbkrSLYT9nN0aor7gff-Q@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 27 Jul 2010 16:32:50 -0700
+Message-ID: <AANLkTinGmv6vPnvYNqe6z-hPspQGAPSHAGiPbEDoHXE+@mail.gmail.com>
+Subject: Re: regulatory hiccup
+To: Andrew Lutomirski <luto@mit.edu>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 26, 2010 at 01:49:22PM -0700, Maxim Levitsky wrote:
-> On Mon, 2010-07-26 at 13:13 -0700, Luis R. Rodriguez wrote: 
-> > On Sat, Jun 19, 2010 at 08:32:44AM -0700, Maxim Levitsky wrote:
-> > > On Sat, 2010-06-19 at 16:02 +0300, Maxim Levitsky wrote: 
-> > > > On Sat, 2010-06-19 at 08:38 -0400, Bob Copeland wrote: 
-> > > > > On Sat, Jun 19, 2010 at 10:49:34AM +0300, Maxim Levitsky wrote:
-> > > > > > How this patch?
-> > > > > 
-> > > > > Looks fine to me.  Some nitpicking below but feel free to add my
-> > > > > 
-> > > > > Acked-by: Bob Copeland <me@bobcopeland.com>
-> > > > > 
-> > > Done.
-> > > 
-> > > Best regards,
-> > > Maxim Levitsky
-> > > 
-> > > --- 
-> > > 
-> > > commit 616afa397b3e843f2aba06be12a30e72dfff7740
-> > > Author: Maxim Levitsky <maximlevitsky@gmail.com>
-> > > Date:   Thu Jun 17 23:21:42 2010 +0300
-> > > 
-> > >     ath5k: disable ASPM
-> > >     
-> > >     Atheros card on Acer Aspire One (AOA150, Atheros Communications Inc. AR5001
-> > >     Wireless Network Adapter [168c:001c] (rev 01)) doesn't work well with ASPM
-> > >     enabled. With ASPM ath5k will eventually stall on heavy traffic with often
-> > >     'unsupported jumbo' warnings appearing. Disabling ASPM L0s in ath5k fixes
-> > >     these problems.
-> > >     Also card sends a storm of RXORN interrupts even though medium is idle.
-> > >     
-> > >     Reproduced with pcie_aspm=force and by using 'nc < /dev/zero > /dev/null' at
-> > >     both ends (usually stalls within seconds).
-> > >     
-> > >     Unfortunately BIOS enables ASPM on this card by default on these machines
-> > >     This means that, problem shows up (less often) without pcie_aspm=force too. 
-> > >     Therefore to benefit from this fix you need to _enable_ CONFIG_PCIEASPM
-> > >     
-> > > 
-> > >     All credit for this patch goes to Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-> > >     for finding and fixing this bug.
-> > >     
-> > >     Based on patch that is
-> > >     From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-> > >     
-> > >     
-> > >     Signed-off-by: Maxim Levitsky <maximlevitsky@gmail.com>
-> > >     Acked-by: Bob Copeland <me@bobcopeland.com>
-> > 
-> > Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> > 
-> > But please resubmit and completley modify the commit log to indicate
-> > ath5k cards support ASPM but L0s must be disabled, only L1
-> > works correctly.
-> > 
-> > The comments about ASPM force should be removed as it would
-> > lead others to try to use the same and the fact of the matter is
-> > that ASPM force should never be used. As was clarified out of
-> > some of these discussions worth noting also is that in newer
-> > kernels CONFIG_PCIEASPM=y will always become the default, for
-> > older kernels this was never the default and some distributions
-> > (Ubunutu) do not have this enabled, the benefit of having it
-> > enabled is it will disable ASPM for these cases:
-> > 
-> > (a) the PCIE device is pre PCIE 1.1
-> > (b) the firmware has the FADT flag set to tell you not to and
-> > (c) the firmware doesn't grant control via _OSC. The powersave policy will
-> > enable ASPM even if the BIOS didn't, but only if something else doesn't
-> > tell us not to.
-> > 
-> > The last two checks were only recently added by Mathew and forcing
-> > CONFIG_PCIEASPM=y was also only recently made default.
-> > 
-> > In short, Linux distributions should also start enabling
-> > CONFIG_PCIEASPM=y on older kernels.
-> 
-> 
-> Just one note that since at least my ath5k device is pre 1.1, and you
-> say that L1 can be enabled, and should, I probably need to enable L1
-> explicitly in the driver.
-> 
-> OK?
-
-No, ASPM must be enabled by the Systems Integrator through the BIOS, there are
-other settings that have to be taken care of like modifying some PCI entrance and
-exit latency timers, the number of FTS packets we send to exit L0s, amongst
-other things. If a user selectively enables L1 but the BIOS had it disabled on
-the device it may not work correctly.
-
-In other words leave the settings as-is on your card unless you developing
-for a company to enable ASPM yourself or you are willing to take the risks.
-Tweaks like force enabling a device to use ASPM should only then be done in
-userspace and by an end user. This is not something Linux distributions should
-let users tweak. Its a hacker task.
-
-However, it is reasonable to force disable L0s, for example, completley on
-the driver if it is known that L0s does not work for all chisets supported
-on that driver.
-
-  Luis
+T24gRnJpLCBKdWwgMjMsIDIwMTAgYXQgMTI6MzUgUE0sIEFuZHJldyBMdXRvbWlyc2tpIDxsdXRv
+QG1pdC5lZHU+IHdyb3RlOgo+IE9uIEZyaSwgSnVsIDIzLCAyMDEwIGF0IDM6MzAgUE0sIEFuZHJl
+dyBMdXRvbWlyc2tpIDxsdXRvQG1pdC5lZHU+IHdyb3RlOgo+Pgo+PiBUaGVuLCBhZnRlciBmaWRk
+bGluZyB3aXRoIGFuIEFQIGZvciBhIGJpdCwgSSBnb3Q6Cj4+Cj4+IFsxMTc0Ny4yNjQyMjFdIGNm
+ZzgwMjExOiBDYWxsaW5nIENSREEgZm9yIGNvdW50cnk6IFVTCj4+IFsxMTc0Ny4yODI2NjRdIGNm
+ZzgwMjExOiBDdXJyZW50IHJlZ3VsYXRvcnkgZG9tYWluIHVwZGF0ZWQgYnkgQVAgdG86IFVTCj4+
+IFsxMTc0Ny4yODI2NzJdIMKgIMKgIChzdGFydF9mcmVxIC0gZW5kX2ZyZXEgQCBiYW5kd2lkdGgp
+LAo+PiAobWF4X2FudGVubmFfZ2FpbiwgbWF4X2VpcnApCj4+IFsxMTc0Ny4yODI2ODBdIMKgIMKg
+ICg1MTcwMDAwIEtIeiAtIDUyNTAwMDAgS0h6IEAgNDAwMDAgS0h6KSwgKDMwMCBtQmksIDE2MDAg
+bUJtKQo+PiBbMTE3NDcuMjgyNjg4XSDCoCDCoCAoNTI1MDAwMCBLSHogLSA1MzMwMDAwIEtIeiBA
+IDQwMDAwIEtIeiksICgzMDAgbUJpLCAxNjAwIG1CbSkKPj4KPgo+IEl0J3Mgd29yc2UgdGhhbiB0
+aGF0LiDCoEkgcmVjb25uZWN0ZWQgdG8gdGhlIEFQIChpdCBhcHBlYXJlZCB0byB3b3JrCj4gZm9y
+IGEgZmV3IHNlY29uZHMpIGFuZCBJIHNhdzoKPgo+IFdpcGh5IHBoeTAKPiBbLi4uXQo+IMKgIMKg
+IMKgIMKgQmFuZCAyOgo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgQ2FwYWJpbGl0aWVzOiAweDg3
+Mgo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgSFQyMC9IVDQwCj4gwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBTdGF0aWMgU00gUG93ZXIgU2F2ZQo+IMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgUlggR3JlZW5maWVsZAo+IMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgUlggSFQyMCBTR0kKPiDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoFJYIEhUNDAgU0dJCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqBObyBSWCBTVEJDCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBN
+YXggQU1TRFUgbGVuZ3RoOiAzODM5IGJ5dGVzCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqBObyBEU1NTL0NDSyBIVDQwCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBNYXhpbXVt
+IFJYIEFNUERVIGxlbmd0aCA2NTUzNSBieXRlcyAoZXhwb25lbnQ6IDB4MDAzKQo+IMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgTWluaW11bSBSWCBBTVBEVSB0aW1lIHNwYWNpbmc6IDQgdXNlYyAoMHgw
+NSkKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoEhUIFRYL1JYIE1DUyByYXRlIGluZGV4ZXMgc3Vw
+cG9ydGVkOiAwLTIzLCAzMgo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgRnJlcXVlbmNpZXM6Cj4g
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDUxODAgTUh6IFszNl0gKDE1LjAg
+ZEJtKSAocGFzc2l2ZSBzY2FubmluZywgbm8gSUJTUykKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCogNTIwMCBNSHogWzQwXSAoMTUuMCBkQm0pIChwYXNzaXZlIHNjYW5uaW5n
+LCBubyBJQlNTKQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1MjIwIE1I
+eiBbNDRdICgxNS4wIGRCbSkgKHBhc3NpdmUgc2Nhbm5pbmcsIG5vIElCU1MpCj4gwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDUyNDAgTUh6IFs0OF0gKDE1LjAgZEJtKSAocGFz
+c2l2ZSBzY2FubmluZywgbm8gSUJTUykKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCogNTI2MCBNSHogWzUyXSAoMTUuMCBkQm0pIChwYXNzaXZlIHNjYW5uaW5nLCBubyBJQlNT
+LCByYWRhciBkZXRlY3Rpb24pCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAq
+IDUyODAgTUh6IFs1Nl0gKDE1LjAgZEJtKSAocGFzc2l2ZSBzY2FubmluZywgbm8gSUJTUywgcmFk
+YXIgZGV0ZWN0aW9uKQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1MzAw
+IE1IeiBbNjBdICgxNS4wIGRCbSkgKHBhc3NpdmUgc2Nhbm5pbmcsIG5vIElCU1MsIHJhZGFyIGRl
+dGVjdGlvbikKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCogNTMyMCBNSHog
+WzY0XSAoMTUuMCBkQm0pIChwYXNzaXZlIHNjYW5uaW5nLCBubyBJQlNTLCByYWRhciBkZXRlY3Rp
+b24pCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU1MDAgTUh6IFsxMDBd
+IChkaXNhYmxlZCkKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCogNTUyMCBN
+SHogWzEwNF0gKGRpc2FibGVkKQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+KiA1NTQwIE1IeiBbMTA4XSAoZGlzYWJsZWQpCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAqIDU1NjAgTUh6IFsxMTJdIChkaXNhYmxlZCkKPiDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCogNTU4MCBNSHogWzExNl0gKGRpc2FibGVkKQo+IMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1NjAwIE1IeiBbMTIwXSAoZGlzYWJsZWQpCj4gwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU2MjAgTUh6IFsxMjRdIChkaXNhYmxl
+ZCkKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCogNTY0MCBNSHogWzEyOF0g
+KGRpc2FibGVkKQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1NjYwIE1I
+eiBbMTMyXSAoZGlzYWJsZWQpCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAq
+IDU2ODAgTUh6IFsxMzZdIChkaXNhYmxlZCkKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCogNTcwMCBNSHogWzE0MF0gKGRpc2FibGVkKQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgKiA1NzQ1IE1IeiBbMTQ5XSAoZGlzYWJsZWQpCj4gwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU3NjUgTUh6IFsxNTNdIChkaXNhYmxlZCkKPiDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCogNTc4NSBNSHogWzE1N10gKGRpc2FibGVk
+KQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1ODA1IE1IeiBbMTYxXSAo
+ZGlzYWJsZWQpCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU4MjUgTUh6
+IFsxNjVdIChkaXNhYmxlZCkKPgo+IFdoaWNoIGlzIGFic3VyZCwgYmVjYXVzZToKPgo+IENvbm5l
+Y3RlZCB0byAwMDowMjo2Zjo2ZTpkNzo2YyAob24gd2xhbjApCj4gwqAgwqAgwqAgwqBTU0lEOiBG
+RlRUNQo+IMKgIMKgIMKgIMKgZnJlcTogNTc4NSDCoCDCoCDCoCDCoFshISEhISEhISEhIV0KPiDC
+oCDCoCDCoCDCoFJYOiA3MjA1OCBieXRlcyAoMzEwIHBhY2tldHMpCj4gwqAgwqAgwqAgwqBUWDog
+MjU2OCBieXRlcyAoMjAgcGFja2V0cykKPiDCoCDCoCDCoCDCoHNpZ25hbDogLTMzIGRCbQo+IMKg
+IMKgIMKgIMKgdHggYml0cmF0ZTogNi4wIE1CaXQvcwo+Cj4gVGhlIGNvbm5lY3Rpb24gZGllZCBh
+ZnRlciBhIGxpdHRsZSB3aGlsZSwgcHJlc3VtYWJseSBiZWNhdXNlIHRoZSBBUAo+IHdhcyBvdXRz
+aWRlIG9mIGl0cyBvd24gYWxsb3dlZCBiYW5kLgoKSGVoIHllYWggaXQgY291bGQgYmUgdGhlIEFQ
+IHNlbmRzIGEgY291bnRyeSBJRSB3aGljaCBkb2VzIG5vdCBoYXZlIHRoZQpjaGFubmVsIGl0IGl0
+c2VsZiBpcyBvbiwgd291bGQgYmUgcmVhbGx5IG9kZCBidXQgYXQgdGhpcyBwb2ludCBJJ3ZlCnNl
+ZW4gb3RoZXIgZHVtYiB0aGluZ3MgdGhhdCBBUHMgZG8uIFRoZSBJRSBkdW1wIHlvdSBnb3QgaXMg
+T0sgYnV0IGRvZXMKbm90IGdpdmUgbWUgZW5vdWdoIGluZm8gYWJvdXQgaG93IGl0IGlzIGV4YWN0
+bHkgc3RydWN0dXJlZC4gSSdsbCByZXBseQp0byB0aGF0IHRocmVhZCBuZXh0LgoKICBMdWlzCg==
