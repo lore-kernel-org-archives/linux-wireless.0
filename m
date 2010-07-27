@@ -1,61 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:3723 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751163Ab0G2CLS (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:64805 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752551Ab0G0Xv0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jul 2010 22:11:18 -0400
-Received: from vs3002.wh2.ocn.ne.jp (125.206.180.165)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0311209475
-	for <linux-wireless@vger.kernel.org>; Thu, 29 Jul 2010 11:11:16 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [PATCH v4 1/3] cfg80211: Add nl80211 antenna configuration
-Date: Thu, 29 Jul 2010 11:11:27 +0900
-Cc: Felix Fietkau <nbd@openwrt.org>, johannes@sipsolutions.net,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-References: <20100727094732.27186.30900.stgit@tt-desk> <201007281106.06813.br1@einfach.org> <AANLkTimBu2=9XhzKwUi1ZpRmGWA+C4GCDgXqp-YJVLxt@mail.gmail.com>
-In-Reply-To: <AANLkTimBu2=9XhzKwUi1ZpRmGWA+C4GCDgXqp-YJVLxt@mail.gmail.com>
+	Tue, 27 Jul 2010 19:51:26 -0400
+Received: by pwi5 with SMTP id 5so674335pwi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 16:51:26 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201007291111.27417.br1@einfach.org>
+In-Reply-To: <AANLkTimZsj6+cp6YGoVFn06NEQR3ZBCAheaWHaKPZNK6@mail.gmail.com>
+References: <AANLkTimdDhHudW6_7Hwcf6UCumY_EgqGd7CLtmSgOzEz@mail.gmail.com>
+	<AANLkTinfMiS=+dqi=azF2exJbkrSLYT9nN0aor7gff-Q@mail.gmail.com>
+	<AANLkTi=Wy1r2C1xL289QQX10aVZaYfF7A1K8sd93ZXOd@mail.gmail.com>
+	<AANLkTik2njXen5go8v2d8UPejC7THJiDJAvVunS7T5WU@mail.gmail.com>
+	<AANLkTimZsj6+cp6YGoVFn06NEQR3ZBCAheaWHaKPZNK6@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 27 Jul 2010 16:51:06 -0700
+Message-ID: <AANLkTinNAWZvDJVqL9U8AmJUNqV=fLLo4BN=dEfg=8cd@mail.gmail.com>
+Subject: Re: regulatory hiccup
+To: Andrew Lutomirski <luto@mit.edu>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu July 29 2010 02:24:46 Luis R. Rodriguez wrote:
-> So if you want to define an API I do believe its best to treat these
-> separately, for legacy I think your API can be fine tuned to consider
-> FIXED_A, FIXED_B, or DIVERSITY. 
+On Tue, Jul 27, 2010 at 4:46 PM, Andrew Lutomirski <luto@mit.edu> wrote:
+> On Tue, Jul 27, 2010 at 7:33 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>>>
+>>> AFAICT net/wireless/reg.c ignores the last bit, and the other APs that
+>>> work correctly here don't send country IEs.
+>>
+>> Can you provide the output of iw dev wlan0 scan from a fresh git
+>> version of iw? That will actually tell me more than your listing.
+>
+> Unfortunately (or fortunately, I suppose) I can't, because a firmware
+> upgrade for the AP removed the country IE entirely.  But if we're
+> ignoring that data in 2.6.36 anyway, I'm not too worried.  If you
+> really want that data, I can downgrade the AP the week after next and
+> get it.
+>
+> (FWIW, it looks like the Intel driver on Windows refused to work with
+> that AP but other people with macbooks could use it just fine.  I'd
+> guess that no one would complain if Linux ignored country IEs that
+> were transmitted outside their own "allowed" band, but this seems to
+> be moot anyway.)
 
-hi luis, 
+If sounds like the AP may have had an issue if the country IE is no
+longer present and by the quick looks of your output it could have
+been.. so unless you're confident of the AP I would think this is an
+AP bug. If its a STA bug for sure though we certainly need to address
+the issue on 2.6.35 even if 2.6.36 has a proper fix of ignoring the IE
+altogether.
 
-i already tried to explain several times why FIXED_A, FIXED_B, or DIVERSITY is 
-not enough even for "legacy". please re-read the mails and the description of 
-the first patch - i really don't want to re-iterate it *again*. thanks :)
+> P.S.  My thread about the AP that works on 2.6.34 but can't associate
+> most of the time on 2.6.35-rc6 is the same AP but with the new
+> firmware.
 
-as felix pointed out, it's best to think of this as the antenna mask, which 
-can be used to mask out antennas which are not attached or should not be used. 
-it does not matter if the device is "legacy" or 802.11n or "802.11xyz" - we 
-can always use this API to inform mac80211 / the driver about the available 
-antennas if they are in fact different from the default HW settings. based on 
-this information 802.11n drivers can derive which chainmasks to use, and in 
-some cases wether diversity should be used; "legacy" drivers can derive wether 
-to use diversity or not.
+Wonderful.
 
-actually thinking about it like this, i would like to remove the special 
-casing of "0" for tx diversity (which means go back to my original proposal): 
-if an antenna can be used for TX it should be set to one in the mask, and the 
-driver can enable diversity or mulitple chainmasks as suitable.
-
-> Would we keep two values for some of these settings, an "actual hw"
-> capablity and then also a "configured" values? Would this be exposed
-> and visible through iw?
-
-the actual HW capability could be exported via the wiphy info as well, but i 
-think this could be dealt with in a seperate patch, as well as other 
-improvements. for now let's just define an API for an antenna mask, which can 
-be used to mask out antennas seperately for RX and TX.
-
-i'll try to make that more clear in the descriptions and re-send my proposal.
-
-bruno
+ Luis
