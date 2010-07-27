@@ -1,37 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41719 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759501Ab0GVOIb (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:63580 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751902Ab0G0Rag (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 10:08:31 -0400
-Subject: Re: 2.6.35-rc5+ WARNING at net/mac80211/scan.c:262
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20100722134048.GA28231@isilmar-3.linta.de>
-References: <20100721184040.GA22968@comet.dominikbrodowski.net>
-	 <1279802055.12439.16.camel@jlt3.sipsolutions.net>
-	 <20100722134048.GA28231@isilmar-3.linta.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 22 Jul 2010 16:07:58 +0200
-Message-ID: <1279807678.12439.17.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 27 Jul 2010 13:30:36 -0400
+Received: by pwi5 with SMTP id 5so557124pwi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 10:30:36 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTi=ZbskS-7TA8Mp5SKrRMrxOpNQJLpxnCHoRs-tb@mail.gmail.com>
+References: <1276857140.3638.22.camel@jlt3.sipsolutions.net>
+	<AANLkTinHXxhwrOmhRxveekG7_C7WeydUdSBL2R7DwOvJ@mail.gmail.com>
+	<AANLkTinch-sygnRmB6LKi6xLNYVKY6Ap3YL4_PMNdmKQ@mail.gmail.com>
+	<AANLkTik=1LX_12ZskP5vwkSrTVFO9jH6uu8pyByGmLg6@mail.gmail.com>
+	<1280226169.19098.12.camel@jlt3.sipsolutions.net> <AANLkTi=ZbskS-7TA8Mp5SKrRMrxOpNQJLpxnCHoRs-tb@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 27 Jul 2010 10:29:18 -0700
+Message-ID: <AANLkTikFjgzL1DOfUVS_N_=p5N3r0Qp7VoC5+-9cbb1a@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: fix sw scan bracketing
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-07-22 at 15:40 +0200, Dominik Brodowski wrote:
+On Tue, Jul 27, 2010 at 8:54 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Tue, Jul 27, 2010 at 3:22 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Tue, 2010-07-27 at 02:22 -0700, Luis R. Rodriguez wrote:
+>>> To address and review all this I need more time and instead I think
+>>> its easier to ask for revert of this patch.
+>>
+>> I'm OK with a revert, but *ONLY* if at the same time you remove the
+>> double-scan-detected message from ath9k and stop claiming it's a
+>> mac80211 bug :-)
+>
+> Deal :)
 
-> > http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-mac80211-hw-scan-locking.patch
-> 
-> patching file drivers/net/wireless/iwlwifi/iwl-core.c
-> Hunk #1 succeeded at 2103 (offset 102 lines).
-> Hunk #2 FAILED at 2015.
-> Hunk #3 succeeded at 2120 (offset 97 lines).
-> 1 out of 3 hunks FAILED -- saving rejects to file
-> drivers/net/wireless/iwlwifi/iwl-core.c.rej
+I just reviewed this and noticed both of these prints are using
+KERN_DEBUG, and since the warning will become valid *after* this gets
+properly fixed, are you OK with just a revert of your patch?
 
-Oh, it's against wireless-testing, which apparently has some other mods
-there. I'll have to see if any other patch needs to go into .35 too.
-
-johannes
-
+  Luis
