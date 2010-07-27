@@ -1,185 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:55511 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751414Ab0G1Rp6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jul 2010 13:45:58 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 3/3] ath9k_hw: fix a noise floor calibration related race condition
-Date: Wed, 28 Jul 2010 19:45:51 +0200
-Message-Id: <1280339151-37084-3-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1280339151-37084-2-git-send-email-nbd@openwrt.org>
-References: <1280339151-37084-1-git-send-email-nbd@openwrt.org>
- <1280339151-37084-2-git-send-email-nbd@openwrt.org>
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:26270 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752675Ab0G0Jti (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jul 2010 05:49:38 -0400
+Received: from vs3003.wh2.ocn.ne.jp (125.206.180.231)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0326164177
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 18:49:37 +0900 (JST)
+Subject: [PATCH 2/2] iw: Add antenna configuration commands
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 27 Jul 2010 18:49:37 +0900
+Message-ID: <20100727094937.27300.97445.stgit@tt-desk>
+In-Reply-To: <20100727094932.27300.10253.stgit@tt-desk>
+References: <20100727094932.27300.10253.stgit@tt-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On AR5008-AR9002, other forms of calibration must not be started while
-the noise floor calibration is running, as this can create invalid
-readings which were sometimes not even recoverable by any further
-calibration attempts.
+Add command to set the antenna configuration (iw phyX set antenna ...) and
+include antenna setting in wiphy information (iw phyX info).
 
-This patch also ensures that the result of noise floor measurements
-are processed faster and also allows the result of the initial
-calibration on reset to make it into the NF history buffer
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 ---
- drivers/net/wireless/ath/ath9k/ar9002_calib.c |   32 ++++++++++++++++--------
- drivers/net/wireless/ath/ath9k/calib.c        |   15 ++++++-----
- drivers/net/wireless/ath/ath9k/calib.h        |    3 +-
- drivers/net/wireless/ath/ath9k/hw.h           |    1 +
- 4 files changed, 31 insertions(+), 20 deletions(-)
+ info.c |    7 +++++++
+ phy.c  |   46 ++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 53 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-index 4a7bcfa..916cde7 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-@@ -687,8 +687,13 @@ static bool ar9002_hw_calibrate(struct ath_hw *ah,
- {
- 	bool iscaldone = true;
- 	struct ath9k_cal_list *currCal = ah->cal_list_curr;
-+	bool nfcal, nfcal_pending = false;
- 
--	if (currCal &&
-+	nfcal = !!(REG_READ(ah, AR_PHY_AGC_CONTROL) & AR_PHY_AGC_CONTROL_NF);
-+	if (ah->caldata)
-+		nfcal_pending = ah->caldata->nfcal_pending;
-+
-+	if (currCal && !nfcal &&
- 	    (currCal->calState == CAL_RUNNING ||
- 	     currCal->calState == CAL_WAITING)) {
- 		iscaldone = ar9002_hw_per_calibration(ah, chan,
-@@ -704,7 +709,7 @@ static bool ar9002_hw_calibrate(struct ath_hw *ah,
+diff --git a/info.c b/info.c
+index 512e777..dc987c7 100644
+--- a/info.c
++++ b/info.c
+@@ -167,6 +167,13 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
+ 		printf("\tCoverage class: %d (up to %dm)\n", coverage, 450 * coverage);
  	}
  
- 	/* Do NF cal only at longer intervals */
--	if (longcal) {
-+	if (longcal || nfcal_pending) {
- 		/* Do periodic PAOffset Cal */
- 		ar9002_hw_pa_cal(ah, false);
- 		ar9002_hw_olc_temp_compensation(ah);
-@@ -713,16 +718,18 @@ static bool ar9002_hw_calibrate(struct ath_hw *ah,
- 		 * Get the value from the previous NF cal and update
- 		 * history buffer.
- 		 */
--		ath9k_hw_getnf(ah, chan);
--
--		/*
--		 * Load the NF from history buffer of the current channel.
--		 * NF is slow time-variant, so it is OK to use a historical
--		 * value.
--		 */
--		ath9k_hw_loadnf(ah, ah->curchan);
-+		if (ath9k_hw_getnf(ah, chan)) {
-+			/*
-+			 * Load the NF from history buffer of the current
-+			 * channel.
-+			 * NF is slow time-variant, so it is OK to use a
-+			 * historical value.
-+			 */
-+			ath9k_hw_loadnf(ah, ah->curchan);
++	if (tb_msg[NL80211_ATTR_WIPHY_ANTENNA_TX] &&
++	    tb_msg[NL80211_ATTR_WIPHY_ANTENNA_RX]) {
++		printf("\tAntenna: TX %d RX %d\n",
++		       nla_get_u8(tb_msg[NL80211_ATTR_WIPHY_ANTENNA_TX]),
++		       nla_get_u8(tb_msg[NL80211_ATTR_WIPHY_ANTENNA_RX]));
++	}
++
+ 	if (!tb_msg[NL80211_ATTR_SUPPORTED_IFTYPES])
+ 		goto commands;
+ 
+diff --git a/phy.c b/phy.c
+index 1f54ba3..75c80d2 100644
+--- a/phy.c
++++ b/phy.c
+@@ -306,3 +306,49 @@ COMMAND(set, txpower, "<auto|fixed|limit> [<tx power in mBm>]",
+ COMMAND(set, txpower, "<auto|fixed|limit> [<tx power in mBm>]",
+ 	NL80211_CMD_SET_WIPHY, 0, CIB_NETDEV, handle_txpower,
+ 	"Specify transmit power level and setting type.");
++
++static int handle_antenna(struct nl80211_state *state,
++			  struct nl_cb *cb,
++			  struct nl_msg *msg,
++			  int argc, char **argv)
++{
++	char *end;
++	uint8_t tx_ant = 0, rx_ant = 0;
++
++	if (argc == 1) {
++		if (strcmp(*argv, "diversity") == 0) {
++			tx_ant = 0;
++			rx_ant = 0xf;
++		} else {
++			tx_ant = rx_ant = strtoul(argv[0], &end, 10);
 +		}
- 
--		ath9k_hw_start_nfcal(ah);
-+		if (longcal)
-+			ath9k_hw_start_nfcal(ah);
- 	}
- 
- 	return iscaldone;
-@@ -873,6 +880,9 @@ static bool ar9002_hw_init_cal(struct ath_hw *ah, struct ath9k_channel *chan)
- 	REG_WRITE(ah, AR_PHY_AGC_CONTROL,
- 		  REG_READ(ah, AR_PHY_AGC_CONTROL) | AR_PHY_AGC_CONTROL_NF);
- 
-+	if (ah->caldata)
-+		ah->caldata->nfcal_pending = true;
++	}
++	else if (argc == 4) {
++		while (argc) {
++			if (strcmp(*argv, "tx") == 0 ||
++			    strcmp(*argv, "rx") == 0) {
++				if (strcmp(*argv, "tx") == 0)
++					tx_ant = strtoul(argv[1], &end, 10);
++				else
++					rx_ant = strtoul(argv[1], &end, 10);
++			}
++			argv = argv + 2;
++			argc = argc - 2;
++		}
++	}
 +
- 	ah->cal_list = ah->cal_list_last = ah->cal_list_curr = NULL;
- 
- 	/* Enable IQ, ADC Gain and ADC DC offset CALs */
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index 52460bc..787657b 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -156,6 +156,9 @@ EXPORT_SYMBOL(ath9k_hw_reset_calvalid);
- 
- void ath9k_hw_start_nfcal(struct ath_hw *ah)
- {
-+	if (ah->caldata)
-+		ah->caldata->nfcal_pending = true;
++	if (*end)
++		return 1;
 +
- 	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL,
- 		    AR_PHY_AGC_CONTROL_ENABLE_NF);
- 	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL,
-@@ -282,8 +285,7 @@ static void ath9k_hw_nf_sanitize(struct ath_hw *ah, s16 *nf)
- 	}
- }
- 
--int16_t ath9k_hw_getnf(struct ath_hw *ah,
--		       struct ath9k_channel *chan)
-+bool ath9k_hw_getnf(struct ath_hw *ah, struct ath9k_channel *chan)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	int16_t nf, nfThresh;
-@@ -293,7 +295,7 @@ int16_t ath9k_hw_getnf(struct ath_hw *ah,
- 	struct ath9k_hw_cal_data *caldata = ah->caldata;
- 
- 	if (!caldata)
--		return ath9k_hw_get_default_nf(ah, chan);
-+		return false;
- 
- 	chan->channelFlags &= (~CHANNEL_CW_INT);
- 	if (REG_READ(ah, AR_PHY_AGC_CONTROL) & AR_PHY_AGC_CONTROL_NF) {
-@@ -301,7 +303,7 @@ int16_t ath9k_hw_getnf(struct ath_hw *ah,
- 			  "NF did not complete in calibration window\n");
- 		nf = 0;
- 		caldata->rawNoiseFloor = nf;
--		return caldata->rawNoiseFloor;
-+		return false;
- 	} else {
- 		ath9k_hw_do_getnf(ah, nfarray);
- 		ath9k_hw_nf_sanitize(ah, nfarray);
-@@ -317,11 +319,10 @@ int16_t ath9k_hw_getnf(struct ath_hw *ah,
- 	}
- 
- 	h = caldata->nfCalHist;
--
-+	caldata->nfcal_pending = false;
- 	ath9k_hw_update_nfcal_hist_buffer(h, nfarray);
- 	caldata->rawNoiseFloor = h[0].privNF;
--
--	return ah->caldata->rawNoiseFloor;
-+	return true;
- }
- 
- void ath9k_init_nfcal_hist_buffer(struct ath_hw *ah,
-diff --git a/drivers/net/wireless/ath/ath9k/calib.h b/drivers/net/wireless/ath/ath9k/calib.h
-index 09a0ed2..8381e81 100644
---- a/drivers/net/wireless/ath/ath9k/calib.h
-+++ b/drivers/net/wireless/ath/ath9k/calib.h
-@@ -110,8 +110,7 @@ struct ath9k_pacal_info{
- bool ath9k_hw_reset_calvalid(struct ath_hw *ah);
- void ath9k_hw_start_nfcal(struct ath_hw *ah);
- void ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan);
--int16_t ath9k_hw_getnf(struct ath_hw *ah,
--		       struct ath9k_channel *chan);
-+bool ath9k_hw_getnf(struct ath_hw *ah, struct ath9k_channel *chan);
- void ath9k_init_nfcal_hist_buffer(struct ath_hw *ah,
- 				  struct ath9k_channel *chan);
- s16 ath9k_hw_getchan_noise(struct ath_hw *ah, struct ath9k_channel *chan);
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index c1b7011..399f7c1 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -354,6 +354,7 @@ struct ath9k_hw_cal_data {
- 	int8_t qCoff;
- 	int16_t rawNoiseFloor;
- 	bool paprd_done;
-+	bool nfcal_pending;
- 	u16 small_signal_gain[AR9300_MAX_CHAINS];
- 	u32 pa_table[AR9300_MAX_CHAINS][PAPRD_TABLE_SZ];
- 	struct ath9k_nfcal_hist nfCalHist[NUM_NF_READINGS];
--- 
-1.6.4.2
++	NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_ANTENNA_TX, tx_ant);
++	NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_ANTENNA_RX, rx_ant);
++
++	return 0;
++
++ nla_put_failure:
++	return -ENOBUFS;
++}
++COMMAND(set, antenna, "<bitmap> | diversity | tx <bitmap> rx <bitmap>",
++	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_antenna,
++	"Set a bitmap of allowed antennas to use for TX and RX.\n"
++	"The driver may reject antenna configurations it cannot support.");
 
