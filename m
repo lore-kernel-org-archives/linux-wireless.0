@@ -1,76 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:58191 "EHLO ds10.nbd.name"
+Received: from kroah.org ([198.145.64.141]:60660 "EHLO coco.kroah.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751029Ab0GVTHI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 15:07:08 -0400
-Message-ID: <4C4896D5.8010802@openwrt.org>
-Date: Thu, 22 Jul 2010 21:07:01 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1753398Ab0G0Wvt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jul 2010 18:51:49 -0400
+Date: Tue, 27 Jul 2010 15:40:08 -0700
+From: Greg KH <greg@kroah.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: stable@kernel.org, linux-wireless@vger.kernel.org,
+	Ben Hutchings <ben@decadent.org.uk>
+Subject: Re: [stable] [PATCH 1/4 2.6.33.y] mac80211: explicitly
+ disable/enable QoS
+Message-ID: <20100727224008.GM14257@kroah.com>
+References: <1275904827-6598-1-git-send-email-sgruszka@redhat.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Sven Geggus <sven@gegg.us>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: minstrel_tx_status mac80211 WARNINGs in vanilla 2.6.34.1
-References: <20100722123000.GA16657@geggus.net> <20100722144723.GA2616@tuxdriver.com>
-In-Reply-To: <20100722144723.GA2616@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1275904827-6598-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-07-22 4:47 PM, John W. Linville wrote:
-> On Thu, Jul 22, 2010 at 02:30:01PM +0200, Sven Geggus wrote:
->> Hello,
->> 
->> running vanilla 2.6.34.1 I get the following warnings in  kernel log:
->> 
->> WARNING: at net/mac80211/rc80211_minstrel.c:70 minstrel_tx_status+0x67/0xd1 [mac80211]()
->> Hardware name: SCENIC E300/E600
->> Modules linked in: i915 drm_kms_helper drm video backlight output lp loop
->> snd_intel8x0 snd_ac97_codec ac97_bus snd_pcm_oss snd_mixer_oss snd_pcm
->> snd_seq_dummy zd1211rw snd_seq_oss usbhid mac80211 option cfg80211
->> snd_seq_midi usbserial snd_rawmidi snd_seq_midi_event snd_seq snd_timer
->> snd_seq_device snd parport_pc ehci_hcd uhci_hcd soundcore intel_agp parport
->> usbcore nls_base snd_page_alloc agpgart rng_core floppy sg
->> Pid: 0, comm: swapper Tainted: G        W  2.6.34.1 #3
->> Call Trace:
->>  [<c102af25>] warn_slowpath_common+0x60/0x90
->>  [<c102af62>] warn_slowpath_null+0xd/0x10
->>  [<f83cbd48>] minstrel_tx_status+0x67/0xd1 [mac80211]
->>  [<f83b6eb1>] ieee80211_tx_status+0x1f6/0x5ac [mac80211]
->>  [<c1261533>] ? skb_dequeue+0x45/0x4c
->>  [<f83b6896>] ieee80211_tasklet_handler+0x61/0xd6 [mac80211]
->>  [<c102ed7d>] tasklet_action+0x62/0x9f
->>  [<c102f331>] __do_softirq+0x77/0xe5
->>  [<c102f3c5>] do_softirq+0x26/0x2b
->>  [<c102f52f>] irq_exit+0x29/0x66
->>  [<c1003e90>] do_IRQ+0x85/0x9b
->>  [<c1002d29>] common_interrupt+0x29/0x30
->>  [<c10083ac>] ? default_idle+0x2d/0x42
->>  [<c1001a9b>] cpu_idle+0x44/0x71
->>  [<c12e00de>] rest_init+0x96/0x98
->>  [<c1498862>] start_kernel+0x2a5/0x2aa
->>  [<c14980b7>] i386_start_kernel+0xb7/0xbf
->> ---[ end trace f22ceacef336878f ]---
->> 
->> Wireless driver is zd1211rw.
->> 
->> Did not test with older kernel because this device has not been in user on
->> this machine before.
->> 
->> WLAN does however seem to work anyway.
+On Mon, Jun 07, 2010 at 12:00:24PM +0200, Stanislaw Gruszka wrote:
+> commit e1b3ec1a2a336c328c336cfa5485a5f0484cc90d upstream.
 > 
-> Well, I just took a quick look -- so, I'm not 100% sure...
-> 
-> But, it looks to me like zd1211rw is reporting tx status on a rate
-> that minstrel didn't expect it to use.  It seems like the hardware
-> is pre-wired to do retries on sequentially lower rates, which seems
-> a bit incompatible with minstrel's worldview.
-> 
-> Felix, can we accomodate this?  The "WLAN does however seem to work
-> anyway" seems to suggest things work, so can we at least not yell
-> about it?
-I think we should just drop that WARN_ON(). It's not problematic if
-minstrel gets feedback for rates that it doesn't have in its list, it
-should just ignore it.
+> Add interface to disable/enable QoS (aka WMM or WME). Currently drivers
+> enable it explicitly when ->conf_tx method is called, and newer disable.
+> Disabling is needed for some APs, which do not support QoS, such
+> we should send QoS frames to them.
 
-- Felix
+Why is this a patch for a -stable tree?  It looks like it adds a new api
+for a new feature, right?
+
+confused,
+
+greg k-h
+
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+>  include/net/mac80211.h |    5 +++++
+>  net/mac80211/mlme.c    |    9 ++++++++-
+>  net/mac80211/util.c    |    5 +++++
+>  3 files changed, 18 insertions(+), 1 deletions(-)
+> 
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index f39b303..8c1f0ee 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -577,11 +577,15 @@ struct ieee80211_rx_status {
+>   *	may turn the device off as much as possible. Typically, this flag will
+>   *	be set when an interface is set UP but not associated or scanning, but
+>   *	it can also be unset in that case when monitor interfaces are active.
+> + * @IEEE80211_CONF_QOS: Enable 802.11e QoS also know as WMM (Wireless
+> + *      Multimedia). On some drivers (iwlwifi is one of know) we have
+> + *      to enable/disable QoS explicitly.
+>   */
+>  enum ieee80211_conf_flags {
+>  	IEEE80211_CONF_MONITOR		= (1<<0),
+>  	IEEE80211_CONF_PS		= (1<<1),
+>  	IEEE80211_CONF_IDLE		= (1<<2),
+> +	IEEE80211_CONF_QOS		= (1<<3),
+>  };
+>  
+>  
+> @@ -604,6 +608,7 @@ enum ieee80211_conf_changed {
+>  	IEEE80211_CONF_CHANGE_CHANNEL		= BIT(6),
+>  	IEEE80211_CONF_CHANGE_RETRY_LIMITS	= BIT(7),
+>  	IEEE80211_CONF_CHANGE_IDLE		= BIT(8),
+> +	IEEE80211_CONF_CHANGE_QOS		= BIT(9),
+>  };
+>  
+>  /**
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index 1a209ac..950088d 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -798,6 +798,9 @@ static void ieee80211_sta_wmm_params(struct ieee80211_local *local,
+>  	int count;
+>  	u8 *pos;
+>  
+> +	if (!local->ops->conf_tx)
+> +		return;
+> +
+>  	if (!(ifmgd->flags & IEEE80211_STA_WMM_ENABLED))
+>  		return;
+>  
+> @@ -856,11 +859,15 @@ static void ieee80211_sta_wmm_params(struct ieee80211_local *local,
+>  		       wiphy_name(local->hw.wiphy), queue, aci, acm,
+>  		       params.aifs, params.cw_min, params.cw_max, params.txop);
+>  #endif
+> -		if (drv_conf_tx(local, queue, &params) && local->ops->conf_tx)
+> +		if (drv_conf_tx(local, queue, &params))
+>  			printk(KERN_DEBUG "%s: failed to set TX queue "
+>  			       "parameters for queue %d\n",
+>  			       wiphy_name(local->hw.wiphy), queue);
+>  	}
+> +
+> +	/* enable WMM or activate new settings */
+> +	local->hw.conf.flags |=	IEEE80211_CONF_QOS;
+> +	drv_config(local, IEEE80211_CONF_CHANGE_QOS);
+>  }
+>  
+>  static u32 ieee80211_handle_bss_capability(struct ieee80211_sub_if_data *sdata,
+> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+> index 27212e8..9e35dcb 100644
+> --- a/net/mac80211/util.c
+> +++ b/net/mac80211/util.c
+> @@ -795,6 +795,11 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata)
+>  
+>  		drv_conf_tx(local, queue, &qparam);
+>  	}
+> +
+> +	/* after reinitialize QoS TX queues setting to default,
+> +	 * disable QoS at all */
+> +	local->hw.conf.flags &=	~IEEE80211_CONF_QOS;
+> +	drv_config(local, IEEE80211_CONF_CHANGE_QOS);
+>  }
+>  
+>  void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
+> -- 
+> 1.6.2.5
+> 
+> _______________________________________________
+> stable mailing list
+> stable@linux.kernel.org
+> http://linux.kernel.org/mailman/listinfo/stable
