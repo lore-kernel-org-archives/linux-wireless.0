@@ -1,78 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from flokli.de ([78.46.104.9]:38681 "EHLO asterix.flokli.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751399Ab0GNQgV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jul 2010 12:36:21 -0400
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Subject: Re: commit 062bee448bd539580ef9f64efe50fdfe04eeb103 broke my iwlagn  5100
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:56592 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750908Ab0G0GzN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jul 2010 02:55:13 -0400
+Received: by pwi5 with SMTP id 5so333712pwi.19
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Jul 2010 23:55:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Date: Wed, 14 Jul 2010 18:36:20 +0200
-From: Florian Klink <flokli@flokli.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>, <flokli@flokli.de>
-In-Reply-To: <1279121328.19725.27.camel@wwguy-ubuntu>
-References: <1279100021.7275.24.camel@flokli-laptop>
- <1279101655.3719.12.camel@jlt3.sipsolutions.net>
- <e5d3a4df03d6582ddc18af249ed3a2f2@imap.flokli.de>
- <1279121328.19725.27.camel@wwguy-ubuntu>
-Message-ID: <2af581f49d0d7786326de05682b92382@imap.flokli.de>
+In-Reply-To: <1280213303.19098.3.camel@jlt3.sipsolutions.net>
+References: <4C4DE6B5.5080307@candelatech.com> <4C4E0580.3060404@candelatech.com>
+	<AANLkTi=qJXCxtMZcEm3VQT1s7ioJsdhj2kJzkgGSf3ND@mail.gmail.com>
+	<4C4E1784.3030702@candelatech.com> <AANLkTimnZ9pSfVLsEPgiDPyc=_eUnyLj89RHCC6rsaX8@mail.gmail.com>
+	<4C4E1C0B.9040608@candelatech.com> <1280213303.19098.3.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 26 Jul 2010 23:54:53 -0700
+Message-ID: <AANLkTinh7JvGmx0s-A1ZKgGY+2WDPnptqt53=73PRzHD@mail.gmail.com>
+Subject: Re: ath9k: /proc/net/wireless always shows status of 0
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Ben Greear <greearb@candelatech.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-Hi,
-
-I did a dmesg with 2.6.35-rc5 and debug=0x43fff.
-You can get it here: http://pastebin.com/Q6eCdPZR
-
-Florian
-
-
-On Wed, 14 Jul 2010 08:28:48 -0700, "Guy, Wey-Yi"
-<wey-yi.w.guy@intel.com> wrote:
-> Hi Florian,
-> 
-> On Wed, 2010-07-14 at 03:06 -0700, Florian Klink wrote:
->> Thanks ;-)
+On Mon, Jul 26, 2010 at 11:48 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2010-07-26 at 16:36 -0700, Ben Greear wrote:
+>
+>> > You can use nl28011 and register for netlink multicast messages which
+>> > broadcast device state changes like the ones you mentioned. These come
+>> > in on iw via event.c, see print_event() and see the case statements
+>> > for NL80211_CMD_ASSOCIATE, NL80211_CMD_DEAUTHENTICATE,
+>> > NL80211_CMD_DISASSOCIATE, etc, you even get reason codes parsed for
+>> > you too.
 >>
->> On Wed, 14 Jul 2010 12:00:55 +0200, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > [correct wey-yi's address, remove reinette]
->> >
->> > On Wed, 2010-07-14 at 11:33 +0200, Florian Klink wrote:
->> >> Hi,
->> >>
->> >> I hope I'm writing to the right addresses, this is my first kernel bug
->> >> report :-)
->> >>
->> >> I regulary build linus' tree from git. One day, my wireless card was
->> >> unable to connect to the access point. dmesg showed something like this:
->> >>
->> >> [  122.290949] wlan0: direct probe to 00:15:0c:xx:xx:xx (try 1)
->> >> [  122.490158] wlan0: direct probe to 00:15:0c:xx:xx:xx (try 2)
->> >> [  122.690057] wlan0: direct probe to 00:15:0c:xx:xx:xx (try 3)
->> >> [  122.890031] wlan0: direct probe to 00:15:0c:xx:xx:xx timed out
->> >>
->> >> At first, I thought is was some link quality problem and tried it next
->> >> to the access point, but it still didn't work.
->> >> I booted another (older) kernel and with this one, the card was able to
->> >> connect without any problems.
->> >>
->> >> I bisected the problem and came to commit
->> >> 062bee448bd539580ef9f64efe50fdfe04eeb103
->> >> iwlwifi: set TX_CMD_FLAG_PROT_REQUIRE_MSK in tx_flag
->> >> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=062bee448bd539580ef9f64efe50fdfe04eeb103
->> >>
->> >> My wireless card is a Intel Corporation Wireless WiFi Link 5100.
->> >>
->> >> Will provide more info if needed.
->> >>
-> Could you please load the iwlagn module with module parameter
-> debug=0x43fff and forward us the dmesg log
-> 
-> Thanks
-> Wey
->>
+>> Ahhh, that is the kind of thing I'm looking for.  I'll check out that
+>> code in detail tomorrow.
+>
+> Keep in mind though that not all drivers can give you the difference
+> between AUTH and ASSOC, and will ONLY report "CONNECTED" events. This is
+> those drivers that do roaming and all that in firmware rather than in
+> mac80211. Therefore, generally speaking, you cannot get the states
+> you're after.
 
+FWIW I think he's on ath9k.
+
+  Luis
