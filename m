@@ -1,72 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:58681 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751036Ab0GYOGB (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49122 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751407Ab0G0UKN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Jul 2010 10:06:01 -0400
-MIME-Version: 1.0
-In-Reply-To: <alpine.LFD.2.00.1007250953400.25246@xanadu.home>
-References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
-	<1279733634-21974-19-git-send-email-ohad@wizery.com> <4C482D01.1040109@nokia.com>
-	<AANLkTimfJnC7onDT83DWLb7sR7+evJB3eymt5Z6JYkAt@mail.gmail.com>
-	<alpine.LFD.2.00.1007250953400.25246@xanadu.home>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Sun, 25 Jul 2010 17:05:39 +0300
-Message-ID: <AANLkTimjoMFwc=Bu=vfoODW2XiiuRN9iPcAAOwU6Sfpz@mail.gmail.com>
-Subject: Re: [PATCH v2 18/20] mmc: sdio: enable a default power off mode of
-	the card
-To: Nicolas Pitre <nico@fluxnic.net>
-Cc: Roger Quadros <roger.quadros@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	San Mehat <san@google.com>, Tony Lindgren <tony@atomide.com>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 27 Jul 2010 16:10:13 -0400
+Subject: Re: [PATCH] mac80211: fix sw scan bracketing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTikFjgzL1DOfUVS_N_=p5N3r0Qp7VoC5+-9cbb1a@mail.gmail.com>
+References: <1276857140.3638.22.camel@jlt3.sipsolutions.net>
+	 <AANLkTinHXxhwrOmhRxveekG7_C7WeydUdSBL2R7DwOvJ@mail.gmail.com>
+	 <AANLkTinch-sygnRmB6LKi6xLNYVKY6Ap3YL4_PMNdmKQ@mail.gmail.com>
+	 <AANLkTik=1LX_12ZskP5vwkSrTVFO9jH6uu8pyByGmLg6@mail.gmail.com>
+	 <1280226169.19098.12.camel@jlt3.sipsolutions.net>
+	 <AANLkTi=ZbskS-7TA8Mp5SKrRMrxOpNQJLpxnCHoRs-tb@mail.gmail.com>
+	 <AANLkTikFjgzL1DOfUVS_N_=p5N3r0Qp7VoC5+-9cbb1a@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 27 Jul 2010 22:09:56 +0200
+Message-ID: <1280261396.3755.5.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jul 25, 2010 at 4:56 PM, Nicolas Pitre <nico@fluxnic.net> wrote:
-> On Sun, 25 Jul 2010, Ohad Ben-Cohen wrote:
->
->> On Thu, Jul 22, 2010 at 2:35 PM, Roger Quadros <roger.quadros@nokia.com> wrote:
->> > On 07/21/2010 08:33 PM, ext Ohad Ben-Cohen wrote:
->> >>
->> >> Add support for an SDIO device to stay powered off even without
->> >> the presence of an SDIO function driver. A host should explicitly
->> >> ask for it by means of MMC_CAP_DONT_POWER_CARD, and the SDIO
->> >> function driver should know it needs to call sdio_claim_power
->> >> before accessing the device.
->> >>
->> >> Signed-off-by: Ohad Ben-Cohen<ohad@wizery.com>
->> >
->> > Shouldn't this be the default behaviour? If there is no function driver for
->> > any of the functions of the card, then sdio core shold power off the card.
->> >
->> > I don't see a need for a special capability flag for this.
->> >
->> > in fact MMC_CAP_DONT_POWER_CARD does not seem like an mmc host's capability
->>
->> Totally agree.
->>
->> I didn't want to change the current behavior of the cards/funcs so I
->> looked for a way to explicitly power down only specific cards.
->>
->> Alternatively we could power down all cards at the end
->> mmc_attach_sdio, and then power them up selectively in sdio_bus_probe,
->> just before calling probe. If the probe succeeds, the function driver
->> takes over. If the probe fails, we can power them down again.
->
-> Exactly!
+On Tue, 2010-07-27 at 10:29 -0700, Luis R. Rodriguez wrote:
 
-Ok, v3 is on the way :)
+> I just reviewed this and noticed both of these prints are using
+> KERN_DEBUG, and since the warning will become valid *after* this gets
+> properly fixed, are you OK with just a revert of your patch?
 
-(featuring no special host CAP, fix locking issues, and power down
-unclaimed cards also on resume)
+I've seen this show up in bug reports, and we _know_ that there's a
+problem since I fixed it, so no, I really do want the message to go
+away.
+
+johannes
+
