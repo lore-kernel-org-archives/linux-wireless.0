@@ -1,62 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:35166 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751633Ab0GUWRT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jul 2010 18:17:19 -0400
-Received: by ewy23 with SMTP id 23so2666151ewy.19
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jul 2010 15:17:15 -0700 (PDT)
+Received: from qult.net ([82.238.217.46]:47391 "EHLO qult.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751801Ab0G0Txz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jul 2010 15:53:55 -0400
+Date: Tue, 27 Jul 2010 21:25:03 +0200
+From: Ignacy Gawedzki <linux-wireless@qult.net>
+To: "David H. Lynch Jr." <dhlii@dlasys.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: CARL9170
+Message-ID: <20100727192503.GA26504@zenon.in.qult.net>
+References: <4C169610.5020907@dlasys.net>
 MIME-Version: 1.0
-Date: Thu, 22 Jul 2010 00:17:12 +0200
-Message-ID: <AANLkTimQ7O2nOmh2Rda3d_PKWbS2WlGVBHYMCuhxW10W@mail.gmail.com>
-Subject: ath9k: performance regressions / tx semi-stuck somehow
-From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-To: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4C169610.5020907@dlasys.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Hi David,
 
-I just tried out compat-wireless-2010-07-16 on AR913x (with
-openwrt/trunk@r22321) and saw some weird performance problems.
+I happen to be trying to achieve something very similar to what you are aiming
+at.  I need to measure each TX frame's "service time", i.e. the interval of
+time between the instant this frame is considered for transmission and the
+instant the corresponding ACK is received or the transmission is given up (too
+many failed transmission attempts).  Then I need this value to be returned to
+the kernel with the TX status, for further processing.
 
-First, with the default 11n HT20 AP configuration I get really good
-performance on an old 11g MacBook. 16Mbps downloads limited by WAN. :)
+Until now, I oversimplistically was doing that measurement upstream, in the
+kernel driver, taking a timestamp between the instant a frame is shipped
+through the USB framework and the instant the TX completion interrupt is
+received.  This approach worked well only when sending sustained traffic
+(back-to-back frames), since the TX completion time of the previous frame was
+then used as the starting instant of the current frame.  When frames were sent
+one-by-one, the measured interval was way too large (as a matter of fact, it
+was a lot smaller, while still too large, when I used the ar9170
+firmware+driver), so as to become unusable.  Since I discovered the carl9170
+firmware+driver, I'm seriously thinking about implementing that measurement
+inside the firmware for much higher accuracy.
 
-But then I try a newer 11n MacBook and performance absolutely sucks.
-2-3Mbps downloads with erratic bursts and "hangs".
+I read with great interest the threads you started and wanted to ask whether
+you managed to advance in your quest.  In the meantime, I continue to read
+carl9170 firmware code thoroughly to get a feeling of how things are going on
+in it.
 
-So, I start to think something is wrong with 11n and reconfigure for
-11g only. Then the 11g MacBook performance also sucks. The same
-2-3Mbps downloads with erratic bursts and "hangs". So 11n AP and 11g
-client is good, but 11g AP and 11g client sucks. Looking at the
-rc_stats it seems like tx completely breaks down from time to time:
+Ignacy
 
-root@OpenWrt:/sys/kernel/debug/ieee80211/phy0# cat stations/00\:17\:f2\:51\:b2\:
-2d/rc_stats
-rate     throughput  ewma prob   this prob  this succ/attempt
-success    attempts
- t   1         0.1       18.3        0.0          0( 19)         28         731
-     2         0.0        0.0        0.0          0(  0)          0          18
-     5.5       0.0        0.0        0.0          0(  0)          0          10
-    11         0.0        0.0        0.0          0(  0)          0          14
-     6         0.0        0.0        0.0          0(  0)          0          11
-     9         0.0        0.0        0.0          0(  0)          0          18
-    12         0.0        0.0        0.0          0(  0)          0          12
-    18         0.0        0.0        0.0          0(  0)          0          16
-    24         0.0        0.0        0.0          0(  0)          0          18
-    36         0.1        0.4        0.0          0(  0)          2        1824
-    48         0.0        0.0        0.0          0(  2)          0          16
-T P 54        27.3       63.1        0.0          0(180)       4749       13896
-
-Total packet count::    ideal 4780      lookaround 532
-
-That's in exactly the same spot I was getting 16Mbps consistently with
-AP was 11n!
-
-Any debuging I can do to help? Bisecting is unfortunately a lot of
-work on this embedded system...
-
-/Björn
+-- 
+Information wants to be beer, or something like that.
