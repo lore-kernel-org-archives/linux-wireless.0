@@ -1,56 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:48902 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756223Ab0GPSRR (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:62779 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751195Ab0G0Xdw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jul 2010 14:17:17 -0400
-Received: by bwz1 with SMTP id 1so1372993bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jul 2010 11:17:15 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [RFC] mac80211: indicate BA window size with IEEE80211_AMPDU_TX_OPERATIONAL drv_ampud_action
-Date: Fri, 16 Jul 2010 20:16:35 +0200
-Cc: yogeshp <yogeshp@marvell.com>,
-	Pradeep Nemavat <pnemavat@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <4C3F0AA3.4050706@marvell.com> <4C402360.5050502@marvell.com> <AANLkTim2fLLZfD5xrUtioY5mZaF-PgLwrVlMHQHwsL41@mail.gmail.com>
-In-Reply-To: <AANLkTim2fLLZfD5xrUtioY5mZaF-PgLwrVlMHQHwsL41@mail.gmail.com>
+	Tue, 27 Jul 2010 19:33:52 -0400
+Received: by pzk26 with SMTP id 26so1588399pzk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 16:33:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201007162016.35442.helmut.schaa@googlemail.com>
+In-Reply-To: <AANLkTi=Wy1r2C1xL289QQX10aVZaYfF7A1K8sd93ZXOd@mail.gmail.com>
+References: <AANLkTimdDhHudW6_7Hwcf6UCumY_EgqGd7CLtmSgOzEz@mail.gmail.com>
+	<AANLkTinfMiS=+dqi=azF2exJbkrSLYT9nN0aor7gff-Q@mail.gmail.com>
+	<AANLkTi=Wy1r2C1xL289QQX10aVZaYfF7A1K8sd93ZXOd@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 27 Jul 2010 16:33:31 -0700
+Message-ID: <AANLkTik2njXen5go8v2d8UPejC7THJiDJAvVunS7T5WU@mail.gmail.com>
+Subject: Re: regulatory hiccup
+To: Andrew Lutomirski <luto@mit.edu>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Freitag 16 Juli 2010 schrieb Luis R. Rodriguez:
-> On Fri, Jul 16, 2010 at 2:16 AM, yogeshp <yogeshp@marvell.com> wrote:
-> > Hi Luis,
-> >  Please see inline comments
-> >
-> > Luis R. Rodriguez wrote:
-> >> On Thu, Jul 15, 2010 at 6:18 AM, yogeshp <yogeshp@marvell.com> wrote:
-> >>> BA window size for a successful BA setup is not made available to the driver by
-> >>> mac80211. The patch below gets the BA window size from addba response and
-> >>> indicates it to driver through IEEE80211_AMPDU_TX_OPERATIONAL drv_ampdu_action.
-> >
-> >> But why do you want that? Your patch and commit log do not mention why
-> >> you need this.
-> > BA window size from ADDBA response defines how many outstanding MPDUs are allowed for the BA stream by recipient. Since ADDBA response is processed in mac80211 stack, mac80211 should communicate the BA window size to driver (and may be from driver it is further communicated to firmware/hardware) to control the number of outstanding MPDUs while transmitting MPDUs for the stream.
-> 
-> What driver requires this? Your patch does all these changes but do
-> not show any secondary patch of a user, so the patch is pointless
-> right now.
-
-JFI, rt2800 would also need the BA windows size in its tx path (not only once
-but in every tx descriptor). So maybe it would even make sense to move it to
-the ieee80211_sta structure? That way rt2800 could also benefit from that
-change.
-
-Using the approach as implemented in this patch we would have to store the
-value for each STA on our own in rt2x00 although mac80211 has it already
-in its own structures.
-
-Just my 2 cents ...
-Helmut
+T24gRnJpLCBKdWwgMjMsIDIwMTAgYXQgMTowMyBQTSwgQW5kcmV3IEx1dG9taXJza2kgPGx1dG9A
+bWl0LmVkdT4gd3JvdGU6Cj4gT24gRnJpLCBKdWwgMjMsIDIwMTAgYXQgMzozNSBQTSwgQW5kcmV3
+IEx1dG9taXJza2kgPGx1dG9AbWl0LmVkdT4gd3JvdGU6Cj4+IE9uIEZyaSwgSnVsIDIzLCAyMDEw
+IGF0IDM6MzAgUE0sIEFuZHJldyBMdXRvbWlyc2tpIDxsdXRvQG1pdC5lZHU+IHdyb3RlOgo+Pj4K
+Pj4+IFRoZW4sIGFmdGVyIGZpZGRsaW5nIHdpdGggYW4gQVAgZm9yIGEgYml0LCBJIGdvdDoKPj4+
+Cj4+PiBbMTE3NDcuMjY0MjIxXSBjZmc4MDIxMTogQ2FsbGluZyBDUkRBIGZvciBjb3VudHJ5OiBV
+Uwo+Pj4gWzExNzQ3LjI4MjY2NF0gY2ZnODAyMTE6IEN1cnJlbnQgcmVndWxhdG9yeSBkb21haW4g
+dXBkYXRlZCBieSBBUCB0bzogVVMKPj4+IFsxMTc0Ny4yODI2NzJdIMKgIMKgIChzdGFydF9mcmVx
+IC0gZW5kX2ZyZXEgQCBiYW5kd2lkdGgpLAo+Pj4gKG1heF9hbnRlbm5hX2dhaW4sIG1heF9laXJw
+KQo+Pj4gWzExNzQ3LjI4MjY4MF0gwqAgwqAgKDUxNzAwMDAgS0h6IC0gNTI1MDAwMCBLSHogQCA0
+MDAwMCBLSHopLCAoMzAwIG1CaSwgMTYwMCBtQm0pCj4+PiBbMTE3NDcuMjgyNjg4XSDCoCDCoCAo
+NTI1MDAwMCBLSHogLSA1MzMwMDAwIEtIeiBAIDQwMDAwIEtIeiksICgzMDAgbUJpLCAxNjAwIG1C
+bSkKPj4+Cj4+Cj4+IEl0J3Mgd29yc2UgdGhhbiB0aGF0LiDCoEkgcmVjb25uZWN0ZWQgdG8gdGhl
+IEFQIChpdCBhcHBlYXJlZCB0byB3b3JrCj4+IGZvciBhIGZldyBzZWNvbmRzKSBhbmQgSSBzYXc6
+Cj4+Cj4+IFdpcGh5IHBoeTAKPj4gWy4uLl0KPj4gwqAgwqAgwqAgwqBCYW5kIDI6Cj4+IMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgQ2FwYWJpbGl0aWVzOiAweDg3Mgo+PiDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCDCoEhUMjAvSFQ0MAo+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoFN0YXRpYyBTTSBQb3dlciBTYXZlCj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgUlggR3JlZW5maWVsZAo+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoFJYIEhUMjAgU0dJCj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+UlggSFQ0MCBTR0kKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBObyBSWCBT
+VEJDCj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgTWF4IEFNU0RVIGxlbmd0
+aDogMzgzOSBieXRlcwo+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoE5vIERT
+U1MvQ0NLIEhUNDAKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBNYXhpbXVtIFJYIEFNUERVIGxl
+bmd0aCA2NTUzNSBieXRlcyAoZXhwb25lbnQ6IDB4MDAzKQo+PiDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoE1pbmltdW0gUlggQU1QRFUgdGltZSBzcGFjaW5nOiA0IHVzZWMgKDB4MDUpCj4+IMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgSFQgVFgvUlggTUNTIHJhdGUgaW5kZXhlcyBzdXBwb3J0ZWQ6IDAt
+MjMsIDMyCj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgRnJlcXVlbmNpZXM6Cj4+IMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1MTgwIE1IeiBbMzZdICgxNS4wIGRCbSkgKHBh
+c3NpdmUgc2Nhbm5pbmcsIG5vIElCU1MpCj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgKiA1MjAwIE1IeiBbNDBdICgxNS4wIGRCbSkgKHBhc3NpdmUgc2Nhbm5pbmcsIG5vIElC
+U1MpCj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1MjIwIE1IeiBbNDRd
+ICgxNS4wIGRCbSkgKHBhc3NpdmUgc2Nhbm5pbmcsIG5vIElCU1MpCj4+IMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1MjQwIE1IeiBbNDhdICgxNS4wIGRCbSkgKHBhc3NpdmUg
+c2Nhbm5pbmcsIG5vIElCU1MpCj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+KiA1MjYwIE1IeiBbNTJdICgxNS4wIGRCbSkgKHBhc3NpdmUgc2Nhbm5pbmcsIG5vIElCU1MsIHJh
+ZGFyIGRldGVjdGlvbikKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDUy
+ODAgTUh6IFs1Nl0gKDE1LjAgZEJtKSAocGFzc2l2ZSBzY2FubmluZywgbm8gSUJTUywgcmFkYXIg
+ZGV0ZWN0aW9uKQo+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCogNTMwMCBN
+SHogWzYwXSAoMTUuMCBkQm0pIChwYXNzaXZlIHNjYW5uaW5nLCBubyBJQlNTLCByYWRhciBkZXRl
+Y3Rpb24pCj4+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgKiA1MzIwIE1IeiBb
+NjRdICgxNS4wIGRCbSkgKHBhc3NpdmUgc2Nhbm5pbmcsIG5vIElCU1MsIHJhZGFyIGRldGVjdGlv
+bikKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU1MDAgTUh6IFsxMDBd
+IChkaXNhYmxlZCkKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU1MjAg
+TUh6IFsxMDRdIChkaXNhYmxlZCkKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAqIDU1NDAgTUh6IFsxMDhdIChkaXNhYmxlZCkKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAqIDU1NjAgTUh6IFsxMTJdIChkaXNhYmxlZCkKPj4gwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU1ODAgTUh6IFsxMTZdIChkaXNhYmxlZCkKPj4gwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU2MDAgTUh6IFsxMjBdIChkaXNhYmxlZCkK
+Pj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU2MjAgTUh6IFsxMjRdIChk
+aXNhYmxlZCkKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU2NDAgTUh6
+IFsxMjhdIChkaXNhYmxlZCkKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAq
+IDU2NjAgTUh6IFsxMzJdIChkaXNhYmxlZCkKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAqIDU2ODAgTUh6IFsxMzZdIChkaXNhYmxlZCkKPj4gwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAqIDU3MDAgTUh6IFsxNDBdIChkaXNhYmxlZCkKPj4gwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU3NDUgTUh6IFsxNDldIChkaXNhYmxlZCkKPj4g
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU3NjUgTUh6IFsxNTNdIChkaXNh
+YmxlZCkKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU3ODUgTUh6IFsx
+NTddIChkaXNhYmxlZCkKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAqIDU4
+MDUgTUh6IFsxNjFdIChkaXNhYmxlZCkKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAqIDU4MjUgTUh6IFsxNjVdIChkaXNhYmxlZCkKPj4KPj4gV2hpY2ggaXMgYWJzdXJkLCBi
+ZWNhdXNlOgo+Pgo+PiBDb25uZWN0ZWQgdG8gMDA6MDI6NmY6NmU6ZDc6NmMgKG9uIHdsYW4wKQo+
+PiDCoCDCoCDCoCDCoFNTSUQ6IEZGVFQ1Cj4+IMKgIMKgIMKgIMKgZnJlcTogNTc4NSDCoCDCoCDC
+oCDCoFshISEhISEhISEhIV0KPj4gwqAgwqAgwqAgwqBSWDogNzIwNTggYnl0ZXMgKDMxMCBwYWNr
+ZXRzKQo+PiDCoCDCoCDCoCDCoFRYOiAyNTY4IGJ5dGVzICgyMCBwYWNrZXRzKQo+PiDCoCDCoCDC
+oCDCoHNpZ25hbDogLTMzIGRCbQo+PiDCoCDCoCDCoCDCoHR4IGJpdHJhdGU6IDYuMCBNQml0L3MK
+Pj4KPj4gVGhlIGNvbm5lY3Rpb24gZGllZCBhZnRlciBhIGxpdHRsZSB3aGlsZSwgcHJlc3VtYWJs
+eSBiZWNhdXNlIHRoZSBBUAo+PiB3YXMgb3V0c2lkZSBvZiBpdHMgb3duIGFsbG93ZWQgYmFuZC4K
+Pj4KPgo+IEhlcmUncyB0aGUgb2ZmZW5kaW5nIGNvdW50cnkgSUU6Cj4KPiBDb3VudHJ5IEluZm9y
+bWF0aW9uOiBDb3VudHJ5IENvZGU6IFVTLCBJbmRvb3IgRW52aXJvbm1lbnQKPiBUYWcgTnVtYmVy
+OiA3IChDb3VudHJ5IEluZm9ybWF0aW9uKQo+IFRhZyBsZW5ndGg6IDYKPiBUYWcgaW50ZXJwcmV0
+YXRpb246IENvdW50cnkgQ29kZTogVVMsIEluZG9vciBFbnZpcm9ubWVudAo+IMKgU3RhcnQgQ2hh
+bm5lbDogMzYsIENoYW5uZWxzOiAxMywgTWF4IFRYIFBvd2VyOiAxNiBkQm0KPgo+IEFGQUlDVCBu
+ZXQvd2lyZWxlc3MvcmVnLmMgaWdub3JlcyB0aGUgbGFzdCBiaXQsIGFuZCB0aGUgb3RoZXIgQVBz
+IHRoYXQKPiB3b3JrIGNvcnJlY3RseSBoZXJlIGRvbid0IHNlbmQgY291bnRyeSBJRXMuCgpDYW4g
+eW91IHByb3ZpZGUgdGhlIG91dHB1dCBvZiBpdyBkZXYgd2xhbjAgc2NhbiBmcm9tIGEgZnJlc2gg
+Z2l0CnZlcnNpb24gb2YgaXc/IFRoYXQgd2lsbCBhY3R1YWxseSB0ZWxsIG1lIG1vcmUgdGhhbiB5
+b3VyIGxpc3RpbmcuCgogIEx1aXMK
