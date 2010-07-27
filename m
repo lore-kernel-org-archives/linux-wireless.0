@@ -1,160 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:43084 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751136Ab0G1VPs convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jul 2010 17:15:48 -0400
-Received: by ywh1 with SMTP id 1so965569ywh.19
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Jul 2010 14:15:47 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4C506DF7.9020907@openwrt.org>
-References: <20100727094732.27186.30900.stgit@tt-desk> <4C4F0BB1.6030002@openwrt.org>
-	<AANLkTi=QWMwVTqOqL3wNUnLAWHDw60HmYXtngXJrQOu+@mail.gmail.com>
-	<201007281106.06813.br1@einfach.org> <AANLkTimBu2=9XhzKwUi1ZpRmGWA+C4GCDgXqp-YJVLxt@mail.gmail.com>
-	<4C506DF7.9020907@openwrt.org>
+Received: from mail.atheros.com ([12.36.123.2]:32862 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752421Ab0G0RUX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jul 2010 13:20:23 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 10:20:23 -0700
+Date: Tue, 27 Jul 2010 10:20:20 -0700
 From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 28 Jul 2010 14:15:27 -0700
-Message-ID: <AANLkTi=HyyA0oqVRRsh2_ad_0zLGCSBQ6CK=fCg=g=ad@mail.gmail.com>
-Subject: Re: [PATCH v4 1/3] cfg80211: Add nl80211 antenna configuration
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Bruno Randolf <br1@einfach.org>, johannes@sipsolutions.net,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: "Simsek, Burak" <burak.simsek@fokus.fraunhofer.de>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] [PATCH 4/5] mac80211: add WoW support
+Message-ID: <20100727172020.GE8293@tux>
+References: <804B13F8F3D94A4AB18B9B01ACB68FA1037B5158@EXCHSRV.fokus.fraunhofer.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <804B13F8F3D94A4AB18B9B01ACB68FA1037B5158@EXCHSRV.fokus.fraunhofer.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 28, 2010 at 10:50 AM, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2010-07-28 7:24 PM, Luis R. Rodriguez wrote:
->> On Tue, Jul 27, 2010 at 7:06 PM, Bruno Randolf <br1@einfach.org> wrote:
->>> On Wed July 28 2010 01:47:34 Luis R. Rodriguez wrote:
->>>> On Tue, Jul 27, 2010 at 9:39 AM, Felix Fietkau <nbd@openwrt.org> wrote:
->>>> > On 2010-07-27 6:19 PM, Luis R. Rodriguez wrote:
->>>> >>> + * @NL80211_ATTR_WIPHY_ANTENNA_TX: Bitmap of allowed antennas for
->>>> >>> transmitting. + *     Each bit represents one antenna, starting with
->>>> >>> antenna 1 at the first + *     bit. If the bitmap is zero (0), the TX
->>>> >>> antenna follows RX diversity.
->>>> >>
->>>> >> What about for 802.11n? What if you want to disable TX?
->>>> >
->>>> > Disabling tx shouldn't be handled by the antenna setting, IMHO.
->>>> >
->>>> >>> + *     If multiple antennas are selected all selected antennas have to
->>>> >>> be used + *     for transmitting (801.11n multiple TX chains).
->>>> >>
->>>> >> I rather call this TX / RX chainmask then.
->>>> >
->>>> > Well, for legacy hardware, these aren't really chains, as there is only
->>>> > one rx and one tx path, just with switching onto multiple antennas.
->>>> >
->>>> >>> + *     Drivers may reject configurations they cannot support.
->>>> >>> + *
->>>> >>> + * @NL80211_ATTR_WIPHY_ANTENNA_RX: Bitmap of allowed antennas for
->>>> >>> receiving. + *     Each bit represents one antenna, starting with
->>>> >>> antenna 1 at the first + *     bit. If multiple antennas are selected
->>>> >>> in the bitmap, 802.11n devices + *     should use multiple RX chains
->>>> >>> on these antennas, while non-802.11n + *     drivers should use
->>>> >>> antenna diversity between these antennas.
->>>> >>
->>>> >> What about TX beamforming, and STBC?
->>>> >
->>>> > Disabling one antenna/chain on a two-chain device would naturally
->>>> > disable TxBF and STBC as well, since it limits the number of available
->>>> > chains. The driver should simply act as if the disabled chains didn't
->>>> > exist.
->>>>
->>>> That would work.
->>>>
->>>> >> Unless 802.11n is completely dealt with I really prefer this patch to
->>>> >> only address legacy. Otherwise I see sloppyness and inconsistencies on
->>>> >> supporting this feature throughout different drivers. I'd like to
->>>> >> avoid that at all costs on nl80211. What you are trying to address is
->>>> >> legacy antenna setup, not 802.11n RX/TX chainmask dynamic settings so
->>>> >> I'd really try to avoid it unless you really want to address all
->>>> >> aspects of chain configuration for 802.11n and even then what I'm
->>>> >> leading on to say is I think you'll see if you try to address both it
->>>> >> just gets messy.
->>>> >
->>>> > I think 802.11n is already completely dealt with if you treat this as
->>>> > the chainmask on 11n devices.
->>>>
->>>> Its fine by me if the above cases are also embedded into the
->>>> documentation, just don't want these questions lingering. I can't
->>>> think of other 802.11n special cases.
->>>
->>> thanks felix :)
->>>
->>> luis, could you tell me what exactly you would want to include in the
->>> documentation?
->>
->> Sure, but after some though I'm sticking to my preference for an API
->> for this, legacy and 802.11n chainmask / antenna selection should be
->> dealt with separately.
+On Tue, Jul 27, 2010 at 08:12:10AM -0700, Simsek, Burak wrote:
+> Dear Luis,
 >
-> As I pointed out in an earlier discussion, they *cannot* really be
-> treated separately if you're running in AP mode, dealing with both
-> legacy and 11n clients.
+> I have found out that you have worked on WoW for ath9k for a while. However,
+> in the wiki page of wireless.kernel.org the current state is written as
+> ongoing work. Can you please tell me whether you were successful while
+> implementing WoW. Is there anything that we could use?
 
-In AP mode you'd use the 11n mode stuff not the legacy stuff, so not
-sure how this matters.
+WoW worked for me but inconsistantly and at the time of writing
+the patches I had to do quite a lot of coordination with Johannes
+since he had a lot of API changes and his changes needed to get
+merged first.
 
->> Reason is I just reviewed the IEEE 802.11 sections 19.19 for TX
->> beamforming but also happened to stumble upon section 19.20 Antenna
->> selection. This Antenna Selection section indicates you can support
->> more antennas than chains and you can use and that the antenna you use
->> for your chains can vary over time. You select which antenna to use
->> based on training/sounding tests on each antenna. Antenna selection as
->> per 19.19 supports up to 8 antennas and up to 4 RF chains. Section
->> 19.20.2 deals with how a STA can initiate antenna selection training
->> with another STA. Now granted we don't have code for this and I don't
->> think this is all done explicitly in hardware so one can argue we can
->> deal with this when/if we do add support for this but this just
->> highlights how different "antenna selection" or knobs to tune antennas
->> is even from a standard perspective than legacy. For STBC and TX
->> beamforming requirements I would like to see mac80211 actually have
->> code which disables STBC and later TX beamforming (once we have code
->> for it) if we enable only one chain, I don't see why drivers should
->> deal with this.
->
-> This is easy to handle, it can work like this:
-> We treat the setting not as a raw chainmask, but actually as an antenna
-> mask. The chainmask gets calculated from that. If we disable all
-> antennas belonging to a particular chain, we disable the entire chain.
+I also found quite a few issues in mac80211 back then but I believe
+we have resolved all of them by now so I would expect that if the
+same WoW-only patches to be rebased and tested we may get better
+results.
 
-Fair enough. Would cfg80211 deal with this logic then? That would be
-my preference. But then, do we even expose enough hardware
-capabilities for cfg80211 to make this decision already?
+I stopped working on the WoW stuff due to lack of time to keep
+testing them but the last series can be edited to remove all
+of the already merged stuff and test out the new stuff. The more
+challenging thing for me was to actually get a WoW enabled
+802.11 card, these are not as popular as you would hope. The
+EEPROM would be modified when WoW is enabled but WoW requires
+some actual hardware mucking to allow for the PCI Wake signal
+which is typically blocked off. If the EEPROM has WoW enabled
+then the hardware mucking would have been done.
 
-> For AR9285 we will already deviate from treating this as a chainmask,
-> because it has one chain with rx diversity.
+To test WoW you also need to drop Network Manager and use
+the supplicant directly so that during suspend you remain
+associated. I should note that WoW will only work on
+non-WPA networks with ath9k due to the lack of
+hardware CPU, during suspend there is only power for the
+802.11 hardware, the CPU on your box would be asleep but
+would be required for group key changes. The way I was thinking
+of doing this was to only enable WoW through cfg80211 for ath9k if
+and only if you are associated and you are connected to a non
+WPA network.
 
-Good point but the single stream 802.11n case just needs to be
-documented as well, it'll be like that for other single stream 802.11n
-devices, if there are others, not sure if Atheros has the only ones in
-the market or what.
+WoW would work with encryption on our USB devices where
+there is a CPU though.
 
-> Please accept this API
+You can find my last series here:
 
-If you really need some knobs without detailed review and discussion
-shoot for debugfs, otherwise I will take my time reviewing carefully
-all the details because once its API then.. well its set in stone and
-we have to deal with it. I realize I'm being a real big fucking pain
-in the ass with this but.. I believe these discussions have also been
-helpful.
+http://www.mk.kernel.org/pub/linux/kernel/people/mcgrof/patches/wow-07-21.patch
+http://www.mk.kernel.org/pub/linux/kernel/people/mcgrof/patches/iw-add-wow.patch
 
-> I'm sure the API can be used to handle everything related to 802.11n
-> antenna/chain selection properly. :)
-
-Sure, but who deals with the 11n stuff? Right now this patches just
-pass two variables, TX and RX antenna mask, and has no special case
-handling for the different 802.11n cases, nor does it document who
-should handle that.
-
-  * STBC (11n 9.6.0.c, 9.7g, etc)
-  * TX Beamforming (11n 19.19)
-  * Antenna selection (11n 19.20)
-
-IMHO we should be thinking about this if we want to define an API that
-*all* 802.11 drivers can use if the API will be used for 802.11n as
-well.
+If you manage to do what I noted above, get an actual WoW enabled card,
+and it works reliably I'd gladly welcome and ACK the patches :)
 
   Luis
