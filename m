@@ -1,33 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:59354 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37758 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754941Ab0GZSaO (ORCPT
+	with ESMTP id S1751296Ab0G0SPW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jul 2010 14:30:14 -0400
-Date: Mon, 26 Jul 2010 14:27:07 -0400
+	Tue, 27 Jul 2010 14:15:22 -0400
+Date: Tue, 27 Jul 2010 14:05:56 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Corey Thomas <coreythomas@charter.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 4/5] wireless: use newly introduced hex_to_bin()
-Message-ID: <20100726182707.GE3903@tuxdriver.com>
-References: <cover.1279890832.git.andy.shevchenko@gmail.com>
- <9d7821ff7791c30772667681c0eab829e6e93e59.1279890832.git.andy.shevchenko@gmail.com>
+To: Joe Perches <joe@perches.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH net-next 4/4] wireless: Convert wiphy_debug macro to
+ function
+Message-ID: <20100727180556.GE31694@tuxdriver.com>
+References: <cover.1280177971.git.joe@perches.com>
+ <8e7aa541ec8fb92e1166920a4eb704aa5f851b71.1280177971.git.joe@perches.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <9d7821ff7791c30772667681c0eab829e6e93e59.1279890832.git.andy.shevchenko@gmail.com>
+In-Reply-To: <8e7aa541ec8fb92e1166920a4eb704aa5f851b71.1280177971.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 23, 2010 at 04:18:09PM +0300, Andy Shevchenko wrote:
-> Signed-off-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-> Cc: Corey Thomas <coreythomas@charter.net>
-> Cc: "John W. Linville" <linville@tuxdriver.com>
-> Cc: linux-wireless@vger.kernel.org
+On Mon, Jul 26, 2010 at 02:40:00PM -0700, Joe Perches wrote:
+> Save a few bytes of text
+> 
+> (allyesconfig)
+> $ size drivers/net/wireless/built-in.o*
+>    text	   data	    bss	    dec	    hex	filename
+> 3924568	 100548	 871056	4896172	 4ab5ac	drivers/net/wireless/built-in.o.new
+> 3926520	 100548	 871464	4898532	 4abee4	drivers/net/wireless/built-in.o.old
+> 
+> $ size net/wireless/core.o*
+>    text	   data	    bss	    dec	    hex	filename
+>   12843	    216	   3768	  16827	   41bb	net/wireless/core.o.new
+>   12328	    216	   3656	  16200	   3f48	net/wireless/core.o
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-Acked-by: John W. Linville <linville@tuxdriver.com>
+> --- a/net/wireless/core.c
+> +++ b/net/wireless/core.c
+> @@ -907,3 +907,56 @@ static void __exit cfg80211_exit(void)
+>  	destroy_workqueue(cfg80211_wq);
+>  }
+>  module_exit(cfg80211_exit);
+> +
+> +#ifdef __KERNEL__
+
+Do we need this part?
 
 -- 
 John W. Linville		Someday the world will need a hero, and you
