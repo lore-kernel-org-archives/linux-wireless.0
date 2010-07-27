@@ -1,83 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:54273 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757781Ab0GDP7O (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:33152 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751361Ab0G0RsV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Jul 2010 11:59:14 -0400
-Message-ID: <4C30AFD0.80100@candelatech.com>
-Date: Sun, 04 Jul 2010 08:59:12 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 27 Jul 2010 13:48:21 -0400
+Received: by bwz1 with SMTP id 1so3496689bwz.19
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 10:48:20 -0700 (PDT)
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k doesn't clean up virtual wifis on rmmod, and crashes.
-References: <4C2ED806.9000105@candelatech.com> <20100703070259.GA15479@vasanth-laptop> <4C2F6681.7070202@candelatech.com> <20100704093535.GE5053@vasanth-laptop>
-In-Reply-To: <20100704093535.GE5053@vasanth-laptop>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20100727144804.6012.94740.send-patch@dhcp-lab-109.englab.brq.redhat.com>
+References: <20100727144804.6012.94740.send-patch@dhcp-lab-109.englab.brq.redhat.com>
+Date: Tue, 27 Jul 2010 19:48:19 +0200
+Message-ID: <AANLkTimLmQjyypfRWrRs80P7o7Rozzhb4_fcu-KccdSH@mail.gmail.com>
+Subject: Re: [PATCH w-t 1/3] rt2500usb: write keys to proper registers
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/04/2010 02:35 AM, Vasanthakumar Thiagarajan wrote:
-> On Sat, Jul 03, 2010 at 10:04:09PM +0530, Ben Greear wrote:
->> On 07/03/2010 12:02 AM, Vasanthakumar Thiagarajan wrote:
->>> On Sat, Jul 03, 2010 at 11:56:14AM +0530, Ben Greear wrote:
->>>> It seems to me that in 2.6.34, there is no code to clean up
->>>> virtual wiphys in ath9k on rmmod.  Also, ath9k mailing list
->>>> is returning error about mis-configured DNS server.
->>>>
->>>> This is with un-modified ath9k driver and is repeatable
->>>> every time on my system (crash is often different, but
->>>> it always crashes very quickly).
->>>>
->>>> [root@atom ~]# echo add=5>   /debug/ath9k/phy1/wiphy
->>>> -bash: /debug/ath9k/phy1/wiphy: No such file or directory
->>>> [root@atom ~]# echo add=5>   /debug/ath9k/phy0/wiphy
->>>> Jul  2 23:22:19 atom kernel: phy1: Selected rate control algorithm 'ath9k_rate_control'
->>>> [root@atom ~]# Jul  2 23:22:19 atom kernel: ADDRCONF(NETDEV_UP): wlan1: link is not ready
->>>> rmmod ath9k
->>>> Jul  2 23:22:24 atom kernel: ath9k 0000:05:00.0: PCI INT A disabled
->>>> Jul  2 23:22:24 atom kernel: ath9k: Driver unloaded
->>>> [root@atom ~]# BUG: spinlock bad magic on CPU#1, iw/2877
->>>>     lock: f8a476c0, .magic: 00000000, .owner:<none>/-1, .owner_cpu: 0
->>>> Pid: 2877, comm: iw Not tainted 2.6.34 #7
->>>> Call Trace:
->>>>     [<c0730e34>] ? printk+0xf/0x13
->>>>     [<c05710d6>] spin_bug+0x7b/0x86
->>>>     [<c0440b76>] ? delayed_work_timer_fn+0x0/0x30
->>>>     [<c0571171>] do_raw_spin_lock+0x1e/0x125
->>>>     [<c042f91e>] ? scheduler_tick+0xd6/0x1c9
->>>>     [<c0440b76>] ? delayed_work_timer_fn+0x0/0x30
->>>>     [<c0732a6d>] _raw_spin_lock_irqsave+0x1b/0x20
->>>>     [<c0440b59>] __queue_work+0x12/0x2f
->>>>     [<c0440b76>] ? delayed_work_timer_fn+0x0/0x30
->>>>     [<c0440ba4>] delayed_work_timer_fn+0x2e/0x30
->>>>
->>>> I'm new to hacking on this driver..but would love to test
->>>> patches, and if someone wants to suggest a good point in
->>>> the code to remove the virtual phys, I'll make the attempt.
->>>
->>> Can you please try this patch?
->>
->> It still crashes for me, and backtraces look similar.
->>
->> Were you able to reproduce the crash?
+On Tue, Jul 27, 2010 at 4:48 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> Fix rt2500usb hardware encryption broken by commit
+> 96b61bafe22b2f2abcc833d651739edb977f1b1e
+> "rt2x00: Clean up USB vendor request buffer functions"
 >
-> with my patch, no. Can you please give the steps to trigger
-> this crash?
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-It happens every time if I:
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-echo add >   /debug/ath9k/phy0/wiphy
-rmmod ath9k
-
-I notice the patch applied with offsets.  What kernel/driver
-version are you testing?  I tried .34 kernel as well as the top-of-tree
-2.6.35-rcX.
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+> ---
+>  drivers/net/wireless/rt2x00/rt2500usb.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+> index 4b2fef3..7892647 100644
+> --- a/drivers/net/wireless/rt2x00/rt2500usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+> @@ -376,7 +376,7 @@ static int rt2500usb_config_key(struct rt2x00_dev *rt2x00dev,
+>                if (key->hw_key_idx > 0 && crypto->cipher != curr_cipher)
+>                        return -EOPNOTSUPP;
+>
+> -               rt2500usb_register_multiwrite(rt2x00dev, reg,
+> +               rt2500usb_register_multiwrite(rt2x00dev, KEY_ENTRY(key->hw_key_idx),
+>                                              crypto->key, sizeof(crypto->key));
+>
+>                /*
+> --
+> 1.7.1
+>
+>
