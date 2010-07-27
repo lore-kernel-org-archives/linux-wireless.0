@@ -1,94 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49441 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755064Ab0GTTaX (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:51344 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750722Ab0G0QUK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jul 2010 15:30:23 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] wireless: remove unnecessary reg_same_country_ie_hint
-Date: Tue, 20 Jul 2010 15:15:33 -0400
-Message-Id: <1279653333-13489-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <AANLkTinPnjtbDM8AE7gKMA9lBnIJDqG-KXc04ynZ6wLg@mail.gmail.com>
-References: <AANLkTinPnjtbDM8AE7gKMA9lBnIJDqG-KXc04ynZ6wLg@mail.gmail.com>
+	Tue, 27 Jul 2010 12:20:10 -0400
+Received: by pwi5 with SMTP id 5so520708pwi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 09:20:09 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20100727094759.27186.79639.stgit@tt-desk>
+References: <20100727094732.27186.30900.stgit@tt-desk> <20100727094759.27186.79639.stgit@tt-desk>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 27 Jul 2010 09:19:49 -0700
+Message-ID: <AANLkTi=4BtktKxPmFnYwAHaf9Wg-VdLmupcOfXEr1Bpg@mail.gmail.com>
+Subject: Re: [PATCH v4 1/3] cfg80211: Add nl80211 antenna configuration
+To: Bruno Randolf <br1@einfach.org>
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Might as well remove  reg_same_country_ie_hint() completely since we
-already dealt with suspend/resume through the regulatory hint
-disconnect." -- Luis
+On Tue, Jul 27, 2010 at 2:48 AM, Bruno Randolf <br1@einfach.org> wrote:
+> Allow setting TX and RX antenna configuration via nl80211.
+>
+> The antenna configuration is defined as a bitmap of allowed antennas to use for
+> either receiving or transmitting. Separate bitmaps are used for RX and TX to
+> allow configuring different antennas for receiving and transmitting. The bitmap
+> is 8 bit long, each bit representing one antenna, starting with antenna 1.
+>
+> If multiple receive (RX) antennas are selected, the driver may use diversity or
+> multiple 802.11n RX chains, according to the chipset capabilities and
+> configuration.
+>
+> If multiple transmit (TX) antennas are selected, the driver has to send on all
+> selected antennas, making this mode of operation only possible on 802.11n
+> chipsets with multiple TX chains. If the transmit antenna bitmap is set to the
+> special value zero (0) the driver should select the TX antenna based on the
+> antenna which was used for receiving (TX antenna follows RX diversity - this is
+> the usual mode of 'diversity') for pre 802.11n devices.
+>
+> Using bitmaps has the benefit of allowing for a flexible configuration
+> interface which can support many different configurations. Drivers should
+> reject configurations they cannot support. While covering the standard modes
+> "fixed antenna 1", "fixed antenna 2" and "diversity" this API also allows more
+> rare - but useful - configurations as follows:
+>
+> 1) Send on antenna 1, receive on antenna 2 (or vice versa). This can be used to
+> have a low gain antenna for TX in order to keep within the regulatory
+> constraints and a high gain antenna for RX in order to receive weaker signals
+> ("speak softly, but listen harder"). This can be useful for building long-shot
+> outdoor links. Another usage of this setup is having a low-noise pre-amplifier
+> on antenna 1 and a power amplifier on the other antenna. This way transmit
+> noise is mostly kept out of the low noise receive channel.
+> (This would be bitmaps: tx 1 rx 2).
+>
+> 2) Another similar setup is: Use RX diversity on both antennas, but always send
+> on antenna 1. Again that would allow us to benefit from a higher gain RX
+> antenna, while staying within the legal limits.
+> (This would be: tx 0 rx 3).
+>
+> 3) And finally there can be special experimental setups in research and
+> development where more than 2 antennas are available. It's good to keep the API
+> flexible.
+>
+> Signed-off-by: Bruno Randolf <br1@einfach.org>
+> ---
+>  include/linux/nl80211.h |   17 +++++++++++++++++
+>  include/net/cfg80211.h  |    3 +++
+>  net/wireless/nl80211.c  |   30 +++++++++++++++++++++++++++++-
+>  3 files changed, 49 insertions(+), 1 deletions(-)
+>
+> diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+> index 2c87016..b9de53c 100644
+> --- a/include/linux/nl80211.h
+> +++ b/include/linux/nl80211.h
+> @@ -731,6 +731,20 @@ enum nl80211_commands {
+>  *      This is used in association with @NL80211_ATTR_WIPHY_TX_POWER_SETTING
+>  *      for non-automatic settings.
+>  *
+> + * @NL80211_ATTR_WIPHY_ANTENNA_TX: Bitmap of allowed antennas for transmitting.
+> + *     Each bit represents one antenna, starting with antenna 1 at the first
+> + *     bit. If the bitmap is zero (0), the TX antenna follows RX diversity.
 
-Reported-by: Luis R. Rodriguez <mcgrof@gmail.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/wireless/reg.c |   45 ---------------------------------------------
- 1 files changed, 0 insertions(+), 45 deletions(-)
+What about for 802.11n? What if you want to disable TX?
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 678d0bd..48baf28 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1483,39 +1483,6 @@ int regulatory_hint(struct wiphy *wiphy, const char *alpha2)
- }
- EXPORT_SYMBOL(regulatory_hint);
- 
--/* Caller must hold reg_mutex */
--static bool reg_same_country_ie_hint(struct wiphy *wiphy,
--			char *alpha2, enum environment_cap env)
--{
--	struct wiphy *request_wiphy;
--
--	assert_reg_lock();
--
--	if (unlikely(last_request->initiator !=
--	    NL80211_REGDOM_SET_BY_COUNTRY_IE))
--		return false;
--
--	request_wiphy = wiphy_idx_to_wiphy(last_request->wiphy_idx);
--
--	if (!request_wiphy)
--		return false;
--
--	if (likely(request_wiphy != wiphy))
--		return (last_request->alpha2[0] == alpha2[0] &&
--			last_request->alpha2[1] == alpha2[1] &&
--			last_request->country_ie_env == env);
--	/*
--	 * We should not have let these through at this point, they
--	 * should have been picked up earlier by the first alpha2 check
--	 * on the device
--	 */
--	if (WARN_ON((last_request->alpha2[0] == alpha2[0] &&
--			last_request->alpha2[1] == alpha2[1] &&
--			last_request->country_ie_env == env )))
--		return true;
--	return false;
--}
--
- /*
-  * We hold wdev_lock() here so we cannot hold cfg80211_mutex() and
-  * therefore cannot iterate over the rdev list here.
-@@ -1560,18 +1527,6 @@ void regulatory_hint_11d(struct wiphy *wiphy,
- 	    wiphy_idx_valid(last_request->wiphy_idx)))
- 		goto out;
- 
--	/*
--	 * This will not happen right now but we leave it here for the
--	 * the future when we want to add suspend/resume support and having
--	 * the user move to another country after doing so, or having the user
--	 * move to another AP. Right now we just trust the first AP.
--	 *
--	 * If we hit this before we add this support we want to be informed of
--	 * it as it would indicate a mistake in the current design
--	 */
--	if (WARN_ON(reg_same_country_ie_hint(wiphy, alpha2, env)))
--		goto free_rd_out;
--
- 	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
- 	if (!request)
- 		goto free_rd_out;
--- 
-1.7.1.1
+> + *     If multiple antennas are selected all selected antennas have to be used
+> + *     for transmitting (801.11n multiple TX chains).
 
+I rather call this TX / RX chainmask then.
+
+> + *     Drivers may reject configurations they cannot support.
+> + *
+> + * @NL80211_ATTR_WIPHY_ANTENNA_RX: Bitmap of allowed antennas for receiving.
+> + *     Each bit represents one antenna, starting with antenna 1 at the first
+> + *     bit. If multiple antennas are selected in the bitmap, 802.11n devices
+> + *     should use multiple RX chains on these antennas, while non-802.11n
+> + *     drivers should use antenna diversity between these antennas.
+
+What about TX beamforming, and STBC?
+
+Unless 802.11n is completely dealt with I really prefer this patch to
+only address legacy. Otherwise I see sloppyness and inconsistencies on
+supporting this feature throughout different drivers. I'd like to
+avoid that at all costs on nl80211. What you are trying to address is
+legacy antenna setup, not 802.11n RX/TX chainmask dynamic settings so
+I'd really try to avoid it unless you really want to address all
+aspects of chain configuration for 802.11n and even then what I'm
+leading on to say is I think you'll see if you try to address both it
+just gets messy.
+
+  Luis
