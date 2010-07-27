@@ -1,43 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40642 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751981Ab0GWVAN (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34361 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750908Ab0G0GhS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jul 2010 17:00:13 -0400
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1OcPLo-0001T5-Iu
-	for linux-wireless@vger.kernel.org; Fri, 23 Jul 2010 17:00:12 -0400
-Received: from linville-t400.local (linville-t400.local [127.0.0.1])
-	by linville-t400.local (8.14.4/8.14.3) with ESMTP id o6NKjT22031470
-	for <linux-wireless@vger.kernel.org>; Fri, 23 Jul 2010 16:45:29 -0400
-Received: (from linville@localhost)
-	by linville-t400.local (8.14.4/8.14.4/Submit) id o6NKjTwV031469
-	for linux-wireless@vger.kernel.org; Fri, 23 Jul 2010 16:45:29 -0400
-Date: Fri, 23 Jul 2010 16:45:29 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: new stuff for 2.6.36 needs to be posted _now_
-Message-ID: <20100723204529.GE2426@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 27 Jul 2010 02:37:18 -0400
+Subject: Re: iwlwifi connection problems
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alex Romosan <romosan@sycorax.lbl.gov>
+Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <87mxtd5xlq.fsf@sycorax.lbl.gov>
+References: <87tynqvtu6.fsf@sycorax.lbl.gov>
+	 <1279917523.10769.1.camel@wwguy-huron>
+	 <1280135867.3693.5.camel@jlt3.sipsolutions.net>
+	 <87mxtd5xlq.fsf@sycorax.lbl.gov>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 27 Jul 2010 08:37:09 +0200
+Message-ID: <1280212629.19098.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-You may have noticed that when Linus released 2.6.35-rc6, he
-optimistically predicted that it will be the last -rc for 2.6.35.
-So, the merge window is around the corner!
+On Mon, 2010-07-26 at 21:59 -0700, Alex Romosan wrote:
 
-For those that need a reminder, the opening of the merge window is a
-_deadline_ for new features.  Once the merge window opens, only fixes
-will be accepted for 2.6.36.  In fact, any non-fix patches need to
-already be in wireless-next-2.6 when the merge window opens if you want
-them in 2.6.36.  That means you need to get them posted _now_, so they
-can be reviewed and I can find time to merge them before the deadline.
+> any ideas on how i can debug this? i tried to do a git-bisect but i
+> didn't get anywhere. i have the driver compiled in the kernel if that
+> makes any difference. as i played with the later kernels (after 2.6.34)
+> i discovered that if kept bringing the interface down and then up again
+> eventually i would get "cfg80211: Calling CRDA to update world
+> regulatory domain" the antenna light on the laptop (i have a thinkpad
+> t61) would go off and then at the next ifup the driver connected. looks
+> like some kind of reset/initialization problem to me.
 
-You have been warned...this means you!
+So is the issue maybe the channel the AP is no, not the fact that it's
+hidden? or something like that?
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+johannes
+
