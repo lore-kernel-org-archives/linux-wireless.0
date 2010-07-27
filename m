@@ -1,54 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:45511 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754285Ab0GAHgZ convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:39027 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752967Ab0G0RyP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Jul 2010 03:36:25 -0400
-Received: by fxm14 with SMTP id 14so946920fxm.19
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Jul 2010 00:36:24 -0700 (PDT)
+	Tue, 27 Jul 2010 13:54:15 -0400
+Received: by bwz1 with SMTP id 1so3499724bwz.19
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 10:54:14 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <AC090B9732AB2B4DB7FF476E907FE660010673660C@dnce02.ent.ti.com>
-References: <AANLkTinOcy-n6EVzAasAJO1I2yNeWOiaCid0tGdxnuwa@mail.gmail.com>
-	<AC090B9732AB2B4DB7FF476E907FE660010673660C@dnce02.ent.ti.com>
-Date: Thu, 1 Jul 2010 09:36:23 +0200
-Message-ID: <AANLkTintDfCQ-JK-mN5uZQU1LXelqI3OuVhvdKPA62SX@mail.gmail.com>
-Subject: Re: wl1271 firmware
-From: Pazzo Da Legare <pazzodalegare@gmail.com>
-To: "Levi, Shahar" <shahar_levi@ti.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20100727144818.6012.48437.send-patch@dhcp-lab-109.englab.brq.redhat.com>
+References: <20100727144804.6012.94740.send-patch@dhcp-lab-109.englab.brq.redhat.com>
+	<20100727144818.6012.48437.send-patch@dhcp-lab-109.englab.brq.redhat.com>
+Date: Tue, 27 Jul 2010 19:54:13 +0200
+Message-ID: <AANLkTikcKFadn_jn8GV-u_xWpcN11Z+2QP5Dt4XQsDEk@mail.gmail.com>
+Subject: Re: [PATCH w-t 3/3] rt2500usb: disallow to set WEP key with non zero
+	index
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Shahar,
+On Tue, Jul 27, 2010 at 4:48 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On our hardware (050d:7050 Belkin Components F5D7050 Wireless G Adapter),
+> setting any WEP key with non zero index, cause rx frames corruption.
+>
+> Note: perhaps (I did not check) this can be fixed differently - by using
+> hw_key_idx the same as true MAC key index. But according to the comment in
+> rt2x00mac_set_key():
+>
+> "the hardware requires keys to be assigned in correct order (When key 1
+> is provided but key 0 is not, then the key is not found by the hardware
+> during RX)"
+>
+> this will be quite problematic. Since WEP should not be used, disabling
+> hardware crypto offload for it will not hurt much. Beside static
+> one key WEP will still be offloaded.
+>
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Thank you for your help!
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-pz
-
-2010/6/30 Levi, Shahar <shahar_levi@ti.com>:
-> Hi pz,
-> I am checking the way to access the FW and NVS file of wl1271.
-> Let me find more details on that and get back to you.
-> Regards,
-> Shahar
-> -----Original Message-----
-> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Pazzo Da Legare
-> Sent: Wednesday, June 30, 2010 2:27 PM
-> To: linux-wireless@vger.kernel.org
-> Subject: wl1271 firmware
+> ---
+>  drivers/net/wireless/rt2x00/rt2500usb.c |    8 ++++++++
+>  1 files changed, 8 insertions(+), 0 deletions(-)
 >
-> Hi all,
+> diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+> index 3028abb..bf059cd 100644
+> --- a/drivers/net/wireless/rt2x00/rt2500usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+> @@ -351,6 +351,14 @@ static int rt2500usb_config_key(struct rt2x00_dev *rt2x00dev,
 >
-> I'm looking for wl1271 firmwares. I found wl1271-fw.bin but I cannot
-> find wl1271-nvs.bin needed to use the wl1271's driver.
-> Could you please indicate where I can get it?
->
-> Thank in advance,
->
-> pz
+>        if (crypto->cmd == SET_KEY) {
+>                /*
+> +                * Disallow to set WEP key other than with index 0,
+> +                * it is known that not work at least on some hardware.
+> +                * SW crypto will be used in that case.
+> +                */
+> +               if (key->alg == ALG_WEP && key->keyidx != 0)
+> +                       return -EOPNOTSUPP;
+> +
+> +               /*
+>                 * Pairwise key will always be entry 0, but this
+>                 * could collide with a shared key on the same
+>                 * position...
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 1.7.1
+>
 >
