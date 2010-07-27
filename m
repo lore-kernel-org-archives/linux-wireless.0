@@ -1,488 +1,546 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:25973 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751355Ab0G0SGh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 14:06:37 -0400
-Subject: [wt PATCH 12/16] libertas: convert PS_MODE to a direct command
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1280260357.19686.13.camel@dcbw.foobar.com>
-References: <1280260357.19686.13.camel@dcbw.foobar.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 27 Jul 2010 13:08:08 -0700
-Message-ID: <1280261288.19686.31.camel@dcbw.foobar.com>
-Mime-Version: 1.0
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:59099 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750908Ab0G0GUe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jul 2010 02:20:34 -0400
+Received: by wwj40 with SMTP id 40so872558wwj.1
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Jul 2010 23:20:32 -0700 (PDT)
+Received: from debian64.daheim
+	([192.168.0.4] helo=debian64.localnet ident=chuck)
+	by debian64.daheim with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.72)
+	(envelope-from <chunkeey@googlemail.com>)
+	id 1OddWg-0003LA-Ph
+	for linux-wireless@vger.kernel.org; Tue, 27 Jul 2010 08:20:30 +0200
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [WIP] mac80211: AMPDU rx reorder timeout timer
+Date: Tue, 27 Jul 2010 08:20:24 +0200
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201007270820.25347.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Powersave looks like it got broken at some point but we'll fix that up
-when the command submission stuff is more understandable, which this
-series helps to do.  That said, this patch should not further break
-powersave.
+This (rather _unfinished_ :-D ) patch adds a timer which
+if trigger schedules the automatic release of all expired
+A-MPDU frames. This implementation has the advantage that
+all queued-up MPDU will now arrive in the network core
+within a timely manner.
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
+In my "experiments", the patch helped to ironed out the
+sudden throughput drops that have been _killing_ my
+average tcp performance ever since I can remember.
+
+But there is a catch: The logs will quickly fill up with:
+"release an RX reorder frame due to timeout on earlier frames".
+and the package loss will goes through the roof...
+
+Now, I can think of several reasons why this could happen:
+	1. we don't wait long enough for the HT peer to
+		finish their _retry_ procedure?
+
+	2. previously - when the stream simply _stopped_ - we had
+		to wait until the tcp retry kick in again. So we had
+		some "silent" periods and therefore less noise from
+		the reordering code?
+
+	3. ->bugs<- but where are they?
+
+Regards,
+	Christian
 ---
- drivers/net/wireless/libertas/cmd.c     |  139 ++++++++++++-------------------
- drivers/net/wireless/libertas/cmd.h     |    6 +-
- drivers/net/wireless/libertas/cmdresp.c |   13 ++--
- drivers/net/wireless/libertas/defs.h    |    5 -
- drivers/net/wireless/libertas/host.h    |   50 ++++++-----
- drivers/net/wireless/libertas/if_usb.c  |    4 +-
- drivers/net/wireless/libertas/main.c    |    4 +-
- 7 files changed, 95 insertions(+), 126 deletions(-)
+yeah, it's past 8 AM here...
 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index 2c96cf3..5c7bb35 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -230,42 +230,49 @@ int lbs_host_sleep_cfg(struct lbs_private *priv, uint32_t criteria,
+so please excuse me, if this is nothing but utter rubbish.
+---
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index 965b272..947352e 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -86,6 +86,11 @@ void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
+ 				     tid, 0, reason);
+ 
+ 	del_timer_sync(&tid_rx->session_timer);
++	del_timer_sync(&tid_rx->reorder_timer);
++
++	spin_lock_bh(&local->tid_rx_reorder_lock);
++	list_del_init(&tid_rx->reorder_head);
++	spin_unlock_bh(&local->tid_rx_reorder_lock);
+ 
+ 	call_rcu(&tid_rx->rcu_head, ieee80211_free_tid_rx);
  }
- EXPORT_SYMBOL_GPL(lbs_host_sleep_cfg);
+@@ -120,6 +125,28 @@ static void sta_rx_agg_session_timer_expired(unsigned long data)
+ 	ieee80211_queue_work(&sta->local->hw, &sta->ampdu_mlme.work);
+ }
  
--static int lbs_cmd_802_11_ps_mode(struct cmd_ds_command *cmd,
--				   u16 cmd_action)
-+/**
-+ *  @brief Sets the Power Save mode
-+ *
-+ *  @param priv    	A pointer to struct lbs_private structure
-+ *  @param cmd_action	The Power Save operation (PS_MODE_ACTION_ENTER_PS or
-+ *                         PS_MODE_ACTION_EXIT_PS)
-+ *  @param block	Whether to block on a response or not
-+ *
-+ *  @return 	   	0 on success, error on failure
-+ */
-+int lbs_set_ps_mode(struct lbs_private *priv, u16 cmd_action, bool block)
++static void sta_rx_agg_reorder_timer_expired(unsigned long data)
++{
++	/* not an elegant detour, but there is no choice as the timer passes
++	 * only one argument, and various sta_info are needed here, so init
++	 * flow in sta_info_create gives the TID as data, while the timer_to_id
++	 * array gives the sta through container_of */
++	u8 *ptid = (u8 *)data;
++	u8 *timer_to_id = ptid - *ptid;
++	struct sta_info *sta = container_of(timer_to_id, struct sta_info,
++					 timer_to_tid[0]);
++
++	struct ieee80211_local *local = sta->local;
++	struct tid_ampdu_rx *tid_rx = sta->ampdu_mlme.tid_rx[*ptid];
++
++	spin_lock_bh(&local->tid_rx_reorder_lock);
++	if (list_empty(&tid_rx->reorder_head))
++		list_add_tail(&tid_rx->reorder_head, &local->tid_rx_reorder);
++	spin_unlock_bh(&local->tid_rx_reorder_lock);
++
++	tasklet_schedule(&local->tasklet);
++}
++
+ static void ieee80211_send_addba_resp(struct ieee80211_sub_if_data *sdata, u8 *da, u16 tid,
+ 				      u8 dialog_token, u16 status, u16 policy,
+ 				      u16 buf_size, u16 timeout)
+@@ -251,11 +278,17 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
+ 		goto end;
+ 	}
+ 
+-	/* rx timer */
++	/* rx session timer */
+ 	tid_agg_rx->session_timer.function = sta_rx_agg_session_timer_expired;
+ 	tid_agg_rx->session_timer.data = (unsigned long)&sta->timer_to_tid[tid];
+ 	init_timer(&tid_agg_rx->session_timer);
+ 
++	/* rx reorder timer */
++	INIT_LIST_HEAD(&tid_agg_rx->reorder_head);
++	tid_agg_rx->reorder_timer.function = sta_rx_agg_reorder_timer_expired;
++	tid_agg_rx->reorder_timer.data = (unsigned long)&sta->timer_to_tid[tid];
++	init_timer(&tid_agg_rx->reorder_timer);
++
+ 	/* prepare reordering buffer */
+ 	tid_agg_rx->reorder_buf =
+ 		kcalloc(buf_size, sizeof(struct sk_buff *), GFP_ATOMIC);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index c6b5c2d..b8bd0f9 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -704,6 +704,8 @@ struct ieee80211_local {
+ 	struct tasklet_struct tasklet;
+ 	struct sk_buff_head skb_queue;
+ 	struct sk_buff_head skb_queue_unreliable;
++	spinlock_t tid_rx_reorder_lock;
++	struct list_head tid_rx_reorder;
+ 
+ 	/* Station data */
+ 	/*
+@@ -1241,6 +1243,8 @@ int ieee80211_wk_remain_on_channel(struct ieee80211_sub_if_data *sdata,
+ int ieee80211_wk_cancel_remain_on_channel(
+ 	struct ieee80211_sub_if_data *sdata, u64 cookie);
+ 
++void ieee80211_release_reorder_timeout(struct sta_info *sta, unsigned int tid);
++
+ /* channel management */
+ enum ieee80211_chan_mode {
+ 	CHAN_MODE_UNDEFINED,
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 0e95c75..7bff2db 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -281,6 +281,26 @@ static void ieee80211_tasklet_handler(unsigned long data)
+ 			break;
+ 		}
+ 	}
++
++	spin_lock_bh(&local->tid_rx_reorder_lock);
++	while (!list_empty(&local->tid_rx_reorder)) {
++		struct tid_ampdu_rx *iter;
++		struct sta_info *sta;
++		u8 *ptid, *timer_to_id;
++
++		iter = list_first_entry(&local->tid_rx_reorder,
++					struct tid_ampdu_rx,
++					reorder_head);
++
++		ptid = (u8 *)iter->session_timer.data;
++		timer_to_id = ptid - *ptid;
++		sta = container_of(timer_to_id, struct sta_info,
++				   timer_to_tid[0]);
++
++		list_del_init(&iter->reorder_head);
++		ieee80211_release_reorder_timeout(sta, *ptid);
++	}
++	spin_unlock_bh(&local->tid_rx_reorder_lock);
+ }
+ 
+ static void ieee80211_restart_work(struct work_struct *work)
+@@ -448,6 +468,8 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 	local->uapsd_max_sp_len = IEEE80211_DEFAULT_MAX_SP_LEN;
+ 
+ 	INIT_LIST_HEAD(&local->interfaces);
++	INIT_LIST_HEAD(&local->tid_rx_reorder);
++	spin_lock_init(&local->tid_rx_reorder_lock);
+ 
+ 	__hw_addr_init(&local->mc_list);
+ 
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index d70e1a9..fae1dbe 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -538,20 +538,12 @@ static void ieee80211_release_reorder_frame(struct ieee80211_hw *hw,
+ 					    int index,
+ 					    struct sk_buff_head *frames)
  {
--	struct cmd_ds_802_11_ps_mode *psm = &cmd->params.psmode;
-+	struct cmd_ds_802_11_ps_mode cmd;
-+	int ret = 0;
+-	struct ieee80211_supported_band *sband;
+-	struct ieee80211_rate *rate = NULL;
+ 	struct sk_buff *skb = tid_agg_rx->reorder_buf[index];
+-	struct ieee80211_rx_status *status;
  
- 	lbs_deb_enter(LBS_DEB_CMD);
+ 	if (!skb)
+ 		goto no_frame;
  
--	cmd->command = cpu_to_le16(CMD_802_11_PS_MODE);
--	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_802_11_ps_mode) +
--				sizeof(struct cmd_header));
--	psm->action = cpu_to_le16(cmd_action);
--	psm->multipledtim = 0;
--	switch (cmd_action) {
--	case CMD_SUBCMD_ENTER_PS:
--		lbs_deb_cmd("PS command:" "SubCode- Enter PS\n");
+-	status = IEEE80211_SKB_RXCB(skb);
 -
--		psm->locallisteninterval = 0;
--		psm->nullpktinterval = 0;
--		psm->multipledtim =
--		    cpu_to_le16(MRVDRV_DEFAULT_MULTIPLE_DTIM);
--		break;
--
--	case CMD_SUBCMD_EXIT_PS:
--		lbs_deb_cmd("PS command:" "SubCode- Exit PS\n");
--		break;
--
--	case CMD_SUBCMD_SLEEP_CONFIRMED:
--		lbs_deb_cmd("PS command: SubCode- sleep confirm\n");
--		break;
-+	memset(&cmd, 0, sizeof(cmd));
-+	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
-+	cmd.action = cpu_to_le16(cmd_action);
+ 	/* release the reordered frames to stack */
+-	sband = hw->wiphy->bands[status->band];
+-	if (!(status->flag & RX_FLAG_HT))
+-		rate = &sband->bitrates[status->rate_idx];
+ 	tid_agg_rx->stored_mpdu_num--;
+ 	tid_agg_rx->reorder_buf[index] = NULL;
+ 	__skb_queue_tail(frames, skb);
+@@ -583,6 +575,73 @@ static void ieee80211_release_reorder_frames(struct ieee80211_hw *hw,
+  */
+ #define HT_RX_REORDER_BUF_TIMEOUT (HZ / 10)
  
--	default:
--		break;
-+	if (cmd_action == PS_MODE_ACTION_ENTER_PS) {
-+		lbs_deb_cmd("PS_MODE: action ENTER_PS\n");
-+		cmd.multipledtim = cpu_to_le16(1);  /* Default DTIM multiple */
-+	} else if (cmd_action == PS_MODE_ACTION_EXIT_PS) {
-+		lbs_deb_cmd("PS_MODE: action EXIT_PS\n");
-+	} else {
-+		/* We don't handle CONFIRM_SLEEP here because it needs to
-+		 * be fastpathed to the firmware.
++static void ieee80211_sta_reorder_timeout(struct ieee80211_hw *hw,
++					  struct tid_ampdu_rx *tid_agg_rx,
++					  struct sk_buff_head *frames)
++{
++	int index;
++
++	/* release the buffer until next missing frame */
++	index = seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn) %
++						tid_agg_rx->buf_size;
++	if (!tid_agg_rx->reorder_buf[index] &&
++	    tid_agg_rx->stored_mpdu_num > 1) {
++		/*
++		 * No buffers ready to be released, but check whether any
++		 * frames in the reorder buffer have timed out.
 +		 */
-+		lbs_deb_cmd("PS_MODE: unknown action 0x%X\n", cmd_action);
-+		ret = -EOPNOTSUPP;
-+		goto out;
- 	}
- 
--	lbs_deb_leave(LBS_DEB_CMD);
--	return 0;
-+	if (block)
-+		ret = lbs_cmd_with_response(priv, CMD_802_11_PS_MODE, &cmd);
-+	else
-+		lbs_cmd_async(priv, CMD_802_11_PS_MODE, &cmd.hdr, sizeof (cmd));
++		int j;
++		int skipped = 1;
++		for (j = (index + 1) % tid_agg_rx->buf_size; j != index;
++		     j = (j + 1) % tid_agg_rx->buf_size) {
++			if (!tid_agg_rx->reorder_buf[j]) {
++				skipped++;
++				continue;
++			}
++			if (!time_after(jiffies, tid_agg_rx->reorder_time[j] +
++					HT_RX_REORDER_BUF_TIMEOUT)) {
 +
-+out:
-+	lbs_deb_leave_args(LBS_DEB_CMD, "ret %d", ret);
-+	return ret;
++				mod_timer(&tid_agg_rx->reorder_timer, jiffies -
++					  tid_agg_rx->reorder_time[j] + 1 +
++					  HT_RX_REORDER_BUF_TIMEOUT);
++				break;
++			}
++
++#ifdef CONFIG_MAC80211_HT_DEBUG
++			if (net_ratelimit())
++				printk(KERN_DEBUG "%s: release an RX reorder "
++				       "frame due to timeout on earlier "
++				       "frames\n",
++				       wiphy_name(hw->wiphy));
++#endif
++			ieee80211_release_reorder_frame(hw, tid_agg_rx,
++							j, frames);
++
++			/*
++			 * Increment the head seq# also for the skipped slots.
++			 */
++			tid_agg_rx->head_seq_num =
++				(tid_agg_rx->head_seq_num + skipped) & SEQ_MASK;
++			skipped = 0;
++		}
++	} else {
++		while (tid_agg_rx->reorder_buf[index]) {
++			ieee80211_release_reorder_frame(hw, tid_agg_rx,
++							index, frames);
++			index =	seq_sub(tid_agg_rx->head_seq_num,
++				tid_agg_rx->ssn) % tid_agg_rx->buf_size;
++		}
++
++		if (tid_agg_rx->stored_mpdu_num) {
++			mod_timer(&tid_agg_rx->reorder_timer, jiffies -
++				  tid_agg_rx->reorder_time[index] + 1 +
++				  HT_RX_REORDER_BUF_TIMEOUT);
++		} else {
++			del_timer(&tid_agg_rx->reorder_timer);
++		}
++	}
++}
++
+ /*
+  * As this function belongs to the RX path it must be under
+  * rcu_read_lock protection. It returns false if the frame
+@@ -643,49 +702,8 @@ static bool ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
+ 	tid_agg_rx->reorder_buf[index] = skb;
+ 	tid_agg_rx->reorder_time[index] = jiffies;
+ 	tid_agg_rx->stored_mpdu_num++;
+-	/* release the buffer until next missing frame */
+-	index = seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn) %
+-						tid_agg_rx->buf_size;
+-	if (!tid_agg_rx->reorder_buf[index] &&
+-	    tid_agg_rx->stored_mpdu_num > 1) {
+-		/*
+-		 * No buffers ready to be released, but check whether any
+-		 * frames in the reorder buffer have timed out.
+-		 */
+-		int j;
+-		int skipped = 1;
+-		for (j = (index + 1) % tid_agg_rx->buf_size; j != index;
+-		     j = (j + 1) % tid_agg_rx->buf_size) {
+-			if (!tid_agg_rx->reorder_buf[j]) {
+-				skipped++;
+-				continue;
+-			}
+-			if (!time_after(jiffies, tid_agg_rx->reorder_time[j] +
+-					HT_RX_REORDER_BUF_TIMEOUT))
+-				break;
+ 
+-#ifdef CONFIG_MAC80211_HT_DEBUG
+-			if (net_ratelimit())
+-				printk(KERN_DEBUG "%s: release an RX reorder "
+-				       "frame due to timeout on earlier "
+-				       "frames\n",
+-				       wiphy_name(hw->wiphy));
+-#endif
+-			ieee80211_release_reorder_frame(hw, tid_agg_rx,
+-							j, frames);
+-
+-			/*
+-			 * Increment the head seq# also for the skipped slots.
+-			 */
+-			tid_agg_rx->head_seq_num =
+-				(tid_agg_rx->head_seq_num + skipped) & SEQ_MASK;
+-			skipped = 0;
+-		}
+-	} else while (tid_agg_rx->reorder_buf[index]) {
+-		ieee80211_release_reorder_frame(hw, tid_agg_rx, index, frames);
+-		index =	seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn) %
+-							tid_agg_rx->buf_size;
+-	}
++	ieee80211_sta_reorder_timeout(hw, tid_agg_rx, frames);
+ 
+ 	return true;
+ }
+@@ -2267,19 +2285,47 @@ static void ieee80211_rx_cooked_monitor(struct ieee80211_rx_data *rx,
+ 	dev_kfree_skb(skb);
  }
  
- int lbs_cmd_802_11_sleep_params(struct lbs_private *priv, uint16_t cmd_action,
-@@ -950,16 +957,15 @@ static void lbs_queue_cmd(struct lbs_private *priv,
- 
- 	/* Exit_PS command needs to be queued in the header always. */
- 	if (le16_to_cpu(cmdnode->cmdbuf->command) == CMD_802_11_PS_MODE) {
--		struct cmd_ds_802_11_ps_mode *psm = (void *) &cmdnode->cmdbuf[1];
-+		struct cmd_ds_802_11_ps_mode *psm = (void *) &cmdnode->cmdbuf;
- 
--		if (psm->action == cpu_to_le16(CMD_SUBCMD_EXIT_PS)) {
-+		if (psm->action == cpu_to_le16(PS_MODE_ACTION_EXIT_PS)) {
- 			if (priv->psstate != PS_STATE_FULL_POWER)
- 				addtail = 0;
- 		}
- 	}
- 
--	if (le16_to_cpu(cmdnode->cmdbuf->command) ==
--			CMD_802_11_WAKEUP_CONFIRM)
-+	if (le16_to_cpu(cmdnode->cmdbuf->command) == CMD_802_11_WAKEUP_CONFIRM)
- 		addtail = 0;
- 
- 	spin_lock_irqsave(&priv->driver_lock, flags);
-@@ -1154,7 +1160,7 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
+-
+-static void ieee80211_invoke_rx_handlers(struct ieee80211_sub_if_data *sdata,
+-					 struct ieee80211_rx_data *rx,
+-					 struct sk_buff *skb,
+-					 struct ieee80211_rate *rate)
++static void ieee80211_rx_handlers_result(struct ieee80211_rx_data *rx,
++					 ieee80211_rx_result res)
  {
- 	int ret = 0;
- 	struct cmd_ctrl_node *cmdnode;
--	struct cmd_ds_command *cmdptr;
-+	struct cmd_header *cmdptr;
- 	unsigned long flags;
+-	struct sk_buff_head reorder_release;
+-	ieee80211_rx_result res = RX_DROP_MONITOR;
++	struct ieee80211_rx_status *status;
  
- 	lbs_deb_enter(LBS_DEB_HOST);
-@@ -1190,7 +1196,7 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
- 	cmdnode->callback = NULL;
- 	cmdnode->callback_arg = (unsigned long)pdata_buf;
+-	__skb_queue_head_init(&reorder_release);
++	switch (res) {
++	case RX_DROP_MONITOR:
++		I802_DEBUG_INC(rx->sdata->local->rx_handlers_drop);
++		if (rx->sta)
++			rx->sta->rx_dropped++;
++		/* fall through */
++	case RX_CONTINUE: {
++		struct ieee80211_rate *rate = NULL;
++		struct ieee80211_supported_band *sband;
  
--	cmdptr = (struct cmd_ds_command *)cmdnode->cmdbuf;
-+	cmdptr = (struct cmd_header *)cmdnode->cmdbuf;
+-	rx->skb = skb;
+-	rx->sdata = sdata;
++		status = IEEE80211_SKB_RXCB((rx->skb));
++
++		sband = rx->local->hw.wiphy->bands[status->band];
++		if (!(status->flag & RX_FLAG_HT))
++			rate = &sband->bitrates[status->rate_idx];
++
++		ieee80211_rx_cooked_monitor(rx, rate);
++		break;
++		}
++	case RX_DROP_UNUSABLE:
++		I802_DEBUG_INC(rx->sdata->local->rx_handlers_drop);
++		if (rx->sta)
++			rx->sta->rx_dropped++;
++		dev_kfree_skb(rx->skb);
++		break;
++	case RX_QUEUED:
++		I802_DEBUG_INC(rx->sdata->local->rx_handlers_queued);
++		break;
++	}
++}
++
++static void ieee80211_rx_handlers(struct ieee80211_rx_data *rx,
++				  struct sk_buff_head *frames)
++{
++	ieee80211_rx_result res = RX_DROP_MONITOR;
++	struct sk_buff *skb;
  
- 	lbs_deb_host("PREP_CMD: command 0x%04x\n", cmd_no);
+ #define CALL_RXH(rxh)			\
+ 	do {				\
+@@ -2288,17 +2334,7 @@ static void ieee80211_invoke_rx_handlers(struct ieee80211_sub_if_data *sdata,
+ 			goto rxh_next;  \
+ 	} while (0);
  
-@@ -1202,10 +1208,6 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
- 	cmdptr->result = 0;
- 
- 	switch (cmd_no) {
--	case CMD_802_11_PS_MODE:
--		ret = lbs_cmd_802_11_ps_mode(cmdptr, cmd_action);
--		break;
--
- 	case CMD_802_11_DEEP_SLEEP:
- 		cmdptr->command = cpu_to_le16(CMD_802_11_DEEP_SLEEP);
- 		cmdptr->size = cpu_to_le16(sizeof(struct cmd_header));
-@@ -1426,10 +1428,10 @@ int lbs_execute_next_command(struct lbs_private *priv)
- 			/*
- 			 * 1. Non-PS command:
- 			 * Queue it. set needtowakeup to TRUE if current state
--			 * is SLEEP, otherwise call lbs_ps_wakeup to send Exit_PS.
--			 * 2. PS command but not Exit_PS:
-+			 * is SLEEP, otherwise call send EXIT_PS.
-+			 * 2. PS command but not EXIT_PS:
- 			 * Ignore it.
--			 * 3. PS command Exit_PS:
-+			 * 3. PS command EXIT_PS:
- 			 * Set needtowakeup to TRUE if current state is SLEEP,
- 			 * otherwise send this command down to firmware
- 			 * immediately.
-@@ -1443,8 +1445,11 @@ int lbs_execute_next_command(struct lbs_private *priv)
- 					/* w/ new scheme, it will not reach here.
- 					   since it is blocked in main_thread. */
- 					priv->needtowakeup = 1;
--				} else
--					lbs_ps_wakeup(priv, 0);
-+				} else {
-+					lbs_set_ps_mode(priv,
-+							PS_MODE_ACTION_EXIT_PS,
-+							false);
-+				}
- 
- 				ret = 0;
- 				goto done;
-@@ -1459,7 +1464,7 @@ int lbs_execute_next_command(struct lbs_private *priv)
- 				       "EXEC_NEXT_CMD: PS cmd, action 0x%02x\n",
- 				       psm->action);
- 				if (psm->action !=
--				    cpu_to_le16(CMD_SUBCMD_EXIT_PS)) {
-+				    cpu_to_le16(PS_MODE_ACTION_EXIT_PS)) {
- 					lbs_deb_host(
- 					       "EXEC_NEXT_CMD: ignore ENTER_PS cmd\n");
- 					list_del(&cmdnode->list);
-@@ -1519,13 +1524,16 @@ int lbs_execute_next_command(struct lbs_private *priv)
- 					lbs_deb_host(
- 					       "EXEC_NEXT_CMD: WPA enabled and GTK_SET"
- 					       " go back to PS_SLEEP");
--					lbs_ps_sleep(priv, 0);
-+					lbs_set_ps_mode(priv,
-+							PS_MODE_ACTION_ENTER_PS,
-+							false);
- 				}
- 			} else {
- 				lbs_deb_host(
- 				       "EXEC_NEXT_CMD: cmdpendingq empty, "
- 				       "go back to PS_SLEEP");
--				lbs_ps_sleep(priv, 0);
-+				lbs_set_ps_mode(priv, PS_MODE_ACTION_ENTER_PS,
-+						false);
- 			}
- 		}
- #endif
-@@ -1573,43 +1581,6 @@ out:
- 	lbs_deb_leave(LBS_DEB_HOST);
- }
- 
--void lbs_ps_sleep(struct lbs_private *priv, int wait_option)
--{
--	lbs_deb_enter(LBS_DEB_HOST);
--
 -	/*
--	 * PS is currently supported only in Infrastructure mode
--	 * Remove this check if it is to be supported in IBSS mode also
+-	 * NB: the rxh_next label works even if we jump
+-	 *     to it from here because then the list will
+-	 *     be empty, which is a trivial check
 -	 */
+-	CALL_RXH(ieee80211_rx_h_passive_scan)
+-	CALL_RXH(ieee80211_rx_h_check)
 -
--	lbs_prepare_and_send_command(priv, CMD_802_11_PS_MODE,
--			      CMD_SUBCMD_ENTER_PS, wait_option, 0, NULL);
+-	ieee80211_rx_reorder_ampdu(rx, &reorder_release);
 -
--	lbs_deb_leave(LBS_DEB_HOST);
--}
--
--/**
-- *  @brief This function sends Exit_PS command to firmware.
-- *
-- *  @param priv    	A pointer to struct lbs_private structure
-- *  @param wait_option	wait response or not
-- *  @return 	   	n/a
-- */
--void lbs_ps_wakeup(struct lbs_private *priv, int wait_option)
--{
--	__le32 Localpsmode;
--
--	lbs_deb_enter(LBS_DEB_HOST);
--
--	Localpsmode = cpu_to_le32(LBS802_11POWERMODECAM);
--
--	lbs_prepare_and_send_command(priv, CMD_802_11_PS_MODE,
--			      CMD_SUBCMD_EXIT_PS,
--			      wait_option, 0, &Localpsmode);
--
--	lbs_deb_leave(LBS_DEB_HOST);
--}
--
- /**
-  *  @brief This function checks condition and prepares to
-  *  send sleep confirm command to firmware if ok.
-diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
-index bfb3690..19b1f21 100644
---- a/drivers/net/wireless/libertas/cmd.h
-+++ b/drivers/net/wireless/libertas/cmd.h
-@@ -94,10 +94,6 @@ int lbs_host_sleep_cfg(struct lbs_private *priv, uint32_t criteria,
- int lbs_cmd_802_11_sleep_params(struct lbs_private *priv, uint16_t cmd_action,
- 				struct sleep_params *sp);
- 
--void lbs_ps_sleep(struct lbs_private *priv, int wait_option);
--
--void lbs_ps_wakeup(struct lbs_private *priv, int wait_option);
--
- void lbs_ps_confirm_sleep(struct lbs_private *priv);
- 
- int lbs_set_radio(struct lbs_private *priv, u8 preamble, u8 radio_on);
-@@ -143,4 +139,6 @@ int lbs_get_reg(struct lbs_private *priv, u16 reg, u16 offset, u32 *value);
- 
- int lbs_set_reg(struct lbs_private *priv, u16 reg, u16 offset, u32 value);
- 
-+int lbs_set_ps_mode(struct lbs_private *priv, u16 cmd_action, bool block);
-+
- #endif /* _LBS_CMD_H */
-diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-index a4e147a..83283b8 100644
---- a/drivers/net/wireless/libertas/cmdresp.c
-+++ b/drivers/net/wireless/libertas/cmdresp.c
-@@ -49,7 +49,7 @@ void lbs_mac_event_disconnected(struct lbs_private *priv)
- 	if (priv->psstate != PS_STATE_FULL_POWER) {
- 		/* make firmware to exit PS mode */
- 		lbs_deb_cmd("disconnected, so exit PS mode\n");
--		lbs_ps_wakeup(priv, 0);
-+		lbs_set_ps_mode(priv, PS_MODE_ACTION_EXIT_PS, false);
- 	}
- 	lbs_deb_leave(LBS_DEB_ASSOC);
- }
-@@ -132,9 +132,9 @@ int lbs_process_command_response(struct lbs_private *priv, u8 *data, u32 len)
- 			 * lbs_execute_next_command().
- 			 */
- 			if (priv->wdev->iftype == NL80211_IFTYPE_MONITOR &&
--			    action == CMD_SUBCMD_ENTER_PS)
-+			    action == PS_MODE_ACTION_ENTER_PS)
- 				priv->psmode = LBS802_11POWERMODECAM;
--		} else if (action == CMD_SUBCMD_ENTER_PS) {
-+		} else if (action == PS_MODE_ACTION_ENTER_PS) {
- 			priv->needtowakeup = 0;
- 			priv->psstate = PS_STATE_AWAKE;
- 
-@@ -149,11 +149,12 @@ int lbs_process_command_response(struct lbs_private *priv, u8 *data, u32 len)
- 
- 				spin_unlock_irqrestore(&priv->driver_lock, flags);
- 				mutex_unlock(&priv->lock);
--				lbs_ps_wakeup(priv, 0);
-+				lbs_set_ps_mode(priv, PS_MODE_ACTION_EXIT_PS,
-+						false);
- 				mutex_lock(&priv->lock);
- 				spin_lock_irqsave(&priv->driver_lock, flags);
- 			}
--		} else if (action == CMD_SUBCMD_EXIT_PS) {
-+		} else if (action == PS_MODE_ACTION_EXIT_PS) {
- 			priv->needtowakeup = 0;
- 			priv->psstate = PS_STATE_FULL_POWER;
- 			lbs_deb_host("CMD_RESP: EXIT_PS command response\n");
-@@ -291,7 +292,7 @@ int lbs_process_event(struct lbs_private *priv, u32 event)
- 			 * in lbs_ps_wakeup()
- 			 */
- 			lbs_deb_cmd("waking up ...\n");
--			lbs_ps_wakeup(priv, 0);
-+			lbs_set_ps_mode(priv, PS_MODE_ACTION_EXIT_PS, false);
- 		}
- 		break;
- 
-diff --git a/drivers/net/wireless/libertas/defs.h b/drivers/net/wireless/libertas/defs.h
-index da9833f..d00c728 100644
---- a/drivers/net/wireless/libertas/defs.h
-+++ b/drivers/net/wireless/libertas/defs.h
-@@ -172,11 +172,6 @@ static inline void lbs_deb_hex(unsigned int grp, const char *prompt, u8 *buf, in
- #define MRVDRV_MAX_BSS_DESCRIPTS		16
- #define MRVDRV_MAX_REGION_CODE			6
- 
--#define MRVDRV_IGNORE_MULTIPLE_DTIM		0xfffe
--#define MRVDRV_MIN_MULTIPLE_DTIM		1
--#define MRVDRV_MAX_MULTIPLE_DTIM		5
--#define MRVDRV_DEFAULT_MULTIPLE_DTIM		1
--
- #define MRVDRV_DEFAULT_LISTEN_INTERVAL		10
- 
- #define	MRVDRV_CHANNELS_PER_SCAN		4
-diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
-index ea041ac..a6d9b24 100644
---- a/drivers/net/wireless/libertas/host.h
-+++ b/drivers/net/wireless/libertas/host.h
-@@ -94,11 +94,9 @@
- #define CMD_802_11_BEACON_CTRL                  0x00b0
- 
- /* For the IEEE Power Save */
--#define CMD_SUBCMD_ENTER_PS                     0x0030
--#define CMD_SUBCMD_EXIT_PS                      0x0031
--#define CMD_SUBCMD_SLEEP_CONFIRMED              0x0034
--#define CMD_SUBCMD_FULL_POWERDOWN               0x0035
--#define CMD_SUBCMD_FULL_POWERUP                 0x0036
-+#define PS_MODE_ACTION_ENTER_PS                 0x0030
-+#define PS_MODE_ACTION_EXIT_PS                  0x0031
-+#define PS_MODE_ACTION_SLEEP_CONFIRMED          0x0034
- 
- #define CMD_ENABLE_RSN                          0x0001
- #define CMD_DISABLE_RSN                         0x0000
-@@ -163,11 +161,6 @@
- #define CMD_ACT_SET_TX_FIX_RATE                 0x0001
- #define CMD_ACT_GET_TX_RATE                     0x0002
- 
--/* Define action or option for CMD_802_11_PS_MODE */
--#define CMD_TYPE_CAM                            0x0000
--#define CMD_TYPE_MAX_PSP                        0x0001
--#define CMD_TYPE_FAST_PSP                       0x0002
--
- /* Options for CMD_802_11_FW_WAKE_METHOD */
- #define CMD_WAKE_METHOD_UNCHANGED               0x0000
- #define CMD_WAKE_METHOD_COMMAND_INT             0x0001
-@@ -683,11 +676,35 @@ struct cmd_ds_802_11_fw_wake_method {
- } __attribute__ ((packed));
- 
- struct cmd_ds_802_11_ps_mode {
-+	struct cmd_header hdr;
-+
- 	__le16 action;
-+
-+	/* Interval for keepalive in PS mode:
-+	 * 0x0000 = don't change
-+	 * 0x001E = firmware default
-+	 * 0xFFFF = disable
-+	 */
- 	__le16 nullpktinterval;
-+
-+	/* Number of DTIM intervals to wake up for:
-+	 * 0 = don't change
-+	 * 1 = firmware default
-+	 * 5 = max
-+	 */
- 	__le16 multipledtim;
-+
- 	__le16 reserved;
- 	__le16 locallisteninterval;
-+
-+	/* AdHoc awake period (FW v9+ only):
-+	 * 0 = don't change
-+	 * 1 = always awake (IEEE standard behavior)
-+	 * 2 - 31 = sleep for (n - 1) periods and awake for 1 period
-+	 * 32 - 254 = invalid
-+	 * 255 = sleep at each ATIM
-+	 */
-+	__le16 adhoc_awake_period;
- } __attribute__ ((packed));
- 
- struct cmd_confirm_sleep {
-@@ -952,17 +969,4 @@ struct cmd_ds_mesh_access {
- 
- /* Number of stats counters returned by the firmware */
- #define MESH_STATS_NUM 8
--
--struct cmd_ds_command {
--	/* command header */
--	__le16 command;
--	__le16 size;
--	__le16 seqnum;
--	__le16 result;
--
--	/* command Body */
--	union {
--		struct cmd_ds_802_11_ps_mode psmode;
--	} params;
--} __attribute__ ((packed));
+-	while ((skb = __skb_dequeue(&reorder_release))) {
++	while ((skb = __skb_dequeue(frames))) {
+ 		/*
+ 		 * all the other fields are valid across frames
+ 		 * that belong to an aMPDU since they are on the
+@@ -2316,42 +2352,88 @@ static void ieee80211_invoke_rx_handlers(struct ieee80211_sub_if_data *sdata,
+ 		CALL_RXH(ieee80211_rx_h_remove_qos_control)
+ 		CALL_RXH(ieee80211_rx_h_amsdu)
+ #ifdef CONFIG_MAC80211_MESH
+-		if (ieee80211_vif_is_mesh(&sdata->vif))
++		if (ieee80211_vif_is_mesh(&rx->sdata->vif))
+ 			CALL_RXH(ieee80211_rx_h_mesh_fwding);
  #endif
-diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-index 3678e53..07ece9d 100644
---- a/drivers/net/wireless/libertas/if_usb.c
-+++ b/drivers/net/wireless/libertas/if_usb.c
-@@ -433,7 +433,7 @@ static int if_usb_send_fw_pkt(struct if_usb_card *cardp)
+ 		CALL_RXH(ieee80211_rx_h_data)
  
- static int if_usb_reset_device(struct if_usb_card *cardp)
- {
--	struct cmd_ds_command *cmd = cardp->ep_out_buf + 4;
-+	struct cmd_header *cmd = cardp->ep_out_buf + 4;
- 	int ret;
+ 		/* special treatment -- needs the queue */
+-		res = ieee80211_rx_h_ctrl(rx, &reorder_release);
++		res = ieee80211_rx_h_ctrl(rx, frames);
+ 		if (res != RX_CONTINUE)
+ 			goto rxh_next;
  
- 	lbs_deb_enter(LBS_DEB_USB);
-@@ -441,7 +441,7 @@ static int if_usb_reset_device(struct if_usb_card *cardp)
- 	*(__le32 *)cardp->ep_out_buf = cpu_to_le32(CMD_TYPE_REQUEST);
+ 		CALL_RXH(ieee80211_rx_h_action)
+ 		CALL_RXH(ieee80211_rx_h_mgmt)
  
- 	cmd->command = cpu_to_le16(CMD_802_11_RESET);
--	cmd->size = cpu_to_le16(sizeof(struct cmd_header));
-+	cmd->size = cpu_to_le16(sizeof(cmd));
- 	cmd->result = cpu_to_le16(0);
- 	cmd->seqnum = cpu_to_le16(0x5a5a);
- 	usb_tx_block(cardp, cardp->ep_out_buf, 4 + sizeof(struct cmd_header));
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index cfd0af6..6c0e814 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -897,7 +897,7 @@ void lbs_remove_card(struct lbs_private *priv)
++ rxh_next:
++		ieee80211_rx_handlers_result(rx, res);
++
+ #undef CALL_RXH
++	}
++}
++
++static void ieee80211_invoke_rx_handlers(struct ieee80211_sub_if_data *sdata,
++					 struct ieee80211_rx_data *rx,
++					 struct sk_buff *skb,
++					 struct ieee80211_rate *rate)
++{
++	struct sk_buff_head reorder_release;
++	ieee80211_rx_result res = RX_DROP_MONITOR;
++
++	__skb_queue_head_init(&reorder_release);
++
++	rx->skb = skb;
++	rx->sdata = sdata;
++
++#define CALL_RXH(rxh)			\
++	do {				\
++		res = rxh(rx);		\
++		if (res != RX_CONTINUE)	\
++			goto rxh_next;  \
++	} while (0);
++
++	/*
++	 * NB: the rxh_next label works even if we jump
++	 *     to it from here because then the list will
++	 *     be empty, which is a trivial check
++	 */
++	CALL_RXH(ieee80211_rx_h_passive_scan)
++	CALL_RXH(ieee80211_rx_h_check)
++
++	ieee80211_rx_reorder_ampdu(rx, &reorder_release);
++	ieee80211_rx_handlers(rx, &reorder_release);
++	return;
  
- 	if (priv->psmode == LBS802_11POWERMODEMAX_PSP) {
- 		priv->psmode = LBS802_11POWERMODECAM;
--		lbs_ps_wakeup(priv, CMD_OPTION_WAITFORRSP);
-+		lbs_set_ps_mode(priv, PS_MODE_ACTION_EXIT_PS, true);
- 	}
+  rxh_next:
+-		switch (res) {
+-		case RX_DROP_MONITOR:
+-			I802_DEBUG_INC(sdata->local->rx_handlers_drop);
+-			if (rx->sta)
+-				rx->sta->rx_dropped++;
+-			/* fall through */
+-		case RX_CONTINUE:
+-			ieee80211_rx_cooked_monitor(rx, rate);
+-			break;
+-		case RX_DROP_UNUSABLE:
+-			I802_DEBUG_INC(sdata->local->rx_handlers_drop);
+-			if (rx->sta)
+-				rx->sta->rx_dropped++;
+-			dev_kfree_skb(rx->skb);
+-			break;
+-		case RX_QUEUED:
+-			I802_DEBUG_INC(sdata->local->rx_handlers_queued);
+-			break;
+-		}
+-	}
++	ieee80211_rx_handlers_result(rx, res);
++
++#undef CALL_RXH
++}
++
++void ieee80211_release_reorder_timeout(struct sta_info *sta, unsigned int tid)
++{
++	struct sk_buff_head frames;
++	struct ieee80211_rx_data rx = { };
++
++	__skb_queue_head_init(&frames);
++
++	rx.sdata = sta->sdata;
++	rx.local = sta->local;
++	rx.sta = sta;
++	rx.queue = tid;
++	rx.flags |= IEEE80211_RX_RA_MATCH;
++
++	if (unlikely(test_bit(SCAN_HW_SCANNING, &sta->local->scanning) ||
++		     test_bit(SCAN_OFF_CHANNEL, &sta->local->scanning)))
++		rx.flags |= IEEE80211_RX_IN_SCAN;
++
++	rcu_read_lock();
++	ieee80211_sta_reorder_timeout(&sta->local->hw,
++		sta->ampdu_mlme.tid_rx[tid], &frames);
++
++	ieee80211_rx_handlers(&rx, &frames);
++	rcu_read_unlock();
++
+ }
  
- 	if (priv->is_deep_sleep) {
-@@ -1060,7 +1060,7 @@ static int __init lbs_init_module(void)
- 	memset(&confirm_sleep, 0, sizeof(confirm_sleep));
- 	confirm_sleep.hdr.command = cpu_to_le16(CMD_802_11_PS_MODE);
- 	confirm_sleep.hdr.size = cpu_to_le16(sizeof(confirm_sleep));
--	confirm_sleep.action = cpu_to_le16(CMD_SUBCMD_SLEEP_CONFIRMED);
-+	confirm_sleep.action = cpu_to_le16(PS_MODE_ACTION_SLEEP_CONFIRMED);
- 	lbs_debugfs_init();
- 	lbs_deb_leave(LBS_DEB_MAIN);
- 	return 0;
--- 
-1.7.1.1
-
-
-
-
+ /* main receive path */
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 54262e7..4dccce8 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -110,6 +110,7 @@ struct tid_ampdu_tx {
+  * @timeout: reset timer value (in TUs).
+  * @dialog_token: dialog token for aggregation session
+  * @rcu_head: RCU head used for freeing this struct
++ * @reorder_head: used to release expired frames
+  *
+  * This structure is protected by RCU and the per-station
+  * spinlock. Assignments to the array holding it must hold
+@@ -121,9 +122,11 @@ struct tid_ampdu_tx {
+  */
+ struct tid_ampdu_rx {
+ 	struct rcu_head rcu_head;
++	struct list_head reorder_head;
+ 	struct sk_buff **reorder_buf;
+ 	unsigned long *reorder_time;
+ 	struct timer_list session_timer;
++	struct timer_list reorder_timer;
+ 	u16 head_seq_num;
+ 	u16 stored_mpdu_num;
+ 	u16 ssn;
