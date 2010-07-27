@@ -1,56 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:40315 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751537Ab0GLPWx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jul 2010 11:22:53 -0400
-Received: by pxi14 with SMTP id 14so1847388pxi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jul 2010 08:22:53 -0700 (PDT)
-Message-ID: <4C3B3342.3060801@lwfinger.net>
-Date: Mon, 12 Jul 2010 10:22:42 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Michael Wu <aluminum.tape@gmail.com>,
-	Christian Lamparter <chunkeey@googlemail.com>
-Subject: Re: [PATCH] wireless: mark adm8211 and p54 orphaned
-References: <1278947189-14833-1-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1278947189-14833-1-git-send-email-lrodriguez@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:3046 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751994Ab0G0SDo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jul 2010 14:03:44 -0400
+Subject: [wt PATCH 11/16] libertas: remove unused indirect command response
+ handler
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1280260357.19686.13.camel@dcbw.foobar.com>
+References: <1280260357.19686.13.camel@dcbw.foobar.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 27 Jul 2010 13:05:16 -0700
+Message-ID: <1280261116.19686.28.camel@dcbw.foobar.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/12/2010 10:06 AM, Luis R. Rodriguez wrote:
-> Michael has been out of the scene for a while now, these
-> drivers are really orphaned so mark them as such.
->
-> Cc: Michael Wu<aluminum.tape@gmail.com>
-> Cc: Larry Finger<Larry.Finger@lwfinger.net>
-> Cc: Christian Lamparter<chunkeey@googlemail.com>
-> Signed-off-by: Luis R. Rodriguez<lrodriguez@atheros.com>
-> ---
->   MAINTAINERS |    6 ++----
->   1 files changed, 2 insertions(+), 4 deletions(-)
->
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index a07a49d..6ed6135 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -4270,11 +4269,10 @@ F:	include/scsi/osd_*
->   F:	fs/exofs/
->
->   P54 WIRELESS DRIVER
-> -M:	Michael Wu<flamingice@sourmilk.net>
->   L:	linux-wireless@vger.kernel.org
->   W:	http://prism54.org
->   T:	git git://git.kernel.org/pub/scm/linux/kernel/git/mwu/mac80211-drivers.git
-> -S:	Maintained
-> +S:	Orphan
->   F:	drivers/net/wireless/p54/
+Signed-off-by: Dan Williams <dcbw@redhat.com>
+---
+ drivers/net/wireless/libertas/cmdresp.c |   25 +------------------------
+ 1 files changed, 1 insertions(+), 24 deletions(-)
 
-Despite Michael's absence, p54 is still maintained. Christian is the most 
-obvious choice for the position. If he is not willing to take on the 
-responsibility, then I will.
+diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
+index 26a30db..a4e147a 100644
+--- a/drivers/net/wireless/libertas/cmdresp.c
++++ b/drivers/net/wireless/libertas/cmdresp.c
+@@ -54,28 +54,6 @@ void lbs_mac_event_disconnected(struct lbs_private *priv)
+ 	lbs_deb_leave(LBS_DEB_ASSOC);
+ }
+ 
+-static inline int handle_cmd_response(struct lbs_private *priv,
+-				      struct cmd_header *cmd_response)
+-{
+-	struct cmd_ds_command *resp = (struct cmd_ds_command *) cmd_response;
+-	int ret = 0;
+-	uint16_t respcmd = le16_to_cpu(resp->command);
+-
+-	lbs_deb_enter(LBS_DEB_HOST);
+-
+-	switch (respcmd) {
+-	case CMD_RET(CMD_802_11_BEACON_STOP):
+-		break;
+-
+-	default:
+-		lbs_pr_err("CMD_RESP: unknown cmd response 0x%04x\n",
+-			   le16_to_cpu(resp->command));
+-		break;
+-	}
+-	lbs_deb_leave(LBS_DEB_HOST);
+-	return ret;
+-}
+-
+ int lbs_process_command_response(struct lbs_private *priv, u8 *data, u32 len)
+ {
+ 	uint16_t respcmd, curcmd;
+@@ -216,8 +194,7 @@ int lbs_process_command_response(struct lbs_private *priv, u8 *data, u32 len)
+ 	if (priv->cur_cmd && priv->cur_cmd->callback) {
+ 		ret = priv->cur_cmd->callback(priv, priv->cur_cmd->callback_arg,
+ 				resp);
+-	} else
+-		ret = handle_cmd_response(priv, resp);
++	}
+ 
+ 	spin_lock_irqsave(&priv->driver_lock, flags);
+ 
+-- 
+1.7.1.1
 
-Larry
+
