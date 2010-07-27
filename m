@@ -1,61 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:37901 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756960Ab0GFAkU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jul 2010 20:40:20 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>
-Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Ohad Ben-Cohen <ohadb@ti.com>
-Subject: [PATCH 07/15] omap zoom3: wlan board muxing
-Date: Tue,  6 Jul 2010 03:37:38 +0300
-Message-Id: <1278376666-3509-8-git-send-email-ohad@wizery.com>
-In-Reply-To: <1278376666-3509-1-git-send-email-ohad@wizery.com>
-References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
+Received: from kroah.org ([198.145.64.141]:60747 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753599Ab0G0XzE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jul 2010 19:55:04 -0400
+Date: Tue, 27 Jul 2010 16:54:51 -0700
+From: Greg KH <greg@kroah.com>
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>, stable@kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [stable] [PATCH 1/4 2.6.33.y] mac80211: explicitly
+ disable/enable QoS
+Message-ID: <20100727235451.GA12332@kroah.com>
+References: <1275904827-6598-1-git-send-email-sgruszka@redhat.com>
+ <20100727224008.GM14257@kroah.com>
+ <1280272525.13192.67.camel@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1280272525.13192.67.camel@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ohad Ben-Cohen <ohadb@ti.com>
+On Wed, Jul 28, 2010 at 12:15:25AM +0100, Ben Hutchings wrote:
+> On Tue, 2010-07-27 at 15:40 -0700, Greg KH wrote:
+> > On Mon, Jun 07, 2010 at 12:00:24PM +0200, Stanislaw Gruszka wrote:
+> > > commit e1b3ec1a2a336c328c336cfa5485a5f0484cc90d upstream.
+> > > 
+> > > Add interface to disable/enable QoS (aka WMM or WME). Currently drivers
+> > > enable it explicitly when ->conf_tx method is called, and newer disable.
+> > > Disabling is needed for some APs, which do not support QoS, such
+> > > we should send QoS frames to them.
+> > 
+> > Why is this a patch for a -stable tree?  It looks like it adds a new api
+> > for a new feature, right?
+> [...]
+> 
+> It extends the interface between the 802.11 stack and drivers so that
+> drivers can avoid sending QoS frames to APs that don't support them.
+> There is no new interface to userland.  My understanding is that iwlwifi
+> becomes unable to communicate with non-QoS-capable APs after having once
+> associated with a QoS-capable AP, without this and the following change
+> in iwlwifi itself.
 
-Add board muxing to support the wlan wl1271 chip that is
-hardwired to mmc2 (third mmc controller) on the ZOOM3.
+Is this really true?  And is it a bug that people are hitting?
 
-Signed-off-by: Ohad Ben-Cohen <ohadb@ti.com>
----
- arch/arm/mach-omap2/board-zoom3.c |   15 +++++++++++++++
- 1 files changed, 15 insertions(+), 0 deletions(-)
+thanks,
 
-diff --git a/arch/arm/mach-omap2/board-zoom3.c b/arch/arm/mach-omap2/board-zoom3.c
-index 3314704..0b62663 100644
---- a/arch/arm/mach-omap2/board-zoom3.c
-+++ b/arch/arm/mach-omap2/board-zoom3.c
-@@ -46,6 +46,21 @@ static void __init omap_zoom_init_irq(void)
- 
- #ifdef CONFIG_OMAP_MUX
- static struct omap_board_mux board_mux[] __initdata = {
-+#ifdef CONFIG_OMAP_ZOOM_WLAN
-+	/* WLAN IRQ - GPIO 162 */
-+	OMAP3_MUX(MCBSP1_CLKX, OMAP_MUX_MODE4 | OMAP_PIN_INPUT_PULLUP),
-+	/* WLAN POWER ENABLE - GPIO 101 */
-+	OMAP3_MUX(CAM_D2, OMAP_MUX_MODE4 | OMAP_PIN_OUTPUT),
-+	/* WLAN SDIO: MMC3 CMD */
-+	OMAP3_MUX(MCSPI1_CS1, OMAP_MUX_MODE3 | OMAP_PIN_INPUT_PULLUP),
-+	/* WLAN SDIO: MMC3 CLK */
-+	OMAP3_MUX(ETK_CLK, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
-+	/* WLAN SDIO: MMC3 DAT[0-3] */
-+	OMAP3_MUX(ETK_D3, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
-+	OMAP3_MUX(ETK_D4, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
-+	OMAP3_MUX(ETK_D5, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
-+	OMAP3_MUX(ETK_D6, OMAP_MUX_MODE2 | OMAP_PIN_INPUT_PULLUP),
-+#endif
- 	{ .reg_offset = OMAP_MUX_TERMINATOR },
- };
- #else
--- 
-1.7.0.4
-
+greg k-h
