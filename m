@@ -1,73 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59109 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755945Ab0G0KW7 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56988 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751080Ab0G0TAN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 06:22:59 -0400
-Subject: Re: [PATCH] mac80211: fix sw scan bracketing
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <AANLkTik=1LX_12ZskP5vwkSrTVFO9jH6uu8pyByGmLg6@mail.gmail.com>
-References: <1276857140.3638.22.camel@jlt3.sipsolutions.net>
-	 <AANLkTinHXxhwrOmhRxveekG7_C7WeydUdSBL2R7DwOvJ@mail.gmail.com>
-	 <AANLkTinch-sygnRmB6LKi6xLNYVKY6Ap3YL4_PMNdmKQ@mail.gmail.com>
-	 <AANLkTik=1LX_12ZskP5vwkSrTVFO9jH6uu8pyByGmLg6@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 27 Jul 2010 12:22:49 +0200
-Message-ID: <1280226169.19098.12.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 27 Jul 2010 15:00:13 -0400
+Date: Tue, 27 Jul 2010 14:57:28 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Joe Perches <joe@perches.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH net-next 4/4] wireless: Convert wiphy_debug macro to
+ function
+Message-ID: <20100727185728.GF31694@tuxdriver.com>
+References: <cover.1280177971.git.joe@perches.com>
+ <8e7aa541ec8fb92e1166920a4eb704aa5f851b71.1280177971.git.joe@perches.com>
+ <20100727180556.GE31694@tuxdriver.com>
+ <1280255665.2082.119.camel@Joe-Laptop.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1280255665.2082.119.camel@Joe-Laptop.home>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-07-27 at 02:22 -0700, Luis R. Rodriguez wrote:
-
-> > Yeap, reverting this patch alone today on wireless-testing makes me
-> > ath9k happy once again.
+On Tue, Jul 27, 2010 at 11:34:25AM -0700, Joe Perches wrote:
+> On Tue, 2010-07-27 at 14:05 -0400, John W. Linville wrote:
+> > > --- a/net/wireless/core.c
+> > > +++ b/net/wireless/core.c
+> > > @@ -907,3 +907,56 @@ static void __exit cfg80211_exit(void)
+> > >  	destroy_workqueue(cfg80211_wq);
+> > >  }
+> > >  module_exit(cfg80211_exit);
+> > > +
+> > > +#ifdef __KERNEL__
+> > 
+> > Do we need this part?
 > 
-> So after some though and review in order to fix this we need a little
-> more time and thought. The above patch changes the order in which we
-> configure hardware upon a scan complete. It used to be we would
-> configure the hardware, configure the filter and then scan complete.
-> By then we'd be on the home channel and the filters would be set
-> correctly. ath9k's scan complete routine does a few things which
-> depend on the channel and will make hardware poo otherwise or do
-> stupid things:
+> No, not really.
 > 
->   * start TX poll routine, due to the new latency introduced to
-> configure hardware and configure the RX filter the TX polll routine
-> now has some extra work done by hardware before it actually starts
-> TXing. I don't suspect this could introduce a huge regression but it
-> is worth noting.
+> I'm not too sure about the need for the added
+> cfg80211.h #ifdef __KERNEL__ either.
 
-I don't even understand why this is stopped during scan?
+Good point -- I'll remove both of them.
 
->   * ANI gets started, and the wrong channel is used if we're not yet
-> on the home channel. A simple patch to test if this may be causing the
-> disconnect issue I am seeing I just tried was to increase the delay
-> before starting ANI, this did indeed help.
-
-This really should be done when the channel is configured after scan
-anyway.
-
->   * ath_beacon_config() which I suspect means that if we now scan in
-> AP mode/IBSS mode we could potentially be leaking beacons on the last
-> channel of a scan, prior to sending them on the actual desired home
-> channel.
-
-This should be done by the driver based on mac80211's indication of
-whether it should be beaconing or not, not based on the scan callbacks.
-
-I'm starting to think that it was a mistake to add these callbacks to
-start with ...
-
-> To address and review all this I need more time and instead I think
-> its easier to ask for revert of this patch.
-
-I'm OK with a revert, but *ONLY* if at the same time you remove the
-double-scan-detected message from ath9k and stop claiming it's a
-mac80211 bug :-)
-
-johannes
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
