@@ -1,53 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:43709 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755582Ab0GIARB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jul 2010 20:17:01 -0400
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <-IGZ64uxA6G.A.P0H.bLmNMB@chimera>
-References: <-IGZ64uxA6G.A.P0H.bLmNMB@chimera>
-Date: Fri, 9 Jul 2010 02:16:57 +0200
-Message-ID: <AANLkTimmGRikJAWmVeYRkvr9-3AoeO9APN-oDlCJUpvl@mail.gmail.com>
-Subject: Re: 2.6.35-rc4-git3: Reported regressions from 2.6.34
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.sourceforge.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:60535 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751574Ab0G0SOv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jul 2010 14:14:51 -0400
+Subject: [wt PATCH 15/16] libertas: rename lbs_get_cmd_ctrl_node() to
+ lbs_get_free_cmd_node()
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1280260357.19686.13.camel@dcbw.foobar.com>
+References: <1280260357.19686.13.camel@dcbw.foobar.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 27 Jul 2010 13:16:24 -0700
+Message-ID: <1280261784.19686.40.camel@dcbw.foobar.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Rafael,
+Signed-off-by: Dan Williams <dcbw@redhat.com>
+---
+ drivers/net/wireless/libertas/cmd.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-On Fri, Jul 9, 2010 at 1:33 AM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-[...]
-Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16169
-Subject         : Complain from preemptive debug
-Submitter       : Sedat Dilek <sedat.dilek@googlemail.com>
-Date            : 2010-05-31 10:10 (39 days old)
-Message-ID      : <AANLkTilTnAAZIizKinYsxFkNTkrmPqk6XJJuUjjhJ7EP@mail.gmail.com>
-References      : http://lkml.org/lkml/2010/5/31/77
-Handled-By      : Dmitry Monakhov <dmonakhov@openvz.org>
-                 Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Patch           : http://www.spinics.net/lists/cpufreq/msg01631.html
-                 https://patchwork.kernel.org/patch/106555/
+diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index 4946bce..7074592 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -15,8 +15,6 @@
+ #define CAL_NF(nf)		((s32)(-(s32)(nf)))
+ #define CAL_RSSI(snr, nf)	((s32)((s32)(snr) + CAL_NF(nf)))
+ 
+-static struct cmd_ctrl_node *lbs_get_cmd_ctrl_node(struct lbs_private *priv);
+-
+ /**
+  *  @brief Simple callback that copies response back into command
+  *
+@@ -1207,7 +1205,7 @@ done:
+  *  @param priv		A pointer to struct lbs_private structure
+  *  @return cmd_ctrl_node A pointer to cmd_ctrl_node structure or NULL
+  */
+-static struct cmd_ctrl_node *lbs_get_cmd_ctrl_node(struct lbs_private *priv)
++static struct cmd_ctrl_node *lbs_get_free_cmd_node(struct lbs_private *priv)
+ {
+ 	struct cmd_ctrl_node *tempnode;
+ 	unsigned long flags;
+@@ -1578,7 +1576,7 @@ struct cmd_ctrl_node *__lbs_cmd_async(struct lbs_private *priv,
+ 		}
+ 	}
+ 
+-	cmdnode = lbs_get_cmd_ctrl_node(priv);
++	cmdnode = lbs_get_free_cmd_node(priv);
+ 	if (cmdnode == NULL) {
+ 		lbs_deb_host("PREP_CMD: cmdnode is NULL\n");
+ 
+-- 
+1.7.1.1
 
-This bug is fixed Upstream [1]:
 
-commit 8c215bd3890c347dfb6a2db4779755f8b9c298a9
-"sched: Cure nr_iowait_cpu() users"
-
-- Sedat -
-
-[1] http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=8c215bd3890c347dfb6a2db4779755f8b9c298a9
