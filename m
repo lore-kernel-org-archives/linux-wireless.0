@@ -1,32 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:39345 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751894Ab0G1RKm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jul 2010 13:10:42 -0400
-Received: by qwh6 with SMTP id 6so981274qwh.19
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Jul 2010 10:10:41 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1280334711-6141-1-git-send-email-linville@tuxdriver.com>
-References: <1280334711-6141-1-git-send-email-linville@tuxdriver.com>
-Date: Wed, 28 Jul 2010 13:10:41 -0400
-Message-ID: <AANLkTi=n1=1QZ_qss98PBtR7ki+aBEfymrY1YphVo6Kk@mail.gmail.com>
-Subject: Re: [PATCH] ath5k: add led_disable module option
-From: Bob Copeland <me@bobcopeland.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:61311 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753513Ab0G0Os1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jul 2010 10:48:27 -0400
+Date: Tue, 27 Jul 2010 10:48:24 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <IvDoorn@gmail.com>, sgruszka@redhat.com,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Message-Id: <20100727144818.6012.48437.send-patch@dhcp-lab-109.englab.brq.redhat.com>
+In-Reply-To: <20100727144804.6012.94740.send-patch@dhcp-lab-109.englab.brq.redhat.com>
+References: <20100727144804.6012.94740.send-patch@dhcp-lab-109.englab.brq.redhat.com>
+Subject: [PATCH w-t 3/3] rt2500usb: disallow to set WEP key with non zero index
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 28, 2010 at 12:31 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> Not everyone agrees about LED behaviour...give them an escape hatch that
-> will at least stop the lights from annoying them.
->
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+On our hardware (050d:7050 Belkin Components F5D7050 Wireless G Adapter),
+setting any WEP key with non zero index, cause rx frames corruption.
 
-Fine with me...
+Note: perhaps (I did not check) this can be fixed differently - by using
+hw_key_idx the same as true MAC key index. But according to the comment in
+rt2x00mac_set_key():
 
+"the hardware requires keys to be assigned in correct order (When key 1
+is provided but key 0 is not, then the key is not found by the hardware
+during RX)"
+
+this will be quite problematic. Since WEP should not be used, disabling
+hardware crypto offload for it will not hurt much. Beside static
+one key WEP will still be offloaded.
+ 
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/rt2x00/rt2500usb.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index 3028abb..bf059cd 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -351,6 +351,14 @@ static int rt2500usb_config_key(struct rt2x00_dev *rt2x00dev,
+ 
+ 	if (crypto->cmd == SET_KEY) {
+ 		/*
++		 * Disallow to set WEP key other than with index 0,
++		 * it is known that not work at least on some hardware.
++		 * SW crypto will be used in that case.
++		 */
++		if (key->alg == ALG_WEP && key->keyidx != 0)
++			return -EOPNOTSUPP;
++
++		/*
+ 		 * Pairwise key will always be entry 0, but this
+ 		 * could collide with a shared key on the same
+ 		 * position...
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.7.1
+
