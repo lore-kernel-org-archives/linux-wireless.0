@@ -1,121 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:61101 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754043Ab0GKKcF (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:61968 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752046Ab0G0Qry convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Jul 2010 06:32:05 -0400
-Received: by eya25 with SMTP id 25so426234eya.19
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Jul 2010 03:32:04 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 09/17] rt2x00: Allow beacon update without scheduling a work
-Date: Sun, 11 Jul 2010 12:27:26 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-References: <201007111223.11190.IvDoorn@gmail.com> <201007111226.13314.IvDoorn@gmail.com> <201007111226.49015.IvDoorn@gmail.com>
-In-Reply-To: <201007111226.49015.IvDoorn@gmail.com>
+	Tue, 27 Jul 2010 12:47:54 -0400
+Received: by pwi5 with SMTP id 5so535474pwi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 09:47:54 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201007111227.27070.IvDoorn@gmail.com>
+In-Reply-To: <4C4F0BB1.6030002@openwrt.org>
+References: <20100727094732.27186.30900.stgit@tt-desk> <20100727094759.27186.79639.stgit@tt-desk>
+	<AANLkTi=4BtktKxPmFnYwAHaf9Wg-VdLmupcOfXEr1Bpg@mail.gmail.com>
+	<4C4F0BB1.6030002@openwrt.org>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 27 Jul 2010 09:47:34 -0700
+Message-ID: <AANLkTi=QWMwVTqOqL3wNUnLAWHDw60HmYXtngXJrQOu+@mail.gmail.com>
+Subject: Re: [PATCH v4 1/3] cfg80211: Add nl80211 antenna configuration
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Bruno Randolf <br1@einfach.org>, johannes@sipsolutions.net,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+On Tue, Jul 27, 2010 at 9:39 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> On 2010-07-27 6:19 PM, Luis R. Rodriguez wrote:
+>>> + * @NL80211_ATTR_WIPHY_ANTENNA_TX: Bitmap of allowed antennas for transmitting.
+>>> + *     Each bit represents one antenna, starting with antenna 1 at the first
+>>> + *     bit. If the bitmap is zero (0), the TX antenna follows RX diversity.
+>>
+>> What about for 802.11n? What if you want to disable TX?
+> Disabling tx shouldn't be handled by the antenna setting, IMHO.
+>
+>>> + *     If multiple antennas are selected all selected antennas have to be used
+>>> + *     for transmitting (801.11n multiple TX chains).
+>>
+>> I rather call this TX / RX chainmask then.
+> Well, for legacy hardware, these aren't really chains, as there is only
+> one rx and one tx path, just with switching onto multiple antennas.
+>
+>>> + *     Drivers may reject configurations they cannot support.
+>>> + *
+>>> + * @NL80211_ATTR_WIPHY_ANTENNA_RX: Bitmap of allowed antennas for receiving.
+>>> + *     Each bit represents one antenna, starting with antenna 1 at the first
+>>> + *     bit. If multiple antennas are selected in the bitmap, 802.11n devices
+>>> + *     should use multiple RX chains on these antennas, while non-802.11n
+>>> + *     drivers should use antenna diversity between these antennas.
+>>
+>> What about TX beamforming, and STBC?
+> Disabling one antenna/chain on a two-chain device would naturally
+> disable TxBF and STBC as well, since it limits the number of available
+> chains. The driver should simply act as if the disabled chains didn't exist.
 
-Since all rt2x00 PCI drivers use threaded interrupts now we don't need
-to schedule a work just to update the beacon. The only place where the
-beacon still gets updated in atomic context is from the set_tim
-callback. Hence, move the work scheduling there.
+That would work.
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00dev.c |   13 +++++--------
- drivers/net/wireless/rt2x00/rt2x00mac.c |   26 +++++++++++++++++++++++++-
- 2 files changed, 30 insertions(+), 9 deletions(-)
+>> Unless 802.11n is completely dealt with I really prefer this patch to
+>> only address legacy. Otherwise I see sloppyness and inconsistencies on
+>> supporting this feature throughout different drivers. I'd like to
+>> avoid that at all costs on nl80211. What you are trying to address is
+>> legacy antenna setup, not 802.11n RX/TX chainmask dynamic settings so
+>> I'd really try to avoid it unless you really want to address all
+>> aspects of chain configuration for 802.11n and even then what I'm
+>> leading on to say is I think you'll see if you try to address both it
+>> just gets messy.
+> I think 802.11n is already completely dealt with if you treat this as
+> the chainmask on 11n devices.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index d3ebb41..e255725 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -181,7 +181,7 @@ static void rt2x00lib_intf_scheduled(struct work_struct *work)
- static void rt2x00lib_beacondone_iter(void *data, u8 *mac,
- 				      struct ieee80211_vif *vif)
- {
--	struct rt2x00_intf *intf = vif_to_intf(vif);
-+	struct rt2x00_dev *rt2x00dev = data;
- 
- 	if (vif->type != NL80211_IFTYPE_AP &&
- 	    vif->type != NL80211_IFTYPE_ADHOC &&
-@@ -189,9 +189,7 @@ static void rt2x00lib_beacondone_iter(void *data, u8 *mac,
- 	    vif->type != NL80211_IFTYPE_WDS)
- 		return;
- 
--	spin_lock(&intf->lock);
--	intf->delayed_flags |= DELAYED_UPDATE_BEACON;
--	spin_unlock(&intf->lock);
-+	rt2x00queue_update_beacon(rt2x00dev, vif, true);
- }
- 
- void rt2x00lib_beacondone(struct rt2x00_dev *rt2x00dev)
-@@ -199,11 +197,10 @@ void rt2x00lib_beacondone(struct rt2x00_dev *rt2x00dev)
- 	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
- 		return;
- 
--	ieee80211_iterate_active_interfaces_atomic(rt2x00dev->hw,
--						   rt2x00lib_beacondone_iter,
--						   rt2x00dev);
-+	ieee80211_iterate_active_interfaces(rt2x00dev->hw,
-+					   rt2x00lib_beacondone_iter,
-+					   rt2x00dev);
- 
--	ieee80211_queue_work(rt2x00dev->hw, &rt2x00dev->intf_work);
- }
- EXPORT_SYMBOL_GPL(rt2x00lib_beacondone);
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index bbce496..4d8d232 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -433,12 +433,36 @@ void rt2x00mac_configure_filter(struct ieee80211_hw *hw,
- }
- EXPORT_SYMBOL_GPL(rt2x00mac_configure_filter);
- 
-+static void rt2x00mac_set_tim_iter(void *data, u8 *mac,
-+				   struct ieee80211_vif *vif)
-+{
-+	struct rt2x00_intf *intf = vif_to_intf(vif);
-+
-+	if (vif->type != NL80211_IFTYPE_AP &&
-+	    vif->type != NL80211_IFTYPE_ADHOC &&
-+	    vif->type != NL80211_IFTYPE_MESH_POINT &&
-+	    vif->type != NL80211_IFTYPE_WDS)
-+		return;
-+
-+	spin_lock(&intf->lock);
-+	intf->delayed_flags |= DELAYED_UPDATE_BEACON;
-+	spin_unlock(&intf->lock);
-+}
-+
- int rt2x00mac_set_tim(struct ieee80211_hw *hw, struct ieee80211_sta *sta,
- 		      bool set)
- {
- 	struct rt2x00_dev *rt2x00dev = hw->priv;
- 
--	rt2x00lib_beacondone(rt2x00dev);
-+	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
-+		return 0;
-+
-+	ieee80211_iterate_active_interfaces_atomic(rt2x00dev->hw,
-+						   rt2x00mac_set_tim_iter,
-+						   rt2x00dev);
-+
-+	/* queue work to upodate the beacon template */
-+	ieee80211_queue_work(rt2x00dev->hw, &rt2x00dev->intf_work);
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(rt2x00mac_set_tim);
--- 
-1.7.1.1
+Its fine by me if the above cases are also embedded into the
+documentation, just don't want these questions lingering. I can't
+think of other 802.11n special cases.
 
+  Luis
