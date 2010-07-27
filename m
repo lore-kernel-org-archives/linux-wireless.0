@@ -1,105 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:49411 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751872Ab0GUQF0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jul 2010 12:05:26 -0400
-Message-ID: <4C471AC2.5040003@bu3sch.de>
-Date: Wed, 21 Jul 2010 18:05:22 +0200
-From: =?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <mb@bu3sch.de>
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:58946 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753905Ab0G0JXI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jul 2010 05:23:08 -0400
+Received: by pwi5 with SMTP id 5so361005pwi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 02:23:06 -0700 (PDT)
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@wfinger.net>,
-	=?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Subject: Re: [PATCH] b43: silense most sparse warnings
-References: <1279727142-25234-1-git-send-email-linville@tuxdriver.com> (sfid-20100721_180034_804844_FFFFFFFF8CC2B4DB)
-In-Reply-To: <1279727142-25234-1-git-send-email-linville@tuxdriver.com> (sfid-20100721_180034_804844_FFFFFFFF8CC2B4DB)
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <AANLkTinch-sygnRmB6LKi6xLNYVKY6Ap3YL4_PMNdmKQ@mail.gmail.com>
+References: <1276857140.3638.22.camel@jlt3.sipsolutions.net>
+	<AANLkTinHXxhwrOmhRxveekG7_C7WeydUdSBL2R7DwOvJ@mail.gmail.com>
+	<AANLkTinch-sygnRmB6LKi6xLNYVKY6Ap3YL4_PMNdmKQ@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 27 Jul 2010 02:22:46 -0700
+Message-ID: <AANLkTik=1LX_12ZskP5vwkSrTVFO9jH6uu8pyByGmLg6@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: fix sw scan bracketing
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/21/2010 05:45 PM, John W. Linville wrote:
-> diff --git a/drivers/net/wireless/b43/phy_g.c b/drivers/net/wireless/b43/phy_g.c
-> index 29bf34c..0dc33b6 100644
-> --- a/drivers/net/wireless/b43/phy_g.c
-> +++ b/drivers/net/wireless/b43/phy_g.c
-> @@ -972,7 +972,7 @@ b43_radio_interference_mitigation_enable(struct b43_wldev *dev, int mode)
->   		b43_phy_maskset(dev, 0x04A2, 0xFFF0, 0x000B);
+On Tue, Jul 27, 2010 at 1:27 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Tue, Jul 27, 2010 at 1:04 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> On Fri, Jun 18, 2010 at 3:32 AM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>>> From: Johannes Berg <johannes.berg@intel.com>
+>>>
+>>> Currently, detection in hwsim and ath9k can
+>>> detect that two sw scans are in flight at the
+>>> same time, which isn't really true. It is
+>>> caused by a race condition, because the scan
+>>> complete callback is called too late, after
+>>> the lock has been dropped, so that a new scan
+>>> can be started before it is called.
+>>>
+>>> It is also called too early semantically, as
+>>> it is currently called _after_ the return to
+>>> the operating channel -- it should be before
+>>> so that drivers know this is the operating
+>>> channel again.
+>>>
+>>> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+>>> ---
+>>>  net/mac80211/scan.c |    4 ++--
+>>>  1 file changed, 2 insertions(+), 2 deletions(-)
+>>>
+>>> --- wireless-testing.orig/net/mac80211/scan.c   2010-06-18 12:22:56.000000000 +0200
+>>> +++ wireless-testing/net/mac80211/scan.c        2010-06-18 12:23:25.000000000 +0200
+>>> @@ -287,6 +287,8 @@ void ieee80211_scan_completed(struct iee
+>>>        local->scanning = 0;
+>>>        local->scan_channel = NULL;
+>>>
+>>> +       drv_sw_scan_complete(local);
+>>> +
+>>>        /* we only have to protect scan_req and hw/sw scan */
+>>>        mutex_unlock(&local->scan_mtx);
+>>>
+>>> @@ -296,8 +298,6 @@ void ieee80211_scan_completed(struct iee
+>>>
+>>>        ieee80211_configure_filter(local);
+>>>
+>>> -       drv_sw_scan_complete(local);
+>>> -
+>>>        ieee80211_offchannel_return(local, true);
+>>>
+>>>  done:
+>>
+>> Leaving the entire patch in the e-mail reply as the patch is small to
+>> help with context.
+>>
+>> Turns out this patch broke ath9k in the sense that right after a scan
+>> we get disconnected from the AP. I just bisected wireless-testing by
+>> master-tag dates and found 2010-06-18 to be where we hit poo in. I
+>> reverted this patch and its cured. I'm going to test a recent
+>> wireless-testing now and then just try reverting this to see if its OK
+>> even on a recent wireless-testing, and then see if we can fix this
+>> properly on ath9k or whatever.
 >
->   		if (phy->rev>= 3) {
-> -			b43_phy_mask(dev, 0x048A, (u16)~0x8000);
-> +			b43_phy_mask(dev, 0x048A, 0x7FFF);
+> Yeap, reverting this patch alone today on wireless-testing makes me
+> ath9k happy once again.
 
-This cast was introduced to silense a GCC warning. Do we end up in an
-infinite loop now? ;)
+So after some though and review in order to fix this we need a little
+more time and thought. The above patch changes the order in which we
+configure hardware upon a scan complete. It used to be we would
+configure the hardware, configure the filter and then scan complete.
+By then we'd be on the home channel and the filters would be set
+correctly. ath9k's scan complete routine does a few things which
+depend on the channel and will make hardware poo otherwise or do
+stupid things:
 
->   			b43_phy_maskset(dev, 0x0415, 0x8000, 0x36D8);
->   			b43_phy_maskset(dev, 0x0416, 0x8000, 0x36D8);
->   			b43_phy_maskset(dev, 0x0417, 0xFE00, 0x016D);
-> diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
-> index c6afe9d..fd50eb1 100644
-> --- a/drivers/net/wireless/b43/phy_lp.c
-> +++ b/drivers/net/wireless/b43/phy_lp.c
-> @@ -1145,7 +1145,7 @@ static void lpphy_write_tx_pctl_mode_to_hardware(struct b43_wldev *dev)
->   		B43_WARN_ON(1);
->   	}
->   	b43_phy_maskset(dev, B43_LPPHY_TX_PWR_CTL_CMD,
-> -			(u16)~B43_LPPHY_TX_PWR_CTL_CMD_MODE, ctl);
-> +			~B43_LPPHY_TX_PWR_CTL_CMD_MODE&  0xFFFF, ctl);
->   }
+  * start TX poll routine, due to the new latency introduced to
+configure hardware and configure the RX filter the TX polll routine
+now has some extra work done by hardware before it actually starts
+TXing. I don't suspect this could introduce a huge regression but it
+is worth noting.
+  * ANI gets started, and the wrong channel is used if we're not yet
+on the home channel. A simple patch to test if this may be causing the
+disconnect issue I am seeing I just tried was to increase the delay
+before starting ANI, this did indeed help.
+  * ath_beacon_config() which I suspect means that if we now scan in
+AP mode/IBSS mode we could potentially be leaking beacons on the last
+channel of a scan, prior to sending them on the actual desired home
+channel.
 
->
->   static void lpphy_set_tx_power_control(struct b43_wldev *dev,
-> @@ -1522,11 +1522,11 @@ static void lpphy_tx_pctl_init_hw(struct b43_wldev *dev)
->   	b43_phy_mask(dev, B43_LPPHY_TX_PWR_CTL_DELTAPWR_LIMIT, 0xFF);
->   	b43_phy_write(dev, B43_LPPHY_TX_PWR_CTL_DELTAPWR_LIMIT, 0xA);
->   	b43_phy_maskset(dev, B43_LPPHY_TX_PWR_CTL_CMD,
-> -			(u16)~B43_LPPHY_TX_PWR_CTL_CMD_MODE,
-> +			~B43_LPPHY_TX_PWR_CTL_CMD_MODE&  0xFFFF,
->   			B43_LPPHY_TX_PWR_CTL_CMD_MODE_OFF);
->   	b43_phy_mask(dev, B43_LPPHY_TX_PWR_CTL_NNUM, 0xF8FF);
->   	b43_phy_maskset(dev, B43_LPPHY_TX_PWR_CTL_CMD,
-> -			(u16)~B43_LPPHY_TX_PWR_CTL_CMD_MODE,
-> +			~B43_LPPHY_TX_PWR_CTL_CMD_MODE&  0xFFFF,
->   			B43_LPPHY_TX_PWR_CTL_CMD_MODE_SW);
+To address and review all this I need more time and instead I think
+its easier to ask for revert of this patch. I think we should more
+carefully address these issues acanll together in one patch to avoid
+these regressions. Right now ath9k is just completely useless with
+this. It disconnects upon every scan, so for network manager users
+this is every 60 seconds.
 
-> diff --git a/drivers/net/wireless/b43/wa.c b/drivers/net/wireless/b43/wa.c
-> index 97c7916..9a335da 100644
-> --- a/drivers/net/wireless/b43/wa.c
-> +++ b/drivers/net/wireless/b43/wa.c
-> @@ -382,7 +382,7 @@ static void b43_wa_altagc(struct b43_wldev *dev)
->   		b43_ofdmtab_write16(dev, B43_OFDMTAB_AGC1, 3, 25);
->   	}
->
-> -	b43_phy_maskset(dev, B43_PHY_CCKSHIFTBITS_WA, (u16)~0xFF00, 0x5700);
-> +	b43_phy_maskset(dev, B43_PHY_CCKSHIFTBITS_WA, 0x00FF, 0x5700);
->   	b43_phy_maskset(dev, B43_PHY_OFDM(0x1A), ~0x007F, 0x000F);
->   	b43_phy_maskset(dev, B43_PHY_OFDM(0x1A), ~0x3F80, 0x2B80);
->   	b43_phy_maskset(dev, B43_PHY_ANTWRSETT, 0xF0FF, 0x0300);
-> @@ -400,9 +400,9 @@ static void b43_wa_altagc(struct b43_wldev *dev)
->   	b43_phy_maskset(dev, B43_PHY_OFDM(0x89), ~0x00FF, 0x0020);
->   	b43_phy_maskset(dev, B43_PHY_OFDM(0x89), ~0x3F00, 0x0200);
->   	b43_phy_maskset(dev, B43_PHY_OFDM(0x82), ~0x00FF, 0x002E);
-> -	b43_phy_maskset(dev, B43_PHY_OFDM(0x96), (u16)~0xFF00, 0x1A00);
-> +	b43_phy_maskset(dev, B43_PHY_OFDM(0x96), 0x00FF, 0x1A00);
->   	b43_phy_maskset(dev, B43_PHY_OFDM(0x81), ~0x00FF, 0x0028);
-> -	b43_phy_maskset(dev, B43_PHY_OFDM(0x81), (u16)~0xFF00, 0x2C00);
-> +	b43_phy_maskset(dev, B43_PHY_OFDM(0x81), 0x00FF, 0x2C00);
->   	if (phy->rev == 1) {
->   		b43_phy_write(dev, B43_PHY_PEAK_COUNT, 0x092B);
->   		b43_phy_maskset(dev, B43_PHY_OFDM(0x1B), ~0x001E, 0x0002);
-> @@ -412,7 +412,7 @@ static void b43_wa_altagc(struct b43_wldev *dev)
->   		b43_phy_maskset(dev, B43_PHY_LPFGAINCTL, ~0x000F, 0x0004);
->   		if (phy->rev>= 6) {
->   			b43_phy_write(dev, B43_PHY_OFDM(0x22), 0x287A);
-> -			b43_phy_maskset(dev, B43_PHY_LPFGAINCTL, (u16)~0xF000, 0x3000);
-> +			b43_phy_maskset(dev, B43_PHY_LPFGAINCTL, 0x0FFF, 0x3000);
->   		}
->   	}
->   	b43_phy_maskset(dev, B43_PHY_DIVSRCHIDX, 0x8080, 0x7874);
-
-Same for all of these.
-
--- 
-Greetings Michael.
+  Luis
