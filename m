@@ -1,47 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:61324 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752678Ab0GWTD1 (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:60999 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755933Ab0G0Jcd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jul 2010 15:03:27 -0400
-Received: by pzk26 with SMTP id 26so198545pzk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jul 2010 12:03:27 -0700 (PDT)
+	Tue, 27 Jul 2010 05:32:33 -0400
 MIME-Version: 1.0
-In-Reply-To: <AANLkTimfc3NY46aYqPM5Ys2i9vpm2_qr5-kgsvc3sdkx@mail.gmail.com>
-References: <AANLkTimfc3NY46aYqPM5Ys2i9vpm2_qr5-kgsvc3sdkx@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 23 Jul 2010 12:03:07 -0700
-Message-ID: <AANLkTimpwMyfcvRGnJ1JfZP+F=4nFNT5Ra3pB3vse1LM@mail.gmail.com>
-Subject: Re: Atheros 0cf3:b003
-To: Maximi89 <maximi89@gmail.com>
-Cc: Stephen Chen <Stephen.Chen@atheros.com>,
-	Sujith <Sujith.Manoharan@atheros.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20100726193028.GG3903@tuxdriver.com>
+References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+	<20100726193028.GG3903@tuxdriver.com>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Tue, 27 Jul 2010 12:32:11 +0300
+Message-ID: <AANLkTi=L2ha_wcP3nBJ2txxH6iJkmEaqitbOALaouG6V@mail.gmail.com>
+Subject: Re: [PATCH v2 00/20] native support for wl1271 on ZOOM
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux@arm.linux.org.uk,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	akpm@linux-foundation.org, San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Pandita Vikram <vikram.pandita@ti.com>,
+	Kalle Valo <kalle.valo@iki.fi>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/7/23 Maximi89 <maximi89@gmail.com>:
-> Hola Luis, conoces ese ID?, Atheros 0cf3:b003
-> Es efectivamente un AR9271?
+On Mon, Jul 26, 2010 at 10:30 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Wed, Jul 21, 2010 at 08:33:34PM +0300, Ohad Ben-Cohen wrote:
+>> This patch series adds native support for wl1271 on ZOOM.
+>
+> Just for the record, I'm fine with the wl1271 bits here going through
+> the omap tree with the rest of the series.
 
-No, cual tarjeta es esa? Las que tenemos son estos:
+Thanks, John.
 
-static struct usb_device_id ath9k_hif_usb_ids[] = {
-        { USB_DEVICE(0x0cf3, 0x9271) }, /* Atheros */
-        { USB_DEVICE(0x0cf3, 0x1006) }, /* Atheros */
-        { USB_DEVICE(0x0cf3, 0x7010) }, /* Atheros */
-        { USB_DEVICE(0x0cf3, 0x7015) }, /* Atheros */
-        { USB_DEVICE(0x0846, 0x9030) }, /* Netgear N150 */
-        { USB_DEVICE(0x0846, 0x9018) }, /* Netgear WNDA3200 */
-        { USB_DEVICE(0x07D1, 0x3A10) }, /* Dlink Wireless 150 */
-        { USB_DEVICE(0x13D3, 0x3327) }, /* Azurewave */
-        { USB_DEVICE(0x13D3, 0x3328) }, /* Azurewave */
-        { USB_DEVICE(0x04CA, 0x4605) }, /* Liteon */
-        { USB_DEVICE(0x083A, 0xA704) }, /* SMC Networks */
-        { },
-};
-
-Stephen, have you heard of 0cf3:b003 as an ar9271 or HB94 card?
-
-  Luis
+>
+> John
+> --
+> John W. Linville                Someday the world will need a hero, and you
+> linville@tuxdriver.com                  might be all we have.  Be ready.
+>
