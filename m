@@ -1,44 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41882 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751870Ab0GWNaN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jul 2010 09:30:13 -0400
-Date: Fri, 23 Jul 2010 09:28:48 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Simon Kelley <simon@thekelleys.org.uk>
-Cc: Dan Williams <dcbw@redhat.com>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] MAINTAINERS: orphan the atmel wireless driver
-Message-ID: <20100723132847.GC6678@tuxdriver.com>
-References: <1279823468-21366-1-git-send-email-linville@tuxdriver.com>
- <1279837721.4829.19.camel@dcbw.foobar.com>
- <4C495BD7.2080004@thekelleys.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4C495BD7.2080004@thekelleys.org.uk>
+Received: from mx1.redhat.com ([209.132.183.28]:64530 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753513Ab0G0OsY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jul 2010 10:48:24 -0400
+Date: Tue, 27 Jul 2010 10:48:17 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: sgruszka@redhat.com, Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Message-Id: <20100727144811.6012.56633.send-patch@dhcp-lab-109.englab.brq.redhat.com>
+In-Reply-To: <20100727144804.6012.94740.send-patch@dhcp-lab-109.englab.brq.redhat.com>
+References: <20100727144804.6012.94740.send-patch@dhcp-lab-109.englab.brq.redhat.com>
+Subject: [PATCH w-t 2/3] rt2500usb: truly disable encryption when initialize
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 23, 2010 at 10:07:35AM +0100, Simon Kelley wrote:
-> Dan Williams wrote:
-> > On Thu, 2010-07-22 at 14:31 -0400, John W. Linville wrote:
-> >> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> > 
-> > Aww,  how sad :(.  I'll take it since I still have some of this
-> > hardware.  Not that I'll do much with it, but if the patches are simple
-> > I'm happy to test+ack them.
-> > 
-> Thanks Dan, whilst I still have the hardware, I no longer have a
-> convenient PCMCIA slot into which to plug it.
-> 
-> This hardware is well orphaned: it never made is past 802.11b, and there
-> have been no new models for a long time. Nevertheless, if the existing
-> code can be kept functional, that would be good.
+Without cipher part nullify of TXRX_CSR0 register we can receive
+corrupted frames (removed IV or IVC), after reloading rt2500usb module
+with nohwcrypt=1 option, if previous some keys were configured into
+the hardware.
 
-Is the existing code functional?  The device I have seems to only
-half work -- I suppose I need to figure that out...
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/rt2x00/rt2500usb.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-John
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index 7892647..3028abb 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -813,6 +813,7 @@ static int rt2500usb_init_registers(struct rt2x00_dev *rt2x00dev)
+ 	rt2500usb_register_write(rt2x00dev, MAC_CSR8, reg);
+ 
+ 	rt2500usb_register_read(rt2x00dev, TXRX_CSR0, &reg);
++	rt2x00_set_field16(&reg, TXRX_CSR0_ALGORITHM, CIPHER_NONE);
+ 	rt2x00_set_field16(&reg, TXRX_CSR0_IV_OFFSET, IEEE80211_HEADER);
+ 	rt2x00_set_field16(&reg, TXRX_CSR0_KEY_ID, 0);
+ 	rt2500usb_register_write(rt2x00dev, TXRX_CSR0, reg);
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.1
+
