@@ -1,35 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:42373 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752911Ab0G3Xxu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jul 2010 19:53:50 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1OezOc-0005Dr-Tl
-	for linux-wireless@vger.kernel.org; Sat, 31 Jul 2010 01:53:47 +0200
-Received: from f052163214.adsl.alicedsl.de ([78.52.163.214])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 31 Jul 2010 01:53:46 +0200
-Received: from pommnitz by f052163214.adsl.alicedsl.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 31 Jul 2010 01:53:46 +0200
-To: linux-wireless@vger.kernel.org
-From: jpo <pommnitz@yahoo.com>
-Subject: Re: [PATCH 2.6.34] rtl8187: ad-hoc mode support
-Date: Fri, 30 Jul 2010 23:53:37 +0000 (UTC)
-Message-ID: <loom.20100731T015149-899@post.gmane.org>
-References: <201007291835.46159.kirill.zut@promwad.com> <20100729180426.GC2424@tuxdriver.com> <4C51D096.7090607@lwfinger.net> <4C51EA06.3010905@users.sourceforge.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60748 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751230Ab0G0QPM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jul 2010 12:15:12 -0400
+Date: Tue, 27 Jul 2010 12:04:34 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Confused - bisecting wireless-testing
+Message-ID: <20100727160434.GB31694@tuxdriver.com>
+References: <AANLkTim-0qoS7o+fcQ6uA18AC_gQSiiDe4Tv_L1FT1Ae@mail.gmail.com>
+ <20100727140139.GA31694@tuxdriver.com>
+ <AANLkTimS2d0jZnu-44+cbFQXvitj_3Rq3egttgOzEiRh@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <AANLkTimS2d0jZnu-44+cbFQXvitj_3Rq3egttgOzEiRh@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hin-Tak Leung <htl10@...> writes:
-> My impression is that master mode for mac80211-based drivers - if it is ever
-going 
-> to happen - requires some substantial changes to both mac80211 and hostapd and 
-> is not happening any time soon.
+On Tue, Jul 27, 2010 at 08:56:54AM -0700, Luis R. Rodriguez wrote:
+> On Tue, Jul 27, 2010 at 7:01 AM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+> > On Mon, Jul 26, 2010 at 08:27:06PM -0700, Luis R. Rodriguez wrote:
+> >> 04:23  * mcgrof is confused, I just did a git bisect -i on
+> >> wireless-testing on some patch on Fri Jul 2 00:09:49 2010  and ended
+> >> up with a 2.6.34 top level
+> >>           Makefile
+> >> 04:23 < mcgrof> it was git rebase -i ba17bc5e55ba541d2a8765fca53b6883b667ab21
+> >> 04:23 < mcgrof> eh
+> >> 04:24 < mcgrof> how am I supposed to bisect wl now
+> >> 04:24 < mcgrof> the odd thing though is that the top commit is ancient
+> >> 04:24 < mcgrof> http://paste.pocoo.org/show/242077/
+> >> 04:24 < mcgrof> but the other ones are OK
+> >>
+> >> I realize we should use wireless-2.6.git to bisect stable but I need
+> >> to bisect against recent patches that spans different master- tags
+> >> from you, I figured git bisecting wireless-testing would work now that
+> >> you are using a different method to move your tree forward but am I
+> >> wrong? Should I only bisect between master tags still?
+> >
+> > wireless-testing is a nasty mess when it comes to bisection.
+> > I am considering a one-time rebase of wireless-testing after the
+> > next -rc1, now that the current process is working reasonably well.
+> > wireless-testing will continue to have a messy history, but it should
+> > be a bit less nasty after a rebase.
+> >
+> > As for right now, it sounds like you should just use wireless-next-2.6
+> > instead?
+> 
+> Oh OK, didn't realize that was bisectable, thanks. Also was unsure if
+> I'd get other subsystems's -next components. Is wireless-next.git just
+> the -next bits for 802.11 or does it also suck up net-next?
 
-Huh? It's been there for some time now.
+Usually just the wireless bits, but I did just pull the bluetooth stuff
+(which included some net-next stuff).
 
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
