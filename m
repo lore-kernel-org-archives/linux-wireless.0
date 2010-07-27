@@ -1,53 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:45030 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756811Ab0GNPZt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jul 2010 11:25:49 -0400
-Subject: Re: [PATCH] iwlwifi: convert new uses of __attribute__ ((packed))
- to __packed
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Received: from senator.holtmann.net ([87.106.208.187]:43916 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753367Ab0G0Wx0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jul 2010 18:53:26 -0400
+From: Marcel Holtmann <marcel@holtmann.org>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1279118252-10258-1-git-send-email-linville@tuxdriver.com>
-References: <1279118252-10258-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain
-Date: Wed, 14 Jul 2010 08:25:11 -0700
-Message-Id: <1279121111.19725.25.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Cc: linux-wireless@vger.kernel.org
+Subject: Pull request: bluetooth-next-2.6 2010-07-27
+Date: Tue, 27 Jul 2010 15:53:11 -0700
+Message-Id: <cover.1280270806.git.marcel@holtmann.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Hi John,
 
-On Wed, 2010-07-14 at 07:37 -0700, John W. Linville wrote:
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-commands.h |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-> index 8d2db9d..f1c0e68 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-> +++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-> @@ -1245,7 +1245,7 @@ struct iwl_txfifo_flush_cmd {
->  	__le32 fifo_control;
->  	__le16 flush_control;
->  	__le16 reserved;
-> -} __attribute__ ((packed));
-> +} __packed;
->  
->  /*
->   * REPLY_WEP_KEY = 0x20
-> @@ -3547,7 +3547,7 @@ struct iwl_sensitivity_cmd {
->  struct iwl_enhance_sensitivity_cmd {
->  	__le16 control;			/* always use "1" */
->  	__le16 enhance_table[ENHANCE_HD_TABLE_SIZE];	/* use HD_* as index */
-> -} __attribute__ ((packed));
-> +} __packed;
->  
-> 
->  /**
+I have a few more patches for the 2.6.36 merge window. Besides the SCO
+setup fix they are just cleanups anyway.
 
-Thanks
-Wey
+Regards
+
+Marcel
+
+
+Please pull from
+
+    git://git.kernel.org/pub/scm/linux/kernel/git/holtmann/bluetooth-next-2.6.git master
+
+This will update the following files:
+
+ drivers/bluetooth/hci_ath.c      |    6 +-
+ drivers/bluetooth/hci_bcsp.c     |    4 +-
+ drivers/bluetooth/hci_h4.c       |  107 ++------------------------------------
+ drivers/bluetooth/hci_ll.c       |    4 +-
+ include/net/bluetooth/hci_core.h |    2 +
+ net/bluetooth/hci_conn.c         |   32 ++++++++++--
+ net/bluetooth/hci_core.c         |    8 ++--
+ net/bluetooth/hci_event.c        |   31 +++++------
+ net/bluetooth/rfcomm/sock.c      |    2 +-
+ net/bluetooth/rfcomm/tty.c       |    4 +-
+ 10 files changed, 63 insertions(+), 137 deletions(-)
+ mode change 100755 => 100644 drivers/bluetooth/hci_ath.c
+
+through these ChangeSets:
+
+Dan Carpenter (1):
+    Bluetooth: Fix kfree() => kfree_skb() in hci_ath.c
+
+Gustavo F. Padovan (5):
+    Bluetooth: Fix permission of hci_ath.c
+    Bluetooth: Test 'count' value before enter the loop
+    Bluetooth: Use hci_recv_stream_fragment() in UART driver
+    Bluetooth: Add __init and __exit marks to UART drivers
+    Bluetooth: Add __init and __exit marks to RFCOMM
+
+Marcel Holtmann (1):
+    Bluetooth: Defer SCO setup if mode change is pending
 
