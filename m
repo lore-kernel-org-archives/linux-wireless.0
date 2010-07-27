@@ -1,115 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:41261 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753982Ab0GKKcC (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:47172 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752551Ab0G0Xsw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Jul 2010 06:32:02 -0400
-Received: by mail-ey0-f174.google.com with SMTP id 25so426224eya.19
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Jul 2010 03:32:01 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 05/17] rt2x00: Fix vgc_level_reg handling
-Date: Sun, 11 Jul 2010 12:25:17 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-References: <201007111223.11190.IvDoorn@gmail.com> <201007111224.23529.IvDoorn@gmail.com> <201007111224.48247.IvDoorn@gmail.com>
-In-Reply-To: <201007111224.48247.IvDoorn@gmail.com>
+	Tue, 27 Jul 2010 19:48:52 -0400
+Received: by pwi5 with SMTP id 5so673533pwi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 16:48:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201007111225.18986.IvDoorn@gmail.com>
+In-Reply-To: <AANLkTimWKV28m5aRFZzCkHoVkNBDV+0uGky8UdREJxHK@mail.gmail.com>
+References: <AANLkTimo4RV6UMgti0ng1rQYE2eUVh2WLv_WHQZkz30j@mail.gmail.com>
+	<AANLkTimr-tyyNfLz7c9hKVMwWm-5qQcsUniKmv8kvC8U@mail.gmail.com>
+	<AANLkTi=rNVifMZ_8UzmWH=f26X0pT9UM5XT7U7wE2FWd@mail.gmail.com>
+	<AANLkTimb0r0LJCpU76rrLibG=1o7j+UtcsFTmHeUHdXH@mail.gmail.com>
+	<AANLkTimWKV28m5aRFZzCkHoVkNBDV+0uGky8UdREJxHK@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 27 Jul 2010 16:48:32 -0700
+Message-ID: <AANLkTin2kzbNxdgqSzUZXZW4O37tJHnWZJbM46c7epkK@mail.gmail.com>
+Subject: Re: iwlagn: two regressions 2.6.34->2.6.35-rc6
+To: Andrew Lutomirski <luto@mit.edu>
+Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently vgc_level_reg and vgc_level are equal to eachother,
-while the purpose of vgc_level_reg is the value last written
-to the register and is remembered through link tuning resets.
-The vgc_level is the currently active level, which is
-reset during link tuning resets.
+On Tue, Jul 27, 2010 at 4:42 PM, Andrew Lutomirski <luto@mit.edu> wrote:
+> On Tue, Jul 27, 2010 at 7:26 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> On Tue, Jul 27, 2010 at 4:24 PM, Andrew Lutomirski <luto@mit.edu> wrote:
+>>> On Mon, Jul 26, 2010 at 3:48 PM, Andrew Lutomirski <luto@mit.edu> wrote:
+>>>>> In the attached log, you'll see the one successful connection to
+>>>>> 00:02:6f:6e:d7:6c as well as a failure.  The failure is just:
+>>>>>
+>>>>> [  668.569218] wlan0: authenticate with 00:02:6f:6e:d7:6c (try 1)
+>>>>> [  668.769269] wlan0: authenticate with 00:02:6f:6e:d7:6c (try 2)
+>>>>> [  668.969150] wlan0: authenticate with 00:02:6f:6e:d7:6c (try 3)
+>>>>> [  669.169262] wlan0: authentication with 00:02:6f:6e:d7:6c timed out
+>>>>
+>>>> This time with actual attachment.
+>>>
+>>> Not sure if this is the same issue, but I've got another AP here
+>>> (Ubiquiti RouterStation Pro + R52N ath9k minipci card running latest
+>>> OpenWRT "backfire") that works quite nicely on 2.6.34 but requires me
+>>> to reconnect every minute or so on 2.6.35-rc6+ to keep it working.
+>>
+>> Define 2.6.35-rc6+
+>>
+>> If you are using wireless-testing there was a regression there that I
+>> just sent patches for.
+>
+> It's just Linus' kernel (specifically
+> 6aa033d7efb85830535bb83cf6713d6025ae6e59) plus a few local i915
+> patches.  (I also have my aggregation failure warning patch in there,
+> but that just changes a couple of printks.)
 
-The usage of these variables depends on the drivers, some drivers
-need both, while others need only one of the two.
+If you can test vanilla Linus and post a bug report that would help
+for sure. I do not think we are aware of existing pending issues on
+2.6.35, and in fact the regression list often posted by Rafael shows 0
+regressions for 2.6.34 and 2.6.35-rc so far so you're issue is
+certainly not reported until now, but we need more details, like
+chipset, how to reproduce, etc.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2400pci.c  |    8 +++++---
- drivers/net/wireless/rt2x00/rt2500pci.c  |    8 +++-----
- drivers/net/wireless/rt2x00/rt2x00link.c |    8 ++++++++
- 3 files changed, 16 insertions(+), 8 deletions(-)
+>> Reporting issues is the way to go which BTW i have yet to get to your
+>> other e-mail, sorry just got back from vacation and still catching up.
+>
+> No problem.  (I didn't think you worked on iwlwifi anyway...)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index d5f1fab..25e9dcf 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -586,9 +586,11 @@ static void rt2400pci_link_stats(struct rt2x00_dev *rt2x00dev,
- static inline void rt2400pci_set_vgc(struct rt2x00_dev *rt2x00dev,
- 				     struct link_qual *qual, u8 vgc_level)
- {
--	rt2400pci_bbp_write(rt2x00dev, 13, vgc_level);
--	qual->vgc_level = vgc_level;
--	qual->vgc_level_reg = vgc_level;
-+	if (qual->vgc_level_reg != vgc_level) {
-+		rt2400pci_bbp_write(rt2x00dev, 13, vgc_level);
-+		qual->vgc_level = vgc_level;
-+		qual->vgc_level_reg = vgc_level;
-+	}
- }
- 
- static void rt2400pci_reset_tuner(struct rt2x00_dev *rt2x00dev,
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index 096d6db..faa804c 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -626,6 +626,7 @@ static inline void rt2500pci_set_vgc(struct rt2x00_dev *rt2x00dev,
- {
- 	if (qual->vgc_level_reg != vgc_level) {
- 		rt2500pci_bbp_write(rt2x00dev, 17, vgc_level);
-+		qual->vgc_level = vgc_level;
- 		qual->vgc_level_reg = vgc_level;
- 	}
- }
-@@ -700,13 +701,10 @@ dynamic_cca_tune:
- 	 * R17 is inside the dynamic tuning range,
- 	 * start tuning the link based on the false cca counter.
- 	 */
--	if (qual->false_cca > 512 && qual->vgc_level_reg < 0x40) {
-+	if (qual->false_cca > 512 && qual->vgc_level_reg < 0x40)
- 		rt2500pci_set_vgc(rt2x00dev, qual, ++qual->vgc_level_reg);
--		qual->vgc_level = qual->vgc_level_reg;
--	} else if (qual->false_cca < 100 && qual->vgc_level_reg > 0x32) {
-+	else if (qual->false_cca < 100 && qual->vgc_level_reg > 0x32)
- 		rt2500pci_set_vgc(rt2x00dev, qual, --qual->vgc_level_reg);
--		qual->vgc_level = qual->vgc_level_reg;
--	}
- }
- 
- /*
-diff --git a/drivers/net/wireless/rt2x00/rt2x00link.c b/drivers/net/wireless/rt2x00/rt2x00link.c
-index 14f1d51..9acfc5c 100644
---- a/drivers/net/wireless/rt2x00/rt2x00link.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00link.c
-@@ -302,6 +302,7 @@ void rt2x00link_stop_tuner(struct rt2x00_dev *rt2x00dev)
- void rt2x00link_reset_tuner(struct rt2x00_dev *rt2x00dev, bool antenna)
- {
- 	struct link_qual *qual = &rt2x00dev->link.qual;
-+	u8 vgc_level = qual->vgc_level_reg;
- 
- 	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
- 		return;
-@@ -318,6 +319,13 @@ void rt2x00link_reset_tuner(struct rt2x00_dev *rt2x00dev, bool antenna)
- 	memset(qual, 0, sizeof(*qual));
- 
- 	/*
-+	 * Restore the VGC level as stored in the registers,
-+	 * the driver can use this to determine if the register
-+	 * must be updated during reset or not.
-+	 */
-+	qual->vgc_level_reg = vgc_level;
-+
-+	/*
- 	 * Reset the link tuner.
- 	 */
- 	rt2x00dev->ops->lib->reset_tuner(rt2x00dev, qual);
--- 
-1.7.1.1
+No, but if its regulatory yes.
 
+>>> I'm getting tempted to just revert the whole driver back to 2.6.34 and
+>>> use the rest of 2.6.35 when it comes out.  I can also try to bisect,
+>>> either the normal way or just the iwlwifi driver, but that'll have to
+>>> wait until the Monday after next at least because I'm leaving town.
+>>> If any of you have any ideas to test *today*, I can do it.
+>
+> Do you know how hard it is to bisect compat-wireless?
+
+Sure by date, it also has the specific dates it pulls stuff from
+linux-next.git so you can use that as reference.
+
+> Bisecting just
+> the iwlwifi directory is a bit of a pain because I have to manually
+> fix up everything that doesn't compile, and it's also a pain to bisect
+> the whole tree because I need some local i915 patches to get a working
+> system.  (Also, IIRC, 2.6.35 was very broken around -rc2 or -rc3.)
+
+I would just say to use wireless-testing directly and bisect that, I
+did that yesterday night. You bisect wireless-testing by the
+^master-$(date -I) tags. A little of a pain but its not so bad. As
+John noted also you can just use his wireless-next.git too and you
+should be able to bisect that regularly.
+
+I understand your requirements for i915 changes.. but maybe you can
+test with vesa in the meantime?
+
+  Luis
