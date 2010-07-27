@@ -1,121 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:43538 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753050Ab0GHDjy convert rfc822-to-8bit (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:41937 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751416Ab0G0XYf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jul 2010 23:39:54 -0400
-From: "Ghorai, Sukumar" <s-ghorai@ti.com>
-To: Ohad Ben-Cohen <ohad@wizery.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"Chikkature Rajashekar, Madhusudhan" <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	San Mehat <san@google.com>, "Ben-cohen, Ohad" <ohadb@ti.com>
-Date: Thu, 8 Jul 2010 09:09:22 +0530
-Subject: RE: [PATCH 04/15] mmc: support embedded data field in mmc_host
-Message-ID: <2A3DCF3DA181AD40BDE86A3150B27B6B030E10C9B5@dbde02.ent.ti.com>
-References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
- <1278376666-3509-5-git-send-email-ohad@wizery.com>
-In-Reply-To: <1278376666-3509-5-git-send-email-ohad@wizery.com>
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 27 Jul 2010 19:24:35 -0400
+Received: by pxi14 with SMTP id 14so667384pxi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 16:24:35 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <AANLkTimr-tyyNfLz7c9hKVMwWm-5qQcsUniKmv8kvC8U@mail.gmail.com>
+References: <AANLkTimo4RV6UMgti0ng1rQYE2eUVh2WLv_WHQZkz30j@mail.gmail.com>
+	<AANLkTimr-tyyNfLz7c9hKVMwWm-5qQcsUniKmv8kvC8U@mail.gmail.com>
+From: Andrew Lutomirski <luto@mit.edu>
+Date: Tue, 27 Jul 2010 19:24:15 -0400
+Message-ID: <AANLkTi=rNVifMZ_8UzmWH=f26X0pT9UM5XT7U7wE2FWd@mail.gmail.com>
+Subject: Re: iwlagn: two regressions 2.6.34->2.6.35-rc6
+To: linux-wireless@vger.kernel.org, ilw@linux.intel.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Jul 26, 2010 at 3:48 PM, Andrew Lutomirski <luto@mit.edu> wrote:
+>> In the attached log, you'll see the one successful connection to
+>> 00:02:6f:6e:d7:6c as well as a failure.  The failure is just:
+>>
+>> [  668.569218] wlan0: authenticate with 00:02:6f:6e:d7:6c (try 1)
+>> [  668.769269] wlan0: authenticate with 00:02:6f:6e:d7:6c (try 2)
+>> [  668.969150] wlan0: authenticate with 00:02:6f:6e:d7:6c (try 3)
+>> [  669.169262] wlan0: authentication with 00:02:6f:6e:d7:6c timed out
+>
+> This time with actual attachment.
 
+Not sure if this is the same issue, but I've got another AP here
+(Ubiquiti RouterStation Pro + R52N ath9k minipci card running latest
+OpenWRT "backfire") that works quite nicely on 2.6.34 but requires me
+to reconnect every minute or so on 2.6.35-rc6+ to keep it working.
 
-> -----Original Message-----
-> From: linux-mmc-owner@vger.kernel.org [mailto:linux-mmc-
-> owner@vger.kernel.org] On Behalf Of Ohad Ben-Cohen
-> Sent: Tuesday, July 06, 2010 6:08 AM
-> To: linux-wireless@vger.kernel.org; linux-mmc@vger.kernel.org; linux-
-> omap@vger.kernel.org
-> Cc: linux-arm-kernel@lists.infradead.org; linux@arm.linux.org.uk;
-> Chikkature Rajashekar, Madhusudhan; Luciano Coelho; akpm@linux-
-> foundation.org; San Mehat; Ben-cohen, Ohad
-> Subject: [PATCH 04/15] mmc: support embedded data field in mmc_host
-> 
-> From: Ohad Ben-Cohen <ohadb@ti.com>
-> 
-> Add support to set/get mmc_host private embedded
-> data.
-> 
-> This is needed to allow software to dynamically
-> create (and remove) SDIO functions which represents
-> embedded SDIO devices.
-> 
-> Typically, it will be used to set the context of
-> a driver that is creating a new SDIO function
-> (and would then expect to be able to get that context
-> back upon creation of the new sdio func).
-> 
-> Signed-off-by: Ohad Ben-Cohen <ohadb@ti.com>
-> ---
->  drivers/mmc/core/Kconfig |    8 ++++++++
->  include/linux/mmc/host.h |   16 ++++++++++++++++
->  2 files changed, 24 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/mmc/core/Kconfig b/drivers/mmc/core/Kconfig
-> index bb22ffd..ab27eb3 100644
-> --- a/drivers/mmc/core/Kconfig
-> +++ b/drivers/mmc/core/Kconfig
-> @@ -16,3 +16,11 @@ config MMC_UNSAFE_RESUME
-> 
->  	  This option sets a default which can be overridden by the
->  	  module parameter "removable=0" or "removable=1".
-> +
-> +config MMC_EMBEDDED_SDIO
-> +	boolean "MMC embedded SDIO device support"
-> +	help
-> +	  If you say Y here, support will be added for embedded SDIO
-> +	  devices (e.g. hardwired embedded WLAN SDIO devices).
-> +	  Such devices require software support for emulating
-> +	  card detect events.
-> diff --git a/include/linux/mmc/host.h b/include/linux/mmc/host.h
-> index f65913c..9a48486 100644
-> --- a/include/linux/mmc/host.h
-> +++ b/include/linux/mmc/host.h
-> @@ -209,6 +209,10 @@ struct mmc_host {
->  	struct led_trigger	*led;		/* activity led */
->  #endif
-> 
-> +#ifdef CONFIG_MMC_EMBEDDED_SDIO
-> +	void			*embedded_data;
-> +#endif
-> +
->  	struct dentry		*debugfs_root;
-> 
->  	unsigned long		private[0] ____cacheline_aligned;
-> @@ -264,5 +268,17 @@ static inline void mmc_set_disable_delay(struct
-> mmc_host *host,
->  	host->disable_delay = disable_delay;
->  }
-> 
-> +#ifdef CONFIG_MMC_EMBEDDED_SDIO
-> +static inline void *mmc_get_embedded_data(struct mmc_host *host)
-> +{
-> +	return host->embedded_data;
-> +}
-> +
-> +static inline void mmc_set_embedded_data(struct mmc_host *host, void
-> *data)
-> +{
-> +	host->embedded_data = data;
-> +}
-> +#endif
-> +
-[Ghorai] we can avoid CONFIG_MMC_EMBEDDED_SDIO flag itself. Why we are passing fixed data? We can enquire form card for the functions, features,.. and at runtime itself. And we are adding many compile-time/kconfig options in this patch series.
->  #endif
-> 
-> --
-> 1.7.0.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-mmc" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'm getting tempted to just revert the whole driver back to 2.6.34 and
+use the rest of 2.6.35 when it comes out.  I can also try to bisect,
+either the normal way or just the iwlwifi driver, but that'll have to
+wait until the Monday after next at least because I'm leaving town.
+If any of you have any ideas to test *today*, I can do it.
+
+This is a 5350, which I guess is somewhat rare given the general lack
+of WiMAX coverage.
+
+--Andy
