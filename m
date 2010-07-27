@@ -1,103 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:41500 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754543Ab0GTGmq convert rfc822-to-8bit (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:33605 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752509Ab0G0I1p convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jul 2010 02:42:46 -0400
-Received: by qwh6 with SMTP id 6so2013377qwh.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jul 2010 23:42:45 -0700 (PDT)
+	Tue, 27 Jul 2010 04:27:45 -0400
+Received: by pvc7 with SMTP id 7so349747pvc.19
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 01:27:45 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <AANLkTintLd8YTgMQuzbEB36t_i5AL4TePBSDAa7G2zvl@mail.gmail.com>
-References: <AANLkTilmifjH5Zopo82LhjidzsYfT_xRgKJzjGCZZPlq@mail.gmail.com>
-	<AANLkTintLd8YTgMQuzbEB36t_i5AL4TePBSDAa7G2zvl@mail.gmail.com>
-From: Jonathan Guerin <jonathan@guerin.id.au>
-Date: Tue, 20 Jul 2010 16:39:29 +1000
-Message-ID: <AANLkTimgt_HdXyGneQMOz7wR7Xs7BBrDUCGoxP1qDcYg@mail.gmail.com>
-Subject: Re: ath5k Ad Hoc Association
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <AANLkTinHXxhwrOmhRxveekG7_C7WeydUdSBL2R7DwOvJ@mail.gmail.com>
+References: <1276857140.3638.22.camel@jlt3.sipsolutions.net>
+	<AANLkTinHXxhwrOmhRxveekG7_C7WeydUdSBL2R7DwOvJ@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 27 Jul 2010 01:27:25 -0700
+Message-ID: <AANLkTinch-sygnRmB6LKi6xLNYVKY6Ap3YL4_PMNdmKQ@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: fix sw scan bracketing
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-Thanks heaps for replying.
-
-Yes, I've checked the channel (36, 5180) allows beaconing. I've tried
-the commands you mentioned, but no luck. If I monitor the interface
-from another station, the ath5k drive never appears to beacon.
-
-What I've managed to get working, however, is to start one station
-using MadWifi. This definitely beacons, then I bring up the ath5k
-interfaces on the other machines using these commands:
-*******
-# Create interfaces
-iw phy phy0 interface add wlan0 type adhoc
-iw wlan0 set channel 36
-iwconfig wlan0 channel 36
-iwconfig wlan0 essid txctest
-
-# Set IP and bring up
-ifconfig wlan0 10.0.1.64 netmask 255.255.255.0 up
-ifconfig mon0 up
-
-sleep 5
-# Scan trick to force association
-iwlist scan
-*****
-
-They ath5k stations will then correctly join the SSID and I am able to
-ping them.
-
-Using the ibss join command doesn't seem to help when I only bring up
-ath5k stations - they never seem to beacon at all. This was run from a
-monitor interface on the MadWifi node:
-****
-tcpdump -s 2048 -i mon0 -w dump.pcap
-tcpdump: WARNING: mon0: no IPv4 address assigned
-tcpdump: listening on mon0, link-type IEEE802_11_RADIO (802.11 plus
-radiotap header), capture size 2048 bytes
-^C0 packets captured
-0 packets received by filter
-0 packets dropped by kernel
-****
-
-Thanks,
-
---
-Jonathan Guerin
-
-
-
-On Tue, Jul 20, 2010 at 5:22 AM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Mon, Jul 19, 2010 at 12:35 AM, Jonathan Guerin <jonathan@guerin.id.au> wrote:
->> Hi,
+On Tue, Jul 27, 2010 at 1:04 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Fri, Jun 18, 2010 at 3:32 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> From: Johannes Berg <johannes.berg@intel.com>
 >>
->> I'm trying to get my wireless nodes to associate in ad hoc mode.
-> [...]
->> I've built and installed the compat package for this kernel version:
->> compat-wireless-2.6.32.16
+>> Currently, detection in hwsim and ath9k can
+>> detect that two sw scans are in flight at the
+>> same time, which isn't really true. It is
+>> caused by a race condition, because the scan
+>> complete callback is called too late, after
+>> the lock has been dropped, so that a new scan
+>> can be started before it is called.
+>>
+>> It is also called too early semantically, as
+>> it is currently called _after_ the return to
+>> the operating channel -- it should be before
+>> so that drivers know this is the operating
+>> channel again.
+>>
+>> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+>> ---
+>>  net/mac80211/scan.c |    4 ++--
+>>  1 file changed, 2 insertions(+), 2 deletions(-)
+>>
+>> --- wireless-testing.orig/net/mac80211/scan.c   2010-06-18 12:22:56.000000000 +0200
+>> +++ wireless-testing/net/mac80211/scan.c        2010-06-18 12:23:25.000000000 +0200
+>> @@ -287,6 +287,8 @@ void ieee80211_scan_completed(struct iee
+>>        local->scanning = 0;
+>>        local->scan_channel = NULL;
+>>
+>> +       drv_sw_scan_complete(local);
+>> +
+>>        /* we only have to protect scan_req and hw/sw scan */
+>>        mutex_unlock(&local->scan_mtx);
+>>
+>> @@ -296,8 +298,6 @@ void ieee80211_scan_completed(struct iee
+>>
+>>        ieee80211_configure_filter(local);
+>>
+>> -       drv_sw_scan_complete(local);
+>> -
+>>        ieee80211_offchannel_return(local, true);
+>>
+>>  done:
 >
-> Ok, I'm not sure which mainline kernel this corresponds to, but I
-> just tested ath5k adhoc with success in the latest wireless-testing
-> kernel. �Here's what I did:
+> Leaving the entire patch in the e-mail reply as the patch is small to
+> help with context.
 >
-> (had dnsmasq running dhcp for 192.168.10.x, network manager disabled)
->
-> $ su
-> # modprobe -r ath5k
-> # modprobe ath5k
-> # iw dev wlan0 set type ibss
-> # ifconfig wlan0 192.168.10.1 up
-> # iw dev wlan0 ibss join myibss 2462
->
-> Then on the other machine (Vista) I just located 'myibss' (so beacons
-> are working) and selected it, then successfully pinged 192.168.10.1.
->
-> It may depend on which channel you are trying to use; are you on
-> a channel that allows beaconing in your regulatory domain?
->
-> --
-> Bob Copeland %% www.bobcopeland.com
->
+> Turns out this patch broke ath9k in the sense that right after a scan
+> we get disconnected from the AP. I just bisected wireless-testing by
+> master-tag dates and found 2010-06-18 to be where we hit poo in. I
+> reverted this patch and its cured. I'm going to test a recent
+> wireless-testing now and then just try reverting this to see if its OK
+> even on a recent wireless-testing, and then see if we can fix this
+> properly on ath9k or whatever.
+
+Yeap, reverting this patch alone today on wireless-testing makes me
+ath9k happy once again.
+
+ Luis
