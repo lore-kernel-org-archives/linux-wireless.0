@@ -1,54 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:52481 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751580Ab0GEGOn (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:46551 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751281Ab0G0TDv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jul 2010 02:14:43 -0400
-Received: by bwz1 with SMTP id 1so2498569bwz.19
-        for <linux-wireless@vger.kernel.org>; Sun, 04 Jul 2010 23:14:42 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: David Ellingsworth <david@identd.dyndns.org>
-Subject: Re: rt61pci AP performance issues
-Date: Mon, 5 Jul 2010 08:14:07 +0200
-Cc: rt2x00 Users List <users@rt2x00.serialmonkey.com>,
-	wireless <linux-wireless@vger.kernel.org>
-References: <AANLkTimZTGvPuWPTXSOfOjvxzQh5tSnlqNBpueASLAUF@mail.gmail.com> <AANLkTikRH3YEoZ47ihcZyqBiwfxdBPAEgZdAzAWES8x-@mail.gmail.com>
-In-Reply-To: <AANLkTikRH3YEoZ47ihcZyqBiwfxdBPAEgZdAzAWES8x-@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201007050814.07863.helmut.schaa@googlemail.com>
+	Tue, 27 Jul 2010 15:03:51 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 4DA65418D8
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 15:03:43 -0400 (EDT)
+Subject: Compat-wireless release for 2010-07-27 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100727190348.B08ED404F0@repository3.orbit-lab.org>
+Date: Tue, 27 Jul 2010 15:03:48 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Dienstag 29 Juni 2010 schrieb David Ellingsworth:
-> I haven't conducted any other tests beyond what was bisected in the
-> attached log. Performance across all those revisions remained somewhat
-> fast, and my markings were based solely on client link failure. Each
-> bad commit resulted in the link failing after about 10s while
-> transferring a file. At which point, the transfer would stop, the AP
-> would be unreachable via pings, but the client remained associated to
-> the AP. About 30s after that point, the client would timeout and
-> re-associate to the AP reactivating the link.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   d40de6c..886be5a  history    -> origin/history
+ + f0fbdf0...7ef15af master     -> origin/master  (forced update)
+   86c65a7..1a041a2  stable     -> origin/stable
+ * [new tag]         next-20100727 -> next-20100727
 
-Could you please check if the queues get stuck in that situation? I was
-able to sometimes observe queues getting stuck on rt2800.
+compat-wireless code metrics
 
-Just do the following (on the AP mode machine):
+    494125 - Total upstream lines of code being pulled
+      1447 - backport code changes
+      1211 - backport code additions
+       236 - backport code deletions
+      5764 - backport from compat module
+      7211 - total backport code
+    1.4593 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2465 - % of crap code
 
-mount -t debugfs none /sys/debug
-cat /sys/debug/ieee80211/phy0/queues
-
-That should give you something like:
-
-00: 0x00000000/0
-01: 0x00000000/0
-02: 0x00000000/0
-03: 0x00000000/0
-
-And if there's somewhere a 1 instead of a 0 it means that this queue is
-stopped (which can/and must actually happen in some scenarios without
-causing problems). If that 1 stays there for longer that means something
-didn't start the queue anymore and your connection is most likely stuck.
-
-Helmut
+Base tree: linux-next.git
+Base tree version: next-20100727
+compat-wireless release: compat-wireless-2010-07-13-4-g04898a5
