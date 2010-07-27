@@ -1,57 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:54833 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932676Ab0GOIY4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jul 2010 04:24:56 -0400
-Date: Thu, 15 Jul 2010 10:23:10 +0200
-From: Dan Carpenter <error27@gmail.com>
-To: Pavel Roskin <proski@gnu.org>
-Cc: David Gibson <hermes@gibson.dropbear.id.au>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	David Kilroy <kilroyd@googlemail.com>,
-	linux-wireless@vger.kernel.org,
-	orinoco-devel@lists.sourceforge.net,
-	kernel-janitors@vger.kernel.org
-Subject: [patch] orinoco_usb: potential null dereference
-Message-ID: <20100715082309.GE5164@bicker>
+Received: from kroah.org ([198.145.64.141]:60640 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751518Ab0G0Wvo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jul 2010 18:51:44 -0400
+Date: Tue, 27 Jul 2010 15:18:02 -0700
+From: Greg KH <greg@kroah.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: stable@kernel.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [stable] [PATCH 2.6.32..2.6.33] ath5k: drop warning on jumbo
+ frames
+Message-ID: <20100727221802.GH14257@kroah.com>
+References: <1276641307-10287-1-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1276641307-10287-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Smatch complains that "upriv->read_urb" gets dereferenced before
-checking for NULL.  It turns out that it's possible for
-"upriv->read_urb" to be NULL so I added checks around the dereferences.
+On Tue, Jun 15, 2010 at 06:35:07PM -0400, Luis R. Rodriguez wrote:
+> commit 9637e516d16a58b13f6098cfe899e22963132be3 upstream.
+> 
+> Jumbo frames are not supported, and if they are seen it is likely
+> a bogus frame so just silently discard them instead of warning on
+> them all time. Also, instead of dropping them immediately though
+> move the check *after* we check for all sort of frame errors. This
+> should enable us to discard these frames if the hardware picks
+> other bogus items first. Lets see if we still get those jumbo
+> counters increasing still with this.
+> 
+> Jumbo frames would happen if we tell hardware we can support
+> a small 802.11 chunks of DMA'd frame, hardware would split RX'd
+> frames into parts and we'd have to reconstruct them in software.
+> This is done with USB due to the bulk size but with ath5k we
+> already provide a good limit to hardware and this should not be
+> happening.
+> 
+> This is reported quite often and if it fills the logs then this
+> needs to be addressed and to avoid spurious reports.
+> 
+> Cc: stable@kernel.org
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+> 
+> Greg, here's a stable ath5k patch which required some manual
+> backport. The backported was needed since the sc->stats.rxerr_jumbo
+> counter was not available until 2.6.34 and it was used on the upstream
+> commit. This goes only compile tested against 2.6.32.y and 2.6.33.y.
 
-Also I remove an "if (upriv->bap_buf != NULL)" check because
-"kfree(NULL) is OK.
+Many thanks, I've now commited this one.
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
-
-diff --git a/drivers/net/wireless/orinoco/orinoco_usb.c b/drivers/net/wireless/orinoco/orinoco_usb.c
-index 78f089b..11d5ec2 100644
---- a/drivers/net/wireless/orinoco/orinoco_usb.c
-+++ b/drivers/net/wireless/orinoco/orinoco_usb.c
-@@ -1504,16 +1504,16 @@ static inline void ezusb_delete(struct ezusb_priv *upriv)
- 	    ezusb_ctx_complete(list_entry(item,
- 					  struct request_context, list));
- 
--	if (upriv->read_urb->status == -EINPROGRESS)
-+	if (upriv->read_urb && upriv->read_urb->status == -EINPROGRESS)
- 		printk(KERN_ERR PFX "Some URB in progress\n");
- 
- 	mutex_unlock(&upriv->mtx);
- 
--	kfree(upriv->read_urb->transfer_buffer);
--	if (upriv->bap_buf != NULL)
--		kfree(upriv->bap_buf);
--	if (upriv->read_urb != NULL)
-+	if (upriv->read_urb) {
-+		kfree(upriv->read_urb->transfer_buffer);
- 		usb_free_urb(upriv->read_urb);
-+	}
-+	kfree(upriv->bap_buf);
- 	if (upriv->dev) {
- 		struct orinoco_private *priv = ndev_priv(upriv->dev);
- 		orinoco_if_del(priv);
+greg k-h
