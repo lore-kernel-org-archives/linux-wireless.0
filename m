@@ -1,63 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redfish-solutions.com ([66.232.79.143]:39293 "EHLO
-	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757194Ab0GNSLM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jul 2010 14:11:12 -0400
-Message-ID: <4C3DFDB5.10904@redfish-solutions.com>
-Date: Wed, 14 Jul 2010 12:11:01 -0600
-From: "Philip A. Prindeville" <philipp_subx@redfish-solutions.com>
+Received: from nbd.name ([88.198.39.176]:48534 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751716Ab0G0QjT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jul 2010 12:39:19 -0400
+Message-ID: <4C4F0BB1.6030002@openwrt.org>
+Date: Tue, 27 Jul 2010 18:39:13 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
 To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org,
-	mcgrof@infradead.org
-Subject: Re: [PATCH] compat-wireless: fix build of ath5k for CONFIG_PM_SLEEP=n
-References: <1278879791-12646-1-git-send-email-hauke@hauke-m.de> 	<AANLkTimLweydYTbS-O6Q2sX-W0H5z7cWOLUqQphSTO1s@mail.gmail.com> 	<4C3B6AAE.4070204@redfish-solutions.com> <AANLkTilfUKMido8N4vRF4Em7ewtoUAlkrsp1uaKTx6H9@mail.gmail.com> <AANLkTilVf_eOMqvYwcz5XrSVFuk3RNLl7SoVOj-6L6Fu@mail.gmail.com>
-In-Reply-To: <AANLkTilVf_eOMqvYwcz5XrSVFuk3RNLl7SoVOj-6L6Fu@mail.gmail.com>
+CC: Bruno Randolf <br1@einfach.org>, johannes@sipsolutions.net,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v4 1/3] cfg80211: Add nl80211 antenna configuration
+References: <20100727094732.27186.30900.stgit@tt-desk> <20100727094759.27186.79639.stgit@tt-desk> <AANLkTi=4BtktKxPmFnYwAHaf9Wg-VdLmupcOfXEr1Bpg@mail.gmail.com>
+In-Reply-To: <AANLkTi=4BtktKxPmFnYwAHaf9Wg-VdLmupcOfXEr1Bpg@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/13/2010 04:44 PM, Luis R. Rodriguez wrote:
-> On Tue, Jul 13, 2010 at 2:54 PM, Luis R. Rodriguez
-> <lrodriguez@atheros.com> wrote:
->> On Mon, Jul 12, 2010 at 12:19 PM, Philip A. Prindeville
->> <philipp_subx@redfish-solutions.com> wrote:
->>> On 07/12/2010 09:30 AM, Luis R. Rodriguez wrote:
->>>> On Sun, Jul 11, 2010 at 1:23 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->>>>> suspend and resume are activated in ath5k if CONFIG_PM_SLEEP is set and
->>>>> not if just CONFIG_PM is set.
->>>>>
->>>>> This should fix the problems reported by Philip Prindeville.
->>>>>
->>>>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
->>>>
->>>> Thanks! Applied and pushed out, at noon we'll have a new tarball with this.
->>>>
->>>>   Luis
->>>
->>> And...
->>>
->>>
->>>  CC [M]  /home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth/l2cap.o
->>> /home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth/l2cap.c: In function 'l2cap_data_channel':
->>> /home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth/l2cap.c:4352: error: void value not ignored as it ought to be
->>> make[4]: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth/l2cap.o] Error 1
->>> make[3]: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/bluetooth] Error 2
->>> make[2]: *** [_module_/home/philipp/kernel/build_i586/compat-wireless-2010-07-12] Error 2
->>> make[2]: Leaving directory `/home/philipp/kernel/build_i586/linux-2.6.27.48-astlinux'
->>> make[1]: *** [modules] Error 2
->>> make[1]: Leaving directory `/home/philipp/kernel/build_i586/compat-wireless-2010-07-12'
->>> make: *** [/home/philipp/kernel/build_i586/compat-wireless-2010-07-12/net/wireless/lib80211.ko] Error 2
->>
->> Thanks for reporting this, I am working on it now.
+On 2010-07-27 6:19 PM, Luis R. Rodriguez wrote:
+>> + * @NL80211_ATTR_WIPHY_ANTENNA_TX: Bitmap of allowed antennas for transmitting.
+>> + *     Each bit represents one antenna, starting with antenna 1 at the first
+>> + *     bit. If the bitmap is zero (0), the TX antenna follows RX diversity.
 > 
-> This is now fixed, I'll push out a new tarball shortly.
+> What about for 802.11n? What if you want to disable TX?
+Disabling tx shouldn't be handled by the antenna setting, IMHO.
+
+>> + *     If multiple antennas are selected all selected antennas have to be used
+>> + *     for transmitting (801.11n multiple TX chains).
 > 
->   Luis
+> I rather call this TX / RX chainmask then.
+Well, for legacy hardware, these aren't really chains, as there is only
+one rx and one tx path, just with switching onto multiple antennas.
 
-That tarball never made it out...  can you please retry?
+>> + *     Drivers may reject configurations they cannot support.
+>> + *
+>> + * @NL80211_ATTR_WIPHY_ANTENNA_RX: Bitmap of allowed antennas for receiving.
+>> + *     Each bit represents one antenna, starting with antenna 1 at the first
+>> + *     bit. If multiple antennas are selected in the bitmap, 802.11n devices
+>> + *     should use multiple RX chains on these antennas, while non-802.11n
+>> + *     drivers should use antenna diversity between these antennas.
+> 
+> What about TX beamforming, and STBC?
+Disabling one antenna/chain on a two-chain device would naturally
+disable TxBF and STBC as well, since it limits the number of available
+chains. The driver should simply act as if the disabled chains didn't exist.
 
-Thanks.
+> Unless 802.11n is completely dealt with I really prefer this patch to
+> only address legacy. Otherwise I see sloppyness and inconsistencies on
+> supporting this feature throughout different drivers. I'd like to
+> avoid that at all costs on nl80211. What you are trying to address is
+> legacy antenna setup, not 802.11n RX/TX chainmask dynamic settings so
+> I'd really try to avoid it unless you really want to address all
+> aspects of chain configuration for 802.11n and even then what I'm
+> leading on to say is I think you'll see if you try to address both it
+> just gets messy.
+I think 802.11n is already completely dealt with if you treat this as
+the chainmask on 11n devices.
 
-
+- Felix
