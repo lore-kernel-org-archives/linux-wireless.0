@@ -1,97 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:48127 "EHLO ds10.nbd.name"
+Received: from kroah.org ([198.145.64.141]:60651 "EHLO coco.kroah.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753099Ab0GGRmU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jul 2010 13:42:20 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 1/2] ath9k: fix a potential buffer leak in the STA teardown path
-Date: Wed,  7 Jul 2010 19:42:08 +0200
-Message-Id: <1278524529-30246-1-git-send-email-nbd@openwrt.org>
+	id S1753386Ab0G0Wvq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jul 2010 18:51:46 -0400
+Date: Tue, 27 Jul 2010 15:22:25 -0700
+From: Greg KH <greg@kroah.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: stable@kernel.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Kristoffer Ericson <kristoffer.ericson@gmail.com>,
+	"Justin P. Mattock" <justinmattock@gmail.com>,
+	Peter Stuge <peter@stuge.se>
+Subject: Re: [stable] [PATCH 2.6.32.y] ath9k: re-enable ps by default for
+ new single chip families
+Message-ID: <20100727222225.GJ14257@kroah.com>
+References: <1276640359-25360-1-git-send-email-lrodriguez@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1276640359-25360-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It looks like it might be possible for a TID to be paused, while still
-holding some queued buffers, however ath_tx_node_cleanup currently only
-iterates over active TIDs.
-Fix this by always checking every allocated TID for the STA that is being
-cleaned up.
+On Tue, Jun 15, 2010 at 06:19:19PM -0400, Luis R. Rodriguez wrote:
+> commit 14acdde6e527950f66c084dbf19bad6fbfcaeedc upstream.
+> 
+> The newer single chip hardware family of chipsets have not been
+> experiencing issues with power saving set by default with recent
+> fixes merged (even into stable). The remaining issues are only
+> reported with AR5416 and since enabling PS by default can increase
+> power savings considerably best to take advantage of that feature
+> as this has been tested properly.
+> 
+> For more details on this issue see the bug report:
+> 
+> http://bugzilla.kernel.org/show_bug.cgi?id=14267
+> 
+> We leave AR5416 with PS disabled by default, that seems to require
+> some more work.
+> 
+> Cc: stable@kernel.org
+> Cc: Peter Stuge <peter@stuge.se>
+> Cc: Justin P. Mattock  <justinmattock@gmail.com>
+> Cc: Kristoffer Ericson <kristoffer.ericson@gmail.com>
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+> 
+> Greg, this is the long promised backport of the patch titled
+> "ath9k: re-enable ps by default for new single chip families" backported
+> down to 2.6.32.y. This just goes test compiled. Manual backport
+> was required from the upstream Linus patch since the flag
+> WIPHY_FLAG_PS_ON_BY_DEFAULT was not used back on 2.6.32 so instead
+> we use the equivalent hw->wiphy->ps_default bool.
+> 
+> Apologies for the delay, was just stuck with other stuff.
+> 
+> I'll remove this from the stable pending list for 802.11 [1] once
+> this gets sucked in.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@kernel.org
----
- drivers/net/wireless/ath/ath9k/xmit.c |   52 ++++++++++++++++----------------
- 1 files changed, 26 insertions(+), 26 deletions(-)
+Now queued up, thanks.
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index c3681a1..408d1c5 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2430,37 +2430,37 @@ void ath_tx_node_init(struct ath_softc *sc, struct ath_node *an)
- 
- void ath_tx_node_cleanup(struct ath_softc *sc, struct ath_node *an)
- {
--	int i;
--	struct ath_atx_ac *ac, *ac_tmp;
--	struct ath_atx_tid *tid, *tid_tmp;
-+	struct ath_atx_ac *ac;
-+	struct ath_atx_tid *tid;
- 	struct ath_txq *txq;
-+	int i, tidno;
- 
--	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
--		if (ATH_TXQ_SETUP(sc, i)) {
--			txq = &sc->tx.txq[i];
-+	for (tidno = 0, tid = &an->tid[tidno];
-+	     tidno < WME_NUM_TID; tidno++, tid++) {
-+		i = tid->ac->qnum;
- 
--			spin_lock_bh(&txq->axq_lock);
-+		if (!ATH_TXQ_SETUP(sc, i))
-+			continue;
- 
--			list_for_each_entry_safe(ac,
--					ac_tmp, &txq->axq_acq, list) {
--				tid = list_first_entry(&ac->tid_q,
--						struct ath_atx_tid, list);
--				if (tid && tid->an != an)
--					continue;
--				list_del(&ac->list);
--				ac->sched = false;
--
--				list_for_each_entry_safe(tid,
--						tid_tmp, &ac->tid_q, list) {
--					list_del(&tid->list);
--					tid->sched = false;
--					ath_tid_drain(sc, txq, tid);
--					tid->state &= ~AGGR_ADDBA_COMPLETE;
--					tid->state &= ~AGGR_CLEANUP;
--				}
--			}
-+		txq = &sc->tx.txq[i];
-+		ac = tid->ac;
- 
--			spin_unlock_bh(&txq->axq_lock);
-+		spin_lock_bh(&txq->axq_lock);
-+
-+		if (tid->sched) {
-+			list_del(&tid->list);
-+			tid->sched = false;
-+		}
-+
-+		if (ac->sched) {
-+			list_del(&ac->list);
-+			tid->ac->sched = false;
- 		}
-+
-+		ath_tid_drain(sc, txq, tid);
-+		tid->state &= ~AGGR_ADDBA_COMPLETE;
-+		tid->state &= ~AGGR_CLEANUP;
-+
-+		spin_unlock_bh(&txq->axq_lock);
- 	}
- }
--- 
-1.6.4.2
-
+greg k-h
