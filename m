@@ -1,122 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42793 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756066Ab0G1SaM (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:56877 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753743Ab0G0IFF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jul 2010 14:30:12 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Lennert Buytenhek <buytenh@wantstofly.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mwl8k: add get_survey callback in order to get channel noise
-Date: Wed, 28 Jul 2010 14:22:41 -0400
-Message-Id: <1280341361-21337-1-git-send-email-linville@tuxdriver.com>
+	Tue, 27 Jul 2010 04:05:05 -0400
+Received: by pvc7 with SMTP id 7so345555pvc.19
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 01:05:03 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1276857140.3638.22.camel@jlt3.sipsolutions.net>
+References: <1276857140.3638.22.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 27 Jul 2010 01:04:43 -0700
+Message-ID: <AANLkTinHXxhwrOmhRxveekG7_C7WeydUdSBL2R7DwOvJ@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: fix sw scan bracketing
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/mwl8k.c |   31 +++++++++++++++++++++++++++----
- 1 files changed, 27 insertions(+), 4 deletions(-)
+On Fri, Jun 18, 2010 at 3:32 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> Currently, detection in hwsim and ath9k can
+> detect that two sw scans are in flight at the
+> same time, which isn't really true. It is
+> caused by a race condition, because the scan
+> complete callback is called too late, after
+> the lock has been dropped, so that a new scan
+> can be started before it is called.
+>
+> It is also called too early semantically, as
+> it is currently called _after_ the return to
+> the operating channel -- it should be before
+> so that drivers know this is the operating
+> channel again.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  net/mac80211/scan.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> --- wireless-testing.orig/net/mac80211/scan.c   2010-06-18 12:22:56.000000000 +0200
+> +++ wireless-testing/net/mac80211/scan.c        2010-06-18 12:23:25.000000000 +0200
+> @@ -287,6 +287,8 @@ void ieee80211_scan_completed(struct iee
+>        local->scanning = 0;
+>        local->scan_channel = NULL;
+>
+> +       drv_sw_scan_complete(local);
+> +
+>        /* we only have to protect scan_req and hw/sw scan */
+>        mutex_unlock(&local->scan_mtx);
+>
+> @@ -296,8 +298,6 @@ void ieee80211_scan_completed(struct iee
+>
+>        ieee80211_configure_filter(local);
+>
+> -       drv_sw_scan_complete(local);
+> -
+>        ieee80211_offchannel_return(local, true);
+>
+>  done:
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 28beeaf..d761ed2 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -86,7 +86,7 @@ struct rxd_ops {
- 	void (*rxd_init)(void *rxd, dma_addr_t next_dma_addr);
- 	void (*rxd_refill)(void *rxd, dma_addr_t addr, int len);
- 	int (*rxd_process)(void *rxd, struct ieee80211_rx_status *status,
--			   __le16 *qos);
-+			   __le16 *qos, s8 *noise);
- };
- 
- struct mwl8k_device_info {
-@@ -207,6 +207,9 @@ struct mwl8k_priv {
- 
- 	/* Tasklet to perform RX.  */
- 	struct tasklet_struct poll_rx_task;
-+
-+	/* Most recently reported noise in dBm */
-+	s8 noise;
- };
- 
- /* Per interface specific private data */
-@@ -741,7 +744,7 @@ static void mwl8k_rxd_8366_ap_refill(void *_rxd, dma_addr_t addr, int len)
- 
- static int
- mwl8k_rxd_8366_ap_process(void *_rxd, struct ieee80211_rx_status *status,
--			  __le16 *qos)
-+			  __le16 *qos, s8 *noise)
- {
- 	struct mwl8k_rxd_8366_ap *rxd = _rxd;
- 
-@@ -752,6 +755,7 @@ mwl8k_rxd_8366_ap_process(void *_rxd, struct ieee80211_rx_status *status,
- 	memset(status, 0, sizeof(*status));
- 
- 	status->signal = -rxd->rssi;
-+	*noise = -rxd->noise_floor;
- 
- 	if (rxd->rate & MWL8K_8366_AP_RATE_INFO_MCS_FORMAT) {
- 		status->flag |= RX_FLAG_HT;
-@@ -839,7 +843,7 @@ static void mwl8k_rxd_sta_refill(void *_rxd, dma_addr_t addr, int len)
- 
- static int
- mwl8k_rxd_sta_process(void *_rxd, struct ieee80211_rx_status *status,
--		       __le16 *qos)
-+		       __le16 *qos, s8 *noise)
- {
- 	struct mwl8k_rxd_sta *rxd = _rxd;
- 	u16 rate_info;
-@@ -853,6 +857,7 @@ mwl8k_rxd_sta_process(void *_rxd, struct ieee80211_rx_status *status,
- 	memset(status, 0, sizeof(*status));
- 
- 	status->signal = -rxd->rssi;
-+	*noise = -rxd->noise_level;
- 	status->antenna = MWL8K_STA_RATE_INFO_ANTSELECT(rate_info);
- 	status->rate_idx = MWL8K_STA_RATE_INFO_RATEID(rate_info);
- 
-@@ -1053,7 +1058,8 @@ static int rxq_process(struct ieee80211_hw *hw, int index, int limit)
- 
- 		rxd = rxq->rxd + (rxq->head * priv->rxd_ops->rxd_size);
- 
--		pkt_len = priv->rxd_ops->rxd_process(rxd, &status, &qos);
-+		pkt_len = priv->rxd_ops->rxd_process(rxd, &status, &qos,
-+							&priv->noise);
- 		if (pkt_len < 0)
- 			break;
- 
-@@ -3755,6 +3761,22 @@ static int mwl8k_get_stats(struct ieee80211_hw *hw,
- 	return mwl8k_cmd_get_stat(hw, stats);
- }
- 
-+static int mwl8k_get_survey(struct ieee80211_hw *hw, int idx,
-+				struct survey_info *survey)
-+{
-+	struct mwl8k_priv *priv = hw->priv;
-+	struct ieee80211_conf *conf = &hw->conf;
-+
-+	if (idx != 0)
-+		return -ENOENT;
-+
-+	survey->channel = conf->channel;
-+	survey->filled = SURVEY_INFO_NOISE_DBM;
-+	survey->noise = priv->noise;
-+
-+	return 0;
-+}
-+
- static int
- mwl8k_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		   enum ieee80211_ampdu_mlme_action action,
-@@ -3786,6 +3808,7 @@ static const struct ieee80211_ops mwl8k_ops = {
- 	.sta_remove		= mwl8k_sta_remove,
- 	.conf_tx		= mwl8k_conf_tx,
- 	.get_stats		= mwl8k_get_stats,
-+	.get_survey		= mwl8k_get_survey,
- 	.ampdu_action		= mwl8k_ampdu_action,
- };
- 
--- 
-1.7.1.1
+Leaving the entire patch in the e-mail reply as the patch is small to
+help with context.
 
+Turns out this patch broke ath9k in the sense that right after a scan
+we get disconnected from the AP. I just bisected wireless-testing by
+master-tag dates and found 2010-06-18 to be where we hit poo in. I
+reverted this patch and its cured. I'm going to test a recent
+wireless-testing now and then just try reverting this to see if its OK
+even on a recent wireless-testing, and then see if we can fix this
+properly on ath9k or whatever.
+
+  Luis
