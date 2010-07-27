@@ -1,49 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:51873 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758366Ab0GTMFY (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:41924 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753952Ab0G0JfY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jul 2010 08:05:24 -0400
-Received: by vws14 with SMTP id 14so163272vws.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Jul 2010 05:05:22 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201007201350.48923.holgerschurig@gmail.com>
-References: <AANLkTilmifjH5Zopo82LhjidzsYfT_xRgKJzjGCZZPlq@mail.gmail.com>
-	<AANLkTintLd8YTgMQuzbEB36t_i5AL4TePBSDAa7G2zvl@mail.gmail.com>
-	<AANLkTimgt_HdXyGneQMOz7wR7Xs7BBrDUCGoxP1qDcYg@mail.gmail.com>
-	<201007201350.48923.holgerschurig@gmail.com>
-From: Jonathan Guerin <jonathan@guerin.id.au>
-Date: Tue, 20 Jul 2010 22:05:02 +1000
-Message-ID: <AANLkTinytWGuChBFYuU5V6EPVKCJPMPlt6PTD2_jLAmX@mail.gmail.com>
-Subject: Re: ath5k Ad Hoc Association
-To: Holger Schurig <holgerschurig@googlemail.com>
-Cc: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 27 Jul 2010 05:35:24 -0400
+Subject: Re: [ath5k-devel] [PATCH v3] ath5k: disable ASPM
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	David Quan <David.Quan@atheros.com>,
+	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	"kernel-team@lists.ubuntu.com" <kernel-team@lists.ubuntu.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	"tim.gardner@canonical.com" <tim.gardner@canonical.com>
+In-Reply-To: <20100726225057.GA7268@srcf.ucam.org>
+References: <20100726210651.GJ14855@tux>
+	 <1280179033.3721.15.camel@maxim-laptop>
+	 <20100726212543.GA5424@srcf.ucam.org>
+	 <AANLkTi=5_Dc8SumPi7cr8u7=DmnOHgSo6C76w9b0E4Kj@mail.gmail.com>
+	 <20100726222113.GA6487@srcf.ucam.org>
+	 <AANLkTinq-SxMHTrJM23WaeRMkU-2cySiVrkwCjDRS_o+@mail.gmail.com>
+	 <20100726222909.GA6773@srcf.ucam.org>
+	 <AANLkTinysGjYS7RKN4X_7T2q+rw_-OWdn-UJYM0poWXu@mail.gmail.com>
+	 <20100726223326.GA6904@srcf.ucam.org>
+	 <AANLkTinChEx_B9wa-n+a6xDr1vLOBOD3Mhcs=iqcYwen@mail.gmail.com>
+	 <20100726225057.GA7268@srcf.ucam.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 27 Jul 2010 12:35:13 +0300
+Message-ID: <1280223313.3721.83.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I understand that it's not the way I'm supposed to do it. What I'm
-saying is that it's not working, whereas the other way is! :(
+On Mon, 2010-07-26 at 23:50 +0100, Matthew Garrett wrote: 
+> On Mon, Jul 26, 2010 at 03:43:04PM -0700, Luis R. Rodriguez wrote:
+> 
+> > I see.. thanks Mathew... in that case since L1 works on all devices we
+> > could just force enable L1 for all PCIE devices. What do you think?
+> 
+> Works for me.
+> 
 
-I will play around some more with it tomorrow. It's still baffling as
-to why the driver is not beaconing until there is another node tho...
+On the second thought, there is no 'pci_enable_link_state' :-)
+I afraid that if I add it, I might not do that right for all cases, thus
+do more harm that good...
 
---
-Jonathan Guerin
+Best regards,
+Maxim Levitsky
 
-
-
-On Tue, Jul 20, 2010 at 9:50 PM, Holger Schurig
-<holgerschurig@googlemail.com> wrote:
->> iw phy phy0 interface add wlan0 type adhoc
->> iw wlan0 set channel 36
->> iwconfig wlan0 channel 36
->> iwconfig wlan0 essid txctest
->
-> I can't think of ANY reason why you do that. Use "iw", not "iwconfig".
->
-> All the last three commands should be replaced with one single "iw dev wlan0
-> ibss join myibss XXXX", where XXXX is the frequency for channel 36. If in
-> doubt what this is, just do "iw list" and you'll see it.
->
