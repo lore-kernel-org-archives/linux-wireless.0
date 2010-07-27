@@ -1,49 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isilmar-3.linta.de ([188.40.101.200]:36314 "EHLO linta.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753148Ab0GZI2M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jul 2010 04:28:12 -0400
-Date: Mon, 26 Jul 2010 10:27:54 +0200
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org
-Subject: Re: 2.6.35-rc5+ WARNING at net/mac80211/scan.c:262
-Message-ID: <20100726082754.GA14881@comet.dominikbrodowski.net>
-References: <20100721184040.GA22968@comet.dominikbrodowski.net>
- <1279802055.12439.16.camel@jlt3.sipsolutions.net>
- <20100722134048.GA28231@isilmar-3.linta.de>
- <1279807678.12439.17.camel@jlt3.sipsolutions.net>
- <20100723082710.GA20251@comet.dominikbrodowski.net>
- <1279873990.3745.1.camel@jlt3.sipsolutions.net>
- <20100726081713.GA14192@comet.dominikbrodowski.net>
- <1280132498.3693.2.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1280132498.3693.2.camel@jlt3.sipsolutions.net>
+Received: from mx1.redhat.com ([209.132.183.28]:42144 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753513Ab0G0OsN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jul 2010 10:48:13 -0400
+Date: Tue, 27 Jul 2010 10:48:10 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ivo van Doorn <IvDoorn@gmail.com>, sgruszka@redhat.com,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Message-Id: <20100727144804.6012.94740.send-patch@dhcp-lab-109.englab.brq.redhat.com>
+Subject: [PATCH w-t 1/3] rt2500usb: write keys to proper registers
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 26, 2010 at 10:21:38AM +0200, Johannes Berg wrote:
-> On Mon, 2010-07-26 at 10:17 +0200, Dominik Brodowski wrote:
-> > Hey,
-> > 
-> > On Fri, Jul 23, 2010 at 10:33:10AM +0200, Johannes Berg wrote:
-> > > > > Oh, it's against wireless-testing, which apparently has some other mods
-> > > > > there. I'll have to see if any other patch needs to go into .35 too.
-> > > > 
-> > > > That's fine, I'll just test wireless-testing plus your patch from now on ;)
-> > > 
-> > > Hah, ok, I made a note to backport the patch for you, guess I'll delete
-> > > it. Wouldn't have gotten around to it today anyway I think.
-> > 
-> > the problem didn't reappear when using wireless-testing plus your patch. As
-> > I can't reproduce it -- it just happened every once in a while (maybe once a
-> > day?) -- this doesn't necessarily mean the bug is fixed, but...
-> 
-> Alright, thanks. I don't suppose you tried wireless-testing w/o the
-> patch?
+Fix rt2500usb hardware encryption broken by commit
+96b61bafe22b2f2abcc833d651739edb977f1b1e
+"rt2x00: Clean up USB vendor request buffer functions"
 
-No. Shall I?
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/rt2x00/rt2500usb.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Best,
-	Dominik
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index 4b2fef3..7892647 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -376,7 +376,7 @@ static int rt2500usb_config_key(struct rt2x00_dev *rt2x00dev,
+ 		if (key->hw_key_idx > 0 && crypto->cipher != curr_cipher)
+ 			return -EOPNOTSUPP;
+ 
+-		rt2500usb_register_multiwrite(rt2x00dev, reg,
++		rt2500usb_register_multiwrite(rt2x00dev, KEY_ENTRY(key->hw_key_idx),
+ 					      crypto->key, sizeof(crypto->key));
+ 
+ 		/*
+-- 
+1.7.1
+
