@@ -1,55 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:65170 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761257Ab0GUTT1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jul 2010 15:19:27 -0400
-Received: by pzk26 with SMTP id 26so2210467pzk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jul 2010 12:19:27 -0700 (PDT)
-Message-ID: <4C474851.4000809@lwfinger.net>
-Date: Wed, 21 Jul 2010 14:19:45 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Ben Gamari <bgamari.foss@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Master mode in rtl8187
-References: <87vd88n1i8.fsf@gmail.com>
-In-Reply-To: <87vd88n1i8.fsf@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:34118 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752461Ab0G0RzR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jul 2010 13:55:17 -0400
+Subject: [wt PATCH 4/16] libertas: remove unused indirect TPC_CFG command
+ leftovers
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1280260357.19686.13.camel@dcbw.foobar.com>
+References: <1280260357.19686.13.camel@dcbw.foobar.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 27 Jul 2010 12:56:44 -0700
+Message-ID: <1280260604.19686.17.camel@dcbw.foobar.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/21/2010 01:17 PM, Ben Gamari wrote:
-> Hey all,
->
-> I recently purchased a Netgear WG111v2 (based on rtl8187b) and after
-> seeing scattered reports[1] that master mode may be supported by the
-> rtl8187 driver. Unfortunately, hostapd throws up when it attempts to put
-> the card into master mode. Is master mode supported by this driver? I've
-> tried both 2.6.34 as well as the latest wireless-testing tree and
-> neither seem to work.
+These were no longer used but were left around; Transmit Power
+Control is done through the lbs_set_tpc_cfg() function.
 
-My WG111V2 has an RTL8187L chip in it, not an RTL8187B. No, master mode is NOT 
-supported by this driver. Adding that feature has been on my list of things to 
-do, but the priority is very low. I really have little desire to convert my $600 
-laptop into a $40 access point.
+Signed-off-by: Dan Williams <dcbw@redhat.com>
+---
+ drivers/net/wireless/libertas/cmd.c     |   12 ------------
+ drivers/net/wireless/libertas/cmdresp.c |    7 -------
+ drivers/net/wireless/libertas/host.h    |    1 -
+ 3 files changed, 0 insertions(+), 20 deletions(-)
 
-> I noticed there was a patch[2] sent out a few years back, but it seems
-> no one followed up. While I don't have much experience working with
-> wireless hardware I've done kernel driver work before, so with some
-> guidance I might be able to finish up that patch. Any input would be
-> greatly appreciated. Thanks!
+diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index 2aa362f..76a892e 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -1217,18 +1217,6 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
+ 		ret = 0;
+ 		goto done;
+ 
+-	case CMD_802_11_TPC_CFG:
+-		cmdptr->command = cpu_to_le16(CMD_802_11_TPC_CFG);
+-		cmdptr->size =
+-		    cpu_to_le16(sizeof(struct cmd_ds_802_11_tpc_cfg) +
+-				     sizeof(struct cmd_header));
+-
+-		memmove(&cmdptr->params.tpccfg,
+-			pdata_buf, sizeof(struct cmd_ds_802_11_tpc_cfg));
+-
+-		ret = 0;
+-		break;
+-
+ #ifdef CONFIG_LIBERTAS_MESH
+ 
+ 	case CMD_BT_ACCESS:
+diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
+index 35b8ceb..6bc40c6 100644
+--- a/drivers/net/wireless/libertas/cmdresp.c
++++ b/drivers/net/wireless/libertas/cmdresp.c
+@@ -125,13 +125,6 @@ static inline int handle_cmd_response(struct lbs_private *priv,
+ 	case CMD_RET(CMD_802_11_BEACON_STOP):
+ 		break;
+ 
+-	case CMD_RET(CMD_802_11_TPC_CFG):
+-		spin_lock_irqsave(&priv->driver_lock, flags);
+-		memmove((void *)priv->cur_cmd->callback_arg, &resp->params.tpccfg,
+-			sizeof(struct cmd_ds_802_11_tpc_cfg));
+-		spin_unlock_irqrestore(&priv->driver_lock, flags);
+-		break;
+-
+ 	case CMD_RET(CMD_BT_ACCESS):
+ 		spin_lock_irqsave(&priv->driver_lock, flags);
+ 		if (priv->cur_cmd->callback_arg)
+diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
+index ad46c36..a15f5d0 100644
+--- a/drivers/net/wireless/libertas/host.h
++++ b/drivers/net/wireless/libertas/host.h
+@@ -965,7 +965,6 @@ struct cmd_ds_command {
+ 		struct cmd_ds_bbp_reg_access bbpreg;
+ 		struct cmd_ds_rf_reg_access rfreg;
+ 
+-		struct cmd_ds_802_11_tpc_cfg tpccfg;
+ 		struct cmd_ds_802_11_afc afc;
+ 		struct cmd_ds_802_11_led_ctrl ledgpio;
+ 
+-- 
+1.7.1.1
 
-> [1] http://osdir.com/ml/linux.kernel.wireless.general/2007-07/msg00289.html
-> [2] http://osdir.com/ml/linux.kernel.wireless.general/2007-06/msg00455.html
 
-That patch is useless. The rtl8187 driver and mac80211 have changed so much that 
-it cannot be made to apply, and would not be likely to work.
-
-One other thing to consider. The RTL8187L has only a single transmit queue. Will 
-the device be able to transmit beacons with an appropriate timing accuracy?
-
-To modify the driver, you will need to study some other driver that does work in 
-master mode.
-
-Larry
