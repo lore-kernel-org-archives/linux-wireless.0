@@ -1,76 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:59315 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756699Ab0GURec (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40087 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753914Ab0G0Ih1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jul 2010 13:34:32 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>
-Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v2 03/20] mmc: support embedded data field in mmc_host
-Date: Wed, 21 Jul 2010 20:33:37 +0300
-Message-Id: <1279733634-21974-4-git-send-email-ohad@wizery.com>
-In-Reply-To: <1279733634-21974-1-git-send-email-ohad@wizery.com>
-References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+	Tue, 27 Jul 2010 04:37:27 -0400
+Subject: Re: [WIP] mac80211: AMPDU rx reorder timeout timer
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <201007270820.25347.chunkeey@googlemail.com>
+References: <201007270820.25347.chunkeey@googlemail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 27 Jul 2010 10:37:25 +0200
+Message-ID: <1280219845.19098.4.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support to set/get mmc_host private embedded
-data.
+On Tue, 2010-07-27 at 08:20 +0200, Christian Lamparter wrote:
+> This (rather _unfinished_ :-D ) patch adds a timer which
+> if trigger schedules the automatic release of all expired
+> A-MPDU frames. This implementation has the advantage that
+> all queued-up MPDU will now arrive in the network core
+> within a timely manner.
+> 
+> In my "experiments", the patch helped to ironed out the
+> sudden throughput drops that have been _killing_ my
+> average tcp performance ever since I can remember.
 
-This is needed to allow software to dynamically
-create (and remove) SDIO functions which represents
-embedded SDIO devices.
+But why is your BA session so damaged to start with? This is not a
+normal situtation!
 
-Typically, it will be used to set the context of
-a driver that is creating a new SDIO function
-(and would then expect to be able to get that context
-back upon creation of the new sdio func).
+> But there is a catch: The logs will quickly fill up with:
+> "release an RX reorder frame due to timeout on earlier frames".
+> and the package loss will goes through the roof...
+> 
+> Now, I can think of several reasons why this could happen:
+> 	1. we don't wait long enough for the HT peer to
+> 		finish their _retry_ procedure?
+> 
+> 	2. previously - when the stream simply _stopped_ - we had
+> 		to wait until the tcp retry kick in again. So we had
+> 		some "silent" periods and therefore less noise from
+> 		the reordering code?
+> 
+> 	3. ->bugs<- but where are they?
 
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
----
- include/linux/mmc/host.h |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+I'm having a hard time understanding this patch, can you split out the
+no-op code reorg parts or explain what it does?
 
-diff --git a/include/linux/mmc/host.h b/include/linux/mmc/host.h
-index f65913c..80db597 100644
---- a/include/linux/mmc/host.h
-+++ b/include/linux/mmc/host.h
-@@ -209,6 +209,8 @@ struct mmc_host {
- 	struct led_trigger	*led;		/* activity led */
- #endif
- 
-+	void			*embedded_data;
-+
- 	struct dentry		*debugfs_root;
- 
- 	unsigned long		private[0] ____cacheline_aligned;
-@@ -264,5 +266,15 @@ static inline void mmc_set_disable_delay(struct mmc_host *host,
- 	host->disable_delay = disable_delay;
- }
- 
-+static inline void *mmc_get_embedded_data(struct mmc_host *host)
-+{
-+	return host->embedded_data;
-+}
-+
-+static inline void mmc_set_embedded_data(struct mmc_host *host, void *data)
-+{
-+	host->embedded_data = data;
-+}
-+
- #endif
- 
--- 
-1.7.0.4
+johannes
 
