@@ -1,72 +1,488 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:37878 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758884Ab0GBSAY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jul 2010 14:00:24 -0400
-Received: by bwz1 with SMTP id 1so1734976bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Jul 2010 11:00:23 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: rt2x00 & mac80211: correct usage of ieee80211_beacon_get_tim?
-Date: Fri, 2 Jul 2010 19:59:45 +0200
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-References: <201006241521.47623.helmut.schaa@googlemail.com> <201006272100.22216.helmut.schaa@googlemail.com> <1278090770.15412.4.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1278090770.15412.4.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201007021959.45704.helmut.schaa@googlemail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:25973 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751355Ab0G0SGh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jul 2010 14:06:37 -0400
+Subject: [wt PATCH 12/16] libertas: convert PS_MODE to a direct command
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1280260357.19686.13.camel@dcbw.foobar.com>
+References: <1280260357.19686.13.camel@dcbw.foobar.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 27 Jul 2010 13:08:08 -0700
+Message-ID: <1280261288.19686.31.camel@dcbw.foobar.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Freitag 02 Juli 2010 schrieb Johannes Berg:
-> On Sun, 2010-06-27 at 21:00 +0200, Helmut Schaa wrote:
-> 
-> > rt2x00 pulls every beacon. But not directly _prior_ to transmission as the 
-> > hw lacks an interrupt for that. Instead the next beacon gets pulled _after_
-> > the beacondone interrupt (which is obviously triggered directly after the
-> > beacon was sent). So, all TIM changes that happen during the next beacon
-> > interval won't be included in the next beacon. Hence, rt2x00 also implements
-> > the set_tim callback and updates the beacon through these as well.
-> > 
-> > This gives us a correct TIM but as I explained earlier breaks the DTIM
-> > count (and thus bc/mc buffering which is done in mac80211 fot rt2x00).
-> > 
-> > One possible option to fix this in rt2x00 would be to delay the beacon
-> > update (as it is already put on a workqueue we could simply replace it by
-> > a delayed work) by beaconinterval - 10ms or something. But I'm not how
-> > accurate that would be (and of course remove the set_tim callback).
-> 
-> Well, after a beacon is before a beacon.
+Powersave looks like it got broken at some point but we'll fix that up
+when the command submission stuff is more understandable, which this
+series helps to do.  That said, this patch should not further break
+powersave.
 
-Yes ;)
+Signed-off-by: Dan Williams <dcbw@redhat.com>
+---
+ drivers/net/wireless/libertas/cmd.c     |  139 ++++++++++++-------------------
+ drivers/net/wireless/libertas/cmd.h     |    6 +-
+ drivers/net/wireless/libertas/cmdresp.c |   13 ++--
+ drivers/net/wireless/libertas/defs.h    |    5 -
+ drivers/net/wireless/libertas/host.h    |   50 ++++++-----
+ drivers/net/wireless/libertas/if_usb.c  |    4 +-
+ drivers/net/wireless/libertas/main.c    |    4 +-
+ 7 files changed, 95 insertions(+), 126 deletions(-)
 
-> I think iwlwifi also pulls the
-> next beacon after the previous one was sent. That just means you get a
-> potential higher delay, 
+diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index 2c96cf3..5c7bb35 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -230,42 +230,49 @@ int lbs_host_sleep_cfg(struct lbs_private *priv, uint32_t criteria,
+ }
+ EXPORT_SYMBOL_GPL(lbs_host_sleep_cfg);
+ 
+-static int lbs_cmd_802_11_ps_mode(struct cmd_ds_command *cmd,
+-				   u16 cmd_action)
++/**
++ *  @brief Sets the Power Save mode
++ *
++ *  @param priv    	A pointer to struct lbs_private structure
++ *  @param cmd_action	The Power Save operation (PS_MODE_ACTION_ENTER_PS or
++ *                         PS_MODE_ACTION_EXIT_PS)
++ *  @param block	Whether to block on a response or not
++ *
++ *  @return 	   	0 on success, error on failure
++ */
++int lbs_set_ps_mode(struct lbs_private *priv, u16 cmd_action, bool block)
+ {
+-	struct cmd_ds_802_11_ps_mode *psm = &cmd->params.psmode;
++	struct cmd_ds_802_11_ps_mode cmd;
++	int ret = 0;
+ 
+ 	lbs_deb_enter(LBS_DEB_CMD);
+ 
+-	cmd->command = cpu_to_le16(CMD_802_11_PS_MODE);
+-	cmd->size = cpu_to_le16(sizeof(struct cmd_ds_802_11_ps_mode) +
+-				sizeof(struct cmd_header));
+-	psm->action = cpu_to_le16(cmd_action);
+-	psm->multipledtim = 0;
+-	switch (cmd_action) {
+-	case CMD_SUBCMD_ENTER_PS:
+-		lbs_deb_cmd("PS command:" "SubCode- Enter PS\n");
+-
+-		psm->locallisteninterval = 0;
+-		psm->nullpktinterval = 0;
+-		psm->multipledtim =
+-		    cpu_to_le16(MRVDRV_DEFAULT_MULTIPLE_DTIM);
+-		break;
+-
+-	case CMD_SUBCMD_EXIT_PS:
+-		lbs_deb_cmd("PS command:" "SubCode- Exit PS\n");
+-		break;
+-
+-	case CMD_SUBCMD_SLEEP_CONFIRMED:
+-		lbs_deb_cmd("PS command: SubCode- sleep confirm\n");
+-		break;
++	memset(&cmd, 0, sizeof(cmd));
++	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
++	cmd.action = cpu_to_le16(cmd_action);
+ 
+-	default:
+-		break;
++	if (cmd_action == PS_MODE_ACTION_ENTER_PS) {
++		lbs_deb_cmd("PS_MODE: action ENTER_PS\n");
++		cmd.multipledtim = cpu_to_le16(1);  /* Default DTIM multiple */
++	} else if (cmd_action == PS_MODE_ACTION_EXIT_PS) {
++		lbs_deb_cmd("PS_MODE: action EXIT_PS\n");
++	} else {
++		/* We don't handle CONFIRM_SLEEP here because it needs to
++		 * be fastpathed to the firmware.
++		 */
++		lbs_deb_cmd("PS_MODE: unknown action 0x%X\n", cmd_action);
++		ret = -EOPNOTSUPP;
++		goto out;
+ 	}
+ 
+-	lbs_deb_leave(LBS_DEB_CMD);
+-	return 0;
++	if (block)
++		ret = lbs_cmd_with_response(priv, CMD_802_11_PS_MODE, &cmd);
++	else
++		lbs_cmd_async(priv, CMD_802_11_PS_MODE, &cmd.hdr, sizeof (cmd));
++
++out:
++	lbs_deb_leave_args(LBS_DEB_CMD, "ret %d", ret);
++	return ret;
+ }
+ 
+ int lbs_cmd_802_11_sleep_params(struct lbs_private *priv, uint16_t cmd_action,
+@@ -950,16 +957,15 @@ static void lbs_queue_cmd(struct lbs_private *priv,
+ 
+ 	/* Exit_PS command needs to be queued in the header always. */
+ 	if (le16_to_cpu(cmdnode->cmdbuf->command) == CMD_802_11_PS_MODE) {
+-		struct cmd_ds_802_11_ps_mode *psm = (void *) &cmdnode->cmdbuf[1];
++		struct cmd_ds_802_11_ps_mode *psm = (void *) &cmdnode->cmdbuf;
+ 
+-		if (psm->action == cpu_to_le16(CMD_SUBCMD_EXIT_PS)) {
++		if (psm->action == cpu_to_le16(PS_MODE_ACTION_EXIT_PS)) {
+ 			if (priv->psstate != PS_STATE_FULL_POWER)
+ 				addtail = 0;
+ 		}
+ 	}
+ 
+-	if (le16_to_cpu(cmdnode->cmdbuf->command) ==
+-			CMD_802_11_WAKEUP_CONFIRM)
++	if (le16_to_cpu(cmdnode->cmdbuf->command) == CMD_802_11_WAKEUP_CONFIRM)
+ 		addtail = 0;
+ 
+ 	spin_lock_irqsave(&priv->driver_lock, flags);
+@@ -1154,7 +1160,7 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
+ {
+ 	int ret = 0;
+ 	struct cmd_ctrl_node *cmdnode;
+-	struct cmd_ds_command *cmdptr;
++	struct cmd_header *cmdptr;
+ 	unsigned long flags;
+ 
+ 	lbs_deb_enter(LBS_DEB_HOST);
+@@ -1190,7 +1196,7 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
+ 	cmdnode->callback = NULL;
+ 	cmdnode->callback_arg = (unsigned long)pdata_buf;
+ 
+-	cmdptr = (struct cmd_ds_command *)cmdnode->cmdbuf;
++	cmdptr = (struct cmd_header *)cmdnode->cmdbuf;
+ 
+ 	lbs_deb_host("PREP_CMD: command 0x%04x\n", cmd_no);
+ 
+@@ -1202,10 +1208,6 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
+ 	cmdptr->result = 0;
+ 
+ 	switch (cmd_no) {
+-	case CMD_802_11_PS_MODE:
+-		ret = lbs_cmd_802_11_ps_mode(cmdptr, cmd_action);
+-		break;
+-
+ 	case CMD_802_11_DEEP_SLEEP:
+ 		cmdptr->command = cpu_to_le16(CMD_802_11_DEEP_SLEEP);
+ 		cmdptr->size = cpu_to_le16(sizeof(struct cmd_header));
+@@ -1426,10 +1428,10 @@ int lbs_execute_next_command(struct lbs_private *priv)
+ 			/*
+ 			 * 1. Non-PS command:
+ 			 * Queue it. set needtowakeup to TRUE if current state
+-			 * is SLEEP, otherwise call lbs_ps_wakeup to send Exit_PS.
+-			 * 2. PS command but not Exit_PS:
++			 * is SLEEP, otherwise call send EXIT_PS.
++			 * 2. PS command but not EXIT_PS:
+ 			 * Ignore it.
+-			 * 3. PS command Exit_PS:
++			 * 3. PS command EXIT_PS:
+ 			 * Set needtowakeup to TRUE if current state is SLEEP,
+ 			 * otherwise send this command down to firmware
+ 			 * immediately.
+@@ -1443,8 +1445,11 @@ int lbs_execute_next_command(struct lbs_private *priv)
+ 					/* w/ new scheme, it will not reach here.
+ 					   since it is blocked in main_thread. */
+ 					priv->needtowakeup = 1;
+-				} else
+-					lbs_ps_wakeup(priv, 0);
++				} else {
++					lbs_set_ps_mode(priv,
++							PS_MODE_ACTION_EXIT_PS,
++							false);
++				}
+ 
+ 				ret = 0;
+ 				goto done;
+@@ -1459,7 +1464,7 @@ int lbs_execute_next_command(struct lbs_private *priv)
+ 				       "EXEC_NEXT_CMD: PS cmd, action 0x%02x\n",
+ 				       psm->action);
+ 				if (psm->action !=
+-				    cpu_to_le16(CMD_SUBCMD_EXIT_PS)) {
++				    cpu_to_le16(PS_MODE_ACTION_EXIT_PS)) {
+ 					lbs_deb_host(
+ 					       "EXEC_NEXT_CMD: ignore ENTER_PS cmd\n");
+ 					list_del(&cmdnode->list);
+@@ -1519,13 +1524,16 @@ int lbs_execute_next_command(struct lbs_private *priv)
+ 					lbs_deb_host(
+ 					       "EXEC_NEXT_CMD: WPA enabled and GTK_SET"
+ 					       " go back to PS_SLEEP");
+-					lbs_ps_sleep(priv, 0);
++					lbs_set_ps_mode(priv,
++							PS_MODE_ACTION_ENTER_PS,
++							false);
+ 				}
+ 			} else {
+ 				lbs_deb_host(
+ 				       "EXEC_NEXT_CMD: cmdpendingq empty, "
+ 				       "go back to PS_SLEEP");
+-				lbs_ps_sleep(priv, 0);
++				lbs_set_ps_mode(priv, PS_MODE_ACTION_ENTER_PS,
++						false);
+ 			}
+ 		}
+ #endif
+@@ -1573,43 +1581,6 @@ out:
+ 	lbs_deb_leave(LBS_DEB_HOST);
+ }
+ 
+-void lbs_ps_sleep(struct lbs_private *priv, int wait_option)
+-{
+-	lbs_deb_enter(LBS_DEB_HOST);
+-
+-	/*
+-	 * PS is currently supported only in Infrastructure mode
+-	 * Remove this check if it is to be supported in IBSS mode also
+-	 */
+-
+-	lbs_prepare_and_send_command(priv, CMD_802_11_PS_MODE,
+-			      CMD_SUBCMD_ENTER_PS, wait_option, 0, NULL);
+-
+-	lbs_deb_leave(LBS_DEB_HOST);
+-}
+-
+-/**
+- *  @brief This function sends Exit_PS command to firmware.
+- *
+- *  @param priv    	A pointer to struct lbs_private structure
+- *  @param wait_option	wait response or not
+- *  @return 	   	n/a
+- */
+-void lbs_ps_wakeup(struct lbs_private *priv, int wait_option)
+-{
+-	__le32 Localpsmode;
+-
+-	lbs_deb_enter(LBS_DEB_HOST);
+-
+-	Localpsmode = cpu_to_le32(LBS802_11POWERMODECAM);
+-
+-	lbs_prepare_and_send_command(priv, CMD_802_11_PS_MODE,
+-			      CMD_SUBCMD_EXIT_PS,
+-			      wait_option, 0, &Localpsmode);
+-
+-	lbs_deb_leave(LBS_DEB_HOST);
+-}
+-
+ /**
+  *  @brief This function checks condition and prepares to
+  *  send sleep confirm command to firmware if ok.
+diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
+index bfb3690..19b1f21 100644
+--- a/drivers/net/wireless/libertas/cmd.h
++++ b/drivers/net/wireless/libertas/cmd.h
+@@ -94,10 +94,6 @@ int lbs_host_sleep_cfg(struct lbs_private *priv, uint32_t criteria,
+ int lbs_cmd_802_11_sleep_params(struct lbs_private *priv, uint16_t cmd_action,
+ 				struct sleep_params *sp);
+ 
+-void lbs_ps_sleep(struct lbs_private *priv, int wait_option);
+-
+-void lbs_ps_wakeup(struct lbs_private *priv, int wait_option);
+-
+ void lbs_ps_confirm_sleep(struct lbs_private *priv);
+ 
+ int lbs_set_radio(struct lbs_private *priv, u8 preamble, u8 radio_on);
+@@ -143,4 +139,6 @@ int lbs_get_reg(struct lbs_private *priv, u16 reg, u16 offset, u32 *value);
+ 
+ int lbs_set_reg(struct lbs_private *priv, u16 reg, u16 offset, u32 value);
+ 
++int lbs_set_ps_mode(struct lbs_private *priv, u16 cmd_action, bool block);
++
+ #endif /* _LBS_CMD_H */
+diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
+index a4e147a..83283b8 100644
+--- a/drivers/net/wireless/libertas/cmdresp.c
++++ b/drivers/net/wireless/libertas/cmdresp.c
+@@ -49,7 +49,7 @@ void lbs_mac_event_disconnected(struct lbs_private *priv)
+ 	if (priv->psstate != PS_STATE_FULL_POWER) {
+ 		/* make firmware to exit PS mode */
+ 		lbs_deb_cmd("disconnected, so exit PS mode\n");
+-		lbs_ps_wakeup(priv, 0);
++		lbs_set_ps_mode(priv, PS_MODE_ACTION_EXIT_PS, false);
+ 	}
+ 	lbs_deb_leave(LBS_DEB_ASSOC);
+ }
+@@ -132,9 +132,9 @@ int lbs_process_command_response(struct lbs_private *priv, u8 *data, u32 len)
+ 			 * lbs_execute_next_command().
+ 			 */
+ 			if (priv->wdev->iftype == NL80211_IFTYPE_MONITOR &&
+-			    action == CMD_SUBCMD_ENTER_PS)
++			    action == PS_MODE_ACTION_ENTER_PS)
+ 				priv->psmode = LBS802_11POWERMODECAM;
+-		} else if (action == CMD_SUBCMD_ENTER_PS) {
++		} else if (action == PS_MODE_ACTION_ENTER_PS) {
+ 			priv->needtowakeup = 0;
+ 			priv->psstate = PS_STATE_AWAKE;
+ 
+@@ -149,11 +149,12 @@ int lbs_process_command_response(struct lbs_private *priv, u8 *data, u32 len)
+ 
+ 				spin_unlock_irqrestore(&priv->driver_lock, flags);
+ 				mutex_unlock(&priv->lock);
+-				lbs_ps_wakeup(priv, 0);
++				lbs_set_ps_mode(priv, PS_MODE_ACTION_EXIT_PS,
++						false);
+ 				mutex_lock(&priv->lock);
+ 				spin_lock_irqsave(&priv->driver_lock, flags);
+ 			}
+-		} else if (action == CMD_SUBCMD_EXIT_PS) {
++		} else if (action == PS_MODE_ACTION_EXIT_PS) {
+ 			priv->needtowakeup = 0;
+ 			priv->psstate = PS_STATE_FULL_POWER;
+ 			lbs_deb_host("CMD_RESP: EXIT_PS command response\n");
+@@ -291,7 +292,7 @@ int lbs_process_event(struct lbs_private *priv, u32 event)
+ 			 * in lbs_ps_wakeup()
+ 			 */
+ 			lbs_deb_cmd("waking up ...\n");
+-			lbs_ps_wakeup(priv, 0);
++			lbs_set_ps_mode(priv, PS_MODE_ACTION_EXIT_PS, false);
+ 		}
+ 		break;
+ 
+diff --git a/drivers/net/wireless/libertas/defs.h b/drivers/net/wireless/libertas/defs.h
+index da9833f..d00c728 100644
+--- a/drivers/net/wireless/libertas/defs.h
++++ b/drivers/net/wireless/libertas/defs.h
+@@ -172,11 +172,6 @@ static inline void lbs_deb_hex(unsigned int grp, const char *prompt, u8 *buf, in
+ #define MRVDRV_MAX_BSS_DESCRIPTS		16
+ #define MRVDRV_MAX_REGION_CODE			6
+ 
+-#define MRVDRV_IGNORE_MULTIPLE_DTIM		0xfffe
+-#define MRVDRV_MIN_MULTIPLE_DTIM		1
+-#define MRVDRV_MAX_MULTIPLE_DTIM		5
+-#define MRVDRV_DEFAULT_MULTIPLE_DTIM		1
+-
+ #define MRVDRV_DEFAULT_LISTEN_INTERVAL		10
+ 
+ #define	MRVDRV_CHANNELS_PER_SCAN		4
+diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
+index ea041ac..a6d9b24 100644
+--- a/drivers/net/wireless/libertas/host.h
++++ b/drivers/net/wireless/libertas/host.h
+@@ -94,11 +94,9 @@
+ #define CMD_802_11_BEACON_CTRL                  0x00b0
+ 
+ /* For the IEEE Power Save */
+-#define CMD_SUBCMD_ENTER_PS                     0x0030
+-#define CMD_SUBCMD_EXIT_PS                      0x0031
+-#define CMD_SUBCMD_SLEEP_CONFIRMED              0x0034
+-#define CMD_SUBCMD_FULL_POWERDOWN               0x0035
+-#define CMD_SUBCMD_FULL_POWERUP                 0x0036
++#define PS_MODE_ACTION_ENTER_PS                 0x0030
++#define PS_MODE_ACTION_EXIT_PS                  0x0031
++#define PS_MODE_ACTION_SLEEP_CONFIRMED          0x0034
+ 
+ #define CMD_ENABLE_RSN                          0x0001
+ #define CMD_DISABLE_RSN                         0x0000
+@@ -163,11 +161,6 @@
+ #define CMD_ACT_SET_TX_FIX_RATE                 0x0001
+ #define CMD_ACT_GET_TX_RATE                     0x0002
+ 
+-/* Define action or option for CMD_802_11_PS_MODE */
+-#define CMD_TYPE_CAM                            0x0000
+-#define CMD_TYPE_MAX_PSP                        0x0001
+-#define CMD_TYPE_FAST_PSP                       0x0002
+-
+ /* Options for CMD_802_11_FW_WAKE_METHOD */
+ #define CMD_WAKE_METHOD_UNCHANGED               0x0000
+ #define CMD_WAKE_METHOD_COMMAND_INT             0x0001
+@@ -683,11 +676,35 @@ struct cmd_ds_802_11_fw_wake_method {
+ } __attribute__ ((packed));
+ 
+ struct cmd_ds_802_11_ps_mode {
++	struct cmd_header hdr;
++
+ 	__le16 action;
++
++	/* Interval for keepalive in PS mode:
++	 * 0x0000 = don't change
++	 * 0x001E = firmware default
++	 * 0xFFFF = disable
++	 */
+ 	__le16 nullpktinterval;
++
++	/* Number of DTIM intervals to wake up for:
++	 * 0 = don't change
++	 * 1 = firmware default
++	 * 5 = max
++	 */
+ 	__le16 multipledtim;
++
+ 	__le16 reserved;
+ 	__le16 locallisteninterval;
++
++	/* AdHoc awake period (FW v9+ only):
++	 * 0 = don't change
++	 * 1 = always awake (IEEE standard behavior)
++	 * 2 - 31 = sleep for (n - 1) periods and awake for 1 period
++	 * 32 - 254 = invalid
++	 * 255 = sleep at each ATIM
++	 */
++	__le16 adhoc_awake_period;
+ } __attribute__ ((packed));
+ 
+ struct cmd_confirm_sleep {
+@@ -952,17 +969,4 @@ struct cmd_ds_mesh_access {
+ 
+ /* Number of stats counters returned by the firmware */
+ #define MESH_STATS_NUM 8
+-
+-struct cmd_ds_command {
+-	/* command header */
+-	__le16 command;
+-	__le16 size;
+-	__le16 seqnum;
+-	__le16 result;
+-
+-	/* command Body */
+-	union {
+-		struct cmd_ds_802_11_ps_mode psmode;
+-	} params;
+-} __attribute__ ((packed));
+ #endif
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index 3678e53..07ece9d 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -433,7 +433,7 @@ static int if_usb_send_fw_pkt(struct if_usb_card *cardp)
+ 
+ static int if_usb_reset_device(struct if_usb_card *cardp)
+ {
+-	struct cmd_ds_command *cmd = cardp->ep_out_buf + 4;
++	struct cmd_header *cmd = cardp->ep_out_buf + 4;
+ 	int ret;
+ 
+ 	lbs_deb_enter(LBS_DEB_USB);
+@@ -441,7 +441,7 @@ static int if_usb_reset_device(struct if_usb_card *cardp)
+ 	*(__le32 *)cardp->ep_out_buf = cpu_to_le32(CMD_TYPE_REQUEST);
+ 
+ 	cmd->command = cpu_to_le16(CMD_802_11_RESET);
+-	cmd->size = cpu_to_le16(sizeof(struct cmd_header));
++	cmd->size = cpu_to_le16(sizeof(cmd));
+ 	cmd->result = cpu_to_le16(0);
+ 	cmd->seqnum = cpu_to_le16(0x5a5a);
+ 	usb_tx_block(cardp, cardp->ep_out_buf, 4 + sizeof(struct cmd_header));
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index cfd0af6..6c0e814 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -897,7 +897,7 @@ void lbs_remove_card(struct lbs_private *priv)
+ 
+ 	if (priv->psmode == LBS802_11POWERMODEMAX_PSP) {
+ 		priv->psmode = LBS802_11POWERMODECAM;
+-		lbs_ps_wakeup(priv, CMD_OPTION_WAITFORRSP);
++		lbs_set_ps_mode(priv, PS_MODE_ACTION_EXIT_PS, true);
+ 	}
+ 
+ 	if (priv->is_deep_sleep) {
+@@ -1060,7 +1060,7 @@ static int __init lbs_init_module(void)
+ 	memset(&confirm_sleep, 0, sizeof(confirm_sleep));
+ 	confirm_sleep.hdr.command = cpu_to_le16(CMD_802_11_PS_MODE);
+ 	confirm_sleep.hdr.size = cpu_to_le16(sizeof(confirm_sleep));
+-	confirm_sleep.action = cpu_to_le16(CMD_SUBCMD_SLEEP_CONFIRMED);
++	confirm_sleep.action = cpu_to_le16(PS_MODE_ACTION_SLEEP_CONFIRMED);
+ 	lbs_debugfs_init();
+ 	lbs_deb_leave(LBS_DEB_MAIN);
+ 	return 0;
+-- 
+1.7.1.1
 
-Agreed.
 
-> but otherwise it doesn't really matter that
-> much. You'll never be able to close the race fully anyway,
 
-No, but I'd like to get as close as possible. The idea with the delayed
-work was intended to reduce the latency as good as we can.
 
-> unless your
-> device itself is capable of generating the TIM IE _right before_ the
-> beacon gets transmitted.
-
-Agreed. At least on rt2800 we can use the pre tbtt interrupt to update the
-beacon just before it is sent out.
-
-> Therefore, with standard beacon intervals of 100 TU, I don't think it
-> matters all that much whether it's before or after?
-
-Yeah, maybe that's just fine. I guess I'll just drop the set_tim callback
-from all rt2x00 pci variants and implement the pre tbtt interrupt on rt2800.
-
-Thanks,
-Helmut
