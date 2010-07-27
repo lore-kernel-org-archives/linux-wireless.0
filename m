@@ -1,63 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50637 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752172Ab0GMPpN (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:49677 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753914Ab0G0Jap convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jul 2010 11:45:13 -0400
-Date: Tue, 13 Jul 2010 11:35:31 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Alejandro Riveira =?iso-8859-1?Q?Fern=E1ndez?=
-	<ariveira@gmail.com>, Martin Steigerwald <Martin@lichtvoll.de>,
-	linux-kernel@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: rt2x00: slow wifi with correct basic rate bitmap (was Re:
- stable? quality assurance?)
-Message-ID: <20100713153530.GC3835@tuxdriver.com>
-References: <201007110918.42120.Martin@lichtvoll.de>
- <AANLkTimCwi2uJqqPaq3U30f3rvdDizu1BnaaXgvNeC9k@mail.gmail.com>
- <201007111651.42963.Martin@lichtvoll.de>
- <20100713131112.26a3da54@varda>
- <4C3C6106.3000909@s5r6.in-berlin.de>
+	Tue, 27 Jul 2010 05:30:45 -0400
+Received: by pzk26 with SMTP id 26so1282682pzk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 02:30:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <4C3C6106.3000909@s5r6.in-berlin.de>
+In-Reply-To: <AANLkTik=1LX_12ZskP5vwkSrTVFO9jH6uu8pyByGmLg6@mail.gmail.com>
+References: <1276857140.3638.22.camel@jlt3.sipsolutions.net>
+	<AANLkTinHXxhwrOmhRxveekG7_C7WeydUdSBL2R7DwOvJ@mail.gmail.com>
+	<AANLkTinch-sygnRmB6LKi6xLNYVKY6Ap3YL4_PMNdmKQ@mail.gmail.com>
+	<AANLkTik=1LX_12ZskP5vwkSrTVFO9jH6uu8pyByGmLg6@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 27 Jul 2010 02:30:25 -0700
+Message-ID: <AANLkTimB7awehpFh035hMqeazvv0ArHoKMQgrQfPSRhw@mail.gmail.com>
+Subject: Re: [PATCH] mac80211: fix sw scan bracketing
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 13, 2010 at 02:50:14PM +0200, Stefan Richter wrote:
-> Alejandro Riveira Fern�ndez wrote:
-> >  I for one stopped booting into -rc kernels.
-> >  The fact that still have to patch my kernels with a *one* liner
-> >  since 2.6.29 kernel [1] does not give me confidence on the "test
-> >  report/bisect and it will be fixed" promise some have made in this
-> >  threath
-> >  
-> >  [1] https://bugzilla.kernel.org/show_bug.cgi?id=13362
-> 
-> There were promises made in this thread?  Then I must have read a
-> different mailinglist or so.
-> 
-> I do not know why your WLAN regression has not been fixed yet, but at
-> least it seems rather plausible why commit
-> 7e0986c17f695952ce5d61ed793ce048ba90a661 is not going to be reverted (if
-> such a revert is the one-liner that you are referring to).
-> 
-> Why is one reporter's rt2500 OK now though but not yours?  Are there
-> different card revisions or firmwares out there that require quirk handling?
+On Tue, Jul 27, 2010 at 2:22 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+> On Tue, Jul 27, 2010 at 1:27 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>> On Tue, Jul 27, 2010 at 1:04 AM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
+>>> On Fri, Jun 18, 2010 at 3:32 AM, Johannes Berg
+>>> <johannes@sipsolutions.net> wrote:
+>>>> From: Johannes Berg <johannes.berg@intel.com>
+>>>>
+>>>> Currently, detection in hwsim and ath9k can
+>>>> detect that two sw scans are in flight at the
+>>>> same time, which isn't really true. It is
+>>>> caused by a race condition, because the scan
+>>>> complete callback is called too late, after
+>>>> the lock has been dropped, so that a new scan
+>>>> can be started before it is called.
+>>>>
+>>>> It is also called too early semantically, as
+>>>> it is currently called _after_ the return to
+>>>> the operating channel -- it should be before
+>>>> so that drivers know this is the operating
+>>>> channel again.
+>>>>
+>>>> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+>>>> ---
+>>>>  net/mac80211/scan.c |    4 ++--
+>>>>  1 file changed, 2 insertions(+), 2 deletions(-)
+>>>>
+>>>> --- wireless-testing.orig/net/mac80211/scan.c   2010-06-18 12:22:56.000000000 +0200
+>>>> +++ wireless-testing/net/mac80211/scan.c        2010-06-18 12:23:25.000000000 +0200
+>>>> @@ -287,6 +287,8 @@ void ieee80211_scan_completed(struct iee
+>>>>        local->scanning = 0;
+>>>>        local->scan_channel = NULL;
+>>>>
+>>>> +       drv_sw_scan_complete(local);
+>>>> +
+>>>>        /* we only have to protect scan_req and hw/sw scan */
+>>>>        mutex_unlock(&local->scan_mtx);
+>>>>
+>>>> @@ -296,8 +298,6 @@ void ieee80211_scan_completed(struct iee
+>>>>
+>>>>        ieee80211_configure_filter(local);
+>>>>
+>>>> -       drv_sw_scan_complete(local);
+>>>> -
+>>>>        ieee80211_offchannel_return(local, true);
+>>>>
+>>>>  done:
+>>>
+>>> Leaving the entire patch in the e-mail reply as the patch is small to
+>>> help with context.
+>>>
+>>> Turns out this patch broke ath9k in the sense that right after a scan
+>>> we get disconnected from the AP. I just bisected wireless-testing by
+>>> master-tag dates and found 2010-06-18 to be where we hit poo in. I
+>>> reverted this patch and its cured. I'm going to test a recent
+>>> wireless-testing now and then just try reverting this to see if its OK
+>>> even on a recent wireless-testing, and then see if we can fix this
+>>> properly on ath9k or whatever.
+>>
+>> Yeap, reverting this patch alone today on wireless-testing makes me
+>> ath9k happy once again.
+>
+> So after some though and review in order to fix this we need a little
+> more time and thought. The above patch changes the order in which we
+> configure hardware upon a scan complete. It used to be we would
+> configure the hardware, configure the filter and then scan complete.
+> By then we'd be on the home channel and the filters would be set
+> correctly. ath9k's scan complete routine does a few things which
+> depend on the channel and will make hardware poo otherwise or do
+> stupid things:
+>
+>  * start TX poll routine, due to the new latency introduced to
+> configure hardware and configure the RX filter the TX polll routine
+> now has some extra work done by hardware before it actually starts
+> TXing. I don't suspect this could introduce a huge regression but it
+> is worth noting.
+>  * ANI gets started, and the wrong channel is used if we're not yet
+> on the home channel. A simple patch to test if this may be causing the
+> disconnect issue I am seeing I just tried was to increase the delay
+> before starting ANI, this did indeed help.
 
-The patch (7e0986c1) corrects an obvious error.  Reverting it might
-improve your (i.e. Alejandro) performance, but it seems likely to
-cause connectivity problems for others.
+Oh and having the right filters set up for ANI processing is important too.
 
-The fact that reverting 7e098c1 helps you suggests that rt2500usb
-isn't using the basic_rates map properly.  But after reviewing the
-code and the data I have, I can't see what would be causing that.
-It is at least possible that your AP is sending bad rate information.
-Have you tried this device with other APs?
+At first I thought trying to detect upon hw config the home channel
+would be a good place to move the ani start, but then we'd also need
+to move the beacon config and test that.. at this point there are just
+too many unknowns on possible regressions introduced by this.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+>  * ath_beacon_config() which I suspect means that if we now scan in
+> AP mode/IBSS mode we could potentially be leaking beacons on the last
+> channel of a scan, prior to sending them on the actual desired home
+> channel.
+>
+> To address and review all this I need more time and instead I think
+> its easier to ask for revert of this patch. I think we should more
+> carefully address these issues acanll together in one patch to avoid
+> these regressions. Right now ath9k is just completely useless with
+> this. It disconnects upon every scan, so for network manager users
+> this is every 60 seconds.
+
+  Luis
