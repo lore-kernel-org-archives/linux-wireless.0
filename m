@@ -1,157 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:34740 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755005Ab0GUSBR (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:45061 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752501Ab0G0XbI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jul 2010 14:01:17 -0400
-From: Marcel Holtmann <marcel@holtmann.org>
-To: "John W. Linville" <linville@tuxdriver.com>
+	Tue, 27 Jul 2010 19:31:08 -0400
+Received: by pxi14 with SMTP id 14so669255pxi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 16:31:07 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTimdDhHudW6_7Hwcf6UCumY_EgqGd7CLtmSgOzEz@mail.gmail.com>
+References: <AANLkTimdDhHudW6_7Hwcf6UCumY_EgqGd7CLtmSgOzEz@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 27 Jul 2010 16:30:47 -0700
+Message-ID: <AANLkTi=h+Ra9h=7E1q0Wnnmh=UYmGNxS8cP7E-LNER=G@mail.gmail.com>
+Subject: Re: regulatory hiccup
+To: Andrew Lutomirski <luto@mit.edu>
 Cc: linux-wireless@vger.kernel.org
-Subject: =?UTF-8?q?Pull=20request=3A=20bluetooth-next-2=2E6=202010-07-21?=
-Date: Wed, 21 Jul 2010 11:01:04 -0700
-Message-Id: <cover.1279734130.git.marcel@holtmann.org>
-MIME-Version: 1.0
-MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Fri, Jul 23, 2010 at 12:30 PM, Andrew Lutomirski <luto@mit.edu> wrote:
+> This is 2.6.35-rc4, but this bug (?) might exist in other versions ,too.
+>
+> Early in boot, all was well:
+>
+> [ 5524.214376] cfg80211: Calling CRDA to update world regulatory domain
+> [ 5524.219025] cfg80211: Calling CRDA for country: US
+> [ 5524.238440] cfg80211: Regulatory domain changed to country: US
+> [ 5524.238443]     (start_freq - end_freq @ bandwidth),
+> (max_antenna_gain, max_eirp)
+> [ 5524.238446]     (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2700 mBm)
+> [ 5524.238448]     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 1700 mBm)
+> [ 5524.238451]     (5250000 KHz - 5330000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+> [ 5524.238454]     (5490000 KHz - 5600000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+> [ 5524.238456]     (5650000 KHz - 5710000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+> [ 5524.238459]     (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 3000 mBm)
+>
+> Then, after fiddling with an AP for a bit, I got:
+>
+> [11747.264221] cfg80211: Calling CRDA for country: US
+> [11747.282664] cfg80211: Current regulatory domain updated by AP to: US
+> [11747.282672]     (start_freq - end_freq @ bandwidth),
+> (max_antenna_gain, max_eirp)
+> [11747.282680]     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 1600 mBm)
+> [11747.282688]     (5250000 KHz - 5330000 KHz @ 40000 KHz), (300 mBi, 1600 mBm)
+>
+> (Note lots of missing channels after that.)  iw phy phy0 info showed
+> all the channels above 5.33GHz disabled.  I didn't see some other APs
+> that were there.
+>
+> Later on I disconnected, CRDA got called again, and all was well.
+>
+> The AP that I had just connected to when everything broke was an
+> EnGenuis ESR7750 (brand new), and maybe it sent something wrong, but
+> surely if it says US it shouldn't disable other APs on US bands that
+> CRDA says is OK.
 
-these are the Bluetooth patches for 2.6.36 merge window. The big chunk is
-from the L2CAP extension that we are now enabling by default. Everything
-else are minor fixes and there is one new driver.
+If you are saying the the AP's Country IE is a subset of what CRDA has
+and complaining that we follow that, yes that is true. We were being
+very careful and only recently revisited this again with our
+regulatory folks. It was determined to be fair to disregard the AP's
+own regulatory data and follow our own since we do keep good tabs on
+our wireless-regdb. Patches for that were sent by Linville and will be
+part of 2.6.36, you can either cherry pick those or wait for
+2.6.36-rc1 or the respective compat-wireless-2.6.36-rc1
 
-Regards
-
-Marcel
-
-
-Please pull from
-
-    git://git.kernel.org/pub/scm/linux/kernel/git/holtmann/bluetooth-next-2.6.git master
-
-This will update the following files:
-
- drivers/bluetooth/Kconfig          |   12 +
- drivers/bluetooth/Makefile         |    1 +
- drivers/bluetooth/bcm203x.c        |    3 +-
- drivers/bluetooth/bpa10x.c         |    2 +-
- drivers/bluetooth/btmrvl_debugfs.c |    2 +-
- drivers/bluetooth/btmrvl_drv.h     |    5 +-
- drivers/bluetooth/btmrvl_main.c    |    5 +-
- drivers/bluetooth/btmrvl_sdio.c    |  111 +++---
- drivers/bluetooth/btusb.c          |   13 +-
- drivers/bluetooth/dtl1_cs.c        |    2 +-
- drivers/bluetooth/hci_ath.c        |  235 +++++++++++++
- drivers/bluetooth/hci_ldisc.c      |   20 +-
- drivers/bluetooth/hci_ll.c         |    2 +-
- drivers/bluetooth/hci_uart.h       |   15 +-
- fs/compat_ioctl.c                  |    9 +-
- include/net/bluetooth/bluetooth.h  |    3 +-
- include/net/bluetooth/hci.h        |  187 +++++-----
- include/net/bluetooth/hci_core.h   |   28 +-
- include/net/bluetooth/l2cap.h      |   34 +-
- include/net/bluetooth/rfcomm.h     |   14 +-
- net/bluetooth/Kconfig              |   13 -
- net/bluetooth/hci_conn.c           |    2 +-
- net/bluetooth/hci_core.c           |  204 ++++++++----
- net/bluetooth/hci_event.c          |    8 +-
- net/bluetooth/hci_sock.c           |   90 +++++
- net/bluetooth/hci_sysfs.c          |   38 ++
- net/bluetooth/l2cap.c              |  669 ++++++++++++++++++++++--------------
- 27 files changed, 1197 insertions(+), 530 deletions(-)
- create mode 100755 drivers/bluetooth/hci_ath.c
-
-through these ChangeSets:
-
-Amitkumar Karwar (1):
-    Bluetooth: Process interrupt in main thread of btmrvl driver as well
-
-Cyril Lacoux (1):
-    Bluetooth: Added support for controller shipped with iMac i5
-
-Gustavo F. Padovan (39):
-    Bluetooth: Remove max_tx and tx_window module paramenters from L2CAP
-    Bluetooth: Remove L2CAP Extended Features from Kconfig
-    Bluetooth: Fix drop of packets with invalid req_seq/tx_seq
-    Bluetooth: Fix bug with ERTM vars increment
-    Bluetooth: Only check SAR bits if frame is an I-frame
-    Bluetooth: Fix bug in l2cap_ertm_send() behavior
-    Bluetooth: Proper shutdown ERTM when closing the channel
-    Bluetooth: Fix L2CAP control bit field corruption
-    Bluetooth: Stop ack_timer if ERTM enters in Local Busy or SREJ_SENT
-    Bluetooth: Update buffer_seq before retransmit frames
-    Bluetooth: Fix handle of received P-bit
-    Bluetooth: Check the tx_window size on setsockopt
-    Bluetooth: Check packet FCS earlier
-    Bluetooth: Fix missing retransmission action with RR(P=1)
-    Bluetooth: Fix ERTM error reporting to the userspace
-    Bluetooth: Add debug output to ERTM code
-    Bluetooth: Tweaks to l2cap_send_i_or_rr_or_rnr() flow
-    Bluetooth: Change the way we set ERTM mode as mandatory
-    Bluetooth: Disconnect the channel if we don't want the proposed mode
-    Bluetooth: Prefer Basic Mode on receipt of ConfigReq
-    Bluetooth: Actively send request for Basic Mode
-    Bluetooth: Refuse ConfigRsp with different mode
-    Bluetooth: Remove check for supported mode
-    Bluetooth: Disconnect early if mode is not supported
-    Bluetooth: Don't accept ConfigReq if we aren't in the BT_CONFIG state
-    Bluetooth: Remove the send_lock spinlock from ERTM
-    Bluetooth: Add backlog queue to ERTM code
-    Bluetooth: Improve ERTM local busy handling
-    Bluetooth: Send ConfigReq after send a ConnectionRsp
-    Bluetooth: Fix bug in kzalloc allocation size
-    Bluetooth: Keep code under column 80
-    Bluetooth: Add Copyright notice to L2CAP
-    Bluetooth: Update L2CAP version information
-    Bluetooth: Add Google's copyright to L2CAP
-    Bluetooth: Move bit-field variable in USB driver to data->flags
-    Bluetooth: Fix typo in hci_event.c
-    Bluetooth: Enable L2CAP Extended features by default
-    Bluetooth: Use __packed annotation
-    Bluetooth: Use __packed annotation for drivers
-
-Joe Perches (1):
-    Bluetooth: Remove unnecessary casts of private_data in drivers
-
-Johan Hedberg (4):
-    Bluetooth: Add blacklist support for incoming connections
-    Bluetooth: Add debugfs support for showing the blacklist
-    Bluetooth: Add missing HCIUARTGETDEVICE ioctl to compat_ioctl.c
-    Bluetooth: Add HCIUARTSETFLAGS and HCIUARTGETFLAGS ioctls
-
-João Paulo Rechi Vita (8):
-    Bluetooth: Fix SREJ_QUEUE corruption in L2CAP
-    Bluetooth: Fix l2cap_sock_connect error return.
-    Bluetooth: Make l2cap_streaming_send() void.
-    Bluetooth: Fix error return value on sendmsg.
-    Bluetooth: Fix error return value on sendmsg.
-    Bluetooth: Fix error return for l2cap_connect_rsp().
-    Bluetooth: Fix error value for wrong FCS.
-    Bluetooth: Fix error return on L2CAP-HCI interface.
-
-Julia Lawall (2):
-    Bluetooth: Use kmemdup for drivers
-    Bluetooth: Use kzalloc for drivers
-
-Justin P. Mattock (1):
-    Bluetooth: Fix warning: variable 'tty' set but not used
-
-Kulikov Vasiliy (1):
-    Bluetooth: Silence warning in btmrvl SDIO driver
-
-Nathan Holstein (1):
-    Bluetooth: Fix bug with ERTM minimum packet length
-
-Ron Shaffer (2):
-    Bluetooth: Remove extraneous white space
-    Bluetooth: Reassigned copyright to Code Aurora Forum
-
-Suraj Sumangala (5):
-    Bluetooth: Add one more buffer for HCI stream reassembly
-    Bluetooth: Implement hci_reassembly helper to reassemble RX packets
-    Bluetooth: Modified hci_recv_fragment() to use hci_reassembly helper
-    Bluetooth: Implemented HCI frame reassembly for RX from stream
-    Bluetooth: Support for Atheros AR300x serial chip
-
+  Luis
