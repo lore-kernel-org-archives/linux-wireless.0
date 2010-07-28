@@ -1,59 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:33569 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751932Ab0GMIdr (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:35811 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751241Ab0G1X2w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jul 2010 04:33:47 -0400
-Received: by wwi17 with SMTP id 17so755694wwi.1
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jul 2010 01:33:46 -0700 (PDT)
-Subject: RE: [PATCH] Added support for host sleep feature
-From: Alberto Panizzo <maramaopercheseimorto@gmail.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: 'Paul Fox' <pgf@laptop.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"libertas-dev@lists.infradead.org" <libertas-dev@lists.infradead.org>
-In-Reply-To: <5FF020A1CFFEEC49BD1E09530C4FF59505DA40D0D6@SC-VEXCH1.marvell.com>
-References: <5FF020A1CFFEEC49BD1E09530C4FF59505DA40D0D6@SC-VEXCH1.marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 13 Jul 2010 10:33:42 +0200
-Message-ID: <1279010022.3164.27.camel@realization>
-Mime-Version: 1.0
+	Wed, 28 Jul 2010 19:28:52 -0400
+Received: by bwz1 with SMTP id 1so15046bwz.19
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Jul 2010 16:28:51 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] cfg80211: fix dev <-> wiphy typo
+Date: Thu, 29 Jul 2010 01:28:46 +0200
+Cc: Joe Perches <joe@perches.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201007290128.46773.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On ven, 2010-07-09 at 06:01 -0700, Amitkumar Karwar wrote:
-> 
-> > amitkumar wrote:
-> >  > From: Amitkumar Karwar <akarwar@marvell.com>
-> >  >
-> >  > Existing "ethtool -s ethX wol X" command configures hostsleep
-> >  > parameters, but those are activated only during suspend/resume,
-> >  > there is no way to configure host sleep without actual suspend.
-> > 
-> > as background, can you expand on how this is useful?  i just spent
-> > a bunch of time debugging issues with HOST_SLEEP_CFG and
-> > HOST_SLEEP_ACTIVATE (which doesn't work on an 8388) on the XO-1
-> > OLPC laptop, and i'm wondering whether or how this would have
-> > helped.
-> 
-> This patch is useful if someone wants to enable host sleep feature without the device entering suspend state.
-> 
-> The host sleep using device suspend feature is also intact.
-> 
-> Thanks,
-> Amitkumar Karwar
-
-Regards current consumption, maintaining a wireless connection active,
-the device consumes circa 30 mA instead of 180 mA of full power idle
-mode.
-So for embedded devices powered from battery, enabling the Power Save
-mode is a huge battery save task.
-
-Best Regards,
-
--- 
-Alberto!
-
-        Be Persistent!
-                - Greg Kroah-Hartman (FOSDEM 2010)
-
+Cc: Joe Perches <joe@perches.com>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index ae80f8f..2fd06c6 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2451,7 +2451,7 @@ int wiphy_debug(const struct wiphy *wiphy, const char *format, ...)
+ 	wiphy_printk(KERN_DEBUG, wiphy, format, ##args)
+ #elif defined(CONFIG_DYNAMIC_DEBUG)
+ #define wiphy_dbg(wiphy, format, args...)			\
+-	dynamic_pr_debug("%s: " format,	wiphy_name(dev), ##args)
++	dynamic_pr_debug("%s: " format,	wiphy_name(wiphy), ##args)
+ #else
+ #define wiphy_dbg(wiphy, format, args...)				\
+ ({									\
