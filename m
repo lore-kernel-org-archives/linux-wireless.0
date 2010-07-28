@@ -1,46 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:56060 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752639Ab0GZWV1 (ORCPT
+Received: from mail-gw0-f66.google.com ([74.125.83.66]:51946 "EHLO
+	mail-gw0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751170Ab0G1SUs convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jul 2010 18:21:27 -0400
-Date: Mon, 26 Jul 2010 23:21:13 +0100
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Maxim Levitsky <maximlevitsky@gmail.com>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	David Quan <David.Quan@atheros.com>,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"kernel-team@lists.ubuntu.com" <kernel-team@lists.ubuntu.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	"tim.gardner@canonical.com" <tim.gardner@canonical.com>
-Subject: Re: [ath5k-devel] [PATCH v3] ath5k: disable ASPM
-Message-ID: <20100726222113.GA6487@srcf.ucam.org>
-References: <1276933774.16697.11.camel@maxim-laptop> <20100619123841.GA31838@hash.localnet> <1276952554.3332.3.camel@maxim-laptop> <1276961564.5173.12.camel@maxim-laptop> <20100726201322.GI14855@tux> <1280177362.3721.7.camel@maxim-laptop> <20100726210651.GJ14855@tux> <1280179033.3721.15.camel@maxim-laptop> <20100726212543.GA5424@srcf.ucam.org> <AANLkTi=5_Dc8SumPi7cr8u7=DmnOHgSo6C76w9b0E4Kj@mail.gmail.com>
+	Wed, 28 Jul 2010 14:20:48 -0400
+Received: by gwb11 with SMTP id 11so326399gwb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Jul 2010 11:20:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTi=5_Dc8SumPi7cr8u7=DmnOHgSo6C76w9b0E4Kj@mail.gmail.com>
+In-Reply-To: <4C500460.5000505@iam.unibe.ch>
+References: <4C4D5560.2040201@iam.unibe.ch> <AANLkTinfWZaiMsmPTmm5qrBRcqMAvQpv1Xq86fxo+S3Z@mail.gmail.com>
+	<4C500460.5000505@iam.unibe.ch>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 28 Jul 2010 10:30:21 -0700
+Message-ID: <AANLkTindXiF6pjzSgz7Gp_w7qy1EeOqNgq8safE00FvG@mail.gmail.com>
+Subject: Re: iw dev wlan0 link - "Not connected"
+To: Zhongliang Zhao <zhao@iam.unibe.ch>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 26, 2010 at 03:15:32PM -0700, Luis R. Rodriguez wrote:
-> On Mon, Jul 26, 2010 at 2:25 PM, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
-> > This may need to be done on a chip by chip basis. Take a look at
-> > http://www.atheros.cz/inffile.php?inf=68&bit=32&atheros=AR5002G&system=4
-> > and some of the other inf files on that site to see which devices
-> > provide the PciASPMOptIn flag - those should support ASPM states even if
-> > they're pre-1.1 devices.
-> 
-> I rather we not bother with these, lets simply follow the kernel's
-> lead here for its rule matching.
+On Wed, Jul 28, 2010 at 3:20 AM, Zhongliang Zhao <zhao@iam.unibe.ch> wrote:
+> On 07/26/2010 07:23 PM, Luis R. Rodriguez wrote:
+>>
+>> On Mon, Jul 26, 2010 at 2:29 AM, Zhongliang Zhao<zhao@iam.unibe.ch>
+>>  wrote:
+>>
+>>>
+>>> Dear all,
+>>>
+>>> When I use "iw dev wlan0 link" to get information on wlan0 (basically to
+>>> check the channel used on wlan0),
+>>> it says: " Not connected "
+>>>
+>>> Can someone tell me how to fix this?
+>>>
+>>
+>> Refer to:
+>>
+>> http://wireless.kernel.org/en/users/Documentation/iw#Getting_link_status
+>>
+>> And then:
+>>
+>>
+>> http://wireless.kernel.org/en/users/Documentation/iw#Establishing_a_basic_connection
+>>
+>> What you really want to use is:
+>>
+>> http://wireless.kernel.org/en/users/Documentation/wpa_supplicant
+>>
+>>   Luis
+>>
+>
+>
+> Luis, thanks for the reply. But actually we're working on mesh nodes with
+> the iw-tool installed, so maybe we should use the "mesh" interface mode. In
+> this case, how to solve the problem?
 
-Sorry? The idea is to indicate which chips support ASPM even though 
-they're pre-PCIe 1.1. If all Atheros parts work fine with L1 then that 
-makes things much easier, but it would be good to know the correct set 
-of chips that are broken with L0s.
+http://wireless.kernel.org/en/users/Documentation/iw#Creating_and_inspecting_Mesh_Point_interfaces_with_iw
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+Note for ath9k you currently have to issue a scan to kick the card to
+beacon, its a bug, not dealt with yet.
+
+  Luis
