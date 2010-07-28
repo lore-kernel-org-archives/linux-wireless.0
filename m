@@ -1,36 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:62855 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754553Ab0GIV4U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jul 2010 17:56:20 -0400
-Subject: Re: Compat-wireless release for 2010-07-09 is baked
-From: Pavel Roskin <proski@gnu.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20100709190222.115F242E2D@repository3.orbit-lab.org>
-References: <20100709190222.115F242E2D@repository3.orbit-lab.org>
-Content-Type: text/plain
-Date: Fri, 09 Jul 2010 17:56:13 -0400
-Message-Id: <1278712573.9411.4.camel@mj>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47276 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750889Ab0G1VPY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Jul 2010 17:15:24 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] wl1271: update hw/fw version info in wiphy struct
+Date: Wed, 28 Jul 2010 17:10:43 -0400
+Message-Id: <1280351443-28535-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-07-09 at 15:02 -0400, Compat-wireless cronjob account
-wrote:
-> Base tree: linux-next.git
-> Base tree version: next-20100708
-> compat-wireless release: compat-wireless-2010-07-08-1-g469f74f
-> ssh: Could not resolve hostname wireless.kernel.org: Name or service not known
-> rsync: connection unexpectedly closed (0 bytes received so far) [sender]
-> rsync error: unexplained error (code 255) at io.c(600) [sender=3.0.6]
+This makes the information available through ethtool...
 
-Still not good.  The 2010-07-09 release is not on the download site.  I
-assume the upload failed.
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_main.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-Perhaps only successful reports should go to the list, and unsuccessful
-reports should go to those who can fix the problem?
-
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 374abf0..9d68f00 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -839,6 +839,7 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 				   struct ieee80211_vif *vif)
+ {
+ 	struct wl1271 *wl = hw->priv;
++	struct wiphy *wiphy = hw->wiphy;
+ 	int retries = WL1271_BOOT_RETRIES;
+ 	int ret = 0;
+ 
+@@ -892,6 +893,12 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 
+ 		wl->state = WL1271_STATE_ON;
+ 		wl1271_info("firmware booted (%s)", wl->chip.fw_ver);
++
++		/* update hw/fw version info in wiphy struct */
++		wiphy->hw_version = wl->chip.id;
++		strncpy(wiphy->fw_version, wl->chip.fw_ver,
++			sizeof(wiphy->fw_version));
++
+ 		goto out;
+ 
+ irq_disable:
 -- 
-Regards,
-Pavel Roskin
+1.7.1.1
+
