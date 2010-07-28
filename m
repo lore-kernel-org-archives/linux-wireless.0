@@ -1,50 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:45564 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754567Ab0GSX3i (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50454 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752075Ab0G1GwP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jul 2010 19:29:38 -0400
-Subject: Re: iwlagn and many firmware restarts with Fedora kernel
-From: Marcel Holtmann <marcel@holtmann.org>
-To: drago01 <drago01@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTinGUQjPoMRmt_jeFgpxLhzma7qhfR14t_tWLvO1@mail.gmail.com>
-References: <1279565034.4572.36.camel@localhost.localdomain>
-	 <AANLkTinGUQjPoMRmt_jeFgpxLhzma7qhfR14t_tWLvO1@mail.gmail.com>
+	Wed, 28 Jul 2010 02:52:15 -0400
+Subject: Re: [PATCH 2/3] mac80211_hwsim: supress scan conflict message
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1280262788-9890-3-git-send-email-lrodriguez@atheros.com>
+References: <1280262788-9890-1-git-send-email-lrodriguez@atheros.com>
+	 <1280262788-9890-3-git-send-email-lrodriguez@atheros.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 19 Jul 2010 16:29:34 -0700
-Message-ID: <1279582174.4572.43.camel@localhost.localdomain>
+Date: Wed, 28 Jul 2010 08:52:09 +0200
+Message-ID: <1280299929.3832.3.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, 2010-07-27 at 16:33 -0400, Luis R. Rodriguez wrote:
+> Johannes already debugged this and determined it was due
+> to a race condition in mac80211, in order to fix this though
+> we would need to change drivers quite a bit so for now just
+> supress this and we'll correct this on the next kernel release.
 
-> > so during the last few weeks, I have seen a huge amount of firmware
-> > restarts with my Intel 5350 card and Fedora 13 kernel (2.6.33.6-147).
-> >
-> > iwlagn 0000:03:00.0: low ack count detected, restart firmware
-> > iwlagn 0000:03:00.0: On demand firmware reload
-> > iwlagn 0000:03:00.0: Stopping AGG while state not ON or starting
-> > iwlagn 0000:03:00.0: queue number out of range: 0, must be 10 to 19
-> >
-> > If this happens then I don't see it once, I normally see this 10-20
-> > times and the connectivity is stalled until the cards comes back to
-> > life. I have seen patches that should have fixed this symptom, but they
-> > might be also send to -stable since this is a major hassle.
-> >
-> > The time without connectivity is something around 4-5 minutes or longer
-> > when this happens. Not really funny.
-> 
-> This happens here too even with the 2.6.34.1-9.fc13.x86_64 kernel;
-> when this happens reloading the iwlagn module seems to be the only
-> (quick) way to get it back to life.
+This one can stay for all I care since it's not used in practise by
+actual users that get confused :-)
 
-the quick way is re-loading the module, that is true. Otherwise you have
-to sit it out. It always comes back nicely and starts working again.
-
-Regards
-
-Marcel
-
+johannes
 
