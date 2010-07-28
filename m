@@ -1,39 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34361 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750908Ab0G0GhS (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40408 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755287Ab0G1UpT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 02:37:18 -0400
-Subject: Re: iwlwifi connection problems
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alex Romosan <romosan@sycorax.lbl.gov>
-Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <87mxtd5xlq.fsf@sycorax.lbl.gov>
-References: <87tynqvtu6.fsf@sycorax.lbl.gov>
-	 <1279917523.10769.1.camel@wwguy-huron>
-	 <1280135867.3693.5.camel@jlt3.sipsolutions.net>
-	 <87mxtd5xlq.fsf@sycorax.lbl.gov>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 27 Jul 2010 08:37:09 +0200
-Message-ID: <1280212629.19098.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 28 Jul 2010 16:45:19 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] ar9170: add get_survey callback in order to get channel noise
+Date: Wed, 28 Jul 2010 16:30:40 -0400
+Message-Id: <1280349040-25102-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <201007282157.57068.chunkeey@googlemail.com>
+References: <201007282157.57068.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-07-26 at 21:59 -0700, Alex Romosan wrote:
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Acked-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+ drivers/net/wireless/ath/ar9170/main.c |   17 +++++++++++++++++
+ 1 files changed, 17 insertions(+), 0 deletions(-)
 
-> any ideas on how i can debug this? i tried to do a git-bisect but i
-> didn't get anywhere. i have the driver compiled in the kernel if that
-> makes any difference. as i played with the later kernels (after 2.6.34)
-> i discovered that if kept bringing the interface down and then up again
-> eventually i would get "cfg80211: Calling CRDA to update world
-> regulatory domain" the antenna light on the laptop (i have a thinkpad
-> t61) would go off and then at the next ifup the driver connected. looks
-> like some kind of reset/initialization problem to me.
-
-So is the issue maybe the channel the AP is no, not the fact that it's
-hidden? or something like that?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
+index 5e2c514..e089d9f 100644
+--- a/drivers/net/wireless/ath/ar9170/main.c
++++ b/drivers/net/wireless/ath/ar9170/main.c
+@@ -1905,6 +1905,22 @@ static int ar9170_get_stats(struct ieee80211_hw *hw,
+ 	return 0;
+ }
+ 
++static int ar9170_get_survey(struct ieee80211_hw *hw, int idx,
++				struct survey_info *survey)
++{
++	struct ar9170 *ar = hw->priv;
++	struct ieee80211_conf *conf = &hw->conf;
++
++	if (idx != 0)
++		return -ENOENT;
++
++	survey->channel = conf->channel;
++	survey->filled = SURVEY_INFO_NOISE_DBM;
++	survey->noise = ar->noise[0];
++
++	return 0;
++}
++
+ static int ar9170_conf_tx(struct ieee80211_hw *hw, u16 queue,
+ 			  const struct ieee80211_tx_queue_params *param)
+ {
+@@ -1957,6 +1973,7 @@ static const struct ieee80211_ops ar9170_ops = {
+ 	.get_tsf		= ar9170_op_get_tsf,
+ 	.set_key		= ar9170_set_key,
+ 	.get_stats		= ar9170_get_stats,
++	.get_survey		= ar9170_get_survey,
+ 	.ampdu_action		= ar9170_ampdu_action,
+ };
+ 
+-- 
+1.7.1.1
 
