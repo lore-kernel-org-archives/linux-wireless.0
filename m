@@ -1,38 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34588 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753724Ab0GWNpN (ORCPT
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:49468 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752170Ab0G1Uno convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jul 2010 09:45:13 -0400
-Date: Fri, 23 Jul 2010 09:33:11 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	nuh <nuh@mailinator.net>
-Subject: Re: 2.6.35-rc6: Reported regressions from 2.6.34
-Message-ID: <20100723133310.GD6678@tuxdriver.com>
-References: <Lupw7pePXBO.A.fZH.G2XSMB@chimera>
+	Wed, 28 Jul 2010 16:43:44 -0400
+Received: by gwb20 with SMTP id 20so1107614gwb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Jul 2010 13:43:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <Lupw7pePXBO.A.fZH.G2XSMB@chimera>
+In-Reply-To: <1280339151-37084-1-git-send-email-nbd@openwrt.org>
+References: <1280339151-37084-1-git-send-email-nbd@openwrt.org>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 28 Jul 2010 13:43:23 -0700
+Message-ID: <AANLkTimZ8zTZWDcXwr7Hu2FT=gDPeCiiUFXcBmpYpp7M@mail.gmail.com>
+Subject: Re: [PATCH 1/3] ath9k: prevent calibration during off-channel
+	activity
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 23, 2010 at 01:42:26PM +0200, Rafael J. Wysocki wrote:
+On Wed, Jul 28, 2010 at 10:45 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> Previously the software scan callback was used to indicate to the hardware,
+> when it was safe to calibrate. This didn't really work properly, because it
+> depends on a specific order of software scan callbacks vs. channel changes.
+> Also, software scans are not the only thing that triggers off-channel
+> activity, so it's better to use the newly added indication from mac80211 for
+> this and not use the software scan callback for anything calibration related.
+>
+> This fixes at least some of the invalid noise floor readings that I've seen
+> in AP mode on AR9160
 
-> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16201
-> Subject		: SIOCGIWFREQ ioctl fails to get frequency info
-> Submitter	: nuh <nuh@mailinator.net>
-> Date		: 2010-06-14 10:45 (40 days old)
+Neat!
 
-Also 40 days since I posted a comment requesting some information, with
-no response from the poster...  Honestly, if SIOCGIWFREQ were actually
-broken I would think there would be a lot of unhappy iwconfig users?
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -154,6 +154,27 @@ void ath9k_ps_restore(struct ath_softc *sc)
+>        spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
+>  }
+>        spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
+>  }
+>
+> +static void ath_start_ani(struct ath_common *common)
+> +{
+> +       struct ath_hw *ah = common->ah;
+> +       unsigned long timestamp = jiffies_to_msecs(jiffies);
+> +       struct ath_softc *sc = (struct ath_softc *) common->priv;
+> +
+> +       if (!(sc->sc_flags & SC_OP_ANI_RUN))
+> +               return;
+> +
+> +       if (sc->sc_flags & SC_OP_OFFCHANNEL)
+> +               return;
+> +
+> +       common->ani.longcal_timer = timestamp;
+> +       common->ani.shortcal_timer = timestamp;
+> +       common->ani.checkani_timer = timestamp;
+> +
+> +       mod_timer(&common->ani.timer,
+> +                 jiffies +
+> +                       msecs_to_jiffies((u32)ah->config.ani_poll_interval));
+> +}
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+I would prefer if you do this sort of code shift in a separate patch.
+In this case its pretty easy to see the code is the same so I think
+its fine the way it is now but for next time please. Otherwise looks
+good, thanks!!
+
+  Luis
