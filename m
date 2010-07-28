@@ -1,183 +1,718 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:47612 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752675Ab0G0JsD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 05:48:03 -0400
-Received: from vs3003.wh2.ocn.ne.jp (125.206.180.231)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-019774080
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 18:48:00 +0900 (JST)
-Subject: [PATCH v4 1/3] cfg80211: Add nl80211 antenna configuration
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
-Date: Tue, 27 Jul 2010 18:48:00 +0900
-Message-ID: <20100727094759.27186.79639.stgit@tt-desk>
-In-Reply-To: <20100727094732.27186.30900.stgit@tt-desk>
-References: <20100727094732.27186.30900.stgit@tt-desk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from nbd.name ([88.198.39.176]:55512 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754682Ab0G1Rp7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Jul 2010 13:45:59 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 2/3] ath9k_hw: clean up per-channel calibration data
+Date: Wed, 28 Jul 2010 19:45:50 +0200
+Message-Id: <1280339151-37084-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1280339151-37084-1-git-send-email-nbd@openwrt.org>
+References: <1280339151-37084-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow setting TX and RX antenna configuration via nl80211.
+The noise floor history buffer is currently not kept per channel, which
+can lead to problems when changing channels from a clean channel to a
+noisy one. Also when switching from HT20 to HT40, the noise floor
+history buffer is full of measurements, but none of them contain data
+for the extension channel, which it needs quite a bit of time to recover
+from.
 
-The antenna configuration is defined as a bitmap of allowed antennas to use for
-either receiving or transmitting. Separate bitmaps are used for RX and TX to
-allow configuring different antennas for receiving and transmitting. The bitmap
-is 8 bit long, each bit representing one antenna, starting with antenna 1.
+This patch puts all the per-channel calibration data into a single data
+structure, and gives the the driver control over whether that is used
+per-channel or even not used for some channels.
 
-If multiple receive (RX) antennas are selected, the driver may use diversity or
-multiple 802.11n RX chains, according to the chipset capabilities and
-configuration.
+For ath9k_htc, I decided to keep this per-channel in order to avoid
+creating regressions.
 
-If multiple transmit (TX) antennas are selected, the driver has to send on all
-selected antennas, making this mode of operation only possible on 802.11n
-chipsets with multiple TX chains. If the transmit antenna bitmap is set to the
-special value zero (0) the driver should select the TX antenna based on the
-antenna which was used for receiving (TX antenna follows RX diversity - this is
-the usual mode of 'diversity') for pre 802.11n devices.
+For ath9k, the data is kept only for the operating channel, which saves
+some space. ath9k_hw takes care of wiping old data when the operating
+channel or its channel flags change.
 
-Using bitmaps has the benefit of allowing for a flexible configuration
-interface which can support many different configurations. Drivers should
-reject configurations they cannot support. While covering the standard modes
-"fixed antenna 1", "fixed antenna 2" and "diversity" this API also allows more
-rare - but useful - configurations as follows:
-
-1) Send on antenna 1, receive on antenna 2 (or vice versa). This can be used to
-have a low gain antenna for TX in order to keep within the regulatory
-constraints and a high gain antenna for RX in order to receive weaker signals
-("speak softly, but listen harder"). This can be useful for building long-shot
-outdoor links. Another usage of this setup is having a low-noise pre-amplifier
-on antenna 1 and a power amplifier on the other antenna. This way transmit
-noise is mostly kept out of the low noise receive channel.
-(This would be bitmaps: tx 1 rx 2).
-
-2) Another similar setup is: Use RX diversity on both antennas, but always send
-on antenna 1. Again that would allow us to benefit from a higher gain RX
-antenna, while staying within the legal limits.
-(This would be: tx 0 rx 3).
-
-3) And finally there can be special experimental setups in research and
-development where more than 2 antennas are available. It's good to keep the API
-flexible.
-
-Signed-off-by: Bruno Randolf <br1@einfach.org>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- include/linux/nl80211.h |   17 +++++++++++++++++
- include/net/cfg80211.h  |    3 +++
- net/wireless/nl80211.c  |   30 +++++++++++++++++++++++++++++-
- 3 files changed, 49 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9002_calib.c |    8 +-
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c |    8 +-
+ drivers/net/wireless/ath/ath9k/ar9003_paprd.c |   17 ++--
+ drivers/net/wireless/ath/ath9k/ath9k.h        |    1 +
+ drivers/net/wireless/ath/ath9k/calib.c        |   99 +++++++++++++------------
+ drivers/net/wireless/ath/ath9k/calib.h        |    3 +-
+ drivers/net/wireless/ath/ath9k/htc.h          |    2 +
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |   10 ++-
+ drivers/net/wireless/ath/ath9k/hw.c           |   18 +++--
+ drivers/net/wireless/ath/ath9k/hw.h           |   24 ++++--
+ drivers/net/wireless/ath/ath9k/main.c         |   32 +++++---
+ drivers/net/wireless/ath/ath9k/xmit.c         |    2 +-
+ 12 files changed, 130 insertions(+), 94 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 2c87016..b9de53c 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -731,6 +731,20 @@ enum nl80211_commands {
-  *      This is used in association with @NL80211_ATTR_WIPHY_TX_POWER_SETTING
-  *      for non-automatic settings.
-  *
-+ * @NL80211_ATTR_WIPHY_ANTENNA_TX: Bitmap of allowed antennas for transmitting.
-+ *	Each bit represents one antenna, starting with antenna 1 at the first
-+ *	bit. If the bitmap is zero (0), the TX antenna follows RX diversity.
-+ *	If multiple antennas are selected all selected antennas have to be used
-+ *	for transmitting (801.11n multiple TX chains).
-+ *	Drivers may reject configurations they cannot support.
-+ *
-+ * @NL80211_ATTR_WIPHY_ANTENNA_RX: Bitmap of allowed antennas for receiving.
-+ *	Each bit represents one antenna, starting with antenna 1 at the first
-+ *	bit. If multiple antennas are selected in the bitmap, 802.11n devices
-+ *	should use multiple RX chains on these antennas, while non-802.11n
-+ *	drivers should use antenna diversity between these antennas.
-+ *	Drivers may reject configurations they cannot support.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -891,6 +905,9 @@ enum nl80211_attrs {
- 	NL80211_ATTR_WIPHY_TX_POWER_SETTING,
- 	NL80211_ATTR_WIPHY_TX_POWER_LEVEL,
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+index dabafb8..4a7bcfa 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+@@ -63,6 +63,7 @@ static bool ar9002_hw_per_calibration(struct ath_hw *ah,
+ 				      u8 rxchainmask,
+ 				      struct ath9k_cal_list *currCal)
+ {
++	struct ath9k_hw_cal_data *caldata = ah->caldata;
+ 	bool iscaldone = false;
  
-+	NL80211_ATTR_WIPHY_ANTENNA_TX,
-+	NL80211_ATTR_WIPHY_ANTENNA_RX,
-+
- 	/* add attributes here, update the policy in nl80211.c */
+ 	if (currCal->calState == CAL_RUNNING) {
+@@ -81,14 +82,14 @@ static bool ar9002_hw_per_calibration(struct ath_hw *ah,
+ 				}
  
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index f68ae54..7dc0e8d 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1184,6 +1184,9 @@ struct cfg80211_ops {
- 	int	(*set_cqm_rssi_config)(struct wiphy *wiphy,
- 				       struct net_device *dev,
- 				       s32 rssi_thold, u32 rssi_hyst);
-+
-+	int	(*set_antenna)(struct wiphy *wiphy, u8 tx_ant, u8 rx_ant);
-+	int	(*get_antenna)(struct wiphy *wiphy, u8 *tx_ant, u8 *rx_ant);
- };
- 
- /*
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index cea595e..62fc5fe 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -156,6 +156,9 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 
- 	[NL80211_ATTR_WIPHY_TX_POWER_SETTING] = { .type = NLA_U32 },
- 	[NL80211_ATTR_WIPHY_TX_POWER_LEVEL] = { .type = NLA_U32 },
-+
-+	[NL80211_ATTR_WIPHY_ANTENNA_TX] = { .type = NLA_U8 },
-+	[NL80211_ATTR_WIPHY_ANTENNA_RX] = { .type = NLA_U8 },
- };
- 
- /* policy for the attributes */
-@@ -458,7 +461,6 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 		    dev->wiphy.rts_threshold);
- 	NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_COVERAGE_CLASS,
- 		    dev->wiphy.coverage_class);
--
- 	NLA_PUT_U8(msg, NL80211_ATTR_MAX_NUM_SCAN_SSIDS,
- 		   dev->wiphy.max_scan_ssids);
- 	NLA_PUT_U16(msg, NL80211_ATTR_MAX_SCAN_IE_LEN,
-@@ -471,6 +473,16 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
- 	NLA_PUT_U8(msg, NL80211_ATTR_MAX_NUM_PMKIDS,
- 		   dev->wiphy.max_num_pmkids);
- 
-+	if (dev->ops->get_antenna) {
-+		u8 tx_ant = 0, rx_ant = 0;
-+		int res;
-+		res = dev->ops->get_antenna(&dev->wiphy, &tx_ant, &rx_ant);
-+		if (!res) {
-+			NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_ANTENNA_TX, tx_ant);
-+			NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_ANTENNA_RX, rx_ant);
-+		}
-+	}
-+
- 	nl_modes = nla_nest_start(msg, NL80211_ATTR_SUPPORTED_IFTYPES);
- 	if (!nl_modes)
- 		goto nla_put_failure;
-@@ -900,6 +912,22 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
- 			goto bad_res;
+ 				currCal->calData->calPostProc(ah, numChains);
+-				ichan->CalValid |= currCal->calData->calType;
++				caldata->CalValid |= currCal->calData->calType;
+ 				currCal->calState = CAL_DONE;
+ 				iscaldone = true;
+ 			} else {
+ 				ar9002_hw_setup_calibration(ah, currCal);
+ 			}
+ 		}
+-	} else if (!(ichan->CalValid & currCal->calData->calType)) {
++	} else if (!(caldata->CalValid & currCal->calData->calType)) {
+ 		ath9k_hw_reset_calibration(ah, currCal);
  	}
  
-+	if (info->attrs[NL80211_ATTR_WIPHY_ANTENNA_TX] &&
-+	    info->attrs[NL80211_ATTR_WIPHY_ANTENNA_RX]) {
-+		u8 tx_ant, rx_ant;
-+		if (!rdev->ops->set_antenna) {
-+			result = -EOPNOTSUPP;
-+			goto bad_res;
-+		}
+@@ -901,7 +902,8 @@ static bool ar9002_hw_init_cal(struct ath_hw *ah, struct ath9k_channel *chan)
+ 			ath9k_hw_reset_calibration(ah, ah->cal_list_curr);
+ 	}
+ 
+-	chan->CalValid = 0;
++	if (ah->caldata)
++		ah->caldata->CalValid = 0;
+ 
+ 	return true;
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 5a06503..1c5dadc 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -68,6 +68,7 @@ static bool ar9003_hw_per_calibration(struct ath_hw *ah,
+ 				      u8 rxchainmask,
+ 				      struct ath9k_cal_list *currCal)
+ {
++	struct ath9k_hw_cal_data *caldata = ah->caldata;
+ 	/* Cal is assumed not done until explicitly set below */
+ 	bool iscaldone = false;
+ 
+@@ -95,7 +96,7 @@ static bool ar9003_hw_per_calibration(struct ath_hw *ah,
+ 				currCal->calData->calPostProc(ah, numChains);
+ 
+ 				/* Calibration has finished. */
+-				ichan->CalValid |= currCal->calData->calType;
++				caldata->CalValid |= currCal->calData->calType;
+ 				currCal->calState = CAL_DONE;
+ 				iscaldone = true;
+ 			} else {
+@@ -106,7 +107,7 @@ static bool ar9003_hw_per_calibration(struct ath_hw *ah,
+ 			ar9003_hw_setup_calibration(ah, currCal);
+ 			}
+ 		}
+-	} else if (!(ichan->CalValid & currCal->calData->calType)) {
++	} else if (!(caldata->CalValid & currCal->calData->calType)) {
+ 		/* If current cal is marked invalid in channel, kick it off */
+ 		ath9k_hw_reset_calibration(ah, currCal);
+ 	}
+@@ -785,7 +786,8 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
+ 	if (ah->cal_list_curr)
+ 		ath9k_hw_reset_calibration(ah, ah->cal_list_curr);
+ 
+-	chan->CalValid = 0;
++	if (ah->caldata)
++		ah->caldata->CalValid = 0;
+ 
+ 	return true;
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+index 49e0c86..7c38229 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_paprd.c
+@@ -577,10 +577,11 @@ static bool create_pa_curve(u32 *data_L, u32 *data_U, u32 *pa_table, u16 *gain)
+ }
+ 
+ void ar9003_paprd_populate_single_table(struct ath_hw *ah,
+-					struct ath9k_channel *chan, int chain)
++					struct ath9k_hw_cal_data *caldata,
++					int chain)
+ {
+-	u32 *paprd_table_val = chan->pa_table[chain];
+-	u32 small_signal_gain = chan->small_signal_gain[chain];
++	u32 *paprd_table_val = caldata->pa_table[chain];
++	u32 small_signal_gain = caldata->small_signal_gain[chain];
+ 	u32 training_power;
+ 	u32 reg = 0;
+ 	int i;
+@@ -654,17 +655,17 @@ int ar9003_paprd_setup_gain_table(struct ath_hw *ah, int chain)
+ }
+ EXPORT_SYMBOL(ar9003_paprd_setup_gain_table);
+ 
+-int ar9003_paprd_create_curve(struct ath_hw *ah, struct ath9k_channel *chan,
+-			      int chain)
++int ar9003_paprd_create_curve(struct ath_hw *ah,
++			      struct ath9k_hw_cal_data *caldata, int chain)
+ {
+-	u16 *small_signal_gain = &chan->small_signal_gain[chain];
+-	u32 *pa_table = chan->pa_table[chain];
++	u16 *small_signal_gain = &caldata->small_signal_gain[chain];
++	u32 *pa_table = caldata->pa_table[chain];
+ 	u32 *data_L, *data_U;
+ 	int i, status = 0;
+ 	u32 *buf;
+ 	u32 reg;
+ 
+-	memset(chan->pa_table[chain], 0, sizeof(chan->pa_table[chain]));
++	memset(caldata->pa_table[chain], 0, sizeof(caldata->pa_table[chain]));
+ 
+ 	buf = kmalloc(2 * 48 * sizeof(u32), GFP_ATOMIC);
+ 	if (!buf)
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 9e967b1..20f9002 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -608,6 +608,7 @@ struct ath_softc {
+ struct ath_wiphy {
+ 	struct ath_softc *sc; /* shared for all virtual wiphys */
+ 	struct ieee80211_hw *hw;
++	struct ath9k_hw_cal_data caldata;
+ 	enum ath_wiphy_state {
+ 		ATH_WIPHY_INACTIVE,
+ 		ATH_WIPHY_ACTIVE,
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index 139289e..52460bc 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -22,23 +22,6 @@
+ /* We can tune this as we go by monitoring really low values */
+ #define ATH9K_NF_TOO_LOW	-60
+ 
+-/* AR5416 may return very high value (like -31 dBm), in those cases the nf
+- * is incorrect and we should use the static NF value. Later we can try to
+- * find out why they are reporting these values */
+-
+-static bool ath9k_hw_nf_in_range(struct ath_hw *ah, s16 nf)
+-{
+-	if (nf > ATH9K_NF_TOO_LOW) {
+-		ath_print(ath9k_hw_common(ah), ATH_DBG_CALIBRATE,
+-			  "noise floor value detected (%d) is "
+-			  "lower than what we think is a "
+-			  "reasonable value (%d)\n",
+-			  nf, ATH9K_NF_TOO_LOW);
+-		return false;
+-	}
+-	return true;
+-}
+-
+ static int16_t ath9k_hw_get_nf_hist_mid(int16_t *nfCalBuffer)
+ {
+ 	int16_t nfval;
+@@ -121,6 +104,19 @@ void ath9k_hw_reset_calibration(struct ath_hw *ah,
+ 	ah->cal_samples = 0;
+ }
+ 
++static s16 ath9k_hw_get_default_nf(struct ath_hw *ah,
++				   struct ath9k_channel *chan)
++{
++	struct ath_nf_limits *limit;
 +
-+		tx_ant = nla_get_u8(info->attrs[NL80211_ATTR_WIPHY_ANTENNA_TX]);
-+		rx_ant = nla_get_u8(info->attrs[NL80211_ATTR_WIPHY_ANTENNA_RX]);
++	if (!chan || IS_CHAN_2GHZ(chan))
++		limit = &ah->nf_2g;
++	else
++		limit = &ah->nf_5g;
 +
-+		result = rdev->ops->set_antenna(&rdev->wiphy, tx_ant, rx_ant);
-+		if (result)
-+			goto bad_res;
++	return limit->nominal;
++}
++
+ /* This is done for the currently configured channel */
+ bool ath9k_hw_reset_calvalid(struct ath_hw *ah)
+ {
+@@ -128,7 +124,7 @@ bool ath9k_hw_reset_calvalid(struct ath_hw *ah)
+ 	struct ieee80211_conf *conf = &common->hw->conf;
+ 	struct ath9k_cal_list *currCal = ah->cal_list_curr;
+ 
+-	if (!ah->curchan)
++	if (!ah->caldata)
+ 		return true;
+ 
+ 	if (!AR_SREV_9100(ah) && !AR_SREV_9160_10_OR_LATER(ah))
+@@ -151,7 +147,7 @@ bool ath9k_hw_reset_calvalid(struct ath_hw *ah)
+ 		  "Resetting Cal %d state for channel %u\n",
+ 		  currCal->calData->calType, conf->channel->center_freq);
+ 
+-	ah->curchan->CalValid &= ~currCal->calData->calType;
++	ah->caldata->CalValid &= ~currCal->calData->calType;
+ 	currCal->calState = CAL_WAITING;
+ 
+ 	return false;
+@@ -169,19 +165,28 @@ void ath9k_hw_start_nfcal(struct ath_hw *ah)
+ 
+ void ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
+ {
+-	struct ath9k_nfcal_hist *h;
++	struct ath9k_nfcal_hist *h = NULL;
+ 	unsigned i, j;
+ 	int32_t val;
+ 	u8 chainmask = (ah->rxchainmask << 3) | ah->rxchainmask;
+ 	struct ath_common *common = ath9k_hw_common(ah);
++	s16 default_nf = ath9k_hw_get_default_nf(ah, chan);
+ 
+-	h = ah->nfCalHist;
++	if (ah->caldata)
++		h = ah->caldata->nfCalHist;
+ 
+ 	for (i = 0; i < NUM_NF_READINGS; i++) {
+ 		if (chainmask & (1 << i)) {
++			s16 nfval;
++
++			if (h)
++				nfval = h[i].privNF;
++			else
++				nfval = default_nf;
++
+ 			val = REG_READ(ah, ah->nf_regs[i]);
+ 			val &= 0xFFFFFE00;
+-			val |= (((u32) (h[i].privNF) << 1) & 0x1ff);
++			val |= (((u32) nfval << 1) & 0x1ff);
+ 			REG_WRITE(ah, ah->nf_regs[i], val);
+ 		}
+ 	}
+@@ -285,14 +290,18 @@ int16_t ath9k_hw_getnf(struct ath_hw *ah,
+ 	int16_t nfarray[NUM_NF_READINGS] = { 0 };
+ 	struct ath9k_nfcal_hist *h;
+ 	struct ieee80211_channel *c = chan->chan;
++	struct ath9k_hw_cal_data *caldata = ah->caldata;
++
++	if (!caldata)
++		return ath9k_hw_get_default_nf(ah, chan);
+ 
+ 	chan->channelFlags &= (~CHANNEL_CW_INT);
+ 	if (REG_READ(ah, AR_PHY_AGC_CONTROL) & AR_PHY_AGC_CONTROL_NF) {
+ 		ath_print(common, ATH_DBG_CALIBRATE,
+ 			  "NF did not complete in calibration window\n");
+ 		nf = 0;
+-		chan->rawNoiseFloor = nf;
+-		return chan->rawNoiseFloor;
++		caldata->rawNoiseFloor = nf;
++		return caldata->rawNoiseFloor;
+ 	} else {
+ 		ath9k_hw_do_getnf(ah, nfarray);
+ 		ath9k_hw_nf_sanitize(ah, nfarray);
+@@ -307,47 +316,41 @@ int16_t ath9k_hw_getnf(struct ath_hw *ah,
+ 		}
+ 	}
+ 
+-	h = ah->nfCalHist;
++	h = caldata->nfCalHist;
+ 
+ 	ath9k_hw_update_nfcal_hist_buffer(h, nfarray);
+-	chan->rawNoiseFloor = h[0].privNF;
++	caldata->rawNoiseFloor = h[0].privNF;
+ 
+-	return chan->rawNoiseFloor;
++	return ah->caldata->rawNoiseFloor;
+ }
+ 
+-void ath9k_init_nfcal_hist_buffer(struct ath_hw *ah)
++void ath9k_init_nfcal_hist_buffer(struct ath_hw *ah,
++				  struct ath9k_channel *chan)
+ {
+-	struct ath_nf_limits *limit;
++	struct ath9k_nfcal_hist *h;
++	s16 default_nf;
+ 	int i, j;
+ 
+-	if (!ah->curchan || IS_CHAN_2GHZ(ah->curchan))
+-		limit = &ah->nf_2g;
+-	else
+-		limit = &ah->nf_5g;
++	if (!ah->caldata)
++		return;
+ 
++	h = ah->caldata->nfCalHist;
++	default_nf = ath9k_hw_get_default_nf(ah, chan);
+ 	for (i = 0; i < NUM_NF_READINGS; i++) {
+-		ah->nfCalHist[i].currIndex = 0;
+-		ah->nfCalHist[i].privNF = limit->nominal;
+-		ah->nfCalHist[i].invalidNFcount =
+-			AR_PHY_CCA_FILTERWINDOW_LENGTH;
++		h[i].currIndex = 0;
++		h[i].privNF = default_nf;
++		h[i].invalidNFcount = AR_PHY_CCA_FILTERWINDOW_LENGTH;
+ 		for (j = 0; j < ATH9K_NF_CAL_HIST_MAX; j++) {
+-			ah->nfCalHist[i].nfCalBuffer[j] = limit->nominal;
++			h[i].nfCalBuffer[j] = default_nf;
+ 		}
+ 	}
+ }
+ 
+ s16 ath9k_hw_getchan_noise(struct ath_hw *ah, struct ath9k_channel *chan)
+ {
+-	s16 nf;
+-
+-	if (chan->rawNoiseFloor == 0)
+-		nf = -96;
+-	else
+-		nf = chan->rawNoiseFloor;
+-
+-	if (!ath9k_hw_nf_in_range(ah, nf))
+-		nf = ATH_DEFAULT_NOISE_FLOOR;
++	if (!ah->caldata || !ah->caldata->rawNoiseFloor)
++		return ath9k_hw_get_default_nf(ah, chan);
+ 
+-	return nf;
++	return ah->caldata->rawNoiseFloor;
+ }
+ EXPORT_SYMBOL(ath9k_hw_getchan_noise);
+diff --git a/drivers/net/wireless/ath/ath9k/calib.h b/drivers/net/wireless/ath/ath9k/calib.h
+index cd60d09..09a0ed2 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.h
++++ b/drivers/net/wireless/ath/ath9k/calib.h
+@@ -112,7 +112,8 @@ void ath9k_hw_start_nfcal(struct ath_hw *ah);
+ void ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan);
+ int16_t ath9k_hw_getnf(struct ath_hw *ah,
+ 		       struct ath9k_channel *chan);
+-void ath9k_init_nfcal_hist_buffer(struct ath_hw *ah);
++void ath9k_init_nfcal_hist_buffer(struct ath_hw *ah,
++				  struct ath9k_channel *chan);
+ s16 ath9k_hw_getchan_noise(struct ath_hw *ah, struct ath9k_channel *chan);
+ void ath9k_hw_reset_calibration(struct ath_hw *ah,
+ 				struct ath9k_cal_list *currCal);
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 3756400..43b9e21 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -353,6 +353,8 @@ struct ath9k_htc_priv {
+ 	u16 seq_no;
+ 	u32 bmiss_cnt;
+ 
++	struct ath9k_hw_cal_data caldata[38];
++
+ 	spinlock_t beacon_lock;
+ 
+ 	bool tx_queues_stop;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index cf9bcc6..ebed9d1 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -125,6 +125,7 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
+ 	struct ieee80211_conf *conf = &common->hw->conf;
+ 	bool fastcc = true;
+ 	struct ieee80211_channel *channel = hw->conf.channel;
++	struct ath9k_hw_cal_data *caldata;
+ 	enum htc_phymode mode;
+ 	__be16 htc_mode;
+ 	u8 cmd_rsp;
+@@ -149,7 +150,8 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
+ 		  priv->ah->curchan->channel,
+ 		  channel->center_freq, conf_is_ht(conf), conf_is_ht40(conf));
+ 
+-	ret = ath9k_hw_reset(ah, hchan, fastcc);
++	caldata = &priv->caldata[channel->hw_value];
++	ret = ath9k_hw_reset(ah, hchan, caldata, fastcc);
+ 	if (ret) {
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to reset channel (%u Mhz) "
+@@ -1028,7 +1030,7 @@ static void ath9k_htc_radio_enable(struct ieee80211_hw *hw)
+ 		ah->curchan = ath9k_cmn_get_curchannel(hw, ah);
+ 
+ 	/* Reset the HW */
+-	ret = ath9k_hw_reset(ah, ah->curchan, false);
++	ret = ath9k_hw_reset(ah, ah->curchan, ah->caldata, false);
+ 	if (ret) {
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to reset hardware; reset status %d "
+@@ -1091,7 +1093,7 @@ static void ath9k_htc_radio_disable(struct ieee80211_hw *hw)
+ 		ah->curchan = ath9k_cmn_get_curchannel(hw, ah);
+ 
+ 	/* Reset the HW */
+-	ret = ath9k_hw_reset(ah, ah->curchan, false);
++	ret = ath9k_hw_reset(ah, ah->curchan, ah->caldata, false);
+ 	if (ret) {
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to reset hardware; reset status %d "
+@@ -1179,7 +1181,7 @@ static int ath9k_htc_start(struct ieee80211_hw *hw)
+ 	ath9k_hw_configpcipowersave(ah, 0, 0);
+ 
+ 	ath9k_hw_htc_resetinit(ah);
+-	ret = ath9k_hw_reset(ah, init_channel, false);
++	ret = ath9k_hw_reset(ah, init_channel, ah->caldata, false);
+ 	if (ret) {
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to reset hardware; reset status %d "
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 2f83f97..ac8e0bb 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -609,7 +609,6 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	else
+ 		ah->tx_trig_level = (AR_FTRIG_512B >> AR_FTRIG_S);
+ 
+-	ath9k_init_nfcal_hist_buffer(ah);
+ 	ah->bb_watchdog_timeout_ms = 25;
+ 
+ 	common->state = ATH_HW_INITIALIZED;
+@@ -1182,9 +1181,6 @@ static bool ath9k_hw_channel_change(struct ath_hw *ah,
+ 
+ 	ath9k_hw_spur_mitigate_freq(ah, chan);
+ 
+-	if (!chan->oneTimeCalsDone)
+-		chan->oneTimeCalsDone = true;
+-
+ 	return true;
+ }
+ 
+@@ -1217,7 +1213,7 @@ bool ath9k_hw_check_alive(struct ath_hw *ah)
+ EXPORT_SYMBOL(ath9k_hw_check_alive);
+ 
+ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+-		    bool bChannelChange)
++		   struct ath9k_hw_cal_data *caldata, bool bChannelChange)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	u32 saveLedState;
+@@ -1242,9 +1238,19 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE))
+ 		return -EIO;
+ 
+-	if (curchan && !ah->chip_fullsleep)
++	if (curchan && !ah->chip_fullsleep && ah->caldata)
+ 		ath9k_hw_getnf(ah, curchan);
+ 
++	ah->caldata = caldata;
++	if (caldata &&
++	    (chan->channel != caldata->channel ||
++	     (chan->channelFlags & ~CHANNEL_CW_INT) !=
++	     (caldata->channelFlags & ~CHANNEL_CW_INT))) {
++		/* Operating channel changed, reset channel calibration data */
++		memset(caldata, 0, sizeof(*caldata));
++		ath9k_init_nfcal_hist_buffer(ah, chan);
 +	}
 +
- 	changed = 0;
+ 	if (bChannelChange &&
+ 	    (ah->chip_fullsleep != true) &&
+ 	    (ah->curchan != NULL) &&
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 2d30efc..c1b7011 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -346,19 +346,24 @@ enum ath9k_int {
+ 	 CHANNEL_HT40PLUS |			\
+ 	 CHANNEL_HT40MINUS)
  
- 	if (info->attrs[NL80211_ATTR_WIPHY_RETRY_SHORT]) {
+-struct ath9k_channel {
+-	struct ieee80211_channel *chan;
++struct ath9k_hw_cal_data {
+ 	u16 channel;
+ 	u32 channelFlags;
+-	u32 chanmode;
+ 	int32_t CalValid;
+-	bool oneTimeCalsDone;
+ 	int8_t iCoff;
+ 	int8_t qCoff;
+ 	int16_t rawNoiseFloor;
+ 	bool paprd_done;
+ 	u16 small_signal_gain[AR9300_MAX_CHAINS];
+ 	u32 pa_table[AR9300_MAX_CHAINS][PAPRD_TABLE_SZ];
++	struct ath9k_nfcal_hist nfCalHist[NUM_NF_READINGS];
++};
++
++struct ath9k_channel {
++	struct ieee80211_channel *chan;
++	u16 channel;
++	u32 channelFlags;
++	u32 chanmode;
+ };
+ 
+ #define IS_CHAN_G(_c) ((((_c)->channelFlags & (CHANNEL_G)) == CHANNEL_G) || \
+@@ -669,7 +674,7 @@ struct ath_hw {
+ 	enum nl80211_iftype opmode;
+ 	enum ath9k_power_mode power_mode;
+ 
+-	struct ath9k_nfcal_hist nfCalHist[NUM_NF_READINGS];
++	struct ath9k_hw_cal_data *caldata;
+ 	struct ath9k_pacal_info pacal_info;
+ 	struct ar5416Stats stats;
+ 	struct ath9k_tx_queue_info txq[ATH9K_NUM_TX_QUEUES];
+@@ -863,7 +868,7 @@ const char *ath9k_hw_probe(u16 vendorid, u16 devid);
+ void ath9k_hw_deinit(struct ath_hw *ah);
+ int ath9k_hw_init(struct ath_hw *ah);
+ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+-		   bool bChannelChange);
++		   struct ath9k_hw_cal_data *caldata, bool bChannelChange);
+ int ath9k_hw_fill_cap_info(struct ath_hw *ah);
+ u32 ath9k_regd_get_ctl(struct ath_regulatory *reg, struct ath9k_channel *chan);
+ 
+@@ -958,9 +963,10 @@ void ar9003_hw_bb_watchdog_read(struct ath_hw *ah);
+ void ar9003_hw_bb_watchdog_dbg_info(struct ath_hw *ah);
+ void ar9003_paprd_enable(struct ath_hw *ah, bool val);
+ void ar9003_paprd_populate_single_table(struct ath_hw *ah,
+-					struct ath9k_channel *chan, int chain);
+-int ar9003_paprd_create_curve(struct ath_hw *ah, struct ath9k_channel *chan,
+-			      int chain);
++					struct ath9k_hw_cal_data *caldata,
++					int chain);
++int ar9003_paprd_create_curve(struct ath_hw *ah,
++			      struct ath9k_hw_cal_data *caldata, int chain);
+ int ar9003_paprd_setup_gain_table(struct ath_hw *ah, int chain);
+ int ar9003_paprd_init_table(struct ath_hw *ah);
+ bool ar9003_paprd_is_done(struct ath_hw *ah);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index c82d8c4..0b3f59a 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -183,11 +183,13 @@ static void ath_start_ani(struct ath_common *common)
+ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 		    struct ath9k_channel *hchan)
+ {
++	struct ath_wiphy *aphy = hw->priv;
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ieee80211_conf *conf = &common->hw->conf;
+ 	bool fastcc = true, stopped;
+ 	struct ieee80211_channel *channel = hw->conf.channel;
++	struct ath9k_hw_cal_data *caldata = NULL;
+ 	int r;
+ 
+ 	if (sc->sc_flags & SC_OP_INVALID)
+@@ -220,6 +222,9 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 	if (!stopped || !(sc->sc_flags & SC_OP_OFFCHANNEL))
+ 		fastcc = false;
+ 
++	if (!(sc->sc_flags & SC_OP_OFFCHANNEL))
++		caldata = &aphy->caldata;
++
+ 	ath_print(common, ATH_DBG_CONFIG,
+ 		  "(%u MHz) -> (%u MHz), conf_is_ht40: %d\n",
+ 		  sc->sc_ah->curchan->channel,
+@@ -227,7 +232,7 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 
+ 	spin_lock_bh(&sc->sc_resetlock);
+ 
+-	r = ath9k_hw_reset(ah, hchan, fastcc);
++	r = ath9k_hw_reset(ah, hchan, caldata, fastcc);
+ 	if (r) {
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to reset channel (%u MHz), "
+@@ -263,9 +268,10 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ static void ath_paprd_activate(struct ath_softc *sc)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
++	struct ath9k_hw_cal_data *caldata = ah->caldata;
+ 	int chain;
+ 
+-	if (!ah->curchan->paprd_done)
++	if (!caldata || !caldata->paprd_done)
+ 		return;
+ 
+ 	ath9k_ps_wakeup(sc);
+@@ -273,7 +279,7 @@ static void ath_paprd_activate(struct ath_softc *sc)
+ 		if (!(ah->caps.tx_chainmask & BIT(chain)))
+ 			continue;
+ 
+-		ar9003_paprd_populate_single_table(ah, ah->curchan, chain);
++		ar9003_paprd_populate_single_table(ah, caldata, chain);
+ 	}
+ 
+ 	ar9003_paprd_enable(ah, true);
+@@ -291,6 +297,7 @@ void ath_paprd_calibrate(struct work_struct *work)
+ 	int band = hw->conf.channel->band;
+ 	struct ieee80211_supported_band *sband = &sc->sbands[band];
+ 	struct ath_tx_control txctl;
++	struct ath9k_hw_cal_data *caldata = ah->caldata;
+ 	int qnum, ftype;
+ 	int chain_ok = 0;
+ 	int chain;
+@@ -298,6 +305,9 @@ void ath_paprd_calibrate(struct work_struct *work)
+ 	int time_left;
+ 	int i;
+ 
++	if (!caldata)
++		return;
++
+ 	skb = alloc_skb(len, GFP_KERNEL);
+ 	if (!skb)
+ 		return;
+@@ -352,7 +362,7 @@ void ath_paprd_calibrate(struct work_struct *work)
+ 		if (!ar9003_paprd_is_done(ah))
+ 			break;
+ 
+-		if (ar9003_paprd_create_curve(ah, ah->curchan, chain) != 0)
++		if (ar9003_paprd_create_curve(ah, caldata, chain) != 0)
+ 			break;
+ 
+ 		chain_ok = 1;
+@@ -360,7 +370,7 @@ void ath_paprd_calibrate(struct work_struct *work)
+ 	kfree_skb(skb);
+ 
+ 	if (chain_ok) {
+-		ah->curchan->paprd_done = true;
++		caldata->paprd_done = true;
+ 		ath_paprd_activate(sc);
+ 	}
+ 
+@@ -469,8 +479,8 @@ set_timer:
+ 		cal_interval = min(cal_interval, (u32)short_cal_interval);
+ 
+ 	mod_timer(&common->ani.timer, jiffies + msecs_to_jiffies(cal_interval));
+-	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_PAPRD) {
+-		if (!sc->sc_ah->curchan->paprd_done)
++	if ((sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_PAPRD) && ah->caldata) {
++		if (!ah->caldata->paprd_done)
+ 			ieee80211_queue_work(sc->hw, &sc->paprd_work);
+ 		else
+ 			ath_paprd_activate(sc);
+@@ -828,7 +838,7 @@ void ath_radio_enable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 		ah->curchan = ath_get_curchannel(sc, sc->hw);
+ 
+ 	spin_lock_bh(&sc->sc_resetlock);
+-	r = ath9k_hw_reset(ah, ah->curchan, false);
++	r = ath9k_hw_reset(ah, ah->curchan, ah->caldata, false);
+ 	if (r) {
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to reset channel (%u MHz), "
+@@ -888,7 +898,7 @@ void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 		ah->curchan = ath_get_curchannel(sc, hw);
+ 
+ 	spin_lock_bh(&sc->sc_resetlock);
+-	r = ath9k_hw_reset(ah, ah->curchan, false);
++	r = ath9k_hw_reset(ah, ah->curchan, ah->caldata, false);
+ 	if (r) {
+ 		ath_print(ath9k_hw_common(sc->sc_ah), ATH_DBG_FATAL,
+ 			  "Unable to reset channel (%u MHz), "
+@@ -921,7 +931,7 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 	ath_flushrecv(sc);
+ 
+ 	spin_lock_bh(&sc->sc_resetlock);
+-	r = ath9k_hw_reset(ah, sc->sc_ah->curchan, false);
++	r = ath9k_hw_reset(ah, sc->sc_ah->curchan, ah->caldata, false);
+ 	if (r)
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to reset hardware; reset status %d\n", r);
+@@ -1096,7 +1106,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 	 * and then setup of the interrupt mask.
+ 	 */
+ 	spin_lock_bh(&sc->sc_resetlock);
+-	r = ath9k_hw_reset(ah, init_channel, false);
++	r = ath9k_hw_reset(ah, init_channel, ah->caldata, false);
+ 	if (r) {
+ 		ath_print(common, ATH_DBG_FATAL,
+ 			  "Unable to reset hardware; reset status %d "
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 501b728..700ba8d 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1181,7 +1181,7 @@ void ath_drain_all_txq(struct ath_softc *sc, bool retry_tx)
+ 			  "Failed to stop TX DMA. Resetting hardware!\n");
+ 
+ 		spin_lock_bh(&sc->sc_resetlock);
+-		r = ath9k_hw_reset(ah, sc->sc_ah->curchan, false);
++		r = ath9k_hw_reset(ah, sc->sc_ah->curchan, ah->caldata, false);
+ 		if (r)
+ 			ath_print(common, ATH_DBG_FATAL,
+ 				  "Unable to reset hardware; reset status %d\n",
+-- 
+1.6.4.2
 
