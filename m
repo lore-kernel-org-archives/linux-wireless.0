@@ -1,67 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp136.mail.ukl.yahoo.com ([77.238.184.67]:41763 "HELO
-	smtp136.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751765Ab0G3DWJ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50446 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751830Ab0G1GuM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jul 2010 23:22:09 -0400
-Message-ID: <4C52455E.6010405@users.sourceforge.net>
-Date: Fri, 30 Jul 2010 04:22:06 +0100
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] rtl8187: consolidate MSR writes in rtl8187_bss_info_changed
-References: <1280455044-26073-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1280455044-26073-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 28 Jul 2010 02:50:12 -0400
+Subject: Re: [PATCH] mac80211: inform drivers about the off-channel status
+ on channel changes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <4C4F7C91.9000300@openwrt.org>
+References: <4C4F7C91.9000300@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 28 Jul 2010 08:50:08 +0200
+Message-ID: <1280299808.3832.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
-
-Thanks for looking this over. I wondered how the code came to be like this, so I 
-went to look it up - the reason was that we used to have more lines between the 
-{}'s and they were gradually removed. The full list of defines for the 
-RTL818X_MSR_* are :
-
-#define RTL818X_MSR_NO_LINK		(0 << 2)
-#define RTL818X_MSR_ADHOC		(1 << 2)
-#define RTL818X_MSR_INFRA		(2 << 2)
-#define RTL818X_MSR_MASTER		(3 << 2)
-#define RTL818X_MSR_ENEDCA		(4 << 2)
-
-but we only use 3 at the moment (not _AHOC nor _MASTER).
-
-Hin-Tak
-
-> ---
->  drivers/net/wireless/rtl818x/rtl8187_dev.c |    9 ++++-----
->  1 files changed, 4 insertions(+), 5 deletions(-)
+On Wed, 2010-07-28 at 02:40 +0200, Felix Fietkau wrote:
+> For some drivers it can be useful to know whether the channel they're
+> supposed to switch to is going to be used for short off-channel work or
+> scanning, or whether the hardware is expected to stay on it for a while
+> longer. This is important for various kinds of calibration work, which
+> takes longer to complete and should keep some persistent state, even if
+> the channel temporarily changes.
 > 
-> diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> index 5738a55..0801c1d 100644
-> --- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> +++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
-> @@ -1176,13 +1176,12 @@ static void rtl8187_bss_info_changed(struct ieee80211_hw *dev,
->  		else
->  			reg = 0;
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> ---
+> I need something like this for properly getting rid of the ath9k sw
+> scanning callback and for fixing various calibration bugs.
+
+Fine with me, I'll just have to hope people don't abuse it too
+much... :-)
+
+johannes
+
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -625,11 +625,14 @@ struct ieee80211_rx_status {
+>   *	may turn the device off as much as possible. Typically, this flag will
+>   *	be set when an interface is set UP but not associated or scanning, but
+>   *	it can also be unset in that case when monitor interfaces are active.
+> + * @IEEE80211_CONF_OFFCHANNEL: The device is currently not on its main
+> + *	operating channel.
+>   */
+>  enum ieee80211_conf_flags {
+>  	IEEE80211_CONF_MONITOR		= (1<<0),
+>  	IEEE80211_CONF_PS		= (1<<1),
+>  	IEEE80211_CONF_IDLE		= (1<<2),
+> +	IEEE80211_CONF_OFFCHANNEL	= (1<<3),
+>  };
 >  
-> -		if (is_valid_ether_addr(info->bssid)) {
-> +		if (is_valid_ether_addr(info->bssid))
->  			reg |= RTL818X_MSR_INFRA;
-> -			rtl818x_iowrite8(priv, &priv->map->MSR, reg);
-> -		} else {
-> +		else
->  			reg |= RTL818X_MSR_NO_LINK;
-> -			rtl818x_iowrite8(priv, &priv->map->MSR, reg);
-> -		}
-> +
-> +		rtl818x_iowrite8(priv, &priv->map->MSR, reg);
->  
->  		mutex_unlock(&priv->conf_mutex);
+> 
+> --- a/net/mac80211/main.c
+> +++ b/net/mac80211/main.c
+> @@ -111,12 +111,15 @@ int ieee80211_hw_config(struct ieee80211
+>  	if (scan_chan) {
+>  		chan = scan_chan;
+>  		channel_type = NL80211_CHAN_NO_HT;
+> +		local->hw.conf.flags |= IEEE80211_CONF_OFFCHANNEL;
+>  	} else if (local->tmp_channel) {
+>  		chan = scan_chan = local->tmp_channel;
+>  		channel_type = local->tmp_channel_type;
+> +		local->hw.conf.flags |= IEEE80211_CONF_OFFCHANNEL;
+>  	} else {
+>  		chan = local->oper_channel;
+>  		channel_type = local->_oper_channel_type;
+> +		local->hw.conf.flags &= ~IEEE80211_CONF_OFFCHANNEL;
 >  	}
+>  
+>  	if (chan != local->hw.conf.channel ||
+> 
+
+
