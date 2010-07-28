@@ -1,73 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:17662 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751383Ab0G0SPb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 14:15:31 -0400
-Subject: [wt PATCH 16/16] libertas: remove unused cmd_pending waitq
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1280260357.19686.13.camel@dcbw.foobar.com>
-References: <1280260357.19686.13.camel@dcbw.foobar.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 27 Jul 2010 13:17:03 -0700
-Message-ID: <1280261823.19686.41.camel@dcbw.foobar.com>
-Mime-Version: 1.0
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:47765 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752580Ab0G1VOE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Jul 2010 17:14:04 -0400
+Received: by yxg6 with SMTP id 6so1125347yxg.19
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Jul 2010 14:14:03 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1280351044.3732.0.camel@jlt3.sipsolutions.net>
+References: <1280334711-6141-1-git-send-email-linville@tuxdriver.com>
+	<AANLkTim_Yr0Hx58GHYPfiPxRBWjspuFUd64epUHn_4La@mail.gmail.com>
+	<1280351044.3732.0.camel@jlt3.sipsolutions.net>
+Date: Wed, 28 Jul 2010 17:14:03 -0400
+Message-ID: <AANLkTik-0nOnKxnUOr1DFA_1WbTDNoOQYP3qn_vMesCF@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH] ath5k: add led_disable module option
+From: Bob Copeland <me@bobcopeland.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
----
- drivers/net/wireless/libertas/dev.h  |    1 -
- drivers/net/wireless/libertas/main.c |    8 --------
- 2 files changed, 0 insertions(+), 9 deletions(-)
+On Wed, Jul 28, 2010 at 5:04 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2010-07-28 at 14:01 -0700, Luis R. Rodriguez wrote:
+>> On Wed, Jul 28, 2010 at 9:31 AM, John W. Linville
+>> <linville@tuxdriver.com> wrote:
+>> > Not everyone agrees about LED behaviour...give them an escape hatch that
+>> > will at least stop the lights from annoying them.
+>> >
+>> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>>
+>> I wonder if we can just do this on cfg80211 through a debugfs knob,
+>> which would take care of all device drivers?
+>
+> We have proper API for this in sysfs if anybody bothered to hook this up
+> through the LED class/trigger system
 
-diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-index 85cdc9a..3c7e255 100644
---- a/drivers/net/wireless/libertas/dev.h
-+++ b/drivers/net/wireless/libertas/dev.h
-@@ -111,7 +111,6 @@ struct lbs_private {
- 	struct cmd_ctrl_node *cur_cmd;
- 	struct list_head cmdfreeq;    /* free command buffers */
- 	struct list_head cmdpendingq; /* pending command buffers */
--	wait_queue_head_t cmd_pending;
- 	struct timer_list command_timer;
- 	int cmd_timed_out;
- 
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index 960799f..2b2dbb0 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -502,12 +502,6 @@ static int lbs_thread(void *data)
- 		if (!priv->dnld_sent && !priv->cur_cmd)
- 			lbs_execute_next_command(priv);
- 
--		/* Wake-up command waiters which can't sleep in
--		 * lbs_prepare_and_send_command
--		 */
--		if (!list_empty(&priv->cmdpendingq))
--			wake_up_all(&priv->cmd_pending);
--
- 		spin_lock_irq(&priv->driver_lock);
- 		if (!priv->dnld_sent && priv->tx_pending_len > 0) {
- 			int ret = priv->hw_host_to_card(priv, MVMS_DAT,
-@@ -533,7 +527,6 @@ static int lbs_thread(void *data)
- 
- 	del_timer(&priv->command_timer);
- 	del_timer(&priv->auto_deepsleep_timer);
--	wake_up_all(&priv->cmd_pending);
- 
- 	lbs_deb_leave(LBS_DEB_THREAD);
- 	return 0;
-@@ -739,7 +732,6 @@ static int lbs_init_adapter(struct lbs_private *priv)
- 	INIT_LIST_HEAD(&priv->cmdpendingq);
- 
- 	spin_lock_init(&priv->driver_lock);
--	init_waitqueue_head(&priv->cmd_pending);
- 
- 	/* Allocate the command buffers */
- 	if (lbs_allocate_cmd_buffer(priv)) {
+Yes, they are hooked up through the triggers, so you can disable
+them via sysfs (which I have told several people, but complaints still
+roll in...)
+
+I don't have any devices with LEDs so either way I don't care too much.
+
 -- 
-1.7.1.1
-
-
+Bob Copeland %% www.bobcopeland.com
