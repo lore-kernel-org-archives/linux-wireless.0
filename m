@@ -1,112 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:37901 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757167Ab0GFAlL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jul 2010 20:41:11 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>
-Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Ohad Ben-Cohen <ohadb@ti.com>
-Subject: [PATCH 15/15] omap: zoom: enable WLAN device
-Date: Tue,  6 Jul 2010 03:37:46 +0300
-Message-Id: <1278376666-3509-16-git-send-email-ohad@wizery.com>
-In-Reply-To: <1278376666-3509-1-git-send-email-ohad@wizery.com>
-References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
+Received: from nbd.name ([88.198.39.176]:60243 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754991Ab0G1VIy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Jul 2010 17:08:54 -0400
+Message-ID: <4C509C65.4020305@openwrt.org>
+Date: Wed, 28 Jul 2010 23:08:53 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH 1/3] ath9k: prevent calibration during off-channel 	activity
+References: <1280339151-37084-1-git-send-email-nbd@openwrt.org> <AANLkTimZ8zTZWDcXwr7Hu2FT=gDPeCiiUFXcBmpYpp7M@mail.gmail.com>
+In-Reply-To: <AANLkTimZ8zTZWDcXwr7Hu2FT=gDPeCiiUFXcBmpYpp7M@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ohad Ben-Cohen <ohadb@ti.com>
+On 2010-07-28 10:43 PM, Luis R. Rodriguez wrote:
+> On Wed, Jul 28, 2010 at 10:45 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+>> Previously the software scan callback was used to indicate to the hardware,
+>> when it was safe to calibrate. This didn't really work properly, because it
+>> depends on a specific order of software scan callbacks vs. channel changes.
+>> Also, software scans are not the only thing that triggers off-channel
+>> activity, so it's better to use the newly added indication from mac80211 for
+>> this and not use the software scan callback for anything calibration related.
+>>
+>> This fixes at least some of the invalid noise floor readings that I've seen
+>> in AP mode on AR9160
+> 
+> Neat!
+> 
+>> --- a/drivers/net/wireless/ath/ath9k/main.c
+>> +++ b/drivers/net/wireless/ath/ath9k/main.c
+>> @@ -154,6 +154,27 @@ void ath9k_ps_restore(struct ath_softc *sc)
+>>        spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
+>>  }
+>>        spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
+>>  }
+>>
+>> +static void ath_start_ani(struct ath_common *common)
+>> +{
+>> +       struct ath_hw *ah = common->ah;
+>> +       unsigned long timestamp = jiffies_to_msecs(jiffies);
+>> +       struct ath_softc *sc = (struct ath_softc *) common->priv;
+>> +
+>> +       if (!(sc->sc_flags & SC_OP_ANI_RUN))
+>> +               return;
+>> +
+>> +       if (sc->sc_flags & SC_OP_OFFCHANNEL)
+>> +               return;
+>> +
+>> +       common->ani.longcal_timer = timestamp;
+>> +       common->ani.shortcal_timer = timestamp;
+>> +       common->ani.checkani_timer = timestamp;
+>> +
+>> +       mod_timer(&common->ani.timer,
+>> +                 jiffies +
+>> +                       msecs_to_jiffies((u32)ah->config.ani_poll_interval));
+>> +}
+> 
+> I would prefer if you do this sort of code shift in a separate patch.
+> In this case its pretty easy to see the code is the same so I think
+> its fine the way it is now but for next time please. Otherwise looks
+> good, thanks!!
+If it had been a bigger function, I'd have made a separate patch, but I
+figured for something as trivial as this it wouldn't matter.
 
-Make it possible to build and use TI's wl1271
-device on the ZOOM boards.
-
-The device is an embedded SDIO WLAN chip
-that is hardwired to the 3rd mmc controller
-of the ZOOM2/3 boards.
-
-Signed-off-by: Ohad Ben-Cohen <ohadb@ti.com>
----
- arch/arm/mach-omap2/Kconfig                  |    5 +++++
- arch/arm/mach-omap2/Makefile                 |    1 +
- arch/arm/mach-omap2/board-zoom-peripherals.c |   15 +++++++++++++++
- 3 files changed, 21 insertions(+), 0 deletions(-)
-
-diff --git a/arch/arm/mach-omap2/Kconfig b/arch/arm/mach-omap2/Kconfig
-index b31b6f1..7fee11b 100644
---- a/arch/arm/mach-omap2/Kconfig
-+++ b/arch/arm/mach-omap2/Kconfig
-@@ -131,6 +131,11 @@ config MACH_OMAP_ZOOM3
- 	depends on ARCH_OMAP3
- 	select OMAP_PACKAGE_CBP
- 
-+config OMAP_ZOOM_WLAN
-+	bool "OMAP Zoom board WLAN support"
-+	depends on MACH_OMAP_ZOOM2 || MACH_OMAP_ZOOM3
-+	select MMC_EMBEDDED_SDIO
-+
- config MACH_CM_T35
- 	bool "CompuLab CM-T35 module"
- 	depends on ARCH_OMAP3
-diff --git a/arch/arm/mach-omap2/Makefile b/arch/arm/mach-omap2/Makefile
-index ea52b03..ac1bad9 100644
---- a/arch/arm/mach-omap2/Makefile
-+++ b/arch/arm/mach-omap2/Makefile
-@@ -129,6 +129,7 @@ obj-$(CONFIG_MACH_OMAP_ZOOM3)		+= board-zoom3.o \
- 					   board-zoom-peripherals.o \
- 					   hsmmc.o \
- 					   board-zoom-debugboard.o
-+obj-y					+= board-zoom-wlan.o
- obj-$(CONFIG_MACH_OMAP_3630SDP)		+= board-3630sdp.o \
- 					   board-zoom-peripherals.o \
- 					   hsmmc.o
-diff --git a/arch/arm/mach-omap2/board-zoom-peripherals.c b/arch/arm/mach-omap2/board-zoom-peripherals.c
-index 6b39849..3128cd4 100644
---- a/arch/arm/mach-omap2/board-zoom-peripherals.c
-+++ b/arch/arm/mach-omap2/board-zoom-peripherals.c
-@@ -16,11 +16,13 @@
- #include <linux/gpio.h>
- #include <linux/i2c/twl.h>
- #include <linux/regulator/machine.h>
-+#include <linux/mmc/host.h>
- 
- #include <asm/mach-types.h>
- #include <asm/mach/arch.h>
- #include <asm/mach/map.h>
- 
-+#include <mach/board-zoom.h>
- #include <plat/common.h>
- #include <plat/usb.h>
- 
-@@ -168,6 +170,18 @@ static struct omap2_hsmmc_info mmc[] __initdata = {
- 		.nonremovable	= true,
- 		.power_saving	= true,
- 	},
-+#ifdef CONFIG_OMAP_ZOOM_WLAN
-+	{
-+		.mmc		= 3,
-+		.wires		= 4,
-+		.gpio_cd	= -EINVAL,
-+		.gpio_wp	= -EINVAL,
-+		.register_embedded_control =
-+				omap_zoom_wlan_register_embedded_control,
-+		.virtual_get_cd = omap_zoom_wlan_get_virtual_cd,
-+		.ocr_mask	= MMC_VDD_165_195,
-+	},
-+#endif
- 	{}      /* Terminator */
- };
- 
-@@ -282,4 +296,5 @@ void __init zoom_peripherals_init(void)
- 	omap_i2c_init();
- 	usb_musb_init(&musb_board_data);
- 	enable_board_wakeup_source();
-+	omap_zoom_wlan_init();
- }
--- 
-1.7.0.4
-
+- Felix
