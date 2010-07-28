@@ -1,43 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:44941 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756927Ab0GHVML (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jul 2010 17:12:11 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] compat: fix tracpoint building
-Date: Thu,  8 Jul 2010 23:11:58 +0200
-Message-Id: <1278623518-18964-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:37761 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752428Ab0G1Uws (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Jul 2010 16:52:48 -0400
+Received: by ywh1 with SMTP id 1so954451ywh.19
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Jul 2010 13:52:48 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1280339151-37084-2-git-send-email-nbd@openwrt.org>
+References: <1280339151-37084-1-git-send-email-nbd@openwrt.org>
+	<1280339151-37084-2-git-send-email-nbd@openwrt.org>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 28 Jul 2010 13:52:27 -0700
+Message-ID: <AANLkTi=8UX5B9+nLymSdJS2J-gRwMsYT_SVnviHX9Zi3@mail.gmail.com>
+Subject: Re: [PATCH 2/3] ath9k_hw: clean up per-channel calibration data
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Jouni Malinen <Jouni.Malinen@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-trace/define_trace.h can be included more often and it have to.
+On Wed, Jul 28, 2010 at 10:45 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> The noise floor history buffer is currently not kept per channel, which
+> can lead to problems when changing channels from a clean channel to a
+> noisy one. Also when switching from HT20 to HT40, the noise floor
+> history buffer is full of measurements, but none of them contain data
+> for the extension channel, which it needs quite a bit of time to recover
+> from.
+>
+> This patch puts all the per-channel calibration data into a single data
+> structure, and gives the the driver control over whether that is used
+> per-channel or even not used for some channels.
+>
+> For ath9k_htc, I decided to keep this per-channel in order to avoid
+> creating regressions.
+>
+> For ath9k, the data is kept only for the operating channel, which saves
+> some space. ath9k_hw takes care of wiping old data when the operating
+> channel or its channel flags change.
+>
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 
-This fixes some errors like this:
-WARNING: "__tracepoint_iwlwifi_dev_rx" [/home/hauke/compat-wireless/compat-wireless-git/drivers/net/wireless/iwlwifi/iwlcore.ko] undefined!
+But this also means every time we want to get operational on a channel
+we have to learn the current noise all over again. This means for WiFi
+Direct every channel swap we'd have to learn to walk, which happens
+quite often. What do you think? Sorry, I know we discussed this
+approach and I seemed fine but this just occurred to me now, and will
+become really important later when we support WiFi Direct.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/trace/define_trace.h |    5 -----
- 1 files changed, 0 insertions(+), 5 deletions(-)
-
-diff --git a/include/trace/define_trace.h b/include/trace/define_trace.h
-index a31105a..7d03ccf 100644
---- a/include/trace/define_trace.h
-+++ b/include/trace/define_trace.h
-@@ -1,10 +1,5 @@
--#ifndef _COMPAT_TRACE_DEFINE_TRACE_H
--#define _COMPAT_TRACE_DEFINE_TRACE_H 1
--
- #include <linux/version.h>
- 
- #if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30))
- #include_next <trace/define_trace.h>
- #endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,30)) */
--
--#endif	/* _COMPAT_TRACE_DEFINE_TRACE_H */
--- 
-1.7.0.4
-
+  Luis
