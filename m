@@ -1,49 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:59315 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756699Ab0GURe0 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38031 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750939Ab0G1TAM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jul 2010 13:34:26 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>
-Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v2 01/20] sdio: add TI + wl1271 ids
-Date: Wed, 21 Jul 2010 20:33:35 +0300
-Message-Id: <1279733634-21974-2-git-send-email-ohad@wizery.com>
-In-Reply-To: <1279733634-21974-1-git-send-email-ohad@wizery.com>
-References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+	Wed, 28 Jul 2010 15:00:12 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Christian Lamparter <chunkeey@web.de>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] ar9170: add get_survey callback in order to get channel noise
+Date: Wed, 28 Jul 2010 14:48:44 -0400
+Message-Id: <1280342924-22811-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add SDIO IDs for TI and for TI's wl1271 wlan device.
-
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- include/linux/mmc/sdio_ids.h |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ar9170/main.c |   17 +++++++++++++++++
+ 1 files changed, 17 insertions(+), 0 deletions(-)
 
-diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
-index 33b2ea0..0d313c6 100644
---- a/include/linux/mmc/sdio_ids.h
-+++ b/include/linux/mmc/sdio_ids.h
-@@ -43,4 +43,7 @@
- #define SDIO_DEVICE_ID_SIANO_NOVA_A0		0x1100
- #define SDIO_DEVICE_ID_SIANO_STELLAR 		0x5347
+diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
+index 5e2c514..e089d9f 100644
+--- a/drivers/net/wireless/ath/ar9170/main.c
++++ b/drivers/net/wireless/ath/ar9170/main.c
+@@ -1905,6 +1905,22 @@ static int ar9170_get_stats(struct ieee80211_hw *hw,
+ 	return 0;
+ }
  
-+#define SDIO_VENDOR_ID_TI			0x0097
-+#define SDIO_DEVICE_ID_TI_WL1271		0x4076
++static int ar9170_get_survey(struct ieee80211_hw *hw, int idx,
++				struct survey_info *survey)
++{
++	struct ar9170 *ar = hw->priv;
++	struct ieee80211_conf *conf = &hw->conf;
 +
- #endif
++	if (idx != 0)
++		return -ENOENT;
++
++	survey->channel = conf->channel;
++	survey->filled = SURVEY_INFO_NOISE_DBM;
++	survey->noise = ar->noise[0];
++
++	return 0;
++}
++
+ static int ar9170_conf_tx(struct ieee80211_hw *hw, u16 queue,
+ 			  const struct ieee80211_tx_queue_params *param)
+ {
+@@ -1957,6 +1973,7 @@ static const struct ieee80211_ops ar9170_ops = {
+ 	.get_tsf		= ar9170_op_get_tsf,
+ 	.set_key		= ar9170_set_key,
+ 	.get_stats		= ar9170_get_stats,
++	.get_survey		= ar9170_get_survey,
+ 	.ampdu_action		= ar9170_ampdu_action,
+ };
+ 
 -- 
-1.7.0.4
+1.7.1.1
 
