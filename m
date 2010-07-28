@@ -1,54 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55177 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753821Ab0G2SaS (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:33343 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751800Ab0G1PQv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jul 2010 14:30:18 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v2] b43legacy: update hw/fw version info in wiphy struct
-Date: Thu, 29 Jul 2010 14:29:53 -0400
-Message-Id: <1280428193-30038-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1280424890-18995-1-git-send-email-linville@tuxdriver.com>
-References: <1280424890-18995-1-git-send-email-linville@tuxdriver.com>
+	Wed, 28 Jul 2010 11:16:51 -0400
+Received: by bwz1 with SMTP id 1so4015726bwz.19
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Jul 2010 08:16:50 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [WIP] mac80211: AMPDU rx reorder timeout timer
+Date: Wed, 28 Jul 2010 17:16:41 +0200
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>
+References: <201007270820.25347.chunkeey@googlemail.com> <1280219845.19098.4.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1280219845.19098.4.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201007281716.41612.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes the information available through ethtool...
+On Tuesday 27 July 2010 10:37:25 Johannes Berg wrote:
+> On Tue, 2010-07-27 at 08:20 +0200, Christian Lamparter wrote:
+> > This (rather _unfinished_ :-D ) patch adds a timer which
+> > if trigger schedules the automatic release of all expired
+> > A-MPDU frames. This implementation has the advantage that
+> > all queued-up MPDU will now arrive in the network core
+> > within a timely manner.
+> > 
+> > In my "experiments", the patch helped to ironed out the
+> > sudden throughput drops that have been _killing_ my
+> > average tcp performance ever since I can remember.
+> 
+> But why is your BA session so damaged to start with? This is not a
+> normal situtation!
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
-v2 -> use coreid for hw_version
+I can think of at least one possible reason:
 
- drivers/net/wireless/b43legacy/main.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+commit 3ef83d745bf5220bef3a0fd11b96eb9ac64c8e8e
+Author: Felix Fietkau <nbd@openwrt.org>
+Date:   Tue May 4 09:58:57 2010 +0200
 
-diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
-index 1713f5f..67f18ec 100644
---- a/drivers/net/wireless/b43legacy/main.c
-+++ b/drivers/net/wireless/b43legacy/main.c
-@@ -1623,6 +1623,7 @@ error:
+    ath9k: fix another source of corrupt frames
+    
+    Atheros hardware supports receiving frames that span multiple
+    descriptors and buffers. In this case, the rx status of every
+    descriptor except for the last one is invalid and may contain random
+    data. Because the driver does not support this, it needs to drop such
+    frames.
+    
+    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+and obviously, the HW marked the "last one" in the BA scoreboard
+as successfully received. Therefore we don't get a second attempt
+because the driver dropped it :(
+
+(The same applies to ar9170, which will print "missing tags!",
+ or stream corruption in such a case)
+
+> > But there is a catch: The logs will quickly fill up with:
+> > "release an RX reorder frame due to timeout on earlier frames".
+> > and the package loss will goes through the roof...
+> > 
+> > Now, I can think of several reasons why this could happen:
+> > 	1. we don't wait long enough for the HT peer to
+> > 		finish their _retry_ procedure?
+> > 
+> > 	2. previously - when the stream simply _stopped_ - we had
+> > 		to wait until the tcp retry kick in again. So we had
+> > 		some "silent" periods and therefore less noise from
+> > 		the reordering code?
+> > 
+> > 	3. ->bugs<- but where are they?
+> 
+> I'm having a hard time understanding this patch, can you split out the
+> no-op code reorg parts or explain what it does?
  
- static int b43legacy_upload_microcode(struct b43legacy_wldev *dev)
- {
-+	struct wiphy *wiphy = dev->wl->hw->wiphy;
- 	const size_t hdr_len = sizeof(struct b43legacy_fw_header);
- 	const __be32 *data;
- 	unsigned int i;
-@@ -1732,6 +1733,10 @@ static int b43legacy_upload_microcode(struct b43legacy_wldev *dev)
- 	dev->fw.rev = fwrev;
- 	dev->fw.patch = fwpatch;
- 
-+	snprintf(wiphy->fw_version, sizeof(wiphy->fw_version), "%u.%u",
-+			dev->fw.rev, dev->fw.patch);
-+	wiphy->hw_version = dev->dev->id.coreid;
-+
- 	return 0;
- 
- error:
--- 
-1.7.1.1
+Sure, just finished clean-up.
 
+Regards,
+	Chr
