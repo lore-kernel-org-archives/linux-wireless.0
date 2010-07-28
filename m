@@ -1,47 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:9843 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751550Ab0G2DfB (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:35602 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753240Ab0G1PV2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jul 2010 23:35:01 -0400
-Received: from vs3000.wh2.ocn.ne.jp (125.206.180.163)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0841814497
-	for <linux-wireless@vger.kernel.org>; Thu, 29 Jul 2010 12:35:00 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
+	Wed, 28 Jul 2010 11:21:28 -0400
+Received: by bwz1 with SMTP id 1so4018409bwz.19
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Jul 2010 08:21:27 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 2/2] iw: Add antenna configuration commands
-Date: Thu, 29 Jul 2010 12:35:11 +0900
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-References: <20100727094932.27300.10253.stgit@tt-desk> <1280299848.3832.2.camel@jlt3.sipsolutions.net> <201007281729.38652.br1@einfach.org>
-In-Reply-To: <201007281729.38652.br1@einfach.org>
+Subject: [WIP 2/3] mac80211: remove (now) unused rate function parameters
+Date: Wed, 28 Jul 2010 17:21:24 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <201007270820.25347.chunkeey@googlemail.com> <1280219845.19098.4.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1280219845.19098.4.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: Text/Plain;
   charset="utf-8"
-Message-Id: <201007291235.11202.br1@einfach.org>
+Message-Id: <201007281721.25200.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed July 28 2010 17:29:38 Bruno Randolf wrote:
-> On Wed July 28 2010 15:50:48 Johannes Berg wrote:
-> > On Wed, 2010-07-28 at 11:07 +0900, Bruno Randolf wrote:
-> > > On Tue July 27 2010 19:04:21 Johannes Berg wrote:
-> > > > On Tue, 2010-07-27 at 18:49 +0900, Bruno Randolf wrote:
-> > > > > +	if (tb_msg[NL80211_ATTR_WIPHY_ANTENNA_TX] &&
-> > > > > +	    tb_msg[NL80211_ATTR_WIPHY_ANTENNA_RX]) {
-> > > > > +		printf("\tAntenna: TX %d RX %d\n",
-> > > > > +		       nla_get_u8(tb_msg[NL80211_ATTR_WIPHY_ANTENNA_TX]),
-> > > > > +		       nla_get_u8(tb_msg[NL80211_ATTR_WIPHY_ANTENNA_RX]));
-> > > > 
-> > > > That's like the worst possible way to show the info.
-> > > 
-> > > which way would you prefer?
-> > 
-> > It occurred to me later that with the normal numbers we have (1 through
-> > 7) it won't matter much ... but still, I'd prefer %#x.
-> 
-> ok. changed that...
+dead code removal. This can probably go in in one form
+or another.
 
-actually - no. what sense does it make to use a hexadecimal notation and print 
-0x for values between 0 and 7?
+---
+additionally: we could drop the extra sdata parameter of
 
-bruno
+prepare_for_handlers
+ieee80211_invoke_rx_handlers
+
+and use the one from the rx_data structure?
+---
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 8179e62..6cb5541 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -538,20 +538,12 @@ static void ieee80211_release_reorder_frame(struct ieee80211_hw *hw,
+ 					    int index,
+ 					    struct sk_buff_head *frames)
+ {
+-	struct ieee80211_supported_band *sband;
+-	struct ieee80211_rate *rate = NULL;
+ 	struct sk_buff *skb = tid_agg_rx->reorder_buf[index];
+-	struct ieee80211_rx_status *status;
+ 
+ 	if (!skb)
+ 		goto no_frame;
+ 
+-	status = IEEE80211_SKB_RXCB(skb);
+-
+-	/* release the reordered frames to stack */
+-	sband = hw->wiphy->bands[status->band];
+-	if (!(status->flag & RX_FLAG_HT))
+-		rate = &sband->bitrates[status->rate_idx];
++	/* release the frame from the reorder ring buffer */
+ 	tid_agg_rx->stored_mpdu_num--;
+ 	tid_agg_rx->reorder_buf[index] = NULL;
+ 	__skb_queue_tail(frames, skb);
+@@ -2289,8 +2281,7 @@ static void ieee80211_rx_handlers(struct ieee80211_rx_data *rx,
+ 
+ static void ieee80211_invoke_rx_handlers(struct ieee80211_sub_if_data *sdata,
+ 					 struct ieee80211_rx_data *rx,
+-					 struct sk_buff *skb,
+-					 struct ieee80211_rate *rate)
++					 struct sk_buff *skb)
+ {
+ 	struct sk_buff_head reorder_release;
+ 	ieee80211_rx_result res = RX_DROP_MONITOR;
+@@ -2500,8 +2491,7 @@ static int prepare_for_handlers(struct ieee80211_sub_if_data *sdata,
+  * be called with rcu_read_lock protection.
+  */
+ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+-					 struct sk_buff *skb,
+-					 struct ieee80211_rate *rate)
++					 struct sk_buff *skb)
+ {
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+ 	struct ieee80211_local *local = hw_to_local(hw);
+@@ -2609,7 +2599,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+ 					       prev->name);
+ 				goto next;
+ 			}
+-			ieee80211_invoke_rx_handlers(prev, &rx, skb_new, rate);
++			ieee80211_invoke_rx_handlers(prev, &rx, skb_new);
+ next:
+ 			prev = sdata;
+ 		}
+@@ -2625,7 +2615,7 @@ next:
+ 		}
+ 	}
+ 	if (prev)
+-		ieee80211_invoke_rx_handlers(prev, &rx, skb, rate);
++		ieee80211_invoke_rx_handlers(prev, &rx, skb);
+ 	else
+ 		dev_kfree_skb(skb);
+ }
+@@ -2711,7 +2701,7 @@ void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		return;
+ 	}
+ 
+-	__ieee80211_rx_handle_packet(hw, skb, rate);
++	__ieee80211_rx_handle_packet(hw, skb);
+ 
+ 	rcu_read_unlock();
+ 
