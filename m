@@ -1,50 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:56707 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751716Ab0G0P6N (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:41879 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750730Ab0G1XrJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 11:58:13 -0400
-MIME-Version: 1.0
-In-Reply-To: <1280223313.3721.83.camel@maxim-laptop>
-References: <20100726210651.GJ14855@tux> <1280179033.3721.15.camel@maxim-laptop>
-	<20100726212543.GA5424@srcf.ucam.org> <AANLkTi=5_Dc8SumPi7cr8u7=DmnOHgSo6C76w9b0E4Kj@mail.gmail.com>
-	<20100726222113.GA6487@srcf.ucam.org> <AANLkTinq-SxMHTrJM23WaeRMkU-2cySiVrkwCjDRS_o+@mail.gmail.com>
-	<20100726222909.GA6773@srcf.ucam.org> <AANLkTinysGjYS7RKN4X_7T2q+rw_-OWdn-UJYM0poWXu@mail.gmail.com>
-	<20100726223326.GA6904@srcf.ucam.org> <AANLkTinChEx_B9wa-n+a6xDr1vLOBOD3Mhcs=iqcYwen@mail.gmail.com>
-	<20100726225057.GA7268@srcf.ucam.org> <1280223313.3721.83.camel@maxim-laptop>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 27 Jul 2010 08:57:51 -0700
-Message-ID: <AANLkTim1sZ5ZoGcrsdCw8dFSzUj4igZOiq7irKsdbfXR@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH v3] ath5k: disable ASPM
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	David Quan <David.Quan@atheros.com>,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"kernel-team@lists.ubuntu.com" <kernel-team@lists.ubuntu.com>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	"tim.gardner@canonical.com" <tim.gardner@canonical.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 28 Jul 2010 19:47:09 -0400
+Date: Thu, 29 Jul 2010 01:47:04 +0200
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mwl8k: change maintenance status
+Message-ID: <20100728234704.GZ21121@mail.wantstofly.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 27, 2010 at 2:35 AM, Maxim Levitsky <maximlevitsky@gmail.com> wrote:
-> On Mon, 2010-07-26 at 23:50 +0100, Matthew Garrett wrote:
->> On Mon, Jul 26, 2010 at 03:43:04PM -0700, Luis R. Rodriguez wrote:
->>
->> > I see.. thanks Mathew... in that case since L1 works on all devices we
->> > could just force enable L1 for all PCIE devices. What do you think?
->>
->> Works for me.
->>
->
-> On the second thought, there is no 'pci_enable_link_state' :-)
-> I afraid that if I add it, I might not do that right for all cases, thus
-> do more harm that good...
+The 8366 AP support in particular is still rather incomplete, but
+this is unlikely to be addressed any time soon.
 
-I'm sorry, can you elaborate?
+Signed-off-by: Lennert Buytenhek <buytenh@wantstofly.org>
 
-  Luis
+diff --git a/MAINTAINERS b/MAINTAINERS
+index c9a3fe0..8edb240 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -3619,7 +3619,7 @@ F:	include/linux/mv643xx.h
+ MARVELL MWL8K WIRELESS DRIVER
+ M:	Lennert Buytenhek <buytenh@wantstofly.org>
+ L:	linux-wireless@vger.kernel.org
+-S:	Maintained
++S:	Odd Fixes
+ F:	drivers/net/wireless/mwl8k.c
+ 
+ MARVELL SOC MMC/SD/SDIO CONTROLLER DRIVER
