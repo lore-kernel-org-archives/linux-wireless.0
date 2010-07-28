@@ -1,37 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:50496 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755778Ab0GJQja (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:5451 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754138Ab0G1CGz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Jul 2010 12:39:30 -0400
-Date: Sat, 10 Jul 2010 20:38:53 +0400
-From: Kulikov Vasiliy <segooon@gmail.com>
-To: Dan Carpenter <error27@gmail.com>
-Cc: kernel-janitors@vger.kernel.org,
-	Simon Kelley <simon@thekelleys.org.uk>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Stephen Hemminger <shemminger@vyatta.com>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH] atmel: unregister_netdev() on error
-Message-ID: <20100710163853.GA4695@albatros>
-References: <1278767508-10164-1-git-send-email-segooon@gmail.com>
- <20100710141204.GY19184@bicker>
+	Tue, 27 Jul 2010 22:06:55 -0400
+Received: from vs3011.wh2.ocn.ne.jp (125.206.180.239)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-038862813
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Jul 2010 11:06:53 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 2/2] iw: Add antenna configuration commands
+Date: Wed, 28 Jul 2010 11:07:04 +0900
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+References: <20100727094932.27300.10253.stgit@tt-desk> <20100727094937.27300.97445.stgit@tt-desk> <1280225061.19098.8.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1280225061.19098.8.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100710141204.GY19184@bicker>
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201007281107.04455.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 10, 2010 at 16:12 +0200, Dan Carpenter wrote:
-> > +err_out_unreg:
-> > +	unregister_netdev(dev);
-> 	^^^^^^^^^^^^^^^^^^^^^^
-> > +
+On Tue July 27 2010 19:04:21 Johannes Berg wrote:
+> On Tue, 2010-07-27 at 18:49 +0900, Bruno Randolf wrote:
+> > +	if (tb_msg[NL80211_ATTR_WIPHY_ANTENNA_TX] &&
+> > +	    tb_msg[NL80211_ATTR_WIPHY_ANTENNA_RX]) {
+> > +		printf("\tAntenna: TX %d RX %d\n",
+> > +		       nla_get_u8(tb_msg[NL80211_ATTR_WIPHY_ANTENNA_TX]),
+> > +		       nla_get_u8(tb_msg[NL80211_ATTR_WIPHY_ANTENNA_RX]));
 > 
-> What the pants?  :P
-Hmm, I've slightly misunderstood the code, sorry.
+> That's like the worst possible way to show the info.
 
-Thanks, Dan.
+which way would you prefer?
+
+bruno
