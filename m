@@ -1,36 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:40833 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758309Ab0GBJuM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jul 2010 05:50:12 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1OUcsm-0001Kq-UJ
-	for linux-wireless@vger.kernel.org; Fri, 02 Jul 2010 11:50:05 +0200
-Received: from host179-164-static.104-82-b.business.telecomitalia.it ([82.104.164.179])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Jul 2010 11:50:04 +0200
-Received: from massimiliano.cialdi by host179-164-static.104-82-b.business.telecomitalia.it with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Jul 2010 11:50:04 +0200
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46503 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754743Ab0G1VaN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Jul 2010 17:30:13 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
 To: linux-wireless@vger.kernel.org
-From: max <massimiliano.cialdi@powersoft.it>
-Subject: Re: wl1271 firmware
-Date: Fri, 2 Jul 2010 09:47:47 +0000 (UTC)
-Message-ID: <loom.20100702T114312-713@post.gmane.org>
-References: <AANLkTinOcy-n6EVzAasAJO1I2yNeWOiaCid0tGdxnuwa@mail.gmail.com> <AC090B9732AB2B4DB7FF476E907FE660010673660C@dnce02.ent.ti.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v2] ar9170: add get_survey callback in order to get channel noise
+Date: Wed, 28 Jul 2010 17:20:04 -0400
+Message-Id: <1280352004-7319-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1280349040-25102-1-git-send-email-linville@tuxdriver.com>
+References: <1280349040-25102-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Levi, Shahar <shahar_levi@...> writes:
-> I am checking the way to access the FW and NVS file of wl1271.
-> Let me find more details on that and get back to you.
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Acked-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+v2 -> add TODO comment
 
-Hi I'm also searching for that file
-Please let me know when it will be available
+ drivers/net/wireless/ath/ar9170/main.c |   19 +++++++++++++++++++
+ 1 files changed, 19 insertions(+), 0 deletions(-)
 
-thanks
+diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
+index 5e2c514..c67b05f 100644
+--- a/drivers/net/wireless/ath/ar9170/main.c
++++ b/drivers/net/wireless/ath/ar9170/main.c
+@@ -1905,6 +1905,24 @@ static int ar9170_get_stats(struct ieee80211_hw *hw,
+ 	return 0;
+ }
+ 
++static int ar9170_get_survey(struct ieee80211_hw *hw, int idx,
++				struct survey_info *survey)
++{
++	struct ar9170 *ar = hw->priv;
++	struct ieee80211_conf *conf = &hw->conf;
++
++	if (idx != 0)
++		return -ENOENT;
++
++	/* TODO: update noise value, e.g. call ar9170_set_channel */
++
++	survey->channel = conf->channel;
++	survey->filled = SURVEY_INFO_NOISE_DBM;
++	survey->noise = ar->noise[0];
++
++	return 0;
++}
++
+ static int ar9170_conf_tx(struct ieee80211_hw *hw, u16 queue,
+ 			  const struct ieee80211_tx_queue_params *param)
+ {
+@@ -1957,6 +1975,7 @@ static const struct ieee80211_ops ar9170_ops = {
+ 	.get_tsf		= ar9170_op_get_tsf,
+ 	.set_key		= ar9170_set_key,
+ 	.get_stats		= ar9170_get_stats,
++	.get_survey		= ar9170_get_survey,
+ 	.ampdu_action		= ar9170_ampdu_action,
+ };
+ 
+-- 
+1.7.1.1
 
