@@ -1,107 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:35546 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933320Ab0GOQ7g convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jul 2010 12:59:36 -0400
-Received: by pwi5 with SMTP id 5so352340pwi.19
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Jul 2010 09:59:35 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4C3F0AA3.4050706@marvell.com>
-References: <4C3F0AA3.4050706@marvell.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 15 Jul 2010 09:59:01 -0700
-Message-ID: <AANLkTiljhQpDh_20zEf8HjYnk82BpUi4Gctu9G90aqpS@mail.gmail.com>
-Subject: Re: [RFC] mac80211: indicate BA window size with IEEE80211_AMPDU_TX_OPERATIONAL
-	drv_ampud_action
-To: yogeshp <yogeshp@marvell.com>
-Cc: linville@tuxdriver.com, Nishant Sarmukadam <nishants@marvell.com>,
-	Pradeep Nemavat <pnemavat@marvell.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga11.intel.com ([192.55.52.93]:57223 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751987Ab0G1SXw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Jul 2010 14:23:52 -0400
+Subject: Re: [BUG] after starting wimaxd at boot iwlagn module will crash
+ for intel 6250 card
+From: Inaky Perez-Gonzalez <inaky@linux.intel.com>
+To: alexxy@gentoo.org
+Cc: linux-wireless@vger.kernel.org, wimax@linuxwimax.org
+In-Reply-To: <1280340597.26204.300.camel@localhost.localdomain>
+References: <201007280028.48674.alexxy@gentoo.org>
+	 <1280270313.26204.288.camel@localhost.localdomain>
+	 <201007282154.06383.alexxy@gentoo.org>
+	 <1280340597.26204.300.camel@localhost.localdomain>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 28 Jul 2010 11:23:42 -0700
+Message-ID: <1280341422.26204.307.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 15, 2010 at 6:18 AM, yogeshp <yogeshp@marvell.com> wrote:
-> BA window size for a successful BA setup is not made available to the driver by
-> mac80211. The patch below gets the BA window size from addba response and
-> indicates it to driver through IEEE80211_AMPDU_TX_OPERATIONAL drv_ampdu_action.
+On Wed, 2010-07-28 at 11:09 -0700, Inaky Perez-Gonzalez wrote: 
+> Hi Alexey
+> 
+> On Wed, 2010-07-28 at 21:53 +0400, Alexey Shvetsov wrote: 
+> > Updated relevant part of logs for this bug
+> > 
 
-But why do you want that? Your patch and commit log do not mention why
-you need this. Also your patch does not address changing all of the
-other drivers, and breaks compilation so NACK, WTF!
+On the other side, I just went through the huge log file you sent me --
+thx for that.
 
-When I compile mac80211 with your patch it fails compilation:
+I don't see any i2400m errors in there -- the driver seems to at least
+be able to initialize right. WiFi's iwlagn gets toasted, but i2400m is
+not really complaining about anything -- except when NetworkManager
+seemingly tries to turn on/off the radio and a message about it being
+done while the device is not in the right state is popping up:
 
-  CHECK   net/mac80211/main.c
-net/mac80211/main.c:617:9: error: invalid bitfield width, -1.
-  CC [M]  net/mac80211/main.o
-In file included from net/mac80211/driver-ops.h:7,
-                 from net/mac80211/main.c:29:
-net/mac80211/driver-trace.h: In function ‘trace_drv_ampdu_action’:
-net/mac80211/driver-trace.h:731: warning: passing argument 7 of ‘(void
-(*)(void *, struct ieee80211_local *, struct ieee80211_sub_if_data *,
-enum ieee80211_ampdu_mlme_action,  struct ieee80211_sta *, u16,  u16,
-u16 *))it_func’ makes integer from pointer without a cast
-net/mac80211/driver-trace.h:731: note: expected ‘u16’ but argument is
-of type ‘u16 *’
-net/mac80211/driver-trace.h:731: error: too few arguments to function
-‘(void (*)(void *, struct ieee80211_local *, struct
-ieee80211_sub_if_data *, enum ieee80211_ampdu_mlme_action,  struct
-ieee80211_sta *, u16,  u16,  u16 *))it_func’
-make[1]: *** [net/mac80211/main.o] Error 1
-make: *** [_module_net/mac80211] Error 2
+... 
+kernel: iwlagn 0000:02:00.0: RF_KILL bit toggled to enable radio.
+NetworkManager: <info>  WiFi now disabled by radio killswitch
+kernel: i2400m_usb 2-1.3:1.0: 'RF Control' (0x4602) command failed: -84 - invalid state (3)
+NetworkManager: <info>  (wlan0): bringing up device.
+kernel: iwlagn 0000:02:00.0: Microcode SW error detected.  Restarting
+...
 
-When I compile ath9k and ath9k_htc with this patch I also get:
+I say seemingly because I don't remember NetworkManager actually doing
+that on WiMAX devices, but I could be wrong, as they expose an RFKILL
+interface.
 
-  CHECK   drivers/net/wireless/ath/ath9k/main.c
-drivers/net/wireless/ath/ath9k/main.c:2068:31: warning: incorrect type
-in initializer (incompatible argument 6 (different base types))
-drivers/net/wireless/ath/ath9k/main.c:2068:31:    expected int (
-*ampdu_action )( ... )
-drivers/net/wireless/ath/ath9k/main.c:2068:31:    got int ( static
-[toplevel] *<noident> )( ... )
-  CC [M]  drivers/net/wireless/ath/ath9k/main.o
-drivers/net/wireless/ath/ath9k/main.c:2068: warning: initialization
-from incompatible pointer type
+So I am the more puzzled here, I guess I need to re-establish a baseline
+to curb confusion, please help me here:
 
-  CC [M]  drivers/net/wireless/ath/ath9k/htc_drv_txrx.o
-  CHECK   drivers/net/wireless/ath/ath9k/htc_drv_main.c
-drivers/net/wireless/ath/ath9k/htc_drv_main.c:1846:31: warning:
-incorrect type in initializer (incompatible argument 6 (different base
-types))
-drivers/net/wireless/ath/ath9k/htc_drv_main.c:1846:31:    expected int
-( *ampdu_action )( ... )
-drivers/net/wireless/ath/ath9k/htc_drv_main.c:1846:31:    got int (
-static [toplevel] *<noident> )( ... )
-  CC [M]  drivers/net/wireless/ath/ath9k/htc_drv_main.o
-drivers/net/wireless/ath/ath9k/htc_drv_main.c:1846: warning:
-initialization from incompatible pointer type
+-- let's be in peace with the fact that wifi is not working at this
+point --
 
-In fact I'm surprised this even compiles with your patch. If you want
-to submit this make sure you use both checkpatch.pl to test your patch
-and also use sparse to compile test. You can get sparse from:
+(1) Does WiMAX work ok when iwlagn is unloaded? can you get to turn on
+the radio and scan?
 
-git://git.kernel.org/pub/scm/devel/sparse/chrisl/sparse.git
+(2) Apparently the driver is up and running when iwlagn is loaded
+(according to your logs). Can you get the daemon to start? turn the
+radio on? scan?
 
-I recommend to use use the v0.4.2 tag:
+(3) when and how do you actually get that -22 error from the i2400m
+probe?
 
-git checkout -b rel42 v0.4.2
-make
-make install
 
-Then when compiling to test your patch use C=1 to use sparse.
-
-make C=1 M=drivers/net/wireless/ath/ath9k/
-
-> Signed-off-by: yogeshp@marvell.com
-> Signed-off-by: nishants@marvell.com
-
-Please read the Developer's Certificate of Origin 1.1, on
-Documentation/SubmittingPatches.
-
-Also please read:
-
-http://wireless.kernel.org/en/developers/Documentation
-
-  Luis
