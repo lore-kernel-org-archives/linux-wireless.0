@@ -1,54 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:60432 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751270Ab0GVTDq (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47277 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754553Ab0G1VP0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 15:03:46 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 41DF1421C8
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Jul 2010 15:03:45 -0400 (EDT)
-Subject: Compat-wireless release for 2010-07-22 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20100722190343.1E4BD404F0@repository3.orbit-lab.org>
-Date: Thu, 22 Jul 2010 15:03:43 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Wed, 28 Jul 2010 17:15:26 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kalle.valo@iki.fi>,
+	Juuso Oikarinen <juuso.oikarinen@nokia.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] wl1251: update hw/fw version info in wiphy struct
+Date: Wed, 28 Jul 2010 17:07:45 -0400
+Message-Id: <1280351265-27791-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   1a05138..04898a5  master     -> origin/master
-   0442f68..c7ecb8a  wl         -> origin/wl
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   5f11688..afdbfed  history    -> origin/history
- + fecd01b...dd5c869 master     -> origin/master  (forced update)
-   e095937..cd5b8f8  stable     -> origin/stable
- * [new tag]         next-20100722 -> next-20100722
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
+This makes the information available through ethtool...
 
-compat-wireless code metrics
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/wl12xx/wl1251_main.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-    493727 - Total upstream lines of code being pulled
-      1447 - backport code changes
-      1211 - backport code additions
-       236 - backport code deletions
-      5764 - backport from compat module
-      7211 - total backport code
-    1.4605 - % of code consists of backport work
-      1218 - Crap changes not yet posted
-      1179 - Crap additions not yet posted
-        39 - Crap deletions not yet posted
-    0.2467 - % of crap code
+diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
+index a6d8d1a..861a5f3 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_main.c
++++ b/drivers/net/wireless/wl12xx/wl1251_main.c
+@@ -411,6 +411,7 @@ static int wl1251_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ static int wl1251_op_start(struct ieee80211_hw *hw)
+ {
+ 	struct wl1251 *wl = hw->priv;
++	struct wiphy *wiphy = hw->wiphy;
+ 	int ret = 0;
+ 
+ 	wl1251_debug(DEBUG_MAC80211, "mac80211 start");
+@@ -444,6 +445,10 @@ static int wl1251_op_start(struct ieee80211_hw *hw)
+ 
+ 	wl1251_info("firmware booted (%s)", wl->fw_ver);
+ 
++	/* update hw/fw version info in wiphy struct */
++	wiphy->hw_version = wl->chip_id;
++	strncpy(wiphy->fw_version, wl->fw_ver, sizeof(wiphy->fw_version));
++
+ out:
+ 	if (ret < 0)
+ 		wl1251_power_off(wl);
+-- 
+1.7.1.1
 
-Base tree: linux-next.git
-Base tree version: next-20100722
-compat-wireless release: compat-wireless-2010-07-13-4-g04898a5
