@@ -1,61 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35505 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44939 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756131Ab0GTSaM (ORCPT
+	with ESMTP id S1751006Ab0G1TaO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jul 2010 14:30:12 -0400
+	Wed, 28 Jul 2010 15:30:14 -0400
+Date: Wed, 28 Jul 2010 15:15:53 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] libipw: correct sparse warnings and mark some variables static
-Date: Tue, 20 Jul 2010 14:17:52 -0400
-Message-Id: <1279649872-6998-1-git-send-email-linville@tuxdriver.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ar9170: add get_survey callback in order to get channel
+ noise
+Message-ID: <20100728191552.GA2668@tuxdriver.com>
+References: <1280342924-22811-1-git-send-email-linville@tuxdriver.com>
+ <201007282110.31458.chunkeey@googlemail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201007282110.31458.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  CHECK   drivers/net/wireless/ipw2x00/libipw_module.c
-drivers/net/wireless/ipw2x00/libipw_module.c:65:21: warning: symbol 'libipw_config_ops' was not declared. Should it be static?
-drivers/net/wireless/ipw2x00/libipw_module.c:66:6: warning: symbol 'libipw_wiphy_privid' was not declared. Should it be static?
-  CHECK   drivers/net/wireless/ipw2x00/libipw_wx.c
-drivers/net/wireless/ipw2x00/libipw_wx.c:415:17: warning: symbol 'ssid' shadows an earlier one
-drivers/net/wireless/ipw2x00/libipw_wx.c:324:9: originally declared here
+On Wed, Jul 28, 2010 at 09:10:31PM +0200, Christian Lamparter wrote:
+> On Wednesday 28 July 2010 20:48:44 John W. Linville wrote:
+> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> > ---
+> >  drivers/net/wireless/ath/ar9170/main.c |   17 +++++++++++++++++
+> >  1 files changed, 17 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/ath/ar9170/main.c b/drivers/net/wireless/ath/ar9170/main.c
+> > index 5e2c514..e089d9f 100644
+> > --- a/drivers/net/wireless/ath/ar9170/main.c
+> > +++ b/drivers/net/wireless/ath/ar9170/main.c
+> > @@ -1905,6 +1905,22 @@ static int ar9170_get_stats(struct ieee80211_hw *hw,
+> >  	return 0;
+> >  }
+> >  
+> > +static int ar9170_get_survey(struct ieee80211_hw *hw, int idx,
+> > +				struct survey_info *survey)
+> > +{
+> > +	struct ar9170 *ar = hw->priv;
+> > +	struct ieee80211_conf *conf = &hw->conf;
+> > +
+> > +	if (idx != 0)
+> > +		return -ENOENT;
+> > +
+> > +	survey->channel = conf->channel;
+> > +	survey->filled = SURVEY_INFO_NOISE_DBM;
+> > +	survey->noise = ar->noise[0];
+> > +
+> > +	return 0;
+> > +}
+> > +
+> >  static int ar9170_conf_tx(struct ieee80211_hw *hw, u16 queue,
+> >  			  const struct ieee80211_tx_queue_params *param)
+> >  {
+> > @@ -1957,6 +1973,7 @@ static const struct ieee80211_ops ar9170_ops = {
+> >  	.get_tsf		= ar9170_op_get_tsf,
+> >  	.set_key		= ar9170_set_key,
+> >  	.get_stats		= ar9170_get_stats,
+> > +	.get_survey		= ar9170_get_survey,
+> >  	.ampdu_action		= ar9170_ampdu_action,
+> >  };
+> 
+> One problem: the noisefloor stays at the same level and
+> is not updated. You would have to call ar9170_set_channel,
+> but I don't recommend that because that may lockup
+> the device :(.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/ipw2x00/libipw_module.c |    4 ++--
- drivers/net/wireless/ipw2x00/libipw_wx.c     |    4 ----
- 2 files changed, 2 insertions(+), 6 deletions(-)
+I'm not sure I understand -- isn't ar9170_set_channel already called
+from ar9170_op_config?  Or are you saying that the value will be
+stale unless you call ar9170_set_channel again?
 
-diff --git a/drivers/net/wireless/ipw2x00/libipw_module.c b/drivers/net/wireless/ipw2x00/libipw_module.c
-index 5596540..32dee2c 100644
---- a/drivers/net/wireless/ipw2x00/libipw_module.c
-+++ b/drivers/net/wireless/ipw2x00/libipw_module.c
-@@ -62,8 +62,8 @@ MODULE_DESCRIPTION(DRV_DESCRIPTION);
- MODULE_AUTHOR(DRV_COPYRIGHT);
- MODULE_LICENSE("GPL");
- 
--struct cfg80211_ops libipw_config_ops = { };
--void *libipw_wiphy_privid = &libipw_wiphy_privid;
-+static struct cfg80211_ops libipw_config_ops = { };
-+static void *libipw_wiphy_privid = &libipw_wiphy_privid;
- 
- static int libipw_networks_allocate(struct libipw_device *ieee)
- {
-diff --git a/drivers/net/wireless/ipw2x00/libipw_wx.c b/drivers/net/wireless/ipw2x00/libipw_wx.c
-index 3633c66..8a4bae4 100644
---- a/drivers/net/wireless/ipw2x00/libipw_wx.c
-+++ b/drivers/net/wireless/ipw2x00/libipw_wx.c
-@@ -411,10 +411,6 @@ int libipw_wx_set_encode(struct libipw_device *ieee,
- 
- 	/* If a new key was provided, set it up */
- 	if (erq->length > 0) {
--#ifdef CONFIG_LIBIPW_DEBUG
--		DECLARE_SSID_BUF(ssid);
--#endif
--
- 		len = erq->length <= 5 ? 5 : 13;
- 		memcpy(sec.keys[key], keybuf, erq->length);
- 		if (len > erq->length)
+How is this patch any worse than the situation was before commit
+5d6566ff356a19fb6ad994717cb937ff88063fa6?
+
+John
 -- 
-1.7.1.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
