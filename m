@@ -1,39 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:38861 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757486Ab0GWW4G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jul 2010 18:56:06 -0400
-Subject: Re: [PATCH] zd1211rw: make CR_INTERRUPT cast explicit
-From: Pavel Roskin <proski@gnu.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
-	Ulrich Kunitz <kune@deine-taler.de>
-In-Reply-To: <20100722190339.GD2616@tuxdriver.com>
-References: <1279724935-16581-1-git-send-email-linville@tuxdriver.com>
-	 <1279730218.9003.7.camel@mj>  <20100722190339.GD2616@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 23 Jul 2010 18:55:36 -0400
-Message-ID: <1279925736.23722.5.camel@mj>
-Mime-Version: 1.0
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:45701 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755571Ab0G1Wsi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Jul 2010 18:48:38 -0400
+Received: by iwn7 with SMTP id 7so5017047iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Jul 2010 15:48:38 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTin+sPu45teiAiePPWdBp3huffds3v_uzJBtKmLO@mail.gmail.com>
+References: <1280339151-37084-1-git-send-email-nbd@openwrt.org>
+	<AANLkTimZ8zTZWDcXwr7Hu2FT=gDPeCiiUFXcBmpYpp7M@mail.gmail.com>
+	<4C509C65.4020305@openwrt.org> <AANLkTimqsXoynA2CPJ1tFmj6wUetztDUJ3iKCpQHJKCe@mail.gmail.com>
+	<4C50AEF4.4060905@openwrt.org> <AANLkTin+sPu45teiAiePPWdBp3huffds3v_uzJBtKmLO@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Wed, 28 Jul 2010 15:48:18 -0700
+Message-ID: <AANLkTikxs8LfQDw4juPRZV3DU1_mX2CMC6vYHYu1n5as@mail.gmail.com>
+Subject: Re: [PATCH 1/3] ath9k: prevent calibration during off-channel
+	activity
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-07-22 at 15:03 -0400, John W. Linville wrote:
-> On Wed, Jul 21, 2010 at 12:36:58PM -0400, Pavel Roskin wrote:
-> > I think __force should be used sparingly, especially outside headers.  I
-> > tried other ways to prevent the warning.  I tried declaring int_num as
-> > zd_addr_t, but sparse keeps complaining about the same comparison.
-> 
-> Actually, it looks like it works w/o the "__force" as well.
-> Any objection to a version like that?
+On Wed, Jul 28, 2010 at 3:47 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Wed, Jul 28, 2010 at 3:28 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+>> On 2010-07-29 12:12 AM, Luis R. Rodriguez wrote:
+>>> On Wed, Jul 28, 2010 at 2:08 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+>>>> On 2010-07-28 10:43 PM, Luis R. Rodriguez wrote:
+>>>>> On Wed, Jul 28, 2010 at 10:45 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+>>>>>> Previously the software scan callback was used to indicate to the hardware,
+>>>>>> when it was safe to calibrate. This didn't really work properly, because it
+>>>>>> depends on a specific order of software scan callbacks vs. channel changes.
+>>>>>> Also, software scans are not the only thing that triggers off-channel
+>>>>>> activity, so it's better to use the newly added indication from mac80211 for
+>>>>>> this and not use the software scan callback for anything calibration related.
+>>>>>>
+>>>>>> This fixes at least some of the invalid noise floor readings that I've seen
+>>>>>> in AP mode on AR9160
+>>>>>
+>>>>> Neat!
+>>>>>
+>>>>>> --- a/drivers/net/wireless/ath/ath9k/main.c
+>>>>>> +++ b/drivers/net/wireless/ath/ath9k/main.c
+>>>>>> @@ -154,6 +154,27 @@ void ath9k_ps_restore(struct ath_softc *sc)
+>>>>>>        spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
+>>>>>>  }
+>>>>>>        spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
+>>>>>>  }
+>>>>>>
+>>>>>> +static void ath_start_ani(struct ath_common *common)
+>>>>>> +{
+>>>>>> +       struct ath_hw *ah = common->ah;
+>>>>>> +       unsigned long timestamp = jiffies_to_msecs(jiffies);
+>>>>>> +       struct ath_softc *sc = (struct ath_softc *) common->priv;
+>>>>>> +
+>>>>>> +       if (!(sc->sc_flags & SC_OP_ANI_RUN))
+>>>>>> +               return;
+>>>>>> +
+>>>>>> +       if (sc->sc_flags & SC_OP_OFFCHANNEL)
+>>>>>> +               return;
+>>>>>> +
+>>>>>> +       common->ani.longcal_timer = timestamp;
+>>>>>> +       common->ani.shortcal_timer = timestamp;
+>>>>>> +       common->ani.checkani_timer = timestamp;
+>>>>>> +
+>>>>>> +       mod_timer(&common->ani.timer,
+>>>>>> +                 jiffies +
+>>>>>> +                       msecs_to_jiffies((u32)ah->config.ani_poll_interval));
+>>>>>> +}
+>>>>>
+>>>>> I would prefer if you do this sort of code shift in a separate patch.
+>>>>> In this case its pretty easy to see the code is the same so I think
+>>>>> its fine the way it is now but for next time please. Otherwise looks
+>>>>> good, thanks!!
+>>>> If it had been a bigger function, I'd have made a separate patch, but I
+>>>> figured for something as trivial as this it wouldn't matter.
+>>>
+>>> iw event -t while  pinging and then issuing a scan:
+>>>
+>>> 1280354915.820607: wlan32 (phy #0): scan started
+>>> 1280354920.390438: wlan32 (phy #0): scan finished: 2412 2417 2422 2427
+>>> 2432 2437 2442 2447 2452 2457 2462 5180 5200 5220 5240 5260 5280 5300
+>>> 5320 5500 5520 5540 5560 5580 5660 5680 5700 5745 5765 5785 5805 5825,
+>>> ""
+>>> 1280354923.103628: wlan32 (phy #0): deauth FOO -> BAR reason 4:
+>>> Disassociated due to inactivity
+>>> 1280354923.103736: wlan32 (phy #0): disconnected (local request)
+>>> 1280354923.111251: phy #0: regulatory domain change: set to world
+>>> roaming by the wireless core upon initialization request
+>>>
+>>> So this seems to re-introduce the same issue I was seeing before.
+>>
+>> Are you sure it's this change?
+>
+> Just reverted the changes and it works without these issues.
 
-Ideally, I would avoid any workarounds for sparse.  The bug was
-acknowledged by a sparse developer, so I expect it to be fixed.
-http://www.spinics.net/lists/linux-sparse/msg02167.html
+Also without these patches I get 0% packet loss, with the patches
+applied I get some packet loss.
 
-However, a version without __force would be more acceptable than a
-version with __force.
-
--- 
-Regards,
-Pavel Roskin
+  Luis
