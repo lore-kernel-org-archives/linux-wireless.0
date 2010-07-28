@@ -1,42 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42667 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751781Ab0GZO1a (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:48989 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755249Ab0G1Uo2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jul 2010 10:27:30 -0400
-Subject: Re: [PATCH] mac80211: simplify key locking
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <20100726142058.GA7324@jm.kir.nu>
-References: <1275380359.3621.17.camel@jlt3.sipsolutions.net>
-	 <20100724053301.GA6773@jm.kir.nu>
-	 <1279962385.8223.2.camel@jlt3.sipsolutions.net>
-	 <20100726013953.GA29386@jm.kir.nu>
-	 <1280130178.3693.1.camel@jlt3.sipsolutions.net>
-	 <20100726142058.GA7324@jm.kir.nu>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 26 Jul 2010 16:27:27 +0200
-Message-ID: <1280154447.3693.9.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 28 Jul 2010 16:44:28 -0400
+Message-ID: <4C5094BB.6070105@adurom.com>
+Date: Wed, 28 Jul 2010 23:36:11 +0300
+From: Kalle Valo <kvalo@adurom.com>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wl1251: add get_survey callback in order to get channel
+ noise
+References: <1280345147-24137-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1280345147-24137-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-07-26 at 07:20 -0700, Jouni Malinen wrote:
+On 07/28/2010 10:25 PM, John W. Linville wrote:
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+> The calculation of the noise value looks a bit strange to me, but this
+> is the same calculation from commit 446cfaa412beef0dd6cb0edf3b4eaed34d824537,
+> some hopefully it was/is correct (or good enough)...
 
-> Well, the latter one may indeed do that since debugfs_remove_recursive()
-> survives NULL pointer. However, the former one does not.
-> ieee80211_key_disable_hw_accel() has a key->local dereference and it
-> oopses without the "if (key->local)" part here (before checking whether
-> the key is uploaded to hardware). I started first making that handle
-> unlinked keys, but since this gets called before
-> ieee80211_key_enable_hw_accel() in the problem case, it looked more
-> logical to fix the caller not to get to the disable function in the
-> first place.
+I never was able to find out proper way to measure noise with wl1251.
+The algorithm I came up and included in this patch is most likely
+incorrect. But as having support for noise survey doesn't do any harm,
+and hopefully we even might motivate someone to fix the algorithm, I
+think it's safe to have this patch.
 
-Oh, indeed, that comes before the check. I agree then, this patch seems
-like the best fix.
-
-johannes
-
+Acked-by: Kalle Valo <kvalo@adurom.com>
