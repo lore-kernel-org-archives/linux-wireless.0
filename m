@@ -1,64 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:16668 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751311Ab0GFLDH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jul 2010 07:03:07 -0400
-Message-ID: <4C330D37.4090104@nokia.com>
-Date: Tue, 06 Jul 2010 14:02:15 +0300
-From: Roger Quadros <roger.quadros@nokia.com>
+Received: from nbd.name ([88.198.39.176]:33677 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756209Ab0G1VaZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Jul 2010 17:30:25 -0400
+Message-ID: <4C50A170.1070902@openwrt.org>
+Date: Wed, 28 Jul 2010 23:30:24 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: ext Ohad Ben-Cohen <ohad@wizery.com>
-CC: Nicolas Pitre <nico@fluxnic.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	San Mehat <san@google.com>,
-	"Pandita, Vikram" <vikram.pandita@ti.com>
-Subject: Re: [PATCH 05/15] omap: hsmmc: add virtual card detect support
-References: <1278376666-3509-1-git-send-email-ohad@wizery.com> 	<1278376666-3509-6-git-send-email-ohad@wizery.com> <alpine.LFD.2.00.1007052134460.6020@xanadu.home> <AANLkTim4E4LlFERmfYA1M0HLBOoRAsQuvdW6QBNu6pC0@mail.gmail.com>
-In-Reply-To: <AANLkTim4E4LlFERmfYA1M0HLBOoRAsQuvdW6QBNu6pC0@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Jouni Malinen <Jouni.Malinen@atheros.com>
+Subject: Re: [PATCH 2/3] ath9k_hw: clean up per-channel calibration data
+References: <1280339151-37084-1-git-send-email-nbd@openwrt.org> 	<1280339151-37084-2-git-send-email-nbd@openwrt.org> <AANLkTi=8UX5B9+nLymSdJS2J-gRwMsYT_SVnviHX9Zi3@mail.gmail.com> 	<4C509CE1.90503@openwrt.org> <AANLkTi==nB+Wqe3KcmDf6P=JUYnLzc2PeAuOZQE3v9bn@mail.gmail.com>
+In-Reply-To: <AANLkTi==nB+Wqe3KcmDf6P=JUYnLzc2PeAuOZQE3v9bn@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/06/2010 01:22 PM, ext Ohad Ben-Cohen wrote:
-> Hi Nicolas,
->
-> On Tue, Jul 6, 2010 at 4:45 AM, Nicolas Pitre<nico@fluxnic.net>  wrote:
->> On Tue, 6 Jul 2010, Ohad Ben-Cohen wrote:
->>
->>> From: Ohad Ben-Cohen<ohadb@ti.com>
+On 2010-07-28 11:21 PM, Luis R. Rodriguez wrote:
+> On Wed, Jul 28, 2010 at 2:10 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+>> On 2010-07-28 10:52 PM, Luis R. Rodriguez wrote:
+>>> On Wed, Jul 28, 2010 at 10:45 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+>>>> The noise floor history buffer is currently not kept per channel, which
+>>>> can lead to problems when changing channels from a clean channel to a
+>>>> noisy one. Also when switching from HT20 to HT40, the noise floor
+>>>> history buffer is full of measurements, but none of them contain data
+>>>> for the extension channel, which it needs quite a bit of time to recover
+>>>> from.
+>>>>
+>>>> This patch puts all the per-channel calibration data into a single data
+>>>> structure, and gives the the driver control over whether that is used
+>>>> per-channel or even not used for some channels.
+>>>>
+>>>> For ath9k_htc, I decided to keep this per-channel in order to avoid
+>>>> creating regressions.
+>>>>
+>>>> For ath9k, the data is kept only for the operating channel, which saves
+>>>> some space. ath9k_hw takes care of wiping old data when the operating
+>>>> channel or its channel flags change.
+>>>>
+>>>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 >>>
->>> Add support for software emulation of card detect
->>> events.
->>>
->>> This is required for specific controllers
->>> that are hard wired with embedded SDIO devices
->>> (such as TI's wl1271 WLAN device).
->>
->> Why?
->>
->> Many instances of hardwired SDIO based WLAN devices do exist already,
->> and they don't need extra card detect events to be generated.  The core
->> MMC code already triggers a probe for cards whenever a new host
->> controller is registered.
->
-> We prefer not to power up the chip as early as boot time; instead, we
-Why? if the card is hard wired with no card detect then it should be powered up. 
-The function driver should power it down later if required. no?
+>>> But this also means every time we want to get operational on a channel
+>>> we have to learn the current noise all over again. This means for WiFi
+>>> Direct every channel swap we'd have to learn to walk, which happens
+>>> quite often. What do you think? Sorry, I know we discussed this
+>>> approach and I seemed fine but this just occurred to me now, and will
+>>> become really important later when we support WiFi Direct.
+>> When we get to implementing per-vif channel settings with switching
+>> being done in mac80211, we can just move the calibration data to ath9k's
+>> virtual interface data and thus keep the calibration for multiple
+>> operating channels.
+> 
+> Sounds good. This would currently break the ath9k virtual wiphy's
+> calibration stuff :P (not like I care), Jouni?
+My current patch should work just fine with virtual wiphy's, since I
+store the calibration data in the ath_wiphy struct.
 
-> would like to have it powered off until the wlan interface is brought
-> up, power it on when the interface is brought up,
-
-If it was powered OFF then how did the wlan interface come into picture?
-
-> and power it off again as soon as the interface is brought down again
-> (to minimize power consumption when the wlan is not in use).
-I agree, we some how need to power down the card when not in use in the right way.
+- Felix
