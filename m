@@ -1,88 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:44689 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754611Ab0GWTfv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jul 2010 15:35:51 -0400
-Received: by pwi5 with SMTP id 5so3642292pwi.19
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jul 2010 12:35:50 -0700 (PDT)
+Received: from mail.atheros.com ([12.36.123.2]:60675 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755378Ab0G1Vkn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Jul 2010 17:40:43 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Jul 2010 14:40:43 -0700
+Date: Wed, 28 Jul 2010 14:40:41 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>
+Subject: Re: [PATCH 2/3] ath9k_hw: clean up per-channel calibration data
+Message-ID: <20100728214041.GC8033@tux>
+References: <1280339151-37084-1-git-send-email-nbd@openwrt.org>
+ <1280339151-37084-2-git-send-email-nbd@openwrt.org>
+ <AANLkTi=8UX5B9+nLymSdJS2J-gRwMsYT_SVnviHX9Zi3@mail.gmail.com>
+ <4C509CE1.90503@openwrt.org>
+ <AANLkTi==nB+Wqe3KcmDf6P=JUYnLzc2PeAuOZQE3v9bn@mail.gmail.com>
+ <4C50A170.1070902@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTimdDhHudW6_7Hwcf6UCumY_EgqGd7CLtmSgOzEz@mail.gmail.com>
-References: <AANLkTimdDhHudW6_7Hwcf6UCumY_EgqGd7CLtmSgOzEz@mail.gmail.com>
-From: Andrew Lutomirski <luto@mit.edu>
-Date: Fri, 23 Jul 2010 15:35:30 -0400
-Message-ID: <AANLkTinfMiS=+dqi=azF2exJbkrSLYT9nN0aor7gff-Q@mail.gmail.com>
-Subject: Re: regulatory hiccup
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4C50A170.1070902@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 23, 2010 at 3:30 PM, Andrew Lutomirski <luto@mit.edu> wrote:
+On Wed, Jul 28, 2010 at 02:30:24PM -0700, Felix Fietkau wrote:
+> On 2010-07-28 11:21 PM, Luis R. Rodriguez wrote:
+> > On Wed, Jul 28, 2010 at 2:10 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> >> On 2010-07-28 10:52 PM, Luis R. Rodriguez wrote:
+> >>> On Wed, Jul 28, 2010 at 10:45 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> >>>> The noise floor history buffer is currently not kept per channel, which
+> >>>> can lead to problems when changing channels from a clean channel to a
+> >>>> noisy one. Also when switching from HT20 to HT40, the noise floor
+> >>>> history buffer is full of measurements, but none of them contain data
+> >>>> for the extension channel, which it needs quite a bit of time to recover
+> >>>> from.
+> >>>>
+> >>>> This patch puts all the per-channel calibration data into a single data
+> >>>> structure, and gives the the driver control over whether that is used
+> >>>> per-channel or even not used for some channels.
+> >>>>
+> >>>> For ath9k_htc, I decided to keep this per-channel in order to avoid
+> >>>> creating regressions.
+> >>>>
+> >>>> For ath9k, the data is kept only for the operating channel, which saves
+> >>>> some space. ath9k_hw takes care of wiping old data when the operating
+> >>>> channel or its channel flags change.
+> >>>>
+> >>>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> >>>
+> >>> But this also means every time we want to get operational on a channel
+> >>> we have to learn the current noise all over again. This means for WiFi
+> >>> Direct every channel swap we'd have to learn to walk, which happens
+> >>> quite often. What do you think? Sorry, I know we discussed this
+> >>> approach and I seemed fine but this just occurred to me now, and will
+> >>> become really important later when we support WiFi Direct.
+> >> When we get to implementing per-vif channel settings with switching
+> >> being done in mac80211, we can just move the calibration data to ath9k's
+> >> virtual interface data and thus keep the calibration for multiple
+> >> operating channels.
+> > 
+> > Sounds good. This would currently break the ath9k virtual wiphy's
+> > calibration stuff :P (not like I care), Jouni?
 >
-> Then, after fiddling with an AP for a bit, I got:
->
-> [11747.264221] cfg80211: Calling CRDA for country: US
-> [11747.282664] cfg80211: Current regulatory domain updated by AP to: US
-> [11747.282672]     (start_freq - end_freq @ bandwidth),
-> (max_antenna_gain, max_eirp)
-> [11747.282680]     (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 1600 mBm)
-> [11747.282688]     (5250000 KHz - 5330000 KHz @ 40000 KHz), (300 mBi, 1600 mBm)
->
+> My current patch should work just fine with virtual wiphy's, since I
+> store the calibration data in the ath_wiphy struct.
 
-It's worse than that.  I reconnected to the AP (it appeared to work
-for a few seconds) and I saw:
+Ah neat, this approach seems fine in the long run then. My only remaining
+questions is how effective our scans are in a noisy environemnt with what
+I suppose are some default settings?
 
-Wiphy phy0
-[...]
-	Band 2:
-		Capabilities: 0x872
-			HT20/HT40
-			Static SM Power Save
-			RX Greenfield
-			RX HT20 SGI
-			RX HT40 SGI
-			No RX STBC
-			Max AMSDU length: 3839 bytes
-			No DSSS/CCK HT40
-		Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
-		Minimum RX AMPDU time spacing: 4 usec (0x05)
-		HT TX/RX MCS rate indexes supported: 0-23, 32
-		Frequencies:
-			* 5180 MHz [36] (15.0 dBm) (passive scanning, no IBSS)
-			* 5200 MHz [40] (15.0 dBm) (passive scanning, no IBSS)
-			* 5220 MHz [44] (15.0 dBm) (passive scanning, no IBSS)
-			* 5240 MHz [48] (15.0 dBm) (passive scanning, no IBSS)
-			* 5260 MHz [52] (15.0 dBm) (passive scanning, no IBSS, radar detection)
-			* 5280 MHz [56] (15.0 dBm) (passive scanning, no IBSS, radar detection)
-			* 5300 MHz [60] (15.0 dBm) (passive scanning, no IBSS, radar detection)
-			* 5320 MHz [64] (15.0 dBm) (passive scanning, no IBSS, radar detection)
-			* 5500 MHz [100] (disabled)
-			* 5520 MHz [104] (disabled)
-			* 5540 MHz [108] (disabled)
-			* 5560 MHz [112] (disabled)
-			* 5580 MHz [116] (disabled)
-			* 5600 MHz [120] (disabled)
-			* 5620 MHz [124] (disabled)
-			* 5640 MHz [128] (disabled)
-			* 5660 MHz [132] (disabled)
-			* 5680 MHz [136] (disabled)
-			* 5700 MHz [140] (disabled)
-			* 5745 MHz [149] (disabled)
-			* 5765 MHz [153] (disabled)
-			* 5785 MHz [157] (disabled)
-			* 5805 MHz [161] (disabled)
-			* 5825 MHz [165] (disabled)
-
-Which is absurd, because:
-
-Connected to 00:02:6f:6e:d7:6c (on wlan0)
-	SSID: FFTT5
-	freq: 5785        [!!!!!!!!!!!]
-	RX: 72058 bytes (310 packets)
-	TX: 2568 bytes (20 packets)
-	signal: -33 dBm
-	tx bitrate: 6.0 MBit/s
-
-The connection died after a little while, presumably because the AP
-was outside of its own allowed band.
+  Luis
