@@ -1,46 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:62931 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753840Ab0GCAxX convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:55871 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751318Ab0G1T6E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jul 2010 20:53:23 -0400
-Received: by iwn7 with SMTP id 7so3795998iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Jul 2010 17:53:22 -0700 (PDT)
+	Wed, 28 Jul 2010 15:58:04 -0400
+Received: by bwz1 with SMTP id 1so4145834bwz.19
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Jul 2010 12:58:02 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH] ar9170: add get_survey callback in order to get channel noise
+Date: Wed, 28 Jul 2010 21:57:56 +0200
+Cc: linux-wireless@vger.kernel.org,
+	Benoit Papillault <benoit.papillault@free.fr>
+References: <1280342924-22811-1-git-send-email-linville@tuxdriver.com> <201007282110.31458.chunkeey@googlemail.com> <20100728191552.GA2668@tuxdriver.com>
+In-Reply-To: <20100728191552.GA2668@tuxdriver.com>
 MIME-Version: 1.0
-In-Reply-To: <1278022192-83277-6-git-send-email-nbd@openwrt.org>
-References: <1278022192-83277-1-git-send-email-nbd@openwrt.org>
-	<1278022192-83277-2-git-send-email-nbd@openwrt.org>
-	<1278022192-83277-3-git-send-email-nbd@openwrt.org>
-	<1278022192-83277-4-git-send-email-nbd@openwrt.org>
-	<1278022192-83277-5-git-send-email-nbd@openwrt.org>
-	<1278022192-83277-6-git-send-email-nbd@openwrt.org>
-Date: Sat, 3 Jul 2010 02:53:12 +0200
-Message-ID: <AANLkTim0QXRVcOcl8gZFEh7JC8G8npuhw7oxf7X6w1Fg@mail.gmail.com>
-Subject: Re: [PATCH 6/6] ath9k: fix false positives in the baseband hang check
-From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	lrodriguez@atheros.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201007282157.57068.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 2, 2010 at 12:09 AM, Felix Fietkau <nbd@openwrt.org> wrote:
-> ath9k_hw_check_alive() occasionally returns false, as the hardware
-> is still processing data in a specific state. Fix this issue by
-> repeating the test a few times with longer delay inbetween attempts.
-> This gets rid of excessive hardware resets that appear frequently on
-> some AR9132 based devices, but could also happen on AR9280.
->
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> Reported-by: Björn Smedman <bjorn.smedman@venatech.se>
-> Cc: stable@kernel.org
+On Wednesday 28 July 2010 21:15:53 John W. Linville wrote:
+> On Wed, Jul 28, 2010 at 09:10:31PM +0200, Christian Lamparter wrote:
+> > On Wednesday 28 July 2010 20:48:44 John W. Linville wrote:
+> > > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> > > ---
+> > >  drivers/net/wireless/ath/ar9170/main.c |   17 +++++++++++++++++
+> > >  1 files changed, 17 insertions(+), 0 deletions(-)
+> > >  [...]
+> > One problem: the noisefloor stays at the same level and
+> > is not updated. You would have to call ar9170_set_channel,
+> > but I don't recommend that because that may lockup
+> > the device :(.
+> 
+> I'm not sure I understand -- isn't ar9170_set_channel already called
+> from ar9170_op_config? Or are you saying that the value will be
+> stale unless you call ar9170_set_channel again?
+the latter... come to think of it, I wrote a RFT a while back:
+"[RFT] ar9170: implement get_survey" <- 27. April
 
-Tested-by: Björn Smedman <bjorn.smedman@venatech.se>
+and Benoit joined in to point out that he has/had the same
+issue with ath9k hardware. Was this ever sorted out? 
 
-No false positives.
+> How is this patch any worse than the situation was before commit
+> 5d6566ff356a19fb6ad994717cb937ff88063fa6?
 
-By the way, ath9k has never felt so solid on AR9100 as after this
-patch series. Huge thanx, especially for the initvals update! :)
+Well, a dodgy value is hardly an improvement, right?
+Sure it is _just_ the noise *floor* and people
+might argue that any value is better than nothing at all. 
 
-/Björn
+Therefore, yes:
+
+Acked-by: Christian Lamparter <chunkeey@googlemail.com>
+
+and add the nf-update to the TODO-list...
+Or wait and look how ath9k(_htc) does/did it. 
+
+Regards,
+	Christian
