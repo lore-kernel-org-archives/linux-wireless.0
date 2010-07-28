@@ -1,53 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:56589 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754076Ab0GNMwR (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38096 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753175Ab0G1Qp1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jul 2010 08:52:17 -0400
-MIME-Version: 1.0
-In-Reply-To: <AANLkTinO32CIe0HBTXjP_bcAz0nMEw6wvcZwcob1fX3r@mail.gmail.com>
-References: <cover.1279110894.git.siccegge@cs.fau.de>
-	<29013fb6eab9e95e95d61df894797d2455dfa10c.1279110894.git.siccegge@cs.fau.de>
-	<AANLkTinO32CIe0HBTXjP_bcAz0nMEw6wvcZwcob1fX3r@mail.gmail.com>
-Date: Wed, 14 Jul 2010 14:52:14 +0200
-Message-ID: <AANLkTikCeDys9e1EnE9GdiJtDRcbqW3gzvsmjzvB_yDs@mail.gmail.com>
-Subject: Re: [PATCH 01/11] Removing dead RT2800PCI_SOC
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Christoph Egger <siccegge@cs.fau.de>
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	vamos-dev@i4.informatik.uni-erlangen.de,
-	Luis Correia <luis.f.correia@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 28 Jul 2010 12:45:27 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: ath5k-devel@lists.ath5k.org, Bob Copeland <me@bobcopeland.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] ath5k: add led_disable module option
+Date: Wed, 28 Jul 2010 12:31:51 -0400
+Message-Id: <1280334711-6141-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 14, 2010 at 2:46 PM, Luis Correia <luis.f.correia@gmail.com> wrote:
-> On Wed, Jul 14, 2010 at 13:39, Christoph Egger <siccegge@cs.fau.de> wrote:
->> While RT2800PCI_SOC exists in Kconfig, it depends on either
->> RALINK_RT288X or RALINK_RT305X which are both not available in Kconfig
->> so all Code depending on that can't ever be selected and, if there's
->> no plan to add these options, should be cleaned up
->>
->> Signed-off-by: Christoph Egger <siccegge@cs.fau.de>
->
-> NAK,
->
-> this is not dead code, it is needed for the Ralink System-on-Chip
-> Platform devices.
->
-> While I can't fix Kconfig errors and the current KConfig file may be
-> wrong, this code cannot and will not be deleted.
+Not everyone agrees about LED behaviour...give them an escape hatch that
+will at least stop the lights from annoying them.
 
-When the config option was introduced, the config options RALINK_RT288X and
-RALINK_RT305X were supposed to be merged as well soon after by somebody (Felix?)
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/ath/ath5k/led.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-But since testing is done on SoC boards by Helmut and Felix, I assume the code
-isn't dead but actually in use.
+diff --git a/drivers/net/wireless/ath/ath5k/led.c b/drivers/net/wireless/ath/ath5k/led.c
+index 67aa52e..6c416db 100644
+--- a/drivers/net/wireless/ath/ath5k/led.c
++++ b/drivers/net/wireless/ath/ath5k/led.c
+@@ -43,6 +43,10 @@
+ #include "ath5k.h"
+ #include "base.h"
+ 
++static int modparam_led_disable;
++module_param_named(led_disable, modparam_led_disable, bool, S_IRUGO);
++MODULE_PARM_DESC(led_disable, "Disable software-controlled LEDs.");
++
+ #define ATH_SDEVICE(subv,subd) \
+ 	.vendor = PCI_ANY_ID, .device = PCI_ANY_ID, \
+ 	.subvendor = (subv), .subdevice = (subd)
+@@ -165,6 +169,9 @@ int ath5k_init_leds(struct ath5k_softc *sc)
+ 	char name[ATH5K_LED_MAX_NAME_LEN + 1];
+ 	const struct pci_device_id *match;
+ 
++	if (modparam_led_disable)
++		goto out;
++
+ 	match = pci_match_id(&ath5k_led_devices[0], pdev);
+ 	if (match) {
+ 		__set_bit(ATH_STAT_LEDSOFT, sc->status);
+-- 
+1.7.1.1
 
-Ivo
