@@ -1,70 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:55549 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752436Ab0G0UdM (ORCPT
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:32081 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753703Ab0G1CF6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 16:33:12 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/3] Revert "mac80211: fix sw scan bracketing"
-Date: Tue, 27 Jul 2010 16:33:08 -0400
-Message-Id: <1280262788-9890-4-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1280262788-9890-1-git-send-email-lrodriguez@atheros.com>
-References: <1280262788-9890-1-git-send-email-lrodriguez@atheros.com>
+	Tue, 27 Jul 2010 22:05:58 -0400
+Received: from vs3001.wh2.ocn.ne.jp (125.206.180.229)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0699212756
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Jul 2010 11:05:57 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [PATCH v4 1/3] cfg80211: Add nl80211 antenna configuration
+Date: Wed, 28 Jul 2010 11:06:06 +0900
+Cc: Felix Fietkau <nbd@openwrt.org>, johannes@sipsolutions.net,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+References: <20100727094732.27186.30900.stgit@tt-desk> <4C4F0BB1.6030002@openwrt.org> <AANLkTi=QWMwVTqOqL3wNUnLAWHDw60HmYXtngXJrQOu+@mail.gmail.com>
+In-Reply-To: <AANLkTi=QWMwVTqOqL3wNUnLAWHDw60HmYXtngXJrQOu+@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201007281106.06813.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reverts this commit. While in theory the change is
-correct the patch does not address current assumptions made
-by some drivers, one which is definitley affected is ath9k.
+On Wed July 28 2010 01:47:34 Luis R. Rodriguez wrote:
+> On Tue, Jul 27, 2010 at 9:39 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> > On 2010-07-27 6:19 PM, Luis R. Rodriguez wrote:
+> >>> + * @NL80211_ATTR_WIPHY_ANTENNA_TX: Bitmap of allowed antennas for
+> >>> transmitting. + *     Each bit represents one antenna, starting with
+> >>> antenna 1 at the first + *     bit. If the bitmap is zero (0), the TX
+> >>> antenna follows RX diversity.
+> >> 
+> >> What about for 802.11n? What if you want to disable TX?
+> > 
+> > Disabling tx shouldn't be handled by the antenna setting, IMHO.
+> > 
+> >>> + *     If multiple antennas are selected all selected antennas have to
+> >>> be used + *     for transmitting (801.11n multiple TX chains).
+> >> 
+> >> I rather call this TX / RX chainmask then.
+> > 
+> > Well, for legacy hardware, these aren't really chains, as there is only
+> > one rx and one tx path, just with switching onto multiple antennas.
+> > 
+> >>> + *     Drivers may reject configurations they cannot support.
+> >>> + *
+> >>> + * @NL80211_ATTR_WIPHY_ANTENNA_RX: Bitmap of allowed antennas for
+> >>> receiving. + *     Each bit represents one antenna, starting with
+> >>> antenna 1 at the first + *     bit. If multiple antennas are selected
+> >>> in the bitmap, 802.11n devices + *     should use multiple RX chains
+> >>> on these antennas, while non-802.11n + *     drivers should use
+> >>> antenna diversity between these antennas.
+> >> 
+> >> What about TX beamforming, and STBC?
+> > 
+> > Disabling one antenna/chain on a two-chain device would naturally
+> > disable TxBF and STBC as well, since it limits the number of available
+> > chains. The driver should simply act as if the disabled chains didn't
+> > exist.
+> 
+> That would work.
+> 
+> >> Unless 802.11n is completely dealt with I really prefer this patch to
+> >> only address legacy. Otherwise I see sloppyness and inconsistencies on
+> >> supporting this feature throughout different drivers. I'd like to
+> >> avoid that at all costs on nl80211. What you are trying to address is
+> >> legacy antenna setup, not 802.11n RX/TX chainmask dynamic settings so
+> >> I'd really try to avoid it unless you really want to address all
+> >> aspects of chain configuration for 802.11n and even then what I'm
+> >> leading on to say is I think you'll see if you try to address both it
+> >> just gets messy.
+> > 
+> > I think 802.11n is already completely dealt with if you treat this as
+> > the chainmask on 11n devices.
+> 
+> Its fine by me if the above cases are also embedded into the
+> documentation, just don't want these questions lingering. I can't
+> think of other 802.11n special cases.
 
-Prior to this change the scan complete callback would be
-called after we returned to the home channel and configured
-the hardware RX filters. After this change we call the scan
-complete callback prior to both the hw config and the config
-filter. At least for ath9k this breaks quite a few assumptions
-on the callback, leading to disconnects to the AP after every scan
-making the driver pretty useless on STA mode. The goal behind
-this commit was to address the now understood spurious warnings
-from ath9k and mac80211_hwsim on scanning on two wiphys at the
-same time but we have now supressed these and will address this
-issue in the next kernel release.
+thanks felix :)
 
-When fixing this for good next we must first review the other
-driver's dependence on this logic and perhaps consider removal
-of the scan complete callback all together.
+luis, could you tell me what exactly you would want to include in the 
+documentation?
 
-Cc: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- net/mac80211/scan.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 4dcbf8b..9aa19ec 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -287,8 +287,6 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
- 	local->scanning = 0;
- 	local->scan_channel = NULL;
- 
--	drv_sw_scan_complete(local);
--
- 	/* we only have to protect scan_req and hw/sw scan */
- 	mutex_unlock(&local->scan_mtx);
- 
-@@ -298,6 +296,8 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
- 
- 	ieee80211_configure_filter(local);
- 
-+	drv_sw_scan_complete(local);
-+
- 	ieee80211_offchannel_return(local, true);
- 
-  done:
--- 
-1.7.0.4
-
+bruno
