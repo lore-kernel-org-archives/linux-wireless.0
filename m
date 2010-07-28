@@ -1,41 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34226 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752186Ab0GTQPN (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:39345 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751894Ab0G1RKm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jul 2010 12:15:13 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] wireless: correct sparse warning in lib80211_crypt_tkip.c
-Date: Tue, 20 Jul 2010 12:11:33 -0400
-Message-Id: <1279642293-8781-1-git-send-email-linville@tuxdriver.com>
+	Wed, 28 Jul 2010 13:10:42 -0400
+Received: by qwh6 with SMTP id 6so981274qwh.19
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Jul 2010 10:10:41 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1280334711-6141-1-git-send-email-linville@tuxdriver.com>
+References: <1280334711-6141-1-git-send-email-linville@tuxdriver.com>
+Date: Wed, 28 Jul 2010 13:10:41 -0400
+Message-ID: <AANLkTi=n1=1QZ_qss98PBtR7ki+aBEfymrY1YphVo6Kk@mail.gmail.com>
+Subject: Re: [PATCH] ath5k: add led_disable module option
+From: Bob Copeland <me@bobcopeland.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  CHECK   net/wireless/lib80211_crypt_tkip.c
-net/wireless/lib80211_crypt_tkip.c:581:27: warning: cast to restricted __le16
+On Wed, Jul 28, 2010 at 12:31 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> Not everyone agrees about LED behaviour...give them an escape hatch that
+> will at least stop the lights from annoying them.
+>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-Caused by dereferencing a "u8 *" and passing it to le16_to_cpu...
+Fine with me...
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/wireless/lib80211_crypt_tkip.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/net/wireless/lib80211_crypt_tkip.c b/net/wireless/lib80211_crypt_tkip.c
-index 8cbdb32..a7f9956 100644
---- a/net/wireless/lib80211_crypt_tkip.c
-+++ b/net/wireless/lib80211_crypt_tkip.c
-@@ -578,7 +578,7 @@ static void michael_mic_hdr(struct sk_buff *skb, u8 * hdr)
- 	}
- 
- 	if (ieee80211_is_data_qos(hdr11->frame_control)) {
--		hdr[12] = le16_to_cpu(*ieee80211_get_qos_ctl(hdr11))
-+		hdr[12] = le16_to_cpu(*((__le16 *)ieee80211_get_qos_ctl(hdr11)))
- 			& IEEE80211_QOS_CTL_TID_MASK;
- 	} else
- 		hdr[12] = 0;		/* priority */
 -- 
-1.7.1.1
-
+Bob Copeland %% www.bobcopeland.com
