@@ -1,67 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:55742 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751250Ab0GUAA5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jul 2010 20:00:57 -0400
-Received: by qyk38 with SMTP id 38so2812623qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Jul 2010 17:00:56 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20100720231629.GC7049@hash.localnet>
-References: <AANLkTilmifjH5Zopo82LhjidzsYfT_xRgKJzjGCZZPlq@mail.gmail.com>
-	<AANLkTintLd8YTgMQuzbEB36t_i5AL4TePBSDAa7G2zvl@mail.gmail.com>
-	<alpine.DEB.2.00.1007211002410.21858@kauri.acheron.indranet.co.nz>
-	<20100720231629.GC7049@hash.localnet>
-From: Jonathan Guerin <jonathan@guerin.id.au>
-Date: Wed, 21 Jul 2010 10:00:36 +1000
-Message-ID: <AANLkTilD94SJFfNK4CHxsbD1lyQiu33k3WeQtsjMUyei@mail.gmail.com>
-Subject: Re: [ath5k-devel] ath5k Ad Hoc Association
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Derek Smithies <derek@indranet.co.nz>,
-	"Ath5k Devel issues." <ath5k-devel@lists.ath5k.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:35479 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753424Ab0G1OfS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Jul 2010 10:35:18 -0400
+Subject: Re: [RFC] iwlwifi: fix scan abort
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20100728154509.77e8e85b@dhcp-lab-109.englab.brq.redhat.com>
+References: <20100728154509.77e8e85b@dhcp-lab-109.englab.brq.redhat.com>
+Content-Type: text/plain
+Date: Wed, 28 Jul 2010 07:34:42 -0700
+Message-Id: <1280327682.26765.6.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do you remember what version kernel this was fixed in? I can update
-the nodes to at least this version and see if it helps...
+Hi Gruszka,
 
-On my setup, I am not seeing ANY probes from the ath5k nodes at all.
-If I start a MadWifi node and the ath5k nodes join it, then bring down
-the MadWifi node, the ath5k nodes ALL start beaconing...
+On Wed, 2010-07-28 at 06:45 -0700, Stanislaw Gruszka wrote:
+> We can not call cancel_delayed_work_sync(&priv->scan_check) with 
+> priv->mutex locked because workqueue function iwl_bg_scan_check()
+> take that lock internally.
+> 
+> We do not need to synchronize when canceling priv->scan_check work. 
+> We can avoid races (sending double abort command or send no
+> command at all) using STATUS_SCAN_ABORT bit. Moreover
+> current iwl_bg_scan_check() code seems to be broken, as
+> we should not send abort commands when currently aborting.
+> 
+> I did not test patch yet, just want to know if it is theoretically
+> correct. Except obvious circular priv->mutex locking fix, maybe it
+> can help with warning in ieee80211_scan_completed, which is still
+> reported by the users from time to time.
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+> index 2a7c399..b0c6b04 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-scan.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+> @@ -429,11 +429,10 @@ void iwl_bg_scan_check(struct work_struct *data)
+>  		return;
+>  
+>  	mutex_lock(&priv->mutex);
+> -	if (test_bit(STATUS_SCANNING, &priv->status) ||
+> -	    test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
+> -		IWL_DEBUG_SCAN(priv, "Scan completion watchdog resetting "
+> -			"adapter (%dms)\n",
+> -			jiffies_to_msecs(IWL_SCAN_CHECK_WATCHDOG));
+> +	if (test_bit(STATUS_SCANNING, &priv->status) &&
+> +	    !test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
+> +		IWL_DEBUG_SCAN(priv, "Scan completion watchdog (%dms)\n",
+> +			       jiffies_to_msecs(IWL_SCAN_CHECK_WATCHDOG));
 
-Cheers,
+make sense here, the code is broken, we should not abort scan if already
+doing it.
 
---
-Jonathan Guerin
+>  
+>  		if (!test_bit(STATUS_EXIT_PENDING, &priv->status))
+>  			iwl_send_scan_abort(priv);
+> @@ -498,12 +497,11 @@ void iwl_bg_abort_scan(struct work_struct *work)
+>  	    !test_bit(STATUS_GEO_CONFIGURED, &priv->status))
+>  		return;
+>  
+> -	mutex_lock(&priv->mutex);
+> -
+> -	cancel_delayed_work_sync(&priv->scan_check);
+> -	set_bit(STATUS_SCAN_ABORTING, &priv->status);
+> -	iwl_send_scan_abort(priv);
+> +	cancel_delayed_work(&priv->scan_check);
+>  
+> +	mutex_lock(&priv->mutex);
+> +	if (test_bit(STATUS_SCAN_ABORTING, &priv->status))
+> +		iwl_send_scan_abort(priv);
+>  	mutex_unlock(&priv->mutex);
+>  }
+
+Looks right to me, thanks a lot to catch this one.
+
+Wey
 
 
 
-On Wed, Jul 21, 2010 at 9:16 AM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Wed, Jul 21, 2010 at 10:11:14AM +1200, Derek Smithies wrote:
->>> Then on the other machine (Vista) I just located 'myibss' (so beacons
->>> are working) and selected it, then successfully pinged 192.168.10.1.
->> Wrong.
->> If the other machine located your node, then one of the four statements
->> is true:
->
-> Ok, fine, I just set up a monitor interface and I see beacons
-> (and probe responses) for my setup on that channel.
->
->> A scan should not be necessary - if both ends are put on channel 2462- a
->> scan should not be required - there is no channel changing. Yet - my
->> colleague noted a scan helped nodes to associate.
->
-> There was a bug in older kernels that wouldn't fully configure the
-> beacons until after a reset, which scanning happens to do.  It's
-> possible something similar is going on.
->
-> Also, scanning might open a previously passive channel because we might
-> get lucky and receive a beacon from another node on it.  The 'iw phy
-> phy0 info' can show this kind of thing.
->
-> --
-> Bob Copeland %% www.bobcopeland.com
->
->
