@@ -1,83 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:31411 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752860Ab0GFOb2 (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:9843 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751550Ab0G2DfB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jul 2010 10:31:28 -0400
-Message-ID: <4C333E0D.2070601@nokia.com>
-Date: Tue, 06 Jul 2010 17:30:37 +0300
-From: Roger Quadros <roger.quadros@nokia.com>
+	Wed, 28 Jul 2010 23:35:01 -0400
+Received: from vs3000.wh2.ocn.ne.jp (125.206.180.163)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0841814497
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Jul 2010 12:35:00 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 2/2] iw: Add antenna configuration commands
+Date: Thu, 29 Jul 2010 12:35:11 +0900
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+References: <20100727094932.27300.10253.stgit@tt-desk> <1280299848.3832.2.camel@jlt3.sipsolutions.net> <201007281729.38652.br1@einfach.org>
+In-Reply-To: <201007281729.38652.br1@einfach.org>
 MIME-Version: 1.0
-To: ext Ohad Ben-Cohen <ohad@wizery.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	San Mehat <san@google.com>
-Subject: Re: [PATCH 11/15] wireless: wl1271: introduce platform device support
-References: <1278376666-3509-1-git-send-email-ohad@wizery.com> 	<1278376666-3509-12-git-send-email-ohad@wizery.com> <4C32EF19.1000604@nokia.com> 	<AANLkTintIz-N7MwwtqhVq2LR3Ln5JTNYSbJUBSSClcA-@mail.gmail.com> 	<4C3306F4.8060907@nokia.com> <AANLkTin5W52fPzWToRrAzm56SLZI-taSuI16rCEhLWqH@mail.gmail.com>
-In-Reply-To: <AANLkTin5W52fPzWToRrAzm56SLZI-taSuI16rCEhLWqH@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201007291235.11202.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/06/2010 03:53 PM, ext Ohad Ben-Cohen wrote:
-> Hi Roger,
->
-> On Tue, Jul 6, 2010 at 1:35 PM, Roger Quadros<roger.quadros@nokia.com>  wrote:
->> My point is that shouldn't this be handled by SDIO core?
->
-> Care to explain what you mean / give a code example ?
+On Wed July 28 2010 17:29:38 Bruno Randolf wrote:
+> On Wed July 28 2010 15:50:48 Johannes Berg wrote:
+> > On Wed, 2010-07-28 at 11:07 +0900, Bruno Randolf wrote:
+> > > On Tue July 27 2010 19:04:21 Johannes Berg wrote:
+> > > > On Tue, 2010-07-27 at 18:49 +0900, Bruno Randolf wrote:
+> > > > > +	if (tb_msg[NL80211_ATTR_WIPHY_ANTENNA_TX] &&
+> > > > > +	    tb_msg[NL80211_ATTR_WIPHY_ANTENNA_RX]) {
+> > > > > +		printf("\tAntenna: TX %d RX %d\n",
+> > > > > +		       nla_get_u8(tb_msg[NL80211_ATTR_WIPHY_ANTENNA_TX]),
+> > > > > +		       nla_get_u8(tb_msg[NL80211_ATTR_WIPHY_ANTENNA_RX]));
+> > > > 
+> > > > That's like the worst possible way to show the info.
+> > > 
+> > > which way would you prefer?
+> > 
+> > It occurred to me later that with the normal numbers we have (1 through
+> > 7) it won't matter much ... but still, I'd prefer %#x.
+> 
+> ok. changed that...
 
-If the Power enable GPIO can be treated as SDIO slot supply (i.e. vmmc), then 
-the SDIO/MMC core should tackle it, just like it deals with supply for slots 
-with removable cards.
+actually - no. what sense does it make to use a hexadecimal notation and print 
+0x for values between 0 and 7?
 
-see mmc_regulator_set_ocr()
-mmc_power_up()
-mmc_set_ios()
-
-in drivers/mmc/core/core.c
-
-and omap_hsmmc_set_ios()
-
-in drivers/mmc/host/omap_hsmmc.c
-
->
->> If there are no users for the SDIO function and the card, doesn't the SDIO
->> core power down the slot and take care of re-initialization when it is
->> powered up?
->
-> You need card detect events in order to trigger card&  sdio function
-> initialization and removals.
->
-> Please share any alternative approach you may be thinking on.
-
-OK, this is how I see it.
-
-- Treat the non-removable card as non-removable. So no need to do card detect 
-emulation.
-
-- Treat the GPIO power enable on wl1271 as VMMC supply. Use fixed regulator 
-framework to define this regulator & supply. Even though you mention that it is 
-not actually a supply, it fits well in the fixed supply framework.
-
-- When the host controller is enumerated, the mmc core will power up the slot, 
-find the sdio card, and probe the function driver (i.e. wl1271_sdio).
-
-- if interface is not in use, the function driver must release the sdio host, 
-and this should eventually disable the vmmc supply.
-
-- Whenever the wlan interface must be brought up, wl1271_sdio, can claim the 
-sdio host. this will cause the vmmc supply to be enabled, for as long as the 
-interface is up.
-
-Does this address all issues?
-
-regards,
--roger
+bruno
