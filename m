@@ -1,85 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:35320 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756695Ab0GOAIm (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:38952 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754396Ab0G2TEK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jul 2010 20:08:42 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Tushit Jain <tushit.jain@atheros.com>,
-	Kyungwan Nam <kyungwan.nam@atheros.com>
-Subject: [PATCH] ath9k_hw: Fix AR9003 MPDU delimeter CRC check for middle subframes
-Date: Wed, 14 Jul 2010 20:08:41 -0400
-Message-Id: <1279152521-10805-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 29 Jul 2010 15:04:10 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 21FB2418D8
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Jul 2010 15:03:47 -0400 (EDT)
+Subject: Compat-wireless release for 2010-07-29 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100729190408.15630404FA@repository3.orbit-lab.org>
+Date: Thu, 29 Jul 2010 15:04:07 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-An A-MPDU may contain several subframes each containing its own
-CRC for the data. Each subframe also has a respective CRC for the
-MPDU length and 4 reserved bits (aka delimeter CRC). AR9003 will
-ACK frames that have a valid data CRC but have failed to pass the
-CRC for the MPDU length, if and only if the subframe is not the
-last subframe in an A-MPDU and if an OFDM phy OFDM reset error has
-been caught. Discarding those subframes results in packet loss under
-heavy stress conditions, an example being UDP video. Since the
-frames are ACK'd by hardware we need to let these frames through
-and process them as valid frames.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   54ebee1..6194650  history    -> origin/history
+ + 1068a69...144d058 master     -> origin/master  (forced update)
+ * [new tag]         next-20100729 -> next-20100729
 
-Cc: Tushit Jain <tushit.jain@atheros.com>
-Cc: Kyungwan Nam <kyungwan.nam@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mac.c |   31 +++++++++++++++++++++++++-
- 1 files changed, 29 insertions(+), 2 deletions(-)
+compat-wireless code metrics
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-index 06ef710..5b995be 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-@@ -579,12 +579,39 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
- 		rxs->rs_flags |= ATH9K_RX_DECRYPT_BUSY;
- 
- 	if ((rxsp->status11 & AR_RxFrameOK) == 0) {
-+		/*
-+		 * AR_CRCErr will bet set to true if we're on the last
-+		 * subframe and the AR_PostDelimCRCErr is caught.
-+		 * In a way this also gives us a guarantee that when
-+		 * (!(AR_CRCErr) && (AR_PostDelimCRCErr)) we cannot
-+		 * possibly be reviewing the last subframe. AR_CRCErr
-+		 * is the CRC of the actual data.
-+		 */
- 		if (rxsp->status11 & AR_CRCErr) {
- 			rxs->rs_status |= ATH9K_RXERR_CRC;
- 		} else if (rxsp->status11 & AR_PHYErr) {
--			rxs->rs_status |= ATH9K_RXERR_PHY;
- 			phyerr = MS(rxsp->status11, AR_PHYErrCode);
--			rxs->rs_phyerr = phyerr;
-+			/*
-+			 * If we reach a point here where AR_PostDelimCRCErr is
-+			 * true it implies we're *not* on the last subframe. In
-+			 * in that case that we know already that the CRC of
-+			 * the frame was OK, and MAC would send an ACK for that
-+			 * subframe, even if we did get a phy error of type
-+			 * ATH9K_PHYERR_OFDM_RESTART. This is only applicable
-+			 * to frame that are prior to the last subframe.
-+			 * The AR_PostDelimCRCErr is the CRC for the MPDU
-+			 * delimiter, which contains the 4 reserved bits,
-+			 * the MPDU length (12 bits), and follows the MPDU
-+			 * delimiter for an A-MPDU subframe (0x4E = 'N' ASCII).
-+			 */
-+			if ((phyerr == ATH9K_PHYERR_OFDM_RESTART) &&
-+			    (rxsp->status11 & AR_PostDelimCRCErr)) {
-+				rxs->rs_phyerr = 0;
-+			} else {
-+				rxs->rs_status |= ATH9K_RXERR_PHY;
-+				rxs->rs_phyerr = phyerr;
-+			}
-+
- 		} else if (rxsp->status11 & AR_DecryptCRCErr) {
- 			rxs->rs_status |= ATH9K_RXERR_DECRYPT;
- 		} else if (rxsp->status11 & AR_MichaelErr) {
--- 
-1.7.0.4
+    494000 - Total upstream lines of code being pulled
+      1447 - backport code changes
+      1211 - backport code additions
+       236 - backport code deletions
+      5764 - backport from compat module
+      7211 - total backport code
+    1.4597 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2466 - % of crap code
 
+Base tree: linux-next.git
+Base tree version: next-20100729
+compat-wireless release: compat-wireless-2010-07-13-4-g04898a5
