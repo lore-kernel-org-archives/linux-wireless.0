@@ -1,64 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:33984 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751075Ab0GKFiv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Jul 2010 01:38:51 -0400
-From: "Levi, Shahar" <shahar_levi@ti.com>
-To: Logan Gunthorpe <logang@deltatee.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Sun, 11 Jul 2010 07:38:33 +0200
-Subject: RE: wl1271 firmware
-Message-ID: <AC090B9732AB2B4DB7FF476E907FE660010685F34E@dnce02.ent.ti.com>
-References: 1278578525.8576.19.camel@chilepepper
- <4C37BCA0.5090607@deltatee.com>
-In-Reply-To: <4C37BCA0.5090607@deltatee.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail.atheros.com ([12.36.123.2]:17076 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750952Ab0G2ALB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Jul 2010 20:11:01 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Jul 2010 17:11:01 -0700
+Date: Wed, 28 Jul 2010 17:10:59 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Bruno Randolf <br1@einfach.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v4 1/3] cfg80211: Add nl80211 antenna configuration
+Message-ID: <20100729001059.GA2421@tux>
+References: <20100727094732.27186.30900.stgit@tt-desk>
+ <4C4F0BB1.6030002@openwrt.org>
+ <AANLkTi=QWMwVTqOqL3wNUnLAWHDw60HmYXtngXJrQOu+@mail.gmail.com>
+ <201007281106.06813.br1@einfach.org>
+ <AANLkTimBu2=9XhzKwUi1ZpRmGWA+C4GCDgXqp-YJVLxt@mail.gmail.com>
+ <4C506DF7.9020907@openwrt.org>
+ <AANLkTi=HyyA0oqVRRsh2_ad_0zLGCSBQ6CK=fCg=g=ad@mail.gmail.com>
+ <4C50A08B.2080002@openwrt.org>
+ <20100728213939.GB8033@tux>
+ <4C50A9B9.5070708@openwrt.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4C50A9B9.5070708@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> -----Original Message-----
-> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
-> owner@vger.kernel.org] On Behalf Of Logan Gunthorpe
-> Sent: Saturday, July 10, 2010 3:20 AM
-> To: Luciano Coelho
-> Cc: linux-wireless@vger.kernel.org
-> Subject: RE: wl1271 firmware
-> 
-> Hi Everyone,
-> 
-> I too am working with a WL1271 module and have just today got it
-> connected to an Atmel ARM9 development kit (AT91SAM9G45-EKES). So far it
-> appears to work but I have been gated by the firmware and NVS file issues.
-> 
-> I have a firmware binary, but it seems to be a newer version
-> (6.1.3.01.5) than what you are using. Does anyone have any idea if this
-> version will work? It seems to be the only one available on TI's
-> website. Additionally, our device manufacturer has been hesitant to
-> provide any support because we are on an unsupported platform and opted
-> to use the open source driver. Are there any other ways to obtain an
-> older version of the firmware?
-> 
-> The NVS file is another problem. TI's website has instructions to use a
-> cryptic tool that appears to come with their driver package. There is no
-> source for this tool and for obvious reasons would not work for us.
-> 
-> Anyway, I'd like to help in anyway I can. I've taken a look at the
-> twilan.ini file and I see the commonality with wl1271_ini.h. It would be
-> relatively easy to write a tool that parses the INI file and generates
-> the common part of the NVS file. However, I'd have no idea how to
-> generate the device specific calibration or the few fields missing from
-> the INI file.
-> 
-> Thanks,
-> 
-> Logan
-> 
+On Wed, Jul 28, 2010 at 03:05:45PM -0700, Felix Fietkau wrote:
+> On 2010-07-28 11:39 PM, Luis R. Rodriguez wrote:
+> > On Wed, Jul 28, 2010 at 02:26:35PM -0700, Felix Fietkau wrote:
+> >> We don't need any special case handling for this at all. Drivers already
+> >> calculate their HT capabilities based on the number of available chains.
+> >> Once the antenna selection stuff is actually used, they will have some
+> >> internal information about which chains have how many antennas.
+> >> 
+> >> The reason why we can ignore *all* of this stuff for the API is simple:
+> >> We only need to refactor the code to calculate these settings based on
+> >> effective chainmask / antenna mask instead of pure hardware capability.
+> >> 
+> >> The effective chainmask / antenna mask is basically the same as the
+> >> hardware settings, except that it gets masked with the values that are
+> >> configured through this API. That leaves us with something that's easy
+> >> to configure, easy to implement for drivers, and doesn't need special
+> >> case stuff for various 802.11n features.
+> > 
+> > Consider the case of an already associated STA in 3x3 mode, and someone
+> > uses this API to limit it to a 1 stream 1x1 chaimask setting using
+> > only one antenna. How would the AP find out about this RX setting
+> > from the STA? Are we going to deny mucking with this prior to association?
+> > What about if you're the AP?
+> > 
+> > If you are using STBC and the user tunes the device to 1 stream 1x1 chainmask
+> > settings, who deals with the required adaptations?
+> I think we should simply not accept runtime modifications of this stuff.
+> The user should bring down the interface, change the value, then bring
+> it back up again. That allows the driver to recalculate all the HT stuff
+> based on the updated chainmask/antenna mask without special cases.
 
-Hi Logan,
-I am pushing to get access to the correct FW and NVS files version in TI web. I believe the community wills nave access of those files this week.
-Regarding the tool to generate the NVS file in the correct format, I will check that and reply.
-Regards,
-Shahar
+Works with me.
+
+Would we keep two values for some of these settings, an "actual hw"
+capablity and then also a "configured" values? Would this be exposed
+and visible through iw?
+
+  Luis
