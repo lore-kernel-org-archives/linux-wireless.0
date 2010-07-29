@@ -1,164 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:46902 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752388Ab0GZVRT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jul 2010 17:17:19 -0400
-Subject: Re: [ath5k-devel] [PATCH v3] ath5k: disable ASPM
-From: Maxim Levitsky <maximlevitsky@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
-	"ath5k-devel@lists.ath5k.org" <ath5k-devel@lists.ath5k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"kernel-team@lists.ubuntu.com" <kernel-team@lists.ubuntu.com>,
-	"tim.gardner@canonical.com" <tim.gardner@canonical.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	David Quan <David.Quan@Atheros.com>
-In-Reply-To: <20100726210651.GJ14855@tux>
-References: <20100618134930.124225d4fsi8w1fk@naisho.dyndns.info>
-	 <1276859156.19554.2.camel@maxim-laptop>
-	 <AANLkTimdTjedtoeKAp5tcTqefrUB6k373Kx9EacuYFcO@mail.gmail.com>
-	 <1276870309.23783.3.camel@maxim-laptop>
-	 <1276933774.16697.11.camel@maxim-laptop>
-	 <20100619123841.GA31838@hash.localnet>
-	 <1276952554.3332.3.camel@maxim-laptop>
-	 <1276961564.5173.12.camel@maxim-laptop> <20100726201322.GI14855@tux>
-	 <1280177362.3721.7.camel@maxim-laptop>  <20100726210651.GJ14855@tux>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 27 Jul 2010 00:17:13 +0300
-Message-ID: <1280179033.3721.15.camel@maxim-laptop>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.36.123.2]:34626 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753443Ab0G2M5G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Jul 2010 08:57:06 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Jul 2010 05:57:06 -0700
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/3] ath9k_hw: Add capability flag for Antenna diversity and combining feature
+Date: Thu, 29 Jul 2010 05:56:57 -0700
+Message-ID: <1280408219-5293-1-git-send-email-vasanth@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-07-26 at 14:06 -0700, Luis R. Rodriguez wrote: 
-> On Mon, Jul 26, 2010 at 01:49:22PM -0700, Maxim Levitsky wrote:
-> > On Mon, 2010-07-26 at 13:13 -0700, Luis R. Rodriguez wrote: 
-> > > On Sat, Jun 19, 2010 at 08:32:44AM -0700, Maxim Levitsky wrote:
-> > > > On Sat, 2010-06-19 at 16:02 +0300, Maxim Levitsky wrote: 
-> > > > > On Sat, 2010-06-19 at 08:38 -0400, Bob Copeland wrote: 
-> > > > > > On Sat, Jun 19, 2010 at 10:49:34AM +0300, Maxim Levitsky wrote:
-> > > > > > > How this patch?
-> > > > > > 
-> > > > > > Looks fine to me.  Some nitpicking below but feel free to add my
-> > > > > > 
-> > > > > > Acked-by: Bob Copeland <me@bobcopeland.com>
-> > > > > > 
-> > > > Done.
-> > > > 
-> > > > Best regards,
-> > > > Maxim Levitsky
-> > > > 
-> > > > --- 
-> > > > 
-> > > > commit 616afa397b3e843f2aba06be12a30e72dfff7740
-> > > > Author: Maxim Levitsky <maximlevitsky@gmail.com>
-> > > > Date:   Thu Jun 17 23:21:42 2010 +0300
-> > > > 
-> > > >     ath5k: disable ASPM
-> > > >     
-> > > >     Atheros card on Acer Aspire One (AOA150, Atheros Communications Inc. AR5001
-> > > >     Wireless Network Adapter [168c:001c] (rev 01)) doesn't work well with ASPM
-> > > >     enabled. With ASPM ath5k will eventually stall on heavy traffic with often
-> > > >     'unsupported jumbo' warnings appearing. Disabling ASPM L0s in ath5k fixes
-> > > >     these problems.
-> > > >     Also card sends a storm of RXORN interrupts even though medium is idle.
-> > > >     
-> > > >     Reproduced with pcie_aspm=force and by using 'nc < /dev/zero > /dev/null' at
-> > > >     both ends (usually stalls within seconds).
-> > > >     
-> > > >     Unfortunately BIOS enables ASPM on this card by default on these machines
-> > > >     This means that, problem shows up (less often) without pcie_aspm=force too. 
-> > > >     Therefore to benefit from this fix you need to _enable_ CONFIG_PCIEASPM
-> > > >     
-> > > > 
-> > > >     All credit for this patch goes to Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-> > > >     for finding and fixing this bug.
-> > > >     
-> > > >     Based on patch that is
-> > > >     From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-> > > >     
-> > > >     
-> > > >     Signed-off-by: Maxim Levitsky <maximlevitsky@gmail.com>
-> > > >     Acked-by: Bob Copeland <me@bobcopeland.com>
-> > > 
-> > > Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
-> > > 
-> > > But please resubmit and completley modify the commit log to indicate
-> > > ath5k cards support ASPM but L0s must be disabled, only L1
-> > > works correctly.
-> > > 
-> > > The comments about ASPM force should be removed as it would
-> > > lead others to try to use the same and the fact of the matter is
-> > > that ASPM force should never be used. As was clarified out of
-> > > some of these discussions worth noting also is that in newer
-> > > kernels CONFIG_PCIEASPM=y will always become the default, for
-> > > older kernels this was never the default and some distributions
-> > > (Ubunutu) do not have this enabled, the benefit of having it
-> > > enabled is it will disable ASPM for these cases:
-> > > 
-> > > (a) the PCIE device is pre PCIE 1.1
-> > > (b) the firmware has the FADT flag set to tell you not to and
-> > > (c) the firmware doesn't grant control via _OSC. The powersave policy will
-> > > enable ASPM even if the BIOS didn't, but only if something else doesn't
-> > > tell us not to.
-> > > 
-> > > The last two checks were only recently added by Mathew and forcing
-> > > CONFIG_PCIEASPM=y was also only recently made default.
-> > > 
-> > > In short, Linux distributions should also start enabling
-> > > CONFIG_PCIEASPM=y on older kernels.
-> > 
-> > 
-> > Just one note that since at least my ath5k device is pre 1.1, and you
-> > say that L1 can be enabled, and should, I probably need to enable L1
-> > explicitly in the driver.
-> > 
-> > OK?
-> 
-> No, ASPM must be enabled by the Systems Integrator through the BIOS, there are
-> other settings that have to be taken care of like modifying some PCI entrance and
-> exit latency timers, the number of FTS packets we send to exit L0s, amongst
-> other things. If a user selectively enables L1 but the BIOS had it disabled on
-> the device it may not work correctly.
-> 
-> In other words leave the settings as-is on your card unless you developing
-> for a company to enable ASPM yourself or you are willing to take the risks.
-> Tweaks like force enabling a device to use ASPM should only then be done in
-> userspace and by an end user. This is not something Linux distributions should
-> let users tweak. Its a hacker task.
-> 
-> However, it is reasonable to force disable L0s, for example, completley on
-> the driver if it is known that L0s does not work for all chisets supported
-> on that driver.
+This is enabled only for ar9285.
 
-You didn't understand me.
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/eeprom.h    |    2 ++
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c |    4 ++++
+ drivers/net/wireless/ath/ath9k/hw.c        |    9 +++++++++
+ drivers/net/wireless/ath/ath9k/hw.h        |    1 +
+ 4 files changed, 16 insertions(+), 0 deletions(-)
 
-
-On my notebook, the AR5001 device is marked as pre 1.1 PCIE device.
-
-ASPM *is* enabled for both L0s and L1 by BIOS.
-
-Linux disables ASPM because the device is pre 1.1, and things work fine
-with no more patching (assuming that CONFIG_PCIEASPM is set)
-
-
-However, it is possible, (and that what I asked you) that some ath5k
-devices aren't 'pre 1.1 pcie devices' so linux won't disable ASPM L0s
-for them.
-So indeed for 'good feeling' it is ok to disable L0s from ath5k
-explicitly, but most of the time (or always) it will be no-op.
-
-In *addition* to that, since you said that ASPM L1 *does* work, and is
-enabled by BIOS, but linux disables it, that it might be worthy to
-enable it again from ath5k driver explicitly.
-As long as wireless works I don't really care if this done or not.
-
-
-Best regards,
-Maxim Levitsky
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index 8750c55..b2223a6 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -265,6 +265,8 @@ enum eeprom_param {
+ 	EEP_INTERNAL_REGULATOR,
+ 	EEP_SWREG,
+ 	EEP_PAPRD,
++	EEP_MODAL_VER,
++	EEP_ANT_DIV_CTL1,
+ };
+ 
+ enum ar5416_rates {
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+index 9cccd12..2e1397b 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+@@ -213,6 +213,10 @@ static u32 ath9k_hw_4k_get_eeprom(struct ath_hw *ah,
+ 		return 0;
+ 	case EEP_PWR_TABLE_OFFSET:
+ 		return AR5416_PWR_TABLE_OFFSET_DB;
++	case EEP_MODAL_VER:
++		return pModal->version;
++	case EEP_ANT_DIV_CTL1:
++		return pModal->antdiv_ctl1;
+ 	default:
+ 		return 0;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 2f83f97..d9e9344 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2052,6 +2052,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
+ 
+ 	u16 capField = 0, eeval;
++	u8 ant_div_ctl1;
+ 
+ 	eeval = ah->eep_ops->get_eeprom(ah, EEP_REG_0);
+ 	regulatory->current_rd = eeval;
+@@ -2276,6 +2277,14 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 	if (AR_SREV_9287_10_OR_LATER(ah) || AR_SREV_9271(ah))
+ 		pCap->hw_caps |= ATH9K_HW_CAP_SGI_20;
+ 
++	if (AR_SREV_9285(ah))
++		if (ah->eep_ops->get_eeprom(ah, EEP_MODAL_VER) >= 3) {
++			ant_div_ctl1 =
++				ah->eep_ops->get_eeprom(ah, EEP_ANT_DIV_CTL1);
++			if ((ant_div_ctl1 & 0x1) && ((ant_div_ctl1 >> 3) & 0x1))
++				pCap->hw_caps |= ATH9K_HW_CAP_ANT_DIV_COMB;
++		}
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 2d30efc..3f19148 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -204,6 +204,7 @@ enum ath9k_hw_caps {
+ 	ATH9K_HW_CAP_FASTCLOCK			= BIT(20),
+ 	ATH9K_HW_CAP_SGI_20			= BIT(21),
+ 	ATH9K_HW_CAP_PAPRD			= BIT(22),
++	ATH9K_HW_CAP_ANT_DIV_COMB		= BIT(23),
+ };
+ 
+ struct ath9k_hw_capabilities {
+-- 
+1.7.0.4
 
