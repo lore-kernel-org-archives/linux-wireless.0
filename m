@@ -1,52 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:37761 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752428Ab0G1Uws (ORCPT
+Received: from silver.sucs.swan.ac.uk ([137.44.10.1]:43661 "EHLO
+	silver.sucs.swan.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755786Ab0G2LWI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jul 2010 16:52:48 -0400
-Received: by ywh1 with SMTP id 1so954451ywh.19
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Jul 2010 13:52:48 -0700 (PDT)
+	Thu, 29 Jul 2010 07:22:08 -0400
+Received: from sits by silver.sucs.swan.ac.uk with local (Exim 4.69)
+	(envelope-from <sits@sucs.org>)
+	id 1OeQhb-0006FT-QM
+	for linux-wireless@vger.kernel.org; Thu, 29 Jul 2010 11:51:03 +0100
+Date: Thu, 29 Jul 2010 11:51:03 +0100
+From: Sitsofe Wheeler <sitsofe@yahoo.com>
+To: linux-wireless@vger.kernel.org
+Subject: WARNING: at net/wireless/mlme.c:47 cfg80211_send_rx_auth+0x8a/0x130
+Message-ID: <20100729105103.GA20903@sucs.org>
 MIME-Version: 1.0
-In-Reply-To: <1280339151-37084-2-git-send-email-nbd@openwrt.org>
-References: <1280339151-37084-1-git-send-email-nbd@openwrt.org>
-	<1280339151-37084-2-git-send-email-nbd@openwrt.org>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 28 Jul 2010 13:52:27 -0700
-Message-ID: <AANLkTi=8UX5B9+nLymSdJS2J-gRwMsYT_SVnviHX9Zi3@mail.gmail.com>
-Subject: Re: [PATCH 2/3] ath9k_hw: clean up per-channel calibration data
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Jouni Malinen <Jouni.Malinen@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 28, 2010 at 10:45 AM, Felix Fietkau <nbd@openwrt.org> wrote:
-> The noise floor history buffer is currently not kept per channel, which
-> can lead to problems when changing channels from a clean channel to a
-> noisy one. Also when switching from HT20 to HT40, the noise floor
-> history buffer is full of measurements, but none of them contain data
-> for the extension channel, which it needs quite a bit of time to recover
-> from.
->
-> This patch puts all the per-channel calibration data into a single data
-> structure, and gives the the driver control over whether that is used
-> per-channel or even not used for some channels.
->
-> For ath9k_htc, I decided to keep this per-channel in order to avoid
-> creating regressions.
->
-> For ath9k, the data is kept only for the operating channel, which saves
-> some space. ath9k_hw takes care of wiping old data when the operating
-> channel or its channel flags change.
->
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Hi,
 
-But this also means every time we want to get operational on a channel
-we have to learn the current noise all over again. This means for WiFi
-Direct every channel swap we'd have to learn to walk, which happens
-quite often. What do you think? Sorry, I know we discussed this
-approach and I seemed fine but this just occurred to me now, and will
-become really important later when we support WiFi Direct.
+Over the past 6 months or so I sometimes see warn on slowpath in dmesg
+if I turn on my EeePC 900 (which uses ath5k) and it immediately connects
+to AP. Here's an example of the warning from a recent kernel:
 
-  Luis
+[   13.010403] wlan0: deauthenticating from xx:xx:xx:xx:xx:xx by local choice (reason=3)
+[   13.016644] wlan0: authenticate with xx:xx:xx:xx:xx:xx (try 1)
+[   13.025436] wlan0: authenticated
+[   13.025445] ------------[ cut here ]------------
+[   13.025458] WARNING: at net/wireless/mlme.c:47 cfg80211_send_rx_auth+0x8a/0x130()
+[   13.025463] Hardware name: 900
+[   13.025469] Pid: 490, comm: phy0 Not tainted 2.6.35-rc6-00150-gd15aa2c #1
+[   13.025474] Call Trace:
+[   13.025485]  [<b01247f3>] ? warn_slowpath_common+0x73/0xb0
+[   13.025492]  [<b04a2f8a>] ? cfg80211_send_rx_auth+0x8a/0x130
+[   13.025499]  [<b04a2f8a>] ? cfg80211_send_rx_auth+0x8a/0x130
+[   13.025506]  [<b0124849>] ? warn_slowpath_null+0x19/0x20
+[   13.025512]  [<b04a2f8a>] ? cfg80211_send_rx_auth+0x8a/0x130
+[   13.025519]  [<b04b65c7>] ? ieee80211_probe_auth_done+0x67/0x90
+[   13.025526]  [<b04b7a63>] ? ieee80211_work_work+0x253/0x14e0
+[   13.025534]  [<b0120790>] ? dequeue_task_fair+0x20/0x1d0
+[   13.025540]  [<b012052a>] ? T.1071+0x2a/0x80
+[   13.025547]  [<b04d51e0>] ? schedule+0x130/0x2d0
+[   13.025553]  [<b04b7810>] ? ieee80211_work_work+0x0/0x14e0
+[   13.025562]  [<b0137f1f>] ? worker_thread+0x10f/0x210
+[   13.025569]  [<b013b2d0>] ? autoremove_wake_function+0x0/0x40
+[   13.025576]  [<b0137e10>] ? worker_thread+0x0/0x210
+[   13.025582]  [<b013af04>] ? kthread+0x74/0x80
+[   13.025587]  [<b013ae90>] ? kthread+0x0/0x80
+[   13.025594]  [<b01030b6>] ? kernel_thread_helper+0x6/0x10
+[   13.025599] ---[ end trace 84910d510f8a9a59 ]---
+
+After a delay the machine goes on to the connect to the AP anyway so it
+seems fairly harmless. Any ideas?
+
+-- 
+Sitsofe | http://sucs.org/~sits/
