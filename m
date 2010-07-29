@@ -1,66 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:58049 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751166Ab0GVXOA convert rfc822-to-8bit (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:12244 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755198Ab0G2JO2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 19:14:00 -0400
+	Thu, 29 Jul 2010 05:14:28 -0400
+Received: from vs3012.wh2.ocn.ne.jp (125.206.180.183)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0936684866
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Jul 2010 18:14:27 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 2/2] iw: Add antenna configuration commands
+Date: Thu, 29 Jul 2010 18:14:44 +0900
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+References: <20100727094932.27300.10253.stgit@tt-desk> <201007291235.11202.br1@einfach.org> <1280389745.3823.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1280389745.3823.1.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <4C48287D.1000603@nokia.com>
-References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
-	<1279733634-21974-11-git-send-email-ohad@wizery.com> <20100721175930.GD10930@sirena.org.uk>
-	<4C48287D.1000603@nokia.com>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Fri, 23 Jul 2010 02:13:38 +0300
-Message-ID: <AANLkTin2dyLNo1RMQgLG-4DtN-CsXqNNLAfITXDbMIvl@mail.gmail.com>
-Subject: Re: [PATCH v2 10/20] omap: zoom: add fixed regulator device for wlan
-To: Roger Quadros <roger.quadros@nokia.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Tony Lindgren <tony@atomide.com>, San Mehat <san@google.com>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201007291814.44330.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 22, 2010 at 2:16 PM, Roger Quadros <roger.quadros@nokia.com> wrote:
-> On 07/21/2010 08:59 PM, ext Mark Brown wrote:
->>
->> On Wed, Jul 21, 2010 at 08:33:44PM +0300, Ohad Ben-Cohen wrote:
->>
->>> +static struct regulator_consumer_supply zoom_vmmc3_supply = {
->>> +       .supply         = "vmmc",
->>> +};
->>
->> This looks like a misconfiguration on the consumer - I'd strongly expect
->> the consumer to have a dev_name specified also with the name being in
->> terms of the consumer device.
->
-> you need to add something like
->
-> .dev_name       = "mmci-omap-hs.2"
+On Thu July 29 2010 16:49:05 Johannes Berg wrote:
+> On Thu, 2010-07-29 at 12:35 +0900, Bruno Randolf wrote:
+> > actually - no. what sense does it make to use a hexadecimal notation and
+> > print 0x for values between 0 and 7?
+> 
+> Well ... 11n does define mimo 4x4.
 
-I already set the .dev member of the consumer in a similar manner to
-how all other regulators are configured in this board - please check
-out patch 13:
+oh, yes, true: 0xf
 
-https://patchwork.kernel.org/patch/113418/
-
-Does this look reasonable to you ?
-
-Thanks,
-Ohad.
-
->
-> regards,
-> -roger
->
+bruno
