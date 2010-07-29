@@ -1,69 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:60243 "EHLO ds10.nbd.name"
+Received: from mga09.intel.com ([134.134.136.24]:38944 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754991Ab0G1VIy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jul 2010 17:08:54 -0400
-Message-ID: <4C509C65.4020305@openwrt.org>
-Date: Wed, 28 Jul 2010 23:08:53 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH 1/3] ath9k: prevent calibration during off-channel 	activity
-References: <1280339151-37084-1-git-send-email-nbd@openwrt.org> <AANLkTimZ8zTZWDcXwr7Hu2FT=gDPeCiiUFXcBmpYpp7M@mail.gmail.com>
-In-Reply-To: <AANLkTimZ8zTZWDcXwr7Hu2FT=gDPeCiiUFXcBmpYpp7M@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	id S1753717Ab0G2Nxu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Jul 2010 09:53:50 -0400
+Subject: Re: [PATCH] iwlwifi: fix scan abort
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "Chatre, Reinette" <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"stable@kernel.org" <stable@kernel.org>
+In-Reply-To: <20100729113741.152e986a@dhcp-lab-109.englab.brq.redhat.com>
+References: <20100729113741.152e986a@dhcp-lab-109.englab.brq.redhat.com>
+Content-Type: text/plain
+Date: Thu, 29 Jul 2010 06:53:14 -0700
+Message-Id: <1280411594.24402.1.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-07-28 10:43 PM, Luis R. Rodriguez wrote:
-> On Wed, Jul 28, 2010 at 10:45 AM, Felix Fietkau <nbd@openwrt.org> wrote:
->> Previously the software scan callback was used to indicate to the hardware,
->> when it was safe to calibrate. This didn't really work properly, because it
->> depends on a specific order of software scan callbacks vs. channel changes.
->> Also, software scans are not the only thing that triggers off-channel
->> activity, so it's better to use the newly added indication from mac80211 for
->> this and not use the software scan callback for anything calibration related.
->>
->> This fixes at least some of the invalid noise floor readings that I've seen
->> in AP mode on AR9160
+On Thu, 2010-07-29 at 02:37 -0700, Stanislaw Gruszka wrote:
+> Fix possible double priv->mutex lock introduced by commit
+> a69b03e941abae00380fc6bc1877fb797a1b31e6
+> "iwlwifi: cancel scan watchdog in iwl_bg_abort_scan" .
+> We can not call cancel_delayed_work_sync(&priv->scan_check) with 
+> priv->mutex locked because workqueue function iwl_bg_scan_check()
+> take that lock internally.
 > 
-> Neat!
+> We do not need to synchronize when canceling priv->scan_check work.
+> We can avoid races (sending double abort command or send no
+> command at all) using STATUS_SCAN_ABORT bit. Moreover
+> current iwl_bg_scan_check() code seems to be broken, as
+> we should not send abort commands when currently aborting.
 > 
->> --- a/drivers/net/wireless/ath/ath9k/main.c
->> +++ b/drivers/net/wireless/ath/ath9k/main.c
->> @@ -154,6 +154,27 @@ void ath9k_ps_restore(struct ath_softc *sc)
->>        spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
->>  }
->>        spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
->>  }
->>
->> +static void ath_start_ani(struct ath_common *common)
->> +{
->> +       struct ath_hw *ah = common->ah;
->> +       unsigned long timestamp = jiffies_to_msecs(jiffies);
->> +       struct ath_softc *sc = (struct ath_softc *) common->priv;
->> +
->> +       if (!(sc->sc_flags & SC_OP_ANI_RUN))
->> +               return;
->> +
->> +       if (sc->sc_flags & SC_OP_OFFCHANNEL)
->> +               return;
->> +
->> +       common->ani.longcal_timer = timestamp;
->> +       common->ani.shortcal_timer = timestamp;
->> +       common->ani.checkani_timer = timestamp;
->> +
->> +       mod_timer(&common->ani.timer,
->> +                 jiffies +
->> +                       msecs_to_jiffies((u32)ah->config.ani_poll_interval));
->> +}
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> CC: stable@kernel.org
 > 
-> I would prefer if you do this sort of code shift in a separate patch.
-> In this case its pretty easy to see the code is the same so I think
-> its fine the way it is now but for next time please. Otherwise looks
-> good, thanks!!
-If it had been a bigger function, I'd have made a separate patch, but I
-figured for something as trivial as this it wouldn't matter.
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+> index 2a7c399..b0c6b04 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-scan.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+> @@ -429,11 +429,10 @@ void iwl_bg_scan_check(struct work_struct *data)
+>  		return;
+>  
+>  	mutex_lock(&priv->mutex);
+> -	if (test_bit(STATUS_SCANNING, &priv->status) ||
+> -	    test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
+> -		IWL_DEBUG_SCAN(priv, "Scan completion watchdog resetting "
+> -			"adapter (%dms)\n",
+> -			jiffies_to_msecs(IWL_SCAN_CHECK_WATCHDOG));
+> +	if (test_bit(STATUS_SCANNING, &priv->status) &&
+> +	    !test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
+> +		IWL_DEBUG_SCAN(priv, "Scan completion watchdog (%dms)\n",
+> +			       jiffies_to_msecs(IWL_SCAN_CHECK_WATCHDOG));
+>  
+>  		if (!test_bit(STATUS_EXIT_PENDING, &priv->status))
+>  			iwl_send_scan_abort(priv);
+> @@ -498,12 +497,11 @@ void iwl_bg_abort_scan(struct work_struct *work)
+>  	    !test_bit(STATUS_GEO_CONFIGURED, &priv->status))
+>  		return;
+>  
+> -	mutex_lock(&priv->mutex);
+> -
+> -	cancel_delayed_work_sync(&priv->scan_check);
+> -	set_bit(STATUS_SCAN_ABORTING, &priv->status);
+> -	iwl_send_scan_abort(priv);
+> +	cancel_delayed_work(&priv->scan_check);
+>  
+> +	mutex_lock(&priv->mutex);
+> +	if (test_bit(STATUS_SCAN_ABORTING, &priv->status))
+> +		iwl_send_scan_abort(priv);
+>  	mutex_unlock(&priv->mutex);
+>  }
+>  EXPORT_SYMBOL(iwl_bg_abort_scan);
 
-- Felix
+looks good and thanks
+
+Wey
+
