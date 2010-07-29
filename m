@@ -1,38 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34353 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757481Ab0GBSGE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jul 2010 14:06:04 -0400
-Subject: Re: rt2x00 & mac80211: correct usage of ieee80211_beacon_get_tim?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-In-Reply-To: <201007021959.45704.helmut.schaa@googlemail.com>
-References: <201006241521.47623.helmut.schaa@googlemail.com>
-	 <201006272100.22216.helmut.schaa@googlemail.com>
-	 <1278090770.15412.4.camel@jlt3.sipsolutions.net>
-	 <201007021959.45704.helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 02 Jul 2010 20:06:04 +0200
-Message-ID: <1278093964.15412.24.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:43964 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753821Ab0G2SE5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Jul 2010 14:04:57 -0400
+Message-ID: <4C51C2C4.7050207@bu3sch.de>
+Date: Thu, 29 Jul 2010 20:04:52 +0200
+From: =?ISO-8859-1?Q?Michael_B=FCsch?= <mb@bu3sch.de>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@wfinger.net>
+Subject: Re: [PATCH] b43: update hw/fw version info in wiphy struct
+References: <1280424853-18954-1-git-send-email-linville@tuxdriver.com> (sfid-20100729_194523_073564_FFFFFFFFA02F8A4A)
+In-Reply-To: <1280424853-18954-1-git-send-email-linville@tuxdriver.com> (sfid-20100729_194523_073564_FFFFFFFFA02F8A4A)
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-07-02 at 19:59 +0200, Helmut Schaa wrote:
+On 07/29/2010 07:34 PM, John W. Linville wrote:
+> +	wiphy->hw_version = dev->dev->bus->chip_id;
 
-> > unless your
-> > device itself is capable of generating the TIM IE _right before_ the
-> > beacon gets transmitted.
-> 
-> Agreed. At least on rt2800 we can use the pre tbtt interrupt to update the
-> beacon just before it is sent out.
+Hm, well. Is hw_version of any use, actually? How does ethtool display
+it? I guess it does not use BCD (chip_id is BCD encoded).
 
-Careful though. You don't know how far in advance it is triggered (or
-maybe you do) or if the time will be sufficient to generate and upload
-the beacon to the device. You could even hit lock contention I think.
+What about using the wireless-core revision? It is slightly more usable
+than the chip_id.
 
-johannes
-
+-- 
+Greetings Michael.
