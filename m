@@ -1,160 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:37901 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757053Ab0GFAkZ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35083 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754556Ab0G2VP1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jul 2010 20:40:25 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>
-Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Ohad Ben-Cohen <ohadb@ti.com>
-Subject: [PATCH 08/15] wireless: wl1271: make wl12xx.h common to both spi and sdio
-Date: Tue,  6 Jul 2010 03:37:39 +0300
-Message-Id: <1278376666-3509-9-git-send-email-ohad@wizery.com>
-In-Reply-To: <1278376666-3509-1-git-send-email-ohad@wizery.com>
-References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
+	Thu, 29 Jul 2010 17:15:27 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v2 1/2] mac80211: support use of NAPI for bottom-half processing
+Date: Thu, 29 Jul 2010 17:14:04 -0400
+Message-Id: <1280438045-16424-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1280435978.3823.20.camel@jlt3.sipsolutions.net>
+References: <1280435978.3823.20.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ohad Ben-Cohen <ohadb@ti.com>
+This patch implement basic infrastructure to support use of NAPI by
+mac80211-based hardware drivers.
 
-Move wl12xx.h outside of the spi-specific location,
-so it can be shared with both spi and sdio solutions.
+Because mac80211 devices can support multiple netdevs, a dummy netdev
+is used for interfacing with the NAPI code in the core of the network
+stack.  That structure is hidden from the hardware drivers, but the
+actual napi_struct is exposed in the ieee80211_hw structure so that the
+poll routines in drivers can retrieve that structure.  Hardware drivers
+can also specify their own weight value for NAPI polling.
 
-Signed-off-by: Ohad Ben-Cohen <ohadb@ti.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- drivers/net/wireless/wl12xx/wl1251_sdio.c |    2 +-
- drivers/net/wireless/wl12xx/wl1251_spi.c  |    2 +-
- drivers/net/wireless/wl12xx/wl1271_spi.c  |    2 +-
- include/linux/spi/wl12xx.h                |   34 -----------------------------
- include/linux/wl12xx.h                    |   34 +++++++++++++++++++++++++++++
- 5 files changed, 37 insertions(+), 37 deletions(-)
- delete mode 100644 include/linux/spi/wl12xx.h
- create mode 100644 include/linux/wl12xx.h
+v2 -> hide napi_struct as suggested by johill
 
-diff --git a/drivers/net/wireless/wl12xx/wl1251_sdio.c b/drivers/net/wireless/wl12xx/wl1251_sdio.c
-index c561332..416d5aa 100644
---- a/drivers/net/wireless/wl12xx/wl1251_sdio.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_sdio.c
-@@ -24,7 +24,7 @@
- #include <linux/mmc/sdio_func.h>
- #include <linux/mmc/sdio_ids.h>
- #include <linux/platform_device.h>
--#include <linux/spi/wl12xx.h>
-+#include <linux/wl12xx.h>
- #include <linux/irq.h>
+ include/net/mac80211.h     |   24 ++++++++++++++++++++++++
+ net/mac80211/ieee80211_i.h |    5 +++++
+ net/mac80211/iface.c       |    4 ++++
+ net/mac80211/main.c        |   30 ++++++++++++++++++++++++++++++
+ 4 files changed, 63 insertions(+), 0 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index f85fc8a..64171c1 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1102,6 +1102,10 @@ enum ieee80211_hw_flags {
+  *
+  * @max_rates: maximum number of alternate rate retry stages
+  * @max_rate_tries: maximum number of tries for each stage
++ *
++ * @napi_weight: weight used for NAPI polling.  You must specify an
++ *	appropriate value here if a napi_poll operation is provided
++ *	by your driver.
+  */
+ struct ieee80211_hw {
+ 	struct ieee80211_conf conf;
+@@ -1113,6 +1117,7 @@ struct ieee80211_hw {
+ 	int channel_change_time;
+ 	int vif_data_size;
+ 	int sta_data_size;
++	int napi_weight;
+ 	u16 queues;
+ 	u16 max_listen_interval;
+ 	s8 max_signal;
+@@ -1687,6 +1692,8 @@ enum ieee80211_ampdu_mlme_action {
+  *	switch operation for CSAs received from the AP may implement this
+  *	callback. They must then call ieee80211_chswitch_done() to indicate
+  *	completion of the channel switch.
++ *
++ * @napi_poll: Poll Rx queue for incoming data frames.
+  */
+ struct ieee80211_ops {
+ 	int (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
+@@ -1752,6 +1759,7 @@ struct ieee80211_ops {
+ 	void (*flush)(struct ieee80211_hw *hw, bool drop);
+ 	void (*channel_switch)(struct ieee80211_hw *hw,
+ 			       struct ieee80211_channel_switch *ch_switch);
++	int (*napi_poll)(struct ieee80211_hw *hw, int budget);
+ };
  
- #include "wl1251.h"
-diff --git a/drivers/net/wireless/wl12xx/wl1251_spi.c b/drivers/net/wireless/wl12xx/wl1251_spi.c
-index e814742..4847b6a 100644
---- a/drivers/net/wireless/wl12xx/wl1251_spi.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_spi.c
-@@ -26,7 +26,7 @@
- #include <linux/slab.h>
- #include <linux/crc7.h>
- #include <linux/spi/spi.h>
--#include <linux/spi/wl12xx.h>
-+#include <linux/wl12xx.h>
+ /**
+@@ -1897,6 +1905,22 @@ void ieee80211_free_hw(struct ieee80211_hw *hw);
+  */
+ void ieee80211_restart_hw(struct ieee80211_hw *hw);
  
- #include "wl1251.h"
- #include "wl1251_reg.h"
-diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
-index 5189b81..e866049 100644
---- a/drivers/net/wireless/wl12xx/wl1271_spi.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
-@@ -25,7 +25,7 @@
- #include <linux/module.h>
- #include <linux/crc7.h>
- #include <linux/spi/spi.h>
--#include <linux/spi/wl12xx.h>
-+#include <linux/wl12xx.h>
- #include <linux/slab.h>
- 
- #include "wl1271.h"
-diff --git a/include/linux/spi/wl12xx.h b/include/linux/spi/wl12xx.h
-deleted file mode 100644
-index a223ecb..0000000
---- a/include/linux/spi/wl12xx.h
-+++ /dev/null
-@@ -1,34 +0,0 @@
--/*
-- * This file is part of wl12xx
-- *
-- * Copyright (C) 2009 Nokia Corporation
-- *
-- * Contact: Kalle Valo <kalle.valo@nokia.com>
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * version 2 as published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-- * General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-- * 02110-1301 USA
-- *
-- */
--
--#ifndef _LINUX_SPI_WL12XX_H
--#define _LINUX_SPI_WL12XX_H
--
--struct wl12xx_platform_data {
--	void (*set_power)(bool enable);
--	/* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
--	int irq;
--	bool use_eeprom;
--};
--
--#endif
-diff --git a/include/linux/wl12xx.h b/include/linux/wl12xx.h
-new file mode 100644
-index 0000000..137ac89
---- /dev/null
-+++ b/include/linux/wl12xx.h
-@@ -0,0 +1,34 @@
-+/*
-+ * This file is part of wl12xx
++/** ieee80211_napi_schedule - schedule NAPI poll
 + *
-+ * Copyright (C) 2009 Nokia Corporation
++ * Use this function to schedule NAPI polling on a device.
 + *
-+ * Contact: Kalle Valo <kalle.valo@nokia.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * version 2 as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-+ * 02110-1301 USA
-+ *
++ * @hw: the hardware to start polling
 + */
++void ieee80211_napi_schedule(struct ieee80211_hw *hw);
 +
-+#ifndef _LINUX_WL12XX_H
-+#define _LINUX_WL12XX_H
++/** ieee80211_napi_complete - complete NAPI polling
++ *
++ * Use this function to finish NAPI polling on a device.
++ *
++ * @hw: the hardware to stop polling
++ */
++void ieee80211_napi_complete(struct ieee80211_hw *hw);
 +
-+struct wl12xx_platform_data {
-+	void (*set_power)(bool enable);
-+	/* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
-+	int irq;
-+	bool use_eeprom;
-+};
+ /**
+  * ieee80211_rx - receive frame
+  *
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 65e0ed6..79d5645 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -870,6 +870,11 @@ struct ieee80211_local {
+ 		struct dentry *keys;
+ 	} debugfs;
+ #endif
 +
-+#endif
++	/* dummy netdev for use w/ NAPI */
++	struct net_device napi_dev;
++
++	struct napi_struct napi;
+ };
+ 
+ static inline struct ieee80211_sub_if_data *
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index ebbe264..c1008a9 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -187,6 +187,8 @@ static int ieee80211_open(struct net_device *dev)
+ 		res = drv_start(local);
+ 		if (res)
+ 			goto err_del_bss;
++		if (local->ops->napi_poll)
++			napi_enable(&local->napi);
+ 		/* we're brought up, everything changes */
+ 		hw_reconf_flags = ~0;
+ 		ieee80211_led_radio(local, true);
+@@ -519,6 +521,8 @@ static int ieee80211_stop(struct net_device *dev)
+ 	ieee80211_recalc_ps(local, -1);
+ 
+ 	if (local->open_count == 0) {
++		if (local->ops->napi_poll)
++			napi_disable(&local->napi);
+ 		ieee80211_clear_tx_pending(local);
+ 		ieee80211_stop_device(local);
+ 
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 7cc4f91..98bb5c0 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -390,6 +390,30 @@ static int ieee80211_ifa_changed(struct notifier_block *nb,
+ }
+ #endif
+ 
++static int ieee80211_napi_poll(struct napi_struct *napi, int budget)
++{
++	struct ieee80211_local *local =
++		container_of(napi, struct ieee80211_local, napi);
++
++	return local->ops->napi_poll(&local->hw, budget);
++}
++
++void ieee80211_napi_schedule(struct ieee80211_hw *hw)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++
++	napi_schedule(&local->napi);
++}
++EXPORT_SYMBOL(ieee80211_napi_schedule);
++
++void ieee80211_napi_complete(struct ieee80211_hw *hw)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++
++	napi_complete(&local->napi);
++}
++EXPORT_SYMBOL(ieee80211_napi_complete);
++
+ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 					const struct ieee80211_ops *ops)
+ {
+@@ -494,6 +518,9 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 	skb_queue_head_init(&local->skb_queue);
+ 	skb_queue_head_init(&local->skb_queue_unreliable);
+ 
++	/* init dummy netdev for use w/ NAPI */
++	init_dummy_netdev(&local->napi_dev);
++
+ 	return local_to_hw(local);
+ }
+ EXPORT_SYMBOL(ieee80211_alloc_hw);
+@@ -683,6 +710,9 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 		goto fail_ifa;
+ #endif
+ 
++	netif_napi_add(&local->napi_dev, &local->napi, ieee80211_napi_poll,
++			local->hw.napi_weight);
++
+ 	return 0;
+ 
+  fail_ifa:
 -- 
-1.7.0.4
+1.7.1.1
 
