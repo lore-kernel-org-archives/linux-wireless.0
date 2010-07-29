@@ -1,73 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:32862 "EHLO mail.atheros.com"
+Received: from kroah.org ([198.145.64.141]:39099 "EHLO coco.kroah.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752421Ab0G0RUX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 13:20:23 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Jul 2010 10:20:23 -0700
-Date: Tue, 27 Jul 2010 10:20:20 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Simsek, Burak" <burak.simsek@fokus.fraunhofer.de>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] [PATCH 4/5] mac80211: add WoW support
-Message-ID: <20100727172020.GE8293@tux>
-References: <804B13F8F3D94A4AB18B9B01ACB68FA1037B5158@EXCHSRV.fokus.fraunhofer.de>
+	id S1756721Ab0G2Wc7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Jul 2010 18:32:59 -0400
+Date: Thu, 29 Jul 2010 14:48:37 -0700
+From: Greg KH <greg@kroah.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	Ben Hutchings <ben@decadent.org.uk>, stable@kernel.org
+Subject: Re: [stable] [PATCH 1/4 2.6.33.y] mac80211: explicitly
+ disable/enable QoS
+Message-ID: <20100729214837.GG17470@kroah.com>
+References: <1275904827-6598-1-git-send-email-sgruszka@redhat.com>
+ <20100727224008.GM14257@kroah.com>
+ <1280272525.13192.67.camel@localhost>
+ <20100727235451.GA12332@kroah.com>
+ <20100728085007.349b2c22@dhcp-lab-109.englab.brq.redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <804B13F8F3D94A4AB18B9B01ACB68FA1037B5158@EXCHSRV.fokus.fraunhofer.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100728085007.349b2c22@dhcp-lab-109.englab.brq.redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 27, 2010 at 08:12:10AM -0700, Simsek, Burak wrote:
-> Dear Luis,
->
-> I have found out that you have worked on WoW for ath9k for a while. However,
-> in the wiki page of wireless.kernel.org the current state is written as
-> ongoing work. Can you please tell me whether you were successful while
-> implementing WoW. Is there anything that we could use?
+On Wed, Jul 28, 2010 at 08:50:07AM +0200, Stanislaw Gruszka wrote:
+> On Tue, 27 Jul 2010 16:54:51 -0700
+> Greg KH <greg@kroah.com> wrote:
+> 
+> > On Wed, Jul 28, 2010 at 12:15:25AM +0100, Ben Hutchings wrote:
+> > > On Tue, 2010-07-27 at 15:40 -0700, Greg KH wrote:
+> > > > On Mon, Jun 07, 2010 at 12:00:24PM +0200, Stanislaw Gruszka wrote:
+> > > > > commit e1b3ec1a2a336c328c336cfa5485a5f0484cc90d upstream.
+> > > > > 
+> > > > > Add interface to disable/enable QoS (aka WMM or WME). Currently drivers
+> > > > > enable it explicitly when ->conf_tx method is called, and newer disable.
+> > > > > Disabling is needed for some APs, which do not support QoS, such
+> > > > > we should send QoS frames to them.
+> > > > 
+> > > > Why is this a patch for a -stable tree?  It looks like it adds a new api
+> > > > for a new feature, right?
+> > > [...]
+> > > 
+> > > It extends the interface between the 802.11 stack and drivers so that
+> > > drivers can avoid sending QoS frames to APs that don't support them.
+> > > There is no new interface to userland.  My understanding is that iwlwifi
+> > > becomes unable to communicate with non-QoS-capable APs after having once
+> > > associated with a QoS-capable AP, without this and the following change
+> > > in iwlwifi itself.
+> > 
+> > Is this really true?  And is it a bug that people are hitting?
+> 
+> Yes, without that patch iwlwifi devices are not able to connect with some
+> old APs. I had only two Fedora bug reports about that, so do not think
+> this is something critical. Fill free to drop that patch (together with 
+> "iwlwifi: manage QoS by mac stack" which is part of the fix and do not have
+> sense alone), or apply only to 2.6.34.
 
-WoW worked for me but inconsistantly and at the time of writing
-the patches I had to do quite a lot of coordination with Johannes
-since he had a lot of API changes and his changes needed to get
-merged first.
+Ok, I'm going to drop both of these.
 
-I also found quite a few issues in mac80211 back then but I believe
-we have resolved all of them by now so I would expect that if the
-same WoW-only patches to be rebased and tested we may get better
-results.
+thanks,
 
-I stopped working on the WoW stuff due to lack of time to keep
-testing them but the last series can be edited to remove all
-of the already merged stuff and test out the new stuff. The more
-challenging thing for me was to actually get a WoW enabled
-802.11 card, these are not as popular as you would hope. The
-EEPROM would be modified when WoW is enabled but WoW requires
-some actual hardware mucking to allow for the PCI Wake signal
-which is typically blocked off. If the EEPROM has WoW enabled
-then the hardware mucking would have been done.
-
-To test WoW you also need to drop Network Manager and use
-the supplicant directly so that during suspend you remain
-associated. I should note that WoW will only work on
-non-WPA networks with ath9k due to the lack of
-hardware CPU, during suspend there is only power for the
-802.11 hardware, the CPU on your box would be asleep but
-would be required for group key changes. The way I was thinking
-of doing this was to only enable WoW through cfg80211 for ath9k if
-and only if you are associated and you are connected to a non
-WPA network.
-
-WoW would work with encryption on our USB devices where
-there is a CPU though.
-
-You can find my last series here:
-
-http://www.mk.kernel.org/pub/linux/kernel/people/mcgrof/patches/wow-07-21.patch
-http://www.mk.kernel.org/pub/linux/kernel/people/mcgrof/patches/iw-add-wow.patch
-
-If you manage to do what I noted above, get an actual WoW enabled card,
-and it works reliably I'd gladly welcome and ACK the patches :)
-
-  Luis
+greg k-h
