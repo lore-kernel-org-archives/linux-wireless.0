@@ -1,80 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:44046 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751118Ab0G0FR5 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47902 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751417Ab0G2UWk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 01:17:57 -0400
-Subject: Re: Hardware needs to know when EAP nego is complete
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Jouni Malinen <j@w1.fi>
-Cc: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>
-In-Reply-To: <20100726143047.GB7324@jm.kir.nu>
-References: <1280142400.6475.33.camel@wimaxnb.nmp.nokia.com>
-	 <20100726143047.GB7324@jm.kir.nu>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 27 Jul 2010 08:17:22 +0300
-Message-ID: <1280207842.6475.56.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+	Thu, 29 Jul 2010 16:22:40 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 1/2] mac80211: support use of NAPI for bottom-half processing
+Date: Thu, 29 Jul 2010 16:14:13 -0400
+Message-Id: <1280434454-3597-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-07-26 at 16:30 +0200, ext Jouni Malinen wrote:
-> On Mon, Jul 26, 2010 at 02:06:40PM +0300, Juuso Oikarinen wrote:
-> > There are lots of timing issues involved, and there is a priority
-> > between WLAN an BT. To ensure BT A2DP and SCO work properly, BT needs to
-> > have enough priority at the expense of WLAN performance. While this
-> > works well enough when connected, during WLAN association and especially
-> > during EAP negotiation the priority needs to be more on the WLAN side to
-> > ensure reliability.
-> 
-> Could you please explain why EAP negotiation is a special case? It is
-> using data frames just like any other operation after it..
+This patch implement basic infrastructure to support use of NAPI by
+mac80211-based hardware drivers.
 
-I'm not aware of all the facts, but I believe it's more about the EAP
-negotiation being more sensitive to lost frames for instance.
+Because mac80211 devices can support multiple netdevs, a dummy netdev
+is used for interfacing with the NAPI code in the core of the network
+stack.  That structure is hidden from the hardware drivers, but the
+actual napi_struct is exposed in the ieee80211_hw structure so that the
+poll routines in drivers can retrieve that structure.  Hardware drivers
+can also specify their own weight value for NAPI polling.
 
-> > So, what this all boils down to is that the wl1271 driver needs to know
-> > when the association, including the possible EAP negotations are fully
-> > complete, to be able to adjust the priority.
-> 
-> This sounds like a horrible hack and really, the unreliability during
-> EAP should likely fixed in some other way.
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ include/net/mac80211.h     |    8 ++++++++
+ net/mac80211/ieee80211_i.h |    3 +++
+ net/mac80211/iface.c       |    4 ++++
+ net/mac80211/main.c        |    6 ++++++
+ 4 files changed, 21 insertions(+), 0 deletions(-)
 
-To be truthful, I think it's a hack all the way - also on the wl1271.
-This way of WLAN-BT coexistence has proven to be a pandora's box of
-problems - all these weird issues keep popping up. And this particular
-issue is probably one of those, and this way around it, is probably a
-last minute hack to solve the issue on the chipset vendor part.
-
-> > Currently, there is no such information available to the driver. In fact
-> > this information is not available anywhere in the kernel level either
-> > (as the details of the EAP negotiation, needed keys etc are controlled
-> > in user-space), so the trigger would need to come from user-space.
-> 
-> That's not actually true.. At least when run with wpa_supplicant is
-> setting operation state to IF_OPER_UP when the full authentication
-> sequence (i.e., not only EAP, but also the following 4-way handshake
-> with EAPOL-Key frames) is done (and IF_OPER_DORMANT when not ready).
-> This is needed for other purposes to indicate when real data traffic can
-> be sent, e.g., for DHCP clients.
-
-> I don't think I would support the idea of using that information to
-> change the WLAN vs. BT priority without some additional data on what
-> exactly goes wrong during EAP negotiation, but at least the information
-> should already be in the kernel, so we do not need to change nl80211 for
-> this.
-> 
-
-Yeah, this sounds like something that could be used for a trigger. I
-will look into it.
-
-I did not really think this proposal would be accepted. I stated out the
-problem mainly to get a second opinion, and possibly ideas.
-
-In the meanwhile, we will have to somehow make this work. I thank you
-for your thoughts. :)
-
--Juuso
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 20d372e..88223b4 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1094,6 +1094,9 @@ enum ieee80211_hw_flags {
+  *
+  * @max_rates: maximum number of alternate rate retry stages
+  * @max_rate_tries: maximum number of tries for each stage
++ *
++ * @napi: NAPI control structure
++ * @napi_weight: weight used for NAPI polling
+  */
+ struct ieee80211_hw {
+ 	struct ieee80211_conf conf;
+@@ -1105,6 +1108,8 @@ struct ieee80211_hw {
+ 	int channel_change_time;
+ 	int vif_data_size;
+ 	int sta_data_size;
++	struct napi_struct napi;
++	int napi_weight;
+ 	u16 queues;
+ 	u16 max_listen_interval;
+ 	s8 max_signal;
+@@ -1679,6 +1684,8 @@ enum ieee80211_ampdu_mlme_action {
+  *	switch operation for CSAs received from the AP may implement this
+  *	callback. They must then call ieee80211_chswitch_done() to indicate
+  *	completion of the channel switch.
++ *
++ * @napi_poll: Poll Rx queue for incoming data frames.
+  */
+ struct ieee80211_ops {
+ 	int (*tx)(struct ieee80211_hw *hw, struct sk_buff *skb);
+@@ -1744,6 +1751,7 @@ struct ieee80211_ops {
+ 	void (*flush)(struct ieee80211_hw *hw, bool drop);
+ 	void (*channel_switch)(struct ieee80211_hw *hw,
+ 			       struct ieee80211_channel_switch *ch_switch);
++	int (*napi_poll)(struct napi_struct *napi, int budget);
+ };
+ 
+ /**
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index c6b5c2d..2c6ac97 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -869,6 +869,9 @@ struct ieee80211_local {
+ 		struct dentry *keys;
+ 	} debugfs;
+ #endif
++
++	/* dummy netdev for use w/ NAPI */
++	struct net_device napi_dev;
+ };
+ 
+ static inline struct ieee80211_sub_if_data *
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index ebbe264..827f25d 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -187,6 +187,8 @@ static int ieee80211_open(struct net_device *dev)
+ 		res = drv_start(local);
+ 		if (res)
+ 			goto err_del_bss;
++		if (local->ops->napi_poll)
++			napi_enable(&local->hw.napi);
+ 		/* we're brought up, everything changes */
+ 		hw_reconf_flags = ~0;
+ 		ieee80211_led_radio(local, true);
+@@ -519,6 +521,8 @@ static int ieee80211_stop(struct net_device *dev)
+ 	ieee80211_recalc_ps(local, -1);
+ 
+ 	if (local->open_count == 0) {
++		if (local->ops->napi_poll)
++			napi_disable(&local->hw.napi);
+ 		ieee80211_clear_tx_pending(local);
+ 		ieee80211_stop_device(local);
+ 
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 0e95c75..79ca2ba 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -491,6 +491,9 @@ struct ieee80211_hw *ieee80211_alloc_hw(size_t priv_data_len,
+ 	skb_queue_head_init(&local->skb_queue);
+ 	skb_queue_head_init(&local->skb_queue_unreliable);
+ 
++	/* init dummy netdev for use w/ NAPI */
++	init_dummy_netdev(&local->napi_dev);
++
+ 	return local_to_hw(local);
+ }
+ EXPORT_SYMBOL(ieee80211_alloc_hw);
+@@ -680,6 +683,9 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 		goto fail_ifa;
+ #endif
+ 
++	netif_napi_add(&local->napi_dev, &local->hw.napi, local->ops->napi_poll,
++			local->hw.napi_weight);
++
+ 	return 0;
+ 
+  fail_ifa:
+-- 
+1.7.1.1
 
