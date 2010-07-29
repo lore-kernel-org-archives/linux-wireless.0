@@ -1,57 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:53306 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751542Ab0GMTQE (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:64038 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752083Ab0G2PJi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jul 2010 15:16:04 -0400
-Received: by bwz1 with SMTP id 1so483454bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jul 2010 12:16:03 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Ivo Van Doorn <ivdoorn@gmail.com>
-Subject: Re: Rate control & USB
-Date: Tue, 13 Jul 2010 21:15:16 +0200
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felix Fietkau <nbd@openwrt.org>
-References: <AANLkTinubmjYu9FyDU0B81F0gHmFPLnDUWYGmZ9Rodss@mail.gmail.com> <201007122114.09571.helmut.schaa@googlemail.com> <AANLkTil9g4VT2tROcjSYu1hGNQ04M5psSzxLfpOGE9DS@mail.gmail.com>
-In-Reply-To: <AANLkTil9g4VT2tROcjSYu1hGNQ04M5psSzxLfpOGE9DS@mail.gmail.com>
+	Thu, 29 Jul 2010 11:09:38 -0400
+Received: by iwn7 with SMTP id 7so399869iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Jul 2010 08:09:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201007132115.16101.helmut.schaa@googlemail.com>
+In-Reply-To: <201007291111.27417.br1@einfach.org>
+References: <20100727094732.27186.30900.stgit@tt-desk> <201007281106.06813.br1@einfach.org>
+	<AANLkTimBu2=9XhzKwUi1ZpRmGWA+C4GCDgXqp-YJVLxt@mail.gmail.com>
+	<201007291111.27417.br1@einfach.org>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 29 Jul 2010 08:09:17 -0700
+Message-ID: <AANLkTinH-2VNYGGBVha-M2HOzYJYe_GBb3Ww1V6i6Hyc@mail.gmail.com>
+Subject: Re: [PATCH v4 1/3] cfg80211: Add nl80211 antenna configuration
+To: Bruno Randolf <br1@einfach.org>
+Cc: Felix Fietkau <nbd@openwrt.org>, johannes@sipsolutions.net,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Dienstag 13 Juli 2010 schrieb Ivo Van Doorn:
-> On Mon, Jul 12, 2010 at 9:14 PM, Helmut Schaa
-> <helmut.schaa@googlemail.com> wrote:
-> > Am Montag 12 Juli 2010 schrieb Ivo Van Doorn:
-> >> I am currently looking into the old problem of the mac80211 rate
-> >> control algorithms
-> >> and USB devices. The Ralink USB devices (and as far as I know, the
-> >> other USB devices
-> >> as well), do not work well with the PID and Minstrel algorithms. This
-> >> is caused by the
-> >> fact that USB devices do not report the TX status to mac80211.
-> >
-> > Ivo, do you know by any chance if the USB devices also have a TX_STA_FIFO
-> > register like the PCI variants? Does it contain useful data or just crap?
-> 
-> Well I guess he has the registers (we don't have rt2870 specific specsheets,
-> but the register definitions from the original Ralink driver to
-> suggest the register
-> is there). However, even if it contains valid data, how do you want to match
-> the contents of that register with the sent frames in the queue?
+On Wed, Jul 28, 2010 at 7:11 PM, Bruno Randolf <br1@einfach.org> wrote:
+> i already tried to explain several times why FIXED_A, FIXED_B, or DIVERSITY is
+> not enough even for "legacy". please re-read the mails and the description of
+> the first patch - i really don't want to re-iterate it *again*. thanks :)
 
-We could stuff a unique packet ID into the TXWI and the TX_STA_FIFO should
-contain the same ID alongside the TX status after the frame was processed
-by the hw.
+What legacy device and respective device driver do we support upstream
+on the kernel that has this sort of extra antenna setup? Do you
+foresee this happening? New silicon simply won't be using legacy
+(non-802.11) so I do not expect new chipsets to have this setup and I
+do not foresee neither a driver supporting these devices nor interest
+from anyone actually implementing this upstream.
 
-> And another downside, is that the above only applies to rt2800usb, and not
-> for rt73usb and rt2500usb, which neither have the TX status register, and were
-> replaced with statistics registers (which I want to read for the batch
-> TX status).
+Even consider Turbo stuff on Atheros legacy chipsets. For eons I've
+been recommending this crap just be removed from ath5k but yet there
+has been resistance. To this day no one has worked on it nor do I
+expect anyone will and actually get Turbo support upstream.
 
-Ok, that's a valid argument ...
+So yes, perhaps some odd ball legacy devices exist with a setup other
+than ANT_A ANT_B and DIVERSITY but I do not think we will support them
+upstream, ever.
 
-Helmut
+  Luis
