@@ -1,277 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42710 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750784Ab0G3ERE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jul 2010 00:17:04 -0400
-Subject: [wt PATCH 5/5] libertas: scan before assocation if no BSSID was
- given
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1280470034.14523.4.camel@dcbw.foobar.com>
-References: <1280470034.14523.4.camel@dcbw.foobar.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 29 Jul 2010 23:18:31 -0700
-Message-ID: <1280470711.14523.16.camel@dcbw.foobar.com>
-Mime-Version: 1.0
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:38090 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751838Ab0G2D60 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Jul 2010 23:58:26 -0400
+Received: from vs3012.wh2.ocn.ne.jp (125.206.180.183)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0948555904
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Jul 2010 12:58:25 +0900 (JST)
+Subject: [PATCH v5] cfg80211: Add nl80211 antenna configuration
+To: johannes@sipsolutions.net, linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: nbd@openwrt.org, mcgrof@gmail.com, linux-wireless@vger.kernel.org
+Date: Thu, 29 Jul 2010 12:58:38 +0900
+Message-ID: <20100729035820.5930.29864.stgit@tt-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix this leftover TODO from the cfg80211 conversion by doing a scan
-if cfg80211 didn't pass in the BSSID for us.  Since the scan code
-uses so much of the cfg80211_scan_request structure to build up the
-firmware command, we just fake one when the scan request is triggered
-internally.  But we need to make sure that internal 'fake' cfg82011
-scan request does get back to cfg82011 via cfg80211_scan_done().
+Allow setting of TX and RX antenna configuration via nl80211.
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
+The antenna configuration is defined as a bitmap of allowed antennas to use.
+This API can be used to mask out antennas which are not attached or should not
+be used for other reasons like regulatory concerns or special setups.
+
+Separate bitmaps are used for RX and TX to allow configuring different antennas
+for receiving and transmitting. The bitmap is 8 bit long, each bit representing
+one antenna, starting with antenna 1 at the first bit. If an antenna bit is
+set, this means the driver is allowed to use this antenna for RX or TX
+respectively; if the bit is not set the hardware is not allowed to use this
+antenna.
+
+Using bitmaps has the benefit of allowing for a flexible configuration
+interface which can support many different configurations and which can be used
+for 802.11n as well as non-802.11n devices. Instead of relying on some hardware
+specific assumptions, drivers can use this information to know which antennas
+are actually attached to the system and derive their capabilities based on
+that.
+
+802.11n devices should enable or disable chains, based on which antennas are
+present (If all antennas belonging to a particular chain are disabled, the
+entire chain should be disabled). HT capabilities (like STBC, TX Beamforming,
+Antenna selection) should be calculated based on the available chains after
+applying the antenna masks. Should a 802.11n device have diversity antennas
+attached to one of their chains, diversity can be enabled or disabled based on
+the antenna information.
+
+Non-802.11n drivers can use the antenna masks to enable or disable antenna
+diversity.
+
+While covering chainmasks for 802.11n and the standard "legacy" modes "fixed
+antenna 1", "fixed antenna 2" and "diversity" this API also allows more rare,
+but useful configurations as follows:
+
+1) Send on antenna 1, receive on antenna 2 (or vice versa). This can be used to
+have a low gain antenna for TX in order to keep within the regulatory
+constraints and a high gain antenna for RX in order to receive weaker signals
+("speak softly, but listen harder"). This can be useful for building long-shot
+outdoor links. Another usage of this setup is having a low-noise pre-amplifier
+on antenna 1 and a power amplifier on the other antenna. This way transmit
+noise is mostly kept out of the low noise receive channel.
+(This would be bitmaps: tx 1 rx 2).
+
+2) Another similar setup is: Use RX diversity on both antennas, but always send
+on antenna 1. Again that would allow us to benefit from a higher gain RX
+antenna, while staying within the legal limits.
+(This would be: tx 0 rx 3).
+
+3) And finally there can be special experimental setups in research and
+development even with pre 802.11n hardware where more than 2 antennas are
+available. It's good to keep the API simple, yet flexible.
+
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 ---
- drivers/net/wireless/libertas/cfg.c  |  148 ++++++++++++++++++++++++++--------
- drivers/net/wireless/libertas/dev.h  |    5 +
- drivers/net/wireless/libertas/main.c |    1 +
- 3 files changed, 121 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
-index a8c0126..623b81e 100644
---- a/drivers/net/wireless/libertas/cfg.c
-+++ b/drivers/net/wireless/libertas/cfg.c
-@@ -715,8 +715,13 @@ static void lbs_scan_worker(struct work_struct *work)
+v5: Removed the special casing of "0" for diversity. I hope i made the
+descriptions more clear and incorportated all comments concerning 802.11n. If
+we can agree on this i will re-send the whole series.
+
+---
+ include/linux/nl80211.h |   25 +++++++++++++++++++++++++
+ include/net/cfg80211.h  |    3 +++
+ net/wireless/nl80211.c  |   30 +++++++++++++++++++++++++++++-
+ 3 files changed, 57 insertions(+), 1 deletions(-)
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 2c87016..8a88921 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -731,6 +731,28 @@ enum nl80211_commands {
+  *      This is used in association with @NL80211_ATTR_WIPHY_TX_POWER_SETTING
+  *      for non-automatic settings.
+  *
++ * @NL80211_ATTR_WIPHY_ANTENNA_TX: Bitmap of allowed antennas for transmitting.
++ *	This can be used to mask out antennas which are not attached or should
++ *	not be used for transmitting. If an antenna is not selected in this
++ *	bitmap the hardware is not allowed to transmit on this antenna.
++ *
++ *	Each bit represents one antenna, starting with antenna 1 at the first
++ *	bit. Depending on which antennas are selected in the bitmap, 802.11n
++ *	drivers can derive which chainmasks to use (if all antennas belonging to
++ *	a particular chain are disabled this chain should be disabled) and if
++ *	a chain has diversity antennas wether diversity should be used or not.
++ *	HT capabilities (STBC, TX Beamforming, Antenna selection) can be
++ *	derived from the available chains after applying the antenna mask.
++ *	Non-802.11n drivers can derive wether to use diversity or not.
++ *	Drivers may reject configurations or RX/TX mask combinations they cannot
++ *	support by returning -EINVAL.
++ *
++ * @NL80211_ATTR_WIPHY_ANTENNA_RX: Bitmap of allowed antennas for receiving.
++ *	This can be used to mask out antennas which are not attached or should
++ *	not be used for receiving. If an antenna is not selected in this bitmap
++ *	the hardware should not be configured to receive on this antenna.
++ *	For a more detailed descripton see @NL80211_ATTR_WIPHY_ANTENNA_TX.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -891,6 +913,9 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_WIPHY_TX_POWER_SETTING,
+ 	NL80211_ATTR_WIPHY_TX_POWER_LEVEL,
  
- 	if (priv->scan_channel >= priv->scan_req->n_channels) {
- 		/* Mark scan done */
--		cfg80211_scan_done(priv->scan_req, false);
-+		if (priv->internal_scan)
-+			kfree(priv->scan_req);
-+		else
-+			cfg80211_scan_done(priv->scan_req, false);
++	NL80211_ATTR_WIPHY_ANTENNA_TX,
++	NL80211_ATTR_WIPHY_ANTENNA_RX,
 +
- 		priv->scan_req = NULL;
-+		priv->last_scan = jiffies;
- 	}
+ 	/* add attributes here, update the policy in nl80211.c */
  
- 	/* Restart network */
-@@ -727,10 +732,33 @@ static void lbs_scan_worker(struct work_struct *work)
- 
- 	kfree(scan_cmd);
- 
-+	/* Wake up anything waiting on scan completion */
-+	if (priv->scan_req == NULL) {
-+		lbs_deb_scan("scan: waking up waiters\n");
-+		wake_up_all(&priv->scan_q);
-+	}
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index f68ae54..7dc0e8d 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1184,6 +1184,9 @@ struct cfg80211_ops {
+ 	int	(*set_cqm_rssi_config)(struct wiphy *wiphy,
+ 				       struct net_device *dev,
+ 				       s32 rssi_thold, u32 rssi_hyst);
 +
-  out_no_scan_cmd:
- 	lbs_deb_leave(LBS_DEB_SCAN);
- }
- 
-+static void _internal_start_scan(struct lbs_private *priv, bool internal,
-+	struct cfg80211_scan_request *request)
-+{
-+	lbs_deb_enter(LBS_DEB_CFG80211);
-+
-+	lbs_deb_scan("scan: ssids %d, channels %d, ie_len %zd\n",
-+		request->n_ssids, request->n_channels, request->ie_len);
-+
-+	priv->scan_channel = 0;
-+	queue_delayed_work(priv->work_thread, &priv->scan_work,
-+		msecs_to_jiffies(50));
-+
-+	priv->scan_req = request;
-+	priv->internal_scan = internal;
-+
-+	lbs_deb_leave(LBS_DEB_CFG80211);
-+}
- 
- static int lbs_cfg_scan(struct wiphy *wiphy,
- 	struct net_device *dev,
-@@ -747,18 +775,11 @@ static int lbs_cfg_scan(struct wiphy *wiphy,
- 		goto out;
- 	}
- 
--	lbs_deb_scan("scan: ssids %d, channels %d, ie_len %zd\n",
--		request->n_ssids, request->n_channels, request->ie_len);
--
--	priv->scan_channel = 0;
--	queue_delayed_work(priv->work_thread, &priv->scan_work,
--		msecs_to_jiffies(50));
-+	_internal_start_scan(priv, false, request);
- 
- 	if (priv->surpriseremoved)
- 		ret = -EIO;
- 
--	priv->scan_req = request;
--
-  out:
- 	lbs_deb_leave_args(LBS_DEB_CFG80211, "ret %d", ret);
- 	return ret;
-@@ -1193,7 +1214,62 @@ done:
- 	return ret;
- }
- 
-+static struct cfg80211_scan_request *
-+_new_connect_scan_req(struct wiphy *wiphy, struct cfg80211_connect_params *sme)
-+{
-+	struct cfg80211_scan_request *creq = NULL;
-+	int i, n_channels = 0;
-+	enum ieee80211_band band;
-+
-+	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
-+		if (wiphy->bands[band])
-+			n_channels += wiphy->bands[band]->n_channels;
-+	}
-+
-+	creq = kzalloc(sizeof(*creq) + sizeof(struct cfg80211_ssid) +
-+		       n_channels * sizeof(void *),
-+		       GFP_ATOMIC);
-+	if (!creq)
-+		return NULL;
-+
-+	/* SSIDs come after channels */
-+	creq->ssids = (void *)&creq->channels[n_channels];
-+	creq->n_channels = n_channels;
-+	creq->n_ssids = 1;
-+
-+	/* Scan all available channels */
-+	i = 0;
-+	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
-+		int j;
-+
-+		if (!wiphy->bands[band])
-+			continue;
-+
-+		for (j = 0; j < wiphy->bands[band]->n_channels; j++) {
-+			/* ignore disabled channels */
-+			if (wiphy->bands[band]->channels[j].flags &
-+						IEEE80211_CHAN_DISABLED)
-+				continue;
-+
-+			creq->channels[i] = &wiphy->bands[band]->channels[j];
-+			i++;
-+		}
-+	}
-+	if (i) {
-+		/* Set real number of channels specified in creq->channels[] */
-+		creq->n_channels = i;
-+
-+		/* Scan for the SSID we're going to connect to */
-+		memcpy(creq->ssids[0].ssid, sme->ssid, sme->ssid_len);
-+		creq->ssids[0].ssid_len = sme->ssid_len;
-+	} else {
-+		/* No channels found... */
-+		kfree(creq);
-+		creq = NULL;
-+	}
- 
-+	return creq;
-+}
- 
- static int lbs_cfg_connect(struct wiphy *wiphy, struct net_device *dev,
- 			   struct cfg80211_connect_params *sme)
-@@ -1205,37 +1281,43 @@ static int lbs_cfg_connect(struct wiphy *wiphy, struct net_device *dev,
- 
- 	lbs_deb_enter(LBS_DEB_CFG80211);
- 
--	if (sme->bssid) {
--		bss = cfg80211_get_bss(wiphy, sme->channel, sme->bssid,
--			sme->ssid, sme->ssid_len,
--			WLAN_CAPABILITY_ESS, WLAN_CAPABILITY_ESS);
--	} else {
--		/*
--		 * Here we have an impedance mismatch. The firmware command
--		 * CMD_802_11_ASSOCIATE always needs a BSSID, it cannot
--		 * connect otherwise. However, for the connect-API of
--		 * cfg80211 the bssid is purely optional. We don't get one,
--		 * except the user specifies one on the "iw" command line.
--		 *
--		 * If we don't got one, we could initiate a scan and look
--		 * for the best matching cfg80211_bss entry.
--		 *
--		 * Or, better yet, net/wireless/sme.c get's rewritten into
--		 * something more generally useful.
-+	if (!sme->bssid) {
-+		/* Run a scan if one isn't in-progress already and if the last
-+		 * scan was done more than 2 seconds ago.
- 		 */
--		lbs_pr_err("TODO: no BSS specified\n");
--		ret = -ENOTSUPP;
--		goto done;
--	}
-+		if (priv->scan_req == NULL &&
-+		    time_after(jiffies, priv->last_scan + (2 * HZ))) {
-+			struct cfg80211_scan_request *creq;
- 
-+			creq = _new_connect_scan_req(wiphy, sme);
-+			if (!creq) {
-+				ret = -EINVAL;
-+				goto done;
-+			}
-+
-+			lbs_deb_assoc("assoc: scanning for compatible AP\n");
-+			_internal_start_scan(priv, true, creq);
-+		}
-+
-+		/* Wait for any in-progress scan to complete */
-+		lbs_deb_assoc("assoc: waiting for scan to complete\n");
-+		wait_event_interruptible_timeout(priv->scan_q,
-+						 (priv->scan_req == NULL),
-+						 (15 * HZ));
-+		lbs_deb_assoc("assoc: scanning competed\n");
-+	}
- 
-+	/* Find the BSS we want using available scan results */
-+	bss = cfg80211_get_bss(wiphy, sme->channel, sme->bssid,
-+		sme->ssid, sme->ssid_len,
-+		WLAN_CAPABILITY_ESS, WLAN_CAPABILITY_ESS);
- 	if (!bss) {
--		lbs_pr_err("assicate: bss %pM not in scan results\n",
-+		lbs_pr_err("assoc: bss %pM not in scan results\n",
- 			   sme->bssid);
- 		ret = -ENOENT;
- 		goto done;
- 	}
--	lbs_deb_assoc("trying %pM", sme->bssid);
-+	lbs_deb_assoc("trying %pM\n", bss->bssid);
- 	lbs_deb_assoc("cipher 0x%x, key index %d, key len %d\n",
- 		      sme->crypto.cipher_group,
- 		      sme->key_idx, sme->key_len);
-@@ -1298,7 +1380,7 @@ static int lbs_cfg_connect(struct wiphy *wiphy, struct net_device *dev,
- 	lbs_set_radio(priv, preamble, 1);
- 
- 	/* Do the actual association */
--	lbs_associate(priv, bss, sme);
-+	ret = lbs_associate(priv, bss, sme);
- 
-  done:
- 	if (bss)
-diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-index 3c7e255..f062ed5 100644
---- a/drivers/net/wireless/libertas/dev.h
-+++ b/drivers/net/wireless/libertas/dev.h
-@@ -161,6 +161,11 @@ struct lbs_private {
- 	/** Scanning */
- 	struct delayed_work scan_work;
- 	int scan_channel;
-+	/* Queue of things waiting for scan completion */
-+	wait_queue_head_t scan_q;
-+	/* Whether the scan was initiated internally and not by cfg80211 */
-+	bool internal_scan;
-+	unsigned long last_scan;
++	int	(*set_antenna)(struct wiphy *wiphy, u8 tx_ant, u8 rx_ant);
++	int	(*get_antenna)(struct wiphy *wiphy, u8 *tx_ant, u8 *rx_ant);
  };
  
- extern struct cmd_confirm_sleep confirm_sleep;
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index 2589671..24958a8 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -719,6 +719,7 @@ static int lbs_init_adapter(struct lbs_private *priv)
- 	priv->deep_sleep_required = 0;
- 	priv->wakeup_dev_required = 0;
- 	init_waitqueue_head(&priv->ds_awake_q);
-+	init_waitqueue_head(&priv->scan_q);
- 	priv->authtype_auto = 1;
- 	priv->is_host_sleep_configured = 0;
- 	priv->is_host_sleep_activated = 0;
--- 
-1.7.2
-
+ /*
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index cea595e..62fc5fe 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -156,6 +156,9 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 
+ 	[NL80211_ATTR_WIPHY_TX_POWER_SETTING] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_WIPHY_TX_POWER_LEVEL] = { .type = NLA_U32 },
++
++	[NL80211_ATTR_WIPHY_ANTENNA_TX] = { .type = NLA_U8 },
++	[NL80211_ATTR_WIPHY_ANTENNA_RX] = { .type = NLA_U8 },
+ };
+ 
+ /* policy for the attributes */
+@@ -458,7 +461,6 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+ 		    dev->wiphy.rts_threshold);
+ 	NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_COVERAGE_CLASS,
+ 		    dev->wiphy.coverage_class);
+-
+ 	NLA_PUT_U8(msg, NL80211_ATTR_MAX_NUM_SCAN_SSIDS,
+ 		   dev->wiphy.max_scan_ssids);
+ 	NLA_PUT_U16(msg, NL80211_ATTR_MAX_SCAN_IE_LEN,
+@@ -471,6 +473,16 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+ 	NLA_PUT_U8(msg, NL80211_ATTR_MAX_NUM_PMKIDS,
+ 		   dev->wiphy.max_num_pmkids);
+ 
++	if (dev->ops->get_antenna) {
++		u8 tx_ant = 0, rx_ant = 0;
++		int res;
++		res = dev->ops->get_antenna(&dev->wiphy, &tx_ant, &rx_ant);
++		if (!res) {
++			NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_ANTENNA_TX, tx_ant);
++			NLA_PUT_U8(msg, NL80211_ATTR_WIPHY_ANTENNA_RX, rx_ant);
++		}
++	}
++
+ 	nl_modes = nla_nest_start(msg, NL80211_ATTR_SUPPORTED_IFTYPES);
+ 	if (!nl_modes)
+ 		goto nla_put_failure;
+@@ -900,6 +912,22 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
+ 			goto bad_res;
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_WIPHY_ANTENNA_TX] &&
++	    info->attrs[NL80211_ATTR_WIPHY_ANTENNA_RX]) {
++		u8 tx_ant, rx_ant;
++		if (!rdev->ops->set_antenna) {
++			result = -EOPNOTSUPP;
++			goto bad_res;
++		}
++
++		tx_ant = nla_get_u8(info->attrs[NL80211_ATTR_WIPHY_ANTENNA_TX]);
++		rx_ant = nla_get_u8(info->attrs[NL80211_ATTR_WIPHY_ANTENNA_RX]);
++
++		result = rdev->ops->set_antenna(&rdev->wiphy, tx_ant, rx_ant);
++		if (result)
++			goto bad_res;
++	}
++
+ 	changed = 0;
+ 
+ 	if (info->attrs[NL80211_ATTR_WIPHY_RETRY_SHORT]) {
 
