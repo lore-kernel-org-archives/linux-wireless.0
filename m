@@ -1,98 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:59315 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758554Ab0GURfJ (ORCPT
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:24679 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751267Ab0G2JMO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jul 2010 13:35:09 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>
-Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v2 13/20] omap: zoom: add mmc3/wl1271 device support
-Date: Wed, 21 Jul 2010 20:33:47 +0300
-Message-Id: <1279733634-21974-14-git-send-email-ohad@wizery.com>
-In-Reply-To: <1279733634-21974-1-git-send-email-ohad@wizery.com>
-References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+	Thu, 29 Jul 2010 05:12:14 -0400
+Received: from vs3013.wh2.ocn.ne.jp (125.206.180.245)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 5-0488404731
+	for <linux-wireless@vger.kernel.org>; Thu, 29 Jul 2010 18:12:13 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH v5] cfg80211: Add nl80211 antenna configuration
+Date: Thu, 29 Jul 2010 18:12:28 +0900
+References: <20100729035820.5930.29864.stgit@tt-desk> <AANLkTika8nD5oEXt-nHx7BHzZzCK1i8VQ9b-ubmcMze+@mail.gmail.com>
+In-Reply-To: <AANLkTika8nD5oEXt-nHx7BHzZzCK1i8VQ9b-ubmcMze+@mail.gmail.com>
+Cc: johannes@sipsolutions.net, linville@tuxdriver.com, nbd@openwrt.org,
+	linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201007291812.28639.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add MMC3 support on ZOOM, which has the wl1271 device hardwired to.
+On Thu July 29 2010 15:12:29 you wrote:
+> On Wed, Jul 28, 2010 at 8:58 PM, Bruno Randolf <br1@einfach.org> wrote:
+> > diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+> > index 2c87016..8a88921 100644
+> > --- a/include/linux/nl80211.h
+> > +++ b/include/linux/nl80211.h
+> > @@ -731,6 +731,28 @@ enum nl80211_commands {
+> >  *      This is used in association with
+> > @NL80211_ATTR_WIPHY_TX_POWER_SETTING *      for non-automatic settings.
+> >  *
+> > + * @NL80211_ATTR_WIPHY_ANTENNA_TX: Bitmap of allowed antennas for
+> > transmitting. + *     This can be used to mask out antennas which are
+> > not attached or should + *     not be used for transmitting. If an
+> > antenna is not selected in this + *     bitmap the hardware is not
+> > allowed to transmit on this antenna. + *
+> > + *     Each bit represents one antenna, starting with antenna 1 at the
+> > first + *     bit. Depending on which antennas are selected in the
+> > bitmap, 802.11n + *     drivers can derive which chainmasks to use (if
+> > all antennas belonging to + *     a particular chain are disabled this
+> > chain should be disabled) and if + *     a chain has diversity antennas
+> > wether diversity should be used or not. + *     HT capabilities (STBC,
+> > TX Beamforming, Antenna selection) can be + *     derived from the
+> > available chains after applying the antenna mask.
+> 
+> I don't want to do any work myself on drivers for this, can we have
+> cfg80211/mac80211 do this for us?
 
-The wl1271 is a 4-wire, 1.8V, embedded SDIO WLAN device with an
-external IRQ line, and power-controlled by a GPIO-based fixed regulator.
+is this not a separate issue from defining the API? you could have it do this 
+for you even now, with or without the antenna API, no?
 
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
----
- arch/arm/mach-omap2/board-zoom-peripherals.c |   19 +++++++++++++++++++
- 1 files changed, 19 insertions(+), 0 deletions(-)
+i think this should be dealt with seperately. for now let's just define an API 
+for an antenna mask.
 
-diff --git a/arch/arm/mach-omap2/board-zoom-peripherals.c b/arch/arm/mach-omap2/board-zoom-peripherals.c
-index 2fc0f4a..3230801 100644
---- a/arch/arm/mach-omap2/board-zoom-peripherals.c
-+++ b/arch/arm/mach-omap2/board-zoom-peripherals.c
-@@ -17,6 +17,8 @@
- #include <linux/i2c/twl.h>
- #include <linux/regulator/machine.h>
- #include <linux/regulator/fixed.h>
-+#include <linux/mmc/host.h>
-+#include <linux/wl12xx.h>
- 
- #include <asm/mach-types.h>
- #include <asm/mach/arch.h>
-@@ -29,6 +31,7 @@
- #include "hsmmc.h"
- 
- #define OMAP_ZOOM_WLAN_PMENA_GPIO	(101)
-+#define OMAP_ZOOM_WLAN_IRQ_GPIO		(162)
- 
- /* Zoom2 has Qwerty keyboard*/
- static int board_keymap[] = {
-@@ -184,6 +187,12 @@ static struct platform_device omap_vwlan_device = {
- 	},
- };
- 
-+struct wl12xx_platform_data omap_zoom_wlan_data = {
-+	.irq = OMAP_GPIO_IRQ(OMAP_ZOOM_WLAN_IRQ_GPIO),
-+	/* ZOOM ref clock is 26 MHz */
-+	.board_ref_clock = 1,
-+};
-+
- static struct omap2_hsmmc_info mmc[] __initdata = {
- 	{
- 		.name		= "external",
-@@ -201,6 +210,15 @@ static struct omap2_hsmmc_info mmc[] __initdata = {
- 		.nonremovable	= true,
- 		.power_saving	= true,
- 	},
-+	{
-+		.name		= "wl1271",
-+		.mmc		= 3,
-+		.wires		= 4,
-+		.gpio_wp	= -EINVAL,
-+		.gpio_cd	= -EINVAL,
-+		.ocr_mask	= MMC_VDD_165_195,
-+		.priv_data	= &omap_zoom_wlan_data,
-+	},
- 	{}      /* Terminator */
- };
- 
-@@ -217,6 +235,7 @@ static int zoom_twl_gpio_setup(struct device *dev,
- 	zoom_vmmc1_supply.dev = mmc[0].dev;
- 	zoom_vsim_supply.dev = mmc[0].dev;
- 	zoom_vmmc2_supply.dev = mmc[1].dev;
-+	zoom_vmmc3_supply.dev = mmc[2].dev;
- 
- 	return 0;
- }
--- 
-1.7.0.4
-
+bruno
