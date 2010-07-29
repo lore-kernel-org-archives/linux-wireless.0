@@ -1,32 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50030 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751761Ab0GVMec (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55177 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753821Ab0G2SaS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 08:34:32 -0400
-Subject: Re: 2.6.35-rc5+ WARNING at net/mac80211/scan.c:262
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org
-In-Reply-To: <20100721184040.GA22968@comet.dominikbrodowski.net>
-References: <20100721184040.GA22968@comet.dominikbrodowski.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 22 Jul 2010 14:34:15 +0200
-Message-ID: <1279802055.12439.16.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 29 Jul 2010 14:30:18 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v2] b43legacy: update hw/fw version info in wiphy struct
+Date: Thu, 29 Jul 2010 14:29:53 -0400
+Message-Id: <1280428193-30038-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1280424890-18995-1-git-send-email-linville@tuxdriver.com>
+References: <1280424890-18995-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This makes the information available through ethtool...
 
-> [82970.511341] ------------[ cut here ]------------
-> [82970.511365] WARNING: at net/mac80211/scan.c:262 ieee80211_scan_completed+0x137/0x1d0()
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+v2 -> use coreid for hw_version
 
-You don't happen to have a way of reproducing this? I have been
-suspecting races in this area, and came up with this patch to fix them,
-but haven't really validated it yet:
+ drivers/net/wireless/b43legacy/main.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-mac80211-hw-scan-locking.patch
-
-johannes
+diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
+index 1713f5f..67f18ec 100644
+--- a/drivers/net/wireless/b43legacy/main.c
++++ b/drivers/net/wireless/b43legacy/main.c
+@@ -1623,6 +1623,7 @@ error:
+ 
+ static int b43legacy_upload_microcode(struct b43legacy_wldev *dev)
+ {
++	struct wiphy *wiphy = dev->wl->hw->wiphy;
+ 	const size_t hdr_len = sizeof(struct b43legacy_fw_header);
+ 	const __be32 *data;
+ 	unsigned int i;
+@@ -1732,6 +1733,10 @@ static int b43legacy_upload_microcode(struct b43legacy_wldev *dev)
+ 	dev->fw.rev = fwrev;
+ 	dev->fw.patch = fwpatch;
+ 
++	snprintf(wiphy->fw_version, sizeof(wiphy->fw_version), "%u.%u",
++			dev->fw.rev, dev->fw.patch);
++	wiphy->hw_version = dev->dev->id.coreid;
++
+ 	return 0;
+ 
+ error:
+-- 
+1.7.1.1
 
