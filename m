@@ -1,56 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:59315 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761148Ab0GURfc (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55185 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754771Ab0G2SaY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jul 2010 13:35:32 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>
-Cc: <linux-arm-kernel@lists.infradead.org>, <linux@arm.linux.org.uk>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v2 20/20] wireless: wl1271: call SDIO claim/release power API
-Date: Wed, 21 Jul 2010 20:33:54 +0300
-Message-Id: <1279733634-21974-21-git-send-email-ohad@wizery.com>
-In-Reply-To: <1279733634-21974-1-git-send-email-ohad@wizery.com>
-References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+	Thu, 29 Jul 2010 14:30:24 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v2] b43: update hw/fw version info in wiphy struct
+Date: Thu, 29 Jul 2010 14:28:50 -0400
+Message-Id: <1280428130-29999-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <4C51C2C4.7050207@bu3sch.de>
+References: <4C51C2C4.7050207@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-call SDIO claim/release power API to turn the wl1271
-power on and off
+This makes the information available through ethtool...
 
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- drivers/net/wireless/wl12xx/wl1271_sdio.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+v2 -> use coreid for hw_version
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-index 5967718..a7e9ace 100644
---- a/drivers/net/wireless/wl12xx/wl1271_sdio.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-@@ -152,11 +152,13 @@ static int wl1271_sdio_set_power(struct wl1271 *wl, bool enable)
- 	 * alive.
- 	 */
- 	if (enable) {
-+		sdio_claim_power(func);
- 		sdio_claim_host(func);
- 		sdio_enable_func(func);
- 	} else {
- 		sdio_disable_func(func);
- 		sdio_release_host(func);
-+		sdio_release_power(func);
+ drivers/net/wireless/b43/main.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 20631ae..294b688 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -2280,6 +2280,7 @@ out:
+ 
+ static int b43_upload_microcode(struct b43_wldev *dev)
+ {
++	struct wiphy *wiphy = dev->wl->hw->wiphy;
+ 	const size_t hdr_len = sizeof(struct b43_fw_header);
+ 	const __be32 *data;
+ 	unsigned int i, len;
+@@ -2405,6 +2406,10 @@ static int b43_upload_microcode(struct b43_wldev *dev)
+ 		}
  	}
  
- 	return 0;
++	snprintf(wiphy->fw_version, sizeof(wiphy->fw_version), "%u.%u",
++			dev->fw.rev, dev->fw.patch);
++	wiphy->hw_version = dev->dev->id.coreid;
++
+ 	if (b43_is_old_txhdr_format(dev)) {
+ 		/* We're over the deadline, but we keep support for old fw
+ 		 * until it turns out to be in major conflict with something new. */
 -- 
-1.7.0.4
+1.7.1.1
 
