@@ -1,63 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40174 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751964Ab0G0RvF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 13:51:05 -0400
-Subject: [wt PATCH 0/16] libertas: finish conversion to direct command
- architecture
-From: Dan Williams <dcbw@redhat.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:33468 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755788Ab0G2Ujk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Jul 2010 16:39:40 -0400
+Subject: Re: [PATCH 1/2] mac80211: support use of NAPI for bottom-half
+ processing
+From: Johannes Berg <johannes@sipsolutions.net>
 To: "John W. Linville" <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1280434454-3597-1-git-send-email-linville@tuxdriver.com>
+References: <1280434454-3597-1-git-send-email-linville@tuxdriver.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 27 Jul 2010 12:52:37 -0700
-Message-ID: <1280260357.19686.13.camel@dcbw.foobar.com>
+Date: Thu, 29 Jul 2010 22:39:38 +0200
+Message-ID: <1280435978.3823.20.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series finishes conversion of all firmware commands to direct
-commands instead of using the indirect (and I'd argue less clear) model
-that the original vendor driver used.  This was the last barrier to
-scale before we can begin cleaning up the command submission structure
-to be less convoluted and more reliable.  It's a net code loss too which
-makes many kittens and puppies happy.
+On Thu, 2010-07-29 at 16:14 -0400, John W. Linville wrote:
 
-Please apply to wireless-testing.  Note that wireless-testing is
-somewhat broken as a result of the cfg80211 patches, but this series
-should make that easier to fix up.
+> +	struct napi_struct napi;
+> +	int napi_weight;
 
-Dan Williams (16):
-  libertas: clean up MONITOR_MODE command
-  libertas: clean up RSSI command
-  libertas: convert 11D_DOMAIN_INFO to a direct command
-  libertas: remove unused indirect TPC_CFG command leftovers
-  libertas: remove unused Automatic Frequency Control command
-  libertas: remove Beacon Control
-  libertas: convert LED_GPIO_CTRL to a direct command
-  libertas: convert register access to direct commands
-  libertas: convert Mesh Blinding Table access to a direct command
-  libertas: convert CMD_FWT_ACCESS to a direct command
-  libertas: remove unused indirect command response handler
-  libertas: convert PS_MODE to a direct command
-  libertas: convert DEEP_SLEEP timer to a direct command
-  libertas: kill unused lbs_prepare_and_send_command()
-  libertas: rename lbs_get_cmd_ctrl_node() to lbs_get_free_cmd_node()
-  libertas: remove unused cmd_pending waitq
+Why is the napi struct visible to drivers? Ok .. I see later.
 
- drivers/net/wireless/libertas/cfg.c     |  197 +--------
- drivers/net/wireless/libertas/cfg.h     |    6 -
- drivers/net/wireless/libertas/cmd.c     |  718 +++++++++++++------------------
- drivers/net/wireless/libertas/cmd.h     |   25 +-
- drivers/net/wireless/libertas/cmdresp.c |  179 +--------
- drivers/net/wireless/libertas/debugfs.c |   67 +---
- drivers/net/wireless/libertas/decl.h    |    5 -
- drivers/net/wireless/libertas/defs.h    |   18 -
- drivers/net/wireless/libertas/dev.h     |    6 -
- drivers/net/wireless/libertas/host.h    |  142 +++----
- drivers/net/wireless/libertas/if_usb.c  |    4 +-
- drivers/net/wireless/libertas/main.c    |   33 +-
- drivers/net/wireless/libertas/mesh.c    |  216 ++++++++--
- drivers/net/wireless/libertas/mesh.h    |   14 +-
- 14 files changed, 613 insertions(+), 1017 deletions(-)
+> @@ -1679,6 +1684,8 @@ enum ieee80211_ampdu_mlme_action {
+>   *	switch operation for CSAs received from the AP may implement this
+>   *	callback. They must then call ieee80211_chswitch_done() to indicate
+>   *	completion of the channel switch.
+> + *
+> + * @napi_poll: Poll Rx queue for incoming data frames.
 
+should this document that napi_weight must be set?
+
+> +	int (*napi_poll)(struct napi_struct *napi, int budget);
+
+I'd prefer passing the hw here and having mac80211 wrap it in a simple
+function that does the container_of magic? Anything preventing that?
+Then the napi struct can be hidden from drivers.
+
+johannes
 
