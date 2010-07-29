@@ -1,92 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:37045 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751270Ab0GVGlH (ORCPT
+Received: from smtp130.mail.ukl.yahoo.com ([77.238.184.61]:39765 "HELO
+	smtp130.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754848Ab0G2RIS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 02:41:07 -0400
-Subject: Re: [PATCH] wl1251: fix sparse-generated warnings
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: "ext John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kalle.valo@iki.fi>
-In-Reply-To: <1279729917-4451-1-git-send-email-linville@tuxdriver.com>
-References: <1279729917-4451-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 22 Jul 2010 09:34:18 +0300
-Message-ID: <1279780458.2322.25.camel@powerslave>
-Mime-Version: 1.0
+	Thu, 29 Jul 2010 13:08:18 -0400
+Message-ID: <4C51B3EE.8000205@users.sourceforge.net>
+Date: Thu, 29 Jul 2010 18:01:34 +0100
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+MIME-Version: 1.0
+To: Kirill Zut <kirill.zut@promwad.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Subject: Re: [PATCH 2.6.34] rtl8187: ad-hoc mode support
+References: <201007291835.46159.kirill.zut@promwad.com>
+In-Reply-To: <201007291835.46159.kirill.zut@promwad.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Kirill Zut wrote:
+> ---
+> This patch makes ad-hoc mode available on RTL8187
+> 
+> Signed-off-by: Kirill Zut <kirill.zut@promwad.com>
 
-Great that someone finally made the endianess changes that we never had
-the time to do for wl1251. Thanks for that! :)
+Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
 
-I took a look at your patch and I have a few minor comments below, but
-the best person to comment would certainly be Kalle, not me ;)
+looks alright, but I remember some discussion about generic ad hoc support from 
+the mac80211 is needed for all mac80211-based drivers to work. What's the status 
+of that and how's it comming along?
 
+Hin-Tak
 
-On Wed, 2010-07-21 at 18:31 +0200, ext John W. Linville wrote:
-> diff --git a/drivers/net/wireless/wl12xx/wl1251_boot.c b/drivers/net/wireless/wl12xx/wl1251_boot.c
-> index 2545123..c688895 100644
-> --- a/drivers/net/wireless/wl12xx/wl1251_boot.c
-> +++ b/drivers/net/wireless/wl12xx/wl1251_boot.c
-
-[...]
-
-> @@ -467,7 +467,7 @@ static int wl1251_boot_upload_nvs(struct wl1251 *wl)
->  		val = (nvs_ptr[0] | (nvs_ptr[1] << 8)
->  		       | (nvs_ptr[2] << 16) | (nvs_ptr[3] << 24));
+> ---
+> --- linux-2.6.x/drivers/net/wireless/rtl818x/rtl8187_dev.c.orig	2010-07-29 14:40:09.000000000 +0300
+> +++ linux-2.6.x/drivers/net/wireless/rtl818x/rtl8187_dev.c	2010-07-29 14:59:39.000000000 +0300
+> @@ -1032,6 +1032,7 @@ static int rtl8187_add_interface(struct 
 >  
-> -		val = cpu_to_le32(val);
-> +		val = (u32 __force) cpu_to_le32(val);
-
-This will work, but such casts always make me a bit suspicious.  I think
-this is fine for now, but later I think we should make sure that all the
-_write() functions explicitly receive __le32 as val, or receives the
-cpu's u32 and converts it before actually writing the value, for clarity
-reasons.  Kalle, what do you think?
-
-
-> diff --git a/drivers/net/wireless/wl12xx/wl1251_tx.c b/drivers/net/wireless/wl12xx/wl1251_tx.c
-> index c822318..a38ec19 100644
-> --- a/drivers/net/wireless/wl12xx/wl1251_tx.c
-> +++ b/drivers/net/wireless/wl12xx/wl1251_tx.c
-
-[...]
-
-> @@ -191,11 +191,13 @@ static int wl1251_tx_send_packet(struct wl1251 *wl, struct sk_buff *skb,
->  	if (control->control.hw_key &&
->  	    control->control.hw_key->alg == ALG_TKIP) {
->  		int hdrlen;
-> -		u16 fc;
-> +		__le16 fc;
-> +		u16 length;
->  		u8 *pos;
+>  	switch (vif->type) {
+>  	case NL80211_IFTYPE_STATION:
+> +	case NL80211_IFTYPE_ADHOC:
+>  		break;
+>  	default:
+>  		goto exit;
+> @@ -1178,7 +1179,10 @@ static void rtl8187_bss_info_changed(str
+>  			reg = 0;
 >  
-> -		fc = *(u16 *)(skb->data + sizeof(*tx_hdr));
-> -		tx_hdr->length += WL1251_TKIP_IV_SPACE;
-> +		fc = *(__le16 *)(skb->data + sizeof(*tx_hdr));
-
-Is this going to work? sizeof(*tx_hdr), and the operation, will be in
-the cpu's endianess, right? Wouldn't the following be the right thing to
-do then?
-
-fc = cpu_to_le16(le16_to_cpu(skb->data) + sizeof(*tx_hdr));
-
-Maybe some casts are needed too, I didn't check that, but regarding the
-endianess, I think this is how it should go.  It's the same thing as the
-length parameter:
-
-> +		length = le16_to_cpu(tx_hdr->length) + WL1251_TKIP_IV_SPACE;
-> +		tx_hdr->length = cpu_to_le16(length);
-
-...which is treated correctly here.
-
-
-
--- 
-Cheers,
-Luca.
-
+>  		if (is_valid_ether_addr(info->bssid)) {
+> -			reg |= RTL818X_MSR_INFRA;
+> +			if (vif->type == NL80211_IFTYPE_ADHOC)
+> +				reg |= RTL818X_MSR_ADHOC;
+> +			else
+> +				reg |= RTL818X_MSR_INFRA;
+>  			rtl818x_iowrite8(priv, &priv->map->MSR, reg);
+>  		} else {
+>  			reg |= RTL818X_MSR_NO_LINK;
+> @@ -1502,7 +1506,8 @@ static int __devinit rtl8187_probe(struc
+>  	 * XXX: Once this driver supports anything that requires
+>  	 *	beacons it must implement IEEE80211_TX_CTL_ASSIGN_SEQ.
+>  	 */
+> -	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+> +	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+> +				      BIT(NL80211_IFTYPE_ADHOC);
+>  
+>  	if ((id->driver_info == DEVICE_RTL8187) && priv->is_rtl8187b)
+>  		printk(KERN_INFO "rtl8187: inconsistency between id with OEM"
+> 
