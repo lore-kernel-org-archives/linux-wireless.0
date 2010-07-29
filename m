@@ -1,62 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:52975 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756999Ab0GUVA1 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36852 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756659Ab0G2Spi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jul 2010 17:00:27 -0400
-Received: by wwj40 with SMTP id 40so2800902wwj.1
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jul 2010 14:00:25 -0700 (PDT)
+	Thu, 29 Jul 2010 14:45:38 -0400
+Date: Thu, 29 Jul 2010 14:44:14 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Michael =?iso-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@wfinger.net>
+Subject: Re: [PATCH] b43: update hw/fw version info in wiphy struct
+Message-ID: <20100729184414.GE2424@tuxdriver.com>
+References: <1280424853-18954-1-git-send-email-linville@tuxdriver.com>
+ <4C51C2C4.7050207@bu3sch.de>
 MIME-Version: 1.0
-In-Reply-To: <1279744628.6548.0.camel@wwguy-ubuntu>
-References: <1279565034.4572.36.camel@localhost.localdomain>
-	<AANLkTinGUQjPoMRmt_jeFgpxLhzma7qhfR14t_tWLvO1@mail.gmail.com>
-	<1279582174.4572.43.camel@localhost.localdomain>
-	<1279583798.28066.3.camel@wwguy-ubuntu>
-	<AANLkTinJrjvSUuOSeb6fQESN-T789wWCU1ezRXwQ3KXK@mail.gmail.com>
-	<1279744628.6548.0.camel@wwguy-ubuntu>
-Date: Wed, 21 Jul 2010 23:00:24 +0200
-Message-ID: <AANLkTilxa09Cqn3icsTRAULhKBPzv5evOVPTqI-GrYiU@mail.gmail.com>
-Subject: Re: iwlagn and many firmware restarts with Fedora kernel
-From: drago01 <drago01@gmail.com>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <4C51C2C4.7050207@bu3sch.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 21, 2010 at 10:37 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> Hi drago,
-> On Wed, 2010-07-21 at 12:59 -0700, drago01 wrote:
->> On Tue, Jul 20, 2010 at 1:56 AM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
->> > Hi drago,
->> >
->> >
->> > Are you using 5350? here I attach a "RFC patch", could you give a try to
->> > see if it help?
->>
->> Not quite I am on 5300; your patch seem to only touch the 5350 code
->> ... should I try the same change for 5300?
->
-> Yes, please
+On Thu, Jul 29, 2010 at 08:04:52PM +0200, Michael Büsch wrote:
+> On 07/29/2010 07:34 PM, John W. Linville wrote:
+> >+	wiphy->hw_version = dev->dev->bus->chip_id;
+> 
+> Hm, well. Is hw_version of any use, actually? How does ethtool display
+> it? I guess it does not use BCD (chip_id is BCD encoded).
 
-Hi,
+It is available through the ETHTOOL_GREGS ioctl.  The userland ethtool
+app can be extended to interpret the value for a specific driver.
 
-As there is no such field in .34 I patched the .35 driver which seems
-to be fine with the change ... I couldn't trigger it using the close
-lid (no suspend) and wait a bit trick ... but I have not used it for
-long enough to say for certain that its gone.
+> What about using the wireless-core revision? It is slightly more usable
+> than the chip_id.
 
-But unfortunately the driver has a different issue it spams my log with tons of:
+Patch v2 posted...
 
-iwlagn 0000:02:00.0: BA scd_flow 0 does not match txq_id 10
-iwlagn 0000:02:00.0: BA scd_flow 0 does not match txq_id 10
-iwlagn 0000:02:00.0: BA scd_flow 0 does not match txq_id 10
-iwlagn 0000:02:00.0: BA scd_flow 0 does not match txq_id 10
-iwlagn 0000:02:00.0: BA scd_flow 0 does not match txq_id 10
-iwlagn 0000:02:00.0: BA scd_flow 0 does not match txq_id 10
-iwlagn 0000:02:00.0: BA scd_flow 0 does not match txq_id 10
-iwlagn 0000:02:00.0: BA scd_flow 0 does not match txq_id 10
-iwlagn 0000:02:00.0: BA scd_flow 0 does not match txq_id 10
-
-messages.
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
