@@ -1,91 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43140 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750968Ab0G3ELX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jul 2010 00:11:23 -0400
-Subject: [wt PATCH 2/5] libertas: better scan response debugging
-From: Dan Williams <dcbw@redhat.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:53130 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758155Ab0G2T6r convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Jul 2010 15:58:47 -0400
+Received: by bwz1 with SMTP id 1so102125bwz.19
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Jul 2010 12:58:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1280425899-20943-1-git-send-email-linville@tuxdriver.com>
+References: <1280425899-20943-1-git-send-email-linville@tuxdriver.com>
+Date: Thu, 29 Jul 2010 21:58:45 +0200
+Message-ID: <AANLkTi=BMeQexF+LjRYV=xfZFMLniovorLED80kRwKrr@mail.gmail.com>
+Subject: Re: [PATCH] rt2x00: update fw version info in wiphy struct
+From: Ivo Van Doorn <ivdoorn@gmail.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1280470034.14523.4.camel@dcbw.foobar.com>
-References: <1280470034.14523.4.camel@dcbw.foobar.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 29 Jul 2010 23:12:53 -0700
-Message-ID: <1280470373.14523.9.camel@dcbw.foobar.com>
-Mime-Version: 1.0
+Cc: linux-wireless@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make it a bit easier to debug scan results in the future.
+On Thu, Jul 29, 2010 at 7:51 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> This makes the information available through ethtool...
+>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
----
- drivers/net/wireless/libertas/cfg.c |   24 ++++++++++++++++++++----
- 1 files changed, 20 insertions(+), 4 deletions(-)
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
-index b60f661..c7da6c0 100644
---- a/drivers/net/wireless/libertas/cfg.c
-+++ b/drivers/net/wireless/libertas/cfg.c
-@@ -502,20 +502,31 @@ static int lbs_ret_scan(struct lbs_private *priv, unsigned long dummy,
- 
- 	pos = scanresp->bssdesc_and_tlvbuffer;
- 
-+	lbs_deb_hex(LBS_DEB_SCAN, "SCAN_RSP", scanresp->bssdesc_and_tlvbuffer,
-+			scanresp->bssdescriptsize);
-+
- 	tsfdesc = pos + bsssize;
- 	tsfsize = 4 + 8 * scanresp->nr_sets;
-+	lbs_deb_hex(LBS_DEB_SCAN, "SCAN_TSF", (u8 *) tsfdesc, tsfsize);
- 
- 	/* Validity check: we expect a Marvell-Local TLV */
- 	i = get_unaligned_le16(tsfdesc);
- 	tsfdesc += 2;
--	if (i != TLV_TYPE_TSFTIMESTAMP)
-+	if (i != TLV_TYPE_TSFTIMESTAMP) {
-+		lbs_deb_scan("scan response: invalid TSF Timestamp %d\n", i);
- 		goto done;
-+	}
-+
- 	/* Validity check: the TLV holds TSF values with 8 bytes each, so
- 	 * the size in the TLV must match the nr_sets value */
- 	i = get_unaligned_le16(tsfdesc);
- 	tsfdesc += 2;
--	if (i / 8 != scanresp->nr_sets)
-+	if (i / 8 != scanresp->nr_sets) {
-+		lbs_deb_scan("scan response: invalid number of TSF timestamp "
-+			     "sets (expected %d got %d)\n", scanresp->nr_sets,
-+			     i / 8);
- 		goto done;
-+	}
- 
- 	for (i = 0; i < scanresp->nr_sets; i++) {
- 		const u8 *bssid;
-@@ -557,8 +568,11 @@ static int lbs_ret_scan(struct lbs_private *priv, unsigned long dummy,
- 			id = *pos++;
- 			elen = *pos++;
- 			left -= 2;
--			if (elen > left || elen == 0)
-+			if (elen > left || elen == 0) {
-+				lbs_deb_scan("scan response: invalid IE fmt\n");
- 				goto done;
-+			}
-+
- 			if (id == WLAN_EID_DS_PARAMS)
- 				chan_no = *pos;
- 			if (id == WLAN_EID_SSID) {
-@@ -589,7 +603,9 @@ static int lbs_ret_scan(struct lbs_private *priv, unsigned long dummy,
- 					capa, intvl, ie, ielen,
- 					LBS_SCAN_RSSI_TO_MBM(rssi),
- 					GFP_KERNEL);
--		}
-+		} else
-+			lbs_deb_scan("scan response: missing BSS channel IE\n");
-+
- 		tsfdesc += 8;
- 	}
- 	ret = 0;
--- 
-1.7.2
-
-
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00firmware.c |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00firmware.c b/drivers/net/wireless/rt2x00/rt2x00firmware.c
+> index b818a43..f0e1eb7 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00firmware.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00firmware.c
+> @@ -63,6 +63,9 @@ static int rt2x00lib_request_firmware(struct rt2x00_dev *rt2x00dev)
+>
+>        INFO(rt2x00dev, "Firmware detected - version: %d.%d.\n",
+>             fw->data[fw->size - 4], fw->data[fw->size - 3]);
+> +       snprintf(rt2x00dev->hw->wiphy->fw_version,
+> +                       sizeof(rt2x00dev->hw->wiphy->fw_version), "%d.%d",
+> +                       fw->data[fw->size - 4], fw->data[fw->size - 3]);
+>
+>        retval = rt2x00dev->ops->lib->check_firmware(rt2x00dev, fw->data, fw->size);
+>        switch (retval) {
+> --
+> 1.7.1.1
+>
+>
