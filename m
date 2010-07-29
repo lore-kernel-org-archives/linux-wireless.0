@@ -1,57 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:57453 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752415Ab0GXIuH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jul 2010 04:50:07 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1OcaQl-00026N-79
-	for linux-wireless@vger.kernel.org; Sat, 24 Jul 2010 10:50:03 +0200
-Received: from 105.Red-88-1-80.dynamicIP.rima-tde.net ([88.1.80.105])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Jul 2010 10:50:03 +0200
-Received: from sergitfe1974 by 105.Red-88-1-80.dynamicIP.rima-tde.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Jul 2010 10:50:03 +0200
-To: linux-wireless@vger.kernel.org
-From: sergi <sergitfe1974@gmail.com>
-Subject: Re: Atheros 0cf3:b003
-Date: Sat, 24 Jul 2010 08:04:39 +0000 (UTC)
-Message-ID: <loom.20100724T095719-176@post.gmane.org>
-References: <AANLkTimfc3NY46aYqPM5Ys2i9vpm2_qr5-kgsvc3sdkx@mail.gmail.com> <AANLkTimpwMyfcvRGnJ1JfZP+F=4nFNT5Ra3pB3vse1LM@mail.gmail.com>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36107 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753848Ab0G2SPs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Jul 2010 14:15:48 -0400
+Date: Thu, 29 Jul 2010 14:04:27 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kirill Zut <kirill.zut@promwad.com>
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Hin-Tak Leung <htl10@users.sourceforge.net>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Subject: Re: [PATCH 2.6.34] rtl8187: ad-hoc mode support
+Message-ID: <20100729180426.GC2424@tuxdriver.com>
+References: <201007291835.46159.kirill.zut@promwad.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201007291835.46159.kirill.zut@promwad.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez <mcgrof@...> writes:
+Don't you need something to make it beacon?
 
+On Thu, Jul 29, 2010 at 06:35:45PM +0300, Kirill Zut wrote:
+> ---
+> This patch makes ad-hoc mode available on RTL8187
 > 
-> 2010/7/23 Maximi89 <maximi89@...>:
-> > Hola Luis, conoces ese ID?, Atheros 0cf3:b003
-> > Es efectivamente un AR9271?
-> 
-> No, cual tarjeta es esa? Las que tenemos son estos:
+> Signed-off-by: Kirill Zut <kirill.zut@promwad.com>
+> ---
+> --- linux-2.6.x/drivers/net/wireless/rtl818x/rtl8187_dev.c.orig	2010-07-29 14:40:09.000000000 +0300
+> +++ linux-2.6.x/drivers/net/wireless/rtl818x/rtl8187_dev.c	2010-07-29 14:59:39.000000000 +0300
+> @@ -1032,6 +1032,7 @@ static int rtl8187_add_interface(struct 
+>  
+>  	switch (vif->type) {
+>  	case NL80211_IFTYPE_STATION:
+> +	case NL80211_IFTYPE_ADHOC:
+>  		break;
+>  	default:
+>  		goto exit;
+> @@ -1178,7 +1179,10 @@ static void rtl8187_bss_info_changed(str
+>  			reg = 0;
+>  
+>  		if (is_valid_ether_addr(info->bssid)) {
+> -			reg |= RTL818X_MSR_INFRA;
+> +			if (vif->type == NL80211_IFTYPE_ADHOC)
+> +				reg |= RTL818X_MSR_ADHOC;
+> +			else
+> +				reg |= RTL818X_MSR_INFRA;
+>  			rtl818x_iowrite8(priv, &priv->map->MSR, reg);
+>  		} else {
+>  			reg |= RTL818X_MSR_NO_LINK;
+> @@ -1502,7 +1506,8 @@ static int __devinit rtl8187_probe(struc
+>  	 * XXX: Once this driver supports anything that requires
+>  	 *	beacons it must implement IEEE80211_TX_CTL_ASSIGN_SEQ.
+>  	 */
+> -	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
+> +	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+> +				      BIT(NL80211_IFTYPE_ADHOC);
+>  
+>  	if ((id->driver_info == DEVICE_RTL8187) && priv->is_rtl8187b)
+>  		printk(KERN_INFO "rtl8187: inconsistency between id with OEM"
 > 
 
->         { },
-> };
-> 
-> Stephen, have you heard of 0cf3:b003 as an ar9271 or HB94 card?
-> 
->   Luis
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@...
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> Hola Luis yo fui quien le mando la consulta a maximiliano,,mi lapiz usb es de
-la casa Ubiquiti modelo wifistation ext y ahi dicen k tiene el atheros 9271..y
-el id k me sale es el mencionado,,tanto en Mac,Linux y con Everest en win,uso
-Ubuntu Ultimate 2.7 con kernel 2.6.32-24 y nada k no me funciona,Podria cmbiar
-el Id para k sea compatible?? ..bueno muchas gracias por tu atencion
-
-
-
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
