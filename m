@@ -1,52 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38096 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753175Ab0G1Qp1 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33474 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753791Ab0G2UmH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jul 2010 12:45:27 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath5k-devel@lists.ath5k.org, Bob Copeland <me@bobcopeland.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] ath5k: add led_disable module option
-Date: Wed, 28 Jul 2010 12:31:51 -0400
-Message-Id: <1280334711-6141-1-git-send-email-linville@tuxdriver.com>
+	Thu, 29 Jul 2010 16:42:07 -0400
+Subject: Re: [PATCH 1/2] mac80211: support use of NAPI for bottom-half
+ processing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1280435978.3823.20.camel@jlt3.sipsolutions.net>
+References: <1280434454-3597-1-git-send-email-linville@tuxdriver.com>
+	 <1280435978.3823.20.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 29 Jul 2010 22:42:06 +0200
+Message-ID: <1280436126.3823.22.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Not everyone agrees about LED behaviour...give them an escape hatch that
-will at least stop the lights from annoying them.
+On Thu, 2010-07-29 at 22:39 +0200, Johannes Berg wrote:
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/ath/ath5k/led.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+> > +	int (*napi_poll)(struct napi_struct *napi, int budget);
+> 
+> I'd prefer passing the hw here and having mac80211 wrap it in a simple
+> function that does the container_of magic? Anything preventing that?
+> Then the napi struct can be hidden from drivers.
 
-diff --git a/drivers/net/wireless/ath/ath5k/led.c b/drivers/net/wireless/ath/ath5k/led.c
-index 67aa52e..6c416db 100644
---- a/drivers/net/wireless/ath/ath5k/led.c
-+++ b/drivers/net/wireless/ath/ath5k/led.c
-@@ -43,6 +43,10 @@
- #include "ath5k.h"
- #include "base.h"
- 
-+static int modparam_led_disable;
-+module_param_named(led_disable, modparam_led_disable, bool, S_IRUGO);
-+MODULE_PARM_DESC(led_disable, "Disable software-controlled LEDs.");
-+
- #define ATH_SDEVICE(subv,subd) \
- 	.vendor = PCI_ANY_ID, .device = PCI_ANY_ID, \
- 	.subvendor = (subv), .subdevice = (subd)
-@@ -165,6 +169,9 @@ int ath5k_init_leds(struct ath5k_softc *sc)
- 	char name[ATH5K_LED_MAX_NAME_LEN + 1];
- 	const struct pci_device_id *match;
- 
-+	if (modparam_led_disable)
-+		goto out;
-+
- 	match = pci_match_id(&ath5k_led_devices[0], pdev);
- 	if (match) {
- 		__set_bit(ATH_STAT_LEDSOFT, sc->status);
--- 
-1.7.1.1
+Ok actually that requires wrapping napi_complete() too, that doesn't
+seem worth it. Can you wrap the container_of() in an inline though and
+maybe do "struct napi_struct _napi;" and document it shouldn't really be
+touched or something?
+
+johannes
 
