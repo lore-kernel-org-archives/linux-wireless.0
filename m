@@ -1,45 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-202-190.clients.your-server.de ([88.198.202.190]:35424
-	"EHLO kleinhenz.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751426Ab0GNHul (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36105 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751142Ab0G2SPr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jul 2010 03:50:41 -0400
-Date: Wed, 14 Jul 2010 09:50:37 +0200
-From: Simon Richter <Simon.Richter@hogyros.de>
-To: Michael =?iso-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	linux-wireless@vger.kernel.org, 588196@bugs.debian.org
-Subject: Re: Bug#588196: b43: does not join multicast groups
-Message-ID: <20100714075037.GA6128@richter>
-References: <20100706021937.11147.78230.reportbug@debian.hogyros.de>
- <1278887148.6139.91.camel@localhost>
- <4C3A4C6E.6060801@lwfinger.net>
- <20100713051430.GA2625@honey.hogyros.de>
- <4C3BFB87.5030907@lwfinger.net>
- <20100713073751.GB3089@richter>
- <4C3C6350.50304@bu3sch.de>
- <20100713130614.GB25565@richter>
- <4C3C7296.3070700@bu3sch.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <4C3C7296.3070700@bu3sch.de>
+	Thu, 29 Jul 2010 14:15:47 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] zd1211rw: update fw version info in wiphy struct
+Date: Thu, 29 Jul 2010 14:00:15 -0400
+Message-Id: <1280426415-22014-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This makes the information available through ethtool...
 
-On Tue, Jul 13, 2010 at 04:05:10PM +0200, Michael Büsch wrote:
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/zd1211rw/zd_chip.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-> So it is up to the upper layer to detect the failure. I don't think
-> it's possible to automatically detect such incidents for multicast
-> transmissions. So the mechanism fails here.
+diff --git a/drivers/net/wireless/zd1211rw/zd_chip.c b/drivers/net/wireless/zd1211rw/zd_chip.c
+index b2af3c5..87a95bc 100644
+--- a/drivers/net/wireless/zd1211rw/zd_chip.c
++++ b/drivers/net/wireless/zd1211rw/zd_chip.c
+@@ -973,6 +973,7 @@ static void dump_fw_registers(struct zd_chip *chip)
+ 
+ static int print_fw_version(struct zd_chip *chip)
+ {
++	struct wiphy *wiphy = zd_chip_to_mac(chip)->hw->wiphy;
+ 	int r;
+ 	u16 version;
+ 
+@@ -982,6 +983,10 @@ static int print_fw_version(struct zd_chip *chip)
+ 		return r;
+ 
+ 	dev_info(zd_chip_dev(chip),"firmware version %04hx\n", version);
++
++	snprintf(wiphy->fw_version, sizeof(wiphy->fw_version),
++			"%04hx", version);
++
+ 	return 0;
+ }
+ 
+-- 
+1.7.1.1
 
-Well, it is about *receiving* a multicast transmission (IPv6 router
-advertisement, sent to 33:33:00:00:00:01). I have no idea where the
-packet is dropped; from my somewhat limited understanding of 802.11, I'd
-expect the frames to be treated like broadcast frames by the AP, so it'd
-be the receiver dropping them in the MAC filter.
-
-   Simon
