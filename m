@@ -1,94 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40406 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60110 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752580Ab0G1UpR (ORCPT
+	with ESMTP id S1753627Ab0G2RAM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jul 2010 16:45:17 -0400
+	Thu, 29 Jul 2010 13:00:12 -0400
+Date: Thu, 29 Jul 2010 12:58:35 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Juuso Oikarinen <juuso.oikarinen@nokia.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] wl1271: add get_survey callback in order to get channel noise
-Date: Wed, 28 Jul 2010 16:42:20 -0400
-Message-Id: <1280349740-26973-1-git-send-email-linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
+Subject: wireless-next-2.6 rebase -- Re: [PATCH 1/3] ath9k: prevent
+ calibration during off-channel activity
+Message-ID: <20100729165835.GB2424@tuxdriver.com>
+References: <1280339151-37084-1-git-send-email-nbd@openwrt.org>
+ <AANLkTimZ8zTZWDcXwr7Hu2FT=gDPeCiiUFXcBmpYpp7M@mail.gmail.com>
+ <4C509C65.4020305@openwrt.org>
+ <AANLkTimqsXoynA2CPJ1tFmj6wUetztDUJ3iKCpQHJKCe@mail.gmail.com>
+ <4C50AEF4.4060905@openwrt.org>
+ <AANLkTin+sPu45teiAiePPWdBp3huffds3v_uzJBtKmLO@mail.gmail.com>
+ <AANLkTikxs8LfQDw4juPRZV3DU1_mX2CMC6vYHYu1n5as@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTikxs8LfQDw4juPRZV3DU1_mX2CMC6vYHYu1n5as@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/wl12xx/wl1271.h      |    3 +++
- drivers/net/wireless/wl12xx/wl1271_main.c |   17 +++++++++++++++++
- drivers/net/wireless/wl12xx/wl1271_rx.c   |    7 +++++++
- 3 files changed, 27 insertions(+), 0 deletions(-)
+On Wed, Jul 28, 2010 at 03:48:18PM -0700, Luis R. Rodriguez wrote:
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
-index 53d47d7..dd3cee6 100644
---- a/drivers/net/wireless/wl12xx/wl1271.h
-+++ b/drivers/net/wireless/wl12xx/wl1271.h
-@@ -475,6 +475,9 @@ struct wl1271 {
- 	bool sg_enabled;
- 
- 	struct list_head list;
-+
-+	/* Most recently reported noise in dBm */
-+	s8 noise;
- };
- 
- int wl1271_plt_start(struct wl1271 *wl);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 864318f..374abf0 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1927,6 +1927,22 @@ out:
- 	return mactime;
- }
- 
-+static int wl1271_op_get_survey(struct ieee80211_hw *hw, int idx,
-+				struct survey_info *survey)
-+{
-+	struct wl1271 *wl = hw->priv;
-+	struct ieee80211_conf *conf = &hw->conf;
-+ 
-+	if (idx != 0)
-+		return -ENOENT;
-+ 
-+	survey->channel = conf->channel;
-+	survey->filled = SURVEY_INFO_NOISE_DBM;
-+	survey->noise = wl->noise;
-+ 
-+	return 0;
-+}
-+
- /* can't be const, mac80211 writes to this */
- static struct ieee80211_rate wl1271_rates[] = {
- 	{ .bitrate = 10,
-@@ -2156,6 +2172,7 @@ static const struct ieee80211_ops wl1271_ops = {
- 	.set_rts_threshold = wl1271_op_set_rts_threshold,
- 	.conf_tx = wl1271_op_conf_tx,
- 	.get_tsf = wl1271_op_get_tsf,
-+	.get_survey = wl1271_op_get_survey,
- 	CFG80211_TESTMODE_CMD(wl1271_tm_cmd)
- };
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_rx.c b/drivers/net/wireless/wl12xx/wl1271_rx.c
-index e98f22b..019aa79 100644
---- a/drivers/net/wireless/wl12xx/wl1271_rx.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_rx.c
-@@ -55,6 +55,13 @@ static void wl1271_rx_status(struct wl1271 *wl,
- 
- 	status->signal = desc->rssi;
- 
-+	/*
-+	 * FIXME: In wl1251, the SNR should be divided by two.  In wl1271 we
-+	 * need to divide by two for now, but TI has been discussing about
-+	 * changing it.  This needs to be rechecked.
-+	 */
-+	wl->noise = desc->rssi - (desc->snr >> 1);
-+
- 	status->freq = ieee80211_channel_to_frequency(desc->channel);
- 
- 	if (desc->flags & WL1271_RX_DESC_ENCRYPT_MASK) {
+> Also without these patches I get 0% packet loss, with the patches
+> applied I get some packet loss.
+
+Based on this report, I'm dropping this series from wireless-next-2.6
+(requiring a rebase) -- FYI...
+
+John
 -- 
-1.7.1.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
