@@ -1,59 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:41886 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751797Ab0GYKkf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Jul 2010 06:40:35 -0400
-MIME-Version: 1.0
-In-Reply-To: <20100723091503.GA12300@rakim.wolfsonmicro.main>
-References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
-	<1279733634-21974-11-git-send-email-ohad@wizery.com> <20100721175930.GD10930@sirena.org.uk>
-	<4C48287D.1000603@nokia.com> <AANLkTin2dyLNo1RMQgLG-4DtN-CsXqNNLAfITXDbMIvl@mail.gmail.com>
-	<20100723091503.GA12300@rakim.wolfsonmicro.main>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Sun, 25 Jul 2010 13:40:13 +0300
-Message-ID: <AANLkTi=qnAy+c7-xqcscyuy7Q4sgVsedZToEmZHo=y9y@mail.gmail.com>
-Subject: Re: [PATCH v2 10/20] omap: zoom: add fixed regulator device for wlan
-To: Mark Brown <broonie@opensource.wolfsonmicro.com>
-Cc: Roger Quadros <roger.quadros@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Tony Lindgren <tony@atomide.com>, San Mehat <san@google.com>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nbd.name ([88.198.39.176]:42330 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760346Ab0G3TCW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Jul 2010 15:02:22 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 2/4] ath9k_hw: fix periodic noise floor calibration on AR9003
+Date: Fri, 30 Jul 2010 21:02:10 +0200
+Message-Id: <1280516532-42721-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1280516532-42721-1-git-send-email-nbd@openwrt.org>
+References: <1280516532-42721-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 23, 2010 at 12:15 PM, Mark Brown
-<broonie@opensource.wolfsonmicro.com> wrote:
-> On Fri, Jul 23, 2010 at 02:13:38AM +0300, Ohad Ben-Cohen wrote:
->> On Thu, Jul 22, 2010 at 2:16 PM, Roger Quadros <roger.quadros@nokia.com> wrote:
->> > .dev_name       = "mmci-omap-hs.2"
->
->> I already set the .dev member of the consumer in a similar manner to
->> how all other regulators are configured in this board - please check
->> out patch 13:
->
->> https://patchwork.kernel.org/patch/113418/
->
->> Does this look reasonable to you ?
->
-> You should really be using dev_name in preference to dev these days
-> unless there's a *very* good reason.
+The periodic noise floor calibration is broken on this chip family, because
+it keeps triggering a software-filtered noise floor calibration, but never
+reads the result before uploading the history buffer value to the hardware.
 
-Changed, thank you.
+Fix this with a call to ath9k_hw_getnf(), just like on AR9002.
 
-I'll submit the updated patch now as a standalone patch as it has no
-dependencies on the whole series, and it could only help to start
-trimming that series down.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
->
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 938365e..f51ab89 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -149,6 +149,12 @@ static bool ar9003_hw_calibrate(struct ath_hw *ah,
+ 	/* Do NF cal only at longer intervals */
+ 	if (longcal) {
+ 		/*
++		 * Get the value from the previous NF cal and update
++		 * history buffer.
++		 */
++		ath9k_hw_getnf(ah, chan);
++
++		/*
+ 		 * Load the NF from history buffer of the current channel.
+ 		 * NF is slow time-variant, so it is OK to use a historical
+ 		 * value.
+-- 
+1.6.4.2
+
