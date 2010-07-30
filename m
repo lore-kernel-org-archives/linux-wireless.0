@@ -1,40 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57695 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966729Ab0GSVAO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56511 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753896Ab0G3GgG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jul 2010 17:00:14 -0400
-Date: Mon, 19 Jul 2010 16:48:07 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Pauli Nieminen <suokkos@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: RTL8180L is hitting WARN_ON in net/wireless/scan.c:575
-Message-ID: <20100719204806.GB6115@tuxdriver.com>
-References: <AANLkTiknLRzt2bdhcin5WRzwPXSWqEs8dIUe5imlN0I9@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTiknLRzt2bdhcin5WRzwPXSWqEs8dIUe5imlN0I9@mail.gmail.com>
+	Fri, 30 Jul 2010 02:36:06 -0400
+Subject: Re: [wt PATCH 5/5] libertas: scan before assocation if no BSSID
+ was given
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Williams <dcbw@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1280470711.14523.16.camel@dcbw.foobar.com>
+References: <1280470034.14523.4.camel@dcbw.foobar.com>
+	 <1280470711.14523.16.camel@dcbw.foobar.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 30 Jul 2010 08:37:18 +0200
+Message-ID: <1280471838.3710.6.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jul 17, 2010 at 10:30:49AM +0300, Pauli Nieminen wrote:
-> Hi,
-> 
-> I'm testing 2.6.35-rc4+, I have problem that warning is spamming dmesg
-> when I have my wifi on. Actual problem caused y that problem is that I
-> can't scan/connect to any network with 2.6.35.
-> 
-> When I looked the code in warning it might be related to problem that
-> my wifi reports all signal strength to be 175 or 178 (if I remember
-> correctly). I'm now using 2.6.35 so I can't check the reported values
-> from scan results.
+On Thu, 2010-07-29 at 23:18 -0700, Dan Williams wrote:
+> Fix this leftover TODO from the cfg80211 conversion by doing a scan
+> if cfg80211 didn't pass in the BSSID for us.  Since the scan code
+> uses so much of the cfg80211_scan_request structure to build up the
+> firmware command, we just fake one when the scan request is triggered
+> internally.  But we need to make sure that internal 'fake' cfg82011
+> scan request does get back to cfg82011 via cfg80211_scan_done().
 
-I just sent "rtl8180: improve signal reporting for rtl8185 hardware"
-as a reply to this email.  Can you try that patch?
+I think you mean "does _not_ get back".
 
-Thanks!
+johannes
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
