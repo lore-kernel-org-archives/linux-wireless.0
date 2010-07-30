@@ -1,63 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57796 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758537Ab0G3MKn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jul 2010 08:10:43 -0400
-Message-Id: <20100730113152.340700184@sipsolutions.net>
-Date: Fri, 30 Jul 2010 13:30:47 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: wey-yi.w.guy@intel.com, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/2] mac80211: fix scan locking wrt. hw scan
-References: <20100730113045.923567583@sipsolutions.net>
-Mime-Version: 1.0
+Received: from kroah.org ([198.145.64.141]:59128 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932732Ab0G3R51 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Jul 2010 13:57:27 -0400
+Message-Id: <20100730175149.193511268@clark.site>
+Date: Fri, 30 Jul 2010 10:53:05 -0700
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: stable-review@kernel.org, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
+	Daniel Mack <daniel@caiaq.de>,
+	Alagu Sankar <alagusankar@embwise.com>,
+	Volker Ernst <volker.ernst@txtr.com>,
+	Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Holger Schurig <hs4233@mail.mn-solutions.de>,
+	Bing Zhao <bzhao@marvell.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-mmc@vger.kernel.org
+Subject: [168/205] libertas/sdio: 8686: set ECSI bit for 1-bit transfers
+In-Reply-To: <20100730175238.GA3924@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+2.6.34-stable review patch.  If anyone has any objections, please let us know.
 
-Releasing the scan mutex while starting scans
-can lead to unexpected things happening, so
-we shouldn't do that. Fix that and hold the
-mutex across the scan triggering.
+------------------
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+From: Daniel Mack <daniel@caiaq.de>
+
+commit 8a64c0f6b7ec7f758c4ef445e49f479e27fa2236 upstream.
+
+When operating in 1-bit mode, SDAT1 is used as dedicated interrupt line.
+However, the 8686 will only drive this line when the ECSI bit is set in
+the CCCR_IF register.
+
+Thanks to Alagu Sankar for pointing me in the right direction.
+
+Signed-off-by: Daniel Mack <daniel@caiaq.de>
+Cc: Alagu Sankar <alagusankar@embwise.com>
+Cc: Volker Ernst <volker.ernst@txtr.com>
+Cc: Dan Williams <dcbw@redhat.com>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: Bing Zhao <bzhao@marvell.com>
+Cc: libertas-dev@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Cc: linux-mmc@vger.kernel.org
+Acked-by: Dan Williams <dcbw@redhat.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
 ---
- net/mac80211/scan.c |   14 --------------
- 1 file changed, 14 deletions(-)
+ drivers/net/wireless/libertas/if_sdio.c |   22 ++++++++++++++++++++++
+ include/linux/mmc/sdio.h                |    2 ++
+ 2 files changed, 24 insertions(+)
 
---- wireless-testing.orig/net/mac80211/scan.c	2010-07-30 08:43:30.000000000 +0200
-+++ wireless-testing/net/mac80211/scan.c	2010-07-30 08:43:38.000000000 +0200
-@@ -401,19 +401,7 @@ static int __ieee80211_start_scan(struct
- 	else
- 		__set_bit(SCAN_SW_SCANNING, &local->scanning);
+--- a/drivers/net/wireless/libertas/if_sdio.c
++++ b/drivers/net/wireless/libertas/if_sdio.c
+@@ -35,6 +35,8 @@
+ #include <linux/mmc/card.h>
+ #include <linux/mmc/sdio_func.h>
+ #include <linux/mmc/sdio_ids.h>
++#include <linux/mmc/sdio.h>
++#include <linux/mmc/host.h>
  
--	/*
--	 * Kicking off the scan need not be protected,
--	 * only the scan variable stuff, since now
--	 * local->scan_req is assigned and other callers
--	 * will abort their scan attempts.
--	 *
--	 * This avoids too many locking dependencies
--	 * so that the scan completed calls have more
--	 * locking freedom.
--	 */
--
- 	ieee80211_recalc_idle(local);
--	mutex_unlock(&local->scan_mtx);
+ #include "host.h"
+ #include "decl.h"
+@@ -943,6 +945,7 @@ static int if_sdio_probe(struct sdio_fun
+ 	int ret, i;
+ 	unsigned int model;
+ 	struct if_sdio_packet *packet;
++	struct mmc_host *host = func->card->host;
  
- 	if (local->ops->hw_scan) {
- 		WARN_ON(!ieee80211_prep_hw_scan(local));
-@@ -421,8 +409,6 @@ static int __ieee80211_start_scan(struct
- 	} else
- 		rc = ieee80211_start_sw_scan(local);
+ 	lbs_deb_enter(LBS_DEB_SDIO);
  
--	mutex_lock(&local->scan_mtx);
--
- 	if (rc) {
- 		kfree(local->hw_scan_req);
- 		local->hw_scan_req = NULL;
+@@ -1023,6 +1026,25 @@ static int if_sdio_probe(struct sdio_fun
+ 	if (ret)
+ 		goto disable;
+ 
++	/* For 1-bit transfers to the 8686 model, we need to enable the
++	 * interrupt flag in the CCCR register. Set the MMC_QUIRK_LENIENT_FN0
++	 * bit to allow access to non-vendor registers. */
++	if ((card->model == IF_SDIO_MODEL_8686) &&
++	    (host->caps & MMC_CAP_SDIO_IRQ) &&
++	    (host->ios.bus_width == MMC_BUS_WIDTH_1)) {
++		u8 reg;
++
++		func->card->quirks |= MMC_QUIRK_LENIENT_FN0;
++		reg = sdio_f0_readb(func, SDIO_CCCR_IF, &ret);
++		if (ret)
++			goto release_int;
++
++		reg |= SDIO_BUS_ECSI;
++		sdio_f0_writeb(func, reg, SDIO_CCCR_IF, &ret);
++		if (ret)
++			goto release_int;
++	}
++
+ 	card->ioport = sdio_readb(func, IF_SDIO_IOPORT, &ret);
+ 	if (ret)
+ 		goto release_int;
+--- a/include/linux/mmc/sdio.h
++++ b/include/linux/mmc/sdio.h
+@@ -94,6 +94,8 @@
+ 
+ #define  SDIO_BUS_WIDTH_1BIT	0x00
+ #define  SDIO_BUS_WIDTH_4BIT	0x02
++#define  SDIO_BUS_ECSI		0x20	/* Enable continuous SPI interrupt */
++#define  SDIO_BUS_SCSI		0x40	/* Support continuous SPI interrupt */
+ 
+ #define  SDIO_BUS_ASYNC_INT	0x20
+ 
 
 
