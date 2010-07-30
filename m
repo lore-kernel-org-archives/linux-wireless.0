@@ -1,75 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:45891 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757545Ab0GWX1P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jul 2010 19:27:15 -0400
-Subject: Re: Wireless card on Debian squeeze
-From: Pavel Roskin <proski@gnu.org>
-To: Nicholas Syrotiuk <syrotiuk@manchester.ac.uk>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4C488BD9.8040809@manchester.ac.uk>
-References: <4C488BD9.8040809@manchester.ac.uk>
+Received: from he.sipsolutions.net ([78.46.109.217]:42694 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756305Ab0G3LV5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Jul 2010 07:21:57 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.72)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Oenf1-0000b7-9N
+	for linux-wireless@vger.kernel.org; Fri, 30 Jul 2010 13:21:55 +0200
+Subject: [PATCH] mac80211: don't check rates on PLCP error frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 23 Jul 2010 19:27:10 -0400
-Message-ID: <1279927630.23722.24.camel@mj>
+Date: Fri, 30 Jul 2010 13:23:12 +0200
+Message-ID: <1280488992.3710.8.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-07-22 at 19:20 +0100, Nicholas Syrotiuk wrote:
-> Dear Linux Wireless users,
-> 
-> I'm having some trouble installing the correct driver on my laptop.  I'm 
-> slightly confused about the revision numbering of my wireless hardware; 
-> that is, I'm not sure if it's revision 2 or 3.
-> 
-> My kernel is: 2.6.32-5
-> Relevant output from lspci is:
-> 02:03.0 Network controller [0280]: Broadcom Corporation BCM4306 
-> 802.11b/g Wireless LAN Controller [14e4:4320] (rev 02)
-> 	Subsystem: Dell TrueMobile 1300 WLAN Mini-PCI Card [1028:0001]
-> 	Flags: bus master, fast devsel, latency 32, IRQ 5
-> 	Memory at fafee000 (32-bit, non-prefetchable) [size=8K]
-> 	Kernel driver in use: b43-pci-bridge
-> -----------------------------------------------
-> 
-> It looks like I need the b43legacy driver, which comes in a separate 
-> Debian package called "firmware-b43legacy-installer."  When I install 
-> this package, computer says: "Not supported card.  Use b43 firmware."
-> 
-> When I install b43 firmware, configure the interface and bring it up, 
-> computer says: "Firmware file b43legacy/ucode4.fw not found or load failed."
+From: Johannes Berg <johannes.berg@intel.com>
 
-I believe the drivers should be trusted since there they access the
-actual hardware.  The above message is from b43legacy.  It must have
-found the card, so the card needs b43legacy.
+Frames that failed PLCP error checks are most likely
+microwave transmissions (well, maybe not ...) and
+don't have a proper rate detected, so ignore it.
 
-That means that firmware-b43legacy-installer is wrong.  I don't have
-Debian handy, but I checked its source, and it should work for your
-card.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/rx.c |   49 +++++++++++++++++++++++++++++--------------------
+ 1 file changed, 29 insertions(+), 20 deletions(-)
 
-That's the page:
-http://packages.debian.org/sid/firmware-b43legacy-installer
+--- wireless-testing.orig/net/mac80211/rx.c	2010-07-30 08:42:22.000000000 +0200
++++ wireless-testing/net/mac80211/rx.c	2010-07-30 08:43:38.000000000 +0200
+@@ -2615,28 +2615,37 @@ void ieee80211_rx(struct ieee80211_hw *h
+ 	if (WARN_ON(!local->started))
+ 		goto drop;
+ 
+-	if (status->flag & RX_FLAG_HT) {
++	if (likely(!(status->flag & RX_FLAG_FAILED_PLCP_CRC))) {
+ 		/*
+-		 * rate_idx is MCS index, which can be [0-76] as documented on:
+-		 *
+-		 * http://wireless.kernel.org/en/developers/Documentation/ieee80211/802.11n
+-		 *
+-		 * Anything else would be some sort of driver or hardware error.
+-		 * The driver should catch hardware errors.
++		 * Validate the rate, unless a PLCP error means that
++		 * we probably can't have a valid rate here anyway.
+ 		 */
+-		if (WARN((status->rate_idx < 0 ||
+-			 status->rate_idx > 76),
+-			 "Rate marked as an HT rate but passed "
+-			 "status->rate_idx is not "
+-			 "an MCS index [0-76]: %d (0x%02x)\n",
+-			 status->rate_idx,
+-			 status->rate_idx))
+-			goto drop;
+-	} else {
+-		if (WARN_ON(status->rate_idx < 0 ||
+-			    status->rate_idx >= sband->n_bitrates))
+-			goto drop;
+-		rate = &sband->bitrates[status->rate_idx];
++
++		if (status->flag & RX_FLAG_HT) {
++			/*
++			 * rate_idx is MCS index, which can be [0-76]
++			 * as documented on:
++			 *
++			 * http://wireless.kernel.org/en/developers/Documentation/ieee80211/802.11n
++			 *
++			 * Anything else would be some sort of driver or
++			 * hardware error. The driver should catch hardware
++			 * errors.
++			 */
++			if (WARN((status->rate_idx < 0 ||
++				 status->rate_idx > 76),
++				 "Rate marked as an HT rate but passed "
++				 "status->rate_idx is not "
++				 "an MCS index [0-76]: %d (0x%02x)\n",
++				 status->rate_idx,
++				 status->rate_idx))
++				goto drop;
++		} else {
++			if (WARN_ON(status->rate_idx < 0 ||
++				    status->rate_idx >= sband->n_bitrates))
++				goto drop;
++			rate = &sband->bitrates[status->rate_idx];
++		}
+ 	}
+ 
+ 	/*
 
-And that's the source:
-http://ftp.de.debian.org/debian/pool/contrib/b/b43-fwcutter/b43-fwcutter_013-2.debian.tar.gz
 
-I ran your "lspci -n" output through the
-firmware-b43legacy-installer.postinst script and it doesn't complain.
-
-> So, I am slightly confounded.  However, it has occurred to me that I may 
-> be getting the packages from the wrong source, which are currently:
-> 
-> deb http://debian.man.ac.uk/debian squeeze main
-> deb http://ftp.us.debian.org/debian squeeze main contrib
-
-Make sure your apt-get knows about the latest packages, that is run
-"apt-get update".  Then try installing firmware-b43legacy-installer.
-
-If it doesn't work, download the package from the above page and install
-it with dpkg.  Alternatively, you could generate the firmware manually,
-as described at http://linuxwireless.org/en/users/Drivers/b43
-
--- 
-Regards,
-Pavel Roskin
