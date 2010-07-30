@@ -1,75 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lager.deltatee.com ([207.54.116.66]:48358 "EHLO
-	porter.deltatee.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751273Ab0GLFf2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jul 2010 01:35:28 -0400
-Message-ID: <4C3AA99C.7030406@deltatee.com>
-Date: Sun, 11 Jul 2010 23:35:24 -0600
-From: Logan Gunthorpe <logang@deltatee.com>
-MIME-Version: 1.0
-To: "Levi, Shahar" <shahar_levi@ti.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: 1278578525.8576.19.camel@chilepepper <4C37BCA0.5090607@deltatee.com> <AC090B9732AB2B4DB7FF476E907FE660010685F34E@dnce02.ent.ti.com>
-In-Reply-To: <AC090B9732AB2B4DB7FF476E907FE660010685F34E@dnce02.ent.ti.com>
-Content-Type: text/plain; charset=ISO-8859-1
-Subject: Re: wl1271 firmware
+Received: from mx1.redhat.com ([209.132.183.28]:17325 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750924Ab0G3EKF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Jul 2010 00:10:05 -0400
+Subject: [wt PATCH 1/5] libertas: get the right # of scanned BSSes
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1280470034.14523.4.camel@dcbw.foobar.com>
+References: <1280470034.14523.4.camel@dcbw.foobar.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 29 Jul 2010 23:11:30 -0700
+Message-ID: <1280470290.14523.7.camel@dcbw.foobar.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Shahar,
+Let's actually check the right field in the command response; and
+if there aren't any reported BSSes, exit early with success.
 
-Excellent news.
+Signed-off-by: Dan Williams <dcbw@redhat.com>
+---
+ drivers/net/wireless/libertas/cfg.c |   10 +++++++++-
+ 1 files changed, 9 insertions(+), 1 deletions(-)
 
-Thank you very much.
+diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
+index 25f9027..b60f661 100644
+--- a/drivers/net/wireless/libertas/cfg.c
++++ b/drivers/net/wireless/libertas/cfg.c
+@@ -465,7 +465,15 @@ static int lbs_ret_scan(struct lbs_private *priv, unsigned long dummy,
+ 	lbs_deb_enter(LBS_DEB_CFG80211);
+ 
+ 	bsssize = get_unaligned_le16(&scanresp->bssdescriptsize);
+-	nr_sets = le16_to_cpu(resp->size);
++	nr_sets = le16_to_cpu(scanresp->nr_sets);
++
++	lbs_deb_scan("scan response: %d BSSs (%d bytes); resp size %d bytes\n",
++			nr_sets, bsssize, le16_to_cpu(resp->size));
++
++	if (nr_sets == 0) {
++		ret = 0;
++		goto done;
++	}
+ 
+ 	/*
+ 	 * The general layout of the scan response is described in chapter
+-- 
+1.7.2
 
-Logan
 
-Levi, Shahar wrote:
->> -----Original Message-----
->> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
->> owner@vger.kernel.org] On Behalf Of Logan Gunthorpe
->> Sent: Saturday, July 10, 2010 3:20 AM
->> To: Luciano Coelho
->> Cc: linux-wireless@vger.kernel.org
->> Subject: RE: wl1271 firmware
->>
->> Hi Everyone,
->>
->> I too am working with a WL1271 module and have just today got it
->> connected to an Atmel ARM9 development kit (AT91SAM9G45-EKES). So far it
->> appears to work but I have been gated by the firmware and NVS file issues.
->>
->> I have a firmware binary, but it seems to be a newer version
->> (6.1.3.01.5) than what you are using. Does anyone have any idea if this
->> version will work? It seems to be the only one available on TI's
->> website. Additionally, our device manufacturer has been hesitant to
->> provide any support because we are on an unsupported platform and opted
->> to use the open source driver. Are there any other ways to obtain an
->> older version of the firmware?
->>
->> The NVS file is another problem. TI's website has instructions to use a
->> cryptic tool that appears to come with their driver package. There is no
->> source for this tool and for obvious reasons would not work for us.
->>
->> Anyway, I'd like to help in anyway I can. I've taken a look at the
->> twilan.ini file and I see the commonality with wl1271_ini.h. It would be
->> relatively easy to write a tool that parses the INI file and generates
->> the common part of the NVS file. However, I'd have no idea how to
->> generate the device specific calibration or the few fields missing from
->> the INI file.
->>
->> Thanks,
->>
->> Logan
->>
-> 
-> Hi Logan,
-> I am pushing to get access to the correct FW and NVS files version in TI web. I believe the community wills nave access of those files this week.
-> Regarding the tool to generate the NVS file in the correct format, I will check that and reply.
-> Regards,
-> Shahar
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
