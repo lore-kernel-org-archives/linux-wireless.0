@@ -1,47 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:47619 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754171Ab0GMMue (ORCPT
+Received: from smtp136.mail.ukl.yahoo.com ([77.238.184.67]:41763 "HELO
+	smtp136.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751765Ab0G3DWJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jul 2010 08:50:34 -0400
-Message-ID: <4C3C6106.3000909@s5r6.in-berlin.de>
-Date: Tue, 13 Jul 2010 14:50:14 +0200
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+	Thu, 29 Jul 2010 23:22:09 -0400
+Message-ID: <4C52455E.6010405@users.sourceforge.net>
+Date: Fri, 30 Jul 2010 04:22:06 +0100
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Alejandro_Riveira_Fern=E1ndez?= <ariveira@gmail.com>
-CC: Martin Steigerwald <Martin@lichtvoll.de>,
-	linux-kernel@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: rt2x00: slow wifi with correct basic rate bitmap (was Re: stable?
- quality assurance?)
-References: <201007110918.42120.Martin@lichtvoll.de>	<AANLkTimCwi2uJqqPaq3U30f3rvdDizu1BnaaXgvNeC9k@mail.gmail.com>	<201007111651.42963.Martin@lichtvoll.de> <20100713131112.26a3da54@varda>
-In-Reply-To: <20100713131112.26a3da54@varda>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] rtl8187: consolidate MSR writes in rtl8187_bss_info_changed
+References: <1280455044-26073-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1280455044-26073-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Alejandro Riveira Fernández wrote:
->  I for one stopped booting into -rc kernels.
->  The fact that still have to patch my kernels with a *one* liner
->  since 2.6.29 kernel [1] does not give me confidence on the "test
->  report/bisect and it will be fixed" promise some have made in this
->  threath
+John W. Linville wrote:
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+Acked-by: Hin-Tak Leung <htl10@users.sourceforge.net>
+
+Thanks for looking this over. I wondered how the code came to be like this, so I 
+went to look it up - the reason was that we used to have more lines between the 
+{}'s and they were gradually removed. The full list of defines for the 
+RTL818X_MSR_* are :
+
+#define RTL818X_MSR_NO_LINK		(0 << 2)
+#define RTL818X_MSR_ADHOC		(1 << 2)
+#define RTL818X_MSR_INFRA		(2 << 2)
+#define RTL818X_MSR_MASTER		(3 << 2)
+#define RTL818X_MSR_ENEDCA		(4 << 2)
+
+but we only use 3 at the moment (not _AHOC nor _MASTER).
+
+Hin-Tak
+
+> ---
+>  drivers/net/wireless/rtl818x/rtl8187_dev.c |    9 ++++-----
+>  1 files changed, 4 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> index 5738a55..0801c1d 100644
+> --- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> +++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+> @@ -1176,13 +1176,12 @@ static void rtl8187_bss_info_changed(struct ieee80211_hw *dev,
+>  		else
+>  			reg = 0;
 >  
->  [1] https://bugzilla.kernel.org/show_bug.cgi?id=13362
-
-There were promises made in this thread?  Then I must have read a
-different mailinglist or so.
-
-I do not know why your WLAN regression has not been fixed yet, but at
-least it seems rather plausible why commit
-7e0986c17f695952ce5d61ed793ce048ba90a661 is not going to be reverted (if
-such a revert is the one-liner that you are referring to).
-
-Why is one reporter's rt2500 OK now though but not yours?  Are there
-different card revisions or firmwares out there that require quirk handling?
--- 
-Stefan Richter
--=====-==-=- -=== -==-=
-http://arcgraph.de/sr/
+> -		if (is_valid_ether_addr(info->bssid)) {
+> +		if (is_valid_ether_addr(info->bssid))
+>  			reg |= RTL818X_MSR_INFRA;
+> -			rtl818x_iowrite8(priv, &priv->map->MSR, reg);
+> -		} else {
+> +		else
+>  			reg |= RTL818X_MSR_NO_LINK;
+> -			rtl818x_iowrite8(priv, &priv->map->MSR, reg);
+> -		}
+> +
+> +		rtl818x_iowrite8(priv, &priv->map->MSR, reg);
+>  
+>  		mutex_unlock(&priv->conf_mutex);
+>  	}
