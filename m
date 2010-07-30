@@ -1,38 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:33140 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757408Ab0F3WiN convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40842 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755635Ab0G3CAM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Jun 2010 18:38:13 -0400
-Received: by iwn7 with SMTP id 7so1342605iwn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Jun 2010 15:38:12 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1277935351.17170.1.camel@mj>
-References: <4C2A8AD4.8070504@openwrt.org>
-	<1277935351.17170.1.camel@mj>
-Date: Thu, 1 Jul 2010 00:38:12 +0200
-Message-ID: <AANLkTim8NrVZfcJGi4NK_OhXBxEY0Lw9fdg1bcbzDU0X@mail.gmail.com>
-Subject: Re: [PATCH] ath9k: fix TSF after reset on AR913x
-From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-To: Pavel Roskin <proski@gnu.org>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 29 Jul 2010 22:00:12 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] rtl8180: use RTL818X_MSR_ADHOC for IBSS connection
+Date: Thu, 29 Jul 2010 21:56:06 -0400
+Message-Id: <1280454966-25996-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 1, 2010 at 12:02 AM, Pavel Roskin <proski@gnu.org> wrote:
-> On Wed, 2010-06-30 at 02:07 +0200, Felix Fietkau wrote:
->> +     if (AR_SREV_9100(ah) && (ath9k_hw_gettsf64(ah) < tsf)) {
->> +             tsf += 1500;
->
-> Why 1500?  Is it a magic number?  It is a result of some measurement?
-> Can we have a define for it, please?
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/rtl818x/rtl8180_dev.c |   15 +++++++++------
+ 1 files changed, 9 insertions(+), 6 deletions(-)
 
-Does the TSF always start counting from zero when the chip is reset?
-In that case maybe the "magic number" can be replaced with the return
-value from ath9k_hw_gettsf64() (which we call anyway).
+diff --git a/drivers/net/wireless/rtl818x/rtl8180_dev.c b/drivers/net/wireless/rtl818x/rtl8180_dev.c
+index c879660..2c44753 100644
+--- a/drivers/net/wireless/rtl818x/rtl8180_dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8180_dev.c
+@@ -788,6 +788,7 @@ static void rtl8180_bss_info_changed(struct ieee80211_hw *dev,
+ 	struct rtl8180_priv *priv = dev->priv;
+ 	struct rtl8180_vif *vif_priv;
+ 	int i;
++	u8 reg;
+ 
+ 	vif_priv = (struct rtl8180_vif *)&vif->drv_priv;
+ 
+@@ -796,12 +797,14 @@ static void rtl8180_bss_info_changed(struct ieee80211_hw *dev,
+ 			rtl818x_iowrite8(priv, &priv->map->BSSID[i],
+ 					 info->bssid[i]);
+ 
+-		if (is_valid_ether_addr(info->bssid))
+-			rtl818x_iowrite8(priv, &priv->map->MSR,
+-					 RTL818X_MSR_INFRA);
+-		else
+-			rtl818x_iowrite8(priv, &priv->map->MSR,
+-					 RTL818X_MSR_NO_LINK);
++		if (is_valid_ether_addr(info->bssid)) {
++			if (vif->type == NL80211_IFTYPE_ADHOC)
++				reg = RTL818X_MSR_ADHOC;
++			else
++				reg = RTL818X_MSR_INFRA;
++		} else
++			reg = RTL818X_MSR_NO_LINK;
++		rtl818x_iowrite8(priv, &priv->map->MSR, reg);
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_ERP_SLOT && priv->rf->conf_erp)
+-- 
+1.7.1.1
 
-/Björn
