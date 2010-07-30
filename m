@@ -1,85 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:38606 "EHLO mail.atheros.com"
+Received: from mx1.redhat.com ([209.132.183.28]:61481 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753498Ab0G3FhB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jul 2010 01:37:01 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 29 Jul 2010 22:37:01 -0700
-Date: Fri, 30 Jul 2010 11:06:54 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 3/3] ath9k: Implement an algorithm for Antenna
-	diversity and combining
-Message-ID: <20100730053653.GA10419@vasanth-laptop>
-References: <1280408219-5293-1-git-send-email-vasanth@atheros.com> <1280408219-5293-3-git-send-email-vasanth@atheros.com> <AANLkTimiQZj7Gh5g+W0pcuWYFejt4EGQVCEQQ1aNvsk5@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-In-Reply-To: <AANLkTimiQZj7Gh5g+W0pcuWYFejt4EGQVCEQQ1aNvsk5@mail.gmail.com>
+	id S1750926Ab0G3EFq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Jul 2010 00:05:46 -0400
+Subject: [wt PATCH 0/5] libertas: make association work again
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 29 Jul 2010 23:07:14 -0700
+Message-ID: <1280470034.14523.4.camel@dcbw.foobar.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 29, 2010 at 08:09:35PM +0530, Luis R. Rodriguez wrote:
-> On Thu, Jul 29, 2010 at 5:56 AM, Vasanthakumar Thiagarajan
-> <vasanth@atheros.com> wrote:
-> > This algorithm chooses the best main and alt lna out of
-> > LNA1, LNA2, LNA1+LNA2 and LNA1-LNA2 to improve rx for single
-> > chain chips(AR9285). This would greatly improve rx when there
-> > is only one antenna is connected with AR9285.
-> >
-> > Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> 
-> > diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-> > index 243c177..8b4e4a6 100644
-> > --- a/drivers/net/wireless/ath/ath9k/init.c
-> > +++ b/drivers/net/wireless/ath/ath9k/init.c
-> > @@ -531,6 +531,11 @@ static void ath9k_init_misc(struct ath_softc *sc)
-> >                sc->beacon.bslot[i] = NULL;
-> >                sc->beacon.bslot_aphy[i] = NULL;
-> >        }
-> > +
-> > +       if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB) {
-> > +               memset(&sc->ant_comb, 0, sizeof(struct ath_ant_comb));
-> 
-> I do not believe this memset is required since we kzalloc()'d the ah struct.
+This series makes libertas actually associate with APs after the
+cfg80211 conversion.  There was a pretty big TODO where if cfg80211
+didn't pass in the BSSID of the AP to associate with, then libertas
+would fail because the firmware really, really, really wants a BSSID.
+So lets do a scan to find that BSSID.  The other notable change is
+a fix to make sure all supported rates are included in the firmware's
+association request, lack of which caused some APs to deny the attempt.
 
-that,s true. thanks.
 
-> 
-> Wow this routine is pretty large. Could you split this up into a few
-> helpers which describe what they do ?
+Dan Williams (5):
+  libertas: get the right # of scanned BSSes
+  libertas: better scan response debugging
+  libertas: better association request debugging
+  libertas: fix association with some APs by using extended rates
+  libertas: scan before assocation if no BSSID was given
 
-right, this one is pretty large, let me see if I can split things
-up.
+ drivers/net/wireless/libertas/cfg.c  |  275 ++++++++++++++++++++++++++--------
+ drivers/net/wireless/libertas/dev.h  |    5 +
+ drivers/net/wireless/libertas/main.c |    1 +
+ 3 files changed, 219 insertions(+), 62 deletions(-)
 
-> Also notice how this ended up calling ath9k_hw_antdiv_comb_conf_get()
-> and ath9k_hw_antdiv_comb_conf_set(), the only callers of those
-> routines, and this itself is done when:
-> 
-> > +
-> >  int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
-> >  {
-> >        struct ath_buf *bf;
-> > @@ -1210,6 +1738,9 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
-> >                                              PS_WAIT_FOR_PSPOLL_DATA))))
-> >                        ath_rx_ps(sc, skb);
-> >
-> > +               if (ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB)
-> > +                       ath_ant_comb_scan(sc, &rs);
-> > +
-> >                ath_rx_send_to_mac80211(hw, sc, skb, rxs);
-> >
-> >  requeue:
-> 
-> So the call currently really does not require to be abstracted away
-> unless we expect another 1x1 device where it will have its own set of
-> calls, eventually.
 
-hm, i actually planned not to abstract, not sure how I ended up
-doing this one. I'll send the next version of this series. thanks.
-
-Vasanth
