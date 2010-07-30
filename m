@@ -1,60 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relais.videotron.ca ([24.201.245.36]:33091 "EHLO
-	relais.videotron.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751043Ab0GVW4d (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:57792 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756588Ab0G3MKk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 18:56:33 -0400
-MIME-version: 1.0
-Content-type: TEXT/PLAIN; charset=US-ASCII
-Date: Fri, 23 Jul 2010 00:56:30 +0200 (CEST)
-From: Nicolas Pitre <nico@fluxnic.net>
-To: Ohad Ben-Cohen <ohad@wizery.com>
-Cc: linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux@arm.linux.org.uk,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	akpm@linux-foundation.org, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>
-Subject: Re: [PATCH v2 00/20] native support for wl1271 on ZOOM
-In-reply-to: <1279733634-21974-1-git-send-email-ohad@wizery.com>
-Message-id: <alpine.LFD.2.00.1007230052320.12562@xanadu.home>
-References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+	Fri, 30 Jul 2010 08:10:40 -0400
+Message-Id: <20100730113152.151224384@sipsolutions.net>
+Date: Fri, 30 Jul 2010 13:30:46 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: wey-yi.w.guy@intel.com, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/2] iwlwifi: fix possible recursive locking deadlock
+References: <20100730113045.923567583@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 21 Jul 2010, Ohad Ben-Cohen wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> This patch series adds native support for wl1271 on ZOOM.
-> 
-> Changes since v1:
-> 
-> - introduce a fixed regulator device to control the power of wl1271
-> - allow to propagate private board-specific data to SDIO function drivers
-> - allow SDIO function driver to control the card's power via new API
-> - make it possible to keep the card's power down (without depending
->   on an explicit SDIO function driver power-down request)
-> 
-> Thanks to these changes, we no longer need a separate platform
-> device (carrying e.g. the external irq information of the device),
-> and no longer need to emulate virtual card detect events.
-> 
-> The two "board muxing" pathces were already taken by Tony, and
-> are resent here just to make it easier for people to use/test these pathces.
-> 
-> The changes to the MMC core really needs careful review; there still
-> might be some pitfalls that haven't been covered. E.g., one thing
-> we plan to look at next is their bahvior together with SDIO Suspend/Resume.
-> 
-> Special thanks to Roger Quadros and Nicolas Pitre for their extensive
-> review and helpful suggestions.
+commit f84b29ec0a1ab767679d3f2428877b65f94bc3ff
+Author: Johannes Berg <johannes.berg@intel.com>
+Date:   Tue May 18 02:29:13 2010 -0700
 
-FYI, I do intend to review those patches, but I'll be flying home in a 
-couple hours, and once there I'll be gone on vacation for 2 weeks.  So 
-this review won't happen right away.
+    iwlwifi: queue user-initiated scan when doing internal scan
+
+introduced a potential deadlock because it calls
+ieee80211_scan_completed() with the priv->mutex
+held, but mac80211 may call back into iwlwifi
+which would lead to recursive locking. Move this
+out from under the mutex.
+
+Cc: stable@kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |    6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-core.c	2010-07-30 13:27:51.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-core.c	2010-07-30 13:27:53.000000000 +0200
+@@ -2000,6 +2000,7 @@ void iwl_mac_remove_interface(struct iee
+ 			      struct ieee80211_vif *vif)
+ {
+ 	struct iwl_priv *priv = hw->priv;
++	bool scan_completed = false;
+ 
+ 	IWL_DEBUG_MAC80211(priv, "enter\n");
+ 
+@@ -2013,7 +2014,7 @@ void iwl_mac_remove_interface(struct iee
+ 	if (priv->vif == vif) {
+ 		priv->vif = NULL;
+ 		if (priv->scan_vif == vif) {
+-			ieee80211_scan_completed(priv->hw, true);
++			scan_completed = true;
+ 			priv->scan_vif = NULL;
+ 			priv->scan_request = NULL;
+ 		}
+@@ -2021,6 +2022,9 @@ void iwl_mac_remove_interface(struct iee
+ 	}
+ 	mutex_unlock(&priv->mutex);
+ 
++	if (scan_completed)
++		ieee80211_scan_completed(priv->hw, true);
++
+ 	IWL_DEBUG_MAC80211(priv, "leave\n");
+ 
+ }
 
 
-Nicolas
