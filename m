@@ -1,55 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:60521 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752471Ab0GMTHz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jul 2010 15:07:55 -0400
-Date: Tue, 13 Jul 2010 21:07:42 +0200
-From: Alejandro Riveira =?UTF-8?B?RmVybsOhbmRleg==?=
-	<ariveira@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>,
-	Martin Steigerwald <Martin@lichtvoll.de>,
-	linux-kernel@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: rt2x00: slow wifi with correct basic rate bitmap (was Re:
- stable? quality assurance?)
-Message-ID: <20100713210742.3048ad79@varda>
-In-Reply-To: <20100713183851.GD3835@tuxdriver.com>
-References: <201007110918.42120.Martin@lichtvoll.de>
-	<AANLkTimCwi2uJqqPaq3U30f3rvdDizu1BnaaXgvNeC9k@mail.gmail.com>
-	<201007111651.42963.Martin@lichtvoll.de>
-	<20100713131112.26a3da54@varda>
-	<4C3C6106.3000909@s5r6.in-berlin.de>
-	<20100713153530.GC3835@tuxdriver.com>
-	<20100713201927.78674c4a@varda>
-	<20100713183851.GD3835@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from kroah.org ([198.145.64.141]:52166 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758797Ab0G3RUJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Jul 2010 13:20:09 -0400
+Message-Id: <20100730171512.517341960@clark.site>
+Date: Fri, 30 Jul 2010 10:16:10 -0700
+From: Greg KH <gregkh@suse.de>
+To: linux-kernel@vger.kernel.org, stable@kernel.org
+Cc: stable-review@kernel.org, torvalds@linux-foundation.org,
+	akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk,
+	Daniel Mack <daniel@caiaq.de>,
+	Alagu Sankar <alagusankar@embwise.com>,
+	Volker Ernst <volker.ernst@txtr.com>,
+	Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Holger Schurig <hs4233@mail.mn-solutions.de>,
+	Bing Zhao <bzhao@marvell.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-mmc@vger.kernel.org
+Subject: [142/165] libertas/sdio: 8686: set ECSI bit for 1-bit transfers
+In-Reply-To: <20100730171550.GA1299@kroah.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-El Tue, 13 Jul 2010 14:38:52 -0400
-"John W. Linville" <linville@tuxdriver.com> escribió:
+2.6.32-stable review patch.  If anyone has any objections, please let us know.
 
-> 
-> > > isn't using the basic_rates map properly.  But after reviewing the
-> > > code and the data I have, I can't see what would be causing that.
-> > > It is at least possible that your AP is sending bad rate information.
-> > > Have you tried this device with other APs?
+------------------
 
- I do no know; i captured some debug data for Ivo back in the day and from
- what he said all the info passed to the card was correct...
- See http://lkml.org/lkml/2009/5/25/163 ( link is in bugzilla) in case
- you missed it
+From: Daniel Mack <daniel@caiaq.de>
 
-> >  
-> >  No; this is a desktop pc that connects to my home router/AP. A new wifi
-> >  card is cheaper than a new AP ...
-> 
-> Perhaps you could capture some beacons from that AP?
+commit 8a64c0f6b7ec7f758c4ef445e49f479e27fa2236 upstream.
 
-  f you explain how; I can try.
+When operating in 1-bit mode, SDAT1 is used as dedicated interrupt line.
+However, the 8686 will only drive this line when the ECSI bit is set in
+the CCCR_IF register.
 
-> 
+Thanks to Alagu Sankar for pointing me in the right direction.
+
+Signed-off-by: Daniel Mack <daniel@caiaq.de>
+Cc: Alagu Sankar <alagusankar@embwise.com>
+Cc: Volker Ernst <volker.ernst@txtr.com>
+Cc: Dan Williams <dcbw@redhat.com>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: Holger Schurig <hs4233@mail.mn-solutions.de>
+Cc: Bing Zhao <bzhao@marvell.com>
+Cc: libertas-dev@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Cc: linux-mmc@vger.kernel.org
+Acked-by: Dan Williams <dcbw@redhat.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+---
+ drivers/net/wireless/libertas/if_sdio.c |   22 ++++++++++++++++++++++
+ include/linux/mmc/sdio.h                |    2 ++
+ 2 files changed, 24 insertions(+)
+
+--- a/drivers/net/wireless/libertas/if_sdio.c
++++ b/drivers/net/wireless/libertas/if_sdio.c
+@@ -34,6 +34,8 @@
+ #include <linux/mmc/card.h>
+ #include <linux/mmc/sdio_func.h>
+ #include <linux/mmc/sdio_ids.h>
++#include <linux/mmc/sdio.h>
++#include <linux/mmc/host.h>
+ 
+ #include "host.h"
+ #include "decl.h"
+@@ -883,6 +885,7 @@ static int if_sdio_probe(struct sdio_fun
+ 	int ret, i;
+ 	unsigned int model;
+ 	struct if_sdio_packet *packet;
++	struct mmc_host *host = func->card->host;
+ 
+ 	lbs_deb_enter(LBS_DEB_SDIO);
+ 
+@@ -963,6 +966,25 @@ static int if_sdio_probe(struct sdio_fun
+ 	if (ret)
+ 		goto disable;
+ 
++	/* For 1-bit transfers to the 8686 model, we need to enable the
++	 * interrupt flag in the CCCR register. Set the MMC_QUIRK_LENIENT_FN0
++	 * bit to allow access to non-vendor registers. */
++	if ((card->model == IF_SDIO_MODEL_8686) &&
++	    (host->caps & MMC_CAP_SDIO_IRQ) &&
++	    (host->ios.bus_width == MMC_BUS_WIDTH_1)) {
++		u8 reg;
++
++		func->card->quirks |= MMC_QUIRK_LENIENT_FN0;
++		reg = sdio_f0_readb(func, SDIO_CCCR_IF, &ret);
++		if (ret)
++			goto release_int;
++
++		reg |= SDIO_BUS_ECSI;
++		sdio_f0_writeb(func, reg, SDIO_CCCR_IF, &ret);
++		if (ret)
++			goto release_int;
++	}
++
+ 	card->ioport = sdio_readb(func, IF_SDIO_IOPORT, &ret);
+ 	if (ret)
+ 		goto release_int;
+--- a/include/linux/mmc/sdio.h
++++ b/include/linux/mmc/sdio.h
+@@ -94,6 +94,8 @@
+ 
+ #define  SDIO_BUS_WIDTH_1BIT	0x00
+ #define  SDIO_BUS_WIDTH_4BIT	0x02
++#define  SDIO_BUS_ECSI		0x20	/* Enable continuous SPI interrupt */
++#define  SDIO_BUS_SCSI		0x40	/* Support continuous SPI interrupt */
+ 
+ #define  SDIO_BUS_CD_DISABLE     0x80	/* disable pull-up on DAT3 (pin 1) */
+ 
+
+
