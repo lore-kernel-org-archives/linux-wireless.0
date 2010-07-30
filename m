@@ -1,496 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49535 "EHLO mx1.redhat.com"
+Received: from nbd.name ([88.198.39.176]:42328 "EHLO ds10.nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751959Ab0G0R7l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jul 2010 13:59:41 -0400
-Subject: [wt PATCH 8/16] libertas: convert register access to direct
- commands
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1280260357.19686.13.camel@dcbw.foobar.com>
-References: <1280260357.19686.13.camel@dcbw.foobar.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 27 Jul 2010 13:01:07 -0700
-Message-ID: <1280260867.19686.23.camel@dcbw.foobar.com>
-Mime-Version: 1.0
+	id S1760367Ab0G3TCX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Jul 2010 15:02:23 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 1/4] ath9k_hw: clean up and fix initial noise floor calibration
+Date: Fri, 30 Jul 2010 21:02:09 +0200
+Message-Id: <1280516532-42721-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
+On AR9003 the initial noise floor calibration is currently triggered
+at the end of the reset without allowing the hardware to update the
+baseband settings. This could potentially make scans in noisy
+environments a bit more unreliable, so use the same calibration
+sequence that is used on AR9002.
+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/libertas/cmd.c     |  130 ++++++++++++++++---------------
- drivers/net/wireless/libertas/cmd.h     |    4 +
- drivers/net/wireless/libertas/cmdresp.c |   48 -----------
- drivers/net/wireless/libertas/debugfs.c |   67 ++++------------
- drivers/net/wireless/libertas/dev.h     |    1 -
- drivers/net/wireless/libertas/host.h    |   24 ++----
- 6 files changed, 94 insertions(+), 180 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9002_calib.c |    5 ++---
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c |    4 +++-
+ drivers/net/wireless/ath/ath9k/calib.c        |   10 ++++++++--
+ drivers/net/wireless/ath/ath9k/calib.h        |    2 +-
+ drivers/net/wireless/ath/ath9k/hw.c           |    7 ++-----
+ 5 files changed, 16 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index a09ee6b..b8df1fd 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -848,78 +848,86 @@ int lbs_set_11d_domain_info(struct lbs_private *priv,
- 	return ret;
- }
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+index dabafb8..2387ad1 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+@@ -721,7 +721,7 @@ static bool ar9002_hw_calibrate(struct ath_hw *ah,
+ 		 */
+ 		ath9k_hw_loadnf(ah, ah->curchan);
  
--static int lbs_cmd_reg_access(struct cmd_ds_command *cmdptr,
--			       u8 cmd_action, void *pdata_buf)
-+/**
-+ *  @brief Read a MAC, Baseband, or RF register
-+ *
-+ *  @param priv		pointer to struct lbs_private
-+ *  @param cmd		register command, one of CMD_MAC_REG_ACCESS,
-+ *                        CMD_BBP_REG_ACCESS, or CMD_RF_REG_ACCESS
-+ *  @param offset       byte offset of the register to get
-+ *  @param value        on success, the value of the register at 'offset'
-+ *
-+ *  @return		0 on success, error code on failure
-+*/
-+int lbs_get_reg(struct lbs_private *priv, u16 reg, u16 offset, u32 *value)
- {
--	struct lbs_offset_value *offval;
-+	struct cmd_ds_reg_access cmd;
-+	int ret = 0;
- 
- 	lbs_deb_enter(LBS_DEB_CMD);
- 
--	offval = (struct lbs_offset_value *)pdata_buf;
--
--	switch (le16_to_cpu(cmdptr->command)) {
--	case CMD_MAC_REG_ACCESS:
--		{
--			struct cmd_ds_mac_reg_access *macreg;
--
--			cmdptr->size =
--			    cpu_to_le16(sizeof (struct cmd_ds_mac_reg_access)
--					+ sizeof(struct cmd_header));
--			macreg =
--			    (struct cmd_ds_mac_reg_access *)&cmdptr->params.
--			    macreg;
--
--			macreg->action = cpu_to_le16(cmd_action);
--			macreg->offset = cpu_to_le16((u16) offval->offset);
--			macreg->value = cpu_to_le32(offval->value);
--
--			break;
--		}
--
--	case CMD_BBP_REG_ACCESS:
--		{
--			struct cmd_ds_bbp_reg_access *bbpreg;
-+	BUG_ON(value == NULL);
- 
--			cmdptr->size =
--			    cpu_to_le16(sizeof
--					     (struct cmd_ds_bbp_reg_access)
--					     + sizeof(struct cmd_header));
--			bbpreg =
--			    (struct cmd_ds_bbp_reg_access *)&cmdptr->params.
--			    bbpreg;
-+	memset(&cmd, 0, sizeof(cmd));
-+	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
-+	cmd.action = cpu_to_le16(CMD_ACT_GET);
- 
--			bbpreg->action = cpu_to_le16(cmd_action);
--			bbpreg->offset = cpu_to_le16((u16) offval->offset);
--			bbpreg->value = (u8) offval->value;
-+	if (reg != CMD_MAC_REG_ACCESS &&
-+	    reg != CMD_BBP_REG_ACCESS &&
-+	    reg != CMD_RF_REG_ACCESS) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
- 
--			break;
--		}
-+	ret = lbs_cmd_with_response(priv, reg, &cmd);
-+	if (ret) {
-+		if (reg == CMD_BBP_REG_ACCESS || reg == CMD_RF_REG_ACCESS)
-+			*value = cmd.value.bbp_rf;
-+		else if (reg == CMD_MAC_REG_ACCESS)
-+			*value = le32_to_cpu(cmd.value.mac);
-+	}
- 
--	case CMD_RF_REG_ACCESS:
--		{
--			struct cmd_ds_rf_reg_access *rfreg;
-+out:
-+	lbs_deb_leave_args(LBS_DEB_CMD, "ret %d", ret);
-+	return ret;
-+}
- 
--			cmdptr->size =
--			    cpu_to_le16(sizeof
--					     (struct cmd_ds_rf_reg_access) +
--					     sizeof(struct cmd_header));
--			rfreg =
--			    (struct cmd_ds_rf_reg_access *)&cmdptr->params.
--			    rfreg;
-+/**
-+ *  @brief Write a MAC, Baseband, or RF register
-+ *
-+ *  @param priv		pointer to struct lbs_private
-+ *  @param cmd		register command, one of CMD_MAC_REG_ACCESS,
-+ *                        CMD_BBP_REG_ACCESS, or CMD_RF_REG_ACCESS
-+ *  @param offset       byte offset of the register to set
-+ *  @param value        the value to write to the register at 'offset'
-+ *
-+ *  @return		0 on success, error code on failure
-+*/
-+int lbs_set_reg(struct lbs_private *priv, u16 reg, u16 offset, u32 value)
-+{
-+	struct cmd_ds_reg_access cmd;
-+	int ret = 0;
- 
--			rfreg->action = cpu_to_le16(cmd_action);
--			rfreg->offset = cpu_to_le16((u16) offval->offset);
--			rfreg->value = (u8) offval->value;
-+	lbs_deb_enter(LBS_DEB_CMD);
- 
--			break;
--		}
-+	memset(&cmd, 0, sizeof(cmd));
-+	cmd.hdr.size = cpu_to_le16(sizeof(cmd));
-+	cmd.action = cpu_to_le16(CMD_ACT_SET);
- 
--	default:
--		break;
-+	if (reg == CMD_BBP_REG_ACCESS || reg == CMD_RF_REG_ACCESS)
-+		cmd.value.bbp_rf = (u8) (value & 0xFF);
-+	else if (reg == CMD_MAC_REG_ACCESS)
-+		cmd.value.mac = cpu_to_le32(value);
-+	else {
-+		ret = -EINVAL;
-+		goto out;
+-		ath9k_hw_start_nfcal(ah);
++		ath9k_hw_start_nfcal(ah, false);
  	}
  
--	lbs_deb_leave(LBS_DEB_CMD);
--	return 0;
-+	ret = lbs_cmd_with_response(priv, reg, &cmd);
+ 	return iscaldone;
+@@ -869,8 +869,7 @@ static bool ar9002_hw_init_cal(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	ar9002_hw_pa_cal(ah, true);
+ 
+ 	/* Do NF Calibration after DC offset and other calibrations */
+-	REG_WRITE(ah, AR_PHY_AGC_CONTROL,
+-		  REG_READ(ah, AR_PHY_AGC_CONTROL) | AR_PHY_AGC_CONTROL_NF);
++	ath9k_hw_start_nfcal(ah, true);
+ 
+ 	ah->cal_list = ah->cal_list_last = ah->cal_list_curr = NULL;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 5a06503..938365e 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -156,7 +156,7 @@ static bool ar9003_hw_calibrate(struct ath_hw *ah,
+ 		ath9k_hw_loadnf(ah, ah->curchan);
+ 
+ 		/* start NF calibration, without updating BB NF register */
+-		ath9k_hw_start_nfcal(ah);
++		ath9k_hw_start_nfcal(ah, false);
+ 	}
+ 
+ 	return iscaldone;
+@@ -762,6 +762,8 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
+ 	/* Revert chainmasks to their original values before NF cal */
+ 	ar9003_hw_set_chain_masks(ah, ah->rxchainmask, ah->txchainmask);
+ 
++	ath9k_hw_start_nfcal(ah, true);
 +
-+out:
-+	lbs_deb_leave_args(LBS_DEB_CMD, "ret %d", ret);
-+	return ret;
+ 	/* Initialize list pointers */
+ 	ah->cal_list = ah->cal_list_last = ah->cal_list_curr = NULL;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index 139289e..294016f 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -158,12 +158,18 @@ bool ath9k_hw_reset_calvalid(struct ath_hw *ah)
+ }
+ EXPORT_SYMBOL(ath9k_hw_reset_calvalid);
+ 
+-void ath9k_hw_start_nfcal(struct ath_hw *ah)
++void ath9k_hw_start_nfcal(struct ath_hw *ah, bool update)
+ {
+ 	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL,
+ 		    AR_PHY_AGC_CONTROL_ENABLE_NF);
+-	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL,
++
++	if (update)
++		REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
+ 		    AR_PHY_AGC_CONTROL_NO_UPDATE_NF);
++	else
++		REG_SET_BIT(ah, AR_PHY_AGC_CONTROL,
++		    AR_PHY_AGC_CONTROL_NO_UPDATE_NF);
++
+ 	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_NF);
  }
  
- static void lbs_queue_cmd(struct lbs_private *priv,
-@@ -1198,12 +1206,6 @@ int lbs_prepare_and_send_command(struct lbs_private *priv,
- 		ret = lbs_cmd_802_11_ps_mode(cmdptr, cmd_action);
- 		break;
+diff --git a/drivers/net/wireless/ath/ath9k/calib.h b/drivers/net/wireless/ath/ath9k/calib.h
+index cd60d09..bf44742 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.h
++++ b/drivers/net/wireless/ath/ath9k/calib.h
+@@ -108,7 +108,7 @@ struct ath9k_pacal_info{
+ };
  
--	case CMD_MAC_REG_ACCESS:
--	case CMD_BBP_REG_ACCESS:
--	case CMD_RF_REG_ACCESS:
--		ret = lbs_cmd_reg_access(cmdptr, cmd_action, pdata_buf);
--		break;
--
- #ifdef CONFIG_LIBERTAS_MESH
+ bool ath9k_hw_reset_calvalid(struct ath_hw *ah);
+-void ath9k_hw_start_nfcal(struct ath_hw *ah);
++void ath9k_hw_start_nfcal(struct ath_hw *ah, bool update);
+ void ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan);
+ int16_t ath9k_hw_getnf(struct ath_hw *ah,
+ 		       struct ath9k_channel *chan);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 8d291cc..257b623 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1256,7 +1256,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
  
- 	case CMD_BT_ACCESS:
-diff --git a/drivers/net/wireless/libertas/cmd.h b/drivers/net/wireless/libertas/cmd.h
-index 2c24c19..bfb3690 100644
---- a/drivers/net/wireless/libertas/cmd.h
-+++ b/drivers/net/wireless/libertas/cmd.h
-@@ -139,4 +139,8 @@ int lbs_set_11d_domain_info(struct lbs_private *priv,
- 			    struct regulatory_request *request,
- 			    struct ieee80211_supported_band **bands);
+ 		if (ath9k_hw_channel_change(ah, chan)) {
+ 			ath9k_hw_loadnf(ah, ah->curchan);
+-			ath9k_hw_start_nfcal(ah);
++			ath9k_hw_start_nfcal(ah, true);
+ 			return 0;
+ 		}
+ 	}
+@@ -1461,11 +1461,8 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	if (ah->btcoex_hw.enabled)
+ 		ath9k_hw_btcoex_enable(ah);
  
-+int lbs_get_reg(struct lbs_private *priv, u16 reg, u16 offset, u32 *value);
-+
-+int lbs_set_reg(struct lbs_private *priv, u16 reg, u16 offset, u32 value);
-+
- #endif /* _LBS_CMD_H */
-diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-index 6196e54..810d758 100644
---- a/drivers/net/wireless/libertas/cmdresp.c
-+++ b/drivers/net/wireless/libertas/cmdresp.c
-@@ -54,48 +54,6 @@ void lbs_mac_event_disconnected(struct lbs_private *priv)
- 	lbs_deb_leave(LBS_DEB_ASSOC);
- }
- 
--static int lbs_ret_reg_access(struct lbs_private *priv,
--			       u16 type, struct cmd_ds_command *resp)
--{
--	int ret = 0;
--
--	lbs_deb_enter(LBS_DEB_CMD);
--
--	switch (type) {
--	case CMD_RET(CMD_MAC_REG_ACCESS):
--		{
--			struct cmd_ds_mac_reg_access *reg = &resp->params.macreg;
--
--			priv->offsetvalue.offset = (u32)le16_to_cpu(reg->offset);
--			priv->offsetvalue.value = le32_to_cpu(reg->value);
--			break;
--		}
--
--	case CMD_RET(CMD_BBP_REG_ACCESS):
--		{
--			struct cmd_ds_bbp_reg_access *reg = &resp->params.bbpreg;
--
--			priv->offsetvalue.offset = (u32)le16_to_cpu(reg->offset);
--			priv->offsetvalue.value = reg->value;
--			break;
--		}
--
--	case CMD_RET(CMD_RF_REG_ACCESS):
--		{
--			struct cmd_ds_rf_reg_access *reg = &resp->params.rfreg;
--
--			priv->offsetvalue.offset = (u32)le16_to_cpu(reg->offset);
--			priv->offsetvalue.value = reg->value;
--			break;
--		}
--
--	default:
--		ret = -1;
+-	if (AR_SREV_9300_20_OR_LATER(ah)) {
+-		ath9k_hw_loadnf(ah, curchan);
+-		ath9k_hw_start_nfcal(ah);
++	if (AR_SREV_9300_20_OR_LATER(ah))
+ 		ar9003_hw_bb_watchdog_config(ah);
 -	}
--
--	lbs_deb_leave_args(LBS_DEB_CMD, "ret %d", ret);
--	return ret;
--}
- static inline int handle_cmd_response(struct lbs_private *priv,
- 				      struct cmd_header *cmd_response)
- {
-@@ -107,12 +65,6 @@ static inline int handle_cmd_response(struct lbs_private *priv,
- 	lbs_deb_enter(LBS_DEB_HOST);
  
- 	switch (respcmd) {
--	case CMD_RET(CMD_MAC_REG_ACCESS):
--	case CMD_RET(CMD_BBP_REG_ACCESS):
--	case CMD_RET(CMD_RF_REG_ACCESS):
--		ret = lbs_ret_reg_access(priv, respcmd, resp);
--		break;
--
- 	case CMD_RET(CMD_802_11_BEACON_STOP):
- 		break;
- 
-diff --git a/drivers/net/wireless/libertas/debugfs.c b/drivers/net/wireless/libertas/debugfs.c
-index 3db621b..651a79c 100644
---- a/drivers/net/wireless/libertas/debugfs.c
-+++ b/drivers/net/wireless/libertas/debugfs.c
-@@ -446,30 +446,24 @@ static ssize_t lbs_bcnmiss_write(struct file *file, const char __user *userbuf,
+ 	return 0;
  }
- 
- 
--
- static ssize_t lbs_rdmac_read(struct file *file, char __user *userbuf,
- 				  size_t count, loff_t *ppos)
- {
- 	struct lbs_private *priv = file->private_data;
--	struct lbs_offset_value offval;
- 	ssize_t pos = 0;
- 	int ret;
- 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
- 	char *buf = (char *)addr;
-+	u32 val = 0;
-+
- 	if (!buf)
- 		return -ENOMEM;
- 
--	offval.offset = priv->mac_offset;
--	offval.value = 0;
--
--	ret = lbs_prepare_and_send_command(priv,
--				CMD_MAC_REG_ACCESS, 0,
--				CMD_OPTION_WAITFORRSP, 0, &offval);
-+	ret = lbs_get_reg(priv, CMD_MAC_REG_ACCESS, priv->mac_offset, &val);
- 	mdelay(10);
- 	if (!ret) {
--		pos += snprintf(buf+pos, len-pos, "MAC[0x%x] = 0x%08x\n",
--				priv->mac_offset, priv->offsetvalue.value);
--
-+		pos = snprintf(buf, len, "MAC[0x%x] = 0x%08x\n",
-+				priv->mac_offset, val);
- 		ret = simple_read_from_buffer(userbuf, count, ppos, buf, pos);
- 	}
- 	free_page(addr);
-@@ -507,7 +501,6 @@ static ssize_t lbs_wrmac_write(struct file *file,
- 	struct lbs_private *priv = file->private_data;
- 	ssize_t res, buf_size;
- 	u32 offset, value;
--	struct lbs_offset_value offval;
- 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
- 	char *buf = (char *)addr;
- 	if (!buf)
-@@ -524,11 +517,7 @@ static ssize_t lbs_wrmac_write(struct file *file,
- 		goto out_unlock;
- 	}
- 
--	offval.offset = offset;
--	offval.value = value;
--	res = lbs_prepare_and_send_command(priv,
--				CMD_MAC_REG_ACCESS, 1,
--				CMD_OPTION_WAITFORRSP, 0, &offval);
-+	res = lbs_set_reg(priv, CMD_MAC_REG_ACCESS, offset, value);
- 	mdelay(10);
- 
- 	if (!res)
-@@ -542,25 +531,20 @@ static ssize_t lbs_rdbbp_read(struct file *file, char __user *userbuf,
- 				  size_t count, loff_t *ppos)
- {
- 	struct lbs_private *priv = file->private_data;
--	struct lbs_offset_value offval;
- 	ssize_t pos = 0;
- 	int ret;
- 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
- 	char *buf = (char *)addr;
-+	u32 val;
-+
- 	if (!buf)
- 		return -ENOMEM;
- 
--	offval.offset = priv->bbp_offset;
--	offval.value = 0;
--
--	ret = lbs_prepare_and_send_command(priv,
--				CMD_BBP_REG_ACCESS, 0,
--				CMD_OPTION_WAITFORRSP, 0, &offval);
-+	ret = lbs_get_reg(priv, CMD_BBP_REG_ACCESS, priv->bbp_offset, &val);
- 	mdelay(10);
- 	if (!ret) {
--		pos += snprintf(buf+pos, len-pos, "BBP[0x%x] = 0x%08x\n",
--				priv->bbp_offset, priv->offsetvalue.value);
--
-+		pos = snprintf(buf, len, "BBP[0x%x] = 0x%08x\n",
-+				priv->bbp_offset, val);
- 		ret = simple_read_from_buffer(userbuf, count, ppos, buf, pos);
- 	}
- 	free_page(addr);
-@@ -599,7 +583,6 @@ static ssize_t lbs_wrbbp_write(struct file *file,
- 	struct lbs_private *priv = file->private_data;
- 	ssize_t res, buf_size;
- 	u32 offset, value;
--	struct lbs_offset_value offval;
- 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
- 	char *buf = (char *)addr;
- 	if (!buf)
-@@ -616,11 +599,7 @@ static ssize_t lbs_wrbbp_write(struct file *file,
- 		goto out_unlock;
- 	}
- 
--	offval.offset = offset;
--	offval.value = value;
--	res = lbs_prepare_and_send_command(priv,
--				CMD_BBP_REG_ACCESS, 1,
--				CMD_OPTION_WAITFORRSP, 0, &offval);
-+	res = lbs_set_reg(priv, CMD_BBP_REG_ACCESS, offset, value);
- 	mdelay(10);
- 
- 	if (!res)
-@@ -634,25 +613,20 @@ static ssize_t lbs_rdrf_read(struct file *file, char __user *userbuf,
- 				  size_t count, loff_t *ppos)
- {
- 	struct lbs_private *priv = file->private_data;
--	struct lbs_offset_value offval;
- 	ssize_t pos = 0;
- 	int ret;
- 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
- 	char *buf = (char *)addr;
-+	u32 val;
-+
- 	if (!buf)
- 		return -ENOMEM;
- 
--	offval.offset = priv->rf_offset;
--	offval.value = 0;
--
--	ret = lbs_prepare_and_send_command(priv,
--				CMD_RF_REG_ACCESS, 0,
--				CMD_OPTION_WAITFORRSP, 0, &offval);
-+	ret = lbs_get_reg(priv, CMD_RF_REG_ACCESS, priv->rf_offset, &val);
- 	mdelay(10);
- 	if (!ret) {
--		pos += snprintf(buf+pos, len-pos, "RF[0x%x] = 0x%08x\n",
--				priv->rf_offset, priv->offsetvalue.value);
--
-+		pos = snprintf(buf, len, "RF[0x%x] = 0x%08x\n",
-+				priv->rf_offset, val);
- 		ret = simple_read_from_buffer(userbuf, count, ppos, buf, pos);
- 	}
- 	free_page(addr);
-@@ -691,7 +665,6 @@ static ssize_t lbs_wrrf_write(struct file *file,
- 	struct lbs_private *priv = file->private_data;
- 	ssize_t res, buf_size;
- 	u32 offset, value;
--	struct lbs_offset_value offval;
- 	unsigned long addr = get_zeroed_page(GFP_KERNEL);
- 	char *buf = (char *)addr;
- 	if (!buf)
-@@ -708,11 +681,7 @@ static ssize_t lbs_wrrf_write(struct file *file,
- 		goto out_unlock;
- 	}
- 
--	offval.offset = offset;
--	offval.value = value;
--	res = lbs_prepare_and_send_command(priv,
--				CMD_RF_REG_ACCESS, 1,
--				CMD_OPTION_WAITFORRSP, 0, &offval);
-+	res = lbs_set_reg(priv, CMD_RF_REG_ACCESS, offset, value);
- 	mdelay(10);
- 
- 	if (!res)
-diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-index be263ac..556a9c3 100644
---- a/drivers/net/wireless/libertas/dev.h
-+++ b/drivers/net/wireless/libertas/dev.h
-@@ -64,7 +64,6 @@ struct lbs_private {
- 	u32 mac_offset;
- 	u32 bbp_offset;
- 	u32 rf_offset;
--	struct lbs_offset_value offsetvalue;
- 
- 	/* Power management */
- 	u16 psmode;
-diff --git a/drivers/net/wireless/libertas/host.h b/drivers/net/wireless/libertas/host.h
-index 7f512ed..bd86d65 100644
---- a/drivers/net/wireless/libertas/host.h
-+++ b/drivers/net/wireless/libertas/host.h
-@@ -567,24 +567,15 @@ struct cmd_ds_802_11_snmp_mib {
- 	u8 value[128];
- } __attribute__ ((packed));
- 
--struct cmd_ds_mac_reg_access {
--	__le16 action;
--	__le16 offset;
--	__le32 value;
--} __attribute__ ((packed));
--
--struct cmd_ds_bbp_reg_access {
--	__le16 action;
--	__le16 offset;
--	u8 value;
--	u8 reserved[3];
--} __attribute__ ((packed));
-+struct cmd_ds_reg_access {
-+	struct cmd_header hdr;
- 
--struct cmd_ds_rf_reg_access {
- 	__le16 action;
- 	__le16 offset;
--	u8 value;
--	u8 reserved[3];
-+	union {
-+		u8 bbp_rf;  /* for BBP and RF registers */
-+		__le32 mac; /* for MAC registers */
-+	} value;
- } __attribute__ ((packed));
- 
- struct cmd_ds_802_11_radio_control {
-@@ -968,9 +959,6 @@ struct cmd_ds_command {
- 	/* command Body */
- 	union {
- 		struct cmd_ds_802_11_ps_mode psmode;
--		struct cmd_ds_mac_reg_access macreg;
--		struct cmd_ds_bbp_reg_access bbpreg;
--		struct cmd_ds_rf_reg_access rfreg;
- 		struct cmd_ds_bt_access bt;
- 		struct cmd_ds_fwt_access fwt;
- 	} params;
 -- 
-1.7.1.1
-
+1.6.4.2
 
