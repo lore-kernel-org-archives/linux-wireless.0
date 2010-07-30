@@ -1,46 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:49992 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751508Ab0GAPTy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Jul 2010 11:19:54 -0400
-Received: by pwi5 with SMTP id 5so199296pwi.19
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Jul 2010 08:19:52 -0700 (PDT)
-From: tom.leiming@gmail.com
-To: nbd@openwrt.org
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH] minstrel_ht: fix check for downgrading of top2 rate
-Date: Thu,  1 Jul 2010 23:19:50 +0800
-Message-Id: <1277997590-3512-1-git-send-email-tom.leiming@gmail.com>
+Received: from nbd.name ([88.198.39.176]:42329 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755690Ab0G3TCX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Jul 2010 15:02:23 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 3/4] ath9k: fix a crash in the PA predistortion apply function
+Date: Fri, 30 Jul 2010 21:02:11 +0200
+Message-Id: <1280516532-42721-3-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1280516532-42721-2-git-send-email-nbd@openwrt.org>
+References: <1280516532-42721-1-git-send-email-nbd@openwrt.org>
+ <1280516532-42721-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ming Lei <tom.leiming@gmail.com>
+When updating the PAPRD table in hardware, PAPRD itself needs to be
+disabled first, otherwise the hardware can throw a data bus error,
+which upsets at least some platforms.
 
-The check should be against current top2 rate, instead of
-current top rate.
-
-Signed-off-by: Ming Lei <tom.leiming@gmail.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- net/mac80211/rc80211_minstrel_ht.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 8fba6f4..b5ace24 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -443,8 +443,8 @@ minstrel_ht_tx_status(void *priv, struct ieee80211_supported_band *sband,
- 		minstrel_downgrade_rate(mi, &mi->max_tp_rate, true);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 0429dda..6c1d9ef 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -239,6 +239,7 @@ static void ath_paprd_activate(struct ath_softc *sc)
+ 		return;
  
- 	rate2 = minstrel_get_ratestats(mi, mi->max_tp_rate2);
--	if (rate->attempts > 30 &&
--	    MINSTREL_FRAC(rate->success, rate->attempts) <
-+	if (rate2->attempts > 30 &&
-+	    MINSTREL_FRAC(rate2->success, rate2->attempts) <
- 	    MINSTREL_FRAC(20, 100))
- 		minstrel_downgrade_rate(mi, &mi->max_tp_rate2, false);
- 
+ 	ath9k_ps_wakeup(sc);
++	ar9003_paprd_enable(ah, false);
+ 	for (chain = 0; chain < AR9300_MAX_CHAINS; chain++) {
+ 		if (!(ah->caps.tx_chainmask & BIT(chain)))
+ 			continue;
 -- 
-1.6.2.5
+1.6.4.2
 
