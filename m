@@ -1,67 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36107 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40853 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753848Ab0G2SPs (ORCPT
+	with ESMTP id S1755671Ab0G3CAl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jul 2010 14:15:48 -0400
-Date: Thu, 29 Jul 2010 14:04:27 -0400
+	Thu, 29 Jul 2010 22:00:41 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Kirill Zut <kirill.zut@promwad.com>
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
+To: linux-wireless@vger.kernel.org
+Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
 	Hin-Tak Leung <htl10@users.sourceforge.net>,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Subject: Re: [PATCH 2.6.34] rtl8187: ad-hoc mode support
-Message-ID: <20100729180426.GC2424@tuxdriver.com>
-References: <201007291835.46159.kirill.zut@promwad.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201007291835.46159.kirill.zut@promwad.com>
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] rtl8187: consolidate MSR writes in rtl8187_bss_info_changed
+Date: Thu, 29 Jul 2010 21:57:24 -0400
+Message-Id: <1280455044-26073-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Don't you need something to make it beacon?
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/rtl818x/rtl8187_dev.c |    9 ++++-----
+ 1 files changed, 4 insertions(+), 5 deletions(-)
 
-On Thu, Jul 29, 2010 at 06:35:45PM +0300, Kirill Zut wrote:
-> ---
-> This patch makes ad-hoc mode available on RTL8187
-> 
-> Signed-off-by: Kirill Zut <kirill.zut@promwad.com>
-> ---
-> --- linux-2.6.x/drivers/net/wireless/rtl818x/rtl8187_dev.c.orig	2010-07-29 14:40:09.000000000 +0300
-> +++ linux-2.6.x/drivers/net/wireless/rtl818x/rtl8187_dev.c	2010-07-29 14:59:39.000000000 +0300
-> @@ -1032,6 +1032,7 @@ static int rtl8187_add_interface(struct 
->  
->  	switch (vif->type) {
->  	case NL80211_IFTYPE_STATION:
-> +	case NL80211_IFTYPE_ADHOC:
->  		break;
->  	default:
->  		goto exit;
-> @@ -1178,7 +1179,10 @@ static void rtl8187_bss_info_changed(str
->  			reg = 0;
->  
->  		if (is_valid_ether_addr(info->bssid)) {
-> -			reg |= RTL818X_MSR_INFRA;
-> +			if (vif->type == NL80211_IFTYPE_ADHOC)
-> +				reg |= RTL818X_MSR_ADHOC;
-> +			else
-> +				reg |= RTL818X_MSR_INFRA;
->  			rtl818x_iowrite8(priv, &priv->map->MSR, reg);
->  		} else {
->  			reg |= RTL818X_MSR_NO_LINK;
-> @@ -1502,7 +1506,8 @@ static int __devinit rtl8187_probe(struc
->  	 * XXX: Once this driver supports anything that requires
->  	 *	beacons it must implement IEEE80211_TX_CTL_ASSIGN_SEQ.
->  	 */
-> -	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
-> +	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
-> +				      BIT(NL80211_IFTYPE_ADHOC);
->  
->  	if ((id->driver_info == DEVICE_RTL8187) && priv->is_rtl8187b)
->  		printk(KERN_INFO "rtl8187: inconsistency between id with OEM"
-> 
-
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+index 5738a55..0801c1d 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -1176,13 +1176,12 @@ static void rtl8187_bss_info_changed(struct ieee80211_hw *dev,
+ 		else
+ 			reg = 0;
+ 
+-		if (is_valid_ether_addr(info->bssid)) {
++		if (is_valid_ether_addr(info->bssid))
+ 			reg |= RTL818X_MSR_INFRA;
+-			rtl818x_iowrite8(priv, &priv->map->MSR, reg);
+-		} else {
++		else
+ 			reg |= RTL818X_MSR_NO_LINK;
+-			rtl818x_iowrite8(priv, &priv->map->MSR, reg);
+-		}
++
++		rtl818x_iowrite8(priv, &priv->map->MSR, reg);
+ 
+ 		mutex_unlock(&priv->conf_mutex);
+ 	}
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.1.1
+
