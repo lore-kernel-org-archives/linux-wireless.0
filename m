@@ -1,143 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:42621 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754780Ab0GZWwO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jul 2010 18:52:14 -0400
-Date: Mon, 26 Jul 2010 15:52:03 -0700
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: Fix key freeing to handle unlinked keys
-Message-ID: <20100726225203.GA31787@jm.kir.nu>
-References: <1275380359.3621.17.camel@jlt3.sipsolutions.net>
- <20100724053301.GA6773@jm.kir.nu>
- <1279962385.8223.2.camel@jlt3.sipsolutions.net>
- <20100726013953.GA29386@jm.kir.nu>
- <1280130178.3693.1.camel@jlt3.sipsolutions.net>
- <20100726142058.GA7324@jm.kir.nu>
- <1280154447.3693.9.camel@jlt3.sipsolutions.net>
+Received: from mga11.intel.com ([192.55.52.93]:15724 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756553Ab0GaQyt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 Jul 2010 12:54:49 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 5/8] iwlwifi: fix compile warning
+Date: Sat, 31 Jul 2010 08:34:09 -0700
+Message-Id: <1280590452-10655-6-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1280590452-10655-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1280590452-10655-1-git-send-email-wey-yi.w.guy@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1280154447.3693.9.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Key locking simplification removed key->sdata != NULL verification from
-ieee80211_key_free(). While that is fine for most use cases, there is one
-path where this function can be called with an unlinked key (i.e.,
-key->sdata == NULL && key->local == NULL). This results in a NULL pointer
-dereference with the current implementation. This is known to happen at
-least with FT protocol when wpa_supplicant tries to configure the key
-before association.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Avoid the issue by passing in the local pointer to
-ieee80211_key_free(). In addition, do not clear the key from hw_accel
-or debugfs if it has not yet been added. At least the hw_accel one could
-trigger another NULL pointer dereference.
+When iwlwifi is compiled w/o debug, we get
+this warning:
+iwl-agn.c: In function ‘iwlagn_load_firmware’:
+iwl-agn.c:2014: warning: passing argument 3 of ‘iwl_print_hex_dump’ discards qualifiers from pointer target type
+iwl-debug.h:73: note: expected ‘void *’ but argument is of type ‘const u8 *’
 
-Signed-off-by: Jouni Malinen <j@w1.fi>
+because the const qualifier is missing in the
+inline stub. Fix this.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- net/mac80211/cfg.c      |    6 +++---
- net/mac80211/key.c      |   13 ++++++-------
- net/mac80211/key.h      |    3 ++-
- net/mac80211/sta_info.c |    2 +-
- 4 files changed, 12 insertions(+), 12 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-debug.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-(Note: The reference to key locking simplification is to the commit
-ad0e2b5a00dbec303e4682b403bb6703d11dcdb2 which is not yet in linux-2.6.)
-
---- wireless-testing.orig/net/mac80211/cfg.c	2010-07-26 14:44:01.000000000 -0700
-+++ wireless-testing/net/mac80211/cfg.c	2010-07-26 14:44:43.000000000 -0700
-@@ -158,7 +158,7 @@ static int ieee80211_add_key(struct wiph
- 	if (mac_addr) {
- 		sta = sta_info_get_bss(sdata, mac_addr);
- 		if (!sta) {
--			ieee80211_key_free(key);
-+			ieee80211_key_free(sdata->local, key);
- 			err = -ENOENT;
- 			goto out_unlock;
- 		}
-@@ -192,7 +192,7 @@ static int ieee80211_del_key(struct wiph
- 			goto out_unlock;
- 
- 		if (sta->key) {
--			ieee80211_key_free(sta->key);
-+			ieee80211_key_free(sdata->local, sta->key);
- 			WARN_ON(sta->key);
- 			ret = 0;
- 		}
-@@ -205,7 +205,7 @@ static int ieee80211_del_key(struct wiph
- 		goto out_unlock;
- 	}
- 
--	ieee80211_key_free(sdata->keys[key_idx]);
-+	ieee80211_key_free(sdata->local, sdata->keys[key_idx]);
- 	WARN_ON(sdata->keys[key_idx]);
- 
- 	ret = 0;
---- wireless-testing.orig/net/mac80211/key.c	2010-07-26 14:43:07.000000000 -0700
-+++ wireless-testing/net/mac80211/key.c	2010-07-26 14:44:43.000000000 -0700
-@@ -323,13 +323,15 @@ static void __ieee80211_key_destroy(stru
- 	if (!key)
- 		return;
- 
--	ieee80211_key_disable_hw_accel(key);
-+	if (key->local)
-+		ieee80211_key_disable_hw_accel(key);
- 
- 	if (key->conf.alg == ALG_CCMP)
- 		ieee80211_aes_key_free(key->u.ccmp.tfm);
- 	if (key->conf.alg == ALG_AES_CMAC)
- 		ieee80211_aes_cmac_key_free(key->u.aes_cmac.tfm);
--	ieee80211_debugfs_key_remove(key);
-+	if (key->local)
-+		ieee80211_debugfs_key_remove(key);
- 
- 	kfree(key);
- }
-@@ -410,15 +412,12 @@ static void __ieee80211_key_free(struct 
- 	__ieee80211_key_destroy(key);
- }
- 
--void ieee80211_key_free(struct ieee80211_key *key)
-+void ieee80211_key_free(struct ieee80211_local *local,
-+			struct ieee80211_key *key)
- {
--	struct ieee80211_local *local;
--
- 	if (!key)
- 		return;
- 
--	local = key->sdata->local;
--
- 	mutex_lock(&local->key_mtx);
- 	__ieee80211_key_free(key);
- 	mutex_unlock(&local->key_mtx);
---- wireless-testing.orig/net/mac80211/key.h	2010-07-26 14:43:07.000000000 -0700
-+++ wireless-testing/net/mac80211/key.h	2010-07-26 14:44:43.000000000 -0700
-@@ -135,7 +135,8 @@ struct ieee80211_key *ieee80211_key_allo
- void ieee80211_key_link(struct ieee80211_key *key,
- 			struct ieee80211_sub_if_data *sdata,
- 			struct sta_info *sta);
--void ieee80211_key_free(struct ieee80211_key *key);
-+void ieee80211_key_free(struct ieee80211_local *local,
-+			struct ieee80211_key *key);
- void ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata, int idx);
- void ieee80211_set_default_mgmt_key(struct ieee80211_sub_if_data *sdata,
- 				    int idx);
---- wireless-testing.orig/net/mac80211/sta_info.c	2010-07-26 14:43:07.000000000 -0700
-+++ wireless-testing/net/mac80211/sta_info.c	2010-07-26 14:44:43.000000000 -0700
-@@ -647,7 +647,7 @@ static int __must_check __sta_info_destr
- 		return ret;
- 
- 	if (sta->key) {
--		ieee80211_key_free(sta->key);
-+		ieee80211_key_free(local, sta->key);
- 		WARN_ON(sta->key);
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
+index 5c2bcef..0b961a3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debug.h
++++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
+@@ -71,7 +71,7 @@ do {                                            			\
+ #define IWL_DEBUG(__priv, level, fmt, args...)
+ #define IWL_DEBUG_LIMIT(__priv, level, fmt, args...)
+ static inline void iwl_print_hex_dump(struct iwl_priv *priv, int level,
+-				      void *p, u32 len)
++				      const void *p, u32 len)
+ {}
+ #endif				/* CONFIG_IWLWIFI_DEBUG */
  
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.7.0.4
+
