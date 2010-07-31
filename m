@@ -1,35 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:33655 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751804Ab0GVAcu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jul 2010 20:32:50 -0400
-Message-ID: <4C4791AF.8040909@openwrt.org>
-Date: Thu, 22 Jul 2010 02:32:47 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-CC: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] ath9k: performance regressions / tx semi-stuck
- somehow
-References: <AANLkTimQ7O2nOmh2Rda3d_PKWbS2WlGVBHYMCuhxW10W@mail.gmail.com>
-In-Reply-To: <AANLkTimQ7O2nOmh2Rda3d_PKWbS2WlGVBHYMCuhxW10W@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.HRZ.Uni-Dortmund.DE ([129.217.128.51]:46499 "EHLO
+	unimail.uni-dortmund.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753538Ab0GaOQV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 Jul 2010 10:16:21 -0400
+From: Thomas Klute <thomas2.klute@uni-dortmund.de>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, dcbw@redhat.com,
+	libertas-dev@lists.infradead.org,
+	Thomas Klute <thomas2.klute@uni-dortmund.de>
+Subject: [PATCH 1/2] libertas_tf: if_usb.c: Whitespace cleanup
+Date: Sat, 31 Jul 2010 12:01:44 +0200
+Message-Id: <1280570505-6791-1-git-send-email-thomas2.klute@uni-dortmund.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-07-22 12:17 AM, Björn Smedman wrote:
-> Hi all,
-> 
-> I just tried out compat-wireless-2010-07-16 on AR913x (with
-> openwrt/trunk@r22321) and saw some weird performance problems.
-> 
-> That's in exactly the same spot I was getting 16Mbps consistently with
-> AP was 11n!
-> 
-> Any debuging I can do to help? Bisecting is unfortunately a lot of
-> work on this embedded system...
-Could you please try if the earlier version that was in OpenWrt
-(2010-07-06) has the same issues?
 
-- Felix
+Signed-off-by: Thomas Klute <thomas2.klute@uni-dortmund.de>
+---
+ drivers/net/wireless/libertas_tf/if_usb.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/libertas_tf/if_usb.c b/drivers/net/wireless/libertas_tf/if_usb.c
+index b172f5d..f93260b 100644
+--- a/drivers/net/wireless/libertas_tf/if_usb.c
++++ b/drivers/net/wireless/libertas_tf/if_usb.c
+@@ -54,7 +54,7 @@ static int if_usb_reset_device(struct if_usb_card *cardp);
+ /**
+  *  if_usb_wrike_bulk_callback -  call back to handle URB status
+  *
+- *  @param urb 		pointer to urb structure
++ *  @param urb		pointer to urb structure
+  */
+ static void if_usb_write_bulk_callback(struct urb *urb)
+ {
+@@ -187,7 +187,7 @@ static int if_usb_probe(struct usb_interface *intf,
+ 
+ 			lbtf_deb_usbd(&udev->dev, "out_endpoint = %d\n", cardp->ep_out);
+ 			lbtf_deb_usbd(&udev->dev, "Bulk out size is %d\n",
+-			              cardp->ep_out_size);
++				cardp->ep_out_size);
+ 		}
+ 	}
+ 	if (!cardp->ep_out_size || !cardp->ep_in_size) {
+@@ -367,7 +367,7 @@ EXPORT_SYMBOL_GPL(if_usb_reset_device);
+ /**
+  *  usb_tx_block - transfer data to the device
+  *
+- *  @priv 	pointer to struct lbtf_private
++ *  @priv	pointer to struct lbtf_private
+  *  @payload	pointer to payload data
+  *  @nb		data length
+  *  @data	non-zero for data, zero for commands
+@@ -689,7 +689,7 @@ static void if_usb_receive(struct urb *urb)
+ 	}
+ 	default:
+ 		lbtf_deb_usbd(&cardp->udev->dev,
+-		         "libertastf: unknown command type 0x%X\n", recvtype);
++			"libertastf: unknown command type 0x%X\n", recvtype);
+ 		kfree_skb(skb);
+ 		break;
+ 	}
+-- 
+1.7.1
+
