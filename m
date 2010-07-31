@@ -1,51 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:34815 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752203Ab0GVFHY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jul 2010 01:07:24 -0400
-Received: by yxg6 with SMTP id 6so309718yxg.19
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jul 2010 22:07:23 -0700 (PDT)
+Received: from purkki.adurom.net ([80.68.90.206]:33098 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753968Ab0GaJhM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 Jul 2010 05:37:12 -0400
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Luke-Jr <luke@dashjr.org>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, torvalds@linux-foundation.org
+Subject: Re: [PATCH] p54spi: replace internal "cx3110x" name with "p54spi"
+References: <201006012117.00432.luke@dashjr.org>
+	<1275465299.3915.0.camel@jlt3.sipsolutions.net>
+	<201006021406.15393.luke@dashjr.org>
+	<1275640607.9953.15.camel@jlt3.sipsolutions.net>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Sat, 31 Jul 2010 12:37:07 +0300
+In-Reply-To: <1275640607.9953.15.camel@jlt3.sipsolutions.net> (Johannes Berg's message of "Fri\, 04 Jun 2010 10\:36\:47 +0200")
+Message-ID: <87iq3wdmbg.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-From: Jonathan Guerin <jonathan@guerin.id.au>
-Date: Thu, 22 Jul 2010 14:55:36 +1000
-Message-ID: <AANLkTimWWGlhEhIRol_5kjhIIEILLgDuMmUXUHCCVUC1@mail.gmail.com>
-Subject: ath5k debug mode
-To: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-I'm not sure if I'm just misunderstanding something, or if they
-documentation is older than what's happening in practice. I'm trying
-to enable ath5k debug mode so that I can have a poke around in debufs.
+> On Wed, 2010-06-02 at 14:06 -0500, Luke-Jr wrote:
+>
+>> > >  	.driver = {
+>> > > -		/* use cx3110x name because board-n800.c uses that for the
+>> > > -		 * SPI port */
+>> > > -		.name		= "cx3110x",
+>> > > +		.name		= "p54spi",
+>> > >  		.bus		= &spi_bus_type,
+>> > 
+>> > maybe that comment wasn't clear enough ... it needs to be that way to be
+>> > properly linked up against SPI.
+>> 
+>> I don't understand what you mean here. Does the hardware-side of SPI use 
+>> string identifiers? These are the only two instances of "cx3110x" in the 
+>> kernel source; N8x0 board files expect "p54spi"
+>
+> Hm, ok, I thought that the board stuff needed cx3110x. Hopefully it
+> doesn't differ in n810s?
 
-Unfortunately, enabling debug in the compat-wireless distro doesn't
-seem to output the same information as I've been reading about
-elsewhere on the 'net. My understanding is that ath5k should load an
-ath5k directory tree into debugfs:
-http://www.mail-archive.com/ath5k-devel@lists.ath5k.org/msg00266.html
+I changed the n8x0 board files (for both n800 and n810) in mainline to
+use p54spi. So this patch is correct.
 
-This doesn't seem to be happening at the moment - what I CAN see in
-the /debug tree is:
-bdi  gpio  ieee80211  kprobes  mce  pktcdvd  sched_features  tracing  usb  x86
+The old maemo kernels and the closed driver used cx3110x to identify
+the spi device.
 
-Some of the stuff I expect to see in ath5k is in ieee8022, but I
-cannot write to this tree. Trying to replicate the cat mentioned in
-the link above to set the debug level in this tree fails with a
-'permission denied' error.
-
-Trying to load the module with the debug param fails with the following error:
-ath5k: Unknown parameter `debug'
-
-I'm wondering if someone would be able to point me in the right
-direction to get this working.
-
-Your help would be greatly appreciated!
-
-Thanks,
-
---
-Jonathan Guerin
+-- 
+Kalle Valo
