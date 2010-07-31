@@ -1,35 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:44687 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755852Ab0GXTCn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jul 2010 15:02:43 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id ABE8C421C8
-	for <linux-wireless@vger.kernel.org>; Sat, 24 Jul 2010 15:02:43 -0400 (EDT)
-Subject: Compat-wireless release for 2010-07-24 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20100724190240.4E832404F0@repository3.orbit-lab.org>
-Date: Sat, 24 Jul 2010 15:02:40 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mga11.intel.com ([192.55.52.93]:15724 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756479Ab0GaQyr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 Jul 2010 12:54:47 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 8/8] iwlagn: fix typo in ucode_bt_stats_read debugfs
+Date: Sat, 31 Jul 2010 08:34:12 -0700
+Message-Id: <1280590452-10655-9-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1280590452-10655-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1280590452-10655-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-compat-wireless code metrics
+small typo fix in ucode_bt_stats_read debugfs file
 
-    493730 - Total upstream lines of code being pulled
-      1447 - backport code changes
-      1211 - backport code additions
-       236 - backport code deletions
-      5764 - backport from compat module
-      7211 - total backport code
-    1.4605 - % of code consists of backport work
-      1218 - Crap changes not yet posted
-      1179 - Crap additions not yet posted
-        39 - Crap deletions not yet posted
-    0.2467 - % of crap code
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Base tree: linux-next.git
-Base tree version: next-20100723
-compat-wireless release: compat-wireless-2010-07-13-4-g04898a5
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
+index f052c6d..d706b8a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
+@@ -980,7 +980,7 @@ ssize_t iwl_ucode_bt_stats_read(struct file *file,
+ 			 le32_to_cpu(bt->lo_priority_tx_req_cnt),
+ 			 accum_bt->lo_priority_tx_req_cnt);
+ 	pos += scnprintf(buf + pos, bufsz - pos,
+-			 "lo_priority_rx_denied_cnt:\t%u\t\t\t%u\n",
++			 "lo_priority_tx_denied_cnt:\t%u\t\t\t%u\n",
+ 			 le32_to_cpu(bt->lo_priority_tx_denied_cnt),
+ 			 accum_bt->lo_priority_tx_denied_cnt);
+ 	pos += scnprintf(buf + pos, bufsz - pos,
+-- 
+1.7.0.4
+
