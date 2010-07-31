@@ -1,40 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:51032 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761210Ab0GUSRJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jul 2010 14:17:09 -0400
-Received: by qwh6 with SMTP id 6so2602054qwh.19
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Jul 2010 11:17:08 -0700 (PDT)
-From: Ben Gamari <bgamari.foss@gmail.com>
-To: Jiri Benc <jbenc@suse.cz>, linux-wireless@vger.kernel.org,
-	Michael Wu <flamingice@sourmilk.net>,
-	Andrea Merello <andreamrl@tiscali.it>
-Subject: Master mode in rtl8187
-Date: Wed, 21 Jul 2010 14:17:03 -0400
-Message-ID: <87vd88n1i8.fsf@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga11.intel.com ([192.55.52.93]:55161 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756545Ab0GaQyt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 Jul 2010 12:54:49 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 4/8] iwlwifi: make iwl_set_hw_params static to _agn
+Date: Sat, 31 Jul 2010 08:34:08 -0700
+Message-Id: <1280590452-10655-5-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1280590452-10655-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1280590452-10655-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey all,
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-I recently purchased a Netgear WG111v2 (based on rtl8187b) and after
-seeing scattered reports[1] that master mode may be supported by the
-rtl8187 driver. Unfortunately, hostapd throws up when it attempts to put
-the card into master mode. Is master mode supported by this driver? I've
-tried both 2.6.34 as well as the latest wireless-testing tree and
-neither seem to work.
+iwl_set_hw_params() only used by _agn, make it static
 
-I noticed there was a patch[2] sent out a few years back, but it seems
-no one followed up. While I don't have much experience working with
-wireless hardware I've done kernel driver work before, so with some
-guidance I might be able to finish up that patch. Any input would be
-greatly appreciated. Thanks!
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |   18 ++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-core.c |   19 -------------------
+ drivers/net/wireless/iwlwifi/iwl-core.h |    1 -
+ 3 files changed, 18 insertions(+), 20 deletions(-)
 
-- Ben
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index fcbc42c..32fdc5a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3979,6 +3979,24 @@ static void iwl_hw_detect(struct iwl_priv *priv)
+ 	IWL_DEBUG_INFO(priv, "HW Revision ID = 0x%X\n", priv->rev_id);
+ }
+ 
++static int iwl_set_hw_params(struct iwl_priv *priv)
++{
++	priv->hw_params.max_rxq_size = RX_QUEUE_SIZE;
++	priv->hw_params.max_rxq_log = RX_QUEUE_SIZE_LOG;
++	if (priv->cfg->mod_params->amsdu_size_8K)
++		priv->hw_params.rx_page_order = get_order(IWL_RX_BUF_SIZE_8K);
++	else
++		priv->hw_params.rx_page_order = get_order(IWL_RX_BUF_SIZE_4K);
++
++	priv->hw_params.max_beacon_itrvl = IWL_MAX_UCODE_BEACON_INTERVAL;
++
++	if (priv->cfg->mod_params->disable_11n)
++		priv->cfg->sku &= ~IWL_SKU_N;
++
++	/* Device-specific setup */
++	return priv->cfg->ops->lib->set_hw_params(priv);
++}
++
+ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+ 	int err = 0;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 5af5e23..78d8eb8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1348,25 +1348,6 @@ void iwl_configure_filter(struct ieee80211_hw *hw,
+ }
+ EXPORT_SYMBOL(iwl_configure_filter);
+ 
+-int iwl_set_hw_params(struct iwl_priv *priv)
+-{
+-	priv->hw_params.max_rxq_size = RX_QUEUE_SIZE;
+-	priv->hw_params.max_rxq_log = RX_QUEUE_SIZE_LOG;
+-	if (priv->cfg->mod_params->amsdu_size_8K)
+-		priv->hw_params.rx_page_order = get_order(IWL_RX_BUF_SIZE_8K);
+-	else
+-		priv->hw_params.rx_page_order = get_order(IWL_RX_BUF_SIZE_4K);
+-
+-	priv->hw_params.max_beacon_itrvl = IWL_MAX_UCODE_BEACON_INTERVAL;
+-
+-	if (priv->cfg->mod_params->disable_11n)
+-		priv->cfg->sku &= ~IWL_SKU_N;
+-
+-	/* Device-specific setup */
+-	return priv->cfg->ops->lib->set_hw_params(priv);
+-}
+-EXPORT_SYMBOL(iwl_set_hw_params);
+-
+ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
+ {
+ 	int ret = 0;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 4c3bf4d..a166f3a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -382,7 +382,6 @@ void iwl_irq_handle_error(struct iwl_priv *priv);
+ void iwl_configure_filter(struct ieee80211_hw *hw,
+ 			  unsigned int changed_flags,
+ 			  unsigned int *total_flags, u64 multicast);
+-int iwl_set_hw_params(struct iwl_priv *priv);
+ void iwl_post_associate(struct iwl_priv *priv, struct ieee80211_vif *vif);
+ void iwl_bss_info_changed(struct ieee80211_hw *hw,
+ 				     struct ieee80211_vif *vif,
+-- 
+1.7.0.4
 
-
-[1] http://osdir.com/ml/linux.kernel.wireless.general/2007-07/msg00289.html
-[2] http://osdir.com/ml/linux.kernel.wireless.general/2007-06/msg00455.html
