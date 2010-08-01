@@ -1,83 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3696 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751789Ab0HUUjy (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:44952 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751188Ab0HAUeH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Aug 2010 16:39:54 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 3/3] ath5k: log descriptor chains at a new debug level
-Date: Sat, 21 Aug 2010 16:39:03 -0400
-Message-Id: <1282423143-4121-3-git-send-email-me@bobcopeland.com>
-In-Reply-To: <1282423143-4121-1-git-send-email-me@bobcopeland.com>
-References: <1282423143-4121-1-git-send-email-me@bobcopeland.com>
+	Sun, 1 Aug 2010 16:34:07 -0400
+Received: by pvc7 with SMTP id 7so1130636pvc.19
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Aug 2010 13:34:07 -0700 (PDT)
+Message-ID: <4C55DA66.3090507@lwfinger.net>
+Date: Sun, 01 Aug 2010 15:34:46 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: David Cozatt <olbrannon@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: SMC 2802W -status unsupported
+References: <AANLkTinU74hoPQ9tfZp12n_rQQX38OYy2qaETON-qGAu@mail.gmail.com>
+In-Reply-To: <AANLkTinU74hoPQ9tfZp12n_rQQX38OYy2qaETON-qGAu@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Descriptors are currently logged with ATH5K_DEBUG_RESET,
-which isn't really apt, and also means we can't see just
-the descriptor setup or just the resets.  Add a new
-debug level just for that.
+On 08/01/2010 02:59 PM, David Cozatt wrote:
+> ----snip--
+> If I understand correctly, the device is working - only the wiki is wrong.
+> 
+> For my info, what does 'lspci -nnk | grep 2802' show?
+> 
+> Larry
+> 
+> ----/snip--
+> random david # lspci -nnk | grep 2802
+> 	Subsystem: Standard Microsystems Corp [SMC] SMC2802W Wireless PCI
+> Adapter [10b8:2802]
+> 
+> One thing only bothers me not sure of wpa2 enough to know if it
+> matters since I don't use the
+> wireless-tools to connect but iwconfig reports-
+> 
+> wlan0     IEEE 802.11bg  ESSID:"Davespace"
+>           Mode:Managed  Frequency:2.437 GHz  Access Point: 00:1C:10:9C:32:87
+>           Bit Rate=48 Mb/s   Tx-Power=20 dBm
+>           Retry  long limit:7   RTS thr:off   Fragment thr:off
+>           Encryption key:off
+>           Power Management:off
+>           Link Quality=70/70  Signal level=-1 dBm
+>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+> 
+> doesn't care? sinde we use wpa? on the enc off?
 
-Acked-by: Bruno Randolf <br1@einfach.org>
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath/ath5k/debug.c |    5 +++--
- drivers/net/wireless/ath/ath5k/debug.h |    2 ++
- 2 files changed, 5 insertions(+), 2 deletions(-)
+The encryption is being handled by mac80211, wpa_supplicant, and the device. The
+"encryption key:off" should be ignored. The wireless extension tools such as
+iwconfig are being phased out and do not always have the best information.
 
-diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
-index 4cccc29..1b7c6d7 100644
---- a/drivers/net/wireless/ath/ath5k/debug.c
-+++ b/drivers/net/wireless/ath/ath5k/debug.c
-@@ -312,6 +312,7 @@ static const struct {
- 	{ ATH5K_DEBUG_DUMP_TX,	"dumptx",	"print transmit skb content" },
- 	{ ATH5K_DEBUG_DUMPBANDS, "dumpbands",	"dump bands" },
- 	{ ATH5K_DEBUG_ANI,	"ani",		"adaptive noise immunity" },
-+	{ ATH5K_DEBUG_DESC,	"desc",		"descriptor chains" },
- 	{ ATH5K_DEBUG_ANY,	"all",		"show all debug levels" },
+Looking at the driver code, we need the patch below to enable the device:
+
+Index: wireless-testing/drivers/net/wireless/p54/p54pci.c
+===================================================================
+--- wireless-testing.orig/drivers/net/wireless/p54/p54pci.c
++++ wireless-testing/drivers/net/wireless/p54/p54pci.c
+@@ -43,6 +43,8 @@ static DEFINE_PCI_DEVICE_TABLE(p54p_tabl
+        { PCI_DEVICE(0x1260, 0x3886) },
+        /* Intersil PRISM Xbow Wireless LAN adapter (Symbol AP-300) */
+        { PCI_DEVICE(0x1260, 0xffff) },
++       /* Standard Microsystems Corp SMC2802W Wireless PCI */
++       { PCI_DEVICE(0x10b8, 0x2802) },
+        { },
  };
- 
-@@ -955,7 +956,7 @@ ath5k_debug_printrxbuffs(struct ath5k_softc *sc, struct ath5k_hw *ah)
- 	struct ath5k_rx_status rs = {};
- 	int status;
- 
--	if (likely(!(sc->debug.level & ATH5K_DEBUG_RESET)))
-+	if (likely(!(sc->debug.level & ATH5K_DEBUG_DESC)))
- 		return;
- 
- 	printk(KERN_DEBUG "rxdp %x, rxlink %p\n",
-@@ -997,7 +998,7 @@ ath5k_debug_printtxbuf(struct ath5k_softc *sc, struct ath5k_buf *bf)
- 	struct ath5k_tx_status ts = {};
- 	int done;
- 
--	if (likely(!(sc->debug.level & ATH5K_DEBUG_RESET)))
-+	if (likely(!(sc->debug.level & ATH5K_DEBUG_DESC)))
- 		return;
- 
- 	done = sc->ah->ah_proc_tx_desc(sc->ah, bf->desc, &ts);
-diff --git a/drivers/net/wireless/ath/ath5k/debug.h b/drivers/net/wireless/ath/ath5k/debug.h
-index 606ae94..9b22722 100644
---- a/drivers/net/wireless/ath/ath5k/debug.h
-+++ b/drivers/net/wireless/ath/ath5k/debug.h
-@@ -95,6 +95,7 @@ struct ath5k_dbg_info {
-  * @ATH5K_DEBUG_DUMP_TX: print transmit skb content
-  * @ATH5K_DEBUG_DUMPBANDS: dump bands
-  * @ATH5K_DEBUG_TRACE: trace function calls
-+ * @ATH5K_DEBUG_DESC: descriptor setup
-  * @ATH5K_DEBUG_ANY: show at any debug level
-  *
-  * The debug level is used to control the amount and type of debugging output
-@@ -117,6 +118,7 @@ enum ath5k_debug_level {
- 	ATH5K_DEBUG_DUMP_TX	= 0x00000200,
- 	ATH5K_DEBUG_DUMPBANDS	= 0x00000400,
- 	ATH5K_DEBUG_ANI		= 0x00002000,
-+	ATH5K_DEBUG_DESC	= 0x00004000,
- 	ATH5K_DEBUG_ANY		= 0xffffffff
- };
- 
--- 
-1.7.1.1
 
 
+I will do a formal submission of the patch and edit the wiki.
+
+Larry
