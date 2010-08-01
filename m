@@ -1,235 +1,653 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:15438 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753949Ab0HWOxd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Aug 2010 10:53:33 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 14/26] iwlagn: wifi/bt coex configuration sequence
-Date: Mon, 23 Aug 2010 07:57:05 -0700
-Message-Id: <1282575437-23270-15-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1282575437-23270-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1282575437-23270-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from isilmar-3.linta.de ([188.40.101.200]:33784 "EHLO linta.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754584Ab0HAM7o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Aug 2010 08:59:44 -0400
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+To: <linux-pcmcia@lists.infradead.org>
+Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-serial@vger.kernel.org, Michael Buesch <mb@bu3sch.de>
+Subject: [PATCH 01/11] pcmcia: use pcmica_{read,write}_config_byte
+Date: Sun,  1 Aug 2010 14:59:00 +0200
+Message-Id: <1280667550-3040-1-git-send-email-linux@dominikbrodowski.net>
+In-Reply-To: <20100801125749.GA2564@comet.dominikbrodowski.net>
+References: <20100801125749.GA2564@comet.dominikbrodowski.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Use pcmcia_read_config_byte and pcmcia_write_config_byte instead
+of pcmcia_access_configuration_register.
 
-bt config command need to send before the init calibration command,
-driver need to let uCode know that calibrations are being performed now
-in order to assure antenna is not being taken to BT use during radio/dsp
-reads/writes
-
-Also, bt_coex_priorty_table command need to be send right after the
-bt_config_command during init sequence. Followed by bt coex envelope
-command to initialize and prepare uCode bt state machine
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+CC: netdev@vger.kernel.org
+CC: linux-wireless@vger.kernel.org
+CC: linux-serial@vger.kernel.org
+CC: Michael Buesch <mb@bu3sch.de>
+Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
 ---
- drivers/net/wireless/iwlwifi/iwl-6000.c      |    5 +-
- drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |   59 ++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-agn.c       |    6 ++-
- drivers/net/wireless/iwlwifi/iwl-commands.h  |   59 +++++++++++++++++++-------
- 4 files changed, 109 insertions(+), 20 deletions(-)
+ drivers/net/pcmcia/axnet_cs.c              |    3 +-
+ drivers/net/pcmcia/nmclan_cs.c             |   21 ++-----
+ drivers/net/pcmcia/xirc2ps_cs.c            |   16 ++---
+ drivers/net/wireless/hostap/hostap_cs.c    |   91 ++++++++--------------------
+ drivers/net/wireless/orinoco/spectrum_cs.c |   32 +++-------
+ drivers/pcmcia/cistpl.c                    |    7 +-
+ drivers/pcmcia/cs_internal.h               |    4 +-
+ drivers/pcmcia/pcmcia_resource.c           |   72 +++++++++++++---------
+ drivers/serial/serial_cs.c                 |    8 +--
+ drivers/ssb/pcmcia.c                       |   14 +----
+ include/pcmcia/cs.h                        |   12 ----
+ include/pcmcia/ds.h                        |    4 +-
+ 12 files changed, 105 insertions(+), 179 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index a4601b5..101630b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -235,11 +235,10 @@ static void iwl6000g2b_send_bt_config(struct iwl_priv *priv)
- 	/*
- 	 * Configure BT coex mode to "no coexistence" when the
- 	 * user disabled BT coexistence, we have no interface
--	 * (might be in monitor mode), or the interface is in
-+	 * user disabled BT coexistence, or the interface is in
- 	 * IBSS mode (no proper uCode support for coex then).
+diff --git a/drivers/net/pcmcia/axnet_cs.c b/drivers/net/pcmcia/axnet_cs.c
+index 467fd4b..ee0a6d0 100644
+--- a/drivers/net/pcmcia/axnet_cs.c
++++ b/drivers/net/pcmcia/axnet_cs.c
+@@ -378,8 +378,7 @@ static int axnet_config(struct pcmcia_device *link)
+     /* Maybe PHY is in power down mode. (PPD_SET = 1) 
+        Bit 2 of CCSR is active low. */ 
+     if (i == 32) {
+-	conf_reg_t reg = { 0, CS_WRITE, CISREG_CCSR, 0x04 };
+- 	pcmcia_access_configuration_register(link, &reg);
++	pcmcia_write_config_byte(link, CISREG_CCSR, 0x04);
+ 	for (i = 0; i < 32; i++) {
+ 	    j = mdio_read(dev->base_addr + AXNET_MII_EEP, i, 1);
+ 	    j2 = mdio_read(dev->base_addr + AXNET_MII_EEP, i, 2);
+diff --git a/drivers/net/pcmcia/nmclan_cs.c b/drivers/net/pcmcia/nmclan_cs.c
+index c0eacfa..c0d85af 100644
+--- a/drivers/net/pcmcia/nmclan_cs.c
++++ b/drivers/net/pcmcia/nmclan_cs.c
+@@ -757,29 +757,20 @@ static void nmclan_reset(struct net_device *dev)
+ 
+ #if RESET_XILINX
+   struct pcmcia_device *link = &lp->link;
+-  conf_reg_t reg;
+-  u_long OrigCorValue; 
++  u8 OrigCorValue;
+ 
+   /* Save original COR value */
+-  reg.Function = 0;
+-  reg.Action = CS_READ;
+-  reg.Offset = CISREG_COR;
+-  reg.Value = 0;
+-  pcmcia_access_configuration_register(link, &reg);
+-  OrigCorValue = reg.Value;
++  pcmcia_read_config_byte(link, CISREG_COR, &OrigCorValue);
+ 
+   /* Reset Xilinx */
+-  reg.Action = CS_WRITE;
+-  reg.Offset = CISREG_COR;
+-  dev_dbg(&link->dev, "nmclan_reset: OrigCorValue=0x%lX, resetting...\n",
++  dev_dbg(&link->dev, "nmclan_reset: OrigCorValue=0x%x, resetting...\n",
+ 	OrigCorValue);
+-  reg.Value = COR_SOFT_RESET;
+-  pcmcia_access_configuration_register(link, &reg);
++  pcmcia_write_config_byte(link, CISREG_COR, COR_SOFT_RESET);
+   /* Need to wait for 20 ms for PCMCIA to finish reset. */
+ 
+   /* Restore original COR configuration index */
+-  reg.Value = COR_LEVEL_REQ | (OrigCorValue & COR_CONFIG_MASK);
+-  pcmcia_access_configuration_register(link, &reg);
++  pcmcia_write_config_byte(link, CISREG_COR,
++			  (COR_LEVEL_REQ | (OrigCorValue & COR_CONFIG_MASK)));
+   /* Xilinx is now completely reset along with the MACE chip. */
+   lp->tx_free_frames=AM2150_MAX_TX_FRAMES;
+ 
+diff --git a/drivers/net/pcmcia/xirc2ps_cs.c b/drivers/net/pcmcia/xirc2ps_cs.c
+index a7662f0..add6c82 100644
+--- a/drivers/net/pcmcia/xirc2ps_cs.c
++++ b/drivers/net/pcmcia/xirc2ps_cs.c
+@@ -869,7 +869,6 @@ xirc2ps_config(struct pcmcia_device * link)
+ 	goto config_error;
+ 
+     if (local->dingo) {
+-	conf_reg_t reg;
+ 	win_req_t req;
+ 	memreq_t mem;
+ 
+@@ -878,15 +877,14 @@ xirc2ps_config(struct pcmcia_device * link)
+ 	 * the base address of the ethernet port (BasePort1) is written
+ 	 * to the BAR registers of the modem.
  	 */
--	if (!bt_coex_active || !priv->vif ||
--	    priv->iw_mode == NL80211_IFTYPE_ADHOC) {
-+	if (!bt_coex_active || priv->iw_mode == NL80211_IFTYPE_ADHOC) {
- 		bt_cmd.flags = 0;
- 	} else {
- 		bt_cmd.flags = IWL6000G2B_BT_FLAG_CHANNEL_INHIBITION |
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-index 6f77441..2dc569b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-@@ -329,6 +329,51 @@ static int iwlagn_send_wimax_coex(struct iwl_priv *priv)
- 				sizeof(coex_cmd), &coex_cmd);
- }
+-	reg.Action = CS_WRITE;
+-	reg.Offset = CISREG_IOBASE_0;
+-	reg.Value = link->io.BasePort2 & 0xff;
+-	if ((err = pcmcia_access_configuration_register(link, &reg)))
++	err = pcmcia_write_config_byte(link, CISREG_IOBASE_0,
++				link->io.BasePort2 & 0xff);
++	if (err)
+ 	    goto config_error;
+-	reg.Action = CS_WRITE;
+-	reg.Offset = CISREG_IOBASE_1;
+-	reg.Value = (link->io.BasePort2 >> 8) & 0xff;
+-	if ((err = pcmcia_access_configuration_register(link, &reg)))
++
++	err = pcmcia_write_config_byte(link, CISREG_IOBASE_1,
++				link->io.BasePort2 & 0xff);
++	if (err)
+ 	    goto config_error;
  
-+static const u8 iwlagn_bt_prio_tbl[BT_COEX_PRIO_TBL_EVT_MAX] = {
-+	((BT_COEX_PRIO_TBL_PRIO_BYPASS << IWL_BT_COEX_PRIO_TBL_PRIO_POS) |
-+		(0 << IWL_BT_COEX_PRIO_TBL_SHARED_ANTENNA_POS)),
-+	((BT_COEX_PRIO_TBL_PRIO_BYPASS << IWL_BT_COEX_PRIO_TBL_PRIO_POS) |
-+		(1 << IWL_BT_COEX_PRIO_TBL_SHARED_ANTENNA_POS)),
-+	((BT_COEX_PRIO_TBL_PRIO_LOW << IWL_BT_COEX_PRIO_TBL_PRIO_POS) |
-+		(0 << IWL_BT_COEX_PRIO_TBL_SHARED_ANTENNA_POS)),
-+	((BT_COEX_PRIO_TBL_PRIO_LOW << IWL_BT_COEX_PRIO_TBL_PRIO_POS) |
-+		(1 << IWL_BT_COEX_PRIO_TBL_SHARED_ANTENNA_POS)),
-+	((BT_COEX_PRIO_TBL_PRIO_HIGH << IWL_BT_COEX_PRIO_TBL_PRIO_POS) |
-+		(0 << IWL_BT_COEX_PRIO_TBL_SHARED_ANTENNA_POS)),
-+	((BT_COEX_PRIO_TBL_PRIO_HIGH << IWL_BT_COEX_PRIO_TBL_PRIO_POS) |
-+		(1 << IWL_BT_COEX_PRIO_TBL_SHARED_ANTENNA_POS)),
-+	((BT_COEX_PRIO_TBL_PRIO_BYPASS << IWL_BT_COEX_PRIO_TBL_PRIO_POS) |
-+		(0 << IWL_BT_COEX_PRIO_TBL_SHARED_ANTENNA_POS)),
-+	((BT_COEX_PRIO_TBL_PRIO_COEX_OFF << IWL_BT_COEX_PRIO_TBL_PRIO_POS) |
-+		(0 << IWL_BT_COEX_PRIO_TBL_SHARED_ANTENNA_POS)),
-+	((BT_COEX_PRIO_TBL_PRIO_COEX_ON << IWL_BT_COEX_PRIO_TBL_PRIO_POS) |
-+		(0 << IWL_BT_COEX_PRIO_TBL_SHARED_ANTENNA_POS)),
-+	0, 0, 0, 0, 0, 0, 0
-+};
-+
-+static void iwlagn_send_prio_tbl(struct iwl_priv *priv)
-+{
-+	struct iwl_bt_coex_prio_table_cmd prio_tbl_cmd;
-+
-+	memcpy(prio_tbl_cmd.prio_tbl, iwlagn_bt_prio_tbl,
-+		sizeof(iwlagn_bt_prio_tbl));
-+	if (iwl_send_cmd_pdu(priv, REPLY_BT_COEX_PRIO_TABLE,
-+				sizeof(prio_tbl_cmd), &prio_tbl_cmd))
-+		IWL_ERR(priv, "failed to send BT prio tbl command\n");
-+}
-+
-+static void iwlagn_send_bt_env(struct iwl_priv *priv, u8 action, u8 type)
-+{
-+	struct iwl_bt_coex_prot_env_cmd env_cmd;
-+
-+	env_cmd.action = action;
-+	env_cmd.type = type;
-+	if (iwl_send_cmd_pdu(priv, REPLY_BT_COEX_PROT_ENV,
-+			     sizeof(env_cmd), &env_cmd))
-+		IWL_ERR(priv, "failed to send BT env command\n");
-+}
-+
-+
- int iwlagn_alive_notify(struct iwl_priv *priv)
+ 	/* There is no config entry for the Ethernet part which
+diff --git a/drivers/net/wireless/hostap/hostap_cs.c b/drivers/net/wireless/hostap/hostap_cs.c
+index 2f4b6d4..def63bf 100644
+--- a/drivers/net/wireless/hostap/hostap_cs.c
++++ b/drivers/net/wireless/hostap/hostap_cs.c
+@@ -224,27 +224,18 @@ static int prism2_pccard_card_present(local_info_t *local)
+ static void sandisk_set_iobase(local_info_t *local)
  {
- 	u32 a;
-@@ -416,6 +461,20 @@ int iwlagn_alive_notify(struct iwl_priv *priv)
+ 	int res;
+-	conf_reg_t reg;
+ 	struct hostap_cs_priv *hw_priv = local->hw_priv;
  
- 	spin_unlock_irqrestore(&priv->lock, flags);
+-	reg.Function = 0;
+-	reg.Action = CS_WRITE;
+-	reg.Offset = 0x10; /* 0x3f0 IO base 1 */
+-	reg.Value = hw_priv->link->io.BasePort1 & 0x00ff;
+-	res = pcmcia_access_configuration_register(hw_priv->link,
+-						   &reg);
++	res = pcmcia_write_config_byte(hw_priv->link, 0x10,
++				hw_priv->link->io.BasePort1 & 0x00ff);
+ 	if (res != 0) {
+ 		printk(KERN_DEBUG "Prism3 SanDisk - failed to set I/O base 0 -"
+ 		       " res=%d\n", res);
+ 	}
+ 	udelay(10);
  
-+	if (priv->cfg->advanced_bt_coexist) {
-+		/* Configure Bluetooth device coexistence support */
-+		/* need to perform this before any calibration */
-+		priv->cfg->ops->hcmd->send_bt_config(priv);
-+		if (bt_coex_active && priv->iw_mode != NL80211_IFTYPE_ADHOC) {
-+			iwlagn_send_prio_tbl(priv);
-+			iwlagn_send_bt_env(priv, IWL_BT_COEX_ENV_OPEN,
-+				BT_COEX_PRIO_TBL_EVT_INIT_CALIB2);
-+			iwlagn_send_bt_env(priv, IWL_BT_COEX_ENV_CLOSE,
-+				BT_COEX_PRIO_TBL_EVT_INIT_CALIB2);
-+		}
-+
-+	}
-+
- 	iwlagn_send_wimax_coex(priv);
+-	reg.Function = 0;
+-	reg.Action = CS_WRITE;
+-	reg.Offset = 0x12; /* 0x3f2 IO base 2 */
+-	reg.Value = (hw_priv->link->io.BasePort1 & 0xff00) >> 8;
+-	res = pcmcia_access_configuration_register(hw_priv->link,
+-						   &reg);
++	res = pcmcia_write_config_byte(hw_priv->link, 0x12,
++				hw_priv->link->io.BasePort1 & 0x00ff);
+ 	if (res != 0) {
+ 		printk(KERN_DEBUG "Prism3 SanDisk - failed to set I/O base 1 -"
+ 		       " res=%d\n", res);
+@@ -270,7 +261,6 @@ static void sandisk_write_hcr(local_info_t *local, int hcr)
+ static int sandisk_enable_wireless(struct net_device *dev)
+ {
+ 	int res, ret = 0;
+-	conf_reg_t reg;
+ 	struct hostap_interface *iface = netdev_priv(dev);
+ 	local_info_t *local = iface->local;
+ 	struct hostap_cs_priv *hw_priv = local->hw_priv;
+@@ -297,12 +287,8 @@ static int sandisk_enable_wireless(struct net_device *dev)
+ 	       " - using vendor-specific initialization\n", dev->name);
+ 	hw_priv->sandisk_connectplus = 1;
  
- 	iwlagn_set_Xtal_calib(priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 087f6c6..3686164 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2754,8 +2754,10 @@ static void iwl_alive_start(struct iwl_priv *priv)
- 			priv->cfg->ops->hcmd->set_rxon_chain(priv);
+-	reg.Function = 0;
+-	reg.Action = CS_WRITE;
+-	reg.Offset = CISREG_COR;
+-	reg.Value = COR_SOFT_RESET;
+-	res = pcmcia_access_configuration_register(hw_priv->link,
+-						   &reg);
++	res = pcmcia_write_config_byte(hw_priv->link, CISREG_COR,
++				COR_SOFT_RESET);
+ 	if (res != 0) {
+ 		printk(KERN_DEBUG "%s: SanDisk - COR sreset failed (%d)\n",
+ 		       dev->name, res);
+@@ -310,16 +296,13 @@ static int sandisk_enable_wireless(struct net_device *dev)
+ 	}
+ 	mdelay(5);
+ 
+-	reg.Function = 0;
+-	reg.Action = CS_WRITE;
+-	reg.Offset = CISREG_COR;
+ 	/*
+ 	 * Do not enable interrupts here to avoid some bogus events. Interrupts
+ 	 * will be enabled during the first cor_sreset call.
+ 	 */
+-	reg.Value = COR_LEVEL_REQ | 0x8 | COR_ADDR_DECODE | COR_FUNC_ENA;
+-	res = pcmcia_access_configuration_register(hw_priv->link,
+-						   &reg);
++	res = pcmcia_write_config_byte(hw_priv->link, CISREG_COR,
++				(COR_LEVEL_REQ | 0x8 | COR_ADDR_DECODE |
++					COR_FUNC_ENA));
+ 	if (res != 0) {
+ 		printk(KERN_DEBUG "%s: SanDisk - COR sreset failed (%d)\n",
+ 		       dev->name, res);
+@@ -342,30 +325,23 @@ done:
+ static void prism2_pccard_cor_sreset(local_info_t *local)
+ {
+ 	int res;
+-	conf_reg_t reg;
++	u8 val;
+ 	struct hostap_cs_priv *hw_priv = local->hw_priv;
+ 
+ 	if (!prism2_pccard_card_present(local))
+ 	       return;
+ 
+-	reg.Function = 0;
+-	reg.Action = CS_READ;
+-	reg.Offset = CISREG_COR;
+-	reg.Value = 0;
+-	res = pcmcia_access_configuration_register(hw_priv->link,
+-						   &reg);
++	res = pcmcia_read_config_byte(hw_priv->link, CISREG_COR, &val);
+ 	if (res != 0) {
+ 		printk(KERN_DEBUG "prism2_pccard_cor_sreset failed 1 (%d)\n",
+ 		       res);
+ 		return;
+ 	}
+ 	printk(KERN_DEBUG "prism2_pccard_cor_sreset: original COR %02x\n",
+-	       reg.Value);
++		val);
+ 
+-	reg.Action = CS_WRITE;
+-	reg.Value |= COR_SOFT_RESET;
+-	res = pcmcia_access_configuration_register(hw_priv->link,
+-						   &reg);
++	val |= COR_SOFT_RESET;
++	res = pcmcia_write_config_byte(hw_priv->link, CISREG_COR, val);
+ 	if (res != 0) {
+ 		printk(KERN_DEBUG "prism2_pccard_cor_sreset failed 2 (%d)\n",
+ 		       res);
+@@ -374,11 +350,10 @@ static void prism2_pccard_cor_sreset(local_info_t *local)
+ 
+ 	mdelay(hw_priv->sandisk_connectplus ? 5 : 2);
+ 
+-	reg.Value &= ~COR_SOFT_RESET;
++	val &= ~COR_SOFT_RESET;
+ 	if (hw_priv->sandisk_connectplus)
+-		reg.Value |= COR_IREQ_ENA;
+-	res = pcmcia_access_configuration_register(hw_priv->link,
+-						   &reg);
++		val |= COR_IREQ_ENA;
++	res = pcmcia_write_config_byte(hw_priv->link, CISREG_COR, val);
+ 	if (res != 0) {
+ 		printk(KERN_DEBUG "prism2_pccard_cor_sreset failed 3 (%d)\n",
+ 		       res);
+@@ -395,8 +370,7 @@ static void prism2_pccard_cor_sreset(local_info_t *local)
+ static void prism2_pccard_genesis_reset(local_info_t *local, int hcr)
+ {
+ 	int res;
+-	conf_reg_t reg;
+-	int old_cor;
++	u8 old_cor;
+ 	struct hostap_cs_priv *hw_priv = local->hw_priv;
+ 
+ 	if (!prism2_pccard_card_present(local))
+@@ -407,25 +381,17 @@ static void prism2_pccard_genesis_reset(local_info_t *local, int hcr)
+ 		return;
  	}
  
--	/* Configure Bluetooth device coexistence support */
--	priv->cfg->ops->hcmd->send_bt_config(priv);
-+	if (!priv->cfg->advanced_bt_coexist) {
-+		/* Configure Bluetooth device coexistence support */
-+		priv->cfg->ops->hcmd->send_bt_config(priv);
-+	}
+-	reg.Function = 0;
+-	reg.Action = CS_READ;
+-	reg.Offset = CISREG_COR;
+-	reg.Value = 0;
+-	res = pcmcia_access_configuration_register(hw_priv->link,
+-						   &reg);
++	res = pcmcia_read_config_byte(hw_priv->link, CISREG_COR, &old_cor);
+ 	if (res != 0) {
+ 		printk(KERN_DEBUG "prism2_pccard_genesis_sreset failed 1 "
+ 		       "(%d)\n", res);
+ 		return;
+ 	}
+ 	printk(KERN_DEBUG "prism2_pccard_genesis_sreset: original COR %02x\n",
+-	       reg.Value);
+-	old_cor = reg.Value;
++		old_cor);
  
- 	iwl_reset_run_time_calib(priv);
+-	reg.Action = CS_WRITE;
+-	reg.Value |= COR_SOFT_RESET;
+-	res = pcmcia_access_configuration_register(hw_priv->link,
+-						   &reg);
++	res = pcmcia_write_config_byte(hw_priv->link, CISREG_COR,
++				old_cor | COR_SOFT_RESET);
+ 	if (res != 0) {
+ 		printk(KERN_DEBUG "prism2_pccard_genesis_sreset failed 2 "
+ 		       "(%d)\n", res);
+@@ -435,11 +401,7 @@ static void prism2_pccard_genesis_reset(local_info_t *local, int hcr)
+ 	mdelay(10);
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 67eaeb6..b45882a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -4078,34 +4078,63 @@ struct iwl_bt_coex_profile_notif {
- 	u8 reserved;
- } __attribute__((packed));
+ 	/* Setup Genesis mode */
+-	reg.Action = CS_WRITE;
+-	reg.Value = hcr;
+-	reg.Offset = CISREG_CCSR;
+-	res = pcmcia_access_configuration_register(hw_priv->link,
+-						   &reg);
++	res = pcmcia_write_config_byte(hw_priv->link, CISREG_CCSR, hcr);
+ 	if (res != 0) {
+ 		printk(KERN_DEBUG "prism2_pccard_genesis_sreset failed 3 "
+ 		       "(%d)\n", res);
+@@ -447,11 +409,8 @@ static void prism2_pccard_genesis_reset(local_info_t *local, int hcr)
+ 	}
+ 	mdelay(10);
  
--#define IWL_BT_COEX_PRIO_SHARED_ANTENNA		0x1
--#define IWL_BT_COEX_PRIO_PRIO_MASK		0xe
--#define IWL_BT_COEX_PRIO_PRIO_SHIFT		1
-+#define IWL_BT_COEX_PRIO_TBL_SHARED_ANTENNA_POS	0
-+#define IWL_BT_COEX_PRIO_TBL_SHARED_ANTENNA_MSK	0x1
-+#define IWL_BT_COEX_PRIO_TBL_PRIO_POS		1
-+#define IWL_BT_COEX_PRIO_TBL_PRIO_MASK		0x0e
-+#define IWL_BT_COEX_PRIO_TBL_RESERVED_POS	4
-+#define IWL_BT_COEX_PRIO_TBL_RESERVED_MASK	0xf0
-+#define IWL_BT_COEX_PRIO_TBL_PRIO_SHIFT		1
+-	reg.Action = CS_WRITE;
+-	reg.Offset = CISREG_COR;
+-	reg.Value = old_cor & ~COR_SOFT_RESET;
+-	res = pcmcia_access_configuration_register(hw_priv->link,
+-						   &reg);
++	res = pcmcia_write_config_byte(hw_priv->link, CISREG_COR,
++				old_cor & ~COR_SOFT_RESET);
+ 	if (res != 0) {
+ 		printk(KERN_DEBUG "prism2_pccard_genesis_sreset failed 4 "
+ 		       "(%d)\n", res);
+diff --git a/drivers/net/wireless/orinoco/spectrum_cs.c b/drivers/net/wireless/orinoco/spectrum_cs.c
+index cad30e4..39399cd 100644
+--- a/drivers/net/wireless/orinoco/spectrum_cs.c
++++ b/drivers/net/wireless/orinoco/spectrum_cs.c
+@@ -79,35 +79,27 @@ static int
+ spectrum_reset(struct pcmcia_device *link, int idle)
+ {
+ 	int ret;
+-	conf_reg_t reg;
+-	u_int save_cor;
++	u8 save_cor;
++	u8 ccsr;
  
- /*
-  * BT Coexistence Priority table
-  * REPLY_BT_COEX_PRIO_TABLE = 0xcc
+ 	/* Doing it if hardware is gone is guaranteed crash */
+ 	if (!pcmcia_dev_present(link))
+ 		return -ENODEV;
+ 
+ 	/* Save original COR value */
+-	reg.Function = 0;
+-	reg.Action = CS_READ;
+-	reg.Offset = CISREG_COR;
+-	ret = pcmcia_access_configuration_register(link, &reg);
++	ret = pcmcia_read_config_byte(link, CISREG_COR, &save_cor);
+ 	if (ret)
+ 		goto failed;
+-	save_cor = reg.Value;
+ 
+ 	/* Soft-Reset card */
+-	reg.Action = CS_WRITE;
+-	reg.Offset = CISREG_COR;
+-	reg.Value = (save_cor | COR_SOFT_RESET);
+-	ret = pcmcia_access_configuration_register(link, &reg);
++	ret = pcmcia_write_config_byte(link, CISREG_COR,
++				(save_cor | COR_SOFT_RESET));
+ 	if (ret)
+ 		goto failed;
+ 	udelay(1000);
+ 
+ 	/* Read CCSR */
+-	reg.Action = CS_READ;
+-	reg.Offset = CISREG_CCSR;
+-	ret = pcmcia_access_configuration_register(link, &reg);
++	ret = pcmcia_read_config_byte(link, CISREG_CCSR, &ccsr);
+ 	if (ret)
+ 		goto failed;
+ 
+@@ -115,19 +107,15 @@ spectrum_reset(struct pcmcia_device *link, int idle)
+ 	 * Start or stop the firmware.  Memory width bit should be
+ 	 * preserved from the value we've just read.
+ 	 */
+-	reg.Action = CS_WRITE;
+-	reg.Offset = CISREG_CCSR;
+-	reg.Value = (idle ? HCR_IDLE : HCR_RUN) | (reg.Value & HCR_MEM16);
+-	ret = pcmcia_access_configuration_register(link, &reg);
++	ccsr = (idle ? HCR_IDLE : HCR_RUN) | (ccsr & HCR_MEM16);
++	ret = pcmcia_write_config_byte(link, CISREG_CCSR, ccsr);
+ 	if (ret)
+ 		goto failed;
+ 	udelay(1000);
+ 
+ 	/* Restore original COR configuration index */
+-	reg.Action = CS_WRITE;
+-	reg.Offset = CISREG_COR;
+-	reg.Value = (save_cor & ~COR_SOFT_RESET);
+-	ret = pcmcia_access_configuration_register(link, &reg);
++	ret = pcmcia_write_config_byte(link, CISREG_COR,
++				(save_cor & ~COR_SOFT_RESET));
+ 	if (ret)
+ 		goto failed;
+ 	udelay(1000);
+diff --git a/drivers/pcmcia/cistpl.c b/drivers/pcmcia/cistpl.c
+index ba4a5ac..1733fab 100644
+--- a/drivers/pcmcia/cistpl.c
++++ b/drivers/pcmcia/cistpl.c
+@@ -209,7 +209,7 @@ int pcmcia_read_cis_mem(struct pcmcia_socket *s, int attr, u_int addr,
+  * Probably only useful for writing one-byte registers. Must be called
+  * with ops_mutex held.
   */
-+enum bt_coex_prio_table_events {
-+	BT_COEX_PRIO_TBL_EVT_INIT_CALIB1 = 0,
-+	BT_COEX_PRIO_TBL_EVT_INIT_CALIB2 = 1,
-+	BT_COEX_PRIO_TBL_EVT_PERIODIC_CALIB_LOW1 = 2,
-+	BT_COEX_PRIO_TBL_EVT_PERIODIC_CALIB_LOW2 = 3, /* DC calib */
-+	BT_COEX_PRIO_TBL_EVT_PERIODIC_CALIB_HIGH1 = 4,
-+	BT_COEX_PRIO_TBL_EVT_PERIODIC_CALIB_HIGH2 = 5,
-+	BT_COEX_PRIO_TBL_EVT_DTIM = 6,
-+	BT_COEX_PRIO_TBL_EVT_SCAN52 = 7,
-+	BT_COEX_PRIO_TBL_EVT_SCAN24 = 8,
-+	BT_COEX_PRIO_TBL_EVT_RESERVED0 = 9,
-+	BT_COEX_PRIO_TBL_EVT_RESERVED1 = 10,
-+	BT_COEX_PRIO_TBL_EVT_RESERVED2 = 11,
-+	BT_COEX_PRIO_TBL_EVT_RESERVED3 = 12,
-+	BT_COEX_PRIO_TBL_EVT_RESERVED4 = 13,
-+	BT_COEX_PRIO_TBL_EVT_RESERVED5 = 14,
-+	BT_COEX_PRIO_TBL_EVT_RESERVED6 = 15,
-+	/* BT_COEX_PRIO_TBL_EVT_MAX should always be last */
-+	BT_COEX_PRIO_TBL_EVT_MAX,
-+};
-+
-+enum bt_coex_prio_table_priorities {
-+	BT_COEX_PRIO_TBL_DISABLED = 0,
-+	BT_COEX_PRIO_TBL_PRIO_LOW = 1,
-+	BT_COEX_PRIO_TBL_PRIO_HIGH = 2,
-+	BT_COEX_PRIO_TBL_PRIO_BYPASS = 3,
-+	BT_COEX_PRIO_TBL_PRIO_COEX_OFF = 4,
-+	BT_COEX_PRIO_TBL_PRIO_COEX_ON = 5,
-+	BT_COEX_PRIO_TBL_PRIO_RSRVD1 = 6,
-+	BT_COEX_PRIO_TBL_PRIO_RSRVD2 = 7,
-+	BT_COEX_PRIO_TBL_MAX,
-+};
-+
- struct iwl_bt_coex_prio_table_cmd {
--	u8 init_calib_protection_cfg1,
--	   init_calib_protection_cfg2,
--	   init_calib_protection_lowprio_cfg1,
--	   init_calib_protection_lowprio_cfg2,
--	   init_calib_protection_highprio_cfg1,
--	   init_calib_protection_highprio_cfg2,
--	   dtim_protection_prio_cfg,
--	   scan_52_protection_cfg,
--	   scan_24_protection_cfg,
--	   bc_mc_protection_cfg;
--	u8 reserved[6];
-+	u8 prio_tbl[BT_COEX_PRIO_TBL_EVT_MAX];
- } __attribute__((packed));
+-void pcmcia_write_cis_mem(struct pcmcia_socket *s, int attr, u_int addr,
++int pcmcia_write_cis_mem(struct pcmcia_socket *s, int attr, u_int addr,
+ 		   u_int len, void *ptr)
+ {
+ 	void __iomem *sys, *end;
+@@ -231,7 +231,7 @@ void pcmcia_write_cis_mem(struct pcmcia_socket *s, int attr, u_int addr,
+ 				((cis_width) ? MAP_16BIT : 0));
+ 		if (!sys) {
+ 			dev_dbg(&s->dev, "could not map memory\n");
+-			return; /* FIXME: Error */
++			return -EINVAL;
+ 		}
  
-+#define IWL_BT_COEX_ENV_CLOSE	0
-+#define IWL_BT_COEX_ENV_OPEN	1
- /*
-  * BT Protection Envelope
-  * REPLY_BT_COEX_PROT_ENV = 0xcd
+ 		writeb(flags, sys+CISREG_ICTRL0);
+@@ -256,7 +256,7 @@ void pcmcia_write_cis_mem(struct pcmcia_socket *s, int attr, u_int addr,
+ 			sys = set_cis_map(s, card_offset, flags);
+ 			if (!sys) {
+ 				dev_dbg(&s->dev, "could not map memory\n");
+-				return; /* FIXME: error */
++				return -EINVAL;
+ 			}
+ 
+ 			end = sys + s->map_size;
+@@ -270,6 +270,7 @@ void pcmcia_write_cis_mem(struct pcmcia_socket *s, int attr, u_int addr,
+ 			addr = 0;
+ 		}
+ 	}
++	return 0;
+ }
+ 
+ 
+diff --git a/drivers/pcmcia/cs_internal.h b/drivers/pcmcia/cs_internal.h
+index 45e7fd1..cebd40d 100644
+--- a/drivers/pcmcia/cs_internal.h
++++ b/drivers/pcmcia/cs_internal.h
+@@ -158,8 +158,8 @@ extern struct bin_attribute pccard_cis_attr;
+ 
+ int pcmcia_read_cis_mem(struct pcmcia_socket *s, int attr,
+ 			u_int addr, u_int len, void *ptr);
+-void pcmcia_write_cis_mem(struct pcmcia_socket *s, int attr,
+-			  u_int addr, u_int len, void *ptr);
++int pcmcia_write_cis_mem(struct pcmcia_socket *s, int attr,
++			u_int addr, u_int len, void *ptr);
+ void release_cis_mem(struct pcmcia_socket *s);
+ void destroy_cis_cache(struct pcmcia_socket *s);
+ int pccard_read_tuple(struct pcmcia_socket *s, unsigned int function,
+diff --git a/drivers/pcmcia/pcmcia_resource.c b/drivers/pcmcia/pcmcia_resource.c
+index 2394de4..563750e 100644
+--- a/drivers/pcmcia/pcmcia_resource.c
++++ b/drivers/pcmcia/pcmcia_resource.c
+@@ -108,25 +108,25 @@ static void release_io_space(struct pcmcia_socket *s, unsigned int base,
+ } /* release_io_space */
+ 
+ 
+-/** pccard_access_configuration_register
++/**
++ * pcmcia_access_config() - read or write card configuration registers
+  *
+- * Access_configuration_register() reads and writes configuration
+- * registers in attribute memory.  Memory window 0 is reserved for
+- * this and the tuple reading services.
++ * pcmcia_access_config() reads and writes configuration registers in
++ * attribute memory.  Memory window 0 is reserved for this and the tuple
++ * reading services. Drivers must use pcmcia_read_config_byte() or
++ * pcmcia_write_config_byte().
   */
- struct iwl_bt_coex_prot_env_cmd {
--	u8 open; /* 0 = closed, 1 = open */
-+	u8 action; /* 0 = closed, 1 = open */
- 	u8 type; /* 0 .. 15 */
- 	u8 reserved[2];
- } __attribute__((packed));
+-
+-int pcmcia_access_configuration_register(struct pcmcia_device *p_dev,
+-					 conf_reg_t *reg)
++static int pcmcia_access_config(struct pcmcia_device *p_dev,
++				off_t where, u8 *val,
++				int (*accessf) (struct pcmcia_socket *s,
++						int attr, unsigned int addr,
++						unsigned int len, void *ptr))
+ {
+ 	struct pcmcia_socket *s;
+ 	config_t *c;
+ 	int addr;
+-	u_char val;
+ 	int ret = 0;
+ 
+-	if (!p_dev || !p_dev->function_config)
+-		return -EINVAL;
+-
+ 	s = p_dev->socket;
+ 
+ 	mutex_lock(&s->ops_mutex);
+@@ -138,26 +138,40 @@ int pcmcia_access_configuration_register(struct pcmcia_device *p_dev,
+ 		return -EACCES;
+ 	}
+ 
+-	addr = (c->ConfigBase + reg->Offset) >> 1;
++	addr = (c->ConfigBase + where) >> 1;
++
++	ret = accessf(s, 1, addr, 1, val);
+ 
+-	switch (reg->Action) {
+-	case CS_READ:
+-		ret = pcmcia_read_cis_mem(s, 1, addr, 1, &val);
+-		reg->Value = val;
+-		break;
+-	case CS_WRITE:
+-		val = reg->Value;
+-		pcmcia_write_cis_mem(s, 1, addr, 1, &val);
+-		break;
+-	default:
+-		dev_dbg(&s->dev, "Invalid conf register request\n");
+-		ret = -EINVAL;
+-		break;
+-	}
+ 	mutex_unlock(&s->ops_mutex);
++
+ 	return ret;
+-} /* pcmcia_access_configuration_register */
+-EXPORT_SYMBOL(pcmcia_access_configuration_register);
++} /* pcmcia_access_config */
++
++
++/**
++ * pcmcia_read_config_byte() - read a byte from a card configuration register
++ *
++ * pcmcia_read_config_byte() reads a byte from a configuration register in
++ * attribute memory.
++ */
++int pcmcia_read_config_byte(struct pcmcia_device *p_dev, off_t where, u8 *val)
++{
++	return pcmcia_access_config(p_dev, where, val, pcmcia_read_cis_mem);
++}
++EXPORT_SYMBOL(pcmcia_read_config_byte);
++
++
++/**
++ * pcmcia_write_config_byte() - write a byte to a card configuration register
++ *
++ * pcmcia_write_config_byte() writes a byte to a configuration register in
++ * attribute memory.
++ */
++int pcmcia_write_config_byte(struct pcmcia_device *p_dev, off_t where, u8 val)
++{
++	return pcmcia_access_config(p_dev, where, &val, pcmcia_write_cis_mem);
++}
++EXPORT_SYMBOL(pcmcia_write_config_byte);
+ 
+ 
+ int pcmcia_map_mem_page(struct pcmcia_device *p_dev, window_handle_t wh,
+diff --git a/drivers/serial/serial_cs.c b/drivers/serial/serial_cs.c
+index 2b99c7b..2be8b10 100644
+--- a/drivers/serial/serial_cs.c
++++ b/drivers/serial/serial_cs.c
+@@ -114,16 +114,14 @@ static void quirk_setup_brainboxes_0104(struct pcmcia_device *link, struct uart_
+ 
+ static int quirk_post_ibm(struct pcmcia_device *link)
+ {
+-	conf_reg_t reg = { 0, CS_READ, 0x800, 0 };
++	u8 val;
+ 	int ret;
+ 
+-	ret = pcmcia_access_configuration_register(link, &reg);
++	ret = pcmcia_read_config_byte(link, 0x800, &val);
+ 	if (ret)
+ 		goto failed;
+ 
+-	reg.Action = CS_WRITE;
+-	reg.Value = reg.Value | 1;
+-	ret = pcmcia_access_configuration_register(link, &reg);
++	ret = pcmcia_write_config_byte(link, 0x800, val | 1);
+ 	if (ret)
+ 		goto failed;
+ 	return 0;
+diff --git a/drivers/ssb/pcmcia.c b/drivers/ssb/pcmcia.c
+index 2152030..526682d 100644
+--- a/drivers/ssb/pcmcia.c
++++ b/drivers/ssb/pcmcia.c
+@@ -71,14 +71,9 @@
+ /* Write to a PCMCIA configuration register. */
+ static int ssb_pcmcia_cfg_write(struct ssb_bus *bus, u8 offset, u8 value)
+ {
+-	conf_reg_t reg;
+ 	int res;
+ 
+-	memset(&reg, 0, sizeof(reg));
+-	reg.Offset = offset;
+-	reg.Action = CS_WRITE;
+-	reg.Value = value;
+-	res = pcmcia_access_configuration_register(bus->host_pcmcia, &reg);
++	res = pcmcia_write_config_byte(bus->host_pcmcia, offset, value);
+ 	if (unlikely(res != 0))
+ 		return -EBUSY;
+ 
+@@ -88,16 +83,11 @@ static int ssb_pcmcia_cfg_write(struct ssb_bus *bus, u8 offset, u8 value)
+ /* Read from a PCMCIA configuration register. */
+ static int ssb_pcmcia_cfg_read(struct ssb_bus *bus, u8 offset, u8 *value)
+ {
+-	conf_reg_t reg;
+ 	int res;
+ 
+-	memset(&reg, 0, sizeof(reg));
+-	reg.Offset = offset;
+-	reg.Action = CS_READ;
+-	res = pcmcia_access_configuration_register(bus->host_pcmcia, &reg);
++	res = pcmcia_read_config_byte(bus->host_pcmcia, offset, value);
+ 	if (unlikely(res != 0))
+ 		return -EBUSY;
+-	*value = reg.Value;
+ 
+ 	return 0;
+ }
+diff --git a/include/pcmcia/cs.h b/include/pcmcia/cs.h
+index c78d9b1..64e853d 100644
+--- a/include/pcmcia/cs.h
++++ b/include/pcmcia/cs.h
+@@ -19,18 +19,6 @@
+ #include <linux/interrupt.h>
+ #endif
+ 
+-/* For AccessConfigurationRegister */
+-typedef struct conf_reg_t {
+-    u_char	Function;
+-    u_int	Action;
+-    off_t	Offset;
+-    u_int	Value;
+-} conf_reg_t;
+-
+-/* Actions */
+-#define CS_READ		1
+-#define CS_WRITE	2
+-
+ /* for AdjustResourceInfo */
+ /* Action field */
+ #define REMOVE_MANAGED_RESOURCE		1
+diff --git a/include/pcmcia/ds.h b/include/pcmcia/ds.h
+index e614aa0..d494ce4 100644
+--- a/include/pcmcia/ds.h
++++ b/include/pcmcia/ds.h
+@@ -174,8 +174,8 @@ struct pcmcia_device *pcmcia_dev_present(struct pcmcia_device *p_dev);
+ int pcmcia_reset_card(struct pcmcia_socket *skt);
+ 
+ /* CIS config */
+-int pcmcia_access_configuration_register(struct pcmcia_device *p_dev,
+-					 conf_reg_t *reg);
++int pcmcia_read_config_byte(struct pcmcia_device *p_dev, off_t where, u8 *val);
++int pcmcia_write_config_byte(struct pcmcia_device *p_dev, off_t where, u8 val);
+ 
+ /* device configuration */
+ int pcmcia_request_io(struct pcmcia_device *p_dev, io_req_t *req);
 -- 
 1.7.0.4
 
