@@ -1,57 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:58092 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751377Ab0HCCbZ convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:44431 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751000Ab0HAUAV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Aug 2010 22:31:25 -0400
-Received: by gwb20 with SMTP id 20so1462211gwb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Aug 2010 19:31:24 -0700 (PDT)
+	Sun, 1 Aug 2010 16:00:21 -0400
+Received: by wwf26 with SMTP id 26so9070126wwf.1
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Aug 2010 13:00:19 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4C577DB3.4050902@gmail.com>
-References: <1280799971-7091-1-git-send-email-justinmattock@gmail.com>
-	<AANLkTimmiraT1wV_=zxUmfKPz7D78uOdY4s67pVXOntA@mail.gmail.com>
-	<4C577DB3.4050902@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 3 Aug 2010 12:31:04 +1000
-Message-ID: <AANLkTi=ZEKts2eW8KjvkNN0h5ogPkEwjfjbMYHjcjx+s@mail.gmail.com>
-Subject: Re: [PATCH v3]hostap:hostap_ioctl.c Fix variable 'ret' set but not
-	used
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: linux-wireless@vger.kernel.org, j@w1.fi, linville@tuxdriver.com,
-	mcgrof@gmail.com
+Date: Sun, 1 Aug 2010 15:59:07 -0400
+Message-ID: <AANLkTinU74hoPQ9tfZp12n_rQQX38OYy2qaETON-qGAu@mail.gmail.com>
+Subject: Re: SMC 2802W -status unsupported
+From: David Cozatt <olbrannon@gmail.com>
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 3, 2010 at 12:23, Justin P. Mattock <justinmattock@gmail.com> wrote:
-> wait im lost.. looking at your patch looks the same(number wise) except I
-> see different parts of code in there:
->
-> hostap_set_word(dev, HFA384X_RID_CNFROAMINGMODE,
->                                HFA384X_ROAMING_FIRMWARE);
->
-> -       return 0;
-> +       return ret;
->
->
->
-> mine is:
->
-> printk(KERN_DEBUG "SCANREQUEST failed\n");
-> -               ret = -EINVAL;
-> +               return ret;
->
->
-> The tree Im using is Linus's tree.
+----snip--
+If I understand correctly, the device is working - only the wiki is wrong.
 
-I'm using wireless-testing, and the line you're changing is #1692, I'm
-changing #1699.
+For my info, what does 'lspci -nnk | grep 2802' show?
 
-Thanks,
+Larry
 
--- 
+----/snip--
+random david # lspci -nnk | grep 2802
+	Subsystem: Standard Microsystems Corp [SMC] SMC2802W Wireless PCI
+Adapter [10b8:2802]
 
-Julian Calaby
+One thing only bothers me not sure of wpa2 enough to know if it
+matters since I don't use the
+wireless-tools to connect but iwconfig reports-
 
-Email: julian.calaby@gmail.com
-.Plan: http://sites.google.com/site/juliancalaby/
+wlan0     IEEE 802.11bg  ESSID:"Davespace"
+          Mode:Managed  Frequency:2.437 GHz  Access Point: 00:1C:10:9C:32:87
+          Bit Rate=48 Mb/s   Tx-Power=20 dBm
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:off
+          Link Quality=70/70  Signal level=-1 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+
+doesn't care? sinde we use wpa? on the enc off?
