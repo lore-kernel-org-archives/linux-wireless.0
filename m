@@ -1,83 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:62079 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754495Ab0H0Q4z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 12:56:55 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 21/27] iwlagn: send RXON timing before associating
-Date: Fri, 27 Aug 2010 09:59:49 -0700
-Message-Id: <1282928395-32762-22-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1282928395-32762-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1282928395-32762-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from senator.holtmann.net ([87.106.208.187]:51975 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751905Ab0HASEt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Aug 2010 14:04:49 -0400
+Subject: Re: [PATCH 04/11] pcmcia: do not use io_req_t after call to
+ pcmcia_request_io()
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Dominik Brodowski <linux@dominikbrodowski.net>
+Cc: linux-pcmcia@lists.infradead.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-usb@vger.kernel.org, laforge@gnumonks.org,
+	linux-mtd@lists.infradead.org, linux-bluetooth@vger.kernel.org,
+	alsa-devel@alsa-project.org, linux-serial@vger.kernel.org
+In-Reply-To: <1280667550-3040-4-git-send-email-linux@dominikbrodowski.net>
+References: <20100801125749.GA2564@comet.dominikbrodowski.net>
+	 <1280667550-3040-4-git-send-email-linux@dominikbrodowski.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 01 Aug 2010 11:04:43 -0700
+Message-ID: <1280685883.12579.8.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Dominik,
 
-The PAN functionality requires us to send the
-timing including a valid DTIM period to the
-microcode before associating, so request this
-data from mac80211 and send it to the device.
+> After pcmcia_request_io(), do not make use of the values stored in
+> io_req_t, but instead use those found in struct pcmcia_device->resource[].
+> 
+> CC: netdev@vger.kernel.org
+> CC: linux-wireless@vger.kernel.org
+> CC: linux-ide@vger.kernel.org
+> CC: linux-usb@vger.kernel.org
+> CC: laforge@gnumonks.org
+> CC: linux-mtd@lists.infradead.org
+> CC: linux-bluetooth@vger.kernel.org
+> CC: alsa-devel@alsa-project.org
+> CC: linux-serial@vger.kernel.org
+> Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c  |   16 ++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-core.c |    2 ++
- 2 files changed, 18 insertions(+), 0 deletions(-)
+for the drivers/bluetooth/ pieces.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 143c12a..79aff1f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -182,6 +182,21 @@ int iwl_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 
- 	iwl_set_rxon_hwcrypto(priv, ctx, !priv->cfg->mod_params->sw_crypto);
- 
-+	if (new_assoc) {
-+		if (WARN_ON(!ctx->vif))
-+			return -EINVAL;
-+		/*
-+		 * First of all, before setting associated, we need to
-+		 * send RXON timing so the device knows about the DTIM
-+		 * period and other timing values
-+		 */
-+		ret = iwl_send_rxon_timing(priv, ctx->vif);
-+		if (ret) {
-+			IWL_ERR(priv, "Error setting RXON timing!\n");
-+			return ret;
-+		}
-+	}
-+
- 	/* Apply the new configuration
- 	 * RXON unassoc clears the station table in uCode so restoration of
- 	 * stations is needed after it (the RXON command) completes
-@@ -3355,6 +3370,7 @@ static int iwl_mac_setup_register(struct iwl_priv *priv,
- 	/* Tell mac80211 our characteristics */
- 	hw->flags = IEEE80211_HW_SIGNAL_DBM |
- 		    IEEE80211_HW_AMPDU_AGGREGATION |
-+		    IEEE80211_HW_NEED_DTIM_PERIOD |
- 		    IEEE80211_HW_SPECTRUM_MGMT;
- 
- 	if (!priv->cfg->broken_powersave)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index fb9173b..04d7894 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -536,6 +536,8 @@ int iwl_send_rxon_timing(struct iwl_priv *priv, struct ieee80211_vif *vif)
- 	rem = do_div(tsf, interval_tm);
- 	ctx->timing.beacon_init_val = cpu_to_le32(interval_tm - rem);
- 
-+	ctx->timing.dtim_period = vif->bss_conf.dtim_period;
-+
- 	IWL_DEBUG_ASSOC(priv,
- 			"beacon interval %d beacon timer %d beacon tim %d\n",
- 			le16_to_cpu(ctx->timing.beacon_interval),
--- 
-1.7.0.4
+Acked-by: Marcel Holtmann <marcel@holtmann.org>
+
+Regards
+
+Marcel
+
 
