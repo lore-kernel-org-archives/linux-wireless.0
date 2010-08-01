@@ -1,42 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:59142 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753414Ab0HKTJj (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:57765 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751165Ab0HAQRR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Aug 2010 15:09:39 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 7E3CC4195D
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Aug 2010 15:09:34 -0400 (EDT)
-Subject: Compat-wireless release for 2010-08-11 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20100811190937.7E93E41133@repository3.orbit-lab.org>
-Date: Wed, 11 Aug 2010 15:09:37 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Sun, 1 Aug 2010 12:17:17 -0400
+Received: by wwj40 with SMTP id 40so3081813wwj.1
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Aug 2010 09:17:16 -0700 (PDT)
+MIME-Version: 1.0
+Date: Sun, 1 Aug 2010 12:17:16 -0400
+Message-ID: <AANLkTi=XOECFnOgB5mmaDejVhH2aAEedYqz9tyeSz7Ge@mail.gmail.com>
+Subject: SMC 2802W -status unsupported
+From: David Cozatt <olbrannon@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
-   8a5dfc1..82eaf99  master     -> origin/master
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   dcf085f..38c112b  history    -> origin/history
- + 81e09f5...e71de56 master     -> origin/master  (forced update)
-   45d7f32..3d30701  stable     -> origin/stable
- * [new tag]         next-20100811 -> next-20100811
+Accessing http://wireless.kernel.org/en/users/Drivers/p54 shows in unsupported
 
-compat-wireless code metrics
+    * early PrismGT cards (e.g.: Netgear WG511v1, SMC 2802W)
 
-    494636 - Total upstream lines of code being pulled
-      1699 - backport code changes
-      1460 - backport code additions
-       239 - backport code deletions
-      5979 - backport from compat module
-      7678 - total backport code
-    1.5523 - % of code consists of backport work
-      1218 - Crap changes not yet posted
-      1179 - Crap additions not yet posted
-        39 - Crap deletions not yet posted
-    0.2462 - % of crap code
+There are 2 revisions of this model
 
-Base tree: linux-next.git
-Base tree version: next-20100811
-compat-wireless release: compat-wireless-2010-08-03-4-g7746bc0
+random david # lspci -vv | grep SMC
+    Subsystem: Standard Microsystems Corp [SMC] SMC2802W Wireless PCI Adapter
+random david # lspci -vv | grep Wireless
+    Subsystem: Standard Microsystems Corp [SMC] SMC2802W Wireless PCI Adapter
+random david # dmesg | grep phy0
+
+phy0: p54 detected a LM86 firmware
+phy0: FW rev 2.13.12.0 - Softmac protocol 5.9
+phy0: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
+phy0: hwaddr 00:04:e2:63:c2:67, MAC:isl3890 RF:Duette3
+phy0: Selected rate control algorithm 'minstrel'
+p54pci 0000:00:0a.0: is registered as 'phy0'
+
+Part numbers:
+99-012084-164
+99-012084-285
+
+You can verify this with choosing the 2802W from the drop down boxes
+@http://www.smc.com/index.cfm?event=downloads.searchCriteria&localeCode=EN_USA&knowsPartNumber=false&productCategory=5&modelNumber=536&downloadType=0&os=0
+
+Mine is the -164 version. Anything else needed to confirm working properly?
+
+random david # uname -a
+Linux random 2.6.34.1 #5 SMP Thu Jul 22 22:06:56 EDT 2010 x86_64 AMD
+Athlon(tm) 64 Processor 3200+ AuthenticAMD GNU/Linux
+
+Posting vie device ;-)
+
+kind regards
+DJ Cozatt
