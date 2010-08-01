@@ -1,59 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sycorax.lbl.gov ([128.3.11.121]:34834 "EHLO sycorax.lbl.gov"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753533Ab0HCDyl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Aug 2010 23:54:41 -0400
-From: Alex Romosan <romosan@sycorax.lbl.gov>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Guy\, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlwifi connection problems
-References: <87tynqvtu6.fsf@sycorax.lbl.gov>
-	<1279917523.10769.1.camel@wwguy-huron>
-	<1280135867.3693.5.camel@jlt3.sipsolutions.net>
-	<87mxtd5xlq.fsf@sycorax.lbl.gov>
-	<1280212629.19098.0.camel@jlt3.sipsolutions.net>
-	<87bp9l6f4k.fsf@sycorax.lbl.gov>
-	<1280746705.3923.11.camel@jlt3.sipsolutions.net>
-	<878w4pvx5e.fsf@sycorax.lbl.gov>
-	<1280766201.24503.0.camel@jlt3.sipsolutions.net>
-Date: Mon, 02 Aug 2010 20:53:40 -0700
-In-Reply-To: <1280766201.24503.0.camel@jlt3.sipsolutions.net> (message from
-	Johannes Berg on Mon, 02 Aug 2010 18:23:21 +0200)
-Message-ID: <87aap4z70b.fsf@sycorax.lbl.gov>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from external1.orbit-lab.org ([128.6.192.131]:32849 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750926Ab0HATCl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Aug 2010 15:02:41 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id B548A41959
+	for <linux-wireless@vger.kernel.org>; Sun,  1 Aug 2010 15:01:55 -0400 (EDT)
+Subject: Compat-wireless release for 2010-08-01 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100801190239.E165B408F7@repository3.orbit-lab.org>
+Date: Sun,  1 Aug 2010 15:02:39 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
 
-> On Mon, 2010-08-02 at 08:42 -0700, Alex Romosan wrote:
->
->> so i think i finally managed to track this down. doing a git bisect i
->> get:
->> 
->> 3474ad635db371b0d8d0ee40086f15d223d5b6a4 is the first bad commit
->> commit 3474ad635db371b0d8d0ee40086f15d223d5b6a4
->> Author: Johannes Berg <johannes.berg@intel.com>
->> Date:   Thu Apr 29 04:43:05 2010 -0700
->> 
->>     iwlwifi: apply filter flags directly
->
->> ...
->
-> Thanks. I'll take a closer look tomorrow, am about to leave for today.
+compat-wireless code metrics
 
-so i looked a little bit more at what happened. the only difference
-between the non working and the working version is a call to
-iwlcore_commit_rxon(priv) on line 1327 of iwl-core.c (the version in
-2.6.35). if i comment that line out then i can connect to the access
-point without problems. hope this helps.
+    494088 - Total upstream lines of code being pulled
+      1447 - backport code changes
+      1211 - backport code additions
+       236 - backport code deletions
+      5764 - backport from compat module
+      7211 - total backport code
+    1.4595 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2465 - % of crap code
 
---alex--
-
--- 
-| I believe the moment is at hand when, by a paranoiac and active |
-|  advance of the mind, it will be possible (simultaneously with  |
-|  automatism and other passive states) to systematize confusion  |
-|  and thus to help to discredit completely the world of reality. |
+Base tree: linux-next.git
+Base tree version: next-20100730
+compat-wireless release: compat-wireless-2010-07-13-4-g04898a5
