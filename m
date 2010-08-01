@@ -1,51 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:41151 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753495Ab0HBTyi (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:51969 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751666Ab0HASEp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Aug 2010 15:54:38 -0400
-Received: by wyb39 with SMTP id 39so3643025wyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Aug 2010 12:54:37 -0700 (PDT)
-Message-ID: <4C57227A.1050802@gmail.com>
-Date: Mon, 02 Aug 2010 21:54:34 +0200
-From: Kshitij Kulshreshtha <kkhere.geo@gmail.com>
-MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/3] compat: define struct va_format introduced in v2.6.36
-References: <4C55D22A.5040302@hauke-m.de>	 <1280700173-14690-4-git-send-email-kkhere.geo@gmail.com>	 <AANLkTinfrBRm8J2G+k8bB6N-YniVkmUYOBkRpyF_tC2j@mail.gmail.com>	 <4C571F0B.3000200@gmail.com> <1280778534.1752.68.camel@Joe-Laptop.home>
-In-Reply-To: <1280778534.1752.68.camel@Joe-Laptop.home>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 1 Aug 2010 14:04:45 -0400
+Subject: Re: [PATCH 05/11] pcmcia: do not use io_req_t when calling
+ pcmcia_request_io()
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Dominik Brodowski <linux@dominikbrodowski.net>
+Cc: linux-pcmcia@lists.infradead.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-usb@vger.kernel.org, laforge@gnumonks.org,
+	linux-mtd@lists.infradead.org, linux-bluetooth@vger.kernel.org,
+	alsa-devel@alsa-project.org, linux-serial@vger.kernel.org,
+	Michael Buesch <mb@bu3sch.de>
+In-Reply-To: <1280667550-3040-5-git-send-email-linux@dominikbrodowski.net>
+References: <20100801125749.GA2564@comet.dominikbrodowski.net>
+	 <1280667550-3040-5-git-send-email-linux@dominikbrodowski.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 01 Aug 2010 11:04:37 -0700
+Message-ID: <1280685877.12579.7.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Dominik,
 
-As on 2010-08-02 21:48, Joe Perches did write:
-> On Mon, 2010-08-02 at 21:39 +0200, Kshitij Kulshreshtha wrote:
->> As on 2010-08-02 20:00, Luis R. Rodriguez did write:
->>> On Sun, Aug 1, 2010 at 3:02 PM, Kshitij Kulshreshtha
->>>> +struct va_format {
->>>> +       const char *fmt;
->>>> +       va_list *va;
->>>> +};
->>> I'll apply this for now but what caller uses this for example?
+> Instead of io_req_t, drivers are now requested to fill out
+> struct pcmcia_device *p_dev->resource[0,1] for up to two ioport
+> ranges. After a call to pcmcia_request_io(), the ports found there
+> are reserved, after calling pcmcia_request_configuration(), they may
+> be used.
 > 
-> Why is this necessary?
-> 
+> CC: netdev@vger.kernel.org
+> CC: linux-wireless@vger.kernel.org
+> CC: linux-ide@vger.kernel.org
+> CC: linux-usb@vger.kernel.org
+> CC: laforge@gnumonks.org
+> CC: linux-mtd@lists.infradead.org
+> CC: linux-bluetooth@vger.kernel.org
+> CC: alsa-devel@alsa-project.org
+> CC: linux-serial@vger.kernel.org
+> CC: Michael Buesch <mb@bu3sch.de>
+> Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
 
-I needed this to compile compat-wireless which is based on linux-next.
-Otherwise net/wireless/core.c fails to compile, due to the use of this
-struct va_format in the functions defined in lines 910--958. If this
-usage is reverted, we won't need it in compat.
+for the drivers/bluetooth/ pieces.
 
--- 
-Kshitij Kulshreshtha
+Acked-by: Marcel Holtmann <marcel@holtmann.org>
 
-Institut für Mathematik,
-Universität Paderborn,
-Warburger Straße 100,
-33098 Paderborn.
+Regards
 
-Büro: A3.319
+Marcel
+
+
