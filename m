@@ -1,206 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:45951 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751866Ab0HBNPP (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:36002 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750722Ab0HAQfI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Aug 2010 09:15:15 -0400
-Received: by bwz1 with SMTP id 1so1446928bwz.19
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Aug 2010 06:15:13 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/3] mac80211: put rx handlers into seperate functions
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Mon, 2 Aug 2010 15:15:05 +0200
+	Sun, 1 Aug 2010 12:35:08 -0400
+Received: by pzk26 with SMTP id 26so1093521pzk.19
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Aug 2010 09:35:07 -0700 (PDT)
+Message-ID: <4C55A261.10902@lwfinger.net>
+Date: Sun, 01 Aug 2010 11:35:45 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201008021515.06013.chunkeey@googlemail.com>
+To: David Cozatt <olbrannon@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: SMC 2802W -status unsupported
+References: <AANLkTi=XOECFnOgB5mmaDejVhH2aAEedYqz9tyeSz7Ge@mail.gmail.com>
+In-Reply-To: <AANLkTi=XOECFnOgB5mmaDejVhH2aAEedYqz9tyeSz7Ge@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Note: In order to keep diff from removing and re-adding code,
-I used forward declarations. So it should be easier to verify
-that I didn't change anything related to the reordering logic.
+On 08/01/2010 11:17 AM, David Cozatt wrote:
+> Accessing http://wireless.kernel.org/en/users/Drivers/p54 shows in unsupported
+> 
+>     * early PrismGT cards (e.g.: Netgear WG511v1, SMC 2802W)
+> 
+> There are 2 revisions of this model
+> 
+> random david # lspci -vv | grep SMC
+>     Subsystem: Standard Microsystems Corp [SMC] SMC2802W Wireless PCI Adapter
+> random david # lspci -vv | grep Wireless
+>     Subsystem: Standard Microsystems Corp [SMC] SMC2802W Wireless PCI Adapter
+> random david # dmesg | grep phy0
+> 
+> phy0: p54 detected a LM86 firmware
+> phy0: FW rev 2.13.12.0 - Softmac protocol 5.9
+> phy0: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
+> phy0: hwaddr 00:04:e2:63:c2:67, MAC:isl3890 RF:Duette3
+> phy0: Selected rate control algorithm 'minstrel'
+> p54pci 0000:00:0a.0: is registered as 'phy0'
+> 
+> Part numbers:
+> 99-012084-164
+> 99-012084-285
+> 
+> You can verify this with choosing the 2802W from the drop down boxes
+> @http://www.smc.com/index.cfm?event=downloads.searchCriteria&localeCode=EN_USA&knowsPartNumber=false&productCategory=5&modelNumber=536&downloadType=0&os=0
+> 
+> Mine is the -164 version. Anything else needed to confirm working properly?
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-WIP -> PATCH:
-	- no changes
----
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index fa0f37e..8179e62 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -574,6 +574,11 @@ static void ieee80211_release_reorder_frames(struct ieee80211_hw *hw,
- 	}
- }
- 
-+static void ieee80211_sta_reorder_release(struct ieee80211_hw *hw,
-+					  struct tid_ampdu_rx *tid_agg_rx,
-+					  struct sk_buff_head *frames);
-+
-+
- /*
-  * Timeout (in jiffies) for skb's that are waiting in the RX reorder buffer. If
-  * the skb was added to the buffer longer than this time ago, the earlier
-@@ -643,6 +648,17 @@ static bool ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
- 	tid_agg_rx->reorder_buf[index] = skb;
- 	tid_agg_rx->reorder_time[index] = jiffies;
- 	tid_agg_rx->stored_mpdu_num++;
-+	ieee80211_sta_reorder_release(hw, tid_agg_rx, frames);
-+
-+	return true;
-+}
-+
-+static void ieee80211_sta_reorder_release(struct ieee80211_hw *hw,
-+					  struct tid_ampdu_rx *tid_agg_rx,
-+					  struct sk_buff_head *frames)
-+{
-+	int index;
-+
- 	/* release the buffer until next missing frame */
- 	index = seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn) %
- 						tid_agg_rx->buf_size;
-@@ -686,8 +702,6 @@ static bool ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
- 		index =	seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn) %
- 							tid_agg_rx->buf_size;
- 	}
--
--	return true;
- }
- 
- /*
-@@ -2267,6 +2281,11 @@ static void ieee80211_rx_cooked_monitor(struct ieee80211_rx_data *rx,
- 	dev_kfree_skb(skb);
- }
- 
-+static void ieee80211_rx_handlers_result(struct ieee80211_rx_data *rx,
-+					 ieee80211_rx_result res);
-+
-+static void ieee80211_rx_handlers(struct ieee80211_rx_data *rx,
-+				  struct sk_buff_head *frames);
- 
- static void ieee80211_invoke_rx_handlers(struct ieee80211_sub_if_data *sdata,
- 					 struct ieee80211_rx_data *rx,
-@@ -2288,17 +2307,34 @@ static void ieee80211_invoke_rx_handlers(struct ieee80211_sub_if_data *sdata,
- 			goto rxh_next;  \
- 	} while (0);
- 
--	/*
--	 * NB: the rxh_next label works even if we jump
--	 *     to it from here because then the list will
--	 *     be empty, which is a trivial check
--	 */
- 	CALL_RXH(ieee80211_rx_h_passive_scan)
- 	CALL_RXH(ieee80211_rx_h_check)
- 
- 	ieee80211_rx_reorder_ampdu(rx, &reorder_release);
- 
--	while ((skb = __skb_dequeue(&reorder_release))) {
-+	ieee80211_rx_handlers(rx, &reorder_release);
-+	return;
-+
-+ rxh_next:
-+	ieee80211_rx_handlers_result(rx, res);
-+
-+#undef CALL_RXH
-+}
-+
-+static void ieee80211_rx_handlers(struct ieee80211_rx_data *rx,
-+				  struct sk_buff_head *frames)
-+{
-+	ieee80211_rx_result res = RX_DROP_MONITOR;
-+	struct sk_buff *skb;
-+
-+#define CALL_RXH(rxh)			\
-+	do {				\
-+		res = rxh(rx);		\
-+		if (res != RX_CONTINUE)	\
-+			goto rxh_next;  \
-+	} while (0);
-+
-+	while ((skb = __skb_dequeue(frames))) {
- 		/*
- 		 * all the other fields are valid across frames
- 		 * that belong to an aMPDU since they are on the
-@@ -2316,41 +2352,58 @@ static void ieee80211_invoke_rx_handlers(struct ieee80211_sub_if_data *sdata,
- 		CALL_RXH(ieee80211_rx_h_remove_qos_control)
- 		CALL_RXH(ieee80211_rx_h_amsdu)
- #ifdef CONFIG_MAC80211_MESH
--		if (ieee80211_vif_is_mesh(&sdata->vif))
-+		if (ieee80211_vif_is_mesh(&rx->sdata->vif))
- 			CALL_RXH(ieee80211_rx_h_mesh_fwding);
- #endif
- 		CALL_RXH(ieee80211_rx_h_data)
- 
- 		/* special treatment -- needs the queue */
--		res = ieee80211_rx_h_ctrl(rx, &reorder_release);
-+		res = ieee80211_rx_h_ctrl(rx, frames);
- 		if (res != RX_CONTINUE)
- 			goto rxh_next;
- 
- 		CALL_RXH(ieee80211_rx_h_action)
- 		CALL_RXH(ieee80211_rx_h_mgmt)
- 
-+ rxh_next:
-+		ieee80211_rx_handlers_result(rx, res);
-+
- #undef CALL_RXH
-+	}
-+}
- 
-- rxh_next:
--		switch (res) {
--		case RX_DROP_MONITOR:
--			I802_DEBUG_INC(sdata->local->rx_handlers_drop);
--			if (rx->sta)
--				rx->sta->rx_dropped++;
--			/* fall through */
--		case RX_CONTINUE:
--			ieee80211_rx_cooked_monitor(rx, rate);
--			break;
--		case RX_DROP_UNUSABLE:
--			I802_DEBUG_INC(sdata->local->rx_handlers_drop);
--			if (rx->sta)
--				rx->sta->rx_dropped++;
--			dev_kfree_skb(rx->skb);
--			break;
--		case RX_QUEUED:
--			I802_DEBUG_INC(sdata->local->rx_handlers_queued);
--			break;
-+static void ieee80211_rx_handlers_result(struct ieee80211_rx_data *rx,
-+					 ieee80211_rx_result res)
-+{
-+	switch (res) {
-+	case RX_DROP_MONITOR:
-+		I802_DEBUG_INC(rx->sdata->local->rx_handlers_drop);
-+		if (rx->sta)
-+			rx->sta->rx_dropped++;
-+		/* fall through */
-+	case RX_CONTINUE: {
-+		struct ieee80211_rate *rate = NULL;
-+		struct ieee80211_supported_band *sband;
-+		struct ieee80211_rx_status *status;
-+
-+		status = IEEE80211_SKB_RXCB((rx->skb));
-+
-+		sband = rx->local->hw.wiphy->bands[status->band];
-+		if (!(status->flag & RX_FLAG_HT))
-+			rate = &sband->bitrates[status->rate_idx];
-+
-+		ieee80211_rx_cooked_monitor(rx, rate);
-+		break;
- 		}
-+	case RX_DROP_UNUSABLE:
-+		I802_DEBUG_INC(rx->sdata->local->rx_handlers_drop);
-+		if (rx->sta)
-+			rx->sta->rx_dropped++;
-+		dev_kfree_skb(rx->skb);
-+		break;
-+	case RX_QUEUED:
-+		I802_DEBUG_INC(rx->sdata->local->rx_handlers_queued);
-+		break;
- 	}
- }
- 
+If I understand correctly, the device is working - only the wiki is wrong.
+
+For my info, what does 'lspci -nnk | grep 2802' show?
+
+Larry
