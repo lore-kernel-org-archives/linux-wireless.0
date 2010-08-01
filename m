@@ -1,75 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:24115 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753971Ab0HWOxf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Aug 2010 10:53:35 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 24/26] iwlagn: update bt status upon scan complete
-Date: Mon, 23 Aug 2010 07:57:15 -0700
-Message-Id: <1282575437-23270-25-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1282575437-23270-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1282575437-23270-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:45954 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750999Ab0HATin (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Aug 2010 15:38:43 -0400
+Message-ID: <4C55CD68.1020401@lwfinger.net>
+Date: Sun, 01 Aug 2010 14:39:20 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>
+Subject: Re: 2.6.35-rc6-git6: Reported regressions from 2.6.34
+References: <2dWFdr9kTFM.A.P0D.spXVMB@chimera>
+In-Reply-To: <2dWFdr9kTFM.A.P0D.spXVMB@chimera>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On 08/01/2010 08:46 AM, Rafael J. Wysocki wrote:
+> This message contains a list of some regressions from 2.6.34,
+> for which there are no fixes in the mainline known to the tracking team.
+> If any of them have been fixed already, please let us know.
+> 
+> If you know of any other unresolved regressions from 2.6.34, please let us
+> know either and we'll add them to the list.  Also, please let us know
+> if any of the entries below are invalid.
+> 
+> Each entry from the list will be sent additionally in an automatic reply
+> to this message with CCs to the people involved in reporting and handling
+> the issue.
 
-Update bt status upon receive scan complete notification
+> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16312
+> Subject		: WARNING: at fs/fs-writeback.c:1127 __mark_inode_dirty
+> Submitter	: Zdenek Kabelac <zdenek.kabelac@gmail.com>
+> Date		: 2010-06-28 9:40 (35 days old)
+> Message-ID	: <AANLkTin24fr5O4_q5Xbo9Y_NKkEmtcp6Hgmr9_4qXaFz@mail.gmail.com>
+> References	: http://marc.info/?l=linux-kernel&m=127771804806465&w=2
+> Handled-By	: Jan Kara <jack@suse.cz>
+> Patch		: https://bugzilla.kernel.org/attachment.cgi?id=27272
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-commands.h |    2 +-
- drivers/net/wireless/iwlwifi/iwl-scan.c     |   20 ++++++++++++++++++++
- 2 files changed, 21 insertions(+), 1 deletions(-)
+I am beginning to think that Bug 16312 is not the same as Bug 16122. Even with
+the patches from 16312, I still get warnings as below:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 8ed2412..9b53583 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -3013,7 +3013,7 @@ struct iwl_scanresults_notification {
- struct iwl_scancomplete_notification {
- 	u8 scanned_channels;
- 	u8 status;
--	u8 reserved;
-+	u8 bt_status;	/* BT On/Off status */
- 	u8 last_channel;
- 	__le32 tsf_low;
- 	__le32 tsf_high;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 8d7fa59..33aa7a5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -236,6 +236,26 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
- 
- 	clear_bit(STATUS_SCANNING, &priv->status);
- 
-+	if (priv->iw_mode != NL80211_IFTYPE_ADHOC &&
-+	    priv->cfg->advanced_bt_coexist && priv->bt_status !=
-+	    scan_notif->bt_status) {
-+		if (scan_notif->bt_status) {
-+			/* BT on */
-+			if (!priv->bt_ch_announce)
-+				priv->bt_traffic_load =
-+					IWL_BT_COEX_TRAFFIC_LOAD_HIGH;
-+			/*
-+			 * otherwise, no traffic load information provided
-+			 * no changes made
-+			 */
-+		} else {
-+			/* BT off */
-+			priv->bt_traffic_load =
-+				IWL_BT_COEX_TRAFFIC_LOAD_NONE;
-+		}
-+		priv->bt_status = scan_notif->bt_status;
-+		queue_work(priv->workqueue, &priv->bt_traffic_change_work);
-+	}
- 	queue_work(priv->workqueue, &priv->scan_completed);
- }
- 
--- 
-1.7.0.4
+[   11.728776] ------------[ cut here ]------------
+[   11.728787] WARNING: at fs/fs-writeback.c:964 __mark_inode_dirty+0x10f/0x1a0()
+[   11.728790] Hardware name: HP Pavilion dv2700 Notebook PC
+[   11.728792] Modules linked in: loop(+) dm_mod ide_cd_mod cdrom
+snd_hda_codec_conexant ide_pci_generic arc4 ecb b43 rng_core mac80211
+snd_hda_intel r8712u(C) cfg80211 snd_hda_codec amd74xx snd_pcm sg ide_core
+rfkill led_class snd_timer ssb mmc_core pcmcia snd joydev k8temp hwmon
+i2c_nforce2 pcmcia_core forcedeth serio_raw snd_page_alloc i2c_core battery ac
+button ext4 mbcache jbd2 crc16 ohci_hcd sd_mod ehci_hcd usbcore fan processor
+ahci libahci libata scsi_mod thermal
+[   11.728854] Pid: 2449, comm: udisks-part-id Tainted: G         C
+2.6.35-rc6-realtek+ #15
+[   11.728857] Call Trace:
+[   11.728865]  [<ffffffff8104608a>] warn_slowpath_common+0x7a/0xb0
+[   11.728869]  [<ffffffff810460d5>] warn_slowpath_null+0x15/0x20
+[   11.728874]  [<ffffffff81129d5f>] __mark_inode_dirty+0x10f/0x1a0
+[   11.728879]  [<ffffffff8111e07d>] touch_atime+0x12d/0x170
+[   11.728885]  [<ffffffff810cab91>] generic_file_aio_read+0x5c1/0x720
+[   11.728890]  [<ffffffff81107ca2>] do_sync_read+0xd2/0x110
+[   11.728896]  [<ffffffff81077e7d>] ? trace_hardirqs_on+0xd/0x10
+[   11.728900]  [<ffffffff811083c3>] vfs_read+0xb3/0x170
+[   11.728906]  [<ffffffff81002d1c>] ? sysret_check+0x27/0x62
+[   11.728909]  [<ffffffff811084cc>] sys_read+0x4c/0x80
+[   11.728914]  [<ffffffff81002ceb>] system_call_fastpath+0x16/0x1b
+[   11.728917] ---[ end trace 32e16cacad33229f ]---
+[   11.728919] bdi-block not registered
 
+The warnings do not occur with every boot and appear to be some kind of race
+condition.
+
+Larry
