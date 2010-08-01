@@ -1,76 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:49345 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751604Ab0HGFXt (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:38393 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751695Ab0HAX43 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Aug 2010 01:23:49 -0400
-Received: by ewy23 with SMTP id 23so3019506ewy.19
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Aug 2010 22:23:47 -0700 (PDT)
+	Sun, 1 Aug 2010 19:56:29 -0400
+Received: by iwn7 with SMTP id 7so3516875iwn.19
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Aug 2010 16:56:28 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <AANLkTim8i245P0nGcnpsf63_O8xXeby9re=pX53WfOwV@mail.gmail.com>
-References: <AANLkTi=W=vkgb0gM7ZWsBeE79Fe3iabtKFgu2S7N5uLe@mail.gmail.com>
-	<201008011137.49528.florian@openwrt.org>
-	<AANLkTik=t=jeCG7=bgkq3LBwJP9vq7KmFpgDeHngPoq-@mail.gmail.com>
-	<4C55F377.6040404@candelatech.com>
-	<AANLkTi=FEFrKdXUHN-h-BZruvNzSmwXdPcq9-OgZcFAM@mail.gmail.com>
-	<4C565100.4040305@candelatech.com>
-	<AANLkTim8i245P0nGcnpsf63_O8xXeby9re=pX53WfOwV@mail.gmail.com>
-Date: Sat, 7 Aug 2010 15:23:46 +1000
-Message-ID: <AANLkTi=Krfwcmn6v7e6jU87A4cM3H06LTU7_XOiB-WUx@mail.gmail.com>
-Subject: Re: virtual access poitns (ath5k/mac80211)
-From: Ryszard <ryszard99@gmail.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Florian Fainelli <florian@openwrt.org>,
-	Patrick McHardy <kaber@trash.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <E9954878DD1FB34FAE5187FB88C58A350122DF3C44@orsmsx506.amr.corp.intel.com>
+References: <AANLkTimrv507n5-WmikUOhPE95wM1p1_Qtd65rOA1hei@mail.gmail.com>
+	<E9954878DD1FB34FAE5187FB88C58A350122DF3C44@orsmsx506.amr.corp.intel.com>
+Date: Sun, 1 Aug 2010 19:56:28 -0400
+Message-ID: <AANLkTi=urmiEPXN+Bpk-6_KwcqSgFuqKc1LK0njNd5E_@mail.gmail.com>
+Subject: Re: Intel Wireless: Microcode SW error detected.
+From: Malthe Borch <mborch@gmail.com>
+To: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Sternberg, Jay E" <jay.e.sternberg@intel.com>
+Content-Type: multipart/mixed; boundary=0050450168c81e8358048ccbd5de
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hey ben,
+--0050450168c81e8358048ccbd5de
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-i've spend a day attempting to get the kernel installed but am not
-having much luck.. the box i'm installing on is an alix
-(http://www.pcengines.ch/alix2d13.htm, amd geode) which has an ubuntu
-lucid kernel on it.
+Attached is the additional logging output I get when I load the drivers usi=
+ng:
 
-the error message i'm getting (before it drops to an initramfs) is:
-==========================================
-Gave up waiting for root device.  Common problems:
- - Boot args (cat /proc/cmdline)
-   - Check rootdelay= (did the system wait long enough?)
-   - Check root= (did the system wait for the right device?)
- - Missing modules (cat /proc/modules; ls /dev)
-chvt: can't open console
-ALERT! /dev/disk/by-uuid/371f6b1f-0267-41c1-94d6-4068567af74f does not
-exist. Dropping to a shell!
+  modprobe iwlagn debug=3D0x43fff
 
+\malthe
 
-
-BusyBox v1.13.3 (Ubuntu 1:1.13.3-1ubuntu11) built-in shell (ash)
-Enter 'help' for a list of built-in commands.
-
-
-(initramfs)
-==========================================
-
-while the error message may seem obvious (that it cant find the disk)
-i'm unsure how to proceed.. are you able to give any tips at all?
-(i'll keep plugging away in the meantime)
-regs
-R
-
-On 2 August 2010 21:16, Ryszard <ryszard99@gmail.com> wrote:
-> Hi Ben,
-> i'll get to this in the next day or so.
-> regs
-> R.
+On 27 July 2010 10:40, Guy, Wey-Yi W <wey-yi.w.guy@intel.com> wrote:
+> Add Jay to the thread,
 >
-> On 2 August 2010 15:00, Ben Greear <greearb@candelatech.com> wrote:
->>
->> On 08/01/2010 06:51 PM, Ryszard wrote:
->>>
->>> Hey ben,
->>>
->>> thanks for the reply on this.
->>>
+> Jay, could you help to take a look at it. Thanks
+>
+> Wey-Yi Guy
+> Intel Corporation
+> 2111 N.E. 25th Avenue =C2=A0M/S JF3-308
+> Hillsboro OR 97124-5961
+> USA
+> Work Phone: 503-264-6023 (OR)
+> Cell Phone: 503-329-8410
+> Email: wey-yi.w.guy@intel.com
+>
+>
+> -----Original Message-----
+> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@v=
+ger.kernel.org] On Behalf Of Malthe Borch
+> Sent: Monday, July 26, 2010 2:19 PM
+> To: linux-wireless@vger.kernel.org
+> Subject: Intel Wireless: Microcode SW error detected.
+>
+> I get this with the latest and greatest Intel firmware 9.221.4.1 build 25=
+532.
+>
+> Ultimately enabling the device fails with: "uCode did not respond OK."
+>
+
+--0050450168c81e8358048ccbd5de
+Content-Type: application/octet-stream; name=dmesg
+Content-Disposition: attachment; filename=dmesg
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_gccjuasy0
+
+aWVlZTgwMjExIHBoeTA6IEkgaXdsX3ByaW50X3J4X2NvbmZpZ19jbWQgUlggQ09ORklHOgppd2wg
+ZGF0YTogMDAwMDAwMDA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
+IDAwIDAwICAuLi4uLi4uLi4uLi4uLi4uCml3bCBkYXRhOiAwMDAwMDAxMDogMDAgMDAgMDAgMDAg
+MDAgMDAgMDAgMDAgMDAgMDAgMGUgMjQgMDAgMDAgMDAgMDAgIC4uLi4uLi4uLi4uJC4uLi4KaXds
+IGRhdGE6IDAwMDAwMDIwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCAgLi4uLi4uLi4uLi4uLi4uLgppd2wgZGF0YTogMDAwMDAwMzA6IDAwIDAwICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAuLgppZWVlODAyMTEgcGh5MDog
+SSBpd2xfcHJpbnRfcnhfY29uZmlnX2NtZCB1MTYgY2hhbm5lbDogMHgwCmllZWU4MDIxMSBwaHkw
+OiBJIGl3bF9wcmludF9yeF9jb25maWdfY21kIHUzMiBmbGFnczogMHgwMDAwMDAwMAppZWVlODAy
+MTEgcGh5MDogSSBpd2xfcHJpbnRfcnhfY29uZmlnX2NtZCB1MzIgZmlsdGVyX2ZsYWdzOiAweDAw
+MDAwMDAwCmllZWU4MDIxMSBwaHkwOiBJIGl3bF9wcmludF9yeF9jb25maWdfY21kIHU4IGRldl90
+eXBlOiAweDAKaWVlZTgwMjExIHBoeTA6IEkgaXdsX3ByaW50X3J4X2NvbmZpZ19jbWQgdTggb2Zk
+bV9iYXNpY19yYXRlczogMHgwMAppZWVlODAyMTEgcGh5MDogSSBpd2xfcHJpbnRfcnhfY29uZmln
+X2NtZCB1OCBjY2tfYmFzaWNfcmF0ZXM6IDB4MDAKaWVlZTgwMjExIHBoeTA6IEkgaXdsX3ByaW50
+X3J4X2NvbmZpZ19jbWQgdThbNl0gbm9kZV9hZGRyOiAwMDowMDowMDowMDowMDowMAppZWVlODAy
+MTEgcGh5MDogSSBpd2xfcHJpbnRfcnhfY29uZmlnX2NtZCB1OFs2XSBic3NpZF9hZGRyOiAwMDow
+MDowMDowMDowMDowMAppZWVlODAyMTEgcGh5MDogSSBpd2xfcHJpbnRfcnhfY29uZmlnX2NtZCB1
+MTYgYXNzb2NfaWQ6IDB4MAppZWVlODAyMTEgcGh5MDogSSBpd2xfaXJxX2hhbmRsZV9lcnJvciBS
+ZXN0YXJ0aW5nIGFkYXB0ZXIgZHVlIHRvIHVDb2RlIGVycm9yLgppZWVlODAyMTEgcGh5MDogSSBp
+d2xfcnhfcmVwbHlfYWxpdmUgQWxpdmUgdWNvZGUgc3RhdHVzIDB4MDAwMDAwMDAgcmV2aXNpb24g
+MHgxIDB4MAppZWVlODAyMTEgcGh5MDogSSBpd2xfcnhfcmVwbHlfYWxpdmUgUnVudGltZSBBbGl2
+ZSByZWNlaXZlZC4KaXdsYWduIDAwMDA6MDI6MDAuMDogdUNvZGUgZGlkIG5vdCByZXNwb25kIE9L
+LgppZWVlODAyMTEgcGh5MDogVSBfX2l3bF9kb3duIGl3bGFnbiBpcyBnb2luZyBkb3duCmllZWU4
+MDIxMSBwaHkwOiBVIGl3bF9jbGVhcl91Y29kZV9zdGF0aW9ucyBDbGVhcmluZyB1Y29kZSBzdGF0
+aW9ucyBpbiBkcml2ZXIKaWVlZTgwMjExIHBoeTA6IFUgaXdsX2NsZWFyX3Vjb2RlX3N0YXRpb25z
+IE5vIGFjdGl2ZSBzdGF0aW9ucyBmb3VuZCB0byBiZSBjbGVhcmVkCmllZWU4MDIxMSBwaHkwOiBV
+IGl3bF9hcG1fc3RvcCBTdG9wIGNhcmQsIHB1dCBpbiBsb3cgcG93ZXIgc3RhdGUKaWVlZTgwMjEx
+IHBoeTA6IFUgaXdsX2FwbV9zdG9wX21hc3RlciBzdG9wIG1hc3RlcgppZWVlODAyMTEgcGh5MDog
+VSBpd2xfY2xlYXJfZnJlZV9mcmFtZXMgMCBmcmFtZXMgb24gcHJlLWFsbG9jYXRlZCBoZWFwIG9u
+IGNsZWFyLgppd2xhZ24gMDAwMDowMjowMC4wOiBTVEFSVF9BTElWRSB0aW1lb3V0IGFmdGVyIDQw
+MDBtcy4KaWVlZTgwMjExIHBoeTA6IFUgaXdsX2NvbmZpZ3VyZV9maWx0ZXIgRW50ZXI6IGNoYW5n
+ZWQ6IDB4MCwgdG90YWw6IDB4ODAwMDAwMDAK
+--0050450168c81e8358048ccbd5de--
