@@ -1,59 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:44727 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750856Ab0HVVsc (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:52857 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751727Ab0HAWD3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Aug 2010 17:48:32 -0400
-Received: by fxm13 with SMTP id 13so2602581fxm.19
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Aug 2010 14:48:30 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: cancel restart_work in ieee80211_unregister_hw
-Date: Sun, 22 Aug 2010 23:48:25 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201008222348.25668.chunkeey@googlemail.com>
+	Sun, 1 Aug 2010 18:03:29 -0400
+Received: by ewy23 with SMTP id 23so1137344ewy.19
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Aug 2010 15:03:28 -0700 (PDT)
+From: Kshitij Kulshreshtha <kkhere.geo@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org,
+	Kshitij Kulshreshtha <kshitij@math.hu-berlin.de>
+Subject: [PATCH 5/5] compat-wireless: copy headers in include/pcmcia from compat
+Date: Mon,  2 Aug 2010 00:02:53 +0200
+Message-Id: <1280700173-14690-6-git-send-email-kkhere.geo@gmail.com>
+In-Reply-To: <4C55D22A.5040302@hauke-m.de>
+References: <4C55D22A.5040302@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Unlike most other workqueue-tasks, the restart_work is
-not scheduled onto mac80211's private per-interface
-workqueue, but onto one of the system-wide workqueues.
+From: Kshitij Kulshreshtha <kshitij@math.hu-berlin.de>
 
-Therefore the mac80211-stack has to cancel any pending
-restarts, before destroying the shared device context
-and handing back the memory. Otherwise - under very
-unlucky circumstances - there could be a stale work-
-item left, because some other kernel component might
-have delayed the execution of ieee80211_restart_work
-for too long.
+this is needed after the removal of pcmcia/cs_types.h in v2.6.36
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+Signed-off-by: Kshitij Kulshreshtha <kshitij@math.hu-berlin.de>
 ---
-Sure, normally a device doesn't simply disappear,
-but you know: restarts might take some time (fw upload,
-phy/mac/crypto reinit, etc.) to finish and some
-impatient user might want to speed  things up by
-_simply_ replugging the USB device...
+ scripts/admin-update.sh |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-But don't ask me what this "elusive" kernel component
-could be, I stumbled upon this theoretical bug, while
-reviewing code in order to prevent crashes from a
-driver, which relies on a fully functional restart
-support.
----
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index a53feac..74e3529 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -807,6 +807,7 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
+diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
+index 4eb7c3e..8ff2ece 100755
+--- a/scripts/admin-update.sh
++++ b/scripts/admin-update.sh
+@@ -231,6 +231,7 @@ mkdir -p include/linux/ include/net/ include/linux/usb \
+ 	include/linux/unaligned \
+ 	include/linux/spi \
+ 	include/trace \
++	include/pcmcia \
+ 	net/mac80211/ net/wireless/ \
+ 	net/rfkill/ \
+ 	drivers/ssb/ \
+@@ -353,6 +354,7 @@ cp -a $GIT_COMPAT_TREE/scripts/ $COMPAT/
+ cp -a $GIT_COMPAT_TREE/include/linux/* include/linux/
+ cp -a $GIT_COMPAT_TREE/include/net/* include/net/
+ cp -a $GIT_COMPAT_TREE/include/trace/* include/trace/
++cp -a $GIT_COMPAT_TREE/include/pcmcia/* include/pcmcia/
+ rm -f $COMPAT/*.mod.c
  
- 	rtnl_unlock();
- 
-+	cancel_work_sync(&local->restart_work);
- 	cancel_work_sync(&local->reconfig_filter);
- 
- 	ieee80211_clear_tx_pending(local);
+ # Refresh patches using quilt
+-- 
+1.7.1
+
