@@ -1,43 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redfish-solutions.com ([66.232.79.143]:35109 "EHLO
-	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752786Ab0HYBSz (ORCPT
+Received: from mho-01-ewr.mailhop.org ([204.13.248.71]:51558 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751152Ab0HBLms (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Aug 2010 21:18:55 -0400
-Message-ID: <4C746F74.70401@redfish-solutions.com>
-Date: Tue, 24 Aug 2010 18:18:44 -0700
-From: Philip Prindeville <philipp_subx@redfish-solutions.com>
+	Mon, 2 Aug 2010 07:42:48 -0400
+Date: Mon, 2 Aug 2010 14:42:58 +0300
+From: Tony Lindgren <tony@atomide.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: "ext John W. Linville" <linville@tuxdriver.com>,
+	Ohad Ben-Cohen <ohad@wizery.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	San Mehat <san@google.com>,
+	"Quadros Roger (Nokia-MS/Helsinki)" <roger.quadros@nokia.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Pandita Vikram <vikram.pandita@ti.com>,
+	Kalle Valo <kalle.valo@iki.fi>
+Subject: Re: [PATCH v2 00/20] native support for wl1271 on ZOOM
+Message-ID: <20100802114256.GE12293@atomide.com>
+References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+ <20100726193028.GG3903@tuxdriver.com>
+ <1280736987.17809.18.camel@chilepepper>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: Jouni Malinen <j@w1.fi>, Johannes Berg <johannes@sipsolutions.net>
-Subject: Marshaling issues w/ compat-wireless-2010-08-19
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1280736987.17809.18.camel@chilepepper>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  I've got a stock Fedora Core 13 install (updated today) with the hostapd-0.6.10 rpm and hostapd-0.7.2 compiled from sources.  The NIC is a Ubiquiti SR71e (AR9280).
+* Luciano Coelho <luciano.coelho@nokia.com> [100802 11:10]:
+> On Mon, 2010-07-26 at 21:30 +0200, ext John W. Linville wrote:
+> > On Wed, Jul 21, 2010 at 08:33:34PM +0300, Ohad Ben-Cohen wrote:
+> > > This patch series adds native support for wl1271 on ZOOM.
+> > 
+> > Just for the record, I'm fine with the wl1271 bits here going through
+> > the omap tree with the rest of the series.
+> 
+> Yeah, I agree.  This is probably the best way to keep things in sync.
 
-I installed compat-wireless-2010-08-19 after patching it with Johannes's fix posted earlier today.
+OK, let's do that then. 
 
-I can confirm that hostapd and iw are no longer hitting the "Illegal nla->nla_type == 0" message when run.
+Nicolas Pitre made a comment saying he wants to look at these patches
+more, are there other pending comments?
 
-But I'm seeing something else.
+Regards,
 
-(1) "Unknown event 5" messages when starting up hostapd (line 95 below):
-(2) Some highly unlikely values from the hostapd debugging messages when parsing out WEP authentication messages (line 507):
-
-This is captured in http://pastebin.ca/1924659 :
-
-authentication: STA=f8:1e:df:1e:c2:23 auth_alg=35510 auth_transaction=79 status_code=21688 wep=1
-Unsupported authentication algorithm (35510)
-
-
-I'm wondering if some messages that are passed up to user-space via netlink from the driver might have changed their schema, i.e. adding new fields in the middle of a structure or moving fields around within a structure.
-
-Am I on the wrong track?  How to go about resolving this?
-
-Thanks,
-
--Philip
-
-
+Tony
