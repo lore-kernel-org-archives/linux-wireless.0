@@ -1,56 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:20739 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752526Ab0HBFEj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Aug 2010 01:04:39 -0400
-Subject: Re: [PATCH] net: wl12xx: do not use kfree'd memory
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Kulikov Vasiliy <segooon@gmail.com>
-Cc: "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
-	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Paasikivi Teemu.3 (EXT-Ixonos/Tampere)"
-	<ext-teemu.3.paasikivi@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-In-Reply-To: <1280594039-3246-1-git-send-email-segooon@gmail.com>
-References: <1280594039-3246-1-git-send-email-segooon@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 02 Aug 2010 08:04:11 +0300
-Message-ID: <1280725451.6475.111.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+Received: from sycorax.lbl.gov ([128.3.11.121]:36265 "EHLO sycorax.lbl.gov"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751888Ab0HBAS4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Aug 2010 20:18:56 -0400
+From: Alex Romosan <romosan@sycorax.lbl.gov>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Guy\, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: iwlwifi connection problems
+References: <87tynqvtu6.fsf@sycorax.lbl.gov>
+	<1279917523.10769.1.camel@wwguy-huron>
+	<1280135867.3693.5.camel@jlt3.sipsolutions.net>
+	<87mxtd5xlq.fsf@sycorax.lbl.gov>
+	<1280212629.19098.0.camel@jlt3.sipsolutions.net>
+Date: Sun, 01 Aug 2010 17:18:51 -0700
+In-Reply-To: <1280212629.19098.0.camel@jlt3.sipsolutions.net> (message from
+	Johannes Berg on Tue, 27 Jul 2010 08:37:09 +0200)
+Message-ID: <87bp9l6f4k.fsf@sycorax.lbl.gov>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2010-07-31 at 18:33 +0200, ext Kulikov Vasiliy wrote:
-> wl1271_dump() uses cmd after kfree(cmd). Move kfree() just after
-> wl1271_dump().
-> 
-> Signed-off-by: Kulikov Vasiliy <segooon@gmail.com>
-> ---
->  drivers/net/wireless/wl12xx/wl1271_spi.c |    3 +--
->  1 files changed, 1 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
-> index 96d25fb..4cb99c5 100644
-> --- a/drivers/net/wireless/wl12xx/wl1271_spi.c
-> +++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
-> @@ -160,9 +160,8 @@ static void wl1271_spi_init(struct wl1271 *wl)
->  	spi_message_add_tail(&t, &m);
->  
->  	spi_sync(wl_to_spi(wl), &m);
-> -	kfree(cmd);
-> -
->  	wl1271_dump(DEBUG_SPI, "spi init -> ", cmd, WSPI_INIT_CMD_LEN);
-> +	kfree(cmd);
->  }
->  
->  #define WL1271_BUSY_WORD_TIMEOUT 1000
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Whoops ;) Good catch, thanks.
+> On Mon, 2010-07-26 at 21:59 -0700, Alex Romosan wrote:
+>
+>> any ideas on how i can debug this? i tried to do a git-bisect but i
+>> didn't get anywhere. i have the driver compiled in the kernel if that
+>> makes any difference. as i played with the later kernels (after 2.6.34)
+>> i discovered that if kept bringing the interface down and then up again
+>> eventually i would get "cfg80211: Calling CRDA to update world
+>> regulatory domain" the antenna light on the laptop (i have a thinkpad
+>> t61) would go off and then at the next ifup the driver connected. looks
+>> like some kind of reset/initialization problem to me.
+>
+> So is the issue maybe the channel the AP is no, not the fact that it's
+> hidden? or something like that?
 
-Acked-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+it's still not working even with kernel 2.6.35 so i decided to play with
+it a little bit more. indeed, it has nothing to do with the access
+point being hidden or not. it doesn't work even when it's visible
+(previously i was able to connect to the wireless at work which is
+visible so i wrongly assumed that was the cause).
 
--Juuso
+so it looks like the problem is connecting to this particular access
+point which is a proxim ap-200 orinoco wireless ap i got in 2003. right
+now the ap is setup on channel 3 and the rate is set to 11 Mbps. should
+i try a different channel? which one?
 
+--alex--
+
+-- 
+| I believe the moment is at hand when, by a paranoiac and active |
+|  advance of the mind, it will be possible (simultaneously with  |
+|  automatism and other passive states) to systematize confusion  |
+|  and thus to help to discredit completely the world of reality. |
