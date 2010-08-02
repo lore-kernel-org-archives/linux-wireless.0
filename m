@@ -1,61 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:57056 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759853Ab0HEICo (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55302 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751310Ab0HBK6d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Aug 2010 04:02:44 -0400
-MIME-Version: 1.0
-In-Reply-To: <4C5A6EFE.7040703@arndnet.de>
-References: <20100804.162141.15218463.davem@davemloft.net>
-	<4C5A6EFE.7040703@arndnet.de>
-From: Changli Gao <xiaosuo@gmail.com>
-Date: Thu, 5 Aug 2010 16:02:22 +0800
-Message-ID: <AANLkTinf3+UE2L4uTr1buEfxuTa36vVjk4WspTN8edRs@mail.gmail.com>
-Subject: Re: GIT: net-*2.6 rebased...
-To: Arnd Hannemann <arnd@arndnet.de>
-Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, sfr@canb.auug.org.au
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 2 Aug 2010 06:58:33 -0400
+Subject: Re: iwlwifi connection problems
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alex Romosan <romosan@sycorax.lbl.gov>
+Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <87bp9l6f4k.fsf@sycorax.lbl.gov>
+References: <87tynqvtu6.fsf@sycorax.lbl.gov>
+	 <1279917523.10769.1.camel@wwguy-huron>
+	 <1280135867.3693.5.camel@jlt3.sipsolutions.net>
+	 <87mxtd5xlq.fsf@sycorax.lbl.gov>
+	 <1280212629.19098.0.camel@jlt3.sipsolutions.net>
+	 <87bp9l6f4k.fsf@sycorax.lbl.gov>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 02 Aug 2010 12:58:25 +0200
+Message-ID: <1280746705.3923.11.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 5, 2010 at 3:57 PM, Arnd Hannemann <arnd@arndnet.de> wrote:
-> Hi,
->
-> Am 05.08.2010 01:21, schrieb David Miller:
->>
->> Both net-2.6 and net-next-2.6 have been rebased.
->>
->> To be honest, if you've been pulling from my tree you can just keep
->> doing so if you want, it will look just as if I had merged Linus's
->> tree into net-2.6 et al.
->
-> I there something broken with the trees on git.kernel.org?
->
-> if I try to fetch from net-next-2.6, I get:
-> fatal: The remote end hung up unexpectedly
->
-> if I try to clone net-2.6:
-> (e.g. git clone git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-2.6.git
->
-> I get lots of errors reading the tags "does not point to a valid object!" and then:
-> remote: error: Could not read 3cfc2c42c1cbc8e238bb9c0612c0df4565e3a8b4
-> remote: fatal: Failed to traverse parents of commit 7aaaaa1e44b2a4047dfe05f304a5090eb995cf44
-> remote: aborting due to possible repository corruption on the remote side.
-> fatal: early EOF
-> fatal: index-pack failed
->
-> I'm using git version 1.7.1.
->
+On Sun, 2010-08-01 at 17:18 -0700, Alex Romosan wrote:
 
-me 2 for net-next-2.6
+> > So is the issue maybe the channel the AP is no, not the fact that it's
+> > hidden? or something like that?
+> 
+> it's still not working even with kernel 2.6.35 so i decided to play with
+> it a little bit more. indeed, it has nothing to do with the access
+> point being hidden or not. it doesn't work even when it's visible
+> (previously i was able to connect to the wireless at work which is
+> visible so i wrongly assumed that was the cause).
 
-localhost linux # git pull
-fatal: The remote end hung up unexpectedly
-localhost linux # git version
-git version 1.7.1
+Ok, thanks for checking, that's good to know.
 
+> so it looks like the problem is connecting to this particular access
+> point which is a proxim ap-200 orinoco wireless ap i got in 2003. right
+> now the ap is setup on channel 3 and the rate is set to 11 Mbps. should
+> i try a different channel? which one?
 
--- 
-Regards,
-Changli Gao(xiaosuo@gmail.com)
+Channel 3 should be fine, we just had reports about channel 13 failing.
+2.6.35 includes the QoS fix, so I'm not sure what the issue could be
+here.
+
+Typically such ancient APs have issues with the supported rates bitmap,
+could you maybe try to revert 76f273640134f3eb8257179cd5b3bc6ba5fe4a96?
+This is the only relevant commit I can find between .34 and .35.
+
+However, if that doesn't help this seems like an ideal candidate for
+bisection, would you be willing to try that? I'd restrict to wireless
+code, i.e.
+
+git bisect start -- net/wireless net/mac80211 drivers/net/wireless/iwlwifi
+
+johannes
+
