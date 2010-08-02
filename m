@@ -1,113 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43916 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933385Ab0HEPpR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Aug 2010 11:45:17 -0400
-Subject: [PATCH] cfg80211: support sysfs namespaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"Eric W. Biederman" <ebiederm@xmission.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 05 Aug 2010 17:45:15 +0200
-Message-ID: <1281023115.4058.11.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from dev2day.de ([83.169.2.241]:40186 "EHLO dev2day.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754075Ab0HBVzy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Aug 2010 17:55:54 -0400
+Message-ID: <4C573EE6.9040707@dev2day.de>
+Date: Mon, 02 Aug 2010 23:55:50 +0200
+From: Jan Friedrich <jft@dev2day.de>
+MIME-Version: 1.0
+To: linville@tuxdriver.com
+CC: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
+Subject: [Patch] ath9k: fix erased ieee80211_rx_status.mactime
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+ath9k_rx_skb_preprocess nulls rxs and the mactime is never set again -
+mactime is always 0. This causes problems in IBSS mode.
 
-Enable using network namespaces with
-wireless devices even when sysfs is
-enabled using the same infrastructure
-that was built for netdevs.
+ieee80211_rx_bss_info uses mactime to decide if an IBSS merge is needed.
+Without this patch the merge is triggered by each beacon received.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+This can be recognized by the "beacon TSF higher than local TSF - IBSS
+merge with BSSID" log message accompanying each beacon.
+
+This problem was not completely fixed in commit
+a6d2055b02dde1067075795274672720baadd3ca and is not a stable kernel fix.
+It is solely intended for wireless-testing.
+
+Signed-off-by: Jan Friedrich <jft@dev2day.de>
 ---
-NB: This generates a harmless gcc warning, I submitted
-    a patch to fix it here:
-    http://thread.gmane.org/gmane.linux.kernel/1019330
+ drivers/net/wireless/ath/ath9k/recv.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
 
- include/linux/netdevice.h |    2 ++
- net/core/net-sysfs.c      |    3 ++-
- net/wireless/core.c       |    7 ++++++-
- net/wireless/sysfs.c      |    9 +++++++++
- 4 files changed, 19 insertions(+), 2 deletions(-)
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c
+b/drivers/net/wireless/ath/ath9k/recv.c
+index da0cfe9..ae4bd30 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1140,6 +1140,11 @@ int ath_rx_tasklet(struct ath_softc *sc, int
+flush, bool hp)
+ 		if (flush)
+ 			goto requeue;
 
---- wireless-testing.orig/net/core/net-sysfs.c	2010-08-05 17:33:47.000000000 +0200
-+++ wireless-testing/net/core/net-sysfs.c	2010-08-05 17:38:27.000000000 +0200
-@@ -789,12 +789,13 @@ static const void *net_netlink_ns(struct
- 	return sock_net(sk);
- }
- 
--static struct kobj_ns_type_operations net_ns_type_operations = {
-+struct kobj_ns_type_operations net_ns_type_operations = {
- 	.type = KOBJ_NS_TYPE_NET,
- 	.current_ns = net_current_ns,
- 	.netlink_ns = net_netlink_ns,
- 	.initial_ns = net_initial_ns,
- };
-+EXPORT_SYMBOL_GPL(net_ns_type_operations);
- 
- static void net_kobj_ns_exit(struct net *net)
- {
---- wireless-testing.orig/net/wireless/sysfs.c	2010-08-05 17:33:47.000000000 +0200
-+++ wireless-testing/net/wireless/sysfs.c	2010-08-05 17:39:11.000000000 +0200
-@@ -110,6 +110,13 @@ static int wiphy_resume(struct device *d
- 	return ret;
- }
- 
-+static const void *wiphy_namespace(struct device *d)
-+{
-+	struct wiphy *wiphy = container_of(d, struct wiphy, dev);
-+
-+	return wiphy_net(wiphy);
-+}
-+
- struct class ieee80211_class = {
- 	.name = "ieee80211",
- 	.owner = THIS_MODULE,
-@@ -120,6 +127,8 @@ struct class ieee80211_class = {
- #endif
- 	.suspend = wiphy_suspend,
- 	.resume = wiphy_resume,
-+	.ns_type = &net_ns_type_operations,
-+	.namespace = wiphy_namespace,
- };
- 
- int wiphy_sysfs_init(void)
---- wireless-testing.orig/net/wireless/core.c	2010-08-05 17:33:47.000000000 +0200
-+++ wireless-testing/net/wireless/core.c	2010-08-05 17:38:27.000000000 +0200
-@@ -253,11 +253,16 @@ int cfg80211_switch_netns(struct cfg8021
- 			WARN_ON(err);
- 			wdev->netdev->features |= NETIF_F_NETNS_LOCAL;
- 		}
-+
-+		return err;
- 	}
- 
- 	wiphy_net_set(&rdev->wiphy, net);
- 
--	return err;
-+	err = device_rename(&rdev->wiphy.dev, dev_name(&rdev->wiphy.dev));
-+	WARN_ON(err);
-+
-+	return 0;
- }
- 
- static void cfg80211_rfkill_poll(struct rfkill *rfkill, void *data)
---- wireless-testing.orig/include/linux/netdevice.h	2010-08-05 17:13:50.000000000 +0200
-+++ wireless-testing/include/linux/netdevice.h	2010-08-05 17:39:02.000000000 +0200
-@@ -2171,6 +2171,8 @@ extern void dev_seq_stop(struct seq_file
- extern int netdev_class_create_file(struct class_attribute *class_attr);
- extern void netdev_class_remove_file(struct class_attribute *class_attr);
- 
-+extern struct kobj_ns_type_operations net_ns_type_operations;
-+
- extern char *netdev_drivername(const struct net_device *dev, char *buffer, int len);
- 
- extern void linkwatch_run_queue(void);
++		retval = ath9k_rx_skb_preprocess(common, hw, hdr, &rs,
++						 rxs, &decrypt_error);
++		if (retval)
++			goto requeue;
++			
+ 		rxs->mactime = (tsf & ~0xffffffffULL) | rs.rs_tstamp;
+ 		if (rs.rs_tstamp > tsf_lower &&
+ 		    unlikely(rs.rs_tstamp - tsf_lower > 0x10000000))
+@@ -1149,11 +1154,6 @@ int ath_rx_tasklet(struct ath_softc *sc, int
+flush, bool hp)
+ 		    unlikely(tsf_lower - rs.rs_tstamp > 0x10000000))
+ 			rxs->mactime += 0x100000000ULL;
 
-
+-		retval = ath9k_rx_skb_preprocess(common, hw, hdr, &rs,
+-						 rxs, &decrypt_error);
+-		if (retval)
+-			goto requeue;
+-
+ 		/* Ensure we always have an skb to requeue once we are done
+ 		 * processing the current buffer's skb */
+ 		requeue_skb = ath_rxbuf_alloc(common, common->rx_bufsize, GFP_ATOMIC);
