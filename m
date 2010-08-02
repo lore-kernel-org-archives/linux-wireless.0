@@ -1,39 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:36711 "EHLO hera.kernel.org"
+Received: from nbd.name ([88.198.39.176]:43056 "EHLO ds10.nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751449Ab0HSIPs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Aug 2010 04:15:48 -0400
-Message-ID: <4C6CE715.4010203@kernel.org>
-Date: Thu, 19 Aug 2010 10:11:01 +0200
-From: Tejun Heo <tj@kernel.org>
+	id S1752680Ab0HBLTJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Aug 2010 07:19:09 -0400
+Message-ID: <4C56A9AB.8030801@openwrt.org>
+Date: Mon, 02 Aug 2010 13:19:07 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Luis Rodriguez <lrodriguez@atheros.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux-pm mailing list <linux-pm@lists.linux-foundation.org>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	Maciej Rutecki <maciej.rutecki@gmail.com>
-Subject: Re: [Regression, 2.6.36-rc1] ath9k resume problem on Acer Ferrari
- One
-References: <201008190001.11342.rjw@sisk.pl>
-In-Reply-To: <201008190001.11342.rjw@sisk.pl>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Bruno Randolf <br1@einfach.org>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v5] cfg80211: Add nl80211 antenna configuration
+References: <20100729035820.5930.29864.stgit@tt-desk>	 <201007291812.28639.br1@einfach.org>	 <AANLkTi=ihY=pAmKaEp7Pga=DOxwASZqSxqmURbgnks-d@mail.gmail.com>	 <201008021313.54850.br1@einfach.org>	 <AANLkTimRnfa8HVpi0hcP7Eo9Nrns60ff3Hs+fq39WoJh@mail.gmail.com>	 <4C5688F7.1070200@openwrt.org>	 <AANLkTi=Qm53CgFNNgtF4iBvh3jbfYzd8XPH4y9ysUaoV@mail.gmail.com>	 <4C568D23.2000203@openwrt.org>	 <AANLkTinGdwt4bSPRDV=ZfPBmoKS42GgUVjLAg_O1vL3i@mail.gmail.com>	 <4C5690C7.2080104@openwrt.org>	 <AANLkTimoU+iF2bVJ-Fs4iT3k5v0iU9PaE783NhUdnQQ-@mail.gmail.com>	 <4C5699AE.6090103@openwrt.org>	 <AANLkTimWnefNaiPzqMXwc6d8aePmy3SZ8w9FB4=6CRko@mail.gmail.com>	 <4C56A251.7080903@openwrt.org> <1280746893.3923.12.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1280746893.3923.12.camel@jlt3.sipsolutions.net>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello, Rafael.
+On 2010-08-02 1:01 PM, Johannes Berg wrote:
+> On Mon, 2010-08-02 at 12:47 +0200, Felix Fietkau wrote:
+> 
+>> Legacy hardware  => run time changes possible (actually optional)
+>> 802.11n hardware => need to bring down the interface before changing
+>>                     the antenna settings
+> 
+> I think I'd prefer if all hw just required the device to be stopped.
+> Otherwise things either become awkward when you have, say. software
+> diversity control, or they become unpredictable quite, no?
+If the driver does something like that, then the antenna control
+callback should reset that state as well. But then again, I don't mind
+if legacy hw requires the interface to be down as well.
 
-On 08/19/2010 12:01 AM, Rafael J. Wysocki wrote:
-> While testing 2.6.36-rc1 (with a couple of fixes on top) I noticed
-> that the ath9k driver didn't work after resume from suspend to RAM.
-> An attempt to unload the driver using rmmod caused the BUG_ON() in
-> kernel/workqueue.c:2844 to trigger.
-
-That BUG_ON() triggers if destroy_workqueue() is called while work
-items are still pending on the workqueue.  Can you please trigger
-stack traces after resume and post it?
-
-Thanks.
-
--- 
-tejun
+- Felix
