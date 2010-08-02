@@ -1,75 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:54250 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754742Ab0HES34 (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:60923 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750959Ab0HBQTG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Aug 2010 14:29:56 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] wireless: upcase alpha2 values in queue_regulatory_request
-Date: Thu,  5 Aug 2010 14:28:52 -0400
-Message-Id: <1281032932-7271-1-git-send-email-linville@tuxdriver.com>
+	Mon, 2 Aug 2010 12:19:06 -0400
+MIME-Version: 1.0
+In-Reply-To: <AANLkTimaSeLqowRHSCivGXTiSE7NatNTR=jLWQYsSo-6@mail.gmail.com>
+References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+	<20100726193028.GG3903@tuxdriver.com>
+	<1280736987.17809.18.camel@chilepepper>
+	<20100802114256.GE12293@atomide.com>
+	<AANLkTikvtMbqUdwHtCtdL2xXbQh64pxjApo6ZH6hAXnP@mail.gmail.com>
+	<AANLkTimaSeLqowRHSCivGXTiSE7NatNTR=jLWQYsSo-6@mail.gmail.com>
+Date: Mon, 2 Aug 2010 18:19:04 +0200
+Message-ID: <AANLkTikPSp0_S8kSFmeZJ0qLR3DHKBN=iW_As5891a6v@mail.gmail.com>
+Subject: Re: [PATCH v2 00/20] native support for wl1271 on ZOOM
+From: Vitaly Wool <vitalywool@gmail.com>
+To: Ohad Ben-Cohen <ohad@wizery.com>
+Cc: Tony Lindgren <tony@atomide.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Pandita Vikram <vikram.pandita@ti.com>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	"Quadros Roger (Nokia-MS/Helsinki)" <roger.quadros@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"ext John W. Linville" <linville@tuxdriver.com>,
+	San Mehat <san@google.com>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This provides a little more flexibility for human users, and it allows
-us to use isalpha rather than the custom is_alpha_upper.
+Hi Ohad,
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/wireless/reg.c |   16 +++++++---------
- 1 files changed, 7 insertions(+), 9 deletions(-)
+On Mon, Aug 2, 2010 at 5:59 PM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
+>
+> Check out patch no. 9:
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index f180db0..b0d9a08 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -36,6 +36,7 @@
- #include <linux/slab.h>
- #include <linux/list.h>
- #include <linux/random.h>
-+#include <linux/ctype.h>
- #include <linux/nl80211.h>
- #include <linux/platform_device.h>
- #include <net/cfg80211.h>
-@@ -181,14 +182,6 @@ static bool is_alpha2_set(const char *alpha2)
- 	return false;
- }
- 
--static bool is_alpha_upper(char letter)
--{
--	/* ASCII A - Z */
--	if (letter >= 65 && letter <= 90)
--		return true;
--	return false;
--}
--
- static bool is_unknown_alpha2(const char *alpha2)
- {
- 	if (!alpha2)
-@@ -220,7 +213,7 @@ static bool is_an_alpha2(const char *alpha2)
- {
- 	if (!alpha2)
- 		return false;
--	if (is_alpha_upper(alpha2[0]) && is_alpha_upper(alpha2[1]))
-+	if (isalpha(alpha2[0]) && isalpha(alpha2[1]))
- 		return true;
- 	return false;
- }
-@@ -1399,6 +1392,11 @@ static DECLARE_WORK(reg_work, reg_todo);
- 
- static void queue_regulatory_request(struct regulatory_request *request)
- {
-+	if (isalpha(request->alpha2[0]))
-+		request->alpha2[0] = toupper(request->alpha2[0]);
-+	if (isalpha(request->alpha2[1]))
-+		request->alpha2[1] = toupper(request->alpha2[1]);
-+
- 	spin_lock(&reg_requests_lock);
- 	list_add_tail(&request->list, &reg_requests_list);
- 	spin_unlock(&reg_requests_lock);
--- 
-1.7.2
+sorry for the confusion. However, I guess if the platform doesn't
+supply this value, we'll just consider it 0? Without any warning,
+right?
 
+The problem is, we can't really distinguish between this field not set
+and value zero, and that means something is wrong with the design. The
+easiest way is probably changing the clock ids to start with 1.
+
+Thanks,
+   Vitaly
