@@ -1,133 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33599 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758665Ab0HEPF6 (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:65256 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751835Ab0HBQZY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Aug 2010 11:05:58 -0400
-Subject: [PATCH] mac80211: allow drivers to request SM PS mode change
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 05 Aug 2010 17:05:55 +0200
-Message-ID: <1281020755.4058.6.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 2 Aug 2010 12:25:24 -0400
+MIME-Version: 1.0
+In-Reply-To: <AANLkTimZQKj7H_GeE=+O9cwxEMTR+LhfFbt=AyXGzN3d@mail.gmail.com>
+References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+	<1279733634-21974-4-git-send-email-ohad@wizery.com>
+	<AANLkTimzA_JJ-byTDWznbL3YzeJ8LAP4M50onf2_3fBF@mail.gmail.com>
+	<AANLkTi=Oy8X1xMOwWL_cKBB1LWULT6=p+adUgB+AuSJS@mail.gmail.com>
+	<AANLkTi=BUX59heXAW2Uf4wZo2dSS19Je54dkQ5u2YGAW@mail.gmail.com>
+	<AANLkTimZQKj7H_GeE=+O9cwxEMTR+LhfFbt=AyXGzN3d@mail.gmail.com>
+Date: Mon, 2 Aug 2010 18:25:23 +0200
+Message-ID: <AANLkTikfRja-h9mz7uyRXCZNZjKdU_yB8e58XQucUzrn@mail.gmail.com>
+Subject: Re: [PATCH v2 03/20] mmc: support embedded data field in mmc_host
+From: Vitaly Wool <vitalywool@gmail.com>
+To: Ohad Ben-Cohen <ohad@wizery.com>
+Cc: linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-omap@vger.kernel.org, Kalle Valo <kalle.valo@iki.fi>,
+	Pandita Vikram <vikram.pandita@ti.com>, linux@arm.linux.org.uk,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Tony Lindgren <tony@atomide.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	San Mehat <san@google.com>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	akpm@linux-foundation.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Ohad,
 
-Sometimes drivers have more information than the
-stack about how their antennas/chains are used,
-and may require that the SM PS mode be changed.
-This could happen, for example, when detecting
-that the user disconnected an antenna. Thus this
-patch introduces API to allow drivers to request
-SM PS mode changes.
+On Mon, Aug 2, 2010 at 5:54 PM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h     |   12 ++++++++++++
- net/mac80211/ht.c          |   28 ++++++++++++++++++++++++++++
- net/mac80211/ieee80211_i.h |    6 +++++-
- net/mac80211/mlme.c        |    3 +++
- 4 files changed, 48 insertions(+), 1 deletion(-)
+> SPI is using these spi_board_info tables to populate the SPI device
+> trees. These tables are registered early at the board-specific init
+> code, and are later used by SPI core to populate the devices when the
+> SPI master controller is registered.
+>
+> SDIO doesn't normally needs any kind of hard coded data: most devices
+> are dynamically probed and populated.
+>
+> On rare cases like the wl1271, we have some platform-specific data we
+> need to deliver the SDIO function driver (i.e. the irq info in this
+> case). Since the device is hardwired to a specific controller, it does
+> make some sense to pass this private data from the controller's info
+> in the board files, through the host driver, and make it accessible
+> through the specific host instance that drives this controller.
+>
+> Btw, if our problem was be broader (e.g., needs to supply private data
+> for non-hardwired devices), then I agree that a more complex
+> mechanism, such as the one you suggest, would be needed. But currently
+> the problem is very simple and the solution is even simpler: just add
+> 1 private pointer to the host.
+>
+> Hope you find this reasonable,
 
---- wireless-testing.orig/include/net/mac80211.h	2010-08-05 16:12:39.000000000 +0200
-+++ wireless-testing/include/net/mac80211.h	2010-08-05 17:03:03.000000000 +0200
-@@ -2524,6 +2524,18 @@ void ieee80211_cqm_rssi_notify(struct ie
-  */
- void ieee80211_chswitch_done(struct ieee80211_vif *vif, bool success);
- 
-+/**
-+ * ieee80211_request_smps - request SM PS transition
-+ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-+ * @mode: new SM PS mode
-+ *
-+ * This allows the driver to request an SM PS transition in managed
-+ * mode. This is useful when the driver has more information than
-+ * the stack about possible interference, for example by bluetooth.
-+ */
-+void ieee80211_request_smps(struct ieee80211_vif *vif,
-+			    enum ieee80211_smps_mode smps_mode);
-+
- /* Rate control API */
- 
- /**
---- wireless-testing.orig/net/mac80211/ht.c	2010-07-30 16:08:28.000000000 +0200
-+++ wireless-testing/net/mac80211/ht.c	2010-08-05 17:03:03.000000000 +0200
-@@ -265,3 +265,31 @@ int ieee80211_send_smps_action(struct ie
- 
- 	return 0;
- }
-+
-+void ieee80211_request_smps_work(struct work_struct *work)
-+{
-+	struct ieee80211_sub_if_data *sdata =
-+		container_of(work, struct ieee80211_sub_if_data,
-+			     u.mgd.request_smps_work);
-+
-+	mutex_lock(&sdata->u.mgd.mtx);
-+	__ieee80211_request_smps(sdata, sdata->u.mgd.driver_smps_mode);
-+	mutex_unlock(&sdata->u.mgd.mtx);
-+}
-+
-+void ieee80211_request_smps(struct ieee80211_vif *vif,
-+			    enum ieee80211_smps_mode smps_mode)
-+{
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+
-+	if (WARN_ON(vif->type != NL80211_IFTYPE_STATION))
-+		return;
-+
-+	if (WARN_ON(smps_mode == IEEE80211_SMPS_OFF))
-+		smps_mode = IEEE80211_SMPS_AUTOMATIC;
-+
-+	ieee80211_queue_work(&sdata->local->hw,
-+			     &sdata->u.mgd.request_smps_work);
-+}
-+/* this might change ... don't want non-open drivers using it */
-+EXPORT_SYMBOL_GPL(ieee80211_request_smps);
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2010-08-05 16:12:39.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2010-08-05 17:03:03.000000000 +0200
-@@ -343,7 +343,10 @@ struct ieee80211_if_managed {
- 	unsigned long timers_running; /* used for quiesce/restart */
- 	bool powersave; /* powersave requested for this iface */
- 	enum ieee80211_smps_mode req_smps, /* requested smps mode */
--				 ap_smps; /* smps mode AP thinks we're in */
-+				 ap_smps, /* smps mode AP thinks we're in */
-+				 driver_smps_mode; /* smps mode request */
-+
-+	struct work_struct request_smps_work;
- 
- 	unsigned int flags;
- 
-@@ -1108,6 +1111,7 @@ void ieee80211_send_delba(struct ieee802
- int ieee80211_send_smps_action(struct ieee80211_sub_if_data *sdata,
- 			       enum ieee80211_smps_mode smps, const u8 *da,
- 			       const u8 *bssid);
-+void ieee80211_request_smps_work(struct work_struct *work);
- 
- void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
- 				     u16 initiator, u16 reason);
---- wireless-testing.orig/net/mac80211/mlme.c	2010-08-05 16:22:42.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2010-08-05 17:03:03.000000000 +0200
-@@ -1926,6 +1926,8 @@ void ieee80211_sta_quiesce(struct ieee80
- 	 * time -- the code here is properly synchronised.
- 	 */
- 
-+	cancel_work_sync(&ifmgd->request_smps_work);
-+
- 	cancel_work_sync(&ifmgd->beacon_connection_loss_work);
- 	if (del_timer_sync(&ifmgd->timer))
- 		set_bit(TMR_RUNNING_TIMER, &ifmgd->timers_running);
-@@ -1961,6 +1963,7 @@ void ieee80211_sta_setup_sdata(struct ie
- 	INIT_WORK(&ifmgd->chswitch_work, ieee80211_chswitch_work);
- 	INIT_WORK(&ifmgd->beacon_connection_loss_work,
- 		  ieee80211_beacon_connection_loss_work);
-+	INIT_WORK(&ifmgd->request_smps_work, ieee80211_request_smps_work);
- 	setup_timer(&ifmgd->timer, ieee80211_sta_timer,
- 		    (unsigned long) sdata);
- 	setup_timer(&ifmgd->bcn_mon_timer, ieee80211_sta_bcn_mon_timer,
+no, actually I don't. I think this is a hack that intrudes into the
+area it completely doesn't belong to.
 
+In fact, one can have 2 views on this problem: either this is a fairly
+generic problem we need to address, or this is a very specific corner
+case.
+Your solution will be treated as a hack in both cases.
 
+If we consider it a generic problem, then we need to find a generic
+solution, which is the board_info solution, for instance. FWIW, I2C
+also uses this approach now.
+
+If we consider it to be a corner case, let's just add a dummy
+platform_device like it's done in WL1251 implementation and keep the
+MMC subsystem clean.
+
+Thanks,
+   Vitaly
