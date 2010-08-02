@@ -1,62 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from madara.hpl.hp.com ([192.6.19.124]:50348 "EHLO madara.hpl.hp.com"
+Received: from mail.perches.com ([173.55.12.10]:2203 "EHLO mail.perches.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755439Ab0H3Rkx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Aug 2010 13:40:53 -0400
-Date: Mon, 30 Aug 2010 10:40:19 -0700
-From: Jean Tourrilhes <jt@hpl.hp.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kees Cook <kees.cook@canonical.com>, linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH] wireless: fix 64K kernel heap content leak via ioctl
-Message-ID: <20100830174018.GA3639@bougret.hpl.hp.com>
-Reply-To: jt@hpl.hp.com
-References: <20100827210240.GC4703@outflux.net> <20100827212254.GB32275@bougret.hpl.hp.com> <1283158058.3691.10.camel@jlt3.sipsolutions.net> <1283158704.3691.11.camel@jlt3.sipsolutions.net> <1283162341.3691.45.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1283162341.3691.45.camel@jlt3.sipsolutions.net>
+	id S1754628Ab0HBTs5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Aug 2010 15:48:57 -0400
+Subject: Re: [PATCH 3/3] compat: define struct va_format introduced in
+ v2.6.36
+From: Joe Perches <joe@perches.com>
+To: Kshitij Kulshreshtha <kkhere.geo@gmail.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4C571F0B.3000200@gmail.com>
+References: <4C55D22A.5040302@hauke-m.de>
+	 <1280700173-14690-4-git-send-email-kkhere.geo@gmail.com>
+	 <AANLkTinfrBRm8J2G+k8bB6N-YniVkmUYOBkRpyF_tC2j@mail.gmail.com>
+	 <4C571F0B.3000200@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 02 Aug 2010 12:48:54 -0700
+Message-ID: <1280778534.1752.68.camel@Joe-Laptop.home>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 30, 2010 at 11:59:01AM +0200, Johannes Berg wrote:
-> 
-> Ok I finally fully understood the issue.
-> 
-> This will fix the problem, but the comment is completely bogus, which I
-> guess means you didn't actually understand the problem.
+On Mon, 2010-08-02 at 21:39 +0200, Kshitij Kulshreshtha wrote:
+> As on 2010-08-02 20:00, Luis R. Rodriguez did write:
+> > On Sun, Aug 1, 2010 at 3:02 PM, Kshitij Kulshreshtha
+> >> +struct va_format {
+> >> +       const char *fmt;
+> >> +       va_list *va;
+> >> +};
+> > I'll apply this for now but what caller uses this for example?
 
-	Correct, Kees pointed out that my comment was bogus and the
-e-mail I sent after the patch corrected myself on that point :
+Why is this necessary?
 
-------------------------------------
-> The comment should probably be clarified -- it's the caller's iwp->length
-> that may be causing problems
-
-        Ha ! I see. It would be for regular iwpoint queries, not for
-extended NOMAX queries (scan is a extended NOMAX query).
-------------------------------------
-
-> My patch also didn't fix the problem, I didn't understand the problem
-> correctly and was continuously wondering how drivers would ever fill the
-> buffer with more than max_tokens (which would be a more serious bug,
-> since they'd overwrite a slab object after "extra").
-
-	Yes, I had arrived at the same conclusion (not that my patch
-did fix the issue).
-
-> What really fixes the problem is the patch below though. Had to realise
-> that the path where the driver didn't do ANYTHING AT ALL was the
-> problem....
-
-	I actually like your patch better than mine, it's closer to
-the original intent of the API. Go for it ;-)
-
-> johannes
-
-	Thanks a lot for the second pair of eyes.
-
-	Jean
