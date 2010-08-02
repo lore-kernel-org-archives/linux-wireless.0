@@ -1,54 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:61772 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750740Ab0HKLBn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Aug 2010 07:01:43 -0400
+Received: from nbd.name ([88.198.39.176]:50481 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753088Ab0HBJdA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Aug 2010 05:33:00 -0400
+Message-ID: <4C5690C7.2080104@openwrt.org>
+Date: Mon, 02 Aug 2010 11:32:55 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <4C6280DA.70205@nokia.com>
-References: <1281478348-24833-1-git-send-email-ohad@wizery.com>
-	<1281478348-24833-9-git-send-email-ohad@wizery.com> <4C6275F3.6030108@nokia.com>
-	<4C6280DA.70205@nokia.com>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Wed, 11 Aug 2010 14:01:22 +0300
-Message-ID: <AANLkTi=MB+021B+TRu6x1frM5=OB9p-wS1G441bhgiWj@mail.gmail.com>
-Subject: Re: [PATCH v3 8/9] omap: hsmmc: split mmc23 power control
-To: Roger Quadros <roger.quadros@nokia.com>
-Cc: "Hunter Adrian (Nokia-MS/Helsinki)" <adrian.hunter@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	San Mehat <san@google.com>, Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Bruno Randolf <br1@einfach.org>, johannes@sipsolutions.net,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v5] cfg80211: Add nl80211 antenna configuration
+References: <20100729035820.5930.29864.stgit@tt-desk> <201007291812.28639.br1@einfach.org> 	<AANLkTi=ihY=pAmKaEp7Pga=DOxwASZqSxqmURbgnks-d@mail.gmail.com> 	<201008021313.54850.br1@einfach.org> <AANLkTimRnfa8HVpi0hcP7Eo9Nrns60ff3Hs+fq39WoJh@mail.gmail.com> 	<4C5688F7.1070200@openwrt.org> <AANLkTi=Qm53CgFNNgtF4iBvh3jbfYzd8XPH4y9ysUaoV@mail.gmail.com> 	<4C568D23.2000203@openwrt.org> <AANLkTinGdwt4bSPRDV=ZfPBmoKS42GgUVjLAg_O1vL3i@mail.gmail.com>
+In-Reply-To: <AANLkTinGdwt4bSPRDV=ZfPBmoKS42GgUVjLAg_O1vL3i@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 11, 2010 at 1:52 PM, Roger Quadros <roger.quadros@nokia.com> wrote:
-> On 08/11/2010 01:05 PM, Hunter Adrian (Nokia-MS/Helsinki) wrote:
->>
->> Ohad Ben-Cohen wrote:
+On 2010-08-02 11:23 AM, Luis R. Rodriguez wrote:
+> On Mon, Aug 2, 2010 at 2:17 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+>> On 2010-08-02 11:10 AM, Luis R. Rodriguez wrote:
+>>> On Mon, Aug 2, 2010 at 1:59 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+>>>> On 2010-08-02 7:37 AM, Luis R. Rodriguez wrote:
+>>>>> I'm not, the point I was trying to make is that solving this for
+>>>>> legacy and that for 802.11n this needs more thought and work.
+>>>> I need this for 802.11n as well, and I believe the API is good enough
+>>>> for that.
 >>>
->>> Prepare for mmc3 regulator power control by splitting the power
->>> control functions of mmc2 and mmc3, and expecting mmc3 to have
->>> a single, dedicated, regulator support.
->>
->> Why?  Can't the controller be connected to an eMMC with 2 power
->> supplies?  At a glance, it is not obvious why this patch is needed.
->>
-> I agree with Adrian. This patch is not required at all.
->
+>>> Sure.
+>>>
+>>>>>> as long as the API is flexible
+>>>>>> enough i think it can be added later as 802.11n devices are going to accept
+>>>>>> antenna configuration.
+>>>>>
+>>>>> If you want really flexible stuff without addressing serious
+>>>>> considerations before introducing a new kernel API then use debugfs.
+>>>> I'd like to see this in nl80211. Is there any specific concern left that
+>>>> I haven't addressed already? If so, please point me at it...
+>>>
+>>> The code that deals with not accepting changes unless we're not
+>>> associated, and that also caches the old real hw config vs the
+>>> modified one.
+>> This is not really an API issue, this is more of an implementation
+>> aspect. I think it's up to the driver to reject changes that it cannot
+>> handle at the moment.
+> 
+> Huh,why not deal with this on cfg80211 and/or mac80211?
+Right now, the drivers calculate this. We could make a helper function
+in cfg80211 at some point, but we're talking about really small chunks
+of code.
 
-Thanks guys, I'll check it out.
+>> For 802.11n, changes that affect the chainmask should be rejected while
+>> the interface is up. That way we don't run into weird cached config vs
+>> hw config issues, and also keep a sane state for the HT capabilities.
+> 
+> Sure, I just did not see any code for this in these patches. My point
+> about the hw config vs fake/mod'd is if we'd expose the mod'd config
+> changes to userspace or if we'd keep them internal to cfg80211. How
+> would this be dealt with?
+Right now, cfg80211 doesn't know enough to handle this stuff on its own,
+so let's handle it in the driver completely on the first iteration. The
+patches do not need any changes for this right now.
 
-I'm about to leave until e/o August and I still have to sort out some
-stuff, so I might not respond right away, but please send any comments
-you may still have.
+- Felix
