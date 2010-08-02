@@ -1,40 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35583 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752782Ab0H0M47 (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:41151 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753495Ab0HBTyi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 08:56:59 -0400
-Subject: Re: [PATCH] mac80211: fix offchannel queue stop
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Vivek Natarajan <Vivek.Natarajan@Atheros.com>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	Luis Rodriguez <mcgrof@gmail.com>
-In-Reply-To: <20100827123054.GB3780@vasanth-laptop>
-References: <1282909528.4377.8.camel@jlt3.sipsolutions.net>
-	 <20100827123054.GB3780@vasanth-laptop>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 27 Aug 2010 14:56:56 +0200
-Message-ID: <1282913816.4377.10.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 2 Aug 2010 15:54:38 -0400
+Received: by wyb39 with SMTP id 39so3643025wyb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Aug 2010 12:54:37 -0700 (PDT)
+Message-ID: <4C57227A.1050802@gmail.com>
+Date: Mon, 02 Aug 2010 21:54:34 +0200
+From: Kshitij Kulshreshtha <kkhere.geo@gmail.com>
+MIME-Version: 1.0
+To: Joe Perches <joe@perches.com>
+CC: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/3] compat: define struct va_format introduced in v2.6.36
+References: <4C55D22A.5040302@hauke-m.de>	 <1280700173-14690-4-git-send-email-kkhere.geo@gmail.com>	 <AANLkTinfrBRm8J2G+k8bB6N-YniVkmUYOBkRpyF_tC2j@mail.gmail.com>	 <4C571F0B.3000200@gmail.com> <1280778534.1752.68.camel@Joe-Laptop.home>
+In-Reply-To: <1280778534.1752.68.camel@Joe-Laptop.home>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-08-27 at 18:00 +0530, Vasanthakumar Thiagarajan wrote:
 
-> > The problem, as I understand it, is that when
-> > we go offchannel while the driver has a queue
-> > stopped, the driver will likely start draining
-> > the queue and then enable it while offchannel.
-> > This in turn will enable the interface queue,
-> > and that leads to transmitting data frames on
-> > the wrong channel.
+As on 2010-08-02 21:48, Joe Perches did write:
+> On Mon, 2010-08-02 at 21:39 +0200, Kshitij Kulshreshtha wrote:
+>> As on 2010-08-02 20:00, Luis R. Rodriguez did write:
+>>> On Sun, Aug 1, 2010 at 3:02 PM, Kshitij Kulshreshtha
+>>>> +struct va_format {
+>>>> +       const char *fmt;
+>>>> +       va_list *va;
+>>>> +};
+>>> I'll apply this for now but what caller uses this for example?
+> 
+> Why is this necessary?
+> 
 
-> thanks for fixing, It was me only. Somehow I forgot this.
+I needed this to compile compat-wireless which is based on linux-next.
+Otherwise net/wireless/core.c fails to compile, due to the use of this
+struct va_format in the functions defined in lines 910--958. If this
+usage is reverted, we won't need it in compat.
 
-Did I understand the issue correctly then?
+-- 
+Kshitij Kulshreshtha
 
-johannes
+Institut für Mathematik,
+Universität Paderborn,
+Warburger Straße 100,
+33098 Paderborn.
 
+Büro: A3.319
