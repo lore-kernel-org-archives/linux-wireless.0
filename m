@@ -1,48 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42146 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752312Ab0HDPLg (ORCPT
+Received: from dakia2.marvell.com ([65.219.4.35]:59433 "EHLO
+	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751852Ab0HBL44 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Aug 2010 11:11:36 -0400
-Subject: Re: iwlwifi connection problems
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alex Romosan <romosan@sycorax.lbl.gov>
-Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <8739uu8lg2.fsf@sycorax.lbl.gov>
-References: <87tynqvtu6.fsf@sycorax.lbl.gov>
-	 <1279917523.10769.1.camel@wwguy-huron>
-	 <1280135867.3693.5.camel@jlt3.sipsolutions.net>
-	 <87mxtd5xlq.fsf@sycorax.lbl.gov>
-	 <1280212629.19098.0.camel@jlt3.sipsolutions.net>
-	 <87bp9l6f4k.fsf@sycorax.lbl.gov>
-	 <1280746705.3923.11.camel@jlt3.sipsolutions.net>
-	 <878w4pvx5e.fsf@sycorax.lbl.gov>
-	 <1280766201.24503.0.camel@jlt3.sipsolutions.net>
-	 <87aap4z70b.fsf@sycorax.lbl.gov>
-	 <1280817596.3874.0.camel@jlt3.sipsolutions.net>
-	 <87mxt3n9xh.fsf@sycorax.lbl.gov>
-	 <1280908365.3768.4.camel@jlt3.sipsolutions.net>
-	 <87aap28m8v.fsf@sycorax.lbl.gov>
-	 <1280934185.3768.8.camel@jlt3.sipsolutions.net>
-	 <8739uu8lg2.fsf@sycorax.lbl.gov>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 04 Aug 2010 17:11:29 +0200
-Message-ID: <1280934689.17718.3.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 2 Aug 2010 07:56:56 -0400
+Message-ID: <4C56B234.3040209@marvell.com>
+Date: Mon, 02 Aug 2010 17:25:32 +0530
+From: yogeshp <yogeshp@marvell.com>
+MIME-Version: 1.0
+To: "linville@tuxdriver.com" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: wireless-regdb: Why crda db.txt disallows 40Mhz BW on Channel 12-13
+ for JP?
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-08-04 at 08:08 -0700, Alex Romosan wrote:
+Hello All,
 
-> > Thanks. The down/up is fine, I'll be able to identify that in the
-> > traces. Except the "working" trace looks like it only starts after you
-> > connected already?
-> 
-> the driver connects automatically on boot, so, yes, it was after i was
-> connected. i can bring down the interface and try again if you want.
+Crda db.txt has following entries for JP:
+        (2402 - 2472 @ 40), (N/A, 20)
+        (2457 - 2482 @ 20), (N/A, 20)
 
-Yes, please do that.
+Why are channel 12 and 13 for JP disallowed to operate in 40Mhz by this file? 
 
-johannes
+As per Annex 11J of latest 802.11n spec, for Japan, channel 1-7 are allowed in HT40+ and channel 5-13 are allowed in HT40- mode.
+
+Thanks,
+Yogesh
 
