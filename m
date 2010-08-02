@@ -1,31 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:51993 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750876Ab0HRQdm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Aug 2010 12:33:42 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 0/2] iwlwifi fix for 2.6.35
-Date: Wed, 18 Aug 2010 09:35:20 -0700
-Message-Id: <1282149322-17928-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from isilmar-3.linta.de ([188.40.101.200]:48028 "EHLO linta.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754178Ab0HBUMK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Aug 2010 16:12:10 -0400
+Date: Mon, 2 Aug 2010 21:52:21 +0200
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+To: Komuro <komurojun-mbn@nifty.com>
+Cc: Michael Buesch <mb@bu3sch.de>, netdev@vger.kernel.org,
+	linux-pcmcia@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-serial@vger.kernel.org
+Subject: Re: [PATCH 01/11] pcmcia: use pcmica_{read,write}_config_byte
+Message-ID: <20100802195221.GA21063@comet.dominikbrodowski.net>
+References: <1280667550-3040-1-git-send-email-linux@dominikbrodowski.net>
+ <20100801125749.GA2564@comet.dominikbrodowski.net>
+ <15238373.192661280750366920.komurojun-mbn@nifty.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <15238373.192661280750366920.komurojun-mbn@nifty.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Don't check WEP keys in AP mode.
-Also handle the scan abort condition, iwlwifi should not tell
-mac80211 later when scan completed. 
+Hey,
 
-Johannes Berg (2):
-  iwlagn: do not check for AP mode for WEP keys
-  iwlwifi: do not spuriously call ieee80211_scan_completed
+On Mon, Aug 02, 2010 at 08:59:26PM +0900, Komuro wrote:
+> >--- a/drivers/net/pcmcia/xirc2ps_cs.c
+> >+++ b/drivers/net/pcmcia/xirc2ps_cs.c
+> 
+> 
+> >+	if (err)
+> > 	    goto config_error;
+> >-	reg.Action = CS_WRITE;
+> >-	reg.Offset = CISREG_IOBASE_1;
+> >-	reg.Value = (link->io.BasePort2 >> 8) & 0xff;
+> >-	if ((err = pcmcia_access_configuration_register(link, &reg)))
+> >+
+> >+	err = pcmcia_write_config_byte(link, CISREG_IOBASE_1,
+> >+				link->io.BasePort2 & 0xff);
+> 
+> It should be
+> 
+> 	err = pcmcia_write_config_byte(link, CISREG_IOBASE_1,
+> 				(link->io.BasePort2 >> 8) & 0xff);
+> 
 
-these patches are also available from wireless-2.6 branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+Fixed, thanks.
 
- drivers/net/wireless/iwlwifi/iwl-agn.c  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-scan.c |    6 ++++--
- 2 files changed, 5 insertions(+), 3 deletions(-)
-
+Best,
+	Dominik
