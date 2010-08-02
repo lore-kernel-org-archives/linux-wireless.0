@@ -1,50 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp4-g21.free.fr ([212.27.42.4]:45982 "EHLO smtp4-g21.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751457Ab0HNGbV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Aug 2010 02:31:21 -0400
-Subject: Re: [PATCH v2] cfg80211: fix race between sysfs and cfg80211
-From: Maxime Bizon <mbizon@freebox.fr>
-Reply-To: mbizon@freebox.fr
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1281638550.3803.4.camel@jlt3.sipsolutions.net>
-References: <1279336415.1941.6.camel@kero>
-	 <1279394982.3931.0.camel@jlt3.sipsolutions.net>
-	 <1279852170.14136.0.camel@sakura.staff.proxad.net>
-	 <1281638499.12446.498.camel@sakura.staff.proxad.net>
-	 <1281638550.3803.4.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="ANSI_X3.4-1968"
-Date: Sat, 14 Aug 2010 08:31:12 +0200
-Message-ID: <1281767472.12446.551.camel@sakura.staff.proxad.net>
-Mime-Version: 1.0
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:45620 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752680Ab0HBJYC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Aug 2010 05:24:02 -0400
+Received: by yxg6 with SMTP id 6so1194602yxg.19
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Aug 2010 02:24:01 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4C568D23.2000203@openwrt.org>
+References: <20100729035820.5930.29864.stgit@tt-desk> <201007291812.28639.br1@einfach.org>
+	<AANLkTi=ihY=pAmKaEp7Pga=DOxwASZqSxqmURbgnks-d@mail.gmail.com>
+	<201008021313.54850.br1@einfach.org> <AANLkTimRnfa8HVpi0hcP7Eo9Nrns60ff3Hs+fq39WoJh@mail.gmail.com>
+	<4C5688F7.1070200@openwrt.org> <AANLkTi=Qm53CgFNNgtF4iBvh3jbfYzd8XPH4y9ysUaoV@mail.gmail.com>
+	<4C568D23.2000203@openwrt.org>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 2 Aug 2010 02:23:37 -0700
+Message-ID: <AANLkTinGdwt4bSPRDV=ZfPBmoKS42GgUVjLAg_O1vL3i@mail.gmail.com>
+Subject: Re: [PATCH v5] cfg80211: Add nl80211 antenna configuration
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Bruno Randolf <br1@einfach.org>, johannes@sipsolutions.net,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Aug 2, 2010 at 2:17 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> On 2010-08-02 11:10 AM, Luis R. Rodriguez wrote:
+>> On Mon, Aug 2, 2010 at 1:59 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+>>> On 2010-08-02 7:37 AM, Luis R. Rodriguez wrote:
+>>>> I'm not, the point I was trying to make is that solving this for
+>>>> legacy and that for 802.11n this needs more thought and work.
+>>> I need this for 802.11n as well, and I believe the API is good enough
+>>> for that.
+>>
+>> Sure.
+>>
+>>>>> as long as the API is flexible
+>>>>> enough i think it can be added later as 802.11n devices are going to accept
+>>>>> antenna configuration.
+>>>>
+>>>> If you want really flexible stuff without addressing serious
+>>>> considerations before introducing a new kernel API then use debugfs.
+>>> I'd like to see this in nl80211. Is there any specific concern left that
+>>> I haven't addressed already? If so, please point me at it...
+>>
+>> The code that deals with not accepting changes unless we're not
+>> associated, and that also caches the old real hw config vs the
+>> modified one.
+> This is not really an API issue, this is more of an implementation
+> aspect. I think it's up to the driver to reject changes that it cannot
+> handle at the moment.
 
-On Thu, 2010-08-12 at 20:42 +0200, Johannes Berg wrote:
+Huh,why not deal with this on cfg80211 and/or mac80211?
 
-> Err, it was merged a long time ago
+> For legacy, changing settings is fine in any state (even with assoc).
 
-I'm hitting another race now, it appeared after I disabled
-CONFIG_CRYPTO_MANAGER_TESTS (new option in 2.6.35.2).
+Sure.
 
-I have a userspace daemon that listen for new phy event, and create and
-configure an AP interface just after it gets the event.
+> For 802.11n, changes that affect the chainmask should be rejected while
+> the interface is up. That way we don't run into weird cached config vs
+> hw config issues, and also keep a sane state for the HT capabilities.
 
+Sure, I just did not see any code for this in these patches. My point
+about the hw config vs fake/mod'd is if we'd expose the mod'd config
+changes to userspace or if we'd keep them internal to cfg80211. How
+would this be dealt with?
 
-The driver is still inside ieee80211_register_hw(), but the userspace is
-able to create the AP interface before the call is over. Once
-wiphy_register() is done, no lock seems to prevent this from happening.
-
-ieee80211_init_rate_ctrl_alg() then fails with EBUSY, and
-ieee80211_register_hw() starts unregistering the phy.
-
-Is that expected ?
-
-I was able to get past it by taking rtnl lock before wiphy_register()
-
--- 
-Maxime
-
-
+  Luis
