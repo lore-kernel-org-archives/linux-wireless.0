@@ -1,61 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gundega.hpl.hp.com ([192.6.19.190]:46488 "EHLO
-	gundega.hpl.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753586Ab0H0WkY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 18:40:24 -0400
-Date: Fri, 27 Aug 2010 15:39:26 -0700
-From: Jean Tourrilhes <jt@hpl.hp.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Kees Cook <kees.cook@canonical.com>, linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH] wireless: fix 64K kernel heap content leak via ioctl
-Message-ID: <20100827223926.GB32498@bougret.hpl.hp.com>
-Reply-To: jt@hpl.hp.com
-References: <20100827210240.GC4703@outflux.net> <20100827212254.GB32275@bougret.hpl.hp.com> <AANLkTimeEa_=dqX5yFnYzaSaL90TfOg3=MsydG81naAC@mail.gmail.com>
+Received: from mail.atheros.com ([12.36.123.2]:51382 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751245Ab0HBUwK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Aug 2010 16:52:10 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 02 Aug 2010 13:52:10 -0700
+Date: Mon, 2 Aug 2010 13:52:05 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Jan Friedrich <jft@dev2day.de>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [Patch] ath9k: fix erased ieee80211_rx_status.mactime
+Message-ID: <20100802205205.GG8920@tux>
+References: <4C57278E.1030601@dev2day.de>
+ <20100802202137.GC8920@tux>
+ <4C572C18.6070003@dev2day.de>
+ <20100802203843.GD8920@tux>
+ <4C572F31.3050809@dev2day.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTimeEa_=dqX5yFnYzaSaL90TfOg3=MsydG81naAC@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4C572F31.3050809@dev2day.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 27, 2010 at 03:35:19PM -0700, Luis R. Rodriguez wrote:
-> >
-> > diff -u -p wext.j2.c wext.c
-> > --- wext.j2.c   2010-08-27 14:17:26.000000000 -0700
-> > +++ wext.c      2010-08-27 14:19:33.000000000 -0700
-> > @@ -800,9 +800,12 @@ static int ioctl_standard_iw_point(struc
-> >                        goto out;
-> >                }
-> >
-> > -               if (copy_to_user(iwp->pointer, extra,
-> > -                                iwp->length *
-> > -                                descr->token_size)) {
-> > +               /* Verify how much we should return. Some driver
-> > +                * may abuse iwp->length... */
-> > +               if((iwp->length * descr->token_size) < extra_size)
-> > +                       extra_size = iwp->length * descr->token_size;
-> > +
-> > +               if (copy_to_user(iwp->pointer, extra, extra_size)) {
-> >                        err = -EFAULT;
-> >                        goto out;
-> >                }
+On Mon, Aug 02, 2010 at 01:48:49PM -0700, Jan Friedrich wrote:
+> > Think? Does the patch actually fix something or do you think it fixes
+> > something? Next time please include all these details on your patch
+> > commit log mesage so its easy to understand the reasoning behind
+> > the patch.
 > 
+> It fixes the problem I described. Now the mactime is set correctly and
+> the IBSS merge is done only once and by the correct station. I noticed
+> no negative side effect and tested it with 10+ stations in IBSS mode.
 > 
-> Jean, can you submit in a new thread and right before the SOB add in
-> the commit log Cc: stable@kernel.org [2.6.32+]
+> Sorry for the inconvenience. Next time I will provide more information.
 
-	The current patch was made for 2.6.27 and was only
-compiled. Someone would need to verify it works for 2.6.32. I could
-probably find some time next week.
+no problem, can you resubmit but add all these details to the commit log?
+ALso, is this a stable kernel fix, that is, does this fix need to be
+propagated to the stable kernels, 2.6.35, 2.6.34, 2.6.33, 2.6.32?
 
->   Luis
-
-	Regards,
-
-	Jean
+  Luis
