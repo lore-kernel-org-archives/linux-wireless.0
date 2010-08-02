@@ -1,60 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sycorax.lbl.gov ([128.3.11.121]:50335 "EHLO sycorax.lbl.gov"
+Received: from mail.perches.com ([173.55.12.10]:2206 "EHLO mail.perches.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750955Ab0HPNoy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Aug 2010 09:44:54 -0400
-From: Alex Romosan <romosan@sycorax.lbl.gov>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Guy\, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlwifi connection problems
-References: <87tynqvtu6.fsf@sycorax.lbl.gov>
-	<1279917523.10769.1.camel@wwguy-huron>
-	<1280135867.3693.5.camel@jlt3.sipsolutions.net>
-	<87mxtd5xlq.fsf@sycorax.lbl.gov>
-	<1280212629.19098.0.camel@jlt3.sipsolutions.net>
-	<87bp9l6f4k.fsf@sycorax.lbl.gov>
-	<1280746705.3923.11.camel@jlt3.sipsolutions.net>
-	<878w4pvx5e.fsf@sycorax.lbl.gov>
-	<1280766201.24503.0.camel@jlt3.sipsolutions.net>
-	<87aap4z70b.fsf@sycorax.lbl.gov>
-	<1280817596.3874.0.camel@jlt3.sipsolutions.net>
-	<87mxt3n9xh.fsf@sycorax.lbl.gov>
-	<1280908365.3768.4.camel@jlt3.sipsolutions.net>
-	<87aap28m8v.fsf@sycorax.lbl.gov>
-	<1280934185.3768.8.camel@jlt3.sipsolutions.net>
-	<8739uu8lg2.fsf@sycorax.lbl.gov>
-	<1280934689.17718.3.camel@jlt3.sipsolutions.net>
-	<8762zq76p3.fsf@sycorax.lbl.gov>
-	<1281964617.3683.23.camel@jlt3.sipsolutions.net>
-Date: Mon, 16 Aug 2010 06:44:48 -0700
-In-Reply-To: <1281964617.3683.23.camel@jlt3.sipsolutions.net> (message from
-	Johannes Berg on Mon, 16 Aug 2010 15:16:57 +0200)
-Message-ID: <8762za7ju7.fsf@sycorax.lbl.gov>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1754687Ab0HBUIt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Aug 2010 16:08:49 -0400
+Subject: Re: [PATCH 3/3] compat: define struct va_format introduced in
+ v2.6.36
+From: Joe Perches <joe@perches.com>
+To: Kshitij Kulshreshtha <kkhere.geo@gmail.com>
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <4C57227A.1050802@gmail.com>
+References: <4C55D22A.5040302@hauke-m.de>
+	 <1280700173-14690-4-git-send-email-kkhere.geo@gmail.com>
+	 <AANLkTinfrBRm8J2G+k8bB6N-YniVkmUYOBkRpyF_tC2j@mail.gmail.com>
+	 <4C571F0B.3000200@gmail.com> <1280778534.1752.68.camel@Joe-Laptop.home>
+	 <4C57227A.1050802@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 02 Aug 2010 13:08:47 -0700
+Message-ID: <1280779727.1752.71.camel@Joe-Laptop.home>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Mon, 2010-08-02 at 21:54 +0200, Kshitij Kulshreshtha wrote:
+> As on 2010-08-02 21:48, Joe Perches did write:
+> > On Mon, 2010-08-02 at 21:39 +0200, Kshitij Kulshreshtha wrote:
+> >> As on 2010-08-02 20:00, Luis R. Rodriguez did write:
+> >>> On Sun, Aug 1, 2010 at 3:02 PM, Kshitij Kulshreshtha
+> >>>> +struct va_format {
+> >>>> +       const char *fmt;
+> >>>> +       va_list *va;
+> >>>> +};
+> >>> I'll apply this for now but what caller uses this for example?
+> > Why is this necessary?
+> I needed this to compile compat-wireless which is based on linux-next.
+> Otherwise net/wireless/core.c fails to compile, due to the use of this
+> struct va_format in the functions defined in lines 910--958. If this
+> usage is reverted, we won't need it in compat.
 
-> Alex, thanks. I apologise for the delay. I should've asked you much
-> earlier to do this -- could you open a bug report on
-> bugzilla.intellinuxwireless.org and attach all the information you
-> gathered?
+I see your problem.
 
-okay, i'll do that.
+I think your problem should not be a constraint
+on new development and I do not think the new use
+should be reverted.
 
-> Also, have you tried the released 2.6.35.2?
+cheers, Joe
 
-i haven't, tried 2.6.36-rc1 last night but got a series of oopses while
-booting so i didn't get a chance to test it. i'll give 2.6.35.2 a try at
-some point soon. thanks for all the help.
-
---alex--
-
--- 
-| I believe the moment is at hand when, by a paranoiac and active |
-|  advance of the mind, it will be possible (simultaneously with  |
-|  automatism and other passive states) to systematize confusion  |
-|  and thus to help to discredit completely the world of reality. |
