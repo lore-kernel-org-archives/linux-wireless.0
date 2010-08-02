@@ -1,41 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:42391 "EHLO
-	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752203Ab0HVTqi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Aug 2010 15:46:38 -0400
-Subject: [PATCH 2/4] wl12xx: change contact person for the include file
-To: linux-wireless@vger.kernel.org
-From: Kalle Valo <kvalo@adurom.com>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>
-Date: Sun, 22 Aug 2010 22:46:28 +0300
-Message-ID: <20100822194628.16660.25636.stgit@potku.valot.fi>
-In-Reply-To: <20100822194615.16660.21195.stgit@potku.valot.fi>
-References: <20100822194615.16660.21195.stgit@potku.valot.fi>
+Received: from hera.kernel.org ([140.211.167.34]:32949 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751852Ab0HBQd3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Aug 2010 12:33:29 -0400
+Message-ID: <4C56F30D.3020304@kernel.org>
+Date: Mon, 02 Aug 2010 18:32:13 +0200
+From: Tejun Heo <tj@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Linus Torvalds <torvalds@linux-foundation.org>
+CC: "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Jens Axboe <jaxboe@fusionio.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>
+Subject: Re: 2.6.35-rc6-git6: Reported regressions from 2.6.34
+References: <2dWFdr9kTFM.A.P0D.spXVMB@chimera> <AANLkTimcH7+Bq1UEbaSU7SQpzArPgmSLegiqE13V8=CF@mail.gmail.com>
+In-Reply-To: <AANLkTimcH7+Bq1UEbaSU7SQpzArPgmSLegiqE13V8=CF@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luciano should be the contact person for the include/linux/spi/wl12xx.h file.
+Hello, Linus.
 
-Cc: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Kalle Valo <kvalo@adurom.com>
----
- include/linux/spi/wl12xx.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On 08/01/2010 08:01 PM, Linus Torvalds wrote:
+> This has a proposed patch. I don't know what the status of it is, though. Jens?
+> 
+>    http://marc.info/?l=linux-kernel&m=127950018204029&w=2
+> 
+>> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16393
+>> Subject         : kernel BUG at fs/block_dev.c:765!
+>> Submitter       : Markus Trippelsdorf <markus@trippelsdorf.de>
+>> Date            : 2010-07-14 13:52 (19 days old)
+>> Message-ID      : <20100714135217.GA1797@arch.tripp.de>
+>> References      : http://marc.info/?l=linux-kernel&m=127911564213748&w=2
+> 
+> This one is interesting. And I think I perhaps see where it's coming from.
+> 
+> bd_start_claiming() (through bd_prepare_to_claim()) has two separate
+> success cases: either there was no holder (bd_claiming is NULL) or the
+> new holder was already claiming it (bd_claiming == holder).
+> 
+> Note in particular the case of the holder _already_ holding it. What happens is:
+> 
+>  - bd_start_claiming() succeeds because we had _already_ claimed it
+> with the same holder
+> 
+>  - then some error happens, and we call bd_abort_claiming(), which
+> does whole->bd_claiming = NULL;
+> 
+>  - the original holder thinks it still holds the bd, but it has been released!
+> 
+>  - a new claimer comes in, and succeeds because bd_claiming is now NULL.
+> 
+>  - we now have two "owners" of the bd, but bd_claiming only points to
+> the second one.
+> 
+> I think bd_start_claiming() needs to do some kind of refcount for the
+> nested holder case, and bd_abort_claiming() needs to decrement the
+> refcount and only clear the bd_claiming field when it goes down to
+> zero.
+> 
+> I dunno. Maybe there's something else going on, but it does look
+> suspicious, and the above would explain the BUG_ON().
 
-diff --git a/include/linux/spi/wl12xx.h b/include/linux/spi/wl12xx.h
-index a223ecb..a20bccf 100644
---- a/include/linux/spi/wl12xx.h
-+++ b/include/linux/spi/wl12xx.h
-@@ -3,7 +3,7 @@
-  *
-  * Copyright (C) 2009 Nokia Corporation
-  *
-- * Contact: Kalle Valo <kalle.valo@nokia.com>
-+ * Contact: Luciano Coelho <luciano.coelho@nokia.com>
-  *
-  * This program is free software; you can redistribute it and/or
-  * modify it under the terms of the GNU General Public License
+Yeah, that definitely sounds plausible.  I think the condition check
+in bd_prepare_to_claim() should have been "if (whole->bd_claiming)"
+instead of "if (whole->bd_claiming && whole->bd_claiming != holder)".
+It doesn't make much sense to allow multiple parallel claiming
+operations anyway and the comment above already says - "This function
+fails if @bdev is already claimed by another holder and waits if
+another claiming is in progress."
 
+I'll try to build a test case and verify it.
+
+Thank you.
+
+-- 
+tejun
