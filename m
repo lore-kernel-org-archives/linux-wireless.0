@@ -1,52 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:59597 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753823Ab0HRPtB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Aug 2010 11:49:01 -0400
-To: Grazvydas Ignotas <notasas@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Luciano Coelho <luciano.coelho@nokia.com>
-Subject: Re: [PATCH 0/4] wl1271 -> wl1251 port patches
-References: <1282074415-6168-1-git-send-email-notasas@gmail.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Wed, 18 Aug 2010 18:48:57 +0300
-In-Reply-To: <1282074415-6168-1-git-send-email-notasas@gmail.com> (Grazvydas Ignotas's message of "Tue\, 17 Aug 2010 22\:46\:51 +0300")
-Message-ID: <87sk2b9b12.fsf@purkki.adurom.net>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:46807 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752000Ab0HBNPs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Aug 2010 09:15:48 -0400
+Received: by bwz1 with SMTP id 1so1447189bwz.19
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Aug 2010 06:15:46 -0700 (PDT)
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/3] mac80211: remove unused rate function parameters
+Cc: Johannes Berg j <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Mon, 2 Aug 2010 15:15:44 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201008021515.44901.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Grazvydas Ignotas <notasas@gmail.com> writes:
-
-> Hi,
-
-Hi Grazvydas,
-
-> I've been looking at wl1271 changelog and found several patches that
-> seem to be also applicable to wl1251. I'm not that sure about patches
-> 2 and 4, but 1 and 3 should be correct (I've verified 3 with TI driver).
-> I've been running these on pandora for several days now without problems.
-
-Patches looked good, thank you for them.
-
-> It's a shame wl12xx drivers were completely split, it would look like
-> they could share fair bit of code. Now wl1251 does not benefit from more
-> actively developed wl1271 fixes.
-
-We tried that first. But there were so many subtle differences
-everywhere that it became very difficult to handle and we decided to
-split the driver. Of course that also has it's problems like you
-mentioned. A stable firmware API would have solved this, but as usual
-when dealing with hardware, it's just a pipe dream.
-
-> There are even more wl1271 patches that could be applicable to wl1251.
-> Kalle, could you take a look at the list below? I could try porting if
-> you think any of those make sense.
-
-Sorry, I can't do it right now but I should have time for it later
-this week.
-
--- 
-Kalle Valo
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+WIP -> PATCH:
+	- no changes
+---
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 8179e62..6cb5541 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -538,20 +538,12 @@ static void ieee80211_release_reorder_frame(struct ieee80211_hw *hw,
+ 					    int index,
+ 					    struct sk_buff_head *frames)
+ {
+-	struct ieee80211_supported_band *sband;
+-	struct ieee80211_rate *rate = NULL;
+ 	struct sk_buff *skb = tid_agg_rx->reorder_buf[index];
+-	struct ieee80211_rx_status *status;
+ 
+ 	if (!skb)
+ 		goto no_frame;
+ 
+-	status = IEEE80211_SKB_RXCB(skb);
+-
+-	/* release the reordered frames to stack */
+-	sband = hw->wiphy->bands[status->band];
+-	if (!(status->flag & RX_FLAG_HT))
+-		rate = &sband->bitrates[status->rate_idx];
++	/* release the frame from the reorder ring buffer */
+ 	tid_agg_rx->stored_mpdu_num--;
+ 	tid_agg_rx->reorder_buf[index] = NULL;
+ 	__skb_queue_tail(frames, skb);
+@@ -2289,8 +2281,7 @@ static void ieee80211_rx_handlers(struct ieee80211_rx_data *rx,
+ 
+ static void ieee80211_invoke_rx_handlers(struct ieee80211_sub_if_data *sdata,
+ 					 struct ieee80211_rx_data *rx,
+-					 struct sk_buff *skb,
+-					 struct ieee80211_rate *rate)
++					 struct sk_buff *skb)
+ {
+ 	struct sk_buff_head reorder_release;
+ 	ieee80211_rx_result res = RX_DROP_MONITOR;
+@@ -2500,8 +2491,7 @@ static int prepare_for_handlers(struct ieee80211_sub_if_data *sdata,
+  * be called with rcu_read_lock protection.
+  */
+ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+-					 struct sk_buff *skb,
+-					 struct ieee80211_rate *rate)
++					 struct sk_buff *skb)
+ {
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+ 	struct ieee80211_local *local = hw_to_local(hw);
+@@ -2609,7 +2599,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+ 					       prev->name);
+ 				goto next;
+ 			}
+-			ieee80211_invoke_rx_handlers(prev, &rx, skb_new, rate);
++			ieee80211_invoke_rx_handlers(prev, &rx, skb_new);
+ next:
+ 			prev = sdata;
+ 		}
+@@ -2625,7 +2615,7 @@ next:
+ 		}
+ 	}
+ 	if (prev)
+-		ieee80211_invoke_rx_handlers(prev, &rx, skb, rate);
++		ieee80211_invoke_rx_handlers(prev, &rx, skb);
+ 	else
+ 		dev_kfree_skb(skb);
+ }
+@@ -2711,7 +2701,7 @@ void ieee80211_rx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		return;
+ 	}
+ 
+-	__ieee80211_rx_handle_packet(hw, skb, rate);
++	__ieee80211_rx_handle_packet(hw, skb);
+ 
+ 	rcu_read_unlock();
+ 
