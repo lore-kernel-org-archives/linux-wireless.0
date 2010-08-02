@@ -1,82 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:34700 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754838Ab0HPQZX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Aug 2010 12:25:23 -0400
-Date: Mon, 16 Aug 2010 18:25:21 +0200 (CEST)
-From: Julia Lawall <julia@diku.dk>
-To: Kalle Valo <kalle.valo@iki.fi>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH 3/16] drivers/net/wireless/wl12xx: Use available error codes
-Message-ID: <Pine.LNX.4.64.1008161825010.19313@ask.diku.dk>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:60641 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752737Ab0HBFby (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Aug 2010 01:31:54 -0400
+Received: by iwn7 with SMTP id 7so3805036iwn.19
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Aug 2010 22:31:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+In-Reply-To: <201008021259.16623.br1@einfach.org>
+References: <20100727094732.27186.30900.stgit@tt-desk> <201007291111.27417.br1@einfach.org>
+	<AANLkTinH-2VNYGGBVha-M2HOzYJYe_GBb3Ww1V6i6Hyc@mail.gmail.com>
+	<201008021259.16623.br1@einfach.org>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Sun, 1 Aug 2010 22:31:32 -0700
+Message-ID: <AANLkTin0_APCmVQiCa19NU4zJsBdbXwAgpX23fo9r+vD@mail.gmail.com>
+Subject: Re: [PATCH v4 1/3] cfg80211: Add nl80211 antenna configuration
+To: Bruno Randolf <br1@einfach.org>
+Cc: Felix Fietkau <nbd@openwrt.org>, johannes@sipsolutions.net,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
+On Sun, Aug 1, 2010 at 8:59 PM, Bruno Randolf <br1@einfach.org> wrote:
+> On Fri July 30 2010 00:09:17 you wrote:
+>> On Wed, Jul 28, 2010 at 7:11 PM, Bruno Randolf <br1@einfach.org> wrote:
+>> > i already tried to explain several times why FIXED_A, FIXED_B, or
+>> > DIVERSITY is not enough even for "legacy". please re-read the mails and
+>> > the description of the first patch - i really don't want to re-iterate
+>> > it *again*. thanks :)
+>>
+>> What legacy device and respective device driver do we support upstream
+>> on the kernel that has this sort of extra antenna setup? Do you
+>> foresee this happening?
+>
+> right now, probably none. but it's easy to this to ath5k. madwifi supported it
+> and it's just a matter of setting tx and rx antennas (it's already there as
+> AR5K_ANTMODE_DEBUG). i might add it, just to make my case... ;)
+>
+> anyhow, i can see your point of view now. but while you might not care about
+> anything before 802.11n - there are millions of what you call 'legacy' chips
+> out there (and you guys are actually still selling them!), so i think it's
+> worth it to properly support them, especially since i still believe that my
+> proposal is usable for both 802.11n and before.
 
-In each case, error codes are stored in ret, but the return value is always
-0.  Return ret instead.
+I am not saying to drop legacy support I am saying to just support
+legacy via the two standard antenna model because there is nothing
+visible being supported which I think merits expanding a simple API
+for legacy.
 
-The semantic match that finds this problem is as follows:
-(http://coccinelle.lip6.fr/)
-
-// <smpl>
-@r@
-local idexpression x;
-constant C;
-@@
-
-if (...) { ...
-  x = -C
-  ... when != x
-(
-  return <+...x...+>;
-|
-  return NULL;
-|
-  return;
-|
-* return ...;
-)
-}
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
----
-This changes the semantics and has not been tested.
-
- drivers/net/wireless/wl12xx/wl1251_acx.c |    2 +-
- drivers/net/wireless/wl12xx/wl1251_cmd.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1251_acx.c b/drivers/net/wireless/wl12xx/wl1251_acx.c
-index 91891f9..2f8a2ba 100644
---- a/drivers/net/wireless/wl12xx/wl1251_acx.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_acx.c
-@@ -380,7 +380,7 @@ int wl1251_acx_pd_threshold(struct wl1251 *wl)
- 
- out:
- 	kfree(pd);
--	return 0;
-+	return ret;
- }
- 
- int wl1251_acx_slot(struct wl1251 *wl, enum acx_slot_type slot_time)
-diff --git a/drivers/net/wireless/wl12xx/wl1251_cmd.c b/drivers/net/wireless/wl12xx/wl1251_cmd.c
-index a37b30c..949b6a3 100644
---- a/drivers/net/wireless/wl12xx/wl1251_cmd.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_cmd.c
-@@ -200,7 +200,7 @@ int wl1251_cmd_vbm(struct wl1251 *wl, u8 identity,
- 
- out:
- 	kfree(vbm);
--	return 0;
-+	return ret;
- }
- 
- int wl1251_cmd_data_path(struct wl1251 *wl, u8 channel, bool enable)
+ Luis
