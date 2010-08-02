@@ -1,49 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta-2.ms.rz.RWTH-Aachen.DE ([134.130.7.73]:45484 "EHLO
-	mta-2.ms.rz.rwth-aachen.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759674Ab0HEH6P (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:33874 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751452Ab0HBJw5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Aug 2010 03:58:15 -0400
-MIME-version: 1.0
-Content-type: text/plain; charset=ISO-8859-1
-Message-id: <4C5A6EFE.7040703@arndnet.de>
-Date: Thu, 05 Aug 2010 09:57:50 +0200
-From: Arnd Hannemann <arnd@arndnet.de>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	sfr@canb.auug.org.au
-Subject: Re: GIT: net-*2.6 rebased...
-References: <20100804.162141.15218463.davem@davemloft.net>
-In-reply-to: <20100804.162141.15218463.davem@davemloft.net>
+	Mon, 2 Aug 2010 05:52:57 -0400
+Received: by iwn7 with SMTP id 7so4013798iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Aug 2010 02:52:56 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4C5690C7.2080104@openwrt.org>
+References: <20100729035820.5930.29864.stgit@tt-desk> <201007291812.28639.br1@einfach.org>
+	<AANLkTi=ihY=pAmKaEp7Pga=DOxwASZqSxqmURbgnks-d@mail.gmail.com>
+	<201008021313.54850.br1@einfach.org> <AANLkTimRnfa8HVpi0hcP7Eo9Nrns60ff3Hs+fq39WoJh@mail.gmail.com>
+	<4C5688F7.1070200@openwrt.org> <AANLkTi=Qm53CgFNNgtF4iBvh3jbfYzd8XPH4y9ysUaoV@mail.gmail.com>
+	<4C568D23.2000203@openwrt.org> <AANLkTinGdwt4bSPRDV=ZfPBmoKS42GgUVjLAg_O1vL3i@mail.gmail.com>
+	<4C5690C7.2080104@openwrt.org>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 2 Aug 2010 02:52:36 -0700
+Message-ID: <AANLkTimoU+iF2bVJ-Fs4iT3k5v0iU9PaE783NhUdnQQ-@mail.gmail.com>
+Subject: Re: [PATCH v5] cfg80211: Add nl80211 antenna configuration
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Bruno Randolf <br1@einfach.org>, johannes@sipsolutions.net,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, Aug 2, 2010 at 2:32 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> On 2010-08-02 11:23 AM, Luis R. Rodriguez wrote:
+>> On Mon, Aug 2, 2010 at 2:17 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+>>> On 2010-08-02 11:10 AM, Luis R. Rodriguez wrote:
+>>>> On Mon, Aug 2, 2010 at 1:59 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+>>>>> On 2010-08-02 7:37 AM, Luis R. Rodriguez wrote:
+>>>>>> I'm not, the point I was trying to make is that solving this for
+>>>>>> legacy and that for 802.11n this needs more thought and work.
+>>>>> I need this for 802.11n as well, and I believe the API is good enough
+>>>>> for that.
+>>>>
+>>>> Sure.
+>>>>
+>>>>>>> as long as the API is flexible
+>>>>>>> enough i think it can be added later as 802.11n devices are going to accept
+>>>>>>> antenna configuration.
+>>>>>>
+>>>>>> If you want really flexible stuff without addressing serious
+>>>>>> considerations before introducing a new kernel API then use debugfs.
+>>>>> I'd like to see this in nl80211. Is there any specific concern left that
+>>>>> I haven't addressed already? If so, please point me at it...
+>>>>
+>>>> The code that deals with not accepting changes unless we're not
+>>>> associated, and that also caches the old real hw config vs the
+>>>> modified one.
+>>> This is not really an API issue, this is more of an implementation
+>>> aspect. I think it's up to the driver to reject changes that it cannot
+>>> handle at the moment.
+>>
+>> Huh,why not deal with this on cfg80211 and/or mac80211?
+> Right now, the drivers calculate this. We could make a helper function
+> in cfg80211 at some point, but we're talking about really small chunks
+> of code.
+>
+>>> For 802.11n, changes that affect the chainmask should be rejected while
+>>> the interface is up. That way we don't run into weird cached config vs
+>>> hw config issues, and also keep a sane state for the HT capabilities.
+>>
+>> Sure, I just did not see any code for this in these patches. My point
+>> about the hw config vs fake/mod'd is if we'd expose the mod'd config
+>> changes to userspace or if we'd keep them internal to cfg80211. How
+>> would this be dealt with?
+> Right now, cfg80211 doesn't know enough to handle this stuff on its own,
+> so let's handle it in the driver completely on the first iteration. The
+> patches do not need any changes for this right now.
 
-Am 05.08.2010 01:21, schrieb David Miller:
-> 
-> Both net-2.6 and net-next-2.6 have been rebased.
-> 
-> To be honest, if you've been pulling from my tree you can just keep
-> doing so if you want, it will look just as if I had merged Linus's
-> tree into net-2.6 et al.
+I'd prefer that code to be written rather then let this be defined as
+API now and let drivers deal with this differently. But that's me, I'm
+not the maintainer, I just will not deal with bug reports dealing with
+this and I'll assign them to you guys if this gets through. Still
+think its crap and should just go through debugfs until all the code
+mentioned does exist.
 
-I there something broken with the trees on git.kernel.org?
-
-if I try to fetch from net-next-2.6, I get:
-fatal: The remote end hung up unexpectedly
-
-if I try to clone net-2.6:
-(e.g. git clone git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-2.6.git
-
-I get lots of errors reading the tags "does not point to a valid object!" and then:
-remote: error: Could not read 3cfc2c42c1cbc8e238bb9c0612c0df4565e3a8b4
-remote: fatal: Failed to traverse parents of commit 7aaaaa1e44b2a4047dfe05f304a5090eb995cf44
-remote: aborting due to possible repository corruption on the remote side.
-fatal: early EOF
-fatal: index-pack failed
-
-I'm using git version 1.7.1.
-
-Best regards,
- Arnd
+  Luis
