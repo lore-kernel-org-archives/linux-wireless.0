@@ -1,121 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:20610 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762095Ab0HFV5G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Aug 2010 17:57:06 -0400
-Subject: Re: [PATCH 3/8] iwlwifi: separate thermal throttling function
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: "linville@tuxdriver.com" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1281100480.3853.424.camel@jlt3.sipsolutions.net>
-References: <1280590452-10655-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <1280590452-10655-4-git-send-email-wey-yi.w.guy@intel.com>
-	 <1281100480.3853.424.camel@jlt3.sipsolutions.net>
-Content-Type: multipart/mixed; boundary="=-jETx3uECddoZwh9wo7SA"
-Date: Fri, 06 Aug 2010 14:56:28 -0700
-Message-Id: <1281131788.26320.5.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39719 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756899Ab0HCPJY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Aug 2010 11:09:24 -0400
+Received: from sapphire.tuxdriver.com ([70.61.120.61] helo=linville-8530p.local)
+	by smtp.tuxdriver.com with esmtps (TLSv1:AES256-SHA:256)
+	(Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1OgJ7L-0000rj-CO
+	for linux-wireless@vger.kernel.org; Tue, 03 Aug 2010 11:09:23 -0400
+Received: from linville-8530p.local (linville-8530p.local [127.0.0.1])
+	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id o73F9pMt006478
+	for <linux-wireless@vger.kernel.org>; Tue, 3 Aug 2010 11:09:51 -0400
+Received: (from linville@localhost)
+	by linville-8530p.local (8.14.4/8.14.4/Submit) id o73F9psF006477
+	for linux-wireless@vger.kernel.org; Tue, 3 Aug 2010 11:09:51 -0400
+Date: Tue, 3 Aug 2010 10:50:39 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: wireless merging -- Re: reminder: bug fixes only
+Message-ID: <20100803145039.GB4779@tuxdriver.com>
+References: <20100802.224837.135539305.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100802.224837.135539305.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---=-jETx3uECddoZwh9wo7SA
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-
-Hi John,
-
-Based on ours previous conversation, I understand the thermal throttling
-patch is not being merge it, since it has a stupid bug I create and
-being identify by Johannes, is it ok for you to merge the attached patch
-with the original patch work while you ready to push?
-
-Thanks
-
-On Fri, 2010-08-06 at 06:14 -0700, Johannes Berg wrote:
-> > @@ -325,9 +283,15 @@ int iwl_power_update_mode(struct iwl_priv *priv, bool force)
-> >  	else if (priv->cfg->supports_idle &&
-> >  		 priv->hw->conf.flags & IEEE80211_CONF_IDLE)
-> >  		iwl_static_sleep_cmd(priv, &cmd, IWL_POWER_INDEX_5, 20);
-> > -	else if (tt->state >= IWL_TI_1)
-> > -		iwl_static_sleep_cmd(priv, &cmd, tt->tt_power_mode, dtimper);
-> > -	else if (!enabled)
-> > +	else if (priv->cfg->ops->lib->tt_ops.lower_power_detection &&
-> > +		 priv->cfg->ops->lib->tt_ops.tt_power_mode) {
-> > +		if (priv->cfg->ops->lib->tt_ops.lower_power_detection(priv)) {
-> > +			/* in thermal throttling low power state */
-> > +			iwl_static_sleep_cmd(priv, &cmd,
-> > +			    priv->cfg->ops->lib->tt_ops.tt_power_mode(priv),
-> > +			    dtimper);
-> > +		}
-> > +	} else if (!enabled)
-> >  		iwl_power_sleep_cam_cmd(priv, &cmd);
-> >  	else if (priv->power_data.debug_sleep_level_override >= 0)
-> >  		iwl_static_sleep_cmd(priv, &cmd,
+On Mon, Aug 02, 2010 at 10:48:37PM -0700, David Miller wrote:
 > 
-> This is very very broken because it adds an often-used code path that
-> will not initialise "cmd" at all. It needs to be
-> 
-> ...
-> else if (priv->...lower_power_detection &&
->          priv->...tt_power_mode &&
->          priv->...lower_power_detection(priv))
->         iwl_static_sleep_cmd(...)
-> else if (!enabled)
-> ...
-> 
-> johannes
-> 
+> 2.6.35 is out, we're about to enter the merge window, so
+> if it isn't already in my tree I don't want to see it unless
+> it's a bug fix.
 
---=-jETx3uECddoZwh9wo7SA
-Content-Disposition: attachment; filename*0=0001-iwlwifi-fix-thermal-throttling-related-power-manage.patc; filename*1=h
-Content-Type: text/x-patch; name="0001-iwlwifi-fix-thermal-throttling-related-power-manage.patch"; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+In case you missed it, Dave has made the "no more new stuff" call.
+Anything that wasn't included in the pull request I sent on Thursday
+will not be included in 2.6.36.  The exception, of course, is bug
+(particularly regression) fixes.  If something you have already posted
+fits that category, feel free to send me a hint to that effect.
+Anything new intended for 2.6.36 should indicate that in the patch
+posting.
 
->From 98ec32fb40c92ce0175a3246660f4ae7969308d7 Mon Sep 17 00:00:00 2001
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Date: Fri, 6 Aug 2010 12:39:14 -0700
-Subject: [PATCH 1/1] iwlwifi: fix thermal throttling related power manageent operation
+Generally Stephen requests that nothing be available in the -next
+trees during the merge window that isn't being sent to Linus.
+The wireless-next-2.6 tree feeds wireless-testing, so you should not
+expect to see any post-2.6.36 patches in either of those trees until
+the merge window closes in slightly less than two weeks from now.
+Fixes will be available as normal.
 
-The current approach is very broken because it adds an
-often-used code path that will not initialise "cmd" at all.
+Thanks for your patience!
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Shanyu Zhao <shanyu.zhao.intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-power.c |   12 +++++-------
- 1 files changed, 5 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
-index da1f2ae..63c0ab4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-power.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-power.c
-@@ -284,13 +284,11 @@ int iwl_power_update_mode(struct iwl_priv *priv, bool force)
- 		 priv->hw->conf.flags & IEEE80211_CONF_IDLE)
- 		iwl_static_sleep_cmd(priv, &cmd, IWL_POWER_INDEX_5, 20);
- 	else if (priv->cfg->ops->lib->tt_ops.lower_power_detection &&
--		 priv->cfg->ops->lib->tt_ops.tt_power_mode) {
--		if (priv->cfg->ops->lib->tt_ops.lower_power_detection(priv)) {
--			/* in thermal throttling low power state */
--			iwl_static_sleep_cmd(priv, &cmd,
--			    priv->cfg->ops->lib->tt_ops.tt_power_mode(priv),
--			    dtimper);
--		}
-+		 priv->cfg->ops->lib->tt_ops.tt_power_mode &&
-+		 priv->cfg->ops->lib->tt_ops.lower_power_detection(priv)) {
-+		/* in thermal throttling low power state */
-+		iwl_static_sleep_cmd(priv, &cmd,
-+		    priv->cfg->ops->lib->tt_ops.tt_power_mode(priv), dtimper);
- 	} else if (!enabled)
- 		iwl_power_sleep_cam_cmd(priv, &cmd);
- 	else if (priv->power_data.debug_sleep_level_override >= 0)
+John
 -- 
-1.5.6.3
-
-
---=-jETx3uECddoZwh9wo7SA--
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
