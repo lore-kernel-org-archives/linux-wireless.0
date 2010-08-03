@@ -1,46 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:62000 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751410Ab0HBJ3X (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:49688 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756244Ab0HCORi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Aug 2010 05:29:23 -0400
-Received: by pwi5 with SMTP id 5so1276738pwi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Aug 2010 02:29:22 -0700 (PDT)
+	Tue, 3 Aug 2010 10:17:38 -0400
 MIME-Version: 1.0
-In-Reply-To: <4C5683C9.1090504@linux.intel.com>
-References: <4C54ACE7.1000205@linux.intel.com>
-	<AANLkTin5jKr4BQdxooy4NRjmBja2Z8TPdgE-5RV++AQh@mail.gmail.com>
-	<4C5683C9.1090504@linux.intel.com>
-Date: Mon, 2 Aug 2010 12:29:22 +0300
-Message-ID: <AANLkTinY54ZasK_-2Hfdj1uAqg6RXMjyEOr+98gRzAyM@mail.gmail.com>
-Subject: Re: Regulatory domain
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Sebastien Cayetanot <sebastien.cayetanot@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTi=vhWV1RNyemtfppfjvLYAbzd3aRjFOVgLLpG3Z@mail.gmail.com>
+References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
+	<1279733634-21974-4-git-send-email-ohad@wizery.com>
+	<AANLkTimzA_JJ-byTDWznbL3YzeJ8LAP4M50onf2_3fBF@mail.gmail.com>
+	<AANLkTi=Oy8X1xMOwWL_cKBB1LWULT6=p+adUgB+AuSJS@mail.gmail.com>
+	<AANLkTi=BUX59heXAW2Uf4wZo2dSS19Je54dkQ5u2YGAW@mail.gmail.com>
+	<AANLkTimZQKj7H_GeE=+O9cwxEMTR+LhfFbt=AyXGzN3d@mail.gmail.com>
+	<AANLkTikfRja-h9mz7uyRXCZNZjKdU_yB8e58XQucUzrn@mail.gmail.com>
+	<AANLkTi=vhWV1RNyemtfppfjvLYAbzd3aRjFOVgLLpG3Z@mail.gmail.com>
+Date: Tue, 3 Aug 2010 16:17:37 +0200
+Message-ID: <AANLkTin4m8gJR50zwMB2b0jRMHdNA6CQToKBTAhOL9wF@mail.gmail.com>
+Subject: Re: [PATCH v2 03/20] mmc: support embedded data field in mmc_host
+From: Vitaly Wool <vitalywool@gmail.com>
+To: Ohad Ben-Cohen <ohad@wizery.com>
+Cc: linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-omap@vger.kernel.org, Kalle Valo <kalle.valo@iki.fi>,
+	Pandita Vikram <vikram.pandita@ti.com>, linux@arm.linux.org.uk,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Tony Lindgren <tony@atomide.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	San Mehat <san@google.com>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	akpm@linux-foundation.org, linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>
->> (aaaa-bbbb @ c),(n/a, 23), XXX
->>
->> each line is a range in frequencies (channels that fall between aaaa
->> and bbbb. c is the channel width (10 Mhz for Japan's narrow channels,
->> 20 Mhz for regular channels and 40 Mhz for wide channels). 23 is the
->> maximum Tx power e.i.r.p. in db.
->
-> Many thanks for your support and the link. One additional parameter 'N/A' is
-> my example are sometimes fills w/ a number depending on the country I set.
->
-> What is the meaning of this parameter, I didn't catch it on the Regulatory
-> page.
+Hi Ohad,
 
-It is the maximum antenna gain: look at
-http://wireless.kernel.org/en/developers/Regulatory/Database and click
-on one of the countries there.
+On Mon, Aug 2, 2010 at 11:35 PM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
 
->
-> Thx
->
-> Sebastien
->
+> I'm honestly trying to understand your concerns, but I'm afraid that
+> just saying "it's a hack" is not too informative. Can you please
+> explain what do you think is technically wrong with the proposed
+> solution ? is it not general enough for other use cases ? will it
+> break something ?
+
+let's summarize the solution you're proposing.
+
+You're trying to add embedded_data which will be scattered all over
+the place. The patches you introduce do the following:
+- add the pointer to the mmc core header;
+- add the primitive to set it from the controller driver;
+- add the pointer to the board-specific header;
+- add the structure to the board-specific C file and propagate its
+pointer to the controller driver;
+- add setting the pointer in the core structure into the controller driver.
+
+So if I'd like to set the *same* structure for the *same* WL1271
+driver, provided that I'm working with the other platform, I'll need
+to do the following:
+- add the pointer to the board-specific header;
+- add the structure to the board-specific C file and propagate its
+pointer to the controller driver;
+- add setting the pointer in the core structure into the controller driver.
+
+This is far from being intuitive. This means we need to hack,
+generally speaking, all the MMC controller drivers to get it working
+on all platforms. This is error prone.
+
+And I'm not even speaking about the fact that MMC controller driver
+should not deal with such things at all.
+
+Thanks,
+   Vitaly
