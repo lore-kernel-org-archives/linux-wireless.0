@@ -1,59 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:30752 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754337Ab0H0Q4z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 12:56:55 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 26/27] iwlwifi: follow main beacon interval
-Date: Fri, 27 Aug 2010 09:59:54 -0700
-Message-Id: <1282928395-32762-27-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1282928395-32762-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1282928395-32762-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-px0-f174.google.com ([209.85.212.174]:57925 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754558Ab0HCAEm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Aug 2010 20:04:42 -0400
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org, j@w1.fi,
+	linville@tuxdriver.com,
+	"Justin P. Mattock" <justinmattock@gmail.com>
+Subject: [PATCH]hostap:hostap_ioctl.c Fix variable 'hostscan' set but not used 
+Date: Mon,  2 Aug 2010 17:04:39 -0700
+Message-Id: <1280793879-1768-1-git-send-email-justinmattock@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+The patch below fixes a compiler warning:
+  CC [M]  drivers/net/wireless/hostap/hostap_ioctl.o
+drivers/net/wireless/hostap/hostap_ioctl.c: In function 'prism2_translate_scan':
+drivers/net/wireless/hostap/hostap_ioctl.c:1954:13: warning: variable 'hostscan' set but not used
 
-It is necessary that the PAN context always
-use the same beacon interval as the BSS
-context unless it is in dual-station mode,
-ie. the PAN context is a station as well,
-so implement that.
+Keep in mind I've looked and searched for a fix for this but
+couldnt come up with anything.(if there is let me know and I'll have a try at it). 
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+
 ---
- drivers/net/wireless/iwlwifi/iwl-core.c |   11 +++++++++--
- 1 files changed, 9 insertions(+), 2 deletions(-)
+ drivers/net/wireless/hostap/hostap_ioctl.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 91ca517..a2b39fd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -525,9 +525,16 @@ int iwl_send_rxon_timing(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 	 */
- 	ctx->timing.atim_window = 0;
+diff --git a/drivers/net/wireless/hostap/hostap_ioctl.c b/drivers/net/wireless/hostap/hostap_ioctl.c
+index 27d462f..25420e3 100644
+--- a/drivers/net/wireless/hostap/hostap_ioctl.c
++++ b/drivers/net/wireless/hostap/hostap_ioctl.c
+@@ -1951,7 +1951,7 @@ static inline int prism2_translate_scan(local_info_t *local,
+ 					char *buffer, int buflen)
+ {
+ 	struct hfa384x_hostscan_result *scan;
+-	int entry, hostscan;
++	int entry;
+ 	char *current_ev = buffer;
+ 	char *end_buf = buffer + buflen;
+ 	struct list_head *ptr;
+@@ -1964,7 +1964,6 @@ static inline int prism2_translate_scan(local_info_t *local,
+ 		bss->included = 0;
+ 	}
  
--	beacon_int = iwl_adjust_beacon_interval(beacon_int,
-+	if (ctx->ctxid == IWL_RXON_CTX_PAN &&
-+	    (!ctx->vif || ctx->vif->type != NL80211_IFTYPE_STATION)) {
-+		ctx->timing.beacon_interval =
-+			priv->contexts[IWL_RXON_CTX_BSS].timing.beacon_interval;
-+		beacon_int = le16_to_cpu(ctx->timing.beacon_interval);
-+	} else {
-+		beacon_int = iwl_adjust_beacon_interval(beacon_int,
- 				priv->hw_params.max_beacon_itrvl * TIME_UNIT);
--	ctx->timing.beacon_interval = cpu_to_le16(beacon_int);
-+		ctx->timing.beacon_interval = cpu_to_le16(beacon_int);
-+	}
- 
- 	tsf = priv->timestamp; /* tsf is modifed by do_div: copy it */
- 	interval_tm = beacon_int * TIME_UNIT;
+-	hostscan = local->last_scan_type == PRISM2_HOSTSCAN;
+ 	for (entry = 0; entry < local->last_scan_results_count; entry++) {
+ 		int found = 0;
+ 		scan = &local->last_scan_results[entry];
 -- 
-1.7.0.4
+1.7.1.rc1.21.gf3bd6
 
