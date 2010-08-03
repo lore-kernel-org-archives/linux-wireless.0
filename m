@@ -1,75 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:57790 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753863Ab0HYP7W (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:39069 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754466Ab0HCUFB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Aug 2010 11:59:22 -0400
-Message-ID: <4C753DD0.9040702@candelatech.com>
-Date: Wed, 25 Aug 2010 08:59:12 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 3 Aug 2010 16:05:01 -0400
+Received: by eya25 with SMTP id 25so1775103eya.19
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Aug 2010 13:05:00 -0700 (PDT)
 MIME-Version: 1.0
-To: Wei Qiang <weiqiang@chinacablecom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: AR7240 VLAN setup
-References: <B94E9F5324F243B5B714A70B147C8CB1@lenovodbc34d11>
-In-Reply-To: <B94E9F5324F243B5B714A70B147C8CB1@lenovodbc34d11>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <4C58316C.2050009@candelatech.com>
+References: <AANLkTik0Ebk6zcTi29pofUvzmVDmRwi4hthj+66k9-V0@mail.gmail.com>
+	<4C57A16A.90501@candelatech.com>
+	<AANLkTi=vrwrqJwB+OH_d6kUWhqNN6LkzeUpuAktd=87H@mail.gmail.com>
+	<AANLkTim5ApsX4VwqR1+Fw1E-+iey8G5HMKgAXbXh+6zu@mail.gmail.com>
+	<4C58316C.2050009@candelatech.com>
+Date: Wed, 4 Aug 2010 06:05:00 +1000
+Message-ID: <AANLkTikqGUToB6-ULz4Ng0xDiYJoaLBtvkMkLUs5vG5z@mail.gmail.com>
+Subject: Re: virtual access point setup
+From: Ryszard <ryszard99@gmail.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Florian Fainelli <florian@openwrt.org>,
+	Patrick McHardy <kaber@trash.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/25/2010 02:13 AM, Wei Qiang wrote:
-> *Hi, Ben,*
->
-> * *
->
-> * Sorry for bother.*
->
-> * *
->
-> * I have a question about how to setup 802.1Q VLAN on AR7240, and can’t get any answer for days. When I googled “802.1q ar7240”, I noticed that you were the
-> supporter of 802.1q module. It seems that you are the only one who may help me resolve the problem now. Support from Atheros is poor.*
+ah, good tip, thx!
 
-You might try the linux wireless mailing list:
-"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-
-I have only messed with VLANs on wired interfaces.
-
-Thanks,
-Ben
-
+On 4 August 2010 01:10, Ben Greear <greearb@candelatech.com> wrote:
 >
-> * *
+> On 08/02/2010 10:46 PM, Ryszard wrote:
+>>
+>> hey ben,  any idea on which config would be best for an AMD geode proc?
+>> i'm thinking either the c3 or p4 compat configs ..
 >
-> * The problem itself is quite straight forward: *
+> You could start with either, and then change the CPU type as needed.
 >
-> * *
+> You only need the -compat version if you are running on older user-space
+> OS's..so you might try w/out compat first.
 >
-> *1. All packets to ingress LAN port should have a VLAN tag added, or the tag should be removed at egress LAN port.*
+> Thanks,
+> Ben
 >
-> * 2. WAN port will transmit all packets unmodified.*
->
-> * *
->
-> * If you may have an instruction of how to set AR7240 up, or have some related documents to me, that will be great.*
->
-> * *
->
-> * I have tried different combinations of those registers, but none of them works.*
->
-> * *
->
-> * This issue is very important for me, and your help is highly appreciated!*
->
-> * *
->
-> *Thanks and regards,*
->
-> * *
->
-> *Wei*
->
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+> --
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
