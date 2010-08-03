@@ -1,63 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:44704 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752412Ab0HKNTa (ORCPT
+Received: from mailhub-lb2.unibe.ch ([130.92.0.83]:36087 "EHLO
+	mailhub-lb2.unibe.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756696Ab0HCQKd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Aug 2010 09:19:30 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, Ido Yariv <ido@wizery.com>,
-	San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Gao Yunpeng <yunpeng.gao@intel.com>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [RFC/PATCH 1/6] mmc: sdio: fully reconfigure oldcard on resume
-Date: Wed, 11 Aug 2010 16:19:25 +0300
-Message-Id: <1281532770-27545-2-git-send-email-ohad@wizery.com>
-In-Reply-To: <1281532770-27545-1-git-send-email-ohad@wizery.com>
-References: <1281532770-27545-1-git-send-email-ohad@wizery.com>
+	Tue, 3 Aug 2010 12:10:33 -0400
+Received: from localhost (scanhub-lb1.unibe.ch [130.92.5.65])
+	by mailhub-lb2.unibe.ch (Postfix) with ESMTP id 9ABF749802E
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Aug 2010 18:10:31 +0200 (CEST)
+Received: from mailhub-lb2.unibe.ch ([130.92.0.83])
+	by localhost (scanhub-lb1.unibe.ch [130.92.5.65]) (amavisd-new, port 10024)
+	with LMTP id bbxPBZFB6ZKj for <linux-wireless@vger.kernel.org>;
+	Tue,  3 Aug 2010 18:10:29 +0200 (CEST)
+Received: from mail.iam.unibe.ch (asterix.unibe.ch [130.92.64.4])
+	by mailhub-lb2.unibe.ch (Postfix) with ESMTP id 9EE84C4B4D
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Aug 2010 18:10:29 +0200 (CEST)
+Received: from [130.92.64.14] (baghira [130.92.64.14])
+	by mail.iam.unibe.ch (8.13.8+Sun/8.13.8) with ESMTP id o73GATqa020474
+	for <linux-wireless@vger.kernel.org>; Tue, 3 Aug 2010 18:10:29 +0200 (MEST)
+Message-ID: <4C583F71.8070009@iam.unibe.ch>
+Date: Tue, 03 Aug 2010 18:10:25 +0200
+From: Zhongliang Zhao <zhao@iam.unibe.ch>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: iw set channel failed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On resume, let mmc_sdio_init_card go all the way, instead
-of skipping the reconfiguration of the card's speed and width.
+Hi all,
 
-This is needed to ensure cards wake up with their clock
-reconfigured (otherwise it's kept low).
+When using iw to set the channel of mesh nodes working in ad hoc 
+mode(with iw-tool installed), I got error:
 
-This patch also removes the explicit bus width reconfiguration
-on resume, since now this is part of mmc_sdio_init_card.
+# iw --debug dev wlan1 set channel 5
 
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
----
- drivers/mmc/core/sdio.c |    4 ----
- 1 files changed, 0 insertions(+), 4 deletions(-)
+-- Debug: Received Message:
+--------------------------   BEGIN NETLINK MESSAGE 
+---------------------------
+   [HEADER] 16 octets
+     .nlmsg_len = 36
+     .nlmsg_type = 2 <ERROR>
+     .nlmsg_flags = 0 <>
+     .nlmsg_seq = 947833964
+     .nlmsg_pid = 2734
+   [ERRORMSG] 20 octets
+     .error = 0 "Success"
+   [ORIGINAL MESSAGE] 16 octets
+     .nlmsg_len = 16
+     .nlmsg_type = 17 <0x11>
+     .nlmsg_flags = 5 <REQUEST,ACK>
+     .nlmsg_seq = 947833964
+     .nlmsg_pid = 2734
+---------------------------  END NETLINK MESSAGE   
+---------------------------
 
-diff --git a/drivers/mmc/core/sdio.c b/drivers/mmc/core/sdio.c
-index b9dee28..645f173 100644
---- a/drivers/mmc/core/sdio.c
-+++ b/drivers/mmc/core/sdio.c
-@@ -344,7 +344,6 @@ static int mmc_sdio_init_card(struct mmc_host *host, u32 ocr,
- 			goto err;
- 		}
- 		card = oldcard;
--		return 0;
- 	}
- 
- 	/*
-@@ -487,9 +486,6 @@ static int mmc_sdio_resume(struct mmc_host *host)
- 	mmc_claim_host(host);
- 	err = mmc_sdio_init_card(host, host->ocr, host->card,
- 				 (host->pm_flags & MMC_PM_KEEP_POWER));
--	if (!err)
--		/* We may have switched to 1-bit mode during suspend. */
--		err = sdio_enable_wide(host->card);
- 	if (!err && host->sdio_irqs)
- 		mmc_signal_sdio_irq(host);
- 	mmc_release_host(host);
--- 
-1.7.0.4
 
+Does someone know the possible reason?
+
+Many thanks in advance.
+
+p.s. iwconfig could work for this.
+
+zzl
