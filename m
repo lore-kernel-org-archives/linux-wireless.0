@@ -1,65 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:52388 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751090Ab0HUDH1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Aug 2010 23:07:27 -0400
-Received: by ewy23 with SMTP id 23so2601621ewy.19
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Aug 2010 20:07:26 -0700 (PDT)
+Received: from sycorax.lbl.gov ([128.3.11.121]:34834 "EHLO sycorax.lbl.gov"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753533Ab0HCDyl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Aug 2010 23:54:41 -0400
+From: Alex Romosan <romosan@sycorax.lbl.gov>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Guy\, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: iwlwifi connection problems
+References: <87tynqvtu6.fsf@sycorax.lbl.gov>
+	<1279917523.10769.1.camel@wwguy-huron>
+	<1280135867.3693.5.camel@jlt3.sipsolutions.net>
+	<87mxtd5xlq.fsf@sycorax.lbl.gov>
+	<1280212629.19098.0.camel@jlt3.sipsolutions.net>
+	<87bp9l6f4k.fsf@sycorax.lbl.gov>
+	<1280746705.3923.11.camel@jlt3.sipsolutions.net>
+	<878w4pvx5e.fsf@sycorax.lbl.gov>
+	<1280766201.24503.0.camel@jlt3.sipsolutions.net>
+Date: Mon, 02 Aug 2010 20:53:40 -0700
+In-Reply-To: <1280766201.24503.0.camel@jlt3.sipsolutions.net> (message from
+	Johannes Berg on Mon, 02 Aug 2010 18:23:21 +0200)
+Message-ID: <87aap4z70b.fsf@sycorax.lbl.gov>
 MIME-Version: 1.0
-In-Reply-To: <4C618713.9030303@candelatech.com>
-References: <AANLkTi=W=vkgb0gM7ZWsBeE79Fe3iabtKFgu2S7N5uLe@mail.gmail.com>
-	<201008011137.49528.florian@openwrt.org>
-	<AANLkTik=t=jeCG7=bgkq3LBwJP9vq7KmFpgDeHngPoq-@mail.gmail.com>
-	<4C55F377.6040404@candelatech.com>
-	<AANLkTinGqWZ8o9L=ePsbgzWtitWAHCt3=g_z6BM7EpjO@mail.gmail.com>
-	<4C618713.9030303@candelatech.com>
-Date: Sat, 21 Aug 2010 13:07:26 +1000
-Message-ID: <AANLkTikanjZf0LEqZjw5toeJz02Tcs6EcAiNdagJh=sQ@mail.gmail.com>
-Subject: Re: virtual access poitns (ath5k/mac80211)
-From: Ryszard <ryszard99@gmail.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Florian Fainelli <florian@openwrt.org>,
-	Patrick McHardy <kaber@trash.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've managed to compile and get bens kernel installed.  the problem i
-had (for future reference) was the physical media not being
-recognised.  adding rootdelay=130 to the kernel options seemed to have
-fixed that.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-On 11 August 2010 03:06, Ben Greear <greearb@candelatech.com> wrote:
-> On 08/10/2010 09:54 AM, Luis R. Rodriguez wrote:
->>
->> On Sun, Aug 1, 2010 at 3:21 PM, Ben Greear<greearb@candelatech.com>
->>  wrote:
+> On Mon, 2010-08-02 at 08:42 -0700, Alex Romosan wrote:
 >
->>> You would not believe how hard it is to keep up with the wireless tree.
->>>  Last time,
->>> by the time we had something stable, upstream had changed too much to
->>> merge.
->>
->> This is why you should not do your development outside of
->> wireless-testing. If you are doing development on a stable kernel tree
->> then you will likely run into huge issues. You should do development
->> on wireless-testing.git, always rebase when John has a new update, and
->> break your changes out into a small changes as possible. If you follow
->> these basic rules I believe you will likely have better luck with
->> keeping your code up to date.
+>> so i think i finally managed to track this down. doing a git bisect i
+>> get:
+>> 
+>> 3474ad635db371b0d8d0ee40086f15d223d5b6a4 is the first bad commit
+>> commit 3474ad635db371b0d8d0ee40086f15d223d5b6a4
+>> Author: Johannes Berg <johannes.berg@intel.com>
+>> Date:   Thu Apr 29 04:43:05 2010 -0700
+>> 
+>>     iwlwifi: apply filter flags directly
 >
-> That sounds nice, but at that time I was carrying a lot of other patches
-> needed to make my test environment work.  Fortunately, .35 pretty much
-> works out of the box, so I can develop on pristine upstream kernels now.
+>> ...
 >
-> Thanks,
-> Ben
->
-> --
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
->
->
+> Thanks. I'll take a closer look tomorrow, am about to leave for today.
+
+so i looked a little bit more at what happened. the only difference
+between the non working and the working version is a call to
+iwlcore_commit_rxon(priv) on line 1327 of iwl-core.c (the version in
+2.6.35). if i comment that line out then i can connect to the access
+point without problems. hope this helps.
+
+--alex--
+
+-- 
+| I believe the moment is at hand when, by a paranoiac and active |
+|  advance of the mind, it will be possible (simultaneously with  |
+|  automatism and other passive states) to systematize confusion  |
+|  and thus to help to discredit completely the world of reality. |
