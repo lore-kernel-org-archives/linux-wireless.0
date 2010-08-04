@@ -1,85 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:30390 "EHLO mga03.intel.com"
+Received: from purkki.adurom.net ([80.68.90.206]:55180 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751021Ab0HRRqA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Aug 2010 13:46:00 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 2/2] iwlwifi: use long monitor timer to avoid un-necessary reload
-Date: Wed, 18 Aug 2010 10:50:19 -0700
-Message-Id: <1282153819-27781-3-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1282153819-27781-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1282153819-27781-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1754029Ab0HDSeD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Aug 2010 14:34:03 -0400
+To: Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: wl1251 issues
+References: <1280682326.3868.37.camel@gnutoo-laptop>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Wed, 04 Aug 2010 21:33:59 +0300
+In-Reply-To: <1280682326.3868.37.camel@gnutoo-laptop> (Denis Carikli's message of "Sun\, 01 Aug 2010 19\:05\:26 +0200")
+Message-ID: <87y6cmcjmw.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Denis 'GNUtoo' Carikli <GNUtoo@no-log.org> writes:
 
-For 5000 series of devices, use long monitor timer to check
-stuck tx queues.
+> Hi,
 
-5000 series device, it is being reported firmware got reload more
-often than necessary, so extend the timer to avoid un-necessary reload.
+Hi Denis,
 
-Cc: stable@kernel.org [2.6.35]
-Reported-by: Marcel Holtmann <marcel@holtmann.org>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-5000.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+> Here's the issue(this first issue doesn't involve PSM yet):
+> I connect trough wpa to the local access point at the wifi cafee(wrt54
+> somrthing,running an old openwrt with a 2.4 kernel and the proprietary
+> broadcom module)
+>
+> I use dhcp to get an ip
+> The connection last for a while and then I've that:
+> wlan0     IEEE 802.11bg  ESSID:"essid_has_been_hidden_in_that_mail"  
+>           Mode:Managed  Frequency:2.432 GHz  Access Point:
+> 00:23:69:XX:XX:XX  
+>           Bit Rate=1 Mb/s   Tx-Power=20 dBm   
+>           Retry  long limit:7   RTS thr:off   Fragment thr:off
+>           Encryption key:off
+>           Power Management:off
+>           Link Quality=43/70  Signal level=-67 dBm  
+>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>           Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+> That seem connected.
+>
+> root@htcdream ~ # ping 192.168.2.1
+> PING 192.168.2.1 (192.168.2.1): 56 data bytes
+> ^C
+> --- 192.168.2.1 ping statistics ---
+> 22 packets transmitted, 0 packets received, 100% packet loss
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 5f4f6ba..6bacdd5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -522,7 +522,7 @@ struct iwl_cfg iwl5100_abg_cfg = {
- 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
- 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
- 	.chain_noise_scale = 1000,
--	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
-+	.monitor_recover_period = IWL_LONG_MONITORING_PERIOD,
- 	.max_event_log_size = 512,
- 	.ucode_tracing = true,
- 	.sensitivity_calib_by_driver = true,
-@@ -553,7 +553,7 @@ struct iwl_cfg iwl5100_agn_cfg = {
- 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
- 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
- 	.chain_noise_scale = 1000,
--	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
-+	.monitor_recover_period = IWL_LONG_MONITORING_PERIOD,
- 	.max_event_log_size = 512,
- 	.ucode_tracing = true,
- 	.sensitivity_calib_by_driver = true,
-@@ -584,7 +584,7 @@ struct iwl_cfg iwl5350_agn_cfg = {
- 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
- 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
- 	.chain_noise_scale = 1000,
--	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
-+	.monitor_recover_period = IWL_LONG_MONITORING_PERIOD,
- 	.max_event_log_size = 512,
- 	.ucode_tracing = true,
- 	.sensitivity_calib_by_driver = true,
-@@ -615,7 +615,7 @@ struct iwl_cfg iwl5150_agn_cfg = {
- 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
- 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
- 	.chain_noise_scale = 1000,
--	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
-+	.monitor_recover_period = IWL_LONG_MONITORING_PERIOD,
- 	.max_event_log_size = 512,
- 	.ucode_tracing = true,
- 	.sensitivity_calib_by_driver = true,
-@@ -644,7 +644,7 @@ struct iwl_cfg iwl5150_abg_cfg = {
- 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
- 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
- 	.chain_noise_scale = 1000,
--	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
-+	.monitor_recover_period = IWL_LONG_MONITORING_PERIOD,
- 	.max_event_log_size = 512,
- 	.ucode_tracing = true,
- 	.sensitivity_calib_by_driver = true,
+So basically what happens is that you associate but no data is
+transfered? Did you confirm that the dhcp client really gets the ip
+address?
+
+> here's the wpa connection script output:
+> ot@htcdream ~ # sh wpa.sh
+> CTRL-EVENT-SCAN-RESULTS 
+> Trying to associate with 00:23:69:xx:xx:xx
+> (SSID='essid_has_been_hidden_in_that_mail' freq=2432 MHz)
+> Associated with 00:23:69:xx:xx:xx
+> WPA: Key negotiation completed with 00:23:69:xx:xx:xx [PTK=CCMP
+> GTK=CCMP]
+> CTRL-EVENT-CONNECTED - Connection to 00:23:69:xx:xx:xx completed (auth)
+> [id=0 id_str=]
+>
+> the essid and mac address have been changed.
+>
+> a while true;do dmesg -c;done gave a still flowing flow of messages:
+> here's a part of it:
+
+I didn't immeadiately notice anything wrong from the logs. I would
+like to know if the problem is related to power save mode or
+encryption. Can you first test without encryption, ie. connect to an
+open network and see if you still see the problem. If you still see
+the problem, disable power save and connect to the same open AP again.
+
 -- 
-1.7.0.4
-
+Kalle Valo
