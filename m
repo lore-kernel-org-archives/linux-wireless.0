@@ -1,46 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:56938 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752868Ab0HPXvp (ORCPT
+Received: from gerolde.archlinux.org ([66.211.214.132]:56214 "EHLO
+	archlinux.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757105Ab0HDO2b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Aug 2010 19:51:45 -0400
-Received: by gxk23 with SMTP id 23so2135642gxk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Aug 2010 16:51:44 -0700 (PDT)
-Message-ID: <4C69CEFE.2070209@lwfinger.net>
-Date: Mon, 16 Aug 2010 18:51:26 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 4 Aug 2010 10:28:31 -0400
+Message-ID: <4C59790C.4010809@archlinux.org>
+Date: Wed, 04 Aug 2010 16:28:28 +0200
+From: =?ISO-8859-15?Q?Thomas_B=E4chler?= <thomas@archlinux.org>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 2/2] p54: improve eeprom parser
-References: <201008170116.58759.chunkeey@googlemail.com>
-In-Reply-To: <201008170116.58759.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: WARNING at net/wireless/reg.c when wireless network is disconnected
+References: <4C5950B7.4000802@archlinux.org> <20100804134908.GB17666@tuxdriver.com>
+In-Reply-To: <20100804134908.GB17666@tuxdriver.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="------------enig210063A1CEA420DB1A047490"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/16/2010 06:16 PM, Christian Lamparter wrote:
-> Like other vendors, p54* devices have a checksum for
-> the EEPROM descriptor data. This patch enhances the
-> parser code to generate and verify the data fields,
-> before initializing the radio-chip on the card.
-> 
-> Note:
-> 	If you have to bootstrap an alternative EEPROM image
-> 	for your device and you don't know how to generate a
-> 	valid crc ccitt checksum, you should take a look at:
-> 	http://git.kernel.org/?p=linux/kernel/git/chr/p54tools.git
-> 
-> 	The "checksum" utility loads a binary p54 EEPROM blob
-> 	(use the -f switch, to skip the check) and applies
-> 	the correct crc automatically.
-> 
-> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig210063A1CEA420DB1A047490
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: quoted-printable
 
-ACK for p54usb.
+Am 04.08.2010 15:49, schrieb John W. Linville:
+> On Wed, Aug 04, 2010 at 01:36:23PM +0200, Thomas B=E4chler wrote:
+>> Hello,
+>>
+>> this warning has been around ever since I switched to 2.6.34, has
+>> accompanied me through the 2.6.35-rc* phase and is still there with
+>> 2.6.35. I didn't bother to report it so far, as there seems to be no h=
+arm.
+>>
+>> Whenever I disconnect/get disconnected from the wireless, I receive th=
+e
+>> below warning:
+>>
+>> ------------[ cut here ]------------
+>> WARNING: at net/wireless/reg.c:272
+>> regulatory_hint_disconnect+0x1b3/0x230 [cfg80211]()
+>> Hardware name: TECRA A11
+>> Unexpected user alpha2: de
+>=20
+> Perhaps you need to set the regdomain as "DE" rather than "de"?
+>=20
+> John
 
-Larry
+You are actually right. I did set it to "DE" with iw, but wpa_supplicant
+had a setting country=3D"de". I just fixed that and will soon see if the
+problem disappears.
+
+Still, the warning shouldn't look like a bad kernel bug, but rather an
+advisory to the user to set something sane. What confuses me even more
+is that this has been set to DE afterwards:
+
+$ dmesg | grep cfg80211:\ Calling\ CRDA
+cfg80211: Calling CRDA to update world regulatory domain
+cfg80211: Calling CRDA for country: de
+cfg80211: Calling CRDA for country: DE
+cfg80211: Calling CRDA to update world regulatory domain
+cfg80211: Calling CRDA for country: DE
+cfg80211: Calling CRDA to update world regulatory domain
+cfg80211: Calling CRDA for country: DE
+cfg80211: Calling CRDA to update world regulatory domain
+cfg80211: Calling CRDA for country: DE
+cfg80211: Calling CRDA to update world regulatory domain
+cfg80211: Calling CRDA for country: DE
+cfg80211: Calling CRDA to update world regulatory domain
+cfg80211: Calling CRDA for country: DE
+
+The AP has been playing with the regdom as well, I lost track of what
+has been set where in this mess.
 
 
+--------------enig210063A1CEA420DB1A047490
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iEYEAREIAAYFAkxZeQwACgkQEda5KzHP/VBFVwCfUxrcxooArhF7+NjsD5rztYmV
+yjsAnAt0SWlyX5apmvrAaDgTfr8m1msY
+=LbFW
+-----END PGP SIGNATURE-----
+
+--------------enig210063A1CEA420DB1A047490--
