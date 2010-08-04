@@ -1,117 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:44644 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755523Ab0HBVgR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Aug 2010 17:36:17 -0400
-MIME-Version: 1.0
-In-Reply-To: <AANLkTikfRja-h9mz7uyRXCZNZjKdU_yB8e58XQucUzrn@mail.gmail.com>
-References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
-	<1279733634-21974-4-git-send-email-ohad@wizery.com> <AANLkTimzA_JJ-byTDWznbL3YzeJ8LAP4M50onf2_3fBF@mail.gmail.com>
-	<AANLkTi=Oy8X1xMOwWL_cKBB1LWULT6=p+adUgB+AuSJS@mail.gmail.com>
-	<AANLkTi=BUX59heXAW2Uf4wZo2dSS19Je54dkQ5u2YGAW@mail.gmail.com>
-	<AANLkTimZQKj7H_GeE=+O9cwxEMTR+LhfFbt=AyXGzN3d@mail.gmail.com>
-	<AANLkTikfRja-h9mz7uyRXCZNZjKdU_yB8e58XQucUzrn@mail.gmail.com>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Tue, 3 Aug 2010 00:35:56 +0300
-Message-ID: <AANLkTi=vhWV1RNyemtfppfjvLYAbzd3aRjFOVgLLpG3Z@mail.gmail.com>
-Subject: Re: [PATCH v2 03/20] mmc: support embedded data field in mmc_host
-To: Vitaly Wool <vitalywool@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-omap@vger.kernel.org, Kalle Valo <kalle.valo@iki.fi>,
-	Pandita Vikram <vikram.pandita@ti.com>, linux@arm.linux.org.uk,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Tony Lindgren <tony@atomide.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	San Mehat <san@google.com>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	akpm@linux-foundation.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:57128 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755795Ab0HDQlI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Aug 2010 12:41:08 -0400
+Subject: Re: [BUG] after starting wimaxd at boot iwlagn module will crash
+ for  intel 6250 card
+From: Inaky Perez-Gonzalez <inaky@linux.intel.com>
+To: Alexey Shvetsov <alexxy@gentoo.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"wimax@linuxwimax.org" <wimax@linuxwimax.org>
+In-Reply-To: <AANLkTimDoQmuJcsuXVPEWDSS-odw5Zt=kqdUiheuPEjH@mail.gmail.com>
+References: <201007280028.48674.alexxy@gentoo.org>
+	 <1280270313.26204.288.camel@localhost.localdomain>
+	 <201007282154.06383.alexxy@gentoo.org>
+	 <1280340597.26204.300.camel@localhost.localdomain>
+	 <1280341422.26204.307.camel@localhost.localdomain>
+	 <1280351645.2700.8.camel@dcbw.foobar.com>
+	 <1280348503.26204.357.camel@localhost.localdomain>
+	 <AANLkTimDoQmuJcsuXVPEWDSS-odw5Zt=kqdUiheuPEjH@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 04 Aug 2010 09:36:23 -0700
+Message-ID: <1280939783.19261.4.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Vitaly,
+On Fri, 2010-07-30 at 18:48 +0400, Alexey Shvetsov wrote: 
+> Update with debug info on this bug
+> Log attached
 
-On Mon, Aug 2, 2010 at 7:25 PM, Vitaly Wool <vitalywool@gmail.com> wrote:
-> On Mon, Aug 2, 2010 at 5:54 PM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
->> SPI is using these spi_board_info tables to populate the SPI device
->> trees. These tables are registered early at the board-specific init
->> code, and are later used by SPI core to populate the devices when the
->> SPI master controller is registered.
->>
->> SDIO doesn't normally needs any kind of hard coded data: most devices
->> are dynamically probed and populated.
->>
->> On rare cases like the wl1271, we have some platform-specific data we
->> need to deliver the SDIO function driver (i.e. the irq info in this
->> case). Since the device is hardwired to a specific controller, it does
->> make some sense to pass this private data from the controller's info
->> in the board files, through the host driver, and make it accessible
->> through the specific host instance that drives this controller.
->>
->> Btw, if our problem was be broader (e.g., needs to supply private data
->> for non-hardwired devices), then I agree that a more complex
->> mechanism, such as the one you suggest, would be needed. But currently
->> the problem is very simple and the solution is even simpler: just add
->> 1 private pointer to the host.
->>
->> Hope you find this reasonable,
->
-> no, actually I don't. I think this is a hack that intrudes into the
-> area it completely doesn't belong to.
->
-> In fact, one can have 2 views on this problem: either this is a fairly
-> generic problem we need to address, or this is a very specific corner
-> case.
-> Your solution will be treated as a hack in both cases.
->
-> If we consider it a generic problem, then we need to find a generic
-> solution, which is the board_info solution, for instance. FWIW, I2C
-> also uses this approach now.
->
-> If we consider it to be a corner case, let's just add a dummy
-> platform_device like it's done in WL1251 implementation and keep the
-> MMC subsystem clean.
+This is now being tracked in bug #13.
 
-Let's start by defining the problem exactly:
+Thank you!
 
-SDIO devices that are hardwired to a specific controller and have some
-platform data that needs to be available to the SDIO function driver.
 
-It doesn't get more generic than that - it's not needed with common
-fully-enumerable SDIO devices (at least I'm not aware of such need),
-hence a generic mechanism of maintaining a global pile of platform
-data pointers, which can be queried with the device and vendor ID,
-really sounds like an overkill.
-
-But it's not specific to the wl1271 device - I prefer to support this
-at the MMC level, so we wouldn't have to add an extra platform device
-for every SDIO function driver that needs to cope with such issue (we
-already have two drivers - wl1271_sdio.c and wl1251_sdio.c); Adding an
-extra platform device for every driver is just too much dummy code
-(that btw adds a well-hidden race condition between the two probe
-calls), which can be nicely eliminated if we just introduce this new
-per-host private data pointer.
-
-So we have a SDIO device hardwired to a specific controller, that is
-driven by a specific host controller driver instance. This patch
-allows this specific host instance to carry platform data for the
-device that is hardwired to it. The platform data would be available
-only to SDIO function driver instances of that specific host
-controller. The solution is generic enough to support all SDIO
-function drivers with similar needs, and it's extremely simple.
-
-I'm honestly trying to understand your concerns, but I'm afraid that
-just saying "it's a hack" is not too informative. Can you please
-explain what do you think is technically wrong with the proposed
-solution ? is it not general enough for other use cases ? will it
-break something ?
-
-Thanks,
-Ohad.
-
->
-> Thanks,
->   Vitaly
->
