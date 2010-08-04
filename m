@@ -1,65 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:49725 "EHLO mail.atheros.com"
+Received: from mx1.redhat.com ([209.132.183.28]:11444 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751102Ab0HBUmQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Aug 2010 16:42:16 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 02 Aug 2010 13:42:16 -0700
-Date: Mon, 2 Aug 2010 13:42:11 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Joe Perches <joe@perches.com>
-CC: Kshitij Kulshreshtha <kkhere.geo@gmail.com>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 3/3] compat: define struct va_format introduced in
- v2.6.36
-Message-ID: <20100802204211.GE8920@tux>
-References: <4C55D22A.5040302@hauke-m.de>
- <1280700173-14690-4-git-send-email-kkhere.geo@gmail.com>
- <AANLkTinfrBRm8J2G+k8bB6N-YniVkmUYOBkRpyF_tC2j@mail.gmail.com>
- <4C571F0B.3000200@gmail.com>
- <1280778534.1752.68.camel@Joe-Laptop.home>
- <4C57227A.1050802@gmail.com>
- <1280779727.1752.71.camel@Joe-Laptop.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1280779727.1752.71.camel@Joe-Laptop.home>
+	id S933120Ab0HDTOT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Aug 2010 15:14:19 -0400
+Subject: Re: [wt PATCH 0/5] libertas: make association work again
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1280907989.3768.0.camel@jlt3.sipsolutions.net>
+References: <1280470034.14523.4.camel@dcbw.foobar.com>
+	 <1280471706.3710.5.camel@jlt3.sipsolutions.net>
+	 <1280900467.2665.6.camel@dcbw.foobar.com>
+	 <1280907989.3768.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 04 Aug 2010 14:15:46 -0500
+Message-ID: <1280949346.11056.1.camel@dcbw.foobar.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 02, 2010 at 01:08:47PM -0700, Joe Perches wrote:
-> On Mon, 2010-08-02 at 21:54 +0200, Kshitij Kulshreshtha wrote:
-> > As on 2010-08-02 21:48, Joe Perches did write:
-> > > On Mon, 2010-08-02 at 21:39 +0200, Kshitij Kulshreshtha wrote:
-> > >> As on 2010-08-02 20:00, Luis R. Rodriguez did write:
-> > >>> On Sun, Aug 1, 2010 at 3:02 PM, Kshitij Kulshreshtha
-> > >>>> +struct va_format {
-> > >>>> +       const char *fmt;
-> > >>>> +       va_list *va;
-> > >>>> +};
-> > >>> I'll apply this for now but what caller uses this for example?
-> > > Why is this necessary?
-> > I needed this to compile compat-wireless which is based on linux-next.
-> > Otherwise net/wireless/core.c fails to compile, due to the use of this
-> > struct va_format in the functions defined in lines 910--958. If this
-> > usage is reverted, we won't need it in compat.
+On Wed, 2010-08-04 at 09:46 +0200, Johannes Berg wrote:
+> On Wed, 2010-08-04 at 00:41 -0500, Dan Williams wrote:
+> > On Fri, 2010-07-30 at 08:35 +0200, Johannes Berg wrote:
+> > > On Thu, 2010-07-29 at 23:07 -0700, Dan Williams wrote:
+> > > > This series makes libertas actually associate with APs after the
+> > > > cfg80211 conversion.  There was a pretty big TODO where if cfg80211
+> > > > didn't pass in the BSSID of the AP to associate with, then libertas
+> > > > would fail because the firmware really, really, really wants a BSSID.
+> > > > So lets do a scan to find that BSSID.  The other notable change is
+> > > > a fix to make sure all supported rates are included in the firmware's
+> > > > association request, lack of which caused some APs to deny the attempt.
+> > > 
+> > > I'm a bit tempted to say we could use the connect logic in cfg80211 to
+> > > provide this? cfg80211 _already_ provides this if the hardware wants
+> > > auth()/assoc() rather than connect() calls, so it seems fairly simple to
+> > > also (optionally) do it here?
+> > 
+> > Yeah, I thought about that too.  Do you want me to work on that now
+> > instead of letting this patch through?  I can revert the relevant bits
+> > of this later if that's acceptable too.
 > 
-> I see your problem.
-> 
-> I think your problem should not be a constraint
-> on new development and I do not think the new use
-> should be reverted.
+> Either way works for me since I don't care about any cruft in
+> libertas ;)
 
-Joe, compat.git does not go upstream into the kernel, compat.git
-tries to backport as much new kernel stuff for usage on older kernels.
-compat-wireless uses compat.git to help with backporting the 802.11/BT/ethernet
-subsystems to older kernels.
+John, if you don't mind applying this patch I'll work on generic
+scan-before-connect support in cfg80211 in a further patch series.
 
-In this case the patch Kshitij sent for compat.git is OK since the struct is
-used in code only by cfg80211 which we end up updating using compat-wireless.
+Dan
 
-Thanks for the clarifications Kshitij.
 
-  Luis
