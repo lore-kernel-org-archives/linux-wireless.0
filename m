@@ -1,43 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:27909 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752851Ab0H0LIM (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42146 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752312Ab0HDPLg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 07:08:12 -0400
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes.berg@intel.com
-Subject: [PATCH 0/4] mac80211: cfg80211: support for hw-only crypts and custom control port protocols
-Date: Fri, 27 Aug 2010 14:07:35 +0300
-Message-Id: <1282907259-30825-1-git-send-email-juuso.oikarinen@nokia.com>
+	Wed, 4 Aug 2010 11:11:36 -0400
+Subject: Re: iwlwifi connection problems
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alex Romosan <romosan@sycorax.lbl.gov>
+Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <8739uu8lg2.fsf@sycorax.lbl.gov>
+References: <87tynqvtu6.fsf@sycorax.lbl.gov>
+	 <1279917523.10769.1.camel@wwguy-huron>
+	 <1280135867.3693.5.camel@jlt3.sipsolutions.net>
+	 <87mxtd5xlq.fsf@sycorax.lbl.gov>
+	 <1280212629.19098.0.camel@jlt3.sipsolutions.net>
+	 <87bp9l6f4k.fsf@sycorax.lbl.gov>
+	 <1280746705.3923.11.camel@jlt3.sipsolutions.net>
+	 <878w4pvx5e.fsf@sycorax.lbl.gov>
+	 <1280766201.24503.0.camel@jlt3.sipsolutions.net>
+	 <87aap4z70b.fsf@sycorax.lbl.gov>
+	 <1280817596.3874.0.camel@jlt3.sipsolutions.net>
+	 <87mxt3n9xh.fsf@sycorax.lbl.gov>
+	 <1280908365.3768.4.camel@jlt3.sipsolutions.net>
+	 <87aap28m8v.fsf@sycorax.lbl.gov>
+	 <1280934185.3768.8.camel@jlt3.sipsolutions.net>
+	 <8739uu8lg2.fsf@sycorax.lbl.gov>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 04 Aug 2010 17:11:29 +0200
+Message-ID: <1280934689.17718.3.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches enable usage of hw-only cipher-suites, and enable using
-control port ethertypes other than ETH_P_PAE for key-negotiation.
+On Wed, 2010-08-04 at 08:08 -0700, Alex Romosan wrote:
 
-These patches are originally written by Johannes Berg, finalized and tested by
-myself.
+> > Thanks. The down/up is fine, I'll be able to identify that in the
+> > traces. Except the "working" trace looks like it only starts after you
+> > connected already?
+> 
+> the driver connects automatically on boot, so, yes, it was after i was
+> connected. i can bring down the interface and try again if you want.
 
-Johannes Berg (4):
-  cfg80211: allow vendor specific cipher suites
-  mac80211: allow vendor specific cipher suites
-  cfg80211: allow changing port control protocol
-  mac80211: allow changing port control protocol
+Yes, please do that.
 
- include/linux/nl80211.h    |   16 ++++++++++++++-
- include/net/cfg80211.h     |   24 +++++++++++++++------
- net/mac80211/cfg.c         |    5 ++-
- net/mac80211/ieee80211_i.h |    4 +++
- net/mac80211/iface.c       |    2 +
- net/mac80211/key.c         |   38 ++++++++++++++++++++++++++++-------
- net/mac80211/key.h         |    6 ++--
- net/mac80211/main.c        |   47 ++++++++++++++++++++++++++++++++++++++-----
- net/mac80211/mlme.c        |    3 ++
- net/mac80211/rx.c          |    8 ++++++-
- net/mac80211/tx.c          |   32 +++++++++++++++++++++++++----
- net/wireless/nl80211.c     |   25 ++++++++++++++++++++--
- net/wireless/util.c        |    9 +++++++-
- net/wireless/wext-sme.c    |    2 +
- 14 files changed, 184 insertions(+), 37 deletions(-)
+johannes
 
