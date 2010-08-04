@@ -1,62 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:42818 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752143Ab0HXRWu (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50347 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751742Ab0HDPXM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Aug 2010 13:22:50 -0400
-Received: by bwz11 with SMTP id 11so4952089bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Aug 2010 10:22:48 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: fix rcu-unsafe pointer dereference
-Date: Tue, 24 Aug 2010 19:22:42 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201008241922.42514.chunkeey@googlemail.com>
+	Wed, 4 Aug 2010 11:23:12 -0400
+Subject: Re: iwlwifi connection problems
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Alex Romosan <romosan@sycorax.lbl.gov>
+Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <8762zq76p3.fsf@sycorax.lbl.gov>
+References: <87tynqvtu6.fsf@sycorax.lbl.gov>
+	 <1279917523.10769.1.camel@wwguy-huron>
+	 <1280135867.3693.5.camel@jlt3.sipsolutions.net>
+	 <87mxtd5xlq.fsf@sycorax.lbl.gov>
+	 <1280212629.19098.0.camel@jlt3.sipsolutions.net>
+	 <87bp9l6f4k.fsf@sycorax.lbl.gov>
+	 <1280746705.3923.11.camel@jlt3.sipsolutions.net>
+	 <878w4pvx5e.fsf@sycorax.lbl.gov>
+	 <1280766201.24503.0.camel@jlt3.sipsolutions.net>
+	 <87aap4z70b.fsf@sycorax.lbl.gov>
+	 <1280817596.3874.0.camel@jlt3.sipsolutions.net>
+	 <87mxt3n9xh.fsf@sycorax.lbl.gov>
+	 <1280908365.3768.4.camel@jlt3.sipsolutions.net>
+	 <87aap28m8v.fsf@sycorax.lbl.gov>
+	 <1280934185.3768.8.camel@jlt3.sipsolutions.net>
+	 <8739uu8lg2.fsf@sycorax.lbl.gov>
+	 <1280934689.17718.3.camel@jlt3.sipsolutions.net>
+	 <8762zq76p3.fsf@sycorax.lbl.gov>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 04 Aug 2010 17:23:02 +0200
+Message-ID: <1280935382.17718.4.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a potential crash (null-pointer de-
-reference) which was introduced in my previous patch:
- "mac80211: AMPDU rx reorder timeout timer"
+On Wed, 2010-08-04 at 08:12 -0700, Alex Romosan wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+> 
+> > On Wed, 2010-08-04 at 08:08 -0700, Alex Romosan wrote:
+> >
+> >> > Thanks. The down/up is fine, I'll be able to identify that in the
+> >> > traces. Except the "working" trace looks like it only starts after you
+> >> > connected already?
+> >> 
+> >> the driver connects automatically on boot, so, yes, it was after i was
+> >> connected. i can bring down the interface and try again if you want.
+> >
+> > Yes, please do that.
+> 
+> http://caliban.lbl.gov/iwlwifi/trace.dat-working.before.ifup.gz
 
-During a BA teardown, the pointer to the soon-to-be-gone
-tid_ampdu_rx element will be nullified. Therefore the
-release timer mechanism has to be careful not to
-accidentally access the item without any RCU protection.
+Thank you. I need to adjust my analysis tools because you're using 3945,
+not sure if I can finish that today.
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 06ef5c1..0c19702 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2482,6 +2482,11 @@ void ieee80211_release_reorder_timeout(struct sta_info *sta, int tid)
- {
- 	struct sk_buff_head frames;
- 	struct ieee80211_rx_data rx = { };
-+	struct tid_ampdu_rx *tid_agg_rx;
-+
-+	tid_agg_rx = rcu_dereference(sta->ampdu_mlme.tid_rx[tid]);
-+	if (!tid_agg_rx)
-+		return;
- 
- 	__skb_queue_head_init(&frames);
- 
-@@ -2496,10 +2501,9 @@ void ieee80211_release_reorder_timeout(struct sta_info *sta, int tid)
- 		     test_bit(SCAN_OFF_CHANNEL, &sta->local->scanning)))
- 		rx.flags |= IEEE80211_RX_IN_SCAN;
- 
--	spin_lock(&sta->ampdu_mlme.tid_rx[tid]->reorder_lock);
--	ieee80211_sta_reorder_release(&sta->local->hw,
--		sta->ampdu_mlme.tid_rx[tid], &frames);
--	spin_unlock(&sta->ampdu_mlme.tid_rx[tid]->reorder_lock);
-+	spin_lock(&tid_agg_rx->reorder_lock);
-+	ieee80211_sta_reorder_release(&sta->local->hw, tid_agg_rx, &frames);
-+	spin_unlock(&tid_agg_rx->reorder_lock);
- 
- 	ieee80211_rx_handlers(&rx, &frames);
- }
+johannes
+
