@@ -1,47 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from slow3-v.mail.gandi.net ([217.70.178.89]:35514 "EHLO
-	slow3-v.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754326Ab0HWWPf (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47466 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758637Ab0HDTom (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Aug 2010 18:15:35 -0400
-Subject: Re: [PATCH 0/2] iw: add GeoClue support
-From: Bastien Nocera <hadess@hadess.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Kevin Hayes <kevin@Atheros.com>,
-	David Quan <David.Quan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"geoclue@lists.freedesktop.org" <geoclue@lists.freedesktop.org>
-In-Reply-To: <20100823221119.GC2206@tux>
-References: <1282350556-16523-1-git-send-email-lrodriguez@atheros.com>
-	 <1282572681.3813.3.camel@jlt3.sipsolutions.net>
-	 <AANLkTimrtWQKycuAcZ3SjDaOqJ6Z-pPNauRfh+2aZ=ge@mail.gmail.com>
-	 <1282579507.3405.130.camel@localhost.localdomain>
-	 <20100823174620.GA12375@tux>
-	 <1282597556.3405.135.camel@localhost.localdomain>
-	 <20100823221119.GC2206@tux>
-Content-Type: text/plain; charset="ISO-8859-1"
-Date: Mon, 23 Aug 2010 23:15:07 +0100
-Message-ID: <1282601707.3405.140.camel@localhost.localdomain>
-Mime-Version: 1.0
+	Wed, 4 Aug 2010 15:44:42 -0400
+Date: Wed, 4 Aug 2010 15:34:42 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [wt PATCH 0/5] libertas: make association work again
+Message-ID: <20100804193442.GR17666@tuxdriver.com>
+References: <1280470034.14523.4.camel@dcbw.foobar.com>
+ <1280471706.3710.5.camel@jlt3.sipsolutions.net>
+ <1280900467.2665.6.camel@dcbw.foobar.com>
+ <1280907989.3768.0.camel@jlt3.sipsolutions.net>
+ <1280949346.11056.1.camel@dcbw.foobar.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1280949346.11056.1.camel@dcbw.foobar.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-08-23 at 15:11 -0700, Luis R. Rodriguez wrote:
-> On Mon, Aug 23, 2010 at 02:05:56PM -0700, Bastien Nocera wrote:
-<snip>
-> > No, I'm talking about what's exported by the providers. I don't really
-> > care if they talk to other parts of the system using D-Bus though. I'm
-> > talking about link 2) here.
+On Wed, Aug 04, 2010 at 02:15:46PM -0500, Dan Williams wrote:
+> On Wed, 2010-08-04 at 09:46 +0200, Johannes Berg wrote:
+> > On Wed, 2010-08-04 at 00:41 -0500, Dan Williams wrote:
+> > > On Fri, 2010-07-30 at 08:35 +0200, Johannes Berg wrote:
+> > > > On Thu, 2010-07-29 at 23:07 -0700, Dan Williams wrote:
+> > > > > This series makes libertas actually associate with APs after the
+> > > > > cfg80211 conversion.  There was a pretty big TODO where if cfg80211
+> > > > > didn't pass in the BSSID of the AP to associate with, then libertas
+> > > > > would fail because the firmware really, really, really wants a BSSID.
+> > > > > So lets do a scan to find that BSSID.  The other notable change is
+> > > > > a fix to make sure all supported rates are included in the firmware's
+> > > > > association request, lack of which caused some APs to deny the attempt.
+> > > > 
+> > > > I'm a bit tempted to say we could use the connect logic in cfg80211 to
+> > > > provide this? cfg80211 _already_ provides this if the hardware wants
+> > > > auth()/assoc() rather than connect() calls, so it seems fairly simple to
+> > > > also (optionally) do it here?
+> > > 
+> > > Yeah, I thought about that too.  Do you want me to work on that now
+> > > instead of letting this patch through?  I can revert the relevant bits
+> > > of this later if that's acceptable too.
 > > 
-> > [App] <-1-> [Geoclue master] <-2-> [Gypsy provider] <-3-> [Gypsy daemon]
+> > Either way works for me since I don't care about any cruft in
+> > libertas ;)
 > 
-> Sorry I do not follow yet. Is the idea that you would prefer if
-> client applications would never talk to providers directly and instead
-> always used the master provider?
+> John, if you don't mind applying this patch I'll work on generic
+> scan-before-connect support in cfg80211 in a further patch series.
 
-Exactly, and it's mentioned in the bugzilla, and was discussed on the
-mailing-list as well.
+OK...which of these need to be in 2.6.36?
 
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
