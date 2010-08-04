@@ -1,49 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:42371 "EHLO mail.atheros.com"
+Received: from sycorax.lbl.gov ([128.3.11.121]:56803 "EHLO sycorax.lbl.gov"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751101Ab0HLIxe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Aug 2010 04:53:34 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Aug 2010 01:53:34 -0700
-From: Vivek Natarajan <vnatarajan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <stable@kernel.org>
-Subject: [PATCH v2] ath9k_htc: Fix disconnect issue in HT40 mode.
-Date: Thu, 12 Aug 2010 14:23:28 +0530
-Message-ID: <1281603208-6633-1-git-send-email-vnatarajan@atheros.com>
+	id S1757917Ab0HDPIe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Aug 2010 11:08:34 -0400
+From: Alex Romosan <romosan@sycorax.lbl.gov>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Guy\, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: iwlwifi connection problems
+References: <87tynqvtu6.fsf@sycorax.lbl.gov>
+	<1279917523.10769.1.camel@wwguy-huron>
+	<1280135867.3693.5.camel@jlt3.sipsolutions.net>
+	<87mxtd5xlq.fsf@sycorax.lbl.gov>
+	<1280212629.19098.0.camel@jlt3.sipsolutions.net>
+	<87bp9l6f4k.fsf@sycorax.lbl.gov>
+	<1280746705.3923.11.camel@jlt3.sipsolutions.net>
+	<878w4pvx5e.fsf@sycorax.lbl.gov>
+	<1280766201.24503.0.camel@jlt3.sipsolutions.net>
+	<87aap4z70b.fsf@sycorax.lbl.gov>
+	<1280817596.3874.0.camel@jlt3.sipsolutions.net>
+	<87mxt3n9xh.fsf@sycorax.lbl.gov>
+	<1280908365.3768.4.camel@jlt3.sipsolutions.net>
+	<87aap28m8v.fsf@sycorax.lbl.gov>
+	<1280934185.3768.8.camel@jlt3.sipsolutions.net>
+Date: Wed, 04 Aug 2010 08:08:29 -0700
+In-Reply-To: <1280934185.3768.8.camel@jlt3.sipsolutions.net> (message from
+	Johannes Berg on Wed, 04 Aug 2010 17:03:05 +0200)
+Message-ID: <8739uu8lg2.fsf@sycorax.lbl.gov>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some APs advertise that they may be HT40 capable in the capabilites
-but the current operating channel configuration may be only HT20.
-This causes disconnection as ath9k_htc sets WLAN_RC_40_FLAG despite
-the AP operating in HT20 mode.
-Hence set this flag only if the current channel configuration
-is HT40 enabled.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Cc: stable@kernel.org
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+> On Wed, 2010-08-04 at 07:51 -0700, Alex Romosan wrote:
+>> Johannes Berg <johannes@sipsolutions.net> writes:
+>> 
+>> > Could you rebuild your kernel with CONFIG_MAC80211_DRIVER_API_TRACER
+>> > and CONFIG_IWLWIFI_DEVICE_TRACING, get trace-cmd from
+>> > git://git.kernel.org/pub/scm/linux/kernel/git/rostedt/trace-cmd.git
+>> > and record traces for me? I'd like to have
+>> > 	trace-cmd record -e iwlwifi -e mac80211
+>> > for both the working and non-working case, preferably the same kernel
+>> > with that single line of code changed. Please compress the output.
+>> 
+>> you can get both traces from
+>> 
+>>   http://caliban.lbl.gov/iwlwifi/
+>> 
+>> for the not-working case i also tried to bring down the interface and
+>> then bring it up again while recording the trace (don't know if it
+>> matters).
+>
+> Thanks. The down/up is fine, I'll be able to identify that in the
+> traces. Except the "working" trace looks like it only starts after you
+> connected already?
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index ebed9d1..7d09b4b 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -366,7 +366,8 @@ static void ath9k_htc_setup_rate(struct ath9k_htc_priv *priv,
- 		caps = WLAN_RC_HT_FLAG;
- 		if (sta->ht_cap.mcs.rx_mask[1])
- 			caps |= WLAN_RC_DS_FLAG;
--		if (sta->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40)
-+		if ((sta->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) &&
-+		     (conf_is_ht40(&priv->hw->conf)))
- 			caps |= WLAN_RC_40_FLAG;
- 		if (conf_is_ht40(&priv->hw->conf) &&
- 		    (sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_40))
+the driver connects automatically on boot, so, yes, it was after i was
+connected. i can bring down the interface and try again if you want.
+
+--alex--
+
 -- 
-1.7.2.1
-
+| I believe the moment is at hand when, by a paranoiac and active |
+|  advance of the mind, it will be possible (simultaneously with  |
+|  automatism and other passive states) to systematize confusion  |
+|  and thus to help to discredit completely the world of reality. |
