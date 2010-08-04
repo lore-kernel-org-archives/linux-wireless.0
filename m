@@ -1,92 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:32879 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755979Ab0HPTNt (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:54498 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S933249Ab0HDTDj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Aug 2010 15:13:49 -0400
-Subject: Re: nl80211 scanning from userspace
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christopher Piggott <cpiggott@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTi=ZGn0Rt7zYxBJB0jJ-EY=gPpxtBN2bA9svkq99@mail.gmail.com>
-References: <AANLkTi=ZGn0Rt7zYxBJB0jJ-EY=gPpxtBN2bA9svkq99@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 16 Aug 2010 21:13:45 +0200
-Message-ID: <1281986025.3683.31.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 4 Aug 2010 15:03:39 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 4B7C141959
+	for <linux-wireless@vger.kernel.org>; Wed,  4 Aug 2010 15:02:30 -0400 (EDT)
+Subject: Compat-wireless release for 2010-08-04 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100804190337.6AAC2408F7@repository3.orbit-lab.org>
+Date: Wed,  4 Aug 2010 15:03:37 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-08-16 at 15:06 -0400, Christopher Piggott wrote:
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   b3703a3..4b6128d  master     -> origin/master
+   c7ecb8a..55764c1  wl         -> origin/wl
+ * [new tag]         compat-wireless-2010-08-03 -> compat-wireless-2010-08-03
+ * [new tag]         compat-wireless-master-2010-08-03 -> compat-wireless-master-2010-08-03
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   e67e41a..d9285f7  history    -> origin/history
+ + a74255d...262e79e master     -> origin/master  (forced update)
+   9fe6206..3a09b1b  stable     -> origin/stable
+ * [new tag]         next-20100804 -> next-20100804
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
 
-> Start building the message.  First build an SSID list with one entry
-> in it (empty string)
->     struct nl_msg *ssids = nlmsg_alloc();
->     nla_put_string(ssids, 0, "");
+compat-wireless code metrics
 
-I think that has to be a 1 instead of 0, but I'm not entirely sure.
+    494063 - Total upstream lines of code being pulled
+      1475 - backport code changes
+      1239 - backport code additions
+       236 - backport code deletions
+      5805 - backport from compat module
+      7280 - total backport code
+    1.4735 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2465 - % of crap code
 
-> Next build the scan request message:
->     struct nl_msg *msg = nlmsg_alloc();
->     int flags = 0;
->     int cmd = NL80211_CMD_TRIGGER_SCAN;
->     genlmsg_put(msg, 0, 0, genl_family_get_id(nl80211), 0, flags, cmd, 0);
->     /* append our ssid list to this message as a nested message */
->     nla_put_nested(msg, NL80211_ATTR_SCAN_SSIDS, ssids)
-
-You're not telling it which interface should scan, this is handled
-generically in iw.c, look for
-	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, devidx);
-
-> Finally I send the request:
->     int rc = nl_send_auto_complete(sock, msg);
-> 
-> From this I found out that 32 bytes were sent (seems reasonable).
-> Unfortunately, what I get back is this:
->   [HEADER] 16 octets
->     .nlmsg_len = 52
->     .nlmsg_type = 2 <ERROR>
->     .nlmsg_flags = 0 <>
->     .nlmsg_seq = 1282012377
->     .nlmsg_pid = 30415
->   [ERRORMSG] 20 octets
->     .error = -22 "Invalid argument"
->   [ORIGINAL MESSAGE] 16 octets
->     .nlmsg_len = 16
->     .nlmsg_type = 23 <0x17>
->     .nlmsg_flags = 5 <REQUEST,ACK>
->     .nlmsg_seq = 1282012377
->     .nlmsg_pid = 30415
-> 
-> so, even following what iw's "scan.c" does I have somehow pieced the
-> request together incorrectly.
-> 
-> Questions:
-> 1. Am I doing something obviously wrong?
-
-You're also missing the interface as above.
-
-> 2. Is this even the interface I should be using to do this?  (I need
-> to scan for all access points on a specific "hidden" SSID to retrieve
-> some information about their SNR.  It's a type of "site survey"
-> application for building contour maps of coverage).
-
-Yes, it does make sense.
-
-> I'm not sure what I'm doing next makes sense, either.  After I send
-> the scan request I wait 3 seconds then start reading like this:
->     while(nl_recvmsgs(sock, callbacks) != 0)
->     {
->         printf("processed a result\n");
->     }
-> 
-> I have registered my callback earlier; this seems to work because I
-> get the message (above) plus later an "Operation Not Supported"
-> message.  The operation is indeed supported, as it works with the
-> iwlist and iw command line tools.
-
-Maybe you should look at wpa_supplicant either for doing your thing, or
-for the driver_nl80211.c code in it, which is more explicit than iw.
-
-johannes
-
+Base tree: linux-next.git
+Base tree version: next-20100804
+compat-wireless release: compat-wireless-2010-08-03
