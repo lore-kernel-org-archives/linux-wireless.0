@@ -1,67 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay4-v.mail.gandi.net ([217.70.178.78]:35197 "EHLO
-	relay4-v.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751825Ab0HWW3Q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Aug 2010 18:29:16 -0400
-Subject: Re: [PATCH 0/2] iw: add GeoClue support
-From: Bastien Nocera <hadess@hadess.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Kevin Hayes <kevin@Atheros.com>,
-	David Quan <David.Quan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"geoclue@lists.freedesktop.org" <geoclue@lists.freedesktop.org>
-In-Reply-To: <20100823222236.GE2206@tux>
-References: <1282350556-16523-1-git-send-email-lrodriguez@atheros.com>
-	 <1282572681.3813.3.camel@jlt3.sipsolutions.net>
-	 <AANLkTimrtWQKycuAcZ3SjDaOqJ6Z-pPNauRfh+2aZ=ge@mail.gmail.com>
-	 <1282579507.3405.130.camel@localhost.localdomain>
-	 <20100823174620.GA12375@tux>
-	 <1282597556.3405.135.camel@localhost.localdomain>
-	 <20100823221119.GC2206@tux>
-	 <1282601707.3405.140.camel@localhost.localdomain>
-	 <20100823222236.GE2206@tux>
-Content-Type: text/plain; charset="ISO-8859-1"
-Date: Mon, 23 Aug 2010 23:29:06 +0100
-Message-ID: <1282602546.3405.143.camel@localhost.localdomain>
-Mime-Version: 1.0
+Received: from sycorax.lbl.gov ([128.3.11.121]:58029 "EHLO sycorax.lbl.gov"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752630Ab0HDPM2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Aug 2010 11:12:28 -0400
+From: Alex Romosan <romosan@sycorax.lbl.gov>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Guy\, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: iwlwifi connection problems
+References: <87tynqvtu6.fsf@sycorax.lbl.gov>
+	<1279917523.10769.1.camel@wwguy-huron>
+	<1280135867.3693.5.camel@jlt3.sipsolutions.net>
+	<87mxtd5xlq.fsf@sycorax.lbl.gov>
+	<1280212629.19098.0.camel@jlt3.sipsolutions.net>
+	<87bp9l6f4k.fsf@sycorax.lbl.gov>
+	<1280746705.3923.11.camel@jlt3.sipsolutions.net>
+	<878w4pvx5e.fsf@sycorax.lbl.gov>
+	<1280766201.24503.0.camel@jlt3.sipsolutions.net>
+	<87aap4z70b.fsf@sycorax.lbl.gov>
+	<1280817596.3874.0.camel@jlt3.sipsolutions.net>
+	<87mxt3n9xh.fsf@sycorax.lbl.gov>
+	<1280908365.3768.4.camel@jlt3.sipsolutions.net>
+	<87aap28m8v.fsf@sycorax.lbl.gov>
+	<1280934185.3768.8.camel@jlt3.sipsolutions.net>
+	<8739uu8lg2.fsf@sycorax.lbl.gov>
+	<1280934689.17718.3.camel@jlt3.sipsolutions.net>
+Date: Wed, 04 Aug 2010 08:12:24 -0700
+In-Reply-To: <1280934689.17718.3.camel@jlt3.sipsolutions.net> (message from
+	Johannes Berg on Wed, 04 Aug 2010 17:11:29 +0200)
+Message-ID: <8762zq76p3.fsf@sycorax.lbl.gov>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-08-23 at 15:22 -0700, Luis R. Rodriguez wrote:
-> On Mon, Aug 23, 2010 at 03:15:07PM -0700, Bastien Nocera wrote:
-> > On Mon, 2010-08-23 at 15:11 -0700, Luis R. Rodriguez wrote:
-> > > On Mon, Aug 23, 2010 at 02:05:56PM -0700, Bastien Nocera wrote:
-> > <snip>
-> > > > No, I'm talking about what's exported by the providers. I don't really
-> > > > care if they talk to other parts of the system using D-Bus though. I'm
-> > > > talking about link 2) here.
-> > > > 
-> > > > [App] <-1-> [Geoclue master] <-2-> [Gypsy provider] <-3-> [Gypsy daemon]
-> > > 
-> > > Sorry I do not follow yet. Is the idea that you would prefer if
-> > > client applications would never talk to providers directly and instead
-> > > always used the master provider?
-> > 
-> > Exactly, and it's mentioned in the bugzilla
-> 
-> Thanks for the heads up, I haven't been grep'ing through the bugzilla.
-> 
-> > and was discussed on the mailing-list as well.
-> 
-> And am new there :)
-> 
-> This makes sense -- are there plans on removing all these exported
-> library routines so that the only exposed thing is the master
-> provider calls?
-> 
-> Based on your comments it seems changing the iw patch to just
-> use the master provider would go more in line with current
-> development focus.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Right. And file bugs if you have specific uses that don't work as
-expected with the master provider.
+> On Wed, 2010-08-04 at 08:08 -0700, Alex Romosan wrote:
+>
+>> > Thanks. The down/up is fine, I'll be able to identify that in the
+>> > traces. Except the "working" trace looks like it only starts after you
+>> > connected already?
+>> 
+>> the driver connects automatically on boot, so, yes, it was after i was
+>> connected. i can bring down the interface and try again if you want.
+>
+> Yes, please do that.
 
+http://caliban.lbl.gov/iwlwifi/trace.dat-working.before.ifup.gz
+
+--alex--
+
+-- 
+| I believe the moment is at hand when, by a paranoiac and active |
+|  advance of the mind, it will be possible (simultaneously with  |
+|  automatism and other passive states) to systematize confusion  |
+|  and thus to help to discredit completely the world of reality. |
