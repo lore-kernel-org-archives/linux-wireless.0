@@ -1,52 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55071 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755295Ab0HaT3k (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:52499 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754877Ab0HETDn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Aug 2010 15:29:40 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: cancel scan in ieee80211_restart_hw if software scan pending
-Date: Tue, 31 Aug 2010 15:25:37 -0400
-Message-Id: <1283282737-27749-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1283246981.3733.7.camel@jlt3.sipsolutions.net>
-References: <1283246981.3733.7.camel@jlt3.sipsolutions.net>
+	Thu, 5 Aug 2010 15:03:43 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 8F9084195D
+	for <linux-wireless@vger.kernel.org>; Thu,  5 Aug 2010 15:02:26 -0400 (EDT)
+Subject: Compat-wireless release for 2010-08-05 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100805190341.AE0D841133@repository3.orbit-lab.org>
+Date: Thu,  5 Aug 2010 15:03:41 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This function exists to clean-up after a hardware error or something
-similar.  The restart is accomplished using the same infrastructure used
-to resume after a suspend.  The suspend path cancels running scans, so
-it seems appropriate to do that here as well for software-based scans.
-If a hardware-based scan is pending, issue a warning message since this
-indicates that the drivers has failed to clean-up after itself.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   b2124fd..1bf4bba  linux-2.6.35.y -> origin/linux-2.6.35.y
+   4b6128d..3672499  master     -> origin/master
+ * [new tag]         compat-wireless-v2.6.35-0 -> compat-wireless-v2.6.35-0
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+   1b21e25..226b1c2  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   d9285f7..8a39b1f  history    -> origin/history
+ + 262e79e...b07c08d master     -> origin/master  (forced update)
+   3a09b1b..3cfc2c4  stable     -> origin/stable
+ * [new tag]         next-20100805 -> next-20100805
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/mac80211/main.c |    8 +++++++-
- 1 files changed, 7 insertions(+), 1 deletions(-)
+compat-wireless code metrics
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 93194f6..a06b6ee 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -305,7 +305,13 @@ void ieee80211_restart_hw(struct ieee80211_hw *hw)
- 
- 	trace_api_restart_hw(local);
- 
--	/* use this reason, __ieee80211_resume will unblock it */
-+	WARN(test_bit(SCAN_HW_SCANNING, &local->scanning),
-+		"%s called with hardware scan in progress\n", __func__);
-+
-+	if (unlikely(test_bit(SCAN_SW_SCANNING, &local->scanning)))
-+		ieee80211_scan_cancel(local);
-+
-+	/* use this reason, ieee80211_reconfig will unblock it */
- 	ieee80211_stop_queues_by_reason(hw,
- 		IEEE80211_QUEUE_STOP_REASON_SUSPEND);
- 
--- 
-1.7.2.2
+    494547 - Total upstream lines of code being pulled
+      1532 - backport code changes
+      1296 - backport code additions
+       236 - backport code deletions
+      5805 - backport from compat module
+      7337 - total backport code
+    1.4836 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2463 - % of crap code
 
+Base tree: linux-next.git
+Base tree version: next-20100805
+compat-wireless release: compat-wireless-2010-08-03-1-g3672499
