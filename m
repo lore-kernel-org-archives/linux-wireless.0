@@ -1,94 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:42243 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752369Ab0HQTrV (ORCPT
+Received: from smtp-out-118.synserver.de ([212.40.180.118]:1071 "EHLO
+	smtp-out-117.synserver.de" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754179Ab0HEJXr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Aug 2010 15:47:21 -0400
-Received: by eyg5 with SMTP id 5so2243619eyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2010 12:47:20 -0700 (PDT)
-From: Grazvydas Ignotas <notasas@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>,
-	Grazvydas Ignotas <notasas@gmail.com>
-Subject: [PATCH 1/4] wl1251: add missing __packed modifier for some structs
-Date: Tue, 17 Aug 2010 22:46:52 +0300
-Message-Id: <1282074415-6168-2-git-send-email-notasas@gmail.com>
-In-Reply-To: <1282074415-6168-1-git-send-email-notasas@gmail.com>
-References: <1282074415-6168-1-git-send-email-notasas@gmail.com>
+	Thu, 5 Aug 2010 05:23:47 -0400
+Date: Thu, 5 Aug 2010 11:17:04 +0200
+From: Markus Trippelsdorf <markus@trippelsdorf.de>
+To: Jens Axboe <jaxboe@fusionio.com>
+Cc: Tejun Heo <htejun@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"stable@kernel.org" <stable@kernel.org>
+Subject: Re: [PATCH RESEND block#for-2.6.36] block_dev: always serialize
+ exclusive open attempts
+Message-ID: <20100805091704.GA1772@arch.tripp.de>
+References: <2dWFdr9kTFM.A.P0D.spXVMB@chimera>
+ <AANLkTimcH7+Bq1UEbaSU7SQpzArPgmSLegiqE13V8=CF@mail.gmail.com>
+ <4C56F30D.3020304@kernel.org>
+ <4C598E6B.7050405@gmail.com>
+ <4C5A7E33.3060101@fusionio.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <4C5A7E33.3060101@fusionio.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Several acx and cmd structures are missing __packed modifier, add it.
-This was noticed while comparing them with corresponding wl1271 code.
+On Thu, Aug 05, 2010 at 11:02:43AM +0200, Jens Axboe wrote:
+> On 2010-08-04 17:59, Tejun Heo wrote:
+> > bd_prepare_to_claim() incorrectly allowed multiple attempts for
+> > exclusive open to progress in parallel if the attempting holders are
+> > identical.  This triggered BUG_ON() as reported in the following bug.
+> > 
+> >   https://bugzilla.kernel.org/show_bug.cgi?id=16393
+> > 
+> > __bd_abort_claiming() is used to finish claiming blocks and doesn't
+> > work if multiple openers are inside a claiming block.  Allowing
+> > multiple parallel open attempts to continue doesn't gain anything as
+> > those are serialized down in the call chain anyway.  Fix it by always
+> > allowing only single open attempt in a claiming block.
+> > 
+> > This problem can easily be reproduced by adding a delay after
+> > bd_prepare_to_claim() and attempting to mount two partitions of a
+> > disk.
+> > 
+> > stable: only applicable to v2.6.35
+> > 
+> > Signed-off-by: Tejun Heo <tj@kernel.org>
+> > Reported-by: Markus Trippelsdorf <markus@trippelsdorf.de>
+> > Cc: stable@kernel.org
+> 
+> Thanks Tejun, applied.
 
-Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
----
- drivers/net/wireless/wl12xx/wl1251_acx.h |    6 +++---
- drivers/net/wireless/wl12xx/wl1251_cmd.h |    6 +++---
- 2 files changed, 6 insertions(+), 6 deletions(-)
+It's already in mainline:
+e75aa85892b2ee78c79edac720868cbef16e62eb
 
-diff --git a/drivers/net/wireless/wl12xx/wl1251_acx.h b/drivers/net/wireless/wl12xx/wl1251_acx.h
-index 842df31..9864124 100644
---- a/drivers/net/wireless/wl12xx/wl1251_acx.h
-+++ b/drivers/net/wireless/wl12xx/wl1251_acx.h
-@@ -37,7 +37,7 @@ struct acx_header {
- 
- 	/* payload length (not including headers */
- 	u16 len;
--};
-+} __packed;
- 
- struct acx_error_counter {
- 	struct acx_header header;
-@@ -471,7 +471,7 @@ struct acx_conn_monit_params {
- 
- 	u32 synch_fail_thold; /* number of beacons missed */
- 	u32 bss_lose_timeout; /* number of TU's from synch fail */
--};
-+} __packed;
- 
- enum {
- 	SG_ENABLE = 0,
-@@ -1056,7 +1056,7 @@ struct acx_rate_class {
- 	u8 long_retry_limit;
- 	u8 aflags;
- 	u8 reserved;
--};
-+} __packed;
- 
- struct acx_rate_policy {
- 	struct acx_header header;
-diff --git a/drivers/net/wireless/wl12xx/wl1251_cmd.h b/drivers/net/wireless/wl12xx/wl1251_cmd.h
-index a9e4991..60d7e52 100644
---- a/drivers/net/wireless/wl12xx/wl1251_cmd.h
-+++ b/drivers/net/wireless/wl12xx/wl1251_cmd.h
-@@ -111,7 +111,7 @@ struct wl1251_cmd_header {
- struct  wl1251_command {
- 	struct wl1251_cmd_header header;
- 	u8  parameters[MAX_CMD_PARAMS];
--};
-+} __packed;
- 
- enum {
- 	CMD_MAILBOX_IDLE              		=  0,
-@@ -164,7 +164,7 @@ struct cmd_read_write_memory {
- 	   of this field is the Host in WRITE command or the Wilink in READ
- 	   command. */
- 	u8 value[MAX_READ_SIZE];
--};
-+} __packed;
- 
- #define CMDMBOX_HEADER_LEN 4
- #define CMDMBOX_INFO_ELEM_HEADER_LEN 4
-@@ -339,7 +339,7 @@ struct wl1251_cmd_trigger_scan_to {
- 	struct wl1251_cmd_header header;
- 
- 	u32 timeout;
--};
-+} __packed;
- 
- /* HW encryption keys */
- #define NUM_ACCESS_CATEGORIES_COPY 4
 -- 
-1.5.6.3
-
+»A man who doesn't know he is in prison can never escape.«
+William S. Burroughs
