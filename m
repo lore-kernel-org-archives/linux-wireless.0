@@ -1,41 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51883 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753989Ab0HZP2L (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Aug 2010 11:28:11 -0400
-Subject: Re: a simple wireless mesh network
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joel Fernandes <agnel.joel@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTimNA_i8Za8xOh8XffdkrE7wFLc9GBs4JSPAsT3+@mail.gmail.com>
-References: <AANLkTimNA_i8Za8xOh8XffdkrE7wFLc9GBs4JSPAsT3+@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 26 Aug 2010 17:28:10 +0200
-Message-ID: <1282836490.3812.66.camel@jlt3.sipsolutions.net>
+Received: from lo.gmane.org ([80.91.229.12]:41233 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757548Ab0HETfY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Aug 2010 15:35:24 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1Oh6Do-0006Bh-FR
+	for linux-wireless@vger.kernel.org; Thu, 05 Aug 2010 21:35:21 +0200
+Received: from 216-31-249-246.static-ip.telepacific.net ([216.31.249.246])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Aug 2010 21:35:20 +0200
+Received: from graman by 216-31-249-246.static-ip.telepacific.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Aug 2010 21:35:20 +0200
+To: linux-wireless@vger.kernel.org
+From: Gopal Raman <graman@arubanetworks.com>
+Subject: Re: ath5k : Channel 149 thru 161 not working with =?utf-8?b?CWNvbXBhdC13aXJlbGVzcy0yLjYuMzQuMQ==?=
+Date: Thu, 5 Aug 2010 19:35:11 +0000 (UTC)
+Message-ID: <loom.20100805T213232-313@post.gmane.org>
+References: <loom.20100805T020816-848@post.gmane.org> <loom.20100805T025322-892@post.gmane.org> <AANLkTikcWNzO7tbheeJp=NYMsY=Kh983DrR2P=OKCJ5p@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-08-26 at 10:19 -0500, Joel Fernandes wrote:
-> Hi,
-> I am studying wireless mesh networks and wanted to play with open80211s.
-> As a part of my study, I want to demo, multiple nodes on a mesh
-> network and analyze the traffic in wireshark
-> 
-> Unfortunately I don't have many physical nodes so I'm looking for a
-> way to emulate them.
-> 
-> So far I've learnt that vmware and virtual box don't support virtual
-> wireless network adapters.
-> 
-> Any other suggestion that would make creating a wireless mesh network
-> for study purposes quick and painless?
+Jonathan Guerin <jonathan@...> writes:
 
-http://wireless.kernel.org/en/users/Drivers/mac80211_hwsim
+> 
+> I found issues when switching to ath5k where the wrong antenna was selected.
+> 
+> Try forcing the antenna (especially if you don't have 1 of them
+> plugged in) and see how you go:
+> http://www.mail-archive.com/ath5k-devel-xDcbHBWguxEUs3QNXV6qNA <at> 
+public.gmane.org/msg02979.html
+> 
 
-plus network namespaces, on a very new kernel where that actually works
-(like current wireless-testing)
+Hi
+I could not find the sysfs node where antenna control is being set in the 
+compat-wireless-2.6.34.1 driver. Maybe that was taken out ? To rule out 
+problems with my NIC card can anyone confirm that with this driver we can 
+receive frames on channels 149 thru 161 ?
+Thanks much
 
-johannes
+-gopal
 
