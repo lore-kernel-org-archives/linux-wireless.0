@@ -1,54 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:49661 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752087Ab0HXOYL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Aug 2010 10:24:11 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH wireless-next-2.6] iwlwifi: fix compile error without debugging support
-Date: Tue, 24 Aug 2010 07:27:56 -0700
-Message-Id: <1282660076-9004-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-4.cc.uic.edu ([128.248.155.184]:36885 "EHLO
+	mail-4.cc.uic.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933683Ab0HEQag (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Aug 2010 12:30:36 -0400
+Message-ID: <4C5AE723.5070708@uic.edu>
+Date: Thu, 05 Aug 2010 11:30:27 -0500
+From: ABM Musa <amusa2@uic.edu>
+MIME-Version: 1.0
+To: Daniel Haid <d.haid@gogi.tv>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Capturing packets with bad FCS in monitor mode
+References: <201008051614.11546.d.haid@gogi.tv> <475A8455ABBB4AD79E2B0AD03B1F69B9@personal> <201008051819.55252.d.haid@gogi.tv>
+In-Reply-To: <201008051819.55252.d.haid@gogi.tv>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On 08/05/2010 11:19 AM, Daniel Haid wrote:
+>> Packets with crc error can be captured using corresponding flag of iw.
+>>
+>> iw phy phy0 interface add wlan0 type monitor flags fcsfail
+>>      
+> Is this supported on ath9k? I do not see any difference so far
+> with the packet capturing.
+> I also do not find the FIF_FCSFAIL flag be used anywhere in
+> the ath9k code.
+>
+> Will I get lots of corrupted packets if this is enabled properly or only
+> casually?
+>
+>    
 
-Encounter compiler error when iwlwifi debugging support is
-disabled, fix it.
+I can get packets with crc error using this method and I get lot of 
+corrupted packets. I am using ath9k with openwrt for router station 
+pro+ubiquity sr-71A card and tplink 1043nd.
 
-This compiler error was introduced by the previous WiFi/BT coexist patchset.
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
-this patch is also available from wireless-2.6 branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-
- drivers/net/wireless/iwlwifi/iwl-scan.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index c8f7a34..7727f09 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -206,7 +206,6 @@ static void iwl_rx_scan_results_notif(struct iwl_priv *priv,
- static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
- 				       struct iwl_rx_mem_buffer *rxb)
- {
--#ifdef CONFIG_IWLWIFI_DEBUG
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
- 	struct iwl_scancomplete_notification *scan_notif = (void *)pkt->u.raw;
- 
-@@ -214,7 +213,6 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
- 		       scan_notif->scanned_channels,
- 		       scan_notif->tsf_low,
- 		       scan_notif->tsf_high, scan_notif->status);
--#endif
- 
- 	/* The HW is no longer scanning */
- 	clear_bit(STATUS_SCAN_HW, &priv->status);
--- 
-1.7.0.4
-
+Musa
