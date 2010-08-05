@@ -1,40 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp7.freeserve.com ([80.12.242.2]:8582 "EHLO
-	smtp6.freeserve.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750876Ab0HQUey (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Aug 2010 16:34:54 -0400
-Date: Tue, 17 Aug 2010 21:28:25 +0100
-From: Chris Vine <chris@cvine.freeserve.co.uk>
-To: b43-dev <b43-dev@lists.infradead.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFT] BCM4312 users with DMA errors, please test!
-Message-ID: <20100817212825.6f5ecb66@boulder.homenet>
-In-Reply-To: <20100817132337.01392797@boulder.homenet>
-References: <AANLkTimMhW7OX3DT7A3EDNaOnr577KmTv5w9C_mz19TG@mail.gmail.com>
-	<20100816204154.5100b604@boulder.homenet>
-	<20100816233544.40f0e1d4@boulder.homenet>
-	<4C69CF85.2020809@lwfinger.net>
-	<20100817010923.589d8063@boulder.homenet>
-	<20100817011455.4919cfbb@boulder.homenet>
-	<4C69DF79.2020900@lwfinger.net>
-	<20100817132337.01392797@boulder.homenet>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail.atheros.com ([12.36.123.2]:49128 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758877Ab0HEUr7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Aug 2010 16:47:59 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 05 Aug 2010 13:47:59 -0700
+Date: Thu, 5 Aug 2010 13:47:56 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Julia Lawall <julia@diku.dk>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	Sujith Manoharan <Sujith.Manoharan@Atheros.com>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Subject: Re: [PATCH 33/42] drivers/net/wireless/ath/ath9k: Adjust confusing
+ if indentation
+Message-ID: <20100805204756.GA1738@tux>
+References: <Pine.LNX.4.64.1008052226380.31692@ask.diku.dk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <Pine.LNX.4.64.1008052226380.31692@ask.diku.dk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 17 Aug 2010 13:23:37 +0100
-Chris Vine <chris@cvine.freeserve.co.uk> wrote:
-> Reverting to 2.6.35.1 solves this.  Probably 2.6.36-rc1 would be OK as
-> well.  I might later today try the ssb patch on the 2.6.35.1 kernel,
-> but it doesn't look as if it solves the DMA errors.  However,
-> yesterday's tests clearly aren't conclusive about anything.
+On Thu, Aug 05, 2010 at 01:26:56PM -0700, Julia Lawall wrote:
+> From: Julia Lawall <julia@diku.dk>
+> 
+> Outdent the code following the if.
+> 
+> The semantic match that finds this problem is as follows:
+> (http://coccinelle.lip6.fr/)
+> 
+> // <smpl>
+> @r disable braces4@
+> position p1,p2;
+> statement S1,S2;
+> @@
+> 
+> (
+> if (...) { ... }
+> |
+> if (...) S1@p1 S2@p2
+> )
+> 
+> @script:python@
+> p1 << r.p1;
+> p2 << r.p2;
+> @@
+> 
+> if (p1[0].column == p2[0].column):
+>   cocci.print_main("branch",p1)
+>   cocci.print_secs("after",p2)
+> // </smpl>
+> 
+> Signed-off-by: Julia Lawall <julia@diku.dk>
 
-I have applied the patch to 2.6.35.1, and it does not appear to have
-any effect on the DMA errors.
+Acked-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-Chris
+> ---
+> This patch doesn't change the semantics of the code.  But it might not be
+> what is intended.
 
+Your patch is correct, it wast a tab goof, thanks for fixing this.
 
+  Luis
