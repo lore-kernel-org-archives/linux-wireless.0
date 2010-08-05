@@ -1,72 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:44704 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752412Ab0HKNTd (ORCPT
+Received: from mta-2.ms.rz.RWTH-Aachen.DE ([134.130.7.73]:40212 "EHLO
+	mta-2.ms.rz.rwth-aachen.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933244Ab0HEOpx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Aug 2010 09:19:33 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, Ido Yariv <ido@wizery.com>,
-	San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Gao Yunpeng <yunpeng.gao@intel.com>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [RFC/PATCH 2/6] sdio: add power_restore support
-Date: Wed, 11 Aug 2010 16:19:26 +0300
-Message-Id: <1281532770-27545-3-git-send-email-ohad@wizery.com>
-In-Reply-To: <1281532770-27545-1-git-send-email-ohad@wizery.com>
-References: <1281532770-27545-1-git-send-email-ohad@wizery.com>
+	Thu, 5 Aug 2010 10:45:53 -0400
+MIME-version: 1.0
+Content-type: text/plain; charset=ISO-8859-1
+Message-id: <4C5ACE88.2070704@arndnet.de>
+Date: Thu, 05 Aug 2010 16:45:28 +0200
+From: Arnd Hannemann <arnd@arndnet.de>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	sfr@canb.auug.org.au
+Subject: Re: GIT: net-*2.6 rebased...
+References: <20100804.162141.15218463.davem@davemloft.net>
+ <4C5A6EFE.7040703@arndnet.de> <20100805.014637.13722703.davem@davemloft.net>
+In-reply-to: <20100805.014637.13722703.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a power_restore handler to the SDIO bus ops,
-in order to support waking up SDIO cards that
-were powered off by runtime pm.
+Am 05.08.2010 10:46, schrieb David Miller:
+> From: Arnd Hannemann <arnd@arndnet.de> Date: Thu, 05 Aug 2010
+> 09:57:50 +0200
+>
+>> if I try to fetch from net-next-2.6, I get: fatal: The remote end
+>> hung up unexpectedly
+>>
+>> if I try to clone net-2.6: (e.g. git clone
+>> git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-2.6.git
+>>
+>> I get lots of errors reading the tags "does not point to a valid
+>> object!" and then: remote: error: Could not read
+>> 3cfc2c42c1cbc8e238bb9c0612c0df4565e3a8b4 remote: fatal: Failed to
+>> traverse parents of commit
+>> 7aaaaa1e44b2a4047dfe05f304a5090eb995cf44 remote: aborting due to
+>> possible repository corruption on the remote side. fatal: early
+>> EOF fatal: index-pack failed
+>
+> I fixed the alternates file but it will take some time for the fix to
+> propagate from master.kernel.org
+>
+> Let me know if it doesn't work even after an hour or so.
 
-Note: this approach would also require changing
-the power_restore/save bus handlers to support
-a return value.
+It works now, for both net-next-2.6 and net-2.6.
 
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
----
- drivers/mmc/core/sdio.c |   16 ++++++++++++++++
- 1 files changed, 16 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/mmc/core/sdio.c b/drivers/mmc/core/sdio.c
-index 645f173..ddbb9d3 100644
---- a/drivers/mmc/core/sdio.c
-+++ b/drivers/mmc/core/sdio.c
-@@ -511,11 +511,27 @@ static int mmc_sdio_resume(struct mmc_host *host)
- 	return err;
- }
- 
-+static void mmc_sdio_power_restore(struct mmc_host *host)
-+{
-+	int err;
-+
-+	BUG_ON(!host);
-+	BUG_ON(!host->card);
-+
-+	mmc_claim_host(host);
-+	err = mmc_sdio_init_card(host, host->ocr, host->card,
-+			(host->pm_flags & MMC_PM_KEEP_POWER));
-+	if (!err && host->sdio_irqs)
-+		mmc_signal_sdio_irq(host);
-+	mmc_release_host(host);
-+}
-+
- static const struct mmc_bus_ops mmc_sdio_ops = {
- 	.remove = mmc_sdio_remove,
- 	.detect = mmc_sdio_detect,
- 	.suspend = mmc_sdio_suspend,
- 	.resume = mmc_sdio_resume,
-+	.power_restore = mmc_sdio_power_restore,
- };
- 
- 
--- 
-1.7.0.4
+Thanks,
+Arnd
 
