@@ -1,38 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55984 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751939Ab0HIRHM (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:42824 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754877Ab0HETIx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Aug 2010 13:07:12 -0400
-Subject: Re: [RFC PATCH] iwlwifi: abort scan when restarting
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20100809160203.GA22569@redhat.com>
-References: <20100809160203.GA22569@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 09 Aug 2010 19:06:53 +0200
-Message-ID: <1281373613.20185.3.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 5 Aug 2010 15:08:53 -0400
+Received: by qwh6 with SMTP id 6so4249383qwh.19
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Aug 2010 12:08:52 -0700 (PDT)
+Message-ID: <4C5B0C46.20607@lwfinger.net>
+Date: Thu, 05 Aug 2010 14:08:54 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Arthur Moreira <arthur.moreira@gmail.com>
+CC: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: bdm 4353 802.11n monitor mode you can?
+References: <AANLkTi=Q7FXWnH9dyH3mPX7G+JDBNVb0NWuYjqd_VN2F@mail.gmail.com>	<4C5AC2B1.7060007@lwfinger.net>	<AANLkTinrj6ApbFz5_3T95Z96RBbuz5hTh3x=Q98qpgpP@mail.gmail.com>	<4C5ADA52.40106@lwfinger.net> <AANLkTi=2qk6GExYE+daK4XHT5B22LpQxNZOdsrMrsmUx@mail.gmail.com>
+In-Reply-To: <AANLkTi=2qk6GExYE+daK4XHT5B22LpQxNZOdsrMrsmUx@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-08-09 at 18:02 +0200, Stanislaw Gruszka wrote:
+On 08/05/2010 02:01 PM, Arthur Moreira wrote:
+> Tk Larry
+> I will wait
+> I am from brazil and to buy in ebay is complicated
+> but, i will look in mercadolivre com br the symilar in brazil
+> but i dont want to buy a extra card for mobility, but i will see
+> 
+> i will wait the guys try to correct the wl driver.
+> tks all
+> 
+> off corse, sorry for my bad english.
 
-> iwl_scan_cancel_timeout() will not success if we are performing it
-> from work handler, because workqueue can not fire new work when
-> still other one is performed. To prevent such situation
-> schedule priv->abort_scan to generic workqueue. Also increase
-> sleep time to have better change abort_scan work complete.
+No problem. Your English is much better than my Portuguese.
 
-I don't like this much, but you're right. However, I think we can get
-around this by having iwl_scan_cancel_timeout() not call
-iwl_scan_cancel() but rather do everything that iwl_bg_abort_scan()
-would do directly, since _timeout() may sleep, while scan_cancel() may
-not. What do you think?
-
-johannes
+Larry
 
