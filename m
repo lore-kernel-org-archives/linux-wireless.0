@@ -1,48 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [64.85.170.234] ([64.85.170.234]:55333 "EHLO mail.tomasu.net"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1751324Ab0HVGMX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Aug 2010 02:12:23 -0400
-From: Thomas Fjellstrom <tfjellstrom@strangesoft.net>
-To: linux-wireless@vger.kernel.org
-Subject: ath5k problem with 2.6.35
-Date: Sun, 22 Aug 2010 00:05:38 -0600
-Cc: linux-kernel@vger.kernel.org
+Received: from hyde.gogi.tv ([87.106.167.24]:51684 "EHLO hyde.gogi.tv"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755677Ab0HEQkc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Aug 2010 12:40:32 -0400
+From: Daniel Haid <d.haid@gogi.tv>
+To: ABM Musa <amusa2@uic.edu>
+Subject: Re: Capturing packets with bad FCS in monitor mode
+Date: Thu, 5 Aug 2010 18:40:18 +0200
+Cc: linux-wireless@vger.kernel.org
+References: <201008051614.11546.d.haid@gogi.tv> <201008051819.55252.d.haid@gogi.tv> <4C5AE723.5070708@uic.edu>
+In-Reply-To: <4C5AE723.5070708@uic.edu>
 MIME-Version: 1.0
 Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201008220005.38969.tfjellstrom@strangesoft.net>
+  charset="iso-8859-1"
+Message-Id: <201008051840.18914.d.haid@gogi.tv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, I'm running 2.6.35, and my wireless card fails to initialize properly on 
-boot. I get the following messages in dmesg:
+> I can get packets with crc error using this method and I get lot of
+> corrupted packets. I am using ath9k with openwrt for router station
+> pro+ubiquity sr-71A card and tplink 1043nd.
 
-[    0.866525] ath5k 0000:02:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-[    0.866536] ath5k 0000:02:00.0: setting latency timer to 64
-[    0.866571] ath5k 0000:02:00.0: registered as 'phy0'
-[    1.358241] ath: EEPROM regdomain: 0x67
-[    1.358242] ath: EEPROM indicates we should expect a direct regpair map
-[    1.358245] ath: Country alpha2 being used: 00
-[    1.358247] ath: Regpair used: 0x67
-[    1.372021] ath5k phy0: can't register ieee80211 hw
-[    1.372080] ath5k 0000:02:00.0: PCI INT A disabled
-[    1.372084] ath5k: probe of 0000:02:00.0 failed with error -2
+I am using an ubiquity sr-71X card, and still not one corrupted packet.
 
-That said, if I remove the ath5k module, and modprobe ath5k, it starts 
-working.
-
-[ 2976.411770] ath5k 0000:02:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-[ 2976.411783] ath5k 0000:02:00.0: setting latency timer to 64
-[ 2976.412767] ath5k 0000:02:00.0: registered as 'phy1'
-[ 2976.912422] ath: EEPROM regdomain: 0x67
-[ 2976.912424] ath: EEPROM indicates we should expect a direct regpair map
-[ 2976.912427] ath: Country alpha2 being used: 00
-[ 2976.912429] ath: Regpair used: 0x67
-[ 2977.079190] ath5k phy1: Atheros AR2425 chip found (MAC: 0xe2, PHY: 0x70)
-
-Is this a known issue?
-
--- 
-Thomas Fjellstrom
-tfjellstrom@strangesoft.net
+I think I need to artificially create and transmit a corrupted packet. How
+can I do that?
