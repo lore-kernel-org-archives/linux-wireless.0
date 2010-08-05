@@ -1,42 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36076 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751250Ab0HPJG4 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52671 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754773Ab0HESon (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Aug 2010 05:06:56 -0400
-Subject: Re: [PATCH v2] cfg80211: fix race between sysfs and cfg80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: mbizon@freebox.fr
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1281767472.12446.551.camel@sakura.staff.proxad.net>
-References: <1279336415.1941.6.camel@kero>
-	 <1279394982.3931.0.camel@jlt3.sipsolutions.net>
-	 <1279852170.14136.0.camel@sakura.staff.proxad.net>
-	 <1281638499.12446.498.camel@sakura.staff.proxad.net>
-	 <1281638550.3803.4.camel@jlt3.sipsolutions.net>
-	 <1281767472.12446.551.camel@sakura.staff.proxad.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 16 Aug 2010 11:06:54 +0200
-Message-ID: <1281949614.3683.10.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 5 Aug 2010 14:44:43 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] iwlwifi: disable aspm by default
+Date: Thu,  5 Aug 2010 14:42:03 -0400
+Message-Id: <1281033723-8217-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2010-08-14 at 08:31 +0200, Maxime Bizon wrote:
+Some iwlwifi devices inexplicably disconnect themselves from the PCI-E
+bus causing the predictable failures.  This seems to disappear if ASPM
+is disabled.
 
-> The driver is still inside ieee80211_register_hw(), but the userspace is
-> able to create the AP interface before the call is over. Once
-> wiphy_register() is done, no lock seems to prevent this from happening.
-> 
-> ieee80211_init_rate_ctrl_alg() then fails with EBUSY, and
-> ieee80211_register_hw() starts unregistering the phy.
-> 
-> Is that expected ?
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    4 ++++
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    4 ++++
+ 2 files changed, 8 insertions(+), 0 deletions(-)
 
-Oops. No, not really, but I think the problem is that we do
-wiphy_register far too early. I think we should see if we can reorder
-the code in register_hw(). It won't be perfect wrt. debugfs, but I don't
-think that is a problem.
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 35337b1..49a7a98 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -33,6 +33,7 @@
+ #include <linux/module.h>
+ #include <linux/init.h>
+ #include <linux/pci.h>
++#include <linux/pci-aspm.h>
+ #include <linux/slab.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/delay.h>
+@@ -3968,6 +3969,9 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	/**************************
+ 	 * 2. Initializing PCI bus
+ 	 **************************/
++	pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1 |
++				PCIE_LINK_STATE_CLKPM);
++
+ 	if (pci_enable_device(pdev)) {
+ 		err = -ENODEV;
+ 		goto out_ieee80211_free_hw;
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index d24eb47..bc08242 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -33,6 +33,7 @@
+ #include <linux/module.h>
+ #include <linux/init.h>
+ #include <linux/pci.h>
++#include <linux/pci-aspm.h>
+ #include <linux/slab.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/delay.h>
+@@ -3963,6 +3964,9 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 	/***************************
+ 	 * 2. Initializing PCI bus
+ 	 * *************************/
++	pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1 |
++				PCIE_LINK_STATE_CLKPM);
++
+ 	if (pci_enable_device(pdev)) {
+ 		err = -ENODEV;
+ 		goto out_ieee80211_free_hw;
+-- 
+1.7.2
 
