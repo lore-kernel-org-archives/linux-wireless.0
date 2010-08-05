@@ -1,66 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mundo.umh.es ([193.147.147.4]:58879 "EHLO mundo.umh.es"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758913Ab0HELzI convert rfc822-to-8bit (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:57056 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759853Ab0HEICo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Aug 2010 07:55:08 -0400
-Received: from uwicorejohn (unknown [10.1.60.23])
-	by mundo.umh.es (Postfix) with ESMTP id 0C03628DBA5
-	for <linux-wireless@vger.kernel.org>; Thu,  5 Aug 2010 13:55:07 +0200 (CEST)
-From: =?iso-8859-1?Q?J=F3natan_Mu=F1oz?= <jmunoz@umh.es>
-To: <linux-wireless@vger.kernel.org>
-Subject: [ath9k]: Beaconing process in ad-hoc mode
-Date: Thu, 5 Aug 2010 13:55:05 +0200
-Message-ID: <002c01cb3495$0ff49610$2fddc230$@es>
+	Thu, 5 Aug 2010 04:02:44 -0400
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+In-Reply-To: <4C5A6EFE.7040703@arndnet.de>
+References: <20100804.162141.15218463.davem@davemloft.net>
+	<4C5A6EFE.7040703@arndnet.de>
+From: Changli Gao <xiaosuo@gmail.com>
+Date: Thu, 5 Aug 2010 16:02:22 +0800
+Message-ID: <AANLkTinf3+UE2L4uTr1buEfxuTa36vVjk4WspTN8edRs@mail.gmail.com>
+Subject: Re: GIT: net-*2.6 rebased...
+To: Arnd Hannemann <arnd@arndnet.de>
+Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, sfr@canb.auug.org.au
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear All,
+On Thu, Aug 5, 2010 at 3:57 PM, Arnd Hannemann <arnd@arndnet.de> wrote:
+> Hi,
+>
+> Am 05.08.2010 01:21, schrieb David Miller:
+>>
+>> Both net-2.6 and net-next-2.6 have been rebased.
+>>
+>> To be honest, if you've been pulling from my tree you can just keep
+>> doing so if you want, it will look just as if I had merged Linus's
+>> tree into net-2.6 et al.
+>
+> I there something broken with the trees on git.kernel.org?
+>
+> if I try to fetch from net-next-2.6, I get:
+> fatal: The remote end hung up unexpectedly
+>
+> if I try to clone net-2.6:
+> (e.g. git clone git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-2.6.git
+>
+> I get lots of errors reading the tags "does not point to a valid object!" and then:
+> remote: error: Could not read 3cfc2c42c1cbc8e238bb9c0612c0df4565e3a8b4
+> remote: fatal: Failed to traverse parents of commit 7aaaaa1e44b2a4047dfe05f304a5090eb995cf44
+> remote: aborting due to possible repository corruption on the remote side.
+> fatal: early EOF
+> fatal: index-pack failed
+>
+> I'm using git version 1.7.1.
+>
 
-I am working in a project where I need to modified the currently beaconing
-system for adhoc mode in ath9k, what I want to achieve is that each station
-in an adhoc network send periodically a beacon. As I know, when a station in
-the network receives a beacon before sending its own beacon, cancels the
-transmission, updates its hw tsf based on the received beacon and waits for
-a chance to send the beacon during next TBTT.
+me 2 for net-next-2.6
 
-For my goal, I think that I should comment the part where the transmission
-of the beacon is cancelled. In this way, each station will send a beacon
-each 100TU (~100 ms). I know that this mean a increased traffic load on the
-network, but it is so much important for the project to obtain a beacon for
-each station each 100ms.
-
-Right now, I am looking at the source code of ath9k, I am trying to modify
-the file beacon.c, but I don’t find the way to get my purpose. Could anyone
-help me to find the right place at the code that I have to modify? I am a
-bit lost and any help would be greatly appreciated.
-
-Thanks in advance.
-
-PD: Please excuse my poor English
-
-John
-
-
-
-------------------------------------------
-Jónatan Muñoz
-Email: jmunoz@umh.es
-Ubiquitous Wireless Communications Research Laboratory 
-Uwicore, http://www.uwicore.umh.es 
-Signal Theory and Communications Division 
-University Miguel Hernández of Elche 
-
-Avenida de la Universidad s/n 
-Edificio Quorum V P2 012
-03202, Elche (Alicante) 
-Spain 
-Tel: +34 96522 2031 /+34 669256708
-Fax: +34 96665 8903 
-------------------------------------------
+localhost linux # git pull
+fatal: The remote end hung up unexpectedly
+localhost linux # git version
+git version 1.7.1
 
 
-
+-- 
+Regards,
+Changli Gao(xiaosuo@gmail.com)
