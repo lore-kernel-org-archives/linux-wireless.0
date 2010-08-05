@@ -1,64 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:53726 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756937Ab0HKUNL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Aug 2010 16:13:11 -0400
+Received: from mgw2.diku.dk ([130.225.96.92]:57858 "EHLO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934200Ab0HEUX5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Aug 2010 16:23:57 -0400
+Date: Thu, 5 Aug 2010 22:23:54 +0200 (CEST)
+From: Julia Lawall <julia@diku.dk>
+To: Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+Subject: [PATCH 23/42] drivers/net/wireless/libertas: Adjust confusing if
+ indentation
+Message-ID: <Pine.LNX.4.64.1008052223340.31692@ask.diku.dk>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTi=n=uH5ePRf8KzXWTtSdyRabpOCOgLBSD1GfwkJ@mail.gmail.com>
-References: <1281478348-24833-1-git-send-email-ohad@wizery.com>
-	<1281478348-24833-10-git-send-email-ohad@wizery.com> <4C626140.3080107@nokia.com>
-	<AANLkTik8yftwy9Toq473134vcdoFN1Z29oTc9MGEUzue@mail.gmail.com>
-	<AANLkTi=n=uH5ePRf8KzXWTtSdyRabpOCOgLBSD1GfwkJ@mail.gmail.com>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Wed, 11 Aug 2010 23:12:51 +0300
-Message-ID: <AANLkTin9ABch+_S=gYwD2HKPm8aT8etwfsE_WRRoq=2U@mail.gmail.com>
-Subject: Re: [PATCH v3 9/9] omap: zoom: add mmc3/wl1271 device support
-To: kishore kadiyala <kishorek.kadiyala@gmail.com>
-Cc: Roger Quadros <roger.quadros@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	San Mehat <san@google.com>, Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kishore,
+From: Julia Lawall <julia@diku.dk>
 
-On Wed, Aug 11, 2010 at 11:09 PM, kishore kadiyala
-<kishorek.kadiyala@gmail.com> wrote:
-> Since you specified the voltage source is fixed, and if MMC3 has any
-> dedicated regulator as MMC1 & MMC2 you can go with
-> Roger's comments.
+At the point of the patched code, err has already been tested, so it is
+only worthwhile to test it again in the if branches where it is changed.
 
-You are reading an old batch of the patches.
+The semantic match that finds this problem is as follows:
+(http://coccinelle.lip6.fr/)
 
-Scroll down to v4 ;)
+// <smpl>
+@r disable braces4@
+position p1,p2;
+statement S1,S2;
+@@
 
-Thanks,
-Ohad.
+(
+if (...) { ... }
+|
+if (...) S1@p1 S2@p2
+)
 
-> If the LDO is fixed voltage source from TWL then since regulator
-> framework supports only adjustable LDO's, I think you can
-> have ocr_mask defined as above in board file.
->
-> Regards,
-> Kishore
->>
->> Removed, thanks!
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-mmc" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
+@script:python@
+p1 << r.p1;
+p2 << r.p2;
+@@
+
+if (p1[0].column == p2[0].column):
+  cocci.print_main("branch",p1)
+  cocci.print_secs("after",p2)
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+ drivers/net/wireless/libertas/if_spi.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+index fe3f080..3965c6c 100644
+--- a/drivers/net/wireless/libertas/if_spi.c
++++ b/drivers/net/wireless/libertas/if_spi.c
+@@ -800,14 +800,16 @@ static int lbs_spi_thread(void *data)
+ 			goto err;
+ 		}
+ 
+-		if (hiStatus & IF_SPI_HIST_CMD_UPLOAD_RDY)
++		if (hiStatus & IF_SPI_HIST_CMD_UPLOAD_RDY) {
+ 			err = if_spi_c2h_cmd(card);
+ 			if (err)
+ 				goto err;
+-		if (hiStatus & IF_SPI_HIST_RX_UPLOAD_RDY)
++		}
++		if (hiStatus & IF_SPI_HIST_RX_UPLOAD_RDY) {
+ 			err = if_spi_c2h_data(card);
+ 			if (err)
+ 				goto err;
++		}
+ 
+ 		/* workaround: in PS mode, the card does not set the Command
+ 		 * Download Ready bit, but it sets TX Download Ready. */
