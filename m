@@ -1,197 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:17675 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753148Ab0HRO15 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Aug 2010 10:27:57 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 18 Aug 2010 07:27:57 -0700
-From: Vivek Natarajan <vnatarajan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/2] ath9k_common: Move bt_stomp to common for sharing with ath9k_htc.
-Date: Wed, 18 Aug 2010 19:57:48 +0530
-Message-ID: <1282141669-9823-1-git-send-email-vnatarajan@atheros.com>
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:34909 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760518Ab0HESXG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Aug 2010 14:23:06 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20100804145258.GC17666@tuxdriver.com>
+References: <4C5950B7.4000802@archlinux.org> <20100804134908.GB17666@tuxdriver.com>
+	<4C59790C.4010809@archlinux.org> <20100804145258.GC17666@tuxdriver.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 5 Aug 2010 11:22:44 -0700
+Message-ID: <AANLkTimPznW41N0aqkqjAKZdt73ugY2KBoRXFNPxuTOT@mail.gmail.com>
+Subject: Re: WARNING at net/wireless/reg.c when wireless network is
+	disconnected
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: =?UTF-8?Q?Thomas_B=C3=A4chler?= <thomas@archlinux.org>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h  |    8 ------
- drivers/net/wireless/ath/ath9k/common.c |   31 ++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/common.h |   11 ++++++++
- drivers/net/wireless/ath/ath9k/gpio.c   |   40 ++++--------------------------
- 4 files changed, 48 insertions(+), 42 deletions(-)
+On Wed, Aug 4, 2010 at 7:52 AM, John W. Linville <linville@tuxdriver.com> wrote:
+> On Wed, Aug 04, 2010 at 04:28:28PM +0200, Thomas Bächler wrote:
+>> Am 04.08.2010 15:49, schrieb John W. Linville:
+>> > On Wed, Aug 04, 2010 at 01:36:23PM +0200, Thomas Bächler wrote:
+>> >> Hello,
+>> >>
+>> >> this warning has been around ever since I switched to 2.6.34, has
+>> >> accompanied me through the 2.6.35-rc* phase and is still there with
+>> >> 2.6.35. I didn't bother to report it so far, as there seems to be no harm.
+>> >>
+>> >> Whenever I disconnect/get disconnected from the wireless, I receive the
+>> >> below warning:
+>> >>
+>> >> ------------[ cut here ]------------
+>> >> WARNING: at net/wireless/reg.c:272
+>> >> regulatory_hint_disconnect+0x1b3/0x230 [cfg80211]()
+>> >> Hardware name: TECRA A11
+>> >> Unexpected user alpha2: de
+>> >
+>> > Perhaps you need to set the regdomain as "DE" rather than "de"?
+>> >
+>> > John
+>>
+>> You are actually right. I did set it to "DE" with iw, but wpa_supplicant
+>> had a setting country="de". I just fixed that and will soon see if the
+>> problem disappears.
+>>
+>> Still, the warning shouldn't look like a bad kernel bug, but rather an
+>> advisory to the user to set something sane. What confuses me even more
+>> is that this has been set to DE afterwards:
+>
+> Perhaps we should just upcase the alpha2 value?  I'm not sure why we don't.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index def0cd3..f0197a6 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -437,14 +437,6 @@ void ath_ani_calibrate(unsigned long data);
- /* BTCOEX */
- /**********/
- 
--/* Defines the BT AR_BT_COEX_WGHT used */
--enum ath_stomp_type {
--	ATH_BTCOEX_NO_STOMP,
--	ATH_BTCOEX_STOMP_ALL,
--	ATH_BTCOEX_STOMP_LOW,
--	ATH_BTCOEX_STOMP_NONE
--};
--
- struct ath_btcoex {
- 	bool hw_timer_enabled;
- 	spinlock_t btcoex_lock;
-diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
-index 3100c87..31cfe46 100644
---- a/drivers/net/wireless/ath/ath9k/common.c
-+++ b/drivers/net/wireless/ath/ath9k/common.c
-@@ -420,6 +420,37 @@ int ath9k_cmn_count_streams(unsigned int chainmask, int max)
- }
- EXPORT_SYMBOL(ath9k_cmn_count_streams);
- 
-+/*
-+ * Configures appropriate weight based on stomp type.
-+ */
-+void ath9k_cmn_btcoex_bt_stomp(struct ath_common *common,
-+				  enum ath_stomp_type stomp_type)
-+{
-+	struct ath_hw *ah = common->ah;
-+
-+	switch (stomp_type) {
-+	case ATH_BTCOEX_STOMP_ALL:
-+		ath9k_hw_btcoex_set_weight(ah, AR_BT_COEX_WGHT,
-+					   AR_STOMP_ALL_WLAN_WGHT);
-+		break;
-+	case ATH_BTCOEX_STOMP_LOW:
-+		ath9k_hw_btcoex_set_weight(ah, AR_BT_COEX_WGHT,
-+					   AR_STOMP_LOW_WLAN_WGHT);
-+		break;
-+	case ATH_BTCOEX_STOMP_NONE:
-+		ath9k_hw_btcoex_set_weight(ah, AR_BT_COEX_WGHT,
-+					   AR_STOMP_NONE_WLAN_WGHT);
-+		break;
-+	default:
-+		ath_print(common, ATH_DBG_BTCOEX,
-+			  "Invalid Stomptype\n");
-+		break;
-+	}
-+
-+	ath9k_hw_btcoex_enable(ah);
-+}
-+EXPORT_SYMBOL(ath9k_cmn_btcoex_bt_stomp);
-+
- static int __init ath9k_cmn_init(void)
- {
- 	return 0;
-diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
-index 97809d3..fcc3f9a 100644
---- a/drivers/net/wireless/ath/ath9k/common.h
-+++ b/drivers/net/wireless/ath/ath9k/common.h
-@@ -52,6 +52,14 @@
- #define ATH_EP_RND(x, mul) 						\
- 	((((x)%(mul)) >= ((mul)/2)) ? ((x) + ((mul) - 1)) / (mul) : (x)/(mul))
- 
-+/* Defines the BT AR_BT_COEX_WGHT used */
-+enum ath_stomp_type {
-+	ATH_BTCOEX_NO_STOMP,
-+	ATH_BTCOEX_STOMP_ALL,
-+	ATH_BTCOEX_STOMP_LOW,
-+	ATH_BTCOEX_STOMP_NONE
-+};
-+
- int ath9k_cmn_padpos(__le16 frame_control);
- int ath9k_cmn_get_hw_crypto_keytype(struct sk_buff *skb);
- void ath9k_cmn_update_ichannel(struct ieee80211_hw *hw,
-@@ -65,3 +73,6 @@ int ath9k_cmn_key_config(struct ath_common *common,
- void ath9k_cmn_key_delete(struct ath_common *common,
- 			  struct ieee80211_key_conf *key);
- int ath9k_cmn_count_streams(unsigned int chainmask, int max);
-+void ath9k_cmn_btcoex_bt_stomp(struct ath_common *common,
-+				  enum ath_stomp_type stomp_type);
-+
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 3a8ee99..4a9a68b 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -251,36 +251,6 @@ static void ath_detect_bt_priority(struct ath_softc *sc)
- 	}
- }
- 
--/*
-- * Configures appropriate weight based on stomp type.
-- */
--static void ath9k_btcoex_bt_stomp(struct ath_softc *sc,
--				  enum ath_stomp_type stomp_type)
--{
--	struct ath_hw *ah = sc->sc_ah;
--
--	switch (stomp_type) {
--	case ATH_BTCOEX_STOMP_ALL:
--		ath9k_hw_btcoex_set_weight(ah, AR_BT_COEX_WGHT,
--					   AR_STOMP_ALL_WLAN_WGHT);
--		break;
--	case ATH_BTCOEX_STOMP_LOW:
--		ath9k_hw_btcoex_set_weight(ah, AR_BT_COEX_WGHT,
--					   AR_STOMP_LOW_WLAN_WGHT);
--		break;
--	case ATH_BTCOEX_STOMP_NONE:
--		ath9k_hw_btcoex_set_weight(ah, AR_BT_COEX_WGHT,
--					   AR_STOMP_NONE_WLAN_WGHT);
--		break;
--	default:
--		ath_print(ath9k_hw_common(ah), ATH_DBG_BTCOEX,
--			  "Invalid Stomptype\n");
--		break;
--	}
--
--	ath9k_hw_btcoex_enable(ah);
--}
--
- static void ath9k_gen_timer_start(struct ath_hw *ah,
- 				  struct ath_gen_timer *timer,
- 				  u32 timer_next,
-@@ -319,6 +289,7 @@ static void ath_btcoex_period_timer(unsigned long data)
- 	struct ath_softc *sc = (struct ath_softc *) data;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_btcoex *btcoex = &sc->btcoex;
-+	struct ath_common *common = ath9k_hw_common(ah);
- 	u32 timer_period;
- 	bool is_btscan;
- 
-@@ -328,7 +299,7 @@ static void ath_btcoex_period_timer(unsigned long data)
- 
- 	spin_lock_bh(&btcoex->btcoex_lock);
- 
--	ath9k_btcoex_bt_stomp(sc, is_btscan ? ATH_BTCOEX_STOMP_ALL :
-+	ath9k_cmn_btcoex_bt_stomp(common, is_btscan ? ATH_BTCOEX_STOMP_ALL :
- 			      btcoex->bt_stomp_type);
- 
- 	spin_unlock_bh(&btcoex->btcoex_lock);
-@@ -359,17 +330,18 @@ static void ath_btcoex_no_stomp_timer(void *arg)
- 	struct ath_softc *sc = (struct ath_softc *)arg;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_btcoex *btcoex = &sc->btcoex;
-+	struct ath_common *common = ath9k_hw_common(ah);
- 	bool is_btscan = sc->sc_flags & SC_OP_BT_SCAN;
- 
--	ath_print(ath9k_hw_common(ah), ATH_DBG_BTCOEX,
-+	ath_print(common, ATH_DBG_BTCOEX,
- 		  "no stomp timer running\n");
- 
- 	spin_lock_bh(&btcoex->btcoex_lock);
- 
- 	if (btcoex->bt_stomp_type == ATH_BTCOEX_STOMP_LOW || is_btscan)
--		ath9k_btcoex_bt_stomp(sc, ATH_BTCOEX_STOMP_NONE);
-+		ath9k_cmn_btcoex_bt_stomp(common, ATH_BTCOEX_STOMP_NONE);
- 	 else if (btcoex->bt_stomp_type == ATH_BTCOEX_STOMP_ALL)
--		ath9k_btcoex_bt_stomp(sc, ATH_BTCOEX_STOMP_LOW);
-+		ath9k_cmn_btcoex_bt_stomp(common, ATH_BTCOEX_STOMP_LOW);
- 
- 	spin_unlock_bh(&btcoex->btcoex_lock);
- }
--- 
-1.6.3.3
+It just needs to be implemented.
 
+  Luis
