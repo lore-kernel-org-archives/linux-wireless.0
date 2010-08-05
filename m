@@ -1,67 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:41546 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755824Ab0HKS6N (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Aug 2010 14:58:13 -0400
-Date: Wed, 11 Aug 2010 21:57:25 +0300
-From: Felipe Balbi <felipe.balbi@nokia.com>
-To: "ext DebBarma, Tarun Kanti" <tarun.kanti@ti.com>
-Cc: "Balbi Felipe (Nokia-MS/Helsinki)" <felipe.balbi@nokia.com>,
-	Ohad Ben-Cohen <ohad@wizery.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	Ido Yariv <ido@wizery.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"Chikkature Rajashekar, Madhusudhan" <madhu.cr@ti.com>,
-	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	San Mehat <san@google.com>,
-	"Quadros Roger (Nokia-MS/Helsinki)" <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	"Pandita, Vikram" <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>
-Subject: Re: [PATCH v4 3/8] wireless: wl1271: add platform driver to get
- board data
-Message-ID: <20100811185724.GD21778@nokia.com>
-Reply-To: felipe.balbi@nokia.com
-References: <1281550913-17633-1-git-send-email-ohad@wizery.com>
- <1281550913-17633-4-git-send-email-ohad@wizery.com>
- <5A47E75E594F054BAF48C5E4FC4B92AB0324110ABD@dbde02.ent.ti.com>
- <20100811184742.GA21778@nokia.com>
- <5A47E75E594F054BAF48C5E4FC4B92AB0324110AC1@dbde02.ent.ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-In-Reply-To: <5A47E75E594F054BAF48C5E4FC4B92AB0324110AC1@dbde02.ent.ti.com>
+Received: from lo.gmane.org ([80.91.229.12]:41207 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759361Ab0HEA5a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Aug 2010 20:57:30 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1Ogom1-0002S4-8h
+	for linux-wireless@vger.kernel.org; Thu, 05 Aug 2010 02:57:29 +0200
+Received: from 216-31-249-246.static-ip.telepacific.net ([216.31.249.246])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Aug 2010 02:57:29 +0200
+Received: from graman by 216-31-249-246.static-ip.telepacific.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Aug 2010 02:57:29 +0200
+To: linux-wireless@vger.kernel.org
+From: Gopal Raman <graman@arubanetworks.com>
+Subject: Re: ath5k : Channel 149 thru 161 not working with compat-wireless-2.6.34.1
+Date: Thu, 5 Aug 2010 00:57:21 +0000 (UTC)
+Message-ID: <loom.20100805T025322-892@post.gmane.org>
+References: <loom.20100805T020816-848@post.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-On Wed, Aug 11, 2010 at 08:52:54PM +0200, ext DebBarma, Tarun Kanti wrote:
->True; however if we go by that argument than we can also assume pdata 
->is valid, so that we would not need the below check.
 
-of course not. You can have devices that just play well with default 
-values or devices where you don't need the flexibility of platform data. 
-That's why we check.
+> 
 
-platform_device pointers on the other hand, are guaranteed to be always 
-true, if it isn't then you should oops, you deserve to oops because 
-something is really really wrong.
+Gopal Raman <graman@...> writes:
 
->Still, I would go ahead and find out if there is any scenario where 
->pdev can go wrong during device registration. Thanks.
+Another piece of information is that when the channel is set to 149, 'cat
+/proc/interrupts' hardly increments whereas on channel 36 it goes up
+real fast. Also 'iw ph0 info' does show that channels 149 thru 161
+in its output.
+-gopal
 
-if that scenario ever happens, it's either a bug on your implementation 
-or driver-core. In both cases you deserve to oops so we catch such 
-problems at early stages.
-
--- 
-balbi
-
-DefectiveByDesign.org
