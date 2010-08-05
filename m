@@ -1,66 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:44704 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752412Ab0HKNT2 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:59659 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759092Ab0HEN7l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Aug 2010 09:19:28 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, Ido Yariv <ido@wizery.com>,
-	San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Gao Yunpeng <yunpeng.gao@intel.com>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [RFC 0/6] adding SDIO Runtime PM support
-Date: Wed, 11 Aug 2010 16:19:24 +0300
-Message-Id: <1281532770-27545-1-git-send-email-ohad@wizery.com>
+	Thu, 5 Aug 2010 09:59:41 -0400
+Date: Thu, 5 Aug 2010 09:45:31 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?iso-8859-1?Q?J=F3natan_Mu=F1oz?= <jmunoz@umh.es>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [ath9k]: Beaconing process in ad-hoc mode
+Message-ID: <20100805134531.GA2779@tuxdriver.com>
+References: <002c01cb3495$0ff49610$2fddc230$@es>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <002c01cb3495$0ff49610$2fddc230$@es>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SDIO function drivers should be able to power down/up
-their cards (e.g. a WLAN SDIO driver might want to
-power down its card whenever wlan0 is down).
+On Thu, Aug 05, 2010 at 01:55:05PM +0200, Jónatan Muñoz wrote:
+> Dear All,
+> 
+> I am working in a project where I need to modified the currently beaconing
+> system for adhoc mode in ath9k, what I want to achieve is that each station
+> in an adhoc network send periodically a beacon. As I know, when a station in
+> the network receives a beacon before sending its own beacon, cancels the
+> transmission, updates its hw tsf based on the received beacon and waits for
+> a chance to send the beacon during next TBTT.
+> 
+> For my goal, I think that I should comment the part where the transmission
+> of the beacon is cancelled. In this way, each station will send a beacon
+> each 100TU (~100 ms). I know that this mean a increased traffic load on the
+> network, but it is so much important for the project to obtain a beacon for
+> each station each 100ms.
+> 
+> Right now, I am looking at the source code of ath9k, I am trying to modify
+> the file beacon.c, but I don’t find the way to get my purpose. Could anyone
+> help me to find the right place at the code that I have to modify? I am a
+> bit lost and any help would be greatly appreciated.
+> 
+> Thanks in advance.
+> 
+> PD: Please excuse my poor English
+> 
+> John
 
-In the past few weeks we've been discussing how this
-could be achieved, and I'd like to present a new approach,
-which is based on runtime pm API.
+I think you should be looking in net/mac80211/ibss.c.
 
-The following few patches add runtime pm support for SDIO
-devices, and demonstrate it with the wl1271_sdio driver.
-Basic functionality is provided: The power state of the
-device is now coupled with the state of the wlan0 interface.
+Hth!
 
-The nice thing about this approach is how small it is,
-as the runtime PM core is already taking care of everything
-needed (usage counts, device hierarchy, established set of API,
-synchronization, ...).
-
-Having said that, I'd like to stress that these patches
-are early submitted for RFC purposes only, as they
-are still in a preliminary state and only lightly tested.
-
-Please note that I will soon be leaving for the rest of August and
-am going to have a very limited email access, so it might
-take me some time to respond.
-
-Appreciate your feedback,
-
-Thank you,
-
-Ohad Ben-Cohen (6):
-  mmc: sdio: fully reconfigure oldcard on resume
-  sdio: add power_restore support
-  mmc: add general runtime PM support
-  sdio: add general runtime PM support
-  sdio: enable Runtime PM for SDIO cards
-  wireless: wl1271_sdio: enable Runtime PM
-
- drivers/mmc/core/bus.c                    |   35 +++++++++++++++++++++++++++
- drivers/mmc/core/sdio.c                   |   24 +++++++++++++++---
- drivers/mmc/core/sdio_bus.c               |   10 ++++++++
- drivers/net/wireless/wl12xx/wl1271_sdio.c |   37 ++++++++++++++++++++++++++++-
- 4 files changed, 101 insertions(+), 5 deletions(-)
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
