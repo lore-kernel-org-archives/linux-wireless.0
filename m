@@ -1,52 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:2199 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932307Ab0HORNU (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:59143 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754742Ab0HES1m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Aug 2010 13:13:20 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 4/6] ath5k: remove monitor check in receive_frame_ok filter
-Date: Sun, 15 Aug 2010 13:03:13 -0400
-Message-Id: <1281891795-14718-5-git-send-email-me@bobcopeland.com>
-In-Reply-To: <1281891795-14718-1-git-send-email-me@bobcopeland.com>
-References: <1281891795-14718-1-git-send-email-me@bobcopeland.com>
+	Thu, 5 Aug 2010 14:27:42 -0400
+Received: by iwn33 with SMTP id 33so372232iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Aug 2010 11:27:41 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1280931516-29665-1-git-send-email-kkhere.geo@gmail.com>
+References: <1280931516-29665-1-git-send-email-kkhere.geo@gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 5 Aug 2010 11:27:21 -0700
+Message-ID: <AANLkTim7CqtS-oKZLp3UGRQi7dHdQyHLtL=9QRG0jC2M@mail.gmail.com>
+Subject: Re: [PATCH] build fixes for compat-wireless due to PCMCIA changes
+To: Kshitij Kulshreshtha <kkhere.geo@gmail.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Monitor interfaces are never seen by the driver, so tests based on
-that opmode don't make sense.  Also, we already pass all mic
-failure packets.
+On Wed, Aug 4, 2010 at 7:18 AM, Kshitij Kulshreshtha
+<kkhere.geo@gmail.com> wrote:
+> Hello,
+> here are two patches for compat and compat-wireless that fix build with
+> linux-next.git tag next-20100804 and kernel v2.6.34
+>
+> The patch for compat-wireless is only
+> leftovers from Luis R. Rodriguez' commit dedb6981 in
+> drivers/net/wireless/orinoco/{orinoco,spectrum}_cs.c
+>
+> The patch for compat backports the newly added pcmcia_{read,write}_config_byte()
+> functions in <pcmcia/ds.h>
+>
+> Thanks and regards.
 
-Consequently this code is actually accepting any frames with just
-crypto errors and rejecting those with CRC, FIFO, and PHY errors for
-all interface types.  Adjust the code and comment accordingly.
+Thank you, patches applied and pushed out!
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath/ath5k/base.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 9c49b8d..03808b8 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -2035,9 +2035,8 @@ ath5k_receive_frame_ok(struct ath5k_softc *sc, struct ath5k_rx_status *rs)
- 			return true;
- 		}
- 
--		/* let crypto-error packets fall through in MNTR */
--		if ((rs->rs_status & ~(AR5K_RXERR_DECRYPT|AR5K_RXERR_MIC)) ||
--		    sc->opmode != NL80211_IFTYPE_MONITOR)
-+		/* reject any frames with non-crypto errors */
-+		if (rs->rs_status & ~(AR5K_RXERR_DECRYPT))
- 			return false;
- 	}
- 
--- 
-1.7.1.1
-
-
+  Luis
