@@ -1,132 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:44704 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752690Ab0HKNTp (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43916 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933385Ab0HEPpR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Aug 2010 09:19:45 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, Ido Yariv <ido@wizery.com>,
-	San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Gao Yunpeng <yunpeng.gao@intel.com>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [RFC/PATCH 6/6] wireless: wl1271_sdio: enable Runtime PM
-Date: Wed, 11 Aug 2010 16:19:30 +0300
-Message-Id: <1281532770-27545-7-git-send-email-ohad@wizery.com>
-In-Reply-To: <1281532770-27545-1-git-send-email-ohad@wizery.com>
-References: <1281532770-27545-1-git-send-email-ohad@wizery.com>
+	Thu, 5 Aug 2010 11:45:17 -0400
+Subject: [PATCH] cfg80211: support sysfs namespaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"Eric W. Biederman" <ebiederm@xmission.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 05 Aug 2010 17:45:15 +0200
+Message-ID: <1281023115.4058.11.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable runtime pm for the wl1271 SDIO device.
+From: Johannes Berg <johannes.berg@intel.com>
 
-We request power whenever the WLAN interface is brought up,
-and release it after the WLAN interface is taken down.
+Enable using network namespaces with
+wireless devices even when sysfs is
+enabled using the same infrastructure
+that was built for netdevs.
 
-As a result, power is released immediately after probe returns,
-since at that point power has not been explicitly requested yet
-(i.e. the WLAN interface is still down).
-
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/wl12xx/wl1271_sdio.c |   37 ++++++++++++++++++++++++++++-
- 1 files changed, 36 insertions(+), 1 deletions(-)
+NB: This generates a harmless gcc warning, I submitted
+    a patch to fix it here:
+    http://thread.gmane.org/gmane.linux.kernel/1019330
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-index bfb18b6..2dede64 100644
---- a/drivers/net/wireless/wl12xx/wl1271_sdio.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-@@ -33,6 +33,7 @@
- #include <linux/gpio.h>
- #include <linux/platform_device.h>
- #include <linux/completion.h>
-+#include <linux/pm_runtime.h>
+ include/linux/netdevice.h |    2 ++
+ net/core/net-sysfs.c      |    3 ++-
+ net/wireless/core.c       |    7 ++++++-
+ net/wireless/sysfs.c      |    9 +++++++++
+ 4 files changed, 19 insertions(+), 2 deletions(-)
+
+--- wireless-testing.orig/net/core/net-sysfs.c	2010-08-05 17:33:47.000000000 +0200
++++ wireless-testing/net/core/net-sysfs.c	2010-08-05 17:38:27.000000000 +0200
+@@ -789,12 +789,13 @@ static const void *net_netlink_ns(struct
+ 	return sock_net(sk);
+ }
  
- #include "wl1271.h"
- #include "wl12xx_80211.h"
-@@ -156,20 +157,23 @@ static void wl1271_sdio_raw_write(struct wl1271 *wl, int addr, void *buf,
- static int wl1271_sdio_set_power(struct wl1271 *wl, bool enable)
+-static struct kobj_ns_type_operations net_ns_type_operations = {
++struct kobj_ns_type_operations net_ns_type_operations = {
+ 	.type = KOBJ_NS_TYPE_NET,
+ 	.current_ns = net_current_ns,
+ 	.netlink_ns = net_netlink_ns,
+ 	.initial_ns = net_initial_ns,
+ };
++EXPORT_SYMBOL_GPL(net_ns_type_operations);
+ 
+ static void net_kobj_ns_exit(struct net *net)
  {
- 	struct sdio_func *func = wl_to_func(wl);
-+	int err;
- 
- 	/* Let the SDIO stack handle wlan_enable control, so we
- 	 * keep host claimed while wlan is in use to keep wl1271
- 	 * alive.
- 	 */
- 	if (enable) {
-+		err = pm_runtime_get_sync(&func->dev);
- 		sdio_claim_host(func);
- 		sdio_enable_func(func);
- 	} else {
- 		sdio_disable_func(func);
- 		sdio_release_host(func);
-+		err = pm_runtime_put_sync(&func->dev);
- 	}
- 
--	return 0;
-+	return err;
+--- wireless-testing.orig/net/wireless/sysfs.c	2010-08-05 17:33:47.000000000 +0200
++++ wireless-testing/net/wireless/sysfs.c	2010-08-05 17:39:11.000000000 +0200
+@@ -110,6 +110,13 @@ static int wiphy_resume(struct device *d
+ 	return ret;
  }
  
- static struct wl1271_if_operations sdio_ops = {
-@@ -318,10 +322,23 @@ static int __devinit wl1271_probe(struct sdio_func *func,
- 
- 	sdio_set_drvdata(func, wl);
- 
-+	/* indicate to Runtime PM core that our device is active */
-+	ret = pm_runtime_set_active(&func->dev);
-+	if (ret)
-+		goto unreg_hw;
-+
-+	/* enable Runtime PM.
-+	 * When probe will return, runtime pm will immediately release power
-+	 * for us since we call pm_runtime_get() only when the user brings up
-+	 * the WLAN interface */
-+	pm_runtime_enable(&func->dev);
-+
- 	wl1271_notice("initialized");
- 
- 	return 0;
- 
-+unreg_hw:
-+	wl1271_unregister_hw(wl);
- out_irq:
- 	free_irq(wl->irq, wl);
- put_data:
-@@ -346,11 +363,29 @@ static void __devexit wl1271_remove(struct sdio_func *func)
- 	wl1271_free_hw(wl);
- }
- 
-+static int wl1271_sdio_runtime_suspend(struct device *dev)
++static const void *wiphy_namespace(struct device *d)
 +{
-+	return 0;
++	struct wiphy *wiphy = container_of(d, struct wiphy, dev);
++
++	return wiphy_net(wiphy);
 +}
 +
-+static int wl1271_sdio_runtime_resume(struct device *dev)
-+{
-+	return 0;
-+}
-+
-+static const struct dev_pm_ops wl1271_sdio_pm_ops = {
-+	.runtime_suspend = wl1271_sdio_runtime_suspend,
-+	.runtime_resume = wl1271_sdio_runtime_resume,
-+};
-+
- static struct sdio_driver wl1271_sdio_driver = {
- 	.name		= "wl1271_sdio",
- 	.id_table	= wl1271_devices,
- 	.probe		= wl1271_probe,
- 	.remove		= __devexit_p(wl1271_remove),
-+	.drv = {
-+		.pm = &wl1271_sdio_pm_ops,
-+	},
+ struct class ieee80211_class = {
+ 	.name = "ieee80211",
+ 	.owner = THIS_MODULE,
+@@ -120,6 +127,8 @@ struct class ieee80211_class = {
+ #endif
+ 	.suspend = wiphy_suspend,
+ 	.resume = wiphy_resume,
++	.ns_type = &net_ns_type_operations,
++	.namespace = wiphy_namespace,
  };
  
- static int __init wl1271_init(void)
--- 
-1.7.0.4
+ int wiphy_sysfs_init(void)
+--- wireless-testing.orig/net/wireless/core.c	2010-08-05 17:33:47.000000000 +0200
++++ wireless-testing/net/wireless/core.c	2010-08-05 17:38:27.000000000 +0200
+@@ -253,11 +253,16 @@ int cfg80211_switch_netns(struct cfg8021
+ 			WARN_ON(err);
+ 			wdev->netdev->features |= NETIF_F_NETNS_LOCAL;
+ 		}
++
++		return err;
+ 	}
+ 
+ 	wiphy_net_set(&rdev->wiphy, net);
+ 
+-	return err;
++	err = device_rename(&rdev->wiphy.dev, dev_name(&rdev->wiphy.dev));
++	WARN_ON(err);
++
++	return 0;
+ }
+ 
+ static void cfg80211_rfkill_poll(struct rfkill *rfkill, void *data)
+--- wireless-testing.orig/include/linux/netdevice.h	2010-08-05 17:13:50.000000000 +0200
++++ wireless-testing/include/linux/netdevice.h	2010-08-05 17:39:02.000000000 +0200
+@@ -2171,6 +2171,8 @@ extern void dev_seq_stop(struct seq_file
+ extern int netdev_class_create_file(struct class_attribute *class_attr);
+ extern void netdev_class_remove_file(struct class_attribute *class_attr);
+ 
++extern struct kobj_ns_type_operations net_ns_type_operations;
++
+ extern char *netdev_drivername(const struct net_device *dev, char *buffer, int len);
+ 
+ extern void linkwatch_run_queue(void);
+
 
