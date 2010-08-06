@@ -1,51 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:35187 "EHLO lo.gmane.org"
+Received: from hyde.gogi.tv ([87.106.167.24]:49107 "EHLO hyde.gogi.tv"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758413Ab0HOQHJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Aug 2010 12:07:09 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1OkXrU-0001yP-Gz
-	for linux-wireless@vger.kernel.org; Sun, 15 Aug 2010 09:42:32 +0200
-Received: from rain.gmane.org ([80.91.229.7])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 15 Aug 2010 09:42:32 +0200
-Received: from marcus by rain.gmane.org with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 15 Aug 2010 09:42:32 +0200
+	id S932168Ab0HFA62 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Aug 2010 20:58:28 -0400
+From: Daniel Haid <d.haid@gogi.tv>
 To: linux-wireless@vger.kernel.org
-From: Marcus Better <marcus@better.se>
-Subject: iwl3945 not associating on 2.6.35
-Date: Sun, 15 Aug 2010 09:42:15 +0200
-Message-ID: <i485ou$qmb$1@dough.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Subject: Re: Capturing packets with bad FCS in monitor mode
+Date: Fri, 6 Aug 2010 02:58:07 +0200
+Cc: Qasim Javed <qasimj@gmail.com>
+References: <201008051614.11546.d.haid@gogi.tv> <AANLkTikM_hyo71PyMLQ9z63FnOkusbKQb7OkRWfOvSTZ@mail.gmail.com>
+In-Reply-To: <AANLkTikM_hyo71PyMLQ9z63FnOkusbKQb7OkRWfOvSTZ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201008060258.07539.d.haid@gogi.tv>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+> In order to receive frames with CRC errors in monitor mode, I just
+> removed ATH9K_RXERR_CRC from the above snippet, recompiled and
+> reloaded ath9k and was able to receive frames with CRC errors.
 
-Hi,
+I assume this is the case because the driver is still being developed and
+the correct behaviour would be that frames with CRC errors are recieved
+in monitor mode if and only if the fcsfail flag is not set.
 
-after upgrading from 2.6.34 to either 2.6.35 or 2.6.35.1, wpasupplicant will 
-no longer associate to my WPA2 access point. The log is full of "Failed to 
-initiate AP scan" messages.
+Will a patch be accepted that implements that behaviour? What else
+must the patch contain for it to be accepted?
 
-Is this a known issue? I couldn't quite find out by sifting through the 
-archives... The system is a Thinkpad T61, x86_64, Debian sid, network-
-manager and wpasupplicant 0.6.10-2.
+(For example, what about the radiotap header? Will it automatically
+have the bad fcs flag set when for a corrupted packet? Or does that
+have to be still implemented as well?)
 
-Cheers,
-
-Marcus
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAkxnmlcACgkQXjXn6TzcAQnMGACfWGBirSDBKoTpgC0wbvVprU3W
-U3wAmgKGiivAZdln14CdkBWIF2hJd+BS
-=84Cy
------END PGP SIGNATURE-----
-
-
+Thank you
