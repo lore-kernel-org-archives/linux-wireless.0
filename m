@@ -1,67 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw-sa02.nokia.com ([147.243.1.48]:59136 "EHLO
-	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751286Ab0HQFuK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Aug 2010 01:50:10 -0400
-Subject: Re: [PATCH 10/16] drivers/net/wireless/wl12xx: Use available error
- codes
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Julia Lawall <julia@diku.dk>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
+Received: from mga09.intel.com ([134.134.136.24]:5071 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759702Ab0HFOwI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Aug 2010 10:52:08 -0400
+Subject: Re: [PATCH 3/8] iwlwifi: separate thermal throttling function
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: "linville@tuxdriver.com" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.1008161827140.19313@ask.diku.dk>
-References: <Pine.LNX.4.64.1008161827140.19313@ask.diku.dk>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 17 Aug 2010 08:42:21 +0300
-Message-ID: <1282023741.1773.9.camel@powerslave>
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <1281100480.3853.424.camel@jlt3.sipsolutions.net>
+References: <1280590452-10655-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <1280590452-10655-4-git-send-email-wey-yi.w.guy@intel.com>
+	 <1281100480.3853.424.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain
+Date: Fri, 06 Aug 2010 07:51:31 -0700
+Message-Id: <1281106291.22150.2.camel@wwguy-ubuntu>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-08-16 at 18:27 +0200, ext Julia Lawall wrote:
-> From: Julia Lawall <julia@diku.dk>
-> 
-> Error codes are stored in ret, but the return value is always 0.  Return
-> ret instead.
-> 
-> The semantic match that finds this problem is as follows:
-> (http://coccinelle.lip6.fr/)
-> 
-> // <smpl>
-> @r@
-> local idexpression x;
-> constant C;
-> @@
-> 
-> if (...) { ...
->   x = -C
->   ... when != x
-> (
->   return <+...x...+>;
-> |
->   return NULL;
-> |
->   return;
-> |
-> * return ...;
-> )
-> }
-> // </smpl>
-> 
-> Signed-off-by: Julia Lawall <julia@diku.dk>
-> 
-> ---
+Hi Johannes,
 
+Thanks very much to catch this bug. 
 
-This was indeed a bug.  Thanks!
+John, please do not take the "thermal throttling" patch, I will fix it
+up and re-submit.
 
-Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
+Thanks
 
--- 
-Cheers,
-Luca.
+On Fri, 2010-08-06 at 06:14 -0700, Johannes Berg wrote:
+> > @@ -325,9 +283,15 @@ int iwl_power_update_mode(struct iwl_priv *priv, bool force)
+> >  	else if (priv->cfg->supports_idle &&
+> >  		 priv->hw->conf.flags & IEEE80211_CONF_IDLE)
+> >  		iwl_static_sleep_cmd(priv, &cmd, IWL_POWER_INDEX_5, 20);
+> > -	else if (tt->state >= IWL_TI_1)
+> > -		iwl_static_sleep_cmd(priv, &cmd, tt->tt_power_mode, dtimper);
+> > -	else if (!enabled)
+> > +	else if (priv->cfg->ops->lib->tt_ops.lower_power_detection &&
+> > +		 priv->cfg->ops->lib->tt_ops.tt_power_mode) {
+> > +		if (priv->cfg->ops->lib->tt_ops.lower_power_detection(priv)) {
+> > +			/* in thermal throttling low power state */
+> > +			iwl_static_sleep_cmd(priv, &cmd,
+> > +			    priv->cfg->ops->lib->tt_ops.tt_power_mode(priv),
+> > +			    dtimper);
+> > +		}
+> > +	} else if (!enabled)
+> >  		iwl_power_sleep_cam_cmd(priv, &cmd);
+> >  	else if (priv->power_data.debug_sleep_level_override >= 0)
+> >  		iwl_static_sleep_cmd(priv, &cmd,
+> 
+> This is very very broken because it adds an often-used code path that
+> will not initialise "cmd" at all. It needs to be
+> 
+> ...
+> else if (priv->...lower_power_detection &&
+>          priv->...tt_power_mode &&
+>          priv->...lower_power_detection(priv))
+>         iwl_static_sleep_cmd(...)
+> else if (!enabled)
+> ...
+> 
+> johannes
+> 
 
