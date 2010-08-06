@@ -1,46 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw-sa02.nokia.com ([147.243.1.48]:26311 "EHLO
-	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754002Ab0H0L1Q (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35616 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752473Ab0HFU3o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 07:27:16 -0400
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes.berg@intel.com
-Subject: [PATCHv2 0/4] mac80211: cfg80211: support for hw-only crypts and custom control port protocols
-Date: Fri, 27 Aug 2010 14:26:50 +0300
-Message-Id: <1282908414-26783-1-git-send-email-juuso.oikarinen@nokia.com>
+	Fri, 6 Aug 2010 16:29:44 -0400
+Date: Fri, 6 Aug 2010 16:19:56 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: wireless-testing won't build
+Message-ID: <20100806201956.GD2753@tuxdriver.com>
+References: <4C5C694A.7060500@candelatech.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4C5C694A.7060500@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches enable usage of hw-only cipher-suites, and enable using
-control port ethertypes other than ETH_P_PAE for key-negotiation.
+On Fri, Aug 06, 2010 at 12:58:02PM -0700, Ben Greear wrote:
+> [greearb@grok2 wireless-testing.p4s]$ make bzImage modules
+> make -C /home/greearb/git/wireless-testing O=/home/greearb/kernel/2.6/wireless-testing.p4s/. bzImage modules
+>   Using /home/greearb/git/wireless-testing as source for kernel
+>   GEN     /home/greearb/kernel/2.6/wireless-testing.p4s/Makefile
+>   CHK     include/linux/version.h
+>   CHK     include/generated/utsrelease.h
+>   CALL    /home/greearb/git/wireless-testing/scripts/checksyscalls.sh
+>   CHK     include/generated/compile.h
+>   CC [M]  drivers/net/wireless/libertas/cfg.o
+> /home/greearb/git/wireless-testing/drivers/net/wireless/libertas/cfg.c: In function ‘lbs_scan_worker’:
+> /home/greearb/git/wireless-testing/drivers/net/wireless/libertas/cfg.c:722: error: ‘TASK_NORMAL’ undeclared (first use in this function)
+> /home/greearb/git/wireless-testing/drivers/net/wireless/libertas/cfg.c:722: error: (Each undeclared identifier is reported only once
+> /home/greearb/git/wireless-testing/drivers/net/wireless/libertas/cfg.c:722: error: for each function it appears in.)
+> /home/greearb/git/wireless-testing/drivers/net/wireless/libertas/cfg.c: In function ‘lbs_cfg_connect’:
+> /home/greearb/git/wireless-testing/drivers/net/wireless/libertas/cfg.c:1267: error: ‘TASK_INTERRUPTIBLE’ undeclared (first use in this function)
+> /home/greearb/git/wireless-testing/drivers/net/wireless/libertas/cfg.c:1267: error: implicit declaration of function ‘signal_pending’
+> /home/greearb/git/wireless-testing/drivers/net/wireless/libertas/cfg.c:1267: error: implicit declaration of function ‘schedule_timeout’
+> make[6]: *** [drivers/net/wireless/libertas/cfg.o] Error 1
+> make[5]: *** [drivers/net/wireless/libertas] Error 2
+> make[4]: *** [drivers/net/wireless] Error 2
+> make[3]: *** [drivers/net] Error 2
+> make[2]: *** [drivers] Error 2
+> make[1]: *** [sub-make] Error 2
+> make: *** [all] Error 2
 
-These patches are originally written by Johannes Berg, finalized and tested by
-myself.
+It builds here...does adding "#include <linux/sched.h>" at the top
+of drivers/net/wireless/libertas/cfg.c correct this for you?
 
-v2: Add explicit setting to false for sdata->control_port_protocol in 
-    ieee80211_setup_sdata.
-
-Johannes Berg (4):
-  cfg80211: allow vendor specific cipher suites
-  mac80211: allow vendor specific cipher suites
-  cfg80211: allow changing port control protocol
-  mac80211: allow changing port control protocol
-
- include/linux/nl80211.h    |   16 ++++++++++++++-
- include/net/cfg80211.h     |   24 +++++++++++++++------
- net/mac80211/cfg.c         |    5 ++-
- net/mac80211/ieee80211_i.h |    4 +++
- net/mac80211/iface.c       |    2 +
- net/mac80211/key.c         |   38 ++++++++++++++++++++++++++++-------
- net/mac80211/key.h         |    6 ++--
- net/mac80211/main.c        |   47 ++++++++++++++++++++++++++++++++++++++-----
- net/mac80211/mlme.c        |    3 ++
- net/mac80211/rx.c          |    8 ++++++-
- net/mac80211/tx.c          |   32 +++++++++++++++++++++++++----
- net/wireless/nl80211.c     |   25 ++++++++++++++++++++--
- net/wireless/util.c        |    9 +++++++-
- net/wireless/wext-sme.c    |    2 +
- 14 files changed, 184 insertions(+), 37 deletions(-)
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
