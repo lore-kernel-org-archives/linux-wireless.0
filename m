@@ -1,45 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:49097 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752688Ab0HTLFH (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:50196 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761721Ab0HFSts (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Aug 2010 07:05:07 -0400
-Subject: Re: scanning a specific ssid
-From: Samuel Ortiz <samuel@sortiz.org>
-Reply-To: Samuel Ortiz <samuel@sortiz.org>
-To: Christopher Piggott <cpiggott@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTimPjyiJsdgX5j+YGQC_0=9FEfeCQUFWuXgxz7Qh@mail.gmail.com>
-References: <AANLkTimPjyiJsdgX5j+YGQC_0=9FEfeCQUFWuXgxz7Qh@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 20 Aug 2010 13:05:03 +0200
-Message-ID: <1282302303.3662.5.camel@sortiz-mobl>
-Mime-Version: 1.0
+	Fri, 6 Aug 2010 14:49:48 -0400
+Received: by eya25 with SMTP id 25so2902634eya.19
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Aug 2010 11:49:47 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 0/7] rt2x00 update
+Date: Fri, 6 Aug 2010 20:45:04 +0200
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201008062045.05288.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Christopher,
+Hi John,
 
-On Thu, 2010-08-19 at 16:25 -0400, Christopher Piggott wrote:
-> Hi,
-> 
-> I wrote a small C++ program using libdbus-c++ to scan for access
-> points via wpa_supplicant's dbus interface.  It works very well, and I
-> can retrieve the list just fine.
-> 
-> Now I want to cause it to scan for a specific SSID by issuing a probe,
-> but the dbus interface fi.epitest.hostap.WPASupplicant.Interface has
-> only one scan method, and it does not seem to take arguments.
-> (Looking at the source file ctrl_iface_dbus_handlers.c in function
-> wpas_dbus_iface_scan() you can see why - it doesn't handle or even
-> look at the arguments to the message).
-> 
-> Is there another way to accomplish this?  
-I don't know which version of wpa_supplicant you're using, but the new
-D-Bus API (fi.w1.wpa_supplicant1.*) has a much more extended scanning
-API. You can pass SSIDs, channels, IEs and the scanning type to it.
+Here is a fresh update for rt2x00 for 2.6.37, most notable
+change is the move of TX/RX handling to a workqueue, but
+more importantly the more accurate TX status reporting
+for rt2800usb
 
-Cheers,
-Samuel.
+Helmut Schaa (2):
+      rt2x00: Set MIMO PS flag in tx descriptor for STAs in dynamic SMPS mode
+      rt2x00: Update comments regarding TXWI and TX_STA_FIFO
 
+Ivo van Doorn (5):
+      rt2x00: Move USB tx/rx done handling to workqueue
+      rt2x00: Add helper function for reporting tx status
+      rt2x00: Request TXWI pointer from driver
+      rt2x00: Implement TX status reporting for rt2800usb
+      rt2x00: Remove ieee80211_rx_status from rt2x00_dev
 
+Ivo
