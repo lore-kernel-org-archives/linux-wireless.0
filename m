@@ -1,91 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:35374 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752278Ab0H0Sn2 (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:50964 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S965293Ab0HFTDn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 14:43:28 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
-	Amod Bodas <Amod.Bodas@atheros.com>
-Subject: [PATCH] ath9k: fix drop of multicast / broadcast data during scan
-Date: Fri, 27 Aug 2010 14:43:26 -0400
-Message-Id: <1282934606-4169-1-git-send-email-lrodriguez@atheros.com>
+	Fri, 6 Aug 2010 15:03:43 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 3B6C04195D
+	for <linux-wireless@vger.kernel.org>; Fri,  6 Aug 2010 15:02:18 -0400 (EDT)
+Subject: Compat-wireless release for 2010-08-06 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100806190340.9A51441133@repository3.orbit-lab.org>
+Date: Fri,  6 Aug 2010 15:03:38 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211's scan implementation puts the burden of processing the DTIM
-count on drivers to accurately disallow scanning during certain wait
-constraints. ath9k was allowing to change channel while a few of these
-wait constraints were still in effect causing some drop of buffered
-broadcast and multicast traffic. Fix this by checking for the wait
-constraints prior to switching channels.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   1bf4bba..bd3cf78  linux-2.6.35.y -> origin/linux-2.6.35.y
+   55764c1..8eb662b  wl         -> origin/wl
+ * [new tag]         compat-wireless-v2.6.35-1 -> compat-wireless-v2.6.35-1
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+   464e8d5..9855656  linux-2.6.35.y -> origin/linux-2.6.35.y
+   226b1c2..d6f0174  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   8a39b1f..b7cb6f4  history    -> origin/history
+ + b07c08d...598a80f master     -> origin/master  (forced update)
+   3cfc2c4..fc1caf6  stable     -> origin/stable
+ * [new tag]         next-20100806 -> next-20100806
 
-This is tested against a Cisco E3000 AP configued with a DTIM Interval of 2
-and beacon interval of 1000. Then setup ath9k to receive multicast
-traffic:
+compat-wireless code metrics
 
-  user@ath9k-RX-box $ iperf -s -u -B 224.0.55.55 -i 1
+    494668 - Total upstream lines of code being pulled
+      1532 - backport code changes
+      1296 - backport code additions
+       236 - backport code deletions
+      5805 - backport from compat module
+      7337 - total backport code
+    1.4832 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2462 - % of crap code
 
-On the transmit multicast box connected to the same AP:
-
-  user@ath9k-TX-box $ while true ; do iperf -c 224.0.55.55 \
-	-u -T 32 -t 3 -i 1 -b 10M -t 1000; sleep 2 ; done
-
-Without this patch we would otherwise loose that data. You can verify we run into
-this by enabling the ATH_DBG_PS (0x800) when loading ath9k.
-
-Cc: stable@kernel.org
-Cc: Amod Bodas <Amod.Bodas@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
-
-With other types of tests my AP just ends up dying so this is as
-far as I could test it. For example setting the DTIM interval to a
-max 255 beacon interval to a max of 65535 I poo out my AP in no time
-when sending broadcast / multicast traffic. In fact even Ethernet
-dies out immediately.
-
- drivers/net/wireless/ath/ath9k/main.c |   19 +++++++++++++++++++
- 1 files changed, 19 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 1165f90..3b0cd19 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1511,6 +1511,22 @@ void ath9k_enable_ps(struct ath_softc *sc)
- 	}
- }
- 
-+static bool ath9k_can_change_channel(struct ath_softc *sc)
-+{
-+	u32 wait_for = PS_WAIT_FOR_BEACON |
-+		       PS_WAIT_FOR_CAB |
-+		       PS_WAIT_FOR_PSPOLL_DATA |
-+		       PS_WAIT_FOR_TX_ACK;
-+
-+	if (sc->ps_flags & wait_for) {
-+		ath_print(ath9k_hw_common(sc->sc_ah), ATH_DBG_PS,
-+			  "Cannot change channel due to a wait constraint\n");
-+		return false;
-+	}
-+
-+	return true;
-+}
-+
- static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- {
- 	struct ath_wiphy *aphy = hw->priv;
-@@ -1605,6 +1621,9 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 		struct ieee80211_channel *curchan = hw->conf.channel;
- 		int pos = curchan->hw_value;
- 
-+		if (!ath9k_can_change_channel(sc))
-+			goto skip_chan_change;
-+
- 		aphy->chan_idx = pos;
- 		aphy->chan_is_ht = conf_is_ht(conf);
- 		if (hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)
--- 
-1.7.0.4
-
+Base tree: linux-next.git
+Base tree version: next-20100806
+compat-wireless release: compat-wireless-2010-08-03-1-g3672499
