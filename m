@@ -1,47 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60042 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751590Ab0HYO7k (ORCPT
+Received: from mundo.umh.es ([193.147.147.4]:43398 "EHLO mundo.umh.es"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756181Ab0HFKs4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Aug 2010 10:59:40 -0400
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1OoHS0-0007ua-BB
-	for linux-wireless@vger.kernel.org; Wed, 25 Aug 2010 10:59:40 -0400
-Received: from linville-8530p.local (linville-8530p.local [127.0.0.1])
-	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id o7PExDRB003916
-	for <linux-wireless@vger.kernel.org>; Wed, 25 Aug 2010 10:59:14 -0400
-Received: (from linville@localhost)
-	by linville-8530p.local (8.14.4/8.14.4/Submit) id o7PExD6v003914
-	for linux-wireless@vger.kernel.org; Wed, 25 Aug 2010 10:59:13 -0400
-Subject: Re: [PATCH 1/2] ath9k: Fix for throughput issue in Intel Pinetrail
- platform.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vivek Natarajan <vnatarajan@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.org,
-	Aeolus.Yang@atheros.com, Senthilkumar.Balasubramanian@atheros.com
-In-Reply-To: <1282745092-19825-1-git-send-email-vnatarajan@atheros.com>
-References: <1282745092-19825-1-git-send-email-vnatarajan@atheros.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 25 Aug 2010 16:21:20 +0200
-Message-ID: <1282746080.3667.5.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 6 Aug 2010 06:48:56 -0400
+From: =?iso-8859-1?Q?J=F3natan_Mu=F1oz?= <jmunoz@umh.es>
+To: "'John W. Linville'" <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>
+References: <002c01cb3495$0ff49610$2fddc230$@es> <20100805134531.GA2779@tuxdriver.com>
+In-Reply-To: <20100805134531.GA2779@tuxdriver.com>
+Subject: RE: [ath9k]: Beaconing process in ad-hoc mode
+Date: Fri, 6 Aug 2010 12:48:44 +0200
+Message-ID: <000001cb3554$f6d21840$e47648c0$@es>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-08-25 at 19:34 +0530, Vivek Natarajan wrote:
-> Trigger the generic timer interrupt frequently as a workaround
-> to improve the throughput in C3 state with the Intel Pinetrail
-> platform.
+Dear John,
 
-This seems an awfully lot like a DMA problem with C3 states or something
-like that? It seems like you should do something like this:
+Thanks for your help. I am looking in net/mac80211/ibss.c.
+I see the ieee80211_rx_mgmt_beacon function but I don't find anything about
+beacon tx, or about tsf update. I am still lost.
 
-        pm_qos_add_request(&ipw2100_pm_qos_req, PM_QOS_CPU_DMA_LATENCY,
-                           PM_QOS_DEFAULT_VALUE);
+static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+				     struct ieee80211_mgmt *mgmt,
+				     size_t len,
+				     struct ieee80211_rx_status *rx_status)
+{
+	size_t baselen;
+	struct ieee802_11_elems elems;
 
-(taken from ipw2100)
+	/* Process beacon from the current BSS */
+	baselen = (u8 *) mgmt->u.beacon.variable - (u8 *) mgmt;
+	if (baselen > len)
+		return;
 
-johannes
+	ieee802_11_parse_elems(mgmt->u.beacon.variable, len - baselen,
+&elems);
 
+	ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems, true);
+}
+
+
+Any tip more, please?
+
+Thank you in advance
+
+John
+
+
+
+------------------------------------------
+Jónatan Muñoz
+Email: jmunoz@umh.es
+Ubiquitous Wireless Communications Research Laboratory 
+Uwicore, http://www.uwicore.umh.es 
+Signal Theory and Communications Division 
+University Miguel Hernández of Elche 
+
+Avenida de la Universidad s/n 
+Edificio Quorum V P2 012
+03202, Elche (Alicante) 
+Spain 
+Tel: +34 96522 2031 /+34 669256708
+Fax: +34 96665 8903 
+------------------------------------------
+
+> -----Mensaje original-----
+> De: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
+> owner@vger.kernel.org] En nombre de John W. Linville
+> Enviado el: jueves, 05 de agosto de 2010 15:46
+> Para: Jónatan Muñoz
+> CC: linux-wireless@vger.kernel.org
+> Asunto: Re: [ath9k]: Beaconing process in ad-hoc mode
+> 
+> On Thu, Aug 05, 2010 at 01:55:05PM +0200, Jónatan Muñoz wrote:
+> > Dear All,
+> >
+> > I am working in a project where I need to modified the currently
+> beaconing
+> > system for adhoc mode in ath9k, what I want to achieve is that each
+> station
+> > in an adhoc network send periodically a beacon. As I know, when a
+> station in
+> > the network receives a beacon before sending its own beacon, cancels
+> the
+> > transmission, updates its hw tsf based on the received beacon and
+> waits for
+> > a chance to send the beacon during next TBTT.
+> >
+> > For my goal, I think that I should comment the part where the
+> transmission
+> > of the beacon is cancelled. In this way, each station will send a
+> beacon
+> > each 100TU (~100 ms). I know that this mean a increased traffic load
+> on the
+> > network, but it is so much important for the project to obtain a
+> beacon for
+> > each station each 100ms.
+> >
+> > Right now, I am looking at the source code of ath9k, I am trying to
+> modify
+> > the file beacon.c, but I don’t find the way to get my purpose. Could
+> anyone
+> > help me to find the right place at the code that I have to modify? I
+> am a
+> > bit lost and any help would be greatly appreciated.
+> >
+> > Thanks in advance.
+> >
+> > PD: Please excuse my poor English
+> >
+> > John
+> 
+> I think you should be looking in net/mac80211/ibss.c.
+> 
+> Hth!
+> 
+> John
+> --
+> John W. Linville		Someday the world will need a hero, and you
+> linville@tuxdriver.com			might be all we have.  Be
+ready.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-
+> wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
