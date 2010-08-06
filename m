@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:14136 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752541Ab0HBEN4 (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:37669 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761304Ab0HFQbM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Aug 2010 00:13:56 -0400
-Received: from vs3007.wh2.ocn.ne.jp (125.206.180.235)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0622542434
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Aug 2010 13:13:55 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: Re: [PATCH v5] cfg80211: Add nl80211 antenna configuration
-Date: Mon, 2 Aug 2010 13:13:54 +0900
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com, nbd@openwrt.org,
-	linux-wireless@vger.kernel.org
-References: <20100729035820.5930.29864.stgit@tt-desk> <201007291812.28639.br1@einfach.org> <AANLkTi=ihY=pAmKaEp7Pga=DOxwASZqSxqmURbgnks-d@mail.gmail.com>
-In-Reply-To: <AANLkTi=ihY=pAmKaEp7Pga=DOxwASZqSxqmURbgnks-d@mail.gmail.com>
+	Fri, 6 Aug 2010 12:31:12 -0400
+Received: by wwj40 with SMTP id 40so9256066wwj.1
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Aug 2010 09:31:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201008021313.54850.br1@einfach.org>
+In-Reply-To: <4C5B27BE.8010708@lwfinger.net>
+References: <4C5B27BE.8010708@lwfinger.net>
+Date: Fri, 6 Aug 2010 18:31:11 +0200
+Message-ID: <AANLkTi=-Jc9XjD-gqwtUyUnM768wvv3GzzwhJNtkwYKK@mail.gmail.com>
+Subject: Re: Interesting development regarding b43 DMA ERROR
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: b43-dev <b43-dev@lists.infradead.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri July 30 2010 00:04:49 Luis R. Rodriguez wrote:
-> >> I don't want to do any work myself on drivers for this, can we have
-> >> cfg80211/mac80211 do this for us?
-> > 
-> > is this not a separate issue from defining the API? you could have it do
-> > this for you even now, with or without the antenna API, no?
-> 
-> It depends on the consumer and at what level we think the consumer
-> should be doing whatever checks or changes it should. For starters I
-> would expect at least a check for association within cfg80211 which
-> disallows hw config changes. 
+2010/8/5 Larry Finger <Larry.Finger@lwfinger.net>:
+> Yesterday, I had to go back to kernel 2.6.34 for a test of code to avoid ssb
+> load freezeups on my HP Mini 110 Netbook, which has the SPROM at offset 0x0800,
+> not 0x1000. As I had been using b43 for this BCM4312 (14e4:4315) card in DMA
+> mode without any problems, I was quite surprised to see the dreaded DMA errors.
+> I had attributed the lack of errors with wireless testing to be due to the AMI,
+> not Phoenix, BIOS in this machine. When I switched to mainline ('git describe'
+> reports it as v2.6.35-3370-gcdd854b), again it works.
+>
+> AFAIK, none of any fixes that were put into wt to try to solve this problem had
+> any affect, yet the device now works here.
+>
+> Is anyone else that had/has the DMA problem running 2.6.35 + updates from the
+> linux-2.6.git tree? If so, does your BCM4312 now work with b43, or is my box
+> special?
 
-for ath5k at least, it's o.k. to change antenna configuration during 
-association.
+Interesting. It means some patch that gone mainline fixed it and it
+was submitted using other tree than w-t, right?
 
-if 802.11n devices cannot change antenna setup during association, the driver 
-could simply reject the configuration. but i can see that it can make sense to 
-handle some of this in cfg80211 or mac80211. it should be possible to add that 
-on top of my patches.
+Would you care to bisect this?
 
-i think you are expecting to much. for now i just want to define an API which 
-1) can be used right now and 2) is flexible enough to support 802.11n devices. 
-as i don't work with 802.11n devices right now, please don't expect me to 
-solve all 802.11n related antenna problems. as long as the API is flexible 
-enough i think it can be added later as 802.11n devices are going to accept 
-antenna configuration.
-
-bruno
+-- 
+Rafał
