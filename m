@@ -1,139 +1,393 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47781 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755765Ab0H3Psh (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:59602 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761876Ab0HFSuA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Aug 2010 11:48:37 -0400
-Subject: Re: [RFC 0/3] mac80211: new API for handling broadcast / multicast
- on sw scan
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	amod.bodas@atheros.com
-In-Reply-To: <AANLkTinOzTHn4okTdm=321sdAKy8z1ji_1K_SsDd_dH2@mail.gmail.com>
-References: <1282979590-31113-1-git-send-email-lrodriguez@atheros.com>
-	 <1283177949.3691.72.camel@jlt3.sipsolutions.net>
-	 <AANLkTinOzTHn4okTdm=321sdAKy8z1ji_1K_SsDd_dH2@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 30 Aug 2010 17:47:59 +0200
-Message-ID: <1283183279.3691.82.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 6 Aug 2010 14:50:00 -0400
+Received: by mail-ew0-f46.google.com with SMTP id 23so2918051ewy.19
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Aug 2010 11:50:00 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 5/7] rt2x00: Implement TX status reporting for rt2800usb
+Date: Fri, 6 Aug 2010 20:47:57 +0200
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+References: <201008062045.05288.IvDoorn@gmail.com> <201008062046.54483.IvDoorn@gmail.com> <201008062047.21710.IvDoorn@gmail.com>
+In-Reply-To: <201008062047.21710.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201008062047.58607.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-08-30 at 08:37 -0700, Luis R. Rodriguez wrote:
+The TX_STA_FIFO register which is used for per-frame TX frame
+status reporting is also valid on rt2800usb. We can move the
+rt2800pci_txdone function into rt2800lib where it can also
+be used by rt2800usb.
 
-> > Also, some of your comments seem like you're confused about being an AP
-> > vs. being associated to one?
-> 
-> Like?
+rt2800usb needs to overwrite the txdone work handler to
+a different function.
 
-Like doing CAB stuff, or saying that drivers need to keep track of DTIM
-count, that seems more AP related to me, but maybe I'm not understanding
-you correctly.
+Both rt2800usb as rt2800_txdone need to take into account
+that IO failures can occur while uploading the URB, which
+means that when obtaining the new entry the IO status must
+be checked.
 
-> > What are you actually trying to achieve?
-> 
-> The current sw code simply follows the listen interval, it in no way
-> respect the DTIM. What this means is you loose the buffered multicast
-> and broadcast frames the AP saves up for you after the DTIM beacon.
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |  117 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/rt2x00/rt2800lib.h |    4 +
+ drivers/net/wireless/rt2x00/rt2800pci.c |  108 +----------------------------
+ drivers/net/wireless/rt2x00/rt2800usb.c |   40 ++++++++++-
+ 4 files changed, 162 insertions(+), 107 deletions(-)
 
-Right, I don't deny that this is an issue.
-
-> Apart from ensuring you awake at the DTIM count you then also have to
-> ensure you stay awake for all the multicast / broadcast data after the
-> DTIM. It was my understanding you were postulating that all this is a
-> requirement for the drivers to do properly given that mac80211 is too
-> slow to do it properly.
-
-No, I was mostly speaking about the powersave case, where for maximum
-power saving and correctness you need to wake up right before the
-beacon. Going offchannel only _after_ a DTIM beacon and associated
-multicast traffic seems unrelated to that?
-
-> > It seems mac80211 can, no
-> > matter what the driver is
-> >  - wait for DTIM beacons, and the end of mcast traffic, before going off
-> >   channel (should be relevant for p2p as well)
-> 
-> I do not deny this is not possible, I was following your statements
-> about mac80211 being too slow to handle this, so was relying more on
-> the driver to achieve this.
-
-I believe we just misunderstood each other in that other thread, which
-is probably mostly my fault since I started talking about powersave when
-you were concerned about scan only.
-
->  I actually believe this should go into
-> mac80211 but its not there yet. ath9k also has its own nullfunc
-> requirements handled for the ath9k vritual wiphy stuff so either way
-> you still have some private uses for the nullfunc frames. I rather
-> take this up in steps in mac80211.
-
-Right, I agree, let's tackle the issue step by step :) I guess we
-disagree on what the steps should be and what order they should be in,
-though.
-
-> >  - attempt to do better wrt. scheduling between DTIM, by scheduling
-> >   closer (but if DTIM period is 1, this may fail)
-> 
-> To do this you still need to handle all the different sorts of code
-> paths for nullfuncs and ensure they are ACK'd. You have the private
-> ath9k virtual wiphy too.. which I rather see removed but we have no
-> alternative to replace it yet do we?
-
-We're going to discuss multi-channel operation next week, and I believe
-then we can remove it. We're mostly there, I believe, just some mac80211
-internal re-design will be needed (with driver changes, obviously).
-
-> >  - subject to the driver advertising guaranteed TX status, it can also
-> >   wait for the nullfunc ACK -- you should also implement flush which
-> >   will probably improve things by itself for ath9k
-> 
-> Sure, I have some patches for that as well. The nullfunc ACK wait for
-> the offchannel operation *can* be handled indeed by mac80211, as my
-> latest comments indicate. But note we'd have to categorize the
-> different types of uses for the nullfuncs. We also have some private
-> driver uses of nullfuncs such as the ath9k virtual wiphy.
-
-Well those seem like a corner case though, let's not let the design be
-impacted by something we're going to get rid of in the fairly short
-term.
-
-> Then -- you also have other synch wait considerations to address which
-> are also currently only private to the driver. ath9k has these:
-> 
-> +       wait_for = PS_WAIT_FOR_BEACON |
-> +                  PS_BEACON_SYNC |
-> +                  PS_WAIT_FOR_CAB |
-> +                  PS_WAIT_FOR_PSPOLL_DATA |
-> +                  PS_WAIT_FOR_TX_ACK |
-> +                  PS_NULLFUNC_COMPLETED;
-> 
-> Of those I see an easy way to move to mac80211 the
-> PS_NULLFUNC_COMPLETED except for the private driver usage for
-> ath9k_send_nullfunc().
-
- - wait for beacon: can be moved, if that's waiting for DTIM + traffic?
- - beacon sync:     no idea what this is?
- - wait for cab:    seems AP related? we turn off beaconing when
-                    scanning on APs
- - pspoll:          seems like it could be done in mac80211, though
-                    I guess it shouldn't matter if our nullfunc was
-                    ACKed
- - tx ack:          no idea what this is about?
- - nullfunc:        can be moved
-
-> The others require either some new API or as I
-> put it, a driver callback for wait constraints. As I see it, I think
-> these all of these *should* be moved to mac80211, but I don't expect
-> to do this all in one shot and think its better to do address them one
-> at a time.
-
-Well, the other major issue with this is that you basically poll the
-driver until those constraints no longer exist, and the polling interval
-of 200ms is rather strange. So I suspect this really needs to be more of
-an event based API.
-
-johannes
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 6f1eb58..827a258 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -1,4 +1,5 @@
+ /*
++	Copyright (C) 2010 Willow Garage <http://www.willowgarage.com>
+ 	Copyright (C) 2010 Ivo van Doorn <IvDoorn@gmail.com>
+ 	Copyright (C) 2009 Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+ 	Copyright (C) 2009 Gertjan van Wingerde <gwingerde@gmail.com>
+@@ -572,6 +573,122 @@ void rt2800_process_rxwi(struct queue_entry *entry,
+ }
+ EXPORT_SYMBOL_GPL(rt2800_process_rxwi);
+ 
++void rt2800_txdone(struct rt2x00_dev *rt2x00dev)
++{
++	struct data_queue *queue;
++	struct queue_entry *entry;
++	__le32 *txwi;
++	struct txdone_entry_desc txdesc;
++	u32 word;
++	u32 reg;
++	int wcid, ack, pid, tx_wcid, tx_ack, tx_pid;
++	u16 mcs, real_mcs;
++	int i;
++
++	/*
++	 * TX_STA_FIFO is a stack of X entries, hence read TX_STA_FIFO
++	 * at most X times and also stop processing once the TX_STA_FIFO_VALID
++	 * flag is not set anymore.
++	 *
++	 * The legacy drivers use X=TX_RING_SIZE but state in a comment
++	 * that the TX_STA_FIFO stack has a size of 16. We stick to our
++	 * tx ring size for now.
++	 */
++	for (i = 0; i < TX_ENTRIES; i++) {
++		rt2800_register_read(rt2x00dev, TX_STA_FIFO, &reg);
++		if (!rt2x00_get_field32(reg, TX_STA_FIFO_VALID))
++			break;
++
++		wcid	= rt2x00_get_field32(reg, TX_STA_FIFO_WCID);
++		ack	= rt2x00_get_field32(reg, TX_STA_FIFO_TX_ACK_REQUIRED);
++		pid	= rt2x00_get_field32(reg, TX_STA_FIFO_PID_TYPE);
++
++		/*
++		 * Skip this entry when it contains an invalid
++		 * queue identication number.
++		 */
++		if (pid <= 0 || pid > QID_RX)
++			continue;
++
++		queue = rt2x00queue_get_queue(rt2x00dev, pid - 1);
++		if (unlikely(!queue))
++			continue;
++
++		/*
++		 * Inside each queue, we process each entry in a chronological
++		 * order. We first check that the queue is not empty.
++		 */
++		entry = NULL;
++		while (!rt2x00queue_empty(queue)) {
++			entry = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
++			if (!test_bit(ENTRY_DATA_IO_FAILED, &entry->flags))
++				break;
++
++			rt2x00lib_txdone_noinfo(entry, TXDONE_FAILURE);
++		}
++
++		if (!entry || rt2x00queue_empty(queue))
++			break;
++
++		/*
++		 * Check if we got a match by looking at WCID/ACK/PID
++		 * fields
++		 */
++		txwi = rt2800_drv_get_txwi(entry);
++
++		rt2x00_desc_read(txwi, 1, &word);
++		tx_wcid	= rt2x00_get_field32(word, TXWI_W1_WIRELESS_CLI_ID);
++		tx_ack	= rt2x00_get_field32(word, TXWI_W1_ACK);
++		tx_pid	= rt2x00_get_field32(word, TXWI_W1_PACKETID);
++
++		if ((wcid != tx_wcid) || (ack != tx_ack) || (pid != tx_pid))
++			WARNING(rt2x00dev, "invalid TX_STA_FIFO content");
++
++		/*
++		 * Obtain the status about this packet.
++		 */
++		txdesc.flags = 0;
++		rt2x00_desc_read(txwi, 0, &word);
++		mcs = rt2x00_get_field32(word, TXWI_W0_MCS);
++		mcs = rt2x00_get_field32(reg, TX_STA_FIFO_MCS);
++		real_mcs = rt2x00_get_field32(reg, TX_STA_FIFO_MCS);
++
++		/*
++		 * Ralink has a retry mechanism using a global fallback
++		 * table. We setup this fallback table to try the immediate
++		 * lower rate for all rates. In the TX_STA_FIFO, the MCS field
++		 * always contains the MCS used for the last transmission, be
++		 * it successful or not.
++		 */
++		if (rt2x00_get_field32(reg, TX_STA_FIFO_TX_SUCCESS)) {
++			/*
++			 * Transmission succeeded. The number of retries is
++			 * mcs - real_mcs
++			 */
++			__set_bit(TXDONE_SUCCESS, &txdesc.flags);
++			txdesc.retry = ((mcs > real_mcs) ? mcs - real_mcs : 0);
++		} else {
++			/*
++			 * Transmission failed. The number of retries is
++			 * always 7 in this case (for a total number of 8
++			 * frames sent).
++			 */
++			__set_bit(TXDONE_FAILURE, &txdesc.flags);
++			txdesc.retry = rt2x00dev->long_retry;
++		}
++
++		/*
++		 * the frame was retried at least once
++		 * -> hw used fallback rates
++		 */
++		if (txdesc.retry)
++			__set_bit(TXDONE_FALLBACK, &txdesc.flags);
++
++		rt2x00lib_txdone(entry, &txdesc);
++	}
++}
++EXPORT_SYMBOL_GPL(rt2800_txdone);
++
+ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
+ {
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/rt2x00/rt2800lib.h
+index 8f97518..3b572c6 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.h
++++ b/drivers/net/wireless/rt2x00/rt2800lib.h
+@@ -1,4 +1,6 @@
+ /*
++	Copyright (C) 2010 Willow Garage <http://www.willowgarage.com>
++	Copyright (C) 2010 Ivo van Doorn <IvDoorn@gmail.com>
+ 	Copyright (C) 2009 Bartlomiej Zolnierkiewicz
+ 
+ 	This program is free software; you can redistribute it and/or modify
+@@ -147,6 +149,8 @@ void rt2800_write_tx_data(struct queue_entry *entry,
+ 			  struct txentry_desc *txdesc);
+ void rt2800_process_rxwi(struct queue_entry *entry, struct rxdone_entry_desc *txdesc);
+ 
++void rt2800_txdone(struct rt2x00_dev *rt2x00dev);
++
+ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc);
+ 
+ extern const struct rt2x00debug rt2800_rt2x00debug;
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index f415f6d..4390f2b 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -1,5 +1,5 @@
+ /*
+-	Copyright (C) 2009 Ivo van Doorn <IvDoorn@gmail.com>
++	Copyright (C) 2009 - 2010 Ivo van Doorn <IvDoorn@gmail.com>
+ 	Copyright (C) 2009 Alban Browaeys <prahal@yahoo.com>
+ 	Copyright (C) 2009 Felix Fietkau <nbd@openwrt.org>
+ 	Copyright (C) 2009 Luis Correia <luis.f.correia@gmail.com>
+@@ -724,110 +724,6 @@ static void rt2800pci_fill_rxdone(struct queue_entry *entry,
+ /*
+  * Interrupt functions.
+  */
+-static void rt2800pci_txdone(struct rt2x00_dev *rt2x00dev)
+-{
+-	struct data_queue *queue;
+-	struct queue_entry *entry;
+-	__le32 *txwi;
+-	struct txdone_entry_desc txdesc;
+-	u32 word;
+-	u32 reg;
+-	int wcid, ack, pid, tx_wcid, tx_ack, tx_pid;
+-	u16 mcs, real_mcs;
+-	int i;
+-
+-	/*
+-	 * TX_STA_FIFO is a stack of X entries, hence read TX_STA_FIFO
+-	 * at most X times and also stop processing once the TX_STA_FIFO_VALID
+-	 * flag is not set anymore.
+-	 *
+-	 * The legacy drivers use X=TX_RING_SIZE but state in a comment
+-	 * that the TX_STA_FIFO stack has a size of 16. We stick to our
+-	 * tx ring size for now.
+-	 */
+-	for (i = 0; i < TX_ENTRIES; i++) {
+-		rt2800_register_read(rt2x00dev, TX_STA_FIFO, &reg);
+-		if (!rt2x00_get_field32(reg, TX_STA_FIFO_VALID))
+-			break;
+-
+-		wcid    = rt2x00_get_field32(reg, TX_STA_FIFO_WCID);
+-		ack     = rt2x00_get_field32(reg, TX_STA_FIFO_TX_ACK_REQUIRED);
+-		pid     = rt2x00_get_field32(reg, TX_STA_FIFO_PID_TYPE);
+-
+-		/*
+-		 * Skip this entry when it contains an invalid
+-		 * queue identication number.
+-		 */
+-		if (pid <= 0 || pid > QID_RX)
+-			continue;
+-
+-		queue = rt2x00queue_get_queue(rt2x00dev, pid - 1);
+-		if (unlikely(!queue))
+-			continue;
+-
+-		/*
+-		 * Inside each queue, we process each entry in a chronological
+-		 * order. We first check that the queue is not empty.
+-		 */
+-		if (rt2x00queue_empty(queue))
+-			continue;
+-		entry = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
+-
+-		/* Check if we got a match by looking at WCID/ACK/PID
+-		 * fields */
+-		txwi = (__le32 *) entry->skb->data;
+-
+-		rt2x00_desc_read(txwi, 1, &word);
+-		tx_wcid = rt2x00_get_field32(word, TXWI_W1_WIRELESS_CLI_ID);
+-		tx_ack  = rt2x00_get_field32(word, TXWI_W1_ACK);
+-		tx_pid  = rt2x00_get_field32(word, TXWI_W1_PACKETID);
+-
+-		if ((wcid != tx_wcid) || (ack != tx_ack) || (pid != tx_pid))
+-			WARNING(rt2x00dev, "invalid TX_STA_FIFO content\n");
+-
+-		/*
+-		 * Obtain the status about this packet.
+-		 */
+-		txdesc.flags = 0;
+-		rt2x00_desc_read(txwi, 0, &word);
+-		mcs = rt2x00_get_field32(word, TXWI_W0_MCS);
+-		real_mcs = rt2x00_get_field32(reg, TX_STA_FIFO_MCS);
+-
+-		/*
+-		 * Ralink has a retry mechanism using a global fallback
+-		 * table. We setup this fallback table to try the immediate
+-		 * lower rate for all rates. In the TX_STA_FIFO, the MCS field
+-		 * always contains the MCS used for the last transmission, be
+-		 * it successful or not.
+-		 */
+-		if (rt2x00_get_field32(reg, TX_STA_FIFO_TX_SUCCESS)) {
+-			/*
+-			 * Transmission succeeded. The number of retries is
+-			 * mcs - real_mcs
+-			 */
+-			__set_bit(TXDONE_SUCCESS, &txdesc.flags);
+-			txdesc.retry = ((mcs > real_mcs) ? mcs - real_mcs : 0);
+-		} else {
+-			/*
+-			 * Transmission failed. The number of retries is
+-			 * always 7 in this case (for a total number of 8
+-			 * frames sent).
+-			 */
+-			__set_bit(TXDONE_FAILURE, &txdesc.flags);
+-			txdesc.retry = 7;
+-		}
+-
+-		/*
+-		 * the frame was retried at least once
+-		 * -> hw used fallback rates
+-		 */
+-		if (txdesc.retry)
+-			__set_bit(TXDONE_FALLBACK, &txdesc.flags);
+-
+-		rt2x00lib_txdone(entry, &txdesc);
+-	}
+-}
+-
+ static void rt2800pci_wakeup(struct rt2x00_dev *rt2x00dev)
+ {
+ 	struct ieee80211_conf conf = { .flags = 0 };
+@@ -863,7 +759,7 @@ static irqreturn_t rt2800pci_interrupt_thread(int irq, void *dev_instance)
+ 	 * 4 - Tx done interrupt.
+ 	 */
+ 	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_TX_FIFO_STATUS))
+-		rt2800pci_txdone(rt2x00dev);
++		rt2800_txdone(rt2x00dev);
+ 
+ 	/*
+ 	 * 5 - Auto wakeup interrupt.
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 9084b9a..9ad28be 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -1,5 +1,6 @@
+ /*
+-	Copyright (C) 2009 Ivo van Doorn <IvDoorn@gmail.com>
++	Copyright (C) 2010 Willow Garage <http://www.willowgarage.com>
++	Copyright (C) 2009 - 2010 Ivo van Doorn <IvDoorn@gmail.com>
+ 	Copyright (C) 2009 Mattias Nissler <mattias.nissler@gmx.de>
+ 	Copyright (C) 2009 Felix Fietkau <nbd@openwrt.org>
+ 	Copyright (C) 2009 Xose Vazquez Perez <xose.vazquez@gmail.com>
+@@ -378,6 +379,38 @@ static int rt2800usb_get_tx_data_len(struct queue_entry *entry)
+ }
+ 
+ /*
++ * TX control handlers
++ */
++static void rt2800usb_work_txdone(struct work_struct *work)
++{
++	struct rt2x00_dev *rt2x00dev =
++	    container_of(work, struct rt2x00_dev, txdone_work);
++	struct data_queue *queue;
++	struct queue_entry *entry;
++
++	rt2800_txdone(rt2x00dev);
++
++	/*
++	 * Process any trailing TX status reports for IO failures,
++	 * we loop until we find the first non-IO error entry. This
++	 * can either be a frame which is free, is being uploaded,
++	 * or has completed the upload but didn't have an entry
++	 * in the TX_STAT_FIFO register yet.
++	 */
++	tx_queue_for_each(rt2x00dev, queue) {
++		while (!rt2x00queue_empty(queue)) {
++			entry = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
++
++			if (test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags) ||
++			    !test_bit(ENTRY_DATA_IO_FAILED, &entry->flags))
++				break;
++
++			rt2x00lib_txdone_noinfo(entry, TXDONE_FAILURE);
++		}
++	}
++}
++
++/*
+  * RX control handlers
+  */
+ static void rt2800usb_fill_rxdone(struct queue_entry *entry,
+@@ -513,6 +546,11 @@ static int rt2800usb_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 	 */
+ 	rt2x00dev->rssi_offset = DEFAULT_RSSI_OFFSET;
+ 
++	/*
++	 * Overwrite TX done handler
++	 */
++	PREPARE_WORK(&rt2x00dev->txdone_work, rt2800usb_work_txdone);
++
+ 	return 0;
+ }
+ 
+-- 
+1.7.2
 
