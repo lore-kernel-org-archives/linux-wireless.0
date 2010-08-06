@@ -1,45 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:41546 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751204Ab0H0Pzs (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55213 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754251Ab0HFNOs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 11:55:48 -0400
-Received: by pvg2 with SMTP id 2so1126625pvg.19
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Aug 2010 08:55:47 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1282924294.4377.15.camel@jlt3.sipsolutions.net>
-References: <1282887527-23259-1-git-send-email-lrodriguez@atheros.com>
- <20100827090655.GA15873@jm.kir.nu> <AANLkTimw1MpiKM=rCfp_zxkw855SyaoZg6m1oB354tCF@mail.gmail.com>
- <1282923444.4377.13.camel@jlt3.sipsolutions.net> <AANLkTi=qWjhwo50hg8HB1wtsyUizAi55SEK9EW0Udckv@mail.gmail.com>
- <1282923799.4377.14.camel@jlt3.sipsolutions.net> <AANLkTinP7Mzk6gNL3DZaByOj5DZG=nCo2s_ne3WeN0+p@mail.gmail.com>
- <1282924294.4377.15.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Fri, 27 Aug 2010 08:55:25 -0700
-Message-ID: <AANLkTikkemr390C4N2bPivp9rZhbdSpUw9=+uvS=y-Mq@mail.gmail.com>
-Subject: Re: [RFT] mac80211: fix broadcast/multicast data drop on scan
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
-	Kalle Valo <kvalo@adurom.com>,
-	Amod Bodas <Amod.Bodas@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 6 Aug 2010 09:14:48 -0400
+Subject: Re: [PATCH 3/8] iwlwifi: separate thermal throttling function
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <1280590452-10655-4-git-send-email-wey-yi.w.guy@intel.com>
+References: <1280590452-10655-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <1280590452-10655-4-git-send-email-wey-yi.w.guy@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 06 Aug 2010 15:14:40 +0200
+Message-ID: <1281100480.3853.424.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 27, 2010 at 8:51 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2010-08-27 at 08:48 -0700, Luis R. Rodriguez wrote:
->
->> > Well, there's no way we can reliably wake up exactly before a beacon by
->> > implementing that in software, hard real-time hasn't been achieved in
->> > Linux yet :-)
->>
->> Keyword here is *exactly*. I don't want to wake up *exactly* at DTIM,
->> only ensure we don't sleep during it and the send buffered frames and
->> multicast traffic data. Why can we not implement this on mac80211?
->
-> Well, how long before the beacon do you want to wake up to catch it?
-> 1ms? 10ms? 100ms? 1000ms? What if the system is busy?
+> @@ -325,9 +283,15 @@ int iwl_power_update_mode(struct iwl_priv *priv, bool force)
+>  	else if (priv->cfg->supports_idle &&
+>  		 priv->hw->conf.flags & IEEE80211_CONF_IDLE)
+>  		iwl_static_sleep_cmd(priv, &cmd, IWL_POWER_INDEX_5, 20);
+> -	else if (tt->state >= IWL_TI_1)
+> -		iwl_static_sleep_cmd(priv, &cmd, tt->tt_power_mode, dtimper);
+> -	else if (!enabled)
+> +	else if (priv->cfg->ops->lib->tt_ops.lower_power_detection &&
+> +		 priv->cfg->ops->lib->tt_ops.tt_power_mode) {
+> +		if (priv->cfg->ops->lib->tt_ops.lower_power_detection(priv)) {
+> +			/* in thermal throttling low power state */
+> +			iwl_static_sleep_cmd(priv, &cmd,
+> +			    priv->cfg->ops->lib->tt_ops.tt_power_mode(priv),
+> +			    dtimper);
+> +		}
+> +	} else if (!enabled)
+>  		iwl_power_sleep_cam_cmd(priv, &cmd);
+>  	else if (priv->power_data.debug_sleep_level_override >= 0)
+>  		iwl_static_sleep_cmd(priv, &cmd,
 
-I cannot say what would work best, how about half a beacon interval early?
+This is very very broken because it adds an often-used code path that
+will not initialise "cmd" at all. It needs to be
 
-  Luis
+...
+else if (priv->...lower_power_detection &&
+         priv->...tt_power_mode &&
+         priv->...lower_power_detection(priv))
+        iwl_static_sleep_cmd(...)
+else if (!enabled)
+...
+
+johannes
+
