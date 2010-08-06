@@ -1,81 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:61507 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752331Ab0HSUmZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Aug 2010 16:42:25 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 19 Aug 2010 13:42:25 -0700
-Date: Thu, 19 Aug 2010 13:42:16 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Tejun Heo <tj@kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux-pm mailing list <linux-pm@lists.linux-foundation.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>
-Subject: Re: [Regression, 2.6.36-rc1] ath9k resume problem on Acer Ferrari
- One
-Message-ID: <20100819204216.GD14497@tux>
-References: <201008190001.11342.rjw@sisk.pl>
- <201008191605.08053.rjw@sisk.pl>
- <4C6D3D5C.7010504@kernel.org>
- <201008192231.01722.rjw@sisk.pl>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <201008192231.01722.rjw@sisk.pl>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:35619 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762024Ab0HFU3p (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Aug 2010 16:29:45 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Michael Buesch <mb@bu3sch.de>,
+	Larry Finger <Larry.Finger@wfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] b43: move hwrng registration driver to wireless core initialization
+Date: Fri,  6 Aug 2010 16:26:52 -0400
+Message-Id: <1281126412-5089-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 19, 2010 at 01:31:01PM -0700, Rafael J. Wysocki wrote:
-> On Thursday, August 19, 2010, Tejun Heo wrote:
-> > Hello,
-> > 
-> > On 08/19/2010 04:05 PM, Rafael J. Wysocki wrote:
-> > > On Thursday, August 19, 2010, Tejun Heo wrote:
-> > >> Hello, Rafael.
-> > >>
-> > >> On 08/19/2010 12:01 AM, Rafael J. Wysocki wrote:
-> > >>> While testing 2.6.36-rc1 (with a couple of fixes on top) I noticed
-> > >>> that the ath9k driver didn't work after resume from suspend to RAM.
-> > >>> An attempt to unload the driver using rmmod caused the BUG_ON() in
-> > >>> kernel/workqueue.c:2844 to trigger.
-> > >>
-> > >> That BUG_ON() triggers if destroy_workqueue() is called while work
-> > >> items are still pending on the workqueue.  Can you please trigger
-> > >> stack traces after resume and post it?
-> > > 
-> > > Do you mean sysrq-t?
-> > 
-> > Yeah, I'm a bit confused regarding what's going on.  I thought the
-> > most likely cause is thawing failing to kick a frozen workqueue into
-> > working state but then flush_workqueue() which is called from
-> > destroy_workqueue() should have hung too, that is, unless
-> > flush_workqueue() is broken too.  If flush_workqueue() is not broken,
-> > then it could be that workqueue itself isn't at fault and works are
-> > being scheduled and executed fine for the workqueue ath9k is using but
-> > the driver doesn't work for another reason.
-> > 
-> > Also, the BUG_ON() being triggered means either flush_workqueue() is
-> > broken or the driver is failing to stop works on the workqueue from
-> > being requeued before calling destroy_workqueue().  So, finding out
-> > the followings would be great,
-> > 
-> > * While the driver isn't working, do a sysrq-t and see whether any
-> >   worker is executing a work for ath9k.
-> > 
-> > * Repeat it several times and see whether the work is stuck or making
-> >   progress and/or executing on different workers.
-> 
-> Actaully, I'm unable to reproduce the resume issue with current mainline
-> (HEAD = 763008c4357b73c8d18396dfd8d79dc58fa3f99d), so I guess it either is
-> a race (or another timing issue), or it's been fixed by one of the patches on
-> top of -rc1.
-> 
-> I'll let you know if I see it again.
+...and unregistration to core shutdown.  Previously, the driver
+remained registered even when the hardware was shutdown.  That
+causes the driver to return -ENODEV if the b43 device is IFF_DOWN.
+This change causes the driver to disappear in that case, allowing
+/dev/hwrng to still function if another hwrng device is available.
 
-To be clear, this is a non-issue now until further notice, ACK?
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/b43/main.c |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 20631ae..4062c07 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -4250,6 +4250,10 @@ static void b43_wireless_core_exit(struct b43_wldev *dev)
+ 	B43_WARN_ON(dev && b43_status(dev) > B43_STAT_INITIALIZED);
+ 	if (!dev || b43_status(dev) != B43_STAT_INITIALIZED)
+ 		return;
++
++	/* Unregister HW RNG driver */
++	b43_rng_exit(dev->wl);
++
+ 	b43_set_status(dev, B43_STAT_UNINIT);
+ 
+ 	/* Stop the microcode PSM. */
+@@ -4379,6 +4383,9 @@ static int b43_wireless_core_init(struct b43_wldev *dev)
+ 
+ 	b43_set_status(dev, B43_STAT_INITIALIZED);
+ 
++	/* Register HW RNG driver */
++	b43_rng_init(dev->wl);
++
+ out:
+ 	return err;
+ 
+@@ -4984,7 +4991,6 @@ static int b43_probe(struct ssb_device *dev, const struct ssb_device_id *id)
+ 		if (err)
+ 			goto err_one_core_detach;
+ 		b43_leds_register(wl->current_dev);
+-		b43_rng_init(wl);
+ 	}
+ 
+       out:
+@@ -5020,7 +5026,6 @@ static void b43_remove(struct ssb_device *dev)
+ 	b43_one_core_detach(dev);
+ 
+ 	if (list_empty(&wl->devlist)) {
+-		b43_rng_exit(wl);
+ 		b43_leds_unregister(wl);
+ 		/* Last core on the chip unregistered.
+ 		 * We can destroy common struct b43_wl.
+-- 
+1.7.2
+
