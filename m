@@ -1,36 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48357 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754759Ab0HaSKf (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:58915 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751908Ab0HGTCi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Aug 2010 14:10:35 -0400
-Subject: Re: [PATCH] wireless: register wiphy rfkill w/o holding
- cfg80211_mutex
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Miles Lane <miles.lane@gmail.com>,
-	rjw@sisk.pl, maciej.rutecki@gmail.com
-In-Reply-To: <1283277436-5922-1-git-send-email-linville@tuxdriver.com>
-References: <1283237477.3733.0.camel@jlt3.sipsolutions.net>
-	 <1283277436-5922-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 31 Aug 2010 20:10:32 +0200
-Message-ID: <1283278232.3733.53.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Sat, 7 Aug 2010 15:02:38 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 3590E4195D
+	for <linux-wireless@vger.kernel.org>; Sat,  7 Aug 2010 15:00:51 -0400 (EDT)
+Subject: Compat-wireless release for 2010-08-07 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100807190221.D036941133@repository3.orbit-lab.org>
+Date: Sat,  7 Aug 2010 15:02:21 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-08-31 at 13:57 -0400, John W. Linville wrote:
-> Otherwise lockdep complains...
-> 
-> https://bugzilla.kernel.org/show_bug.cgi?id=17311
-...
+fatal: Unable to look up git.kernel.org (port 9418) (Name or service not known)
 
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+compat-wireless code metrics
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+    494668 - Total upstream lines of code being pulled
+      1532 - backport code changes
+      1296 - backport code additions
+       236 - backport code deletions
+      5805 - backport from compat module
+      7337 - total backport code
+    1.4832 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2462 - % of crap code
 
-Thanks John.
-
-johannes
-
+Base tree: linux-next.git
+Base tree version: next-20100806
+compat-wireless release: compat-wireless-2010-08-03-1-g3672499
+ssh: Could not resolve hostname wireless.kernel.org: Name or service not known
+rsync: connection unexpectedly closed (0 bytes received so far) [sender]
+rsync error: unexplained error (code 255) at io.c(600) [sender=3.0.6]
