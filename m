@@ -1,92 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:1413 "EHLO mga03.intel.com"
+Received: from nbd.name ([88.198.39.176]:35492 "EHLO ds10.nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754167Ab0HRQSd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Aug 2010 12:18:33 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 04/16] iwlwifi: make aggregation time limit configurable
-Date: Wed, 18 Aug 2010 09:22:39 -0700
-Message-Id: <1282148571-9258-5-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1282148571-9258-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1282148571-9258-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1753275Ab0HGO26 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Aug 2010 10:28:58 -0400
+Message-ID: <4C5D6DA7.4050707@openwrt.org>
+Date: Sat, 07 Aug 2010 16:28:55 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] minstrel_ht: fill out more than 3 rates
+References: <201008070007.53294.chunkeey@googlemail.com>
+In-Reply-To: <201008070007.53294.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-By default, aggregation time limit is 4000 uSec, add the parameter to
-.cfg
-to allow this parameter can be configure per device base if needed.
+On 2010-08-07 12:07 AM, Christian Lamparter wrote:
+> Hello Felix,
+> 
+> I've stumbled into this conundrum a while ago...
+> then as usual: forgot that it existed, until yesterday:
+> 
+> As you know minstrel (our non ht fallback) enables mrr-mode
+> only if the driver sets hw->max_rates to 4 or more. 
+> minstrel_ht - on the other hand - just prepares a set
+> of 3 rates, so at least one additional retry with
+> different tx-vectors remains unused...
+> 
+> How the last tries should be used is up for debate,
+> I've opted out for lowest possible MCS.
+> (although, some devices may also use a legacy
+>  rate for the final tries...)
+> 
+> And the reason why I think it's worth to do an additional
+> round: The reordering penalty for lost MPDUs on the receiver-
+> side can be as high as 100ms, which is quite expensive compared
+> to some extra airtime...
+The problem here is that we have very different forms of retransmission
+that receive the same kind of tx rate information, even though they
+should be treated in a different way.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c   |   10 ++++++++++
- drivers/net/wireless/iwlwifi/iwl-commands.h |    6 ++++--
- drivers/net/wireless/iwlwifi/iwl-core.h     |    2 ++
- 3 files changed, 16 insertions(+), 2 deletions(-)
+With drivers like ath9k, we don't need many retransmission steps. The
+hardware-level retransmission stops as soon as it receives a Block Ack,
+even if that may only ACK one of many frames (or maybe even none at
+all). Software retransmission is then used to ensure that we don't
+usually see lost MPDUs (under sane conditions, software-level excessive
+retries should be pretty rare).
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index 23e5c42..7c4deee 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -2694,8 +2694,18 @@ static void rs_fill_link_cmd(struct iwl_priv *priv,
- 
- 	lq_cmd->agg_params.agg_frame_cnt_limit = LINK_QUAL_AGG_FRAME_LIMIT_DEF;
- 	lq_cmd->agg_params.agg_dis_start_th = LINK_QUAL_AGG_DISABLE_START_DEF;
-+
- 	lq_cmd->agg_params.agg_time_limit =
- 		cpu_to_le16(LINK_QUAL_AGG_TIME_LIMIT_DEF);
-+	/*
-+	 * overwrite if needed, pass aggregation time limit
-+	 * to uCode in uSec
-+	 */
-+	if (priv && priv->cfg->agg_time_limit &&
-+	    priv->cfg->agg_time_limit >= LINK_QUAL_AGG_TIME_LIMIT_MIN &&
-+	    priv->cfg->agg_time_limit <= LINK_QUAL_AGG_TIME_LIMIT_MAX)
-+		lq_cmd->agg_params.agg_time_limit =
-+			cpu_to_le16(priv->cfg->agg_time_limit);
- }
- 
- static void *rs_alloc(struct ieee80211_hw *hw, struct dentry *debugfsdir)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index c6a0470..14a7a8c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -2110,8 +2110,10 @@ struct iwl_link_qual_general_params {
-  */
- struct iwl_link_qual_agg_params {
- 
--	/* Maximum number of uSec in aggregation.
--	 * Driver should set this to 4000 (4 milliseconds). */
-+	/*
-+	 *Maximum number of uSec in aggregation.
-+	 * default set to 4000 (4 milliseconds) if not configured in .cfg
-+	 */
- 	__le16 agg_time_limit;
- 
- 	/*
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 51ebd03..17fae00 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -280,6 +280,7 @@ struct iwl_mod_params {
-  * @scan_antennas: available antenna for scan operation
-  * @need_dc_calib: need to perform init dc calibration
-  * @bt_statistics: use BT version of statistics notification
-+ * @agg_time_limit: maximum number of uSec in aggregation
-  *
-  * We enable the driver to be backward compatible wrt API version. The
-  * driver specifies which APIs it supports (with @ucode_api_max being the
-@@ -350,6 +351,7 @@ struct iwl_cfg {
- 	u8 scan_tx_antennas[IEEE80211_NUM_BANDS];
- 	const bool need_dc_calib;
- 	const bool bt_statistics;
-+	u16 agg_time_limit;
- };
- 
- /***************************
--- 
-1.7.0.4
+With this form of aggregation, the processing of the MRR chain is always
+restarted for the next transmission attempt.
+Since the table is for hw-level retransmission only, we do need to
+ensure that we don't put unnecessarily low rates into the MRR array, as
+this will limit aggregation size based on the 4-ms limit.
 
+When using hardware aggregation, the behaviour kind of depends on how
+the hardware interprets the retransmission information and how many
+times it retransmits failed subframes of an A-MPDU transmission that
+received a Block Ack.
+
+I think in the long run we need to split this up. In my software
+aggregation rewrite, I plan to add rate control lookups per A-MPDU, so
+that the rate control algorithm can make a decision based on the number
+of failed subframes (or the delta between first frame seqno and last
+frame seqno, to better utilize the block ack window). In this case, the
+rate control can be (and should be) much more optimistic about rates,
+whereas with hardware aggregation we should probably put more emphasis
+on reliability to reduce the latency.
+
+- Felix
