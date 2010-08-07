@@ -1,38 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51111
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750877Ab0HSX7f (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Aug 2010 19:59:35 -0400
-Date: Thu, 19 Aug 2010 16:59:51 -0700 (PDT)
-Message-Id: <20100819.165951.200388018.davem@davemloft.net>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-2.6 2010-08-19
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20100819174638.GC2672@tuxdriver.com>
-References: <20100819174638.GC2672@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from server19320154104.serverpool.info ([193.201.54.104]:51976 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762645Ab0HGNdF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Aug 2010 09:33:05 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 3/4] compat: fix compiler warning
+Date: Sat,  7 Aug 2010 15:32:20 +0200
+Message-Id: <1281187941-7168-4-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1281187941-7168-1-git-send-email-hauke@hauke-m.de>
+References: <1281187941-7168-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 19 Aug 2010 13:46:38 -0400
 
-> This collection of fixes intended for 2.6.36 includes a few that look
-> bigger than they really are.  The one from Joe Perches corrects a number
-> of inadvertant upper->lower case conversion from an earlier patch
-> already in 2.6.36.  The ones from Wey-Yi Guy change a timer value in a
-> number of device-dependent data structures in order to avoid excessive
-> firmware resets for those devices.
-> 
-> In addition to those, the one from Johannes Berg gives iwl3945 its own
-> filter flag function since sharing the iwlagn version has created
-> regressions for iwl3945.  The one from me corrects a DMA API misuse in
-> ipw2100 that results in warning backtraces.
-> 
-> Please let me know if there are problems!
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ include/linux/compat-2.6.27.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-Pulled, thanks.
+diff --git a/include/linux/compat-2.6.27.h b/include/linux/compat-2.6.27.h
+index d667222..b9d7029 100644
+--- a/include/linux/compat-2.6.27.h
++++ b/include/linux/compat-2.6.27.h
+@@ -236,6 +236,8 @@ static inline void debugfs_remove_recursive(struct dentry *dentry)
+ 	_dev;								\
+ })
+ 
++#define dev_name(dev) dev_name((struct device *)dev)
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,27)) */
+ 
+ #endif /* LINUX_26_27_COMPAT_H */
+-- 
+1.7.0.4
+
