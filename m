@@ -1,60 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38742 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755173Ab0HCGkE (ORCPT
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:45855 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752881Ab0HGGaW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Aug 2010 02:40:04 -0400
-Subject: Re: iwlwifi connection problems
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alex Romosan <romosan@sycorax.lbl.gov>
-Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <87aap4z70b.fsf@sycorax.lbl.gov>
-References: <87tynqvtu6.fsf@sycorax.lbl.gov>
-	 <1279917523.10769.1.camel@wwguy-huron>
-	 <1280135867.3693.5.camel@jlt3.sipsolutions.net>
-	 <87mxtd5xlq.fsf@sycorax.lbl.gov>
-	 <1280212629.19098.0.camel@jlt3.sipsolutions.net>
-	 <87bp9l6f4k.fsf@sycorax.lbl.gov>
-	 <1280746705.3923.11.camel@jlt3.sipsolutions.net>
-	 <878w4pvx5e.fsf@sycorax.lbl.gov>
-	 <1280766201.24503.0.camel@jlt3.sipsolutions.net>
-	 <87aap4z70b.fsf@sycorax.lbl.gov>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 03 Aug 2010 08:39:56 +0200
-Message-ID: <1280817596.3874.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Sat, 7 Aug 2010 02:30:22 -0400
+Received: by wyb39 with SMTP id 39so8482413wyb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Aug 2010 23:29:50 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4C5C9252.7040007@bu3sch.de>
+References: <4C5C9252.7040007@bu3sch.de>
+Date: Sat, 7 Aug 2010 08:29:49 +0200
+Message-ID: <AANLkTikotSiDU1ZGetwB8=XJVZrn-HQYDHGm8KT1dVPF@mail.gmail.com>
+Subject: Re: ssb: 2.6.34.1 -> 2.6.34.2 regression
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>
+Cc: stable@kernel.org, Christoph Fritz <chf.fritz@googlemail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-08-02 at 20:53 -0700, Alex Romosan wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
-> 
-> > On Mon, 2010-08-02 at 08:42 -0700, Alex Romosan wrote:
-> >
-> >> so i think i finally managed to track this down. doing a git bisect i
-> >> get:
-> >> 
-> >> 3474ad635db371b0d8d0ee40086f15d223d5b6a4 is the first bad commit
-> >> commit 3474ad635db371b0d8d0ee40086f15d223d5b6a4
-> >> Author: Johannes Berg <johannes.berg@intel.com>
-> >> Date:   Thu Apr 29 04:43:05 2010 -0700
-> >> 
-> >>     iwlwifi: apply filter flags directly
-> >
-> >> ...
-> >
-> > Thanks. I'll take a closer look tomorrow, am about to leave for today.
-> 
-> so i looked a little bit more at what happened. the only difference
-> between the non working and the working version is a call to
-> iwlcore_commit_rxon(priv) on line 1327 of iwl-core.c (the version in
-> 2.6.35). if i comment that line out then i can connect to the access
-> point without problems. hope this helps.
+2010/8/7 Michael Büsch <mb@bu3sch.de>:
+> The SPROM changes applied to SSB in 2.6.34.2 completely broke SPROM
+> extraction. This leads to broken wireless for my BCM4306 card.
+> All other BCM43xx and BCM44xx most likely are affected, too.
+> Symptoms should be wrong MAC addresses and broken transmission (for 43xx).
+>
+> The patch changed the SPEX() macro and removed the offset subtraction,
+> but did not remove the actual 0x1000 offset from the SPROM defines.
+> This results in random memory poking rather than proper SPROM data
+> extraction.
+>
+> I applied the following to my kernel to get it working again. However
+> this is not a proper fix. I suggest that the -stable SSB patch
+> is dropped and mainline patches being applied. They seem to
+> be correct (However I did not test mainline, yet).
 
-Yes, thank you, but it's very strange. But it's probably ok, let's
-remove the call then, it wasn't there before. Want to post a patch
-yourself?
+The original patch didn't simply drop subtraction of offset, it also
+modified defines in .h:
+http://marc.info/?l=linux-wireless&m=127006884129062&w=4
 
-johannes
+It's Larry combined patch that you see in .34.2 and it indeed lacks
+changes in defines. We already explained that situation, Greg will
+revert it and apply correct patches instead.
 
+-- 
+Rafał
