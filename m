@@ -1,52 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:52776 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932230Ab0HJSx0 (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:49345 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751604Ab0HGFXt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Aug 2010 14:53:26 -0400
-Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id o7AIrPWW030923
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Tue, 10 Aug 2010 11:53:25 -0700
-Message-ID: <4C61A025.4090909@candelatech.com>
-Date: Tue, 10 Aug 2010 11:53:25 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Sat, 7 Aug 2010 01:23:49 -0400
+Received: by ewy23 with SMTP id 23so3019506ewy.19
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Aug 2010 22:23:47 -0700 (PDT)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: build failure in intel_scu_ipc.c
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <AANLkTim8i245P0nGcnpsf63_O8xXeby9re=pX53WfOwV@mail.gmail.com>
+References: <AANLkTi=W=vkgb0gM7ZWsBeE79Fe3iabtKFgu2S7N5uLe@mail.gmail.com>
+	<201008011137.49528.florian@openwrt.org>
+	<AANLkTik=t=jeCG7=bgkq3LBwJP9vq7KmFpgDeHngPoq-@mail.gmail.com>
+	<4C55F377.6040404@candelatech.com>
+	<AANLkTi=FEFrKdXUHN-h-BZruvNzSmwXdPcq9-OgZcFAM@mail.gmail.com>
+	<4C565100.4040305@candelatech.com>
+	<AANLkTim8i245P0nGcnpsf63_O8xXeby9re=pX53WfOwV@mail.gmail.com>
+Date: Sat, 7 Aug 2010 15:23:46 +1000
+Message-ID: <AANLkTi=Krfwcmn6v7e6jU87A4cM3H06LTU7_XOiB-WUx@mail.gmail.com>
+Subject: Re: virtual access poitns (ath5k/mac80211)
+From: Ryszard <ryszard99@gmail.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Florian Fainelli <florian@openwrt.org>,
+	Patrick McHardy <kaber@trash.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I just tried to build the latest wireless-testing tree on 32-bit Fedora 13,
-and found this error:
+hey ben,
 
-make -C /home/greearb/git/wireless-testing O=/home/greearb/kernel/2.6/wireless-testing.p4s/. bzImage modules
-   Using /home/greearb/git/wireless-testing as source for kernel
-   GEN     /home/greearb/kernel/2.6/wireless-testing.p4s/Makefile
-   CHK     include/linux/version.h
-   CHK     include/generated/utsrelease.h
-   CALL    /home/greearb/git/wireless-testing/scripts/checksyscalls.sh
-   CHK     include/generated/compile.h
-   CC      drivers/platform/x86/intel_scu_ipc.o
-In file included from /home/greearb/git/wireless-testing/drivers/platform/x86/intel_scu_ipc.c:27:
-/home/greearb/git/wireless-testing/arch/x86/include/asm/mrst.h:14: warning: ‘struct sfi_table_header’ declared inside parameter list
-/home/greearb/git/wireless-testing/arch/x86/include/asm/mrst.h:14: warning: its scope is only this definition or declaration, which is probably not what you want
-/home/greearb/git/wireless-testing/drivers/platform/x86/intel_scu_ipc.c: In function ‘pwr_reg_rdwr’:
-/home/greearb/git/wireless-testing/drivers/platform/x86/intel_scu_ipc.c:175: error: ‘MRST_CPU_CHIP_PENWELL’ undeclared (first use in this function)
-/home/greearb/git/wireless-testing/drivers/platform/x86/intel_scu_ipc.c:175: error: (Each undeclared identifier is reported only once
-/home/greearb/git/wireless-testing/drivers/platform/x86/intel_scu_ipc.c:175: error: for each function it appears in.)
-/home/greearb/git/wireless-testing/drivers/platform/x86/intel_scu_ipc.c: In function ‘intel_scu_ipc_init’:
-/home/greearb/git/wireless-testing/drivers/platform/x86/intel_scu_ipc.c:741: error: implicit declaration of function ‘mrst_identify_cpu’
-make[5]: *** [drivers/platform/x86/intel_scu_ipc.o] Error 1
-make[4]: *** [drivers/platform/x86] Error 2
-make[3]: *** [drivers/platform] Error 2
-make[2]: *** [drivers] Error 2
-make[1]: *** [sub-make] Error 2
-make: *** [all] Error 2
+i've spend a day attempting to get the kernel installed but am not
+having much luck.. the box i'm installing on is an alix
+(http://www.pcengines.ch/alix2d13.htm, amd geode) which has an ubuntu
+lucid kernel on it.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+the error message i'm getting (before it drops to an initramfs) is:
+==========================================
+Gave up waiting for root device.  Common problems:
+ - Boot args (cat /proc/cmdline)
+   - Check rootdelay= (did the system wait long enough?)
+   - Check root= (did the system wait for the right device?)
+ - Missing modules (cat /proc/modules; ls /dev)
+chvt: can't open console
+ALERT! /dev/disk/by-uuid/371f6b1f-0267-41c1-94d6-4068567af74f does not
+exist. Dropping to a shell!
 
+
+
+BusyBox v1.13.3 (Ubuntu 1:1.13.3-1ubuntu11) built-in shell (ash)
+Enter 'help' for a list of built-in commands.
+
+
+(initramfs)
+==========================================
+
+while the error message may seem obvious (that it cant find the disk)
+i'm unsure how to proceed.. are you able to give any tips at all?
+(i'll keep plugging away in the meantime)
+regs
+R
+
+On 2 August 2010 21:16, Ryszard <ryszard99@gmail.com> wrote:
+> Hi Ben,
+> i'll get to this in the next day or so.
+> regs
+> R.
+>
+> On 2 August 2010 15:00, Ben Greear <greearb@candelatech.com> wrote:
+>>
+>> On 08/01/2010 06:51 PM, Ryszard wrote:
+>>>
+>>> Hey ben,
+>>>
+>>> thanks for the reply on this.
+>>>
