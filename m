@@ -1,49 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57628 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932100Ab0HJROp (ORCPT
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:34118 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751908Ab0HGSqA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Aug 2010 13:14:45 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
+	Sat, 7 Aug 2010 14:46:00 -0400
+Received: from compute1.internal (compute1.internal [10.202.2.41])
+	by gateway1.messagingengine.com (Postfix) with ESMTP id E6E531819F6
+	for <linux-wireless@vger.kernel.org>; Sat,  7 Aug 2010 14:45:54 -0400 (EDT)
+Message-Id: <1281206754.31161.1388795015@webmail.messagingengine.com>
+From: "giovanni_re" <john_re@fastmail.us>
 To: linux-wireless@vger.kernel.org
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] ipw2100: avoid warning from pointer cast in call to IPW_DEBUG_TX
-Date: Tue, 10 Aug 2010 13:13:58 -0400
-Message-Id: <1281460438-3063-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <20100809164346.6e30cf8c.akpm@linux-foundation.org>
-References: <20100809164346.6e30cf8c.akpm@linux-foundation.org>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Wifi GNOME network manager version into KUbuntu, Debian "pinning
+ method, etc. ; jor linux-wireless-kernel
+Date: Sat, 07 Aug 2010 11:45:54 -0700
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-drivers/net/wireless/ipw2x00/ipw2100.c: In function 'ipw2100_tx_send_commands':
-drivers/net/wireless/ipw2x00/ipw2100.c:3063: warning: cast to pointer from integer of different size
+KUbuntu 10.4,
 
-This changes the cast and the conversion to match other usage of the
-same value in calls to IPW_DEBUG_TX.
+=
+Failing to get wifi to connect to access point.  It can see APs, but
+fails to get dhcp via command mode, & fails connect with wicd.
 
-Reported-by: Andrew Morton <akpm@linux-foundation.org>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/ipw2x00/ipw2100.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+=
+It has been suggested (on KUbuntu list?) to remove the KU network
+manager package, & that might get wicd & console command wifi working.
 
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
-index a146240..e4ed479 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-@@ -3064,9 +3064,9 @@ static void ipw2100_tx_send_commands(struct ipw2100_priv *priv)
- 
- 		packet = list_entry(element, struct ipw2100_tx_packet, list);
- 
--		IPW_DEBUG_TX("using TBD at virt=%p, phys=%p\n",
-+		IPW_DEBUG_TX("using TBD at virt=%p, phys=%04X\n",
- 			     &txq->drv[txq->next],
--			     (void *)(txq->nic + txq->next *
-+			     (u32) (txq->nic + txq->next *
- 				      sizeof(struct ipw2100_bd)));
- 
- 		packet->index = txq->next;
--- 
-1.7.2.1
+Previously, I was told that there is more networking success if one
+installs Ubuntu (not KUbuntu) [to get the Ubuntu/Gnome network manager
+sw], then install KDE on top of that.
+
+=
+For a system that was installed as KUbuntu:
+
+Might it be possible to use something like Debian "pinning" to hold back
+the KU network manager package, & then install the Ubuntu NetworkManager
+package?  Guess I'd at least have to ad the Ubuntu repositories to
+/etc/apt/sources.list.
+
+There might also be another debian method to do this.
+
+=
+ Being as Ubuntu is Debian based, is there some way to make this work?
+
+=
+I ran Debian from about 2000-2005, so haven't done pinning for a long
+time.
+
+=
+Thanks :)
+
+==  Join in the Global weekly meetings, via VOIP, about all Free SW HW & Culture
+http://sites.google.com/site/berkeleytip/
 
