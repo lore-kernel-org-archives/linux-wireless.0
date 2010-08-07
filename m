@@ -1,52 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37261 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752226Ab0HYSZn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Aug 2010 14:25:43 -0400
-Subject: Re: [RFC patch (against wireless-next)] include/net/cfg80211.h:
- wiphy_<level> messages use dev_printk
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
-	netdev <netdev@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-In-Reply-To: <20100825180129.GK2557@tuxdriver.com>
-References: <1282245848.6724.261.camel@Joe-Laptop>
-	 <1282246784.4507.14.camel@jlt3.sipsolutions.net>
-	 <1282342439.1960.84.camel@Joe-Laptop> <20100825180129.GK2557@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 25 Aug 2010 20:25:36 +0200
-Message-ID: <1282760736.3667.9.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:59368 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752896Ab0HGKpI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Aug 2010 06:45:08 -0400
+Message-ID: <4C5D3929.1060708@bu3sch.de>
+Date: Sat, 07 Aug 2010 12:44:57 +0200
+From: =?ISO-8859-1?Q?Michael_B=FCsch?= <mb@bu3sch.de>
+MIME-Version: 1.0
+To: Greg KH <greg@kroah.com>
+CC: stable@kernel.org, Christoph Fritz <chf.fritz@googlemail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: [stable] ssb: 2.6.34.1 -> 2.6.34.2 regression
+References: <4C5C9252.7040007@bu3sch.de> <20100806235631.GA21827@kroah.com> (sfid-20100807_015640_159647_FFFFFFFFF3BB5C8C)
+In-Reply-To: <20100806235631.GA21827@kroah.com> (sfid-20100807_015640_159647_FFFFFFFFF3BB5C8C)
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-08-25 at 14:01 -0400, John W. Linville wrote:
+On 08/07/2010 01:56 AM, Greg KH wrote:
+> On Sat, Aug 07, 2010 at 12:53:06AM +0200, Michael Büsch wrote:
+>> Hi,
+>>
+>> The SPROM changes applied to SSB in 2.6.34.2 completely broke SPROM
+>> extraction. This leads to broken wireless for my BCM4306 card.
+>> All other BCM43xx and BCM44xx most likely are affected, too.
+>> Symptoms should be wrong MAC addresses and broken transmission (for 43xx).
+>>
+>> The patch changed the SPEX() macro and removed the offset subtraction,
+>> but did not remove the actual 0x1000 offset from the SPROM defines.
+>> This results in random memory poking rather than proper SPROM data
+>> extraction.
+>>
+>> I applied the following to my kernel to get it working again. However
+>> this is not a proper fix. I suggest that the -stable SSB patch
+>> is dropped and mainline patches being applied. They seem to
+>> be correct (However I did not test mainline, yet).
+>
+> That's already done, can you please test the 2.6.34.3-rc1 kernel that
+> was announced a few hours ago?  I should have fixed all of the issues
+> there, if not, please let me know.
 
-> > "<level>dev_driver_string(&wiphy->dev) dev_name(&wiphy->dev): wiphy_name(wiphy): " fmt, ##args
-> > 
-> > for instance:
-> > 
-> > [   41.261941] ieee80211 phy0: phy0: Selected rate control algorithm 'minstrel_ht'
-> > 
-> > ie: redundant.
-> > wiphy_name(wiphy) is an inline for dev_name(&wiphy->dev)
-> > 
-> > So it's appropriate to use:
-> > 
-> > #define wiphy_<level>(wiphy, fmt, arg...) dev_<level>(&wiphy->dev, fmt, ##arg) 
-> > 
-> > and the output becomes:
-> > 
-> > [   41.261941] ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
-> > 
-> > Signed-off-by: Joe Perches <joe@perches.com>
-> 
-> Everyone OK w/ this version?
+That one works. Thanks.
 
-I don't care much :)
-
-johannes
-
-
+-- 
+Greetings Michael.
