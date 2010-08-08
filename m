@@ -1,247 +1,319 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:48523 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751061Ab0HUA3S (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Aug 2010 20:29:18 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, geoclue@lists.freedesktop.org,
-	David.Quan@atheros.com, kevin@atheros.com,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 2/2] iw: add GeoClue support for automatically determining location
-Date: Fri, 20 Aug 2010 20:29:16 -0400
-Message-Id: <1282350556-16523-3-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1282350556-16523-1-git-send-email-lrodriguez@atheros.com>
-References: <1282350556-16523-1-git-send-email-lrodriguez@atheros.com>
+Received: from mx1.redhat.com ([209.132.183.28]:38503 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751380Ab0HHCN7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Aug 2010 22:13:59 -0400
+Subject: [PATCH 3/5] libertas: [cs] use common firmware request helper and
+ new firmware locations
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	David Woodhouse <dwmw2@infradead.org>,
+	Holger Schurig <hs4233@mail.mn-solutions.de>
+In-Reply-To: <1281233470.6235.12.camel@dcbw.foobar.com>
+References: <1281233470.6235.12.camel@dcbw.foobar.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 07 Aug 2010 21:15:19 -0500
+Message-ID: <1281233719.6235.16.camel@dcbw.foobar.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds GeoClue support to iw through a new command,
-georeg. The command can be used to both query what GeoClue
-knows about our location and also to send it to the kernel.
+linux-firmware puts libertas firmware in /libertas.  Fix the driver to
+look there first, but fall back to the old firmware names if the new
+ones don't exist.
 
-georeg support will only be compiled if you have geoclue
-libraries available. The current GeoClue implementation uses
-the hostip provider from GeoClue (http://hostip.info).
-
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Dan Williams <dcbw@redhat.com>
 ---
- COPYING  |    2 +-
- Makefile |    7 +++
- georeg.c |  172 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 180 insertions(+), 1 deletions(-)
- create mode 100644 georeg.c
+ drivers/net/wireless/libertas/if_cs.c |  130 +++++++++++++++++++--------------
+ 1 files changed, 74 insertions(+), 56 deletions(-)
 
-diff --git a/COPYING b/COPYING
-index 73e19ac..3782eca 100644
---- a/COPYING
-+++ b/COPYING
-@@ -1,7 +1,7 @@
- Copyright (c) 2007, 2008	Johannes Berg
- Copyright (c) 2007		Andy Lutomirski
- Copyright (c) 2007		Mike Kershaw
--Copyright (c) 2008-2009		Luis R. Rodriguez
-+Copyright (c) 2008-2010		Luis R. Rodriguez
+diff --git a/drivers/net/wireless/libertas/if_cs.c b/drivers/net/wireless/libertas/if_cs.c
+index 08e4e39..a6fd704 100644
+--- a/drivers/net/wireless/libertas/if_cs.c
++++ b/drivers/net/wireless/libertas/if_cs.c
+@@ -49,7 +49,6 @@
+ MODULE_AUTHOR("Holger Schurig <hs4233@mail.mn-solutions.de>");
+ MODULE_DESCRIPTION("Driver for Marvell 83xx compact flash WLAN cards");
+ MODULE_LICENSE("GPL");
+-MODULE_FIRMWARE("libertas_cs_helper.fw");
  
- Permission to use, copy, modify, and/or distribute this software for any
- purpose with or without fee is hereby granted, provided that the above
-diff --git a/Makefile b/Makefile
-index bd6ca15..75e105a 100644
---- a/Makefile
-+++ b/Makefile
-@@ -24,6 +24,13 @@ ALL = iw
  
- NL1FOUND := $(shell $(PKG_CONFIG) --atleast-version=1 libnl-1 && echo Y)
- NL2FOUND := $(shell $(PKG_CONFIG) --atleast-version=2 libnl-2.0 && echo Y)
-+GEO_FOUND := $(shell $(PKG_CONFIG) --exists geoclue && echo Y)
+ 
+@@ -62,9 +61,34 @@ struct if_cs_card {
+ 	struct lbs_private *priv;
+ 	void __iomem *iobase;
+ 	bool align_regs;
++	u32 model;
+ };
+ 
+ 
++enum {
++	MODEL_UNKNOWN = 0x00,
++	MODEL_8305 = 0x01,
++	MODEL_8381 = 0x02,
++	MODEL_8385 = 0x03
++};
 +
-+ifeq ($(GEO_FOUND),Y)
-+OBJS += georeg.o
-+LIBS += $(shell $(PKG_CONFIG) --libs geoclue)
-+CFLAGS += $(shell $(PKG_CONFIG) --cflags geoclue)
-+endif
++static const struct lbs_fw_table fw_table[] = {
++	{ MODEL_8305, "libertas/cf8305.bin", NULL },
++	{ MODEL_8305, "libertas_cs_helper.fw", NULL },
++	{ MODEL_8381, "libertas/cf8381_helper.bin", "libertas/cf8381.bin" },
++	{ MODEL_8381, "libertas_cs_helper.fw", "libertas_cs.fw" },
++	{ MODEL_8385, "libertas/cf8385_helper.bin", "libertas/cf8385.bin" },
++	{ MODEL_8385, "libertas_cs_helper.fw", "libertas_cs.fw" },
++	{ 0, NULL, NULL }
++};
++MODULE_FIRMWARE("libertas/cf8305.bin");
++MODULE_FIRMWARE("libertas/cf8381_helper.bin");
++MODULE_FIRMWARE("libertas/cf8381.bin");
++MODULE_FIRMWARE("libertas/cf8385_helper.bin");
++MODULE_FIRMWARE("libertas/cf8385.bin");
++MODULE_FIRMWARE("libertas_cs_helper.fw");
++MODULE_FIRMWARE("libertas_cs.fw");
++
  
- ifeq ($(NL1FOUND),Y)
- NLLIBNAME = libnl-1
-diff --git a/georeg.c b/georeg.c
-new file mode 100644
-index 0000000..65acf31
---- /dev/null
-+++ b/georeg.c
-@@ -0,0 +1,172 @@
-+/*
-+ * Copyright 2010 Luis R. Rodriguez <lrodriguez@atheros.com>
-+ *
-+ * If your Linux distribution supports GeoClue you can use this
-+ * 'iw georeg set' to notify the kernel of your country based
-+ * on your Operating System's geolocation hints it can obtain.
-+ * Since the hostip provider does not currently provide asynchronous
-+ * signals you should first check for network connectvity before
-+ * using this.
-+ *
-+ * To test what GeoClue is using prior to sending to the kernel you
-+ * can use 'iw georeg get'.
+ /********************************************************************/
+ /* Hardware access                                                  */
+@@ -290,22 +314,19 @@ static int if_cs_poll_while_fw_download(struct if_cs_card *card, uint addr, u8 r
+ #define CF8385_MANFID		0x02df
+ #define CF8385_CARDID		0x8103
+ 
+-static inline int if_cs_hw_is_cf8305(struct pcmcia_device *p_dev)
+-{
+-	return (p_dev->manf_id == CF8305_MANFID &&
+-		p_dev->card_id == CF8305_CARDID);
+-}
+-
+-static inline int if_cs_hw_is_cf8381(struct pcmcia_device *p_dev)
+-{
+-	return (p_dev->manf_id == CF8381_MANFID &&
+-		p_dev->card_id == CF8381_CARDID);
+-}
+-
+-static inline int if_cs_hw_is_cf8385(struct pcmcia_device *p_dev)
++/* FIXME: just use the 'driver_info' field of 'struct pcmcia_device_id' when
++ * that gets fixed.  Currently there's no way to access it from the probe hook.
 + */
-+
-+#include <net/if.h>
-+#include <errno.h>
-+#include <string.h>
-+#include <stdbool.h>
-+
-+#include <geoclue/geoclue-address.h>
-+
-+#include <netlink/genl/genl.h>
-+#include <netlink/genl/family.h>
-+#include <netlink/genl/ctrl.h>
-+#include <netlink/msg.h>
-+#include <netlink/attr.h>
-+
-+#include "nl80211.h"
-+#include "iw.h"
-+
-+SECTION(georeg);
-+
-+/*
-+ * This uses the hostip provider from GeoClue (http://hostip.info).
-+ *
-+ * TODO:
-+ *
-+ * - The hostip provider should be extended to listen to signals for
-+ *   network connetions, and once one becomes availble we can enable
-+ *   asynchronous notifications back to the kernel.
-+ *
-+ * - Extend this to try first the GeoClue gypsy provider, gpsd.
-+ *
-+ * - Consider writing a GeoClue provider for https://wigle.net/
-+ *   which the supplicant can use to inform GeoClue of location.
-+ *
-+ * - Consider writing our own GeoClue provider based on timezones
-+ *   as a last resort.
-+ *
-+ * - Consider whether or not the kernel may want accuracy
-+ *   information as well to make more interesting decisions.
-+ */
-+static int get_geoclue_alpha2(char *alpha2)
-+{
-+	GeoclueAddress *address = NULL;
-+	GHashTable *details = NULL;
-+	int timestamp;
-+	double acc_hor, acc_vert;
-+	GError *error = NULL;
-+	GeoclueAccuracy *accuracy = NULL;
-+	GeoclueAccuracyLevel acc_level;
-+	gchar *country;
-+	int r = 0;
-+
-+	g_type_init();
-+
-+	address = geoclue_address_new("org.freedesktop.Geoclue.Providers.Hostip",
-+				      "/org/freedesktop/Geoclue/Providers/Hostip");
-+
-+	if (!address)
-+		return -EINVAL;
-+
-+        if (!geoclue_address_get_address(address, &timestamp,
-+					 &details, &accuracy,
-+					 &error)) {
-+		g_object_unref(address);
-+		return -EINVAL;
++static inline u32 get_model(u16 manf_id, u16 card_id)
+ {
+-	return (p_dev->manf_id == CF8385_MANFID &&
+-		p_dev->card_id == CF8385_CARDID);
++	/* NOTE: keep in sync with if_cs_ids */
++	if (manf_id == CF8305_MANFID && card_id == CF8305_CARDID)
++		return MODEL_8305;
++	else if (manf_id == CF8381_MANFID && card_id == CF8381_CARDID)
++		return MODEL_8381;
++	else if (manf_id == CF8385_MANFID && card_id == CF8385_CARDID)
++		return MODEL_8385;
++	return MODEL_UNKNOWN;
+ }
+ 
+ /********************************************************************/
+@@ -559,12 +580,11 @@ static irqreturn_t if_cs_interrupt(int irq, void *data)
+  *
+  * Return 0 on success
+  */
+-static int if_cs_prog_helper(struct if_cs_card *card)
++static int if_cs_prog_helper(struct if_cs_card *card, const struct firmware *fw)
+ {
+ 	int ret = 0;
+ 	int sent = 0;
+ 	u8  scratch;
+-	const struct firmware *fw;
+ 
+ 	lbs_deb_enter(LBS_DEB_CS);
+ 
+@@ -590,14 +610,6 @@ static int if_cs_prog_helper(struct if_cs_card *card)
+ 		goto done;
+ 	}
+ 
+-	/* TODO: make firmware file configurable */
+-	ret = request_firmware(&fw, "libertas_cs_helper.fw",
+-		&card->p_dev->dev);
+-	if (ret) {
+-		lbs_pr_err("can't load helper firmware\n");
+-		ret = -ENODEV;
+-		goto done;
+-	}
+ 	lbs_deb_cs("helper size %td\n", fw->size);
+ 
+ 	/* "Set the 5 bytes of the helper image to 0" */
+@@ -636,7 +648,7 @@ static int if_cs_prog_helper(struct if_cs_card *card)
+ 		if (ret < 0) {
+ 			lbs_pr_err("can't download helper at 0x%x, ret %d\n",
+ 				sent, ret);
+-			goto err_release;
++			goto done;
+ 		}
+ 
+ 		if (count == 0)
+@@ -645,17 +657,14 @@ static int if_cs_prog_helper(struct if_cs_card *card)
+ 		sent += count;
+ 	}
+ 
+-err_release:
+-	release_firmware(fw);
+ done:
+ 	lbs_deb_leave_args(LBS_DEB_CS, "ret %d", ret);
+ 	return ret;
+ }
+ 
+ 
+-static int if_cs_prog_real(struct if_cs_card *card)
++static int if_cs_prog_real(struct if_cs_card *card, const struct firmware *fw)
+ {
+-	const struct firmware *fw;
+ 	int ret = 0;
+ 	int retry = 0;
+ 	int len = 0;
+@@ -663,21 +672,13 @@ static int if_cs_prog_real(struct if_cs_card *card)
+ 
+ 	lbs_deb_enter(LBS_DEB_CS);
+ 
+-	/* TODO: make firmware file configurable */
+-	ret = request_firmware(&fw, "libertas_cs.fw",
+-		&card->p_dev->dev);
+-	if (ret) {
+-		lbs_pr_err("can't load firmware\n");
+-		ret = -ENODEV;
+-		goto done;
+-	}
+ 	lbs_deb_cs("fw size %td\n", fw->size);
+ 
+ 	ret = if_cs_poll_while_fw_download(card, IF_CS_SQ_READ_LOW,
+ 		IF_CS_SQ_HELPER_OK);
+ 	if (ret < 0) {
+ 		lbs_pr_err("helper firmware doesn't answer\n");
+-		goto err_release;
++		goto done;
+ 	}
+ 
+ 	for (sent = 0; sent < fw->size; sent += len) {
+@@ -692,7 +693,7 @@ static int if_cs_prog_real(struct if_cs_card *card)
+ 		if (retry > 20) {
+ 			lbs_pr_err("could not download firmware\n");
+ 			ret = -ENODEV;
+-			goto err_release;
++			goto done;
+ 		}
+ 		if (retry) {
+ 			sent -= len;
+@@ -711,7 +712,7 @@ static int if_cs_prog_real(struct if_cs_card *card)
+ 			IF_CS_BIT_COMMAND);
+ 		if (ret < 0) {
+ 			lbs_pr_err("can't download firmware at 0x%x\n", sent);
+-			goto err_release;
++			goto done;
+ 		}
+ 	}
+ 
+@@ -719,9 +720,6 @@ static int if_cs_prog_real(struct if_cs_card *card)
+ 	if (ret < 0)
+ 		lbs_pr_err("firmware download failed\n");
+ 
+-err_release:
+-	release_firmware(fw);
+-
+ done:
+ 	lbs_deb_leave_args(LBS_DEB_CS, "ret %d", ret);
+ 	return ret;
+@@ -825,6 +823,8 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
+ 	unsigned int prod_id;
+ 	struct lbs_private *priv;
+ 	struct if_cs_card *card;
++	const struct firmware *helper = NULL;
++	const struct firmware *mainfw = NULL;
+ 
+ 	lbs_deb_enter(LBS_DEB_CS);
+ 
+@@ -844,7 +844,6 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
+ 		goto out1;
+ 	}
+ 
+-
+ 	/*
+ 	 * Allocate an interrupt line.  Note that this does not assign
+ 	 * a handler to the interrupt, unless the 'Handler' member of
+@@ -883,34 +882,47 @@ static int if_cs_probe(struct pcmcia_device *p_dev)
+ 	 */
+ 	card->align_regs = 0;
+ 
++	card->model = get_model(p_dev->manf_id, p_dev->card_id);
++	if (card->model == MODEL_UNKNOWN) {
++		lbs_pr_err("unsupported manf_id 0x%04x / card_id 0x%04x\n",
++			   p_dev->manf_id, p_dev->card_id);
++		goto out2;
 +	}
 +
-+	if (error) {
-+		g_printerr("%s\n", error->message);
-+		g_error_free(error);
-+		g_object_unref(address);
-+		return -EINVAL;
+ 	/* Check if we have a current silicon */
+ 	prod_id = if_cs_read8(card, IF_CS_PRODUCT_ID);
+-	if (if_cs_hw_is_cf8305(p_dev)) {
++	if (card->model == MODEL_8305) {
+ 		card->align_regs = 1;
+ 		if (prod_id < IF_CS_CF8305_B1_REV) {
+-			lbs_pr_err("old chips like 8305 rev B3 "
+-				"aren't supported\n");
++			lbs_pr_err("8305 rev B0 and older are not supported\n");
+ 			ret = -ENODEV;
+ 			goto out2;
+ 		}
+ 	}
+ 
+-	if (if_cs_hw_is_cf8381(p_dev) && prod_id < IF_CS_CF8381_B3_REV) {
+-		lbs_pr_err("old chips like 8381 rev B3 aren't supported\n");
++	if ((card->model == MODEL_8381) && prod_id < IF_CS_CF8381_B3_REV) {
++		lbs_pr_err("8381 rev B2 and older are not supported\n");
+ 		ret = -ENODEV;
+ 		goto out2;
+ 	}
+ 
+-	if (if_cs_hw_is_cf8385(p_dev) && prod_id < IF_CS_CF8385_B1_REV) {
+-		lbs_pr_err("old chips like 8385 rev B1 aren't supported\n");
++	if ((card->model == MODEL_8385) && prod_id < IF_CS_CF8385_B1_REV) {
++		lbs_pr_err("8385 rev B0 and older are not supported\n");
+ 		ret = -ENODEV;
+ 		goto out2;
+ 	}
+ 
++	ret = lbs_get_firmware(&p_dev->dev, NULL, NULL, card->model,
++				&fw_table[0], &helper, &mainfw);
++	if (ret) {
++		lbs_pr_err("failed to find firmware (%d)\n", ret);
++		goto out2;
 +	}
 +
-+	geoclue_accuracy_get_details(accuracy, &acc_level, &acc_hor, &acc_vert);
+ 	/* Load the firmware early, before calling into libertas.ko */
+-	ret = if_cs_prog_helper(card);
+-	if (ret == 0 && !if_cs_hw_is_cf8305(p_dev))
+-		ret = if_cs_prog_real(card);
++	ret = if_cs_prog_helper(card, helper);
++	if (ret == 0 && (card->model != MODEL_8305))
++		ret = if_cs_prog_real(card, mainfw);
+ 	if (ret)
+ 		goto out2;
+ 
+@@ -959,6 +971,11 @@ out2:
+ out1:
+ 	pcmcia_disable_device(p_dev);
+ out:
++	if (helper)
++		release_firmware(helper);
++	if (mainfw)
++		release_firmware(mainfw);
 +
-+	if (acc_level < GEOCLUE_ACCURACY_LEVEL_COUNTRY) {
-+		fprintf(stderr, "Accuracy level is not country specific\n");
-+		fprintf(stderr, "Hostip does not have a valid location available."
-+			"\nVisit http://www.hostip.info/ to correct this");
-+		r = -EINVAL;
-+		goto out;
-+	}
-+
-+	country = g_hash_table_lookup(details, GEOCLUE_ADDRESS_KEY_COUNTRYCODE);
-+	if (!country) {
-+		r = -EINVAL;
-+		goto out;
-+	}
-+
-+	/* At this point we know we are sure of the country */
-+
-+	alpha2[0] = country[0];
-+	alpha2[1] = country[1];
-+	alpha2[2] = '\0';
-+
-+out:
-+	g_hash_table_destroy (details);
-+	geoclue_accuracy_free(accuracy);
-+	g_object_unref(address);
-+
-+	return r;
-+}
-+
-+static int handle_geo_reg_set(struct nl80211_state *state,
-+			      struct nl_cb *cb,
-+			      struct nl_msg *msg,
-+			      int argc, char **argv)
-+{
-+	char alpha2[3];
-+	int r;
-+
-+	r = get_geoclue_alpha2(alpha2);
-+	if (r) {
-+		fprintf(stderr, "Could not get an alpha2 from GeoClue\n");
-+		return -EINVAL;
-+	}
-+
-+	if (!is_alpha2(alpha2)) {
-+		fprintf(stderr, "not a valid ISO/IEC 3166-1 alpha2\n");
-+		return -EINVAL;
-+	}
-+
-+	printf("GeoClue sent: %c%c\n", alpha2[0], alpha2[1]);
-+
-+	NLA_PUT_STRING(msg, NL80211_ATTR_REG_ALPHA2, alpha2);
-+
-+	return 0;
-+ nla_put_failure:
-+	return -ENOBUFS;
-+}
-+COMMAND(georeg, set, NULL, NL80211_CMD_SET_REG, 0, CIB_NONE, handle_geo_reg_set,
-+        "Use GeoClue to send your location information to the kernel.");
-+
-+static int handle_geo_reg_get(struct nl80211_state *state,
-+			      struct nl_cb *cb,
-+			      struct nl_msg *msg,
-+			      int argc, char **argv)
-+{
-+	char alpha2[3];
-+	int r;
-+
-+	r = get_geoclue_alpha2(alpha2);
-+	if (r) {
-+		fprintf(stderr, "Could not get an alpha2 from GeoClue\n");
-+		return -EINVAL;
-+	}
-+
-+	if (!is_alpha2(alpha2)) {
-+		fprintf(stderr, "not a valid ISO/IEC 3166-1 alpha2\n");
-+		return -EINVAL;
-+	}
-+
-+	fprintf(stdout, "GeoClue: %c%c - Via http://hostip.info\n",
-+		alpha2[0], alpha2[1]);
-+
-+	return 0;
-+}
-+COMMAND(georeg, get, NULL, 0, 0, CIB_NONE, handle_geo_reg_get,
-+        "Use GeoClue to get your location information prior to sending it to the kernel.");
+ 	lbs_deb_leave_args(LBS_DEB_CS, "ret %d", ret);
+ 	return ret;
+ }
+@@ -995,6 +1012,7 @@ static struct pcmcia_device_id if_cs_ids[] = {
+ 	PCMCIA_DEVICE_MANF_CARD(CF8305_MANFID, CF8305_CARDID),
+ 	PCMCIA_DEVICE_MANF_CARD(CF8381_MANFID, CF8381_CARDID),
+ 	PCMCIA_DEVICE_MANF_CARD(CF8385_MANFID, CF8385_CARDID),
++	/* NOTE: keep in sync with get_model() */
+ 	PCMCIA_DEVICE_NULL,
+ };
+ MODULE_DEVICE_TABLE(pcmcia, if_cs_ids);
 -- 
-1.7.0.4
+1.7.2.1
+
 
