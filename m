@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49254 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751706Ab0HEUFp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Aug 2010 16:05:45 -0400
-Subject: Re: [PATCH] cfg80211: support sysfs namespaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-In-Reply-To: <m1wrs47shi.fsf@fess.ebiederm.org>
-References: <1281023115.4058.11.camel@jlt3.sipsolutions.net>
-	 <m1wrs47shi.fsf@fess.ebiederm.org>
+Received: from mx1.redhat.com ([209.132.183.28]:61872 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751668Ab0HHCJv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Aug 2010 22:09:51 -0400
+Subject: [PATCH 0/5] libertas: firmware loading rework
+From: Dan Williams <dcbw@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	David Woodhouse <dwmw2@infradead.org>,
+	Holger Schurig <hs4233@mail.mn-solutions.de>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 05 Aug 2010 22:05:30 +0200
-Message-ID: <1281038730.4058.12.camel@jlt3.sipsolutions.net>
+Date: Sat, 07 Aug 2010 21:11:10 -0500
+Message-ID: <1281233470.6235.12.camel@dcbw.foobar.com>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-08-05 at 12:46 -0700, Eric W. Biederman wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
-> 
-> > From: Johannes Berg <johannes.berg@intel.com>
-> >
-> > Enable using network namespaces with
-> > wireless devices even when sysfs is
-> > enabled using the same infrastructure
-> > that was built for netdevs.
-> 
-> Acked-by: "Eric W. Biederman" <ebiederm@xmission.com>
-> 
-> This looks reasonable.  I assume you have tested this and it is
-> working now?
+I dumped a ton of Libertas firmware into linux-firmware a long time ago,
+but the driver was never updated to use the linux-firmware locations.
+Fix that.  USB uses one-stage firmware so it doesn't need to use the
+common helper.
 
-Yes, I tested it. Was missing the no-op device_rename() at first, but
-now it works.
+John: this is 2.6.37 material.
 
-johannes
+Dan Williams (5):
+  libertas: [usb] use new firmware locations
+  libertas: add two-stage firmware request helper
+  libertas: [cs] use common firmware request helper and new firmware locations
+  libertas: [sdio] use common firmware request helper and new firmware locations
+  libertas: [spi] use common firmware request helper and new firmware locations
+
+ drivers/net/wireless/libertas/decl.h    |   13 +++
+ drivers/net/wireless/libertas/if_cs.c   |  130 ++++++++++++++++------------
+ drivers/net/wireless/libertas/if_sdio.c |  143 +++++++++++++------------------
+ drivers/net/wireless/libertas/if_sdio.h |    4 -
+ drivers/net/wireless/libertas/if_spi.c  |  144 +++++++++++++++----------------
+ drivers/net/wireless/libertas/if_spi.h  |    5 -
+ drivers/net/wireless/libertas/if_usb.c  |   60 +++++++++++--
+ drivers/net/wireless/libertas/if_usb.h  |    1 +
+ drivers/net/wireless/libertas/main.c    |  105 ++++++++++++++++++++++
+ 9 files changed, 375 insertions(+), 230 deletions(-)
+
+-- 
+1.7.2.1
+
 
