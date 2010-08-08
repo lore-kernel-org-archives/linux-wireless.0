@@ -1,32 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:60680 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751022Ab0HOTCX (ORCPT
+Received: from purkki.adurom.net ([80.68.90.206]:42368 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751214Ab0HHFIs convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Aug 2010 15:02:23 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 77AE74195D
-	for <linux-wireless@vger.kernel.org>; Sun, 15 Aug 2010 15:02:08 -0400 (EDT)
-Subject: Compat-wireless release for 2010-08-15 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20100815190222.5111441133@repository3.orbit-lab.org>
-Date: Sun, 15 Aug 2010 15:02:22 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Sun, 8 Aug 2010 01:08:48 -0400
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Interesting development regarding b43 DMA ERROR
+References: <4C5B27BE.8010708@lwfinger.net>
+	<AANLkTi=-Jc9XjD-gqwtUyUnM768wvv3GzzwhJNtkwYKK@mail.gmail.com>
+	<4C5C4860.2030507@lwfinger.net>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Sun, 08 Aug 2010 08:08:46 +0300
+In-Reply-To: <4C5C4860.2030507@lwfinger.net> (Larry Finger's message of "Fri\, 06 Aug 2010 12\:37\:36 -0500")
+Message-ID: <878w4hd735.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-compat-wireless code metrics
+> On 08/06/2010 11:31 AM, Rafał Miłecki wrote:
+>> 
+>> Interesting. It means some patch that gone mainline fixed it and it
+>> was submitted using other tree than w-t, right?
+>> 
+>> Would you care to bisect this?
+>
+> It won't be fun as this is a 1.6 GHz Atom and a kernel build is quite slow.
 
-    494644 - Total upstream lines of code being pulled
+You can always build the kernel in another machine and just copy the
+zImage and modules back to your netbook (or even create a monolithic
+kernel without any modules). Also there are tools like distcc and
+ccache which would help.
+
+-- 
+Kalle Valo
