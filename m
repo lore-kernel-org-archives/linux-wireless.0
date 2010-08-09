@@ -1,114 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:15438 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753942Ab0HWOxb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Aug 2010 10:53:31 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 11/26] iwlwifi: Relax uCode timeout/error checking for 6000g2b
-Date: Mon, 23 Aug 2010 07:57:02 -0700
-Message-Id: <1282575437-23270-12-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1282575437-23270-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1282575437-23270-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:59829 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756285Ab0HINwJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Aug 2010 09:52:09 -0400
+Subject: [PATCH] cfg80211: fix locking in action frame TX
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 09 Aug 2010 15:52:03 +0200
+Message-ID: <1281361923.3845.66.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Disable plcp error checking for 6000g2b devices, with wifi/bt coex;
-this got trigger too often, disable for now until finding better
-trigger point.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Also extend the firmware reload timer much longer for BT coex to make sure
-there are will be no mistake to reload firmware too fast and too often.
+Accesses to "wdev->current_bss" must be
+locked with the wdev lock, which action
+frame transmission is missing.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: stable@kernel.org [2.6.33+]
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-6000.c |   12 ++++++------
- drivers/net/wireless/iwlwifi/iwl-core.c |   10 +++++++---
- 2 files changed, 13 insertions(+), 9 deletions(-)
+ net/wireless/mlme.c |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 22676d9..9d43098 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -796,7 +796,7 @@ struct iwl_cfg iwl6000g2b_2agn_cfg = {
- 	.supports_idle = true,
- 	.adv_thermal_throttle = true,
- 	.support_ct_kill_exit = true,
--	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
-+	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DISABLE,
- 	.chain_noise_scale = 1000,
- 	.monitor_recover_period = IWL_LONG_MONITORING_PERIOD,
- 	.max_event_log_size = 512,
-@@ -835,7 +835,7 @@ struct iwl_cfg iwl6000g2b_2abg_cfg = {
- 	.supports_idle = true,
- 	.adv_thermal_throttle = true,
- 	.support_ct_kill_exit = true,
--	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
-+	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DISABLE,
- 	.chain_noise_scale = 1000,
- 	.monitor_recover_period = IWL_LONG_MONITORING_PERIOD,
- 	.max_event_log_size = 512,
-@@ -876,7 +876,7 @@ struct iwl_cfg iwl6000g2b_2bgn_cfg = {
- 	.supports_idle = true,
- 	.adv_thermal_throttle = true,
- 	.support_ct_kill_exit = true,
--	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
-+	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DISABLE,
- 	.chain_noise_scale = 1000,
- 	.monitor_recover_period = IWL_LONG_MONITORING_PERIOD,
- 	.max_event_log_size = 512,
-@@ -915,7 +915,7 @@ struct iwl_cfg iwl6000g2b_2bg_cfg = {
- 	.supports_idle = true,
- 	.adv_thermal_throttle = true,
- 	.support_ct_kill_exit = true,
--	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
-+	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DISABLE,
- 	.chain_noise_scale = 1000,
- 	.monitor_recover_period = IWL_LONG_MONITORING_PERIOD,
- 	.max_event_log_size = 512,
-@@ -956,7 +956,7 @@ struct iwl_cfg iwl6000g2b_bgn_cfg = {
- 	.supports_idle = true,
- 	.adv_thermal_throttle = true,
- 	.support_ct_kill_exit = true,
--	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
-+	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DISABLE,
- 	.chain_noise_scale = 1000,
- 	.monitor_recover_period = IWL_LONG_MONITORING_PERIOD,
- 	.max_event_log_size = 512,
-@@ -995,7 +995,7 @@ struct iwl_cfg iwl6000g2b_bg_cfg = {
- 	.supports_idle = true,
- 	.adv_thermal_throttle = true,
- 	.support_ct_kill_exit = true,
--	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
-+	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DISABLE,
- 	.chain_noise_scale = 1000,
- 	.monitor_recover_period = IWL_LONG_MONITORING_PERIOD,
- 	.max_event_log_size = 512,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 1921307..72eda7e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2646,10 +2646,14 @@ static int iwl_check_stuck_queue(struct iwl_priv *priv, int cnt)
- 						"queue %d, not read %d time\n",
- 						q->id,
- 						q->repeat_same_read_ptr);
--				mod_timer(&priv->monitor_recover, jiffies +
--					msecs_to_jiffies(IWL_ONE_HUNDRED_MSECS));
-+				if (!priv->cfg->advanced_bt_coexist) {
-+					mod_timer(&priv->monitor_recover,
-+						jiffies + msecs_to_jiffies(
-+						IWL_ONE_HUNDRED_MSECS));
-+					return 1;
-+				}
- 			}
--			return 1;
-+			return 0;
- 		} else {
- 			q->last_read_ptr = q->read_ptr;
- 			q->repeat_same_read_ptr = 0;
--- 
-1.7.0.4
+--- wireless-testing.orig/net/wireless/mlme.c	2010-08-09 15:23:36.000000000 +0200
++++ wireless-testing/net/wireless/mlme.c	2010-08-09 15:25:30.000000000 +0200
+@@ -844,13 +844,19 @@ int cfg80211_mlme_action(struct cfg80211
+ 		return -EINVAL;
+ 	if (mgmt->u.action.category != WLAN_CATEGORY_PUBLIC) {
+ 		/* Verify that we are associated with the destination AP */
++		wdev_lock(wdev);
++
+ 		if (!wdev->current_bss ||
+ 		    memcmp(wdev->current_bss->pub.bssid, mgmt->bssid,
+ 			   ETH_ALEN) != 0 ||
+ 		    (wdev->iftype == NL80211_IFTYPE_STATION &&
+ 		     memcmp(wdev->current_bss->pub.bssid, mgmt->da,
+-			    ETH_ALEN) != 0))
++			    ETH_ALEN) != 0)) {
++			wdev_unlock(wdev);
+ 			return -ENOTCONN;
++		}
++
++		wdev_unlock(wdev);
+ 	}
+ 
+ 	if (memcmp(mgmt->sa, dev->dev_addr, ETH_ALEN) != 0)
+
 
