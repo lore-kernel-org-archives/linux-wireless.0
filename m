@@ -1,122 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:50196 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761821Ab0HFStz (ORCPT
+Received: from rcsinet10.oracle.com ([148.87.113.121]:37965 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757268Ab0HIXvD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Aug 2010 14:49:55 -0400
-Received: by mail-ey0-f174.google.com with SMTP id 25so2902634eya.19
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Aug 2010 11:49:55 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 3/7] rt2x00: Add helper function for reporting tx status
-Date: Fri, 6 Aug 2010 20:46:53 +0200
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-References: <201008062045.05288.IvDoorn@gmail.com> <201008062045.39547.IvDoorn@gmail.com> <201008062046.19946.IvDoorn@gmail.com>
-In-Reply-To: <201008062046.19946.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201008062046.54483.IvDoorn@gmail.com>
+	Mon, 9 Aug 2010 19:51:03 -0400
+Date: Mon, 9 Aug 2010 16:48:37 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Greg KH <greg@kroah.com>, David Woodhouse <dwmw2@infradead.org>,
+	Mike Frysinger <vapier@gentoo.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Kevin Curtis <kevin.curtis@farsite.co.uk>,
+	Phillip Lougher <phillip@lougher.demon.co.uk>,
+	Faisal Latif <faisal.latif@intel.com>,
+	Chien Tung <chien.tin.tung@intel.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Samuel Ortiz <samuel.ortiz@intel.com>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, x86@kernel.org,
+	linux-rdma@vger.kernel.org
+Subject: Re: i386 allmodconfig, current mainline
+Message-Id: <20100809164837.b0c34ef1.randy.dunlap@oracle.com>
+In-Reply-To: <20100809164346.6e30cf8c.akpm@linux-foundation.org>
+References: <20100809164346.6e30cf8c.akpm@linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-At some points, some drivers can't report the full TX status
-information. This can happen for the UNKNOWN state, or the
-FAILURE state (in case the URB failed).
-Add a wrapper function to simplify reporting the
-empty TX information.
+On Mon, 9 Aug 2010 16:43:46 -0700 Andrew Morton wrote:
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+> 
+> Guys.  What's goin' on out there?
+> 
+> 
+> drivers/power/olpc_battery.c:387: error: unknown field 'owner' specified in initializer
+> drivers/power/olpc_battery.c:387: warning: initialization from incompatible pointer type
+> make[2]: *** [drivers/power/olpc_battery.o] Error 1
+> make[1]: *** [drivers/power] Error 2
+
+David Woodhouse fixed this one today.
+
+
+> fs/squashfs/xattr.c:37: warning: 'squashfs_xattr_handler' declared inline after being called
+> fs/squashfs/xattr.c:37: warning: previous declaration of 'squashfs_xattr_handler' was here
+
+I see this one on one system (with gcc 4.1.2) but not on f11 with gcc 4.4.1,
+although it should be OK to "fix" it.
+
+
 ---
- drivers/net/wireless/rt2x00/rt2x00.h    |    1 +
- drivers/net/wireless/rt2x00/rt2x00dev.c |   12 ++++++++++++
- drivers/net/wireless/rt2x00/rt2x00usb.c |   10 ++--------
- drivers/net/wireless/rt2x00/rt61pci.c   |    6 +-----
- 4 files changed, 16 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index 5276c19..edfc2b7 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -1078,6 +1078,7 @@ void rt2x00lib_beacondone(struct rt2x00_dev *rt2x00dev);
- void rt2x00lib_pretbtt(struct rt2x00_dev *rt2x00dev);
- void rt2x00lib_txdone(struct queue_entry *entry,
- 		      struct txdone_entry_desc *txdesc);
-+void rt2x00lib_txdone_noinfo(struct queue_entry *entry, u32 status);
- void rt2x00lib_rxdone(struct rt2x00_dev *rt2x00dev,
- 		      struct queue_entry *entry);
- 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-index 94621bd..6499cc4 100644
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-@@ -408,6 +408,18 @@ void rt2x00lib_txdone(struct queue_entry *entry,
- }
- EXPORT_SYMBOL_GPL(rt2x00lib_txdone);
- 
-+void rt2x00lib_txdone_noinfo(struct queue_entry *entry, u32 status)
-+{
-+	struct txdone_entry_desc txdesc;
-+
-+	txdesc.flags = 0;
-+	__set_bit(status, &txdesc.flags);
-+	txdesc.retry = 0;
-+
-+	rt2x00lib_txdone(entry, &txdesc);
-+}
-+EXPORT_SYMBOL_GPL(rt2x00lib_txdone_noinfo);
-+
- static int rt2x00lib_rxdone_read_signal(struct rt2x00_dev *rt2x00dev,
- 					struct rxdone_entry_desc *rxdesc)
- {
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index 3f13101..f76014f 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -170,8 +170,6 @@ EXPORT_SYMBOL_GPL(rt2x00usb_regbusy_read);
-  */
- static void rt2x00usb_work_txdone_entry(struct queue_entry *entry)
- {
--	struct txdone_entry_desc txdesc;
--
- 	/*
- 	 * If the transfer to hardware succeeded, it does not mean the
- 	 * frame was send out correctly. It only means the frame
-@@ -180,14 +178,10 @@ static void rt2x00usb_work_txdone_entry(struct queue_entry *entry)
- 	 * (Only indirectly by looking at the failed TX counters
- 	 * in the register).
- 	 */
--	txdesc.flags = 0;
- 	if (test_bit(ENTRY_DATA_IO_FAILED, &entry->flags))
--		__set_bit(TXDONE_FAILURE, &txdesc.flags);
-+		rt2x00lib_txdone_noinfo(entry, TXDONE_FAILURE);
- 	else
--		__set_bit(TXDONE_UNKNOWN, &txdesc.flags);
--	txdesc.retry = 0;
--
--	rt2x00lib_txdone(entry, &txdesc);
-+		rt2x00lib_txdone_noinfo(entry, TXDONE_UNKNOWN);
- }
- 
- static void rt2x00usb_work_txdone(struct work_struct *work)
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index e539c6c..dc6f3eb 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -2107,11 +2107,7 @@ static void rt61pci_txdone(struct rt2x00_dev *rt2x00dev)
- 				"TX status report missed for entry %d\n",
- 				entry_done->entry_idx);
- 
--			txdesc.flags = 0;
--			__set_bit(TXDONE_UNKNOWN, &txdesc.flags);
--			txdesc.retry = 0;
--
--			rt2x00lib_txdone(entry_done, &txdesc);
-+			rt2x00lib_txdone_noinfo(entry, TXDONE_UNKNOWN);
- 			entry_done = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
- 		}
- 
--- 
-1.7.2
-
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
