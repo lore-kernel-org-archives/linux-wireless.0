@@ -1,165 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47490 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751906Ab0HZLfn (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:39727 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756661Ab0HIQJS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Aug 2010 07:35:43 -0400
-Message-Id: <20100826113438.523779120@sipsolutions.net>
-Date: Thu, 26 Aug 2010 13:30:26 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/3] mac80211: allow scan to complete from any context
-References: <20100826113024.738612439@sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 9 Aug 2010 12:09:18 -0400
+Received: by yxg6 with SMTP id 6so3456176yxg.19
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Aug 2010 09:09:17 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201008082124.33033.d.haid@gogi.tv>
+References: <201008082124.33033.d.haid@gogi.tv>
+Date: Mon, 9 Aug 2010 18:09:16 +0200
+Message-ID: <AANLkTinXjYAwJqui41MFzPebUMkvQdO3UsfQcD7se158@mail.gmail.com>
+Subject: Re: Setting MCS rate on injected packets does not work properly (with
+	patches)
+From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
+To: Daniel Haid <d.haid@gogi.tv>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sun, Aug 8, 2010 at 9:24 PM, Daniel Haid <d.haid@gogi.tv> wrote:
+> Hello,
 
-The ieee80211_scan_completed() function was a frequent
-source of potential deadlocks, since it is called by
-drivers but may call back into drivers, so drivers had
-to make sure to call it without any locks held, which
-frequently lead to more complex code in drivers. Avoid
-that problem by allowing the function to be called in
-any context, and queueing the actual work it does.
-Also update the documentation for it to indicate this.
+> When I use hostapd on one station and enable HT I get
+> rates of about 60MBit/s.
+>
+> But when I inject packets manually and I set the MCS index
+> the MCS index gets reported properly at the other station.
+> However no matter what index I choose, I never get rates
+> higher than 10MBit/s  (I wrote a program that reads monitor
+> mode packets with libpcap and sends them to a tun device
+> and everything that comes from the tun device is injected
+> with libpcap - then I measured the rate for UDP packets sent
+> trough this connection).
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h     |    3 ++-
- net/mac80211/ieee80211_i.h |    6 ++++++
- net/mac80211/scan.c        |   34 ++++++++++++++++++++++++++--------
- 3 files changed, 34 insertions(+), 9 deletions(-)
+One reason for this is aggregation: injected packets are not
+aggregated. Depending on your setup that could be the whole
+explanation.
 
---- wireless-testing.orig/net/mac80211/scan.c	2010-08-26 13:29:57.000000000 +0200
-+++ wireless-testing/net/mac80211/scan.c	2010-08-26 13:30:01.000000000 +0200
-@@ -249,13 +249,11 @@ static bool ieee80211_prep_hw_scan(struc
- 	return true;
- }
- 
--void ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
-+static void __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
- 	bool was_hw_scan;
- 
--	trace_api_scan_completed(local, aborted);
--
- 	mutex_lock(&local->mtx);
- 
- 	/*
-@@ -313,6 +311,18 @@ void ieee80211_scan_completed(struct iee
- 	ieee80211_mesh_notify_scan_completed(local);
- 	ieee80211_queue_work(&local->hw, &local->work_work);
- }
-+
-+void ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+
-+	trace_api_scan_completed(local, aborted);
-+
-+	set_bit(SCAN_COMPLETED, &local->scanning);
-+	if (aborted)
-+		set_bit(SCAN_ABORTED, &local->scanning);
-+	ieee80211_queue_delayed_work(&local->hw, &local->scan_work, 0);
-+}
- EXPORT_SYMBOL(ieee80211_scan_completed);
- 
- static int ieee80211_start_sw_scan(struct ieee80211_local *local)
-@@ -450,7 +460,7 @@ static int ieee80211_scan_state_decision
- 
- 	/* if no more bands/channels left, complete scan and advance to the idle state */
- 	if (local->scan_channel_idx >= local->scan_req->n_channels) {
--		ieee80211_scan_completed(&local->hw, false);
-+		__ieee80211_scan_completed(&local->hw, false);
- 		return 1;
- 	}
- 
-@@ -642,6 +652,14 @@ void ieee80211_scan_work(struct work_str
- 	struct ieee80211_sub_if_data *sdata = local->scan_sdata;
- 	unsigned long next_delay = 0;
- 
-+	if (test_and_clear_bit(SCAN_COMPLETED, &local->scanning)) {
-+		bool aborted;
-+
-+		aborted = test_and_clear_bit(SCAN_ABORTED, &local->scanning);
-+		__ieee80211_scan_completed(&local->hw, aborted);
-+		return;
-+	}
-+
- 	mutex_lock(&local->mtx);
- 	if (!sdata || !local->scan_req) {
- 		mutex_unlock(&local->mtx);
-@@ -652,7 +670,7 @@ void ieee80211_scan_work(struct work_str
- 		int rc = drv_hw_scan(local, sdata, local->hw_scan_req);
- 		mutex_unlock(&local->mtx);
- 		if (rc)
--			ieee80211_scan_completed(&local->hw, true);
-+			__ieee80211_scan_completed(&local->hw, true);
- 		return;
- 	}
- 
-@@ -667,7 +685,7 @@ void ieee80211_scan_work(struct work_str
- 		mutex_unlock(&local->mtx);
- 
- 		if (rc)
--			ieee80211_scan_completed(&local->hw, true);
-+			__ieee80211_scan_completed(&local->hw, true);
- 		return;
- 	}
- 
-@@ -677,7 +695,7 @@ void ieee80211_scan_work(struct work_str
- 	 * Avoid re-scheduling when the sdata is going away.
- 	 */
- 	if (!ieee80211_sdata_running(sdata)) {
--		ieee80211_scan_completed(&local->hw, true);
-+		__ieee80211_scan_completed(&local->hw, true);
- 		return;
- 	}
- 
-@@ -784,5 +802,5 @@ void ieee80211_scan_cancel(struct ieee80
- 	mutex_unlock(&local->mtx);
- 
- 	if (abortscan)
--		ieee80211_scan_completed(&local->hw, true);
-+		__ieee80211_scan_completed(&local->hw, true);
- }
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2010-08-26 13:30:00.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2010-08-26 13:30:01.000000000 +0200
-@@ -596,11 +596,17 @@ enum queue_stop_reason {
-  *	determine if we are on the operating channel or not
-  * @SCAN_OFF_CHANNEL: We're off our operating channel for scanning,
-  *	gets only set in conjunction with SCAN_SW_SCANNING
-+ * @SCAN_COMPLETED: Set for our scan work function when the driver reported
-+ *	that the scan completed.
-+ * @SCAN_ABORTED: Set for our scan work function when the driver reported
-+ *	a scan complete for an aborted scan.
-  */
- enum {
- 	SCAN_SW_SCANNING,
- 	SCAN_HW_SCANNING,
- 	SCAN_OFF_CHANNEL,
-+	SCAN_COMPLETED,
-+	SCAN_ABORTED,
- };
- 
- /**
---- wireless-testing.orig/include/net/mac80211.h	2010-08-26 13:29:58.000000000 +0200
-+++ wireless-testing/include/net/mac80211.h	2010-08-26 13:30:01.000000000 +0200
-@@ -2268,7 +2268,8 @@ void ieee80211_wake_queues(struct ieee80
-  *
-  * When hardware scan offload is used (i.e. the hw_scan() callback is
-  * assigned) this function needs to be called by the driver to notify
-- * mac80211 that the scan finished.
-+ * mac80211 that the scan finished. This function can be called from
-+ * any context, including hardirq context.
-  *
-  * @hw: the hardware that finished the scan
-  * @aborted: set to true if scan was aborted
+Also, a single fixed MCS index in the first slot of the tx control
+rates array will not perform as well as e.g. minstrel_ht, especially
+not if your radio environment is noisy.
 
+10 Mbit/s sounds a bit slow though if you say you can get 60 in ap -
+sta mode. Perhaps you are cpu limited?
 
+/Björn
