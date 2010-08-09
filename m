@@ -1,32 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44301 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753902Ab0H3UOj (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:55087 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754367Ab0HITD3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Aug 2010 16:14:39 -0400
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1OqAkZ-00017N-1a
-	for linux-wireless@vger.kernel.org; Mon, 30 Aug 2010 16:14:39 -0400
-Received: from linville-8530p.local (localhost.localdomain [127.0.0.1])
-	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id o7UK0XCa004610
-	for <linux-wireless@vger.kernel.org>; Mon, 30 Aug 2010 16:00:33 -0400
-Received: (from linville@localhost)
-	by linville-8530p.local (8.14.4/8.14.4/Submit) id o7UK0XRY004609
-	for linux-wireless@vger.kernel.org; Mon, 30 Aug 2010 16:00:33 -0400
-Date: Mon, 30 Aug 2010 16:00:33 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: FYI: rebasing wireless-2.6
-Message-ID: <20100830200033.GH30864@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 9 Aug 2010 15:03:29 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 36A004195D
+	for <linux-wireless@vger.kernel.org>; Mon,  9 Aug 2010 15:01:42 -0400 (EDT)
+Subject: Compat-wireless release for 2010-08-09 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100809190328.562AB41133@repository3.orbit-lab.org>
+Date: Mon,  9 Aug 2010 15:03:28 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just a heads-up, for anyone following wireless-2.6 (rather than wireless-testing)...
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   f55c6b6..1cec6b6  history    -> origin/history
+ + 7fd0686...d1a1614 master     -> origin/master  (forced update)
+   4a386c3..45d7f32  stable     -> origin/stable
+ * [new tag]         next-20100809 -> next-20100809
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+compat-wireless code metrics
+
+    494668 - Total upstream lines of code being pulled
+      1530 - backport code changes
+      1291 - backport code additions
+       239 - backport code deletions
+      5833 - backport from compat module
+      7363 - total backport code
+    1.4885 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2462 - % of crap code
+
+Base tree: linux-next.git
+Base tree version: next-20100809
+compat-wireless release: compat-wireless-2010-08-03-2-g404ce58
