@@ -1,31 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dakia2.marvell.com ([65.219.4.35]:59433 "EHLO
-	dakia2.marvell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751852Ab0HBL44 (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:55438 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752596Ab0HIBoD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Aug 2010 07:56:56 -0400
-Message-ID: <4C56B234.3040209@marvell.com>
-Date: Mon, 02 Aug 2010 17:25:32 +0530
-From: yogeshp <yogeshp@marvell.com>
+	Sun, 8 Aug 2010 21:44:03 -0400
+Received: by iwn33 with SMTP id 33so3315722iwn.19
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Aug 2010 18:44:01 -0700 (PDT)
+Message-ID: <4C5F5D5C.9040709@lwfinger.net>
+Date: Sun, 08 Aug 2010 20:43:56 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: "linville@tuxdriver.com" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: wireless-regdb: Why crda db.txt disallows 40Mhz BW on Channel 12-13
- for JP?
+To: Rogerio Luz Coelho <rogluz.news@gmail.com>
+CC: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Subject: Re: RTL 8187b - naughty behaviour
+References: <u2u917a57cb1004030656w7aff9e18qa43a358674d52d5a@mail.gmail.com>	<4BB7660A.3030900@lwfinger.net>	<i2x917a57cb1004030949qabd49dfeqa1f7cb66f4ef0f4e@mail.gmail.com>	<4BB773A9.2070703@lwfinger.net>	<n2n917a57cb1004031000h9910230ew50c6380788a64b1c@mail.gmail.com>	<q2k917a57cb1004100507s17249540xfb11a2e2f0a2dd76@mail.gmail.com>	<w2i69e28c911004101150h9db59aa1x2f9d12964f3c3fc1@mail.gmail.com>	<y2g917a57cb1004101240g8033e225n57bf68b6d37b5431@mail.gmail.com>	<q2k69e28c911004110635nac8100f6pe014361ed0a516a5@mail.gmail.com>	<1275579654.1311.32.camel@casa> <AANLkTimKLuiLpV0C+cXOyX2OqJOwB+giVLaHKCMJKVvt@mail.gmail.com>
+In-Reply-To: <AANLkTimKLuiLpV0C+cXOyX2OqJOwB+giVLaHKCMJKVvt@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello All,
+On 08/08/2010 05:22 PM, Rogerio Luz Coelho wrote:
+> SNIP ...
+> 
+> So no luck with the Realtek driver yet?
 
-Crda db.txt has following entries for JP:
-        (2402 - 2472 @ 40), (N/A, 20)
-        (2457 - 2482 @ 20), (N/A, 20)
+We are not doing anything with the Realtek driver. My RTL8187B device works
+perfectly fine.
 
-Why are channel 12 and 13 for JP disallowed to operate in 40Mhz by this file? 
+If you were to study a vendor driver and come up with some patches to rtl8187
+that made your device function better, then I would consider them, but at this
+point, I am not looking at any changes to rtl8187.
 
-As per Annex 11J of latest 802.11n spec, for Japan, channel 1-7 are allowed in HT40+ and channel 5-13 are allowed in HT40- mode.
-
-Thanks,
-Yogesh
-
+Larry
