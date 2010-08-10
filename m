@@ -1,35 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:38010 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752509Ab0HWTcA (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:41291 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751440Ab0HJBSe convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Aug 2010 15:32:00 -0400
-Date: Mon, 23 Aug 2010 15:32:00 -0400
-From: Christoph Hellwig <hch@infradead.org>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlagn fails to associate on 2.6.36-rc2
-Message-ID: <20100823193200.GA22447@infradead.org>
-References: <20100823110247.GA3198@infradead.org>
- <1282572681.20674.3.camel@wwguy-ubuntu>
- <20100823141432.GA29902@infradead.org>
- <1282574533.12500.1.camel@wwguy-huron>
- <20100823163259.GA15511@infradead.org>
- <1282582845.13288.4.camel@wwguy-ubuntu>
+	Mon, 9 Aug 2010 21:18:34 -0400
+Received: by iwn33 with SMTP id 33so4010648iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Aug 2010 18:18:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1282582845.13288.4.camel@wwguy-ubuntu>
+In-Reply-To: <1281187941-7168-1-git-send-email-hauke@hauke-m.de>
+References: <1281187941-7168-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 9 Aug 2010 18:18:13 -0700
+Message-ID: <AANLkTi=6DY=N23HSYrMrZox+yLZpv82ki_VLBxA1uhq4@mail.gmail.com>
+Subject: Re: [PATCH 0/4] compat: miscellaneous updates for compat
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 23, 2010 at 10:00:45AM -0700, Guy, Wey-Yi wrote:
-> Hi Christoph,
-> 
-> there is a important RTS/CTS patch
-> 94597ab23ea10b3bdcba534be00a9f7b35791c07
-> 
-> http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-2.6.git;a=commit;h=94597ab23ea10b3bdcba534be00a9f7b35791c07
+On Sat, Aug 7, 2010 at 6:32 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> This series contains miscellaneous updates for compat. They are compile
+> tested with kernel 2.6.26 to 2.6.35. ath9k and b43 were tested with
+> kernel 2.6.32.
+>
+> Hauke Mehrtens (4):
+>  compat: backport n_tty_ioctl_helper
+>  compat: move va_format to compat-2.6.36.h
+>  compat: fix compiler warning
+>  compat: update compat_firmware_class.c
+>
+>  compat/compat-2.6.28.c         |  128 ++++++++++++++++++
+>  compat/compat_firmware_class.c |  290 ++++++++++++++++++++-------------------
+>  include/linux/compat-2.6.27.h  |    2 +
+>  include/linux/compat-2.6.28.h  |    6 +
+>  include/linux/compat-2.6.35.h  |    5 -
+>  include/linux/compat-2.6.36.h  |    5 +
+>  6 files changed, 290 insertions(+), 146 deletions(-)
 
-That is already included in the kernel I'm testing.
+Nice, thanks applied all 4 patches to compat and the 2 other patches
+to compat-wireless. Sorry for the delay.
 
+  Luis
