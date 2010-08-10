@@ -1,69 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:45620 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752680Ab0HBJYC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Aug 2010 05:24:02 -0400
-Received: by yxg6 with SMTP id 6so1194602yxg.19
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Aug 2010 02:24:01 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4C568D23.2000203@openwrt.org>
-References: <20100729035820.5930.29864.stgit@tt-desk> <201007291812.28639.br1@einfach.org>
-	<AANLkTi=ihY=pAmKaEp7Pga=DOxwASZqSxqmURbgnks-d@mail.gmail.com>
-	<201008021313.54850.br1@einfach.org> <AANLkTimRnfa8HVpi0hcP7Eo9Nrns60ff3Hs+fq39WoJh@mail.gmail.com>
-	<4C5688F7.1070200@openwrt.org> <AANLkTi=Qm53CgFNNgtF4iBvh3jbfYzd8XPH4y9ysUaoV@mail.gmail.com>
-	<4C568D23.2000203@openwrt.org>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 2 Aug 2010 02:23:37 -0700
-Message-ID: <AANLkTinGdwt4bSPRDV=ZfPBmoKS42GgUVjLAg_O1vL3i@mail.gmail.com>
-Subject: Re: [PATCH v5] cfg80211: Add nl80211 antenna configuration
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Bruno Randolf <br1@einfach.org>, johannes@sipsolutions.net,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga11.intel.com ([192.55.52.93]:53237 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933994Ab0HJXFV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Aug 2010 19:05:21 -0400
+Subject: Re: [WTF, maintainers] Re: *PING* iwlagn 2.6.35: "BA scd_flow 0
+ does not 	match txq_id 10" regression
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Andrew Lutomirski <luto@mit.edu>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+In-Reply-To: <AANLkTinuYOvwNZAFgq67f4XBL4YQ+b2z4EBMcmvbMYi3@mail.gmail.com>
+References: <AANLkTim4_HoHwdhGqAZqcGf2oq7boktdZFW4-w5DpdDa@mail.gmail.com>
+	 <AANLkTinuYOvwNZAFgq67f4XBL4YQ+b2z4EBMcmvbMYi3@mail.gmail.com>
+Content-Type: text/plain
+Date: Tue, 10 Aug 2010 16:05:05 -0700
+Message-Id: <1281481505.20038.10.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 2, 2010 at 2:17 AM, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2010-08-02 11:10 AM, Luis R. Rodriguez wrote:
->> On Mon, Aug 2, 2010 at 1:59 AM, Felix Fietkau <nbd@openwrt.org> wrote:
->>> On 2010-08-02 7:37 AM, Luis R. Rodriguez wrote:
->>>> I'm not, the point I was trying to make is that solving this for
->>>> legacy and that for 802.11n this needs more thought and work.
->>> I need this for 802.11n as well, and I believe the API is good enough
->>> for that.
->>
->> Sure.
->>
->>>>> as long as the API is flexible
->>>>> enough i think it can be added later as 802.11n devices are going to accept
->>>>> antenna configuration.
->>>>
->>>> If you want really flexible stuff without addressing serious
->>>> considerations before introducing a new kernel API then use debugfs.
->>> I'd like to see this in nl80211. Is there any specific concern left that
->>> I haven't addressed already? If so, please point me at it...
->>
->> The code that deals with not accepting changes unless we're not
->> associated, and that also caches the old real hw config vs the
->> modified one.
-> This is not really an API issue, this is more of an implementation
-> aspect. I think it's up to the driver to reject changes that it cannot
-> handle at the moment.
+Hi Andrew,
 
-Huh,why not deal with this on cfg80211 and/or mac80211?
+On Tue, 2010-08-10 at 14:39 -0700, Andrew Lutomirski wrote:
+> On Mon, Jul 26, 2010 at 4:02 PM, Andrew Lutomirski <luto@mit.edu> wrote:
+> > There's a regression in 2.6.35 where the connection breaks and iwlagn
+> > writes a bunch of:
+> >
+> > iwlagn 0000:03:00.0: BA scd_flow 0 does not match txq_id 10
+> >
+> > This is confirmed [1] and a patch supposedly exists.  Since this
+> > breaks at least two people's wireless and 2.6.35 is about to be
+> > released, can we see the patches?
+> >
+> > Thanks,
+> > Andy
+> >
+> > [1] http://article.gmane.org/gmane.linux.kernel.wireless.general/53552
+> >
+> 
+> This regression was reported on July 21 and confirmed, supposedly with
+> a patch available, on July 24 (or maybe July 23).  On July 26 I pinged
+> the list because I'm affected as well.
+> 
+> It's now August 10 and both 2.6.35 and 2.5.35.1 have been released and
+> the bug is still there.  WTF happened?  (I admit I haven't actually
+> tested 2.6.35.1 because it's still compiling, but I see nothing to
+> suggest that it's been fixed.)
+> 
 
-> For legacy, changing settings is fine in any state (even with assoc).
+Sorry for the delay, the problem you report is a real problem in our
+uCode; unfortunately, we still not root cause the real problem yet. The
+patch I provide previous just a hack and still waiting for our internal
+validation team to make sure it did not break the overall behaviors.
 
-Sure.
+I will submit the patch as soon as I got the report back from our test
+team; at the meantime, we are very active work on root cause the real
+problem. Once we have the possible solution, it will be great if you can
+help us to verify it.
 
-> For 802.11n, changes that affect the chainmask should be rejected while
-> the interface is up. That way we don't run into weird cached config vs
-> hw config issues, and also keep a sane state for the HT capabilities.
+Best regards
+Wey 
+> 
+> P.S.  iwlagn malfunctions for me *all the time*.  I'd love to help
+> debug but it's hard when no one pays attention and when the bugs are
+> all hard to trigger.  Any volunteers to help?
 
-Sure, I just did not see any code for this in these patches. My point
-about the hw config vs fake/mod'd is if we'd expose the mod'd config
-changes to userspace or if we'd keep them internal to cfg80211. How
-would this be dealt with?
-
-  Luis
