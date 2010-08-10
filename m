@@ -1,44 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37813 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756939Ab0HFOAw (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:58809 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932222Ab0HJQxW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Aug 2010 10:00:52 -0400
-Subject: [PATCH 2.6.36] iwlwifi: fix TX tracer
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Wey-Yi W Guy <wey-yi.w.guy@intel.com>,
-	"Zhao, Shanyu" <shanyu.zhao@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 06 Aug 2010 16:00:48 +0200
-Message-ID: <1281103248.3853.483.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 10 Aug 2010 12:53:22 -0400
+MIME-Version: 1.0
+In-Reply-To: <20100810101521.0dcd4393.sfr@canb.auug.org.au>
+References: <20100809164346.6e30cf8c.akpm@linux-foundation.org>
+	<20100810101521.0dcd4393.sfr@canb.auug.org.au>
+Date: Tue, 10 Aug 2010 18:53:20 +0200
+Message-ID: <AANLkTimtZ7H=rT68V6UGC2GBky8z9VJ5m6-pwFHfm7yw@mail.gmail.com>
+Subject: Re: i386 allmodconfig, current mainline
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Greg KH <greg@kroah.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Mike Frysinger <vapier@gentoo.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Kevin Curtis <kevin.curtis@farsite.co.uk>,
+	Phillip Lougher <phillip@lougher.demon.co.uk>,
+	Faisal Latif <faisal.latif@intel.com>,
+	Chien Tung <chien.tin.tung@intel.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Samuel Ortiz <samuel.ortiz@intel.com>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, x86@kernel.org,
+	linux-rdma@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, Aug 10, 2010 at 02:15, Stephen Rothwell <sfr@canb.auug.org.au> wrote:
+> On Mon, 9 Aug 2010 16:43:46 -0700 Andrew Morton <akpm@linux-foundation.org> wrote:
+>>
+>> Guys.  What's goin' on out there?
+>
+> I guess we are all so up to date that noone does 32 bit builds any
+> more ...  Also noone is bothering to look at the build logs:
+>
+> linus tree: http://kisskb.ellerman.id.au/kisskb/branch/3/
+> linux-next: http://kisskb.ellerman.id.au/kisskb/branch/9/
 
-The TX tracing code copies with the wrong length,
-which will typically copy too little data. Fix
-this by using the correct length variable.
+Yeah, we have build failures migrating from -next to -linus :-(
 
-Cc: stable@kernel.org [2.6.32+]
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-devtrace.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+BTW, still no one has commented on http://lkml.org/lkml/2010/7/13/378?
 
---- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-devtrace.h	2010-08-06 15:58:10.000000000 +0200
-+++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-devtrace.h	2010-08-06 15:58:20.000000000 +0200
-@@ -193,7 +193,7 @@ TRACE_EVENT(iwlwifi_dev_tx,
- 		__entry->framelen = buf0_len + buf1_len;
- 		memcpy(__get_dynamic_array(tfd), tfd, tfdlen);
- 		memcpy(__get_dynamic_array(buf0), buf0, buf0_len);
--		memcpy(__get_dynamic_array(buf1), buf1, buf0_len);
-+		memcpy(__get_dynamic_array(buf1), buf1, buf1_len);
- 	),
- 	TP_printk("[%p] TX %.2x (%zu bytes)",
- 		  __entry->priv,
+Gr{oetje,eeting}s,
 
+                        Geert
 
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
