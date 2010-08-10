@@ -1,44 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41030 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757281Ab0HDN7l (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:52776 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932230Ab0HJSx0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Aug 2010 09:59:41 -0400
-Date: Wed, 4 Aug 2010 09:49:08 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Thomas =?iso-8859-1?Q?B=E4chler?= <thomas@archlinux.org>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: WARNING at net/wireless/reg.c when wireless network is
- disconnected
-Message-ID: <20100804134908.GB17666@tuxdriver.com>
-References: <4C5950B7.4000802@archlinux.org>
+	Tue, 10 Aug 2010 14:53:26 -0400
+Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id o7AIrPWW030923
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Tue, 10 Aug 2010 11:53:25 -0700
+Message-ID: <4C61A025.4090909@candelatech.com>
+Date: Tue, 10 Aug 2010 11:53:25 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <4C5950B7.4000802@archlinux.org>
+To: linux-wireless@vger.kernel.org
+Subject: build failure in intel_scu_ipc.c
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 04, 2010 at 01:36:23PM +0200, Thomas Bächler wrote:
-> Hello,
-> 
-> this warning has been around ever since I switched to 2.6.34, has
-> accompanied me through the 2.6.35-rc* phase and is still there with
-> 2.6.35. I didn't bother to report it so far, as there seems to be no harm.
-> 
-> Whenever I disconnect/get disconnected from the wireless, I receive the
-> below warning:
-> 
-> ------------[ cut here ]------------
-> WARNING: at net/wireless/reg.c:272
-> regulatory_hint_disconnect+0x1b3/0x230 [cfg80211]()
-> Hardware name: TECRA A11
-> Unexpected user alpha2: de
+I just tried to build the latest wireless-testing tree on 32-bit Fedora 13,
+and found this error:
 
-Perhaps you need to set the regdomain as "DE" rather than "de"?
+make -C /home/greearb/git/wireless-testing O=/home/greearb/kernel/2.6/wireless-testing.p4s/. bzImage modules
+   Using /home/greearb/git/wireless-testing as source for kernel
+   GEN     /home/greearb/kernel/2.6/wireless-testing.p4s/Makefile
+   CHK     include/linux/version.h
+   CHK     include/generated/utsrelease.h
+   CALL    /home/greearb/git/wireless-testing/scripts/checksyscalls.sh
+   CHK     include/generated/compile.h
+   CC      drivers/platform/x86/intel_scu_ipc.o
+In file included from /home/greearb/git/wireless-testing/drivers/platform/x86/intel_scu_ipc.c:27:
+/home/greearb/git/wireless-testing/arch/x86/include/asm/mrst.h:14: warning: ‘struct sfi_table_header’ declared inside parameter list
+/home/greearb/git/wireless-testing/arch/x86/include/asm/mrst.h:14: warning: its scope is only this definition or declaration, which is probably not what you want
+/home/greearb/git/wireless-testing/drivers/platform/x86/intel_scu_ipc.c: In function ‘pwr_reg_rdwr’:
+/home/greearb/git/wireless-testing/drivers/platform/x86/intel_scu_ipc.c:175: error: ‘MRST_CPU_CHIP_PENWELL’ undeclared (first use in this function)
+/home/greearb/git/wireless-testing/drivers/platform/x86/intel_scu_ipc.c:175: error: (Each undeclared identifier is reported only once
+/home/greearb/git/wireless-testing/drivers/platform/x86/intel_scu_ipc.c:175: error: for each function it appears in.)
+/home/greearb/git/wireless-testing/drivers/platform/x86/intel_scu_ipc.c: In function ‘intel_scu_ipc_init’:
+/home/greearb/git/wireless-testing/drivers/platform/x86/intel_scu_ipc.c:741: error: implicit declaration of function ‘mrst_identify_cpu’
+make[5]: *** [drivers/platform/x86/intel_scu_ipc.o] Error 1
+make[4]: *** [drivers/platform/x86] Error 2
+make[3]: *** [drivers/platform] Error 2
+make[2]: *** [drivers] Error 2
+make[1]: *** [sub-make] Error 2
+make: *** [all] Error 2
 
-John
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
