@@ -1,102 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:47774 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755723Ab0HPSpW convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:49515 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932319Ab0HJRGh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Aug 2010 14:45:22 -0400
-Received: by qwh6 with SMTP id 6so5251181qwh.19
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Aug 2010 11:45:21 -0700 (PDT)
+	Tue, 10 Aug 2010 13:06:37 -0400
+Message-ID: <4C618713.9030303@candelatech.com>
+Date: Tue, 10 Aug 2010 10:06:27 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTinkx+FjrAR48dziDR2kX48JRcjm3SF7jhhi4_oM@mail.gmail.com>
-References: <AANLkTimMhW7OX3DT7A3EDNaOnr577KmTv5w9C_mz19TG@mail.gmail.com>
- <AANLkTin0R6k0_GoSEN8aJ8t_fTJw9h_N_0etcxAokv6N@mail.gmail.com>
- <AANLkTinPR-Fp7u6vFq9LsY93myS4QzyMpF3R0NydmHYv@mail.gmail.com> <AANLkTinkx+FjrAR48dziDR2kX48JRcjm3SF7jhhi4_oM@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Mon, 16 Aug 2010 20:45:00 +0200
-Message-ID: <AANLkTimYs3fcSTKYwa60P0_OtumBoHJidYFZuLhXeimZ@mail.gmail.com>
-Subject: Re: [RFT] BCM4312 users with DMA errors, please test!
-To: Arthur Moreira <arthur.moreira@gmail.com>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Ryszard <ryszard99@gmail.com>,
+	Florian Fainelli <florian@openwrt.org>,
+	Patrick McHardy <kaber@trash.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: virtual access poitns (ath5k/mac80211)
+References: <AANLkTi=W=vkgb0gM7ZWsBeE79Fe3iabtKFgu2S7N5uLe@mail.gmail.com> 	<201008011137.49528.florian@openwrt.org> <AANLkTik=t=jeCG7=bgkq3LBwJP9vq7KmFpgDeHngPoq-@mail.gmail.com> 	<4C55F377.6040404@candelatech.com> <AANLkTinGqWZ8o9L=ePsbgzWtitWAHCt3=g_z6BM7EpjO@mail.gmail.com>
+In-Reply-To: <AANLkTinGqWZ8o9L=ePsbgzWtitWAHCt3=g_z6BM7EpjO@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/8/16 Arthur Moreira <arthur.moreira@gmail.com>:
-> Ok, tks Gábor
->
-> i will wait, i need much of this card working in monitor mode for
-> tests and demonstration and my organization. i work with security in
-> my city. and i dont want to plug another card, like usb ou pciexpreess
-> card than a original embedded.
->
-> if you need a help to tests and beta version of driver or modules
-> call me
->
->
->               Arthur Moreira
+On 08/10/2010 09:54 AM, Luis R. Rodriguez wrote:
+> On Sun, Aug 1, 2010 at 3:21 PM, Ben Greear<greearb@candelatech.com>  wrote:
 
-Well, I post any testing requests on the list, so you will probably
-see them here.
-
-Also, please use the Reply to All button when replying to a list!
-
+>> You would not believe how hard it is to keep up with the wireless tree.
+>>   Last time,
+>> by the time we had something stable, upstream had changed too much to merge.
 >
-> 2010/8/16 Gábor Stefanik <netrolller.3d@gmail.com>:
->> 2010/8/16 Arthur Moreira <arthur.moreira@gmail.com>:
->>> Hi,
->>> I have a BCM4353 card, with the  hybrid module  wl work fine to find
->>> and conect to networks.
->>> But, a want to put the card in monitor mode.
->>>
->>> (my card is a 802.11bgN mini card, in a dell vostro)
->>>
->>> this path will help me? and.. how to aply the path? the comand path $#
->>> < file    ???
->>> tks
->>>
->>>
->>>               Arthur Moreira
->>>
->>
->> No, this patch is only for BCM4312 devices, not the BCM43224 that you
->> have (there is no such thing as a "BCM4353" AFAIK - PCI device IDs
->> don't map directly to chip IDs!). Your card is an N-PHY, probably
->> revision 4 or 5 (you can see the revision by adding 14e4:4353 to the
->> list of PCI IDs in ssb, then looking for the "FOUND UNSUPPORTED PHY"
->> line in dmesg). We are working on N-PHYs, revisions <=2 will likely be
->> usable soon; rev.3 and newer will take longer, however. (It is
->> possible that this patch will also be needed for N-PHYs if they show
->> similar DMA errors to the 4312, but it is certainly not enough to get
->> N-PHYs to work.)
->>
->>>
->>>
->>>
->>> 2010/8/16 Gábor Stefanik <netrolller.3d@gmail.com>:
->>>> Hello Everyone!
->>>>
->>>> If you are experiencing DMA errors on a BCM4312, please test the
->>>> attached patch. It implements the PCI-E SERDES workaround, which the
->>>> hybrid driver is applying during early init to LP-PHY cards, and which
->>>> is a good candidate for the cause of the DMA error.
->>>> Note that this is not a final patch & it may cause collateral damage
->>>> for non-4312 cards; if it helps the 4312 problem, I will submit a
->>>> cleaned-up version.
->>>>
->>>> Thanks,
->>>> Gábor
->>>>
->>>
->>
->>
->>
->> --
->> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
->>
->
+> This is why you should not do your development outside of
+> wireless-testing. If you are doing development on a stable kernel tree
+> then you will likely run into huge issues. You should do development
+> on wireless-testing.git, always rebase when John has a new update, and
+> break your changes out into a small changes as possible. If you follow
+> these basic rules I believe you will likely have better luck with
+> keeping your code up to date.
 
+That sounds nice, but at that time I was carrying a lot of other patches
+needed to make my test environment work.  Fortunately, .35 pretty much
+works out of the box, so I can develop on pristine upstream kernels now.
 
+Thanks,
+Ben
 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
