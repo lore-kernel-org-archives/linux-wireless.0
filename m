@@ -1,61 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.fusionio.com ([64.244.102.30]:55887 "EHLO mx1.fusionio.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750881Ab0HEJQ0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Aug 2010 05:16:26 -0400
-Message-ID: <4C5A7E33.3060101@fusionio.com>
-Date: Thu, 5 Aug 2010 11:02:43 +0200
-From: Jens Axboe <jaxboe@fusionio.com>
-MIME-Version: 1.0
-To: Tejun Heo <htejun@gmail.com>
-CC: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	"stable@kernel.org" <stable@kernel.org>
-Subject: Re: [PATCH RESEND block#for-2.6.36] block_dev: always serialize
- exclusive open attempts
-References: <2dWFdr9kTFM.A.P0D.spXVMB@chimera> <AANLkTimcH7+Bq1UEbaSU7SQpzArPgmSLegiqE13V8=CF@mail.gmail.com> <4C56F30D.3020304@kernel.org> <4C598E6B.7050405@gmail.com>
-In-Reply-To: <4C598E6B.7050405@gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from he.sipsolutions.net ([78.46.109.217]:44106 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756240Ab0HJHvA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Aug 2010 03:51:00 -0400
+Message-Id: <20100810074637.034583799@sipsolutions.net>
+Date: Tue, 10 Aug 2010 09:46:37 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/5] mac80211 crypto cleanups
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-08-04 17:59, Tejun Heo wrote:
-> bd_prepare_to_claim() incorrectly allowed multiple attempts for
-> exclusive open to progress in parallel if the attempting holders are
-> identical.  This triggered BUG_ON() as reported in the following bug.
-> 
->   https://bugzilla.kernel.org/show_bug.cgi?id=16393
-> 
-> __bd_abort_claiming() is used to finish claiming blocks and doesn't
-> work if multiple openers are inside a claiming block.  Allowing
-> multiple parallel open attempts to continue doesn't gain anything as
-> those are serialized down in the call chain anyway.  Fix it by always
-> allowing only single open attempt in a claiming block.
-> 
-> This problem can easily be reproduced by adding a delay after
-> bd_prepare_to_claim() and attempting to mount two partitions of a
-> disk.
-> 
-> stable: only applicable to v2.6.35
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Reported-by: Markus Trippelsdorf <markus@trippelsdorf.de>
-> Cc: stable@kernel.org
+This has a bunch of crypto code cleanups.
 
-Thanks Tejun, applied.
+The last two might be applicable to .36
+if that got the WEP thing you (John) did?
+But they'd have to be rebased due to the
+first patch in this series.
 
--- 
-Jens Axboe
+johannes
 
-
-Confidentiality Notice: This e-mail message, its contents and any attachments to it are confidential to the intended recipient, and may contain information that is privileged and/or exempt from disclosure under applicable law. If you are not the intended recipient, please immediately notify the sender and destroy the original e-mail message and any attachments (and any copies that may have been made) from your system or otherwise. Any unauthorized use, copying, disclosure or distribution of this information is strictly prohibited.
