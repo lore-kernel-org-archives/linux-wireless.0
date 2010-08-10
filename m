@@ -1,51 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:64879 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753277Ab0HBPMJ (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:53319 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932446Ab0HJR3x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Aug 2010 11:12:09 -0400
-MIME-Version: 1.0
-In-Reply-To: <20100802114256.GE12293@atomide.com>
-References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
-	<20100726193028.GG3903@tuxdriver.com>
-	<1280736987.17809.18.camel@chilepepper>
-	<20100802114256.GE12293@atomide.com>
-Date: Mon, 2 Aug 2010 17:12:08 +0200
-Message-ID: <AANLkTikvtMbqUdwHtCtdL2xXbQh64pxjApo6ZH6hAXnP@mail.gmail.com>
-Subject: Re: [PATCH v2 00/20] native support for wl1271 on ZOOM
-From: Vitaly Wool <vitalywool@gmail.com>
-To: Tony Lindgren <tony@atomide.com>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Ohad Ben-Cohen <ohad@wizery.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"Quadros Roger (Nokia-MS/Helsinki)" <roger.quadros@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"ext John W. Linville" <linville@tuxdriver.com>,
-	San Mehat <san@google.com>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 10 Aug 2010 13:29:53 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Samuel Ortiz <samuel.ortiz@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] iwm3200wifi: remove comparison to WIFI_IF_NTFY_MAX in iwm_ntf_wifi_if_wrapper
+Date: Tue, 10 Aug 2010 13:26:50 -0400
+Message-Id: <1281461210-3528-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <20100809164346.6e30cf8c.akpm@linux-foundation.org>
+References: <20100809164346.6e30cf8c.akpm@linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 2, 2010 at 1:42 PM, Tony Lindgren <tony@atomide.com> wrote:
+drivers/net/wireless/iwmc3200wifi/rx.c: In function 'iwm_ntf_wifi_if_wrapper':
+drivers/net/wireless/iwmc3200wifi/rx.c:1198: warning: comparison is always true due to limited range of data type
 
-> Nicolas Pitre made a comment saying he wants to look at these patches
-> more, are there other pending comments?
+This is, of course, because the value of WIFI_IF_NTFY_MAX is 0xff and
+hdr->oid is a u8.  This is obviously an attempt to verify the range on
+an input value, but since it has no effect it can simply be removed.
 
-Yep, I'm feeling quite uncomfortable with the way platform data is
-being passed over to sdio device now.
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/iwmc3200wifi/rx.c |    7 ++-----
+ 1 files changed, 2 insertions(+), 5 deletions(-)
 
-Also, specifically to 12xx, I'd like to see REF_CLOCK moved on and
-have this set by platform too (I haven't found anything like that in
-the patches but maybe I've overlooked that).
+diff --git a/drivers/net/wireless/iwmc3200wifi/rx.c b/drivers/net/wireless/iwmc3200wifi/rx.c
+index c02fced..a944893 100644
+--- a/drivers/net/wireless/iwmc3200wifi/rx.c
++++ b/drivers/net/wireless/iwmc3200wifi/rx.c
+@@ -1195,11 +1195,8 @@ static int iwm_ntf_wifi_if_wrapper(struct iwm_priv *iwm, u8 *buf,
+ 	IWM_DBG_NTF(iwm, DBG, "WIFI_IF_WRAPPER cmd is delivered to UMAC: "
+ 		    "oid is 0x%x\n", hdr->oid);
+ 
+-	if (hdr->oid <= WIFI_IF_NTFY_MAX) {
+-		set_bit(hdr->oid, &iwm->wifi_ntfy[0]);
+-		wake_up_interruptible(&iwm->wifi_ntfy_queue);
+-	} else
+-		return -EINVAL;
++	set_bit(hdr->oid, &iwm->wifi_ntfy[0]);
++	wake_up_interruptible(&iwm->wifi_ntfy_queue);
+ 
+ 	switch (hdr->oid) {
+ 	case UMAC_WIFI_IF_CMD_SET_PROFILE:
+-- 
+1.7.2.1
 
-Thanks,
-   Vitaly
