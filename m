@@ -1,52 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:11444 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933120Ab0HDTOT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Aug 2010 15:14:19 -0400
-Subject: Re: [wt PATCH 0/5] libertas: make association work again
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1280907989.3768.0.camel@jlt3.sipsolutions.net>
-References: <1280470034.14523.4.camel@dcbw.foobar.com>
-	 <1280471706.3710.5.camel@jlt3.sipsolutions.net>
-	 <1280900467.2665.6.camel@dcbw.foobar.com>
-	 <1280907989.3768.0.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 04 Aug 2010 14:15:46 -0500
-Message-ID: <1280949346.11056.1.camel@dcbw.foobar.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:37431
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753602Ab0HJHHc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Aug 2010 03:07:32 -0400
+Date: Tue, 10 Aug 2010 00:07:51 -0700 (PDT)
+Message-Id: <20100810.000751.260105232.davem@davemloft.net>
+To: akpm@linux-foundation.org
+Cc: greg@kroah.com, dwmw2@infradead.org, vapier@gentoo.org,
+	jbarnes@virtuousgeek.org, kevin.curtis@farsite.co.uk,
+	phillip@lougher.demon.co.uk, faisal.latif@intel.com,
+	chien.tin.tung@intel.com, dan.j.williams@intel.com,
+	samuel.ortiz@intel.com, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	x86@kernel.org, linux-rdma@vger.kernel.org
+Subject: Re: i386 allmodconfig, current mainline
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20100809164346.6e30cf8c.akpm@linux-foundation.org>
+References: <20100809164346.6e30cf8c.akpm@linux-foundation.org>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-08-04 at 09:46 +0200, Johannes Berg wrote:
-> On Wed, 2010-08-04 at 00:41 -0500, Dan Williams wrote:
-> > On Fri, 2010-07-30 at 08:35 +0200, Johannes Berg wrote:
-> > > On Thu, 2010-07-29 at 23:07 -0700, Dan Williams wrote:
-> > > > This series makes libertas actually associate with APs after the
-> > > > cfg80211 conversion.  There was a pretty big TODO where if cfg80211
-> > > > didn't pass in the BSSID of the AP to associate with, then libertas
-> > > > would fail because the firmware really, really, really wants a BSSID.
-> > > > So lets do a scan to find that BSSID.  The other notable change is
-> > > > a fix to make sure all supported rates are included in the firmware's
-> > > > association request, lack of which caused some APs to deny the attempt.
-> > > 
-> > > I'm a bit tempted to say we could use the connect logic in cfg80211 to
-> > > provide this? cfg80211 _already_ provides this if the hardware wants
-> > > auth()/assoc() rather than connect() calls, so it seems fairly simple to
-> > > also (optionally) do it here?
-> > 
-> > Yeah, I thought about that too.  Do you want me to work on that now
-> > instead of letting this patch through?  I can revert the relevant bits
-> > of this later if that's acceptable too.
-> 
-> Either way works for me since I don't care about any cruft in
-> libertas ;)
+From: Andrew Morton <akpm@linux-foundation.org>
+Date: Mon, 9 Aug 2010 16:43:46 -0700
 
-John, if you don't mind applying this patch I'll work on generic
-scan-before-connect support in cfg80211 in a further patch series.
+> drivers/net/wan/farsync.c: In function 'fst_intr_rx':
+> drivers/net/wan/farsync.c:1312: warning: cast to pointer from integer of different size
+> drivers/net/wan/farsync.c: In function 'do_bottom_half_tx':
+> drivers/net/wan/farsync.c:1407: warning: cast to pointer from integer of different size
 
-Dan
+I'll toss the following into net-2.6:
 
+--------------------
+farsync: Fix compile warnings.
+
+drivers/net/wan/farsync.c: In function 'fst_intr_rx':
+drivers/net/wan/farsync.c:1312: warning: cast to pointer from integer of different size
+drivers/net/wan/farsync.c: In function 'do_bottom_half_tx':
+drivers/net/wan/farsync.c:1407: warning: cast to pointer from integer of different size
+
+The "skb" and "mem" arguments being passed here are DMA addresses
+being programmed into the hardware registers, so pass them as the type
+that they actually are.  And use the correct printf formatting in
+debug logging statements for these things to match the type change.
+
+Reported-by: Andrew Morton <akpm@linux-foundation.org>
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ drivers/net/wan/farsync.c |   15 ++++++++-------
+ 1 files changed, 8 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wan/farsync.c b/drivers/net/wan/farsync.c
+index ad7719f..e050bd6 100644
+--- a/drivers/net/wan/farsync.c
++++ b/drivers/net/wan/farsync.c
+@@ -885,20 +885,21 @@ fst_rx_dma_complete(struct fst_card_info *card, struct fst_port_info *port,
+  *      Receive a frame through the DMA
+  */
+ static inline void
+-fst_rx_dma(struct fst_card_info *card, unsigned char *skb,
+-	   unsigned char *mem, int len)
++fst_rx_dma(struct fst_card_info *card, dma_addr_t skb,
++	   dma_addr_t mem, int len)
+ {
+ 	/*
+ 	 * This routine will setup the DMA and start it
+ 	 */
+ 
+-	dbg(DBG_RX, "In fst_rx_dma %p %p %d\n", skb, mem, len);
++	dbg(DBG_RX, "In fst_rx_dma %lx %lx %d\n",
++	    (unsigned long) skb, (unsigned long) mem, len);
+ 	if (card->dmarx_in_progress) {
+ 		dbg(DBG_ASS, "In fst_rx_dma while dma in progress\n");
+ 	}
+ 
+-	outl((unsigned long) skb, card->pci_conf + DMAPADR0);	/* Copy to here */
+-	outl((unsigned long) mem, card->pci_conf + DMALADR0);	/* from here */
++	outl(skb, card->pci_conf + DMAPADR0);	/* Copy to here */
++	outl(mem, card->pci_conf + DMALADR0);	/* from here */
+ 	outl(len, card->pci_conf + DMASIZ0);	/* for this length */
+ 	outl(0x00000000c, card->pci_conf + DMADPR0);	/* In this direction */
+ 
+@@ -1309,8 +1310,8 @@ fst_intr_rx(struct fst_card_info *card, struct fst_port_info *port)
+ 		card->dma_port_rx = port;
+ 		card->dma_len_rx = len;
+ 		card->dma_rxpos = rxp;
+-		fst_rx_dma(card, (char *) card->rx_dma_handle_card,
+-			   (char *) BUF_OFFSET(rxBuffer[pi][rxp][0]), len);
++		fst_rx_dma(card, card->rx_dma_handle_card,
++			   BUF_OFFSET(rxBuffer[pi][rxp][0]), len);
+ 	}
+ 	if (rxp != port->rxpos) {
+ 		dbg(DBG_ASS, "About to increment rxpos by more than 1\n");
+-- 
+1.7.2.1
 
