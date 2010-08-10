@@ -1,126 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47885 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750755Ab0H0Lpc (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:62839 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932745Ab0HJWNm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 07:45:32 -0400
-Subject: [PATCH] mac80211: fix offchannel queue stop
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Vivek Natarajan <Vivek.Natarajan@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Luis Rodriguez <mcgrof@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 27 Aug 2010 13:45:28 +0200
-Message-ID: <1282909528.4377.8.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 10 Aug 2010 18:13:42 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>
+Cc: Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Pandita Vikram <vikram.pandita@ti.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH v3 5/9] wireless: wl1271: make ref_clock configurable by board
+Date: Wed, 11 Aug 2010 01:12:24 +0300
+Message-Id: <1281478348-24833-6-git-send-email-ohad@wizery.com>
+In-Reply-To: <1281478348-24833-1-git-send-email-ohad@wizery.com>
+References: <1281478348-24833-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+The wl1271 device is using a reference clock that may change
+between board to board.
 
-Somebody noticed this problem, and I outlined
-to them how to fix it, but haven't heard back
-from them. So while I was adding the state
-field I figured I could use it to fix it.
+Make the ref_clock parameter configurable by the board
+files that set up the device, instead of having a hard coded
+value in the driver source itself.
 
-The problem, as I understand it, is that when
-we go offchannel while the driver has a queue
-stopped, the driver will likely start draining
-the queue and then enable it while offchannel.
-This in turn will enable the interface queue,
-and that leads to transmitting data frames on
-the wrong channel.
-
-Fix this by keeping track of offchannel status
-per interface, and not enabling the interface
-queues on interfaces that are offchannel when
-the driver enables a queue.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
 ---
-Too lazy to dig out who reported this, so CCing
-a bunch of people at Atheros ...
+ drivers/net/wireless/wl12xx/wl1271.h      |    1 +
+ drivers/net/wireless/wl12xx/wl1271_boot.c |    9 +++++----
+ drivers/net/wireless/wl12xx/wl1271_boot.h |    1 -
+ drivers/net/wireless/wl12xx/wl1271_sdio.c |    1 +
+ drivers/net/wireless/wl12xx/wl1271_spi.c  |    2 ++
+ include/linux/wl12xx.h                    |    1 +
+ 6 files changed, 10 insertions(+), 5 deletions(-)
 
- net/mac80211/ieee80211_i.h |    3 +++
- net/mac80211/offchannel.c  |   19 +++++++++++++++++--
- net/mac80211/util.c        |    5 ++++-
- 3 files changed, 24 insertions(+), 3 deletions(-)
-
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2010-08-27 13:26:38.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2010-08-27 13:29:44.000000000 +0200
-@@ -477,9 +477,12 @@ enum ieee80211_sub_if_data_flags {
-  * @SDATA_STATE_RUNNING: virtual interface is up & running; this
-  *	mirrors netif_running() but is separate for interface type
-  *	change handling while the interface is up
-+ * @SDATA_STATE_OFFCHANNEL: This interface is currently in offchannel
-+ *	mode, so queues are stopped
-  */
- enum ieee80211_sdata_state_bits {
- 	SDATA_STATE_RUNNING,
-+	SDATA_STATE_OFFCHANNEL,
+diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+index 013eabb..f0988a4 100644
+--- a/drivers/net/wireless/wl12xx/wl1271.h
++++ b/drivers/net/wireless/wl12xx/wl1271.h
+@@ -342,6 +342,7 @@ struct wl1271 {
+ 
+ 	void (*set_power)(bool enable);
+ 	int irq;
++	int ref_clock;
+ 
+ 	spinlock_t wl_lock;
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.c b/drivers/net/wireless/wl12xx/wl1271_boot.c
+index f36430b..95c636a 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_boot.c
++++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
+@@ -457,17 +457,18 @@ int wl1271_boot(struct wl1271 *wl)
+ {
+ 	int ret = 0;
+ 	u32 tmp, clk, pause;
++	int ref_clock = wl->ref_clock;
+ 
+ 	wl1271_boot_hw_version(wl);
+ 
+-	if (REF_CLOCK == 0 || REF_CLOCK == 2 || REF_CLOCK == 4)
++	if (ref_clock == 0 || ref_clock == 2 || ref_clock == 4)
+ 		/* ref clk: 19.2/38.4/38.4-XTAL */
+ 		clk = 0x3;
+-	else if (REF_CLOCK == 1 || REF_CLOCK == 3)
++	else if (ref_clock == 1 || ref_clock == 3)
+ 		/* ref clk: 26/52 */
+ 		clk = 0x5;
+ 
+-	if (REF_CLOCK != 0) {
++	if (ref_clock != 0) {
+ 		u16 val;
+ 		/* Set clock type (open drain) */
+ 		val = wl1271_top_reg_read(wl, OCP_REG_CLK_TYPE);
+@@ -516,7 +517,7 @@ int wl1271_boot(struct wl1271 *wl)
+ 	wl1271_debug(DEBUG_BOOT, "clk2 0x%x", clk);
+ 
+ 	/* 2 */
+-	clk |= (REF_CLOCK << 1) << 4;
++	clk |= (ref_clock << 1) << 4;
+ 	wl1271_write32(wl, DRPW_SCRATCH_START, clk);
+ 
+ 	wl1271_set_partition(wl, &part_table[PART_WORK]);
+diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.h b/drivers/net/wireless/wl12xx/wl1271_boot.h
+index f829699..f73b0b1 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_boot.h
++++ b/drivers/net/wireless/wl12xx/wl1271_boot.h
+@@ -46,7 +46,6 @@ struct wl1271_static_data {
+ /* delay between retries */
+ #define INIT_LOOP_DELAY 50
+ 
+-#define REF_CLOCK            2
+ #define WU_COUNTER_PAUSE_VAL 0x3FF
+ #define WELP_ARM_COMMAND_VAL 0x4
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
+index b565e64..bfb18b6 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_sdio.c
++++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
+@@ -296,6 +296,7 @@ static int __devinit wl1271_probe(struct sdio_func *func,
+ 	}
+ 
+ 	wl->irq = wlan_data->irq;
++	wl->ref_clock = wlan_data->board_ref_clock;
+ 
+ 	ret = request_irq(wl->irq, wl1271_irq, 0, DRIVER_NAME, wl);
+ 	if (ret < 0) {
+diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
+index de56d8d..ced0a9e 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_spi.c
++++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
+@@ -372,6 +372,8 @@ static int __devinit wl1271_probe(struct spi_device *spi)
+ 		goto out_free;
+ 	}
+ 
++	wl->ref_clock = pdata->board_ref_clock;
++
+ 	wl->irq = spi->irq;
+ 	if (wl->irq < 0) {
+ 		wl1271_error("irq missing in platform data");
+diff --git a/include/linux/wl12xx.h b/include/linux/wl12xx.h
+index 137ac89..ef6eed9 100644
+--- a/include/linux/wl12xx.h
++++ b/include/linux/wl12xx.h
+@@ -29,6 +29,7 @@ struct wl12xx_platform_data {
+ 	/* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
+ 	int irq;
+ 	bool use_eeprom;
++	int board_ref_clock;
  };
  
- struct ieee80211_sub_if_data {
---- wireless-testing.orig/net/mac80211/offchannel.c	2010-08-27 13:26:38.000000000 +0200
-+++ wireless-testing/net/mac80211/offchannel.c	2010-08-27 13:34:31.000000000 +0200
-@@ -112,8 +112,10 @@ void ieee80211_offchannel_stop_beaconing
- 		 * used from user space controlled off-channel operations.
- 		 */
- 		if (sdata->vif.type != NL80211_IFTYPE_STATION &&
--		    sdata->vif.type != NL80211_IFTYPE_MONITOR)
-+		    sdata->vif.type != NL80211_IFTYPE_MONITOR) {
-+			set_bit(SDATA_STATE_OFFCHANNEL, &sdata->state);
- 			netif_tx_stop_all_queues(sdata->dev);
-+		}
- 	}
- 	mutex_unlock(&local->iflist_mtx);
- }
-@@ -131,6 +133,7 @@ void ieee80211_offchannel_stop_station(s
- 			continue;
- 
- 		if (sdata->vif.type == NL80211_IFTYPE_STATION) {
-+			set_bit(SDATA_STATE_OFFCHANNEL, &sdata->state);
- 			netif_tx_stop_all_queues(sdata->dev);
- 			if (sdata->u.mgd.associated)
- 				ieee80211_offchannel_ps_enable(sdata);
-@@ -155,8 +158,20 @@ void ieee80211_offchannel_return(struct
- 				ieee80211_offchannel_ps_disable(sdata);
- 		}
- 
--		if (sdata->vif.type != NL80211_IFTYPE_MONITOR)
-+		if (sdata->vif.type != NL80211_IFTYPE_MONITOR) {
-+			clear_bit(SDATA_STATE_OFFCHANNEL, &sdata->state);
-+			/*
-+			 * This may wake up queues even though the driver
-+			 * currently has them stopped. This is not very
-+			 * likely, since the driver won't have gotten any
-+			 * (or hardly any) new packets while we weren't
-+			 * on the right channel, and even if it happens
-+			 * it will at most lead to queueing up one more
-+			 * packet per queue in mac80211 rather than on
-+			 * the interface qdisc.
-+			 */
- 			netif_tx_wake_all_queues(sdata->dev);
-+		}
- 
- 		/* re-enable beaconing */
- 		if (enable_beaconing &&
---- wireless-testing.orig/net/mac80211/util.c	2010-08-27 13:27:34.000000000 +0200
-+++ wireless-testing/net/mac80211/util.c	2010-08-27 13:29:44.000000000 +0200
-@@ -283,8 +283,11 @@ static void __ieee80211_wake_queue(struc
- 
- 	if (skb_queue_empty(&local->pending[queue])) {
- 		rcu_read_lock();
--		list_for_each_entry_rcu(sdata, &local->interfaces, list)
-+		list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-+			if (test_bit(SDATA_STATE_OFFCHANNEL, &sdata->state))
-+				continue;
- 			netif_wake_subqueue(sdata->dev, queue);
-+		}
- 		rcu_read_unlock();
- 	} else
- 		tasklet_schedule(&local->tx_pending_tasklet);
-
+ #endif
+-- 
+1.7.0.4
 
