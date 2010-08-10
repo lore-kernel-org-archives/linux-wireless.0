@@ -1,54 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:43673 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754842Ab0HKSWR (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:39699
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933613Ab0HJXAk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Aug 2010 14:22:17 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>
-Cc: Ido Yariv <ido@wizery.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v4 6/8] omap: hsmmc: remove unused variable
-Date: Wed, 11 Aug 2010 21:21:51 +0300
-Message-Id: <1281550913-17633-7-git-send-email-ohad@wizery.com>
-In-Reply-To: <1281550913-17633-1-git-send-email-ohad@wizery.com>
-References: <1281550913-17633-1-git-send-email-ohad@wizery.com>
+	Tue, 10 Aug 2010 19:00:40 -0400
+Date: Tue, 10 Aug 2010 16:00:59 -0700 (PDT)
+Message-Id: <20100810.160059.27791359.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2010-08-10
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20100810204251.GB2728@tuxdriver.com>
+References: <20100810204251.GB2728@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make this go away:
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 10 Aug 2010 16:42:51 -0400
 
-drivers/mmc/host/omap_hsmmc.c: In function 'omap_hsmmc_suspend':
-drivers/mmc/host/omap_hsmmc.c:2328: warning: unused variable 'state'
+> Here are a few more fixes intended for 2.6.36.  Included are a locking
+> fix for cfg80211, a fix for iwlagn to prevent it from using RTS/CTS
+> or CTS-to-self protection on every frame (even inappropriately),
+> a reversion of a mistakenly added PCI ID from p54, and a simple fix
+> for some build breakage some have been experiencing in libertas.
+> Also included are a handful of Bluetooth fixes by way of Marcel.
 
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
----
- drivers/mmc/host/omap_hsmmc.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/mmc/host/omap_hsmmc.c b/drivers/mmc/host/omap_hsmmc.c
-index b032828..d50e917 100644
---- a/drivers/mmc/host/omap_hsmmc.c
-+++ b/drivers/mmc/host/omap_hsmmc.c
-@@ -2272,7 +2272,6 @@ static int omap_hsmmc_suspend(struct device *dev)
- 	int ret = 0;
- 	struct platform_device *pdev = to_platform_device(dev);
- 	struct omap_hsmmc_host *host = platform_get_drvdata(pdev);
--	pm_message_t state = PMSG_SUSPEND; /* unused by MMC core */
- 
- 	if (host && host->suspended)
- 		return 0;
--- 
-1.7.0.4
-
+Pulled, thanks a lot John.
