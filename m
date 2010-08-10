@@ -1,40 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:33456 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754359Ab0HSTDu (ORCPT
+Received: from anchor-post-1.mail.demon.net ([195.173.77.132]:40804 "EHLO
+	anchor-post-1.mail.demon.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932130Ab0HJS3F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Aug 2010 15:03:50 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 6D8494195D
-	for <linux-wireless@vger.kernel.org>; Thu, 19 Aug 2010 15:03:24 -0400 (EDT)
-Subject: Compat-wireless release for 2010-08-19 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20100819190349.09CA841133@repository3.orbit-lab.org>
-Date: Thu, 19 Aug 2010 15:03:48 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Tue, 10 Aug 2010 14:29:05 -0400
+Message-ID: <4C619A08.5050704@lougher.demon.co.uk>
+Date: Tue, 10 Aug 2010 19:27:20 +0100
+From: Phillip Lougher <phillip@lougher.demon.co.uk>
+MIME-Version: 1.0
+To: Andrew Morton <akpm@linux-foundation.org>
+CC: Greg KH <greg@kroah.com>, David Woodhouse <dwmw2@infradead.org>,
+	Mike Frysinger <vapier@gentoo.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Kevin Curtis <kevin.curtis@farsite.co.uk>,
+	Faisal Latif <faisal.latif@intel.com>,
+	Chien Tung <chien.tin.tung@intel.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Samuel Ortiz <samuel.ortiz@intel.com>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, x86@kernel.org,
+	linux-rdma@vger.kernel.org
+Subject: Re: i386 allmodconfig, current mainline
+References: <20100809164346.6e30cf8c.akpm@linux-foundation.org>
+In-Reply-To: <20100809164346.6e30cf8c.akpm@linux-foundation.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   0213728..9d70494  history    -> origin/history
- + f898b45...5143e0a master     -> origin/master  (forced update)
-   da5cabf..763008c  stable     -> origin/stable
- * [new tag]         next-20100819 -> next-20100819
+Andrew Morton wrote:
 
-compat-wireless code metrics
+> fs/squashfs/xattr.c:37: warning: 'squashfs_xattr_handler' declared inline after being called
+> fs/squashfs/xattr.c:37: warning: previous declaration of 'squashfs_xattr_handler' was here
+> 
 
-    496200 - Total upstream lines of code being pulled
-      1714 - backport code changes
-      1474 - backport code additions
-       240 - backport code deletions
-      6070 - backport from compat module
-      7784 - total backport code
-    1.5687 - % of code consists of backport work
-      1218 - Crap changes not yet posted
-      1179 - Crap additions not yet posted
-        39 - Crap deletions not yet posted
-    0.2455 - % of crap code
+The fix for this is in linux-next, and it will be in my imminent 2.6.36 pull
+request to Linus.
 
-Base tree: linux-next.git
-Base tree version: next-20100819
-compat-wireless release: compat-wireless-2010-08-16-3-g558219f
+Phillip
