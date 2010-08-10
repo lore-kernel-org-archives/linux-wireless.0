@@ -1,65 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:49579 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753309Ab0HSOXi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Aug 2010 10:23:38 -0400
-Message-ID: <4C6D3D5C.7010504@kernel.org>
-Date: Thu, 19 Aug 2010 16:19:08 +0200
-From: Tejun Heo <tj@kernel.org>
-MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-CC: Luis Rodriguez <lrodriguez@atheros.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Linux-pm mailing list <linux-pm@lists.linux-foundation.org>,
-	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-	Maciej Rutecki <maciej.rutecki@gmail.com>
-Subject: Re: [Regression, 2.6.36-rc1] ath9k resume problem on Acer Ferrari
- One
-References: <201008190001.11342.rjw@sisk.pl> <4C6CE715.4010203@kernel.org> <201008191605.08053.rjw@sisk.pl>
-In-Reply-To: <201008191605.08053.rjw@sisk.pl>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:62839 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933346Ab0HJWNu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Aug 2010 18:13:50 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>
+Cc: Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Pandita Vikram <vikram.pandita@ti.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH v3 7/9] omap: zoom: add fixed regulator device for wlan
+Date: Wed, 11 Aug 2010 01:12:26 +0300
+Message-Id: <1281478348-24833-8-git-send-email-ohad@wizery.com>
+In-Reply-To: <1281478348-24833-1-git-send-email-ohad@wizery.com>
+References: <1281478348-24833-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Add a fixed regulator vmmc device to enable power control
+of the wl1271 wlan device.
 
-On 08/19/2010 04:05 PM, Rafael J. Wysocki wrote:
-> On Thursday, August 19, 2010, Tejun Heo wrote:
->> Hello, Rafael.
->>
->> On 08/19/2010 12:01 AM, Rafael J. Wysocki wrote:
->>> While testing 2.6.36-rc1 (with a couple of fixes on top) I noticed
->>> that the ath9k driver didn't work after resume from suspend to RAM.
->>> An attempt to unload the driver using rmmod caused the BUG_ON() in
->>> kernel/workqueue.c:2844 to trigger.
->>
->> That BUG_ON() triggers if destroy_workqueue() is called while work
->> items are still pending on the workqueue.  Can you please trigger
->> stack traces after resume and post it?
-> 
-> Do you mean sysrq-t?
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+---
+ arch/arm/mach-omap2/board-zoom-peripherals.c |   35 ++++++++++++++++++++++++++
+ 1 files changed, 35 insertions(+), 0 deletions(-)
 
-Yeah, I'm a bit confused regarding what's going on.  I thought the
-most likely cause is thawing failing to kick a frozen workqueue into
-working state but then flush_workqueue() which is called from
-destroy_workqueue() should have hung too, that is, unless
-flush_workqueue() is broken too.  If flush_workqueue() is not broken,
-then it could be that workqueue itself isn't at fault and works are
-being scheduled and executed fine for the workqueue ath9k is using but
-the driver doesn't work for another reason.
-
-Also, the BUG_ON() being triggered means either flush_workqueue() is
-broken or the driver is failing to stop works on the workqueue from
-being requeued before calling destroy_workqueue().  So, finding out
-the followings would be great,
-
-* While the driver isn't working, do a sysrq-t and see whether any
-  worker is executing a work for ath9k.
-
-* Repeat it several times and see whether the work is stuck or making
-  progress and/or executing on different workers.
-
-Thanks.
-
+diff --git a/arch/arm/mach-omap2/board-zoom-peripherals.c b/arch/arm/mach-omap2/board-zoom-peripherals.c
+index 6b39849..de88635 100644
+--- a/arch/arm/mach-omap2/board-zoom-peripherals.c
++++ b/arch/arm/mach-omap2/board-zoom-peripherals.c
+@@ -16,6 +16,7 @@
+ #include <linux/gpio.h>
+ #include <linux/i2c/twl.h>
+ #include <linux/regulator/machine.h>
++#include <linux/regulator/fixed.h>
+ 
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+@@ -27,6 +28,8 @@
+ #include "mux.h"
+ #include "hsmmc.h"
+ 
++#define OMAP_ZOOM_WLAN_PMENA_GPIO	(101)
++
+ /* Zoom2 has Qwerty keyboard*/
+ static int board_keymap[] = {
+ 	KEY(0, 0, KEY_E),
+@@ -106,6 +109,11 @@ static struct regulator_consumer_supply zoom_vmmc2_supply = {
+ 	.supply		= "vmmc",
+ };
+ 
++static struct regulator_consumer_supply zoom_vmmc3_supply = {
++	.supply		= "vmmc",
++	.dev_name	= "mmci-omap-hs.2",
++};
++
+ /* VMMC1 for OMAP VDD_MMC1 (i/o) and MMC1 card */
+ static struct regulator_init_data zoom_vmmc1 = {
+ 	.constraints = {
+@@ -151,6 +159,32 @@ static struct regulator_init_data zoom_vsim = {
+ 	.consumer_supplies      = &zoom_vsim_supply,
+ };
+ 
++static struct regulator_init_data zoom_vmmc3 = {
++	.constraints = {
++		.valid_ops_mask	= REGULATOR_CHANGE_STATUS,
++	},
++	.num_consumer_supplies = 1,
++	.consumer_supplies = &zoom_vmmc3_supply,
++};
++
++static struct fixed_voltage_config zoom_vwlan = {
++	.supply_name = "vwl1271",
++	.microvolts = 1800000, /* 1.8V */
++	.gpio = OMAP_ZOOM_WLAN_PMENA_GPIO,
++	.startup_delay = 70000, /* 70msec */
++	.enable_high = 1,
++	.enabled_at_boot = 0,
++	.init_data = &zoom_vmmc3,
++};
++
++static struct platform_device omap_vwlan_device = {
++	.name		= "reg-fixed-voltage",
++	.id		= 1,
++	.dev = {
++		.platform_data = &zoom_vwlan,
++	},
++};
++
+ static struct omap2_hsmmc_info mmc[] __initdata = {
+ 	{
+ 		.name		= "external",
+@@ -280,6 +314,7 @@ static void enable_board_wakeup_source(void)
+ void __init zoom_peripherals_init(void)
+ {
+ 	omap_i2c_init();
++	platform_device_register(&omap_vwlan_device);
+ 	usb_musb_init(&musb_board_data);
+ 	enable_board_wakeup_source();
+ }
 -- 
-tejun
+1.7.0.4
+
