@@ -1,158 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42223 "EHLO mx1.redhat.com"
+Received: from cantor2.suse.de ([195.135.220.15]:45981 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750699Ab0HHCM2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Aug 2010 22:12:28 -0400
-Subject: [PATCH 1/5] libertas: [usb] use new firmware locations
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	David Woodhouse <dwmw2@infradead.org>,
-	Holger Schurig <hs4233@mail.mn-solutions.de>
-In-Reply-To: <1281233470.6235.12.camel@dcbw.foobar.com>
-References: <1281233470.6235.12.camel@dcbw.foobar.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 07 Aug 2010 21:13:57 -0500
-Message-ID: <1281233637.6235.14.camel@dcbw.foobar.com>
-Mime-Version: 1.0
+	id S932070Ab0HJMwJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Aug 2010 08:52:09 -0400
+Date: Tue, 10 Aug 2010 14:52:06 +0200 (CEST)
+From: Jiri Kosina <jkosina@suse.cz>
+To: Peter Teoh <htmldeveloper@gmail.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: Compilation errors on latest git tree
+In-Reply-To: <AANLkTinU1jzHEwgQScFxt=a0MBSUsMXuYJwkwKocJP6D@mail.gmail.com>
+Message-ID: <alpine.LRH.2.00.1008101450540.2372@twin.jikos.cz>
+References: <AANLkTinU1jzHEwgQScFxt=a0MBSUsMXuYJwkwKocJP6D@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: MULTIPART/MIXED; BOUNDARY="-1747641777-669367335-1281444727=:2372"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Look for firmware where the linux-firmware tree actually puts it, but
-fall back to original firmware name & location when the new location
-doesn't exist.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
----
- drivers/net/wireless/libertas/if_usb.c |   60 ++++++++++++++++++++++++++++----
- drivers/net/wireless/libertas/if_usb.h |    1 +
- 2 files changed, 54 insertions(+), 7 deletions(-)
+---1747641777-669367335-1281444727=:2372
+Content-Type: TEXT/PLAIN; charset=windows-1252
+Content-Transfer-Encoding: 8BIT
 
-diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-index 07ece9d..238de10 100644
---- a/drivers/net/wireless/libertas/if_usb.c
-+++ b/drivers/net/wireless/libertas/if_usb.c
-@@ -26,15 +26,25 @@
- 
- #define MESSAGE_HEADER_LEN	4
- 
--static char *lbs_fw_name = "usb8388.bin";
-+static char *lbs_fw_name = NULL;
- module_param_named(fw_name, lbs_fw_name, charp, 0644);
- 
-+MODULE_FIRMWARE("libertas/usb8388_v9.bin");
-+MODULE_FIRMWARE("libertas/usb8388_v5.bin");
-+MODULE_FIRMWARE("libertas/usb8388.bin");
-+MODULE_FIRMWARE("libertas/usb8682.bin");
- MODULE_FIRMWARE("usb8388.bin");
- 
-+enum {
-+	MODEL_UNKNOWN = 0x0,
-+	MODEL_8388 = 0x1,
-+	MODEL_8682 = 0x2
-+};
-+
- static struct usb_device_id if_usb_table[] = {
- 	/* Enter the device signature inside */
--	{ USB_DEVICE(0x1286, 0x2001) },
--	{ USB_DEVICE(0x05a3, 0x8388) },
-+	{ USB_DEVICE(0x1286, 0x2001), .driver_info = MODEL_8388 },
-+	{ USB_DEVICE(0x05a3, 0x8388), .driver_info = MODEL_8388 },
- 	{}	/* Terminating entry */
- };
- 
-@@ -66,6 +76,8 @@ static ssize_t if_usb_firmware_set(struct device *dev,
- 	struct if_usb_card *cardp = priv->card;
- 	int ret;
- 
-+	BUG_ON(buf == NULL);
-+
- 	ret = if_usb_prog_firmware(cardp, buf, BOOT_CMD_UPDATE_FW);
- 	if (ret == 0)
- 		return count;
-@@ -91,6 +103,8 @@ static ssize_t if_usb_boot2_set(struct device *dev,
- 	struct if_usb_card *cardp = priv->card;
- 	int ret;
- 
-+	BUG_ON(buf == NULL);
-+
- 	ret = if_usb_prog_firmware(cardp, buf, BOOT_CMD_UPDATE_BOOT2);
- 	if (ret == 0)
- 		return count;
-@@ -244,6 +258,7 @@ static int if_usb_probe(struct usb_interface *intf,
- 	init_waitqueue_head(&cardp->fw_wq);
- 
- 	cardp->udev = udev;
-+	cardp->model = (uint32_t) id->driver_info;
- 	iface_desc = intf->cur_altsetting;
- 
- 	lbs_deb_usbd(&udev->dev, "bcdUSB = 0x%X bDeviceClass = 0x%X"
-@@ -921,6 +936,38 @@ static int if_usb_prog_firmware(struct if_usb_card *cardp,
- 	return ret;
- }
- 
-+/* table of firmware file names */
-+static const struct {
-+	u32 model;
-+	const char *fwname;
-+} fw_table[] = {
-+	{ MODEL_8388, "libertas/usb8388_v9.bin" },
-+	{ MODEL_8388, "libertas/usb8388_v5.bin" },
-+	{ MODEL_8388, "libertas/usb8388.bin" },
-+	{ MODEL_8388, "usb8388.bin" },
-+	{ MODEL_8682, "libertas/usb8682.bin" }
-+};
-+
-+static int get_fw(struct if_usb_card *cardp, const char *fwname)
-+{
-+	int i;
-+
-+	/* Try user-specified firmware first */
-+	if (fwname)
-+		return request_firmware(&cardp->fw, fwname, &cardp->udev->dev);
-+
-+	/* Otherwise search for firmware to use */
-+	for (i = 0; i < ARRAY_SIZE(fw_table); i++) {
-+		if (fw_table[i].model != cardp->model)
-+			continue;
-+		if (request_firmware(&cardp->fw, fw_table[i].fwname,
-+					&cardp->udev->dev) == 0)
-+			return 0;
-+	}
-+
-+	return -ENOENT;
-+}
-+
- static int __if_usb_prog_firmware(struct if_usb_card *cardp,
- 					const char *fwname, int cmd)
- {
-@@ -930,10 +977,9 @@ static int __if_usb_prog_firmware(struct if_usb_card *cardp,
- 
- 	lbs_deb_enter(LBS_DEB_USB);
- 
--	ret = request_firmware(&cardp->fw, fwname, &cardp->udev->dev);
--	if (ret < 0) {
--		lbs_pr_err("request_firmware() failed with %#x\n", ret);
--		lbs_pr_err("firmware %s not found\n", fwname);
-+	ret = get_fw(cardp, fwname);
-+	if (ret) {
-+		lbs_pr_err("failed to find firmware (%d)\n", ret);
- 		goto done;
- 	}
- 
-diff --git a/drivers/net/wireless/libertas/if_usb.h b/drivers/net/wireless/libertas/if_usb.h
-index 5ba0aee..d819e7e 100644
---- a/drivers/net/wireless/libertas/if_usb.h
-+++ b/drivers/net/wireless/libertas/if_usb.h
-@@ -43,6 +43,7 @@ struct bootcmdresp
- /** USB card description structure*/
- struct if_usb_card {
- 	struct usb_device *udev;
-+	uint32_t model;  /* MODEL_* */
- 	struct urb *rx_urb, *tx_urb;
- 	struct lbs_private *priv;
- 
+On Tue, 10 Aug 2010, Peter Teoh wrote:
+
+> Got the following compilation errors on the latest linus git tree
+> (v.2.6.35-6113-gf6cec0a).
+> 
+>   CHK     include/linux/version.h
+>   CHK     include/generated/utsrelease.h
+>   CALL    scripts/checksyscalls.sh
+>   CHK     include/generated/compile.h
+>   VDSOSYM arch/x86/vdso/vdso32-int80-syms.lds
+>   VDSOSYM arch/x86/vdso/vdso32-sysenter-syms.lds
+>   VDSOSYM arch/x86/vdso/vdso32-syms.lds
+>   LD      arch/x86/vdso/built-in.o
+>   LD      arch/x86/built-in.o
+>   CC [M]  drivers/net/wireless/libertas/cfg.o
+> drivers/net/wireless/libertas/cfg.c: In function ‘lbs_scan_worker’:
+> drivers/net/wireless/libertas/cfg.c:722: error: ‘TASK_NORMAL’
+> undeclared (first use in this function)
+> drivers/net/wireless/libertas/cfg.c:722: error: (Each undeclared
+> identifier is reported only once
+> drivers/net/wireless/libertas/cfg.c:722: error: for each function it
+> appears in.)
+> drivers/net/wireless/libertas/cfg.c: In function ‘lbs_cfg_connect’:
+> drivers/net/wireless/libertas/cfg.c:1267: error: ‘TASK_INTERRUPTIBLE’
+> undeclared (first use in this function)
+> drivers/net/wireless/libertas/cfg.c:1267: error: implicit declaration
+> of function ‘signal_pending’
+> drivers/net/wireless/libertas/cfg.c:1267: error: implicit declaration
+> of function ‘schedule_timeout’
+> make[4]: *** [drivers/net/wireless/libertas/cfg.o] Error 1
+> make[3]: *** [drivers/net/wireless/libertas] Error 2
+> make[2]: *** [drivers/net/wireless] Error 2
+> make[1]: *** [drivers/net] Error 2
+> make: *** [drivers] Error 2
+> 
+> It as resolved via the attached patch.   You may want to change the
+> way I patch it.   Thanks.
+
+Adding some appropriate CCs.
+
 -- 
-1.7.2.1
+Jiri Kosina
+SUSE Labs, Novell Inc.
 
+---1747641777-669367335-1281444727=:2372
+Content-Type: TEXT/PLAIN; charset=US-ASCII; name=libertas.patch
+Content-Transfer-Encoding: BASE64
+Content-ID: <alpine.LRH.2.00.1008101452060.2372@twin.jikos.cz>
+Content-Description: 
+Content-Disposition: attachment; filename=libertas.patch
 
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2xpYmVydGFzL2Nm
+Zy5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbGliZXJ0YXMvY2ZnLmMNCmlu
+ZGV4IDhlOWZiZmQuLjUxYTk2ZjUgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL25l
+dC93aXJlbGVzcy9saWJlcnRhcy9jZmcuYw0KKysrIGIvZHJpdmVycy9uZXQv
+d2lyZWxlc3MvbGliZXJ0YXMvY2ZnLmMNCkBAIC03LDYgKzcsNyBAQA0KICAq
+Lw0KIA0KICNpbmNsdWRlIDxsaW51eC9zbGFiLmg+DQorI2luY2x1ZGUgPGxp
+bnV4L3NjaGVkLmg+DQogI2luY2x1ZGUgPGxpbnV4L2llZWU4MDIxMS5oPg0K
+ICNpbmNsdWRlIDxuZXQvY2ZnODAyMTEuaD4NCiAjaW5jbHVkZSA8YXNtL3Vu
+YWxpZ25lZC5oPg0K
+
+---1747641777-669367335-1281444727=:2372--
