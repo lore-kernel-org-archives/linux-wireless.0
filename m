@@ -1,55 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44710 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752085Ab0H0PnW (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:50730 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757936Ab0HJVjp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 11:43:22 -0400
-Subject: Re: [RFT] mac80211: fix broadcast/multicast data drop on scan
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
-	Kalle Valo <kvalo@adurom.com>,
-	Amod Bodas <Amod.Bodas@atheros.com>
-In-Reply-To: <AANLkTi=qWjhwo50hg8HB1wtsyUizAi55SEK9EW0Udckv@mail.gmail.com>
-References: <1282887527-23259-1-git-send-email-lrodriguez@atheros.com>
-	 <20100827090655.GA15873@jm.kir.nu>
-	 <AANLkTimw1MpiKM=rCfp_zxkw855SyaoZg6m1oB354tCF@mail.gmail.com>
-	 <1282923444.4377.13.camel@jlt3.sipsolutions.net>
-	 <AANLkTi=qWjhwo50hg8HB1wtsyUizAi55SEK9EW0Udckv@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 27 Aug 2010 17:43:19 +0200
-Message-ID: <1282923799.4377.14.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 10 Aug 2010 17:39:45 -0400
+Received: by eya25 with SMTP id 25so4106809eya.19
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Aug 2010 14:39:44 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTim4_HoHwdhGqAZqcGf2oq7boktdZFW4-w5DpdDa@mail.gmail.com>
+References: <AANLkTim4_HoHwdhGqAZqcGf2oq7boktdZFW4-w5DpdDa@mail.gmail.com>
+From: Andrew Lutomirski <luto@mit.edu>
+Date: Tue, 10 Aug 2010 17:39:24 -0400
+Message-ID: <AANLkTinuYOvwNZAFgq67f4XBL4YQ+b2z4EBMcmvbMYi3@mail.gmail.com>
+Subject: [WTF, maintainers] Re: *PING* iwlagn 2.6.35: "BA scd_flow 0 does not
+	match txq_id 10" regression
+To: linux-wireless@vger.kernel.org, wey-yi.w.guy@intel.com
+Cc: linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-08-27 at 08:40 -0700, Luis R. Rodriguez wrote:
-> On Fri, Aug 27, 2010 at 8:37 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Fri, 2010-08-27 at 08:28 -0700, Luis R. Rodriguez wrote:
-> >
-> >> Indeed... I do not see where we keep track of the DTIM count and was
-> >> afraid this was not sufficient. I had not thought about the last
-> >> received multicast / broadcast frame, that will require some more
-> >> work. But I also noticed even ieee80211_recalc_ps() does not take this
-> >> into account when computing the max_sleep_period ieee80211_enable_ps()
-> >> for dynamic power save, it only considers the DTIM period. We send the
-> >> nullfunc frame for dynamic power save and it does not seem we take
-> >> into consideration the DTIM count and last RX's broadcast / multicast
-> >> data prior to sending the nullfunc to go into power save. So it seems
-> >> to me dynamic power save would also loses broadcast / multicast data
-> >> frames.
-> >
-> > No, the max sleep period is just a helper variable for device
-> > implementation of sleep -- the actual alignment of it with DTIM beacons
-> > etc. has to be done by the device. Therefore, it isn't so :-)
-> 
-> I noticed the comment on the PS documentation that the reason for this
-> is that mac80211 is too slow, is that right?
+On Mon, Jul 26, 2010 at 4:02 PM, Andrew Lutomirski <luto@mit.edu> wrote:
+> There's a regression in 2.6.35 where the connection breaks and iwlagn
+> writes a bunch of:
+>
+> iwlagn 0000:03:00.0: BA scd_flow 0 does not match txq_id 10
+>
+> This is confirmed [1] and a patch supposedly exists.  Since this
+> breaks at least two people's wireless and 2.6.35 is about to be
+> released, can we see the patches?
+>
+> Thanks,
+> Andy
+>
+> [1] http://article.gmane.org/gmane.linux.kernel.wireless.general/53552
+>
 
-Well, there's no way we can reliably wake up exactly before a beacon by
-implementing that in software, hard real-time hasn't been achieved in
-Linux yet :-)
+This regression was reported on July 21 and confirmed, supposedly with
+a patch available, on July 24 (or maybe July 23).  On July 26 I pinged
+the list because I'm affected as well.
 
-johannes
+It's now August 10 and both 2.6.35 and 2.5.35.1 have been released and
+the bug is still there.  WTF happened?  (I admit I haven't actually
+tested 2.6.35.1 because it's still compiling, but I see nothing to
+suggest that it's been fixed.)
 
+Thanks,
+Andy
+
+P.S.  iwlagn malfunctions for me *all the time*.  I'd love to help
+debug but it's hard when no one pays attention and when the bugs are
+all hard to trigger.  Any volunteers to help?
