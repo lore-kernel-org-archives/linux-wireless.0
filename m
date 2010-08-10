@@ -1,80 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39316 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752400Ab0HYV5G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Aug 2010 17:57:06 -0400
-Subject: Re: [PATCH] libertas: if_sdio: fix buffer alignment in struct
- if_sdio_card
-From: Dan Williams <dcbw@redhat.com>
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: Mike Rapoport <mike@compulab.co.il>, rusty@rustcorp.com.au,
-	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
-In-Reply-To: <201008221557.44607.marek.vasut@gmail.com>
-References: <1282476160-6913-1-git-send-email-mike@compulab.co.il>
-	 <201008221459.25574.marek.vasut@gmail.com>
-	 <4C712480.1090006@compulab.co.il>
-	 <201008221557.44607.marek.vasut@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 25 Aug 2010 16:59:00 -0500
-Message-ID: <1282773540.28250.29.camel@dcbw.foobar.com>
-Mime-Version: 1.0
+Received: from external1.orbit-lab.org ([128.6.192.131]:40503 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932712Ab0HJTD1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Aug 2010 15:03:27 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 79CD14195D
+	for <linux-wireless@vger.kernel.org>; Tue, 10 Aug 2010 15:03:25 -0400 (EDT)
+Subject: Compat-wireless release for 2010-08-10 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100810190325.DC8EF41133@repository3.orbit-lab.org>
+Date: Tue, 10 Aug 2010 15:03:25 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2010-08-22 at 15:57 +0200, Marek Vasut wrote:
-> Dne Ne 22. srpna 2010 15:22:08 Mike Rapoport napsal(a):
-> > Marek Vasut wrote:
-> > > Dne Ne 22. srpna 2010 13:22:40 Mike Rapoport napsal(a):
-> > >> The commit 886275ce41a9751117367fb387ed171049eb6148 (param: lock
-> > >> if_sdio's lbs_helper_name and lbs_fw_name against sysfs changes)
-> > >> introduced new fields into the if_sdio_card structure. It caused
-> > >> missalignment of the if_sdio_card.buffer field and failure at driver
-> > >> 
-> > >> load time:
-> > >>   ~# modprobe libertas_sdio
-> > >>   [   62.315124] libertas_sdio: Libertas SDIO driver
-> > >>   [   62.319976] libertas_sdio: Copyright Pierre Ossman
-> > >>   [   63.020629] DMA misaligned error with device 48
-> > >>   [   63.025207] mmci-omap-hs mmci-omap-hs.1: unexpected dma status 800
-> > >>   [   66.005035] libertas: command 0x0003 timed out
-> > >>   [   66.009826] libertas: Timeout submitting command 0x0003
-> > >>   [   66.016296] libertas: PREP_CMD: command 0x0003 failed: -110
-> > >> 
-> > >> Adding explicit alignment attribute for the if_sdio_card.buffer field
-> > >> fixes this problem.
-> > >> 
-> > >> Signed-off-by: Mike Rapoport <mike@compulab.co.il>
-> > >> ---
-> > >> 
-> > >>  drivers/net/wireless/libertas/if_sdio.c |    2 +-
-> > >>  1 files changed, 1 insertions(+), 1 deletions(-)
-> > >> 
-> > >> diff --git a/drivers/net/wireless/libertas/if_sdio.c
-> > >> b/drivers/net/wireless/libertas/if_sdio.c index ba854c7..87b6349 100644
-> > >> --- a/drivers/net/wireless/libertas/if_sdio.c
-> > >> +++ b/drivers/net/wireless/libertas/if_sdio.c
-> > >> @@ -128,7 +128,7 @@ struct if_sdio_card {
-> > >> 
-> > >>  	bool			helper_allocated;
-> > >>  	bool			firmware_allocated;
-> > >> 
-> > >> -	u8			buffer[65536];
-> > >> +	u8			buffer[65536] __attribute__((aligned(4)));
-> > >> 
-> > >>  	spinlock_t		lock;
-> > >>  	struct if_sdio_packet	*packets;
-> > > 
-> > > Will this work even on platforms that need some weird DMA destination
-> > > address alignment ? I might be totally off with this question though ;-)
-> > 
-> > I've tested it on PXA and OMAP and it works on both.
-> > I think that on platforms with weird DMA destination address alignment
-> > libertas_sdio will fail anyway because of if_sdio_packet alignment.
-> 
-> You're right ... thanks for clearing this.
-> 
-> Acked-by: Marek Vasut <marek.vasut@gmail.com>
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   404ce58..7746bc0  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+   9855656..e06a643  linux-2.6.35.y -> origin/linux-2.6.35.y
+   a092b24..8a5dfc1  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   1cec6b6..dcf085f  history    -> origin/history
+ + d1a1614...81e09f5 master     -> origin/master  (forced update)
+ * [new tag]         next-20100810 -> next-20100810
 
-Acked-by: Dan Williams <dcbw@redhat.com>
+compat-wireless code metrics
 
+    494634 - Total upstream lines of code being pulled
+      1699 - backport code changes
+      1460 - backport code additions
+       239 - backport code deletions
+      5977 - backport from compat module
+      7676 - total backport code
+    1.5519 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2462 - % of crap code
 
+Base tree: linux-next.git
+Base tree version: next-20100810
+compat-wireless release: compat-wireless-2010-08-03-4-g7746bc0
