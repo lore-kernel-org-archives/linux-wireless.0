@@ -1,80 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:42134 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752635Ab0H0SlP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 14:41:15 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 3/7] compat-wireless: remove linux/gpio.h include
-Date: Fri, 27 Aug 2010 20:40:49 +0200
-Message-Id: <1282934453-18093-4-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1282934453-18093-1-git-send-email-hauke@hauke-m.de>
-References: <1282934453-18093-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:62839 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932905Ab0HJWNb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Aug 2010 18:13:31 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>
+Cc: Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Pandita Vikram <vikram.pandita@ti.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH v3 2/9] wireless: wl1271: support return value for the set power func
+Date: Wed, 11 Aug 2010 01:12:21 +0300
+Message-Id: <1281478348-24833-3-git-send-email-ohad@wizery.com>
+In-Reply-To: <1281478348-24833-1-git-send-email-ohad@wizery.com>
+References: <1281478348-24833-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kernel 2.6.24 does not have this header file. No method provided by
-gpio.h is used in wl12*1_boot.c so this include looks unneeded to me.
-This should probably also go into mainline.
+Make it possible for the set power method to indicate a
+success/failure return value. This is needed to support
+more complex power on/off operations such as bringing up
+(and down) sdio functions.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
 ---
- patches/06-header-changes.patch |   24 ++++++++++++++++++++++--
- 1 files changed, 22 insertions(+), 2 deletions(-)
+ drivers/net/wireless/wl12xx/wl1271.h      |    2 +-
+ drivers/net/wireless/wl12xx/wl1271_io.h   |    8 +++++---
+ drivers/net/wireless/wl12xx/wl1271_main.c |    4 +++-
+ drivers/net/wireless/wl12xx/wl1271_sdio.c |    4 +++-
+ drivers/net/wireless/wl12xx/wl1271_spi.c  |    4 +++-
+ 5 files changed, 15 insertions(+), 7 deletions(-)
 
-diff --git a/patches/06-header-changes.patch b/patches/06-header-changes.patch
-index e0846f5..17c4465 100644
---- a/patches/06-header-changes.patch
-+++ b/patches/06-header-changes.patch
-@@ -16,9 +16,19 @@ cases.
-  
-  struct b43_wldev;
-  
-+--- a/drivers/net/wireless/wl12xx/wl1251_boot.c
-++++ b/drivers/net/wireless/wl12xx/wl1251_boot.c
-+@@ -19,7 +19,6 @@
-+  *
-+  */
-+ 
-+-#include <linux/gpio.h>
-+ #include <linux/slab.h>
-+ 
-+ #include "wl1251_reg.h"
- --- a/drivers/net/wireless/wl12xx/wl1251_main.c
- +++ b/drivers/net/wireless/wl12xx/wl1251_main.c
--@@ -26,6 +26,9 @@
-+@@ -24,6 +24,9 @@
-  #include <linux/firmware.h>
-  #include <linux/delay.h>
-  #include <linux/irq.h>
-@@ -30,7 +40,7 @@ cases.
-  #include <linux/vmalloc.h>
- --- a/drivers/net/wireless/wl12xx/wl1251_spi.c
- +++ b/drivers/net/wireless/wl12xx/wl1251_spi.c
--@@ -25,6 +25,9 @@
-+@@ -23,6 +23,9 @@
-  #include <linux/module.h>
-  #include <linux/slab.h>
-  #include <linux/crc7.h>
-@@ -40,6 +50,16 @@ cases.
-  #include <linux/spi/spi.h>
-  #include <linux/spi/wl12xx.h>
-  
-+--- a/drivers/net/wireless/wl12xx/wl1271_boot.c
-++++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
-+@@ -21,7 +21,6 @@
-+  *
-+  */
-+ 
-+-#include <linux/gpio.h>
-+ #include <linux/slab.h>
-+ 
-+ #include "wl1271_acx.h"
- --- a/net/mac80211/key.c
- +++ b/net/mac80211/key.c
- @@ -22,6 +22,9 @@
+diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+index dd3cee6..faa5925 100644
+--- a/drivers/net/wireless/wl12xx/wl1271.h
++++ b/drivers/net/wireless/wl12xx/wl1271.h
+@@ -313,7 +313,7 @@ struct wl1271_if_operations {
+ 		     bool fixed);
+ 	void (*reset)(struct wl1271 *wl);
+ 	void (*init)(struct wl1271 *wl);
+-	void (*power)(struct wl1271 *wl, bool enable);
++	int (*power)(struct wl1271 *wl, bool enable);
+ 	struct device* (*dev)(struct wl1271 *wl);
+ 	void (*enable_irq)(struct wl1271 *wl);
+ 	void (*disable_irq)(struct wl1271 *wl);
+diff --git a/drivers/net/wireless/wl12xx/wl1271_io.h b/drivers/net/wireless/wl12xx/wl1271_io.h
+index bc806c7..4a5b92c 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_io.h
++++ b/drivers/net/wireless/wl12xx/wl1271_io.h
+@@ -144,10 +144,12 @@ static inline void wl1271_power_off(struct wl1271 *wl)
+ 	clear_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
+ }
+ 
+-static inline void wl1271_power_on(struct wl1271 *wl)
++static inline int wl1271_power_on(struct wl1271 *wl)
+ {
+-	wl->if_ops->power(wl, true);
+-	set_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
++	int ret = wl->if_ops->power(wl, true);
++	if (ret == 0)
++		set_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
++	return ret;
+ }
+ 
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index 9d68f00..e6e0852 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -621,7 +621,9 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
+ 	int ret = 0;
+ 
+ 	msleep(WL1271_PRE_POWER_ON_SLEEP);
+-	wl1271_power_on(wl);
++	ret = wl1271_power_on(wl);
++	if (ret < 0)
++		goto out;
+ 	msleep(WL1271_POWER_ON_SLEEP);
+ 	wl1271_io_reset(wl);
+ 	wl1271_io_init(wl);
+diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
+index 7059b5c..c41293a 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_sdio.c
++++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
+@@ -152,7 +152,7 @@ static void wl1271_sdio_raw_write(struct wl1271 *wl, int addr, void *buf,
+ 
+ }
+ 
+-static void wl1271_sdio_set_power(struct wl1271 *wl, bool enable)
++static int wl1271_sdio_set_power(struct wl1271 *wl, bool enable)
+ {
+ 	struct sdio_func *func = wl_to_func(wl);
+ 
+@@ -167,6 +167,8 @@ static void wl1271_sdio_set_power(struct wl1271 *wl, bool enable)
+ 		sdio_disable_func(func);
+ 		sdio_release_host(func);
+ 	}
++
++	return 0;
+ }
+ 
+ static struct wl1271_if_operations sdio_ops = {
+diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
+index c3fdab7..de56d8d 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_spi.c
++++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
+@@ -312,10 +312,12 @@ static irqreturn_t wl1271_irq(int irq, void *cookie)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static void wl1271_spi_set_power(struct wl1271 *wl, bool enable)
++static int wl1271_spi_set_power(struct wl1271 *wl, bool enable)
+ {
+ 	if (wl->set_power)
+ 		wl->set_power(enable);
++
++	return 0;
+ }
+ 
+ static struct wl1271_if_operations spi_ops = {
 -- 
 1.7.0.4
 
