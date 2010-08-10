@@ -1,79 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:57858 "EHLO mgw2.diku.dk"
+Received: from mundo.umh.es ([193.147.147.4]:56064 "EHLO mundo.umh.es"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934200Ab0HEUX5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Aug 2010 16:23:57 -0400
-Date: Thu, 5 Aug 2010 22:23:54 +0200 (CEST)
-From: Julia Lawall <julia@diku.dk>
-To: Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-Subject: [PATCH 23/42] drivers/net/wireless/libertas: Adjust confusing if
- indentation
-Message-ID: <Pine.LNX.4.64.1008052223340.31692@ask.diku.dk>
+	id S1757129Ab0HJLfE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Aug 2010 07:35:04 -0400
+Received: from uwicorejohn (unknown [10.1.60.4])
+	by mundo.umh.es (Postfix) with ESMTP id 4DBA928DB8F
+	for <linux-wireless@vger.kernel.org>; Tue, 10 Aug 2010 13:35:02 +0200 (CEST)
+From: =?iso-8859-1?Q?J=F3natan_Mu=F1oz?= <jmunoz@umh.es>
+To: <linux-wireless@vger.kernel.org>
+Subject: mac80211: Beaconing adhoc process (ar9170 & ath9k)
+Date: Tue, 10 Aug 2010 13:35:13 +0200
+Message-ID: <001101cb3880$19129a50$4b37cef0$@es>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
+Hi all,
 
-At the point of the patched code, err has already been tested, so it is
-only worthwhile to test it again in the if branches where it is changed.
+I am modifying the beaconing system of adhoc mode for ath9k and ar9170.
+Until now I change /net/mac80211/ibss.
 
-The semantic match that finds this problem is as follows:
-(http://coccinelle.lip6.fr/)
+static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+				      const u8 *bssid, const int beacon_int,
+				      struct ieee80211_channel *chan,
+				      const u32 basic_rates,
+				      const u16 capability, u64 tsf)
+{
 
-// <smpl>
-@r disable braces4@
-position p1,p2;
-statement S1,S2;
-@@
+.....
 
-(
-if (...) { ... }
-|
-if (...) S1@p1 S2@p2
-)
+if (ifibss->ie_len)
+		memcpy(skb_put(skb, ifibss->ie_len),
+		       ifibss->ie, ifibss->ie_len);
 
-@script:python@
-p1 << r.p1;
-p2 << r.p2;
-@@
+	rcu_assign_pointer(ifibss->presp, skb);
 
-if (p1[0].column == p2[0].column):
-  cocci.print_main("branch",p1)
-  cocci.print_secs("after",p2)
-// </smpl>
+-	sdata->vif.bss_conf.beacon_int = beacon_int;
+-	bss_change = BSS_CHANGED_BEACON_INT;
+-	bss_change |= ieee80211_reset_erp_info(sdata);
++	bss_change = ieee80211_reset_erp_info(sdata);
+	bss_change |= BSS_CHANGED_BSSID;
+	bss_change |= BSS_CHANGED_BEACON;
+	bss_change |= BSS_CHANGED_BEACON_ENABLED;
+	bss_change |= BSS_CHANGED_IBSS;
+	sdata->vif.bss_conf.ibss_joined = true;
+	ieee80211_bss_info_change_notify(sdata, bss_change);
 
-Signed-off-by: Julia Lawall <julia@diku.dk>
+	ieee80211_sta_def_wmm_params(sdata, sband->n_bitrates, supp_rates);
 
----
- drivers/net/wireless/libertas/if_spi.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+	ifibss->state = IEEE80211_IBSS_MLME_JOINED;
+	mod_timer(&ifibss->timer,
+		  round_jiffies(jiffies + IEEE80211_IBSS_MERGE_INTERVAL));
 
-diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
-index fe3f080..3965c6c 100644
---- a/drivers/net/wireless/libertas/if_spi.c
-+++ b/drivers/net/wireless/libertas/if_spi.c
-@@ -800,14 +800,16 @@ static int lbs_spi_thread(void *data)
- 			goto err;
- 		}
- 
--		if (hiStatus & IF_SPI_HIST_CMD_UPLOAD_RDY)
-+		if (hiStatus & IF_SPI_HIST_CMD_UPLOAD_RDY) {
- 			err = if_spi_c2h_cmd(card);
- 			if (err)
- 				goto err;
--		if (hiStatus & IF_SPI_HIST_RX_UPLOAD_RDY)
-+		}
-+		if (hiStatus & IF_SPI_HIST_RX_UPLOAD_RDY) {
- 			err = if_spi_c2h_data(card);
- 			if (err)
- 				goto err;
-+		}
- 
- 		/* workaround: in PS mode, the card does not set the Command
- 		 * Download Ready bit, but it sets TX Download Ready. */
+	bss = cfg80211_inform_bss_frame(local->hw.wiphy,
+local->hw.conf.channel,
+					mgmt, skb->len, 0, GFP_KERNEL);
+	cfg80211_put_bss(bss);
+	cfg80211_ibss_joined(sdata->dev, ifibss->bssid, GFP_KERNEL);
+}
+
+I pretend that each node in an adhoc network send periodically beacons every
+100ms. Until now I get that two nodes, one with driver ath9k and the other
+one with ar9170, send their beacons in the way I want. But if another node
+with ar9170 or ath9k driver is added to the network, the nodes with the same
+driver send one beacon every 100ms in total, not each one as I wish. Is
+there something more that I must to change?
+
+I hope you bring me some ligth in this darkness.
+
+Thanks in advance
+
+John
+------------------------------------------
+Jónatan Muñoz
+Email: jmunoz@umh.es
+Ubiquitous Wireless Communications Research Laboratory 
+Uwicore, http://www.uwicore.umh.es 
+Signal Theory and Communications Division 
+University Miguel Hernández of Elche 
+
+Avenida de la Universidad s/n 
+Edificio Quorum V P2 012
+03202, Elche (Alicante) 
+Spain 
+Tel: +34 96522 2031 /+34 669256708
+Fax: +34 96665 8903 
+------------------------------------------
+
+
+
