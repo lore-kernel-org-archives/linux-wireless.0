@@ -1,63 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40307 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754339Ab0H0Lgw (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57628 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932100Ab0HJROp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 07:36:52 -0400
-Subject: [PATCH] mac80211: use subqueue helpers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 27 Aug 2010 13:36:49 +0200
-Message-ID: <1282909009.4377.5.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 10 Aug 2010 13:14:45 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] ipw2100: avoid warning from pointer cast in call to IPW_DEBUG_TX
+Date: Tue, 10 Aug 2010 13:13:58 -0400
+Message-Id: <1281460438-3063-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <20100809164346.6e30cf8c.akpm@linux-foundation.org>
+References: <20100809164346.6e30cf8c.akpm@linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+drivers/net/wireless/ipw2x00/ipw2100.c: In function 'ipw2100_tx_send_commands':
+drivers/net/wireless/ipw2x00/ipw2100.c:3063: warning: cast to pointer from integer of different size
 
-There are subqueue helpers so that we don't
-need to get the TX queue and then wake/stop
-it, use those helpers.
+This changes the cast and the conversion to match other usage of the
+same value in calls to IPW_DEBUG_TX.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reported-by: Andrew Morton <akpm@linux-foundation.org>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- net/mac80211/tx.c   |    3 +--
- net/mac80211/util.c |    4 ++--
- 2 files changed, 3 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ipw2x00/ipw2100.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
---- wireless-testing.orig/net/mac80211/tx.c	2010-08-27 13:26:57.000000000 +0200
-+++ wireless-testing/net/mac80211/tx.c	2010-08-27 13:27:11.000000000 +0200
-@@ -2070,8 +2070,7 @@ void ieee80211_tx_pending(unsigned long
+diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
+index a146240..e4ed479 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2100.c
++++ b/drivers/net/wireless/ipw2x00/ipw2100.c
+@@ -3064,9 +3064,9 @@ static void ipw2100_tx_send_commands(struct ipw2100_priv *priv)
  
- 		if (skb_queue_empty(&local->pending[i]))
- 			list_for_each_entry_rcu(sdata, &local->interfaces, list)
--				netif_tx_wake_queue(
--					netdev_get_tx_queue(sdata->dev, i));
-+				netif_wake_subqueue(sdata->dev, i);
- 	}
- 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+ 		packet = list_entry(element, struct ipw2100_tx_packet, list);
  
---- wireless-testing.orig/net/mac80211/util.c	2010-08-27 13:27:14.000000000 +0200
-+++ wireless-testing/net/mac80211/util.c	2010-08-27 13:27:34.000000000 +0200
-@@ -284,7 +284,7 @@ static void __ieee80211_wake_queue(struc
- 	if (skb_queue_empty(&local->pending[queue])) {
- 		rcu_read_lock();
- 		list_for_each_entry_rcu(sdata, &local->interfaces, list)
--			netif_tx_wake_queue(netdev_get_tx_queue(sdata->dev, queue));
-+			netif_wake_subqueue(sdata->dev, queue);
- 		rcu_read_unlock();
- 	} else
- 		tasklet_schedule(&local->tx_pending_tasklet);
-@@ -323,7 +323,7 @@ static void __ieee80211_stop_queue(struc
+-		IPW_DEBUG_TX("using TBD at virt=%p, phys=%p\n",
++		IPW_DEBUG_TX("using TBD at virt=%p, phys=%04X\n",
+ 			     &txq->drv[txq->next],
+-			     (void *)(txq->nic + txq->next *
++			     (u32) (txq->nic + txq->next *
+ 				      sizeof(struct ipw2100_bd)));
  
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list)
--		netif_tx_stop_queue(netdev_get_tx_queue(sdata->dev, queue));
-+		netif_stop_subqueue(sdata->dev, queue);
- 	rcu_read_unlock();
- }
- 
-
+ 		packet->index = txq->next;
+-- 
+1.7.2.1
 
