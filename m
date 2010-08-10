@@ -1,33 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:48631 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753573Ab0HPRr5 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44116 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756586Ab0HJHvF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Aug 2010 13:47:57 -0400
-Message-ID: <4C6979CC.80107@adurom.com>
-Date: Mon, 16 Aug 2010 20:47:56 +0300
-From: Kalle Valo <kvalo@adurom.com>
-MIME-Version: 1.0
-To: Julia Lawall <julia@diku.dk>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH 3/16] drivers/net/wireless/wl12xx: Use available error
- codes
-References: <Pine.LNX.4.64.1008161825010.19313@ask.diku.dk>
-In-Reply-To: <Pine.LNX.4.64.1008161825010.19313@ask.diku.dk>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 10 Aug 2010 03:51:05 -0400
+Message-Id: <20100810074700.762364520@sipsolutions.net>
+Date: Tue, 10 Aug 2010 09:46:42 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 5/5] cfg80211: check if WEP is available for shared key auth
+References: <20100810074637.034583799@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/16/2010 07:25 PM, Julia Lawall wrote:
-> From: Julia Lawall <julia@diku.dk>
-> 
-> In each case, error codes are stored in ret, but the return value is always
-> 0.  Return ret instead.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Thanks, looks correct to me.
+When shared key auth is requested, cfg80211
+should verify that the device is capable of
+WEP crypto which is required.
 
-Acked-by: Kalle Valo <kvalo@adurom.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c |   15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-Kalle
+--- wireless-testing.orig/net/wireless/nl80211.c	2010-08-08 11:32:20.000000000 +0200
++++ wireless-testing/net/wireless/nl80211.c	2010-08-08 11:32:28.000000000 +0200
+@@ -3604,6 +3604,21 @@ static int nl80211_authenticate(struct s
+ 	if (err)
+ 		goto unlock_rtnl;
+ 
++	if (key.idx >= 0) {
++		int i;
++		bool ok = false;
++		for (i = 0; i < rdev->wiphy.n_cipher_suites; i++) {
++			if (key.p.cipher == rdev->wiphy.cipher_suites[i]) {
++				ok = true;
++				break;
++			}
++		}
++		if (!ok) {
++			err = -EINVAL;
++			goto out;
++		}
++	}
++
+ 	if (!rdev->ops->auth) {
+ 		err = -EOPNOTSUPP;
+ 		goto out;
+
+
