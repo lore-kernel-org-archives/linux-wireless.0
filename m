@@ -1,94 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3695 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751613Ab0HUUjw (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59900 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932447Ab0HJRSl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Aug 2010 16:39:52 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 2/3] ath5k: trivial spelling fixes
-Date: Sat, 21 Aug 2010 16:39:02 -0400
-Message-Id: <1282423143-4121-2-git-send-email-me@bobcopeland.com>
-In-Reply-To: <1282423143-4121-1-git-send-email-me@bobcopeland.com>
-References: <1282423143-4121-1-git-send-email-me@bobcopeland.com>
+	Tue, 10 Aug 2010 13:18:41 -0400
+Subject: Re: [ipw3945-devel] [PATCH 0/1] fix for 2.6.35
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <1281459872.6027.6.camel@wwguy-ubuntu>
+References: <1281376622-6835-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <AANLkTinJtJGQCgpWCu5t+EF7bEvXR3cQG7oHuagrjd1a@mail.gmail.com>
+	 <1281459872.6027.6.camel@wwguy-ubuntu>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 10 Aug 2010 19:18:36 +0200
+Message-ID: <1281460716.3759.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix some comments:
-    s/transmition/transmission/
-    s/puting/putting/
+On Tue, 2010-08-10 at 10:04 -0700, Guy, Wey-Yi wrote:
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath/ath5k/pcu.c   |    4 ++--
- drivers/net/wireless/ath/ath5k/phy.c   |    2 +-
- drivers/net/wireless/ath/ath5k/reset.c |    6 +++---
- 3 files changed, 6 insertions(+), 6 deletions(-)
+> > This patch has an awesome commit log entry and describes issues with
+> > the current RTS mechanism and improvements made on the patch for
+> > different scenarios 
 
-diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
-index 3fef593..bb2e215 100644
---- a/drivers/net/wireless/ath/ath5k/pcu.c
-+++ b/drivers/net/wireless/ath/ath5k/pcu.c
-@@ -137,11 +137,11 @@ void ath5k_hw_update_mib_counters(struct ath5k_hw *ah)
-  * ath5k_hw_set_ack_bitrate - set bitrate for ACKs
-  *
-  * @ah: The &struct ath5k_hw
-- * @high: Flag to determine if we want to use high transmition rate
-+ * @high: Flag to determine if we want to use high transmission rate
-  * for ACKs or not
-  *
-  * If high flag is set, we tell hw to use a set of control rates based on
-- * the current transmition rate (check out control_rates array inside reset.c).
-+ * the current transmission rate (check out control_rates array inside reset.c).
-  * If not hw just uses the lowest rate available for the current modulation
-  * scheme being used (1Mbit for CCK and 6Mbits for OFDM).
-  */
-diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
-index c7c4465..8c27a36 100644
---- a/drivers/net/wireless/ath/ath5k/phy.c
-+++ b/drivers/net/wireless/ath/ath5k/phy.c
-@@ -2987,7 +2987,7 @@ ath5k_setup_rate_powertable(struct ath5k_hw *ah, u16 max_pwr,
- 
- 
- /*
-- * Set transmition power
-+ * Set transmission power
-  */
- int
- ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel,
-diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-index 4154959..58912cd 100644
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -326,7 +326,7 @@ commit:
-  * register). After this MAC and Baseband are
-  * disabled and a full reset is needed to come
-  * back. This way we save as much power as possible
-- * without puting the card on full sleep.
-+ * without putting the card on full sleep.
-  */
- int ath5k_hw_on_hold(struct ath5k_hw *ah)
- {
-@@ -344,7 +344,7 @@ int ath5k_hw_on_hold(struct ath5k_hw *ah)
- 	/*
- 	 * Put chipset on warm reset...
- 	 *
--	 * Note: puting PCI core on warm reset on PCI-E cards
-+	 * Note: putting PCI core on warm reset on PCI-E cards
- 	 * results card to hang and always return 0xffff... so
- 	 * we ingore that flag for PCI-E cards. On PCI cards
- 	 * this flag gets cleared after 64 PCI clocks.
-@@ -400,7 +400,7 @@ int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
- 	/*
- 	 * Put chipset on warm reset...
- 	 *
--	 * Note: puting PCI core on warm reset on PCI-E cards
-+	 * Note: putting PCI core on warm reset on PCI-E cards
- 	 * results card to hang and always return 0xffff... so
- 	 * we ingore that flag for PCI-E cards. On PCI cards
- 	 * this flag gets cleared after 64 PCI clocks.
--- 
-1.7.1.1
+:-)
 
+> > but in no way talks about issues with association
+> > with 5 GHz APs. Can you clarify in the commit log how it cures issues
+> > with 5 GHz, if that is indeed an intended fix for it?
+
+> Johannes might be able to add more, the original attempt of this patch
+> is to prevent un-necessary protection for non-data frames which we
+> introduced few rc ago. while we fix this, but we also found out this
+> patch also address the issue we have for 5GHz unable to associate to AP.
+
+Well it does describe what it's intended to fix, we just found out that
+a side effect of trying to protect too many frames can be, but maybe
+isn't always, that you can't associate on 5 GHz because the protection
+mechanism fails on the direct probe probe request frame ...
+
+johannes
 
