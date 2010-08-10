@@ -1,183 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:42497 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753104Ab0H3TQr (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:46165 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932249Ab0HJVVu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Aug 2010 15:16:47 -0400
-Received: by mail-ey0-f174.google.com with SMTP id 5so3422616eyg.19
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Aug 2010 12:16:46 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 10/10] rt2x00: Cleanup rt2x00usb_watchdog_reset_tx
-Date: Mon, 30 Aug 2010 21:15:51 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201008302112.25578.IvDoorn@gmail.com> <201008302114.56989.IvDoorn@gmail.com> <201008302115.20431.IvDoorn@gmail.com>
-In-Reply-To: <201008302115.20431.IvDoorn@gmail.com>
+	Tue, 10 Aug 2010 17:21:50 -0400
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201008302115.52394.IvDoorn@gmail.com>
+In-Reply-To: <alpine.LFD.2.00.1007061316010.6020@xanadu.home>
+References: <1278376666-3509-1-git-send-email-ohad@wizery.com>
+	<1278376666-3509-12-git-send-email-ohad@wizery.com> <4C32EF19.1000604@nokia.com>
+	<AANLkTintIz-N7MwwtqhVq2LR3Ln5JTNYSbJUBSSClcA-@mail.gmail.com>
+	<4C3306F4.8060907@nokia.com> <AANLkTin5W52fPzWToRrAzm56SLZI-taSuI16rCEhLWqH@mail.gmail.com>
+	<4C333E0D.2070601@nokia.com> <alpine.LFD.2.00.1007061316010.6020@xanadu.home>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Wed, 11 Aug 2010 00:21:30 +0300
+Message-ID: <AANLkTincjpb4_c13AAx-HoZ5xsdunRGkVeO1P5EJegX1@mail.gmail.com>
+Subject: Re: [PATCH 11/15] wireless: wl1271: introduce platform device support
+To: Nicolas Pitre <nico@fluxnic.net>
+Cc: Roger Quadros <roger.quadros@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	San Mehat <san@google.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rt2x00usb_watchdog_reset_tx performs the same task
-as rt2x00usb_kill_tx_queue, with the only difference
-is that it waits for all entries to be returned to
-the driver and for all frames the status has been
-reported to mac80211.
+On Tue, Jul 6, 2010 at 8:42 PM, Nicolas Pitre <nico@fluxnic.net> wrote:
+> Another function pair would be needed instead, which would do almost
+> like the suspend/resume code is already doing.  Something like:
+>
+> /*
+>  * Indicate to the core SDIO layer that we're not requiring that the
+>  * function remain powered.  If all functions for the card are in the
+>  * same "no power" state, then the host controller can remove power from
+>  * the card.  Note: the function driver must preserve hardware states if
+>  * necessary.
+>  */
+> int sdio_release_power(struct sdio_func *func);
+>
+> /*
+>  * Indicate to the core SDIO layer that we want power back for this
+>  * SDIO function.  The power may or may not actually have been removed
+>  * since last call to sdio_release_power(), so the function driver must
+>  * not assume any preserved state at the hardware level and re-perform
+>  * all the necessary hardware config.  This function returns 0 when
+>  * power is actually restored, or some error code if this cannot be
+>  * achieved.  One error reason might be that the card is no longer
+>  * available on the bus (was removed while powered down and card
+>  * detection didn't trigger yet).
+>  */
+> int sdio_claim_power(struct sdio_func *func);
+>
+> That's it.  When the network interface is down and the hardware is not
+> needed, you call sdio_release_power().  When the request to activate the
+> network interface is received, you call sdio_claim_power() and configure
+> the hardware appropriately.  If sdio_claim_power() returns an error,
+> then you just return an error to the network request, and eventually the
+> driver's remove method will be called if this is indeed because the card
+> was removed.
+>
 
-We can easily split this task by calling rt2x00usb_kill_tx_queue,
-sleep for a short period and invoke the TX status reporting
-function. By adding the sleep() to the kill_entry we make sure
-that even during shutdown we guarentee the entry has been killed when
-the function returns. To make this work correctly the interrupt
-handlers have to be updated to prevent checking for the RADIO_ENABLED
-flag too early which prevents the ownership of the entry to be reset.
-Additionally a check for the DEVICE_PRESENT flag is not required but
-is nice to prevent race conditions when the device was unplugged.
+After playing with this a little, I am getting convinced that the way
+to go here is to add runtime pm support to MMC/SDIO.
 
-Additionally rather then calling rt2x00usb_work_txdone() for
-status reporting we let the driver perform the TX status reporting
-first. If this is not sufficient then rt2x00usb_work_txdone() will
-still be used to cleanup the mess.
+It just fits perfectly into this model:
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2x00usb.c |   66 +++++++++++++++++++------------
- 1 files changed, 40 insertions(+), 26 deletions(-)
+Runtime PM already takes care of usage count per device (so it would
+tell if an SDIO function is idle), takes into account parent-child
+relationships (so if all SDIO functions are idle, it would
+automatically send an idle request to the card device), doesn't break
+existing drivers (drivers needs to explicitly enable it), play along
+nicely with the system suspend/resume, etc..
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
-index aec6440..4c5ae3d 100644
---- a/drivers/net/wireless/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
-@@ -208,8 +208,7 @@ static void rt2x00usb_interrupt_txdone(struct urb *urb)
- 	struct queue_entry *entry = (struct queue_entry *)urb->context;
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
- 
--	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags) ||
--	    !__test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
-+	if (!__test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
- 		return;
- 
- 	/*
-@@ -227,7 +226,9 @@ static void rt2x00usb_interrupt_txdone(struct urb *urb)
- 	 * Schedule the delayed work for reading the TX status
- 	 * from the device.
- 	 */
--	ieee80211_queue_work(rt2x00dev->hw, &rt2x00dev->txdone_work);
-+	if (test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags) &&
-+	    test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
-+		ieee80211_queue_work(rt2x00dev->hw, &rt2x00dev->txdone_work);
- }
- 
- static void rt2x00usb_kick_tx_entry(struct queue_entry *entry)
-@@ -279,6 +280,14 @@ static void rt2x00usb_kill_tx_entry(struct queue_entry *entry)
- 	if ((entry->queue->qid == QID_BEACON) &&
- 	    (test_bit(DRIVER_REQUIRE_BEACON_GUARD, &rt2x00dev->flags)))
- 		usb_kill_urb(bcn_priv->guardian_urb);
-+
-+	/*
-+	 * We need a short delay here to wait for
-+	 * the URB to be canceled
-+	 */
-+	do {
-+		udelay(100);
-+	} while (test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags));
- }
- 
- void rt2x00usb_kill_tx_queue(struct data_queue *queue)
-@@ -290,8 +299,7 @@ EXPORT_SYMBOL_GPL(rt2x00usb_kill_tx_queue);
- 
- static void rt2x00usb_watchdog_tx_dma(struct data_queue *queue)
- {
--	struct queue_entry *entry;
--	struct queue_entry_priv_usb *entry_priv;
-+	struct rt2x00_dev *rt2x00dev = queue->rt2x00dev;
- 	unsigned short threshold = queue->threshold;
- 
- 	WARNING(queue->rt2x00dev, "TX queue %d DMA timed out,"
-@@ -305,28 +313,33 @@ static void rt2x00usb_watchdog_tx_dma(struct data_queue *queue)
- 	 * queue from being enabled during the txdone handler.
- 	 */
- 	queue->threshold = queue->limit;
--	ieee80211_stop_queue(queue->rt2x00dev->hw, queue->qid);
-+	ieee80211_stop_queue(rt2x00dev->hw, queue->qid);
- 
- 	/*
--	 * Reset all currently uploaded TX frames.
-+	 * Kill all entries in the queue, afterwards we need to
-+	 * wait a bit for all URBs to be cancelled.
- 	 */
--	while (!rt2x00queue_empty(queue)) {
--		entry = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
--		entry_priv = entry->priv_data;
--		usb_kill_urb(entry_priv->urb);
-+	rt2x00usb_kill_tx_queue(queue);
- 
--		/*
--		 * We need a short delay here to wait for
--		 * the URB to be canceled
--		 */
--		do {
--			udelay(100);
--		} while (test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags));
-+	/*
-+	 * In case that a driver has overriden the txdone_work
-+	 * function, we invoke the TX done through there.
-+	 */
-+	rt2x00dev->txdone_work.func(&rt2x00dev->txdone_work);
- 
--		/*
--		 * Invoke the TX done handler
--		 */
--		rt2x00usb_work_txdone_entry(entry);
-+	/*
-+	 * Security measure: if the driver did override the
-+	 * txdone_work function, and the hardware did arrive
-+	 * in a state which causes it to malfunction, it is
-+	 * possible that the driver couldn't handle the txdone
-+	 * event correctly. So after giving the driver the
-+	 * chance to cleanup, we now force a cleanup of any
-+	 * leftovers.
-+	 */
-+	if (!rt2x00queue_empty(queue)) {
-+		WARNING(queue->rt2x00dev, "TX queue %d DMA timed out,"
-+			" status handling failed, invoke hard reset", queue->qid);
-+		rt2x00usb_work_txdone(&rt2x00dev->txdone_work);
- 	}
- 
- 	/*
-@@ -334,7 +347,7 @@ static void rt2x00usb_watchdog_tx_dma(struct data_queue *queue)
- 	 * queue again.
- 	 */
- 	queue->threshold = threshold;
--	ieee80211_wake_queue(queue->rt2x00dev->hw, queue->qid);
-+	ieee80211_wake_queue(rt2x00dev->hw, queue->qid);
- }
- 
- static void rt2x00usb_watchdog_tx_status(struct data_queue *queue)
-@@ -394,8 +407,7 @@ static void rt2x00usb_interrupt_rxdone(struct urb *urb)
- 	struct queue_entry *entry = (struct queue_entry *)urb->context;
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
- 
--	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags) ||
--	    !__test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
-+	if (!__test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
- 		return;
- 
- 	/*
-@@ -415,7 +427,9 @@ static void rt2x00usb_interrupt_rxdone(struct urb *urb)
- 	 * Schedule the delayed work for reading the RX status
- 	 * from the device.
- 	 */
--	ieee80211_queue_work(rt2x00dev->hw, &rt2x00dev->rxdone_work);
-+	if (test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags) &&
-+	    test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
-+		ieee80211_queue_work(rt2x00dev->hw, &rt2x00dev->rxdone_work);
- }
- 
- /*
--- 
-1.7.2.2
+I'm going to split the patches to two:
+- first half would be basic wl1271 support for omap/zoom. it's pretty
+straight forward and can probably already go thru.
+- second half would be adding runtime PM to SDIO/MMC. I'll post some
+initial patches to set off a discussion.
 
+Thanks,
+Ohad.
