@@ -1,49 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:53368 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751133Ab0HAGIm convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:44704 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752412Ab0HKNTd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Aug 2010 02:08:42 -0400
-Received: by pzk26 with SMTP id 26so1002346pzk.19
-        for <linux-wireless@vger.kernel.org>; Sat, 31 Jul 2010 23:08:41 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4C54ACE7.1000205@linux.intel.com>
-References: <4C54ACE7.1000205@linux.intel.com>
-Date: Sun, 1 Aug 2010 09:08:41 +0300
-Message-ID: <AANLkTin5jKr4BQdxooy4NRjmBja2Z8TPdgE-5RV++AQh@mail.gmail.com>
-Subject: Re: Regulatory domain
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Sebastien Cayetanot <sebastien.cayetanot@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 11 Aug 2010 09:19:33 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	<akpm@linux-foundation.org>, Ido Yariv <ido@wizery.com>,
+	San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Gao Yunpeng <yunpeng.gao@intel.com>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [RFC/PATCH 2/6] sdio: add power_restore support
+Date: Wed, 11 Aug 2010 16:19:26 +0300
+Message-Id: <1281532770-27545-3-git-send-email-ohad@wizery.com>
+In-Reply-To: <1281532770-27545-1-git-send-email-ohad@wizery.com>
+References: <1281532770-27545-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> country JP:
->        (2402 - 2472 @ 40), (N/A, 20)
->        (2457 - 2482 @ 20), (N/A, 20)
->        (2474 - 2494 @ 20), (N/A, 20), NO-OFDM
->        (4910 - 4930 @ 10), (N/A, 23)
->        (4910 - 4990 @ 40), (N/A, 23)
->        (4930 - 4950 @ 10), (N/A, 23)
->        (5030 - 5045 @ 10), (N/A, 23)
->        (5030 - 5090 @ 40), (N/A, 23)
->        (5050 - 5060 @ 10), (N/A, 23)
->        (5170 - 5250 @ 40), (N/A, 20)
->        (5250 - 5330 @ 40), (N/A, 20), DFS
->        (5490 - 5710 @ 40), (N/A, 23), DFS
->
-> I would like to understand exactly what is displayed.
->
-> - the number of line (xxx-xxx @ xx), (xx,xx) is equal to the number of channel which can be accessed
-> - What is the meaning of each line and details on each parameter.
->
+Add a power_restore handler to the SDIO bus ops,
+in order to support waking up SDIO cards that
+were powered off by runtime pm.
 
-http://wireless.kernel.org/en/developers/Regulatory
+Note: this approach would also require changing
+the power_restore/save bus handlers to support
+a return value.
 
-(aaaa-bbbb @ c),(n/a, 23), XXX
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+---
+ drivers/mmc/core/sdio.c |   16 ++++++++++++++++
+ 1 files changed, 16 insertions(+), 0 deletions(-)
 
-each line is a range in frequencies (channels that fall between aaaa
-and bbbb. c is the channel width (10 Mhz for Japan's narrow channels,
-20 Mhz for regular channels and 40 Mhz for wide channels). 23 is the
-maximum Tx power e.i.r.p. in db.
+diff --git a/drivers/mmc/core/sdio.c b/drivers/mmc/core/sdio.c
+index 645f173..ddbb9d3 100644
+--- a/drivers/mmc/core/sdio.c
++++ b/drivers/mmc/core/sdio.c
+@@ -511,11 +511,27 @@ static int mmc_sdio_resume(struct mmc_host *host)
+ 	return err;
+ }
+ 
++static void mmc_sdio_power_restore(struct mmc_host *host)
++{
++	int err;
++
++	BUG_ON(!host);
++	BUG_ON(!host->card);
++
++	mmc_claim_host(host);
++	err = mmc_sdio_init_card(host, host->ocr, host->card,
++			(host->pm_flags & MMC_PM_KEEP_POWER));
++	if (!err && host->sdio_irqs)
++		mmc_signal_sdio_irq(host);
++	mmc_release_host(host);
++}
++
+ static const struct mmc_bus_ops mmc_sdio_ops = {
+ 	.remove = mmc_sdio_remove,
+ 	.detect = mmc_sdio_detect,
+ 	.suspend = mmc_sdio_suspend,
+ 	.resume = mmc_sdio_resume,
++	.power_restore = mmc_sdio_power_restore,
+ };
+ 
+ 
+-- 
+1.7.0.4
+
