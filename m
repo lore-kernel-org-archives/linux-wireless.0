@@ -1,49 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59900 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932447Ab0HJRSl (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:55279 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754523Ab0HKQBk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Aug 2010 13:18:41 -0400
-Subject: Re: [ipw3945-devel] [PATCH 0/1] fix for 2.6.35
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <1281459872.6027.6.camel@wwguy-ubuntu>
-References: <1281376622-6835-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <AANLkTinJtJGQCgpWCu5t+EF7bEvXR3cQG7oHuagrjd1a@mail.gmail.com>
-	 <1281459872.6027.6.camel@wwguy-ubuntu>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 10 Aug 2010 19:18:36 +0200
-Message-ID: <1281460716.3759.2.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 11 Aug 2010 12:01:40 -0400
+MIME-Version: 1.0
+In-Reply-To: <4C6275F3.6030108@nokia.com>
+References: <1281478348-24833-1-git-send-email-ohad@wizery.com>
+	<1281478348-24833-9-git-send-email-ohad@wizery.com> <4C6275F3.6030108@nokia.com>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Wed, 11 Aug 2010 19:01:20 +0300
+Message-ID: <AANLkTinYn2NQFeS8GocmTgU20Cc24Ax+RSbMLGz3KGom@mail.gmail.com>
+Subject: Re: [PATCH v3 8/9] omap: hsmmc: split mmc23 power control
+To: Adrian Hunter <adrian.hunter@nokia.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	San Mehat <san@google.com>,
+	"Quadros Roger (Nokia-MS/Helsinki)" <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Pandita Vikram <vikram.pandita@ti.com>,
+	Kalle Valo <kalle.valo@iki.fi>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-08-10 at 10:04 -0700, Guy, Wey-Yi wrote:
+On Wed, Aug 11, 2010 at 1:05 PM, Adrian Hunter <adrian.hunter@nokia.com> wrote:
+> Ohad Ben-Cohen wrote:
+>>
+>> Prepare for mmc3 regulator power control by splitting the power
+>> control functions of mmc2 and mmc3, and expecting mmc3 to have
+>> a single, dedicated, regulator support.
+>
+> Why?  Can't the controller be connected to an eMMC with 2 power
+> supplies?  At a glance, it is not obvious why this patch is needed.
 
-> > This patch has an awesome commit log entry and describes issues with
-> > the current RTS mechanism and improvements made on the patch for
-> > different scenarios 
-
-:-)
-
-> > but in no way talks about issues with association
-> > with 5 GHz APs. Can you clarify in the commit log how it cures issues
-> > with 5 GHz, if that is indeed an intended fix for it?
-
-> Johannes might be able to add more, the original attempt of this patch
-> is to prevent un-necessary protection for non-data frames which we
-> introduced few rc ago. while we fix this, but we also found out this
-> patch also address the issue we have for 5GHz unable to associate to AP.
-
-Well it does describe what it's intended to fix, we just found out that
-a side effect of trying to protect too many frames can be, but maybe
-isn't always, that you can't associate on 5 GHz because the protection
-mechanism fails on the direct probe probe request frame ...
-
-johannes
-
+I had ZOOM too much in mind when I did that. Removed now, thanks !
