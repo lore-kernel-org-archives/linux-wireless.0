@@ -1,57 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp4-g21.free.fr ([212.27.42.4]:57703 "EHLO smtp4-g21.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750761Ab0HOS1L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Aug 2010 14:27:11 -0400
-Date: Sun, 15 Aug 2010 20:27:00 +0200 (CEST)
-From: dimitri.gorokhovik@free.fr
-To: linville@tuxdriver.com, stefano.brivio@polimi.it
-Cc: linux-wireless@vger.kernel.org
-Message-ID: <1944322236.136661281896820874.JavaMail.root@zimbra3-e1.priv.proxad.net>
-In-Reply-To: <1682961998.136221281896329090.JavaMail.root@zimbra3-e1.priv.proxad.net>
-Subject: [PATCH]: b43: is there such a thing as radio 0x2062 rev 2?
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:43673 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753830Ab0HKSWO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Aug 2010 14:22:14 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>
+Cc: Ido Yariv <ido@wizery.com>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Pandita Vikram <vikram.pandita@ti.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH v4 5/8] wireless: wl1271: make ref_clock configurable by board
+Date: Wed, 11 Aug 2010 21:21:50 +0300
+Message-Id: <1281550913-17633-6-git-send-email-ohad@wizery.com>
+In-Reply-To: <1281550913-17633-1-git-send-email-ohad@wizery.com>
+References: <1281550913-17633-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+The wl1271 device is using a reference clock that may change
+between board to board.
 
-On a DELL D630 with BCM4312 (low-power PHY 4e4:4315 rev 01), I was able to fix the problem:
+Make the ref_clock parameter configurable by the board
+files that set up the device, instead of having a hard coded
+value in the driver source itself.
 
-Aug 15 17:14:45 dimitri kernel: b43-phy0 debug: RC calib: Failed to switch to channel 7, error = -5
-
-by bumping the radio's version (0x2062 rev 2) to 0x2063 (kept rev 2). 
-
-Before the fix, the hardware detected as:
-
-Aug 15 17:14:45 dimitri kernel: b43-phy0: Broadcom 4312 WLAN found (core revision 15)
-Aug 15 17:14:45 dimitri kernel: b43-phy0 debug: Found PHY: Analog 6, Type 5, Revision 1
-Aug 15 17:14:45 dimitri kernel: b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2062, Revision 2
-
-The problem manifested itself (permanently) as:
-
-Aug 15 18:18:10 dimitri kernel: b43-phy0: Loading firmware version 478.104 (2008-07-01 00:50:23)
-Aug 15 18:18:10 dimitri kernel: b43-phy0 debug: b2062: Using crystal tab entry 19200 kHz.
-Aug 15 18:18:10 dimitri kernel: b43-phy0 debug: RC calib: Failed to switch to channel 7, error = -5
-
-
-The patch follows, tested on 2.6.32.18 and 2.6.35.2, both built for x86_64.
-
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
 ---
-b43: Bump the radio version 0x2063-rev-2 to 0x2063. 
+ drivers/net/wireless/wl12xx/wl1271.h      |    1 +
+ drivers/net/wireless/wl12xx/wl1271_boot.c |    9 +++++----
+ drivers/net/wireless/wl12xx/wl1271_boot.h |    1 -
+ drivers/net/wireless/wl12xx/wl1271_sdio.c |    1 +
+ drivers/net/wireless/wl12xx/wl1271_spi.c  |    2 ++
+ include/linux/wl12xx.h                    |    1 +
+ 6 files changed, 10 insertions(+), 5 deletions(-)
 
-Signed-off-by: <dimitri.gorokhovik@free.fr>
----
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 7965b70..d245a23 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -4084,6 +4084,7 @@ static int b43_phy_versioning(struct b43_wldev *dev)
-        case B43_PHYTYPE_LP:
-                if (radio_ver != 0x2062 && radio_ver != 0x2063)
-                        unsupported = 1;
-+		radio_ver += radio_rev > 1;
-                break;
-        default:
-                B43_WARN_ON(1);
+diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+index 013eabb..f0988a4 100644
+--- a/drivers/net/wireless/wl12xx/wl1271.h
++++ b/drivers/net/wireless/wl12xx/wl1271.h
+@@ -342,6 +342,7 @@ struct wl1271 {
+ 
+ 	void (*set_power)(bool enable);
+ 	int irq;
++	int ref_clock;
+ 
+ 	spinlock_t wl_lock;
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.c b/drivers/net/wireless/wl12xx/wl1271_boot.c
+index f36430b..95c636a 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_boot.c
++++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
+@@ -457,17 +457,18 @@ int wl1271_boot(struct wl1271 *wl)
+ {
+ 	int ret = 0;
+ 	u32 tmp, clk, pause;
++	int ref_clock = wl->ref_clock;
+ 
+ 	wl1271_boot_hw_version(wl);
+ 
+-	if (REF_CLOCK == 0 || REF_CLOCK == 2 || REF_CLOCK == 4)
++	if (ref_clock == 0 || ref_clock == 2 || ref_clock == 4)
+ 		/* ref clk: 19.2/38.4/38.4-XTAL */
+ 		clk = 0x3;
+-	else if (REF_CLOCK == 1 || REF_CLOCK == 3)
++	else if (ref_clock == 1 || ref_clock == 3)
+ 		/* ref clk: 26/52 */
+ 		clk = 0x5;
+ 
+-	if (REF_CLOCK != 0) {
++	if (ref_clock != 0) {
+ 		u16 val;
+ 		/* Set clock type (open drain) */
+ 		val = wl1271_top_reg_read(wl, OCP_REG_CLK_TYPE);
+@@ -516,7 +517,7 @@ int wl1271_boot(struct wl1271 *wl)
+ 	wl1271_debug(DEBUG_BOOT, "clk2 0x%x", clk);
+ 
+ 	/* 2 */
+-	clk |= (REF_CLOCK << 1) << 4;
++	clk |= (ref_clock << 1) << 4;
+ 	wl1271_write32(wl, DRPW_SCRATCH_START, clk);
+ 
+ 	wl1271_set_partition(wl, &part_table[PART_WORK]);
+diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.h b/drivers/net/wireless/wl12xx/wl1271_boot.h
+index f829699..f73b0b1 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_boot.h
++++ b/drivers/net/wireless/wl12xx/wl1271_boot.h
+@@ -46,7 +46,6 @@ struct wl1271_static_data {
+ /* delay between retries */
+ #define INIT_LOOP_DELAY 50
+ 
+-#define REF_CLOCK            2
+ #define WU_COUNTER_PAUSE_VAL 0x3FF
+ #define WELP_ARM_COMMAND_VAL 0x4
+ 
+diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
+index 228f5af..2f558a6 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_sdio.c
++++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
+@@ -296,6 +296,7 @@ static int __devinit wl1271_probe(struct sdio_func *func,
+ 	}
+ 
+ 	wl->irq = wlan_data->irq;
++	wl->ref_clock = wlan_data->board_ref_clock;
+ 
+ 	ret = request_irq(wl->irq, wl1271_irq, 0, DRIVER_NAME, wl);
+ 	if (ret < 0) {
+diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
+index de56d8d..ced0a9e 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_spi.c
++++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
+@@ -372,6 +372,8 @@ static int __devinit wl1271_probe(struct spi_device *spi)
+ 		goto out_free;
+ 	}
+ 
++	wl->ref_clock = pdata->board_ref_clock;
++
+ 	wl->irq = spi->irq;
+ 	if (wl->irq < 0) {
+ 		wl1271_error("irq missing in platform data");
+diff --git a/include/linux/wl12xx.h b/include/linux/wl12xx.h
+index 137ac89..ef6eed9 100644
+--- a/include/linux/wl12xx.h
++++ b/include/linux/wl12xx.h
+@@ -29,6 +29,7 @@ struct wl12xx_platform_data {
+ 	/* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
+ 	int irq;
+ 	bool use_eeprom;
++	int board_ref_clock;
+ };
+ 
+ #endif
+-- 
+1.7.0.4
+
