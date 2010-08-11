@@ -1,44 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:41657 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754369Ab0HLHYL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Aug 2010 03:24:11 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Aug 2010 00:24:11 -0700
-From: Vivek Natarajan <vnatarajan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath9k_htc: Fix disconnect issue in HT40 mode.
-Date: Thu, 12 Aug 2010 12:54:05 +0530
-Message-ID: <1281597845-6342-1-git-send-email-vnatarajan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:43673 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754879Ab0HKSWY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Aug 2010 14:22:24 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>
+Cc: Ido Yariv <ido@wizery.com>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Pandita Vikram <vikram.pandita@ti.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH v4 8/8] omap: zoom: add mmc3/wl1271 device support
+Date: Wed, 11 Aug 2010 21:21:53 +0300
+Message-Id: <1281550913-17633-9-git-send-email-ohad@wizery.com>
+In-Reply-To: <1281550913-17633-1-git-send-email-ohad@wizery.com>
+References: <1281550913-17633-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set WLAN_RC_40_FLAG only if the current channel configuration
-is HT40 enabled.
+Add MMC3 support on ZOOM, which has the wl1271 device hardwired to.
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+The wl1271 is a 4-wire, 1.8V, embedded SDIO WLAN device with an
+external IRQ line, and power-controlled by a GPIO-based fixed regulator.
+
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
 ---
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ arch/arm/mach-omap2/board-zoom-peripherals.c |   34 ++++++++++++++++++++++++++
+ 1 files changed, 34 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index ebed9d1..7d09b4b 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -366,7 +366,8 @@ static void ath9k_htc_setup_rate(struct ath9k_htc_priv *priv,
- 		caps = WLAN_RC_HT_FLAG;
- 		if (sta->ht_cap.mcs.rx_mask[1])
- 			caps |= WLAN_RC_DS_FLAG;
--		if (sta->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40)
-+		if ((sta->ht_cap.cap & IEEE80211_HT_CAP_SUP_WIDTH_20_40) &&
-+		     (conf_is_ht40(&priv->hw->conf)))
- 			caps |= WLAN_RC_40_FLAG;
- 		if (conf_is_ht40(&priv->hw->conf) &&
- 		    (sta->ht_cap.cap & IEEE80211_HT_CAP_SGI_40))
+diff --git a/arch/arm/mach-omap2/board-zoom-peripherals.c b/arch/arm/mach-omap2/board-zoom-peripherals.c
+index de88635..625ae56 100644
+--- a/arch/arm/mach-omap2/board-zoom-peripherals.c
++++ b/arch/arm/mach-omap2/board-zoom-peripherals.c
+@@ -17,6 +17,8 @@
+ #include <linux/i2c/twl.h>
+ #include <linux/regulator/machine.h>
+ #include <linux/regulator/fixed.h>
++#include <linux/mmc/host.h>
++#include <linux/wl12xx.h>
+ 
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+@@ -29,6 +31,7 @@
+ #include "hsmmc.h"
+ 
+ #define OMAP_ZOOM_WLAN_PMENA_GPIO	(101)
++#define OMAP_ZOOM_WLAN_IRQ_GPIO		(162)
+ 
+ /* Zoom2 has Qwerty keyboard*/
+ static int board_keymap[] = {
+@@ -185,6 +188,28 @@ static struct platform_device omap_vwlan_device = {
+ 	},
+ };
+ 
++struct wl12xx_platform_data omap_zoom_wlan_data = {
++	/* ZOOM ref clock is 26 MHz */
++	.board_ref_clock = 1,
++};
++
++static struct resource omap_zoom_wl1271_resources[] = {
++	{
++		.start = OMAP_GPIO_IRQ(OMAP_ZOOM_WLAN_IRQ_GPIO),
++		.end = OMAP_GPIO_IRQ(OMAP_ZOOM_WLAN_IRQ_GPIO),
++		.flags = IORESOURCE_IRQ,
++	}
++};
++static struct platform_device omap_zoom_wl1271 = {
++	.name		= "wl1271_plat.2",
++	.id		= -1,
++	.resource	= omap_zoom_wl1271_resources,
++	.num_resources	= ARRAY_SIZE(omap_zoom_wl1271_resources),
++	.dev = {
++		.platform_data = &omap_zoom_wlan_data,
++	},
++};
++
+ static struct omap2_hsmmc_info mmc[] __initdata = {
+ 	{
+ 		.name		= "external",
+@@ -202,6 +227,14 @@ static struct omap2_hsmmc_info mmc[] __initdata = {
+ 		.nonremovable	= true,
+ 		.power_saving	= true,
+ 	},
++	{
++		.name		= "wl1271",
++		.mmc		= 3,
++		.wires		= 4,
++		.gpio_wp	= -EINVAL,
++		.gpio_cd	= -EINVAL,
++		.nonremovable	= true,
++	},
+ 	{}      /* Terminator */
+ };
+ 
+@@ -313,6 +346,7 @@ static void enable_board_wakeup_source(void)
+ 
+ void __init zoom_peripherals_init(void)
+ {
++	platform_device_register(&omap_zoom_wl1271);
+ 	omap_i2c_init();
+ 	platform_device_register(&omap_vwlan_device);
+ 	usb_musb_init(&musb_board_data);
 -- 
-1.7.2.1
+1.7.0.4
 
