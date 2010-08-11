@@ -1,42 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:56166 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754788Ab0HKSDf convert rfc822-to-8bit (ORCPT
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:33850 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751392Ab0HKVXb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Aug 2010 14:03:35 -0400
-Received: by qwh6 with SMTP id 6so397616qwh.19
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Aug 2010 11:03:35 -0700 (PDT)
+	Wed, 11 Aug 2010 17:23:31 -0400
+Date: Wed, 11 Aug 2010 22:21:56 +0100
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: "DebBarma, Tarun Kanti" <tarun.kanti@ti.com>
+Cc: "felipe.balbi@nokia.com" <felipe.balbi@nokia.com>,
+	Ohad Ben-Cohen <ohad@wizery.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	"Pandita, Vikram" <vikram.pandita@ti.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"Quadros Roger (Nokia-MS/Helsinki)" <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	Nicolas Pitre <nico@fluxnic.net>, San Mehat <san@google.com>,
+	"Chikkature Rajashekar, Madhusudhan" <madhu.cr@ti.com>,
+	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	Ido Yariv <ido@wizery.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v4 3/8] wireless: wl1271: add platform driver to get
+	board data
+Message-ID: <20100811212156.GB827@n2100.arm.linux.org.uk>
+References: <1281550913-17633-1-git-send-email-ohad@wizery.com> <1281550913-17633-4-git-send-email-ohad@wizery.com> <5A47E75E594F054BAF48C5E4FC4B92AB0324110ABD@dbde02.ent.ti.com> <20100811184742.GA21778@nokia.com> <5A47E75E594F054BAF48C5E4FC4B92AB0324110AC1@dbde02.ent.ti.com>
 MIME-Version: 1.0
-In-Reply-To: <9A3B6D8B-F99D-4822-9680-121FCC710AB9@cs.tu-berlin.de>
-References: <mailman.2.1281088802.10054.ath9k-devel@lists.ath9k.org>
-	<F980642C-09A1-41C9-95D2-ABA6C7ED3F98@cs.tu-berlin.de>
-	<20100806184849.GF1757@tux>
-	<9A3B6D8B-F99D-4822-9680-121FCC710AB9@cs.tu-berlin.de>
-Date: Wed, 11 Aug 2010 13:56:17 -0400
-Message-ID: <AANLkTimRWQFEVkyQF7wuj3=jQx_zCwFCqSBS0Y=KLxu3@mail.gmail.com>
-Subject: Re: [ath9k-devel] Multiple interfaces with one card
-From: Bob Copeland <me@bobcopeland.com>
-To: Hakan Coskun <coskun@cs.tu-berlin.de>
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5A47E75E594F054BAF48C5E4FC4B92AB0324110AC1@dbde02.ent.ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 6, 2010 at 2:59 PM, Hakan Coskun <coskun@cs.tu-berlin.de> wrote:
+On Thu, Aug 12, 2010 at 12:22:54AM +0530, DebBarma, Tarun Kanti wrote:
+> True; however if we go by that argument than we can also assume pdata
+> is valid, so that we would not need the below check.
 
-> thank you for your really quick reply. We are already using wireless-testing for our development. The ath9k extensions will be commited soon. At the moment, we are using the eclipse to index the code and walk through the files. This is working quite good. But how can we see during runtime, what is happening. Should we use something like kgdb to trace the operation or what is your approach you take for development. Can you give us any hints ?
->
+If pdev was ever NULL in a probe function, the kernel deserves to OOPS
+so that you have a backtrace to fix the bugger.
 
-IMHO the best way to do this is a combination of mac80211 tracepoints and
-ftrace, the function tracer, via trace-cmd.  Something like:
+Basically, a probe function is only called when the driver finds a
+matching device to bind to - so the device _must_ already exist and
+be valid.  It's basically guaranteed.  So checking for a NULL pdev is
+not only a waste of space, it's a waste of CPU time and developer time
+writing the check as well.
 
-# trace-cmd record -p function -l ieee\* -e mac80211 sleep 300
+On the other hand, platform data passed in via a platform device _is_
+liable to be NULL if whatever created the platform device didn't
+set the platform data up.  So we can't guarantee that the platform
+data will exist.  So a NULL check is appropriate here.
 
-...should get you five minutes worth of useful traces.  Of course command can
-be anything you like.
-
-
--- 
-Bob Copeland %% www.bobcopeland.com
+So, if an API in normal operation requires non-NULL data to be passed,
+don't bother checking for a NULL pointer.  If you're passed a NULL
+pointer in this situation, you deserve to OOPS so you get a backtrace
+to fix the problem rather than silently ignoring the problem.
