@@ -1,42 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:40032 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752379Ab0HNTmp (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:65199 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755870Ab0HKT3r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Aug 2010 15:42:45 -0400
-Subject: Re: [PATCH 0/2] iwlwifi fix for 2.6.35
-From: Marcel Holtmann <marcel@holtmann.org>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <1281800751-20784-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1281800751-20784-1-git-send-email-wey-yi.w.guy@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 14 Aug 2010 21:42:33 +0200
-Message-ID: <1281814953.23399.29.camel@localhost.localdomain>
+	Wed, 11 Aug 2010 15:29:47 -0400
+Subject: [PATCH 2/2] ipw2100: add WEXT scan capabilities
+From: Christoph Fritz <chf.fritz@googlemail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Zhu Yi <yi.zhu@intel.com>, "David S. Miller" <davem@davemloft.net>,
+	Joe Perches <joe@perches.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <1281555063.4367.1.camel@lovely.krouter>
+References: <1281555063.4367.1.camel@lovely.krouter>
+Content-Type: text/plain; charset="ISO-8859-1"
+Date: Wed, 11 Aug 2010 21:33:15 +0200
+Message-ID: <1281555195.4367.3.camel@lovely.krouter>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Wey-Yi,
+NetworkManager claims: "driver does not support SSID scans (scan_capa
+0x00)". This patch adds scan capabilities.
 
-> When tx queue stuck, iwlwifi driver should detect and reload the firmware;
-> different devices has different timing requirement, change the timeout
-> value for 5000 series devices to avoid un-necessary firmware reload which
-> can cause device become unstable.
-> 
-> This fixes:
-> http://article.gmane.org/gmane.linux.kernel.wireless.general/53552
-> 
-> Wey-Yi Guy (2):
->   iwlwifi: long monitor timer
->   iwlwifi: use long monitor timer to avoid un-necessary reload
+Signed-off-by: Christoph Fritz <chf.fritz@googlemail.com>
+---
+ drivers/net/wireless/ipw2x00/ipw2100.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-I think these qualify even to all -stable trees. I have at least seen it
-with a 2.6.33.6 kernel from Fedora 13.
+diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
+index df8e535..c330da4 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2100.c
++++ b/drivers/net/wireless/ipw2x00/ipw2100.c
+@@ -6982,12 +6982,15 @@ static int ipw2100_wx_get_range(struct net_device *dev,
+ 
+ 	/* Event capability (kernel + driver) */
+ 	range->event_capa[0] = (IW_EVENT_CAPA_K_0 |
+-				IW_EVENT_CAPA_MASK(SIOCGIWAP));
++				IW_EVENT_CAPA_MASK(SIOCGIWAP) |
++				IW_EVENT_CAPA_MASK(SIOCGIWSCAN));
+ 	range->event_capa[1] = IW_EVENT_CAPA_K_1;
+ 
+ 	range->enc_capa = IW_ENC_CAPA_WPA | IW_ENC_CAPA_WPA2 |
+ 		IW_ENC_CAPA_CIPHER_TKIP | IW_ENC_CAPA_CIPHER_CCMP;
+ 
++	range->scan_capa = IW_SCAN_CAPA_ESSID | IW_SCAN_CAPA_TYPE;
++
+ 	IPW_DEBUG_WX("GET Range\n");
+ 
+ 	return 0;
+-- 
+1.7.1
 
-Regards
-
-Marcel
 
 
