@@ -1,54 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:44718 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752040Ab0H0TDQ convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55936 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751267Ab0HKMjV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 15:03:16 -0400
-Received: by yxg6 with SMTP id 6so1234320yxg.19
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Aug 2010 12:03:15 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1282934606-4169-1-git-send-email-lrodriguez@atheros.com>
-References: <1282934606-4169-1-git-send-email-lrodriguez@atheros.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Fri, 27 Aug 2010 12:02:55 -0700
-Message-ID: <AANLkTi=6WGrMJ7SNpoXhF77F76sxVr0Hp+T6QO21+Frr@mail.gmail.com>
-Subject: Re: [PATCH] ath9k: fix drop of multicast / broadcast data during scan
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
-	Amod Bodas <Amod.Bodas@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 11 Aug 2010 08:39:21 -0400
+Subject: Re: [PATCH 3/5] mac80211: remove unused status flag checks
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1281528765.6475.163.camel@wimaxnb.nmp.nokia.com>
+References: <20100810074637.034583799@sipsolutions.net>
+	 <20100810074700.385206959@sipsolutions.net>
+	 <1281527495.6475.160.camel@wimaxnb.nmp.nokia.com>
+	 <1281528765.6475.163.camel@wimaxnb.nmp.nokia.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 11 Aug 2010 14:39:16 +0200
+Message-ID: <1281530356.3674.3.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 27, 2010 at 11:43 AM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> mac80211's scan implementation puts the burden of processing the DTIM
-> count on drivers to accurately disallow scanning during certain wait
-> constraints. ath9k was allowing to change channel while a few of these
-> wait constraints were still in effect causing some drop of buffered
-> broadcast and multicast traffic. Fix this by checking for the wait
-> constraints prior to switching channels.
->
-> This is tested against a Cisco E3000 AP configued with a DTIM Interval of 2
-> and beacon interval of 1000. Then setup ath9k to receive multicast
-> traffic:
->
->  user@ath9k-RX-box $ iperf -s -u -B 224.0.55.55 -i 1
->
-> On the transmit multicast box connected to the same AP:
->
->  user@ath9k-TX-box $ while true ; do iperf -c 224.0.55.55 \
->        -u -T 32 -t 3 -i 1 -b 10M -t 1000; sleep 2 ; done
->
-> Without this patch we would otherwise loose that data. You can verify we run into
-> this by enabling the ATH_DBG_PS (0x800) when loading ath9k.
->
-> Cc: stable@kernel.org
-> Cc: Amod Bodas <Amod.Bodas@atheros.com>
-> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+On Wed, 2010-08-11 at 15:12 +0300, Juuso Oikarinen wrote:
 
-Sorry ignore this, Jouni noted this would break handling of off
-channel operation, amongst other things. Will work on the more proper
-solution by letting drivers inform mac80211 of these wait constraints.
+> > > The decryption code verifies whether or not
+> > > a given frame was decrypted and verified by
+> > > hardware. This is unnecessary, as the crypto
+> > > RX handler already does it long before the
+> > > decryption code is even invoked, so remove
+> > > that code to avoid confusion.
+> > > 
+> > > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> > > ---
+> > >  net/mac80211/wpa.c |   26 ++++++--------------------
+> > >  1 file changed, 6 insertions(+), 20 deletions(-)
+> > > 
+> > 
+> > This patch for some reason seems to break wl1271 WPA - association
+> > succeeds but encrypted data transfer fails.
+> > 
+> > I still don't know why, but I'm looking into it.
+> > 
+> 
+> It appears, that in function ieee80211_rx_h_decrypt we go here:
+> 
+> 	if (!is_multicast_ether_addr(hdr->addr1) && stakey) {
+> 		rx->key = stakey;
+> 		/* Skip decryption if the frame is not protected. */
+> 		if (!ieee80211_has_protected(hdr->frame_control))
+> 			return RX_CONTINUE;
+> 
+> And here, as the frame is protected, we go out of the if, and end up in
+> tkip_decrypt, which with this patch no longer checks whether the frame
+> is already decrypted.
+> 
+> The frame then ends up dropped.
 
-  Luis
+Err, you're right, sorry about that. There are too many paths here. How
+about this patch?
+
+johannes
+
+--- wireless-testing.orig/net/mac80211/rx.c	2010-08-11 14:37:13.000000000 +0200
++++ wireless-testing/net/mac80211/rx.c	2010-08-11 14:38:13.000000000 +0200
+@@ -873,6 +873,9 @@ ieee80211_rx_h_decrypt(struct ieee80211_
+ 
+ 	if (!is_multicast_ether_addr(hdr->addr1) && stakey) {
+ 		rx->key = stakey;
++		if ((status->flag & RX_FLAG_DECRYPTED) &&
++		    (status->flag & RX_FLAG_IV_STRIPPED))
++			return RX_CONTINUE;
+ 		/* Skip decryption if the frame is not protected. */
+ 		if (!ieee80211_has_protected(fc))
+ 			return RX_CONTINUE;
+
+
