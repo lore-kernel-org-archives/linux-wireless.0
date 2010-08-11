@@ -1,85 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:41538 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750933Ab0HOSwf convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:44704 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752412Ab0HKNTa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Aug 2010 14:52:35 -0400
-Received: by qwh6 with SMTP id 6so4346391qwh.19
-        for <linux-wireless@vger.kernel.org>; Sun, 15 Aug 2010 11:52:34 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1944322236.136661281896820874.JavaMail.root@zimbra3-e1.priv.proxad.net>
-References: <1682961998.136221281896329090.JavaMail.root@zimbra3-e1.priv.proxad.net>
- <1944322236.136661281896820874.JavaMail.root@zimbra3-e1.priv.proxad.net>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Sun, 15 Aug 2010 20:52:14 +0200
-Message-ID: <AANLkTink6t1cPNi80sFX-fadLF7ztGbUteH+EM=TgwH4@mail.gmail.com>
-Subject: Re: [PATCH]: b43: is there such a thing as radio 0x2062 rev 2?
-To: dimitri.gorokhovik@free.fr
-Cc: linville@tuxdriver.com, stefano.brivio@polimi.it,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 11 Aug 2010 09:19:30 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	<akpm@linux-foundation.org>, Ido Yariv <ido@wizery.com>,
+	San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Gao Yunpeng <yunpeng.gao@intel.com>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [RFC/PATCH 1/6] mmc: sdio: fully reconfigure oldcard on resume
+Date: Wed, 11 Aug 2010 16:19:25 +0300
+Message-Id: <1281532770-27545-2-git-send-email-ohad@wizery.com>
+In-Reply-To: <1281532770-27545-1-git-send-email-ohad@wizery.com>
+References: <1281532770-27545-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Does the card actually work if you make b43 believe that it has a BCM2063 radio?
+On resume, let mmc_sdio_init_card go all the way, instead
+of skipping the reconfiguration of the card's speed and width.
 
-BTW, all BCM2062 radios seen so far are rev.2, and none have shown
-this error. Maybe your card actually has a BCM2063 radio, but for some
-reason b43 detects it as a BCM2062?
+This is needed to ensure cards wake up with their clock
+reconfigured (otherwise it's kept low).
 
-Also, does the Broadcom hybrid driver handle your card?
+This patch also removes the explicit bus width reconfiguration
+on resume, since now this is part of mmc_sdio_init_card.
 
-Thanks,
-Gábor.
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+---
+ drivers/mmc/core/sdio.c |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
 
-On Sun, Aug 15, 2010 at 8:27 PM,  <dimitri.gorokhovik@free.fr> wrote:
-> Hi,
->
-> On a DELL D630 with BCM4312 (low-power PHY 4e4:4315 rev 01), I was able to fix the problem:
->
-> Aug 15 17:14:45 dimitri kernel: b43-phy0 debug: RC calib: Failed to switch to channel 7, error = -5
->
-> by bumping the radio's version (0x2062 rev 2) to 0x2063 (kept rev 2).
->
-> Before the fix, the hardware detected as:
->
-> Aug 15 17:14:45 dimitri kernel: b43-phy0: Broadcom 4312 WLAN found (core revision 15)
-> Aug 15 17:14:45 dimitri kernel: b43-phy0 debug: Found PHY: Analog 6, Type 5, Revision 1
-> Aug 15 17:14:45 dimitri kernel: b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2062, Revision 2
->
-> The problem manifested itself (permanently) as:
->
-> Aug 15 18:18:10 dimitri kernel: b43-phy0: Loading firmware version 478.104 (2008-07-01 00:50:23)
-> Aug 15 18:18:10 dimitri kernel: b43-phy0 debug: b2062: Using crystal tab entry 19200 kHz.
-> Aug 15 18:18:10 dimitri kernel: b43-phy0 debug: RC calib: Failed to switch to channel 7, error = -5
->
->
-> The patch follows, tested on 2.6.32.18 and 2.6.35.2, both built for x86_64.
->
-> ---
-> b43: Bump the radio version 0x2063-rev-2 to 0x2063.
->
-> Signed-off-by: <dimitri.gorokhovik@free.fr>
-> ---
-> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-> index 7965b70..d245a23 100644
-> --- a/drivers/net/wireless/b43/main.c
-> +++ b/drivers/net/wireless/b43/main.c
-> @@ -4084,6 +4084,7 @@ static int b43_phy_versioning(struct b43_wldev *dev)
->        case B43_PHYTYPE_LP:
->                if (radio_ver != 0x2062 && radio_ver != 0x2063)
->                        unsupported = 1;
-> +               radio_ver += radio_rev > 1;
->                break;
->        default:
->                B43_WARN_ON(1);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
-
+diff --git a/drivers/mmc/core/sdio.c b/drivers/mmc/core/sdio.c
+index b9dee28..645f173 100644
+--- a/drivers/mmc/core/sdio.c
++++ b/drivers/mmc/core/sdio.c
+@@ -344,7 +344,6 @@ static int mmc_sdio_init_card(struct mmc_host *host, u32 ocr,
+ 			goto err;
+ 		}
+ 		card = oldcard;
+-		return 0;
+ 	}
+ 
+ 	/*
+@@ -487,9 +486,6 @@ static int mmc_sdio_resume(struct mmc_host *host)
+ 	mmc_claim_host(host);
+ 	err = mmc_sdio_init_card(host, host->ocr, host->card,
+ 				 (host->pm_flags & MMC_PM_KEEP_POWER));
+-	if (!err)
+-		/* We may have switched to 1-bit mode during suspend. */
+-		err = sdio_enable_wide(host->card);
+ 	if (!err && host->sdio_irqs)
+ 		mmc_signal_sdio_irq(host);
+ 	mmc_release_host(host);
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.7.0.4
+
