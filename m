@@ -1,202 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:55158 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754070Ab0H2WkO convert rfc822-to-8bit (ORCPT
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39680 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752877Ab0HKV02 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Aug 2010 18:40:14 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: 2.6.36-rc3: Reported regressions from 2.6.35
-Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
+	Wed, 11 Aug 2010 17:26:28 -0400
+Date: Wed, 11 Aug 2010 22:25:13 +0100
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: "DebBarma, Tarun Kanti" <tarun.kanti@ti.com>
+Cc: "felipe.balbi@nokia.com" <felipe.balbi@nokia.com>,
+	Ohad Ben-Cohen <ohad@wizery.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	"Pandita, Vikram" <vikram.pandita@ti.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"Quadros Roger (Nokia-MS/Helsinki)" <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	Nicolas Pitre <nico@fluxnic.net>, San Mehat <san@google.com>,
+	"Chikkature Rajashekar, Madhusudhan" <madhu.cr@ti.com>,
+	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	Ido Yariv <ido@wizery.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v4 3/8] wireless: wl1271: add platform driver to get
+	board data
+Message-ID: <20100811212513.GC827@n2100.arm.linux.org.uk>
+References: <1281550913-17633-1-git-send-email-ohad@wizery.com> <1281550913-17633-4-git-send-email-ohad@wizery.com> <5A47E75E594F054BAF48C5E4FC4B92AB0324110ABD@dbde02.ent.ti.com> <20100811184742.GA21778@nokia.com> <5A47E75E594F054BAF48C5E4FC4B92AB0324110AC1@dbde02.ent.ti.com> <20100811185724.GD21778@nokia.com> <5A47E75E594F054BAF48C5E4FC4B92AB0324110AC7@dbde02.ent.ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-ID: <4LwrqITm-eJ.A.r8G.eFueMB@chimera>
-Date: Mon, 30 Aug 2010 00:24:40 +0200 (CEST)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5A47E75E594F054BAF48C5E4FC4B92AB0324110AC7@dbde02.ent.ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This message contains a list of some regressions from 2.6.35,
-for which there are no fixes in the mainline known to the tracking team.
-If any of them have been fixed already, please let us know.
+On Thu, Aug 12, 2010 at 12:57:18AM +0530, DebBarma, Tarun Kanti wrote:
+> 
+> > -----Original Message-----
+> > From: Felipe Balbi [mailto:felipe.balbi@nokia.com]
+> > Sent: Thursday, August 12, 2010 12:27 AM
+> > To: DebBarma, Tarun Kanti
+> > Cc: Balbi Felipe (Nokia-MS/Helsinki); Ohad Ben-Cohen; linux-
+> > wireless@vger.kernel.org; linux-mmc@vger.kernel.org; linux-
+> > omap@vger.kernel.org; Ido Yariv; Mark Brown; linux-arm-
+> > kernel@lists.infradead.org; Chikkature Rajashekar, Madhusudhan; Coelho
+> > Luciano (Nokia-MS/Helsinki); akpm@linux-foundation.org; San Mehat; Quadros
+> > Roger (Nokia-MS/Helsinki); Tony Lindgren; Nicolas Pitre; Pandita, Vikram;
+> > Kalle Valo
+> > Subject: Re: [PATCH v4 3/8] wireless: wl1271: add platform driver to get
+> > board data
+> > 
+> > Hi,
+> > 
+> > On Wed, Aug 11, 2010 at 08:52:54PM +0200, ext DebBarma, Tarun Kanti wrote:
+> > >True; however if we go by that argument than we can also assume pdata
+> > >is valid, so that we would not need the below check.
+> > 
+> > of course not. You can have devices that just play well with default
+> > values or devices where you don't need the flexibility of platform data.
+> > That's why we check.
+> > 
+> > platform_device pointers on the other hand, are guaranteed to be always
+> > true, if it isn't then you should oops, you deserve to oops because
+> > something is really really wrong.
+> >
+> Sounds perfect!
+> What that means is _probe() function makes sense only for cases where we
+> have valid platform data because we are returning right at the top if
+> pdata is not valid. If this is the case I was curious to know why not
+> framework make another check for valid pdata before calling _probe()
+> instead of coming all the way to _probe() and then returning! 
 
-If you know of any other unresolved regressions from 2.6.35, please let us
-know either and we'll add them to the list.  Also, please let us know
-if any of the entries below are invalid.
+Platform devices are not for passing platform data around - they're for
+declaring platform hardware devices that we want drivers to handle -
+and it depends on the driver whether having platform data is appropriate
+or not.
 
-Each entry from the list will be sent additionally in an automatic reply
-to this message with CCs to the people involved in reporting and handling
-the issue.
-
-
-Listed regressions statistics:
-
-  Date          Total  Pending  Unresolved
-  ----------------------------------------
-  2010-08-30       21       16          15
-
-
-Unresolved regressions
-----------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17341
-Subject		: kdump regression compared to v2.6.35
-Submitter	: CAI Qian <caiqian@redhat.com>
-Date		: 2010-08-27 12:35 (3 days old)
-Message-ID	: <2136707099.1405541282912500148.JavaMail.root@zmail06.collab.prod.int.phx2.redhat.com>
-References	: http://marc.info/?l=linux-kernel&m=128291252612135&w=2
-Handled-By	: Tejun Heo <tj@kernel.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17331
-Subject		: BUG: scheduling while atomic
-Submitter	: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Date		: 2010-08-27 7:59 (3 days old)
-Message-ID	: <20100827075911.GA5966@swordfish.minsk.epam.com>
-References	: http://marc.info/?l=linux-kernel&m=128289602925505&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17321
-Subject		: i386 WARNING: at kernel/softirq.c:143 _local_bh_enable_ip+0x2f/0x7e
-Submitter	: Arno Schuring <aelschuring@hotmail.com>
-Date		: 2010-08-27 20:04 (3 days old)
-Message-ID	: <4C781A3A.4010707@hotmail.com>
-References	: http://marc.info/?l=linux-kernel&m=128294076822387&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17311
-Subject		: 2.6.36-rc2-git4 - INFO: possible circular locking dependency detected
-Submitter	: Miles Lane <miles.lane@gmail.com>
-Date		: 2010-08-27 1:56 (3 days old)
-First-Bad-Commit: http://git.kernel.org/linus/5a652052fedbd7869572c757dd2ffc2ed420c69d
-Message-ID	: <AANLkTinHbEW36D5R9NSrGgfbOC0Hri3Tg-fA0iR92Udi@mail.gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=128287422106267&w=2
-Handled-By	: Johannes Berg <johannes@sipsolutions.net>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17301
-Subject		: i915: 2.6.36-rc2 wrong resolution on gdm start
-Submitter	: Ivan Bulatovic <combuster@gmx.com>
-Date		: 2010-08-24 1:00 (6 days old)
-First-Bad-Commit: http://git.kernel.org/linus/9d0498a2bf7455159b317f19531a3e5db2ecc9c4
-Message-ID	: <1282611655.2177.19.camel@localhost.localdomain>
-References	: http://marc.info/?l=linux-kernel&m=128261168202306&w=2
-Handled-By	: Chris Wilson <chris@chris-wilson.co.uk>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17151
-Subject		: i915: 2.6.36-rc2 hoses my Intel display
-Submitter	: Jonathan Corbet <corbet@lwn.net>
-Date		: 2010-08-23 17:01 (7 days old)
-First-Bad-Commit: http://git.kernel.org/linus/32aad86fe88e7323d4fc5e9e423abcee0d55a03d
-Message-ID	: <20100823110145.08eb72fd@bike.lwn.net>
-References	: http://marc.info/?l=linux-kernel&m=128258293327326&w=2
-Handled-By	: Chris Wilson <chris@chris-wilson.co.uk>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17131
-Subject		: WARN with 3c905 boomerang NIC
-Submitter	: Doug Nazar <nazard.lkml@gmail.com>
-Date		: 2010-08-22 6:35 (8 days old)
-Message-ID	: <4C70C516.5020404@gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=128245894300623&w=2
-Handled-By	: David Miller <davem@davemloft.net>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17061
-Subject		: 2.6.36-rc1 on zaurus: bluetooth regression
-Submitter	: Pavel Machek <pavel@ucw.cz>
-Date		: 2010-08-21 15:24 (9 days old)
-Message-ID	: <20100821152445.GA1536@ucw.cz>
-References	: http://marc.info/?l=linux-kernel&m=128240433828087&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17041
-Subject		: 2.6.36-rc1 hangs during XFS barrier test for /
-Submitter	: Torsten Kaiser <just.for.lkml@googlemail.com>
-Date		: 2010-08-20 (10 days old)
-Message-ID	: <AANLkTim1PXibiY98GUdMj-UZLTav+n7GAnJ0Mjn6_5a3@mail.gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=128231691708710&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17021
-Subject		: [REGRESSION] [2.6.36-rc1] [DRM INTEL] [drm:intel_calculate_wm] *ERROR* Insufficient FIFO for plane, expect flickering: entries required = 36, available = 28.
-Submitter	: Maciej Rutecki <maciej.rutecki@gmail.com>
-Date		: 2010-08-18 18:46 (12 days old)
-Message-ID	: <201008182046.37732.maciej.rutecki@gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=128215721507666&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16971
-Subject		: qla4xxx compile failure on 32-bit PowerPC: missing readq and writeq
-Submitter	: Meelis Roos <mroos@linux.ee>
-Date		: 2010-08-19 21:03 (11 days old)
-Message-ID	: <alpine.SOC.1.00.1008192359310.19654@math.ut.ee>
-References	: http://marc.info/?l=linux-kernel&m=128225184900892&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16961
-Subject		: kernel BUG at arch/x86/kvm/../../../virt/kvm/kvm_main.c:1978
-Submitter	: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Date		: 2010-08-19 9:54 (11 days old)
-Message-ID	: <20100819095429.GA5201@swordfish.minsk.epam.com>
-References	: http://marc.info/?l=linux-kernel&m=128221169606214&w=2
-Handled-By	: Avi Kivity <avi@redhat.com>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16951
-Subject		: hackbench regression with 2.6.36-rc1
-Submitter	: Zhang, Yanmin <yanmin_zhang@linux.intel.com>
-Date		: 2010-08-18 6:18 (12 days old)
-Message-ID	: <1282112318.21202.8.camel@ymzhang.sh.intel.com>
-References	: http://marc.info/?l=linux-kernel&m=128211235904910&w=2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16881
-Subject		: [REGRESSION, Radeon-KMS] 2.6.36-rc1,2 - missing textures in 0 A.D.
-Submitter	:  <trapdoor6@gmail.com>
-Date		: 2010-08-24 12:20 (6 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16626
-Subject		: Machine hangs with EIP at skb_copy_and_csum_dev
-Submitter	: Plamen Petrov <pvp-lsts@fs.uni-ruse.bg>
-Date		: 2010-08-19 09:57 (11 days old)
-Handled-By	:  Eric Dumazet <eric.dumazet@gmail.com>
-
-
-Regressions with patches
-------------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16629
-Subject		: fix BUG: using smp_processor_id() in preemptible code (resend)
-Submitter	: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Date		: 2010-08-18 9:11 (12 days old)
-Message-ID	: <20100818091157.GA5238@swordfish.minsk.epam.com>
-References	: http://marc.info/?l=linux-kernel&m=128212276618793&w=2
-Handled-By	: H. Peter Anvin <hpa@zytor.com>
-Patch		: http://marc.info/?l=linux-kernel&m=128212276618793&w=2
-
-
-For details, please visit the bug entries and follow the links given in
-references.
-
-As you can see, there is a Bugzilla entry for each of the listed regressions.
-There also is a Bugzilla entry used for tracking the regressions from 2.6.35,
-unresolved as well as resolved, at:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=16444
-
-Please let the tracking team know if there are any Bugzilla entries that
-should be added to the list in there.
-
-Thanks!
-
+This proposal is, IMHO, abusing the platform device/driver support to
+achieve its own goals.  I've outlined a far simpler and easiler solution
+which avoids this kind of abuse, and given suggestions on how to extend
+it to support multiple instances.
