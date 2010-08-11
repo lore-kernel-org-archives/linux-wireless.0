@@ -1,56 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:51986 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750973Ab0HSBJN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Aug 2010 21:09:13 -0400
-Received: by gxk23 with SMTP id 23so459608gxk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Aug 2010 18:09:12 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201008190001.11342.rjw@sisk.pl>
-References: <201008190001.11342.rjw@sisk.pl>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 18 Aug 2010 18:00:47 -0700
-Message-ID: <AANLkTi=S3JE=1J9xQtBAN5hHTqGSfohi4vL82iZHMWp+@mail.gmail.com>
-Subject: Re: [Regression, 2.6.36-rc1] ath9k resume problem on Acer Ferrari One
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Tejun Heo <tj@kernel.org>, LKML <linux-kernel@vger.kernel.org>,
-	Linux-pm mailing list <linux-pm@lists.linux-foundation.org>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Maciej Rutecki <maciej.rutecki@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:57975 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751760Ab0HKXbk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Aug 2010 19:31:40 -0400
+Subject: Re: [PATCH 2/2] ipw2100: add WEXT scan capabilities
+From: Dan Williams <dcbw@redhat.com>
+To: Christoph Fritz <chf.fritz@googlemail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Zhu Yi <yi.zhu@intel.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Joe Perches <joe@perches.com>,
+	"Rafael J. Wysocki" <rjw@sisk.pl>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <1281555195.4367.3.camel@lovely.krouter>
+References: <1281555063.4367.1.camel@lovely.krouter>
+	 <1281555195.4367.3.camel@lovely.krouter>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 11 Aug 2010 18:32:42 -0500
+Message-ID: <1281569562.21024.6.camel@dcbw.foobar.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 18, 2010 at 3:01 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> Hi,
->
-> While testing 2.6.36-rc1 (with a couple of fixes on top)
+On Wed, 2010-08-11 at 21:33 +0200, Christoph Fritz wrote:
+> NetworkManager claims: "driver does not support SSID scans (scan_capa
+> 0x00)". This patch adds scan capabilities.
 
-Which couple of fixes?
+NAK
 
-> I noticed that the ath9k
-> driver didn't work after resume from suspend to RAM.
+It just doesn't.  Take a look at ipw2100_wx_set_scan(); there's no
+handling of any SSID stuff in there.  The driver does not support
+probe-scans; I'm not sure if the firmware does, but even if it does, the
+driver doesn't send the SSID down to the firmware.
 
-To rule out if its an ath9k issue you can try
-compat-wireless-2.6.36-rc1 from here:
+Compare this to the ipw2200.c set_scan() function.  It just does not
+appear that the ipw2100 supports arbitrary SSIDs for direct scans, which
+is why I didn't include this capability when I went around patching the
+drivers a few years ago.
 
-http://wireless.kernel.org/en/users/Download/stable/
+Dan
 
-and install it on an older kernel, you can use ./scripts/driver-select
-to only enable ath9k to compile.
 
-I've been using pm-suspend on this release for a few days now without
-any issue but I am using an AR9003 chipset. What chipset are you
-using? Can you provide the dmesg output upon module load?
+> Signed-off-by: Christoph Fritz <chf.fritz@googlemail.com>
+> ---
+>  drivers/net/wireless/ipw2x00/ipw2100.c |    5 ++++-
+>  1 files changed, 4 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
+> index df8e535..c330da4 100644
+> --- a/drivers/net/wireless/ipw2x00/ipw2100.c
+> +++ b/drivers/net/wireless/ipw2x00/ipw2100.c
+> @@ -6982,12 +6982,15 @@ static int ipw2100_wx_get_range(struct net_device *dev,
+>  
+>  	/* Event capability (kernel + driver) */
+>  	range->event_capa[0] = (IW_EVENT_CAPA_K_0 |
+> -				IW_EVENT_CAPA_MASK(SIOCGIWAP));
+> +				IW_EVENT_CAPA_MASK(SIOCGIWAP) |
+> +				IW_EVENT_CAPA_MASK(SIOCGIWSCAN));
+>  	range->event_capa[1] = IW_EVENT_CAPA_K_1;
+>  
+>  	range->enc_capa = IW_ENC_CAPA_WPA | IW_ENC_CAPA_WPA2 |
+>  		IW_ENC_CAPA_CIPHER_TKIP | IW_ENC_CAPA_CIPHER_CCMP;
+>  
+> +	range->scan_capa = IW_SCAN_CAPA_ESSID | IW_SCAN_CAPA_TYPE;
+> +
+>  	IPW_DEBUG_WX("GET Range\n");
+>  
+>  	return 0;
 
->  An attempt to unload the
-> driver using rmmod caused the BUG_ON() in kernel/workqueue.c:2844 to trigger.
 
-That's a bug, a regression likely.
-
-> I wonder if that regression is a result of the recent workqueue changes?
-
-Yeah very likely.
-
-  Luis
