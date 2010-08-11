@@ -1,80 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:46826 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753725Ab0H2TzY convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:43673 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753554Ab0HKSWA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Aug 2010 15:55:24 -0400
-Received: by gwj17 with SMTP id 17so1748760gwj.19
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Aug 2010 12:55:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1282979590-31113-3-git-send-email-lrodriguez@atheros.com>
-References: <1282979590-31113-1-git-send-email-lrodriguez@atheros.com> <1282979590-31113-3-git-send-email-lrodriguez@atheros.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Sun, 29 Aug 2010 12:55:03 -0700
-Message-ID: <AANLkTinzeS=2rc5YYpOcQ6L6CoDN4jq2--zKS=NfDbEv@mail.gmail.com>
-Subject: Re: [RFC 2/3] mac80211: allow drivers to specify sw scan wait constraints
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, amod.bodas@atheros.com,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 11 Aug 2010 14:22:00 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>
+Cc: Ido Yariv <ido@wizery.com>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Pandita Vikram <vikram.pandita@ti.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH v4 1/8] wireless: wl1271: make wl12xx.h common to both spi and sdio
+Date: Wed, 11 Aug 2010 21:21:46 +0300
+Message-Id: <1281550913-17633-2-git-send-email-ohad@wizery.com>
+In-Reply-To: <1281550913-17633-1-git-send-email-ohad@wizery.com>
+References: <1281550913-17633-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Aug 28, 2010 at 12:13 AM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
+Move wl12xx.h outside of the spi-specific location,
+so it can be shared with both spi and sdio solutions.
 
-> @@ -520,23 +521,38 @@ static int ieee80211_scan_state_decision(struct ieee80211_local *local,
->                /*
->                 * we're on the operating channel currently, let's
->                 * leave that channel now to scan another one
-> +                * unless the driver has other wait time constraints
->                 */
-> -               local->next_scan_state = SCAN_LEAVE_OPER_CHANNEL;
-> +               if (drv_sw_scan_wait_constraints(local) &&
-> +                   local->scan_oper_chan_waits < 2) {
-> +                       local->next_scan_state = SCAN_DECISION;
-> +                       local->scan_oper_chan_waits++;
-> +               } else {
-> +                       local->next_scan_state = SCAN_LEAVE_OPER_CHANNEL;
-> +                       local->scan_oper_chan_waits = 0;
-> +               }
->        }
->
-> -       *next_delay = 0;
-> +       if (local->next_scan_state == SCAN_DECISION)
-> +               *next_delay = HZ / 5;
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/wl1251_sdio.c |    2 +-
+ drivers/net/wireless/wl12xx/wl1251_spi.c  |    2 +-
+ drivers/net/wireless/wl12xx/wl1271_spi.c  |    2 +-
+ include/linux/spi/wl12xx.h                |   34 -----------------------------
+ include/linux/wl12xx.h                    |   34 +++++++++++++++++++++++++++++
+ 5 files changed, 37 insertions(+), 37 deletions(-)
+ delete mode 100644 include/linux/spi/wl12xx.h
+ create mode 100644 include/linux/wl12xx.h
 
-This needs some good review as well. As its implemented here we'll
-essentially stop all TX except null data frames and probe requests as
-local->scanning is set by SCAN_SW_SCANNING through
-__ieee80211_start_scan(). One possible alternative is to do the
-drv_sw_scan_wait_constraints() check prior to calling the sw scan and
-fail the __ieee80211_start_scan() call if we need to wait. I didn't
-think this was the best thing to do at first though because the user
-will just get a scan busy error from userspace. It seemed more
-rational to queue the request in since we just have to wait until the
-driver clears its wait constraints -- or we wait too long (just a loop
-counter now on the operating channel).
+diff --git a/drivers/net/wireless/wl12xx/wl1251_sdio.c b/drivers/net/wireless/wl12xx/wl1251_sdio.c
+index b901b61..a319df1 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_sdio.c
++++ b/drivers/net/wireless/wl12xx/wl1251_sdio.c
+@@ -24,7 +24,7 @@
+ #include <linux/mmc/sdio_func.h>
+ #include <linux/mmc/sdio_ids.h>
+ #include <linux/platform_device.h>
+-#include <linux/spi/wl12xx.h>
++#include <linux/wl12xx.h>
+ #include <linux/irq.h>
+ 
+ #include "wl1251.h"
+diff --git a/drivers/net/wireless/wl12xx/wl1251_spi.c b/drivers/net/wireless/wl12xx/wl1251_spi.c
+index 27fdfaa..a6faf3e 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_spi.c
++++ b/drivers/net/wireless/wl12xx/wl1251_spi.c
+@@ -26,7 +26,7 @@
+ #include <linux/slab.h>
+ #include <linux/crc7.h>
+ #include <linux/spi/spi.h>
+-#include <linux/spi/wl12xx.h>
++#include <linux/wl12xx.h>
+ 
+ #include "wl1251.h"
+ #include "wl1251_reg.h"
+diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
+index 4cb99c5..c3fdab7 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_spi.c
++++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
+@@ -25,7 +25,7 @@
+ #include <linux/module.h>
+ #include <linux/crc7.h>
+ #include <linux/spi/spi.h>
+-#include <linux/spi/wl12xx.h>
++#include <linux/wl12xx.h>
+ #include <linux/slab.h>
+ 
+ #include "wl1271.h"
+diff --git a/include/linux/spi/wl12xx.h b/include/linux/spi/wl12xx.h
+deleted file mode 100644
+index a223ecb..0000000
+--- a/include/linux/spi/wl12xx.h
++++ /dev/null
+@@ -1,34 +0,0 @@
+-/*
+- * This file is part of wl12xx
+- *
+- * Copyright (C) 2009 Nokia Corporation
+- *
+- * Contact: Kalle Valo <kalle.valo@nokia.com>
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License
+- * version 2 as published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+- * 02110-1301 USA
+- *
+- */
+-
+-#ifndef _LINUX_SPI_WL12XX_H
+-#define _LINUX_SPI_WL12XX_H
+-
+-struct wl12xx_platform_data {
+-	void (*set_power)(bool enable);
+-	/* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
+-	int irq;
+-	bool use_eeprom;
+-};
+-
+-#endif
+diff --git a/include/linux/wl12xx.h b/include/linux/wl12xx.h
+new file mode 100644
+index 0000000..137ac89
+--- /dev/null
++++ b/include/linux/wl12xx.h
+@@ -0,0 +1,34 @@
++/*
++ * This file is part of wl12xx
++ *
++ * Copyright (C) 2009 Nokia Corporation
++ *
++ * Contact: Kalle Valo <kalle.valo@nokia.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * version 2 as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
++ * 02110-1301 USA
++ *
++ */
++
++#ifndef _LINUX_WL12XX_H
++#define _LINUX_WL12XX_H
++
++struct wl12xx_platform_data {
++	void (*set_power)(bool enable);
++	/* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
++	int irq;
++	bool use_eeprom;
++};
++
++#endif
+-- 
+1.7.0.4
 
-> @@ -544,8 +560,26 @@ static void ieee80211_scan_state_leave_oper_channel(struct ieee80211_local *loca
->        else
->                *next_delay = HZ / 10;
->
-> +       /*
-> +        * If we're not getting ACKs for our nullfuncs we're likely in bad
-> +        * shape so we should not care about missed data as we can't even
-> +        * hear the AP. We want to help roam away if we can so just go
-> +        * ahead and scan. Try getting the ACK just 3 times.
-> +        */
-> +       r = drv_sw_scan_wait_constraints(local);
-> +       if (r == -EAGAIN) {
-> +               local->scan_nullfunc_retries++;
-> +               *next_delay = HZ / 10;
-
-After some review I believe we need to set here
-local->offchannel_ps_enabled otherwise we won't resend the nullfunc.
-Also we may want to reconsider the amount of time we wait for a resend
-as in that duration we will be only letting through nullfuncs and
-probe requests.
-
-  Luis
