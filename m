@@ -1,34 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:33007 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755174Ab0H3K5w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Aug 2010 06:57:52 -0400
-To: Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wl1251: Fix queue stopping/waking for TX path
-References: <1282945699-25472-1-git-send-email-GNUtoo@no-log.org>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Mon, 30 Aug 2010 13:57:50 +0300
-In-Reply-To: <1282945699-25472-1-git-send-email-GNUtoo@no-log.org> (Denis Carikli's message of "Fri\, 27 Aug 2010 23\:48\:19 +0200")
-Message-ID: <87tymc74gh.fsf@purkki.adurom.net>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:42796 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752581Ab0HKPis (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Aug 2010 11:38:48 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4C6266FE.5000904@nokia.com>
+References: <1281478348-24833-1-git-send-email-ohad@wizery.com>
+	<1281478348-24833-10-git-send-email-ohad@wizery.com> <4C626140.3080107@nokia.com>
+	<4C6266FE.5000904@nokia.com>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Wed, 11 Aug 2010 18:38:28 +0300
+Message-ID: <AANLkTikfq+xJ9jNGorvonJur2zOGvkSsu9SePXr4mw-O@mail.gmail.com>
+Subject: Re: [PATCH v3 9/9] omap: zoom: add mmc3/wl1271 device support
+To: Roger Quadros <roger.quadros@nokia.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	San Mehat <san@google.com>, Tony Lindgren <tony@atomide.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Pandita Vikram <vikram.pandita@ti.com>,
+	Kalle Valo <kalle.valo@iki.fi>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Denis 'GNUtoo' Carikli <GNUtoo@no-log.org> writes:
+On Wed, Aug 11, 2010 at 12:01 PM, Roger Quadros <roger.quadros@nokia.com> wrote:
+> Also shouldn't .nonremovable be set to true? as this is a non-removable card
+> slot.
 
-> This patch was adapted from 06f7bc7db79fabe6b2ec16eff0f59e4acc21eb72
-> (from linus's linux-2.6 tree of kernel.org)
+This doesn't seem to have any effect on SDIO, but it can't hurt.
+
+Thanks!
+
+
 >
-> here's the original message:
->     The queue stopping/waking functionality was broken in a way that could
->     cause huge latencies in TX transfers and even cause the TX to stall in the
->     right circumstances. Correct these problems.
+> regards,
+> -roger
 >
-> Signed-off-by: Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
-
-Acked-by: Kalle Valo <kvalo@adurom.com>
-
--- 
-Kalle Valo
