@@ -1,44 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:41291 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751440Ab0HJBSe convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:44704 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752666Ab0HKNTj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Aug 2010 21:18:34 -0400
-Received: by iwn33 with SMTP id 33so4010648iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Aug 2010 18:18:34 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1281187941-7168-1-git-send-email-hauke@hauke-m.de>
-References: <1281187941-7168-1-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 9 Aug 2010 18:18:13 -0700
-Message-ID: <AANLkTi=6DY=N23HSYrMrZox+yLZpv82ki_VLBxA1uhq4@mail.gmail.com>
-Subject: Re: [PATCH 0/4] compat: miscellaneous updates for compat
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 11 Aug 2010 09:19:39 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>
+Cc: <linux-arm-kernel@lists.infradead.org>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	<akpm@linux-foundation.org>, Ido Yariv <ido@wizery.com>,
+	San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Gao Yunpeng <yunpeng.gao@intel.com>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [RFC/PATCH 4/6] sdio: add general runtime PM support
+Date: Wed, 11 Aug 2010 16:19:28 +0300
+Message-Id: <1281532770-27545-5-git-send-email-ohad@wizery.com>
+In-Reply-To: <1281532770-27545-1-git-send-email-ohad@wizery.com>
+References: <1281532770-27545-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Aug 7, 2010 at 6:32 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> This series contains miscellaneous updates for compat. They are compile
-> tested with kernel 2.6.26 to 2.6.35. ath9k and b43 were tested with
-> kernel 2.6.32.
->
-> Hauke Mehrtens (4):
->  compat: backport n_tty_ioctl_helper
->  compat: move va_format to compat-2.6.36.h
->  compat: fix compiler warning
->  compat: update compat_firmware_class.c
->
->  compat/compat-2.6.28.c         |  128 ++++++++++++++++++
->  compat/compat_firmware_class.c |  290 ++++++++++++++++++++-------------------
->  include/linux/compat-2.6.27.h  |    2 +
->  include/linux/compat-2.6.28.h  |    6 +
->  include/linux/compat-2.6.35.h  |    5 -
->  include/linux/compat-2.6.36.h  |    5 +
->  6 files changed, 290 insertions(+), 146 deletions(-)
+Add generic Runtime PM handlers to sdio.
 
-Nice, thanks applied all 4 patches to compat and the 2 other patches
-to compat-wireless. Sorry for the delay.
+When a runtime pm event kicks in, those handlers call the
+runtime pm handlers of the relevant SDIO function drivers.
 
-  Luis
+Runtime PM is still disabled by default, so this patch alone
+has no immediate effect.
+
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+---
+ drivers/mmc/core/sdio_bus.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/mmc/core/sdio_bus.c b/drivers/mmc/core/sdio_bus.c
+index 4a890dc..2e417f9 100644
+--- a/drivers/mmc/core/sdio_bus.c
++++ b/drivers/mmc/core/sdio_bus.c
+@@ -14,6 +14,7 @@
+ #include <linux/device.h>
+ #include <linux/err.h>
+ #include <linux/slab.h>
++#include <linux/pm_runtime.h>
+ 
+ #include <linux/mmc/card.h>
+ #include <linux/mmc/sdio_func.h>
+@@ -154,6 +155,14 @@ static int sdio_bus_remove(struct device *dev)
+ 	return 0;
+ }
+ 
++static const struct dev_pm_ops sdio_bus_pm_ops = {
++	SET_RUNTIME_PM_OPS(
++		pm_generic_runtime_suspend,
++		pm_generic_runtime_resume,
++		pm_generic_runtime_idle
++	)
++};
++
+ static struct bus_type sdio_bus_type = {
+ 	.name		= "sdio",
+ 	.dev_attrs	= sdio_dev_attrs,
+@@ -161,6 +170,7 @@ static struct bus_type sdio_bus_type = {
+ 	.uevent		= sdio_bus_uevent,
+ 	.probe		= sdio_bus_probe,
+ 	.remove		= sdio_bus_remove,
++	.pm		= &sdio_bus_pm_ops,
+ };
+ 
+ int sdio_register_bus(void)
+-- 
+1.7.0.4
+
