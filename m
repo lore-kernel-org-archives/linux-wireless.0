@@ -1,43 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redfish-solutions.com ([66.232.79.143]:36970 "EHLO
-	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751603Ab0HYRYA (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55546 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934044Ab0HLSmb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Aug 2010 13:24:00 -0400
-Message-ID: <4C7551A4.4040605@redfish-solutions.com>
-Date: Wed, 25 Aug 2010 10:23:48 -0700
-From: Philip Prindeville <philipp_subx@redfish-solutions.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-Subject: Re: Marshaling issues w/ compat-wireless-2010-08-19
-References: <4C746F74.70401@redfish-solutions.com>	 <1282723861.3685.4.camel@jlt3.sipsolutions.net> <1282724412.3685.5.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1282724412.3685.5.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Thu, 12 Aug 2010 14:42:31 -0400
+Subject: Re: [PATCH v2] cfg80211: fix race between sysfs and cfg80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: mbizon@freebox.fr
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1281638499.12446.498.camel@sakura.staff.proxad.net>
+References: <1279336415.1941.6.camel@kero>
+	 <1279394982.3931.0.camel@jlt3.sipsolutions.net>
+	 <1279852170.14136.0.camel@sakura.staff.proxad.net>
+	 <1281638499.12446.498.camel@sakura.staff.proxad.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 12 Aug 2010 20:42:30 +0200
+Message-ID: <1281638550.3803.4.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  On 8/25/10 1:20 AM, Johannes Berg wrote:
-> On Wed, 2010-08-25 at 10:11 +0200, Johannes Berg wrote:
->
->>> authentication: STA=f8:1e:df:1e:c2:23 auth_alg=35510 auth_transaction=79 status_code=21688 wep=1
->>> Unsupported authentication algorithm (35510)
->>>
->>>
->>> I'm wondering if some messages that are passed up to user-space via
->>> netlink from the driver might have changed their schema, i.e. adding
->>> new fields in the middle of a structure or moving fields around within
->>> a structure.
->> Looks more like a crypto problem to me, as this should be the encrypted
->> challenge in your shared key handshake. IOW, it looks like the frame
->> isn't getting decrypted by mac80211 for some reason.
-> Works fine here in hwsim, so likely to be either a driver problem (hw
-> decrypts frame, but driver doesn't tell us so), something that has been
-> fixed between then and now, or a compat specific problem.
->
-> johannes
+On Thu, 2010-08-12 at 20:41 +0200, Maxime Bizon wrote:
+> On Fri, 2010-07-23 at 04:29 +0200, Maxime Bizon wrote:
+> 
+> Hi,
+> 
+> > From: Maxime Bizon <mbizon@freebox.fr>
+> 
+> Any comment/ACK/NACK on this ?
 
-I'll bump to yesterday's baking, apply your patch, and retry.  Maybe it was a spurious issue.
+Err, it was merged a long time ago
 
-If that doesn't work, I'll try forcing h/w decryption off in the NIC.
+johannes
 
