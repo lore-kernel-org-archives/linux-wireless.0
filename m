@@ -1,74 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:54636 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750927Ab0HSN4u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Aug 2010 09:56:50 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: Re: [Regression, 2.6.36-rc1] ath9k resume problem on Acer Ferrari One
-Date: Thu, 19 Aug 2010 15:55:08 +0200
-Cc: Tejun Heo <tj@kernel.org>, LKML <linux-kernel@vger.kernel.org>,
-	"Linux-pm mailing list" <linux-pm@lists.linux-foundation.org>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Maciej Rutecki <maciej.rutecki@gmail.com>
-References: <201008190001.11342.rjw@sisk.pl> <AANLkTi=S3JE=1J9xQtBAN5hHTqGSfohi4vL82iZHMWp+@mail.gmail.com>
-In-Reply-To: <AANLkTi=S3JE=1J9xQtBAN5hHTqGSfohi4vL82iZHMWp+@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201008191555.08392.rjw@sisk.pl>
+Received: from he.sipsolutions.net ([78.46.109.217]:39518 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753579Ab0HLNhc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Aug 2010 09:37:32 -0400
+Subject: [PATCH] mac80211: remove unused don't-encrypt flag
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 12 Aug 2010 15:37:29 +0200
+Message-ID: <1281620249.3803.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, August 19, 2010, Luis R. Rodriguez wrote:
-> On Wed, Aug 18, 2010 at 3:01 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-> > Hi,
-> >
-> > While testing 2.6.36-rc1 (with a couple of fixes on top)
-> 
-> Which couple of fixes?
+From: Johannes Berg <johannes.berg@intel.com>
 
-AMD bood fix, HID suspend fix and shmem fix (two of them have already been
-merged).
+When MFP is disabled, action frames will not
+be encrypted since they are management frames
+and the only management frames that can then
+be encrypted are authentication frames.
 
-> > I noticed that the ath9k
-> > driver didn't work after resume from suspend to RAM.
-> 
-> To rule out if its an ath9k issue you can try
-> compat-wireless-2.6.36-rc1 from here:
-> 
-> http://wireless.kernel.org/en/users/Download/stable/
-> 
-> and install it on an older kernel, you can use ./scripts/driver-select
-> to only enable ath9k to compile.
+Therefore, setting the don't-encrypt flag on
+action frames is unnecessary.
 
-Well, that sounds a bit complicated and even if I know it's not ath9k,
-that's not going to help me find the real source of the problem.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/cfg.c |    2 --
+ 1 file changed, 2 deletions(-)
 
-> I've been using pm-suspend on this release for a few days now without
-> any issue but I am using an AR9003 chipset. What chipset are you
-> using? Can you provide the dmesg output upon module load?
+--- wireless-testing.orig/net/mac80211/cfg.c	2010-08-12 13:42:52.000000000 +0200
++++ wireless-testing/net/mac80211/cfg.c	2010-08-12 13:42:54.000000000 +0200
+@@ -1575,8 +1575,6 @@ static int ieee80211_action(struct wiphy
+ 			return -ENOLINK;
+ 		break;
+ 	case NL80211_IFTYPE_STATION:
+-		if (!(sdata->u.mgd.flags & IEEE80211_STA_MFP_ENABLED))
+-			flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
+ 		break;
+ 	default:
+ 		return -EOPNOTSUPP;
 
-Sure.
 
-[    9.680128] ath9k 0000:09:00.0: PCI INT A -> GSI 19 (level, low) -> IRQ 19
-[    9.689487] ath9k 0000:09:00.0: setting latency timer to 64
-[    9.706383] HDA Intel 0000:00:14.2: PCI INT A -> GSI 16 (level, low) -> IRQ 16
-[    9.805043] hda_codec: ALC272X: BIOS auto-probing.
-[    9.819389] input: HDA Digital PCBeep as /devices/pci0000:00/0000:00:14.2/input/input8
-[   10.155052] ath: EEPROM regdomain: 0x65
-[   10.155058] ath: EEPROM indicates we should expect a direct regpair map
-[   10.155066] ath: Country alpha2 being used: 00
-[   10.155070] ath: Regpair used: 0x65
-[   10.179762] phy0: Selected rate control algorithm 'ath9k_rate_control'
-[   10.181657] Registered led device: ath9k-phy0::radio
-[   10.181890] Registered led device: ath9k-phy0::assoc
-[   10.182139] Registered led device: ath9k-phy0::tx
-[   10.182339] Registered led device: ath9k-phy0::rx
-
-lspci says it's:
-
-09:00.0 Network controller: Atheros Communications Inc. AR928X Wireless Network Adapter (PCI-Express) (rev 01)
-
-Thanks,
-Rafael
