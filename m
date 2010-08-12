@@ -1,145 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:43673 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753830Ab0HKSWO (ORCPT
+Received: from mgw-sa02.nokia.com ([147.243.1.48]:55341 "EHLO
+	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751085Ab0HLE6C (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Aug 2010 14:22:14 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>
-Cc: Ido Yariv <ido@wizery.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v4 5/8] wireless: wl1271: make ref_clock configurable by board
-Date: Wed, 11 Aug 2010 21:21:50 +0300
-Message-Id: <1281550913-17633-6-git-send-email-ohad@wizery.com>
-In-Reply-To: <1281550913-17633-1-git-send-email-ohad@wizery.com>
-References: <1281550913-17633-1-git-send-email-ohad@wizery.com>
+	Thu, 12 Aug 2010 00:58:02 -0400
+Subject: Re: [PATCH 3/5] mac80211: remove unused status flag checks
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: ext Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1281530356.3674.3.camel@jlt3.sipsolutions.net>
+References: <20100810074637.034583799@sipsolutions.net>
+	 <20100810074700.385206959@sipsolutions.net>
+	 <1281527495.6475.160.camel@wimaxnb.nmp.nokia.com>
+	 <1281528765.6475.163.camel@wimaxnb.nmp.nokia.com>
+	 <1281530356.3674.3.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 12 Aug 2010 07:57:23 +0300
+Message-ID: <1281589043.6475.164.camel@wimaxnb.nmp.nokia.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wl1271 device is using a reference clock that may change
-between board to board.
+On Wed, 2010-08-11 at 14:39 +0200, ext Johannes Berg wrote:
+> On Wed, 2010-08-11 at 15:12 +0300, Juuso Oikarinen wrote:
+> 
+> > > > The decryption code verifies whether or not
+> > > > a given frame was decrypted and verified by
+> > > > hardware. This is unnecessary, as the crypto
+> > > > RX handler already does it long before the
+> > > > decryption code is even invoked, so remove
+> > > > that code to avoid confusion.
+> > > > 
+> > > > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> > > > ---
+> > > >  net/mac80211/wpa.c |   26 ++++++--------------------
+> > > >  1 file changed, 6 insertions(+), 20 deletions(-)
+> > > > 
+> > > 
+> > > This patch for some reason seems to break wl1271 WPA - association
+> > > succeeds but encrypted data transfer fails.
+> > > 
+> > > I still don't know why, but I'm looking into it.
+> > > 
+> > 
+> > It appears, that in function ieee80211_rx_h_decrypt we go here:
+> > 
+> > 	if (!is_multicast_ether_addr(hdr->addr1) && stakey) {
+> > 		rx->key = stakey;
+> > 		/* Skip decryption if the frame is not protected. */
+> > 		if (!ieee80211_has_protected(hdr->frame_control))
+> > 			return RX_CONTINUE;
+> > 
+> > And here, as the frame is protected, we go out of the if, and end up in
+> > tkip_decrypt, which with this patch no longer checks whether the frame
+> > is already decrypted.
+> > 
+> > The frame then ends up dropped.
+> 
+> Err, you're right, sorry about that. There are too many paths here. How
+> about this patch?
+> 
+> johannes
+> 
+> --- wireless-testing.orig/net/mac80211/rx.c	2010-08-11 14:37:13.000000000 +0200
+> +++ wireless-testing/net/mac80211/rx.c	2010-08-11 14:38:13.000000000 +0200
+> @@ -873,6 +873,9 @@ ieee80211_rx_h_decrypt(struct ieee80211_
+>  
+>  	if (!is_multicast_ether_addr(hdr->addr1) && stakey) {
+>  		rx->key = stakey;
+> +		if ((status->flag & RX_FLAG_DECRYPTED) &&
+> +		    (status->flag & RX_FLAG_IV_STRIPPED))
+> +			return RX_CONTINUE;
+>  		/* Skip decryption if the frame is not protected. */
+>  		if (!ieee80211_has_protected(fc))
+>  			return RX_CONTINUE;
+> 
+> 
 
-Make the ref_clock parameter configurable by the board
-files that set up the device, instead of having a hard coded
-value in the driver source itself.
+This appears to work.
 
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
----
- drivers/net/wireless/wl12xx/wl1271.h      |    1 +
- drivers/net/wireless/wl12xx/wl1271_boot.c |    9 +++++----
- drivers/net/wireless/wl12xx/wl1271_boot.h |    1 -
- drivers/net/wireless/wl12xx/wl1271_sdio.c |    1 +
- drivers/net/wireless/wl12xx/wl1271_spi.c  |    2 ++
- include/linux/wl12xx.h                    |    1 +
- 6 files changed, 10 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
-index 013eabb..f0988a4 100644
---- a/drivers/net/wireless/wl12xx/wl1271.h
-+++ b/drivers/net/wireless/wl12xx/wl1271.h
-@@ -342,6 +342,7 @@ struct wl1271 {
- 
- 	void (*set_power)(bool enable);
- 	int irq;
-+	int ref_clock;
- 
- 	spinlock_t wl_lock;
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.c b/drivers/net/wireless/wl12xx/wl1271_boot.c
-index f36430b..95c636a 100644
---- a/drivers/net/wireless/wl12xx/wl1271_boot.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
-@@ -457,17 +457,18 @@ int wl1271_boot(struct wl1271 *wl)
- {
- 	int ret = 0;
- 	u32 tmp, clk, pause;
-+	int ref_clock = wl->ref_clock;
- 
- 	wl1271_boot_hw_version(wl);
- 
--	if (REF_CLOCK == 0 || REF_CLOCK == 2 || REF_CLOCK == 4)
-+	if (ref_clock == 0 || ref_clock == 2 || ref_clock == 4)
- 		/* ref clk: 19.2/38.4/38.4-XTAL */
- 		clk = 0x3;
--	else if (REF_CLOCK == 1 || REF_CLOCK == 3)
-+	else if (ref_clock == 1 || ref_clock == 3)
- 		/* ref clk: 26/52 */
- 		clk = 0x5;
- 
--	if (REF_CLOCK != 0) {
-+	if (ref_clock != 0) {
- 		u16 val;
- 		/* Set clock type (open drain) */
- 		val = wl1271_top_reg_read(wl, OCP_REG_CLK_TYPE);
-@@ -516,7 +517,7 @@ int wl1271_boot(struct wl1271 *wl)
- 	wl1271_debug(DEBUG_BOOT, "clk2 0x%x", clk);
- 
- 	/* 2 */
--	clk |= (REF_CLOCK << 1) << 4;
-+	clk |= (ref_clock << 1) << 4;
- 	wl1271_write32(wl, DRPW_SCRATCH_START, clk);
- 
- 	wl1271_set_partition(wl, &part_table[PART_WORK]);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.h b/drivers/net/wireless/wl12xx/wl1271_boot.h
-index f829699..f73b0b1 100644
---- a/drivers/net/wireless/wl12xx/wl1271_boot.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_boot.h
-@@ -46,7 +46,6 @@ struct wl1271_static_data {
- /* delay between retries */
- #define INIT_LOOP_DELAY 50
- 
--#define REF_CLOCK            2
- #define WU_COUNTER_PAUSE_VAL 0x3FF
- #define WELP_ARM_COMMAND_VAL 0x4
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-index 228f5af..2f558a6 100644
---- a/drivers/net/wireless/wl12xx/wl1271_sdio.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-@@ -296,6 +296,7 @@ static int __devinit wl1271_probe(struct sdio_func *func,
- 	}
- 
- 	wl->irq = wlan_data->irq;
-+	wl->ref_clock = wlan_data->board_ref_clock;
- 
- 	ret = request_irq(wl->irq, wl1271_irq, 0, DRIVER_NAME, wl);
- 	if (ret < 0) {
-diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
-index de56d8d..ced0a9e 100644
---- a/drivers/net/wireless/wl12xx/wl1271_spi.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
-@@ -372,6 +372,8 @@ static int __devinit wl1271_probe(struct spi_device *spi)
- 		goto out_free;
- 	}
- 
-+	wl->ref_clock = pdata->board_ref_clock;
-+
- 	wl->irq = spi->irq;
- 	if (wl->irq < 0) {
- 		wl1271_error("irq missing in platform data");
-diff --git a/include/linux/wl12xx.h b/include/linux/wl12xx.h
-index 137ac89..ef6eed9 100644
---- a/include/linux/wl12xx.h
-+++ b/include/linux/wl12xx.h
-@@ -29,6 +29,7 @@ struct wl12xx_platform_data {
- 	/* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
- 	int irq;
- 	bool use_eeprom;
-+	int board_ref_clock;
- };
- 
- #endif
--- 
-1.7.0.4
+-Juus
 
