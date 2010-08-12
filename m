@@ -1,42 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw-sa02.nokia.com ([147.243.1.48]:45355 "EHLO
-	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750972Ab0HKKwY (ORCPT
+Received: from smtp.nokia.com ([192.100.122.230]:52185 "EHLO
+	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932810Ab0HLGsp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Aug 2010 06:52:24 -0400
-Message-ID: <4C6280DA.70205@nokia.com>
-Date: Wed, 11 Aug 2010 13:52:10 +0300
-From: Roger Quadros <roger.quadros@nokia.com>
-MIME-Version: 1.0
-To: "Hunter Adrian (Nokia-MS/Helsinki)" <adrian.hunter@nokia.com>
-CC: Ohad Ben-Cohen <ohad@wizery.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	San Mehat <san@google.com>, Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>
-Subject: Re: [PATCH v3 8/9] omap: hsmmc: split mmc23 power control
-References: <1281478348-24833-1-git-send-email-ohad@wizery.com> <1281478348-24833-9-git-send-email-ohad@wizery.com> <4C6275F3.6030108@nokia.com>
-In-Reply-To: <4C6275F3.6030108@nokia.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 12 Aug 2010 02:48:45 -0400
+Subject: Re: [PATCH (for some future time)] drivers/net: Convert unbounded
+ kzalloc calls to kcalloc
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Joe Perches <joe@perches.com>
+Cc: netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <1281546168.3976.39.camel@Joe-Laptop.home>
+References: <1281546168.3976.39.camel@Joe-Laptop.home>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 12 Aug 2010 09:48:14 +0300
+Message-ID: <1281595694.4440.2.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/11/2010 01:05 PM, Hunter Adrian (Nokia-MS/Helsinki) wrote:
-> Ohad Ben-Cohen wrote:
->> Prepare for mmc3 regulator power control by splitting the power
->> control functions of mmc2 and mmc3, and expecting mmc3 to have
->> a single, dedicated, regulator support.
->
-> Why?  Can't the controller be connected to an eMMC with 2 power
-> supplies?  At a glance, it is not obvious why this patch is needed.
->
-I agree with Adrian. This patch is not required at all.
+On Wed, 2010-08-11 at 19:02 +0200, ext Joe Perches wrote:
+> These changes may be slightly safer in some instances.
+> 
+> There are other kzalloc calls with a multiply, but those
+> calls are typically "small fixed #" * sizeof(some pointer)"
+> and those are not converted.
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
+
+[...]
+
+>  drivers/net/wireless/wl12xx/wl1271_scan.c |    2 +-
+
+[...]
+
+> diff --git a/drivers/net/wireless/wl12xx/wl1271_scan.c b/drivers/net/wireless/wl12xx/wl1271_scan.c
+> index fec43ee..30dc100 100644
+> --- a/drivers/net/wireless/wl12xx/wl1271_scan.c
+> +++ b/drivers/net/wireless/wl12xx/wl1271_scan.c
+> @@ -248,7 +248,7 @@ int wl1271_scan(struct wl1271 *wl, const u8 *ssid, size_t ssid_len,
+> 
+>         wl->scan.req = req;
+> 
+> -       wl->scan.scanned_ch = kzalloc(req->n_channels *
+> +       wl->scan.scanned_ch = kcalloc(req->n_channels,
+>                                       sizeof(*wl->scan.scanned_ch),
+>                                       GFP_KERNEL);
+>         wl1271_scan_stm(wl);
+
+For the wl1271 part:
+
+Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
+
+-- 
+Cheers,
+Luca.
+
