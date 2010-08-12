@@ -1,53 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:50730 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757936Ab0HJVjp convert rfc822-to-8bit (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:39651 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751475Ab0HLGkj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Aug 2010 17:39:45 -0400
-Received: by eya25 with SMTP id 25so4106809eya.19
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Aug 2010 14:39:44 -0700 (PDT)
+	Thu, 12 Aug 2010 02:40:39 -0400
 MIME-Version: 1.0
-In-Reply-To: <AANLkTim4_HoHwdhGqAZqcGf2oq7boktdZFW4-w5DpdDa@mail.gmail.com>
-References: <AANLkTim4_HoHwdhGqAZqcGf2oq7boktdZFW4-w5DpdDa@mail.gmail.com>
-From: Andrew Lutomirski <luto@mit.edu>
-Date: Tue, 10 Aug 2010 17:39:24 -0400
-Message-ID: <AANLkTinuYOvwNZAFgq67f4XBL4YQ+b2z4EBMcmvbMYi3@mail.gmail.com>
-Subject: [WTF, maintainers] Re: *PING* iwlagn 2.6.35: "BA scd_flow 0 does not
-	match txq_id 10" regression
-To: linux-wireless@vger.kernel.org, wey-yi.w.guy@intel.com
-Cc: linville@tuxdriver.com
+In-Reply-To: <20100811212513.GC827@n2100.arm.linux.org.uk>
+References: <1281550913-17633-1-git-send-email-ohad@wizery.com>
+	<1281550913-17633-4-git-send-email-ohad@wizery.com> <5A47E75E594F054BAF48C5E4FC4B92AB0324110ABD@dbde02.ent.ti.com>
+	<20100811184742.GA21778@nokia.com> <5A47E75E594F054BAF48C5E4FC4B92AB0324110AC1@dbde02.ent.ti.com>
+	<20100811185724.GD21778@nokia.com> <5A47E75E594F054BAF48C5E4FC4B92AB0324110AC7@dbde02.ent.ti.com>
+	<20100811212513.GC827@n2100.arm.linux.org.uk>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Thu, 12 Aug 2010 09:40:19 +0300
+Message-ID: <AANLkTikDhzGVFZhNJZic9xYX9bL_NhOW=4LS-cTFSG0i@mail.gmail.com>
+Subject: Re: [PATCH v4 3/8] wireless: wl1271: add platform driver to get board
+	data
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: "DebBarma, Tarun Kanti" <tarun.kanti@ti.com>,
+	"felipe.balbi@nokia.com" <felipe.balbi@nokia.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	"Pandita, Vikram" <vikram.pandita@ti.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"Quadros Roger (Nokia-MS/Helsinki)" <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	Nicolas Pitre <nico@fluxnic.net>, San Mehat <san@google.com>,
+	"Chikkature Rajashekar, Madhusudhan" <madhu.cr@ti.com>,
+	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	Ido Yariv <ido@wizery.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 26, 2010 at 4:02 PM, Andrew Lutomirski <luto@mit.edu> wrote:
-> There's a regression in 2.6.35 where the connection breaks and iwlagn
-> writes a bunch of:
->
-> iwlagn 0000:03:00.0: BA scd_flow 0 does not match txq_id 10
->
-> This is confirmed [1] and a patch supposedly exists.  Since this
-> breaks at least two people's wireless and 2.6.35 is about to be
-> released, can we see the patches?
->
-> Thanks,
-> Andy
->
-> [1] http://article.gmane.org/gmane.linux.kernel.wireless.general/53552
+On Thu, Aug 12, 2010 at 12:25 AM, Russell King - ARM Linux
+<linux@arm.linux.org.uk> wrote:
+>I've outlined a far simpler and easiler solution
+> which avoids this kind of abuse, and given suggestions on how to extend
+> it to support multiple instances.
 >
 
-This regression was reported on July 21 and confirmed, supposedly with
-a patch available, on July 24 (or maybe July 23).  On July 26 I pinged
-the list because I'm affected as well.
+Do you mean:
+http://www.spinics.net/lists/arm-kernel/msg95338.html
+?
 
-It's now August 10 and both 2.6.35 and 2.5.35.1 have been released and
-the bug is still there.  WTF happened?  (I admit I haven't actually
-tested 2.6.35.1 because it's still compiling, but I see nothing to
-suggest that it's been fixed.)
+I was under the impression you eventually discarded that approach in that post.
+
+Please tell me if you still support it,
 
 Thanks,
-Andy
-
-P.S.  iwlagn malfunctions for me *all the time*.  I'd love to help
-debug but it's hard when no one pays attention and when the bugs are
-all hard to trigger.  Any volunteers to help?
+Ohad.
