@@ -1,165 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:43673 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753554Ab0HKSWA (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:64575 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755778Ab0HLHZl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Aug 2010 14:22:00 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>
-Cc: Ido Yariv <ido@wizery.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v4 1/8] wireless: wl1271: make wl12xx.h common to both spi and sdio
-Date: Wed, 11 Aug 2010 21:21:46 +0300
-Message-Id: <1281550913-17633-2-git-send-email-ohad@wizery.com>
-In-Reply-To: <1281550913-17633-1-git-send-email-ohad@wizery.com>
-References: <1281550913-17633-1-git-send-email-ohad@wizery.com>
+	Thu, 12 Aug 2010 03:25:41 -0400
+Received: by qyk5 with SMTP id 5so1235538qyk.19
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Aug 2010 00:25:40 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1281597845-6342-1-git-send-email-vnatarajan@atheros.com>
+References: <1281597845-6342-1-git-send-email-vnatarajan@atheros.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 12 Aug 2010 00:25:20 -0700
+Message-ID: <AANLkTi=Mr-vf+4yf5Zribnpu8qLFCz21kF3bi4f4tBZ-@mail.gmail.com>
+Subject: Re: [PATCH] ath9k_htc: Fix disconnect issue in HT40 mode.
+To: Vivek Natarajan <vnatarajan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move wl12xx.h outside of the spi-specific location,
-so it can be shared with both spi and sdio solutions.
+On Thu, Aug 12, 2010 at 12:24 AM, Vivek Natarajan
+<vnatarajan@atheros.com> wrote:
+> Set WLAN_RC_40_FLAG only if the current channel configuration
+> is HT40 enabled.
 
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
----
- drivers/net/wireless/wl12xx/wl1251_sdio.c |    2 +-
- drivers/net/wireless/wl12xx/wl1251_spi.c  |    2 +-
- drivers/net/wireless/wl12xx/wl1271_spi.c  |    2 +-
- include/linux/spi/wl12xx.h                |   34 -----------------------------
- include/linux/wl12xx.h                    |   34 +++++++++++++++++++++++++++++
- 5 files changed, 37 insertions(+), 37 deletions(-)
- delete mode 100644 include/linux/spi/wl12xx.h
- create mode 100644 include/linux/wl12xx.h
+What does this fix? Is this a stable fix, if so why?
 
-diff --git a/drivers/net/wireless/wl12xx/wl1251_sdio.c b/drivers/net/wireless/wl12xx/wl1251_sdio.c
-index b901b61..a319df1 100644
---- a/drivers/net/wireless/wl12xx/wl1251_sdio.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_sdio.c
-@@ -24,7 +24,7 @@
- #include <linux/mmc/sdio_func.h>
- #include <linux/mmc/sdio_ids.h>
- #include <linux/platform_device.h>
--#include <linux/spi/wl12xx.h>
-+#include <linux/wl12xx.h>
- #include <linux/irq.h>
- 
- #include "wl1251.h"
-diff --git a/drivers/net/wireless/wl12xx/wl1251_spi.c b/drivers/net/wireless/wl12xx/wl1251_spi.c
-index 27fdfaa..a6faf3e 100644
---- a/drivers/net/wireless/wl12xx/wl1251_spi.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_spi.c
-@@ -26,7 +26,7 @@
- #include <linux/slab.h>
- #include <linux/crc7.h>
- #include <linux/spi/spi.h>
--#include <linux/spi/wl12xx.h>
-+#include <linux/wl12xx.h>
- 
- #include "wl1251.h"
- #include "wl1251_reg.h"
-diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
-index 4cb99c5..c3fdab7 100644
---- a/drivers/net/wireless/wl12xx/wl1271_spi.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
-@@ -25,7 +25,7 @@
- #include <linux/module.h>
- #include <linux/crc7.h>
- #include <linux/spi/spi.h>
--#include <linux/spi/wl12xx.h>
-+#include <linux/wl12xx.h>
- #include <linux/slab.h>
- 
- #include "wl1271.h"
-diff --git a/include/linux/spi/wl12xx.h b/include/linux/spi/wl12xx.h
-deleted file mode 100644
-index a223ecb..0000000
---- a/include/linux/spi/wl12xx.h
-+++ /dev/null
-@@ -1,34 +0,0 @@
--/*
-- * This file is part of wl12xx
-- *
-- * Copyright (C) 2009 Nokia Corporation
-- *
-- * Contact: Kalle Valo <kalle.valo@nokia.com>
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * version 2 as published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-- * General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-- * 02110-1301 USA
-- *
-- */
--
--#ifndef _LINUX_SPI_WL12XX_H
--#define _LINUX_SPI_WL12XX_H
--
--struct wl12xx_platform_data {
--	void (*set_power)(bool enable);
--	/* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
--	int irq;
--	bool use_eeprom;
--};
--
--#endif
-diff --git a/include/linux/wl12xx.h b/include/linux/wl12xx.h
-new file mode 100644
-index 0000000..137ac89
---- /dev/null
-+++ b/include/linux/wl12xx.h
-@@ -0,0 +1,34 @@
-+/*
-+ * This file is part of wl12xx
-+ *
-+ * Copyright (C) 2009 Nokia Corporation
-+ *
-+ * Contact: Kalle Valo <kalle.valo@nokia.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * version 2 as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-+ * 02110-1301 USA
-+ *
-+ */
-+
-+#ifndef _LINUX_WL12XX_H
-+#define _LINUX_WL12XX_H
-+
-+struct wl12xx_platform_data {
-+	void (*set_power)(bool enable);
-+	/* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
-+	int irq;
-+	bool use_eeprom;
-+};
-+
-+#endif
--- 
-1.7.0.4
-
+  Luis
