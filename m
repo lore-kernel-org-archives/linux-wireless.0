@@ -1,70 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:44349 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934653Ab0HNJpk convert rfc822-to-8bit (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:19201 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934143Ab0HMJrv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Aug 2010 05:45:40 -0400
-MIME-Version: 1.0
-In-Reply-To: <20100811203216.GA25168@hera.kernel.org>
-References: <20100811203216.GA25168@hera.kernel.org>
-Date: Sat, 14 Aug 2010 10:45:39 +0100
-Message-ID: <AANLkTimX1MnVtbhrHFx7-jTA5XRpSvWn2uF3OiJU8WYM@mail.gmail.com>
-Subject: Re: [PATCH] orinoco: Fix walking past the end of the buffer
-From: Dave Kilroy <kilroyd@googlemail.com>
-To: Denis Kirjanov <dkirjanov@kernel.org>
-Cc: linville@tuxdriver.com, proski@gnu.org,
-	hermes@gibson.dropbear.id.au, davem@davemloft.net,
-	linux-wireless@vger.kernel.org,
-	orinoco-devel@lists.sourceforge.net, netdev@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 13 Aug 2010 05:47:51 -0400
+From: ext-yuri.kululin@nokia.com
+To: kvalo@adurom.com
+Cc: linux-wireless@vger.kernel.org, ameya.palande@nokia.com,
+	ext-yuri.kululin@nokia.com
+Subject: [PATCH 1/1] wl1251: fix trigger scan timeout usage
+Date: Fri, 13 Aug 2010 13:46:12 +0400
+Message-Id: <8ca8a9b93496d16bc8b5956c3a7976c08b95282c.1281691901.git.ext-yuri.kululin@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 11, 2010 at 9:32 PM, Denis Kirjanov <dkirjanov@kernel.org> wrote:
-> diff --git a/drivers/net/wireless/orinoco/hw.c b/drivers/net/wireless/orinoco/hw.c
-> index 077baa8..191bc03 100644
-> --- a/drivers/net/wireless/orinoco/hw.c
-> +++ b/drivers/net/wireless/orinoco/hw.c
-> @@ -765,9 +765,12 @@ int orinoco_hw_get_act_bitrate(struct orinoco_private *priv, int *bitrate)
->                        if (bitrate_table[i].intersil_txratectrl == val)
->                                break;
->
-> -               if (i >= BITRATE_TABLE_SIZE)
-> +               if (i >= BITRATE_TABLE_SIZE) {
->                        printk(KERN_INFO "%s: Unable to determine current bitrate (0x%04hx)\n",
->                               priv->ndev->name, val);
-> +                       *bitrate = 100001; /* Mark as invalid */
+From: Yuri Kululin <ext-yuri.kululin@nokia.com>
 
-We should propogate the failure by returning an error in the return
-code rather than a cryptic bitrate value. The calling function(s)
-should then propogate the error through wext/cfg80211 as appropriate.
+Use appropriate command (CMD_TRIGGER_SCAN_TO) instead of scan command
+(CMD_SCAN) to configure trigger scan timeout.
 
-> +                       break;
-> +               }
->
->                *bitrate = bitrate_table[i].bitrate * 100000;
->                break;
+This was broken in commit 3a98c30f3e8bb1f32b5bcb74a39647b3670de275.
 
-We can also make the structure easier to understand by setting the
-bitrate within the for loop. Something like the following (I only have
-access to gmail ATM, so can't format a proper patch):
+Cc: stable@kernel.org
+Signed-off-by: Yuri Ershov <ext-yuri.ershov@nokia.com>
+Signed-off-by: Yuri Kululin <ext-yuri.kululin@nokia.com>
+---
+ drivers/net/wireless/wl12xx/wl1251_cmd.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-		for (i = 0; i < BITRATE_TABLE_SIZE; i++)
-			if (bitrate_table[i].intersil_txratectrl == val) {
-				*bitrate = bitrate_table[i].bitrate * 100000;
-				break;
-			}
+diff --git a/drivers/net/wireless/wl12xx/wl1251_cmd.c b/drivers/net/wireless/wl12xx/wl1251_cmd.c
+index a37b30c..ce3722f 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_cmd.c
++++ b/drivers/net/wireless/wl12xx/wl1251_cmd.c
+@@ -484,7 +484,7 @@ int wl1251_cmd_trigger_scan_to(struct wl1251 *wl, u32 timeout)
+ 
+ 	cmd->timeout = timeout;
+ 
+-	ret = wl1251_cmd_send(wl, CMD_SCAN, cmd, sizeof(*cmd));
++	ret = wl1251_cmd_send(wl, CMD_TRIGGER_SCAN_TO, cmd, sizeof(*cmd));
+ 	if (ret < 0) {
+ 		wl1251_error("cmd trigger scan to failed: %d", ret);
+ 		goto out;
+-- 
+1.7.1.1
 
-		if (i >= BITRATE_TABLE_SIZE) {
-			printk(KERN_INFO "%s: Unable to determine current bitrate (0x%04hx)\n",
-			       priv->ndev->name, val);
-			err = -EIO; /* maybe chose a better value... */
-		}
-
-		break;
-
-Could you update the patch along those lines please?
-
-Thanks,
-
-Dave.
