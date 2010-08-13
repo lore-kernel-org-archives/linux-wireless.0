@@ -1,94 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from colo4.heeltoe.com ([207.210.93.145]:59782 "EHLO
-	colo4.heeltoe.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751330Ab0HZTSa (ORCPT
+Received: from xenotime.net ([72.52.115.56]:37180 "HELO xenotime.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1761776Ab0HMQXO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Aug 2010 15:18:30 -0400
-To: Dan Williams <dcbw@redhat.com>
-Subject: Re: [rfc patch] libertas: fix if_spi_prog_helper_firmware()
-From: Paul Fox <pgf@laptop.org>
-cc: Dan Carpenter <error27@gmail.com>,
-	Mike Frysinger <vapier.adi@gmail.com>,
-	libertas-dev@lists.infradead.org, kernel-janitors@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Ben Hutchings <ben@decadent.org.uk>
-In-reply-to: <1282837725.3642.1.camel@dcbw.foobar.com> (sfid-20100826_114702_532051_0C06391A)
-References: <20100824120743.GG29330@bicker> <1282837725.3642.1.camel@dcbw.foobar.com> (sfid-20100826_114702_532051_0C06391A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Date: Thu, 26 Aug 2010 14:52:13 -0400
-Message-ID: <6529.1282848733@foxharp.boston.ma.us>
+	Fri, 13 Aug 2010 12:23:14 -0400
+Received: from chimera.site ([173.50.240.230]) by xenotime.net for <linux-wireless@vger.kernel.org>; Fri, 13 Aug 2010 09:23:09 -0700
+Date: Fri, 13 Aug 2010 09:23:09 -0700
+From: Randy Dunlap <rdunlap@xenotime.net>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Greg KH <greg@kroah.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Mike Frysinger <vapier@gentoo.org>,
+	Jesse Barnes <jbarnes@virtuousgeek.org>,
+	Kevin Curtis <kevin.curtis@farsite.co.uk>,
+	Phillip Lougher <phillip@lougher.demon.co.uk>,
+	Faisal Latif <faisal.latif@intel.com>,
+	Chien Tung <chien.tin.tung@intel.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Samuel Ortiz <samuel.ortiz@intel.com>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, x86@kernel.org,
+	linux-rdma@vger.kernel.org
+Subject: Re: i386 allmodconfig, current mainline
+Message-Id: <20100813092309.fd54fc28.rdunlap@xenotime.net>
+In-Reply-To: <AANLkTimtZ7H=rT68V6UGC2GBky8z9VJ5m6-pwFHfm7yw@mail.gmail.com>
+References: <20100809164346.6e30cf8c.akpm@linux-foundation.org>
+	<20100810101521.0dcd4393.sfr@canb.auug.org.au>
+	<AANLkTimtZ7H=rT68V6UGC2GBky8z9VJ5m6-pwFHfm7yw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-dan wrote:
- > On Tue, 2010-08-24 at 14:07 +0200, Dan Carpenter wrote:
- > > The indenting is not correct here.  I don't have this hardware and I'm
- > > just guessing as to what was intended.  I think that if there is an
- > > error we should return an error code, but if there isn't an error we
- > > should return success directly without releasing the firmware.
- > > 
- > > Signed-off-by: Dan Carpenter <error27@gmail.com>
- > 
- > I've significantly changed firmware loading in wireless-testing which
- > should hit the next merge window.  It won't have this problem, and it
- > does correctly release the firmware later on.  It does preserve the
- > existing behavior of releasing the firmware after load, instead of
- > keeping it around for resume.  If there are fixes I think they should be
- > against wireless-testing actually since that's what's "next".
+On Tue, 10 Aug 2010 18:53:20 +0200 Geert Uytterhoeven wrote:
 
-as part of the firmware and suspend/resume topic:  on the XO 1.5
-laptop, running 2.6.31, we see an apparent leak of the firmware on
-every suspend/resume where the card is powered down.  (our driver
-keeps the wlan module powered acros s/r if there are wakeup events
-configured, otherwise it powers down -- i can't remember if that change
-has been upstreamed or not.) our trac ticket is here: 
-http://dev.laptop.org/ticket/9928
+> On Tue, Aug 10, 2010 at 02:15, Stephen Rothwell <sfr@canb.auug.org.au> wrote:
+> > On Mon, 9 Aug 2010 16:43:46 -0700 Andrew Morton <akpm@linux-foundation.org> wrote:
+> >>
+> >> Guys.  What's goin' on out there?
+> >
+> > I guess we are all so up to date that noone does 32 bit builds any
+> > more ...  Also noone is bothering to look at the build logs:
+> >
+> > linus tree: http://kisskb.ellerman.id.au/kisskb/branch/3/
+> > linux-next: http://kisskb.ellerman.id.au/kisskb/branch/9/
+> 
+> Yeah, we have build failures migrating from -next to -linus :-(
+> 
+> BTW, still no one has commented on http://lkml.org/lkml/2010/7/13/378?
 
-i got as far as deciding that the leak wasn't in the libertas driver
-itself before we decided we had more important fish to fry, so our
-investigation is/was incomplete.  from what i found, it seemed like
-perhaps the leak would go away if the driver cached a copy of the
-firmware, as other drivers do.  but that still leaves the suspicion
-that there's another copy hanging around in the download path still.
+OK.
 
-paul
+The diff (regression) script output looks useful to me.
+The log summary is still quite (too) verbose, or maybe that's partly due
+to the number of warnings & errors.  :(
 
- > 
- > Dan
- > 
- > > diff --git a/drivers/net/wireless/libertas/if_spi.c 
- > b/drivers/net/wireless/libertas/if_spi.c
- > > index fe3f080..123a541 100644
- > > --- a/drivers/net/wireless/libertas/if_spi.c
- > > +++ b/drivers/net/wireless/libertas/if_spi.c
- > > @@ -471,9 +471,12 @@ static int if_spi_prog_helper_firmware(struct 
- > if_spi_card *card)
- > >  		goto release_firmware;
- > >  	err = spu_write_u16(card, IF_SPI_CARD_INT_CAUSE_REG,
- > >  				IF_SPI_CIC_CMD_DOWNLOAD_OVER);
- > > +	if (err)
- > >  		goto release_firmware;
- > >  
- > > -	lbs_deb_spi("waiting for helper to boot...\n");
- > > +	lbs_deb_spi("helper firmware loaded...\n");
- > > +
- > > +	return 0;
- > >  
- > >  release_firmware:
- > >  	release_firmware(firmware);
- > > --
- > > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
- > > the body of a message to majordomo@vger.kernel.org
- > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
- > 
- > 
- > 
- > _______________________________________________
- > libertas-dev mailing list
- > libertas-dev@lists.infradead.org
- > http://lists.infradead.org/mailman/listinfo/libertas-dev
 
-=---------------------
- paul fox, pgf@laptop.org
+Maybe someone could look at http://www.xenotime.net/linux/scripts/buildsummary.pl also.
+
+Here is today's linux-next *i386* build summary, short mode (totals only):
+
+> buildsummary.pl -t build*.out | more
+build-r5372.out: totals: error/warning files: 27, errors: 3, warnings: 44, Section mismatches: 36
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build-r5373.out: totals: error/warning files: 10, errors: 3, warnings: 14, Section mismatches: 36
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build-r5374.out: totals: error/warning files: 29, errors: 0, warnings: 45, Section mismatches: 38
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build-r5375.out: totals: error/warning files: 18, errors: 3, warnings: 36, Section mismatches: 38
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build-r5377.out: totals: error/warning files: 21, errors: 0, warnings: 43, Section mismatches: 67
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build-r5380.out: totals: error/warning files: 16, errors: 4, warnings: 22, Section mismatches: 81
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build-r5381.out: totals: error/warning files: 17, errors: 3, warnings: 75, Section mismatches: 88
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build-r5383.out: totals: error/warning files: 11, errors: 0, warnings: 32, Section mismatches: 130
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build-r5384.out: totals: error/warning files: 23, errors: 3, warnings: 47, Section mismatches: 150
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build-r5385.out: totals: error/warning files: 6, errors: 12, warnings: 9, Section mismatches: 160
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build-r5386.out: totals: error/warning files: 10, errors: 1, warnings: 53, Section mismatches: 163
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build-r5387.out: totals: error/warning files: 18, errors: 0, warnings: 45, Section mismatches: 164
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build-r5388.out: totals: error/warning files: 7, errors: 1, warnings: 8, Section mismatches: 164
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build-r5389.out: totals: error/warning files: 43, errors: 0, warnings: 80, Section mismatches: 167
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build-r5390.out: totals: error/warning files: 12, errors: 0, warnings: 18, Section mismatches: 167
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build-r5391.out: totals: error/warning files: 46, errors: 0, warnings: 77, Section mismatches: 170
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build-r5392.out: totals: error/warning files: 15, errors: 12, warnings: 31, Section mismatches: 184
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build-r5393.out: totals: error/warning files: 15, errors: 0, warnings: 23, Section mismatches: 187
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build-r5394.out: totals: error/warning files: 76, errors: 0, warnings: 141, Section mismatches: 190
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build-r5395.out: totals: error/warning files: 11, errors: 0, warnings: 18, Section mismatches: 192
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+build-r5396.out: totals: error/warning files: 22, errors: 0, warnings: 28, Section mismatches: 193
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
