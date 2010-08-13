@@ -1,49 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52685 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753598Ab0H3OmB (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:38593 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753935Ab0HMTDI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Aug 2010 10:42:01 -0400
-Subject: Re: mac80211 using different tx queue for frames with same TID and
- RA
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Krishna Kumar <krkumar2@in.ibm.com>, netdev@vger.kernel.org
-In-Reply-To: <201008301634.10122.helmut.schaa@googlemail.com>
-References: <201008301601.12971.helmut.schaa@googlemail.com>
-	 <1283177480.3691.66.camel@jlt3.sipsolutions.net>
-	 <201008301634.10122.helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 30 Aug 2010 16:41:47 +0200
-Message-ID: <1283179307.3691.73.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 13 Aug 2010 15:03:08 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id BFB574195D
+	for <linux-wireless@vger.kernel.org>; Fri, 13 Aug 2010 15:02:55 -0400 (EDT)
+Subject: Compat-wireless release for 2010-08-13 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100813190304.3D8D641133@repository3.orbit-lab.org>
+Date: Fri, 13 Aug 2010 15:03:04 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-08-30 at 16:34 +0200, Helmut Schaa wrote:
-> Am Monday 30 August 2010 schrieb Johannes Berg:
-> > On Mon, 2010-08-30 at 16:01 +0200, Helmut Schaa wrote:
-> > 
-> > > while debugging an issue in rt2x00 I've discovered that in some cases frames
-> > > with the same TID and RA end up in different tx queues (which causes problems
-> > > in rt2x00 when using aggregation).
-> > > 
-> > > Is this behavior expected and we need to handle that case in rt2x00 or is it
-> > > more likely a bug? At least I thought the select_queue implementation in
-> > > mac80211 was meant to always pick the same tx queue for skbs with the same
-> > > priority and hence it shouldn't happen that frames with the same TID are
-> > > queued into different tx queues.
-> > 
-> > Indeed, that seems like a bug. I don't see how this can happen though,
-> > since the code _appears_ to not use the sk_tx_queue_mapping when an
-> > ndo_select_queue method is present.
-> 
-> Hmm, this issue seems to only happen when the wifi interface (AP mode)
-> is part of a bridge and the frame is tx'ed through the bridge.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   286bff9..16383b1  history    -> origin/history
+ + ab5f7cf...f55f020 master     -> origin/master  (forced update)
+   5af568c..ad41a1e  stable     -> origin/stable
+ * [new tag]         next-20100813 -> next-20100813
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
 
-Ok, I guess in that case it may actually have a socket TX queue mapping
-already? Seems bogus to use it though.
+compat-wireless code metrics
 
-johannes
-
+    494644 - Total upstream lines of code being pulled
