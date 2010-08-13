@@ -1,58 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:42110 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752635Ab0H0SlK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 14:41:10 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/7] compat-wireless: do not use needed_headroom
-Date: Fri, 27 Aug 2010 20:40:47 +0200
-Message-Id: <1282934453-18093-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1282934453-18093-1-git-send-email-hauke@hauke-m.de>
-References: <1282934453-18093-1-git-send-email-hauke@hauke-m.de>
+Received: from purkki.adurom.net ([80.68.90.206]:45525 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755109Ab0HMMdH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Aug 2010 08:33:07 -0400
+To: ext-yuri.kululin@nokia.com
+Cc: linux-wireless@vger.kernel.org, ameya.palande@nokia.com
+Subject: Re: [PATCH 1/1] wl1251: fix trigger scan timeout usage
+References: <8ca8a9b93496d16bc8b5956c3a7976c08b95282c.1281691901.git.ext-yuri.kululin@nokia.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Fri, 13 Aug 2010 15:33:05 +0300
+In-Reply-To: <8ca8a9b93496d16bc8b5956c3a7976c08b95282c.1281691901.git.ext-yuri.kululin@nokia.com> (ext-yuri kululin's message of "Fri\, 13 Aug 2010 13\:46\:12 +0400")
+Message-ID: <87bp96bsla.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-needed_headroom was introduced in kernel 2.6.26.
-Resize hard_header_len instead as it was done before using
-needed_headroom.
+ext-yuri.kululin@nokia.com writes:
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/01-netdev.patch |   11 ++++++++++-
- 1 files changed, 10 insertions(+), 1 deletions(-)
+> From: Yuri Kululin <ext-yuri.kululin@nokia.com>
+>
+> Use appropriate command (CMD_TRIGGER_SCAN_TO) instead of scan command
+> (CMD_SCAN) to configure trigger scan timeout.
+>
+> This was broken in commit 3a98c30f3e8bb1f32b5bcb74a39647b3670de275.
 
-diff --git a/patches/01-netdev.patch b/patches/01-netdev.patch
-index bb6b30d..e168105 100644
---- a/patches/01-netdev.patch
-+++ b/patches/01-netdev.patch
-@@ -278,7 +278,7 @@ without creating a headache on maintenance of the pathes.
-  	dev->tx_queue_len = 0;
- --- a/drivers/net/wireless/orinoco/main.c
- +++ b/drivers/net/wireless/orinoco/main.c
--@@ -2268,9 +2268,9 @@ int orinoco_if_add(struct orinoco_privat
-+@@ -2268,14 +2268,18 @@ int orinoco_if_add(struct orinoco_privat
-  #endif
-  	/* Default to standard ops if not set */
-  	if (ops)
-@@ -290,6 +290,15 @@ without creating a headache on maintenance of the pathes.
-  
-  	/* we use the default eth_mac_addr for setting the MAC addr */
-  
-+ 	/* Reserve space in skb for the SNAP header */
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,26))
-+ 	dev->needed_headroom = ENCAPS_OVERHEAD;
-++#else
-++	dev->hard_header_len += ENCAPS_OVERHEAD;
-++#endif
-+ 
-+ 	netif_carrier_off(dev);
-+ 
- --- a/net/bluetooth/bnep/netdev.c
- +++ b/net/bluetooth/bnep/netdev.c
- @@ -170,8 +170,12 @@ static inline int bnep_net_proto_filter(
+Good find. I broke this last January, sorry about that. 
+
+John, the patch fixes this bug:
+
+https://bugzilla.kernel.org/show_bug.cgi?id=16554
+
+If possible, try to get this to 2.6.36. Otherwise wl1251 is more or
+less broken. I'll make sure that this goes to stable releases as well.
+
+> Cc: stable@kernel.org
+> Signed-off-by: Yuri Ershov <ext-yuri.ershov@nokia.com>
+> Signed-off-by: Yuri Kululin <ext-yuri.kululin@nokia.com>
+
+Acked-by: Kalle Valo <kvalo@adurom.com>
+
+Thanks.
+
 -- 
-1.7.0.4
-
+Kalle Valo
