@@ -1,56 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:54498 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S933249Ab0HDTDj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Aug 2010 15:03:39 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 4B7C141959
-	for <linux-wireless@vger.kernel.org>; Wed,  4 Aug 2010 15:02:30 -0400 (EDT)
-Subject: Compat-wireless release for 2010-08-04 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20100804190337.6AAC2408F7@repository3.orbit-lab.org>
-Date: Wed,  4 Aug 2010 15:03:37 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mail.atheros.com ([12.36.123.2]:12396 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934327Ab0HMNEm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Aug 2010 09:04:42 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 13 Aug 2010 06:04:42 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH] ath9k_htc: load proper firmware for device ID 7015
+Date: Fri, 13 Aug 2010 18:36:40 +0530
+Message-ID: <1281704800-4422-1-git-send-email-rmanoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   b3703a3..4b6128d  master     -> origin/master
-   c7ecb8a..55764c1  wl         -> origin/wl
- * [new tag]         compat-wireless-2010-08-03 -> compat-wireless-2010-08-03
- * [new tag]         compat-wireless-master-2010-08-03 -> compat-wireless-master-2010-08-03
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   e67e41a..d9285f7  history    -> origin/history
- + a74255d...262e79e master     -> origin/master  (forced update)
-   9fe6206..3a09b1b  stable     -> origin/stable
- * [new tag]         next-20100804 -> next-20100804
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
+This patch handles the firmware loading properly
+for device ID 7015.
 
-compat-wireless code metrics
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/eeprom.h       |    1 +
+ drivers/net/wireless/ath/ath9k/eeprom_9287.c  |    7 ++++++-
+ drivers/net/wireless/ath/ath9k/hif_usb.c      |    8 ++------
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c |    1 +
+ drivers/net/wireless/ath/ath9k/reg.h          |    1 +
+ 5 files changed, 11 insertions(+), 7 deletions(-)
 
-    494063 - Total upstream lines of code being pulled
-      1475 - backport code changes
-      1239 - backport code additions
-       236 - backport code deletions
-      5805 - backport from compat module
-      7280 - total backport code
-    1.4735 - % of code consists of backport work
-      1218 - Crap changes not yet posted
-      1179 - Crap additions not yet posted
-        39 - Crap deletions not yet posted
-    0.2465 - % of crap code
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index 8750c55..7f48df1 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -191,6 +191,7 @@
+ #define AR9287_EEP_NO_BACK_VER       AR9287_EEP_MINOR_VER_1
+ 
+ #define AR9287_EEP_START_LOC            128
++#define AR9287_HTC_EEP_START_LOC        256
+ #define AR9287_NUM_2G_CAL_PIERS         3
+ #define AR9287_NUM_2G_CCK_TARGET_POWERS 3
+ #define AR9287_NUM_2G_20_TARGET_POWERS  3
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+index 4a52cf0..dff2da7 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+@@ -34,9 +34,14 @@ static bool ath9k_hw_ar9287_fill_eeprom(struct ath_hw *ah)
+ 	struct ar9287_eeprom *eep = &ah->eeprom.map9287;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	u16 *eep_data;
+-	int addr, eep_start_loc = AR9287_EEP_START_LOC;
++	int addr, eep_start_loc;
+ 	eep_data = (u16 *)eep;
+ 
++	if (ah->hw_version.devid == 0x7015)
++		eep_start_loc = AR9287_HTC_EEP_START_LOC;
++	else
++		eep_start_loc = AR9287_EEP_START_LOC;
++
+ 	if (!ath9k_hw_use_flash(ah)) {
+ 		ath_print(common, ATH_DBG_EEPROM,
+ 			  "Reading from EEPROM, not flash\n");
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 61c1bee..17e7a9a 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -799,7 +799,7 @@ static int ath9k_hif_usb_download_fw(struct hif_device_usb *hif_dev)
+ 	}
+ 	kfree(buf);
+ 
+-	if (hif_dev->device_id == 0x7010)
++	if ((hif_dev->device_id == 0x7010) || (hif_dev->device_id == 0x7015))
+ 		firm_offset = AR7010_FIRMWARE_TEXT;
+ 	else
+ 		firm_offset = AR9271_FIRMWARE_TEXT;
+@@ -901,6 +901,7 @@ static int ath9k_hif_usb_probe(struct usb_interface *interface,
+ 
+ 	switch(hif_dev->device_id) {
+ 	case 0x7010:
++	case 0x7015:
+ 	case 0x9018:
+ 		if (le16_to_cpu(udev->descriptor.bcdDevice) == 0x0202)
+ 			hif_dev->fw_name = FIRMWARE_AR7010_1_1;
+@@ -912,11 +913,6 @@ static int ath9k_hif_usb_probe(struct usb_interface *interface,
+ 		break;
+ 	}
+ 
+-	if (!hif_dev->fw_name) {
+-		dev_err(&udev->dev, "Can't determine firmware !\n");
+-		goto err_htc_hw_alloc;
+-	}
+-
+ 	ret = ath9k_hif_usb_dev_init(hif_dev);
+ 	if (ret) {
+ 		ret = -EINVAL;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 148b433..2d42791 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -245,6 +245,7 @@ static int ath9k_init_htc_services(struct ath9k_htc_priv *priv, u16 devid)
+ 
+ 	switch(devid) {
+ 	case 0x7010:
++	case 0x7015:
+ 	case 0x9018:
+ 		priv->htc->credits = 45;
+ 		break;
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 633e3d9..d01c4ad 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -899,6 +899,7 @@
+ 
+ #define AR_DEVID_7010(_ah) \
+ 	(((_ah)->hw_version.devid == 0x7010) || \
++	 ((_ah)->hw_version.devid == 0x7015) || \
+ 	 ((_ah)->hw_version.devid == 0x9018))
+ 
+ #define AR_RADIO_SREV_MAJOR                   0xf0
+-- 
+1.7.2.1
 
-Base tree: linux-next.git
-Base tree version: next-20100804
-compat-wireless release: compat-wireless-2010-08-03
