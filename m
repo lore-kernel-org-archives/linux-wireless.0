@@ -1,46 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:2185 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932301Ab0HORNR (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:47575 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761662Ab0HMOkV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Aug 2010 13:13:17 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linville@tuxdriver.com, jirislaby@gmail.com, mickflemm@gmail.com,
-	lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 0/6] ath5k cleanups and fixes
-Date: Sun, 15 Aug 2010 13:03:09 -0400
-Message-Id: <1281891795-14718-1-git-send-email-me@bobcopeland.com>
+	Fri, 13 Aug 2010 10:40:21 -0400
+Received: by fxm13 with SMTP id 13so1752261fxm.19
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Aug 2010 07:40:20 -0700 (PDT)
+MIME-Version: 1.0
+Date: Fri, 13 Aug 2010 20:10:19 +0530
+Message-ID: <AANLkTin1=7JDXSJgTQ-L-9-r18VJY1fUVLPY+cPup8Pn@mail.gmail.com>
+Subject: cfg80211 support for pre-auth
+From: Dhiraj Gaurh <dhiraj.gaurh@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-
-Here are a few cleanups from myself and Nick, and a couple of
-minor filter fixes, for 2.6.37.
-
-Bob Copeland (4):
-  ath5k: clean up some comments
-  ath5k: remove monitor check in receive_frame_ok filter
-  ath5k: remove all mention of monitor iftype
-  ath5k: don't enable probe request rx for STAs
-
-Nick Kossifidis (2):
-  ath5k: rename ath5k_hw_set_associd to _set_bssid
-  ath5k: remove own (wrong) IEEE80211_MAX_LEN
-
- drivers/net/wireless/ath/ath5k/ani.c      |    6 +-
- drivers/net/wireless/ath/ath5k/ath5k.h    |    7 +--
- drivers/net/wireless/ath/ath5k/attach.c   |    8 ++--
- drivers/net/wireless/ath/ath5k/base.c     |   81 +++++++++++++----------------
- drivers/net/wireless/ath/ath5k/dma.c      |    4 +-
- drivers/net/wireless/ath/ath5k/eeprom.c   |    4 +-
- drivers/net/wireless/ath/ath5k/pcu.c      |   13 ++---
- drivers/net/wireless/ath/ath5k/phy.c      |   15 ++---
- drivers/net/wireless/ath/ath5k/reg.h      |    2 +-
- drivers/net/wireless/ath/ath5k/reset.c    |   24 ++++----
- drivers/net/wireless/ath/ath5k/rfbuffer.h |    4 +-
- 11 files changed, 77 insertions(+), 91 deletions(-)
-
-
+Hello folks,
+ PMK caching and pre-auth are not currently supported by
+cfg80211/nl80211/supplicant. Actually the former is only not supported
+by wpa_supplicant. I have fixed that and will be moving the code
+upstream shortly.
+BUT the latter is not even supported by cfg/nl. Anybody working on
+that ? Actually support is not even there for using wext in this
+scenario. So you just fail certification if you use cfg/nl. I need to
+change this scenario.
+Currently thinking if it is better to add support in cfg/nl/supplicant
+or just use wext stuff and a patch.
+I need an API in cfg80211 to let the driver tell cfg that it has got
+beacon from another AP it can preauth with. Then the supplicant will
+start the pre-auth process when it receives the message.
+Currently in wext the IWEVPMKIDCAND is used for this to pass this info
+from drivers to supplicant but this framework does not exist for
+cfg80211.
+After my changes, hopefully you will be able to pass certification by
+simply using cfg/nl and removing wext entirely from the picture.
+regards
+Dhiraj
