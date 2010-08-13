@@ -1,54 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sycorax.lbl.gov ([128.3.11.121]:44835 "EHLO sycorax.lbl.gov"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754792Ab0HPQlD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Aug 2010 12:41:03 -0400
-From: Alex Romosan <romosan@sycorax.lbl.gov>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Guy\, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlwifi connection problems
-References: <87tynqvtu6.fsf@sycorax.lbl.gov>
-	<1279917523.10769.1.camel@wwguy-huron>
-	<1280135867.3693.5.camel@jlt3.sipsolutions.net>
-	<87mxtd5xlq.fsf@sycorax.lbl.gov>
-	<1280212629.19098.0.camel@jlt3.sipsolutions.net>
-	<87bp9l6f4k.fsf@sycorax.lbl.gov>
-	<1280746705.3923.11.camel@jlt3.sipsolutions.net>
-	<878w4pvx5e.fsf@sycorax.lbl.gov>
-	<1280766201.24503.0.camel@jlt3.sipsolutions.net>
-	<87aap4z70b.fsf@sycorax.lbl.gov>
-	<1280817596.3874.0.camel@jlt3.sipsolutions.net>
-	<87mxt3n9xh.fsf@sycorax.lbl.gov>
-	<1280908365.3768.4.camel@jlt3.sipsolutions.net>
-	<87aap28m8v.fsf@sycorax.lbl.gov>
-	<1280934185.3768.8.camel@jlt3.sipsolutions.net>
-	<8739uu8lg2.fsf@sycorax.lbl.gov>
-	<1280934689.17718.3.camel@jlt3.sipsolutions.net>
-	<8762zq76p3.fsf@sycorax.lbl.gov>
-	<1281964617.3683.23.camel@jlt3.sipsolutions.net>
-Date: Mon, 16 Aug 2010 09:40:57 -0700
-In-Reply-To: <1281964617.3683.23.camel@jlt3.sipsolutions.net> (message from
-	Johannes Berg on Mon, 16 Aug 2010 15:16:57 +0200)
-Message-ID: <877hjqpl2e.fsf@sycorax.lbl.gov>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:48215 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755034Ab0HMPpr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Aug 2010 11:45:47 -0400
+Subject: Re: [PATCH] ath5k: disable ASPM L0s for all cards
+From: Maxim Levitsky <maximlevitsky@gmail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org, linux-kernel@vger.kernel.org,
+	David Quan <David.Quan@atheros.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Tim Gardner <tim.gardner@canonical.com>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>, stable@kernel.org
+In-Reply-To: <1281713248-25761-1-git-send-email-lrodriguez@atheros.com>
+References: <1281713248-25761-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 13 Aug 2010 18:45:39 +0300
+Message-ID: <1281714339.10222.3.camel@maxim-laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+On Fri, 2010-08-13 at 11:27 -0400, Luis R. Rodriguez wrote: 
+> From: Maxim Levitsky <maximlevitsky@gmail.com>
+> 
+> Atheros PCIe wireless cards handled by ath5k do require L0s disabled.
+> For distributions shipping with CONFIG_PCIEASPM (this will be enabled
+> by default in the future in 2.6.36) this will also mean both L1 and L0s
+> will be disabled when a pre 1.1 PCIe device is detected. We do know L1
+> works correctly even for all ath5k pre 1.1 PCIe devices though but cannot
+> currently undue the effect of a blacklist, for details you can read
+> pcie_aspm_sanity_check() and see how it adjusts the device link
+> capability.
+> 
+> It may be possible in the future to implement some PCI API to allow
+> drivers to override blacklists for pre 1.1 PCIe but for now it is
+> best to accept that both L0s and L1 will be disabled completely for
+> distributions shipping with CONFIG_PCIEASPM rather than having this
+> issue present. Motivation for adding this new API will be to help
+> with power consumption for some of these devices.
+> 
+> Example of issues you'd see:
+> 
+>   - On the Acer Aspire One (AOA150, Atheros Communications Inc. AR5001
+>     Wireless Network Adapter [168c:001c] (rev 01)) doesn't work well
+>     with ASPM enabled, the card will eventually stall on heavy traffic
+>     with often 'unsupported jumbo' warnings appearing. Disabling
+>     ASPM L0s in ath5k fixes these problems.
+> 
+>   - On the same card you would see a storm of RXORN interrupts
+>     even though medium is idle.
+> 
+> Credit for root causing and fixing the bug goes to Jussi Kivilinna.
+> 
+> Cc: David Quan <David.Quan@atheros.com>
+> Cc: Matthew Garrett <mjg59@srcf.ucam.org>
+> Cc: Tim Gardner <tim.gardner@canonical.com>
+> Cc: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+> Cc: stable@kernel.org
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+> Signed-off-by: Maxim Levitsky <maximlevitsky@gmail.com>
+> ---
+> 
+> Maxim, it was just reported this patch never made it upstream
+> so I just took the liberty to submit it and also clear up the
+> commit log and comments a little more in terms of actual impact
+> and possible future fixes. I've also Cc'd stable so this can
+> get propagated down to 2.6.32 as well.
+Sure. In fact I don't deserve much credit on this patch. It is just one
+line and besides ASPM is disabled anyway.
 
-> Also, have you tried the released 2.6.35.2?
+Thanks for Jussi Kivilinna again for finding this.
 
-just tried it with 2.6.36-rc1 (after applying a reiserfs patch) and i
-still need to comment out the call to iwlcore_commit_rxon(priv); on line
-1361 of iwl-core.c. i'll file the bug, but if nobody steps forward,
-wouldn't it make sense just to remove that call? thanks.
+Best regards,
+Maxim Levitsky
 
---alex--
 
--- 
-| I believe the moment is at hand when, by a paranoiac and active |
-|  advance of the mind, it will be possible (simultaneously with  |
-|  automatism and other passive states) to systematize confusion  |
-|  and thus to help to discredit completely the world of reality. |
+> 
+>  drivers/net/wireless/ath/ath5k/base.c |   21 +++++++++++++++++++++
+>  1 files changed, 21 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+> index 0d5de25..373dcfe 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.c
+> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> @@ -48,6 +48,7 @@
+>  #include <linux/netdevice.h>
+>  #include <linux/cache.h>
+>  #include <linux/pci.h>
+> +#include <linux/pci-aspm.h>
+>  #include <linux/ethtool.h>
+>  #include <linux/uaccess.h>
+>  #include <linux/slab.h>
+> @@ -476,6 +477,26 @@ ath5k_pci_probe(struct pci_dev *pdev,
+>  	int ret;
+>  	u8 csz;
+>  
+> +	/*
+> +	 * L0s needs to be disabled on all ath5k cards.
+> +	 *
+> +	 * For distributions shipping with CONFIG_PCIEASPM (this will be enabled
+> +	 * by default in the future in 2.6.36) this will also mean both L1 and
+> +	 * L0s will be disabled when a pre 1.1 PCIe device is detected. We do
+> +	 * know L1 works correctly even for all ath5k pre 1.1 PCIe devices
+> +	 * though but cannot currently undue the effect of a blacklist, for
+> +	 * details you can read pcie_aspm_sanity_check() and see how it adjusts
+> +	 * the device link capability.
+> +	 *
+> +	 * It may be possible in the future to implement some PCI API to allow
+> +	 * drivers to override blacklists for pre 1.1 PCIe but for now it is
+> +	 * best to accept that both L0s and L1 will be disabled completely for
+> +	 * distributions shipping with CONFIG_PCIEASPM rather than having this
+> +	 * issue present. Motivation for adding this new API will be to help
+> +	 * with power consumption for some of these devices.
+> +	 */
+> +	pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S);
+> +
+>  	ret = pci_enable_device(pdev);
+>  	if (ret) {
+>  		dev_err(&pdev->dev, "can't enable device\n");
+
+
