@@ -1,49 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:39727 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756661Ab0HIQJS convert rfc822-to-8bit (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:58177 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754097Ab0HNTCX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Aug 2010 12:09:18 -0400
-Received: by yxg6 with SMTP id 6so3456176yxg.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Aug 2010 09:09:17 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201008082124.33033.d.haid@gogi.tv>
-References: <201008082124.33033.d.haid@gogi.tv>
-Date: Mon, 9 Aug 2010 18:09:16 +0200
-Message-ID: <AANLkTinXjYAwJqui41MFzPebUMkvQdO3UsfQcD7se158@mail.gmail.com>
-Subject: Re: Setting MCS rate on injected packets does not work properly (with
-	patches)
-From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-To: Daniel Haid <d.haid@gogi.tv>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 14 Aug 2010 15:02:23 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 11F694195D
+	for <linux-wireless@vger.kernel.org>; Sat, 14 Aug 2010 15:02:11 -0400 (EDT)
+Subject: Compat-wireless release for 2010-08-14 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100814190222.3640A41133@repository3.orbit-lab.org>
+Date: Sat, 14 Aug 2010 15:02:22 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Aug 8, 2010 at 9:24 PM, Daniel Haid <d.haid@gogi.tv> wrote:
-> Hello,
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
 
-> When I use hostapd on one station and enable HT I get
-> rates of about 60MBit/s.
->
-> But when I inject packets manually and I set the MCS index
-> the MCS index gets reported properly at the other station.
-> However no matter what index I choose, I never get rates
-> higher than 10MBit/s  (I wrote a program that reads monitor
-> mode packets with libpcap and sends them to a tun device
-> and everything that comes from the tun device is injected
-> with libpcap - then I measured the rate for UDP packets sent
-> trough this connection).
+compat-wireless code metrics
 
-One reason for this is aggregation: injected packets are not
-aggregated. Depending on your setup that could be the whole
-explanation.
-
-Also, a single fixed MCS index in the first slot of the tx control
-rates array will not perform as well as e.g. minstrel_ht, especially
-not if your radio environment is noisy.
-
-10 Mbit/s sounds a bit slow though if you say you can get 60 in ap -
-sta mode. Perhaps you are cpu limited?
-
-/Björn
+    494644 - Total upstream lines of code being pulled
