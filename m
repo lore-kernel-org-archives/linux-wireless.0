@@ -1,51 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sycorax.lbl.gov ([128.3.11.121]:52651 "EHLO sycorax.lbl.gov"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756180Ab0HCMnm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Aug 2010 08:43:42 -0400
-From: Alex Romosan <romosan@sycorax.lbl.gov>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Guy\, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlwifi connection problems
-References: <87tynqvtu6.fsf@sycorax.lbl.gov>
-	<1279917523.10769.1.camel@wwguy-huron>
-	<1280135867.3693.5.camel@jlt3.sipsolutions.net>
-	<87mxtd5xlq.fsf@sycorax.lbl.gov>
-	<1280212629.19098.0.camel@jlt3.sipsolutions.net>
-	<87bp9l6f4k.fsf@sycorax.lbl.gov>
-	<1280746705.3923.11.camel@jlt3.sipsolutions.net>
-	<878w4pvx5e.fsf@sycorax.lbl.gov>
-	<1280766201.24503.0.camel@jlt3.sipsolutions.net>
-	<87aap4z70b.fsf@sycorax.lbl.gov>
-	<1280817596.3874.0.camel@jlt3.sipsolutions.net>
-Date: Tue, 03 Aug 2010 05:43:38 -0700
-In-Reply-To: <1280817596.3874.0.camel@jlt3.sipsolutions.net> (message from
-	Johannes Berg on Tue, 03 Aug 2010 08:39:56 +0200)
-Message-ID: <87mxt3n9xh.fsf@sycorax.lbl.gov>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from external1.orbit-lab.org ([128.6.192.131]:60680 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751022Ab0HOTCX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Aug 2010 15:02:23 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 77AE74195D
+	for <linux-wireless@vger.kernel.org>; Sun, 15 Aug 2010 15:02:08 -0400 (EDT)
+Subject: Compat-wireless release for 2010-08-15 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100815190222.5111441133@repository3.orbit-lab.org>
+Date: Sun, 15 Aug 2010 15:02:22 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
 
-> Yes, thank you, but it's very strange. But it's probably ok, let's
-> remove the call then, it wasn't there before. Want to post a patch
-> yourself?
+compat-wireless code metrics
 
-btw, the old code had this comment
-
- /* We avoid iwl_commit_rxon here to commit the new filter flags
-  * since mac80211 will call ieee80211_hw_config immediately.
-  * (mc_list is not supported at this time). Otherwise, we need to
-  * queue a background iwl_commit_rxon work.
-  */
-
---alex--
-
--- 
-| I believe the moment is at hand when, by a paranoiac and active |
-|  advance of the mind, it will be possible (simultaneously with  |
-|  automatism and other passive states) to systematize confusion  |
-|  and thus to help to discredit completely the world of reality. |
+    494644 - Total upstream lines of code being pulled
