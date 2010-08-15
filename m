@@ -1,33 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw-sa02.nokia.com ([147.243.1.48]:64904 "EHLO
-	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751631Ab0HWNVZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Aug 2010 09:21:25 -0400
-Subject: Re: [PATCH 2/4] wl12xx: change contact person for the include file
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Kalle Valo <kvalo@adurom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20100822194628.16660.25636.stgit@potku.valot.fi>
-References: <20100822194615.16660.21195.stgit@potku.valot.fi>
-	 <20100822194628.16660.25636.stgit@potku.valot.fi>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 23 Aug 2010 16:21:15 +0300
-Message-ID: <1282569675.7198.0.camel@powerslave>
+Received: from lo.gmane.org ([80.91.229.12]:35187 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758413Ab0HOQHJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Aug 2010 12:07:09 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1OkXrU-0001yP-Gz
+	for linux-wireless@vger.kernel.org; Sun, 15 Aug 2010 09:42:32 +0200
+Received: from rain.gmane.org ([80.91.229.7])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Aug 2010 09:42:32 +0200
+Received: from marcus by rain.gmane.org with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Aug 2010 09:42:32 +0200
+To: linux-wireless@vger.kernel.org
+From: Marcus Better <marcus@better.se>
+Subject: iwl3945 not associating on 2.6.35
+Date: Sun, 15 Aug 2010 09:42:15 +0200
+Message-ID: <i485ou$qmb$1@dough.gmane.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2010-08-22 at 21:46 +0200, ext Kalle Valo wrote:
-> Luciano should be the contact person for the include/linux/spi/wl12xx.h file.
-> 
-> Cc: Luciano Coelho <luciano.coelho@nokia.com>
-> Signed-off-by: Kalle Valo <kvalo@adurom.com>
-> ---
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
+Hi,
 
--- 
+after upgrading from 2.6.34 to either 2.6.35 or 2.6.35.1, wpasupplicant will 
+no longer associate to my WPA2 access point. The log is full of "Failed to 
+initiate AP scan" messages.
+
+Is this a known issue? I couldn't quite find out by sifting through the 
+archives... The system is a Thinkpad T61, x86_64, Debian sid, network-
+manager and wpasupplicant 0.6.10-2.
+
 Cheers,
-Luca.
+
+Marcus
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAkxnmlcACgkQXjXn6TzcAQnMGACfWGBirSDBKoTpgC0wbvVprU3W
+U3wAmgKGiivAZdln14CdkBWIF2hJd+BS
+=84Cy
+-----END PGP SIGNATURE-----
+
 
