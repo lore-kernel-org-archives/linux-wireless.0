@@ -1,99 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:44704 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752660Ab0HKNTg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Aug 2010 09:19:36 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>
-Cc: <linux-arm-kernel@lists.infradead.org>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, Ido Yariv <ido@wizery.com>,
-	San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Gao Yunpeng <yunpeng.gao@intel.com>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [RFC/PATCH 3/6] mmc: add general runtime PM support
-Date: Wed, 11 Aug 2010 16:19:27 +0300
-Message-Id: <1281532770-27545-4-git-send-email-ohad@wizery.com>
-In-Reply-To: <1281532770-27545-1-git-send-email-ohad@wizery.com>
-References: <1281532770-27545-1-git-send-email-ohad@wizery.com>
+Received: from smtp4-g21.free.fr ([212.27.42.4]:57703 "EHLO smtp4-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750761Ab0HOS1L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Aug 2010 14:27:11 -0400
+Date: Sun, 15 Aug 2010 20:27:00 +0200 (CEST)
+From: dimitri.gorokhovik@free.fr
+To: linville@tuxdriver.com, stefano.brivio@polimi.it
+Cc: linux-wireless@vger.kernel.org
+Message-ID: <1944322236.136661281896820874.JavaMail.root@zimbra3-e1.priv.proxad.net>
+In-Reply-To: <1682961998.136221281896329090.JavaMail.root@zimbra3-e1.priv.proxad.net>
+Subject: [PATCH]: b43: is there such a thing as radio 0x2062 rev 2?
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add Runtime PM handlers to mmc, which calls mmc_power_save_host
-and mmc_power_restore_host in respond to runtime_suspend and
-runtime_resume events.
+Hi,
 
-Runtime PM is still disabled by default, so this patch alone
-has no immediate effect.
+On a DELL D630 with BCM4312 (low-power PHY 4e4:4315 rev 01), I was able to fix the problem:
 
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+Aug 15 17:14:45 dimitri kernel: b43-phy0 debug: RC calib: Failed to switch to channel 7, error = -5
+
+by bumping the radio's version (0x2062 rev 2) to 0x2063 (kept rev 2). 
+
+Before the fix, the hardware detected as:
+
+Aug 15 17:14:45 dimitri kernel: b43-phy0: Broadcom 4312 WLAN found (core revision 15)
+Aug 15 17:14:45 dimitri kernel: b43-phy0 debug: Found PHY: Analog 6, Type 5, Revision 1
+Aug 15 17:14:45 dimitri kernel: b43-phy0 debug: Found Radio: Manuf 0x17F, Version 0x2062, Revision 2
+
+The problem manifested itself (permanently) as:
+
+Aug 15 18:18:10 dimitri kernel: b43-phy0: Loading firmware version 478.104 (2008-07-01 00:50:23)
+Aug 15 18:18:10 dimitri kernel: b43-phy0 debug: b2062: Using crystal tab entry 19200 kHz.
+Aug 15 18:18:10 dimitri kernel: b43-phy0 debug: RC calib: Failed to switch to channel 7, error = -5
+
+
+The patch follows, tested on 2.6.32.18 and 2.6.35.2, both built for x86_64.
+
 ---
- drivers/mmc/core/bus.c |   35 +++++++++++++++++++++++++++++++++++
- 1 files changed, 35 insertions(+), 0 deletions(-)
+b43: Bump the radio version 0x2063-rev-2 to 0x2063. 
 
-diff --git a/drivers/mmc/core/bus.c b/drivers/mmc/core/bus.c
-index 49d9dca..27902b4 100644
---- a/drivers/mmc/core/bus.c
-+++ b/drivers/mmc/core/bus.c
-@@ -14,6 +14,7 @@
- #include <linux/device.h>
- #include <linux/err.h>
- #include <linux/slab.h>
-+#include <linux/pm_runtime.h>
- 
- #include <linux/mmc/card.h>
- #include <linux/mmc/host.h>
-@@ -137,6 +138,39 @@ static int mmc_bus_resume(struct device *dev)
- 	return ret;
- }
- 
-+static int mmc_runtime_suspend(struct device *dev)
-+{
-+	int status = 0;
-+	struct mmc_card *card = dev_to_mmc_card(dev);
-+
-+	mmc_power_save_host(card->host);
-+
-+	return status;
-+}
-+
-+static int mmc_runtime_resume(struct device *dev)
-+{
-+	int status = 0;
-+	struct mmc_card *card = dev_to_mmc_card(dev);
-+
-+	mmc_power_restore_host(card->host);
-+
-+	return status;
-+}
-+
-+static int mmc_runtime_idle(struct device *dev)
-+{
-+	struct mmc_card *card = dev_to_mmc_card(dev);
-+
-+	return pm_runtime_suspend(dev);
-+}
-+
-+static const struct dev_pm_ops mmc_bus_pm_ops = {
-+	.runtime_suspend	= mmc_runtime_suspend,
-+	.runtime_resume		= mmc_runtime_resume,
-+	.runtime_idle		= mmc_runtime_idle,
-+};
-+
- static struct bus_type mmc_bus_type = {
- 	.name		= "mmc",
- 	.dev_attrs	= mmc_dev_attrs,
-@@ -146,6 +180,7 @@ static struct bus_type mmc_bus_type = {
- 	.remove		= mmc_bus_remove,
- 	.suspend	= mmc_bus_suspend,
- 	.resume		= mmc_bus_resume,
-+	.pm		= &mmc_bus_pm_ops,
- };
- 
- int mmc_register_bus(void)
--- 
-1.7.0.4
-
+Signed-off-by: <dimitri.gorokhovik@free.fr>
+---
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 7965b70..d245a23 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -4084,6 +4084,7 @@ static int b43_phy_versioning(struct b43_wldev *dev)
+        case B43_PHYTYPE_LP:
+                if (radio_ver != 0x2062 && radio_ver != 0x2063)
+                        unsupported = 1;
++		radio_ver += radio_rev > 1;
+                break;
+        default:
+                B43_WARN_ON(1);
