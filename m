@@ -1,33 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:38323 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750769Ab0HXJiP (ORCPT
+Received: from mail-px0-f174.google.com ([209.85.212.174]:55704 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750696Ab0HOE5s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Aug 2010 05:38:15 -0400
-Subject: Re: [PATCH] ath9k_htc: Add firmware for AR7010
-From: David Woodhouse <dwmw2@infradead.org>
-To: Sujith <Sujith.Manoharan@atheros.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <19462.12932.201066.376129@gargle.gargle.HOWL>
-References: <19462.12932.201066.376129@gargle.gargle.HOWL>
+	Sun, 15 Aug 2010 00:57:48 -0400
+Received: by pxi10 with SMTP id 10so1400807pxi.19
+        for <linux-wireless@vger.kernel.org>; Sat, 14 Aug 2010 21:57:47 -0700 (PDT)
+Subject: After compiling Openwrt, which image should I use for my TP-Link
+ WR1043ND?
+From: Robert Chan <robert.chan.list@gmail.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 24 Aug 2010 10:38:08 +0100
-Message-ID: <1282642688.12796.2.camel@localhost>
+Date: Sun, 15 Aug 2010 12:57:32 +0800
+Message-ID: <1281848252.1932.20.camel@patrick-olevia>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-06-02 at 03:29 -0700, Sujith wrote:
-> Add firmware for AR7010 chipsets supported
-> by the ath9k_htc driver.
-> 
-> More information at: http://wireless.kernel.org/en/users/Drivers/ath9k_htc
-> 
-> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
+Dear all,
 
-Applied; sorry for the delay. Using this email address should usually
-work better.
+I am pretty new to Openwrt.  I got through the compiling of it, and
+selected the ar71xx as my target and TP-Link WR1043ND v1 as my
+platform.  
 
--- 
-dwmw2
+Now, when I look into the /bin/ar71xx folder, however, I found quite a
+few images:
+
+openwrt-ar71xx-root.squashfs
+openwrt-ar71xx-root.squashfs-4k
+openwrt-ar71xx-uImage-gzip.bin
+openwrt-ar71xx-uImage-lzma.bin
+openwrt-ar71xx-vmlinux.bin
+openwrt-ar71xx-vmlinux.elf
+openwrt-ar71xx-vmlinux.gz
+openwrt-ar71xx-vmlinux.lzma
+
+Which image should I use to flash my router?  
+
+According to the "Using the Image Builder Howto, I should be expecting
+something like openwrt-ar71xx-tl-wr1043nd-v1-squashfs.bin, right?
+
+Also, it looks to me that openwrt-ar71xx-root.squashfs is the one, but
+it is 30MB big.  AFAIK, the tl-wr1043rd has only 32MB of RAM and 64MB of
+flash, would it be too large?
+
+Thanks very much in advance.
+
+Robert
+
 
