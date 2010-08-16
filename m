@@ -1,112 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:50369 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932746Ab0HKIng (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Aug 2010 04:43:36 -0400
-Message-ID: <4C626140.3080107@nokia.com>
-Date: Wed, 11 Aug 2010 11:37:20 +0300
-From: Roger Quadros <roger.quadros@nokia.com>
+Received: from sycorax.lbl.gov ([128.3.11.121]:44835 "EHLO sycorax.lbl.gov"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754792Ab0HPQlD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Aug 2010 12:41:03 -0400
+From: Alex Romosan <romosan@sycorax.lbl.gov>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Guy\, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: iwlwifi connection problems
+References: <87tynqvtu6.fsf@sycorax.lbl.gov>
+	<1279917523.10769.1.camel@wwguy-huron>
+	<1280135867.3693.5.camel@jlt3.sipsolutions.net>
+	<87mxtd5xlq.fsf@sycorax.lbl.gov>
+	<1280212629.19098.0.camel@jlt3.sipsolutions.net>
+	<87bp9l6f4k.fsf@sycorax.lbl.gov>
+	<1280746705.3923.11.camel@jlt3.sipsolutions.net>
+	<878w4pvx5e.fsf@sycorax.lbl.gov>
+	<1280766201.24503.0.camel@jlt3.sipsolutions.net>
+	<87aap4z70b.fsf@sycorax.lbl.gov>
+	<1280817596.3874.0.camel@jlt3.sipsolutions.net>
+	<87mxt3n9xh.fsf@sycorax.lbl.gov>
+	<1280908365.3768.4.camel@jlt3.sipsolutions.net>
+	<87aap28m8v.fsf@sycorax.lbl.gov>
+	<1280934185.3768.8.camel@jlt3.sipsolutions.net>
+	<8739uu8lg2.fsf@sycorax.lbl.gov>
+	<1280934689.17718.3.camel@jlt3.sipsolutions.net>
+	<8762zq76p3.fsf@sycorax.lbl.gov>
+	<1281964617.3683.23.camel@jlt3.sipsolutions.net>
+Date: Mon, 16 Aug 2010 09:40:57 -0700
+In-Reply-To: <1281964617.3683.23.camel@jlt3.sipsolutions.net> (message from
+	Johannes Berg on Mon, 16 Aug 2010 15:16:57 +0200)
+Message-ID: <877hjqpl2e.fsf@sycorax.lbl.gov>
 MIME-Version: 1.0
-To: ext Ohad Ben-Cohen <ohad@wizery.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	San Mehat <san@google.com>, Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>
-Subject: Re: [PATCH v3 9/9] omap: zoom: add mmc3/wl1271 device support
-References: <1281478348-24833-1-git-send-email-ohad@wizery.com> <1281478348-24833-10-git-send-email-ohad@wizery.com>
-In-Reply-To: <1281478348-24833-10-git-send-email-ohad@wizery.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/11/2010 01:12 AM, ext Ohad Ben-Cohen wrote:
-> Add MMC3 support on ZOOM, which has the wl1271 device hardwired to.
->
-> The wl1271 is a 4-wire, 1.8V, embedded SDIO WLAN device with an
-> external IRQ line, and power-controlled by a GPIO-based fixed regulator.
->
-> Signed-off-by: Ohad Ben-Cohen<ohad@wizery.com>
-> ---
->   arch/arm/mach-omap2/board-zoom-peripherals.c |   34 ++++++++++++++++++++++++++
->   1 files changed, 34 insertions(+), 0 deletions(-)
->
-> diff --git a/arch/arm/mach-omap2/board-zoom-peripherals.c b/arch/arm/mach-omap2/board-zoom-peripherals.c
-> index de88635..82776bc 100644
-> --- a/arch/arm/mach-omap2/board-zoom-peripherals.c
-> +++ b/arch/arm/mach-omap2/board-zoom-peripherals.c
-> @@ -17,6 +17,8 @@
->   #include<linux/i2c/twl.h>
->   #include<linux/regulator/machine.h>
->   #include<linux/regulator/fixed.h>
-> +#include<linux/mmc/host.h>
-> +#include<linux/wl12xx.h>
->
->   #include<asm/mach-types.h>
->   #include<asm/mach/arch.h>
-> @@ -29,6 +31,7 @@
->   #include "hsmmc.h"
->
->   #define OMAP_ZOOM_WLAN_PMENA_GPIO	(101)
-> +#define OMAP_ZOOM_WLAN_IRQ_GPIO		(162)
->
->   /* Zoom2 has Qwerty keyboard*/
->   static int board_keymap[] = {
-> @@ -185,6 +188,28 @@ static struct platform_device omap_vwlan_device = {
->   	},
->   };
->
-> +struct wl12xx_platform_data omap_zoom_wlan_data = {
-> +	/* ZOOM ref clock is 26 MHz */
-> +	.board_ref_clock = 1,
-> +};
-> +
-> +static struct resource omap_zoom_wl1271_resources[] = {
-> +	{
-> +		.start = OMAP_GPIO_IRQ(OMAP_ZOOM_WLAN_IRQ_GPIO),
-> +		.end = OMAP_GPIO_IRQ(OMAP_ZOOM_WLAN_IRQ_GPIO),
-> +		.flags = IORESOURCE_IRQ,
-> +	}
-> +};
-> +static struct platform_device omap_zoom_wl1271 = {
-> +	.name		= "wl1271_plat.2",
-> +	.id		= -1,
-> +	.resource	= omap_zoom_wl1271_resources,
-> +	.num_resources	= ARRAY_SIZE(omap_zoom_wl1271_resources),
-> +	.dev = {
-> +		.platform_data =&omap_zoom_wlan_data,
-> +	},
-> +};
-> +
->   static struct omap2_hsmmc_info mmc[] __initdata = {
->   	{
->   		.name		= "external",
-> @@ -202,6 +227,14 @@ static struct omap2_hsmmc_info mmc[] __initdata = {
->   		.nonremovable	= true,
->   		.power_saving	= true,
->   	},
-> +	{
-> +		.name		= "wl1271",
-> +		.mmc		= 3,
-> +		.wires		= 4,
-> +		.gpio_wp	= -EINVAL,
-> +		.gpio_cd	= -EINVAL,
-> +		.ocr_mask	= MMC_VDD_165_195,
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Do we really need to specify ocr_mask here?
-It seems to be set in omap_hsmmc_reg_get() by calling mmc_regulator_get_ocrmask().
+> Also, have you tried the released 2.6.35.2?
 
-This should automatically pick the right mask if you have defined the "vmmc" 
-regulator output voltage correctly.
+just tried it with 2.6.36-rc1 (after applying a reiserfs patch) and i
+still need to comment out the call to iwlcore_commit_rxon(priv); on line
+1361 of iwl-core.c. i'll file the bug, but if nobody steps forward,
+wouldn't it make sense just to remove that call? thanks.
 
-regards,
--roger
+--alex--
+
+-- 
+| I believe the moment is at hand when, by a paranoiac and active |
+|  advance of the mind, it will be possible (simultaneously with  |
+|  automatism and other passive states) to systematize confusion  |
+|  and thus to help to discredit completely the world of reality. |
