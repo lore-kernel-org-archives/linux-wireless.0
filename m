@@ -1,95 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:53815 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756894Ab0HKUK7 convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:51171 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751898Ab0HPXRC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Aug 2010 16:10:59 -0400
+	Mon, 16 Aug 2010 19:17:02 -0400
+Received: by bwz3 with SMTP id 3so3080410bwz.19
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Aug 2010 16:17:01 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] p54: improve eeprom parser
+Date: Tue, 17 Aug 2010 01:16:58 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>
 MIME-Version: 1.0
-In-Reply-To: <20100811184742.GA21778@nokia.com>
-References: <1281550913-17633-1-git-send-email-ohad@wizery.com>
-	<1281550913-17633-4-git-send-email-ohad@wizery.com> <5A47E75E594F054BAF48C5E4FC4B92AB0324110ABD@dbde02.ent.ti.com>
-	<20100811184742.GA21778@nokia.com>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Wed, 11 Aug 2010 23:10:38 +0300
-Message-ID: <AANLkTikLbiJ8PsUbSnmYrfY6oNW4okejf-UdyQyfYbUz@mail.gmail.com>
-Subject: Re: [PATCH v4 3/8] wireless: wl1271: add platform driver to get board
-	data
-To: felipe.balbi@nokia.com
-Cc: "ext DebBarma, Tarun Kanti" <tarun.kanti@ti.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	Ido Yariv <ido@wizery.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"Chikkature Rajashekar, Madhusudhan" <madhu.cr@ti.com>,
-	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	San Mehat <san@google.com>,
-	"Quadros Roger (Nokia-MS/Helsinki)" <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	"Pandita, Vikram" <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <201008170116.58759.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Felipe,
+Like other vendors, p54* devices have a checksum for
+the EEPROM descriptor data. This patch enhances the
+parser code to generate and verify the data fields,
+before initializing the radio-chip on the card.
 
-On Wed, Aug 11, 2010 at 9:47 PM, Felipe Balbi <felipe.balbi@nokia.com> wrote:
->>> +       pdata = pdev->dev.platform_data;
->>> +       if (!pdata) {
->>> +               wl1271_error("no platform data");
->>> +               return -ENODEV;
->>> +       }
->>> +
->>> +       pdriver = container_of(pdev->dev.driver, struct platform_driver,
->>> +                                                               driver);
->
-> but you shouldn't fiddle with the driver structure here. What are you
-> actually trying to achieve here ? What's pinstance supposed to do ? are you
-> trying to handle cases where you might have several wl12xx chips on the same
-> board ?
+Note:
+	If you have to bootstrap an alternative EEPROM image
+	for your device and you don't know how to generate a
+	valid crc ccitt checksum, you should take a look at:
+	http://git.kernel.org/?p=linux/kernel/git/chr/p54tools.git
 
-Yes.
+	The "checksum" utility loads a binary p54 EEPROM blob
+	(use the -f switch, to skip the check) and applies
+	the correct crc automatically.
 
-Think of several wl1271 devices, each of which is represented by two
-devices; an SDIO function, and a platform device. The SDIO function
-stands for a specific MMC controller the device is hardwired to, and
-the platform device stands for the external irq line that the device
-is hardwired to.
-
-We must couple the SDIO function with the correct platform device,
-otherwise it will start getting the wrong interrupts. So after the
-SDIO function is probed, it registers a platform driver with the
-unique name that represents the platform device that it is coupled
-with. When the platform device is probed, it needs to deliver its
-platform data info to the specific SDIO function that it is bound
-with.
-
-To avoid using some global data structure in that driver, we allocate
-a unique platform driver per each device, which makes it possible for
-the platform driver probe to find the SDIO function context by means
-of container_of.
-
-Alternatively, we can also use some global structure in that file,
-most probably idr, which would also make it possible to reach the SDIO
-function contexts without going through the driver structure. The idr
-indexes would then be the MMC controller index, which should match
-the platform device id.
-
-I'll try this out, it might actually look nicer.
-
-Thanks,
-Ohad.
-
-> If that's the case you should have several platform devices, one for
-> each chip. They'll only have different ids.
->
-> --
-> balbi
->
-> DefectiveByDesign.org
->
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+diff --git a/drivers/net/wireless/p54/Kconfig b/drivers/net/wireless/p54/Kconfig
+index b0342a5..60a930e 100644
+--- a/drivers/net/wireless/p54/Kconfig
++++ b/drivers/net/wireless/p54/Kconfig
+@@ -2,6 +2,7 @@ config P54_COMMON
+ 	tristate "Softmac Prism54 support"
+ 	depends on MAC80211 && EXPERIMENTAL
+ 	select FW_LOADER
++	select CRC_CCITT
+ 	---help---
+ 	  This is common code for isl38xx/stlc45xx based modules.
+ 	  This module does nothing by itself - the USB/PCI/SPI front-ends
+diff --git a/drivers/net/wireless/p54/eeprom.c b/drivers/net/wireless/p54/eeprom.c
+index d687cb7..32d3f99 100644
+--- a/drivers/net/wireless/p54/eeprom.c
++++ b/drivers/net/wireless/p54/eeprom.c
+@@ -23,6 +23,7 @@
+ #include <linux/slab.h>
+ 
+ #include <net/mac80211.h>
++#include <linux/crc-ccitt.h>
+ 
+ #include "p54.h"
+ #include "eeprom.h"
+@@ -540,6 +541,7 @@ int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
+ 	int err;
+ 	u8 *end = (u8 *)eeprom + len;
+ 	u16 synth = 0;
++	u16 crc16 = ~0;
+ 
+ 	wrap = (struct eeprom_pda_wrap *) eeprom;
+ 	entry = (void *)wrap->data + le16_to_cpu(wrap->len);
+@@ -655,16 +657,29 @@ int p54_parse_eeprom(struct ieee80211_hw *dev, void *eeprom, int len)
+ 			}
+ 			break;
+ 		case PDR_END:
+-			/* make it overrun */
+-			entry_len = len;
++			crc16 = ~crc_ccitt(crc16, (u8 *) entry, sizeof(*entry));
++			if (crc16 != le16_to_cpup((__le16 *)entry->data)) {
++				wiphy_err(dev->wiphy, "eeprom failed checksum "
++					 "test!\n");
++				err = -ENOMSG;
++				goto err;
++			} else {
++				goto good_eeprom;
++			}
+ 			break;
+ 		default:
+ 			break;
+ 		}
+ 
+-		entry = (void *)entry + (entry_len + 1)*2;
++		crc16 = crc_ccitt(crc16, (u8 *)entry, (entry_len + 1) * 2);
++		entry = (void *)entry + (entry_len + 1) * 2;
+ 	}
+ 
++	wiphy_err(dev->wiphy, "unexpected end of eeprom data.\n");
++	err = -ENODATA;
++	goto err;
++
++good_eeprom:
+ 	if (!synth || !priv->iq_autocal || !priv->output_limit ||
+ 	    !priv->curve_data) {
+ 		wiphy_err(dev->wiphy,
