@@ -1,130 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtpfb2-g21.free.fr ([212.27.42.10]:55544 "EHLO
-	smtpfb2-g21.free.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751376Ab0HOTcK convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:32879 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755979Ab0HPTNt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Aug 2010 15:32:10 -0400
-Received: from smtp2-g21.free.fr (smtp2-g21.free.fr [212.27.42.2])
-	by smtpfb2-g21.free.fr (Postfix) with ESMTP id 0C3D3D1A056
-	for <linux-wireless@vger.kernel.org>; Sun, 15 Aug 2010 21:22:40 +0200 (CEST)
-Date: Sun, 15 Aug 2010 21:21:52 +0200 (CEST)
-From: dimitri.gorokhovik@free.fr
-To: =?utf-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
-Cc: linville@tuxdriver.com, stefano brivio <stefano.brivio@polimi.it>,
-	linux-wireless@vger.kernel.org
-Message-ID: <1123777895.142301281900112563.JavaMail.root@zimbra3-e1.priv.proxad.net>
-In-Reply-To: <1689108175.140731281899456474.JavaMail.root@zimbra3-e1.priv.proxad.net>
-Subject: Re: [PATCH]: b43: is there such a thing as radio 0x2062 rev 2?
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Mon, 16 Aug 2010 15:13:49 -0400
+Subject: Re: nl80211 scanning from userspace
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christopher Piggott <cpiggott@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTi=ZGn0Rt7zYxBJB0jJ-EY=gPpxtBN2bA9svkq99@mail.gmail.com>
+References: <AANLkTi=ZGn0Rt7zYxBJB0jJ-EY=gPpxtBN2bA9svkq99@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 16 Aug 2010 21:13:45 +0200
+Message-ID: <1281986025.3683.31.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2010-08-16 at 15:06 -0400, Christopher Piggott wrote:
 
------ "Gábor Stefanik" <netrolller.3d@gmail.com> a écrit :
+> Start building the message.  First build an SSID list with one entry
+> in it (empty string)
+>     struct nl_msg *ssids = nlmsg_alloc();
+>     nla_put_string(ssids, 0, "");
 
-> Does the card actually work if you make b43 believe that it has a
-> BCM2063 radio?
-The interface stays on (the WiFi LED lit), and I can scan and see 
-the networks (Quality info seems OK as well with 2.6.35). However, 
-I am still unable to connect to either an open or a protected 
-network:
+I think that has to be a 1 instead of 0, but I'm not entirely sure.
 
-Aug 15 19:04:11 dimitri kernel: wlan0: authenticate with 00:17:33:1e:13:70 (try 1)
-Aug 15 19:04:11 dimitri kernel: wlan0: authenticated
-Aug 15 19:04:11 dimitri kernel: wlan0: associate with 00:17:33:1e:13:70 (try 1)
-Aug 15 19:04:11 dimitri kernel: wlan0: RX AssocResp from 00:17:33:1e:13:70 (capab=0x411 status=0 aid=2)
-Aug 15 19:04:11 dimitri kernel: wlan0: associated
-Aug 15 19:04:16 dimitri kernel: No probe response from AP 00:17:33:1e:13:70 after 500ms, disconnecting.
+> Next build the scan request message:
+>     struct nl_msg *msg = nlmsg_alloc();
+>     int flags = 0;
+>     int cmd = NL80211_CMD_TRIGGER_SCAN;
+>     genlmsg_put(msg, 0, 0, genl_family_get_id(nl80211), 0, flags, cmd, 0);
+>     /* append our ssid list to this message as a nested message */
+>     nla_put_nested(msg, NL80211_ATTR_SCAN_SSIDS, ssids)
 
-> BTW, all BCM2062 radios seen so far are rev.2, and none have shown
-> this error. Maybe your card actually has a BCM2063 radio, but for
-> some reason b43 detects it as a BCM2062?
-Sure, this is of course possible (I don't really believe my patch 
-fixes the problem). The MAC address of the WiFi card is 
-00:22:68:ba:e2:ef (maybe somebody knows know the manufacturing 
-series).
+You're not telling it which interface should scan, this is handled
+generically in iw.c, look for
+	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, devidx);
 
-For the record, I was able, only once, to run the unmodified driver
-(2.6.32 x86+_64 debian kernel), but was never able to get it ever 
-again after that. That time, the HDMI res negotiated on both my 
-screens (though a dock) was rather unusual (something like 
-11xx X 9xx) so I think my problem might be some sort of CEM 
-problem.  
-
+> Finally I send the request:
+>     int rc = nl_send_auto_complete(sock, msg);
 > 
-> Also, does the Broadcom hybrid driver handle your card?
-Last time I tried (more than a year ago), from memory, I believe,
-I was able to scan, but I had the problems with Network Manager
-support and didn't go for manual config.
+> From this I found out that 32 bytes were sent (seems reasonable).
+> Unfortunately, what I get back is this:
+>   [HEADER] 16 octets
+>     .nlmsg_len = 52
+>     .nlmsg_type = 2 <ERROR>
+>     .nlmsg_flags = 0 <>
+>     .nlmsg_seq = 1282012377
+>     .nlmsg_pid = 30415
+>   [ERRORMSG] 20 octets
+>     .error = -22 "Invalid argument"
+>   [ORIGINAL MESSAGE] 16 octets
+>     .nlmsg_len = 16
+>     .nlmsg_type = 23 <0x17>
+>     .nlmsg_flags = 5 <REQUEST,ACK>
+>     .nlmsg_seq = 1282012377
+>     .nlmsg_pid = 30415
+> 
+> so, even following what iw's "scan.c" does I have somehow pieced the
+> request together incorrectly.
+> 
+> Questions:
+> 1. Am I doing something obviously wrong?
 
-Thanks,
-Dimitri
+You're also missing the interface as above.
+
+> 2. Is this even the interface I should be using to do this?  (I need
+> to scan for all access points on a specific "hidden" SSID to retrieve
+> some information about their SNR.  It's a type of "site survey"
+> application for building contour maps of coverage).
+
+Yes, it does make sense.
+
+> I'm not sure what I'm doing next makes sense, either.  After I send
+> the scan request I wait 3 seconds then start reading like this:
+>     while(nl_recvmsgs(sock, callbacks) != 0)
+>     {
+>         printf("processed a result\n");
+>     }
 > 
-> Thanks,
-> Gábor.
-> 
-> On Sun, Aug 15, 2010 at 8:27 PM,  <dimitri.gorokhovik@free.fr> wrote:
-> > Hi,
-> >
-> > On a DELL D630 with BCM4312 (low-power PHY 4e4:4315 rev 01), I was
-> able to fix the problem:
-> >
-> > Aug 15 17:14:45 dimitri kernel: b43-phy0 debug: RC calib: Failed to
-> switch to channel 7, error = -5
-> >
-> > by bumping the radio's version (0x2062 rev 2) to 0x2063 (kept rev
-> 2).
-> >
-> > Before the fix, the hardware detected as:
-> >
-> > Aug 15 17:14:45 dimitri kernel: b43-phy0: Broadcom 4312 WLAN found
-> (core revision 15)
-> > Aug 15 17:14:45 dimitri kernel: b43-phy0 debug: Found PHY: Analog 6,
-> Type 5, Revision 1
-> > Aug 15 17:14:45 dimitri kernel: b43-phy0 debug: Found Radio: Manuf
-> 0x17F, Version 0x2062, Revision 2
-> >
-> > The problem manifested itself (permanently) as:
-> >
-> > Aug 15 18:18:10 dimitri kernel: b43-phy0: Loading firmware version
-> 478.104 (2008-07-01 00:50:23)
-> > Aug 15 18:18:10 dimitri kernel: b43-phy0 debug: b2062: Using crystal
-> tab entry 19200 kHz.
-> > Aug 15 18:18:10 dimitri kernel: b43-phy0 debug: RC calib: Failed to
-> switch to channel 7, error = -5
-> >
-> >
-> > The patch follows, tested on 2.6.32.18 and 2.6.35.2, both built for
-> x86_64.
-> >
-> > ---
-> > b43: Bump the radio version 0x2063-rev-2 to 0x2063.
-> >
-> > Signed-off-by: <dimitri.gorokhovik@free.fr>
-> > ---
-> > diff --git a/drivers/net/wireless/b43/main.c
-> b/drivers/net/wireless/b43/main.c
-> > index 7965b70..d245a23 100644
-> > --- a/drivers/net/wireless/b43/main.c
-> > +++ b/drivers/net/wireless/b43/main.c
-> > @@ -4084,6 +4084,7 @@ static int b43_phy_versioning(struct b43_wldev
-> *dev)
-> >        case B43_PHYTYPE_LP:
-> >                if (radio_ver != 0x2062 && radio_ver != 0x2063)
-> >                        unsupported = 1;
-> > +               radio_ver += radio_rev > 1;
-> >                break;
-> >        default:
-> >                B43_WARN_ON(1);
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe
-> linux-wireless" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> 
-> 
-> 
-> -- 
-> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+> I have registered my callback earlier; this seems to work because I
+> get the message (above) plus later an "Operation Not Supported"
+> message.  The operation is indeed supported, as it works with the
+> iwlist and iw command line tools.
+
+Maybe you should look at wpa_supplicant either for doing your thing, or
+for the driver_nl80211.c code in it, which is more explicit than iw.
+
+johannes
+
