@@ -1,46 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:35245 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750774Ab0H1GWJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Aug 2010 02:22:09 -0400
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH 3/3] wl12xx: remove unneeded locking
-References: <20100826113024.738612439@sipsolutions.net>
-	<20100826113438.826909320@sipsolutions.net>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Sat, 28 Aug 2010 09:22:01 +0300
-In-Reply-To: <20100826113438.826909320@sipsolutions.net> (Johannes Berg's message of "Thu\, 26 Aug 2010 13\:30\:27 +0200")
-Message-ID: <87fwxz8dfa.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:47919
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750929Ab0HPU4G (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Aug 2010 16:56:06 -0400
+Date: Mon, 16 Aug 2010 13:56:22 -0700 (PDT)
+Message-Id: <20100816.135622.214236113.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2010-08-16
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20100816203440.GG2656@tuxdriver.com>
+References: <20100816203440.GG2656@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 16 Aug 2010 16:34:41 -0400
 
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> With the scan callback now being callable from
-> any context, these unlocks/locks can go away.
-> This makes the code easier to understand, since
-> callers of these functions must no longer be
-> aware that the mutex may be dropped.
->
-> As Stanislaw is working on iwlwifi scanning, I
-> didn't change it to take advantage of the new
-> mac80211 semantics.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
->  drivers/net/wireless/wl12xx/wl1251_event.c |    2 --
->  drivers/net/wireless/wl12xx/wl1251_main.c  |    2 --
+> This group of fixes is intended for 2.6.36.  This includes a fix for a
+> warning backtrace related to pm_qos in ipw2100, a packet injection oops
+> for ath9k_htc, a connectivity regression for ath9k_htc related to HT
+> capabilities handling, a scanning regression in wl1251, 
+> a firmware loading error in ath9k_htc, and a patch to disable L0s for
+> all ath5k cards (causes misc wierdness).
 
-Thanks, wl1251 part looks good. I didn't test them yet, but will do
-soon.
-
--- 
-Kalle Valo
+Pulled, thanks a lot John.
