@@ -1,47 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:41233 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757548Ab0HETfY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Aug 2010 15:35:24 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1Oh6Do-0006Bh-FR
-	for linux-wireless@vger.kernel.org; Thu, 05 Aug 2010 21:35:21 +0200
-Received: from 216-31-249-246.static-ip.telepacific.net ([216.31.249.246])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Aug 2010 21:35:20 +0200
-Received: from graman by 216-31-249-246.static-ip.telepacific.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Aug 2010 21:35:20 +0200
-To: linux-wireless@vger.kernel.org
-From: Gopal Raman <graman@arubanetworks.com>
-Subject: Re: ath5k : Channel 149 thru 161 not working with =?utf-8?b?CWNvbXBhdC13aXJlbGVzcy0yLjYuMzQuMQ==?=
-Date: Thu, 5 Aug 2010 19:35:11 +0000 (UTC)
-Message-ID: <loom.20100805T213232-313@post.gmane.org>
-References: <loom.20100805T020816-848@post.gmane.org> <loom.20100805T025322-892@post.gmane.org> <AANLkTikcWNzO7tbheeJp=NYMsY=Kh983DrR2P=OKCJ5p@mail.gmail.com>
+Received: from smtp5.freeserve.com ([193.252.22.151]:35022 "EHLO
+	smtp6.freeserve.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756694Ab0HPWgF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Aug 2010 18:36:05 -0400
+Date: Mon, 16 Aug 2010 23:35:44 +0100
+From: Chris Vine <chris@cvine.freeserve.co.uk>
+To: =?UTF-8?B?R8OhYm9y?= Stefanik <netrolller.3d@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: [RFT] BCM4312 users with DMA errors, please test!
+Message-ID: <20100816233544.40f0e1d4@boulder.homenet>
+In-Reply-To: <20100816204154.5100b604@boulder.homenet>
+References: <AANLkTimMhW7OX3DT7A3EDNaOnr577KmTv5w9C_mz19TG@mail.gmail.com>
+	<20100816204154.5100b604@boulder.homenet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jonathan Guerin <jonathan@...> writes:
+On Mon, 16 Aug 2010 20:41:54 +0100
+Chris Vine <chris@cvine.freeserve.co.uk> wrote:
 
+> On Mon, 16 Aug 2010 19:59:36 +0200
+> Gábor Stefanik <netrolller.3d@gmail.com> wrote:
+> > Hello Everyone!
+> > 
+> > If you are experiencing DMA errors on a BCM4312, please test the
+> > attached patch. It implements the PCI-E SERDES workaround, which the
+> > hybrid driver is applying during early init to LP-PHY cards, and
+> > which is a good candidate for the cause of the DMA error.
+> > Note that this is not a final patch & it may cause collateral damage
+> > for non-4312 cards; if it helps the 4312 problem, I will submit a
+> > cleaned-up version.
 > 
-> I found issues when switching to ath5k where the wrong antenna was selected.
+> This applies to 2.6.35.2, but does not compile:
 > 
-> Try forcing the antenna (especially if you don't have 1 of them
-> plugged in) and see how you go:
-> http://www.mail-archive.com/ath5k-devel-xDcbHBWguxEUs3QNXV6qNA <at> 
-public.gmane.org/msg02979.html
+> drivers/ssb/driver_pcicore.c: In function 'ssb_pcie_mdio_set_block':
+> drivers/ssb/driver_pcicore.c:457: error: 'i' undeclared (first use in
+> this function) drivers/ssb/driver_pcicore.c:457: error: (Each
+> undeclared identifier is reported only once
+> drivers/ssb/driver_pcicore.c:457: error: for each function it appears
+> in.) drivers/ssb/driver_pcicore.c: In function 'ssb_pcie_mdio_read':
+> drivers/ssb/driver_pcicore.c:503: error: expected ';' before
+> 'pcicore_write32'
 > 
+> With the obvious fixes (providing a variable 'i' of int type as the
+> count variable and terminating the line which had no terminating
+> semi-colon), it compiled OK and the first time I booted up, booted up
+> OK but didn't fix the DMA error.  Subsequent attempts to boot up gave
+> me a slew of errors on boot up so I am not sure what is going on
+> there.
+> 
+> You might want to check that the obvious fixes to the patch are
+> complete.
 
-Hi
-I could not find the sysfs node where antenna control is being set in the 
-compat-wireless-2.6.34.1 driver. Maybe that was taken out ? To rule out 
-problems with my NIC card can anyone confirm that with this driver we can 
-receive frames on channels 149 thru 161 ?
-Thanks much
+I have more or less tracked down what is happening.
 
--gopal
+The first thing to report is that this does not fix the DMA error.
+
+The second thing is that with the patch applied, and with _all_
+wireless/ssb modules blacklisted (ssb, b43, wl), if the wl module is
+present the kernel bizarrely still tries to load it on boot up and
+shortly thereafter hangs with a number of errors reported, which differ
+on different boots (there is no particular pattern to them). That in
+turn causes some file system corruption which affects further boots
+even if the wl module is removed.  The corruption is not that serious
+and appears only to affect the kernel image and/or the wl module.
+Reinstalling both solved the problem, so far.  ef2fsck -f only reported
+that the time stamps were wrong, but inodes and directory structures
+were reported as OK.
+
+But caveat testor so far as the corruption is concerned.  I might have
+been lucky.
+
+Chris
+
 
