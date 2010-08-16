@@ -1,81 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:33874 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751452Ab0HBJw5 (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:41041 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755353Ab0HPUjR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Aug 2010 05:52:57 -0400
-Received: by iwn7 with SMTP id 7so4013798iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Aug 2010 02:52:56 -0700 (PDT)
+	Mon, 16 Aug 2010 16:39:17 -0400
+Received: by mail-fx0-f46.google.com with SMTP id 13so3130309fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Aug 2010 13:39:17 -0700 (PDT)
+From: =?UTF-8?q?G=C3=A1bor=20Stefanik?= <netrolller.3d@gmail.com>
+To: John Linville <linville@tuxdriver.com>,
+	=?UTF-8?q?Michael=20B=C3=BCsch?= <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	Larry Finger <larry.finger@lwfinger.net>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	=?UTF-8?q?G=C3=A1bor=20Stefanik?= <netrolller.3d@gmail.com>
+Subject: [PATCH 2/4] b43: N-PHY: Fix typo in function name (gain_crtl -> gain_ctrl)
+Date: Mon, 16 Aug 2010 22:39:15 +0200
+Message-Id: <1281991157-1557-2-git-send-email-netrolller.3d@gmail.com>
+In-Reply-To: <1281991157-1557-1-git-send-email-netrolller.3d@gmail.com>
+References: <1281991157-1557-1-git-send-email-netrolller.3d@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <4C5690C7.2080104@openwrt.org>
-References: <20100729035820.5930.29864.stgit@tt-desk> <201007291812.28639.br1@einfach.org>
-	<AANLkTi=ihY=pAmKaEp7Pga=DOxwASZqSxqmURbgnks-d@mail.gmail.com>
-	<201008021313.54850.br1@einfach.org> <AANLkTimRnfa8HVpi0hcP7Eo9Nrns60ff3Hs+fq39WoJh@mail.gmail.com>
-	<4C5688F7.1070200@openwrt.org> <AANLkTi=Qm53CgFNNgtF4iBvh3jbfYzd8XPH4y9ysUaoV@mail.gmail.com>
-	<4C568D23.2000203@openwrt.org> <AANLkTinGdwt4bSPRDV=ZfPBmoKS42GgUVjLAg_O1vL3i@mail.gmail.com>
-	<4C5690C7.2080104@openwrt.org>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 2 Aug 2010 02:52:36 -0700
-Message-ID: <AANLkTimoU+iF2bVJ-Fs4iT3k5v0iU9PaE783NhUdnQQ-@mail.gmail.com>
-Subject: Re: [PATCH v5] cfg80211: Add nl80211 antenna configuration
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Bruno Randolf <br1@einfach.org>, johannes@sipsolutions.net,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 2, 2010 at 2:32 AM, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2010-08-02 11:23 AM, Luis R. Rodriguez wrote:
->> On Mon, Aug 2, 2010 at 2:17 AM, Felix Fietkau <nbd@openwrt.org> wrote:
->>> On 2010-08-02 11:10 AM, Luis R. Rodriguez wrote:
->>>> On Mon, Aug 2, 2010 at 1:59 AM, Felix Fietkau <nbd@openwrt.org> wrote:
->>>>> On 2010-08-02 7:37 AM, Luis R. Rodriguez wrote:
->>>>>> I'm not, the point I was trying to make is that solving this for
->>>>>> legacy and that for 802.11n this needs more thought and work.
->>>>> I need this for 802.11n as well, and I believe the API is good enough
->>>>> for that.
->>>>
->>>> Sure.
->>>>
->>>>>>> as long as the API is flexible
->>>>>>> enough i think it can be added later as 802.11n devices are going to accept
->>>>>>> antenna configuration.
->>>>>>
->>>>>> If you want really flexible stuff without addressing serious
->>>>>> considerations before introducing a new kernel API then use debugfs.
->>>>> I'd like to see this in nl80211. Is there any specific concern left that
->>>>> I haven't addressed already? If so, please point me at it...
->>>>
->>>> The code that deals with not accepting changes unless we're not
->>>> associated, and that also caches the old real hw config vs the
->>>> modified one.
->>> This is not really an API issue, this is more of an implementation
->>> aspect. I think it's up to the driver to reject changes that it cannot
->>> handle at the moment.
->>
->> Huh,why not deal with this on cfg80211 and/or mac80211?
-> Right now, the drivers calculate this. We could make a helper function
-> in cfg80211 at some point, but we're talking about really small chunks
-> of code.
->
->>> For 802.11n, changes that affect the chainmask should be rejected while
->>> the interface is up. That way we don't run into weird cached config vs
->>> hw config issues, and also keep a sane state for the HT capabilities.
->>
->> Sure, I just did not see any code for this in these patches. My point
->> about the hw config vs fake/mod'd is if we'd expose the mod'd config
->> changes to userspace or if we'd keep them internal to cfg80211. How
->> would this be dealt with?
-> Right now, cfg80211 doesn't know enough to handle this stuff on its own,
-> so let's handle it in the driver completely on the first iteration. The
-> patches do not need any changes for this right now.
+Signed-off-by: Gábor Stefanik <netrolller.3d@gmail.com>
+---
+ drivers/net/wireless/b43/phy_n.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-I'd prefer that code to be written rather then let this be defined as
-API now and let drivers deal with this differently. But that's me, I'm
-not the maintainer, I just will not deal with bug reports dealing with
-this and I'll assign them to you guys if this gets through. Still
-think its crap and should just go through debugfs until all the code
-mentioned does exist.
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index cb815cc..f1b5707 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -893,7 +893,7 @@ static void b43_nphy_adjust_lna_gain_table(struct b43_wldev *dev)
+ }
+ 
+ /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/WorkaroundsGainCtrl */
+-static void b43_nphy_gain_crtl_workarounds(struct b43_wldev *dev)
++static void b43_nphy_gain_ctrl_workarounds(struct b43_wldev *dev)
+ {
+ 	struct b43_phy_n *nphy = dev->phy.n;
+ 	u8 i, j;
+@@ -1094,7 +1094,7 @@ static void b43_nphy_workarounds(struct b43_wldev *dev)
+ 		b43_nphy_set_rf_sequence(dev, 0, events1, delays1, 7);
+ 		b43_nphy_set_rf_sequence(dev, 1, events2, delays2, 7);
+ 
+-		b43_nphy_gain_crtl_workarounds(dev);
++		b43_nphy_gain_ctrl_workarounds(dev);
+ 
+ 		if (dev->phy.rev < 2) {
+ 			if (b43_phy_read(dev, B43_NPHY_RXCTL) & 0x2)
+-- 
+1.6.4.2
 
-  Luis
