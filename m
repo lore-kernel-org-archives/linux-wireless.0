@@ -1,50 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp5.freeserve.com ([193.252.22.151]:19502 "EHLO
-	smtp6.freeserve.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753537Ab0HQAO7 (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:52274 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751250Ab0HPXQK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Aug 2010 20:14:59 -0400
-Date: Tue, 17 Aug 2010 01:14:55 +0100
-From: Chris Vine <chris@cvine.freeserve.co.uk>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: [RFT] BCM4312 users with DMA errors, please test!
-Message-ID: <20100817011455.4919cfbb@boulder.homenet>
-In-Reply-To: <20100817010923.589d8063@boulder.homenet>
-References: <AANLkTimMhW7OX3DT7A3EDNaOnr577KmTv5w9C_mz19TG@mail.gmail.com>
-	<20100816204154.5100b604@boulder.homenet>
-	<20100816233544.40f0e1d4@boulder.homenet>
-	<4C69CF85.2020809@lwfinger.net>
-	<20100817010923.589d8063@boulder.homenet>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Mon, 16 Aug 2010 19:16:10 -0400
+Received: by vws3 with SMTP id 3so3934193vws.19
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Aug 2010 16:16:04 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTi=sb0PT4FHsjbuAOQjnDq79GHEj8LbCLTtO8MeS@mail.gmail.com>
+References: <AANLkTi=ZGn0Rt7zYxBJB0jJ-EY=gPpxtBN2bA9svkq99@mail.gmail.com>
+	<1281986025.3683.31.camel@jlt3.sipsolutions.net>
+	<AANLkTiniqFJzrWFzNJTxsF31EZfSTei89dbS2Ak4YDjH@mail.gmail.com>
+	<1281987696.3683.32.camel@jlt3.sipsolutions.net>
+	<AANLkTi=ALaGb=UcWAuB_N8E9j95f0Hgxtw0Dhh7xaPh2@mail.gmail.com>
+	<1281995025.3683.34.camel@jlt3.sipsolutions.net>
+	<AANLkTi=sb0PT4FHsjbuAOQjnDq79GHEj8LbCLTtO8MeS@mail.gmail.com>
+Date: Mon, 16 Aug 2010 19:16:04 -0400
+Message-ID: <AANLkTin90i08fbYeyrc17a7=smhshxR69=ushqUSkA0Z@mail.gmail.com>
+Subject: Re: nl80211 scanning from userspace
+From: Christopher Piggott <cpiggott@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 17 Aug 2010 01:09:23 +0100
-Chris Vine <chris@cvine.freeserve.co.uk> wrote:
+Forgive me if this is an obtuse question but why would one use
+nl_socket_add_membership, if all that isn't necessary to get back the
+scan results?
 
-> On Mon, 16 Aug 2010 18:53:41 -0500
-> Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> > I tried to duplicate your boot problems without anything unexpected
-> > happening.
-> > 
-> > I don't know what happened, but I doubt that this ssb patch was
-> > responsible.
-> 
-> I have reproduced it twice.  It is definitely the patch, in the sense
-> that it happens with the patch included (on two separate tests that I
-> have conducted) and never without.
-> 
-> I do not doubt that you do not experience this effect.  However, you
-> don't experience the DMA bug either.
-
-Out of interest, which version of the wl module do you have installed,
-as I wonder if that makes a difference?   (As I said in my e-mail on
-this, this problem only occurs if the wl module is available to the
-kernel.)
-
-Chris
-
-
+On Mon, Aug 16, 2010 at 5:55 PM, Christopher Piggott <cpiggott@gmail.com> wrote:
+> OHHH.  I am with you now.  I looked at driver_nl80211.c and somehow
+> had a blind spot  when it came to message NLM_F_DUMP.  I see it now,
+> and it's sending me back results.
+>
+> I am tempted to write a slightly higher level API on top of some of
+> this, once I understand the semantics of all of this a little better.
+> I will search around first and see if any attempts have already been
+> made.
+>
+> Thank you very much for pushing me in the right direction.
+>
+> --Chris
+>
+>
+> On Mon, Aug 16, 2010 at 5:43 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Mon, 2010-08-16 at 17:22 -0400, Christopher Piggott wrote:
+>>> It's hard to figure out what's going on sometimes.  I set up an error handler:
+>>>
+>>> static int error_handler(struct sockaddr_nl *nla, struct nlmsgerr
+>>> *err, void *arg) {
+>>>     printf("ERROR %s (%d)\n", strerror(err->error), err->error);
+>>>     return NL_SKIP;
+>>> }
+>>>
+>>> which also returns -95 (operation not supported) just as you said.
+>>> So, I'll have to figure out what you mean by "dumping."
+>>>
+>>> I did find this:
+>>>
+>>>         mcid = nl_get_multicast_id(state->nl_sock, "nl80211", "scan");
+>>>
+>>> in iw:event.c and traced it to some code in iw:genl.c, a file that
+>>> starts out by commenting "This ought to be provided by libnl".  That
+>>> situation doesn't seem to have changed.
+>>>
+>>> Is this the area of the code you mean when you say "dump" ?  That I
+>>> need to register myself to receive the scan results?
+>>
+>> No, you need to use NLM_F_DUMP etc. Really, check wpa_supplicant :)
+>>
+>> johannes
+>>
+>>
+>
