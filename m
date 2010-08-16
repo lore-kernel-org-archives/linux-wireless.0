@@ -1,65 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dev2day.de ([83.169.2.241]:40186 "EHLO dev2day.de"
+Received: from bear.ext.ti.com ([192.94.94.41]:57738 "EHLO bear.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754075Ab0HBVzy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Aug 2010 17:55:54 -0400
-Message-ID: <4C573EE6.9040707@dev2day.de>
-Date: Mon, 02 Aug 2010 23:55:50 +0200
-From: Jan Friedrich <jft@dev2day.de>
+	id S1751287Ab0HPEWX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Aug 2010 00:22:23 -0400
+From: "DebBarma, Tarun Kanti" <tarun.kanti@ti.com>
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+CC: "felipe.balbi@nokia.com" <felipe.balbi@nokia.com>,
+	Ohad Ben-Cohen <ohad@wizery.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	"Pandita, Vikram" <vikram.pandita@ti.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"Quadros Roger (Nokia-MS/Helsinki)" <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	Nicolas Pitre <nico@fluxnic.net>, San Mehat <san@google.com>,
+	"Chikkature Rajashekar, Madhusudhan" <madhu.cr@ti.com>,
+	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	Ido Yariv <ido@wizery.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Date: Mon, 16 Aug 2010 09:51:04 +0530
+Subject: RE: [PATCH v4 3/8] wireless: wl1271: add platform driver to get
+	board data
+Message-ID: <5A47E75E594F054BAF48C5E4FC4B92AB032419CAAC@dbde02.ent.ti.com>
+References: <1281550913-17633-1-git-send-email-ohad@wizery.com>
+ <1281550913-17633-4-git-send-email-ohad@wizery.com>
+ <5A47E75E594F054BAF48C5E4FC4B92AB0324110ABD@dbde02.ent.ti.com>
+ <20100811184742.GA21778@nokia.com>
+ <5A47E75E594F054BAF48C5E4FC4B92AB0324110AC1@dbde02.ent.ti.com>
+ <20100811185724.GD21778@nokia.com>
+ <5A47E75E594F054BAF48C5E4FC4B92AB0324110AC7@dbde02.ent.ti.com>
+ <20100811212513.GC827@n2100.arm.linux.org.uk>
+In-Reply-To: <20100811212513.GC827@n2100.arm.linux.org.uk>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
-Subject: [Patch] ath9k: fix erased ieee80211_rx_status.mactime
-Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath9k_rx_skb_preprocess nulls rxs and the mactime is never set again -
-mactime is always 0. This causes problems in IBSS mode.
 
-ieee80211_rx_bss_info uses mactime to decide if an IBSS merge is needed.
-Without this patch the merge is triggered by each beacon received.
+> -----Original Message-----
+> From: Russell King - ARM Linux [mailto:linux@arm.linux.org.uk]
+> Sent: Thursday, August 12, 2010 2:55 AM
+> To: DebBarma, Tarun Kanti
+> Cc: felipe.balbi@nokia.com; Ohad Ben-Cohen; Kalle Valo; Pandita, Vikram;
+> akpm@linux-foundation.org; Quadros Roger (Nokia-MS/Helsinki); Tony
+> Lindgren; linux-wireless@vger.kernel.org; Mark Brown; linux-
+> mmc@vger.kernel.org; Nicolas Pitre; San Mehat; Chikkature Rajashekar,
+> Madhusudhan; Coelho Luciano (Nokia-MS/Helsinki); linux-
+> omap@vger.kernel.org; Ido Yariv; linux-arm-kernel@lists.infradead.org
+> Subject: Re: [PATCH v4 3/8] wireless: wl1271: add platform driver to get
+> board data
+> 
+> On Thu, Aug 12, 2010 at 12:57:18AM +0530, DebBarma, Tarun Kanti wrote:
+> >
+> > > -----Original Message-----
+> > > From: Felipe Balbi [mailto:felipe.balbi@nokia.com]
+> > > Sent: Thursday, August 12, 2010 12:27 AM
+> > > To: DebBarma, Tarun Kanti
+> > > Cc: Balbi Felipe (Nokia-MS/Helsinki); Ohad Ben-Cohen; linux-
+> > > wireless@vger.kernel.org; linux-mmc@vger.kernel.org; linux-
+> > > omap@vger.kernel.org; Ido Yariv; Mark Brown; linux-arm-
+> > > kernel@lists.infradead.org; Chikkature Rajashekar, Madhusudhan; Coelho
+> > > Luciano (Nokia-MS/Helsinki); akpm@linux-foundation.org; San Mehat;
+> Quadros
+> > > Roger (Nokia-MS/Helsinki); Tony Lindgren; Nicolas Pitre; Pandita,
+> Vikram;
+> > > Kalle Valo
+> > > Subject: Re: [PATCH v4 3/8] wireless: wl1271: add platform driver to
+> get
+> > > board data
+> > >
+> > > Hi,
+> > >
+> > > On Wed, Aug 11, 2010 at 08:52:54PM +0200, ext DebBarma, Tarun Kanti
+> wrote:
+> > > >True; however if we go by that argument than we can also assume pdata
+> > > >is valid, so that we would not need the below check.
+> > >
+> > > of course not. You can have devices that just play well with default
+> > > values or devices where you don't need the flexibility of platform
+> data.
+> > > That's why we check.
+> > >
+> > > platform_device pointers on the other hand, are guaranteed to be
+> always
+> > > true, if it isn't then you should oops, you deserve to oops because
+> > > something is really really wrong.
+> > >
+> > Sounds perfect!
+> > What that means is _probe() function makes sense only for cases where we
+> > have valid platform data because we are returning right at the top if
+> > pdata is not valid. If this is the case I was curious to know why not
+> > framework make another check for valid pdata before calling _probe()
+> > instead of coming all the way to _probe() and then returning!
+> 
+> Platform devices are not for passing platform data around - they're for
+> declaring platform hardware devices that we want drivers to handle -
+> and it depends on the driver whether having platform data is appropriate
+> or not.
+> 
+> This proposal is, IMHO, abusing the platform device/driver support to
+> achieve its own goals.  I've outlined a far simpler and easiler solution
+> which avoids this kind of abuse, and given suggestions on how to extend
+> it to support multiple instances.
 
-This can be recognized by the "beacon TSF higher than local TSF - IBSS
-merge with BSSID" log message accompanying each beacon.
+I guess I have not put my question in the right perspective. As you have said, platform devices are not meant for passing data around, it appeared to me contradictory when in the probe() we are just checking the pdata and proceeding/returning based upon its value, as if platform device has no other functions. So, the question should have been what else we could do in probe() with platform device other than manipulation of pdata, other than modification of the framework in the real sense.
 
-This problem was not completely fixed in commit
-a6d2055b02dde1067075795274672720baadd3ca and is not a stable kernel fix.
-It is solely intended for wireless-testing.
+Anyways, I will go through the suggestions you mentioned. Thanks for the clarifications.
 
-Signed-off-by: Jan Friedrich <jft@dev2day.de>
----
- drivers/net/wireless/ath/ath9k/recv.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c
-b/drivers/net/wireless/ath/ath9k/recv.c
-index da0cfe9..ae4bd30 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1140,6 +1140,11 @@ int ath_rx_tasklet(struct ath_softc *sc, int
-flush, bool hp)
- 		if (flush)
- 			goto requeue;
-
-+		retval = ath9k_rx_skb_preprocess(common, hw, hdr, &rs,
-+						 rxs, &decrypt_error);
-+		if (retval)
-+			goto requeue;
-+			
- 		rxs->mactime = (tsf & ~0xffffffffULL) | rs.rs_tstamp;
- 		if (rs.rs_tstamp > tsf_lower &&
- 		    unlikely(rs.rs_tstamp - tsf_lower > 0x10000000))
-@@ -1149,11 +1154,6 @@ int ath_rx_tasklet(struct ath_softc *sc, int
-flush, bool hp)
- 		    unlikely(tsf_lower - rs.rs_tstamp > 0x10000000))
- 			rxs->mactime += 0x100000000ULL;
-
--		retval = ath9k_rx_skb_preprocess(common, hw, hdr, &rs,
--						 rxs, &decrypt_error);
--		if (retval)
--			goto requeue;
--
- 		/* Ensure we always have an skb to requeue once we are done
- 		 * processing the current buffer's skb */
- 		requeue_skb = ath_rxbuf_alloc(common, common->rx_bufsize, GFP_ATOMIC);
