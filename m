@@ -1,55 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44748 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754492Ab0HXKOS (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49999 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753417Ab0HPO7l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Aug 2010 06:14:18 -0400
-Subject: [PATCH] nl80211: fix missing nesting
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Philip A. Prindeville" <philipp@redfish-solutions.com>,
-	Philip Prindeville <philipp_subx@redfish-solutions.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 24 Aug 2010 12:15:53 +0200
-Message-ID: <1282644953.3695.7.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 16 Aug 2010 10:59:41 -0400
+Date: Mon, 16 Aug 2010 10:52:21 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Marcus Better <marcus@better.se>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: iwl3945 not associating on 2.6.35
+Message-ID: <20100816145221.GB2656@tuxdriver.com>
+References: <i485ou$qmb$1@dough.gmane.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <i485ou$qmb$1@dough.gmane.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sun, Aug 15, 2010 at 09:42:15AM +0200, Marcus Better wrote:
+> Hi,
+> 
+> after upgrading from 2.6.34 to either 2.6.35 or 2.6.35.1, wpasupplicant will 
+> no longer associate to my WPA2 access point. The log is full of "Failed to 
+> initiate AP scan" messages.
+> 
+> Is this a known issue? I couldn't quite find out by sifting through the 
+> archives... The system is a Thinkpad T61, x86_64, Debian sid, network-
+> manager and wpasupplicant 0.6.10-2.
+> 
+> Cheers,
+> 
+> Marcus
 
-commit 95a6ccbb46c70cff376684c752831c014c87029d
-Author: Johannes Berg <johannes.berg@intel.com>
-Date:   Thu Aug 12 15:38:38 2010 +0200
+I'm not aware of this issue.  Please open a bug at bugzilla.kernel.org.
+Please include dmesg output for starters.
 
-    cfg80211/mac80211: extensible frame processing
+Thanks,
 
-introduced a netlink bug that caused parsing errors
-in userspace because it forgot to close a nesting,
-which would advertise a nesting length of zero to
-userspace, which then completely threw off parsing
-and led to
-
-	Illegal nla->nla_type == 0
-
-being printed by libnl.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/nl80211.c |    2 ++
- 1 file changed, 2 insertions(+)
-
---- wireless-testing.orig/net/wireless/nl80211.c	2010-08-24 12:11:16.000000000 +0200
-+++ wireless-testing/net/wireless/nl80211.c	2010-08-24 12:11:21.000000000 +0200
-@@ -636,6 +636,8 @@ static int nl80211_send_wiphy(struct sk_
- 			nla_nest_end(msg, nl_ftypes);
- 		}
- 
-+		nla_nest_end(msg, nl_ifs);
-+
- 		nl_ifs = nla_nest_start(msg, NL80211_ATTR_RX_FRAME_TYPES);
- 		if (!nl_ifs)
- 			goto nla_put_failure;
-
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
