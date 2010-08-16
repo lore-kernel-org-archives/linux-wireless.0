@@ -1,97 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:61338 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751003Ab0HVXak convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:41041 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755353Ab0HPUjY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Aug 2010 19:30:40 -0400
-Received: by qyk9 with SMTP id 9so2210087qyk.19
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Aug 2010 16:30:39 -0700 (PDT)
+	Mon, 16 Aug 2010 16:39:24 -0400
+Received: by mail-fx0-f46.google.com with SMTP id 13so3130309fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Aug 2010 13:39:23 -0700 (PDT)
+From: =?UTF-8?q?G=C3=A1bor=20Stefanik?= <netrolller.3d@gmail.com>
+To: John Linville <linville@tuxdriver.com>,
+	=?UTF-8?q?Michael=20B=C3=BCsch?= <mb@bu3sch.de>
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	Larry Finger <larry.finger@lwfinger.net>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	=?UTF-8?q?G=C3=A1bor=20Stefanik?= <netrolller.3d@gmail.com>
+Subject: [PATCH 4/4] b43: N-PHY: Implement RX core state setting for rev.2 and earlier PHYs
+Date: Mon, 16 Aug 2010 22:39:17 +0200
+Message-Id: <1281991157-1557-4-git-send-email-netrolller.3d@gmail.com>
+In-Reply-To: <1281991157-1557-3-git-send-email-netrolller.3d@gmail.com>
+References: <1281991157-1557-1-git-send-email-netrolller.3d@gmail.com>
+ <1281991157-1557-2-git-send-email-netrolller.3d@gmail.com>
+ <1281991157-1557-3-git-send-email-netrolller.3d@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTi=TMhmTF+ztooAu=E1e1zdw-cBnaSZCKj=Utik0@mail.gmail.com>
-References: <1282506589-8220-1-git-send-email-zajec5@gmail.com> <AANLkTi=TMhmTF+ztooAu=E1e1zdw-cBnaSZCKj=Utik0@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Mon, 23 Aug 2010 01:30:19 +0200
-Message-ID: <AANLkTikMxL41zrR+KDF1Od_SKpbQhsQWHWiAAAULYx+F@mail.gmail.com>
-Subject: Re: [PATCH 1/2] b43: N-PHY: band width setting with dumb clock
- control call
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-2
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 23, 2010 at 1:20 AM, Julian Calaby <julian.calaby@gmail.com> wrote:
-> Rafal,
->
-> Couple of minor style issues, if you're re-submitting.
->
-> 2010/8/23 Rafa³ Mi³ecki <zajec5@gmail.com>:
->> Signed-off-by: Rafa³ Mi³ecki <zajec5@gmail.com>
->> ---
->>  drivers/net/wireless/b43/phy_common.c |   20 ++++++++++++++++++++
->>  drivers/net/wireless/b43/phy_common.h |   11 +++++++++++
->>  drivers/net/wireless/b43/phy_n.c      |    4 ++--
->>  drivers/net/wireless/b43/phy_n.h      |    1 -
->>  4 files changed, 33 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/net/wireless/b43/phy_common.c b/drivers/net/wireless/b43/phy_common.c
->> index 8f7d7ef..b06e3f0 100644
->> --- a/drivers/net/wireless/b43/phy_common.c
->> +++ b/drivers/net/wireless/b43/phy_common.c
->> @@ -466,3 +466,23 @@ struct b43_c32 b43_cordic(int theta)
->>
->>        return ret;
->>  }
->> +
->> +/* http://bcm-v4.sipsolutions.net/802.11/PHY/ClkCtlClk */
->> +static void b43_clock_control(struct b43_wldev *dev, u32 mode)
->> +{
->> +       ; /* TODO */
->
-> You don't need the semicolon here, as I understand it.
->
->> +}
->> +
->> +/* http://bcm-v4.sipsolutions.net/802.11/PHY/BmacBwSet */
->> +void b43_bmac_set_b_width(struct b43_wldev *dev, u8 b_width)
->> +{
->> +       bool fast = dev->phy.forcefastclk;;
->
-> Double semicolon - and is it necessary to assign a local variable here?
+Rev.3+ support coming in a later patch.
 
-I agree - don't blindly follow the specs; accessing struct members it
-not expensive.
+Signed-off-by: GÃ¡bor Stefanik <netrolller.3d@gmail.com>
+---
+ drivers/net/wireless/b43/phy_n.c |   40 +++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 39 insertions(+), 1 deletions(-)
 
->
->> +       if (!fast)
->> +               b43_clock_control(dev, 0);
->> +       dev->phy.b_width = b_width;
->> +       b43_read32(dev, B43_MMIO_MACCTL); /* flush writes */
->> +       /* TODO: Call PHY BMAC Reset */
->> +       dev->phy.ops->init(dev);
-
-I believe you need to do the whole PHY init, including the common
-part; not just the PHY type-specific init. Larry, is this true?
-
->> +       if (fast)
->> +               b43_clock_control(dev, 2);
->> +}
->
-> Thanks,
->
-> --
->
-> Julian Calaby
->
-> Email: julian.calaby@gmail.com
-> .Plan: http://sites.google.com/site/juliancalaby/
->
-
-
-
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index d2dab55..92cf8b8 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -3085,6 +3085,44 @@ static void b43_nphy_mac_phy_clock_set(struct b43_wldev *dev, bool on)
+ 	ssb_write32(dev->dev, SSB_TMSLOW, tmslow);
+ }
+ 
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/RxCoreSetState */
++static void b43_nphy_set_rx_core_state(struct b43_wldev *dev, u8 mask)
++{
++	struct b43_phy *phy = &dev->phy;
++	struct b43_phy_n *nphy = phy->n;
++	u16 buf[16];
++
++	if (0 /* FIXME clk */)
++		return;
++
++	b43_mac_suspend(dev);
++
++	if (nphy->hang_avoid)
++		b43_nphy_stay_in_carrier_search(dev, true);
++
++	b43_phy_maskset(dev, B43_NPHY_RFSEQCA, ~B43_NPHY_RFSEQCA_RXEN,
++			(mask & 0x3) << B43_NPHY_RFSEQCA_RXEN_SHIFT);
++
++	if (maskbits & 0x3 != 0x3) {
++		b43_phy_write(dev, B43_NPHY_HPANT_SWTHRES, 1);
++		if (dev->phy.rev >= 3) {
++			/* TODO */
++		}
++	} else {
++		b43_phy_write(dev, B43_NPHY_HPANT_SWTHRES, 0x1E);
++		if (dev->phy.rev >= 3) {
++			/* TODO */
++		}
++	}
++
++	b43_nphy_force_rf_sequence(dev, B43_RFSEQ_RESET2RX);
++
++	if (nphy->hang_avoid)
++		b43_nphy_stay_in_carrier_search(dev, false);
++
++	b43_mac_enable(dev);
++}
++
+ /*
+  * Init N-PHY
+  * http://bcm-v4.sipsolutions.net/802.11/PHY/Init/N
+@@ -3211,7 +3249,7 @@ int b43_phy_initn(struct b43_wldev *dev)
+ 	}
+ 
+ 	if (nphy->phyrxchain != 3)
+-		;/* TODO N PHY RX Core Set State with phyrxchain as argument */
++		b43_nphy_set_rx_core_state(dev, nphy->phyrxchain);
+ 	if (nphy->mphase_cal_phase_id > 0)
+ 		;/* TODO PHY Periodic Calibration Multi-Phase Restart */
+ 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+1.6.4.2
+
