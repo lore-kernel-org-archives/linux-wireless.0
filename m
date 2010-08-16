@@ -1,58 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:38416 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751259Ab0HQTDz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Aug 2010 15:03:55 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 80FC34195D
-	for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2010 15:03:32 -0400 (EDT)
-Subject: Compat-wireless release for 2010-08-17 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20100817190351.ACDEB41133@repository3.orbit-lab.org>
-Date: Tue, 17 Aug 2010 15:03:51 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mgw2.diku.dk ([130.225.96.92]:34700 "EHLO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754838Ab0HPQZX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Aug 2010 12:25:23 -0400
+Date: Mon, 16 Aug 2010 18:25:21 +0200 (CEST)
+From: Julia Lawall <julia@diku.dk>
+To: Kalle Valo <kalle.valo@iki.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH 3/16] drivers/net/wireless/wl12xx: Use available error codes
+Message-ID: <Pine.LNX.4.64.1008161825010.19313@ask.diku.dk>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
- * [new branch]      linux-2.6.36.y -> origin/linux-2.6.36.y
-   7746bc0..4c0ceee  master     -> origin/master
- * [new tag]         compat-wireless-2010-08-16 -> compat-wireless-2010-08-16
- * [new tag]         compat-wireless-master-2010-08-05 -> compat-wireless-master-2010-08-05
- * [new tag]         compat-wireless-v2.6.36-rc1 -> compat-wireless-v2.6.36-rc1
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
- * [new branch]      linux-2.6.36.y -> origin/linux-2.6.36.y
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   3639a89..ffefdc0  history    -> origin/history
- + f74eac3...ef937c2 master     -> origin/master  (forced update)
- * [new tag]         next-20100817 -> next-20100817
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
+From: Julia Lawall <julia@diku.dk>
 
-compat-wireless code metrics
+In each case, error codes are stored in ret, but the return value is always
+0.  Return ret instead.
 
-    495649 - Total upstream lines of code being pulled
-      1699 - backport code changes
-      1460 - backport code additions
-       239 - backport code deletions
-      5979 - backport from compat module
-      7678 - total backport code
-    1.5491 - % of code consists of backport work
-      1218 - Crap changes not yet posted
-      1179 - Crap additions not yet posted
-        39 - Crap deletions not yet posted
-    0.2457 - % of crap code
+The semantic match that finds this problem is as follows:
+(http://coccinelle.lip6.fr/)
 
-Base tree: linux-next.git
-Base tree version: next-20100817
-compat-wireless release: compat-wireless-2010-08-16
+// <smpl>
+@r@
+local idexpression x;
+constant C;
+@@
+
+if (...) { ...
+  x = -C
+  ... when != x
+(
+  return <+...x...+>;
+|
+  return NULL;
+|
+  return;
+|
+* return ...;
+)
+}
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+This changes the semantics and has not been tested.
+
+ drivers/net/wireless/wl12xx/wl1251_acx.c |    2 +-
+ drivers/net/wireless/wl12xx/wl1251_cmd.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1251_acx.c b/drivers/net/wireless/wl12xx/wl1251_acx.c
+index 91891f9..2f8a2ba 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_acx.c
++++ b/drivers/net/wireless/wl12xx/wl1251_acx.c
+@@ -380,7 +380,7 @@ int wl1251_acx_pd_threshold(struct wl1251 *wl)
+ 
+ out:
+ 	kfree(pd);
+-	return 0;
++	return ret;
+ }
+ 
+ int wl1251_acx_slot(struct wl1251 *wl, enum acx_slot_type slot_time)
+diff --git a/drivers/net/wireless/wl12xx/wl1251_cmd.c b/drivers/net/wireless/wl12xx/wl1251_cmd.c
+index a37b30c..949b6a3 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_cmd.c
++++ b/drivers/net/wireless/wl12xx/wl1251_cmd.c
+@@ -200,7 +200,7 @@ int wl1251_cmd_vbm(struct wl1251 *wl, u8 identity,
+ 
+ out:
+ 	kfree(vbm);
+-	return 0;
++	return ret;
+ }
+ 
+ int wl1251_cmd_data_path(struct wl1251 *wl, u8 channel, bool enable)
