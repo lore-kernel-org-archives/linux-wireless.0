@@ -1,55 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56687 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751104Ab0HRNB0 (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:34793 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751390Ab0HPSQN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Aug 2010 09:01:26 -0400
-Subject: [PATCH v2] mac80211: fix docbook
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1282130871.3664.5.camel@jlt3.sipsolutions.net>
-References: <1282130871.3664.5.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 18 Aug 2010 15:01:23 +0200
-Message-ID: <1282136483.13315.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 16 Aug 2010 14:16:13 -0400
+Received: by qyk10 with SMTP id 10so32188qyk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Aug 2010 11:16:12 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTin0R6k0_GoSEN8aJ8t_fTJw9h_N_0etcxAokv6N@mail.gmail.com>
+References: <AANLkTimMhW7OX3DT7A3EDNaOnr577KmTv5w9C_mz19TG@mail.gmail.com> <AANLkTin0R6k0_GoSEN8aJ8t_fTJw9h_N_0etcxAokv6N@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Mon, 16 Aug 2010 20:15:52 +0200
+Message-ID: <AANLkTinPR-Fp7u6vFq9LsY93myS4QzyMpF3R0NydmHYv@mail.gmail.com>
+Subject: Re: [RFT] BCM4312 users with DMA errors, please test!
+To: Arthur Moreira <arthur.moreira@gmail.com>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+2010/8/16 Arthur Moreira <arthur.moreira@gmail.com>:
+> Hi,
+> I have a BCM4353 card, with the  hybrid module  wl work fine to find
+> and conect to networks.
+> But, a want to put the card in monitor mode.
+>
+> (my card is a 802.11bgN mini card, in a dell vostro)
+>
+> this path will help me? and.. how to aply the path? the comand path $#
+> < file    ???
+> tks
+>
+>
+>               Arthur Moreira
+>
 
-Fix a small problem in the documentation for
-ieee80211_request_smps, and a now erroneous
-inclusion of enum ieee80211_key_alg, which no
-longer exists after the change to ciphers.
+No, this patch is only for BCM4312 devices, not the BCM43224 that you
+have (there is no such thing as a "BCM4353" AFAIK - PCI device IDs
+don't map directly to chip IDs!). Your card is an N-PHY, probably
+revision 4 or 5 (you can see the revision by adding 14e4:4353 to the
+list of PCI IDs in ssb, then looking for the "FOUND UNSUPPORTED PHY"
+line in dmesg). We are working on N-PHYs, revisions <=2 will likely be
+usable soon; rev.3 and newer will take longer, however. (It is
+possible that this patch will also be needed for N-PHYs if they show
+similar DMA errors to the 4312, but it is certainly not enough to get
+N-PHYs to work.)
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- Documentation/DocBook/80211.tmpl |    1 -
- include/net/mac80211.h           |    2 +-
- 2 files changed, 1 insertion(+), 2 deletions(-)
-
---- wireless-testing.orig/include/net/mac80211.h	2010-08-18 13:26:33.000000000 +0200
-+++ wireless-testing/include/net/mac80211.h	2010-08-18 13:26:43.000000000 +0200
-@@ -2546,7 +2546,7 @@ void ieee80211_chswitch_done(struct ieee
- /**
-  * ieee80211_request_smps - request SM PS transition
-  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-- * @mode: new SM PS mode
-+ * @smps_mode: new SM PS mode
-  *
-  * This allows the driver to request an SM PS transition in managed
-  * mode. This is useful when the driver has more information than
---- wireless-testing.orig/Documentation/DocBook/80211.tmpl	2010-08-18 14:53:44.000000000 +0200
-+++ wireless-testing/Documentation/DocBook/80211.tmpl	2010-08-18 14:54:25.000000000 +0200
-@@ -248,7 +248,6 @@ MISSING
-   <!-- intentionally multiple !F lines to get proper order -->
- !Finclude/net/mac80211.h set_key_cmd
- !Finclude/net/mac80211.h ieee80211_key_conf
--!Finclude/net/mac80211.h ieee80211_key_alg
- !Finclude/net/mac80211.h ieee80211_key_flags
-       </chapter>
- 
+>
+>
+>
+> 2010/8/16 Gábor Stefanik <netrolller.3d@gmail.com>:
+>> Hello Everyone!
+>>
+>> If you are experiencing DMA errors on a BCM4312, please test the
+>> attached patch. It implements the PCI-E SERDES workaround, which the
+>> hybrid driver is applying during early init to LP-PHY cards, and which
+>> is a good candidate for the cause of the DMA error.
+>> Note that this is not a final patch & it may cause collateral damage
+>> for non-4312 cards; if it helps the 4312 problem, I will submit a
+>> cleaned-up version.
+>>
+>> Thanks,
+>> Gábor
+>>
+>
 
 
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
