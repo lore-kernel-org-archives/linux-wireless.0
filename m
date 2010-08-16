@@ -1,68 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:60630 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752062Ab0HVTuI convert rfc822-to-8bit (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:60945 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754797Ab0HPVzg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Aug 2010 15:50:08 -0400
-Received: by qyk9 with SMTP id 9so2127570qyk.19
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Aug 2010 12:50:07 -0700 (PDT)
+	Mon, 16 Aug 2010 17:55:36 -0400
+Received: by vws3 with SMTP id 3so3856816vws.19
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Aug 2010 14:55:36 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1282506452-8159-1-git-send-email-zajec5@gmail.com>
-References: <1282506452-8159-1-git-send-email-zajec5@gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Sun, 22 Aug 2010 21:49:47 +0200
-Message-ID: <AANLkTikP5hQKMyJD1-7+gaY8PykQ77At+Vpkqf=HRT0H@mail.gmail.com>
-Subject: Re: [PATCH] b43: N-PHY: add missing phyrxchain setting and fix
- warning in RX core function
-To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1281995025.3683.34.camel@jlt3.sipsolutions.net>
+References: <AANLkTi=ZGn0Rt7zYxBJB0jJ-EY=gPpxtBN2bA9svkq99@mail.gmail.com>
+	<1281986025.3683.31.camel@jlt3.sipsolutions.net>
+	<AANLkTiniqFJzrWFzNJTxsF31EZfSTei89dbS2Ak4YDjH@mail.gmail.com>
+	<1281987696.3683.32.camel@jlt3.sipsolutions.net>
+	<AANLkTi=ALaGb=UcWAuB_N8E9j95f0Hgxtw0Dhh7xaPh2@mail.gmail.com>
+	<1281995025.3683.34.camel@jlt3.sipsolutions.net>
+Date: Mon, 16 Aug 2010 17:55:35 -0400
+Message-ID: <AANLkTi=sb0PT4FHsjbuAOQjnDq79GHEj8LbCLTtO8MeS@mail.gmail.com>
+Subject: Re: nl80211 scanning from userspace
+From: Christopher Piggott <cpiggott@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/8/22 Rafał Miłecki <zajec5@gmail.com>:
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
-> Gábor: please kindly, watch out for such a missing calls/sets. We may lose a
-> lot of time looking for such a missing lines later.
-> ---
->  drivers/net/wireless/b43/phy_n.c |    4 +++-
->  1 files changed, 3 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-> index d116229..2466c0a 100644
-> --- a/drivers/net/wireless/b43/phy_n.c
-> +++ b/drivers/net/wireless/b43/phy_n.c
-> @@ -3092,6 +3092,8 @@ static void b43_nphy_set_rx_core_state(struct b43_wldev *dev, u8 mask)
->        struct b43_phy_n *nphy = phy->n;
->        u16 buf[16];
->
-> +       nphy->phyrxchain = mask;
-> +
->        if (0 /* FIXME clk */)
->                return;
->
-> @@ -3103,7 +3105,7 @@ static void b43_nphy_set_rx_core_state(struct b43_wldev *dev, u8 mask)
->        b43_phy_maskset(dev, B43_NPHY_RFSEQCA, ~B43_NPHY_RFSEQCA_RXEN,
->                        (mask & 0x3) << B43_NPHY_RFSEQCA_RXEN_SHIFT);
->
-> -       if (mask & 0x3 != 0x3) {
-> +       if ((mask & 0x3) != 0x3) {
+OHHH.  I am with you now.  I looked at driver_nl80211.c and somehow
+had a blind spot  when it came to message NLM_F_DUMP.  I see it now,
+and it's sending me back results.
 
-Why is this needed? An & doesn't magically transform into an && under
-any circumstances...
+I am tempted to write a slightly higher level API on top of some of
+this, once I understand the semantics of all of this a little better.
+I will search around first and see if any attempts have already been
+made.
 
->                b43_phy_write(dev, B43_NPHY_HPANT_SWTHRES, 1);
->                if (dev->phy.rev >= 3) {
->                        /* TODO */
-> --
-> 1.7.1
->
->
+Thank you very much for pushing me in the right direction.
+
+--Chris
 
 
-
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+On Mon, Aug 16, 2010 at 5:43 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2010-08-16 at 17:22 -0400, Christopher Piggott wrote:
+>> It's hard to figure out what's going on sometimes. �I set up an error handler:
+>>
+>> static int error_handler(struct sockaddr_nl *nla, struct nlmsgerr
+>> *err, void *arg) {
+>> � � printf("ERROR %s (%d)\n", strerror(err->error), err->error);
+>> � � return NL_SKIP;
+>> }
+>>
+>> which also returns -95 (operation not supported) just as you said.
+>> So, I'll have to figure out what you mean by "dumping."
+>>
+>> I did find this:
+>>
+>> � � � � mcid = nl_get_multicast_id(state->nl_sock, "nl80211", "scan");
+>>
+>> in iw:event.c and traced it to some code in iw:genl.c, a file that
+>> starts out by commenting "This ought to be provided by libnl". �That
+>> situation doesn't seem to have changed.
+>>
+>> Is this the area of the code you mean when you say "dump" ? �That I
+>> need to register myself to receive the scan results?
+>
+> No, you need to use NLM_F_DUMP etc. Really, check wpa_supplicant :)
+>
+> johannes
+>
+>
