@@ -1,47 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:39069 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754466Ab0HCUFB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Aug 2010 16:05:01 -0400
-Received: by eya25 with SMTP id 25so1775103eya.19
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Aug 2010 13:05:00 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4C58316C.2050009@candelatech.com>
-References: <AANLkTik0Ebk6zcTi29pofUvzmVDmRwi4hthj+66k9-V0@mail.gmail.com>
-	<4C57A16A.90501@candelatech.com>
-	<AANLkTi=vrwrqJwB+OH_d6kUWhqNN6LkzeUpuAktd=87H@mail.gmail.com>
-	<AANLkTim5ApsX4VwqR1+Fw1E-+iey8G5HMKgAXbXh+6zu@mail.gmail.com>
-	<4C58316C.2050009@candelatech.com>
-Date: Wed, 4 Aug 2010 06:05:00 +1000
-Message-ID: <AANLkTikqGUToB6-ULz4Ng0xDiYJoaLBtvkMkLUs5vG5z@mail.gmail.com>
-Subject: Re: virtual access point setup
-From: Ryszard <ryszard99@gmail.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Florian Fainelli <florian@openwrt.org>,
-	Patrick McHardy <kaber@trash.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from lo.gmane.org ([80.91.229.12]:60743 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753152Ab0HQHK0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Aug 2010 03:10:26 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1OlGJT-0002Mp-4e
+	for linux-wireless@vger.kernel.org; Tue, 17 Aug 2010 09:10:23 +0200
+Received: from rain.gmane.org ([80.91.229.7])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2010 09:10:23 +0200
+Received: from marcus by rain.gmane.org with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2010 09:10:23 +0200
+To: linux-wireless@vger.kernel.org
+From: Marcus Better <marcus@better.se>
+Subject: Re: iwl3945 not associating on 2.6.35
+Date: Tue, 17 Aug 2010 09:10:04 +0200
+Message-ID: <i4dckm$p0v$1@dough.gmane.org>
+References: <i485ou$qmb$1@dough.gmane.org> <20100816145221.GB2656@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ah, good tip, thx!
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-On 4 August 2010 01:10, Ben Greear <greearb@candelatech.com> wrote:
->
-> On 08/02/2010 10:46 PM, Ryszard wrote:
->>
->> hey ben,  any idea on which config would be best for an AMD geode proc?
->> i'm thinking either the c3 or p4 compat configs ..
->
-> You could start with either, and then change the CPU type as needed.
->
-> You only need the -compat version if you are running on older user-space
-> OS's..so you might try w/out compat first.
->
-> Thanks,
-> Ben
->
-> --
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
+John W. Linville wrote:
+> I'm not aware of this issue.  Please open a bug at bugzilla.kernel.org.
+
+https://bugzilla.kernel.org/show_bug.cgi?id=16610
+
+Cheers,
+
+Marcus
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAkxqNcwACgkQXjXn6TzcAQknwQCgk+c05IofA8KG6J+OP9nGD4m1
+E6MAoLQSThgPu0+8io9HUuBNISNIs5zX
+=+wgZ
+-----END PGP SIGNATURE-----
+
+
