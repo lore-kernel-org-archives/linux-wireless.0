@@ -1,72 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:54770 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754442Ab0HDPkn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Aug 2010 11:40:43 -0400
-Message-ID: <4C598A0B.9000301@gmail.com>
-Date: Wed, 04 Aug 2010 17:40:59 +0200
-From: Tejun Heo <htejun@gmail.com>
-MIME-Version: 1.0
-To: Jens Axboe <jaxboe@fusionio.com>
-CC: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	stable@kernel.org, Maciej Rutecki <maciej.rutecki@gmail.com>
-Subject: [PATCH block#for-2.6.36] block_dev: always serialize exclusive open
- attempts
-References: <2dWFdr9kTFM.A.P0D.spXVMB@chimera> <AANLkTimcH7+Bq1UEbaSU7SQpzArPgmSLegiqE13V8=CF@mail.gmail.com> <4C56F30D.3020304@kernel.org>
-In-Reply-To: <4C56F30D.3020304@kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:50125 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933372Ab0HQSbg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Aug 2010 14:31:36 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 0/3] compat-wireless: miscellaneous fixes
+Date: Tue, 17 Aug 2010 20:31:06 +0200
+Message-Id: <1282069869-22300-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-bd_prepare_to_claim() incorrectly allowed multiple attempts for
-exclusive open to progress in parallel if the attempting holders are
-identical.  This triggered BUG_ON() as reported in the following bug.
+This was build tested in combination with the patches to compat.
 
-  https://bugzilla.kernel.org/show_bug.cgi?id=16393
+Hauke Mehrtens (3):
+  compat-wireless: deactivate namespace
+  compat-wireless: make compat-2.6.37.c build
+  compat-wireless: fix hidp_output_raw_report
 
-__bd_abort_claiming() is used to finish claiming blocks and doesn't
-work if multiple openers are inside a claiming block.  Allowing
-multiple parallel open attempts to continue doesn't gain anything as
-those are serialized down in the call chain anyway.  Fix it by always
-allowing only single open attempt in a claiming block.
-
-This problem can easily be reproduced by adding a delay after
-bd_prepare_to_claim() and attempting to mount two partitions of a
-disk.
-
-stable: only applicable to v2.6.35
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Maciej Rutecki <maciej.rutecki@gmail.com>
-Cc: stable@kernel.org
----
- fs/block_dev.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 99d6af8..b3171fb 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -681,8 +681,8 @@ retry:
- 	if (!bd_may_claim(bdev, whole, holder))
- 		return -EBUSY;
-
--	/* if someone else is claiming, wait for it to finish */
--	if (whole->bd_claiming && whole->bd_claiming != holder) {
-+	/* if claiming is already in progress, wait for it to finish */
-+	if (whole->bd_claiming) {
- 		wait_queue_head_t *wq = bit_waitqueue(&whole->bd_claiming, 0);
- 		DEFINE_WAIT(wait);
+ config.mk                       |    2 +-
+ patches/16-bluetooth.patch      |   37 +++++++++++++++++++++++--------------
+ patches/32-remove-ns-type.patch |   28 ++++++++++++++++++++++++++++
+ 3 files changed, 52 insertions(+), 15 deletions(-)
+ create mode 100644 patches/32-remove-ns-type.patch
 
