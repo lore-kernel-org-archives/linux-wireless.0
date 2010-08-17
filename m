@@ -1,90 +1,759 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:43673 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754144Ab0HKSWL (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52110 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755617Ab0HQKEi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Aug 2010 14:22:11 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>
-Cc: Ido Yariv <ido@wizery.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v4 4/8] wireless: wl1271: take irq info from private board data
-Date: Wed, 11 Aug 2010 21:21:49 +0300
-Message-Id: <1281550913-17633-5-git-send-email-ohad@wizery.com>
-In-Reply-To: <1281550913-17633-1-git-send-email-ohad@wizery.com>
-References: <1281550913-17633-1-git-send-email-ohad@wizery.com>
+	Tue, 17 Aug 2010 06:04:38 -0400
+Subject: [PATCH] wireless: move documentation books
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 17 Aug 2010 12:04:34 +0200
+Message-ID: <1282039474.3747.4.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove the hard coded irq information, and instead take
-the irq information from the board's platform data.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+This moves mac80211 documentation into a new
+802.11 bookset and also adds a cfg80211 book
+to the set. All of this is rather incomplete,
+but it's easier to work with big code moving
+as a separate patch.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/wl12xx/wl1271_sdio.c |   18 +++++++++---------
- 1 files changed, 9 insertions(+), 9 deletions(-)
+ Documentation/DocBook/80211.tmpl    |  371 ++++++++++++++++++++++++++++++++++++
+ Documentation/DocBook/Makefile      |    2 
+ Documentation/DocBook/mac80211.tmpl |  337 --------------------------------
+ 3 files changed, 372 insertions(+), 338 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-index 68b512b..228f5af 100644
---- a/drivers/net/wireless/wl12xx/wl1271_sdio.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-@@ -38,9 +38,6 @@
- #include "wl12xx_80211.h"
- #include "wl1271_io.h"
- 
+--- wireless-testing.orig/Documentation/DocBook/mac80211.tmpl	2010-06-15 11:20:57.000000000 +0200
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,337 +0,0 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+-	"http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" []>
 -
--#define RX71_WL1271_IRQ_GPIO		42
+-<book id="mac80211-developers-guide">
+-  <bookinfo>
+-    <title>The mac80211 subsystem for kernel developers</title>
 -
- #ifndef SDIO_VENDOR_ID_TI
- #define SDIO_VENDOR_ID_TI		0x0097
- #endif
-@@ -191,6 +188,7 @@ static int wl1271_plat_probe(struct platform_device *pdev)
- 	struct wl12xx_platform_data *pdata;
- 	struct platform_driver *pdriver;
- 	struct wl12xx_plat_instance *pinstance;
-+	int irq;
+-    <authorgroup>
+-      <author>
+-        <firstname>Johannes</firstname>
+-        <surname>Berg</surname>
+-        <affiliation>
+-          <address><email>johannes@sipsolutions.net</email></address>
+-        </affiliation>
+-      </author>
+-    </authorgroup>
+-
+-    <copyright>
+-      <year>2007-2009</year>
+-      <holder>Johannes Berg</holder>
+-    </copyright>
+-
+-    <legalnotice>
+-      <para>
+-        This documentation is free software; you can redistribute
+-        it and/or modify it under the terms of the GNU General Public
+-        License version 2 as published by the Free Software Foundation.
+-      </para>
+-
+-      <para>
+-        This documentation is distributed in the hope that it will be
+-        useful, but WITHOUT ANY WARRANTY; without even the implied
+-        warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+-        See the GNU General Public License for more details.
+-      </para>
+-
+-      <para>
+-        You should have received a copy of the GNU General Public
+-        License along with this documentation; if not, write to the Free
+-        Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+-        MA 02111-1307 USA
+-      </para>
+-
+-      <para>
+-        For more details see the file COPYING in the source
+-        distribution of Linux.
+-      </para>
+-    </legalnotice>
+-
+-    <abstract>
+-!Pinclude/net/mac80211.h Introduction
+-!Pinclude/net/mac80211.h Warning
+-    </abstract>
+-  </bookinfo>
+-
+-  <toc></toc>
+-
+-<!--
+-Generally, this document shall be ordered by increasing complexity.
+-It is important to note that readers should be able to read only
+-the first few sections to get a working driver and only advanced
+-usage should require reading the full document.
+--->
+-
+-  <part>
+-    <title>The basic mac80211 driver interface</title>
+-    <partintro>
+-      <para>
+-        You should read and understand the information contained
+-        within this part of the book while implementing a driver.
+-        In some chapters, advanced usage is noted, that may be
+-        skipped at first.
+-      </para>
+-      <para>
+-        This part of the book only covers station and monitor mode
+-        functionality, additional information required to implement
+-        the other modes is covered in the second part of the book.
+-      </para>
+-    </partintro>
+-
+-    <chapter id="basics">
+-      <title>Basic hardware handling</title>
+-      <para>TBD</para>
+-      <para>
+-        This chapter shall contain information on getting a hw
+-        struct allocated and registered with mac80211.
+-      </para>
+-      <para>
+-        Since it is required to allocate rates/modes before registering
+-        a hw struct, this chapter shall also contain information on setting
+-        up the rate/mode structs.
+-      </para>
+-      <para>
+-        Additionally, some discussion about the callbacks and
+-        the general programming model should be in here, including
+-        the definition of ieee80211_ops which will be referred to
+-        a lot.
+-      </para>
+-      <para>
+-        Finally, a discussion of hardware capabilities should be done
+-        with references to other parts of the book.
+-      </para>
+-<!-- intentionally multiple !F lines to get proper order -->
+-!Finclude/net/mac80211.h ieee80211_hw
+-!Finclude/net/mac80211.h ieee80211_hw_flags
+-!Finclude/net/mac80211.h SET_IEEE80211_DEV
+-!Finclude/net/mac80211.h SET_IEEE80211_PERM_ADDR
+-!Finclude/net/mac80211.h ieee80211_ops
+-!Finclude/net/mac80211.h ieee80211_alloc_hw
+-!Finclude/net/mac80211.h ieee80211_register_hw
+-!Finclude/net/mac80211.h ieee80211_get_tx_led_name
+-!Finclude/net/mac80211.h ieee80211_get_rx_led_name
+-!Finclude/net/mac80211.h ieee80211_get_assoc_led_name
+-!Finclude/net/mac80211.h ieee80211_get_radio_led_name
+-!Finclude/net/mac80211.h ieee80211_unregister_hw
+-!Finclude/net/mac80211.h ieee80211_free_hw
+-    </chapter>
+-
+-    <chapter id="phy-handling">
+-      <title>PHY configuration</title>
+-      <para>TBD</para>
+-      <para>
+-        This chapter should describe PHY handling including
+-        start/stop callbacks and the various structures used.
+-      </para>
+-!Finclude/net/mac80211.h ieee80211_conf
+-!Finclude/net/mac80211.h ieee80211_conf_flags
+-    </chapter>
+-
+-    <chapter id="iface-handling">
+-      <title>Virtual interfaces</title>
+-      <para>TBD</para>
+-      <para>
+-        This chapter should describe virtual interface basics
+-        that are relevant to the driver (VLANs, MGMT etc are not.)
+-        It should explain the use of the add_iface/remove_iface
+-        callbacks as well as the interface configuration callbacks.
+-      </para>
+-      <para>Things related to AP mode should be discussed there.</para>
+-      <para>
+-        Things related to supporting multiple interfaces should be
+-        in the appropriate chapter, a BIG FAT note should be here about
+-        this though and the recommendation to allow only a single
+-        interface in STA mode at first!
+-      </para>
+-!Finclude/net/mac80211.h ieee80211_vif
+-    </chapter>
+-
+-    <chapter id="rx-tx">
+-      <title>Receive and transmit processing</title>
+-      <sect1>
+-        <title>what should be here</title>
+-        <para>TBD</para>
+-        <para>
+-          This should describe the receive and transmit
+-          paths in mac80211/the drivers as well as
+-          transmit status handling.
+-        </para>
+-      </sect1>
+-      <sect1>
+-        <title>Frame format</title>
+-!Pinclude/net/mac80211.h Frame format
+-      </sect1>
+-      <sect1>
+-        <title>Packet alignment</title>
+-!Pnet/mac80211/rx.c Packet alignment
+-      </sect1>
+-      <sect1>
+-        <title>Calling into mac80211 from interrupts</title>
+-!Pinclude/net/mac80211.h Calling mac80211 from interrupts
+-      </sect1>
+-      <sect1>
+-        <title>functions/definitions</title>
+-!Finclude/net/mac80211.h ieee80211_rx_status
+-!Finclude/net/mac80211.h mac80211_rx_flags
+-!Finclude/net/mac80211.h ieee80211_tx_info
+-!Finclude/net/mac80211.h ieee80211_rx
+-!Finclude/net/mac80211.h ieee80211_rx_irqsafe
+-!Finclude/net/mac80211.h ieee80211_tx_status
+-!Finclude/net/mac80211.h ieee80211_tx_status_irqsafe
+-!Finclude/net/mac80211.h ieee80211_rts_get
+-!Finclude/net/mac80211.h ieee80211_rts_duration
+-!Finclude/net/mac80211.h ieee80211_ctstoself_get
+-!Finclude/net/mac80211.h ieee80211_ctstoself_duration
+-!Finclude/net/mac80211.h ieee80211_generic_frame_duration
+-!Finclude/net/mac80211.h ieee80211_wake_queue
+-!Finclude/net/mac80211.h ieee80211_stop_queue
+-!Finclude/net/mac80211.h ieee80211_wake_queues
+-!Finclude/net/mac80211.h ieee80211_stop_queues
+-      </sect1>
+-    </chapter>
+-
+-    <chapter id="filters">
+-      <title>Frame filtering</title>
+-!Pinclude/net/mac80211.h Frame filtering
+-!Finclude/net/mac80211.h ieee80211_filter_flags
+-    </chapter>
+-  </part>
+-
+-  <part id="advanced">
+-    <title>Advanced driver interface</title>
+-    <partintro>
+-      <para>
+-       Information contained within this part of the book is
+-       of interest only for advanced interaction of mac80211
+-       with drivers to exploit more hardware capabilities and
+-       improve performance.
+-      </para>
+-    </partintro>
+-
+-    <chapter id="hardware-crypto-offload">
+-      <title>Hardware crypto acceleration</title>
+-!Pinclude/net/mac80211.h Hardware crypto acceleration
+-<!-- intentionally multiple !F lines to get proper order -->
+-!Finclude/net/mac80211.h set_key_cmd
+-!Finclude/net/mac80211.h ieee80211_key_conf
+-!Finclude/net/mac80211.h ieee80211_key_alg
+-!Finclude/net/mac80211.h ieee80211_key_flags
+-    </chapter>
+-
+-    <chapter id="powersave">
+-      <title>Powersave support</title>
+-!Pinclude/net/mac80211.h Powersave support
+-    </chapter>
+-
+-    <chapter id="beacon-filter">
+-      <title>Beacon filter support</title>
+-!Pinclude/net/mac80211.h Beacon filter support
+-!Finclude/net/mac80211.h ieee80211_beacon_loss
+-    </chapter>
+-
+-    <chapter id="qos">
+-      <title>Multiple queues and QoS support</title>
+-      <para>TBD</para>
+-!Finclude/net/mac80211.h ieee80211_tx_queue_params
+-    </chapter>
+-
+-    <chapter id="AP">
+-      <title>Access point mode support</title>
+-      <para>TBD</para>
+-      <para>Some parts of the if_conf should be discussed here instead</para>
+-      <para>
+-        Insert notes about VLAN interfaces with hw crypto here or
+-        in the hw crypto chapter.
+-      </para>
+-!Finclude/net/mac80211.h ieee80211_get_buffered_bc
+-!Finclude/net/mac80211.h ieee80211_beacon_get
+-    </chapter>
+-
+-    <chapter id="multi-iface">
+-      <title>Supporting multiple virtual interfaces</title>
+-      <para>TBD</para>
+-      <para>
+-        Note: WDS with identical MAC address should almost always be OK
+-      </para>
+-      <para>
+-        Insert notes about having multiple virtual interfaces with
+-        different MAC addresses here, note which configurations are
+-        supported by mac80211, add notes about supporting hw crypto
+-        with it.
+-      </para>
+-    </chapter>
+-
+-    <chapter id="hardware-scan-offload">
+-      <title>Hardware scan offload</title>
+-      <para>TBD</para>
+-!Finclude/net/mac80211.h ieee80211_scan_completed
+-    </chapter>
+-  </part>
+-
+-  <part id="rate-control">
+-    <title>Rate control interface</title>
+-    <partintro>
+-      <para>TBD</para>
+-      <para>
+-       This part of the book describes the rate control algorithm
+-       interface and how it relates to mac80211 and drivers.
+-      </para>
+-    </partintro>
+-    <chapter id="dummy">
+-      <title>dummy chapter</title>
+-      <para>TBD</para>
+-    </chapter>
+-  </part>
+-
+-  <part id="internal">
+-    <title>Internals</title>
+-    <partintro>
+-      <para>TBD</para>
+-      <para>
+-       This part of the book describes mac80211 internals.
+-      </para>
+-    </partintro>
+-
+-    <chapter id="key-handling">
+-      <title>Key handling</title>
+-      <sect1>
+-        <title>Key handling basics</title>
+-!Pnet/mac80211/key.c Key handling basics
+-      </sect1>
+-      <sect1>
+-        <title>MORE TBD</title>
+-        <para>TBD</para>
+-      </sect1>
+-    </chapter>
+-
+-    <chapter id="rx-processing">
+-      <title>Receive processing</title>
+-      <para>TBD</para>
+-    </chapter>
+-
+-    <chapter id="tx-processing">
+-      <title>Transmit processing</title>
+-      <para>TBD</para>
+-    </chapter>
+-
+-    <chapter id="sta-info">
+-      <title>Station info handling</title>
+-      <sect1>
+-        <title>Programming information</title>
+-!Fnet/mac80211/sta_info.h sta_info
+-!Fnet/mac80211/sta_info.h ieee80211_sta_info_flags
+-      </sect1>
+-      <sect1>
+-        <title>STA information lifetime rules</title>
+-!Pnet/mac80211/sta_info.c STA information lifetime rules
+-      </sect1>
+-    </chapter>
+-
+-    <chapter id="synchronisation">
+-      <title>Synchronisation</title>
+-      <para>TBD</para>
+-      <para>Locking, lots of RCU</para>
+-    </chapter>
+-  </part>
+-</book>
+--- wireless-testing.orig/Documentation/DocBook/Makefile	2010-06-15 11:20:57.000000000 +0200
++++ wireless-testing/Documentation/DocBook/Makefile	2010-06-15 11:21:01.000000000 +0200
+@@ -12,7 +12,7 @@ DOCBOOKS := z8530book.xml mcabook.xml de
+ 	    kernel-api.xml filesystems.xml lsm.xml usb.xml kgdb.xml \
+ 	    gadget.xml libata.xml mtdnand.xml librs.xml rapidio.xml \
+ 	    genericirq.xml s390-drivers.xml uio-howto.xml scsi.xml \
+-	    mac80211.xml debugobjects.xml sh.xml regulator.xml \
++	    80211.xml debugobjects.xml sh.xml regulator.xml \
+ 	    alsa-driver-api.xml writing-an-alsa-driver.xml \
+ 	    tracepoint.xml media.xml drm.xml
  
- 	pdata = pdev->dev.platform_data;
- 	if (!pdata) {
-@@ -198,6 +196,13 @@ static int wl1271_plat_probe(struct platform_device *pdev)
- 		return -ENODEV;
- 	}
- 
-+	irq = platform_get_irq(pdev, 0);
-+	if (irq < 0) {
-+		wl1271_error("no platform irq data");
-+		return -ENODEV;
-+	}
-+	pdata->irq = irq;
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ wireless-testing/Documentation/DocBook/80211.tmpl	2010-06-15 11:21:01.000000000 +0200
+@@ -0,0 +1,371 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<!DOCTYPE set PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
++	"http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" []>
++<set>
++  <setinfo>
++    <title>The 802.11 subsystems &ndash; for kernel developers</title>
++    <subtitle>
++      Explaining wireless 802.11 networking in the Linux kernel
++    </subtitle>
 +
- 	pdriver = container_of(pdev->dev.driver, struct platform_driver,
- 								driver);
- 	pinstance = container_of(pdriver, struct wl12xx_plat_instance, pdriver);
-@@ -290,12 +295,7 @@ static int __devinit wl1271_probe(struct sdio_func *func,
- 		goto out_free;
- 	}
- 
--	wl->irq = gpio_to_irq(RX71_WL1271_IRQ_GPIO);
--	if (wl->irq < 0) {
--		ret = wl->irq;
--		wl1271_error("could not get irq!");
--		goto put_data;
--	}
-+	wl->irq = wlan_data->irq;
- 
- 	ret = request_irq(wl->irq, wl1271_irq, 0, DRIVER_NAME, wl);
- 	if (ret < 0) {
--- 
-1.7.0.4
++    <copyright>
++      <year>2007-2009</year>
++      <holder>Johannes Berg</holder>
++    </copyright>
++
++    <authorgroup>
++      <author>
++        <firstname>Johannes</firstname>
++        <surname>Berg</surname>
++        <affiliation>
++          <address><email>johannes@sipsolutions.net</email></address>
++        </affiliation>
++      </author>
++    </authorgroup>
++
++    <legalnotice>
++      <para>
++        This documentation is free software; you can redistribute
++        it and/or modify it under the terms of the GNU General Public
++        License version 2 as published by the Free Software Foundation.
++      </para>
++      <para>
++        This documentation is distributed in the hope that it will be
++        useful, but WITHOUT ANY WARRANTY; without even the implied
++        warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
++        See the GNU General Public License for more details.
++      </para>
++      <para>
++        You should have received a copy of the GNU General Public
++        License along with this documentation; if not, write to the Free
++        Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
++        MA 02111-1307 USA
++      </para>
++      <para>
++        For more details see the file COPYING in the source
++        distribution of Linux.
++      </para>
++    </legalnotice>
++
++    <abstract>
++      <para>
++        These books attempt to give a description of the
++        various subsystems that play a role in 802.11 wireless
++        networking in Linux. Since these books are for kernel
++        developers they attempts to document the structures
++        and functions used in the kernel as well as giving a
++        higher-level overview.
++      </para>
++      <para>
++      	The reader is expected to be familiar with the 802.11
++      	standard as published by the IEEE in 802.11-2007 (or
++      	possibly later versions). References to this standard
++      	will be given as "802.11-2007 8.1.5".
++      </para>
++    </abstract>
++  </setinfo>
++  <book id="cfg80211-developers-guide">
++    <bookinfo>
++      <title>The cfg80211 subsystem</title>
++
++      <abstract>
++        <para>
++MISSING
++        </para>
++      </abstract>
++    </bookinfo>
++    <part><chapter>
++!Finclude/net/cfg80211.h ieee80211_band
++    </chapter></part>
++  </book>
++  <book id="mac80211-developers-guide">
++    <bookinfo>
++      <title>The mac80211 subsystem</title>
++      <abstract>
++!Pinclude/net/mac80211.h Introduction
++!Pinclude/net/mac80211.h Warning
++      </abstract>
++    </bookinfo>
++
++    <toc></toc>
++
++  <!--
++  Generally, this document shall be ordered by increasing complexity.
++  It is important to note that readers should be able to read only
++  the first few sections to get a working driver and only advanced
++  usage should require reading the full document.
++  -->
++
++    <part>
++      <title>The basic mac80211 driver interface</title>
++      <partintro>
++        <para>
++          You should read and understand the information contained
++          within this part of the book while implementing a driver.
++          In some chapters, advanced usage is noted, that may be
++          skipped at first.
++        </para>
++        <para>
++          This part of the book only covers station and monitor mode
++          functionality, additional information required to implement
++          the other modes is covered in the second part of the book.
++        </para>
++      </partintro>
++
++      <chapter id="basics">
++        <title>Basic hardware handling</title>
++        <para>TBD</para>
++        <para>
++          This chapter shall contain information on getting a hw
++          struct allocated and registered with mac80211.
++        </para>
++        <para>
++          Since it is required to allocate rates/modes before registering
++          a hw struct, this chapter shall also contain information on setting
++          up the rate/mode structs.
++        </para>
++        <para>
++          Additionally, some discussion about the callbacks and
++          the general programming model should be in here, including
++          the definition of ieee80211_ops which will be referred to
++          a lot.
++        </para>
++        <para>
++          Finally, a discussion of hardware capabilities should be done
++          with references to other parts of the book.
++        </para>
++  <!-- intentionally multiple !F lines to get proper order -->
++!Finclude/net/mac80211.h ieee80211_hw
++!Finclude/net/mac80211.h ieee80211_hw_flags
++!Finclude/net/mac80211.h SET_IEEE80211_DEV
++!Finclude/net/mac80211.h SET_IEEE80211_PERM_ADDR
++!Finclude/net/mac80211.h ieee80211_ops
++!Finclude/net/mac80211.h ieee80211_alloc_hw
++!Finclude/net/mac80211.h ieee80211_register_hw
++!Finclude/net/mac80211.h ieee80211_get_tx_led_name
++!Finclude/net/mac80211.h ieee80211_get_rx_led_name
++!Finclude/net/mac80211.h ieee80211_get_assoc_led_name
++!Finclude/net/mac80211.h ieee80211_get_radio_led_name
++!Finclude/net/mac80211.h ieee80211_unregister_hw
++!Finclude/net/mac80211.h ieee80211_free_hw
++      </chapter>
++
++      <chapter id="phy-handling">
++        <title>PHY configuration</title>
++        <para>TBD</para>
++        <para>
++          This chapter should describe PHY handling including
++          start/stop callbacks and the various structures used.
++        </para>
++!Finclude/net/mac80211.h ieee80211_conf
++!Finclude/net/mac80211.h ieee80211_conf_flags
++      </chapter>
++
++      <chapter id="iface-handling">
++        <title>Virtual interfaces</title>
++        <para>TBD</para>
++        <para>
++          This chapter should describe virtual interface basics
++          that are relevant to the driver (VLANs, MGMT etc are not.)
++          It should explain the use of the add_iface/remove_iface
++          callbacks as well as the interface configuration callbacks.
++        </para>
++        <para>Things related to AP mode should be discussed there.</para>
++        <para>
++          Things related to supporting multiple interfaces should be
++          in the appropriate chapter, a BIG FAT note should be here about
++          this though and the recommendation to allow only a single
++          interface in STA mode at first!
++        </para>
++!Finclude/net/mac80211.h ieee80211_vif
++      </chapter>
++
++      <chapter id="rx-tx">
++        <title>Receive and transmit processing</title>
++        <sect1>
++          <title>what should be here</title>
++          <para>TBD</para>
++          <para>
++            This should describe the receive and transmit
++            paths in mac80211/the drivers as well as
++            transmit status handling.
++          </para>
++        </sect1>
++        <sect1>
++          <title>Frame format</title>
++!Pinclude/net/mac80211.h Frame format
++        </sect1>
++        <sect1>
++          <title>Packet alignment</title>
++!Pnet/mac80211/rx.c Packet alignment
++        </sect1>
++        <sect1>
++          <title>Calling into mac80211 from interrupts</title>
++!Pinclude/net/mac80211.h Calling mac80211 from interrupts
++        </sect1>
++        <sect1>
++          <title>functions/definitions</title>
++!Finclude/net/mac80211.h ieee80211_rx_status
++!Finclude/net/mac80211.h mac80211_rx_flags
++!Finclude/net/mac80211.h ieee80211_tx_info
++!Finclude/net/mac80211.h ieee80211_rx
++!Finclude/net/mac80211.h ieee80211_rx_irqsafe
++!Finclude/net/mac80211.h ieee80211_tx_status
++!Finclude/net/mac80211.h ieee80211_tx_status_irqsafe
++!Finclude/net/mac80211.h ieee80211_rts_get
++!Finclude/net/mac80211.h ieee80211_rts_duration
++!Finclude/net/mac80211.h ieee80211_ctstoself_get
++!Finclude/net/mac80211.h ieee80211_ctstoself_duration
++!Finclude/net/mac80211.h ieee80211_generic_frame_duration
++!Finclude/net/mac80211.h ieee80211_wake_queue
++!Finclude/net/mac80211.h ieee80211_stop_queue
++!Finclude/net/mac80211.h ieee80211_wake_queues
++!Finclude/net/mac80211.h ieee80211_stop_queues
++        </sect1>
++      </chapter>
++
++      <chapter id="filters">
++        <title>Frame filtering</title>
++!Pinclude/net/mac80211.h Frame filtering
++!Finclude/net/mac80211.h ieee80211_filter_flags
++      </chapter>
++    </part>
++
++    <part id="advanced">
++      <title>Advanced driver interface</title>
++      <partintro>
++        <para>
++         Information contained within this part of the book is
++         of interest only for advanced interaction of mac80211
++         with drivers to exploit more hardware capabilities and
++         improve performance.
++        </para>
++      </partintro>
++
++      <chapter id="hardware-crypto-offload">
++        <title>Hardware crypto acceleration</title>
++!Pinclude/net/mac80211.h Hardware crypto acceleration
++  <!-- intentionally multiple !F lines to get proper order -->
++!Finclude/net/mac80211.h set_key_cmd
++!Finclude/net/mac80211.h ieee80211_key_conf
++!Finclude/net/mac80211.h ieee80211_key_alg
++!Finclude/net/mac80211.h ieee80211_key_flags
++      </chapter>
++
++      <chapter id="powersave">
++        <title>Powersave support</title>
++!Pinclude/net/mac80211.h Powersave support
++      </chapter>
++
++      <chapter id="beacon-filter">
++        <title>Beacon filter support</title>
++!Pinclude/net/mac80211.h Beacon filter support
++!Finclude/net/mac80211.h ieee80211_beacon_loss
++      </chapter>
++
++      <chapter id="qos">
++        <title>Multiple queues and QoS support</title>
++        <para>TBD</para>
++!Finclude/net/mac80211.h ieee80211_tx_queue_params
++      </chapter>
++
++      <chapter id="AP">
++        <title>Access point mode support</title>
++        <para>TBD</para>
++        <para>Some parts of the if_conf should be discussed here instead</para>
++        <para>
++          Insert notes about VLAN interfaces with hw crypto here or
++          in the hw crypto chapter.
++        </para>
++!Finclude/net/mac80211.h ieee80211_get_buffered_bc
++!Finclude/net/mac80211.h ieee80211_beacon_get
++      </chapter>
++
++      <chapter id="multi-iface">
++        <title>Supporting multiple virtual interfaces</title>
++        <para>TBD</para>
++        <para>
++          Note: WDS with identical MAC address should almost always be OK
++        </para>
++        <para>
++          Insert notes about having multiple virtual interfaces with
++          different MAC addresses here, note which configurations are
++          supported by mac80211, add notes about supporting hw crypto
++          with it.
++        </para>
++      </chapter>
++
++      <chapter id="hardware-scan-offload">
++        <title>Hardware scan offload</title>
++        <para>TBD</para>
++!Finclude/net/mac80211.h ieee80211_scan_completed
++      </chapter>
++    </part>
++
++    <part id="rate-control">
++      <title>Rate control interface</title>
++      <partintro>
++        <para>TBD</para>
++        <para>
++         This part of the book describes the rate control algorithm
++         interface and how it relates to mac80211 and drivers.
++        </para>
++      </partintro>
++      <chapter id="dummy">
++        <title>dummy chapter</title>
++        <para>TBD</para>
++      </chapter>
++    </part>
++
++    <part id="internal">
++      <title>Internals</title>
++      <partintro>
++        <para>TBD</para>
++        <para>
++         This part of the book describes mac80211 internals.
++        </para>
++      </partintro>
++
++      <chapter id="key-handling">
++        <title>Key handling</title>
++        <sect1>
++          <title>Key handling basics</title>
++!Pnet/mac80211/key.c Key handling basics
++        </sect1>
++        <sect1>
++          <title>MORE TBD</title>
++          <para>TBD</para>
++        </sect1>
++      </chapter>
++
++      <chapter id="rx-processing">
++        <title>Receive processing</title>
++        <para>TBD</para>
++      </chapter>
++
++      <chapter id="tx-processing">
++        <title>Transmit processing</title>
++        <para>TBD</para>
++      </chapter>
++
++      <chapter id="sta-info">
++        <title>Station info handling</title>
++        <sect1>
++          <title>Programming information</title>
++!Fnet/mac80211/sta_info.h sta_info
++!Fnet/mac80211/sta_info.h ieee80211_sta_info_flags
++        </sect1>
++        <sect1>
++          <title>STA information lifetime rules</title>
++!Pnet/mac80211/sta_info.c STA information lifetime rules
++        </sect1>
++      </chapter>
++
++      <chapter id="synchronisation">
++        <title>Synchronisation</title>
++        <para>TBD</para>
++        <para>Locking, lots of RCU</para>
++      </chapter>
++    </part>
++  </book>
++</set>
+
 
