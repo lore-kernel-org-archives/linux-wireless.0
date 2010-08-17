@@ -1,50 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:38312 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754923Ab0HJNfu (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:45681 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755970Ab0HQGi0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Aug 2010 09:35:50 -0400
-Subject: Re: bug: wl1251 stalls connection
-From: Ameya Palande <ameya.palande@nokia.com>
-To: ext Kalle Valo <kvalo@adurom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"carsten@maemo.org" <carsten@maemo.org>
-In-Reply-To: <4C614988.20106@adurom.com>
-References: <1281438628.1964.6.camel@chotu>  <4C614988.20106@adurom.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 10 Aug 2010 16:35:17 +0300
-Message-ID: <1281447317.17541.30.camel@chotu>
-Mime-Version: 1.0
+	Tue, 17 Aug 2010 02:38:26 -0400
+Received: by qyk10 with SMTP id 10so321368qyk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Aug 2010 23:38:11 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4C69A3E4.1080807@bu3sch.de>
+References: <1281991157-1557-1-git-send-email-netrolller.3d@gmail.com>
+ <1281991157-1557-2-git-send-email-netrolller.3d@gmail.com>
+ <1281991157-1557-3-git-send-email-netrolller.3d@gmail.com>
+ <1281991157-1557-4-git-send-email-netrolller.3d@gmail.com> <4C69A3E4.1080807@bu3sch.de>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Tue, 17 Aug 2010 08:37:51 +0200
+Message-ID: <AANLkTik-q-UsU8AyvoQ+ci2RFUk9=4kfiPZLmb7pg4jG@mail.gmail.com>
+Subject: Re: [PATCH 4/4] b43: N-PHY: Implement RX core state setting for rev.2
+ and earlier PHYs
+To: =?ISO-8859-1?Q?Michael_B=FCsch?= <mb@bu3sch.de>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	Larry Finger <larry.finger@lwfinger.net>,
+	=?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+On Mon, Aug 16, 2010 at 10:47 PM, Michael Büsch <mb@bu3sch.de> wrote:
+> On 08/16/2010 10:39 PM, Gábor Stefanik wrote:
+>>
+>> +static void b43_nphy_set_rx_core_state(struct b43_wldev *dev, u8 mask)
+>> +{
+>> +       struct b43_phy *phy =&dev->phy;
+>> +       struct b43_phy_n *nphy = phy->n;
+>> +       u16 buf[16];
+>
+>> +       if (maskbits&  0x3 != 0x3) {
+>
+> Does this even compile? I don't see maskbits being defined.
 
-On Tue, 2010-08-10 at 14:43 +0200, ext Kalle Valo wrote:
-> On 08/10/2010 02:10 PM, Ameya Palande wrote:
-> > Hi,
-> 
-> Hi Ameya,
-> 
-> > Can you guys have a look at following wl1251 bug?
-> 
-> I'll plan to look at later this week. I need to first setup my n900 to
-> work with the latest upstream kernel.
-> 
-> > Bug 5030 - WL1251 stalls connection completely when being asked to scan 
-> > while associated
-> > 
-> > Link: http://bugs.meego.com/show_bug.cgi?id=5030
-> 
-> I remember Android having similar problems with wl1251_sdio. I'm
-> guessing wl1251 scan commands are somehow broken in upstream kernel.
-> Obviously this was working with maemo kernels.
-> 
-> It would help someone can file a bug about this to
-> https://bugzilla.kernel.org/. Easier to track the issue that way.
+Typo, should be just "mask" (without "bits").
 
-https://bugzilla.kernel.org/show_bug.cgi?id=16554
+>
+> --
+> Greetings Michael.
+>
 
-Cheers,
-Ameya.
 
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
