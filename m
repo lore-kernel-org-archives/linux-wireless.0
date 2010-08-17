@@ -1,48 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:6817 "EHLO mga01.intel.com"
+Received: from chilli.pcug.org.au ([203.10.76.44]:33742 "EHLO smtps.tip.net.au"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751976Ab0HWRBU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Aug 2010 13:01:20 -0400
-Subject: Re: iwlagn fails to associate on 2.6.36-rc2
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20100823163259.GA15511@infradead.org>
-References: <20100823110247.GA3198@infradead.org>
-	 <1282572681.20674.3.camel@wwguy-ubuntu>
-	 <20100823141432.GA29902@infradead.org>
-	 <1282574533.12500.1.camel@wwguy-huron>
-	 <20100823163259.GA15511@infradead.org>
-Content-Type: text/plain
-Date: Mon, 23 Aug 2010 10:00:45 -0700
-Message-Id: <1282582845.13288.4.camel@wwguy-ubuntu>
+	id S1750910Ab0HQDHb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Aug 2010 23:07:31 -0400
+Date: Tue, 17 Aug 2010 13:07:22 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Rusty Russell <rusty@rustcorp.com.au>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
+	libertas-dev@lists.infradead.org, netdev@vger.kernel.org,
+	Takashi Iwai <tiwai@suse.de>
+Subject: Re: linux-next: manual merge of the wireless tree with Linus' tree
+Message-Id: <20100817130722.cd8c11b0.sfr@canb.auug.org.au>
+In-Reply-To: <201008171229.46175.rusty@rustcorp.com.au>
+References: <20100817115203.e8a76e44.sfr@canb.auug.org.au>
+	<201008171229.46175.rusty@rustcorp.com.au>
 Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Tue__17_Aug_2010_13_07_22_+1000_mvQO/kDifi5bPJbC"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-08-23 at 09:32 -0700, Christoph Hellwig wrote:
-> On Mon, Aug 23, 2010 at 07:42:13AM -0700, Guy, Wey-Yi wrote:
-> > Turn both iwlagn anf mac80211 debugging on when you compile kernel and
-> > use debug=0x43fff when you load the iwlagn module
-> 
-> Here's a log for the sequence of:
-> 
-> 	modprobe iwlagn debug=0x43fff
-> 	ifup wlan0
-> 
-> until dhclient times out.
+--Signature=_Tue__17_Aug_2010_13_07_22_+1000_mvQO/kDifi5bPJbC
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Hi Christoph,
+Hi Rusty,
 
-there is a important RTS/CTS patch
-94597ab23ea10b3bdcba534be00a9f7b35791c07
+On Tue, 17 Aug 2010 12:29:44 +0930 Rusty Russell <rusty@rustcorp.com.au> wr=
+ote:
+>
+> You can drop the commit as you have done.  But it leaves three problematic
+> writable charp parameters in the libertas/ directory which now need lifet=
+ime
+> management.
+>=20
+> ie. kparam_block_sysfs_write()/unblock around them, and probably they need
+> to be copied.
 
-http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-2.6.git;a=commit;h=94597ab23ea10b3bdcba534be00a9f7b35791c07
+I figured that there was something needed, but I could not figure out where.
 
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
 
-please apply and try
+--Signature=_Tue__17_Aug_2010_13_07_22_+1000_mvQO/kDifi5bPJbC
+Content-Type: application/pgp-signature
 
-Thanks
-Wey
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
+iQEcBAEBAgAGBQJMafzqAAoJEDMEi1NhKgbsz/MH/2+KQG759Xe65MYG3jf9hdPY
+J1Vwya4UMshfWxmUVL9Ivji8wy6XLKM0nTv2z0MuAvOspBoMb7X0UxwMfBMnIClh
+XK2f2S2ZKMYjLuulK7qF9Jjy/vkxsQtbjqZSEndrFzBKYtq0kkFJv/KYwpZC9oaU
+q6aOW269HkbwLdl1EMjLqKikRvc7ymzxtWPq6vihnWxDCeQyepHv2TFe7AUSOoGl
+aaLWJ3EB/nBVJQfvKEcySGjNskkSTViiGN5tMV7sqxetc9pEVpO2o76ZCoyWxhBl
+ZxSoIGkYunezJH3Xd4baokWza0Y8TK7dUEUqV8PaQ1pVnlEfVustlhPY7BWfnz4=
+=x2fH
+-----END PGP SIGNATURE-----
 
+--Signature=_Tue__17_Aug_2010_13_07_22_+1000_mvQO/kDifi5bPJbC--
