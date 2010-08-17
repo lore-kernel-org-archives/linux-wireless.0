@@ -1,44 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60834 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751854Ab0H3TOp (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:38416 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751259Ab0HQTDz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Aug 2010 15:14:45 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] mac80211: cancel scan in ieee80211_restart_hw
-Date: Mon, 30 Aug 2010 15:14:31 -0400
-Message-Id: <1283195671-4086-1-git-send-email-linville@tuxdriver.com>
+	Tue, 17 Aug 2010 15:03:55 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 80FC34195D
+	for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2010 15:03:32 -0400 (EDT)
+Subject: Compat-wireless release for 2010-08-17 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100817190351.ACDEB41133@repository3.orbit-lab.org>
+Date: Tue, 17 Aug 2010 15:03:51 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This function exists to clean-up after a hardware error or something
-similar.  The restart is accomplished using the same infrastructure used
-to resume after a suspend.  The suspend path cancels running scans, so
-it seems appropriate to do that here as well.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+ * [new branch]      linux-2.6.36.y -> origin/linux-2.6.36.y
+   7746bc0..4c0ceee  master     -> origin/master
+ * [new tag]         compat-wireless-2010-08-16 -> compat-wireless-2010-08-16
+ * [new tag]         compat-wireless-master-2010-08-05 -> compat-wireless-master-2010-08-05
+ * [new tag]         compat-wireless-v2.6.36-rc1 -> compat-wireless-v2.6.36-rc1
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+ * [new branch]      linux-2.6.36.y -> origin/linux-2.6.36.y
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   3639a89..ffefdc0  history    -> origin/history
+ + f74eac3...ef937c2 master     -> origin/master  (forced update)
+ * [new tag]         next-20100817 -> next-20100817
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/mac80211/main.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+compat-wireless code metrics
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 93194f6..8b43d85 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -305,7 +305,9 @@ void ieee80211_restart_hw(struct ieee80211_hw *hw)
- 
- 	trace_api_restart_hw(local);
- 
--	/* use this reason, __ieee80211_resume will unblock it */
-+	ieee80211_scan_cancel(local);
-+
-+	/* use this reason, ieee80211_reconfig will unblock it */
- 	ieee80211_stop_queues_by_reason(hw,
- 		IEEE80211_QUEUE_STOP_REASON_SUSPEND);
- 
--- 
-1.7.2.2
+    495649 - Total upstream lines of code being pulled
+      1699 - backport code changes
+      1460 - backport code additions
+       239 - backport code deletions
+      5979 - backport from compat module
+      7678 - total backport code
+    1.5491 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2457 - % of crap code
 
+Base tree: linux-next.git
+Base tree version: next-20100817
+compat-wireless release: compat-wireless-2010-08-16
