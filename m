@@ -1,77 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:54230 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755568Ab0HMABT (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:32965 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750740Ab0HQUjP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Aug 2010 20:01:19 -0400
+	Tue, 17 Aug 2010 16:39:15 -0400
+Received: by qwh6 with SMTP id 6so6471790qwh.19
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2010 13:39:14 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20100812095546.GA3354@n2100.arm.linux.org.uk>
-References: <1281550913-17633-1-git-send-email-ohad@wizery.com>
-	<1281550913-17633-4-git-send-email-ohad@wizery.com>
-	<5A47E75E594F054BAF48C5E4FC4B92AB0324110ABD@dbde02.ent.ti.com>
-	<20100811184742.GA21778@nokia.com>
-	<5A47E75E594F054BAF48C5E4FC4B92AB0324110AC1@dbde02.ent.ti.com>
-	<20100811185724.GD21778@nokia.com>
-	<5A47E75E594F054BAF48C5E4FC4B92AB0324110AC7@dbde02.ent.ti.com>
-	<20100811212513.GC827@n2100.arm.linux.org.uk>
-	<AANLkTikDhzGVFZhNJZic9xYX9bL_NhOW=4LS-cTFSG0i@mail.gmail.com>
-	<20100812095546.GA3354@n2100.arm.linux.org.uk>
-Date: Fri, 13 Aug 2010 03:01:17 +0300
-Message-ID: <AANLkTi=f_vghwQZn3HHs_CJKYiMf_pp85JHujsyvRg3J@mail.gmail.com>
-Subject: Re: [PATCH v4 3/8] wireless: wl1271: add platform driver to get board data
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: "DebBarma, Tarun Kanti" <tarun.kanti@ti.com>,
-	"felipe.balbi@nokia.com" <felipe.balbi@nokia.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	"Pandita, Vikram" <vikram.pandita@ti.com>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	"Quadros Roger (Nokia-MS/Helsinki)" <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	Nicolas Pitre <nico@fluxnic.net>, San Mehat <san@google.com>,
-	"Chikkature Rajashekar, Madhusudhan" <madhu.cr@ti.com>,
-	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	Ido Yariv <ido@wizery.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
+In-Reply-To: <20100817212825.6f5ecb66@boulder.homenet>
+References: <AANLkTimMhW7OX3DT7A3EDNaOnr577KmTv5w9C_mz19TG@mail.gmail.com>
+ <20100816204154.5100b604@boulder.homenet> <20100816233544.40f0e1d4@boulder.homenet>
+ <4C69CF85.2020809@lwfinger.net> <20100817010923.589d8063@boulder.homenet>
+ <20100817011455.4919cfbb@boulder.homenet> <4C69DF79.2020900@lwfinger.net>
+ <20100817132337.01392797@boulder.homenet> <20100817212825.6f5ecb66@boulder.homenet>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Tue, 17 Aug 2010 22:38:54 +0200
+Message-ID: <AANLkTikFi5Nid47WUFYgMGBBq8SY87VizPHiSzv7ZLct@mail.gmail.com>
+Subject: Re: [RFT] BCM4312 users with DMA errors, please test!
+To: Chris Vine <chris@cvine.freeserve.co.uk>
+Cc: b43-dev <b43-dev@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, August 12, 2010, Russell King - ARM Linux
-<linux@arm.linux.org.uk> wrote:
-> On Thu, Aug 12, 2010 at 09:40:19AM +0300, Ohad Ben-Cohen wrote:
->> On Thu, Aug 12, 2010 at 12:25 AM, Russell King - ARM Linux
->> <linux@arm.linux.org.uk> wrote:
->> >I've outlined a far simpler and easiler solution
->> > which avoids this kind of abuse, and given suggestions on how to extend
->> > it to support multiple instances.
->> >
->>
->> Do you mean:
->> http://www.spinics.net/lists/arm-kernel/msg95338.html
->> ?
->>
->> I was under the impression you eventually discarded that approach in
->> that post.
+On Tue, Aug 17, 2010 at 10:28 PM, Chris Vine
+<chris@cvine.freeserve.co.uk> wrote:
+> On Tue, 17 Aug 2010 13:23:37 +0100
+> Chris Vine <chris@cvine.freeserve.co.uk> wrote:
+>> Reverting to 2.6.35.1 solves this.  Probably 2.6.36-rc1 would be OK as
+>> well.  I might later today try the ssb patch on the 2.6.35.1 kernel,
+>> but it doesn't look as if it solves the DMA errors.  However,
+>> yesterday's tests clearly aren't conclusive about anything.
 >
-> Indeed.
+> I have applied the patch to 2.6.35.1, and it does not appear to have
+> any effect on the DMA errors.
 >
-> I'm talking about my first suggestion:
+> Chris
 >
-> http://lists.arm.linux.org.uk/lurker/message/20100804.114148.bf961e83.en.html
 >
-> which was later expanded by Vitaly:
 >
-> http://lists.arm.linux.org.uk/lurker/message/20100804.140119.f476c29c.en.html
->
-> I don't think anyone had any negative comments against that proposal.
 
-Thanks, I see what you mean now.
-
-I'll give this a spin when I'm back (I'm away until e/o August)
->
+Thanks! That's what I was ultimately interested in. So, we now know
+it's not the SERDES workaround. (Or maybe it needs to be performed at
+a different time.)
