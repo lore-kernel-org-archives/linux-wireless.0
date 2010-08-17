@@ -1,65 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:50481 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753088Ab0HBJdA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Aug 2010 05:33:00 -0400
-Message-ID: <4C5690C7.2080104@openwrt.org>
-Date: Mon, 02 Aug 2010 11:32:55 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Bruno Randolf <br1@einfach.org>, johannes@sipsolutions.net,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v5] cfg80211: Add nl80211 antenna configuration
-References: <20100729035820.5930.29864.stgit@tt-desk> <201007291812.28639.br1@einfach.org> 	<AANLkTi=ihY=pAmKaEp7Pga=DOxwASZqSxqmURbgnks-d@mail.gmail.com> 	<201008021313.54850.br1@einfach.org> <AANLkTimRnfa8HVpi0hcP7Eo9Nrns60ff3Hs+fq39WoJh@mail.gmail.com> 	<4C5688F7.1070200@openwrt.org> <AANLkTi=Qm53CgFNNgtF4iBvh3jbfYzd8XPH4y9ysUaoV@mail.gmail.com> 	<4C568D23.2000203@openwrt.org> <AANLkTinGdwt4bSPRDV=ZfPBmoKS42GgUVjLAg_O1vL3i@mail.gmail.com>
-In-Reply-To: <AANLkTinGdwt4bSPRDV=ZfPBmoKS42GgUVjLAg_O1vL3i@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:61807 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752363Ab0HQTrU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Aug 2010 15:47:20 -0400
+Received: by eyg5 with SMTP id 5so2243590eyg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2010 12:47:18 -0700 (PDT)
+From: Grazvydas Ignotas <notasas@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>,
+	Grazvydas Ignotas <notasas@gmail.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>
+Subject: [PATCH 0/4] wl1271 -> wl1251 port patches
+Date: Tue, 17 Aug 2010 22:46:51 +0300
+Message-Id: <1282074415-6168-1-git-send-email-notasas@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-08-02 11:23 AM, Luis R. Rodriguez wrote:
-> On Mon, Aug 2, 2010 at 2:17 AM, Felix Fietkau <nbd@openwrt.org> wrote:
->> On 2010-08-02 11:10 AM, Luis R. Rodriguez wrote:
->>> On Mon, Aug 2, 2010 at 1:59 AM, Felix Fietkau <nbd@openwrt.org> wrote:
->>>> On 2010-08-02 7:37 AM, Luis R. Rodriguez wrote:
->>>>> I'm not, the point I was trying to make is that solving this for
->>>>> legacy and that for 802.11n this needs more thought and work.
->>>> I need this for 802.11n as well, and I believe the API is good enough
->>>> for that.
->>>
->>> Sure.
->>>
->>>>>> as long as the API is flexible
->>>>>> enough i think it can be added later as 802.11n devices are going to accept
->>>>>> antenna configuration.
->>>>>
->>>>> If you want really flexible stuff without addressing serious
->>>>> considerations before introducing a new kernel API then use debugfs.
->>>> I'd like to see this in nl80211. Is there any specific concern left that
->>>> I haven't addressed already? If so, please point me at it...
->>>
->>> The code that deals with not accepting changes unless we're not
->>> associated, and that also caches the old real hw config vs the
->>> modified one.
->> This is not really an API issue, this is more of an implementation
->> aspect. I think it's up to the driver to reject changes that it cannot
->> handle at the moment.
-> 
-> Huh,why not deal with this on cfg80211 and/or mac80211?
-Right now, the drivers calculate this. We could make a helper function
-in cfg80211 at some point, but we're talking about really small chunks
-of code.
+Hi,
 
->> For 802.11n, changes that affect the chainmask should be rejected while
->> the interface is up. That way we don't run into weird cached config vs
->> hw config issues, and also keep a sane state for the HT capabilities.
-> 
-> Sure, I just did not see any code for this in these patches. My point
-> about the hw config vs fake/mod'd is if we'd expose the mod'd config
-> changes to userspace or if we'd keep them internal to cfg80211. How
-> would this be dealt with?
-Right now, cfg80211 doesn't know enough to handle this stuff on its own,
-so let's handle it in the driver completely on the first iteration. The
-patches do not need any changes for this right now.
+I've been looking at wl1271 changelog and found several patches that
+seem to be also applicable to wl1251. I'm not that sure about patches
+2 and 4, but 1 and 3 should be correct (I've verified 3 with TI driver).
+I've been running these on pandora for several days now without problems.
 
-- Felix
+It's a shame wl12xx drivers were completely split, it would look like
+they could share fair bit of code. Now wl1251 does not benefit from more
+actively developed wl1271 fixes.
+
+There are even more wl1271 patches that could be applicable to wl1251.
+Kalle, could you take a look at the list below? I could try porting if
+you think any of those make sense.
+
+
+Adding disconnect command, it seems to be also used by TI driver:
+25a7dc6d22adda590be4932ebc772ea35914880c
+c7f43e451ba40e66a89d51e63bc21a57824592f2
+
+powersave fail handling:
+19ad0715d8d9acc259ef02f83df767df2cf1eafe
+
+not masking interrupts while processing:
+4aa05917051b01da037a80c3207b48aee252eed2
+
+connection monitoring control:
+6ccbb92ead9379d7de2cc25cd950d15a8d22e0c9
+a9af092b524614dd3fc7b52bde7c87f8b82cd2a6
+
+broken ps-poll handling:
+90494a90bea010af47547880634e0f1c52824a7d
+
+improved queue stopping:
+06f7bc7db79fabe6b2ec16eff0f59e4acc21eb72
+
+probably more..
+
+
+Grazvydas Ignotas (4):
+  wl1251: add missing __packed modifier for some structs
+  wl1251: fix event handling mechanism
+  wl1251: fix beacon filter table structure
+  wl1251: wait for join command complete event
+
+ drivers/net/wireless/wl12xx/wl1251_acx.h   |    8 +++---
+ drivers/net/wireless/wl12xx/wl1251_boot.c  |    2 +-
+ drivers/net/wireless/wl12xx/wl1251_cmd.h   |    6 ++--
+ drivers/net/wireless/wl12xx/wl1251_event.c |   29 ++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1251_event.h |    1 +
+ drivers/net/wireless/wl12xx/wl1251_main.c  |   24 ++++++++++------------
+ 6 files changed, 49 insertions(+), 21 deletions(-)
+
