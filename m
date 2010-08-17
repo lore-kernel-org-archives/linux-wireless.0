@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44175 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751267Ab0HUJVv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Aug 2010 05:21:51 -0400
-Subject: Re: Fwd: nl80211 scanning from userspace
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christopher Piggott <cpiggott@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTi=ioQFQ=0_Z5EWRNVrEYp2o40UU4TROOMaouZX1@mail.gmail.com>
-References: <AANLkTi=ZGn0Rt7zYxBJB0jJ-EY=gPpxtBN2bA9svkq99@mail.gmail.com>
-	 <1281986025.3683.31.camel@jlt3.sipsolutions.net>
-	 <AANLkTiniqFJzrWFzNJTxsF31EZfSTei89dbS2Ak4YDjH@mail.gmail.com>
-	 <1281987696.3683.32.camel@jlt3.sipsolutions.net>
-	 <AANLkTi=ALaGb=UcWAuB_N8E9j95f0Hgxtw0Dhh7xaPh2@mail.gmail.com>
-	 <1281995025.3683.34.camel@jlt3.sipsolutions.net>
-	 <AANLkTi=sb0PT4FHsjbuAOQjnDq79GHEj8LbCLTtO8MeS@mail.gmail.com>
-	 <AANLkTin90i08fbYeyrc17a7=smhshxR69=ushqUSkA0Z@mail.gmail.com>
-	 <1282035102.3747.0.camel@jlt3.sipsolutions.net>
-	 <AANLkTikzWs65zQYbCJQuvLv0e_010Rgy-C6J4ucpzBfa@mail.gmail.com>
-	 <AANLkTi=ioQFQ=0_Z5EWRNVrEYp2o40UU4TROOMaouZX1@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 21 Aug 2010 11:21:48 +0200
-Message-ID: <1282382508.3759.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from purkki.adurom.net ([80.68.90.206]:55145 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762855Ab0HQS5M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Aug 2010 14:57:12 -0400
+To: linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: Filesystem corruption with 2.6.36-rc1-wl+ and ecryptfs
+From: Kalle Valo <kvalo@adurom.com>
+Date: Tue, 17 Aug 2010 21:57:10 +0300
+Message-ID: <87tymt9iex.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-08-20 at 19:42 -0400, Christopher Piggott wrote:
+Hi,
 
-> So here's the question: in my NL_CB_VALID listener, how do I
-> distinguish the response to the NL80211_CMD_TRIGGER_SCAN (the one that
-> indicates scan complete) from the response to the CMD_GET_SCAN (fetch
-> the results) message?
+I just installed my first 2.6.36 kernel, 2.6.36-rc1-wl+ from
+wireless-testing, and immeadialy (during first boot) got major
+corruption in the filesystem. For example, gnome lost it's settings,
+~/.ssh was empty etc. Now, with an older kernel, my directory
+structure has duplicate entries, like this:
 
-One will be unicast to you, and the event is multicast to everybody. You
-should be able to tell the difference.
+$ ls -ald D*
+drwxr-xr-x 2 kvalo kvalo 4096 2010-08-17 19:21 Desktop/
+drwxr-xr-x 2 kvalo kvalo 4096 2010-08-17 19:21 Desktop/
+drwxr-xr-x 2 kvalo kvalo 4096 2010-08-17 19:21 Documents/
+drwxr-xr-x 2 kvalo kvalo 4096 2010-08-17 19:21 Documents/
+drwxr-xr-x 2 kvalo kvalo 4096 2010-08-17 19:21 Downloads/
+drwxr-xr-x 2 kvalo kvalo 4096 2010-08-17 19:21 Downloads/
 
-johannes
+I'm using ecryptfs and that's my major suspect for the corruption, but
+naturally I can't be sure because I'm just guessing here. 
 
+Some info about my system:
+
+Samsung X120 laptop
+Ubuntu 10.04
+amd64, 2 CPUs
+ext4, /home/kvalo encrypted with ecryptfs
+ath9k
+
+-- 
+Kalle Valo
