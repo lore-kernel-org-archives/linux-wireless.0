@@ -1,66 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from chilli.pcug.org.au ([203.10.76.44]:33742 "EHLO smtps.tip.net.au"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750910Ab0HQDHb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Aug 2010 23:07:31 -0400
-Date: Tue, 17 Aug 2010 13:07:22 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Rusty Russell <rusty@rustcorp.com.au>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Dan Williams <dcbw@redhat.com>,
-	libertas-dev@lists.infradead.org, netdev@vger.kernel.org,
-	Takashi Iwai <tiwai@suse.de>
-Subject: Re: linux-next: manual merge of the wireless tree with Linus' tree
-Message-Id: <20100817130722.cd8c11b0.sfr@canb.auug.org.au>
-In-Reply-To: <201008171229.46175.rusty@rustcorp.com.au>
-References: <20100817115203.e8a76e44.sfr@canb.auug.org.au>
-	<201008171229.46175.rusty@rustcorp.com.au>
+Received: from smtp5.freeserve.com ([193.252.22.159]:57747 "EHLO
+	smtp5.freeserve.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753202Ab0HQAS3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Aug 2010 20:18:29 -0400
+Date: Tue, 17 Aug 2010 01:09:23 +0100
+From: Chris Vine <chris@cvine.freeserve.co.uk>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: =?UTF-8?B?R8OhYm9y?= Stefanik <netrolller.3d@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: [RFT] BCM4312 users with DMA errors, please test!
+Message-ID: <20100817010923.589d8063@boulder.homenet>
+In-Reply-To: <4C69CF85.2020809@lwfinger.net>
+References: <AANLkTimMhW7OX3DT7A3EDNaOnr577KmTv5w9C_mz19TG@mail.gmail.com>
+	<20100816204154.5100b604@boulder.homenet>
+	<20100816233544.40f0e1d4@boulder.homenet>
+	<4C69CF85.2020809@lwfinger.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Tue__17_Aug_2010_13_07_22_+1000_mvQO/kDifi5bPJbC"
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Signature=_Tue__17_Aug_2010_13_07_22_+1000_mvQO/kDifi5bPJbC
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Mon, 16 Aug 2010 18:53:41 -0500
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> I tried to duplicate your boot problems without anything unexpected
+> happening.
+> 
+> I don't know what happened, but I doubt that this ssb patch was
+> responsible.
 
-Hi Rusty,
+I have reproduced it twice.  It is definitely the patch, in the sense
+that it happens with the patch included (on two separate tests that I
+have conducted) and never without.
 
-On Tue, 17 Aug 2010 12:29:44 +0930 Rusty Russell <rusty@rustcorp.com.au> wr=
-ote:
->
-> You can drop the commit as you have done.  But it leaves three problematic
-> writable charp parameters in the libertas/ directory which now need lifet=
-ime
-> management.
->=20
-> ie. kparam_block_sysfs_write()/unblock around them, and probably they need
-> to be copied.
+I do not doubt that you do not experience this effect.  However, you
+don't experience the DMA bug either.
 
-I figured that there was something needed, but I could not figure out where.
+Chris
 
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
 
---Signature=_Tue__17_Aug_2010_13_07_22_+1000_mvQO/kDifi5bPJbC
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQEcBAEBAgAGBQJMafzqAAoJEDMEi1NhKgbsz/MH/2+KQG759Xe65MYG3jf9hdPY
-J1Vwya4UMshfWxmUVL9Ivji8wy6XLKM0nTv2z0MuAvOspBoMb7X0UxwMfBMnIClh
-XK2f2S2ZKMYjLuulK7qF9Jjy/vkxsQtbjqZSEndrFzBKYtq0kkFJv/KYwpZC9oaU
-q6aOW269HkbwLdl1EMjLqKikRvc7ymzxtWPq6vihnWxDCeQyepHv2TFe7AUSOoGl
-aaLWJ3EB/nBVJQfvKEcySGjNskkSTViiGN5tMV7sqxetc9pEVpO2o76ZCoyWxhBl
-ZxSoIGkYunezJH3Xd4baokWza0Y8TK7dUEUqV8PaQ1pVnlEfVustlhPY7BWfnz4=
-=x2fH
------END PGP SIGNATURE-----
-
---Signature=_Tue__17_Aug_2010_13_07_22_+1000_mvQO/kDifi5bPJbC--
