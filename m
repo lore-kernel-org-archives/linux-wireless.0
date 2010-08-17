@@ -1,132 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:58526 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752028Ab0H1HNL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Aug 2010 03:13:11 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, amod.bodas@atheros.com,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [RFC 3/3] ath9k: implement the sw scan wait constraints
-Date: Sat, 28 Aug 2010 03:13:10 -0400
-Message-Id: <1282979590-31113-4-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1282979590-31113-1-git-send-email-lrodriguez@atheros.com>
-References: <1282979590-31113-1-git-send-email-lrodriguez@atheros.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:50211 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935473Ab0HQSct (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Aug 2010 14:32:49 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/3] compat: backport net_ns_type_operations
+Date: Tue, 17 Aug 2010 20:32:32 +0200
+Message-Id: <1282069953-22360-3-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1282069953-22360-1-git-send-email-hauke@hauke-m.de>
+References: <1282069953-22360-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When mac80211 sw scan is triggered this will inform mac80211
-to take us to the home channel if we are aware of some
-time constraints for scanning. This ensures ath9k will not
-loose buffered broadcast and multicast frames when scanning.
+net_ns_type_operations needs to be exported. This only works for kernel
+>= 2.6.35 because struct kobj_ns_type_operations was introduced in
+kernel 2.6.35.
 
-Cc: Amod Bodas <amod.bodas@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
- drivers/net/wireless/ath/ath9k/main.c  |   69 ++++++++++++++++++++++++++++++++
- 2 files changed, 70 insertions(+), 0 deletions(-)
+ compat/Makefile               |    1 +
+ compat/compat-2.6.37.c        |   45 +++++++++++++++++++++++++++++++++++++++++
+ include/linux/compat-2.6.37.h |    2 +
+ 3 files changed, 48 insertions(+), 0 deletions(-)
+ create mode 100644 compat/compat-2.6.37.c
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index f0197a6..89bbcd0 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -588,6 +588,7 @@ struct ath_softc {
- 	int led_off_cnt;
- 
- 	int beacon_interval;
-+	u32 scan_wait_counter;
- 
- #ifdef CONFIG_ATH9K_DEBUGFS
- 	struct ath9k_debug debug;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 1165f90..181edea 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2043,6 +2043,74 @@ static void ath9k_sw_scan_start(struct ieee80211_hw *hw)
- 	mutex_unlock(&sc->mutex);
- }
- 
-+static void ath9k_ps_flags_dbg(struct ath_softc *sc)
-+{
-+#define ATH9K_WAIT_DBG(_reason) do { \
-+	if (sc->ps_flags & _reason) \
-+		ath_print(common, ATH_DBG_PS, \
-+			  "  %s\n", #_reason); \
-+	} while (0)
-+
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+
-+	ath_print(common, ATH_DBG_PS, "PS flags:\n");
-+
-+	ATH9K_WAIT_DBG(PS_WAIT_FOR_BEACON);
-+	ATH9K_WAIT_DBG(PS_WAIT_FOR_CAB);
-+	ATH9K_WAIT_DBG(PS_WAIT_FOR_PSPOLL_DATA);
-+	ATH9K_WAIT_DBG(PS_WAIT_FOR_TX_ACK);
-+	ATH9K_WAIT_DBG(PS_BEACON_SYNC);
-+	ATH9K_WAIT_DBG(PS_NULLFUNC_COMPLETED);
-+	ATH9K_WAIT_DBG(PS_ENABLED);
-+
-+#undef ATH9K_WAIT_DBG
-+}
-+
+diff --git a/compat/Makefile b/compat/Makefile
+index bcd8fe7..b067be2 100644
+--- a/compat/Makefile
++++ b/compat/Makefile
+@@ -27,3 +27,4 @@ compat-$(CONFIG_COMPAT_KERNEL_31) += compat-2.6.31.o
+ compat-$(CONFIG_COMPAT_KERNEL_32) += compat-2.6.32.o
+ compat-$(CONFIG_COMPAT_KERNEL_33) += compat-2.6.33.o
+ compat-$(CONFIG_COMPAT_KERNEL_35) += compat-2.6.35.o
++compat-$(CONFIG_COMPAT_KERNEL_37) += compat-2.6.37.o
+diff --git a/compat/compat-2.6.37.c b/compat/compat-2.6.37.c
+new file mode 100644
+index 0000000..655b92f
+--- /dev/null
++++ b/compat/compat-2.6.37.c
+@@ -0,0 +1,45 @@
 +/*
-+ * We expect to be disassociated if the counter gets too high.
++ * Copyright 2010    Hauke Mehrtens <hauke@hauke-m.de>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ * Compatibility file for Linux wireless for kernels 2.6.37.
 + */
-+static int ath9k_sw_scan_wait_constraints(struct ieee80211_hw *hw)
++
++#include <linux/compat.h>
++
++#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)
++
++#include <linux/netdevice.h>
++#include <net/sock.h>
++#include <linux/nsproxy.h>
++
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35)
++static const void *net_current_ns(void)
 +{
-+	struct ath_wiphy *aphy = hw->priv;
-+	struct ath_softc *sc = aphy->sc;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	int r = 0;
-+	u32 wait_for;
-+
-+	mutex_lock(&sc->mutex);
-+
-+	wait_for = PS_WAIT_FOR_BEACON |
-+		   PS_BEACON_SYNC |
-+		   PS_WAIT_FOR_CAB |
-+		   PS_WAIT_FOR_PSPOLL_DATA |
-+		   PS_WAIT_FOR_TX_ACK |
-+		   PS_NULLFUNC_COMPLETED;
-+
-+	if (sc->ps_flags & wait_for) {
-+		sc->scan_wait_counter++;
-+		ath_print(common, ATH_DBG_PS,
-+			  "Holding on channel change due to a "
-+			  "wait constraint, count: %d, ps_flags: 0x%04x\n",
-+			  sc->scan_wait_counter,
-+			  sc->ps_flags);
-+		ath9k_ps_flags_dbg(sc);
-+		if (sc->ps_flags & PS_NULLFUNC_COMPLETED)
-+			r = -EAGAIN;
-+		else
-+			r = -EBUSY;
-+		goto out;
-+	}
-+
-+	sc->scan_wait_counter = 0;
-+	ath_print(common, ATH_DBG_PS,
-+		  "No scan wait contraints found, ps_flags: 0x%04x\n",
-+		   sc->ps_flags);
-+out:
-+	mutex_unlock(&sc->mutex);
-+
-+	return r;
++	return current->nsproxy->net_ns;
 +}
 +
- /*
-  * XXX: this requires a revisit after the driver
-  * scan_complete gets moved to another place/removed in mac80211.
-@@ -2089,6 +2157,7 @@ struct ieee80211_ops ath9k_ops = {
- 	.ampdu_action       = ath9k_ampdu_action,
- 	.get_survey	    = ath9k_get_survey,
- 	.sw_scan_start      = ath9k_sw_scan_start,
-+	.sw_scan_wait_constraints = ath9k_sw_scan_wait_constraints,
- 	.sw_scan_complete   = ath9k_sw_scan_complete,
- 	.rfkill_poll        = ath9k_rfkill_poll_state,
- 	.set_coverage_class = ath9k_set_coverage_class,
++static const void *net_initial_ns(void)
++{
++	return &init_net;
++}
++
++static const void *net_netlink_ns(struct sock *sk)
++{
++	return sock_net(sk);
++}
++
++struct kobj_ns_type_operations net_ns_type_operations = {
++	.type = KOBJ_NS_TYPE_NET,
++	.current_ns = net_current_ns,
++	.netlink_ns = net_netlink_ns,
++	.initial_ns = net_initial_ns,
++};
++EXPORT_SYMBOL_GPL(net_ns_type_operations);
++
++#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35)*/ 
++
++#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37) */
+diff --git a/include/linux/compat-2.6.37.h b/include/linux/compat-2.6.37.h
+index cf0279e..5bd6edb 100644
+--- a/include/linux/compat-2.6.37.h
++++ b/include/linux/compat-2.6.37.h
+@@ -24,6 +24,8 @@
+ 
+ #define SDIO_CLASS_BT_AMP	0x09	/* Type-A Bluetooth AMP interface */
+ 
++extern struct kobj_ns_type_operations net_ns_type_operations;
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)) */
+ 
+ #endif /* LINUX_26_37_COMPAT_H */
 -- 
 1.7.0.4
 
