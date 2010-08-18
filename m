@@ -1,58 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47466 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758637Ab0HDTom (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Aug 2010 15:44:42 -0400
-Date: Wed, 4 Aug 2010 15:34:42 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [wt PATCH 0/5] libertas: make association work again
-Message-ID: <20100804193442.GR17666@tuxdriver.com>
-References: <1280470034.14523.4.camel@dcbw.foobar.com>
- <1280471706.3710.5.camel@jlt3.sipsolutions.net>
- <1280900467.2665.6.camel@dcbw.foobar.com>
- <1280907989.3768.0.camel@jlt3.sipsolutions.net>
- <1280949346.11056.1.camel@dcbw.foobar.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1280949346.11056.1.camel@dcbw.foobar.com>
+Received: from mga03.intel.com ([143.182.124.21]:30390 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751021Ab0HRRqA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Aug 2010 13:46:00 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 2/2] iwlwifi: use long monitor timer to avoid un-necessary reload
+Date: Wed, 18 Aug 2010 10:50:19 -0700
+Message-Id: <1282153819-27781-3-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1282153819-27781-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1282153819-27781-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 04, 2010 at 02:15:46PM -0500, Dan Williams wrote:
-> On Wed, 2010-08-04 at 09:46 +0200, Johannes Berg wrote:
-> > On Wed, 2010-08-04 at 00:41 -0500, Dan Williams wrote:
-> > > On Fri, 2010-07-30 at 08:35 +0200, Johannes Berg wrote:
-> > > > On Thu, 2010-07-29 at 23:07 -0700, Dan Williams wrote:
-> > > > > This series makes libertas actually associate with APs after the
-> > > > > cfg80211 conversion.  There was a pretty big TODO where if cfg80211
-> > > > > didn't pass in the BSSID of the AP to associate with, then libertas
-> > > > > would fail because the firmware really, really, really wants a BSSID.
-> > > > > So lets do a scan to find that BSSID.  The other notable change is
-> > > > > a fix to make sure all supported rates are included in the firmware's
-> > > > > association request, lack of which caused some APs to deny the attempt.
-> > > > 
-> > > > I'm a bit tempted to say we could use the connect logic in cfg80211 to
-> > > > provide this? cfg80211 _already_ provides this if the hardware wants
-> > > > auth()/assoc() rather than connect() calls, so it seems fairly simple to
-> > > > also (optionally) do it here?
-> > > 
-> > > Yeah, I thought about that too.  Do you want me to work on that now
-> > > instead of letting this patch through?  I can revert the relevant bits
-> > > of this later if that's acceptable too.
-> > 
-> > Either way works for me since I don't care about any cruft in
-> > libertas ;)
-> 
-> John, if you don't mind applying this patch I'll work on generic
-> scan-before-connect support in cfg80211 in a further patch series.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-OK...which of these need to be in 2.6.36?
+For 5000 series of devices, use long monitor timer to check
+stuck tx queues.
 
-John
+5000 series device, it is being reported firmware got reload more
+often than necessary, so extend the timer to avoid un-necessary reload.
+
+Cc: stable@kernel.org [2.6.35]
+Reported-by: Marcel Holtmann <marcel@holtmann.org>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-5000.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 5f4f6ba..6bacdd5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -522,7 +522,7 @@ struct iwl_cfg iwl5100_abg_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_LONG_MONITORING_PERIOD,
+ 	.max_event_log_size = 512,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -553,7 +553,7 @@ struct iwl_cfg iwl5100_agn_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_LONG_MONITORING_PERIOD,
+ 	.max_event_log_size = 512,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -584,7 +584,7 @@ struct iwl_cfg iwl5350_agn_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_LONG_MONITORING_PERIOD,
+ 	.max_event_log_size = 512,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -615,7 +615,7 @@ struct iwl_cfg iwl5150_agn_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_LONG_MONITORING_PERIOD,
+ 	.max_event_log_size = 512,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -644,7 +644,7 @@ struct iwl_cfg iwl5150_abg_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_LONG_MONITORING_PERIOD,
+ 	.max_event_log_size = 512,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.0.4
+
