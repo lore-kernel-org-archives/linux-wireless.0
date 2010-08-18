@@ -1,47 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:61902 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932105Ab0HOQxz (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58566 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751851Ab0HRQon (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Aug 2010 12:53:55 -0400
-Received: by pxi10 with SMTP id 10so1570199pxi.19
-        for <linux-wireless@vger.kernel.org>; Sun, 15 Aug 2010 09:53:54 -0700 (PDT)
-Message-ID: <4C681B90.4000802@lwfinger.net>
-Date: Sun, 15 Aug 2010 11:53:36 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 18 Aug 2010 12:44:43 -0400
+Date: Wed, 18 Aug 2010 12:44:05 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH 2/2] iwlwifi: do not spuriously call
+ ieee80211_scan_completed
+Message-ID: <20100818164405.GA2793@tuxdriver.com>
+References: <1282149322-17928-1-git-send-email-wey-yi.w.guy@intel.com>
+ <1282149322-17928-3-git-send-email-wey-yi.w.guy@intel.com>
 MIME-Version: 1.0
-To: Fritz <linuxwireless@crusius.info>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: RTL8192E Kernel 2.6.32 Freeze
-References: <loom.20100815T155457-704@post.gmane.org>
-In-Reply-To: <loom.20100815T155457-704@post.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1282149322-17928-3-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/15/2010 09:17 AM, Fritz wrote:
-> Hi,
+On Wed, Aug 18, 2010 at 09:35:22AM -0700, Wey-Yi Guy wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 > 
-> I'm using the RTL8192E (r8192_pci) staging driver 
-> that comes with ubuntu kernel 2.6.32-24 and am 
-> experiencing frequent freezes on an 
-> Intel Atom N450 based system.
+> When a scan is aborted because the corresponding
+> virtual interface is removed, we may still later
+> attempt to tell mac80211 that the scan completed.
+> This is obviously wrong, since we already told it
+> that it was aborted, so don't do that.
 > 
-> Is this a known problem and is there perhaps a newer
-> kernel that I should build and run instead?
-> 
-> The freeze seems to occur whenever the card reconnects
-> with the router, see for more detailed problem
-> description
-> http://ubuntuforums.org/showthread.php?t=1549483
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Drivers in drivers/staging are not supported by this group. We look after the
-ones in drivers/net/wireless. As the log message tells you, you have been warned
-about using anything from staging. To see the full text, use 'dmesg | grep staging'.
+Does this really qualify as a fix for 2.6.36?  Is it a regression?
+Does it generate an oops?  Or loss of connectivity?
 
-I have no idea if it will help, but I suspect that 2.6.35 might be better than
-2.6.32. You might also do a 'modinfo r8192_pci' to see who is listed as the
-module author. He/she might be able to help.
-
-Larry
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
