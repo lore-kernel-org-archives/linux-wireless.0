@@ -1,40 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:46678 "EHLO mail.atheros.com"
+Received: from mga01.intel.com ([192.55.52.88]:49825 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754826Ab0HBUVm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Aug 2010 16:21:42 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 02 Aug 2010 13:21:42 -0700
-Date: Mon, 2 Aug 2010 13:21:37 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Jan Friedrich <jft@dev2day.de>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>
-Subject: Re: [Patch] ath9k: fix erased ieee80211_rx_status.mactime
-Message-ID: <20100802202137.GC8920@tux>
-References: <4C57278E.1030601@dev2day.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4C57278E.1030601@dev2day.de>
+	id S1751823Ab0HRTtS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Aug 2010 15:49:18 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH wireless-2.6] iwlwifi: use long monitor timer for 5300 series
+Date: Wed, 18 Aug 2010 12:53:28 -0700
+Message-Id: <1282161208-8587-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 02, 2010 at 01:16:14PM -0700, Jan Friedrich wrote:
-> This patch addresses the erasure of ieee80211_rx_status.mactime.
-> 
-> After the mactime is set in "ath_rx_tasklet" it is immediately nulled in
-> "ath9k_rx_skb_preprocess".
+For 5000 series of devices, use long monitor timer to check
+stuck tx queues.
 
-What effect does this have? What issue does this fix? Is this a
-fix which also needs to be propagated to the stable kernels, if so
-why? etc.
+This modification apply to all the 5000 series including 5300 and others.
 
-Your patch describes what it does, it doesn't say why its a good
-fix or what was affected before. Please clarify all this as best
-as you can so we can help ACK/NACK/propagate the patch to stable
-if it is appropriate.
+Cc: stable@kernel.org [2.6.35]
+Reported-by: drago01 <drago01@gmail.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+this patch is also available from wireless-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
 
-  Luis
->  		requeue_skb = ath_rxbuf_alloc(common, common->rx_bufsize, GFP_ATOMIC);
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 6bacdd5..b5629a9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -462,7 +462,7 @@ struct iwl_cfg iwl5300_agn_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_LONG_MONITORING_PERIOD,
+ 	.max_event_log_size = 512,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -493,7 +493,7 @@ struct iwl_cfg iwl5100_bgn_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_LONG_MONITORING_PERIOD,
+ 	.max_event_log_size = 512,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+-- 
+1.7.0.4
+
