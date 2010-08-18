@@ -1,96 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56908 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752132Ab0H0Khu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 06:37:50 -0400
-Message-Id: <20100827103658.361889799@sipsolutions.net>
-Date: Fri, 27 Aug 2010 12:35:56 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
+Received: from mga03.intel.com ([143.182.124.21]:1413 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754166Ab0HRQSh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Aug 2010 12:18:37 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/6] mac80211: simplify zero address checks
-References: <20100827103553.559128239@sipsolutions.net>
-Mime-Version: 1.0
+	ipw3945-devel@lists.sourceforge.net,
+	Jay Sternberg <jay.e.sternberg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 16/16] iwlwifi: move debug options into submenu
+Date: Wed, 18 Aug 2010 09:22:51 -0700
+Message-Id: <1282148571-9258-17-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1282148571-9258-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1282148571-9258-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Jay Sternberg <jay.e.sternberg@intel.com>
 
-The libertas_tf special code for zero addresses
-is a bit too complex, it compares against a stack
-value instead of using is_zero_ether_addr() and
-tries to update all interfaces even if just the
-one that's being brought up needs to be changed.
-Additionally, the repeated check for a valid MAC
-address need only be done if we actually changed
-it on the fly.
+more debug options being added so it is useful to move them
+into a submenu for ease of readability when using config commands
+like make menuconfig and make xconfig
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Jay Sternberg <jay.e.sternberg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- net/mac80211/iface.c |   38 +++++++++++++-------------------------
- 1 file changed, 13 insertions(+), 25 deletions(-)
+ drivers/net/wireless/iwlwifi/Kconfig |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
---- wireless-testing.orig/net/mac80211/iface.c	2010-08-26 16:00:30.000000000 +0200
-+++ wireless-testing/net/mac80211/iface.c	2010-08-26 16:00:31.000000000 +0200
-@@ -103,10 +103,9 @@ static int ieee80211_open(struct net_dev
- 	u32 changed = 0;
- 	int res;
- 	u32 hw_reconf_flags = 0;
--	u8 null_addr[ETH_ALEN] = {0};
+diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
+index 7ab5b51..b823642 100644
+--- a/drivers/net/wireless/iwlwifi/Kconfig
++++ b/drivers/net/wireless/iwlwifi/Kconfig
+@@ -3,6 +3,9 @@ config IWLWIFI
+ 	depends on PCI && MAC80211
+ 	select FW_LOADER
  
- 	/* fail early if user set an invalid address */
--	if (compare_ether_addr(dev->dev_addr, null_addr) &&
-+	if (!is_zero_ether_addr(dev->dev_addr) &&
- 	    !is_valid_ether_addr(dev->dev_addr))
- 		return -EADDRNOTAVAIL;
- 
-@@ -195,33 +194,22 @@ static int ieee80211_open(struct net_dev
- 	}
- 
- 	/*
--	 * Check all interfaces and copy the hopefully now-present
--	 * MAC address to those that have the special null one.
-+	 * Copy the hopefully now-present MAC address to
-+	 * this interface, if it has the special null one.
- 	 */
--	list_for_each_entry(nsdata, &local->interfaces, list) {
--		struct net_device *ndev = nsdata->dev;
--
--		/*
--		 * No need to check running since we do not allow
--		 * it to start up with this invalid address.
--		 */
--		if (compare_ether_addr(null_addr, ndev->dev_addr) == 0) {
--			memcpy(ndev->dev_addr,
--			       local->hw.wiphy->perm_addr,
--			       ETH_ALEN);
--			memcpy(ndev->perm_addr, ndev->dev_addr, ETH_ALEN);
-+	if (is_zero_ether_addr(dev->dev_addr)) {
-+		memcpy(dev->dev_addr,
-+		       local->hw.wiphy->perm_addr,
-+		       ETH_ALEN);
-+		memcpy(dev->perm_addr, dev->dev_addr, ETH_ALEN);
++menu "Debugging Options"
++	depends on IWLWIFI
 +
-+		if (!is_valid_ether_addr(dev->dev_addr)) {
-+			if (!local->open_count)
-+				drv_stop(local);
-+			return -EADDRNOTAVAIL;
- 		}
- 	}
+ config IWLWIFI_DEBUG
+ 	bool "Enable full debugging output in iwlagn and iwl3945 drivers"
+ 	depends on IWLWIFI
+@@ -59,6 +62,7 @@ config IWLWIFI_DEVICE_TRACING
  
--	/*
--	 * Validate the MAC address for this device.
--	 */
--	if (!is_valid_ether_addr(dev->dev_addr)) {
--		if (!local->open_count)
--			drv_stop(local);
--		return -EADDRNOTAVAIL;
--	}
--
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_AP_VLAN:
- 		/* no need to tell driver */
-
+ 	  If unsure, say Y so we can help you better when problems
+ 	  occur.
++endmenu
+ 
+ config IWLAGN
+ 	tristate "Intel Wireless WiFi Next Gen AGN (iwlagn)"
+-- 
+1.7.0.4
 
