@@ -1,165 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:42497 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752233Ab0H3TQ2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Aug 2010 15:16:28 -0400
-Received: by mail-ey0-f174.google.com with SMTP id 5so3422616eyg.19
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Aug 2010 12:16:28 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 04/10] rt2x00: Validate TX status results with current data entry
-Date: Mon, 30 Aug 2010 21:13:30 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201008302112.25578.IvDoorn@gmail.com> <201008302112.48658.IvDoorn@gmail.com> <201008302113.09605.IvDoorn@gmail.com>
-In-Reply-To: <201008302113.09605.IvDoorn@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201008302113.31006.IvDoorn@gmail.com>
+Received: from mga03.intel.com ([143.182.124.21]:33609 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754171Ab0HRQSe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Aug 2010 12:18:34 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Shanyu Zhao <shanyu.zhao@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 06/16] iwlwifi: avoid race condition in channel change
+Date: Wed, 18 Aug 2010 09:22:41 -0700
+Message-Id: <1282148571-9258-7-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1282148571-9258-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1282148571-9258-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of printing a warning when the PID, ACK, or WCID of
-an entry don't match the TX status report, we should skip the
-entry to search for the entry which actually does match
-the TX status data.
+From: Shanyu Zhao <shanyu.zhao@intel.com>
 
-This reduces the number of watchdog errors on the TX queues
-for rt2800usb, and seems to improve the reliability of the
-TX flow a bit.
+When iwl_mac_config() is called by mac80211, the channel pointer
+hw->conf->channel can potentially change, resulting in mismatch
+band and channel number when configuring RXON command. To avoid
+this situation, save the channel pointer in local variables
+and validate the channel before using it. Note that priv->mutex
+is locked during the whole function so the local variables are safe.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Same change is applied to iwl_mac_channel_switch() since basically
+it copies code from iwl_mac_config().
+
+Also removed an outdated comment in the flow.
+
+Signed-off-by: Shanyu Zhao <shanyu.zhao@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |   73 +++++++++++++++++++++----------
- 1 files changed, 50 insertions(+), 23 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |   14 ++++++--------
+ drivers/net/wireless/iwlwifi/iwl-core.c |   14 ++++++--------
+ 2 files changed, 12 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 967f3e5..c8af221 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -581,6 +581,49 @@ void rt2800_process_rxwi(struct queue_entry *entry,
- }
- EXPORT_SYMBOL_GPL(rt2800_process_rxwi);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 00cbb83..8011105 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3632,6 +3632,7 @@ static void iwl_mac_channel_switch(struct ieee80211_hw *hw,
+ 	struct iwl_priv *priv = hw->priv;
+ 	const struct iwl_channel_info *ch_info;
+ 	struct ieee80211_conf *conf = &hw->conf;
++	struct ieee80211_channel *channel = ch_switch->channel;
+ 	struct iwl_ht_config *ht_conf = &priv->current_ht_config;
+ 	u16 ch;
+ 	unsigned long flags = 0;
+@@ -3655,10 +3656,10 @@ static void iwl_mac_channel_switch(struct ieee80211_hw *hw,
+ 	mutex_lock(&priv->mutex);
+ 	if (priv->cfg->ops->lib->set_channel_switch) {
  
-+static bool rt2800_txdone_entry_check(struct queue_entry *entry, u32 reg)
-+{
-+	__le32 *txwi;
-+	u32 word;
-+	int wcid, ack, pid;
-+	int tx_wcid, tx_ack, tx_pid;
-+
-+	wcid	= rt2x00_get_field32(reg, TX_STA_FIFO_WCID);
-+	ack	= rt2x00_get_field32(reg, TX_STA_FIFO_TX_ACK_REQUIRED);
-+	pid	= rt2x00_get_field32(reg, TX_STA_FIFO_PID_TYPE);
-+
-+	/*
-+	 * This frames has returned with an IO error,
-+	 * so the status report is not intended for this
-+	 * frame.
-+	 */
-+	if (test_bit(ENTRY_DATA_IO_FAILED, &entry->flags)) {
-+		rt2x00lib_txdone_noinfo(entry, TXDONE_FAILURE);
-+		return false;
-+	}
-+
-+	/*
-+	 * Validate if this TX status report is intended for
-+	 * this entry by comparing the WCID/ACK/PID fields.
-+	 */
-+	txwi = rt2800_drv_get_txwi(entry);
-+
-+	rt2x00_desc_read(txwi, 1, &word);
-+	tx_wcid = rt2x00_get_field32(word, TXWI_W1_WIRELESS_CLI_ID);
-+	tx_ack  = rt2x00_get_field32(word, TXWI_W1_ACK);
-+	tx_pid  = rt2x00_get_field32(word, TXWI_W1_PACKETID);
-+
-+	if ((wcid != tx_wcid) || (ack != tx_ack) || (pid != tx_pid)) {
-+		WARNING(entry->queue->rt2x00dev,
-+			"TX status report missed for queue %d entry %d\n",
-+		entry->queue->qid, entry->entry_idx);
-+		rt2x00lib_txdone_noinfo(entry, TXDONE_UNKNOWN);
-+		return false;
-+	}
-+
-+	return true;
-+}
-+
- void rt2800_txdone(struct rt2x00_dev *rt2x00dev)
- {
- 	struct data_queue *queue;
-@@ -589,8 +632,8 @@ void rt2800_txdone(struct rt2x00_dev *rt2x00dev)
- 	struct txdone_entry_desc txdesc;
- 	u32 word;
- 	u32 reg;
--	int wcid, ack, pid, tx_wcid, tx_ack, tx_pid;
- 	u16 mcs, real_mcs;
-+	u8 pid;
- 	int i;
+-		ch = ch_switch->channel->hw_value;
++		ch = channel->hw_value;
+ 		if (le16_to_cpu(priv->active_rxon.channel) != ch) {
+ 			ch_info = iwl_get_channel_info(priv,
+-						       conf->channel->band,
++						       channel->band,
+ 						       ch);
+ 			if (!is_channel_valid(ch_info)) {
+ 				IWL_DEBUG_MAC80211(priv, "invalid channel\n");
+@@ -3687,15 +3688,12 @@ static void iwl_mac_channel_switch(struct ieee80211_hw *hw,
+ 			} else
+ 				ht_conf->is_40mhz = false;
  
- 	/*
-@@ -607,18 +650,15 @@ void rt2800_txdone(struct rt2x00_dev *rt2x00dev)
- 		if (!rt2x00_get_field32(reg, TX_STA_FIFO_VALID))
- 			break;
+-			/* if we are switching from ht to 2.4 clear flags
+-			 * from any ht related info since 2.4 does not
+-			 * support ht */
+-			if ((le16_to_cpu(priv->staging_rxon.channel) != ch))
++			if (le16_to_cpu(priv->staging_rxon.channel) != ch)
+ 				priv->staging_rxon.flags = 0;
  
--		wcid	= rt2x00_get_field32(reg, TX_STA_FIFO_WCID);
--		ack	= rt2x00_get_field32(reg, TX_STA_FIFO_TX_ACK_REQUIRED);
--		pid	= rt2x00_get_field32(reg, TX_STA_FIFO_PID_TYPE);
--
- 		/*
- 		 * Skip this entry when it contains an invalid
- 		 * queue identication number.
- 		 */
--		if (pid <= 0 || pid > QID_RX)
-+		pid = rt2x00_get_field32(reg, TX_STA_FIFO_PID_TYPE) - 1;
-+		if (pid >= QID_RX)
- 			continue;
+-			iwl_set_rxon_channel(priv, conf->channel);
++			iwl_set_rxon_channel(priv, channel);
+ 			iwl_set_rxon_ht(priv, ht_conf);
+-			iwl_set_flags_for_band(priv, conf->channel->band,
++			iwl_set_flags_for_band(priv, channel->band,
+ 					       priv->vif);
+ 			spin_unlock_irqrestore(&priv->lock, flags);
  
--		queue = rt2x00queue_get_queue(rt2x00dev, pid - 1);
-+		queue = rt2x00queue_get_queue(rt2x00dev, pid);
- 		if (unlikely(!queue))
- 			continue;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 221a211..fc78690 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1947,6 +1947,7 @@ int iwl_mac_config(struct ieee80211_hw *hw, u32 changed)
+ 	struct iwl_priv *priv = hw->priv;
+ 	const struct iwl_channel_info *ch_info;
+ 	struct ieee80211_conf *conf = &hw->conf;
++	struct ieee80211_channel *channel = conf->channel;
+ 	struct iwl_ht_config *ht_conf = &priv->current_ht_config;
+ 	unsigned long flags = 0;
+ 	int ret = 0;
+@@ -1956,7 +1957,7 @@ int iwl_mac_config(struct ieee80211_hw *hw, u32 changed)
+ 	mutex_lock(&priv->mutex);
  
-@@ -627,35 +667,22 @@ void rt2800_txdone(struct rt2x00_dev *rt2x00dev)
- 		 * order. We first check that the queue is not empty.
- 		 */
- 		entry = NULL;
-+		txwi = NULL;
- 		while (!rt2x00queue_empty(queue)) {
- 			entry = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
--			if (!test_bit(ENTRY_DATA_IO_FAILED, &entry->flags))
-+			if (rt2800_txdone_entry_check(entry, reg))
- 				break;
--
--			rt2x00lib_txdone_noinfo(entry, TXDONE_FAILURE);
- 		}
+ 	IWL_DEBUG_MAC80211(priv, "enter to channel %d changed 0x%X\n",
+-					conf->channel->hw_value, changed);
++					channel->hw_value, changed);
  
- 		if (!entry || rt2x00queue_empty(queue))
- 			break;
+ 	if (unlikely(!priv->cfg->mod_params->disable_hw_scan &&
+ 			test_bit(STATUS_SCANNING, &priv->status))) {
+@@ -1987,8 +1988,8 @@ int iwl_mac_config(struct ieee80211_hw *hw, u32 changed)
+ 		if (scan_active)
+ 			goto set_ch_out;
  
--		/*
--		 * Check if we got a match by looking at WCID/ACK/PID
--		 * fields
--		 */
--		txwi = rt2800_drv_get_txwi(entry);
--
--		rt2x00_desc_read(txwi, 1, &word);
--		tx_wcid	= rt2x00_get_field32(word, TXWI_W1_WIRELESS_CLI_ID);
--		tx_ack	= rt2x00_get_field32(word, TXWI_W1_ACK);
--		tx_pid	= rt2x00_get_field32(word, TXWI_W1_PACKETID);
--
--		if ((wcid != tx_wcid) || (ack != tx_ack) || (pid != tx_pid))
--			WARNING(rt2x00dev, "invalid TX_STA_FIFO content");
+-		ch = conf->channel->hw_value;
+-		ch_info = iwl_get_channel_info(priv, conf->channel->band, ch);
++		ch = channel->hw_value;
++		ch_info = iwl_get_channel_info(priv, channel->band, ch);
+ 		if (!is_channel_valid(ch_info)) {
+ 			IWL_DEBUG_MAC80211(priv, "leave - invalid channel\n");
+ 			ret = -EINVAL;
+@@ -2019,16 +2020,13 @@ int iwl_mac_config(struct ieee80211_hw *hw, u32 changed)
+ 		 * from BSS config in iwl_ht_conf */
+ 		ht_conf->ht_protection = IEEE80211_HT_OP_MODE_PROTECTION_NONE;
  
- 		/*
- 		 * Obtain the status about this packet.
- 		 */
- 		txdesc.flags = 0;
-+		txwi = rt2800_drv_get_txwi(entry);
- 		rt2x00_desc_read(txwi, 0, &word);
- 		mcs = rt2x00_get_field32(word, TXWI_W0_MCS);
- 		real_mcs = rt2x00_get_field32(reg, TX_STA_FIFO_MCS);
+-		/* if we are switching from ht to 2.4 clear flags
+-		 * from any ht related info since 2.4 does not
+-		 * support ht */
+ 		if ((le16_to_cpu(priv->staging_rxon.channel) != ch))
+ 			priv->staging_rxon.flags = 0;
+ 
+-		iwl_set_rxon_channel(priv, conf->channel);
++		iwl_set_rxon_channel(priv, channel);
+ 		iwl_set_rxon_ht(priv, ht_conf);
+ 
+-		iwl_set_flags_for_band(priv, conf->channel->band, priv->vif);
++		iwl_set_flags_for_band(priv, channel->band, priv->vif);
+ 		spin_unlock_irqrestore(&priv->lock, flags);
+ 
+ 		if (priv->cfg->ops->lib->update_bcast_station)
 -- 
-1.7.2.2
+1.7.0.4
 
