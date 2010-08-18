@@ -1,111 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56912 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752296Ab0H0Khv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 06:37:51 -0400
-Message-Id: <20100827103658.545080439@sipsolutions.net>
-Date: Fri, 27 Aug 2010 12:35:57 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
+Received: from mga03.intel.com ([143.182.124.21]:1413 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754167Ab0HRQSd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Aug 2010 12:18:33 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 4/6] mac80211: split out concurrent vif checks
-References: <20100827103553.559128239@sipsolutions.net>
-Mime-Version: 1.0
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 04/16] iwlwifi: make aggregation time limit configurable
+Date: Wed, 18 Aug 2010 09:22:39 -0700
+Message-Id: <1282148571-9258-5-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1282148571-9258-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1282148571-9258-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+By default, aggregation time limit is 4000 uSec, add the parameter to
+.cfg
+to allow this parameter can be configure per device base if needed.
 
-Split the concurrent virtual interface checks
-into a new function that can be used to check
-for any given new interface type.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- net/mac80211/iface.c |   43 +++++++++++++++++++++++++++++--------------
- 1 file changed, 29 insertions(+), 14 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c   |   10 ++++++++++
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    6 ++++--
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    2 ++
+ 3 files changed, 16 insertions(+), 2 deletions(-)
 
---- wireless-testing.orig/net/mac80211/iface.c	2010-08-26 16:00:31.000000000 +0200
-+++ wireless-testing/net/mac80211/iface.c	2010-08-26 16:00:31.000000000 +0200
-@@ -94,20 +94,14 @@ static inline int identical_mac_addr_all
- 			 type2 == NL80211_IFTYPE_AP_VLAN));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 23e5c42..7c4deee 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -2694,8 +2694,18 @@ static void rs_fill_link_cmd(struct iwl_priv *priv,
+ 
+ 	lq_cmd->agg_params.agg_frame_cnt_limit = LINK_QUAL_AGG_FRAME_LIMIT_DEF;
+ 	lq_cmd->agg_params.agg_dis_start_th = LINK_QUAL_AGG_DISABLE_START_DEF;
++
+ 	lq_cmd->agg_params.agg_time_limit =
+ 		cpu_to_le16(LINK_QUAL_AGG_TIME_LIMIT_DEF);
++	/*
++	 * overwrite if needed, pass aggregation time limit
++	 * to uCode in uSec
++	 */
++	if (priv && priv->cfg->agg_time_limit &&
++	    priv->cfg->agg_time_limit >= LINK_QUAL_AGG_TIME_LIMIT_MIN &&
++	    priv->cfg->agg_time_limit <= LINK_QUAL_AGG_TIME_LIMIT_MAX)
++		lq_cmd->agg_params.agg_time_limit =
++			cpu_to_le16(priv->cfg->agg_time_limit);
  }
  
--static int ieee80211_open(struct net_device *dev)
-+static int ieee80211_check_concurrent_iface(struct ieee80211_sub_if_data *sdata,
-+					    enum nl80211_iftype iftype)
- {
--	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--	struct ieee80211_sub_if_data *nsdata;
- 	struct ieee80211_local *local = sdata->local;
--	struct sta_info *sta;
--	u32 changed = 0;
--	int res;
--	u32 hw_reconf_flags = 0;
-+	struct ieee80211_sub_if_data *nsdata;
-+	struct net_device *dev = sdata->dev;
+ static void *rs_alloc(struct ieee80211_hw *hw, struct dentry *debugfsdir)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index c6a0470..14a7a8c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -2110,8 +2110,10 @@ struct iwl_link_qual_general_params {
+  */
+ struct iwl_link_qual_agg_params {
  
--	/* fail early if user set an invalid address */
--	if (!is_zero_ether_addr(dev->dev_addr) &&
--	    !is_valid_ether_addr(dev->dev_addr))
--		return -EADDRNOTAVAIL;
-+	ASSERT_RTNL();
+-	/* Maximum number of uSec in aggregation.
+-	 * Driver should set this to 4000 (4 milliseconds). */
++	/*
++	 *Maximum number of uSec in aggregation.
++	 * default set to 4000 (4 milliseconds) if not configured in .cfg
++	 */
+ 	__le16 agg_time_limit;
  
- 	/* we hold the RTNL here so can safely walk the list */
- 	list_for_each_entry(nsdata, &local->interfaces, list) {
-@@ -124,7 +118,7 @@ static int ieee80211_open(struct net_dev
- 			 * belonging to the same hardware. Then, however, we're
- 			 * faced with having to adopt two different TSF timers...
- 			 */
--			if (sdata->vif.type == NL80211_IFTYPE_ADHOC &&
-+			if (iftype == NL80211_IFTYPE_ADHOC &&
- 			    nsdata->vif.type == NL80211_IFTYPE_ADHOC)
- 				return -EBUSY;
+ 	/*
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 51ebd03..17fae00 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -280,6 +280,7 @@ struct iwl_mod_params {
+  * @scan_antennas: available antenna for scan operation
+  * @need_dc_calib: need to perform init dc calibration
+  * @bt_statistics: use BT version of statistics notification
++ * @agg_time_limit: maximum number of uSec in aggregation
+  *
+  * We enable the driver to be backward compatible wrt API version. The
+  * driver specifies which APIs it supports (with @ucode_api_max being the
+@@ -350,6 +351,7 @@ struct iwl_cfg {
+ 	u8 scan_tx_antennas[IEEE80211_NUM_BANDS];
+ 	const bool need_dc_calib;
+ 	const bool bt_statistics;
++	u16 agg_time_limit;
+ };
  
-@@ -138,19 +132,40 @@ static int ieee80211_open(struct net_dev
- 			/*
- 			 * check whether it may have the same address
- 			 */
--			if (!identical_mac_addr_allowed(sdata->vif.type,
-+			if (!identical_mac_addr_allowed(iftype,
- 							nsdata->vif.type))
- 				return -ENOTUNIQ;
- 
- 			/*
- 			 * can only add VLANs to enabled APs
- 			 */
--			if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
-+			if (iftype == NL80211_IFTYPE_AP_VLAN &&
- 			    nsdata->vif.type == NL80211_IFTYPE_AP)
- 				sdata->bss = &nsdata->u.ap;
- 		}
- 	}
- 
-+	return 0;
-+}
-+
-+static int ieee80211_open(struct net_device *dev)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
-+	struct sta_info *sta;
-+	u32 changed = 0;
-+	int res;
-+	u32 hw_reconf_flags = 0;
-+
-+	/* fail early if user set an invalid address */
-+	if (!is_zero_ether_addr(dev->dev_addr) &&
-+	    !is_valid_ether_addr(dev->dev_addr))
-+		return -EADDRNOTAVAIL;
-+
-+	res = ieee80211_check_concurrent_iface(sdata, sdata->vif.type);
-+	if (res)
-+		return res;
-+
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_WDS:
- 		if (!is_valid_ether_addr(sdata->u.wds.remote_addr))
-
+ /***************************
+-- 
+1.7.0.4
 
