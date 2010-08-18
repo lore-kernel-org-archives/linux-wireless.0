@@ -1,50 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54847 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:38215 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754970Ab0HPVnq (ORCPT
+	with ESMTP id S1751436Ab0HRQkL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Aug 2010 17:43:46 -0400
-Subject: Re: nl80211 scanning from userspace
+	Wed, 18 Aug 2010 12:40:11 -0400
+Subject: Re: [PATCH 1/2] iwlagn: do not check for AP mode for WEP keys
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Christopher Piggott <cpiggott@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTi=ALaGb=UcWAuB_N8E9j95f0Hgxtw0Dhh7xaPh2@mail.gmail.com>
-References: <AANLkTi=ZGn0Rt7zYxBJB0jJ-EY=gPpxtBN2bA9svkq99@mail.gmail.com>
-	 <1281986025.3683.31.camel@jlt3.sipsolutions.net>
-	 <AANLkTiniqFJzrWFzNJTxsF31EZfSTei89dbS2Ak4YDjH@mail.gmail.com>
-	 <1281987696.3683.32.camel@jlt3.sipsolutions.net>
-	 <AANLkTi=ALaGb=UcWAuB_N8E9j95f0Hgxtw0Dhh7xaPh2@mail.gmail.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net
+In-Reply-To: <1282149322-17928-2-git-send-email-wey-yi.w.guy@intel.com>
+References: <1282149322-17928-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <1282149322-17928-2-git-send-email-wey-yi.w.guy@intel.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 16 Aug 2010 23:43:45 +0200
-Message-ID: <1281995025.3683.34.camel@jlt3.sipsolutions.net>
+Date: Wed, 18 Aug 2010 18:40:04 +0200
+Message-ID: <1282149604.5249.5.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-08-16 at 17:22 -0400, Christopher Piggott wrote:
-> It's hard to figure out what's going on sometimes.  I set up an error handler:
+On Wed, 2010-08-18 at 09:35 -0700, Wey-Yi Guy wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 > 
-> static int error_handler(struct sockaddr_nl *nla, struct nlmsgerr
-> *err, void *arg) {
->     printf("ERROR %s (%d)\n", strerror(err->error), err->error);
->     return NL_SKIP;
-> }
-> 
-> which also returns -95 (operation not supported) just as you said.
-> So, I'll have to figure out what you mean by "dumping."
-> 
-> I did find this:
-> 
->         mcid = nl_get_multicast_id(state->nl_sock, "nl80211", "scan");
-> 
-> in iw:event.c and traced it to some code in iw:genl.c, a file that
-> starts out by commenting "This ought to be provided by libnl".  That
-> situation doesn't seem to have changed.
-> 
-> Is this the area of the code you mean when you say "dump" ?  That I
-> need to register myself to receive the scan results?
+> Even when we configure WEP keys in AP mode
+> ones without a station pointer are default
+> keys, so don't check for AP mode here.
 
-No, you need to use NLM_F_DUMP etc. Really, check wpa_supplicant :)
+I don't think this needs to go into 2.6.35 (or 2.6.36, which I think you
+meant?) since we don't support AP mode.
 
 johannes
+
 
