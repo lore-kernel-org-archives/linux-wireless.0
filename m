@@ -1,219 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:27344 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753933Ab0HWOxa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Aug 2010 10:53:30 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 07/26] iwlagn: let bluetooth traffic load impact rate scale
-Date: Mon, 23 Aug 2010 07:56:58 -0700
-Message-Id: <1282575437-23270-8-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1282575437-23270-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1282575437-23270-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from external1.orbit-lab.org ([128.6.192.131]:53013 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751050Ab0HRTD3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Aug 2010 15:03:29 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 9FFA84195D
+	for <linux-wireless@vger.kernel.org>; Wed, 18 Aug 2010 15:03:05 -0400 (EDT)
+Subject: Compat-wireless release for 2010-08-18 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100818190327.7845B41133@repository3.orbit-lab.org>
+Date: Wed, 18 Aug 2010 15:03:27 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   4c0ceee..558219f  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+   82eaf99..4715fbe  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   ffefdc0..0213728  history    -> origin/history
+ + ef937c2...f898b45 master     -> origin/master  (forced update)
+ * [new tag]         next-20100818 -> next-20100818
 
-Depending on the amount of bluetooth traffic,
-using the shared antenna (antenna B) will have
-adverse impact on both bluetooth and wireless
-traffic. Add controls to improve the situation
-by making rate scaling depend on the BT load.
+compat-wireless code metrics
 
-When there's high bluetooth traffic load, there's
-little point in trying to aggregate as BT traffic
-would disrupt the aggregated frames all the time,
-so simply don't start sessions then.
+    495893 - Total upstream lines of code being pulled
+      1714 - backport code changes
+      1474 - backport code additions
+       240 - backport code deletions
+      6070 - backport from compat module
+      7784 - total backport code
+    1.5697 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2456 - % of crap code
 
-When BT traffic returns to lower levels, the rate
-scaling will come here again automatically when
-wifi traffic is high enough, and then it will be
-able to successfully enable aggregation.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c |  113 ++++++++++++++++++++++++++++-
- drivers/net/wireless/iwlwifi/iwl-agn-rs.h |    2 +
- 2 files changed, 114 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index a456338..f8eed92 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -301,7 +301,19 @@ static int rs_tl_turn_on_agg_for_tid(struct iwl_priv *priv,
- 				      struct ieee80211_sta *sta)
- {
- 	int ret = -EAGAIN;
--	u32 load = rs_tl_get_load(lq_data, tid);
-+	u32 load;
-+
-+	/*
-+	 * Don't create TX aggregation sessions when in high
-+	 * BT traffic, as they would just be disrupted by BT.
-+	 */
-+	if (priv->bt_traffic_load >= IWL_BT_COEX_TRAFFIC_LOAD_HIGH) {
-+		IWL_ERR(priv, "BT traffic (%d), no aggregation allowed\n",
-+			priv->bt_traffic_load);
-+		return ret;
-+	}
-+
-+	load = rs_tl_get_load(lq_data, tid);
- 
- 	if (load > IWL_AGG_LOAD_THRESHOLD) {
- 		IWL_DEBUG_HT(priv, "Starting Tx agg: STA: %pM tid: %d\n",
-@@ -1286,6 +1298,27 @@ static int rs_move_legacy_other(struct iwl_priv *priv,
- 	int ret = 0;
- 	u8 update_search_tbl_counter = 0;
- 
-+	switch (priv->bt_traffic_load) {
-+	case IWL_BT_COEX_TRAFFIC_LOAD_NONE:
-+		/* nothing */
-+		break;
-+	case IWL_BT_COEX_TRAFFIC_LOAD_LOW:
-+		/* avoid antenna B unless MIMO */
-+		if (tbl->action == IWL_LEGACY_SWITCH_ANTENNA2)
-+			tbl->action = IWL_LEGACY_SWITCH_ANTENNA1;
-+		break;
-+	case IWL_BT_COEX_TRAFFIC_LOAD_HIGH:
-+	case IWL_BT_COEX_TRAFFIC_LOAD_CONTINUOUS:
-+		/* avoid antenna B and MIMO */
-+		if (tbl->action >= IWL_LEGACY_SWITCH_ANTENNA2 &&
-+		    tbl->action != IWL_LEGACY_SWITCH_SISO)
-+			tbl->action = IWL_SISO_SWITCH_ANTENNA1;
-+		break;
-+	default:
-+		IWL_ERR(priv, "Invalid BT load %d", priv->bt_traffic_load);
-+		break;
-+	}
-+
- 	if (!iwl_ht_enabled(priv))
- 		/* stay in Legacy */
- 		tbl->action = IWL_LEGACY_SWITCH_ANTENNA1;
-@@ -1425,6 +1458,27 @@ static int rs_move_siso_to_other(struct iwl_priv *priv,
- 	u8 update_search_tbl_counter = 0;
- 	int ret;
- 
-+	switch (priv->bt_traffic_load) {
-+	case IWL_BT_COEX_TRAFFIC_LOAD_NONE:
-+		/* nothing */
-+		break;
-+	case IWL_BT_COEX_TRAFFIC_LOAD_LOW:
-+		/* avoid antenna B unless MIMO */
-+		if (tbl->action == IWL_SISO_SWITCH_ANTENNA2)
-+			tbl->action = IWL_SISO_SWITCH_ANTENNA1;
-+		break;
-+	case IWL_BT_COEX_TRAFFIC_LOAD_HIGH:
-+	case IWL_BT_COEX_TRAFFIC_LOAD_CONTINUOUS:
-+		/* avoid antenna B and MIMO */
-+		if (tbl->action >= IWL_SISO_SWITCH_ANTENNA2 &&
-+		    tbl->action != IWL_SISO_SWITCH_GI)
-+			tbl->action = IWL_SISO_SWITCH_ANTENNA1;
-+		break;
-+	default:
-+		IWL_ERR(priv, "Invalid BT load %d", priv->bt_traffic_load);
-+		break;
-+	}
-+
- 	if (iwl_tx_ant_restriction(priv) == IWL_ANT_OK_SINGLE &&
- 	    tbl->action > IWL_SISO_SWITCH_ANTENNA2) {
- 		/* stay in SISO */
-@@ -1564,6 +1618,27 @@ static int rs_move_mimo2_to_other(struct iwl_priv *priv,
- 	u8 update_search_tbl_counter = 0;
- 	int ret;
- 
-+	switch (priv->bt_traffic_load) {
-+	case IWL_BT_COEX_TRAFFIC_LOAD_NONE:
-+		/* nothing */
-+		break;
-+	case IWL_BT_COEX_TRAFFIC_LOAD_HIGH:
-+	case IWL_BT_COEX_TRAFFIC_LOAD_CONTINUOUS:
-+		/* avoid antenna B and MIMO */
-+		if (tbl->action == IWL_MIMO2_SWITCH_MIMO3_ABC)
-+			tbl->action = IWL_SISO_SWITCH_ANTENNA1;
-+	case IWL_BT_COEX_TRAFFIC_LOAD_LOW:
-+		/* avoid antenna B unless MIMO */
-+		if (tbl->action == IWL_MIMO2_SWITCH_ANTENNA2)
-+			tbl->action = IWL_MIMO2_SWITCH_ANTENNA1;
-+		else if (tbl->action == IWL_MIMO2_SWITCH_SISO_B)
-+			tbl->action = IWL_MIMO2_SWITCH_SISO_A;
-+		break;
-+	default:
-+		IWL_ERR(priv, "Invalid BT load %d", priv->bt_traffic_load);
-+		break;
-+	}
-+
- 	if ((iwl_tx_ant_restriction(priv) == IWL_ANT_OK_SINGLE) &&
- 	    (tbl->action < IWL_MIMO2_SWITCH_SISO_A ||
- 	     tbl->action > IWL_MIMO2_SWITCH_SISO_C)) {
-@@ -1706,6 +1781,29 @@ static int rs_move_mimo3_to_other(struct iwl_priv *priv,
- 	int ret;
- 	u8 update_search_tbl_counter = 0;
- 
-+	switch (priv->bt_traffic_load) {
-+	case IWL_BT_COEX_TRAFFIC_LOAD_NONE:
-+		/* nothing */
-+		break;
-+	case IWL_BT_COEX_TRAFFIC_LOAD_HIGH:
-+	case IWL_BT_COEX_TRAFFIC_LOAD_CONTINUOUS:
-+		/* avoid antenna B and MIMO */
-+		if (tbl->action == IWL_MIMO3_SWITCH_MIMO2_AB ||
-+		    tbl->action == IWL_MIMO3_SWITCH_MIMO2_AC ||
-+		    tbl->action == IWL_MIMO3_SWITCH_MIMO2_BC)
-+			tbl->action = IWL_MIMO3_SWITCH_SISO_A;
-+	case IWL_BT_COEX_TRAFFIC_LOAD_LOW:
-+		/* avoid antenna B unless MIMO */
-+		if (tbl->action == IWL_MIMO3_SWITCH_SISO_B)
-+			tbl->action = IWL_MIMO3_SWITCH_SISO_A;
-+		else if (tbl->action == IWL_MIMO3_SWITCH_ANTENNA2)
-+			tbl->action = IWL_MIMO3_SWITCH_ANTENNA1;
-+		break;
-+	default:
-+		IWL_ERR(priv, "Invalid BT load %d", priv->bt_traffic_load);
-+		break;
-+	}
-+
- 	if ((iwl_tx_ant_restriction(priv) == IWL_ANT_OK_SINGLE) &&
- 	    (tbl->action < IWL_MIMO3_SWITCH_SISO_A ||
- 	     tbl->action > IWL_MIMO3_SWITCH_SISO_C)) {
-@@ -2234,6 +2332,19 @@ static void rs_rate_scale_perform(struct iwl_priv *priv,
- 	if (iwl_tx_ant_restriction(priv) != IWL_ANT_OK_MULTI &&
- 		(is_mimo2(tbl->lq_type) || is_mimo3(tbl->lq_type)))
- 		scale_action = -1;
-+
-+	if (lq_sta->last_bt_traffic > priv->bt_traffic_load) {
-+		lq_sta->last_bt_traffic = priv->bt_traffic_load;
-+		/*
-+		 * don't set scale_action, don't want to scale up if
-+		 * the rate scale doesn't otherwise think that is a
-+		 * good idea.
-+		 */
-+	} else if (lq_sta->last_bt_traffic < priv->bt_traffic_load) {
-+		lq_sta->last_bt_traffic = priv->bt_traffic_load;
-+		scale_action = -1;
-+	}
-+
- 	switch (scale_action) {
- 	case -1:
- 		/* Decrease starting rate, update uCode's rate table */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
-index 8292f6d..3970ab1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
-@@ -432,6 +432,8 @@ struct iwl_lq_sta {
- 	u32 last_rate_n_flags;
- 	/* packets destined for this STA are aggregated */
- 	u8 is_agg;
-+	/* BT traffic this sta was last updated in */
-+	u8 last_bt_traffic;
- };
- 
- static inline u8 num_of_ant(u8 mask)
--- 
-1.7.0.4
-
+Base tree: linux-next.git
+Base tree version: next-20100818
+compat-wireless release: compat-wireless-2010-08-16-3-g558219f
