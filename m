@@ -1,96 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:42139 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755250Ab0H0SlQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 14:41:16 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 4/7] compat-wireless: multiple changes to config file
-Date: Fri, 27 Aug 2010 20:40:50 +0200
-Message-Id: <1282934453-18093-5-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1282934453-18093-1-git-send-email-hauke@hauke-m.de>
-References: <1282934453-18093-1-git-send-email-hauke@hauke-m.de>
+Received: from mga01.intel.com ([192.55.52.88]:9125 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752183Ab0HRQqM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Aug 2010 12:46:12 -0400
+Subject: Re: [PATCH 2/2] iwlwifi: do not spuriously call
+ ieee80211_scan_completed
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+In-Reply-To: <20100818164405.GA2793@tuxdriver.com>
+References: <1282149322-17928-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <1282149322-17928-3-git-send-email-wey-yi.w.guy@intel.com>
+	 <20100818164405.GA2793@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 18 Aug 2010 09:50:34 -0700
+Message-ID: <1282150234.4235.0.camel@wwguy-huron>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- *	deactivate SPI drivers for kernel < 2.6.25 because linux/gpio.h
-	is missing
- * 	CONFIG_WL1251 and CONFIG_WL1271 both need CRC7
- * 	CONFIG_RT2X00_LIB_LEDS does not work for kernel < 2.6.25
-	because of missing blink_set
+On Wed, 2010-08-18 at 09:44 -0700, John W. Linville wrote:
+> On Wed, Aug 18, 2010 at 09:35:22AM -0700, Wey-Yi Guy wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> > 
+> > When a scan is aborted because the corresponding
+> > virtual interface is removed, we may still later
+> > attempt to tell mac80211 that the scan completed.
+> > This is obviously wrong, since we already told it
+> > that it was aborted, so don't do that.
+> > 
+> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> > Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> 
+> Does this really qualify as a fix for 2.6.36?  Is it a regression?
+> Does it generate an oops?  Or loss of connectivity?
+> 
+Johannes, could you help to answer.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- config.mk |   15 ++++++++++++---
- 1 files changed, 12 insertions(+), 3 deletions(-)
+Thanks
+Wey
 
-diff --git a/config.mk b/config.mk
-index edfeca2..4c4a111 100644
---- a/config.mk
-+++ b/config.mk
-@@ -436,12 +436,12 @@ CONFIG_BT_ATH3K=m
- endif # end of USB driver list
- 
- ifneq ($(CONFIG_SPI_MASTER),)
-+ifndef CONFIG_COMPAT_KERNEL_25
- 
--CONFIG_WL1251=m
- ifneq ($(CONFIG_CRC7),)
- CONFIG_WL1251_SPI=m
--endif
- CONFIG_WL1271_SPI=m
-+endif
- CONFIG_P54_SPI=m
- 
- ifdef CONFIG_COMPAT_KERNEL_27
-@@ -452,18 +452,23 @@ CONFIG_LIBERTAS_SPI=m
- NEED_LIBERTAS=y
- endif
- 
-+endif
- endif # end of SPI driver list
- 
- ifneq ($(CONFIG_MMC),)
- 
- CONFIG_SSB_SDIOHOST=y
- CONFIG_B43_SDIO=y
-+
-+ifneq ($(CONFIG_CRC7),)
- CONFIG_WL1251_SDIO=m
- 
- ifndef CONFIG_COMPAT_KERNEL_32
- CONFIG_WL1271_SDIO=m
- endif
- 
-+endif
-+
- ifdef CONFIG_COMPAT_KERNEL_27
- CONFIG_LIBERTAS_SDIO=n
- NEED_LIBERTAS=n
-@@ -488,7 +493,11 @@ CONFIG_RT2800_LIB=m
- CONFIG_RT2X00_LIB_HT=y
- CONFIG_RT2X00_LIB_FIRMWARE=y
- CONFIG_RT2X00_LIB_CRYPTO=y
-+ifdef CONFIG_COMPAT_KERNEL_25
-+CONFIG_RT2X00_LIB_LEDS=n
-+else
- CONFIG_RT2X00_LIB_LEDS=y
-+endif
- # CONFIG_RT2X00_DEBUG=y
- # CONFIG_RT2X00_LIB_DEBUGFS
- endif
-@@ -506,8 +515,8 @@ CONFIG_ATH_COMMON=m
- # CONFIG_ATH_DEBUG=y
- 
- CONFIG_WL12XX=y
--CONFIG_WL1251=m
- ifneq ($(CONFIG_CRC7),)
-+CONFIG_WL1251=m
- CONFIG_WL1271=m
- endif
- 
--- 
-1.7.0.4
 
