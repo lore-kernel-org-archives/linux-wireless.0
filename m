@@ -1,43 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:54581 "EHLO hera.kernel.org"
+Received: from mga03.intel.com ([143.182.124.21]:30390 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755823Ab0HKUeX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Aug 2010 16:34:23 -0400
-Date: Wed, 11 Aug 2010 20:32:16 +0000
-From: Denis Kirjanov <dkirjanov@kernel.org>
+	id S1751021Ab0HRRp7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Aug 2010 13:45:59 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
-Cc: proski@gnu.org, hermes@gibson.dropbear.id.au, davem@davemloft.net,
-	linux-wireless@vger.kernel.org,
-	orinoco-devel@lists.sourceforge.net, netdev@vger.kernel.org
-Subject: [PATCH] orinoco: Fix walking past the end of the buffer
-Message-ID: <20100811203216.GA25168@hera.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 0/2] iwlwifi fix for stable kernel 2.6.35
+Date: Wed, 18 Aug 2010 10:50:17 -0700
+Message-Id: <1282153819-27781-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix walking past the end of the bitrate_table array
-in the case when the loop counter == BITRATE_TABLE_SIZE.
-Mark bitrate as invalid in this case for the orinoco_ioctl_setrate()
+When tx queue stuck, iwlwifi driver should detect and reload the firmware;
+different devices has different timing requirement, change the timeout
+value for 5000 series devices to avoid un-necessary firmware reload which
+can cause device become unstable.
 
-Signed-off-by: Denis Kirjanov <dkirjanov@kernel.org>
----
+This fixes:
+http://article.gmane.org/gmane.linux.kernel.wireless.general/53552
 
-diff --git a/drivers/net/wireless/orinoco/hw.c b/drivers/net/wireless/orinoco/hw.c
-index 077baa8..191bc03 100644
---- a/drivers/net/wireless/orinoco/hw.c
-+++ b/drivers/net/wireless/orinoco/hw.c
-@@ -765,9 +765,12 @@ int orinoco_hw_get_act_bitrate(struct orinoco_private *priv, int *bitrate)
- 			if (bitrate_table[i].intersil_txratectrl == val)
- 				break;
- 
--		if (i >= BITRATE_TABLE_SIZE)
-+		if (i >= BITRATE_TABLE_SIZE) {
- 			printk(KERN_INFO "%s: Unable to determine current bitrate (0x%04hx)\n",
- 			       priv->ndev->name, val);
-+			*bitrate = 100001; /* Mark as invalid */
-+			break;
-+		}
- 
- 		*bitrate = bitrate_table[i].bitrate * 100000;
- 		break;
+Those patches already available in wireless-2.6
+
+Wey-Yi Guy (2):
+  iwlwifi: long monitor timer
+  iwlwifi: use long monitor timer to avoid un-necessary reload
+
+this patch is also available from wireless-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+
+ drivers/net/wireless/iwlwifi/iwl-1000.c |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-3945.c |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-4965.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c |   14 +++++++-------
+ drivers/net/wireless/iwlwifi/iwl-6000.c |   14 +++++++-------
+ drivers/net/wireless/iwlwifi/iwl-dev.h  |    3 ++-
+ 6 files changed, 21 insertions(+), 20 deletions(-)
+
