@@ -1,65 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [12.19.149.2] ([12.19.149.2]:28258 "EHLO mail.atheros.com"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1754143Ab0HWWWi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Aug 2010 18:22:38 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 23 Aug 2010 15:22:34 -0700
-Date: Mon, 23 Aug 2010 15:22:36 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Bastien Nocera <hadess@hadess.net>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Kevin Hayes <kevin@Atheros.com>,
-	David Quan <David.Quan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"geoclue@lists.freedesktop.org" <geoclue@lists.freedesktop.org>
-Subject: Re: [PATCH 0/2] iw: add GeoClue support
-Message-ID: <20100823222236.GE2206@tux>
-References: <1282350556-16523-1-git-send-email-lrodriguez@atheros.com>
- <1282572681.3813.3.camel@jlt3.sipsolutions.net>
- <AANLkTimrtWQKycuAcZ3SjDaOqJ6Z-pPNauRfh+2aZ=ge@mail.gmail.com>
- <1282579507.3405.130.camel@localhost.localdomain>
- <20100823174620.GA12375@tux>
- <1282597556.3405.135.camel@localhost.localdomain>
- <20100823221119.GC2206@tux>
- <1282601707.3405.140.camel@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1282601707.3405.140.camel@localhost.localdomain>
+Received: from he.sipsolutions.net ([78.46.109.217]:56687 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751104Ab0HRNB0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Aug 2010 09:01:26 -0400
+Subject: [PATCH v2] mac80211: fix docbook
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1282130871.3664.5.camel@jlt3.sipsolutions.net>
+References: <1282130871.3664.5.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 18 Aug 2010 15:01:23 +0200
+Message-ID: <1282136483.13315.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 23, 2010 at 03:15:07PM -0700, Bastien Nocera wrote:
-> On Mon, 2010-08-23 at 15:11 -0700, Luis R. Rodriguez wrote:
-> > On Mon, Aug 23, 2010 at 02:05:56PM -0700, Bastien Nocera wrote:
-> <snip>
-> > > No, I'm talking about what's exported by the providers. I don't really
-> > > care if they talk to other parts of the system using D-Bus though. I'm
-> > > talking about link 2) here.
-> > > 
-> > > [App] <-1-> [Geoclue master] <-2-> [Gypsy provider] <-3-> [Gypsy daemon]
-> > 
-> > Sorry I do not follow yet. Is the idea that you would prefer if
-> > client applications would never talk to providers directly and instead
-> > always used the master provider?
-> 
-> Exactly, and it's mentioned in the bugzilla
+From: Johannes Berg <johannes.berg@intel.com>
 
-Thanks for the heads up, I haven't been grep'ing through the bugzilla.
+Fix a small problem in the documentation for
+ieee80211_request_smps, and a now erroneous
+inclusion of enum ieee80211_key_alg, which no
+longer exists after the change to ciphers.
 
-> and was discussed on the mailing-list as well.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ Documentation/DocBook/80211.tmpl |    1 -
+ include/net/mac80211.h           |    2 +-
+ 2 files changed, 1 insertion(+), 2 deletions(-)
 
-And am new there :)
+--- wireless-testing.orig/include/net/mac80211.h	2010-08-18 13:26:33.000000000 +0200
++++ wireless-testing/include/net/mac80211.h	2010-08-18 13:26:43.000000000 +0200
+@@ -2546,7 +2546,7 @@ void ieee80211_chswitch_done(struct ieee
+ /**
+  * ieee80211_request_smps - request SM PS transition
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+- * @mode: new SM PS mode
++ * @smps_mode: new SM PS mode
+  *
+  * This allows the driver to request an SM PS transition in managed
+  * mode. This is useful when the driver has more information than
+--- wireless-testing.orig/Documentation/DocBook/80211.tmpl	2010-08-18 14:53:44.000000000 +0200
++++ wireless-testing/Documentation/DocBook/80211.tmpl	2010-08-18 14:54:25.000000000 +0200
+@@ -248,7 +248,6 @@ MISSING
+   <!-- intentionally multiple !F lines to get proper order -->
+ !Finclude/net/mac80211.h set_key_cmd
+ !Finclude/net/mac80211.h ieee80211_key_conf
+-!Finclude/net/mac80211.h ieee80211_key_alg
+ !Finclude/net/mac80211.h ieee80211_key_flags
+       </chapter>
+ 
 
-This makes sense -- are there plans on removing all these exported
-library routines so that the only exposed thing is the master
-provider calls?
 
-Based on your comments it seems changing the iw patch to just
-use the master provider would go more in line with current
-development focus.
-
-  Luis
