@@ -1,82 +1,244 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:46539 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757840Ab0HKByl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Aug 2010 21:54:41 -0400
-Received: by wwj40 with SMTP id 40so13669416wwj.1
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Aug 2010 18:54:40 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1281481505.20038.10.camel@wwguy-ubuntu>
-References: <AANLkTim4_HoHwdhGqAZqcGf2oq7boktdZFW4-w5DpdDa@mail.gmail.com>
- <AANLkTinuYOvwNZAFgq67f4XBL4YQ+b2z4EBMcmvbMYi3@mail.gmail.com> <1281481505.20038.10.camel@wwguy-ubuntu>
-From: Andrew Lutomirski <luto@mit.edu>
-Date: Tue, 10 Aug 2010 21:54:20 -0400
-Message-ID: <AANLkTimU6qzoe2KS59zbN1Kxgh0KU0PO3aMaXz--st93@mail.gmail.com>
-Subject: Re: [WTF, maintainers] Re: *PING* iwlagn 2.6.35: "BA scd_flow 0 does
- not match txq_id 10" regression
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga03.intel.com ([143.182.124.21]:30390 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751729Ab0HRRqA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Aug 2010 13:46:00 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 1/2] iwlwifi: long monitor timer
+Date: Wed, 18 Aug 2010 10:50:18 -0700
+Message-Id: <1282153819-27781-2-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1282153819-27781-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1282153819-27781-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 10, 2010 at 7:05 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> Hi Andrew,
->
-> On Tue, 2010-08-10 at 14:39 -0700, Andrew Lutomirski wrote:
->> On Mon, Jul 26, 2010 at 4:02 PM, Andrew Lutomirski <luto@mit.edu> wrote:
->> > There's a regression in 2.6.35 where the connection breaks and iwlagn
->> > writes a bunch of:
->> >
->> > iwlagn 0000:03:00.0: BA scd_flow 0 does not match txq_id 10
->> >
->> > This is confirmed [1] and a patch supposedly exists.  Since this
->> > breaks at least two people's wireless and 2.6.35 is about to be
->> > released, can we see the patches?
->> >
->> > Thanks,
->> > Andy
->> >
->> > [1] http://article.gmane.org/gmane.linux.kernel.wireless.general/53552
->> >
->>
->> This regression was reported on July 21 and confirmed, supposedly with
->> a patch available, on July 24 (or maybe July 23).  On July 26 I pinged
->> the list because I'm affected as well.
->>
->> It's now August 10 and both 2.6.35 and 2.5.35.1 have been released and
->> the bug is still there.  WTF happened?  (I admit I haven't actually
->> tested 2.6.35.1 because it's still compiling, but I see nothing to
->> suggest that it's been fixed.)
->>
->
-> Sorry for the delay, the problem you report is a real problem in our
-> uCode; unfortunately, we still not root cause the real problem yet. The
-> patch I provide previous just a hack and still waiting for our internal
-> validation team to make sure it did not break the overall behaviors.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Fair enough.
+Change the name for monitor timer, also adding define for long monitor
+timer; long monitor timer can be used for the type of devices require longer
+time to determine the uCode is stuck on tx and needed reload.
 
->
-> I will submit the patch as soon as I got the report back from our test
-> team; at the meantime, we are very active work on root cause the real
-> problem. Once we have the possible solution, it will be great if you can
-> help us to verify it.
->
+Cc: stable@kernel.org [2.6.35]
+Reported-by: Marcel Holtmann <marcel@holtmann.org>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-1000.c |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-3945.c |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-4965.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c |   14 +++++++-------
+ drivers/net/wireless/iwlwifi/iwl-6000.c |   14 +++++++-------
+ drivers/net/wireless/iwlwifi/iwl-dev.h  |    3 ++-
+ 6 files changed, 21 insertions(+), 20 deletions(-)
 
-I'll do my best, but I'm don't know how easily I can reproduce this.
-I only rarely get the messages, but I have random problems connecting
-fairly frequently.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index 6be2992..f9fdb53 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -257,7 +257,7 @@ struct iwl_cfg iwl1000_bgn_cfg = {
+ 	.support_ct_kill_exit = true,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_EXT_LONG_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 128,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -289,7 +289,7 @@ struct iwl_cfg iwl1000_bg_cfg = {
+ 	.support_ct_kill_exit = true,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_EXT_LONG_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 128,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index c44a303..a52c468 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -2895,7 +2895,7 @@ static struct iwl_cfg iwl3945_bg_cfg = {
+ 	.led_compensation = 64,
+ 	.broken_powersave = true,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 512,
+ 	.tx_power_by_driver = true,
+ };
+@@ -2916,7 +2916,7 @@ static struct iwl_cfg iwl3945_abg_cfg = {
+ 	.led_compensation = 64,
+ 	.broken_powersave = true,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 512,
+ 	.tx_power_by_driver = true,
+ };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index d3afdda..abbfa02 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -2274,7 +2274,7 @@ struct iwl_cfg iwl4965_agn_cfg = {
+ 	.led_compensation = 61,
+ 	.chain_noise_num_beacons = IWL4965_CAL_NUM_BEACONS,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.temperature_kelvin = true,
+ 	.max_event_log_size = 512,
+ 	.tx_power_by_driver = true,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index a28af7e..5f4f6ba 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -462,7 +462,7 @@ struct iwl_cfg iwl5300_agn_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 512,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -493,7 +493,7 @@ struct iwl_cfg iwl5100_bgn_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 512,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -522,7 +522,7 @@ struct iwl_cfg iwl5100_abg_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 512,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -553,7 +553,7 @@ struct iwl_cfg iwl5100_agn_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 512,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -584,7 +584,7 @@ struct iwl_cfg iwl5350_agn_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 512,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -615,7 +615,7 @@ struct iwl_cfg iwl5150_agn_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 512,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -644,7 +644,7 @@ struct iwl_cfg iwl5150_abg_cfg = {
+ 	.chain_noise_num_beacons = IWL_CAL_NUM_BEACONS,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_LONG_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 512,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 9fbf54c..eaee975 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -438,7 +438,7 @@ struct iwl_cfg iwl6000g2a_2agn_cfg = {
+ 	.support_ct_kill_exit = true,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 512,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -478,7 +478,7 @@ struct iwl_cfg iwl6000i_2agn_cfg = {
+ 	.support_ct_kill_exit = true,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 1024,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -513,7 +513,7 @@ struct iwl_cfg iwl6000i_2abg_cfg = {
+ 	.support_ct_kill_exit = true,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 1024,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -548,7 +548,7 @@ struct iwl_cfg iwl6000i_2bg_cfg = {
+ 	.support_ct_kill_exit = true,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 1024,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -585,7 +585,7 @@ struct iwl_cfg iwl6050_2agn_cfg = {
+ 	.support_ct_kill_exit = true,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1500,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 1024,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -620,7 +620,7 @@ struct iwl_cfg iwl6050_2abg_cfg = {
+ 	.support_ct_kill_exit = true,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1500,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 1024,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+@@ -657,7 +657,7 @@ struct iwl_cfg iwl6000_3agn_cfg = {
+ 	.support_ct_kill_exit = true,
+ 	.plcp_delta_threshold = IWL_MAX_PLCP_ERR_THRESHOLD_DEF,
+ 	.chain_noise_scale = 1000,
+-	.monitor_recover_period = IWL_MONITORING_PERIOD,
++	.monitor_recover_period = IWL_DEF_MONITORING_PERIOD,
+ 	.max_event_log_size = 1024,
+ 	.ucode_tracing = true,
+ 	.sensitivity_calib_by_driver = true,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index f3f3473..df69540 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -1057,7 +1057,8 @@ struct iwl_event_log {
+ #define IWL_DELAY_NEXT_FORCE_FW_RELOAD (HZ*5)
+ 
+ /* timer constants use to monitor and recover stuck tx queues in mSecs */
+-#define IWL_MONITORING_PERIOD  (1000)
++#define IWL_DEF_MONITORING_PERIOD	(1000)
++#define IWL_LONG_MONITORING_PERIOD	(5000)
+ #define IWL_ONE_HUNDRED_MSECS   (100)
+ #define IWL_SIXTY_SECS          (60000)
+ 
+-- 
+1.7.0.4
 
---Andy
-
-> Best regards
-> Wey
->>
->> P.S.  iwlagn malfunctions for me *all the time*.  I'd love to help
->> debug but it's hard when no one pays attention and when the bugs are
->> all hard to trigger.  Any volunteers to help?
->
->
