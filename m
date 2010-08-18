@@ -1,47 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw-sa02.nokia.com ([147.243.1.48]:51770 "EHLO
-	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751861Ab0HWNWU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Aug 2010 09:22:20 -0400
-Subject: Re: [PATCH 2/4] wl12xx: change contact person for the include file
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Joe Perches <joe@perches.com>
-Cc: Kalle Valo <kvalo@adurom.com>,
+Received: from mga01.intel.com ([192.55.52.88]:33734 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752911Ab0HRT0e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Aug 2010 15:26:34 -0400
+Subject: Re: [PATCH 2/2] iwlwifi: use long monitor timer to avoid
+ un-necessary reload
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: drago01 <drago01@gmail.com>
+Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <1282507323.1879.37.camel@Joe-Laptop>
-References: <20100822194615.16660.21195.stgit@potku.valot.fi>
-	 <20100822194628.16660.25636.stgit@potku.valot.fi>
-	 <1282507323.1879.37.camel@Joe-Laptop>
+	"ipw3945-devel@lists.sourceforge.net"
+	<ipw3945-devel@lists.sourceforge.net>
+In-Reply-To: <AANLkTikEKbHNtG0A=QdoxytSyBpG247=zdXOj1FmQ8Lw@mail.gmail.com>
+References: <1282153819-27781-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <1282153819-27781-3-git-send-email-wey-yi.w.guy@intel.com>
+	 <AANLkTikEKbHNtG0A=QdoxytSyBpG247=zdXOj1FmQ8Lw@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 23 Aug 2010 16:21:57 +0300
-Message-ID: <1282569717.7198.1.camel@powerslave>
+Date: Wed, 18 Aug 2010 12:30:55 -0700
+Message-ID: <1282159855.27858.1.camel@wwguy-huron>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2010-08-22 at 22:02 +0200, ext Joe Perches wrote:
-> On Sun, 2010-08-22 at 22:46 +0300, Kalle Valo wrote:
-> > Luciano should be the contact person for the include/linux/spi/wl12xx.h file.
-> > diff --git a/include/linux/spi/wl12xx.h b/include/linux/spi/wl12xx.h
-> > index a223ecb..a20bccf 100644
-> > --- a/include/linux/spi/wl12xx.h
-> > +++ b/include/linux/spi/wl12xx.h
-> > @@ -3,7 +3,7 @@
-> > - * Contact: Kalle Valo <kalle.valo@nokia.com>
-> > + * Contact: Luciano Coelho <luciano.coelho@nokia.com>
+On Wed, 2010-08-18 at 11:50 -0700, drago01 wrote:
+> On Wed, Aug 18, 2010 at 7:50 PM, Wey-Yi Guy <wey-yi.w.guy@intel.com> wrote:
+> > From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> >
+> > For 5000 series of devices, use long monitor timer to check
+> > stuck tx queues.
+> >
+> > 5000 series device, it is being reported firmware got reload more
+> > often than necessary, so extend the timer to avoid un-necessary reload.
 > 
-> Perhaps it's better to add that to MAINTAINERS.
+> What about iwl5300 ?
+> As I noted in the other thread my 5300 was affected by said issue and
+> increasing the timeout fixed it.
 > 
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
+I am not aware of 5300 also having similar issues; I all submit follow
+up patch to extend the timeout value for 5300 device.
 
-Yes, I guess this should go to MAINTAINERS as well.
+Thanks
+Wey
 
-Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
-
--- 
-Cheers,
-Luca.
 
