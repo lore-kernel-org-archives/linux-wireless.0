@@ -1,30 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hyde.gogi.tv ([87.106.167.24]:43479 "EHLO hyde.gogi.tv"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759080Ab0HEQUK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Aug 2010 12:20:10 -0400
-From: Daniel Haid <d.haid@gogi.tv>
-To: "ABM Musa" <amusa2@uic.edu>
-Subject: Re: Capturing packets with bad FCS in monitor mode
-Date: Thu, 5 Aug 2010 18:19:55 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <201008051614.11546.d.haid@gogi.tv> <475A8455ABBB4AD79E2B0AD03B1F69B9@personal>
-In-Reply-To: <475A8455ABBB4AD79E2B0AD03B1F69B9@personal>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:32982 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750927Ab0HSNtW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Aug 2010 09:49:22 -0400
+Received: by iwn1 with SMTP id 1so117037iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Aug 2010 06:49:22 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201008051819.55252.d.haid@gogi.tv>
+In-Reply-To: <1282197045-4473-2-git-send-email-vnatarajan@atheros.com>
+References: <1282197045-4473-1-git-send-email-vnatarajan@atheros.com> <1282197045-4473-2-git-send-email-vnatarajan@atheros.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 18 Aug 2010 23:51:27 -0700
+Message-ID: <AANLkTinQU+WVRJoQeM7Bs320LOe+_y968tcXf78crfU-@mail.gmail.com>
+Subject: Re: [PATCH 2/2 v2] ath9k_htc: Add support for bluetooth coexistence.
+To: Vivek Natarajan <vnatarajan@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Packets with crc error can be captured using corresponding flag of iw.
-> 
-> iw phy phy0 interface add wlan0 type monitor flags fcsfail
+On Wed, Aug 18, 2010 at 10:50 PM, Vivek Natarajan
+<vnatarajan@atheros.com> wrote:
 
-Is this supported on ath9k? I do not see any difference so far
-with the packet capturing.
-I also do not find the FIF_FCSFAIL flag be used anywhere in
-the ath9k code.
+> --- a/drivers/net/wireless/ath/ath9k/htc.h
+> +++ b/drivers/net/wireless/ath/ath9k/htc.h
+> @@ -316,17 +316,32 @@ struct htc_beacon_config {
+>        u8 dtim_count;
+>  };
+>
+> -#define OP_INVALID        BIT(0)
+> -#define OP_SCANNING       BIT(1)
+> -#define OP_FULL_RESET     BIT(2)
+> -#define OP_LED_ASSOCIATED BIT(3)
+> -#define OP_LED_ON         BIT(4)
+> -#define OP_PREAMBLE_SHORT BIT(5)
+> -#define OP_PROTECT_ENABLE BIT(6)
+> -#define OP_ASSOCIATED     BIT(7)
+> -#define OP_ENABLE_BEACON  BIT(8)
+> -#define OP_LED_DEINIT     BIT(9)
+> -#define OP_UNPLUGGED      BIT(10)
 
-Will I get lots of corrupted packets if this is enabled properly or only
-casually?
+Can you get the patch to not do this?
+
+  Luis
