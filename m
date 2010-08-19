@@ -1,47 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:61872 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751668Ab0HHCJv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Aug 2010 22:09:51 -0400
-Subject: [PATCH 0/5] libertas: firmware loading rework
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	David Woodhouse <dwmw2@infradead.org>,
-	Holger Schurig <hs4233@mail.mn-solutions.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 07 Aug 2010 21:11:10 -0500
-Message-ID: <1281233470.6235.12.camel@dcbw.foobar.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51111
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750877Ab0HSX7f (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Aug 2010 19:59:35 -0400
+Date: Thu, 19 Aug 2010 16:59:51 -0700 (PDT)
+Message-Id: <20100819.165951.200388018.davem@davemloft.net>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless-2.6 2010-08-19
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20100819174638.GC2672@tuxdriver.com>
+References: <20100819174638.GC2672@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I dumped a ton of Libertas firmware into linux-firmware a long time ago,
-but the driver was never updated to use the linux-firmware locations.
-Fix that.  USB uses one-stage firmware so it doesn't need to use the
-common helper.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Thu, 19 Aug 2010 13:46:38 -0400
 
-John: this is 2.6.37 material.
+> This collection of fixes intended for 2.6.36 includes a few that look
+> bigger than they really are.  The one from Joe Perches corrects a number
+> of inadvertant upper->lower case conversion from an earlier patch
+> already in 2.6.36.  The ones from Wey-Yi Guy change a timer value in a
+> number of device-dependent data structures in order to avoid excessive
+> firmware resets for those devices.
+> 
+> In addition to those, the one from Johannes Berg gives iwl3945 its own
+> filter flag function since sharing the iwlagn version has created
+> regressions for iwl3945.  The one from me corrects a DMA API misuse in
+> ipw2100 that results in warning backtraces.
+> 
+> Please let me know if there are problems!
 
-Dan Williams (5):
-  libertas: [usb] use new firmware locations
-  libertas: add two-stage firmware request helper
-  libertas: [cs] use common firmware request helper and new firmware locations
-  libertas: [sdio] use common firmware request helper and new firmware locations
-  libertas: [spi] use common firmware request helper and new firmware locations
-
- drivers/net/wireless/libertas/decl.h    |   13 +++
- drivers/net/wireless/libertas/if_cs.c   |  130 ++++++++++++++++------------
- drivers/net/wireless/libertas/if_sdio.c |  143 +++++++++++++------------------
- drivers/net/wireless/libertas/if_sdio.h |    4 -
- drivers/net/wireless/libertas/if_spi.c  |  144 +++++++++++++++----------------
- drivers/net/wireless/libertas/if_spi.h  |    5 -
- drivers/net/wireless/libertas/if_usb.c  |   60 +++++++++++--
- drivers/net/wireless/libertas/if_usb.h  |    1 +
- drivers/net/wireless/libertas/main.c    |  105 ++++++++++++++++++++++
- 9 files changed, 375 insertions(+), 230 deletions(-)
-
--- 
-1.7.2.1
-
-
+Pulled, thanks.
