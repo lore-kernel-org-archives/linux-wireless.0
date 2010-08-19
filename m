@@ -1,40 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:47601 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751404Ab0HAWDG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Aug 2010 18:03:06 -0400
-Received: by ewy23 with SMTP id 23so1137298ewy.19
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Aug 2010 15:03:03 -0700 (PDT)
-From: Kshitij Kulshreshtha <kkhere.geo@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] build fixes for compat.git and compat-wireless.git
-Date: Mon,  2 Aug 2010 00:02:48 +0200
-Message-Id: <1280700173-14690-1-git-send-email-kkhere.geo@gmail.com>
-In-Reply-To: <4C55D22A.5040302@hauke-m.de>
-References: <4C55D22A.5040302@hauke-m.de>
+Received: from ogre.sisk.pl ([217.79.144.158]:55470 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750745Ab0HSUS7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Aug 2010 16:18:59 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Tejun Heo <htejun@gmail.com>
+Subject: Re: [Regression, 2.6.36-rc1] ath9k resume problem on Acer Ferrari One
+Date: Thu, 19 Aug 2010 22:17:14 +0200
+Cc: Luis Rodriguez <lrodriguez@atheros.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"Linux-pm mailing list" <linux-pm@lists.linux-foundation.org>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	Maciej Rutecki <maciej.rutecki@gmail.com>
+References: <201008190001.11342.rjw@sisk.pl> <4C6D3D5C.7010504@kernel.org> <4C6D3E49.7080601@gmail.com>
+In-Reply-To: <4C6D3E49.7080601@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201008192217.14774.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
- here are some patches with build fixes for compat.git and 
-compat-wireless.git in order to build it with kernel v2.6.34.
+On Thursday, August 19, 2010, Tejun Heo wrote:
+> Oh, can you also please attach log of the BUG()?
 
-I have incorporated the comments of Hauke Mehrtens.
+That's difficult, because I have no way to collect it after it's happened.
 
-Please review and apply.
+I can try to convert it to WARN_ON or rewrite the call trace by hand.
 
-Thanks and regards.
---
-Kshitij Kulshreshtha
+Or I may try to make a photo. :-)
 
-Institut für Mathematik,
-Universität Paderborn,
-Warburger Straße 100,
-33098 Paderborn.
-
-Büro: A3.319
+Thanks,
+Rafael
