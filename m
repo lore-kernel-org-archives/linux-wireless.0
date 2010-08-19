@@ -1,33 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55577 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751342Ab0HUKEa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Aug 2010 06:04:30 -0400
-Subject: Re: [PATCH 1/1] mac80211: fix warning for un-used parameter
-From: Johannes Berg <johannes@sipsolutions.net>
-To: wey-yi.w.guy@intel.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1282340976-10665-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1282340976-10665-1-git-send-email-wey-yi.w.guy@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 21 Aug 2010 12:04:25 +0200
-Message-ID: <1282385065.3759.1.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from hera.kernel.org ([140.211.167.34]:36711 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751449Ab0HSIPs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Aug 2010 04:15:48 -0400
+Message-ID: <4C6CE715.4010203@kernel.org>
+Date: Thu, 19 Aug 2010 10:11:01 +0200
+From: Tejun Heo <tj@kernel.org>
+MIME-Version: 1.0
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Luis Rodriguez <lrodriguez@atheros.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux-pm mailing list <linux-pm@lists.linux-foundation.org>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	Maciej Rutecki <maciej.rutecki@gmail.com>
+Subject: Re: [Regression, 2.6.36-rc1] ath9k resume problem on Acer Ferrari
+ One
+References: <201008190001.11342.rjw@sisk.pl>
+In-Reply-To: <201008190001.11342.rjw@sisk.pl>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-08-20 at 14:49 -0700, wey-yi.w.guy@intel.com wrote:
+Hello, Rafael.
 
-> @@ -1701,7 +1701,9 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
->  	u16 ethertype, hdrlen,  meshhdrlen = 0;
->  	__le16 fc;
->  	struct ieee80211_hdr hdr;
-> +#ifdef CONFIG_MAC80211_MESH
->  	struct ieee80211s_hdr mesh_hdr;
-> +#endif
+On 08/19/2010 12:01 AM, Rafael J. Wysocki wrote:
+> While testing 2.6.36-rc1 (with a couple of fixes on top) I noticed
+> that the ath9k driver didn't work after resume from suspend to RAM.
+> An attempt to unload the driver using rmmod caused the BUG_ON() in
+> kernel/workqueue.c:2844 to trigger.
 
-Good catch. I think just adding __maybe_unused would be better though?
+That BUG_ON() triggers if destroy_workqueue() is called while work
+items are still pending on the workqueue.  Can you please trigger
+stack traces after resume and post it?
 
-johannes
+Thanks.
 
+-- 
+tejun
