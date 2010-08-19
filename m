@@ -1,60 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:43934 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753987Ab0HAJhO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Aug 2010 05:37:14 -0400
-Received: by wyb39 with SMTP id 39so2416318wyb.19
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Aug 2010 02:37:12 -0700 (PDT)
-From: Florian Fainelli <florian@openwrt.org>
-Reply-To: Florian Fainelli <florian@openwrt.org>
-To: Ryszard <ryszard99@gmail.com>, Patrick McHardy <kaber@trash.net>,
-	Ben Greear <greearb@candelatech.com>
-Subject: Re: virtual access poitns (ath5k/mac80211)
-Date: Sun, 1 Aug 2010 11:37:43 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <AANLkTi=W=vkgb0gM7ZWsBeE79Fe3iabtKFgu2S7N5uLe@mail.gmail.com>
-In-Reply-To: <AANLkTi=W=vkgb0gM7ZWsBeE79Fe3iabtKFgu2S7N5uLe@mail.gmail.com>
+Received: from ogre.sisk.pl ([217.79.144.158]:55645 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753426Ab0HSVJg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Aug 2010 17:09:36 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [Regression, 2.6.36-rc1] ath9k resume problem on Acer Ferrari One
+Date: Thu, 19 Aug 2010 23:07:24 +0200
+Cc: Tejun Heo <tj@kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"Linux-pm mailing list" <linux-pm@lists.linux-foundation.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@venema.h4ckr.net" <ath9k-devel@venema.h4ckr.net>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>
+References: <201008190001.11342.rjw@sisk.pl> <201008192231.01722.rjw@sisk.pl> <20100819204216.GD14497@tux>
+In-Reply-To: <20100819204216.GD14497@tux>
 MIME-Version: 1.0
 Content-Type: Text/Plain;
   charset="iso-8859-1"
-Message-Id: <201008011137.49528.florian@openwrt.org>
+Message-Id: <201008192307.24867.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-Le Sunday 1 August 2010 03:53:13, Ryszard a écrit :
-> Hi all,
+On Thursday, August 19, 2010, Luis R. Rodriguez wrote:
+> On Thu, Aug 19, 2010 at 01:31:01PM -0700, Rafael J. Wysocki wrote:
+> > On Thursday, August 19, 2010, Tejun Heo wrote:
+> > > Hello,
+> > > 
+> > > On 08/19/2010 04:05 PM, Rafael J. Wysocki wrote:
+> > > > On Thursday, August 19, 2010, Tejun Heo wrote:
+> > > >> Hello, Rafael.
+> > > >>
+> > > >> On 08/19/2010 12:01 AM, Rafael J. Wysocki wrote:
+> > > >>> While testing 2.6.36-rc1 (with a couple of fixes on top) I noticed
+> > > >>> that the ath9k driver didn't work after resume from suspend to RAM.
+> > > >>> An attempt to unload the driver using rmmod caused the BUG_ON() in
+> > > >>> kernel/workqueue.c:2844 to trigger.
+> > > >>
+> > > >> That BUG_ON() triggers if destroy_workqueue() is called while work
+> > > >> items are still pending on the workqueue.  Can you please trigger
+> > > >> stack traces after resume and post it?
+> > > > 
+> > > > Do you mean sysrq-t?
+> > > 
+> > > Yeah, I'm a bit confused regarding what's going on.  I thought the
+> > > most likely cause is thawing failing to kick a frozen workqueue into
+> > > working state but then flush_workqueue() which is called from
+> > > destroy_workqueue() should have hung too, that is, unless
+> > > flush_workqueue() is broken too.  If flush_workqueue() is not broken,
+> > > then it could be that workqueue itself isn't at fault and works are
+> > > being scheduled and executed fine for the workqueue ath9k is using but
+> > > the driver doesn't work for another reason.
+> > > 
+> > > Also, the BUG_ON() being triggered means either flush_workqueue() is
+> > > broken or the driver is failing to stop works on the workqueue from
+> > > being requeued before calling destroy_workqueue().  So, finding out
+> > > the followings would be great,
+> > > 
+> > > * While the driver isn't working, do a sysrq-t and see whether any
+> > >   worker is executing a work for ath9k.
+> > > 
+> > > * Repeat it several times and see whether the work is stuck or making
+> > >   progress and/or executing on different workers.
+> > 
+> > Actaully, I'm unable to reproduce the resume issue with current mainline
+> > (HEAD = 763008c4357b73c8d18396dfd8d79dc58fa3f99d), so I guess it either is
+> > a race (or another timing issue), or it's been fixed by one of the patches on
+> > top of -rc1.
+> > 
+> > I'll let you know if I see it again.
 > 
-> i'm working on a project that requires i can create multiple access
-> points on the one bit of hardware.  After an insane amount of googling
-> and reading the lists the closest i've been able to come up with is
-> something along the lines of:
-> iw dev wlan0 interface add vap0 type __ap
-> iw dev wlan0 interface add vap1 type __ap
-> 
-> then using macchanger to assign unique mac addresses.
-> 
-> I've also seen something from March 2009
-> (http://lwn.net/Articles/321690/) that hints at the functionality
-> available with the ath9k which gave me a bit of hope!
-> 
-> My question is, is it possible to create multiple virtual access
-> points with my hardware ( Atheros Communications Inc. AR5413 802.11abg
-> ) and the ath5k/mac80211 drivers (or is there some other method to
-> achieve what i'm after) ?  i'm not too fussed about different
-> channels, but different SSID's and WPA keys are a requirement for the
-> project.
+> To be clear, this is a non-issue now until further notice, ACK?
 
-There is support for creating virtual interfaces using iw and ath5k here: 
-http://www.candelatech.com/oss/vsta.html
+Yep.
 
-I really wish someone could submit this mainline, unfortunately it is pretty 
-hard to isolate the commits in this tree which are implementing virtual 
-interfaces support.
-
-Ben, Patrick, could you rebase your patches on top of wireless-testing and 
-send them for review/testing?
---
-Florian
+Rafael
