@@ -1,84 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:57356 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751731Ab0HUKul (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:45036 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750890Ab0HSUZA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Aug 2010 06:50:41 -0400
-Received: by wyb32 with SMTP id 32so4722301wyb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Aug 2010 03:50:40 -0700 (PDT)
-From: David Kilroy <kilroyd@googlemail.com>
+	Thu, 19 Aug 2010 16:25:00 -0400
+Received: by vws3 with SMTP id 3so2226353vws.19
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Aug 2010 13:25:00 -0700 (PDT)
+MIME-Version: 1.0
+Date: Thu, 19 Aug 2010 16:25:00 -0400
+Message-ID: <AANLkTimPjyiJsdgX5j+YGQC_0=9FEfeCQUFWuXgxz7Qh@mail.gmail.com>
+Subject: scanning a specific ssid
+From: Christopher Piggott <cpiggott@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: dkirjanov@kernel.org, David Kilroy <kilroyd@googlemail.com>
-Subject: [PATCH] orinoco: Fix walking past the end of the buffer
-Date: Sat, 21 Aug 2010 12:08:15 +0100
-Message-Id: <1282388895-30045-1-git-send-email-kilroyd@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix walking past the end of the bitrate_table array
-in the case when the loop counter == BITRATE_TABLE_SIZE.
+Hi,
 
-Reported by: Denis Kirjanov <dkirjanov@kernel.org>
-Signed-off-by: David Kilroy <kilroyd@googlemail.com>
----
+I wrote a small C++ program using libdbus-c++ to scan for access
+points via wpa_supplicant's dbus interface.  It works very well, and I
+can retrieve the list just fine.
 
-This patch improves upon Denis' original by reporting the error to
-the caller and handling it there instead of passing an invalid
-bitrate to userspace. In this case we can ignore the error and send
-userspace the known configuration.
+Now I want to cause it to scan for a specific SSID by issuing a probe,
+but the dbus interface fi.epitest.hostap.WPASupplicant.Interface has
+only one scan method, and it does not seem to take arguments.
+(Looking at the source file ctrl_iface_dbus_handlers.c in function
+wpas_dbus_iface_scan() you can see why - it doesn't handle or even
+look at the arguments to the message).
 
----
- drivers/net/wireless/orinoco/hw.c   |    9 ++++++---
- drivers/net/wireless/orinoco/wext.c |   11 +++++++++--
- 2 files changed, 15 insertions(+), 5 deletions(-)
+Is there another way to accomplish this?  I notice that a number of
+dbus messages trigger a scan.  I don't really want to try to associate
+with it, but perhaps that's the only way.
 
-diff --git a/drivers/net/wireless/orinoco/hw.c b/drivers/net/wireless/orinoco/hw.c
-index 077baa8..b4772c1 100644
---- a/drivers/net/wireless/orinoco/hw.c
-+++ b/drivers/net/wireless/orinoco/hw.c
-@@ -762,14 +762,17 @@ int orinoco_hw_get_act_bitrate(struct orinoco_private *priv, int *bitrate)
- 	case FIRMWARE_TYPE_INTERSIL: /* Intersil style rate */
- 	case FIRMWARE_TYPE_SYMBOL: /* Symbol style rate */
- 		for (i = 0; i < BITRATE_TABLE_SIZE; i++)
--			if (bitrate_table[i].intersil_txratectrl == val)
-+			if (bitrate_table[i].intersil_txratectrl == val) {
-+				*bitrate = bitrate_table[i].bitrate * 100000;
- 				break;
-+			}
- 
--		if (i >= BITRATE_TABLE_SIZE)
-+		if (i >= BITRATE_TABLE_SIZE) {
- 			printk(KERN_INFO "%s: Unable to determine current bitrate (0x%04hx)\n",
- 			       priv->ndev->name, val);
-+			err = -EIO;
-+		}
- 
--		*bitrate = bitrate_table[i].bitrate * 100000;
- 		break;
- 	default:
- 		BUG();
-diff --git a/drivers/net/wireless/orinoco/wext.c b/drivers/net/wireless/orinoco/wext.c
-index cf7be1e..93505f9 100644
---- a/drivers/net/wireless/orinoco/wext.c
-+++ b/drivers/net/wireless/orinoco/wext.c
-@@ -589,8 +589,15 @@ static int orinoco_ioctl_getrate(struct net_device *dev,
- 
- 	/* If the interface is running we try to find more about the
- 	   current mode */
--	if (netif_running(dev))
--		err = orinoco_hw_get_act_bitrate(priv, &bitrate);
-+	if (netif_running(dev)) {
-+		int act_bitrate;
-+		int lerr;
-+
-+		/* Ignore errors if we can't get the actual bitrate */
-+		lerr = orinoco_hw_get_act_bitrate(priv, &act_bitrate);
-+		if (!lerr)
-+			bitrate = act_bitrate;
-+	}
- 
- 	orinoco_unlock(priv, &flags);
- 
--- 
-1.7.1
+(I guess I could try to trigger the scan via netlink and receive the
+results via dbus..... messy).
 
+--Chris
