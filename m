@@ -1,47 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:52861 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754687Ab0HCBH0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Aug 2010 21:07:26 -0400
-Subject: [PATCH] wireless: ipw2100: check result of kzalloc()
-From: Christoph Fritz <chf.fritz@googlemail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: kernel-janitors <kernel-janitors@vger.kernel.org>,
-	Zhu Yi <yi.zhu@intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="ISO-8859-1"
-Date: Tue, 03 Aug 2010 03:10:22 +0200
-Message-ID: <1280797822.11158.55.camel@lovely.krouter>
-Mime-Version: 1.0
+Received: from ogre.sisk.pl ([217.79.144.158]:54636 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750927Ab0HSN4u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Aug 2010 09:56:50 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: Re: [Regression, 2.6.36-rc1] ath9k resume problem on Acer Ferrari One
+Date: Thu, 19 Aug 2010 15:55:08 +0200
+Cc: Tejun Heo <tj@kernel.org>, LKML <linux-kernel@vger.kernel.org>,
+	"Linux-pm mailing list" <linux-pm@lists.linux-foundation.org>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Maciej Rutecki <maciej.rutecki@gmail.com>
+References: <201008190001.11342.rjw@sisk.pl> <AANLkTi=S3JE=1J9xQtBAN5hHTqGSfohi4vL82iZHMWp+@mail.gmail.com>
+In-Reply-To: <AANLkTi=S3JE=1J9xQtBAN5hHTqGSfohi4vL82iZHMWp+@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201008191555.08392.rjw@sisk.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If kzalloc() fails return with -ENOMEM from ipw2100_net_init() which is
-called by register_netdev.
+On Thursday, August 19, 2010, Luis R. Rodriguez wrote:
+> On Wed, Aug 18, 2010 at 3:01 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> > Hi,
+> >
+> > While testing 2.6.36-rc1 (with a couple of fixes on top)
+> 
+> Which couple of fixes?
 
-Signed-off-by: Christoph Fritz <chf.fritz@googlemail.com>
----
- drivers/net/wireless/ipw2x00/ipw2100.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+AMD bood fix, HID suspend fix and shmem fix (two of them have already been
+merged).
 
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
-index 0bd4dfa..908c176 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-@@ -1924,6 +1924,8 @@ static int ipw2100_net_init(struct net_device *dev)
- 		bg_band->channels =
- 			kzalloc(geo->bg_channels *
- 				sizeof(struct ieee80211_channel), GFP_KERNEL);
-+		if (!bg_band->channels)
-+			return -ENOMEM;
- 		/* translate geo->bg to bg_band.channels */
- 		for (i = 0; i < geo->bg_channels; i++) {
- 			bg_band->channels[i].band = IEEE80211_BAND_2GHZ;
--- 
-1.7.1
+> > I noticed that the ath9k
+> > driver didn't work after resume from suspend to RAM.
+> 
+> To rule out if its an ath9k issue you can try
+> compat-wireless-2.6.36-rc1 from here:
+> 
+> http://wireless.kernel.org/en/users/Download/stable/
+> 
+> and install it on an older kernel, you can use ./scripts/driver-select
+> to only enable ath9k to compile.
 
+Well, that sounds a bit complicated and even if I know it's not ath9k,
+that's not going to help me find the real source of the problem.
 
+> I've been using pm-suspend on this release for a few days now without
+> any issue but I am using an AR9003 chipset. What chipset are you
+> using? Can you provide the dmesg output upon module load?
 
+Sure.
+
+[    9.680128] ath9k 0000:09:00.0: PCI INT A -> GSI 19 (level, low) -> IRQ 19
+[    9.689487] ath9k 0000:09:00.0: setting latency timer to 64
+[    9.706383] HDA Intel 0000:00:14.2: PCI INT A -> GSI 16 (level, low) -> IRQ 16
+[    9.805043] hda_codec: ALC272X: BIOS auto-probing.
+[    9.819389] input: HDA Digital PCBeep as /devices/pci0000:00/0000:00:14.2/input/input8
+[   10.155052] ath: EEPROM regdomain: 0x65
+[   10.155058] ath: EEPROM indicates we should expect a direct regpair map
+[   10.155066] ath: Country alpha2 being used: 00
+[   10.155070] ath: Regpair used: 0x65
+[   10.179762] phy0: Selected rate control algorithm 'ath9k_rate_control'
+[   10.181657] Registered led device: ath9k-phy0::radio
+[   10.181890] Registered led device: ath9k-phy0::assoc
+[   10.182139] Registered led device: ath9k-phy0::tx
+[   10.182339] Registered led device: ath9k-phy0::rx
+
+lspci says it's:
+
+09:00.0 Network controller: Atheros Communications Inc. AR928X Wireless Network Adapter (PCI-Express) (rev 01)
+
+Thanks,
+Rafael
