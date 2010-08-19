@@ -1,132 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mundo.umh.es ([193.147.147.4]:43398 "EHLO mundo.umh.es"
+Received: from hera.kernel.org ([140.211.167.34]:49579 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756181Ab0HFKs4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Aug 2010 06:48:56 -0400
-From: =?iso-8859-1?Q?J=F3natan_Mu=F1oz?= <jmunoz@umh.es>
-To: "'John W. Linville'" <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>
-References: <002c01cb3495$0ff49610$2fddc230$@es> <20100805134531.GA2779@tuxdriver.com>
-In-Reply-To: <20100805134531.GA2779@tuxdriver.com>
-Subject: RE: [ath9k]: Beaconing process in ad-hoc mode
-Date: Fri, 6 Aug 2010 12:48:44 +0200
-Message-ID: <000001cb3554$f6d21840$e47648c0$@es>
+	id S1753309Ab0HSOXi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Aug 2010 10:23:38 -0400
+Message-ID: <4C6D3D5C.7010504@kernel.org>
+Date: Thu, 19 Aug 2010 16:19:08 +0200
+From: Tejun Heo <tj@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-8859-1"
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+CC: Luis Rodriguez <lrodriguez@atheros.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Linux-pm mailing list <linux-pm@lists.linux-foundation.org>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	Maciej Rutecki <maciej.rutecki@gmail.com>
+Subject: Re: [Regression, 2.6.36-rc1] ath9k resume problem on Acer Ferrari
+ One
+References: <201008190001.11342.rjw@sisk.pl> <4C6CE715.4010203@kernel.org> <201008191605.08053.rjw@sisk.pl>
+In-Reply-To: <201008191605.08053.rjw@sisk.pl>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear John,
+Hello,
 
-Thanks for your help. I am looking in net/mac80211/ibss.c.
-I see the ieee80211_rx_mgmt_beacon function but I don't find anything about
-beacon tx, or about tsf update. I am still lost.
-
-static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
-				     struct ieee80211_mgmt *mgmt,
-				     size_t len,
-				     struct ieee80211_rx_status *rx_status)
-{
-	size_t baselen;
-	struct ieee802_11_elems elems;
-
-	/* Process beacon from the current BSS */
-	baselen = (u8 *) mgmt->u.beacon.variable - (u8 *) mgmt;
-	if (baselen > len)
-		return;
-
-	ieee802_11_parse_elems(mgmt->u.beacon.variable, len - baselen,
-&elems);
-
-	ieee80211_rx_bss_info(sdata, mgmt, len, rx_status, &elems, true);
-}
-
-
-Any tip more, please?
-
-Thank you in advance
-
-John
-
-
-
-------------------------------------------
-Jónatan Muñoz
-Email: jmunoz@umh.es
-Ubiquitous Wireless Communications Research Laboratory 
-Uwicore, http://www.uwicore.umh.es 
-Signal Theory and Communications Division 
-University Miguel Hernández of Elche 
-
-Avenida de la Universidad s/n 
-Edificio Quorum V P2 012
-03202, Elche (Alicante) 
-Spain 
-Tel: +34 96522 2031 /+34 669256708
-Fax: +34 96665 8903 
-------------------------------------------
-
-> -----Mensaje original-----
-> De: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
-> owner@vger.kernel.org] En nombre de John W. Linville
-> Enviado el: jueves, 05 de agosto de 2010 15:46
-> Para: Jónatan Muñoz
-> CC: linux-wireless@vger.kernel.org
-> Asunto: Re: [ath9k]: Beaconing process in ad-hoc mode
+On 08/19/2010 04:05 PM, Rafael J. Wysocki wrote:
+> On Thursday, August 19, 2010, Tejun Heo wrote:
+>> Hello, Rafael.
+>>
+>> On 08/19/2010 12:01 AM, Rafael J. Wysocki wrote:
+>>> While testing 2.6.36-rc1 (with a couple of fixes on top) I noticed
+>>> that the ath9k driver didn't work after resume from suspend to RAM.
+>>> An attempt to unload the driver using rmmod caused the BUG_ON() in
+>>> kernel/workqueue.c:2844 to trigger.
+>>
+>> That BUG_ON() triggers if destroy_workqueue() is called while work
+>> items are still pending on the workqueue.  Can you please trigger
+>> stack traces after resume and post it?
 > 
-> On Thu, Aug 05, 2010 at 01:55:05PM +0200, Jónatan Muñoz wrote:
-> > Dear All,
-> >
-> > I am working in a project where I need to modified the currently
-> beaconing
-> > system for adhoc mode in ath9k, what I want to achieve is that each
-> station
-> > in an adhoc network send periodically a beacon. As I know, when a
-> station in
-> > the network receives a beacon before sending its own beacon, cancels
-> the
-> > transmission, updates its hw tsf based on the received beacon and
-> waits for
-> > a chance to send the beacon during next TBTT.
-> >
-> > For my goal, I think that I should comment the part where the
-> transmission
-> > of the beacon is cancelled. In this way, each station will send a
-> beacon
-> > each 100TU (~100 ms). I know that this mean a increased traffic load
-> on the
-> > network, but it is so much important for the project to obtain a
-> beacon for
-> > each station each 100ms.
-> >
-> > Right now, I am looking at the source code of ath9k, I am trying to
-> modify
-> > the file beacon.c, but I don’t find the way to get my purpose. Could
-> anyone
-> > help me to find the right place at the code that I have to modify? I
-> am a
-> > bit lost and any help would be greatly appreciated.
-> >
-> > Thanks in advance.
-> >
-> > PD: Please excuse my poor English
-> >
-> > John
-> 
-> I think you should be looking in net/mac80211/ibss.c.
-> 
-> Hth!
-> 
-> John
-> --
-> John W. Linville		Someday the world will need a hero, and you
-> linville@tuxdriver.com			might be all we have.  Be
-ready.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-
-> wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Do you mean sysrq-t?
 
+Yeah, I'm a bit confused regarding what's going on.  I thought the
+most likely cause is thawing failing to kick a frozen workqueue into
+working state but then flush_workqueue() which is called from
+destroy_workqueue() should have hung too, that is, unless
+flush_workqueue() is broken too.  If flush_workqueue() is not broken,
+then it could be that workqueue itself isn't at fault and works are
+being scheduled and executed fine for the workqueue ath9k is using but
+the driver doesn't work for another reason.
+
+Also, the BUG_ON() being triggered means either flush_workqueue() is
+broken or the driver is failing to stop works on the workqueue from
+being requeued before calling destroy_workqueue().  So, finding out
+the followings would be great,
+
+* While the driver isn't working, do a sysrq-t and see whether any
+  worker is executing a work for ath9k.
+
+* Repeat it several times and see whether the work is stuck or making
+  progress and/or executing on different workers.
+
+Thanks.
+
+-- 
+tejun
