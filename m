@@ -1,40 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:58249 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751230Ab0HQW42 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Aug 2010 18:56:28 -0400
-Message-ID: <4C6B1395.2030208@hauke-m.de>
-Date: Wed, 18 Aug 2010 00:56:21 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: linux-wireless@vger.kernel.org, mcgrof@infradead.org
-Subject: Re: [PATCH 0/3] compat-wireless: miscellaneous fixes
-References: <1282069869-22300-1-git-send-email-hauke@hauke-m.de> <AANLkTinS=nXje5hJ=Eq4AuXvMUEhDbquB=C_oDXA+pHk@mail.gmail.com>
-In-Reply-To: <AANLkTinS=nXje5hJ=Eq4AuXvMUEhDbquB=C_oDXA+pHk@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail.perches.com ([173.55.12.10]:1191 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751153Ab0HSTYK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Aug 2010 15:24:10 -0400
+Subject: [RFC patch] include/net/cfg80211.h: wiphy_<level> messages use
+ dev_printk
+From: Joe Perches <joe@perches.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 19 Aug 2010 12:24:08 -0700
+Message-ID: <1282245848.6724.261.camel@Joe-Laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 18.08.2010 00:02, schrieb Luis R. Rodriguez:
-> On Tue, Aug 17, 2010 at 11:31 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->> This was build tested in combination with the patches to compat.
->>
->> Hauke Mehrtens (3):
->>  compat-wireless: deactivate namespace
->>  compat-wireless: make compat-2.6.37.c build
->>  compat-wireless: fix hidp_output_raw_report
-> 
-> Great thanks! Applied and pushed all out. Are any of these stable
-> fixes into the respective stable branches of compat-wireless.git? How
-> about the compat.git ones?
-> 
->   Luis
+Adding device to the wiphy logging messages could be useful.
 
-Thanks for applying.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ include/net/cfg80211.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Only compat-wireless: fix hidp_output_raw_report is needed in stable.
-The other patches are not needed in stable for now, they are for some
-changes made after 2.6.36.
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 6a98b1b..61bc007 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2439,7 +2439,7 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
+ /* wiphy_printk helpers, similar to dev_printk */
+ 
+ #define wiphy_printk(level, wiphy, format, args...)		\
+-	printk(level "%s: " format, wiphy_name(wiphy), ##args)
++	dev_printk(level, &wiphy->dev, "%s: " format, wiphy_name(wiphy), ##args)
+ #define wiphy_emerg(wiphy, format, args...)			\
+ 	wiphy_printk(KERN_EMERG, wiphy, format, ##args)
+ #define wiphy_alert(wiphy, format, args...)			\
 
-Hauke
+
