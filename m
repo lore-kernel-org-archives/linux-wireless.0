@@ -1,84 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:50735 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753615Ab0H0Wfk convert rfc822-to-8bit (ORCPT
+Received: from mail.redfish-solutions.com ([66.232.79.143]:58161 "EHLO
+	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751527Ab0HTWz6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 18:35:40 -0400
+	Fri, 20 Aug 2010 18:55:58 -0400
+Message-ID: <4C6F07AA.3080606@redfish-solutions.com>
+Date: Fri, 20 Aug 2010 15:54:34 -0700
+From: Philip Prindeville <philipp_subx@redfish-solutions.com>
 MIME-Version: 1.0
-In-Reply-To: <20100827212254.GB32275@bougret.hpl.hp.com>
-References: <20100827210240.GC4703@outflux.net> <20100827212254.GB32275@bougret.hpl.hp.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 27 Aug 2010 15:35:19 -0700
-Message-ID: <AANLkTimeEa_=dqX5yFnYzaSaL90TfOg3=MsydG81naAC@mail.gmail.com>
-Subject: Re: [PATCH] wireless: fix 64K kernel heap content leak via ioctl
-To: jt@hpl.hp.com
-Cc: Kees Cook <kees.cook@canonical.com>, linux-kernel@vger.kernel.org,
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Jouni Malinen <jouni.malinen@atheros.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Subject: Re: [PATCH 3/3] nl80211: New command for setting TX rate mask for
+ rate control
+References: <20091229105945.GD18493@jm.kir.nu>	 <4C6DA19B.7010606@redfish-solutions.com> <1282296004.3785.25.camel@jlt3.sipsolutions.net> <4C6EAE6C.50001@redfish-solutions.com>
+In-Reply-To: <4C6EAE6C.50001@redfish-solutions.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 27, 2010 at 2:22 PM, Jean Tourrilhes <jt@hpl.hp.com> wrote:
-> On Fri, Aug 27, 2010 at 02:02:41PM -0700, Kees Cook wrote:
->> This problem was originally tracked down by Brad Spengler.
+  On 8/20/10 9:33 AM, Philip Prindeville wrote:
+>  On 8/20/10 2:20 AM, Johannes Berg wrote:
+>> On Thu, 2010-08-19 at 14:26 -0700, Philip Prindeville wrote:
 >>
->> When calling wireless ioctls, if a driver does not correctly
->> validate/shrink iwp->length, the resulting copy_to_user can leak up to
->> 64K of kernel heap contents.
+>>>> +    /*
+>>>> +     * The nested attribute uses enum nl80211_band as the index. This maps
+>>>> +     * directly to the enum ieee80211_band values used in cfg80211.
+>>>> +     */
+>>>> +    nla_for_each_nested(tx_rates, info->attrs[NL80211_ATTR_TX_RATES], rem)
+>>>> +    {
+>>>> +        enum ieee80211_band band = nla_type(tx_rates);
+>>> Can this even work?  The first entry in nl80211_band is NL80211_BAND_2GHZ, i.e. zero.
+>>>
+>>> Yet looking at libnl-1.1/lib/attr.c there's:
+>>>
+>>> int nla_parse(struct nlattr *tb[], int maxtype, struct nlattr *head, int len,
+>>>                 struct nla_policy *policy)
+>>> {
+>>> ...
+>>>           nla_for_each_attr(nla, head, len, rem) {
+>>>                   int type = nla_type(nla);
+>>>
+>>>                   if (type == 0) {
+>> Well, notice how you're quoting code that does the same thing
+>> (for_each_attr), but the latter code does the extra non-zero check,
+>> which we don't.
 >>
->> It seems that this is triggerable[1] in 2.6.32 at least on ath5k, but
->> I was not able to track down how. The twisty maze of ioctl handlers
->> stumped me. :)
+>> We don't use nla_parse for this, we have to use
+>> nla_parse_nested/for_each_attr. Yeah, it's a little quirky, but still
+>> works fine.
+>>
+>> johannes
+>>
 >
->        You can always ask.
+> Well, I grepped through all the relevant source (i.e. libnl and iw) and the only place that the string "Illegal nla->nla_type == 0" gets printed was there, and I'm definitely seeing it.
 >
->> Other drivers I checked did not appear to have any problems,
->> but the potential remains. I'm not sure if this patch is the right approach;
->> it was fixed differently[2] in grsecurity.
+> So while the condition might be set in the driver, it's detected in "iw" here.
 >
->        Did you tried your patch for real ? With large scan request ?
->        I ask because at first glance, it looks incorrect, asI believe
-> it kills large request. But someone would need to test, for sure.
->
->> [1] http://forums.grsecurity.net/viewtopic.php?f=3&t=2290&start=0
->> [2] http://grsecurity.net/~spender/wireless-infoleak-fix2.patch
->
->        I believe this patch would make the situation worse.
->
->        Would you mind validating the following patch ? I've just
-> verified that it compiles and I believe it does what you are asking in
-> a much more predictable way.
->        Regards,
->
->        Jean
->
-> diff -u -p wext.j2.c wext.c
-> --- wext.j2.c   2010-08-27 14:17:26.000000000 -0700
-> +++ wext.c      2010-08-27 14:19:33.000000000 -0700
-> @@ -800,9 +800,12 @@ static int ioctl_standard_iw_point(struc
->                        goto out;
->                }
->
-> -               if (copy_to_user(iwp->pointer, extra,
-> -                                iwp->length *
-> -                                descr->token_size)) {
-> +               /* Verify how much we should return. Some driver
-> +                * may abuse iwp->length... */
-> +               if((iwp->length * descr->token_size) < extra_size)
-> +                       extra_size = iwp->length * descr->token_size;
-> +
-> +               if (copy_to_user(iwp->pointer, extra, extra_size)) {
->                        err = -EFAULT;
->                        goto out;
->                }
+> That was my point.
 
 
-Jean, can you submit in a new thread and right before the SOB add in
-the commit log Cc: stable@kernel.org [2.6.32+]
+What I'm trying to say is that even though the driver handles the condition of nla_type == 0 when it generates the message, the condition isn't handled correct when the message finally gets passed up into user-space, because the above sequence in the netlink library gets hit both for "iw" and "hostapd".
 
-  Luis
+So it's not enough to handle it correctly in the driver: it needs to be handled in libnl as well.
+
+There are 3 potential solutions:
+
+(1) go with a 1-based enum for the band, instead of 0-based;
+(2) remove the test for nla_type == 0 in nla_parse() in libnl;
+(3) use a way to convey the band that doesn't involve overloading nla_type;
+
+What's the correct fix?
+
+Thanks,
+
+-Philip
+
