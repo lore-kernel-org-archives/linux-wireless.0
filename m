@@ -1,34 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:56722 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753989Ab0HZPTZ (ORCPT
+Received: from casper.infradead.org ([85.118.1.10]:49097 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752688Ab0HTLFH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Aug 2010 11:19:25 -0400
-Received: by bwz11 with SMTP id 11so1164788bwz.19
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Aug 2010 08:19:24 -0700 (PDT)
-MIME-Version: 1.0
-Date: Thu, 26 Aug 2010 10:19:23 -0500
-Message-ID: <AANLkTimNA_i8Za8xOh8XffdkrE7wFLc9GBs4JSPAsT3+@mail.gmail.com>
-Subject: a simple wireless mesh network
-From: Joel Fernandes <agnel.joel@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 20 Aug 2010 07:05:07 -0400
+Subject: Re: scanning a specific ssid
+From: Samuel Ortiz <samuel@sortiz.org>
+Reply-To: Samuel Ortiz <samuel@sortiz.org>
+To: Christopher Piggott <cpiggott@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTimPjyiJsdgX5j+YGQC_0=9FEfeCQUFWuXgxz7Qh@mail.gmail.com>
+References: <AANLkTimPjyiJsdgX5j+YGQC_0=9FEfeCQUFWuXgxz7Qh@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 20 Aug 2010 13:05:03 +0200
+Message-ID: <1282302303.3662.5.camel@sortiz-mobl>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-I am studying wireless mesh networks and wanted to play with open80211s.
-As a part of my study, I want to demo, multiple nodes on a mesh
-network and analyze the traffic in wireshark
+Hi Christopher,
 
-Unfortunately I don't have many physical nodes so I'm looking for a
-way to emulate them.
+On Thu, 2010-08-19 at 16:25 -0400, Christopher Piggott wrote:
+> Hi,
+> 
+> I wrote a small C++ program using libdbus-c++ to scan for access
+> points via wpa_supplicant's dbus interface.  It works very well, and I
+> can retrieve the list just fine.
+> 
+> Now I want to cause it to scan for a specific SSID by issuing a probe,
+> but the dbus interface fi.epitest.hostap.WPASupplicant.Interface has
+> only one scan method, and it does not seem to take arguments.
+> (Looking at the source file ctrl_iface_dbus_handlers.c in function
+> wpas_dbus_iface_scan() you can see why - it doesn't handle or even
+> look at the arguments to the message).
+> 
+> Is there another way to accomplish this?  
+I don't know which version of wpa_supplicant you're using, but the new
+D-Bus API (fi.w1.wpa_supplicant1.*) has a much more extended scanning
+API. You can pass SSIDs, channels, IEs and the scanning type to it.
 
-So far I've learnt that vmware and virtual box don't support virtual
-wireless network adapters.
+Cheers,
+Samuel.
 
-Any other suggestion that would make creating a wireless mesh network
-for study purposes quick and painless?
 
-Thanks a lot,
-Joel
