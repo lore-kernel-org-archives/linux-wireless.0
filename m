@@ -1,54 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55213 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754251Ab0HFNOs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Aug 2010 09:14:48 -0400
-Subject: Re: [PATCH 3/8] iwlwifi: separate thermal throttling function
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <1280590452-10655-4-git-send-email-wey-yi.w.guy@intel.com>
-References: <1280590452-10655-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <1280590452-10655-4-git-send-email-wey-yi.w.guy@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 06 Aug 2010 15:14:40 +0200
-Message-ID: <1281100480.3853.424.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:44748 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751688Ab0HTNZJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Aug 2010 09:25:09 -0400
+Date: Fri, 20 Aug 2010 15:23:47 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH w-t] iwlwifi: fix canceling monitor_recover timer
+Message-ID: <20100820132346.GA4725@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> @@ -325,9 +283,15 @@ int iwl_power_update_mode(struct iwl_priv *priv, bool force)
->  	else if (priv->cfg->supports_idle &&
->  		 priv->hw->conf.flags & IEEE80211_CONF_IDLE)
->  		iwl_static_sleep_cmd(priv, &cmd, IWL_POWER_INDEX_5, 20);
-> -	else if (tt->state >= IWL_TI_1)
-> -		iwl_static_sleep_cmd(priv, &cmd, tt->tt_power_mode, dtimper);
-> -	else if (!enabled)
-> +	else if (priv->cfg->ops->lib->tt_ops.lower_power_detection &&
-> +		 priv->cfg->ops->lib->tt_ops.tt_power_mode) {
-> +		if (priv->cfg->ops->lib->tt_ops.lower_power_detection(priv)) {
-> +			/* in thermal throttling low power state */
-> +			iwl_static_sleep_cmd(priv, &cmd,
-> +			    priv->cfg->ops->lib->tt_ops.tt_power_mode(priv),
-> +			    dtimper);
-> +		}
-> +	} else if (!enabled)
->  		iwl_power_sleep_cam_cmd(priv, &cmd);
->  	else if (priv->power_data.debug_sleep_level_override >= 0)
->  		iwl_static_sleep_cmd(priv, &cmd,
+To make del_timer_sync() works we have to assure that timer function
+does not rearm the timer. To achieve that we cancel timer with
+STATUS_EXIT_PENDING bit set in __iwl{3945,}_down function.
 
-This is very very broken because it adds an often-used code path that
-will not initialise "cmd" at all. It needs to be
+Patch also fix priv->txq memory usage after free for iwl3945, because
+it move timer cancellation before iwl3945_hw_txq_ctx_free(priv) is called.
 
-...
-else if (priv->...lower_power_detection &&
-         priv->...tt_power_mode &&
-         priv->...lower_power_detection(priv))
-        iwl_static_sleep_cmd(...)
-else if (!enabled)
-...
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    7 +++++--
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    7 +++++--
+ 2 files changed, 10 insertions(+), 4 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 3ced9ea..26bc048 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2764,6 +2764,11 @@ static void __iwl_down(struct iwl_priv *priv)
+ 	if (!exit_pending)
+ 		set_bit(STATUS_EXIT_PENDING, &priv->status);
+ 
++	/* Stop TX queues watchdog. We need to have STATUS_EXIT_PENDING bit set
++	 * to prevent rearm timer */
++	if (priv->cfg->ops->lib->recover_from_tx_stall)
++		del_timer_sync(&priv->monitor_recover);
++
+ 	iwl_clear_ucode_stations(priv);
+ 	iwl_dealloc_bcast_station(priv);
+ 	iwl_clear_driver_stations(priv);
+@@ -3870,8 +3875,6 @@ static void iwl_cancel_deferred_work(struct iwl_priv *priv)
+ 	cancel_work_sync(&priv->beacon_update);
+ 	del_timer_sync(&priv->statistics_periodic);
+ 	del_timer_sync(&priv->ucode_trace);
+-	if (priv->cfg->ops->lib->recover_from_tx_stall)
+-		del_timer_sync(&priv->monitor_recover);
+ }
+ 
+ static void iwl_init_hw_rates(struct iwl_priv *priv,
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 94d7e6e..53e6cbb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -2571,6 +2571,11 @@ static void __iwl3945_down(struct iwl_priv *priv)
+ 	if (!exit_pending)
+ 		set_bit(STATUS_EXIT_PENDING, &priv->status);
+ 
++	/* Stop TX queues watchdog. We need to have STATUS_EXIT_PENDING bit set
++	 * to prevent rearm timer */
++	if (priv->cfg->ops->lib->recover_from_tx_stall)
++		del_timer_sync(&priv->monitor_recover);
++
+ 	/* Station information will now be cleared in device */
+ 	iwl_clear_ucode_stations(priv);
+ 	iwl_dealloc_bcast_station(priv);
+@@ -3811,8 +3816,6 @@ static void iwl3945_cancel_deferred_work(struct iwl_priv *priv)
+ 	cancel_delayed_work(&priv->alive_start);
+ 	cancel_work_sync(&priv->start_internal_scan);
+ 	cancel_work_sync(&priv->beacon_update);
+-	if (priv->cfg->ops->lib->recover_from_tx_stall)
+-		del_timer_sync(&priv->monitor_recover);
+ }
+ 
+ static struct attribute *iwl3945_sysfs_entries[] = {
+-- 
+1.7.1
 
