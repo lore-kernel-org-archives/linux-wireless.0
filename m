@@ -1,47 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47488 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751905Ab0HZLfm (ORCPT
+Received: from mail.redfish-solutions.com ([66.232.79.143]:41191 "EHLO
+	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751768Ab0HTQfN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Aug 2010 07:35:42 -0400
-Message-Id: <20100826113438.251820520@sipsolutions.net>
-Date: Thu, 26 Aug 2010 13:30:25 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/3] mac80211: remove unused scan expire define
-References: <20100826113024.738612439@sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 20 Aug 2010 12:35:13 -0400
+Message-ID: <4C6EAE6C.50001@redfish-solutions.com>
+Date: Fri, 20 Aug 2010 09:33:48 -0700
+From: Philip Prindeville <philipp_subx@redfish-solutions.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Jouni Malinen <jouni.malinen@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Subject: Re: [PATCH 3/3] nl80211: New command for setting TX rate mask for
+ rate control
+References: <20091229105945.GD18493@jm.kir.nu>	 <4C6DA19B.7010606@redfish-solutions.com> <1282296004.3785.25.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1282296004.3785.25.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+  On 8/20/10 2:20 AM, Johannes Berg wrote:
+> On Thu, 2010-08-19 at 14:26 -0700, Philip Prindeville wrote:
+>
+>>> +	/*
+>>> +	 * The nested attribute uses enum nl80211_band as the index. This maps
+>>> +	 * directly to the enum ieee80211_band values used in cfg80211.
+>>> +	 */
+>>> +	nla_for_each_nested(tx_rates, info->attrs[NL80211_ATTR_TX_RATES], rem)
+>>> +	{
+>>> +		enum ieee80211_band band = nla_type(tx_rates);
+>> Can this even work?  The first entry in nl80211_band is NL80211_BAND_2GHZ, i.e. zero.
+>>
+>> Yet looking at libnl-1.1/lib/attr.c there's:
+>>
+>> int nla_parse(struct nlattr *tb[], int maxtype, struct nlattr *head, int len,
+>>                 struct nla_policy *policy)
+>> {
+>> ...
+>>           nla_for_each_attr(nla, head, len, rem) {
+>>                   int type = nla_type(nla);
+>>
+>>                   if (type == 0) {
+> Well, notice how you're quoting code that does the same thing
+> (for_each_attr), but the latter code does the extra non-zero check,
+> which we don't.
+>
+> We don't use nla_parse for this, we have to use
+> nla_parse_nested/for_each_attr. Yeah, it's a little quirky, but still
+> works fine.
+>
+> johannes
+>
 
-Since cfg80211 manages the BSS list completely,
-this define hasn't been used for a long time
-and will never be used again.
+Well, I grepped through all the relevant source (i.e. libnl and iw) and the only place that the string "Illegal nla->nla_type == 0" gets printed was there, and I'm definitely seeing it.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ieee80211_i.h |    6 ------
- 1 file changed, 6 deletions(-)
+So while the condition might be set in the driver, it's detected in "iw" here.
 
---- wireless-testing.orig/net/mac80211/ieee80211_i.h	2010-08-26 13:10:20.000000000 +0200
-+++ wireless-testing/net/mac80211/ieee80211_i.h	2010-08-26 13:10:24.000000000 +0200
-@@ -50,12 +50,6 @@ struct ieee80211_local;
-  * increased memory use (about 2 kB of RAM per entry). */
- #define IEEE80211_FRAGMENT_MAX 4
- 
--/*
-- * Time after which we ignore scan results and no longer report/use
-- * them in any way.
-- */
--#define IEEE80211_SCAN_RESULT_EXPIRE (10 * HZ)
--
- #define TU_TO_EXP_TIME(x)	(jiffies + usecs_to_jiffies((x) * 1024))
- 
- #define IEEE80211_DEFAULT_UAPSD_QUEUES \
+That was my point.
 
 
