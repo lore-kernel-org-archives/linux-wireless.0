@@ -1,47 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:49009 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758351Ab0HOQHE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Aug 2010 12:07:04 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1Oke92-0007Dl-7I
-	for linux-wireless@vger.kernel.org; Sun, 15 Aug 2010 16:25:04 +0200
-Received: from 94-194-49-83.zone8.bethere.co.uk ([94.194.49.83])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 15 Aug 2010 16:25:04 +0200
-Received: from linuxwireless by 94-194-49-83.zone8.bethere.co.uk with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 15 Aug 2010 16:25:04 +0200
-To: linux-wireless@vger.kernel.org
-From: Fritz <linuxwireless@crusius.info>
-Subject: RTL8192E Kernel 2.6.32 Freeze
-Date: Sun, 15 Aug 2010 14:17:55 +0000 (UTC)
-Message-ID: <loom.20100815T155457-704@post.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail.deathmatch.net ([72.66.92.28]:3696 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751789Ab0HUUjy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Aug 2010 16:39:54 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 3/3] ath5k: log descriptor chains at a new debug level
+Date: Sat, 21 Aug 2010 16:39:03 -0400
+Message-Id: <1282423143-4121-3-git-send-email-me@bobcopeland.com>
+In-Reply-To: <1282423143-4121-1-git-send-email-me@bobcopeland.com>
+References: <1282423143-4121-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Descriptors are currently logged with ATH5K_DEBUG_RESET,
+which isn't really apt, and also means we can't see just
+the descriptor setup or just the resets.  Add a new
+debug level just for that.
 
-I'm using the RTL8192E (r8192_pci) staging driver 
-that comes with ubuntu kernel 2.6.32-24 and am 
-experiencing frequent freezes on an 
-Intel Atom N450 based system.
+Acked-by: Bruno Randolf <br1@einfach.org>
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath/ath5k/debug.c |    5 +++--
+ drivers/net/wireless/ath/ath5k/debug.h |    2 ++
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-Is this a known problem and is there perhaps a newer
-kernel that I should build and run instead?
-
-The freeze seems to occur whenever the card reconnects
-with the router, see for more detailed problem
-description
-http://ubuntuforums.org/showthread.php?t=1549483
-
-Cheers,
-Fritz
-
-
+diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
+index 4cccc29..1b7c6d7 100644
+--- a/drivers/net/wireless/ath/ath5k/debug.c
++++ b/drivers/net/wireless/ath/ath5k/debug.c
+@@ -312,6 +312,7 @@ static const struct {
+ 	{ ATH5K_DEBUG_DUMP_TX,	"dumptx",	"print transmit skb content" },
+ 	{ ATH5K_DEBUG_DUMPBANDS, "dumpbands",	"dump bands" },
+ 	{ ATH5K_DEBUG_ANI,	"ani",		"adaptive noise immunity" },
++	{ ATH5K_DEBUG_DESC,	"desc",		"descriptor chains" },
+ 	{ ATH5K_DEBUG_ANY,	"all",		"show all debug levels" },
+ };
+ 
+@@ -955,7 +956,7 @@ ath5k_debug_printrxbuffs(struct ath5k_softc *sc, struct ath5k_hw *ah)
+ 	struct ath5k_rx_status rs = {};
+ 	int status;
+ 
+-	if (likely(!(sc->debug.level & ATH5K_DEBUG_RESET)))
++	if (likely(!(sc->debug.level & ATH5K_DEBUG_DESC)))
+ 		return;
+ 
+ 	printk(KERN_DEBUG "rxdp %x, rxlink %p\n",
+@@ -997,7 +998,7 @@ ath5k_debug_printtxbuf(struct ath5k_softc *sc, struct ath5k_buf *bf)
+ 	struct ath5k_tx_status ts = {};
+ 	int done;
+ 
+-	if (likely(!(sc->debug.level & ATH5K_DEBUG_RESET)))
++	if (likely(!(sc->debug.level & ATH5K_DEBUG_DESC)))
+ 		return;
+ 
+ 	done = sc->ah->ah_proc_tx_desc(sc->ah, bf->desc, &ts);
+diff --git a/drivers/net/wireless/ath/ath5k/debug.h b/drivers/net/wireless/ath/ath5k/debug.h
+index 606ae94..9b22722 100644
+--- a/drivers/net/wireless/ath/ath5k/debug.h
++++ b/drivers/net/wireless/ath/ath5k/debug.h
+@@ -95,6 +95,7 @@ struct ath5k_dbg_info {
+  * @ATH5K_DEBUG_DUMP_TX: print transmit skb content
+  * @ATH5K_DEBUG_DUMPBANDS: dump bands
+  * @ATH5K_DEBUG_TRACE: trace function calls
++ * @ATH5K_DEBUG_DESC: descriptor setup
+  * @ATH5K_DEBUG_ANY: show at any debug level
+  *
+  * The debug level is used to control the amount and type of debugging output
+@@ -117,6 +118,7 @@ enum ath5k_debug_level {
+ 	ATH5K_DEBUG_DUMP_TX	= 0x00000200,
+ 	ATH5K_DEBUG_DUMPBANDS	= 0x00000400,
+ 	ATH5K_DEBUG_ANI		= 0x00002000,
++	ATH5K_DEBUG_DESC	= 0x00004000,
+ 	ATH5K_DEBUG_ANY		= 0xffffffff
+ };
+ 
+-- 
+1.7.1.1
 
 
