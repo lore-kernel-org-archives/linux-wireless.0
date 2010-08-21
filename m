@@ -1,77 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:53433 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756913Ab0HaIBt convert rfc822-to-8bit (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:52388 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751090Ab0HUDH1 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Aug 2010 04:01:49 -0400
-Received: by iwn5 with SMTP id 5so5653008iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Aug 2010 01:01:48 -0700 (PDT)
+	Fri, 20 Aug 2010 23:07:27 -0400
+Received: by ewy23 with SMTP id 23so2601621ewy.19
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Aug 2010 20:07:26 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4C7CB546.9070800@gmail.com>
-References: <4C7CB546.9070800@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 31 Aug 2010 01:01:24 -0700
-Message-ID: <AANLkTik=g0oTaLjg+WNQbPMTPXwCPiR0qUpwqBkQkcFx@mail.gmail.com>
-Subject: Re: compat-wireless-2.6.35-rc6 won't build
-To: =?UTF-8?Q?Carlos_Salvador_P=C3=A9rez_Salgado?=
-	<carlosalvatore@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <4C618713.9030303@candelatech.com>
+References: <AANLkTi=W=vkgb0gM7ZWsBeE79Fe3iabtKFgu2S7N5uLe@mail.gmail.com>
+	<201008011137.49528.florian@openwrt.org>
+	<AANLkTik=t=jeCG7=bgkq3LBwJP9vq7KmFpgDeHngPoq-@mail.gmail.com>
+	<4C55F377.6040404@candelatech.com>
+	<AANLkTinGqWZ8o9L=ePsbgzWtitWAHCt3=g_z6BM7EpjO@mail.gmail.com>
+	<4C618713.9030303@candelatech.com>
+Date: Sat, 21 Aug 2010 13:07:26 +1000
+Message-ID: <AANLkTikanjZf0LEqZjw5toeJz02Tcs6EcAiNdagJh=sQ@mail.gmail.com>
+Subject: Re: virtual access poitns (ath5k/mac80211)
+From: Ryszard <ryszard99@gmail.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Florian Fainelli <florian@openwrt.org>,
+	Patrick McHardy <kaber@trash.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/8/31 Carlos Salvador Pérez Salgado <carlosalvatore@gmail.com>:
-> Greetings
->
-> I hope you can point me into the right direction.
->
-> I've already tried this patch
-> http://trac.pentoo.ch/browser/portage/trunk/net-wireless/compat-wireless/files/WEXT-EXT-nuts.patch
->
->
-> #make clean && ./scripts/driver-select atheros && make
->
-> make[1]: Entering directory `/media/disk/temp/linux-2.6.35.4'
-> CLEAN /media/disk/temp/compat-wireless-2.6.35-rc6
-> CLEAN /media/disk/temp/compat-wireless-2.6.35-rc6/.tmp_versions
-> make[1]: Leaving directory `/media/disk/temp/linux-2.6.35.4'
-> Processing new driver-select request...
-> Backing up makefile: Makefile.bk
-> Backup exists: drivers/net/wireless/Makefile.bk
-> Backup exists: net/wireless/Makefile.bk
-> Backup exists: drivers/net/Makefile.bk
-> Backup exists: drivers/ssb/Makefile.bk
-> Backup exists: drivers/misc/eeprom/Makefile.bk
-> ./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
-> make -C /lib/modules/2.6.35.4-k8/build
-> M=/media/disk/temp/compat-wireless-2.6.35-rc6 modules
-> make[1]: Entering directory `/media/disk/temp/linux-2.6.35.4'
-> LD /media/disk/temp/compat-wireless-2.6.35-rc6/compat/built-in.o
-> CC [M] /media/disk/temp/compat-wireless-2.6.35-rc6/compat/main.o
->
-> ...
->
-> CC [M] /media/disk/temp/compat-wireless-2.6.35-rc6/net/wireless/core.o
-> /media/disk/temp/compat-wireless-2.6.35-rc6/net/wireless/core.c: In function
-> ‘cfg80211_netdev_notifier_call’:
-> /media/disk/temp/compat-wireless-2.6.35-rc6/net/wireless/core.c:703: error:
-> ‘struct net_device’ has no member named ‘wireless_handlers’
-> /media/disk/temp/compat-wireless-2.6.35-rc6/net/wireless/core.c:704: error:
-> ‘struct net_device’ has no member named ‘wireless_handlers’
-> make[3]: ***
-> [/media/disk/temp/compat-wireless-2.6.35-rc6/net/wireless/core.o] Error 1
-> make[2]: *** [/media/disk/temp/compat-wireless-2.6.35-rc6/net/wireless]
-> Error 2
-> make[1]: *** [_module_/media/disk/temp/compat-wireless-2.6.35-rc6] Error 2
-> make[1]: Leaving directory `/media/disk/temp/linux-2.6.35.4'
-> make: *** [modules] Error 2
->
-> Thanks.
->
-> I'm using ubuntu lucid, custom kernel 2.6.35.4 in an AMD Turion X2 64 bits.
-> Using CFLAGS="-march=k8 -msse3 -O3"
+I've managed to compile and get bens kernel installed.  the problem i
+had (for future reference) was the physical media not being
+recognised.  adding rootdelay=130 to the kernel options seemed to have
+fixed that.
 
-Why are you building compat-wireless-2.6.35-rc6 when you already ahve
-2.6.35.4? You realize this is 100% pointless, right?
-
-  Luis
+On 11 August 2010 03:06, Ben Greear <greearb@candelatech.com> wrote:
+> On 08/10/2010 09:54 AM, Luis R. Rodriguez wrote:
+>>
+>> On Sun, Aug 1, 2010 at 3:21 PM, Ben Greear<greearb@candelatech.com>
+>> �wrote:
+>
+>>> You would not believe how hard it is to keep up with the wireless tree.
+>>> �Last time,
+>>> by the time we had something stable, upstream had changed too much to
+>>> merge.
+>>
+>> This is why you should not do your development outside of
+>> wireless-testing. If you are doing development on a stable kernel tree
+>> then you will likely run into huge issues. You should do development
+>> on wireless-testing.git, always rebase when John has a new update, and
+>> break your changes out into a small changes as possible. If you follow
+>> these basic rules I believe you will likely have better luck with
+>> keeping your code up to date.
+>
+> That sounds nice, but at that time I was carrying a lot of other patches
+> needed to make my test environment work. �Fortunately, .35 pretty much
+> works out of the box, so I can develop on pristine upstream kernels now.
+>
+> Thanks,
+> Ben
+>
+> --
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc �http://www.candelatech.com
+>
+>
