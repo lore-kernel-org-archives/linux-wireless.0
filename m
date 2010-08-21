@@ -1,50 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:42528 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753770Ab0HWOiV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Aug 2010 10:38:21 -0400
-Subject: Re: iwlagn fails to associate on 2.6.36-rc2
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20100823141432.GA29902@infradead.org>
-References: <20100823110247.GA3198@infradead.org>
-	 <1282572681.20674.3.camel@wwguy-ubuntu>
-	 <20100823141432.GA29902@infradead.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 23 Aug 2010 07:42:13 -0700
-Message-ID: <1282574533.12500.1.camel@wwguy-huron>
-Mime-Version: 1.0
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:33333 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751256Ab0HUWA0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Aug 2010 18:00:26 -0400
+Received: by bwz11 with SMTP id 11so2995400bwz.19
+        for <linux-wireless@vger.kernel.org>; Sat, 21 Aug 2010 15:00:21 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: [PATCH] p54spi: Kconfig option for config blob
+Date: Sun, 22 Aug 2010 00:00:14 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201008220000.15280.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-08-23 at 07:14 -0700, Christoph Hellwig wrote:
-> On Mon, Aug 23, 2010 at 07:11:21AM -0700, Guy, Wey-Yi wrote:
-> > it is kind of strange, the connection can stay if you have background
-> > ping going?
-> 
-> Yes (that's on a kernel up to 2.6.35). Otherwise it drops a lot, up
-> to ca 2.6.32 it kept working.  See the linux-wireless archives for my
-> report from back then.
-> 
-> > could you give more description on your problem, band/channel/...
-> > you also can turn on the debug flag debug=0x43fff to capture the current
-> > status of iwlwifi. it do require you compile kernel with full debugging
-> > support.
-> 
-> I don't know what you mean with full kernel debugging.  iwlagn
-> debugging, mac80211 debugging?  Just tell me the options and I'll run
-> with it.
+This patch adds an Kconfig option, which allows the user
+to select, whenever he/she wants to include a 4k blob for
+generic calibration and interface values into the driver,
+or cut the module size by about 15 to 20%.
 
-Turn both iwlagn anf mac80211 debugging on when you compile kernel and
-use debug=0x43fff when you load the iwlagn module
-
-Thanks
-Wey
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+diff --git a/drivers/net/wireless/p54/Kconfig b/drivers/net/wireless/p54/Kconfig
+index 60a930e..0a963d5 100644
+--- a/drivers/net/wireless/p54/Kconfig
++++ b/drivers/net/wireless/p54/Kconfig
+@@ -49,6 +49,23 @@ config P54_SPI
+ 
+ 	  If you choose to build a module, it'll be called p54spi.
+ 
++config P54_SPI_DEFAULT_EEPROM
++	bool "Include fallback EEPROM blob"
++	depends on P54_SPI
++	default n
++	---help---
++	 Unlike the PCI or USB devices, the SPI variants don't have
++	 a dedicated EEPROM chip to store all device specific values
++	 for calibration, country and interface settings.
++
++	 The driver will try to load the image "3826.eeprom", if the
++	 file is put at the right place. (usually /lib/firmware.)
++
++	 Only if this request fails, this option will provide a
++	 backup set of generic values to get the device working.
++
++	 Enabling this option adds about 4k to p54spi.
++
+ config P54_LEDS
+ 	bool
+ 	depends on P54_COMMON && MAC80211_LEDS && (LEDS_CLASS = y || LEDS_CLASS = P54_COMMON)
+diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
+index 087bf06..156e57d 100644
+--- a/drivers/net/wireless/p54/p54spi.c
++++ b/drivers/net/wireless/p54/p54spi.c
+@@ -32,11 +32,14 @@
+ #include <linux/slab.h>
+ 
+ #include "p54spi.h"
+-#include "p54spi_eeprom.h"
+ #include "p54.h"
+ 
+ #include "lmac.h"
+ 
++#ifdef CONFIG_P54_SPI_DEFAULT_EEPROM
++#include "p54spi_eeprom.h"
++#endif /* CONFIG_P54_SPI_DEFAULT_EEPROM */
++
+ MODULE_FIRMWARE("3826.arm");
+ MODULE_ALIAS("stlc45xx");
+ 
+@@ -195,9 +198,11 @@ static int p54spi_request_eeprom(struct ieee80211_hw *dev)
+ 
+ 	ret = request_firmware(&eeprom, "3826.eeprom", &priv->spi->dev);
+ 	if (ret < 0) {
++#ifdef CONFIG_P54_SPI_DEFAULT_EEPROM
+ 		dev_info(&priv->spi->dev, "loading default eeprom...\n");
+ 		ret = p54_parse_eeprom(dev, (void *) p54spi_eeprom,
+ 				       sizeof(p54spi_eeprom));
++#endif /* CONFIG_P54_SPI_DEFAULT_EEPROM */
+ 	} else {
+ 		dev_info(&priv->spi->dev, "loading user eeprom...\n");
+ 		ret = p54_parse_eeprom(dev, (void *) eeprom->data,
