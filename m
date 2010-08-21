@@ -1,115 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:43673 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754879Ab0HKSWY (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:3695 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751613Ab0HUUjw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Aug 2010 14:22:24 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>
-Cc: Ido Yariv <ido@wizery.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v4 8/8] omap: zoom: add mmc3/wl1271 device support
-Date: Wed, 11 Aug 2010 21:21:53 +0300
-Message-Id: <1281550913-17633-9-git-send-email-ohad@wizery.com>
-In-Reply-To: <1281550913-17633-1-git-send-email-ohad@wizery.com>
-References: <1281550913-17633-1-git-send-email-ohad@wizery.com>
+	Sat, 21 Aug 2010 16:39:52 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 2/3] ath5k: trivial spelling fixes
+Date: Sat, 21 Aug 2010 16:39:02 -0400
+Message-Id: <1282423143-4121-2-git-send-email-me@bobcopeland.com>
+In-Reply-To: <1282423143-4121-1-git-send-email-me@bobcopeland.com>
+References: <1282423143-4121-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add MMC3 support on ZOOM, which has the wl1271 device hardwired to.
+Fix some comments:
+    s/transmition/transmission/
+    s/puting/putting/
 
-The wl1271 is a 4-wire, 1.8V, embedded SDIO WLAN device with an
-external IRQ line, and power-controlled by a GPIO-based fixed regulator.
-
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
 ---
- arch/arm/mach-omap2/board-zoom-peripherals.c |   34 ++++++++++++++++++++++++++
- 1 files changed, 34 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath5k/pcu.c   |    4 ++--
+ drivers/net/wireless/ath/ath5k/phy.c   |    2 +-
+ drivers/net/wireless/ath/ath5k/reset.c |    6 +++---
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/arch/arm/mach-omap2/board-zoom-peripherals.c b/arch/arm/mach-omap2/board-zoom-peripherals.c
-index de88635..625ae56 100644
---- a/arch/arm/mach-omap2/board-zoom-peripherals.c
-+++ b/arch/arm/mach-omap2/board-zoom-peripherals.c
-@@ -17,6 +17,8 @@
- #include <linux/i2c/twl.h>
- #include <linux/regulator/machine.h>
- #include <linux/regulator/fixed.h>
-+#include <linux/mmc/host.h>
-+#include <linux/wl12xx.h>
+diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
+index 3fef593..bb2e215 100644
+--- a/drivers/net/wireless/ath/ath5k/pcu.c
++++ b/drivers/net/wireless/ath/ath5k/pcu.c
+@@ -137,11 +137,11 @@ void ath5k_hw_update_mib_counters(struct ath5k_hw *ah)
+  * ath5k_hw_set_ack_bitrate - set bitrate for ACKs
+  *
+  * @ah: The &struct ath5k_hw
+- * @high: Flag to determine if we want to use high transmition rate
++ * @high: Flag to determine if we want to use high transmission rate
+  * for ACKs or not
+  *
+  * If high flag is set, we tell hw to use a set of control rates based on
+- * the current transmition rate (check out control_rates array inside reset.c).
++ * the current transmission rate (check out control_rates array inside reset.c).
+  * If not hw just uses the lowest rate available for the current modulation
+  * scheme being used (1Mbit for CCK and 6Mbits for OFDM).
+  */
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index c7c4465..8c27a36 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -2987,7 +2987,7 @@ ath5k_setup_rate_powertable(struct ath5k_hw *ah, u16 max_pwr,
  
- #include <asm/mach-types.h>
- #include <asm/mach/arch.h>
-@@ -29,6 +31,7 @@
- #include "hsmmc.h"
  
- #define OMAP_ZOOM_WLAN_PMENA_GPIO	(101)
-+#define OMAP_ZOOM_WLAN_IRQ_GPIO		(162)
- 
- /* Zoom2 has Qwerty keyboard*/
- static int board_keymap[] = {
-@@ -185,6 +188,28 @@ static struct platform_device omap_vwlan_device = {
- 	},
- };
- 
-+struct wl12xx_platform_data omap_zoom_wlan_data = {
-+	/* ZOOM ref clock is 26 MHz */
-+	.board_ref_clock = 1,
-+};
-+
-+static struct resource omap_zoom_wl1271_resources[] = {
-+	{
-+		.start = OMAP_GPIO_IRQ(OMAP_ZOOM_WLAN_IRQ_GPIO),
-+		.end = OMAP_GPIO_IRQ(OMAP_ZOOM_WLAN_IRQ_GPIO),
-+		.flags = IORESOURCE_IRQ,
-+	}
-+};
-+static struct platform_device omap_zoom_wl1271 = {
-+	.name		= "wl1271_plat.2",
-+	.id		= -1,
-+	.resource	= omap_zoom_wl1271_resources,
-+	.num_resources	= ARRAY_SIZE(omap_zoom_wl1271_resources),
-+	.dev = {
-+		.platform_data = &omap_zoom_wlan_data,
-+	},
-+};
-+
- static struct omap2_hsmmc_info mmc[] __initdata = {
- 	{
- 		.name		= "external",
-@@ -202,6 +227,14 @@ static struct omap2_hsmmc_info mmc[] __initdata = {
- 		.nonremovable	= true,
- 		.power_saving	= true,
- 	},
-+	{
-+		.name		= "wl1271",
-+		.mmc		= 3,
-+		.wires		= 4,
-+		.gpio_wp	= -EINVAL,
-+		.gpio_cd	= -EINVAL,
-+		.nonremovable	= true,
-+	},
- 	{}      /* Terminator */
- };
- 
-@@ -313,6 +346,7 @@ static void enable_board_wakeup_source(void)
- 
- void __init zoom_peripherals_init(void)
+ /*
+- * Set transmition power
++ * Set transmission power
+  */
+ int
+ ath5k_hw_txpower(struct ath5k_hw *ah, struct ieee80211_channel *channel,
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index 4154959..58912cd 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -326,7 +326,7 @@ commit:
+  * register). After this MAC and Baseband are
+  * disabled and a full reset is needed to come
+  * back. This way we save as much power as possible
+- * without puting the card on full sleep.
++ * without putting the card on full sleep.
+  */
+ int ath5k_hw_on_hold(struct ath5k_hw *ah)
  {
-+	platform_device_register(&omap_zoom_wl1271);
- 	omap_i2c_init();
- 	platform_device_register(&omap_vwlan_device);
- 	usb_musb_init(&musb_board_data);
+@@ -344,7 +344,7 @@ int ath5k_hw_on_hold(struct ath5k_hw *ah)
+ 	/*
+ 	 * Put chipset on warm reset...
+ 	 *
+-	 * Note: puting PCI core on warm reset on PCI-E cards
++	 * Note: putting PCI core on warm reset on PCI-E cards
+ 	 * results card to hang and always return 0xffff... so
+ 	 * we ingore that flag for PCI-E cards. On PCI cards
+ 	 * this flag gets cleared after 64 PCI clocks.
+@@ -400,7 +400,7 @@ int ath5k_hw_nic_wakeup(struct ath5k_hw *ah, int flags, bool initial)
+ 	/*
+ 	 * Put chipset on warm reset...
+ 	 *
+-	 * Note: puting PCI core on warm reset on PCI-E cards
++	 * Note: putting PCI core on warm reset on PCI-E cards
+ 	 * results card to hang and always return 0xffff... so
+ 	 * we ingore that flag for PCI-E cards. On PCI cards
+ 	 * this flag gets cleared after 64 PCI clocks.
 -- 
-1.7.0.4
+1.7.1.1
+
 
