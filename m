@@ -1,53 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:60973 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932273Ab0HJRje convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Aug 2010 13:39:34 -0400
-Received: by vws3 with SMTP id 3so7758488vws.19
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Aug 2010 10:39:33 -0700 (PDT)
+Received: from mga09.intel.com ([134.134.136.24]:50361 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751558Ab0HUOSC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Aug 2010 10:18:02 -0400
+From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Sat, 21 Aug 2010 07:18:00 -0700
+Subject: RE: [PATCH 1/1] mac80211: fix warning for un-used parameter
+Message-ID: <E9954878DD1FB34FAE5187FB88C58A35012774EE0E@orsmsx506.amr.corp.intel.com>
+References: <1282340976-10665-1-git-send-email-wey-yi.w.guy@intel.com>
+ <1282385065.3759.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1282385065.3759.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <4C618713.9030303@candelatech.com>
-References: <AANLkTi=W=vkgb0gM7ZWsBeE79Fe3iabtKFgu2S7N5uLe@mail.gmail.com>
-	<201008011137.49528.florian@openwrt.org> <AANLkTik=t=jeCG7=bgkq3LBwJP9vq7KmFpgDeHngPoq-@mail.gmail.com>
-	<4C55F377.6040404@candelatech.com> <AANLkTinGqWZ8o9L=ePsbgzWtitWAHCt3=g_z6BM7EpjO@mail.gmail.com>
-	<4C618713.9030303@candelatech.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 10 Aug 2010 10:39:12 -0700
-Message-ID: <AANLkTi=inqG3Kd7Xi2V3pncsa4bJtOBO24WTb6F2z6QO@mail.gmail.com>
-Subject: Re: virtual access poitns (ath5k/mac80211)
-To: Ben Greear <greearb@candelatech.com>
-Cc: Ryszard <ryszard99@gmail.com>,
-	Florian Fainelli <florian@openwrt.org>,
-	Patrick McHardy <kaber@trash.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 10, 2010 at 10:06 AM, Ben Greear <greearb@candelatech.com> wrote:
-> On 08/10/2010 09:54 AM, Luis R. Rodriguez wrote:
->>
->> On Sun, Aug 1, 2010 at 3:21 PM, Ben Greear<greearb@candelatech.com>
->>  wrote:
->
->>> You would not believe how hard it is to keep up with the wireless tree.
->>>  Last time,
->>> by the time we had something stable, upstream had changed too much to
->>> merge.
->>
->> This is why you should not do your development outside of
->> wireless-testing. If you are doing development on a stable kernel tree
->> then you will likely run into huge issues. You should do development
->> on wireless-testing.git, always rebase when John has a new update, and
->> break your changes out into a small changes as possible. If you follow
->> these basic rules I believe you will likely have better luck with
->> keeping your code up to date.
->
-> That sounds nice, but at that time I was carrying a lot of other patches
-> needed to make my test environment work.  Fortunately, .35 pretty much
-> works out of the box, so I can develop on pristine upstream kernels now.
-
-Do not work on "pristine kernels" work on wireless-testing.git.
-
-  Luis
+LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEpvaGFubmVzIEJlcmcgW21haWx0bzpq
+b2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0XSANClNlbnQ6IFNhdHVyZGF5LCBBdWd1c3QgMjEsIDIw
+MTAgMzowNCBBTQ0KVG86IEd1eSwgV2V5LVlpIFcNCkNjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtl
+cm5lbC5vcmcNClN1YmplY3Q6IFJlOiBbUEFUQ0ggMS8xXSBtYWM4MDIxMTogZml4IHdhcm5pbmcg
+Zm9yIHVuLXVzZWQgcGFyYW1ldGVyDQoNCk9uIEZyaSwgMjAxMC0wOC0yMCBhdCAxNDo0OSAtMDcw
+MCwgd2V5LXlpLncuZ3V5QGludGVsLmNvbSB3cm90ZToNCg0KPiBAQCAtMTcwMSw3ICsxNzAxLDkg
+QEAgbmV0ZGV2X3R4X3QgaWVlZTgwMjExX3N1YmlmX3N0YXJ0X3htaXQoc3RydWN0IHNrX2J1ZmYg
+KnNrYiwNCj4gIAl1MTYgZXRoZXJ0eXBlLCBoZHJsZW4sICBtZXNoaGRybGVuID0gMDsNCj4gIAlf
+X2xlMTYgZmM7DQo+ICAJc3RydWN0IGllZWU4MDIxMV9oZHIgaGRyOw0KPiArI2lmZGVmIENPTkZJ
+R19NQUM4MDIxMV9NRVNIDQo+ICAJc3RydWN0IGllZWU4MDIxMXNfaGRyIG1lc2hfaGRyOw0KPiAr
+I2VuZGlmDQoNCkdvb2QgY2F0Y2guIEkgdGhpbmsganVzdCBhZGRpbmcgX19tYXliZV91bnVzZWQg
+d291bGQgYmUgYmV0dGVyIHRob3VnaD8NCg0KWWVhaCwgY291bGQgZG8gdGhhdCwgd2lsbCByZS1z
+dWJtaXQNCg0KV2V5DQoNCg==
