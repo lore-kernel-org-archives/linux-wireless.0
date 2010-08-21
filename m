@@ -1,109 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51696 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751972Ab0HYMcZ (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:3697 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751792Ab0HUUjy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Aug 2010 08:32:25 -0400
-Subject: [PATCH] mac80211: fix mesh advertisement
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 25 Aug 2010 14:34:01 +0200
-Message-ID: <1282739641.3685.22.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Sat, 21 Aug 2010 16:39:54 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 1/3] mac80211: trivial spelling fixes
+Date: Sat, 21 Aug 2010 16:39:01 -0400
+Message-Id: <1282423143-4121-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Fix spelling and readability of a few lines of kernel doc:
 
-When a mac80211-based driver advertises mesh mode
-support, this will be advertised to userspace.
-However, if mac80211 was compiled without mesh
-support, then that won't actually be true. Fix
-this by removing the bit for mesh if mesh isn't
-compiled in.
+    s/issueing/issuing/g
+    s/approriate/appropriate/g
+    s/supported by simply/supported simply by/
+    s/IEEE80211_HW_BEACON_FILTERING/IEEE80211_HW_BEACON_FILTER/g
 
-Since this synchronizes what we advertise to
-cfg80211 and actually support, it means we can
-now rely on cfg80211's interface type checks
-and need not check again in mac80211.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
 ---
- net/mac80211/cfg.c  |   33 ---------------------------------
- net/mac80211/main.c |    5 +++++
- 2 files changed, 5 insertions(+), 33 deletions(-)
+ include/net/mac80211.h |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
 
---- wireless-testing.orig/net/mac80211/main.c	2010-08-25 14:32:34.000000000 +0200
-+++ wireless-testing/net/mac80211/main.c	2010-08-25 14:32:43.000000000 +0200
-@@ -622,6 +622,11 @@ int ieee80211_register_hw(struct ieee802
- 	/* mac80211 always supports monitor */
- 	local->hw.wiphy->interface_modes |= BIT(NL80211_IFTYPE_MONITOR);
- 
-+#ifndef CONFIG_MAC80211_MESH
-+	/* mesh depends on Kconfig, but drivers should set it if they want */
-+	local->hw.wiphy->interface_modes &= ~BIT(NL80211_IFTYPE_MESH_POINT);
-+#endif
-+
- 	if (local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
- 		local->hw.wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
- 	else if (local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)
---- wireless-testing.orig/net/mac80211/cfg.c	2010-08-25 14:32:34.000000000 +0200
-+++ wireless-testing/net/mac80211/cfg.c	2010-08-25 14:32:43.000000000 +0200
-@@ -19,33 +19,6 @@
- #include "rate.h"
- #include "mesh.h"
- 
--static bool nl80211_type_check(enum nl80211_iftype type)
--{
--	switch (type) {
--	case NL80211_IFTYPE_ADHOC:
--	case NL80211_IFTYPE_STATION:
--	case NL80211_IFTYPE_MONITOR:
--#ifdef CONFIG_MAC80211_MESH
--	case NL80211_IFTYPE_MESH_POINT:
--#endif
--	case NL80211_IFTYPE_AP:
--	case NL80211_IFTYPE_AP_VLAN:
--	case NL80211_IFTYPE_WDS:
--		return true;
--	default:
--		return false;
--	}
--}
--
--static bool nl80211_params_check(enum nl80211_iftype type,
--				 struct vif_params *params)
--{
--	if (!nl80211_type_check(type))
--		return false;
--
--	return true;
--}
--
- static int ieee80211_add_iface(struct wiphy *wiphy, char *name,
- 			       enum nl80211_iftype type, u32 *flags,
- 			       struct vif_params *params)
-@@ -55,9 +28,6 @@ static int ieee80211_add_iface(struct wi
- 	struct ieee80211_sub_if_data *sdata;
- 	int err;
- 
--	if (!nl80211_params_check(type, params))
--		return -EINVAL;
--
- 	err = ieee80211_if_add(local, name, &dev, type, params);
- 	if (err || type != NL80211_IFTYPE_MONITOR || !flags)
- 		return err;
-@@ -85,9 +55,6 @@ static int ieee80211_change_iface(struct
- 	if (ieee80211_sdata_running(sdata))
- 		return -EBUSY;
- 
--	if (!nl80211_params_check(type, params))
--		return -EINVAL;
--
- 	ret = ieee80211_if_change_type(sdata, type);
- 	if (ret)
- 		return ret;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 2a18113..dcc8c2b 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1242,8 +1242,8 @@ ieee80211_get_alt_retry_rate(const struct ieee80211_hw *hw,
+  * %IEEE80211_CONF_PS flag enabled means that the powersave mode defined in
+  * IEEE 802.11-2007 section 11.2 is enabled. This is not to be confused
+  * with hardware wakeup and sleep states. Driver is responsible for waking
+- * up the hardware before issueing commands to the hardware and putting it
+- * back to sleep at approriate times.
++ * up the hardware before issuing commands to the hardware and putting it
++ * back to sleep at appropriate times.
+  *
+  * When PS is enabled, hardware needs to wakeup for beacons and receive the
+  * buffered multicast/broadcast frames after the beacon. Also it must be
+@@ -1264,7 +1264,7 @@ ieee80211_get_alt_retry_rate(const struct ieee80211_hw *hw,
+  * there's data traffic and still saving significantly power in idle
+  * periods.
+  *
+- * Dynamic powersave is supported by simply mac80211 enabling and disabling
++ * Dynamic powersave is simply supported by mac80211 enabling and disabling
+  * PS based on traffic. Driver needs to only set %IEEE80211_HW_SUPPORTS_PS
+  * flag and mac80211 will handle everything automatically. Additionally,
+  * hardware having support for the dynamic PS feature may set the
+@@ -2458,7 +2458,7 @@ void ieee80211_sta_block_awake(struct ieee80211_hw *hw,
+  *
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+  *
+- * When beacon filtering is enabled with %IEEE80211_HW_BEACON_FILTERING and
++ * When beacon filtering is enabled with %IEEE80211_HW_BEACON_FILTER and
+  * %IEEE80211_CONF_PS is set, the driver needs to inform whenever the
+  * hardware is not receiving beacons with this function.
+  */
+@@ -2469,7 +2469,7 @@ void ieee80211_beacon_loss(struct ieee80211_vif *vif);
+  *
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+  *
+- * When beacon filtering is enabled with %IEEE80211_HW_BEACON_FILTERING, and
++ * When beacon filtering is enabled with %IEEE80211_HW_BEACON_FILTER, and
+  * %IEEE80211_CONF_PS and %IEEE80211_HW_CONNECTION_MONITOR are set, the driver
+  * needs to inform if the connection to the AP has been lost.
+  *
+-- 
+1.7.1.1
 
 
