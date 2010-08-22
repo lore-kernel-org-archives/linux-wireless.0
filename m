@@ -1,36 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:55438 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752596Ab0HIBoD (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:44727 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750856Ab0HVVsc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Aug 2010 21:44:03 -0400
-Received: by iwn33 with SMTP id 33so3315722iwn.19
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Aug 2010 18:44:01 -0700 (PDT)
-Message-ID: <4C5F5D5C.9040709@lwfinger.net>
-Date: Sun, 08 Aug 2010 20:43:56 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 22 Aug 2010 17:48:32 -0400
+Received: by fxm13 with SMTP id 13so2602581fxm.19
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Aug 2010 14:48:30 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: cancel restart_work in ieee80211_unregister_hw
+Date: Sun, 22 Aug 2010 23:48:25 +0200
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-To: Rogerio Luz Coelho <rogluz.news@gmail.com>
-CC: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Herton Ronaldo Krzesinski <herton@mandriva.com.br>
-Subject: Re: RTL 8187b - naughty behaviour
-References: <u2u917a57cb1004030656w7aff9e18qa43a358674d52d5a@mail.gmail.com>	<4BB7660A.3030900@lwfinger.net>	<i2x917a57cb1004030949qabd49dfeqa1f7cb66f4ef0f4e@mail.gmail.com>	<4BB773A9.2070703@lwfinger.net>	<n2n917a57cb1004031000h9910230ew50c6380788a64b1c@mail.gmail.com>	<q2k917a57cb1004100507s17249540xfb11a2e2f0a2dd76@mail.gmail.com>	<w2i69e28c911004101150h9db59aa1x2f9d12964f3c3fc1@mail.gmail.com>	<y2g917a57cb1004101240g8033e225n57bf68b6d37b5431@mail.gmail.com>	<q2k69e28c911004110635nac8100f6pe014361ed0a516a5@mail.gmail.com>	<1275579654.1311.32.camel@casa> <AANLkTimKLuiLpV0C+cXOyX2OqJOwB+giVLaHKCMJKVvt@mail.gmail.com>
-In-Reply-To: <AANLkTimKLuiLpV0C+cXOyX2OqJOwB+giVLaHKCMJKVvt@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201008222348.25668.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/08/2010 05:22 PM, Rogerio Luz Coelho wrote:
-> SNIP ...
-> 
-> So no luck with the Realtek driver yet?
+Unlike most other workqueue-tasks, the restart_work is
+not scheduled onto mac80211's private per-interface
+workqueue, but onto one of the system-wide workqueues.
 
-We are not doing anything with the Realtek driver. My RTL8187B device works
-perfectly fine.
+Therefore the mac80211-stack has to cancel any pending
+restarts, before destroying the shared device context
+and handing back the memory. Otherwise - under very
+unlucky circumstances - there could be a stale work-
+item left, because some other kernel component might
+have delayed the execution of ieee80211_restart_work
+for too long.
 
-If you were to study a vendor driver and come up with some patches to rtl8187
-that made your device function better, then I would consider them, but at this
-point, I am not looking at any changes to rtl8187.
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+Sure, normally a device doesn't simply disappear,
+but you know: restarts might take some time (fw upload,
+phy/mac/crypto reinit, etc.) to finish and some
+impatient user might want to speed  things up by
+_simply_ replugging the USB device...
 
-Larry
+But don't ask me what this "elusive" kernel component
+could be, I stumbled upon this theoretical bug, while
+reviewing code in order to prevent crashes from a
+driver, which relies on a fully functional restart
+support.
+---
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index a53feac..74e3529 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -807,6 +807,7 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
+ 
+ 	rtnl_unlock();
+ 
++	cancel_work_sync(&local->restart_work);
+ 	cancel_work_sync(&local->reconfig_filter);
+ 
+ 	ieee80211_clear_tx_pending(local);
