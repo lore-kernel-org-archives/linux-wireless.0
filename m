@@ -1,42 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:64855 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753583Ab0H3Oe4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Aug 2010 10:34:56 -0400
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: mac80211 using different tx queue for frames with same TID and RA
-Date: Mon, 30 Aug 2010 16:34:09 +0200
-Cc: linux-wireless@vger.kernel.org,
-	Krishna Kumar <krkumar2@in.ibm.com>, netdev@vger.kernel.org
-References: <201008301601.12971.helmut.schaa@googlemail.com> <1283177480.3691.66.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1283177480.3691.66.camel@jlt3.sipsolutions.net>
+Received: from [64.85.170.234] ([64.85.170.234]:42045 "EHLO mail.tomasu.net"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1751286Ab0HVIA2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Aug 2010 04:00:28 -0400
+From: Thomas Fjellstrom <thomas@fjellstrom.ca>
+Reply-To: thomas@fjellstrom.ca
+To: linux-wireless@vger.kernel.org
+Subject: Re: ath5k problem with 2.6.35
+Date: Sun, 22 Aug 2010 01:53:41 -0600
+Cc: linux-kernel@vger.kernel.org
+References: <201008220005.38969.tfjellstrom@strangesoft.net>
+In-Reply-To: <201008220005.38969.tfjellstrom@strangesoft.net>
 MIME-Version: 1.0
 Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201008301634.10122.helmut.schaa@googlemail.com>
+  charset="iso-8859-1"
+Message-Id: <201008220153.41678.thomas@fjellstrom.ca>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Monday 30 August 2010 schrieb Johannes Berg:
-> On Mon, 2010-08-30 at 16:01 +0200, Helmut Schaa wrote:
-> 
-> > while debugging an issue in rt2x00 I've discovered that in some cases frames
-> > with the same TID and RA end up in different tx queues (which causes problems
-> > in rt2x00 when using aggregation).
-> > 
-> > Is this behavior expected and we need to handle that case in rt2x00 or is it
-> > more likely a bug? At least I thought the select_queue implementation in
-> > mac80211 was meant to always pick the same tx queue for skbs with the same
-> > priority and hence it shouldn't happen that frames with the same TID are
-> > queued into different tx queues.
-> 
-> Indeed, that seems like a bug. I don't see how this can happen though,
-> since the code _appears_ to not use the sk_tx_queue_mapping when an
-> ndo_select_queue method is present.
+On August 22, 2010, Thomas Fjellstrom wrote:
+> Hi, I'm running 2.6.35, and my wireless card fails to initialize properly
+> on boot. I get the following messages in dmesg:
 
-Hmm, this issue seems to only happen when the wifi interface (AP mode)
-is part of a bridge and the frame is tx'ed through the bridge.
+Probably important, but I missed a couple lines:
+ 
+> [    0.866525] ath5k 0000:02:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ
+> 17 [    0.866536] ath5k 0000:02:00.0: setting latency timer to 64
+> [    0.866571] ath5k 0000:02:00.0: registered as 'phy0'
+> [    1.358241] ath: EEPROM regdomain: 0x67
+> [    1.358242] ath: EEPROM indicates we should expect a direct regpair map
+> [    1.358245] ath: Country alpha2 being used: 00
+> [    1.358247] ath: Regpair used: 0x67
+   [    1.360589] phy0: Failed to initialize wep: -2
+> [    1.372021] ath5k phy0: can't register ieee80211 hw
+> [    1.372080] ath5k 0000:02:00.0: PCI INT A disabled
+> [    1.372084] ath5k: probe of 0000:02:00.0 failed with error -2
+>
+> That said, if I remove the ath5k module, and modprobe ath5k, it starts
+> working.
+> 
+> [ 2976.411770] ath5k 0000:02:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ
+> 17 [ 2976.411783] ath5k 0000:02:00.0: setting latency timer to 64
+> [ 2976.412767] ath5k 0000:02:00.0: registered as 'phy1'
+> [ 2976.912422] ath: EEPROM regdomain: 0x67
+> [ 2976.912424] ath: EEPROM indicates we should expect a direct regpair map
+> [ 2976.912427] ath: Country alpha2 being used: 00
+> [ 2976.912429] ath: Regpair used: 0x67
+   [ 2977.078747] phy1: Selected rate control algorithm 'minstrel'
+> [ 2977.079190] ath5k phy1: Atheros AR2425 chip found (MAC: 0xe2, PHY: 0x70)
+> 
+> Is this a known issue?
 
-Helmut
+Thanks
+
+-- 
+Thomas Fjellstrom
+thomas@fjellstrom.ca
