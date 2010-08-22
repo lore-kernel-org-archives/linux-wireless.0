@@ -1,72 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35619 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762024Ab0HFU3p (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:59431 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752343Ab0HVNAF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Aug 2010 16:29:45 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Michael Buesch <mb@bu3sch.de>,
-	Larry Finger <Larry.Finger@wfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] b43: move hwrng registration driver to wireless core initialization
-Date: Fri,  6 Aug 2010 16:26:52 -0400
-Message-Id: <1281126412-5089-1-git-send-email-linville@tuxdriver.com>
+	Sun, 22 Aug 2010 09:00:05 -0400
+Received: by fxm13 with SMTP id 13so2508318fxm.19
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Aug 2010 06:00:03 -0700 (PDT)
+From: Marek Vasut <marek.vasut@gmail.com>
+To: libertas-dev@lists.infradead.org
+Subject: Re: [PATCH] libertas: if_sdio: fix buffer alignment in struct if_sdio_card
+Date: Sun, 22 Aug 2010 14:59:25 +0200
+Cc: Mike Rapoport <mike@compulab.co.il>,
+	linux-wireless@vger.kernel.org, rusty@rustcorp.com.au
+References: <1282476160-6913-1-git-send-email-mike@compulab.co.il>
+In-Reply-To: <1282476160-6913-1-git-send-email-mike@compulab.co.il>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201008221459.25574.marek.vasut@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-...and unregistration to core shutdown.  Previously, the driver
-remained registered even when the hardware was shutdown.  That
-causes the driver to return -ENODEV if the b43 device is IFF_DOWN.
-This change causes the driver to disappear in that case, allowing
-/dev/hwrng to still function if another hwrng device is available.
+Dne Ne 22. srpna 2010 13:22:40 Mike Rapoport napsal(a):
+> The commit 886275ce41a9751117367fb387ed171049eb6148 (param: lock
+> if_sdio's lbs_helper_name and lbs_fw_name against sysfs changes)
+> introduced new fields into the if_sdio_card structure. It caused
+> missalignment of the if_sdio_card.buffer field and failure at driver
+> load time:
+> 
+>   ~# modprobe libertas_sdio
+>   [   62.315124] libertas_sdio: Libertas SDIO driver
+>   [   62.319976] libertas_sdio: Copyright Pierre Ossman
+>   [   63.020629] DMA misaligned error with device 48
+>   [   63.025207] mmci-omap-hs mmci-omap-hs.1: unexpected dma status 800
+>   [   66.005035] libertas: command 0x0003 timed out
+>   [   66.009826] libertas: Timeout submitting command 0x0003
+>   [   66.016296] libertas: PREP_CMD: command 0x0003 failed: -110
+> 
+> Adding explicit alignment attribute for the if_sdio_card.buffer field
+> fixes this problem.
+> 
+> Signed-off-by: Mike Rapoport <mike@compulab.co.il>
+> ---
+>  drivers/net/wireless/libertas/if_sdio.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/libertas/if_sdio.c
+> b/drivers/net/wireless/libertas/if_sdio.c index ba854c7..87b6349 100644
+> --- a/drivers/net/wireless/libertas/if_sdio.c
+> +++ b/drivers/net/wireless/libertas/if_sdio.c
+> @@ -128,7 +128,7 @@ struct if_sdio_card {
+>  	bool			helper_allocated;
+>  	bool			firmware_allocated;
+> 
+> -	u8			buffer[65536];
+> +	u8			buffer[65536] __attribute__((aligned(4)));
+> 
+>  	spinlock_t		lock;
+>  	struct if_sdio_packet	*packets;
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/b43/main.c |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
+Will this work even on platforms that need some weird DMA destination address 
+alignment ? I might be totally off with this question though ;-)
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 20631ae..4062c07 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -4250,6 +4250,10 @@ static void b43_wireless_core_exit(struct b43_wldev *dev)
- 	B43_WARN_ON(dev && b43_status(dev) > B43_STAT_INITIALIZED);
- 	if (!dev || b43_status(dev) != B43_STAT_INITIALIZED)
- 		return;
-+
-+	/* Unregister HW RNG driver */
-+	b43_rng_exit(dev->wl);
-+
- 	b43_set_status(dev, B43_STAT_UNINIT);
- 
- 	/* Stop the microcode PSM. */
-@@ -4379,6 +4383,9 @@ static int b43_wireless_core_init(struct b43_wldev *dev)
- 
- 	b43_set_status(dev, B43_STAT_INITIALIZED);
- 
-+	/* Register HW RNG driver */
-+	b43_rng_init(dev->wl);
-+
- out:
- 	return err;
- 
-@@ -4984,7 +4991,6 @@ static int b43_probe(struct ssb_device *dev, const struct ssb_device_id *id)
- 		if (err)
- 			goto err_one_core_detach;
- 		b43_leds_register(wl->current_dev);
--		b43_rng_init(wl);
- 	}
- 
-       out:
-@@ -5020,7 +5026,6 @@ static void b43_remove(struct ssb_device *dev)
- 	b43_one_core_detach(dev);
- 
- 	if (list_empty(&wl->devlist)) {
--		b43_rng_exit(wl);
- 		b43_leds_unregister(wl);
- 		/* Last core on the chip unregistered.
- 		 * We can destroy common struct b43_wl.
--- 
-1.7.2
-
+Cheers
