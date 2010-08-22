@@ -1,37 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:39735 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753647Ab0HWOJe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Aug 2010 10:09:34 -0400
-Subject: Re: 11h frequency change support in iwlwifi?
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: "garkein@mailueberfall.de" <garkein@mailueberfall.de>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20100823093615.36500@gmx.net>
-References: <20100823093615.36500@gmx.net>
-Content-Type: text/plain
-Date: Mon, 23 Aug 2010 07:08:49 -0700
-Message-Id: <1282572529.20674.1.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:41446 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752777Ab0HVUAI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Aug 2010 16:00:08 -0400
+Received: by qwh6 with SMTP id 6so4575678qwh.19
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Aug 2010 13:00:07 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTikP5hQKMyJD1-7+gaY8PykQ77At+Vpkqf=HRT0H@mail.gmail.com>
+References: <1282506452-8159-1-git-send-email-zajec5@gmail.com>
+	<AANLkTikP5hQKMyJD1-7+gaY8PykQ77At+Vpkqf=HRT0H@mail.gmail.com>
+Date: Sun, 22 Aug 2010 22:00:07 +0200
+Message-ID: <AANLkTincNmC+Lbm_UbzARx6LiHinOnQMF=vb6PKfp66x@mail.gmail.com>
+Subject: Re: [PATCH] b43: N-PHY: add missing phyrxchain setting and fix
+ warning in RX core function
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-08-23 at 02:36 -0700, garkein@mailueberfall.de wrote:
-> Hello,
-> 
-> I would like to know whether the client side support for 11h frequency change on radar detection is supported in the iwlwifi driver (and/or mac80211 if relevant).
-> 
-> I've learned that there is some kind of protocol with which the AP tells all clients about a radar related frequency change, which allow the clients to seamlessly follow the AP to the new channel.
-> 
-> Apparently this is either not supported or working in Linux/iwlwifi as my 5100agn repeatedly just looses the AP if that changes the channel due to radar instead of seamlessly following it. (which is bad, no fun if the client looses internet ;-))
-> 
-> That why I'm asking whether this currently supported in iwlwifi/Linux and if so, what debug flags I should switch on to gain some more information on what might be going wrong.
-> 
-> 
-Channel switch is supported in iwlwifi, what version of kernel you are
-using, this feature was introduce no too long ago. Please use
-debug=0x10000003 to debug any issue.
+W dniu 22 sierpnia 2010 21:49 użytkownik Gábor Stefanik
+<netrolller.3d@gmail.com> napisał:
+> 2010/8/22 Rafał Miłecki <zajec5@gmail.com>:
+>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>> ---
+>> Gábor: please kindly, watch out for such a missing calls/sets. We may lose a
+>> lot of time looking for such a missing lines later.
+>> ---
+>>  drivers/net/wireless/b43/phy_n.c |    4 +++-
+>>  1 files changed, 3 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+>> index d116229..2466c0a 100644
+>> --- a/drivers/net/wireless/b43/phy_n.c
+>> +++ b/drivers/net/wireless/b43/phy_n.c
+>> @@ -3092,6 +3092,8 @@ static void b43_nphy_set_rx_core_state(struct b43_wldev *dev, u8 mask)
+>>        struct b43_phy_n *nphy = phy->n;
+>>        u16 buf[16];
+>>
+>> +       nphy->phyrxchain = mask;
+>> +
+>>        if (0 /* FIXME clk */)
+>>                return;
+>>
+>> @@ -3103,7 +3105,7 @@ static void b43_nphy_set_rx_core_state(struct b43_wldev *dev, u8 mask)
+>>        b43_phy_maskset(dev, B43_NPHY_RFSEQCA, ~B43_NPHY_RFSEQCA_RXEN,
+>>                        (mask & 0x3) << B43_NPHY_RFSEQCA_RXEN_SHIFT);
+>>
+>> -       if (mask & 0x3 != 0x3) {
+>> +       if ((mask & 0x3) != 0x3) {
+>
+> Why is this needed? An & doesn't magically transform into an && under
+> any circumstances...
 
-Thanks
-Wey
+I agree it's quite obvious, however I believe kernel compiles with
+flags raising such a warnings by default:
 
+drivers/net/wireless/b43/phy_n.c: In function ‘b43_nphy_set_rx_core_state’:
+drivers/net/wireless/b43/phy_n.c:3106:2: warning: suggest parentheses
+around comparison in operand of ‘&’
+
+-- 
+Rafał
