@@ -1,280 +1,224 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:27977 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751336Ab0HDFmT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Aug 2010 01:42:19 -0400
-Subject: [wt PATCH 5/5 v2] libertas: scan before assocation if no BSSID was
- given
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1280470711.14523.16.camel@dcbw.foobar.com>
-References: <1280470034.14523.4.camel@dcbw.foobar.com>
-	 <1280470711.14523.16.camel@dcbw.foobar.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 04 Aug 2010 00:43:47 -0500
-Message-ID: <1280900627.2665.8.camel@dcbw.foobar.com>
-Mime-Version: 1.0
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:54713 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752563Ab0HVUE2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Aug 2010 16:04:28 -0400
+Received: by qwh6 with SMTP id 6so4577354qwh.19
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Aug 2010 13:04:27 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTimeKMR8MfoNKyr6i-JxA8bdqwMKriUbBOagw-z5@mail.gmail.com>
+References: <1282506589-8220-1-git-send-email-zajec5@gmail.com>
+ <1282506589-8220-2-git-send-email-zajec5@gmail.com> <AANLkTi=dXNY+Hf8--Yp4VjQBOMwDCFuQqNSi_OAsq=2X@mail.gmail.com>
+ <AANLkTimeKMR8MfoNKyr6i-JxA8bdqwMKriUbBOagw-z5@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Sun, 22 Aug 2010 22:04:07 +0200
+Message-ID: <AANLkTi=ELhn1sFmpYn5a1-GcWqVBAeRGC6Kc7OBDLmZw@mail.gmail.com>
+Subject: Re: [PATCH 2/2] b43: N-PHY: add sub calls of band width setting
+To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix this leftover TODO from the cfg80211 conversion by doing a scan
-if cfg80211 didn't pass in the BSSID for us.  Since the scan code
-uses so much of the cfg80211_scan_request structure to build up the
-firmware command, we just fake one when the scan request is triggered
-internally.  But we need to make sure that internal 'fake' cfg82011
-scan request does not get back to cfg82011 via cfg80211_scan_done().
+2010/8/22 Rafa³ Mi³ecki <zajec5@gmail.com>:
+> W dniu 22 sierpnia 2010 21:52 u¿ytkownik Gábor Stefanik
+> <netrolller.3d@gmail.com> napisa³:
+>> 2010/8/22 Rafa³ Mi³ecki <zajec5@gmail.com>:
+>>> Signed-off-by: Rafa³ Mi³ecki <zajec5@gmail.com>
+>>> ---
+>>>  drivers/net/wireless/b43/b43.h        |    1 +
+>>>  drivers/net/wireless/b43/phy_common.c |  150 ++++++++++++++++++++++++++++++++-
+>>>  drivers/net/wireless/b43/phy_common.h |    7 ++
+>>>  3 files changed, 157 insertions(+), 1 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
+>>> index 8674a99..73376ff 100644
+>>> --- a/drivers/net/wireless/b43/b43.h
+>>> +++ b/drivers/net/wireless/b43/b43.h
+>>> @@ -57,6 +57,7 @@
+>>>  #define B43_MMIO_TSF_CFP_REP           0x188
+>>>  #define B43_MMIO_TSF_CFP_START         0x18C
+>>>  #define B43_MMIO_TSF_CFP_MAXDUR                0x190
+>>> +#define B43_MMIO_CLKCTL                        0x1E0   /* clock control status */
+>>>
+>>>  /* 32-bit DMA */
+>>>  #define B43_MMIO_DMA32_BASE0           0x200
+>>> diff --git a/drivers/net/wireless/b43/phy_common.c b/drivers/net/wireless/b43/phy_common.c
+>>> index b06e3f0..10b9e6f 100644
+>>> --- a/drivers/net/wireless/b43/phy_common.c
+>>> +++ b/drivers/net/wireless/b43/phy_common.c
+>>> @@ -467,10 +467,158 @@ struct b43_c32 b43_cordic(int theta)
+>>>        return ret;
+>>>  }
+>>>
+>>> +/* http://bcm-v4.sipsolutions.net/802.11/NcClkCtlCc */
+>>> +static bool b43_no_check_clock_control_chip_common(struct b43_wldev *dev,
+>>> +                                                               u32 mode)
+>>> +{
+>>> +       /* TODO: this is temporary hack */
+>>> +       return (mode == 0);
+>>> +}
+>>> +
+>>> +/* http://bcm-v4.sipsolutions.net/802.11/ClkCtlCc */
+>>> +static bool b43_clock_control_chip_common(struct b43_wldev *dev, u32 mode)
+>>> +{
+>>> +       struct ssb_bus *bus = dev->dev->bus;
+>>> +       u16 chip_id = bus->chip_id;
+>>> +       u16 chip_rev = bus->chip_rev;
+>>> +       /* TODO: specs distinguish PCI and PCIe */
+>>> +       bool pci = (bus->bustype == SSB_BUSTYPE_PCI);
+>>> +
+>>> +       if (dev->dev->id.revision < 6)
+>>> +               return false;
+>>> +       if (pci && ((chip_id == 0x4311 && chip_rev < 2) ||
+>>> +                   (pci && chip_id == 0x4321) ||
+>>> +                   (pci && chip_id == 0x4716)))
+>>> +               return (mode == 0);
+>>> +       return b43_no_check_clock_control_chip_common(dev, mode);
+>>> +}
+>>> +
+>>> +/* http://bcm-v4.sipsolutions.net/802.11/PHY/BmacWaitForWake */
+>>> +static void b43_phy_bmac_wait_for_wake(struct b43_wldev *dev)
+>>> +{
+>>> +       u8 core_rev = dev->dev->bus->pcicore.dev->id.revision;
+>>> +       u16 tmp, i;
+>>> +
+>>> +       if (core_rev == 4) {
+>>> +               udelay(5);
+>>> +               return;
+>>> +       }
+>>> +
+>>> +       if (dev->phy.type == B43_PHYTYPE_G && core_rev == 5)
+>>> +               udelay(2000);
+>>> +       else
+>>> +               udelay(40);
+>>> +
+>>> +       for (i = 0; i < 1500; i++) {
+>>> +               tmp = b43_shm_read16(dev, B43_SHM_SHARED,
+>>> +                                       B43_SHM_SH_UCODESTAT);
+>>> +               if (tmp == B43_SHM_SH_UCODESTAT_SLEEP) {
+>>> +                       i = 0;
+>>> +                       break;
+>>> +               }
+>>> +               udelay(10);
+>>> +       }
+>>> +       if (i)
+>>> +               b43err(dev->wl, "ucode wake up timeout\n");
+>>> +}
+>>> +
+>>> +/* http://bcm-v4.sipsolutions.net/802.11/PHY/MctrlWrite */
+>>> +static void b43_phy_mac_control_write(struct b43_wldev *dev)
+>>> +{
+>>> +       u32 tmp = dev->phy.maccontrol;
+>>> +       if (dev->phy.wake_override)
+>>> +               tmp |= B43_MACCTL_AWAKE;
+>>> +       if (dev->phy.mute_override)
+>>> +               tmp &= ~B43_MACCTL_AP;
+>>> +       tmp |= B43_MACCTL_INFRA;
+>>> +       b43_write32(dev, B43_MMIO_MACCTL, tmp);
+>>> +}
+>>> +
+>>> +/* http://bcm-v4.sipsolutions.net/802.11/PHY/UcodeWakeOverrideSet */
+>>> +static void b43_ucode_wake_override_set(struct b43_wldev *dev, u32 override)
+>>> +{
+>>> +       dev->phy.wake_override |= override;
+>>> +       if (dev->phy.wake_override || dev->phy.maccontrol & B43_MACCTL_AWAKE)
+>>> +               return;
+>>> +       b43_phy_mac_control_write(dev);
+>>> +       b43_phy_bmac_wait_for_wake(dev);
+>>> +}
+>>> +
+>>> +/* http://bcm-v4.sipsolutions.net/802.11/PHY/UcodeWakeOverrideClear */
+>>> +static void b43_ucode_wake_override_clear(struct b43_wldev *dev, u32 override)
+>>> +{
+>>> +       dev->phy.wake_override &= ~override;
+>>> +       if (dev->phy.wake_override != (dev->phy.maccontrol & B43_MACCTL_AWAKE))
+>>> +               return;
+>>> +       b43_phy_mac_control_write(dev);
+>>> +}
+>>> +
+>>>  /* http://bcm-v4.sipsolutions.net/802.11/PHY/ClkCtlClk */
+>>>  static void b43_clock_control(struct b43_wldev *dev, u32 mode)
+>>>  {
+>>> -       ; /* TODO */
+>>> +       struct b43_phy *phy = &dev->phy;
+>>> +       struct ssb_bus *bus = dev->dev->bus;
+>>> +       u8 core_rev = bus->pcicore.dev->id.revision;
+>>> +       u16 i;
+>>> +       u32 clkctl;
+>>> +       bool wakeup;
+>>> +
+>>> +       if (bus->chipco.capabilities & SSB_CHIPCO_CAP_PMU) { /* PMU Present */
+>>> +               B43_WARN_ON(core_rev < 20);
+>>> +               if (phy->clk) {
+>>> +                       bool tmp = (bus->chipco.pmu.rev == 0 &&
+>>> +                               (b43_read32(dev, B43_MMIO_CLKCTL) & 0x12));
+>>> +
+>>> +                       if (mode == 0) {
+>>> +                               clkctl = b43_read32(dev, B43_MMIO_CLKCTL);
+>>> +                               clkctl |= 0x2;
+>>> +                               b43_write32(dev, B43_MMIO_CLKCTL, clkctl);
+>>> +                               udelay(33);
+>>> +                       }
+>>> +
+>>> +                       if (mode == 0 || tmp) {
+>>> +                               for (i = 0; i < 1500; i++) {
+>>> +                                       clkctl = b43_read32(dev, B43_MMIO_CLKCTL);
+>>> +                                       if ((clkctl & 0x20000) == 0) {
+>>> +                                               i = 0;
+>>> +                                               break;
+>>> +                                       }
+>>> +                                       udelay(10);
+>>> +                               }
+>>> +                               if (i)
+>>> +                                       b43err(dev->wl, "clock timeout\n");
+>>> +                       }
+>>> +
+>>> +                       if (mode != 0 && tmp) {
+>>> +                               clkctl = b43_read32(dev, B43_MMIO_CLKCTL);
+>>> +                               clkctl &= ~0x2;
+>>> +                               b43_write32(dev, B43_MMIO_CLKCTL, clkctl);
+>>> +                       }
+>>> +               }
+>>> +               phy->forcefastclk = (mode == 0);
+>>> +       } else {
+>>> +               B43_WARN_ON(core_rev >= 20);
+>>> +
+>>> +               wakeup = (core_rev < 9);
+>>> +               if (phy->up && wakeup)
+>>> +                       b43_ucode_wake_override_set(dev, 1);
+>>> +
+>>> +               phy->forcefastclk = b43_clock_control_chip_common(dev, mode);
+>>> +               if (core_rev < 11) {
+>>> +                       if (phy->forcefastclk)
+>>> +                               ; /* TODO: b43_mhf(dev, 0, 0x400, 0x400, 3); */
+>>> +                       else
+>>> +                               ; /* TODO: b43_mhf(dev, 0, 0x400, 0, 3); */
+>>
+>> We do implement mhf already, though it is done differently than in wl.
+>> See my earlier "Add missing HF write" patch.
+>
+> Yes, I noticed this in your patch, thanks, however I don't understand
+> relation between our implementation and wl yet. I'm not 100% sure how
+> to translate this, so I decided to left this as TODO. Didn't want to
+> wait anymore before publishing this, to avoid situation of
+> implementing the same functions and wasting your and/or mine time.
+>
+> Could you post a patch making real call instead of this comment, please?
+>
+> --
+> Rafa³
+>
 
-Signed-off-by: Dan Williams <dcbw@redhat.com>
----
- drivers/net/wireless/libertas/cfg.c  |  148 ++++++++++++++++++++++++++--------
- drivers/net/wireless/libertas/dev.h  |    5 +
- drivers/net/wireless/libertas/main.c |    1 +
- 3 files changed, 121 insertions(+), 33 deletions(-)
+Sorry, I'm on a Windows-only machine right now.
+However, the general rule of translation is:
+mhf(a, b, c, d) -> b43_hf_write(dev, (b43_hf_read(dev) & (~b <<
+(a*16))) | (c << (a*16)))
+(Yes, the last parameter is ignored; it seems to be just Broadcrap -
+crap written by Broadcom.)
 
-v2: fixed commit message
-
-diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
-index a8c0126..623b81e 100644
---- a/drivers/net/wireless/libertas/cfg.c
-+++ b/drivers/net/wireless/libertas/cfg.c
-@@ -715,8 +715,13 @@ static void lbs_scan_worker(struct work_struct *work)
- 
- 	if (priv->scan_channel >= priv->scan_req->n_channels) {
- 		/* Mark scan done */
--		cfg80211_scan_done(priv->scan_req, false);
-+		if (priv->internal_scan)
-+			kfree(priv->scan_req);
-+		else
-+			cfg80211_scan_done(priv->scan_req, false);
-+
- 		priv->scan_req = NULL;
-+		priv->last_scan = jiffies;
- 	}
- 
- 	/* Restart network */
-@@ -727,10 +732,33 @@ static void lbs_scan_worker(struct work_struct *work)
- 
- 	kfree(scan_cmd);
- 
-+	/* Wake up anything waiting on scan completion */
-+	if (priv->scan_req == NULL) {
-+		lbs_deb_scan("scan: waking up waiters\n");
-+		wake_up_all(&priv->scan_q);
-+	}
-+
-  out_no_scan_cmd:
- 	lbs_deb_leave(LBS_DEB_SCAN);
- }
- 
-+static void _internal_start_scan(struct lbs_private *priv, bool internal,
-+	struct cfg80211_scan_request *request)
-+{
-+	lbs_deb_enter(LBS_DEB_CFG80211);
-+
-+	lbs_deb_scan("scan: ssids %d, channels %d, ie_len %zd\n",
-+		request->n_ssids, request->n_channels, request->ie_len);
-+
-+	priv->scan_channel = 0;
-+	queue_delayed_work(priv->work_thread, &priv->scan_work,
-+		msecs_to_jiffies(50));
-+
-+	priv->scan_req = request;
-+	priv->internal_scan = internal;
-+
-+	lbs_deb_leave(LBS_DEB_CFG80211);
-+}
- 
- static int lbs_cfg_scan(struct wiphy *wiphy,
- 	struct net_device *dev,
-@@ -747,18 +775,11 @@ static int lbs_cfg_scan(struct wiphy *wiphy,
- 		goto out;
- 	}
- 
--	lbs_deb_scan("scan: ssids %d, channels %d, ie_len %zd\n",
--		request->n_ssids, request->n_channels, request->ie_len);
--
--	priv->scan_channel = 0;
--	queue_delayed_work(priv->work_thread, &priv->scan_work,
--		msecs_to_jiffies(50));
-+	_internal_start_scan(priv, false, request);
- 
- 	if (priv->surpriseremoved)
- 		ret = -EIO;
- 
--	priv->scan_req = request;
--
-  out:
- 	lbs_deb_leave_args(LBS_DEB_CFG80211, "ret %d", ret);
- 	return ret;
-@@ -1193,7 +1214,62 @@ done:
- 	return ret;
- }
- 
-+static struct cfg80211_scan_request *
-+_new_connect_scan_req(struct wiphy *wiphy, struct cfg80211_connect_params *sme)
-+{
-+	struct cfg80211_scan_request *creq = NULL;
-+	int i, n_channels = 0;
-+	enum ieee80211_band band;
-+
-+	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
-+		if (wiphy->bands[band])
-+			n_channels += wiphy->bands[band]->n_channels;
-+	}
-+
-+	creq = kzalloc(sizeof(*creq) + sizeof(struct cfg80211_ssid) +
-+		       n_channels * sizeof(void *),
-+		       GFP_ATOMIC);
-+	if (!creq)
-+		return NULL;
-+
-+	/* SSIDs come after channels */
-+	creq->ssids = (void *)&creq->channels[n_channels];
-+	creq->n_channels = n_channels;
-+	creq->n_ssids = 1;
-+
-+	/* Scan all available channels */
-+	i = 0;
-+	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
-+		int j;
-+
-+		if (!wiphy->bands[band])
-+			continue;
-+
-+		for (j = 0; j < wiphy->bands[band]->n_channels; j++) {
-+			/* ignore disabled channels */
-+			if (wiphy->bands[band]->channels[j].flags &
-+						IEEE80211_CHAN_DISABLED)
-+				continue;
-+
-+			creq->channels[i] = &wiphy->bands[band]->channels[j];
-+			i++;
-+		}
-+	}
-+	if (i) {
-+		/* Set real number of channels specified in creq->channels[] */
-+		creq->n_channels = i;
-+
-+		/* Scan for the SSID we're going to connect to */
-+		memcpy(creq->ssids[0].ssid, sme->ssid, sme->ssid_len);
-+		creq->ssids[0].ssid_len = sme->ssid_len;
-+	} else {
-+		/* No channels found... */
-+		kfree(creq);
-+		creq = NULL;
-+	}
- 
-+	return creq;
-+}
- 
- static int lbs_cfg_connect(struct wiphy *wiphy, struct net_device *dev,
- 			   struct cfg80211_connect_params *sme)
-@@ -1205,37 +1281,43 @@ static int lbs_cfg_connect(struct wiphy *wiphy, struct net_device *dev,
- 
- 	lbs_deb_enter(LBS_DEB_CFG80211);
- 
--	if (sme->bssid) {
--		bss = cfg80211_get_bss(wiphy, sme->channel, sme->bssid,
--			sme->ssid, sme->ssid_len,
--			WLAN_CAPABILITY_ESS, WLAN_CAPABILITY_ESS);
--	} else {
--		/*
--		 * Here we have an impedance mismatch. The firmware command
--		 * CMD_802_11_ASSOCIATE always needs a BSSID, it cannot
--		 * connect otherwise. However, for the connect-API of
--		 * cfg80211 the bssid is purely optional. We don't get one,
--		 * except the user specifies one on the "iw" command line.
--		 *
--		 * If we don't got one, we could initiate a scan and look
--		 * for the best matching cfg80211_bss entry.
--		 *
--		 * Or, better yet, net/wireless/sme.c get's rewritten into
--		 * something more generally useful.
-+	if (!sme->bssid) {
-+		/* Run a scan if one isn't in-progress already and if the last
-+		 * scan was done more than 2 seconds ago.
- 		 */
--		lbs_pr_err("TODO: no BSS specified\n");
--		ret = -ENOTSUPP;
--		goto done;
--	}
-+		if (priv->scan_req == NULL &&
-+		    time_after(jiffies, priv->last_scan + (2 * HZ))) {
-+			struct cfg80211_scan_request *creq;
- 
-+			creq = _new_connect_scan_req(wiphy, sme);
-+			if (!creq) {
-+				ret = -EINVAL;
-+				goto done;
-+			}
-+
-+			lbs_deb_assoc("assoc: scanning for compatible AP\n");
-+			_internal_start_scan(priv, true, creq);
-+		}
-+
-+		/* Wait for any in-progress scan to complete */
-+		lbs_deb_assoc("assoc: waiting for scan to complete\n");
-+		wait_event_interruptible_timeout(priv->scan_q,
-+						 (priv->scan_req == NULL),
-+						 (15 * HZ));
-+		lbs_deb_assoc("assoc: scanning competed\n");
-+	}
- 
-+	/* Find the BSS we want using available scan results */
-+	bss = cfg80211_get_bss(wiphy, sme->channel, sme->bssid,
-+		sme->ssid, sme->ssid_len,
-+		WLAN_CAPABILITY_ESS, WLAN_CAPABILITY_ESS);
- 	if (!bss) {
--		lbs_pr_err("assicate: bss %pM not in scan results\n",
-+		lbs_pr_err("assoc: bss %pM not in scan results\n",
- 			   sme->bssid);
- 		ret = -ENOENT;
- 		goto done;
- 	}
--	lbs_deb_assoc("trying %pM", sme->bssid);
-+	lbs_deb_assoc("trying %pM\n", bss->bssid);
- 	lbs_deb_assoc("cipher 0x%x, key index %d, key len %d\n",
- 		      sme->crypto.cipher_group,
- 		      sme->key_idx, sme->key_len);
-@@ -1298,7 +1380,7 @@ static int lbs_cfg_connect(struct wiphy *wiphy, struct net_device *dev,
- 	lbs_set_radio(priv, preamble, 1);
- 
- 	/* Do the actual association */
--	lbs_associate(priv, bss, sme);
-+	ret = lbs_associate(priv, bss, sme);
- 
-  done:
- 	if (bss)
-diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
-index 3c7e255..f062ed5 100644
---- a/drivers/net/wireless/libertas/dev.h
-+++ b/drivers/net/wireless/libertas/dev.h
-@@ -161,6 +161,11 @@ struct lbs_private {
- 	/** Scanning */
- 	struct delayed_work scan_work;
- 	int scan_channel;
-+	/* Queue of things waiting for scan completion */
-+	wait_queue_head_t scan_q;
-+	/* Whether the scan was initiated internally and not by cfg80211 */
-+	bool internal_scan;
-+	unsigned long last_scan;
- };
- 
- extern struct cmd_confirm_sleep confirm_sleep;
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index 2589671..24958a8 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -719,6 +719,7 @@ static int lbs_init_adapter(struct lbs_private *priv)
- 	priv->deep_sleep_required = 0;
- 	priv->wakeup_dev_required = 0;
- 	init_waitqueue_head(&priv->ds_awake_q);
-+	init_waitqueue_head(&priv->scan_q);
- 	priv->authtype_auto = 1;
- 	priv->is_host_sleep_configured = 0;
- 	priv->is_host_sleep_activated = 0;
 -- 
-1.7.2
-
-
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
