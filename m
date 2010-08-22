@@ -1,112 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from xenotime.net ([72.52.115.56]:37180 "HELO xenotime.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1761776Ab0HMQXO convert rfc822-to-8bit (ORCPT
+Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:42510 "EHLO
+	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752062Ab0HVTrK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Aug 2010 12:23:14 -0400
-Received: from chimera.site ([173.50.240.230]) by xenotime.net for <linux-wireless@vger.kernel.org>; Fri, 13 Aug 2010 09:23:09 -0700
-Date: Fri, 13 Aug 2010 09:23:09 -0700
-From: Randy Dunlap <rdunlap@xenotime.net>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Greg KH <greg@kroah.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Mike Frysinger <vapier@gentoo.org>,
-	Jesse Barnes <jbarnes@virtuousgeek.org>,
-	Kevin Curtis <kevin.curtis@farsite.co.uk>,
-	Phillip Lougher <phillip@lougher.demon.co.uk>,
-	Faisal Latif <faisal.latif@intel.com>,
-	Chien Tung <chien.tin.tung@intel.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Samuel Ortiz <samuel.ortiz@intel.com>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, x86@kernel.org,
-	linux-rdma@vger.kernel.org
-Subject: Re: i386 allmodconfig, current mainline
-Message-Id: <20100813092309.fd54fc28.rdunlap@xenotime.net>
-In-Reply-To: <AANLkTimtZ7H=rT68V6UGC2GBky8z9VJ5m6-pwFHfm7yw@mail.gmail.com>
-References: <20100809164346.6e30cf8c.akpm@linux-foundation.org>
-	<20100810101521.0dcd4393.sfr@canb.auug.org.au>
-	<AANLkTimtZ7H=rT68V6UGC2GBky8z9VJ5m6-pwFHfm7yw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 22 Aug 2010 15:47:10 -0400
+Received: from saunalahti-vams (vs3-11.mail.saunalahti.fi [62.142.5.95])
+	by emh05-2.mail.saunalahti.fi (Postfix) with SMTP id BD1AA8C28F
+	for <linux-wireless@vger.kernel.org>; Sun, 22 Aug 2010 22:47:08 +0300 (EEST)
+Received: from potku.valot.fi (a85-156-250-252.elisa-laajakaista.fi [85.156.250.252])
+	by emh06.mail.saunalahti.fi (Postfix) with ESMTP id 29FC1E51A3
+	for <linux-wireless@vger.kernel.org>; Sun, 22 Aug 2010 22:47:05 +0300 (EEST)
+Subject: [PATCH 4/4] wl1251: move include guard after the license
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@adurom.com>
+Date: Sun, 22 Aug 2010 22:47:02 +0300
+Message-ID: <20100822194702.16660.99182.stgit@potku.valot.fi>
+In-Reply-To: <20100822194615.16660.21195.stgit@potku.valot.fi>
+References: <20100822194615.16660.21195.stgit@potku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 10 Aug 2010 18:53:20 +0200 Geert Uytterhoeven wrote:
-
-> On Tue, Aug 10, 2010 at 02:15, Stephen Rothwell <sfr@canb.auug.org.au> wrote:
-> > On Mon, 9 Aug 2010 16:43:46 -0700 Andrew Morton <akpm@linux-foundation.org> wrote:
-> >>
-> >> Guys.  What's goin' on out there?
-> >
-> > I guess we are all so up to date that noone does 32 bit builds any
-> > more ...  Also noone is bothering to look at the build logs:
-> >
-> > linus tree: http://kisskb.ellerman.id.au/kisskb/branch/3/
-> > linux-next: http://kisskb.ellerman.id.au/kisskb/branch/9/
-> 
-> Yeah, we have build failures migrating from -next to -linus :-(
-> 
-> BTW, still no one has commented on http://lkml.org/lkml/2010/7/13/378?
-
-OK.
-
-The diff (regression) script output looks useful to me.
-The log summary is still quite (too) verbose, or maybe that's partly due
-to the number of warnings & errors.  :(
-
-
-Maybe someone could look at http://www.xenotime.net/linux/scripts/buildsummary.pl also.
-
-Here is today's linux-next *i386* build summary, short mode (totals only):
-
-> buildsummary.pl -t build*.out | more
-build-r5372.out: totals: error/warning files: 27, errors: 3, warnings: 44, Section mismatches: 36
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-build-r5373.out: totals: error/warning files: 10, errors: 3, warnings: 14, Section mismatches: 36
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-build-r5374.out: totals: error/warning files: 29, errors: 0, warnings: 45, Section mismatches: 38
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-build-r5375.out: totals: error/warning files: 18, errors: 3, warnings: 36, Section mismatches: 38
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-build-r5377.out: totals: error/warning files: 21, errors: 0, warnings: 43, Section mismatches: 67
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-build-r5380.out: totals: error/warning files: 16, errors: 4, warnings: 22, Section mismatches: 81
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-build-r5381.out: totals: error/warning files: 17, errors: 3, warnings: 75, Section mismatches: 88
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-build-r5383.out: totals: error/warning files: 11, errors: 0, warnings: 32, Section mismatches: 130
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-build-r5384.out: totals: error/warning files: 23, errors: 3, warnings: 47, Section mismatches: 150
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-build-r5385.out: totals: error/warning files: 6, errors: 12, warnings: 9, Section mismatches: 160
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-build-r5386.out: totals: error/warning files: 10, errors: 1, warnings: 53, Section mismatches: 163
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-build-r5387.out: totals: error/warning files: 18, errors: 0, warnings: 45, Section mismatches: 164
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-build-r5388.out: totals: error/warning files: 7, errors: 1, warnings: 8, Section mismatches: 164
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-build-r5389.out: totals: error/warning files: 43, errors: 0, warnings: 80, Section mismatches: 167
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-build-r5390.out: totals: error/warning files: 12, errors: 0, warnings: 18, Section mismatches: 167
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-build-r5391.out: totals: error/warning files: 46, errors: 0, warnings: 77, Section mismatches: 170
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-build-r5392.out: totals: error/warning files: 15, errors: 12, warnings: 31, Section mismatches: 184
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-build-r5393.out: totals: error/warning files: 15, errors: 0, warnings: 23, Section mismatches: 187
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-build-r5394.out: totals: error/warning files: 76, errors: 0, warnings: 141, Section mismatches: 190
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-build-r5395.out: totals: error/warning files: 11, errors: 0, warnings: 18, Section mismatches: 192
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-build-r5396.out: totals: error/warning files: 22, errors: 0, warnings: 28, Section mismatches: 193
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
+Signed-off-by: Kalle Valo <kvalo@adurom.com>
 ---
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+ drivers/net/wireless/wl12xx/wl1251_ps.h |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1251_ps.h b/drivers/net/wireless/wl12xx/wl1251_ps.h
+index 98ed6c2..e5db81f 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_ps.h
++++ b/drivers/net/wireless/wl12xx/wl1251_ps.h
+@@ -1,6 +1,3 @@
+-#ifndef __WL1251_PS_H__
+-#define __WL1251_PS_H__
+-
+ /*
+  * This file is part of wl1251
+  *
+@@ -23,6 +20,9 @@
+  *
+  */
+ 
++#ifndef __WL1251_PS_H__
++#define __WL1251_PS_H__
++
+ #include "wl1251.h"
+ #include "wl1251_acx.h"
+ 
+
