@@ -1,49 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:42790 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755138Ab0HXTDW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Aug 2010 15:03:22 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 0FF304195D
-	for <linux-wireless@vger.kernel.org>; Tue, 24 Aug 2010 15:02:43 -0400 (EDT)
-Subject: Compat-wireless release for 2010-08-24 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20100824190321.0A2A741133@repository3.orbit-lab.org>
-Date: Tue, 24 Aug 2010 15:03:20 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from compulab.co.il ([67.18.134.219]:47009 "EHLO compulab.co.il"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752093Ab0HVLXe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Aug 2010 07:23:34 -0400
+From: Mike Rapoport <mike@compulab.co.il>
+To: linux-wireless@vger.kernel.org
+Cc: libertas-dev@lists.infradead.org, rusty@rustcorp.com.au,
+	Mike Rapoport <mike@compulab.co.il>
+Subject: [PATCH] libertas: if_sdio: fix buffer alignment in struct if_sdio_card
+Date: Sun, 22 Aug 2010 14:22:40 +0300
+Message-Id: <1282476160-6913-1-git-send-email-mike@compulab.co.il>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   44a3497..03699ed  linux-2.6.36.y -> origin/linux-2.6.36.y
-   558219f..1d39e2d  master     -> origin/master
- + a34839f...92c8a6d wl         -> origin/wl  (forced update)
- * [new tag]         compat-wireless-2010-08-23 -> compat-wireless-2010-08-23
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
- * [new tag]         compat-wireless-v2.6.36-rc1-2 -> compat-wireless-v2.6.36-rc1-2
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   6c8895f..a65b21c  history    -> origin/history
- + 2957dad...1a28812 master     -> origin/master  (forced update)
-   3dc8d7f..9ee4747  stable     -> origin/stable
- * [new tag]         next-20100824 -> next-20100824
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- * [new tag]         v2.6.36-rc2 -> v2.6.36-rc2
+The commit 886275ce41a9751117367fb387ed171049eb6148 (param: lock
+if_sdio's lbs_helper_name and lbs_fw_name against sysfs changes)
+introduced new fields into the if_sdio_card structure. It caused
+missalignment of the if_sdio_card.buffer field and failure at driver
+load time:
 
-compat-wireless code metrics
+  ~# modprobe libertas_sdio
+  [   62.315124] libertas_sdio: Libertas SDIO driver
+  [   62.319976] libertas_sdio: Copyright Pierre Ossman
+  [   63.020629] DMA misaligned error with device 48
+  [   63.025207] mmci-omap-hs mmci-omap-hs.1: unexpected dma status 800
+  [   66.005035] libertas: command 0x0003 timed out
+  [   66.009826] libertas: Timeout submitting command 0x0003
+  [   66.016296] libertas: PREP_CMD: command 0x0003 failed: -110
 
-    496308 - Total upstream lines of code being pulled
-      1714 - backport code changes
-      1474 - backport code additions
-       240 - backport code deletions
-      6070 - backport from compat module
-      7784 - total backport code
-    1.5684 - % of code consists of backport work
-      1218 - Crap changes not yet posted
-      1179 - Crap additions not yet posted
-        39 - Crap deletions not yet posted
-    0.2454 - % of crap code
+Adding explicit alignment attribute for the if_sdio_card.buffer field
+fixes this problem.
 
-Base tree: linux-next.git
-Base tree version: next-20100824
-compat-wireless release: compat-wireless-2010-08-23
+Signed-off-by: Mike Rapoport <mike@compulab.co.il>
+---
+ drivers/net/wireless/libertas/if_sdio.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+index ba854c7..87b6349 100644
+--- a/drivers/net/wireless/libertas/if_sdio.c
++++ b/drivers/net/wireless/libertas/if_sdio.c
+@@ -128,7 +128,7 @@ struct if_sdio_card {
+ 	bool			helper_allocated;
+ 	bool			firmware_allocated;
+ 
+-	u8			buffer[65536];
++	u8			buffer[65536] __attribute__((aligned(4)));
+ 
+ 	spinlock_t		lock;
+ 	struct if_sdio_packet	*packets;
+-- 
+1.6.6.2
+
