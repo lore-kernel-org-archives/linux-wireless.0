@@ -1,43 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.colab.de ([195.226.127.114]:53857 "EHLO mail.colab.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750924Ab0HATYn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Aug 2010 15:24:43 -0400
-From: Jochen Friedrich <jochen@scram.de>
-To: linux-wireless@vger.kernel.org
-Cc: Jochen Friedrich <jochen@scram.de>
-Subject: [iw] Implement set 4addr.
-Date: Sun,  1 Aug 2010 21:03:52 +0200
-Message-Id: <1280689432-14741-1-git-send-email-jochen@scram.de>
+Received: from external1.orbit-lab.org ([128.6.192.131]:53512 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750882Ab0HVTCl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Aug 2010 15:02:41 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id D2DD74195D
+	for <linux-wireless@vger.kernel.org>; Sun, 22 Aug 2010 15:02:07 -0400 (EDT)
+Subject: Compat-wireless release for 2010-08-22 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100822190240.75F1341133@repository3.orbit-lab.org>
+Date: Sun, 22 Aug 2010 15:02:40 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Jochen Friedrich <jochen@scram.de>
----
- interface.c |   13 +++++++++++++
- 1 files changed, 13 insertions(+), 0 deletions(-)
 
-diff --git a/interface.c b/interface.c
-index c092aa2..e6cca4f 100644
---- a/interface.c
-+++ b/interface.c
-@@ -365,3 +365,16 @@ COMMAND(set, type, "<type>",
- 	NL80211_CMD_SET_INTERFACE, 0, CIB_NETDEV, handle_interface_type,
- 	"Set interface type/mode.\n"
- 	IFACE_TYPES);
-+
-+static int handle_interface_4addr(struct nl80211_state *state,
-+				 struct nl_cb *cb,
-+				 struct nl_msg *msg,
-+				 int argc, char **argv)
-+{
-+	if (argc != 1)
-+		return 1;
-+	return parse_4addr_flag(argv[0], msg);
-+}
-+COMMAND(set, 4addr, "<on|off>",
-+	NL80211_CMD_SET_INTERFACE, 0, CIB_NETDEV, handle_interface_4addr,
-+	"Set interface 4addr (WDS) mode.\n");
--- 
-1.7.1
+compat-wireless code metrics
 
+    496309 - Total upstream lines of code being pulled
+      1714 - backport code changes
+      1474 - backport code additions
+       240 - backport code deletions
+      6070 - backport from compat module
+      7784 - total backport code
+    1.5684 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2454 - % of crap code
+
+Base tree: linux-next.git
+Base tree version: next-20100820
+compat-wireless release: compat-wireless-2010-08-16-3-g558219f
