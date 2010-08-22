@@ -1,53 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mho-01-ewr.mailhop.org ([204.13.248.71]:51558 "EHLO
-	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751152Ab0HBLms (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Aug 2010 07:42:48 -0400
-Date: Mon, 2 Aug 2010 14:42:58 +0300
-From: Tony Lindgren <tony@atomide.com>
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: "ext John W. Linville" <linville@tuxdriver.com>,
-	Ohad Ben-Cohen <ohad@wizery.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	San Mehat <san@google.com>,
-	"Quadros Roger (Nokia-MS/Helsinki)" <roger.quadros@nokia.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>
-Subject: Re: [PATCH v2 00/20] native support for wl1271 on ZOOM
-Message-ID: <20100802114256.GE12293@atomide.com>
-References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
- <20100726193028.GG3903@tuxdriver.com>
- <1280736987.17809.18.camel@chilepepper>
+Received: from compulab.co.il ([67.18.134.219]:47693 "EHLO compulab.co.il"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752311Ab0HVNWz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Aug 2010 09:22:55 -0400
+Message-ID: <4C712480.1090006@compulab.co.il>
+Date: Sun, 22 Aug 2010 16:22:08 +0300
+From: Mike Rapoport <mike@compulab.co.il>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1280736987.17809.18.camel@chilepepper>
+To: Marek Vasut <marek.vasut@gmail.com>
+CC: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	rusty@rustcorp.com.au, Mike Rapoport <mike@compulab.co.il>
+Subject: Re: [PATCH] libertas: if_sdio: fix buffer alignment in struct if_sdio_card
+References: <1282476160-6913-1-git-send-email-mike@compulab.co.il> <201008221459.25574.marek.vasut@gmail.com>
+In-Reply-To: <201008221459.25574.marek.vasut@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Luciano Coelho <luciano.coelho@nokia.com> [100802 11:10]:
-> On Mon, 2010-07-26 at 21:30 +0200, ext John W. Linville wrote:
-> > On Wed, Jul 21, 2010 at 08:33:34PM +0300, Ohad Ben-Cohen wrote:
-> > > This patch series adds native support for wl1271 on ZOOM.
-> > 
-> > Just for the record, I'm fine with the wl1271 bits here going through
-> > the omap tree with the rest of the series.
+Marek Vasut wrote:
+> Dne Ne 22. srpna 2010 13:22:40 Mike Rapoport napsal(a):
+>> The commit 886275ce41a9751117367fb387ed171049eb6148 (param: lock
+>> if_sdio's lbs_helper_name and lbs_fw_name against sysfs changes)
+>> introduced new fields into the if_sdio_card structure. It caused
+>> missalignment of the if_sdio_card.buffer field and failure at driver
+>> load time:
+>>
+>>   ~# modprobe libertas_sdio
+>>   [   62.315124] libertas_sdio: Libertas SDIO driver
+>>   [   62.319976] libertas_sdio: Copyright Pierre Ossman
+>>   [   63.020629] DMA misaligned error with device 48
+>>   [   63.025207] mmci-omap-hs mmci-omap-hs.1: unexpected dma status 800
+>>   [   66.005035] libertas: command 0x0003 timed out
+>>   [   66.009826] libertas: Timeout submitting command 0x0003
+>>   [   66.016296] libertas: PREP_CMD: command 0x0003 failed: -110
+>>
+>> Adding explicit alignment attribute for the if_sdio_card.buffer field
+>> fixes this problem.
+>>
+>> Signed-off-by: Mike Rapoport <mike@compulab.co.il>
+>> ---
+>>  drivers/net/wireless/libertas/if_sdio.c |    2 +-
+>>  1 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/libertas/if_sdio.c
+>> b/drivers/net/wireless/libertas/if_sdio.c index ba854c7..87b6349 100644
+>> --- a/drivers/net/wireless/libertas/if_sdio.c
+>> +++ b/drivers/net/wireless/libertas/if_sdio.c
+>> @@ -128,7 +128,7 @@ struct if_sdio_card {
+>>  	bool			helper_allocated;
+>>  	bool			firmware_allocated;
+>>
+>> -	u8			buffer[65536];
+>> +	u8			buffer[65536] __attribute__((aligned(4)));
+>>
+>>  	spinlock_t		lock;
+>>  	struct if_sdio_packet	*packets;
 > 
-> Yeah, I agree.  This is probably the best way to keep things in sync.
+> Will this work even on platforms that need some weird DMA destination address 
+> alignment ? I might be totally off with this question though ;-)
 
-OK, let's do that then. 
+I've tested it on PXA and OMAP and it works on both.
+I think that on platforms with weird DMA destination address alignment 
+libertas_sdio will fail anyway because of if_sdio_packet alignment.
 
-Nicolas Pitre made a comment saying he wants to look at these patches
-more, are there other pending comments?
+> Cheers
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Regards,
 
-Tony
+-- 
+Sincerely yours,
+Mike.
+
