@@ -1,84 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw-sa02.nokia.com ([147.243.1.48]:55341 "EHLO
-	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751085Ab0HLE6C (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Aug 2010 00:58:02 -0400
-Subject: Re: [PATCH 3/5] mac80211: remove unused status flag checks
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1281530356.3674.3.camel@jlt3.sipsolutions.net>
-References: <20100810074637.034583799@sipsolutions.net>
-	 <20100810074700.385206959@sipsolutions.net>
-	 <1281527495.6475.160.camel@wimaxnb.nmp.nokia.com>
-	 <1281528765.6475.163.camel@wimaxnb.nmp.nokia.com>
-	 <1281530356.3674.3.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 12 Aug 2010 07:57:23 +0300
-Message-ID: <1281589043.6475.164.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+Received: from [64.85.170.234] ([64.85.170.234]:55333 "EHLO mail.tomasu.net"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1751324Ab0HVGMX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Aug 2010 02:12:23 -0400
+From: Thomas Fjellstrom <tfjellstrom@strangesoft.net>
+To: linux-wireless@vger.kernel.org
+Subject: ath5k problem with 2.6.35
+Date: Sun, 22 Aug 2010 00:05:38 -0600
+Cc: linux-kernel@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201008220005.38969.tfjellstrom@strangesoft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-08-11 at 14:39 +0200, ext Johannes Berg wrote:
-> On Wed, 2010-08-11 at 15:12 +0300, Juuso Oikarinen wrote:
-> 
-> > > > The decryption code verifies whether or not
-> > > > a given frame was decrypted and verified by
-> > > > hardware. This is unnecessary, as the crypto
-> > > > RX handler already does it long before the
-> > > > decryption code is even invoked, so remove
-> > > > that code to avoid confusion.
-> > > > 
-> > > > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> > > > ---
-> > > >  net/mac80211/wpa.c |   26 ++++++--------------------
-> > > >  1 file changed, 6 insertions(+), 20 deletions(-)
-> > > > 
-> > > 
-> > > This patch for some reason seems to break wl1271 WPA - association
-> > > succeeds but encrypted data transfer fails.
-> > > 
-> > > I still don't know why, but I'm looking into it.
-> > > 
-> > 
-> > It appears, that in function ieee80211_rx_h_decrypt we go here:
-> > 
-> > 	if (!is_multicast_ether_addr(hdr->addr1) && stakey) {
-> > 		rx->key = stakey;
-> > 		/* Skip decryption if the frame is not protected. */
-> > 		if (!ieee80211_has_protected(hdr->frame_control))
-> > 			return RX_CONTINUE;
-> > 
-> > And here, as the frame is protected, we go out of the if, and end up in
-> > tkip_decrypt, which with this patch no longer checks whether the frame
-> > is already decrypted.
-> > 
-> > The frame then ends up dropped.
-> 
-> Err, you're right, sorry about that. There are too many paths here. How
-> about this patch?
-> 
-> johannes
-> 
-> --- wireless-testing.orig/net/mac80211/rx.c	2010-08-11 14:37:13.000000000 +0200
-> +++ wireless-testing/net/mac80211/rx.c	2010-08-11 14:38:13.000000000 +0200
-> @@ -873,6 +873,9 @@ ieee80211_rx_h_decrypt(struct ieee80211_
->  
->  	if (!is_multicast_ether_addr(hdr->addr1) && stakey) {
->  		rx->key = stakey;
-> +		if ((status->flag & RX_FLAG_DECRYPTED) &&
-> +		    (status->flag & RX_FLAG_IV_STRIPPED))
-> +			return RX_CONTINUE;
->  		/* Skip decryption if the frame is not protected. */
->  		if (!ieee80211_has_protected(fc))
->  			return RX_CONTINUE;
-> 
-> 
+Hi, I'm running 2.6.35, and my wireless card fails to initialize properly on 
+boot. I get the following messages in dmesg:
 
-This appears to work.
+[    0.866525] ath5k 0000:02:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+[    0.866536] ath5k 0000:02:00.0: setting latency timer to 64
+[    0.866571] ath5k 0000:02:00.0: registered as 'phy0'
+[    1.358241] ath: EEPROM regdomain: 0x67
+[    1.358242] ath: EEPROM indicates we should expect a direct regpair map
+[    1.358245] ath: Country alpha2 being used: 00
+[    1.358247] ath: Regpair used: 0x67
+[    1.372021] ath5k phy0: can't register ieee80211 hw
+[    1.372080] ath5k 0000:02:00.0: PCI INT A disabled
+[    1.372084] ath5k: probe of 0000:02:00.0 failed with error -2
 
--Juus
+That said, if I remove the ath5k module, and modprobe ath5k, it starts 
+working.
 
+[ 2976.411770] ath5k 0000:02:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+[ 2976.411783] ath5k 0000:02:00.0: setting latency timer to 64
+[ 2976.412767] ath5k 0000:02:00.0: registered as 'phy1'
+[ 2976.912422] ath: EEPROM regdomain: 0x67
+[ 2976.912424] ath: EEPROM indicates we should expect a direct regpair map
+[ 2976.912427] ath: Country alpha2 being used: 00
+[ 2976.912429] ath: Regpair used: 0x67
+[ 2977.079190] ath5k phy1: Atheros AR2425 chip found (MAC: 0xe2, PHY: 0x70)
+
+Is this a known issue?
+
+-- 
+Thomas Fjellstrom
+tfjellstrom@strangesoft.net
