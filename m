@@ -1,38 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:38275 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757870Ab0HJUVi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Aug 2010 16:21:38 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] compat: backport SDIO_CLASS_BT_AMP
-Date: Tue, 10 Aug 2010 22:21:26 +0200
-Message-Id: <1281471686-16882-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.perches.com ([173.55.12.10]:1213 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752093Ab0HVUCG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Aug 2010 16:02:06 -0400
+Subject: Re: [PATCH 2/4] wl12xx: change contact person for the include file
+From: Joe Perches <joe@perches.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: linux-wireless@vger.kernel.org,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <20100822194628.16660.25636.stgit@potku.valot.fi>
+References: <20100822194615.16660.21195.stgit@potku.valot.fi>
+	 <20100822194628.16660.25636.stgit@potku.valot.fi>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 22 Aug 2010 13:02:03 -0700
+Message-ID: <1282507323.1879.37.camel@Joe-Laptop>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is needed by drivers/bluetooth/btsdio.c
+On Sun, 2010-08-22 at 22:46 +0300, Kalle Valo wrote:
+> Luciano should be the contact person for the include/linux/spi/wl12xx.h file.
+> diff --git a/include/linux/spi/wl12xx.h b/include/linux/spi/wl12xx.h
+> index a223ecb..a20bccf 100644
+> --- a/include/linux/spi/wl12xx.h
+> +++ b/include/linux/spi/wl12xx.h
+> @@ -3,7 +3,7 @@
+> - * Contact: Kalle Valo <kalle.valo@nokia.com>
+> + * Contact: Luciano Coelho <luciano.coelho@nokia.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Perhaps it's better to add that to MAINTAINERS.
+
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
- include/linux/compat-2.6.37.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 433f353..dc43e8f 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6384,6 +6384,7 @@ W:	http://wireless.kernel.org
+ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+ S:	Maintained
+ F:	drivers/net/wireless/wl12xx/wl1271*
++F:	include/linux/spi/wl12xx.h
+ 
+ WL3501 WIRELESS PCMCIA CARD DRIVER
+ M:	Arnaldo Carvalho de Melo <acme@ghostprotocols.net>
 
-diff --git a/include/linux/compat-2.6.37.h b/include/linux/compat-2.6.37.h
-index a33c9a2..cf0279e 100644
---- a/include/linux/compat-2.6.37.h
-+++ b/include/linux/compat-2.6.37.h
-@@ -22,6 +22,8 @@
- #define br_port_exists(dev)	(dev->br_port)
- #endif
- 
-+#define SDIO_CLASS_BT_AMP	0x09	/* Type-A Bluetooth AMP interface */
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)) */
- 
- #endif /* LINUX_26_37_COMPAT_H */
--- 
-1.7.0.4
 
