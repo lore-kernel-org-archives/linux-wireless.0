@@ -1,44 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:49813 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752531Ab0H0LTg (ORCPT
+Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:42339 "EHLO
+	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752093Ab0HVTqY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 07:19:36 -0400
-Subject: Re: [PATCH 4/4] mac80211: allow changing port control protocol
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1282907610.4377.4.camel@jlt3.sipsolutions.net>
-References: <1282907259-30825-1-git-send-email-juuso.oikarinen@nokia.com>
-	 <1282907259-30825-5-git-send-email-juuso.oikarinen@nokia.com>
-	 <1282907610.4377.4.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 27 Aug 2010 14:18:51 +0300
-Message-ID: <1282907931.9258.229.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+	Sun, 22 Aug 2010 15:46:24 -0400
+Received: from saunalahti-vams (vs3-12.mail.saunalahti.fi [62.142.5.96])
+	by emh05-2.mail.saunalahti.fi (Postfix) with SMTP id C75D78C26B
+	for <linux-wireless@vger.kernel.org>; Sun, 22 Aug 2010 22:46:22 +0300 (EEST)
+Received: from potku.valot.fi (a85-156-250-252.elisa-laajakaista.fi [85.156.250.252])
+	by emh05.mail.saunalahti.fi (Postfix) with ESMTP id 6D1F327D88
+	for <linux-wireless@vger.kernel.org>; Sun, 22 Aug 2010 22:46:19 +0300 (EEST)
+Subject: [PATCH 1/4] wl1251: update my email address
+To: linux-wireless@vger.kernel.org
+From: Kalle Valo <kvalo@adurom.com>
+Date: Sun, 22 Aug 2010 22:46:15 +0300
+Message-ID: <20100822194615.16660.21195.stgit@potku.valot.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-08-27 at 13:13 +0200, ext Johannes Berg wrote:
-> On Fri, 2010-08-27 at 14:07 +0300, Juuso Oikarinen wrote:
-> 
-> > @@ -855,6 +855,8 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
-> >  	sdata->dev->netdev_ops = &ieee80211_dataif_ops;
-> >  	sdata->wdev.iftype = type;
-> >  
-> > +	sdata->control_port_protocol = cpu_to_be16(ETH_P_PAE);
-> > +
-> 
-> I believe we may also need to set control_port_no_encrypt to false here,
-> or we'll run into issues with interface type switching after it had been
-> true?
+I use now my adurom.com address.
 
-Sounds valid. I'll send v2 still.
+Signed-off-by: Kalle Valo <kvalo@adurom.com>
+---
+ MAINTAINERS                               |    2 +-
+ drivers/net/wireless/wl12xx/wl1251_main.c |    2 +-
+ drivers/net/wireless/wl12xx/wl1251_sdio.c |    2 +-
+ drivers/net/wireless/wl12xx/wl1251_spi.c  |    2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
 
--Juuso
-
-> johannes
-> 
-
+diff --git a/MAINTAINERS b/MAINTAINERS
+index b5b8baa..0ce4e53 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6369,7 +6369,7 @@ S:	Maintained
+ F:	drivers/input/misc/wistron_btns.c
+ 
+ WL1251 WIRELESS DRIVER
+-M:	Kalle Valo <kalle.valo@iki.fi>
++M:	Kalle Valo <kvalo@adurom.com>
+ L:	linux-wireless@vger.kernel.org
+ W:	http://wireless.kernel.org
+ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
+index c81e95b..c7cffba 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_main.c
++++ b/drivers/net/wireless/wl12xx/wl1251_main.c
+@@ -1437,5 +1437,5 @@ EXPORT_SYMBOL_GPL(wl1251_free_hw);
+ 
+ MODULE_DESCRIPTION("TI wl1251 Wireles LAN Driver Core");
+ MODULE_LICENSE("GPL");
+-MODULE_AUTHOR("Kalle Valo <kalle.valo@nokia.com>");
++MODULE_AUTHOR("Kalle Valo <kvalo@adurom.com>");
+ MODULE_FIRMWARE(WL1251_FW_NAME);
+diff --git a/drivers/net/wireless/wl12xx/wl1251_sdio.c b/drivers/net/wireless/wl12xx/wl1251_sdio.c
+index b901b61..c0b68b0 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_sdio.c
++++ b/drivers/net/wireless/wl12xx/wl1251_sdio.c
+@@ -339,4 +339,4 @@ module_init(wl1251_sdio_init);
+ module_exit(wl1251_sdio_exit);
+ 
+ MODULE_LICENSE("GPL");
+-MODULE_AUTHOR("Kalle Valo <kalle.valo@nokia.com>");
++MODULE_AUTHOR("Kalle Valo <kvalo@adurom.com>");
+diff --git a/drivers/net/wireless/wl12xx/wl1251_spi.c b/drivers/net/wireless/wl12xx/wl1251_spi.c
+index 27fdfaa..a6435fb 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_spi.c
++++ b/drivers/net/wireless/wl12xx/wl1251_spi.c
+@@ -344,5 +344,5 @@ module_init(wl1251_spi_init);
+ module_exit(wl1251_spi_exit);
+ 
+ MODULE_LICENSE("GPL");
+-MODULE_AUTHOR("Kalle Valo <kalle.valo@nokia.com>");
++MODULE_AUTHOR("Kalle Valo <kvalo@adurom.com>");
+ MODULE_ALIAS("spi:wl1251");
 
