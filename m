@@ -1,68 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:63312 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758123Ab0HFHHt (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:44215 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752203Ab0HVTrB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Aug 2010 03:07:49 -0400
+	Sun, 22 Aug 2010 15:47:01 -0400
+Received: by eyg5 with SMTP id 5so2942779eyg.19
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Aug 2010 12:47:00 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?G=C3=A1bor=20Stefanik?= <netrolller.3d@gmail.com>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] b43: N-PHY: add missing phyrxchain setting and fix warning in RX core function
+Date: Sun, 22 Aug 2010 21:47:32 +0200
+Message-Id: <1282506452-8159-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTi=Dqs_qg=BsoNBTjvJbG+ub+zMv8ctbrJSGPJJJ@mail.gmail.com>
-References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
-	<1279733634-21974-4-git-send-email-ohad@wizery.com>
-	<AANLkTimzA_JJ-byTDWznbL3YzeJ8LAP4M50onf2_3fBF@mail.gmail.com>
-	<AANLkTi=Oy8X1xMOwWL_cKBB1LWULT6=p+adUgB+AuSJS@mail.gmail.com>
-	<AANLkTi=BUX59heXAW2Uf4wZo2dSS19Je54dkQ5u2YGAW@mail.gmail.com>
-	<AANLkTimZQKj7H_GeE=+O9cwxEMTR+LhfFbt=AyXGzN3d@mail.gmail.com>
-	<AANLkTikfRja-h9mz7uyRXCZNZjKdU_yB8e58XQucUzrn@mail.gmail.com>
-	<AANLkTi=vhWV1RNyemtfppfjvLYAbzd3aRjFOVgLLpG3Z@mail.gmail.com>
-	<AANLkTin4m8gJR50zwMB2b0jRMHdNA6CQToKBTAhOL9wF@mail.gmail.com>
-	<AANLkTinu2S19r8fueM-jVkc35XL2G0Z16BddE92Ci9KB@mail.gmail.com>
-	<20100804114147.GB6852@n2100.arm.linux.org.uk>
-	<AANLkTi=Dqs_qg=BsoNBTjvJbG+ub+zMv8ctbrJSGPJJJ@mail.gmail.com>
-Date: Fri, 6 Aug 2010 09:07:47 +0200
-Message-ID: <AANLkTimrb5P9cVo30y_udoi4+vu3cM4YzfpDaYCfwGEA@mail.gmail.com>
-Subject: Re: [PATCH v2 03/20] mmc: support embedded data field in mmc_host
-From: Linus Walleij <linus.ml.walleij@gmail.com>
-To: Ohad Ben-Cohen <ohad@wizery.com>
-Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Vitaly Wool <vitalywool@gmail.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Tony Lindgren <tony@atomide.com>,
-	linux-wireless@vger.kernel.org,
-	Roger Quadros <roger.quadros@nokia.com>,
-	linux-mmc@vger.kernel.org, San Mehat <san@google.com>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	linux-omap@vger.kernel.org, akpm@linux-foundation.org,
-	linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/8/4 Ohad Ben-Cohen <ohad@wizery.com>:
-> On Wed, Aug 4, 2010 at 2:41 PM, Russell King - ARM Linux
->>
->> Why not arrange for a small piece of code to be built into the kernel
->> when this driver is selected as a module or built-in, which handles
->> the passing of platform data to the driver?
->
-> It's interesting.
->
-> The only drawback I can see is that it has an inherent limitation of
-> having only a single wl1271 device on board,
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+Gábor: please kindly, watch out for such a missing calls/sets. We may lose a
+lot of time looking for such a missing lines later.
+---
+ drivers/net/wireless/b43/phy_n.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-...which is exactly what the *_board_info scheme in the spi
-and i2c subsystems is designed to solve.
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index d116229..2466c0a 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -3092,6 +3092,8 @@ static void b43_nphy_set_rx_core_state(struct b43_wldev *dev, u8 mask)
+ 	struct b43_phy_n *nphy = phy->n;
+ 	u16 buf[16];
+ 
++	nphy->phyrxchain = mask;
++
+ 	if (0 /* FIXME clk */)
+ 		return;
+ 
+@@ -3103,7 +3105,7 @@ static void b43_nphy_set_rx_core_state(struct b43_wldev *dev, u8 mask)
+ 	b43_phy_maskset(dev, B43_NPHY_RFSEQCA, ~B43_NPHY_RFSEQCA_RXEN,
+ 			(mask & 0x3) << B43_NPHY_RFSEQCA_RXEN_SHIFT);
+ 
+-	if (mask & 0x3 != 0x3) {
++	if ((mask & 0x3) != 0x3) {
+ 		b43_phy_write(dev, B43_NPHY_HPANT_SWTHRES, 1);
+ 		if (dev->phy.rev >= 3) {
+ 			/* TODO */
+-- 
+1.7.1
 
-This is an established design pattern in the kernel with two
-precedents, what makes it so hard to implement this idea?
-There are plenty of examples all over the place.
-
-What mainly matters to me is that the stuff can be separated
-cleanly and in a nicely structured manner into board-xxx.c files
-in the mach-xxx dirs, which is possible also with the simpler
-approach so whatever...
-
-Yours,
-Linus Walleij
