@@ -1,26 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:56006 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754051Ab0HLTEG (ORCPT
+Received: from mgw-sa02.nokia.com ([147.243.1.48]:51770 "EHLO
+	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751861Ab0HWNWU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Aug 2010 15:04:06 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id D6B734195D
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Aug 2010 15:03:58 -0400 (EDT)
-Subject: Compat-wireless release for 2010-08-12 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20100812190404.9D83641133@repository3.orbit-lab.org>
-Date: Thu, 12 Aug 2010 15:04:04 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Mon, 23 Aug 2010 09:22:20 -0400
+Subject: Re: [PATCH 2/4] wl12xx: change contact person for the include file
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Joe Perches <joe@perches.com>
+Cc: Kalle Valo <kvalo@adurom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <1282507323.1879.37.camel@Joe-Laptop>
+References: <20100822194615.16660.21195.stgit@potku.valot.fi>
+	 <20100822194628.16660.25636.stgit@potku.valot.fi>
+	 <1282507323.1879.37.camel@Joe-Laptop>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 23 Aug 2010 16:21:57 +0300
+Message-ID: <1282569717.7198.1.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   38c112b..286bff9  history    -> origin/history
- + e71de56...ab5f7cf master     -> origin/master  (forced update)
-   3d30701..5af568c  stable     -> origin/stable
- * [new tag]         next-20100812 -> next-20100812
+On Sun, 2010-08-22 at 22:02 +0200, ext Joe Perches wrote:
+> On Sun, 2010-08-22 at 22:46 +0300, Kalle Valo wrote:
+> > Luciano should be the contact person for the include/linux/spi/wl12xx.h file.
+> > diff --git a/include/linux/spi/wl12xx.h b/include/linux/spi/wl12xx.h
+> > index a223ecb..a20bccf 100644
+> > --- a/include/linux/spi/wl12xx.h
+> > +++ b/include/linux/spi/wl12xx.h
+> > @@ -3,7 +3,7 @@
+> > - * Contact: Kalle Valo <kalle.valo@nokia.com>
+> > + * Contact: Luciano Coelho <luciano.coelho@nokia.com>
+> 
+> Perhaps it's better to add that to MAINTAINERS.
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
 
-compat-wireless code metrics
+Yes, I guess this should go to MAINTAINERS as well.
 
-    494644 - Total upstream lines of code being pulled
+Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
+
+-- 
+Cheers,
+Luca.
+
