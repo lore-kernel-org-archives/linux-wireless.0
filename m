@@ -1,56 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:41296 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755435Ab0HXV3V (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:57418 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753089Ab0HWOLY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Aug 2010 17:29:21 -0400
-Received: by bwz11 with SMTP id 11so97312bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Aug 2010 14:29:19 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: "linux-wireless" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] p54: better rssi->dbm conversion for longbow phys
-Date: Tue, 24 Aug 2010 23:29:05 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201008242329.06120.chunkeey@googlemail.com>
+	Mon, 23 Aug 2010 10:11:24 -0400
+Subject: Re: [PATCH 0/2] iw: add GeoClue support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linux-wireless@vger.kernel.org, geoclue@lists.freedesktop.org,
+	David.Quan@atheros.com, kevin@atheros.com
+In-Reply-To: <1282350556-16523-1-git-send-email-lrodriguez@atheros.com>
+References: <1282350556-16523-1-git-send-email-lrodriguez@atheros.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 23 Aug 2010 16:11:21 +0200
+Message-ID: <1282572681.3813.3.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch should fix the dodgy signal and noise value
-reports for most longbow (p54spi) users:
+On Fri, 2010-08-20 at 20:29 -0400, Luis R. Rodriguez wrote:
+> This series adds GeoClue support to iw.
 
-e.g.: (an older tcpdump extract)
-> 2.0 Mb/s 2437 MHz (0x00a0) -49dB signal -41dB noise 
-> 1.0 Mb/s 2437 MHz (0x00a0) 4dB signal -41dB noise
+Quite frankly, I don't see the point?
 
-The formula is taken from stlc45xx:
-http://gitorious.org/stlc45xx/mainline/blobs/master/stlc45xx.c#line1199
+What use is a command line tool that has to talk to a whole bunch of
+daemons etc.? I could see using say NM to connect it all, or maybe put
+it into geoclue directly, but a command line to trigger it all seems
+like a wrong approach?
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-diff --git a/drivers/net/wireless/p54/txrx.c b/drivers/net/wireless/p54/txrx.c
-index 1dc0dbf..1fe971c 100644
---- a/drivers/net/wireless/p54/txrx.c
-+++ b/drivers/net/wireless/p54/txrx.c
-@@ -275,15 +275,15 @@ static int p54_rssi_to_dbm(struct p54_common *priv, int rssi)
- {
- 	int band = priv->hw->conf.channel->band;
- 
--	if (priv->rxhw != 5)
-+	if (priv->rxhw != 5) {
- 		return ((rssi * priv->rssical_db[band].mul) / 64 +
- 			 priv->rssical_db[band].add) / 4;
--	else
-+	} else {
- 		/*
- 		 * TODO: find the correct formula
- 		 */
--		return ((rssi * priv->rssical_db[band].mul) / 64 +
--			 priv->rssical_db[band].add) / 4;
-+		return rssi / 2 - 110;
-+	}
- }
- 
- /*
+johannes
+
