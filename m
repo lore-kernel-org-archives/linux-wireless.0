@@ -1,79 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from madara.hpl.hp.com ([192.6.19.124]:52517 "EHLO madara.hpl.hp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753169Ab0H0V3F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 17:29:05 -0400
-Date: Fri, 27 Aug 2010 14:22:54 -0700
-From: Jean Tourrilhes <jt@hpl.hp.com>
-To: Kees Cook <kees.cook@canonical.com>
-Cc: linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH] wireless: fix 64K kernel heap content leak via ioctl
-Message-ID: <20100827212254.GB32275@bougret.hpl.hp.com>
-Reply-To: jt@hpl.hp.com
-References: <20100827210240.GC4703@outflux.net>
+Received: from bombadil.infradead.org ([18.85.46.34]:38010 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752509Ab0HWTcA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Aug 2010 15:32:00 -0400
+Date: Mon, 23 Aug 2010 15:32:00 -0400
+From: Christoph Hellwig <hch@infradead.org>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: iwlagn fails to associate on 2.6.36-rc2
+Message-ID: <20100823193200.GA22447@infradead.org>
+References: <20100823110247.GA3198@infradead.org>
+ <1282572681.20674.3.camel@wwguy-ubuntu>
+ <20100823141432.GA29902@infradead.org>
+ <1282574533.12500.1.camel@wwguy-huron>
+ <20100823163259.GA15511@infradead.org>
+ <1282582845.13288.4.camel@wwguy-ubuntu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100827210240.GC4703@outflux.net>
+In-Reply-To: <1282582845.13288.4.camel@wwguy-ubuntu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 27, 2010 at 02:02:41PM -0700, Kees Cook wrote:
-> This problem was originally tracked down by Brad Spengler.
+On Mon, Aug 23, 2010 at 10:00:45AM -0700, Guy, Wey-Yi wrote:
+> Hi Christoph,
 > 
-> When calling wireless ioctls, if a driver does not correctly
-> validate/shrink iwp->length, the resulting copy_to_user can leak up to
-> 64K of kernel heap contents.
+> there is a important RTS/CTS patch
+> 94597ab23ea10b3bdcba534be00a9f7b35791c07
 > 
-> It seems that this is triggerable[1] in 2.6.32 at least on ath5k, but
-> I was not able to track down how. The twisty maze of ioctl handlers
-> stumped me. :)
+> http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-2.6.git;a=commit;h=94597ab23ea10b3bdcba534be00a9f7b35791c07
 
-	You can always ask.
+That is already included in the kernel I'm testing.
 
-> Other drivers I checked did not appear to have any problems,
-> but the potential remains. I'm not sure if this patch is the right approach;
-> it was fixed differently[2] in grsecurity.
-
-	Did you tried your patch for real ? With large scan request ?
-	I ask because at first glance, it looks incorrect, asI believe
-it kills large request. But someone would need to test, for sure.
-
-> [1] http://forums.grsecurity.net/viewtopic.php?f=3&t=2290&start=0
-> [2] http://grsecurity.net/~spender/wireless-infoleak-fix2.patch
-
-	I believe this patch would make the situation worse.
-
-	Would you mind validating the following patch ? I've just
-verified that it compiles and I believe it does what you are asking in
-a much more predictable way.
-	Regards,
-
-	Jean
-
-Signed-off-by: Jean Tourrilhes <jt@hpl.hp.com>
-
-diff -u -p wext.j2.c wext.c
---- wext.j2.c   2010-08-27 14:17:26.000000000 -0700
-+++ wext.c      2010-08-27 14:19:33.000000000 -0700
-@@ -800,9 +800,12 @@ static int ioctl_standard_iw_point(struc
-                        goto out;
-                }
- 
--               if (copy_to_user(iwp->pointer, extra,
--                                iwp->length *
--                                descr->token_size)) {
-+               /* Verify how much we should return. Some driver
-+                * may abuse iwp->length... */
-+               if((iwp->length * descr->token_size) < extra_size)
-+                       extra_size = iwp->length * descr->token_size;
-+
-+               if (copy_to_user(iwp->pointer, extra, extra_size)) {
-                        err = -EFAULT;
-                        goto out;
-                }
