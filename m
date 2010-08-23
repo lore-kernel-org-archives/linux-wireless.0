@@ -1,44 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:51382 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751245Ab0HBUwK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Aug 2010 16:52:10 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 02 Aug 2010 13:52:10 -0700
-Date: Mon, 2 Aug 2010 13:52:05 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Jan Friedrich <jft@dev2day.de>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [Patch] ath9k: fix erased ieee80211_rx_status.mactime
-Message-ID: <20100802205205.GG8920@tux>
-References: <4C57278E.1030601@dev2day.de>
- <20100802202137.GC8920@tux>
- <4C572C18.6070003@dev2day.de>
- <20100802203843.GD8920@tux>
- <4C572F31.3050809@dev2day.de>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:34145 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753988Ab0HWR5U (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Aug 2010 13:57:20 -0400
+Received: by fxm13 with SMTP id 13so3164360fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Aug 2010 10:57:19 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 2/8] rt2x00: Reduce indenting
+Date: Mon, 23 Aug 2010 19:54:02 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201008231953.40629.IvDoorn@gmail.com>
+In-Reply-To: <201008231953.40629.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4C572F31.3050809@dev2day.de>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201008231954.03752.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 02, 2010 at 01:48:49PM -0700, Jan Friedrich wrote:
-> > Think? Does the patch actually fix something or do you think it fixes
-> > something? Next time please include all these details on your patch
-> > commit log mesage so its easy to understand the reasoning behind
-> > the patch.
-> 
-> It fixes the problem I described. Now the mactime is set correctly and
-> the IBSS merge is done only once and by the correct station. I noticed
-> no negative side effect and tested it with 10+ stations in IBSS mode.
-> 
-> Sorry for the inconvenience. Next time I will provide more information.
+Cosmetic change, reduce indenting.
 
-no problem, can you resubmit but add all these details to the commit log?
-ALso, is this a stable kernel fix, that is, does this fix need to be
-propagated to the stable kernels, 2.6.35, 2.6.34, 2.6.33, 2.6.32?
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00usb.c |   27 ++++++++++++++-------------
+ 1 files changed, 14 insertions(+), 13 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index 52ed3f4..1d2eb46 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -232,21 +232,22 @@ static inline void rt2x00usb_kick_tx_entry(struct queue_entry *entry)
+ 	struct queue_entry_priv_usb *entry_priv = entry->priv_data;
+ 	u32 length;
+ 
+-	if (test_and_clear_bit(ENTRY_DATA_PENDING, &entry->flags)) {
+-		/*
+-		 * USB devices cannot blindly pass the skb->len as the
+-		 * length of the data to usb_fill_bulk_urb. Pass the skb
+-		 * to the driver to determine what the length should be.
+-		 */
+-		length = rt2x00dev->ops->lib->get_tx_data_len(entry);
++	if (!test_and_clear_bit(ENTRY_DATA_PENDING, &entry->flags))
++		return;
++
++	/*
++	 * USB devices cannot blindly pass the skb->len as the
++	 * length of the data to usb_fill_bulk_urb. Pass the skb
++	 * to the driver to determine what the length should be.
++	 */
++	length = rt2x00dev->ops->lib->get_tx_data_len(entry);
+ 
+-		usb_fill_bulk_urb(entry_priv->urb, usb_dev,
+-				  usb_sndbulkpipe(usb_dev, entry->queue->usb_endpoint),
+-				  entry->skb->data, length,
+-				  rt2x00usb_interrupt_txdone, entry);
++	usb_fill_bulk_urb(entry_priv->urb, usb_dev,
++			  usb_sndbulkpipe(usb_dev, entry->queue->usb_endpoint),
++			  entry->skb->data, length,
++			  rt2x00usb_interrupt_txdone, entry);
+ 
+-		usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
+-	}
++	usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
+ }
+ 
+ void rt2x00usb_kick_tx_queue(struct data_queue *queue)
+-- 
+1.7.2.1
+
