@@ -1,42 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:39150 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756059Ab0HXViW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Aug 2010 17:38:22 -0400
-Received: by qyk33 with SMTP id 33so6921273qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Aug 2010 14:38:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1282678054-10894-1-git-send-email-linville@tuxdriver.com>
-References: <1282678054-10894-1-git-send-email-linville@tuxdriver.com>
-Date: Tue, 24 Aug 2010 17:38:21 -0400
-Message-ID: <AANLkTi=g2p8qOMg0Pq=N_tb6t3_6qWg5+WY9yySqPcoA@mail.gmail.com>
-Subject: Re: [PATCH 2.6.36] ath5k: check return value of ieee80211_get_tx_rate
-From: Bob Copeland <me@bobcopeland.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, stable@kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga01.intel.com ([192.55.52.88]:24115 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753971Ab0HWOxf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Aug 2010 10:53:35 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 24/26] iwlagn: update bt status upon scan complete
+Date: Mon, 23 Aug 2010 07:57:15 -0700
+Message-Id: <1282575437-23270-25-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1282575437-23270-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1282575437-23270-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 24, 2010 at 3:27 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> This avoids a NULL pointer dereference as reported here:
->
->        https://bugzilla.redhat.com/show_bug.cgi?id=625889
->
-> When the WARN condition is hit in ieee80211_get_tx_rate, it will return
-> NULL.  So, we need to check the return value and avoid dereferencing it
-> in that case.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Yeah, it's ok with me, but get_tx_rate returning NULL always bugged me.
-We could also make mac80211 return rate_lowest_index() here, perhaps?
+Update bt status upon receive scan complete notification
 
-> Of course, the better question is why are we hitting that condition at
-> all...?
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-scan.c     |   20 ++++++++++++++++++++
+ 2 files changed, 21 insertions(+), 1 deletions(-)
 
-Some rate controller decided to stuff -1 in the rate set... no idea
-why.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index 8ed2412..9b53583 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -3013,7 +3013,7 @@ struct iwl_scanresults_notification {
+ struct iwl_scancomplete_notification {
+ 	u8 scanned_channels;
+ 	u8 status;
+-	u8 reserved;
++	u8 bt_status;	/* BT On/Off status */
+ 	u8 last_channel;
+ 	__le32 tsf_low;
+ 	__le32 tsf_high;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 8d7fa59..33aa7a5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -236,6 +236,26 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
+ 
+ 	clear_bit(STATUS_SCANNING, &priv->status);
+ 
++	if (priv->iw_mode != NL80211_IFTYPE_ADHOC &&
++	    priv->cfg->advanced_bt_coexist && priv->bt_status !=
++	    scan_notif->bt_status) {
++		if (scan_notif->bt_status) {
++			/* BT on */
++			if (!priv->bt_ch_announce)
++				priv->bt_traffic_load =
++					IWL_BT_COEX_TRAFFIC_LOAD_HIGH;
++			/*
++			 * otherwise, no traffic load information provided
++			 * no changes made
++			 */
++		} else {
++			/* BT off */
++			priv->bt_traffic_load =
++				IWL_BT_COEX_TRAFFIC_LOAD_NONE;
++		}
++		priv->bt_status = scan_notif->bt_status;
++		queue_work(priv->workqueue, &priv->bt_traffic_change_work);
++	}
+ 	queue_work(priv->workqueue, &priv->scan_completed);
+ }
+ 
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.7.0.4
+
