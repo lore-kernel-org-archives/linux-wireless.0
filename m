@@ -1,196 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:59602 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761842Ab0HFSt6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Aug 2010 14:49:58 -0400
-Received: by mail-ew0-f46.google.com with SMTP id 23so2918051ewy.19
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Aug 2010 11:49:58 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 4/7] rt2x00: Request TXWI pointer from driver
-Date: Fri, 6 Aug 2010 20:47:20 +0200
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-References: <201008062045.05288.IvDoorn@gmail.com> <201008062046.19946.IvDoorn@gmail.com> <201008062046.54483.IvDoorn@gmail.com>
-In-Reply-To: <201008062046.54483.IvDoorn@gmail.com>
+Received: from [12.19.149.2] ([12.19.149.2]:28258 "EHLO mail.atheros.com"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1754143Ab0HWWWi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Aug 2010 18:22:38 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 23 Aug 2010 15:22:34 -0700
+Date: Mon, 23 Aug 2010 15:22:36 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Bastien Nocera <hadess@hadess.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Kevin Hayes <kevin@Atheros.com>,
+	David Quan <David.Quan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"geoclue@lists.freedesktop.org" <geoclue@lists.freedesktop.org>
+Subject: Re: [PATCH 0/2] iw: add GeoClue support
+Message-ID: <20100823222236.GE2206@tux>
+References: <1282350556-16523-1-git-send-email-lrodriguez@atheros.com>
+ <1282572681.3813.3.camel@jlt3.sipsolutions.net>
+ <AANLkTimrtWQKycuAcZ3SjDaOqJ6Z-pPNauRfh+2aZ=ge@mail.gmail.com>
+ <1282579507.3405.130.camel@localhost.localdomain>
+ <20100823174620.GA12375@tux>
+ <1282597556.3405.135.camel@localhost.localdomain>
+ <20100823221119.GC2206@tux>
+ <1282601707.3405.140.camel@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201008062047.21710.IvDoorn@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1282601707.3405.140.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The only reason why the write_tx_data callback function
-is needed inside the driver, is because the location of
-the TXWI descriptor is different on PCI and USB hardware.
-Except for the beacon, where the TXWI is always at the
-start of the SKB buffer.
+On Mon, Aug 23, 2010 at 03:15:07PM -0700, Bastien Nocera wrote:
+> On Mon, 2010-08-23 at 15:11 -0700, Luis R. Rodriguez wrote:
+> > On Mon, Aug 23, 2010 at 02:05:56PM -0700, Bastien Nocera wrote:
+> <snip>
+> > > No, I'm talking about what's exported by the providers. I don't really
+> > > care if they talk to other parts of the system using D-Bus though. I'm
+> > > talking about link 2) here.
+> > > 
+> > > [App] <-1-> [Geoclue master] <-2-> [Gypsy provider] <-3-> [Gypsy daemon]
+> > 
+> > Sorry I do not follow yet. Is the idea that you would prefer if
+> > client applications would never talk to providers directly and instead
+> > always used the master provider?
+> 
+> Exactly, and it's mentioned in the bugzilla
 
-In both cases the drivers write_tx_data function only
-wrap around the function rt2800_write_txwi. Move write_tx_data
-completely into the rt2800lib library, and add a callback
-function to obtain the TXWI pointer.
+Thanks for the heads up, I haven't been grep'ing through the bugzilla.
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    8 +++++---
- drivers/net/wireless/rt2x00/rt2800lib.h |   11 ++++++++++-
- drivers/net/wireless/rt2x00/rt2800pci.c |   11 ++++-------
- drivers/net/wireless/rt2x00/rt2800usb.c |   14 +++++++-------
- 4 files changed, 26 insertions(+), 18 deletions(-)
+> and was discussed on the mailing-list as well.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 833b157..6f1eb58 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -427,8 +427,10 @@ int rt2800_load_firmware(struct rt2x00_dev *rt2x00dev,
- }
- EXPORT_SYMBOL_GPL(rt2800_load_firmware);
- 
--void rt2800_write_txwi(__le32 *txwi, struct txentry_desc *txdesc)
-+void rt2800_write_tx_data(struct queue_entry *entry,
-+			  struct txentry_desc *txdesc)
- {
-+	__le32 *txwi = rt2800_drv_get_txwi(entry);
- 	u32 word;
- 
- 	/*
-@@ -479,7 +481,7 @@ void rt2800_write_txwi(__le32 *txwi, struct txentry_desc *txdesc)
- 	_rt2x00_desc_write(txwi, 2, 0 /* skbdesc->iv[0] */);
- 	_rt2x00_desc_write(txwi, 3, 0 /* skbdesc->iv[1] */);
- }
--EXPORT_SYMBOL_GPL(rt2800_write_txwi);
-+EXPORT_SYMBOL_GPL(rt2800_write_tx_data);
- 
- static int rt2800_agc_to_rssi(struct rt2x00_dev *rt2x00dev, int rxwi_w2)
- {
-@@ -601,7 +603,7 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
- 	/*
- 	 * Add the TXWI for the beacon to the skb.
- 	 */
--	rt2800_write_txwi((__le32 *)entry->skb->data, txdesc);
-+	rt2800_write_tx_data(entry, txdesc);
- 
- 	/*
- 	 * Dump beacon to userspace through debugfs.
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/rt2x00/rt2800lib.h
-index 091641e..8f97518 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.h
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.h
-@@ -44,6 +44,7 @@ struct rt2800_ops {
- 	int (*drv_write_firmware)(struct rt2x00_dev *rt2x00dev,
- 				  const u8 *data, const size_t len);
- 	int (*drv_init_registers)(struct rt2x00_dev *rt2x00dev);
-+	__le32 *(*drv_get_txwi)(struct queue_entry *entry);
- };
- 
- static inline void rt2800_register_read(struct rt2x00_dev *rt2x00dev,
-@@ -126,6 +127,13 @@ static inline int rt2800_drv_init_registers(struct rt2x00_dev *rt2x00dev)
- 	return rt2800ops->drv_init_registers(rt2x00dev);
- }
- 
-+static inline __le32 *rt2800_drv_get_txwi(struct queue_entry *entry)
-+{
-+	const struct rt2800_ops *rt2800ops = entry->queue->rt2x00dev->ops->drv;
-+
-+	return rt2800ops->drv_get_txwi(entry);
-+}
-+
- void rt2800_mcu_request(struct rt2x00_dev *rt2x00dev,
- 			const u8 command, const u8 token,
- 			const u8 arg0, const u8 arg1);
-@@ -135,7 +143,8 @@ int rt2800_check_firmware(struct rt2x00_dev *rt2x00dev,
- int rt2800_load_firmware(struct rt2x00_dev *rt2x00dev,
- 			 const u8 *data, const size_t len);
- 
--void rt2800_write_txwi(__le32 *txwi, struct txentry_desc *txdesc);
-+void rt2800_write_tx_data(struct queue_entry *entry,
-+			  struct txentry_desc *txdesc);
- void rt2800_process_rxwi(struct queue_entry *entry, struct rxdone_entry_desc *txdesc);
- 
- void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc);
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 39b3846..f415f6d 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -566,15 +566,11 @@ static int rt2800pci_set_device_state(struct rt2x00_dev *rt2x00dev,
- /*
-  * TX descriptor initialization
-  */
--static void rt2800pci_write_tx_data(struct queue_entry* entry,
--				    struct txentry_desc *txdesc)
-+static __le32 *rt2800pci_get_txwi(struct queue_entry *entry)
- {
--	__le32 *txwi = (__le32 *) entry->skb->data;
--
--	rt2800_write_txwi(txwi, txdesc);
-+	return (__le32 *) entry->skb->data;
- }
- 
--
- static void rt2800pci_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 				    struct sk_buff *skb,
- 				    struct txentry_desc *txdesc)
-@@ -1011,6 +1007,7 @@ static const struct rt2800_ops rt2800pci_rt2800_ops = {
- 	.regbusy_read		= rt2x00pci_regbusy_read,
- 	.drv_write_firmware	= rt2800pci_write_firmware,
- 	.drv_init_registers	= rt2800pci_init_registers,
-+	.drv_get_txwi		= rt2800pci_get_txwi,
- };
- 
- static const struct rt2x00lib_ops rt2800pci_rt2x00_ops = {
-@@ -1030,7 +1027,7 @@ static const struct rt2x00lib_ops rt2800pci_rt2x00_ops = {
- 	.reset_tuner		= rt2800_reset_tuner,
- 	.link_tuner		= rt2800_link_tuner,
- 	.write_tx_desc		= rt2800pci_write_tx_desc,
--	.write_tx_data		= rt2800pci_write_tx_data,
-+	.write_tx_data		= rt2800_write_tx_data,
- 	.write_beacon		= rt2800_write_beacon,
- 	.kick_tx_queue		= rt2800pci_kick_tx_queue,
- 	.kill_tx_queue		= rt2800pci_kill_tx_queue,
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 5a2dfe8..9084b9a 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -320,15 +320,14 @@ static int rt2800usb_set_device_state(struct rt2x00_dev *rt2x00dev,
- /*
-  * TX descriptor initialization
-  */
--static void rt2800usb_write_tx_data(struct queue_entry* entry,
--				    struct txentry_desc *txdesc)
-+static __le32 *rt2800usb_get_txwi(struct queue_entry *entry)
- {
--	__le32 *txwi = (__le32 *) (entry->skb->data + TXINFO_DESC_SIZE);
--
--	rt2800_write_txwi(txwi, txdesc);
-+	if (entry->queue->qid == QID_BEACON)
-+		return (__le32 *) (entry->skb->data);
-+	else
-+		return (__le32 *) (entry->skb->data + TXINFO_DESC_SIZE);
- }
- 
--
- static void rt2800usb_write_tx_desc(struct rt2x00_dev *rt2x00dev,
- 				    struct sk_buff *skb,
- 				    struct txentry_desc *txdesc)
-@@ -549,6 +548,7 @@ static const struct rt2800_ops rt2800usb_rt2800_ops = {
- 	.regbusy_read		= rt2x00usb_regbusy_read,
- 	.drv_write_firmware	= rt2800usb_write_firmware,
- 	.drv_init_registers	= rt2800usb_init_registers,
-+	.drv_get_txwi		= rt2800usb_get_txwi,
- };
- 
- static const struct rt2x00lib_ops rt2800usb_rt2x00_ops = {
-@@ -566,7 +566,7 @@ static const struct rt2x00lib_ops rt2800usb_rt2x00_ops = {
- 	.link_tuner		= rt2800_link_tuner,
- 	.watchdog		= rt2x00usb_watchdog,
- 	.write_tx_desc		= rt2800usb_write_tx_desc,
--	.write_tx_data		= rt2800usb_write_tx_data,
-+	.write_tx_data		= rt2800_write_tx_data,
- 	.write_beacon		= rt2800_write_beacon,
- 	.get_tx_data_len	= rt2800usb_get_tx_data_len,
- 	.kick_tx_queue		= rt2x00usb_kick_tx_queue,
--- 
-1.7.2
+And am new there :)
 
+This makes sense -- are there plans on removing all these exported
+library routines so that the only exposed thing is the master
+provider calls?
+
+Based on your comments it seems changing the iw patch to just
+use the master provider would go more in line with current
+development focus.
+
+  Luis
