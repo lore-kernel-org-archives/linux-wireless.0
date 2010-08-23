@@ -1,85 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44748 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751688Ab0HTNZJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Aug 2010 09:25:09 -0400
-Date: Fri, 20 Aug 2010 15:23:47 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH w-t] iwlwifi: fix canceling monitor_recover timer
-Message-ID: <20100820132346.GA4725@redhat.com>
+Received: from bombadil.infradead.org ([18.85.46.34]:55531 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751861Ab0HWOOc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Aug 2010 10:14:32 -0400
+Date: Mon, 23 Aug 2010 10:14:32 -0400
+From: Christoph Hellwig <hch@infradead.org>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: iwlagn fails to associate on 2.6.36-rc2
+Message-ID: <20100823141432.GA29902@infradead.org>
+References: <20100823110247.GA3198@infradead.org>
+ <1282572681.20674.3.camel@wwguy-ubuntu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1282572681.20674.3.camel@wwguy-ubuntu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To make del_timer_sync() works we have to assure that timer function
-does not rearm the timer. To achieve that we cancel timer with
-STATUS_EXIT_PENDING bit set in __iwl{3945,}_down function.
+On Mon, Aug 23, 2010 at 07:11:21AM -0700, Guy, Wey-Yi wrote:
+> it is kind of strange, the connection can stay if you have background
+> ping going?
 
-Patch also fix priv->txq memory usage after free for iwl3945, because
-it move timer cancellation before iwl3945_hw_txq_ctx_free(priv) is called.
+Yes (that's on a kernel up to 2.6.35). Otherwise it drops a lot, up
+to ca 2.6.32 it kept working.  See the linux-wireless archives for my
+report from back then.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    7 +++++--
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    7 +++++--
- 2 files changed, 10 insertions(+), 4 deletions(-)
+> could you give more description on your problem, band/channel/...
+> you also can turn on the debug flag debug=0x43fff to capture the current
+> status of iwlwifi. it do require you compile kernel with full debugging
+> support.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 3ced9ea..26bc048 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2764,6 +2764,11 @@ static void __iwl_down(struct iwl_priv *priv)
- 	if (!exit_pending)
- 		set_bit(STATUS_EXIT_PENDING, &priv->status);
- 
-+	/* Stop TX queues watchdog. We need to have STATUS_EXIT_PENDING bit set
-+	 * to prevent rearm timer */
-+	if (priv->cfg->ops->lib->recover_from_tx_stall)
-+		del_timer_sync(&priv->monitor_recover);
-+
- 	iwl_clear_ucode_stations(priv);
- 	iwl_dealloc_bcast_station(priv);
- 	iwl_clear_driver_stations(priv);
-@@ -3870,8 +3875,6 @@ static void iwl_cancel_deferred_work(struct iwl_priv *priv)
- 	cancel_work_sync(&priv->beacon_update);
- 	del_timer_sync(&priv->statistics_periodic);
- 	del_timer_sync(&priv->ucode_trace);
--	if (priv->cfg->ops->lib->recover_from_tx_stall)
--		del_timer_sync(&priv->monitor_recover);
- }
- 
- static void iwl_init_hw_rates(struct iwl_priv *priv,
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 94d7e6e..53e6cbb 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -2571,6 +2571,11 @@ static void __iwl3945_down(struct iwl_priv *priv)
- 	if (!exit_pending)
- 		set_bit(STATUS_EXIT_PENDING, &priv->status);
- 
-+	/* Stop TX queues watchdog. We need to have STATUS_EXIT_PENDING bit set
-+	 * to prevent rearm timer */
-+	if (priv->cfg->ops->lib->recover_from_tx_stall)
-+		del_timer_sync(&priv->monitor_recover);
-+
- 	/* Station information will now be cleared in device */
- 	iwl_clear_ucode_stations(priv);
- 	iwl_dealloc_bcast_station(priv);
-@@ -3811,8 +3816,6 @@ static void iwl3945_cancel_deferred_work(struct iwl_priv *priv)
- 	cancel_delayed_work(&priv->alive_start);
- 	cancel_work_sync(&priv->start_internal_scan);
- 	cancel_work_sync(&priv->beacon_update);
--	if (priv->cfg->ops->lib->recover_from_tx_stall)
--		del_timer_sync(&priv->monitor_recover);
- }
- 
- static struct attribute *iwl3945_sysfs_entries[] = {
--- 
-1.7.1
-
+I don't know what you mean with full kernel debugging.  iwlagn
+debugging, mac80211 debugging?  Just tell me the options and I'll run
+with it.
