@@ -1,197 +1,365 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:50053 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750996Ab0HVUOS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Aug 2010 16:14:18 -0400
-Received: by qwh6 with SMTP id 6so4580954qwh.19
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Aug 2010 13:14:17 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTi=ELhn1sFmpYn5a1-GcWqVBAeRGC6Kc7OBDLmZw@mail.gmail.com>
-References: <1282506589-8220-1-git-send-email-zajec5@gmail.com>
-	<1282506589-8220-2-git-send-email-zajec5@gmail.com>
-	<AANLkTi=dXNY+Hf8--Yp4VjQBOMwDCFuQqNSi_OAsq=2X@mail.gmail.com>
-	<AANLkTimeKMR8MfoNKyr6i-JxA8bdqwMKriUbBOagw-z5@mail.gmail.com>
-	<AANLkTi=ELhn1sFmpYn5a1-GcWqVBAeRGC6Kc7OBDLmZw@mail.gmail.com>
-Date: Sun, 22 Aug 2010 22:14:17 +0200
-Message-ID: <AANLkTikipx9a2K7A96FF=jwypJr8X0YXFh9LUBOQRjLr@mail.gmail.com>
-Subject: Re: [PATCH 2/2] b43: N-PHY: add sub calls of band width setting
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Received: from mga01.intel.com ([192.55.52.88]:27344 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753908Ab0HWOx2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Aug 2010 10:53:28 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 04/26] iwlagn: implement advance BT config command
+Date: Mon, 23 Aug 2010 07:56:55 -0700
+Message-Id: <1282575437-23270-5-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1282575437-23270-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1282575437-23270-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-VyBkbml1IDIyIHNpZXJwbmlhIDIwMTAgMjI6MDQgdcW8eXRrb3duaWsgR8OhYm9yIFN0ZWZhbmlr
-CjxuZXRyb2xsbGVyLjNkQGdtYWlsLmNvbT4gbmFwaXNhxYI6Cj4gMjAxMC84LzIyIFJhZmHFgiBN
-acWCZWNraSA8emFqZWM1QGdtYWlsLmNvbT46Cj4+IFcgZG5pdSAyMiBzaWVycG5pYSAyMDEwIDIx
-OjUyIHXFvHl0a293bmlrIEfDoWJvciBTdGVmYW5pawo+PiA8bmV0cm9sbGxlci4zZEBnbWFpbC5j
-b20+IG5hcGlzYcWCOgo+Pj4gMjAxMC84LzIyIFJhZmHFgiBNacWCZWNraSA8emFqZWM1QGdtYWls
-LmNvbT46Cj4+Pj4gU2lnbmVkLW9mZi1ieTogUmFmYcWCIE1pxYJlY2tpIDx6YWplYzVAZ21haWwu
-Y29tPgo+Pj4+IC0tLQo+Pj4+IMKgZHJpdmVycy9uZXQvd2lyZWxlc3MvYjQzL2I0My5oIMKgIMKg
-IMKgIMKgfCDCoCDCoDEgKwo+Pj4+IMKgZHJpdmVycy9uZXQvd2lyZWxlc3MvYjQzL3BoeV9jb21t
-b24uYyB8IMKgMTUwICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrLQo+Pj4+IMKgZHJp
-dmVycy9uZXQvd2lyZWxlc3MvYjQzL3BoeV9jb21tb24uaCB8IMKgIMKgNyArKwo+Pj4+IMKgMyBm
-aWxlcyBjaGFuZ2VkLCAxNTcgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbnMoLSkKPj4+Pgo+Pj4+
-IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9iNDMvYjQzLmggYi9kcml2ZXJzL25l
-dC93aXJlbGVzcy9iNDMvYjQzLmgKPj4+PiBpbmRleCA4Njc0YTk5Li43MzM3NmZmIDEwMDY0NAo+
-Pj4+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2I0My9iNDMuaAo+Pj4+ICsrKyBiL2RyaXZl
-cnMvbmV0L3dpcmVsZXNzL2I0My9iNDMuaAo+Pj4+IEBAIC01Nyw2ICs1Nyw3IEBACj4+Pj4gwqAj
-ZGVmaW5lIEI0M19NTUlPX1RTRl9DRlBfUkVQIMKgIMKgIMKgIMKgIMKgIDB4MTg4Cj4+Pj4gwqAj
-ZGVmaW5lIEI0M19NTUlPX1RTRl9DRlBfU1RBUlQgwqAgwqAgwqAgwqAgMHgxOEMKPj4+PiDCoCNk
-ZWZpbmUgQjQzX01NSU9fVFNGX0NGUF9NQVhEVVIgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAweDE5
-MAo+Pj4+ICsjZGVmaW5lIEI0M19NTUlPX0NMS0NUTCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoDB4MUUwIMKgIC8qIGNsb2NrIGNvbnRyb2wgc3RhdHVzICovCj4+Pj4KPj4+PiDC
-oC8qIDMyLWJpdCBETUEgKi8KPj4+PiDCoCNkZWZpbmUgQjQzX01NSU9fRE1BMzJfQkFTRTAgwqAg
-wqAgwqAgwqAgwqAgMHgyMDAKPj4+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-YjQzL3BoeV9jb21tb24uYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2I0My9waHlfY29tbW9uLmMK
-Pj4+PiBpbmRleCBiMDZlM2YwLi4xMGI5ZTZmIDEwMDY0NAo+Pj4+IC0tLSBhL2RyaXZlcnMvbmV0
-L3dpcmVsZXNzL2I0My9waHlfY29tbW9uLmMKPj4+PiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVz
-cy9iNDMvcGh5X2NvbW1vbi5jCj4+Pj4gQEAgLTQ2NywxMCArNDY3LDE1OCBAQCBzdHJ1Y3QgYjQz
-X2MzMiBiNDNfY29yZGljKGludCB0aGV0YSkKPj4+PiDCoCDCoCDCoCDCoHJldHVybiByZXQ7Cj4+
-Pj4gwqB9Cj4+Pj4KPj4+PiArLyogaHR0cDovL2JjbS12NC5zaXBzb2x1dGlvbnMubmV0LzgwMi4x
-MS9OY0Nsa0N0bENjICovCj4+Pj4gK3N0YXRpYyBib29sIGI0M19ub19jaGVja19jbG9ja19jb250
-cm9sX2NoaXBfY29tbW9uKHN0cnVjdCBiNDNfd2xkZXYgKmRldiwKPj4+PiArIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHUzMiBtb2RlKQo+Pj4+ICt7Cj4+Pj4gKyDCoCDCoCDC
-oCAvKiBUT0RPOiB0aGlzIGlzIHRlbXBvcmFyeSBoYWNrICovCj4+Pj4gKyDCoCDCoCDCoCByZXR1
-cm4gKG1vZGUgPT0gMCk7Cj4+Pj4gK30KPj4+PiArCj4+Pj4gKy8qIGh0dHA6Ly9iY20tdjQuc2lw
-c29sdXRpb25zLm5ldC84MDIuMTEvQ2xrQ3RsQ2MgKi8KPj4+PiArc3RhdGljIGJvb2wgYjQzX2Ns
-b2NrX2NvbnRyb2xfY2hpcF9jb21tb24oc3RydWN0IGI0M193bGRldiAqZGV2LCB1MzIgbW9kZSkK
-Pj4+PiArewo+Pj4+ICsgwqAgwqAgwqAgc3RydWN0IHNzYl9idXMgKmJ1cyA9IGRldi0+ZGV2LT5i
-dXM7Cj4+Pj4gKyDCoCDCoCDCoCB1MTYgY2hpcF9pZCA9IGJ1cy0+Y2hpcF9pZDsKPj4+PiArIMKg
-IMKgIMKgIHUxNiBjaGlwX3JldiA9IGJ1cy0+Y2hpcF9yZXY7Cj4+Pj4gKyDCoCDCoCDCoCAvKiBU
-T0RPOiBzcGVjcyBkaXN0aW5ndWlzaCBQQ0kgYW5kIFBDSWUgKi8KPj4+PiArIMKgIMKgIMKgIGJv
-b2wgcGNpID0gKGJ1cy0+YnVzdHlwZSA9PSBTU0JfQlVTVFlQRV9QQ0kpOwo+Pj4+ICsKPj4+PiAr
-IMKgIMKgIMKgIGlmIChkZXYtPmRldi0+aWQucmV2aXNpb24gPCA2KQo+Pj4+ICsgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgcmV0dXJuIGZhbHNlOwo+Pj4+ICsgwqAgwqAgwqAgaWYgKHBjaSAmJiAoKGNo
-aXBfaWQgPT0gMHg0MzExICYmIGNoaXBfcmV2IDwgMikgfHwKPj4+PiArIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIChwY2kgJiYgY2hpcF9pZCA9PSAweDQzMjEpIHx8Cj4+Pj4gKyDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCAocGNpICYmIGNoaXBfaWQgPT0gMHg0NzE2KSkpCj4+Pj4gKyDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCByZXR1cm4gKG1vZGUgPT0gMCk7Cj4+Pj4gKyDCoCDCoCDCoCBy
-ZXR1cm4gYjQzX25vX2NoZWNrX2Nsb2NrX2NvbnRyb2xfY2hpcF9jb21tb24oZGV2LCBtb2RlKTsK
-Pj4+PiArfQo+Pj4+ICsKPj4+PiArLyogaHR0cDovL2JjbS12NC5zaXBzb2x1dGlvbnMubmV0Lzgw
-Mi4xMS9QSFkvQm1hY1dhaXRGb3JXYWtlICovCj4+Pj4gK3N0YXRpYyB2b2lkIGI0M19waHlfYm1h
-Y193YWl0X2Zvcl93YWtlKHN0cnVjdCBiNDNfd2xkZXYgKmRldikKPj4+PiArewo+Pj4+ICsgwqAg
-wqAgwqAgdTggY29yZV9yZXYgPSBkZXYtPmRldi0+YnVzLT5wY2ljb3JlLmRldi0+aWQucmV2aXNp
-b247Cj4+Pj4gKyDCoCDCoCDCoCB1MTYgdG1wLCBpOwo+Pj4+ICsKPj4+PiArIMKgIMKgIMKgIGlm
-IChjb3JlX3JldiA9PSA0KSB7Cj4+Pj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCB1ZGVsYXkoNSk7
-Cj4+Pj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCByZXR1cm47Cj4+Pj4gKyDCoCDCoCDCoCB9Cj4+
-Pj4gKwo+Pj4+ICsgwqAgwqAgwqAgaWYgKGRldi0+cGh5LnR5cGUgPT0gQjQzX1BIWVRZUEVfRyAm
-JiBjb3JlX3JldiA9PSA1KQo+Pj4+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgdWRlbGF5KDIwMDAp
-Owo+Pj4+ICsgwqAgwqAgwqAgZWxzZQo+Pj4+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgdWRlbGF5
-KDQwKTsKPj4+PiArCj4+Pj4gKyDCoCDCoCDCoCBmb3IgKGkgPSAwOyBpIDwgMTUwMDsgaSsrKSB7
-Cj4+Pj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCB0bXAgPSBiNDNfc2htX3JlYWQxNihkZXYsIEI0
-M19TSE1fU0hBUkVELAo+Pj4+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgQjQzX1NITV9TSF9VQ09ERVNUQVQpOwo+Pj4+ICsgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgaWYgKHRtcCA9PSBCNDNfU0hNX1NIX1VDT0RFU1RBVF9TTEVFUCkgewo+
-Pj4+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgaSA9IDA7Cj4+Pj4gKyDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBicmVhazsKPj4+PiArIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIH0KPj4+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHVkZWxheSgxMCk7Cj4+Pj4gKyDC
-oCDCoCDCoCB9Cj4+Pj4gKyDCoCDCoCDCoCBpZiAoaSkKPj4+PiArIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIGI0M2VycihkZXYtPndsLCAidWNvZGUgd2FrZSB1cCB0aW1lb3V0XG4iKTsKPj4+PiArfQo+
-Pj4+ICsKPj4+PiArLyogaHR0cDovL2JjbS12NC5zaXBzb2x1dGlvbnMubmV0LzgwMi4xMS9QSFkv
-TWN0cmxXcml0ZSAqLwo+Pj4+ICtzdGF0aWMgdm9pZCBiNDNfcGh5X21hY19jb250cm9sX3dyaXRl
-KHN0cnVjdCBiNDNfd2xkZXYgKmRldikKPj4+PiArewo+Pj4+ICsgwqAgwqAgwqAgdTMyIHRtcCA9
-IGRldi0+cGh5Lm1hY2NvbnRyb2w7Cj4+Pj4gKyDCoCDCoCDCoCBpZiAoZGV2LT5waHkud2FrZV9v
-dmVycmlkZSkKPj4+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHRtcCB8PSBCNDNfTUFDQ1RMX0FX
-QUtFOwo+Pj4+ICsgwqAgwqAgwqAgaWYgKGRldi0+cGh5Lm11dGVfb3ZlcnJpZGUpCj4+Pj4gKyDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCB0bXAgJj0gfkI0M19NQUNDVExfQVA7Cj4+Pj4gKyDCoCDCoCDC
-oCB0bXAgfD0gQjQzX01BQ0NUTF9JTkZSQTsKPj4+PiArIMKgIMKgIMKgIGI0M193cml0ZTMyKGRl
-diwgQjQzX01NSU9fTUFDQ1RMLCB0bXApOwo+Pj4+ICt9Cj4+Pj4gKwo+Pj4+ICsvKiBodHRwOi8v
-YmNtLXY0LnNpcHNvbHV0aW9ucy5uZXQvODAyLjExL1BIWS9VY29kZVdha2VPdmVycmlkZVNldCAq
-Lwo+Pj4+ICtzdGF0aWMgdm9pZCBiNDNfdWNvZGVfd2FrZV9vdmVycmlkZV9zZXQoc3RydWN0IGI0
-M193bGRldiAqZGV2LCB1MzIgb3ZlcnJpZGUpCj4+Pj4gK3sKPj4+PiArIMKgIMKgIMKgIGRldi0+
-cGh5Lndha2Vfb3ZlcnJpZGUgfD0gb3ZlcnJpZGU7Cj4+Pj4gKyDCoCDCoCDCoCBpZiAoZGV2LT5w
-aHkud2FrZV9vdmVycmlkZSB8fCBkZXYtPnBoeS5tYWNjb250cm9sICYgQjQzX01BQ0NUTF9BV0FL
-RSkKPj4+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHJldHVybjsKPj4+PiArIMKgIMKgIMKgIGI0
-M19waHlfbWFjX2NvbnRyb2xfd3JpdGUoZGV2KTsKPj4+PiArIMKgIMKgIMKgIGI0M19waHlfYm1h
-Y193YWl0X2Zvcl93YWtlKGRldik7Cj4+Pj4gK30KPj4+PiArCj4+Pj4gKy8qIGh0dHA6Ly9iY20t
-djQuc2lwc29sdXRpb25zLm5ldC84MDIuMTEvUEhZL1Vjb2RlV2FrZU92ZXJyaWRlQ2xlYXIgKi8K
-Pj4+PiArc3RhdGljIHZvaWQgYjQzX3Vjb2RlX3dha2Vfb3ZlcnJpZGVfY2xlYXIoc3RydWN0IGI0
-M193bGRldiAqZGV2LCB1MzIgb3ZlcnJpZGUpCj4+Pj4gK3sKPj4+PiArIMKgIMKgIMKgIGRldi0+
-cGh5Lndha2Vfb3ZlcnJpZGUgJj0gfm92ZXJyaWRlOwo+Pj4+ICsgwqAgwqAgwqAgaWYgKGRldi0+
-cGh5Lndha2Vfb3ZlcnJpZGUgIT0gKGRldi0+cGh5Lm1hY2NvbnRyb2wgJiBCNDNfTUFDQ1RMX0FX
-QUtFKSkKPj4+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHJldHVybjsKPj4+PiArIMKgIMKgIMKg
-IGI0M19waHlfbWFjX2NvbnRyb2xfd3JpdGUoZGV2KTsKPj4+PiArfQo+Pj4+ICsKPj4+PiDCoC8q
-IGh0dHA6Ly9iY20tdjQuc2lwc29sdXRpb25zLm5ldC84MDIuMTEvUEhZL0Nsa0N0bENsayAqLwo+
-Pj4+IMKgc3RhdGljIHZvaWQgYjQzX2Nsb2NrX2NvbnRyb2woc3RydWN0IGI0M193bGRldiAqZGV2
-LCB1MzIgbW9kZSkKPj4+PiDCoHsKPj4+PiAtIMKgIMKgIMKgIDsgLyogVE9ETyAqLwo+Pj4+ICsg
-wqAgwqAgwqAgc3RydWN0IGI0M19waHkgKnBoeSA9ICZkZXYtPnBoeTsKPj4+PiArIMKgIMKgIMKg
-IHN0cnVjdCBzc2JfYnVzICpidXMgPSBkZXYtPmRldi0+YnVzOwo+Pj4+ICsgwqAgwqAgwqAgdTgg
-Y29yZV9yZXYgPSBidXMtPnBjaWNvcmUuZGV2LT5pZC5yZXZpc2lvbjsKPj4+PiArIMKgIMKgIMKg
-IHUxNiBpOwo+Pj4+ICsgwqAgwqAgwqAgdTMyIGNsa2N0bDsKPj4+PiArIMKgIMKgIMKgIGJvb2wg
-d2FrZXVwOwo+Pj4+ICsKPj4+PiArIMKgIMKgIMKgIGlmIChidXMtPmNoaXBjby5jYXBhYmlsaXRp
-ZXMgJiBTU0JfQ0hJUENPX0NBUF9QTVUpIHsgLyogUE1VIFByZXNlbnQgKi8KPj4+PiArIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIEI0M19XQVJOX09OKGNvcmVfcmV2IDwgMjApOwo+Pj4+ICsgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgaWYgKHBoeS0+Y2xrKSB7Cj4+Pj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCBib29sIHRtcCA9IChidXMtPmNoaXBjby5wbXUucmV2ID09IDAgJiYKPj4+
-PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIChiNDNfcmVh
-ZDMyKGRldiwgQjQzX01NSU9fQ0xLQ1RMKSAmIDB4MTIpKTsKPj4+PiArCj4+Pj4gKyDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBpZiAobW9kZSA9PSAwKSB7Cj4+Pj4gKyDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBjbGtjdGwgPSBiNDNfcmVhZDMy
-KGRldiwgQjQzX01NSU9fQ0xLQ1RMKTsKPj4+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIGNsa2N0bCB8PSAweDI7Cj4+Pj4gKyDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBiNDNfd3JpdGUzMihkZXYsIEI0M19NTUlPX0NM
-S0NUTCwgY2xrY3RsKTsKPj4+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIHVkZWxheSgzMyk7Cj4+Pj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCB9Cj4+Pj4gKwo+Pj4+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgaWYg
-KG1vZGUgPT0gMCB8fCB0bXApIHsKPj4+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIGZvciAoaSA9IDA7IGkgPCAxNTAwOyBpKyspIHsKPj4+PiArIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGNsa2N0
-bCA9IGI0M19yZWFkMzIoZGV2LCBCNDNfTU1JT19DTEtDVEwpOwo+Pj4+ICsgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgaWYgKChjbGtjdGwg
-JiAweDIwMDAwKSA9PSAwKSB7Cj4+Pj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBpID0gMDsKPj4+PiArIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIGJyZWFrOwo+Pj4+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgfQo+Pj4+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgdWRlbGF5KDEwKTsKPj4+PiArIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIH0KPj4+PiArIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGlmIChpKQo+Pj4+ICsgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgYjQzZXJyKGRl
-di0+d2wsICJjbG9jayB0aW1lb3V0XG4iKTsKPj4+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIH0KPj4+PiArCj4+Pj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCBpZiAobW9kZSAhPSAwICYmIHRtcCkgewo+Pj4+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgY2xrY3RsID0gYjQzX3JlYWQzMihkZXYsIEI0M19NTUlPX0NM
-S0NUTCk7Cj4+Pj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCBjbGtjdGwgJj0gfjB4MjsKPj4+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIGI0M193cml0ZTMyKGRldiwgQjQzX01NSU9fQ0xLQ1RMLCBjbGtjdGwpOwo+
-Pj4+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgfQo+Pj4+ICsgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgfQo+Pj4+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgcGh5LT5mb3JjZWZhc3Rj
-bGsgPSAobW9kZSA9PSAwKTsKPj4+PiArIMKgIMKgIMKgIH0gZWxzZSB7Cj4+Pj4gKyDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCBCNDNfV0FSTl9PTihjb3JlX3JldiA+PSAyMCk7Cj4+Pj4gKwo+Pj4+ICsg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgd2FrZXVwID0gKGNvcmVfcmV2IDwgOSk7Cj4+Pj4gKyDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCBpZiAocGh5LT51cCAmJiB3YWtldXApCj4+Pj4gKyDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBiNDNfdWNvZGVfd2FrZV9vdmVycmlkZV9zZXQoZGV2LCAx
-KTsKPj4+PiArCj4+Pj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCBwaHktPmZvcmNlZmFzdGNsayA9
-IGI0M19jbG9ja19jb250cm9sX2NoaXBfY29tbW9uKGRldiwgbW9kZSk7Cj4+Pj4gKyDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCBpZiAoY29yZV9yZXYgPCAxMSkgewo+Pj4+ICsgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgaWYgKHBoeS0+Zm9yY2VmYXN0Y2xrKQo+Pj4+ICsgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgOyAvKiBUT0RPOiBiNDNfbWhmKGRl
-diwgMCwgMHg0MDAsIDB4NDAwLCAzKTsgKi8KPj4+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIGVsc2UKPj4+PiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIDsgLyogVE9ETzogYjQzX21oZihkZXYsIDAsIDB4NDAwLCAwLCAzKTsgKi8KPj4+
-Cj4+PiBXZSBkbyBpbXBsZW1lbnQgbWhmIGFscmVhZHksIHRob3VnaCBpdCBpcyBkb25lIGRpZmZl
-cmVudGx5IHRoYW4gaW4gd2wuCj4+PiBTZWUgbXkgZWFybGllciAiQWRkIG1pc3NpbmcgSEYgd3Jp
-dGUiIHBhdGNoLgo+Pgo+PiBZZXMsIEkgbm90aWNlZCB0aGlzIGluIHlvdXIgcGF0Y2gsIHRoYW5r
-cywgaG93ZXZlciBJIGRvbid0IHVuZGVyc3RhbmQKPj4gcmVsYXRpb24gYmV0d2VlbiBvdXIgaW1w
-bGVtZW50YXRpb24gYW5kIHdsIHlldC4gSSdtIG5vdCAxMDAlIHN1cmUgaG93Cj4+IHRvIHRyYW5z
-bGF0ZSB0aGlzLCBzbyBJIGRlY2lkZWQgdG8gbGVmdCB0aGlzIGFzIFRPRE8uIERpZG4ndCB3YW50
-IHRvCj4+IHdhaXQgYW55bW9yZSBiZWZvcmUgcHVibGlzaGluZyB0aGlzLCB0byBhdm9pZCBzaXR1
-YXRpb24gb2YKPj4gaW1wbGVtZW50aW5nIHRoZSBzYW1lIGZ1bmN0aW9ucyBhbmQgd2FzdGluZyB5
-b3VyIGFuZC9vciBtaW5lIHRpbWUuCj4+Cj4+IENvdWxkIHlvdSBwb3N0IGEgcGF0Y2ggbWFraW5n
-IHJlYWwgY2FsbCBpbnN0ZWFkIG9mIHRoaXMgY29tbWVudCwgcGxlYXNlPwo+Pgo+PiAtLQo+PiBS
-YWZhxYIKPj4KPgo+IFNvcnJ5LCBJJ20gb24gYSBXaW5kb3dzLW9ubHkgbWFjaGluZSByaWdodCBu
-b3cuCj4gSG93ZXZlciwgdGhlIGdlbmVyYWwgcnVsZSBvZiB0cmFuc2xhdGlvbiBpczoKPiBtaGYo
-YSwgYiwgYywgZCkgLT4gYjQzX2hmX3dyaXRlKGRldiwgKGI0M19oZl9yZWFkKGRldikgJiAofmIg
-PDwKPiAoYSoxNikpKSB8IChjIDw8IChhKjE2KSkpCj4gKFllcywgdGhlIGxhc3QgcGFyYW1ldGVy
-IGlzIGlnbm9yZWQ7IGl0IHNlZW1zIHRvIGJlIGp1c3QgQnJvYWRjcmFwIC0KPiBjcmFwIHdyaXR0
-ZW4gYnkgQnJvYWRjb20uKQoKSG0sIE9LLCB0aGFua3MuIFN0aWxsLCBJJ3ZlIHRvIHJlYWQgaXQg
-Y2FsbWx5LCBhcyBpdCBsb29rcyB0aGF0Cmh0dHA6Ly9iY20tdjQuc2lwc29sdXRpb25zLm5ldC84
-MDIuMTEvTWhmCnVzZXMgbGFzdCBwYXJhbWV0ZXIgYW5kIGdlbmVyYWxseSBpcyBhIGxpdHRsZSBk
-aWZmZXJlbnQuIEkgZG9uJ3QgbWVhbgp5b3UncmUgd3JvbmcsIGp1c3QgbmVlZCB0aW1lIHRvIHJl
-YWQgdGhpcyBhbmQgdW5kZXJzdGFuZCBpdCA6KQoKLS0gClJhZmHFggo=
+From: Johannes Berg <johannes.berg@intel.com>
+
+6000g2b hardware implements advance bluetooth coexist command,
+implement base on the new API command strucutre.
+
+Also increment the API 5 to support the advance BT/WIfi coex.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-6000.c     |  140 +++++++++++++++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-commands.h |   62 ++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-core.c     |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    5 +
+ 4 files changed, 203 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 9e390f6..fc2eeb0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -52,7 +52,7 @@
+ /* Highest firmware API version supported */
+ #define IWL6000_UCODE_API_MAX 4
+ #define IWL6050_UCODE_API_MAX 4
+-#define IWL6000G2_UCODE_API_MAX 4
++#define IWL6000G2_UCODE_API_MAX 5
+ 
+ /* Lowest firmware API version supported */
+ #define IWL6000_UCODE_API_MIN 4
+@@ -122,6 +122,120 @@ static void iwl6000_nic_config(struct iwl_priv *priv)
+ 		priv->cfg->ops->lib->temp_ops.set_calib_version(priv);
+ }
+ 
++/*
++ * Macros to access the lookup table.
++ *
++ * The lookup table has 7 inputs: bt3_prio, bt3_txrx, bt_rf_act, wifi_req,
++ * wifi_prio, wifi_txrx and wifi_sh_ant_req.
++ *
++ * It has three outputs: WLAN_ACTIVE, WLAN_KILL and ANT_SWITCH
++ *
++ * The format is that "registers" 8 through 11 contain the WLAN_ACTIVE bits
++ * one after another in 32-bit registers, and "registers" 0 through 7 contain
++ * the WLAN_KILL and ANT_SWITCH bits interleaved (in that order).
++ *
++ * These macros encode that format.
++ */
++#define LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, wifi_req, wifi_prio, \
++	wifi_txrx, wifi_sh_ant_req) \
++	(bt3_prio | (bt3_txrx << 1) | (bt_rf_act << 2) | (wifi_req << 3) | \
++	(wifi_prio << 4) | (wifi_txrx << 5) | (wifi_sh_ant_req << 6))
++
++#define LUT_PTA_WLAN_ACTIVE_OP(lut, op, val) \
++	lut[8 + ((val) >> 5)] op (cpu_to_le32(BIT((val) & 0x1f)))
++#define LUT_TEST_PTA_WLAN_ACTIVE(lut, bt3_prio, bt3_txrx, bt_rf_act, \
++	wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req) \
++	(!!(LUT_PTA_WLAN_ACTIVE_OP(lut, &, LUT_VALUE(bt3_prio, bt3_txrx,\
++	bt_rf_act, wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))))
++#define LUT_SET_PTA_WLAN_ACTIVE(lut, bt3_prio, bt3_txrx, bt_rf_act, \
++	wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req) \
++	LUT_PTA_WLAN_ACTIVE_OP(lut, |=, LUT_VALUE(bt3_prio, bt3_txrx, \
++	bt_rf_act, wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))
++#define LUT_CLEAR_PTA_WLAN_ACTIVE(lut, bt3_prio, bt3_txrx, bt_rf_act, \
++	wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req) \
++	LUT_PTA_WLAN_ACTIVE_OP(lut, &= ~, LUT_VALUE(bt3_prio, bt3_txrx, \
++	bt_rf_act, wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))
++
++#define LUT_WLAN_KILL_OP(lut, op, val) \
++	lut[(val) >> 4] op (cpu_to_le32(BIT(((val) << 1) & 0x1e)))
++#define LUT_TEST_WLAN_KILL(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
++	wifi_prio, wifi_txrx, wifi_sh_ant_req) \
++	(!!(LUT_WLAN_KILL_OP(lut, &, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
++	wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))))
++#define LUT_SET_WLAN_KILL(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
++	wifi_prio, wifi_txrx, wifi_sh_ant_req) \
++	LUT_WLAN_KILL_OP(lut, |=, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
++	wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))
++#define LUT_CLEAR_WLAN_KILL(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
++	wifi_prio, wifi_txrx, wifi_sh_ant_req) \
++	LUT_WLAN_KILL_OP(lut, &= ~, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
++	wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))
++
++#define LUT_ANT_SWITCH_OP(lut, op, val) \
++	lut[(val) >> 4] op (cpu_to_le32(BIT((((val) << 1) & 0x1e) + 1)))
++#define LUT_TEST_ANT_SWITCH(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
++	wifi_prio, wifi_txrx, wifi_sh_ant_req) \
++	(!!(LUT_ANT_SWITCH_OP(lut, &, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
++	wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))))
++#define LUT_SET_ANT_SWITCH(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
++	wifi_prio, wifi_txrx, wifi_sh_ant_req) \
++	LUT_ANT_SWITCH_OP(lut, |=, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
++	wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))
++#define LUT_CLEAR_ANT_SWITCH(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
++	wifi_prio, wifi_txrx, wifi_sh_ant_req) \
++	LUT_ANT_SWITCH_OP(lut, &= ~, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
++	wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))
++
++static const __le32 iwl6000g2b_def_3w_lookup[12] = {
++	cpu_to_le32(0xaaaaaaaa),
++	cpu_to_le32(0xaaaaaaaa),
++	cpu_to_le32(0xaeaaaaaa),
++	cpu_to_le32(0xaaaaaaaa),
++	cpu_to_le32(0xcc00ff28),
++	cpu_to_le32(0x0000aaaa),
++	cpu_to_le32(0xcc00aaaa),
++	cpu_to_le32(0x0000aaaa),
++	cpu_to_le32(0xc0004000),
++	cpu_to_le32(0x00004000),
++	cpu_to_le32(0xf0005000),
++	cpu_to_le32(0xf0004000),
++};
++
++static void iwl6000g2b_send_bt_config(struct iwl_priv *priv)
++{
++	struct iwl6000g2b_bt_cmd bt_cmd = {
++		.prio_boost = IWL6000G2B_BT_PRIO_BOOST_DEFAULT,
++		.max_kill = IWL6000G2B_BT_MAX_KILL_DEFAULT,
++		.bt3_timer_t7_value = IWL6000G2B_BT3_T7_DEFAULT,
++		.kill_ack_mask = IWL6000G2B_BT_KILL_ACK_MASK_DEFAULT,
++		.kill_cts_mask = IWL6000G2B_BT_KILL_CTS_MASK_DEFAULT,
++		.bt3_prio_sample_time = IWL6000G2B_BT3_PRIO_SAMPLE_DEFAULT,
++		.bt3_timer_t2_value = IWL6000G2B_BT3_T2_DEFAULT,
++		.valid = IWL6000G2B_BT_VALID_ENABLE_FLAGS,
++	};
++
++	BUILD_BUG_ON(sizeof(iwl6000g2b_def_3w_lookup) !=
++			sizeof(bt_cmd.bt3_lookup_table));
++
++	if (!bt_coex_active) {
++		bt_cmd.flags = 0;
++	} else {
++		bt_cmd.flags = IWL6000G2B_BT_FLAG_CHANNEL_INHIBITION |
++				IWL6000G2B_BT_FLAG_COEX_MODE_3W <<
++					IWL6000G2B_BT_FLAG_COEX_MODE_SHIFT;
++		bt_cmd.valid |= IWL6000G2B_BT_ALL_VALID_MSK;
++	}
++
++	memcpy(bt_cmd.bt3_lookup_table, iwl6000g2b_def_3w_lookup,
++		sizeof(iwl6000g2b_def_3w_lookup));
++
++	IWL_DEBUG_INFO(priv, "BT coex %s\n",
++		       bt_cmd.flags ? "active" : "disabled");
++
++	if (iwl_send_cmd_pdu(priv, REPLY_BT_CONFIG, sizeof(bt_cmd), &bt_cmd))
++		IWL_ERR(priv, "failed to send BT Coex Config\n");
++}
++
+ static struct iwl_sensitivity_ranges iwl6000_sensitivity = {
+ 	.min_nrg_cck = 97,
+ 	.max_nrg_cck = 0, /* not used, set to 0 */
+@@ -344,16 +458,12 @@ static const struct iwl_ops iwl6000_ops = {
+ 	.led = &iwlagn_led_ops,
+ };
+ 
+-static void do_not_send_bt_config(struct iwl_priv *priv)
+-{
+-}
+-
+ static struct iwl_hcmd_ops iwl6000g2b_hcmd = {
+ 	.rxon_assoc = iwlagn_send_rxon_assoc,
+ 	.commit_rxon = iwl_commit_rxon,
+ 	.set_rxon_chain = iwl_set_rxon_chain,
+ 	.set_tx_ant = iwlagn_send_tx_ant_config,
+-	.send_bt_config = do_not_send_bt_config,
++	.send_bt_config = iwl6000g2b_send_bt_config,
+ };
+ 
+ static const struct iwl_ops iwl6000g2b_ops = {
+@@ -507,6 +617,9 @@ struct iwl_cfg iwl6000g2b_2agn_cfg = {
+ 	.chain_noise_calib_by_driver = true,
+ 	.need_dc_calib = true,
+ 	.bt_statistics = true,
++	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
++	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
++	.advanced_bt_coexist = true,
+ };
+ 
+ struct iwl_cfg iwl6000g2b_2abg_cfg = {
+@@ -543,6 +656,9 @@ struct iwl_cfg iwl6000g2b_2abg_cfg = {
+ 	.chain_noise_calib_by_driver = true,
+ 	.need_dc_calib = true,
+ 	.bt_statistics = true,
++	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
++	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
++	.advanced_bt_coexist = true,
+ };
+ 
+ struct iwl_cfg iwl6000g2b_2bgn_cfg = {
+@@ -581,6 +697,9 @@ struct iwl_cfg iwl6000g2b_2bgn_cfg = {
+ 	.chain_noise_calib_by_driver = true,
+ 	.need_dc_calib = true,
+ 	.bt_statistics = true,
++	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
++	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
++	.advanced_bt_coexist = true,
+ };
+ 
+ struct iwl_cfg iwl6000g2b_2bg_cfg = {
+@@ -617,6 +736,9 @@ struct iwl_cfg iwl6000g2b_2bg_cfg = {
+ 	.chain_noise_calib_by_driver = true,
+ 	.need_dc_calib = true,
+ 	.bt_statistics = true,
++	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
++	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
++	.advanced_bt_coexist = true,
+ };
+ 
+ struct iwl_cfg iwl6000g2b_bgn_cfg = {
+@@ -655,6 +777,9 @@ struct iwl_cfg iwl6000g2b_bgn_cfg = {
+ 	.chain_noise_calib_by_driver = true,
+ 	.need_dc_calib = true,
+ 	.bt_statistics = true,
++	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
++	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
++	.advanced_bt_coexist = true,
+ };
+ 
+ struct iwl_cfg iwl6000g2b_bg_cfg = {
+@@ -691,6 +816,9 @@ struct iwl_cfg iwl6000g2b_bg_cfg = {
+ 	.chain_noise_calib_by_driver = true,
+ 	.need_dc_calib = true,
+ 	.bt_statistics = true,
++	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
++	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
++	.advanced_bt_coexist = true,
+ };
+ 
+ /*
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index 78086ad..69fc774 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -2394,6 +2394,68 @@ struct iwl_bt_cmd {
+ 	__le32 kill_cts_mask;
+ } __packed;
+ 
++#define IWL6000G2B_BT_FLAG_CHANNEL_INHIBITION	BIT(0)
++
++#define IWL6000G2B_BT_FLAG_COEX_MODE_MASK	(BIT(3)|BIT(4)|BIT(5))
++#define IWL6000G2B_BT_FLAG_COEX_MODE_SHIFT	3
++#define IWL6000G2B_BT_FLAG_COEX_MODE_DISABLED	0
++#define IWL6000G2B_BT_FLAG_COEX_MODE_LEGACY_2W	1
++#define IWL6000G2B_BT_FLAG_COEX_MODE_3W		2
++#define IWL6000G2B_BT_FLAG_COEX_MODE_4W		3
++
++#define IWL6000G2B_BT_FLAG_UCODE_DEFAULT	BIT(6)
++#define IWL6000G2B_BT_FLAG_NOCOEX_NOTIF		BIT(7)
++
++#define IWL6000G2B_BT_PRIO_BOOST_MAX		0xFF
++#define IWL6000G2B_BT_PRIO_BOOST_MIN		0x00
++#define IWL6000G2B_BT_PRIO_BOOST_DEFAULT	0x00
++
++#define IWL6000G2B_BT_MAX_KILL_DEFAULT		5
++
++#define IWL6000G2B_BT3_T7_DEFAULT		1
++
++#define IWL6000G2B_BT_KILL_ACK_MASK_DEFAULT	cpu_to_le32(0xffffffff)
++#define IWL6000G2B_BT_KILL_CTS_MASK_DEFAULT	cpu_to_le32(0xffffffff)
++
++#define IWL6000G2B_BT3_PRIO_SAMPLE_DEFAULT	2
++
++#define IWL6000G2B_BT3_T2_DEFAULT		0xc
++
++#define IWL6000G2B_BT_VALID_ENABLE_FLAGS	cpu_to_le16(BIT(0))
++#define IWL6000G2B_BT_VALID_BOOST		cpu_to_le16(BIT(1))
++#define IWL6000G2B_BT_VALID_MAX_KILL		cpu_to_le16(BIT(2))
++#define IWL6000G2B_BT_VALID_3W_TIMERS		cpu_to_le16(BIT(3))
++#define IWL6000G2B_BT_VALID_KILL_ACK_MASK	cpu_to_le16(BIT(4))
++#define IWL6000G2B_BT_VALID_KILL_CTS_MASK	cpu_to_le16(BIT(5))
++#define IWL6000G2B_BT_VALID_BT4_TIMES		cpu_to_le16(BIT(6))
++#define IWL6000G2B_BT_VALID_3W_LUT		cpu_to_le16(BIT(7))
++
++#define IWL6000G2B_BT_ALL_VALID_MSK	(IWL6000G2B_BT_VALID_ENABLE_FLAGS | \
++					IWL6000G2B_BT_VALID_BOOST | \
++					IWL6000G2B_BT_VALID_MAX_KILL | \
++					IWL6000G2B_BT_VALID_3W_TIMERS | \
++					IWL6000G2B_BT_VALID_KILL_ACK_MASK | \
++					IWL6000G2B_BT_VALID_KILL_CTS_MASK | \
++					IWL6000G2B_BT_VALID_BT4_TIMES | \
++					IWL6000G2B_BT_VALID_3W_LUT)
++
++struct iwl6000g2b_bt_cmd {
++	u8 flags;
++	u8 ledtime; /* unused */
++	u8 max_kill;
++	u8 bt3_timer_t7_value;
++	__le32 kill_ack_mask;
++	__le32 kill_cts_mask;
++	u8 bt3_prio_sample_time;
++	u8 bt3_timer_t2_value;
++	__le16 bt4_reaction_time; /* unused */
++	__le32 bt3_lookup_table[12];
++	__le16 bt4_decision_time; /* unused */
++	__le16 valid;
++	u8 prio_boost;
++	u8 reserved[3];
++};
++
+ /******************************************************************************
+  * (6)
+  * Spectrum Management (802.11h) Commands, Responses, Notifications:
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 3d9443b..4beddad 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -64,7 +64,8 @@ MODULE_LICENSE("GPL");
+  *
+  * default: bt_coex_active = true (BT_COEX_ENABLE)
+  */
+-static bool bt_coex_active = true;
++bool bt_coex_active = true;
++EXPORT_SYMBOL_GPL(bt_coex_active);
+ module_param(bt_coex_active, bool, S_IRUGO);
+ MODULE_PARM_DESC(bt_coex_active, "enable wifi/bluetooth co-exist");
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 7b1e832..d773379 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -278,6 +278,7 @@ struct iwl_mod_params {
+  * @chain_noise_calib_by_driver: driver has the capability to perform
+  *	chain noise calibration operation
+  * @scan_antennas: available antenna for scan operation
++ * @advanced_bt_coexist: support advanced bt coexist
+  * @need_dc_calib: need to perform init dc calibration
+  * @bt_statistics: use BT version of statistics notification
+  * @agg_time_limit: maximum number of uSec in aggregation
+@@ -351,6 +352,7 @@ struct iwl_cfg {
+ 	const bool chain_noise_calib_by_driver;
+ 	u8 scan_rx_antennas[IEEE80211_NUM_BANDS];
+ 	u8 scan_tx_antennas[IEEE80211_NUM_BANDS];
++	bool advanced_bt_coexist;
+ 	const bool need_dc_calib;
+ 	const bool bt_statistics;
+ 	u16 agg_time_limit;
+@@ -732,4 +734,7 @@ static inline const struct ieee80211_supported_band *iwl_get_hw_mode(
+ {
+ 	return priv->hw->wiphy->bands[band];
+ }
++
++extern bool bt_coex_active;
++
+ #endif /* __iwl_core_h__ */
+-- 
+1.7.0.4
+
