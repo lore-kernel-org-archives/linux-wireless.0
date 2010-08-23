@@ -1,46 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sv1.nifty.com ([220.209.183.60]:46294 "EHLO
-	defg301.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753198Ab0HBMM7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Aug 2010 08:12:59 -0400
-Message-ID: <15238373.192661280750366920.komurojun-mbn@nifty.com>
-Date: Mon, 2 Aug 2010 20:59:26 +0900 (JST)
-From: Komuro <komurojun-mbn@nifty.com>
-To: Dominik Brodowski <linux@dominikbrodowski.net>
-Subject: Re: [PATCH 01/11] pcmcia: use pcmica_{read,write}_config_byte
-Cc: linux-pcmcia@lists.infradead.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-serial@vger.kernel.org,
-	Dominik Brodowski <linux@dominikbrodowski.net>,
-	Michael Buesch <mb@bu3sch.de>
-In-Reply-To: <1280667550-3040-1-git-send-email-linux@dominikbrodowski.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-2022-jp"
-References: <1280667550-3040-1-git-send-email-linux@dominikbrodowski.net>
- <20100801125749.GA2564@comet.dominikbrodowski.net>
+Received: from mga11.intel.com ([192.55.52.93]:11961 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753825Ab0HWTfL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Aug 2010 15:35:11 -0400
+Subject: Re: iwlagn fails to associate on 2.6.36-rc2
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20100823193200.GA22447@infradead.org>
+References: <20100823110247.GA3198@infradead.org>
+	 <1282572681.20674.3.camel@wwguy-ubuntu>
+	 <20100823141432.GA29902@infradead.org>
+	 <1282574533.12500.1.camel@wwguy-huron>
+	 <20100823163259.GA15511@infradead.org>
+	 <1282582845.13288.4.camel@wwguy-ubuntu>
+	 <20100823193200.GA22447@infradead.org>
+Content-Type: text/plain
+Date: Mon, 23 Aug 2010 12:34:36 -0700
+Message-Id: <1282592076.13288.7.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, 2010-08-23 at 12:32 -0700, Christoph Hellwig wrote:
+> On Mon, Aug 23, 2010 at 10:00:45AM -0700, Guy, Wey-Yi wrote:
+> > Hi Christoph,
+> > 
+> > there is a important RTS/CTS patch
+> > 94597ab23ea10b3bdcba534be00a9f7b35791c07
+> > 
+> > http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi-2.6.git;a=commit;h=94597ab23ea10b3bdcba534be00a9f7b35791c07
+> 
+> That is already included in the kernel I'm testing.
 
->--- a/drivers/net/pcmcia/xirc2ps_cs.c
->+++ b/drivers/net/pcmcia/xirc2ps_cs.c
+ok, just hope I got lucky :-)
 
-
->+	if (err)
-> 	    goto config_error;
->-	reg.Action = CS_WRITE;
->-	reg.Offset = CISREG_IOBASE_1;
->-	reg.Value = (link->io.BasePort2 >> 8) & 0xff;
->-	if ((err = pcmcia_access_configuration_register(link, &reg)))
->+
->+	err = pcmcia_write_config_byte(link, CISREG_IOBASE_1,
->+				link->io.BasePort2 & 0xff);
-
-It should be
-
-	err = pcmcia_write_config_byte(link, CISREG_IOBASE_1,
-				(link->io.BasePort2 >> 8) & 0xff);
-
-
+Thanks
+Wey
 
