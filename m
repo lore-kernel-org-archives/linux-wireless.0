@@ -1,43 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.cs.tu-berlin.de ([130.149.17.13]:55772 "EHLO
-	mail.cs.tu-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933433Ab0HFSsA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Aug 2010 14:48:00 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by localhost-12225.cs.tu-berlin.de (Postfix) with ESMTP id 63DD538FF9
-	for <linux-wireless@vger.kernel.org>; Fri,  6 Aug 2010 20:47:56 +0200 (CEST)
-Received: from mailhost.cs.tu-berlin.de ([127.0.0.1])
-	by localhost (mail.cs.tu-berlin.de [127.0.0.1]) (amavisd-new, port 12224)
-	with ESMTP id HDNPvaUtqyOq 18490-07
-	for <linux-wireless@vger.kernel.org>;
-	Fri,  6 Aug 2010 20:47:45 +0200 (CEST) 17249
-Received: from hco-laptop.lan (g231109089.adsl.alicedsl.de [92.231.109.89])
-	(using TLSv1 with cipher AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	(Authenticated sender: coskun)
-	by mailhost.cs.tu-berlin.de (Postfix) with ESMTPSA
-	for <linux-wireless@vger.kernel.org>; Fri,  6 Aug 2010 20:47:45 +0200 (CEST)
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Apple Message framework v1081)
-Subject: Multiple station interfaces with one wifi card
-From: Hakan Coskun <coskun@cs.tu-berlin.de>
-In-Reply-To: <7CE373CC-7FCB-41A0-AC81-06E9893D8BC8@cs.tu-berlin.de>
-Date: Fri, 6 Aug 2010 20:47:45 +0200
-Message-Id: <46641FB7-7BF7-4BFA-9AF2-C1369840FF84@cs.tu-berlin.de>
-References: <20100618190319.249D942E2C@repository3.localdomain> <C2473D7F-D624-48C1-A9C5-46678C5CD489@cs.tu-berlin.de> <7CE373CC-7FCB-41A0-AC81-06E9893D8BC8@cs.tu-berlin.de>
-To: linux-wireless@vger.kernel.org
+Received: from [12.19.149.2] ([12.19.149.2]:62266 "EHLO mail.atheros.com"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1751107Ab0HWRvX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Aug 2010 13:51:23 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 23 Aug 2010 10:51:19 -0700
+Date: Mon, 23 Aug 2010 10:46:20 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Bastien Nocera <hadess@hadess.net>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Kevin Hayes <kevin@Atheros.com>,
+	David Quan <David.Quan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"geoclue@lists.freedesktop.org" <geoclue@lists.freedesktop.org>
+Subject: Re: [PATCH 0/2] iw: add GeoClue support
+Message-ID: <20100823174620.GA12375@tux>
+References: <1282350556-16523-1-git-send-email-lrodriguez@atheros.com>
+ <1282572681.3813.3.camel@jlt3.sipsolutions.net>
+ <AANLkTimrtWQKycuAcZ3SjDaOqJ6Z-pPNauRfh+2aZ=ge@mail.gmail.com>
+ <1282579507.3405.130.camel@localhost.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1282579507.3405.130.camel@localhost.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, Aug 23, 2010 at 09:05:07AM -0700, Bastien Nocera wrote:
+> On Mon, 2010-08-23 at 08:44 -0700, Luis R. Rodriguez wrote:
+> > 
+> > > What use is a command line tool that has to talk to a whole bunch of
+> > > daemons etc.?
+> > 
+> > The current implementation doesn't talk to deamons. The hostip
+> > provider within GeoClue and it will just trigger a URL get. If
+> > desktops start implementing a master server though then the query
+> > would simply be a cached response. 
+> 
+> Note that this error carries on in the mail. There is a master provider
+> for Geoclue that can make use of whatever providers are available, but
+> it's not in too good a shape.
 
-we are doing research in order to study the behaviour of virtual wifi interfaces with channel switching. After a simulative study, we started to perform some real world experiments with ath9k, which is able to run multiple wiphys on top of a card. This is working quite good. Of course there are several restrictions and performance problems, we are working on some scheduling algorithms to improve the operation.
-But now to take it a step further, we plan to go for a mac80211 based virtualization, meaning to run multiple vifs in parallel in station mode. The first step is to run them on the same channel, but as expected this is not working, yet. We can create several interfaces with iw, there is no problem. Even scanning is working, but as soon as we want to connect to an open AP we get into trouble. Authentication and association are not working.
- 
-mac80211 needs to be extended with additional functionality like ath9k, to cope with multiple associations and channel switching, etc.. The internals of ath9k are clear to us, since the virtualization code is not big, and the patches well documented. We want to adapt them to mac80211, in order allow vifs to connect to APs simultaneously.
+I see, can you elaborate on that a little?
 
-How can we track the sequence of operations during the runtime in order to get a better understanding of the mac80211. At the moment, we enabled tracing and debug messages for mac80211, this helps but is not sufficient to follow the functions step by step. We can put a lot of debugging messages into the files, but are there any "best practices" we should follow. 
+> I'd rather somebody started fixing the Geoclue master provider rather
+> than relying on a particular service, especially when the D-Bus API for
+> the providers themselves is something we don't want to support in the
+> longer term.
 
-Thanks,
-Hakan
+Would the master provider not use Dbus for gypsy, for example?
+
+  Luis
