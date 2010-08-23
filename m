@@ -1,34 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hyde.gogi.tv ([87.106.167.24]:57553 "EHLO hyde.gogi.tv"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760482Ab0HFBHN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Aug 2010 21:07:13 -0400
-From: Daniel Haid <d.haid@gogi.tv>
-To: linux-wireless@vger.kernel.org, Qasim Javed <qasimj@gmail.com>
-Subject: Re: Capturing packets with bad FCS in monitor mode
-Date: Fri, 6 Aug 2010 03:06:57 +0200
-References: <201008051614.11546.d.haid@gogi.tv> <AANLkTikM_hyo71PyMLQ9z63FnOkusbKQb7OkRWfOvSTZ@mail.gmail.com>
-In-Reply-To: <AANLkTikM_hyo71PyMLQ9z63FnOkusbKQb7OkRWfOvSTZ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201008060306.57963.d.haid@gogi.tv>
+Received: from relay4-v.mail.gandi.net ([217.70.178.78]:35197 "EHLO
+	relay4-v.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751825Ab0HWW3Q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Aug 2010 18:29:16 -0400
+Subject: Re: [PATCH 0/2] iw: add GeoClue support
+From: Bastien Nocera <hadess@hadess.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Kevin Hayes <kevin@Atheros.com>,
+	David Quan <David.Quan@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"geoclue@lists.freedesktop.org" <geoclue@lists.freedesktop.org>
+In-Reply-To: <20100823222236.GE2206@tux>
+References: <1282350556-16523-1-git-send-email-lrodriguez@atheros.com>
+	 <1282572681.3813.3.camel@jlt3.sipsolutions.net>
+	 <AANLkTimrtWQKycuAcZ3SjDaOqJ6Z-pPNauRfh+2aZ=ge@mail.gmail.com>
+	 <1282579507.3405.130.camel@localhost.localdomain>
+	 <20100823174620.GA12375@tux>
+	 <1282597556.3405.135.camel@localhost.localdomain>
+	 <20100823221119.GC2206@tux>
+	 <1282601707.3405.140.camel@localhost.localdomain>
+	 <20100823222236.GE2206@tux>
+Content-Type: text/plain; charset="ISO-8859-1"
+Date: Mon, 23 Aug 2010 23:29:06 +0100
+Message-ID: <1282602546.3405.143.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> if (ah->opmode == NL80211_IFTYPE_MONITOR) {
->         if (rx_stats->rs_status &
->                 ~(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_MIC |
->                 ATH9K_RXERR_CRC))
->         return false;
+On Mon, 2010-08-23 at 15:22 -0700, Luis R. Rodriguez wrote:
+> On Mon, Aug 23, 2010 at 03:15:07PM -0700, Bastien Nocera wrote:
+> > On Mon, 2010-08-23 at 15:11 -0700, Luis R. Rodriguez wrote:
+> > > On Mon, Aug 23, 2010 at 02:05:56PM -0700, Bastien Nocera wrote:
+> > <snip>
+> > > > No, I'm talking about what's exported by the providers. I don't really
+> > > > care if they talk to other parts of the system using D-Bus though. I'm
+> > > > talking about link 2) here.
+> > > > 
+> > > > [App] <-1-> [Geoclue master] <-2-> [Gypsy provider] <-3-> [Gypsy daemon]
+> > > 
+> > > Sorry I do not follow yet. Is the idea that you would prefer if
+> > > client applications would never talk to providers directly and instead
+> > > always used the master provider?
+> > 
+> > Exactly, and it's mentioned in the bugzilla
 > 
-> Clearly, this function will return false in case of a CRC error while
-> receiving on a monitor interface.
+> Thanks for the heads up, I haven't been grep'ing through the bugzilla.
+> 
+> > and was discussed on the mailing-list as well.
+> 
+> And am new there :)
+> 
+> This makes sense -- are there plans on removing all these exported
+> library routines so that the only exposed thing is the master
+> provider calls?
+> 
+> Based on your comments it seems changing the iw patch to just
+> use the master provider would go more in line with current
+> development focus.
 
-Wait a moment, should it not be the other way around? ATH9K_RXERR_CRC
-is removed from rx_stats->rs_status and the comment above
-also says that DECRYPT and MIC errors are ignored normally, while
-CRC is additionally ignored in monitor mode.
+Right. And file bugs if you have specific uses that don't work as
+expected with the master provider.
 
-Are you 100% certain that you were able to receive corrupted
-packets after removing ATH9K_RXERR_CRC above??
