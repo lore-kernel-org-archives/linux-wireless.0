@@ -1,110 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36059 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754182Ab0HYU6X (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:43054 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754117Ab0HWPpK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Aug 2010 16:58:23 -0400
-Message-Id: <20100825205726.924659600@sipsolutions.net>
-Date: Wed, 25 Aug 2010 22:56:23 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 4/6] mac80211: split out concurrent vif checks
-References: <20100825205619.152295081@sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 23 Aug 2010 11:45:10 -0400
+MIME-Version: 1.0
+In-Reply-To: <1282572681.3813.3.camel@jlt3.sipsolutions.net>
+References: <1282350556-16523-1-git-send-email-lrodriguez@atheros.com> <1282572681.3813.3.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 23 Aug 2010 08:44:49 -0700
+Message-ID: <AANLkTimrtWQKycuAcZ3SjDaOqJ6Z-pPNauRfh+2aZ=ge@mail.gmail.com>
+Subject: Re: [PATCH 0/2] iw: add GeoClue support
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, geoclue@lists.freedesktop.org,
+	David.Quan@atheros.com, kevin@atheros.com,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, Aug 23, 2010 at 7:11 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2010-08-20 at 20:29 -0400, Luis R. Rodriguez wrote:
+>> This series adds GeoClue support to iw.
+>
+> Quite frankly, I don't see the point?
 
-Split the concurrent virtual interface checks
-into a new function that can be used to check
-for any given new interface type.
+To help us move forward to automate location awareness information
+into the kernel. I don't think we can unify all possible solutions for
+the different distributions out there so best is to make available
+whatever utilities we can and allow the distribution implementors to
+embrace whatever they want.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/iface.c |   43 +++++++++++++++++++++++++++++--------------
- 1 file changed, 29 insertions(+), 14 deletions(-)
+I'll explain some more below.
 
---- wireless-testing.orig/net/mac80211/iface.c	2010-08-25 22:01:50.000000000 +0200
-+++ wireless-testing/net/mac80211/iface.c	2010-08-25 22:38:19.000000000 +0200
-@@ -94,20 +94,14 @@ static inline int identical_mac_addr_all
- 			 type2 == NL80211_IFTYPE_AP_VLAN));
- }
- 
--static int ieee80211_open(struct net_device *dev)
-+static int ieee80211_check_concurrent_iface(struct ieee80211_sub_if_data *sdata,
-+					    enum nl80211_iftype iftype)
- {
--	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--	struct ieee80211_sub_if_data *nsdata;
- 	struct ieee80211_local *local = sdata->local;
--	struct sta_info *sta;
--	u32 changed = 0;
--	int res;
--	u32 hw_reconf_flags = 0;
-+	struct ieee80211_sub_if_data *nsdata;
-+	struct net_device *dev = sdata->dev;
- 
--	/* fail early if user set an invalid address */
--	if (!is_zero_ether_addr(dev->dev_addr) &&
--	    !is_valid_ether_addr(dev->dev_addr))
--		return -EADDRNOTAVAIL;
-+	ASSERT_RTNL();
- 
- 	/* we hold the RTNL here so can safely walk the list */
- 	list_for_each_entry(nsdata, &local->interfaces, list) {
-@@ -124,7 +118,7 @@ static int ieee80211_open(struct net_dev
- 			 * belonging to the same hardware. Then, however, we're
- 			 * faced with having to adopt two different TSF timers...
- 			 */
--			if (sdata->vif.type == NL80211_IFTYPE_ADHOC &&
-+			if (iftype == NL80211_IFTYPE_ADHOC &&
- 			    nsdata->vif.type == NL80211_IFTYPE_ADHOC)
- 				return -EBUSY;
- 
-@@ -138,19 +132,40 @@ static int ieee80211_open(struct net_dev
- 			/*
- 			 * check whether it may have the same address
- 			 */
--			if (!identical_mac_addr_allowed(sdata->vif.type,
-+			if (!identical_mac_addr_allowed(iftype,
- 							nsdata->vif.type))
- 				return -ENOTUNIQ;
- 
- 			/*
- 			 * can only add VLANs to enabled APs
- 			 */
--			if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
-+			if (iftype == NL80211_IFTYPE_AP_VLAN &&
- 			    nsdata->vif.type == NL80211_IFTYPE_AP)
- 				sdata->bss = &nsdata->u.ap;
- 		}
- 	}
- 
-+	return 0;
-+}
-+
-+static int ieee80211_open(struct net_device *dev)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
-+	struct sta_info *sta;
-+	u32 changed = 0;
-+	int res;
-+	u32 hw_reconf_flags = 0;
-+
-+	/* fail early if user set an invalid address */
-+	if (!is_zero_ether_addr(dev->dev_addr) &&
-+	    !is_valid_ether_addr(dev->dev_addr))
-+		return -EADDRNOTAVAIL;
-+
-+	res = ieee80211_check_concurrent_iface(sdata, sdata->vif.type);
-+	if (res)
-+		return res;
-+
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_WDS:
- 		if (!is_valid_ether_addr(sdata->u.wds.remote_addr))
+> What use is a command line tool that has to talk to a whole bunch of
+> daemons etc.?
 
+The current implementation doesn't talk to deamons. The hostip
+provider within GeoClue and it will just trigger a URL get. If
+desktops start implementing a master server though then the query
+would simply be a cached response.
 
+> I could see using say NM to connect it all,
+
+GeoClue has some initial connectivity support now. It allows your
+connectivity managers to provide back things like status of your
+connection, your AP's MAC address, router MAC address, and a list of
+APs. The last one can be used by Plazes and Skyhook for example.
+GeoClue now supports this connection interface with Network Manager
+and as of recently for Connman. Technically Connman and Network
+Manager then can seed GeoClue with bits of info for providers. For
+example I can forsee a GeoClue http://wigle.net provider implemented
+where the provider can make use of the existing connection manager
+services to query APs and eventually provide clients its location.
+
+So clients are the ones querying GeoClue, and its up to them to
+implement support. Network Manager and Connman can add support for
+GeoClue by doing a similar query but then the question arises if all
+distributions will also be providing a master provider. The GeoClue
+master provider caches queries based on all supported and available
+providers so that clients do not have to wait for a provider to do its
+work on an independent query. If not master provider is installed on a
+system, each GeoClue client will have to poke at the respective
+provider to do its own work. In the case of the hostip provider a
+simple URL query is made and parsed (http://api.hostip.info). For
+other providers like gypsy Dbus will be used to get gypsy to do its
+thing and give back information. I should also note GeoClue depends on
+Glib and Dbus so there are also size considerations embedded
+distributions must make if they are not supporting Glib and/or Dbus.
+
+For distributions then the question of the master provider and
+overhead library support remains. The iw patch I provide simply
+provides an example of how to do this in userspace applications and I
+would like to expand on it to use other providers first like Gpysy and
+Gpsd until the desktop catches up. This may mean we end up handling
+this in wpa_supplicant -- not sure, this would be a good time to
+review this or we can also review this at the upcoming summit. For
+embedded distributions like openwrt it also provides a sample of what
+can be equivalently done, I doubt Glib support will be integrated.
+
+> or maybe put it into geoclue directly,
+
+GeoClue provides clients an API to query geolocation information. Its
+up to the different distributions to decide if they want to implement
+support for the master provider, which providers they want to handle.
+Client software then just queries GeoClue, what we need then is
+different userspace clients being capable of querying this information
+if GeoClue is supported to send it off to the kernel.
+
+> but a command line to trigger it all seems
+> like a wrong approach?
+
+Its an option which can be made available to distributions, right now
+we have no other except a set of bash scripts to for example query
+timezone and things like that. Piggy backing this on top of iw lets
+distributions eventually replace those scripts with a simple iw call.
+That should also get distributions to consider implementing the master
+GeoClue provider.
+
+The last mile IMHO, will be to figure out how the different desktops /
+connection managers like Network Manager and Connman, and embedded
+systems ultimately use some of this or use alternatives.
+
+ Luis
