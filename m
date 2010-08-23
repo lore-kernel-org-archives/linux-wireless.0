@@ -1,48 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:34025 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755306Ab0HDTSQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Aug 2010 15:18:16 -0400
-Subject: Re: [PATCH 0/8] iwlwifi update for 2.6.36
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-In-Reply-To: <20100804190320.GQ17666@tuxdriver.com>
-References: <1280590452-10655-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <20100804190320.GQ17666@tuxdriver.com>
-Content-Type: text/plain
-Date: Wed, 04 Aug 2010 12:17:40 -0700
-Message-Id: <1280949460.17120.0.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:63600 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752002Ab0HWX42 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Aug 2010 19:56:28 -0400
+Received: by qwh6 with SMTP id 6so5590548qwh.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Aug 2010 16:56:26 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4C730173.7080703@lwfinger.net>
+References: <1282506589-8220-1-git-send-email-zajec5@gmail.com>
+ <AANLkTi=TMhmTF+ztooAu=E1e1zdw-cBnaSZCKj=Utik0@mail.gmail.com>
+ <AANLkTikMxL41zrR+KDF1Od_SKpbQhsQWHWiAAAULYx+F@mail.gmail.com>
+ <AANLkTim6d0C_Lx=zExfHy-hfeVdY=aXZCfi6c825TGt7@mail.gmail.com> <4C730173.7080703@lwfinger.net>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Tue, 24 Aug 2010 01:56:06 +0200
+Message-ID: <AANLkTik8cMdxG-0azPOsoBEMdf1JkZ_Gemh_bNDSF3sS@mail.gmail.com>
+Subject: Re: [PATCH 1/2] b43: N-PHY: band width setting with dumb clock
+ control call
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Tue, Aug 24, 2010 at 1:17 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 08/23/2010 05:53 PM, Rafał Miłecki wrote:
+>>> I believe you need to do the whole PHY init, including the common
+>>> part; not just the PHY type-specific init. Larry, is this true?
+>>
+>> Do you mean b43_phy_init? Larry: I guess indeed some tip would be nice :)
+>
+> As it shows in http://bcm-v4.sipsolutions.net/802.11/PHY/Init, you need to do
+> the Common steps. #15 in that list is the specific routines for the PHY type in
+> the device.
+>
+> The code in b43_phy_init() seems not to have all of these steps in it, but I'm
+> not sure where they are implemented.
 
-On Wed, 2010-08-04 at 20:03 +0100, John W. Linville wrote:
-> On Sat, Jul 31, 2010 at 08:34:04AM -0700, Wey-Yi Guy wrote:
-> > We move "Thermal throttling" related functions out of power management
-> > into it own file.
-> > We also reduce the warning level for "BA scd_flow not match" to
-> > avoid flood the syslog when condition detected.
-> > We also track IBSS manager status with uCode beacon notification.
-> > 
-> > Johannes Berg (2):
-> 
-> >   iwlwifi: fix compile warning
-> > 
-> > Wey-Yi Guy (6):
-> 
-> >   iwlwifi: BA scd_flow not match condition detected
-> >   iwlagn: fix typo in ucode_bt_stats_read debugfs
-> 
-> I'm applying these directly as fixes intended for 2.6.36.  I will
-> apply the others to wireless-next-2.6 after the merge window closes
-> for 2.6.36.
-> 
-Thank you very much 
+This spec page seems to have lots of Broadcrap in it... it especially
+needs de-chanspec-tamination; how the driver handles band and
+bandwidth selection is irrelevant to a HW specification. (Also, many
+referenced chanspec-related functions are missing.)
 
-Wey
+>
+> Larry
+>
 
+
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
