@@ -1,45 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:42459 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751460Ab0HAWDZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Aug 2010 18:03:25 -0400
-Received: by mail-ey0-f174.google.com with SMTP id 25so1118027eya.19
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Aug 2010 15:03:24 -0700 (PDT)
-From: Kshitij Kulshreshtha <kkhere.geo@gmail.com>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org,
-	Kshitij Kulshreshtha <kkhere.geo@gmail.com>
-Subject: [PATCH 3/3] compat: define struct va_format introduced in v2.6.36
-Date: Mon,  2 Aug 2010 00:02:51 +0200
-Message-Id: <1280700173-14690-4-git-send-email-kkhere.geo@gmail.com>
-In-Reply-To: <4C55D22A.5040302@hauke-m.de>
-References: <4C55D22A.5040302@hauke-m.de>
+Received: from mailout-de.gmx.net ([213.165.64.23]:56330 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1752660Ab0HWOlh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Aug 2010 10:41:37 -0400
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Date: Mon, 23 Aug 2010 16:41:32 +0200
+From: garkein@mailueberfall.de
+In-Reply-To: <1282572529.20674.1.camel@wwguy-ubuntu>
+Message-ID: <20100823144132.181290@gmx.net>
+MIME-Version: 1.0
+References: <20100823093615.36500@gmx.net>
+ <1282572529.20674.1.camel@wwguy-ubuntu>
+Subject: Re: 11h frequency change support in iwlwifi?
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Kshitij Kulshreshtha <kkhere.geo@gmail.com>
----
- include/linux/compat-2.6.36.h |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
 
-diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
-index 0307108..b14c772 100644
---- a/include/linux/compat-2.6.36.h
-+++ b/include/linux/compat-2.6.36.h
-@@ -8,6 +8,11 @@
- #define kparam_block_sysfs_write(a)
- #define kparam_unblock_sysfs_write(a)
- 
-+struct va_format {
-+	const char *fmt;
-+	va_list *va;
-+};
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36)) */
- 
- #endif /* LINUX_26_36_COMPAT_H */
+-------- Original-Nachricht --------
+> Datum: Mon, 23 Aug 2010 07:08:49 -0700
+> Von: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+> An: "garkein@mailueberfall.de" <garkein@mailueberfall.de>
+> CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+> Betreff: Re: 11h frequency change support in iwlwifi?
+
+> On Mon, 2010-08-23 at 02:36 -0700, garkein@mailueberfall.de wrote:
+> > Hello,
+> > 
+> > I would like to know whether the client side support for 11h frequency
+> change on radar detection is supported in the iwlwifi driver (and/or
+> mac80211 if relevant).
+> > 
+> > I've learned that there is some kind of protocol with which the AP tells
+> all clients about a radar related frequency change, which allow the
+> clients to seamlessly follow the AP to the new channel.
+> > 
+> > Apparently this is either not supported or working in Linux/iwlwifi as
+> my 5100agn repeatedly just looses the AP if that changes the channel due to
+> radar instead of seamlessly following it. (which is bad, no fun if the
+> client looses internet ;-))
+> > 
+> > That why I'm asking whether this currently supported in iwlwifi/Linux
+> and if so, what debug flags I should switch on to gain some more information
+> on what might be going wrong.
+> > 
+> > 
+> Channel switch is supported in iwlwifi, what version of kernel you are
+> using, this feature was introduce no too long ago. Please use
+> debug=0x10000003 to debug any issue.
+> 
+> Thanks
+> Wey
+> 
+
+I'm using 2.6.35.2 currently. I'll try to make some traces tonight.
+
+Daniel
+
 -- 
-1.7.1
-
+GMX DSL SOMMER-SPECIAL: Surf & Phone Flat 16.000 für nur 19,99 ¿/mtl.!*
+http://portal.gmx.net/de/go/dsl
