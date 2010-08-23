@@ -1,33 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:58936 "EHLO purkki.adurom.net"
+Received: from mga01.intel.com ([192.55.52.88]:15438 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752860Ab0HRPMK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Aug 2010 11:12:10 -0400
-To: Grazvydas Ignotas <notasas@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/4] wl1251: add missing __packed modifier for some structs
-References: <1282074415-6168-1-git-send-email-notasas@gmail.com>
-	<1282074415-6168-2-git-send-email-notasas@gmail.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Wed, 18 Aug 2010 18:12:08 +0300
-In-Reply-To: <1282074415-6168-2-git-send-email-notasas@gmail.com> (Grazvydas Ignotas's message of "Tue\, 17 Aug 2010 22\:46\:52 +0300")
-Message-ID: <87aaok9cqf.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1753080Ab0HWOxb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Aug 2010 10:53:31 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 08/26] iwlwifi: reset BT when going down
+Date: Mon, 23 Aug 2010 07:56:59 -0700
+Message-Id: <1282575437-23270-9-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1282575437-23270-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1282575437-23270-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Grazvydas Ignotas <notasas@gmail.com> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> Several acx and cmd structures are missing __packed modifier, add it.
-> This was noticed while comparing them with corresponding wl1271 code.
+When we turn off the device, reset BT
+data so that we don't have outdated
+information when we come up again.
 
-Looks good.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
 
-> Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
-
-Acked-by: Kalle Valo <kvalo@adurom.com>
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 3ced9ea..d4d08aa 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2768,6 +2768,10 @@ static void __iwl_down(struct iwl_priv *priv)
+ 	iwl_dealloc_bcast_station(priv);
+ 	iwl_clear_driver_stations(priv);
+ 
++	/* reset BT coex data */
++	priv->bt_traffic_load = 0;
++	priv->bt_sco_active = false;
++
+ 	/* Unblock any waiting calls */
+ 	wake_up_interruptible_all(&priv->wait_command_queue);
+ 
+@@ -3073,8 +3077,9 @@ static void iwl_bg_restart(struct work_struct *data)
+ 		mutex_lock(&priv->mutex);
+ 		priv->vif = NULL;
+ 		priv->is_open = 0;
++		__iwl_down(priv);
+ 		mutex_unlock(&priv->mutex);
+-		iwl_down(priv);
++		iwl_cancel_deferred_work(priv);
+ 		ieee80211_restart_hw(priv->hw);
+ 	} else {
+ 		iwl_down(priv);
 -- 
-Kalle Valo
+1.7.0.4
+
