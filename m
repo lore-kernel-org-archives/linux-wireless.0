@@ -1,58 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from chilli.pcug.org.au ([203.10.76.44]:44855 "EHLO smtps.tip.net.au"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750881Ab0HEELP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Aug 2010 00:11:15 -0400
-Date: Thu, 5 Aug 2010 14:11:04 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: GIT: net-*2.6 rebased...
-Message-Id: <20100805141104.8094814d.sfr@canb.auug.org.au>
-In-Reply-To: <20100804.162141.15218463.davem@davemloft.net>
-References: <20100804.162141.15218463.davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Thu__5_Aug_2010_14_11_04_+1000_UFY0DkavU5Ye_Ys2"
+Received: from mailout-de.gmx.net ([213.165.64.22]:56737 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1751762Ab0HWJgT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Aug 2010 05:36:19 -0400
+Content-Type: text/plain; charset="utf-8"
+Date: Mon, 23 Aug 2010 11:36:15 +0200
+From: garkein@mailueberfall.de
+Message-ID: <20100823093615.36500@gmx.net>
+MIME-Version: 1.0
+Subject: 11h frequency change support in iwlwifi?
+To: linux-wireless@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Signature=_Thu__5_Aug_2010_14_11_04_+1000_UFY0DkavU5Ye_Ys2
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hello,
 
-Hi Dave,
+I would like to know whether the client side support for 11h frequency change on radar detection is supported in the iwlwifi driver (and/or mac80211 if relevant).
 
-On Wed, 04 Aug 2010 16:21:41 -0700 (PDT) David Miller <davem@davemloft.net>=
- wrote:
->
-> Please adhere to these rules, it helps keep the tree stable and
-> preserve the limited sanity still remaining in folks like Stephen
-> Rothwell. :-)
+I've learned that there is some kind of protocol with which the AP tells all clients about a radar related frequency change, which allow the clients to seamlessly follow the AP to the new channel.
 
-Now I am not sure if I should be insulted :-)
+Apparently this is either not supported or working in Linux/iwlwifi as my 5100agn repeatedly just looses the AP if that changes the channel due to radar instead of seamlessly following it. (which is bad, no fun if the client looses internet ;-))
 
-/me locks up all his sharp objects
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
+That why I'm asking whether this currently supported in iwlwifi/Linux and if so, what debug flags I should switch on to gain some more information on what might be going wrong.
 
---Signature=_Thu__5_Aug_2010_14_11_04_+1000_UFY0DkavU5Ye_Ys2
-Content-Type: application/pgp-signature
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+Regards,
+Daniel
 
-iQEcBAEBAgAGBQJMWjnYAAoJEDMEi1NhKgbshSYH/1sGx348Ovx7ftf8yj2R3AxH
-NNyPO/t4ekVEalwOZR7Vbj6tNGIBr4E9qh50fAlzGEjlZfmT4rthHQFNq9gvqB5W
-el2TBT1d95IzsmMtK3Pomf4ztklUnarKE588E2ubI1y8Y7PeE86accwmpJNM+hs2
-nzkR+8Q8b3K0u0ud4KtFCnugyPD2+MegVIqyY/VTGZNuI5O8zSRIzjBoEqkiwjLA
-bjDkIpE4ogxtIR4yYt/IqTWYALlqRdbBzPtispdUJX5yJ04LMlpEQ3pw0NSDKrPm
-gLMmBlZK1AWJExTA1JK2Jp1X0zbKaNzHU4A8Tm9bmMPnV+mE/sS0gwpBDaAn0HM=
-=vCUq
------END PGP SIGNATURE-----
-
---Signature=_Thu__5_Aug_2010_14_11_04_+1000_UFY0DkavU5Ye_Ys2--
+-- 
+GMX DSL SOMMER-SPECIAL: Surf & Phone Flat 16.000 für nur 19,99 ¿/mtl.!*
+http://portal.gmx.net/de/go/dsl
