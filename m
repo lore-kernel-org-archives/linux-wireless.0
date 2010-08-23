@@ -1,40 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:50143 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935222Ab0HQSbl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Aug 2010 14:31:41 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/3] compat-wireless: make compat-2.6.37.c build
-Date: Tue, 17 Aug 2010 20:31:08 +0200
-Message-Id: <1282069869-22300-3-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1282069869-22300-1-git-send-email-hauke@hauke-m.de>
-References: <1282069869-22300-1-git-send-email-hauke@hauke-m.de>
+Received: from slow3-v.mail.gandi.net ([217.70.178.89]:53536 "EHLO
+	slow3-v.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754326Ab0HWQFm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Aug 2010 12:05:42 -0400
+Subject: Re: [PATCH 0/2] iw: add GeoClue support
+From: Bastien Nocera <hadess@hadess.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>, kevin@atheros.com,
+	David.Quan@atheros.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, geoclue@lists.freedesktop.org
+In-Reply-To: <AANLkTimrtWQKycuAcZ3SjDaOqJ6Z-pPNauRfh+2aZ=ge@mail.gmail.com>
+References: <1282350556-16523-1-git-send-email-lrodriguez@atheros.com>
+	 <1282572681.3813.3.camel@jlt3.sipsolutions.net>
+	 <AANLkTimrtWQKycuAcZ3SjDaOqJ6Z-pPNauRfh+2aZ=ge@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Date: Mon, 23 Aug 2010 17:05:07 +0100
+Message-ID: <1282579507.3405.130.camel@localhost.localdomain>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is needed to set CONFIG_COMPAT_KERNEL_37
+On Mon, 2010-08-23 at 08:44 -0700, Luis R. Rodriguez wrote:
+> 
+> > What use is a command line tool that has to talk to a whole bunch of
+> > daemons etc.?
+> 
+> The current implementation doesn't talk to deamons. The hostip
+> provider within GeoClue and it will just trigger a URL get. If
+> desktops start implementing a master server though then the query
+> would simply be a cached response. 
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- config.mk |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Note that this error carries on in the mail. There is a master provider
+for Geoclue that can make use of whatever providers are available, but
+it's not in too good a shape.
 
-diff --git a/config.mk b/config.mk
-index 777ebd3..edfeca2 100644
---- a/config.mk
-+++ b/config.mk
-@@ -20,7 +20,7 @@ endif
- # as I suspect all users of this package want 802.11e (WME) and
- # 802.11n (HT) support.
- ifneq ($(wildcard $(KLIB_BUILD)/Makefile),)
--COMPAT_LATEST_VERSION = 35
-+COMPAT_LATEST_VERSION = 37
- KERNEL_SUBLEVEL := $(shell $(MAKE) -C $(KLIB_BUILD) kernelversion | sed -n 's/^2\.6\.\([0-9]\+\).*/\1/p')
- COMPAT_VERSIONS := $(shell I=$(COMPAT_LATEST_VERSION); while [ "$$I" -gt $(KERNEL_SUBLEVEL) ]; do echo $$I; I=$$(($$I - 1)); done)
- $(foreach ver,$(COMPAT_VERSIONS),$(eval CONFIG_COMPAT_KERNEL_$(ver)=y))
--- 
-1.7.0.4
+I'd rather somebody started fixing the Geoclue master provider rather
+than relying on a particular service, especially when the D-Bus API for
+the providers themselves is something we don't want to support in the
+longer term.
+
+Cheers
 
