@@ -1,32 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.22]:56737 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1751762Ab0HWJgT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Aug 2010 05:36:19 -0400
-Content-Type: text/plain; charset="utf-8"
-Date: Mon, 23 Aug 2010 11:36:15 +0200
-From: garkein@mailueberfall.de
-Message-ID: <20100823093615.36500@gmx.net>
-MIME-Version: 1.0
-Subject: 11h frequency change support in iwlwifi?
-To: linux-wireless@vger.kernel.org
+Received: from mga09.intel.com ([134.134.136.24]:49661 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752087Ab0HXOYL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Aug 2010 10:24:11 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH wireless-next-2.6] iwlwifi: fix compile error without debugging support
+Date: Tue, 24 Aug 2010 07:27:56 -0700
+Message-Id: <1282660076-9004-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-I would like to know whether the client side support for 11h frequency change on radar detection is supported in the iwlwifi driver (and/or mac80211 if relevant).
+Encounter compiler error when iwlwifi debugging support is
+disabled, fix it.
 
-I've learned that there is some kind of protocol with which the AP tells all clients about a radar related frequency change, which allow the clients to seamlessly follow the AP to the new channel.
+This compiler error was introduced by the previous WiFi/BT coexist patchset.
 
-Apparently this is either not supported or working in Linux/iwlwifi as my 5100agn repeatedly just looses the AP if that changes the channel due to radar instead of seamlessly following it. (which is bad, no fun if the client looses internet ;-))
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+this patch is also available from wireless-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
 
-That why I'm asking whether this currently supported in iwlwifi/Linux and if so, what debug flags I should switch on to gain some more information on what might be going wrong.
+ drivers/net/wireless/iwlwifi/iwl-scan.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-
-Regards,
-Daniel
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index c8f7a34..7727f09 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -206,7 +206,6 @@ static void iwl_rx_scan_results_notif(struct iwl_priv *priv,
+ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
+ 				       struct iwl_rx_mem_buffer *rxb)
+ {
+-#ifdef CONFIG_IWLWIFI_DEBUG
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+ 	struct iwl_scancomplete_notification *scan_notif = (void *)pkt->u.raw;
+ 
+@@ -214,7 +213,6 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
+ 		       scan_notif->scanned_channels,
+ 		       scan_notif->tsf_low,
+ 		       scan_notif->tsf_high, scan_notif->status);
+-#endif
+ 
+ 	/* The HW is no longer scanning */
+ 	clear_bit(STATUS_SCAN_HW, &priv->status);
 -- 
-GMX DSL SOMMER-SPECIAL: Surf & Phone Flat 16.000 für nur 19,99 ¿/mtl.!*
-http://portal.gmx.net/de/go/dsl
+1.7.0.4
+
