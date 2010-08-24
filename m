@@ -1,75 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:4672 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754196Ab0HRQSh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Aug 2010 12:18:37 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 14/16] iwlwifi: remove unused iwl_send_card_state function
-Date: Wed, 18 Aug 2010 09:22:49 -0700
-Message-Id: <1282148571-9258-15-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1282148571-9258-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1282148571-9258-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:36022 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752332Ab0HXMQh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Aug 2010 08:16:37 -0400
+Subject: Re: [rfc patch] libertas: fix if_spi_prog_helper_firmware()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Carpenter <error27@gmail.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	Mike Frysinger <vapier.adi@gmail.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+In-Reply-To: <20100824120743.GG29330@bicker>
+References: <20100824120743.GG29330@bicker>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 24 Aug 2010 14:17:52 +0200
+Message-ID: <1282652273.3695.21.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iwl_send_card_state() is not being call from anywhere, remove it.
+On Tue, 2010-08-24 at 14:07 +0200, Dan Carpenter wrote:
+> The indenting is not correct here.  I don't have this hardware and I'm
+> just guessing as to what was intended.  I think that if there is an
+> error we should return an error code, but if there isn't an error we
+> should return success directly without releasing the firmware.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |   22 ----------------------
- drivers/net/wireless/iwlwifi/iwl-core.h |    2 --
- 2 files changed, 0 insertions(+), 24 deletions(-)
+>  		goto release_firmware;
+>  	err = spu_write_u16(card, IF_SPI_CARD_INT_CAUSE_REG,
+>  				IF_SPI_CIC_CMD_DOWNLOAD_OVER);
+> +	if (err)
+>  		goto release_firmware;
+>  
+> -	lbs_deb_spi("waiting for helper to boot...\n");
+> +	lbs_deb_spi("helper firmware loaded...\n");
+> +
+> +	return 0;
+>  
+>  release_firmware:
+>  	release_firmware(firmware);
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index e6497c6..3d9443b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1470,28 +1470,6 @@ int iwl_send_statistics_request(struct iwl_priv *priv, u8 flags, bool clear)
- }
- EXPORT_SYMBOL(iwl_send_statistics_request);
- 
--/*
-- * CARD_STATE_CMD
-- *
-- * Use: Sets the device's internal card state to enable, disable, or halt
-- *
-- * When in the 'enable' state the card operates as normal.
-- * When in the 'disable' state, the card enters into a low power mode.
-- * When in the 'halt' state, the card is shut down and must be fully
-- * restarted to come back on.
-- */
--int iwl_send_card_state(struct iwl_priv *priv, u32 flags, u8 meta_flag)
--{
--	struct iwl_host_cmd cmd = {
--		.id = REPLY_CARD_STATE_CMD,
--		.len = sizeof(u32),
--		.data = &flags,
--		.flags = meta_flag,
--	};
--
--	return iwl_send_cmd(priv, &cmd);
--}
--
- void iwl_rx_pm_sleep_notif(struct iwl_priv *priv,
- 			   struct iwl_rx_mem_buffer *rxb)
- {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 6bd6013..7b1e832 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -592,8 +592,6 @@ int iwl_send_cmd_pdu_async(struct iwl_priv *priv, u8 id, u16 len,
- 
- int iwl_enqueue_hcmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd);
- 
--int iwl_send_card_state(struct iwl_priv *priv, u32 flags,
--			u8 meta_flag);
- 
- /*****************************************************
-  * PCI						     *
--- 
-1.7.0.4
+This doesn't look correct, the caller of this function also sometimes
+releases the firmware, but it looks like it could lead to a double-free?
+
+johannes
 
