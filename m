@@ -1,114 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:43673 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753830Ab0HKSWV (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34381 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751710Ab0HXT3m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Aug 2010 14:22:21 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>
-Cc: Ido Yariv <ido@wizery.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v4 7/8] omap: zoom: add fixed regulator device for wlan
-Date: Wed, 11 Aug 2010 21:21:52 +0300
-Message-Id: <1281550913-17633-8-git-send-email-ohad@wizery.com>
-In-Reply-To: <1281550913-17633-1-git-send-email-ohad@wizery.com>
-References: <1281550913-17633-1-git-send-email-ohad@wizery.com>
+	Tue, 24 Aug 2010 15:29:42 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>, stable@kernel.org
+Subject: [PATCH 2.6.36] ath5k: check return value of ieee80211_get_tx_rate
+Date: Tue, 24 Aug 2010 15:27:34 -0400
+Message-Id: <1282678054-10894-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a fixed regulator vmmc device to enable power control
-of the wl1271 wlan device.
+This avoids a NULL pointer dereference as reported here:
 
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+	https://bugzilla.redhat.com/show_bug.cgi?id=625889
+
+When the WARN condition is hit in ieee80211_get_tx_rate, it will return
+NULL.  So, we need to check the return value and avoid dereferencing it
+in that case.
+
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Cc: stable@kernel.org
 ---
- arch/arm/mach-omap2/board-zoom-peripherals.c |   35 ++++++++++++++++++++++++++
- 1 files changed, 35 insertions(+), 0 deletions(-)
+Of course, the better question is why are we hitting that condition at
+all...?
 
-diff --git a/arch/arm/mach-omap2/board-zoom-peripherals.c b/arch/arm/mach-omap2/board-zoom-peripherals.c
-index 6b39849..de88635 100644
---- a/arch/arm/mach-omap2/board-zoom-peripherals.c
-+++ b/arch/arm/mach-omap2/board-zoom-peripherals.c
-@@ -16,6 +16,7 @@
- #include <linux/gpio.h>
- #include <linux/i2c/twl.h>
- #include <linux/regulator/machine.h>
-+#include <linux/regulator/fixed.h>
+ drivers/net/wireless/ath/ath5k/base.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 373dcfe..c7720e4 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1327,6 +1327,8 @@ ath5k_txbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf,
+ 			PCI_DMA_TODEVICE);
  
- #include <asm/mach-types.h>
- #include <asm/mach/arch.h>
-@@ -27,6 +28,8 @@
- #include "mux.h"
- #include "hsmmc.h"
+ 	rate = ieee80211_get_tx_rate(sc->hw, info);
++	if (!rate)
++		goto err_unmap;
  
-+#define OMAP_ZOOM_WLAN_PMENA_GPIO	(101)
-+
- /* Zoom2 has Qwerty keyboard*/
- static int board_keymap[] = {
- 	KEY(0, 0, KEY_E),
-@@ -106,6 +109,11 @@ static struct regulator_consumer_supply zoom_vmmc2_supply = {
- 	.supply		= "vmmc",
- };
- 
-+static struct regulator_consumer_supply zoom_vmmc3_supply = {
-+	.supply		= "vmmc",
-+	.dev_name	= "mmci-omap-hs.2",
-+};
-+
- /* VMMC1 for OMAP VDD_MMC1 (i/o) and MMC1 card */
- static struct regulator_init_data zoom_vmmc1 = {
- 	.constraints = {
-@@ -151,6 +159,32 @@ static struct regulator_init_data zoom_vsim = {
- 	.consumer_supplies      = &zoom_vsim_supply,
- };
- 
-+static struct regulator_init_data zoom_vmmc3 = {
-+	.constraints = {
-+		.valid_ops_mask	= REGULATOR_CHANGE_STATUS,
-+	},
-+	.num_consumer_supplies = 1,
-+	.consumer_supplies = &zoom_vmmc3_supply,
-+};
-+
-+static struct fixed_voltage_config zoom_vwlan = {
-+	.supply_name = "vwl1271",
-+	.microvolts = 1800000, /* 1.8V */
-+	.gpio = OMAP_ZOOM_WLAN_PMENA_GPIO,
-+	.startup_delay = 70000, /* 70msec */
-+	.enable_high = 1,
-+	.enabled_at_boot = 0,
-+	.init_data = &zoom_vmmc3,
-+};
-+
-+static struct platform_device omap_vwlan_device = {
-+	.name		= "reg-fixed-voltage",
-+	.id		= 1,
-+	.dev = {
-+		.platform_data = &zoom_vwlan,
-+	},
-+};
-+
- static struct omap2_hsmmc_info mmc[] __initdata = {
- 	{
- 		.name		= "external",
-@@ -280,6 +314,7 @@ static void enable_board_wakeup_source(void)
- void __init zoom_peripherals_init(void)
- {
- 	omap_i2c_init();
-+	platform_device_register(&omap_vwlan_device);
- 	usb_musb_init(&musb_board_data);
- 	enable_board_wakeup_source();
- }
+ 	if (info->flags & IEEE80211_TX_CTL_NO_ACK)
+ 		flags |= AR5K_TXDESC_NOACK;
 -- 
-1.7.0.4
+1.7.2.1
 
