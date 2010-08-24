@@ -1,67 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:43480 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751068Ab0H0Glz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 02:41:55 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 26 Aug 2010 23:41:50 -0700
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH] ath9k_htc: Enable ANI in associated state only
-Date: Fri, 27 Aug 2010 12:09:00 +0530
-Message-ID: <1282891140-4170-1-git-send-email-rmanoharan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from external1.orbit-lab.org ([128.6.192.131]:42790 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755138Ab0HXTDW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Aug 2010 15:03:22 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 0FF304195D
+	for <linux-wireless@vger.kernel.org>; Tue, 24 Aug 2010 15:02:43 -0400 (EDT)
+Subject: Compat-wireless release for 2010-08-24 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100824190321.0A2A741133@repository3.orbit-lab.org>
+Date: Tue, 24 Aug 2010 15:03:20 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While scanning, ANI is triggered unnecessarily where sta is in
-unassociated state. And cancelling ani work in ath9k_htc_stop
-is not required.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   44a3497..03699ed  linux-2.6.36.y -> origin/linux-2.6.36.y
+   558219f..1d39e2d  master     -> origin/master
+ + a34839f...92c8a6d wl         -> origin/wl  (forced update)
+ * [new tag]         compat-wireless-2010-08-23 -> compat-wireless-2010-08-23
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+ * [new tag]         compat-wireless-v2.6.36-rc1-2 -> compat-wireless-v2.6.36-rc1-2
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   6c8895f..a65b21c  history    -> origin/history
+ + 2957dad...1a28812 master     -> origin/master  (forced update)
+   3dc8d7f..9ee4747  stable     -> origin/stable
+ * [new tag]         next-20100824 -> next-20100824
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ * [new tag]         v2.6.36-rc2 -> v2.6.36-rc2
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    9 +++++----
- 1 files changed, 5 insertions(+), 4 deletions(-)
+compat-wireless code metrics
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-index 5e318cb..f467207 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-@@ -1239,7 +1239,6 @@ static void ath9k_htc_stop(struct ieee80211_hw *hw)
- 
- 	/* Cancel all the running timers/work .. */
- 	cancel_work_sync(&priv->ps_work);
--	cancel_delayed_work_sync(&priv->ath9k_ani_work);
- 	cancel_delayed_work_sync(&priv->ath9k_led_blink_work);
- 	ath9k_led_stop_brightness(priv);
- 
-@@ -1787,7 +1786,8 @@ static void ath9k_htc_sw_scan_start(struct ieee80211_hw *hw)
- 	priv->op_flags |= OP_SCANNING;
- 	spin_unlock_bh(&priv->beacon_lock);
- 	cancel_work_sync(&priv->ps_work);
--	cancel_delayed_work_sync(&priv->ath9k_ani_work);
-+	if (priv->op_flags & OP_ASSOCIATED)
-+		cancel_delayed_work_sync(&priv->ath9k_ani_work);
- 	mutex_unlock(&priv->mutex);
- }
- 
-@@ -1801,9 +1801,10 @@ static void ath9k_htc_sw_scan_complete(struct ieee80211_hw *hw)
- 	priv->op_flags &= ~OP_SCANNING;
- 	spin_unlock_bh(&priv->beacon_lock);
- 	priv->op_flags |= OP_FULL_RESET;
--	if (priv->op_flags & OP_ASSOCIATED)
-+	if (priv->op_flags & OP_ASSOCIATED) {
- 		ath9k_htc_beacon_config(priv, priv->vif);
--	ath_start_ani(priv);
-+		ath_start_ani(priv);
-+	}
- 	ath9k_htc_ps_restore(priv);
- 	mutex_unlock(&priv->mutex);
- }
--- 
-1.7.2.2
+    496308 - Total upstream lines of code being pulled
+      1714 - backport code changes
+      1474 - backport code additions
+       240 - backport code deletions
+      6070 - backport from compat module
+      7784 - total backport code
+    1.5684 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2454 - % of crap code
 
+Base tree: linux-next.git
+Base tree version: next-20100824
+compat-wireless release: compat-wireless-2010-08-23
