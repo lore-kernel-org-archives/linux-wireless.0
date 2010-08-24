@@ -1,113 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:62839 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933346Ab0HJWNu (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44754 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754453Ab0HXKPF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Aug 2010 18:13:50 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>
-Cc: Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v3 7/9] omap: zoom: add fixed regulator device for wlan
-Date: Wed, 11 Aug 2010 01:12:26 +0300
-Message-Id: <1281478348-24833-8-git-send-email-ohad@wizery.com>
-In-Reply-To: <1281478348-24833-1-git-send-email-ohad@wizery.com>
-References: <1281478348-24833-1-git-send-email-ohad@wizery.com>
+	Tue, 24 Aug 2010 06:15:05 -0400
+Subject: Re: [PATCH 3/3] nl80211: New command for setting TX rate mask for
+ rate control
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Philip Prindeville <philipp_subx@redfish-solutions.com>
+Cc: Jouni Malinen <jouni.malinen@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+In-Reply-To: <4C6F07AA.3080606@redfish-solutions.com>
+References: <20091229105945.GD18493@jm.kir.nu>
+	 <4C6DA19B.7010606@redfish-solutions.com>
+	 <1282296004.3785.25.camel@jlt3.sipsolutions.net>
+	 <4C6EAE6C.50001@redfish-solutions.com>
+	 <4C6F07AA.3080606@redfish-solutions.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 24 Aug 2010 12:16:34 +0200
+Message-ID: <1282644994.3695.8.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a fixed regulator vmmc device to enable power control
-of the wl1271 wlan device.
+On Fri, 2010-08-20 at 15:54 -0700, Philip Prindeville wrote:
 
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
----
- arch/arm/mach-omap2/board-zoom-peripherals.c |   35 ++++++++++++++++++++++++++
- 1 files changed, 35 insertions(+), 0 deletions(-)
+> What I'm trying to say is that even though the driver handles the
+> condition of nla_type == 0 when it generates the message, the
+> condition isn't handled correct when the message finally gets passed
+> up into user-space, because the above sequence in the netlink library
+> gets hit both for "iw" and "hostapd".
+> 
+> So it's not enough to handle it correctly in the driver: it needs to
+> be handled in libnl as well.
+> 
+> There are 3 potential solutions:
+> 
+> (1) go with a 1-based enum for the band, instead of 0-based;
+> (2) remove the test for nla_type == 0 in nla_parse() in libnl;
+> (3) use a way to convey the band that doesn't involve overloading
+> nla_type;
+> 
+> What's the correct fix?
 
-diff --git a/arch/arm/mach-omap2/board-zoom-peripherals.c b/arch/arm/mach-omap2/board-zoom-peripherals.c
-index 6b39849..de88635 100644
---- a/arch/arm/mach-omap2/board-zoom-peripherals.c
-+++ b/arch/arm/mach-omap2/board-zoom-peripherals.c
-@@ -16,6 +16,7 @@
- #include <linux/gpio.h>
- #include <linux/i2c/twl.h>
- #include <linux/regulator/machine.h>
-+#include <linux/regulator/fixed.h>
- 
- #include <asm/mach-types.h>
- #include <asm/mach/arch.h>
-@@ -27,6 +28,8 @@
- #include "mux.h"
- #include "hsmmc.h"
- 
-+#define OMAP_ZOOM_WLAN_PMENA_GPIO	(101)
-+
- /* Zoom2 has Qwerty keyboard*/
- static int board_keymap[] = {
- 	KEY(0, 0, KEY_E),
-@@ -106,6 +109,11 @@ static struct regulator_consumer_supply zoom_vmmc2_supply = {
- 	.supply		= "vmmc",
- };
- 
-+static struct regulator_consumer_supply zoom_vmmc3_supply = {
-+	.supply		= "vmmc",
-+	.dev_name	= "mmci-omap-hs.2",
-+};
-+
- /* VMMC1 for OMAP VDD_MMC1 (i/o) and MMC1 card */
- static struct regulator_init_data zoom_vmmc1 = {
- 	.constraints = {
-@@ -151,6 +159,32 @@ static struct regulator_init_data zoom_vsim = {
- 	.consumer_supplies      = &zoom_vsim_supply,
- };
- 
-+static struct regulator_init_data zoom_vmmc3 = {
-+	.constraints = {
-+		.valid_ops_mask	= REGULATOR_CHANGE_STATUS,
-+	},
-+	.num_consumer_supplies = 1,
-+	.consumer_supplies = &zoom_vmmc3_supply,
-+};
-+
-+static struct fixed_voltage_config zoom_vwlan = {
-+	.supply_name = "vwl1271",
-+	.microvolts = 1800000, /* 1.8V */
-+	.gpio = OMAP_ZOOM_WLAN_PMENA_GPIO,
-+	.startup_delay = 70000, /* 70msec */
-+	.enable_high = 1,
-+	.enabled_at_boot = 0,
-+	.init_data = &zoom_vmmc3,
-+};
-+
-+static struct platform_device omap_vwlan_device = {
-+	.name		= "reg-fixed-voltage",
-+	.id		= 1,
-+	.dev = {
-+		.platform_data = &zoom_vwlan,
-+	},
-+};
-+
- static struct omap2_hsmmc_info mmc[] __initdata = {
- 	{
- 		.name		= "external",
-@@ -280,6 +314,7 @@ static void enable_board_wakeup_source(void)
- void __init zoom_peripherals_init(void)
- {
- 	omap_i2c_init();
-+	platform_device_register(&omap_vwlan_device);
- 	usb_musb_init(&musb_board_data);
- 	enable_board_wakeup_source();
- }
--- 
-1.7.0.4
+You managed to totally throw me off course ... The problem is completely
+unrelated to this, see the patch I just sent :-)
+
+johannes
 
