@@ -1,30 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57017 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751590Ab0HBNW1 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41707 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751507Ab0HXP3l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Aug 2010 09:22:27 -0400
-Subject: Re: [PATCH 1/3] mac80211: put rx handlers into seperate functions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <201008021515.06013.chunkeey@googlemail.com>
-References: <201008021515.06013.chunkeey@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 02 Aug 2010 15:22:25 +0200
-Message-ID: <1280755345.3923.13.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 24 Aug 2010 11:29:41 -0400
+Date: Tue, 24 Aug 2010 11:18:15 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Thomas Fjellstrom <thomas@fjellstrom.ca>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: ath5k problem with 2.6.35
+Message-ID: <20100824151815.GE2535@tuxdriver.com>
+References: <201008220005.38969.tfjellstrom@strangesoft.net>
+ <201008220153.41678.thomas@fjellstrom.ca>
+ <20100823182903.GE2609@tuxdriver.com>
+ <201008231849.13144.thomas@fjellstrom.ca>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201008231849.13144.thomas@fjellstrom.ca>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-08-02 at 15:15 +0200, Christian Lamparter wrote:
-> Note: In order to keep diff from removing and re-adding code,
-> I used forward declarations. So it should be easier to verify
-> that I didn't change anything related to the reordering logic.
+On Mon, Aug 23, 2010 at 06:49:12PM -0600, Thomas Fjellstrom wrote:
+> On August 23, 2010, John W. Linville wrote:
+> > On Sun, Aug 22, 2010 at 01:53:41AM -0600, Thomas Fjellstrom wrote:
+> > > On August 22, 2010, Thomas Fjellstrom wrote:
+> > > > Hi, I'm running 2.6.35, and my wireless card fails to initialize
+> > > > properly
+> > > 
+> > > > on boot. I get the following messages in dmesg:
+> > > Probably important, but I missed a couple lines:
+> > > > [    0.866525] ath5k 0000:02:00.0: PCI INT A -> GSI 17 (level, low) ->
+> > > > IRQ 17 [    0.866536] ath5k 0000:02:00.0: setting latency timer to 64
+> > > > [    0.866571] ath5k 0000:02:00.0: registered as 'phy0'
+> > > > [    1.358241] ath: EEPROM regdomain: 0x67
+> > > > [    1.358242] ath: EEPROM indicates we should expect a direct regpair
+> > > > map [    1.358245] ath: Country alpha2 being used: 00
+> > > > [    1.358247] ath: Regpair used: 0x67
+> > > > 
+> > >    [    1.360589] phy0: Failed to initialize wep: -2
+> > > > 
+> > > > [    1.372021] ath5k phy0: can't register ieee80211 hw
+> > > > [    1.372080] ath5k 0000:02:00.0: PCI INT A disabled
+> > > > [    1.372084] ath5k: probe of 0000:02:00.0 failed with error -2
+> > 
+> > Did you enable fips mode?
+> 
+> I don't even know what that is, so no. At least I didn't do it. if wicd did, 
+> then yes.
 
-FWIW, I'd prefer you didn't do that but moved the code instead.
+In any case, wep failed to init for some reason and the prevents
+device registration.  You need the patch I referenced earlier.
 
-johannes
-
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
