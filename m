@@ -1,54 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.outflux.net ([198.145.64.163]:36160 "EHLO smtp.outflux.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756161Ab0H3SEM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Aug 2010 14:04:12 -0400
-Date: Mon, 30 Aug 2010 11:03:03 -0700
-From: Kees Cook <kees.cook@canonical.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Jean Tourrilhes <jt@hpl.hp.com>
-Subject: Re: [PATCH] wireless extensions: fix kernel heap content leak
-Message-ID: <20100830180302.GM4703@outflux.net>
-References: <20100827210240.GC4703@outflux.net>
- <20100827212254.GB32275@bougret.hpl.hp.com>
- <1283158058.3691.10.camel@jlt3.sipsolutions.net>
- <1283158704.3691.11.camel@jlt3.sipsolutions.net>
- <1283162341.3691.45.camel@jlt3.sipsolutions.net>
- <1283163894.3691.48.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1283163894.3691.48.camel@jlt3.sipsolutions.net>
+Received: from he.sipsolutions.net ([78.46.109.217]:44748 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754492Ab0HXKOS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Aug 2010 06:14:18 -0400
+Subject: [PATCH] nl80211: fix missing nesting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Philip A. Prindeville" <philipp@redfish-solutions.com>,
+	Philip Prindeville <philipp_subx@redfish-solutions.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 24 Aug 2010 12:15:53 +0200
+Message-ID: <1282644953.3695.7.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Mon, Aug 30, 2010 at 12:24:54PM +0200, Johannes Berg wrote:
-> --- wireless-testing.orig/net/wireless/wext-compat.c	2010-08-30 12:04:57.000000000 +0200
-> +++ wireless-testing/net/wireless/wext-compat.c	2010-08-30 12:11:32.000000000 +0200
-> @@ -1420,6 +1420,9 @@ int cfg80211_wext_giwessid(struct net_de
->  {
->  	struct wireless_dev *wdev = dev->ieee80211_ptr;
->  
-> +	data->flags = 0;
-> +	data->length = 0;
-> +
->  	switch (wdev->iftype) {
->  	case NL80211_IFTYPE_ADHOC:
->  		return cfg80211_ibss_wext_giwessid(dev, info, data, ssid);
+commit 95a6ccbb46c70cff376684c752831c014c87029d
+Author: Johannes Berg <johannes.berg@intel.com>
+Date:   Thu Aug 12 15:38:38 2010 +0200
 
-Thanks for all your work on this! Were you able to trigger the leak
-through cfg80211? If so, then this will need a CVE assigned and sent to
-stable too, I think.
+    cfg80211/mac80211: extensible frame processing
 
--Kees
+introduced a netlink bug that caused parsing errors
+in userspace because it forgot to close a nesting,
+which would advertise a nesting length of zero to
+userspace, which then completely threw off parsing
+and led to
 
--- 
-Kees Cook
-Ubuntu Security Team
+	Illegal nla->nla_type == 0
+
+being printed by libnl.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+--- wireless-testing.orig/net/wireless/nl80211.c	2010-08-24 12:11:16.000000000 +0200
++++ wireless-testing/net/wireless/nl80211.c	2010-08-24 12:11:21.000000000 +0200
+@@ -636,6 +636,8 @@ static int nl80211_send_wiphy(struct sk_
+ 			nla_nest_end(msg, nl_ftypes);
+ 		}
+ 
++		nla_nest_end(msg, nl_ifs);
++
+ 		nl_ifs = nla_nest_start(msg, NL80211_ATTR_RX_FRAME_TYPES);
+ 		if (!nl_ifs)
+ 			goto nla_put_failure;
+
+
