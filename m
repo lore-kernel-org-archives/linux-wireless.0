@@ -1,40 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:33609 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754144Ab0HRQSc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Aug 2010 12:18:32 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 01/16] iwlwifi: remove unused define
-Date: Wed, 18 Aug 2010 09:22:36 -0700
-Message-Id: <1282148571-9258-2-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1282148571-9258-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1282148571-9258-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail.redfish-solutions.com ([66.232.79.143]:43357 "EHLO
+	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755970Ab0HXVaI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Aug 2010 17:30:08 -0400
+Message-ID: <4C7439CB.6040208@redfish-solutions.com>
+Date: Tue, 24 Aug 2010 14:29:47 -0700
+From: Philip Prindeville <philipp_subx@redfish-solutions.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Jouni Malinen <jouni.malinen@atheros.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Subject: Re: [PATCH 3/3] nl80211: New command for setting TX rate mask for
+ rate control
+References: <20091229105945.GD18493@jm.kir.nu>	 <4C6DA19B.7010606@redfish-solutions.com>	 <1282296004.3785.25.camel@jlt3.sipsolutions.net>	 <4C6EAE6C.50001@redfish-solutions.com>	 <4C6F07AA.3080606@redfish-solutions.com> <1282644994.3695.8.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1282644994.3695.8.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IWL_SIXTY_SECS is not been used, remove it
+  On 8/24/10 3:16 AM, Johannes Berg wrote:
+> On Fri, 2010-08-20 at 15:54 -0700, Philip Prindeville wrote:
+>
+>> What I'm trying to say is that even though the driver handles the
+>> condition of nla_type == 0 when it generates the message, the
+>> condition isn't handled correct when the message finally gets passed
+>> up into user-space, because the above sequence in the netlink library
+>> gets hit both for "iw" and "hostapd".
+>>
+>> So it's not enough to handle it correctly in the driver: it needs to
+>> be handled in libnl as well.
+>>
+>> There are 3 potential solutions:
+>>
+>> (1) go with a 1-based enum for the band, instead of 0-based;
+>> (2) remove the test for nla_type == 0 in nla_parse() in libnl;
+>> (3) use a way to convey the band that doesn't involve overloading
+>> nla_type;
+>>
+>> What's the correct fix?
+> You managed to totally throw me off course ... The problem is completely
+> unrelated to this, see the patch I just sent :-)
+>
+> johannes
+>
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-dev.h |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+Confirmed your fix.  http://pastebin.ca/1924624
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index a36b4f9..37ec76a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1053,7 +1053,6 @@ struct iwl_event_log {
- #define IWL_DEF_MONITORING_PERIOD	(1000)
- #define IWL_LONG_MONITORING_PERIOD	(5000)
- #define IWL_ONE_HUNDRED_MSECS   (100)
--#define IWL_SIXTY_SECS          (60000)
- 
- enum iwl_reset {
- 	IWL_RF_RESET = 0,
--- 
-1.7.0.4
+Thanks!
 
