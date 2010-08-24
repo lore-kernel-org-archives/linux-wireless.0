@@ -1,52 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53319 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932446Ab0HJR3x (ORCPT
+Received: from casper.infradead.org ([85.118.1.10]:38323 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750769Ab0HXJiP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Aug 2010 13:29:53 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Samuel Ortiz <samuel.ortiz@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] iwm3200wifi: remove comparison to WIFI_IF_NTFY_MAX in iwm_ntf_wifi_if_wrapper
-Date: Tue, 10 Aug 2010 13:26:50 -0400
-Message-Id: <1281461210-3528-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <20100809164346.6e30cf8c.akpm@linux-foundation.org>
-References: <20100809164346.6e30cf8c.akpm@linux-foundation.org>
+	Tue, 24 Aug 2010 05:38:15 -0400
+Subject: Re: [PATCH] ath9k_htc: Add firmware for AR7010
+From: David Woodhouse <dwmw2@infradead.org>
+To: Sujith <Sujith.Manoharan@atheros.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <19462.12932.201066.376129@gargle.gargle.HOWL>
+References: <19462.12932.201066.376129@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 24 Aug 2010 10:38:08 +0100
+Message-ID: <1282642688.12796.2.camel@localhost>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-drivers/net/wireless/iwmc3200wifi/rx.c: In function 'iwm_ntf_wifi_if_wrapper':
-drivers/net/wireless/iwmc3200wifi/rx.c:1198: warning: comparison is always true due to limited range of data type
+On Wed, 2010-06-02 at 03:29 -0700, Sujith wrote:
+> Add firmware for AR7010 chipsets supported
+> by the ath9k_htc driver.
+> 
+> More information at: http://wireless.kernel.org/en/users/Drivers/ath9k_htc
+> 
+> Signed-off-by: Sujith <Sujith.Manoharan@atheros.com>
 
-This is, of course, because the value of WIFI_IF_NTFY_MAX is 0xff and
-hdr->oid is a u8.  This is obviously an attempt to verify the range on
-an input value, but since it has no effect it can simply be removed.
+Applied; sorry for the delay. Using this email address should usually
+work better.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/iwmc3200wifi/rx.c |    7 ++-----
- 1 files changed, 2 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/iwmc3200wifi/rx.c b/drivers/net/wireless/iwmc3200wifi/rx.c
-index c02fced..a944893 100644
---- a/drivers/net/wireless/iwmc3200wifi/rx.c
-+++ b/drivers/net/wireless/iwmc3200wifi/rx.c
-@@ -1195,11 +1195,8 @@ static int iwm_ntf_wifi_if_wrapper(struct iwm_priv *iwm, u8 *buf,
- 	IWM_DBG_NTF(iwm, DBG, "WIFI_IF_WRAPPER cmd is delivered to UMAC: "
- 		    "oid is 0x%x\n", hdr->oid);
- 
--	if (hdr->oid <= WIFI_IF_NTFY_MAX) {
--		set_bit(hdr->oid, &iwm->wifi_ntfy[0]);
--		wake_up_interruptible(&iwm->wifi_ntfy_queue);
--	} else
--		return -EINVAL;
-+	set_bit(hdr->oid, &iwm->wifi_ntfy[0]);
-+	wake_up_interruptible(&iwm->wifi_ntfy_queue);
- 
- 	switch (hdr->oid) {
- 	case UMAC_WIFI_IF_CMD_SET_PROFILE:
 -- 
-1.7.2.1
+dwmw2
 
