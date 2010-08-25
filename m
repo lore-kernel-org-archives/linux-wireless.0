@@ -1,57 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41707 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56302 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751507Ab0HXP3l (ORCPT
+	with ESMTP id S1750706Ab0HYSOl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Aug 2010 11:29:41 -0400
-Date: Tue, 24 Aug 2010 11:18:15 -0400
+	Wed, 25 Aug 2010 14:14:41 -0400
+Date: Wed, 25 Aug 2010 14:01:29 -0400
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Thomas Fjellstrom <thomas@fjellstrom.ca>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: ath5k problem with 2.6.35
-Message-ID: <20100824151815.GE2535@tuxdriver.com>
-References: <201008220005.38969.tfjellstrom@strangesoft.net>
- <201008220153.41678.thomas@fjellstrom.ca>
- <20100823182903.GE2609@tuxdriver.com>
- <201008231849.13144.thomas@fjellstrom.ca>
+To: Joe Perches <joe@perches.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC patch (against wireless-next)] include/net/cfg80211.h:
+ wiphy_<level> messages use dev_printk
+Message-ID: <20100825180129.GK2557@tuxdriver.com>
+References: <1282245848.6724.261.camel@Joe-Laptop>
+ <1282246784.4507.14.camel@jlt3.sipsolutions.net>
+ <1282342439.1960.84.camel@Joe-Laptop>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201008231849.13144.thomas@fjellstrom.ca>
+In-Reply-To: <1282342439.1960.84.camel@Joe-Laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 23, 2010 at 06:49:12PM -0600, Thomas Fjellstrom wrote:
-> On August 23, 2010, John W. Linville wrote:
-> > On Sun, Aug 22, 2010 at 01:53:41AM -0600, Thomas Fjellstrom wrote:
-> > > On August 22, 2010, Thomas Fjellstrom wrote:
-> > > > Hi, I'm running 2.6.35, and my wireless card fails to initialize
-> > > > properly
-> > > 
-> > > > on boot. I get the following messages in dmesg:
-> > > Probably important, but I missed a couple lines:
-> > > > [    0.866525] ath5k 0000:02:00.0: PCI INT A -> GSI 17 (level, low) ->
-> > > > IRQ 17 [    0.866536] ath5k 0000:02:00.0: setting latency timer to 64
-> > > > [    0.866571] ath5k 0000:02:00.0: registered as 'phy0'
-> > > > [    1.358241] ath: EEPROM regdomain: 0x67
-> > > > [    1.358242] ath: EEPROM indicates we should expect a direct regpair
-> > > > map [    1.358245] ath: Country alpha2 being used: 00
-> > > > [    1.358247] ath: Regpair used: 0x67
-> > > > 
-> > >    [    1.360589] phy0: Failed to initialize wep: -2
-> > > > 
-> > > > [    1.372021] ath5k phy0: can't register ieee80211 hw
-> > > > [    1.372080] ath5k 0000:02:00.0: PCI INT A disabled
-> > > > [    1.372084] ath5k: probe of 0000:02:00.0 failed with error -2
-> > 
-> > Did you enable fips mode?
+On Fri, Aug 20, 2010 at 03:13:59PM -0700, Joe Perches wrote:
+> On Thu, 2010-08-19 at 21:39 +0200, Johannes Berg wrote:
+> > On Thu, 2010-08-19 at 12:24 -0700, Joe Perches wrote:
+> > > Adding device to the wiphy logging messages could be useful.
+> > >  #define wiphy_printk(level, wiphy, format, args...)		\
+> > > -	printk(level "%s: " format, wiphy_name(wiphy), ##args)
+> > > +	dev_printk(level, &wiphy->dev, "%s: " format, wiphy_name(wiphy), ##args)
+> > what will that actually print?
 > 
-> I don't even know what that is, so no. At least I didn't do it. if wicd did, 
-> then yes.
+> As is, that'd print:
+> 
+> "<level>dev_driver_string(&wiphy->dev) dev_name(&wiphy->dev): wiphy_name(wiphy): " fmt, ##args
+> 
+> for instance:
+> 
+> [   41.261941] ieee80211 phy0: phy0: Selected rate control algorithm 'minstrel_ht'
+> 
+> ie: redundant.
+> wiphy_name(wiphy) is an inline for dev_name(&wiphy->dev)
+> 
+> So it's appropriate to use:
+> 
+> #define wiphy_<level>(wiphy, fmt, arg...) dev_<level>(&wiphy->dev, fmt, ##arg) 
+> 
+> and the output becomes:
+> 
+> [   41.261941] ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-In any case, wep failed to init for some reason and the prevents
-device registration.  You need the patch I referenced earlier.
+Everyone OK w/ this version?
 
-John
 -- 
 John W. Linville		Someday the world will need a hero, and you
 linville@tuxdriver.com			might be all we have.  Be ready.
