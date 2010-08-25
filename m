@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:50717 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752687Ab0HZGqO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Aug 2010 02:46:14 -0400
-To: linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: Re: Filesystem corruption with 2.6.36-rc1-wl+ and ecryptfs
-References: <87tymt9iex.fsf@purkki.adurom.net>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Thu, 26 Aug 2010 09:46:13 +0300
-In-Reply-To: <87tymt9iex.fsf@purkki.adurom.net> (Kalle Valo's message of "Tue\, 17 Aug 2010 21\:57\:10 +0300")
-Message-ID: <87k4nd98i2.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from he.sipsolutions.net ([78.46.109.217]:53813 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750867Ab0HYIJ0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Aug 2010 04:09:26 -0400
+Subject: Re: Marshaling issues w/ compat-wireless-2010-08-19
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Philip Prindeville <philipp_subx@redfish-solutions.com>
+Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+In-Reply-To: <4C746F74.70401@redfish-solutions.com>
+References: <4C746F74.70401@redfish-solutions.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 25 Aug 2010 10:11:01 +0200
+Message-ID: <1282723861.3685.4.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@adurom.com> writes:
+On Tue, 2010-08-24 at 18:18 -0700, Philip Prindeville wrote:
 
-> I just installed my first 2.6.36 kernel, 2.6.36-rc1-wl+ from
-> wireless-testing, and immeadialy (during first boot) got major
-> corruption in the filesystem. For example, gnome lost it's settings,
-> ~/.ssh was empty etc. Now, with an older kernel, my directory
-> structure has duplicate entries, like this:
->
-> $ ls -ald D*
-> drwxr-xr-x 2 kvalo kvalo 4096 2010-08-17 19:21 Desktop/
-> drwxr-xr-x 2 kvalo kvalo 4096 2010-08-17 19:21 Desktop/
-> drwxr-xr-x 2 kvalo kvalo 4096 2010-08-17 19:21 Documents/
-> drwxr-xr-x 2 kvalo kvalo 4096 2010-08-17 19:21 Documents/
-> drwxr-xr-x 2 kvalo kvalo 4096 2010-08-17 19:21 Downloads/
-> drwxr-xr-x 2 kvalo kvalo 4096 2010-08-17 19:21 Downloads/
->
-> I'm using ecryptfs and that's my major suspect for the corruption, but
-> naturally I can't be sure because I'm just guessing here. 
+> (1) "Unknown event 5" messages when starting up hostapd (line 95
+> below):
 
-(For the archives)
+That's fine, it's just EVENT_INTERFACE_STATUS.
 
-It was ecryptfs, bug report here:
+> (2) Some highly unlikely values from the hostapd debugging messages
+> when parsing out WEP authentication messages (line 507):
+> 
+> This is captured in http://pastebin.ca/1924659 :
+> 
+> authentication: STA=f8:1e:df:1e:c2:23 auth_alg=35510 auth_transaction=79 status_code=21688 wep=1
+> Unsupported authentication algorithm (35510)
+> 
+> 
+> I'm wondering if some messages that are passed up to user-space via
+> netlink from the driver might have changed their schema, i.e. adding
+> new fields in the middle of a structure or moving fields around within
+> a structure.
 
-https://bugs.launchpad.net/ecryptfs/+bug/623087
+Looks more like a crypto problem to me, as this should be the encrypted
+challenge in your shared key handshake. IOW, it looks like the frame
+isn't getting decrypted by mac80211 for some reason.
 
-And fix here:
+johannes
 
-http://git.kernel.org/?p=linux/kernel/git/ecryptfs/ecryptfs-2.6.git;a=commitdiff;h=b4ef26e06ce0c4877bd5a736b0dfb318a4fb9002
-
--- 
-Kalle Valo
