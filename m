@@ -1,50 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:33135 "EHLO ds10.nbd.name"
+Received: from mx1.redhat.com ([209.132.183.28]:39316 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751464Ab0HBJR1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Aug 2010 05:17:27 -0400
-Message-ID: <4C568D23.2000203@openwrt.org>
-Date: Mon, 02 Aug 2010 11:17:23 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: Bruno Randolf <br1@einfach.org>, johannes@sipsolutions.net,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v5] cfg80211: Add nl80211 antenna configuration
-References: <20100729035820.5930.29864.stgit@tt-desk> <201007291812.28639.br1@einfach.org> 	<AANLkTi=ihY=pAmKaEp7Pga=DOxwASZqSxqmURbgnks-d@mail.gmail.com> 	<201008021313.54850.br1@einfach.org> <AANLkTimRnfa8HVpi0hcP7Eo9Nrns60ff3Hs+fq39WoJh@mail.gmail.com> 	<4C5688F7.1070200@openwrt.org> <AANLkTi=Qm53CgFNNgtF4iBvh3jbfYzd8XPH4y9ysUaoV@mail.gmail.com>
-In-Reply-To: <AANLkTi=Qm53CgFNNgtF4iBvh3jbfYzd8XPH4y9ysUaoV@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	id S1752400Ab0HYV5G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Aug 2010 17:57:06 -0400
+Subject: Re: [PATCH] libertas: if_sdio: fix buffer alignment in struct
+ if_sdio_card
+From: Dan Williams <dcbw@redhat.com>
+To: Marek Vasut <marek.vasut@gmail.com>
+Cc: Mike Rapoport <mike@compulab.co.il>, rusty@rustcorp.com.au,
+	linux-wireless@vger.kernel.org, libertas-dev@lists.infradead.org
+In-Reply-To: <201008221557.44607.marek.vasut@gmail.com>
+References: <1282476160-6913-1-git-send-email-mike@compulab.co.il>
+	 <201008221459.25574.marek.vasut@gmail.com>
+	 <4C712480.1090006@compulab.co.il>
+	 <201008221557.44607.marek.vasut@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 25 Aug 2010 16:59:00 -0500
+Message-ID: <1282773540.28250.29.camel@dcbw.foobar.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-08-02 11:10 AM, Luis R. Rodriguez wrote:
-> On Mon, Aug 2, 2010 at 1:59 AM, Felix Fietkau <nbd@openwrt.org> wrote:
->> On 2010-08-02 7:37 AM, Luis R. Rodriguez wrote:
->>> I'm not, the point I was trying to make is that solving this for
->>> legacy and that for 802.11n this needs more thought and work.
->> I need this for 802.11n as well, and I believe the API is good enough
->> for that.
+On Sun, 2010-08-22 at 15:57 +0200, Marek Vasut wrote:
+> Dne Ne 22. srpna 2010 15:22:08 Mike Rapoport napsal(a):
+> > Marek Vasut wrote:
+> > > Dne Ne 22. srpna 2010 13:22:40 Mike Rapoport napsal(a):
+> > >> The commit 886275ce41a9751117367fb387ed171049eb6148 (param: lock
+> > >> if_sdio's lbs_helper_name and lbs_fw_name against sysfs changes)
+> > >> introduced new fields into the if_sdio_card structure. It caused
+> > >> missalignment of the if_sdio_card.buffer field and failure at driver
+> > >> 
+> > >> load time:
+> > >>   ~# modprobe libertas_sdio
+> > >>   [   62.315124] libertas_sdio: Libertas SDIO driver
+> > >>   [   62.319976] libertas_sdio: Copyright Pierre Ossman
+> > >>   [   63.020629] DMA misaligned error with device 48
+> > >>   [   63.025207] mmci-omap-hs mmci-omap-hs.1: unexpected dma status 800
+> > >>   [   66.005035] libertas: command 0x0003 timed out
+> > >>   [   66.009826] libertas: Timeout submitting command 0x0003
+> > >>   [   66.016296] libertas: PREP_CMD: command 0x0003 failed: -110
+> > >> 
+> > >> Adding explicit alignment attribute for the if_sdio_card.buffer field
+> > >> fixes this problem.
+> > >> 
+> > >> Signed-off-by: Mike Rapoport <mike@compulab.co.il>
+> > >> ---
+> > >> 
+> > >>  drivers/net/wireless/libertas/if_sdio.c |    2 +-
+> > >>  1 files changed, 1 insertions(+), 1 deletions(-)
+> > >> 
+> > >> diff --git a/drivers/net/wireless/libertas/if_sdio.c
+> > >> b/drivers/net/wireless/libertas/if_sdio.c index ba854c7..87b6349 100644
+> > >> --- a/drivers/net/wireless/libertas/if_sdio.c
+> > >> +++ b/drivers/net/wireless/libertas/if_sdio.c
+> > >> @@ -128,7 +128,7 @@ struct if_sdio_card {
+> > >> 
+> > >>  	bool			helper_allocated;
+> > >>  	bool			firmware_allocated;
+> > >> 
+> > >> -	u8			buffer[65536];
+> > >> +	u8			buffer[65536] __attribute__((aligned(4)));
+> > >> 
+> > >>  	spinlock_t		lock;
+> > >>  	struct if_sdio_packet	*packets;
+> > > 
+> > > Will this work even on platforms that need some weird DMA destination
+> > > address alignment ? I might be totally off with this question though ;-)
+> > 
+> > I've tested it on PXA and OMAP and it works on both.
+> > I think that on platforms with weird DMA destination address alignment
+> > libertas_sdio will fail anyway because of if_sdio_packet alignment.
 > 
-> Sure.
+> You're right ... thanks for clearing this.
 > 
->>>> as long as the API is flexible
->>>> enough i think it can be added later as 802.11n devices are going to accept
->>>> antenna configuration.
->>>
->>> If you want really flexible stuff without addressing serious
->>> considerations before introducing a new kernel API then use debugfs.
->> I'd like to see this in nl80211. Is there any specific concern left that
->> I haven't addressed already? If so, please point me at it...
-> 
-> The code that deals with not accepting changes unless we're not
-> associated, and that also caches the old real hw config vs the
-> modified one.
-This is not really an API issue, this is more of an implementation
-aspect. I think it's up to the driver to reject changes that it cannot
-handle at the moment.
-For legacy, changing settings is fine in any state (even with assoc).
-For 802.11n, changes that affect the chainmask should be rejected while
-the interface is up. That way we don't run into weird cached config vs
-hw config issues, and also keep a sane state for the HT capabilities.
+> Acked-by: Marek Vasut <marek.vasut@gmail.com>
 
-- Felix
+Acked-by: Dan Williams <dcbw@redhat.com>
+
+
