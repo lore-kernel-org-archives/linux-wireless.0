@@ -1,128 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:42102 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932141Ab0HDMom convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36053 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754164Ab0HYU6T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Aug 2010 08:44:42 -0400
-MIME-Version: 1.0
-In-Reply-To: <20100804114147.GB6852@n2100.arm.linux.org.uk>
-References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
-	<1279733634-21974-4-git-send-email-ohad@wizery.com> <AANLkTimzA_JJ-byTDWznbL3YzeJ8LAP4M50onf2_3fBF@mail.gmail.com>
-	<AANLkTi=Oy8X1xMOwWL_cKBB1LWULT6=p+adUgB+AuSJS@mail.gmail.com>
-	<AANLkTi=BUX59heXAW2Uf4wZo2dSS19Je54dkQ5u2YGAW@mail.gmail.com>
-	<AANLkTimZQKj7H_GeE=+O9cwxEMTR+LhfFbt=AyXGzN3d@mail.gmail.com>
-	<AANLkTikfRja-h9mz7uyRXCZNZjKdU_yB8e58XQucUzrn@mail.gmail.com>
-	<AANLkTi=vhWV1RNyemtfppfjvLYAbzd3aRjFOVgLLpG3Z@mail.gmail.com>
-	<AANLkTin4m8gJR50zwMB2b0jRMHdNA6CQToKBTAhOL9wF@mail.gmail.com>
-	<AANLkTinu2S19r8fueM-jVkc35XL2G0Z16BddE92Ci9KB@mail.gmail.com>
-	<20100804114147.GB6852@n2100.arm.linux.org.uk>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Wed, 4 Aug 2010 15:42:32 +0300
-Message-ID: <AANLkTi=Dqs_qg=BsoNBTjvJbG+ub+zMv8ctbrJSGPJJJ@mail.gmail.com>
-Subject: Re: [PATCH v2 03/20] mmc: support embedded data field in mmc_host
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Vitaly Wool <vitalywool@gmail.com>, Kalle Valo <kalle.valo@iki.fi>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Tony Lindgren <tony@atomide.com>,
-	linux-wireless@vger.kernel.org,
-	Roger Quadros <roger.quadros@nokia.com>,
-	linux-mmc@vger.kernel.org, San Mehat <san@google.com>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	linux-omap@vger.kernel.org, akpm@linux-foundation.org,
-	linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 25 Aug 2010 16:58:19 -0400
+Message-Id: <20100825205726.345107640@sipsolutions.net>
+Date: Wed, 25 Aug 2010 22:56:20 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 1/6] mac80211: clean up ifdown/cleanup paths
+References: <20100825205619.152295081@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 4, 2010 at 2:41 PM, Russell King - ARM Linux
-<linux@arm.linux.org.uk> wrote:
-> On Wed, Aug 04, 2010 at 02:24:39PM +0300, Ohad Ben-Cohen wrote:
->> On Tue, Aug 3, 2010 at 5:17 PM, Vitaly Wool <vitalywool@gmail.com> wrote:
->> > On Mon, Aug 2, 2010 at 11:35 PM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
->> >> I'm honestly trying to understand your concerns, but I'm afraid that
->> >> just saying "it's a hack" is not too informative. Can you please
->> >> explain what do you think is technically wrong with the proposed
->> >> solution ? is it not general enough for other use cases ? will it
->> >> break something ?
->>
->> > So if I'd like to set the *same* structure for the *same* WL1271
->> > driver, provided that I'm working with the other platform, I'll need
->> > to do the following:
->> > - add the pointer to the board-specific header;
->> > - add the structure to the board-specific C file and propagate its
->> > pointer to the controller driver;
->> > - add setting the pointer in the core structure into the controller driver.
->> >
->> > This is far from being intuitive. This means we need to hack,
->> > generally speaking, all the MMC controller drivers to get it working
->> > on all platforms. This is error prone.
->>
->> You make it sound really complex.
->>
->> Let's see what it means to add it to a totally different platform.
->>
->> As an example, let's take Google's ADP1 which is based on a different
->> host controller (msm-sdcc), and add the required support (untested of
->> course, just a quick sketch, patch is based on android's msm git):
->
-> What if some other driver gets attached and tries to use this
-> platform data?  This whole idea sounds extremely silly, cumbersome,
-> error prone, and is inviting misuse by normal MMC sockets.
->
-> Why not arrange for a small piece of code to be built into the kernel
-> when this driver is selected as a module or built-in, which handles
-> the passing of platform data to the driver?
+From: Johannes Berg <johannes.berg@intel.com>
 
-It's interesting.
+There's a lot of redundant code in mac80211's
+interface cleanup/down, for example freeing
+AP beacons is done both when the interface is
+set DOWN as well as when it is torn down, of
+which only the former has any effect.
 
-The only drawback I can see is that it has an inherent limitation of
-having only a single wl1271 device on board, but there are no such
-boards outside development/testing labs.
+Also, a bunch of things should be closer to
+where they matter, like the MLME timers that
+we should cancel when disassociating, rather
+than only when the interface is set DOWN.
 
-Vitaly would that work for you too ?
+Clean up all this code.
 
-Thanks,
-Ohad.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/iface.c |   89 +++++++++++++--------------------------------------
+ net/mac80211/mlme.c  |    5 ++
+ 2 files changed, 28 insertions(+), 66 deletions(-)
 
->
-> Something like:
->
-> wl12xx_platform_data.c:
-> #include <linux/module.h>
-> #include <whatever/required/for/wl12xx.h>
->
-> static struct wl12xx_platform_data *platform_data;
->
-> int __init wl12xx_set_platform_data(const struct wl12xx_platform_data *data)
-> {
->        if (platform_data)
->                return -EBUSY;
->        platform_data = kmemdup(data, sizeof(*data), GFP_KERNEL);
->        if (!platform_data)
->                return -ENOMEM;
->        return 0;
-> }
->
-> int wl12xx_get_platform_data(struct wl12xx_platform_data *data)
-> {
->        if (platform_data) {
->                memcpy(data, platform_data, sizeof(*data));
->                return 0;
->        }
->        return -ENODEV;
-> }
-> EXPORT_SYMBOL(wl12xx_get_platform_data);
->
-> And in the Kconfig, something like:
->
-> config WL12XX_PLATFORM_DATA
->        bool
->        depends on WL12XX != n
->        default y
->
-> This means there'll be no confusion over who owns the 'embedded data',
-> typechecking is preserved, and no possibility for the wrong driver to
-> pick up the data.
->
+--- wireless-testing.orig/net/mac80211/iface.c	2010-08-25 21:58:52.000000000 +0200
++++ wireless-testing/net/mac80211/iface.c	2010-08-25 21:59:11.000000000 +0200
+@@ -370,12 +370,9 @@ static int ieee80211_stop(struct net_dev
+ 	 * (because if we remove a STA after ops->remove_interface()
+ 	 * the driver will have removed the vif info already!)
+ 	 *
+-	 * We could relax this and only unlink the stations from the
+-	 * hash table and list but keep them on a per-sdata list that
+-	 * will be inserted back again when the interface is brought
+-	 * up again, but I don't currently see a use case for that,
+-	 * except with WDS which gets a STA entry created when it is
+-	 * brought up.
++	 * This is relevant only in AP, WDS and mesh modes, since in
++	 * all other modes we've already removed all stations when
++	 * disconnecting etc.
+ 	 */
+ 	sta_info_flush(local, sdata);
+ 
+@@ -410,11 +407,21 @@ static int ieee80211_stop(struct net_dev
+ 		struct ieee80211_sub_if_data *vlan, *tmpsdata;
+ 		struct beacon_data *old_beacon = sdata->u.ap.beacon;
+ 
++		/* sdata_running will return false, so this will disable */
++		ieee80211_bss_info_change_notify(sdata,
++						 BSS_CHANGED_BEACON_ENABLED);
++
+ 		/* remove beacon */
+ 		rcu_assign_pointer(sdata->u.ap.beacon, NULL);
+ 		synchronize_rcu();
+ 		kfree(old_beacon);
+ 
++		/* free all potentially still buffered bcast frames */
++		while ((skb = skb_dequeue(&sdata->u.ap.ps_bc_buf))) {
++			local->total_ps_buffered--;
++			dev_kfree_skb(skb);
++		}
++
+ 		/* down all dependent devices, that is VLANs */
+ 		list_for_each_entry_safe(vlan, tmpsdata, &sdata->u.ap.vlans,
+ 					 u.vlan.list)
+@@ -454,27 +461,6 @@ static int ieee80211_stop(struct net_dev
+ 
+ 		ieee80211_configure_filter(local);
+ 		break;
+-	case NL80211_IFTYPE_STATION:
+-		del_timer_sync(&sdata->u.mgd.chswitch_timer);
+-		del_timer_sync(&sdata->u.mgd.timer);
+-		del_timer_sync(&sdata->u.mgd.conn_mon_timer);
+-		del_timer_sync(&sdata->u.mgd.bcn_mon_timer);
+-		/*
+-		 * If any of the timers fired while we waited for it, it will
+-		 * have queued its work. Now the work will be running again
+-		 * but will not rearm the timer again because it checks
+-		 * whether the interface is running, which, at this point,
+-		 * it no longer is.
+-		 */
+-		cancel_work_sync(&sdata->u.mgd.chswitch_work);
+-		cancel_work_sync(&sdata->u.mgd.monitor_work);
+-		cancel_work_sync(&sdata->u.mgd.beacon_connection_loss_work);
+-
+-		/* fall through */
+-	case NL80211_IFTYPE_ADHOC:
+-		if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
+-			del_timer_sync(&sdata->u.ibss.timer);
+-		/* fall through */
+ 	case NL80211_IFTYPE_MESH_POINT:
+ 		if (ieee80211_vif_is_mesh(&sdata->vif)) {
+ 			/* other_bss and allmulti are always set on mesh
+@@ -502,17 +488,19 @@ static int ieee80211_stop(struct net_dev
+ 			ieee80211_scan_cancel(local);
+ 
+ 		/*
+-		 * Disable beaconing for AP and mesh, IBSS can't
+-		 * still be joined to a network at this point.
++		 * Disable beaconing here for mesh only, AP and IBSS
++		 * are already taken care of.
+ 		 */
+-		if (sdata->vif.type == NL80211_IFTYPE_AP ||
+-		    sdata->vif.type == NL80211_IFTYPE_MESH_POINT) {
++		if (sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
+ 			ieee80211_bss_info_change_notify(sdata,
+ 				BSS_CHANGED_BEACON_ENABLED);
+-		}
+ 
+-		/* free all remaining keys, there shouldn't be any */
++		/*
++		 * Free all remaining keys, there shouldn't be any,
++		 * except maybe group keys in AP more or WDS?
++		 */
+ 		ieee80211_free_keys(sdata);
++
+ 		drv_remove_interface(local, &sdata->vif);
+ 	}
+ 
+@@ -593,8 +581,6 @@ static void ieee80211_teardown_sdata(str
+ {
+ 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+ 	struct ieee80211_local *local = sdata->local;
+-	struct beacon_data *beacon;
+-	struct sk_buff *skb;
+ 	int flushed;
+ 	int i;
+ 
+@@ -607,37 +593,8 @@ static void ieee80211_teardown_sdata(str
+ 		__skb_queue_purge(&sdata->fragments[i].skb_list);
+ 	sdata->fragment_next = 0;
+ 
+-	switch (sdata->vif.type) {
+-	case NL80211_IFTYPE_AP:
+-		beacon = sdata->u.ap.beacon;
+-		rcu_assign_pointer(sdata->u.ap.beacon, NULL);
+-		synchronize_rcu();
+-		kfree(beacon);
+-
+-		while ((skb = skb_dequeue(&sdata->u.ap.ps_bc_buf))) {
+-			local->total_ps_buffered--;
+-			dev_kfree_skb(skb);
+-		}
+-
+-		break;
+-	case NL80211_IFTYPE_MESH_POINT:
+-		if (ieee80211_vif_is_mesh(&sdata->vif))
+-			mesh_rmc_free(sdata);
+-		break;
+-	case NL80211_IFTYPE_ADHOC:
+-		if (WARN_ON(sdata->u.ibss.presp))
+-			kfree_skb(sdata->u.ibss.presp);
+-		break;
+-	case NL80211_IFTYPE_STATION:
+-	case NL80211_IFTYPE_WDS:
+-	case NL80211_IFTYPE_AP_VLAN:
+-	case NL80211_IFTYPE_MONITOR:
+-		break;
+-	case NL80211_IFTYPE_UNSPECIFIED:
+-	case NUM_NL80211_IFTYPES:
+-		BUG();
+-		break;
+-	}
++	if (ieee80211_vif_is_mesh(&sdata->vif))
++		mesh_rmc_free(sdata);
+ 
+ 	flushed = sta_info_flush(local, sdata);
+ 	WARN_ON(flushed);
+--- wireless-testing.orig/net/mac80211/mlme.c	2010-08-25 21:58:52.000000000 +0200
++++ wireless-testing/net/mac80211/mlme.c	2010-08-25 21:58:56.000000000 +0200
+@@ -990,6 +990,11 @@ static void ieee80211_set_disassoc(struc
+ 
+ 	if (remove_sta)
+ 		sta_info_destroy_addr(sdata, bssid);
++
++	del_timer_sync(&sdata->u.mgd.conn_mon_timer);
++	del_timer_sync(&sdata->u.mgd.bcn_mon_timer);
++	del_timer_sync(&sdata->u.mgd.timer);
++	del_timer_sync(&sdata->u.mgd.chswitch_timer);
+ }
+ 
+ void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
+
+
