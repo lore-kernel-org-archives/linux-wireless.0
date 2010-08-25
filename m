@@ -1,54 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:57765 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751165Ab0HAQRR convert rfc822-to-8bit (ORCPT
+Received: from mail.redfish-solutions.com ([66.232.79.143]:48421 "EHLO
+	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751696Ab0HYSmS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Aug 2010 12:17:17 -0400
-Received: by wwj40 with SMTP id 40so3081813wwj.1
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Aug 2010 09:17:16 -0700 (PDT)
+	Wed, 25 Aug 2010 14:42:18 -0400
+Message-ID: <4C7563FE.10301@redfish-solutions.com>
+Date: Wed, 25 Aug 2010 11:42:06 -0700
+From: Philip Prindeville <philipp_subx@redfish-solutions.com>
 MIME-Version: 1.0
-Date: Sun, 1 Aug 2010 12:17:16 -0400
-Message-ID: <AANLkTi=XOECFnOgB5mmaDejVhH2aAEedYqz9tyeSz7Ge@mail.gmail.com>
-Subject: SMC 2802W -status unsupported
-From: David Cozatt <olbrannon@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Subject: Re: Marshaling issues w/ compat-wireless-2010-08-19
+References: <4C746F74.70401@redfish-solutions.com>	 <1282723861.3685.4.camel@jlt3.sipsolutions.net> <1282724412.3685.5.camel@jlt3.sipsolutions.net> <4C7551A4.4040605@redfish-solutions.com>
+In-Reply-To: <4C7551A4.4040605@redfish-solutions.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Accessing http://wireless.kernel.org/en/users/Drivers/p54 shows in unsupported
+  On 8/25/10 10:23 AM, Philip Prindeville wrote:
+>  On 8/25/10 1:20 AM, Johannes Berg wrote:
+>> On Wed, 2010-08-25 at 10:11 +0200, Johannes Berg wrote:
+>>
+>>>> authentication: STA=f8:1e:df:1e:c2:23 auth_alg=35510 auth_transaction=79 status_code=21688 wep=1
+>>>> Unsupported authentication algorithm (35510)
+>>>>
+>>>>
+>>>> I'm wondering if some messages that are passed up to user-space via
+>>>> netlink from the driver might have changed their schema, i.e. adding
+>>>> new fields in the middle of a structure or moving fields around within
+>>>> a structure.
+>>> Looks more like a crypto problem to me, as this should be the encrypted
+>>> challenge in your shared key handshake. IOW, it looks like the frame
+>>> isn't getting decrypted by mac80211 for some reason.
+>> Works fine here in hwsim, so likely to be either a driver problem (hw
+>> decrypts frame, but driver doesn't tell us so), something that has been
+>> fixed between then and now, or a compat specific problem.
+>>
+>> johannes
+>
+> I'll bump to yesterday's baking, apply your patch, and retry.  Maybe it was a spurious issue.
+>
+> If that doesn't work, I'll try forcing h/w decryption off in the NIC.
 
-    * early PrismGT cards (e.g.: Netgear WG511v1, SMC 2802W)
 
-There are 2 revisions of this model
+Retried with yesterday's baking.  No joy.  Also reloaded the module with nohwcrypt=1 and same result (except that the value in the auth_alg field changed from 6421 to 44995).
 
-random david # lspci -vv | grep SMC
-    Subsystem: Standard Microsystems Corp [SMC] SMC2802W Wireless PCI Adapter
-random david # lspci -vv | grep Wireless
-    Subsystem: Standard Microsystems Corp [SMC] SMC2802W Wireless PCI Adapter
-random david # dmesg | grep phy0
 
-phy0: p54 detected a LM86 firmware
-phy0: FW rev 2.13.12.0 - Softmac protocol 5.9
-phy0: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
-phy0: hwaddr 00:04:e2:63:c2:67, MAC:isl3890 RF:Duette3
-phy0: Selected rate control algorithm 'minstrel'
-p54pci 0000:00:0a.0: is registered as 'phy0'
-
-Part numbers:
-99-012084-164
-99-012084-285
-
-You can verify this with choosing the 2802W from the drop down boxes
-@http://www.smc.com/index.cfm?event=downloads.searchCriteria&localeCode=EN_USA&knowsPartNumber=false&productCategory=5&modelNumber=536&downloadType=0&os=0
-
-Mine is the -164 version. Anything else needed to confirm working properly?
-
-random david # uname -a
-Linux random 2.6.34.1 #5 SMP Thu Jul 22 22:06:56 EDT 2010 x86_64 AMD
-Athlon(tm) 64 Processor 3200+ AuthenticAMD GNU/Linux
-
-Posting vie device ;-)
-
-kind regards
-DJ Cozatt
