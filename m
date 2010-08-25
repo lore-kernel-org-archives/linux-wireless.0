@@ -1,42 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:52411 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750926Ab0HUPj0 convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36057 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754181Ab0HYU6W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Aug 2010 11:39:26 -0400
-Received: by qyk9 with SMTP id 9so1488694qyk.19
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Aug 2010 08:39:25 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTi=ioQFQ=0_Z5EWRNVrEYp2o40UU4TROOMaouZX1@mail.gmail.com>
-References: <AANLkTi=ZGn0Rt7zYxBJB0jJ-EY=gPpxtBN2bA9svkq99@mail.gmail.com>
-	<1281986025.3683.31.camel@jlt3.sipsolutions.net>
-	<AANLkTiniqFJzrWFzNJTxsF31EZfSTei89dbS2Ak4YDjH@mail.gmail.com>
-	<1281987696.3683.32.camel@jlt3.sipsolutions.net>
-	<AANLkTi=ALaGb=UcWAuB_N8E9j95f0Hgxtw0Dhh7xaPh2@mail.gmail.com>
-	<1281995025.3683.34.camel@jlt3.sipsolutions.net>
-	<AANLkTi=sb0PT4FHsjbuAOQjnDq79GHEj8LbCLTtO8MeS@mail.gmail.com>
-	<AANLkTin90i08fbYeyrc17a7=smhshxR69=ushqUSkA0Z@mail.gmail.com>
-	<1282035102.3747.0.camel@jlt3.sipsolutions.net>
-	<AANLkTikzWs65zQYbCJQuvLv0e_010Rgy-C6J4ucpzBfa@mail.gmail.com>
-	<AANLkTi=ioQFQ=0_Z5EWRNVrEYp2o40UU4TROOMaouZX1@mail.gmail.com>
-Date: Sat, 21 Aug 2010 11:39:24 -0400
-Message-ID: <AANLkTikKLxtZot06Wr+KvgxC0dbZKxjNnAMB-3_Ok=-H@mail.gmail.com>
-Subject: Re: nl80211 scanning from userspace
-From: Bob Copeland <me@bobcopeland.com>
-To: Christopher Piggott <cpiggott@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 25 Aug 2010 16:58:22 -0400
+Message-Id: <20100825205726.741362601@sipsolutions.net>
+Date: Wed, 25 Aug 2010 22:56:22 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC 3/6] mac80211: simplify zero address checks
+References: <20100825205619.152295081@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 20, 2010 at 7:42 PM, Christopher Piggott <cpiggott@gmail.com> wrote:
-> I'm sorry ... I hit REPLY again to Johannes personally rather than to
-> the list.  I don't know what it is about this list server that makes
-> me do it ... maybe there's no Reply-To.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Tip: for most Linux-related mailing lists, simply use reply-to-all.
+The libertas_tf special code for zero addresses
+is a bit too complex, it compares against a stack
+value instead of using is_zero_ether_addr() and
+tries to update all interfaces even if just the
+one that's being brought up needs to be changed.
+Additionally, the repeated check for a valid MAC
+address need only be done if we actually changed
+it on the fly.
 
-http://www.unicom.com/pw/reply-to-harmful.html
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/iface.c |   38 +++++++++++++-------------------------
+ 1 file changed, 13 insertions(+), 25 deletions(-)
 
--- 
-Bob Copeland %% www.bobcopeland.com
+--- wireless-testing.orig/net/mac80211/iface.c	2010-08-25 21:59:11.000000000 +0200
++++ wireless-testing/net/mac80211/iface.c	2010-08-25 22:01:50.000000000 +0200
+@@ -103,10 +103,9 @@ static int ieee80211_open(struct net_dev
+ 	u32 changed = 0;
+ 	int res;
+ 	u32 hw_reconf_flags = 0;
+-	u8 null_addr[ETH_ALEN] = {0};
+ 
+ 	/* fail early if user set an invalid address */
+-	if (compare_ether_addr(dev->dev_addr, null_addr) &&
++	if (!is_zero_ether_addr(dev->dev_addr) &&
+ 	    !is_valid_ether_addr(dev->dev_addr))
+ 		return -EADDRNOTAVAIL;
+ 
+@@ -195,33 +194,22 @@ static int ieee80211_open(struct net_dev
+ 	}
+ 
+ 	/*
+-	 * Check all interfaces and copy the hopefully now-present
+-	 * MAC address to those that have the special null one.
++	 * Copy the hopefully now-present MAC address to
++	 * this interface, if it has the special null one.
+ 	 */
+-	list_for_each_entry(nsdata, &local->interfaces, list) {
+-		struct net_device *ndev = nsdata->dev;
+-
+-		/*
+-		 * No need to check running since we do not allow
+-		 * it to start up with this invalid address.
+-		 */
+-		if (compare_ether_addr(null_addr, ndev->dev_addr) == 0) {
+-			memcpy(ndev->dev_addr,
+-			       local->hw.wiphy->perm_addr,
+-			       ETH_ALEN);
+-			memcpy(ndev->perm_addr, ndev->dev_addr, ETH_ALEN);
++	if (is_zero_ether_addr(dev->dev_addr)) {
++		memcpy(dev->dev_addr,
++		       local->hw.wiphy->perm_addr,
++		       ETH_ALEN);
++		memcpy(dev->perm_addr, dev->dev_addr, ETH_ALEN);
++
++		if (!is_valid_ether_addr(dev->dev_addr)) {
++			if (!local->open_count)
++				drv_stop(local);
++			return -EADDRNOTAVAIL;
+ 		}
+ 	}
+ 
+-	/*
+-	 * Validate the MAC address for this device.
+-	 */
+-	if (!is_valid_ether_addr(dev->dev_addr)) {
+-		if (!local->open_count)
+-			drv_stop(local);
+-		return -EADDRNOTAVAIL;
+-	}
+-
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_AP_VLAN:
+ 		/* no need to tell driver */
+
+
