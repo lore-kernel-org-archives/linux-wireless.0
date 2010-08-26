@@ -1,35 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:52680 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751925Ab0H1TCn (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51883 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753989Ab0HZP2L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Aug 2010 15:02:43 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 62DD94195D
-	for <linux-wireless@vger.kernel.org>; Sat, 28 Aug 2010 15:01:53 -0400 (EDT)
-Subject: Compat-wireless release for 2010-08-28 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20100828190242.18FD441133@repository3.orbit-lab.org>
-Date: Sat, 28 Aug 2010 15:02:42 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Thu, 26 Aug 2010 11:28:11 -0400
+Subject: Re: a simple wireless mesh network
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Joel Fernandes <agnel.joel@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <AANLkTimNA_i8Za8xOh8XffdkrE7wFLc9GBs4JSPAsT3+@mail.gmail.com>
+References: <AANLkTimNA_i8Za8xOh8XffdkrE7wFLc9GBs4JSPAsT3+@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 26 Aug 2010 17:28:10 +0200
+Message-ID: <1282836490.3812.66.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2010-08-26 at 10:19 -0500, Joel Fernandes wrote:
+> Hi,
+> I am studying wireless mesh networks and wanted to play with open80211s.
+> As a part of my study, I want to demo, multiple nodes on a mesh
+> network and analyze the traffic in wireshark
+> 
+> Unfortunately I don't have many physical nodes so I'm looking for a
+> way to emulate them.
+> 
+> So far I've learnt that vmware and virtual box don't support virtual
+> wireless network adapters.
+> 
+> Any other suggestion that would make creating a wireless mesh network
+> for study purposes quick and painless?
 
-compat-wireless code metrics
+http://wireless.kernel.org/en/users/Drivers/mac80211_hwsim
 
-    497647 - Total upstream lines of code being pulled
-      1714 - backport code changes
-      1474 - backport code additions
-       240 - backport code deletions
-      6072 - backport from compat module
-      7786 - total backport code
-    1.5646 - % of code consists of backport work
-      1218 - Crap changes not yet posted
-      1179 - Crap additions not yet posted
-        39 - Crap deletions not yet posted
-    0.2448 - % of crap code
+plus network namespaces, on a very new kernel where that actually works
+(like current wireless-testing)
 
-Base tree: linux-next.git
-Base tree version: next-20100827
-compat-wireless release: compat-wireless-2010-08-23-4-ge690954
+johannes
+
