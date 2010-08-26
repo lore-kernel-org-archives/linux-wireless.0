@@ -1,45 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:59366 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753641Ab0HHTDc (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:33900 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751330Ab0HZXfW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Aug 2010 15:03:32 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 8F8964195D
-	for <linux-wireless@vger.kernel.org>; Sun,  8 Aug 2010 15:01:52 -0400 (EDT)
-Subject: Compat-wireless release for 2010-08-08 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20100808190330.E8D2B41133@repository3.orbit-lab.org>
-Date: Sun,  8 Aug 2010 15:03:30 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Thu, 26 Aug 2010 19:35:22 -0400
+Received: by iwn5 with SMTP id 5so1993050iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Aug 2010 16:35:22 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTimbKnZ4WBgkXa9fm2Tj1=hfCOC8Zm=Skg+CfUgJ@mail.gmail.com>
+References: <20100826204722.GA1745@tux> <AANLkTimbKnZ4WBgkXa9fm2Tj1=hfCOC8Zm=Skg+CfUgJ@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Thu, 26 Aug 2010 16:35:02 -0700
+Message-ID: <AANLkTi=WjipNDTHbP-L5LCi8jsyJ0-vxCFnpBJracdJK@mail.gmail.com>
+Subject: Re: issues with scanning in mac80211
+To: Amod Bodas <Amod.Bodas@atheros.com>
+Cc: Jouni Malinen <Jouni.Malinen@atheros.com>,
+	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	Helmut Schaa <Helmut.Schaa@gmx.de>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	ext Kalle Valo <kvalo@adurom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   3672499..404ce58  master     -> origin/master
-   8eb662b..a34839f  wl         -> origin/wl
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
-   d6f0174..a092b24  master     -> origin/master
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   b7cb6f4..f55c6b6  history    -> origin/history
- + 598a80f...7fd0686 master     -> origin/master  (forced update)
-   fc1caf6..4a386c3  stable     -> origin/stable
- * [new tag]         next-20100807 -> next-20100807
+On Thu, Aug 26, 2010 at 4:11 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> As suggested by Jouni, I'll test using min(listen_interval,
+> DTIM_PERIOD), this should only help with broadcast / multicast data
+> upon a scan. If there are any other thresholds required by userspace
+> this should likely be configured on the bg scan module I think.
 
-compat-wireless code metrics
+Ah bleh, we cannot rely on the dtim as it is not exposed to drivers
+unless otherwise requested. This can be done by using the new
+IEEE80211_HW_NEED_DTIM_PERIOD but this is completely unused by drivers
+today.
 
-    494668 - Total upstream lines of code being pulled
-      1530 - backport code changes
-      1291 - backport code additions
-       239 - backport code deletions
-      5833 - backport from compat module
-      7363 - total backport code
-    1.4885 - % of code consists of backport work
-      1218 - Crap changes not yet posted
-      1179 - Crap additions not yet posted
-        39 - Crap deletions not yet posted
-    0.2462 - % of crap code
+mcgrof@tux ~/wireless-testing (git::master)$ git grep
+IEEE80211_HW_NEED_DTIM_PERIOD drivers/net/wireless/
+mcgrof@tux ~/wireless-testing (git::master)$
 
-Base tree: linux-next.git
-Base tree version: next-20100807
-compat-wireless release: compat-wireless-2010-08-03-2-g404ce58
+
+commit e5b900d228b76d445a4240d9aeb3cd8f79205a91
+Author: Johannes Berg <johannes.berg@intel.com>
+Date:   Thu Jul 29 16:08:55 2010 +0200
+
+    mac80211: allow drivers to request DTIM period
+
+    Some features require knowing the DTIM period
+    before associating. This implements the ability
+    to wait for a beacon in mac80211 before assoc
+    to provide this value. It is optional since
+    most likely not all drivers will need this.
+
+    Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+.... < amongst other hunks > ...
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index cf8d721..b6c163a 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -870,6 +870,11 @@ static void ieee80211_set_associated(struct
+ieee80211_sub_if_data *sdata,
+
+        ieee80211_led_assoc(local, 1);
+
++       if (local->hw.flags & IEEE80211_HW_NEED_DTIM_PERIOD)
++               bss_conf->dtim_period = bss->dtim_period;
++       else
++               bss_conf->dtim_period = 0;
++
+        bss_conf->assoc = 1;
+        /*
+         * For now just always ask the driver to update the basic rateset
