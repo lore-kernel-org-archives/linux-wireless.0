@@ -1,32 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:59284 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751445Ab0HXAak (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56722 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751908Ab0HZN3m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Aug 2010 20:30:40 -0400
+	Thu, 26 Aug 2010 09:29:42 -0400
+Date: Thu, 26 Aug 2010 07:58:00 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC 0/6] "runtime" iftype switching
+Message-ID: <20100826115800.GA6733@tuxdriver.com>
+References: <20100825205619.152295081@sipsolutions.net>
+ <20100825211036.GO2557@tuxdriver.com>
+ <1282807400.3812.6.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 23 Aug 2010 17:30:20 -0700
-Message-ID: <AANLkTikP7W9eQeqb3zdaCGdqqKddhBBQty_XsffGeNdB@mail.gmail.com>
-Subject: Compat-wireless wireless-testing.git branch
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>
-Cc: Senthil Balasubramanian <senthilkumar@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1282807400.3812.6.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The "wl" branch for compat-wireless.git is used to allow us to build
-releases based on wireless-testing.git instead of linux-next.git. I
-just ran into a few issues with porting some of the patches from the
-master branch over which are now applicable to the "wl" branch but got
-tired of trying to just nuked the "wl" branch, recreated a new one
-based on the master branch and refreshed the patches to apply. If you
-are a user of the "wl" branch you must:
+On Thu, Aug 26, 2010 at 09:23:20AM +0200, Johannes Berg wrote:
+> On Wed, 2010-08-25 at 17:10 -0400, John W. Linville wrote:
+> > On Wed, Aug 25, 2010 at 10:56:19PM +0200, Johannes Berg wrote:
+> > > Here's some code to allow runtime (while the
+> > > interface is UP) interface type switching,
+> > > so far only for STA, IBSS and AP because the
+> > > others seem a bit trickier and harder to
+> > > verify.
+> 
+> > What is driving this?
+> 
+> Mostly the fact that it's awkward to set the interface down every time,
+> because for example every time you do that some IPv6 configuration gets
+> lost.
+> 
+> Also, "because I can" :)
 
-git fetch
-git checkout master
-git branch -D wl
-git checkout -b wl origin/wl
+Fair enough... :-)
 
-  Luis
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
