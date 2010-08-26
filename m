@@ -1,50 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:43999 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754034Ab0HWR50 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Aug 2010 13:57:26 -0400
-Received: by mail-wy0-f174.google.com with SMTP id 32so7066669wyb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Aug 2010 10:57:25 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 5/8] rt2x00: Fix rt2800 retry calculation
-Date: Mon, 23 Aug 2010 19:55:01 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <201008231953.40629.IvDoorn@gmail.com> <201008231954.22661.IvDoorn@gmail.com> <201008231954.42087.IvDoorn@gmail.com>
-In-Reply-To: <201008231954.42087.IvDoorn@gmail.com>
+Received: from purkki.adurom.net ([80.68.90.206]:50717 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752687Ab0HZGqO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Aug 2010 02:46:14 -0400
+To: linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: Re: Filesystem corruption with 2.6.36-rc1-wl+ and ecryptfs
+References: <87tymt9iex.fsf@purkki.adurom.net>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Thu, 26 Aug 2010 09:46:13 +0300
+In-Reply-To: <87tymt9iex.fsf@purkki.adurom.net> (Kalle Valo's message of "Tue\, 17 Aug 2010 21\:57\:10 +0300")
+Message-ID: <87k4nd98i2.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201008231955.02401.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The retry count for a frame is calculated by the realized MCS rate
-subtracting of the requested MCS rate. However during TX done reporting
-we accidently override the requested MCS rate with the realized MCS
-rate. This causes the retry count to be reset to 0 always, and feeding
-invalid rate information into minstrel_ht.
+Kalle Valo <kvalo@adurom.com> writes:
 
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+> I just installed my first 2.6.36 kernel, 2.6.36-rc1-wl+ from
+> wireless-testing, and immeadialy (during first boot) got major
+> corruption in the filesystem. For example, gnome lost it's settings,
+> ~/.ssh was empty etc. Now, with an older kernel, my directory
+> structure has duplicate entries, like this:
+>
+> $ ls -ald D*
+> drwxr-xr-x 2 kvalo kvalo 4096 2010-08-17 19:21 Desktop/
+> drwxr-xr-x 2 kvalo kvalo 4096 2010-08-17 19:21 Desktop/
+> drwxr-xr-x 2 kvalo kvalo 4096 2010-08-17 19:21 Documents/
+> drwxr-xr-x 2 kvalo kvalo 4096 2010-08-17 19:21 Documents/
+> drwxr-xr-x 2 kvalo kvalo 4096 2010-08-17 19:21 Downloads/
+> drwxr-xr-x 2 kvalo kvalo 4096 2010-08-17 19:21 Downloads/
+>
+> I'm using ecryptfs and that's my major suspect for the corruption, but
+> naturally I can't be sure because I'm just guessing here. 
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 6a0cb2d..d3a5837 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -650,7 +650,6 @@ void rt2800_txdone(struct rt2x00_dev *rt2x00dev)
- 		txdesc.flags = 0;
- 		rt2x00_desc_read(txwi, 0, &word);
- 		mcs = rt2x00_get_field32(word, TXWI_W0_MCS);
--		mcs = rt2x00_get_field32(reg, TX_STA_FIFO_MCS);
- 		real_mcs = rt2x00_get_field32(reg, TX_STA_FIFO_MCS);
- 
- 		/*
+(For the archives)
+
+It was ecryptfs, bug report here:
+
+https://bugs.launchpad.net/ecryptfs/+bug/623087
+
+And fix here:
+
+http://git.kernel.org/?p=linux/kernel/git/ecryptfs/ecryptfs-2.6.git;a=commitdiff;h=b4ef26e06ce0c4877bd5a736b0dfb318a4fb9002
+
 -- 
-1.7.2.1
-
+Kalle Valo
