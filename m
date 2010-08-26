@@ -1,55 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:36002 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750722Ab0HAQfI (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:44287 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752198Ab0HZTDx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Aug 2010 12:35:08 -0400
-Received: by pzk26 with SMTP id 26so1093521pzk.19
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Aug 2010 09:35:07 -0700 (PDT)
-Message-ID: <4C55A261.10902@lwfinger.net>
-Date: Sun, 01 Aug 2010 11:35:45 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: David Cozatt <olbrannon@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: SMC 2802W -status unsupported
-References: <AANLkTi=XOECFnOgB5mmaDejVhH2aAEedYqz9tyeSz7Ge@mail.gmail.com>
-In-Reply-To: <AANLkTi=XOECFnOgB5mmaDejVhH2aAEedYqz9tyeSz7Ge@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 26 Aug 2010 15:03:53 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 6B81C4195D
+	for <linux-wireless@vger.kernel.org>; Thu, 26 Aug 2010 15:03:08 -0400 (EDT)
+Subject: Compat-wireless release for 2010-08-26 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100826190351.BB0E141133@repository3.orbit-lab.org>
+Date: Thu, 26 Aug 2010 15:03:51 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/01/2010 11:17 AM, David Cozatt wrote:
-> Accessing http://wireless.kernel.org/en/users/Drivers/p54 shows in unsupported
-> 
->     * early PrismGT cards (e.g.: Netgear WG511v1, SMC 2802W)
-> 
-> There are 2 revisions of this model
-> 
-> random david # lspci -vv | grep SMC
->     Subsystem: Standard Microsystems Corp [SMC] SMC2802W Wireless PCI Adapter
-> random david # lspci -vv | grep Wireless
->     Subsystem: Standard Microsystems Corp [SMC] SMC2802W Wireless PCI Adapter
-> random david # dmesg | grep phy0
-> 
-> phy0: p54 detected a LM86 firmware
-> phy0: FW rev 2.13.12.0 - Softmac protocol 5.9
-> phy0: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
-> phy0: hwaddr 00:04:e2:63:c2:67, MAC:isl3890 RF:Duette3
-> phy0: Selected rate control algorithm 'minstrel'
-> p54pci 0000:00:0a.0: is registered as 'phy0'
-> 
-> Part numbers:
-> 99-012084-164
-> 99-012084-285
-> 
-> You can verify this with choosing the 2802W from the drop down boxes
-> @http://www.smc.com/index.cfm?event=downloads.searchCriteria&localeCode=EN_USA&knowsPartNumber=false&productCategory=5&modelNumber=536&downloadType=0&os=0
-> 
-> Mine is the -164 version. Anything else needed to confirm working properly?
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   03699ed..359abe5  linux-2.6.36.y -> origin/linux-2.6.36.y
+   1d39e2d..ce9cc2e  master     -> origin/master
+   92c8a6d..502cb34  wl         -> origin/wl
+ * [new tag]         compat-wireless-master-2010-08-25 -> compat-wireless-master-2010-08-25
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+   b8eedcf..2a2a712  linux-2.6.33.y -> origin/linux-2.6.33.y
+   ab9d7b2..b4453f5  linux-2.6.34.y -> origin/linux-2.6.34.y
+   e06a643..4b258cb  linux-2.6.35.y -> origin/linux-2.6.35.y
+   82eaf99..9caaec5  linux-2.6.36.y -> origin/linux-2.6.36.y
+   4715fbe..6561208  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   456b10e..da9e5a3  history    -> origin/history
+ + 17c4c1b...bd174e2 master     -> origin/master  (forced update)
+   502adf5..d4348c6  stable     -> origin/stable
+ * [new tag]         next-20100826 -> next-20100826
 
-If I understand correctly, the device is working - only the wiki is wrong.
+compat-wireless code metrics
 
-For my info, what does 'lspci -nnk | grep 2802' show?
+    497647 - Total upstream lines of code being pulled
+      1714 - backport code changes
+      1474 - backport code additions
+       240 - backport code deletions
+      6072 - backport from compat module
+      7786 - total backport code
+    1.5646 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2448 - % of crap code
 
-Larry
+Base tree: linux-next.git
+Base tree version: next-20100826
+compat-wireless release: compat-wireless-2010-08-23-2-gce9cc2e
