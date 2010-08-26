@@ -1,55 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:30752 "EHLO mga14.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:23733 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754423Ab0H0Q44 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 12:56:56 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 25/27] iwlagn: always send RXON timing
-Date: Fri, 27 Aug 2010 09:59:53 -0700
-Message-Id: <1282928395-32762-26-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1282928395-32762-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1282928395-32762-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1752309Ab0HZPrO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Aug 2010 11:47:14 -0400
+Subject: Re: [rfc patch] libertas: fix if_spi_prog_helper_firmware()
+From: Dan Williams <dcbw@redhat.com>
+To: Dan Carpenter <error27@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	Mike Frysinger <vapier.adi@gmail.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+In-Reply-To: <20100824120743.GG29330@bicker>
+References: <20100824120743.GG29330@bicker>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 26 Aug 2010 10:48:45 -0500
+Message-ID: <1282837725.3642.1.camel@dcbw.foobar.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, 2010-08-24 at 14:07 +0200, Dan Carpenter wrote:
+> The indenting is not correct here.  I don't have this hardware and I'm
+> just guessing as to what was intended.  I think that if there is an
+> error we should return an error code, but if there isn't an error we
+> should return success directly without releasing the firmware.
+> 
+> Signed-off-by: Dan Carpenter <error27@gmail.com>
 
-The PAN context requires also getting
-RXON timing when we send an unassociated
-RXON in some cases.
+I've significantly changed firmware loading in wireless-testing which
+should hit the next merge window.  It won't have this problem, and it
+does correctly release the firmware later on.  It does preserve the
+existing behavior of releasing the firmware after load, instead of
+keeping it around for resume.  If there are fixes I think they should be
+against wireless-testing actually since that's what's "next".
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Dan
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 85eea94..1d58b1c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -105,6 +105,7 @@ int iwl_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 	int ret;
- 	bool new_assoc =
- 		!!(ctx->staging.filter_flags & RXON_FILTER_ASSOC_MSK);
-+	bool old_assoc = !!(ctx->active.filter_flags & RXON_FILTER_ASSOC_MSK);
- 
- 	if (!iwl_is_alive(priv))
- 		return -EBUSY;
-@@ -182,7 +183,7 @@ int iwl_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 
- 	iwl_set_rxon_hwcrypto(priv, ctx, !priv->cfg->mod_params->sw_crypto);
- 
--	if (new_assoc) {
-+	if (!old_assoc) {
- 		/*
- 		 * First of all, before setting associated, we need to
- 		 * send RXON timing so the device knows about the DTIM
--- 
-1.7.0.4
+> diff --git a/drivers/net/wireless/libertas/if_spi.c b/drivers/net/wireless/libertas/if_spi.c
+> index fe3f080..123a541 100644
+> --- a/drivers/net/wireless/libertas/if_spi.c
+> +++ b/drivers/net/wireless/libertas/if_spi.c
+> @@ -471,9 +471,12 @@ static int if_spi_prog_helper_firmware(struct if_spi_card *card)
+>  		goto release_firmware;
+>  	err = spu_write_u16(card, IF_SPI_CARD_INT_CAUSE_REG,
+>  				IF_SPI_CIC_CMD_DOWNLOAD_OVER);
+> +	if (err)
+>  		goto release_firmware;
+>  
+> -	lbs_deb_spi("waiting for helper to boot...\n");
+> +	lbs_deb_spi("helper firmware loaded...\n");
+> +
+> +	return 0;
+>  
+>  release_firmware:
+>  	release_firmware(firmware);
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
