@@ -1,122 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.outflux.net ([198.145.64.163]:48751 "EHLO smtp.outflux.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751932Ab0H0VEZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 17:04:25 -0400
-Date: Fri, 27 Aug 2010 14:02:41 -0700
-From: Kees Cook <kees.cook@canonical.com>
-To: linux-kernel@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Joe Perches <joe@perches.com>, Jean Tourrilhes <jt@hpl.hp.com>,
-	Tejun Heo <tj@kernel.org>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: [PATCH] wireless: fix 64K kernel heap content leak via ioctl
-Message-ID: <20100827210240.GC4703@outflux.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:49363 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751208Ab0HZDh5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Aug 2010 23:37:57 -0400
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Colin McCabe <cmccabe@alumni.cmu.edu>
+Cc: Dan Carpenter <error27@gmail.com>,
+	Mike Frysinger <vapier.adi@gmail.com>,
+	libertas-dev@lists.infradead.org, Dan Williams <dcbw@redhat.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+In-Reply-To: <AANLkTikL8KUyaCsSy8yu0brUde5cGCRnfc74Ufs47jga@mail.gmail.com>
+References: <20100824120743.GG29330@bicker>
+	 <1282652121.2968.9.camel@localhost>
+	 <AANLkTikL8KUyaCsSy8yu0brUde5cGCRnfc74Ufs47jga@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-+hzUrnF623iOu1MFLGFe"
+Date: Thu, 26 Aug 2010 04:37:37 +0100
+Message-ID: <1282793857.22839.233.camel@localhost>
+Mime-Version: 1.0
+Subject: Re: [rfc patch] libertas: fix if_spi_prog_helper_firmware()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This problem was originally tracked down by Brad Spengler.
 
-When calling wireless ioctls, if a driver does not correctly
-validate/shrink iwp->length, the resulting copy_to_user can leak up to
-64K of kernel heap contents.
+--=-+hzUrnF623iOu1MFLGFe
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-It seems that this is triggerable[1] in 2.6.32 at least on ath5k, but
-I was not able to track down how. The twisty maze of ioctl handlers
-stumped me. :) Other drivers I checked did not appear to have any problems,
-but the potential remains. I'm not sure if this patch is the right approach;
-it was fixed differently[2] in grsecurity.
+On Wed, 2010-08-25 at 20:26 -0700, Colin McCabe wrote:
+> On Tue, Aug 24, 2010 at 5:15 AM, Ben Hutchings <ben@decadent.org.uk> wrot=
+e:
+> > On Tue, 2010-08-24 at 14:07 +0200, Dan Carpenter wrote:
+> >> The indenting is not correct here.  I don't have this hardware and I'm
+> >> just guessing as to what was intended.  I think that if there is an
+> >> error we should return an error code, but if there isn't an error we
+> >> should return success directly without releasing the firmware.
+> > [...]
+> >
+> > The driver doesn't use or refer to the firmware image once it's copied
+> > into device RAM, so this just leaks the firmware.
+> >
+> > The driver *should* keep a reference so it can restore the firmware
+> > after suspend/resume without filesystem access (which is likely to
+> > deadlock).
+>=20
+> Well, if all you want to do is put the device into "deep sleep" mode,
+> you will not need a firmware reload after waking it up.
+[...]
 
-[1] http://forums.grsecurity.net/viewtopic.php?f=3&t=2290&start=0
-[2] http://grsecurity.net/~spender/wireless-infoleak-fix2.patch
+I was thinking of system suspend/resume, which could remove all power
+from the device.
 
-Reported-by: Brad Spengler <spender@grsecurity.net>
-Signed-off-by: Kees Cook <kees.cook@canonical.com>
----
- include/net/iw_handler.h |    1 -
- net/wireless/wext-core.c |   26 ++------------------------
- 2 files changed, 2 insertions(+), 25 deletions(-)
+Ben.
 
-diff --git a/include/net/iw_handler.h b/include/net/iw_handler.h
-index 3afdb21..6c81f29 100644
---- a/include/net/iw_handler.h
-+++ b/include/net/iw_handler.h
-@@ -277,7 +277,6 @@
- #define IW_DESCR_FLAG_EVENT	0x0002	/* Generate an event on SET */
- #define IW_DESCR_FLAG_RESTRICT	0x0004	/* GET : request is ROOT only */
- 				/* SET : Omit payload from generated iwevent */
--#define IW_DESCR_FLAG_NOMAX	0x0008	/* GET : no limit on request size */
- /* Driver level flags */
- #define IW_DESCR_FLAG_WAIT	0x0100	/* Wait for driver event */
- 
-diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
-index 0ef17bc..55b1fd9 100644
---- a/net/wireless/wext-core.c
-+++ b/net/wireless/wext-core.c
-@@ -82,7 +82,6 @@ static const struct iw_ioctl_description standard_ioctl[] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= sizeof(struct iw_priv_args),
- 		.max_tokens	= 16,
--		.flags		= IW_DESCR_FLAG_NOMAX,
- 	},
- 	[IW_IOCTL_IDX(SIOCSIWSTATS)] = {
- 		.header_type	= IW_HEADER_TYPE_NULL,
-@@ -134,7 +133,6 @@ static const struct iw_ioctl_description standard_ioctl[] = {
- 		.token_size	= sizeof(struct sockaddr) +
- 				  sizeof(struct iw_quality),
- 		.max_tokens	= IW_MAX_AP,
--		.flags		= IW_DESCR_FLAG_NOMAX,
- 	},
- 	[IW_IOCTL_IDX(SIOCSIWSCAN)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
-@@ -146,7 +144,6 @@ static const struct iw_ioctl_description standard_ioctl[] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
- 		.token_size	= 1,
- 		.max_tokens	= IW_SCAN_MAX_DATA,
--		.flags		= IW_DESCR_FLAG_NOMAX,
- 	},
- 	[IW_IOCTL_IDX(SIOCSIWESSID)] = {
- 		.header_type	= IW_HEADER_TYPE_POINT,
-@@ -737,28 +734,9 @@ static int ioctl_standard_iw_point(struct iw_point *iwp, unsigned int cmd,
- 			return -EFAULT;
- 		/* Save user space buffer size for checking */
- 		user_length = iwp->length;
--
--		/* Don't check if user_length > max to allow forward
--		 * compatibility. The test user_length < min is
--		 * implied by the test at the end.
--		 */
--
--		/* Support for very large requests */
--		if ((descr->flags & IW_DESCR_FLAG_NOMAX) &&
--		    (user_length > descr->max_tokens)) {
--			/* Allow userspace to GET more than max so
--			 * we can support any size GET requests.
--			 * There is still a limit : -ENOMEM.
--			 */
--			extra_size = user_length * descr->token_size;
--
--			/* Note : user_length is originally a __u16,
--			 * and token_size is controlled by us,
--			 * so extra_size won't get negative and
--			 * won't overflow...
--			 */
--		}
- 	}
-+	/* Support for very large requests */
-+	extra_size = max(extra_size, iwp->length * descr->token_size);
- 
- 	/* kzalloc() ensures NULL-termination for essid_compat. */
- 	extra = kzalloc(extra_size, GFP_KERNEL);
--- 
-1.7.1
+--=20
+Ben Hutchings
+Once a job is fouled up, anything done to improve it makes it worse.
 
+--=-+hzUrnF623iOu1MFLGFe
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
--- 
-Kees Cook
-Ubuntu Security Team
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIVAwUATHXhgOe/yOyVhhEJAQJPgRAA1pJDZuimszaCM964jmuuk3eoKoxEvhn1
+MqOAAsxG+L7YruyFDyqZr6XWCuKuXcj1GZsaBTxEACtoWSMFwpteukWu8HHcIA1E
+8L3K0iWrxAG++HmXG7PI6R8KgO0SgqzHqOkEag6TVCWcLORcl3i4CHUAv6qWdbO5
+v1w4m1xXxV8b52iga/EgEiXkTfb6exZq2dAcK4ogpLA5+dleeDLpZgsr55JeNRO0
+0uRrmgKIy/jy2nR4KHYY4xLlO3nOeZcc9ZhV8iTJ4Z1T5VkwIiVUO+Oga3oA+Nxc
+5Jz0gK20NsB2f+oP8r8KATwkj9eA6VHtjufFYJAPMPaig2Gr/zlvH0YmHdte+VPO
+2TCl9E5vkx+ER4YCDkG1mj3fk37kR5rKScN7npPnIqguEx4B3RW7zfOxtIPeKBIm
+2wD7UCSWYdV2t5S2JaCnvrzlsyCu65Dgt2NrRKhz2hL9LdGHE+srCEdQMKOnPahP
+EI2lrVDX7pEp5vt6Mdqy6JosmuaFtItrAwGufcbPw6bntyV8BQHf/zRvcVx9TZdR
+hB8kIKxU4V97V82nfC3/2sRJJKl+oZgHi8Str8TMEFPOBoPw+6nAUNr61tsHatl7
+jn/tFEIYDotCUYTMbWb1YkUxQwNLmswmGUOSehtm+e8V9j9mtbrI21jLc09kwOYx
+9y90Qh40cB0=
+=KrU/
+-----END PGP SIGNATURE-----
+
+--=-+hzUrnF623iOu1MFLGFe--
