@@ -1,149 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:63897 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754467Ab0H3Crr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Aug 2010 22:47:47 -0400
-Received: by ewy23 with SMTP id 23so2875150ewy.19
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Aug 2010 19:47:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTik9vPPxpxksGhRLkU+5y8YouJ+mbMHMBgt3B+3J@mail.gmail.com>
-References: <AANLkTi=W=vkgb0gM7ZWsBeE79Fe3iabtKFgu2S7N5uLe@mail.gmail.com>
-	<201008011137.49528.florian@openwrt.org>
-	<AANLkTik=t=jeCG7=bgkq3LBwJP9vq7KmFpgDeHngPoq-@mail.gmail.com>
-	<4C55F377.6040404@candelatech.com>
-	<AANLkTinGqWZ8o9L=ePsbgzWtitWAHCt3=g_z6BM7EpjO@mail.gmail.com>
-	<4C618713.9030303@candelatech.com>
-	<AANLkTikanjZf0LEqZjw5toeJz02Tcs6EcAiNdagJh=sQ@mail.gmail.com>
-	<AANLkTik9vPPxpxksGhRLkU+5y8YouJ+mbMHMBgt3B+3J@mail.gmail.com>
-Date: Mon, 30 Aug 2010 12:47:45 +1000
-Message-ID: <AANLkTikQk5=S=n8rP3hRgu8F=oyGqY_c8rFar7C=kRef@mail.gmail.com>
-Subject: Re: virtual access poitns (ath5k/mac80211)
-From: Ryszard <ryszard99@gmail.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Florian Fainelli <florian@openwrt.org>,
-	Patrick McHardy <kaber@trash.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga14.intel.com ([143.182.124.37]:28002 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754134Ab0HZPtH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Aug 2010 11:49:07 -0400
+Subject: Re: Intel Wireless: Microcode SW error detected.
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Saurav Barik <saurav.barik@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <loom.20100826T134600-785@post.gmane.org>
+References: <AANLkTimrv507n5-WmikUOhPE95wM1p1_Qtd65rOA1hei@mail.gmail.com>
+	 <E9954878DD1FB34FAE5187FB88C58A350122DF3C44@orsmsx506.amr.corp.intel.com>
+	 <AANLkTi=urmiEPXN+Bpk-6_KwcqSgFuqKc1LK0njNd5E_@mail.gmail.com>
+	 <loom.20100826T134600-785@post.gmane.org>
+Content-Type: text/plain
+Date: Thu, 26 Aug 2010 08:48:31 -0700
+Message-Id: <1282837711.3344.5.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi all,
+Hi Saurav,
 
-just to follow up with my progress on this.  i've managed to get it
-all working, that is, virtual wireless access points with Bens custom
-kernel and hostapd.
+On Thu, 2010-08-26 at 04:46 -0700, Saurav Barik wrote:
+> I am getting the same error with a - 6000 Series 2x2 AGN Gen2a card. I am 
+> using firmware version 9.221.4.1, build 25532. I have renamed the firmware 
+> to iwlwifi-6000g2a-4.ucode. Do I need a newer firmware for this card?
+> 
+not sure where you get the 6000 Series 2x2 AGN Gen2a card, we are still
+working on this device and no firmware being official release yet. 
 
-one issue i had was the default routing that was being set up.  for
-some reason, networks 172.16.0.0/255.255.0.0 was being associated with
-vap1 and vap0.  i've manually worked around that by issuing route del
-and the appropriate route add commands in rc.local (ubuntu based
-distro).
+Yes, you do need different firmware for the 6000g2a device
 
-unfort my interfaces are dynamically allocated IP addresses, so i dont
-think i can put this info into the /etc/network/interfaces file,
-however if anyone has any tips on how to make this a little more
-elegant, i'm all ears!
+Thanks
+Wey
 
-any any regard, i'd like to thank ben for his custom kernel and work
-on getting vaps to work with the ath5k drivers!!
 
-regs
-R
-
-On 23 August 2010 14:43, Ryszard <ryszard99@gmail.com> wrote:
-> now that i've got the kernel installed and working, i need to get some
-> modules installed.
->
-> I'm making the kernel with make-kpkg and want to do a make-kpkg
-> modules_install but am getting this error:
-> -----------------------------------------------------
-> root@bssapp1:~/linux-2.6.dev.31.y# time make-kpkg modules_image
-> exec debian/rules  DEBIAN_REVISION=2.6.31.12-10.00.Custom  modules_image
-> for module in  ; do                       \
->          if test -d  $module; then                                \
->            (cd $module;                                          \
->              if ./debian/rules KVERS="2.6.31.12"
-> KSRC="/home/jwilliams/linux-2.6.dev.31.y" \
->                             KMAINT="Unknown Kernel Package
-> Maintainer" KEMAIL="unknown@unconfigured.in.etc.kernel-pkg.conf"
-> \
->
-> KPKG_DEST_DIR="/home/jwilliams/linux-2.6.dev.31.y/.."       \
->                             KPKG_MAINTAINER="Unknown Kernel Package
-> Maintainer"        \
->                             KPKG_EXTRAV_ARG=""        \
->                             ARCH="i386"         \
->                             KDREV="2.6.31.12-10.00.Custom"
-> kdist_image; then    \
->                  echo "Module $module processed fine";            \
->              else                                                  \
->                   echo "Module $module failed.";                  \
->                   if [ "X" != "X" ]; then      \
->                      echo "Perhaps $module does not understand --rootcmd?";  \
->                      echo "If you see messages that indicate that it is not"; \
->                      echo "in fact being built as root, please file a bug ";  \
->                      echo "against $module.";                     \
->                   fi;                                              \
->                   echo "Hit return to Continue";                   \
->                 read ans;                                        \
->              fi;                                                   \
->             );                                                    \
->          else                                                      \
->               echo "Module $module does not exist";               \
->               echo "Hit return to Continue?";                      \
->          fi;                                                       \
->        done
->
-> real    0m6.557s
-> user    0m4.050s
-> sys     0m2.810s
-> root@bssapp1:~/linux-2.6.dev.31.y#
-> -----------------------------------------------------
->
-> does anyone have a hint or tip for me?!
->
-> regs
-> Jason
->
->
-> On 21 August 2010 13:07, Ryszard <ryszard99@gmail.com> wrote:
->> I've managed to compile and get bens kernel installed.  the problem i
->> had (for future reference) was the physical media not being
->> recognised.  adding rootdelay=130 to the kernel options seemed to have
->> fixed that.
->>
->> On 11 August 2010 03:06, Ben Greear <greearb@candelatech.com> wrote:
->>> On 08/10/2010 09:54 AM, Luis R. Rodriguez wrote:
->>>>
->>>> On Sun, Aug 1, 2010 at 3:21 PM, Ben Greear<greearb@candelatech.com>
->>>>  wrote:
->>>
->>>>> You would not believe how hard it is to keep up with the wireless tree.
->>>>>  Last time,
->>>>> by the time we had something stable, upstream had changed too much to
->>>>> merge.
->>>>
->>>> This is why you should not do your development outside of
->>>> wireless-testing. If you are doing development on a stable kernel tree
->>>> then you will likely run into huge issues. You should do development
->>>> on wireless-testing.git, always rebase when John has a new update, and
->>>> break your changes out into a small changes as possible. If you follow
->>>> these basic rules I believe you will likely have better luck with
->>>> keeping your code up to date.
->>>
->>> That sounds nice, but at that time I was carrying a lot of other patches
->>> needed to make my test environment work.  Fortunately, .35 pretty much
->>> works out of the box, so I can develop on pristine upstream kernels now.
->>>
->>> Thanks,
->>> Ben
->>>
->>> --
->>> Ben Greear <greearb@candelatech.com>
->>> Candela Technologies Inc  http://www.candelatech.com
->>>
->>>
->>
->
