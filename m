@@ -1,58 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sycorax.lbl.gov ([128.3.11.121]:36265 "EHLO sycorax.lbl.gov"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751888Ab0HBAS4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Aug 2010 20:18:56 -0400
-From: Alex Romosan <romosan@sycorax.lbl.gov>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Guy\, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlwifi connection problems
-References: <87tynqvtu6.fsf@sycorax.lbl.gov>
-	<1279917523.10769.1.camel@wwguy-huron>
-	<1280135867.3693.5.camel@jlt3.sipsolutions.net>
-	<87mxtd5xlq.fsf@sycorax.lbl.gov>
-	<1280212629.19098.0.camel@jlt3.sipsolutions.net>
-Date: Sun, 01 Aug 2010 17:18:51 -0700
-In-Reply-To: <1280212629.19098.0.camel@jlt3.sipsolutions.net> (message from
-	Johannes Berg on Tue, 27 Jul 2010 08:37:09 +0200)
-Message-ID: <87bp9l6f4k.fsf@sycorax.lbl.gov>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:44718 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752040Ab0H0TDQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Aug 2010 15:03:16 -0400
+Received: by yxg6 with SMTP id 6so1234320yxg.19
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Aug 2010 12:03:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1282934606-4169-1-git-send-email-lrodriguez@atheros.com>
+References: <1282934606-4169-1-git-send-email-lrodriguez@atheros.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 27 Aug 2010 12:02:55 -0700
+Message-ID: <AANLkTi=6WGrMJ7SNpoXhF77F76sxVr0Hp+T6QO21+Frr@mail.gmail.com>
+Subject: Re: [PATCH] ath9k: fix drop of multicast / broadcast data during scan
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
+	Amod Bodas <Amod.Bodas@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
-
-> On Mon, 2010-07-26 at 21:59 -0700, Alex Romosan wrote:
+On Fri, Aug 27, 2010 at 11:43 AM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> mac80211's scan implementation puts the burden of processing the DTIM
+> count on drivers to accurately disallow scanning during certain wait
+> constraints. ath9k was allowing to change channel while a few of these
+> wait constraints were still in effect causing some drop of buffered
+> broadcast and multicast traffic. Fix this by checking for the wait
+> constraints prior to switching channels.
 >
->> any ideas on how i can debug this? i tried to do a git-bisect but i
->> didn't get anywhere. i have the driver compiled in the kernel if that
->> makes any difference. as i played with the later kernels (after 2.6.34)
->> i discovered that if kept bringing the interface down and then up again
->> eventually i would get "cfg80211: Calling CRDA to update world
->> regulatory domain" the antenna light on the laptop (i have a thinkpad
->> t61) would go off and then at the next ifup the driver connected. looks
->> like some kind of reset/initialization problem to me.
+> This is tested against a Cisco E3000 AP configued with a DTIM Interval of 2
+> and beacon interval of 1000. Then setup ath9k to receive multicast
+> traffic:
 >
-> So is the issue maybe the channel the AP is no, not the fact that it's
-> hidden? or something like that?
+>  user@ath9k-RX-box $ iperf -s -u -B 224.0.55.55 -i 1
+>
+> On the transmit multicast box connected to the same AP:
+>
+>  user@ath9k-TX-box $ while true ; do iperf -c 224.0.55.55 \
+>        -u -T 32 -t 3 -i 1 -b 10M -t 1000; sleep 2 ; done
+>
+> Without this patch we would otherwise loose that data. You can verify we run into
+> this by enabling the ATH_DBG_PS (0x800) when loading ath9k.
+>
+> Cc: stable@kernel.org
+> Cc: Amod Bodas <Amod.Bodas@atheros.com>
+> Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 
-it's still not working even with kernel 2.6.35 so i decided to play with
-it a little bit more. indeed, it has nothing to do with the access
-point being hidden or not. it doesn't work even when it's visible
-(previously i was able to connect to the wireless at work which is
-visible so i wrongly assumed that was the cause).
+Sorry ignore this, Jouni noted this would break handling of off
+channel operation, amongst other things. Will work on the more proper
+solution by letting drivers inform mac80211 of these wait constraints.
 
-so it looks like the problem is connecting to this particular access
-point which is a proxim ap-200 orinoco wireless ap i got in 2003. right
-now the ap is setup on channel 3 and the rate is set to 11 Mbps. should
-i try a different channel? which one?
-
---alex--
-
--- 
-| I believe the moment is at hand when, by a paranoiac and active |
-|  advance of the mind, it will be possible (simultaneously with  |
-|  automatism and other passive states) to systematize confusion  |
-|  and thus to help to discredit completely the world of reality. |
+  Luis
