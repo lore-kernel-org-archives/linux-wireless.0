@@ -1,55 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:58520 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751925Ab0H1HNL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Aug 2010 03:13:11 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Received: from mga14.intel.com ([143.182.124.37]:43574 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754340Ab0H0Q4u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Aug 2010 12:56:50 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, amod.bodas@atheros.com,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [RFC 1/3] ath9k: fix regression which disabled ps on ath9k on all cards
-Date: Sat, 28 Aug 2010 03:13:08 -0400
-Message-Id: <1282979590-31113-2-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1282979590-31113-1-git-send-email-lrodriguez@atheros.com>
-References: <1282979590-31113-1-git-send-email-lrodriguez@atheros.com>
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 08/27] iwlwifi: add context into tx descriptor
+Date: Fri, 27 Aug 2010 09:59:36 -0700
+Message-Id: <1282928395-32762-9-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1282928395-32762-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1282928395-32762-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch titled "ath9k: Add new file init.c" shuffled some code
-around but in dong so for some reason also removed the revision
-check for disablign power save. Add this revision check again
-so we can get power save re-enabled again by default on cards
-newer than AR5416 and AR5418.
+From: Johannes Berg <johannes.berg@intel.com>
 
-$ git describe --contains 556242049cc3992d0ee625e9f15c4b00ea4baac8
-v2.6.34-rc1~233^2~49^2~343
+In status processing we'll need to find the context
+for a given frame, so add a context pointer to the
+TX info for each frame.
 
-Before on all cards:
-
-$ iw dev wlan39 get power_save
-Power save: off
-
-Cc: Amod Bodas <amod.bodas@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/init.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c   |    1 +
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    1 +
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    1 +
+ 3 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 243c177..4129390 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -641,7 +641,8 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 		BIT(NL80211_IFTYPE_ADHOC) |
- 		BIT(NL80211_IFTYPE_MESH_POINT);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index a2e4ca0..bff593a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -640,6 +640,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	/* Set up driver data for this TFD */
+ 	memset(&(txq->txb[q->write_ptr]), 0, sizeof(struct iwl_tx_info));
+ 	txq->txb[q->write_ptr].skb = skb;
++	txq->txb[q->write_ptr].ctx = ctx;
  
--	hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
-+	if (AR_SREV_5416(sc->sc_ah))
-+		hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
+ 	/* Set up first empty entry in queue's array of Tx/cmd buffers */
+ 	out_cmd = txq->cmd[q->write_ptr];
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 01a654e..90bf6b3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -144,6 +144,7 @@ struct iwl_queue {
+ /* One for each TFD */
+ struct iwl_tx_info {
+ 	struct sk_buff *skb;
++	struct iwl_rxon_context *ctx;
+ };
  
- 	hw->queues = 4;
- 	hw->max_rates = 4;
+ /**
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 09bca17..aef5f81 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -544,6 +544,7 @@ static int iwl3945_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	/* Set up driver data for this TFD */
+ 	memset(&(txq->txb[q->write_ptr]), 0, sizeof(struct iwl_tx_info));
+ 	txq->txb[q->write_ptr].skb = skb;
++	txq->txb[q->write_ptr].ctx = &priv->contexts[IWL_RXON_CTX_BSS];
+ 
+ 	/* Init first empty entry in queue's array of Tx/cmd buffers */
+ 	out_cmd = txq->cmd[idx];
 -- 
 1.7.0.4
 
