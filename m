@@ -1,86 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36055 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754177Ab0HYU6U (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Aug 2010 16:58:20 -0400
-Message-Id: <20100825205726.554487600@sipsolutions.net>
-Date: Wed, 25 Aug 2010 22:56:21 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 2/6] mac80211: switch to ieee80211_sdata_running
-References: <20100825205619.152295081@sipsolutions.net>
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:42139 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755250Ab0H0SlQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Aug 2010 14:41:16 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 4/7] compat-wireless: multiple changes to config file
+Date: Fri, 27 Aug 2010 20:40:50 +0200
+Message-Id: <1282934453-18093-5-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1282934453-18093-1-git-send-email-hauke@hauke-m.de>
+References: <1282934453-18093-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+ *	deactivate SPI drivers for kernel < 2.6.25 because linux/gpio.h
+	is missing
+ * 	CONFIG_WL1251 and CONFIG_WL1271 both need CRC7
+ * 	CONFIG_RT2X00_LIB_LEDS does not work for kernel < 2.6.25
+	because of missing blink_set
 
-Since the introduction of ieee80211_sdata_running(),
-some new code was introduced that uses netif_running()
-instead. Switch all these instances over.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- net/mac80211/cfg.c  |    6 ++----
- net/mac80211/main.c |    6 +++---
- net/mac80211/util.c |    2 +-
- 3 files changed, 6 insertions(+), 8 deletions(-)
+ config.mk |   15 ++++++++++++---
+ 1 files changed, 12 insertions(+), 3 deletions(-)
 
---- wireless-testing.orig/net/mac80211/cfg.c	2010-08-25 21:59:45.000000000 +0200
-+++ wireless-testing/net/mac80211/cfg.c	2010-08-25 22:01:07.000000000 +0200
-@@ -81,16 +81,14 @@ static int ieee80211_add_key(struct wiph
- 			     u8 key_idx, const u8 *mac_addr,
- 			     struct key_params *params)
- {
--	struct ieee80211_sub_if_data *sdata;
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct sta_info *sta = NULL;
- 	struct ieee80211_key *key;
- 	int err;
+diff --git a/config.mk b/config.mk
+index edfeca2..4c4a111 100644
+--- a/config.mk
++++ b/config.mk
+@@ -436,12 +436,12 @@ CONFIG_BT_ATH3K=m
+ endif # end of USB driver list
  
--	if (!netif_running(dev))
-+	if (!ieee80211_sdata_running(sdata))
- 		return -ENETDOWN;
+ ifneq ($(CONFIG_SPI_MASTER),)
++ifndef CONFIG_COMPAT_KERNEL_25
  
--	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--
- 	/* reject WEP and TKIP keys if WEP failed to initialize */
- 	switch (params->cipher) {
- 	case WLAN_CIPHER_SUITE_WEP40:
---- wireless-testing.orig/net/mac80211/main.c	2010-08-25 21:59:57.000000000 +0200
-+++ wireless-testing/net/mac80211/main.c	2010-08-25 22:01:25.000000000 +0200
-@@ -339,9 +339,6 @@ static int ieee80211_ifa_changed(struct
- 	struct ieee80211_if_managed *ifmgd;
- 	int c = 0;
+-CONFIG_WL1251=m
+ ifneq ($(CONFIG_CRC7),)
+ CONFIG_WL1251_SPI=m
+-endif
+ CONFIG_WL1271_SPI=m
++endif
+ CONFIG_P54_SPI=m
  
--	if (!netif_running(ndev))
--		return NOTIFY_DONE;
--
- 	/* Make sure it's our interface that got changed */
- 	if (!wdev)
- 		return NOTIFY_DONE;
-@@ -352,6 +349,9 @@ static int ieee80211_ifa_changed(struct
- 	sdata = IEEE80211_DEV_TO_SUB_IF(ndev);
- 	bss_conf = &sdata->vif.bss_conf;
+ ifdef CONFIG_COMPAT_KERNEL_27
+@@ -452,18 +452,23 @@ CONFIG_LIBERTAS_SPI=m
+ NEED_LIBERTAS=y
+ endif
  
-+	if (!ieee80211_sdata_running(sdata))
-+		return NOTIFY_DONE;
++endif
+ endif # end of SPI driver list
+ 
+ ifneq ($(CONFIG_MMC),)
+ 
+ CONFIG_SSB_SDIOHOST=y
+ CONFIG_B43_SDIO=y
 +
- 	/* ARP filtering is only supported in managed mode */
- 	if (sdata->vif.type != NL80211_IFTYPE_STATION)
- 		return NOTIFY_DONE;
---- wireless-testing.orig/net/mac80211/util.c	2010-08-25 22:00:15.000000000 +0200
-+++ wireless-testing/net/mac80211/util.c	2010-08-25 22:00:28.000000000 +0200
-@@ -1308,7 +1308,7 @@ void ieee80211_recalc_smps(struct ieee80
- 	 */
++ifneq ($(CONFIG_CRC7),)
+ CONFIG_WL1251_SDIO=m
  
- 	list_for_each_entry(sdata, &local->interfaces, list) {
--		if (!netif_running(sdata->dev))
-+		if (!ieee80211_sdata_running(sdata))
- 			continue;
- 		if (sdata->vif.type != NL80211_IFTYPE_STATION)
- 			goto set;
-
+ ifndef CONFIG_COMPAT_KERNEL_32
+ CONFIG_WL1271_SDIO=m
+ endif
+ 
++endif
++
+ ifdef CONFIG_COMPAT_KERNEL_27
+ CONFIG_LIBERTAS_SDIO=n
+ NEED_LIBERTAS=n
+@@ -488,7 +493,11 @@ CONFIG_RT2800_LIB=m
+ CONFIG_RT2X00_LIB_HT=y
+ CONFIG_RT2X00_LIB_FIRMWARE=y
+ CONFIG_RT2X00_LIB_CRYPTO=y
++ifdef CONFIG_COMPAT_KERNEL_25
++CONFIG_RT2X00_LIB_LEDS=n
++else
+ CONFIG_RT2X00_LIB_LEDS=y
++endif
+ # CONFIG_RT2X00_DEBUG=y
+ # CONFIG_RT2X00_LIB_DEBUGFS
+ endif
+@@ -506,8 +515,8 @@ CONFIG_ATH_COMMON=m
+ # CONFIG_ATH_DEBUG=y
+ 
+ CONFIG_WL12XX=y
+-CONFIG_WL1251=m
+ ifneq ($(CONFIG_CRC7),)
++CONFIG_WL1251=m
+ CONFIG_WL1271=m
+ endif
+ 
+-- 
+1.7.0.4
 
