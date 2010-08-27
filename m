@@ -1,71 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:58649 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751661Ab0HXMPq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Aug 2010 08:15:46 -0400
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Dan Carpenter <error27@gmail.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Mike Frysinger <vapier.adi@gmail.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-In-Reply-To: <20100824120743.GG29330@bicker>
-References: <20100824120743.GG29330@bicker>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-6E3cDtw135peAR+NVFDq"
-Date: Tue, 24 Aug 2010 13:15:21 +0100
-Message-ID: <1282652121.2968.9.camel@localhost>
-Mime-Version: 1.0
-Subject: Re: [rfc patch] libertas: fix if_spi_prog_helper_firmware()
+Received: from mga14.intel.com ([143.182.124.37]:54400 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753254Ab0H0Q4m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Aug 2010 12:56:42 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 00/27] iwlwifi update for 2.6.37
+Date: Fri, 27 Aug 2010 09:59:28 -0700
+Message-Id: <1282928395-32762-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+We add support for multiple interfaces.
+In order to support multiple interfaces, move
+a lot of data into per-context structures so we can
+use the contexts the device offers.
 
---=-6E3cDtw135peAR+NVFDq
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Johannes Berg (27):
+  iwlwifi: initial contextification
+  iwlwifi: prepare for PAN queue/fifo assignment
+  iwlwifi: define PAN queues/FIFOs
+  iwlwifi: contextify broadcast station
+  iwlwifi: contextify-stations-completely
+  iwlwifi: contextify command sending
+  iwlwifi: move QoS into context
+  iwlwifi: add context into tx descriptor
+  iwlwifi: move virtual interface pointer into context
+  iwlwifi: clamp scanning dwell time to all contexts
+  iwlwifi: move AP sta ID to context
+  iwlwifi: make hw crypto context aware
+  iwlwifi: store default station flags in context
+  iwlwifi: add context pointer to station
+  iwlwifi: move HT configuration data into context
+  iwlwifi: introduce beacon context
+  iwlwifi: add PAN API
+  iwlagn: detect PAN capability
+  iwlagn: remove iw_mode check for beacon
+  iwlagn: queue frames according to context
+  iwlagn: send RXON timing before associating
+  iwlagn: send beacon before committing associated RXON
+  iwlwifi: send PAN parameters
+  iwlwifi: pass context to iwl_send_rxon_timing
+  iwlagn: always send RXON timing
+  iwlwifi: follow main beacon interval
+  iwlwifi: allow using multiple contexts
 
-On Tue, 2010-08-24 at 14:07 +0200, Dan Carpenter wrote:
-> The indenting is not correct here.  I don't have this hardware and I'm
-> just guessing as to what was intended.  I think that if there is an
-> error we should return an error code, but if there isn't an error we
-> should return success directly without releasing the firmware.
-[...]
+these patches are also available from wireless-next-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
 
-The driver doesn't use or refer to the firmware image once it's copied
-into device RAM, so this just leaks the firmware.
+ drivers/net/wireless/iwlwifi/iwl-1000.c      |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-3945-hw.h   |    1 +
+ drivers/net/wireless/iwlwifi/iwl-3945-rs.c   |    7 +-
+ drivers/net/wireless/iwlwifi/iwl-3945.c      |   86 ++--
+ drivers/net/wireless/iwlwifi/iwl-4965.c      |   57 ++-
+ drivers/net/wireless/iwlwifi/iwl-5000.c      |   25 +-
+ drivers/net/wireless/iwlwifi/iwl-6000.c      |   23 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-calib.c |   12 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c  |  104 ++++-
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c   |   32 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c    |   66 ++-
+ drivers/net/wireless/iwlwifi/iwl-agn-tt.c    |   26 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c    |   81 ++--
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |   31 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c       |  423 ++++++++++++-----
+ drivers/net/wireless/iwlwifi/iwl-agn.h       |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-commands.h  |  110 +++++-
+ drivers/net/wireless/iwlwifi/iwl-core.c      |  676 +++++++++++++++-----------
+ drivers/net/wireless/iwlwifi/iwl-core.h      |   55 ++-
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c   |   31 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h       |  142 +++++--
+ drivers/net/wireless/iwlwifi/iwl-hcmd.c      |   10 +-
+ drivers/net/wireless/iwlwifi/iwl-prph.h      |    9 +-
+ drivers/net/wireless/iwlwifi/iwl-rx.c        |    9 +-
+ drivers/net/wireless/iwlwifi/iwl-scan.c      |   35 +-
+ drivers/net/wireless/iwlwifi/iwl-sta.c       |  183 +++++---
+ drivers/net/wireless/iwlwifi/iwl-sta.h       |   64 ++-
+ drivers/net/wireless/iwlwifi/iwl-tx.c        |   34 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c  |  168 ++++---
+ 29 files changed, 1658 insertions(+), 849 deletions(-)
 
-The driver *should* keep a reference so it can restore the firmware
-after suspend/resume without filesystem access (which is likely to
-deadlock).
-
-Ben.
-
---=20
-Ben Hutchings
-Once a job is fouled up, anything done to improve it makes it worse.
-
---=-6E3cDtw135peAR+NVFDq
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIVAwUATHO3zue/yOyVhhEJAQJVtw/9EJk3ezlWAUfbHqfAZu89KMA4QM39Q3Q7
-2s6eLI8Am+TDjiztCaBu0asi5cHR992wp+1bOr2VdZIhAJdvp5s1PCO/WdBAoHjc
-cl01Jqp8sAz1l+5oDfJfzeIlLXC+sP4iNp+XouSmPjWYwJRNM9d6hdj5sLKua83f
-+k5Tuk97Dizt1CooMQVpJKPcV8ooYaRyUQtjWhDAV9bQ0VJcwE+aK0iPpe0LA48S
-SKH7xXS4QBwyZqG3pwPV65RC+six8K/gNAQYBKjNQ4/8YaPwtzxGohtL+OS8A5Xr
-gK/15jrs3IswUsAi7GNijh75K6jiVKVByJAIPOzdNc4aRo8goncOaEYnHkdoVcEl
-Mqy4jqyHOVMBUr7v7zPzYt7MvbKuqu8vGVsgoiXpU8E5nMv5dp0hyZMha2lZSeGn
-OL4XRCZAUCvTn29NQY2emklKbDEvYBozdPX7dyzom5F36plNJbjT+vatUzJGgVnb
-0Dg4QXIJlO38dwYwNX3WhLNIm/83081WGRpJaM+4J2I1IhAP9m6hNDUML4A7VgSZ
-noJnlnTI192/hhLNSIWhCxU3kTjataVEIklnFlfUwn+lk4K2QKj57swkj1vbJbm9
-I9LYTSI6JED4mCygmkoA01vE/kaxw4sC0xmRMcLnTXtW0N1iHoNHxnCwtnOKp0LC
-MCJqOsnwckM=
-=o9za
------END PGP SIGNATURE-----
-
---=-6E3cDtw135peAR+NVFDq--
