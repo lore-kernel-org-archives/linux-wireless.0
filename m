@@ -1,123 +1,195 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48366 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754742Ab0HaSMX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Aug 2010 14:12:23 -0400
-Subject: Re: [RFC 0/3] mac80211: new API for handling broadcast / multicast
- on sw scan
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amod Bodas <Amod.Bodas@Atheros.com>,
-	Matt Smith <Matt.Smith@Atheros.com>,
-	Kevin Hayes <kevin@Atheros.com>,
-	David Quan <David.Quan@atheros.com>
-In-Reply-To: <20100831165931.GC15752@tux>
-References: <1282979590-31113-1-git-send-email-lrodriguez@atheros.com>
-	 <1283177949.3691.72.camel@jlt3.sipsolutions.net>
-	 <AANLkTinOzTHn4okTdm=321sdAKy8z1ji_1K_SsDd_dH2@mail.gmail.com>
-	 <1283183279.3691.82.camel@jlt3.sipsolutions.net>
-	 <AANLkTi=bVRaDs6z6EavxCLFdMeNRhB=85yKtaHr-_hL-@mail.gmail.com>
-	 <1283191837.3694.13.camel@jlt3.sipsolutions.net>
-	 <AANLkTin9KBUTZSkiL-qMnToaMjXS9S3j3PzV-AZWa_9U@mail.gmail.com>
-	 <1283265399.3733.18.camel@jlt3.sipsolutions.net>
-	 <AANLkTi=yRnMwTBq1ze8LaMCO521YutrtxJpBS0rGuvhJ@mail.gmail.com>
-	 <1283270092.3733.41.camel@jlt3.sipsolutions.net>
-	 <20100831165931.GC15752@tux>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 31 Aug 2010 20:12:20 +0200
-Message-ID: <1283278340.3733.56.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mga14.intel.com ([143.182.124.37]:43574 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754354Ab0H0Q4s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Aug 2010 12:56:48 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 05/27] iwlwifi: contextify-stations-completely
+Date: Fri, 27 Aug 2010 09:59:33 -0700
+Message-Id: <1282928395-32762-6-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1282928395-32762-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1282928395-32762-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-08-31 at 09:59 -0700, Luis R. Rodriguez wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> > > This is true, but why would they not be important for going off
-> > > channel ? The TSF sync seems just as important as waiting for the ACK
-> > > for the nullfunc from the AP.
-> > 
-> > Why? It doesn't seem important to me?
-> 
-> How else could you possibly do a reliable calculation for the computation of the
-> next DTIM?
+The microcode tracks stations per context, so
+the driver needs to do that as well for adding,
+deleting and restoring them, especially in the
+implicit removal case when we send an RXON.
 
-Dunno what your TSF sync does, but a single beacon frame has all the
-relevant information for computing this.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.c     |   10 ++++++----
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   10 +++++-----
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-sta.c      |   11 +++++++++--
+ drivers/net/wireless/iwlwifi/iwl-sta.h      |    5 +++--
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
+ 6 files changed, 25 insertions(+), 15 deletions(-)
 
-> So we do the TSF synch to more reliably know when we will get a DTIM and also
-> adjust our beacon miss interrupt. For offchannel operation know the DTIM
-> more accurately will help in our computation when going off channel.
-
-Yeah but when _going_ offchannel we don't need to know exactly when it
-will happen in advance, we can just wait for the relevant thing to end
-and then go offchannel ... what am I missing?
-
-> > > And I'm saying its not. To wait for the DTIM you need to know the DTIM
-> > > count, and you could also miss a few DTIM beacons. 
-> > 
-> > What do you mean by "need to know the DTIM count"? You just need to look
-> > at every received beacon.
-> 
-> The DTIM count on the TIM information element tells stations how many beacons
-> must be transmitted before receiving the next DTIM. The DTIM count will be 0
-> when we've reached a DTIM.
-> 
-> http://wireless.kernel.org/en/developers/Documentation/ieee80211/power-savings
-> 
-> If you do not know the DTIM count at which beacon will we get the DTIM?
-
-Each beacon contains the count and period ... we're just going around in
-circles. You just need a single beacon frame.
-
-> It is a subjective matter, I agree, it depends how reliable you want
-> to claim mac80211 is for broadcast and multicast traffic when drivers
-> use sw scan. One key item that is more important though is if we are
-> only trying to be on our home channel when doing offchannel operation
-> for bg scanning then we must also send a PS-POLL to get our own buffered
-> unicast frames after DTIM.
-
-No, we don't need to send PS-poll as we send a wakeup. I think, anyway.
-
-> > since it's not just as you did it now, but it really needs to be
-> > asynchronous with event callbacks,
-> 
-> In case of firmware timeouts? Or what?
-
-No, just the polling you have now doesn't seem adequate.
-
-> > and error handling is also more
-> > complex in the mac80211/driver interaction case (what if the driver
-> > never returns the event in the timeout? then mac80211 asks for the next
-> > channel, but the driver _then_ returns the event? etc.)
-> 
-> So I am not sure what you are referring to here. Are you referring to
-> timeouts for calls we make on the driver for wait constraints or
-> are you referring to possible endless wait constraints?
-> 
-> If the first, then I do not follow.
-> 
-> If the later, then I think it shouldn't happen often enough *if* we
-> actually end up dealing with most constraints properly in mac80211.
-> 
-> Or maybe I just completely misunderstood this last point.
-
-No, I'm referring to the fact that when we don't poll, we'll be waiting
-for the driver to tell us when we can go offchannel. But what if the
-driver for some reason doesn't tell us within an acceptable timeout
-period? Say it has endless constraints. Do we require drivers to
-_always_ tell us? What then if the driver's buggy? etc.
-
-> Worst case scenerio we will just have to review this in more detail next week
-> in person on Thursday or Friday during the wireless summit.
-
-Actually let's do that, since anything that isn't purely implemented in
-mac80211 should probably take into account multi-channel virtual
-interface operation as well, which we'll probably want to offload to the
-driver for scheduling between interfaces.
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
+index 905575c..ba3a9f9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-3945.c
++++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
+@@ -1832,8 +1832,9 @@ static int iwl3945_commit_rxon(struct iwl_priv *priv,
+ 				  "configuration (%d).\n", rc);
+ 			return rc;
+ 		}
+-		iwl_clear_ucode_stations(priv);
+-		iwl_restore_stations(priv);
++		iwl_clear_ucode_stations(priv,
++					 &priv->contexts[IWL_RXON_CTX_BSS]);
++		iwl_restore_stations(priv, &priv->contexts[IWL_RXON_CTX_BSS]);
+ 	}
+ 
+ 	IWL_DEBUG_INFO(priv, "Sending RXON\n"
+@@ -1865,8 +1866,9 @@ static int iwl3945_commit_rxon(struct iwl_priv *priv,
+ 	memcpy(active_rxon, staging_rxon, sizeof(*active_rxon));
+ 
+ 	if (!new_assoc) {
+-		iwl_clear_ucode_stations(priv);
+-		iwl_restore_stations(priv);
++		iwl_clear_ucode_stations(priv,
++					 &priv->contexts[IWL_RXON_CTX_BSS]);
++		iwl_restore_stations(priv, &priv->contexts[IWL_RXON_CTX_BSS]);
+ 	}
+ 
+ 	/* If we issue a new RXON command which required a tune then we must
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index d222278..23db6c3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -163,8 +163,8 @@ int iwl_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+ 			IWL_ERR(priv, "Error clearing ASSOC_MSK (%d)\n", ret);
+ 			return ret;
+ 		}
+-		iwl_clear_ucode_stations(priv);
+-		iwl_restore_stations(priv);
++		iwl_clear_ucode_stations(priv, ctx);
++		iwl_restore_stations(priv, ctx);
+ 		ret = iwl_restore_default_wep_keys(priv);
+ 		if (ret) {
+ 			IWL_ERR(priv, "Failed to restore WEP keys (%d)\n", ret);
+@@ -195,8 +195,8 @@ int iwl_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+ 		}
+ 		IWL_DEBUG_INFO(priv, "Return from !new_assoc RXON.\n");
+ 		memcpy(active_rxon, &ctx->staging, sizeof(*active_rxon));
+-		iwl_clear_ucode_stations(priv);
+-		iwl_restore_stations(priv);
++		iwl_clear_ucode_stations(priv, ctx);
++		iwl_restore_stations(priv, ctx);
+ 		ret = iwl_restore_default_wep_keys(priv);
+ 		if (ret) {
+ 			IWL_ERR(priv, "Failed to restore WEP keys (%d)\n", ret);
+@@ -2830,7 +2830,7 @@ static void __iwl_down(struct iwl_priv *priv)
+ 	if (priv->cfg->ops->lib->recover_from_tx_stall)
+ 		del_timer_sync(&priv->monitor_recover);
+ 
+-	iwl_clear_ucode_stations(priv);
++	iwl_clear_ucode_stations(priv, NULL);
+ 	iwl_dealloc_bcast_stations(priv);
+ 	iwl_clear_driver_stations(priv);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index f51c07c..da54bd5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -495,7 +495,7 @@ struct iwl_qos_info {
+ struct iwl_station_entry {
+ 	struct iwl_addsta_cmd sta;
+ 	struct iwl_tid_data tid[MAX_TID_COUNT];
+-	u8 used;
++	u8 used, ctxid;
+ 	struct iwl_hw_key keyinfo;
+ 	struct iwl_link_quality_cmd *lq;
+ };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index b1275e3..2923562 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -290,6 +290,7 @@ static u8 iwl_prep_station(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+ 	station->sta.mode = 0;
+ 	station->sta.sta.sta_id = sta_id;
+ 	station->sta.station_flags = 0;
++	station->ctxid = ctx->ctxid;
+ 
+ 	/*
+ 	 * OK to call unconditionally, since local stations (IBSS BSSID
+@@ -615,7 +616,8 @@ EXPORT_SYMBOL_GPL(iwl_remove_station);
+  * other than explicit station management would cause this in
+  * the ucode, e.g. unassociated RXON.
+  */
+-void iwl_clear_ucode_stations(struct iwl_priv *priv)
++void iwl_clear_ucode_stations(struct iwl_priv *priv,
++			      struct iwl_rxon_context *ctx)
+ {
+ 	int i;
+ 	unsigned long flags_spin;
+@@ -625,6 +627,9 @@ void iwl_clear_ucode_stations(struct iwl_priv *priv)
+ 
+ 	spin_lock_irqsave(&priv->sta_lock, flags_spin);
+ 	for (i = 0; i < priv->hw_params.max_stations; i++) {
++		if (ctx && ctx->ctxid != priv->stations[i].ctxid)
++			continue;
++
+ 		if (priv->stations[i].used & IWL_STA_UCODE_ACTIVE) {
+ 			IWL_DEBUG_INFO(priv, "Clearing ucode active for station %d\n", i);
+ 			priv->stations[i].used &= ~IWL_STA_UCODE_ACTIVE;
+@@ -646,7 +651,7 @@ EXPORT_SYMBOL(iwl_clear_ucode_stations);
+  *
+  * Function sleeps.
+  */
+-void iwl_restore_stations(struct iwl_priv *priv)
++void iwl_restore_stations(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+ {
+ 	struct iwl_addsta_cmd sta_cmd;
+ 	struct iwl_link_quality_cmd lq;
+@@ -664,6 +669,8 @@ void iwl_restore_stations(struct iwl_priv *priv)
+ 	IWL_DEBUG_ASSOC(priv, "Restoring all known stations ... start.\n");
+ 	spin_lock_irqsave(&priv->sta_lock, flags_spin);
+ 	for (i = 0; i < priv->hw_params.max_stations; i++) {
++		if (ctx->ctxid != priv->stations[i].ctxid)
++			continue;
+ 		if ((priv->stations[i].used & IWL_STA_DRIVER_ACTIVE) &&
+ 			    !(priv->stations[i].used & IWL_STA_UCODE_ACTIVE)) {
+ 			IWL_DEBUG_ASSOC(priv, "Restoring sta %pM\n",
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
+index 8a978c6..269a3ed 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.h
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.h
+@@ -57,8 +57,9 @@ void iwl_update_tkip_key(struct iwl_priv *priv,
+ 			 struct ieee80211_key_conf *keyconf,
+ 			 struct ieee80211_sta *sta, u32 iv32, u16 *phase1key);
+ 
+-void iwl_restore_stations(struct iwl_priv *priv);
+-void iwl_clear_ucode_stations(struct iwl_priv *priv);
++void iwl_restore_stations(struct iwl_priv *priv, struct iwl_rxon_context *ctx);
++void iwl_clear_ucode_stations(struct iwl_priv *priv,
++			      struct iwl_rxon_context *ctx);
+ int iwl_alloc_bcast_station(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+ 			    bool init_lq);
+ void iwl_dealloc_bcast_stations(struct iwl_priv *priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 8b07632..630b8d6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -2581,7 +2581,7 @@ static void __iwl3945_down(struct iwl_priv *priv)
+ 		del_timer_sync(&priv->monitor_recover);
+ 
+ 	/* Station information will now be cleared in device */
+-	iwl_clear_ucode_stations(priv);
++	iwl_clear_ucode_stations(priv, NULL);
+ 	iwl_dealloc_bcast_stations(priv);
+ 	iwl_clear_driver_stations(priv);
+ 
+-- 
+1.7.0.4
 
