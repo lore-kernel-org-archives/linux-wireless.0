@@ -1,196 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.36.123.2]:21921 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751018Ab0HSFux (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Aug 2010 01:50:53 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 18 Aug 2010 22:50:53 -0700
-From: Vivek Natarajan <vnatarajan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/2 v2] ath9k_common: Move bt_stomp to common for sharing with ath9k_htc.
-Date: Thu, 19 Aug 2010 11:20:44 +0530
-Message-ID: <1282197045-4473-1-git-send-email-vnatarajan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from bombadil.infradead.org ([18.85.46.34]:35374 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752278Ab0H0Sn2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Aug 2010 14:43:28 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
+	Amod Bodas <Amod.Bodas@atheros.com>
+Subject: [PATCH] ath9k: fix drop of multicast / broadcast data during scan
+Date: Fri, 27 Aug 2010 14:43:26 -0400
+Message-Id: <1282934606-4169-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h  |    8 ------
- drivers/net/wireless/ath/ath9k/common.c |   31 ++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/common.h |   10 +++++++
- drivers/net/wireless/ath/ath9k/gpio.c   |   40 ++++--------------------------
- 4 files changed, 47 insertions(+), 42 deletions(-)
+mac80211's scan implementation puts the burden of processing the DTIM
+count on drivers to accurately disallow scanning during certain wait
+constraints. ath9k was allowing to change channel while a few of these
+wait constraints were still in effect causing some drop of buffered
+broadcast and multicast traffic. Fix this by checking for the wait
+constraints prior to switching channels.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index def0cd3..f0197a6 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -437,14 +437,6 @@ void ath_ani_calibrate(unsigned long data);
- /* BTCOEX */
- /**********/
- 
--/* Defines the BT AR_BT_COEX_WGHT used */
--enum ath_stomp_type {
--	ATH_BTCOEX_NO_STOMP,
--	ATH_BTCOEX_STOMP_ALL,
--	ATH_BTCOEX_STOMP_LOW,
--	ATH_BTCOEX_STOMP_NONE
--};
--
- struct ath_btcoex {
- 	bool hw_timer_enabled;
- 	spinlock_t btcoex_lock;
-diff --git a/drivers/net/wireless/ath/ath9k/common.c b/drivers/net/wireless/ath/ath9k/common.c
-index 3100c87..31cfe46 100644
---- a/drivers/net/wireless/ath/ath9k/common.c
-+++ b/drivers/net/wireless/ath/ath9k/common.c
-@@ -420,6 +420,37 @@ int ath9k_cmn_count_streams(unsigned int chainmask, int max)
- }
- EXPORT_SYMBOL(ath9k_cmn_count_streams);
- 
-+/*
-+ * Configures appropriate weight based on stomp type.
-+ */
-+void ath9k_cmn_btcoex_bt_stomp(struct ath_common *common,
-+				  enum ath_stomp_type stomp_type)
-+{
-+	struct ath_hw *ah = common->ah;
-+
-+	switch (stomp_type) {
-+	case ATH_BTCOEX_STOMP_ALL:
-+		ath9k_hw_btcoex_set_weight(ah, AR_BT_COEX_WGHT,
-+					   AR_STOMP_ALL_WLAN_WGHT);
-+		break;
-+	case ATH_BTCOEX_STOMP_LOW:
-+		ath9k_hw_btcoex_set_weight(ah, AR_BT_COEX_WGHT,
-+					   AR_STOMP_LOW_WLAN_WGHT);
-+		break;
-+	case ATH_BTCOEX_STOMP_NONE:
-+		ath9k_hw_btcoex_set_weight(ah, AR_BT_COEX_WGHT,
-+					   AR_STOMP_NONE_WLAN_WGHT);
-+		break;
-+	default:
-+		ath_print(common, ATH_DBG_BTCOEX,
-+			  "Invalid Stomptype\n");
-+		break;
-+	}
-+
-+	ath9k_hw_btcoex_enable(ah);
-+}
-+EXPORT_SYMBOL(ath9k_cmn_btcoex_bt_stomp);
-+
- static int __init ath9k_cmn_init(void)
- {
- 	return 0;
-diff --git a/drivers/net/wireless/ath/ath9k/common.h b/drivers/net/wireless/ath/ath9k/common.h
-index 97809d3..4aa4e7d 100644
---- a/drivers/net/wireless/ath/ath9k/common.h
-+++ b/drivers/net/wireless/ath/ath9k/common.h
-@@ -52,6 +52,14 @@
- #define ATH_EP_RND(x, mul) 						\
- 	((((x)%(mul)) >= ((mul)/2)) ? ((x) + ((mul) - 1)) / (mul) : (x)/(mul))
- 
-+/* Defines the BT AR_BT_COEX_WGHT used */
-+enum ath_stomp_type {
-+	ATH_BTCOEX_NO_STOMP,
-+	ATH_BTCOEX_STOMP_ALL,
-+	ATH_BTCOEX_STOMP_LOW,
-+	ATH_BTCOEX_STOMP_NONE
-+};
-+
- int ath9k_cmn_padpos(__le16 frame_control);
- int ath9k_cmn_get_hw_crypto_keytype(struct sk_buff *skb);
- void ath9k_cmn_update_ichannel(struct ieee80211_hw *hw,
-@@ -65,3 +73,5 @@ int ath9k_cmn_key_config(struct ath_common *common,
- void ath9k_cmn_key_delete(struct ath_common *common,
- 			  struct ieee80211_key_conf *key);
- int ath9k_cmn_count_streams(unsigned int chainmask, int max);
-+void ath9k_cmn_btcoex_bt_stomp(struct ath_common *common,
-+				  enum ath_stomp_type stomp_type);
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 3a8ee99..4a9a68b 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -251,36 +251,6 @@ static void ath_detect_bt_priority(struct ath_softc *sc)
+This is tested against a Cisco E3000 AP configued with a DTIM Interval of 2
+and beacon interval of 1000. Then setup ath9k to receive multicast
+traffic:
+
+  user@ath9k-RX-box $ iperf -s -u -B 224.0.55.55 -i 1
+
+On the transmit multicast box connected to the same AP:
+
+  user@ath9k-TX-box $ while true ; do iperf -c 224.0.55.55 \
+	-u -T 32 -t 3 -i 1 -b 10M -t 1000; sleep 2 ; done
+
+Without this patch we would otherwise loose that data. You can verify we run into
+this by enabling the ATH_DBG_PS (0x800) when loading ath9k.
+
+Cc: stable@kernel.org
+Cc: Amod Bodas <Amod.Bodas@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+
+With other types of tests my AP just ends up dying so this is as
+far as I could test it. For example setting the DTIM interval to a
+max 255 beacon interval to a max of 65535 I poo out my AP in no time
+when sending broadcast / multicast traffic. In fact even Ethernet
+dies out immediately.
+
+ drivers/net/wireless/ath/ath9k/main.c |   19 +++++++++++++++++++
+ 1 files changed, 19 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 1165f90..3b0cd19 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1511,6 +1511,22 @@ void ath9k_enable_ps(struct ath_softc *sc)
  	}
  }
  
--/*
-- * Configures appropriate weight based on stomp type.
-- */
--static void ath9k_btcoex_bt_stomp(struct ath_softc *sc,
--				  enum ath_stomp_type stomp_type)
--{
--	struct ath_hw *ah = sc->sc_ah;
--
--	switch (stomp_type) {
--	case ATH_BTCOEX_STOMP_ALL:
--		ath9k_hw_btcoex_set_weight(ah, AR_BT_COEX_WGHT,
--					   AR_STOMP_ALL_WLAN_WGHT);
--		break;
--	case ATH_BTCOEX_STOMP_LOW:
--		ath9k_hw_btcoex_set_weight(ah, AR_BT_COEX_WGHT,
--					   AR_STOMP_LOW_WLAN_WGHT);
--		break;
--	case ATH_BTCOEX_STOMP_NONE:
--		ath9k_hw_btcoex_set_weight(ah, AR_BT_COEX_WGHT,
--					   AR_STOMP_NONE_WLAN_WGHT);
--		break;
--	default:
--		ath_print(ath9k_hw_common(ah), ATH_DBG_BTCOEX,
--			  "Invalid Stomptype\n");
--		break;
--	}
--
--	ath9k_hw_btcoex_enable(ah);
--}
--
- static void ath9k_gen_timer_start(struct ath_hw *ah,
- 				  struct ath_gen_timer *timer,
- 				  u32 timer_next,
-@@ -319,6 +289,7 @@ static void ath_btcoex_period_timer(unsigned long data)
- 	struct ath_softc *sc = (struct ath_softc *) data;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_btcoex *btcoex = &sc->btcoex;
-+	struct ath_common *common = ath9k_hw_common(ah);
- 	u32 timer_period;
- 	bool is_btscan;
++static bool ath9k_can_change_channel(struct ath_softc *sc)
++{
++	u32 wait_for = PS_WAIT_FOR_BEACON |
++		       PS_WAIT_FOR_CAB |
++		       PS_WAIT_FOR_PSPOLL_DATA |
++		       PS_WAIT_FOR_TX_ACK;
++
++	if (sc->ps_flags & wait_for) {
++		ath_print(ath9k_hw_common(sc->sc_ah), ATH_DBG_PS,
++			  "Cannot change channel due to a wait constraint\n");
++		return false;
++	}
++
++	return true;
++}
++
+ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ {
+ 	struct ath_wiphy *aphy = hw->priv;
+@@ -1605,6 +1621,9 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 		struct ieee80211_channel *curchan = hw->conf.channel;
+ 		int pos = curchan->hw_value;
  
-@@ -328,7 +299,7 @@ static void ath_btcoex_period_timer(unsigned long data)
- 
- 	spin_lock_bh(&btcoex->btcoex_lock);
- 
--	ath9k_btcoex_bt_stomp(sc, is_btscan ? ATH_BTCOEX_STOMP_ALL :
-+	ath9k_cmn_btcoex_bt_stomp(common, is_btscan ? ATH_BTCOEX_STOMP_ALL :
- 			      btcoex->bt_stomp_type);
- 
- 	spin_unlock_bh(&btcoex->btcoex_lock);
-@@ -359,17 +330,18 @@ static void ath_btcoex_no_stomp_timer(void *arg)
- 	struct ath_softc *sc = (struct ath_softc *)arg;
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_btcoex *btcoex = &sc->btcoex;
-+	struct ath_common *common = ath9k_hw_common(ah);
- 	bool is_btscan = sc->sc_flags & SC_OP_BT_SCAN;
- 
--	ath_print(ath9k_hw_common(ah), ATH_DBG_BTCOEX,
-+	ath_print(common, ATH_DBG_BTCOEX,
- 		  "no stomp timer running\n");
- 
- 	spin_lock_bh(&btcoex->btcoex_lock);
- 
- 	if (btcoex->bt_stomp_type == ATH_BTCOEX_STOMP_LOW || is_btscan)
--		ath9k_btcoex_bt_stomp(sc, ATH_BTCOEX_STOMP_NONE);
-+		ath9k_cmn_btcoex_bt_stomp(common, ATH_BTCOEX_STOMP_NONE);
- 	 else if (btcoex->bt_stomp_type == ATH_BTCOEX_STOMP_ALL)
--		ath9k_btcoex_bt_stomp(sc, ATH_BTCOEX_STOMP_LOW);
-+		ath9k_cmn_btcoex_bt_stomp(common, ATH_BTCOEX_STOMP_LOW);
- 
- 	spin_unlock_bh(&btcoex->btcoex_lock);
- }
++		if (!ath9k_can_change_channel(sc))
++			goto skip_chan_change;
++
+ 		aphy->chan_idx = pos;
+ 		aphy->chan_is_ht = conf_is_ht(conf);
+ 		if (hw->conf.flags & IEEE80211_CONF_OFFCHANNEL)
 -- 
-1.6.3.3
+1.7.0.4
 
