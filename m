@@ -1,197 +1,217 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36053 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754164Ab0HYU6T (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:27924 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753506Ab0H0LIU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Aug 2010 16:58:19 -0400
-Message-Id: <20100825205726.345107640@sipsolutions.net>
-Date: Wed, 25 Aug 2010 22:56:20 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 1/6] mac80211: clean up ifdown/cleanup paths
-References: <20100825205619.152295081@sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 27 Aug 2010 07:08:20 -0400
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes.berg@intel.com
+Subject: [PATCH 3/4] cfg80211: allow changing port control protocol
+Date: Fri, 27 Aug 2010 14:07:38 +0300
+Message-Id: <1282907259-30825-4-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1282907259-30825-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1282907259-30825-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-There's a lot of redundant code in mac80211's
-interface cleanup/down, for example freeing
-AP beacons is done both when the interface is
-set DOWN as well as when it is torn down, of
-which only the former has any effect.
+Some vendor specified mechanisms for 802.1X-style
+functionality use a different protocol than EAP
+(even if EAP is vendor-extensible). Allow setting
+the ethertype for the protocol when a driver has
+support for this. The default if unspecified is
+EAP, of course.
 
-Also, a bunch of things should be closer to
-where they matter, like the MLME timers that
-we should cancel when disassociating, rather
-than only when the interface is set DOWN.
-
-Clean up all this code.
+Note: This is suitable only for station mode, not
+      for AP implementation.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 ---
- net/mac80211/iface.c |   89 +++++++++++++--------------------------------------
- net/mac80211/mlme.c  |    5 ++
- 2 files changed, 28 insertions(+), 66 deletions(-)
+ include/linux/nl80211.h |   16 +++++++++++++++-
+ include/net/cfg80211.h  |   24 +++++++++++++++++-------
+ net/wireless/nl80211.c  |   25 ++++++++++++++++++++++---
+ net/wireless/wext-sme.c |    2 ++
+ 4 files changed, 56 insertions(+), 11 deletions(-)
 
---- wireless-testing.orig/net/mac80211/iface.c	2010-08-25 21:58:52.000000000 +0200
-+++ wireless-testing/net/mac80211/iface.c	2010-08-25 21:59:11.000000000 +0200
-@@ -370,12 +370,9 @@ static int ieee80211_stop(struct net_dev
- 	 * (because if we remove a STA after ops->remove_interface()
- 	 * the driver will have removed the vif info already!)
- 	 *
--	 * We could relax this and only unlink the stations from the
--	 * hash table and list but keep them on a per-sdata list that
--	 * will be inserted back again when the interface is brought
--	 * up again, but I don't currently see a use case for that,
--	 * except with WDS which gets a STA entry created when it is
--	 * brought up.
-+	 * This is relevant only in AP, WDS and mesh modes, since in
-+	 * all other modes we've already removed all stations when
-+	 * disconnecting etc.
- 	 */
- 	sta_info_flush(local, sdata);
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index ec1690d..31603e8 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -295,7 +295,9 @@
+  *	auth and assoc steps. For this, you need to specify the SSID in a
+  *	%NL80211_ATTR_SSID attribute, and can optionally specify the association
+  *	IEs in %NL80211_ATTR_IE, %NL80211_ATTR_AUTH_TYPE, %NL80211_ATTR_MAC,
+- *	%NL80211_ATTR_WIPHY_FREQ and %NL80211_ATTR_CONTROL_PORT.
++ *	%NL80211_ATTR_WIPHY_FREQ, %NL80211_ATTR_CONTROL_PORT,
++ *	%NL80211_ATTR_CONTROL_PORT_ETHERTYPE and
++ *	%NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT.
+  *	It is also sent as an event, with the BSSID and response IEs when the
+  *	connection is established or failed to be established. This can be
+  *	determined by the STATUS_CODE attribute.
+@@ -686,6 +688,15 @@ enum nl80211_commands {
+  *	request, the driver will assume that the port is unauthorized until
+  *	authorized by user space. Otherwise, port is marked authorized by
+  *	default in station mode.
++ * @NL80211_ATTR_CONTROL_PORT_ETHERTYPE: A 16-bit value indicating the
++ *	ethertype that will be used for key negotiation. It can be
++ *	specified with the associate and connect commands. If it is not
++ *	specified, the value defaults to 0x888E (PAE, 802.1X). This
++ *	attribute is also used as a flag in the wiphy information to
++ *	indicate that protocols other than PAE are supported.
++ * @NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT: When included along with
++ *	%NL80211_ATTR_CONTROL_PORT_ETHERTYPE, indicates that the custom
++ *	ethertype frames used for key negotiation must not be encrypted.
+  *
+  * @NL80211_ATTR_TESTDATA: Testmode data blob, passed through to the driver.
+  *	We recommend using nested, driver-specific attributes within this.
+@@ -951,6 +962,9 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_RX_FRAME_TYPES,
+ 	NL80211_ATTR_FRAME_TYPE,
  
-@@ -410,11 +407,21 @@ static int ieee80211_stop(struct net_dev
- 		struct ieee80211_sub_if_data *vlan, *tmpsdata;
- 		struct beacon_data *old_beacon = sdata->u.ap.beacon;
- 
-+		/* sdata_running will return false, so this will disable */
-+		ieee80211_bss_info_change_notify(sdata,
-+						 BSS_CHANGED_BEACON_ENABLED);
++	NL80211_ATTR_CONTROL_PORT_ETHERTYPE,
++	NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT,
 +
- 		/* remove beacon */
- 		rcu_assign_pointer(sdata->u.ap.beacon, NULL);
- 		synchronize_rcu();
- 		kfree(old_beacon);
+ 	/* add attributes here, update the policy in nl80211.c */
  
-+		/* free all potentially still buffered bcast frames */
-+		while ((skb = skb_dequeue(&sdata->u.ap.ps_bc_buf))) {
-+			local->total_ps_buffered--;
-+			dev_kfree_skb(skb);
-+		}
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index f274053..4c8c727 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -763,6 +763,10 @@ const u8 *ieee80211_bss_get_ie(struct cfg80211_bss *bss, u8 ie);
+  *	sets/clears %NL80211_STA_FLAG_AUTHORIZED. If true, the driver is
+  *	required to assume that the port is unauthorized until authorized by
+  *	user space. Otherwise, port is marked authorized by default.
++ * @control_port_ethertype: the control port protocol that should be
++ *	allowed through even on unauthorized ports
++ * @control_port_no_encrypt: TRUE to prevent encryption of control port
++ *	protocol frames.
+  */
+ struct cfg80211_crypto_settings {
+ 	u32 wpa_versions;
+@@ -772,6 +776,8 @@ struct cfg80211_crypto_settings {
+ 	int n_akm_suites;
+ 	u32 akm_suites[NL80211_MAX_NR_AKM_SUITES];
+ 	bool control_port;
++	__be16 control_port_ethertype;
++	bool control_port_no_encrypt;
+ };
+ 
+ /**
+@@ -1293,15 +1299,19 @@ struct cfg80211_ops {
+  * @WIPHY_FLAG_4ADDR_AP: supports 4addr mode even on AP (with a single station
+  *	on a VLAN interface)
+  * @WIPHY_FLAG_4ADDR_STATION: supports 4addr mode even as a station
++ * @WIPHY_FLAG_CONTROL_PORT_PROTOCOL: This device supports setting the
++ *	control port protocol ethertype. The device also honours the
++ *	control_port_no_encrypt flag.
+  */
+ enum wiphy_flags {
+-	WIPHY_FLAG_CUSTOM_REGULATORY	= BIT(0),
+-	WIPHY_FLAG_STRICT_REGULATORY	= BIT(1),
+-	WIPHY_FLAG_DISABLE_BEACON_HINTS	= BIT(2),
+-	WIPHY_FLAG_NETNS_OK		= BIT(3),
+-	WIPHY_FLAG_PS_ON_BY_DEFAULT	= BIT(4),
+-	WIPHY_FLAG_4ADDR_AP		= BIT(5),
+-	WIPHY_FLAG_4ADDR_STATION	= BIT(6),
++	WIPHY_FLAG_CUSTOM_REGULATORY		= BIT(0),
++	WIPHY_FLAG_STRICT_REGULATORY		= BIT(1),
++	WIPHY_FLAG_DISABLE_BEACON_HINTS		= BIT(2),
++	WIPHY_FLAG_NETNS_OK			= BIT(3),
++	WIPHY_FLAG_PS_ON_BY_DEFAULT		= BIT(4),
++	WIPHY_FLAG_4ADDR_AP			= BIT(5),
++	WIPHY_FLAG_4ADDR_STATION		= BIT(6),
++	WIPHY_FLAG_CONTROL_PORT_PROTOCOL	= BIT(7),
+ };
+ 
+ struct mac_address {
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 49f5ca3..85a23de 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -136,6 +136,8 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 		.len = sizeof(struct nl80211_sta_flag_update),
+ 	},
+ 	[NL80211_ATTR_CONTROL_PORT] = { .type = NLA_FLAG },
++	[NL80211_ATTR_CONTROL_PORT_ETHERTYPE] = { .type = NLA_U16 },
++	[NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_PRIVACY] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_CIPHER_SUITE_GROUP] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_WPA_VERSIONS] = { .type = NLA_U32 },
+@@ -474,6 +476,9 @@ static int nl80211_send_wiphy(struct sk_buff *msg, u32 pid, u32 seq, int flags,
+ 	NLA_PUT_U8(msg, NL80211_ATTR_MAX_NUM_PMKIDS,
+ 		   dev->wiphy.max_num_pmkids);
+ 
++	if (dev->wiphy.flags & WIPHY_FLAG_CONTROL_PORT_PROTOCOL)
++		NLA_PUT_FLAG(msg, NL80211_ATTR_CONTROL_PORT_ETHERTYPE);
 +
- 		/* down all dependent devices, that is VLANs */
- 		list_for_each_entry_safe(vlan, tmpsdata, &sdata->u.ap.vlans,
- 					 u.vlan.list)
-@@ -454,27 +461,6 @@ static int ieee80211_stop(struct net_dev
- 
- 		ieee80211_configure_filter(local);
- 		break;
--	case NL80211_IFTYPE_STATION:
--		del_timer_sync(&sdata->u.mgd.chswitch_timer);
--		del_timer_sync(&sdata->u.mgd.timer);
--		del_timer_sync(&sdata->u.mgd.conn_mon_timer);
--		del_timer_sync(&sdata->u.mgd.bcn_mon_timer);
--		/*
--		 * If any of the timers fired while we waited for it, it will
--		 * have queued its work. Now the work will be running again
--		 * but will not rearm the timer again because it checks
--		 * whether the interface is running, which, at this point,
--		 * it no longer is.
--		 */
--		cancel_work_sync(&sdata->u.mgd.chswitch_work);
--		cancel_work_sync(&sdata->u.mgd.monitor_work);
--		cancel_work_sync(&sdata->u.mgd.beacon_connection_loss_work);
--
--		/* fall through */
--	case NL80211_IFTYPE_ADHOC:
--		if (sdata->vif.type == NL80211_IFTYPE_ADHOC)
--			del_timer_sync(&sdata->u.ibss.timer);
--		/* fall through */
- 	case NL80211_IFTYPE_MESH_POINT:
- 		if (ieee80211_vif_is_mesh(&sdata->vif)) {
- 			/* other_bss and allmulti are always set on mesh
-@@ -502,17 +488,19 @@ static int ieee80211_stop(struct net_dev
- 			ieee80211_scan_cancel(local);
- 
- 		/*
--		 * Disable beaconing for AP and mesh, IBSS can't
--		 * still be joined to a network at this point.
-+		 * Disable beaconing here for mesh only, AP and IBSS
-+		 * are already taken care of.
- 		 */
--		if (sdata->vif.type == NL80211_IFTYPE_AP ||
--		    sdata->vif.type == NL80211_IFTYPE_MESH_POINT) {
-+		if (sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
- 			ieee80211_bss_info_change_notify(sdata,
- 				BSS_CHANGED_BEACON_ENABLED);
--		}
- 
--		/* free all remaining keys, there shouldn't be any */
-+		/*
-+		 * Free all remaining keys, there shouldn't be any,
-+		 * except maybe group keys in AP more or WDS?
-+		 */
- 		ieee80211_free_keys(sdata);
-+
- 		drv_remove_interface(local, &sdata->vif);
- 	}
- 
-@@ -593,8 +581,6 @@ static void ieee80211_teardown_sdata(str
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
- 	struct ieee80211_local *local = sdata->local;
--	struct beacon_data *beacon;
--	struct sk_buff *skb;
- 	int flushed;
- 	int i;
- 
-@@ -607,37 +593,8 @@ static void ieee80211_teardown_sdata(str
- 		__skb_queue_purge(&sdata->fragments[i].skb_list);
- 	sdata->fragment_next = 0;
- 
--	switch (sdata->vif.type) {
--	case NL80211_IFTYPE_AP:
--		beacon = sdata->u.ap.beacon;
--		rcu_assign_pointer(sdata->u.ap.beacon, NULL);
--		synchronize_rcu();
--		kfree(beacon);
--
--		while ((skb = skb_dequeue(&sdata->u.ap.ps_bc_buf))) {
--			local->total_ps_buffered--;
--			dev_kfree_skb(skb);
--		}
--
--		break;
--	case NL80211_IFTYPE_MESH_POINT:
--		if (ieee80211_vif_is_mesh(&sdata->vif))
--			mesh_rmc_free(sdata);
--		break;
--	case NL80211_IFTYPE_ADHOC:
--		if (WARN_ON(sdata->u.ibss.presp))
--			kfree_skb(sdata->u.ibss.presp);
--		break;
--	case NL80211_IFTYPE_STATION:
--	case NL80211_IFTYPE_WDS:
--	case NL80211_IFTYPE_AP_VLAN:
--	case NL80211_IFTYPE_MONITOR:
--		break;
--	case NL80211_IFTYPE_UNSPECIFIED:
--	case NUM_NL80211_IFTYPES:
--		BUG();
--		break;
--	}
-+	if (ieee80211_vif_is_mesh(&sdata->vif))
-+		mesh_rmc_free(sdata);
- 
- 	flushed = sta_info_flush(local, sdata);
- 	WARN_ON(flushed);
---- wireless-testing.orig/net/mac80211/mlme.c	2010-08-25 21:58:52.000000000 +0200
-+++ wireless-testing/net/mac80211/mlme.c	2010-08-25 21:58:56.000000000 +0200
-@@ -990,6 +990,11 @@ static void ieee80211_set_disassoc(struc
- 
- 	if (remove_sta)
- 		sta_info_destroy_addr(sdata, bssid);
-+
-+	del_timer_sync(&sdata->u.mgd.conn_mon_timer);
-+	del_timer_sync(&sdata->u.mgd.bcn_mon_timer);
-+	del_timer_sync(&sdata->u.mgd.timer);
-+	del_timer_sync(&sdata->u.mgd.chswitch_timer);
+ 	nl_modes = nla_nest_start(msg, NL80211_ATTR_SUPPORTED_IFTYPES);
+ 	if (!nl_modes)
+ 		goto nla_put_failure;
+@@ -3691,7 +3696,8 @@ unlock_rtnl:
+ 	return err;
  }
  
- void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
-
+-static int nl80211_crypto_settings(struct genl_info *info,
++static int nl80211_crypto_settings(struct cfg80211_registered_device *rdev,
++				   struct genl_info *info,
+ 				   struct cfg80211_crypto_settings *settings,
+ 				   int cipher_limit)
+ {
+@@ -3699,6 +3705,19 @@ static int nl80211_crypto_settings(struct genl_info *info,
+ 
+ 	settings->control_port = info->attrs[NL80211_ATTR_CONTROL_PORT];
+ 
++	if (info->attrs[NL80211_ATTR_CONTROL_PORT_ETHERTYPE]) {
++		u16 proto;
++		proto = nla_get_u16(
++			info->attrs[NL80211_ATTR_CONTROL_PORT_ETHERTYPE]);
++		settings->control_port_ethertype = cpu_to_be16(proto);
++		if (!(rdev->wiphy.flags & WIPHY_FLAG_CONTROL_PORT_PROTOCOL) &&
++		    proto != ETH_P_PAE)
++			return -EINVAL;
++		if (info->attrs[NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT])
++			settings->control_port_no_encrypt = true;
++	} else
++		settings->control_port_ethertype = cpu_to_be16(ETH_P_PAE);
++
+ 	if (info->attrs[NL80211_ATTR_CIPHER_SUITES_PAIRWISE]) {
+ 		void *data;
+ 		int len, i;
+@@ -3826,7 +3845,7 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
+ 	if (info->attrs[NL80211_ATTR_PREV_BSSID])
+ 		prev_bssid = nla_data(info->attrs[NL80211_ATTR_PREV_BSSID]);
+ 
+-	err = nl80211_crypto_settings(info, &crypto, 1);
++	err = nl80211_crypto_settings(rdev, info, &crypto, 1);
+ 	if (!err)
+ 		err = cfg80211_mlme_assoc(rdev, dev, chan, bssid, prev_bssid,
+ 					  ssid, ssid_len, ie, ie_len, use_mfp,
+@@ -4303,7 +4322,7 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	connect.privacy = info->attrs[NL80211_ATTR_PRIVACY];
+ 
+-	err = nl80211_crypto_settings(info, &connect.crypto,
++	err = nl80211_crypto_settings(rdev, info, &connect.crypto,
+ 				      NL80211_MAX_NR_CIPHER_SUITES);
+ 	if (err)
+ 		return err;
+diff --git a/net/wireless/wext-sme.c b/net/wireless/wext-sme.c
+index 9818198..6fffe62 100644
+--- a/net/wireless/wext-sme.c
++++ b/net/wireless/wext-sme.c
+@@ -197,6 +197,8 @@ int cfg80211_mgd_wext_siwessid(struct net_device *dev,
+ 	wdev->wext.connect.ssid_len = len;
+ 
+ 	wdev->wext.connect.crypto.control_port = false;
++	wdev->wext.connect.crypto.control_port_ethertype =
++					cpu_to_be16(ETH_P_PAE);
+ 
+ 	err = cfg80211_mgd_wext_connect(rdev, wdev);
+  out:
+-- 
+1.6.3.3
 
