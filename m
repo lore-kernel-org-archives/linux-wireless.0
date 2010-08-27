@@ -1,77 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:55681 "EHLO mga03.intel.com"
+Received: from madara.hpl.hp.com ([192.6.19.124]:52517 "EHLO madara.hpl.hp.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752282Ab0HZJnF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Aug 2010 05:43:05 -0400
-From: "Gao, Yunpeng" <yunpeng.gao@intel.com>
-To: Ohad Ben-Cohen <ohad@wizery.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	Ido Yariv <ido@wizery.com>, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Nicolas Pitre <nico@fluxnic.net>
-Date: Thu, 26 Aug 2010 17:42:00 +0800
-Subject: RE: [RFC/PATCH 3/6] mmc: add general runtime PM support
-Message-ID: <CE761E84DADF2947A4AF22FB8D97A4732A516CE8@shsmsx501.ccr.corp.intel.com>
-References: <1281532770-27545-1-git-send-email-ohad@wizery.com>
- <1281532770-27545-4-git-send-email-ohad@wizery.com>
-In-Reply-To: <1281532770-27545-4-git-send-email-ohad@wizery.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1753169Ab0H0V3F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Aug 2010 17:29:05 -0400
+Date: Fri, 27 Aug 2010 14:22:54 -0700
+From: Jean Tourrilhes <jt@hpl.hp.com>
+To: Kees Cook <kees.cook@canonical.com>
+Cc: linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH] wireless: fix 64K kernel heap content leak via ioctl
+Message-ID: <20100827212254.GB32275@bougret.hpl.hp.com>
+Reply-To: jt@hpl.hp.com
+References: <20100827210240.GC4703@outflux.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100827210240.GC4703@outflux.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>+static int mmc_runtime_suspend(struct device *dev)
->+{
->+	int status = 0;
->+	struct mmc_card *card = dev_to_mmc_card(dev);
->+
->+	mmc_power_save_host(card->host);
->+
->+	return status;
->+}
+On Fri, Aug 27, 2010 at 02:02:41PM -0700, Kees Cook wrote:
+> This problem was originally tracked down by Brad Spengler.
+> 
+> When calling wireless ioctls, if a driver does not correctly
+> validate/shrink iwp->length, the resulting copy_to_user can leak up to
+> 64K of kernel heap contents.
+> 
+> It seems that this is triggerable[1] in 2.6.32 at least on ath5k, but
+> I was not able to track down how. The twisty maze of ioctl handlers
+> stumped me. :)
 
-It seems the power_save callback is not implemented (Null pointer) yet for both mmc and sdio. Does it mean that the power_save callback will be implemented in future or just don't need at all? Thanks.
+	You can always ask.
 
->+static int mmc_runtime_resume(struct device *dev)
->+{
->+	int status = 0;
->+	struct mmc_card *card = dev_to_mmc_card(dev);
->+
->+	mmc_power_restore_host(card->host);
->+
->+	return status;
->+}
->+
->+static int mmc_runtime_idle(struct device *dev)
->+{
->+	struct mmc_card *card = dev_to_mmc_card(dev);
->+
->+	return pm_runtime_suspend(dev);
->+}
->+
->+static const struct dev_pm_ops mmc_bus_pm_ops = {
->+	.runtime_suspend	= mmc_runtime_suspend,
->+	.runtime_resume		= mmc_runtime_resume,
->+	.runtime_idle		= mmc_runtime_idle,
->+};
->+
-> static struct bus_type mmc_bus_type = {
-> 	.name		= "mmc",
-> 	.dev_attrs	= mmc_dev_attrs,
->@@ -146,6 +180,7 @@ static struct bus_type mmc_bus_type = {
-> 	.remove		= mmc_bus_remove,
-> 	.suspend	= mmc_bus_suspend,
-> 	.resume		= mmc_bus_resume,
->+	.pm		= &mmc_bus_pm_ops,
-> };
->
-I think this is a good example to implement runtime PM support for mmc driver. But seems it doesn't provide a runtime PM example on host controller driver side. To my understanding, once the functions (mmc card or sdio devices) and mmc/sdio bus enter into rumtime suspend, it should then make the host controller enter into runtime suspend, too. Any ideas on how to achieve this? Thanks.
+> Other drivers I checked did not appear to have any problems,
+> but the potential remains. I'm not sure if this patch is the right approach;
+> it was fixed differently[2] in grsecurity.
 
-Best Regards,
-Yunpeng Gao
+	Did you tried your patch for real ? With large scan request ?
+	I ask because at first glance, it looks incorrect, asI believe
+it kills large request. But someone would need to test, for sure.
+
+> [1] http://forums.grsecurity.net/viewtopic.php?f=3&t=2290&start=0
+> [2] http://grsecurity.net/~spender/wireless-infoleak-fix2.patch
+
+	I believe this patch would make the situation worse.
+
+	Would you mind validating the following patch ? I've just
+verified that it compiles and I believe it does what you are asking in
+a much more predictable way.
+	Regards,
+
+	Jean
+
+Signed-off-by: Jean Tourrilhes <jt@hpl.hp.com>
+
+diff -u -p wext.j2.c wext.c
+--- wext.j2.c   2010-08-27 14:17:26.000000000 -0700
++++ wext.c      2010-08-27 14:19:33.000000000 -0700
+@@ -800,9 +800,12 @@ static int ioctl_standard_iw_point(struc
+                        goto out;
+                }
+ 
+-               if (copy_to_user(iwp->pointer, extra,
+-                                iwp->length *
+-                                descr->token_size)) {
++               /* Verify how much we should return. Some driver
++                * may abuse iwp->length... */
++               if((iwp->length * descr->token_size) < extra_size)
++                       extra_size = iwp->length * descr->token_size;
++
++               if (copy_to_user(iwp->pointer, extra, extra_size)) {
+                        err = -EFAULT;
+                        goto out;
+                }
