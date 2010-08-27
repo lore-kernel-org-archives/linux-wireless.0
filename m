@@ -1,34 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34552 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755670Ab0HXVOm (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:36884 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755281Ab0H0TDR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Aug 2010 17:14:42 -0400
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1Oo0pN-0003Sp-BS
-	for linux-wireless@vger.kernel.org; Tue, 24 Aug 2010 17:14:41 -0400
-Received: from linville-8530p.local (linville-8530p.local [127.0.0.1])
-	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id o7OL1tVe018993
-	for <linux-wireless@vger.kernel.org>; Tue, 24 Aug 2010 17:01:55 -0400
-Received: (from linville@localhost)
-	by linville-8530p.local (8.14.4/8.14.4/Submit) id o7OL1t5t018992
-	for linux-wireless@vger.kernel.org; Tue, 24 Aug 2010 17:01:55 -0400
-Date: Tue, 24 Aug 2010 17:01:55 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: wireless-next-2.6 rebased
-Message-ID: <20100824210155.GH2535@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 27 Aug 2010 15:03:17 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 267524195D
+	for <linux-wireless@vger.kernel.org>; Fri, 27 Aug 2010 15:02:30 -0400 (EDT)
+Subject: Compat-wireless release for 2010-08-27 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100827190316.261B941133@repository3.orbit-lab.org>
+Date: Fri, 27 Aug 2010 15:03:16 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I had to rebase wireless-next-2.6 to correct a merging problem -- FYI.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   359abe5..11f03db  linux-2.6.36.y -> origin/linux-2.6.36.y
+   ce9cc2e..e690954  master     -> origin/master
+ * [new tag]         compat-wireless-v2.6.36-rc2-1 -> compat-wireless-v2.6.36-rc2-1
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   da9e5a3..894ba00  history    -> origin/history
+ + bd174e2...917977d master     -> origin/master  (forced update)
+ * [new tag]         next-20100827 -> next-20100827
 
-I apologize for any inconvenience!
+compat-wireless code metrics
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+    497647 - Total upstream lines of code being pulled
+      1714 - backport code changes
+      1474 - backport code additions
+       240 - backport code deletions
+      6072 - backport from compat module
+      7786 - total backport code
+    1.5646 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2448 - % of crap code
+
+Base tree: linux-next.git
+Base tree version: next-20100827
+compat-wireless release: compat-wireless-2010-08-23-4-ge690954
