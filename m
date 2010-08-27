@@ -1,42 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58566 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751851Ab0HRQon (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Aug 2010 12:44:43 -0400
-Date: Wed, 18 Aug 2010 12:44:05 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH 2/2] iwlwifi: do not spuriously call
- ieee80211_scan_completed
-Message-ID: <20100818164405.GA2793@tuxdriver.com>
-References: <1282149322-17928-1-git-send-email-wey-yi.w.guy@intel.com>
- <1282149322-17928-3-git-send-email-wey-yi.w.guy@intel.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:49032 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751235Ab0H0V1V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Aug 2010 17:27:21 -0400
+Message-ID: <4C782DB0.4060800@hauke-m.de>
+Date: Fri, 27 Aug 2010 23:27:12 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1282149322-17928-3-git-send-email-wey-yi.w.guy@intel.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
+	mcgrof@infradead.org
+Subject: Re: [PATCH 0/7] compat-wireless: add support for kernel 2.6.24 and
+ 2.6.25
+References: <1282934453-18093-1-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1282934453-18093-1-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 18, 2010 at 09:35:22AM -0700, Wey-Yi Guy wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+Am 27.08.2010 20:40, schrieb Hauke Mehrtens:
+> This series fixes some problems when compiling compat-wireless against 
+> kernel 2.6.24 or 2.6.25. Now this should work for every driver selected 
+> by default.
+> "add ifdefs into compat_autoconf.h" extends gen-compat-autoconf.sh to
+> handle some ifdef in config.mk.
 > 
-> When a scan is aborted because the corresponding
-> virtual interface is removed, we may still later
-> attempt to tell mac80211 that the scan completed.
-> This is obviously wrong, since we already told it
-> that it was aborted, so don't do that.
+> This was compile tested with kernel 2.6.24 to 2.6.36.
 > 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> Hauke Mehrtens (7):
+>   compat-wireless: do not use needed_headroom
+>   compat-wireless: fix patch stile.
+>   compat-wireless: remove linux/gpio.h include
+>   compat-wireless: multiple changes to config file
+>   compat-wireless: rename CONFIG_IWLWIFI config symbol
+>   compat-wireless: add ifdefs into compat_autoconf.h
+>   compat-wireless: add support for kernel 2.6.24
 
-Does this really qualify as a fix for 2.6.36?  Is it a regression?
-Does it generate an oops?  Or loss of connectivity?
+These patches and the patch for compat should also go into stable. I
+have tested then with origin/linux-2.6.36.y and they also worked on that
+branch.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Hauke
