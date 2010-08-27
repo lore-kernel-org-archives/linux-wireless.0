@@ -1,82 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caramon.arm.linux.org.uk ([78.32.30.218]:39680 "EHLO
-	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752877Ab0HKV02 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Aug 2010 17:26:28 -0400
-Date: Wed, 11 Aug 2010 22:25:13 +0100
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: "DebBarma, Tarun Kanti" <tarun.kanti@ti.com>
-Cc: "felipe.balbi@nokia.com" <felipe.balbi@nokia.com>,
-	Ohad Ben-Cohen <ohad@wizery.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	"Pandita, Vikram" <vikram.pandita@ti.com>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	"Quadros Roger (Nokia-MS/Helsinki)" <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	Nicolas Pitre <nico@fluxnic.net>, San Mehat <san@google.com>,
-	"Chikkature Rajashekar, Madhusudhan" <madhu.cr@ti.com>,
-	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	Ido Yariv <ido@wizery.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v4 3/8] wireless: wl1271: add platform driver to get
-	board data
-Message-ID: <20100811212513.GC827@n2100.arm.linux.org.uk>
-References: <1281550913-17633-1-git-send-email-ohad@wizery.com> <1281550913-17633-4-git-send-email-ohad@wizery.com> <5A47E75E594F054BAF48C5E4FC4B92AB0324110ABD@dbde02.ent.ti.com> <20100811184742.GA21778@nokia.com> <5A47E75E594F054BAF48C5E4FC4B92AB0324110AC1@dbde02.ent.ti.com> <20100811185724.GD21778@nokia.com> <5A47E75E594F054BAF48C5E4FC4B92AB0324110AC7@dbde02.ent.ti.com>
+Received: from madara.hpl.hp.com ([192.6.19.124]:43193 "EHLO madara.hpl.hp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752615Ab0H0Vxk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Aug 2010 17:53:40 -0400
+Date: Fri, 27 Aug 2010 14:53:16 -0700
+From: Jean Tourrilhes <jt@hpl.hp.com>
+To: Kees Cook <kees.cook@canonical.com>
+Cc: linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH] wireless: fix 64K kernel heap content leak via ioctl
+Message-ID: <20100827215316.GA32405@bougret.hpl.hp.com>
+Reply-To: jt@hpl.hp.com
+References: <20100827210240.GC4703@outflux.net> <20100827212254.GB32275@bougret.hpl.hp.com> <20100827214357.GE4703@outflux.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5A47E75E594F054BAF48C5E4FC4B92AB0324110AC7@dbde02.ent.ti.com>
+In-Reply-To: <20100827214357.GE4703@outflux.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 12, 2010 at 12:57:18AM +0530, DebBarma, Tarun Kanti wrote:
+On Fri, Aug 27, 2010 at 02:43:57PM -0700, Kees Cook wrote:
+> Hi Jean,
 > 
-> > -----Original Message-----
-> > From: Felipe Balbi [mailto:felipe.balbi@nokia.com]
-> > Sent: Thursday, August 12, 2010 12:27 AM
-> > To: DebBarma, Tarun Kanti
-> > Cc: Balbi Felipe (Nokia-MS/Helsinki); Ohad Ben-Cohen; linux-
-> > wireless@vger.kernel.org; linux-mmc@vger.kernel.org; linux-
-> > omap@vger.kernel.org; Ido Yariv; Mark Brown; linux-arm-
-> > kernel@lists.infradead.org; Chikkature Rajashekar, Madhusudhan; Coelho
-> > Luciano (Nokia-MS/Helsinki); akpm@linux-foundation.org; San Mehat; Quadros
-> > Roger (Nokia-MS/Helsinki); Tony Lindgren; Nicolas Pitre; Pandita, Vikram;
-> > Kalle Valo
-> > Subject: Re: [PATCH v4 3/8] wireless: wl1271: add platform driver to get
-> > board data
-> > 
-> > Hi,
-> > 
-> > On Wed, Aug 11, 2010 at 08:52:54PM +0200, ext DebBarma, Tarun Kanti wrote:
-> > >True; however if we go by that argument than we can also assume pdata
-> > >is valid, so that we would not need the below check.
-> > 
-> > of course not. You can have devices that just play well with default
-> > values or devices where you don't need the flexibility of platform data.
-> > That's why we check.
-> > 
-> > platform_device pointers on the other hand, are guaranteed to be always
-> > true, if it isn't then you should oops, you deserve to oops because
-> > something is really really wrong.
-> >
-> Sounds perfect!
-> What that means is _probe() function makes sense only for cases where we
-> have valid platform data because we are returning right at the top if
-> pdata is not valid. If this is the case I was curious to know why not
-> framework make another check for valid pdata before calling _probe()
-> instead of coming all the way to _probe() and then returning! 
+> The comment should probably be clarified -- it's the caller's iwp->length
+> that may be causing problems
 
-Platform devices are not for passing platform data around - they're for
-declaring platform hardware devices that we want drivers to handle -
-and it depends on the driver whether having platform data is appropriate
-or not.
+	Ha ! I see. It would be for regular iwpoint queries, not for
+extended NOMAX queries (scan is a extended NOMAX query).
+	Note that I don't like the idea of reducing the mallocated
+size, especially with regular queries, as I know that some driver may
+expect a fixed size in extra and may memcpy to it without double
+checking.
 
-This proposal is, IMHO, abusing the platform device/driver support to
-achieve its own goals.  I've outlined a far simpler and easiler solution
-which avoids this kind of abuse, and given suggestions on how to extend
-it to support multiple instances.
+> Regardless, the above patch would appear to limit the copy_to_user
+> to only the kzalloced region.
+
+	I'm glad you like it.
+
+> Thanks!
+> 
+> -Kees
+
+	Regards,
+
+	Jean
