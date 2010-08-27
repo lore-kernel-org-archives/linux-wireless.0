@@ -1,86 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:32949 "EHLO hera.kernel.org"
+Received: from mga14.intel.com ([143.182.124.37]:54400 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751852Ab0HBQd3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Aug 2010 12:33:29 -0400
-Message-ID: <4C56F30D.3020304@kernel.org>
-Date: Mon, 02 Aug 2010 18:32:13 +0200
-From: Tejun Heo <tj@kernel.org>
-MIME-Version: 1.0
-To: Linus Torvalds <torvalds@linux-foundation.org>
-CC: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	Jens Axboe <jaxboe@fusionio.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-Subject: Re: 2.6.35-rc6-git6: Reported regressions from 2.6.34
-References: <2dWFdr9kTFM.A.P0D.spXVMB@chimera> <AANLkTimcH7+Bq1UEbaSU7SQpzArPgmSLegiqE13V8=CF@mail.gmail.com>
-In-Reply-To: <AANLkTimcH7+Bq1UEbaSU7SQpzArPgmSLegiqE13V8=CF@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1754080Ab0H0Q4p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Aug 2010 12:56:45 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 03/27] iwlwifi: define PAN queues/FIFOs
+Date: Fri, 27 Aug 2010 09:59:31 -0700
+Message-Id: <1282928395-32762-4-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1282928395-32762-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1282928395-32762-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello, Linus.
+From: Johannes Berg <johannes.berg@intel.com>
 
-On 08/01/2010 08:01 PM, Linus Torvalds wrote:
-> This has a proposed patch. I don't know what the status of it is, though. Jens?
-> 
->    http://marc.info/?l=linux-kernel&m=127950018204029&w=2
-> 
->> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16393
->> Subject         : kernel BUG at fs/block_dev.c:765!
->> Submitter       : Markus Trippelsdorf <markus@trippelsdorf.de>
->> Date            : 2010-07-14 13:52 (19 days old)
->> Message-ID      : <20100714135217.GA1797@arch.tripp.de>
->> References      : http://marc.info/?l=linux-kernel&m=127911564213748&w=2
-> 
-> This one is interesting. And I think I perhaps see where it's coming from.
-> 
-> bd_start_claiming() (through bd_prepare_to_claim()) has two separate
-> success cases: either there was no holder (bd_claiming is NULL) or the
-> new holder was already claiming it (bd_claiming == holder).
-> 
-> Note in particular the case of the holder _already_ holding it. What happens is:
-> 
->  - bd_start_claiming() succeeds because we had _already_ claimed it
-> with the same holder
-> 
->  - then some error happens, and we call bd_abort_claiming(), which
-> does whole->bd_claiming = NULL;
-> 
->  - the original holder thinks it still holds the bd, but it has been released!
-> 
->  - a new claimer comes in, and succeeds because bd_claiming is now NULL.
-> 
->  - we now have two "owners" of the bd, but bd_claiming only points to
-> the second one.
-> 
-> I think bd_start_claiming() needs to do some kind of refcount for the
-> nested holder case, and bd_abort_claiming() needs to decrement the
-> refcount and only clear the bd_claiming field when it goes down to
-> zero.
-> 
-> I dunno. Maybe there's something else going on, but it does look
-> suspicious, and the above would explain the BUG_ON().
+PAN capable microcode has a different
+queue assignment (not just more queues
+for PAN) due to the way multicast is
+handled for AP mode.
 
-Yeah, that definitely sounds plausible.  I think the condition check
-in bd_prepare_to_claim() should have been "if (whole->bd_claiming)"
-instead of "if (whole->bd_claiming && whole->bd_claiming != holder)".
-It doesn't make much sense to allow multiple parallel claiming
-operations anyway and the comment above already says - "This function
-fails if @bdev is already claimed by another holder and waits if
-another claiming is in progress."
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |   10 +++++-----
+ drivers/net/wireless/iwlwifi/iwl-agn.c       |    5 ++++-
+ drivers/net/wireless/iwlwifi/iwl-dev.h       |   15 +++++++++++++--
+ 3 files changed, 22 insertions(+), 8 deletions(-)
 
-I'll try to build a test case and verify it.
-
-Thank you.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
+index a9ea7a1..a7961bf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
+@@ -57,11 +57,11 @@ static const s8 iwlagn_ipan_queue_to_tx_fifo[] = {
+ 	IWL_TX_FIFO_VI,
+ 	IWL_TX_FIFO_BE,
+ 	IWL_TX_FIFO_BK,
+-	IWL_TX_FIFO_UNUSED, /* FIXME */
+-	IWL_TX_FIFO_UNUSED, /* FIXME */
+-	IWL_TX_FIFO_UNUSED, /* FIXME */
+-	IWL_TX_FIFO_UNUSED, /* FIXME */
+-	IWL_TX_FIFO_UNUSED, /* FIXME */
++	IWL_TX_FIFO_BK_IPAN,
++	IWL_TX_FIFO_BE_IPAN,
++	IWL_TX_FIFO_VI_IPAN,
++	IWL_TX_FIFO_VO_IPAN,
++	IWL_TX_FIFO_BE_IPAN,
+ 	IWLAGN_CMD_FIFO_NUM,
+ };
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index cfc8e8d..5f67955 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3012,7 +3012,10 @@ static int __iwl_up(struct iwl_priv *priv)
+ 	iwl_write32(priv, CSR_INT, 0xFFFFFFFF);
+ 
+ 	/* must be initialised before iwl_hw_nic_init */
+-	priv->cmd_queue = IWL_DEFAULT_CMD_QUEUE_NUM;
++	if (priv->valid_contexts != BIT(IWL_RXON_CTX_BSS))
++		priv->cmd_queue = IWL_IPAN_CMD_QUEUE_NUM;
++	else
++		priv->cmd_queue = IWL_DEFAULT_CMD_QUEUE_NUM;
+ 
+ 	ret = iwlagn_hw_nic_init(priv);
+ 	if (ret) {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 7cafb26..8ec377d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -253,10 +253,14 @@ struct iwl_channel_info {
+ 	struct iwl3945_scan_power_info scan_pwr_info[IWL_NUM_SCAN_RATES];
+ };
+ 
+-#define IWL_TX_FIFO_BK		0
++#define IWL_TX_FIFO_BK		0	/* shared */
+ #define IWL_TX_FIFO_BE		1
+-#define IWL_TX_FIFO_VI		2
++#define IWL_TX_FIFO_VI		2	/* shared */
+ #define IWL_TX_FIFO_VO		3
++#define IWL_TX_FIFO_BK_IPAN	IWL_TX_FIFO_BK
++#define IWL_TX_FIFO_BE_IPAN	4
++#define IWL_TX_FIFO_VI_IPAN	IWL_TX_FIFO_VI
++#define IWL_TX_FIFO_VO_IPAN	5
+ #define IWL_TX_FIFO_UNUSED	-1
+ 
+ /* Minimum number of queues. MAX_NUM is defined in hw specific files.
+@@ -270,6 +274,13 @@ struct iwl_channel_info {
+ #define IWL_DEFAULT_CMD_QUEUE_NUM	4
+ #define IWL_IPAN_CMD_QUEUE_NUM		9
+ 
++/*
++ * This queue number is required for proper operation
++ * because the ucode will stop/start the scheduler as
++ * required.
++ */
++#define IWL_IPAN_MCAST_QUEUE		8
++
+ /* Power management (not Tx power) structures */
+ 
+ enum iwl_pwr_src {
 -- 
-tejun
+1.7.0.4
+
