@@ -1,54 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from imsm057.netvigator.com ([218.102.48.210]:51986 "EHLO
-	imsm057.netvigator.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751708Ab0HVSSK (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:45072 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751726Ab0H0WwI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Aug 2010 14:18:10 -0400
-Received: from [192.168.0.111] (really [119.236.69.139])
-          by imsm057dat.netvigator.com
-          (InterMail vM.7.05.01.01 201-2174-106-103-20060222) with ESMTP
-          id <20100822181809.EMAQ28063.imsm057dat.netvigator.com@[192.168.0.111]>
-          for <linux-wireless@vger.kernel.org>;
-          Mon, 23 Aug 2010 02:18:09 +0800
-Subject: Please help! The SYS LED on TL-WR1043ND stays dark after flashig
- OpenWRT ...
-From: Robert Chan <robert.chan.list@gmail.com>
-To: linux-wireless@vger.kernel.org
-In-Reply-To: <000901cb4225$5ba42ba0$12ec82e0$@chan.list@gmail.com>
-References: <000901cb4225$5ba42ba0$12ec82e0$@chan.list@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 23 Aug 2010 02:18:08 +0800
-Message-ID: <1282501088.1982.1.camel@patrick-olevia>
-Mime-Version: 1.0
+	Fri, 27 Aug 2010 18:52:08 -0400
+MIME-Version: 1.0
+In-Reply-To: <20100827223926.GB32498@bougret.hpl.hp.com>
+References: <20100827210240.GC4703@outflux.net> <20100827212254.GB32275@bougret.hpl.hp.com>
+ <AANLkTimeEa_=dqX5yFnYzaSaL90TfOg3=MsydG81naAC@mail.gmail.com> <20100827223926.GB32498@bougret.hpl.hp.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 27 Aug 2010 15:51:47 -0700
+Message-ID: <AANLkTinZmG-bv_m0ktL+NBbtMRtHkM+urfD9M1GdLxCD@mail.gmail.com>
+Subject: Re: [PATCH] wireless: fix 64K kernel heap content leak via ioctl
+To: jt@hpl.hp.com
+Cc: Kees Cook <kees.cook@canonical.com>, linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear OpenWRT and 802.11s experts,
+On Fri, Aug 27, 2010 at 3:39 PM, Jean Tourrilhes <jt@hpl.hp.com> wrote:
+> On Fri, Aug 27, 2010 at 03:35:19PM -0700, Luis R. Rodriguez wrote:
+>> >
+>> > diff -u -p wext.j2.c wext.c
+>> > --- wext.j2.c   2010-08-27 14:17:26.000000000 -0700
+>> > +++ wext.c      2010-08-27 14:19:33.000000000 -0700
+>> > @@ -800,9 +800,12 @@ static int ioctl_standard_iw_point(struc
+>> >                        goto out;
+>> >                }
+>> >
+>> > -               if (copy_to_user(iwp->pointer, extra,
+>> > -                                iwp->length *
+>> > -                                descr->token_size)) {
+>> > +               /* Verify how much we should return. Some driver
+>> > +                * may abuse iwp->length... */
+>> > +               if((iwp->length * descr->token_size) < extra_size)
+>> > +                       extra_size = iwp->length * descr->token_size;
+>> > +
+>> > +               if (copy_to_user(iwp->pointer, extra, extra_size)) {
+>> >                        err = -EFAULT;
+>> >                        goto out;
+>> >                }
+>>
+>>
+>> Jean, can you submit in a new thread and right before the SOB add in
+>> the commit log Cc: stable@kernel.org [2.6.32+]
+>
+>        The current patch was made for 2.6.27 and was only
+> compiled. Someone would need to verify it works for 2.6.32. I could
+> probably find some time next week.
 
-Sorry for posting this question to both groups at the same time, but
-this problem is killing me and the deadline is coming up real soon!
+Got it, ah so it would be Cc: stable@kernel.org [2.6.27+]. To get this
+trickled in we first need it for wireless-testing.git, and provide
+links / patches to the backport of the patch for each kernel. Once it
+gets merged into Linus' tree the stable team can apply the respective
+backported patches.
 
-After playing around with the kernel_menuconfig, I finally enabled “mesh
-networking (pre-802.11s) and compiled the kernel.  I then flashed the
-kernel (using the openwt-ar71xx-tl-wr1043nd-v1-squashfs-facory.bin) onto
-the TL-WR1043ND (from the original firmware’s firmware upgrade).  The
-flash was reported successful, however the SYS LED stays dark ever since
-(of course I rebooted the router many times).  The PWR and LAN port LED
-are ON, though.
-
-Needless to say, I cannot even connect to the firmware through
-192.168.1.1.  so what is going on?  After search google and numerous
-forums on OpenWRT, I still cannot find this kind of “brick” scenario.
-So is the router “bricked”?  
-
-I have seen many posts regarding opening the case and solder the serial
-port to the board.  However, no one in my company has that kind of
-experience. So would this be the ONLY option I have right now?
-
-I appreciate for any hints I may be given.  Thanks very much in advance.
-
-Regards,
-
-Robert
-
-
+  Luis
