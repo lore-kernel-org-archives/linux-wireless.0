@@ -1,189 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:62839 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933346Ab0HJWNx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Aug 2010 18:13:53 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>
-Cc: Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v3 8/9] omap: hsmmc: split mmc23 power control
-Date: Wed, 11 Aug 2010 01:12:27 +0300
-Message-Id: <1281478348-24833-9-git-send-email-ohad@wizery.com>
-In-Reply-To: <1281478348-24833-1-git-send-email-ohad@wizery.com>
-References: <1281478348-24833-1-git-send-email-ohad@wizery.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:42120 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752635Ab0H0SlM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Aug 2010 14:41:12 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/7] compat-wireless: fix patch stile.
+Date: Fri, 27 Aug 2010 20:40:48 +0200
+Message-Id: <1282934453-18093-3-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1282934453-18093-1-git-send-email-hauke@hauke-m.de>
+References: <1282934453-18093-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prepare for mmc3 regulator power control by splitting the power
-control functions of mmc2 and mmc3, and expecting mmc3 to have
-a single, dedicated, regulator support.
+This should not change any functionality but the patches are looking
+better with theses changes.
 
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- arch/arm/mach-omap2/hsmmc.c   |   10 ++++--
- drivers/mmc/host/omap_hsmmc.c |   67 ++++++++++++++++++++++++++++++++++++----
- 2 files changed, 66 insertions(+), 11 deletions(-)
+ patches/01-netdev.patch    |    6 ++----
+ patches/16-bluetooth.patch |   26 ++++++++++----------------
+ 2 files changed, 12 insertions(+), 20 deletions(-)
 
-diff --git a/arch/arm/mach-omap2/hsmmc.c b/arch/arm/mach-omap2/hsmmc.c
-index 1ef54b0..5d3d789 100644
---- a/arch/arm/mach-omap2/hsmmc.c
-+++ b/arch/arm/mach-omap2/hsmmc.c
-@@ -174,7 +174,7 @@ static void omap4_hsmmc1_after_set_reg(struct device *dev, int slot,
- 	}
- }
- 
--static void hsmmc23_before_set_reg(struct device *dev, int slot,
-+static void hsmmc2_before_set_reg(struct device *dev, int slot,
- 				   int power_on, int vdd)
- {
- 	struct omap_mmc_platform_data *mmc = dev->platform_data;
-@@ -325,14 +325,16 @@ void __init omap2_hsmmc_init(struct omap2_hsmmc_info *controllers)
- 				c->transceiver = 1;
- 			if (c->transceiver && c->wires > 4)
- 				c->wires = 4;
--			/* FALLTHROUGH */
--		case 3:
- 			if (mmc->slots[0].features & HSMMC_HAS_PBIAS) {
- 				/* off-chip level shifting, or none */
--				mmc->slots[0].before_set_reg = hsmmc23_before_set_reg;
-+				mmc->slots[0].before_set_reg = hsmmc2_before_set_reg;
- 				mmc->slots[0].after_set_reg = NULL;
- 			}
- 			break;
-+		case 3:
-+			mmc->slots[0].before_set_reg = NULL;
-+			mmc->slots[0].after_set_reg = NULL;
-+			break;
- 		default:
- 			pr_err("MMC%d configuration not supported!\n", c->mmc);
- 			kfree(mmc);
-diff --git a/drivers/mmc/host/omap_hsmmc.c b/drivers/mmc/host/omap_hsmmc.c
-index d50e917..6f5cea0 100644
---- a/drivers/mmc/host/omap_hsmmc.c
-+++ b/drivers/mmc/host/omap_hsmmc.c
-@@ -258,7 +258,7 @@ static int omap_hsmmc_1_set_power(struct device *dev, int slot, int power_on,
- 	return ret;
- }
- 
--static int omap_hsmmc_23_set_power(struct device *dev, int slot, int power_on,
-+static int omap_hsmmc_2_set_power(struct device *dev, int slot, int power_on,
- 				   int vdd)
- {
- 	struct omap_hsmmc_host *host =
-@@ -309,6 +309,31 @@ static int omap_hsmmc_23_set_power(struct device *dev, int slot, int power_on,
- 	return ret;
- }
- 
-+static int omap_hsmmc_3_set_power(struct device *dev, int slot, int power_on,
-+				   int vdd)
-+{
-+	struct omap_hsmmc_host *host =
-+		platform_get_drvdata(to_platform_device(dev));
-+	int ret = 0;
-+
-+	if (power_on) {
-+		ret = mmc_regulator_set_ocr(host->vcc, vdd);
-+		/* Enable interface voltage rail, if needed */
-+		if (ret == 0 && host->vcc) {
-+			ret = regulator_enable(host->vcc);
-+			if (ret < 0)
-+				ret = mmc_regulator_set_ocr(host->vcc, 0);
-+		}
-+	} else {
-+		if (host->vcc)
-+			ret = regulator_disable(host->vcc);
-+		if (ret == 0)
-+			ret = mmc_regulator_set_ocr(host->vcc, 0);
-+	}
-+
-+	return ret;
-+}
-+
- static int omap_hsmmc_1_set_sleep(struct device *dev, int slot, int sleep,
- 				  int vdd, int cardsleep)
- {
-@@ -319,7 +344,7 @@ static int omap_hsmmc_1_set_sleep(struct device *dev, int slot, int sleep,
- 	return regulator_set_mode(host->vcc, mode);
- }
- 
--static int omap_hsmmc_23_set_sleep(struct device *dev, int slot, int sleep,
-+static int omap_hsmmc_2_set_sleep(struct device *dev, int slot, int sleep,
- 				   int vdd, int cardsleep)
- {
- 	struct omap_hsmmc_host *host =
-@@ -358,6 +383,31 @@ static int omap_hsmmc_23_set_sleep(struct device *dev, int slot, int sleep,
- 		return regulator_enable(host->vcc_aux);
- }
- 
-+static int omap_hsmmc_3_set_sleep(struct device *dev, int slot, int sleep,
-+				   int vdd, int cardsleep)
-+{
-+	struct omap_hsmmc_host *host =
-+		platform_get_drvdata(to_platform_device(dev));
-+	int err = 0;
-+
-+	/*
-+	 * If we don't see a Vcc regulator, assume it's a fixed
-+	 * voltage always-on regulator.
-+	 */
-+	if (!host->vcc)
-+		return 0;
-+
-+	if (cardsleep) {
-+		/* VCC can be turned off if card is asleep */
-+		if (sleep)
-+			err = mmc_regulator_set_ocr(host->vcc, 0);
-+		else
-+			err = mmc_regulator_set_ocr(host->vcc, vdd);
-+	}
-+
-+	return err;
-+}
-+
- static int omap_hsmmc_reg_get(struct omap_hsmmc_host *host)
- {
- 	struct regulator *reg;
-@@ -370,10 +420,13 @@ static int omap_hsmmc_reg_get(struct omap_hsmmc_host *host)
- 		mmc_slot(host).set_sleep = omap_hsmmc_1_set_sleep;
- 		break;
- 	case OMAP_MMC2_DEVID:
--	case OMAP_MMC3_DEVID:
- 		/* Off-chip level shifting, or none */
--		mmc_slot(host).set_power = omap_hsmmc_23_set_power;
--		mmc_slot(host).set_sleep = omap_hsmmc_23_set_sleep;
-+		mmc_slot(host).set_power = omap_hsmmc_2_set_power;
-+		mmc_slot(host).set_sleep = omap_hsmmc_2_set_sleep;
-+		break;
-+	case OMAP_MMC3_DEVID:
-+		mmc_slot(host).set_power = omap_hsmmc_3_set_power;
-+		mmc_slot(host).set_sleep = omap_hsmmc_3_set_sleep;
- 		break;
- 	default:
- 		pr_err("MMC%d configuration not supported!\n", host->id);
-@@ -386,9 +439,9 @@ static int omap_hsmmc_reg_get(struct omap_hsmmc_host *host)
- 		/*
- 		* HACK: until fixed.c regulator is usable,
- 		* we don't require a main regulator
--		* for MMC2 or MMC3
-+		* for MMC2
- 		*/
--		if (host->id == OMAP_MMC1_DEVID) {
-+		if (host->id != OMAP_MMC2_DEVID) {
- 			ret = PTR_ERR(reg);
- 			goto err;
- 		}
+diff --git a/patches/01-netdev.patch b/patches/01-netdev.patch
+index e168105..17b4b11 100644
+--- a/patches/01-netdev.patch
++++ b/patches/01-netdev.patch
+@@ -305,14 +305,12 @@ without creating a headache on maintenance of the pathes.
+  }
+  #endif
+  
+--static netdev_tx_t bnep_net_xmit(struct sk_buff *skb,
+--				 struct net_device *dev)
+ +#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,31))
+-+static netdev_tx_t bnep_net_xmit(struct sk_buff *skb, struct net_device *dev)
++ static netdev_tx_t bnep_net_xmit(struct sk_buff *skb,
++ 				 struct net_device *dev)
+ +#else
+ +static int bnep_net_xmit(struct sk_buff *skb, struct net_device *dev)
+ +#endif
+-+
+  {
+  	struct bnep_session *s = netdev_priv(dev);
+  	struct sock *sk = s->sock->sk;
+diff --git a/patches/16-bluetooth.patch b/patches/16-bluetooth.patch
+index 29d990a..85e9b25 100644
+--- a/patches/16-bluetooth.patch
++++ b/patches/16-bluetooth.patch
+@@ -63,7 +63,7 @@ here still, but for now we keep this here.
+ +#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
+  		sock_recv_ts_and_drops(msg, sk, skb);
+ +#else
+-+	  sock_recv_timestamp(msg, sk, skb);
+++		sock_recv_timestamp(msg, sk, skb);
+ +#endif
+  
+  	skb_free_datagram(sk, skb);
+@@ -75,7 +75,7 @@ here still, but for now we keep this here.
+ +#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,31))
+  		amount = sk->sk_sndbuf - sk_wmem_alloc_get(sk);
+ +#else
+-+    amount = sk->sk_sndbuf - atomic_read(&sk->sk_wmem_alloc);
+++		amount = sk->sk_sndbuf - atomic_read(&sk->sk_wmem_alloc);
+ +#endif
+  		if (amount < 0)
+  			amount = 0;
+@@ -201,27 +201,21 @@ here still, but for now we keep this here.
+  
+  static void hidp_idle_timeout(unsigned long arg)
+  {
+-@@ -596,10 +607,16 @@ static int hidp_session(void *arg)
+- 		session->input = NULL;
++@@ -597,8 +608,14 @@ static int hidp_session(void *arg)
+  	}
+  
+--	if (session->hid) {
+--		hid_destroy_device(session->hid);
+--		session->hid = NULL;
+--	}
+-+  if (session->hid) {
++ 	if (session->hid) {
+ +#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27))
+-+    hid_destroy_device(session->hid);
+-+    session->hid = NULL;
++ 		hid_destroy_device(session->hid);
++ 		session->hid = NULL;
+ +#else
+-+    if (session->hid->claimed & HID_CLAIMED_INPUT)
+-+      hidinput_disconnect(session->hid);
+-+    hid_free_device(session->hid);
+++		if (session->hid->claimed & HID_CLAIMED_INPUT)
+++			hidinput_disconnect(session->hid);
+++		hid_free_device(session->hid);
+ +#endif
+-+  }
++ 	}
+  
+  	/* Wakeup user-space polling for socket errors */
+- 	session->intr_sock->sk->sk_err = EUNATCH;
+ @@ -711,6 +728,70 @@ static void hidp_close(struct hid_device
+  {
+  }
 -- 
 1.7.0.4
 
