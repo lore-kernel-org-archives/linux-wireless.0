@@ -1,375 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:43574 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754080Ab0H0Q4v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 12:56:51 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Received: from mgw-sa02.nokia.com ([147.243.1.48]:26270 "EHLO
+	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753946Ab0H0L1O (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Aug 2010 07:27:14 -0400
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 12/27] iwlwifi: make hw crypto context aware
-Date: Fri, 27 Aug 2010 09:59:40 -0700
-Message-Id: <1282928395-32762-13-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1282928395-32762-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1282928395-32762-1-git-send-email-wey-yi.w.guy@intel.com>
+Cc: linux-wireless@vger.kernel.org, johannes.berg@intel.com
+Subject: [PATCHv2 4/4] mac80211: allow changing port control protocol
+Date: Fri, 27 Aug 2010 14:26:54 +0300
+Message-Id: <1282908414-26783-5-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1282908414-26783-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1282908414-26783-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-HW crypto needs to be aware of the context, and there
-are different command IDs for the WEP keys per context,
-so move the key tracking variables and command IDs into
-the context structure.
+Some vendor specified mechanisms for 802.1X-style
+functionality use a different protocol than EAP
+(even if EAP is vendor-extensible). Support this
+in mac80211 via the cfg80211 API for it.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-3945.c     |    2 +
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   17 ++++++++---
- drivers/net/wireless/iwlwifi/iwl-commands.h |    1 +
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    9 ++++-
- drivers/net/wireless/iwlwifi/iwl-sta.c      |   41 +++++++++++++++------------
- drivers/net/wireless/iwlwifi/iwl-sta.h      |   27 +++++++++++------
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    1 +
- 7 files changed, 63 insertions(+), 35 deletions(-)
+v2: Add explicit setting to false for sdata->control_port_protocol in
+    ieee80211_setup_sdata.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-3945.c b/drivers/net/wireless/iwlwifi/iwl-3945.c
-index ba3a9f9..5d09686 100644
---- a/drivers/net/wireless/iwlwifi/iwl-3945.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-3945.c
-@@ -2430,6 +2430,8 @@ int iwl3945_hw_set_hw_params(struct iwl_priv *priv)
- 	priv->hw_params.max_stations = IWL3945_STATION_COUNT;
- 	priv->contexts[IWL_RXON_CTX_BSS].bcast_sta_id = IWL3945_BROADCAST_ID;
+ net/mac80211/ieee80211_i.h |    2 ++
+ net/mac80211/iface.c       |    3 +++
+ net/mac80211/main.c        |    3 +++
+ net/mac80211/mlme.c        |    3 +++
+ net/mac80211/rx.c          |    2 +-
+ net/mac80211/tx.c          |   20 +++++++++++++++++---
+ 6 files changed, 29 insertions(+), 4 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 0262dfe..d7e7989 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -515,6 +515,8 @@ struct ieee80211_sub_if_data {
+ 	struct ieee80211_key *default_mgmt_key;
  
-+	priv->sta_key_max_num = STA_KEY_MAX_NUM;
+ 	u16 sequence_number;
++	__be16 control_port_protocol;
++	bool control_port_no_encrypt;
+ 
+ 	struct work_struct work;
+ 	struct sk_buff_head skb_queue;
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 9369710..810e676 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -855,6 +855,9 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
+ 	sdata->dev->netdev_ops = &ieee80211_dataif_ops;
+ 	sdata->wdev.iftype = type;
+ 
++	sdata->control_port_protocol = cpu_to_be16(ETH_P_PAE);
++	sdata->control_port_no_encrypt = false;
 +
- 	priv->hw_params.rx_wrt_ptr_reg = FH39_RSCSR_CHNL0_WPTR;
- 	priv->hw_params.max_beacon_itrvl = IWL39_MAX_UCODE_BEACON_INTERVAL;
- 	priv->hw_params.beacon_time_tsf_bits = IWL3945_EXT_BEACON_TIME_POS;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index a67b04b..837406e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -165,7 +165,7 @@ int iwl_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 		}
- 		iwl_clear_ucode_stations(priv, ctx);
- 		iwl_restore_stations(priv, ctx);
--		ret = iwl_restore_default_wep_keys(priv);
-+		ret = iwl_restore_default_wep_keys(priv, ctx);
- 		if (ret) {
- 			IWL_ERR(priv, "Failed to restore WEP keys (%d)\n", ret);
- 			return ret;
-@@ -197,7 +197,7 @@ int iwl_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 		memcpy(active_rxon, &ctx->staging, sizeof(*active_rxon));
- 		iwl_clear_ucode_stations(priv, ctx);
- 		iwl_restore_stations(priv, ctx);
--		ret = iwl_restore_default_wep_keys(priv);
-+		ret = iwl_restore_default_wep_keys(priv, ctx);
- 		if (ret) {
- 			IWL_ERR(priv, "Failed to restore WEP keys (%d)\n", ret);
- 			return ret;
-@@ -2222,6 +2222,11 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
- 		priv->_agn.inst_evtlog_size = priv->cfg->max_event_log_size;
- 	priv->_agn.inst_errlog_ptr = pieces.inst_errlog_ptr;
+ 	/* only monitor differs */
+ 	sdata->dev->type = ARPHRD_ETHER;
  
-+	if (priv->valid_contexts == BIT(IWL_RXON_CTX_BSS))
-+		priv->sta_key_max_num = STA_KEY_MAX_NUM;
-+	else
-+		priv->sta_key_max_num = STA_KEY_MAX_NUM_PAN;
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 15f0e96..964c267 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -627,6 +627,9 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	local->hw.wiphy->interface_modes &= ~BIT(NL80211_IFTYPE_MESH_POINT);
+ #endif
+ 
++	/* mac80211 supports control port protocol changing */
++	local->hw.wiphy->flags |= WIPHY_FLAG_CONTROL_PORT_PROTOCOL;
 +
- 	/* Copy images into buffers for card's bus-master reads ... */
+ 	if (local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
+ 		local->hw.wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
+ 	else if (local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 5282ac1..0cb4296 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2262,6 +2262,9 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 	else
+ 		ifmgd->flags &= ~IEEE80211_STA_CONTROL_PORT;
  
- 	/* Runtime instructions (first block of data in file) */
-@@ -3548,6 +3553,7 @@ static int iwl_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- {
- 	struct iwl_priv *priv = hw->priv;
- 	struct iwl_vif_priv *vif_priv = (void *)vif->drv_priv;
-+	struct iwl_rxon_context *ctx = vif_priv->ctx;
- 	int ret;
- 	u8 sta_id;
- 	bool is_default_wep_key = false;
-@@ -3576,7 +3582,7 @@ static int iwl_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	     key->cipher == WLAN_CIPHER_SUITE_WEP104) &&
- 	    !sta) {
- 		if (cmd == SET_KEY)
--			is_default_wep_key = !priv->key_mapping_key;
-+			is_default_wep_key = !ctx->key_mapping_keys;
- 		else
- 			is_default_wep_key =
- 					(key->hw_key_idx == HW_KEY_DEFAULT);
-@@ -3594,9 +3600,9 @@ static int iwl_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		break;
- 	case DISABLE_KEY:
- 		if (is_default_wep_key)
--			ret = iwl_remove_default_wep_key(priv, key);
-+			ret = iwl_remove_default_wep_key(priv, ctx, key);
- 		else
--			ret = iwl_remove_dynamic_key(priv, key, sta_id);
-+			ret = iwl_remove_dynamic_key(priv, ctx, key, sta_id);
- 
- 		IWL_DEBUG_MAC80211(priv, "disable hwcrypto key\n");
- 		break;
-@@ -4209,6 +4215,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	priv->contexts[IWL_RXON_CTX_BSS].rxon_assoc_cmd = REPLY_RXON_ASSOC;
- 	priv->contexts[IWL_RXON_CTX_BSS].qos_cmd = REPLY_QOS_PARAM;
- 	priv->contexts[IWL_RXON_CTX_BSS].ap_sta_id = IWL_AP_ID;
-+	priv->contexts[IWL_RXON_CTX_BSS].wep_key_cmd = REPLY_WEPKEY;
- 	BUILD_BUG_ON(NUM_IWL_RXON_CTX != 1);
- 
- 	SET_IEEE80211_DEV(hw, &pdev->dev);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 9b53583..55779bf 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -1001,6 +1001,7 @@ struct iwl_qosparam_cmd {
- #define STA_KEY_FLG_KEY_SIZE_MSK     cpu_to_le16(0x1000)
- #define STA_KEY_MULTICAST_MSK        cpu_to_le16(0x4000)
- #define STA_KEY_MAX_NUM		8
-+#define STA_KEY_MAX_NUM_PAN	16
- 
- /* Flags indicate whether to modify vs. don't change various station params */
- #define	STA_MODIFY_KEY_MASK		0x01
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index d1400a0..ef7862b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1133,6 +1133,10 @@ struct iwl_rxon_context {
- 
- 	u8 rxon_cmd, rxon_assoc_cmd, rxon_timing_cmd;
- 	u8 qos_cmd;
-+	u8 wep_key_cmd;
++	sdata->control_port_protocol = req->crypto.control_port_ethertype;
++	sdata->control_port_no_encrypt = req->crypto.control_port_no_encrypt;
 +
-+	struct iwl_wep_key wep_keys[WEP_KEYS_MAX];
-+	u8 key_mapping_keys;
- };
- 
- struct iwl_priv {
-@@ -1217,6 +1221,9 @@ struct iwl_priv {
- 	/* command queue number */
- 	u8 cmd_queue;
- 
-+	/* max number of station keys */
-+	u8 sta_key_max_num;
-+
- 	/* EEPROM MAC addresses */
- 	struct mac_address addresses[2];
- 
-@@ -1296,8 +1303,6 @@ struct iwl_priv {
- 	spinlock_t sta_lock;
- 	int num_stations;
- 	struct iwl_station_entry stations[IWL_STATION_COUNT];
--	struct iwl_wep_key wep_keys[WEP_KEYS_MAX]; /* protected by mutex */
--	u8 key_mapping_key;
- 	unsigned long ucode_key_table;
- 
- 	/* queue refcounts */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index f5500cc..ac6e2be 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -724,7 +724,7 @@ int iwl_get_free_ucode_key_index(struct iwl_priv *priv)
- {
- 	int i;
- 
--	for (i = 0; i < STA_KEY_MAX_NUM; i++)
-+	for (i = 0; i < priv->sta_key_max_num; i++)
- 		if (!test_and_set_bit(i, &priv->ucode_key_table))
- 			return i;
- 
-@@ -732,7 +732,9 @@ int iwl_get_free_ucode_key_index(struct iwl_priv *priv)
+ 	ieee80211_add_work(wk);
+ 	return 0;
  }
- EXPORT_SYMBOL(iwl_get_free_ucode_key_index);
- 
--static int iwl_send_static_wepkey_cmd(struct iwl_priv *priv, u8 send_if_empty)
-+static int iwl_send_static_wepkey_cmd(struct iwl_priv *priv,
-+				      struct iwl_rxon_context *ctx,
-+				      bool send_if_empty)
- {
- 	int i, not_empty = 0;
- 	u8 buff[sizeof(struct iwl_wep_cmd) +
-@@ -740,7 +742,7 @@ static int iwl_send_static_wepkey_cmd(struct iwl_priv *priv, u8 send_if_empty)
- 	struct iwl_wep_cmd *wep_cmd = (struct iwl_wep_cmd *)buff;
- 	size_t cmd_size  = sizeof(struct iwl_wep_cmd);
- 	struct iwl_host_cmd cmd = {
--		.id = REPLY_WEPKEY,
-+		.id = ctx->wep_key_cmd,
- 		.data = wep_cmd,
- 		.flags = CMD_SYNC,
- 	};
-@@ -752,16 +754,16 @@ static int iwl_send_static_wepkey_cmd(struct iwl_priv *priv, u8 send_if_empty)
- 
- 	for (i = 0; i < WEP_KEYS_MAX ; i++) {
- 		wep_cmd->key[i].key_index = i;
--		if (priv->wep_keys[i].key_size) {
-+		if (ctx->wep_keys[i].key_size) {
- 			wep_cmd->key[i].key_offset = i;
- 			not_empty = 1;
- 		} else {
- 			wep_cmd->key[i].key_offset = WEP_INVALID_OFFSET;
- 		}
- 
--		wep_cmd->key[i].key_size = priv->wep_keys[i].key_size;
--		memcpy(&wep_cmd->key[i].key[3], priv->wep_keys[i].key,
--				priv->wep_keys[i].key_size);
-+		wep_cmd->key[i].key_size = ctx->wep_keys[i].key_size;
-+		memcpy(&wep_cmd->key[i].key[3], ctx->wep_keys[i].key,
-+				ctx->wep_keys[i].key_size);
- 	}
- 
- 	wep_cmd->global_key_type = WEP_KEY_WEP_TYPE;
-@@ -777,15 +779,17 @@ static int iwl_send_static_wepkey_cmd(struct iwl_priv *priv, u8 send_if_empty)
- 		return 0;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 6e5fb16..ac205a3 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1527,7 +1527,7 @@ static bool ieee80211_frame_allowed(struct ieee80211_rx_data *rx, __le16 fc)
+ 	 * Allow EAPOL frames to us/the PAE group address regardless
+ 	 * of whether the frame was encrypted or not.
+ 	 */
+-	if (ehdr->h_proto == htons(ETH_P_PAE) &&
++	if (ehdr->h_proto == rx->sdata->control_port_protocol &&
+ 	    (compare_ether_addr(ehdr->h_dest, rx->sdata->vif.addr) == 0 ||
+ 	     compare_ether_addr(ehdr->h_dest, pae_group_addr) == 0))
+ 		return true;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 31a8903..92764bb 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -509,6 +509,18 @@ ieee80211_tx_h_ps_buf(struct ieee80211_tx_data *tx)
  }
  
--int iwl_restore_default_wep_keys(struct iwl_priv *priv)
-+int iwl_restore_default_wep_keys(struct iwl_priv *priv,
-+				 struct iwl_rxon_context *ctx)
- {
- 	lockdep_assert_held(&priv->mutex);
- 
--	return iwl_send_static_wepkey_cmd(priv, 0);
-+	return iwl_send_static_wepkey_cmd(priv, ctx, false);
- }
- EXPORT_SYMBOL(iwl_restore_default_wep_keys);
- 
- int iwl_remove_default_wep_key(struct iwl_priv *priv,
-+			       struct iwl_rxon_context *ctx,
- 			       struct ieee80211_key_conf *keyconf)
- {
- 	int ret;
-@@ -795,13 +799,13 @@ int iwl_remove_default_wep_key(struct iwl_priv *priv,
- 	IWL_DEBUG_WEP(priv, "Removing default WEP key: idx=%d\n",
- 		      keyconf->keyidx);
- 
--	memset(&priv->wep_keys[keyconf->keyidx], 0, sizeof(priv->wep_keys[0]));
-+	memset(&ctx->wep_keys[keyconf->keyidx], 0, sizeof(ctx->wep_keys[0]));
- 	if (iwl_is_rfkill(priv)) {
- 		IWL_DEBUG_WEP(priv, "Not sending REPLY_WEPKEY command due to RFKILL.\n");
- 		/* but keys in device are clear anyway so return success */
- 		return 0;
- 	}
--	ret = iwl_send_static_wepkey_cmd(priv, 1);
-+	ret = iwl_send_static_wepkey_cmd(priv, ctx, 1);
- 	IWL_DEBUG_WEP(priv, "Remove default WEP key: idx=%d ret=%d\n",
- 		      keyconf->keyidx, ret);
- 
-@@ -827,11 +831,11 @@ int iwl_set_default_wep_key(struct iwl_priv *priv,
- 	keyconf->hw_key_idx = HW_KEY_DEFAULT;
- 	priv->stations[ctx->ap_sta_id].keyinfo.cipher = keyconf->cipher;
- 
--	priv->wep_keys[keyconf->keyidx].key_size = keyconf->keylen;
--	memcpy(&priv->wep_keys[keyconf->keyidx].key, &keyconf->key,
-+	ctx->wep_keys[keyconf->keyidx].key_size = keyconf->keylen;
-+	memcpy(&ctx->wep_keys[keyconf->keyidx].key, &keyconf->key,
- 							keyconf->keylen);
- 
--	ret = iwl_send_static_wepkey_cmd(priv, 0);
-+	ret = iwl_send_static_wepkey_cmd(priv, ctx, false);
- 	IWL_DEBUG_WEP(priv, "Set default WEP key: len=%d idx=%d ret=%d\n",
- 		keyconf->keylen, keyconf->keyidx, ret);
- 
-@@ -1029,8 +1033,9 @@ void iwl_update_tkip_key(struct iwl_priv *priv,
- EXPORT_SYMBOL(iwl_update_tkip_key);
- 
- int iwl_remove_dynamic_key(struct iwl_priv *priv,
--				struct ieee80211_key_conf *keyconf,
--				u8 sta_id)
-+			   struct iwl_rxon_context *ctx,
-+			   struct ieee80211_key_conf *keyconf,
-+			   u8 sta_id)
- {
- 	unsigned long flags;
- 	u16 key_flags;
-@@ -1039,7 +1044,7 @@ int iwl_remove_dynamic_key(struct iwl_priv *priv,
- 
- 	lockdep_assert_held(&priv->mutex);
- 
--	priv->key_mapping_key--;
-+	ctx->key_mapping_keys--;
- 
- 	spin_lock_irqsave(&priv->sta_lock, flags);
- 	key_flags = le16_to_cpu(priv->stations[sta_id].sta.key.key_flags);
-@@ -1098,7 +1103,7 @@ int iwl_set_dynamic_key(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
- 
- 	lockdep_assert_held(&priv->mutex);
- 
--	priv->key_mapping_key++;
-+	ctx->key_mapping_keys++;
- 	keyconf->hw_key_idx = HW_KEY_DYNAMIC;
- 
- 	switch (keyconf->cipher) {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
-index b7f7006..6ab5587 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.h
-@@ -44,14 +44,16 @@
- 
- 
- int iwl_remove_default_wep_key(struct iwl_priv *priv,
-+			       struct iwl_rxon_context *ctx,
- 			       struct ieee80211_key_conf *key);
- int iwl_set_default_wep_key(struct iwl_priv *priv,
- 			    struct iwl_rxon_context *ctx,
- 			    struct ieee80211_key_conf *key);
--int iwl_restore_default_wep_keys(struct iwl_priv *priv);
-+int iwl_restore_default_wep_keys(struct iwl_priv *priv,
-+				 struct iwl_rxon_context *ctx);
- int iwl_set_dynamic_key(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
- 			struct ieee80211_key_conf *key, u8 sta_id);
--int iwl_remove_dynamic_key(struct iwl_priv *priv,
-+int iwl_remove_dynamic_key(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
- 			   struct ieee80211_key_conf *key, u8 sta_id);
- void iwl_update_tkip_key(struct iwl_priv *priv,
- 			 struct iwl_rxon_context *ctx,
-@@ -97,20 +99,25 @@ void iwl_sta_modify_sleep_tx_count(struct iwl_priv *priv, int sta_id, int cnt);
- static inline void iwl_clear_driver_stations(struct iwl_priv *priv)
- {
- 	unsigned long flags;
-+	struct iwl_rxon_context *ctx;
- 
- 	spin_lock_irqsave(&priv->sta_lock, flags);
- 	memset(priv->stations, 0, sizeof(priv->stations));
- 	priv->num_stations = 0;
- 
--	/*
--	 * Remove all key information that is not stored as part of station
--	 * information since mac80211 may not have had a
--	 * chance to remove all the keys. When device is reconfigured by
--	 * mac80211 after an error all keys will be reconfigured.
--	 */
- 	priv->ucode_key_table = 0;
--	priv->key_mapping_key = 0;
--	memset(priv->wep_keys, 0, sizeof(priv->wep_keys));
+ static ieee80211_tx_result debug_noinline
++ieee80211_tx_h_check_control_port_protocol(struct ieee80211_tx_data *tx)
++{
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
 +
-+	for_each_context(priv, ctx) {
-+		/*
-+		 * Remove all key information that is not stored as part
-+		 * of station information since mac80211 may not have had
-+		 * a chance to remove all the keys. When device is
-+		 * reconfigured by mac80211 after an error all keys will
-+		 * be reconfigured.
-+		 */
-+		memset(ctx->wep_keys, 0, sizeof(ctx->wep_keys));
-+		ctx->key_mapping_keys = 0;
-+	}
- 
- 	spin_unlock_irqrestore(&priv->sta_lock, flags);
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 29d1376..be48f79 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -4022,6 +4022,7 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 	priv->contexts[IWL_RXON_CTX_BSS].rxon_assoc_cmd = REPLY_RXON_ASSOC;
- 	priv->contexts[IWL_RXON_CTX_BSS].qos_cmd = REPLY_QOS_PARAM;
- 	priv->contexts[IWL_RXON_CTX_BSS].ap_sta_id = IWL_AP_ID;
-+	priv->contexts[IWL_RXON_CTX_BSS].wep_key_cmd = REPLY_WEPKEY;
- 
- 	/*
- 	 * Disabling hardware scan means that mac80211 will perform scans
++	if (unlikely(tx->sdata->control_port_protocol == tx->skb->protocol &&
++		     tx->sdata->control_port_no_encrypt))
++		info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
++
++	return TX_CONTINUE;
++}
++
++static ieee80211_tx_result debug_noinline
+ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
+ {
+ 	struct ieee80211_key *key = NULL;
+@@ -527,7 +539,7 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
+ 	else if ((key = rcu_dereference(tx->sdata->default_key)))
+ 		tx->key = key;
+ 	else if (tx->sdata->drop_unencrypted &&
+-		 (tx->skb->protocol != cpu_to_be16(ETH_P_PAE)) &&
++		 (tx->skb->protocol != tx->sdata->control_port_protocol) &&
+ 		 !(info->flags & IEEE80211_TX_CTL_INJECTED) &&
+ 		 (!ieee80211_is_robust_mgmt_frame(hdr) ||
+ 		  (ieee80211_is_action(hdr->frame_control) &&
+@@ -1349,6 +1361,7 @@ static int invoke_tx_handlers(struct ieee80211_tx_data *tx)
+ 	CALL_TXH(ieee80211_tx_h_dynamic_ps);
+ 	CALL_TXH(ieee80211_tx_h_check_assoc);
+ 	CALL_TXH(ieee80211_tx_h_ps_buf);
++	CALL_TXH(ieee80211_tx_h_check_control_port_protocol);
+ 	CALL_TXH(ieee80211_tx_h_select_key);
+ 	if (!(tx->local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL))
+ 		CALL_TXH(ieee80211_tx_h_rate_ctrl);
+@@ -1826,7 +1839,8 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ #endif
+ 	case NL80211_IFTYPE_STATION:
+ 		memcpy(hdr.addr1, sdata->u.mgd.bssid, ETH_ALEN);
+-		if (sdata->u.mgd.use_4addr && ethertype != ETH_P_PAE) {
++		if (sdata->u.mgd.use_4addr &&
++		    cpu_to_be16(ethertype) != sdata->control_port_protocol) {
+ 			fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS);
+ 			/* RA TA DA SA */
+ 			memcpy(hdr.addr2, sdata->vif.addr, ETH_ALEN);
+@@ -1879,7 +1893,7 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 	if (!ieee80211_vif_is_mesh(&sdata->vif) &&
+ 		unlikely(!is_multicast_ether_addr(hdr.addr1) &&
+ 		      !(sta_flags & WLAN_STA_AUTHORIZED) &&
+-		      !(ethertype == ETH_P_PAE &&
++		      !(cpu_to_be16(ethertype) == sdata->control_port_protocol &&
+ 		       compare_ether_addr(sdata->vif.addr,
+ 					  skb->data + ETH_ALEN) == 0))) {
+ #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
 -- 
-1.7.0.4
+1.6.3.3
 
