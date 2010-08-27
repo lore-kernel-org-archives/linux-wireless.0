@@ -1,127 +1,216 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:48358 "EHLO ds10.nbd.name"
+Received: from mga14.intel.com ([143.182.124.37]:6615 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753159Ab0HBNxW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Aug 2010 09:53:22 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 2/4] ath9k_hw: apply the noise floor validation to the median instead of single
-Date: Mon,  2 Aug 2010 15:53:13 +0200
-Message-Id: <1280757195-9532-2-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1280757195-9532-1-git-send-email-nbd@openwrt.org>
-References: <1280757195-9532-1-git-send-email-nbd@openwrt.org>
+	id S1754340Ab0H0Q4z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Aug 2010 12:56:55 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 23/27] iwlwifi: send PAN parameters
+Date: Fri, 27 Aug 2010 09:59:51 -0700
+Message-Id: <1282928395-32762-24-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1282928395-32762-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1282928395-32762-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/calib.c |   51 ++++++++++++++++++++------------
- 1 files changed, 32 insertions(+), 19 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index 4520869..ccb1b2e 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -19,8 +19,7 @@
- 
- /* Common calibration code */
- 
--/* We can tune this as we go by monitoring really low values */
--#define ATH9K_NF_TOO_LOW	-60
-+#define ATH9K_NF_TOO_HIGH	-60
- 
- static int16_t ath9k_hw_get_nf_hist_mid(int16_t *nfCalBuffer)
- {
-@@ -45,11 +44,35 @@ static int16_t ath9k_hw_get_nf_hist_mid(int16_t *nfCalBuffer)
- 	return nfval;
+In order for the microcode to be able to handle
+multiple interfaces, we need to give it the PAN
+parameters that state how to allocate the time
+between the two interfaces. Do this, and update
+it wherever necessary.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c |   75 +++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    5 ++
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    6 ++
+ drivers/net/wireless/iwlwifi/iwl-core.c     |    6 ++
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    1 +
+ drivers/net/wireless/iwlwifi/iwl-scan.c     |    3 +
+ 6 files changed, 96 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
+index 2d4cdb0..6fb52ab 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
+@@ -270,12 +270,86 @@ static int iwlagn_calc_rssi(struct iwl_priv *priv,
+ 	return max_rssi - agc - IWLAGN_RSSI_OFFSET;
  }
  
--static void ath9k_hw_update_nfcal_hist_buffer(struct ath9k_nfcal_hist *h,
-+static struct ath_nf_limits *ath9k_hw_get_nf_limits(struct ath_hw *ah,
-+						    struct ath9k_channel *chan)
++static int iwlagn_set_pan_params(struct iwl_priv *priv)
 +{
-+	struct ath_nf_limits *limit;
++	struct iwl_wipan_params_cmd cmd;
++	struct iwl_rxon_context *ctx_bss, *ctx_pan;
++	int slot0 = 300, slot1 = 0;
++	int ret;
 +
-+	if (!chan || IS_CHAN_2GHZ(chan))
-+		limit = &ah->nf_2g;
-+	else
-+		limit = &ah->nf_5g;
++	if (priv->valid_contexts == BIT(IWL_RXON_CTX_BSS))
++		return 0;
 +
-+	return limit;
++	BUILD_BUG_ON(NUM_IWL_RXON_CTX != 2);
++
++	lockdep_assert_held(&priv->mutex);
++
++	ctx_bss = &priv->contexts[IWL_RXON_CTX_BSS];
++	ctx_pan = &priv->contexts[IWL_RXON_CTX_PAN];
++
++	memset(&cmd, 0, sizeof(cmd));
++
++	/* only 2 slots are currently allowed */
++	cmd.num_slots = 2;
++
++	cmd.slots[0].type = 0; /* BSS */
++	cmd.slots[1].type = 1; /* PAN */
++
++	if (ctx_bss->vif && ctx_pan->vif) {
++		int bcnint = ctx_pan->vif->bss_conf.beacon_int;
++
++		/* should be set, but seems unused?? */
++		cmd.flags |= cpu_to_le16(IWL_WIPAN_PARAMS_FLG_SLOTTED_MODE);
++
++		if (ctx_pan->vif->type == NL80211_IFTYPE_AP &&
++		    bcnint &&
++		    bcnint != ctx_bss->vif->bss_conf.beacon_int) {
++			IWL_ERR(priv,
++				"beacon intervals don't match (%d, %d)\n",
++				ctx_bss->vif->bss_conf.beacon_int,
++				ctx_pan->vif->bss_conf.beacon_int);
++		} else
++			bcnint = max_t(int, bcnint,
++				       ctx_bss->vif->bss_conf.beacon_int);
++		if (!bcnint)
++			bcnint = 100;
++		slot0 = bcnint / 2;
++		slot1 = bcnint - slot0;
++
++		if (test_bit(STATUS_SCAN_HW, &priv->status) ||
++		    (!ctx_bss->vif->bss_conf.idle &&
++		     !ctx_bss->vif->bss_conf.assoc)) {
++			slot0 = bcnint * 3 - 20;
++			slot1 = 20;
++		} else if (!ctx_pan->vif->bss_conf.idle &&
++                           !ctx_pan->vif->bss_conf.assoc) {
++			slot1 = bcnint * 3 - 20;
++			slot0 = 20;
++		}
++	} else if (ctx_pan->vif) {
++		slot0 = 0;
++		slot1 = max_t(int, 1, ctx_pan->vif->bss_conf.dtim_period) *
++					ctx_pan->vif->bss_conf.beacon_int;
++		slot1 = max_t(int, 100, slot1);
++	}
++
++	cmd.slots[0].width = cpu_to_le16(slot0);
++	cmd.slots[1].width = cpu_to_le16(slot1);
++
++	ret = iwl_send_cmd_pdu(priv, REPLY_WIPAN_PARAMS, sizeof(cmd), &cmd);
++	if (ret)
++		IWL_ERR(priv, "Error setting PAN parameters (%d)\n", ret);
++
++	return ret;
 +}
 +
-+static s16 ath9k_hw_get_default_nf(struct ath_hw *ah,
-+				   struct ath9k_channel *chan)
-+{
-+	return ath9k_hw_get_nf_limits(ah, chan)->nominal;
-+}
-+
-+
-+static void ath9k_hw_update_nfcal_hist_buffer(struct ath_hw *ah,
-+					      struct ath9k_nfcal_hist *h,
- 					      int16_t *nfarray)
- {
-+	struct ath_nf_limits *limit;
- 	int i;
+ struct iwl_hcmd_ops iwlagn_hcmd = {
+ 	.rxon_assoc = iwlagn_send_rxon_assoc,
+ 	.commit_rxon = iwl_commit_rxon,
+ 	.set_rxon_chain = iwl_set_rxon_chain,
+ 	.set_tx_ant = iwlagn_send_tx_ant_config,
+ 	.send_bt_config = iwl_send_bt_config,
++	.set_pan_params = iwlagn_set_pan_params,
+ };
  
-+	limit = ath9k_hw_get_nf_limits(ah, ah->curchan);
-+
- 	for (i = 0; i < NUM_NF_READINGS; i++) {
- 		h[i].nfCalBuffer[h[i].currIndex] = nfarray[i];
+ struct iwl_hcmd_ops iwlagn_bt_hcmd = {
+@@ -284,6 +358,7 @@ struct iwl_hcmd_ops iwlagn_bt_hcmd = {
+ 	.set_rxon_chain = iwl_set_rxon_chain,
+ 	.set_tx_ant = iwlagn_send_tx_ant_config,
+ 	.send_bt_config = iwlagn_send_advance_bt_config,
++	.set_pan_params = iwlagn_set_pan_params,
+ };
  
-@@ -63,6 +86,9 @@ static void ath9k_hw_update_nfcal_hist_buffer(struct ath9k_nfcal_hist *h,
- 			h[i].privNF =
- 				ath9k_hw_get_nf_hist_mid(h[i].nfCalBuffer);
+ struct iwl_hcmd_utils_ops iwlagn_hcmd_utils = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 7002d7d..a8f2adf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1424,6 +1424,11 @@ void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 	scan->len = cpu_to_le16(cmd.len);
+ 
+ 	set_bit(STATUS_SCAN_HW, &priv->status);
++
++	if (priv->cfg->ops->hcmd->set_pan_params &&
++	    priv->cfg->ops->hcmd->set_pan_params(priv))
++		goto done;
++
+ 	if (iwl_send_cmd_sync(priv, &cmd))
+ 		goto done;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 8e07228..f2884b5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -197,6 +197,12 @@ int iwl_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
  		}
-+
-+		if (h[i].privNF > limit->max)
-+			h[i].privNF = limit->max;
  	}
- }
  
-@@ -104,19 +130,6 @@ void ath9k_hw_reset_calibration(struct ath_hw *ah,
- 	ah->cal_samples = 0;
- }
++	if (priv->cfg->ops->hcmd->set_pan_params) {
++		ret = priv->cfg->ops->hcmd->set_pan_params(priv);
++		if (ret)
++			return ret;
++	}
++
+ 	/* Apply the new configuration
+ 	 * RXON unassoc clears the station table in uCode so restoration of
+ 	 * stations is needed after it (the RXON command) completes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 04d7894..b61b838 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1931,6 +1931,12 @@ void iwl_bss_info_changed(struct ieee80211_hw *hw,
+ 				bss_conf->bssid);
+ 	}
  
--static s16 ath9k_hw_get_default_nf(struct ath_hw *ah,
--				   struct ath9k_channel *chan)
--{
--	struct ath_nf_limits *limit;
--
--	if (!chan || IS_CHAN_2GHZ(chan))
--		limit = &ah->nf_2g;
--	else
--		limit = &ah->nf_5g;
--
--	return limit->nominal;
--}
--
- /* This is done for the currently configured channel */
- bool ath9k_hw_reset_calvalid(struct ath_hw *ah)
- {
-@@ -277,10 +290,10 @@ static void ath9k_hw_nf_sanitize(struct ath_hw *ah, s16 *nf)
- 			  "NF calibrated [%s] [chain %d] is %d\n",
- 			  (i >= 3 ? "ext" : "ctl"), i % 3, nf[i]);
++	if (changes & BSS_CHANGED_IDLE &&
++	    priv->cfg->ops->hcmd->set_pan_params) {
++		if (priv->cfg->ops->hcmd->set_pan_params(priv))
++			IWL_ERR(priv, "failed to update PAN params\n");
++	}
++
+ 	mutex_unlock(&priv->mutex);
  
--		if (nf[i] > limit->max) {
-+		if (nf[i] > ATH9K_NF_TOO_HIGH) {
- 			ath_print(common, ATH_DBG_CALIBRATE,
- 				  "NF[%d] (%d) > MAX (%d), correcting to MAX",
--				  i, nf[i], limit->max);
-+				  i, nf[i], ATH9K_NF_TOO_HIGH);
- 			nf[i] = limit->max;
- 		} else if (nf[i] < limit->min) {
- 			ath_print(common, ATH_DBG_CALIBRATE,
-@@ -326,7 +339,7 @@ bool ath9k_hw_getnf(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	IWL_DEBUG_MAC80211(priv, "leave\n");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index d2ee55d..ab465c5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -94,6 +94,7 @@ struct iwl_hcmd_ops {
+ 			       struct iwl_rxon_context *ctx);
+ 	int (*set_tx_ant)(struct iwl_priv *priv, u8 valid_tx_ant);
+ 	void (*send_bt_config)(struct iwl_priv *priv);
++	int (*set_pan_params)(struct iwl_priv *priv);
+ };
  
- 	h = caldata->nfCalHist;
- 	caldata->nfcal_pending = false;
--	ath9k_hw_update_nfcal_hist_buffer(h, nfarray);
-+	ath9k_hw_update_nfcal_hist_buffer(ah, h, nfarray);
- 	caldata->rawNoiseFloor = h[0].privNF;
- 	return true;
- }
+ struct iwl_hcmd_utils_ops {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 556dcaa..7727f09 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -572,6 +572,9 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+ 		iwlcore_commit_rxon(priv, ctx);
+ 
+  out:
++	if (priv->cfg->ops->hcmd->set_pan_params)
++		priv->cfg->ops->hcmd->set_pan_params(priv);
++
+ 	mutex_unlock(&priv->mutex);
+ 
+ 	/*
 -- 
-1.6.4.2
+1.7.0.4
 
