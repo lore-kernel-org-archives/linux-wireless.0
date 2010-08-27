@@ -1,68 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:57441 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756396Ab0HEW61 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Aug 2010 18:58:27 -0400
-Received: by wwj40 with SMTP id 40so8388665wwj.1
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Aug 2010 15:58:26 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201008051614.11546.d.haid@gogi.tv>
-References: <201008051614.11546.d.haid@gogi.tv>
-Date: Thu, 5 Aug 2010 17:58:26 -0500
-Message-ID: <AANLkTikM_hyo71PyMLQ9z63FnOkusbKQb7OkRWfOvSTZ@mail.gmail.com>
-Subject: Re: Capturing packets with bad FCS in monitor mode
-From: Qasim Javed <qasimj@gmail.com>
-To: Daniel Haid <d.haid@gogi.tv>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga14.intel.com ([143.182.124.37]:6615 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754379Ab0H0Q4y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Aug 2010 12:56:54 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 22/27] iwlagn: send beacon before committing associated RXON
+Date: Fri, 27 Aug 2010 09:59:50 -0700
+Message-Id: <1282928395-32762-23-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1282928395-32762-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1282928395-32762-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Daniel,
+From: Johannes Berg <johannes.berg@intel.com>
 
-I am using the same card and the ath9k driver. I was also not able to
-receive frames with CRC errors by setting the fcsfail flag while
-creating the monitor mode interface. I looked up the code and found
-that ath9k ignores frames with CRC errors in monitor mode.
+Newer AGN microcode requires know the beacon
+before starting the AP so that it can start
+beaconing right away. Implement that.
 
-The ath9k_rx_accept function in common.c has the following condition
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-if (ah->opmode == NL80211_IFTYPE_MONITOR) {
-        if (rx_stats->rs_status &
-                ~(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_MIC |
-                ATH9K_RXERR_CRC))
-        return false;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 79aff1f..8e07228 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -3559,6 +3559,8 @@ void iwl_config_ap(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 				ctx->staging.flags &=
+ 					~RXON_FLG_SHORT_SLOT_MSK;
+ 		}
++		/* need to send beacon cmd before committing assoc RXON! */
++		iwl_send_beacon_cmd(priv);
+ 		/* restore RXON assoc */
+ 		ctx->staging.filter_flags |= RXON_FILTER_ASSOC_MSK;
+ 		iwlcore_commit_rxon(priv, ctx);
+-- 
+1.7.0.4
 
-Clearly, this function will return false in case of a CRC error while
-receiving on a monitor interface.
-
-For your info, this function is called by ath9k_rx_skb_preprocess
-which in turn is invoked in ath9k_rx_tasklet.
-
-In order to receive frames with CRC errors in monitor mode, I just
-removed ATH9K_RXERR_CRC from the above snippet, recompiled and
-reloaded ath9k and was able to receive frames with CRC errors.
-
-I hope that helps.
-
--Qasim
-
-On Thu, Aug 5, 2010 at 9:14 AM, Daniel Haid <d.haid@gogi.tv> wrote:
->
-> Hello,
->
-> is it possible to receive packets with bad FCS in monitor mode (ath9k driver)?
-> There is a comment in ath9k/common.c which says that a bad checksum is
-> ignored in monitor mode, but I have so far never been able to receive a
-> packet with bad FCS (I do not know how to generate such packets,
-> so I might just be too lucky that all packets are received unimpaired).
->
-> Does ath9k hardware drop packets with bad FCS directly? If so, can
-> it be disabled?
->
-> Best regards.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
