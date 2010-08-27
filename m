@@ -1,39 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:33561 "EHLO mga02.intel.com"
+Received: from smtp.outflux.net ([198.145.64.163]:51423 "EHLO smtp.outflux.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753872Ab0HNPly (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Aug 2010 11:41:54 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 0/2] iwlwifi fix for 2.6.35
-Date: Sat, 14 Aug 2010 08:45:49 -0700
-Message-Id: <1281800751-20784-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1752580Ab0H0VpH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Aug 2010 17:45:07 -0400
+Date: Fri, 27 Aug 2010 14:43:57 -0700
+From: Kees Cook <kees.cook@canonical.com>
+To: Jean Tourrilhes <jt@hpl.hp.com>
+Cc: linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH] wireless: fix 64K kernel heap content leak via ioctl
+Message-ID: <20100827214357.GE4703@outflux.net>
+References: <20100827210240.GC4703@outflux.net>
+ <20100827212254.GB32275@bougret.hpl.hp.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100827212254.GB32275@bougret.hpl.hp.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When tx queue stuck, iwlwifi driver should detect and reload the firmware;
-different devices has different timing requirement, change the timeout
-value for 5000 series devices to avoid un-necessary firmware reload which
-can cause device become unstable.
+Hi Jean,
 
-This fixes:
-http://article.gmane.org/gmane.linux.kernel.wireless.general/53552
+On Fri, Aug 27, 2010 at 02:22:54PM -0700, Jean Tourrilhes wrote:
+> On Fri, Aug 27, 2010 at 02:02:41PM -0700, Kees Cook wrote:
+> > This problem was originally tracked down by Brad Spengler.
+> > 
+> > When calling wireless ioctls, if a driver does not correctly
+> > validate/shrink iwp->length, the resulting copy_to_user can leak up to
+> > 64K of kernel heap contents.
+> > 
+> > It seems that this is triggerable[1] in 2.6.32 at least on ath5k, but
+> > I was not able to track down how. The twisty maze of ioctl handlers
+> > stumped me. :)
+> 
+> 	You can always ask.
+> 
+> > Other drivers I checked did not appear to have any problems,
+> > but the potential remains. I'm not sure if this patch is the right approach;
+> > it was fixed differently[2] in grsecurity.
+> 
+> 	Did you tried your patch for real ? With large scan request ?
+> 	I ask because at first glance, it looks incorrect, asI believe
+> it kills large request. But someone would need to test, for sure.
 
-Wey-Yi Guy (2):
-  iwlwifi: long monitor timer
-  iwlwifi: use long monitor timer to avoid un-necessary reload
+I did not, no. Since I couldn't reproduce the original problem (I lacked
+the hardware to test ath5k, and all the other drivers correctly managed
+iwp->length).
 
-these patches are also available from wireless-2.6 branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
+> > [1] http://forums.grsecurity.net/viewtopic.php?f=3&t=2290&start=0
+> > [2] http://grsecurity.net/~spender/wireless-infoleak-fix2.patch
+> 
+> 	I believe this patch would make the situation worse.
+> 
+> 	Would you mind validating the following patch ? I've just
+> verified that it compiles and I believe it does what you are asking in
+> a much more predictable way.
 
- drivers/net/wireless/iwlwifi/iwl-1000.c |    4 +-
- drivers/net/wireless/iwlwifi/iwl-3945.c |    4 +-
- drivers/net/wireless/iwlwifi/iwl-4965.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-5000.c |   14 ++++++------
- drivers/net/wireless/iwlwifi/iwl-6000.c |   32 +++++++++++++++---------------
- drivers/net/wireless/iwlwifi/iwl-dev.h  |    3 +-
- 6 files changed, 30 insertions(+), 29 deletions(-)
+> -               if (copy_to_user(iwp->pointer, extra,
+> -                                iwp->length *
+> -                                descr->token_size)) {
+> +               /* Verify how much we should return. Some driver
+> +                * may abuse iwp->length... */
+> +               if((iwp->length * descr->token_size) < extra_size)
+> +                       extra_size = iwp->length * descr->token_size;
+> +
+> +               if (copy_to_user(iwp->pointer, extra, extra_size)) {
 
+The comment should probably be clarified -- it's the caller's iwp->length
+that may be causing problems (when combined with a driver that forgets to
+adjusted iwp->length downward). Regardless, the above patch would appear to
+limit the copy_to_user to only the kzalloced region.
+
+Thanks!
+
+-Kees
+
+-- 
+Kees Cook
+Ubuntu Security Team
