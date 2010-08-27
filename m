@@ -1,81 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:50969 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752330Ab0HVN6X (ORCPT
+Received: from mgw-sa02.nokia.com ([147.243.1.48]:26209 "EHLO
+	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753531Ab0H0L1N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Aug 2010 09:58:23 -0400
-Received: by fxm13 with SMTP id 13so2518234fxm.19
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Aug 2010 06:58:22 -0700 (PDT)
-From: Marek Vasut <marek.vasut@gmail.com>
-To: Mike Rapoport <mike@compulab.co.il>
-Subject: Re: [PATCH] libertas: if_sdio: fix buffer alignment in struct if_sdio_card
-Date: Sun, 22 Aug 2010 15:57:44 +0200
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	rusty@rustcorp.com.au
-References: <1282476160-6913-1-git-send-email-mike@compulab.co.il> <201008221459.25574.marek.vasut@gmail.com> <4C712480.1090006@compulab.co.il>
-In-Reply-To: <4C712480.1090006@compulab.co.il>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201008221557.44607.marek.vasut@gmail.com>
+	Fri, 27 Aug 2010 07:27:13 -0400
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes.berg@intel.com
+Subject: [PATCHv2 1/4] cfg80211: allow vendor specific cipher suites
+Date: Fri, 27 Aug 2010 14:26:51 +0300
+Message-Id: <1282908414-26783-2-git-send-email-juuso.oikarinen@nokia.com>
+In-Reply-To: <1282908414-26783-1-git-send-email-juuso.oikarinen@nokia.com>
+References: <1282908414-26783-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dne Ne 22. srpna 2010 15:22:08 Mike Rapoport napsal(a):
-> Marek Vasut wrote:
-> > Dne Ne 22. srpna 2010 13:22:40 Mike Rapoport napsal(a):
-> >> The commit 886275ce41a9751117367fb387ed171049eb6148 (param: lock
-> >> if_sdio's lbs_helper_name and lbs_fw_name against sysfs changes)
-> >> introduced new fields into the if_sdio_card structure. It caused
-> >> missalignment of the if_sdio_card.buffer field and failure at driver
-> >> 
-> >> load time:
-> >>   ~# modprobe libertas_sdio
-> >>   [   62.315124] libertas_sdio: Libertas SDIO driver
-> >>   [   62.319976] libertas_sdio: Copyright Pierre Ossman
-> >>   [   63.020629] DMA misaligned error with device 48
-> >>   [   63.025207] mmci-omap-hs mmci-omap-hs.1: unexpected dma status 800
-> >>   [   66.005035] libertas: command 0x0003 timed out
-> >>   [   66.009826] libertas: Timeout submitting command 0x0003
-> >>   [   66.016296] libertas: PREP_CMD: command 0x0003 failed: -110
-> >> 
-> >> Adding explicit alignment attribute for the if_sdio_card.buffer field
-> >> fixes this problem.
-> >> 
-> >> Signed-off-by: Mike Rapoport <mike@compulab.co.il>
-> >> ---
-> >> 
-> >>  drivers/net/wireless/libertas/if_sdio.c |    2 +-
-> >>  1 files changed, 1 insertions(+), 1 deletions(-)
-> >> 
-> >> diff --git a/drivers/net/wireless/libertas/if_sdio.c
-> >> b/drivers/net/wireless/libertas/if_sdio.c index ba854c7..87b6349 100644
-> >> --- a/drivers/net/wireless/libertas/if_sdio.c
-> >> +++ b/drivers/net/wireless/libertas/if_sdio.c
-> >> @@ -128,7 +128,7 @@ struct if_sdio_card {
-> >> 
-> >>  	bool			helper_allocated;
-> >>  	bool			firmware_allocated;
-> >> 
-> >> -	u8			buffer[65536];
-> >> +	u8			buffer[65536] __attribute__((aligned(4)));
-> >> 
-> >>  	spinlock_t		lock;
-> >>  	struct if_sdio_packet	*packets;
-> > 
-> > Will this work even on platforms that need some weird DMA destination
-> > address alignment ? I might be totally off with this question though ;-)
-> 
-> I've tested it on PXA and OMAP and it works on both.
-> I think that on platforms with weird DMA destination address alignment
-> libertas_sdio will fail anyway because of if_sdio_packet alignment.
+From: Johannes Berg <johannes.berg@intel.com>
 
-You're right ... thanks for clearing this.
+cfg80211 currently rejects all cipher suites it
+doesn't know about for key length checking
+purposes. This can lead to inconsistencies when
+a driver advertises an algorithm that cfg80211
+doesn't know about. Remove this rejection so
+drivers can specify any algorithm they like.
 
-Acked-by: Marek Vasut <marek.vasut@gmail.com>
-> 
-> > Cheers
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-wireless"
-> > in the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+---
+ net/wireless/util.c |    9 ++++++++-
+ 1 files changed, 8 insertions(+), 1 deletions(-)
+
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 8d961cc..bca32eb 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -183,7 +183,14 @@ int cfg80211_validate_key_settings(struct cfg80211_registered_device *rdev,
+ 			return -EINVAL;
+ 		break;
+ 	default:
+-		return -EINVAL;
++		/*
++		 * We don't know anything about this algorithm,
++		 * allow using it -- but the driver must check
++		 * all parameters! We still check below whether
++		 * or not the driver supports this algorithm,
++		 * of course.
++		 */
++		break;
+ 	}
+ 
+ 	if (params->seq) {
+-- 
+1.6.3.3
+
