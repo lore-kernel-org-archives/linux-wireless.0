@@ -1,67 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:57993 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934268Ab0HEU0H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Aug 2010 16:26:07 -0400
-Date: Thu, 5 Aug 2010 22:26:04 +0200 (CEST)
-From: Julia Lawall <julia@diku.dk>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH 30/42] drivers/net/wireless/prism54: Adjust confusing if
- indentation
-Message-ID: <Pine.LNX.4.64.1008052225460.31692@ask.diku.dk>
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:34774 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752892Ab0H0TVX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Aug 2010 15:21:23 -0400
+Date: Fri, 27 Aug 2010 22:21:13 +0300
+From: Jouni Malinen <j@w1.fi>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: Fix signal strength average initialization for
+ CQM events
+Message-ID: <20100827192113.GA28502@jm.kir.nu>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia@diku.dk>
+The ave_beacon_signal value uses 1/16 dB unit and as such, must be
+initialized with the signal level of the first Beacon frame multiplied
+by 16. This fixes an issue where the initial CQM events are reported
+incorrectly with a burst of events while the running average
+approaches the correct value after the incorrect initialization. This
+could cause user space -based roaming decision process to get quite
+confused at the moment when we would like to go through authentication
+and DHCP.
 
-Indent the branch of an if.
-
-The semantic match that finds this problem is as follows:
-(http://coccinelle.lip6.fr/)
-
-// <smpl>
-@r disable braces4@
-position p1,p2;
-statement S1,S2;
-@@
-
-(
-if (...) { ... }
-|
-if (...) S1@p1 S2@p2
-)
-
-@script:python@
-p1 << r.p1;
-p2 << r.p2;
-@@
-
-if (p1[0].column == p2[0].column):
-  cocci.print_main("branch",p1)
-  cocci.print_secs("after",p2)
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
+Cc: stable@kernel.org
+Signed-off-by: Jouni Malinen <j@w1.fi>
 
 ---
- drivers/net/wireless/prism54/isl_ioctl.c |    2 +-
+ net/mac80211/mlme.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/prism54/isl_ioctl.c b/drivers/net/wireless/prism54/isl_ioctl.c
-index 77cd65d..d97a2ca 100644
---- a/drivers/net/wireless/prism54/isl_ioctl.c
-+++ b/drivers/net/wireless/prism54/isl_ioctl.c
-@@ -3234,7 +3234,7 @@ prism54_ioctl(struct net_device *ndev, struct ifreq *rq, int cmd)
- 	switch (cmd) {
- 		case PRISM54_HOSTAPD:
- 		if (!capable(CAP_NET_ADMIN))
--		return -EPERM;
-+			return -EPERM;
- 		ret = prism54_hostapd(ndev, &wrq->u.data);
- 		return ret;
- 	}
+--- wireless-testing.orig/net/mac80211/mlme.c	2010-08-27 15:48:14.000000000 +0300
++++ wireless-testing/net/mac80211/mlme.c	2010-08-27 21:43:54.000000000 +0300
+@@ -1548,7 +1548,7 @@ static void ieee80211_rx_mgmt_beacon(str
+ 	ifmgd->last_beacon_signal = rx_status->signal;
+ 	if (ifmgd->flags & IEEE80211_STA_RESET_SIGNAL_AVE) {
+ 		ifmgd->flags &= ~IEEE80211_STA_RESET_SIGNAL_AVE;
+-		ifmgd->ave_beacon_signal = rx_status->signal;
++		ifmgd->ave_beacon_signal = rx_status->signal * 16;
+ 		ifmgd->last_cqm_event_signal = 0;
+ 	} else {
+ 		ifmgd->ave_beacon_signal =
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
