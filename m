@@ -1,56 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:63600 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752002Ab0HWX42 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Aug 2010 19:56:28 -0400
-Received: by qwh6 with SMTP id 6so5590548qwh.19
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Aug 2010 16:56:26 -0700 (PDT)
+Received: from mail.atheros.com ([12.19.149.2]:52309 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753476Ab0H0Np3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Aug 2010 09:45:29 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 27 Aug 2010 06:45:25 -0700
+Date: Fri, 27 Aug 2010 19:15:23 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Vivek Natarajan <Vivek.Natarajan@Atheros.com>,
+	Luis Rodriguez <mcgrof@gmail.com>
+Subject: Re: [PATCH] mac80211: fix offchannel queue stop
+Message-ID: <20100827134523.GC3780@vasanth-laptop>
+References: <1282909528.4377.8.camel@jlt3.sipsolutions.net> <20100827123054.GB3780@vasanth-laptop> <1282913816.4377.10.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <4C730173.7080703@lwfinger.net>
-References: <1282506589-8220-1-git-send-email-zajec5@gmail.com>
- <AANLkTi=TMhmTF+ztooAu=E1e1zdw-cBnaSZCKj=Utik0@mail.gmail.com>
- <AANLkTikMxL41zrR+KDF1Od_SKpbQhsQWHWiAAAULYx+F@mail.gmail.com>
- <AANLkTim6d0C_Lx=zExfHy-hfeVdY=aXZCfi6c825TGt7@mail.gmail.com> <4C730173.7080703@lwfinger.net>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Tue, 24 Aug 2010 01:56:06 +0200
-Message-ID: <AANLkTik8cMdxG-0azPOsoBEMdf1JkZ_Gemh_bNDSF3sS@mail.gmail.com>
-Subject: Re: [PATCH 1/2] b43: N-PHY: band width setting with dumb clock
- control call
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1282913816.4377.10.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 24, 2010 at 1:17 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 08/23/2010 05:53 PM, Rafał Miłecki wrote:
->>> I believe you need to do the whole PHY init, including the common
->>> part; not just the PHY type-specific init. Larry, is this true?
->>
->> Do you mean b43_phy_init? Larry: I guess indeed some tip would be nice :)
->
-> As it shows in http://bcm-v4.sipsolutions.net/802.11/PHY/Init, you need to do
-> the Common steps. #15 in that list is the specific routines for the PHY type in
-> the device.
->
-> The code in b43_phy_init() seems not to have all of these steps in it, but I'm
-> not sure where they are implemented.
+On Fri, Aug 27, 2010 at 06:26:56PM +0530, Johannes Berg wrote:
+> On Fri, 2010-08-27 at 18:00 +0530, Vasanthakumar Thiagarajan wrote:
+> 
+> > > The problem, as I understand it, is that when
+> > > we go offchannel while the driver has a queue
+> > > stopped, the driver will likely start draining
+> > > the queue and then enable it while offchannel.
+> > > This in turn will enable the interface queue,
+> > > and that leads to transmitting data frames on
+> > > the wrong channel.
+> 
+> > thanks for fixing, It was me only. Somehow I forgot this.
+> 
+> Did I understand the issue correctly then?
 
-This spec page seems to have lots of Broadcrap in it... it especially
-needs de-chanspec-tamination; how the driver handles band and
-bandwidth selection is irrelevant to a HW specification. (Also, many
-referenced chanspec-related functions are missing.)
+Yes, you got it right.
 
->
-> Larry
->
-
-
-
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Vasanth
