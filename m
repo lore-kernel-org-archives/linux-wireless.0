@@ -1,119 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:15438 "EHLO mga01.intel.com"
+Received: from mail.atheros.com ([12.19.149.2]:43480 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753952Ab0HWOxe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Aug 2010 10:53:34 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 17/26] iwlwifi: add bt_init_traffic_load as configurable parameter
-Date: Mon, 23 Aug 2010 07:57:08 -0700
-Message-Id: <1282575437-23270-18-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1282575437-23270-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1282575437-23270-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1751068Ab0H0Glz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Aug 2010 02:41:55 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 26 Aug 2010 23:41:50 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH] ath9k_htc: Enable ANI in associated state only
+Date: Fri, 27 Aug 2010 12:09:00 +0530
+Message-ID: <1282891140-4170-1-git-send-email-rmanoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+While scanning, ANI is triggered unnecessarily where sta is in
+unassociated state. And cancelling ani work in ath9k_htc_stop
+is not required.
 
-Adding configurable parameter in .cfg for the initial Bluetooth traffic
-load; set it to IWL_BT_COEX_TRAFFIC_LOAD_NONE for now, but can be change
-for debugging or other reason.
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-6000.c |    6 ++++++
- drivers/net/wireless/iwlwifi/iwl-agn.c  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-core.h |    2 ++
- 3 files changed, 9 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |    9 +++++----
+ 1 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 101630b..396d80c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -832,6 +832,7 @@ struct iwl_cfg iwl6000g2b_2agn_cfg = {
- 	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
- 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
- 	.advanced_bt_coexist = true,
-+	.bt_init_traffic_load = IWL_BT_COEX_TRAFFIC_LOAD_NONE,
- };
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 5e318cb..f467207 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -1239,7 +1239,6 @@ static void ath9k_htc_stop(struct ieee80211_hw *hw)
  
- struct iwl_cfg iwl6000g2b_2abg_cfg = {
-@@ -871,6 +872,7 @@ struct iwl_cfg iwl6000g2b_2abg_cfg = {
- 	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
- 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
- 	.advanced_bt_coexist = true,
-+	.bt_init_traffic_load = IWL_BT_COEX_TRAFFIC_LOAD_NONE,
- };
+ 	/* Cancel all the running timers/work .. */
+ 	cancel_work_sync(&priv->ps_work);
+-	cancel_delayed_work_sync(&priv->ath9k_ani_work);
+ 	cancel_delayed_work_sync(&priv->ath9k_led_blink_work);
+ 	ath9k_led_stop_brightness(priv);
  
- struct iwl_cfg iwl6000g2b_2bgn_cfg = {
-@@ -912,6 +914,7 @@ struct iwl_cfg iwl6000g2b_2bgn_cfg = {
- 	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
- 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
- 	.advanced_bt_coexist = true,
-+	.bt_init_traffic_load = IWL_BT_COEX_TRAFFIC_LOAD_NONE,
- };
+@@ -1787,7 +1786,8 @@ static void ath9k_htc_sw_scan_start(struct ieee80211_hw *hw)
+ 	priv->op_flags |= OP_SCANNING;
+ 	spin_unlock_bh(&priv->beacon_lock);
+ 	cancel_work_sync(&priv->ps_work);
+-	cancel_delayed_work_sync(&priv->ath9k_ani_work);
++	if (priv->op_flags & OP_ASSOCIATED)
++		cancel_delayed_work_sync(&priv->ath9k_ani_work);
+ 	mutex_unlock(&priv->mutex);
+ }
  
- struct iwl_cfg iwl6000g2b_2bg_cfg = {
-@@ -951,6 +954,7 @@ struct iwl_cfg iwl6000g2b_2bg_cfg = {
- 	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
- 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
- 	.advanced_bt_coexist = true,
-+	.bt_init_traffic_load = IWL_BT_COEX_TRAFFIC_LOAD_NONE,
- };
- 
- struct iwl_cfg iwl6000g2b_bgn_cfg = {
-@@ -992,6 +996,7 @@ struct iwl_cfg iwl6000g2b_bgn_cfg = {
- 	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
- 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
- 	.advanced_bt_coexist = true,
-+	.bt_init_traffic_load = IWL_BT_COEX_TRAFFIC_LOAD_NONE,
- };
- 
- struct iwl_cfg iwl6000g2b_bg_cfg = {
-@@ -1031,6 +1036,7 @@ struct iwl_cfg iwl6000g2b_bg_cfg = {
- 	/* Due to bluetooth, we transmit 2.4 GHz probes only on antenna A */
- 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
- 	.advanced_bt_coexist = true,
-+	.bt_init_traffic_load = IWL_BT_COEX_TRAFFIC_LOAD_NONE,
- };
- 
- /*
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 3686164..be13c79 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2800,7 +2800,7 @@ static void __iwl_down(struct iwl_priv *priv)
- 	iwl_clear_driver_stations(priv);
- 
- 	/* reset BT coex data */
--	priv->bt_traffic_load = 0;
-+	priv->bt_traffic_load = priv->cfg->bt_init_traffic_load;
- 	priv->bt_sco_active = false;
- 	priv->bt_full_concurrent = false;
- 	priv->bt_ci_compliance = 0;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 146d0d5..d5dacaf 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -279,6 +279,7 @@ struct iwl_mod_params {
-  *	chain noise calibration operation
-  * @scan_antennas: available antenna for scan operation
-  * @advanced_bt_coexist: support advanced bt coexist
-+ * @bt_init_traffic_load: specify initial bt traffic load
-  * @need_dc_calib: need to perform init dc calibration
-  * @bt_statistics: use BT version of statistics notification
-  * @agg_time_limit: maximum number of uSec in aggregation
-@@ -353,6 +354,7 @@ struct iwl_cfg {
- 	u8 scan_rx_antennas[IEEE80211_NUM_BANDS];
- 	u8 scan_tx_antennas[IEEE80211_NUM_BANDS];
- 	bool advanced_bt_coexist;
-+	u8 bt_init_traffic_load;
- 	const bool need_dc_calib;
- 	const bool bt_statistics;
- 	u16 agg_time_limit;
+@@ -1801,9 +1801,10 @@ static void ath9k_htc_sw_scan_complete(struct ieee80211_hw *hw)
+ 	priv->op_flags &= ~OP_SCANNING;
+ 	spin_unlock_bh(&priv->beacon_lock);
+ 	priv->op_flags |= OP_FULL_RESET;
+-	if (priv->op_flags & OP_ASSOCIATED)
++	if (priv->op_flags & OP_ASSOCIATED) {
+ 		ath9k_htc_beacon_config(priv, priv->vif);
+-	ath_start_ani(priv);
++		ath_start_ani(priv);
++	}
+ 	ath9k_htc_ps_restore(priv);
+ 	mutex_unlock(&priv->mutex);
+ }
 -- 
-1.7.0.4
+1.7.2.2
 
