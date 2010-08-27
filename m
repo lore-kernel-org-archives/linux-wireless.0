@@ -1,55 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:57925 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754558Ab0HCAEm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Aug 2010 20:04:42 -0400
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org, j@w1.fi,
-	linville@tuxdriver.com,
-	"Justin P. Mattock" <justinmattock@gmail.com>
-Subject: [PATCH]hostap:hostap_ioctl.c Fix variable 'hostscan' set but not used 
-Date: Mon,  2 Aug 2010 17:04:39 -0700
-Message-Id: <1280793879-1768-1-git-send-email-justinmattock@gmail.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:59832 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752635Ab0H0SlV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Aug 2010 14:41:21 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 5/7] compat-wireless: rename CONFIG_IWLWIFI config symbol
+Date: Fri, 27 Aug 2010 20:40:51 +0200
+Message-Id: <1282934453-18093-6-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1282934453-18093-1-git-send-email-hauke@hauke-m.de>
+References: <1282934453-18093-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch below fixes a compiler warning:
-  CC [M]  drivers/net/wireless/hostap/hostap_ioctl.o
-drivers/net/wireless/hostap/hostap_ioctl.c: In function 'prism2_translate_scan':
-drivers/net/wireless/hostap/hostap_ioctl.c:1954:13: warning: variable 'hostscan' set but not used
+In kernel 2.6.24 CONFIG_IWLWIFI was a bool config symbol and not a
+tristate one. In that kernel it was used for showing the menu option for
+the Intel driver and not for selection the module it is used for today.
+In kernel configurations for version 2.6.24 it is set so y and not to m.
+As we do not overwrite some value selected in the kernel config it
+will cause problems when we build some parts of the Intel driver in
+compat-wireless directly into the kernel.
+Now we use an other name for this config symbol to work around the
+problem.
 
-Keep in mind I've looked and searched for a fix for this but
-couldnt come up with anything.(if there is let me know and I'll have a try at it). 
-
-Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
-
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/hostap/hostap_ioctl.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+ config.mk                              |    2 +-
+ patches/08-rename-iwl4965-config.patch |    8 +++++++-
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/hostap/hostap_ioctl.c b/drivers/net/wireless/hostap/hostap_ioctl.c
-index 27d462f..25420e3 100644
---- a/drivers/net/wireless/hostap/hostap_ioctl.c
-+++ b/drivers/net/wireless/hostap/hostap_ioctl.c
-@@ -1951,7 +1951,7 @@ static inline int prism2_translate_scan(local_info_t *local,
- 					char *buffer, int buflen)
- {
- 	struct hfa384x_hostscan_result *scan;
--	int entry, hostscan;
-+	int entry;
- 	char *current_ev = buffer;
- 	char *end_buf = buffer + buflen;
- 	struct list_head *ptr;
-@@ -1964,7 +1964,6 @@ static inline int prism2_translate_scan(local_info_t *local,
- 		bss->included = 0;
- 	}
+diff --git a/config.mk b/config.mk
+index 4c4a111..110291d 100644
+--- a/config.mk
++++ b/config.mk
+@@ -214,7 +214,7 @@ CONFIG_ATH9K_COMMON=m
+ # CONFIG_ATH9K_PKTLOG=y
  
--	hostscan = local->last_scan_type == PRISM2_HOSTSCAN;
- 	for (entry = 0; entry < local->last_scan_results_count; entry++) {
- 		int found = 0;
- 		scan = &local->last_scan_results[entry];
+ 
+-CONFIG_IWLWIFI=m
++CONFIG_COMPAT_IWLWIFI=m
+ # CONFIG_IWLWIFI_DEBUG=y
+ # CONFIG_IWLWIFI_DEBUGFS=y
+ # CONFIG_IWLWIFI_DEVICE_TRACING=y
+diff --git a/patches/08-rename-iwl4965-config.patch b/patches/08-rename-iwl4965-config.patch
+index 568314f..28cd39e 100644
+--- a/patches/08-rename-iwl4965-config.patch
++++ b/patches/08-rename-iwl4965-config.patch
+@@ -5,6 +5,12 @@ CONFIG_IWL4965 has to be set to y, to build correctly.
+ 
+ --- a/drivers/net/wireless/iwlwifi/Makefile
+ +++ b/drivers/net/wireless/iwlwifi/Makefile
++@@ -1,4 +1,4 @@
++-obj-$(CONFIG_IWLWIFI)	+= iwlcore.o
+++obj-$(CONFIG_COMPAT_IWLWIFI)	+= iwlcore.o
++ iwlcore-objs 		:= iwl-core.o iwl-eeprom.o iwl-hcmd.o iwl-power.o
++ iwlcore-objs 		+= iwl-rx.o iwl-tx.o iwl-sta.o
++ iwlcore-objs 		+= iwl-scan.o iwl-led.o
+ @@ -15,7 +15,7 @@ iwlagn-objs		+= iwl-agn-lib.o iwl-agn-rx
+  iwlagn-objs		+= iwl-agn-tt.o
+  iwlagn-$(CONFIG_IWLWIFI_DEBUGFS) += iwl-agn-debugfs.o
+@@ -16,7 +22,7 @@ CONFIG_IWL4965 has to be set to y, to build correctly.
+  iwlagn-$(CONFIG_IWL5000) += iwl-1000.o
+ --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
+ +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+-@@ -4339,10 +4339,10 @@ static void __devexit iwl_pci_remove(str
++@@ -4450,10 +4450,10 @@ static void __devexit iwl_pci_remove(str
+  
+  /* Hardware specific file defines the PCI IDs table for that hardware module */
+  static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
 -- 
-1.7.1.rc1.21.gf3bd6
+1.7.0.4
 
