@@ -1,44 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:39838 "EHLO
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:50735 "EHLO
 	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751739Ab0HCADN convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1753615Ab0H0Wfk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Aug 2010 20:03:13 -0400
-Received: by iwn7 with SMTP id 7so4549245iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Aug 2010 17:03:12 -0700 (PDT)
+	Fri, 27 Aug 2010 18:35:40 -0400
 MIME-Version: 1.0
-In-Reply-To: <4C56B234.3040209@marvell.com>
-References: <4C56B234.3040209@marvell.com>
+In-Reply-To: <20100827212254.GB32275@bougret.hpl.hp.com>
+References: <20100827210240.GC4703@outflux.net> <20100827212254.GB32275@bougret.hpl.hp.com>
 From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 2 Aug 2010 17:02:51 -0700
-Message-ID: <AANLkTimSj-X3VEF-OjhV8fQfs5SLCAWR1tLdQGiLttMV@mail.gmail.com>
-Subject: Re: wireless-regdb: Why crda db.txt disallows 40Mhz BW on Channel
-	12-13 for JP?
-To: yogeshp <yogeshp@marvell.com>,
-	Michael Green <Michael.Green@atheros.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 27 Aug 2010 15:35:19 -0700
+Message-ID: <AANLkTimeEa_=dqX5yFnYzaSaL90TfOg3=MsydG81naAC@mail.gmail.com>
+Subject: Re: [PATCH] wireless: fix 64K kernel heap content leak via ioctl
+To: jt@hpl.hp.com
+Cc: Kees Cook <kees.cook@canonical.com>, linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 2, 2010 at 4:55 AM, yogeshp <yogeshp@marvell.com> wrote:
-> Hello All,
+On Fri, Aug 27, 2010 at 2:22 PM, Jean Tourrilhes <jt@hpl.hp.com> wrote:
+> On Fri, Aug 27, 2010 at 02:02:41PM -0700, Kees Cook wrote:
+>> This problem was originally tracked down by Brad Spengler.
+>>
+>> When calling wireless ioctls, if a driver does not correctly
+>> validate/shrink iwp->length, the resulting copy_to_user can leak up to
+>> 64K of kernel heap contents.
+>>
+>> It seems that this is triggerable[1] in 2.6.32 at least on ath5k, but
+>> I was not able to track down how. The twisty maze of ioctl handlers
+>> stumped me. :)
 >
-> Crda db.txt has following entries for JP:
->        (2402 - 2472 @ 40), (N/A, 20)
->        (2457 - 2482 @ 20), (N/A, 20)
+>        You can always ask.
 >
-> Why are channel 12 and 13 for JP disallowed to operate in 40Mhz by this file?
+>> Other drivers I checked did not appear to have any problems,
+>> but the potential remains. I'm not sure if this patch is the right approach;
+>> it was fixed differently[2] in grsecurity.
 >
-> As per Annex 11J of latest 802.11n spec, for Japan, channel 1-7 are allowed in HT40+ and
-> channel 5-13 are allowed in HT40- mode.
+>        Did you tried your patch for real ? With large scan request ?
+>        I ask because at first glance, it looks incorrect, asI believe
+> it kills large request. But someone would need to test, for sure.
+>
+>> [1] http://forums.grsecurity.net/viewtopic.php?f=3&t=2290&start=0
+>> [2] http://grsecurity.net/~spender/wireless-infoleak-fix2.patch
+>
+>        I believe this patch would make the situation worse.
+>
+>        Would you mind validating the following patch ? I've just
+> verified that it compiles and I believe it does what you are asking in
+> a much more predictable way.
+>        Regards,
+>
+>        Jean
+>
+> diff -u -p wext.j2.c wext.c
+> --- wext.j2.c   2010-08-27 14:17:26.000000000 -0700
+> +++ wext.c      2010-08-27 14:19:33.000000000 -0700
+> @@ -800,9 +800,12 @@ static int ioctl_standard_iw_point(struc
+>                        goto out;
+>                }
+>
+> -               if (copy_to_user(iwp->pointer, extra,
+> -                                iwp->length *
+> -                                descr->token_size)) {
+> +               /* Verify how much we should return. Some driver
+> +                * may abuse iwp->length... */
+> +               if((iwp->length * descr->token_size) < extra_size)
+> +                       extra_size = iwp->length * descr->token_size;
+> +
+> +               if (copy_to_user(iwp->pointer, extra, extra_size)) {
+>                        err = -EFAULT;
+>                        goto out;
+>                }
 
-Do you mean Section 11J.1? That stuff defines a regulatory class, its
-not a regulatory text though. Linux dynamically computes the HT40+ or
-HT40- allowed channel map based on frequency ranges supported and the
-max allowed bandwidth for its frequency ranges.
 
-Michael, can you confirm if HT0 is allowed on the 2.4 GHz band in JP ?
+Jean, can you submit in a new thread and right before the SOB add in
+the commit log Cc: stable@kernel.org [2.6.32+]
 
   Luis
