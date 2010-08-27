@@ -1,40 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:2392 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753004Ab0HKTog (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Aug 2010 15:44:36 -0400
-Subject: Re: [PATCH] wireless: revert %pM to %pm conversion
-From: Joe Perches <joe@perches.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <201008112131.01906.chunkeey@googlemail.com>
-References: <201008112131.01906.chunkeey@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 11 Aug 2010 12:44:33 -0700
-Message-ID: <1281555874.3976.51.camel@Joe-Laptop.home>
-Mime-Version: 1.0
+Received: from mgw-sa02.nokia.com ([147.243.1.48]:26311 "EHLO
+	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754002Ab0H0L1Q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Aug 2010 07:27:16 -0400
+From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, johannes.berg@intel.com
+Subject: [PATCHv2 0/4] mac80211: cfg80211: support for hw-only crypts and custom control port protocols
+Date: Fri, 27 Aug 2010 14:26:50 +0300
+Message-Id: <1282908414-26783-1-git-send-email-juuso.oikarinen@nokia.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-08-11 at 21:31 +0200, Christian Lamparter wrote:
-> The patch: "drivers/net/wireless: Use wiphy_<level>" not
-> only replaced printk(KERN_<level> with wiphy_<level>, but
-> also converted some format string characters to lower case.
+These patches enable usage of hw-only cipher-suites, and enable using
+control port ethertypes other than ETH_P_PAE for key-negotiation.
 
-Thanks Christian.
+These patches are originally written by Johannes Berg, finalized and tested by
+myself.
 
-My fault, sorry.
+v2: Add explicit setting to false for sdata->control_port_protocol in 
+    ieee80211_setup_sdata.
 
-There are more undesired newly lower cased words in
-the original patch.
+Johannes Berg (4):
+  cfg80211: allow vendor specific cipher suites
+  mac80211: allow vendor specific cipher suites
+  cfg80211: allow changing port control protocol
+  mac80211: allow changing port control protocol
 
-I now know how that happened.
-
-I lowercased the whole string instead of just the
-KERN_<level> part.
-
-I'll fix it and resubmit on top of Christian's patch
-unless John wants a single patch.
-
+ include/linux/nl80211.h    |   16 ++++++++++++++-
+ include/net/cfg80211.h     |   24 +++++++++++++++------
+ net/mac80211/cfg.c         |    5 ++-
+ net/mac80211/ieee80211_i.h |    4 +++
+ net/mac80211/iface.c       |    2 +
+ net/mac80211/key.c         |   38 ++++++++++++++++++++++++++++-------
+ net/mac80211/key.h         |    6 ++--
+ net/mac80211/main.c        |   47 ++++++++++++++++++++++++++++++++++++++-----
+ net/mac80211/mlme.c        |    3 ++
+ net/mac80211/rx.c          |    8 ++++++-
+ net/mac80211/tx.c          |   32 +++++++++++++++++++++++++----
+ net/wireless/nl80211.c     |   25 ++++++++++++++++++++--
+ net/wireless/util.c        |    9 +++++++-
+ net/wireless/wext-sme.c    |    2 +
+ 14 files changed, 184 insertions(+), 37 deletions(-)
 
