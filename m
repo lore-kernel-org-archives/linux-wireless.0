@@ -1,49 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55670 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759365Ab0HLLOO (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:50876 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751562Ab0H0PlE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Aug 2010 07:14:14 -0400
-Subject: [PATCH] mac80211: check RX crypto for sta key
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 12 Aug 2010 13:14:02 +0200
-Message-ID: <1281611642.3803.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 27 Aug 2010 11:41:04 -0400
+Received: by gxk23 with SMTP id 23so1157296gxk.19
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Aug 2010 08:41:03 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1282923444.4377.13.camel@jlt3.sipsolutions.net>
+References: <1282887527-23259-1-git-send-email-lrodriguez@atheros.com>
+ <20100827090655.GA15873@jm.kir.nu> <AANLkTimw1MpiKM=rCfp_zxkw855SyaoZg6m1oB354tCF@mail.gmail.com>
+ <1282923444.4377.13.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Fri, 27 Aug 2010 08:40:42 -0700
+Message-ID: <AANLkTi=qWjhwo50hg8HB1wtsyUizAi55SEK9EW0Udckv@mail.gmail.com>
+Subject: Re: [RFT] mac80211: fix broadcast/multicast data drop on scan
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
+	Kalle Valo <kvalo@adurom.com>,
+	Amod Bodas <Amod.Bodas@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, Aug 27, 2010 at 8:37 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2010-08-27 at 08:28 -0700, Luis R. Rodriguez wrote:
+>
+>> Indeed... I do not see where we keep track of the DTIM count and was
+>> afraid this was not sufficient. I had not thought about the last
+>> received multicast / broadcast frame, that will require some more
+>> work. But I also noticed even ieee80211_recalc_ps() does not take this
+>> into account when computing the max_sleep_period ieee80211_enable_ps()
+>> for dynamic power save, it only considers the DTIM period. We send the
+>> nullfunc frame for dynamic power save and it does not seem we take
+>> into consideration the DTIM count and last RX's broadcast / multicast
+>> data prior to sending the nullfunc to go into power save. So it seems
+>> to me dynamic power save would also loses broadcast / multicast data
+>> frames.
+>
+> No, the max sleep period is just a helper variable for device
+> implementation of sleep -- the actual alignment of it with DTIM beacons
+> etc. has to be done by the device. Therefore, it isn't so :-)
 
-My previous patch removing decrypted && iv-stripped
-checks from the crypto algorithms turned out to be
-completely wrong since in the common case of using
-a per-station key the check wasn't there. Rather
-than revert it, add a check to this case so that
-the crypto algorithms don't need to be able to deal
-with already decrypted and verified frames.
+I noticed the comment on the PS documentation that the reason for this
+is that mac80211 is too slow, is that right?
 
-Reported-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Tested-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rx.c |    3 +++
- 1 file changed, 3 insertions(+)
-
---- wireless-testing.orig/net/mac80211/rx.c	2010-08-11 14:37:13.000000000 +0200
-+++ wireless-testing/net/mac80211/rx.c	2010-08-12 13:11:17.000000000 +0200
-@@ -873,6 +873,9 @@ ieee80211_rx_h_decrypt(struct ieee80211_
- 
- 	if (!is_multicast_ether_addr(hdr->addr1) && stakey) {
- 		rx->key = stakey;
-+		if ((status->flag & RX_FLAG_DECRYPTED) &&
-+		    (status->flag & RX_FLAG_IV_STRIPPED))
-+			return RX_CONTINUE;
- 		/* Skip decryption if the frame is not protected. */
- 		if (!ieee80211_has_protected(fc))
- 			return RX_CONTINUE;
-
-
+  Luis
