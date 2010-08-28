@@ -1,50 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:56517 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751379Ab0HTDeh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Aug 2010 23:34:37 -0400
-Date: Thu, 19 Aug 2010 20:31:12 -0700
-From: Greg KH <gregkh@suse.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Jerry-RealtekFAE <jerry-chuang@realtek.com>,
-	Gauss Frank <gaussfrank@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-wireless@vger.kernel.org,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	wlanfae <wlanfae@realtek.com>,
-	Florian Schilhabel <florian.c.schilhabel@googlemail.com>
-Subject: Re: Hi,Linus Torvalds. There's a problem in r8192u driver in Linux
-	new kernel.
-Message-ID: <20100820033112.GA5821@suse.de>
-References: <AANLkTi=1NaRKc8QrQBGwU+c_17D86_Cqu9MopR_rso0H@mail.gmail.com> <AANLkTin3qXSbuWejTGJzz6cO6fycK4HqU4gn4gF1wEdp@mail.gmail.com> <20100812161907.GA25082@suse.de> <76C6BFFEAAA24679B55CBB186C084833@cnfaec24b87a3f> <20100820001531.GA2312@suse.de> <4C6DEF52.6050407@lwfinger.net>
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:39770 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752992Ab0H1RMy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Aug 2010 13:12:54 -0400
+Date: Sat, 28 Aug 2010 20:12:39 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Philip Prindeville <philipp_subx@redfish-solutions.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: Marshaling issues w/ compat-wireless-2010-08-19
+Message-ID: <20100828171239.GA23885@jm.kir.nu>
+References: <4C746F74.70401@redfish-solutions.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4C6DEF52.6050407@lwfinger.net>
+In-Reply-To: <4C746F74.70401@redfish-solutions.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 19, 2010 at 09:58:26PM -0500, Larry Finger wrote:
-> On 08/19/2010 07:15 PM, Greg KH wrote:
-> > On Mon, Aug 16, 2010 at 05:37:09PM +0800, Jerry-RealtekFAE wrote:
-> >> Dear Sir/Madam
-> >>
-> >> Please find the RTL8192U latest Linux driver in the attachment.
-> >> Please try it on Kernel 2.6.35-1 again.
-> > 
-> > Could you send patches updating the in-kernel version of this driver to
-> > your latest version?  That would help everyone out in the end.
-> 
-> I have a copy of the driver that Realtek calls the r8712 for the RTL8192 USB
-> devices. All of the dead code and the unneeded configuration sections have been
-> removed. It will be submitted to staging as soon as Realtek signs off on the
-> copyright info. For some reason, it has taken them several weeks and I still
-> have no answer. This new driver is stable - the connection stays up for days. I
-> expect that it will replace the current one in staging.
+On Tue, Aug 24, 2010 at 06:18:44PM -0700, Philip Prindeville wrote:
+>  I've got a stock Fedora Core 13 install (updated today) with the hostapd-0.6.10 rpm and hostapd-0.7.2 compiled from sources.  The NIC is a Ubiquiti SR71e (AR9280).
 
-Wonderful, that's great news.
+> (2) Some highly unlikely values from the hostapd debugging messages when parsing out WEP authentication messages (line 507):
 
-Jerry, any word on getting the copyright sign off moved along?
+> authentication: STA=f8:1e:df:1e:c2:23 auth_alg=35510 auth_transaction=79 status_code=21688 wep=1
+> Unsupported authentication algorithm (35510)
 
-thanks,
+I was unable to reproduce this with the current development tree
+snapshots. Shared key authentication worked with AR9280 and the current
+wireless-testing.git and hostap.git in my tests. If you are still seeing
+this, you could also try to disable hw crypto to remove one possible
+issue area by using nohwcrypt=1 module parameter when loading ath9k.
 
-greg k-h
+-- 
+Jouni Malinen                                            PGP id EFC895FA
