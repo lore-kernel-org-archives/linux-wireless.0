@@ -1,126 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:62079 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754409Ab0H0Q4v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 12:56:51 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 11/27] iwlwifi: move AP sta ID to context
-Date: Fri, 27 Aug 2010 09:59:39 -0700
-Message-Id: <1282928395-32762-12-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1282928395-32762-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1282928395-32762-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:45048 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752825Ab0H1QiB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Aug 2010 12:38:01 -0400
+Date: Sat, 28 Aug 2010 19:37:51 +0300
+From: Jouni Malinen <j@w1.fi>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: Add DS Parameter Set into Probe Request on 2.4
+ GHz
+Message-ID: <20100828163751.GB23426@jm.kir.nu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+IEEE Std 802.11k-2008 added DS Parameter Set information element into
+Probe Request frames as an optional information on 2.4 GHz band (and
+mandatory, if radio measurements are enabled). This allows APs to
+filter out Probe Request frames that may be received from neighboring
+overlapping channels and by doing so, reduce the number of unnecessary
+frames in the air. Make mac80211 add this IE into Probe Request frames
+whenever the channel is known (i.e., whenever hwscan is not used).
 
-Each context needs to use a different AP sta
-ID, so we need to move that into the context
-struct instead of hardcoding it.
+Signed-off-by: Jouni Malinen <j@w1.fi>
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    3 ++-
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-sta.c      |    5 +++--
- drivers/net/wireless/iwlwifi/iwl-sta.h      |    1 +
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    1 +
- 5 files changed, 8 insertions(+), 4 deletions(-)
+ net/mac80211/ieee80211_i.h |    3 ++-
+ net/mac80211/scan.c        |    3 ++-
+ net/mac80211/util.c        |   16 ++++++++++++++--
+ 3 files changed, 18 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 5e1df24..a67b04b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3585,7 +3585,7 @@ static int iwl_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	switch (cmd) {
- 	case SET_KEY:
- 		if (is_default_wep_key)
--			ret = iwl_set_default_wep_key(priv, key);
-+			ret = iwl_set_default_wep_key(priv, vif_priv->ctx, key);
- 		else
- 			ret = iwl_set_dynamic_key(priv, vif_priv->ctx,
- 						  key, sta_id);
-@@ -4208,6 +4208,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	priv->contexts[IWL_RXON_CTX_BSS].rxon_timing_cmd = REPLY_RXON_TIMING;
- 	priv->contexts[IWL_RXON_CTX_BSS].rxon_assoc_cmd = REPLY_RXON_ASSOC;
- 	priv->contexts[IWL_RXON_CTX_BSS].qos_cmd = REPLY_QOS_PARAM;
-+	priv->contexts[IWL_RXON_CTX_BSS].ap_sta_id = IWL_AP_ID;
- 	BUILD_BUG_ON(NUM_IWL_RXON_CTX != 1);
+(note: this is on top of the previous Probe Request SuppRates masking
+patch)
+
+--- uml.orig/net/mac80211/ieee80211_i.h	2010-08-28 19:30:30.000000000 +0300
++++ uml/net/mac80211/ieee80211_i.h	2010-08-28 19:34:22.000000000 +0300
+@@ -1229,7 +1229,8 @@ void ieee80211_send_auth(struct ieee8021
+ 			 const u8 *key, u8 key_len, u8 key_idx);
+ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ 			     const u8 *ie, size_t ie_len,
+-			     enum ieee80211_band band, u32 rate_mask);
++			     enum ieee80211_band band, u32 rate_mask,
++			     u8 channel);
+ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+ 			      const u8 *ssid, size_t ssid_len,
+ 			      const u8 *ie, size_t ie_len);
+--- uml.orig/net/mac80211/scan.c	2010-08-28 19:30:30.000000000 +0300
++++ uml/net/mac80211/scan.c	2010-08-28 19:34:22.000000000 +0300
+@@ -243,7 +243,8 @@ static bool ieee80211_prep_hw_scan(struc
+ 	local->hw_scan_req->n_channels = n_chans;
  
- 	SET_IEEE80211_DEV(hw, &pdev->dev);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index a332ec5..d1400a0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -1129,7 +1129,7 @@ struct iwl_rxon_context {
+ 	ielen = ieee80211_build_preq_ies(local, (u8 *)local->hw_scan_req->ie,
+-					 req->ie, req->ie_len, band, (u32) -1);
++					 req->ie, req->ie_len, band, (u32) -1,
++					 0);
+ 	local->hw_scan_req->ie_len = ielen;
  
- 	struct iwl_qos_info qos_data;
+ 	return true;
+--- uml.orig/net/mac80211/util.c	2010-08-28 19:30:30.000000000 +0300
++++ uml/net/mac80211/util.c	2010-08-28 19:34:22.000000000 +0300
+@@ -904,7 +904,8 @@ void ieee80211_send_auth(struct ieee8021
  
--	u8 bcast_sta_id;
-+	u8 bcast_sta_id, ap_sta_id;
- 
- 	u8 rxon_cmd, rxon_assoc_cmd, rxon_timing_cmd;
- 	u8 qos_cmd;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index 2923562..f5500cc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -236,7 +236,7 @@ static u8 iwl_prep_station(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
- 	u16 rate;
- 
- 	if (is_ap)
--		sta_id = IWL_AP_ID;
-+		sta_id = ctx->ap_sta_id;
- 	else if (is_broadcast_ether_addr(addr))
- 		sta_id = ctx->bcast_sta_id;
- 	else
-@@ -810,6 +810,7 @@ int iwl_remove_default_wep_key(struct iwl_priv *priv,
- EXPORT_SYMBOL(iwl_remove_default_wep_key);
- 
- int iwl_set_default_wep_key(struct iwl_priv *priv,
-+			    struct iwl_rxon_context *ctx,
- 			    struct ieee80211_key_conf *keyconf)
+ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ 			     const u8 *ie, size_t ie_len,
+-			     enum ieee80211_band band, u32 rate_mask)
++			     enum ieee80211_band band, u32 rate_mask,
++			     u8 channel)
  {
- 	int ret;
-@@ -824,7 +825,7 @@ int iwl_set_default_wep_key(struct iwl_priv *priv,
+ 	struct ieee80211_supported_band *sband;
+ 	u8 *pos;
+@@ -956,6 +957,12 @@ int ieee80211_build_preq_ies(struct ieee
+ 		pos += ext_rates_len;
+ 	}
  
- 	keyconf->flags &= ~IEEE80211_KEY_FLAG_GENERATE_IV;
- 	keyconf->hw_key_idx = HW_KEY_DEFAULT;
--	priv->stations[IWL_AP_ID].keyinfo.cipher = keyconf->cipher;
-+	priv->stations[ctx->ap_sta_id].keyinfo.cipher = keyconf->cipher;
++	if (channel && sband->band == IEEE80211_BAND_2GHZ) {
++		*pos++ = WLAN_EID_DS_PARAMS;
++		*pos++ = 1;
++		*pos++ = channel;
++	}
++
+ 	/* insert custom IEs that go before HT */
+ 	if (ie && ie_len) {
+ 		static const u8 before_ht[] = {
+@@ -1022,6 +1029,7 @@ void ieee80211_send_probe_req(struct iee
+ 	struct ieee80211_mgmt *mgmt;
+ 	size_t buf_len;
+ 	u8 *buf;
++	u8 chan;
  
- 	priv->wep_keys[keyconf->keyidx].key_size = keyconf->keylen;
- 	memcpy(&priv->wep_keys[keyconf->keyidx].key, &keyconf->key,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
-index 269a3ed..b7f7006 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.h
-@@ -46,6 +46,7 @@
- int iwl_remove_default_wep_key(struct iwl_priv *priv,
- 			       struct ieee80211_key_conf *key);
- int iwl_set_default_wep_key(struct iwl_priv *priv,
-+			    struct iwl_rxon_context *ctx,
- 			    struct ieee80211_key_conf *key);
- int iwl_restore_default_wep_keys(struct iwl_priv *priv);
- int iwl_set_dynamic_key(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 6b56295..29d1376 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -4021,6 +4021,7 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 	priv->contexts[IWL_RXON_CTX_BSS].rxon_timing_cmd = REPLY_RXON_TIMING;
- 	priv->contexts[IWL_RXON_CTX_BSS].rxon_assoc_cmd = REPLY_RXON_ASSOC;
- 	priv->contexts[IWL_RXON_CTX_BSS].qos_cmd = REPLY_QOS_PARAM;
-+	priv->contexts[IWL_RXON_CTX_BSS].ap_sta_id = IWL_AP_ID;
+ 	/* FIXME: come up with a proper value */
+ 	buf = kmalloc(200 + ie_len, GFP_KERNEL);
+@@ -1031,10 +1039,14 @@ void ieee80211_send_probe_req(struct iee
+ 		return;
+ 	}
  
- 	/*
- 	 * Disabling hardware scan means that mac80211 will perform scans
--- 
-1.7.0.4
++	chan = ieee80211_frequency_to_channel(
++		local->hw.conf.channel->center_freq);
++
+ 	buf_len = ieee80211_build_preq_ies(local, buf, ie, ie_len,
+ 					   local->hw.conf.channel->band,
+ 					   sdata->rc_rateidx_mask
+-					   [local->hw.conf.channel->band]);
++					   [local->hw.conf.channel->band],
++					   chan);
+ 
+ 	skb = ieee80211_probereq_get(&local->hw, &sdata->vif,
+ 				     ssid, ssid_len,
 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
