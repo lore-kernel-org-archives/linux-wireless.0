@@ -1,122 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:37587 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756148Ab0HCQOO convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:59112 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752409Ab0H1U5v convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Aug 2010 12:14:14 -0400
+	Sat, 28 Aug 2010 16:57:51 -0400
+Received: by iwn5 with SMTP id 5so3640288iwn.19
+        for <linux-wireless@vger.kernel.org>; Sat, 28 Aug 2010 13:57:50 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1280850203-5532-1-git-send-email-segooon@gmail.com>
-References: <1280850203-5532-1-git-send-email-segooon@gmail.com>
-Date: Tue, 3 Aug 2010 18:14:11 +0200
-Message-ID: <AANLkTinzvwP74oNaS+mWRnostnGrZZ-iY2SsjMzo=CW4@mail.gmail.com>
-Subject: Re: [PATCH 06/11] rt2x00: do not use PCI resources before
-	pci_enable_device()
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Kulikov Vasiliy <segooon@gmail.com>
-Cc: kernel-janitors@vger.kernel.org, Ivo van Doorn <IvDoorn@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Alban Browaeys <prahal@yahoo.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <4C782DB0.4060800@hauke-m.de>
+References: <1282934453-18093-1-git-send-email-hauke@hauke-m.de> <4C782DB0.4060800@hauke-m.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Sat, 28 Aug 2010 13:57:20 -0700
+Message-ID: <AANLkTinPuGWQ85RO8=EOTeTngjzC2KvgoXxRP8qux0-Z@mail.gmail.com>
+Subject: Re: [PATCH 0/7] compat-wireless: add support for kernel 2.6.24 and 2.6.25
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 3, 2010 at 5:43 PM, Kulikov Vasiliy <segooon@gmail.com> wrote:
-> IRQ and resource[] may not have correct values until
-> after PCI hotplug setup occurs at pci_enable_device() time.
+On Fri, Aug 27, 2010 at 2:27 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> Am 27.08.2010 20:40, schrieb Hauke Mehrtens:
+>> This series fixes some problems when compiling compat-wireless against
+>> kernel 2.6.24 or 2.6.25. Now this should work for every driver selected
+>> by default.
+>> "add ifdefs into compat_autoconf.h" extends gen-compat-autoconf.sh to
+>> handle some ifdef in config.mk.
+>>
+>> This was compile tested with kernel 2.6.24 to 2.6.36.
+>>
+>> Hauke Mehrtens (7):
+>> Â  compat-wireless: do not use needed_headroom
+>> Â  compat-wireless: fix patch stile.
+>> Â  compat-wireless: remove linux/gpio.h include
+>> Â  compat-wireless: multiple changes to config file
+>> Â  compat-wireless: rename CONFIG_IWLWIFI config symbol
+>> Â  compat-wireless: add ifdefs into compat_autoconf.h
+>> Â  compat-wireless: add support for kernel 2.6.24
 >
-> The semantic match that finds this problem is as follows:
->
-> // <smpl>
-> @@
-> identifier x;
-> identifier request ~= "pci_request.*|pci_resource.*";
-> @@
->
-> (
-> * x->irq
-> |
-> * x->resource
-> |
-> * request(x, ...)
-> )
->  ...
-> *pci_enable_device(x)
-> // </smpl>
->
-> Signed-off-by: Kulikov Vasiliy <segooon@gmail.com>
+> These patches and the patch for compat should also go into stable. I
+> have tested then with origin/linux-2.6.36.y and they also worked on that
+> branch.
 
-Good catch.
+Awesome thanks, all applied cleanly on the 2.6.36.y branch except the
+iwlwifi one but I manged that. Merged and pushed.
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-
-> ---
->  drivers/net/wireless/rt2x00/rt2x00pci.c |   21 ++++++++++-----------
->  1 files changed, 10 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
-> index 19b262e..63c2cc4 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
-> @@ -240,16 +240,16 @@ int rt2x00pci_probe(struct pci_dev *pci_dev, const struct pci_device_id *id)
->        struct rt2x00_dev *rt2x00dev;
->        int retval;
->
-> -       retval = pci_request_regions(pci_dev, pci_name(pci_dev));
-> +       retval = pci_enable_device(pci_dev);
->        if (retval) {
-> -               ERROR_PROBE("PCI request regions failed.\n");
-> +               ERROR_PROBE("Enable device failed.\n");
->                return retval;
->        }
->
-> -       retval = pci_enable_device(pci_dev);
-> +       retval = pci_request_regions(pci_dev, pci_name(pci_dev));
->        if (retval) {
-> -               ERROR_PROBE("Enable device failed.\n");
-> -               goto exit_release_regions;
-> +               ERROR_PROBE("PCI request regions failed.\n");
-> +               goto exit_disable_device;
->        }
->
->        pci_set_master(pci_dev);
-> @@ -260,14 +260,14 @@ int rt2x00pci_probe(struct pci_dev *pci_dev, const struct pci_device_id *id)
->        if (dma_set_mask(&pci_dev->dev, DMA_BIT_MASK(32))) {
->                ERROR_PROBE("PCI DMA not supported.\n");
->                retval = -EIO;
-> -               goto exit_disable_device;
-> +               goto exit_release_regions;
->        }
->
->        hw = ieee80211_alloc_hw(sizeof(struct rt2x00_dev), ops->hw);
->        if (!hw) {
->                ERROR_PROBE("Failed to allocate hardware.\n");
->                retval = -ENOMEM;
-> -               goto exit_disable_device;
-> +               goto exit_release_regions;
->        }
->
->        pci_set_drvdata(pci_dev, hw);
-> @@ -300,13 +300,12 @@ exit_free_reg:
->  exit_free_device:
->        ieee80211_free_hw(hw);
->
-> -exit_disable_device:
-> -       if (retval != -EBUSY)
-> -               pci_disable_device(pci_dev);
-> -
->  exit_release_regions:
->        pci_release_regions(pci_dev);
->
-> +exit_disable_device:
-> +       pci_disable_device(pci_dev);
-> +
->        pci_set_drvdata(pci_dev, NULL);
->
->        return retval;
-> --
-> 1.7.0.4
->
->
+ Luis
