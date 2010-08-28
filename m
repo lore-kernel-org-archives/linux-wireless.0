@@ -1,48 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:35179 "EHLO mga02.intel.com"
+Received: from nbd.name ([88.198.39.176]:50843 "EHLO ds10.nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751360Ab0HRQxk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Aug 2010 12:53:40 -0400
-From: "Berg, Johannes" <johannes.berg@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>
-Date: Wed, 18 Aug 2010 17:53:34 +0100
-Subject: RE: [PATCH 2/2] iwlwifi: do not spuriously call
- ieee80211_scan_completed
-Message-ID: <C5C86A19469DAE48AAAD0E5F3716E44501CB7CD0C6@irsmsx504.ger.corp.intel.com>
-References: <1282149322-17928-1-git-send-email-wey-yi.w.guy@intel.com>
- <1282149322-17928-3-git-send-email-wey-yi.w.guy@intel.com>
- <20100818164405.GA2793@tuxdriver.com>
-In-Reply-To: <20100818164405.GA2793@tuxdriver.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1752089Ab0H1QVa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Aug 2010 12:21:30 -0400
+Message-ID: <4C793781.1000809@openwrt.org>
+Date: Sat, 28 Aug 2010 18:21:21 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH] ath9k: fix spurious MIC failure reports
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > When a scan is aborted because the corresponding
-> > virtual interface is removed, we may still later
-> > attempt to tell mac80211 that the scan completed.
-> > This is obviously wrong, since we already told it
-> > that it was aborted, so don't do that.
+According to the hardware documentation, the MIC failure bit is only
+valid if the frame was decrypted using a valid TKIP key and is not a
+fragment.
+In some setups I've seen hardware-reported MIC failures on an AP that
+was configured for CCMP only, so it's clear that additional checks are
+necessary.
 
-
-> Does this really qualify as a fix for 2.6.36?  Is it a regression?
-> Does it generate an oops?  Or loss of connectivity?
-
-It only creates a spurious warning.
-
-johannes
---------------------------------------------------------------------------------------
-Intel GmbH
-Dornacher Strasse 1
-85622 Feldkirchen/Muenchen, Deutschland 
-Sitz der Gesellschaft: Feldkirchen bei Muenchen
-Geschaeftsfuehrer: Douglas Lusk, Peter Gleissner, Hannes Schwaderer
-Registergericht: Muenchen HRB 47456 
-Ust.-IdNr./VAT Registration No.: DE129385895
-Citibank Frankfurt a.M. (BLZ 502 109 00) 600119052
-
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc: stable@kernel.org
+---
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -119,6 +119,7 @@ struct ath_common {
+ 
+ 	u32 keymax;
+ 	DECLARE_BITMAP(keymap, ATH_KEYMAX);
++	DECLARE_BITMAP(tkip_keymap, ATH_KEYMAX);
+ 	u8 splitmic;
+ 
+ 	struct ath_regulatory regulatory;
+--- a/drivers/net/wireless/ath/ath9k/common.c
++++ b/drivers/net/wireless/ath/ath9k/common.c
+@@ -366,9 +366,13 @@ int ath9k_cmn_key_config(struct ath_comm
+ 	set_bit(idx, common->keymap);
+ 	if (key->alg == ALG_TKIP) {
+ 		set_bit(idx + 64, common->keymap);
++		set_bit(idx, common->tkip_keymap);
++		set_bit(idx + 64, common->tkip_keymap);
+ 		if (common->splitmic) {
+ 			set_bit(idx + 32, common->keymap);
+ 			set_bit(idx + 64 + 32, common->keymap);
++			set_bit(idx + 32, common->tkip_keymap);
++			set_bit(idx + 64 + 32, common->tkip_keymap);
+ 		}
+ 	}
+ 
+@@ -393,10 +397,17 @@ void ath9k_cmn_key_delete(struct ath_com
+ 		return;
+ 
+ 	clear_bit(key->hw_key_idx + 64, common->keymap);
++
++	clear_bit(key->hw_key_idx, common->tkip_keymap);
++	clear_bit(key->hw_key_idx + 64, common->tkip_keymap);
++
+ 	if (common->splitmic) {
+ 		ath9k_hw_keyreset(ah, key->hw_key_idx + 32);
+ 		clear_bit(key->hw_key_idx + 32, common->keymap);
+ 		clear_bit(key->hw_key_idx + 64 + 32, common->keymap);
++
++		clear_bit(key->hw_key_idx + 32, common->tkip_keymap);
++		clear_bit(key->hw_key_idx + 64 + 32, common->tkip_keymap);
+ 	}
+ }
+ EXPORT_SYMBOL(ath9k_cmn_key_delete);
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -870,15 +870,18 @@ static bool ath9k_rx_accept(struct ath_c
+ 		if (rx_stats->rs_status & ATH9K_RXERR_DECRYPT) {
+ 			*decrypt_error = true;
+ 		} else if (rx_stats->rs_status & ATH9K_RXERR_MIC) {
+-			if (ieee80211_is_ctl(fc))
+-				/*
+-				 * Sometimes, we get invalid
+-				 * MIC failures on valid control frames.
+-				 * Remove these mic errors.
+-				 */
+-				rx_stats->rs_status &= ~ATH9K_RXERR_MIC;
+-			else
++			/*
++			 * The MIC error bit is only valid if the frame
++			 * is not a control frame or fragment, and it was
++			 * decrypted using a valid TKIP key.
++			 */
++			if (!ieee80211_is_ctl(fc) &&
++			    !ieee80211_has_morefrags(fc) &&
++			    !(le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG) &&
++			    test_bit(rx_stats->rs_keyix, common->tkip_keymap))
+ 				rxs->flag |= RX_FLAG_MMIC_ERROR;
++			else
++				rx_stats->rs_status &= ~ATH9K_RXERR_MIC;
+ 		}
+ 		/*
+ 		 * Reject error frames with the exception of
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -711,7 +711,8 @@ int ath9k_hw_rxprocdesc(struct ath_hw *a
+ 			rs->rs_phyerr = phyerr;
+ 		} else if (ads.ds_rxstatus8 & AR_DecryptCRCErr)
+ 			rs->rs_status |= ATH9K_RXERR_DECRYPT;
+-		else if (ads.ds_rxstatus8 & AR_MichaelErr)
++		else if ((ads.ds_rxstatus8 & AR_MichaelErr) &&
++		         rs->rs_keyix != ATH9K_RXKEYIX_INVALID)
+ 			rs->rs_status |= ATH9K_RXERR_MIC;
+ 		else if (ads.ds_rxstatus8 & AR_KeyMiss)
+ 			rs->rs_status |= ATH9K_RXERR_DECRYPT;
