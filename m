@@ -1,118 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50496 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751662Ab0H3Ir4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Aug 2010 04:47:56 -0400
-Subject: Re: [PATCH] wireless: fix 64K kernel heap content leak via ioctl
-From: Johannes Berg <johannes@sipsolutions.net>
-To: jt@hpl.hp.com
-Cc: Kees Cook <kees.cook@canonical.com>, linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
+Received: from mgw2.diku.dk ([130.225.96.92]:42079 "EHLO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752376Ab0H1PlV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Aug 2010 11:41:21 -0400
+From: Julia Lawall <julia@diku.dk>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: kernel-janitors@vger.kernel.org,
 	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-In-Reply-To: <20100827212254.GB32275@bougret.hpl.hp.com>
-References: <20100827210240.GC4703@outflux.net>
-	 <20100827212254.GB32275@bougret.hpl.hp.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 30 Aug 2010 10:47:38 +0200
-Message-ID: <1283158058.3691.10.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 7/7] net/wireless: Remove double test
+Date: Sat, 28 Aug 2010 17:41:06 +0200
+Message-Id: <1283010066-20935-8-git-send-email-julia@diku.dk>
+In-Reply-To: <1283010066-20935-1-git-send-email-julia@diku.dk>
+References: <1283010066-20935-1-git-send-email-julia@diku.dk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-08-27 at 14:22 -0700, Jean Tourrilhes wrote:
+The same expression is tested twice and the result is the same each time.
 
-> 	Would you mind validating the following patch ? I've just
-> verified that it compiles and I believe it does what you are asking in
-> a much more predictable way.
-> 	Regards,
+The sematic match that finds this problem is as follows:
+(http://coccinelle.lip6.fr/)
 
+// <smpl>
+@expression@
+expression E;
+@@
 
-> @@ -800,9 +800,12 @@ static int ioctl_standard_iw_point(struc
->                         goto out;
->                 }
->  
-> -               if (copy_to_user(iwp->pointer, extra,
-> -                                iwp->length *
-> -                                descr->token_size)) {
-> +               /* Verify how much we should return. Some driver
-> +                * may abuse iwp->length... */
-> +               if((iwp->length * descr->token_size) < extra_size)
-> +                       extra_size = iwp->length * descr->token_size;
-> +
-> +               if (copy_to_user(iwp->pointer, extra, extra_size)) {
->                         err = -EFAULT;
->                         goto out;
+(
+* E
+  || ... || E
+|
+* E
+  && ... && E
+)
+// </smpl>
 
-Based on the code _before_ this hunk, I believe this patch to be wrong
-(the goto out matches):
-
-        /* If we have something to return to the user */
-        if (!err && IW_IS_GET(cmd)) {
-                /* Check if there is enough buffer up there */
-                if (user_length < iwp->length) {
-                        err = -E2BIG;
-                        goto out;
-                }
-
-Thus, apparently drivers were intended to be allowed to return more
-information than userspace had allocated space for (which also matches
-the initial extra_size calculation in this function), so your comment is
-wrong, and your check is also wrong because you actually put the burden
-on the driver, contrary to the apparent intention of this code.
-
-I believe the below patch is a much better fix as it allows the -E2BIG
-code path to be invoked which is more informative to users than
-truncated information (which, in your code, may even be truncated in the
-middle of a token!!)
-
-johannes
+Signed-off-by: Julia Lawall <julia@diku.dk>
 
 ---
- net/wireless/wext-core.c |   23 ++++++++++-------------
- 1 file changed, 10 insertions(+), 13 deletions(-)
+ net/wireless/wext-core.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---- wireless-testing.orig/net/wireless/wext-core.c	2010-08-30 10:35:33.000000000 +0200
-+++ wireless-testing/net/wireless/wext-core.c	2010-08-30 10:46:45.000000000 +0200
-@@ -738,26 +738,23 @@ static int ioctl_standard_iw_point(struc
- 		/* Save user space buffer size for checking */
- 		user_length = iwp->length;
+diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
+index 0ef17bc..4038593 100644
+--- a/net/wireless/wext-core.c
++++ b/net/wireless/wext-core.c
+@@ -611,7 +611,7 @@ struct iw_statistics *get_wireless_stats(struct net_device *dev)
+ #endif
  
--		/* Don't check if user_length > max to allow forward
--		 * compatibility. The test user_length < min is
--		 * implied by the test at the end.
--		 */
--
- 		/* Support for very large requests */
--		if ((descr->flags & IW_DESCR_FLAG_NOMAX) &&
--		    (user_length > descr->max_tokens)) {
-+		if (descr->flags & IW_DESCR_FLAG_NOMAX) {
- 			/* Allow userspace to GET more than max so
- 			 * we can support any size GET requests.
--			 * There is still a limit : -ENOMEM.
--			 */
--			extra_size = user_length * descr->token_size;
--
--			/* Note : user_length is originally a __u16,
-+			 * There is still a limit: 64k records of
-+			 * token_size (since a u16 is used).
-+			 *
-+			 * Note: user_length is originally a u16,
- 			 * and token_size is controlled by us,
- 			 * so extra_size won't get negative and
- 			 * won't overflow...
- 			 */
--		}
-+			if (user_length > descr->max_tokens) {
-+				extra_size = user_length * descr->token_size;
-+		} else
-+			user_length = min_t(int, user_length,
-+						 descr->max_tokens);
- 	}
- 
- 	/* kzalloc() ensures NULL-termination for essid_compat. */
-
+ #ifdef CONFIG_CFG80211_WEXT
+-	if (dev->ieee80211_ptr && dev->ieee80211_ptr &&
++	if (dev->ieee80211_ptr &&
+ 	    dev->ieee80211_ptr->wiphy &&
+ 	    dev->ieee80211_ptr->wiphy->wext &&
+ 	    dev->ieee80211_ptr->wiphy->wext->get_wireless_stats)
 
