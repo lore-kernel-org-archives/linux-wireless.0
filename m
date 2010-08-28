@@ -1,46 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:57819 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750817Ab0HTC5a (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:58520 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751925Ab0H1HNL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Aug 2010 22:57:30 -0400
-Received: by gwj17 with SMTP id 17so1039248gwj.19
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Aug 2010 19:57:30 -0700 (PDT)
-Message-ID: <4C6DEF52.6050407@lwfinger.net>
-Date: Thu, 19 Aug 2010 21:58:26 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Greg KH <gregkh@suse.de>
-CC: Jerry-RealtekFAE <jerry-chuang@realtek.com>,
-	Gauss Frank <gaussfrank@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-wireless@vger.kernel.org,
-	Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
-	wlanfae <wlanfae@realtek.com>,
-	Florian Schilhabel <florian.c.schilhabel@googlemail.com>
-Subject: Re: Hi,Linus Torvalds. There's a problem in r8192u driver in Linux
- new kernel.
-References: <AANLkTi=1NaRKc8QrQBGwU+c_17D86_Cqu9MopR_rso0H@mail.gmail.com> <AANLkTin3qXSbuWejTGJzz6cO6fycK4HqU4gn4gF1wEdp@mail.gmail.com> <20100812161907.GA25082@suse.de> <76C6BFFEAAA24679B55CBB186C084833@cnfaec24b87a3f> <20100820001531.GA2312@suse.de>
-In-Reply-To: <20100820001531.GA2312@suse.de>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 28 Aug 2010 03:13:11 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, amod.bodas@atheros.com,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [RFC 1/3] ath9k: fix regression which disabled ps on ath9k on all cards
+Date: Sat, 28 Aug 2010 03:13:08 -0400
+Message-Id: <1282979590-31113-2-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1282979590-31113-1-git-send-email-lrodriguez@atheros.com>
+References: <1282979590-31113-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/19/2010 07:15 PM, Greg KH wrote:
-> On Mon, Aug 16, 2010 at 05:37:09PM +0800, Jerry-RealtekFAE wrote:
->> Dear Sir/Madam
->>
->> Please find the RTL8192U latest Linux driver in the attachment.
->> Please try it on Kernel 2.6.35-1 again.
-> 
-> Could you send patches updating the in-kernel version of this driver to
-> your latest version?  That would help everyone out in the end.
+The patch titled "ath9k: Add new file init.c" shuffled some code
+around but in dong so for some reason also removed the revision
+check for disablign power save. Add this revision check again
+so we can get power save re-enabled again by default on cards
+newer than AR5416 and AR5418.
 
-I have a copy of the driver that Realtek calls the r8712 for the RTL8192 USB
-devices. All of the dead code and the unneeded configuration sections have been
-removed. It will be submitted to staging as soon as Realtek signs off on the
-copyright info. For some reason, it has taken them several weeks and I still
-have no answer. This new driver is stable - the connection stays up for days. I
-expect that it will replace the current one in staging.
+$ git describe --contains 556242049cc3992d0ee625e9f15c4b00ea4baac8
+v2.6.34-rc1~233^2~49^2~343
 
-Larry
+Before on all cards:
+
+$ iw dev wlan39 get power_save
+Power save: off
+
+Cc: Amod Bodas <amod.bodas@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/init.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 243c177..4129390 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -641,7 +641,8 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 		BIT(NL80211_IFTYPE_ADHOC) |
+ 		BIT(NL80211_IFTYPE_MESH_POINT);
+ 
+-	hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
++	if (AR_SREV_5416(sc->sc_ah))
++		hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
+ 
+ 	hw->queues = 4;
+ 	hw->max_rates = 4;
+-- 
+1.7.0.4
+
