@@ -1,85 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:58861 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753084Ab0HPXx7 (ORCPT
+Received: from liberdade2.minaslivre.org ([74.50.53.203]:58610 "EHLO
+	liberdade.minaslivre.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750830Ab0H1Fyq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Aug 2010 19:53:59 -0400
-Received: by gwj17 with SMTP id 17so1155795gwj.19
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Aug 2010 16:53:59 -0700 (PDT)
-Message-ID: <4C69CF85.2020809@lwfinger.net>
-Date: Mon, 16 Aug 2010 18:53:41 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Chris Vine <chris@cvine.freeserve.co.uk>
-CC: =?UTF-8?B?R8OhYm9yIFN0ZWZhbmlr?= <netrolller.3d@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: [RFT] BCM4312 users with DMA errors, please test!
-References: <AANLkTimMhW7OX3DT7A3EDNaOnr577KmTv5w9C_mz19TG@mail.gmail.com>	<20100816204154.5100b604@boulder.homenet> <20100816233544.40f0e1d4@boulder.homenet>
-In-Reply-To: <20100816233544.40f0e1d4@boulder.homenet>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 28 Aug 2010 01:54:46 -0400
+From: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+To: linux-wireless@vger.kernel.org
+Cc: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Rogerio Luz Coelho <rogluz.news@gmail.com>,
+	Herton Ronaldo Krzesinski <herton@mandriva.com.br>,
+	Hin-Tak Leung <hintak.leung@gmail.com>
+Subject: [PATCH] rtl8187b: do not do per packet TX AGC
+Date: Sat, 28 Aug 2010 02:54:28 -0300
+Message-Id: <1282974868-22237-1-git-send-email-cascardo@holoscopio.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/16/2010 05:35 PM, Chris Vine wrote:
-> On Mon, 16 Aug 2010 20:41:54 +0100
-> Chris Vine <chris@cvine.freeserve.co.uk> wrote:
-> 
->> On Mon, 16 Aug 2010 19:59:36 +0200
->> Gábor Stefanik <netrolller.3d@gmail.com> wrote:
->>> Hello Everyone!
->>>
->>> If you are experiencing DMA errors on a BCM4312, please test the
->>> attached patch. It implements the PCI-E SERDES workaround, which the
->>> hybrid driver is applying during early init to LP-PHY cards, and
->>> which is a good candidate for the cause of the DMA error.
->>> Note that this is not a final patch & it may cause collateral damage
->>> for non-4312 cards; if it helps the 4312 problem, I will submit a
->>> cleaned-up version.
->>
->> This applies to 2.6.35.2, but does not compile:
->>
->> drivers/ssb/driver_pcicore.c: In function 'ssb_pcie_mdio_set_block':
->> drivers/ssb/driver_pcicore.c:457: error: 'i' undeclared (first use in
->> this function) drivers/ssb/driver_pcicore.c:457: error: (Each
->> undeclared identifier is reported only once
->> drivers/ssb/driver_pcicore.c:457: error: for each function it appears
->> in.) drivers/ssb/driver_pcicore.c: In function 'ssb_pcie_mdio_read':
->> drivers/ssb/driver_pcicore.c:503: error: expected ';' before
->> 'pcicore_write32'
->>
->> With the obvious fixes (providing a variable 'i' of int type as the
->> count variable and terminating the line which had no terminating
->> semi-colon), it compiled OK and the first time I booted up, booted up
->> OK but didn't fix the DMA error.  Subsequent attempts to boot up gave
->> me a slew of errors on boot up so I am not sure what is going on
->> there.
->>
->> You might want to check that the obvious fixes to the patch are
->> complete.
-> 
-> I have more or less tracked down what is happening.
-> 
-> The first thing to report is that this does not fix the DMA error.
-> 
-> The second thing is that with the patch applied, and with _all_
-> wireless/ssb modules blacklisted (ssb, b43, wl), if the wl module is
-> present the kernel bizarrely still tries to load it on boot up and
-> shortly thereafter hangs with a number of errors reported, which differ
-> on different boots (there is no particular pattern to them). That in
-> turn causes some file system corruption which affects further boots
-> even if the wl module is removed.  The corruption is not that serious
-> and appears only to affect the kernel image and/or the wl module.
-> Reinstalling both solved the problem, so far.  ef2fsck -f only reported
-> that the time stamps were wrong, but inodes and directory structures
-> were reported as OK.
-> 
-> But caveat testor so far as the corruption is concerned.  I might have
-> been lucky.
+The code for rtl8187 does not do per packet TX AGC. Resetting the per
+packet TX AGC for rtl8187b appears to increase its overall TX power.
+This allows the device to associate and a connection be established
+using APs a little further away.
 
-I tried to duplicate your boot problems without anything unexpected happening.
+Tested-by: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+Signed-off-by: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Rogerio Luz Coelho <rogluz.news@gmail.com>
+Cc: Herton Ronaldo Krzesinski <herton@mandriva.com.br>
+Cc: Hin-Tak Leung <hintak.leung@gmail.com>
+---
+ drivers/net/wireless/rtl818x/rtl8187_dev.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
 
-I don't know what happened, but I doubt that this ssb patch was responsible.
-
-Larry
+diff --git a/drivers/net/wireless/rtl818x/rtl8187_dev.c b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+index 38fa824..6e26149 100644
+--- a/drivers/net/wireless/rtl818x/rtl8187_dev.c
++++ b/drivers/net/wireless/rtl818x/rtl8187_dev.c
+@@ -775,10 +775,6 @@ static int rtl8187b_init_hw(struct ieee80211_hw *dev)
+ 	reg = rtl818x_ioread8(priv, &priv->map->CW_CONF);
+ 	reg |= RTL818X_CW_CONF_PERPACKET_RETRY_SHIFT;
+ 	rtl818x_iowrite8(priv, &priv->map->CW_CONF, reg);
+-	reg = rtl818x_ioread8(priv, &priv->map->TX_AGC_CTL);
+-	reg |= RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT |
+-	       RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT;
+-	rtl818x_iowrite8(priv, &priv->map->TX_AGC_CTL, reg);
+ 
+ 	rtl818x_iowrite16_idx(priv, (__le16 *)0xFFE0, 0x0FFF, 1);
+ 
+@@ -929,6 +925,12 @@ static int rtl8187_start(struct ieee80211_hw *dev)
+ 		priv->rx_conf = reg;
+ 		rtl818x_iowrite32(priv, &priv->map->RX_CONF, reg);
+ 
++		reg = rtl818x_ioread8(priv, &priv->map->TX_AGC_CTL);
++		reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_GAIN_SHIFT;
++		reg &= ~RTL818X_TX_AGC_CTL_PERPACKET_ANTSEL_SHIFT;
++		reg &= ~RTL818X_TX_AGC_CTL_FEEDBACK_ANT;
++		rtl818x_iowrite8(priv, &priv->map->TX_AGC_CTL, reg);
++
+ 		rtl818x_iowrite32(priv, &priv->map->TX_CONF,
+ 				  RTL818X_TX_CONF_HW_SEQNUM |
+ 				  RTL818X_TX_CONF_DISREQQSIZE |
+-- 
+1.7.1
 
