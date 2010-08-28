@@ -1,49 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:34774 "EHLO
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:57991 "EHLO
 	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752892Ab0H0TVX (ORCPT
+	by vger.kernel.org with ESMTP id S1752089Ab0H1QgZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 15:21:23 -0400
-Date: Fri, 27 Aug 2010 22:21:13 +0300
+	Sat, 28 Aug 2010 12:36:25 -0400
+Date: Sat, 28 Aug 2010 19:36:10 +0300
 From: Jouni Malinen <j@w1.fi>
 To: "John W. Linville" <linville@tuxdriver.com>,
 	Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Fix signal strength average initialization for
- CQM events
-Message-ID: <20100827192113.GA28502@jm.kir.nu>
+Subject: [PATCH] mac80211: Filter ProbeReq SuppRates based on TX rate mask
+Message-ID: <20100828163610.GA23426@jm.kir.nu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ave_beacon_signal value uses 1/16 dB unit and as such, must be
-initialized with the signal level of the first Beacon frame multiplied
-by 16. This fixes an issue where the initial CQM events are reported
-incorrectly with a burst of events while the running average
-approaches the correct value after the incorrect initialization. This
-could cause user space -based roaming decision process to get quite
-confused at the moment when we would like to go through authentication
-and DHCP.
+If the TX rate set has been masked, the removed rates can also be
+removed from the Supported Rates and Extended Supported Rates IEs in
+Probe Request frames.
 
-Cc: stable@kernel.org
 Signed-off-by: Jouni Malinen <j@w1.fi>
 
 ---
- net/mac80211/mlme.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/mac80211/ieee80211_i.h |    2 +-
+ net/mac80211/scan.c        |    2 +-
+ net/mac80211/util.c        |   37 ++++++++++++++++++++++---------------
+ 3 files changed, 24 insertions(+), 17 deletions(-)
 
---- wireless-testing.orig/net/mac80211/mlme.c	2010-08-27 15:48:14.000000000 +0300
-+++ wireless-testing/net/mac80211/mlme.c	2010-08-27 21:43:54.000000000 +0300
-@@ -1548,7 +1548,7 @@ static void ieee80211_rx_mgmt_beacon(str
- 	ifmgd->last_beacon_signal = rx_status->signal;
- 	if (ifmgd->flags & IEEE80211_STA_RESET_SIGNAL_AVE) {
- 		ifmgd->flags &= ~IEEE80211_STA_RESET_SIGNAL_AVE;
--		ifmgd->ave_beacon_signal = rx_status->signal;
-+		ifmgd->ave_beacon_signal = rx_status->signal * 16;
- 		ifmgd->last_cqm_event_signal = 0;
- 	} else {
- 		ifmgd->ave_beacon_signal =
+--- uml.orig/net/mac80211/ieee80211_i.h	2010-08-28 19:28:43.000000000 +0300
++++ uml/net/mac80211/ieee80211_i.h	2010-08-28 19:30:30.000000000 +0300
+@@ -1229,7 +1229,7 @@ void ieee80211_send_auth(struct ieee8021
+ 			 const u8 *key, u8 key_len, u8 key_idx);
+ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ 			     const u8 *ie, size_t ie_len,
+-			     enum ieee80211_band band);
++			     enum ieee80211_band band, u32 rate_mask);
+ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
+ 			      const u8 *ssid, size_t ssid_len,
+ 			      const u8 *ie, size_t ie_len);
+--- uml.orig/net/mac80211/scan.c	2010-08-28 19:28:43.000000000 +0300
++++ uml/net/mac80211/scan.c	2010-08-28 19:30:30.000000000 +0300
+@@ -243,7 +243,7 @@ static bool ieee80211_prep_hw_scan(struc
+ 	local->hw_scan_req->n_channels = n_chans;
+ 
+ 	ielen = ieee80211_build_preq_ies(local, (u8 *)local->hw_scan_req->ie,
+-					 req->ie, req->ie_len, band);
++					 req->ie, req->ie_len, band, (u32) -1);
+ 	local->hw_scan_req->ie_len = ielen;
+ 
+ 	return true;
+--- uml.orig/net/mac80211/util.c	2010-08-28 19:28:43.000000000 +0300
++++ uml/net/mac80211/util.c	2010-08-28 19:30:30.000000000 +0300
+@@ -904,26 +904,33 @@ void ieee80211_send_auth(struct ieee8021
+ 
+ int ieee80211_build_preq_ies(struct ieee80211_local *local, u8 *buffer,
+ 			     const u8 *ie, size_t ie_len,
+-			     enum ieee80211_band band)
++			     enum ieee80211_band band, u32 rate_mask)
+ {
+ 	struct ieee80211_supported_band *sband;
+ 	u8 *pos;
+ 	size_t offset = 0, noffset;
+ 	int supp_rates_len, i;
++	u8 rates[32];
++	int num_rates;
++	int ext_rates_len;
+ 
+ 	sband = local->hw.wiphy->bands[band];
+ 
+ 	pos = buffer;
+ 
+-	supp_rates_len = min_t(int, sband->n_bitrates, 8);
++	num_rates = 0;
++	for (i = 0; i < sband->n_bitrates; i++) {
++		if ((BIT(i) & rate_mask) == 0)
++			continue; /* skip rate */
++		rates[num_rates++] = (u8) (sband->bitrates[i].bitrate / 5);
++	}
++
++	supp_rates_len = min_t(int, num_rates, 8);
+ 
+ 	*pos++ = WLAN_EID_SUPP_RATES;
+ 	*pos++ = supp_rates_len;
+-
+-	for (i = 0; i < supp_rates_len; i++) {
+-		int rate = sband->bitrates[i].bitrate;
+-		*pos++ = (u8) (rate / 5);
+-	}
++	memcpy(pos, rates, supp_rates_len);
++	pos += supp_rates_len;
+ 
+ 	/* insert "request information" if in custom IEs */
+ 	if (ie && ie_len) {
+@@ -941,14 +948,12 @@ int ieee80211_build_preq_ies(struct ieee
+ 		offset = noffset;
+ 	}
+ 
+-	if (sband->n_bitrates > i) {
++	ext_rates_len = num_rates - supp_rates_len;
++	if (ext_rates_len > 0) {
+ 		*pos++ = WLAN_EID_EXT_SUPP_RATES;
+-		*pos++ = sband->n_bitrates - i;
+-
+-		for (; i < sband->n_bitrates; i++) {
+-			int rate = sband->bitrates[i].bitrate;
+-			*pos++ = (u8) (rate / 5);
+-		}
++		*pos++ = ext_rates_len;
++		memcpy(pos, rates + supp_rates_len, ext_rates_len);
++		pos += ext_rates_len;
+ 	}
+ 
+ 	/* insert custom IEs that go before HT */
+@@ -1027,7 +1032,9 @@ void ieee80211_send_probe_req(struct iee
+ 	}
+ 
+ 	buf_len = ieee80211_build_preq_ies(local, buf, ie, ie_len,
+-					   local->hw.conf.channel->band);
++					   local->hw.conf.channel->band,
++					   sdata->rc_rateidx_mask
++					   [local->hw.conf.channel->band]);
+ 
+ 	skb = ieee80211_probereq_get(&local->hw, &sdata->vif,
+ 				     ssid, ssid_len,
 
 -- 
 Jouni Malinen                                            PGP id EFC895FA
