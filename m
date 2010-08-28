@@ -1,61 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32491 "EHLO mx1.redhat.com"
+Received: from purkki.adurom.net ([80.68.90.206]:35245 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754117Ab0HER0e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Aug 2010 13:26:34 -0400
-Subject: Re: [wt PATCH 0/5] libertas: make association work again
-From: Dan Williams <dcbw@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20100804193442.GR17666@tuxdriver.com>
-References: <1280470034.14523.4.camel@dcbw.foobar.com>
-	 <1280471706.3710.5.camel@jlt3.sipsolutions.net>
-	 <1280900467.2665.6.camel@dcbw.foobar.com>
-	 <1280907989.3768.0.camel@jlt3.sipsolutions.net>
-	 <1280949346.11056.1.camel@dcbw.foobar.com>
-	 <20100804193442.GR17666@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 05 Aug 2010 12:27:50 -0500
-Message-ID: <1281029270.32607.2.camel@dcbw.foobar.com>
-Mime-Version: 1.0
+	id S1750774Ab0H1GWJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Aug 2010 02:22:09 -0400
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH 3/3] wl12xx: remove unneeded locking
+References: <20100826113024.738612439@sipsolutions.net>
+	<20100826113438.826909320@sipsolutions.net>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Sat, 28 Aug 2010 09:22:01 +0300
+In-Reply-To: <20100826113438.826909320@sipsolutions.net> (Johannes Berg's message of "Thu\, 26 Aug 2010 13\:30\:27 +0200")
+Message-ID: <87fwxz8dfa.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-08-04 at 15:34 -0400, John W. Linville wrote:
-> On Wed, Aug 04, 2010 at 02:15:46PM -0500, Dan Williams wrote:
-> > On Wed, 2010-08-04 at 09:46 +0200, Johannes Berg wrote:
-> > > On Wed, 2010-08-04 at 00:41 -0500, Dan Williams wrote:
-> > > > On Fri, 2010-07-30 at 08:35 +0200, Johannes Berg wrote:
-> > > > > On Thu, 2010-07-29 at 23:07 -0700, Dan Williams wrote:
-> > > > > > This series makes libertas actually associate with APs after the
-> > > > > > cfg80211 conversion.  There was a pretty big TODO where if cfg80211
-> > > > > > didn't pass in the BSSID of the AP to associate with, then libertas
-> > > > > > would fail because the firmware really, really, really wants a BSSID.
-> > > > > > So lets do a scan to find that BSSID.  The other notable change is
-> > > > > > a fix to make sure all supported rates are included in the firmware's
-> > > > > > association request, lack of which caused some APs to deny the attempt.
-> > > > > 
-> > > > > I'm a bit tempted to say we could use the connect logic in cfg80211 to
-> > > > > provide this? cfg80211 _already_ provides this if the hardware wants
-> > > > > auth()/assoc() rather than connect() calls, so it seems fairly simple to
-> > > > > also (optionally) do it here?
-> > > > 
-> > > > Yeah, I thought about that too.  Do you want me to work on that now
-> > > > instead of letting this patch through?  I can revert the relevant bits
-> > > > of this later if that's acceptable too.
-> > > 
-> > > Either way works for me since I don't care about any cruft in
-> > > libertas ;)
-> > 
-> > John, if you don't mind applying this patch I'll work on generic
-> > scan-before-connect support in cfg80211 in a further patch series.
-> 
-> OK...which of these need to be in 2.6.36?
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-They should stick with the libertas cfg80211 bits, wherever they are.
-If you've pushed whatever was in wireless-testing into 2.6.36, then this
-latest series of 5 should go there too.
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> With the scan callback now being callable from
+> any context, these unlocks/locks can go away.
+> This makes the code easier to understand, since
+> callers of these functions must no longer be
+> aware that the mutex may be dropped.
+>
+> As Stanislaw is working on iwlwifi scanning, I
+> didn't change it to take advantage of the new
+> mac80211 semantics.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  drivers/net/wireless/wl12xx/wl1251_event.c |    2 --
+>  drivers/net/wireless/wl12xx/wl1251_main.c  |    2 --
 
-Dan
+Thanks, wl1251 part looks good. I didn't test them yet, but will do
+soon.
 
+-- 
+Kalle Valo
