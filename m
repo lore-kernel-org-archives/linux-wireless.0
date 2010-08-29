@@ -1,121 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:61807 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752466Ab0HQTrZ (ORCPT
+Received: from ogre.sisk.pl ([217.79.144.158]:55158 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754070Ab0H2WkO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Aug 2010 15:47:25 -0400
-Received: by mail-ey0-f174.google.com with SMTP id 5so2243590eyg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Aug 2010 12:47:24 -0700 (PDT)
-From: Grazvydas Ignotas <notasas@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@adurom.com>,
-	Grazvydas Ignotas <notasas@gmail.com>
-Subject: [PATCH 4/4] wl1251: wait for join command complete event
-Date: Tue, 17 Aug 2010 22:46:55 +0300
-Message-Id: <1282074415-6168-5-git-send-email-notasas@gmail.com>
-In-Reply-To: <1282074415-6168-1-git-send-email-notasas@gmail.com>
-References: <1282074415-6168-1-git-send-email-notasas@gmail.com>
+	Sun, 29 Aug 2010 18:40:14 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: 2.6.36-rc3: Reported regressions from 2.6.35
+Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Message-ID: <4LwrqITm-eJ.A.r8G.eFueMB@chimera>
+Date: Mon, 30 Aug 2010 00:24:40 +0200 (CEST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Poll for join command completion instead of waiting blindly for 10
-msecs. There is a timeout of 100 msecs, if the command doesn't complete
-by then, we return an error code.
+This message contains a list of some regressions from 2.6.35,
+for which there are no fixes in the mainline known to the tracking team.
+If any of them have been fixed already, please let us know.
 
-Based on wl1271 patch 99d84c1de8fdf5f9b09f07fdbc628857a040bf8b
-by Luciano Coelho.
+If you know of any other unresolved regressions from 2.6.35, please let us
+know either and we'll add them to the list.  Also, please let us know
+if any of the entries below are invalid.
 
-Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
----
- drivers/net/wireless/wl12xx/wl1251_boot.c  |    2 +-
- drivers/net/wireless/wl12xx/wl1251_event.c |   29 ++++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/wl1251_event.h |    1 +
- drivers/net/wireless/wl12xx/wl1251_main.c  |    8 ++----
- 4 files changed, 34 insertions(+), 6 deletions(-)
+Each entry from the list will be sent additionally in an automatic reply
+to this message with CCs to the people involved in reporting and handling
+the issue.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1251_boot.c b/drivers/net/wireless/wl12xx/wl1251_boot.c
-index 65e0416..5e65f47 100644
---- a/drivers/net/wireless/wl12xx/wl1251_boot.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_boot.c
-@@ -302,7 +302,7 @@ int wl1251_boot_run_firmware(struct wl1251 *wl)
- 		ROAMING_TRIGGER_LOW_RSSI_EVENT_ID |
- 		ROAMING_TRIGGER_REGAINED_RSSI_EVENT_ID |
- 		REGAINED_BSS_EVENT_ID | BT_PTA_SENSE_EVENT_ID |
--		BT_PTA_PREDICTION_EVENT_ID;
-+		BT_PTA_PREDICTION_EVENT_ID | JOIN_EVENT_COMPLETE_ID;
- 
- 	ret = wl1251_event_unmask(wl);
- 	if (ret < 0) {
-diff --git a/drivers/net/wireless/wl12xx/wl1251_event.c b/drivers/net/wireless/wl12xx/wl1251_event.c
-index 020d764..e093a1c 100644
---- a/drivers/net/wireless/wl12xx/wl1251_event.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_event.c
-@@ -97,6 +97,35 @@ static int wl1251_event_process(struct wl1251 *wl, struct event_mailbox *mbox)
- 	return 0;
- }
- 
-+/*
-+ * Poll the mailbox event field until any of the bits in the mask is set or a
-+ * timeout occurs (WL1251_EVENT_TIMEOUT in msecs)
-+ */
-+int wl1251_event_wait(struct wl1251 *wl, u32 mask, int timeout_ms)
-+{
-+	u32 events_vector, event;
-+	unsigned long timeout;
-+
-+	timeout = jiffies + msecs_to_jiffies(timeout_ms);
-+
-+	do {
-+		if (time_after(jiffies, timeout))
-+			return -ETIMEDOUT;
-+
-+		msleep(1);
-+
-+		/* read from both event fields */
-+		wl1251_mem_read(wl, wl->mbox_ptr[0], &events_vector,
-+				sizeof(events_vector));
-+		event = events_vector & mask;
-+		wl1251_mem_read(wl, wl->mbox_ptr[1], &events_vector,
-+				sizeof(events_vector));
-+		event |= events_vector & mask;
-+	} while (!event);
-+
-+	return 0;
-+}
-+
- int wl1251_event_unmask(struct wl1251 *wl)
- {
- 	int ret;
-diff --git a/drivers/net/wireless/wl12xx/wl1251_event.h b/drivers/net/wireless/wl12xx/wl1251_event.h
-index f48a2b6..ec45647 100644
---- a/drivers/net/wireless/wl12xx/wl1251_event.h
-+++ b/drivers/net/wireless/wl12xx/wl1251_event.h
-@@ -117,5 +117,6 @@ struct event_mailbox {
- int wl1251_event_unmask(struct wl1251 *wl);
- void wl1251_event_mbox_config(struct wl1251 *wl);
- int wl1251_event_handle(struct wl1251 *wl, u8 mbox);
-+int wl1251_event_wait(struct wl1251 *wl, u32 mask, int timeout_ms);
- 
- #endif
-diff --git a/drivers/net/wireless/wl12xx/wl1251_main.c b/drivers/net/wireless/wl12xx/wl1251_main.c
-index 51474b6..c81e95b 100644
---- a/drivers/net/wireless/wl12xx/wl1251_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_main.c
-@@ -339,11 +339,9 @@ static int wl1251_join(struct wl1251 *wl, u8 bss_type, u8 channel,
- 	if (ret < 0)
- 		goto out;
- 
--	/*
--	 * FIXME: we should wait for JOIN_EVENT_COMPLETE_ID but to simplify
--	 * locking we just sleep instead, for now
--	 */
--	msleep(10);
-+	ret = wl1251_event_wait(wl, JOIN_EVENT_COMPLETE_ID, 100);
-+	if (ret < 0)
-+		wl1251_warning("join timeout");
- 
- out:
- 	return ret;
--- 
-1.5.6.3
+
+Listed regressions statistics:
+
+  Date          Total  Pending  Unresolved
+  ----------------------------------------
+  2010-08-30       21       16          15
+
+
+Unresolved regressions
+----------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17341
+Subject		: kdump regression compared to v2.6.35
+Submitter	: CAI Qian <caiqian@redhat.com>
+Date		: 2010-08-27 12:35 (3 days old)
+Message-ID	: <2136707099.1405541282912500148.JavaMail.root@zmail06.collab.prod.int.phx2.redhat.com>
+References	: http://marc.info/?l=linux-kernel&m=128291252612135&w=2
+Handled-By	: Tejun Heo <tj@kernel.org>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17331
+Subject		: BUG: scheduling while atomic
+Submitter	: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+Date		: 2010-08-27 7:59 (3 days old)
+Message-ID	: <20100827075911.GA5966@swordfish.minsk.epam.com>
+References	: http://marc.info/?l=linux-kernel&m=128289602925505&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17321
+Subject		: i386 WARNING: at kernel/softirq.c:143 _local_bh_enable_ip+0x2f/0x7e
+Submitter	: Arno Schuring <aelschuring@hotmail.com>
+Date		: 2010-08-27 20:04 (3 days old)
+Message-ID	: <4C781A3A.4010707@hotmail.com>
+References	: http://marc.info/?l=linux-kernel&m=128294076822387&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17311
+Subject		: 2.6.36-rc2-git4 - INFO: possible circular locking dependency detected
+Submitter	: Miles Lane <miles.lane@gmail.com>
+Date		: 2010-08-27 1:56 (3 days old)
+First-Bad-Commit: http://git.kernel.org/linus/5a652052fedbd7869572c757dd2ffc2ed420c69d
+Message-ID	: <AANLkTinHbEW36D5R9NSrGgfbOC0Hri3Tg-fA0iR92Udi@mail.gmail.com>
+References	: http://marc.info/?l=linux-kernel&m=128287422106267&w=2
+Handled-By	: Johannes Berg <johannes@sipsolutions.net>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17301
+Subject		: i915: 2.6.36-rc2 wrong resolution on gdm start
+Submitter	: Ivan Bulatovic <combuster@gmx.com>
+Date		: 2010-08-24 1:00 (6 days old)
+First-Bad-Commit: http://git.kernel.org/linus/9d0498a2bf7455159b317f19531a3e5db2ecc9c4
+Message-ID	: <1282611655.2177.19.camel@localhost.localdomain>
+References	: http://marc.info/?l=linux-kernel&m=128261168202306&w=2
+Handled-By	: Chris Wilson <chris@chris-wilson.co.uk>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17151
+Subject		: i915: 2.6.36-rc2 hoses my Intel display
+Submitter	: Jonathan Corbet <corbet@lwn.net>
+Date		: 2010-08-23 17:01 (7 days old)
+First-Bad-Commit: http://git.kernel.org/linus/32aad86fe88e7323d4fc5e9e423abcee0d55a03d
+Message-ID	: <20100823110145.08eb72fd@bike.lwn.net>
+References	: http://marc.info/?l=linux-kernel&m=128258293327326&w=2
+Handled-By	: Chris Wilson <chris@chris-wilson.co.uk>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17131
+Subject		: WARN with 3c905 boomerang NIC
+Submitter	: Doug Nazar <nazard.lkml@gmail.com>
+Date		: 2010-08-22 6:35 (8 days old)
+Message-ID	: <4C70C516.5020404@gmail.com>
+References	: http://marc.info/?l=linux-kernel&m=128245894300623&w=2
+Handled-By	: David Miller <davem@davemloft.net>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17061
+Subject		: 2.6.36-rc1 on zaurus: bluetooth regression
+Submitter	: Pavel Machek <pavel@ucw.cz>
+Date		: 2010-08-21 15:24 (9 days old)
+Message-ID	: <20100821152445.GA1536@ucw.cz>
+References	: http://marc.info/?l=linux-kernel&m=128240433828087&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17041
+Subject		: 2.6.36-rc1 hangs during XFS barrier test for /
+Submitter	: Torsten Kaiser <just.for.lkml@googlemail.com>
+Date		: 2010-08-20 (10 days old)
+Message-ID	: <AANLkTim1PXibiY98GUdMj-UZLTav+n7GAnJ0Mjn6_5a3@mail.gmail.com>
+References	: http://marc.info/?l=linux-kernel&m=128231691708710&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17021
+Subject		: [REGRESSION] [2.6.36-rc1] [DRM INTEL] [drm:intel_calculate_wm] *ERROR* Insufficient FIFO for plane, expect flickering: entries required = 36, available = 28.
+Submitter	: Maciej Rutecki <maciej.rutecki@gmail.com>
+Date		: 2010-08-18 18:46 (12 days old)
+Message-ID	: <201008182046.37732.maciej.rutecki@gmail.com>
+References	: http://marc.info/?l=linux-kernel&m=128215721507666&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16971
+Subject		: qla4xxx compile failure on 32-bit PowerPC: missing readq and writeq
+Submitter	: Meelis Roos <mroos@linux.ee>
+Date		: 2010-08-19 21:03 (11 days old)
+Message-ID	: <alpine.SOC.1.00.1008192359310.19654@math.ut.ee>
+References	: http://marc.info/?l=linux-kernel&m=128225184900892&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16961
+Subject		: kernel BUG at arch/x86/kvm/../../../virt/kvm/kvm_main.c:1978
+Submitter	: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+Date		: 2010-08-19 9:54 (11 days old)
+Message-ID	: <20100819095429.GA5201@swordfish.minsk.epam.com>
+References	: http://marc.info/?l=linux-kernel&m=128221169606214&w=2
+Handled-By	: Avi Kivity <avi@redhat.com>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16951
+Subject		: hackbench regression with 2.6.36-rc1
+Submitter	: Zhang, Yanmin <yanmin_zhang@linux.intel.com>
+Date		: 2010-08-18 6:18 (12 days old)
+Message-ID	: <1282112318.21202.8.camel@ymzhang.sh.intel.com>
+References	: http://marc.info/?l=linux-kernel&m=128211235904910&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16881
+Subject		: [REGRESSION, Radeon-KMS] 2.6.36-rc1,2 - missing textures in 0 A.D.
+Submitter	:  <trapdoor6@gmail.com>
+Date		: 2010-08-24 12:20 (6 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16626
+Subject		: Machine hangs with EIP at skb_copy_and_csum_dev
+Submitter	: Plamen Petrov <pvp-lsts@fs.uni-ruse.bg>
+Date		: 2010-08-19 09:57 (11 days old)
+Handled-By	:  Eric Dumazet <eric.dumazet@gmail.com>
+
+
+Regressions with patches
+------------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16629
+Subject		: fix BUG: using smp_processor_id() in preemptible code (resend)
+Submitter	: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+Date		: 2010-08-18 9:11 (12 days old)
+Message-ID	: <20100818091157.GA5238@swordfish.minsk.epam.com>
+References	: http://marc.info/?l=linux-kernel&m=128212276618793&w=2
+Handled-By	: H. Peter Anvin <hpa@zytor.com>
+Patch		: http://marc.info/?l=linux-kernel&m=128212276618793&w=2
+
+
+For details, please visit the bug entries and follow the links given in
+references.
+
+As you can see, there is a Bugzilla entry for each of the listed regressions.
+There also is a Bugzilla entry used for tracking the regressions from 2.6.35,
+unresolved as well as resolved, at:
+
+http://bugzilla.kernel.org/show_bug.cgi?id=16444
+
+Please let the tracking team know if there are any Bugzilla entries that
+should be added to the list in there.
+
+Thanks!
 
