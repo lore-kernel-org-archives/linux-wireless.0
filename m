@@ -1,1067 +1,356 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:15438 "EHLO mga01.intel.com"
+Received: from ogre.sisk.pl ([217.79.144.158]:55304 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753968Ab0HWOxf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Aug 2010 10:53:35 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 23/26] iwlagn: generic bt coex functions
-Date: Mon, 23 Aug 2010 07:57:14 -0700
-Message-Id: <1282575437-23270-24-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1282575437-23270-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1282575437-23270-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1754126Ab0H2XNM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Aug 2010 19:13:12 -0400
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: 2.6.36-rc3: Reported regressions 2.6.34 -> 2.6.35
+Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Message-ID: <c1_O4wHrlB.A.63.mbueMB@chimera>
+Date: Mon, 30 Aug 2010 00:57:37 +0200 (CEST)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+This message contains a list of some post-2.6.34 regressions introduced before
+2.6.35, for which there are no fixes in the mainline known to the tracking team.
+If any of them have been fixed already, please let us know.
 
-Move bt coex functions to iwl-agn-lib.c, so those functions
-can be shared by multiple wifi/bt combo devices
+If you know of any other unresolved post-2.6.34 regressions, please let us know
+either and we'll add them to the list.  Also, please let us know if any
+of the entries below are invalid.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-6000.c      |  391 +-------------------------
- drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c  |    8 +
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c   |  370 ++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |    8 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c       |    6 +-
- drivers/net/wireless/iwlwifi/iwl-agn.h       |    9 +
- drivers/net/wireless/iwlwifi/iwl-commands.h  |   74 +++---
- 7 files changed, 441 insertions(+), 425 deletions(-)
+Each entry from the list will be sent additionally in an automatic reply to
+this message with CCs to the people involved in reporting and handling the
+issue.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 30dc1f3..fc9344b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -122,165 +122,6 @@ static void iwl6000_nic_config(struct iwl_priv *priv)
- 		priv->cfg->ops->lib->temp_ops.set_calib_version(priv);
- }
- 
--/*
-- * Macros to access the lookup table.
-- *
-- * The lookup table has 7 inputs: bt3_prio, bt3_txrx, bt_rf_act, wifi_req,
-- * wifi_prio, wifi_txrx and wifi_sh_ant_req.
-- *
-- * It has three outputs: WLAN_ACTIVE, WLAN_KILL and ANT_SWITCH
-- *
-- * The format is that "registers" 8 through 11 contain the WLAN_ACTIVE bits
-- * one after another in 32-bit registers, and "registers" 0 through 7 contain
-- * the WLAN_KILL and ANT_SWITCH bits interleaved (in that order).
-- *
-- * These macros encode that format.
-- */
--#define LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, wifi_req, wifi_prio, \
--	wifi_txrx, wifi_sh_ant_req) \
--	(bt3_prio | (bt3_txrx << 1) | (bt_rf_act << 2) | (wifi_req << 3) | \
--	(wifi_prio << 4) | (wifi_txrx << 5) | (wifi_sh_ant_req << 6))
--
--#define LUT_PTA_WLAN_ACTIVE_OP(lut, op, val) \
--	lut[8 + ((val) >> 5)] op (cpu_to_le32(BIT((val) & 0x1f)))
--#define LUT_TEST_PTA_WLAN_ACTIVE(lut, bt3_prio, bt3_txrx, bt_rf_act, \
--	wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req) \
--	(!!(LUT_PTA_WLAN_ACTIVE_OP(lut, &, LUT_VALUE(bt3_prio, bt3_txrx,\
--	bt_rf_act, wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))))
--#define LUT_SET_PTA_WLAN_ACTIVE(lut, bt3_prio, bt3_txrx, bt_rf_act, \
--	wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req) \
--	LUT_PTA_WLAN_ACTIVE_OP(lut, |=, LUT_VALUE(bt3_prio, bt3_txrx, \
--	bt_rf_act, wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))
--#define LUT_CLEAR_PTA_WLAN_ACTIVE(lut, bt3_prio, bt3_txrx, bt_rf_act, \
--	wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req) \
--	LUT_PTA_WLAN_ACTIVE_OP(lut, &= ~, LUT_VALUE(bt3_prio, bt3_txrx, \
--	bt_rf_act, wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))
--
--#define LUT_WLAN_KILL_OP(lut, op, val) \
--	lut[(val) >> 4] op (cpu_to_le32(BIT(((val) << 1) & 0x1e)))
--#define LUT_TEST_WLAN_KILL(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
--	wifi_prio, wifi_txrx, wifi_sh_ant_req) \
--	(!!(LUT_WLAN_KILL_OP(lut, &, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
--	wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))))
--#define LUT_SET_WLAN_KILL(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
--	wifi_prio, wifi_txrx, wifi_sh_ant_req) \
--	LUT_WLAN_KILL_OP(lut, |=, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
--	wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))
--#define LUT_CLEAR_WLAN_KILL(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
--	wifi_prio, wifi_txrx, wifi_sh_ant_req) \
--	LUT_WLAN_KILL_OP(lut, &= ~, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
--	wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))
--
--#define LUT_ANT_SWITCH_OP(lut, op, val) \
--	lut[(val) >> 4] op (cpu_to_le32(BIT((((val) << 1) & 0x1e) + 1)))
--#define LUT_TEST_ANT_SWITCH(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
--	wifi_prio, wifi_txrx, wifi_sh_ant_req) \
--	(!!(LUT_ANT_SWITCH_OP(lut, &, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
--	wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))))
--#define LUT_SET_ANT_SWITCH(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
--	wifi_prio, wifi_txrx, wifi_sh_ant_req) \
--	LUT_ANT_SWITCH_OP(lut, |=, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
--	wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))
--#define LUT_CLEAR_ANT_SWITCH(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
--	wifi_prio, wifi_txrx, wifi_sh_ant_req) \
--	LUT_ANT_SWITCH_OP(lut, &= ~, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
--	wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))
--
--static const __le32 iwl6000g2b_def_3w_lookup[12] = {
--	cpu_to_le32(0xaaaaaaaa),
--	cpu_to_le32(0xaaaaaaaa),
--	cpu_to_le32(0xaeaaaaaa),
--	cpu_to_le32(0xaaaaaaaa),
--	cpu_to_le32(0xcc00ff28),
--	cpu_to_le32(0x0000aaaa),
--	cpu_to_le32(0xcc00aaaa),
--	cpu_to_le32(0x0000aaaa),
--	cpu_to_le32(0xc0004000),
--	cpu_to_le32(0x00004000),
--	cpu_to_le32(0xf0005000),
--	cpu_to_le32(0xf0004000),
--};
--
--static const __le32 iwl6000g2b_concurrent_lookup[12] = {
--	cpu_to_le32(0xaaaaaaaa),
--	cpu_to_le32(0xaaaaaaaa),
--	cpu_to_le32(0xaaaaaaaa),
--	cpu_to_le32(0xaaaaaaaa),
--	cpu_to_le32(0xaaaaaaaa),
--	cpu_to_le32(0xaaaaaaaa),
--	cpu_to_le32(0xaaaaaaaa),
--	cpu_to_le32(0xaaaaaaaa),
--	cpu_to_le32(0x00000000),
--	cpu_to_le32(0x00000000),
--	cpu_to_le32(0x00000000),
--	cpu_to_le32(0x00000000),
--};
--
--static void iwl6000g2b_send_bt_config(struct iwl_priv *priv)
--{
--	struct iwl6000g2b_bt_cmd bt_cmd = {
--		.max_kill = IWL6000G2B_BT_MAX_KILL_DEFAULT,
--		.bt3_timer_t7_value = IWL6000G2B_BT3_T7_DEFAULT,
--		.bt3_prio_sample_time = IWL6000G2B_BT3_PRIO_SAMPLE_DEFAULT,
--		.bt3_timer_t2_value = IWL6000G2B_BT3_T2_DEFAULT,
--	};
--
--	BUILD_BUG_ON(sizeof(iwl6000g2b_def_3w_lookup) !=
--			sizeof(bt_cmd.bt3_lookup_table));
--
--	bt_cmd.prio_boost = priv->cfg->bt_prio_boost;
--	bt_cmd.kill_ack_mask = priv->kill_ack_mask;
--	bt_cmd.kill_cts_mask = priv->kill_cts_mask;
--	bt_cmd.valid = priv->bt_valid;
--
--	/*
--	 * Configure BT coex mode to "no coexistence" when the
--	 * user disabled BT coexistence, we have no interface
--	 * user disabled BT coexistence, or the interface is in
--	 * IBSS mode (no proper uCode support for coex then).
--	 */
--	if (!bt_coex_active || priv->iw_mode == NL80211_IFTYPE_ADHOC) {
--		bt_cmd.flags = 0;
--	} else {
--		bt_cmd.flags = IWL6000G2B_BT_FLAG_COEX_MODE_3W <<
--					IWL6000G2B_BT_FLAG_COEX_MODE_SHIFT;
--		if (priv->bt_ch_announce)
--			bt_cmd.flags |= IWL6000G2B_BT_FLAG_CHANNEL_INHIBITION;
--		IWL_DEBUG_INFO(priv, "BT coex flag: 0X%x\n", bt_cmd.flags);
--	}
--
--	if (priv->bt_full_concurrent)
--		memcpy(bt_cmd.bt3_lookup_table, iwl6000g2b_concurrent_lookup,
--			sizeof(iwl6000g2b_concurrent_lookup));
--	else
--		memcpy(bt_cmd.bt3_lookup_table, iwl6000g2b_def_3w_lookup,
--			sizeof(iwl6000g2b_def_3w_lookup));
--
--	IWL_DEBUG_INFO(priv, "BT coex %s in %s mode\n",
--		       bt_cmd.flags ? "active" : "disabled",
--		       priv->bt_full_concurrent ?
--		       "full concurrency" : "3-wire");
--
--	if (iwl_send_cmd_pdu(priv, REPLY_BT_CONFIG, sizeof(bt_cmd), &bt_cmd))
--		IWL_ERR(priv, "failed to send BT Coex Config\n");
--
--	/*
--	 * When we are doing a restart, need to also reconfigure BT
--	 * SCO to the device. If not doing a restart, bt_sco_active
--	 * will always be false, so there's no need to have an extra
--	 * variable to check for it.
--	 */
--	if (priv->bt_sco_active) {
--		struct iwl6000g2b_bt_sco_cmd sco_cmd = { .flags = 0 };
--
--		if (priv->bt_sco_active)
--			sco_cmd.flags |= IWL6000G2B_BT_SCO_ACTIVE;
--		if (iwl_send_cmd_pdu(priv, REPLY_BT_COEX_SCO,
--				     sizeof(sco_cmd), &sco_cmd))
--			IWL_ERR(priv, "failed to send BT SCO command\n");
--	}
--}
--
- static struct iwl_sensitivity_ranges iwl6000_sensitivity = {
- 	.min_nrg_cck = 97,
- 	.max_nrg_cck = 0, /* not used, set to 0 */
-@@ -422,210 +263,6 @@ static int iwl6000_hw_channel_switch(struct iwl_priv *priv,
- 	return iwl_send_cmd_sync(priv, &hcmd);
- }
- 
--static void iwl6000g2b_bt_traffic_change_work(struct work_struct *work)
--{
--	struct iwl_priv *priv =
--		container_of(work, struct iwl_priv, bt_traffic_change_work);
--	int smps_request = -1;
--
--	IWL_DEBUG_INFO(priv, "BT traffic load changes: %d\n",
--		       priv->bt_traffic_load);
--
--	switch (priv->bt_traffic_load) {
--	case IWL_BT_COEX_TRAFFIC_LOAD_NONE:
--		smps_request = IEEE80211_SMPS_AUTOMATIC;
--		break;
--	case IWL_BT_COEX_TRAFFIC_LOAD_LOW:
--		smps_request = IEEE80211_SMPS_DYNAMIC;
--		break;
--	case IWL_BT_COEX_TRAFFIC_LOAD_HIGH:
--	case IWL_BT_COEX_TRAFFIC_LOAD_CONTINUOUS:
--		smps_request = IEEE80211_SMPS_STATIC;
--		break;
--	default:
--		IWL_ERR(priv, "Invalid BT traffic load: %d\n",
--			priv->bt_traffic_load);
--		break;
--	}
--
--	mutex_lock(&priv->mutex);
--
--	if (priv->cfg->ops->lib->update_chain_flags)
--		priv->cfg->ops->lib->update_chain_flags(priv);
--
--	if (smps_request != -1 &&
--	    priv->vif && priv->vif->type == NL80211_IFTYPE_STATION)
--		ieee80211_request_smps(priv->vif, smps_request);
--
--	mutex_unlock(&priv->mutex);
--}
--
--static void iwlagn_print_uartmsg(struct iwl_priv *priv,
--				struct iwl_bt_uart_msg *uart_msg)
--{
--	IWL_DEBUG_NOTIF(priv, "Message Type = 0x%X, SSN = 0x%X, "
--			"Update Req = 0x%X",
--		(BT_UART_MSG_FRAME1MSGTYPE_MSK & uart_msg->frame1) >>
--			BT_UART_MSG_FRAME1MSGTYPE_POS,
--		(BT_UART_MSG_FRAME1SSN_MSK & uart_msg->frame1) >>
--			BT_UART_MSG_FRAME1SSN_POS,
--		(BT_UART_MSG_FRAME1UPDATEREQ_MSK & uart_msg->frame1) >>
--			BT_UART_MSG_FRAME1UPDATEREQ_POS);
--
--	IWL_DEBUG_NOTIF(priv, "Open connections = 0x%X, Traffic load = 0x%X, "
--			"Chl_SeqN = 0x%X, In band = 0x%X",
--		(BT_UART_MSG_FRAME2OPENCONNECTIONS_MSK & uart_msg->frame2) >>
--			BT_UART_MSG_FRAME2OPENCONNECTIONS_POS,
--		(BT_UART_MSG_FRAME2TRAFFICLOAD_MSK & uart_msg->frame2) >>
--			BT_UART_MSG_FRAME2TRAFFICLOAD_POS,
--		(BT_UART_MSG_FRAME2CHLSEQN_MSK & uart_msg->frame2) >>
--			BT_UART_MSG_FRAME2CHLSEQN_POS,
--		(BT_UART_MSG_FRAME2INBAND_MSK & uart_msg->frame2) >>
--			BT_UART_MSG_FRAME2INBAND_POS);
--
--	IWL_DEBUG_NOTIF(priv, "SCO/eSCO = 0x%X, Sniff = 0x%X, A2DP = 0x%X, "
--			"ACL = 0x%X, Master = 0x%X, OBEX = 0x%X",
--		(BT_UART_MSG_FRAME3SCOESCO_MSK & uart_msg->frame3) >>
--			BT_UART_MSG_FRAME3SCOESCO_POS,
--		(BT_UART_MSG_FRAME3SNIFF_MSK & uart_msg->frame3) >>
--			BT_UART_MSG_FRAME3SNIFF_POS,
--		(BT_UART_MSG_FRAME3A2DP_MSK & uart_msg->frame3) >>
--			BT_UART_MSG_FRAME3A2DP_POS,
--		(BT_UART_MSG_FRAME3ACL_MSK & uart_msg->frame3) >>
--			BT_UART_MSG_FRAME3ACL_POS,
--		(BT_UART_MSG_FRAME3MASTER_MSK & uart_msg->frame3) >>
--			BT_UART_MSG_FRAME3MASTER_POS,
--		(BT_UART_MSG_FRAME3OBEX_MSK & uart_msg->frame3) >>
--			BT_UART_MSG_FRAME3OBEX_POS);
--
--	IWL_DEBUG_NOTIF(priv, "Idle duration = 0x%X",
--		(BT_UART_MSG_FRAME4IDLEDURATION_MSK & uart_msg->frame4) >>
--			BT_UART_MSG_FRAME4IDLEDURATION_POS);
--
--	IWL_DEBUG_NOTIF(priv, "Tx Activity = 0x%X, Rx Activity = 0x%X, "
--			"eSCO Retransmissions = 0x%X",
--		(BT_UART_MSG_FRAME5TXACTIVITY_MSK & uart_msg->frame5) >>
--			BT_UART_MSG_FRAME5TXACTIVITY_POS,
--		(BT_UART_MSG_FRAME5RXACTIVITY_MSK & uart_msg->frame5) >>
--			BT_UART_MSG_FRAME5RXACTIVITY_POS,
--		(BT_UART_MSG_FRAME5ESCORETRANSMIT_MSK & uart_msg->frame5) >>
--			BT_UART_MSG_FRAME5ESCORETRANSMIT_POS);
--
--	IWL_DEBUG_NOTIF(priv, "Sniff Interval = 0x%X, Discoverable = 0x%X",
--		(BT_UART_MSG_FRAME6SNIFFINTERVAL_MSK & uart_msg->frame6) >>
--			BT_UART_MSG_FRAME6SNIFFINTERVAL_POS,
--		(BT_UART_MSG_FRAME6DISCOVERABLE_MSK & uart_msg->frame6) >>
--			BT_UART_MSG_FRAME6DISCOVERABLE_POS);
--
--	IWL_DEBUG_NOTIF(priv, "Sniff Activity = 0x%X, Inquiry/Page SR Mode = "
--			"0x%X, Connectable = 0x%X",
--		(BT_UART_MSG_FRAME7SNIFFACTIVITY_MSK & uart_msg->frame7) >>
--			BT_UART_MSG_FRAME7SNIFFACTIVITY_POS,
--		(BT_UART_MSG_FRAME7INQUIRYPAGESRMODE_MSK & uart_msg->frame7) >>
--			BT_UART_MSG_FRAME7INQUIRYPAGESRMODE_POS,
--		(BT_UART_MSG_FRAME7CONNECTABLE_MSK & uart_msg->frame7) >>
--			BT_UART_MSG_FRAME7CONNECTABLE_POS);
--}
--
--static void iwl6000g2b_set_kill_ack_msk(struct iwl_priv *priv,
--				     struct iwl_bt_uart_msg *uart_msg)
--{
--	u8 kill_ack_msk;
--	__le32 bt_kill_ack_msg[2] = {
--		cpu_to_le32(0xFFFFFFF), cpu_to_le32(0xFFFFFC00) };
--
--	kill_ack_msk = (((BT_UART_MSG_FRAME3A2DP_MSK |
--			BT_UART_MSG_FRAME3SNIFF_MSK |
--			BT_UART_MSG_FRAME3SCOESCO_MSK) &
--			uart_msg->frame3) == 0) ? 1 : 0;
--	if (priv->kill_ack_mask != bt_kill_ack_msg[kill_ack_msk]) {
--		priv->bt_valid |= IWL6000G2B_BT_VALID_KILL_ACK_MASK;
--		priv->kill_ack_mask = bt_kill_ack_msg[kill_ack_msk];
--		/* schedule to send runtime bt_config */
--		queue_work(priv->workqueue, &priv->bt_runtime_config);
--	}
--
--}
--
--static void iwl6000g2b_bt_coex_profile_notif(struct iwl_priv *priv,
--					     struct iwl_rx_mem_buffer *rxb)
--{
--	unsigned long flags;
--	struct iwl_rx_packet *pkt = rxb_addr(rxb);
--	struct iwl_bt_coex_profile_notif *coex = &pkt->u.bt_coex_profile_notif;
--	struct iwl6000g2b_bt_sco_cmd sco_cmd = { .flags = 0 };
--	struct iwl_bt_uart_msg *uart_msg = &coex->last_bt_uart_msg;
--	u8 last_traffic_load;
--
--	IWL_DEBUG_NOTIF(priv, "BT Coex notification:\n");
--	IWL_DEBUG_NOTIF(priv, "    status: %d\n", coex->bt_status);
--	IWL_DEBUG_NOTIF(priv, "    traffic load: %d\n", coex->bt_traffic_load);
--	IWL_DEBUG_NOTIF(priv, "    CI compliance: %d\n", coex->bt_ci_compliance);
--	iwlagn_print_uartmsg(priv, uart_msg);
--
--	last_traffic_load = priv->notif_bt_traffic_load;
--	priv->notif_bt_traffic_load = coex->bt_traffic_load;
--	if (priv->iw_mode != NL80211_IFTYPE_ADHOC) {
--		if (priv->bt_status != coex->bt_status ||
--		    last_traffic_load != coex->bt_traffic_load) {
--			if (coex->bt_status) {
--				/* BT on */
--				if (!priv->bt_ch_announce)
--					priv->bt_traffic_load =
--						IWL_BT_COEX_TRAFFIC_LOAD_HIGH;
--				else
--					priv->bt_traffic_load =
--						coex->bt_traffic_load;
--			} else {
--				/* BT off */
--				priv->bt_traffic_load =
--					IWL_BT_COEX_TRAFFIC_LOAD_NONE;
--			}
--			priv->bt_status = coex->bt_status;
--			queue_work(priv->workqueue,
--				   &priv->bt_traffic_change_work);
--		}
--		if (priv->bt_sco_active !=
--		    (uart_msg->frame3 & BT_UART_MSG_FRAME3SCOESCO_MSK)) {
--			priv->bt_sco_active = uart_msg->frame3 &
--				BT_UART_MSG_FRAME3SCOESCO_MSK;
--			if (priv->bt_sco_active)
--				sco_cmd.flags |= IWL6000G2B_BT_SCO_ACTIVE;
--			iwl_send_cmd_pdu_async(priv, REPLY_BT_COEX_SCO,
--				       sizeof(sco_cmd), &sco_cmd, NULL);
--		}
--	}
--
--	iwl6000g2b_set_kill_ack_msk(priv, uart_msg);
--
--	/* FIXME: based on notification, adjust the prio_boost */
--
--	spin_lock_irqsave(&priv->lock, flags);
--	priv->bt_ci_compliance = coex->bt_ci_compliance;
--	spin_unlock_irqrestore(&priv->lock, flags);
--}
--
--void iwl6000g2b_rx_handler_setup(struct iwl_priv *priv)
--{
--	iwlagn_rx_handler_setup(priv);
--	priv->rx_handlers[REPLY_BT_COEX_PROFILE_NOTIF] =
--		iwl6000g2b_bt_coex_profile_notif;
--}
--
--static void iwl6000g2b_bt_setup_deferred_work(struct iwl_priv *priv)
--{
--	iwlagn_setup_deferred_work(priv);
--
--	INIT_WORK(&priv->bt_traffic_change_work,
--		  iwl6000g2b_bt_traffic_change_work);
--
--}
--
--static void iwl6000g2b_bt_cancel_deferred_work(struct iwl_priv *priv)
--{
--	cancel_work_sync(&priv->bt_traffic_change_work);
--}
--
- static struct iwl_lib_ops iwl6000_lib = {
- 	.set_hw_params = iwl6000_hw_set_hw_params,
- 	.txq_update_byte_cnt_tbl = iwlagn_txq_update_byte_cnt_tbl,
-@@ -710,9 +347,9 @@ static struct iwl_lib_ops iwl6000g2b_lib = {
- 	.txq_attach_buf_to_tfd = iwl_hw_txq_attach_buf_to_tfd,
- 	.txq_free_tfd = iwl_hw_txq_free_tfd,
- 	.txq_init = iwl_hw_tx_queue_init,
--	.rx_handler_setup = iwl6000g2b_rx_handler_setup,
--	.setup_deferred_work = iwl6000g2b_bt_setup_deferred_work,
--	.cancel_deferred_work = iwl6000g2b_bt_cancel_deferred_work,
-+	.rx_handler_setup = iwlagn_bt_rx_handler_setup,
-+	.setup_deferred_work = iwlagn_bt_setup_deferred_work,
-+	.cancel_deferred_work = iwlagn_bt_cancel_deferred_work,
- 	.is_valid_rtc_data_addr = iwlagn_hw_valid_rtc_data_addr,
- 	.load_ucode = iwlagn_load_ucode,
- 	.dump_nic_event_log = iwl_dump_nic_event_log,
-@@ -782,17 +419,9 @@ static const struct iwl_ops iwl6000_ops = {
- 	.led = &iwlagn_led_ops,
- };
- 
--static struct iwl_hcmd_ops iwl6000g2b_hcmd = {
--	.rxon_assoc = iwlagn_send_rxon_assoc,
--	.commit_rxon = iwl_commit_rxon,
--	.set_rxon_chain = iwl_set_rxon_chain,
--	.set_tx_ant = iwlagn_send_tx_ant_config,
--	.send_bt_config = iwl6000g2b_send_bt_config,
--};
--
- static const struct iwl_ops iwl6000g2b_ops = {
- 	.lib = &iwl6000g2b_lib,
--	.hcmd = &iwl6000g2b_hcmd,
-+	.hcmd = &iwlagn_bt_hcmd,
- 	.utils = &iwlagn_hcmd_utils,
- 	.led = &iwlagn_led_ops,
- };
-@@ -945,7 +574,7 @@ struct iwl_cfg iwl6000g2b_2agn_cfg = {
- 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
- 	.advanced_bt_coexist = true,
- 	.bt_init_traffic_load = IWL_BT_COEX_TRAFFIC_LOAD_NONE,
--	.bt_prio_boost = IWL6000G2B_BT_PRIO_BOOST_DEFAULT,
-+	.bt_prio_boost = IWLAGN_BT_PRIO_BOOST_DEFAULT,
- };
- 
- struct iwl_cfg iwl6000g2b_2abg_cfg = {
-@@ -986,7 +615,7 @@ struct iwl_cfg iwl6000g2b_2abg_cfg = {
- 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
- 	.advanced_bt_coexist = true,
- 	.bt_init_traffic_load = IWL_BT_COEX_TRAFFIC_LOAD_NONE,
--	.bt_prio_boost = IWL6000G2B_BT_PRIO_BOOST_DEFAULT,
-+	.bt_prio_boost = IWLAGN_BT_PRIO_BOOST_DEFAULT,
- };
- 
- struct iwl_cfg iwl6000g2b_2bgn_cfg = {
-@@ -1029,7 +658,7 @@ struct iwl_cfg iwl6000g2b_2bgn_cfg = {
- 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
- 	.advanced_bt_coexist = true,
- 	.bt_init_traffic_load = IWL_BT_COEX_TRAFFIC_LOAD_NONE,
--	.bt_prio_boost = IWL6000G2B_BT_PRIO_BOOST_DEFAULT,
-+	.bt_prio_boost = IWLAGN_BT_PRIO_BOOST_DEFAULT,
- };
- 
- struct iwl_cfg iwl6000g2b_2bg_cfg = {
-@@ -1070,7 +699,7 @@ struct iwl_cfg iwl6000g2b_2bg_cfg = {
- 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
- 	.advanced_bt_coexist = true,
- 	.bt_init_traffic_load = IWL_BT_COEX_TRAFFIC_LOAD_NONE,
--	.bt_prio_boost = IWL6000G2B_BT_PRIO_BOOST_DEFAULT,
-+	.bt_prio_boost = IWLAGN_BT_PRIO_BOOST_DEFAULT,
- };
- 
- struct iwl_cfg iwl6000g2b_bgn_cfg = {
-@@ -1113,7 +742,7 @@ struct iwl_cfg iwl6000g2b_bgn_cfg = {
- 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
- 	.advanced_bt_coexist = true,
- 	.bt_init_traffic_load = IWL_BT_COEX_TRAFFIC_LOAD_NONE,
--	.bt_prio_boost = IWL6000G2B_BT_PRIO_BOOST_DEFAULT,
-+	.bt_prio_boost = IWLAGN_BT_PRIO_BOOST_DEFAULT,
- };
- 
- struct iwl_cfg iwl6000g2b_bg_cfg = {
-@@ -1154,7 +783,7 @@ struct iwl_cfg iwl6000g2b_bg_cfg = {
- 	.scan_tx_antennas[IEEE80211_BAND_2GHZ] = ANT_A,
- 	.advanced_bt_coexist = true,
- 	.bt_init_traffic_load = IWL_BT_COEX_TRAFFIC_LOAD_NONE,
--	.bt_prio_boost = IWL6000G2B_BT_PRIO_BOOST_DEFAULT,
-+	.bt_prio_boost = IWLAGN_BT_PRIO_BOOST_DEFAULT,
- };
- 
- /*
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-index 8493976..84fe06a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
-@@ -277,6 +277,14 @@ struct iwl_hcmd_ops iwlagn_hcmd = {
- 	.send_bt_config = iwl_send_bt_config,
- };
- 
-+struct iwl_hcmd_ops iwlagn_bt_hcmd = {
-+	.rxon_assoc = iwlagn_send_rxon_assoc,
-+	.commit_rxon = iwl_commit_rxon,
-+	.set_rxon_chain = iwl_set_rxon_chain,
-+	.set_tx_ant = iwlagn_send_tx_ant_config,
-+	.send_bt_config = iwlagn_send_advance_bt_config,
-+};
-+
- struct iwl_hcmd_utils_ops iwlagn_hcmd_utils = {
- 	.get_hcmd_size = iwlagn_get_hcmd_size,
- 	.build_addsta_hcmd = iwlagn_build_addsta_hcmd,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index ea24240..a9e69a6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -1542,3 +1542,373 @@ done:
- 	ieee80211_wake_queues(priv->hw);
- 	mutex_unlock(&priv->mutex);
- }
-+
-+/*
-+ * BT coex
-+ */
-+/*
-+ * Macros to access the lookup table.
-+ *
-+ * The lookup table has 7 inputs: bt3_prio, bt3_txrx, bt_rf_act, wifi_req,
-+* wifi_prio, wifi_txrx and wifi_sh_ant_req.
-+ *
-+ * It has three outputs: WLAN_ACTIVE, WLAN_KILL and ANT_SWITCH
-+ *
-+ * The format is that "registers" 8 through 11 contain the WLAN_ACTIVE bits
-+ * one after another in 32-bit registers, and "registers" 0 through 7 contain
-+ * the WLAN_KILL and ANT_SWITCH bits interleaved (in that order).
-+ *
-+ * These macros encode that format.
-+ */
-+#define LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, wifi_req, wifi_prio, \
-+		  wifi_txrx, wifi_sh_ant_req) \
-+	(bt3_prio | (bt3_txrx << 1) | (bt_rf_act << 2) | (wifi_req << 3) | \
-+	(wifi_prio << 4) | (wifi_txrx << 5) | (wifi_sh_ant_req << 6))
-+
-+#define LUT_PTA_WLAN_ACTIVE_OP(lut, op, val) \
-+	lut[8 + ((val) >> 5)] op (cpu_to_le32(BIT((val) & 0x1f)))
-+#define LUT_TEST_PTA_WLAN_ACTIVE(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
-+				 wifi_prio, wifi_txrx, wifi_sh_ant_req) \
-+	(!!(LUT_PTA_WLAN_ACTIVE_OP(lut, &, LUT_VALUE(bt3_prio, bt3_txrx, \
-+				   bt_rf_act, wifi_req, wifi_prio, wifi_txrx, \
-+				   wifi_sh_ant_req))))
-+#define LUT_SET_PTA_WLAN_ACTIVE(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
-+				wifi_prio, wifi_txrx, wifi_sh_ant_req) \
-+	LUT_PTA_WLAN_ACTIVE_OP(lut, |=, LUT_VALUE(bt3_prio, bt3_txrx, \
-+			       bt_rf_act, wifi_req, wifi_prio, wifi_txrx, \
-+			       wifi_sh_ant_req))
-+#define LUT_CLEAR_PTA_WLAN_ACTIVE(lut, bt3_prio, bt3_txrx, bt_rf_act, \
-+				  wifi_req, wifi_prio, wifi_txrx, \
-+				  wifi_sh_ant_req) \
-+	LUT_PTA_WLAN_ACTIVE_OP(lut, &= ~, LUT_VALUE(bt3_prio, bt3_txrx, \
-+			       bt_rf_act, wifi_req, wifi_prio, wifi_txrx, \
-+			       wifi_sh_ant_req))
-+
-+#define LUT_WLAN_KILL_OP(lut, op, val) \
-+	lut[(val) >> 4] op (cpu_to_le32(BIT(((val) << 1) & 0x1e)))
-+#define LUT_TEST_WLAN_KILL(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
-+			   wifi_prio, wifi_txrx, wifi_sh_ant_req) \
-+	(!!(LUT_WLAN_KILL_OP(lut, &, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
-+			     wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))))
-+#define LUT_SET_WLAN_KILL(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
-+			  wifi_prio, wifi_txrx, wifi_sh_ant_req) \
-+	LUT_WLAN_KILL_OP(lut, |=, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
-+			 wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))
-+#define LUT_CLEAR_WLAN_KILL(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
-+			    wifi_prio, wifi_txrx, wifi_sh_ant_req) \
-+	LUT_WLAN_KILL_OP(lut, &= ~, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
-+			 wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))
-+
-+#define LUT_ANT_SWITCH_OP(lut, op, val) \
-+	lut[(val) >> 4] op (cpu_to_le32(BIT((((val) << 1) & 0x1e) + 1)))
-+#define LUT_TEST_ANT_SWITCH(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
-+			    wifi_prio, wifi_txrx, wifi_sh_ant_req) \
-+	(!!(LUT_ANT_SWITCH_OP(lut, &, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
-+			      wifi_req, wifi_prio, wifi_txrx, \
-+			      wifi_sh_ant_req))))
-+#define LUT_SET_ANT_SWITCH(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
-+			   wifi_prio, wifi_txrx, wifi_sh_ant_req) \
-+	LUT_ANT_SWITCH_OP(lut, |=, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
-+			  wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))
-+#define LUT_CLEAR_ANT_SWITCH(lut, bt3_prio, bt3_txrx, bt_rf_act, wifi_req, \
-+			     wifi_prio, wifi_txrx, wifi_sh_ant_req) \
-+	LUT_ANT_SWITCH_OP(lut, &= ~, LUT_VALUE(bt3_prio, bt3_txrx, bt_rf_act, \
-+			  wifi_req, wifi_prio, wifi_txrx, wifi_sh_ant_req))
-+
-+static const __le32 iwlagn_def_3w_lookup[12] = {
-+	cpu_to_le32(0xaaaaaaaa),
-+	cpu_to_le32(0xaaaaaaaa),
-+	cpu_to_le32(0xaeaaaaaa),
-+	cpu_to_le32(0xaaaaaaaa),
-+	cpu_to_le32(0xcc00ff28),
-+	cpu_to_le32(0x0000aaaa),
-+	cpu_to_le32(0xcc00aaaa),
-+	cpu_to_le32(0x0000aaaa),
-+	cpu_to_le32(0xc0004000),
-+	cpu_to_le32(0x00004000),
-+	cpu_to_le32(0xf0005000),
-+	cpu_to_le32(0xf0004000),
-+};
-+
-+static const __le32 iwlagn_concurrent_lookup[12] = {
-+	cpu_to_le32(0xaaaaaaaa),
-+	cpu_to_le32(0xaaaaaaaa),
-+	cpu_to_le32(0xaaaaaaaa),
-+	cpu_to_le32(0xaaaaaaaa),
-+	cpu_to_le32(0xaaaaaaaa),
-+	cpu_to_le32(0xaaaaaaaa),
-+	cpu_to_le32(0xaaaaaaaa),
-+	cpu_to_le32(0xaaaaaaaa),
-+	cpu_to_le32(0x00000000),
-+	cpu_to_le32(0x00000000),
-+	cpu_to_le32(0x00000000),
-+	cpu_to_le32(0x00000000),
-+};
-+
-+void iwlagn_send_advance_bt_config(struct iwl_priv *priv)
-+{
-+	struct iwlagn_bt_cmd bt_cmd = {
-+		.max_kill = IWLAGN_BT_MAX_KILL_DEFAULT,
-+		.bt3_timer_t7_value = IWLAGN_BT3_T7_DEFAULT,
-+		.bt3_prio_sample_time = IWLAGN_BT3_PRIO_SAMPLE_DEFAULT,
-+		.bt3_timer_t2_value = IWLAGN_BT3_T2_DEFAULT,
-+	};
-+
-+	BUILD_BUG_ON(sizeof(iwlagn_def_3w_lookup) !=
-+			sizeof(bt_cmd.bt3_lookup_table));
-+
-+	bt_cmd.prio_boost = priv->cfg->bt_prio_boost;
-+	bt_cmd.kill_ack_mask = priv->kill_ack_mask;
-+	bt_cmd.kill_cts_mask = priv->kill_cts_mask;
-+	bt_cmd.valid = priv->bt_valid;
-+
-+	/*
-+	 * Configure BT coex mode to "no coexistence" when the
-+	 * user disabled BT coexistence, we have no interface
-+	 * (might be in monitor mode), or the interface is in
-+	 * IBSS mode (no proper uCode support for coex then).
-+	 */
-+	if (!bt_coex_active || priv->iw_mode == NL80211_IFTYPE_ADHOC) {
-+		bt_cmd.flags = 0;
-+	} else {
-+		bt_cmd.flags = IWLAGN_BT_FLAG_COEX_MODE_3W <<
-+					IWLAGN_BT_FLAG_COEX_MODE_SHIFT;
-+		if (priv->bt_ch_announce)
-+			bt_cmd.flags |= IWLAGN_BT_FLAG_CHANNEL_INHIBITION;
-+		IWL_DEBUG_INFO(priv, "BT coex flag: 0X%x\n", bt_cmd.flags);
-+	}
-+	if (priv->bt_full_concurrent)
-+		memcpy(bt_cmd.bt3_lookup_table, iwlagn_concurrent_lookup,
-+			sizeof(iwlagn_concurrent_lookup));
-+	else
-+		memcpy(bt_cmd.bt3_lookup_table, iwlagn_def_3w_lookup,
-+			sizeof(iwlagn_def_3w_lookup));
-+
-+	IWL_DEBUG_INFO(priv, "BT coex %s in %s mode\n",
-+		       bt_cmd.flags ? "active" : "disabled",
-+		       priv->bt_full_concurrent ?
-+		       "full concurrency" : "3-wire");
-+
-+	if (iwl_send_cmd_pdu(priv, REPLY_BT_CONFIG, sizeof(bt_cmd), &bt_cmd))
-+		IWL_ERR(priv, "failed to send BT Coex Config\n");
-+
-+	/*
-+	 * When we are doing a restart, need to also reconfigure BT
-+	 * SCO to the device. If not doing a restart, bt_sco_active
-+	 * will always be false, so there's no need to have an extra
-+	 * variable to check for it.
-+	 */
-+	if (priv->bt_sco_active) {
-+		struct iwlagn_bt_sco_cmd sco_cmd = { .flags = 0 };
-+
-+		if (priv->bt_sco_active)
-+			sco_cmd.flags |= IWLAGN_BT_SCO_ACTIVE;
-+		if (iwl_send_cmd_pdu(priv, REPLY_BT_COEX_SCO,
-+				     sizeof(sco_cmd), &sco_cmd))
-+			IWL_ERR(priv, "failed to send BT SCO command\n");
-+	}
-+}
-+
-+static void iwlagn_bt_traffic_change_work(struct work_struct *work)
-+{
-+	struct iwl_priv *priv =
-+		container_of(work, struct iwl_priv, bt_traffic_change_work);
-+	int smps_request = -1;
-+
-+	IWL_DEBUG_INFO(priv, "BT traffic load changes: %d\n",
-+		       priv->bt_traffic_load);
-+
-+	switch (priv->bt_traffic_load) {
-+	case IWL_BT_COEX_TRAFFIC_LOAD_NONE:
-+		smps_request = IEEE80211_SMPS_AUTOMATIC;
-+		break;
-+	case IWL_BT_COEX_TRAFFIC_LOAD_LOW:
-+		smps_request = IEEE80211_SMPS_DYNAMIC;
-+		break;
-+	case IWL_BT_COEX_TRAFFIC_LOAD_HIGH:
-+	case IWL_BT_COEX_TRAFFIC_LOAD_CONTINUOUS:
-+		smps_request = IEEE80211_SMPS_STATIC;
-+		break;
-+	default:
-+		IWL_ERR(priv, "Invalid BT traffic load: %d\n",
-+			priv->bt_traffic_load);
-+		break;
-+	}
-+
-+	mutex_lock(&priv->mutex);
-+
-+	if (priv->cfg->ops->lib->update_chain_flags)
-+		priv->cfg->ops->lib->update_chain_flags(priv);
-+
-+	if (smps_request != -1 &&
-+	    priv->vif && priv->vif->type == NL80211_IFTYPE_STATION)
-+		ieee80211_request_smps(priv->vif, smps_request);
-+
-+	mutex_unlock(&priv->mutex);
-+}
-+
-+static void iwlagn_print_uartmsg(struct iwl_priv *priv,
-+				struct iwl_bt_uart_msg *uart_msg)
-+{
-+	IWL_DEBUG_NOTIF(priv, "Message Type = 0x%X, SSN = 0x%X, "
-+			"Update Req = 0x%X",
-+		(BT_UART_MSG_FRAME1MSGTYPE_MSK & uart_msg->frame1) >>
-+			BT_UART_MSG_FRAME1MSGTYPE_POS,
-+		(BT_UART_MSG_FRAME1SSN_MSK & uart_msg->frame1) >>
-+			BT_UART_MSG_FRAME1SSN_POS,
-+		(BT_UART_MSG_FRAME1UPDATEREQ_MSK & uart_msg->frame1) >>
-+			BT_UART_MSG_FRAME1UPDATEREQ_POS);
-+
-+	IWL_DEBUG_NOTIF(priv, "Open connections = 0x%X, Traffic load = 0x%X, "
-+			"Chl_SeqN = 0x%X, In band = 0x%X",
-+		(BT_UART_MSG_FRAME2OPENCONNECTIONS_MSK & uart_msg->frame2) >>
-+			BT_UART_MSG_FRAME2OPENCONNECTIONS_POS,
-+		(BT_UART_MSG_FRAME2TRAFFICLOAD_MSK & uart_msg->frame2) >>
-+			BT_UART_MSG_FRAME2TRAFFICLOAD_POS,
-+		(BT_UART_MSG_FRAME2CHLSEQN_MSK & uart_msg->frame2) >>
-+			BT_UART_MSG_FRAME2CHLSEQN_POS,
-+		(BT_UART_MSG_FRAME2INBAND_MSK & uart_msg->frame2) >>
-+			BT_UART_MSG_FRAME2INBAND_POS);
-+
-+	IWL_DEBUG_NOTIF(priv, "SCO/eSCO = 0x%X, Sniff = 0x%X, A2DP = 0x%X, "
-+			"ACL = 0x%X, Master = 0x%X, OBEX = 0x%X",
-+		(BT_UART_MSG_FRAME3SCOESCO_MSK & uart_msg->frame3) >>
-+			BT_UART_MSG_FRAME3SCOESCO_POS,
-+		(BT_UART_MSG_FRAME3SNIFF_MSK & uart_msg->frame3) >>
-+			BT_UART_MSG_FRAME3SNIFF_POS,
-+		(BT_UART_MSG_FRAME3A2DP_MSK & uart_msg->frame3) >>
-+			BT_UART_MSG_FRAME3A2DP_POS,
-+		(BT_UART_MSG_FRAME3ACL_MSK & uart_msg->frame3) >>
-+			BT_UART_MSG_FRAME3ACL_POS,
-+		(BT_UART_MSG_FRAME3MASTER_MSK & uart_msg->frame3) >>
-+			BT_UART_MSG_FRAME3MASTER_POS,
-+		(BT_UART_MSG_FRAME3OBEX_MSK & uart_msg->frame3) >>
-+			BT_UART_MSG_FRAME3OBEX_POS);
-+
-+	IWL_DEBUG_NOTIF(priv, "Idle duration = 0x%X",
-+		(BT_UART_MSG_FRAME4IDLEDURATION_MSK & uart_msg->frame4) >>
-+			BT_UART_MSG_FRAME4IDLEDURATION_POS);
-+
-+	IWL_DEBUG_NOTIF(priv, "Tx Activity = 0x%X, Rx Activity = 0x%X, "
-+			"eSCO Retransmissions = 0x%X",
-+		(BT_UART_MSG_FRAME5TXACTIVITY_MSK & uart_msg->frame5) >>
-+			BT_UART_MSG_FRAME5TXACTIVITY_POS,
-+		(BT_UART_MSG_FRAME5RXACTIVITY_MSK & uart_msg->frame5) >>
-+			BT_UART_MSG_FRAME5RXACTIVITY_POS,
-+		(BT_UART_MSG_FRAME5ESCORETRANSMIT_MSK & uart_msg->frame5) >>
-+			BT_UART_MSG_FRAME5ESCORETRANSMIT_POS);
-+
-+	IWL_DEBUG_NOTIF(priv, "Sniff Interval = 0x%X, Discoverable = 0x%X",
-+		(BT_UART_MSG_FRAME6SNIFFINTERVAL_MSK & uart_msg->frame6) >>
-+			BT_UART_MSG_FRAME6SNIFFINTERVAL_POS,
-+		(BT_UART_MSG_FRAME6DISCOVERABLE_MSK & uart_msg->frame6) >>
-+			BT_UART_MSG_FRAME6DISCOVERABLE_POS);
-+
-+	IWL_DEBUG_NOTIF(priv, "Sniff Activity = 0x%X, Inquiry/Page SR Mode = "
-+			"0x%X, Connectable = 0x%X",
-+		(BT_UART_MSG_FRAME7SNIFFACTIVITY_MSK & uart_msg->frame7) >>
-+			BT_UART_MSG_FRAME7SNIFFACTIVITY_POS,
-+		(BT_UART_MSG_FRAME7INQUIRYPAGESRMODE_MSK & uart_msg->frame7) >>
-+			BT_UART_MSG_FRAME7INQUIRYPAGESRMODE_POS,
-+		(BT_UART_MSG_FRAME7CONNECTABLE_MSK & uart_msg->frame7) >>
-+			BT_UART_MSG_FRAME7CONNECTABLE_POS);
-+}
-+
-+static void iwlagn_set_kill_ack_msk(struct iwl_priv *priv,
-+				     struct iwl_bt_uart_msg *uart_msg)
-+{
-+	u8 kill_ack_msk;
-+	__le32 bt_kill_ack_msg[2] = {
-+			cpu_to_le32(0xFFFFFFF), cpu_to_le32(0xFFFFFC00) };
-+
-+	kill_ack_msk = (((BT_UART_MSG_FRAME3A2DP_MSK |
-+			BT_UART_MSG_FRAME3SNIFF_MSK |
-+			BT_UART_MSG_FRAME3SCOESCO_MSK) &
-+			uart_msg->frame3) == 0) ? 1 : 0;
-+	if (priv->kill_ack_mask != bt_kill_ack_msg[kill_ack_msk]) {
-+		priv->bt_valid |= IWLAGN_BT_VALID_KILL_ACK_MASK;
-+		priv->kill_ack_mask = bt_kill_ack_msg[kill_ack_msk];
-+		/* schedule to send runtime bt_config */
-+		queue_work(priv->workqueue, &priv->bt_runtime_config);
-+	}
-+
-+}
-+
-+void iwlagn_bt_coex_profile_notif(struct iwl_priv *priv,
-+					     struct iwl_rx_mem_buffer *rxb)
-+{
-+	unsigned long flags;
-+	struct iwl_rx_packet *pkt = rxb_addr(rxb);
-+	struct iwl_bt_coex_profile_notif *coex = &pkt->u.bt_coex_profile_notif;
-+	struct iwlagn_bt_sco_cmd sco_cmd = { .flags = 0 };
-+	struct iwl_bt_uart_msg *uart_msg = &coex->last_bt_uart_msg;
-+	u8 last_traffic_load;
-+
-+	IWL_DEBUG_NOTIF(priv, "BT Coex notification:\n");
-+	IWL_DEBUG_NOTIF(priv, "    status: %d\n", coex->bt_status);
-+	IWL_DEBUG_NOTIF(priv, "    traffic load: %d\n", coex->bt_traffic_load);
-+	IWL_DEBUG_NOTIF(priv, "    CI compliance: %d\n",
-+			coex->bt_ci_compliance);
-+	iwlagn_print_uartmsg(priv, uart_msg);
-+
-+	last_traffic_load = priv->notif_bt_traffic_load;
-+	priv->notif_bt_traffic_load = coex->bt_traffic_load;
-+	if (priv->iw_mode != NL80211_IFTYPE_ADHOC) {
-+		if (priv->bt_status != coex->bt_status ||
-+		    last_traffic_load != coex->bt_traffic_load) {
-+			if (coex->bt_status) {
-+				/* BT on */
-+				if (!priv->bt_ch_announce)
-+					priv->bt_traffic_load =
-+						IWL_BT_COEX_TRAFFIC_LOAD_HIGH;
-+				else
-+					priv->bt_traffic_load =
-+						coex->bt_traffic_load;
-+			} else {
-+				/* BT off */
-+				priv->bt_traffic_load =
-+					IWL_BT_COEX_TRAFFIC_LOAD_NONE;
-+			}
-+			priv->bt_status = coex->bt_status;
-+			queue_work(priv->workqueue,
-+				   &priv->bt_traffic_change_work);
-+		}
-+		if (priv->bt_sco_active !=
-+		    (uart_msg->frame3 & BT_UART_MSG_FRAME3SCOESCO_MSK)) {
-+			priv->bt_sco_active = uart_msg->frame3 &
-+				BT_UART_MSG_FRAME3SCOESCO_MSK;
-+			if (priv->bt_sco_active)
-+				sco_cmd.flags |= IWLAGN_BT_SCO_ACTIVE;
-+			iwl_send_cmd_pdu_async(priv, REPLY_BT_COEX_SCO,
-+				       sizeof(sco_cmd), &sco_cmd, NULL);
-+		}
-+	}
-+
-+	iwlagn_set_kill_ack_msk(priv, uart_msg);
-+
-+	/* FIXME: based on notification, adjust the prio_boost */
-+
-+	spin_lock_irqsave(&priv->lock, flags);
-+	priv->bt_ci_compliance = coex->bt_ci_compliance;
-+	spin_unlock_irqrestore(&priv->lock, flags);
-+}
-+
-+void iwlagn_bt_rx_handler_setup(struct iwl_priv *priv)
-+{
-+	iwlagn_rx_handler_setup(priv);
-+	priv->rx_handlers[REPLY_BT_COEX_PROFILE_NOTIF] =
-+		iwlagn_bt_coex_profile_notif;
-+}
-+
-+void iwlagn_bt_setup_deferred_work(struct iwl_priv *priv)
-+{
-+	iwlagn_setup_deferred_work(priv);
-+
-+	INIT_WORK(&priv->bt_traffic_change_work,
-+		  iwlagn_bt_traffic_change_work);
-+}
-+
-+void iwlagn_bt_cancel_deferred_work(struct iwl_priv *priv)
-+{
-+	cancel_work_sync(&priv->bt_traffic_change_work);
-+}
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-index 771ceff..f2499e1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
-@@ -464,11 +464,11 @@ int iwlagn_alive_notify(struct iwl_priv *priv)
- 	if (priv->cfg->advanced_bt_coexist) {
- 		/* Configure Bluetooth device coexistence support */
- 		/* need to perform this before any calibration */
--		priv->bt_valid = IWL6000G2B_BT_ALL_VALID_MSK;
--		priv->kill_ack_mask = IWL6000G2B_BT_KILL_ACK_MASK_DEFAULT;
--		priv->kill_cts_mask = IWL6000G2B_BT_KILL_CTS_MASK_DEFAULT;
-+		priv->bt_valid = IWLAGN_BT_ALL_VALID_MSK;
-+		priv->kill_ack_mask = IWLAGN_BT_KILL_ACK_MASK_DEFAULT;
-+		priv->kill_cts_mask = IWLAGN_BT_KILL_CTS_MASK_DEFAULT;
- 		priv->cfg->ops->hcmd->send_bt_config(priv);
--		priv->bt_valid = IWL6000G2B_BT_VALID_ENABLE_FLAGS;
-+		priv->bt_valid = IWLAGN_BT_VALID_ENABLE_FLAGS;
- 
- 		if (bt_coex_active && priv->iw_mode != NL80211_IFTYPE_ADHOC) {
- 			iwlagn_send_prio_tbl(priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index bd006c5..3826f1f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -4021,9 +4021,9 @@ static int iwl_init_drv(struct iwl_priv *priv)
- 
- 	/* init bt coex */
- 	if (priv->cfg->advanced_bt_coexist) {
--		priv->kill_ack_mask = IWL6000G2B_BT_KILL_ACK_MASK_DEFAULT;
--		priv->kill_cts_mask = IWL6000G2B_BT_KILL_CTS_MASK_DEFAULT;
--		priv->bt_valid = IWL6000G2B_BT_ALL_VALID_MSK;
-+		priv->kill_ack_mask = IWLAGN_BT_KILL_ACK_MASK_DEFAULT;
-+		priv->kill_cts_mask = IWLAGN_BT_KILL_CTS_MASK_DEFAULT;
-+		priv->bt_valid = IWLAGN_BT_ALL_VALID_MSK;
- 		priv->bt_on_thresh = BT_ON_THRESHOLD_DEF;
- 		priv->bt_duration = BT_DURATION_LIMIT_DEF;
- 		priv->dynamic_frag_thresh = BT_FRAG_THRESHOLD_DEF;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index cc6464d..1a7f70f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -95,6 +95,7 @@ extern struct iwl_cfg iwl1000_bg_cfg;
- 
- extern struct iwl_mod_params iwlagn_mod_params;
- extern struct iwl_hcmd_ops iwlagn_hcmd;
-+extern struct iwl_hcmd_ops iwlagn_bt_hcmd;
- extern struct iwl_hcmd_utils_ops iwlagn_hcmd_utils;
- 
- int iwl_reset_ict(struct iwl_priv *priv);
-@@ -226,4 +227,12 @@ int iwlagn_manage_ibss_station(struct iwl_priv *priv,
- int iwlagn_send_rxon_assoc(struct iwl_priv *priv);
- int iwlagn_send_tx_ant_config(struct iwl_priv *priv, u8 valid_tx_ant);
- 
-+/* bt coex */
-+void iwlagn_send_advance_bt_config(struct iwl_priv *priv);
-+void iwlagn_bt_coex_profile_notif(struct iwl_priv *priv,
-+				  struct iwl_rx_mem_buffer *rxb);
-+void iwlagn_bt_rx_handler_setup(struct iwl_priv *priv);
-+void iwlagn_bt_setup_deferred_work(struct iwl_priv *priv);
-+void iwlagn_bt_cancel_deferred_work(struct iwl_priv *priv);
-+
- #endif /* __iwl_agn_h__ */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
-index 5df22f1..8ed2412 100644
---- a/drivers/net/wireless/iwlwifi/iwl-commands.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
-@@ -2411,52 +2411,52 @@ struct iwl_bt_cmd {
- 	__le32 kill_cts_mask;
- } __packed;
- 
--#define IWL6000G2B_BT_FLAG_CHANNEL_INHIBITION	BIT(0)
-+#define IWLAGN_BT_FLAG_CHANNEL_INHIBITION	BIT(0)
- 
--#define IWL6000G2B_BT_FLAG_COEX_MODE_MASK	(BIT(3)|BIT(4)|BIT(5))
--#define IWL6000G2B_BT_FLAG_COEX_MODE_SHIFT	3
--#define IWL6000G2B_BT_FLAG_COEX_MODE_DISABLED	0
--#define IWL6000G2B_BT_FLAG_COEX_MODE_LEGACY_2W	1
--#define IWL6000G2B_BT_FLAG_COEX_MODE_3W		2
--#define IWL6000G2B_BT_FLAG_COEX_MODE_4W		3
-+#define IWLAGN_BT_FLAG_COEX_MODE_MASK		(BIT(3)|BIT(4)|BIT(5))
-+#define IWLAGN_BT_FLAG_COEX_MODE_SHIFT		3
-+#define IWLAGN_BT_FLAG_COEX_MODE_DISABLED	0
-+#define IWLAGN_BT_FLAG_COEX_MODE_LEGACY_2W	1
-+#define IWLAGN_BT_FLAG_COEX_MODE_3W		2
-+#define IWLAGN_BT_FLAG_COEX_MODE_4W		3
- 
--#define IWL6000G2B_BT_FLAG_UCODE_DEFAULT	BIT(6)
--#define IWL6000G2B_BT_FLAG_NOCOEX_NOTIF		BIT(7)
-+#define IWLAGN_BT_FLAG_UCODE_DEFAULT	BIT(6)
-+#define IWLAGN_BT_FLAG_NOCOEX_NOTIF	BIT(7)
- 
--#define IWL6000G2B_BT_PRIO_BOOST_MAX		0xFF
--#define IWL6000G2B_BT_PRIO_BOOST_MIN		0x00
--#define IWL6000G2B_BT_PRIO_BOOST_DEFAULT	0xF0
-+#define IWLAGN_BT_PRIO_BOOST_MAX	0xFF
-+#define IWLAGN_BT_PRIO_BOOST_MIN	0x00
-+#define IWLAGN_BT_PRIO_BOOST_DEFAULT	0xF0
- 
--#define IWL6000G2B_BT_MAX_KILL_DEFAULT		5
-+#define IWLAGN_BT_MAX_KILL_DEFAULT	5
- 
--#define IWL6000G2B_BT3_T7_DEFAULT		1
-+#define IWLAGN_BT3_T7_DEFAULT		1
- 
--#define IWL6000G2B_BT_KILL_ACK_MASK_DEFAULT	cpu_to_le32(0xffffffff)
--#define IWL6000G2B_BT_KILL_CTS_MASK_DEFAULT	cpu_to_le32(0xffffffff)
-+#define IWLAGN_BT_KILL_ACK_MASK_DEFAULT	cpu_to_le32(0xffffffff)
-+#define IWLAGN_BT_KILL_CTS_MASK_DEFAULT	cpu_to_le32(0xffffffff)
- 
--#define IWL6000G2B_BT3_PRIO_SAMPLE_DEFAULT	2
-+#define IWLAGN_BT3_PRIO_SAMPLE_DEFAULT	2
- 
--#define IWL6000G2B_BT3_T2_DEFAULT		0xc
-+#define IWLAGN_BT3_T2_DEFAULT		0xc
- 
--#define IWL6000G2B_BT_VALID_ENABLE_FLAGS	cpu_to_le16(BIT(0))
--#define IWL6000G2B_BT_VALID_BOOST		cpu_to_le16(BIT(1))
--#define IWL6000G2B_BT_VALID_MAX_KILL		cpu_to_le16(BIT(2))
--#define IWL6000G2B_BT_VALID_3W_TIMERS		cpu_to_le16(BIT(3))
--#define IWL6000G2B_BT_VALID_KILL_ACK_MASK	cpu_to_le16(BIT(4))
--#define IWL6000G2B_BT_VALID_KILL_CTS_MASK	cpu_to_le16(BIT(5))
--#define IWL6000G2B_BT_VALID_BT4_TIMES		cpu_to_le16(BIT(6))
--#define IWL6000G2B_BT_VALID_3W_LUT		cpu_to_le16(BIT(7))
-+#define IWLAGN_BT_VALID_ENABLE_FLAGS	cpu_to_le16(BIT(0))
-+#define IWLAGN_BT_VALID_BOOST		cpu_to_le16(BIT(1))
-+#define IWLAGN_BT_VALID_MAX_KILL	cpu_to_le16(BIT(2))
-+#define IWLAGN_BT_VALID_3W_TIMERS	cpu_to_le16(BIT(3))
-+#define IWLAGN_BT_VALID_KILL_ACK_MASK	cpu_to_le16(BIT(4))
-+#define IWLAGN_BT_VALID_KILL_CTS_MASK	cpu_to_le16(BIT(5))
-+#define IWLAGN_BT_VALID_BT4_TIMES	cpu_to_le16(BIT(6))
-+#define IWLAGN_BT_VALID_3W_LUT		cpu_to_le16(BIT(7))
- 
--#define IWL6000G2B_BT_ALL_VALID_MSK	(IWL6000G2B_BT_VALID_ENABLE_FLAGS | \
--					IWL6000G2B_BT_VALID_BOOST | \
--					IWL6000G2B_BT_VALID_MAX_KILL | \
--					IWL6000G2B_BT_VALID_3W_TIMERS | \
--					IWL6000G2B_BT_VALID_KILL_ACK_MASK | \
--					IWL6000G2B_BT_VALID_KILL_CTS_MASK | \
--					IWL6000G2B_BT_VALID_BT4_TIMES | \
--					IWL6000G2B_BT_VALID_3W_LUT)
-+#define IWLAGN_BT_ALL_VALID_MSK		(IWLAGN_BT_VALID_ENABLE_FLAGS | \
-+					IWLAGN_BT_VALID_BOOST | \
-+					IWLAGN_BT_VALID_MAX_KILL | \
-+					IWLAGN_BT_VALID_3W_TIMERS | \
-+					IWLAGN_BT_VALID_KILL_ACK_MASK | \
-+					IWLAGN_BT_VALID_KILL_CTS_MASK | \
-+					IWLAGN_BT_VALID_BT4_TIMES | \
-+					IWLAGN_BT_VALID_3W_LUT)
- 
--struct iwl6000g2b_bt_cmd {
-+struct iwlagn_bt_cmd {
- 	u8 flags;
- 	u8 ledtime; /* unused */
- 	u8 max_kill;
-@@ -2473,9 +2473,9 @@ struct iwl6000g2b_bt_cmd {
- 	u8 reserved[3];
- };
- 
--#define IWL6000G2B_BT_SCO_ACTIVE	cpu_to_le32(BIT(0))
-+#define IWLAGN_BT_SCO_ACTIVE	cpu_to_le32(BIT(0))
- 
--struct iwl6000g2b_bt_sco_cmd {
-+struct iwlagn_bt_sco_cmd {
- 	__le32 flags;
- };
- 
--- 
-1.7.0.4
+
+Listed regressions statistics:
+
+  Date          Total  Pending  Unresolved
+  ----------------------------------------
+  2010-08-30      124       38          34
+  2010-08-01      100       27          23
+  2010-07-23       94       33          25
+  2010-07-09       79       45          37
+  2010-06-21       46       37          26
+  2010-06-09       15       13          10
+
+
+Unresolved regressions
+----------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17071
+Subject		: possible esata regression in 2.6.35
+Submitter	: Nicolas Jungers <nicolas@jungers.net>
+Date		: 2010-08-21 18:52 (9 days old)
+Message-ID	: <4C702070.5020809@jungers.net>
+References	: http://marc.info/?l=linux-kernel&m=128241685406276&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16771
+Subject		: [Bisected Regression in 2.6.35] A full tmpfs filesystem causes hibernationto hang
+Submitter	: M. Vefa Bicakci <bicave@superonline.com>
+Date		: 2010-08-15 5:25 (15 days old)
+First-Bad-Commit: http://git.kernel.org/linus/bb21c7ce18eff8e6e7877ca1d06c6db719376e3c
+Message-ID	: <4C677A49.4030904@superonline.com>
+References	: http://marc.info/?l=linux-kernel&m=128184995401968&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16691
+Subject		: IPW5100: iwlagn broken with 2.6.34.x to 2.6.35.2 update
+Submitter	: Can Celasun <dcelasun@gmail.com>
+Date		: 2010-08-21 08:28 (9 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16633
+Subject		: ath5k + 2.6.35 x86 + hostapd - Failed to set channel
+Submitter	: NiTr0 <nitr0@seti.kr.ua>
+Date		: 2010-08-19 19:37 (11 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16620
+Subject		: [REGRESSION 2.6.35+] crash (maybe kmemleak related)
+Submitter	: Maxim Levitsky <maximlevitsky@gmail.com>
+Date		: 2010-08-12 20:37 (18 days old)
+Message-ID	: <1281645464.3893.25.camel@maxim-laptop>
+References	: http://marc.info/?l=linux-kernel&m=128164549415081&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16614
+Subject		: [2.6.35] usb 2.0 em28xx  kernel panic general protection fault: 0000 [#1] SMP          RIP: 0010:[<ffffffffa004fbc5>]  [<ffffffffa004fbc5>] em28xx_isoc_copy_vbi+0x62e/0x812 [em28xx]
+Submitter	: Sander Eikelenboom <linux@eikelenboom.it>
+Date		: 2010-08-10 22:12 (20 days old)
+Message-ID	: <61936849.20100811001257@eikelenboom.it>
+References	: http://marc.info/?l=linux-kernel&m=128152075830927&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16613
+Subject		: i8042 kernel module failed to load after unloading
+Submitter	: Seryodkin Victor <vvscore@gmail.com>
+Date		: 2010-08-17 17:01 (13 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16562
+Subject		: 2.6.35: cpu_idle bug report / on i7 870 cpu (x86_64)
+Submitter	: Justin Piszcz <jpiszcz@lucidpixels.com>
+Date		: 2010-08-06 22:09 (24 days old)
+Message-ID	: <alpine.DEB.2.00.1008061800530.5241@p34.internal.lan>
+References	: http://marc.info/?l=linux-kernel&m=128113260904048&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16549
+Subject		: 2.6.35: suspicious rcu_dereference_check() usage
+Submitter	: Vladislav Bolkhovitin <vst@vlnb.net>
+Date		: 2010-08-04 10:56 (26 days old)
+Message-ID	: <4C594740.1090608@vlnb.net>
+References	: http://marc.info/?l=linux-kernel&m=128091938215177&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16537
+Subject		: TREE_RCU hangs at boot
+Submitter	: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Date		: 2010-08-07 12:18 (23 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16536
+Subject		: audio stop playing after while
+Submitter	: okias <d.okias@gmail.com>
+Date		: 2010-08-07 11:00 (23 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16525
+Subject		: unexpected high load since 2.6.35
+Submitter	: MadLoisae@gmx.net <MadLoisae@gmx.net>
+Date		: 2010-08-02 20:53 (28 days old)
+Message-ID	: <4C573041.1070103@gmx.net>
+References	: http://marc.info/?l=linux-kernel&m=128078243726655&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16515
+Subject		: Radeon rv280 can't boot on kernel 2.6.35.
+Submitter	: Albert Gall <ss3vdr@gmail.com>
+Date		: 2010-08-04 16:10 (26 days old)
+Handled-By	: Alex Deucher <alexdeucher@gmail.com>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16506
+Subject		: 2.6.35.0 compilation errors and excessive warnings.
+Submitter	:  <software+linux-kernel@kd6lvw.ampr.org>
+Date		: 2010-08-04 01:06 (26 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16495
+Subject		: Kernel 2.6.35 takes almost half an hour to boot
+Submitter	: Claudio M. Camacho <claudiomkd@gmail.com>
+Date		: 2010-08-02 17:16 (28 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16488
+Subject		: [i915] Framebuffer ID error after suspend/hibernate leading to X crash
+Submitter	: Milan Bouchet-Valat <nalimilan@club.fr>
+Date		: 2010-08-01 08:55 (29 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16462
+Subject		: unable to connect to AP on legal channel 13
+Submitter	: Daniel J Blueman <daniel.blueman@gmail.com>
+Date		: 2010-07-25 17:06 (36 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16458
+Subject		: Bluetooth disabled after resume
+Submitter	: AttilaN <attila123456@gmail.com>
+Date		: 2010-07-25 09:33 (36 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16448
+Subject		: 2.6.35-rc5 panic at __br_deliver+0x64/0xe0 with kvm bridge networking
+Submitter	: caiqian@redhat.com
+Date		: 2010-07-23 3:25 (38 days old)
+Message-ID	: <198123598.1050221279855515402.JavaMail.root@zmail06.collab.prod.int.phx2.redhat.com>
+References	: http://marc.info/?l=linux-kernel&m=127985553916052&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16423
+Subject		: netfilter/iptables stopped logging 2.6.35-rc
+Submitter	: auto401300@hushmail.com
+Date		: 2010-07-17 10:20 (44 days old)
+Message-ID	: <20100717072036.1BBE52804B@smtp.hushmail.com>
+References	: http://lkml.indiana.edu/hypermail/linux/kernel/1007.2/00440.html
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16406
+Subject		: Badness with the kernel version 2.6.35-rc1-git1 running on P6 box
+Submitter	: divya <dipraksh@linux.vnet.ibm.com>
+Date		: 2010-07-16 8:50 (45 days old)
+Message-ID	: <4C401D56.3070108@linux.vnet.ibm.com>
+References	: http://marc.info/?l=linux-kernel&m=127927024906085&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16399
+Subject		: perf failed with kernel 2.6.35-rc
+Submitter	: Zhang, Yanmin <yanmin_zhang@linux.intel.com>
+Date		: 2010-07-13 8:14 (48 days old)
+First-Bad-Commit: http://git.kernel.org/linus/1ac62cfff252fb668405ef3398a1fa7f4a0d6d15
+Message-ID	: <1279008849.2096.913.camel@ymzhang.sh.intel.com>
+References	: http://marc.info/?l=linux-kernel&m=127900880212470&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16396
+Subject		: [bisected] resume from suspend freezes system
+Submitter	: tomas m <tmezzadra@gmail.com>
+Date		: 2010-07-15 02:32 (46 days old)
+Handled-By	: Rafael J. Wysocki <rjw@sisk.pl>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16393
+Subject		: kernel BUG at fs/block_dev.c:765!
+Submitter	: Markus Trippelsdorf <markus@trippelsdorf.de>
+Date		: 2010-07-14 13:52 (47 days old)
+Message-ID	: <20100714135217.GA1797@arch.tripp.de>
+References	: http://marc.info/?l=linux-kernel&m=127911564213748&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16380
+Subject		: Loop devices act strangely in 2.6.35
+Submitter	: Artem S. Tashkinov <t.artem@mailcity.com>
+Date		: 2010-07-13 23:21 (48 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16337
+Subject		: general protection fault: 0000 [#1] SMP
+Submitter	: Justin P. Mattock <justinmattock@gmail.com>
+Date		: 2010-07-03 22:59 (58 days old)
+Message-ID	: <<4C2FC0E3.6050101@gmail.com>>
+References	: http://marc.info/?l=linux-kernel&m=127819798215589&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16323
+Subject		: 2.6.35-rc3-git4 - kernel/sched.c:616 invoked rcu_dereference_check() without protection!
+Submitter	: Miles Lane <miles.lane@gmail.com>
+Date		: 2010-07-01 12:21 (60 days old)
+Message-ID	: <AANLkTini6hz2LFeZi8CMUmY3xw1MU7NxmyesuxZ4oCdo@mail.gmail.com>
+References	: http://marc.info/?l=linux-kernel&m=127798693125541&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16322
+Subject		: WARNING: at /arch/x86/include/asm/processor.h:1005 read_measured_perf_ctrs+0x5a/0x70()
+Submitter	: boris64 <bugzilla.kernel.org@boris64.net>
+Date		: 2010-07-01 13:54 (60 days old)
+Handled-By	: H. Peter Anvin <hpa@zytor.com>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16307
+Subject		: i915 in kernel 2.6.35-rc3, high number of wakeups
+Submitter	: Enrico Bandiello <enban@postal.uv.es>
+Date		: 2010-06-26 16:57 (65 days old)
+Message-ID	: <<4C26317A.5070309@postal.uv.es>>
+References	: http://marc.info/?l=linux-kernel&m=127757403404259&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16265
+Subject		: Why is kslowd accumulating so much CPU time?
+Submitter	: Theodore Ts'o <tytso@mit.edu>
+Date		: 2010-06-09 18:36 (82 days old)
+First-Bad-Commit: http://git.kernel.org/linus/fbf81762e385d3d45acad057b654d56972acf58c
+Message-ID	: <E1OMQ88-0002a1-Gb@closure.thunk.org>
+References	: http://marc.info/?l=linux-kernel&m=127610857819033&w=4
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16228
+Subject		: BUG/boot failure on Dell Precision T3500 (pci/ahci_stop_engine)
+Submitter	: Brian Bloniarz <phunge0@hotmail.com>
+Date		: 2010-06-16 17:57 (75 days old)
+Handled-By	: Bjorn Helgaas <bjorn.helgaas@hp.com>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16221
+Subject		: 2.6.35-rc2-git5 -- [drm:drm_mode_getfb] *ERROR* invalid framebuffer id
+Submitter	: Miles Lane <miles.lane@gmail.com>
+Date		: 2010-06-11 20:31 (80 days old)
+Message-ID	: <AANLkTim0jVRyqkwlGOcrg_XTvUQwcBYfWJX-aRzkkrLG@mail.gmail.com>
+References	: http://marc.info/?l=linux-kernel&m=127628828119623&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16184
+Subject		: Container, X86-64, i386, iptables rule
+Submitter	: Jean-Marc Pigeon <jmp@safe.ca>
+Date		: 2010-06-12 04:17 (79 days old)
+Handled-By	: Patrick McHardy <kaber@trash.net>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16173
+Subject		: After uncompressing the kernel, at boot time, the server hangs.
+Submitter	: David Hill <hilld@binarystorm.net>
+Date		: 2010-06-09 23:25 (82 days old)
+First-Bad-Commit: http://git.kernel.org/linus/cf7500c0ea133d66f8449d86392d83f840102632
+Handled-By	: Eric W. Biederman <ebiederm@xmission.com>
+
+
+Regressions with patches
+------------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16505
+Subject		: 2.6.34.2 breaks b43
+Submitter	: archman <spermmail001@yahoo.com>
+Date		: 2010-08-03 23:53 (27 days old)
+Handled-By	: Larry Finger <Larry.Finger@lwfinger.net>
+Patch		: https://bugzilla.kernel.org/attachment.cgi?id=27335
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16405
+Subject		: Brightness Adjustment on Toshiba nb305 Netbooks is non-functional.
+Submitter	: John Mesmon <jmesmon@gmail.com>
+Date		: 2010-07-15 23:40 (46 days old)
+First-Bad-Commit: http://git.kernel.org/linus/74a365b3f354fafc537efa5867deb7a9fadbfe27
+Handled-By	: Matthew Garrett <mjg59-kernel@srcf.ucam.org>
+Patch		: https://bugzilla.kernel.org/attachment.cgi?id=27236
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16400
+Subject		: 2.6.35-rc5 inconsistent lock state
+Submitter	: Martin Pirker <lkml.collector@gmail.com>
+Date		: 2010-07-14 20:33 (47 days old)
+Message-ID	: <AANLkTikDF0TL6OyPVCzPlUTwxFehcrETn3ysgSSeTq92@mail.gmail.com>
+References	: http://marc.info/?l=linux-kernel&m=127913961025267&w=2
+Handled-By	: Jens Axboe <axboe@kernel.dk>
+Patch		: http://marc.info/?l=linux-kernel&m=127939627513154&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16312
+Subject		: WARNING: at fs/fs-writeback.c:1127 __mark_inode_dirty
+Submitter	: Zdenek Kabelac <zdenek.kabelac@gmail.com>
+Date		: 2010-06-28 9:40 (63 days old)
+Message-ID	: <AANLkTin24fr5O4_q5Xbo9Y_NKkEmtcp6Hgmr9_4qXaFz@mail.gmail.com>
+References	: http://marc.info/?l=linux-kernel&m=127771804806465&w=2
+Handled-By	: Jan Kara <jack@suse.cz>
+Patch		: https://bugzilla.kernel.org/attachment.cgi?id=27272
+
+
+For details, please visit the bug entries and follow the links given in
+references.
+
+As you can see, there is a Bugzilla entry for each of the listed regressions.
+There also is a Bugzilla entry used for tracking the regressions introduced
+between 2.6.34 and 2.6.35, unresolved as well as resolved, at:
+
+http://bugzilla.kernel.org/show_bug.cgi?id=16055
+
+Please let the tracking team know if there are any Bugzilla entries that
+should be added to the list in there.
+
+Thanks!
 
