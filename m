@@ -1,303 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:37442 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759425Ab0HDXgN (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59026 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753447Ab0H3SKn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Aug 2010 19:36:13 -0400
-Received: by bwz1 with SMTP id 1so2671501bwz.19
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Aug 2010 16:36:10 -0700 (PDT)
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/3 v2] mac80211: put rx handlers into separate functions
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Thu, 5 Aug 2010 01:36:04 +0200
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <201008050136.05372.chunkeey@googlemail.com>
+	Mon, 30 Aug 2010 14:10:43 -0400
+Subject: Re: [RFC 0/3] mac80211: new API for handling broadcast / multicast
+ on sw scan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	amod.bodas@atheros.com
+In-Reply-To: <AANLkTi=bVRaDs6z6EavxCLFdMeNRhB=85yKtaHr-_hL-@mail.gmail.com>
+References: <1282979590-31113-1-git-send-email-lrodriguez@atheros.com>
+	 <1283177949.3691.72.camel@jlt3.sipsolutions.net>
+	 <AANLkTinOzTHn4okTdm=321sdAKy8z1ji_1K_SsDd_dH2@mail.gmail.com>
+	 <1283183279.3691.82.camel@jlt3.sipsolutions.net>
+	 <AANLkTi=bVRaDs6z6EavxCLFdMeNRhB=85yKtaHr-_hL-@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 30 Aug 2010 20:10:37 +0200
+Message-ID: <1283191837.3694.13.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch takes the reorder logic from the RX path and
-moves it into separate routines to make the expired frame
-release accessible.
+On Mon, 2010-08-30 at 11:00 -0700, Luis R. Rodriguez wrote:
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-WIP -> v1:
- 	- no changes
+> > Like doing CAB stuff, or saying that drivers need to keep track of DTIM
+> > count, that seems more AP related to me, but maybe I'm not understanding
+> > you correctly.
+> 
+> Well say you want to go to sleep for a sw scan. You not only have to
+> wait for the DTIM beacon prior to going to sleep but you also have to
+> wait so that all multicast and broadcast traffice get spit out by the
+> AP, right?
 
-v1 -> v2:
-	- rearrange code and get rid of the forward declaration
----
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index fa0f37e..fccd5f7 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -583,6 +583,57 @@ static void ieee80211_release_reorder_frames(struct ieee80211_hw *hw,
-  */
- #define HT_RX_REORDER_BUF_TIMEOUT (HZ / 10)
- 
-+static void ieee80211_sta_reorder_release(struct ieee80211_hw *hw,
-+					  struct tid_ampdu_rx *tid_agg_rx,
-+					  struct sk_buff_head *frames)
-+{
-+	int index;
-+
-+	/* release the buffer until next missing frame */
-+	index = seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn) %
-+						tid_agg_rx->buf_size;
-+	if (!tid_agg_rx->reorder_buf[index] &&
-+	    tid_agg_rx->stored_mpdu_num > 1) {
-+		/*
-+		 * No buffers ready to be released, but check whether any
-+		 * frames in the reorder buffer have timed out.
-+		 */
-+		int j;
-+		int skipped = 1;
-+		for (j = (index + 1) % tid_agg_rx->buf_size; j != index;
-+		     j = (j + 1) % tid_agg_rx->buf_size) {
-+			if (!tid_agg_rx->reorder_buf[j]) {
-+				skipped++;
-+				continue;
-+			}
-+			if (!time_after(jiffies, tid_agg_rx->reorder_time[j] +
-+					HT_RX_REORDER_BUF_TIMEOUT))
-+				break;
-+
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+			if (net_ratelimit())
-+				printk(KERN_DEBUG "%s: release an RX reorder "
-+				       "frame due to timeout on earlier "
-+				       "frames\n",
-+				       wiphy_name(hw->wiphy));
-+#endif
-+			ieee80211_release_reorder_frame(hw, tid_agg_rx,
-+							j, frames);
-+
-+			/*
-+			 * Increment the head seq# also for the skipped slots.
-+			 */
-+			tid_agg_rx->head_seq_num =
-+				(tid_agg_rx->head_seq_num + skipped) & SEQ_MASK;
-+			skipped = 0;
-+		}
-+	} else while (tid_agg_rx->reorder_buf[index]) {
-+		ieee80211_release_reorder_frame(hw, tid_agg_rx, index, frames);
-+		index =	seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn) %
-+							tid_agg_rx->buf_size;
-+	}
-+}
-+
- /*
-  * As this function belongs to the RX path it must be under
-  * rcu_read_lock protection. It returns false if the frame
-@@ -643,49 +694,7 @@ static bool ieee80211_sta_manage_reorder_buf(struct ieee80211_hw *hw,
- 	tid_agg_rx->reorder_buf[index] = skb;
- 	tid_agg_rx->reorder_time[index] = jiffies;
- 	tid_agg_rx->stored_mpdu_num++;
--	/* release the buffer until next missing frame */
--	index = seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn) %
--						tid_agg_rx->buf_size;
--	if (!tid_agg_rx->reorder_buf[index] &&
--	    tid_agg_rx->stored_mpdu_num > 1) {
--		/*
--		 * No buffers ready to be released, but check whether any
--		 * frames in the reorder buffer have timed out.
--		 */
--		int j;
--		int skipped = 1;
--		for (j = (index + 1) % tid_agg_rx->buf_size; j != index;
--		     j = (j + 1) % tid_agg_rx->buf_size) {
--			if (!tid_agg_rx->reorder_buf[j]) {
--				skipped++;
--				continue;
--			}
--			if (!time_after(jiffies, tid_agg_rx->reorder_time[j] +
--					HT_RX_REORDER_BUF_TIMEOUT))
--				break;
--
--#ifdef CONFIG_MAC80211_HT_DEBUG
--			if (net_ratelimit())
--				printk(KERN_DEBUG "%s: release an RX reorder "
--				       "frame due to timeout on earlier "
--				       "frames\n",
--				       wiphy_name(hw->wiphy));
--#endif
--			ieee80211_release_reorder_frame(hw, tid_agg_rx,
--							j, frames);
--
--			/*
--			 * Increment the head seq# also for the skipped slots.
--			 */
--			tid_agg_rx->head_seq_num =
--				(tid_agg_rx->head_seq_num + skipped) & SEQ_MASK;
--			skipped = 0;
--		}
--	} else while (tid_agg_rx->reorder_buf[index]) {
--		ieee80211_release_reorder_frame(hw, tid_agg_rx, index, frames);
--		index =	seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn) %
--							tid_agg_rx->buf_size;
--	}
-+	ieee80211_sta_reorder_release(hw, tid_agg_rx, frames);
- 
- 	return true;
- }
-@@ -2267,19 +2276,46 @@ static void ieee80211_rx_cooked_monitor(struct ieee80211_rx_data *rx,
- 	dev_kfree_skb(skb);
- }
- 
-+static void ieee80211_rx_handlers_result(struct ieee80211_rx_data *rx,
-+					 ieee80211_rx_result res)
-+{
-+	switch (res) {
-+	case RX_DROP_MONITOR:
-+		I802_DEBUG_INC(rx->sdata->local->rx_handlers_drop);
-+		if (rx->sta)
-+			rx->sta->rx_dropped++;
-+		/* fall through */
-+	case RX_CONTINUE: {
-+		struct ieee80211_rate *rate = NULL;
-+		struct ieee80211_supported_band *sband;
-+		struct ieee80211_rx_status *status;
-+
-+		status = IEEE80211_SKB_RXCB((rx->skb));
-+
-+		sband = rx->local->hw.wiphy->bands[status->band];
-+		if (!(status->flag & RX_FLAG_HT))
-+			rate = &sband->bitrates[status->rate_idx];
-+
-+		ieee80211_rx_cooked_monitor(rx, rate);
-+		break;
-+		}
-+	case RX_DROP_UNUSABLE:
-+		I802_DEBUG_INC(rx->sdata->local->rx_handlers_drop);
-+		if (rx->sta)
-+			rx->sta->rx_dropped++;
-+		dev_kfree_skb(rx->skb);
-+		break;
-+	case RX_QUEUED:
-+		I802_DEBUG_INC(rx->sdata->local->rx_handlers_queued);
-+		break;
-+	}
-+}
- 
--static void ieee80211_invoke_rx_handlers(struct ieee80211_sub_if_data *sdata,
--					 struct ieee80211_rx_data *rx,
--					 struct sk_buff *skb,
--					 struct ieee80211_rate *rate)
-+static void ieee80211_rx_handlers(struct ieee80211_rx_data *rx,
-+				  struct sk_buff_head *frames)
- {
--	struct sk_buff_head reorder_release;
- 	ieee80211_rx_result res = RX_DROP_MONITOR;
--
--	__skb_queue_head_init(&reorder_release);
--
--	rx->skb = skb;
--	rx->sdata = sdata;
-+	struct sk_buff *skb;
- 
- #define CALL_RXH(rxh)			\
- 	do {				\
-@@ -2288,17 +2324,7 @@ static void ieee80211_invoke_rx_handlers(struct ieee80211_sub_if_data *sdata,
- 			goto rxh_next;  \
- 	} while (0);
- 
--	/*
--	 * NB: the rxh_next label works even if we jump
--	 *     to it from here because then the list will
--	 *     be empty, which is a trivial check
--	 */
--	CALL_RXH(ieee80211_rx_h_passive_scan)
--	CALL_RXH(ieee80211_rx_h_check)
--
--	ieee80211_rx_reorder_ampdu(rx, &reorder_release);
--
--	while ((skb = __skb_dequeue(&reorder_release))) {
-+	while ((skb = __skb_dequeue(frames))) {
- 		/*
- 		 * all the other fields are valid across frames
- 		 * that belong to an aMPDU since they are on the
-@@ -2316,42 +2342,58 @@ static void ieee80211_invoke_rx_handlers(struct ieee80211_sub_if_data *sdata,
- 		CALL_RXH(ieee80211_rx_h_remove_qos_control)
- 		CALL_RXH(ieee80211_rx_h_amsdu)
- #ifdef CONFIG_MAC80211_MESH
--		if (ieee80211_vif_is_mesh(&sdata->vif))
-+		if (ieee80211_vif_is_mesh(&rx->sdata->vif))
- 			CALL_RXH(ieee80211_rx_h_mesh_fwding);
- #endif
- 		CALL_RXH(ieee80211_rx_h_data)
- 
- 		/* special treatment -- needs the queue */
--		res = ieee80211_rx_h_ctrl(rx, &reorder_release);
-+		res = ieee80211_rx_h_ctrl(rx, frames);
- 		if (res != RX_CONTINUE)
- 			goto rxh_next;
- 
- 		CALL_RXH(ieee80211_rx_h_action)
- 		CALL_RXH(ieee80211_rx_h_mgmt)
- 
-+ rxh_next:
-+		ieee80211_rx_handlers_result(rx, res);
-+
- #undef CALL_RXH
-+	}
-+}
-+
-+static void ieee80211_invoke_rx_handlers(struct ieee80211_sub_if_data *sdata,
-+					 struct ieee80211_rx_data *rx,
-+					 struct sk_buff *skb,
-+					 struct ieee80211_rate *rate)
-+{
-+	struct sk_buff_head reorder_release;
-+	ieee80211_rx_result res = RX_DROP_MONITOR;
-+
-+	__skb_queue_head_init(&reorder_release);
-+
-+	rx->skb = skb;
-+	rx->sdata = sdata;
-+
-+#define CALL_RXH(rxh)			\
-+	do {				\
-+		res = rxh(rx);		\
-+		if (res != RX_CONTINUE)	\
-+			goto rxh_next;  \
-+	} while (0);
-+
-+	CALL_RXH(ieee80211_rx_h_passive_scan)
-+	CALL_RXH(ieee80211_rx_h_check)
-+
-+	ieee80211_rx_reorder_ampdu(rx, &reorder_release);
-+
-+	ieee80211_rx_handlers(rx, &reorder_release);
-+	return;
- 
-  rxh_next:
--		switch (res) {
--		case RX_DROP_MONITOR:
--			I802_DEBUG_INC(sdata->local->rx_handlers_drop);
--			if (rx->sta)
--				rx->sta->rx_dropped++;
--			/* fall through */
--		case RX_CONTINUE:
--			ieee80211_rx_cooked_monitor(rx, rate);
--			break;
--		case RX_DROP_UNUSABLE:
--			I802_DEBUG_INC(sdata->local->rx_handlers_drop);
--			if (rx->sta)
--				rx->sta->rx_dropped++;
--			dev_kfree_skb(rx->skb);
--			break;
--		case RX_QUEUED:
--			I802_DEBUG_INC(sdata->local->rx_handlers_queued);
--			break;
--		}
--	}
-+	ieee80211_rx_handlers_result(rx, res);
-+
-+#undef CALL_RXH
- }
- 
- /* main receive path */
+Yeah, ok, I was thinking of these terms (CAB, DTIM count) as being AP
+specific -- the client just waits for the right beacon, it doesn't
+really need to count etc. But ok, just a misunderstanding then.
+
+> > Going offchannel only _after_ a DTIM beacon and associated
+> > multicast traffic seems unrelated to that?
+> 
+> Yes. What you note seems to be another challenge.
+
+I thought you set out to solve that bit. Now I'm confused.
+
+> > We're going to discuss multi-channel operation next week, and I believe
+> > then we can remove it. We're mostly there, I believe, just some mac80211
+> > internal re-design will be needed (with driver changes, obviously).
+> 
+> offchannel.c will eventually be removed?
+
+I don't think so, why? Oh, no, I meant virtual wiphys can be removed.
+
+> >> Then -- you also have other synch wait considerations to address which
+> >> are also currently only private to the driver. ath9k has these:
+> >>
+> >> +       wait_for = PS_WAIT_FOR_BEACON |
+> >> +                  PS_BEACON_SYNC |
+> >> +                  PS_WAIT_FOR_CAB |
+> >> +                  PS_WAIT_FOR_PSPOLL_DATA |
+> >> +                  PS_WAIT_FOR_TX_ACK |
+> >> +                  PS_NULLFUNC_COMPLETED;
+> >>
+> >> Of those I see an easy way to move to mac80211 the
+> >> PS_NULLFUNC_COMPLETED except for the private driver usage for
+> >> ath9k_send_nullfunc().
+> >
+> >  - wait for beacon: can be moved, if that's waiting for DTIM + traffic?
+> 
+> This is used for:
+> 
+> a. Sync TSF if it does not look correct against the AP's TSF, so we
+> wait until the next AP's beacon prior to going to sleep. We ask the
+> driver to wait for the next beacon but also set the beacon synch flag
+> so we can sync up the TSF.
+
+But if we're doing a sleep for scan, we don't really care all that much
+about TSF sync, since we're going to be awake anyway.
+
+> b. When we get a DTIM and it notes we have mcast/bcast (CAB) crap to
+> wait for. What this does is it makes us wait until the next beacon in
+> case we miss the last broadcast / mcast frame. The next beacon will
+> serve as a backup trigger for returning to to network sleep mode.
+
+Ok, this is OK I guess, it seems to be an artifact of your powersave
+implementation. I was thinking it was AP related.
+
+> >  - beacon sync:     no idea what this is?
+> 
+> This is used in combination with the above. It forces us to
+> reconfigure our beacon timers, essentially we run
+> ath_beacon_config(sc, NULL); on the next beacon we get from the AP.
+> This sets up the beacon timers according to the timestamp of the last
+> received beacon and the current TSF, configures PCF, DTIM handling,
+> programs the sleep registers so the hardware will wake up in time to
+> receive beacons, and configures the beacon miss interrupt to alert us
+> when we've stop seeing beacons from the AP we have associated with.
+
+Ok but then why do we care for a scan case?
+
+> >  - wait for cab:    seems AP related? we turn off beaconing when
+> >                    scanning on APs
+> 
+> No, we use this to annotate to the driver it needs to sit and wait
+> until all mcast / bcast frames have been received. We do this in
+> combination with the beacon wait flag in case we miss the last bcast /
+> mcast frame or if the AP fails to send a frame indicating that all CAB
+> frames have been delivered.
+
+Gotcha. But that's easy to implement in mac80211.
+
+> >  - tx ack:          no idea what this is about?
+> 
+> This is used by ath9k to avoid putting the chip to sleep if we are
+> waking up and want to wait for the first ACK from the AP. When we wake
+> up from sleep mac80211 will typically send a ps-poll to the AP so we
+> can pick up any buffered frames, but there are other cases when we may
+> not send the ps-poll, so we need at least an ACK from the AP to ensure
+> we are communicating with it. I am not sure of the history of this,
+> and will need to print here to see when this occurs exactly.
+
+Ok, but if it is as you say, then we don't need this for scan?
+
+> >  - nullfunc:        can be moved
+> 
+> Heh... not yet. That was done because we ended up looping trying to
+> send nullfuncs because we never waited for the nullfunc to be ACK'd. I
+> believe the issue was caused by the fact that mac80211 only keeps
+> track of nullfunc ACKs for PS but not for when we go off channel. I
+> could be wrong though. Anyway, if we remove considerations for the
+> ath9k virtual wiphy then I think we can move this into mac80211 as I
+> noted in my last set of hunks, the code that checks for the type of
+> nullfunc is still missing and obviously this would need testing.
+
+Right ... the virtual wiphy case is a special case, but I'd rather
+disregard it for a while. If you implement flush(), then waiting for the
+nullfunc (and potentially retrying, which we don't do right now since
+it's a unicast frame and really shouldn't get lost) should be simple.
+
+> Agreed, also I believe the wait constraint state machine should be
+> handled in mac80211 for drivers which require sw scan. But I'd like to
+> start off with the simple items and fix the driver with as little work
+> as possible first. Then slowly move crap over to mac80211 and replace
+> ath9k code with its mac80211 equivalent.
+
+I just don't like the need to have this API. Nothing here so far seems
+to really need new API between the driver and mac80211, with the
+possible exception of the driver saying that it has reliable TX status.
+Or so I believe?
+
+johannes
+
