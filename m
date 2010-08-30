@@ -1,122 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36091 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751736Ab0H3WOq (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47781 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755765Ab0H3Psh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Aug 2010 18:14:46 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Miles Lane <miles.lane@gmail.com>, rjw@sisk.pl,
-	maciej.rutecki@gmail.com, johannes@sipsolutions.net,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 2.6.36] wireless: register wiphy rfkill w/o holding cfg80211_mutex
-Date: Mon, 30 Aug 2010 18:10:22 -0400
-Message-Id: <1283206222-21830-1-git-send-email-linville@tuxdriver.com>
+	Mon, 30 Aug 2010 11:48:37 -0400
+Subject: Re: [RFC 0/3] mac80211: new API for handling broadcast / multicast
+ on sw scan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	amod.bodas@atheros.com
+In-Reply-To: <AANLkTinOzTHn4okTdm=321sdAKy8z1ji_1K_SsDd_dH2@mail.gmail.com>
+References: <1282979590-31113-1-git-send-email-lrodriguez@atheros.com>
+	 <1283177949.3691.72.camel@jlt3.sipsolutions.net>
+	 <AANLkTinOzTHn4okTdm=321sdAKy8z1ji_1K_SsDd_dH2@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 30 Aug 2010 17:47:59 +0200
+Message-ID: <1283183279.3691.82.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Otherwise lockdep complains...
+On Mon, 2010-08-30 at 08:37 -0700, Luis R. Rodriguez wrote:
 
-https://bugzilla.kernel.org/show_bug.cgi?id=17311
+> > Also, some of your comments seem like you're confused about being an AP
+> > vs. being associated to one?
+> 
+> Like?
 
-[ INFO: possible circular locking dependency detected ]
-2.6.36-rc2-git4 #12
--------------------------------------------------------
-kworker/0:3/3630 is trying to acquire lock:
- (rtnl_mutex){+.+.+.}, at: [<ffffffff813396c7>] rtnl_lock+0x12/0x14
+Like doing CAB stuff, or saying that drivers need to keep track of DTIM
+count, that seems more AP related to me, but maybe I'm not understanding
+you correctly.
 
-but task is already holding lock:
- (rfkill_global_mutex){+.+.+.}, at: [<ffffffffa014b129>]
-rfkill_switch_all+0x24/0x49 [rfkill]
+> > What are you actually trying to achieve?
+> 
+> The current sw code simply follows the listen interval, it in no way
+> respect the DTIM. What this means is you loose the buffered multicast
+> and broadcast frames the AP saves up for you after the DTIM beacon.
 
-which lock already depends on the new lock.
+Right, I don't deny that this is an issue.
 
-the existing dependency chain (in reverse order) is:
+> Apart from ensuring you awake at the DTIM count you then also have to
+> ensure you stay awake for all the multicast / broadcast data after the
+> DTIM. It was my understanding you were postulating that all this is a
+> requirement for the drivers to do properly given that mac80211 is too
+> slow to do it properly.
 
--> #2 (rfkill_global_mutex){+.+.+.}:
-       [<ffffffff81079ad7>] lock_acquire+0x120/0x15b
-       [<ffffffff813ae869>] __mutex_lock_common+0x54/0x52e
-       [<ffffffff813aede9>] mutex_lock_nested+0x34/0x39
-       [<ffffffffa014b4ab>] rfkill_register+0x2b/0x29c [rfkill]
-       [<ffffffffa0185ba0>] wiphy_register+0x1ae/0x270 [cfg80211]
-       [<ffffffffa0206f01>] ieee80211_register_hw+0x1b4/0x3cf [mac80211]
-       [<ffffffffa0292e98>] iwl_ucode_callback+0x9e9/0xae3 [iwlagn]
-       [<ffffffff812d3e9d>] request_firmware_work_func+0x54/0x6f
-       [<ffffffff81065d15>] kthread+0x8c/0x94
-       [<ffffffff8100ac24>] kernel_thread_helper+0x4/0x10
+No, I was mostly speaking about the powersave case, where for maximum
+power saving and correctness you need to wake up right before the
+beacon. Going offchannel only _after_ a DTIM beacon and associated
+multicast traffic seems unrelated to that?
 
--> #1 (cfg80211_mutex){+.+.+.}:
-       [<ffffffff81079ad7>] lock_acquire+0x120/0x15b
-       [<ffffffff813ae869>] __mutex_lock_common+0x54/0x52e
-       [<ffffffff813aede9>] mutex_lock_nested+0x34/0x39
-       [<ffffffffa018605e>] cfg80211_get_dev_from_ifindex+0x1b/0x7c [cfg80211]
-       [<ffffffffa0189f36>] cfg80211_wext_giwscan+0x58/0x990 [cfg80211]
-       [<ffffffff8139a3ce>] ioctl_standard_iw_point+0x1a8/0x272
-       [<ffffffff8139a529>] ioctl_standard_call+0x91/0xa7
-       [<ffffffff8139a687>] T.723+0xbd/0x12c
-       [<ffffffff8139a727>] wext_handle_ioctl+0x31/0x6d
-       [<ffffffff8133014e>] dev_ioctl+0x63d/0x67a
-       [<ffffffff8131afd9>] sock_ioctl+0x48/0x21d
-       [<ffffffff81102abd>] do_vfs_ioctl+0x4ba/0x509
-       [<ffffffff81102b5d>] sys_ioctl+0x51/0x74
-       [<ffffffff81009e02>] system_call_fastpath+0x16/0x1b
+> > It seems mac80211 can, no
+> > matter what the driver is
+> >  - wait for DTIM beacons, and the end of mcast traffic, before going off
+> >   channel (should be relevant for p2p as well)
+> 
+> I do not deny this is not possible, I was following your statements
+> about mac80211 being too slow to handle this, so was relying more on
+> the driver to achieve this.
 
--> #0 (rtnl_mutex){+.+.+.}:
-       [<ffffffff810796b0>] __lock_acquire+0xa93/0xd9a
-       [<ffffffff81079ad7>] lock_acquire+0x120/0x15b
-       [<ffffffff813ae869>] __mutex_lock_common+0x54/0x52e
-       [<ffffffff813aede9>] mutex_lock_nested+0x34/0x39
-       [<ffffffff813396c7>] rtnl_lock+0x12/0x14
-       [<ffffffffa0185cb5>] cfg80211_rfkill_set_block+0x1a/0x7b [cfg80211]
-       [<ffffffffa014aed0>] rfkill_set_block+0x80/0xd5 [rfkill]
-       [<ffffffffa014b07e>] __rfkill_switch_all+0x3f/0x6f [rfkill]
-       [<ffffffffa014b13d>] rfkill_switch_all+0x38/0x49 [rfkill]
-       [<ffffffffa014b821>] rfkill_op_handler+0x105/0x136 [rfkill]
-       [<ffffffff81060708>] process_one_work+0x248/0x403
-       [<ffffffff81062620>] worker_thread+0x139/0x214
-       [<ffffffff81065d15>] kthread+0x8c/0x94
-       [<ffffffff8100ac24>] kernel_thread_helper+0x4/0x10
+I believe we just misunderstood each other in that other thread, which
+is probably mostly my fault since I started talking about powersave when
+you were concerned about scan only.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/wireless/core.c |   11 ++++-------
- 1 files changed, 4 insertions(+), 7 deletions(-)
+>  I actually believe this should go into
+> mac80211 but its not there yet. ath9k also has its own nullfunc
+> requirements handled for the ath9k vritual wiphy stuff so either way
+> you still have some private uses for the nullfunc frames. I rather
+> take this up in steps in mac80211.
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 541e2ff..d80c1d5 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -472,16 +472,16 @@ int wiphy_register(struct wiphy *wiphy)
- 	/* check and set up bitrates */
- 	ieee80211_set_bitrate_flags(wiphy);
- 
-+	res = rfkill_register(rdev->rfkill);
-+	if (res)
-+		return res;
-+
- 	mutex_lock(&cfg80211_mutex);
- 
- 	res = device_add(&rdev->wiphy.dev);
- 	if (res)
- 		goto out_unlock;
- 
--	res = rfkill_register(rdev->rfkill);
--	if (res)
--		goto out_rm_dev;
--
- 	/* set up regulatory info */
- 	wiphy_update_regulatory(wiphy, NL80211_REGDOM_SET_BY_CORE);
- 
-@@ -511,9 +511,6 @@ int wiphy_register(struct wiphy *wiphy)
- 
- 	return 0;
- 
--out_rm_dev:
--	device_del(&rdev->wiphy.dev);
--
- out_unlock:
- 	mutex_unlock(&cfg80211_mutex);
- 	return res;
--- 
-1.7.2.2
+Right, I agree, let's tackle the issue step by step :) I guess we
+disagree on what the steps should be and what order they should be in,
+though.
+
+> >  - attempt to do better wrt. scheduling between DTIM, by scheduling
+> >   closer (but if DTIM period is 1, this may fail)
+> 
+> To do this you still need to handle all the different sorts of code
+> paths for nullfuncs and ensure they are ACK'd. You have the private
+> ath9k virtual wiphy too.. which I rather see removed but we have no
+> alternative to replace it yet do we?
+
+We're going to discuss multi-channel operation next week, and I believe
+then we can remove it. We're mostly there, I believe, just some mac80211
+internal re-design will be needed (with driver changes, obviously).
+
+> >  - subject to the driver advertising guaranteed TX status, it can also
+> >   wait for the nullfunc ACK -- you should also implement flush which
+> >   will probably improve things by itself for ath9k
+> 
+> Sure, I have some patches for that as well. The nullfunc ACK wait for
+> the offchannel operation *can* be handled indeed by mac80211, as my
+> latest comments indicate. But note we'd have to categorize the
+> different types of uses for the nullfuncs. We also have some private
+> driver uses of nullfuncs such as the ath9k virtual wiphy.
+
+Well those seem like a corner case though, let's not let the design be
+impacted by something we're going to get rid of in the fairly short
+term.
+
+> Then -- you also have other synch wait considerations to address which
+> are also currently only private to the driver. ath9k has these:
+> 
+> +       wait_for = PS_WAIT_FOR_BEACON |
+> +                  PS_BEACON_SYNC |
+> +                  PS_WAIT_FOR_CAB |
+> +                  PS_WAIT_FOR_PSPOLL_DATA |
+> +                  PS_WAIT_FOR_TX_ACK |
+> +                  PS_NULLFUNC_COMPLETED;
+> 
+> Of those I see an easy way to move to mac80211 the
+> PS_NULLFUNC_COMPLETED except for the private driver usage for
+> ath9k_send_nullfunc().
+
+ - wait for beacon: can be moved, if that's waiting for DTIM + traffic?
+ - beacon sync:     no idea what this is?
+ - wait for cab:    seems AP related? we turn off beaconing when
+                    scanning on APs
+ - pspoll:          seems like it could be done in mac80211, though
+                    I guess it shouldn't matter if our nullfunc was
+                    ACKed
+ - tx ack:          no idea what this is about?
+ - nullfunc:        can be moved
+
+> The others require either some new API or as I
+> put it, a driver callback for wait constraints. As I see it, I think
+> these all of these *should* be moved to mac80211, but I don't expect
+> to do this all in one shot and think its better to do address them one
+> at a time.
+
+Well, the other major issue with this is that you basically poll the
+driver until those constraints no longer exist, and the polling interval
+of 200ms is rather strange. So I suspect this really needs to be more of
+an event based API.
+
+johannes
 
