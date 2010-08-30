@@ -1,856 +1,3480 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:44433 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751520Ab0HWQdA (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:48133 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755868Ab0H3Une (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Aug 2010 12:33:00 -0400
-Date: Mon, 23 Aug 2010 12:32:59 -0400
-From: Christoph Hellwig <hch@infradead.org>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlagn fails to associate on 2.6.36-rc2
-Message-ID: <20100823163259.GA15511@infradead.org>
-References: <20100823110247.GA3198@infradead.org>
- <1282572681.20674.3.camel@wwguy-ubuntu>
- <20100823141432.GA29902@infradead.org>
- <1282574533.12500.1.camel@wwguy-huron>
+	Mon, 30 Aug 2010 16:43:34 -0400
+Received: by mail-bw0-f46.google.com with SMTP id 11so4012298bwz.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Aug 2010 13:43:33 -0700 (PDT)
+Received: from debian64.daheim
+	([192.168.0.4] helo=debian64.localnet ident=chuck)
+	by debian64.daheim with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.72)
+	(envelope-from <chunkeey@googlemail.com>)
+	id 1OqBCP-0002lq-RV
+	for linux-wireless@vger.kernel.org; Mon, 30 Aug 2010 22:43:25 +0200
+Subject: [RFT 4/6] carl9170usb: 802.11 rx/tx processing and usb backend
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: "linux-wireless" <linux-wireless@vger.kernel.org>
+Date: Mon, 30 Aug 2010 22:42:00 +0200
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="EeQfGwPcQSOJBaQU"
-In-Reply-To: <1282574533.12500.1.camel@wwguy-huron>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <201008302242.00751.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+ drivers/net/wireless/ath/carl9170/rx.c  |  910 ++++++++++++++++++++
+ drivers/net/wireless/ath/carl9170/tx.c  | 1370 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/carl9170/usb.c | 1143 ++++++++++++++++++++++++++
+ 3 files changed, 3423 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/carl9170/rx.c
+ create mode 100644 drivers/net/wireless/ath/carl9170/tx.c
+ create mode 100644 drivers/net/wireless/ath/carl9170/usb.c
 
---EeQfGwPcQSOJBaQU
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+diff --git a/drivers/net/wireless/ath/carl9170/rx.c b/drivers/net/wireless/ath/carl9170/rx.c
+new file mode 100644
+index 0000000..d3b74d2
+--- /dev/null
++++ b/drivers/net/wireless/ath/carl9170/rx.c
+@@ -0,0 +1,910 @@
++/*
++ * Atheros CARL9170 driver
++ *
++ * 802.11 & command trap routines
++ *
++ * Copyright 2008, Johannes Berg <johannes@sipsolutions.net>
++ * Copyright 2009, 2010, Christian Lamparter <chunkeey@googlemail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; see the file COPYING.  If not, see
++ * http://www.gnu.org/licenses/.
++ *
++ * This file incorporates work covered by the following copyright and
++ * permission notice:
++ *    Copyright (c) 2007-2008 Atheros Communications, Inc.
++ *
++ *    Permission to use, copy, modify, and/or distribute this software for any
++ *    purpose with or without fee is hereby granted, provided that the above
++ *    copyright notice and this permission notice appear in all copies.
++ *
++ *    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ *    WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ *    MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ *    ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ *    WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ *    ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ *    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include <linux/init.h>
++#include <linux/slab.h>
++#include <linux/module.h>
++#include <linux/etherdevice.h>
++#include <linux/crc32.h>
++#include <net/mac80211.h>
++#include "carl9170.h"
++#include "hw.h"
++#include "cmd.h"
++
++static void carl9170_dbg_message(struct ar9170 *ar, const char *buf, u32 len)
++{
++	bool restart = false;
++	enum carl9170_restart_reasons reason = CARL9170_RR_NO_REASON;
++
++	if (len > 3) {
++		if (memcmp(buf, CARL9170_ERR_MAGIC, 3) == 0) {
++			ar->fw_err_counter++;
++			if (ar->fw_err_counter > 3) {
++				restart = true;
++				reason = CARL9170_RR_TOO_MANY_FIRMWARE_ERRORS;
++			}
++		}
++
++		if (memcmp(buf, CARL9170_BUG_MAGIC, 3) == 0) {
++			ar->fw_bug_counter++;
++			restart = true;
++			reason = CARL9170_RR_FATAL_FIRMWARE_ERROR;
++		}
++	}
++
++	wiphy_info(ar->hw->wiphy, "FW: %.*s\n", len, buf);
++
++	if (restart)
++		carl9170_restart(ar, reason);
++}
++
++static void carl9170_handle_ps(struct ar9170 *ar, struct carl9170_rsp *rsp)
++{
++	u32 ps;
++	bool new_ps;
++
++	ps = le32_to_cpu(rsp->psm.state);
++
++	new_ps = (ps & CARL9170_PSM_COUNTER) != CARL9170_PSM_WAKE;
++	if (ar->ps_state != new_ps) {
++		if (!new_ps) {
++			ar->ps_sleep_ms = jiffies_to_msecs(jiffies -
++				ar->ps_last_action);
++		}
++
++		ar->ps_last_action = jiffies;
++
++		ar->ps_state = new_ps;
++	}
++}
++
++static int carl9170_check_sequence(struct ar9170 *ar, unsigned int seq)
++{
++	if (ar->cmd_seq < -1)
++		return 0;
++
++	/*
++	 * Initialize Counter
++	 */
++	if (ar->cmd_seq < 0)
++		ar->cmd_seq = seq;
++
++	/*
++	 * The sequence is strictly monotonic increasing and it never skips!
++	 *
++	 * Therefore we can safely assume that whenever we received an
++	 * unexpected sequence we have lost some valuable data.
++	 */
++	if (seq != ar->cmd_seq) {
++		int count;
++
++		count = (seq - ar->cmd_seq) % ar->fw_cmd_bufs;
++
++		wiphy_err(ar->hw->wiphy, "lost %d command responses/traps! "
++			  "w:%d g:%d\n", count, ar->cmd_seq, seq);
++
++		carl9170_restart(ar, CARL9170_RR_LOST_RSP);
++		return -EIO;
++	}
++
++	ar->cmd_seq = (ar->cmd_seq + 1) % ar->fw_cmd_bufs;
++	return 0;
++}
++
++static void carl9170_cmd_callback(struct ar9170 *ar, u32 len, void *buffer)
++{
++	/*
++	 * Some commands may have a variable response length
++	 * and we cannot predict the correct length in advance.
++	 * So we only check if we provided enough space for the data.
++	 */
++	if (unlikely(ar->readlen != (len - 4))) {
++		dev_warn(&ar->udev->dev, "received invalid command response:"
++			 "got %d, instead of %d\n", len - 4, ar->readlen);
++		print_hex_dump_bytes("carl9170 cmd:", DUMP_PREFIX_OFFSET,
++			ar->cmd_buf, le32_to_cpu(ar->cmd_buf[0]) & 0x3f);
++		print_hex_dump_bytes("carl9170 rsp:", DUMP_PREFIX_OFFSET,
++			buffer, len);
++		/*
++		 * Do not complete. The command times out,
++		 * and we get a stack trace from there.
++		 */
++		carl9170_restart(ar, CARL9170_RR_INVALID_RSP);
++	}
++
++	spin_lock(&ar->cmd_lock);
++	if (ar->readbuf) {
++		if (len >= 4)
++			memcpy(ar->readbuf, buffer + 4, len - 4);
++
++		ar->readbuf = NULL;
++	}
++	complete(&ar->cmd_wait);
++	spin_unlock(&ar->cmd_lock);
++}
++
++void carl9170_handle_command_response(struct ar9170 *ar, void *buf, u32 len)
++{
++	struct carl9170_rsp *cmd = (void *) buf;
++	struct ieee80211_vif *vif;
++
++	if (carl9170_check_sequence(ar, cmd->hdr.seq))
++		return;
++
++	if ((cmd->hdr.cmd & CARL9170_RSP_FLAG) != CARL9170_RSP_FLAG) {
++		if (!(cmd->hdr.cmd & CARL9170_CMD_ASYNC_FLAG))
++			carl9170_cmd_callback(ar, len, buf);
++
++		return;
++	}
++
++	if (unlikely(cmd->hdr.len != (len - 4))) {
++		if (net_ratelimit()) {
++			wiphy_err(ar->hw->wiphy, "FW: received over-/under"
++				"sized event %x (%d, but should be %d).\n",
++			       cmd->hdr.cmd, cmd->hdr.len, len - 4);
++
++			print_hex_dump_bytes("dump:", DUMP_PREFIX_NONE,
++					     buf, len);
++		}
++
++		return;
++	}
++
++	/* hardware event handlers */
++	switch (cmd->hdr.cmd) {
++	case CARL9170_RSP_PRETBTT:
++		/* pre-TBTT event */
++		rcu_read_lock();
++		vif = carl9170_get_main_vif(ar);
++
++		if (!vif) {
++			rcu_read_unlock();
++			break;
++		}
++
++		switch (vif->type) {
++		case NL80211_IFTYPE_STATION:
++			carl9170_handle_ps(ar, cmd);
++			break;
++
++		case NL80211_IFTYPE_AP:
++		case NL80211_IFTYPE_ADHOC:
++			carl9170_update_beacon(ar, true);
++			break;
++
++		default:
++			break;
++		}
++		rcu_read_unlock();
++
++		break;
++
++
++	case CARL9170_RSP_TXCOMP:
++		/* TX status notification */
++		carl9170_tx_process_status(ar, cmd);
++		break;
++
++	case CARL9170_RSP_BEACON_CONFIG:
++		/*
++		 * (IBSS) beacon send notification
++		 * bytes: 04 c2 XX YY B4 B3 B2 B1
++		 *
++		 * XX always 80
++		 * YY always 00
++		 * B1-B4 "should" be the number of send out beacons.
++		 */
++		break;
++
++	case CARL9170_RSP_ATIM:
++		/* End of Atim Window */
++		break;
++
++	case CARL9170_RSP_WATCHDOG:
++		/* Watchdog Interrupt */
++		carl9170_restart(ar, CARL9170_RR_WATCHDOG);
++		break;
++
++	case CARL9170_RSP_TEXT:
++		/* firmware debug */
++		carl9170_dbg_message(ar, (char *)buf + 4, len - 4);
++		break;
++
++	case CARL9170_RSP_HEXDUMP:
++		wiphy_dbg(ar->hw->wiphy, "FW: HD %d\n", len - 4);
++		print_hex_dump_bytes("FW:", DUMP_PREFIX_NONE,
++				     (char *)buf + 4, len - 4);
++		break;
++
++	case CARL9170_RSP_RADAR:
++		if (!net_ratelimit())
++			break;
++
++		wiphy_info(ar->hw->wiphy, "FW: RADAR! Please report this "
++		       "incident to linux-wireless@vger.kernel.org !\n");
++		break;
++
++	case CARL9170_RSP_GPIO:
++#ifdef CONFIG_CARL9170_WPS_BUTTON
++		if (ar->wps_pbc) {
++			bool state = !!(cmd->gpio.gpio & cpu_to_le32(
++				AR9170_GPIO_PORT_WPS_BUTTON_PRESSED));
++
++			if (state != ar->wps_pbc_state) {
++				ar->wps_pbc_state = state;
++				input_report_key(ar->wps_pbc, KEY_WPS_BUTTON,
++						 state);
++				input_sync(ar->wps_pbc);
++			}
++		}
++#endif /* CONFIG_CARL9170_WPS_BUTTON */
++		break;
++
++	case CARL9170_RSP_BOOT:
++		complete(&ar->fw_boot_wait);
++		break;
++
++	default:
++		wiphy_err(ar->hw->wiphy, "FW: received unhandled event %x\n",
++			cmd->hdr.cmd);
++		print_hex_dump_bytes("dump:", DUMP_PREFIX_NONE, buf, len);
++		break;
++	}
++}
++
++static int carl9170_rx_mac_status(struct ar9170 *ar,
++	struct ar9170_rx_head *head, struct ar9170_rx_macstatus *mac,
++	struct ieee80211_rx_status *status)
++{
++	struct ieee80211_channel *chan;
++	u8 error, decrypt;
++
++	BUILD_BUG_ON(sizeof(struct ar9170_rx_head) != 12);
++	BUILD_BUG_ON(sizeof(struct ar9170_rx_macstatus) != 4);
++
++	error = mac->error;
++
++	if (error & AR9170_RX_ERROR_WRONG_RA) {
++		if (!ar->sniffer_enabled)
++			return -EINVAL;
++	}
++
++	if (error & AR9170_RX_ERROR_PLCP) {
++		if (!(ar->filter_state & FIF_PLCPFAIL))
++			return -EINVAL;
++
++		status->flag |= RX_FLAG_FAILED_PLCP_CRC;
++	}
++
++	if (error & AR9170_RX_ERROR_FCS) {
++		ar->tx_fcs_errors++;
++
++		if (!(ar->filter_state & FIF_FCSFAIL))
++			return -EINVAL;
++
++		status->flag |= RX_FLAG_FAILED_FCS_CRC;
++	}
++
++	decrypt = ar9170_get_decrypt_type(mac);
++	if (!(decrypt & AR9170_RX_ENC_SOFTWARE) &&
++	    decrypt != AR9170_ENC_ALG_NONE) {
++		if ((decrypt == AR9170_ENC_ALG_TKIP) &&
++		    (error & AR9170_RX_ERROR_MMIC))
++			status->flag |= RX_FLAG_MMIC_ERROR;
++
++		status->flag |= RX_FLAG_DECRYPTED;
++	}
++
++	if (error & AR9170_RX_ERROR_DECRYPT && !ar->sniffer_enabled)
++		return -ENODATA;
++
++	error &= ~(AR9170_RX_ERROR_MMIC |
++		   AR9170_RX_ERROR_FCS |
++		   AR9170_RX_ERROR_WRONG_RA |
++		   AR9170_RX_ERROR_DECRYPT |
++		   AR9170_RX_ERROR_PLCP);
++
++	/* drop any other error frames */
++	if (unlikely(error)) {
++		/* TODO: update netdevice's RX dropped/errors statistics */
++
++		if (net_ratelimit())
++			wiphy_dbg(ar->hw->wiphy, "received frame with "
++			       "suspicious error code (%#x).\n", error);
++
++		return -EINVAL;
++	}
++
++	chan = ar->channel;
++	if (chan) {
++		status->band = chan->band;
++		status->freq = chan->center_freq;
++	}
++
++	switch (mac->status & AR9170_RX_STATUS_MODULATION) {
++	case AR9170_RX_STATUS_MODULATION_CCK:
++		if (mac->status & AR9170_RX_STATUS_SHORT_PREAMBLE)
++			status->flag |= RX_FLAG_SHORTPRE;
++		switch (head->plcp[0]) {
++		case AR9170_RX_PHY_RATE_CCK_1M:
++			status->rate_idx = 0;
++			break;
++		case AR9170_RX_PHY_RATE_CCK_2M:
++			status->rate_idx = 1;
++			break;
++		case AR9170_RX_PHY_RATE_CCK_5M:
++			status->rate_idx = 2;
++			break;
++		case AR9170_RX_PHY_RATE_CCK_11M:
++			status->rate_idx = 3;
++			break;
++		default:
++			if (net_ratelimit()) {
++				wiphy_err(ar->hw->wiphy, "invalid plcp cck "
++				       "rate (%x).\n", head->plcp[0]);
++			}
++
++			return -EINVAL;
++		}
++		break;
++
++	case AR9170_RX_STATUS_MODULATION_DUPOFDM:
++	case AR9170_RX_STATUS_MODULATION_OFDM:
++		switch (head->plcp[0] & 0xf) {
++		case AR9170_TXRX_PHY_RATE_OFDM_6M:
++			status->rate_idx = 0;
++			break;
++		case AR9170_TXRX_PHY_RATE_OFDM_9M:
++			status->rate_idx = 1;
++			break;
++		case AR9170_TXRX_PHY_RATE_OFDM_12M:
++			status->rate_idx = 2;
++			break;
++		case AR9170_TXRX_PHY_RATE_OFDM_18M:
++			status->rate_idx = 3;
++			break;
++		case AR9170_TXRX_PHY_RATE_OFDM_24M:
++			status->rate_idx = 4;
++			break;
++		case AR9170_TXRX_PHY_RATE_OFDM_36M:
++			status->rate_idx = 5;
++			break;
++		case AR9170_TXRX_PHY_RATE_OFDM_48M:
++			status->rate_idx = 6;
++			break;
++		case AR9170_TXRX_PHY_RATE_OFDM_54M:
++			status->rate_idx = 7;
++			break;
++		default:
++			if (net_ratelimit()) {
++				wiphy_err(ar->hw->wiphy, "invalid plcp ofdm "
++					"rate (%x).\n", head->plcp[0]);
++			}
++
++			return -EINVAL;
++		}
++		if (status->band == IEEE80211_BAND_2GHZ)
++			status->rate_idx += 4;
++		break;
++
++	case AR9170_RX_STATUS_MODULATION_HT:
++		if (head->plcp[3] & 0x80)
++			status->flag |= RX_FLAG_40MHZ;
++		if (head->plcp[6] & 0x80)
++			status->flag |= RX_FLAG_SHORT_GI;
++
++		status->rate_idx = clamp(0, 75, head->plcp[3] & 0x7f);
++		status->flag |= RX_FLAG_HT;
++		break;
++
++	default:
++		if (net_ratelimit())
++			wiphy_err(ar->hw->wiphy, "invalid modulation\n");
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
++static void carl9170_rx_phy_status(struct ar9170 *ar,
++	struct ar9170_rx_phystatus *phy, struct ieee80211_rx_status *status)
++{
++	int i;
++
++	BUILD_BUG_ON(sizeof(struct ar9170_rx_phystatus) != 20);
++
++	for (i = 0; i < 3; i++)
++		if (phy->rssi[i] != 0x80)
++			status->antenna |= BIT(i);
++
++	/* post-process RSSI */
++	for (i = 0; i < 7; i++)
++		if (phy->rssi[i] & 0x80)
++			phy->rssi[i] = ((phy->rssi[i] & 0x7f) + 1) & 0x7f;
++
++	/* TODO: we could do something with phy_errors */
++	status->signal = ar->noise[0] + phy->rssi_combined;
++}
++
++static struct sk_buff *carl9170_rx_copy_data(u8 *buf, int len)
++{
++	struct sk_buff *skb;
++	int reserved = 0;
++	struct ieee80211_hdr *hdr = (void *) buf;
++
++	if (ieee80211_is_data_qos(hdr->frame_control)) {
++		u8 *qc = ieee80211_get_qos_ctl(hdr);
++		reserved += NET_IP_ALIGN;
++
++		if (*qc & IEEE80211_QOS_CONTROL_A_MSDU_PRESENT)
++			reserved += NET_IP_ALIGN;
++	}
++
++	if (ieee80211_has_a4(hdr->frame_control))
++		reserved += NET_IP_ALIGN;
++
++	reserved = 32 + (reserved & NET_IP_ALIGN);
++
++	skb = dev_alloc_skb(len + reserved);
++	if (likely(skb)) {
++		skb_reserve(skb, reserved);
++		memcpy(skb_put(skb, len), buf, len);
++	}
++
++	return skb;
++}
++
++static u8 *carl9170_find_ie(void *data, unsigned int len, u8 ie)
++{
++	struct ieee80211_mgmt *mgmt = (void *)data;
++	u8 *pos, *end;
++
++	pos = (u8 *)mgmt->u.beacon.variable;
++	end = data + len;
++	while (pos < end) {
++		if (pos + 2 + pos[1] > end)
++			return NULL;
++
++		if (pos[0] == ie)
++			return pos;
++
++		pos += 2 + pos[1];
++	}
++	return NULL;
++}
++
++/*
++ * NOTE:
++ *
++ * The firmware is in charge of waking up the device just before
++ * the AP is expected to transmit the next beacon.
++ *
++ * This leaves the driver with the important task of deciding when
++ * to set the PHY back to bed again.
++ */
++static void carl9170_ps_beacon(struct ar9170 *ar, void *data, unsigned int len)
++{
++	struct ieee80211_hdr *hdr = (void *) data;
++	struct ieee80211_tim_ie *tim_ie;
++	u8 *tim;
++	u8 tim_len;
++	bool cam;
++
++	if (likely(!(ar->hw->conf.flags & IEEE80211_CONF_PS)))
++		return;
++
++	/* check if this really is a beacon */
++	if (!ieee80211_is_beacon(hdr->frame_control))
++		return;
++
++	/* min. beacon length + FCS_LEN */
++	if (len <= 40 + FCS_LEN)
++		return;
++
++	/* and only beacons from the associated BSSID, please */
++	if (compare_ether_addr(hdr->addr3, ar->common.curbssid) ||
++	    !ar->common.curaid)
++		return;
++
++	ar->ps_last_beacon = jiffies;
++
++	tim = carl9170_find_ie(data, len - FCS_LEN, WLAN_EID_TIM);
++	if (!tim)
++		return;
++
++	if (tim[1] < sizeof(*tim_ie))
++		return;
++
++	tim_len = tim[1];
++	tim_ie = (struct ieee80211_tim_ie *) &tim[2];
++
++	if (!WARN_ON_ONCE(!ar->hw->conf.ps_dtim_period))
++		ar->ps_dtim_counter = (tim_ie->dtim_count - 1) %
++			ar->hw->conf.ps_dtim_period;
++
++	/* Check whenever the PHY can be turned off again. */
++
++	/* 1. What about buffered unicast traffic for our AID? */
++	cam = ieee80211_check_tim(tim_ie, tim_len, ar->common.curaid);
++
++	/* 2. Maybe the AP wants to send multicast/broadcast data? */
++	cam = !!(tim_ie->bitmap_ctrl & 0x01);
++
++	if (!cam) {
++		/* back to low-power land. */
++		ar->ps_off_override &= ~PS_OFF_BCN;
++		carl9170_ps_check(ar);
++	} else {
++		/* force CAM */
++		ar->ps_off_override |= PS_OFF_BCN;
++	}
++}
++
++/*
++ * If the frame alignment is right (or the kernel has
++ * CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS), and there
++ * is only a single MPDU in the USB frame, then we could
++ * submit to mac80211 the SKB directly. However, since
++ * there may be multiple packets in one SKB in stream
++ * mode, and we need to observe the proper ordering,
++ * this is non-trivial.
++ */
++
++static void carl9170_handle_mpdu(struct ar9170 *ar, u8 *buf, int len)
++{
++	struct ar9170_rx_head *head;
++	struct ar9170_rx_macstatus *mac;
++	struct ar9170_rx_phystatus *phy = NULL;
++	struct ieee80211_rx_status status;
++	struct sk_buff *skb;
++	int mpdu_len;
++
++	if (!IS_STARTED(ar))
++		return;
++
++	if (unlikely(len < sizeof(*mac))) {
++		ar->rx_dropped++;
++		return;
++	}
++
++	mpdu_len = len - sizeof(*mac);
++
++	mac = (void *)(buf + mpdu_len);
++	if (unlikely(mac->error & AR9170_RX_ERROR_FATAL)) {
++		ar->rx_dropped++;
++		return;
++	}
++
++	switch (mac->status & AR9170_RX_STATUS_MPDU) {
++	case AR9170_RX_STATUS_MPDU_FIRST:
++		/* Aggregated MPDUs start with an PLCP header */
++		if (likely(mpdu_len >= sizeof(struct ar9170_rx_head))) {
++			head = (void *) buf;
++
++			/*
++			 * The PLCP header needs to be cached for the
++			 * following MIDDLE + LAST A-MPDU packets.
++			 *
++			 * So, if you are wondering why all frames seem
++			 * to share a common RX status information,
++			 * then you have the answer right here...
++			 */
++			memcpy(&ar->rx_plcp, (void *) buf,
++			       sizeof(struct ar9170_rx_head));
++
++			mpdu_len -= sizeof(struct ar9170_rx_head);
++			buf += sizeof(struct ar9170_rx_head);
++
++			ar->rx_has_plcp = true;
++		} else {
++			if (net_ratelimit()) {
++				wiphy_err(ar->hw->wiphy, "plcp info "
++					"is clipped.\n");
++			}
++
++			ar->rx_dropped++;
++			return;
++		}
++		break;
++
++	case AR9170_RX_STATUS_MPDU_LAST:
++		/*
++		 * The last frame of an A-MPDU has an extra tail
++		 * which does contain the phy status of the whole
++		 * aggregate.
++		 */
++
++		if (likely(mpdu_len >= sizeof(struct ar9170_rx_phystatus))) {
++			mpdu_len -= sizeof(struct ar9170_rx_phystatus);
++			phy = (void *)(buf + mpdu_len);
++		} else {
++			if (net_ratelimit()) {
++				wiphy_err(ar->hw->wiphy, "frame tail "
++					"is clipped.\n");
++			}
++
++			ar->rx_dropped++;
++			return;
++		}
++
++	case AR9170_RX_STATUS_MPDU_MIDDLE:
++		/*  These are just data + mac status */
++		if (unlikely(!ar->rx_has_plcp)) {
++			if (!net_ratelimit())
++				return;
++
++			wiphy_err(ar->hw->wiphy, "rx stream does not start "
++					"with a first_mpdu frame tag.\n");
++
++			ar->rx_dropped++;
++			return;
++		}
++
++		head = &ar->rx_plcp;
++		break;
++
++	case AR9170_RX_STATUS_MPDU_SINGLE:
++		/* single mpdu has both: plcp (head) and phy status (tail) */
++		head = (void *) buf;
++
++		mpdu_len -= sizeof(struct ar9170_rx_head);
++		mpdu_len -= sizeof(struct ar9170_rx_phystatus);
++
++		buf += sizeof(struct ar9170_rx_head);
++		phy = (void *)(buf + mpdu_len);
++		break;
++
++	default:
++		BUG_ON(1);
++		break;
++	}
++
++	/* FC + DU + RA + FCS */
++	if (unlikely(mpdu_len < (2 + 2 + 6 + FCS_LEN))) {
++		ar->rx_dropped++;
++		return;
++	}
++
++	memset(&status, 0, sizeof(status));
++	if (unlikely(carl9170_rx_mac_status(ar, head, mac, &status))) {
++		ar->rx_dropped++;
++		return;
++	}
++
++	if (phy)
++		carl9170_rx_phy_status(ar, phy, &status);
++
++	carl9170_ps_beacon(ar, buf, mpdu_len);
++
++	skb = carl9170_rx_copy_data(buf, mpdu_len);
++	if (likely(skb)) {
++		memcpy(IEEE80211_SKB_RXCB(skb), &status, sizeof(status));
++		ieee80211_rx(ar->hw, skb);
++	} else {
++		ar->rx_dropped++;
++	}
++}
++
++static void carl9170_rx_untie_cmds(struct ar9170 *ar, const u8 *respbuf,
++				   const unsigned int resplen)
++{
++	struct carl9170_rsp *cmd;
++	int i = 0;
++
++	while (i < resplen) {
++		cmd = (void *) &respbuf[i];
++
++		i += cmd->hdr.len + 4;
++		if (unlikely(i > resplen))
++			break;
++
++		carl9170_handle_command_response(ar, cmd, cmd->hdr.len + 4);
++	}
++
++	if (unlikely(i != resplen)) {
++		if (!net_ratelimit())
++			return;
++
++		wiphy_err(ar->hw->wiphy, "malformed firmware trap:\n");
++		print_hex_dump_bytes("rxcmd:", DUMP_PREFIX_OFFSET,
++				     respbuf, resplen);
++	}
++}
++
++static void __carl9170_rx(struct ar9170 *ar, u8 *buf, unsigned int len)
++{
++	unsigned int i = 0;
++
++	/* weird thing, but this is the same in the original driver */
++	while (len > 2 && i < 12 && buf[0] == 0xff && buf[1] == 0xff) {
++		i += 2;
++		len -= 2;
++		buf += 2;
++	}
++
++	if (unlikely(len < 4))
++		return;
++
++	/* found the 6 * 0xffff marker? */
++	if (i == 12)
++		carl9170_rx_untie_cmds(ar, buf, len);
++	else
++		carl9170_handle_mpdu(ar, buf, len);
++}
++
++static void carl9170_rx_stream(struct ar9170 *ar, void *buf, unsigned int len)
++{
++	unsigned int tlen, wlen = 0, clen = 0;
++	struct ar9170_stream *rx_stream;
++	u8 *tbuf;
++
++	tbuf = buf;
++	tlen = len;
++
++	while (tlen >= 4) {
++		rx_stream = (void *) tbuf;
++		clen = le16_to_cpu(rx_stream->length);
++		wlen = ALIGN(clen, 4);
++
++		/* check if this is stream has a valid tag.*/
++		if (rx_stream->tag != cpu_to_le16(AR9170_RX_STREAM_TAG)) {
++			/*
++			 * TODO: handle the highly unlikely event that the
++			 * corrupted stream has the TAG at the right position.
++			 */
++
++			/* check if the frame can be repaired. */
++			if (!ar->rx_failover_missing) {
++
++				/* this is not "short read". */
++				if (net_ratelimit()) {
++					wiphy_err(ar->hw->wiphy,
++						"missing tag!\n");
++				}
++
++				__carl9170_rx(ar, tbuf, tlen);
++				return;
++			}
++
++			if (ar->rx_failover_missing > tlen) {
++				if (net_ratelimit()) {
++					wiphy_err(ar->hw->wiphy,
++						"possible multi "
++						"stream corruption!\n");
++					goto err_telluser;
++				} else {
++					goto err_silent;
++				}
++			}
++
++			memcpy(skb_put(ar->rx_failover, tlen), tbuf, tlen);
++			ar->rx_failover_missing -= tlen;
++
++			if (ar->rx_failover_missing <= 0) {
++				/*
++				 * nested carl9170_rx_stream call!
++				 *
++				 * termination is guranteed, even when the
++				 * combined frame also have an element with
++				 * a bad tag.
++				 */
++
++				ar->rx_failover_missing = 0;
++				carl9170_rx_stream(ar, ar->rx_failover->data,
++						   ar->rx_failover->len);
++
++				skb_reset_tail_pointer(ar->rx_failover);
++				skb_trim(ar->rx_failover, 0);
++			}
++
++			return;
++		}
++
++		/* check if stream is clipped */
++		if (wlen > tlen - 4) {
++			if (ar->rx_failover_missing) {
++				/* TODO: handle double stream corruption. */
++				if (net_ratelimit()) {
++					wiphy_err(ar->hw->wiphy, "double rx "
++						"stream corruption!\n");
++					goto err_telluser;
++				} else {
++					goto err_silent;
++				}
++			}
++
++			/*
++			 * save incomplete data set.
++			 * the firmware will resend the missing bits when
++			 * the rx - descriptor comes round again.
++			 */
++
++			memcpy(skb_put(ar->rx_failover, tlen), tbuf, tlen);
++			ar->rx_failover_missing = clen - tlen;
++			return;
++		}
++		__carl9170_rx(ar, rx_stream->payload, clen);
++
++		tbuf += wlen + 4;
++		tlen -= wlen + 4;
++	}
++
++	if (tlen) {
++		if (net_ratelimit()) {
++			wiphy_err(ar->hw->wiphy, "%d bytes of unprocessed "
++				"data left in rx stream!\n", tlen);
++		}
++
++		goto err_telluser;
++	}
++
++	return;
++
++err_telluser:
++	wiphy_err(ar->hw->wiphy, "damaged RX stream data [want:%d, "
++		"data:%d, rx:%d, pending:%d ]\n", clen, wlen, tlen,
++		ar->rx_failover_missing);
++
++	if (ar->rx_failover_missing)
++		print_hex_dump_bytes("rxbuf:", DUMP_PREFIX_OFFSET,
++				     ar->rx_failover->data,
++				     ar->rx_failover->len);
++
++	print_hex_dump_bytes("stream:", DUMP_PREFIX_OFFSET,
++			     buf, len);
++
++	wiphy_err(ar->hw->wiphy, "please check your hardware and cables, if "
++		"you see this message frequently.\n");
++
++err_silent:
++	if (ar->rx_failover_missing) {
++		skb_reset_tail_pointer(ar->rx_failover);
++		skb_trim(ar->rx_failover, 0);
++		ar->rx_failover_missing = 0;
++	}
++}
++
++void carl9170_rx(struct ar9170 *ar, void *buf, unsigned int len)
++{
++	if (ar->rx_stream)
++		carl9170_rx_stream(ar, buf, len);
++	else
++		__carl9170_rx(ar, buf, len);
++}
+diff --git a/drivers/net/wireless/ath/carl9170/tx.c b/drivers/net/wireless/ath/carl9170/tx.c
+new file mode 100644
+index 0000000..b72f8d5
+--- /dev/null
++++ b/drivers/net/wireless/ath/carl9170/tx.c
+@@ -0,0 +1,1370 @@
++/*
++ * Atheros CARL9170 driver
++ *
++ * 802.11 xmit & status routines
++ *
++ * Copyright 2008, Johannes Berg <johannes@sipsolutions.net>
++ * Copyright 2009, 2010, Christian Lamparter <chunkeey@googlemail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; see the file COPYING.  If not, see
++ * http://www.gnu.org/licenses/.
++ *
++ * This file incorporates work covered by the following copyright and
++ * permission notice:
++ *    Copyright (c) 2007-2008 Atheros Communications, Inc.
++ *
++ *    Permission to use, copy, modify, and/or distribute this software for any
++ *    purpose with or without fee is hereby granted, provided that the above
++ *    copyright notice and this permission notice appear in all copies.
++ *
++ *    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ *    WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ *    MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ *    ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ *    WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ *    ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ *    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include <linux/init.h>
++#include <linux/slab.h>
++#include <linux/module.h>
++#include <linux/etherdevice.h>
++#include <net/mac80211.h>
++#include "carl9170.h"
++#include "hw.h"
++#include "cmd.h"
++
++static inline unsigned int __carl9170_get_queue(struct ar9170 *ar,
++						unsigned int queue)
++{
++	if (unlikely(modparam_noht)) {
++		return queue;
++	} else {
++		/*
++		 * This is just another workaround, until
++		 * someone figures out how to get QoS and
++		 * AMPDU to play nicely together.
++		 */
++
++		return 2;		/* AC_BE */
++	}
++}
++
++static inline unsigned int carl9170_get_queue(struct ar9170 *ar,
++					      struct sk_buff *skb)
++{
++	return __carl9170_get_queue(ar, skb_get_queue_mapping(skb));
++}
++
++static void carl9170_tx_accounting(struct ar9170 *ar, struct sk_buff *skb)
++{
++	int queue, i;
++	bool mem_full;
++
++	atomic_inc(&ar->tx_total_queued);
++
++	queue = skb_get_queue_mapping(skb);
++	spin_lock_bh(&ar->tx_stats_lock);
++
++	/*
++	 * The driver has to accept the frame, regardless if the queue is
++	 * full to the brim, or not. We have to do the queuing internally,
++	 * since mac80211 assumes that a driver which can operate with
++	 * aggregated frames does not reject frames for this reason.
++	 */
++	ar->tx_stats[queue].len++;
++	ar->tx_stats[queue].count++;
++
++	mem_full = (DIV_ROUND_UP(IEEE80211_MAX_FRAME_LEN, ar->mem_block_size) >
++	    atomic_read(&ar->mem_free_blocks));
++
++	for (i = 0; i < ar->hw->queues; i++) {
++		if (ar->tx_stats[i].len >= ar->tx_stats[i].limit || mem_full) {
++			ieee80211_stop_queue(ar->hw, i);
++			ar->queue_stop_timeout[i] = jiffies;
++		}
++	}
++
++	spin_unlock_bh(&ar->tx_stats_lock);
++}
++
++static void carl9170_tx_accounting_free(struct ar9170 *ar, struct sk_buff *skb)
++{
++	struct ieee80211_tx_info *txinfo;
++	int queue, i;
++
++	txinfo = IEEE80211_SKB_CB(skb);
++	queue = skb_get_queue_mapping(skb);
++
++	spin_lock_bh(&ar->tx_stats_lock);
++
++	ar->tx_stats[queue].len--;
++
++	for (i = 0; i < ar->hw->queues; i++) {
++		if (DIV_ROUND_UP(IEEE80211_MAX_FRAME_LEN, ar->mem_block_size) >
++		    atomic_read(&ar->mem_free_blocks))
++			break;
++
++		if (ar->tx_stats[i].len < CARL9170_NUM_TX_LIMIT_SOFT) {
++			if (ieee80211_queue_stopped(ar->hw, i)) {
++				unsigned long tmp;
++
++				tmp = jiffies - ar->queue_stop_timeout[i];
++				if (tmp > ar->max_queue_stop_timeout[i])
++					ar->max_queue_stop_timeout[i] = tmp;
++			}
++
++			ieee80211_wake_queue(ar->hw, i);
++		}
++	}
++
++	spin_unlock_bh(&ar->tx_stats_lock);
++	if (atomic_dec_and_test(&ar->tx_total_queued))
++		complete(&ar->tx_flush);
++}
++
++static int carl9170_alloc_dev_space(struct ar9170 *ar, struct sk_buff *skb)
++{
++	struct _carl9170_tx_superframe *super = (void *) skb->data;
++	unsigned int chunks;
++	int cookie = -1;
++
++	atomic_inc(&ar->mem_allocs);
++
++	chunks = DIV_ROUND_UP(skb->len, ar->mem_block_size);
++	if (unlikely(atomic_sub_return(chunks, &ar->mem_free_blocks) < 0)) {
++		atomic_add(chunks, &ar->mem_free_blocks);
++		return -ENOSPC;
++	}
++
++	spin_lock_bh(&ar->mem_jar_lock);
++	cookie = bitmap_find_free_region(ar->mem_cookie_jar,
++					 ar->mem_blocks, 0);
++	spin_unlock_bh(&ar->mem_jar_lock);
++
++	if (unlikely(cookie < 0)) {
++		atomic_add(chunks, &ar->mem_free_blocks);
++		return -ENOSPC;
++	}
++
++	super = (void *) skb->data;
++
++	/*
++	 * Cookie #0 serves two special purposes:
++	 *  1. The firmware might use it generate BlockACK frames
++	 *     in responds of an incoming BlockAckReqs.
++	 *
++	 *  2. Prevent double-free bugs.
++	 */
++	super->s.cookie = (u8) cookie + 1;
++	return 0;
++}
++
++static void carl9170_release_dev_space(struct ar9170 *ar, struct sk_buff *skb)
++{
++	struct _carl9170_tx_superframe *super = (void *) skb->data;
++	int cookie;
++
++	/* make a local copy of the cookie */
++	cookie = super->s.cookie;
++	/* invalidate cookie */
++	super->s.cookie = 0;
++
++	/*
++	 * Do a out-of-bounds check on the cookie:
++	 *
++	 *  * cookie "0" is reserved and won't be assigned to any
++	 *    out-going frame. Internally however, it is used to
++	 *    mark no longer/un-accounted frames and serves as a
++	 *    cheap way of preventing frames from being freed
++	 *    twice by _accident_. NB: There is a tiny race...
++	 *
++	 *  * obviously, cookie number is limited by the amount
++	 *    of available memory blocks, so the number can
++	 *    never execeed the mem_blocks count.
++	 */
++	if (unlikely(WARN_ON_ONCE(cookie == 0) ||
++	    WARN_ON_ONCE(cookie > ar->mem_blocks)))
++		return;
++
++	atomic_add(DIV_ROUND_UP(skb->len, ar->mem_block_size),
++		   &ar->mem_free_blocks);
++
++	spin_lock_bh(&ar->mem_jar_lock);
++	bitmap_release_region(ar->mem_cookie_jar, cookie - 1, 0);
++	spin_unlock_bh(&ar->mem_jar_lock);
++}
++
++/* Called from any context */
++static void carl9170_tx_release(struct kref *ref)
++{
++	struct ar9170 *ar;
++	struct carl9170_tx_info *arinfo;
++	struct ieee80211_tx_info *txinfo;
++	struct sk_buff *skb;
++
++	arinfo = container_of(ref, struct carl9170_tx_info, ref);
++	txinfo = container_of((void *) arinfo, struct ieee80211_tx_info,
++			      rate_driver_data);
++	skb = container_of((void *) txinfo, struct sk_buff, cb);
++
++	ar = arinfo->ar;
++	if (WARN_ON_ONCE(!ar))
++		return;
++
++	BUILD_BUG_ON(
++	    offsetof(struct ieee80211_tx_info, status.ampdu_ack_len) != 23);
++
++	memset(&txinfo->status.ampdu_ack_len, 0,
++	       sizeof(struct ieee80211_tx_info) -
++	       offsetof(struct ieee80211_tx_info, status.ampdu_ack_len));
++
++	if (atomic_read(&ar->tx_total_queued))
++		ar->tx_schedule = true;
++
++	if (txinfo->flags & IEEE80211_TX_CTL_AMPDU) {
++		if (!atomic_read(&ar->tx_ampdu_upload))
++			ar->tx_ampdu_schedule = true;
++
++		if (txinfo->flags & IEEE80211_TX_STAT_AMPDU) {
++			txinfo->status.ampdu_len = txinfo->pad[0];
++			txinfo->status.ampdu_ack_len = txinfo->pad[1];
++			txinfo->pad[0] = txinfo->pad[1] = 0;
++		} else if (txinfo->flags & IEEE80211_TX_STAT_ACK) {
++			/*
++			 * drop redundant tx_status reports:
++			 *
++			 * 1. ampdu_ack_len of the final tx_status does
++			 *    include the feedback of this particular frame.
++			 *
++			 * 2. tx_status_irqsafe only queues up to 128
++			 *    tx feedback reports and discards the rest.
++			 *
++			 * 3. minstrel_ht is picky, it only accepts
++			 *    reports of frames with the TX_STATUS_AMPDU flag.
++			 */
++
++			dev_kfree_skb_any(skb);
++			return;
++		} else {
++			/*
++			 * Frame has failed, but we want to keep it in
++			 * case it was lost due to a power-state
++			 * transition.
++			 */
++		}
++	}
++
++	skb_pull(skb, sizeof(struct _carl9170_tx_superframe));
++	ieee80211_tx_status_irqsafe(ar->hw, skb);
++}
++
++void carl9170_tx_get_skb(struct sk_buff *skb)
++{
++	struct carl9170_tx_info *arinfo = (void *)
++		(IEEE80211_SKB_CB(skb))->rate_driver_data;
++	kref_get(&arinfo->ref);
++}
++
++int carl9170_tx_put_skb(struct sk_buff *skb)
++{
++	struct carl9170_tx_info *arinfo = (void *)
++		(IEEE80211_SKB_CB(skb))->rate_driver_data;
++
++	return kref_put(&arinfo->ref, carl9170_tx_release);
++}
++
++/* Caller must hold the tid_info->lock & rcu_read_lock */
++static void carl9170_tx_shift_bm(struct ar9170 *ar,
++	struct carl9170_sta_tid *tid_info, u16 seq)
++{
++	u16 off;
++
++	off = SEQ_DIFF(seq, tid_info->bsn);
++
++	if (WARN_ON_ONCE(off >= CARL9170_BAW_BITS))
++		return;
++
++	/*
++	 * Sanity check. For each MPDU we set the bit in bitmap and
++	 * clear it once we received the tx_status.
++	 * But if the bit is already cleared then we've been bitten
++	 * by a bug.
++	 */
++	WARN_ON_ONCE(!test_and_clear_bit(off, tid_info->bitmap));
++
++	off = SEQ_DIFF(tid_info->snx, tid_info->bsn);
++	if (WARN_ON_ONCE(off >= CARL9170_BAW_BITS))
++		return;
++
++	if (!bitmap_empty(tid_info->bitmap, off))
++		off = find_first_bit(tid_info->bitmap, off);
++
++	tid_info->bsn += off;
++	tid_info->bsn &= 0x0fff;
++
++	bitmap_shift_right(tid_info->bitmap, tid_info->bitmap,
++			   off, CARL9170_BAW_BITS);
++}
++
++static void carl9170_tx_status_process_ampdu(struct ar9170 *ar,
++	struct sk_buff *skb, struct ieee80211_tx_info *txinfo)
++{
++	struct _carl9170_tx_superframe *super = (void *) skb->data;
++	struct ieee80211_hdr *hdr = (void *) super->frame_data;
++	struct ieee80211_tx_info *tx_info;
++	struct carl9170_tx_info *ar_info;
++	struct carl9170_sta_info *sta_info;
++	struct ieee80211_sta *sta;
++	struct carl9170_sta_tid *tid_info;
++	struct ieee80211_vif *vif;
++	unsigned int vif_id;
++	u8 tid;
++
++	if (!(txinfo->flags & IEEE80211_TX_CTL_AMPDU) ||
++	    txinfo->flags & IEEE80211_TX_CTL_INJECTED)
++		return;
++
++	tx_info = IEEE80211_SKB_CB(skb);
++	ar_info = (void *) tx_info->rate_driver_data;
++
++	vif_id = (super->s.misc & CARL9170_TX_SUPER_MISC_VIF_ID) >>
++		 CARL9170_TX_SUPER_MISC_VIF_ID_S;
++
++	if (WARN_ON_ONCE(vif_id >= AR9170_MAX_VIRTUAL_MAC))
++		return;
++
++	rcu_read_lock();
++	vif = rcu_dereference(ar->vif_priv[vif_id].vif);
++	if (!vif)
++		goto out_rcu;
++
++	/*
++	 * Normally we should use wrappers like ieee80211_get_DA to get
++	 * the correct peer ieee80211_sta.
++	 *
++	 * But there is a problem with indirect traffic (broadcasts, or
++	 * data which is designated for other stations) in station mode.
++	 * The frame will be directed to the AP for distribution and not
++	 * to the actual destination.
++	 */
++	sta = ieee80211_find_sta(vif, hdr->addr1);
++	if (unlikely(!sta))
++		goto out_rcu;
++
++	tid = get_tid_h(hdr);
++
++	sta_info = (void *) sta->drv_priv;
++	tid_info = rcu_dereference(sta_info->agg[tid]);
++	if (unlikely(!tid_info))
++		goto out_rcu;
++
++	spin_lock_bh(&tid_info->lock);
++	if (likely(tid_info->state >= CARL9170_TID_STATE_IDLE))
++		carl9170_tx_shift_bm(ar, tid_info, get_seq_h(hdr));
++
++	if (sta_info->stats[tid].clear) {
++		sta_info->stats[tid].clear = false;
++		sta_info->stats[tid].ampdu_len = 0;
++		sta_info->stats[tid].ampdu_ack_len = 0;
++	}
++
++	sta_info->stats[tid].ampdu_len++;
++	if (txinfo->status.rates[0].count == 1)
++		sta_info->stats[tid].ampdu_ack_len++;
++
++	if (super->f.mac_control & cpu_to_le16(AR9170_TX_MAC_IMM_BA)) {
++		txinfo->pad[0] = sta_info->stats[tid].ampdu_len;
++		txinfo->pad[1] = sta_info->stats[tid].ampdu_ack_len;
++		txinfo->flags |= IEEE80211_TX_STAT_AMPDU;
++		sta_info->stats[tid].clear = true;
++	}
++	spin_unlock_bh(&tid_info->lock);
++
++out_rcu:
++	rcu_read_unlock();
++}
++
++void carl9170_tx_status(struct ar9170 *ar, struct sk_buff *skb,
++			const bool success)
++{
++	struct ieee80211_tx_info *txinfo;
++
++	carl9170_tx_accounting_free(ar, skb);
++
++	txinfo = IEEE80211_SKB_CB(skb);
++
++	if (success)
++		txinfo->flags |= IEEE80211_TX_STAT_ACK;
++	else
++		ar->tx_ack_failures++;
++
++	if (txinfo->flags & IEEE80211_TX_CTL_AMPDU)
++		carl9170_tx_status_process_ampdu(ar, skb, txinfo);
++
++	carl9170_tx_put_skb(skb);
++}
++
++/* This function may be called form any context */
++void carl9170_tx_callback(struct ar9170 *ar, struct sk_buff *skb)
++{
++	struct ieee80211_tx_info *txinfo = IEEE80211_SKB_CB(skb);
++
++	atomic_dec(&ar->tx_total_pending);
++
++	if (txinfo->flags & IEEE80211_TX_CTL_AMPDU)
++		atomic_dec(&ar->tx_ampdu_upload);
++
++	if (carl9170_tx_put_skb(skb))
++		tasklet_hi_schedule(&ar->usb_tasklet);
++}
++
++static struct sk_buff *carl9170_get_queued_skb(struct ar9170 *ar, u8 cookie,
++					       struct sk_buff_head *queue)
++{
++	struct sk_buff *skb;
++
++	spin_lock_bh(&queue->lock);
++	skb_queue_walk(queue, skb) {
++		struct _carl9170_tx_superframe *txc = (void *) skb->data;
++
++		if (txc->s.cookie != cookie)
++			continue;
++
++		__skb_unlink(skb, queue);
++		spin_unlock_bh(&queue->lock);
++
++		carl9170_release_dev_space(ar, skb);
++		return skb;
++	}
++	spin_unlock_bh(&queue->lock);
++
++	return NULL;
++}
++
++static void carl9170_tx_fill_rateinfo(struct ar9170 *ar, unsigned int rix,
++	unsigned int tries, struct ieee80211_tx_info *txinfo)
++{
++	unsigned int i;
++
++	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
++		if (txinfo->status.rates[i].idx < 0)
++			break;
++
++		if (i == rix) {
++			txinfo->status.rates[i].count = tries;
++			i++;
++			break;
++		}
++	}
++
++	for (; i < IEEE80211_TX_MAX_RATES; i++) {
++		txinfo->status.rates[i].idx = -1;
++		txinfo->status.rates[i].count = 0;
++	}
++}
++
++static void carl9170_check_queue_stop_timeout(struct ar9170 *ar)
++{
++	int i;
++	struct sk_buff *skb;
++	struct ieee80211_tx_info *txinfo;
++	struct carl9170_tx_info *arinfo;
++	bool restart = false;
++
++	for (i = 0; i < ar->hw->queues; i++) {
++		spin_lock_bh(&ar->tx_status[i].lock);
++
++		skb = skb_peek(&ar->tx_status[i]);
++
++		if (!skb)
++			goto next;
++
++		txinfo = IEEE80211_SKB_CB(skb);
++		arinfo = (void *) txinfo->rate_driver_data;
++
++		if (time_is_before_jiffies(arinfo->timeout +
++		    msecs_to_jiffies(CARL9170_QUEUE_STUCK_TIMEOUT)) == true)
++			restart = true;
++
++next:
++		spin_unlock_bh(&ar->tx_status[i].lock);
++	}
++
++	if (restart) {
++		/*
++		 * At least one queue has been stuck for long enough.
++		 * Give the device a kick and hope it gets back to
++		 * work.
++		 *
++		 * possible reasons may include:
++		 *  - frames got lost/corrupted (bad connection to the device)
++		 *  - stalled rx processing/usb controller hiccups
++		 *  - firmware errors/bugs
++		 *  - every bug you can think of.
++		 *  - all bugs you can't...
++		 *  - ...
++		 */
++		carl9170_restart(ar, CARL9170_RR_STUCK_TX);
++	}
++}
++
++void carl9170_tx_janitor(struct work_struct *work)
++{
++	struct ar9170 *ar = container_of(work, struct ar9170,
++					 tx_janitor.work);
++	if (unlikely(!IS_STARTED(ar)))
++		return;
++
++	ar->tx_janitor_last_run = jiffies;
++
++	carl9170_check_queue_stop_timeout(ar);
++
++	if (!atomic_read(&ar->tx_total_queued))
++		return;
++
++	ieee80211_queue_delayed_work(ar->hw, &ar->tx_janitor,
++		msecs_to_jiffies(CARL9170_TX_TIMEOUT));
++}
++
++static void __carl9170_tx_process_status(struct ar9170 *ar,
++	const uint8_t cookie, const uint8_t info)
++{
++	struct sk_buff *skb;
++	struct ieee80211_tx_info *txinfo;
++	struct carl9170_tx_info *arinfo;
++	unsigned int r, t, q;
++	bool success = true;
++
++	q = ar9170_qmap[info & CARL9170_TX_STATUS_QUEUE];
++
++	skb = carl9170_get_queued_skb(ar, cookie, &ar->tx_status[q]);
++	if (unlikely(!skb)) {
++		/*
++		 * We have lost the race to another thread.
++		 */
++
++		return ;
++	}
++
++	txinfo = IEEE80211_SKB_CB(skb);
++	arinfo = (void *) txinfo->rate_driver_data;
++
++	if (!(info & CARL9170_TX_STATUS_SUCCESS))
++		success = false;
++
++	r = (info & CARL9170_TX_STATUS_RIX) >> CARL9170_TX_STATUS_RIX_S;
++	t = (info & CARL9170_TX_STATUS_TRIES) >> CARL9170_TX_STATUS_TRIES_S;
++
++	carl9170_tx_fill_rateinfo(ar, r, t, txinfo);
++	carl9170_tx_status(ar, skb, success);
++}
++
++void carl9170_tx_process_status(struct ar9170 *ar,
++				const struct carl9170_rsp *cmd)
++{
++	unsigned int i;
++
++	for (i = 0;  i < cmd->hdr.ext; i++) {
++		if (WARN_ON(i > ((cmd->hdr.len / 2) + 1))) {
++			print_hex_dump_bytes("UU:", DUMP_PREFIX_NONE,
++					     (void *) cmd, cmd->hdr.len + 4);
++			break;
++		}
++
++		__carl9170_tx_process_status(ar, cmd->_tx_status[i].cookie,
++					     cmd->_tx_status[i].info);
++	}
++}
++
++static __le32 carl9170_tx_physet(struct ar9170 *ar,
++	struct ieee80211_tx_info *info, struct ieee80211_tx_rate *txrate)
++{
++	struct ieee80211_rate *rate = NULL;
++	u32 power, chains;
++	__le32 tmp;
++
++	tmp = cpu_to_le32(0);
++
++	if (txrate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
++		tmp |= cpu_to_le32(AR9170_TX_PHY_BW_40MHZ <<
++			AR9170_TX_PHY_BW_S);
++	/* this works because 40 MHz is 2 and dup is 3 */
++	if (txrate->flags & IEEE80211_TX_RC_DUP_DATA)
++		tmp |= cpu_to_le32(AR9170_TX_PHY_BW_40MHZ_DUP <<
++			AR9170_TX_PHY_BW_S);
++
++	if (txrate->flags & IEEE80211_TX_RC_SHORT_GI)
++		tmp |= cpu_to_le32(AR9170_TX_PHY_SHORT_GI);
++
++	if (txrate->flags & IEEE80211_TX_RC_MCS) {
++		u32 r = txrate->idx;
++		u8 *txpower;
++
++		/* heavy clip control */
++		tmp |= cpu_to_le32((r & 0x7) <<
++			AR9170_TX_PHY_TX_HEAVY_CLIP_S);
++
++		if (txrate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH) {
++			if (info->band == IEEE80211_BAND_5GHZ)
++				txpower = ar->power_5G_ht40;
++			else
++				txpower = ar->power_2G_ht40;
++		} else {
++			if (info->band == IEEE80211_BAND_5GHZ)
++				txpower = ar->power_5G_ht20;
++			else
++				txpower = ar->power_2G_ht20;
++		}
++
++		power = txpower[r & 7];
++
++		/* +1 dBm for HT40 */
++		if (txrate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
++			power += 2;
++
++		r <<= AR9170_TX_PHY_MCS_S;
++		BUG_ON(r & ~AR9170_TX_PHY_MCS);
++
++		tmp |= cpu_to_le32(r & AR9170_TX_PHY_MCS);
++		tmp |= cpu_to_le32(AR9170_TX_PHY_MOD_HT);
++
++		/*
++		 * green field preamble does not work.
++		 *
++		 * if (txrate->flags & IEEE80211_TX_RC_GREEN_FIELD)
++		 * tmp |= cpu_to_le32(AR9170_TX_PHY_GREENFIELD);
++		 */
++	} else {
++		u8 *txpower;
++		u32 mod;
++		u32 phyrate;
++		u8 idx = txrate->idx;
++
++		if (info->band != IEEE80211_BAND_2GHZ) {
++			idx += 4;
++			txpower = ar->power_5G_leg;
++			mod = AR9170_TX_PHY_MOD_OFDM;
++		} else {
++			if (idx < 4) {
++				txpower = ar->power_2G_cck;
++				mod = AR9170_TX_PHY_MOD_CCK;
++			} else {
++				mod = AR9170_TX_PHY_MOD_OFDM;
++				txpower = ar->power_2G_ofdm;
++			}
++		}
++
++		rate = &__carl9170_ratetable[idx];
++
++		phyrate = rate->hw_value & 0xF;
++		power = txpower[(rate->hw_value & 0x30) >> 4];
++		phyrate <<= AR9170_TX_PHY_MCS_S;
++
++		tmp |= cpu_to_le32(mod);
++		tmp |= cpu_to_le32(phyrate);
++
++		/*
++		 * short preamble seems to be broken too.
++		 *
++		 * if (txrate->flags & IEEE80211_TX_RC_USE_SHORT_PREAMBLE)
++		 *	tmp |= cpu_to_le32(AR9170_TX_PHY_SHORT_PREAMBLE);
++		 */
++	}
++	power <<= AR9170_TX_PHY_TX_PWR_S;
++	power &= AR9170_TX_PHY_TX_PWR;
++	tmp |= cpu_to_le32(power);
++
++	/* set TX chains */
++	if (ar->eeprom.tx_mask == 1) {
++		chains = AR9170_TX_PHY_TXCHAIN_1;
++	} else {
++		chains = AR9170_TX_PHY_TXCHAIN_2;
++
++		/* >= 36M legacy OFDM - use only one chain */
++		if (rate && rate->bitrate >= 360 &&
++		    !(txrate->flags & IEEE80211_TX_RC_MCS))
++			chains = AR9170_TX_PHY_TXCHAIN_1;
++	}
++	tmp |= cpu_to_le32(chains << AR9170_TX_PHY_TXCHAIN_S);
++
++	return tmp;
++}
++
++static bool carl9170_tx_rts_check(struct ar9170 *ar,
++				  struct ieee80211_tx_rate *rate,
++				  bool ampdu, bool multi)
++{
++	switch (ar->erp_mode) {
++	case CARL9170_ERP_AUTO:
++		if (ampdu)
++			break;
++
++	case CARL9170_ERP_MAC80211:
++		if (!(rate->flags & IEEE80211_TX_RC_USE_RTS_CTS))
++			break;
++
++	case CARL9170_ERP_RTS:
++		if (likely(!multi))
++			return true;
++
++	default:
++		break;
++	}
++
++	return false;
++}
++
++static bool carl9170_tx_cts_check(struct ar9170 *ar,
++				  struct ieee80211_tx_rate *rate)
++{
++	switch (ar->erp_mode) {
++	case CARL9170_ERP_AUTO:
++	case CARL9170_ERP_MAC80211:
++		if (!(rate->flags & IEEE80211_TX_RC_USE_CTS_PROTECT))
++			break;
++
++	case CARL9170_ERP_CTS:
++		return true;
++
++	default:
++		break;
++	}
++
++	return false;
++}
++
++static int carl9170_tx_prepare(struct ar9170 *ar, struct sk_buff *skb)
++{
++	struct ieee80211_hdr *hdr;
++	struct _carl9170_tx_superframe *txc;
++	struct carl9170_vif_info *cvif;
++	struct ieee80211_tx_info *info;
++	struct ieee80211_tx_rate *txrate;
++	struct ieee80211_sta *sta;
++	struct carl9170_tx_info *arinfo;
++	unsigned int hw_queue;
++	int i;
++	u16 keytype = 0;
++	u16 len, icv = 0;
++	bool ampdu, no_ack;
++
++	BUILD_BUG_ON(sizeof(*arinfo) > sizeof(info->rate_driver_data));
++	BUILD_BUG_ON(sizeof(struct _carl9170_tx_superdesc) !=
++		     CARL9170_TX_SUPERDESC_LEN);
++
++	BUILD_BUG_ON(sizeof(struct _ar9170_tx_hwdesc) !=
++		     AR9170_TX_HWDESC_LEN);
++
++	BUILD_BUG_ON(IEEE80211_TX_MAX_RATES < CARL9170_TX_MAX_RATES);
++
++	hw_queue = ar9170_qmap[carl9170_get_queue(ar, skb)];
++
++	hdr = (void *)skb->data;
++	info = IEEE80211_SKB_CB(skb);
++	len = skb->len;
++
++	/*
++	 * Note: If the frame was sent through a monitor interface,
++	 * the ieee80211_vif pointer can be NULL.
++	 */
++	if (likely(info->control.vif))
++		cvif = (void *) info->control.vif->drv_priv;
++	else
++		cvif = NULL;
++
++	sta = info->control.sta;
++
++	txc = (void *)skb_push(skb, sizeof(*txc));
++	memset(txc, 0, sizeof(*txc));
++
++	ampdu = !!(info->flags & IEEE80211_TX_CTL_AMPDU);
++	no_ack = !!(info->flags & IEEE80211_TX_CTL_NO_ACK);
++
++	if (info->control.hw_key) {
++		icv = info->control.hw_key->icv_len;
++
++		switch (info->control.hw_key->cipher) {
++		case WLAN_CIPHER_SUITE_WEP40:
++		case WLAN_CIPHER_SUITE_WEP104:
++		case WLAN_CIPHER_SUITE_TKIP:
++			keytype = AR9170_TX_MAC_ENCR_RC4;
++			break;
++		case WLAN_CIPHER_SUITE_CCMP:
++			keytype = AR9170_TX_MAC_ENCR_AES;
++			break;
++		default:
++			WARN_ON(1);
++			goto err_out;
++		}
++	}
++
++	BUILD_BUG_ON(AR9170_MAX_VIRTUAL_MAC >
++		((CARL9170_TX_SUPER_MISC_VIF_ID >>
++		 CARL9170_TX_SUPER_MISC_VIF_ID_S) + 1));
++
++	txc->s.len = cpu_to_le16(len + sizeof(*txc));
++	txc->f.length = cpu_to_le16(len + icv + 4);
++	SET_VAL(CARL9170_TX_SUPER_MISC_VIF_ID, txc->s.misc,
++		cvif ? cvif->id : 0);
++
++	txc->f.mac_control = cpu_to_le16(AR9170_TX_MAC_HW_DURATION |
++					 AR9170_TX_MAC_BACKOFF);
++
++	SET_VAL(CARL9170_TX_SUPER_MISC_QUEUE, txc->s.misc, hw_queue);
++
++	txc->f.mac_control |= cpu_to_le16(hw_queue << AR9170_TX_MAC_QOS_S);
++	txc->f.mac_control |= cpu_to_le16(keytype);
++	txc->f.phy_control = cpu_to_le32(0);
++
++	if (no_ack)
++		txc->f.mac_control |= cpu_to_le16(AR9170_TX_MAC_NO_ACK);
++
++	if (info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM)
++		txc->s.misc |= CARL9170_TX_SUPER_MISC_CAB;
++
++	txrate = &info->control.rates[0];
++	if (carl9170_tx_rts_check(ar, txrate, ampdu, no_ack))
++		txc->f.mac_control |= cpu_to_le16(AR9170_TX_MAC_PROT_RTS);
++	else if (carl9170_tx_cts_check(ar, txrate))
++		txc->f.mac_control |= cpu_to_le16(AR9170_TX_MAC_PROT_CTS);
++
++	SET_VAL(CARL9170_TX_SUPER_RI_TRIES, txc->s.ri[0], txrate->count);
++	txc->f.phy_control |= carl9170_tx_physet(ar, info, txrate);
++
++	if (info->flags & IEEE80211_TX_CTL_AMPDU) {
++		for (i = 1; i < CARL9170_TX_MAX_RATES; i++) {
++			txrate = &info->control.rates[i];
++			if (txrate->idx >= 0)
++				continue;
++
++			txrate->idx = 0;
++			txrate->count = ar->hw->max_rate_tries;
++		}
++	}
++
++	/*
++	 * NOTE: For the first rate, the ERP & AMPDU flags are directly
++	 * taken from mac_control. For all fallback rate, the firmware
++	 * updates the mac_control flags from the rate info field.
++	 */
++	for (i = 1; i < CARL9170_TX_MAX_RATES; i++) {
++		txrate = &info->control.rates[i];
++		if (txrate->idx < 0)
++			break;
++
++		SET_VAL(CARL9170_TX_SUPER_RI_TRIES, txc->s.ri[i],
++			txrate->count);
++
++		if (carl9170_tx_rts_check(ar, txrate, ampdu, no_ack))
++			txc->s.ri[i] |= (AR9170_TX_MAC_PROT_RTS <<
++				CARL9170_TX_SUPER_RI_ERP_PROT_S);
++		else if (carl9170_tx_cts_check(ar, txrate))
++			txc->s.ri[i] |= (AR9170_TX_MAC_PROT_CTS <<
++				CARL9170_TX_SUPER_RI_ERP_PROT_S);
++
++		/*
++		 * unaggregated fallback, in case aggregation
++		 * proves to be unsuccessful and unreliable.
++		 */
++		if (ampdu && i < 3)
++			txc->s.ri[i] |= CARL9170_TX_SUPER_RI_AMPDU;
++
++		txc->s.rr[i - 1] = carl9170_tx_physet(ar, info, txrate);
++	}
++
++	if (ieee80211_is_probe_resp(hdr->frame_control))
++		txc->s.misc |= CARL9170_TX_SUPER_MISC_FILL_IN_TSF;
++
++	if (ampdu) {
++		unsigned int density, factor;
++
++		if (unlikely(!sta || !cvif))
++			goto err_out;
++
++		density = info->control.sta->ht_cap.ampdu_density;
++		factor = info->control.sta->ht_cap.ampdu_factor;
++
++		if (density) {
++			/*
++			 * Watch out!
++			 *
++			 * Otus uses slightly different density values than
++			 * those from the 802.11n spec.
++			 */
++
++			density = max_t(unsigned int, density + 1, 7u);
++		}
++
++		factor = min_t(unsigned int, 1u, factor);
++
++		SET_VAL(CARL9170_TX_SUPER_AMPDU_DENSITY,
++			txc->s.ampdu_settings, density);
++
++		SET_VAL(CARL9170_TX_SUPER_AMPDU_FACTOR,
++			txc->s.ampdu_settings, factor);
++
++		if (info->control.rates[0].flags & IEEE80211_TX_RC_MCS) {
++			txc->f.mac_control |= cpu_to_le16(AR9170_TX_MAC_AGGR);
++		} else {
++			/*
++			 * Not sure if it's even possible to aggregate
++			 * non-ht rates with this HW.
++			 */
++			WARN_ON_ONCE(1);
++		}
++	}
++
++	arinfo = (void *)info->rate_driver_data;
++	arinfo->timeout = jiffies;
++	arinfo->ar = ar;
++	kref_init(&arinfo->ref);
++	return 0;
++
++err_out:
++	skb_pull(skb, sizeof(*txc));
++	return -EINVAL;
++}
++
++static void carl9170_set_immba(struct ar9170 *ar, struct sk_buff *skb)
++{
++	struct _carl9170_tx_superframe *super;
++
++	super = (void *) skb->data;
++	super->f.mac_control |= cpu_to_le16(AR9170_TX_MAC_IMM_BA);
++}
++
++static void carl9170_set_ampdu_params(struct ar9170 *ar, struct sk_buff *skb)
++{
++	struct _carl9170_tx_superframe *super;
++	int tmp;
++
++	super = (void *) skb->data;
++
++	tmp = (super->s.ampdu_settings & CARL9170_TX_SUPER_AMPDU_DENSITY) <<
++		CARL9170_TX_SUPER_AMPDU_DENSITY_S;
++
++	/*
++	 * If you haven't noticed carl9170_tx_prepare has already filled
++	 * in all ampdu spacing & factor parameters.
++	 * Now it's the time to check whenever the settings have to be
++	 * updated by the firmware, or if everything is still the same.
++	 *
++	 * There's no sane way to handle different density values with
++	 * this hardware, so we may as well just do the compare in the
++	 * driver.
++	 */
++
++	if (tmp != ar->current_density) {
++		ar->current_density = tmp;
++		super->s.ampdu_settings |=
++			CARL9170_TX_SUPER_AMPDU_COMMIT_DENSITY;
++	}
++
++	tmp = (super->s.ampdu_settings & CARL9170_TX_SUPER_AMPDU_FACTOR) <<
++		CARL9170_TX_SUPER_AMPDU_FACTOR_S;
++
++	if (tmp != ar->current_factor) {
++		ar->current_factor = tmp;
++		super->s.ampdu_settings |=
++			CARL9170_TX_SUPER_AMPDU_COMMIT_FACTOR;
++	}
++}
++
++static bool carl9170_tx_rate_check(struct ar9170 *ar, struct sk_buff *_dest,
++				   struct sk_buff *_src)
++{
++	struct _carl9170_tx_superframe *dest, *src;
++
++	dest = (void *) _dest->data;
++	src = (void *) _src->data;
++
++	/*
++	 * The mac80211 rate control algorithm expects that all MPDUs in
++	 * an AMPDU share the same tx vectors.
++	 * This is not really obvious right now, because the hardware
++	 * does the AMPDU setup according to its own rulebook.
++	 * Our nicely assembled, strictly monotonic increasing mpdu
++	 * chains will be broken up, mashed back together...
++	 */
++
++	return (dest->f.phy_control == src->f.phy_control);
++}
++
++static void carl9170_tx_ampdu(struct ar9170 *ar)
++{
++	struct sk_buff_head agg;
++	struct carl9170_sta_tid *tid_info;
++	struct sk_buff *skb, *first;
++	unsigned int i = 0, done_ampdus = 0;
++	u16 seq, queue, tmpssn;
++
++	atomic_inc(&ar->tx_ampdu_scheduler);
++	ar->tx_ampdu_schedule = false;
++
++	if (atomic_read(&ar->tx_ampdu_upload))
++		return;
++
++	if (!ar->tx_ampdu_list_len)
++		return;
++
++	__skb_queue_head_init(&agg);
++
++	rcu_read_lock();
++	tid_info = rcu_dereference(ar->tx_ampdu_iter);
++	if (WARN_ON_ONCE(!tid_info)) {
++		rcu_read_unlock();
++		return;
++	}
++
++retry:
++	list_for_each_entry_continue_rcu(tid_info, &ar->tx_ampdu_list, list) {
++		i++;
++
++		if (tid_info->state < CARL9170_TID_STATE_PROGRESS)
++			continue;
++
++		queue = TID_TO_WME_AC(tid_info->tid);
++
++		spin_lock_bh(&tid_info->lock);
++		if (tid_info->state != CARL9170_TID_STATE_XMIT) {
++			first = skb_peek(&tid_info->queue);
++			if (first) {
++				struct ieee80211_tx_info *txinfo;
++				struct carl9170_tx_info *arinfo;
++
++				txinfo = IEEE80211_SKB_CB(first);
++				arinfo = (void *) txinfo->rate_driver_data;
++
++				if (time_is_after_jiffies(arinfo->timeout +
++				    msecs_to_jiffies(CARL9170_QUEUE_TIMEOUT))
++				    == true)
++					goto processed;
++
++				/*
++				 * We've been waiting for the frame which
++				 * matches "snx" (start sequence of the
++				 * next aggregate) for some time now.
++				 *
++				 * But it never arrived. Therefore
++				 * jump to the next available frame
++				 * and kick-start the transmission.
++				 *
++				 * Note: This might induce odd latency
++				 * spikes because the receiver will be
++				 * waiting for the lost frame too.
++				 */
++				ar->tx_ampdu_timeout++;
++
++				tid_info->snx = carl9170_get_seq(first);
++				tid_info->state = CARL9170_TID_STATE_XMIT;
++			} else {
++				goto processed;
++			}
++		}
++
++		tid_info->counter++;
++		first = skb_peek(&tid_info->queue);
++		tmpssn = carl9170_get_seq(first);
++		seq = tid_info->snx;
++
++		if (unlikely(tmpssn != seq)) {
++			tid_info->state = CARL9170_TID_STATE_IDLE;
++
++			goto processed;
++		}
++
++		while ((skb = skb_peek(&tid_info->queue))) {
++			/* strict 0, 1, ..., n - 1, n frame sequence order */
++			if (unlikely(carl9170_get_seq(skb) != seq))
++				break;
++
++			/* don't upload more than AMPDU FACTOR allows. */
++			if (unlikely(SEQ_DIFF(tid_info->snx, tid_info->bsn) >=
++			    (tid_info->max - 1)))
++				break;
++
++			if (!carl9170_tx_rate_check(ar, skb, first))
++				break;
++
++			atomic_inc(&ar->tx_ampdu_upload);
++			tid_info->snx = seq = SEQ_NEXT(seq);
++			__skb_unlink(skb, &tid_info->queue);
++
++			__skb_queue_tail(&agg, skb);
++
++			if (skb_queue_len(&agg) >= CARL9170_NUM_TX_AGG_MAX)
++				break;
++		}
++
++		if (skb_queue_empty(&tid_info->queue) ||
++		    carl9170_get_seq(skb_peek(&tid_info->queue)) !=
++		    tid_info->snx) {
++			/*
++			 * stop TID, if A-MPDU frames are still missing,
++			 * or whenever the queue is empty.
++			 */
++
++			tid_info->state = CARL9170_TID_STATE_IDLE;
++		}
++		done_ampdus++;
++
++processed:
++		spin_unlock_bh(&tid_info->lock);
++
++		if (skb_queue_empty(&agg))
++			continue;
++
++		/* apply ampdu spacing & factor settings */
++		carl9170_set_ampdu_params(ar, skb_peek(&agg));
++
++		/* set aggregation push bit */
++		carl9170_set_immba(ar, skb_peek_tail(&agg));
++
++		spin_lock_bh(&ar->tx_pending[queue].lock);
++		skb_queue_splice_tail_init(&agg, &ar->tx_pending[queue]);
++		spin_unlock_bh(&ar->tx_pending[queue].lock);
++		ar->tx_schedule = true;
++	}
++	if ((done_ampdus++ == 0) && (i++ == 0))
++		goto retry;
++
++	rcu_assign_pointer(ar->tx_ampdu_iter, tid_info);
++	rcu_read_unlock();
++}
++
++static struct sk_buff *carl9170_tx_pick_skb(struct ar9170 *ar,
++					    struct sk_buff_head *queue)
++{
++	struct sk_buff *skb;
++	struct ieee80211_tx_info *info;
++	struct carl9170_tx_info *arinfo;
++
++	BUILD_BUG_ON(sizeof(*arinfo) > sizeof(info->rate_driver_data));
++
++	spin_lock_bh(&queue->lock);
++	skb = skb_peek(queue);
++	if (unlikely(!skb))
++		goto err_unlock;
++
++	if (carl9170_alloc_dev_space(ar, skb))
++		goto err_unlock;
++
++	__skb_unlink(skb, queue);
++	spin_unlock_bh(&queue->lock);
++
++	info = IEEE80211_SKB_CB(skb);
++	arinfo = (void *) info->rate_driver_data;
++
++	arinfo->timeout = jiffies;
++
++	/*
++	 * increase ref count to "2".
++	 * Ref counting is the easiest way to solve the race between
++	 * the the urb's completion routine: carl9170_tx_callback and
++	 * wlan tx status functions: carl9170_tx_status/janitor.
++	 */
++	carl9170_tx_get_skb(skb);
++
++	return skb;
++
++err_unlock:
++	spin_unlock_bh(&queue->lock);
++	return NULL;
++}
++
++void carl9170_tx_drop(struct ar9170 *ar, struct sk_buff *skb)
++{
++	struct _carl9170_tx_superframe *super;
++	uint8_t q = 0;
++
++	ar->tx_dropped++;
++
++	super = (void *)skb->data;
++	SET_VAL(CARL9170_TX_SUPER_MISC_QUEUE, q,
++		ar9170_qmap[carl9170_get_queue(ar, skb)]);
++	__carl9170_tx_process_status(ar, super->s.cookie, q);
++}
++
++static void carl9170_tx(struct ar9170 *ar)
++{
++	struct sk_buff *skb;
++	unsigned int i, q;
++	bool schedule_garbagecollector = false;
++
++	ar->tx_schedule = false;
++
++	if (unlikely(!IS_STARTED(ar)))
++		return;
++
++	carl9170_usb_handle_tx_err(ar);
++
++	for (i = 0; i < ar->hw->queues; i++) {
++		while (!skb_queue_empty(&ar->tx_pending[i])) {
++			skb = carl9170_tx_pick_skb(ar, &ar->tx_pending[i]);
++			if (unlikely(!skb))
++				break;
++
++			atomic_inc(&ar->tx_total_pending);
++
++			q = __carl9170_get_queue(ar, i);
++			/*
++			 * NB: tx_status[i] vs. tx_status[q],
++			 * TODO: Move into pick_skb or alloc_dev_space.
++			 */
++			skb_queue_tail(&ar->tx_status[q], skb);
++
++			carl9170_usb_tx(ar, skb);
++			schedule_garbagecollector = true;
++		}
++	}
++
++	if (!schedule_garbagecollector)
++		return;
++
++	ieee80211_queue_delayed_work(ar->hw, &ar->tx_janitor,
++		msecs_to_jiffies(CARL9170_TX_TIMEOUT));
++}
++
++static bool carl9170_tx_ampdu_queue(struct ar9170 *ar,
++	struct ieee80211_sta *sta, struct sk_buff *skb)
++{
++	struct carl9170_sta_info *sta_info;
++	struct carl9170_sta_tid *agg;
++	struct sk_buff *iter;
++	unsigned int max;
++	u16 tid, seq, qseq, off;
++	bool run = false;
++
++	tid = carl9170_get_tid(skb);
++	seq = carl9170_get_seq(skb);
++	sta_info = (void *) sta->drv_priv;
++
++	rcu_read_lock();
++	agg = rcu_dereference(sta_info->agg[tid]);
++	max = sta_info->ampdu_max_len;
++
++	if (!agg)
++		goto err_unlock_rcu;
++
++	spin_lock_bh(&agg->lock);
++	if (unlikely(agg->state < CARL9170_TID_STATE_IDLE))
++		goto err_unlock;
++
++	/* check if sequence is within the BA window */
++	if (unlikely(!BAW_WITHIN(agg->bsn, CARL9170_BAW_BITS, seq)))
++		goto err_unlock;
++
++	if (WARN_ON_ONCE(!BAW_WITHIN(agg->snx, CARL9170_BAW_BITS, seq)))
++		goto err_unlock;
++
++	off = SEQ_DIFF(seq, agg->bsn);
++	if (WARN_ON_ONCE(test_and_set_bit(off, agg->bitmap)))
++		goto err_unlock;
++
++	if (likely(BAW_WITHIN(agg->hsn, CARL9170_BAW_BITS, seq))) {
++		__skb_queue_tail(&agg->queue, skb);
++		agg->hsn = seq;
++		goto queued;
++	}
++
++	skb_queue_reverse_walk(&agg->queue, iter) {
++		qseq = carl9170_get_seq(iter);
++
++		if (BAW_WITHIN(qseq, CARL9170_BAW_BITS, seq)) {
++			__skb_queue_after(&agg->queue, iter, skb);
++			goto queued;
++		}
++	}
++
++	__skb_queue_head(&agg->queue, skb);
++queued:
++
++	if (unlikely(agg->state != CARL9170_TID_STATE_XMIT)) {
++		if (agg->snx == carl9170_get_seq(skb_peek(&agg->queue))) {
++			agg->state = CARL9170_TID_STATE_XMIT;
++			run = true;
++		}
++	}
++
++	spin_unlock_bh(&agg->lock);
++	rcu_read_unlock();
++
++	return run;
++
++err_unlock:
++	spin_unlock_bh(&agg->lock);
++
++err_unlock_rcu:
++	rcu_read_unlock();
++	carl9170_tx_status(ar, skb, false);
++	ar->tx_dropped++;
++	return false;
++}
++
++int carl9170_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
++{
++	struct ar9170 *ar = hw->priv;
++	struct ieee80211_tx_info *info;
++	struct ieee80211_sta *sta;
++	bool run;
++
++	if (unlikely(!IS_STARTED(ar)))
++		goto err_free;
++
++	info = IEEE80211_SKB_CB(skb);
++	sta = info->control.sta;
++
++	if (unlikely(carl9170_tx_prepare(ar, skb)))
++		goto err_free;
++
++	carl9170_tx_accounting(ar, skb);
++	/*
++	 * from now on, one has to use carl9170_tx_status to free
++	 * all ressouces which are associated with the frame.
++	 */
++
++	if (info->flags & IEEE80211_TX_CTL_AMPDU) {
++		if (WARN_ON_ONCE(!sta))
++			goto err_free;
++
++		run = carl9170_tx_ampdu_queue(ar, sta, skb);
++		if (run)
++			carl9170_tx_ampdu(ar);
++
++	} else {
++		unsigned int queue = skb_get_queue_mapping(skb);
++
++		skb_queue_tail(&ar->tx_pending[queue], skb);
++	}
++
++	carl9170_tx(ar);
++	return NETDEV_TX_OK;
++
++err_free:
++	ar->tx_dropped++;
++	dev_kfree_skb_any(skb);
++	return NETDEV_TX_OK;
++}
++
++void carl9170_tx_scheduler(struct ar9170 *ar)
++{
++
++	if (ar->tx_ampdu_schedule)
++		carl9170_tx_ampdu(ar);
++
++	if (ar->tx_schedule)
++		carl9170_tx(ar);
++}
+diff --git a/drivers/net/wireless/ath/carl9170/usb.c b/drivers/net/wireless/ath/carl9170/usb.c
+new file mode 100644
+index 0000000..a51bcc3
+--- /dev/null
++++ b/drivers/net/wireless/ath/carl9170/usb.c
+@@ -0,0 +1,1143 @@
++/*
++ * Atheros CARL9170 driver
++ *
++ * USB - frontend
++ *
++ * Copyright 2008, Johannes Berg <johannes@sipsolutions.net>
++ * Copyright 2009, 2010, Christian Lamparter <chunkeey@googlemail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; see the file COPYING.  If not, see
++ * http://www.gnu.org/licenses/.
++ *
++ * This file incorporates work covered by the following copyright and
++ * permission notice:
++ *    Copyright (c) 2007-2008 Atheros Communications, Inc.
++ *
++ *    Permission to use, copy, modify, and/or distribute this software for any
++ *    purpose with or without fee is hereby granted, provided that the above
++ *    copyright notice and this permission notice appear in all copies.
++ *
++ *    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ *    WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ *    MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ *    ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ *    WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ *    ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ *    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include <linux/module.h>
++#include <linux/slab.h>
++#include <linux/usb.h>
++#include <linux/firmware.h>
++#include <linux/etherdevice.h>
++#include <linux/device.h>
++#include <net/mac80211.h>
++#include "carl9170.h"
++#include "cmd.h"
++#include "hw.h"
++#include "fwcmd.h"
++
++MODULE_AUTHOR("Johannes Berg <johannes@sipsolutions.net>");
++MODULE_AUTHOR("Christian Lamparter <chunkeey@googlemail.com>");
++MODULE_LICENSE("GPL");
++MODULE_DESCRIPTION("Atheros AR9170 802.11n USB wireless");
++MODULE_FIRMWARE(CARL9170FW_NAME);
++MODULE_ALIAS("ar9170usb");
++MODULE_ALIAS("arusb_lnx");
++
++/*
++ * Note:
++ *
++ * Always update our wiki's device list (located at:
++ * http://wireless.kernel.org/en/users/Drivers/ar9170/devices ),
++ * whenever you add a new device.
++ */
++static struct usb_device_id carl9170_usb_ids[] = {
++	/* Atheros 9170 */
++	{ USB_DEVICE(0x0cf3, 0x9170) },
++	/* Atheros TG121N */
++	{ USB_DEVICE(0x0cf3, 0x1001) },
++	/* TP-Link TL-WN821N v2 */
++	{ USB_DEVICE(0x0cf3, 0x1002), .driver_info = CARL9170_WPS_BUTTON |
++		 CARL9170_ONE_LED },
++	/* 3Com Dual Band 802.11n USB Adapter */
++	{ USB_DEVICE(0x0cf3, 0x1010) },
++	/* H3C Dual Band 802.11n USB Adapter */
++	{ USB_DEVICE(0x0cf3, 0x1011) },
++	/* Cace Airpcap NX */
++	{ USB_DEVICE(0xcace, 0x0300) },
++	/* D-Link DWA 160 A1 */
++	{ USB_DEVICE(0x07d1, 0x3c10) },
++	/* D-Link DWA 160 A2 */
++	{ USB_DEVICE(0x07d1, 0x3a09) },
++	/* Netgear WNA1000 */
++	{ USB_DEVICE(0x0846, 0x9040) },
++	/* Netgear WNDA3100 */
++	{ USB_DEVICE(0x0846, 0x9010) },
++	/* Netgear WN111 v2 */
++	{ USB_DEVICE(0x0846, 0x9001), .driver_info = CARL9170_ONE_LED },
++	/* Zydas ZD1221 */
++	{ USB_DEVICE(0x0ace, 0x1221) },
++	/* Proxim ORiNOCO 802.11n USB */
++	{ USB_DEVICE(0x1435, 0x0804) },
++	/* WNC Generic 11n USB Dongle */
++	{ USB_DEVICE(0x1435, 0x0326) },
++	/* ZyXEL NWD271N */
++	{ USB_DEVICE(0x0586, 0x3417) },
++	/* Z-Com UB81 BG */
++	{ USB_DEVICE(0x0cde, 0x0023) },
++	/* Z-Com UB82 ABG */
++	{ USB_DEVICE(0x0cde, 0x0026) },
++	/* Sphairon Homelink 1202 */
++	{ USB_DEVICE(0x0cde, 0x0027) },
++	/* Arcadyan WN7512 */
++	{ USB_DEVICE(0x083a, 0xf522) },
++	/* Planex GWUS300 */
++	{ USB_DEVICE(0x2019, 0x5304) },
++	/* IO-Data WNGDNUS2 */
++	{ USB_DEVICE(0x04bb, 0x093f) },
++	/* NEC WL300NU-G */
++	{ USB_DEVICE(0x0409, 0x0249) },
++	/* AVM FRITZ!WLAN USB Stick N */
++	{ USB_DEVICE(0x057c, 0x8401) },
++	/* AVM FRITZ!WLAN USB Stick N 2.4 */
++	{ USB_DEVICE(0x057c, 0x8402) },
++	/* Qwest/Actiontec 802AIN Wireless N USB Network Adapter */
++	{ USB_DEVICE(0x1668, 0x1200) },
++
++	/* terminate */
++	{}
++};
++MODULE_DEVICE_TABLE(usb, carl9170_usb_ids);
++
++static void carl9170_usb_submit_data_urb(struct ar9170 *ar)
++{
++	struct urb *urb;
++	int err;
++
++	if (atomic_inc_return(&ar->tx_anch_urbs) > AR9170_NUM_TX_URBS)
++		goto err_acc;
++
++	urb = usb_get_from_anchor(&ar->tx_wait);
++	if (!urb)
++		goto err_acc;
++
++	usb_anchor_urb(urb, &ar->tx_anch);
++
++	err = usb_submit_urb(urb, GFP_ATOMIC);
++	if (unlikely(err)) {
++		if (net_ratelimit()) {
++			dev_err(&ar->udev->dev, "tx submit failed (%d)\n",
++				urb->status);
++		}
++
++		usb_unanchor_urb(urb);
++		usb_anchor_urb(urb, &ar->tx_err);
++	}
++
++	usb_free_urb(urb);
++
++	if (likely(err == 0))
++		return;
++
++err_acc:
++	atomic_dec(&ar->tx_anch_urbs);
++}
++
++static void carl9170_usb_tx_data_complete(struct urb *urb)
++{
++	struct ar9170 *ar = (struct ar9170 *)
++	      usb_get_intfdata(usb_ifnum_to_if(urb->dev, 0));
++
++	if (WARN_ON_ONCE(!ar)) {
++		dev_kfree_skb_irq(urb->context);
++		return;
++	}
++
++	atomic_dec(&ar->tx_anch_urbs);
++
++	switch (urb->status) {
++	/* everything is fine */
++	case 0:
++		carl9170_tx_callback(ar, (void *)urb->context);
++		break;
++
++	/* disconnect */
++	case -ENOENT:
++	case -ECONNRESET:
++	case -ENODEV:
++	case -ESHUTDOWN:
++		/*
++		 * Defer the frame clean-up to the tasklet worker.
++		 * This is necessary, because carl9170_tx_drop
++		 * does not work in an irqsave context.
++		 */
++		usb_anchor_urb(urb, &ar->tx_err);
++		return;
++
++	/* a random transmission error has occurred? */
++	default:
++		if (net_ratelimit()) {
++			dev_err(&ar->udev->dev, "tx failed (%d)\n",
++				urb->status);
++		}
++
++		usb_anchor_urb(urb, &ar->tx_err);
++		break;
++	}
++
++	if (likely(IS_STARTED(ar)))
++		carl9170_usb_submit_data_urb(ar);
++}
++
++static int carl9170_usb_submit_cmd_urb(struct ar9170 *ar)
++{
++	struct urb *urb;
++	int err;
++
++	if (atomic_inc_return(&ar->tx_cmd_urbs) != 1) {
++		atomic_dec(&ar->tx_cmd_urbs);
++		return 0;
++	}
++
++	urb = usb_get_from_anchor(&ar->tx_cmd);
++	if (!urb) {
++		atomic_dec(&ar->tx_cmd_urbs);
++		return 0;
++	}
++
++	usb_anchor_urb(urb, &ar->tx_anch);
++	err = usb_submit_urb(urb, GFP_ATOMIC);
++	if (unlikely(err)) {
++		usb_unanchor_urb(urb);
++		atomic_dec(&ar->tx_cmd_urbs);
++	}
++	usb_free_urb(urb);
++
++	return err;
++}
++
++static void carl9170_usb_cmd_complete(struct urb *urb)
++{
++	struct ar9170 *ar = urb->context;
++	int err;
++
++	if (WARN_ON_ONCE(!ar))
++		return;
++
++	atomic_dec(&ar->tx_cmd_urbs);
++
++	switch (urb->status) {
++	/* everything is fine */
++	case 0:
++		if (unlikely(!IS_ACCEPTING_CMD(ar)))
++			return;
++
++		err = carl9170_usb_submit_cmd_urb(ar);
++		if (likely(!err))
++			return;
++
++		break;
++
++	/* disconnect */
++	case -ENOENT:
++	case -ECONNRESET:
++	case -ENODEV:
++	case -ESHUTDOWN:
++		return;
++
++	default:
++		err = urb->status;
++		break;
++	}
++
++	if (!IS_STARTED(ar))
++		return;
++
++	if (net_ratelimit()) {
++		print_hex_dump_bytes("CMD:", DUMP_PREFIX_NONE,
++			urb->transfer_buffer, urb->actual_length);
++		dev_err(&ar->udev->dev, "submit cmd failed (%d).\n", err);
++	}
++}
++
++static void carl9170_usb_rx_irq_complete(struct urb *urb)
++{
++	struct ar9170 *ar = urb->context;
++
++	if (WARN_ON_ONCE(!ar))
++		return;
++
++	switch (urb->status) {
++	/* everything is fine */
++	case 0:
++		break;
++
++	/* disconnect */
++	case -ENOENT:
++	case -ECONNRESET:
++	case -ENODEV:
++	case -ESHUTDOWN:
++		return;
++
++	default:
++		goto resubmit;
++	}
++
++	carl9170_handle_command_response(ar, urb->transfer_buffer,
++					 urb->actual_length);
++
++resubmit:
++	usb_anchor_urb(urb, &ar->rx_anch);
++	if (unlikely(usb_submit_urb(urb, GFP_ATOMIC)))
++		usb_unanchor_urb(urb);
++}
++
++static int carl9170_usb_submit_rx_urb(struct ar9170 *ar, gfp_t gfp)
++{
++	struct urb *urb;
++	int err = 0, runs = 0;
++
++	while ((atomic_read(&ar->rx_anch_urbs) < AR9170_NUM_RX_URBS) &&
++		(runs++ < AR9170_NUM_RX_URBS)) {
++		err = -ENOSPC;
++		urb = usb_get_from_anchor(&ar->rx_pool);
++		if (urb) {
++			usb_anchor_urb(urb, &ar->rx_anch);
++			err = usb_submit_urb(urb, gfp);
++			if (unlikely(err)) {
++				usb_unanchor_urb(urb);
++				usb_anchor_urb(urb, &ar->rx_pool);
++			} else {
++				atomic_dec(&ar->rx_pool_urbs);
++				atomic_inc(&ar->rx_anch_urbs);
++			}
++			usb_free_urb(urb);
++		}
++	}
++
++	return err;
++}
++
++static void carl9170_usb_rx_work(struct ar9170 *ar)
++{
++	struct urb *urb;
++	int i;
++
++	for (i = 0; i < AR9170_NUM_RX_URBS_POOL; i++) {
++		urb = usb_get_from_anchor(&ar->rx_work);
++		if (!urb)
++			break;
++
++		atomic_dec(&ar->rx_work_urbs);
++		if (IS_INITIALIZED(ar)) {
++			carl9170_rx(ar, urb->transfer_buffer,
++				    urb->actual_length);
++		}
++
++		usb_anchor_urb(urb, &ar->rx_pool);
++		atomic_inc(&ar->rx_pool_urbs);
++
++		usb_free_urb(urb);
++
++		carl9170_usb_submit_rx_urb(ar, GFP_ATOMIC);
++	}
++}
++
++void carl9170_usb_handle_tx_err(struct ar9170 *ar)
++{
++	struct urb *urb;
++
++	while ((urb = usb_get_from_anchor(&ar->tx_err))) {
++		struct sk_buff *skb = (void *)urb->context;
++
++		carl9170_tx_drop(ar, skb);
++		carl9170_tx_callback(ar, skb);
++		usb_free_urb(urb);
++	}
++}
++
++static void carl9170_usb_tasklet(unsigned long data)
++{
++	struct ar9170 *ar = (struct ar9170 *) data;
++
++	carl9170_usb_rx_work(ar);
++
++	/*
++	 * Strictly speaking: The tx scheduler is not part of the USB system.
++	 * But the rx worker returns frames back to the mac80211-stack and
++	 * this is the _perfect_ place to generate the next transmissions.
++	 */
++	if (IS_STARTED(ar))
++		carl9170_tx_scheduler(ar);
++}
++
++static void carl9170_usb_rx_complete(struct urb *urb)
++{
++	struct ar9170 *ar = (struct ar9170 *)urb->context;
++	int err;
++
++	if (WARN_ON_ONCE(!ar))
++		return;
++
++	atomic_dec(&ar->rx_anch_urbs);
++
++	switch (urb->status) {
++	case 0:
++		/* rx path */
++		usb_anchor_urb(urb, &ar->rx_work);
++		atomic_inc(&ar->rx_work_urbs);
++		break;
++
++	case -ENOENT:
++	case -ECONNRESET:
++	case -ENODEV:
++	case -ESHUTDOWN:
++		/* handle disconnect events*/
++		return;
++
++	default:
++		/* handle all other errors */
++		usb_anchor_urb(urb, &ar->rx_pool);
++		atomic_inc(&ar->rx_pool_urbs);
++		break;
++	}
++
++	err = carl9170_usb_submit_rx_urb(ar, GFP_ATOMIC);
++	if (unlikely(err)) {
++		/*
++		 * usb_submit_rx_urb reported a problem.
++		 * In case this is due to a rx buffer shortage,
++		 * elevate the tasklet worker priority to
++		 * the highest available level.
++		 */
++		tasklet_hi_schedule(&ar->usb_tasklet);
++
++		if (atomic_read(&ar->rx_anch_urbs) == 0) {
++			/*
++			 * The system is too slow to cope with
++			 * the enormous workload. We have simply
++			 * run out of active rx urbs and this
++			 * unfortunatly leads to an unpredictable
++			 * device.
++			 */
++
++			carl9170_restart(ar, CARL9170_RR_SLOW_SYSTEM);
++		}
++	} else {
++		/*
++		 * Using anything less than _high_ priority absolutely
++		 * kills the rx performance my UP-System...
++		 */
++		tasklet_hi_schedule(&ar->usb_tasklet);
++	}
++}
++
++static struct urb *carl9170_usb_alloc_rx_urb(struct ar9170 *ar, gfp_t gfp)
++{
++	struct urb *urb;
++	void *buf;
++
++	buf = kmalloc(ar->rx_size, gfp);
++	if (!buf)
++		return NULL;
++
++	urb = usb_alloc_urb(0, gfp);
++	if (!urb) {
++		kfree(buf);
++		return NULL;
++	}
++
++	usb_fill_bulk_urb(urb, ar->udev, usb_rcvbulkpipe(ar->udev,
++			  AR9170_USB_EP_RX), buf, ar->rx_size,
++			  carl9170_usb_rx_complete, ar);
++
++	urb->transfer_flags |= URB_FREE_BUFFER;
++
++	return urb;
++}
++
++static int carl9170_usb_send_rx_irq_urb(struct ar9170 *ar)
++{
++	struct urb *urb = NULL;
++	void *ibuf;
++	int err = -ENOMEM;
++
++	urb = usb_alloc_urb(0, GFP_KERNEL);
++	if (!urb)
++		goto out;
++
++	ibuf = kmalloc(AR9170_USB_EP_CTRL_MAX, GFP_KERNEL);
++	if (!ibuf)
++		goto out;
++
++	usb_fill_int_urb(urb, ar->udev, usb_rcvintpipe(ar->udev,
++			 AR9170_USB_EP_IRQ), ibuf, AR9170_USB_EP_CTRL_MAX,
++			 carl9170_usb_rx_irq_complete, ar, 1);
++
++	urb->transfer_flags |= URB_FREE_BUFFER;
++
++	usb_anchor_urb(urb, &ar->rx_anch);
++	err = usb_submit_urb(urb, GFP_KERNEL);
++	if (err)
++		usb_unanchor_urb(urb);
++
++out:
++	usb_free_urb(urb);
++	return err;
++}
++
++static int carl9170_usb_init_rx_bulk_urbs(struct ar9170 *ar)
++{
++	struct urb *urb;
++	int i, err = -EINVAL;
++
++	/*
++	 * The driver actively maintains a second shadow
++	 * pool for inactive, but fully-prepared rx urbs.
++	 *
++	 * The pool should help the driver to master huge
++	 * workload spikes without running the risk of
++	 * undersupplying the hardware or wasting time by
++	 * processing rx data (streams) inside the urb
++	 * completion (hardirq context).
++	 */
++	for (i = 0; i < AR9170_NUM_RX_URBS_POOL; i++) {
++		urb = carl9170_usb_alloc_rx_urb(ar, GFP_KERNEL);
++		if (!urb) {
++			err = -ENOMEM;
++			goto err_out;
++		}
++
++		usb_anchor_urb(urb, &ar->rx_pool);
++		atomic_inc(&ar->rx_pool_urbs);
++		usb_free_urb(urb);
++	}
++
++	err = carl9170_usb_submit_rx_urb(ar, GFP_KERNEL);
++	if (err)
++		goto err_out;
++
++	/* the device now waiting for the firmware. */
++	carl9170_set_state(ar, CARL9170_IDLE);
++	return 0;
++
++err_out:
++
++	usb_scuttle_anchored_urbs(&ar->rx_pool);
++	usb_scuttle_anchored_urbs(&ar->rx_work);
++	usb_kill_anchored_urbs(&ar->rx_anch);
++	return err;
++}
++
++static int carl9170_usb_flush(struct ar9170 *ar)
++{
++	struct urb *urb;
++	int ret, err = 0;
++
++	if (IS_STARTED(ar))
++		carl9170_set_state(ar, CARL9170_IDLE);
++
++	usb_wait_anchor_empty_timeout(&ar->tx_wait, msecs_to_jiffies(800));
++	while ((urb = usb_get_from_anchor(&ar->tx_wait))) {
++		struct sk_buff *skb = (void *)urb->context;
++		carl9170_tx_drop(ar, skb);
++		carl9170_tx_callback(ar, skb);
++		usb_free_urb(urb);
++	}
++
++	/* lets wait a while until the tx - queues are dried out */
++	ret = usb_wait_anchor_empty_timeout(&ar->tx_anch,
++					    msecs_to_jiffies(100));
++	if (ret == 0)
++		err = -ETIMEDOUT;
++
++	usb_kill_anchored_urbs(&ar->tx_anch);
++	carl9170_usb_handle_tx_err(ar);
++
++	if (IS_ACCEPTING_CMD(ar))
++		carl9170_set_state(ar, CARL9170_STARTED);
++
++	return err;
++}
++
++static void carl9170_usb_cancel_urbs(struct ar9170 *ar)
++{
++	int err;
++
++	carl9170_set_state(ar, CARL9170_UNKNOWN_STATE);
++
++	err = carl9170_usb_flush(ar);
++	if (err)
++		dev_err(&ar->udev->dev, "stuck tx urbs!\n");
++
++	usb_poison_anchored_urbs(&ar->tx_anch);
++	carl9170_usb_handle_tx_err(ar);
++	usb_poison_anchored_urbs(&ar->rx_anch);
++
++	tasklet_kill(&ar->usb_tasklet);
++
++	usb_scuttle_anchored_urbs(&ar->rx_work);
++	usb_scuttle_anchored_urbs(&ar->rx_pool);
++	usb_scuttle_anchored_urbs(&ar->tx_cmd);
++}
++
++int __carl9170_exec_cmd(struct ar9170 *ar, struct carl9170_cmd *cmd,
++			bool free_buf)
++{
++	struct urb *urb;
++
++	if (unlikely(!IS_ACCEPTING_CMD(ar)))
++		return -EPERM;
++
++	if (WARN_ON(cmd->hdr.len > CARL9170_MAX_CMD_LEN - 4))
++		return -EINVAL;
++
++	urb = usb_alloc_urb(0, GFP_ATOMIC);
++	if (unlikely(!urb))
++		return -ENOMEM;
++
++	usb_fill_int_urb(urb, ar->udev, usb_sndintpipe(ar->udev,
++		AR9170_USB_EP_CMD), cmd, cmd->hdr.len + 4,
++		carl9170_usb_cmd_complete, ar, 1);
++
++	urb->transfer_flags |= URB_ZERO_PACKET;
++
++	if (free_buf)
++		urb->transfer_flags |= URB_FREE_BUFFER;
++
++	usb_anchor_urb(urb, &ar->tx_cmd);
++	usb_free_urb(urb);
++
++	return carl9170_usb_submit_cmd_urb(ar);
++}
++
++int carl9170_exec_cmd(struct ar9170 *ar, const enum carl9170_cmd_oids cmd,
++	unsigned int plen, void *payload, unsigned int outlen, void *out)
++{
++	int err = -ENOMEM;
++
++	if (!(cmd & CARL9170_CMD_ASYNC_FLAG))
++		might_sleep();
++
++	ar->cmd_buf[0] = cpu_to_le32(plen);
++	ar->cmd_buf[0] |= cpu_to_le32(cmd << 8);
++	/* writing multiple regs fills this buffer already */
++	if (plen && payload != (u8 *)(&ar->cmd_buf[1]))
++		memcpy(&ar->cmd_buf[1], payload, plen);
++
++	spin_lock_bh(&ar->cmd_lock);
++	ar->readbuf = (u8 *)out;
++	ar->readlen = outlen;
++	spin_unlock_bh(&ar->cmd_lock);
++
++	err = __carl9170_exec_cmd(ar, (struct carl9170_cmd *) ar->cmd_buf,
++				  false);
++
++	if (!(cmd & CARL9170_CMD_ASYNC_FLAG)) {
++		err = wait_for_completion_timeout(&ar->cmd_wait, HZ);
++		if (err == 0) {
++			err = -ETIMEDOUT;
++			goto err_unbuf;
++		}
++
++		if (ar->readlen != outlen) {
++			err = -EMSGSIZE;
++			goto err_unbuf;
++		}
++	}
++
++	return 0;
++
++err_unbuf:
++	/* Maybe the device was removed in the moment we were waiting? */
++	if (IS_STARTED(ar)) {
++		dev_err(&ar->udev->dev, "no command feedback "
++			"received (%d).\n", err);
++
++		/* provide some maybe useful debug information */
++		print_hex_dump_bytes("carl9170 cmd: ", DUMP_PREFIX_NONE,
++				     ar->cmd_buf, plen + 4);
++
++		carl9170_restart(ar, CARL9170_RR_COMMAND_TIMEOUT);
++	}
++
++	/* invalidate to avoid completing the next command prematurely */
++	spin_lock_bh(&ar->cmd_lock);
++	ar->readbuf = NULL;
++	ar->readlen = 0;
++	spin_unlock_bh(&ar->cmd_lock);
++
++	return err;
++}
++
++void carl9170_usb_tx(struct ar9170 *ar, struct sk_buff *skb)
++{
++	struct urb *urb;
++	struct ar9170_stream *tx_stream;
++	void *data;
++	unsigned int len;
++
++	if (unlikely(!IS_STARTED(ar)))
++		goto err_drop;
++
++	urb = usb_alloc_urb(0, GFP_ATOMIC);
++	if (unlikely(!urb))
++		goto err_drop;
++
++	if (ar->tx_stream) {
++		tx_stream = (void *) skb->data - sizeof(*tx_stream);
++
++		len = skb->len + sizeof(*tx_stream);
++		tx_stream->length = cpu_to_le16(len);
++		tx_stream->tag = cpu_to_le16(AR9170_TX_STREAM_TAG);
++		data = tx_stream;
++	} else {
++		data = skb->data;
++		len = skb->len;
++	}
++
++	usb_fill_bulk_urb(urb, ar->udev, usb_sndbulkpipe(ar->udev,
++		AR9170_USB_EP_TX), data, len,
++		carl9170_usb_tx_data_complete, skb);
++
++	urb->transfer_flags |= URB_ZERO_PACKET;
++
++	usb_anchor_urb(urb, &ar->tx_wait);
++
++	usb_free_urb(urb);
++
++	carl9170_usb_submit_data_urb(ar);
++	return;
++
++err_drop:
++	carl9170_tx_drop(ar, skb);
++	carl9170_tx_callback(ar, skb);
++}
++
++static int carl9170_usb_upload(struct ar9170 *ar, const void *data,
++			       size_t len, u32 addr, bool complete)
++{
++	unsigned int transfer;
++	int err;
++	u8 *buf = kmalloc(4096, GFP_KERNEL);
++
++	if (!buf)
++		return -ENOMEM;
++
++	while (len) {
++		transfer = min_t(unsigned int, len, 4096u);
++		memcpy(buf, data, transfer);
++
++		err = usb_control_msg(ar->udev, usb_sndctrlpipe(ar->udev, 0),
++				      0x30 /* FW DL */, 0x40 | USB_DIR_OUT,
++				      addr >> 8, 0, buf, transfer, 100);
++
++		if (err < 0) {
++			kfree(buf);
++			return err;
++		}
++
++		len -= transfer;
++		data += transfer;
++		addr += transfer;
++	}
++	kfree(buf);
++
++	err = 0;
++
++	if (complete) {
++		err = usb_control_msg(ar->udev, usb_sndctrlpipe(ar->udev, 0),
++				      0x31 /* FW DL COMPLETE */,
++				      0x40 | USB_DIR_OUT, 0, 0, NULL, 0, 200);
++
++		if (wait_for_completion_timeout(&ar->fw_boot_wait, HZ) == 0)
++			return -ETIMEDOUT;
++
++		err = carl9170_echo_test(ar, 0x4a110123);
++		if (!err) {
++			/* firmware restarts cmd counter */
++			ar->cmd_seq = -1;
++		}
++	}
++
++	return err;
++}
++
++static void carl9170_release_firmware(struct ar9170 *ar)
++{
++	if (ar->fw) {
++		release_firmware(ar->fw);
++		ar->fw = NULL;
++	}
++}
++
++void carl9170_usb_stop(struct ar9170 *ar)
++{
++	int ret;
++
++	if (IS_ACCEPTING_CMD(ar))
++		carl9170_set_state(ar, CARL9170_STOPPED);
++
++	ret = carl9170_usb_flush(ar);
++	if (ret)
++		dev_err(&ar->udev->dev, "kill pending tx urbs.\n");
++
++	usb_poison_anchored_urbs(&ar->tx_anch);
++	carl9170_usb_handle_tx_err(ar);
++	usb_wait_anchor_empty_timeout(&ar->tx_cmd, msecs_to_jiffies(100));
++	/*
++	 * Note:
++	 * So far we freed all tx urbs, but we won't dare to touch any rx urbs.
++	 * Else we would end up with a unresponsive device...
++	 */
++}
++
++int carl9170_usb_open(struct ar9170 *ar)
++{
++	usb_unpoison_anchored_urbs(&ar->tx_anch);
++
++	carl9170_set_state(ar, CARL9170_IDLE);
++	return 0;
++}
++
++static int carl9170_usb_load_firmware(struct ar9170 *ar)
++{
++	const void *fw_data;
++	size_t fw_size;
++	u32 addr;
++	int err = 0;
++
++	fw_data = ar->fw->data;
++	fw_size = ar->fw->size;
++	addr = ar->fw_address;
++
++	/* this removes the miniboot image */
++	fw_data += ar->fw_offset;
++	fw_size -= ar->fw_offset;
++
++	err = carl9170_usb_upload(ar, fw_data, fw_size, addr, true);
++
++	if (err) {
++		carl9170_usb_cancel_urbs(ar);
++		dev_err(&ar->udev->dev, "firmware upload failed (%d).\n", err);
++	}
++
++	return err;
++}
++
++int carl9170_usb_restart(struct ar9170 *ar)
++{
++	int err = 0;
++
++	if (ar->intf->condition != USB_INTERFACE_BOUND)
++		return 0;
++
++	/*
++	 * Disable command sequence counter, until the
++	 * device responds to the echo.
++	 */
++	ar->cmd_seq = -2;
++
++	err = carl9170_reboot(ar);
++
++	carl9170_usb_stop(ar);
++	carl9170_set_state(ar, CARL9170_UNKNOWN_STATE);
++
++	if (err)
++		return err;
++
++	tasklet_schedule(&ar->usb_tasklet);
++	/*
++	 * Note:
++	 * The reboot procedure can take quite a while to complete.
++	 * This is because the device has to go through several
++	 * initialization steps, before its ready to receive the
++	 * next firmware.
++	 */
++
++	msleep(1100);
++	carl9170_usb_open(ar);
++	return carl9170_usb_load_firmware(ar);
++}
++
++void carl9170_usb_reset(struct ar9170 *ar)
++{
++	/*
++	 * This is the last resort to get the device going again
++	 * without any *user replugging action*.
++	 *
++	 * But there is a catch: usb_reset acts like a physical
++	 * *reconnect*. And the mac80211 state will be lost.
++	 * Therefore the userspace application, which controls the
++	 * device must step in and initiate the whole reinitialization
++	 * sequence.
++	 *
++	 * This works pretty well with wpa_supplicant, but hostapd
++	 * (left to it's own devices) gets easily confused and just
++	 * waits for the administrator to act.
++	 */
++	carl9170_set_state(ar, CARL9170_UNKNOWN_STATE);
++
++	usb_queue_reset_device(ar->intf);
++}
++
++static int carl9170_usb_init_device(struct ar9170 *ar)
++{
++	int err;
++
++	err = carl9170_usb_send_rx_irq_urb(ar);
++	if (err)
++		goto err_out;
++
++	err = carl9170_usb_init_rx_bulk_urbs(ar);
++	if (err)
++		goto err_unrx;
++
++	mutex_lock(&ar->mutex);
++	err = carl9170_usb_load_firmware(ar);
++	mutex_unlock(&ar->mutex);
++	if (err)
++		goto err_unrx;
++
++	return 0;
++
++err_unrx:
++	carl9170_usb_cancel_urbs(ar);
++
++err_out:
++	return err;
++}
++
++static void carl9170_usb_firmware_failed(struct ar9170 *ar)
++{
++	struct device *parent = ar->udev->dev.parent;
++	struct usb_device *udev;
++
++	/*
++	 * Store a copy of the usb_device pointer locally.
++	 * This is because device_release_driver initiates
++	 * carl9170_usb_disconnect, which in turn frees our
++	 * driver context (ar).
++	 */
++	udev = ar->udev;
++
++	complete(&ar->fw_load_wait);
++
++	/* unbind anything failed */
++	if (parent)
++		device_lock(parent);
++
++	device_release_driver(&udev->dev);
++	if (parent)
++		device_unlock(parent);
++
++	usb_put_dev(udev);
++}
++
++static void carl9170_usb_firmware_finish(struct ar9170 *ar)
++{
++	int err;
++
++	err = carl9170_parse_firmware(ar);
++	if (err)
++		goto err_freefw;
++
++	err = carl9170_usb_init_device(ar);
++	if (err)
++		goto err_freefw;
++
++	err = carl9170_usb_open(ar);
++	if (err)
++		goto err_unrx;
++
++	err = carl9170_register(ar);
++
++	carl9170_usb_stop(ar);
++	if (err)
++		goto err_unrx;
++
++	complete(&ar->fw_load_wait);
++	usb_put_dev(ar->udev);
++	return;
++
++err_unrx:
++	carl9170_usb_cancel_urbs(ar);
++
++err_freefw:
++	carl9170_release_firmware(ar);
++	carl9170_usb_firmware_failed(ar);
++}
++
++static void carl9170_usb_firmware_step2(const struct firmware *fw,
++					void *context)
++{
++	struct ar9170 *ar = context;
++
++	if (fw) {
++		ar->fw = fw;
++		carl9170_usb_firmware_finish(ar);
++		return;
++	}
++
++	dev_err(&ar->udev->dev, "firmware not found.\n");
++	carl9170_usb_firmware_failed(ar);
++}
++
++static int carl9170_usb_probe(struct usb_interface *intf,
++			      const struct usb_device_id *id)
++{
++	struct ar9170 *ar;
++	struct usb_device *udev;
++	int err;
++
++	err = usb_reset_device(interface_to_usbdev(intf));
++	if (err)
++		return err;
++
++	ar = carl9170_alloc(sizeof(*ar));
++	if (IS_ERR(ar))
++		return PTR_ERR(ar);
++
++	udev = interface_to_usbdev(intf);
++	usb_get_dev(udev);
++	ar->udev = udev;
++	ar->intf = intf;
++	ar->features = id->driver_info;
++
++	usb_set_intfdata(intf, ar);
++	SET_IEEE80211_DEV(ar->hw, &intf->dev);
++
++	init_usb_anchor(&ar->rx_anch);
++	init_usb_anchor(&ar->rx_pool);
++	init_usb_anchor(&ar->rx_work);
++	init_usb_anchor(&ar->tx_wait);
++	init_usb_anchor(&ar->tx_anch);
++	init_usb_anchor(&ar->tx_cmd);
++	init_usb_anchor(&ar->tx_err);
++	init_completion(&ar->cmd_wait);
++	init_completion(&ar->fw_boot_wait);
++	init_completion(&ar->fw_load_wait);
++	tasklet_init(&ar->usb_tasklet, carl9170_usb_tasklet,
++		     (unsigned long)ar);
++
++	atomic_set(&ar->tx_cmd_urbs, 0);
++	atomic_set(&ar->tx_anch_urbs, 0);
++	atomic_set(&ar->rx_work_urbs, 0);
++	atomic_set(&ar->rx_anch_urbs, 0);
++	atomic_set(&ar->rx_pool_urbs, 0);
++	ar->cmd_seq = -2;
++
++	usb_get_dev(ar->udev);
++	return request_firmware_nowait(THIS_MODULE, 1, CARL9170FW_NAME,
++		&ar->udev->dev, GFP_KERNEL, ar, carl9170_usb_firmware_step2);
++}
++
++static void carl9170_usb_disconnect(struct usb_interface *intf)
++{
++	struct ar9170 *ar = usb_get_intfdata(intf);
++	struct usb_device *udev;
++
++	if (!ar)
++		return;
++
++	udev = ar->udev;
++	wait_for_completion(&ar->fw_load_wait);
++
++	carl9170_set_state(ar, CARL9170_IDLE);
++	carl9170_reboot(ar);
++
++	carl9170_set_state(ar, CARL9170_UNKNOWN_STATE);
++	carl9170_usb_cancel_urbs(ar);
++	carl9170_unregister(ar);
++
++	usb_set_intfdata(intf, NULL);
++
++	carl9170_release_firmware(ar);
++	carl9170_free(ar);
++	usb_put_dev(udev);
++}
++
++#ifdef CONFIG_PM
++static int carl9170_usb_suspend(struct usb_interface *intf,
++				pm_message_t message)
++{
++	struct ar9170 *ar = usb_get_intfdata(intf);
++
++	if (!ar)
++		return -ENODEV;
++
++	carl9170_usb_cancel_urbs(ar);
++
++	/*
++	 * firmware automatically reboots for usb suspend.
++	 */
++
++	return 0;
++}
++
++static int carl9170_usb_resume(struct usb_interface *intf)
++{
++	struct ar9170 *ar = usb_get_intfdata(intf);
++	int err;
++
++	if (!ar)
++		return -ENODEV;
++
++	usb_unpoison_anchored_urbs(&ar->rx_anch);
++	usb_unpoison_anchored_urbs(&ar->tx_anch);
++
++	err = carl9170_usb_init_device(ar);
++	if (err)
++		goto err_unrx;
++
++	err = carl9170_usb_open(ar);
++	if (err)
++		goto err_unrx;
++
++	return 0;
++
++err_unrx:
++	carl9170_set_state(ar, CARL9170_UNKNOWN_STATE);
++	carl9170_usb_cancel_urbs(ar);
++
++	return err;
++}
++#endif /* CONFIG_PM */
++
++static struct usb_driver carl9170_driver = {
++	.name = KBUILD_MODNAME,
++	.probe = carl9170_usb_probe,
++	.disconnect = carl9170_usb_disconnect,
++	.id_table = carl9170_usb_ids,
++	.soft_unbind = 1,
++#ifdef CONFIG_PM
++	.suspend = carl9170_usb_suspend,
++	.resume = carl9170_usb_resume,
++#endif /* CONFIG_PM */
++};
++
++static int __init carl9170_usb_init(void)
++{
++	return usb_register(&carl9170_driver);
++}
++
++static void __exit carl9170_usb_exit(void)
++{
++	usb_deregister(&carl9170_driver);
++}
++
++module_init(carl9170_usb_init);
++module_exit(carl9170_usb_exit);
+-- 
+1.7.1
 
-On Mon, Aug 23, 2010 at 07:42:13AM -0700, Guy, Wey-Yi wrote:
-> Turn both iwlagn anf mac80211 debugging on when you compile kernel and
-> use debug=0x43fff when you load the iwlagn module
-
-Here's a log for the sequence of:
-
-	modprobe iwlagn debug=0x43fff
-	ifup wlan0
-
-until dhclient times out.
-
---EeQfGwPcQSOJBaQU
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename=iwlagn-dmesg
-
-[  112.069209] iwlagn 0000:03:00.0: PCI INT A disabled
-[  116.890742] iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, in-tree:d
-[  116.890745] iwlagn: Copyright(c) 2003-2010 Intel Corporation
-[  116.890799] ieee80211 phy1: U iwl_pci_probe *** LOAD DRIVER ***
-[  116.890840] iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-[  116.890872] iwlagn 0000:03:00.0: setting latency timer to 64
-[  116.891609] ieee80211 phy1: U iwl_pci_probe pci_resource_len = 0x00002000
-[  116.891611] ieee80211 phy1: U iwl_pci_probe pci_resource_base = ffffc90018874000
-[  116.891644] iwlagn 0000:03:00.0: Detected Intel(R) WiFi Link 5100 AGN, REV=0x54
-[  116.891652] ieee80211 phy1: U iwl_prepare_card_hw iwl_prepare_card_hw enter
-[  116.891664] ieee80211 phy1: U iwl_set_hw_ready hardware ready
-[  116.891673] ieee80211 phy1: U iwl_eeprom_init NVM size = 2048
-[  116.891788] ieee80211 phy1: U iwl_apm_init Init card's basic functions
-[  116.891848] ieee80211 phy1: U iwl_apm_init L1 Enabled; Disabling L0S
-[  116.892250] ieee80211 phy1: U iwlcore_eeprom_verify_signature EEPROM signature=0x00000004
-[  116.911173] ieee80211 phy1: U iwl_eeprom_init NVM Type: EEPROM, version: 0x11e
-[  116.911178] ieee80211 phy1: U iwl_apm_stop Stop card, put in low power state
-[  116.911185] ieee80211 phy1: U iwl_apm_stop_master stop master
-[  116.911223] iwlagn 0000:03:00.0: device EEPROM VER=0x11e, CALIB=0x4
-[  116.911225] ieee80211 phy1: U iwl_pci_probe MAC address: 00:21:5d:b3:d0:88
-[  116.911228] ieee80211 phy1: U iwl_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[  116.911230] ieee80211 phy1: U iwl_init_channel_map Initializing regulatory info from EEPROM
-[  116.911232] ieee80211 phy1: U iwl_init_channel_map Parsing data for 56 channels.
-[  116.911576] ieee80211 phy1: U iwl_init_channel_map Ch. 1 [2.4GHz] VALID IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-[  116.911580] ieee80211 phy1: U iwl_init_channel_map Ch. 2 [2.4GHz] VALID IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-[  116.911583] ieee80211 phy1: U iwl_init_channel_map Ch. 3 [2.4GHz] VALID IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-[  116.911586] ieee80211 phy1: U iwl_init_channel_map Ch. 4 [2.4GHz] VALID IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-[  116.911589] ieee80211 phy1: U iwl_init_channel_map Ch. 5 [2.4GHz] VALID IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-[  116.911592] ieee80211 phy1: U iwl_init_channel_map Ch. 6 [2.4GHz] VALID IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-[  116.911594] ieee80211 phy1: U iwl_init_channel_map Ch. 7 [2.4GHz] VALID IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-[  116.911597] ieee80211 phy1: U iwl_init_channel_map Ch. 8 [2.4GHz] VALID IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-[  116.911600] ieee80211 phy1: U iwl_init_channel_map Ch. 9 [2.4GHz] VALID IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-[  116.911603] ieee80211 phy1: U iwl_init_channel_map Ch. 10 [2.4GHz] VALID IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-[  116.911606] ieee80211 phy1: U iwl_init_channel_map Ch. 11 [2.4GHz] VALID IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-[  116.911609] ieee80211 phy1: U iwl_init_channel_map Ch. 12 [2.4GHz] VALID WIDE (0x61 15dBm): Ad-Hoc not supported
-[  116.911612] ieee80211 phy1: U iwl_init_channel_map Ch. 13 [2.4GHz] VALID WIDE (0x61 15dBm): Ad-Hoc not supported
-[  116.911614] ieee80211 phy1: U iwl_init_channel_map Ch. 14 Flags 0 [2.4GHz] - No traffic
-[  116.911616] ieee80211 phy1: U iwl_init_channel_map Ch. 183 Flags 0 [5.2GHz] - No traffic
-[  116.911619] ieee80211 phy1: U iwl_init_channel_map Ch. 184 Flags 0 [5.2GHz] - No traffic
-[  116.911621] ieee80211 phy1: U iwl_init_channel_map Ch. 185 Flags 0 [5.2GHz] - No traffic
-[  116.911623] ieee80211 phy1: U iwl_init_channel_map Ch. 187 Flags 0 [5.2GHz] - No traffic
-[  116.911624] ieee80211 phy1: U iwl_init_channel_map Ch. 188 Flags 0 [5.2GHz] - No traffic
-[  116.911626] ieee80211 phy1: U iwl_init_channel_map Ch. 189 Flags 0 [5.2GHz] - No traffic
-[  116.911628] ieee80211 phy1: U iwl_init_channel_map Ch. 192 Flags 0 [5.2GHz] - No traffic
-[  116.911630] ieee80211 phy1: U iwl_init_channel_map Ch. 196 Flags 0 [5.2GHz] - No traffic
-[  116.911632] ieee80211 phy1: U iwl_init_channel_map Ch. 7 Flags 0 [5.2GHz] - No traffic
-[  116.911634] ieee80211 phy1: U iwl_init_channel_map Ch. 8 Flags 0 [5.2GHz] - No traffic
-[  116.911636] ieee80211 phy1: U iwl_init_channel_map Ch. 11 Flags 0 [5.2GHz] - No traffic
-[  116.911638] ieee80211 phy1: U iwl_init_channel_map Ch. 12 Flags 0 [5.2GHz] - No traffic
-[  116.911640] ieee80211 phy1: U iwl_init_channel_map Ch. 16 Flags 0 [5.2GHz] - No traffic
-[  116.911642] ieee80211 phy1: U iwl_init_channel_map Ch. 34 Flags 0 [5.2GHz] - No traffic
-[  116.911645] ieee80211 phy1: U iwl_init_channel_map Ch. 36 [5.2GHz] VALID WIDE DFS (0xe1 15dBm): Ad-Hoc not supported
-[  116.911647] ieee80211 phy1: U iwl_init_channel_map Ch. 38 Flags 0 [5.2GHz] - No traffic
-[  116.911650] ieee80211 phy1: U iwl_init_channel_map Ch. 40 [5.2GHz] VALID WIDE DFS (0xe1 15dBm): Ad-Hoc not supported
-[  116.911652] ieee80211 phy1: U iwl_init_channel_map Ch. 42 Flags 0 [5.2GHz] - No traffic
-[  116.911655] ieee80211 phy1: U iwl_init_channel_map Ch. 44 [5.2GHz] VALID WIDE DFS (0xe1 15dBm): Ad-Hoc not supported
-[  116.911657] ieee80211 phy1: U iwl_init_channel_map Ch. 46 Flags 0 [5.2GHz] - No traffic
-[  116.911659] ieee80211 phy1: U iwl_init_channel_map Ch. 48 [5.2GHz] VALID WIDE DFS (0xe1 15dBm): Ad-Hoc not supported
-[  116.911662] ieee80211 phy1: U iwl_init_channel_map Ch. 52 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-[  116.911665] ieee80211 phy1: U iwl_init_channel_map Ch. 56 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-[  116.911668] ieee80211 phy1: U iwl_init_channel_map Ch. 60 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-[  116.911671] ieee80211 phy1: U iwl_init_channel_map Ch. 64 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-[  116.911674] ieee80211 phy1: U iwl_init_channel_map Ch. 100 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-[  116.911676] ieee80211 phy1: U iwl_init_channel_map Ch. 104 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-[  116.911679] ieee80211 phy1: U iwl_init_channel_map Ch. 108 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-[  116.911682] ieee80211 phy1: U iwl_init_channel_map Ch. 112 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-[  116.911685] ieee80211 phy1: U iwl_init_channel_map Ch. 116 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-[  116.911688] ieee80211 phy1: U iwl_init_channel_map Ch. 120 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-[  116.911691] ieee80211 phy1: U iwl_init_channel_map Ch. 124 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-[  116.911693] ieee80211 phy1: U iwl_init_channel_map Ch. 128 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-[  116.911696] ieee80211 phy1: U iwl_init_channel_map Ch. 132 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-[  116.911699] ieee80211 phy1: U iwl_init_channel_map Ch. 136 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-[  116.911702] ieee80211 phy1: U iwl_init_channel_map Ch. 140 [5.2GHz] VALID RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-[  116.911704] ieee80211 phy1: U iwl_init_channel_map Ch. 145 Flags 0 [5.2GHz] - No traffic
-[  116.911707] ieee80211 phy1: U iwl_init_channel_map Ch. 149 [5.2GHz] VALID WIDE DFS (0xa1 15dBm): Ad-Hoc not supported
-[  116.911710] ieee80211 phy1: U iwl_init_channel_map Ch. 153 [5.2GHz] VALID WIDE DFS (0xa1 15dBm): Ad-Hoc not supported
-[  116.911712] ieee80211 phy1: U iwl_init_channel_map Ch. 157 [5.2GHz] VALID WIDE DFS (0xa1 15dBm): Ad-Hoc not supported
-[  116.911715] ieee80211 phy1: U iwl_init_channel_map Ch. 161 [5.2GHz] VALID WIDE DFS (0xa1 15dBm): Ad-Hoc not supported
-[  116.911718] ieee80211 phy1: U iwl_init_channel_map Ch. 165 [5.2GHz] VALID WIDE DFS (0xa1 15dBm): Ad-Hoc not supported
-[  116.911721] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 1 [2.4GHz] IBSS ACTIVE WIDE (0x6f 10dBm): Ad-Hoc supported
-[  116.911724] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 5 [2.4GHz] IBSS ACTIVE WIDE (0x6f 10dBm): Ad-Hoc supported
-[  116.911727] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 2 [2.4GHz] IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-[  116.911729] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 6 [2.4GHz] IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-[  116.911732] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 3 [2.4GHz] IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-[  116.911735] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 7 [2.4GHz] IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-[  116.911738] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 4 [2.4GHz] IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-[  116.911740] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 8 [2.4GHz] IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-[  116.911743] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 5 [2.4GHz] IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-[  116.911746] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 9 [2.4GHz] IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-[  116.911749] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 6 [2.4GHz] IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-[  116.911751] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 10 [2.4GHz] IBSS ACTIVE WIDE (0x6f 15dBm): Ad-Hoc supported
-[  116.911754] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 7 [2.4GHz] IBSS ACTIVE WIDE (0x6f 13dBm): Ad-Hoc supported
-[  116.911757] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 11 [2.4GHz] IBSS ACTIVE WIDE (0x6f 13dBm): Ad-Hoc supported
-[  116.911760] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 36 [5.2GHz] WIDE DFS (0xe1 14dBm): Ad-Hoc not supported
-[  116.911762] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 40 [5.2GHz] WIDE DFS (0xe1 14dBm): Ad-Hoc not supported
-[  116.911765] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 44 [5.2GHz] WIDE DFS (0xe1 15dBm): Ad-Hoc not supported
-[  116.911768] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 48 [5.2GHz] WIDE DFS (0xe1 15dBm): Ad-Hoc not supported
-[  116.911771] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 52 [5.2GHz] RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-[  116.911773] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 56 [5.2GHz] RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-[  116.911776] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 60 [5.2GHz] RADAR WIDE (0x31 14dBm): Ad-Hoc not supported
-[  116.911779] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 64 [5.2GHz] RADAR WIDE (0x31 14dBm): Ad-Hoc not supported
-[  116.911782] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 100 [5.2GHz] RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-[  116.911785] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 104 [5.2GHz] RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-[  116.911787] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 108 [5.2GHz] RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-[  116.911790] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 112 [5.2GHz] RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-[  116.911793] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 116 [5.2GHz] RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-[  116.911796] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 120 [5.2GHz] RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-[  116.911799] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 124 [5.2GHz] RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-[  116.911802] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 128 [5.2GHz] RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-[  116.911804] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 132 [5.2GHz] RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-[  116.911807] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 136 [5.2GHz] RADAR WIDE (0x31 15dBm): Ad-Hoc not supported
-[  116.911810] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 149 [5.2GHz] WIDE (0x61 15dBm): Ad-Hoc not supported
-[  116.911813] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 153 [5.2GHz] WIDE (0x61 15dBm): Ad-Hoc not supported
-[  116.911816] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 157 [5.2GHz] WIDE (0x61 15dBm): Ad-Hoc not supported
-[  116.911818] ieee80211 phy1: U iwl_mod_ht40_chan_info HT40 Ch. 161 [5.2GHz] WIDE (0x61 15dBm): Ad-Hoc not supported
-[  116.911826] ieee80211 phy1: U iwlcore_init_geos Channel 1 Freq=2412[2.4GHz] valid flag=0x20
-[  116.911829] ieee80211 phy1: U iwlcore_init_geos Channel 2 Freq=2417[2.4GHz] valid flag=0x20
-[  116.911831] ieee80211 phy1: U iwlcore_init_geos Channel 3 Freq=2422[2.4GHz] valid flag=0x20
-[  116.911833] ieee80211 phy1: U iwlcore_init_geos Channel 4 Freq=2427[2.4GHz] valid flag=0x20
-[  116.911835] ieee80211 phy1: U iwlcore_init_geos Channel 5 Freq=2432[2.4GHz] valid flag=0x0
-[  116.911838] ieee80211 phy1: U iwlcore_init_geos Channel 6 Freq=2437[2.4GHz] valid flag=0x0
-[  116.911840] ieee80211 phy1: U iwlcore_init_geos Channel 7 Freq=2442[2.4GHz] valid flag=0x0
-[  116.911842] ieee80211 phy1: U iwlcore_init_geos Channel 8 Freq=2447[2.4GHz] valid flag=0x10
-[  116.911844] ieee80211 phy1: U iwlcore_init_geos Channel 9 Freq=2452[2.4GHz] valid flag=0x10
-[  116.911847] ieee80211 phy1: U iwlcore_init_geos Channel 10 Freq=2457[2.4GHz] valid flag=0x10
-[  116.911849] ieee80211 phy1: U iwlcore_init_geos Channel 11 Freq=2462[2.4GHz] valid flag=0x10
-[  116.911851] ieee80211 phy1: U iwlcore_init_geos Channel 12 Freq=2467[2.4GHz] valid flag=0x36
-[  116.911854] ieee80211 phy1: U iwlcore_init_geos Channel 13 Freq=2472[2.4GHz] valid flag=0x36
-[  116.911856] ieee80211 phy1: U iwlcore_init_geos Channel 36 Freq=5180[5.2GHz] valid flag=0x26
-[  116.911858] ieee80211 phy1: U iwlcore_init_geos Channel 40 Freq=5200[5.2GHz] valid flag=0x16
-[  116.911860] ieee80211 phy1: U iwlcore_init_geos Channel 44 Freq=5220[5.2GHz] valid flag=0x26
-[  116.911863] ieee80211 phy1: U iwlcore_init_geos Channel 48 Freq=5240[5.2GHz] valid flag=0x16
-[  116.911865] ieee80211 phy1: U iwlcore_init_geos Channel 52 Freq=5260[5.2GHz] valid flag=0x2E
-[  116.911867] ieee80211 phy1: U iwlcore_init_geos Channel 56 Freq=5280[5.2GHz] valid flag=0x1E
-[  116.911869] ieee80211 phy1: U iwlcore_init_geos Channel 60 Freq=5300[5.2GHz] valid flag=0x2E
-[  116.911871] ieee80211 phy1: U iwlcore_init_geos Channel 64 Freq=5320[5.2GHz] valid flag=0x1E
-[  116.911874] ieee80211 phy1: U iwlcore_init_geos Channel 100 Freq=5500[5.2GHz] valid flag=0x2E
-[  116.911876] ieee80211 phy1: U iwlcore_init_geos Channel 104 Freq=5520[5.2GHz] valid flag=0x1E
-[  116.911878] ieee80211 phy1: U iwlcore_init_geos Channel 108 Freq=5540[5.2GHz] valid flag=0x2E
-[  116.911881] ieee80211 phy1: U iwlcore_init_geos Channel 112 Freq=5560[5.2GHz] valid flag=0x1E
-[  116.911883] ieee80211 phy1: U iwlcore_init_geos Channel 116 Freq=5580[5.2GHz] valid flag=0x2E
-[  116.911885] ieee80211 phy1: U iwlcore_init_geos Channel 120 Freq=5600[5.2GHz] valid flag=0x1E
-[  116.911887] ieee80211 phy1: U iwlcore_init_geos Channel 124 Freq=5620[5.2GHz] valid flag=0x2E
-[  116.911890] ieee80211 phy1: U iwlcore_init_geos Channel 128 Freq=5640[5.2GHz] valid flag=0x1E
-[  116.911892] ieee80211 phy1: U iwlcore_init_geos Channel 132 Freq=5660[5.2GHz] valid flag=0x2E
-[  116.911894] ieee80211 phy1: U iwlcore_init_geos Channel 136 Freq=5680[5.2GHz] valid flag=0x1E
-[  116.911896] ieee80211 phy1: U iwlcore_init_geos Channel 140 Freq=5700[5.2GHz] valid flag=0x3E
-[  116.911899] ieee80211 phy1: U iwlcore_init_geos Channel 149 Freq=5745[5.2GHz] valid flag=0x26
-[  116.911901] ieee80211 phy1: U iwlcore_init_geos Channel 153 Freq=5765[5.2GHz] valid flag=0x16
-[  116.911903] ieee80211 phy1: U iwlcore_init_geos Channel 157 Freq=5785[5.2GHz] valid flag=0x26
-[  116.911906] ieee80211 phy1: U iwlcore_init_geos Channel 161 Freq=5805[5.2GHz] valid flag=0x16
-[  116.911908] ieee80211 phy1: U iwlcore_init_geos Channel 165 Freq=5825[5.2GHz] valid flag=0x36
-[  116.911910] iwlagn 0000:03:00.0: Tunable channels: 13 802.11bg, 24 802.11a channels
-[  116.912066] iwlagn 0000:03:00.0: irq 49 for MSI/MSI-X
-[  116.913655] ieee80211 phy1: U iwl_tt_initialize Initialize Thermal Throttling
-[  116.913657] ieee80211 phy1: U iwl_tt_initialize Legacy Thermal Throttling
-[  116.913659] ieee80211 phy1: U iwl_request_firmware attempting to load firmware 'iwlwifi-5000-2.ucode'
-[  116.921518] ieee80211 phy1: U iwl_ucode_callback Loaded firmware file 'iwlwifi-5000-2.ucode' (353240 bytes).
-[  116.921522] iwlagn 0000:03:00.0: loaded firmware version 8.24.2.12
-[  116.921524] ieee80211 phy1: U iwl_ucode_callback f/w package hdr ucode version raw = 0x818020c
-[  116.921526] ieee80211 phy1: U iwl_ucode_callback f/w package hdr runtime inst size = 130700
-[  116.921528] ieee80211 phy1: U iwl_ucode_callback f/w package hdr runtime data size = 49152
-[  116.921530] ieee80211 phy1: U iwl_ucode_callback f/w package hdr init inst size = 124212
-[  116.921532] ieee80211 phy1: U iwl_ucode_callback f/w package hdr init data size = 49152
-[  116.921534] ieee80211 phy1: U iwl_ucode_callback f/w package hdr boot inst size = 0
-[  116.921673] ieee80211 phy1: U iwl_ucode_callback Copying (but not loading) uCode instr len 130700
-[  116.921692] ieee80211 phy1: U iwl_ucode_callback uCode instr buf vaddr = 0xffff880125700000, paddr = 0x25700000
-[  116.921694] ieee80211 phy1: U iwl_ucode_callback Copying (but not loading) uCode data len 49152
-[  116.921715] ieee80211 phy1: U iwl_ucode_callback Copying (but not loading) init instr len 124212
-[  116.921742] ieee80211 phy1: U iwl_ucode_callback Copying (but not loading) init data len 49152
-[  116.921750] ieee80211 phy1: U iwl_ucode_callback Copying (but not loading) boot instr len 0
-[  116.922401] phy1: Selected rate control algorithm 'iwl-agn-rs'
-[  130.686519] ieee80211 phy1: U iwl_mac_start enter
-[  130.686524] ieee80211 phy1: U iwl_prep_station Add STA to driver ID 15: ff:ff:ff:ff:ff:ff
-[  130.686527] ieee80211 phy1: U iwl_prepare_card_hw iwl_prepare_card_hw enter
-[  130.686556] ieee80211 phy1: U iwl_set_hw_ready hardware ready
-[  130.686566] ieee80211 phy1: U iwl_apm_init Init card's basic functions
-[  130.686605] ieee80211 phy1: U iwl_apm_init L1 Enabled; Disabling L0S
-[  130.688323] ieee80211 phy1: U iwlagn_load_ucode Init ucode found. Loading init ucode...
-[  130.688385] ieee80211 phy1: U iwlagn_load_section INST uCode section being loaded...
-[  130.691993] ieee80211 phy1: U iwlagn_load_section DATA uCode section being loaded...
-[  130.694679] ieee80211 phy1: U iwlagn_load_ucode Init ucode load complete.
-[  130.694682] ieee80211 phy1: U __iwl_up iwlagn is coming up
-[  130.694684] ieee80211 phy1: U iwl_mac_start Start UP work done.
-[  130.702936] ieee80211 phy1: I iwl_rx_reply_alive Alive ucode status 0x00000001 revision 0x1 0x9
-[  130.702940] ieee80211 phy1: I iwl_rx_reply_alive Initialization Alive received.
-[  130.707026] ieee80211 phy1: U iwlcore_verify_inst_sparse ucode inst image size is 0
-[  130.707029] ieee80211 phy1: U iwl_verify_ucode Bootstrap uCode is good in inst SRAM
-[  130.708016] ieee80211 phy1: U iwlagn_tx_queue_set_status Activate AC/CMD Queue 0 on FIFO 3
-[  130.708016] ieee80211 phy1: U iwlagn_tx_queue_set_status Activate AC/CMD Queue 1 on FIFO 2
-[  130.708016] ieee80211 phy1: U iwlagn_tx_queue_set_status Activate AC/CMD Queue 2 on FIFO 1
-[  130.708016] ieee80211 phy1: U iwlagn_tx_queue_set_status Activate AC/CMD Queue 3 on FIFO 0
-[  130.708016] ieee80211 phy1: U iwlagn_tx_queue_set_status Activate AC/CMD Queue 4 on FIFO 7
-[  130.709519] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command COEX_PRIORITY_TABLE_CMD
-[  130.709522] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command COEX_PRIORITY_TABLE_CMD
-[  130.709527] ieee80211 phy1: U iwl_enqueue_hcmd Sending command COEX_PRIORITY_TABLE_CMD (#5a), seq: 0x0400, 72 bytes at 0[0]:4
-[  130.709562] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command COEX_PRIORITY_TABLE_CMD
-[  130.709712] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_PHY_CALIBRATION_CMD
-[  130.709714] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[  130.709717] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_PHY_CALIBRATION_CMD (#b0), seq: 0x4401, 12 bytes at 1[32]:4
-[  130.709774] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[  130.709783] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command CALIBRATION_CFG_CMD
-[  130.709785] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command CALIBRATION_CFG_CMD
-[  130.709788] ieee80211 phy1: U iwl_enqueue_hcmd Sending command CALIBRATION_CFG_CMD (#65), seq: 0x0402, 96 bytes at 2[2]:4
-[  130.709827] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command CALIBRATION_CFG_CMD
-[  130.785241] ieee80211 phy1: I iwlagn_rx_calib_complete Init. calibration is completed, restarting fw.
-[  130.785252] ieee80211 phy1: U __iwl_down iwlagn is going down
-[  130.785254] ieee80211 phy1: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[  130.785256] ieee80211 phy1: U iwl_clear_ucode_stations No active stations found to be cleared
-[  130.785493] ieee80211 phy1: U iwl_apm_stop Stop card, put in low power state
-[  130.785501] ieee80211 phy1: U iwl_apm_stop_master stop master
-[  130.785539] ieee80211 phy1: U iwl_clear_free_frames 0 frames on pre-allocated heap on clear.
-[  130.785544] ieee80211 phy1: U iwl_prep_station Add STA to driver ID 15: ff:ff:ff:ff:ff:ff
-[  130.785547] ieee80211 phy1: U iwl_prepare_card_hw iwl_prepare_card_hw enter
-[  130.785575] ieee80211 phy1: U iwl_set_hw_ready hardware ready
-[  130.785584] ieee80211 phy1: U iwl_apm_init Init card's basic functions
-[  130.785623] ieee80211 phy1: U iwl_apm_init L1 Enabled; Disabling L0S
-[  130.786515] ieee80211 phy1: U iwlagn_load_ucode Init ucode not found, or already loaded. Loading runtime ucode...
-[  130.786584] ieee80211 phy1: U iwlagn_load_section INST uCode section being loaded...
-[  130.790257] ieee80211 phy1: U iwlagn_load_section DATA uCode section being loaded...
-[  130.792944] ieee80211 phy1: U iwlagn_load_ucode Runtime ucode load complete.
-[  130.792947] ieee80211 phy1: U __iwl_up iwlagn is coming up
-[  130.801201] ieee80211 phy1: I iwl_rx_reply_alive Alive ucode status 0x00000001 revision 0x1 0x0
-[  130.801203] ieee80211 phy1: I iwl_rx_reply_alive Runtime Alive received.
-[  130.806026] ieee80211 phy1: U iwl_alive_start Runtime Alive received.
-[  130.806032] ieee80211 phy1: U iwlcore_verify_inst_sparse ucode inst image size is 0
-[  130.806035] ieee80211 phy1: U iwl_verify_ucode Bootstrap uCode is good in inst SRAM
-[  130.807009] ieee80211 phy1: U iwlagn_tx_queue_set_status Activate AC/CMD Queue 0 on FIFO 3
-[  130.807009] ieee80211 phy1: U iwlagn_tx_queue_set_status Activate AC/CMD Queue 1 on FIFO 2
-[  130.807009] ieee80211 phy1: U iwlagn_tx_queue_set_status Activate AC/CMD Queue 2 on FIFO 1
-[  130.807009] ieee80211 phy1: U iwlagn_tx_queue_set_status Activate AC/CMD Queue 3 on FIFO 0
-[  130.807009] ieee80211 phy1: U iwlagn_tx_queue_set_status Activate AC/CMD Queue 4 on FIFO 7
-[  130.808537] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command COEX_PRIORITY_TABLE_CMD
-[  130.808542] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command COEX_PRIORITY_TABLE_CMD
-[  130.808549] ieee80211 phy1: U iwl_enqueue_hcmd Sending command COEX_PRIORITY_TABLE_CMD (#5a), seq: 0x0400, 72 bytes at 0[0]:4
-[  130.808583] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command COEX_PRIORITY_TABLE_CMD
-[  130.808610] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_PHY_CALIBRATION_CMD
-[  130.808616] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[  130.808622] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_PHY_CALIBRATION_CMD (#b0), seq: 0x4401, 12 bytes at 1[32]:4
-[  130.808675] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[  130.808920] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_PHY_CALIBRATION_CMD
-[  130.808924] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[  130.808929] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_PHY_CALIBRATION_CMD (#b0), seq: 0x4402, 512 bytes at 2[32]:4
-[  130.808967] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[  130.808977] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_PHY_CALIBRATION_CMD
-[  130.808981] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[  130.808985] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_PHY_CALIBRATION_CMD (#b0), seq: 0x4403, 92 bytes at 3[32]:4
-[  130.809020] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[  130.809246] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_PHY_CALIBRATION_CMD
-[  130.809250] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[  130.809255] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_PHY_CALIBRATION_CMD (#b0), seq: 0x4404, 52 bytes at 4[32]:4
-[  130.809286] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[  130.809297] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_PHY_CALIBRATION_CMD
-[  130.809300] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[  130.809305] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_PHY_CALIBRATION_CMD (#b0), seq: 0x4405, 12 bytes at 5[32]:4
-[  130.809334] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_PHY_CALIBRATION_CMD
-[  130.809352] ieee80211 phy1: U iwlagn_send_tx_ant_config select valid tx ant: 2
-[  130.809356] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command TX_ANT_CONFIGURATION_CMD
-[  130.809363] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command TX_ANT_CONFIGURATION_CMD
-[  130.809368] ieee80211 phy1: U iwl_enqueue_hcmd Sending command TX_ANT_CONFIGURATION_CMD (#98), seq: 0x0406, 8 bytes at 6[6]:4
-[  130.809392] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command TX_ANT_CONFIGURATION_CMD
-[  130.809408] ieee80211 phy1: U iwl_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[  130.809412] ieee80211 phy1: U iwl_send_bt_config BT coex active
-[  130.809415] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_BT_CONFIG
-[  130.809418] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_BT_CONFIG
-[  130.809422] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_BT_CONFIG (#9b), seq: 0x0407, 16 bytes at 7[7]:4
-[  130.809450] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_BT_CONFIG
-[  130.809462] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_STATISTICS_CMD (#9c), seq: 0x0408, 8 bytes at 8[8]:4
-[  130.809468] ieee80211 phy1: U iwl_commit_rxon Sending RXON
-[  130.809469] * without RXON_FILTER_ASSOC_MSK
-[  130.809470] * channel = 1
-[  130.809471] * bssid = 00:00:00:00:00:00
-[  130.809474] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_RXON
-[  130.809478] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_RXON
-[  130.809482] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_RXON (#10), seq: 0x0409, 54 bytes at 9[9]:4
-[  130.809500] ieee80211 phy1: I iwl_tt_handler Queueing thermal throttling work.
-[  130.809506] ieee80211 phy1: I iwl_generic_cmd_callback back from REPLY_STATISTICS_CMD (0x00000000)
-[  130.810765] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_RXON
-[  130.810786] ieee80211 phy1: I iwl_tt_handler Queueing thermal throttling work.
-[  130.810795] ieee80211 phy1: U iwl_commit_rxon Return from !new_assoc RXON.
-[  130.810799] ieee80211 phy1: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[  130.810802] ieee80211 phy1: U iwl_clear_ucode_stations No active stations found to be cleared
-[  130.810805] ieee80211 phy1: U iwl_restore_stations Not ready yet, not restoring any stations.
-[  130.810809] ieee80211 phy1: U iwl_print_rx_config_cmd RX CONFIG:
-[  130.810813] iwl data: 00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-[  130.810816] iwl data: 00000010: 00 00 00 00 00 00 00 00 03 00 06 24 ff 0f 00 00  ...........$....
-[  130.810819] iwl data: 00000020: 05 80 00 00 04 00 00 00 01 00 ff ff ff 00 00 00  ................
-[  130.810822] iwl data: 00000030: 00 00                                            ..
-[  130.810825] ieee80211 phy1: U iwl_print_rx_config_cmd u16 channel: 0x1
-[  130.810828] ieee80211 phy1: U iwl_print_rx_config_cmd u32 flags: 0x00008005
-[  130.810831] ieee80211 phy1: U iwl_print_rx_config_cmd u32 filter_flags: 0x00000004
-[  130.810834] ieee80211 phy1: U iwl_print_rx_config_cmd u8 dev_type: 0x3
-[  130.810837] ieee80211 phy1: U iwl_print_rx_config_cmd u8 ofdm_basic_rates: 0xff
-[  130.810840] ieee80211 phy1: U iwl_print_rx_config_cmd u8 cck_basic_rates: 0x0f
-[  130.810843] ieee80211 phy1: U iwl_print_rx_config_cmd u8[6] node_addr: 00:00:00:00:00:00
-[  130.810847] ieee80211 phy1: U iwl_print_rx_config_cmd u8[6] bssid_addr: 00:00:00:00:00:00
-[  130.810850] ieee80211 phy1: U iwl_print_rx_config_cmd u16 assoc_id: 0x0
-[  130.810855] ieee80211 phy1: U iwl_enqueue_hcmd Sending command SENSITIVITY_CMD (#a8), seq: 0x040A, 28 bytes at 10[10]:4
-[  130.810860] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_CT_KILL_CONFIG_CMD
-[  130.810863] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_CT_KILL_CONFIG_CMD
-[  130.810867] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_CT_KILL_CONFIG_CMD (#a4), seq: 0x040B, 16 bytes at 11[11]:4
-[  130.812193] ieee80211 phy1: I iwlagn_pass_packet_to_mac80211 Dropping packet while interface is not open.
-[  130.812208] ieee80211 phy1: I iwl_generic_cmd_callback back from SENSITIVITY_CMD (0x00000000)
-[  130.812213] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_CT_KILL_CONFIG_CMD
-[  130.812230] ieee80211 phy1: U iwl_rf_kill_ct_config REPLY_CT_KILL_CONFIG_CMD succeeded, critical temperature is 110
-[  130.812234] ieee80211 phy1: U iwl_alive_start ALIVE processing complete.
-[  130.812239] ieee80211 phy1: U iwl_power_sleep_cam_cmd Sleep command for CAM
-[  130.812242] ieee80211 phy1: U iwl_set_power Sending power/sleep command
-[  130.812245] ieee80211 phy1: U iwl_set_power Flags value = 0x00000000
-[  130.812248] ieee80211 phy1: U iwl_set_power Tx timeout = 0
-[  130.812250] ieee80211 phy1: U iwl_set_power Rx timeout = 0
-[  130.812254] ieee80211 phy1: U iwl_set_power Sleep interval vector = { 0 , 0 , 0 , 0 , 0 }
-[  130.812257] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command POWER_TABLE_CMD
-[  130.812262] ieee80211 phy1: U iwl_mac_start leave
-[  130.812267] ieee80211 phy1: U iwl_mac_add_interface enter: type 2, addr 00:21:5d:b3:d0:88
-[  130.812271] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command POWER_TABLE_CMD
-[  130.812276] ieee80211 phy1: U iwl_enqueue_hcmd Sending command POWER_TABLE_CMD (#77), seq: 0x040C, 40 bytes at 12[12]:4
-[  130.812334] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command POWER_TABLE_CMD
-[  130.812343] ieee80211 phy1: U iwl_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[  130.812347] ieee80211 phy1: U iwl_commit_rxon Sending RXON
-[  130.812348] * without RXON_FILTER_ASSOC_MSK
-[  130.812349] * channel = 1
-[  130.812350] * bssid = 00:00:00:00:00:00
-[  130.812354] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_RXON
-[  130.812357] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_RXON
-[  130.812361] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_RXON (#10), seq: 0x040D, 54 bytes at 13[13]:4
-[  130.812570] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_RXON
-[  130.812591] ieee80211 phy1: U iwl_commit_rxon Return from !new_assoc RXON.
-[  130.812600] ieee80211 phy1: I iwl_tt_handler Queueing thermal throttling work.
-[  130.812604] ieee80211 phy1: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[  130.812607] ieee80211 phy1: U iwl_clear_ucode_stations No active stations found to be cleared
-[  130.812610] ieee80211 phy1: U iwl_restore_stations Restoring all known stations ... start.
-[  130.812613] ieee80211 phy1: U iwl_restore_stations Restoring sta ff:ff:ff:ff:ff:ff
-[  130.812617] ieee80211 phy1: U iwl_send_add_sta Adding sta 15 (ff:ff:ff:ff:ff:ff) synchronously
-[  130.812621] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[  130.812624] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[  130.812628] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_ADD_STA (#18), seq: 0x040E, 96 bytes at 14[14]:4
-[  130.812711] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[  130.812723] ieee80211 phy1: U iwl_process_add_sta_resp Processing response for adding station 15
-[  130.812727] ieee80211 phy1: U iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[  130.812731] ieee80211 phy1: U iwl_sta_ucode_activate Added STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-[  130.812734] ieee80211 phy1: U iwl_process_add_sta_resp Added station id 15 addr ff:ff:ff:ff:ff:ff
-[  130.812738] ieee80211 phy1: U iwl_process_add_sta_resp Added station according to cmd buffer ff:ff:ff:ff:ff:ff
-[  130.812742] ieee80211 phy1: U is_lq_table_valid Channel 1 is not an HT channel
-[  130.812746] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_TX_LINK_QUALITY_CMD
-[  130.812749] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[  130.812754] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_TX_LINK_QUALITY_CMD (#4e), seq: 0x040F, 92 bytes at 15[15]:4
-[  130.812795] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[  130.812803] ieee80211 phy1: U iwl_send_lq_cmd init LQ command complete, clearing sta addition status for sta 15
-[  130.812806] ieee80211 phy1: U iwl_restore_stations Restoring all known stations .... complete.
-[  130.812810] ieee80211 phy1: U iwl_print_rx_config_cmd RX CONFIG:
-[  130.812813] iwl data: 00000000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-[  130.812816] iwl data: 00000010: 00 00 00 00 00 00 00 00 03 00 06 24 ff 0f 00 00  ...........$....
-[  130.812819] iwl data: 00000020: 05 80 00 00 04 00 00 00 01 00 ff ff ff 00 00 00  ................
-[  130.812822] iwl data: 00000030: 00 00                                            ..
-[  130.812825] ieee80211 phy1: U iwl_print_rx_config_cmd u16 channel: 0x1
-[  130.812828] ieee80211 phy1: U iwl_print_rx_config_cmd u32 flags: 0x00008005
-[  130.812831] ieee80211 phy1: U iwl_print_rx_config_cmd u32 filter_flags: 0x00000004
-[  130.812834] ieee80211 phy1: U iwl_print_rx_config_cmd u8 dev_type: 0x3
-[  130.812837] ieee80211 phy1: U iwl_print_rx_config_cmd u8 ofdm_basic_rates: 0xff
-[  130.812840] ieee80211 phy1: U iwl_print_rx_config_cmd u8 cck_basic_rates: 0x0f
-[  130.812843] ieee80211 phy1: U iwl_print_rx_config_cmd u8[6] node_addr: 00:00:00:00:00:00
-[  130.812846] ieee80211 phy1: U iwl_print_rx_config_cmd u8[6] bssid_addr: 00:00:00:00:00:00
-[  130.812849] ieee80211 phy1: U iwl_print_rx_config_cmd u16 assoc_id: 0x0
-[  130.812854] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_TX_POWER_DBM_CMD (#95), seq: 0x0410, 8 bytes at 16[16]:4
-[  130.812857] ieee80211 phy1: U iwl_alive_start Updated power mode
-[  130.812865] ieee80211 phy1: U iwl_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[  130.812870] ieee80211 phy1: U iwl_commit_rxon Sending RXON
-[  130.812871] * without RXON_FILTER_ASSOC_MSK
-[  130.812872] * channel = 1
-[  130.812873] * bssid = 00:00:00:00:00:00
-[  130.812876] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_RXON
-[  130.812879] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_RXON
-[  130.812883] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_RXON (#10), seq: 0x0411, 54 bytes at 17[17]:4
-[  130.812952] ieee80211 phy1: I iwl_generic_cmd_callback back from REPLY_TX_POWER_DBM_CMD (0x00000000)
-[  130.813109] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_RXON
-[  130.813434] ieee80211 phy1: U iwl_commit_rxon Return from !new_assoc RXON.
-[  130.813437] ieee80211 phy1: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[  130.813441] ieee80211 phy1: U iwl_clear_ucode_stations Clearing ucode active for station 15
-[  130.813444] ieee80211 phy1: U iwl_restore_stations Restoring all known stations ... start.
-[  130.813447] ieee80211 phy1: U iwl_restore_stations Restoring sta ff:ff:ff:ff:ff:ff
-[  130.813451] ieee80211 phy1: U iwl_send_add_sta Adding sta 15 (ff:ff:ff:ff:ff:ff) synchronously
-[  130.813454] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[  130.813458] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[  130.813462] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_ADD_STA (#18), seq: 0x0412, 96 bytes at 18[18]:4
-[  130.813521] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[  130.813838] ieee80211 phy1: U iwl_process_add_sta_resp Processing response for adding station 15
-[  130.813842] ieee80211 phy1: U iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[  130.813845] ieee80211 phy1: U iwl_sta_ucode_activate Added STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-[  130.813849] ieee80211 phy1: U iwl_process_add_sta_resp Added station id 15 addr ff:ff:ff:ff:ff:ff
-[  130.813853] ieee80211 phy1: U iwl_process_add_sta_resp Added station according to cmd buffer ff:ff:ff:ff:ff:ff
-[  130.813857] ieee80211 phy1: U is_lq_table_valid Channel 1 is not an HT channel
-[  130.813860] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_TX_LINK_QUALITY_CMD
-[  130.813863] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[  130.813868] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_TX_LINK_QUALITY_CMD (#4e), seq: 0x0413, 92 bytes at 19[19]:4
-[  130.813912] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[  130.813931] ieee80211 phy1: U iwl_send_lq_cmd init LQ command complete, clearing sta addition status for sta 15
-[  130.813935] ieee80211 phy1: U iwl_restore_stations Restoring all known stations .... complete.
-[  130.813938] ieee80211 phy1: U iwl_print_rx_config_cmd RX CONFIG:
-[  130.813942] iwl data: 00000000: 00 21 5d b3 d0 88 00 00 00 00 00 00 00 00 00 00  .!].............
-[  130.813945] iwl data: 00000010: 00 00 00 00 00 00 00 00 03 00 06 24 ff 0f 00 00  ...........$....
-[  130.813948] iwl data: 00000020: 05 80 00 00 04 00 00 00 01 00 ff ff ff 00 00 00  ................
-[  130.813951] iwl data: 00000030: 00 00                                            ..
-[  130.813953] ieee80211 phy1: U iwl_print_rx_config_cmd u16 channel: 0x1
-[  130.813957] ieee80211 phy1: U iwl_print_rx_config_cmd u32 flags: 0x00008005
-[  130.813960] ieee80211 phy1: U iwl_print_rx_config_cmd u32 filter_flags: 0x00000004
-[  130.813963] ieee80211 phy1: U iwl_print_rx_config_cmd u8 dev_type: 0x3
-[  130.813966] ieee80211 phy1: U iwl_print_rx_config_cmd u8 ofdm_basic_rates: 0xff
-[  130.813969] ieee80211 phy1: U iwl_print_rx_config_cmd u8 cck_basic_rates: 0x0f
-[  130.813972] ieee80211 phy1: U iwl_print_rx_config_cmd u8[6] node_addr: 00:21:5d:b3:d0:88
-[  130.813975] ieee80211 phy1: U iwl_print_rx_config_cmd u8[6] bssid_addr: 00:00:00:00:00:00
-[  130.813978] ieee80211 phy1: U iwl_print_rx_config_cmd u16 assoc_id: 0x0
-[  130.813983] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_TX_POWER_DBM_CMD (#95), seq: 0x0414, 8 bytes at 20[20]:4
-[  130.813988] ieee80211 phy1: U iwl_mac_add_interface leave
-[  130.813991] ieee80211 phy1: U iwl_bss_info_changed changes = 0xE
-[  130.813994] ieee80211 phy1: U iwl_bss_info_changed ERP_PREAMBLE 0
-[  130.813997] ieee80211 phy1: U iwl_bss_info_changed ERP_CTS 0
-[  130.814000] ieee80211 phy1: U iwl_bss_info_changed leave
-[  130.814016] phy1: device now idle
-[  130.814019] ieee80211 phy1: U iwl_mac_flush enter
-[  130.814022] ieee80211 phy1: U iwl_mac_flush wait transmit/flush all frames
-[  130.814025] ieee80211 phy1: U iwl_mac_flush leave
-[  130.814029] ieee80211 phy1: U iwl_mac_config enter to channel 1 changed 0xFFFFFFFF
-[  130.814033] ieee80211 phy1: U iwl_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[  130.814038] ieee80211 phy1: U iwl_power_sleep_cam_cmd Sleep command for CAM
-[  130.814041] ieee80211 phy1: U iwl_mac_config TX Power old=15 new=15
-[  130.814045] ieee80211 phy1: U iwl_commit_rxon Sending RXON
-[  130.814047] * without RXON_FILTER_ASSOC_MSK
-[  130.814048] * channel = 1
-[  130.814048] * bssid = 00:00:00:00:00:00
-[  130.814052] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_RXON
-[  130.814055] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_RXON
-[  130.814059] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_RXON (#10), seq: 0x0415, 54 bytes at 21[21]:4
-[  130.814097] ieee80211 phy1: I iwl_generic_cmd_callback back from REPLY_TX_POWER_DBM_CMD (0x00000000)
-[  130.814256] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_RXON
-[  130.814523] ieee80211 phy1: U iwl_commit_rxon Return from !new_assoc RXON.
-[  130.814525] ieee80211 phy1: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[  130.814527] ieee80211 phy1: U iwl_clear_ucode_stations Clearing ucode active for station 15
-[  130.814529] ieee80211 phy1: U iwl_restore_stations Restoring all known stations ... start.
-[  130.814531] ieee80211 phy1: U iwl_restore_stations Restoring sta ff:ff:ff:ff:ff:ff
-[  130.814533] ieee80211 phy1: U iwl_send_add_sta Adding sta 15 (ff:ff:ff:ff:ff:ff) synchronously
-[  130.814535] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[  130.814537] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[  130.814539] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_ADD_STA (#18), seq: 0x0416, 96 bytes at 22[22]:4
-[  130.814571] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[  130.814581] ieee80211 phy1: U iwl_process_add_sta_resp Processing response for adding station 15
-[  130.814583] ieee80211 phy1: U iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[  130.814585] ieee80211 phy1: U iwl_sta_ucode_activate Added STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-[  130.814587] ieee80211 phy1: U iwl_process_add_sta_resp Added station id 15 addr ff:ff:ff:ff:ff:ff
-[  130.814589] ieee80211 phy1: U iwl_process_add_sta_resp Added station according to cmd buffer ff:ff:ff:ff:ff:ff
-[  130.814591] ieee80211 phy1: U is_lq_table_valid Channel 1 is not an HT channel
-[  130.814593] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_TX_LINK_QUALITY_CMD
-[  130.814595] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[  130.814598] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_TX_LINK_QUALITY_CMD (#4e), seq: 0x0417, 92 bytes at 23[23]:4
-[  130.814637] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[  130.814641] ieee80211 phy1: U iwl_send_lq_cmd init LQ command complete, clearing sta addition status for sta 15
-[  130.814643] ieee80211 phy1: U iwl_restore_stations Restoring all known stations .... complete.
-[  130.814645] ieee80211 phy1: U iwl_print_rx_config_cmd RX CONFIG:
-[  130.814647] iwl data: 00000000: 00 21 5d b3 d0 88 00 00 00 00 00 00 00 00 00 00  .!].............
-[  130.814649] iwl data: 00000010: 00 00 00 00 00 00 00 00 03 00 06 24 15 03 00 00  ...........$....
-[  130.814651] iwl data: 00000020: 05 80 00 00 04 00 00 00 01 00 ff ff ff 00 00 00  ................
-[  130.814652] iwl data: 00000030: 00 00                                            ..
-[  130.814654] ieee80211 phy1: U iwl_print_rx_config_cmd u16 channel: 0x1
-[  130.814656] ieee80211 phy1: U iwl_print_rx_config_cmd u32 flags: 0x00008005
-[  130.814657] ieee80211 phy1: U iwl_print_rx_config_cmd u32 filter_flags: 0x00000004
-[  130.814659] ieee80211 phy1: U iwl_print_rx_config_cmd u8 dev_type: 0x3
-[  130.814661] ieee80211 phy1: U iwl_print_rx_config_cmd u8 ofdm_basic_rates: 0x15
-[  130.814663] ieee80211 phy1: U iwl_print_rx_config_cmd u8 cck_basic_rates: 0x03
-[  130.814664] ieee80211 phy1: U iwl_print_rx_config_cmd u8[6] node_addr: 00:21:5d:b3:d0:88
-[  130.814666] ieee80211 phy1: U iwl_print_rx_config_cmd u8[6] bssid_addr: 00:00:00:00:00:00
-[  130.814668] ieee80211 phy1: U iwl_print_rx_config_cmd u16 assoc_id: 0x0
-[  130.814671] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_TX_POWER_DBM_CMD (#95), seq: 0x0418, 8 bytes at 24[24]:4
-[  130.814673] ieee80211 phy1: U iwl_mac_config leave
-[  130.814676] ieee80211 phy1: U iwl_mac_conf_tx enter
-[  130.814677] ieee80211 phy1: U iwl_mac_conf_tx leave
-[  130.814679] ieee80211 phy1: U iwl_mac_conf_tx enter
-[  130.814680] ieee80211 phy1: U iwl_mac_conf_tx leave
-[  130.814682] ieee80211 phy1: U iwl_mac_conf_tx enter
-[  130.814683] ieee80211 phy1: U iwl_mac_conf_tx leave
-[  130.814685] ieee80211 phy1: U iwl_mac_conf_tx enter
-[  130.814686] ieee80211 phy1: U iwl_mac_conf_tx leave
-[  130.814688] ieee80211 phy1: U iwl_bss_info_changed changes = 0x2000
-[  130.814690] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_QOS_PARAM (#13), seq: 0x0419, 40 bytes at 25[25]:4
-[  130.814693] ieee80211 phy1: U iwl_bss_info_changed leave
-[  130.814713] phy1: device no longer idle - scanning
-[  130.814715] ieee80211 phy1: U iwl_mac_config enter to channel 1 changed 0x100
-[  130.814717] ieee80211 phy1: U iwl_power_sleep_cam_cmd Sleep command for CAM
-[  130.814719] ieee80211 phy1: U iwl_mac_config Not re-sending same RXON configuration.
-[  130.814721] ieee80211 phy1: U iwl_mac_config leave
-[  130.814723] ieee80211 phy1: U iwl_mac_hw_scan enter
-[  130.814725] ieee80211 phy1: U iwl_scan_initiate Starting scan...
-[  130.814730] ieee80211 phy1: U iwlagn_request_scan Kicking off active scan
-[  130.814733] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=1 prob=0x3 [ACTIVE 36]
-[  130.814735] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=2 prob=0x3 [ACTIVE 36]
-[  130.814737] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=3 prob=0x3 [ACTIVE 36]
-[  130.814740] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=4 prob=0x3 [ACTIVE 36]
-[  130.814742] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=5 prob=0x3 [ACTIVE 36]
-[  130.814744] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=6 prob=0x3 [ACTIVE 36]
-[  130.814747] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=7 prob=0x3 [ACTIVE 36]
-[  130.814749] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=8 prob=0x3 [ACTIVE 36]
-[  130.814751] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=9 prob=0x3 [ACTIVE 36]
-[  130.814753] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=10 prob=0x3 [ACTIVE 36]
-[  130.814755] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=11 prob=0x3 [ACTIVE 36]
-[  130.814758] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=12 prob=0x2 [PASSIVE 120]
-[  130.814760] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=13 prob=0x2 [PASSIVE 120]
-[  130.814762] ieee80211 phy1: U iwl_get_channels_for_scan total channels to scan 13
-[  130.814764] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_SCAN_CMD
-[  130.814765] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_SCAN_CMD
-[  130.814766] ieee80211 phy1: I iwl_generic_cmd_callback back from REPLY_TX_POWER_DBM_CMD (0x00000000)
-[  130.814771] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_SCAN_CMD (#80), seq: 0x441A, 994 bytes at 26[32]:4
-[  130.814776] ieee80211 phy1: U iwl_configure_filter Enter: changed: 0x10, total: 0x80000010
-[  130.814936] ieee80211 phy1: I iwl_generic_cmd_callback back from REPLY_QOS_PARAM (0x00000000)
-[  130.814938] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_SCAN_CMD
-[  130.814943] ieee80211 phy1: I iwl_rx_scan_start_notif Scan start: 1 [802.11bg] (TSF: 0x00000000:000002F2) - 1 (beacon timer 101646)
-[  130.814959] ieee80211 phy1: U iwl_mac_hw_scan leave
-[  130.815857] ieee80211 phy1: U iwl_commit_rxon Sending RXON
-[  130.815858] * without RXON_FILTER_ASSOC_MSK
-[  130.815858] * channel = 1
-[  130.815859] * bssid = 00:00:00:00:00:00
-[  130.815861] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_RXON
-[  130.815863] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_RXON
-[  130.815866] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_RXON (#10), seq: 0x041B, 54 bytes at 27[27]:4
-[  130.816300] ieee80211 phy1: I iwl_rx_scan_complete_notif Scan complete: 0 channels (TSF 0x00000848:00000000) - 8
-[  130.816304] ieee80211 phy1: I iwl_rx_scan_complete_notif Scan on 2.4GHz took 2ms
-[  130.816305] ieee80211 phy1: I iwl_rx_scan_complete_notif Setting scan to off
-[  130.816422] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_RXON
-[  130.816428] ieee80211 phy1: U iwl_commit_rxon Return from !new_assoc RXON.
-[  130.816431] ieee80211 phy1: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[  130.816440] ieee80211 phy1: U iwl_clear_ucode_stations Clearing ucode active for station 15
-[  130.816442] ieee80211 phy1: U iwl_restore_stations Restoring all known stations ... start.
-[  130.816444] ieee80211 phy1: U iwl_restore_stations Restoring sta ff:ff:ff:ff:ff:ff
-[  130.816446] ieee80211 phy1: U iwl_send_add_sta Adding sta 15 (ff:ff:ff:ff:ff:ff) synchronously
-[  130.816448] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[  130.816450] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[  130.816453] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_ADD_STA (#18), seq: 0x041C, 96 bytes at 28[28]:4
-[  130.816509] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[  130.816514] ieee80211 phy1: U iwl_process_add_sta_resp Processing response for adding station 15
-[  130.816516] ieee80211 phy1: U iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[  130.816518] ieee80211 phy1: U iwl_sta_ucode_activate Added STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-[  130.816520] ieee80211 phy1: U iwl_process_add_sta_resp Added station id 15 addr ff:ff:ff:ff:ff:ff
-[  130.816522] ieee80211 phy1: U iwl_process_add_sta_resp Added station according to cmd buffer ff:ff:ff:ff:ff:ff
-[  130.816525] ieee80211 phy1: U is_lq_table_valid Channel 1 is not an HT channel
-[  130.816527] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_TX_LINK_QUALITY_CMD
-[  130.816529] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[  130.816531] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_TX_LINK_QUALITY_CMD (#4e), seq: 0x041D, 92 bytes at 29[29]:4
-[  130.816581] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[  130.816597] ieee80211 phy1: U iwl_send_lq_cmd init LQ command complete, clearing sta addition status for sta 15
-[  130.816599] ieee80211 phy1: U iwl_restore_stations Restoring all known stations .... complete.
-[  130.816601] ieee80211 phy1: U iwl_print_rx_config_cmd RX CONFIG:
-[  130.816604] iwl data: 00000000: 00 21 5d b3 d0 88 00 00 00 00 00 00 00 00 00 00  .!].............
-[  130.816605] iwl data: 00000010: 00 00 00 00 00 00 00 00 03 00 06 24 15 03 00 00  ...........$....
-[  130.816607] iwl data: 00000020: 05 80 00 00 44 00 00 00 01 00 ff ff ff 00 00 00  ....D...........
-[  130.816609] iwl data: 00000030: 00 00                                            ..
-[  130.816610] ieee80211 phy1: U iwl_print_rx_config_cmd u16 channel: 0x1
-[  130.816612] ieee80211 phy1: U iwl_print_rx_config_cmd u32 flags: 0x00008005
-[  130.816614] ieee80211 phy1: U iwl_print_rx_config_cmd u32 filter_flags: 0x00000044
-[  130.816616] ieee80211 phy1: U iwl_print_rx_config_cmd u8 dev_type: 0x3
-[  130.816617] ieee80211 phy1: U iwl_print_rx_config_cmd u8 ofdm_basic_rates: 0x15
-[  130.816619] ieee80211 phy1: U iwl_print_rx_config_cmd u8 cck_basic_rates: 0x03
-[  130.816621] ieee80211 phy1: U iwl_print_rx_config_cmd u8[6] node_addr: 00:21:5d:b3:d0:88
-[  130.816623] ieee80211 phy1: U iwl_print_rx_config_cmd u8[6] bssid_addr: 00:00:00:00:00:00
-[  130.816625] ieee80211 phy1: U iwl_print_rx_config_cmd u16 assoc_id: 0x0
-[  130.816627] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_TX_POWER_DBM_CMD (#95), seq: 0x041E, 8 bytes at 30[30]:4
-[  130.816632] ieee80211 phy1: U iwl_configure_filter Enter: changed: 0x0, total: 0x80000010
-[  130.816634] ieee80211 phy1: U iwl_commit_rxon Sending RXON
-[  130.816635] * without RXON_FILTER_ASSOC_MSK
-[  130.816635] * channel = 1
-[  130.816636] * bssid = 00:00:00:00:00:00
-[  130.816638] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_RXON
-[  130.816640] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_RXON
-[  130.816642] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_RXON (#10), seq: 0x041F, 54 bytes at 31[31]:4
-[  130.816751] ieee80211 phy1: I iwl_generic_cmd_callback back from REPLY_TX_POWER_DBM_CMD (0x00000000)
-[  130.816914] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_RXON
-[  130.816918] ieee80211 phy1: U iwl_commit_rxon Return from !new_assoc RXON.
-[  130.816920] ieee80211 phy1: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[  130.816922] ieee80211 phy1: U iwl_clear_ucode_stations Clearing ucode active for station 15
-[  130.816924] ieee80211 phy1: U iwl_restore_stations Restoring all known stations ... start.
-[  130.816926] ieee80211 phy1: U iwl_restore_stations Restoring sta ff:ff:ff:ff:ff:ff
-[  130.816928] ieee80211 phy1: U iwl_send_add_sta Adding sta 15 (ff:ff:ff:ff:ff:ff) synchronously
-[  130.816930] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[  130.816932] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[  130.816935] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_ADD_STA (#18), seq: 0x0420, 96 bytes at 32[0]:4
-[  130.817009] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[  130.817681] ieee80211 phy1: U iwl_process_add_sta_resp Processing response for adding station 15
-[  130.817683] ieee80211 phy1: U iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[  130.817685] ieee80211 phy1: U iwl_sta_ucode_activate Added STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-[  130.817687] ieee80211 phy1: U iwl_process_add_sta_resp Added station id 15 addr ff:ff:ff:ff:ff:ff
-[  130.817689] ieee80211 phy1: U iwl_process_add_sta_resp Added station according to cmd buffer ff:ff:ff:ff:ff:ff
-[  130.817692] ieee80211 phy1: U is_lq_table_valid Channel 1 is not an HT channel
-[  130.817694] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_TX_LINK_QUALITY_CMD
-[  130.817696] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[  130.817698] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_TX_LINK_QUALITY_CMD (#4e), seq: 0x0421, 92 bytes at 33[1]:4
-[  130.817761] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[  130.817985] ieee80211 phy1: U iwl_send_lq_cmd init LQ command complete, clearing sta addition status for sta 15
-[  130.817987] ieee80211 phy1: U iwl_restore_stations Restoring all known stations .... complete.
-[  130.817989] ieee80211 phy1: U iwl_print_rx_config_cmd RX CONFIG:
-[  130.817991] iwl data: 00000000: 00 21 5d b3 d0 88 00 00 00 00 00 00 00 00 00 00  .!].............
-[  130.817993] iwl data: 00000010: 00 00 00 00 00 00 00 00 03 00 06 24 15 03 00 00  ...........$....
-[  130.817995] iwl data: 00000020: 05 80 00 00 44 00 00 00 01 00 ff ff ff 00 00 00  ....D...........
-[  130.817996] iwl data: 00000030: 00 00                                            ..
-[  130.817998] ieee80211 phy1: U iwl_print_rx_config_cmd u16 channel: 0x1
-[  130.818011] ieee80211 phy1: U iwl_print_rx_config_cmd u32 flags: 0x00008005
-[  130.818013] ieee80211 phy1: U iwl_print_rx_config_cmd u32 filter_flags: 0x00000044
-[  130.818015] ieee80211 phy1: U iwl_print_rx_config_cmd u8 dev_type: 0x3
-[  130.818017] ieee80211 phy1: U iwl_print_rx_config_cmd u8 ofdm_basic_rates: 0x15
-[  130.818019] ieee80211 phy1: U iwl_print_rx_config_cmd u8 cck_basic_rates: 0x03
-[  130.818020] ieee80211 phy1: U iwl_print_rx_config_cmd u8[6] node_addr: 00:21:5d:b3:d0:88
-[  130.818022] ieee80211 phy1: U iwl_print_rx_config_cmd u8[6] bssid_addr: 00:00:00:00:00:00
-[  130.818024] ieee80211 phy1: U iwl_print_rx_config_cmd u16 assoc_id: 0x0
-[  130.818027] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_TX_POWER_DBM_CMD (#95), seq: 0x0422, 8 bytes at 34[2]:4
-[  130.818032] ieee80211 phy1: U iwl_bg_scan_completed SCAN complete scan
-[  130.818034] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_TX_POWER_DBM_CMD (#95), seq: 0x0423, 8 bytes at 35[3]:4
-[  130.818039] ieee80211 phy1: U iwl_mac_hw_scan enter
-[  130.818040] ieee80211 phy1: U iwl_scan_initiate Starting scan...
-[  130.818043] ieee80211 phy1: U iwlagn_request_scan Kicking off active scan
-[  130.818046] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=36 prob=0x2 [PASSIVE 110]
-[  130.818048] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=40 prob=0x2 [PASSIVE 110]
-[  130.818050] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=44 prob=0x2 [PASSIVE 110]
-[  130.818053] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=48 prob=0x2 [PASSIVE 110]
-[  130.818055] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=52 prob=0x2 [PASSIVE 110]
-[  130.818057] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=56 prob=0x2 [PASSIVE 110]
-[  130.818059] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=60 prob=0x2 [PASSIVE 110]
-[  130.818061] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=64 prob=0x2 [PASSIVE 110]
-[  130.818063] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=100 prob=0x2 [PASSIVE 110]
-[  130.818066] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=104 prob=0x2 [PASSIVE 110]
-[  130.818068] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=108 prob=0x2 [PASSIVE 110]
-[  130.818070] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=112 prob=0x2 [PASSIVE 110]
-[  130.818072] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=116 prob=0x2 [PASSIVE 110]
-[  130.818074] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=120 prob=0x2 [PASSIVE 110]
-[  130.818076] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=124 prob=0x2 [PASSIVE 110]
-[  130.818079] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=128 prob=0x2 [PASSIVE 110]
-[  130.818081] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=132 prob=0x2 [PASSIVE 110]
-[  130.818083] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=136 prob=0x2 [PASSIVE 110]
-[  130.818085] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=140 prob=0x2 [PASSIVE 110]
-[  130.818088] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=149 prob=0x2 [PASSIVE 110]
-[  130.818090] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=153 prob=0x2 [PASSIVE 110]
-[  130.818092] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=157 prob=0x2 [PASSIVE 110]
-[  130.818094] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=161 prob=0x2 [PASSIVE 110]
-[  130.818096] ieee80211 phy1: U iwl_get_channels_for_scan Scanning ch=165 prob=0x2 [PASSIVE 110]
-[  130.818098] ieee80211 phy1: U iwl_get_channels_for_scan total channels to scan 24
-[  130.818100] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_SCAN_CMD
-[  130.818101] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_SCAN_CMD
-[  130.818105] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_SCAN_CMD (#80), seq: 0x4424, 1120 bytes at 36[32]:4
-[  130.818124] ieee80211 phy1: I iwl_generic_cmd_callback back from REPLY_TX_POWER_DBM_CMD (0x00000000)
-[  130.818202] ieee80211 phy1: I iwl_generic_cmd_callback back from REPLY_TX_POWER_DBM_CMD (0x00000000)
-[  130.819503] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_SCAN_CMD
-[  130.819509] ieee80211 phy1: I iwl_rx_scan_start_notif Scan start: 36 [802.11a] (TSF: 0x00000000:00000A6F) - 1 (beacon timer 99729)
-[  130.819525] ieee80211 phy1: U iwl_mac_hw_scan leave
-[  130.932199] ieee80211 phy1: I iwl_rx_scan_results_notif Scan ch.res: 36 [802.11a] (TSF: 0x00000000:0001C29B) - 0 elapsed=112684 usec
-[  130.933397] ieee80211 phy1: I iwl_rx_scan_start_notif Scan start: 40 [802.11a] (TSF: 0x00000000:0001C74A) - 1 (beacon timer 4282550)
-[  131.046083] ieee80211 phy1: I iwl_rx_scan_results_notif Scan ch.res: 40 [802.11a] (TSF: 0x00000000:00037F79) - 0 elapsed=112687 usec
-[  131.047281] ieee80211 phy1: I iwl_rx_scan_start_notif Scan start: 44 [802.11a] (TSF: 0x00000000:00038428) - 1 (beacon timer 8465368)
-[  131.159998] ieee80211 phy1: I iwl_rx_scan_results_notif Scan ch.res: 44 [802.11a] (TSF: 0x00000000:00053C6C) - 0 elapsed=112708 usec
-[  131.161201] ieee80211 phy1: I iwl_rx_scan_start_notif Scan start: 48 [802.11a] (TSF: 0x00000000:0005411C) - 1 (beacon timer 12648164)
-[  131.273899] ieee80211 phy1: I iwl_rx_scan_results_notif Scan ch.res: 48 [802.11a] (TSF: 0x00000000:0006F95F) - 0 elapsed=112707 usec
-[  131.275107] ieee80211 phy1: I iwl_rx_scan_start_notif Scan start: 52 [802.11a] (TSF: 0x00000000:0006FE12) - 1 (beacon timer 16830958)
-[  131.387811] ieee80211 phy1: I iwl_rx_scan_results_notif Scan ch.res: 52 [802.11a] (TSF: 0x00000000:0008B656) - 0 elapsed=112708 usec
-[  131.389024] ieee80211 phy1: I iwl_rx_scan_start_notif Scan start: 56 [802.11a] (TSF: 0x00000000:0008BB0A) - 1 (beacon timer 21013750)
-[  131.501732] ieee80211 phy1: I iwl_rx_scan_results_notif Scan ch.res: 56 [802.11a] (TSF: 0x00000000:000A734D) - 0 elapsed=112707 usec
-[  131.502936] ieee80211 phy1: I iwl_rx_scan_start_notif Scan start: 60 [802.11a] (TSF: 0x00000000:000A7802) - 1 (beacon timer 25196542)
-[  131.615649] ieee80211 phy1: I iwl_rx_scan_results_notif Scan ch.res: 60 [802.11a] (TSF: 0x00000000:000C3040) - 0 elapsed=112702 usec
-[  131.616847] ieee80211 phy1: I iwl_rx_scan_start_notif Scan start: 64 [802.11a] (TSF: 0x00000000:000C34F4) - 1 (beacon timer 29379340)
-[  131.729550] ieee80211 phy1: I iwl_rx_scan_results_notif Scan ch.res: 64 [802.11a] (TSF: 0x00000000:000DED34) - 0 elapsed=112704 usec
-[  131.730751] ieee80211 phy1: I iwl_rx_scan_start_notif Scan start: 100 [802.11a] (TSF: 0x00000000:000DF1E6) - 1 (beacon timer 33562138)
-[  131.843454] ieee80211 phy1: I iwl_rx_scan_results_notif Scan ch.res: 100 [802.11a] (TSF: 0x00000000:000FAA2D) - 0 elapsed=112711 usec
-[  131.844657] ieee80211 phy1: I iwl_rx_scan_start_notif Scan start: 104 [802.11a] (TSF: 0x00000000:000FAED9) - 1 (beacon timer 42041639)
-[  131.957366] ieee80211 phy1: I iwl_rx_scan_results_notif Scan ch.res: 104 [802.11a] (TSF: 0x00000000:00116722) - 0 elapsed=112713 usec
-[  131.958566] ieee80211 phy1: I iwl_rx_scan_start_notif Scan start: 108 [802.11a] (TSF: 0x00000000:00116BD2) - 1 (beacon timer 46224430)
-[  132.071268] ieee80211 phy1: I iwl_rx_scan_results_notif Scan ch.res: 108 [802.11a] (TSF: 0x00000000:00132407) - 0 elapsed=112693 usec
-[  132.072465] ieee80211 phy1: I iwl_rx_scan_start_notif Scan start: 112 [802.11a] (TSF: 0x00000000:001328B7) - 1 (beacon timer 50407241)
-[  132.185157] ieee80211 phy1: I iwl_rx_scan_results_notif Scan ch.res: 112 [802.11a] (TSF: 0x00000000:0014E0EC) - 0 elapsed=112693 usec
-[  132.186357] ieee80211 phy1: I iwl_rx_scan_start_notif Scan start: 116 [802.11a] (TSF: 0x00000000:0014E59E) - 1 (beacon timer 54590050)
-[  132.299071] ieee80211 phy1: I iwl_rx_scan_results_notif Scan ch.res: 116 [802.11a] (TSF: 0x00000000:00169DE5) - 0 elapsed=112711 usec
-[  132.300276] ieee80211 phy1: I iwl_rx_scan_start_notif Scan start: 120 [802.11a] (TSF: 0x00000000:0016A296) - 1 (beacon timer 58772842)
-[  132.412967] ieee80211 phy1: I iwl_rx_scan_results_notif Scan ch.res: 120 [802.11a] (TSF: 0x00000000:00185ACB) - 0 elapsed=112693 usec
-[  132.414171] ieee80211 phy1: I iwl_rx_scan_start_notif Scan start: 124 [802.11a] (TSF: 0x00000000:00185F7B) - 1 (beacon timer 62955653)
-[  132.526866] ieee80211 phy1: I iwl_rx_scan_results_notif Scan ch.res: 124 [802.11a] (TSF: 0x00000000:001A17B1) - 0 elapsed=112694 usec
-[  132.528063] ieee80211 phy1: I iwl_rx_scan_start_notif Scan start: 128 [802.11a] (TSF: 0x00000000:001A1C62) - 1 (beacon timer 67138462)
-[  132.640758] ieee80211 phy1: I iwl_rx_scan_results_notif Scan ch.res: 128 [802.11a] (TSF: 0x00000000:001BD498) - 0 elapsed=112694 usec
-[  132.641967] ieee80211 phy1: I iwl_rx_scan_start_notif Scan start: 132 [802.11a] (TSF: 0x00000000:001BD94D) - 1 (beacon timer 71321267)
-[  132.754681] ieee80211 phy1: I iwl_rx_scan_results_notif Scan ch.res: 132 [802.11a] (TSF: 0x00000000:001D9193) - 0 elapsed=112710 usec
-[  132.755887] ieee80211 phy1: I iwl_rx_scan_start_notif Scan start: 136 [802.11a] (TSF: 0x00000000:001D9648) - 1 (beacon timer 75504056)
-[  132.868588] ieee80211 phy1: I iwl_rx_scan_results_notif Scan ch.res: 136 [802.11a] (TSF: 0x00000000:001F4E8E) - 0 elapsed=112710 usec
-[  132.869789] ieee80211 phy1: I iwl_rx_scan_start_notif Scan start: 140 [802.11a] (TSF: 0x00000000:001F5340) - 1 (beacon timer 83983552)
-[  132.982494] ieee80211 phy1: I iwl_rx_scan_results_notif Scan ch.res: 140 [802.11a] (TSF: 0x00000000:00210B75) - 0 elapsed=112693 usec
-[  132.983701] ieee80211 phy1: I iwl_rx_scan_start_notif Scan start: 149 [802.11a] (TSF: 0x00000000:00211027) - 1 (beacon timer 88166361)
-[  133.096383] ieee80211 phy1: I iwl_rx_scan_results_notif Scan ch.res: 149 [802.11a] (TSF: 0x00000000:0022C85C) - 0 elapsed=112693 usec
-[  133.097585] ieee80211 phy1: I iwl_rx_scan_start_notif Scan start: 153 [802.11a] (TSF: 0x00000000:0022CD0E) - 1 (beacon timer 92349170)
-[  133.210277] ieee80211 phy1: I iwl_rx_scan_results_notif Scan ch.res: 153 [802.11a] (TSF: 0x00000000:00248543) - 0 elapsed=112693 usec
-[  133.211488] ieee80211 phy1: I iwl_rx_scan_start_notif Scan start: 157 [802.11a] (TSF: 0x00000000:002489F8) - 1 (beacon timer 96531976)
-[  133.324202] ieee80211 phy1: I iwl_rx_scan_results_notif Scan ch.res: 157 [802.11a] (TSF: 0x00000000:0026423F) - 0 elapsed=112711 usec
-[  133.325400] ieee80211 phy1: I iwl_rx_scan_start_notif Scan start: 161 [802.11a] (TSF: 0x00000000:002646F5) - 1 (beacon timer 100714763)
-[  133.438119] ieee80211 phy1: I iwl_rx_scan_results_notif Scan ch.res: 161 [802.11a] (TSF: 0x00000000:0027FF3B) - 0 elapsed=112710 usec
-[  133.439322] ieee80211 phy1: I iwl_rx_scan_start_notif Scan start: 165 [802.11a] (TSF: 0x00000000:002803F1) - 1 (beacon timer 104897551)
-[  133.552039] ieee80211 phy1: I iwl_rx_scan_results_notif Scan ch.res: 165 [802.11a] (TSF: 0x00000000:0029BC37) - 0 elapsed=112710 usec
-[  133.553247] ieee80211 phy1: I iwl_rx_scan_complete_notif Scan complete: 24 channels (TSF 0x0029C0F2:00000000) - 1
-[  133.553253] ieee80211 phy1: I iwl_rx_scan_complete_notif Scan on 5.2GHz took 2735ms
-[  133.553256] ieee80211 phy1: I iwl_rx_scan_complete_notif Setting scan to off
-[  133.553272] ieee80211 phy1: U iwl_bg_scan_completed SCAN complete scan
-[  133.553280] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_TX_POWER_DBM_CMD (#95), seq: 0x0425, 8 bytes at 37[5]:4
-[  133.553292] ieee80211 phy1: U iwl_mac_config enter to channel 1 changed 0x40
-[  133.553296] ieee80211 phy1: U iwl_set_rxon_chain rx_chain=0x2406 active=2 idle=1
-[  133.553302] ieee80211 phy1: U iwl_mac_config Not re-sending same RXON configuration.
-[  133.553305] ieee80211 phy1: U iwl_mac_config leave
-[  133.553308] phy1: device now idle
-[  133.553311] ieee80211 phy1: U iwl_mac_flush enter
-[  133.553314] ieee80211 phy1: U iwl_mac_flush wait transmit/flush all frames
-[  133.553318] ieee80211 phy1: U iwl_mac_flush leave
-[  133.553321] ieee80211 phy1: U iwl_mac_config enter to channel 1 changed 0x100
-[  133.553325] ieee80211 phy1: U iwl_power_sleep_cam_cmd Sleep command for CAM
-[  133.553328] ieee80211 phy1: U iwl_mac_config Not re-sending same RXON configuration.
-[  133.553331] ieee80211 phy1: U iwl_mac_config leave
-[  133.553390] ieee80211 phy1: I iwl_generic_cmd_callback back from REPLY_TX_POWER_DBM_CMD (0x00000000)
-[  133.577022] ieee80211 phy1: I iwl_enqueue_hcmd Sending command REPLY_LEDS_CMD (#48), seq: 0x0426, 12 bytes at 38[6]:4
-[  133.577045] ieee80211 phy1: I iwl_generic_cmd_callback back from REPLY_LEDS_CMD (0x00000000)
-[  193.039097] ieee80211 phy1: U iwl_configure_filter Enter: changed: 0x10, total: 0x80000000
-[  193.039104] ieee80211 phy1: U iwl_commit_rxon Sending RXON
-[  193.039104] * without RXON_FILTER_ASSOC_MSK
-[  193.039105] * channel = 1
-[  193.039105] * bssid = 00:00:00:00:00:00
-[  193.039108] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_RXON
-[  193.039110] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_RXON
-[  193.039114] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_RXON (#10), seq: 0x0427, 54 bytes at 39[7]:4
-[  193.039277] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_RXON
-[  193.039286] ieee80211 phy1: U iwl_commit_rxon Return from !new_assoc RXON.
-[  193.039289] ieee80211 phy1: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[  193.039291] ieee80211 phy1: U iwl_clear_ucode_stations Clearing ucode active for station 15
-[  193.039294] ieee80211 phy1: I iwl_tt_handler Queueing thermal throttling work.
-[  193.039303] ieee80211 phy1: U iwl_restore_stations Restoring all known stations ... start.
-[  193.039305] ieee80211 phy1: U iwl_restore_stations Restoring sta ff:ff:ff:ff:ff:ff
-[  193.039308] ieee80211 phy1: U iwl_send_add_sta Adding sta 15 (ff:ff:ff:ff:ff:ff) synchronously
-[  193.039310] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[  193.039312] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[  193.039315] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_ADD_STA (#18), seq: 0x0428, 96 bytes at 40[8]:4
-[  193.039371] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[  193.039377] ieee80211 phy1: U iwl_process_add_sta_resp Processing response for adding station 15
-[  193.039380] ieee80211 phy1: U iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[  193.039382] ieee80211 phy1: U iwl_sta_ucode_activate Added STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-[  193.039384] ieee80211 phy1: U iwl_process_add_sta_resp Added station id 15 addr ff:ff:ff:ff:ff:ff
-[  193.039386] ieee80211 phy1: U iwl_process_add_sta_resp Added station according to cmd buffer ff:ff:ff:ff:ff:ff
-[  193.039389] ieee80211 phy1: U is_lq_table_valid Channel 1 is not an HT channel
-[  193.039391] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_TX_LINK_QUALITY_CMD
-[  193.039393] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[  193.039396] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_TX_LINK_QUALITY_CMD (#4e), seq: 0x0429, 92 bytes at 41[9]:4
-[  193.039432] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[  193.039448] ieee80211 phy1: U iwl_send_lq_cmd init LQ command complete, clearing sta addition status for sta 15
-[  193.039450] ieee80211 phy1: U iwl_restore_stations Restoring all known stations .... complete.
-[  193.039453] ieee80211 phy1: U iwl_print_rx_config_cmd RX CONFIG:
-[  193.039455] iwl data: 00000000: 00 21 5d b3 d0 88 00 00 00 00 00 00 00 00 00 00  .!].............
-[  193.039457] iwl data: 00000010: 00 00 00 00 00 00 00 00 03 00 06 24 15 03 00 00  ...........$....
-[  193.039459] iwl data: 00000020: 05 80 00 00 04 00 00 00 01 00 ff ff ff 00 00 00  ................
-[  193.039460] iwl data: 00000030: 00 00                                            ..
-[  193.039462] ieee80211 phy1: U iwl_print_rx_config_cmd u16 channel: 0x1
-[  193.039464] ieee80211 phy1: U iwl_print_rx_config_cmd u32 flags: 0x00008005
-[  193.039466] ieee80211 phy1: U iwl_print_rx_config_cmd u32 filter_flags: 0x00000004
-[  193.039468] ieee80211 phy1: U iwl_print_rx_config_cmd u8 dev_type: 0x3
-[  193.039469] ieee80211 phy1: U iwl_print_rx_config_cmd u8 ofdm_basic_rates: 0x15
-[  193.039471] ieee80211 phy1: U iwl_print_rx_config_cmd u8 cck_basic_rates: 0x03
-[  193.039473] ieee80211 phy1: U iwl_print_rx_config_cmd u8[6] node_addr: 00:21:5d:b3:d0:88
-[  193.039475] ieee80211 phy1: U iwl_print_rx_config_cmd u8[6] bssid_addr: 00:00:00:00:00:00
-[  193.039476] ieee80211 phy1: U iwl_print_rx_config_cmd u16 assoc_id: 0x0
-[  193.039481] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_TX_POWER_DBM_CMD (#95), seq: 0x042A, 8 bytes at 42[10]:4
-[  193.039486] ieee80211 phy1: U iwl_legacy_tt_handler Temperature increase 14 degree Celsius
-[  193.039581] ieee80211 phy1: I iwl_generic_cmd_callback back from REPLY_TX_POWER_DBM_CMD (0x00000000)
-[  198.923638] ieee80211 phy1: U iwl_configure_filter Enter: changed: 0x0, total: 0x80000000
-[  198.923646] ieee80211 phy1: U iwl_commit_rxon Sending RXON
-[  198.923646] * without RXON_FILTER_ASSOC_MSK
-[  198.923647] * channel = 1
-[  198.923648] * bssid = 00:00:00:00:00:00
-[  198.923651] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_RXON
-[  198.923652] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_RXON
-[  198.923656] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_RXON (#10), seq: 0x042B, 54 bytes at 43[11]:4
-[  198.923819] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_RXON
-[  198.923825] ieee80211 phy1: U iwl_commit_rxon Return from !new_assoc RXON.
-[  198.923827] ieee80211 phy1: U iwl_clear_ucode_stations Clearing ucode stations in driver
-[  198.923829] ieee80211 phy1: U iwl_clear_ucode_stations Clearing ucode active for station 15
-[  198.923831] ieee80211 phy1: U iwl_restore_stations Restoring all known stations ... start.
-[  198.923834] ieee80211 phy1: U iwl_restore_stations Restoring sta ff:ff:ff:ff:ff:ff
-[  198.923836] ieee80211 phy1: U iwl_send_add_sta Adding sta 15 (ff:ff:ff:ff:ff:ff) synchronously
-[  198.923839] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_ADD_STA
-[  198.923840] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_ADD_STA
-[  198.923843] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_ADD_STA (#18), seq: 0x042C, 96 bytes at 44[12]:4
-[  198.923914] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_ADD_STA
-[  198.923919] ieee80211 phy1: U iwl_process_add_sta_resp Processing response for adding station 15
-[  198.923921] ieee80211 phy1: U iwl_process_add_sta_resp REPLY_ADD_STA PASSED
-[  198.923923] ieee80211 phy1: U iwl_sta_ucode_activate Added STA id 15 addr ff:ff:ff:ff:ff:ff to uCode
-[  198.923925] ieee80211 phy1: U iwl_process_add_sta_resp Added station id 15 addr ff:ff:ff:ff:ff:ff
-[  198.923928] ieee80211 phy1: U iwl_process_add_sta_resp Added station according to cmd buffer ff:ff:ff:ff:ff:ff
-[  198.923931] ieee80211 phy1: U is_lq_table_valid Channel 1 is not an HT channel
-[  198.923933] ieee80211 phy1: U iwl_send_cmd_sync Attempting to send sync command REPLY_TX_LINK_QUALITY_CMD
-[  198.923935] ieee80211 phy1: U iwl_send_cmd_sync Setting HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[  198.923938] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_TX_LINK_QUALITY_CMD (#4e), seq: 0x042D, 92 bytes at 45[13]:4
-[  198.923974] ieee80211 phy1: I iwl_tx_cmd_complete Clearing HCMD_ACTIVE for command REPLY_TX_LINK_QUALITY_CMD
-[  198.923978] ieee80211 phy1: U iwl_send_lq_cmd init LQ command complete, clearing sta addition status for sta 15
-[  198.923980] ieee80211 phy1: U iwl_restore_stations Restoring all known stations .... complete.
-[  198.923983] ieee80211 phy1: U iwl_print_rx_config_cmd RX CONFIG:
-[  198.923985] iwl data: 00000000: 00 21 5d b3 d0 88 00 00 00 00 00 00 00 00 00 00  .!].............
-[  198.923987] iwl data: 00000010: 00 00 00 00 00 00 00 00 03 00 06 24 15 03 00 00  ...........$....
-[  198.923989] iwl data: 00000020: 05 80 00 00 04 00 00 00 01 00 ff ff ff 00 00 00  ................
-[  198.923991] iwl data: 00000030: 00 00                                            ..
-[  198.923993] ieee80211 phy1: U iwl_print_rx_config_cmd u16 channel: 0x1
-[  198.923995] ieee80211 phy1: U iwl_print_rx_config_cmd u32 flags: 0x00008005
-[  198.923997] ieee80211 phy1: U iwl_print_rx_config_cmd u32 filter_flags: 0x00000004
-[  198.923998] ieee80211 phy1: U iwl_print_rx_config_cmd u8 dev_type: 0x3
-[  198.924011] ieee80211 phy1: U iwl_print_rx_config_cmd u8 ofdm_basic_rates: 0x15
-[  198.924013] ieee80211 phy1: U iwl_print_rx_config_cmd u8 cck_basic_rates: 0x03
-[  198.924015] ieee80211 phy1: U iwl_print_rx_config_cmd u8[6] node_addr: 00:21:5d:b3:d0:88
-[  198.924017] ieee80211 phy1: U iwl_print_rx_config_cmd u8[6] bssid_addr: 00:00:00:00:00:00
-[  198.924018] ieee80211 phy1: U iwl_print_rx_config_cmd u16 assoc_id: 0x0
-[  198.924023] ieee80211 phy1: U iwl_enqueue_hcmd Sending command REPLY_TX_POWER_DBM_CMD (#95), seq: 0x042E, 8 bytes at 46[14]:4
-[  198.924122] ieee80211 phy1: I iwl_generic_cmd_callback back from REPLY_TX_POWER_DBM_CMD (0x00000000)
-
---EeQfGwPcQSOJBaQU--
