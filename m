@@ -1,46 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.redfish-solutions.com ([66.232.79.143]:59533 "EHLO
-	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756506Ab0HaBID (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39492 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756491Ab0H3SVq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Aug 2010 21:08:03 -0400
-Message-ID: <4C7C55E6.1060707@redfish-solutions.com>
-Date: Mon, 30 Aug 2010 18:07:50 -0700
-From: Philip Prindeville <philipp_subx@redfish-solutions.com>
+	Mon, 30 Aug 2010 14:21:46 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: me@bobcopeland.com, johannes@sipsolutions.net,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] ath5k: eliminate warning unintialized variable warning
+Date: Mon, 30 Aug 2010 14:21:56 -0400
+Message-Id: <1283192516-3324-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1283191913-3155-1-git-send-email-linville@tuxdriver.com>
+References: <1283191913-3155-1-git-send-email-linville@tuxdriver.com>
 MIME-Version: 1.0
-To: Jouni Malinen <j@w1.fi>
-CC: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: Marshaling issues w/ compat-wireless-2010-08-19
-References: <4C746F74.70401@redfish-solutions.com> <20100828171239.GA23885@jm.kir.nu> <4C79450C.80507@redfish-solutions.com>
-In-Reply-To: <4C79450C.80507@redfish-solutions.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  On 8/28/10 10:19 AM, Philip Prindeville wrote:
->  On 8/28/10 11:12 AM, Jouni Malinen wrote:
->> On Tue, Aug 24, 2010 at 06:18:44PM -0700, Philip Prindeville wrote:
->>>   I've got a stock Fedora Core 13 install (updated today) with the hostapd-0.6.10 rpm and hostapd-0.7.2 compiled from sources.  The NIC is a Ubiquiti SR71e (AR9280).
->>> (2) Some highly unlikely values from the hostapd debugging messages when parsing out WEP authentication messages (line 507):
->>> authentication: STA=f8:1e:df:1e:c2:23 auth_alg=35510 auth_transaction=79 status_code=21688 wep=1
->>> Unsupported authentication algorithm (35510)
->> I was unable to reproduce this with the current development tree
->> snapshots. Shared key authentication worked with AR9280 and the current
->> wireless-testing.git and hostap.git in my tests. If you are still seeing
->> this, you could also try to disable hw crypto to remove one possible
->> issue area by using nohwcrypt=1 module parameter when loading ath9k.
->>
->
-> Already tried that, and it didn't help.
->
-> -Philip
+ath5k/base.c:1317: warning: ‘ret’ may be used uninitialized in this function
 
-I also tried with the tarballs from 2010-07-19, and 2010-08-29 and saw the same issue.
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+Actually include patch this time...
+With right sender info this time...
 
-I also was able to reproduce the issue with "nohwcrypt=1".
+ drivers/net/wireless/ath/ath5k/base.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-So I'm wondering what if decryption is working fine, but the buffer has an alignment issue or isn't being marshaled into netlink properly?
-
--Philip
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 7139c7e..116ac66 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1327,8 +1327,10 @@ ath5k_txbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf,
+ 			PCI_DMA_TODEVICE);
+ 
+ 	rate = ieee80211_get_tx_rate(sc->hw, info);
+-	if (!rate)
++	if (!rate) {
++		ret = -EINVAL;
+ 		goto err_unmap;
++	}
+ 
+ 	if (info->flags & IEEE80211_TX_CTL_NO_ACK)
+ 		flags |= AR5K_TXDESC_NOACK;
+-- 
+1.7.2.2
 
