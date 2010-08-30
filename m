@@ -1,54 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:42988 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751893Ab0HBP72 convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60834 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751854Ab0H3TOp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Aug 2010 11:59:28 -0400
-MIME-Version: 1.0
-In-Reply-To: <AANLkTikvtMbqUdwHtCtdL2xXbQh64pxjApo6ZH6hAXnP@mail.gmail.com>
-References: <1279733634-21974-1-git-send-email-ohad@wizery.com>
-	<20100726193028.GG3903@tuxdriver.com> <1280736987.17809.18.camel@chilepepper>
-	<20100802114256.GE12293@atomide.com> <AANLkTikvtMbqUdwHtCtdL2xXbQh64pxjApo6ZH6hAXnP@mail.gmail.com>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Mon, 2 Aug 2010 18:59:07 +0300
-Message-ID: <AANLkTimaSeLqowRHSCivGXTiSE7NatNTR=jLWQYsSo-6@mail.gmail.com>
-Subject: Re: [PATCH v2 00/20] native support for wl1271 on ZOOM
-To: Vitaly Wool <vitalywool@gmail.com>
-Cc: Tony Lindgren <tony@atomide.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	"linux@arm.linux.org.uk" <linux@arm.linux.org.uk>,
-	"Quadros Roger (Nokia-MS/Helsinki)" <roger.quadros@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"ext John W. Linville" <linville@tuxdriver.com>,
-	San Mehat <san@google.com>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 30 Aug 2010 15:14:45 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: cancel scan in ieee80211_restart_hw
+Date: Mon, 30 Aug 2010 15:14:31 -0400
+Message-Id: <1283195671-4086-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 2, 2010 at 6:12 PM, Vitaly Wool <vitalywool@gmail.com> wrote:
-> Also, specifically to 12xx, I'd like to see REF_CLOCK moved on and
-> have this set by platform too (I haven't found anything like that in
-> the patches but maybe I've overlooked that).
+This function exists to clean-up after a hardware error or something
+similar.  The restart is accomplished using the same infrastructure used
+to resume after a suspend.  The suspend path cancels running scans, so
+it seems appropriate to do that here as well.
 
-Check out patch no. 9:
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/mac80211/main.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-http://www.spinics.net/lists/arm-kernel/msg93836.html
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 93194f6..8b43d85 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -305,7 +305,9 @@ void ieee80211_restart_hw(struct ieee80211_hw *hw)
+ 
+ 	trace_api_restart_hw(local);
+ 
+-	/* use this reason, __ieee80211_resume will unblock it */
++	ieee80211_scan_cancel(local);
++
++	/* use this reason, ieee80211_reconfig will unblock it */
+ 	ieee80211_stop_queues_by_reason(hw,
+ 		IEEE80211_QUEUE_STOP_REASON_SUSPEND);
+ 
+-- 
+1.7.2.2
 
-
->
-> Thanks,
->   Vitaly
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
