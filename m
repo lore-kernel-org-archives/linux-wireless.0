@@ -1,23 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:62519 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752357Ab0HZAb7 (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:51045 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752510Ab0H3Ov1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Aug 2010 20:31:59 -0400
-Received: by iwn5 with SMTP id 5so1051095iwn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Aug 2010 17:31:59 -0700 (PDT)
+	Mon, 30 Aug 2010 10:51:27 -0400
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: mac80211 using different tx queue for frames with same TID and RA
+Date: Mon, 30 Aug 2010 16:50:39 +0200
+Cc: linux-wireless@vger.kernel.org,
+	Krishna Kumar <krkumar2@in.ibm.com>, netdev@vger.kernel.org
+References: <201008301601.12971.helmut.schaa@googlemail.com> <201008301634.10122.helmut.schaa@googlemail.com> <1283179307.3691.73.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1283179307.3691.73.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 25 Aug 2010 17:31:09 -0700
-Message-ID: <AANLkTin3gKxgZjNmUbrCrpBBTezwPC-4EsxpqN6jkf+3@mail.gmail.com>
-Subject: compat-wireless 2.6.36-rc2-1 is out
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201008301650.40190.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-http://wireless.kernel.org/en/users/Download/stable/
+Am Monday 30 August 2010 schrieb Johannes Berg:
+> On Mon, 2010-08-30 at 16:34 +0200, Helmut Schaa wrote:
+> > Am Monday 30 August 2010 schrieb Johannes Berg:
+> > > On Mon, 2010-08-30 at 16:01 +0200, Helmut Schaa wrote:
+> > > 
+> > > > while debugging an issue in rt2x00 I've discovered that in some cases frames
+> > > > with the same TID and RA end up in different tx queues (which causes problems
+> > > > in rt2x00 when using aggregation).
+> > > > 
+> > > > Is this behavior expected and we need to handle that case in rt2x00 or is it
+> > > > more likely a bug? At least I thought the select_queue implementation in
+> > > > mac80211 was meant to always pick the same tx queue for skbs with the same
+> > > > priority and hence it shouldn't happen that frames with the same TID are
+> > > > queued into different tx queues.
+> > > 
+> > > Indeed, that seems like a bug. I don't see how this can happen though,
+> > > since the code _appears_ to not use the sk_tx_queue_mapping when an
+> > > ndo_select_queue method is present.
+> > 
+> > Hmm, this issue seems to only happen when the wifi interface (AP mode)
+> > is part of a bridge and the frame is tx'ed through the bridge.
+> 
+> Ok, I guess in that case it may actually have a socket TX queue mapping
+> already?
 
-This now goes test compiled against 2.6.24 when you enable only ath9k.
+Yes, it has. I've just replaced the call to sk_tx_queue_get in dev_pick_tx
+with a -1 assignment and everything works fine in bridge mode as well now.
 
-  Luis
+> Seems bogus to use it though.
+
+Agreed, I'd like to hear what the netdev folks think about this? Should the
+tx queue mapping used in this case at all? Or should the tx queue mapping be
+on a per netdev base?
+
+Helmut
