@@ -1,38 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:40055 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754047Ab0HHSwD (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:60569 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755185Ab0H3Uk5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Aug 2010 14:52:03 -0400
-Message-ID: <4C5EFCC1.4070106@candelatech.com>
-Date: Sun, 08 Aug 2010 11:51:45 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 30 Aug 2010 16:40:57 -0400
+Received: by eyg5 with SMTP id 5so3467464eyg.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Aug 2010 13:40:56 -0700 (PDT)
 MIME-Version: 1.0
-To: Ryszard <ryszard99@gmail.com>
-CC: Florian Fainelli <florian@openwrt.org>,
-	Patrick McHardy <kaber@trash.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: virtual access poitns (ath5k/mac80211)
-References: <AANLkTi=W=vkgb0gM7ZWsBeE79Fe3iabtKFgu2S7N5uLe@mail.gmail.com>	<201008011137.49528.florian@openwrt.org>	<AANLkTik=t=jeCG7=bgkq3LBwJP9vq7KmFpgDeHngPoq-@mail.gmail.com>	<4C55F377.6040404@candelatech.com>	<AANLkTi=FEFrKdXUHN-h-BZruvNzSmwXdPcq9-OgZcFAM@mail.gmail.com>	<4C565100.4040305@candelatech.com>	<AANLkTim8i245P0nGcnpsf63_O8xXeby9re=pX53WfOwV@mail.gmail.com> <AANLkTi=Krfwcmn6v7e6jU87A4cM3H06LTU7_XOiB-WUx@mail.gmail.com>
-In-Reply-To: <AANLkTi=Krfwcmn6v7e6jU87A4cM3H06LTU7_XOiB-WUx@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Date: Mon, 30 Aug 2010 16:40:56 -0400
+Message-ID: <AANLkTi=R88jHqCkajD4kW=BGStCskBGMLvL1rNErC_71@mail.gmail.com>
+Subject: What extra functionality does a driver need to support for access
+ point functionality?
+From: Charles Gordon <digigordo@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/06/2010 10:23 PM, Ryszard wrote:
-> hey ben,
->
-> i've spend a day attempting to get the kernel installed but am not
-> having much luck.. the box i'm installing on is an alix
-> (http://www.pcengines.ch/alix2d13.htm, amd geode) which has an ubuntu
-> lucid kernel on it.
+Hi,
 
-For whatever reason, you didn't seem to install the kernel properly.
-If you're trying to put this on a live-cd, then you have too mess with
-the initrd...do some google searching on ubuntu's wiki.
+I'm trying to understand what additional features are needed in
+drivers to support AP mode.  I took a look at the mac80211
+documentation on the web site and all it says is that:
 
-Ben
+# honour IEEE80211_TX_CTL_SEND_AFTER_DTIM or set
+IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING and use the
+ieee80211_get_buffered_bc() function
+# must honour IEEE80211_TX_RC_USE_SHORT_PREAMBLE or never do
+short-preamble transmissions
+# When sending probe response frames, the timestamp must be adjusted
+by the hardware or firmware. This is important to power saving
+stations that happen to adjust their TSF from the timestamp in the
+probe response frame.
+# implement sequence numbering for frames with the
+IEEE80211_TX_CTL_ASSIGN_SEQ flag (or ask the hardware to do it for
+those frames)
+# react to the set_tim() callback or fetch each beacon from mac80211
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+This makes it seem like the driver doesn't have to do that much more
+than it does normally.  Somehow, I don't believe that's it can be that
+easy.  What else does the driver need to do to support something like
+hostapd?
+
+Thanks for your help.
