@@ -1,47 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:63838 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965446Ab0HFTFZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Aug 2010 15:05:25 -0400
-Received: by iwn33 with SMTP id 33so1516144iwn.19
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Aug 2010 12:05:25 -0700 (PDT)
+Received: from smtp.outflux.net ([198.145.64.163]:36160 "EHLO smtp.outflux.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756161Ab0H3SEM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Aug 2010 14:04:12 -0400
+Date: Mon, 30 Aug 2010 11:03:03 -0700
+From: Kees Cook <kees.cook@canonical.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Jean Tourrilhes <jt@hpl.hp.com>
+Subject: Re: [PATCH] wireless extensions: fix kernel heap content leak
+Message-ID: <20100830180302.GM4703@outflux.net>
+References: <20100827210240.GC4703@outflux.net>
+ <20100827212254.GB32275@bougret.hpl.hp.com>
+ <1283158058.3691.10.camel@jlt3.sipsolutions.net>
+ <1283158704.3691.11.camel@jlt3.sipsolutions.net>
+ <1283162341.3691.45.camel@jlt3.sipsolutions.net>
+ <1283163894.3691.48.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <20100806135057.GA2753@tuxdriver.com>
-References: <AANLkTinwbLXVHmC9eUczoe-ntT=adyFFx6C6Q=GcBc79@mail.gmail.com>
-	<20100806135057.GA2753@tuxdriver.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 6 Aug 2010 12:05:05 -0700
-Message-ID: <AANLkTi=Q6K1xeDn6zmBD5co5aMgvDMyUqGE3vLoo4_2+@mail.gmail.com>
-Subject: Re: Odd BUG on wireless-testing master-2010-08-05
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1283163894.3691.48.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 6, 2010 at 6:50 AM, John W. Linville <linville@tuxdriver.com> wrote:
-> On Thu, Aug 05, 2010 at 03:31:06PM -0700, Luis R. Rodriguez wrote:
->> I just ran into this. My first load of master-2010-08-05 was fine but
->> I started getting a lot of disconnects on AR9003 hardware after a
->> period of RX'ing data over an encrypted legacy network. Instead of
->> checking dmesg I just rebooted though. After that I connected to the
->> same AP again, started Rx'ing for a while and then shortly got this:
->>
->>
->> [  818.749585] BUG: unable to handle kernel paging request at 00003f3f00000000
->> [  818.749594] IP: [<ffffffff814ee0d8>] unix_stream_recvmsg+0x3f8/0x790
->
->> After a reboot I got a hard hang which I could not capture any logs
->> for. I rebooted and am up now but not seeing these issues yet. John,
->> does this smell like what you were seeing or is this different?
->
-> Yeah, I'm seeing that too.  There is some netdev stuff in
-> wireless-testing at the moment that I suspect was undercooked...
->
-> Sorry for the inconvenience while this gets sorted-out!
+Hi Johannes,
 
-Ah no problem, just wanted to see if I should dig into ath9k or not,
-sounds like I don't. FWIW I had a hang overnight as well.
+On Mon, Aug 30, 2010 at 12:24:54PM +0200, Johannes Berg wrote:
+> --- wireless-testing.orig/net/wireless/wext-compat.c	2010-08-30 12:04:57.000000000 +0200
+> +++ wireless-testing/net/wireless/wext-compat.c	2010-08-30 12:11:32.000000000 +0200
+> @@ -1420,6 +1420,9 @@ int cfg80211_wext_giwessid(struct net_de
+>  {
+>  	struct wireless_dev *wdev = dev->ieee80211_ptr;
+>  
+> +	data->flags = 0;
+> +	data->length = 0;
+> +
+>  	switch (wdev->iftype) {
+>  	case NL80211_IFTYPE_ADHOC:
+>  		return cfg80211_ibss_wext_giwessid(dev, info, data, ssid);
 
-  Luis
+Thanks for all your work on this! Were you able to trigger the leak
+through cfg80211? If so, then this will need a CVE assigned and sent to
+stable too, I think.
+
+-Kees
+
+-- 
+Kees Cook
+Ubuntu Security Team
