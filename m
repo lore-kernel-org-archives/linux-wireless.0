@@ -1,55 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp5.freeserve.com ([193.252.22.151]:34212 "EHLO
-	smtp6.freeserve.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755621Ab0HPTmP convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43295 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753447Ab0H3SGm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Aug 2010 15:42:15 -0400
-Date: Mon, 16 Aug 2010 20:41:54 +0100
-From: Chris Vine <chris@cvine.freeserve.co.uk>
-To: =?UTF-8?B?R8OhYm9y?= Stefanik <netrolller.3d@gmail.com>
-Cc: b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFT] BCM4312 users with DMA errors, please test!
-Message-ID: <20100816204154.5100b604@boulder.homenet>
-In-Reply-To: <AANLkTimMhW7OX3DT7A3EDNaOnr577KmTv5w9C_mz19TG@mail.gmail.com>
-References: <AANLkTimMhW7OX3DT7A3EDNaOnr577KmTv5w9C_mz19TG@mail.gmail.com>
+	Mon, 30 Aug 2010 14:06:42 -0400
+Subject: Re: [PATCH] wireless extensions: fix kernel heap content leak
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kees Cook <kees.cook@canonical.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Jean Tourrilhes <jt@hpl.hp.com>
+In-Reply-To: <20100830180302.GM4703@outflux.net>
+References: <20100827210240.GC4703@outflux.net>
+	 <20100827212254.GB32275@bougret.hpl.hp.com>
+	 <1283158058.3691.10.camel@jlt3.sipsolutions.net>
+	 <1283158704.3691.11.camel@jlt3.sipsolutions.net>
+	 <1283162341.3691.45.camel@jlt3.sipsolutions.net>
+	 <1283163894.3691.48.camel@jlt3.sipsolutions.net>
+	 <20100830180302.GM4703@outflux.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 30 Aug 2010 20:06:30 +0200
+Message-ID: <1283191590.3694.7.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 16 Aug 2010 19:59:36 +0200
-Gábor Stefanik <netrolller.3d@gmail.com> wrote:
-> Hello Everyone!
+On Mon, 2010-08-30 at 11:03 -0700, Kees Cook wrote:
+> Hi Johannes,
 > 
-> If you are experiencing DMA errors on a BCM4312, please test the
-> attached patch. It implements the PCI-E SERDES workaround, which the
-> hybrid driver is applying during early init to LP-PHY cards, and which
-> is a good candidate for the cause of the DMA error.
-> Note that this is not a final patch & it may cause collateral damage
-> for non-4312 cards; if it helps the 4312 problem, I will submit a
-> cleaned-up version.
+> On Mon, Aug 30, 2010 at 12:24:54PM +0200, Johannes Berg wrote:
+> > --- wireless-testing.orig/net/wireless/wext-compat.c	2010-08-30 12:04:57.000000000 +0200
+> > +++ wireless-testing/net/wireless/wext-compat.c	2010-08-30 12:11:32.000000000 +0200
+> > @@ -1420,6 +1420,9 @@ int cfg80211_wext_giwessid(struct net_de
+> >  {
+> >  	struct wireless_dev *wdev = dev->ieee80211_ptr;
+> >  
+> > +	data->flags = 0;
+> > +	data->length = 0;
+> > +
+> >  	switch (wdev->iftype) {
+> >  	case NL80211_IFTYPE_ADHOC:
+> >  		return cfg80211_ibss_wext_giwessid(dev, info, data, ssid);
+> 
+> Thanks for all your work on this! Were you able to trigger the leak
+> through cfg80211? If so, then this will need a CVE assigned and sent to
+> stable too, I think.
 
-This applies to 2.6.35.2, but does not compile:
+Yes, I was, very easily, by doing an SIOCGIWESSID while unassociated,
+with a large iwq->length set by userspace. I did CC stable on my patch,
+but we can amend the commit by a CVE if so desired.
 
-drivers/ssb/driver_pcicore.c: In function 'ssb_pcie_mdio_set_block':
-drivers/ssb/driver_pcicore.c:457: error: 'i' undeclared (first use in
-this function) drivers/ssb/driver_pcicore.c:457: error: (Each
-undeclared identifier is reported only once
-drivers/ssb/driver_pcicore.c:457: error: for each function it appears
-in.) drivers/ssb/driver_pcicore.c: In function 'ssb_pcie_mdio_read':
-drivers/ssb/driver_pcicore.c:503: error: expected ';' before
-'pcicore_write32'
-
-With the obvious fixes (providing a variable 'i' of int type as the
-count variable and terminating the line which had no terminating
-semi-colon), it compiled OK and the first time I booted up, booted up
-OK but didn't fix the DMA error.  Subsequent attempts to boot up gave me
-a slew of errors on boot up so I am not sure what is going on there.
-
-You might want to check that the obvious fixes to the patch are
-complete.
-
-Chris
-
+johannes
 
