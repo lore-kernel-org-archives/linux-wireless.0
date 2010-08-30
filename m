@@ -1,43 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34421 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754631Ab0H0Ph0 (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:64855 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753583Ab0H3Oe4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 11:37:26 -0400
-Subject: Re: [RFT] mac80211: fix broadcast/multicast data drop on scan
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
-	Kalle Valo <kvalo@adurom.com>,
-	Amod Bodas <Amod.Bodas@atheros.com>
-In-Reply-To: <AANLkTimw1MpiKM=rCfp_zxkw855SyaoZg6m1oB354tCF@mail.gmail.com>
-References: <1282887527-23259-1-git-send-email-lrodriguez@atheros.com>
-	 <20100827090655.GA15873@jm.kir.nu>
-	 <AANLkTimw1MpiKM=rCfp_zxkw855SyaoZg6m1oB354tCF@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 27 Aug 2010 17:37:24 +0200
-Message-ID: <1282923444.4377.13.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 30 Aug 2010 10:34:56 -0400
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: mac80211 using different tx queue for frames with same TID and RA
+Date: Mon, 30 Aug 2010 16:34:09 +0200
+Cc: linux-wireless@vger.kernel.org,
+	Krishna Kumar <krkumar2@in.ibm.com>, netdev@vger.kernel.org
+References: <201008301601.12971.helmut.schaa@googlemail.com> <1283177480.3691.66.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1283177480.3691.66.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201008301634.10122.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-08-27 at 08:28 -0700, Luis R. Rodriguez wrote:
+Am Monday 30 August 2010 schrieb Johannes Berg:
+> On Mon, 2010-08-30 at 16:01 +0200, Helmut Schaa wrote:
+> 
+> > while debugging an issue in rt2x00 I've discovered that in some cases frames
+> > with the same TID and RA end up in different tx queues (which causes problems
+> > in rt2x00 when using aggregation).
+> > 
+> > Is this behavior expected and we need to handle that case in rt2x00 or is it
+> > more likely a bug? At least I thought the select_queue implementation in
+> > mac80211 was meant to always pick the same tx queue for skbs with the same
+> > priority and hence it shouldn't happen that frames with the same TID are
+> > queued into different tx queues.
+> 
+> Indeed, that seems like a bug. I don't see how this can happen though,
+> since the code _appears_ to not use the sk_tx_queue_mapping when an
+> ndo_select_queue method is present.
 
-> Indeed... I do not see where we keep track of the DTIM count and was
-> afraid this was not sufficient. I had not thought about the last
-> received multicast / broadcast frame, that will require some more
-> work. But I also noticed even ieee80211_recalc_ps() does not take this
-> into account when computing the max_sleep_period ieee80211_enable_ps()
-> for dynamic power save, it only considers the DTIM period. We send the
-> nullfunc frame for dynamic power save and it does not seem we take
-> into consideration the DTIM count and last RX's broadcast / multicast
-> data prior to sending the nullfunc to go into power save. So it seems
-> to me dynamic power save would also loses broadcast / multicast data
-> frames.
+Hmm, this issue seems to only happen when the wifi interface (AP mode)
+is part of a bridge and the frame is tx'ed through the bridge.
 
-No, the max sleep period is just a helper variable for device
-implementation of sleep -- the actual alignment of it with DTIM beacons
-etc. has to be done by the device. Therefore, it isn't so :-)
-
-johannes
-
+Helmut
