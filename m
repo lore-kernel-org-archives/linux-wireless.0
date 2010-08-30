@@ -1,47 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:51993 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750876Ab0HRQdq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Aug 2010 12:33:46 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 1/2] iwlagn: do not check for AP mode for WEP keys
-Date: Wed, 18 Aug 2010 09:35:21 -0700
-Message-Id: <1282149322-17928-2-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1282149322-17928-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1282149322-17928-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:35147 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754889Ab0H3KZF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Aug 2010 06:25:05 -0400
+Subject: [PATCH] wireless extensions: fix kernel heap content leak
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Kees Cook <kees.cook@canonical.com>, linux-kernel@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Jean Tourrilhes <jt@hpl.hp.com>
+In-Reply-To: <1283162341.3691.45.camel@jlt3.sipsolutions.net>
+References: <20100827210240.GC4703@outflux.net>
+	 <20100827212254.GB32275@bougret.hpl.hp.com>
+	 <1283158058.3691.10.camel@jlt3.sipsolutions.net>
+	 <1283158704.3691.11.camel@jlt3.sipsolutions.net>
+	 <1283162341.3691.45.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 30 Aug 2010 12:24:54 +0200
+Message-ID: <1283163894.3691.48.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Even when we configure WEP keys in AP mode
-ones without a station pointer are default
-keys, so don't check for AP mode here.
+Wireless extensions have an unfortunate, undocumented
+requirement which requires drivers to always fill
+iwp->length when returning a successful status. When
+a driver doesn't do this, it leads to a kernel heap
+content leak when userspace offers a larger buffer
+than would have been necessary.
 
+Arguably, this is a driver bug, as it should, if it
+returns 0, fill iwp->length, even if it separately
+indicated that the buffer contents was not valid.
+
+However, we can also at least avoid the memory content
+leak if the driver doesn't do this by setting the iwp
+length to max_tokens, which then reflects how big the
+buffer is that the driver may fill, regardless of how
+big the userspace buffer is.
+
+To illustrate the point, this patch also fixes a
+corresponding cfg80211 bug (since this requirement
+isn't documented nor was ever pointed out by anyone
+during code review, I don't trust all drivers nor
+all cfg80211 handlers to implement it correctly).
+
+Cc: stable@kernel.org [all the way back]
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Tested all four cases now (both hunks of the patch present/not present)
+and reproduced the problem in the unpatched case.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 10d7b9b..2d309d1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3386,7 +3386,7 @@ static int iwl_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	 * in 1X mode.
- 	 * In legacy wep mode, we use another host command to the uCode.
- 	 */
--	if (key->alg == ALG_WEP && !sta && vif->type != NL80211_IFTYPE_AP) {
-+	if (key->alg == ALG_WEP && !sta) {
- 		if (cmd == SET_KEY)
- 			is_default_wep_key = !priv->key_mapping_key;
- 		else
--- 
-1.7.0.4
+ net/wireless/wext-compat.c |    3 +++
+ net/wireless/wext-core.c   |   16 ++++++++++++++++
+ 2 files changed, 19 insertions(+)
+
+--- wireless-testing.orig/net/wireless/wext-core.c	2010-08-30 12:04:57.000000000 +0200
++++ wireless-testing/net/wireless/wext-core.c	2010-08-30 12:10:35.000000000 +0200
+@@ -782,6 +782,22 @@ static int ioctl_standard_iw_point(struc
+ 		}
+ 	}
+ 
++	if (IW_IS_GET(cmd) && !(descr->flags & IW_DESCR_FLAG_NOMAX)) {
++		/*
++		 * If this is a GET, but not NOMAX, it means that the extra
++		 * data is not bounded by userspace, but by max_tokens. Thus
++		 * set the length to max_tokens. This matches the extra data
++		 * allocation.
++		 * The driver should fill it with the number of tokens it
++		 * provided, and it may check iwp->length rather than having
++		 * knowledge of max_tokens. If the driver doesn't change the
++		 * iwp->length, this ioctl just copies back max_token tokens
++		 * filled with zeroes. Hopefully the driver isn't claiming
++		 * them to be valid data.
++		 */
++		iwp->length = descr->max_tokens;
++	}
++
+ 	err = handler(dev, info, (union iwreq_data *) iwp, extra);
+ 
+ 	iwp->length += essid_compat;
+--- wireless-testing.orig/net/wireless/wext-compat.c	2010-08-30 12:04:57.000000000 +0200
++++ wireless-testing/net/wireless/wext-compat.c	2010-08-30 12:11:32.000000000 +0200
+@@ -1420,6 +1420,9 @@ int cfg80211_wext_giwessid(struct net_de
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 
++	data->flags = 0;
++	data->length = 0;
++
+ 	switch (wdev->iftype) {
+ 	case NL80211_IFTYPE_ADHOC:
+ 		return cfg80211_ibss_wext_giwessid(dev, info, data, ssid);
+
 
