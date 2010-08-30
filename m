@@ -1,66 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46686 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752657Ab0HPNRC (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:50006 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753644Ab0H3XwU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Aug 2010 09:17:02 -0400
-Subject: Re: iwlwifi connection problems
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alex Romosan <romosan@sycorax.lbl.gov>
-Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <8762zq76p3.fsf@sycorax.lbl.gov>
-References: <87tynqvtu6.fsf@sycorax.lbl.gov>
-	 <1279917523.10769.1.camel@wwguy-huron>
-	 <1280135867.3693.5.camel@jlt3.sipsolutions.net>
-	 <87mxtd5xlq.fsf@sycorax.lbl.gov>
-	 <1280212629.19098.0.camel@jlt3.sipsolutions.net>
-	 <87bp9l6f4k.fsf@sycorax.lbl.gov>
-	 <1280746705.3923.11.camel@jlt3.sipsolutions.net>
-	 <878w4pvx5e.fsf@sycorax.lbl.gov>
-	 <1280766201.24503.0.camel@jlt3.sipsolutions.net>
-	 <87aap4z70b.fsf@sycorax.lbl.gov>
-	 <1280817596.3874.0.camel@jlt3.sipsolutions.net>
-	 <87mxt3n9xh.fsf@sycorax.lbl.gov>
-	 <1280908365.3768.4.camel@jlt3.sipsolutions.net>
-	 <87aap28m8v.fsf@sycorax.lbl.gov>
-	 <1280934185.3768.8.camel@jlt3.sipsolutions.net>
-	 <8739uu8lg2.fsf@sycorax.lbl.gov>
-	 <1280934689.17718.3.camel@jlt3.sipsolutions.net>
-	 <8762zq76p3.fsf@sycorax.lbl.gov>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 16 Aug 2010 15:16:57 +0200
-Message-ID: <1281964617.3683.23.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 30 Aug 2010 19:52:20 -0400
+Received: by eyg5 with SMTP id 5so3517016eyg.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Aug 2010 16:52:19 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTikQk5=S=n8rP3hRgu8F=oyGqY_c8rFar7C=kRef@mail.gmail.com>
+References: <AANLkTi=W=vkgb0gM7ZWsBeE79Fe3iabtKFgu2S7N5uLe@mail.gmail.com>
+	<201008011137.49528.florian@openwrt.org>
+	<AANLkTik=t=jeCG7=bgkq3LBwJP9vq7KmFpgDeHngPoq-@mail.gmail.com>
+	<4C55F377.6040404@candelatech.com>
+	<AANLkTinGqWZ8o9L=ePsbgzWtitWAHCt3=g_z6BM7EpjO@mail.gmail.com>
+	<4C618713.9030303@candelatech.com>
+	<AANLkTikanjZf0LEqZjw5toeJz02Tcs6EcAiNdagJh=sQ@mail.gmail.com>
+	<AANLkTik9vPPxpxksGhRLkU+5y8YouJ+mbMHMBgt3B+3J@mail.gmail.com>
+	<AANLkTikQk5=S=n8rP3hRgu8F=oyGqY_c8rFar7C=kRef@mail.gmail.com>
+Date: Tue, 31 Aug 2010 09:52:18 +1000
+Message-ID: <AANLkTik-W_=AixLMwqkrJi9JgwjvrDNGnyHOrbyCgP5+@mail.gmail.com>
+Subject: Re: virtual access poitns (ath5k/mac80211)
+From: Ryszard <ryszard99@gmail.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Florian Fainelli <florian@openwrt.org>,
+	Patrick McHardy <kaber@trash.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-08-04 at 08:12 -0700, Alex Romosan wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
-> 
-> > On Wed, 2010-08-04 at 08:08 -0700, Alex Romosan wrote:
-> >
-> >> > Thanks. The down/up is fine, I'll be able to identify that in the
-> >> > traces. Except the "working" trace looks like it only starts after you
-> >> > connected already?
-> >> 
-> >> the driver connects automatically on boot, so, yes, it was after i was
-> >> connected. i can bring down the interface and try again if you want.
-> >
-> > Yes, please do that.
-> 
-> http://caliban.lbl.gov/iwlwifi/trace.dat-working.before.ifup.gz
+hey ben,
 
-Alex, thanks. I apologise for the delay. I should've asked you much
-earlier to do this -- could you open a bug report on
-bugzilla.intellinuxwireless.org and attach all the information you
-gathered? That way, hopefully we can find somebody more familiar with
-3945 to help you with this. I only joined the team long after it, so I'm
-not familiar with the device at all. When you do this, feel free to
-paste this link to the thread:
-http://thread.gmane.org/gmane.linux.kernel.wireless.general/53539
+i've set everything up and have all the routing working etc etc. it
+seems as tho' there is one last issue i'm hoping you can point me in
+the right direction with.
 
-Also, have you tried the released 2.6.35.2?
+When the device i'm working on boots i've got hostapd starting up with
+two VAP's (vap0 and vap1).  when i connect to on AP everything goes
+well and i can send and receive traffic, however when i disconnect and
+reconnect to the other AP it seems as tho' the client connection
+hangs.
 
-johannes
+Inspecting syslog shows all the dhcp information  for the 1st
+connection, however there is nothing in syslog for the 2nd connection.
 
+have you seen this, or have an idea why it may happen by chance?
+
+regs
+R
+
+[cross posted to the hostapd mailing list]
