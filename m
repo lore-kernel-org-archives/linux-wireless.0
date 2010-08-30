@@ -1,36 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp4-g21.free.fr ([212.27.42.4]:53647 "EHLO smtp4-g21.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934040Ab0HLSlr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Aug 2010 14:41:47 -0400
-Subject: Re: [PATCH v2] cfg80211: fix race between sysfs and cfg80211
-From: Maxime Bizon <mbizon@freebox.fr>
-Reply-To: mbizon@freebox.fr
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1279852170.14136.0.camel@sakura.staff.proxad.net>
-References: <1279336415.1941.6.camel@kero>
-	 <1279394982.3931.0.camel@jlt3.sipsolutions.net>
-	 <1279852170.14136.0.camel@sakura.staff.proxad.net>
-Content-Type: text/plain; charset="ANSI_X3.4-1968"
-Date: Thu, 12 Aug 2010 20:41:39 +0200
-Message-ID: <1281638499.12446.498.camel@sakura.staff.proxad.net>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55840 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751736Ab0H3STv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Aug 2010 14:19:51 -0400
+From: y@tuxdriver.com
+To: linux-wireless@vger.kernel.org
+Cc: me@bobcopeland.com, johannes@sipsolutions.net,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] ath5k: eliminate warning unintialized variable warning
+Date: Mon, 30 Aug 2010 14:19:59 -0400
+Message-Id: <1283192399-3251-1-git-send-email-y>
+In-Reply-To: <1283191913-3155-1-git-send-email-linville@tuxdriver.com>
+References: <1283191913-3155-1-git-send-email-linville@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: John W. Linville <linville@tuxdriver.com>
 
-On Fri, 2010-07-23 at 04:29 +0200, Maxime Bizon wrote:
+ath5k/base.c:1317: warning: ‘ret’ may be used uninitialized in this function
 
-Hi,
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+Actually include patch this time...
 
-> From: Maxime Bizon <mbizon@freebox.fr>
+ drivers/net/wireless/ath/ath5k/base.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-Any comment/ACK/NACK on this ?
-
-Thanks,
-
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 7139c7e..116ac66 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1327,8 +1327,10 @@ ath5k_txbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf,
+ 			PCI_DMA_TODEVICE);
+ 
+ 	rate = ieee80211_get_tx_rate(sc->hw, info);
+-	if (!rate)
++	if (!rate) {
++		ret = -EINVAL;
+ 		goto err_unmap;
++	}
+ 
+ 	if (info->flags & IEEE80211_TX_CTL_NO_ACK)
+ 		flags |= AR5K_TXDESC_NOACK;
 -- 
-Maxime
-
+1.7.2.2
 
