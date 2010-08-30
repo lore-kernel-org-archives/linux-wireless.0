@@ -1,45 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:55145 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762855Ab0HQS5M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Aug 2010 14:57:12 -0400
-To: linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: Filesystem corruption with 2.6.36-rc1-wl+ and ecryptfs
-From: Kalle Valo <kvalo@adurom.com>
-Date: Tue, 17 Aug 2010 21:57:10 +0300
-Message-ID: <87tymt9iex.fsf@purkki.adurom.net>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:62449 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752975Ab0H3TQf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Aug 2010 15:16:35 -0400
+Received: by ewy23 with SMTP id 23so3413183ewy.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Aug 2010 12:16:34 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 07/10] rt2x00: Set PWR_PIN_CFG during initialization
+Date: Mon, 30 Aug 2010 21:14:38 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201008302112.25578.IvDoorn@gmail.com> <201008302113.55101.IvDoorn@gmail.com> <201008302114.16125.IvDoorn@gmail.com>
+In-Reply-To: <201008302114.16125.IvDoorn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201008302114.38933.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Add PWR_PIN_CFG initialization for rt2800usb at the same point
+as rt2800pci.
 
-I just installed my first 2.6.36 kernel, 2.6.36-rc1-wl+ from
-wireless-testing, and immeadialy (during first boot) got major
-corruption in the filesystem. For example, gnome lost it's settings,
-~/.ssh was empty etc. Now, with an older kernel, my directory
-structure has duplicate entries, like this:
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-$ ls -ald D*
-drwxr-xr-x 2 kvalo kvalo 4096 2010-08-17 19:21 Desktop/
-drwxr-xr-x 2 kvalo kvalo 4096 2010-08-17 19:21 Desktop/
-drwxr-xr-x 2 kvalo kvalo 4096 2010-08-17 19:21 Documents/
-drwxr-xr-x 2 kvalo kvalo 4096 2010-08-17 19:21 Documents/
-drwxr-xr-x 2 kvalo kvalo 4096 2010-08-17 19:21 Downloads/
-drwxr-xr-x 2 kvalo kvalo 4096 2010-08-17 19:21 Downloads/
-
-I'm using ecryptfs and that's my major suspect for the corruption, but
-naturally I can't be sure because I'm just guessing here. 
-
-Some info about my system:
-
-Samsung X120 laptop
-Ubuntu 10.04
-amd64, 2 CPUs
-ext4, /home/kvalo encrypted with ecryptfs
-ath9k
-
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index b1a8e94..d275549 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -132,6 +132,8 @@ static int rt2800usb_init_registers(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_register_read(rt2x00dev, PBF_SYS_CTRL, &reg);
+ 	rt2800_register_write(rt2x00dev, PBF_SYS_CTRL, reg & ~0x00002000);
+ 
++	rt2800_register_write(rt2x00dev, PWR_PIN_CFG, 0x00000003);
++
+ 	rt2800_register_read(rt2x00dev, MAC_SYS_CTRL, &reg);
+ 	rt2x00_set_field32(&reg, MAC_SYS_CTRL_RESET_CSR, 1);
+ 	rt2x00_set_field32(&reg, MAC_SYS_CTRL_RESET_BBP, 1);
 -- 
-Kalle Valo
+1.7.2.2
+
