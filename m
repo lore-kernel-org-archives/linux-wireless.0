@@ -1,46 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:29939 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752137Ab0HBD7U (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43189 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753394Ab0H3TSC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Aug 2010 23:59:20 -0400
-Received: from vs3009.wh2.ocn.ne.jp (125.206.180.237)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-0329651556
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Aug 2010 12:59:17 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>, johannes@sipsolutions.net,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v4 1/3] cfg80211: Add nl80211 antenna configuration
-Date: Mon, 2 Aug 2010 12:59:16 +0900
-References: <20100727094732.27186.30900.stgit@tt-desk> <201007291111.27417.br1@einfach.org> <AANLkTinH-2VNYGGBVha-M2HOzYJYe_GBb3Ww1V6i6Hyc@mail.gmail.com>
-In-Reply-To: <AANLkTinH-2VNYGGBVha-M2HOzYJYe_GBb3Ww1V6i6Hyc@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201008021259.16623.br1@einfach.org>
+	Mon, 30 Aug 2010 15:18:02 -0400
+Subject: Re: [PATCH] mac80211: cancel scan in ieee80211_restart_hw
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1283195671-4086-1-git-send-email-linville@tuxdriver.com>
+References: <1283195671-4086-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 30 Aug 2010 21:17:59 +0200
+Message-ID: <1283195879.3694.15.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri July 30 2010 00:09:17 you wrote:
-> On Wed, Jul 28, 2010 at 7:11 PM, Bruno Randolf <br1@einfach.org> wrote:
-> > i already tried to explain several times why FIXED_A, FIXED_B, or
-> > DIVERSITY is not enough even for "legacy". please re-read the mails and
-> > the description of the first patch - i really don't want to re-iterate
-> > it *again*. thanks :)
-> 
-> What legacy device and respective device driver do we support upstream
-> on the kernel that has this sort of extra antenna setup? Do you
-> foresee this happening?
+On Mon, 2010-08-30 at 15:14 -0400, John W. Linville wrote:
+> This function exists to clean-up after a hardware error or something
+> similar.  The restart is accomplished using the same infrastructure used
+> to resume after a suspend.  The suspend path cancels running scans, so
+> it seems appropriate to do that here as well.
 
-right now, probably none. but it's easy to this to ath5k. madwifi supported it 
-and it's just a matter of setting tx and rx antennas (it's already there as 
-AR5K_ANTMODE_DEBUG). i might add it, just to make my case... ;)
+> -	/* use this reason, __ieee80211_resume will unblock it */
+> +	ieee80211_scan_cancel(local);
+> +
+> +	/* use this reason, ieee80211_reconfig will unblock it */
 
-anyhow, i can see your point of view now. but while you might not care about 
-anything before 802.11n - there are millions of what you call 'legacy' chips 
-out there (and you guys are actually still selling them!), so i think it's 
-worth it to properly support them, especially since i still believe that my 
-proposal is usable for both 802.11n and before.
+Hmm, yes .. but how will this interact with hw scan?
 
-bruno
+johannes
+
