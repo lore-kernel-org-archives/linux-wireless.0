@@ -1,128 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:33609 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754200Ab0HRQSh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Aug 2010 12:18:37 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Jay Sternberg <jay.e.sternberg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 15/16] iwlwifi: enable experimental ucode support
-Date: Wed, 18 Aug 2010 09:22:50 -0700
-Message-Id: <1282148571-9258-16-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1282148571-9258-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1282148571-9258-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:42497 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753104Ab0H3TQr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Aug 2010 15:16:47 -0400
+Received: by mail-ey0-f174.google.com with SMTP id 5so3422616eyg.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Aug 2010 12:16:46 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 10/10] rt2x00: Cleanup rt2x00usb_watchdog_reset_tx
+Date: Mon, 30 Aug 2010 21:15:51 +0200
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+References: <201008302112.25578.IvDoorn@gmail.com> <201008302114.56989.IvDoorn@gmail.com> <201008302115.20431.IvDoorn@gmail.com>
+In-Reply-To: <201008302115.20431.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201008302115.52394.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jay Sternberg <jay.e.sternberg@intel.com>
+rt2x00usb_watchdog_reset_tx performs the same task
+as rt2x00usb_kill_tx_queue, with the only difference
+is that it waits for all entries to be returned to
+the driver and for all frames the status has been
+reported to mac80211.
 
-ucode firmware may need to be released as experimental for testing or
-debugging. released ucode filenames have the API version as the last
-component.  experimental ucode files will have that component be "exp"
-and the fw_version string reported by ethtool will also contain the
-string EXP to clearly identify this ucode from released ucode.
-EXP is short for EXPERIMENTAL since fw_version has a max lenght on 32.
+We can easily split this task by calling rt2x00usb_kill_tx_queue,
+sleep for a short period and invoke the TX status reporting
+function. By adding the sleep() to the kill_entry we make sure
+that even during shutdown we guarentee the entry has been killed when
+the function returns. To make this work correctly the interrupt
+handlers have to be updated to prevent checking for the RADIO_ENABLED
+flag too early which prevents the ownership of the entry to be reset.
+Additionally a check for the DEVICE_PRESENT flag is not required but
+is nice to prevent race conditions when the device was unplugged.
 
-this capability is controlled by Kconfig and defaulted to not be used.
+Additionally rather then calling rt2x00usb_work_txdone() for
+status reporting we let the driver perform the TX status reporting
+first. If this is not sufficient then rt2x00usb_work_txdone() will
+still be used to cleanup the mess.
 
-Signed-off-by: Jay Sternberg <jay.e.sternberg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/Kconfig   |    6 +++++
- drivers/net/wireless/iwlwifi/iwl-agn.c |   33 ++++++++++++++++++++++++-------
- 2 files changed, 31 insertions(+), 8 deletions(-)
+ drivers/net/wireless/rt2x00/rt2x00usb.c |   66 +++++++++++++++++++------------
+ 1 files changed, 40 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
-index a51e4da..7ab5b51 100644
---- a/drivers/net/wireless/iwlwifi/Kconfig
-+++ b/drivers/net/wireless/iwlwifi/Kconfig
-@@ -36,6 +36,12 @@ config IWLWIFI_DEBUGFS
- 	  is a low-impact option that allows getting insight into the
- 	  driver's state at runtime.
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+index aec6440..4c5ae3d 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+@@ -208,8 +208,7 @@ static void rt2x00usb_interrupt_txdone(struct urb *urb)
+ 	struct queue_entry *entry = (struct queue_entry *)urb->context;
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
  
-+config IWLWIFI_DEBUG_EXPERIMENTAL_UCODE
-+        bool "Experimental uCode support"
-+        depends on IWLWIFI && IWLWIFI_DEBUG
-+        ---help---
-+	  Enable use of experimental ucode for testing and debugging.
-+
- config IWLWIFI_DEVICE_TRACING
- 	bool "iwlwifi device access tracing"
- 	depends on IWLWIFI
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index a88fabc..ca2cd9f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1659,24 +1659,37 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context);
- static int iwl_mac_setup_register(struct iwl_priv *priv,
- 				  struct iwlagn_ucode_capabilities *capa);
+-	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags) ||
+-	    !__test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
++	if (!__test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
+ 		return;
  
-+#define UCODE_EXPERIMENTAL_INDEX	100
-+#define UCODE_EXPERIMENTAL_TAG		"exp"
+ 	/*
+@@ -227,7 +226,9 @@ static void rt2x00usb_interrupt_txdone(struct urb *urb)
+ 	 * Schedule the delayed work for reading the TX status
+ 	 * from the device.
+ 	 */
+-	ieee80211_queue_work(rt2x00dev->hw, &rt2x00dev->txdone_work);
++	if (test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags) &&
++	    test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
++		ieee80211_queue_work(rt2x00dev->hw, &rt2x00dev->txdone_work);
+ }
+ 
+ static void rt2x00usb_kick_tx_entry(struct queue_entry *entry)
+@@ -279,6 +280,14 @@ static void rt2x00usb_kill_tx_entry(struct queue_entry *entry)
+ 	if ((entry->queue->qid == QID_BEACON) &&
+ 	    (test_bit(DRIVER_REQUIRE_BEACON_GUARD, &rt2x00dev->flags)))
+ 		usb_kill_urb(bcn_priv->guardian_urb);
 +
- static int __must_check iwl_request_firmware(struct iwl_priv *priv, bool first)
++	/*
++	 * We need a short delay here to wait for
++	 * the URB to be canceled
++	 */
++	do {
++		udelay(100);
++	} while (test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags));
+ }
+ 
+ void rt2x00usb_kill_tx_queue(struct data_queue *queue)
+@@ -290,8 +299,7 @@ EXPORT_SYMBOL_GPL(rt2x00usb_kill_tx_queue);
+ 
+ static void rt2x00usb_watchdog_tx_dma(struct data_queue *queue)
  {
- 	const char *name_pre = priv->cfg->fw_name_pre;
-+	char tag[8];
+-	struct queue_entry *entry;
+-	struct queue_entry_priv_usb *entry_priv;
++	struct rt2x00_dev *rt2x00dev = queue->rt2x00dev;
+ 	unsigned short threshold = queue->threshold;
  
--	if (first)
-+	if (first) {
-+#ifdef CONFIG_IWLWIFI_DEBUG_EXPERIMENTAL_UCODE
-+		priv->fw_index = UCODE_EXPERIMENTAL_INDEX;
-+		strcpy(tag, UCODE_EXPERIMENTAL_TAG);
-+	} else if (priv->fw_index == UCODE_EXPERIMENTAL_INDEX) {
-+#endif
- 		priv->fw_index = priv->cfg->ucode_api_max;
--	else
-+		sprintf(tag, "%d", priv->fw_index);
-+	} else {
- 		priv->fw_index--;
-+		sprintf(tag, "%d", priv->fw_index);
-+	}
+ 	WARNING(queue->rt2x00dev, "TX queue %d DMA timed out,"
+@@ -305,28 +313,33 @@ static void rt2x00usb_watchdog_tx_dma(struct data_queue *queue)
+ 	 * queue from being enabled during the txdone handler.
+ 	 */
+ 	queue->threshold = queue->limit;
+-	ieee80211_stop_queue(queue->rt2x00dev->hw, queue->qid);
++	ieee80211_stop_queue(rt2x00dev->hw, queue->qid);
  
- 	if (priv->fw_index < priv->cfg->ucode_api_min) {
- 		IWL_ERR(priv, "no suitable firmware found!\n");
- 		return -ENOENT;
+ 	/*
+-	 * Reset all currently uploaded TX frames.
++	 * Kill all entries in the queue, afterwards we need to
++	 * wait a bit for all URBs to be cancelled.
+ 	 */
+-	while (!rt2x00queue_empty(queue)) {
+-		entry = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
+-		entry_priv = entry->priv_data;
+-		usb_kill_urb(entry_priv->urb);
++	rt2x00usb_kill_tx_queue(queue);
+ 
+-		/*
+-		 * We need a short delay here to wait for
+-		 * the URB to be canceled
+-		 */
+-		do {
+-			udelay(100);
+-		} while (test_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags));
++	/*
++	 * In case that a driver has overriden the txdone_work
++	 * function, we invoke the TX done through there.
++	 */
++	rt2x00dev->txdone_work.func(&rt2x00dev->txdone_work);
+ 
+-		/*
+-		 * Invoke the TX done handler
+-		 */
+-		rt2x00usb_work_txdone_entry(entry);
++	/*
++	 * Security measure: if the driver did override the
++	 * txdone_work function, and the hardware did arrive
++	 * in a state which causes it to malfunction, it is
++	 * possible that the driver couldn't handle the txdone
++	 * event correctly. So after giving the driver the
++	 * chance to cleanup, we now force a cleanup of any
++	 * leftovers.
++	 */
++	if (!rt2x00queue_empty(queue)) {
++		WARNING(queue->rt2x00dev, "TX queue %d DMA timed out,"
++			" status handling failed, invoke hard reset", queue->qid);
++		rt2x00usb_work_txdone(&rt2x00dev->txdone_work);
  	}
  
--	sprintf(priv->firmware_name, "%s%d%s",
--		name_pre, priv->fw_index, ".ucode");
-+	sprintf(priv->firmware_name, "%s%s%s", name_pre, tag, ".ucode");
+ 	/*
+@@ -334,7 +347,7 @@ static void rt2x00usb_watchdog_tx_dma(struct data_queue *queue)
+ 	 * queue again.
+ 	 */
+ 	queue->threshold = threshold;
+-	ieee80211_wake_queue(queue->rt2x00dev->hw, queue->qid);
++	ieee80211_wake_queue(rt2x00dev->hw, queue->qid);
+ }
  
--	IWL_DEBUG_INFO(priv, "attempting to load firmware '%s'\n",
-+	IWL_DEBUG_INFO(priv, "attempting to load firmware %s'%s'\n",
-+		       (priv->fw_index == UCODE_EXPERIMENTAL_INDEX)
-+				? "EXPERIMENTAL " : "",
- 		       priv->firmware_name);
+ static void rt2x00usb_watchdog_tx_status(struct data_queue *queue)
+@@ -394,8 +407,7 @@ static void rt2x00usb_interrupt_rxdone(struct urb *urb)
+ 	struct queue_entry *entry = (struct queue_entry *)urb->context;
+ 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
  
- 	return request_firmware_nowait(THIS_MODULE, 1, priv->firmware_name,
-@@ -1971,8 +1984,10 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
- 	memset(&pieces, 0, sizeof(pieces));
+-	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags) ||
+-	    !__test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
++	if (!__test_and_clear_bit(ENTRY_OWNER_DEVICE_DATA, &entry->flags))
+ 		return;
  
- 	if (!ucode_raw) {
--		IWL_ERR(priv, "request for firmware file '%s' failed.\n",
--			priv->firmware_name);
-+		if (priv->fw_index <= priv->cfg->ucode_api_max)
-+			IWL_ERR(priv,
-+				"request for firmware file '%s' failed.\n",
-+				priv->firmware_name);
- 		goto try_again;
- 	}
+ 	/*
+@@ -415,7 +427,9 @@ static void rt2x00usb_interrupt_rxdone(struct urb *urb)
+ 	 * Schedule the delayed work for reading the RX status
+ 	 * from the device.
+ 	 */
+-	ieee80211_queue_work(rt2x00dev->hw, &rt2x00dev->rxdone_work);
++	if (test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags) &&
++	    test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
++		ieee80211_queue_work(rt2x00dev->hw, &rt2x00dev->rxdone_work);
+ }
  
-@@ -2019,7 +2034,9 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
- 			  api_max, api_ver);
- 
- 	if (build)
--		sprintf(buildstr, " build %u", build);
-+		sprintf(buildstr, " build %u%s", build,
-+		       (priv->fw_index == UCODE_EXPERIMENTAL_INDEX)
-+				? " (EXP)" : "");
- 	else
- 		buildstr[0] = '\0';
- 
+ /*
 -- 
-1.7.0.4
+1.7.2.2
 
