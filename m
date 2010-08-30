@@ -1,158 +1,259 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:62079 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754441Ab0H0Q4w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 12:56:52 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 14/27] iwlwifi: add context pointer to station
-Date: Fri, 27 Aug 2010 09:59:42 -0700
-Message-Id: <1282928395-32762-15-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1282928395-32762-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1282928395-32762-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:34174 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751733Ab0H3SeB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Aug 2010 14:34:01 -0400
+Date: Mon, 30 Aug 2010 21:04:01 +0200
+From: Andreas Herrmann <herrmann.der.user@googlemail.com>
+To: "H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@elte.hu>,
+	Peter Zijlstra <a.p.zijlstra@chello.nl>,
+	Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org,
+	Borislav Petkov <borislav.petkov@amd.com>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Andi Kleen <andi@firstfloor.org>,
+	Bob Copeland <me@bobcopeland.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH v2] bitops: Provide generic sign_extend32 function
+Message-ID: <20100830190400.GB4749@loge.amd.com>
+References: <20100827101651.GC5348@loge.amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100827101651.GC5348@loge.amd.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Andreas Herrmann <andreas.herrmann3@amd.com>
 
-Sometimes we only pass around station
-pointers but need to find the context
-they belong to, so store it in there.
+This patch moves code out from wireless drivers where two different
+functions are defined in three code locations for the same purpose and
+provides a common function to sign extend a 32-bit value.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Andreas Herrmann <andreas.herrmann3@amd.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    1 +
- drivers/net/wireless/iwlwifi/iwl-sta.c      |   22 +++++++++++++++-------
- drivers/net/wireless/iwlwifi/iwl-sta.h      |    2 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
- 5 files changed, 19 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/ath5k/phy.c        |    8 +-------
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c |   12 ++++++------
+ drivers/net/wireless/ath/ath9k/ar9002_phy.c |    8 ++++----
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |   12 ++++++------
+ drivers/net/wireless/ath/ath9k/hw.h         |    6 ------
+ drivers/net/wireless/iwlwifi/iwl-4965.c     |   20 ++------------------
+ include/linux/bitops.h                      |   11 +++++++++++
+ 7 files changed, 30 insertions(+), 47 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 837406e..de8db3a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -3751,7 +3751,7 @@ static int iwlagn_mac_sta_add(struct ieee80211_hw *hw,
- 		sta_priv->client = true;
+Differences to first version.
+(1) Rename to sign_extend32 - it handles only 32-bit values
+(2) Adapt function calls in ath*k code - the common function uses bit
+    position (0..31) instead of number of bits (1..32)
+
+
+Andreas
+
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index 6284c38..c9295b4 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -1101,18 +1101,12 @@ int ath5k_hw_channel(struct ath5k_hw *ah, struct ieee80211_channel *channel)
+   PHY calibration
+ \*****************/
  
- 	ret = iwl_add_station_common(priv, vif_priv->ctx, sta->addr,
--				     is_ap, &sta->ht_cap, &sta_id);
-+				     is_ap, sta, &sta_id);
- 	if (ret) {
- 		IWL_ERR(priv, "Unable to add station %pM (%d)\n",
- 			sta->addr, ret);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 2f9d1da..9364768 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -502,6 +502,7 @@ struct iwl_station_entry {
- };
- 
- struct iwl_station_priv_common {
-+	struct iwl_rxon_context *ctx;
- 	u8 sta_id;
- };
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
-index e6bb81b..c18eb89 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
-@@ -172,12 +172,13 @@ int iwl_send_add_sta(struct iwl_priv *priv,
- EXPORT_SYMBOL(iwl_send_add_sta);
- 
- static void iwl_set_ht_add_station(struct iwl_priv *priv, u8 index,
--				   struct ieee80211_sta_ht_cap *sta_ht_inf)
-+				   struct ieee80211_sta *sta)
+-static int sign_extend(int val, const int nbits)
+-{
+-	int order = BIT(nbits-1);
+-	return (val ^ order) - order;
+-}
+-
+ static s32 ath5k_hw_read_measured_noise_floor(struct ath5k_hw *ah)
  {
-+	struct ieee80211_sta_ht_cap *sta_ht_inf = &sta->ht_cap;
- 	__le32 sta_flags;
- 	u8 mimo_ps_mode;
+ 	s32 val;
  
--	if (!sta_ht_inf || !sta_ht_inf->ht_supported)
-+	if (!sta || !sta_ht_inf->ht_supported)
- 		goto done;
+ 	val = ath5k_hw_reg_read(ah, AR5K_PHY_NF);
+-	return sign_extend(AR5K_REG_MS(val, AR5K_PHY_NF_MINCCA_PWR), 9);
++	return sign_extend32(AR5K_REG_MS(val, AR5K_PHY_NF_MINCCA_PWR), 8);
+ }
  
- 	mimo_ps_mode = (sta_ht_inf->cap & IEEE80211_HT_CAP_SM_PS) >> 2;
-@@ -228,7 +229,7 @@ static void iwl_set_ht_add_station(struct iwl_priv *priv, u8 index,
-  */
- static u8 iwl_prep_station(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
- 			   const u8 *addr, bool is_ap,
--			   struct ieee80211_sta_ht_cap *ht_info)
-+			   struct ieee80211_sta *sta)
- {
- 	struct iwl_station_entry *station;
- 	int i;
-@@ -292,12 +293,19 @@ static u8 iwl_prep_station(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
- 	station->sta.station_flags = ctx->station_flags;
- 	station->ctxid = ctx->ctxid;
+ void ath5k_hw_init_nfcal_hist(struct ath5k_hw *ah)
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+index 3d2c867..0a7d136 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -1498,25 +1498,25 @@ static void ar5008_hw_do_getnf(struct ath_hw *ah,
+ 	int16_t nf;
  
-+	if (sta) {
-+		struct iwl_station_priv_common *sta_priv;
-+
-+		sta_priv = (void *)sta->drv_priv;
-+		sta_priv->ctx = ctx;
-+	}
-+
- 	/*
- 	 * OK to call unconditionally, since local stations (IBSS BSSID
--	 * STA and broadcast STA) pass in a NULL ht_info, and mac80211
-+	 * STA and broadcast STA) pass in a NULL sta, and mac80211
- 	 * doesn't allow HT IBSS.
+ 	nf = MS(REG_READ(ah, AR_PHY_CCA), AR_PHY_MINCCA_PWR);
+-	nfarray[0] = sign_extend(nf, 9);
++	nfarray[0] = sign_extend32(nf, 8);
+ 
+ 	nf = MS(REG_READ(ah, AR_PHY_CH1_CCA), AR_PHY_CH1_MINCCA_PWR);
+-	nfarray[1] = sign_extend(nf, 9);
++	nfarray[1] = sign_extend32(nf, 8);
+ 
+ 	nf = MS(REG_READ(ah, AR_PHY_CH2_CCA), AR_PHY_CH2_MINCCA_PWR);
+-	nfarray[2] = sign_extend(nf, 9);
++	nfarray[2] = sign_extend32(nf, 8);
+ 
+ 	if (!IS_CHAN_HT40(ah->curchan))
+ 		return;
+ 
+ 	nf = MS(REG_READ(ah, AR_PHY_EXT_CCA), AR_PHY_EXT_MINCCA_PWR);
+-	nfarray[3] = sign_extend(nf, 9);
++	nfarray[3] = sign_extend32(nf, 8);
+ 
+ 	nf = MS(REG_READ(ah, AR_PHY_CH1_EXT_CCA), AR_PHY_CH1_EXT_MINCCA_PWR);
+-	nfarray[4] = sign_extend(nf, 9);
++	nfarray[4] = sign_extend32(nf, 8);
+ 
+ 	nf = MS(REG_READ(ah, AR_PHY_CH2_EXT_CCA), AR_PHY_CH2_EXT_MINCCA_PWR);
+-	nfarray[5] = sign_extend(nf, 9);
++	nfarray[5] = sign_extend32(nf, 8);
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
+index adbf031..4b99c33 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
+@@ -474,21 +474,21 @@ static void ar9002_hw_do_getnf(struct ath_hw *ah,
+ 	int16_t nf;
+ 
+ 	nf = MS(REG_READ(ah, AR_PHY_CCA), AR9280_PHY_MINCCA_PWR);
+-	nfarray[0] = sign_extend(nf, 9);
++	nfarray[0] = sign_extend32(nf, 8);
+ 
+ 	nf = MS(REG_READ(ah, AR_PHY_EXT_CCA), AR9280_PHY_EXT_MINCCA_PWR);
+ 	if (IS_CHAN_HT40(ah->curchan))
+-		nfarray[3] = sign_extend(nf, 9);
++		nfarray[3] = sign_extend32(nf, 8);
+ 
+ 	if (AR_SREV_9285(ah) || AR_SREV_9271(ah))
+ 		return;
+ 
+ 	nf = MS(REG_READ(ah, AR_PHY_CH1_CCA), AR9280_PHY_CH1_MINCCA_PWR);
+-	nfarray[1] = sign_extend(nf, 9);
++	nfarray[1] = sign_extend32(nf, 8);
+ 
+ 	nf = MS(REG_READ(ah, AR_PHY_CH1_EXT_CCA), AR9280_PHY_CH1_EXT_MINCCA_PWR);
+ 	if (IS_CHAN_HT40(ah->curchan))
+-		nfarray[4] = sign_extend(nf, 9);
++		nfarray[4] = sign_extend32(nf, 8);
+ }
+ 
+ static void ar9002_hw_set_nf_limits(struct ath_hw *ah)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index a491854..e52634e 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -1025,25 +1025,25 @@ static void ar9003_hw_do_getnf(struct ath_hw *ah,
+ 	int16_t nf;
+ 
+ 	nf = MS(REG_READ(ah, AR_PHY_CCA_0), AR_PHY_MINCCA_PWR);
+-	nfarray[0] = sign_extend(nf, 9);
++	nfarray[0] = sign_extend32(nf, 8);
+ 
+ 	nf = MS(REG_READ(ah, AR_PHY_CCA_1), AR_PHY_CH1_MINCCA_PWR);
+-	nfarray[1] = sign_extend(nf, 9);
++	nfarray[1] = sign_extend32(nf, 8);
+ 
+ 	nf = MS(REG_READ(ah, AR_PHY_CCA_2), AR_PHY_CH2_MINCCA_PWR);
+-	nfarray[2] = sign_extend(nf, 9);
++	nfarray[2] = sign_extend32(nf, 8);
+ 
+ 	if (!IS_CHAN_HT40(ah->curchan))
+ 		return;
+ 
+ 	nf = MS(REG_READ(ah, AR_PHY_EXT_CCA), AR_PHY_EXT_MINCCA_PWR);
+-	nfarray[3] = sign_extend(nf, 9);
++	nfarray[3] = sign_extend32(nf, 8);
+ 
+ 	nf = MS(REG_READ(ah, AR_PHY_EXT_CCA_1), AR_PHY_CH1_EXT_MINCCA_PWR);
+-	nfarray[4] = sign_extend(nf, 9);
++	nfarray[4] = sign_extend32(nf, 8);
+ 
+ 	nf = MS(REG_READ(ah, AR_PHY_EXT_CCA_2), AR_PHY_CH2_EXT_MINCCA_PWR);
+-	nfarray[5] = sign_extend(nf, 9);
++	nfarray[5] = sign_extend32(nf, 8);
+ }
+ 
+ static void ar9003_hw_set_nf_limits(struct ath_hw *ah)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 399f7c1..5dad02f 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -858,12 +858,6 @@ static inline struct ath_hw_ops *ath9k_hw_ops(struct ath_hw *ah)
+ 	return &ah->ops;
+ }
+ 
+-static inline int sign_extend(int val, const int nbits)
+-{
+-	int order = BIT(nbits-1);
+-	return (val ^ order) - order;
+-}
+-
+ /* Initialization, Detach, Reset */
+ const char *ath9k_hw_probe(u16 vendorid, u16 devid);
+ void ath9k_hw_deinit(struct ath_hw *ah);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-4965.c b/drivers/net/wireless/iwlwifi/iwl-4965.c
+index d92b729..92ded39 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-4965.c
++++ b/drivers/net/wireless/iwlwifi/iwl-4965.c
+@@ -1551,22 +1551,6 @@ static void iwl4965_txq_update_byte_cnt_tbl(struct iwl_priv *priv,
+ }
+ 
+ /**
+- * sign_extend - Sign extend a value using specified bit as sign-bit
+- *
+- * Example: sign_extend(9, 3) would return -7 as bit3 of 1001b is 1
+- * and bit0..2 is 001b which when sign extended to 1111111111111001b is -7.
+- *
+- * @param oper value to sign extend
+- * @param index 0 based bit index (0<=index<32) to sign bit
+- */
+-static s32 sign_extend(u32 oper, int index)
+-{
+-	u8 shift = 31 - index;
+-
+-	return (s32)(oper << shift) >> shift;
+-}
+-
+-/**
+  * iwl4965_hw_get_temperature - return the calibrated temperature (in Kelvin)
+  * @statistics: Provides the temperature reading from the uCode
+  *
+@@ -1603,9 +1587,9 @@ static int iwl4965_hw_get_temperature(struct iwl_priv *priv)
+ 	 * "initialize" ALIVE response.
  	 */
--	iwl_set_ht_add_station(priv, sta_id, ht_info);
-+	iwl_set_ht_add_station(priv, sta_id, sta);
+ 	if (!test_bit(STATUS_TEMPERATURE, &priv->status))
+-		vt = sign_extend(R4, 23);
++		vt = sign_extend32(R4, 23);
+ 	else
+-		vt = sign_extend(le32_to_cpu(priv->_agn.statistics.
++		vt = sign_extend32(le32_to_cpu(priv->_agn.statistics.
+ 				 general.common.temperature), 23);
  
- 	/* 3945 only */
- 	rate = (priv->band == IEEE80211_BAND_5GHZ) ?
-@@ -316,7 +324,7 @@ static u8 iwl_prep_station(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
-  */
- int iwl_add_station_common(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
- 			   const u8 *addr, bool is_ap,
--			   struct ieee80211_sta_ht_cap *ht_info, u8 *sta_id_r)
-+			   struct ieee80211_sta *sta, u8 *sta_id_r)
+ 	IWL_DEBUG_TEMP(priv, "Calib values R[1-3]: %d %d %d R4: %d\n", R1, R2, R3, vt);
+diff --git a/include/linux/bitops.h b/include/linux/bitops.h
+index fc68053..a68246e 100644
+--- a/include/linux/bitops.h
++++ b/include/linux/bitops.h
+@@ -109,6 +109,17 @@ static inline __u8 ror8(__u8 word, unsigned int shift)
+ 	return (word >> shift) | (word << (8 - shift));
+ }
+ 
++/**
++ * sign_extend32 - sign extend a 32-bit value using specified bit as sign-bit
++ * @value: value to sign extend
++ * @index: 0 based bit index (0<=index<32) to sign bit
++ */
++static inline __s32 sign_extend32(__u32 value, int index)
++{
++	__u8 shift = 31 - index;
++	return (__s32)(value << shift) >> shift;
++}
++
+ static inline unsigned fls_long(unsigned long l)
  {
- 	unsigned long flags_spin;
- 	int ret = 0;
-@@ -325,7 +333,7 @@ int iwl_add_station_common(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
- 
- 	*sta_id_r = 0;
- 	spin_lock_irqsave(&priv->sta_lock, flags_spin);
--	sta_id = iwl_prep_station(priv, ctx, addr, is_ap, ht_info);
-+	sta_id = iwl_prep_station(priv, ctx, addr, is_ap, sta);
- 	if (sta_id == IWL_INVALID_STATION) {
- 		IWL_ERR(priv, "Unable to prepare station %pM for addition\n",
- 			addr);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.h b/drivers/net/wireless/iwlwifi/iwl-sta.h
-index 6ab5587..56bad3f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sta.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-sta.h
-@@ -74,7 +74,7 @@ int iwl_add_bssid_station(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
- 			  const u8 *addr, bool init_rs, u8 *sta_id_r);
- int iwl_add_station_common(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
- 			   const u8 *addr, bool is_ap,
--			   struct ieee80211_sta_ht_cap *ht_info, u8 *sta_id_r);
-+			   struct ieee80211_sta *sta, u8 *sta_id_r);
- int iwl_remove_station(struct iwl_priv *priv, const u8 sta_id,
- 		       const u8 *addr);
- int iwl_mac_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index be48f79..c048c1d 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -3390,7 +3390,7 @@ static int iwl3945_mac_sta_add(struct ieee80211_hw *hw,
- 
- 
- 	ret = iwl_add_station_common(priv, &priv->contexts[IWL_RXON_CTX_BSS],
--				     sta->addr, is_ap, &sta->ht_cap, &sta_id);
-+				     sta->addr, is_ap, sta, &sta_id);
- 	if (ret) {
- 		IWL_ERR(priv, "Unable to add station %pM (%d)\n",
- 			sta->addr, ret);
+ 	if (sizeof(l) == 4)
 -- 
-1.7.0.4
+1.6.4.4
 
