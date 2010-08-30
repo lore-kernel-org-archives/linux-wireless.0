@@ -1,72 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:42178 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752513Ab0HGPwD convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60206 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756394Ab0H3RuX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Aug 2010 11:52:03 -0400
-Received: by iwn33 with SMTP id 33so2306545iwn.19
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Aug 2010 08:52:02 -0700 (PDT)
-MIME-Version: 1.0
-Date: Sat, 7 Aug 2010 17:52:02 +0200
-Message-ID: <AANLkTim4ccC7pQrW0LymdZ_cAiaBhLW3VofsFj9CcpfP@mail.gmail.com>
-Subject: ath9k: association lost on ap side only
-From: =?ISO-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>
-To: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 30 Aug 2010 13:50:23 -0400
+Subject: Re: [PATCH] wireless: fix 64K kernel heap content leak via ioctl
+From: Johannes Berg <johannes@sipsolutions.net>
+To: jt@hpl.hp.com
+Cc: Kees Cook <kees.cook@canonical.com>, linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+In-Reply-To: <20100830174018.GA3639@bougret.hpl.hp.com>
+References: <20100827210240.GC4703@outflux.net>
+	 <20100827212254.GB32275@bougret.hpl.hp.com>
+	 <1283158058.3691.10.camel@jlt3.sipsolutions.net>
+	 <1283158704.3691.11.camel@jlt3.sipsolutions.net>
+	 <1283162341.3691.45.camel@jlt3.sipsolutions.net>
+	 <20100830174018.GA3639@bougret.hpl.hp.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 30 Aug 2010 19:50:02 +0200
+Message-ID: <1283190602.3694.3.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+On Mon, 2010-08-30 at 10:40 -0700, Jean Tourrilhes wrote:
 
-I'm trying out compat-wireless-2010-07-29 with openwrt/trunk@22474
-patches on AR913x and quite often (a few times a day) run into a
-problem where my laptop thinks it's associated but the router thinks
-it's not.
+>         Ha ! I see. It would be for regular iwpoint queries, not for
+> extended NOMAX queries (scan is a extended NOMAX query).
 
-Basically, on the laptop side I am still associated but on the access
-point iw says there are no stas:
+Yeah, that took a while to sink in here too ..
 
-root@OpenWrt:/sys/kernel/debug/ieee80211/phy0# iw dev wlan0 station dump
-root@OpenWrt:/sys/kernel/debug/ieee80211/phy0#
+> 	I actually like your patch better than mine, it's closer to
+> the original intent of the API. Go for it ;-)
 
-The log looks like this:
+> 	Thanks a lot for the second pair of eyes.
 
-Aug  7 14:53:24 OpenWrt daemon.info dnsmasq-dhcp[1601]:
-DHCPREQUEST(br-lan) 192.168.1.241 00:17:f2:51:b2:2d
-Aug  7 14:53:24 OpenWrt daemon.info dnsmasq-dhcp[1601]:
-DHCPACK(br-lan) 192.168.1.241 00:17:f2:51:b2:2d
-Aug  7 14:56:19 OpenWrt daemon.info hostapd: wlan0: STA
-00:17:f2:51:b2:2d WPA: group key handshake completed (RSN)
-Aug  7 14:56:19 OpenWrt daemon.info hostapd: wlan0: STA
-00:17:f2:51:b2:2d WPA: received EAPOL-Key 2/2 Group with unexpected
-replay counter
-Aug  7 15:06:19 OpenWrt daemon.info hostapd: wlan0: STA
-00:17:f2:51:b2:2d WPA: group key handshake completed (RSN)
-Aug  7 15:06:19 OpenWrt daemon.info hostapd: wlan0: STA
-00:17:f2:51:b2:2d WPA: received EAPOL-Key 2/2 Group with unexpected
-replay counter
-Aug  7 15:16:20 OpenWrt daemon.info hostapd: wlan0: STA
-00:17:f2:51:b2:2d WPA: group key handshake completed (RSN)
-Aug  7 15:16:20 OpenWrt daemon.info hostapd: wlan0: STA
-00:17:f2:51:b2:2d WPA: received EAPOL-Key 2/2 Group with unexpected
-replay counter
-Aug  7 15:16:20 OpenWrt daemon.info hostapd: wlan0: STA
-00:17:f2:51:b2:2d WPA: received EAPOL-Key 2/2 Group with unexpected
-replay counter
-Aug  7 15:26:22 OpenWrt daemon.info hostapd: wlan0: STA
-00:17:f2:51:b2:2d IEEE 802.11: deauthenticated due to local deauth
-request
-Aug  7 15:30:14 OpenWrt user.debug kernel: ath: DMA failed to stop in
-10 ms AR_CR=0x00000024 AR_DIAG_SW=0x40000020
-Aug  7 15:30:14 OpenWrt user.debug kernel: ath: DMA failed to stop in
-10 ms AR_CR=0x00000024 AR_DIAG_SW=0x42000020
+And thank you for looking over my patch. I guess the real bug is still
+in cfg80211 there.
 
-Those "unexpected replay counters" messages are quite common. What can
-cause these? A lost ack and retransmission?
+Initially I considered setting iwp->length to zero, rather than
+max_tokens. What do you think about doing that? The reason I decided to
+use max_tokens was that somebody might look at the length value to know
+how much to copy (which is OK only in NOMAX queries); but that would be
+a more severe driver bug ... can't really make up my mind. We just copy
+back zeroes anyway.
 
-Apart from that I guess there are two questions here: (1) why was the
-association lost on the ap side? and (2) why is there no indication
-from the router that it does not expect data frames in this state?
+johannes
 
-/Björn
