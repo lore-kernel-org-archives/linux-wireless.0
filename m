@@ -1,168 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw-sa02.nokia.com ([147.243.1.48]:26270 "EHLO
-	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753946Ab0H0L1O (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50496 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751662Ab0H3Ir4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Aug 2010 07:27:14 -0400
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, johannes.berg@intel.com
-Subject: [PATCHv2 4/4] mac80211: allow changing port control protocol
-Date: Fri, 27 Aug 2010 14:26:54 +0300
-Message-Id: <1282908414-26783-5-git-send-email-juuso.oikarinen@nokia.com>
-In-Reply-To: <1282908414-26783-1-git-send-email-juuso.oikarinen@nokia.com>
-References: <1282908414-26783-1-git-send-email-juuso.oikarinen@nokia.com>
+	Mon, 30 Aug 2010 04:47:56 -0400
+Subject: Re: [PATCH] wireless: fix 64K kernel heap content leak via ioctl
+From: Johannes Berg <johannes@sipsolutions.net>
+To: jt@hpl.hp.com
+Cc: Kees Cook <kees.cook@canonical.com>, linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	Joe Perches <joe@perches.com>, Tejun Heo <tj@kernel.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+In-Reply-To: <20100827212254.GB32275@bougret.hpl.hp.com>
+References: <20100827210240.GC4703@outflux.net>
+	 <20100827212254.GB32275@bougret.hpl.hp.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 30 Aug 2010 10:47:38 +0200
+Message-ID: <1283158058.3691.10.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, 2010-08-27 at 14:22 -0700, Jean Tourrilhes wrote:
 
-Some vendor specified mechanisms for 802.1X-style
-functionality use a different protocol than EAP
-(even if EAP is vendor-extensible). Support this
-in mac80211 via the cfg80211 API for it.
+> 	Would you mind validating the following patch ? I've just
+> verified that it compiles and I believe it does what you are asking in
+> a much more predictable way.
+> 	Regards,
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+
+> @@ -800,9 +800,12 @@ static int ioctl_standard_iw_point(struc
+>                         goto out;
+>                 }
+>  
+> -               if (copy_to_user(iwp->pointer, extra,
+> -                                iwp->length *
+> -                                descr->token_size)) {
+> +               /* Verify how much we should return. Some driver
+> +                * may abuse iwp->length... */
+> +               if((iwp->length * descr->token_size) < extra_size)
+> +                       extra_size = iwp->length * descr->token_size;
+> +
+> +               if (copy_to_user(iwp->pointer, extra, extra_size)) {
+>                         err = -EFAULT;
+>                         goto out;
+
+Based on the code _before_ this hunk, I believe this patch to be wrong
+(the goto out matches):
+
+        /* If we have something to return to the user */
+        if (!err && IW_IS_GET(cmd)) {
+                /* Check if there is enough buffer up there */
+                if (user_length < iwp->length) {
+                        err = -E2BIG;
+                        goto out;
+                }
+
+Thus, apparently drivers were intended to be allowed to return more
+information than userspace had allocated space for (which also matches
+the initial extra_size calculation in this function), so your comment is
+wrong, and your check is also wrong because you actually put the burden
+on the driver, contrary to the apparent intention of this code.
+
+I believe the below patch is a much better fix as it allows the -E2BIG
+code path to be invoked which is more informative to users than
+truncated information (which, in your code, may even be truncated in the
+middle of a token!!)
+
+johannes
+
 ---
-v2: Add explicit setting to false for sdata->control_port_protocol in
-    ieee80211_setup_sdata.
+ net/wireless/wext-core.c |   23 ++++++++++-------------
+ 1 file changed, 10 insertions(+), 13 deletions(-)
 
- net/mac80211/ieee80211_i.h |    2 ++
- net/mac80211/iface.c       |    3 +++
- net/mac80211/main.c        |    3 +++
- net/mac80211/mlme.c        |    3 +++
- net/mac80211/rx.c          |    2 +-
- net/mac80211/tx.c          |   20 +++++++++++++++++---
- 6 files changed, 29 insertions(+), 4 deletions(-)
+--- wireless-testing.orig/net/wireless/wext-core.c	2010-08-30 10:35:33.000000000 +0200
++++ wireless-testing/net/wireless/wext-core.c	2010-08-30 10:46:45.000000000 +0200
+@@ -738,26 +738,23 @@ static int ioctl_standard_iw_point(struc
+ 		/* Save user space buffer size for checking */
+ 		user_length = iwp->length;
+ 
+-		/* Don't check if user_length > max to allow forward
+-		 * compatibility. The test user_length < min is
+-		 * implied by the test at the end.
+-		 */
+-
+ 		/* Support for very large requests */
+-		if ((descr->flags & IW_DESCR_FLAG_NOMAX) &&
+-		    (user_length > descr->max_tokens)) {
++		if (descr->flags & IW_DESCR_FLAG_NOMAX) {
+ 			/* Allow userspace to GET more than max so
+ 			 * we can support any size GET requests.
+-			 * There is still a limit : -ENOMEM.
+-			 */
+-			extra_size = user_length * descr->token_size;
+-
+-			/* Note : user_length is originally a __u16,
++			 * There is still a limit: 64k records of
++			 * token_size (since a u16 is used).
++			 *
++			 * Note: user_length is originally a u16,
+ 			 * and token_size is controlled by us,
+ 			 * so extra_size won't get negative and
+ 			 * won't overflow...
+ 			 */
+-		}
++			if (user_length > descr->max_tokens) {
++				extra_size = user_length * descr->token_size;
++		} else
++			user_length = min_t(int, user_length,
++						 descr->max_tokens);
+ 	}
+ 
+ 	/* kzalloc() ensures NULL-termination for essid_compat. */
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 0262dfe..d7e7989 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -515,6 +515,8 @@ struct ieee80211_sub_if_data {
- 	struct ieee80211_key *default_mgmt_key;
- 
- 	u16 sequence_number;
-+	__be16 control_port_protocol;
-+	bool control_port_no_encrypt;
- 
- 	struct work_struct work;
- 	struct sk_buff_head skb_queue;
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 9369710..810e676 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -855,6 +855,9 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
- 	sdata->dev->netdev_ops = &ieee80211_dataif_ops;
- 	sdata->wdev.iftype = type;
- 
-+	sdata->control_port_protocol = cpu_to_be16(ETH_P_PAE);
-+	sdata->control_port_no_encrypt = false;
-+
- 	/* only monitor differs */
- 	sdata->dev->type = ARPHRD_ETHER;
- 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 15f0e96..964c267 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -627,6 +627,9 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	local->hw.wiphy->interface_modes &= ~BIT(NL80211_IFTYPE_MESH_POINT);
- #endif
- 
-+	/* mac80211 supports control port protocol changing */
-+	local->hw.wiphy->flags |= WIPHY_FLAG_CONTROL_PORT_PROTOCOL;
-+
- 	if (local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
- 		local->hw.wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
- 	else if (local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 5282ac1..0cb4296 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2262,6 +2262,9 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 	else
- 		ifmgd->flags &= ~IEEE80211_STA_CONTROL_PORT;
- 
-+	sdata->control_port_protocol = req->crypto.control_port_ethertype;
-+	sdata->control_port_no_encrypt = req->crypto.control_port_no_encrypt;
-+
- 	ieee80211_add_work(wk);
- 	return 0;
- }
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 6e5fb16..ac205a3 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1527,7 +1527,7 @@ static bool ieee80211_frame_allowed(struct ieee80211_rx_data *rx, __le16 fc)
- 	 * Allow EAPOL frames to us/the PAE group address regardless
- 	 * of whether the frame was encrypted or not.
- 	 */
--	if (ehdr->h_proto == htons(ETH_P_PAE) &&
-+	if (ehdr->h_proto == rx->sdata->control_port_protocol &&
- 	    (compare_ether_addr(ehdr->h_dest, rx->sdata->vif.addr) == 0 ||
- 	     compare_ether_addr(ehdr->h_dest, pae_group_addr) == 0))
- 		return true;
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 31a8903..92764bb 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -509,6 +509,18 @@ ieee80211_tx_h_ps_buf(struct ieee80211_tx_data *tx)
- }
- 
- static ieee80211_tx_result debug_noinline
-+ieee80211_tx_h_check_control_port_protocol(struct ieee80211_tx_data *tx)
-+{
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
-+
-+	if (unlikely(tx->sdata->control_port_protocol == tx->skb->protocol &&
-+		     tx->sdata->control_port_no_encrypt))
-+		info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
-+
-+	return TX_CONTINUE;
-+}
-+
-+static ieee80211_tx_result debug_noinline
- ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
- {
- 	struct ieee80211_key *key = NULL;
-@@ -527,7 +539,7 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
- 	else if ((key = rcu_dereference(tx->sdata->default_key)))
- 		tx->key = key;
- 	else if (tx->sdata->drop_unencrypted &&
--		 (tx->skb->protocol != cpu_to_be16(ETH_P_PAE)) &&
-+		 (tx->skb->protocol != tx->sdata->control_port_protocol) &&
- 		 !(info->flags & IEEE80211_TX_CTL_INJECTED) &&
- 		 (!ieee80211_is_robust_mgmt_frame(hdr) ||
- 		  (ieee80211_is_action(hdr->frame_control) &&
-@@ -1349,6 +1361,7 @@ static int invoke_tx_handlers(struct ieee80211_tx_data *tx)
- 	CALL_TXH(ieee80211_tx_h_dynamic_ps);
- 	CALL_TXH(ieee80211_tx_h_check_assoc);
- 	CALL_TXH(ieee80211_tx_h_ps_buf);
-+	CALL_TXH(ieee80211_tx_h_check_control_port_protocol);
- 	CALL_TXH(ieee80211_tx_h_select_key);
- 	if (!(tx->local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL))
- 		CALL_TXH(ieee80211_tx_h_rate_ctrl);
-@@ -1826,7 +1839,8 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- #endif
- 	case NL80211_IFTYPE_STATION:
- 		memcpy(hdr.addr1, sdata->u.mgd.bssid, ETH_ALEN);
--		if (sdata->u.mgd.use_4addr && ethertype != ETH_P_PAE) {
-+		if (sdata->u.mgd.use_4addr &&
-+		    cpu_to_be16(ethertype) != sdata->control_port_protocol) {
- 			fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS);
- 			/* RA TA DA SA */
- 			memcpy(hdr.addr2, sdata->vif.addr, ETH_ALEN);
-@@ -1879,7 +1893,7 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 	if (!ieee80211_vif_is_mesh(&sdata->vif) &&
- 		unlikely(!is_multicast_ether_addr(hdr.addr1) &&
- 		      !(sta_flags & WLAN_STA_AUTHORIZED) &&
--		      !(ethertype == ETH_P_PAE &&
-+		      !(cpu_to_be16(ethertype) == sdata->control_port_protocol &&
- 		       compare_ether_addr(sdata->vif.addr,
- 					  skb->data + ETH_ALEN) == 0))) {
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
--- 
-1.6.3.3
 
