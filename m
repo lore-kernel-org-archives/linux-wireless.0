@@ -1,41 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1191 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751153Ab0HSTYK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Aug 2010 15:24:10 -0400
-Subject: [RFC patch] include/net/cfg80211.h: wiphy_<level> messages use
- dev_printk
-From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:52685 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753598Ab0H3OmB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Aug 2010 10:42:01 -0400
+Subject: Re: mac80211 using different tx queue for frames with same TID and
+ RA
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Krishna Kumar <krkumar2@in.ibm.com>, netdev@vger.kernel.org
+In-Reply-To: <201008301634.10122.helmut.schaa@googlemail.com>
+References: <201008301601.12971.helmut.schaa@googlemail.com>
+	 <1283177480.3691.66.camel@jlt3.sipsolutions.net>
+	 <201008301634.10122.helmut.schaa@googlemail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 19 Aug 2010 12:24:08 -0700
-Message-ID: <1282245848.6724.261.camel@Joe-Laptop>
+Date: Mon, 30 Aug 2010 16:41:47 +0200
+Message-ID: <1283179307.3691.73.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding device to the wiphy logging messages could be useful.
+On Mon, 2010-08-30 at 16:34 +0200, Helmut Schaa wrote:
+> Am Monday 30 August 2010 schrieb Johannes Berg:
+> > On Mon, 2010-08-30 at 16:01 +0200, Helmut Schaa wrote:
+> > 
+> > > while debugging an issue in rt2x00 I've discovered that in some cases frames
+> > > with the same TID and RA end up in different tx queues (which causes problems
+> > > in rt2x00 when using aggregation).
+> > > 
+> > > Is this behavior expected and we need to handle that case in rt2x00 or is it
+> > > more likely a bug? At least I thought the select_queue implementation in
+> > > mac80211 was meant to always pick the same tx queue for skbs with the same
+> > > priority and hence it shouldn't happen that frames with the same TID are
+> > > queued into different tx queues.
+> > 
+> > Indeed, that seems like a bug. I don't see how this can happen though,
+> > since the code _appears_ to not use the sk_tx_queue_mapping when an
+> > ndo_select_queue method is present.
+> 
+> Hmm, this issue seems to only happen when the wifi interface (AP mode)
+> is part of a bridge and the frame is tx'ed through the bridge.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- include/net/cfg80211.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Ok, I guess in that case it may actually have a socket TX queue mapping
+already? Seems bogus to use it though.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 6a98b1b..61bc007 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2439,7 +2439,7 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
- /* wiphy_printk helpers, similar to dev_printk */
- 
- #define wiphy_printk(level, wiphy, format, args...)		\
--	printk(level "%s: " format, wiphy_name(wiphy), ##args)
-+	dev_printk(level, &wiphy->dev, "%s: " format, wiphy_name(wiphy), ##args)
- #define wiphy_emerg(wiphy, format, args...)			\
- 	wiphy_printk(KERN_EMERG, wiphy, format, ##args)
- #define wiphy_alert(wiphy, format, args...)			\
-
+johannes
 
