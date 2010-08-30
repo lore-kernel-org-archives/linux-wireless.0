@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-1.cc.uic.edu ([128.248.155.182]:48709 "EHLO
-	mail-1.cc.uic.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933145Ab0HEQus (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:42659 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751421Ab0H3XVF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Aug 2010 12:50:48 -0400
-Message-ID: <4C5AEBE2.5060907@uic.edu>
-Date: Thu, 05 Aug 2010 11:50:42 -0500
-From: ABM Musa <amusa2@uic.edu>
+	Mon, 30 Aug 2010 19:21:05 -0400
+Received: by fxm13 with SMTP id 13so3633943fxm.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Aug 2010 16:21:03 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: [RFT 6/6] carl9170usb: Makefile, Kconfig files and MAINTAINERS
+Date: Tue, 31 Aug 2010 01:20:59 +0200
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
+References: <201008302242.19395.chunkeey@googlemail.com> <AANLkTinXJN7q3CXLVxNP=S2fGQHQJxLEmwvbAV17+Q_i@mail.gmail.com>
+In-Reply-To: <AANLkTinXJN7q3CXLVxNP=S2fGQHQJxLEmwvbAV17+Q_i@mail.gmail.com>
 MIME-Version: 1.0
-To: Daniel Haid <d.haid@gogi.tv>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Capturing packets with bad FCS in monitor mode
-References: <201008051614.11546.d.haid@gogi.tv> <201008051819.55252.d.haid@gogi.tv> <4C5AE723.5070708@uic.edu> <201008051840.18914.d.haid@gogi.tv>
-In-Reply-To: <201008051840.18914.d.haid@gogi.tv>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201008310121.00085.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/05/2010 11:40 AM, Daniel Haid wrote:
->> I can get packets with crc error using this method and I get lot of
->> corrupted packets. I am using ath9k with openwrt for router station
->> pro+ubiquity sr-71A card and tplink 1043nd.
->>      
-> I am using an ubiquity sr-71X card, and still not one corrupted packet.
->
-> I think I need to artificially create and transmit a corrupted packet. How
-> can I do that?
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->    
-I am not sure about how to create corrupted packets. Normally you should 
-get lot of corrupted packets from surrounding transmission. In my case, 
-monitor mode hangs sometime and I don't get any packets. Then if I 
-delete the interface and create a new interface using the iw command I 
-gave earlier, I get packets with crc error. You can also modify already 
-created interface using
+On Tuesday 31 August 2010 00:45:42 Julian Calaby wrote:
+> On Tue, Aug 31, 2010 at 06:42, Christian Lamparter
+> <chunkeey@googlemail.com> wrote:
+> > diff --git a/MAINTAINERS b/MAINTAINERS
+> > index 63e441b..1f10089 100644
+> > --- a/MAINTAINERS
+> > +++ b/MAINTAINERS
+> > @@ -1119,6 +1119,7 @@ L:        linux-wireless@vger.kernel.org
+> >  W:     http://wireless.kernel.org/en/users/Drivers/ar9170
+> >  S:     Maintained
+> >  F:     drivers/net/wireless/ath/ar9170/
+> > +F:     drivers/net/wireless/ath/carl9170/
+> >
+> >  ATK0110 HWMON DRIVER
+> >  M:     Luca Tettamanti <kronos.it@gmail.com>
+> 
+> As carl9170 has a separate website, would it make sense for it to also
+> have a separate MAINTAINERS entry?
+On one hand the driver is based on ar9170 and uses the same device,
+but having an separate entry might be favorable when ar9170usb is
+dropped...
 
-iw wlan0 set monitor flag fcsfail
+> Also, patch 1/6 is signed off by root, you may want to fix that.
+Thanks!
 
-Musa
+---
 
+By the way:
+
+ALL COMPAT-WIRELESS USERS WITH OLDER KERNELS (older than 2.6.36-rc1, 2.6.35.2,
+etc...) have to apply this patch:
+> https://patchwork.kernel.org/patch/118946/
+(Or, suffer from panics.)
