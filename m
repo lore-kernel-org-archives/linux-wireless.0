@@ -1,36 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:58940 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753806Ab0HRPNF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Aug 2010 11:13:05 -0400
-To: Grazvydas Ignotas <notasas@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/4] wl1251: fix event handling mechanism
-References: <1282074415-6168-1-git-send-email-notasas@gmail.com>
-	<1282074415-6168-3-git-send-email-notasas@gmail.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Wed, 18 Aug 2010 18:13:04 +0300
-In-Reply-To: <1282074415-6168-3-git-send-email-notasas@gmail.com> (Grazvydas Ignotas's message of "Tue\, 17 Aug 2010 22\:46\:53 +0300")
-Message-ID: <8762z89cov.fsf@purkki.adurom.net>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:33375 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751676Ab0H3O3j (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Aug 2010 10:29:39 -0400
+Date: Mon, 30 Aug 2010 10:17:06 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linux-wireless@vger.kernel.org, amod.bodas@atheros.com
+Subject: Re: [RFC 2/3] mac80211: allow drivers to specify sw scan wait
+ constraints
+Message-ID: <20100830141705.GC30864@tuxdriver.com>
+References: <1282979590-31113-1-git-send-email-lrodriguez@atheros.com>
+ <1282979590-31113-3-git-send-email-lrodriguez@atheros.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1282979590-31113-3-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Grazvydas Ignotas <notasas@gmail.com> writes:
+On Sat, Aug 28, 2010 at 03:13:09AM -0400, Luis R. Rodriguez wrote:
 
-> In case both A and B events occured simultaneously, current code
-> would only process A and clear both interrupts. Make it process both
-> events instead.
->
-> Based on wl1271 patches by Juuso Oikarinen:
-> 1fd2794f36913992798184c464fe8f85753b13e0
-> 13f2dc52c69bcca074cd12d4806953b2af45c386
->
-> Signed-off-by: Grazvydas Ignotas <notasas@gmail.com>
+> diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+> index 14123dc..5025950 100644
+> --- a/net/mac80211/driver-ops.h
+> +++ b/net/mac80211/driver-ops.h
+> @@ -187,6 +187,22 @@ static inline void drv_sw_scan_start(struct ieee80211_local *local)
+>  	trace_drv_return_void(local);
+>  }
+>  
+> +static inline int drv_sw_scan_wait_constraints(struct ieee80211_local *local)
+> +{
+> +	bool wait_constraints = false;
+> +
+> +	might_sleep();
+> +
+> +	trace_drv_sw_scan_wait_constraints(local);
+> +	if (local->ops->sw_scan_start)
 
-Acked-by: Kalle Valo <kvalo@adurom.com>
+Are we checking the right member here?
+
+> +		wait_constraints =
+> +			local->ops->sw_scan_wait_constraints(&local->hw);
+> +	trace_drv_return_int(local, wait_constraints);
+> +
+> +	return wait_constraints;
+> +}
+> +
+> +
+>  static inline void drv_sw_scan_complete(struct ieee80211_local *local)
+>  {
+>  	might_sleep();
 
 -- 
-Kalle Valo
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
