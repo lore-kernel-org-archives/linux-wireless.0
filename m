@@ -1,43 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37132 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751834Ab0H3Tok (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:53433 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756913Ab0HaIBt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Aug 2010 15:44:40 -0400
-Date: Mon, 30 Aug 2010 15:37:02 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: cancel scan in ieee80211_restart_hw
-Message-ID: <20100830193701.GF30864@tuxdriver.com>
-References: <1283195671-4086-1-git-send-email-linville@tuxdriver.com>
- <1283195879.3694.15.camel@jlt3.sipsolutions.net>
+	Tue, 31 Aug 2010 04:01:49 -0400
+Received: by iwn5 with SMTP id 5so5653008iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Aug 2010 01:01:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1283195879.3694.15.camel@jlt3.sipsolutions.net>
+In-Reply-To: <4C7CB546.9070800@gmail.com>
+References: <4C7CB546.9070800@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 31 Aug 2010 01:01:24 -0700
+Message-ID: <AANLkTik=g0oTaLjg+WNQbPMTPXwCPiR0qUpwqBkQkcFx@mail.gmail.com>
+Subject: Re: compat-wireless-2.6.35-rc6 won't build
+To: =?UTF-8?Q?Carlos_Salvador_P=C3=A9rez_Salgado?=
+	<carlosalvatore@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 30, 2010 at 09:17:59PM +0200, Johannes Berg wrote:
-> On Mon, 2010-08-30 at 15:14 -0400, John W. Linville wrote:
-> > This function exists to clean-up after a hardware error or something
-> > similar.  The restart is accomplished using the same infrastructure used
-> > to resume after a suspend.  The suspend path cancels running scans, so
-> > it seems appropriate to do that here as well.
-> 
-> > -	/* use this reason, __ieee80211_resume will unblock it */
-> > +	ieee80211_scan_cancel(local);
-> > +
-> > +	/* use this reason, ieee80211_reconfig will unblock it */
-> 
-> Hmm, yes .. but how will this interact with hw scan?
+2010/8/31 Carlos Salvador Pérez Salgado <carlosalvatore@gmail.com>:
+> Greetings
+>
+> I hope you can point me into the right direction.
+>
+> I've already tried this patch
+> http://trac.pentoo.ch/browser/portage/trunk/net-wireless/compat-wireless/files/WEXT-EXT-nuts.patch
+>
+>
+> #make clean && ./scripts/driver-select atheros && make
+>
+> make[1]: Entering directory `/media/disk/temp/linux-2.6.35.4'
+> CLEAN /media/disk/temp/compat-wireless-2.6.35-rc6
+> CLEAN /media/disk/temp/compat-wireless-2.6.35-rc6/.tmp_versions
+> make[1]: Leaving directory `/media/disk/temp/linux-2.6.35.4'
+> Processing new driver-select request...
+> Backing up makefile: Makefile.bk
+> Backup exists: drivers/net/wireless/Makefile.bk
+> Backup exists: net/wireless/Makefile.bk
+> Backup exists: drivers/net/Makefile.bk
+> Backup exists: drivers/ssb/Makefile.bk
+> Backup exists: drivers/misc/eeprom/Makefile.bk
+> ./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
+> make -C /lib/modules/2.6.35.4-k8/build
+> M=/media/disk/temp/compat-wireless-2.6.35-rc6 modules
+> make[1]: Entering directory `/media/disk/temp/linux-2.6.35.4'
+> LD /media/disk/temp/compat-wireless-2.6.35-rc6/compat/built-in.o
+> CC [M] /media/disk/temp/compat-wireless-2.6.35-rc6/compat/main.o
+>
+> ...
+>
+> CC [M] /media/disk/temp/compat-wireless-2.6.35-rc6/net/wireless/core.o
+> /media/disk/temp/compat-wireless-2.6.35-rc6/net/wireless/core.c: In function
+> ‘cfg80211_netdev_notifier_call’:
+> /media/disk/temp/compat-wireless-2.6.35-rc6/net/wireless/core.c:703: error:
+> ‘struct net_device’ has no member named ‘wireless_handlers’
+> /media/disk/temp/compat-wireless-2.6.35-rc6/net/wireless/core.c:704: error:
+> ‘struct net_device’ has no member named ‘wireless_handlers’
+> make[3]: ***
+> [/media/disk/temp/compat-wireless-2.6.35-rc6/net/wireless/core.o] Error 1
+> make[2]: *** [/media/disk/temp/compat-wireless-2.6.35-rc6/net/wireless]
+> Error 2
+> make[1]: *** [_module_/media/disk/temp/compat-wireless-2.6.35-rc6] Error 2
+> make[1]: Leaving directory `/media/disk/temp/linux-2.6.35.4'
+> make: *** [modules] Error 2
+>
+> Thanks.
+>
+> I'm using ubuntu lucid, custom kernel 2.6.35.4 in an AMD Turion X2 64 bits.
+> Using CFLAGS="-march=k8 -msse3 -O3"
 
-You tell me -- I would think that calling ieee80211_restart_hw
-would effectively abandon all hope of a hardware scan completing.
-Should the caller call ieee80211_scan_completed(..., 1)?  Or should
-we do that (or equivalent) here too?
+Why are you building compat-wireless-2.6.35-rc6 when you already ahve
+2.6.35.4? You realize this is 100% pointless, right?
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+  Luis
