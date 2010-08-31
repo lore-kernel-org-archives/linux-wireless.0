@@ -1,34 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:34041 "EHLO
-	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752507Ab0HYTHg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Aug 2010 15:07:36 -0400
-Message-ID: <4C7569F4.7020605@bu3sch.de>
-Date: Wed, 25 Aug 2010 21:07:32 +0200
-From: =?ISO-8859-2?Q?Michael_B=FCsch?= <mb@bu3sch.de>
-MIME-Version: 1.0
-To: =?ISO-8859-2?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
-	=?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
-CC: wireless <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: [PATCH 2/2] b43: N-PHY: add sub calls of band width setting
-References: <1282506589-8220-1-git-send-email-zajec5@gmail.com>	<1282506589-8220-2-git-send-email-zajec5@gmail.com>	<AANLkTi=dXNY+Hf8--Yp4VjQBOMwDCFuQqNSi_OAsq=2X@mail.gmail.com>	<AANLkTimeKMR8MfoNKyr6i-JxA8bdqwMKriUbBOagw-z5@mail.gmail.com> <AANLkTi=ELhn1sFmpYn5a1-GcWqVBAeRGC6Kc7OBDLmZw@mail.gmail.com> (sfid-20100822_160429_404901_8D578590)
-In-Reply-To: <AANLkTi=ELhn1sFmpYn5a1-GcWqVBAeRGC6Kc7OBDLmZw@mail.gmail.com> (sfid-20100822_160429_404901_8D578590)
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60886 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754687Ab0HaR7n (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Aug 2010 13:59:43 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Miles Lane <miles.lane@gmail.com>, rjw@sisk.pl,
+	maciej.rutecki@gmail.com,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] wireless: register wiphy rfkill w/o holding cfg80211_mutex
+Date: Tue, 31 Aug 2010 13:57:16 -0400
+Message-Id: <1283277436-5922-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1283237477.3733.0.camel@jlt3.sipsolutions.net>
+References: <1283237477.3733.0.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/22/2010 10:04 PM, Gábor Stefanik wrote:
->>>> +#define B43_MMIO_CLKCTL                        0x1E0   /* clock control status */
+Otherwise lockdep complains...
 
-Is it possible that all this stuff is completely bogus?
-All this clock control stuff you are trying to implement really
-looks like the standard SSB clock control which is already
-implemented in SSB. The clock control and status register
-of the chipcommon is 0x1E0.
+https://bugzilla.kernel.org/show_bug.cgi?id=17311
 
-That "phy reset" stuff also mostly looks like you are reinventing the wheel
-for code that is already present.
+[ INFO: possible circular locking dependency detected ]
+2.6.36-rc2-git4 #12
+-------------------------------------------------------
+kworker/0:3/3630 is trying to acquire lock:
+ (rtnl_mutex){+.+.+.}, at: [<ffffffff813396c7>] rtnl_lock+0x12/0x14
 
+but task is already holding lock:
+ (rfkill_global_mutex){+.+.+.}, at: [<ffffffffa014b129>]
+rfkill_switch_all+0x24/0x49 [rfkill]
+
+which lock already depends on the new lock.
+
+the existing dependency chain (in reverse order) is:
+
+-> #2 (rfkill_global_mutex){+.+.+.}:
+       [<ffffffff81079ad7>] lock_acquire+0x120/0x15b
+       [<ffffffff813ae869>] __mutex_lock_common+0x54/0x52e
+       [<ffffffff813aede9>] mutex_lock_nested+0x34/0x39
+       [<ffffffffa014b4ab>] rfkill_register+0x2b/0x29c [rfkill]
+       [<ffffffffa0185ba0>] wiphy_register+0x1ae/0x270 [cfg80211]
+       [<ffffffffa0206f01>] ieee80211_register_hw+0x1b4/0x3cf [mac80211]
+       [<ffffffffa0292e98>] iwl_ucode_callback+0x9e9/0xae3 [iwlagn]
+       [<ffffffff812d3e9d>] request_firmware_work_func+0x54/0x6f
+       [<ffffffff81065d15>] kthread+0x8c/0x94
+       [<ffffffff8100ac24>] kernel_thread_helper+0x4/0x10
+
+-> #1 (cfg80211_mutex){+.+.+.}:
+       [<ffffffff81079ad7>] lock_acquire+0x120/0x15b
+       [<ffffffff813ae869>] __mutex_lock_common+0x54/0x52e
+       [<ffffffff813aede9>] mutex_lock_nested+0x34/0x39
+       [<ffffffffa018605e>] cfg80211_get_dev_from_ifindex+0x1b/0x7c [cfg80211]
+       [<ffffffffa0189f36>] cfg80211_wext_giwscan+0x58/0x990 [cfg80211]
+       [<ffffffff8139a3ce>] ioctl_standard_iw_point+0x1a8/0x272
+       [<ffffffff8139a529>] ioctl_standard_call+0x91/0xa7
+       [<ffffffff8139a687>] T.723+0xbd/0x12c
+       [<ffffffff8139a727>] wext_handle_ioctl+0x31/0x6d
+       [<ffffffff8133014e>] dev_ioctl+0x63d/0x67a
+       [<ffffffff8131afd9>] sock_ioctl+0x48/0x21d
+       [<ffffffff81102abd>] do_vfs_ioctl+0x4ba/0x509
+       [<ffffffff81102b5d>] sys_ioctl+0x51/0x74
+       [<ffffffff81009e02>] system_call_fastpath+0x16/0x1b
+
+-> #0 (rtnl_mutex){+.+.+.}:
+       [<ffffffff810796b0>] __lock_acquire+0xa93/0xd9a
+       [<ffffffff81079ad7>] lock_acquire+0x120/0x15b
+       [<ffffffff813ae869>] __mutex_lock_common+0x54/0x52e
+       [<ffffffff813aede9>] mutex_lock_nested+0x34/0x39
+       [<ffffffff813396c7>] rtnl_lock+0x12/0x14
+       [<ffffffffa0185cb5>] cfg80211_rfkill_set_block+0x1a/0x7b [cfg80211]
+       [<ffffffffa014aed0>] rfkill_set_block+0x80/0xd5 [rfkill]
+       [<ffffffffa014b07e>] __rfkill_switch_all+0x3f/0x6f [rfkill]
+       [<ffffffffa014b13d>] rfkill_switch_all+0x38/0x49 [rfkill]
+       [<ffffffffa014b821>] rfkill_op_handler+0x105/0x136 [rfkill]
+       [<ffffffff81060708>] process_one_work+0x248/0x403
+       [<ffffffff81062620>] worker_thread+0x139/0x214
+       [<ffffffff81065d15>] kthread+0x8c/0x94
+       [<ffffffff8100ac24>] kernel_thread_helper+0x4/0x10
+
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/wireless/core.c |   21 ++++++++++++---------
+ 1 files changed, 12 insertions(+), 9 deletions(-)
+
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 541e2ff..d6d046b 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -475,12 +475,10 @@ int wiphy_register(struct wiphy *wiphy)
+ 	mutex_lock(&cfg80211_mutex);
+ 
+ 	res = device_add(&rdev->wiphy.dev);
+-	if (res)
+-		goto out_unlock;
+-
+-	res = rfkill_register(rdev->rfkill);
+-	if (res)
+-		goto out_rm_dev;
++	if (res) {
++		mutex_unlock(&cfg80211_mutex);
++		return res;
++	}
+ 
+ 	/* set up regulatory info */
+ 	wiphy_update_regulatory(wiphy, NL80211_REGDOM_SET_BY_CORE);
+@@ -509,13 +507,18 @@ int wiphy_register(struct wiphy *wiphy)
+ 	cfg80211_debugfs_rdev_add(rdev);
+ 	mutex_unlock(&cfg80211_mutex);
+ 
++	/*
++	 * due to a locking dependency this has to be outside of the
++	 * cfg80211_mutex lock
++	 */
++	res = rfkill_register(rdev->rfkill);
++	if (res)
++		goto out_rm_dev;
++
+ 	return 0;
+ 
+ out_rm_dev:
+ 	device_del(&rdev->wiphy.dev);
+-
+-out_unlock:
+-	mutex_unlock(&cfg80211_mutex);
+ 	return res;
+ }
+ EXPORT_SYMBOL(wiphy_register);
 -- 
-Greetings Michael.
+1.7.2.2
+
