@@ -1,39 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44061 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751782Ab0H3OLZ (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:36853 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752330Ab0HaQ3G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Aug 2010 10:11:25 -0400
-Subject: Re: mac80211 using different tx queue for frames with same TID and
- RA
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Krishna Kumar <krkumar2@in.ibm.com>, netdev@vger.kernel.org
-In-Reply-To: <201008301601.12971.helmut.schaa@googlemail.com>
-References: <201008301601.12971.helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 30 Aug 2010 16:11:20 +0200
-Message-ID: <1283177480.3691.66.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 31 Aug 2010 12:29:06 -0400
+Received: by pzk9 with SMTP id 9so2503082pzk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Aug 2010 09:29:05 -0700 (PDT)
+Message-ID: <4C7D2DB6.2090609@gmail.com>
+Date: Tue, 31 Aug 2010 11:28:38 -0500
+From: =?UTF-8?B?Q2FybG9zIFNhbHZhZG9yIFDDqXJleiBTYWxnYWRv?=
+	<carlosalvatore@gmail.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: compat-wireless-2.6.35-rc6 won't build
+References: <4C7D17CF.6030501@gmail.com> <AANLkTik8PLwUfLU1OouBq6uPwSvaWBokAkSHcCzx97ms@mail.gmail.com>
+In-Reply-To: <AANLkTik8PLwUfLU1OouBq6uPwSvaWBokAkSHcCzx97ms@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-08-30 at 16:01 +0200, Helmut Schaa wrote:
+On 08/31/2010 10:32 AM, Luis R. Rodriguez wrote:
+> 2010/8/31 Carlos Salvador Pérez Salgado<carlosalvatore@gmail.com>:
+>    
+>> Do you have a better idea of how can I fix that? I'll really appreciate it.
+>>      
+> Yeah, try to compat-wireless-2.6.36-rc2 ...
+>
+>    Luis
+>
+>    
+Nope... the same error...
 
-> while debugging an issue in rt2x00 I've discovered that in some cases frames
-> with the same TID and RA end up in different tx queues (which causes problems
-> in rt2x00 when using aggregation).
-> 
-> Is this behavior expected and we need to handle that case in rt2x00 or is it
-> more likely a bug? At least I thought the select_queue implementation in
-> mac80211 was meant to always pick the same tx queue for skbs with the same
-> priority and hence it shouldn't happen that frames with the same TID are
-> queued into different tx queues.
 
-Indeed, that seems like a bug. I don't see how this can happen though,
-since the code _appears_ to not use the sk_tx_queue_mapping when an
-ndo_select_queue method is present.
+   LD      
+/media/disk/temp/compat-wireless-2.6.36-rc2-1/net/rfkill/built-in.o
+   LD      
+/media/disk/temp/compat-wireless-2.6.36-rc2-1/net/wireless/built-in.o
+   CC [M]  /media/disk/temp/compat-wireless-2.6.36-rc2-1/net/wireless/core.o
+/media/disk/temp/compat-wireless-2.6.36-rc2-1/net/wireless/core.c: In 
+function ‘cfg80211_netdev_notifier_call’:
+/media/disk/temp/compat-wireless-2.6.36-rc2-1/net/wireless/core.c:705: 
+error: ‘struct net_device’ has no member named ‘wireless_handlers’
+/media/disk/temp/compat-wireless-2.6.36-rc2-1/net/wireless/core.c:706: 
+error: ‘struct net_device’ has no member named ‘wireless_handlers’
+make[3]: *** 
+[/media/disk/temp/compat-wireless-2.6.36-rc2-1/net/wireless/core.o] Error 1
+make[2]: *** 
+[/media/disk/temp/compat-wireless-2.6.36-rc2-1/net/wireless] Error 2
+make[1]: *** [_module_/media/disk/temp/compat-wireless-2.6.36-rc2-1] Error 2
+make[1]: Leaving directory `/media/disk/temp/linux-2.6.35.4'
+make: *** [modules] Error 2
 
-johannes
-
+That didn't help. I hope you can give me another idea.
+Thanks.
