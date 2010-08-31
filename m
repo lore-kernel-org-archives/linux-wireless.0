@@ -1,91 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:36896 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751862Ab0HGAHI (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:43676 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751911Ab0HaTDU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Aug 2010 20:07:08 -0400
-Received: by bwz3 with SMTP id 3so287799bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Aug 2010 17:07:07 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC] minstrel_ht: fill out more than 3 rates
-Date: Sat, 7 Aug 2010 00:07:52 +0200
-Cc: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201008070007.53294.chunkeey@googlemail.com>
+	Tue, 31 Aug 2010 15:03:20 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id C4B6B4195D
+	for <linux-wireless@vger.kernel.org>; Tue, 31 Aug 2010 15:02:22 -0400 (EDT)
+Subject: Compat-wireless release for 2010-08-31 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100831190319.8945041133@repository3.orbit-lab.org>
+Date: Tue, 31 Aug 2010 15:03:19 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Felix,
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+   4207d04..44e920c  master     -> origin/master
+   502cb34..f046dae  wl         -> origin/wl
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
+ * [new tag]         compat-wireless--2010-08-30 -> compat-wireless--2010-08-30
+ * [new tag]         compat-wireless-master-2010-08-30 -> compat-wireless-master-2010-08-30
+>From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
+   6561208..c45d026  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   bd4dea0..e4ae279  history    -> origin/history
+ + b436937...22681a2 master     -> origin/master  (forced update)
+ * [new tag]         next-20100831 -> next-20100831
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
+make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/staging/ath6kl/Makefile: No such file or directory
+make[3]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/staging/ath6kl/Makefile'.  Stop.
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/staging/ath6kl] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/staging/ath6kl/Makefile: No such file or directory
+make[3]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/staging/ath6kl/Makefile'.  Stop.
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/staging/ath6kl] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
 
-I've stumbled into this conundrum a while ago...
-then as usual: forgot that it existed, until yesterday:
+compat-wireless code metrics
 
-As you know minstrel (our non ht fallback) enables mrr-mode
-only if the driver sets hw->max_rates to 4 or more. 
-minstrel_ht - on the other hand - just prepares a set
-of 3 rates, so at least one additional retry with
-different tx-vectors remains unused...
+    497993 - Total upstream lines of code being pulled
+      1714 - backport code changes
+      1475 - backport code additions
+       239 - backport code deletions
+      6073 - backport from compat module
+      7787 - total backport code
+    1.5637 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2446 - % of crap code
 
-How the last tries should be used is up for debate,
-I've opted out for lowest possible MCS.
-(although, some devices may also use a legacy
- rate for the final tries...)
-
-And the reason why I think it's worth to do an additional
-round: The reordering penalty for lost MPDUs on the receiver-
-side can be as high as 100ms, which is quite expensive compared
-to some extra airtime...
----
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index c5b4659..5f44c0b 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -584,7 +584,7 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	struct minstrel_ht_sta_priv *msp = priv_sta;
- 	struct minstrel_ht_sta *mi = &msp->ht;
- 	struct minstrel_priv *mp = priv;
--	int sample_idx;
-+	int sample_idx, i = 0;
- 
- 	if (rate_control_send_low(sta, priv_sta, txrc))
- 		return;
-@@ -595,21 +595,29 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 	info->flags |= mi->tx_flags;
- 	sample_idx = minstrel_get_sample_rate(mp, mi);
- 	if (sample_idx >= 0) {
--		minstrel_ht_set_rate(mp, mi, &ar[0], sample_idx,
-+		minstrel_ht_set_rate(mp, mi, &ar[i++], sample_idx,
- 			txrc, true, false);
--		minstrel_ht_set_rate(mp, mi, &ar[1], mi->max_tp_rate,
-+		minstrel_ht_set_rate(mp, mi, &ar[i++], mi->max_tp_rate,
- 			txrc, false, true);
- 		info->flags |= IEEE80211_TX_CTL_RATE_CTRL_PROBE;
- 	} else {
--		minstrel_ht_set_rate(mp, mi, &ar[0], mi->max_tp_rate,
-+		minstrel_ht_set_rate(mp, mi, &ar[i++], mi->max_tp_rate,
- 			txrc, false, false);
--		minstrel_ht_set_rate(mp, mi, &ar[1], mi->max_tp_rate2,
-+		minstrel_ht_set_rate(mp, mi, &ar[i++], mi->max_tp_rate2,
- 			txrc, false, true);
- 	}
--	minstrel_ht_set_rate(mp, mi, &ar[2], mi->max_prob_rate, txrc, false, true);
-+	minstrel_ht_set_rate(mp, mi, &ar[i++], mi->max_prob_rate,
-+			     txrc, false, true);
- 
--	ar[3].count = 0;
--	ar[3].idx = -1;
-+	for (;i < mp->hw->max_rates; i++) {
-+		minstrel_ht_set_rate(mp, mi, &ar[i++], 0,
-+				     txrc, false, true);
-+	}
-+
-+	for (; i < IEEE80211_TX_MAX_RATES; i++) {
-+		ar[i].count = 0;
-+		ar[i].idx = -1;
-+	}
- 
- 	mi->total_packets++;
- 
+Base tree: linux-next.git
+Base tree version: next-20100831
+compat-wireless release: compat-wireless--2010-08-30-3-g44e920c
