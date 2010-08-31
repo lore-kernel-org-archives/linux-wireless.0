@@ -1,164 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:62839 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932771Ab0HJWN1 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60885 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754684Ab0HaR7n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Aug 2010 18:13:27 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>
-Cc: Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v3 1/9] wireless: wl1271: make wl12xx.h common to both spi and sdio
-Date: Wed, 11 Aug 2010 01:12:20 +0300
-Message-Id: <1281478348-24833-2-git-send-email-ohad@wizery.com>
-In-Reply-To: <1281478348-24833-1-git-send-email-ohad@wizery.com>
-References: <1281478348-24833-1-git-send-email-ohad@wizery.com>
+	Tue, 31 Aug 2010 13:59:43 -0400
+Date: Tue, 31 Aug 2010 13:55:47 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Miles Lane <miles.lane@gmail.com>,
+	rjw@sisk.pl, maciej.rutecki@gmail.com
+Subject: Re: [PATCH 2.6.36] wireless: register wiphy rfkill w/o holding
+ cfg80211_mutex
+Message-ID: <20100831175546.GD2484@tuxdriver.com>
+References: <1283206222-21830-1-git-send-email-linville@tuxdriver.com>
+ <1283237477.3733.0.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1283237477.3733.0.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move wl12xx.h outside of the spi-specific location,
-so it can be shared with both spi and sdio solutions.
+On Tue, Aug 31, 2010 at 08:51:17AM +0200, Johannes Berg wrote:
+> Thanks,
+> 
+> > +	res = rfkill_register(rdev->rfkill);
+> > +	if (res)
+> > +		return res;
+> > +
+> >  	mutex_lock(&cfg80211_mutex);
+> >  
+> >  	res = device_add(&rdev->wiphy.dev);
+> >  	if (res)
+> >  		goto out_unlock;
+> 
+> but does that behave correctly in sysfs? rfkill_register should create
+> some sysfs stuff that points to the device that now only gets added
+> later, doesn't that break things?
 
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
----
- drivers/net/wireless/wl12xx/wl1251_sdio.c |    2 +-
- drivers/net/wireless/wl12xx/wl1251_spi.c  |    2 +-
- drivers/net/wireless/wl12xx/wl1271_spi.c  |    2 +-
- include/linux/spi/wl12xx.h                |   34 -----------------------------
- include/linux/wl12xx.h                    |   34 +++++++++++++++++++++++++++++
- 5 files changed, 37 insertions(+), 37 deletions(-)
- delete mode 100644 include/linux/spi/wl12xx.h
- create mode 100644 include/linux/wl12xx.h
+Yeah, I see that now -- should have looked closer.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1251_sdio.c b/drivers/net/wireless/wl12xx/wl1251_sdio.c
-index b901b61..a319df1 100644
---- a/drivers/net/wireless/wl12xx/wl1251_sdio.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_sdio.c
-@@ -24,7 +24,7 @@
- #include <linux/mmc/sdio_func.h>
- #include <linux/mmc/sdio_ids.h>
- #include <linux/platform_device.h>
--#include <linux/spi/wl12xx.h>
-+#include <linux/wl12xx.h>
- #include <linux/irq.h>
- 
- #include "wl1251.h"
-diff --git a/drivers/net/wireless/wl12xx/wl1251_spi.c b/drivers/net/wireless/wl12xx/wl1251_spi.c
-index 27fdfaa..a6faf3e 100644
---- a/drivers/net/wireless/wl12xx/wl1251_spi.c
-+++ b/drivers/net/wireless/wl12xx/wl1251_spi.c
-@@ -26,7 +26,7 @@
- #include <linux/slab.h>
- #include <linux/crc7.h>
- #include <linux/spi/spi.h>
--#include <linux/spi/wl12xx.h>
-+#include <linux/wl12xx.h>
- 
- #include "wl1251.h"
- #include "wl1251_reg.h"
-diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
-index 4cb99c5..c3fdab7 100644
---- a/drivers/net/wireless/wl12xx/wl1271_spi.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
-@@ -25,7 +25,7 @@
- #include <linux/module.h>
- #include <linux/crc7.h>
- #include <linux/spi/spi.h>
--#include <linux/spi/wl12xx.h>
-+#include <linux/wl12xx.h>
- #include <linux/slab.h>
- 
- #include "wl1271.h"
-diff --git a/include/linux/spi/wl12xx.h b/include/linux/spi/wl12xx.h
-deleted file mode 100644
-index a223ecb..0000000
---- a/include/linux/spi/wl12xx.h
-+++ /dev/null
-@@ -1,34 +0,0 @@
--/*
-- * This file is part of wl12xx
-- *
-- * Copyright (C) 2009 Nokia Corporation
-- *
-- * Contact: Kalle Valo <kalle.valo@nokia.com>
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * version 2 as published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-- * General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-- * 02110-1301 USA
-- *
-- */
--
--#ifndef _LINUX_SPI_WL12XX_H
--#define _LINUX_SPI_WL12XX_H
--
--struct wl12xx_platform_data {
--	void (*set_power)(bool enable);
--	/* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
--	int irq;
--	bool use_eeprom;
--};
--
--#endif
-diff --git a/include/linux/wl12xx.h b/include/linux/wl12xx.h
-new file mode 100644
-index 0000000..137ac89
---- /dev/null
-+++ b/include/linux/wl12xx.h
-@@ -0,0 +1,34 @@
-+/*
-+ * This file is part of wl12xx
-+ *
-+ * Copyright (C) 2009 Nokia Corporation
-+ *
-+ * Contact: Kalle Valo <kalle.valo@nokia.com>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License
-+ * version 2 as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-+ * 02110-1301 USA
-+ *
-+ */
-+
-+#ifndef _LINUX_WL12XX_H
-+#define _LINUX_WL12XX_H
-+
-+struct wl12xx_platform_data {
-+	void (*set_power)(bool enable);
-+	/* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
-+	int irq;
-+	bool use_eeprom;
-+};
-+
-+#endif
+John
 -- 
-1.7.0.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
