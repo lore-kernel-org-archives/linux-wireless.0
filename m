@@ -1,42 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47487 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752824Ab0HBNY4 (ORCPT
+Received: from mail.redfish-solutions.com ([66.232.79.143]:59533 "EHLO
+	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756506Ab0HaBID (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Aug 2010 09:24:56 -0400
-Subject: Re: [PATCH 3/3] mac80211: AMPDU rx reorder timeout timer
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <201008021516.29731.chunkeey@googlemail.com>
-References: <201007270820.25347.chunkeey@googlemail.com>
-	 <1280219845.19098.4.camel@jlt3.sipsolutions.net>
-	 <201007281721.51568.chunkeey@googlemail.com>
-	 <201008021516.29731.chunkeey@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 02 Aug 2010 15:24:55 +0200
-Message-ID: <1280755495.3923.14.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 30 Aug 2010 21:08:03 -0400
+Message-ID: <4C7C55E6.1060707@redfish-solutions.com>
+Date: Mon, 30 Aug 2010 18:07:50 -0700
+From: Philip Prindeville <philipp_subx@redfish-solutions.com>
+MIME-Version: 1.0
+To: Jouni Malinen <j@w1.fi>
+CC: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: Marshaling issues w/ compat-wireless-2010-08-19
+References: <4C746F74.70401@redfish-solutions.com> <20100828171239.GA23885@jm.kir.nu> <4C79450C.80507@redfish-solutions.com>
+In-Reply-To: <4C79450C.80507@redfish-solutions.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-08-02 at 15:16 +0200, Christian Lamparter wrote:
+  On 8/28/10 10:19 AM, Philip Prindeville wrote:
+>  On 8/28/10 11:12 AM, Jouni Malinen wrote:
+>> On Tue, Aug 24, 2010 at 06:18:44PM -0700, Philip Prindeville wrote:
+>>>   I've got a stock Fedora Core 13 install (updated today) with the hostapd-0.6.10 rpm and hostapd-0.7.2 compiled from sources.  The NIC is a Ubiquiti SR71e (AR9280).
+>>> (2) Some highly unlikely values from the hostapd debugging messages when parsing out WEP authentication messages (line 507):
+>>> authentication: STA=f8:1e:df:1e:c2:23 auth_alg=35510 auth_transaction=79 status_code=21688 wep=1
+>>> Unsupported authentication algorithm (35510)
+>> I was unable to reproduce this with the current development tree
+>> snapshots. Shared key authentication worked with AR9280 and the current
+>> wireless-testing.git and hostap.git in my tests. If you are still seeing
+>> this, you could also try to disable hw crypto to remove one possible
+>> issue area by using nohwcrypt=1 module parameter when loading ath9k.
+>>
+>
+> Already tried that, and it didn't help.
+>
+> -Philip
 
-> @@ -110,6 +110,7 @@ struct tid_ampdu_tx {
->   * @timeout: reset timer value (in TUs).
->   * @dialog_token: dialog token for aggregation session
->   * @rcu_head: RCU head used for freeing this struct
-> + * @lock: controls exclusive access to the struct
->   *
->   * This structure is protected by RCU and the per-station
->   * spinlock. Assignments to the array holding it must hold
+I also tried with the tarballs from 2010-07-19, and 2010-08-29 and saw the same issue.
 
-I think that's misleading. You're only using it to control access to the
-reorder stuff here, not any of the other things that are used in
-agg-rx.c.
+I also was able to reproduce the issue with "nohwcrypt=1".
 
-Also, documentation for reorder_timer is missing.
+So I'm wondering what if decryption is working fine, but the buffer has an alignment issue or isn't being marshaled into netlink properly?
 
-johannes
+-Philip
 
