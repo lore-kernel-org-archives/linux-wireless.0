@@ -1,132 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60886 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754687Ab0HaR7n (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:61937 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932327Ab0HaOzQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Aug 2010 13:59:43 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
+	Tue, 31 Aug 2010 10:55:16 -0400
+Received: by pwi3 with SMTP id 3so388430pwi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Aug 2010 07:55:15 -0700 (PDT)
+Message-ID: <4C7D17CF.6030501@gmail.com>
+Date: Tue, 31 Aug 2010 09:55:11 -0500
+From: =?UTF-8?B?Q2FybG9zIFNhbHZhZG9yIFDDqXJleiBTYWxnYWRv?=
+	<carlosalvatore@gmail.com>
+MIME-Version: 1.0
 To: linux-wireless@vger.kernel.org
-Cc: Miles Lane <miles.lane@gmail.com>, rjw@sisk.pl,
-	maciej.rutecki@gmail.com,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] wireless: register wiphy rfkill w/o holding cfg80211_mutex
-Date: Tue, 31 Aug 2010 13:57:16 -0400
-Message-Id: <1283277436-5922-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <1283237477.3733.0.camel@jlt3.sipsolutions.net>
-References: <1283237477.3733.0.camel@jlt3.sipsolutions.net>
+Subject: Re: compat-wireless-2.6.35-rc6 won't build
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Otherwise lockdep complains...
+On 08/31/2010 03:01 AM, Luis R. Rodriguez wrote:
+> 2010/8/31 Carlos Salvador Pérez Salgado<carlosalvatore@gmail.com>:
+>> Greetings
+>>
+>> I hope you can point me into the right direction.
+>>
+>> I've already tried this patch
+>> http://trac.pentoo.ch/browser/portage/trunk/net-wireless/compat-wireless/files/WEXT-EXT-nuts.patch 
+>>
+>>
+>>
+>> #make clean&&  ./scripts/driver-select atheros&&  make
+>>
+>> make[1]: Entering directory `/media/disk/temp/linux-2.6.35.4'
+>> CLEAN /media/disk/temp/compat-wireless-2.6.35-rc6
+>> CLEAN /media/disk/temp/compat-wireless-2.6.35-rc6/.tmp_versions
+>> make[1]: Leaving directory `/media/disk/temp/linux-2.6.35.4'
+>> Processing new driver-select request...
+>> Backing up makefile: Makefile.bk
+>> Backup exists: drivers/net/wireless/Makefile.bk
+>> Backup exists: net/wireless/Makefile.bk
+>> Backup exists: drivers/net/Makefile.bk
+>> Backup exists: drivers/ssb/Makefile.bk
+>> Backup exists: drivers/misc/eeprom/Makefile.bk
+>> ./scripts/gen-compat-autoconf.sh config.mk>  
+>> include/linux/compat_autoconf.h
+>> make -C /lib/modules/2.6.35.4-k8/build
+>> M=/media/disk/temp/compat-wireless-2.6.35-rc6 modules
+>> make[1]: Entering directory `/media/disk/temp/linux-2.6.35.4'
+>> LD /media/disk/temp/compat-wireless-2.6.35-rc6/compat/built-in.o
+>> CC [M] /media/disk/temp/compat-wireless-2.6.35-rc6/compat/main.o
+>>
+>> ...
+>>
+>> CC [M] /media/disk/temp/compat-wireless-2.6.35-rc6/net/wireless/core.o
+>> /media/disk/temp/compat-wireless-2.6.35-rc6/net/wireless/core.c: In 
+>> function
+>> ‘cfg80211_netdev_notifier_call’:
+>> /media/disk/temp/compat-wireless-2.6.35-rc6/net/wireless/core.c:703: 
+>> error:
+>> ‘struct net_device’ has no member named ‘wireless_handlers’
+>> /media/disk/temp/compat-wireless-2.6.35-rc6/net/wireless/core.c:704: 
+>> error:
+>> ‘struct net_device’ has no member named ‘wireless_handlers’
+>> make[3]: ***
+>> [/media/disk/temp/compat-wireless-2.6.35-rc6/net/wireless/core.o] 
+>> Error 1
+>> make[2]: *** [/media/disk/temp/compat-wireless-2.6.35-rc6/net/wireless]
+>> Error 2
+>> make[1]: *** [_module_/media/disk/temp/compat-wireless-2.6.35-rc6] 
+>> Error 2
+>> make[1]: Leaving directory `/media/disk/temp/linux-2.6.35.4'
+>> make: *** [modules] Error 2
+>>
+>> Thanks.
+>>
+>> I'm using ubuntu lucid, custom kernel 2.6.35.4 in an AMD Turion X2 64 
+>> bits.
+>> Using CFLAGS="-march=k8 -msse3 -O3"
+> Why are you building compat-wireless-2.6.35-rc6 when you already ahve
+> 2.6.35.4? You realize this is 100% pointless, right?
+>
+>    Luis
+>
+Hi Luis.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=17311
-
-[ INFO: possible circular locking dependency detected ]
-2.6.36-rc2-git4 #12
--------------------------------------------------------
-kworker/0:3/3630 is trying to acquire lock:
- (rtnl_mutex){+.+.+.}, at: [<ffffffff813396c7>] rtnl_lock+0x12/0x14
-
-but task is already holding lock:
- (rfkill_global_mutex){+.+.+.}, at: [<ffffffffa014b129>]
-rfkill_switch_all+0x24/0x49 [rfkill]
-
-which lock already depends on the new lock.
-
-the existing dependency chain (in reverse order) is:
-
--> #2 (rfkill_global_mutex){+.+.+.}:
-       [<ffffffff81079ad7>] lock_acquire+0x120/0x15b
-       [<ffffffff813ae869>] __mutex_lock_common+0x54/0x52e
-       [<ffffffff813aede9>] mutex_lock_nested+0x34/0x39
-       [<ffffffffa014b4ab>] rfkill_register+0x2b/0x29c [rfkill]
-       [<ffffffffa0185ba0>] wiphy_register+0x1ae/0x270 [cfg80211]
-       [<ffffffffa0206f01>] ieee80211_register_hw+0x1b4/0x3cf [mac80211]
-       [<ffffffffa0292e98>] iwl_ucode_callback+0x9e9/0xae3 [iwlagn]
-       [<ffffffff812d3e9d>] request_firmware_work_func+0x54/0x6f
-       [<ffffffff81065d15>] kthread+0x8c/0x94
-       [<ffffffff8100ac24>] kernel_thread_helper+0x4/0x10
-
--> #1 (cfg80211_mutex){+.+.+.}:
-       [<ffffffff81079ad7>] lock_acquire+0x120/0x15b
-       [<ffffffff813ae869>] __mutex_lock_common+0x54/0x52e
-       [<ffffffff813aede9>] mutex_lock_nested+0x34/0x39
-       [<ffffffffa018605e>] cfg80211_get_dev_from_ifindex+0x1b/0x7c [cfg80211]
-       [<ffffffffa0189f36>] cfg80211_wext_giwscan+0x58/0x990 [cfg80211]
-       [<ffffffff8139a3ce>] ioctl_standard_iw_point+0x1a8/0x272
-       [<ffffffff8139a529>] ioctl_standard_call+0x91/0xa7
-       [<ffffffff8139a687>] T.723+0xbd/0x12c
-       [<ffffffff8139a727>] wext_handle_ioctl+0x31/0x6d
-       [<ffffffff8133014e>] dev_ioctl+0x63d/0x67a
-       [<ffffffff8131afd9>] sock_ioctl+0x48/0x21d
-       [<ffffffff81102abd>] do_vfs_ioctl+0x4ba/0x509
-       [<ffffffff81102b5d>] sys_ioctl+0x51/0x74
-       [<ffffffff81009e02>] system_call_fastpath+0x16/0x1b
-
--> #0 (rtnl_mutex){+.+.+.}:
-       [<ffffffff810796b0>] __lock_acquire+0xa93/0xd9a
-       [<ffffffff81079ad7>] lock_acquire+0x120/0x15b
-       [<ffffffff813ae869>] __mutex_lock_common+0x54/0x52e
-       [<ffffffff813aede9>] mutex_lock_nested+0x34/0x39
-       [<ffffffff813396c7>] rtnl_lock+0x12/0x14
-       [<ffffffffa0185cb5>] cfg80211_rfkill_set_block+0x1a/0x7b [cfg80211]
-       [<ffffffffa014aed0>] rfkill_set_block+0x80/0xd5 [rfkill]
-       [<ffffffffa014b07e>] __rfkill_switch_all+0x3f/0x6f [rfkill]
-       [<ffffffffa014b13d>] rfkill_switch_all+0x38/0x49 [rfkill]
-       [<ffffffffa014b821>] rfkill_op_handler+0x105/0x136 [rfkill]
-       [<ffffffff81060708>] process_one_work+0x248/0x403
-       [<ffffffff81062620>] worker_thread+0x139/0x214
-       [<ffffffff81065d15>] kthread+0x8c/0x94
-       [<ffffffff8100ac24>] kernel_thread_helper+0x4/0x10
-
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- net/wireless/core.c |   21 ++++++++++++---------
- 1 files changed, 12 insertions(+), 9 deletions(-)
-
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 541e2ff..d6d046b 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -475,12 +475,10 @@ int wiphy_register(struct wiphy *wiphy)
- 	mutex_lock(&cfg80211_mutex);
- 
- 	res = device_add(&rdev->wiphy.dev);
--	if (res)
--		goto out_unlock;
--
--	res = rfkill_register(rdev->rfkill);
--	if (res)
--		goto out_rm_dev;
-+	if (res) {
-+		mutex_unlock(&cfg80211_mutex);
-+		return res;
-+	}
- 
- 	/* set up regulatory info */
- 	wiphy_update_regulatory(wiphy, NL80211_REGDOM_SET_BY_CORE);
-@@ -509,13 +507,18 @@ int wiphy_register(struct wiphy *wiphy)
- 	cfg80211_debugfs_rdev_add(rdev);
- 	mutex_unlock(&cfg80211_mutex);
- 
-+	/*
-+	 * due to a locking dependency this has to be outside of the
-+	 * cfg80211_mutex lock
-+	 */
-+	res = rfkill_register(rdev->rfkill);
-+	if (res)
-+		goto out_rm_dev;
-+
- 	return 0;
- 
- out_rm_dev:
- 	device_del(&rdev->wiphy.dev);
--
--out_unlock:
--	mutex_unlock(&cfg80211_mutex);
- 	return res;
- }
- EXPORT_SYMBOL(wiphy_register);
--- 
-1.7.2.2
-
+Because atheros wireless card is not injecting packets using aircrack, 
+and the power is lower comparing it with older kerneles. I use to 
+install ath5k modules compiled from compat-wireless-2.6.32.11 when I was 
+using linux-image-2.6.32-24-generic and that worked for me.
+Do you have a better idea of how can I fix that? I'll really appreciate it.
+Thanks.
