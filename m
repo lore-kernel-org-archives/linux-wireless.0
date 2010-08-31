@@ -1,38 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:43623 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753722Ab0HKPjL convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34152 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756928Ab0HaJaI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Aug 2010 11:39:11 -0400
-MIME-Version: 1.0
-In-Reply-To: <4C626140.3080107@nokia.com>
-References: <1281478348-24833-1-git-send-email-ohad@wizery.com>
-	<1281478348-24833-10-git-send-email-ohad@wizery.com> <4C626140.3080107@nokia.com>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Wed, 11 Aug 2010 18:38:51 +0300
-Message-ID: <AANLkTik8yftwy9Toq473134vcdoFN1Z29oTc9MGEUzue@mail.gmail.com>
-Subject: Re: [PATCH v3 9/9] omap: zoom: add mmc3/wl1271 device support
-To: Roger Quadros <roger.quadros@nokia.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	San Mehat <san@google.com>, Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Pandita Vikram <vikram.pandita@ti.com>,
-	Kalle Valo <kalle.valo@iki.fi>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 31 Aug 2010 05:30:08 -0400
+Subject: Re: [PATCH] mac80211: cancel scan in ieee80211_restart_hw
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20100830193701.GF30864@tuxdriver.com>
+References: <1283195671-4086-1-git-send-email-linville@tuxdriver.com>
+	 <1283195879.3694.15.camel@jlt3.sipsolutions.net>
+	 <20100830193701.GF30864@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 31 Aug 2010 11:29:41 +0200
+Message-ID: <1283246981.3733.7.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 11, 2010 at 11:37 AM, Roger Quadros <roger.quadros@nokia.com> wrote:
->> +               .ocr_mask       = MMC_VDD_165_195,
->
-> Do we really need to specify ocr_mask here?
+On Mon, 2010-08-30 at 15:37 -0400, John W. Linville wrote:
 
-Removed, thanks!
+> > > -	/* use this reason, __ieee80211_resume will unblock it */
+> > > +	ieee80211_scan_cancel(local);
+> > > +
+> > > +	/* use this reason, ieee80211_reconfig will unblock it */
+> > 
+> > Hmm, yes .. but how will this interact with hw scan?
+> 
+> You tell me -- I would think that calling ieee80211_restart_hw
+> would effectively abandon all hope of a hardware scan completing.
+> Should the caller call ieee80211_scan_completed(..., 1)?  Or should
+> we do that (or equivalent) here too?
+
+Yeah, I guess the caller probably should since it may have internal
+state that needs resetting for scans as well. Maybe we should
+WARN_ON(scan in progress) here for the hw scan case, and do what you're
+proposing only for SW scan?
+
+johannes
+
