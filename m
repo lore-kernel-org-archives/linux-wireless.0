@@ -1,107 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:50348 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751515Ab0I3VjV (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59670 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753772Ab0IATK3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Sep 2010 17:39:21 -0400
-Received: by qwh6 with SMTP id 6so1050490qwh.19
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Sep 2010 14:39:20 -0700 (PDT)
-MIME-Version: 1.0
-Date: Thu, 30 Sep 2010 17:39:20 -0400
-Message-ID: <AANLkTi=CySU4wUoiexZggp9jXco=UMt=Etkm4wp9nAL9@mail.gmail.com>
-Subject: [PATCH] mac80211: fix for WDS interfaces
-From: Bill Jordan <bjordan@rajant.com>
+	Wed, 1 Sep 2010 15:10:29 -0400
+Subject: Re: [PATCH] mac80211: cancel scan in ieee80211_restart_hw if
+ software scan pending
+From: Johannes Berg <johannes@sipsolutions.net>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20100901185856.GA4570@tuxdriver.com>
+References: <1283246981.3733.7.camel@jlt3.sipsolutions.net>
+	 <1283282737-27749-1-git-send-email-linville@tuxdriver.com>
+	 <1283336978.4131.7.camel@jlt3.sipsolutions.net>
+	 <20100901185856.GA4570@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 01 Sep 2010 21:10:26 +0200
+Message-ID: <1283368226.4124.12.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Splitting previous patch as requested.
+On Wed, 2010-09-01 at 14:58 -0400, John W. Linville wrote:
+> On Wed, Sep 01, 2010 at 12:29:38PM +0200, Johannes Berg wrote:
+> > On Tue, 2010-08-31 at 15:25 -0400, John W. Linville wrote:
+> > > This function exists to clean-up after a hardware error or something
+> > > similar.  The restart is accomplished using the same infrastructure used
+> > > to resume after a suspend.  The suspend path cancels running scans, so
+> > > it seems appropriate to do that here as well for software-based scans.
+> > > If a hardware-based scan is pending, issue a warning message since this
+> > > indicates that the drivers has failed to clean-up after itself.
+> > 
+> > Makes sense.
+> > 
+> > I guess unrelated to this, I wonder if we should warn in the suspend
+> > case as well, rather than doing it unconditionally. Hmm.
+> 
+> Maybe so, but I'm not sure what path we would hook for that.
+> Doesn't wiphy_suspend run before the hardware bus suspend functions?
+> How would the driver now in advance to cancel the hardware scan?
 
-This patch initializes the rate table for a WDS interface, and
-adds tests to allow WDS packets to pass the xmit and receive
-tests.
+Good point! I was just thinking that if we do a mac80211 cancel only,
+then the scan request struct pointer that we gave to the driver earlier
+suddenly becomes invalid.
 
-Signed-off-by: Bill Jordan <bjordan@rajant.com>
----
- net/mac80211/iface.c |    3 +++
- net/mac80211/main.c  |    3 +++
- net/mac80211/rx.c    |    1 +
- net/mac80211/tx.c    |    3 +++
- 4 files changed, 10 insertions(+), 0 deletions(-)
+johannes
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 6678573..1e91984 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -24,6 +24,7 @@
- #include "led.h"
- #include "driver-ops.h"
- #include "wme.h"
-+#include "rate.h"
-
- /**
-  * DOC: Interface list locking
-@@ -301,6 +302,8 @@ static int ieee80211_do_open(struct net_device
-*dev, bool coming_up)
- 			/* STA has been freed */
- 			goto err_del_interface;
- 		}
-+
-+		rate_control_rate_init(sta);
- 	}
-
- 	/*
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index e24fa5b..4ea88dd 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -201,6 +201,8 @@ void ieee80211_bss_info_change_notify(struct
-ieee80211_sub_if_data *sdata,
- 		sdata->vif.bss_conf.bssid = sdata->u.ibss.bssid;
- 	else if (sdata->vif.type == NL80211_IFTYPE_AP)
- 		sdata->vif.bss_conf.bssid = sdata->vif.addr;
-+	else if (sdata->vif.type == NL80211_IFTYPE_WDS)
-+		sdata->vif.bss_conf.bssid = NULL;
- 	else if (ieee80211_vif_is_mesh(&sdata->vif)) {
- 		sdata->vif.bss_conf.bssid = zero;
- 	} else {
-@@ -211,6 +213,7 @@ void ieee80211_bss_info_change_notify(struct
-ieee80211_sub_if_data *sdata,
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_ADHOC:
-+	case NL80211_IFTYPE_WDS:
- 	case NL80211_IFTYPE_MESH_POINT:
- 		break;
- 	default:
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 0b0e83e..b3e161f 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -819,6 +819,7 @@ ieee80211_rx_h_check(struct ieee80211_rx_data *rx)
- 	if (unlikely((ieee80211_is_data(hdr->frame_control) ||
- 		      ieee80211_is_pspoll(hdr->frame_control)) &&
- 		     rx->sdata->vif.type != NL80211_IFTYPE_ADHOC &&
-+		     rx->sdata->vif.type != NL80211_IFTYPE_WDS &&
- 		     (!rx->sta || !test_sta_flags(rx->sta, WLAN_STA_ASSOC)))) {
- 		if ((!ieee80211_has_fromds(hdr->frame_control) &&
- 		     !ieee80211_has_tods(hdr->frame_control) &&
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index e1733dc..258fbdb 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -273,6 +273,9 @@ ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
- 		 */
- 		return TX_DROP;
-
-+	if (tx->sdata->vif.type == NL80211_IFTYPE_WDS)
-+		return TX_CONTINUE;
-+
- 	if (tx->sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
- 		return TX_CONTINUE;
-
--- 
-1.7.2.3
