@@ -1,88 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43425 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754268Ab0IINxK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Sep 2010 09:53:10 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 01/12] iwlwifi: remove unused conf variables
-Date: Thu,  9 Sep 2010 15:52:19 +0200
-Message-Id: <1284040354-31703-2-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
-References: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:34781 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756007Ab0IAV1P (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Sep 2010 17:27:15 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>
+Cc: Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Nicolas Pitre <nico@fluxnic.net>, Ido Yariv <ido@wizery.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Russell King <linux@arm.linux.org.uk>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH v5 1/7] wireless: wl1271: make wl12xx.h common to both spi and sdio
+Date: Thu,  2 Sep 2010 00:26:44 +0300
+Message-Id: <1283376410-9999-2-git-send-email-ohad@wizery.com>
+In-Reply-To: <1283376410-9999-1-git-send-email-ohad@wizery.com>
+References: <1283376410-9999-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Move wl12xx.h outside of the spi-specific location,
+so it can be shared with both spi and sdio solutions.
 
-There are a number of conf variables that are
-unused, remove them.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    3 ---
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    6 ------
- 2 files changed, 0 insertions(+), 9 deletions(-)
+ drivers/net/wireless/wl12xx/wl1251_sdio.c |    2 +-
+ drivers/net/wireless/wl12xx/wl1251_spi.c  |    2 +-
+ drivers/net/wireless/wl12xx/wl1271_spi.c  |    2 +-
+ include/linux/spi/wl12xx.h                |   34 -----------------------------
+ include/linux/wl12xx.h                    |   34 +++++++++++++++++++++++++++++
+ 5 files changed, 37 insertions(+), 37 deletions(-)
+ delete mode 100644 include/linux/spi/wl12xx.h
+ create mode 100644 include/linux/wl12xx.h
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index a8f2adf..51a8d7e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -1162,7 +1162,6 @@ void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- 		.flags = CMD_SIZE_HUGE,
- 	};
- 	struct iwl_scan_cmd *scan;
--	struct ieee80211_conf *conf = NULL;
- 	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_BSS];
- 	u32 rate_flags = 0;
- 	u16 cmd_len;
-@@ -1179,8 +1178,6 @@ void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- 	if (vif)
- 		ctx = iwl_rxon_ctx_from_vif(vif);
+diff --git a/drivers/net/wireless/wl12xx/wl1251_sdio.c b/drivers/net/wireless/wl12xx/wl1251_sdio.c
+index b901b61..a319df1 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_sdio.c
++++ b/drivers/net/wireless/wl12xx/wl1251_sdio.c
+@@ -24,7 +24,7 @@
+ #include <linux/mmc/sdio_func.h>
+ #include <linux/mmc/sdio_ids.h>
+ #include <linux/platform_device.h>
+-#include <linux/spi/wl12xx.h>
++#include <linux/wl12xx.h>
+ #include <linux/irq.h>
  
--	conf = ieee80211_get_hw_conf(priv->hw);
+ #include "wl1251.h"
+diff --git a/drivers/net/wireless/wl12xx/wl1251_spi.c b/drivers/net/wireless/wl12xx/wl1251_spi.c
+index 27fdfaa..a6faf3e 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_spi.c
++++ b/drivers/net/wireless/wl12xx/wl1251_spi.c
+@@ -26,7 +26,7 @@
+ #include <linux/slab.h>
+ #include <linux/crc7.h>
+ #include <linux/spi/spi.h>
+-#include <linux/spi/wl12xx.h>
++#include <linux/wl12xx.h>
+ 
+ #include "wl1251.h"
+ #include "wl1251_reg.h"
+diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
+index 4cb99c5..c3fdab7 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_spi.c
++++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
+@@ -25,7 +25,7 @@
+ #include <linux/module.h>
+ #include <linux/crc7.h>
+ #include <linux/spi/spi.h>
+-#include <linux/spi/wl12xx.h>
++#include <linux/wl12xx.h>
+ #include <linux/slab.h>
+ 
+ #include "wl1271.h"
+diff --git a/include/linux/spi/wl12xx.h b/include/linux/spi/wl12xx.h
+deleted file mode 100644
+index a223ecb..0000000
+--- a/include/linux/spi/wl12xx.h
++++ /dev/null
+@@ -1,34 +0,0 @@
+-/*
+- * This file is part of wl12xx
+- *
+- * Copyright (C) 2009 Nokia Corporation
+- *
+- * Contact: Kalle Valo <kalle.valo@nokia.com>
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License
+- * version 2 as published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+- * 02110-1301 USA
+- *
+- */
 -
- 	cancel_delayed_work(&priv->scan_check);
- 
- 	if (!iwl_is_ready(priv)) {
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 68e624a..5b742eb 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -2569,12 +2569,9 @@ static void __iwl3945_down(struct iwl_priv *priv)
- {
- 	unsigned long flags;
- 	int exit_pending = test_bit(STATUS_EXIT_PENDING, &priv->status);
--	struct ieee80211_conf *conf = NULL;
- 
- 	IWL_DEBUG_INFO(priv, DRV_NAME " is going down\n");
- 
--	conf = ieee80211_get_hw_conf(priv->hw);
+-#ifndef _LINUX_SPI_WL12XX_H
+-#define _LINUX_SPI_WL12XX_H
 -
- 	if (!exit_pending)
- 		set_bit(STATUS_EXIT_PENDING, &priv->status);
- 
-@@ -2828,13 +2825,10 @@ void iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- 		.flags = CMD_SIZE_HUGE,
- 	};
- 	struct iwl3945_scan_cmd *scan;
--	struct ieee80211_conf *conf = NULL;
- 	u8 n_probes = 0;
- 	enum ieee80211_band band;
- 	bool is_active = false;
- 
--	conf = ieee80211_get_hw_conf(priv->hw);
+-struct wl12xx_platform_data {
+-	void (*set_power)(bool enable);
+-	/* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
+-	int irq;
+-	bool use_eeprom;
+-};
 -
- 	cancel_delayed_work(&priv->scan_check);
- 
- 	if (!iwl_is_ready(priv)) {
+-#endif
+diff --git a/include/linux/wl12xx.h b/include/linux/wl12xx.h
+new file mode 100644
+index 0000000..137ac89
+--- /dev/null
++++ b/include/linux/wl12xx.h
+@@ -0,0 +1,34 @@
++/*
++ * This file is part of wl12xx
++ *
++ * Copyright (C) 2009 Nokia Corporation
++ *
++ * Contact: Kalle Valo <kalle.valo@nokia.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * version 2 as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
++ * 02110-1301 USA
++ *
++ */
++
++#ifndef _LINUX_WL12XX_H
++#define _LINUX_WL12XX_H
++
++struct wl12xx_platform_data {
++	void (*set_power)(bool enable);
++	/* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
++	int irq;
++	bool use_eeprom;
++};
++
++#endif
 -- 
-1.7.1
+1.7.0.4
 
