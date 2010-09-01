@@ -1,96 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:39394 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753111Ab0ITRfk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Sep 2010 13:35:40 -0400
-Message-ID: <4C979B60.3060901@openwrt.org>
-Date: Mon, 20 Sep 2010 19:35:28 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH v2 2/5] ath9k: fix an aggregation start related race condition
-References: <1284983140-30099-1-git-send-email-nbd@openwrt.org> <1284983140-30099-2-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1284983140-30099-2-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:44188 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752571Ab0IAK3l (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Sep 2010 06:29:41 -0400
+Subject: Re: [PATCH] mac80211: cancel scan in ieee80211_restart_hw if
+ software scan pending
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1283282737-27749-1-git-send-email-linville@tuxdriver.com>
+References: <1283246981.3733.7.camel@jlt3.sipsolutions.net>
+	 <1283282737-27749-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 01 Sep 2010 12:29:38 +0200
+Message-ID: <1283336978.4131.7.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A new aggregation session start can be issued by mac80211, even when the
-cleanup of the previous session has not completed yet. Since the data structure
-for the session is not recreated, this could corrupt the block ack window
-and lock up the aggregation session. Fix this by delaying the new session
-until the old one has been cleaned up.
+On Tue, 2010-08-31 at 15:25 -0400, John W. Linville wrote:
+> This function exists to clean-up after a hardware error or something
+> similar.  The restart is accomplished using the same infrastructure used
+> to resume after a suspend.  The suspend path cancels running scans, so
+> it seems appropriate to do that here as well for software-based scans.
+> If a hardware-based scan is pending, issue a warning message since this
+> indicates that the drivers has failed to clean-up after itself.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@kernel.org
----
- v2: add a return code check before calling ieee80211_start_tx_ba_cb_irqsafe
+Makes sense.
 
- drivers/net/wireless/ath/ath9k/ath9k.h |    4 ++--
- drivers/net/wireless/ath/ath9k/main.c  |    5 +++--
- drivers/net/wireless/ath/ath9k/xmit.c  |   10 ++++++++--
- 3 files changed, 13 insertions(+), 6 deletions(-)
+I guess unrelated to this, I wonder if we should warn in the suspend
+case as well, rather than doing it unconditionally. Hmm.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 9fddd80..dfd368a 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -346,8 +346,8 @@ void ath_tx_tasklet(struct ath_softc *sc);
- void ath_tx_edma_tasklet(struct ath_softc *sc);
- void ath_tx_cabq(struct ieee80211_hw *hw, struct sk_buff *skb);
- bool ath_tx_aggr_check(struct ath_softc *sc, struct ath_node *an, u8 tidno);
--void ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
--		       u16 tid, u16 *ssn);
-+int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
-+		      u16 tid, u16 *ssn);
- void ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid);
- void ath_tx_aggr_resume(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid);
- void ath9k_enable_ps(struct ath_softc *sc);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 1165f90..8ffeff4 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1975,8 +1975,9 @@ static int ath9k_ampdu_action(struct ieee80211_hw *hw,
- 		break;
- 	case IEEE80211_AMPDU_TX_START:
- 		ath9k_ps_wakeup(sc);
--		ath_tx_aggr_start(sc, sta, tid, ssn);
--		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
-+		ret = ath_tx_aggr_start(sc, sta, tid, ssn);
-+		if (!ret)
-+			ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
- 		ath9k_ps_restore(sc);
- 		break;
- 	case IEEE80211_AMPDU_TX_STOP:
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 5323a4d..d629bfb 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -783,17 +783,23 @@ static void ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 		 status != ATH_AGGR_BAW_CLOSED);
- }
- 
--void ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
--		       u16 tid, u16 *ssn)
-+int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
-+		      u16 tid, u16 *ssn)
- {
- 	struct ath_atx_tid *txtid;
- 	struct ath_node *an;
- 
- 	an = (struct ath_node *)sta->drv_priv;
- 	txtid = ATH_AN_2_TID(an, tid);
-+
-+	if (txtid->state & (AGGR_CLEANUP | AGGR_ADDBA_COMPLETE))
-+		return -EAGAIN;
-+
- 	txtid->state |= AGGR_ADDBA_PROGRESS;
- 	txtid->paused = true;
- 	*ssn = txtid->seq_start;
-+
-+	return 0;
- }
- 
- void ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid)
+johannes
+
 
