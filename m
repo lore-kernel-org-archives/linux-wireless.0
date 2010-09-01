@@ -1,74 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:41184 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750695Ab0IOEMB (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51577 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754508Ab0IAMmG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 00:12:01 -0400
-Received: by wyf22 with SMTP id 22so8169760wyf.19
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Sep 2010 21:12:00 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201009151245.53194.br1@einfach.org>
-References: <AANLkTim+Q773KvA7Et1s2Zf8yMx36RGS2LsoJsX1Wtt9@mail.gmail.com>
- <201009151216.32430.br1@einfach.org> <AANLkTiniROJatam4yA4sss3qjczT-6=jSP9QxvmDo2dq@mail.gmail.com>
- <201009151245.53194.br1@einfach.org>
-From: Jonathan Guerin <jonathan@guerin.id.au>
-Date: Wed, 15 Sep 2010 14:11:39 +1000
-Message-ID: <AANLkTimHDXpazQ_rEXw81cdHLRmUpAA+r_tHGdvGOVYW@mail.gmail.com>
-Subject: Re: [ath5k-devel] [ath5k] Incorrect value for ACK_TIMEOUT
-To: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Nick Kossifidis <mickflemm@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 1 Sep 2010 08:42:06 -0400
+Subject: Re: [PATCH w-t] iwlwifi: rewrite iwl-scan.c to avoid race
+ conditions
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20100901115826.GB6547@redhat.com>
+References: <20100831150021.GA10963@redhat.com>
+	 <1283338760.4131.22.camel@jlt3.sipsolutions.net>
+	 <20100901115826.GB6547@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 01 Sep 2010 14:41:52 +0200
+Message-ID: <1283344912.4124.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 15, 2010 at 1:45 PM, Bruno Randolf <br1@einfach.org> wrote:
-> On Wed September 15 2010 12:28:36 Jonathan Guerin wrote:
->> >> Should all of the init be changed to use these functions, along with
->> >> #define init values?
->> >
->> > i think it would be best if we could remove the initvals alltoghether and
->> > use the function to set the ack timeout. but i'm not sure if we need to
->> > have them initialized to some value at the beginning. in this case can
->> > we just override them later using the function. or just update the
->> > initvals numerically (but no defines).
->>
->> If there are no initvals, changing the mode won't init them to default
->> values, will it? Or are you saying that values should not be
->> initialised until the mode is set?
->
-> that's what i'm not sure about... but ath5k_hw_set_ack_timeout() could be
-> called from reset so it applies the changes when the mode is set. i think that
-> should be fine, but it needs to be tested -- and i think the same applies to a
-> lot of the initvals.
->
->> I've been a bit scared to post here until I had more information
->> rather than a generic "uhh guys, something's not working". It's been
->> causing me massive headaches with my work as I'm relying on the spec
->> for timing values, but finding that the driver is doing something
->> much, much different. I'm more than happy to post these things, but
->> I'm not a good enough programmer to just give you patches without
->> discussing the fact that I may just not be understanding what's really
->> happening.
->> Thanks for the help, it's greatly appreciated!
->
-> same here :)
->
-> the thing is, like bob said, that we don't really know much about what the HW
-> expects in some of these registers, so unless you can prove your changes to be
-> correct - e.g. by measurements which fit the theoretical model better, or by
-> better thruput, it's hard to say if they are correct or not.
->
-> so before you worry about how to make a correct patch, just go ahead and
-> change those initvals to what you believe they should be. if it improves
-> something, let's talk about how to correctly fix it.
+On Wed, 2010-09-01 at 13:58 +0200, Stanislaw Gruszka wrote:
 
-I don't mean to be a smart-ass, but wouldn't setting the correct
-values here decrease the throughput? I'm not quite sure how to verify
-an improvement, other than get the card to contend for the medium with
-another known-working card? Does this sound reasonable?
+> Custom workqueue is not strictly needed, but it assure all works will
+> run short after schedule. Common workqueue can not give us such guarantees,
+> as other driver/subsystem can schedule own work, possibly slow, which
+> can block start of our work for long time.
 
->
-> bruno
->
+I believe that's no longer true, with Tejun's workqueue rewrite that
+just got into mainline.
+
+> > Shouldn't that only be a few of them anyway?
+> 
+> For sure abort_scan and abort_timeout works have to be scheduled on something
+> other than priv->workqueue. I'm queuing all scan works on priv->scan_workqueue
+> for consistency.
+
+Remind me: The reason is that we need to cancel them from within the
+workqueue? But if we're on the same workqueue, it seems like they
+couldn't be running already, so cancel_work_sync() would always cancel
+them? Do we get lockdep errors for that? Or are there actual locks
+involved?
+
+johannes
+
