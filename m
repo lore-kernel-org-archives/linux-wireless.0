@@ -1,57 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:40244 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757660Ab0IXVKP (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:63024 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752744Ab0IAUIj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Sep 2010 17:10:15 -0400
-Message-ID: <4C9D13AC.4080308@candelatech.com>
-Date: Fri, 24 Sep 2010 14:10:04 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 1 Sep 2010 16:08:39 -0400
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [wireless] wireless:  Keep phy name consistent across module
- reloads.
-References: <1285113431-25526-1-git-send-email-greearb@candelatech.com> <1285362170.11036.1.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1285362170.11036.1.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <CE761E84DADF2947A4AF22FB8D97A4732A516CE8@shsmsx501.ccr.corp.intel.com>
+References: <1281532770-27545-1-git-send-email-ohad@wizery.com>
+ <1281532770-27545-4-git-send-email-ohad@wizery.com> <CE761E84DADF2947A4AF22FB8D97A4732A516CE8@shsmsx501.ccr.corp.intel.com>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Wed, 1 Sep 2010 23:08:14 +0300
+Message-ID: <AANLkTi=4U0AwLeXg=fSUViGvaCnJeXGYvJ=7pkGK+fFX@mail.gmail.com>
+Subject: Re: [RFC/PATCH 3/6] mmc: add general runtime PM support
+To: "Gao, Yunpeng" <yunpeng.gao@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	Ido Yariv <ido@wizery.com>, San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Nicolas Pitre <nico@fluxnic.net>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/24/2010 02:02 PM, Johannes Berg wrote:
-> On Tue, 2010-09-21 at 16:57 -0700, greearb@candelatech.com wrote:
->> From: Ben Greear<greearb@candelatech.com>
->>
->> It adds needless pain to user-space scripts to change the name
->> of the phy on each module reload.  Instead, find the first
->> index.
->
-> Crap, I clearly missed this patch, John, please revert this.
->
-> We cannot do this because otherwise operations you attempt to do one one
-> PHY will race with re-creating of the same phy index. For the same
-> reason, interface indexes aren't reused for netdevs.
->
-> If this bothers you so much, you can easily write a udev rule that
-> renames all your phys to "myphy" or whatever.
+Hi Yunpeng,
 
-Sorry about that.
+Sorry for the late reply (vacation..).
 
-Would a similar patch be acceptable that just set the name to the first
-available phyX, but left the index to increment monotomically as it does
-now be OK?
+On Thu, Aug 26, 2010 at 12:42 PM, Gao, Yunpeng <yunpeng.gao@intel.com> wrote:
+> It seems the power_save callback is not implemented (Null pointer) yet for both mmc and sdio. Does it mean that the power_save callback will be implemented in future or just don't need at all? Thanks.
 
-I'd really like to not have to deal with udev if possible!
+Yes, currently seems it is not needed.
+
+> But seems it doesn't provide a runtime PM example on host controller driver side. To my understanding, once the functions (mmc card or sdio devices) and mmc/sdio bus enter into rumtime suspend, it should then make the host controller enter into runtime suspend, too. Any ideas on how to achieve this? Thanks.
+
+This should already be taken care of by the PM core:
+
+When a device is suspended (e.g. our sdio/mmc card), an idle request
+is sent by the PM core to its parent device (in our case, that would
+be the host controller).
+Now, if the host controller driver has enabled runtime PM, its idle
+handler would be called so it could act upon it.
+Similarly, when the card is resumed, the PM core will first invoke its
+host controller parent's resume handler.
+
+For an (initial) reference example of enabling runtime PM in a host
+controller driver (omap_hsmmc), you can take a look at Kevin Hilman's
+pm-wip/mmc branch of:
+git://git.kernel.org/pub/scm/linux/kernel/git/khilman/linux-omap-pm.git
+
+Btw I have an updated version of this patchset - I am about to start
+testing it (will make sure your scenario works too) and then soon
+after post it here for review.
 
 Thanks,
-Ben
+Ohad.
 
 >
-> johannes
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+> Best Regards,
+> Yunpeng Gao
