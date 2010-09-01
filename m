@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34388 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751147Ab0IBLhH (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:32787 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754306Ab0IAS7k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Sep 2010 07:37:07 -0400
-Subject: Re: [PATCH w-t] iwlwifi: rewrite iwl-scan.c to avoid race
- conditions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20100902110717.GC2372@redhat.com>
-References: <20100831150021.GA10963@redhat.com>
-	 <1283420177.3793.97.camel@jlt3.sipsolutions.net>
-	 <20100902110717.GC2372@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 02 Sep 2010 13:36:53 +0200
-Message-ID: <1283427413.3793.103.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 1 Sep 2010 14:59:40 -0400
+Date: Wed, 1 Sep 2010 14:58:57 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: cancel scan in ieee80211_restart_hw if
+ software scan pending
+Message-ID: <20100901185856.GA4570@tuxdriver.com>
+References: <1283246981.3733.7.camel@jlt3.sipsolutions.net>
+ <1283282737-27749-1-git-send-email-linville@tuxdriver.com>
+ <1283336978.4131.7.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1283336978.4131.7.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-09-02 at 13:07 +0200, Stanislaw Gruszka wrote:
+On Wed, Sep 01, 2010 at 12:29:38PM +0200, Johannes Berg wrote:
+> On Tue, 2010-08-31 at 15:25 -0400, John W. Linville wrote:
+> > This function exists to clean-up after a hardware error or something
+> > similar.  The restart is accomplished using the same infrastructure used
+> > to resume after a suspend.  The suspend path cancels running scans, so
+> > it seems appropriate to do that here as well for software-based scans.
+> > If a hardware-based scan is pending, issue a warning message since this
+> > indicates that the drivers has failed to clean-up after itself.
+> 
+> Makes sense.
+> 
+> I guess unrelated to this, I wonder if we should warn in the suspend
+> case as well, rather than doing it unconditionally. Hmm.
 
-> Ok, if you want to. I could to this as well, actually I should
-> doing that way from the beginning.
+Maybe so, but I'm not sure what path we would hook for that.
+Doesn't wiphy_suspend run before the hardware bus suspend functions?
+How would the driver now in advance to cancel the hardware scan?
 
-I got started:
-http://johannes.sipsolutions.net/patches/kernel/all/LATEST/011-iwl-remove-unused-conf.patch
-http://johannes.sipsolutions.net/patches/kernel/all/LATEST/012-iwl-unify-scan-checks.patch
-http://johannes.sipsolutions.net/patches/kernel/all/LATEST/013-iwl-fix-scan-queued-bug.patch
-http://johannes.sipsolutions.net/patches/kernel/all/LATEST/014-iwl-move-scan-completed.patch
-
-but haven't really started addressing the actual problem. Want to take
-it from here again? (oh and I also haven't tested these patches)
-
-johannes
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
