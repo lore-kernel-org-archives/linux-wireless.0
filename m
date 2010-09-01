@@ -1,37 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38419 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755136Ab0I2UFo (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:34781 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752080Ab0IAV07 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Sep 2010 16:05:44 -0400
-Subject: Re: [PATCH v2] mac80211:  Don't go off-channel in work_work unless
- needed.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1285787159-9207-1-git-send-email-greearb@candelatech.com>
-References: <1285787159-9207-1-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 29 Sep 2010 22:05:29 +0200
-Message-ID: <1285790729.3756.37.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 1 Sep 2010 17:26:59 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>
+Cc: Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Nicolas Pitre <nico@fluxnic.net>, Ido Yariv <ido@wizery.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Russell King <linux@arm.linux.org.uk>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH v5 0/7] native wl1271 support on ZOOM
+Date: Thu,  2 Sep 2010 00:26:43 +0300
+Message-Id: <1283376410-9999-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-09-29 at 12:05 -0700, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> If the work to be done is on the current active channel, then
-> do not call the offchannel and return-to-channel logic.
-> 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
-> v1 -> v2:  Remove went_off_channel logic, and don't set
->    tmp_channel if we're not going offchannel.
+This patchset adds wl1271 support on ZOOM2/3 boards.
 
-I briefly grepped through the source and am pretty sure this'll break a
-few things in mlme.c and even the work-on-same-channel logic in
-work.c...
+Only basic support is included; MMC power manipulation part is submitted separately as Runtime PM migration.
 
-johannes
+Changes since v4:
+- Introduce a simple (yet safe) mechanism to pass platform-specific data to the driver, as suggested by Russell King. Currently only a single device is supported; multi-device support will be introduced only when/if required
+
+Patches are based on 2.6.36-rc3 and tested on ZOOM3.
+
+Thanks,
+
+Ohad Ben-Cohen (7):
+  wireless: wl1271: make wl12xx.h common to both spi and sdio
+  wireless: wl1271: support return value for the set power func
+  wireless: wl12xx: add platform data passing support
+  wireless: wl1271: take irq info from private board data
+  wireless: wl1271: make ref_clock configurable by board
+  omap: zoom: add fixed regulator device for wlan
+  omap: zoom: add mmc3/wl1271 device support
+
+ arch/arm/mach-omap2/board-zoom-peripherals.c       |   54 ++++++++++++++++++++
+ drivers/net/wireless/Makefile                      |    2 +
+ drivers/net/wireless/wl12xx/Kconfig                |    5 ++-
+ drivers/net/wireless/wl12xx/wl1251_sdio.c          |    2 +-
+ drivers/net/wireless/wl12xx/wl1251_spi.c           |    2 +-
+ drivers/net/wireless/wl12xx/wl1271.h               |    3 +-
+ drivers/net/wireless/wl12xx/wl1271_boot.c          |    9 ++--
+ drivers/net/wireless/wl12xx/wl1271_boot.h          |    1 -
+ drivers/net/wireless/wl12xx/wl1271_io.h            |    9 ++-
+ drivers/net/wireless/wl12xx/wl1271_main.c          |    4 +-
+ drivers/net/wireless/wl12xx/wl1271_sdio.c          |   19 ++++---
+ drivers/net/wireless/wl12xx/wl1271_spi.c           |    8 ++-
+ drivers/net/wireless/wl12xx/wl12xx_platform_data.c |   31 +++++++++++
+ include/linux/spi/wl12xx.h                         |   34 ------------
+ include/linux/wl12xx.h                             |   38 ++++++++++++++
+ 15 files changed, 164 insertions(+), 57 deletions(-)
+ create mode 100644 drivers/net/wireless/wl12xx/wl12xx_platform_data.c
+ delete mode 100644 include/linux/spi/wl12xx.h
+ create mode 100644 include/linux/wl12xx.h
 
