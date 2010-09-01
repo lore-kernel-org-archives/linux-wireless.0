@@ -1,68 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:52496 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752014Ab0ILLL0 (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:42269 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755546Ab0IAPHW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Sep 2010 07:11:26 -0400
-From: Felipe Contreras <felipe.contreras@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: Jiri Kosina <jkosina@suse.cz>,
-	Felipe Contreras <felipe.contreras@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Felix Fietkau <nbd@openwrt.org>, Jouni Malinen <j@w1.fi>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 2/2] mac80211: fix compilation warning
-Date: Sun, 12 Sep 2010 14:10:29 +0300
-Message-Id: <1284289829-25425-3-git-send-email-felipe.contreras@gmail.com>
-In-Reply-To: <1284289829-25425-1-git-send-email-felipe.contreras@gmail.com>
-References: <1284289829-25425-1-git-send-email-felipe.contreras@gmail.com>
+	Wed, 1 Sep 2010 11:07:22 -0400
+Received: by ewy23 with SMTP id 23so4363501ewy.19
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Sep 2010 08:07:21 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1282762406.23359.1.camel@wwguy-huron>
+References: <AANLkTim4_HoHwdhGqAZqcGf2oq7boktdZFW4-w5DpdDa@mail.gmail.com>
+ <AANLkTinuYOvwNZAFgq67f4XBL4YQ+b2z4EBMcmvbMYi3@mail.gmail.com>
+ <1281481505.20038.10.camel@wwguy-ubuntu> <AANLkTinDjp500wXXHbiOmom70Wbvs1OL6LXOfTq06A=U@mail.gmail.com>
+ <1282762406.23359.1.camel@wwguy-huron>
+From: Andrew Lutomirski <luto@mit.edu>
+Date: Wed, 1 Sep 2010 11:07:01 -0400
+Message-ID: <AANLkTik0ssMim0-eRS1kWD+CsE_kCS-RjEm_iEbdPy05@mail.gmail.com>
+Subject: Re: [WTF, maintainers] Re: *PING* iwlagn 2.6.35: "BA scd_flow 0 does
+ not match txq_id 10" regression
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-net/mac80211/tx.c: In function â€˜ieee80211_subif_start_xmitâ€™:
-net/mac80211/tx.c:1702: warning: unused variable â€˜mesh_hdrâ€™
+On Wed, Aug 25, 2010 at 2:53 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
+> On Wed, 2010-08-25 at 11:42 -0700, Andrew Lutomirski wrote:
+>> On Tue, Aug 10, 2010 at 7:05 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
+>> > Hi Andrew,
+>> >
+>> > On Tue, 2010-08-10 at 14:39 -0700, Andrew Lutomirski wrote:
+>> >> On Mon, Jul 26, 2010 at 4:02 PM, Andrew Lutomirski <luto@mit.edu> wrote:
+>> >> > There's a regression in 2.6.35 where the connection breaks and iwlagn
+>> >> > writes a bunch of:
+>> >> >
+>> >> > iwlagn 0000:03:00.0: BA scd_flow 0 does not match txq_id 10
+>> >> >
+>> >> > This is confirmed [1] and a patch supposedly exists.  Since this
+>> >> > breaks at least two people's wireless and 2.6.35 is about to be
+>> >> > released, can we see the patches?
+>> >> >
+>> >> > Thanks,
+>> >> > Andy
+>> >> >
+>> >> > [1] http://article.gmane.org/gmane.linux.kernel.wireless.general/53552
+>> >> >
+>> >>
+>> >> This regression was reported on July 21 and confirmed, supposedly with
+>> >> a patch available, on July 24 (or maybe July 23).  On July 26 I pinged
+>> >> the list because I'm affected as well.
+>> >>
+>> >> It's now August 10 and both 2.6.35 and 2.5.35.1 have been released and
+>> >> the bug is still there.  WTF happened?  (I admit I haven't actually
+>> >> tested 2.6.35.1 because it's still compiling, but I see nothing to
+>> >> suggest that it's been fixed.)
+>> >>
+>> >
+>> > Sorry for the delay, the problem you report is a real problem in our
+>> > uCode; unfortunately, we still not root cause the real problem yet. The
+>> > patch I provide previous just a hack and still waiting for our internal
+>> > validation team to make sure it did not break the overall behaviors.
+>> >
+>> > I will submit the patch as soon as I got the report back from our test
+>> > team; at the meantime, we are very active work on root cause the real
+>> > problem. Once we have the possible solution, it will be great if you can
+>> > help us to verify it.
+>>
+>> In case this helps, I just captured the bug starting with
+>> iwlagn.debug=1 and with the following patch:
+>>
+>> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+>> b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+>> index 7d614c4..8583c42 100644
+>> --- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+>> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+>> @@ -1300,8 +1300,9 @@ void iwlagn_rx_reply_compressed_ba(struct iwl_priv *priv,
+>>         tid = ba_resp->tid;
+>>         agg = &priv->stations[sta_id].tid[tid].agg;
+>>         if (unlikely(agg->txq_id != scd_flow)) {
+>> -               IWL_ERR(priv, "BA scd_flow %d does not match txq_id %d\n",
+>> -                       scd_flow, agg->txq_id);
+>> +               IWL_ERR(priv, "BA scd_flow %d does not match txq_id %d
+>> (sta_id = %d, tid = %d)\n",
+>> +                       scd_flow, agg->txq_id, sta_id, tid);
+>> +               //              iwl_force_reset(priv, IWL_FW_RESET);
+>>                 return;
+>>         }
+>>
+>>
+>> I've attached the dmesg.  Search for 'BA'.
+>>
+> It is an known issue as I mention. we are working on it and sorry for
+> the delay.
+>
+> please take a look at commit 735df29a0641d9d8d65117c48ee460284ffcfc05
+>
+> "Since it is possible happen very often and we do not want to fill the
+> syslog, so don't enable the logging by default"
 
-Signed-off-by: Felipe Contreras <felipe.contreras@gmail.com>
----
- net/mac80211/tx.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+IMO that just makes it worse.  Now people's wireless connections will
+break silently and no one will know if it's this bug or a different
+one.  You could ratelimit the error, though.
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index c54db96..323a6b5 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1699,7 +1699,6 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 	u16 ethertype, hdrlen,  meshhdrlen = 0;
- 	__le16 fc;
- 	struct ieee80211_hdr hdr;
--	struct ieee80211s_hdr mesh_hdr;
- 	const u8 *encaps_data;
- 	int encaps_len, skip_header_bytes;
- 	int nh_pos, h_pos;
-@@ -1755,7 +1754,9 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 		hdrlen = 30;
- 		break;
- #ifdef CONFIG_MAC80211_MESH
--	case NL80211_IFTYPE_MESH_POINT:
-+	case NL80211_IFTYPE_MESH_POINT: {
-+		struct ieee80211s_hdr mesh_hdr;
-+
- 		if (!sdata->u.mesh.mshcfg.dot11MeshTTL) {
- 			/* Do not send frames with mesh_ttl == 0 */
- 			sdata->u.mesh.mshstats.dropped_frames_ttl++;
-@@ -1813,6 +1814,7 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 
- 		}
- 		break;
-+	}
- #endif
- 	case NL80211_IFTYPE_STATION:
- 		memcpy(hdr.addr1, sdata->u.mgd.bssid, ETH_ALEN);
--- 
-1.7.2.3
+I tried rigging the driver to force a firmware reload when this
+triggers but that doesn't seem to work reliably.
 
+--Andy
+
+>
+> Thanks
+> Wey
+>
+>
