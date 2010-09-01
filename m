@@ -1,47 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:33903 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750698Ab0IVVff convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Sep 2010 17:35:35 -0400
-Received: by gyd8 with SMTP id 8so357148gyd.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 14:35:34 -0700 (PDT)
+Received: from lime.solrad.nl ([213.193.238.107]:58169 "EHLO lime.solrad.nl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755573Ab0IAPcF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Sep 2010 11:32:05 -0400
+Message-ID: <4C7E71F3.7000301@youcom.nl>
+Date: Wed, 01 Sep 2010 17:32:03 +0200
+From: Jelle Martijn Kok <jmkok@youcom.nl>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTimfAdHOR7XeTxxPGWav1hWB6UKUJm5k2Zs6zcPc@mail.gmail.com>
-References: <AANLkTik_68KKkQJ0N_BJFYRsv4L+iXa5V1+MQ=n-v=Y0@mail.gmail.com>
- <AANLkTiki=Ta-77MFJ-dnCs1iDu2f7OMXcnmeY3ht0Z7J@mail.gmail.com> <AANLkTimfAdHOR7XeTxxPGWav1hWB6UKUJm5k2Zs6zcPc@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 22 Sep 2010 14:35:14 -0700
-Message-ID: <AANLkTi=LuTyMq8tRXuKJ5B70CSftR3VsaMQsuqSMgdqF@mail.gmail.com>
-Subject: Re: Old Otus driver with WEP
-To: Alberto Donato <alberto.donato@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Johannes Berg <johannes@sipsolutions.net>,
+	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
+Subject: mac80211 and powersaving
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 22, 2010 at 2:28 PM, Alberto Donato
-<alberto.donato@gmail.com> wrote:
-> On Wed, Sep 22, 2010 at 11:20 PM, Luis R. Rodriguez <mcgrof@gmail.com> wrote:
->> On Wed, Sep 22, 2010 at 1:38 PM, Alberto Donato
->> <alberto.donato@gmail.com> wrote:
->>> Hi all,
->>>  I'm using the old otus driver on a mips platform which is currently
->>> using a  2.6.18 kernel with a TP-Link TL-WN821N usb adapter.
->>
->> This driver is not supported, upgrade your kernel to something modern.
->>
->>  Luis
->>
->
-> Hi Luis,
->  I know this is no longer supported, but my kernel is vendor-provided
-> for an embedded system, so I can't upgrade freely to newer kernels
-> supporting the new ar9170 driver.
->
-> I'm just trying to know for sure if this driver does not support WEP
-> or there is some problem with my current setup.
+(sorry if this mail is sent twice, but the first attempt was bounced due 
+to html text)
 
-That driver is going to get removed now so no one cares about it.
+I recently ran into trouble when using the RT73 with powersave enabled.
+So I started to investigate the problem and saw the the powersave mode 
+as it was implemented in de rt73usb driver could never function.
+The rt73usb driver seems to switch to sleep on receival of the 
+IEEE80211_CONF_CHANGE_PS flag, while it should only enable the powersave 
+feature (and essentially, it would go to sleep immediatly).
+However after the sleep period the rt73usb awakens for receival of a 
+beacon, en then never goes back to sleep.
 
-  Luis
+I discussed this issue with Ivo van Doorn (we discussed it in Dutch, so 
+I won't be including it here) and he suggested to post the issue the to 
+mailing list.
+
+Assuming the powersave implementation of the RT73 is indeed incorrect, I 
+would actually have the following question:
+Should it not be best if the mac80211 would directly enable and disable 
+the sleep modes of the hardware/driver.
+
+I do realize that this might seriously change a lot of code, but:
+- If the driver is responsible for going to and from sleep, it needs to 
+have a notion of the contents of the packets it receives (as it only may 
+go to sleep on a beacon without a "directed_tim"). And thus this would 
+require the driver to implement a lot of code that is already present in 
+the mac80211.
+- It makes it much easier for drivers to support PS. The driver 
+basically only need to implement a "sleep" and "awake" callback.
+- Only 3 drivers seem to have a viable PS code (ath9k / iwlwifi / p54). 
+However I only quickly scanned the code.
+- All Ralink drivers seem to be similar to the rt73usb, that they only 
+go to sleep once.
+
+So, a quick (and very rough) idea:
+- The driver should implement an "sleep" and "awake" function
+- The driver should inform the mac80211 if it supports sleep and wake 
+and tell if it can do this auto(nomous).
+- If the driver cannot auto-sleep, the mac80211 should call the sleep 
+callback (likely from "ieee80211_rx_mgmt_beacon()")
+- If the driver cannot auto-wake, the mac80211 should start a timer to 
+wake the driver
+- Nullframes will normally also be handled by the mac80211 (unless 
+otherwise specified by the driver)
+
+This would allow almost any hardware to support (dynamic) PS, as all 
+steps performed and managed by the mac80211.
+
+Jelle Martijn Kok
+
