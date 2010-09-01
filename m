@@ -1,64 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:38217 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752855Ab0I3V3i (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Sep 2010 17:29:38 -0400
-Received: by qyk33 with SMTP id 33so2482278qyk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Sep 2010 14:29:37 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:43557 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754825Ab0IAOUY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Sep 2010 10:20:24 -0400
+Date: Wed, 1 Sep 2010 16:16:59 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH w-t] iwlwifi: rewrite iwl-scan.c to avoid race conditions
+Message-ID: <20100901141658.GA20421@redhat.com>
+References: <20100831150021.GA10963@redhat.com>
+ <1283345553.4124.6.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Date: Thu, 30 Sep 2010 17:29:37 -0400
-Message-ID: <AANLkTi=cN7ZKa488MmXYDu_ywW95E8TcqJW4yfyKr0JR@mail.gmail.com>
-Subject: [PATCH] ath9k: Enable WDS for the ath9k
-From: Bill Jordan <bjordan@rajant.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1283345553.4124.6.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As requested, I'm breaking up my previous patch.
+On Wed, Sep 01, 2010 at 02:52:33PM +0200, Johannes Berg wrote:
+> >  static int iwl_send_scan_abort(struct iwl_priv *priv)
+> >  {
+> > -	int ret = 0;
+> > +	int ret;
+> >  	struct iwl_rx_packet *pkt;
+> >  	struct iwl_host_cmd cmd = {
+> >  		.id = REPLY_SCAN_ABORT_CMD,
+> >  		.flags = CMD_WANT_SKB,
+> >  	};
+> 
+> Since you're going through, and probably know where what lock is needed,
+> could you annotate the places with, e.g.
+> 
+> 	lockdep_assert_held(&priv->mutex)?
 
-This patch enables WDS for the ath9k driver.
+Ok
 
-For WDS to fully work, patches to mac80211 are also needed
-(submitted separately).
+> These "inline" annotations seem wrong, either the function is used once,
+> then gcc will inline it, or it is used multiple times, then we shouldn't
+> inline it.
 
-Signed-off-by: Bill Jordan <bjordan@rajant.com>
----
- drivers/net/wireless/ath/ath9k/init.c |    1 +
- drivers/net/wireless/ath/ath9k/main.c |    3 +++
- 2 files changed, 4 insertions(+), 0 deletions(-)
+Ok
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c
-b/drivers/net/wireless/ath/ath9k/init.c
-index de33938..c2792c9 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -639,6 +639,7 @@ void ath9k_set_hw_capab(struct ath_softc *sc,
-struct ieee80211_hw *hw)
+> > +int iwl_scan_cancel_sleep(struct iwl_priv *priv)
+> > +{
+> > +	int ret;
+> > +	unsigned long timeout = jiffies + IWL_SCAN_ABORT_SLEEP;
+> > +
+> > +	IWL_DEBUG_SCAN(priv, "Scan cancel wait\n");
+> > +
+> > +	cancel_delayed_work(&priv->scan_timeout);
+> > +	iwl_do_scan_abort(priv);
+> > +
+> > +	while (time_before_eq(jiffies, timeout)) {
+> > +		if (!test_bit(STATUS_SCAN_HW, &priv->status))
+> > +			break;
+> > +		msleep(20);
+> > +	}
+> 
+> This, and
+> 
+> > +void iwl_wait_for_scan_end(struct iwl_priv *priv)
+> > +{
+> > +	unsigned long timeout = jiffies + IWL_SCAN_WAIT_END;
+> > +
+> > +	while (time_before_eq(jiffies, timeout)) {
+> > +		if (!test_bit(STATUS_SCANNING, &priv->status))
+> > +			break;
+> > +		msleep(20);
+> > +	}
+> 
+> this seems like it could use a completion?
 
- 	hw->wiphy->interface_modes =
- 		BIT(NL80211_IFTYPE_AP) |
-+		BIT(NL80211_IFTYPE_WDS) |
- 		BIT(NL80211_IFTYPE_STATION) |
- 		BIT(NL80211_IFTYPE_ADHOC) |
- 		BIT(NL80211_IFTYPE_MESH_POINT);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c
-b/drivers/net/wireless/ath/ath9k/main.c
-index a133878..d67067f 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1384,6 +1384,9 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
- 	case NL80211_IFTYPE_STATION:
- 		ic_opmode = NL80211_IFTYPE_STATION;
- 		break;
-+	case NL80211_IFTYPE_WDS:
-+		ic_opmode = NL80211_IFTYPE_WDS;
-+		break;
- 	case NL80211_IFTYPE_ADHOC:
- 	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_MESH_POINT:
--- 
-1.7.2.3
+We don't know is scanning is currently performed or not,
+so we nobody could ever call complete(). Above code works
+fine if no scan is running. 
+
+Stanislaw
