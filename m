@@ -1,276 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:41243 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752692Ab0I1VBP (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55577 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751384Ab0IAMwm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Sep 2010 17:01:15 -0400
-Received: by bwz11 with SMTP id 11so94756bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Sep 2010 14:01:13 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] carl9170: support firmware-based rx filter
-Date: Tue, 28 Sep 2010 23:00:59 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201009282301.00027.chunkeey@googlemail.com>
+	Wed, 1 Sep 2010 08:52:42 -0400
+Subject: Re: [PATCH w-t] iwlwifi: rewrite iwl-scan.c to avoid race
+ conditions
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20100831150021.GA10963@redhat.com>
+References: <20100831150021.GA10963@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 01 Sep 2010 14:52:33 +0200
+Message-ID: <1283345553.4124.6.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The hardware rx-filter was essentially disabled, because
-of a serve, yet unidentifiable problem with iwlagn.
-Due to these circumstances the driver and mac80211 were
-left with the job of filtering.
 
-This is very unfortunate and has proven to be expensive
-in terms of latency, memory and load.
+Some comments on the patch:
 
-Therefore the new 1.8.8.3 firmware introduces a flexible
-filtering infrastructure which allows the driver to
-offload some of the checks (FCS & PLCP crc check,
-RA match, control frame filter, etc...) whenever possible.
+>  static int iwl_send_scan_abort(struct iwl_priv *priv)
+>  {
+> -	int ret = 0;
+> +	int ret;
+>  	struct iwl_rx_packet *pkt;
+>  	struct iwl_host_cmd cmd = {
+>  		.id = REPLY_SCAN_ABORT_CMD,
+>  		.flags = CMD_WANT_SKB,
+>  	};
 
-Note:
-This patch also includes all changes to the
-shared headers files since the inclusion.
+Since you're going through, and probably know where what lock is needed,
+could you annotate the places with, e.g.
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-diff --git a/drivers/net/wireless/ath/carl9170/carl9170.h b/drivers/net/wireless/ath/carl9170/carl9170.h
-index 20f2a77..6cf0c9e 100644
---- a/drivers/net/wireless/ath/carl9170/carl9170.h
-+++ b/drivers/net/wireless/ath/carl9170/carl9170.h
-@@ -279,6 +279,7 @@ struct ar9170 {
- 		unsigned int beacon_max_len;
- 		bool rx_stream;
- 		bool tx_stream;
-+		bool rx_filter;
- 		unsigned int mem_blocks;
- 		unsigned int mem_block_size;
- 		unsigned int rx_size;
-@@ -314,6 +315,7 @@ struct ar9170 {
- 	u64 cur_mc_hash;
- 	u32 cur_filter;
- 	unsigned int filter_state;
-+	unsigned int rx_filter_caps;
- 	bool sniffer_enabled;
- 
- 	/* MAC */
-diff --git a/drivers/net/wireless/ath/carl9170/cmd.h b/drivers/net/wireless/ath/carl9170/cmd.h
-index 0fc83d2..f78728c 100644
---- a/drivers/net/wireless/ath/carl9170/cmd.h
-+++ b/drivers/net/wireless/ath/carl9170/cmd.h
-@@ -59,6 +59,16 @@ static inline int carl9170_flush_cab(struct ar9170 *ar,
- 	return carl9170_bcn_ctrl(ar, vif_id, CARL9170_BCN_CTRL_DRAIN, 0, 0);
- }
- 
-+static inline int carl9170_rx_filter(struct ar9170 *ar,
-+				     const unsigned int _rx_filter)
-+{
-+	__le32 rx_filter = cpu_to_le32(_rx_filter);
-+
-+	return carl9170_exec_cmd(ar, CARL9170_CMD_RX_FILTER,
-+				sizeof(rx_filter), (u8 *)&rx_filter,
-+				0, NULL);
-+}
-+
- struct carl9170_cmd *carl9170_cmd_buf(struct ar9170 *ar,
- 	const enum carl9170_cmd_oids cmd, const unsigned int len);
- 
-diff --git a/drivers/net/wireless/ath/carl9170/fw.c b/drivers/net/wireless/ath/carl9170/fw.c
-index 3661546..ae6c006 100644
---- a/drivers/net/wireless/ath/carl9170/fw.c
-+++ b/drivers/net/wireless/ath/carl9170/fw.c
-@@ -257,6 +257,13 @@ static int carl9170_fw(struct ar9170 *ar, const __u8 *data, size_t len)
- 	if (SUPP(CARL9170FW_USB_UP_STREAM))
- 		ar->fw.rx_stream = true;
- 
-+	if (SUPP(CARL9170FW_RX_FILTER)) {
-+		ar->fw.rx_filter = true;
-+		ar->rx_filter_caps = FIF_FCSFAIL | FIF_PLCPFAIL |
-+			FIF_CONTROL | FIF_PSPOLL | FIF_OTHER_BSS |
-+			FIF_PROMISC_IN_BSS;
-+	}
-+
- 	ar->fw.vif_num = otus_desc->vif_num;
- 	ar->fw.cmd_bufs = otus_desc->cmd_bufs;
- 	ar->fw.address = le32_to_cpu(otus_desc->fw_address);
-diff --git a/drivers/net/wireless/ath/carl9170/fwcmd.h b/drivers/net/wireless/ath/carl9170/fwcmd.h
-index d4a4e1d..d552166 100644
---- a/drivers/net/wireless/ath/carl9170/fwcmd.h
-+++ b/drivers/net/wireless/ath/carl9170/fwcmd.h
-@@ -53,6 +53,7 @@ enum carl9170_cmd_oids {
- 	CARL9170_CMD_REBOOT		= 0x04,
- 	CARL9170_CMD_BCN_CTRL		= 0x05,
- 	CARL9170_CMD_READ_TSF		= 0x06,
-+	CARL9170_CMD_RX_FILTER		= 0x07,
- 
- 	/* CAM */
- 	CARL9170_CMD_EKEY		= 0x10,
-@@ -153,6 +154,20 @@ struct carl9170_psm {
- } __packed;
- #define CARL9170_PSM_SIZE		4
- 
-+struct carl9170_rx_filter_cmd {
-+	__le32		rx_filter;
-+} __packed;
-+#define CARL9170_RX_FILTER_CMD_SIZE	4
-+
-+#define CARL9170_RX_FILTER_BAD		0x01
-+#define CARL9170_RX_FILTER_OTHER_RA	0x02
-+#define CARL9170_RX_FILTER_DECRY_FAIL	0x04
-+#define CARL9170_RX_FILTER_CTL_OTHER	0x08
-+#define CARL9170_RX_FILTER_CTL_PSPOLL	0x10
-+#define CARL9170_RX_FILTER_CTL_BACKR	0x20
-+#define CARL9170_RX_FILTER_MGMT		0x40
-+#define CARL9170_RX_FILTER_DATA		0x80
-+
- struct carl9170_bcn_ctrl_cmd {
- 	__le32		vif_id;
- 	__le32		mode;
-@@ -188,6 +203,7 @@ struct carl9170_cmd {
- 		struct carl9170_rf_init		rf_init;
- 		struct carl9170_psm		psm;
- 		struct carl9170_bcn_ctrl_cmd	bcn_ctrl;
-+		struct carl9170_rx_filter_cmd	rx_filter;
- 		u8 data[CARL9170_MAX_CMD_PAYLOAD_LEN];
- 	} __packed;
- } __packed;
-diff --git a/drivers/net/wireless/ath/carl9170/fwdesc.h b/drivers/net/wireless/ath/carl9170/fwdesc.h
-index 7cd8117..71f3821 100644
---- a/drivers/net/wireless/ath/carl9170/fwdesc.h
-+++ b/drivers/net/wireless/ath/carl9170/fwdesc.h
-@@ -66,6 +66,9 @@ enum carl9170fw_feature_list {
- 	/* Firmware PSM support | CARL9170_CMD_PSM */
- 	CARL9170FW_PSM,
- 
-+	/* Firmware RX filter | CARL9170_CMD_RX_FILTER */
-+	CARL9170FW_RX_FILTER,
-+
- 	/* KEEP LAST */
- 	__CARL9170FW_FEATURE_NUM
- };
-@@ -142,7 +145,7 @@ struct carl9170fw_fix_desc {
- 	(sizeof(struct carl9170fw_fix_desc))
- 
- #define CARL9170FW_DBG_DESC_MIN_VER			1
--#define CARL9170FW_DBG_DESC_CUR_VER			2
-+#define CARL9170FW_DBG_DESC_CUR_VER			3
- struct carl9170fw_dbg_desc {
- 	struct carl9170fw_desc_head head;
- 
-@@ -150,6 +153,7 @@ struct carl9170fw_dbg_desc {
- 	__le32 counter_addr;
- 	__le32 rx_total_addr;
- 	__le32 rx_overrun_addr;
-+	__le32 rx_filter;
- 
- 	/* Put your debugging definitions here */
- } __packed;
-diff --git a/drivers/net/wireless/ath/carl9170/hw.h b/drivers/net/wireless/ath/carl9170/hw.h
-index b1292ac..2f471b3 100644
---- a/drivers/net/wireless/ath/carl9170/hw.h
-+++ b/drivers/net/wireless/ath/carl9170/hw.h
-@@ -731,6 +731,9 @@ struct ar9170_stream {
- #define SET_VAL(reg, value, newvalue)					\
- 	(value = ((value) & ~reg) | (((newvalue) << reg##_S) & reg))
- 
-+#define SET_CONSTVAL(reg, newvalue)					\
-+	(((newvalue) << reg##_S) & reg)
-+
- #define MOD_VAL(reg, value, newvalue)					\
- 	(((value) & ~reg) | (((newvalue) << reg##_S) & reg))
- #endif	/* __CARL9170_SHARED_HW_H */
-diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
-index d9d3e9c..4e96910 100644
---- a/drivers/net/wireless/ath/carl9170/main.c
-+++ b/drivers/net/wireless/ath/carl9170/main.c
-@@ -380,6 +380,13 @@ static int carl9170_op_start(struct ieee80211_hw *hw)
- 	if (err)
- 		goto out;
- 
-+	if (ar->fw.rx_filter) {
-+		err = carl9170_rx_filter(ar, CARL9170_RX_FILTER_OTHER_RA |
-+			CARL9170_RX_FILTER_CTL_OTHER | CARL9170_RX_FILTER_BAD);
-+		if (err)
-+			goto out;
-+	}
-+
- 	err = carl9170_write_reg(ar, AR9170_MAC_REG_DMA_TRIGGER,
- 				 AR9170_DMA_TRIGGER_RXQ);
- 	if (err)
-@@ -840,8 +847,7 @@ static void carl9170_op_configure_filter(struct ieee80211_hw *hw,
- 	struct ar9170 *ar = hw->priv;
- 
- 	/* mask supported flags */
--	*new_flags &= FIF_ALLMULTI | FIF_FCSFAIL | FIF_PLCPFAIL |
--		      FIF_OTHER_BSS | FIF_PROMISC_IN_BSS;
-+	*new_flags &= FIF_ALLMULTI | ar->rx_filter_caps;
- 
- 	if (!IS_ACCEPTING_CMD(ar))
- 		return;
-@@ -867,6 +873,26 @@ static void carl9170_op_configure_filter(struct ieee80211_hw *hw,
- 		WARN_ON(carl9170_set_operating_mode(ar));
- 	}
- 
-+	if (ar->fw.rx_filter && changed_flags & ar->rx_filter_caps) {
-+		u32 rx_filter = 0;
-+
-+		if (!(*new_flags & (FIF_FCSFAIL | FIF_PLCPFAIL)))
-+			rx_filter |= CARL9170_RX_FILTER_BAD;
-+
-+		if (!(*new_flags & FIF_CONTROL))
-+			rx_filter |= CARL9170_RX_FILTER_CTL_OTHER;
-+
-+		if (!(*new_flags & FIF_PSPOLL))
-+			rx_filter |= CARL9170_RX_FILTER_CTL_PSPOLL;
-+
-+		if (!(*new_flags & (FIF_OTHER_BSS | FIF_PROMISC_IN_BSS))) {
-+			rx_filter |= CARL9170_RX_FILTER_OTHER_RA;
-+			rx_filter |= CARL9170_RX_FILTER_DECRY_FAIL;
-+		}
-+
-+		WARN_ON(carl9170_rx_filter(ar, rx_filter));
-+	}
-+
- 	mutex_unlock(&ar->mutex);
- }
- 
-diff --git a/drivers/net/wireless/ath/carl9170/phy.h b/drivers/net/wireless/ath/carl9170/phy.h
-index 53c18d3..02c34eb 100644
---- a/drivers/net/wireless/ath/carl9170/phy.h
-+++ b/drivers/net/wireless/ath/carl9170/phy.h
-@@ -423,8 +423,8 @@
- #define		AR9170_PHY_CCK_DETECT_BB_ENABLE_ANT_FAST_DIV	0x2000
- #define		AR9170_PHY_CCK_DETECT_BB_ENABLE_ANT_FAST_DIV_S	13
- 
--#define	AR9170_PHY_REG_GAIN_2GHZ_CHAIN_2	(AR9170_PHY_REG_BASE + 0x2a0c)
- #define	AR9170_PHY_REG_GAIN_2GHZ		(AR9170_PHY_REG_BASE + 0x0a0c)
-+#define	AR9170_PHY_REG_GAIN_2GHZ_CHAIN_2	(AR9170_PHY_REG_BASE + 0x2a0c)
- #define		AR9170_PHY_GAIN_2GHZ_RXTX_MARGIN	0x00fc0000
- #define		AR9170_PHY_GAIN_2GHZ_RXTX_MARGIN_S	18
- #define		AR9170_PHY_GAIN_2GHZ_BSW_MARGIN		0x00003c00
-@@ -561,7 +561,4 @@
- #define		AR9170_PHY_CH2_EXT_MINCCA_PWR		0xff800000
- #define		AR9170_PHY_CH2_EXT_MINCCA_PWR_S		23
- 
--#define	REDUCE_CHAIN_0 0x00000050
--#define	REDUCE_CHAIN_1 0x00000051
--
- #endif	/* __CARL9170_SHARED_PHY_H */
-diff --git a/drivers/net/wireless/ath/carl9170/version.h b/drivers/net/wireless/ath/carl9170/version.h
-index 0e917f8..ff53f07 100644
---- a/drivers/net/wireless/ath/carl9170/version.h
-+++ b/drivers/net/wireless/ath/carl9170/version.h
-@@ -1,7 +1,7 @@
- #ifndef __CARL9170_SHARED_VERSION_H
- #define __CARL9170_SHARED_VERSION_H
- #define CARL9170FW_VERSION_YEAR 10
--#define CARL9170FW_VERSION_MONTH 8
--#define CARL9170FW_VERSION_DAY 30
--#define CARL9170FW_VERSION_GIT "1.8.8.1"
-+#define CARL9170FW_VERSION_MONTH 9
-+#define CARL9170FW_VERSION_DAY 28
-+#define CARL9170FW_VERSION_GIT "1.8.8.3"
- #endif /* __CARL9170_SHARED_VERSION_H */
+	lockdep_assert_held(&priv->mutex)?
+
+If you're not sure, that's fine, but if you know already that'd probably
+make things easier in the future.
+
+> +static inline void iwl_complete_scan(struct iwl_priv *priv, bool aborted)
+
+These "inline" annotations seem wrong, either the function is used once,
+then gcc will inline it, or it is used multiple times, then we shouldn't
+inline it.
+
+> +static void iwl_do_scan_abort(struct iwl_priv *priv)
+
+> +	lockdep_assert_held(&priv->mutex);
+
+:-)
+
+> +/**
+> + * iwl_scan_cancel_sleep - Cancel any currently executing HW scan,
+> + *			   wait for hardware/firmware! completion
+> + */
+> +int iwl_scan_cancel_sleep(struct iwl_priv *priv)
+> +{
+> +	int ret;
+> +	unsigned long timeout = jiffies + IWL_SCAN_ABORT_SLEEP;
+> +
+> +	IWL_DEBUG_SCAN(priv, "Scan cancel wait\n");
+> +
+> +	cancel_delayed_work(&priv->scan_timeout);
+> +	iwl_do_scan_abort(priv);
+> +
+> +	while (time_before_eq(jiffies, timeout)) {
+> +		if (!test_bit(STATUS_SCAN_HW, &priv->status))
+> +			break;
+> +		msleep(20);
+> +	}
+
+This, and
+
+> +void iwl_wait_for_scan_end(struct iwl_priv *priv)
+> +{
+> +	unsigned long timeout = jiffies + IWL_SCAN_WAIT_END;
+> +
+> +	while (time_before_eq(jiffies, timeout)) {
+> +		if (!test_bit(STATUS_SCANNING, &priv->status))
+> +			break;
+> +		msleep(20);
+> +	}
+
+this seems like it could use a completion?
+
+johannes
+
