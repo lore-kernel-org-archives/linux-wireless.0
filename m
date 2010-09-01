@@ -1,80 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:49236 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752480Ab0IOBGl (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49087 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752420Ab0IAU3k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 21:06:41 -0400
-Received: by pxi10 with SMTP id 10so2587131pxi.19
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Sep 2010 18:06:41 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201009150958.14525.br1@einfach.org>
-References: <AANLkTi=azJS6bn7-=Bbb--ibACaQWqv4ZGLMUpfxynm7@mail.gmail.com>
- <AANLkTi==HEkmY4TR=r+4Ymk_55fBORmRgF+SFGQzK750@mail.gmail.com>
- <AANLkTim=hRJxQW+UomOQygmLjrePym=Cn-o7RzKqWc+D@mail.gmail.com> <201009150958.14525.br1@einfach.org>
-From: Jonathan Guerin <jonathan@guerin.id.au>
-Date: Wed, 15 Sep 2010 11:06:21 +1000
-Message-ID: <AANLkTinZmv-o-tbR=2kso8jqZPTMdG=eKFCbM9DJ41d2@mail.gmail.com>
-Subject: Re: [ath5k-devel] [support] ath5k contention windows
-To: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel <ath5k-devel@lists.ath5k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 1 Sep 2010 16:29:40 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: only cancel software-based scans on suspend
+Date: Wed,  1 Sep 2010 16:17:28 -0400
+Message-Id: <1283372248-1043-1-git-send-email-linville@tuxdriver.com>
+In-Reply-To: <1283368226.4124.12.camel@jlt3.sipsolutions.net>
+References: <1283368226.4124.12.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 15, 2010 at 10:58 AM, Bruno Randolf <br1@einfach.org> wrote:
-> On Wed September 15 2010 08:07:36 Jonathan Guerin wrote:
->> I'm capturing using a third-party station. I've had to use a Madwifi
->> station, as ath5k throws a lot of spurious timestamps up, which make
->> calculating this very, very difficult.
->
-> ah, that's interesting and something we should check, too...
->
->> Actually, I've found that they were exactly one slot time negative
->> (give or take 1us). That said, I was doing these calculations using
->> the 802.11a OFDM spec timings. I looked at the driver and realised
->> that SIFS is actually being initialised to 14us, whereas it should be
->> set to 16us. This will also affect DIFS. Once I take these into
->> consideration, they come up as approximately 4-5us out. Now that I
->> think about it, it could make sense.
->
-> hmm, we have a function ath5k_hw_get_default_sifs() which returns 16 for
-> 802.11a, but it's not used for setting the IFS...
->
-> also i think current ath5k_hw_reset_tx_queue() is buggy and sets the AIFS
-> wrongly. it uses ah->ah_aifs + tq->tqi_aifs which is 2 + AR5K_TXQ_USEDEFAULT
-> which results in 2 + (-1). that does not make sense to me and i will post a
-> patch fixing up some of that confusion (but not the SIFS issue) today.
+Otherwise the hardware scan handler could access an invalid scan request
+structure.  The driver should cancel any pending hardware scans during
+the suspend process anyway, so also add a warning if the hardware scan
+is still pending when the device resumes.
 
-I'm getting these values from: initval.c
-/* Initial mode-specific settings for AR5212 (Written before ar5212_ini) */
-static const struct ath5k_ini_mode ar5212_ini_mode_start[] = {
-<...>
-	{ AR5K_DCU_GBL_IFS_SIFS,
-	/*	a/XR	   aTurbo	  b	   g (DYN)     gTurbo     */
-	   { 0x00000230, 0x000001e0, 0x000000b0, 0x00000160, 0x000001e0 } },
-	{ AR5K_DCU_GBL_IFS_SLOT,
-	   { 0x00000168, 0x000001e0, 0x000001b8, 0x0000018c, 0x000001e0 } },
-<...>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/mac80211/ieee80211_i.h |    6 ++++++
+ net/mac80211/pm.c          |    3 ++-
+ 2 files changed, 8 insertions(+), 1 deletions(-)
 
-The IFS_SLOT time is correct:
-0x168/0x28 (clock multiplier) = 9us
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 16f7fb1..4e635e2 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1186,6 +1186,12 @@ int __ieee80211_suspend(struct ieee80211_hw *hw);
+ 
+ static inline int __ieee80211_resume(struct ieee80211_hw *hw)
+ {
++	struct ieee80211_local *local = hw_to_local(hw);
++
++	WARN(test_bit(SCAN_HW_SCANNING, &local->scanning),
++		"%s: resume with hardware scan still in progress\n",
++		wiphy_name(hw->wiphy));
++
+ 	return ieee80211_reconfig(hw_to_local(hw));
+ }
+ #else
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index d287fde..ce671df 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -12,7 +12,8 @@ int __ieee80211_suspend(struct ieee80211_hw *hw)
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct sta_info *sta;
+ 
+-	ieee80211_scan_cancel(local);
++	if (unlikely(test_bit(SCAN_SW_SCANNING, &local->scanning)))
++		ieee80211_scan_cancel(local);
+ 
+ 	ieee80211_stop_queues_by_reason(hw,
+ 			IEEE80211_QUEUE_STOP_REASON_SUSPEND);
+-- 
+1.7.2.2
 
-SIFS is coming up short:
-ox230/0x28 = 14us
-
-I assume that the card calculates the DIFS from these two values, as
-described in Section 9.2.10 DCF timing relations in the spec?
-
-By the way, I may be completely wrong about some of these things, I'm
-just going off the understanding I have regarding the register values.
-
->
-> bruno
->
-
-Thanks for looking into this!
-
-Jonathan
