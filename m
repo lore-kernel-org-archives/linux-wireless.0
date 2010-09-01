@@ -1,42 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:57384 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753740Ab0IUQjT (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:45541 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751762Ab0IAVBy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Sep 2010 12:39:19 -0400
-Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id o8LGdJL6026381
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Tue, 21 Sep 2010 09:39:19 -0700
-Message-ID: <4C98DFB6.10902@candelatech.com>
-Date: Tue, 21 Sep 2010 09:39:18 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Patch to get iw building on Fedora 8
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 1 Sep 2010 17:01:54 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: dwmw2@infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	ath9k-devel@atheros.com, Len Widra <len.widra@atheros.com>,
+	Brian Lee <briank.lee@atheros.com>,
+	Adam Tachner <atachner@atheros.com>,
+	Paul Lever <Paul.Lever@atheros.com>,
+	Vipin Mehta <vipin.mehta@atheros.com>
+Subject: [PATCH] linux-firmware: update Atheros firmware license
+Date: Wed,  1 Sep 2010 17:01:54 -0400
+Message-Id: <1283374914-4554-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I need this in order to get iw to build on Fedora 8.
+This makes the license Operating System agnostic and updates
+the patent license grant for use of the firmware license specifically
+on the Atheros chipsets.
 
-[greearb@fs2 iw]$ git diff
-diff --git a/bitrate.c b/bitrate.c
-index 8de8839..9b6defc 100644
---- a/bitrate.c
-+++ b/bitrate.c
-@@ -1,4 +1,6 @@
-  #include <errno.h>
-+#define  __USE_ISOC99
-+#include <stdlib.h>
+This allows us to share the same license between all Atheros chipsets,
+ath9k, ath9k_htc, ath6kl, and future chipsets.
 
-  #include "nl80211.h"
-  #include "iw.h"
+Cc: ath9k-devel@atheros.com
+Cc: Len Widra <len.widra@atheros.com>
+Cc: Brian Lee <briank.lee@atheros.com>
+Cc: Adam Tachner <atachner@atheros.com>
+Cc: Paul Lever <Paul.Lever@atheros.com>
+Cc: Vipin Mehta <vipin.mehta@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ LICENCE.atheros_firmware |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-Signed-off-by:  Ben Greear<greearb@candelatech.com>
-
+diff --git a/LICENCE.atheros_firmware b/LICENCE.atheros_firmware
+index d336492..e0ebdac 100644
+--- a/LICENCE.atheros_firmware
++++ b/LICENCE.atheros_firmware
+@@ -21,9 +21,7 @@ world-wide, royalty-free, non-exclusive license under patents it
+ now or hereafter owns or controls to make, have made, use, import,
+ offer to sell and sell ("Utilize") this software, but solely to
+ the extent that any such patent is necessary to Utilize the software
+-alone, or in combination with an operating system licensed under an
+-approved Open Source license as listed by the Open Source Initiative
+-at http://opensource.org/licenses.  The patent license shall not
++in conjunction with an Atheros Chipset. The patent license shall not
+ apply to any other combinations which include this software. No
+ hardware per se is licensed hereunder.
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.0.4
 
