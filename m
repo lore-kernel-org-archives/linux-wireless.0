@@ -1,79 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:28638 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932438Ab0ICMB6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Sep 2010 08:01:58 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 07/13] iwlwifi: do not queue abort_scan work if can sleep
-Date: Fri,  3 Sep 2010 13:57:30 +0200
-Message-Id: <1283515056-11523-8-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1283515056-11523-1-git-send-email-sgruszka@redhat.com>
-References: <1283515056-11523-1-git-send-email-sgruszka@redhat.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:43007 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755450Ab0IAPHS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Sep 2010 11:07:18 -0400
+Message-ID: <4C7E6C1D.8050305@hauke-m.de>
+Date: Wed, 01 Sep 2010 17:07:09 +0200
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"mcgrof@infradead.org" <mcgrof@infradead.org>
+Subject: Re: [PATCH] compat: backport linux/pci-aspm.h
+References: <1282934514-18160-1-git-send-email-hauke@hauke-m.de> <20100828210131.GA2422@tux>
+In-Reply-To: <20100828210131.GA2422@tux>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since on timeout version of iwl_scan_cancel procedure we can sleep,
-do not have to schedule abort_scan work to begin and perform scanning,
-can do this directly. Also now, as we do not queue abort_scan from
-restart work anymore, we can queue abort_scan to priv->workqueue.
+Am 28.08.2010 23:01, schrieb Luis R. Rodriguez:
+> On Fri, Aug 27, 2010 at 11:41:54AM -0700, Hauke Mehrtens wrote:
+>> pci-aspm.h was introduced in kernel 2.6.25 and is used by the ath5k driver.
+>>
+>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>> ---
+>>  include/linux/pci-aspm.h |   55 ++++++++++++++++++++++++++++++++++++++++++++++
+>>  1 files changed, 55 insertions(+), 0 deletions(-)
+>>  create mode 100644 include/linux/pci-aspm.h
+>>
+>> diff --git a/include/linux/pci-aspm.h b/include/linux/pci-aspm.h
+>> new file mode 100644
+>> index 0000000..c791d00
+>> --- /dev/null
+>> +++ b/include/linux/pci-aspm.h
+> 
+> So compat-wireless would have to copy this file over? We'd then have to synch
+> this file for older kernels, and the real kernel header's own pci-aspm.h for
+> kernels >= 2.6.25 would be using this version of the file. Can we just stuff
+> the ASPM required stuff onto include/linux/compat-2.6.25.h ?
+> 
+>   Luis
+Hi,
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-scan.c |   16 ++++++++--------
- 1 files changed, 8 insertions(+), 8 deletions(-)
+we can stuff the empty aspm functions into compat-2.6.25.h, but we need
+include/linux/pci-aspm.h or we need an extra ifdef in compat-wireless
+(not nice). Some drivers like drivers/net/wireless/ath/ath5k/base.c and
+drivers/net/wireless/iwlwifi/iwl-agn.c are including pci-aspm.h, but it
+is not there for kernels < 2.6.25.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 4d2a09b..6ab7bb3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -126,7 +126,7 @@ static void iwl_do_scan_abort(struct iwl_priv *priv)
- int iwl_scan_cancel(struct iwl_priv *priv)
- {
- 	IWL_DEBUG_SCAN(priv, "Queuing abort scan\n");
--	schedule_work(&priv->abort_scan);
-+	queue_work(priv->workqueue, &priv->abort_scan);
- 	return 0;
- }
- EXPORT_SYMBOL(iwl_scan_cancel);
-@@ -135,25 +135,25 @@ EXPORT_SYMBOL(iwl_scan_cancel);
-  * iwl_scan_cancel_timeout - Cancel any currently executing HW scan
-  * @ms: amount of time to wait (in milliseconds) for scan to abort
-  *
-- * NOTE: priv->mutex must be held before calling this function
-  */
- int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
- {
- 	unsigned long now = jiffies;
--	int ret;
- 
--	ret = iwl_scan_cancel(priv);
--	if (ret && ms) {
-+	lockdep_assert_held(&priv->mutex);
-+
-+	iwl_do_scan_abort(priv);
-+
-+	if (ms) {
- 		mutex_unlock(&priv->mutex);
- 		while (!time_after(jiffies, now + msecs_to_jiffies(ms)) &&
- 				test_bit(STATUS_SCANNING, &priv->status))
--			msleep(1);
-+			msleep(20);
- 		mutex_lock(&priv->mutex);
- 
--		return test_bit(STATUS_SCANNING, &priv->status);
- 	}
- 
--	return ret;
-+	return test_bit(STATUS_SCANNING, &priv->status);
- }
- EXPORT_SYMBOL(iwl_scan_cancel_timeout);
- 
--- 
-1.7.1
+I will prepare a new patch for compat. With an mostly empty pci-aspm.h
+with an include_next and some functions in compat-2.6.35.h.
 
+Hauke
