@@ -1,48 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:41683 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754448Ab0IYJO0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Sep 2010 05:14:26 -0400
-Message-ID: <4C9DBD69.2070700@openwrt.org>
-Date: Sat, 25 Sep 2010 11:14:17 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: Nick Kossifidis <mickflemm@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] This allows ath5k to support virtual STA and AP interfaces.
-References: <1285272430-9617-1-git-send-email-greearb@candelatech.com> <AANLkTi=n9GDjiBxiS0cen2objz+BO9CeC-Uy5c6hVWhS@mail.gmail.com> <4C9CEB3F.5090804@candelatech.com>
-In-Reply-To: <4C9CEB3F.5090804@candelatech.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from server19320154104.serverpool.info ([193.201.54.104]:53320 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753417Ab0IBNdN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Sep 2010 09:33:13 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/4] compat-wireless: replace name CONFIG_IWLWIFI
+Date: Thu,  2 Sep 2010 15:32:55 +0200
+Message-Id: <1283434377-26210-3-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1283434377-26210-1-git-send-email-hauke@hauke-m.de>
+References: <1283434377-26210-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-09-24 8:17 PM, Ben Greear wrote:
-> On 09/24/2010 10:46 AM, Nick Kossifidis wrote:
->> 2010/9/23<greearb@candelatech.com>:
->>> From: Ben Greear<greearb@candelatech.com>
->>>
->>> +#define ATH5K_VIF_MAX  2048
->>
->> This is too much !!! 2048 interfaces with a total of 4 beacon buffers
->> 40 rx buffers and 200 tx buffers ? Has anyone tested this ?
->>
->> Also think about embedded devices, we don't want to waste memory like this...
->>
->>> +       struct ieee80211_vif *vifs[ATH5K_VIF_MAX];
-> 
-> It only costs 4 or 8 bytes per pointer as long as no one actually
-> adds the vifs.
-> 
-> We've tested at least 128 on an old 1Ghz VIA system, and I'd hope for more
-> on more modern hardware.  I didn't think the driver should make the decision
-> to limit un-necessarily.
-> 
-> If you still think this is too much, then tell me the biggest number
-> you wouldn't complain about :)
-Actually, looking at the code, I don't see much reason to even have this
-array. Most of the time the code is iterating over the list anyway, so
-we might as well just have a linked list here...
-That way we can avoid introducing bogus limitations or memory waste.
+In commit 8c8113109f6916c4926413aa3416cefffaa5d9b8 one CONFIG_IWLWIFI
+was not renamed to CONFIG_COMPAT_IWLWIFI.
 
-- Felix
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/08-rename-iwl4965-config.patch |   13 ++++++++++++-
+ 1 files changed, 12 insertions(+), 1 deletions(-)
+
+diff --git a/patches/08-rename-iwl4965-config.patch b/patches/08-rename-iwl4965-config.patch
+index 28cd39e..7930bf3 100644
+--- a/patches/08-rename-iwl4965-config.patch
++++ b/patches/08-rename-iwl4965-config.patch
+@@ -3,6 +3,17 @@ module, but now it is directly included in the iwlagn.
+ 
+ CONFIG_IWL4965 has to be set to y, to build correctly.
+ 
++--- a/drivers/net/wireless/Makefile
+++++ b/drivers/net/wireless/Makefile
++@@ -40,7 +40,7 @@ obj-$(CONFIG_ADM8211)	+= adm8211.o
++ 
++ obj-$(CONFIG_MWL8K)	+= mwl8k.o
++ 
++-obj-$(CONFIG_IWLWIFI)	+= iwlwifi/
+++obj-$(CONFIG_COMPAT_IWLWIFI)	+= iwlwifi/
++ obj-$(CONFIG_RT2X00)	+= rt2x00/
++ 
++ obj-$(CONFIG_P54_COMMON)	+= p54/
+ --- a/drivers/net/wireless/iwlwifi/Makefile
+ +++ b/drivers/net/wireless/iwlwifi/Makefile
+ @@ -1,4 +1,4 @@
+@@ -22,7 +33,7 @@ CONFIG_IWL4965 has to be set to y, to build correctly.
+  iwlagn-$(CONFIG_IWL5000) += iwl-1000.o
+ --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
+ +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+-@@ -4450,10 +4450,10 @@ static void __devexit iwl_pci_remove(str
++@@ -4625,10 +4625,10 @@ static void __devexit iwl_pci_remove(str
+  
+  /* Hardware specific file defines the PCI IDs table for that hardware module */
+  static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
+-- 
+1.7.0.4
+
