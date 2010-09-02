@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34443 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754323Ab0I1N5F (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Sep 2010 09:57:05 -0400
-Subject: Re: [PATCH 2/2] mac80211:  Allow scanning single channel if other
- VIF is associated.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4CA1F2A4.2090005@candelatech.com>
-References: <1285632457-27539-1-git-send-email-greearb@candelatech.com>
-	 <1285632457-27539-2-git-send-email-greearb@candelatech.com>
-	 <1285658564.3885.1.camel@jlt3.sipsolutions.net>
-	 <4CA1F2A4.2090005@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 28 Sep 2010 15:57:04 +0200
-Message-ID: <1285682224.3885.18.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from kroah.org ([198.145.64.141]:33872 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753488Ab0IBSwo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Sep 2010 14:52:44 -0400
+Date: Thu, 2 Sep 2010 11:47:20 -0700
+From: Greg KH <greg@kroah.com>
+To: Vipin Mehta <Vipin.Mehta@Atheros.com>
+Cc: G?bor Stefanik <netrolller.3d@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Subject: Re: [PATCH 0/1] ath6kl: add ath6kl driver for AR6003 chip
+Message-ID: <20100902184720.GA3330@kroah.com>
+References: <1283381473-20415-1-git-send-email-vmehta@atheros.com>
+ <20100902013545.GB4744@kroah.com>
+ <AANLkTim-OPNM20swWXtHF0VufVjMHpcs-OUVTLCmTPRw@mail.gmail.com>
+ <20100902032527.GA27598@kroah.com>
+ <35B17FE5076C7040809188FBE7913F983F234795C2@SC1EXMB-MBCL.global.atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <35B17FE5076C7040809188FBE7913F983F234795C2@SC1EXMB-MBCL.global.atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-09-28 at 06:50 -0700, Ben Greear wrote:
-
-> At best, it would be a race for wpa_s to determine if any other interface
-> on it's interface's hardware is associated, so I don't see a good way to
-> do this in user-space.
+On Thu, Sep 02, 2010 at 10:54:03AM -0700, Vipin Mehta wrote:
+>  Greg,
+> Besides the size of the original patch, I was not very confident of
+> the exchange server through which my emails go out. The patch may get
+> mangled in which case you wont be able to apply it. I am working on it
+> to make sure that I have a reliable way to send the patches out. Until
+> then, downloading the patch from the location that I specified may be
+> a better option. 
 > 
-> When at least one is associated, I don't want the NIC to go offchannel at all,
-> at least not for wpa_s scanning.  Anything else is going to interrupt other
-> stations's traffic, and for no good reason that I can see, since the scanning
-> interface must associate on the same channel as the rest of the stations
-> anyway.
+> http://www.kernel.org/~vmehta/0001-staging-add-ath6kl-driver-for-AR6003-chip.patch.gz
 > 
-> If you have any suggestions for how to accomplish this, please let me know..
-> otherwise, I can just carry this patch in my tree.
+> If the link above does not work out, then I'll send the patch to you
+> via an email (its about 5 MB uncompressed). Let me know.
 
-You can run all networks in a single wpa_s instance, I believe, and then
-it'd know about all this, right?
+Ok, I've taken the above patch and applied it to the staging-next tree
+now.
 
-johannes
+thanks,
 
+greg k-h
