@@ -1,87 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37842 "EHLO mx1.redhat.com"
+Received: from kroah.org ([198.145.64.141]:59355 "EHLO coco.kroah.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752194Ab0IINxL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Sep 2010 09:53:11 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 07/12] iwlwifi: rework iwl_scan_cancel_timeout
-Date: Thu,  9 Sep 2010 15:52:25 +0200
-Message-Id: <1284040354-31703-8-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
-References: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
+	id S1752419Ab0IBD03 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Sep 2010 23:26:29 -0400
+Date: Wed, 1 Sep 2010 20:25:27 -0700
+From: Greg KH <greg@kroah.com>
+To: G?bor Stefanik <netrolller.3d@gmail.com>
+Cc: Vipin Mehta <vmehta@atheros.com>, linux-wireless@vger.kernel.org,
+	lrodriguez@atheros.com, devel@linuxdriverproject.org
+Subject: Re: [PATCH 0/1] ath6kl: add ath6kl driver for AR6003 chip
+Message-ID: <20100902032527.GA27598@kroah.com>
+References: <1283381473-20415-1-git-send-email-vmehta@atheros.com> <20100902013545.GB4744@kroah.com> <AANLkTim-OPNM20swWXtHF0VufVjMHpcs-OUVTLCmTPRw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTim-OPNM20swWXtHF0VufVjMHpcs-OUVTLCmTPRw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since on timeout version of iwl_scan_cancel procedure we can sleep,
-do not have to schedule abort_scan work to begin and perform scanning,
-can do this directly. Also now, as we do not queue abort_scan from
-restart work anymore, we can queue abort_scan to priv->workqueue.
+On Thu, Sep 02, 2010 at 04:29:31AM +0200, G?bor Stefanik wrote:
+> On Thu, Sep 2, 2010 at 3:35 AM, Greg KH <greg@kroah.com> wrote:
+> > On Wed, Sep 01, 2010 at 03:51:13PM -0700, Vipin Mehta wrote:
+> >> The patch adds support for the 802.11 chip, AR6003. It has been
+> >> generated against the linux-next tree and is being targeted
+> >> for the staging area.
+> >
+> > -ENOPATCH :(
+> 
+> On Wed, Sep 01, 2010 at 03:51:13PM -0700, Vipin Mehta wrote:
+> > The actual patch can be downloaded from the following location:
+> > http://www.kernel.org/~vmehta/0001-staging-add-ath6kl-driver-for-AR6003-chip.patch.gz
+> 
+> This one.
 
-Don't drop mutex when waiting for scan complete. Use STATUS_HW_SCAN bit
-to check if scanning is currently pending, because STATUS_SCANNING will
-be cleared only with priv->mutex taken.
+I'm guessing someone forgot to read section 7 in
+Documentation/SubmittingPatches.  I can't do much with a link, git
+doesn't like it, nor does quilt.  Please send it through email so that I
+can apply it.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-scan.c |   25 ++++++++++++-------------
- 1 files changed, 12 insertions(+), 13 deletions(-)
+And yes, I know about section 8, but my email can handle large sized
+patches...
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 4d2a09b..7e4faaf 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -126,7 +126,7 @@ static void iwl_do_scan_abort(struct iwl_priv *priv)
- int iwl_scan_cancel(struct iwl_priv *priv)
- {
- 	IWL_DEBUG_SCAN(priv, "Queuing abort scan\n");
--	schedule_work(&priv->abort_scan);
-+	queue_work(priv->workqueue, &priv->abort_scan);
- 	return 0;
- }
- EXPORT_SYMBOL(iwl_scan_cancel);
-@@ -135,25 +135,24 @@ EXPORT_SYMBOL(iwl_scan_cancel);
-  * iwl_scan_cancel_timeout - Cancel any currently executing HW scan
-  * @ms: amount of time to wait (in milliseconds) for scan to abort
-  *
-- * NOTE: priv->mutex must be held before calling this function
-  */
- int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
- {
--	unsigned long now = jiffies;
--	int ret;
-+	unsigned long timeout = jiffies + msecs_to_jiffies(ms);
-+
-+	lockdep_assert_held(&priv->mutex);
- 
--	ret = iwl_scan_cancel(priv);
--	if (ret && ms) {
--		mutex_unlock(&priv->mutex);
--		while (!time_after(jiffies, now + msecs_to_jiffies(ms)) &&
--				test_bit(STATUS_SCANNING, &priv->status))
--			msleep(1);
--		mutex_lock(&priv->mutex);
-+	IWL_DEBUG_SCAN(priv, "Scan cancel timeout\n");
- 
--		return test_bit(STATUS_SCANNING, &priv->status);
-+	iwl_do_scan_abort(priv);
-+
-+	while (time_before_eq(jiffies, timeout)) {
-+		if (!test_bit(STATUS_SCAN_HW, &priv->status))
-+			break;
-+		msleep(20);
- 	}
- 
--	return ret;
-+	return test_bit(STATUS_SCAN_HW, &priv->status);
- }
- EXPORT_SYMBOL(iwl_scan_cancel_timeout);
- 
--- 
-1.7.1
+Vipin, did you really want me to take that compressed patch above and
+use it?  Or can you send it by email to me?
 
+thanks,
+
+greg k-h
