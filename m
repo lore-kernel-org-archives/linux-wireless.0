@@ -1,68 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:33487 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751665Ab0IVHxU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Sep 2010 03:53:20 -0400
-Received: by wwi17 with SMTP id 17so376525wwi.1
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 00:53:19 -0700 (PDT)
-From: Ido Yariv <ido@wizery.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	Ido Yariv <ido@wizery.com>
-Subject: [PATCH] wl1271: Fix overflow in wl1271_boot_upload_nvs
-Date: Wed, 22 Sep 2010 09:53:13 +0200
-Message-Id: <1285141993-3772-1-git-send-email-ido@wizery.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:38010 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754808Ab0IBNTX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Sep 2010 09:19:23 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] [PATCH v2] compat: backport linux/pci-aspm.h
+Date: Thu,  2 Sep 2010 15:19:13 +0200
+Message-Id: <1283433553-25991-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Due to miscalculation of nvs_len, excessive data was sent to the
-firmware.
-Fix this by first setting nvs_ptr to point to the first NVS table,
-and computing the total size of all NVS tables accordingly.
+pci-aspm.h was introduced in kernel 2.6.25 and is used by the ath5k and iwlwifi driver.
 
-Signed-off-by: Ido Yariv <ido@wizery.com>
+v2: Do not place the empty functions into pci-aspm.h. Now we do not
+have to change pci-aspm.h when it changes in the mainline kernel only
+compat-2.6.26.h has to be changed.
+
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/wl12xx/wl1271_boot.c |   17 ++++++-----------
- 1 files changed, 6 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.c b/drivers/net/wireless/wl12xx/wl1271_boot.c
-index fc21db8..e5a7f04 100644
---- a/drivers/net/wireless/wl12xx/wl1271_boot.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
-@@ -274,11 +274,11 @@ static int wl1271_boot_upload_nvs(struct wl1271 *wl)
+This should also go into stable.
+
+ include/linux/compat-2.6.26.h |    9 +++++++++
+ include/linux/pci-aspm.h      |    5 +++++
+ 2 files changed, 14 insertions(+), 0 deletions(-)
+ create mode 100644 include/linux/pci-aspm.h
+
+diff --git a/include/linux/compat-2.6.26.h b/include/linux/compat-2.6.26.h
+index 8251177..30ee46c 100644
+--- a/include/linux/compat-2.6.26.h
++++ b/include/linux/compat-2.6.26.h
+@@ -394,6 +394,15 @@ struct net *dev_net(const struct net_device *dev)
  
- 	/*
- 	 * We've reached the first zero length, the first NVS table
--	 * is 7 bytes further.
-+	 * is located at an aligned offset which is at least 7 bytes further.
- 	 */
--	nvs_ptr += 7;
-+	nvs_ptr = (u8 *)wl->nvs->nvs +
-+			ALIGN(nvs_ptr - (u8 *)wl->nvs->nvs + 7, 4);
- 	nvs_len -= nvs_ptr - (u8 *)wl->nvs->nvs;
--	nvs_len = ALIGN(nvs_len, 4);
+ #endif /* xtensa */
  
- 	/* FIXME: The driver sets the partition here, but this is not needed,
- 	   since it sets to the same one as currently in use */
-@@ -286,14 +286,9 @@ static int wl1271_boot_upload_nvs(struct wl1271 *wl)
- 	wl1271_set_partition(wl, &part_table[PART_WORK]);
++#define PCIE_LINK_STATE_L0S	1
++#define PCIE_LINK_STATE_L1	2
++#define PCIE_LINK_STATE_CLKPM	4
++
++static inline void pci_disable_link_state(struct pci_dev *pdev, int state)
++{
++}
++/* source: include/linux/pci-aspm.h */
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,26)) */
  
- 	/* Copy the NVS tables to a new block to ensure alignment */
--	/* FIXME: We jump 3 more bytes before uploading the NVS.  It seems
--	that our NVS files have three extra zeros here.  I'm not sure whether
--	the problem is in our NVS generation or we should really jumpt these
--	3 bytes here */
--	nvs_ptr += 3;
--
--	nvs_aligned = kmemdup(nvs_ptr, nvs_len, GFP_KERNEL); if
--	(!nvs_aligned) return -ENOMEM;
-+	nvs_aligned = kmemdup(nvs_ptr, nvs_len, GFP_KERNEL);
-+	if (!nvs_aligned)
-+		return -ENOMEM;
- 
- 	/* And finally we upload the NVS tables */
- 	/* FIXME: In wl1271, we upload everything at once.
+ #endif /* LINUX_26_26_COMPAT_H */
+diff --git a/include/linux/pci-aspm.h b/include/linux/pci-aspm.h
+new file mode 100644
+index 0000000..2bc6efb
+--- /dev/null
++++ b/include/linux/pci-aspm.h
+@@ -0,0 +1,5 @@
++#include <linux/version.h>
++
++#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,25))
++#include_next <linux/pci-aspm.h>
++#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,25)) */
 -- 
 1.7.0.4
 
