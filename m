@@ -1,54 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:43007 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755450Ab0IAPHS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Sep 2010 11:07:18 -0400
-Message-ID: <4C7E6C1D.8050305@hauke-m.de>
-Date: Wed, 01 Sep 2010 17:07:09 +0200
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mx1.redhat.com ([209.132.183.28]:12017 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751091Ab0IBIuy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Sep 2010 04:50:54 -0400
+Date: Thu, 2 Sep 2010 10:47:21 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH w-t] iwlwifi: rewrite iwl-scan.c to avoid race conditions
+Message-ID: <20100902084720.GA2372@redhat.com>
+References: <20100831150021.GA10963@redhat.com>
+ <1283338760.4131.22.camel@jlt3.sipsolutions.net>
+ <20100901115826.GB6547@redhat.com>
+ <1283344912.4124.2.camel@jlt3.sipsolutions.net>
+ <20100901141643.GC6547@redhat.com>
+ <1283351204.4124.10.camel@jlt3.sipsolutions.net>
+ <20100901152438.GD6547@redhat.com>
+ <1283357075.4124.11.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"mcgrof@infradead.org" <mcgrof@infradead.org>
-Subject: Re: [PATCH] compat: backport linux/pci-aspm.h
-References: <1282934514-18160-1-git-send-email-hauke@hauke-m.de> <20100828210131.GA2422@tux>
-In-Reply-To: <20100828210131.GA2422@tux>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1283357075.4124.11.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 28.08.2010 23:01, schrieb Luis R. Rodriguez:
-> On Fri, Aug 27, 2010 at 11:41:54AM -0700, Hauke Mehrtens wrote:
->> pci-aspm.h was introduced in kernel 2.6.25 and is used by the ath5k driver.
->>
->> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
->> ---
->>  include/linux/pci-aspm.h |   55 ++++++++++++++++++++++++++++++++++++++++++++++
->>  1 files changed, 55 insertions(+), 0 deletions(-)
->>  create mode 100644 include/linux/pci-aspm.h
->>
->> diff --git a/include/linux/pci-aspm.h b/include/linux/pci-aspm.h
->> new file mode 100644
->> index 0000000..c791d00
->> --- /dev/null
->> +++ b/include/linux/pci-aspm.h
+On Wed, Sep 01, 2010 at 06:04:35PM +0200, Johannes Berg wrote:
+> > Cancel at the end of iwl_cancel_scan_deferred_work() is for case
+> > when we still get notification from f/w and clear STATUS_SCAN_HW bit in 
+> > iwl_rx_scan_complete_notif. This can happen when firmware is in some
+> > sane state but we do restart (for example: when debugfs force_reset
+> > file was used).
+> > 
+> > For the same reason we need have to iwl_bg_scan_completed allow to run
+> > in parallel with iwl_bg_restart. To complete scanning when performing
+> > restart, but f/w is responsible.
 > 
-> So compat-wireless would have to copy this file over? We'd then have to synch
-> this file for older kernels, and the real kernel header's own pci-aspm.h for
-> kernels >= 2.6.25 would be using this version of the file. Can we just stuff
-> the ASPM required stuff onto include/linux/compat-2.6.25.h ?
-> 
->   Luis
-Hi,
+> I think you mean "responsive"? Otherwise what you're saying doesn't make
+> much sense to me?
+Ehh, yes responsive.
 
-we can stuff the empty aspm functions into compat-2.6.25.h, but we need
-include/linux/pci-aspm.h or we need an extra ifdef in compat-wireless
-(not nice). Some drivers like drivers/net/wireless/ath/ath5k/base.c and
-drivers/net/wireless/iwlwifi/iwl-agn.c are including pci-aspm.h, but it
-is not there for kernels < 2.6.25.
+> But they all take the mutex, so they can't run in parallel anyway. So it
+> only becomes an ordering issue, no?
 
-I will prepare a new patch for compat. With an mostly empty pci-aspm.h
-with an include_next and some functions in compat-2.6.35.h.
+Mutex is not taken all the time in iwl_bg_restart.
 
-Hauke
+Stanislaw
