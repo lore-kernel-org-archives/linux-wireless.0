@@ -1,32 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49737 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755688Ab0I1SxU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Sep 2010 14:53:20 -0400
-Subject: Re: RFC:  Store premable and g-mode flags in ieee80211_tx_info
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4CA22C34.1000107@candelatech.com>
-References: <4CA224FF.3030103@candelatech.com>
-	 <1285696089.32597.0.camel@jlt3.sipsolutions.net>
-	 <4CA22C34.1000107@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 28 Sep 2010 20:53:18 +0200
-Message-ID: <1285699998.32597.1.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from kroah.org ([198.145.64.141]:45932 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755025Ab0IBBii (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Sep 2010 21:38:38 -0400
+Date: Wed, 1 Sep 2010 18:35:45 -0700
+From: Greg KH <greg@kroah.com>
+To: Vipin Mehta <vmehta@atheros.com>
+Cc: linux-wireless@vger.kernel.org, lrodriguez@atheros.com,
+	devel@linuxdriverproject.org
+Subject: Re: [PATCH 0/1] ath6kl: add ath6kl driver for AR6003 chip
+Message-ID: <20100902013545.GB4744@kroah.com>
+References: <1283381473-20415-1-git-send-email-vmehta@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1283381473-20415-1-git-send-email-vmehta@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-09-28 at 10:56 -0700, Ben Greear wrote:
+On Wed, Sep 01, 2010 at 03:51:13PM -0700, Vipin Mehta wrote:
+> The patch adds support for the 802.11 chip, AR6003. It has been 
+> generated against the linux-next tree and is being targeted 
+> for the staging area.
 
-> Anyway, the reason is that the driver may not know the VIF (and
-> vif may be deleted) when calling the ieee80211_rts_duration, so it needs to be stored
-> in the tx_info structure.
-
-But the vif pointer in the tx_info structure is valid during the entire
-tx() call, why would you need to call rts_duration during TX status?
-
-johannes
-
+-ENOPATCH :(
