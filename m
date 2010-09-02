@@ -1,60 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:56009 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751603Ab0IVUqk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Sep 2010 16:46:40 -0400
-Received: by bwz11 with SMTP id 11so792125bwz.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 13:46:38 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: David Miller <davem@davemloft.net>
-Subject: Re: pull request: wireless-next-2.6 2010-09-21
-Date: Wed, 22 Sep 2010 22:46:30 +0200
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-References: <201009221158.13806.chunkeey@googlemail.com> <201009222054.05469.chunkeey@googlemail.com> <20100922.121902.71115228.davem@davemloft.net>
-In-Reply-To: <20100922.121902.71115228.davem@davemloft.net>
+Received: from mail.atheros.com ([12.19.149.2]:25466 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754793Ab0IBOMR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Sep 2010 10:12:17 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 02 Sep 2010 07:12:12 -0700
+Date: Thu, 2 Sep 2010 07:12:15 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"mcgrof@infradead.org" <mcgrof@infradead.org>
+Subject: Re: [PATCH] compat: backport linux/pci-aspm.h
+Message-ID: <20100902141215.GA2736@tux>
+References: <1282934514-18160-1-git-send-email-hauke@hauke-m.de>
+ <20100828210131.GA2422@tux>
+ <4C7E6C1D.8050305@hauke-m.de>
+ <AANLkTi=29wfzQz7CK8QX++n+S-KrHVGszW60AFS_vpbs@mail.gmail.com>
+ <4C7FA408.3010408@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201009222246.31687.chunkeey@googlemail.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4C7FA408.3010408@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 22 September 2010 21:19:02 David Miller wrote:
-> From: Christian Lamparter <chunkeey@googlemail.com>
-> Date: Wed, 22 Sep 2010 20:54:05 +0200
+On Thu, Sep 02, 2010 at 06:18:00AM -0700, Hauke Mehrtens wrote:
+> Am 01.09.2010 17:12, schrieb Luis R. Rodriguez:
+> > On Wed, Sep 1, 2010 at 8:07 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> >> Am 28.08.2010 23:01, schrieb Luis R. Rodriguez:
+> >>> On Fri, Aug 27, 2010 at 11:41:54AM -0700, Hauke Mehrtens wrote:
+> >>>> pci-aspm.h was introduced in kernel 2.6.25 and is used by the ath5k driver.
+> >>>>
+> >>>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> >>>> ---
+> >>>>  include/linux/pci-aspm.h |   55 ++++++++++++++++++++++++++++++++++++++++++++++
+> >>>>  1 files changed, 55 insertions(+), 0 deletions(-)
+> >>>>  create mode 100644 include/linux/pci-aspm.h
+> >>>>
+> >>>> diff --git a/include/linux/pci-aspm.h b/include/linux/pci-aspm.h
+> >>>> new file mode 100644
+> >>>> index 0000000..c791d00
+> >>>> --- /dev/null
+> >>>> +++ b/include/linux/pci-aspm.h
+> >>>
+> >>> So compat-wireless would have to copy this file over? We'd then have to synch
+> >>> this file for older kernels, and the real kernel header's own pci-aspm.h for
+> >>> kernels >= 2.6.25 would be using this version of the file. Can we just stuff
+> >>> the ASPM required stuff onto include/linux/compat-2.6.25.h ?
+> >>>
+> >>>   Luis
+> >> Hi,
+> >>
+> >> we can stuff the empty aspm functions into compat-2.6.25.h, but we need
+> >> include/linux/pci-aspm.h or we need an extra ifdef in compat-wireless
+> >> (not nice). Some drivers like drivers/net/wireless/ath/ath5k/base.c and
+> >> drivers/net/wireless/iwlwifi/iwl-agn.c are including pci-aspm.h, but it
+> >> is not there for kernels < 2.6.25.
+> > 
+> > Understood and good point.
+> > 
+> >> I will prepare a new patch for compat. With an mostly empty pci-aspm.h
+> >> with an include_next and some functions in compat-2.6.35.h.
+> > 
+> > Well so the issue is getting kernels newer than include their own
+> > kernel header's include/linux/pci-aspm.h rather than the one provided
+> > by compat. How will this be achieved?
 > 
-> > Only the structs which deal with hardware (hw.h, eeprom.h, wlan.h)
-> > or firmware (fwcmd.h, fwdesc.h & wlan.h) interface have the
-> > __packed attribute. And there are several good reasons. 
-> > (don't kill the reasons)!
-> 
-> This is because GCC is not allowed to assume the alignment of any
-> structure marked with __packed.  Therefore only byte sized loads are
-> safe on architectures that require types be aligned to their size.
-> 
-> This really is a performance issue, otherwise I frankly wouldn't
-> care where you put __packed.
-Well, if you only care about "performance" then I have good news!
-Because the only __packed structs that are important for us in the
-tx & rx hot-paths are the two hardware tx/rx descriptors in wlan.h. 
+> #include_next includes the next file with this name.
+> http://www.delorie.com/gnu/docs/gcc/cpp_11.html (middle)
+> We can do it like it is done in include/linux/tracepoint.h in compat.
+> If something changes in pci-aspm.h in the kernel we do not have to
+> change anything for kernel > 2.6.25.
 
-Everything else is boring. e.g.:
- * The firmware descriptor is only important at boot-time
-  (parsing the firmware is really fast, compared to the "second"
-   we have to wait for the device to boot)
+Fair enough and thanks for the reference! Sounds good!
 
- * Firmware commands are (apart from the first init and channel change)
-   very rarely issued during operation.
-   In fact the most "critical thing" is switching on/off
-   the LEDs (of course this is done by a workqueue item, so
-   you probably get the idea)
-
-so almost everything can stay the way it is. The only thing that needs
-to be change (according to you concern) is hardwired into the chip....
-
-But the driver can try to minimizes the access to unaligned elements,
-by using temporary variables (so the value needs to be accessed only
-once). In fact that's already done, the only room for improvement
-would be in carl9170_tx_prepare (temporary u16 for mac_control,
-u8 super_misc, u8 rate_info).
+  Luis
