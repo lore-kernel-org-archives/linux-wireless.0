@@ -1,57 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:34978 "EHLO mail.atheros.com"
+Received: from smtp.netsonic.fi ([194.29.192.26]:39725 "EHLO smtp.netsonic.fi"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756028Ab0IUHZQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Sep 2010 03:25:16 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 21 Sep 2010 00:25:09 -0700
-Date: Tue, 21 Sep 2010 12:56:35 +0530
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k_htc: Fix beacon distribution in IBSS mode
-Message-ID: <20100921072634.GA6675@vmraj-lnx.users.atheros.com>
-References: <1284985872-31021-1-git-send-email-rmanoharan@atheros.com>
- <4C9756CE.1060908@openwrt.org>
+	id S1757095Ab0IBU4g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Sep 2010 16:56:36 -0400
+To: Vipin Mehta <Vipin.Mehta@Atheros.com>
+Cc: Michael Trimarchi <michael@panicking.kicks-ass.org>,
+	Peter Korsgaard <jacmet@sunsite.dk>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Subject: Re: [PATCH 0/1] ath6kl: add ath6kl driver for AR6003 chip
+References: <1283381473-20415-1-git-send-email-vmehta@atheros.com>
+	<87tym8vdio.fsf@macbook.be.48ers.dk>
+	<4C7F74A4.1080706@panicking.kicks-ass.org>
+	<84hbi82zwm.fsf@sauna.l.org>
+	<35B17FE5076C7040809188FBE7913F983F234795E4@SC1EXMB-MBCL.global.atheros.com>
+From: Timo Juhani Lindfors <timo.lindfors@iki.fi>
+Date: Thu, 02 Sep 2010 23:52:46 +0300
+In-Reply-To: <35B17FE5076C7040809188FBE7913F983F234795E4@SC1EXMB-MBCL.global.atheros.com> (Vipin Mehta's message of "Thu\, 2 Sep 2010 11\:12\:54 -0700")
+Message-ID: <84aanzzx41.fsf@sauna.l.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4C9756CE.1060908@openwrt.org>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 20, 2010 at 06:12:54PM +0530, Felix Fietkau wrote:
-> On 2010-09-20 2:31 PM, Rajkumar Manoharan wrote:
-> > This patch ensures fair beacon distribution in IBSS mode
-> > by configuring proper CWmin based on slot time.
-> > 
-> > Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
-> > ---
-> >  drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |    9 +++++-
-> >  drivers/net/wireless/ath/ath9k/hw.c             |   32 +++++++++++++++++++++++
-> >  drivers/net/wireless/ath/ath9k/hw.h             |    1 +
-> >  3 files changed, 41 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-> > index bd1506e..3e699a5 100644
-> > --- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-> > +++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
-> > @@ -235,7 +235,14 @@ void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv)
-> >  	ath9k_hw_get_txq_props(ah, qnum, &qi_be);
-> >  
-> >  	qi.tqi_aifs = qi_be.tqi_aifs;
-> > -	qi.tqi_cwmin = 4*qi_be.tqi_cwmin;
-> > +	/* For WIFI Beacon Distribution
-> > +	 * Long slot time  : 2x cwmin
-> > +	 * Short slot time : 4x cwmin
-> > +	 */
-> > +	if (ath9k_hw_getslottime(ah) == ATH9K_SLOT_TIME_20)
-> I'd recommend using ah->slottime here and dropping all of those ath9k_hw
-> changes.
-> 
-> - Felix
-Yep. I am sending the updated patch. Thanks for your review Felix. :)
+Vipin Mehta <Vipin.Mehta@Atheros.com> writes:
+>    Has this issue been already addressed with the version of the
+>    driver on which it was found? If yes, then we should try to get
 
-- Rajkumar
+No. I just reported it and wasn't capable enough to figure out how to
+check privileges of the caller properly.
