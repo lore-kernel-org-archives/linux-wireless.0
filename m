@@ -1,84 +1,621 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57811 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758011Ab0IUS3i (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43524 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752053Ab0IBKRw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Sep 2010 14:29:38 -0400
-Date: Tue, 21 Sep 2010 14:26:20 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: wireless-2.6 2010-09-21
-Message-ID: <20100921182620.GB2448@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 2 Sep 2010 06:17:52 -0400
+Subject: Re: [PATCH w-t] iwlwifi: rewrite iwl-scan.c to avoid race
+ conditions
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20100831150021.GA10963@redhat.com>
+References: <20100831150021.GA10963@redhat.com>
+Content-Type: multipart/mixed; boundary="=-3u2tSjOkphsV37cF43e6"
+Date: Thu, 02 Sep 2010 12:17:37 +0200
+Message-ID: <1283422657.3793.98.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
 
-Here are two more small fixes intended for 2.6.36.  One is a one-liner
-(kmalloc->kzalloc) that prevents a potential information leak.
-The other is a small fix that skips firmware reloads (a workaround
-for firmware problems) while a scan is in progress in order to avoid
-the stack trace cited in the commit log.
+--=-3u2tSjOkphsV37cF43e6
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 
-Please let me know if there are problems!
+Stanislaw,
 
-Thanks,
+What do you think about the two attached (untested) patches? I think
+your patch was doing too many things at a time, is this a good start?
 
-John
+johannes
 
+
+--=-3u2tSjOkphsV37cF43e6
+Content-Disposition: attachment; filename="iwl-remove-unused-conf.patch"
+Content-Type: text/x-patch; name="iwl-remove-unused-conf.patch"; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+Subject: iwlwifi: remove unused conf variables
+
+From: Johannes Berg <johannes.berg@intel.com>
+
+There are a number of conf variables that are
+unused, remove them.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    3 ---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    6 ------
+ 2 files changed, 9 deletions(-)
 
-The following changes since commit 3779298b81cd9a2531cec93e3beefc1acdb01382:
-
-  Merge branch 'vhost-net' of git://git.kernel.org/pub/scm/linux/kernel/git/mst/vhost (2010-09-20 11:13:34 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
-
-Johannes Berg (1):
-      wext: fix potential private ioctl memory content leak
-
-Wey-Yi Guy (1):
-      iwlwifi: do not perferm force reset while doing scan
-
- drivers/net/wireless/iwlwifi/iwl-core.c |    5 +++++
- net/wireless/wext-priv.c                |    2 +-
- 2 files changed, 6 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 07dbc27..e23c406 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2613,6 +2613,11 @@ int iwl_force_reset(struct iwl_priv *priv, int mode, bool external)
- 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
- 		return -EINVAL;
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-agn-lib.c	2010-09-02 12:12:37.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-agn-lib.c	2010-09-02 12:12:37.000000000 +0200
+@@ -1162,7 +1162,6 @@ void iwlagn_request_scan(struct iwl_priv
+ 		.flags = CMD_SIZE_HUGE,
+ 	};
+ 	struct iwl_scan_cmd *scan;
+-	struct ieee80211_conf *conf = NULL;
+ 	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_BSS];
+ 	u32 rate_flags = 0;
+ 	u16 cmd_len;
+@@ -1179,8 +1178,6 @@ void iwlagn_request_scan(struct iwl_priv
+ 	if (vif)
+ 		ctx = iwl_rxon_ctx_from_vif(vif);
  
-+	if (test_bit(STATUS_SCANNING, &priv->status)) {
-+		IWL_DEBUG_INFO(priv, "scan in progress.\n");
-+		return -EINVAL;
+-	conf = ieee80211_get_hw_conf(priv->hw);
+-
+ 	cancel_delayed_work(&priv->scan_check);
+ 
+ 	if (!iwl_is_ready(priv)) {
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c	2010-09-02 12:12:37.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl3945-base.c	2010-09-02 12:12:37.000000000 +0200
+@@ -2569,12 +2569,9 @@ static void __iwl3945_down(struct iwl_pr
+ {
+ 	unsigned long flags;
+ 	int exit_pending = test_bit(STATUS_EXIT_PENDING, &priv->status);
+-	struct ieee80211_conf *conf = NULL;
+ 
+ 	IWL_DEBUG_INFO(priv, DRV_NAME " is going down\n");
+ 
+-	conf = ieee80211_get_hw_conf(priv->hw);
+-
+ 	if (!exit_pending)
+ 		set_bit(STATUS_EXIT_PENDING, &priv->status);
+ 
+@@ -2828,13 +2825,10 @@ void iwl3945_request_scan(struct iwl_pri
+ 		.flags = CMD_SIZE_HUGE,
+ 	};
+ 	struct iwl3945_scan_cmd *scan;
+-	struct ieee80211_conf *conf = NULL;
+ 	u8 n_probes = 0;
+ 	enum ieee80211_band band;
+ 	bool is_active = false;
+ 
+-	conf = ieee80211_get_hw_conf(priv->hw);
+-
+ 	cancel_delayed_work(&priv->scan_check);
+ 
+ 	if (!iwl_is_ready(priv)) {
+
+--=-3u2tSjOkphsV37cF43e6
+Content-Disposition: attachment; filename="iwl-unify-scan-checks.patch"
+Content-Type: text/x-patch; name="iwl-unify-scan-checks.patch"; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+Subject: iwlwifi: unify scan start checks
+
+From: Johannes Berg <johannes.berg@intel.com>
+
+Rather than duplicating all the checks and even
+in case of errors accepting the scan request
+from mac80211, we can push the checks to the
+caller and in all error cases reject the scan
+request right away (rather than accepting and
+then saying it was aborted).
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-3945.h     |    2 
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |   89 ++++----------------
+ drivers/net/wireless/iwlwifi/iwl-agn.h      |    2 
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    2 
+ drivers/net/wireless/iwlwifi/iwl-scan.c     |  124 ++++++++++++++++------------
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   74 ++--------------
+ 6 files changed, 107 insertions(+), 186 deletions(-)
+
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-3945.h	2010-09-02 12:09:27.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-3945.h	2010-09-02 12:12:50.000000000 +0200
+@@ -295,7 +295,7 @@ extern const struct iwl_channel_info *iw
+ extern int iwl3945_rs_next_rate(struct iwl_priv *priv, int rate);
+ 
+ /* scanning */
+-void iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif);
++int iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif);
+ 
+ /* Requires full declaration of iwl_priv before including */
+ #include "iwl-io.h"
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-agn-lib.c	2010-09-02 12:12:49.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-agn-lib.c	2010-09-02 12:12:50.000000000 +0200
+@@ -1154,7 +1154,7 @@ static int iwl_get_channels_for_scan(str
+ 	return added;
+ }
+ 
+-void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
++int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ {
+ 	struct iwl_host_cmd cmd = {
+ 		.id = REPLY_SCAN_CMD,
+@@ -1174,57 +1174,20 @@ void iwlagn_request_scan(struct iwl_priv
+ 	int  chan_mod;
+ 	u8 active_chains;
+ 	u8 scan_tx_antennas = priv->hw_params.valid_tx_ant;
++	int ret;
++
++	lockdep_assert_held(&priv->mutex);
+ 
+ 	if (vif)
+ 		ctx = iwl_rxon_ctx_from_vif(vif);
+ 
+-	cancel_delayed_work(&priv->scan_check);
+-
+-	if (!iwl_is_ready(priv)) {
+-		IWL_WARN(priv, "request scan called when driver not ready.\n");
+-		goto done;
+-	}
+-
+-	/* Make sure the scan wasn't canceled before this queued work
+-	 * was given the chance to run... */
+-	if (!test_bit(STATUS_SCANNING, &priv->status))
+-		goto done;
+-
+-	/* This should never be called or scheduled if there is currently
+-	 * a scan active in the hardware. */
+-	if (test_bit(STATUS_SCAN_HW, &priv->status)) {
+-		IWL_DEBUG_INFO(priv, "Multiple concurrent scan requests in parallel. "
+-			       "Ignoring second request.\n");
+-		goto done;
+-	}
+-
+-	if (test_bit(STATUS_EXIT_PENDING, &priv->status)) {
+-		IWL_DEBUG_SCAN(priv, "Aborting scan due to device shutdown\n");
+-		goto done;
+-	}
+-
+-	if (test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
+-		IWL_DEBUG_HC(priv, "Scan request while abort pending.  Queuing.\n");
+-		goto done;
+-	}
+-
+-	if (iwl_is_rfkill(priv)) {
+-		IWL_DEBUG_HC(priv, "Aborting scan due to RF Kill activation\n");
+-		goto done;
+-	}
+-
+-	if (!test_bit(STATUS_READY, &priv->status)) {
+-		IWL_DEBUG_HC(priv, "Scan request while uninitialized.  Queuing.\n");
+-		goto done;
+-	}
+-
+ 	if (!priv->scan_cmd) {
+ 		priv->scan_cmd = kmalloc(sizeof(struct iwl_scan_cmd) +
+ 					 IWL_MAX_SCAN_SIZE, GFP_KERNEL);
+ 		if (!priv->scan_cmd) {
+ 			IWL_DEBUG_SCAN(priv,
+ 				       "fail to allocate memory for scan\n");
+-			goto done;
++			return -ENOMEM;
+ 		}
+ 	}
+ 	scan = priv->scan_cmd;
+@@ -1331,8 +1294,8 @@ void iwlagn_request_scan(struct iwl_priv
+ 						IWL_GOOD_CRC_TH_NEVER;
+ 		break;
+ 	default:
+-		IWL_WARN(priv, "Invalid scan band count\n");
+-		goto done;
++		IWL_WARN(priv, "Invalid scan band\n");
++		return -EIO;
+ 	}
+ 
+ 	band = priv->scan_band;
+@@ -1412,7 +1375,7 @@ void iwlagn_request_scan(struct iwl_priv
+ 	}
+ 	if (scan->channel_count == 0) {
+ 		IWL_DEBUG_SCAN(priv, "channel count %d\n", scan->channel_count);
+-		goto done;
++		return -EIO;
+ 	}
+ 
+ 	cmd.len += le16_to_cpu(scan->tx_cmd.len) +
+@@ -1422,28 +1385,20 @@ void iwlagn_request_scan(struct iwl_priv
+ 
+ 	set_bit(STATUS_SCAN_HW, &priv->status);
+ 
+-	if (priv->cfg->ops->hcmd->set_pan_params &&
+-	    priv->cfg->ops->hcmd->set_pan_params(priv))
+-		goto done;
+-
+-	if (iwl_send_cmd_sync(priv, &cmd))
+-		goto done;
+-
+-	queue_delayed_work(priv->workqueue, &priv->scan_check,
+-			   IWL_SCAN_CHECK_WATCHDOG);
+-
+-	return;
+-
+- done:
+-	/* Cannot perform scan. Make sure we clear scanning
+-	* bits from status so next scan request can be performed.
+-	* If we don't clear scanning status bit here all next scan
+-	* will fail
+-	*/
+-	clear_bit(STATUS_SCAN_HW, &priv->status);
+-	clear_bit(STATUS_SCANNING, &priv->status);
+-	/* inform mac80211 scan aborted */
+-	queue_work(priv->workqueue, &priv->scan_completed);
++	if (priv->cfg->ops->hcmd->set_pan_params) {
++		ret = priv->cfg->ops->hcmd->set_pan_params(priv);
++		if (ret)
++			return ret;
 +	}
 +
- 	if (mode >= IWL_MAX_FORCE_RESET) {
- 		IWL_DEBUG_INFO(priv, "invalid reset request.\n");
- 		return -EINVAL;
-diff --git a/net/wireless/wext-priv.c b/net/wireless/wext-priv.c
-index 3feb28e..674d426 100644
---- a/net/wireless/wext-priv.c
-+++ b/net/wireless/wext-priv.c
-@@ -152,7 +152,7 @@ static int ioctl_private_iw_point(struct iw_point *iwp, unsigned int cmd,
- 	} else if (!iwp->pointer)
- 		return -EFAULT;
++	ret = iwl_send_cmd_sync(priv, &cmd);
++	if (ret) {
++		clear_bit(STATUS_SCAN_HW, &priv->status);
++		if (priv->cfg->ops->hcmd->set_pan_params)
++			priv->cfg->ops->hcmd->set_pan_params(priv);
++	}
++
++	return ret;
+ }
  
--	extra = kmalloc(extra_size, GFP_KERNEL);
-+	extra = kzalloc(extra_size, GFP_KERNEL);
- 	if (!extra)
- 		return -ENOMEM;
+ int iwlagn_manage_ibss_station(struct iwl_priv *priv,
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-agn.h	2010-09-02 12:09:27.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-agn.h	2010-09-02 12:12:50.000000000 +0200
+@@ -217,7 +217,7 @@ void iwl_reply_statistics(struct iwl_pri
+ 			  struct iwl_rx_mem_buffer *rxb);
  
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+ /* scan */
+-void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif);
++int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif);
+ 
+ /* station mgmt */
+ int iwlagn_manage_ibss_station(struct iwl_priv *priv,
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-core.h	2010-09-02 12:09:27.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-core.h	2010-09-02 12:12:50.000000000 +0200
+@@ -111,7 +111,7 @@ struct iwl_hcmd_utils_ops {
+ 				  __le16 fc, __le32 *tx_flags);
+ 	int  (*calc_rssi)(struct iwl_priv *priv,
+ 			  struct iwl_rx_phy_res *rx_resp);
+-	void (*request_scan)(struct iwl_priv *priv, struct ieee80211_vif *vif);
++	int (*request_scan)(struct iwl_priv *priv, struct ieee80211_vif *vif);
+ };
+ 
+ struct iwl_apm_ops {
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-scan.c	2010-09-02 12:12:48.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-scan.c	2010-09-02 12:16:09.000000000 +0200
+@@ -324,19 +324,68 @@ void iwl_init_scan_params(struct iwl_pri
+ }
+ EXPORT_SYMBOL(iwl_init_scan_params);
+ 
+-static int iwl_scan_initiate(struct iwl_priv *priv, struct ieee80211_vif *vif)
++static int __must_check iwl_scan_initiate(struct iwl_priv *priv,
++					  struct ieee80211_vif *vif,
++					  bool internal,
++					  enum nl80211_band band)
+ {
++	int ret;
++
+ 	lockdep_assert_held(&priv->mutex);
+ 
+-	IWL_DEBUG_INFO(priv, "Starting scan...\n");
++	if (WARN_ON(!priv->cfg->ops->utils->request_scan))
++		return -EOPNOTSUPP;
++
++	cancel_delayed_work(&priv->scan_check);
++
++	if (!iwl_is_ready(priv)) {
++		IWL_WARN(priv, "request scan called when driver not ready.\n");
++		return -EIO;
++	}
++
++	if (test_bit(STATUS_SCAN_HW, &priv->status)) {
++		IWL_DEBUG_INFO(priv,
++			"Multiple concurrent scan requests in parallel.\n");
++		return -EBUSY;
++	}
++
++	if (test_bit(STATUS_EXIT_PENDING, &priv->status)) {
++		IWL_DEBUG_SCAN(priv, "Aborting scan due to device shutdown\n");
++		return -EIO;
++	}
++
++	if (test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
++		IWL_DEBUG_HC(priv, "Scan request while abort pending.\n");
++		return -EBUSY;
++	}
++
++	if (iwl_is_rfkill(priv)) {
++		IWL_DEBUG_HC(priv, "Aborting scan due to RF Kill activation\n");
++		return -EIO;
++	}
++
++	if (!test_bit(STATUS_READY, &priv->status)) {
++		IWL_DEBUG_HC(priv, "Scan request while uninitialized.\n");
++		return -EBUSY;
++	}
++
++	IWL_DEBUG_INFO(priv, "Starting %sscan...\n",
++			internal ? "internal short " : "");
++
+ 	set_bit(STATUS_SCANNING, &priv->status);
+-	priv->is_internal_short_scan = false;
++
++	priv->is_internal_short_scan = internal;
+ 	priv->scan_start = jiffies;
++	priv->scan_band = band;
+ 
+-	if (WARN_ON(!priv->cfg->ops->utils->request_scan))
+-		return -EOPNOTSUPP;
++	ret = priv->cfg->ops->utils->request_scan(priv, vif);
++	if (ret) {
++		clear_bit(STATUS_SCANNING, &priv->status);
++		return ret;
++	}
+ 
+-	priv->cfg->ops->utils->request_scan(priv, vif);
++	queue_delayed_work(priv->workqueue, &priv->scan_check,
++			   IWL_SCAN_CHECK_WATCHDOG);
+ 
+ 	return 0;
+ }
+@@ -355,12 +404,6 @@ int iwl_mac_hw_scan(struct ieee80211_hw
+ 
+ 	mutex_lock(&priv->mutex);
+ 
+-	if (!iwl_is_ready_rf(priv)) {
+-		ret = -EIO;
+-		IWL_DEBUG_MAC80211(priv, "leave - not ready or exit pending\n");
+-		goto out_unlock;
+-	}
+-
+ 	if (test_bit(STATUS_SCANNING, &priv->status) &&
+ 	    !priv->is_internal_short_scan) {
+ 		IWL_DEBUG_SCAN(priv, "Scan already in progress.\n");
+@@ -368,14 +411,7 @@ int iwl_mac_hw_scan(struct ieee80211_hw
+ 		goto out_unlock;
+ 	}
+ 
+-	if (test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
+-		IWL_DEBUG_SCAN(priv, "Scan request while abort pending\n");
+-		ret = -EAGAIN;
+-		goto out_unlock;
+-	}
+-
+ 	/* mac80211 will only ask for one band at a time */
+-	priv->scan_band = req->channels[0]->band;
+ 	priv->scan_request = req;
+ 	priv->scan_vif = vif;
+ 
+@@ -386,7 +422,8 @@ int iwl_mac_hw_scan(struct ieee80211_hw
+ 	if (priv->is_internal_short_scan)
+ 		ret = 0;
+ 	else
+-		ret = iwl_scan_initiate(priv, vif);
++		ret = iwl_scan_initiate(priv, vif, false,
++					req->channels[0]->band);
+ 
+ 	IWL_DEBUG_MAC80211(priv, "leave\n");
+ 
+@@ -418,31 +455,13 @@ static void iwl_bg_start_internal_scan(s
+ 		goto unlock;
+ 	}
+ 
+-	if (!iwl_is_ready_rf(priv)) {
+-		IWL_DEBUG_SCAN(priv, "not ready or exit pending\n");
+-		goto unlock;
+-	}
+-
+ 	if (test_bit(STATUS_SCANNING, &priv->status)) {
+ 		IWL_DEBUG_SCAN(priv, "Scan already in progress.\n");
+ 		goto unlock;
+ 	}
+ 
+-	if (test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
+-		IWL_DEBUG_SCAN(priv, "Scan request while abort pending\n");
+-		goto unlock;
+-	}
+-
+-	priv->scan_band = priv->band;
+-
+-	IWL_DEBUG_SCAN(priv, "Start internal short scan...\n");
+-	set_bit(STATUS_SCANNING, &priv->status);
+-	priv->is_internal_short_scan = true;
+-
+-	if (WARN_ON(!priv->cfg->ops->utils->request_scan))
+-		goto unlock;
+-
+-	priv->cfg->ops->utils->request_scan(priv, NULL);
++	if (iwl_scan_initiate(priv, NULL, true, priv->band))
++		IWL_DEBUG_SCAN(priv, "failed to start internal short scan\n");
+  unlock:
+ 	mutex_unlock(&priv->mutex);
+ }
+@@ -536,7 +555,6 @@ static void iwl_bg_scan_completed(struct
+ 	struct iwl_priv *priv =
+ 	    container_of(work, struct iwl_priv, scan_completed);
+ 	bool internal = false;
+-	bool scan_completed = false;
+ 	struct iwl_rxon_context *ctx;
+ 
+ 	IWL_DEBUG_SCAN(priv, "SCAN complete scan\n");
+@@ -549,16 +567,26 @@ static void iwl_bg_scan_completed(struct
+ 		IWL_DEBUG_SCAN(priv, "internal short scan completed\n");
+ 		internal = true;
+ 	} else if (priv->scan_request) {
+-		scan_completed = true;
+ 		priv->scan_request = NULL;
+ 		priv->scan_vif = NULL;
++		ieee80211_scan_completed(priv->hw, false);
+ 	}
+ 
+ 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+ 		goto out;
+ 
+-	if (internal && priv->scan_request)
+-		iwl_scan_initiate(priv, priv->scan_vif);
++	if (internal && priv->scan_request) {
++		int err = iwl_scan_initiate(priv, priv->scan_vif, false,
++					priv->scan_request->channels[0]->band);
++
++		if (err) {
++			IWL_DEBUG_SCAN(priv,
++				"failed to initiate pending scan: %d\n", err);
++			priv->scan_request = NULL;
++			priv->scan_vif = NULL;
++			ieee80211_scan_completed(priv->hw, true);
++		}
++	}
+ 
+ 	/* Since setting the TXPOWER may have been deferred while
+ 	 * performing the scan, fire one off */
+@@ -576,14 +604,6 @@ static void iwl_bg_scan_completed(struct
+ 		priv->cfg->ops->hcmd->set_pan_params(priv);
+ 
+ 	mutex_unlock(&priv->mutex);
+-
+-	/*
+-	 * Do not hold mutex here since this will cause mac80211 to call
+-	 * into driver again into functions that will attempt to take
+-	 * mutex.
+-	 */
+-	if (scan_completed)
+-		ieee80211_scan_completed(priv->hw, false);
+ }
+ 
+ void iwl_setup_scan_deferred_work(struct iwl_priv *priv)
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl3945-base.c	2010-09-02 12:12:49.000000000 +0200
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl3945-base.c	2010-09-02 12:12:50.000000000 +0200
+@@ -2817,7 +2817,7 @@ static void iwl3945_rfkill_poll(struct w
+ 
+ }
+ 
+-void iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
++int iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ {
+ 	struct iwl_host_cmd cmd = {
+ 		.id = REPLY_SCAN_CMD,
+@@ -2828,55 +2828,16 @@ void iwl3945_request_scan(struct iwl_pri
+ 	u8 n_probes = 0;
+ 	enum ieee80211_band band;
+ 	bool is_active = false;
++	int ret;
+ 
+-	cancel_delayed_work(&priv->scan_check);
+-
+-	if (!iwl_is_ready(priv)) {
+-		IWL_WARN(priv, "request scan called when driver not ready.\n");
+-		goto done;
+-	}
+-
+-	/* Make sure the scan wasn't canceled before this queued work
+-	 * was given the chance to run... */
+-	if (!test_bit(STATUS_SCANNING, &priv->status))
+-		goto done;
+-
+-	/* This should never be called or scheduled if there is currently
+-	 * a scan active in the hardware. */
+-	if (test_bit(STATUS_SCAN_HW, &priv->status)) {
+-		IWL_DEBUG_INFO(priv, "Multiple concurrent scan requests  "
+-				"Ignoring second request.\n");
+-		goto done;
+-	}
+-
+-	if (test_bit(STATUS_EXIT_PENDING, &priv->status)) {
+-		IWL_DEBUG_SCAN(priv, "Aborting scan due to device shutdown\n");
+-		goto done;
+-	}
+-
+-	if (test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
+-		IWL_DEBUG_HC(priv,
+-			"Scan request while abort pending. Queuing.\n");
+-		goto done;
+-	}
+-
+-	if (iwl_is_rfkill(priv)) {
+-		IWL_DEBUG_HC(priv, "Aborting scan due to RF Kill activation\n");
+-		goto done;
+-	}
+-
+-	if (!test_bit(STATUS_READY, &priv->status)) {
+-		IWL_DEBUG_HC(priv,
+-			"Scan request while uninitialized. Queuing.\n");
+-		goto done;
+-	}
++	lockdep_assert_held(&priv->mutex);
+ 
+ 	if (!priv->scan_cmd) {
+ 		priv->scan_cmd = kmalloc(sizeof(struct iwl3945_scan_cmd) +
+ 					 IWL_MAX_SCAN_SIZE, GFP_KERNEL);
+ 		if (!priv->scan_cmd) {
+ 			IWL_DEBUG_SCAN(priv, "Fail to allocate scan memory\n");
+-			goto done;
++			return -ENOMEM;
+ 		}
+ 	}
+ 	scan = priv->scan_cmd;
+@@ -2971,7 +2932,7 @@ void iwl3945_request_scan(struct iwl_pri
+ 		break;
+ 	default:
+ 		IWL_WARN(priv, "Invalid scan band\n");
+-		goto done;
++		return -EIO;
+ 	}
+ 
+ 	if (!priv->is_internal_short_scan) {
+@@ -3006,7 +2967,7 @@ void iwl3945_request_scan(struct iwl_pri
+ 
+ 	if (scan->channel_count == 0) {
+ 		IWL_DEBUG_SCAN(priv, "channel count %d\n", scan->channel_count);
+-		goto done;
++		return -EIO;
+ 	}
+ 
+ 	cmd.len += le16_to_cpu(scan->tx_cmd.len) +
+@@ -3015,25 +2976,10 @@ void iwl3945_request_scan(struct iwl_pri
+ 	scan->len = cpu_to_le16(cmd.len);
+ 
+ 	set_bit(STATUS_SCAN_HW, &priv->status);
+-	if (iwl_send_cmd_sync(priv, &cmd))
+-		goto done;
+-
+-	queue_delayed_work(priv->workqueue, &priv->scan_check,
+-			   IWL_SCAN_CHECK_WATCHDOG);
+-
+-	return;
+-
+- done:
+-	/* can not perform scan make sure we clear scanning
+-	 * bits from status so next scan request can be performed.
+-	 * if we dont clear scanning status bit here all next scan
+-	 * will fail
+-	*/
+-	clear_bit(STATUS_SCAN_HW, &priv->status);
+-	clear_bit(STATUS_SCANNING, &priv->status);
+-
+-	/* inform mac80211 scan aborted */
+-	queue_work(priv->workqueue, &priv->scan_completed);
++	ret = iwl_send_cmd_sync(priv, &cmd);
++	if (ret)
++		clear_bit(STATUS_SCAN_HW, &priv->status);
++	return ret;
+ }
+ 
+ static void iwl3945_bg_restart(struct work_struct *data)
+
+--=-3u2tSjOkphsV37cF43e6--
+
