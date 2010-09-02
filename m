@@ -1,36 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:57022 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750798Ab0IYVzX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Sep 2010 17:55:23 -0400
-Received: by iwn5 with SMTP id 5so3481987iwn.19
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Sep 2010 14:55:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1285413737-782-1-git-send-email-hauke@hauke-m.de>
-References: <1285413737-782-1-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Sat, 25 Sep 2010 14:55:02 -0700
-Message-ID: <AANLkTikaemKPTK6StobcTEihaf8GdDWFhX-_OAjb-j2o@mail.gmail.com>
-Subject: Re: [PATCH] compat: fix build error in init_dummy_netdev
-To: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:53312 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755200Ab0IBNdJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Sep 2010 09:33:09 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
 Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	philipp_subx@redfish-solutions.com
-Content-Type: text/plain; charset=UTF-8
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 0/4] compat-wireless: small fixes.
+Date: Thu,  2 Sep 2010 15:32:53 +0200
+Message-Id: <1283434377-26210-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 25, 2010 at 4:22 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> In kernel <= 2.6.28 the member napi_list in struct net_device is only
-> availabe if CONFIG_NETPOLL is set. We should initialize it only if it
-> is available.
->
-> This should fix the problem reported by Philip.
+Theses patches are mostly fixing some problems introduced in the last 
+few days.
 
-Thanks applied and pushed out.
+Including ath6kl causes problems. The Makefile wants to build ath6kl but 
+it is not there. This causes errors when compiling. We should exclude 
+ath6kl till it is integrated in linux-next.
 
-> This should also go into stable.
+Hauke Mehrtens (4):
+  compat-wireless: convert ifndef for compat_autoconf.h
+  compat-wireless: replace name CONFIG_IWLWIFI
+  compat-wireless: fix generation of compat_autoconf.h
+  compat-wireless: fix patch style
 
-But it didn't apply to stable as stable doesn't have the napi stuff.
+ config.mk                              |    2 +-
+ patches/08-rename-iwl4965-config.patch |   13 ++++++++++++-
+ patches/24-pcmcia.patch                |    2 +-
+ scripts/gen-compat-autoconf.sh         |    6 +++++-
+ 4 files changed, 19 insertions(+), 4 deletions(-)
 
-  Luis
