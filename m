@@ -1,64 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.47]:36575 "EHLO mgw-sa01.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757389Ab0I0Jrb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 05:47:31 -0400
-Subject: Re: [PATCH 16/25] wl1271: Add support for hardware GEM cipher
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-To: ext Johannes Berg <johannes@sipsolutions.net>
-Cc: "Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1285578777.4043.6.camel@jlt3.sipsolutions.net>
-References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
-	 <1285576669-8070-17-git-send-email-luciano.coelho@nokia.com>
-	 <1285578777.4043.6.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 27 Sep 2010 12:46:46 +0300
-Message-ID: <1285580806.11177.65.camel@wimaxnb.nmp.nokia.com>
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45071 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754564Ab0IBN3p (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Sep 2010 09:29:45 -0400
+Date: Thu, 2 Sep 2010 09:18:29 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: WARNING: at net/mac80211/tx.c:653 ieee80211_tx_h_rate_ctrl+0x460
+Message-ID: <20100902131828.GA6802@tuxdriver.com>
+References: <AANLkTiko4XRM=xQWHy2H5WUMbYBzRE+NfUeqS20S2D_S@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTiko4XRM=xQWHy2H5WUMbYBzRE+NfUeqS20S2D_S@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-09-27 at 11:12 +0200, ext Johannes Berg wrote:
-> On Mon, 2010-09-27 at 11:37 +0300, Luciano Coelho wrote:
-> > From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> > 
-> > This patch adds support for the hardware GEM cipher suite.
-> > 
-> > Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-> > Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-> > Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-> > ---
-> >  drivers/net/wireless/wl12xx/wl1271.h      |    2 ++
-> >  drivers/net/wireless/wl12xx/wl1271_cmd.h  |    2 +-
-> >  drivers/net/wireless/wl12xx/wl1271_main.c |   16 ++++++++++++++++
-> >  3 files changed, 19 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
-> > index 763ece8..9782bc1 100644
-> > --- a/drivers/net/wireless/wl12xx/wl1271.h
-> > +++ b/drivers/net/wireless/wl12xx/wl1271.h
-> > @@ -117,6 +117,8 @@ enum {
-> >  #define WL1271_TX_SECURITY_LO16(s) ((u16)((s) & 0xffff))
-> >  #define WL1271_TX_SECURITY_HI32(s) ((u32)(((s) >> 16) & 0xffffffff))
-> >  
-> > +#define WL1271_CIPHER_SUITE_GEM 0x000FACFF
+On Wed, Sep 01, 2010 at 04:45:46PM -0700, Luis R. Rodriguez wrote:
+> Just hit this
 > 
-> NACK, this is a standards-reserved value. Use the correct ID for it or
-> allocate one within your own OUI if you don't want to admit what this
-> really is (and by now all readers here will know anyway.)
+>         /*
+>          * Lets not bother rate control if we're associated and cannot
+>          * talk to the sta. This should not happen.
+>          */
+>         if (WARN(test_bit(SCAN_SW_SCANNING, &tx->local->scanning) &&
+>                  (sta_flags & WLAN_STA_ASSOC) &&
+>                  !rate_usable_index_exists(sband, &tx->sta->sta),
+>                  "%s: Dropped data frame as no usable bitrate found while "
+>                  "scanning and associated. Target station: "
+>                  "%pM on %d GHz band\n",
+>                  tx->sdata->name, hdr->addr1,
+>                  tx->channel->band ? 5 : 2))
+>                 return TX_DROP;
 
-Well I'm sure many or most know what this patch is about. The choice of
-value was not intended to hide that.
+Also seeing that here:
 
-You're right though, we'll need to change the OUI of the value, unless
-you can point me to an official value to use.
+	https://bugzilla.redhat.com/show_bug.cgi?id=606393
 
--Juuso
-
-
-> johannes
-> 
-> 
-
-
+"I surmise that the device is exiting dynamic power saving mode and
+attempting to transmit a frame to notify the AP that it is awake.
+Instead, it is hitting this check in ieee80211_tx_h_rate_ctrl". -- me
+ 
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
