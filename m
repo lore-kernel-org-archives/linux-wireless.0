@@ -1,53 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:49373 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750965Ab0IFIAH convert rfc822-to-8bit (ORCPT
+Received: from mga02.intel.com ([134.134.136.20]:42408 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754588Ab0ICOcm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Sep 2010 04:00:07 -0400
-Received: by qyk33 with SMTP id 33so4046320qyk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Sep 2010 01:00:06 -0700 (PDT)
+	Fri, 3 Sep 2010 10:32:42 -0400
+From: "Berg, Johannes" <johannes.berg@intel.com>
+To: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 3 Sep 2010 15:31:20 +0100
+Subject: RE: [PATCH 03/13] iwlwifi: move scan completed flags handling
+Message-ID: <C5C86A19469DAE48AAAD0E5F3716E44501CDC1C79A@irsmsx504.ger.corp.intel.com>
+References: <1283515056-11523-1-git-send-email-sgruszka@redhat.com>
+	 <1283515056-11523-4-git-send-email-sgruszka@redhat.com>
+ <1283524159.5211.13.camel@wwguy-ubuntu>
+In-Reply-To: <1283524159.5211.13.camel@wwguy-ubuntu>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <loom.20100906T041329-313@post.gmane.org>
-References: <loom.20100906T041329-313@post.gmane.org>
-Date: Mon, 6 Sep 2010 10:00:06 +0200
-Message-ID: <AANLkTi=5P8N6QDDZkVuFwCMDzBTLsCkiOem0_WwL-hvS@mail.gmail.com>
-Subject: Re: rt2x00usb_watchdog_tx_status: Warning - TX queue 2 status timed
- out, invoke forced tx handler
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Michael <msbroadf@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 6, 2010 at 4:17 AM, Michael <msbroadf@gmail.com> wrote:
-> Im trying the latest compat-wireless 2010-09-05 and i am using a RALINK3027
-> 802.11N wireless USB dongle.
->
-> I setup the wifi using hostapd in monitor and managed mode for this adapter, and
-> it sets up an AP ok, but i notice the following message quite frequently.
->
-> phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX queue 2 status timed out,
-> invoke forced tx handler
->
-> appears very often and greatly interferes with the TX packets and makes the link
-> unusable.
->
-> Could someone tell me if this is being worked on, or if I can help somehow fix
-> it.  Im am a software engineer but don't have much kernel level experience.
 
-It is being worked on, but it cannot be fully resolved. It is
-currently simply a fact
-that the DMA can lockup in the device even the official Ralink driver
-has a watchdog
-function which resets the TX queue whenever it detects the lockup.
 
-I am currently working on improving the detection, since there can be
-a DMA timeout
-and a TX status report timeout. (Where the latter occurs much more
-often then the DMA
-timeout). This should decrease the packet loss somewhat, but will not
-prevent the
-problems to occur.
+> > @@ -554,7 +543,7 @@ static void iwl_bg_scan_completed(struct
+> work_struct *work)
+> >  {
+> >  	struct iwl_priv *priv =
+> >  	    container_of(work, struct iwl_priv, scan_completed);
+> > -	bool internal = false;
+> > +	bool internal = false, aborted;
+> >  	struct iwl_rxon_context *ctx;
+> >
+> >  	IWL_DEBUG_SCAN(priv, "SCAN complete scan\n");
+> > @@ -562,6 +551,15 @@ static void iwl_bg_scan_completed(struct
+> work_struct *work)
+> >  	cancel_delayed_work(&priv->scan_check);
+> >
+> >  	mutex_lock(&priv->mutex);
+> > +
+> > +	aborted = test_and_clear_bit(STATUS_SCAN_ABORTING, &priv-
+> >status);
+> > +	if (aborted)
+> > +		IWL_DEBUG_INFO(priv, "Aborted scan completed.\n");
+> > +
+> > +	IWL_DEBUG_INFO(priv, "Setting scan to off\n");
+> > +
+> > +	clear_bit(STATUS_SCANNING, &priv->status);
+> > +
+> >  	if (priv->is_internal_short_scan) {
+> >  		priv->is_internal_short_scan = false;
+> >  		IWL_DEBUG_SCAN(priv, "internal short scan completed\n");
+> > @@ -569,7 +567,7 @@ static void iwl_bg_scan_completed(struct
+> work_struct *work)
+> >  	} else if (priv->scan_request) {
+> >  		priv->scan_request = NULL;
+> >  		priv->scan_vif = NULL;
+> > -		ieee80211_scan_completed(priv->hw, false);
+> > +		ieee80211_scan_completed(priv->hw, aborted);
+> >  	}
+> >
+> >  	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+> 
+> Not too sure about the flow, just asking is it ok to do all thses
+> before check "STATUS_EXIT_PENFING"?
 
-Ivo
+I believe it's necessary, because otherwise in the exit pending case we will never complete with mac80211.
+
+johannes
+--------------------------------------------------------------------------------------
+Intel GmbH
+Dornacher Strasse 1
+85622 Feldkirchen/Muenchen, Deutschland 
+Sitz der Gesellschaft: Feldkirchen bei Muenchen
+Geschaeftsfuehrer: Douglas Lusk, Peter Gleissner, Hannes Schwaderer
+Registergericht: Muenchen HRB 47456 
+Ust.-IdNr./VAT Registration No.: DE129385895
+Citibank Frankfurt a.M. (BLZ 502 109 00) 600119052
+
