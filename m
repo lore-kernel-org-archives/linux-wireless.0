@@ -1,47 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:64537 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751934Ab0IQXI1 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50029 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756603Ab0ICMHk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Sep 2010 19:08:27 -0400
-Received: by bwz11 with SMTP id 11so3128491bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 16:08:26 -0700 (PDT)
-Message-Id: <99b5b4fce19b1c221e8eee563dc6e4b086ae493b.1284763835.git.chunkeey@googlemail.com>
-In-Reply-To: <cover.1284763834.git.chunkeey@googlemail.com>
-References: <cover.1284763834.git.chunkeey@googlemail.com>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Fri, 17 Sep 2010 22:07:59 +0200
-Subject: [PATCH 1/7] carl9170: use rx chainmask from eeprom
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
+	Fri, 3 Sep 2010 08:07:40 -0400
+Subject: Re: [PATCH 04/13] iwlwifi: cancel scan when down the device
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1283515056-11523-5-git-send-email-sgruszka@redhat.com>
+References: <1283515056-11523-1-git-send-email-sgruszka@redhat.com>
+	 <1283515056-11523-5-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 03 Sep 2010 14:07:20 +0200
+Message-ID: <1283515640.4700.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The eeprom provides a mask for all present rx chains.
-Why not use it instead of the generic initval default?
+On Fri, 2010-09-03 at 13:57 +0200, Stanislaw Gruszka wrote:
+> Always cancel scan when stooping device and scan is currently pending,
+> we should newer have scan running after down device.
+> 
+> To assure we start scan cancel from restart work we have to schedule
+> abort_scan to different workqueue than priv->workqueue.
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
- drivers/net/wireless/ath/carl9170/phy.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+Hmmm...
 
-diff --git a/drivers/net/wireless/ath/carl9170/phy.c b/drivers/net/wireless/ath/carl9170/phy.c
-index 71dea97..fe265e3 100644
---- a/drivers/net/wireless/ath/carl9170/phy.c
-+++ b/drivers/net/wireless/ath/carl9170/phy.c
-@@ -532,8 +532,11 @@ static int carl9170_init_phy_from_eeprom(struct ar9170 *ar,
- 	SET_VAL(AR9170_PHY_TPCRG1_PD_GAIN_2, val,
- 		xpd2pd[m->xpdGain & 0xf] >> 2);
- 	carl9170_regwrite(AR9170_PHY_REG_TPCRG1, val);
--	carl9170_regwrite_finish();
- 
-+	carl9170_regwrite(AR9170_PHY_REG_RX_CHAINMASK, ar->eeprom.rx_mask);
-+	carl9170_regwrite(AR9170_PHY_REG_CAL_CHAINMASK, ar->eeprom.rx_mask);
-+
-+	carl9170_regwrite_finish();
- 	return carl9170_regwrite_result();
- }
- 
--- 
-1.7.1
+> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+> @@ -2875,8 +2875,9 @@ static void __iwl_down(struct iwl_priv *priv)
+>  
+>  	IWL_DEBUG_INFO(priv, DRV_NAME " is going down\n");
+>  
+> -	if (!exit_pending)
+> -		set_bit(STATUS_EXIT_PENDING, &priv->status);
+> +	iwl_scan_cancel_timeout(priv, 200);
+
+This introduces a locking issue, because iwl_scan_cancel_timeout() drops
+the mutex. I suspect you fix that later though, but for example the
+restart work uses the mutex to atomically track a few BT related
+variables.
+
+johannes
 
