@@ -1,61 +1,212 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:51433 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752152Ab0IOQjE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 12:39:04 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Valdis.Kletnieks@vt.edu
-Subject: Re: [PATCH 00/15] change default_llseek action
-Date: Wed, 15 Sep 2010 18:37:29 +0200
-Cc: linux-kernel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>,
-	Christoph Hellwig <hch@infradead.org>,
-	David Airlie <airlied@linux.ie>,
-	dri-devel@lists.freedesktop.org, Jeremy Kerr <jk@ozlabs.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Julia Lawall <julia@diku.dk>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-fsdevel@vger.kernel.org, linux-omap@vger.kernel.org,
-	linuxppc-dev@ozlabs.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Samuel Ortiz <samuel@sortiz.org>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	Tony Lindgren <tony@atomide.com>
-References: <1284495763-7506-1-git-send-email-arnd@arndb.de> <9828.1284565136@localhost>
-In-Reply-To: <9828.1284565136@localhost>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201009151837.30026.arnd@arndb.de>
+Received: from mx1.redhat.com ([209.132.183.28]:49276 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932491Ab0ICMCG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Sep 2010 08:02:06 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 12/13] iwlwifi: do not force complete scan too early
+Date: Fri,  3 Sep 2010 13:57:35 +0200
+Message-Id: <1283515056-11523-13-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1283515056-11523-1-git-send-email-sgruszka@redhat.com>
+References: <1283515056-11523-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 15 September 2010, Valdis.Kletnieks@vt.edu wrote:
->   Show Details
->   On Tue, 14 Sep 2010 22:22:28 +0200, Arnd Bergmann said:
-> 
-> > This changes all instances of struct file_operations in
-> > the kernel to have a .llseek operation and then changes
-> > the default to no_llseek, which returns -ESPIPE, which
-> > is what we had decided some time ago in a discussion
-> > with Christoph Hellwig.
-> 
-> I don't suppose there's any clean way to throw a build error or a
-> printk_on_once() or something if we encounter an unconverted 'struct
-> file_operations', is there? I have this creeping fear that this patch will go
-> upstream during the merge window - as will 12 new staging/ drivers from authors
-> who didn't get the memo yet.
-> 
-> Other than the "missed converting a new usage" issue, it looks OK to me.
+Currently we force scan complete at the end of iwl_scan_cancel_timeout
+function. This cause race condition when we can get a new scan request
+from mac80211 and complete it by iwl_bg_complete from older scan. Change
+code to force scan complete only when really needed: device goes down,
+interface is removed or scan timeout occurs.
 
-One advantage of the scripted approach is that I can run the script
-repeatedly, and send a patch after -rc1 fixing up all the new file
-operations.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    6 +++-
+ drivers/net/wireless/iwlwifi/iwl-core.c     |    6 +++-
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    2 +
+ drivers/net/wireless/iwlwifi/iwl-scan.c     |   40 ++++++++++++++++++++-------
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    4 +-
+ 5 files changed, 42 insertions(+), 16 deletions(-)
 
-Moreover, any new drivers are by definition not regressions and staging
-drivers are expected to have issues. IIRC the most common llseek operation
-is 'noop_llseek', which usually means it should have been 'no_llseek' to
-start with, but since this has been in a released kernel, some random
-user application might expect a seek on that file to succeed without
-error.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 0de2401..9ef48f8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -4054,13 +4054,15 @@ static void iwl_cancel_deferred_work(struct iwl_priv *priv)
+ 		priv->cfg->ops->lib->cancel_deferred_work(priv);
+ 
+ 	cancel_delayed_work_sync(&priv->init_alive_start);
+-	cancel_delayed_work(&priv->scan_check);
+-	cancel_work_sync(&priv->start_internal_scan);
+ 	cancel_delayed_work(&priv->alive_start);
+ 	cancel_work_sync(&priv->run_time_calib_work);
+ 	cancel_work_sync(&priv->beacon_update);
++
++	iwl_cancel_scan_deferred_work(priv);
++
+ 	cancel_work_sync(&priv->bt_full_concurrency);
+ 	cancel_work_sync(&priv->bt_runtime_config);
++
+ 	del_timer_sync(&priv->statistics_periodic);
+ 	del_timer_sync(&priv->ucode_trace);
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 7c1819f..57d157f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2049,8 +2049,10 @@ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
+ 	WARN_ON(ctx->vif != vif);
+ 	ctx->vif = NULL;
+ 
+-	if (priv->scan_vif == vif)
+-		iwl_scan_cancel_timeout(priv, 100);
++	if (priv->scan_vif == vif) {
++		iwl_scan_cancel_timeout(priv, 200);
++		iwl_force_scan_end(priv);
++	}
+ 	iwl_set_mode(priv, vif);
+ 
+ 	/*
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 8dab074..f1d40c6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -553,6 +553,7 @@ static inline __le32 iwl_hw_set_rate_n_flags(u8 rate, u32 flags)
+ void iwl_init_scan_params(struct iwl_priv *priv);
+ int iwl_scan_cancel(struct iwl_priv *priv);
+ int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms);
++void iwl_force_scan_end(struct iwl_priv *priv);
+ int iwl_mac_hw_scan(struct ieee80211_hw *hw,
+ 		    struct ieee80211_vif *vif,
+ 		    struct cfg80211_scan_request *req);
+@@ -568,6 +569,7 @@ u16 iwl_get_passive_dwell_time(struct iwl_priv *priv,
+ 			       enum ieee80211_band band,
+ 			       struct ieee80211_vif *vif);
+ void iwl_setup_scan_deferred_work(struct iwl_priv *priv);
++void iwl_cancel_scan_deferred_work(struct iwl_priv *priv);
+ 
+ /* For faster active scanning, scan will move to the next channel if fewer than
+  * PLCP_QUIET_THRESH packets are heard on this channel within
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index df61273..10b0ccc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -106,14 +106,22 @@ static void iwl_complete_scan(struct iwl_priv *priv, bool aborted)
+ 	priv->scan_request = NULL;
+ }
+ 
+-static void iwl_force_scan_end(struct iwl_priv *priv)
++void iwl_force_scan_end(struct iwl_priv *priv)
+ {
++	lockdep_assert_held(&priv->mutex);
++
++	if (!test_bit(STATUS_SCANNING, &priv->status)) {
++		IWL_DEBUG_SCAN(priv, "Forcing scan end while not scanning\n");
++		return;
++	}
++
+ 	IWL_DEBUG_SCAN(priv, "Forcing scan end\n");
+ 	clear_bit(STATUS_SCANNING, &priv->status);
+ 	clear_bit(STATUS_SCAN_HW, &priv->status);
+ 	clear_bit(STATUS_SCAN_ABORTING, &priv->status);
+ 	iwl_complete_scan(priv, true);
+ }
++EXPORT_SYMBOL(iwl_force_scan_end);
+ 
+ static void iwl_do_scan_abort(struct iwl_priv *priv)
+ {
+@@ -157,7 +165,6 @@ EXPORT_SYMBOL(iwl_scan_cancel);
+  */
+ int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
+ {
+-	int ret;
+ 	unsigned long timeout = jiffies + msecs_to_jiffies(ms);
+ 
+ 	lockdep_assert_held(&priv->mutex);
+@@ -172,10 +179,7 @@ int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
+ 		msleep(20);
+ 	}
+ 
+-	ret = test_bit(STATUS_SCAN_HW, &priv->status);
+-	if (ret)
+-		iwl_force_scan_end(priv);
+-	return ret;
++	return test_bit(STATUS_SCAN_HW, &priv->status);
+ }
+ EXPORT_SYMBOL(iwl_scan_cancel_timeout);
+ 
+@@ -490,8 +494,11 @@ static void iwl_bg_scan_check(struct work_struct *data)
+ 	struct iwl_priv *priv =
+ 	    container_of(data, struct iwl_priv, scan_check.work);
+ 
++	/* Since we are here firmware does not finish scan and
++	 * most likely is in bad shape, so we don't bother to
++	 * send abort command, just force scan complete to mac80211 */
+ 	mutex_lock(&priv->mutex);
+-	iwl_scan_cancel_timeout(priv, 200);
++	iwl_force_scan_end(priv);
+ 	mutex_unlock(&priv->mutex);
+ }
+ 
+@@ -547,8 +554,8 @@ static void iwl_bg_abort_scan(struct work_struct *work)
+ {
+ 	struct iwl_priv *priv = container_of(work, struct iwl_priv, abort_scan);
+ 
+-	cancel_delayed_work(&priv->scan_check);
+-
++	/* We keep scan_check work queued in case when firmware will not
++	 * report back scan completed notification */
+ 	mutex_lock(&priv->mutex);
+ 	iwl_scan_cancel_timeout(priv, 200);
+ 	mutex_unlock(&priv->mutex);
+@@ -564,7 +571,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+ 	IWL_DEBUG_INFO(priv, "Completed %sscan.\n",
+ 		       priv->is_internal_short_scan ? "internal short " : "");
+ 
+-	cancel_delayed_work(&priv->scan_check);
++	cancel_delayed_work_sync(&priv->scan_check);
+ 
+ 	mutex_lock(&priv->mutex);
+ 
+@@ -631,3 +638,16 @@ void iwl_setup_scan_deferred_work(struct iwl_priv *priv)
+ }
+ EXPORT_SYMBOL(iwl_setup_scan_deferred_work);
+ 
++void iwl_cancel_scan_deferred_work(struct iwl_priv *priv)
++{
++	cancel_work_sync(&priv->start_internal_scan);
++	cancel_work_sync(&priv->abort_scan);
++	cancel_work_sync(&priv->scan_completed);
++
++	if (cancel_delayed_work_sync(&priv->scan_check)) {
++		mutex_lock(&priv->mutex);
++		iwl_force_scan_end(priv);
++		mutex_unlock(&priv->mutex);
++	}
++}
++EXPORT_SYMBOL(iwl_cancel_scan_deferred_work);
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index fb894d8..6b8f654 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -3763,10 +3763,10 @@ static void iwl3945_cancel_deferred_work(struct iwl_priv *priv)
+ 	iwl3945_hw_cancel_deferred_work(priv);
+ 
+ 	cancel_delayed_work_sync(&priv->init_alive_start);
+-	cancel_delayed_work(&priv->scan_check);
+ 	cancel_delayed_work(&priv->alive_start);
+-	cancel_work_sync(&priv->start_internal_scan);
+ 	cancel_work_sync(&priv->beacon_update);
++
++	iwl_cancel_scan_deferred_work(priv);
+ }
+ 
+ static struct attribute *iwl3945_sysfs_entries[] = {
+-- 
+1.7.1
 
-	Arnd
