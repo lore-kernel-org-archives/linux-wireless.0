@@ -1,48 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:39144 "EHLO coco.kroah.org"
+Received: from mga11.intel.com ([192.55.52.93]:43561 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752393Ab0IOXFi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 19:05:38 -0400
-Date: Wed, 15 Sep 2010 15:48:36 -0700
-From: Greg KH <greg@kroah.com>
-To: Kees Cook <kees.cook@canonical.com>
-Cc: linux-kernel@vger.kernel.org,
+	id S1756530Ab0ICOxn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Sep 2010 10:53:43 -0400
+Subject: Re: [PATCH 08/13] iwlwifi: avoid dropping muttex in
+ iwl_scan_cancel_timeout
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Joe Perches <joe@perches.com>, Jean Tourrilhes <jt@hpl.hp.com>,
-	Tejun Heo <tj@kernel.org>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [vendor-sec] [PATCH] wireless: fix 64K kernel heap content
- leak via ioctl
-Message-ID: <20100915224836.GF19835@kroah.com>
-References: <20100827210240.GC4703@outflux.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100827210240.GC4703@outflux.net>
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1283515056-11523-9-git-send-email-sgruszka@redhat.com>
+References: <1283515056-11523-1-git-send-email-sgruszka@redhat.com>
+	 <1283515056-11523-9-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain
+Date: Fri, 03 Sep 2010 07:53:05 -0700
+Message-Id: <1283525585.5211.16.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 27, 2010 at 02:02:41PM -0700, Kees Cook wrote:
-> This problem was originally tracked down by Brad Spengler.
-> 
-> When calling wireless ioctls, if a driver does not correctly
-> validate/shrink iwp->length, the resulting copy_to_user can leak up to
-> 64K of kernel heap contents.
-> 
-> It seems that this is triggerable[1] in 2.6.32 at least on ath5k, but
-> I was not able to track down how. The twisty maze of ioctl handlers
-> stumped me. :) Other drivers I checked did not appear to have any problems,
-> but the potential remains. I'm not sure if this patch is the right approach;
-> it was fixed differently[2] in grsecurity.
-> 
-> [1] http://forums.grsecurity.net/viewtopic.php?f=3&t=2290&start=0
-> [2] http://grsecurity.net/~spender/wireless-infoleak-fix2.patch
+Hi Gruszka,
 
-Is this fixed differently upstream in the kernel with commit id
-42da2f948d949efd0111309f5827bf0298bcc9a4?
+On Fri, 2010-09-03 at 04:57 -0700, Stanislaw Gruszka wrote:
+> Don't drop mutex when waiting for scan complete. Use STATUS_HW_SCAN bit
+> to check if scanning is currency pending, because STATUS_SCANNING will
+> be cleared only with priv->mutex taken.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-scan.c |   17 ++++++++---------
+>  1 files changed, 8 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+> index 6ab7bb3..7e4faaf 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-scan.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+> @@ -138,22 +138,21 @@ EXPORT_SYMBOL(iwl_scan_cancel);
+>   */
+>  int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
+>  {
+> -	unsigned long now = jiffies;
+> +	unsigned long timeout = jiffies + msecs_to_jiffies(ms);
+>  
+>  	lockdep_assert_held(&priv->mutex);
+>  
+> -	iwl_do_scan_abort(priv);
+> +	IWL_DEBUG_SCAN(priv, "Scan cancel timeout\n");
+>  
+> -	if (ms) {
+> -		mutex_unlock(&priv->mutex);
+> -		while (!time_after(jiffies, now + msecs_to_jiffies(ms)) &&
+> -				test_bit(STATUS_SCANNING, &priv->status))
+> -			msleep(20);
+> -		mutex_lock(&priv->mutex);
+> +	iwl_do_scan_abort(priv);
+>  
+> +	while (time_before_eq(jiffies, timeout)) {
+> +		if (!test_bit(STATUS_SCAN_HW, &priv->status))
+> +			break;
+> +		msleep(20);
+>  	}
+>  
+> -	return test_bit(STATUS_SCANNING, &priv->status);
+> +	return test_bit(STATUS_SCAN_HW, &priv->status);
+>  }
+>  EXPORT_SYMBOL(iwl_scan_cancel_timeout);
+>  
+Should patch 7 and 8 merge into single patch?
 
-thanks,
+Wey
 
-greg k-h
