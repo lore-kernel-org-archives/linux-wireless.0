@@ -1,89 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:42865 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754700Ab0IQCg4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Sep 2010 22:36:56 -0400
-Received: from vs3001.wh2.ocn.ne.jp (125.206.180.229)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0687531015
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 11:36:55 +0900 (JST)
-Subject: [PATCH 11/11] ath5k: Add tx queue configuration function
+Received: from mga02.intel.com ([134.134.136.20]:26701 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753983Ab0ICTlH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Sep 2010 15:41:07 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Fri, 17 Sep 2010 11:37:18 +0900
-Message-ID: <20100917023718.24997.40780.stgit@tt-desk>
-In-Reply-To: <20100917023543.24997.48466.stgit@tt-desk>
-References: <20100917023543.24997.48466.stgit@tt-desk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH wireless-next-2.6] iwlagn: open/close envlope to force move BT state machine
+Date: Fri,  3 Sep 2010 12:43:43 -0700
+Message-Id: <1283543023-30269-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add the mac80211 callback function to configure the tx queue properties like
-cw_min, cw_max and aifs.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
+In uCode, BT state machine need to receive open envlope
+command before perform calibration; followed by close envlope
+command to move to next stage.
+
+Since Linux has two separated uCode, one for init and the second
+one for runtime; we use open envlope commands for init uCode to
+indicate we are ready to perform calibration operation.
+But for runtime uCode, we are not doing any init calibration,
+so we issue open/close envlope commands to force uCode move to
+"BT COEX ON" state.
+
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/ath5k/base.c |   40 ++++++++++++++++++++++++++++++++-
- 1 files changed, 39 insertions(+), 1 deletions(-)
+this patch is also available from wireless-2.6 branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index cfa9243..95072db 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -3144,6 +3144,44 @@ static void ath5k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
- 	mutex_unlock(&sc->lock);
+ drivers/net/wireless/iwlwifi/iwl-agn-ucode.c |   34 ++++++++++----------------
+ drivers/net/wireless/iwlwifi/iwl-agn.c       |   16 ++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-agn.h       |    2 +
+ 3 files changed, 31 insertions(+), 21 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
+index a7961bf..8bfb049 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-ucode.c
+@@ -307,6 +307,17 @@ void iwlagn_init_alive_start(struct iwl_priv *priv)
+ 		goto restart;
+ 	}
+ 
++	if (priv->cfg->advanced_bt_coexist) {
++		/*
++		 * Tell uCode we are ready to perform calibration
++		 * need to perform this before any calibration
++		 * no need to close the envlope since we are going
++		 * to load the runtime uCode later.
++		 */
++		iwlagn_send_bt_env(priv, IWL_BT_COEX_ENV_OPEN,
++			BT_COEX_PRIO_TBL_EVT_INIT_CALIB2);
++
++	}
+ 	iwlagn_send_calib_cfg(priv);
+ 	return;
+ 
+@@ -364,7 +375,7 @@ static const u8 iwlagn_bt_prio_tbl[BT_COEX_PRIO_TBL_EVT_MAX] = {
+ 	0, 0, 0, 0, 0, 0, 0
+ };
+ 
+-static void iwlagn_send_prio_tbl(struct iwl_priv *priv)
++void iwlagn_send_prio_tbl(struct iwl_priv *priv)
+ {
+ 	struct iwl_bt_coex_prio_table_cmd prio_tbl_cmd;
+ 
+@@ -375,7 +386,7 @@ static void iwlagn_send_prio_tbl(struct iwl_priv *priv)
+ 		IWL_ERR(priv, "failed to send BT prio tbl command\n");
  }
  
-+static int ath5k_conf_tx(struct ieee80211_hw *hw, u16 queue,
-+			 const struct ieee80211_tx_queue_params *params)
-+{
-+	struct ath5k_softc *sc = hw->priv;
-+	struct ath5k_hw *ah = sc->ah;
-+	struct ath5k_txq_info qi;
-+	int ret = 0;
+-static void iwlagn_send_bt_env(struct iwl_priv *priv, u8 action, u8 type)
++void iwlagn_send_bt_env(struct iwl_priv *priv, u8 action, u8 type)
+ {
+ 	struct iwl_bt_coex_prot_env_cmd env_cmd;
+ 
+@@ -482,25 +493,6 @@ int iwlagn_alive_notify(struct iwl_priv *priv)
+ 
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ 
+-	if (priv->cfg->advanced_bt_coexist) {
+-		/* Configure Bluetooth device coexistence support */
+-		/* need to perform this before any calibration */
+-		priv->bt_valid = IWLAGN_BT_ALL_VALID_MSK;
+-		priv->kill_ack_mask = IWLAGN_BT_KILL_ACK_MASK_DEFAULT;
+-		priv->kill_cts_mask = IWLAGN_BT_KILL_CTS_MASK_DEFAULT;
+-		priv->cfg->ops->hcmd->send_bt_config(priv);
+-		priv->bt_valid = IWLAGN_BT_VALID_ENABLE_FLAGS;
+-
+-		if (bt_coex_active && priv->iw_mode != NL80211_IFTYPE_ADHOC) {
+-			iwlagn_send_prio_tbl(priv);
+-			iwlagn_send_bt_env(priv, IWL_BT_COEX_ENV_OPEN,
+-				BT_COEX_PRIO_TBL_EVT_INIT_CALIB2);
+-			iwlagn_send_bt_env(priv, IWL_BT_COEX_ENV_CLOSE,
+-				BT_COEX_PRIO_TBL_EVT_INIT_CALIB2);
+-		}
+-
+-	}
+-
+ 	iwlagn_send_wimax_coex(priv);
+ 
+ 	iwlagn_set_Xtal_calib(priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index ad0e67f..55ac079 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2813,6 +2813,22 @@ static void iwl_alive_start(struct iwl_priv *priv)
+ 	if (iwl_is_rfkill(priv))
+ 		return;
+ 
++	if (priv->cfg->advanced_bt_coexist) {
++		/* Configure Bluetooth device coexistence support */
++		priv->bt_valid = IWLAGN_BT_ALL_VALID_MSK;
++		priv->kill_ack_mask = IWLAGN_BT_KILL_ACK_MASK_DEFAULT;
++		priv->kill_cts_mask = IWLAGN_BT_KILL_CTS_MASK_DEFAULT;
++		priv->cfg->ops->hcmd->send_bt_config(priv);
++		priv->bt_valid = IWLAGN_BT_VALID_ENABLE_FLAGS;
++		if (bt_coex_active && priv->iw_mode != NL80211_IFTYPE_ADHOC)
++			iwlagn_send_prio_tbl(priv);
 +
-+	if (queue >= ah->ah_capabilities.cap_queues.q_tx_num)
-+		return 0;
-+
-+	mutex_lock(&sc->lock);
-+
-+	ath5k_hw_get_tx_queueprops(ah, queue, &qi);
-+
-+	qi.tqi_aifs = params->aifs;
-+	qi.tqi_cw_min = params->cw_min;
-+	qi.tqi_cw_max = params->cw_max;
-+	qi.tqi_burst_time = params->txop;
-+
-+	ATH5K_DBG(sc, ATH5K_DEBUG_ANY,
-+		  "Configure tx [queue %d],  "
-+		  "aifs: %d, cw_min: %d, cw_max: %d, txop: %d\n",
-+		  queue, params->aifs, params->cw_min,
-+		  params->cw_max, params->txop);
-+
-+	if (ath5k_hw_set_tx_queueprops(ah, queue, &qi)) {
-+		ATH5K_ERR(sc,
-+			  "Unable to update hardware queue %u!\n", queue);
-+		ret = -EIO;
-+	} else
-+		ath5k_hw_reset_tx_queue(ah, queue);
-+
-+	mutex_unlock(&sc->lock);
-+
-+	return ret;
-+}
-+
- static const struct ieee80211_ops ath5k_hw_ops = {
- 	.tx 		= ath5k_tx,
- 	.start 		= ath5k_start,
-@@ -3156,7 +3194,7 @@ static const struct ieee80211_ops ath5k_hw_ops = {
- 	.set_key 	= ath5k_set_key,
- 	.get_stats 	= ath5k_get_stats,
- 	.get_survey	= ath5k_get_survey,
--	.conf_tx 	= NULL,
-+	.conf_tx	= ath5k_conf_tx,
- 	.get_tsf 	= ath5k_get_tsf,
- 	.set_tsf 	= ath5k_set_tsf,
- 	.reset_tsf 	= ath5k_reset_tsf,
++		/* FIXME: w/a to force change uCode BT state machine */
++		iwlagn_send_bt_env(priv, IWL_BT_COEX_ENV_OPEN,
++			BT_COEX_PRIO_TBL_EVT_INIT_CALIB2);
++		iwlagn_send_bt_env(priv, IWL_BT_COEX_ENV_CLOSE,
++			BT_COEX_PRIO_TBL_EVT_INIT_CALIB2);
++	}
+ 	ieee80211_wake_queues(priv->hw);
+ 
+ 	priv->active_rate = IWL_RATES_MASK;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 7c542a8..ab7c16f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -134,6 +134,8 @@ void iwlagn_rx_calib_complete(struct iwl_priv *priv,
+ void iwlagn_init_alive_start(struct iwl_priv *priv);
+ int iwlagn_alive_notify(struct iwl_priv *priv);
+ int iwl_verify_ucode(struct iwl_priv *priv);
++void iwlagn_send_bt_env(struct iwl_priv *priv, u8 action, u8 type);
++void iwlagn_send_prio_tbl(struct iwl_priv *priv);
+ 
+ /* lib */
+ void iwl_check_abort_status(struct iwl_priv *priv,
+-- 
+1.7.0.4
 
