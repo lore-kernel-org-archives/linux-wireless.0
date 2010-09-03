@@ -1,49 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:33082 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752608Ab0IIGq2 (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:54118 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752057Ab0ICWeK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Sep 2010 02:46:28 -0400
-Received: by bwz11 with SMTP id 11so852098bwz.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2010 23:46:27 -0700 (PDT)
+	Fri, 3 Sep 2010 18:34:10 -0400
+Date: Fri, 3 Sep 2010 19:34:13 -0300
+From: "Gustavo F. Padovan" <padovan@profusion.mobi>
+To: Dominik Brodowski <linux@dominikbrodowski.net>
+Cc: linux-pcmcia@lists.infradead.org, linux-ide@vger.kernel.org,
+	netdev@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-mtd@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-serial@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 03/15] pcmcia: move Vpp setup to struct pcmcia_device
+Message-ID: <20100903223413.GD16973@vigoh>
+References: <20100903105628.GA21255@comet.dominikbrodowski.net>
+ <1283511434-21620-3-git-send-email-linux@dominikbrodowski.net>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTikD3Z9_38jH1iCayZbdqJL4dstPGGFBgerX7dWe@mail.gmail.com>
-References: <1283988329-44549-1-git-send-email-steve@cozybit.com>
- <1283988329-44549-9-git-send-email-steve@cozybit.com> <AANLkTi=-62L5C02bG_UrTjV0VUE5AZ35C_223vXiRXei@mail.gmail.com>
- <AANLkTikD3Z9_38jH1iCayZbdqJL4dstPGGFBgerX7dWe@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 9 Sep 2010 16:46:07 +1000
-Message-ID: <AANLkTi=1WjgohimscMqGjJQB3YF25s52DnvBjHzmdEwO@mail.gmail.com>
-Subject: Re: [PATCH 8/9] libertas_tf: updated with beacon code
-To: Steve deRosier <steve@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net, javier@cozybit.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1283511434-21620-3-git-send-email-linux@dominikbrodowski.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 9, 2010 at 15:53, Steve deRosier <steve@cozybit.com> wrote:
-> On Wed, Sep 8, 2010 at 7:21 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
->> Also, it appears that this patch does two things, update the beacon
->> code and add some debugging. You may want to separate this into two
->> patches.
->
-> Well, the debugging was added _for_ the beacon code and to debug the
-> beacon code either here in the driver or the interaction with new
-> beacon code in the firmware.
+* Dominik Brodowski <linux@dominikbrodowski.net> [2010-09-03 12:57:02 +0200]:
 
-You should probably mention that in the commit message then.
+> Some drivers prefer to explicitly set Vpp. Instead of passing the
+> voltage inside config_req_t, store it in struct pcmcia_device.
+> 
+> CC: linux-ide@vger.kernel.org
+> CC: netdev@vger.kernel.org
+> CC: linux-bluetooth@vger.kernel.org
+> CC: linux-mtd@lists.infradead.org
+> CC: linux-wireless@vger.kernel.org
+> CC: linux-serial@vger.kernel.org
+> CC: linux-usb@vger.kernel.org
+> CC: linux-scsi@vger.kernel.org
+> Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
+> ---
+>  drivers/ata/pata_pcmcia.c                  |    4 ++--
+>  drivers/bluetooth/bt3c_cs.c                |    2 +-
+>  drivers/bluetooth/btuart_cs.c              |    2 +-
+>  drivers/ide/ide-cs.c                       |    6 +++---
+>  drivers/isdn/hisax/sedlbauer_cs.c          |    8 ++++----
+>  drivers/mtd/maps/pcmciamtd.c               |    4 ++--
+>  drivers/net/wireless/airo_cs.c             |    8 ++++----
+>  drivers/net/wireless/atmel_cs.c            |    4 ++--
+>  drivers/net/wireless/hostap/hostap_cs.c    |   10 +++++-----
+>  drivers/net/wireless/orinoco/orinoco_cs.c  |    4 ++--
+>  drivers/net/wireless/orinoco/spectrum_cs.c |    4 ++--
+>  drivers/pcmcia/pcmcia_resource.c           |    3 ++-
+>  drivers/scsi/pcmcia/nsp_cs.c               |    8 ++++----
+>  drivers/serial/serial_cs.c                 |    2 +-
+>  drivers/usb/host/sl811_cs.c                |    8 ++++----
+>  include/pcmcia/cs.h                        |    1 -
+>  include/pcmcia/ds.h                        |    1 +
+>  17 files changed, 40 insertions(+), 39 deletions(-)
 
-libertas_tf: Update beacon code
+For drivers/bluetooth
 
-Update beacon code and add beacon debugging info.
-
-Thanks,
+Acked-by: Gustavo F. Padovan <padovan@profusion.mobi>
 
 -- 
-
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+Gustavo F. Padovan
+ProFUSION embedded systems - http://profusion.mobi
