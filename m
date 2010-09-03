@@ -1,40 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tre.it ([62.13.171.46]:30013 "EHLO relay2.tre.it"
+Received: from mga02.intel.com ([134.134.136.20]:24927 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750868Ab0IBKYW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Sep 2010 06:24:22 -0400
-Message-ID: <4C7F74A4.1080706@panicking.kicks-ass.org>
-Date: Thu, 02 Sep 2010 11:55:48 +0200
-From: Michael Trimarchi <michael@panicking.kicks-ass.org>
-MIME-Version: 1.0
-To: Peter Korsgaard <jacmet@sunsite.dk>
-CC: Vipin Mehta <vmehta@atheros.com>, linux-wireless@vger.kernel.org,
-	lrodriguez@atheros.com, devel@linuxdriverproject.org
-Subject: Re: [PATCH 0/1] ath6kl: add ath6kl driver for AR6003 chip
-References: <1283381473-20415-1-git-send-email-vmehta@atheros.com> <87tym8vdio.fsf@macbook.be.48ers.dk>
-In-Reply-To: <87tym8vdio.fsf@macbook.be.48ers.dk>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	id S1753630Ab0ICO35 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Sep 2010 10:29:57 -0400
+Subject: Re: [PATCH 03/13] iwlwifi: move scan completed flags handling
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+In-Reply-To: <1283515056-11523-4-git-send-email-sgruszka@redhat.com>
+References: <1283515056-11523-1-git-send-email-sgruszka@redhat.com>
+	 <1283515056-11523-4-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain
+Date: Fri, 03 Sep 2010 07:29:19 -0700
+Message-Id: <1283524159.5211.13.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Peter Korsgaard wrote:
->>>>>> "Vipin" == Vipin Mehta <vmehta@atheros.com> writes:
-> 
->  Vipin> The patch adds support for the 802.11 chip, AR6003. It has been 
->  Vipin> generated against the linux-next tree and is being targeted 
->  Vipin> for the staging area.
-> 
->  Vipin> A little bit about the chip and driver:
->  Vipin> (Pls refer to http://wireless.kernel.org/en/users/Drivers/ath6kl
->  Vipin> for details)
-> 
-> What is the relation to the (openmoko) ar6k driver for ar6000?
+Hi Johannes,
 
-Looking at the code I think that is basically the same.
-
-Michael Trimarchi
-
+On Fri, 2010-09-03 at 04:57 -0700, Stanislaw Gruszka wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 > 
-> http://wireless.kernel.org/en/users/Drivers/ar6k
+> Move the scan completed flags handling so that we
+> can notify mac80211 about aborted scans with the
+> correct status. Also queue the scan_completed work
+> before the BT status update so that it won't see
+> the bits still set (unless a new scan was started
+> in which case that's fine.)
 > 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-scan.c |   30 ++++++++++++++----------------
+>  1 files changed, 14 insertions(+), 16 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+> index 01a4907..9df8bb8 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-scan.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+> @@ -222,21 +222,11 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
+>  		       jiffies_to_msecs(elapsed_jiffies
+>  					(priv->scan_start, jiffies)));
+>  
+> -	/*
+> -	 * If a request to abort was given, or the scan did not succeed
+> -	 * then we reset the scan state machine and terminate,
+> -	 * re-queuing another scan if one has been requested
+> -	 */
+> -	if (test_and_clear_bit(STATUS_SCAN_ABORTING, &priv->status))
+> -		IWL_DEBUG_INFO(priv, "Aborted scan completed.\n");
+> -
+> -	IWL_DEBUG_INFO(priv, "Setting scan to off\n");
+> -
+> -	clear_bit(STATUS_SCANNING, &priv->status);
+> +	queue_work(priv->workqueue, &priv->scan_completed);
+>  
+>  	if (priv->iw_mode != NL80211_IFTYPE_ADHOC &&
+> -	    priv->cfg->advanced_bt_coexist && priv->bt_status !=
+> -	    scan_notif->bt_status) {
+> +	    priv->cfg->advanced_bt_coexist &&
+> +	    priv->bt_status != scan_notif->bt_status) {
+>  		if (scan_notif->bt_status) {
+>  			/* BT on */
+>  			if (!priv->bt_ch_announce)
+> @@ -254,7 +244,6 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
+>  		priv->bt_status = scan_notif->bt_status;
+>  		queue_work(priv->workqueue, &priv->bt_traffic_change_work);
+>  	}
+> -	queue_work(priv->workqueue, &priv->scan_completed);
+>  }
+>  
+>  void iwl_setup_rx_scan_handlers(struct iwl_priv *priv)
+> @@ -554,7 +543,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+>  {
+>  	struct iwl_priv *priv =
+>  	    container_of(work, struct iwl_priv, scan_completed);
+> -	bool internal = false;
+> +	bool internal = false, aborted;
+>  	struct iwl_rxon_context *ctx;
+>  
+>  	IWL_DEBUG_SCAN(priv, "SCAN complete scan\n");
+> @@ -562,6 +551,15 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+>  	cancel_delayed_work(&priv->scan_check);
+>  
+>  	mutex_lock(&priv->mutex);
+> +
+> +	aborted = test_and_clear_bit(STATUS_SCAN_ABORTING, &priv->status);
+> +	if (aborted)
+> +		IWL_DEBUG_INFO(priv, "Aborted scan completed.\n");
+> +
+> +	IWL_DEBUG_INFO(priv, "Setting scan to off\n");
+> +
+> +	clear_bit(STATUS_SCANNING, &priv->status);
+> +
+>  	if (priv->is_internal_short_scan) {
+>  		priv->is_internal_short_scan = false;
+>  		IWL_DEBUG_SCAN(priv, "internal short scan completed\n");
+> @@ -569,7 +567,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+>  	} else if (priv->scan_request) {
+>  		priv->scan_request = NULL;
+>  		priv->scan_vif = NULL;
+> -		ieee80211_scan_completed(priv->hw, false);
+> +		ieee80211_scan_completed(priv->hw, aborted);
+>  	}
+>  
+>  	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+
+Not too sure about the flow, just asking is it ok to do all thses before
+check "STATUS_EXIT_PENFING"?
+
+Wey
+
+
 
