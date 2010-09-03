@@ -1,214 +1,390 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:16935 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932861Ab0I0Iid (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 04:38:33 -0400
-Received: from esebh105.NOE.Nokia.com (esebh105.ntc.nokia.com [172.21.138.211])
-	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o8R8cJPc025709
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 03:38:32 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linux-wireless@vger.kernel.org
-Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 14/25] wl1271: Reduce rate used for last PSM entry attempt
-Date: Mon, 27 Sep 2010 11:37:38 +0300
-Message-Id: <1285576669-8070-15-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
-References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
+Received: from isilmar-3.linta.de ([188.40.101.200]:44059 "EHLO linta.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757268Ab0ICK5z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Sep 2010 06:57:55 -0400
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+To: <linux-pcmcia@lists.infradead.org>
+Cc: Dominik Brodowski <linux@dominikbrodowski.net>,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+Subject: [PATCH 12/15] pcmcia: remove the "Finally, report what we've done" message
+Date: Fri,  3 Sep 2010 12:57:11 +0200
+Message-Id: <1283511434-21620-12-git-send-email-linux@dominikbrodowski.net>
+In-Reply-To: <20100903105628.GA21255@comet.dominikbrodowski.net>
+References: <20100903105628.GA21255@comet.dominikbrodowski.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Remove this unnecessary message -- this info is either available
+in sysfs or by enabling dynamic debug from the PCMCIA core.
 
-This patch reduces the rate of the null-func used to enter PSM on the last
-retry as precaution.
-
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+CC: netdev@vger.kernel.org
+CC: linux-wireless@vger.kernel.org
+CC: linux-scsi@vger.kernel.org
+CC: linux-usb@vger.kernel.org
+Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
 ---
- drivers/net/wireless/wl12xx/wl1271_cmd.c   |    4 ++--
- drivers/net/wireless/wl12xx/wl1271_cmd.h   |    4 +++-
- drivers/net/wireless/wl12xx/wl1271_event.c |   17 ++++++++++++-----
- drivers/net/wireless/wl12xx/wl1271_main.c  |    8 +++++---
- drivers/net/wireless/wl12xx/wl1271_ps.c    |    8 +++++---
- drivers/net/wireless/wl12xx/wl1271_ps.h    |    2 +-
- 6 files changed, 28 insertions(+), 15 deletions(-)
+ drivers/char/pcmcia/synclink_cs.c                |    7 -------
+ drivers/isdn/hisax/avma1_cs.c                    |    3 ---
+ drivers/isdn/hisax/elsa_cs.c                     |   10 ----------
+ drivers/isdn/hisax/sedlbauer_cs.c                |   12 ------------
+ drivers/isdn/hisax/teles_cs.c                    |   10 ----------
+ drivers/net/wireless/airo_cs.c                   |   11 -----------
+ drivers/net/wireless/hostap/hostap_cs.c          |   15 +--------------
+ drivers/pcmcia/ds.c                              |    7 +++++++
+ drivers/scsi/pcmcia/nsp_cs.c                     |   15 ---------------
+ drivers/staging/comedi/drivers/cb_das16_cs.c     |    9 ---------
+ drivers/staging/comedi/drivers/das08_cs.c        |    9 ---------
+ drivers/staging/comedi/drivers/ni_daq_700.c      |    9 ---------
+ drivers/staging/comedi/drivers/ni_daq_dio24.c    |    9 ---------
+ drivers/staging/comedi/drivers/ni_labpc_cs.c     |    9 ---------
+ drivers/staging/comedi/drivers/quatech_daqp_cs.c |    9 ---------
+ drivers/usb/host/sl811_cs.c                      |    8 --------
+ 16 files changed, 8 insertions(+), 144 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.c b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-index 42e7d2f..06b14f2 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.c
-@@ -390,7 +390,7 @@ out:
+diff --git a/drivers/char/pcmcia/synclink_cs.c b/drivers/char/pcmcia/synclink_cs.c
+index a343b8f..7c71913 100644
+--- a/drivers/char/pcmcia/synclink_cs.c
++++ b/drivers/char/pcmcia/synclink_cs.c
+@@ -592,13 +592,6 @@ static int mgslpc_config(struct pcmcia_device *link)
+ 
+     info->io_base = link->resource[0]->start;
+     info->irq_level = link->irq;
+-
+-    dev_info(&link->dev, "index 0x%02x:",
+-	    link->config_index);
+-    printk(", irq %d", link->irq);
+-    if (link->resource[0])
+-	    printk(", io %pR", link->resource[0]);
+-    printk("\n");
+     return 0;
+ 
+ failed:
+diff --git a/drivers/isdn/hisax/avma1_cs.c b/drivers/isdn/hisax/avma1_cs.c
+index cb09f0c..47590e0 100644
+--- a/drivers/isdn/hisax/avma1_cs.c
++++ b/drivers/isdn/hisax/avma1_cs.c
+@@ -162,9 +162,6 @@ static int __devinit avma1cs_config(struct pcmcia_device *link)
+ 	return -ENODEV;
+     }
+ 
+-    printk(KERN_NOTICE "avma1_cs: checking at i/o %#x, irq %d\n",
+-		(unsigned int) link->resource[0]->start, link->irq);
+-
+     icard.para[0] = link->irq;
+     icard.para[1] = link->resource[0]->start;
+     icard.protocol = isdnprot;
+diff --git a/drivers/isdn/hisax/elsa_cs.c b/drivers/isdn/hisax/elsa_cs.c
+index f203a52..b37b9f0 100644
+--- a/drivers/isdn/hisax/elsa_cs.c
++++ b/drivers/isdn/hisax/elsa_cs.c
+@@ -196,16 +196,6 @@ static int __devinit elsa_cs_config(struct pcmcia_device *link)
+     if (i != 0)
+ 	goto failed;
+ 
+-    /* Finally, report what we've done */
+-    dev_info(&link->dev, "index 0x%02x: ",
+-	    link->config_index);
+-    printk(", irq %d", link->irq);
+-    if (link->resource[0])
+-	printk(" & %pR", link->resource[0]);
+-    if (link->resource[1])
+-	printk(" & %pR", link->resource[1]);
+-    printk("\n");
+-
+     icard.para[0] = link->irq;
+     icard.para[1] = link->resource[0]->start;
+     icard.protocol = protocol;
+diff --git a/drivers/isdn/hisax/sedlbauer_cs.c b/drivers/isdn/hisax/sedlbauer_cs.c
+index a88c88f..ff17dba 100644
+--- a/drivers/isdn/hisax/sedlbauer_cs.c
++++ b/drivers/isdn/hisax/sedlbauer_cs.c
+@@ -205,18 +205,6 @@ static int __devinit sedlbauer_config(struct pcmcia_device *link)
+     if (ret)
+ 	    goto failed;
+ 
+-    /* Finally, report what we've done */
+-    dev_info(&link->dev, "index 0x%02x:",
+-	   link->config_index);
+-    if (link->vpp)
+-	printk(", Vpp %d.%d", link->vpp/10, link->vpp%10);
+-    printk(", irq %d", link->irq);
+-    if (link->resource[0])
+-	printk(" & %pR", link->resource[0]);
+-    if (link->resource[1])
+-	printk(" & %pR", link->resource[1]);
+-    printk("\n");
+-
+     icard.para[0] = link->irq;
+     icard.para[1] = link->resource[0]->start;
+     icard.protocol = protocol;
+diff --git a/drivers/isdn/hisax/teles_cs.c b/drivers/isdn/hisax/teles_cs.c
+index 05a5631..13ba9ab 100644
+--- a/drivers/isdn/hisax/teles_cs.c
++++ b/drivers/isdn/hisax/teles_cs.c
+@@ -183,16 +183,6 @@ static int __devinit teles_cs_config(struct pcmcia_device *link)
+     if (i != 0)
+       goto cs_failed;
+ 
+-    /* Finally, report what we've done */
+-    dev_info(&link->dev, "index 0x%02x:",
+-	    link->config_index);
+-    printk(", irq %d", link->irq);
+-    if (link->resource[0])
+-	printk(" & %pR", link->resource[0]);
+-    if (link->resource[1])
+-	printk(" & %pR", link->resource[1]);
+-    printk("\n");
+-
+     icard.para[0] = link->irq;
+     icard.para[1] = link->resource[0]->start;
+     icard.protocol = protocol;
+diff --git a/drivers/net/wireless/airo_cs.c b/drivers/net/wireless/airo_cs.c
+index 77682f2..4067bf1 100644
+--- a/drivers/net/wireless/airo_cs.c
++++ b/drivers/net/wireless/airo_cs.c
+@@ -193,17 +193,6 @@ static int airo_config(struct pcmcia_device *link)
+ 	if (!((local_info_t *)link->priv)->eth_dev)
+ 		goto failed;
+ 
+-	/* Finally, report what we've done */
+-	dev_info(&link->dev, "index 0x%02x: ",
+-	       link->config_index);
+-	if (link->vpp)
+-		printk(", Vpp %d.%d", link->vpp/10, link->vpp%10);
+-	printk(", irq %d", link->irq);
+-	if (link->resource[0])
+-		printk(" & %pR", link->resource[0]);
+-	if (link->resource[1])
+-		printk(" & %pR", link->resource[1]);
+-	printk("\n");
+ 	return 0;
+ 
+  failed:
+diff --git a/drivers/net/wireless/hostap/hostap_cs.c b/drivers/net/wireless/hostap/hostap_cs.c
+index e57b201..d6ff0c7 100644
+--- a/drivers/net/wireless/hostap/hostap_cs.c
++++ b/drivers/net/wireless/hostap/hostap_cs.c
+@@ -544,19 +544,6 @@ static int prism2_config(struct pcmcia_device *link)
+ 
+ 	spin_unlock_irqrestore(&local->irq_init_lock, flags);
+ 
+-	/* Finally, report what we've done */
+-	printk(KERN_INFO "%s: index 0x%02x: ",
+-	       dev_info, link->config_index);
+-	if (link->vpp)
+-		printk(", Vpp %d.%d", link->vpp / 10,
+-		       link->vpp % 10);
+-	printk(", irq %d", link->irq);
+-	if (link->resource[0])
+-		printk(" & %pR", link->resource[0]);
+-	if (link->resource[1])
+-		printk(" & %pR", link->resource[1]);
+-	printk("\n");
+-
+ 	local->shutdown = 0;
+ 
+ 	sandisk_enable_wireless(dev);
+@@ -568,7 +555,7 @@ static int prism2_config(struct pcmcia_device *link)
  	return ret;
- }
  
--int wl1271_cmd_ps_mode(struct wl1271 *wl, u8 ps_mode, bool send)
-+int wl1271_cmd_ps_mode(struct wl1271 *wl, u8 ps_mode, u32 rates, bool send)
- {
- 	struct wl1271_cmd_ps_params *ps_params = NULL;
- 	int ret = 0;
-@@ -407,7 +407,7 @@ int wl1271_cmd_ps_mode(struct wl1271 *wl, u8 ps_mode, bool send)
- 	ps_params->send_null_data = send;
- 	ps_params->retries = 5;
- 	ps_params->hang_over_period = 1;
--	ps_params->null_data_rate = cpu_to_le32(wl->basic_rate_set);
-+	ps_params->null_data_rate = cpu_to_le32(rates);
- 
- 	ret = wl1271_cmd_send(wl, CMD_SET_PS_MODE, ps_params,
- 			      sizeof(*ps_params), 0);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.h b/drivers/net/wireless/wl12xx/wl1271_cmd.h
-index 92747ce..ff8e35e 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.h
-@@ -38,7 +38,9 @@ int wl1271_cmd_test(struct wl1271 *wl, void *buf, size_t buf_len, u8 answer);
- int wl1271_cmd_interrogate(struct wl1271 *wl, u16 id, void *buf, size_t len);
- int wl1271_cmd_configure(struct wl1271 *wl, u16 id, void *buf, size_t len);
- int wl1271_cmd_data_path(struct wl1271 *wl, bool enable);
--int wl1271_cmd_ps_mode(struct wl1271 *wl, u8 ps_mode, bool send);
-+int wl1271_cmd_ps_mode(struct wl1271 *wl, u8 ps_mode, u32 rates, bool send);
-+int wl1271_cmd_read_memory(struct wl1271 *wl, u32 addr, void *answer,
-+			   size_t len);
- int wl1271_cmd_template_set(struct wl1271 *wl, u16 template_id,
- 			    void *buf, size_t buf_len, int index, u32 rates);
- int wl1271_cmd_build_null_data(struct wl1271 *wl);
-diff --git a/drivers/net/wireless/wl12xx/wl1271_event.c b/drivers/net/wireless/wl12xx/wl1271_event.c
-index 25ce2cd..bced829 100644
---- a/drivers/net/wireless/wl12xx/wl1271_event.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_event.c
-@@ -52,7 +52,7 @@ void wl1271_pspoll_work(struct work_struct *work)
- 	 * delivery failure occurred, and no-one changed state since, so
- 	 * we should go back to powersave.
- 	 */
--	wl1271_ps_set_mode(wl, STATION_POWER_SAVE_MODE, true);
-+	wl1271_ps_set_mode(wl, STATION_POWER_SAVE_MODE, wl->basic_rate, true);
- 
- out:
- 	mutex_unlock(&wl->mutex);
-@@ -70,7 +70,8 @@ static void wl1271_event_pspoll_delivery_fail(struct wl1271 *wl)
- 
- 	/* force active mode receive data from the AP */
- 	if (test_bit(WL1271_FLAG_PSM, &wl->flags)) {
--		ret = wl1271_ps_set_mode(wl, STATION_ACTIVE_MODE, true);
-+		ret = wl1271_ps_set_mode(wl, STATION_ACTIVE_MODE,
-+					 wl->basic_rate, true);
- 		if (ret < 0)
- 			return;
- 		set_bit(WL1271_FLAG_PSPOLL_FAILURE, &wl->flags);
-@@ -91,6 +92,8 @@ static int wl1271_event_ps_report(struct wl1271 *wl,
- 				  bool *beacon_loss)
- {
- 	int ret = 0;
-+	u32 total_retries = wl->conf.conn.psm_entry_retries;
-+	u32 rates;
- 
- 	wl1271_debug(DEBUG_EVENT, "ps_status: 0x%x", mbox->ps_status);
- 
-@@ -104,10 +107,14 @@ static int wl1271_event_ps_report(struct wl1271 *wl,
- 			break;
- 		}
- 
--		if (wl->psm_entry_retry < wl->conf.conn.psm_entry_retries) {
-+		if (wl->psm_entry_retry < total_retries) {
- 			wl->psm_entry_retry++;
-+			if (wl->psm_entry_retry == total_retries)
-+				rates = wl->basic_rate;
-+			else
-+				rates = wl->basic_rate_set;
- 			ret = wl1271_ps_set_mode(wl, STATION_POWER_SAVE_MODE,
--						 true);
-+						 rates, true);
- 		} else {
- 			wl1271_info("No ack to nullfunc from AP.");
- 			wl->psm_entry_retry = 0;
-@@ -143,7 +150,7 @@ static int wl1271_event_ps_report(struct wl1271 *wl,
- 		/* make sure the firmware goes to active mode - the frame to
- 		   be sent next will indicate to the AP, that we are active. */
- 		ret = wl1271_ps_set_mode(wl, STATION_ACTIVE_MODE,
--					 false);
-+					 wl->basic_rate, false);
- 		break;
- 	case EVENT_EXIT_POWER_SAVE_SUCCESS:
- 	default:
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 11e112f..81f92a0 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1341,7 +1341,7 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- 		if (test_bit(WL1271_FLAG_STA_ASSOCIATED, &wl->flags)) {
- 			wl1271_debug(DEBUG_PSM, "psm enabled");
- 			ret = wl1271_ps_set_mode(wl, STATION_POWER_SAVE_MODE,
--						 true);
-+						 wl->basic_rate_set, true);
- 		}
- 	} else if (!(conf->flags & IEEE80211_CONF_PS) &&
- 		   test_bit(WL1271_FLAG_PSM_REQUESTED, &wl->flags)) {
-@@ -1351,7 +1351,7 @@ static int wl1271_op_config(struct ieee80211_hw *hw, u32 changed)
- 
- 		if (test_bit(WL1271_FLAG_PSM, &wl->flags))
- 			ret = wl1271_ps_set_mode(wl, STATION_ACTIVE_MODE,
--						 true);
-+						 wl->basic_rate_set, true);
+  failed_unlock:
+-	 spin_unlock_irqrestore(&local->irq_init_lock, flags);
++	spin_unlock_irqrestore(&local->irq_init_lock, flags);
+  failed:
+ 	kfree(hw_priv);
+ 	prism2_release((u_long)link);
+diff --git a/drivers/pcmcia/ds.c b/drivers/pcmcia/ds.c
+index dd43bd3..912c740 100644
+--- a/drivers/pcmcia/ds.c
++++ b/drivers/pcmcia/ds.c
+@@ -277,6 +277,8 @@ static int pcmcia_device_probe(struct device *dev)
+ 	if (!ret) {
+ 		p_dev->config_base = cis_config.base;
+ 		p_dev->config_regs = cis_config.rmask[0];
++		dev_dbg(dev, "base %x, regs %x", p_dev->config_base,
++			p_dev->config_regs);
+ 	} else {
+ 		dev_printk(KERN_INFO, dev,
+ 			   "pcmcia: could not parse base and rmask0 of CIS\n");
+@@ -290,6 +292,11 @@ static int pcmcia_device_probe(struct device *dev)
+ 			   p_drv->drv.name, ret);
+ 		goto put_module;
  	}
++	dev_dbg(dev, "%s bound: Vpp %d.%d, idx %x, IRQ %d", p_drv->drv.name,
++		p_dev->vpp/10, p_dev->vpp%10, p_dev->config_index, p_dev->irq);
++	dev_dbg(dev, "resources: ioport %pR %pR iomem %pR %pR %pR",
++		p_dev->resource[0], p_dev->resource[1], p_dev->resource[2],
++		p_dev->resource[3], p_dev->resource[4]);
  
- 	if (conf->power_level != wl->power_level) {
-@@ -1826,7 +1826,9 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 			if (test_bit(WL1271_FLAG_PSM_REQUESTED, &wl->flags) &&
- 			    !test_bit(WL1271_FLAG_PSM, &wl->flags)) {
- 				mode = STATION_POWER_SAVE_MODE;
--				ret = wl1271_ps_set_mode(wl, mode, true);
-+				ret = wl1271_ps_set_mode(wl, mode,
-+							 wl->basic_rate_set,
-+							 true);
- 				if (ret < 0)
- 					goto out_sleep;
- 			}
-diff --git a/drivers/net/wireless/wl12xx/wl1271_ps.c b/drivers/net/wireless/wl12xx/wl1271_ps.c
-index 52a6095..f75668e 100644
---- a/drivers/net/wireless/wl12xx/wl1271_ps.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_ps.c
-@@ -121,7 +121,7 @@ out:
- }
+ 	mutex_lock(&s->ops_mutex);
+ 	if ((s->pcmcia_pfc) &&
+diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
+index 3d6db73..efb0e64 100644
+--- a/drivers/scsi/pcmcia/nsp_cs.c
++++ b/drivers/scsi/pcmcia/nsp_cs.c
+@@ -1687,21 +1687,6 @@ static int nsp_cs_config(struct pcmcia_device *link)
  
- int wl1271_ps_set_mode(struct wl1271 *wl, enum wl1271_cmd_ps_mode mode,
--		       bool send)
-+		       u32 rates, bool send)
- {
- 	int ret;
+ 	info->host = host;
  
-@@ -135,7 +135,8 @@ int wl1271_ps_set_mode(struct wl1271 *wl, enum wl1271_cmd_ps_mode mode,
- 			return ret;
- 		}
+-	/* Finally, report what we've done */
+-	printk(KERN_INFO "nsp_cs: index 0x%02x: ",
+-	       link->config_index);
+-	if (link->vpp) {
+-		printk(", Vpp %d.%d", link->vpp/10, link->vpp%10);
+-	}
+-	printk(", irq %d", link->irq);
+-	if (link->resource[0])
+-		printk(", io %pR", link->resource[0]);
+-	if (link->resource[1])
+-		printk(" & %pR", link->resource[1]);
+-	if (link->resource[2])
+-		printk(", mem %pR", link->resource[2]);
+-	printk("\n");
+-
+ 	return 0;
  
--		ret = wl1271_cmd_ps_mode(wl, STATION_POWER_SAVE_MODE, send);
-+		ret = wl1271_cmd_ps_mode(wl, STATION_POWER_SAVE_MODE,
-+					 rates, send);
- 		if (ret < 0)
- 			return ret;
+  cs_failed:
+diff --git a/drivers/staging/comedi/drivers/cb_das16_cs.c b/drivers/staging/comedi/drivers/cb_das16_cs.c
+index c43c689..0c4b27c 100644
+--- a/drivers/staging/comedi/drivers/cb_das16_cs.c
++++ b/drivers/staging/comedi/drivers/cb_das16_cs.c
+@@ -745,15 +745,6 @@ static void das16cs_pcmcia_config(struct pcmcia_device *link)
+ 	if (ret)
+ 		goto failed;
  
-@@ -158,7 +159,8 @@ int wl1271_ps_set_mode(struct wl1271 *wl, enum wl1271_cmd_ps_mode mode,
- 		if (ret < 0)
- 			return ret;
+-	/* Finally, report what we've done */
+-	dev_info(&link->dev, "index 0x%02x", link->config_index);
+-	printk(", irq %u", link->irq);
+-	if (link->resource[0])
+-		printk(", io %pR", link->resource[0]);
+-	if (link->resource[1])
+-		printk(", io %pR", link->resource[1]);
+-	printk("\n");
+-
+ 	return;
  
--		ret = wl1271_cmd_ps_mode(wl, STATION_ACTIVE_MODE, send);
-+		ret = wl1271_cmd_ps_mode(wl, STATION_ACTIVE_MODE,
-+					 rates, send);
- 		if (ret < 0)
- 			return ret;
+ failed:
+diff --git a/drivers/staging/comedi/drivers/das08_cs.c b/drivers/staging/comedi/drivers/das08_cs.c
+index d395909..6d89325 100644
+--- a/drivers/staging/comedi/drivers/das08_cs.c
++++ b/drivers/staging/comedi/drivers/das08_cs.c
+@@ -235,15 +235,6 @@ static void das08_pcmcia_config(struct pcmcia_device *link)
+ 	if (ret)
+ 		goto failed;
  
-diff --git a/drivers/net/wireless/wl12xx/wl1271_ps.h b/drivers/net/wireless/wl12xx/wl1271_ps.h
-index 940276f..6ba7b03 100644
---- a/drivers/net/wireless/wl12xx/wl1271_ps.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_ps.h
-@@ -28,7 +28,7 @@
- #include "wl1271_acx.h"
+-	/* Finally, report what we've done */
+-	dev_info(&link->dev, "index 0x%02x", link->config_index);
+-	printk(", irq %u", link->irq);
+-	if (link->resource[0])
+-		printk(", io %pR", link->resource[0]);
+-	if (link->resource[1])
+-		printk(" & %pR", link->resource[1]);
+-	printk("\n");
+-
+ 	return;
  
- int wl1271_ps_set_mode(struct wl1271 *wl, enum wl1271_cmd_ps_mode mode,
--		       bool send);
-+		       u32 rates, bool send);
- void wl1271_ps_elp_sleep(struct wl1271 *wl);
- int wl1271_ps_elp_wakeup(struct wl1271 *wl, bool chip_awake);
- void wl1271_elp_work(struct work_struct *work);
+ failed:
+diff --git a/drivers/staging/comedi/drivers/ni_daq_700.c b/drivers/staging/comedi/drivers/ni_daq_700.c
+index 7129b0c..5244125 100644
+--- a/drivers/staging/comedi/drivers/ni_daq_700.c
++++ b/drivers/staging/comedi/drivers/ni_daq_700.c
+@@ -568,15 +568,6 @@ static void dio700_config(struct pcmcia_device *link)
+ 	if (ret != 0)
+ 		goto failed;
+ 
+-	/* Finally, report what we've done */
+-	dev_info(&link->dev, "index 0x%02x", link->config_index);
+-	printk(", irq %d", link->irq);
+-	if (link->resource[0])
+-		printk(", io %pR", link->resource[0]);
+-	if (link->resource[1])
+-		printk(" & %pR", link->resource[1]);
+-	printk("\n");
+-
+ 	return;
+ 
+ failed:
+diff --git a/drivers/staging/comedi/drivers/ni_daq_dio24.c b/drivers/staging/comedi/drivers/ni_daq_dio24.c
+index 4defdda..54dda4a 100644
+--- a/drivers/staging/comedi/drivers/ni_daq_dio24.c
++++ b/drivers/staging/comedi/drivers/ni_daq_dio24.c
+@@ -319,15 +319,6 @@ static void dio24_config(struct pcmcia_device *link)
+ 	if (ret)
+ 		goto failed;
+ 
+-	/* Finally, report what we've done */
+-	dev_info(&link->dev, "index 0x%02x", link->config_index);
+-	printk(", irq %d", link->irq);
+-	if (link->resource[0])
+-		printk(" & %pR", link->resource[0]);
+-	if (link->resource[1])
+-		printk(" & %pR", link->resource[1]);
+-	printk("\n");
+-
+ 	return;
+ 
+ failed:
+diff --git a/drivers/staging/comedi/drivers/ni_labpc_cs.c b/drivers/staging/comedi/drivers/ni_labpc_cs.c
+index 5123b31..22119f2 100644
+--- a/drivers/staging/comedi/drivers/ni_labpc_cs.c
++++ b/drivers/staging/comedi/drivers/ni_labpc_cs.c
+@@ -297,15 +297,6 @@ static void labpc_config(struct pcmcia_device *link)
+ 	if (ret)
+ 		goto failed;
+ 
+-	/* Finally, report what we've done */
+-	dev_info(&link->dev, "index 0x%02x", link->config_index);
+-	printk(", irq %d", link->irq);
+-	if (link->resource[0])
+-		printk(" & %pR", link->resource[0]);
+-	if (link->resource[1])
+-		printk(" & %pR", link->resource[1]);
+-	printk("\n");
+-
+ 	return;
+ 
+ failed:
+diff --git a/drivers/staging/comedi/drivers/quatech_daqp_cs.c b/drivers/staging/comedi/drivers/quatech_daqp_cs.c
+index afd283d..de37ff7 100644
+--- a/drivers/staging/comedi/drivers/quatech_daqp_cs.c
++++ b/drivers/staging/comedi/drivers/quatech_daqp_cs.c
+@@ -1103,15 +1103,6 @@ static void daqp_cs_config(struct pcmcia_device *link)
+ 	if (ret)
+ 		goto failed;
+ 
+-	/* Finally, report what we've done */
+-	dev_info(&link->dev, "index 0x%02x", link->config_index);
+-	printk(", irq %u", link->irq);
+-	if (link->resource[0])
+-		printk(" & %pR", link->resource[0]);
+-	if (link->resource[1])
+-		printk(" & %pR", link->resource[1]);
+-	printk("\n");
+-
+ 	return;
+ 
+ failed:
+diff --git a/drivers/usb/host/sl811_cs.c b/drivers/usb/host/sl811_cs.c
+index 81d7eea..9ce95cd 100644
+--- a/drivers/usb/host/sl811_cs.c
++++ b/drivers/usb/host/sl811_cs.c
+@@ -164,14 +164,6 @@ static int sl811_cs_config(struct pcmcia_device *link)
+ 	if (ret)
+ 		goto failed;
+ 
+-	dev_info(&link->dev, "index 0x%02x: ",
+-		link->config_index);
+-	if (link->vpp)
+-		printk(", Vpp %d.%d", link->vpp/10, link->vpp%10);
+-	printk(", irq %d", link->irq);
+-	printk(", io %pR", link->resource[0]);
+-	printk("\n");
+-
+ 	if (sl811_hc_init(parent, link->resource[0]->start, link->irq)
+ 			< 0) {
+ failed:
 -- 
-1.6.3.3
+1.7.0.4
 
