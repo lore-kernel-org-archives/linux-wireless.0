@@ -1,121 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39978 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752960Ab0IXJXt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Sep 2010 05:23:49 -0400
-Message-Id: <20100924092305.834557819@sipsolutions.net>
-Date: Fri, 24 Sep 2010 11:21:07 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: John Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/5] mac80211: clean up rx handling wrt. found_sta
-References: <20100924092104.384954781@sipsolutions.net>
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:53008 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932101Ab0ICMBx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Sep 2010 08:01:53 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 13/13] mac80211: wait for scan work complete before restarting hw
+Date: Fri,  3 Sep 2010 13:57:36 +0200
+Message-Id: <1283515056-11523-14-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1283515056-11523-1-git-send-email-sgruszka@redhat.com>
+References: <1283515056-11523-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This is needed to avoid warning in ieee80211_restart_hw about hardware
+scan in progress.
 
-If a station was found, then we'll have exited
-the function already, so it is not necessary to
-have a variable keeping track of it.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- net/mac80211/rx.c |   60 ++++++++++++++++++++++++------------------------------
- 1 file changed, 27 insertions(+), 33 deletions(-)
+ net/mac80211/main.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
---- wireless-testing.orig/net/mac80211/rx.c	2010-09-24 11:02:53.000000000 +0200
-+++ wireless-testing/net/mac80211/rx.c	2010-09-24 11:03:09.000000000 +0200
-@@ -2651,7 +2651,6 @@ static void __ieee80211_rx_handle_packet
- 	struct ieee80211_rx_data rx;
- 	struct ieee80211_sub_if_data *prev;
- 	struct sta_info *sta, *tmp, *prev_sta;
--	bool found_sta = false;
- 	int err = 0;
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 4935b84..bf0eb6a 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -305,6 +305,9 @@ void ieee80211_restart_hw(struct ieee80211_hw *hw)
  
- 	fc = ((struct ieee80211_hdr *)skb->data)->frame_control;
-@@ -2684,8 +2683,6 @@ static void __ieee80211_rx_handle_packet
- 		prev_sta = NULL;
+ 	trace_api_restart_hw(local);
  
- 		for_each_sta_info(local, hdr->addr2, sta, tmp) {
--			found_sta = true;
--
- 			if (!prev_sta) {
- 				prev_sta = sta;
- 				continue;
-@@ -2707,43 +2704,40 @@ static void __ieee80211_rx_handle_packet
- 		}
- 	}
- 
--	if (!found_sta) {
--		prev = NULL;
--
--		list_for_each_entry_rcu(sdata, &local->interfaces, list) {
--			if (!ieee80211_sdata_running(sdata))
--				continue;
--
--			if (sdata->vif.type == NL80211_IFTYPE_MONITOR ||
--			    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
--				continue;
--
--			/*
--			 * frame is destined for this interface, but if it's
--			 * not also for the previous one we handle that after
--			 * the loop to avoid copying the SKB once too much
--			 */
-+	prev = NULL;
- 
--			if (!prev) {
--				prev = sdata;
--				continue;
--			}
--
--			rx.sta = sta_info_get_bss(prev, hdr->addr2);
--			rx.sdata = prev;
--			ieee80211_prepare_and_rx_handle(&rx, skb, false);
-+	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-+		if (!ieee80211_sdata_running(sdata))
-+			continue;
++	/* wait for scan work complete */
++	flush_workqueue(local->workqueue);
 +
-+		if (sdata->vif.type == NL80211_IFTYPE_MONITOR ||
-+		    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
-+			continue;
-+
-+		/*
-+		 * frame is destined for this interface, but if it's
-+		 * not also for the previous one we handle that after
-+		 * the loop to avoid copying the SKB once too much
-+		 */
+ 	WARN(test_bit(SCAN_HW_SCANNING, &local->scanning),
+ 		"%s called with hardware scan in progress\n", __func__);
  
-+		if (!prev) {
- 			prev = sdata;
-+			continue;
- 		}
- 
--		if (prev) {
--			rx.sta = sta_info_get_bss(prev, hdr->addr2);
--			rx.sdata = prev;
-+		rx.sta = sta_info_get_bss(prev, hdr->addr2);
-+		rx.sdata = prev;
-+		ieee80211_prepare_and_rx_handle(&rx, skb, false);
- 
--			if (ieee80211_prepare_and_rx_handle(&rx, skb, true))
--				return;
--		}
-+		prev = sdata;
-+	}
-+
-+	if (prev) {
-+		rx.sta = sta_info_get_bss(prev, hdr->addr2);
-+		rx.sdata = prev;
- 
-+		if (ieee80211_prepare_and_rx_handle(&rx, skb, true))
-+			return;
- 	}
- 
- 	dev_kfree_skb(skb);
-
+-- 
+1.7.1
 
