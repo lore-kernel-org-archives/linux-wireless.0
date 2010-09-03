@@ -1,53 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:42489 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751270Ab0INTA1 (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:43320 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753983Ab0ICTDb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 15:00:27 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [ath9k] ath9k:  calcrxfilter should take multiple VIFs into account.
-Date: Tue, 14 Sep 2010 12:00:22 -0700
-Message-Id: <1284490822-11058-1-git-send-email-greearb@candelatech.com>
+	Fri, 3 Sep 2010 15:03:31 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 9594A418D8
+	for <linux-wireless@vger.kernel.org>; Fri,  3 Sep 2010 15:02:24 -0400 (EDT)
+Subject: Compat-wireless release for 2010-09-03 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100903190329.6C02F41134@repository3.orbit-lab.org>
+Date: Fri,  3 Sep 2010 15:03:29 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   46209e3..3254605  history    -> origin/history
+ + 21929b6...d24ab56 master     -> origin/master  (forced update)
+ * [new tag]         next-20100903 -> next-20100903
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/staging/ath6kl/Makefile: No such file or directory
+make[3]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/staging/ath6kl/Makefile'.  Stop.
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/staging/ath6kl] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
 
-When there is more than one VIF, listen for all beacons
-and ensure ATH9K_RX_FILTER_MCAST_BCAST_ALL is set.
+compat-wireless code metrics
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 b32c8f0... 6ba971b... M	drivers/net/wireless/ath/ath9k/recv.c
- drivers/net/wireless/ath/ath9k/recv.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+    591075 - Total upstream lines of code being pulled
+      1718 - backport code changes
+      1477 - backport code additions
+       241 - backport code deletions
+      6082 - backport from compat module
+      7800 - total backport code
+    1.3196 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2061 - % of crap code
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index b32c8f0..6ba971b 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -449,6 +449,7 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
- 		rfilt |= ATH9K_RX_FILTER_CONTROL;
- 
- 	if ((sc->sc_ah->opmode == NL80211_IFTYPE_STATION) &&
-+	    (sc->nvifs <= 1) &&
- 	    !(sc->rx.rxfilter & FIF_BCN_PRBRESP_PROMISC))
- 		rfilt |= ATH9K_RX_FILTER_MYBEACON;
- 	else
-@@ -463,9 +464,8 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
- 	if (conf_is_ht(&sc->hw->conf))
- 		rfilt |= ATH9K_RX_FILTER_COMP_BAR;
- 
--	if (sc->sec_wiphy || (sc->rx.rxfilter & FIF_OTHER_BSS)) {
--		/* TODO: only needed if more than one BSSID is in use in
--		 * station/adhoc mode */
-+	if (sc->sec_wiphy || (sc->nvifs > 1) ||
-+	    (sc->rx.rxfilter & FIF_OTHER_BSS)) {
- 		/* The following may also be needed for other older chips */
- 		if (sc->sc_ah->hw_version.macVersion == AR_SREV_VERSION_9160)
- 			rfilt |= ATH9K_RX_FILTER_PROM;
--- 
-1.7.2.2
-
+Base tree: linux-next.git
+Base tree version: next-20100903
+compat-wireless release: compat-wireless--2010-09-02
