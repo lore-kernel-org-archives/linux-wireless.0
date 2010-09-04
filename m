@@ -1,33 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38471 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753091Ab0I1HXf (ORCPT
+Received: from casper.infradead.org ([85.118.1.10]:44539 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754066Ab0IDXWT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Sep 2010 03:23:35 -0400
-Subject: Re: Given an interface, how to tell if it's associated?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
+	Sat, 4 Sep 2010 19:22:19 -0400
+Subject: Re: [PATCH] ath9k_htc: Update AR7010 firmwares
+From: David Woodhouse <dwmw2@infradead.org>
+To: Rajkumar Manoharan <rmanoharan@atheros.com>
 Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4CA12600.5070304@candelatech.com>
-References: <4CA12600.5070304@candelatech.com>
+In-Reply-To: <1283530280-6263-1-git-send-email-rmanoharan@atheros.com>
+References: <1283530280-6263-1-git-send-email-rmanoharan@atheros.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 28 Sep 2010 09:23:33 +0200
-Message-ID: <1285658613.3885.2.camel@jlt3.sipsolutions.net>
+Date: Sun, 05 Sep 2010 00:22:10 +0100
+Message-ID: <1283642530.15689.2.camel@i7.infradead.org>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-09-27 at 16:17 -0700, Ben Greear wrote:
-> I need to iterate through all local->interfaces and
-> if they are stations, figure out if they are associated
-> or not.
+On Fri, 2010-09-03 at 17:11 +0100, Rajkumar Manoharan wrote:
+> AR7010 firmwares are patched to change EP3 & EP4
+> from Interrupt to Bulk type.
 > 
-> I tried checking for existence of sdata->u.mgd.associated,
-> but it is always null (I'm using non-encrypted links
-> currently, in case that matters.)
+> Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+> ---
+>  ar7010.fw     |  Bin 70608 -> 70624 bytes
+>  ar7010_1_1.fw |  Bin 70608 -> 70624 bytes
+>  2 files changed, 0 insertions(+), 0 deletions(-) 
 
-That's correct, if it's always NULL then you're not associated properly
-I guess?
+Is that a compatible change which will continue to work with old
+kernels?
 
-johannes
+If not, the firmware needs a new filename -- think of it like an soname
+on userspace libraries.
+
+-- 
+dwmw2
 
