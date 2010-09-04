@@ -1,25 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:47757 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751675Ab0IBP3r (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Sep 2010 11:29:47 -0400
-Received: by iwn5 with SMTP id 5so627536iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Sep 2010 08:29:46 -0700 (PDT)
-MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 2 Sep 2010 08:29:26 -0700
-Message-ID: <AANLkTinUFWMXz8eN_vkmUd4AgagbqjuFqfFY4J=ACEFe@mail.gmail.com>
-Subject: compat-wireless-2.6.36-rc3 released for 802.11 / Ethernet / Bluetooth
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from server19320154104.serverpool.info ([193.201.54.104]:54637 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753755Ab0IDPHG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 Sep 2010 11:07:06 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 0/5] compat-wireless: ath9kl and compat_autoconf.h fixes
+Date: Sat,  4 Sep 2010 17:06:44 +0200
+Message-Id: <1283612809-6798-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-http://www.orbit-lab.org/kernel/compat-wireless-2.6-stable/v2.6.36/compat-wireless-2.6.36-rc3-1.tar.bz2
-sha1sum: e34e2103f9aa5c8c6ee6bb7ebc942c3cc834b1ea
+This series contains some fixes for the ath6kl driver, the 
+compat_autoconf.h file now contains most of the conditions from 
+config.mk and some fixes for CONFIG_WIRELESS_EXT=n were added.
 
-Not much updates except for some iwlwifi ones, and one ASPM compiler
-fix for kernels older than 2.6.25.
+Hauke Mehrtens (5):
+  compat-wireless: add conditions form config into compat_autoconf.h
+  compat-wireless: handle depending on something build as module
+  compat-wireless: make atk6kl build with older kernels
+  compat-wireless: fix for CONFIG_WIRELESS_EXT=n
+  compat-wireless: build if kernel does not have mac80211
 
-  Luis
+ config.mk                               |  102 ++++++++++++++++--------------
+ patches/33-autoconf.patch               |   15 +++++
+ patches/34-backport-bin_attribute.patch |   47 ++++++++++++++
+ scripts/gen-compat-autoconf.sh          |    8 +--
+ 4 files changed, 118 insertions(+), 54 deletions(-)
+ create mode 100644 patches/33-autoconf.patch
+ create mode 100644 patches/34-backport-bin_attribute.patch
+
