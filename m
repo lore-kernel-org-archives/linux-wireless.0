@@ -1,46 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:60196 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751581Ab0INRda (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39976 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750841Ab0IDIny (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 13:33:30 -0400
-Message-ID: <4C8FB1DA.5090209@candelatech.com>
-Date: Tue, 14 Sep 2010 10:33:14 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net, lrodriguez@atheros.com
-Subject: Re: [PATCH 1/2] ath9k: fix BSSID mask calculation
-References: <1284482240-57922-1-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1284482240-57922-1-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sat, 4 Sep 2010 04:43:54 -0400
+Subject: Re: Marshaling issues w/ compat-wireless-2010-08-19
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Philip Prindeville <philipp_subx@redfish-solutions.com>
+Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+In-Reply-To: <4C816E18.6050408@redfish-solutions.com>
+References: <4C746F74.70401@redfish-solutions.com>
+	 <20100828171239.GA23885@jm.kir.nu> <4C79450C.80507@redfish-solutions.com>
+	 <4C7C55E6.1060707@redfish-solutions.com>
+	 <4C816E18.6050408@redfish-solutions.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 04 Sep 2010 10:43:44 +0200
+Message-ID: <1283589824.3746.1.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/14/2010 09:37 AM, Felix Fietkau wrote:
-> At the time the .add_interface driver op is called, the interface has not
-> been marked as running yet, so ieee80211_iterate_active_interfaces will
-> not pass it to the iterator function.
-> Because of this, the calculated BSSID mask is wrong, which breaks multi-BSS
-> operation.
->
-> Additionally, the current way of comparing all addresses against each other
-> is pointless, as the hardware only uses the hardware MAC address and the BSSID
-> mask for matching the destination address, so all the address array
-> reallocation is completely unnecessary.
->
-> This patch simplifies the logic by setting the initial mask bytes to 0xff
-> and removing all bits in the iterator call that don't match the hardware MAC
-> address. It also calls the iterator for the vif that was passed to
-> add_interface()
+On Fri, 2010-09-03 at 14:52 -0700, Philip Prindeville wrote:
 
-You probably need to fix the mask-setting logic in
-ath_opmode_init as well?
+> Just following up: I isolated the problem.
+> 
+> I had taken the sample hostapd.conf that comes with hostapd-0.7.2 and copied it into /etc/.
+> 
+> Then I enabled the following commented out fields:
+> 
+> bridge=br0
+> driver=nl80211
+> ssid=my-hp-test
+> country_code=US
+> hw_mode=g
+> channel=10
+> wep_default_key=0
+> wep_key0=123456789a
+> ieee80211n=1
+> 
+> but what broke it was:
+> 
+> wep_key_len_broadcast=5
+> wep_key_len_unicast=5
+> wep_rekey_period=300
+> 
+> if I turned off those last 3, things work again. 
 
-Thanks,
-Ben
+Hah. I don't even know what that does. What were you trying to achieve?
+Aren't those related to dynamic WEP, but you configured static WEP?
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+johannes
+
