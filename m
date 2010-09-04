@@ -1,90 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:62660 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755676Ab0INWsb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 18:48:31 -0400
-Received: by iwn5 with SMTP id 5so6435964iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Sep 2010 15:48:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTi=azJS6bn7-=Bbb--ibACaQWqv4ZGLMUpfxynm7@mail.gmail.com>
-References: <AANLkTi=azJS6bn7-=Bbb--ibACaQWqv4ZGLMUpfxynm7@mail.gmail.com>
-Date: Wed, 15 Sep 2010 01:48:30 +0300
-Message-ID: <AANLkTi==HEkmY4TR=r+4Ymk_55fBORmRgF+SFGQzK750@mail.gmail.com>
-Subject: Re: [ath5k-devel] [support] ath5k contention windows
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Jonathan Guerin <jonathan@guerin.id.au>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel <ath5k-devel@lists.ath5k.org>,
-	Steve Glass <stevie.glass@gmail.com>,
-	Wee Lum Tan <weelum.tan@nicta.com.au>,
-	Marius Portmann <marius@itee.uq.edu.au>,
-	Konstanty Bialkowski <konstanty@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from server19320154104.serverpool.info ([193.201.54.104]:54669 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753819Ab0IDPHO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 Sep 2010 11:07:14 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 4/5] compat-wireless: fix for CONFIG_WIRELESS_EXT=n
+Date: Sat,  4 Sep 2010 17:06:48 +0200
+Message-Id: <1283612809-6798-5-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1283612809-6798-1-git-send-email-hauke@hauke-m.de>
+References: <1283612809-6798-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/9/14 Jonathan Guerin <jonathan@guerin.id.au>:
-> Hi all,
->
-> I have some behaviour I'm observing with some Atheros cards we use that
-> doesn't seem to match what the initvals of ath5k are set up to. These are
-> the cards I used:
-> http://www.mini-box.com/s.nl/it.A/id.387/.f
->
-> I have run a saturated iPerf flow on a conducted testbed with both stations
-> being inside RF-shielding boxes. They are set to 802.11a mode, on channel 1.
-> I then parse the trace, looking for ACK-DATA pairs, and calculating the time
-> difference between them. From this, I remove the TX_TIME of the DATA frame,
-> as well as a DIFS:
->
-> ACK_TIMESTAMP + DIFS + CONTENTION_TIME + DATA_TX_TIME = DATA_TIMESTAMP
->
-> which will leave me with the CONTENTION_TIME. Dividing this time by a
-> SLOT_TIME will give me the slot which was chosen by the hardware.
->
->
-> According to the driver, in ath5k.h:
->
-> #define AR5K_TUNE_CWMIN                15
->
-> CWMIN is initialised to 15.
->
-> The actual distribution of contention slots I'm observing resembles this:
->
-> Slot Number,Count
-> 0,1315
-> 1,1302
-> 2,1249
-> 3,1291
-> 4,1347
-> 5,1219
-> 6,1249
-> 7,0
-> 8,0
-> 9,0
-> <truncated>
->
-> as well as 1360 frames which came in with a negative CONTENTION_TIME.
->
-> Ignoring the fact that some frames are coming up with a negative
-> CONTENTION_TIME (which potentially points to another problem), what is being
-> observed here is that CW_MIN appears to start at 7, rather than the 15 which
-> it should be.
->
-> I'm just wondering if anyone would have any idea why this is occurring?
->
-> Thanks,
->
-> --
-> Jonathan Guerin
->
+Some modules need CONFIG_WIRELESS_EXT to be set. They should not be
+build if CONFIG_WIRELESS_EXT was not set.
 
-What is your time refference ? Are the 2 stations synced to a point
-you can have such great accuracy ?
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ config.mk |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-
+diff --git a/config.mk b/config.mk
+index 3e09763..3fee3fe 100644
+--- a/config.mk
++++ b/config.mk
+@@ -253,6 +253,7 @@ CONFIG_LIBIPW=m
+ # CONFIG_LIBIPW_DEBUG=y
+ 
+ 
++ifdef CONFIG_WIRELESS_EXT
+ CONFIG_IPW2100=m
+ CONFIG_IPW2100_MONITOR=y
+ # CONFIG_IPW2100_DEBUG=y
+@@ -274,6 +275,7 @@ CONFIG_IPW2200_QOS=y
+ # it on via sysfs:
+ #
+ # % echo 1 > /sys/bus/pci/drivers/ipw2200/*/rtap_iface
++endif #CONFIG_WIRELESS_EXT
+ 
+ ifdef CONFIG_SSB
+ # Sonics Silicon Backplane
+@@ -331,6 +333,7 @@ else #CONFIG_COMPAT_KERNEL_27
+ CONFIG_ATL1C=m
+ endif #CONFIG_COMPAT_KERNEL_27
+ 
++ifdef CONFIG_WIRELESS_EXT
+ CONFIG_HERMES=m
+ CONFIG_HERMES_CACHE_FW_ON_INIT=y
+ ifdef CONFIG_PPC_PMAC
+@@ -344,6 +347,7 @@ ifdef CONFIG_PCMCIA
+ CONFIG_PCMCIA_HERMES=m
+ CONFIG_PCMCIA_SPECTRUM=m
+ endif #CONFIG_PCMCIA
++endif #CONFIG_WIRELESS_EXT
+ 
+ endif #CONFIG_PCI
+ ## end of PCI
+@@ -490,6 +494,7 @@ CONFIG_BT_HCIBTSDIO=m
+ CONFIG_BT_MRVL_SDIO=m
+ 
+ ifneq ($(CONFIG_COMPAT_STAGING),)
++ifdef CONFIG_WIRELESS_EXT
+ CONFIG_ATH6KL_CFG80211=y
+ CONFIG_ATH6KL_DEBUG=y
+ # CONFIG_ATH6KL_DISABLE_TARGET_DBGLOGS is not set
+@@ -501,6 +506,7 @@ CONFIG_ATH6KL_ENABLE_TARGET_DEBUG_PRINTS=y
+ # CONFIG_ATH6KL_SKIP_ABI_VERSION_CHECK is not set
+ CONFIG_ATH6KL_VIRTUAL_SCATTER_GATHER=y
+ CONFIG_ATH6K_LEGACY=m
++endif #CONFIG_WIRELESS_EXT
+ endif #CONFIG_MMC
+ 
+ 
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.7.0.4
+
