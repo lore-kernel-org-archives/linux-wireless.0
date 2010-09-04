@@ -1,36 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55360 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759561Ab0I1HWs (ORCPT
+Received: from mail.redfish-solutions.com ([66.232.79.143]:38958 "EHLO
+	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754187Ab0IDWpv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Sep 2010 03:22:48 -0400
-Subject: Re: [PATCH 2/2] mac80211:  Allow scanning single channel if other
- VIF is associated.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1285632457-27539-2-git-send-email-greearb@candelatech.com>
-References: <1285632457-27539-1-git-send-email-greearb@candelatech.com>
-	 <1285632457-27539-2-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 28 Sep 2010 09:22:44 +0200
-Message-ID: <1285658564.3885.1.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Sat, 4 Sep 2010 18:45:51 -0400
+Message-ID: <4C82CC10.7060903@redfish-solutions.com>
+Date: Sat, 04 Sep 2010 15:45:36 -0700
+From: Philip Prindeville <philipp_subx@redfish-solutions.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Subject: Re: Marshaling issues w/ compat-wireless-2010-08-19
+References: <4C746F74.70401@redfish-solutions.com>	 <20100828171239.GA23885@jm.kir.nu> <4C79450C.80507@redfish-solutions.com>	 <4C7C55E6.1060707@redfish-solutions.com>	 <4C816E18.6050408@redfish-solutions.com> <1283589824.3746.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1283589824.3746.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-09-27 at 17:07 -0700, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> This patch aims to decrease channel switching when there is at least one
-> interface associated.  This should help multiple station interfaces co-exist
-> on the same hardware, especially in WPA mode.
+  On 9/4/10 1:43 AM, Johannes Berg wrote:
+> On Fri, 2010-09-03 at 14:52 -0700, Philip Prindeville wrote:
+>
+>> Just following up: I isolated the problem.
+>>
+>> I had taken the sample hostapd.conf that comes with hostapd-0.7.2 and copied it into /etc/.
+>>
+>> Then I enabled the following commented out fields:
+>>
+>> bridge=br0
+>> driver=nl80211
+>> ssid=my-hp-test
+>> country_code=US
+>> hw_mode=g
+>> channel=10
+>> wep_default_key=0
+>> wep_key0=123456789a
+>> ieee80211n=1
+>>
+>> but what broke it was:
+>>
+>> wep_key_len_broadcast=5
+>> wep_key_len_unicast=5
+>> wep_rekey_period=300
+>>
+>> if I turned off those last 3, things work again.
+> Hah. I don't even know what that does. What were you trying to achieve?
+> Aren't those related to dynamic WEP, but you configured static WEP?
+>
+> johannes
+>
 
-Totally NACK. The code is ugly, complex, and unnecessary.
+I was trying to test the rekeying feature, where new keys are multicast when the group membership changes.
 
-You can make wpa_s scan the channels one by one, or you can improve the
-off-channel behaviour, but this is a workaround that just isn't
-appropriate.
-
-johannes
 
