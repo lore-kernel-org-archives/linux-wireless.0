@@ -1,144 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:23404 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752244Ab0IJO20 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Sep 2010 10:28:26 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 08/14] iwlwifi: force scan complete after timeout
-Date: Fri, 10 Sep 2010 16:26:41 +0200
-Message-Id: <1284128807-11436-9-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
-References: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:45253 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752579Ab0IDMXU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 Sep 2010 08:23:20 -0400
+MIME-Version: 1.0
+In-Reply-To: <1283376410-9999-4-git-send-email-ohad@wizery.com>
+References: <1283376410-9999-1-git-send-email-ohad@wizery.com>
+	<1283376410-9999-4-git-send-email-ohad@wizery.com>
+Date: Sat, 4 Sep 2010 14:23:19 +0200
+Message-ID: <AANLkTi=goLEUqM1XQ__PrGu4=Erw2utaNP4qFmSgRta2@mail.gmail.com>
+Subject: Re: [PATCH v5 3/7] wireless: wl12xx: add platform data passing support
+From: =?ISO-8859-2?Q?Micha=B3_Miros=B3aw?= <mirqus@gmail.com>
+To: Ohad Ben-Cohen <ohad@wizery.com>
+Cc: linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-omap@vger.kernel.org, Kalle Valo <kalle.valo@iki.fi>,
+	Russell King <linux@arm.linux.org.uk>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Tony Lindgren <tony@atomide.com>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Ido Yariv <ido@wizery.com>, San Mehat <san@google.com>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	akpm@linux-foundation.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If we do not get notification from hardware about scan complete, after
-timeout do mac80211 scan completion anyway. This assure we end scan
-in case of firmware hung.
+2010/9/1 Ohad Ben-Cohen <ohad@wizery.com>:
+> Add a simple mechanism to pass platform data to the
+> SDIO instances of wl12xx.
+>
+> This way there is no confusion over who owns the 'embedded data',
+> typechecking is preserved, and no possibility for the wrong driver to
+> pick up the data.
+>
+> Originally proposed by Russell King.
+>
+> Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+> ---
+>  drivers/net/wireless/Makefile                      |    2 +
+>  drivers/net/wireless/wl12xx/Kconfig                |    5 ++-
+>  drivers/net/wireless/wl12xx/wl12xx_platform_data.c |   31 ++++++++++++++++++++
+>  include/linux/wl12xx.h                             |    3 ++
+>  4 files changed, 40 insertions(+), 1 deletions(-)
+>  create mode 100644 drivers/net/wireless/wl12xx/wl12xx_platform_data.c
+>
+> diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+> index 5d4ce4d..85af697 100644
+> --- a/drivers/net/wireless/Makefile
+> +++ b/drivers/net/wireless/Makefile
+> @@ -50,5 +50,7 @@ obj-$(CONFIG_ATH_COMMON)      += ath/
+>  obj-$(CONFIG_MAC80211_HWSIM)   += mac80211_hwsim.o
+>
+>  obj-$(CONFIG_WL12XX)   += wl12xx/
+> +# small builtin driver bit
+> +obj-$(CONFIG_WL12XX_PLATFORM_DATA)     += wl12xx/wl12xx_platform_data.o
+>
+>  obj-$(CONFIG_IWM)      += iwmc3200wifi/
+> diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
+> index 2f98058..4a8bb25 100644
+> --- a/drivers/net/wireless/wl12xx/Kconfig
+> +++ b/drivers/net/wireless/wl12xx/Kconfig
+> @@ -74,4 +74,7 @@ config WL1271_SDIO
+>          If you choose to build a module, it'll be called
+>          wl1271_sdio. Say N if unsure.
+>
+> -
+> +config WL12XX_PLATFORM_DATA
+> +       bool
+> +       depends on WL1271_SDIO != n
+> +       default y
+> diff --git a/drivers/net/wireless/wl12xx/wl12xx_platform_data.c b/drivers/net/wireless/wl12xx/wl12xx_platform_data.c
+> new file mode 100644
+> index 0000000..e00973b
+> --- /dev/null
+> +++ b/drivers/net/wireless/wl12xx/wl12xx_platform_data.c
+> @@ -0,0 +1,31 @@
+> +#include <linux/module.h>
+> +#include <linux/wl12xx.h>
+> +
+> +static struct wl12xx_platform_data *platform_data;
+> +
+> +int __init wl12xx_set_platform_data(const struct wl12xx_platform_data *data)
+> +{
+> +       if (platform_data)
+> +               return -EBUSY;
+> +       if (!data)
+> +               return -EINVAL;
+> +
+> +       platform_data = kmemdup(data, sizeof(*data), GFP_KERNEL);
+> +       if (!platform_data)
+> +               return -ENOMEM;
+> +
+> +       return 0;
+> +}
+> +
+> +int wl12xx_get_platform_data(struct wl12xx_platform_data *data)
+> +{
+> +       if (!platform_data)
+> +               return -ENODEV;
+> +       if (!data)
+> +               return -EINVAL;
+> +
+> +       memcpy(data, platform_data, sizeof(*data));
+> +
+> +       return 0;
+> +}
+> +EXPORT_SYMBOL(wl12xx_get_platform_data);
+> diff --git a/include/linux/wl12xx.h b/include/linux/wl12xx.h
+> index 137ac89..3e33ae1 100644
+> --- a/include/linux/wl12xx.h
+> +++ b/include/linux/wl12xx.h
+> @@ -31,4 +31,7 @@ struct wl12xx_platform_data {
+>        bool use_eeprom;
+>  };
+>
+> +int wl12xx_set_platform_data(const struct wl12xx_platform_data *data);
+> +int wl12xx_get_platform_data(struct wl12xx_platform_data *data);
+> +
+>  #endif
 
-Patch fix one of the causes of wdev_cleanup_work warning reported at
-https://bugzilla.redhat.com/show_bug.cgi?id=593566
+Why do you need all that copying? Isn't the data constant?
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |   15 +++------------
- drivers/net/wireless/iwlwifi/iwl-scan.c |   20 +++++++++++++++-----
- 2 files changed, 18 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 87a2e40..7c1819f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2041,7 +2041,6 @@ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
- {
- 	struct iwl_priv *priv = hw->priv;
- 	struct iwl_rxon_context *ctx = iwl_rxon_ctx_from_vif(vif);
--	bool scan_completed = false;
- 
- 	IWL_DEBUG_MAC80211(priv, "enter\n");
- 
-@@ -2050,15 +2049,10 @@ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
- 	WARN_ON(ctx->vif != vif);
- 	ctx->vif = NULL;
- 
--	iwl_scan_cancel_timeout(priv, 100);
-+	if (priv->scan_vif == vif)
-+		iwl_scan_cancel_timeout(priv, 100);
- 	iwl_set_mode(priv, vif);
- 
--	if (priv->scan_vif == vif) {
--		scan_completed = true;
--		priv->scan_vif = NULL;
--		priv->scan_request = NULL;
--	}
--
- 	/*
- 	 * When removing the IBSS interface, overwrite the
- 	 * BT traffic load with the stored one from the last
-@@ -2072,9 +2066,6 @@ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
- 	memset(priv->bssid, 0, ETH_ALEN);
- 	mutex_unlock(&priv->mutex);
- 
--	if (scan_completed)
--		ieee80211_scan_completed(priv->hw, true);
--
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
- 
- }
-@@ -2255,6 +2246,7 @@ void iwl_mac_reset_tsf(struct ieee80211_hw *hw)
- 
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
-+	iwl_scan_cancel_timeout(priv, 100);
- 	if (!iwl_is_ready_rf(priv)) {
- 		IWL_DEBUG_MAC80211(priv, "leave - not ready\n");
- 		mutex_unlock(&priv->mutex);
-@@ -2264,7 +2256,6 @@ void iwl_mac_reset_tsf(struct ieee80211_hw *hw)
- 	/* we are restarting association process
- 	 * clear RXON_FILTER_ASSOC_MSK bit
- 	 */
--	iwl_scan_cancel_timeout(priv, 100);
- 	ctx->staging.filter_flags &= ~RXON_FILTER_ASSOC_MSK;
- 	iwlcore_commit_rxon(priv, ctx);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index e65a98d..ce605e0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -106,6 +106,15 @@ static void iwl_complete_scan(struct iwl_priv *priv, bool aborted)
- 	priv->scan_request = NULL;
- }
- 
-+static void iwl_force_scan_end(struct iwl_priv *priv)
-+{
-+	IWL_DEBUG_SCAN(priv, "Forcing scan end\n");
-+	clear_bit(STATUS_SCANNING, &priv->status);
-+	clear_bit(STATUS_SCAN_HW, &priv->status);
-+	clear_bit(STATUS_SCAN_ABORTING, &priv->status);
-+	iwl_complete_scan(priv, true);
-+}
-+
- static void iwl_do_scan_abort(struct iwl_priv *priv)
- {
- 	int ret;
-@@ -125,10 +134,7 @@ static void iwl_do_scan_abort(struct iwl_priv *priv)
- 	ret = iwl_send_scan_abort(priv);
- 	if (ret) {
- 		IWL_DEBUG_SCAN(priv, "Send scan abort failed %d\n", ret);
--		clear_bit(STATUS_SCANNING, &priv->status);
--		clear_bit(STATUS_SCAN_HW, &priv->status);
--		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
--		iwl_complete_scan(priv, true);
-+		iwl_force_scan_end(priv);
- 	} else
- 		IWL_DEBUG_SCAN(priv, "Sucessfully send scan abort\n");
- }
-@@ -151,6 +157,7 @@ EXPORT_SYMBOL(iwl_scan_cancel);
-  */
- int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
- {
-+	int ret;
- 	unsigned long timeout = jiffies + msecs_to_jiffies(ms);
- 
- 	lockdep_assert_held(&priv->mutex);
-@@ -165,7 +172,10 @@ int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
- 		msleep(20);
- 	}
- 
--	return test_bit(STATUS_SCAN_HW, &priv->status);
-+	ret = test_bit(STATUS_SCAN_HW, &priv->status);
-+	if (ret)
-+		iwl_force_scan_end(priv);
-+	return ret;
- }
- EXPORT_SYMBOL(iwl_scan_cancel_timeout);
- 
--- 
-1.7.1
-
+Best Regards,
+Micha³ Miros³aw
