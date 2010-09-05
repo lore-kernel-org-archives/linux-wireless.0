@@ -1,114 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:42269 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755546Ab0IAPHW convert rfc822-to-8bit (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:62186 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751261Ab0IETt4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Sep 2010 11:07:22 -0400
-Received: by ewy23 with SMTP id 23so4363501ewy.19
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Sep 2010 08:07:21 -0700 (PDT)
+	Sun, 5 Sep 2010 15:49:56 -0400
+Received: by vws3 with SMTP id 3so2769811vws.19
+        for <linux-wireless@vger.kernel.org>; Sun, 05 Sep 2010 12:49:56 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1282762406.23359.1.camel@wwguy-huron>
-References: <AANLkTim4_HoHwdhGqAZqcGf2oq7boktdZFW4-w5DpdDa@mail.gmail.com>
- <AANLkTinuYOvwNZAFgq67f4XBL4YQ+b2z4EBMcmvbMYi3@mail.gmail.com>
- <1281481505.20038.10.camel@wwguy-ubuntu> <AANLkTinDjp500wXXHbiOmom70Wbvs1OL6LXOfTq06A=U@mail.gmail.com>
- <1282762406.23359.1.camel@wwguy-huron>
-From: Andrew Lutomirski <luto@mit.edu>
-Date: Wed, 1 Sep 2010 11:07:01 -0400
-Message-ID: <AANLkTik0ssMim0-eRS1kWD+CsE_kCS-RjEm_iEbdPy05@mail.gmail.com>
-Subject: Re: [WTF, maintainers] Re: *PING* iwlagn 2.6.35: "BA scd_flow 0 does
- not match txq_id 10" regression
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
+In-Reply-To: <AANLkTi=oVwssd-YvVCqujm2MNqPGF4t6FUAXGu9Wei5=@mail.gmail.com>
+References: <AANLkTimq7nB-ea1XmORprBiS2B-OBNtEiiQXAZLzZfA2@mail.gmail.com>
+	<AANLkTi=i_7oMX4nTiWwcjGezv8vG92gX_8UV1tv_KdYL@mail.gmail.com>
+	<AANLkTi=oVwssd-YvVCqujm2MNqPGF4t6FUAXGu9Wei5=@mail.gmail.com>
+Date: Sun, 5 Sep 2010 21:49:55 +0200
+Message-ID: <AANLkTindGAm4DPaG1MYa6u1rkRNv8z9EjUq+bwjD-+zX@mail.gmail.com>
+Subject: Re: ath9k: freeze when putting interface up
+From: =?ISO-8859-1?Q?Bj=F8rnar_Hansen?= <tilbjornar@gmail.com>
+To: linux-wireless@vger.kernel.org, ath9k-devel-request@lists.ath9k.org
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Satagopan Kanthadai <Satagopan.Kanthadai@atheros.com>,
+	Mohammed Shafi <shafi.wireless@gmail.com>,
+	Vivek Natarajan <vnatarajan@atheros.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 25, 2010 at 2:53 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> On Wed, 2010-08-25 at 11:42 -0700, Andrew Lutomirski wrote:
->> On Tue, Aug 10, 2010 at 7:05 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
->> > Hi Andrew,
->> >
->> > On Tue, 2010-08-10 at 14:39 -0700, Andrew Lutomirski wrote:
->> >> On Mon, Jul 26, 2010 at 4:02 PM, Andrew Lutomirski <luto@mit.edu> wrote:
->> >> > There's a regression in 2.6.35 where the connection breaks and iwlagn
->> >> > writes a bunch of:
->> >> >
->> >> > iwlagn 0000:03:00.0: BA scd_flow 0 does not match txq_id 10
->> >> >
->> >> > This is confirmed [1] and a patch supposedly exists.  Since this
->> >> > breaks at least two people's wireless and 2.6.35 is about to be
->> >> > released, can we see the patches?
->> >> >
->> >> > Thanks,
->> >> > Andy
->> >> >
->> >> > [1] http://article.gmane.org/gmane.linux.kernel.wireless.general/53552
->> >> >
->> >>
->> >> This regression was reported on July 21 and confirmed, supposedly with
->> >> a patch available, on July 24 (or maybe July 23).  On July 26 I pinged
->> >> the list because I'm affected as well.
->> >>
->> >> It's now August 10 and both 2.6.35 and 2.5.35.1 have been released and
->> >> the bug is still there.  WTF happened?  (I admit I haven't actually
->> >> tested 2.6.35.1 because it's still compiling, but I see nothing to
->> >> suggest that it's been fixed.)
->> >>
->> >
->> > Sorry for the delay, the problem you report is a real problem in our
->> > uCode; unfortunately, we still not root cause the real problem yet. The
->> > patch I provide previous just a hack and still waiting for our internal
->> > validation team to make sure it did not break the overall behaviors.
->> >
->> > I will submit the patch as soon as I got the report back from our test
->> > team; at the meantime, we are very active work on root cause the real
->> > problem. Once we have the possible solution, it will be great if you can
->> > help us to verify it.
->>
->> In case this helps, I just captured the bug starting with
->> iwlagn.debug=1 and with the following patch:
->>
->> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
->> b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
->> index 7d614c4..8583c42 100644
->> --- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
->> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
->> @@ -1300,8 +1300,9 @@ void iwlagn_rx_reply_compressed_ba(struct iwl_priv *priv,
->>         tid = ba_resp->tid;
->>         agg = &priv->stations[sta_id].tid[tid].agg;
->>         if (unlikely(agg->txq_id != scd_flow)) {
->> -               IWL_ERR(priv, "BA scd_flow %d does not match txq_id %d\n",
->> -                       scd_flow, agg->txq_id);
->> +               IWL_ERR(priv, "BA scd_flow %d does not match txq_id %d
->> (sta_id = %d, tid = %d)\n",
->> +                       scd_flow, agg->txq_id, sta_id, tid);
->> +               //              iwl_force_reset(priv, IWL_FW_RESET);
->>                 return;
->>         }
->>
->>
->> I've attached the dmesg.  Search for 'BA'.
->>
-> It is an known issue as I mention. we are working on it and sorry for
-> the delay.
->
-> please take a look at commit 735df29a0641d9d8d65117c48ee460284ffcfc05
->
-> "Since it is possible happen very often and we do not want to fill the
-> syslog, so don't enable the logging by default"
+Hi again,
 
-IMO that just makes it worse.  Now people's wireless connections will
-break silently and no one will know if it's this bug or a different
-one.  You could ratelimit the error, though.
+I managed to use git bisect to pinpoint the exact commit that causes
+my laptop to freeze:
 
-I tried rigging the driver to force a firmware reload when this
-triggers but that doesn't seem to work reliably.
+53bc7aa08b48e5cd745f986731cc7dc24eef2a9f is the first bad commit
+commit 53bc7aa08b48e5cd745f986731cc7dc24eef2a9f
+Author: Vivek Natarajan <vnatarajan@atheros.com>
+Date:   Mon Apr 5 14:48:04 2010 +0530
 
---Andy
+    ath9k: Add support for newer AR9285 chipsets.
 
->
-> Thanks
-> Wey
->
->
+    This patch adds support for a modified newer version of AR9285
+    chipsets.
+
+    Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+
+I'm CC'ing this to Vivek also.
+The chipset is reported as AR9285 rev 01. by lspci (I previously
+stated it was rev 2, this is wrong).
+
+While bisecting I found a reliable way to reproduce the freeze. I
+devised a script to continuously bring the interface up and down:
+
+COUNTER=1
+while(true); do
+    sudo ifconfig wlan0 up &&
+    sudo ifconfig wlan0 down &&
+    echo $COUNTER &&
+    let COUNTER=COUNTER+1
+done
+
+On stable kernels I let it run to around 150. On unstable kernels it
+reached at most 8.
+
+
+-Bjørnar
