@@ -1,111 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:38303 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752066Ab0IOAoc convert rfc822-to-8bit (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:56224 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750711Ab0IEGH4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 20:44:32 -0400
-Received: by pzk34 with SMTP id 34so2585417pzk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Sep 2010 17:44:32 -0700 (PDT)
+	Sun, 5 Sep 2010 02:07:56 -0400
+Received: by pvg2 with SMTP id 2so1064288pvg.19
+        for <linux-wireless@vger.kernel.org>; Sat, 04 Sep 2010 23:07:56 -0700 (PDT)
+Message-ID: <4C8333B8.5010501@gmail.com>
+Date: Sun, 05 Sep 2010 01:07:52 -0500
+From: =?UTF-8?B?Q2FybG9zIFNhbHZhZG9yIFDDqXJleiBTYWxnYWRv?=
+	<carlosalvatore@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTi=8p2umy+m4emdqKMb=eTYiLTsR3ZENwFaJyoe8@mail.gmail.com>
-References: <AANLkTi=azJS6bn7-=Bbb--ibACaQWqv4ZGLMUpfxynm7@mail.gmail.com>
- <AANLkTik+KjxZSbaShYKq91WN7niZYvtETXbpgDPgj84L@mail.gmail.com> <AANLkTi=8p2umy+m4emdqKMb=eTYiLTsR3ZENwFaJyoe8@mail.gmail.com>
-From: Jonathan Guerin <jonathan@guerin.id.au>
-Date: Wed, 15 Sep 2010 10:44:09 +1000
-Message-ID: <AANLkTimfyZ4N9LWXi-Tbk-xsVisa3C=B=n4s3S6Lf5HV@mail.gmail.com>
-Subject: Re: [ath5k-devel] [support] ath5k contention windows
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel <ath5k-devel@lists.ath5k.org>
-Content-Type: text/plain; charset=windows-1252
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: compat-wireless-2.6.35-rc6 won't build
+References: <4C7D17CF.6030501@gmail.com> <AANLkTik8PLwUfLU1OouBq6uPwSvaWBokAkSHcCzx97ms@mail.gmail.com> <4C7D2DB6.2090609@gmail.com> <4C7F2477.6030006@gmail.com> <AANLkTinDXfNBBBjJYtu12vbARecc1xgYO=bA_K+Wu-h2@mail.gmail.com> <4C827584.7010203@hauke-m.de>
+In-Reply-To: <4C827584.7010203@hauke-m.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 15, 2010 at 9:07 AM, Jonathan Guerin <jonathan@guerin.id.au> wrote:
-> On Wed, Sep 15, 2010 at 3:39 AM, Bob Copeland <me@bobcopeland.com> wrote:
->> On Tue, Sep 14, 2010 at 1:51 AM, Jonathan Guerin <jonathan@guerin.id.au> wrote:
->>> as well as 1360 frames which came in with a negative CONTENTION_TIME.
->>>
->>> Ignoring the fact that some frames are coming up with a negative
->>> CONTENTION_TIME (which potentially points to another problem)
+On 09/04/2010 11:36 AM, Hauke Mehrtens wrote:
+> Am 02.09.2010 09:17, schrieb Luis R. Rodriguez:
+>    
+>> 2010/9/1 Carlos Salvador Pérez Salgado<carlosalvatore@gmail.com>:
+>>      
+>>> On 08/31/2010 11:28 AM, Carlos Salvador Pérez Salgado wrote:
+>>>        
+>>>> On 08/31/2010 10:32 AM, Luis R. Rodriguez wrote:
+>>>>          
+>>>>> 2010/8/31 Carlos Salvador Pérez Salgado<carlosalvatore@gmail.com>:
+>>>>>            
+>>>>>> Do you have a better idea of how can I fix that? I'll really appreciate
+>>>>>> it.
+>>>>>>              
+>>>>> Yeah, try to compat-wireless-2.6.36-rc2 ...
+>>>>>
+>>>>>    Luis
+>>>>>
+>>>>>            
+>>>> Nope... the same error...
+>>>>
+>>>>
+>>>>   LD
+>>>>   /media/disk/temp/compat-wireless-2.6.36-rc2-1/net/rfkill/built-in.o
+>>>>   LD
+>>>>   /media/disk/temp/compat-wireless-2.6.36-rc2-1/net/wireless/built-in.o
+>>>>   CC [M]  /media/disk/temp/compat-wireless-2.6.36-rc2-1/net/wireless/core.o
+>>>> /media/disk/temp/compat-wireless-2.6.36-rc2-1/net/wireless/core.c: In
+>>>> function ‘cfg80211_netdev_notifier_call’:
+>>>> /media/disk/temp/compat-wireless-2.6.36-rc2-1/net/wireless/core.c:705:
+>>>> error: ‘struct net_device’ has no member named ‘wireless_handlers’
+>>>> /media/disk/temp/compat-wireless-2.6.36-rc2-1/net/wireless/core.c:706:
+>>>> error: ‘struct net_device’ has no member named ‘wireless_handlers’
+>>>> make[3]: ***
+>>>> [/media/disk/temp/compat-wireless-2.6.36-rc2-1/net/wireless/core.o] Error 1
+>>>> make[2]: *** [/media/disk/temp/compat-wireless-2.6.36-rc2-1/net/wireless]
+>>>> Error 2
+>>>> make[1]: *** [_module_/media/disk/temp/compat-wireless-2.6.36-rc2-1] Error
+>>>> 2
+>>>> make[1]: Leaving directory `/media/disk/temp/linux-2.6.35.4'
+>>>> make: *** [modules] Error 2
+>>>>
+>>>> That didn't help. I hope you can give me another idea.
+>>>> Thanks.
+>>>>          
+>>> So...? What should I do?
+>>>        
+>> Sorry, I have not have had time to test compile against 2.6.35, but
+>> when I do I will let you know.
 >>
->> How negative are these? �Are you subtracting more for, say, txtime
->> than you should be?
+>>    Luis
+>>      
+> Hi,
 >
-> Actually, I've found that they were exactly one slot time negative
-> (give or take 1us). That said, I was doing these calculations using
-> the 802.11a OFDM spec timings. I looked at the driver and realised
-> that SIFS is actually being initialised to 14us, whereas it should be
-> set to 16us. This will also affect DIFS. Once I take these into
-> consideration, they come up as approximately 4-5us out. Now that I
-> think about it, it could make sense.
+> I was able to reproduce the problem. In the kernel configuration
+> CONFIG_WIRELESS_EXT=n and CONFIG_CFG80211_WEXT=y are set.
+> compat-wireless uses the old wireless_handlers attribute for the wext
+> handlers interface, but this is only activated if CONFIG_WIRELESS_EXT=y
+> is set.
+> We can not use the new interface through struct wiphy that cfg80211_wext
+> normally uses. The struct is shipped by compat-wireless and changed
+> ofter with different kernel versions, so the pointers do not point to
+> the correct position when using two different versions of this strcut.
+> compat-wireless should *always* deactivates CONFIG_CFG80211_WEXT if
+> CONFIG_WIRELESS_EXT is not set. I got our compat_autoconf.h to overwirte
+> the kernels autoconf.h by add it to LINUXINCLUDE, but I have not found a
+> way how to disable CONFIG_WIRELESS_EXT in the makefile if it was set in
+> the kernel because config.mk is pared before the kernel configuration is
+> parsed. An other way would be to rename CONFIG_WIRELESS_EXT to something
+> else in compat-wireless to prevent the kernel from overwriting this value.
 >
-> With regards to the tx_time, I'm using the OFDM tx_time formula from
-> the 802.11-2007 spec. I'm trying to lock down enough aspects of the
-> timing in order to verify it. From what I've seen now, my txtime is
-> almost always 4us short, but I can't work out why. I will get the code
-> for the txtime when I get into my office, I don't have it on this
-
-The timings I used were from the 802.11-2007 spec.
-SIFS, DIFS & Slot Time: Table 17-15�OFDM PHY characteristics
-NDPS values: Table 17-3�Modulation-dependent parameters
-txtime calculations: Section 17.4.3 OFDM TXTIME calculation
-
-Here are the functions I use to do the basics:
-int16_t ndbps(uint8_t rate_Mbps)
-{
-  //Radiotap returns rate in 500kbps units
-  rate_Mbps/=2;
-
-   static const uint8_t rate_nsyms[][2] = {
-      {  6,  24 },
-      {  9,  36 },
-      { 12,  48 },
-      { 18,  72 },
-      { 24,  96 },
-      { 36, 144 },
-      { 48, 192 },
-      { 54, 216 }
-   };
-   static const size_t nof_rate_nsyms = sizeof(rate_nsyms) /
-sizeof(rate_nsyms[0]);
-   for(size_t i = 0; i < nof_rate_nsyms; ++i) {
-      if(rate_Mbps == rate_nsyms[i][0]) {
-         return rate_nsyms[i][1];
-      }
-   }
-   return -1;
-}
-
-int getTXTime(int rate, int noctets) {
-  uint16_t usecs = 0;
-  const int16_t nof_bps = ndbps(rate);
-
-  int chan_rate = 1;
-
-  if(-1 != nof_bps) {
-    const uint16_t preamble = 16 * chan_rate;
-    const uint16_t signal = 4 * chan_rate;
-    const uint16_t tsym = 4 * chan_rate;
-    const uint16_t nsyms = ceill((16.0 + 8.0 * (noctets) + 6.0) / nof_bps);
-    usecs = preamble + signal + tsym * nsyms;
-  }
-
-  return(usecs);
-}
+> There will be no way to support cfg80211_wext without a kernel
+> configured with CONFIG_CFG80211_WEXT=y.
 >
->>
->> --
->> Bob Copeland %% www.bobcopeland.com
->>
+> Hauke
 >
-> Thanks,
->
-> Jonathan
->
-
-Thanks,
-
-
---
-Jonathan Guerin
+>    
+So, as far as I got it, it won't work until a patch is submitted in 
+compat-wireless? I'll try to build my kernel using the config you 
+suggested and I'll tell you how does it goes.
+Thanks.
