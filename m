@@ -1,34 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:44464 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751851Ab0INNqa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 09:46:30 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 14 Sep 2010 06:46:24 -0700
-Date: Tue, 14 Sep 2010 19:16:13 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
-Subject: Re: RFC:  v3: Support multiple STA on same AP with ath9k
-Message-ID: <20100914134613.GB27234@vasanth-laptop>
-References: <4C8A8FF8.4030900@candelatech.com> <20100913121428.GA15567@vasanth-laptop> <4C8E7A31.70600@candelatech.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:63722 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750938Ab0IEWPE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Sep 2010 18:15:04 -0400
+Received: by qwh6 with SMTP id 6so3382365qwh.19
+        for <linux-wireless@vger.kernel.org>; Sun, 05 Sep 2010 15:15:02 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4C8E7A31.70600@candelatech.com>
+In-Reply-To: <AANLkTikdXBsO0Qx2nEV+Ka9X2D55odmGwePMaUGaQi7j@mail.gmail.com>
+References: <AANLkTim_Ou8fFbfsn8AEZFpWBzjnAQuT4S_w8bV5saYD@mail.gmail.com>
+ <loom.20100903T224155-155@post.gmane.org> <AANLkTikdXBsO0Qx2nEV+Ka9X2D55odmGwePMaUGaQi7j@mail.gmail.com>
+From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Date: Mon, 6 Sep 2010 00:14:42 +0200
+Message-ID: <AANLkTinu_4tsfJ=0CXS7yuuiqw0X5juqjP_T_edw0b4Y@mail.gmail.com>
+Subject: Re: mac80211-based commercial router?
+To: Bob Copeland <me@bobcopeland.com>
+Cc: jpo <pommnitz@yahoo.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 14, 2010 at 12:53:29AM +0530, Ben Greear wrote:
-> Any suggestions for fixing the bssid mask setting in ath_opmode_init?
-> My change, appears to work because it's set in ath9k_add_interface, even
-> if not in the ath_opmode_init method.
+On Sun, Sep 5, 2010 at 10:08 PM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Fri, Sep 3, 2010 at 4:43 PM, jpo <pommnitz@yahoo.com> wrote:
+>
+>> Android 2.2 comes with AP functionality. Are the Android WLAN drivers mac80211
+>> based?
+>
+> No, they aren't.  Does Android really do AP mode or
+> just adhoc?
+>
+> wl1251 is an in-tree module for the TI chip used in G1,
+> but it doesn't support AP mode.  I do not know if there's
+> a mac80211 driver that supports the broadcom chip used
+> in other phones.
 
-checking for ah->hw in ath_opmode_init() is buggy. bssid mask
-configuration from ath9k_add_interface() may not work well when
-some of the other vifs are in down state, may be this needs to
-be in ath_opmode_init() without that incorrect check. 
+AFAIK BCM4325 should be doable, especially if it is attached via SDIO
+bus. In phones where SPI is used, it is more problematic, as b43
+doesn't support SPI.
 
-Vasanth
+>
+> --
+> Bob Copeland %% www.bobcopeland.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+
+
+-- 
+Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
