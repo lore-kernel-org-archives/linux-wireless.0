@@ -1,85 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51384 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751792Ab0INUof (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:51903 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754502Ab0IETCv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 16:44:35 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ohad Ben-Cohen <ohad@wizery.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] wl1271: remove warnings in wl1271_sdio_set_power
-Date: Tue, 14 Sep 2010 16:30:43 -0400
-Message-Id: <1284496243-28484-1-git-send-email-linville@tuxdriver.com>
-In-Reply-To: <20100914203000.GF2484@tuxdriver.com>
-References: <20100914203000.GF2484@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Sun, 5 Sep 2010 15:02:51 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id B0BA6418D8
+	for <linux-wireless@vger.kernel.org>; Sun,  5 Sep 2010 15:01:39 -0400 (EDT)
+Subject: Compat-wireless release for 2010-09-05 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100905190249.DC2B741134@repository3.orbit-lab.org>
+Date: Sun,  5 Sep 2010 15:02:49 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These were introduced in "wl1271: sdio: claim host only when doing IO"
 
-drivers/net/wireless/wl12xx/wl1271_sdio.c: In function ‘wl1271_sdio_set_power’:
-drivers/net/wireless/wl12xx/wl1271_sdio.c:193: warning: ‘return’ with a value, in function returning void
-drivers/net/wireless/wl12xx/wl1271_sdio.c:195: warning: ‘return’ with a value, in function returning void
-drivers/net/wireless/wl12xx/wl1271_sdio.c:186: warning: unused variable ‘func’
+compat-wireless code metrics
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/wl12xx/wl1271_sdio.c |   14 ++++----------
- 1 files changed, 4 insertions(+), 10 deletions(-)
+    591075 - Total upstream lines of code being pulled
+      1718 - backport code changes
+      1477 - backport code additions
+       241 - backport code deletions
+      6082 - backport from compat module
+      7800 - total backport code
+    1.3196 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2061 - % of crap code
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-index b3c3158..b5d9565 100644
---- a/drivers/net/wireless/wl12xx/wl1271_sdio.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-@@ -159,40 +159,34 @@ static void wl1271_sdio_raw_write(struct wl1271 *wl, int addr, void *buf,
- 		wl1271_error("sdio write failed (%d)", ret);
- }
- 
--static int wl1271_sdio_power_on(struct wl1271 *wl)
-+static void wl1271_sdio_power_on(struct wl1271 *wl)
- {
- 	struct sdio_func *func = wl_to_func(wl);
- 
- 	sdio_claim_host(func);
- 	sdio_enable_func(func);
- 	sdio_release_host(func);
--
--	return 0;
- }
- 
--static int wl1271_sdio_power_off(struct wl1271 *wl)
-+static void wl1271_sdio_power_off(struct wl1271 *wl)
- {
- 	struct sdio_func *func = wl_to_func(wl);
- 
- 	sdio_claim_host(func);
- 	sdio_disable_func(func);
- 	sdio_release_host(func);
--
--	return 0;
- }
- 
- static void wl1271_sdio_set_power(struct wl1271 *wl, bool enable)
- {
--	struct sdio_func *func = wl_to_func(wl);
--
- 	/* Let the SDIO stack handle wlan_enable control, so we
- 	 * keep host claimed while wlan is in use to keep wl1271
- 	 * alive.
- 	 */
- 	if (enable)
--		return wl1271_sdio_power_on(wl);
-+		wl1271_sdio_power_on(wl);
- 	else
--		return wl1271_sdio_power_off(wl);
-+		wl1271_sdio_power_off(wl);
- 
- }
- 
--- 
-1.7.2.2
-
+Base tree: linux-next.git
+Base tree version: next-20100903
+compat-wireless release: compat-wireless--2010-09-02
