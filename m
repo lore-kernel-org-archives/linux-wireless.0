@@ -1,40 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51486 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753272Ab0IVRBj (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:60749 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754348Ab0IEUIW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Sep 2010 13:01:39 -0400
-Subject: Re: [mac80211] mac80211:  Support multiple VIFS per AP in debugfs.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
+	Sun, 5 Sep 2010 16:08:22 -0400
+Received: by vws3 with SMTP id 3so2776307vws.19
+        for <linux-wireless@vger.kernel.org>; Sun, 05 Sep 2010 13:08:21 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <loom.20100903T224155-155@post.gmane.org>
+References: <AANLkTim_Ou8fFbfsn8AEZFpWBzjnAQuT4S_w8bV5saYD@mail.gmail.com>
+	<loom.20100903T224155-155@post.gmane.org>
+Date: Sun, 5 Sep 2010 16:08:20 -0400
+Message-ID: <AANLkTikdXBsO0Qx2nEV+Ka9X2D55odmGwePMaUGaQi7j@mail.gmail.com>
+Subject: Re: mac80211-based commercial router?
+From: Bob Copeland <me@bobcopeland.com>
+To: jpo <pommnitz@yahoo.com>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4C9A35FD.8060201@candelatech.com>
-References: <1285071310-11440-1-git-send-email-greearb@candelatech.com>
-	 <4C98DC5D.2000108@candelatech.com>
-	 <1285086618.12764.3.camel@jlt3.sipsolutions.net>
-	 <4C98E05B.8050609@candelatech.com>
-	 <1285088605.12764.5.camel@jlt3.sipsolutions.net>
-	 <1285091341.12764.7.camel@jlt3.sipsolutions.net>
-	 <4C9A35FD.8060201@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 22 Sep 2010 19:01:36 +0200
-Message-ID: <1285174896.3684.71.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-09-22 at 09:59 -0700, Ben Greear wrote:
+On Fri, Sep 3, 2010 at 4:43 PM, jpo <pommnitz@yahoo.com> wrote:
 
-> > maybe the stations should be moved from phy0/stations/ to
-> > phy0/wlan0/stations/ instead?
-> 
-> It doesn't matter either way to me, but I'd like to get one or another
-> patch upstream.
-> 
-> If you want me to change it to put stations under netdev:wlan0/ instead,
-> please just let me know.
+> Android 2.2 comes with AP functionality. Are the Android WLAN drivers mac80211
+> based?
 
-I'd prefer that, if you want to do this.
+No, they aren't.  Does Android really do AP mode or
+just adhoc?
 
-johannes
+wl1251 is an in-tree module for the TI chip used in G1,
+but it doesn't support AP mode.  I do not know if there's
+a mac80211 driver that supports the broadcom chip used
+in other phones.
 
+-- 
+Bob Copeland %% www.bobcopeland.com
