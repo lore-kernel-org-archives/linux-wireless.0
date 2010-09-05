@@ -1,54 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:33960 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756208Ab0IUT36 (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:38416 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751428Ab0IEPLn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Sep 2010 15:29:58 -0400
-Message-ID: <4C9907B2.4050503@candelatech.com>
-Date: Tue, 21 Sep 2010 12:29:54 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Sun, 5 Sep 2010 11:11:43 -0400
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [mac80211/ath9k] mac80211/ath9k:  Support AMPDU with multiple
- VIFs.
-References: <1285095455-29081-1-git-send-email-greearb@candelatech.com>	 <1285096048.12764.9.camel@jlt3.sipsolutions.net>	 <4C9904AE.7060107@candelatech.com> <1285096749.12764.10.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1285096749.12764.10.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Date: Sun, 5 Sep 2010 18:11:41 +0300
+Message-ID: <AANLkTi=BBQL5cS6Ox8MGiy+Pun56xtEhakJxeLwx9UnW@mail.gmail.com>
+Subject: [PROBLEM] ipw2200: WARNING: at kernel/softirq.c:143 local_bh_enable+0x58/0x80()
+From: Pekka Enberg <penberg@kernel.org>
+To: Linux Netdev List <netdev@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/21/2010 12:19 PM, Johannes Berg wrote:
-> On Tue, 2010-09-21 at 12:17 -0700, Ben Greear wrote:
->> The tx path doesn't seem to pass in more than the hardware and the skb,
->> and we don't always need to lookup the VIF, so looking it up early is
->> probably a waste.
->>
->> mac80211 could be changed to pass in the VIF in the xmit path,
->> and then we could make sure that is passed through the entire
->> xmit process, but that would touch a lot of drivers and code.
->
-> It does pass this through in the skb's CB.
+Hi,
 
->> I'm more than happy to test any patches if someone thinks up
->> a different approach.
->
-> I just don't want drivers using struct net_device pointers anywhere,
-> because they shouldn't have to worry about them.
+This showed up in dmesg:
 
-Can we just use:
-sta = tx_info->control.sta
-in ath_tx_complete_aggr()
-?
+[  143.695527] ------------[ cut here ]------------
+[  143.695550] WARNING: at kernel/softirq.c:143 local_bh_enable+0x58/0x80()
+[  143.695557] Hardware name: 2373KYG
+[  143.695562] Modules linked in: ipw2200 libipw
+[  143.695577] Pid: 4112, comm: NetworkManager Not tainted 2.6.36-rc2+ #182
+[  143.695584] Call Trace:
+[  143.695596]  [<c15b8ddc>] ? printk+0x18/0x1a
+[  143.695610]  [<c1033fbd>] warn_slowpath_common+0x6d/0xa0
+[  143.695620]  [<c1039568>] ? local_bh_enable+0x58/0x80
+[  143.695630]  [<c1039568>] ? local_bh_enable+0x58/0x80
+[  143.695640]  [<c103400b>] warn_slowpath_null+0x1b/0x20
+[  143.695650]  [<c1039568>] local_bh_enable+0x58/0x80
+[  143.695662]  [<c1482d25>] netif_rx+0x155/0x180
+[  143.695677]  [<f807519c>] libipw_rx+0x55c/0xad0 [libipw]
+[  143.695703]  [<f816f86a>] ipw_handle_data_packet+0x12a/0x260 [ipw2200]
+[  143.695724]  [<f81702da>] ipw_irq_tasklet+0x82a/0xd80 [ipw2200]
+[  143.695736]  [<c1038942>] tasklet_action+0x62/0x70
+[  143.695746]  [<c103929d>] __do_softirq+0x7d/0x190
+[  143.695756]  [<c106d2f5>] ? handle_IRQ_event+0x45/0x150
+[  143.695766]  [<c10393dd>] do_softirq+0x2d/0x40
+[  143.695775]  [<c10394fd>] irq_exit+0x5d/0x70
+[  143.695785]  [<c10045b3>] do_IRQ+0x43/0xb0
+[  143.695796]  [<c10d0c74>] ? sys_poll+0x54/0xc0
+[  143.695806]  [<c1003269>] common_interrupt+0x29/0x30
+[  143.695814] ---[ end trace a6c4b2362817c5f7 ]---
 
-Thanks,
-Ben
+I have IPW2200 wireless card on this laptop:
 
->
-> johannes
+02:02.0 Network controller: Intel Corporation PRO/Wireless 2200BG
+[Calexico2] Network Connection (rev 05)
 
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+                        Pekka
