@@ -1,77 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:48480 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754390Ab0I2RQv convert rfc822-to-8bit (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:58603 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750975Ab0IFL4Q convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Sep 2010 13:16:51 -0400
-Received: by iwn5 with SMTP id 5so1262195iwn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Sep 2010 10:16:51 -0700 (PDT)
+	Mon, 6 Sep 2010 07:56:16 -0400
 MIME-Version: 1.0
-In-Reply-To: <20100929085657.GD18450@vasanth-laptop>
-References: <20100928222945.GB10932@tux> <20100928230211.GA9844@jm.kir.nu>
- <AANLkTimGPPUW6=QYpZz7q96vt1GOd5kJ-tvYEKxZZT2B@mail.gmail.com>
- <20100929052006.GC18450@vasanth-laptop> <AANLkTinKkTgUUGPxY82G1B6taToKeAMOmrJ+tYvzLY52@mail.gmail.com>
- <20100929085657.GD18450@vasanth-laptop>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 29 Sep 2010 10:16:30 -0700
-Message-ID: <AANLkTikUAchrjeMraauLaUggtq7bYZoki=kz2o8XQ2yh@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: fix rate_control_send_low warnings for delbas
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Cc: Vasanth Thiagarajan <Vasanth.Thiagarajan@atheros.com>,
-	Jouni Malinen <j@w1.fi>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"stable@kernel.org" <stable@kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Paul Stewart <pstew@google.com>,
-	Amod Bodas <Amod.Bodas@atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <AANLkTi=goLEUqM1XQ__PrGu4=Erw2utaNP4qFmSgRta2@mail.gmail.com>
+References: <1283376410-9999-1-git-send-email-ohad@wizery.com>
+ <1283376410-9999-4-git-send-email-ohad@wizery.com> <AANLkTi=goLEUqM1XQ__PrGu4=Erw2utaNP4qFmSgRta2@mail.gmail.com>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Mon, 6 Sep 2010 14:55:55 +0300
+Message-ID: <AANLkTim91620+bmHWewucX5tP8Z-NUkrW2cJYJ+jpMoD@mail.gmail.com>
+Subject: Re: [PATCH v5 3/7] wireless: wl12xx: add platform data passing support
+To: =?ISO-8859-2?Q?Micha=B3_Miros=B3aw?= <mirqus@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
+	linux-omap@vger.kernel.org, Kalle Valo <kalle.valo@iki.fi>,
+	Russell King <linux@arm.linux.org.uk>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Tony Lindgren <tony@atomide.com>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Ido Yariv <ido@wizery.com>, San Mehat <san@google.com>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	akpm@linux-foundation.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 29, 2010 at 1:56 AM, Vasanthakumar Thiagarajan
-<vasanth@atheros.com> wrote:
-> On Wed, Sep 29, 2010 at 12:54:27PM +0530, Luis R. Rodriguez wrote:
->> > (where we just authenticated with another AP)
+2010/9/4 Micha³ Miros³aw <mirqus@gmail.com>:
+> 2010/9/1 Ohad Ben-Cohen <ohad@wizery.com>:
+>> Add a simple mechanism to pass platform data to the
+>> SDIO instances of wl12xx.
 >>
->> Not sure I get this part.
->
-> I mean we are trying to tx frames on the channel where we got
-> newly authenticated to another AP.
-
-Ah yes, agred.
-
->> > just before starting association with the new AP.
+>> This way there is no confusion over who owns the 'embedded data',
+>> typechecking is preserved, and no possibility for the wrong driver to
+>> pick up the data.
 >>
->> Right, but when we are already switched to the new channel, and the
->> reason is that when we try to send a frame we never kept track of the
->> peer's original channel. Now, I also see the teardown happen right
->> before mac80211 tells us its associated to the new AP as well but it
->> not sure what cfg80211 thinks at that point. At least the cfg80211
->> patch's intention seemed to be to allow association to both, and
->> tearing down the association to the other once you completed
->> association to the other. I do see, what you describe though too --
->> only authentication to the new AP, and right before association, we
->> send the teardown. The problem is though that when we send the
->> teardown we are already set on the new channel.
+>> Originally proposed by Russell King.
+>>
+>> Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+>> ---
+>>  drivers/net/wireless/Makefile                      |    2 +
+>>  drivers/net/wireless/wl12xx/Kconfig                |    5 ++-
+>>  drivers/net/wireless/wl12xx/wl12xx_platform_data.c |   31 ++++++++++++++++++++
+>>  include/linux/wl12xx.h                             |    3 ++
+>>  4 files changed, 40 insertions(+), 1 deletions(-)
+>>  create mode 100644 drivers/net/wireless/wl12xx/wl12xx_platform_data.c
+>>
+>> diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+>> index 5d4ce4d..85af697 100644
+>> --- a/drivers/net/wireless/Makefile
+>> +++ b/drivers/net/wireless/Makefile
+>> @@ -50,5 +50,7 @@ obj-$(CONFIG_ATH_COMMON)      += ath/
+>>  obj-$(CONFIG_MAC80211_HWSIM)   += mac80211_hwsim.o
+>>
+>>  obj-$(CONFIG_WL12XX)   += wl12xx/
+>> +# small builtin driver bit
+>> +obj-$(CONFIG_WL12XX_PLATFORM_DATA)     += wl12xx/wl12xx_platform_data.o
+>>
+>>  obj-$(CONFIG_IWM)      += iwmc3200wifi/
+>> diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
+>> index 2f98058..4a8bb25 100644
+>> --- a/drivers/net/wireless/wl12xx/Kconfig
+>> +++ b/drivers/net/wireless/wl12xx/Kconfig
+>> @@ -74,4 +74,7 @@ config WL1271_SDIO
+>>          If you choose to build a module, it'll be called
+>>          wl1271_sdio. Say N if unsure.
+>>
+>> -
+>> +config WL12XX_PLATFORM_DATA
+>> +       bool
+>> +       depends on WL1271_SDIO != n
+>> +       default y
+>> diff --git a/drivers/net/wireless/wl12xx/wl12xx_platform_data.c b/drivers/net/wireless/wl12xx/wl12xx_platform_data.c
+>> new file mode 100644
+>> index 0000000..e00973b
+>> --- /dev/null
+>> +++ b/drivers/net/wireless/wl12xx/wl12xx_platform_data.c
+>> @@ -0,0 +1,31 @@
+>> +#include <linux/module.h>
+>> +#include <linux/wl12xx.h>
+>> +
+>> +static struct wl12xx_platform_data *platform_data;
+>> +
+>> +int __init wl12xx_set_platform_data(const struct wl12xx_platform_data *data)
+>> +{
+>> +       if (platform_data)
+>> +               return -EBUSY;
+>> +       if (!data)
+>> +               return -EINVAL;
+>> +
+>> +       platform_data = kmemdup(data, sizeof(*data), GFP_KERNEL);
+>> +       if (!platform_data)
+>> +               return -ENOMEM;
+>> +
+>> +       return 0;
+>> +}
+>> +
+>> +int wl12xx_get_platform_data(struct wl12xx_platform_data *data)
+>> +{
+>> +       if (!platform_data)
+>> +               return -ENODEV;
+>> +       if (!data)
+>> +               return -EINVAL;
+>> +
+>> +       memcpy(data, platform_data, sizeof(*data));
+>> +
+>> +       return 0;
+>> +}
+>> +EXPORT_SYMBOL(wl12xx_get_platform_data);
+>> diff --git a/include/linux/wl12xx.h b/include/linux/wl12xx.h
+>> index 137ac89..3e33ae1 100644
+>> --- a/include/linux/wl12xx.h
+>> +++ b/include/linux/wl12xx.h
+>> @@ -31,4 +31,7 @@ struct wl12xx_platform_data {
+>>        bool use_eeprom;
+>>  };
+>>
+>> +int wl12xx_set_platform_data(const struct wl12xx_platform_data *data);
+>> +int wl12xx_get_platform_data(struct wl12xx_platform_data *data);
+>> +
+>>  #endif
 >
-> Ok. From my understanding, the sequence of operations during roaming
-> are
->
-> 1. NL80211_CMD_AUTHENTICATE to an (better) AP from user space
-> Â  Â  Â  Â - Change to New Ap's channel and send auth req (done by
-> Â  Â  Â  Â  Â ieee80211_work_work()).
-> Â  Â  Â  Â - Notify auth resp to userspace (ieee80211_probe_auth_done())
-> 2. NL80211_CMD_ASSOCIATE to newly authenticated AP from user space
->
-> Â  Â  Â  Â - Clean up any existing BA session with an AP, if any.
-> Â  Â  Â  Â Here the assumption is, ieee80211_work_work() has already
-> Â  Â  Â  Â configured the device back to it's operating channel (the
-> Â  Â  Â  Â old one) after the authentication is complete with the new
-> Â  Â  Â  Â AP. This should have happened part of 1.
-> Â  Â  Â  Â - Start the association process with the new AP.
+> Why do you need all that copying? Isn't the data constant?
 
-No see, I believe we actually get the association response and *then*
-we teardown the BA agreements. Let me review this some more today.
+That was the original proposal from Russell;
 
-  Luis
+AFAICT it's very similar to how platform device resources are handled
+- it allows marking the original definition of the data as __initdata
+(need to add that) thus freeing up its space after the initialization
+phase completes. Later, in some scenarios, it might also allow to free
+up the copied data (not done now, but the copying happen only once in
+the lifetime of the driver so I'm fine with it).
+
+>
+> Best Regards,
+> Micha³ Miros³aw
+>
