@@ -1,32 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:33585 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752066Ab0IWTNu (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:49373 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750965Ab0IFIAH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Sep 2010 15:13:50 -0400
-Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id o8NJDoMe027140
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Thu, 23 Sep 2010 12:13:50 -0700
-Message-ID: <4C9BA6ED.8080304@candelatech.com>
-Date: Thu, 23 Sep 2010 12:13:49 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 6 Sep 2010 04:00:07 -0400
+Received: by qyk33 with SMTP id 33so4046320qyk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Sep 2010 01:00:06 -0700 (PDT)
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Detect if phy is a/b/g/n?
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <loom.20100906T041329-313@post.gmane.org>
+References: <loom.20100906T041329-313@post.gmane.org>
+Date: Mon, 6 Sep 2010 10:00:06 +0200
+Message-ID: <AANLkTi=5P8N6QDDZkVuFwCMDzBTLsCkiOem0_WwL-hvS@mail.gmail.com>
+Subject: Re: rt2x00usb_watchdog_tx_status: Warning - TX queue 2 status timed
+ out, invoke forced tx handler
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Michael <msbroadf@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is there a way to determine what a/b/g/n modes a particular phy
-supports?  I tried 'iw phy', but I didn't see anything
-obvious.
+On Mon, Sep 6, 2010 at 4:17 AM, Michael <msbroadf@gmail.com> wrote:
+> Im trying the latest compat-wireless 2010-09-05 and i am using a RALINK3027
+> 802.11N wireless USB dongle.
+>
+> I setup the wifi using hostapd in monitor and managed mode for this adapter, and
+> it sets up an AP ok, but i notice the following message quite frequently.
+>
+> phy0 -> rt2x00usb_watchdog_tx_status: Warning - TX queue 2 status timed out,
+> invoke forced tx handler
+>
+> appears very often and greatly interferes with the TX packets and makes the link
+> unusable.
+>
+> Could someone tell me if this is being worked on, or if I can help somehow fix
+> it.  Im am a software engineer but don't have much kernel level experience.
 
-Thanks,
-Ben
+It is being worked on, but it cannot be fully resolved. It is
+currently simply a fact
+that the DMA can lockup in the device even the official Ralink driver
+has a watchdog
+function which resets the TX queue whenever it detects the lockup.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+I am currently working on improving the detection, since there can be
+a DMA timeout
+and a TX status report timeout. (Where the latter occurs much more
+often then the DMA
+timeout). This should decrease the packet loss somewhat, but will not
+prevent the
+problems to occur.
 
+Ivo
