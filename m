@@ -1,56 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:37081 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755125Ab0IMTXe (ORCPT
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:64259 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750963Ab0IFKV5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Sep 2010 15:23:34 -0400
-Message-ID: <4C8E7A31.70600@candelatech.com>
-Date: Mon, 13 Sep 2010 12:23:29 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 6 Sep 2010 06:21:57 -0400
+Received: by qyk33 with SMTP id 33so4143516qyk.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Sep 2010 03:21:56 -0700 (PDT)
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
-Subject: Re: RFC:  v3: Support multiple STA on same AP with ath9k
-References: <4C8A8FF8.4030900@candelatech.com> <20100913121428.GA15567@vasanth-laptop>
-In-Reply-To: <20100913121428.GA15567@vasanth-laptop>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <830552.64105.qm@web56802.mail.re3.yahoo.com>
+References: <AANLkTi=5P8N6QDDZkVuFwCMDzBTLsCkiOem0_WwL-hvS@mail.gmail.com>
+	<830552.64105.qm@web56802.mail.re3.yahoo.com>
+Date: Mon, 6 Sep 2010 12:21:56 +0200
+Message-ID: <AANLkTikYVvnar7Z9FgY6AQ=A3g1Xex768U-XwSiDx2Fc@mail.gmail.com>
+Subject: Re: rt2x00usb_watchdog_tx_status: Warning - TX queue 2 status timed
+ out, invoke forced tx handler
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Walter Goldens <goldenstranger@yahoo.com>
+Cc: Michael <msbroadf@gmail.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/13/2010 05:14 AM, Vasanthakumar Thiagarajan wrote:
+On Mon, Sep 6, 2010 at 12:04 PM, Walter Goldens
+<goldenstranger@yahoo.com> wrote:
+> Is this why the rt307x chips experience considerable amount of packet loss  in managed mode, when connected to an AP? With the rt2870sta drivers and a rt3070 device I experience no packet loss whatsoever. When rt2800usb is being utilized, large amount of packet loss occurs between the client and AP as well as duplicate packets.
 
->> -	/* configure bssid mask */
->> -	if (ah->caps.hw_caps&  ATH9K_HW_CAP_BSSIDMASK)
->> -		ath_hw_setbssidmask(common);
->> +	/* configure bssid mask, if ah->hw is configured.
->> +	 * it is NOT configured when mac80211 is calling
->> +	 * ieee80211_do_open, but probably just as well since
->> +	 * this STA isn't in the list yet.
->> +	 */
->> +	if (ah->hw) {
->
-> This seems bogus. why a check for hw at this point??. IIRS hw of
-> ah is not initialized at all, in that case this would fail always.
-> Did you test with these code?
->
->> +	int avifs = ieee80211_count_sta_atomic(sc->hw);
->
-> If your aim here is to get the number of virtual interfaces
-> associated to a hw, sc->nvifs should work.
+Yes those duplicate packets are since a week or 2, but the packet loss
+is likely being caused because of this problem.
+I am working on reducing the packet loss, without having too much of a
+negative impact on TX status reporting.
 
-Using nvifs seems to work fine.  I can respin that patch using
-nvifs.
-
-Any suggestions for fixing the bssid mask setting in ath_opmode_init?
-My change, appears to work because it's set in ath9k_add_interface, even
-if not in the ath_opmode_init method.
-
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Ivo
