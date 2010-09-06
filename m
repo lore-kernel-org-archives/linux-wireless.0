@@ -1,107 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1559 "EHLO MMS3.broadcom.com"
+Received: from lo.gmane.org ([80.91.229.12]:54857 "EHLO lo.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751542Ab0IKB3n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Sep 2010 21:29:43 -0400
-From: "Brett Rudley" <brudley@broadcom.com>
-To: "Ben Hutchings" <ben@decadent.org.uk>,
-	"Greg Kroah-Hartman" <gregkh@suse.de>
-cc: "Henry Ptasinski" <henryp@broadcom.com>,
-	"Nohee Ko" <noheek@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 10 Sep 2010 18:29:26 -0700
-Subject: RE: [PATCH] brcm80211: Fix some initialisation failure paths
-Message-ID: <7A94256FD72B884D9E7C55586C3CBCEE12BE49E77A@SJEXCHCCR01.corp.ad.broadcom.com>
-References: <1284079098.5323.595.camel@localhost>
-In-Reply-To: <1284079098.5323.595.camel@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
+	id S1750790Ab0IFINC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Sep 2010 04:13:02 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1OsWoy-0000jf-J5
+	for linux-wireless@vger.kernel.org; Mon, 06 Sep 2010 10:12:56 +0200
+Received: from ppp121-44-8-149.lns20.syd6.internode.on.net ([121.44.8.149])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Sep 2010 10:12:56 +0200
+Received: from msbroadf by ppp121-44-8-149.lns20.syd6.internode.on.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Sep 2010 10:12:56 +0200
+To: linux-wireless@vger.kernel.org
+From: Michael <msbroadf@gmail.com>
+Subject: Re: =?utf-8?b?cnQyeDAwdXNiX3dhdGNoZG9nX3R4X3N0YXR1czo=?= Warning - TX queue 2 status timed out, invoke forced tx handler
+Date: Mon, 6 Sep 2010 08:12:46 +0000 (UTC)
+Message-ID: <loom.20100906T101020-999@post.gmane.org>
+References: <loom.20100906T041329-313@post.gmane.org> <AANLkTi=5P8N6QDDZkVuFwCMDzBTLsCkiOem0_WwL-hvS@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T3VyIGZpcnN0IHBhdGNoISAgTG9va3MgZ29vZCwgdGhhbmtzLg0KDQpCcmV0dA0KDQo+IC0tLS0t
-T3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEJlbiBIdXRjaGluZ3MgW21haWx0bzpiZW5A
-ZGVjYWRlbnQub3JnLnVrXQ0KPiBTZW50OiBUaHVyc2RheSwgU2VwdGVtYmVyIDA5LCAyMDEwIDU6
-MzggUE0NCj4gVG86IEdyZWcgS3JvYWgtSGFydG1hbg0KPiBDYzogQnJldHQgUnVkbGV5OyBIZW5y
-eSBQdGFzaW5za2k7IE5vaGVlIEtvOyBsaW51eC0NCj4gd2lyZWxlc3NAdmdlci5rZXJuZWwub3Jn
-DQo+IFN1YmplY3Q6IFtQQVRDSF0gYnJjbTgwMjExOiBGaXggc29tZSBpbml0aWFsaXNhdGlvbiBm
-YWlsdXJlIHBhdGhzDQo+IA0KPiBJbml0aWFsaXNlIHdsX2luZm86OnRhc2tsZXQgZWFybHkgc28g
-dGhhdCBpdCdzIHNhZmUgdG8NCj4gdGFza2xldF9raWxsKCkNCj4gaXQgaW4gd2xfZnJlZSgpLg0K
-PiANCj4gUmVtb3ZlIGFzc2VydGlvbnMgZnJvbSB3bF9mcmVlKCkgdGhhdCBtYXkgbm90IGJlIHRy
-dWUgaW4gY2FzZSBvZg0KPiBpbml0aWFsaXNhdGlvbiBmYWlsdXJlLg0KPiANCj4gQ2FsbCB3bF9y
-ZWxlYXNlX2Z3KCkgaW4gY2FzZSBvZiBmYWlsdXJlIGFmdGVyIHdsX3JlcXVlc3RfZncoKS4NCj4g
-RG9uJ3QgcmVseSBvbiB3bF9maXJtd2FyZTo6ZndfY250IGluIHdsX3JlbGVhc2VfZncoKS4NCj4g
-DQo+IFNpZ25lZC1vZmYtYnk6IEJlbiBIdXRjaGluZ3MgPGJlbkBkZWNhZGVudC5vcmcudWs+DQo+
-IC0tLQ0KPiBUaGlzIGlzIGNvbXBpbGUtdGVzdGVkIG9ubHk7IEkgZG9uJ3QgaGF2ZSBhbnkgb2Yg
-dGhlIHN1cHBvcnRlZA0KPiBoYXJkd2FyZQ0KPiBteXNlbGYuDQo+IA0KPiBCZW4uDQo+IA0KPiAg
-ZHJpdmVycy9zdGFnaW5nL2JyY204MDIxMS9UT0RPICAgICAgICAgICAgICB8ICAgIDEgLQ0KPiAg
-ZHJpdmVycy9zdGFnaW5nL2JyY204MDIxMS9zeXMvd2xfbWFjODAyMTEuYyB8ICAgMjUgKysrKysr
-KysrKysrLS0NCj4gLS0tLS0tLS0tLS0NCj4gIDIgZmlsZXMgY2hhbmdlZCwgMTIgaW5zZXJ0aW9u
-cygrKSwgMTQgZGVsZXRpb25zKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zdGFnaW5n
-L2JyY204MDIxMS9UT0RPDQo+IGIvZHJpdmVycy9zdGFnaW5nL2JyY204MDIxMS9UT0RPDQo+IGlu
-ZGV4IGFhMzhkNDkuLjU4NzBiY2EgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvc3RhZ2luZy9icmNt
-ODAyMTEvVE9ETw0KPiArKysgYi9kcml2ZXJzL3N0YWdpbmcvYnJjbTgwMjExL1RPRE8NCj4gQEAg
-LTI1LDcgKzI1LDYgQEAgQnVncw0KPiAgLSBWYXJpb3VzIG9jY2FzaW9uYWwgYXNzZXJ0cy9oYW5n
-cw0KPiAgLSBTY2FubmluZyBkdXJpbmcgZGF0YSB0cmFuc2ZlciBzb21ldGltZXMgY2F1c2VzIG1h
-am9yIHNsb3dkb3ducy4NCj4gU29tZXRpbWVzDQo+ICAgIHJldmNvdmVycyB3aGVuIHNjYW4gaXMg
-ZG9uZSwgb3RoZXIgdGltZXMgbm90Lg0KPiAtLSBEcml2ZXIgZG9lcyBub3QgaGFuZGxlIG1pc3Np
-bmcgZmlybXdhcmUgZ3JhY2VmdWxseS4NCj4gIC0gTWFjODAyMTEgQVBJIG5vdCBjb21wbGV0ZWx5
-IGltcGxlbWVudGVkIChpZQ0KPiBvcHNfYnNzX2luZm9fY2hhbmdlZCwNCj4gICAgb3BzX2dldF9z
-dGF0cywgZXRjKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc3RhZ2luZy9icmNtODAyMTEv
-c3lzL3dsX21hYzgwMjExLmMNCj4gYi9kcml2ZXJzL3N0YWdpbmcvYnJjbTgwMjExL3N5cy93bF9t
-YWM4MDIxMS5jDQo+IGluZGV4IGQ3M2VjNDQuLjNlMGM0NTAgMTAwNjQ0DQo+IC0tLSBhL2RyaXZl
-cnMvc3RhZ2luZy9icmNtODAyMTEvc3lzL3dsX21hYzgwMjExLmMNCj4gKysrIGIvZHJpdmVycy9z
-dGFnaW5nL2JyY204MDIxMS9zeXMvd2xfbWFjODAyMTEuYw0KPiBAQCAtODM3LDYgKzgzNyw5IEBA
-IHN0YXRpYyB3bF9pbmZvX3QgKndsX2F0dGFjaCh1aW50MTYgdmVuZG9yLA0KPiB1aW50MTYgZGV2
-aWNlLCB1bG9uZyByZWdzLA0KPiAgCXdsLT5vc2ggPSBvc2g7DQo+ICAJYXRvbWljX3NldCgmd2wt
-PmNhbGxiYWNrcywgMCk7DQo+IA0KPiArCS8qIHNldHVwIHRoZSBib3R0b20gaGFsZiBoYW5kbGVy
-ICovDQo+ICsJdGFza2xldF9pbml0KCZ3bC0+dGFza2xldCwgd2xfZHBjLCAodWxvbmcpIHdsKTsN
-Cj4gKw0KPiAgI2lmZGVmIFdMQ19ISUdIX09OTFkNCj4gIAl3bC0+cnBjX3RoID0gYmNtX3JwY190
-cF9hdHRhY2gob3NoLCBOVUxMKTsNCj4gIAlpZiAod2wtPnJwY190aCA9PSBOVUxMKSB7DQo+IEBA
-IC05MDUsMTcgKzkwOCwxNiBAQCBzdGF0aWMgd2xfaW5mb190ICp3bF9hdHRhY2godWludDE2IHZl
-bmRvciwNCj4gdWludDE2IGRldmljZSwgdWxvbmcgcmVncywNCj4gICNlbmRpZg0KPiANCj4gIAkv
-KiBjb21tb24gbG9hZC10aW1lIGluaXRpYWxpemF0aW9uICovDQo+IC0JaWYgKCENCj4gLQkgICAg
-KHdsLT53bGMgPQ0KPiAtCSAgICAgd2xjX2F0dGFjaCgodm9pZCAqKXdsLCB2ZW5kb3IsIGRldmlj
-ZSwgdW5pdCwgd2wtDQo+ID5waW9tb2RlLCBvc2gsDQo+IC0JCQl3bC0+cmVnc3ZhLCB3bC0+YmNt
-X2J1c3R5cGUsIGJ0cGFyYW0sICZlcnIpKSkNCj4gew0KPiArCXdsLT53bGMgPSB3bGNfYXR0YWNo
-KCh2b2lkICopd2wsIHZlbmRvciwgZGV2aWNlLCB1bml0LCB3bC0NCj4gPnBpb21vZGUsIG9zaCwN
-Cj4gKwkJCSAgICAgd2wtPnJlZ3N2YSwgd2wtPmJjbV9idXN0eXBlLCBidHBhcmFtLA0KPiAmZXJy
-KTsNCj4gKyNpZm5kZWYgV0xDX0hJR0hfT05MWQ0KPiArCXdsX3JlbGVhc2VfZncod2wpOw0KPiAr
-I2VuZGlmDQo+ICsJaWYgKCF3bC0+d2xjKSB7DQo+ICAJCXByaW50ZigiJXM6ICVzIGRyaXZlciBm
-YWlsZWQgd2l0aCBjb2RlICVkXG4iLA0KPiBLQlVJTERfTU9ETkFNRSwNCj4gIAkJICAgICAgIEVQ
-SV9WRVJTSU9OX1NUUiwgZXJyKTsNCj4gIAkJZ290byBmYWlsOw0KPiAgCX0NCj4gLSNpZm5kZWYg
-V0xDX0hJR0hfT05MWQ0KPiAtCXdsX3JlbGVhc2VfZncod2wpOw0KPiAtI2VuZGlmDQo+ICAJd2wt
-PnB1YiA9IHdsY19wdWIod2wtPndsYyk7DQo+IA0KPiAgCXdsLT5wdWItPmllZWVfaHcgPSBodzsN
-Cj4gQEAgLTk0Miw5ICs5NDQsNiBAQCBzdGF0aWMgd2xfaW5mb190ICp3bF9hdHRhY2godWludDE2
-IHZlbmRvciwNCj4gdWludDE2IGRldmljZSwgdWxvbmcgcmVncywNCj4gIAl3bGNfaW92YXJfc2V0
-aW50KHdsLT53bGMsICJzZF9kcml2ZXN0cmVuZ3RoIiwNCj4gc2RfZHJpdmVzdHJlbmd0aCk7DQo+
-ICAjZW5kaWYNCj4gDQo+IC0JLyogc2V0dXAgdGhlIGJvdHRvbSBoYWxmIGhhbmRsZXIgKi8NCj4g
-LQl0YXNrbGV0X2luaXQoJndsLT50YXNrbGV0LCB3bF9kcGMsICh1bG9uZykgd2wpOw0KPiAtDQo+
-ICAjaWZkZWYgV0xDX0xPVw0KPiAgCS8qIHJlZ2lzdGVyIG91ciBpbnRlcnJ1cHQgaGFuZGxlciAq
-Lw0KPiAgCWlmIChyZXF1ZXN0X2lycShpcnEsIHdsX2lzciwgSVJRRl9TSEFSRUQsIEtCVUlMRF9N
-T0ROQU1FLA0KPiB3bCkpIHsNCj4gQEAgLTE3MTAsMTEgKzE3MDksOSBAQCB2b2lkIHdsX2ZyZWUo
-d2xfaW5mb190ICogd2wpDQo+IA0KPiAgCUFTU0VSVCh3bCk7DQo+ICAjaWZuZGVmIFdMQ19ISUdI
-X09OTFkNCj4gLQlBU1NFUlQod2wtPmlycSk7CS8qIGJtYWMgZG9lcyBub3QgdXNlIGRpcmVjdCBp
-bnRlcnJ1cHQNCj4gKi8NCj4gIAkvKiBmcmVlIHVjb2RlIGRhdGEgKi8NCj4gIAlpZiAod2wtPmZ3
-LmZ3X2NudCkNCj4gIAkJd2xfdWNvZGVfZGF0YV9mcmVlKCk7DQo+IC0JQVNTRVJUKHdsLT53bGMp
-Ow0KPiAgCWlmICh3bC0+aXJxKQ0KPiAgCQlmcmVlX2lycSh3bC0+aXJxLCB3bCk7DQo+ICAjZW5k
-aWYNCj4gQEAgLTI1MDksNiArMjUwNiw3IEBAIHN0YXRpYyBpbnQgd2xfcmVxdWVzdF9mdyh3bF9p
-bmZvX3QgKiB3bCwNCj4gc3RydWN0IHBjaV9kZXYgKnBkZXYpDQo+ICAJCXN0YXR1cyA9IHJlcXVl
-c3RfZmlybXdhcmUoJndsLT5mdy5md19iaW5baV0sDQo+IGZ3X25hbWUsIGRldmljZSk7DQo+ICAJ
-CWlmIChzdGF0dXMpIHsNCj4gIAkJCXByaW50ZigiZmFpbCB0byByZXF1ZXN0IGZpcm13YXJlICVz
-XG4iLA0KPiBmd19uYW1lKTsNCj4gKwkJCXdsX3JlbGVhc2VfZncod2wpOw0KPiAgCQkJcmV0dXJu
-IHN0YXR1czsNCj4gIAkJfQ0KPiAgCQlXTF9OT05FKCgicmVxdWVzdCBmdyAlc1xuIiwgZndfbmFt
-ZSkpOw0KPiBAQCAtMjUxNyw2ICsyNTE1LDcgQEAgc3RhdGljIGludCB3bF9yZXF1ZXN0X2Z3KHds
-X2luZm9fdCAqIHdsLA0KPiBzdHJ1Y3QgcGNpX2RldiAqcGRldikNCj4gIAkJc3RhdHVzID0gcmVx
-dWVzdF9maXJtd2FyZSgmd2wtPmZ3LmZ3X2hkcltpXSwNCj4gZndfbmFtZSwgZGV2aWNlKTsNCj4g
-IAkJaWYgKHN0YXR1cykgew0KPiAgCQkJcHJpbnRmKCJmYWlsIHRvIHJlcXVlc3QgZmlybXdhcmUg
-JXNcbiIsDQo+IGZ3X25hbWUpOw0KPiArCQkJd2xfcmVsZWFzZV9mdyh3bCk7DQo+ICAJCQlyZXR1
-cm4gc3RhdHVzOw0KPiAgCQl9DQo+ICAJCXdsLT5mdy5oZHJfbnVtX2VudHJpZXNbaV0gPQ0KPiBA
-QCAtMjUzOSw3ICsyNTM4LDcgQEAgdm9pZCB3bF91Y29kZV9mcmVlX2J1Zih2b2lkICpwKQ0KPiAg
-c3RhdGljIHZvaWQgd2xfcmVsZWFzZV9mdyh3bF9pbmZvX3QgKiB3bCkNCj4gIHsNCj4gIAlpbnQg
-aTsNCj4gLQlmb3IgKGkgPSAwOyBpIDwgd2wtPmZ3LmZ3X2NudDsgaSsrKSB7DQo+ICsJZm9yIChp
-ID0gMDsgaSA8IFdMX01BWF9GVzsgaSsrKSB7DQo+ICAJCXJlbGVhc2VfZmlybXdhcmUod2wtPmZ3
-LmZ3X2JpbltpXSk7DQo+ICAJCXJlbGVhc2VfZmlybXdhcmUod2wtPmZ3LmZ3X2hkcltpXSk7DQo+
-ICAJfQ0KPiAtLQ0KPiAxLjcuMQ0KPiANCj4gDQoNCg==
+So Ralink have some fundamental bug in their DMA mechanism....Actually I did
+notice this DMA issue does occur less frequently than the TX issue.  Im happy to
+run any tests that are needed to get this code more robust.  Thanks. Michael
+
+Ivo Van Doorn <ivdoorn@...> writes:
+
 
