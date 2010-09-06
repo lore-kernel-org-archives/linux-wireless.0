@@ -1,72 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:58427 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754577Ab0I0Rbj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 13:31:39 -0400
-Received: by pxi10 with SMTP id 10so1487559pxi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 10:31:39 -0700 (PDT)
+Received: from bay0-omc3-s9.bay0.hotmail.com ([65.54.190.147]:14356 "EHLO
+	bay0-omc3-s9.bay0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750929Ab0IFKoa convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Sep 2010 06:44:30 -0400
+From: Sushil DUTT <sdutt@our.ecu.edu.au>
+To: Bruno Randolf <br1@einfach.org>
+CC: =?iso-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>,
+	=?iso-8859-1?Q?Bj=F6rn_Smedman?= <bjorn.smedman@venatech.se>,
+	Bob Copeland <me@bobcopeland.com>, jpo <pommnitz@yahoo.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: RE: mac80211-based commercial router?
+Date: Mon, 6 Sep 2010 10:44:19 +0000
+Message-ID: <47710AF097913A429588DDC29B060B83032FF3@SINPRD0103MB052.apcprd01.prod.exchangelabs.com>
+References: <AANLkTim_Ou8fFbfsn8AEZFpWBzjnAQuT4S_w8bV5saYD@mail.gmail.com>
+ <AANLkTimVRPTRdMe-pEusXxCiZXjPPWSFfXY7CRiyRazj@mail.gmail.com>
+ <47710AF097913A429588DDC29B060B83032FB9@SINPRD0103MB052.apcprd01.prod.exchangelabs.com>,<201009061454.33672.br1@einfach.org>
+In-Reply-To: <201009061454.33672.br1@einfach.org>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-In-Reply-To: <58E3CFACA7054DC48245C67E9D4AE07B@ChuckPC>
-References: <58E3CFACA7054DC48245C67E9D4AE07B@ChuckPC>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 27 Sep 2010 10:31:10 -0700
-Message-ID: <AANLkTim=hHPMS9kUn11BnWDED1DeUVdJmu3u0Ajr3MPa@mail.gmail.com>
-Subject: Re: memory leak in scan with 9170?
-To: Chuck Crisler <ccrisler@vgocom.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 27, 2010 at 10:16 AM, Chuck Crisler <ccrisler@vgocom.com> wrote:
-> I have modified my code that is using a 9170. I am really concerned about
-> roaming and so am testing that pretty hard. Yesterday I had a loop that
-> forced a DISCONNECT followed by a REASSOCIATE every 30 seconds. After
-> between 1:30 and 1:40 it failed by no longer receiving scan results. When I
-> looked into a log, the very last scan results that I received had a reduced
-> number of BSSs, down from 10-12 per scan to 4, then the next scan was zero.
-> It never recovered. All scans always failed to return any results from then
-> on and, of course, the re-associate failed. This 'feels' to me like a memory
-> leak somewhere, either in the firmware or the driver. I am running the
-> 2.6.31 kernel/driver and the dual file firmware and version 0.6.10 of the
-> supplicant.
+Hi Bruno,
 
-Both are ancient. Please try compat-wireless-2.6.36-rc3-1, I will soon
-make a new release with some stable fixes applied which are not yet in
-Linus' tree which I think will help a lot with your roaming testing. I
-should also note roaming was not possible until circa 2.6.33 when
-Jouni allowed for cfg80211 to authenticate to two APs at the same time
-and then move off to it to associate. Also although technically older
-userspace should work with newer kernels I have noted some issues with
-some really old supplicant on current kernels. I don't think there has
-been enough motivation to track down the exact issues though, but your
-best bet is to just upgrade the supplicant.
+Thanks for your email.
 
-> At the moment I am running another test where it roams every 60
-> seconds rather than 30 seconds to see what kind of difference that makes. I
-> know that my kernel is old, but for now I don't have a choice. Does anyone
-> have any experience like this or insight into this new problem? This is an
-> embedded device that doesn't have the memory of a PC. Is there some way that
-> I could instrument something to check this?
+I am new to Linux development. So if I understood well, I will:
+- buy few routers(to make AP-Station Model) e..g RouterStation Pro or DIR-300, WNDR3700 from open market.
+- Just unscrew the box and connect with PC viz UART or JTAG whatever supports available.
+- Now just to start, I want to recompile the complete image. For this:
+   Is all the main() application open source and downloadable from svn? e.g. C code..
+   Drivers are all part of linux release i.e. backfire..., is it true?
+- I can use a linux IDE to build my application with any changes, is it so?
+- and then flash the image back in the hardware...
 
-I'm testing roaming by using wpa_cli roam <bss> in an ESS every 5
-seconds. To really stress test the hell out of this I force a roam
-every second too, its quite fun, it created a crash but I think we now
-know one of the main issues behind some warnings and Johannes has been
-brainstorming some solution. I don't suspect you'll hit these corner
-cases unless you roam every 2 seconds or so. The warnings are related
-to the fact that we assume the STA peer channel is the currently
-operating one when we TX a frame, and if we already associated to
-another station when moving from 2.4 GHz to 5 GHz we can potentially
-be trying to send a frame to a peer with no valid bitrate.
+Many thanks for your response, as I am little confused at this moment, so many thing running in mind about open source, linux etc...:)
 
-You can use my script to test stuff as well:
+Thanks & Regards,
+Sushil Dutt
 
-http://bombadil.infradead.org/~mcgrof/test-roam
+Centre for Communications Engineering Research
 
-For example if you already know your ESS just replace the ESS variable
-with the set of BSSes for your ESS, they all most be on the same SSID
-though.
+School of Engineering
 
-  Luis
+Edith Cowan University
+
+100 Joondalup Drive, Joondalup WA 6027, Australia.
+
+Telephone: (61 8) 6304 5318 or (61 8) 6304 5458
+
+Fax: (61 8) 6304 5811
+
+________________________________________
+From: Bruno Randolf [br1@einfach.org]
+Sent: Monday, September 06, 2010 1:54 PM
+To: Sushil DUTT
+Cc: Gábor Stefanik; Björn Smedman; Bob Copeland; jpo; linux-wireless@vger.kernel.org; Luis R. Rodriguez
+Subject: Re: mac80211-based commercial router?
+
+hi sushil!
+
+try any board which has good support in OpenWRT, e.g. the RouterStation Pro -
+which is what we are using here for a commercial mac80211 + ath5k based mesh
+routing device.
+
+bruno
+
+On Mon September 6 2010 14:12:56 Sushil DUTT wrote:
+> Friends,
+>
+> I saw in this thread that Athreos Ath9k is based on mac80211. Any idea,
+> from where I can get this development kit? This kit seems perfect for my
+> WLAN solution:)
+>
+> To give a background about my project,
+> Our lab has developed a WLAN solution which shows better results(in
+> comaprision of mkt available solutions) in simulation. Now my job is to
+> embedd & prove this solution in a stable hardware environment. I need a
+> platform with SDK which can support both AP & Station. Reference
+> application is highly desirable to reduce my development time.
+>
+> Thanks in advance for your responses.
+>
+>
+> Thanks & Regards,
+> Sushil Dutt
+> Centre for Communications Engineering Research
+> School of Engineering
+> Edith Cowan University
+> 100 Joondalup Drive, Joondalup WA 6027, Australia.
+> Telephone: (61 8) 6304 5318 or (61 8) 6304 5458
+> Fax: (61 8) 6304 5811
+>
+>
+> ________________________________________
+> From: linux-wireless-owner@vger.kernel.org
+> [linux-wireless-owner@vger.kernel.org] on behalf of Gábor Stefanik
+> [netrolller.3d@gmail.com] Sent: Monday, September 06, 2010 7:29 AM
+> To: Björn Smedman
+> Cc: Bob Copeland; jpo; linux-wireless@vger.kernel.org; Luis R. Rodriguez
+> Subject: Re: mac80211-based commercial router?
+>
+> 2010/9/6 Björn Smedman <bjorn.smedman@venatech.se>:
+> > 2010/9/6 Gábor Stefanik <netrolller.3d@gmail.com>:
+> >> On Sun, Sep 5, 2010 at 10:08 PM, Bob Copeland <me@bobcopeland.com> wrote:
+> >>> On Fri, Sep 3, 2010 at 4:43 PM, jpo <pommnitz@yahoo.com> wrote:
+> >>>> Android 2.2 comes with AP functionality. Are the Android WLAN drivers
+> >>>> mac80211 based?
+> >>>
+> >>> No, they aren't.  Does Android really do AP mode or
+> >>> just adhoc?
+> >>>
+> >>> wl1251 is an in-tree module for the TI chip used in G1,
+> >>> but it doesn't support AP mode.  I do not know if there's
+> >>> a mac80211 driver that supports the broadcom chip used
+> >>> in other phones.
+> >>
+> >> AFAIK BCM4325 should be doable, especially if it is attached via SDIO
+> >> bus. In phones where SPI is used, it is more problematic, as b43
+> >> doesn't support SPI.
+> >
+> > I guess the short answer is no then; all the chip vendors still focus
+> > on their own proprietary mac implementations, at least on the AP side.
+> > Any thoughts on what would be required for them to switch to mac80211?
+> > Will it ever happen?
+> >
+> > /Björn
+>
+> AFAIK, the status is the following:
+> -Atheros: Ath9k is officially supported and recommended by Atheros,
+> and is usable for an AP - indeed, I believe Atheros is the first and
+> only company to officially support a mac80211 driver AND make chipsets
+> for APs. AFAIK, for the AR9002 family, no other Linux driver is
+> available (at least not wit 802.11n support). Once we begin seeing
+> AR9002-based APs with Linux firmware, chances are they will have a
+> mac80211 driver inside. CCing Luis on this one.
+> -Broadcom: they refuse to even acknowledge (maybe with the exception
+> of legal threats) the development of b43, and supply binary drivers
+> (and a 2.4-series kernel) in their platform kits. Also, b43 is way
+> behind time when it comes to HW support (it doesn't support N-PHY,
+> which is the norm now), and usually when APs begin shipping wiht a new
+> Broadcom chipset, b43 still doesn't support that chipset until much
+> later. I don't know about APs that include a Broadcom CPU but an
+> Atheros wireless chip - AFAIK some do exist, but all use madwifi or
+> some variant.
+> -Ralink: Again, platform kits contain non-mac80211 drivers, even for
+> recent chipsets (at least they are open-source, though). Someone
+> should find a way to make them base drivers for the eventual RT4xxx
+> (?) chipsets on the rt2x00 framework.
+> -Marvell: No idea.
+> -Realtek: Same situation as Ralink.
+>
+> And some embedded Linux vendors:
+> -MontaVista: I believe they are still using 2.4.x kernels (though I've
+> heard of MontaVista-based routers with 2.6.8 - but even that one is
+> way too old for mac80211.)
+> -MikroTik: AFAIK RouterOS contains binary drivers with no relation to
+> their open-source counterparts. They even named their Atheros driver
+> "ath5k" IIRC, ignoring the in-tree driver with the same name! Plus,
+> even if it had mac80211-based drivers, it wouldn't matter, since there
+> is no (legal) way to access a Unix shell in RouterOS; instead it uses
+> a proprietary "configuration shell" apparently inspired by Cisco IOS
+> and ZyNOS.
+>
+> --
+> Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+> in the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html--
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+> in the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
