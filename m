@@ -1,38 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33901 "EHLO mx1.redhat.com"
+Received: from lo.gmane.org ([80.91.229.12]:56849 "EHLO lo.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751343Ab0IFHgc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Sep 2010 03:36:32 -0400
-Date: Mon, 6 Sep 2010 09:32:58 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 04/13] iwlwifi: cancel scan when down the device
-Message-ID: <20100906073255.GB3024@redhat.com>
-References: <1283515056-11523-1-git-send-email-sgruszka@redhat.com>
- <1283515056-11523-5-git-send-email-sgruszka@redhat.com>
- <1283524697.5211.15.camel@wwguy-ubuntu>
-MIME-Version: 1.0
+	id S1755015Ab0IFC1n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Sep 2010 22:27:43 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1OsRQq-0001vz-B2
+	for linux-wireless@vger.kernel.org; Mon, 06 Sep 2010 04:27:40 +0200
+Received: from ppp121-44-8-149.lns20.syd6.internode.on.net ([121.44.8.149])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Sep 2010 04:27:40 +0200
+Received: from msbroadf by ppp121-44-8-149.lns20.syd6.internode.on.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Sep 2010 04:27:40 +0200
+To: linux-wireless@vger.kernel.org
+From: Michael <msbroadf@gmail.com>
+Subject: Re: =?utf-8?b?dDJ4MDB1c2Jfd2F0Y2hkb2dfdHhfc3RhdHVzOg==?= Warning - TX queue 2 status timed out, invoke forced tx handler
+Date: Mon, 6 Sep 2010 02:27:29 +0000 (UTC)
+Message-ID: <loom.20100906T042651-361@post.gmane.org>
+References: <loom.20100906T041329-313@post.gmane.org>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1283524697.5211.15.camel@wwguy-ubuntu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+Sorry i meant RALINK3072
 
-On Fri, Sep 03, 2010 at 07:38:17AM -0700, Guy, Wey-Yi wrote:
-> > -		mutex_lock(&priv->mutex);
-> > -		iwl_scan_cancel_timeout(priv, 100);
-> > -		mutex_unlock(&priv->mutex);
-> > -	}
-> > -
-> >  	iwl_down(priv);
-> 
-> I see you remove the "mutex" here, not needed?
 
-Yes, is needed, this is fixed in patch 8.
 
-Stanislaw
