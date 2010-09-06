@@ -1,55 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.47]:35042 "EHLO mgw-sa01.nokia.com"
+Received: from mail.atheros.com ([12.19.149.2]:31904 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932939Ab0I0KCA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 06:02:00 -0400
-Subject: Re: [PATCH 16/25] wl1271: Add support for hardware GEM cipher
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: "Oikarinen Juuso (Nokia-MS/Tampere)" <juuso.oikarinen@nokia.com>
-Cc: ext Johannes Berg <johannes@sipsolutions.net>,
+	id S1753157Ab0IFI4W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Sep 2010 04:56:22 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 06 Sep 2010 01:56:16 -0700
+Date: Mon, 6 Sep 2010 14:27:25 +0530
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: David Woodhouse <dwmw2@infradead.org>
+CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1285581481.11177.68.camel@wimaxnb.nmp.nokia.com>
-References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
-	 <1285576669-8070-17-git-send-email-luciano.coelho@nokia.com>
-	 <1285578777.4043.6.camel@jlt3.sipsolutions.net>
-	 <1285580806.11177.65.camel@wimaxnb.nmp.nokia.com>
-	 <1285580995.4043.7.camel@jlt3.sipsolutions.net>
-	 <1285581481.11177.68.camel@wimaxnb.nmp.nokia.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 27 Sep 2010 13:01:17 +0300
-Message-ID: <1285581677.5768.70.camel@chilepepper>
-Mime-Version: 1.0
+Subject: Re: [PATCH] ath9k_htc: Update AR7010 firmwares
+Message-ID: <20100906085725.GA12370@vmraj-lnx.users.atheros.com>
+References: <1283530280-6263-1-git-send-email-rmanoharan@atheros.com>
+ <1283642530.15689.2.camel@i7.infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1283642530.15689.2.camel@i7.infradead.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-09-27 at 11:58 +0200, Oikarinen Juuso (Nokia-MS/Tampere)
-wrote:
-> On Mon, 2010-09-27 at 11:49 +0200, ext Johannes Berg wrote:
-> > On Mon, 2010-09-27 at 12:46 +0300, Juuso Oikarinen wrote:
+Yes David. These changes are compatible with older kernels.
+
+Thanks,
+Rajkumar
+
+On Sun, Sep 05, 2010 at 04:52:10AM +0530, David Woodhouse wrote:
+> On Fri, 2010-09-03 at 17:11 +0100, Rajkumar Manoharan wrote:
+> > AR7010 firmwares are patched to change EP3 & EP4
+> > from Interrupt to Bulk type.
 > > 
-> > > > > +#define WL1271_CIPHER_SUITE_GEM 0x000FACFF
-> > > > 
-> > > > NACK, this is a standards-reserved value. Use the correct ID for it or
-> > > > allocate one within your own OUI if you don't want to admit what this
-> > > > really is (and by now all readers here will know anyway.)
-> > > 
-> > > Well I'm sure many or most know what this patch is about. The choice of
-> > > value was not intended to hide that.
-> > > 
-> > > You're right though, we'll need to change the OUI of the value, unless
-> > > you can point me to an official value to use.
-> > 
-> > Well, ISO/IEC JTC 1 N 9880 says you should use 00-14-72:1.
+> > Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+> > ---
+> >  ar7010.fw     |  Bin 70608 -> 70624 bytes
+> >  ar7010_1_1.fw |  Bin 70608 -> 70624 bytes
+> >  2 files changed, 0 insertions(+), 0 deletions(-) 
 > 
-> Heh, yes, my local expert on this just gave me the same value. Thanks.
+> Is that a compatible change which will continue to work with old
+> kernels?
 > 
-> One new patch coming up!
-
-Cool, thanks for fixing this quickly, Juuso.  I'll replace the current
-patch with your new one.
-
-
--- 
-Cheers,
-Luca.
-
+> If not, the firmware needs a new filename -- think of it like an soname
+> on userspace libraries.
+> 
+> -- 
+> dwmw2
+> 
