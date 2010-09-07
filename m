@@ -1,51 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:60996 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756389Ab0IXNpN (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:34477 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756760Ab0IGNPj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Sep 2010 09:45:13 -0400
-Message-ID: <4C9CAB62.2040607@candelatech.com>
-Date: Fri, 24 Sep 2010 06:45:06 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 7 Sep 2010 09:15:39 -0400
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Patch to get iw building on Fedora 8
-References: <4C98DFB6.10902@candelatech.com>	 <1285090085.12764.6.camel@jlt3.sipsolutions.net>	 <4C9BDD2C.1090806@candelatech.com> <1285320687.3699.8.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1285320687.3699.8.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <4C8637D2.5070703@csr.com>
+References: <1283858949-11073-1-git-send-email-ohad@wizery.com>
+ <1283858949-11073-9-git-send-email-ohad@wizery.com> <4C8637D2.5070703@csr.com>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Tue, 7 Sep 2010 16:15:19 +0300
+Message-ID: <AANLkTimgk9JM_c20vcZegBufGDx07PBYK_+omMxBMZq-@mail.gmail.com>
+Subject: Re: [PATCH v1 8/8] wireless: wl1271_sdio: enable Runtime PM
+To: David Vrabel <david.vrabel@csr.com>
+Cc: linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	akpm@linux-foundation.org, San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Gao Yunpeng <yunpeng.gao@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/24/2010 02:31 AM, Johannes Berg wrote:
-> On Thu, 2010-09-23 at 16:05 -0700, Ben Greear wrote:
->> I notice that you added some code to try to get this working:
+On Tue, Sep 7, 2010 at 4:02 PM, David Vrabel <david.vrabel@csr.com> wrote:
+> Ohad Ben-Cohen wrote:
+>> Enable runtime pm for the wl1271 SDIO device.
 >>
->> #ifndef _ISOC99_SOURCE
->> #define _ISOC99_SOURCE
->> #endif
+>> We request power whenever the WLAN interface is brought up,
+>> and release it after the WLAN interface is taken down.
 >>
+>> As a result, power is released immediately after probe returns,
+>> since at that point power has not been explicitly requested yet
+>> (i.e. the WLAN interface is still down).
+> [...]
+>> @@ -233,6 +241,8 @@ static int __devinit wl1271_probe(struct sdio_func *func,
 >>
->> However, it still will not build for me on Fedora 8.  In case I'm doing something
->> else strange..were you able to build it on FC8 by any chance?
+>>       sdio_set_drvdata(func, wl);
 >>
->> I can easily carry the fix in my own tree, but thought
->> you might want to know...
+>> +     pm_runtime_put_noidle(&func->dev);
 >
-> No, I don't have FC8 anywhere ... Does it build for you with -std=c99?
-> But that gives me a lot of warnings due to a libnl header file bug
-> ("extern inline").
+> I find this a little odd and confusing as this is releasing the
+> reference taken by mmc core from inside the function driver.
 
-Any problem with just changing it to 'strtod' ?
+This is done in order to still support function drivers that are not
+aware of runtime pm (same approach was taken in the PCI implementation
+of runtime pm).
 
-That compiles back at least as far as FC5.
+> Instead, I would suggest changing all existing SDIO function drivers to
+> call pm_runtime_get() in probe() and pm_runtime_put() in remove().
 
-Ben
+If we are willing to require runtime pm awareness from all SDIO
+function drivers then we can do this (obviously we will break all
+out-of-tree drivers by doing so).
 
+> think this makes the runtime PM usage more obvious from a function
+> driver point of view.
 >
-> johannes
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+>> +
+>>       wl1271_notice("initialized");
+>>
+>>       return 0;
+>> @@ -255,6 +265,8 @@ static void __devexit wl1271_remove(struct sdio_func *func)
+>>
+>>       wl1271_unregister_hw(wl);
+>>       wl1271_free_hw(wl);
+>> +
+>> +     pm_runtime_get_noresume(&func->dev);
+>>  }
+>>
+>>  static struct sdio_driver wl1271_sdio_driver = {
+>
+> David
+> --
+> David Vrabel, Senior Software Engineer, Drivers
+> CSR, Churchill House, Cambridge Business Park,  Tel: +44 (0)1223 692562
+> Cowley Road, Cambridge, CB4 0WZ                 http://www.csr.com/
+>
+>
+> Member of the CSR plc group of companies. CSR plc registered in England and Wales, registered number 4187346, registered office Churchill House, Cambridge Business Park, Cowley Road, Cambridge, CB4 0WZ, United Kingdom
+>
