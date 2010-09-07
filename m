@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:64537 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751774Ab0IQXI2 (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:34344 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932099Ab0IGRfI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Sep 2010 19:08:28 -0400
-Received: by mail-bw0-f46.google.com with SMTP id 11so3128491bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 16:08:27 -0700 (PDT)
-Message-Id: <6c14f87ffdd46c45f3dfcd6c15ba7e89142c1dab.1284763835.git.chunkeey@googlemail.com>
-In-Reply-To: <cover.1284763834.git.chunkeey@googlemail.com>
-References: <cover.1284763834.git.chunkeey@googlemail.com>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Fri, 17 Sep 2010 22:58:40 +0200
-Subject: [PATCH 5/7] carl9170: fix state downgrade during reset
-To: linville@tuxdriver.com
+	Tue, 7 Sep 2010 13:35:08 -0400
+Received: by qyk36 with SMTP id 36so3650763qyk.19
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Sep 2010 10:35:07 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1282764076.3667.12.camel@jlt3.sipsolutions.net>
+References: <1282764076.3667.12.camel@jlt3.sipsolutions.net>
+Date: Tue, 7 Sep 2010 10:35:05 -0700
+Message-ID: <AANLkTikc0-FbeRHm-0rxrWCGgaxa7svCsQmqpAD-87cq@mail.gmail.com>
+Subject: Re: libertas_tf
+From: Steve deRosier <steve@cozybit.com>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Don't mark the device as completely dead just yet.
-If all goes to plan and carl9170_reboot succeeds
-then we can skip the expensive userspace-driven
-reinitialization anyway.
+Johannes,
 
-And if it doesn't and carl9170_reboot fails,
-then carl9170_usb_cancel_urbs will do the
-necessary steps.
+I'm actively working on it.  OLPC's XO-1.5 and also some Gumstix users
+are using it right now.  In particular I've added an sdio interface
+for the 8686 as well as some other general fixes.  I'm trying to get
+it to a state to push it up to wireless-testing now.
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
- drivers/net/wireless/ath/carl9170/usb.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+If you or anyone else is interested, the details are on OLPC's wiki:
+http://wiki.laptop.org/go/Thinfirm_1.5
 
-diff --git a/drivers/net/wireless/ath/carl9170/usb.c b/drivers/net/wireless/ath/carl9170/usb.c
-index 1e7c274..eb789a9 100644
---- a/drivers/net/wireless/ath/carl9170/usb.c
-+++ b/drivers/net/wireless/ath/carl9170/usb.c
-@@ -846,8 +846,6 @@ int carl9170_usb_restart(struct ar9170 *ar)
- 
- 	carl9170_usb_stop(ar);
- 
--	carl9170_set_state(ar, CARL9170_UNKNOWN_STATE);
--
- 	if (err)
- 		goto err_out;
- 
--- 
-1.7.1
+- Steve
 
+On Wed, Aug 25, 2010 at 12:21 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> Is anyone using libertas_tf? I believe it has been broken since
+> 2.6.34-rc1. Anyone want to fix it?
+>
+> johannes
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
