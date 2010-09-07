@@ -1,54 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from compulab.co.il ([67.18.134.219]:54221 "EHLO compulab.co.il"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752557Ab0IMIBK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Sep 2010 04:01:10 -0400
-Message-ID: <4C8DD9F4.5090305@compulab.co.il>
-Date: Mon, 13 Sep 2010 09:59:48 +0200
-From: Mike Rapoport <mike@compulab.co.il>
+Received: from he.sipsolutions.net ([78.46.109.217]:52679 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750827Ab0IGVCv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Sep 2010 17:02:51 -0400
+To: Steve deRosier <steve@cozybit.com>
+Subject: Re: =?UTF-8?Q?libertas=5Ftf?=
 MIME-Version: 1.0
-To: Henry Ptasinski <henryp@broadcom.com>
-CC: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
-Subject: Re: [ANN] Full-source Broadcom wireless driver for 11n chips
-References: <20100908150322.17dac9c3@nehalam> <20100908225132.GA12490@kroah.com> <4C88F8CE.5090708@broadcom.com>
-In-Reply-To: <4C88F8CE.5090708@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
+Date: Tue, 07 Sep 2010 23:02:45 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTimgvEShOKnA3TTf0_3p2ghP2OL8ngKPBgpkf+zf@mail.gmail.com>
+References: <1282764076.3667.12.camel@jlt3.sipsolutions.net> <AANLkTikc0-FbeRHm-0rxrWCGgaxa7svCsQmqpAD-87cq@mail.gmail.com> <5144f966da86d4ab0984bc15bdd5fcab@localhost> <AANLkTimgvEShOKnA3TTf0_3p2ghP2OL8ngKPBgpkf+zf@mail.gmail.com>
+Message-ID: <d09bb244b842cf15a1513899d19bd39d@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Henry,
 
-Henry Ptasinski wrote:
-> Broadcom would like to announce the initial release of a fully-open
-> Linux driver for it's latest generation of 11n chipsets.  The driver,
-> while still a work in progress, is released as full source and uses the
-> native mac80211 stack.   It supports multiple current chips (BCM4313,
-> BCM43224, BCM43225) as well as providing a framework for supporting
-> additional chips in the future, including mac80211-aware embedded chips.
->   The README and TODO files included with the sources provide more
-> details about the current feature set, known issues, and plans for
-> improving the driver.
-> 
-> The driver is currently available in staging-next git tree, available at:
-> 
->     git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging-next-2.6.git 
-> 
-> 
-> in the drivers/staging/brcm80211 directory.
+On Tue, 7 Sep 2010 13:52:47 -0700, Steve deRosier <steve@cozybit.com>
+wrote:
+> I've got it working on 2.6.34-rc5-wl, branched off commit
+> ~8425ee8329f33 sometimes near the end of April 2010.  I've
+> significantly reworked some MAC addr stuff, including forcing the
+> module to request the MAC addr from the hardware and using that to set
+> the addr before the calls to setup mac80211.
 
-Are there any plans to support BCM4319 and BCM4329 SDIO chipsets?
+Ah, ok, but that's the thing I was worried about ... if you're now giving
+it the MAC address before setting up the mac80211 stuff, you should be fine
+(and we can remove the workaround from mac80211, yay)
 
-> ---
-> Henry Ptasinski
-> henryp@broadcom.com
-> 
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I'm now working on getting it all up to head, so patches should be
+> coming soon.  Actually, on that note, how would you prefer I get them
+> to you?  We're talking about an entire new module, libertas_tf_sdio,
+> and lots of patches to the existing libertas_tf modules.  Something
+> like 40+ patches.  Would you prefer a patchset posted, or me to squash
+> a bunch into fewer but larger patches, or would you prefer to pull
+> from my git tree?
 
+Sounds like a lot of stuff... John will have to answer that. I think
+posting it piecemeal as much as possible would probably be preferable.
 
--- 
-Sincerely yours,
-Mike.
+johannes
