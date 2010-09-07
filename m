@@ -1,47 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:16932 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932858Ab0I0Iic (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:46201 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755591Ab0IGKeR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 04:38:32 -0400
-Received: from esebh105.NOE.Nokia.com (esebh105.ntc.nokia.com [172.21.138.211])
-	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o8R8c5EY024679
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 03:38:31 -0500
-Received: from localhost.localdomain (chilepepper.research.nokia.com [172.21.50.167])
-	by mgw-da02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o8R8bogv022566
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 11:37:51 +0300
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 01/25] wl1271: remove deprecated ACX definition
-Date: Mon, 27 Sep 2010 11:37:25 +0300
-Message-Id: <1285576669-8070-2-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
-References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
+	Tue, 7 Sep 2010 06:34:17 -0400
+Date: Tue, 7 Sep 2010 10:34:13 +0000
+From: Jarek Poplawski <jarkao2@gmail.com>
+To: Pekka Enberg <penberg@kernel.org>
+Cc: Linux Netdev List <netdev@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PROBLEM] ipw2200: WARNING: at kernel/softirq.c:143
+	local_bh_enable+0x58/0x80()
+Message-ID: <20100907103412.GA8999@ff.dom.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTi=BBQL5cS6Ox8MGiy+Pun56xtEhakJxeLwx9UnW@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As of Rev. 6.1.0.0.335, the ACX_SET_SMART_REFLEX_DEBUG command is
-deprecated.  This patch removes it from the wl1271 driver (it wasn't used
-anyway).
+On 2010-09-05 17:11, Pekka Enberg wrote:
+> Hi,
+> 
+> This showed up in dmesg:
+> 
+> [  143.695527] ------------[ cut here ]------------
+> [  143.695550] WARNING: at kernel/softirq.c:143 local_bh_enable+0x58/0x80()
+> [  143.695557] Hardware name: 2373KYG
+> [  143.695562] Modules linked in: ipw2200 libipw
+> [  143.695577] Pid: 4112, comm: NetworkManager Not tainted 2.6.36-rc2+ #182
+> [  143.695584] Call Trace:
+> [  143.695596]  [<c15b8ddc>] ? printk+0x18/0x1a
+> [  143.695610]  [<c1033fbd>] warn_slowpath_common+0x6d/0xa0
+> [  143.695620]  [<c1039568>] ? local_bh_enable+0x58/0x80
+> [  143.695630]  [<c1039568>] ? local_bh_enable+0x58/0x80
+> [  143.695640]  [<c103400b>] warn_slowpath_null+0x1b/0x20
+> [  143.695650]  [<c1039568>] local_bh_enable+0x58/0x80
+> [  143.695662]  [<c1482d25>] netif_rx+0x155/0x180
+> [  143.695677]  [<f807519c>] libipw_rx+0x55c/0xad0 [libipw]
+> [  143.695703]  [<f816f86a>] ipw_handle_data_packet+0x12a/0x260 [ipw2200]
 
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-Reviewed-by: Saravanan Dhanabal <ext-saravanan.dhanabal@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_acx.h |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+Hi,
+Here is the thread:
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.h b/drivers/net/wireless/wl12xx/wl1271_acx.h
-index 4235bc5..5c8bb7f 100644
---- a/drivers/net/wireless/wl12xx/wl1271_acx.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_acx.h
-@@ -1060,7 +1060,6 @@ enum {
- 	ACX_PEER_HT_CAP             = 0x0057,
- 	ACX_HT_BSS_OPERATION        = 0x0058,
- 	ACX_COEX_ACTIVITY           = 0x0059,
--	ACX_SET_SMART_REFLEX_DEBUG  = 0x005A,
- 	ACX_SET_DCO_ITRIM_PARAMS    = 0x0061,
- 	DOT11_RX_MSDU_LIFE_TIME     = 0x1004,
- 	DOT11_CUR_TX_PWR            = 0x100D,
--- 
-1.6.3.3
+http://www.spinics.net/lists/netdev/msg139731.html
 
+Jarek P.
