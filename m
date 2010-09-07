@@ -1,146 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30015 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932373Ab0ICMCC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Sep 2010 08:02:02 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 09/13] iwlwifi: rewrite scan completion
-Date: Fri,  3 Sep 2010 13:57:32 +0200
-Message-Id: <1283515056-11523-10-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1283515056-11523-1-git-send-email-sgruszka@redhat.com>
-References: <1283515056-11523-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:49491 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756521Ab0IGL3r (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Sep 2010 07:29:47 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Gao Yunpeng <yunpeng.gao@intel.com>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH v1 5/8] sdio: add general runtime PM support
+Date: Tue,  7 Sep 2010 14:29:06 +0300
+Message-Id: <1283858949-11073-6-git-send-email-ohad@wizery.com>
+In-Reply-To: <1283858949-11073-1-git-send-email-ohad@wizery.com>
+References: <1283858949-11073-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Assure (partially) we call ieee80211_scan_completed() only once when
-scan was requested from mac80211.
+Add generic runtime PM handlers to sdio.
 
-Code path that first clear STATUS_SCANNING bit is responsible to call
-ieee80211_scan_completed(). Before the call, we check if mac80211
-really request the scan.
+Those handlers invoke the relevant SDIO function drivers' handlers, if
+such exist. If not they just return success.
 
-Still persist some cases when we behave wrong, that will be addressed
-in the next patches.
+Runtime PM is still disabled by default, so this patch alone
+has no immediate effect.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-scan.c |   65 +++++++++++++++++++------------
- 1 files changed, 40 insertions(+), 25 deletions(-)
+ drivers/mmc/core/sdio_bus.c |   20 ++++++++++++++++++++
+ 1 files changed, 20 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 7e4faaf..f79fb3e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -93,6 +93,19 @@ static int iwl_send_scan_abort(struct iwl_priv *priv)
- 	return ret;
+diff --git a/drivers/mmc/core/sdio_bus.c b/drivers/mmc/core/sdio_bus.c
+index 4a890dc..256a968 100644
+--- a/drivers/mmc/core/sdio_bus.c
++++ b/drivers/mmc/core/sdio_bus.c
+@@ -14,6 +14,7 @@
+ #include <linux/device.h>
+ #include <linux/err.h>
+ #include <linux/slab.h>
++#include <linux/pm_runtime.h>
+ 
+ #include <linux/mmc/card.h>
+ #include <linux/mmc/sdio_func.h>
+@@ -154,6 +155,24 @@ static int sdio_bus_remove(struct device *dev)
+ 	return 0;
  }
  
-+static void iwl_complete_scan(struct iwl_priv *priv, bool aborted)
-+{
-+	/* check if scan was requested from mac80211 */
-+	if (priv->scan_request) {
-+		IWL_DEBUG_SCAN(priv, "Complete scan in mac80211\n");
-+		ieee80211_scan_completed(priv->hw, aborted);
-+	}
++#ifdef CONFIG_PM_RUNTIME
 +
-+	priv->is_internal_short_scan = false;
-+	priv->scan_vif = NULL;
-+	priv->scan_request = NULL;
-+}
++static const struct dev_pm_ops sdio_bus_pm_ops = {
++	SET_RUNTIME_PM_OPS(
++		pm_generic_runtime_suspend,
++		pm_generic_runtime_resume,
++		pm_generic_runtime_idle
++	)
++};
 +
- static void iwl_do_scan_abort(struct iwl_priv *priv)
- {
- 	int ret;
-@@ -115,7 +128,7 @@ static void iwl_do_scan_abort(struct iwl_priv *priv)
- 		clear_bit(STATUS_SCANNING, &priv->status);
- 		clear_bit(STATUS_SCAN_HW, &priv->status);
- 		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
--		ieee80211_scan_completed(priv->hw, true);
-+		iwl_complete_scan(priv, true);
- 	} else
- 		IWL_DEBUG_SCAN(priv, "Sucessfully send scan abort\n");
- }
-@@ -545,10 +558,11 @@ static void iwl_bg_scan_completed(struct work_struct *work)
- {
- 	struct iwl_priv *priv =
- 	    container_of(work, struct iwl_priv, scan_completed);
--	bool internal = false, aborted;
-+	bool aborted;
- 	struct iwl_rxon_context *ctx;
- 
--	IWL_DEBUG_SCAN(priv, "SCAN complete scan\n");
-+	IWL_DEBUG_INFO(priv, "Completed %sscan.\n",
-+		       priv->is_internal_short_scan ? "internal short " : "");
- 
- 	cancel_delayed_work(&priv->scan_check);
- 
-@@ -558,37 +572,38 @@ static void iwl_bg_scan_completed(struct work_struct *work)
- 	if (aborted)
- 		IWL_DEBUG_INFO(priv, "Aborted scan completed.\n");
- 
--	IWL_DEBUG_INFO(priv, "Setting scan to off\n");
--
--	clear_bit(STATUS_SCANNING, &priv->status);
--
--	if (priv->is_internal_short_scan) {
--		priv->is_internal_short_scan = false;
--		IWL_DEBUG_SCAN(priv, "internal short scan completed\n");
--		internal = true;
--	} else if (priv->scan_request) {
--		priv->scan_request = NULL;
--		priv->scan_vif = NULL;
--		ieee80211_scan_completed(priv->hw, aborted);
-+	if (!test_and_clear_bit(STATUS_SCANNING, &priv->status)) {
-+		IWL_DEBUG_INFO(priv, "Scan already completed.\n");
-+		goto out;
- 	}
- 
--	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
--		goto out;
-+	if (priv->is_internal_short_scan && !aborted) {
-+		int err;
- 
--	if (internal && priv->scan_request) {
--		int err = iwl_scan_initiate(priv, priv->scan_vif, false,
--					priv->scan_request->channels[0]->band);
-+		/* Check if mac80211 requested scan during our internal scan */
-+		if (priv->scan_request == NULL)
-+			goto out_complete;
- 
-+		/* If so request a new scan */
-+		err = iwl_scan_initiate(priv, priv->scan_vif, false,
-+					priv->scan_request->channels[0]->band);
- 		if (err) {
- 			IWL_DEBUG_SCAN(priv,
- 				"failed to initiate pending scan: %d\n", err);
--			priv->scan_request = NULL;
--			priv->scan_vif = NULL;
--			ieee80211_scan_completed(priv->hw, true);
--		} else
--			goto out;
-+			aborted = true;
-+			goto out_complete;
-+		}
++#define SDIO_PM_OPS_PTR	(&sdio_bus_pm_ops)
 +
-+		goto out;
- 	}
++#else /* !CONFIG_PM_RUNTIME */
++
++#define SDIO_PM_OPS_PTR	NULL
++
++#endif /* !CONFIG_PM_RUNTIME */
++
+ static struct bus_type sdio_bus_type = {
+ 	.name		= "sdio",
+ 	.dev_attrs	= sdio_dev_attrs,
+@@ -161,6 +180,7 @@ static struct bus_type sdio_bus_type = {
+ 	.uevent		= sdio_bus_uevent,
+ 	.probe		= sdio_bus_probe,
+ 	.remove		= sdio_bus_remove,
++	.pm		= SDIO_PM_OPS_PTR,
+ };
  
-+out_complete:
-+	iwl_complete_scan(priv, aborted);
-+
-+	/* Can we still talk to firmware ? */
-+	if (!iwl_is_ready_rf(priv))
-+		goto out;
-+
- 	/* Since setting the TXPOWER may have been deferred while
- 	 * performing the scan, fire one off */
- 	iwl_set_tx_power(priv, priv->tx_power_user_lmt, true);
+ int sdio_register_bus(void)
 -- 
-1.7.1
+1.7.0.4
 
