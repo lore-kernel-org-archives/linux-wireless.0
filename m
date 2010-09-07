@@ -1,38 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56810 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753593Ab0IUQaT (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:34553 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757217Ab0IGTDh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Sep 2010 12:30:19 -0400
-Subject: Re: [mac80211] mac80211:  Support multiple VIFS per AP in debugfs.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4C98DC5D.2000108@candelatech.com>
-References: <1285071310-11440-1-git-send-email-greearb@candelatech.com>
-	 <4C98DC5D.2000108@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 21 Sep 2010 18:30:18 +0200
-Message-ID: <1285086618.12764.3.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 7 Sep 2010 15:03:37 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 799A9418D8
+	for <linux-wireless@vger.kernel.org>; Tue,  7 Sep 2010 15:02:20 -0400 (EDT)
+Subject: Compat-wireless release for 2010-09-07 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100907190336.08FEE41134@repository3.orbit-lab.org>
+Date: Tue,  7 Sep 2010 15:03:35 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-09-21 at 09:25 -0700, Ben Greear wrote:
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   2d615c9..5222861  history    -> origin/history
+ + 7c94c50...b4dd1a5 master     -> origin/master  (forced update)
+ * [new tag]         next-20100907 -> next-20100907
 
-> > -	snprintf(mac, sizeof(mac), "%pM", sta->sta.addr);
-> > +	snprintf(mac, sizeof(mac), "%pM-%s",
-> > +		 sta->sta.addr, sta->sdata->name);
-> >
-> >   	/*
-> >   	 * This might fail due to a race condition:
-> 
-> I got to thinking:  Is there any reason to put the sta.addr in there?
-> 
-> Maybe just use sta->sdata->name?  Seems it might be easier for
-> scripts to deal with?
+compat-wireless code metrics
 
-APs have many STAs
+    591159 - Total upstream lines of code being pulled
+      1718 - backport code changes
+      1477 - backport code additions
+       241 - backport code deletions
+      6082 - backport from compat module
+      7800 - total backport code
+    1.3194 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2060 - % of crap code
 
-johannes
-
+Base tree: linux-next.git
+Base tree version: next-20100907
+compat-wireless release: compat-wireless--2010-09-02
