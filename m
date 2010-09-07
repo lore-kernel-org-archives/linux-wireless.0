@@ -1,96 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:40705 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752472Ab0IQXI1 (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:49491 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756529Ab0IGL3t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Sep 2010 19:08:27 -0400
-Received: by bwz11 with SMTP id 11so3128503bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 16:08:26 -0700 (PDT)
-Message-Id: <5cb2e8c6417605344a1ef9228a31182a3414c3f9.1284763835.git.chunkeey@googlemail.com>
-In-Reply-To: <cover.1284763834.git.chunkeey@googlemail.com>
-References: <cover.1284763834.git.chunkeey@googlemail.com>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Fri, 17 Sep 2010 22:42:37 +0200
-Subject: [PATCH 3/7] carl9170: don't load bogus nf of chain 1
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
+	Tue, 7 Sep 2010 07:29:49 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Gao Yunpeng <yunpeng.gao@intel.com>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH v1 6/8] sdio: enable Runtime PM for SDIO cards
+Date: Tue,  7 Sep 2010 14:29:07 +0300
+Message-Id: <1283858949-11073-7-git-send-email-ohad@wizery.com>
+In-Reply-To: <1283858949-11073-1-git-send-email-ohad@wizery.com>
+References: <1283858949-11073-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to Atheros, chain 1 is not connected.
+Enable runtime PM for new SDIO cards.
 
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+As soon as the card will be added to the device tree, runtime PM core
+will release its power, since it doesn't have any users yet.
+
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
 ---
- drivers/net/wireless/ath/carl9170/carl9170.h |    2 +-
- drivers/net/wireless/ath/carl9170/debug.c    |    8 +++-----
- drivers/net/wireless/ath/carl9170/phy.c      |   11 +++++------
- 3 files changed, 9 insertions(+), 12 deletions(-)
+ drivers/mmc/core/sdio.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/carl9170/carl9170.h b/drivers/net/wireless/ath/carl9170/carl9170.h
-index 9f1d603..d43675a 100644
---- a/drivers/net/wireless/ath/carl9170/carl9170.h
-+++ b/drivers/net/wireless/ath/carl9170/carl9170.h
-@@ -321,7 +321,7 @@ struct ar9170 {
+diff --git a/drivers/mmc/core/sdio.c b/drivers/mmc/core/sdio.c
+index c118cc2..a5a76a8 100644
+--- a/drivers/mmc/core/sdio.c
++++ b/drivers/mmc/core/sdio.c
+@@ -10,6 +10,7 @@
+  */
  
- 	/* PHY */
- 	struct ieee80211_channel *channel;
--	int noise[6];
-+	int noise[4];
- 	unsigned int chan_fail;
- 	unsigned int total_chan_fail;
- 	u8 heavy_clip;
-diff --git a/drivers/net/wireless/ath/carl9170/debug.c b/drivers/net/wireless/ath/carl9170/debug.c
-index 6559381..dbb35c3 100644
---- a/drivers/net/wireless/ath/carl9170/debug.c
-+++ b/drivers/net/wireless/ath/carl9170/debug.c
-@@ -437,12 +437,10 @@ static char *carl9170_debugfs_phy_noise_read(struct ar9170 *ar, char *buf,
- 		return buf;
- 	}
+ #include <linux/err.h>
++#include <linux/pm_runtime.h>
  
--	ADD(buf, *len, bufsize, "Chain 1: %10d dBm, ext. chan.:%10d dBm\n",
--	    ar->noise[1], ar->noise[4]);
-+	ADD(buf, *len, bufsize, "Chain 0: %10d dBm, ext. chan.:%10d dBm\n",
-+	    ar->noise[0], ar->noise[2]);
- 	ADD(buf, *len, bufsize, "Chain 2: %10d dBm, ext. chan.:%10d dBm\n",
--	    ar->noise[2], ar->noise[5]);
--	ADD(buf, *len, bufsize, "Combined %10d dBm, ext. chan.:%10d dBm\n",
--	    ar->noise[0], ar->noise[3]);
-+	    ar->noise[1], ar->noise[3]);
+ #include <linux/mmc/host.h>
+ #include <linux/mmc/card.h>
+@@ -709,6 +710,15 @@ int mmc_attach_sdio(struct mmc_host *host, u32 ocr)
+ 	card = host->card;
  
- 	return buf;
- }
-diff --git a/drivers/net/wireless/ath/carl9170/phy.c b/drivers/net/wireless/ath/carl9170/phy.c
-index 7df8f71..fa349b8 100644
---- a/drivers/net/wireless/ath/carl9170/phy.c
-+++ b/drivers/net/wireless/ath/carl9170/phy.c
-@@ -1566,9 +1566,8 @@ static int carl9170_calc_noise_dbm(u32 raw_noise)
- int carl9170_get_noisefloor(struct ar9170 *ar)
- {
- 	static const u32 phy_regs[] = {
--		AR9170_PHY_REG_CCA, AR9170_PHY_REG_CH1_CCA,
--		AR9170_PHY_REG_CH2_CCA, AR9170_PHY_REG_EXT_CCA,
--		AR9170_PHY_REG_CH1_EXT_CCA, AR9170_PHY_REG_CH2_EXT_CCA };
-+		AR9170_PHY_REG_CCA, AR9170_PHY_REG_CH2_CCA,
-+		AR9170_PHY_REG_EXT_CCA, AR9170_PHY_REG_CH2_EXT_CCA };
- 	u32 phy_res[ARRAY_SIZE(phy_regs)];
- 	int err, i;
- 
-@@ -1578,12 +1577,12 @@ int carl9170_get_noisefloor(struct ar9170 *ar)
- 	if (err)
- 		return err;
- 
--	for (i = 0; i < 3; i++) {
-+	for (i = 0; i < 2; i++) {
- 		ar->noise[i] = carl9170_calc_noise_dbm(
- 			(phy_res[i] >> 19) & 0x1ff);
- 
--		ar->noise[i + 3] = carl9170_calc_noise_dbm(
--			(phy_res[i + 3] >> 23) & 0x1ff);
-+		ar->noise[i + 2] = carl9170_calc_noise_dbm(
-+			(phy_res[i + 2] >> 23) & 0x1ff);
- 	}
- 
- 	return 0;
+ 	/*
++	 * Enable Runtime PM for this card
++	 */
++	err = pm_runtime_set_active(&card->dev);
++	if (err)
++		goto remove;
++
++	pm_runtime_enable(&card->dev);
++
++	/*
+ 	 * The number of functions on the card is encoded inside
+ 	 * the ocr.
+ 	 */
 -- 
-1.7.1
+1.7.0.4
 
