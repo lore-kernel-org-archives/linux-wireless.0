@@ -1,81 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:59146 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752340Ab0I2Q7B (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:36123 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753332Ab0IHS6P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Sep 2010 12:59:01 -0400
-Message-ID: <4CA3704E.1070702@candelatech.com>
-Date: Wed, 29 Sep 2010 09:58:54 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 8 Sep 2010 14:58:15 -0400
+Received: by mail-ew0-f46.google.com with SMTP id 23so343042ewy.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2010 11:58:14 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 04/06] rt2x00: Mask out unused interrupts in rt2800pci
+Date: Wed, 8 Sep 2010 20:56:52 +0200
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+References: <201009082055.38033.IvDoorn@gmail.com> <201009082056.05708.IvDoorn@gmail.com> <201009082056.33182.IvDoorn@gmail.com>
+In-Reply-To: <201009082056.33182.IvDoorn@gmail.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3] mac80211:  Allow scanning single channel if other
- VIF is associated.
-References: <1285708650-21858-1-git-send-email-greearb@candelatech.com>	 <1285743733.3756.3.camel@jlt3.sipsolutions.net>	 <4CA35BAB.8090701@candelatech.com> <1285778901.3756.25.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1285778901.3756.25.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201009082056.53759.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/29/2010 09:48 AM, Johannes Berg wrote:
-> On Wed, 2010-09-29 at 08:30 -0700, Ben Greear wrote:
->
->> Does this portion seem useful as a stand-alone patch?  It does not
->> depend on the other scan-one logic.
->
-> Somewhat, but it seems a bit buggy?
->
->> diff --git a/net/mac80211/work.c b/net/mac80211/work.c
->> index ae344d1..1bfc1e0 100644
->> --- a/net/mac80211/work.c
->> +++ b/net/mac80211/work.c
->> @@ -910,12 +910,17 @@ static void ieee80211_work_work(struct work_struct *work)
->>    			 *	 happen to be on the same channel as
->>    			 *	 the requested channel
->>    			 */
->> -			ieee80211_offchannel_stop_beaconing(local);
->> -			ieee80211_offchannel_stop_station(local);
->> -
->> -			local->tmp_channel = wk->chan;
->> -			local->tmp_channel_type = wk->chan_type;
->> -			ieee80211_hw_config(local, 0);
->> +			if (!(wk->chan == local->scan_channel ||
->> +			      (wk->chan == local->oper_channel&&
->
-> I don't think work items will ever run while scanning? And also, this
-> might need to check the channel type as well, which isn't quite
-> necessary right now (since no works requires HT channels) but would seem
-> cleaner.
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-Just in case work ever does happen when scanning, I think we should
-leave this check in.
+We don't use all available interrupts in rt2800pci. Mask out all unused
+interrupts to avoid waking up without having anything to do.
 
-I'll add a check for channel_type being the same as well.
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800pci.c |   26 +++++++++++++-------------
+ 1 files changed, 13 insertions(+), 13 deletions(-)
 
->> +			       !local->scan_channel))) {
->> +				/* Only change channels if we need to */
->> +				ieee80211_offchannel_stop_beaconing(local);
->> +				ieee80211_offchannel_stop_station(local);
->> +
->> +				local->tmp_channel = wk->chan;
->> +				local->tmp_channel_type = wk->chan_type;
->> +				ieee80211_hw_config(local, 0);
->> +			}
->>    			started = true;
->>    			wk->timeout = jiffies;
->
-> Also, I believe it needs matching code to not do all the return stuff
-> since we never left the channel, and I think it still needs to set
-> tmp_channel so that nothing will switch away underneath or so... not
-> quite sure.
-
-Ok, that sounds good.  I'll work on a revised patch when I get a chance.
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index 2bcb150..005ee15 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -342,24 +342,24 @@ static void rt2800pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
+ 	}
+ 
+ 	rt2800_register_read(rt2x00dev, INT_MASK_CSR, &reg);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_RXDELAYINT, mask);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_TXDELAYINT, mask);
++	rt2x00_set_field32(&reg, INT_MASK_CSR_RXDELAYINT, 0);
++	rt2x00_set_field32(&reg, INT_MASK_CSR_TXDELAYINT, 0);
+ 	rt2x00_set_field32(&reg, INT_MASK_CSR_RX_DONE, mask);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_AC0_DMA_DONE, mask);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_AC1_DMA_DONE, mask);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_AC2_DMA_DONE, mask);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_AC3_DMA_DONE, mask);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_HCCA_DMA_DONE, mask);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_MGMT_DMA_DONE, mask);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_MCU_COMMAND, mask);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_RXTX_COHERENT, mask);
++	rt2x00_set_field32(&reg, INT_MASK_CSR_AC0_DMA_DONE, 0);
++	rt2x00_set_field32(&reg, INT_MASK_CSR_AC1_DMA_DONE, 0);
++	rt2x00_set_field32(&reg, INT_MASK_CSR_AC2_DMA_DONE, 0);
++	rt2x00_set_field32(&reg, INT_MASK_CSR_AC3_DMA_DONE, 0);
++	rt2x00_set_field32(&reg, INT_MASK_CSR_HCCA_DMA_DONE, 0);
++	rt2x00_set_field32(&reg, INT_MASK_CSR_MGMT_DMA_DONE, 0);
++	rt2x00_set_field32(&reg, INT_MASK_CSR_MCU_COMMAND, 0);
++	rt2x00_set_field32(&reg, INT_MASK_CSR_RXTX_COHERENT, 0);
+ 	rt2x00_set_field32(&reg, INT_MASK_CSR_TBTT, mask);
+ 	rt2x00_set_field32(&reg, INT_MASK_CSR_PRE_TBTT, mask);
+ 	rt2x00_set_field32(&reg, INT_MASK_CSR_TX_FIFO_STATUS, mask);
+ 	rt2x00_set_field32(&reg, INT_MASK_CSR_AUTO_WAKEUP, mask);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_GPTIMER, mask);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_RX_COHERENT, mask);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_TX_COHERENT, mask);
++	rt2x00_set_field32(&reg, INT_MASK_CSR_GPTIMER, 0);
++	rt2x00_set_field32(&reg, INT_MASK_CSR_RX_COHERENT, 0);
++	rt2x00_set_field32(&reg, INT_MASK_CSR_TX_COHERENT, 0);
+ 	rt2800_register_write(rt2x00dev, INT_MASK_CSR, reg);
+ }
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.2.2
 
