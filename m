@@ -1,41 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:56159 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751001Ab0IICIE convert rfc822-to-8bit (ORCPT
+Received: from mail.atheros.com ([12.19.149.2]:26030 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756281Ab0IHWWP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Sep 2010 22:08:04 -0400
-Received: by bwz11 with SMTP id 11so723095bwz.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2010 19:08:03 -0700 (PDT)
+	Wed, 8 Sep 2010 18:22:15 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2010 15:22:10 -0700
+From: Vipin Mehta <Vipin.Mehta@Atheros.com>
+To: Greg KH <greg@kroah.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
+Date: Wed, 8 Sep 2010 15:22:13 -0700
+Subject: RE: [PATCH] staging: ath6kl: Replacing the symbolic link to the
+	hw.0 directory with a new directory 'hw' while retaining the	contents. This
+ will help with the cases where the driver fails to	compile if the link was
+ not setup properly.
+Message-ID: <35B17FE5076C7040809188FBE7913F983F2381DA36@SC1EXMB-MBCL.global.atheros.com>
+References: <1283905487-1471-1-git-send-email-vmehta@atheros.com>
+ <20100908090538.GA21218@kroah.com>
+In-Reply-To: <20100908090538.GA21218@kroah.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1283988329-44549-7-git-send-email-steve@cozybit.com>
-References: <1283988329-44549-1-git-send-email-steve@cozybit.com> <1283988329-44549-7-git-send-email-steve@cozybit.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 9 Sep 2010 12:07:43 +1000
-Message-ID: <AANLkTinsK63ySOssZUf6kHWp4piurjgQNBY7A4Sd9yaP@mail.gmail.com>
-Subject: Re: [PATCH 6/9] libertas_tf: Fix to enable interrupts even when
- firmware has already started
-To: Steve deRosier <steve@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net, javier@cozybit.com
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 9, 2010 at 09:25, Steve deRosier <steve@cozybit.com> wrote:
->
-> Signed-off-by: Steve deRosier <steve@cozybit.com>
-> ---
->  drivers/net/wireless/libertas_tf/main.c |   18 +++++++++---------
->  1 files changed, 9 insertions(+), 9 deletions(-)
 
-Shouldn't this be rolled into the previous patch?
 
-Thanks,
-
--- 
-
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+> -----Original Message-----
+> From: Greg KH [mailto:greg@kroah.com]
+> Sent: Wednesday, September 08, 2010 2:06 AM
+> To: Vipin Mehta
+> Cc: linux-wireless@vger.kernel.org; devel@driverdev.osuosl.org
+> Subject: Re: [PATCH] staging: ath6kl: Replacing the symbolic link to the
+> hw.0 directory with a new directory 'hw' while retaining the contents.
+> This will help with the cases where the driver fails to compile if the
+> link was not setup properly.
+> 
+> On Tue, Sep 07, 2010 at 05:24:47PM -0700, Vipin Mehta wrote:
+> > Signed-off-by: Vipin Mehta <vmehta@atheros.com>
+> 
+> What's with the long Subject: ?
+Sorry. Still getting used to git.
+> 
+> Anyway, this patch fails to apply, it seems you want to just delete the
+> symlink, which you might need to tell git that you want to generate a
+> patch that does this.  For how you do that, I don't really know, sorry.
+> 
+> If you want, just send a patch that does the proper thing for the
+> existing files to get everything to build correctly, and then tell me to
+> remove the symlink by hand, which I can do.  That might be the easiest
+> thing to do here.
+I have sent you another patch that I generated using the option '-M'. the option allows git-format-patch to detect renames which is what I intended to do. The patch is much smaller and readable. Hopefully, it will apply this time. BTW, I usually test the patches before I send out. Not sure why the earlier one did not work as it works for me.
+> 
+> thanks,
+> 
+> greg k-h
