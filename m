@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web56802.mail.re3.yahoo.com ([66.196.97.76]:30692 "HELO
-	web56802.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750794Ab0IFKLh (ORCPT
+Received: from smtp.nokia.com ([192.100.105.134]:25722 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752080Ab0IHRmY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Sep 2010 06:11:37 -0400
-Message-ID: <830552.64105.qm@web56802.mail.re3.yahoo.com>
-Date: Mon, 6 Sep 2010 03:04:55 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: Re: rt2x00usb_watchdog_tx_status: Warning - TX queue 2 status timed out, invoke forced tx handler
-To: Michael <msbroadf@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTi=5P8N6QDDZkVuFwCMDzBTLsCkiOem0_WwL-hvS@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 8 Sep 2010 13:42:24 -0400
+Subject: Re: [PATCH v1 8/8] wireless: wl1271_sdio: enable Runtime PM
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Ohad Ben-Cohen <ohad@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	San Mehat <san@google.com>,
+	"Quadros Roger (Nokia-MS/Helsinki)" <roger.quadros@nokia.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Gao Yunpeng <yunpeng.gao@intel.com>
+In-Reply-To: <1283858949-11073-9-git-send-email-ohad@wizery.com>
+References: <1283858949-11073-1-git-send-email-ohad@wizery.com>
+	 <1283858949-11073-9-git-send-email-ohad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 08 Sep 2010 10:40:23 -0700
+Message-ID: <1283967623.9120.13.camel@capsicum>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is this why the rt307x chips experience considerable amount of packet loss  in managed mode, when connected to an AP? With the rt2870sta drivers and a rt3070 device I experience no packet loss whatsoever. When rt2800usb is being utilized, large amount of packet loss occurs between the client and AP as well as duplicate packets.
+On Tue, 2010-09-07 at 13:29 +0200, ext Ohad Ben-Cohen wrote:
+> Enable runtime pm for the wl1271 SDIO device.
+> 
+> We request power whenever the WLAN interface is brought up,
+> and release it after the WLAN interface is taken down.
+> 
+> As a result, power is released immediately after probe returns,
+> since at that point power has not been explicitly requested yet
+> (i.e. the WLAN interface is still down).
+> 
+> Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+> ---
 
-Walt
+Looks fine to me, after considering David's comment and since it's done
+in the same way for PCI.
 
-> It is being worked on, but it cannot be fully resolved. It
-> is
-> currently simply a fact
-> that the DMA can lockup in the device even the official
-> Ralink driver
-> has a watchdog
-> function which resets the TX queue whenever it detects the
-> lockup.
->
-> I am currently working on improving the detection, since
-> there can be
-> a DMA timeout
-> and a TX status report timeout. (Where the latter occurs
-> much more
-> often then the DMA
-> timeout). This should decrease the packet loss somewhat,
-> but will not
-> prevent the
-> problems to occur.
->
-> Ivo
+Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
 
 
-      
+-- 
+Cheers,
+Luca.
+
