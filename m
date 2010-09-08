@@ -1,41 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:41354 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750997Ab0IJWnI (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:58763 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932150Ab0IHXgQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Sep 2010 18:43:08 -0400
-Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id o8AMh7Od022460
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Fri, 10 Sep 2010 15:43:07 -0700
-Message-ID: <4C8AB47B.7090801@candelatech.com>
-Date: Fri, 10 Sep 2010 15:43:07 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: question on scanning and multiple VIFs.
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 8 Sep 2010 19:36:16 -0400
+Received: by gxk23 with SMTP id 23so356709gxk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2010 16:36:15 -0700 (PDT)
+From: Steve deRosier <steve@cozybit.com>
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, javier@cozybit.com,
+	Mattia Barbon <mbarbon@cpan.org>,
+	Steve deRosier <steve@cozybit.com>
+Subject: [PATCH 2/3] libertas_tf: fix the check for firmware already running on IGEPv2 boards.
+Date: Wed,  8 Sep 2010 16:35:57 -0700
+Message-Id: <1283988958-44928-2-git-send-email-steve@cozybit.com>
+In-Reply-To: <1283988958-44928-1-git-send-email-steve@cozybit.com>
+References: <1283988958-44928-1-git-send-email-steve@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Mattia Barbon <mbarbon@cpan.org>
 
-I'm now debugging virtual stations with WPA.  It's not working, and at
-least part of the problem appears to be that scanning on one STA
-causes others to think they are going offchannel, though in reality,
-I'm not sure the channel is actually being changed.
+On IGEP boards, the scratch register reports 0x8000 when there is no
+firmware running instead of 0x0000.
 
-I think the proper action would be to have scan happen only
-on the single channel if any of the VIFS are associated.
-In this case, nothing would go offchannel and a secondary
-STA wouldn't overly conflict with the others.
+Signed-off-by: Mattia Barbon <mbarbon@cpan.org>
+Signed-off-by: Steve deRosier <steve@cozybit.com>
+---
+ drivers/net/wireless/libertas_tf/if_sdio.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Any ideas on a proper way to go about doing this?
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/libertas_tf/if_sdio.c b/drivers/net/wireless/libertas_tf/if_sdio.c
+index d1624e3..d3d101e 100644
+--- a/drivers/net/wireless/libertas_tf/if_sdio.c
++++ b/drivers/net/wireless/libertas_tf/if_sdio.c
+@@ -738,7 +738,7 @@ static int if_sdio_prog_firmware(struct if_sdio_card *card)
+ 	if (scratch == IF_SDIO_FIRMWARE_OK) {
+ 		lbtf_deb_sdio("firmware already loaded\n");
+ 		goto success;
+-	} else if ((card->model == IF_SDIO_MODEL_8686) && (scratch > 0)) {
++	} else if ((card->model == IF_SDIO_MODEL_8686) && ((scratch & 0x7fff) != 0)) {
+ 		lbtf_deb_sdio("firmware may be running\n");
+ 		if( lbtf_reset_fw == 0 ) {
+ 			goto success;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.0
 
