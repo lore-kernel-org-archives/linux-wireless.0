@@ -1,52 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46638 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753786Ab0IINwp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Sep 2010 09:52:45 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 0/16 v2] iwlwifi: rewrite iwl-scan.c to avoid race conditions
-Date: Thu,  9 Sep 2010 15:52:18 +0200
-Message-Id: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:48649 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755823Ab0IHVZK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Sep 2010 17:25:10 -0400
+From: Nikitas Angelinas <nikitasangelinas@gmail.com>
+To: lrodriguez@atheros.com, jmalinen@atheros.com, vasanth@atheros.com,
+	senthilkumar@atheros.com, linville@tuxdriver.com,
+	Sujith.Manoharan@atheros.com, nbd@openwrt.org
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Nikitas Angelinas <nikitasangelinas@gmail.com>
+Subject: [PATCH 6/8] drivers/net/wireless/ath/ath9k: use ARRAY_SIZE macro in ani.c
+Date: Wed,  8 Sep 2010 22:25:42 +0100
+Message-Id: <1283981142-5062-1-git-send-email-nikitasangelinas@gmail.com>
+In-Reply-To: <1283979457-4649-1-git-send-email-nikitasangelinas@gmail.com>
+References: <1283979457-4649-1-git-send-email-nikitasangelinas@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Avoid iwlwifi hardware scanning race conditions
-that may lead to not call ieee80211_scan_completed() (what in
-consequences gives "WARNING: at net/wireless/core.c:614
-wdev_cleanup_work+0xb7/0xf0"), or call iee80211_scan_completed() more
-then once (what gives " WARNING: at net/mac80211/scan.c:312
-ieee80211_scan_completed+0x5f/0x1f1").
+Replace (sizeof(ofdm_level_table)/sizeof(ofdm_level_table[0]) with
+ARRAY_SIZE(ofdm_level_table), and (sizeof(cck_level_table)/
+sizeof(cck_level_table[0]) with ARRAY_SIZE(cck_level_table) in
+drivers/net/wireless/ath/ath9k/ani.c
 
-First problem (warning in wdev_cleanup_work) make any further scan
-request from cfg80211 are ignored by mac80211 with EBUSY error,
-hence NetworkManager can not perform successful scan and not allow
-to establish a new connection. So after suspend/resume (but maybe
-not only then) user is not able to connect to wireless network again.
+Signed-off-by: Nikitas Angelinas <nikitasangelinas@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/ani.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-We can not rely on that the commands (start and abort scan) are
-successful. Even if they are successfully send to the hardware, we can
-not get back notification from firmware (i.e. firmware hung or was
-reseted), or we can get notification when we actually perform abort
-scan in driver code or after that.
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index cc648b6..0496f96 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -14,6 +14,7 @@
+  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
++#include <linux/kernel.h>
+ #include "hw.h"
+ #include "hw-ops.h"
+ 
+@@ -48,7 +49,7 @@ static const struct ani_ofdm_level_entry ofdm_level_table[] = {
+ 	{  7,  8,  0  }  /* lvl 9 */
+ };
+ #define ATH9K_ANI_OFDM_NUM_LEVEL \
+-	(sizeof(ofdm_level_table)/sizeof(ofdm_level_table[0]))
++	ARRAY_SIZE(ofdm_level_table)
+ #define ATH9K_ANI_OFDM_MAX_LEVEL \
+ 	(ATH9K_ANI_OFDM_NUM_LEVEL-1)
+ #define ATH9K_ANI_OFDM_DEF_LEVEL \
+@@ -94,7 +95,7 @@ static const struct ani_cck_level_entry cck_level_table[] = {
+ };
+ 
+ #define ATH9K_ANI_CCK_NUM_LEVEL \
+-	(sizeof(cck_level_table)/sizeof(cck_level_table[0]))
++	ARRAY_SIZE(cck_level_table)
+ #define ATH9K_ANI_CCK_MAX_LEVEL \
+ 	(ATH9K_ANI_CCK_NUM_LEVEL-1)
+ #define ATH9K_ANI_CCK_MAX_LEVEL_LOW_RSSI \
+-- 
+1.7.2.3
 
-To assure we call ieee80211_scan_completed() only once when scan
-was started we use SCAN_SCANNING bit. Code path, which first clear
-STATUS_SCANNING bit will call ieee80211_scan_completed().
-We do this in many cases, in scan complete notification, scan
-abort, device down, etc. Each time we check SCANNING bit.
-
-Tested on 3945, 4965 and 5300 adapters. Tested normal work
-functionality and doing scan stress testing using scripts:
-http://people.redhat.com/sgruszka/misc/test_wifi_scan_reboot.sh
-http://people.redhat.com/sgruszka/misc/test_wifi_scan_updown.sh
-
-v1 -> v2:
-- fix not cleared STATUS_SCAN_HW bit in patch 2
-- merged patch 7 and 8
-- add 4 more patches
