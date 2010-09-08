@@ -1,55 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:27589 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932631Ab0I0DWf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Sep 2010 23:22:35 -0400
-Received: from vs3000.wh2.ocn.ne.jp (125.206.180.163)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0205927752
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 12:22:32 +0900 (JST)
-Subject: [PATCH 4/4] ath5k: Disable interrupts in ath5k_hw_get_tsf64
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Mon, 27 Sep 2010 12:22:32 +0900
-Message-ID: <20100927032232.8754.25109.stgit@tt-desk>
-In-Reply-To: <20100927032211.8754.49870.stgit@tt-desk>
-References: <20100927032211.8754.49870.stgit@tt-desk>
+Received: from mail.atheros.com ([12.19.149.2]:21795 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755172Ab0IHVba (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Sep 2010 17:31:30 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2010 14:31:24 -0700
+Date: Wed, 8 Sep 2010 14:31:28 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Nikitas Angelinas <nikitasangelinas@gmail.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Jouni Malinen <Jouni.Malinen@Atheros.com>,
+	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	Senthilkumar Balasubramanian
+	<Senthilkumar.Balasubramanian@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	Sujith Manoharan <Sujith.Manoharan@Atheros.com>,
+	"nbd@openwrt.org" <nbd@openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 6/8] drivers/net/wireless/ath/ath9k: use ARRAY_SIZE
+ macro in ani.c
+Message-ID: <20100908213128.GD1783@tux>
+References: <1283979457-4649-1-git-send-email-nikitasangelinas@gmail.com>
+ <1283981142-5062-1-git-send-email-nikitasangelinas@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1283981142-5062-1-git-send-email-nikitasangelinas@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The code in ath5k_hw_get_tsf64() is time critical and will return wrong results
-if we get interrupted, so disable local interrupts.
+On Wed, Sep 08, 2010 at 02:25:42PM -0700, Nikitas Angelinas wrote:
+> Replace (sizeof(ofdm_level_table)/sizeof(ofdm_level_table[0]) with
+> ARRAY_SIZE(ofdm_level_table), and (sizeof(cck_level_table)/
+> sizeof(cck_level_table[0]) with ARRAY_SIZE(cck_level_table) in
+> drivers/net/wireless/ath/ath9k/ani.c
+> 
+> Signed-off-by: Nikitas Angelinas <nikitasangelinas@gmail.com>
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- drivers/net/wireless/ath/ath5k/pcu.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+Sure.
 
-diff --git a/drivers/net/wireless/ath/ath5k/pcu.c b/drivers/net/wireless/ath/ath5k/pcu.c
-index 604114f..095d30b 100644
---- a/drivers/net/wireless/ath/ath5k/pcu.c
-+++ b/drivers/net/wireless/ath/ath5k/pcu.c
-@@ -495,6 +495,10 @@ u64 ath5k_hw_get_tsf64(struct ath5k_hw *ah)
- {
- 	u32 tsf_lower, tsf_upper1, tsf_upper2;
- 	int i;
-+	unsigned long flags;
-+
-+	/* This code is time critical - we don't want to be interrupted here */
-+	local_irq_save(flags);
- 
- 	/*
- 	 * While reading TSF upper and then lower part, the clock is still
-@@ -517,6 +521,8 @@ u64 ath5k_hw_get_tsf64(struct ath5k_hw *ah)
- 		tsf_upper1 = tsf_upper2;
- 	}
- 
-+	local_irq_restore(flags);
-+
- 	WARN_ON( i == ATH5K_MAX_TSF_READ );
- 
- 	return (((u64)tsf_upper1 << 32) | tsf_lower);
-
+  Luis
