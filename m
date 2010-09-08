@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:49615 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756552Ab0IGUws (ORCPT
+Received: from cp-out12.libero.it ([212.52.84.112]:57499 "EHLO
+	cp-out12.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752061Ab0IHUit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Sep 2010 16:52:48 -0400
-Received: by qyk36 with SMTP id 36so3847872qyk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Sep 2010 13:52:47 -0700 (PDT)
+	Wed, 8 Sep 2010 16:38:49 -0400
+From: Fabio Rossi <rossi.f@inwind.it>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] ath5k: avoid unneeded calibration error messages
+Date: Wed, 8 Sep 2010 22:37:41 +0200
+Cc: Bruno Randolf <br1@einfach.org>, linux-wireless@vger.kernel.org
+References: <201009070110.11495.rossi.f@inwind.it> <201009070948.29066.br1@einfach.org>
+In-Reply-To: <201009070948.29066.br1@einfach.org>
 MIME-Version: 1.0
-In-Reply-To: <5144f966da86d4ab0984bc15bdd5fcab@localhost>
-References: <1282764076.3667.12.camel@jlt3.sipsolutions.net>
-	<AANLkTikc0-FbeRHm-0rxrWCGgaxa7svCsQmqpAD-87cq@mail.gmail.com>
-	<5144f966da86d4ab0984bc15bdd5fcab@localhost>
-Date: Tue, 7 Sep 2010 13:52:47 -0700
-Message-ID: <AANLkTimgvEShOKnA3TTf0_3p2ghP2OL8ngKPBgpkf+zf@mail.gmail.com>
-Subject: Re: libertas_tf
-From: Steve deRosier <steve@cozybit.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Message-Id: <201009082237.41479.rossi.f@inwind.it>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>> Is anyone using libertas_tf? I believe it has been broken since
->>> 2.6.34-rc1. Anyone want to fix it?
->
->
-> Is it working though on kernels newer than that? or do you have to set the
-> MAC addr manually?
->
+Don't generate calibration errors messages when not needed.
 
-I've got it working on 2.6.34-rc5-wl, branched off commit
-~8425ee8329f33 sometimes near the end of April 2010.  I've
-significantly reworked some MAC addr stuff, including forcing the
-module to request the MAC addr from the hardware and using that to set
-the addr before the calls to setup mac80211.
-
-I'm now working on getting it all up to head, so patches should be
-coming soon.  Actually, on that note, how would you prefer I get them
-to you?  We're talking about an entire new module, libertas_tf_sdio,
-and lots of patches to the existing libertas_tf modules.  Something
-like 40+ patches.  Would you prefer a patchset posted, or me to squash
-a bunch into fewer but larger patches, or would you prefer to pull
-from my git tree?
-
-- Steve
+Signed-off-by: Fabio Rossi <rossi.f@inwind.it>
+---
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c 
+b/drivers/net/wireless/ath/ath5k/phy.c                                             
+index 984ba92..4932bf2 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -1377,7 +1377,7 @@ ath5k_hw_rf511x_iq_calibrate(struct ath5k_hw *ah)
+ 
+        /* protect against divide by 0 and loss of sign bits */
+        if (i_coffd == 0 || q_coffd < 2)
+-               return -1;
++               return 0;
+ 
+        i_coff = (-iq_corr) / i_coffd;
+        i_coff = clamp(i_coff, -32, 31); /* signed 6 bit */
