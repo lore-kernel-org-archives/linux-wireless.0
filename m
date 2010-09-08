@@ -1,274 +1,676 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37885 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753322Ab0IWTiy (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:36123 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753273Ab0IHS6N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Sep 2010 15:38:54 -0400
-Message-Id: <20100923193818.848665239@sipsolutions.net>
-Date: Thu, 23 Sep 2010 21:37:49 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC v2 2/3] mac80211: consolidate packet processing
-References: <20100923193747.677517441@sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 8 Sep 2010 14:58:13 -0400
+Received: by mail-ew0-f46.google.com with SMTP id 23so343042ewy.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2010 11:58:12 -0700 (PDT)
+From: Ivo van Doorn <ivdoorn@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 03/06] rt2x00: Check for specific changed flags when updating the erp config
+Date: Wed, 8 Sep 2010 20:56:32 +0200
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+References: <201009082055.38033.IvDoorn@gmail.com> <201009082056.05708.IvDoorn@gmail.com>
+In-Reply-To: <201009082056.05708.IvDoorn@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201009082056.33182.IvDoorn@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 
-There are now four instances of vaguely the same
-code that does packet preparation, checking if
-for MMIC errors and reporting them, and then
-invoking packet processing. Consolidate all of
-these.
+Previously rt2x00 was always updating all erp related config variables
+even though mac80211 might only have changed one. Hence, pass the
+changed flags to the config_erp driver callback so that the driver
+can limit the changes to the correct values.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+This fixes an issue in AP mode where the beacon interval is not
+initialized (and thus zero) but still sent to the hardware causing an
+interrupt storm on rt2800pci hanging the system.
+
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- net/mac80211/rx.c |  165 ++++++++++++++++++++----------------------------------
- 1 file changed, 62 insertions(+), 103 deletions(-)
+ drivers/net/wireless/rt2x00/rt2400pci.c    |  122 +++++++++++++++------------
+ drivers/net/wireless/rt2x00/rt2500pci.c    |  123 ++++++++++++++++------------
+ drivers/net/wireless/rt2x00/rt2500usb.c    |   34 +++++---
+ drivers/net/wireless/rt2x00/rt2800lib.c    |   60 ++++++++------
+ drivers/net/wireless/rt2x00/rt2800lib.h    |    3 +-
+ drivers/net/wireless/rt2x00/rt2x00.h       |    3 +-
+ drivers/net/wireless/rt2x00/rt2x00config.c |    5 +-
+ drivers/net/wireless/rt2x00/rt2x00lib.h    |    3 +-
+ drivers/net/wireless/rt2x00/rt2x00mac.c    |    6 +-
+ drivers/net/wireless/rt2x00/rt61pci.c      |   47 ++++++----
+ drivers/net/wireless/rt2x00/rt73usb.c      |   47 ++++++----
+ 11 files changed, 264 insertions(+), 189 deletions(-)
 
---- wireless-testing.orig/net/mac80211/rx.c	2010-09-23 21:37:15.000000000 +0200
-+++ wireless-testing/net/mac80211/rx.c	2010-09-23 21:37:29.000000000 +0200
-@@ -2443,18 +2443,13 @@ static void ieee80211_rx_handlers(struct
- 	}
+diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
+index 103c711..d49e830 100644
+--- a/drivers/net/wireless/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/rt2x00/rt2400pci.c
+@@ -321,7 +321,8 @@ static void rt2400pci_config_intf(struct rt2x00_dev *rt2x00dev,
  }
  
--static void ieee80211_invoke_rx_handlers(struct ieee80211_sub_if_data *sdata,
--					 struct ieee80211_rx_data *rx,
--					 struct sk_buff *skb)
-+static void ieee80211_invoke_rx_handlers(struct ieee80211_rx_data *rx)
+ static void rt2400pci_config_erp(struct rt2x00_dev *rt2x00dev,
+-				 struct rt2x00lib_erp *erp)
++				 struct rt2x00lib_erp *erp,
++				 u32 changed)
  {
- 	struct sk_buff_head reorder_release;
- 	ieee80211_rx_result res = RX_DROP_MONITOR;
- 
- 	__skb_queue_head_init(&reorder_release);
- 
--	rx->skb = skb;
--	rx->sdata = sdata;
+ 	int preamble_mask;
+ 	u32 reg;
+@@ -329,59 +330,72 @@ static void rt2400pci_config_erp(struct rt2x00_dev *rt2x00dev,
+ 	/*
+ 	 * When short preamble is enabled, we should set bit 0x08
+ 	 */
+-	preamble_mask = erp->short_preamble << 3;
 -
- #define CALL_RXH(rxh)			\
- 	do {				\
- 		res = rxh(rx);		\
-@@ -2598,21 +2593,63 @@ static int prepare_for_handlers(struct i
+-	rt2x00pci_register_read(rt2x00dev, TXCSR1, &reg);
+-	rt2x00_set_field32(&reg, TXCSR1_ACK_TIMEOUT, 0x1ff);
+-	rt2x00_set_field32(&reg, TXCSR1_ACK_CONSUME_TIME, 0x13a);
+-	rt2x00_set_field32(&reg, TXCSR1_TSF_OFFSET, IEEE80211_HEADER);
+-	rt2x00_set_field32(&reg, TXCSR1_AUTORESPONDER, 1);
+-	rt2x00pci_register_write(rt2x00dev, TXCSR1, reg);
+-
+-	rt2x00pci_register_read(rt2x00dev, ARCSR2, &reg);
+-	rt2x00_set_field32(&reg, ARCSR2_SIGNAL, 0x00);
+-	rt2x00_set_field32(&reg, ARCSR2_SERVICE, 0x04);
+-	rt2x00_set_field32(&reg, ARCSR2_LENGTH, GET_DURATION(ACK_SIZE, 10));
+-	rt2x00pci_register_write(rt2x00dev, ARCSR2, reg);
+-
+-	rt2x00pci_register_read(rt2x00dev, ARCSR3, &reg);
+-	rt2x00_set_field32(&reg, ARCSR3_SIGNAL, 0x01 | preamble_mask);
+-	rt2x00_set_field32(&reg, ARCSR3_SERVICE, 0x04);
+-	rt2x00_set_field32(&reg, ARCSR2_LENGTH, GET_DURATION(ACK_SIZE, 20));
+-	rt2x00pci_register_write(rt2x00dev, ARCSR3, reg);
+-
+-	rt2x00pci_register_read(rt2x00dev, ARCSR4, &reg);
+-	rt2x00_set_field32(&reg, ARCSR4_SIGNAL, 0x02 | preamble_mask);
+-	rt2x00_set_field32(&reg, ARCSR4_SERVICE, 0x04);
+-	rt2x00_set_field32(&reg, ARCSR2_LENGTH, GET_DURATION(ACK_SIZE, 55));
+-	rt2x00pci_register_write(rt2x00dev, ARCSR4, reg);
+-
+-	rt2x00pci_register_read(rt2x00dev, ARCSR5, &reg);
+-	rt2x00_set_field32(&reg, ARCSR5_SIGNAL, 0x03 | preamble_mask);
+-	rt2x00_set_field32(&reg, ARCSR5_SERVICE, 0x84);
+-	rt2x00_set_field32(&reg, ARCSR2_LENGTH, GET_DURATION(ACK_SIZE, 110));
+-	rt2x00pci_register_write(rt2x00dev, ARCSR5, reg);
+-
+-	rt2x00pci_register_write(rt2x00dev, ARCSR1, erp->basic_rates);
++	if (changed & BSS_CHANGED_ERP_PREAMBLE) {
++		preamble_mask = erp->short_preamble << 3;
++
++		rt2x00pci_register_read(rt2x00dev, TXCSR1, &reg);
++		rt2x00_set_field32(&reg, TXCSR1_ACK_TIMEOUT, 0x1ff);
++		rt2x00_set_field32(&reg, TXCSR1_ACK_CONSUME_TIME, 0x13a);
++		rt2x00_set_field32(&reg, TXCSR1_TSF_OFFSET, IEEE80211_HEADER);
++		rt2x00_set_field32(&reg, TXCSR1_AUTORESPONDER, 1);
++		rt2x00pci_register_write(rt2x00dev, TXCSR1, reg);
++
++		rt2x00pci_register_read(rt2x00dev, ARCSR2, &reg);
++		rt2x00_set_field32(&reg, ARCSR2_SIGNAL, 0x00);
++		rt2x00_set_field32(&reg, ARCSR2_SERVICE, 0x04);
++		rt2x00_set_field32(&reg, ARCSR2_LENGTH,
++				   GET_DURATION(ACK_SIZE, 10));
++		rt2x00pci_register_write(rt2x00dev, ARCSR2, reg);
++
++		rt2x00pci_register_read(rt2x00dev, ARCSR3, &reg);
++		rt2x00_set_field32(&reg, ARCSR3_SIGNAL, 0x01 | preamble_mask);
++		rt2x00_set_field32(&reg, ARCSR3_SERVICE, 0x04);
++		rt2x00_set_field32(&reg, ARCSR2_LENGTH,
++				   GET_DURATION(ACK_SIZE, 20));
++		rt2x00pci_register_write(rt2x00dev, ARCSR3, reg);
++
++		rt2x00pci_register_read(rt2x00dev, ARCSR4, &reg);
++		rt2x00_set_field32(&reg, ARCSR4_SIGNAL, 0x02 | preamble_mask);
++		rt2x00_set_field32(&reg, ARCSR4_SERVICE, 0x04);
++		rt2x00_set_field32(&reg, ARCSR2_LENGTH,
++				   GET_DURATION(ACK_SIZE, 55));
++		rt2x00pci_register_write(rt2x00dev, ARCSR4, reg);
++
++		rt2x00pci_register_read(rt2x00dev, ARCSR5, &reg);
++		rt2x00_set_field32(&reg, ARCSR5_SIGNAL, 0x03 | preamble_mask);
++		rt2x00_set_field32(&reg, ARCSR5_SERVICE, 0x84);
++		rt2x00_set_field32(&reg, ARCSR2_LENGTH,
++				   GET_DURATION(ACK_SIZE, 110));
++		rt2x00pci_register_write(rt2x00dev, ARCSR5, reg);
++	}
+ 
+-	rt2x00pci_register_read(rt2x00dev, CSR11, &reg);
+-	rt2x00_set_field32(&reg, CSR11_SLOT_TIME, erp->slot_time);
+-	rt2x00pci_register_write(rt2x00dev, CSR11, reg);
++	if (changed & BSS_CHANGED_BASIC_RATES)
++		rt2x00pci_register_write(rt2x00dev, ARCSR1, erp->basic_rates);
+ 
+-	rt2x00pci_register_read(rt2x00dev, CSR12, &reg);
+-	rt2x00_set_field32(&reg, CSR12_BEACON_INTERVAL, erp->beacon_int * 16);
+-	rt2x00_set_field32(&reg, CSR12_CFP_MAX_DURATION, erp->beacon_int * 16);
+-	rt2x00pci_register_write(rt2x00dev, CSR12, reg);
++	if (changed & BSS_CHANGED_ERP_SLOT) {
++		rt2x00pci_register_read(rt2x00dev, CSR11, &reg);
++		rt2x00_set_field32(&reg, CSR11_SLOT_TIME, erp->slot_time);
++		rt2x00pci_register_write(rt2x00dev, CSR11, reg);
+ 
+-	rt2x00pci_register_read(rt2x00dev, CSR18, &reg);
+-	rt2x00_set_field32(&reg, CSR18_SIFS, erp->sifs);
+-	rt2x00_set_field32(&reg, CSR18_PIFS, erp->pifs);
+-	rt2x00pci_register_write(rt2x00dev, CSR18, reg);
++		rt2x00pci_register_read(rt2x00dev, CSR18, &reg);
++		rt2x00_set_field32(&reg, CSR18_SIFS, erp->sifs);
++		rt2x00_set_field32(&reg, CSR18_PIFS, erp->pifs);
++		rt2x00pci_register_write(rt2x00dev, CSR18, reg);
+ 
+-	rt2x00pci_register_read(rt2x00dev, CSR19, &reg);
+-	rt2x00_set_field32(&reg, CSR19_DIFS, erp->difs);
+-	rt2x00_set_field32(&reg, CSR19_EIFS, erp->eifs);
+-	rt2x00pci_register_write(rt2x00dev, CSR19, reg);
++		rt2x00pci_register_read(rt2x00dev, CSR19, &reg);
++		rt2x00_set_field32(&reg, CSR19_DIFS, erp->difs);
++		rt2x00_set_field32(&reg, CSR19_EIFS, erp->eifs);
++		rt2x00pci_register_write(rt2x00dev, CSR19, reg);
++	}
++
++	if (changed & BSS_CHANGED_BEACON_INT) {
++		rt2x00pci_register_read(rt2x00dev, CSR12, &reg);
++		rt2x00_set_field32(&reg, CSR12_BEACON_INTERVAL,
++				   erp->beacon_int * 16);
++		rt2x00_set_field32(&reg, CSR12_CFP_MAX_DURATION,
++				   erp->beacon_int * 16);
++		rt2x00pci_register_write(rt2x00dev, CSR12, reg);
++	}
  }
  
- /*
-+ * This function returns whether or not the SKB
-+ * was destined for RX processing or not, which,
-+ * if consume is true, is equivalent to whether
-+ * or not the skb was consumed.
-+ */
-+static bool ieee80211_prepare_and_rx_handle(struct ieee80211_rx_data *rx,
-+					    struct sk_buff *skb, bool consume)
-+{
-+	struct ieee80211_local *local = rx->local;
-+	struct ieee80211_sub_if_data *sdata = rx->sdata;
-+	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(rx->skb);
-+	struct ieee80211_hdr *hdr = (void *)skb->data;
-+	int prepares;
-+
-+	rx->skb = skb;
-+	rx->flags |= IEEE80211_RX_RA_MATCH;
-+	prepares = prepare_for_handlers(rx, hdr);
-+
-+	if (!prepares)
-+		return false;
-+
-+	if (status->flag & RX_FLAG_MMIC_ERROR) {
-+		if (rx->flags & IEEE80211_RX_RA_MATCH)
-+			ieee80211_rx_michael_mic_report(hdr, rx);
-+		return false;
-+	}
-+
-+	if (!consume) {
-+		skb = skb_copy(skb, GFP_ATOMIC);
-+		if (!skb) {
-+			if (net_ratelimit())
-+				wiphy_debug(local->hw.wiphy,
-+					"failed to copy multicast frame for %s\n",
-+					sdata->name);
-+			return true;
-+		}
-+
-+		rx->skb = skb;
-+	}
-+
-+	ieee80211_invoke_rx_handlers(rx);
-+	return true;
-+}
-+
-+/*
-  * This is the actual Rx frames handler. as it blongs to Rx path it must
-  * be called with rcu_read_lock protection.
-  */
- static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 					 struct sk_buff *skb)
+ static void rt2400pci_config_ant(struct rt2x00_dev *rt2x00dev,
+diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
+index ab05071..2214c32 100644
+--- a/drivers/net/wireless/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/rt2x00/rt2500pci.c
+@@ -327,7 +327,8 @@ static void rt2500pci_config_intf(struct rt2x00_dev *rt2x00dev,
+ }
+ 
+ static void rt2500pci_config_erp(struct rt2x00_dev *rt2x00dev,
+-				 struct rt2x00lib_erp *erp)
++				 struct rt2x00lib_erp *erp,
++				 u32 changed)
  {
--	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
- 	struct ieee80211_local *local = hw_to_local(hw);
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_hdr *hdr;
- 	__le16 fc;
- 	struct ieee80211_rx_data rx;
--	int prepares;
--	struct ieee80211_sub_if_data *prev = NULL;
--	struct sk_buff *skb_new;
-+	struct ieee80211_sub_if_data *prev;
- 	struct sta_info *sta, *tmp, *prev_sta;
- 	bool found_sta = false;
- 	int err = 0;
-@@ -2645,8 +2682,10 @@ static void __ieee80211_rx_handle_packet
- 
- 	if (ieee80211_is_data(fc)) {
- 		prev_sta = NULL;
+ 	int preamble_mask;
+ 	u32 reg;
+@@ -335,59 +336,73 @@ static void rt2500pci_config_erp(struct rt2x00_dev *rt2x00dev,
+ 	/*
+ 	 * When short preamble is enabled, we should set bit 0x08
+ 	 */
+-	preamble_mask = erp->short_preamble << 3;
+-
+-	rt2x00pci_register_read(rt2x00dev, TXCSR1, &reg);
+-	rt2x00_set_field32(&reg, TXCSR1_ACK_TIMEOUT, 0x162);
+-	rt2x00_set_field32(&reg, TXCSR1_ACK_CONSUME_TIME, 0xa2);
+-	rt2x00_set_field32(&reg, TXCSR1_TSF_OFFSET, IEEE80211_HEADER);
+-	rt2x00_set_field32(&reg, TXCSR1_AUTORESPONDER, 1);
+-	rt2x00pci_register_write(rt2x00dev, TXCSR1, reg);
+-
+-	rt2x00pci_register_read(rt2x00dev, ARCSR2, &reg);
+-	rt2x00_set_field32(&reg, ARCSR2_SIGNAL, 0x00);
+-	rt2x00_set_field32(&reg, ARCSR2_SERVICE, 0x04);
+-	rt2x00_set_field32(&reg, ARCSR2_LENGTH, GET_DURATION(ACK_SIZE, 10));
+-	rt2x00pci_register_write(rt2x00dev, ARCSR2, reg);
+-
+-	rt2x00pci_register_read(rt2x00dev, ARCSR3, &reg);
+-	rt2x00_set_field32(&reg, ARCSR3_SIGNAL, 0x01 | preamble_mask);
+-	rt2x00_set_field32(&reg, ARCSR3_SERVICE, 0x04);
+-	rt2x00_set_field32(&reg, ARCSR2_LENGTH, GET_DURATION(ACK_SIZE, 20));
+-	rt2x00pci_register_write(rt2x00dev, ARCSR3, reg);
+-
+-	rt2x00pci_register_read(rt2x00dev, ARCSR4, &reg);
+-	rt2x00_set_field32(&reg, ARCSR4_SIGNAL, 0x02 | preamble_mask);
+-	rt2x00_set_field32(&reg, ARCSR4_SERVICE, 0x04);
+-	rt2x00_set_field32(&reg, ARCSR2_LENGTH, GET_DURATION(ACK_SIZE, 55));
+-	rt2x00pci_register_write(rt2x00dev, ARCSR4, reg);
+-
+-	rt2x00pci_register_read(rt2x00dev, ARCSR5, &reg);
+-	rt2x00_set_field32(&reg, ARCSR5_SIGNAL, 0x03 | preamble_mask);
+-	rt2x00_set_field32(&reg, ARCSR5_SERVICE, 0x84);
+-	rt2x00_set_field32(&reg, ARCSR2_LENGTH, GET_DURATION(ACK_SIZE, 110));
+-	rt2x00pci_register_write(rt2x00dev, ARCSR5, reg);
+-
+-	rt2x00pci_register_write(rt2x00dev, ARCSR1, erp->basic_rates);
++	if (changed & BSS_CHANGED_ERP_PREAMBLE) {
++		preamble_mask = erp->short_preamble << 3;
 +
- 		for_each_sta_info(local, hdr->addr2, sta, tmp) {
- 			found_sta = true;
++		rt2x00pci_register_read(rt2x00dev, TXCSR1, &reg);
++		rt2x00_set_field32(&reg, TXCSR1_ACK_TIMEOUT, 0x162);
++		rt2x00_set_field32(&reg, TXCSR1_ACK_CONSUME_TIME, 0xa2);
++		rt2x00_set_field32(&reg, TXCSR1_TSF_OFFSET, IEEE80211_HEADER);
++		rt2x00_set_field32(&reg, TXCSR1_AUTORESPONDER, 1);
++		rt2x00pci_register_write(rt2x00dev, TXCSR1, reg);
 +
- 			if (!prev_sta) {
- 				prev_sta = sta;
- 				continue;
-@@ -2654,65 +2693,23 @@ static void __ieee80211_rx_handle_packet
++		rt2x00pci_register_read(rt2x00dev, ARCSR2, &reg);
++		rt2x00_set_field32(&reg, ARCSR2_SIGNAL, 0x00);
++		rt2x00_set_field32(&reg, ARCSR2_SERVICE, 0x04);
++		rt2x00_set_field32(&reg, ARCSR2_LENGTH,
++				   GET_DURATION(ACK_SIZE, 10));
++		rt2x00pci_register_write(rt2x00dev, ARCSR2, reg);
++
++		rt2x00pci_register_read(rt2x00dev, ARCSR3, &reg);
++		rt2x00_set_field32(&reg, ARCSR3_SIGNAL, 0x01 | preamble_mask);
++		rt2x00_set_field32(&reg, ARCSR3_SERVICE, 0x04);
++		rt2x00_set_field32(&reg, ARCSR2_LENGTH,
++				   GET_DURATION(ACK_SIZE, 20));
++		rt2x00pci_register_write(rt2x00dev, ARCSR3, reg);
++
++		rt2x00pci_register_read(rt2x00dev, ARCSR4, &reg);
++		rt2x00_set_field32(&reg, ARCSR4_SIGNAL, 0x02 | preamble_mask);
++		rt2x00_set_field32(&reg, ARCSR4_SERVICE, 0x04);
++		rt2x00_set_field32(&reg, ARCSR2_LENGTH,
++				   GET_DURATION(ACK_SIZE, 55));
++		rt2x00pci_register_write(rt2x00dev, ARCSR4, reg);
++
++		rt2x00pci_register_read(rt2x00dev, ARCSR5, &reg);
++		rt2x00_set_field32(&reg, ARCSR5_SIGNAL, 0x03 | preamble_mask);
++		rt2x00_set_field32(&reg, ARCSR5_SERVICE, 0x84);
++		rt2x00_set_field32(&reg, ARCSR2_LENGTH,
++				   GET_DURATION(ACK_SIZE, 110));
++		rt2x00pci_register_write(rt2x00dev, ARCSR5, reg);
++	}
  
- 			rx.sta = prev_sta;
- 			rx.sdata = prev_sta->sdata;
-+			ieee80211_prepare_and_rx_handle(&rx, skb, false);
+-	rt2x00pci_register_read(rt2x00dev, CSR11, &reg);
+-	rt2x00_set_field32(&reg, CSR11_SLOT_TIME, erp->slot_time);
+-	rt2x00pci_register_write(rt2x00dev, CSR11, reg);
++	if (changed & BSS_CHANGED_BASIC_RATES)
++		rt2x00pci_register_write(rt2x00dev, ARCSR1, erp->basic_rates);
++
++	if (changed & BSS_CHANGED_ERP_SLOT) {
++		rt2x00pci_register_read(rt2x00dev, CSR11, &reg);
++		rt2x00_set_field32(&reg, CSR11_SLOT_TIME, erp->slot_time);
++		rt2x00pci_register_write(rt2x00dev, CSR11, reg);
  
--			rx.flags |= IEEE80211_RX_RA_MATCH;
--			prepares = prepare_for_handlers(&rx, hdr);
--			if (!prepares)
--				goto next_sta;
--
--			if (status->flag & RX_FLAG_MMIC_ERROR) {
--				if (rx.flags & IEEE80211_RX_RA_MATCH)
--					ieee80211_rx_michael_mic_report(hdr, &rx);
--				goto next_sta;
--			}
--
--			/*
--			 * frame was destined for the previous interface
--			 * so invoke RX handlers for it
--			 */
--			skb_new = skb_copy(skb, GFP_ATOMIC);
--			if (!skb_new) {
--				if (net_ratelimit())
--					wiphy_debug(local->hw.wiphy,
--						    "failed to copy multicast"
--						    " frame for %s\n",
--						    prev_sta->sdata->name);
--				goto next_sta;
--			}
--			ieee80211_invoke_rx_handlers(prev_sta->sdata, &rx,
--						     skb_new);
--next_sta:
- 			prev_sta = sta;
--		} /* for all STA info */
-+		}
+-	rt2x00pci_register_read(rt2x00dev, CSR12, &reg);
+-	rt2x00_set_field32(&reg, CSR12_BEACON_INTERVAL, erp->beacon_int * 16);
+-	rt2x00_set_field32(&reg, CSR12_CFP_MAX_DURATION, erp->beacon_int * 16);
+-	rt2x00pci_register_write(rt2x00dev, CSR12, reg);
++		rt2x00pci_register_read(rt2x00dev, CSR18, &reg);
++		rt2x00_set_field32(&reg, CSR18_SIFS, erp->sifs);
++		rt2x00_set_field32(&reg, CSR18_PIFS, erp->pifs);
++		rt2x00pci_register_write(rt2x00dev, CSR18, reg);
  
- 		if (prev_sta) {
- 			rx.sta = prev_sta;
- 			rx.sdata = prev_sta->sdata;
- 
--			rx.flags |= IEEE80211_RX_RA_MATCH;
--			prepares = prepare_for_handlers(&rx, hdr);
--			if (!prepares)
--				prev_sta = NULL;
--
--			if (prev_sta && status->flag & RX_FLAG_MMIC_ERROR) {
--				if (rx.flags & IEEE80211_RX_RA_MATCH)
--					ieee80211_rx_michael_mic_report(hdr, &rx);
--				prev_sta = NULL;
--			}
--		}
--
--
--		if (prev_sta) {
--			ieee80211_invoke_rx_handlers(prev_sta->sdata, &rx, skb);
--			return;
--		} else {
--			if (found_sta) {
--				dev_kfree_skb(skb);
-+			if (ieee80211_prepare_and_rx_handle(&rx, skb, true))
- 				return;
--			}
- 		}
--	} /* if data frame */
+-	rt2x00pci_register_read(rt2x00dev, CSR18, &reg);
+-	rt2x00_set_field32(&reg, CSR18_SIFS, erp->sifs);
+-	rt2x00_set_field32(&reg, CSR18_PIFS, erp->pifs);
+-	rt2x00pci_register_write(rt2x00dev, CSR18, reg);
++		rt2x00pci_register_read(rt2x00dev, CSR19, &reg);
++		rt2x00_set_field32(&reg, CSR19_DIFS, erp->difs);
++		rt2x00_set_field32(&reg, CSR19_EIFS, erp->eifs);
++		rt2x00pci_register_write(rt2x00dev, CSR19, reg);
 +	}
 +
- 	if (!found_sta) {
-+		prev = NULL;
-+
- 		list_for_each_entry_rcu(sdata, &local->interfaces, list) {
- 			if (!ieee80211_sdata_running(sdata))
- 				continue;
-@@ -2734,35 +2731,8 @@ next_sta:
++	if (changed & BSS_CHANGED_BEACON_INT) {
++		rt2x00pci_register_read(rt2x00dev, CSR12, &reg);
++		rt2x00_set_field32(&reg, CSR12_BEACON_INTERVAL,
++				   erp->beacon_int * 16);
++		rt2x00_set_field32(&reg, CSR12_CFP_MAX_DURATION,
++				   erp->beacon_int * 16);
++		rt2x00pci_register_write(rt2x00dev, CSR12, reg);
++	}
  
- 			rx.sta = sta_info_get_bss(prev, hdr->addr2);
- 			rx.sdata = prev;
-+			ieee80211_prepare_and_rx_handle(&rx, skb, false);
- 
--			rx.flags |= IEEE80211_RX_RA_MATCH;
--			prepares = prepare_for_handlers(&rx, hdr);
--
--			if (!prepares)
--				goto next;
--
--			if (status->flag & RX_FLAG_MMIC_ERROR) {
--				if (rx.flags & IEEE80211_RX_RA_MATCH)
--					ieee80211_rx_michael_mic_report(hdr,
--									&rx);
--				goto next;
--			}
--
--			/*
--			 * frame was destined for the previous interface
--			 * so invoke RX handlers for it
--			 */
--
--			skb_new = skb_copy(skb, GFP_ATOMIC);
--			if (!skb_new) {
--				if (net_ratelimit())
--					wiphy_debug(local->hw.wiphy,
--						    "failed to copy multicast frame for %s\n",
--						    prev->name);
--				goto next;
--			}
--			ieee80211_invoke_rx_handlers(prev, &rx, skb_new);
--next:
- 			prev = sdata;
- 		}
- 
-@@ -2770,24 +2740,13 @@ next:
- 			rx.sta = sta_info_get_bss(prev, hdr->addr2);
- 			rx.sdata = prev;
- 
--			rx.flags |= IEEE80211_RX_RA_MATCH;
--			prepares = prepare_for_handlers(&rx, hdr);
--
--			if (!prepares)
--				prev = NULL;
--
--			if (prev && status->flag & RX_FLAG_MMIC_ERROR) {
--				if (rx.flags & IEEE80211_RX_RA_MATCH)
--					ieee80211_rx_michael_mic_report(hdr,
--									&rx);
--				prev = NULL;
--			}
-+			if (ieee80211_prepare_and_rx_handle(&rx, skb, true))
-+				return;
- 		}
-+
- 	}
--	if (prev)
--		ieee80211_invoke_rx_handlers(prev, &rx, skb);
--	else
--		dev_kfree_skb(skb);
-+
-+	dev_kfree_skb(skb);
+-	rt2x00pci_register_read(rt2x00dev, CSR19, &reg);
+-	rt2x00_set_field32(&reg, CSR19_DIFS, erp->difs);
+-	rt2x00_set_field32(&reg, CSR19_EIFS, erp->eifs);
+-	rt2x00pci_register_write(rt2x00dev, CSR19, reg);
  }
  
- /*
-
+ static void rt2500pci_config_ant(struct rt2x00_dev *rt2x00dev,
+diff --git a/drivers/net/wireless/rt2x00/rt2500usb.c b/drivers/net/wireless/rt2x00/rt2500usb.c
+index db64df4..6e94356 100644
+--- a/drivers/net/wireless/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/rt2x00/rt2500usb.c
+@@ -494,24 +494,34 @@ static void rt2500usb_config_intf(struct rt2x00_dev *rt2x00dev,
+ }
+ 
+ static void rt2500usb_config_erp(struct rt2x00_dev *rt2x00dev,
+-				 struct rt2x00lib_erp *erp)
++				 struct rt2x00lib_erp *erp,
++				 u32 changed)
+ {
+ 	u16 reg;
+ 
+-	rt2500usb_register_read(rt2x00dev, TXRX_CSR10, &reg);
+-	rt2x00_set_field16(&reg, TXRX_CSR10_AUTORESPOND_PREAMBLE,
+-			   !!erp->short_preamble);
+-	rt2500usb_register_write(rt2x00dev, TXRX_CSR10, reg);
++	if (changed & BSS_CHANGED_ERP_PREAMBLE) {
++		rt2500usb_register_read(rt2x00dev, TXRX_CSR10, &reg);
++		rt2x00_set_field16(&reg, TXRX_CSR10_AUTORESPOND_PREAMBLE,
++				   !!erp->short_preamble);
++		rt2500usb_register_write(rt2x00dev, TXRX_CSR10, reg);
++	}
+ 
+-	rt2500usb_register_write(rt2x00dev, TXRX_CSR11, erp->basic_rates);
++	if (changed & BSS_CHANGED_BASIC_RATES)
++		rt2500usb_register_write(rt2x00dev, TXRX_CSR11,
++					 erp->basic_rates);
+ 
+-	rt2500usb_register_read(rt2x00dev, TXRX_CSR18, &reg);
+-	rt2x00_set_field16(&reg, TXRX_CSR18_INTERVAL, erp->beacon_int * 4);
+-	rt2500usb_register_write(rt2x00dev, TXRX_CSR18, reg);
++	if (changed & BSS_CHANGED_BEACON_INT) {
++		rt2500usb_register_read(rt2x00dev, TXRX_CSR18, &reg);
++		rt2x00_set_field16(&reg, TXRX_CSR18_INTERVAL,
++				   erp->beacon_int * 4);
++		rt2500usb_register_write(rt2x00dev, TXRX_CSR18, reg);
++	}
+ 
+-	rt2500usb_register_write(rt2x00dev, MAC_CSR10, erp->slot_time);
+-	rt2500usb_register_write(rt2x00dev, MAC_CSR11, erp->sifs);
+-	rt2500usb_register_write(rt2x00dev, MAC_CSR12, erp->eifs);
++	if (changed & BSS_CHANGED_ERP_SLOT) {
++		rt2500usb_register_write(rt2x00dev, MAC_CSR10, erp->slot_time);
++		rt2500usb_register_write(rt2x00dev, MAC_CSR11, erp->sifs);
++		rt2500usb_register_write(rt2x00dev, MAC_CSR12, erp->eifs);
++	}
+ }
+ 
+ static void rt2500usb_config_ant(struct rt2x00_dev *rt2x00dev,
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 9cfb9b31..3bb6749 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -1159,38 +1159,50 @@ void rt2800_config_intf(struct rt2x00_dev *rt2x00dev, struct rt2x00_intf *intf,
+ }
+ EXPORT_SYMBOL_GPL(rt2800_config_intf);
+ 
+-void rt2800_config_erp(struct rt2x00_dev *rt2x00dev, struct rt2x00lib_erp *erp)
++void rt2800_config_erp(struct rt2x00_dev *rt2x00dev, struct rt2x00lib_erp *erp,
++		       u32 changed)
+ {
+ 	u32 reg;
+ 
+-	rt2800_register_read(rt2x00dev, AUTO_RSP_CFG, &reg);
+-	rt2x00_set_field32(&reg, AUTO_RSP_CFG_BAC_ACK_POLICY,
+-			   !!erp->short_preamble);
+-	rt2x00_set_field32(&reg, AUTO_RSP_CFG_AR_PREAMBLE,
+-			   !!erp->short_preamble);
+-	rt2800_register_write(rt2x00dev, AUTO_RSP_CFG, reg);
++	if (changed & BSS_CHANGED_ERP_PREAMBLE) {
++		rt2800_register_read(rt2x00dev, AUTO_RSP_CFG, &reg);
++		rt2x00_set_field32(&reg, AUTO_RSP_CFG_BAC_ACK_POLICY,
++				   !!erp->short_preamble);
++		rt2x00_set_field32(&reg, AUTO_RSP_CFG_AR_PREAMBLE,
++				   !!erp->short_preamble);
++		rt2800_register_write(rt2x00dev, AUTO_RSP_CFG, reg);
++	}
+ 
+-	rt2800_register_read(rt2x00dev, OFDM_PROT_CFG, &reg);
+-	rt2x00_set_field32(&reg, OFDM_PROT_CFG_PROTECT_CTRL,
+-			   erp->cts_protection ? 2 : 0);
+-	rt2800_register_write(rt2x00dev, OFDM_PROT_CFG, reg);
++	if (changed & BSS_CHANGED_ERP_CTS_PROT) {
++		rt2800_register_read(rt2x00dev, OFDM_PROT_CFG, &reg);
++		rt2x00_set_field32(&reg, OFDM_PROT_CFG_PROTECT_CTRL,
++				   erp->cts_protection ? 2 : 0);
++		rt2800_register_write(rt2x00dev, OFDM_PROT_CFG, reg);
++	}
+ 
+-	rt2800_register_write(rt2x00dev, LEGACY_BASIC_RATE,
+-				 erp->basic_rates);
+-	rt2800_register_write(rt2x00dev, HT_BASIC_RATE, 0x00008003);
++	if (changed & BSS_CHANGED_BASIC_RATES) {
++		rt2800_register_write(rt2x00dev, LEGACY_BASIC_RATE,
++					 erp->basic_rates);
++		rt2800_register_write(rt2x00dev, HT_BASIC_RATE, 0x00008003);
++	}
+ 
+-	rt2800_register_read(rt2x00dev, BKOFF_SLOT_CFG, &reg);
+-	rt2x00_set_field32(&reg, BKOFF_SLOT_CFG_SLOT_TIME, erp->slot_time);
+-	rt2800_register_write(rt2x00dev, BKOFF_SLOT_CFG, reg);
++	if (changed & BSS_CHANGED_ERP_SLOT) {
++		rt2800_register_read(rt2x00dev, BKOFF_SLOT_CFG, &reg);
++		rt2x00_set_field32(&reg, BKOFF_SLOT_CFG_SLOT_TIME,
++				   erp->slot_time);
++		rt2800_register_write(rt2x00dev, BKOFF_SLOT_CFG, reg);
+ 
+-	rt2800_register_read(rt2x00dev, XIFS_TIME_CFG, &reg);
+-	rt2x00_set_field32(&reg, XIFS_TIME_CFG_EIFS, erp->eifs);
+-	rt2800_register_write(rt2x00dev, XIFS_TIME_CFG, reg);
++		rt2800_register_read(rt2x00dev, XIFS_TIME_CFG, &reg);
++		rt2x00_set_field32(&reg, XIFS_TIME_CFG_EIFS, erp->eifs);
++		rt2800_register_write(rt2x00dev, XIFS_TIME_CFG, reg);
++	}
+ 
+-	rt2800_register_read(rt2x00dev, BCN_TIME_CFG, &reg);
+-	rt2x00_set_field32(&reg, BCN_TIME_CFG_BEACON_INTERVAL,
+-			   erp->beacon_int * 16);
+-	rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
++	if (changed & BSS_CHANGED_BEACON_INT) {
++		rt2800_register_read(rt2x00dev, BCN_TIME_CFG, &reg);
++		rt2x00_set_field32(&reg, BCN_TIME_CFG_BEACON_INTERVAL,
++				   erp->beacon_int * 16);
++		rt2800_register_write(rt2x00dev, BCN_TIME_CFG, reg);
++	}
+ }
+ EXPORT_SYMBOL_GPL(rt2800_config_erp);
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/rt2x00/rt2800lib.h
+index 986229c..600c5eb 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.h
++++ b/drivers/net/wireless/rt2x00/rt2800lib.h
+@@ -169,7 +169,8 @@ void rt2800_config_filter(struct rt2x00_dev *rt2x00dev,
+ 			  const unsigned int filter_flags);
+ void rt2800_config_intf(struct rt2x00_dev *rt2x00dev, struct rt2x00_intf *intf,
+ 			struct rt2x00intf_conf *conf, const unsigned int flags);
+-void rt2800_config_erp(struct rt2x00_dev *rt2x00dev, struct rt2x00lib_erp *erp);
++void rt2800_config_erp(struct rt2x00_dev *rt2x00dev, struct rt2x00lib_erp *erp,
++		       u32 changed);
+ void rt2800_config_ant(struct rt2x00_dev *rt2x00dev, struct antenna_setup *ant);
+ void rt2800_config(struct rt2x00_dev *rt2x00dev,
+ 		   struct rt2x00lib_conf *libconf,
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 0ae942c..7832a59 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -596,7 +596,8 @@ struct rt2x00lib_ops {
+ #define CONFIG_UPDATE_BSSID		( 1 << 3 )
+ 
+ 	void (*config_erp) (struct rt2x00_dev *rt2x00dev,
+-			    struct rt2x00lib_erp *erp);
++			    struct rt2x00lib_erp *erp,
++			    u32 changed);
+ 	void (*config_ant) (struct rt2x00_dev *rt2x00dev,
+ 			    struct antenna_setup *ant);
+ 	void (*config) (struct rt2x00_dev *rt2x00dev,
+diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
+index db09a64..4c7ff76 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00config.c
++++ b/drivers/net/wireless/rt2x00/rt2x00config.c
+@@ -81,7 +81,8 @@ void rt2x00lib_config_intf(struct rt2x00_dev *rt2x00dev,
+ 
+ void rt2x00lib_config_erp(struct rt2x00_dev *rt2x00dev,
+ 			  struct rt2x00_intf *intf,
+-			  struct ieee80211_bss_conf *bss_conf)
++			  struct ieee80211_bss_conf *bss_conf,
++			  u32 changed)
+ {
+ 	struct rt2x00lib_erp erp;
+ 
+@@ -102,7 +103,7 @@ void rt2x00lib_config_erp(struct rt2x00_dev *rt2x00dev,
+ 	/* Update global beacon interval time, this is needed for PS support */
+ 	rt2x00dev->beacon_int = bss_conf->beacon_int;
+ 
+-	rt2x00dev->ops->lib->config_erp(rt2x00dev, &erp);
++	rt2x00dev->ops->lib->config_erp(rt2x00dev, &erp, changed);
+ }
+ 
+ static inline
+diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
+index dc5c657..70c85ac 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00lib.h
++++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
+@@ -86,7 +86,8 @@ void rt2x00lib_config_intf(struct rt2x00_dev *rt2x00dev,
+ 			   const u8 *mac, const u8 *bssid);
+ void rt2x00lib_config_erp(struct rt2x00_dev *rt2x00dev,
+ 			  struct rt2x00_intf *intf,
+-			  struct ieee80211_bss_conf *conf);
++			  struct ieee80211_bss_conf *conf,
++			  u32 changed);
+ void rt2x00lib_config_antenna(struct rt2x00_dev *rt2x00dev,
+ 			      struct antenna_setup ant);
+ void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index 235e037..7862a84 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -669,8 +669,10 @@ void rt2x00mac_bss_info_changed(struct ieee80211_hw *hw,
+ 	 * When the erp information has changed, we should perform
+ 	 * additional configuration steps. For all other changes we are done.
+ 	 */
+-	if (changes & ~(BSS_CHANGED_ASSOC | BSS_CHANGED_HT))
+-		rt2x00lib_config_erp(rt2x00dev, intf, bss_conf);
++	if (changes & (BSS_CHANGED_ERP_CTS_PROT | BSS_CHANGED_ERP_PREAMBLE |
++		       BSS_CHANGED_ERP_SLOT | BSS_CHANGED_BASIC_RATES |
++		       BSS_CHANGED_BEACON_INT))
++		rt2x00lib_config_erp(rt2x00dev, intf, bss_conf, changes);
+ }
+ EXPORT_SYMBOL_GPL(rt2x00mac_bss_info_changed);
+ 
+diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
+index 3a77599..042cfbe 100644
+--- a/drivers/net/wireless/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/rt2x00/rt61pci.c
+@@ -594,7 +594,8 @@ static void rt61pci_config_intf(struct rt2x00_dev *rt2x00dev,
+ }
+ 
+ static void rt61pci_config_erp(struct rt2x00_dev *rt2x00dev,
+-			       struct rt2x00lib_erp *erp)
++			       struct rt2x00lib_erp *erp,
++			       u32 changed)
+ {
+ 	u32 reg;
+ 
+@@ -603,28 +604,36 @@ static void rt61pci_config_erp(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00_set_field32(&reg, TXRX_CSR0_TSF_OFFSET, IEEE80211_HEADER);
+ 	rt2x00pci_register_write(rt2x00dev, TXRX_CSR0, reg);
+ 
+-	rt2x00pci_register_read(rt2x00dev, TXRX_CSR4, &reg);
+-	rt2x00_set_field32(&reg, TXRX_CSR4_AUTORESPOND_ENABLE, 1);
+-	rt2x00_set_field32(&reg, TXRX_CSR4_AUTORESPOND_PREAMBLE,
+-			   !!erp->short_preamble);
+-	rt2x00pci_register_write(rt2x00dev, TXRX_CSR4, reg);
++	if (changed & BSS_CHANGED_ERP_PREAMBLE) {
++		rt2x00pci_register_read(rt2x00dev, TXRX_CSR4, &reg);
++		rt2x00_set_field32(&reg, TXRX_CSR4_AUTORESPOND_ENABLE, 1);
++		rt2x00_set_field32(&reg, TXRX_CSR4_AUTORESPOND_PREAMBLE,
++				   !!erp->short_preamble);
++		rt2x00pci_register_write(rt2x00dev, TXRX_CSR4, reg);
++	}
+ 
+-	rt2x00pci_register_write(rt2x00dev, TXRX_CSR5, erp->basic_rates);
++	if (changed & BSS_CHANGED_BASIC_RATES)
++		rt2x00pci_register_write(rt2x00dev, TXRX_CSR5,
++					 erp->basic_rates);
+ 
+-	rt2x00pci_register_read(rt2x00dev, TXRX_CSR9, &reg);
+-	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_INTERVAL,
+-			   erp->beacon_int * 16);
+-	rt2x00pci_register_write(rt2x00dev, TXRX_CSR9, reg);
++	if (changed & BSS_CHANGED_BEACON_INT) {
++		rt2x00pci_register_read(rt2x00dev, TXRX_CSR9, &reg);
++		rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_INTERVAL,
++				   erp->beacon_int * 16);
++		rt2x00pci_register_write(rt2x00dev, TXRX_CSR9, reg);
++	}
+ 
+-	rt2x00pci_register_read(rt2x00dev, MAC_CSR9, &reg);
+-	rt2x00_set_field32(&reg, MAC_CSR9_SLOT_TIME, erp->slot_time);
+-	rt2x00pci_register_write(rt2x00dev, MAC_CSR9, reg);
++	if (changed & BSS_CHANGED_ERP_SLOT) {
++		rt2x00pci_register_read(rt2x00dev, MAC_CSR9, &reg);
++		rt2x00_set_field32(&reg, MAC_CSR9_SLOT_TIME, erp->slot_time);
++		rt2x00pci_register_write(rt2x00dev, MAC_CSR9, reg);
+ 
+-	rt2x00pci_register_read(rt2x00dev, MAC_CSR8, &reg);
+-	rt2x00_set_field32(&reg, MAC_CSR8_SIFS, erp->sifs);
+-	rt2x00_set_field32(&reg, MAC_CSR8_SIFS_AFTER_RX_OFDM, 3);
+-	rt2x00_set_field32(&reg, MAC_CSR8_EIFS, erp->eifs);
+-	rt2x00pci_register_write(rt2x00dev, MAC_CSR8, reg);
++		rt2x00pci_register_read(rt2x00dev, MAC_CSR8, &reg);
++		rt2x00_set_field32(&reg, MAC_CSR8_SIFS, erp->sifs);
++		rt2x00_set_field32(&reg, MAC_CSR8_SIFS_AFTER_RX_OFDM, 3);
++		rt2x00_set_field32(&reg, MAC_CSR8_EIFS, erp->eifs);
++		rt2x00pci_register_write(rt2x00dev, MAC_CSR8, reg);
++	}
+ }
+ 
+ static void rt61pci_config_antenna_5x(struct rt2x00_dev *rt2x00dev,
+diff --git a/drivers/net/wireless/rt2x00/rt73usb.c b/drivers/net/wireless/rt2x00/rt73usb.c
+index 87fb220..e22f01c 100644
+--- a/drivers/net/wireless/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/rt2x00/rt73usb.c
+@@ -545,7 +545,8 @@ static void rt73usb_config_intf(struct rt2x00_dev *rt2x00dev,
+ }
+ 
+ static void rt73usb_config_erp(struct rt2x00_dev *rt2x00dev,
+-			       struct rt2x00lib_erp *erp)
++			       struct rt2x00lib_erp *erp,
++			       u32 changed)
+ {
+ 	u32 reg;
+ 
+@@ -554,28 +555,36 @@ static void rt73usb_config_erp(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00_set_field32(&reg, TXRX_CSR0_TSF_OFFSET, IEEE80211_HEADER);
+ 	rt2x00usb_register_write(rt2x00dev, TXRX_CSR0, reg);
+ 
+-	rt2x00usb_register_read(rt2x00dev, TXRX_CSR4, &reg);
+-	rt2x00_set_field32(&reg, TXRX_CSR4_AUTORESPOND_ENABLE, 1);
+-	rt2x00_set_field32(&reg, TXRX_CSR4_AUTORESPOND_PREAMBLE,
+-			   !!erp->short_preamble);
+-	rt2x00usb_register_write(rt2x00dev, TXRX_CSR4, reg);
++	if (changed & BSS_CHANGED_ERP_PREAMBLE) {
++		rt2x00usb_register_read(rt2x00dev, TXRX_CSR4, &reg);
++		rt2x00_set_field32(&reg, TXRX_CSR4_AUTORESPOND_ENABLE, 1);
++		rt2x00_set_field32(&reg, TXRX_CSR4_AUTORESPOND_PREAMBLE,
++				   !!erp->short_preamble);
++		rt2x00usb_register_write(rt2x00dev, TXRX_CSR4, reg);
++	}
+ 
+-	rt2x00usb_register_write(rt2x00dev, TXRX_CSR5, erp->basic_rates);
++	if (changed & BSS_CHANGED_BASIC_RATES)
++		rt2x00usb_register_write(rt2x00dev, TXRX_CSR5,
++					 erp->basic_rates);
+ 
+-	rt2x00usb_register_read(rt2x00dev, TXRX_CSR9, &reg);
+-	rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_INTERVAL,
+-			   erp->beacon_int * 16);
+-	rt2x00usb_register_write(rt2x00dev, TXRX_CSR9, reg);
++	if (changed & BSS_CHANGED_BEACON_INT) {
++		rt2x00usb_register_read(rt2x00dev, TXRX_CSR9, &reg);
++		rt2x00_set_field32(&reg, TXRX_CSR9_BEACON_INTERVAL,
++				   erp->beacon_int * 16);
++		rt2x00usb_register_write(rt2x00dev, TXRX_CSR9, reg);
++	}
+ 
+-	rt2x00usb_register_read(rt2x00dev, MAC_CSR9, &reg);
+-	rt2x00_set_field32(&reg, MAC_CSR9_SLOT_TIME, erp->slot_time);
+-	rt2x00usb_register_write(rt2x00dev, MAC_CSR9, reg);
++	if (changed & BSS_CHANGED_ERP_SLOT) {
++		rt2x00usb_register_read(rt2x00dev, MAC_CSR9, &reg);
++		rt2x00_set_field32(&reg, MAC_CSR9_SLOT_TIME, erp->slot_time);
++		rt2x00usb_register_write(rt2x00dev, MAC_CSR9, reg);
+ 
+-	rt2x00usb_register_read(rt2x00dev, MAC_CSR8, &reg);
+-	rt2x00_set_field32(&reg, MAC_CSR8_SIFS, erp->sifs);
+-	rt2x00_set_field32(&reg, MAC_CSR8_SIFS_AFTER_RX_OFDM, 3);
+-	rt2x00_set_field32(&reg, MAC_CSR8_EIFS, erp->eifs);
+-	rt2x00usb_register_write(rt2x00dev, MAC_CSR8, reg);
++		rt2x00usb_register_read(rt2x00dev, MAC_CSR8, &reg);
++		rt2x00_set_field32(&reg, MAC_CSR8_SIFS, erp->sifs);
++		rt2x00_set_field32(&reg, MAC_CSR8_SIFS_AFTER_RX_OFDM, 3);
++		rt2x00_set_field32(&reg, MAC_CSR8_EIFS, erp->eifs);
++		rt2x00usb_register_write(rt2x00dev, MAC_CSR8, reg);
++	}
+ }
+ 
+ static void rt73usb_config_antenna_5x(struct rt2x00_dev *rt2x00dev,
+-- 
+1.7.2.2
 
