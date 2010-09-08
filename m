@@ -1,36 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:4483 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750716Ab0IQERx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Sep 2010 00:17:53 -0400
-Date: Fri, 17 Sep 2010 00:14:50 -0400
-From: me@bobcopeland.com
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org
-Subject: Re: [PATCH v2] ath5k: reorder base.c to remove fwd decls
-Message-ID: <20100917041450.GA310@hash.localnet>
-References: <20100917034507.16135.61268.stgit@tt-desk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100917034507.16135.61268.stgit@tt-desk>
+Received: from smtp.nokia.com ([147.243.1.47]:43218 "EHLO mgw-sa01.nokia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751098Ab0IHRxD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Sep 2010 13:53:03 -0400
+Subject: Re: [PATCH v1 0/8] SDIO Runtime PM Support
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Ohad Ben-Cohen <ohad@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	San Mehat <san@google.com>,
+	"Quadros Roger (Nokia-MS/Helsinki)" <roger.quadros@nokia.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Gao Yunpeng <yunpeng.gao@intel.com>
+In-Reply-To: <1283858949-11073-1-git-send-email-ohad@wizery.com>
+References: <1283858949-11073-1-git-send-email-ohad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 08 Sep 2010 10:52:24 -0700
+Message-ID: <1283968344.9120.22.camel@capsicum>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 17, 2010 at 12:45:07PM +0900, Bruno Randolf wrote:
-> From: Bob Copeland <me@bobcopeland.com>
-> 
-> This change reorganizes the main ath5k file in order to re-group
-> related functions and remove most of the forward declarations
-> (from 61 down to 3).  This is, unfortunately, a lot of churn, but
-> there should be no functional changes.
-> 
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
-> Signed-off-by: Bruno Randolf <br1@einfach.org>
+On Tue, 2010-09-07 at 13:29 +0200, ext Ohad Ben-Cohen wrote:
+> This patchset introduces runtime PM support to SDIO cards.
 
-Applies cleanly and builds without warnings, thanks!
+I guess this whole patchset should be pulled via the mmc tree, since
+there are more mmc patches, if that's fine with Andrew.
+
+I haven't checked the mmc patches, since I'm not very familiar with that
+area, but the wl1271 driver change is ack from me.
 
 -- 
-Bob Copeland %% www.bobcopeland.com
+Cheers,
+Luca.
 
