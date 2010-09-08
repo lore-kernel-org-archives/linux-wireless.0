@@ -1,885 +1,196 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:19649 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754456Ab0IQVXb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Sep 2010 17:23:31 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Jay Sternberg <jay.e.sternberg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 07/10] iwlwifi: corrections to debug output of ucode statistics
-Date: Fri, 17 Sep 2010 14:24:31 -0700
-Message-Id: <1284758674-25297-8-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1284758674-25297-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1284758674-25297-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:47499 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753836Ab0IHXbA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Sep 2010 19:31:00 -0400
+Received: by pzk34 with SMTP id 34so250147pzk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2010 16:31:00 -0700 (PDT)
+From: Steve deRosier <steve@cozybit.com>
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, javier@cozybit.com,
+	Jason Spence <jspence@lightconsulting.com>,
+	Steve deRosier <steve@cozybit.com>
+Subject: [PATCH 1/2] libertas_tf: Removed some casts and fixed the printf format field specifiers to match.
+Date: Wed,  8 Sep 2010 16:30:46 -0700
+Message-Id: <1283988647-44747-1-git-send-email-steve@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jay Sternberg <jay.e.sternberg@intel.com>
+From: Jason Spence <jspence@lightconsulting.com>
 
-remove duplicate header and clean up format so it is defined once
-making changes consolicated ensuring consistancy of output.
-no function change to date displayed.
+Printf format fixes, one spelling fix and a note about reporting noise.
 
-Signed-off-by: Jay Sternberg <jay.e.sternberg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Jason Spence <jspence@lightconsulting.com>
+Signed-off-by: Steve deRosier <steve@cozybit.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c |  357 +++++++++---------------
- 1 files changed, 135 insertions(+), 222 deletions(-)
+ drivers/net/wireless/libertas_tf/if_sdio.c |   58 ++++++++++++++--------------
+ 1 files changed, 29 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
-index 52e9869..33862ff 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
-@@ -28,6 +28,12 @@
- #include "iwl-agn.h"
- #include "iwl-agn-debugfs.h"
+diff --git a/drivers/net/wireless/libertas_tf/if_sdio.c b/drivers/net/wireless/libertas_tf/if_sdio.c
+index 09c028f..d1624e3 100644
+--- a/drivers/net/wireless/libertas_tf/if_sdio.c
++++ b/drivers/net/wireless/libertas_tf/if_sdio.c
+@@ -205,8 +205,8 @@ static int if_sdio_handle_cmd(struct if_sdio_card *card,
+ 	lbtf_deb_enter(LBTF_DEB_SDIO);
  
-+static const char *fmt_value = "  %-30s %10u\n";
-+static const char *fmt_hex   = "  %-30s       0x%02X\n";
-+static const char *fmt_table = "  %-30s %10u  %10u  %10u  %10u\n";
-+static const char *fmt_header =
-+	"%-32s    current  cumulative       delta         max\n";
-+
- static int iwl_statistics_flag(struct iwl_priv *priv, char *buf, int bufsz)
- {
- 	int p = 0;
-@@ -121,436 +127,380 @@ ssize_t iwl_ucode_rx_stats_read(struct file *file, char __user *user_buf,
+ 	if (size > LBS_CMD_BUFFER_SIZE) {
+-		lbtf_deb_sdio("response packet too large (%d bytes)\n",
+-			(int)size);
++		lbtf_deb_sdio("response packet too large (%u bytes)\n",
++			size);
+ 		ret = -E2BIG;
+ 		goto out;
+ 	}
+@@ -235,8 +235,8 @@ static int if_sdio_handle_data(struct if_sdio_card *card,
+ 	lbtf_deb_enter(LBTF_DEB_INT);
+ 
+ 	if (size > MRVDRV_ETH_RX_PACKET_BUFFER_SIZE) {
+-		lbtf_deb_sdio("response packet too large (%d bytes)\n",
+-			(int)size);
++		lbtf_deb_sdio("response packet too large (%u bytes)\n",
++			size);
+ 		ret = -E2BIG;
+ 		goto out;
+ 	}
+@@ -280,8 +280,8 @@ static int if_sdio_handle_event(struct if_sdio_card *card,
+ 		event >>= 3;
+ 	} else {
+ 		if (size < 4) {
+-			lbtf_deb_sdio("event packet too small (%d bytes)\n",
+-				(int)size);
++			lbtf_deb_sdio("event packet too small (%u bytes)\n",
++				size);
+ 			ret = -EINVAL;
+ 			goto out;
+ 		}
+@@ -351,8 +351,8 @@ static int if_sdio_card_to_host(struct if_sdio_card *card)
+ 		goto out;
+ 
+ 	if (size < 4) {
+-		lbtf_deb_sdio("invalid packet size (%d bytes) from firmware\n",
+-			(int)size);
++		lbtf_deb_sdio("invalid packet size (%hu bytes) from firmware\n",
++			size);
+ 		ret = -EINVAL;
+ 		goto out;
+ 	}
+@@ -375,19 +375,19 @@ static int if_sdio_card_to_host(struct if_sdio_card *card)
+ 	chunk = card->buffer[0] | (card->buffer[1] << 8);
+ 	type = card->buffer[2] | (card->buffer[3] << 8);
+ 
+-	lbtf_deb_int("packet of type %d and size %d bytes\n",
+-		(int)type, (int)chunk);
++	lbtf_deb_int("packet of type %hu and size %hu bytes\n",
++		type, chunk);
+ 
+ 	if (chunk > size) {
+-		lbtf_deb_sdio("packet fragment (%d > %d)\n",
+-			(int)chunk, (int)size);
++		lbtf_deb_sdio("packet fragment (%hu > %hu)\n",
++			chunk, size);
+ 		ret = -EINVAL;
+ 		goto out;
  	}
  
- 	pos += iwl_statistics_flag(priv, buf, bufsz);
--	pos += scnprintf(buf + pos, bufsz - pos, "%-32s     current"
--			 "acumulative       delta         max\n",
--			 "Statistics_Rx - OFDM:");
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "ina_cnt:", le32_to_cpu(ofdm->ina_cnt),
-+			 fmt_header, "Statistics_Rx - OFDM:");
-+	pos += scnprintf(buf + pos, bufsz - pos,
-+			 fmt_table, "ina_cnt:",
-+			 le32_to_cpu(ofdm->ina_cnt),
- 			 accum_ofdm->ina_cnt,
- 			 delta_ofdm->ina_cnt, max_ofdm->ina_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "fina_cnt:",
-+			 fmt_table, "fina_cnt:",
- 			 le32_to_cpu(ofdm->fina_cnt), accum_ofdm->fina_cnt,
- 			 delta_ofdm->fina_cnt, max_ofdm->fina_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "plcp_err:",
-+			 fmt_table, "plcp_err:",
- 			 le32_to_cpu(ofdm->plcp_err), accum_ofdm->plcp_err,
- 			 delta_ofdm->plcp_err, max_ofdm->plcp_err);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n", "crc32_err:",
-+			 fmt_table, "crc32_err:",
- 			 le32_to_cpu(ofdm->crc32_err), accum_ofdm->crc32_err,
- 			 delta_ofdm->crc32_err, max_ofdm->crc32_err);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n", "overrun_err:",
-+			 fmt_table, "overrun_err:",
- 			 le32_to_cpu(ofdm->overrun_err),
- 			 accum_ofdm->overrun_err, delta_ofdm->overrun_err,
- 			 max_ofdm->overrun_err);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "early_overrun_err:",
-+			 fmt_table, "early_overrun_err:",
- 			 le32_to_cpu(ofdm->early_overrun_err),
- 			 accum_ofdm->early_overrun_err,
- 			 delta_ofdm->early_overrun_err,
- 			 max_ofdm->early_overrun_err);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "crc32_good:", le32_to_cpu(ofdm->crc32_good),
-+			 fmt_table, "crc32_good:",
-+			 le32_to_cpu(ofdm->crc32_good),
- 			 accum_ofdm->crc32_good, delta_ofdm->crc32_good,
- 			 max_ofdm->crc32_good);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n", "false_alarm_cnt:",
-+			 fmt_table, "false_alarm_cnt:",
- 			 le32_to_cpu(ofdm->false_alarm_cnt),
- 			 accum_ofdm->false_alarm_cnt,
- 			 delta_ofdm->false_alarm_cnt,
- 			 max_ofdm->false_alarm_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "fina_sync_err_cnt:",
-+			 fmt_table, "fina_sync_err_cnt:",
- 			 le32_to_cpu(ofdm->fina_sync_err_cnt),
- 			 accum_ofdm->fina_sync_err_cnt,
- 			 delta_ofdm->fina_sync_err_cnt,
- 			 max_ofdm->fina_sync_err_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n", "sfd_timeout:",
-+			 fmt_table, "sfd_timeout:",
- 			 le32_to_cpu(ofdm->sfd_timeout),
- 			 accum_ofdm->sfd_timeout, delta_ofdm->sfd_timeout,
- 			 max_ofdm->sfd_timeout);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n", "fina_timeout:",
-+			 fmt_table, "fina_timeout:",
- 			 le32_to_cpu(ofdm->fina_timeout),
- 			 accum_ofdm->fina_timeout, delta_ofdm->fina_timeout,
- 			 max_ofdm->fina_timeout);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "unresponded_rts:",
-+			 fmt_table, "unresponded_rts:",
- 			 le32_to_cpu(ofdm->unresponded_rts),
- 			 accum_ofdm->unresponded_rts,
- 			 delta_ofdm->unresponded_rts,
- 			 max_ofdm->unresponded_rts);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "rxe_frame_lmt_ovrun:",
-+			 fmt_table, "rxe_frame_lmt_ovrun:",
- 			 le32_to_cpu(ofdm->rxe_frame_limit_overrun),
- 			 accum_ofdm->rxe_frame_limit_overrun,
- 			 delta_ofdm->rxe_frame_limit_overrun,
- 			 max_ofdm->rxe_frame_limit_overrun);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n", "sent_ack_cnt:",
-+			 fmt_table, "sent_ack_cnt:",
- 			 le32_to_cpu(ofdm->sent_ack_cnt),
- 			 accum_ofdm->sent_ack_cnt, delta_ofdm->sent_ack_cnt,
- 			 max_ofdm->sent_ack_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n", "sent_cts_cnt:",
-+			 fmt_table, "sent_cts_cnt:",
- 			 le32_to_cpu(ofdm->sent_cts_cnt),
- 			 accum_ofdm->sent_cts_cnt, delta_ofdm->sent_cts_cnt,
- 			 max_ofdm->sent_cts_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "sent_ba_rsp_cnt:",
-+			 fmt_table, "sent_ba_rsp_cnt:",
- 			 le32_to_cpu(ofdm->sent_ba_rsp_cnt),
- 			 accum_ofdm->sent_ba_rsp_cnt,
- 			 delta_ofdm->sent_ba_rsp_cnt,
- 			 max_ofdm->sent_ba_rsp_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n", "dsp_self_kill:",
-+			 fmt_table, "dsp_self_kill:",
- 			 le32_to_cpu(ofdm->dsp_self_kill),
- 			 accum_ofdm->dsp_self_kill,
- 			 delta_ofdm->dsp_self_kill,
- 			 max_ofdm->dsp_self_kill);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "mh_format_err:",
-+			 fmt_table, "mh_format_err:",
- 			 le32_to_cpu(ofdm->mh_format_err),
- 			 accum_ofdm->mh_format_err,
- 			 delta_ofdm->mh_format_err,
- 			 max_ofdm->mh_format_err);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "re_acq_main_rssi_sum:",
-+			 fmt_table, "re_acq_main_rssi_sum:",
- 			 le32_to_cpu(ofdm->re_acq_main_rssi_sum),
- 			 accum_ofdm->re_acq_main_rssi_sum,
- 			 delta_ofdm->re_acq_main_rssi_sum,
- 			 max_ofdm->re_acq_main_rssi_sum);
- 
--	pos += scnprintf(buf + pos, bufsz - pos, "%-32s     current"
--			 "acumulative       delta         max\n",
--			 "Statistics_Rx - CCK:");
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "ina_cnt:",
-+			 fmt_header, "Statistics_Rx - CCK:");
-+	pos += scnprintf(buf + pos, bufsz - pos,
-+			 fmt_table, "ina_cnt:",
- 			 le32_to_cpu(cck->ina_cnt), accum_cck->ina_cnt,
- 			 delta_cck->ina_cnt, max_cck->ina_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "fina_cnt:",
-+			 fmt_table, "fina_cnt:",
- 			 le32_to_cpu(cck->fina_cnt), accum_cck->fina_cnt,
- 			 delta_cck->fina_cnt, max_cck->fina_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "plcp_err:",
-+			 fmt_table, "plcp_err:",
- 			 le32_to_cpu(cck->plcp_err), accum_cck->plcp_err,
- 			 delta_cck->plcp_err, max_cck->plcp_err);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "crc32_err:",
-+			 fmt_table, "crc32_err:",
- 			 le32_to_cpu(cck->crc32_err), accum_cck->crc32_err,
- 			 delta_cck->crc32_err, max_cck->crc32_err);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "overrun_err:",
-+			 fmt_table, "overrun_err:",
- 			 le32_to_cpu(cck->overrun_err),
- 			 accum_cck->overrun_err, delta_cck->overrun_err,
- 			 max_cck->overrun_err);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "early_overrun_err:",
-+			 fmt_table, "early_overrun_err:",
- 			 le32_to_cpu(cck->early_overrun_err),
- 			 accum_cck->early_overrun_err,
- 			 delta_cck->early_overrun_err,
- 			 max_cck->early_overrun_err);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "crc32_good:",
-+			 fmt_table, "crc32_good:",
- 			 le32_to_cpu(cck->crc32_good), accum_cck->crc32_good,
- 			 delta_cck->crc32_good, max_cck->crc32_good);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "false_alarm_cnt:",
-+			 fmt_table, "false_alarm_cnt:",
- 			 le32_to_cpu(cck->false_alarm_cnt),
- 			 accum_cck->false_alarm_cnt,
- 			 delta_cck->false_alarm_cnt, max_cck->false_alarm_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "fina_sync_err_cnt:",
-+			 fmt_table, "fina_sync_err_cnt:",
- 			 le32_to_cpu(cck->fina_sync_err_cnt),
- 			 accum_cck->fina_sync_err_cnt,
- 			 delta_cck->fina_sync_err_cnt,
- 			 max_cck->fina_sync_err_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "sfd_timeout:",
-+			 fmt_table, "sfd_timeout:",
- 			 le32_to_cpu(cck->sfd_timeout),
- 			 accum_cck->sfd_timeout, delta_cck->sfd_timeout,
- 			 max_cck->sfd_timeout);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n", "fina_timeout:",
-+			 fmt_table, "fina_timeout:",
- 			 le32_to_cpu(cck->fina_timeout),
- 			 accum_cck->fina_timeout, delta_cck->fina_timeout,
- 			 max_cck->fina_timeout);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "unresponded_rts:",
-+			 fmt_table, "unresponded_rts:",
- 			 le32_to_cpu(cck->unresponded_rts),
- 			 accum_cck->unresponded_rts, delta_cck->unresponded_rts,
- 			 max_cck->unresponded_rts);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "rxe_frame_lmt_ovrun:",
-+			 fmt_table, "rxe_frame_lmt_ovrun:",
- 			 le32_to_cpu(cck->rxe_frame_limit_overrun),
- 			 accum_cck->rxe_frame_limit_overrun,
- 			 delta_cck->rxe_frame_limit_overrun,
- 			 max_cck->rxe_frame_limit_overrun);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n", "sent_ack_cnt:",
-+			 fmt_table, "sent_ack_cnt:",
- 			 le32_to_cpu(cck->sent_ack_cnt),
- 			 accum_cck->sent_ack_cnt, delta_cck->sent_ack_cnt,
- 			 max_cck->sent_ack_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n", "sent_cts_cnt:",
-+			 fmt_table, "sent_cts_cnt:",
- 			 le32_to_cpu(cck->sent_cts_cnt),
- 			 accum_cck->sent_cts_cnt, delta_cck->sent_cts_cnt,
- 			 max_cck->sent_cts_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n", "sent_ba_rsp_cnt:",
-+			 fmt_table, "sent_ba_rsp_cnt:",
- 			 le32_to_cpu(cck->sent_ba_rsp_cnt),
- 			 accum_cck->sent_ba_rsp_cnt,
- 			 delta_cck->sent_ba_rsp_cnt,
- 			 max_cck->sent_ba_rsp_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n", "dsp_self_kill:",
-+			 fmt_table, "dsp_self_kill:",
- 			 le32_to_cpu(cck->dsp_self_kill),
- 			 accum_cck->dsp_self_kill, delta_cck->dsp_self_kill,
- 			 max_cck->dsp_self_kill);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n", "mh_format_err:",
-+			 fmt_table, "mh_format_err:",
- 			 le32_to_cpu(cck->mh_format_err),
- 			 accum_cck->mh_format_err, delta_cck->mh_format_err,
- 			 max_cck->mh_format_err);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "re_acq_main_rssi_sum:",
-+			 fmt_table, "re_acq_main_rssi_sum:",
- 			 le32_to_cpu(cck->re_acq_main_rssi_sum),
- 			 accum_cck->re_acq_main_rssi_sum,
- 			 delta_cck->re_acq_main_rssi_sum,
- 			 max_cck->re_acq_main_rssi_sum);
- 
--	pos += scnprintf(buf + pos, bufsz - pos, "%-32s     current"
--			 "acumulative       delta         max\n",
--			 "Statistics_Rx - GENERAL:");
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n", "bogus_cts:",
-+			 fmt_header, "Statistics_Rx - GENERAL:");
-+	pos += scnprintf(buf + pos, bufsz - pos,
-+			 fmt_table, "bogus_cts:",
- 			 le32_to_cpu(general->bogus_cts),
- 			 accum_general->bogus_cts, delta_general->bogus_cts,
- 			 max_general->bogus_cts);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n", "bogus_ack:",
-+			 fmt_table, "bogus_ack:",
- 			 le32_to_cpu(general->bogus_ack),
- 			 accum_general->bogus_ack, delta_general->bogus_ack,
- 			 max_general->bogus_ack);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "non_bssid_frames:",
-+			 fmt_table, "non_bssid_frames:",
- 			 le32_to_cpu(general->non_bssid_frames),
- 			 accum_general->non_bssid_frames,
- 			 delta_general->non_bssid_frames,
- 			 max_general->non_bssid_frames);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "filtered_frames:",
-+			 fmt_table, "filtered_frames:",
- 			 le32_to_cpu(general->filtered_frames),
- 			 accum_general->filtered_frames,
- 			 delta_general->filtered_frames,
- 			 max_general->filtered_frames);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "non_channel_beacons:",
-+			 fmt_table, "non_channel_beacons:",
- 			 le32_to_cpu(general->non_channel_beacons),
- 			 accum_general->non_channel_beacons,
- 			 delta_general->non_channel_beacons,
- 			 max_general->non_channel_beacons);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "channel_beacons:",
-+			 fmt_table, "channel_beacons:",
- 			 le32_to_cpu(general->channel_beacons),
- 			 accum_general->channel_beacons,
- 			 delta_general->channel_beacons,
- 			 max_general->channel_beacons);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "num_missed_bcon:",
-+			 fmt_table, "num_missed_bcon:",
- 			 le32_to_cpu(general->num_missed_bcon),
- 			 accum_general->num_missed_bcon,
- 			 delta_general->num_missed_bcon,
- 			 max_general->num_missed_bcon);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "adc_rx_saturation_time:",
-+			 fmt_table, "adc_rx_saturation_time:",
- 			 le32_to_cpu(general->adc_rx_saturation_time),
- 			 accum_general->adc_rx_saturation_time,
- 			 delta_general->adc_rx_saturation_time,
- 			 max_general->adc_rx_saturation_time);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "ina_detect_search_tm:",
-+			 fmt_table, "ina_detect_search_tm:",
- 			 le32_to_cpu(general->ina_detection_search_time),
- 			 accum_general->ina_detection_search_time,
- 			 delta_general->ina_detection_search_time,
- 			 max_general->ina_detection_search_time);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "beacon_silence_rssi_a:",
-+			 fmt_table, "beacon_silence_rssi_a:",
- 			 le32_to_cpu(general->beacon_silence_rssi_a),
- 			 accum_general->beacon_silence_rssi_a,
- 			 delta_general->beacon_silence_rssi_a,
- 			 max_general->beacon_silence_rssi_a);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "beacon_silence_rssi_b:",
-+			 fmt_table, "beacon_silence_rssi_b:",
- 			 le32_to_cpu(general->beacon_silence_rssi_b),
- 			 accum_general->beacon_silence_rssi_b,
- 			 delta_general->beacon_silence_rssi_b,
- 			 max_general->beacon_silence_rssi_b);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "beacon_silence_rssi_c:",
-+			 fmt_table, "beacon_silence_rssi_c:",
- 			 le32_to_cpu(general->beacon_silence_rssi_c),
- 			 accum_general->beacon_silence_rssi_c,
- 			 delta_general->beacon_silence_rssi_c,
- 			 max_general->beacon_silence_rssi_c);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "interference_data_flag:",
-+			 fmt_table, "interference_data_flag:",
- 			 le32_to_cpu(general->interference_data_flag),
- 			 accum_general->interference_data_flag,
- 			 delta_general->interference_data_flag,
- 			 max_general->interference_data_flag);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "channel_load:",
-+			 fmt_table, "channel_load:",
- 			 le32_to_cpu(general->channel_load),
- 			 accum_general->channel_load,
- 			 delta_general->channel_load,
- 			 max_general->channel_load);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "dsp_false_alarms:",
-+			 fmt_table, "dsp_false_alarms:",
- 			 le32_to_cpu(general->dsp_false_alarms),
- 			 accum_general->dsp_false_alarms,
- 			 delta_general->dsp_false_alarms,
- 			 max_general->dsp_false_alarms);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "beacon_rssi_a:",
-+			 fmt_table, "beacon_rssi_a:",
- 			 le32_to_cpu(general->beacon_rssi_a),
- 			 accum_general->beacon_rssi_a,
- 			 delta_general->beacon_rssi_a,
- 			 max_general->beacon_rssi_a);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "beacon_rssi_b:",
-+			 fmt_table, "beacon_rssi_b:",
- 			 le32_to_cpu(general->beacon_rssi_b),
- 			 accum_general->beacon_rssi_b,
- 			 delta_general->beacon_rssi_b,
- 			 max_general->beacon_rssi_b);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "beacon_rssi_c:",
-+			 fmt_table, "beacon_rssi_c:",
- 			 le32_to_cpu(general->beacon_rssi_c),
- 			 accum_general->beacon_rssi_c,
- 			 delta_general->beacon_rssi_c,
- 			 max_general->beacon_rssi_c);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "beacon_energy_a:",
-+			 fmt_table, "beacon_energy_a:",
- 			 le32_to_cpu(general->beacon_energy_a),
- 			 accum_general->beacon_energy_a,
- 			 delta_general->beacon_energy_a,
- 			 max_general->beacon_energy_a);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "beacon_energy_b:",
-+			 fmt_table, "beacon_energy_b:",
- 			 le32_to_cpu(general->beacon_energy_b),
- 			 accum_general->beacon_energy_b,
- 			 delta_general->beacon_energy_b,
- 			 max_general->beacon_energy_b);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "beacon_energy_c:",
-+			 fmt_table, "beacon_energy_c:",
- 			 le32_to_cpu(general->beacon_energy_c),
- 			 accum_general->beacon_energy_c,
- 			 delta_general->beacon_energy_c,
- 			 max_general->beacon_energy_c);
- 
--	pos += scnprintf(buf + pos, bufsz - pos, "Statistics_Rx - OFDM_HT:\n");
--	pos += scnprintf(buf + pos, bufsz - pos, "%-32s     current"
--			 "acumulative       delta         max\n",
--			 "Statistics_Rx - OFDM_HT:");
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "plcp_err:",
-+			 fmt_header, "Statistics_Rx - OFDM_HT:");
-+	pos += scnprintf(buf + pos, bufsz - pos,
-+			 fmt_table, "plcp_err:",
- 			 le32_to_cpu(ht->plcp_err), accum_ht->plcp_err,
- 			 delta_ht->plcp_err, max_ht->plcp_err);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "overrun_err:",
-+			 fmt_table, "overrun_err:",
- 			 le32_to_cpu(ht->overrun_err), accum_ht->overrun_err,
- 			 delta_ht->overrun_err, max_ht->overrun_err);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "early_overrun_err:",
-+			 fmt_table, "early_overrun_err:",
- 			 le32_to_cpu(ht->early_overrun_err),
- 			 accum_ht->early_overrun_err,
- 			 delta_ht->early_overrun_err,
- 			 max_ht->early_overrun_err);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "crc32_good:",
-+			 fmt_table, "crc32_good:",
- 			 le32_to_cpu(ht->crc32_good), accum_ht->crc32_good,
- 			 delta_ht->crc32_good, max_ht->crc32_good);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "crc32_err:",
-+			 fmt_table, "crc32_err:",
- 			 le32_to_cpu(ht->crc32_err), accum_ht->crc32_err,
- 			 delta_ht->crc32_err, max_ht->crc32_err);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "mh_format_err:",
-+			 fmt_table, "mh_format_err:",
- 			 le32_to_cpu(ht->mh_format_err),
- 			 accum_ht->mh_format_err,
- 			 delta_ht->mh_format_err, max_ht->mh_format_err);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "agg_crc32_good:",
-+			 fmt_table, "agg_crc32_good:",
- 			 le32_to_cpu(ht->agg_crc32_good),
- 			 accum_ht->agg_crc32_good,
- 			 delta_ht->agg_crc32_good, max_ht->agg_crc32_good);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "agg_mpdu_cnt:",
-+			 fmt_table, "agg_mpdu_cnt:",
- 			 le32_to_cpu(ht->agg_mpdu_cnt),
- 			 accum_ht->agg_mpdu_cnt,
- 			 delta_ht->agg_mpdu_cnt, max_ht->agg_mpdu_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "agg_cnt:",
-+			 fmt_table, "agg_cnt:",
- 			 le32_to_cpu(ht->agg_cnt), accum_ht->agg_cnt,
- 			 delta_ht->agg_cnt, max_ht->agg_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "unsupport_mcs:",
-+			 fmt_table, "unsupport_mcs:",
- 			 le32_to_cpu(ht->unsupport_mcs),
- 			 accum_ht->unsupport_mcs,
- 			 delta_ht->unsupport_mcs, max_ht->unsupport_mcs);
-@@ -597,166 +547,141 @@ ssize_t iwl_ucode_tx_stats_read(struct file *file,
+ 	if (chunk < size) {
+-		lbtf_deb_sdio("packet fragment (%d < %d)\n",
+-			(int)chunk, (int)size);
++		lbtf_deb_sdio("packet fragment (%hu < %hu)\n",
++			chunk, size);
  	}
  
- 	pos += iwl_statistics_flag(priv, buf, bufsz);
--	pos += scnprintf(buf + pos, bufsz - pos,  "%-32s     current"
--			 "acumulative       delta         max\n",
--			 "Statistics_Tx:");
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "preamble:",
-+			 fmt_header, "Statistics_Tx:");
-+	pos += scnprintf(buf + pos, bufsz - pos,
-+			 fmt_table, "preamble:",
- 			 le32_to_cpu(tx->preamble_cnt),
- 			 accum_tx->preamble_cnt,
- 			 delta_tx->preamble_cnt, max_tx->preamble_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "rx_detected_cnt:",
-+			 fmt_table, "rx_detected_cnt:",
- 			 le32_to_cpu(tx->rx_detected_cnt),
- 			 accum_tx->rx_detected_cnt,
- 			 delta_tx->rx_detected_cnt, max_tx->rx_detected_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "bt_prio_defer_cnt:",
-+			 fmt_table, "bt_prio_defer_cnt:",
- 			 le32_to_cpu(tx->bt_prio_defer_cnt),
- 			 accum_tx->bt_prio_defer_cnt,
- 			 delta_tx->bt_prio_defer_cnt,
- 			 max_tx->bt_prio_defer_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "bt_prio_kill_cnt:",
-+			 fmt_table, "bt_prio_kill_cnt:",
- 			 le32_to_cpu(tx->bt_prio_kill_cnt),
- 			 accum_tx->bt_prio_kill_cnt,
- 			 delta_tx->bt_prio_kill_cnt,
- 			 max_tx->bt_prio_kill_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "few_bytes_cnt:",
-+			 fmt_table, "few_bytes_cnt:",
- 			 le32_to_cpu(tx->few_bytes_cnt),
- 			 accum_tx->few_bytes_cnt,
- 			 delta_tx->few_bytes_cnt, max_tx->few_bytes_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "cts_timeout:",
-+			 fmt_table, "cts_timeout:",
- 			 le32_to_cpu(tx->cts_timeout), accum_tx->cts_timeout,
- 			 delta_tx->cts_timeout, max_tx->cts_timeout);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "ack_timeout:",
-+			 fmt_table, "ack_timeout:",
- 			 le32_to_cpu(tx->ack_timeout),
- 			 accum_tx->ack_timeout,
- 			 delta_tx->ack_timeout, max_tx->ack_timeout);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "expected_ack_cnt:",
-+			 fmt_table, "expected_ack_cnt:",
- 			 le32_to_cpu(tx->expected_ack_cnt),
- 			 accum_tx->expected_ack_cnt,
- 			 delta_tx->expected_ack_cnt,
- 			 max_tx->expected_ack_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "actual_ack_cnt:",
-+			 fmt_table, "actual_ack_cnt:",
- 			 le32_to_cpu(tx->actual_ack_cnt),
- 			 accum_tx->actual_ack_cnt,
- 			 delta_tx->actual_ack_cnt,
- 			 max_tx->actual_ack_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "dump_msdu_cnt:",
-+			 fmt_table, "dump_msdu_cnt:",
- 			 le32_to_cpu(tx->dump_msdu_cnt),
- 			 accum_tx->dump_msdu_cnt,
- 			 delta_tx->dump_msdu_cnt,
- 			 max_tx->dump_msdu_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "abort_nxt_frame_mismatch:",
-+			 fmt_table, "abort_nxt_frame_mismatch:",
- 			 le32_to_cpu(tx->burst_abort_next_frame_mismatch_cnt),
- 			 accum_tx->burst_abort_next_frame_mismatch_cnt,
- 			 delta_tx->burst_abort_next_frame_mismatch_cnt,
- 			 max_tx->burst_abort_next_frame_mismatch_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "abort_missing_nxt_frame:",
-+			 fmt_table, "abort_missing_nxt_frame:",
- 			 le32_to_cpu(tx->burst_abort_missing_next_frame_cnt),
- 			 accum_tx->burst_abort_missing_next_frame_cnt,
- 			 delta_tx->burst_abort_missing_next_frame_cnt,
- 			 max_tx->burst_abort_missing_next_frame_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "cts_timeout_collision:",
-+			 fmt_table, "cts_timeout_collision:",
- 			 le32_to_cpu(tx->cts_timeout_collision),
- 			 accum_tx->cts_timeout_collision,
- 			 delta_tx->cts_timeout_collision,
- 			 max_tx->cts_timeout_collision);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "ack_ba_timeout_collision:",
-+			 fmt_table, "ack_ba_timeout_collision:",
- 			 le32_to_cpu(tx->ack_or_ba_timeout_collision),
- 			 accum_tx->ack_or_ba_timeout_collision,
- 			 delta_tx->ack_or_ba_timeout_collision,
- 			 max_tx->ack_or_ba_timeout_collision);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "agg ba_timeout:",
-+			 fmt_table, "agg ba_timeout:",
- 			 le32_to_cpu(tx->agg.ba_timeout),
- 			 accum_tx->agg.ba_timeout,
- 			 delta_tx->agg.ba_timeout,
- 			 max_tx->agg.ba_timeout);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "agg ba_resched_frames:",
-+			 fmt_table, "agg ba_resched_frames:",
- 			 le32_to_cpu(tx->agg.ba_reschedule_frames),
- 			 accum_tx->agg.ba_reschedule_frames,
- 			 delta_tx->agg.ba_reschedule_frames,
- 			 max_tx->agg.ba_reschedule_frames);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "agg scd_query_agg_frame:",
-+			 fmt_table, "agg scd_query_agg_frame:",
- 			 le32_to_cpu(tx->agg.scd_query_agg_frame_cnt),
- 			 accum_tx->agg.scd_query_agg_frame_cnt,
- 			 delta_tx->agg.scd_query_agg_frame_cnt,
- 			 max_tx->agg.scd_query_agg_frame_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "agg scd_query_no_agg:",
-+			 fmt_table, "agg scd_query_no_agg:",
- 			 le32_to_cpu(tx->agg.scd_query_no_agg),
- 			 accum_tx->agg.scd_query_no_agg,
- 			 delta_tx->agg.scd_query_no_agg,
- 			 max_tx->agg.scd_query_no_agg);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "agg scd_query_agg:",
-+			 fmt_table, "agg scd_query_agg:",
- 			 le32_to_cpu(tx->agg.scd_query_agg),
- 			 accum_tx->agg.scd_query_agg,
- 			 delta_tx->agg.scd_query_agg,
- 			 max_tx->agg.scd_query_agg);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "agg scd_query_mismatch:",
-+			 fmt_table, "agg scd_query_mismatch:",
- 			 le32_to_cpu(tx->agg.scd_query_mismatch),
- 			 accum_tx->agg.scd_query_mismatch,
- 			 delta_tx->agg.scd_query_mismatch,
- 			 max_tx->agg.scd_query_mismatch);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "agg frame_not_ready:",
-+			 fmt_table, "agg frame_not_ready:",
- 			 le32_to_cpu(tx->agg.frame_not_ready),
- 			 accum_tx->agg.frame_not_ready,
- 			 delta_tx->agg.frame_not_ready,
- 			 max_tx->agg.frame_not_ready);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "agg underrun:",
-+			 fmt_table, "agg underrun:",
- 			 le32_to_cpu(tx->agg.underrun),
- 			 accum_tx->agg.underrun,
- 			 delta_tx->agg.underrun, max_tx->agg.underrun);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "agg bt_prio_kill:",
-+			 fmt_table, "agg bt_prio_kill:",
- 			 le32_to_cpu(tx->agg.bt_prio_kill),
- 			 accum_tx->agg.bt_prio_kill,
- 			 delta_tx->agg.bt_prio_kill,
- 			 max_tx->agg.bt_prio_kill);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "agg rx_ba_rsp_cnt:",
-+			 fmt_table, "agg rx_ba_rsp_cnt:",
- 			 le32_to_cpu(tx->agg.rx_ba_rsp_cnt),
- 			 accum_tx->agg.rx_ba_rsp_cnt,
- 			 delta_tx->agg.rx_ba_rsp_cnt,
-@@ -767,15 +692,15 @@ ssize_t iwl_ucode_tx_stats_read(struct file *file,
- 			"tx power: (1/2 dB step)\n");
- 		if ((priv->cfg->valid_tx_ant & ANT_A) && tx->tx_power.ant_a)
- 			pos += scnprintf(buf + pos, bufsz - pos,
--					"\tantenna A: 0x%X\n",
-+					fmt_hex, "antenna A:",
- 					tx->tx_power.ant_a);
- 		if ((priv->cfg->valid_tx_ant & ANT_B) && tx->tx_power.ant_b)
- 			pos += scnprintf(buf + pos, bufsz - pos,
--					"\tantenna B: 0x%X\n",
-+					fmt_hex, "antenna B:",
- 					tx->tx_power.ant_b);
- 		if ((priv->cfg->valid_tx_ant & ANT_C) && tx->tx_power.ant_c)
- 			pos += scnprintf(buf + pos, bufsz - pos,
--					"\tantenna C: 0x%X\n",
-+					fmt_hex, "antenna C:",
- 					tx->tx_power.ant_c);
+ 	switch (type) {
+@@ -407,8 +407,8 @@ static int if_sdio_card_to_host(struct if_sdio_card *card)
+ 			goto out;
+ 		break;
+ 	default:
+-		lbtf_deb_sdio("invalid type (%d) from firmware\n",
+-				(int)type);
++		lbtf_deb_sdio("invalid type (%hu) from firmware\n",
++				type);
+ 		ret = -EINVAL;
+ 		goto out;
  	}
- 	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
-@@ -838,84 +763,72 @@ ssize_t iwl_ucode_general_stats_read(struct file *file, char __user *user_buf,
- 	}
+@@ -525,7 +525,7 @@ static int if_sdio_prog_helper(struct if_sdio_card *card)
+ 		 */
+ 		mdelay(2);
  
- 	pos += iwl_statistics_flag(priv, buf, bufsz);
--	pos += scnprintf(buf + pos, bufsz - pos, "%-32s     current"
--			 "acumulative       delta         max\n",
--			 "Statistics_General:");
--	pos += scnprintf(buf + pos, bufsz - pos, "  %-30s %10u\n",
--			 "temperature:",
-+	pos += scnprintf(buf + pos, bufsz - pos,
-+			 fmt_header, "Statistics_General:");
-+	pos += scnprintf(buf + pos, bufsz - pos,
-+			 fmt_value, "temperature:",
- 			 le32_to_cpu(general->temperature));
--	pos += scnprintf(buf + pos, bufsz - pos, "  %-30s %10u\n",
--			 "temperature_m:",
-+	pos += scnprintf(buf + pos, bufsz - pos,
-+			 fmt_value, "temperature_m:",
- 			 le32_to_cpu(general->temperature_m));
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "burst_check:",
-+			 fmt_value, "ttl_timestamp:",
-+			 le32_to_cpu(general->ttl_timestamp));
-+	pos += scnprintf(buf + pos, bufsz - pos,
-+			 fmt_table, "burst_check:",
- 			 le32_to_cpu(dbg->burst_check),
- 			 accum_dbg->burst_check,
- 			 delta_dbg->burst_check, max_dbg->burst_check);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "burst_count:",
-+			 fmt_table, "burst_count:",
- 			 le32_to_cpu(dbg->burst_count),
- 			 accum_dbg->burst_count,
- 			 delta_dbg->burst_count, max_dbg->burst_count);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "wait_for_silence_timeout_count:",
-+			 fmt_table, "wait_for_silence_timeout_count:",
- 			 le32_to_cpu(dbg->wait_for_silence_timeout_cnt),
- 			 accum_dbg->wait_for_silence_timeout_cnt,
- 			 delta_dbg->wait_for_silence_timeout_cnt,
- 			 max_dbg->wait_for_silence_timeout_cnt);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "sleep_time:",
-+			 fmt_table, "sleep_time:",
- 			 le32_to_cpu(general->sleep_time),
- 			 accum_general->sleep_time,
- 			 delta_general->sleep_time, max_general->sleep_time);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "slots_out:",
-+			 fmt_table, "slots_out:",
- 			 le32_to_cpu(general->slots_out),
- 			 accum_general->slots_out,
- 			 delta_general->slots_out, max_general->slots_out);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "slots_idle:",
-+			 fmt_table, "slots_idle:",
- 			 le32_to_cpu(general->slots_idle),
- 			 accum_general->slots_idle,
- 			 delta_general->slots_idle, max_general->slots_idle);
--	pos += scnprintf(buf + pos, bufsz - pos, "ttl_timestamp:\t\t\t%u\n",
--			 le32_to_cpu(general->ttl_timestamp));
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "tx_on_a:",
-+			 fmt_table, "tx_on_a:",
- 			 le32_to_cpu(div->tx_on_a), accum_div->tx_on_a,
- 			 delta_div->tx_on_a, max_div->tx_on_a);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "tx_on_b:",
-+			 fmt_table, "tx_on_b:",
- 			 le32_to_cpu(div->tx_on_b), accum_div->tx_on_b,
- 			 delta_div->tx_on_b, max_div->tx_on_b);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "exec_time:",
-+			 fmt_table, "exec_time:",
- 			 le32_to_cpu(div->exec_time), accum_div->exec_time,
- 			 delta_div->exec_time, max_div->exec_time);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "probe_time:",
-+			 fmt_table, "probe_time:",
- 			 le32_to_cpu(div->probe_time), accum_div->probe_time,
- 			 delta_div->probe_time, max_div->probe_time);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "rx_enable_counter:",
-+			 fmt_table, "rx_enable_counter:",
- 			 le32_to_cpu(general->rx_enable_counter),
- 			 accum_general->rx_enable_counter,
- 			 delta_general->rx_enable_counter,
- 			 max_general->rx_enable_counter);
- 	pos += scnprintf(buf + pos, bufsz - pos,
--			 "  %-30s %10u  %10u  %10u  %10u\n",
--			 "num_of_sos_states:",
-+			 fmt_table, "num_of_sos_states:",
- 			 le32_to_cpu(general->num_of_sos_states),
- 			 accum_general->num_of_sos_states,
- 			 delta_general->num_of_sos_states,
+-		chunk_size = min(size, (size_t)60);
++		chunk_size = min(size, 60U);
+ 
+ 		*((__le32*)chunk_buffer) = cpu_to_le32(chunk_size);
+ 		memcpy(chunk_buffer + 4, firmware, chunk_size);
+@@ -991,22 +991,22 @@ int if_sdio_update_hw_spec(struct if_sdio_card *card)
+ 			chunk = card->buffer[0] | (card->buffer[1] << 8);
+ 			type = card->buffer[2] | (card->buffer[3] << 8);
+ 
+-			lbtf_deb_sdio("packet of type %d and size %d bytes\n",
+-				(int)type, (int)chunk);
++			lbtf_deb_sdio("packet of type %hu and size %hu bytes\n",
++				type, chunk);
+ 
+ 			lbtf_deb_hex(LBTF_DEB_SDIO, "SDIO Rx: ", card->buffer,
+ 						 min_t(unsigned int, size, 100));
+ 
+ 			if (chunk > size) {
+-				lbtf_deb_sdio("packet fragment (%d > %d)\n",
+-					(int)chunk, (int)size);
++				lbtf_deb_sdio("packet fragment (%hu > %hu)\n",
++					chunk, size);
+ 				ret = -EINVAL;
+ 				goto out;
+ 			}
+ 
+ 			if (chunk < size) {
+-				lbtf_deb_sdio("packet fragment (%d < %d)\n",
+-					(int)chunk, (int)size);
++				lbtf_deb_sdio("packet fragment (%hu < %hu)\n",
++					chunk, size);
+ 			}
+ 
+ 			switch (type) {
+@@ -1022,8 +1022,8 @@ int if_sdio_update_hw_spec(struct if_sdio_card *card)
+ 				lbtf_deb_sdio("Got MVMS_EVENT");
+ 				continue;
+ 			default:
+-				lbtf_deb_sdio("invalid type (%d) from firmware\n",
+-						(int)type);
++				lbtf_deb_sdio("invalid type (%hu) from firmware\n",
++						type);
+ 				ret = -EINVAL;
+ 				goto out;
+ 			}
+@@ -1085,7 +1085,7 @@ static void if_sdio_interrupt(struct sdio_func *func)
+ 	card = sdio_get_drvdata(func);
+ 
+ 	cause = sdio_readb(card->func, IF_SDIO_H_INT_STATUS, &ret);
+-	lbtf_deb_int("interrupt: 0x%X\n", (unsigned)cause);
++	lbtf_deb_int("interrupt: 0x%hhX\n", cause);
+ 	lbtf_deb_int("interrupt ret: 0x%X\n", ret);
+ 	if (ret)
+ 		goto out;
+@@ -1158,7 +1158,7 @@ static int if_sdio_probe(struct sdio_func *func,
+ 		card->scratch_reg = IF_SDIO_SCRATCH_OLD;
+ 		break;
+ 	case IF_SDIO_MODEL_8686:
+-		lbtf_deb_sdio("Found Marvel 8686");
++		lbtf_deb_sdio("Found Marvell 8686");
+ 		card->scratch_reg = IF_SDIO_SCRATCH;
+ 		break;
+ 	case IF_SDIO_MODEL_8688:
+@@ -1241,9 +1241,9 @@ static int if_sdio_probe(struct sdio_func *func,
+ 	sdio_set_drvdata(func, card);
+ 
+ 	lbtf_deb_sdio("class = 0x%X, vendor = 0x%X, "
+-			"device = 0x%X, model = 0x%X, ioport = 0x%X\n",
++			"device = 0x%X, model = 0x%X, ioport = 0x%luX\n",
+ 			func->class, func->vendor, func->device,
+-			model, (unsigned)card->ioport);
++			model, card->ioport);
+ 
+ 	/* Upload firmware */
+ 	lbtf_deb_sdio("Going to upload fw...");
 -- 
-1.7.0.4
+1.7.0
 
