@@ -1,41 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:50675 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757175Ab0I0TJW (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:26917 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757584Ab0IHHFH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 15:09:22 -0400
-Received: by iwn5 with SMTP id 5so4952265iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 12:09:21 -0700 (PDT)
+	Wed, 8 Sep 2010 03:05:07 -0400
+Received: from vs3017.wh2.ocn.ne.jp (125.206.180.250)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-025769503
+	for <linux-wireless@vger.kernel.org>; Wed,  8 Sep 2010 16:05:05 +0900 (JST)
+Subject: [PATCH 1/8] ath: Copy cryptographic capability flags into ath
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org, bob@bobcopeland.com,
+	ath5k-devel@lists.ath5k.org, lrodriguez@atheros.com,
+	mickflemm@gmail.com
+Date: Wed, 08 Sep 2010 16:04:33 +0900
+Message-ID: <20100908070433.11255.61620.stgit@tt-desk>
+In-Reply-To: <20100908070427.11255.17659.stgit@tt-desk>
+References: <20100908070427.11255.17659.stgit@tt-desk>
 MIME-Version: 1.0
-In-Reply-To: <1285614371.4043.28.camel@jlt3.sipsolutions.net>
-References: <1285266471.3770.384.camel@jlt3.sipsolutions.net>
- <AANLkTi=3GraBb9hTrieCNvCB0o3PXGORkW1b7F2PceK3@mail.gmail.com>
- <1285611630.4043.26.camel@jlt3.sipsolutions.net> <AANLkTin+1-_RA8fY8B5-omQi3kMJ3U0iw8Kdg=FC2rnP@mail.gmail.com>
- <1285613669.4043.27.camel@jlt3.sipsolutions.net> <AANLkTimmZZiMbtA-8m69grwV_v95KcGKRQi6=-fz0JuT@mail.gmail.com>
- <1285614371.4043.28.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 27 Sep 2010 12:09:01 -0700
-Message-ID: <AANLkTikcqU3kMCELc9QadC0JOA2ic1=Mw+X34kOus4VL@mail.gmail.com>
-Subject: Re: [RFC] mac80211: fix release_reorder_timeout in scan
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: wireless <linux-wireless@vger.kernel.org>, Jouni Malinen <j@w1.fi>,
-	Christian Lamparter <chunkeey@googlemail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 27, 2010 at 12:06 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2010-09-27 at 12:03 -0700, Luis R. Rodriguez wrote:
->
->> > We put them into the reorder buffer, but if we get a reorder timeout
->> > while scanning we'll drop the frames which isn't necessary.
->>
->> Ah, got it, thanks, good catch. Guess its not a terrible stable fix,
->> but at least important for those who care about VoIP and such.
->
-> You wouldn't typically use aggregation on VO traffic, I think?
+This will be used later in this patch series.
 
-ath9k uses aggregation for all data traffic.
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ drivers/net/wireless/ath/ath.h |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index a706202..057fdd7 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -71,6 +71,15 @@ struct ath_regulatory {
+ 	struct reg_dmn_pair_mapping *regpair;
+ };
+ 
++enum ath_crypt_caps {
++	ATH_CRYPT_CAP_MIC_AESCCM		= BIT(0),
++	ATH_CRYPT_CAP_MIC_CKIP			= BIT(1),
++	ATH_CRYPT_CAP_MIC_TKIP			= BIT(2),
++	ATH_CRYPT_CAP_CIPHER_AESCCM		= BIT(3),
++	ATH_CRYPT_CAP_CIPHER_CKIP		= BIT(4),
++	ATH_CRYPT_CAP_CIPHER_TKIP		= BIT(5),
++};
++
+ /**
+  * struct ath_ops - Register read/write operations
+  *
+@@ -121,6 +130,7 @@ struct ath_common {
+ 	DECLARE_BITMAP(keymap, ATH_KEYMAX);
+ 	DECLARE_BITMAP(tkip_keymap, ATH_KEYMAX);
+ 	u8 splitmic;
++	enum ath_crypt_caps crypt_caps;
+ 
+ 	struct ath_regulatory regulatory;
+ 	const struct ath_ops *ops;
+
