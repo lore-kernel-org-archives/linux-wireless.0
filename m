@@ -1,40 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3476 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751545Ab0IQDfW (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:58168 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756634Ab0IHXbB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Sep 2010 23:35:22 -0400
-Date: Thu, 16 Sep 2010 23:32:24 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 02/11] This change reorganizes the main ath5k file in
-	order to re-group
-Message-ID: <20100917033224.GB32630@hash.localnet>
-References: <20100917023543.24997.48466.stgit@tt-desk> <20100917023630.24997.40997.stgit@tt-desk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100917023630.24997.40997.stgit@tt-desk>
+	Wed, 8 Sep 2010 19:31:01 -0400
+Received: by pvg2 with SMTP id 2so254472pvg.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2010 16:31:01 -0700 (PDT)
+From: Steve deRosier <steve@cozybit.com>
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, javier@cozybit.com,
+	Jason Spence <jspence@lightconsulting.com>,
+	Steve deRosier <steve@cozybit.com>
+Subject: [PATCH 2/2] libertas_tf: Add Kconfig note about Wi2Wi device and firmware location.
+Date: Wed,  8 Sep 2010 16:30:47 -0700
+Message-Id: <1283988647-44747-2-git-send-email-steve@cozybit.com>
+In-Reply-To: <1283988647-44747-1-git-send-email-steve@cozybit.com>
+References: <1283988647-44747-1-git-send-email-steve@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 17, 2010 at 11:36:30AM +0900, Bruno Randolf wrote:
-> From: Bob Copeland <me@bobcopeland.com>
-> 
-> related functions and remove most of the forward declarations
-> (from 61 down to 3).  This is, unfortunately, a lot of churn, but
-> there should be no functional changes.
-> 
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
-> Signed-off-by: Bruno Randolf <br1@einfach.org>
+From: Jason Spence <jspence@lightconsulting.com>
 
-> Bruno: rebased to wireless-next
+Signed-off-by: Jason Spence <jspence@lightconsulting.com>
+Signed-off-by: Steve deRosier <steve@cozybit.com>
+---
+ drivers/net/wireless/Kconfig |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-I'm happy that you did the work :) but something weird happened
-to the commit log: subject is gone and first line of the message
-became the subject.
-
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index fc6c713..cb2e74e 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -49,7 +49,11 @@ config LIBERTAS_THINFIRM_SDIO
+ 	tristate "Marvell Libertas 8686 SDIO 802.11b/g cards"
+ 	depends on LIBERTAS_THINFIRM && MMC
+ 	---help---
+-	  A driver for Marvell Libertas 8686 SDIO devices.
++	  A driver for Marvell Libertas 8686 SDIO devices and those that include
++	  the 88W8686 core, such as the Wi2Wi devices.  Special SDIO specific
++	  firmware is required to use this driver, see the OLPC site for details:
++
++	  <http://wiki.laptop.org/go/Thinfirm_1.5>
+ 
+ config LIBERTAS_THINFIRM_USB
+ 	tristate "Marvell Libertas 8388 USB 802.11b/g cards with thin firmware"
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.7.0
 
