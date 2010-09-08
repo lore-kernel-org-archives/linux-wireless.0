@@ -1,182 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:9419 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753480Ab0I2A4x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Sep 2010 20:56:53 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:43636 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757871Ab0IHHFP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Sep 2010 03:05:15 -0400
+Received: from vs3008.wh2.ocn.ne.jp (125.206.180.171)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0739479514
+	for <linux-wireless@vger.kernel.org>; Wed,  8 Sep 2010 16:05:14 +0900 (JST)
+Subject: [PATCH 3/8] ath5k: Use common ath key management functions
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Shanyu Zhao <shanyu.zhao@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 2/5] iwlwifi: add iwl_nic_ops structure to iwl_ops
-Date: Tue, 28 Sep 2010 17:56:55 -0700
-Message-Id: <1285721818-10281-3-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1285721818-10281-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1285721818-10281-1-git-send-email-wey-yi.w.guy@intel.com>
+From: Bruno Randolf <br1@einfach.org>
+Cc: linux-wireless@vger.kernel.org, bob@bobcopeland.com,
+	ath5k-devel@lists.ath5k.org, lrodriguez@atheros.com,
+	mickflemm@gmail.com
+Date: Wed, 08 Sep 2010 16:04:43 +0900
+Message-ID: <20100908070443.11255.13951.stgit@tt-desk>
+In-Reply-To: <20100908070427.11255.17659.stgit@tt-desk>
+References: <20100908070427.11255.17659.stgit@tt-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shanyu Zhao <shanyu.zhao@intel.com>
+Use common ath key management functions in ath5k. This fixes problems with HW
+encryption in AP mode, which was broken in the ath5k implementation.
 
-iwlwifi driver supports multiple devices. Since some device needs
-special configuration we create a new iwl_nic_ops structure which is
-configurable per device. Currently there is only one function pointer
-inside this structure: additional_nic_config().
+Before (with the ath5k implementation) only one client could connect to the AP
+using HW encryption and WPA. When a second client connected, the first client
+was not able to send/receive any more packets. Because of the problems with HW
+encryption, software encryption was always used in AP mode, which resulted in a
+high CPU load (and/or low thruput) on embedded devices. Instead of trying to
+fix the implementation in ath5k it makes more sense to share the code with
+ath9k.
 
-The iwl_nic_ops structure is added to the top level in struct iwl_ops,
-making it easier to change per device. Duplication of the iwl_lib_ops
-structure is no longer needed.
+This also enables HW encryption for AP mode again.
 
-With this new ops the previous function pointer set_calib_version is
-no longer needed since it is just a per device nic configuration.
-
-As part of the code restructuring, a bug is addressed. Indication of
-calib version to uCode is only needed for 6050 devices, however,
-current implementation set calib version for all 6000 devices for
-which DC calib is needed. To fix this, create iwl6050_ops for 6050
-devices and only populate iwl_nic_ops in this structure.
-
-Signed-off-by: Shanyu Zhao <shanyu.zhao@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-6000.c |   35 ++++++++++++++++++++----------
- drivers/net/wireless/iwlwifi/iwl-core.h |    7 +++++-
- 2 files changed, 29 insertions(+), 13 deletions(-)
+ drivers/net/wireless/ath/ath5k/attach.c |    3 +++
+ drivers/net/wireless/ath/ath5k/base.c   |   33 +++++++++++++------------------
+ 2 files changed, 17 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index 9f43f27..8256034 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -83,11 +83,10 @@ static void iwl6000_set_ct_threshold(struct iwl_priv *priv)
- 	priv->hw_params.ct_kill_exit_threshold = CT_KILL_EXIT_THRESHOLD;
- }
+diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
+index aabad4f..eb125d6 100644
+--- a/drivers/net/wireless/ath/ath5k/attach.c
++++ b/drivers/net/wireless/ath/ath5k/attach.c
+@@ -314,6 +314,9 @@ int ath5k_hw_attach(struct ath5k_softc *sc)
+ 	}
  
--/* Indicate calibration version to uCode. */
--static void iwl6000_set_calib_version(struct iwl_priv *priv)
-+static void iwl6050_additional_nic_config(struct iwl_priv *priv)
+ 	/* Crypto settings */
++	common->keymax = (sc->ah->ah_version == AR5K_AR5210 ?
++			  AR5K_KEYTABLE_SIZE_5210 : AR5K_KEYTABLE_SIZE_5211);
++
+ 	ah->ah_aes_support = srev >= AR5K_SREV_AR5212_V4 &&
+ 		(ee->ee_version >= AR5K_EEPROM_VERSION_5_0 &&
+ 		 !AR5K_EEPROM_AES_DIS(ee->ee_misc5));
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 116ac66..9e907da 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2574,6 +2574,7 @@ static int
+ ath5k_init(struct ath5k_softc *sc)
  {
--	if (priv->cfg->need_dc_calib &&
--	    (priv->cfg->ops->lib->eeprom_ops.calib_version(priv) >= 6))
-+	/* Indicate calibration version to uCode. */
-+	if (priv->cfg->ops->lib->eeprom_ops.calib_version(priv) >= 6)
- 		iwl_set_bit(priv, CSR_GP_DRIVER_REG,
- 				CSR_GP_DRIVER_REG_BIT_CALIB_VERSION6);
- }
-@@ -117,9 +116,11 @@ static void iwl6000_nic_config(struct iwl_priv *priv)
- 		iwl_write32(priv, CSR_GP_DRIVER_REG,
- 			     CSR_GP_DRIVER_REG_BIT_RADIO_SKU_2x2_IPA);
+ 	struct ath5k_hw *ah = sc->ah;
++	struct ath_common *common = ath5k_hw_common(ah);
+ 	int ret, i;
+ 
+ 	mutex_lock(&sc->lock);
+@@ -2609,8 +2610,8 @@ ath5k_init(struct ath5k_softc *sc)
+ 	 * Reset the key cache since some parts do not reset the
+ 	 * contents on initial power up or resume from suspend.
+ 	 */
+-	for (i = 0; i < AR5K_KEYTABLE_SIZE; i++)
+-		ath5k_hw_reset_key(ah, i);
++	for (i = 0; i < common->keymax; i++)
++		ath_hw_keyreset(common, (u16)i);
+ 
+ 	ath5k_hw_set_ack_bitrate_high(ah, true);
+ 	ret = 0;
+@@ -3291,9 +3292,6 @@ ath5k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	if (modparam_nohwcrypt)
+ 		return -EOPNOTSUPP;
+ 
+-	if (sc->opmode == NL80211_IFTYPE_AP)
+-		return -EOPNOTSUPP;
+-
+ 	switch (key->cipher) {
+ 	case WLAN_CIPHER_SUITE_WEP40:
+ 	case WLAN_CIPHER_SUITE_WEP104:
+@@ -3302,7 +3300,6 @@ ath5k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	case WLAN_CIPHER_SUITE_CCMP:
+ 		if (sc->ah->ah_aes_support)
+ 			break;
+-
+ 		return -EOPNOTSUPP;
+ 	default:
+ 		WARN_ON(1);
+@@ -3313,27 +3310,25 @@ ath5k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 
+ 	switch (cmd) {
+ 	case SET_KEY:
+-		ret = ath5k_hw_set_key(sc->ah, key->keyidx, key,
+-				       sta ? sta->addr : NULL);
+-		if (ret) {
+-			ATH5K_ERR(sc, "can't set the key\n");
+-			goto unlock;
++		ret = ath_key_config(common, vif, sta, key);
++		if (ret >= 0) {
++			key->hw_key_idx = ret;
++			/* push IV and Michael MIC generation to stack */
++			key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
++			if (key->cipher == WLAN_CIPHER_SUITE_TKIP)
++				key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
++			if (key->cipher == WLAN_CIPHER_SUITE_CCMP)
++				key->flags |= IEEE80211_KEY_FLAG_SW_MGMT;
++			ret = 0;
+ 		}
+-		__set_bit(key->keyidx, common->keymap);
+-		key->hw_key_idx = key->keyidx;
+-		key->flags |= (IEEE80211_KEY_FLAG_GENERATE_IV |
+-			       IEEE80211_KEY_FLAG_GENERATE_MMIC);
+ 		break;
+ 	case DISABLE_KEY:
+-		ath5k_hw_reset_key(sc->ah, key->keyidx);
+-		__clear_bit(key->keyidx, common->keymap);
++		ath_key_delete(common, key);
+ 		break;
+ 	default:
+ 		ret = -EINVAL;
+-		goto unlock;
  	}
--	/* else do nothing, uCode configured */
--	if (priv->cfg->ops->lib->temp_ops.set_calib_version)
--		priv->cfg->ops->lib->temp_ops.set_calib_version(priv);
-+	/* do additional nic configuration if needed */
-+	if (priv->cfg->ops->nic &&
-+		priv->cfg->ops->nic->additional_nic_config) {
-+			priv->cfg->ops->nic->additional_nic_config(priv);
-+	}
- }
  
- static struct iwl_sensitivity_ranges iwl6000_sensitivity = {
-@@ -320,7 +321,6 @@ static struct iwl_lib_ops iwl6000_lib = {
- 	.temp_ops = {
- 		.temperature = iwlagn_temperature,
- 		.set_ct_kill = iwl6000_set_ct_threshold,
--		.set_calib_version = iwl6000_set_calib_version,
- 	 },
- 	.manage_ibss_station = iwlagn_manage_ibss_station,
- 	.update_bcast_stations = iwl_update_bcast_stations,
-@@ -396,7 +396,6 @@ static struct iwl_lib_ops iwl6000g2b_lib = {
- 	.temp_ops = {
- 		.temperature = iwlagn_temperature,
- 		.set_ct_kill = iwl6000_set_ct_threshold,
--		.set_calib_version = iwl6000_set_calib_version,
- 	 },
- 	.manage_ibss_station = iwlagn_manage_ibss_station,
- 	.update_bcast_stations = iwl_update_bcast_stations,
-@@ -419,6 +418,10 @@ static struct iwl_lib_ops iwl6000g2b_lib = {
- 	}
- };
- 
-+static struct iwl_nic_ops iwl6050_nic_ops = {
-+	.additional_nic_config = &iwl6050_additional_nic_config,
-+};
-+
- static const struct iwl_ops iwl6000_ops = {
- 	.lib = &iwl6000_lib,
- 	.hcmd = &iwlagn_hcmd,
-@@ -426,6 +429,14 @@ static const struct iwl_ops iwl6000_ops = {
- 	.led = &iwlagn_led_ops,
- };
- 
-+static const struct iwl_ops iwl6050_ops = {
-+	.lib = &iwl6000_lib,
-+	.hcmd = &iwlagn_hcmd,
-+	.utils = &iwlagn_hcmd_utils,
-+	.led = &iwlagn_led_ops,
-+	.nic = &iwl6050_nic_ops,
-+};
-+
- static const struct iwl_ops iwl6000g2b_ops = {
- 	.lib = &iwl6000g2b_lib,
- 	.hcmd = &iwlagn_bt_hcmd,
-@@ -909,7 +920,7 @@ struct iwl_cfg iwl6050_2agn_cfg = {
- 	.ucode_api_max = IWL6050_UCODE_API_MAX,
- 	.ucode_api_min = IWL6050_UCODE_API_MIN,
- 	.sku = IWL_SKU_A|IWL_SKU_G|IWL_SKU_N,
--	.ops = &iwl6000_ops,
-+	.ops = &iwl6050_ops,
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
- 	.eeprom_ver = EEPROM_6050_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_6050_TX_POWER_VERSION,
-@@ -947,7 +958,7 @@ struct iwl_cfg iwl6050g2_bgn_cfg = {
- 	.ucode_api_max = IWL6050_UCODE_API_MAX,
- 	.ucode_api_min = IWL6050_UCODE_API_MIN,
- 	.sku = IWL_SKU_G|IWL_SKU_N,
--	.ops = &iwl6000_ops,
-+	.ops = &iwl6050_ops,
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
- 	.eeprom_ver = EEPROM_6050G2_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_6050G2_TX_POWER_VERSION,
-@@ -985,7 +996,7 @@ struct iwl_cfg iwl6050_2abg_cfg = {
- 	.ucode_api_max = IWL6050_UCODE_API_MAX,
- 	.ucode_api_min = IWL6050_UCODE_API_MIN,
- 	.sku = IWL_SKU_A|IWL_SKU_G,
--	.ops = &iwl6000_ops,
-+	.ops = &iwl6050_ops,
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE,
- 	.eeprom_ver = EEPROM_6050_EEPROM_VERSION,
- 	.eeprom_calib_ver = EEPROM_6050_TX_POWER_VERSION,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index f0302bf..5daa189 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -137,7 +137,6 @@ struct iwl_debugfs_ops {
- struct iwl_temp_ops {
- 	void (*temperature)(struct iwl_priv *priv);
- 	void (*set_ct_kill)(struct iwl_priv *priv);
--	void (*set_calib_version)(struct iwl_priv *priv);
- };
- 
- struct iwl_tt_ops {
-@@ -233,11 +232,17 @@ struct iwl_led_ops {
- 	int (*off)(struct iwl_priv *priv);
- };
- 
-+/* NIC specific ops */
-+struct iwl_nic_ops {
-+	void (*additional_nic_config)(struct iwl_priv *priv);
-+};
-+
- struct iwl_ops {
- 	const struct iwl_lib_ops *lib;
- 	const struct iwl_hcmd_ops *hcmd;
- 	const struct iwl_hcmd_utils_ops *utils;
- 	const struct iwl_led_ops *led;
-+	const struct iwl_nic_ops *nic;
- };
- 
- struct iwl_mod_params {
--- 
-1.7.0.4
+-unlock:
+ 	mmiowb();
+ 	mutex_unlock(&sc->lock);
+ 	return ret;
 
