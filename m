@@ -1,130 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:42564 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752423Ab0IWNyV (ORCPT
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:46288 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756653Ab0IHXep (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Sep 2010 09:54:21 -0400
-Received: by pzk34 with SMTP id 34so395424pzk.19
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Sep 2010 06:54:20 -0700 (PDT)
-From: greearb@gmail.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] mac80211/ath9k:  Support AMPDU with multiple VIFs.
-Date: Thu, 23 Sep 2010 06:54:14 -0700
-Message-Id: <1285250054-32035-1-git-send-email-greearb@candelatech.com>
+	Wed, 8 Sep 2010 19:34:45 -0400
+Received: by pvg2 with SMTP id 2so255484pvg.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2010 16:34:45 -0700 (PDT)
+From: Steve deRosier <steve@cozybit.com>
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, javier@cozybit.com,
+	Steve deRosier <steve@cozybit.com>
+Subject: [PATCH 1/2] libertas_tf: Fixed mesh mode to get mesh established
+Date: Wed,  8 Sep 2010 16:34:31 -0700
+Message-Id: <1283988872-44843-2-git-send-email-steve@cozybit.com>
+In-Reply-To: <1283988872-44843-1-git-send-email-steve@cozybit.com>
+References: <1283988872-44843-1-git-send-email-steve@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Along with some firmware changes, slight adjustments were needed
+the driver to get mesh beacons through the firmware in mesh mode.
 
-The old ieee80211_find_sta_by_hw method didn't properly
-find VIFS when there was more than one per AP.  This caused
-AMPDU logic in ath9k to get the wrong VIF when trying to
-account for transmitted SKBs.
-
-This patch changes ieee80211_find_sta_by_hw to take a
-localaddr argument to distinguish between VIFs with the
-same AP but different local addresses.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Steve deRosier <steve@cozybit.com>
 ---
-:100644 100644 c5e7af4... 9165ac8... M	drivers/net/wireless/ath/ath9k/recv.c
-:100644 100644 85a7323... 6543828... M	drivers/net/wireless/ath/ath9k/xmit.c
-:100644 100644 12a49f0... 9b25334... M	include/net/mac80211.h
-:100644 100644 44e10a9... f543331... M	net/mac80211/sta_info.c
- drivers/net/wireless/ath/ath9k/recv.c |    6 +++++-
- drivers/net/wireless/ath/ath9k/xmit.c |    2 +-
- include/net/mac80211.h                |   14 ++++----------
- net/mac80211/sta_info.c               |   11 +++++++++--
- 4 files changed, 19 insertions(+), 14 deletions(-)
+ drivers/net/wireless/libertas_tf/main.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index c5e7af4..9165ac8 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -977,7 +977,11 @@ static void ath9k_process_rssi(struct ath_common *common,
- 	 * at least one sdata of a wiphy on mac80211 but with ath9k virtual
- 	 * wiphy you'd have to iterate over every wiphy and each sdata.
- 	 */
--	sta = ieee80211_find_sta_by_hw(hw, hdr->addr2);
-+	if (is_multicast_ether_addr(hdr->addr1))
-+		sta = ieee80211_find_sta_by_hw(hw, hdr->addr2, NULL);
-+	else
-+		sta = ieee80211_find_sta_by_hw(hw, hdr->addr2, hdr->addr1);
-+		
- 	if (sta) {
- 		an = (struct ath_node *) sta->drv_priv;
- 		if (rx_stats->rs_rssi != ATH9K_RSSI_BAD &&
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 85a7323..6543828 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -329,7 +329,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 	rcu_read_lock();
+diff --git a/drivers/net/wireless/libertas_tf/main.c b/drivers/net/wireless/libertas_tf/main.c
+index 0b03fd5..647d195 100644
+--- a/drivers/net/wireless/libertas_tf/main.c
++++ b/drivers/net/wireless/libertas_tf/main.c
+@@ -428,6 +428,7 @@ static int lbtf_op_add_interface(struct ieee80211_hw *hw,
+ 	switch (vif->type) {
+ 	case NL80211_IFTYPE_MESH_POINT:
+ 	case NL80211_IFTYPE_AP:
++	case NL80211_IFTYPE_ADHOC:
+ 		lbtf_set_mode(priv, LBTF_AP_MODE);
+ 		break;
+ 	case NL80211_IFTYPE_STATION:
+@@ -485,6 +486,7 @@ static u64 lbtf_op_prepare_multicast(struct ieee80211_hw *hw,
+ 	int i;
+ 	struct netdev_hw_addr *ha;
+ 	int mc_count = netdev_hw_addr_list_count(mc_list);
++	lbtf_deb_enter(LBTF_DEB_MACOPS);
  
- 	/* XXX: use ieee80211_find_sta! */
--	sta = ieee80211_find_sta_by_hw(hw, hdr->addr1);
-+	sta = ieee80211_find_sta_by_hw(hw, hdr->addr1, hdr->addr2);
- 	if (!sta) {
- 		rcu_read_unlock();
+ 	if (!mc_count || mc_count > MRVDRV_MAX_MULTICAST_LIST_SIZE)
+ 		return mc_count;
+@@ -494,6 +496,7 @@ static u64 lbtf_op_prepare_multicast(struct ieee80211_hw *hw,
+ 	netdev_hw_addr_list_for_each(ha, mc_list)
+ 		memcpy(&priv->multicastlist[i++], ha->addr, ETH_ALEN);
  
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 12a49f0..9b25334 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2419,22 +2419,16 @@ struct ieee80211_sta *ieee80211_find_sta(struct ieee80211_vif *vif,
-  * ieee80211_find_sta_by_hw - find a station on hardware
-  *
-  * @hw: pointer as obtained from ieee80211_alloc_hw()
-- * @addr: station's address
-+ * @addr: remote station's address
-+ * @localaddr: local address (vif->sdata->vif.addr). Use NULL for 'any'.
-  *
-  * This function must be called under RCU lock and the
-  * resulting pointer is only valid under RCU lock as well.
-  *
-- * NOTE: This function should not be used! When mac80211 is converted
-- *	 internally to properly keep track of stations on multiple
-- *	 virtual interfaces, it will not always know which station to
-- *	 return here since a single address might be used by multiple
-- *	 logical stations (e.g. consider a station connecting to another
-- *	 BSSID on the same AP hardware without disconnecting first).
-- *
-- * DO NOT USE THIS FUNCTION.
-  */
- struct ieee80211_sta *ieee80211_find_sta_by_hw(struct ieee80211_hw *hw,
--					       const u8 *addr);
-+					       const u8 *addr,
-+					       const u8 *localaddr);
- 
- /**
-  * ieee80211_sta_block_awake - block station from waking up
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 44e10a9..f543331 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -839,12 +839,19 @@ void ieee80211_sta_expire(struct ieee80211_sub_if_data *sdata,
++	lbtf_deb_leave_args(LBTF_DEB_MACOPS, "count: %d", mc_count);
+ 	return mc_count;
  }
  
- struct ieee80211_sta *ieee80211_find_sta_by_hw(struct ieee80211_hw *hw,
--					       const u8 *addr)
-+					       const u8 *addr,
-+					       const u8 *localaddr)
- {
- 	struct sta_info *sta, *nxt;
+@@ -512,10 +515,13 @@ static void lbtf_op_configure_filter(struct ieee80211_hw *hw,
+ 	*new_flags &= SUPPORTED_FIF_FLAGS;
  
--	/* Just return a random station ... first in list ... */
-+	/*
-+	 * Just return a random station if localaddr is NULL
-+	 * ... first in list.
-+	 */
- 	for_each_sta_info(hw_to_local(hw), addr, sta, nxt) {
-+		if (localaddr &&
-+		    compare_ether_addr(sta->sdata->vif.addr, localaddr) != 0)
-+			continue;
- 		if (!sta->uploaded)
- 			return NULL;
- 		return &sta->sta;
+ 	if (!changed_flags) {
++		lbtf_deb_macops("no flags changed");
+ 		lbtf_deb_leave(LBTF_DEB_MACOPS);
+ 		return;
+ 	}
+ 
++	lbtf_deb_macops("New flags 0x%x", *new_flags);
++
+ 	if (*new_flags & (FIF_PROMISC_IN_BSS))
+ 		priv->mac_control |= CMD_ACT_MAC_PROMISCUOUS_ENABLE;
+ 	else
+@@ -566,7 +572,6 @@ static void lbtf_op_bss_info_changed(struct ieee80211_hw *hw,
+ 				kfree_skb(beacon);
+ 				priv->beacon_enable = bss_conf->enable_beacon;
+ 				priv->beacon_int = bss_conf->beacon_int;
+-				lbtf_set_bssid(priv, 1, bss_conf->bssid);
+ 				lbtf_beacon_ctrl(priv, bss_conf->enable_beacon,
+ 						 bss_conf->beacon_int);
+ 			}
 -- 
-1.7.2.3
+1.7.0
 
