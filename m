@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:30759 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754355Ab0IRBGY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Sep 2010 21:06:24 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 18:06:18 -0700
-From: Vipin Mehta <vmehta@atheros.com>
-To: <greg@kroah.com>
-CC: <linux-wireless@vger.kernel.org>, <vmehta@atheros.com>,
-	<devel@driverdev.osuosl.org>, <andy.shevchenko@gmail.com>,
-	<randy.dunlap@oracle.com>
-Subject: [PATCH] staging: ath6kl: Fixing a compile error
-Date: Fri, 17 Sep 2010 18:06:19 -0700
-Message-ID: <1284771979-13249-1-git-send-email-vmehta@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:57112 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753140Ab0IHXgO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Sep 2010 19:36:14 -0400
+Received: by ywh1 with SMTP id 1so355788ywh.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2010 16:36:13 -0700 (PDT)
+From: Steve deRosier <steve@cozybit.com>
+To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Cc: johannes@sipsolutions.net, javier@cozybit.com,
+	Mattia Barbon <mbarbon@cpan.org>,
+	Steve deRosier <steve@cozybit.com>
+Subject: [PATCH 1/3] libertas_tf: display debugging output only when debugging is enabled.
+Date: Wed,  8 Sep 2010 16:35:56 -0700
+Message-Id: <1283988958-44928-1-git-send-email-steve@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixing a typo that came in as part of commit
-fa1ae16c97d25bb57ed9e1971b9e814da6a290bd.
+From: Mattia Barbon <mbarbon@cpan.org>
 
-Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
-Signed-off-by: Vipin Mehta <vmehta@atheros.com>
+Signed-off-by: Mattia Barbon <mbarbon@cpan.org>
+Signed-off-by: Steve deRosier <steve@cozybit.com>
 ---
- drivers/staging/ath6kl/wmi/wmi.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/libertas_tf/cmd.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/staging/ath6kl/wmi/wmi.c b/drivers/staging/ath6kl/wmi/wmi.c
-index 9811ce7..23ae5d2 100644
---- a/drivers/staging/ath6kl/wmi/wmi.c
-+++ b/drivers/staging/ath6kl/wmi/wmi.c
-@@ -1458,7 +1458,7 @@ wmi_bssInfo_event_rx(struct wmi_t *wmip, A_UINT8 *datap, int len)
+diff --git a/drivers/net/wireless/libertas_tf/cmd.c b/drivers/net/wireless/libertas_tf/cmd.c
+index 8c15e35..1bca11b 100644
+--- a/drivers/net/wireless/libertas_tf/cmd.c
++++ b/drivers/net/wireless/libertas_tf/cmd.c
+@@ -741,10 +741,12 @@ int lbtf_process_rx_command(struct lbtf_private *priv)
+ 	respcmd = le16_to_cpu(resp->command);
+ 	result = le16_to_cpu(resp->result);
  
- 	A_DPRINTF(DBG_WMI2, (DBGFMT "bssInfo event - ch %u, rssi %02x, "
- 		"bssid \"%pM\"\n", DBGARG, bih->channel,
--		(unsigned char) bih->rssi, i&bih->bssid[0]));
-+		(unsigned char) bih->rssi, &bih->bssid[0]));
++#ifdef CONFIG_LIBERTAS_THINFIRM_DEBUG
+ 	if (net_ratelimit())
+ 		pr_info("libertastf: cmd response 0x%04x, seq %d, size %d\n",
+ 			respcmd, le16_to_cpu(resp->seqnum),
+ 			le16_to_cpu(resp->size));
++#endif
  
-     if(wps_enable && (bih->frameType == PROBERESP_FTYPE) ) {
-         wmi_node_return(wmip, bss);
+ 	if (resp->seqnum != priv->cur_cmd->cmdbuf->seqnum) {
+ 		spin_unlock_irqrestore(&priv->driver_lock, flags);
 -- 
-1.6.3.3
+1.7.0
 
