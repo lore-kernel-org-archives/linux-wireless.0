@@ -1,85 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:44835 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755107Ab0I1Qgj (ORCPT
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:5802 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751342Ab0IIAlm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Sep 2010 12:36:39 -0400
-Received: by bwz11 with SMTP id 11so4281968bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Sep 2010 09:36:37 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC] mac80211: fix rx monitor filter refcounters
-Date: Tue, 28 Sep 2010 18:36:24 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>
+	Wed, 8 Sep 2010 20:41:42 -0400
+Received: from vs3007.wh2.ocn.ne.jp (125.206.180.235)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0829262898
+	for <linux-wireless@vger.kernel.org>; Thu,  9 Sep 2010 09:41:40 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Fabio Rossi <rossi.f@inwind.it>
+Subject: Re: [PATCH] ath5k: avoid unneeded calibration error messages
+Date: Thu, 9 Sep 2010 09:40:57 +0900
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+References: <201009070110.11495.rossi.f@inwind.it> <201009070948.29066.br1@einfach.org> <201009082237.41479.rossi.f@inwind.it>
+In-Reply-To: <201009082237.41479.rossi.f@inwind.it>
 MIME-Version: 1.0
 Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201009281836.24529.chunkeey@googlemail.com>
+  charset="iso-8859-1"
+Message-Id: <201009090940.57621.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a refcounter & commit bug when monitor
-rx flags are changed by:
-	iw dev moni set monitor [new flags]
+On Thu September 9 2010 05:37:41 Fabio Rossi wrote:
+> Don't generate calibration errors messages when not needed.
+> 
+> Signed-off-by: Fabio Rossi <rossi.f@inwind.it>
+> ---
+> diff --git a/drivers/net/wireless/ath/ath5k/phy.c
+> b/drivers/net/wireless/ath/ath5k/phy.c
+> index 984ba92..4932bf2 100644
+> --- a/drivers/net/wireless/ath/ath5k/phy.c
+> +++ b/drivers/net/wireless/ath/ath5k/phy.c
+> @@ -1377,7 +1377,7 @@ ath5k_hw_rf511x_iq_calibrate(struct ath5k_hw *ah)
+> 
+>         /* protect against divide by 0 and loss of sign bits */
+>         if (i_coffd == 0 || q_coffd < 2)
+> -               return -1;
+> +               return 0;
+> 
+>         i_coff = (-iq_corr) / i_coffd;
+>         i_coff = clamp(i_coff, -32, 31); /* signed 6 bit */
 
-while interface is up.
-
----
-Is there a sane way to do that?
-
-Introduced by: 8cc9a73914 - Jan 31 19:48:23 2008 
-"mac80211: Use monitor configuration flags"
----
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index c981604..c156936 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -68,8 +68,47 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
- 		 params && params->use_4addr >= 0)
- 		sdata->u.mgd.use_4addr = params->use_4addr;
- 
--	if (sdata->vif.type == NL80211_IFTYPE_MONITOR && flags)
-+	if (sdata->vif.type == NL80211_IFTYPE_MONITOR && flags) {
-+		struct ieee80211_local *local = sdata->local;
-+		u32 changed_flags = sdata->u.mntr_flags ^ *flags;
-+
- 		sdata->u.mntr_flags = *flags;
-+		if (changed_flags & MONITOR_FLAG_FCSFAIL) {
-+			if (*flags & MONITOR_FLAG_FCSFAIL)
-+				local->fif_fcsfail++;
-+			else
-+				local->fif_fcsfail--;
-+		}
-+		if (changed_flags & MONITOR_FLAG_PLCPFAIL) {
-+			if (*flags & MONITOR_FLAG_PLCPFAIL)
-+				local->fif_plcpfail++;
-+			else
-+				local->fif_plcpfail--;
-+		}
-+		if (changed_flags & MONITOR_FLAG_COOK_FRAMES) {
-+			if (*flags & MONITOR_FLAG_COOK_FRAMES)
-+				local->cooked_mntrs++;
-+			else
-+				local->cooked_mntrs--;
-+		}
-+		if (changed_flags & MONITOR_FLAG_OTHER_BSS) {
-+			if (*flags & MONITOR_FLAG_OTHER_BSS)
-+				local->fif_other_bss++;
-+			else
-+				local->fif_other_bss--;
-+		}
-+		if (changed_flags & MONITOR_FLAG_CONTROL) {
-+			if (*flags & MONITOR_FLAG_CONTROL) {
-+				local->fif_pspoll++;
-+				local->fif_control++;
-+			} else {
-+				local->fif_pspoll--;
-+				local->fif_control--;
-+			}
-+		}
-+
-+		ieee80211_configure_filter(local);
-+	}
- 
- 	return 0;
- }
+Acked-by: Bruno Randolf <br1@einfach.org>
