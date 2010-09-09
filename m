@@ -1,631 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:46088 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756594Ab0I0VHI (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:41733 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755330Ab0IICGb convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 17:07:08 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v4] ath5k: Allow ath5k to support virtual STA and AP interfaces.
-Date: Mon, 27 Sep 2010 14:06:28 -0700
-Message-Id: <1285621588-28184-1-git-send-email-greearb@candelatech.com>
+	Wed, 8 Sep 2010 22:06:31 -0400
+Received: by bwz11 with SMTP id 11so722197bwz.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2010 19:06:30 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1283988329-44549-6-git-send-email-steve@cozybit.com>
+References: <1283988329-44549-1-git-send-email-steve@cozybit.com> <1283988329-44549-6-git-send-email-steve@cozybit.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 9 Sep 2010 12:06:10 +1000
+Message-ID: <AANLkTimTgYmdrytn6_wdx_7HVX20nurdsJ=OqiSoGJLs@mail.gmail.com>
+Subject: Re: [PATCH 5/9] libertas_tf: Moved firmware loading to probe in order
+ to fetch MAC address
+To: Steve deRosier <steve@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net, javier@cozybit.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+More nits:
 
-Support up to 4 virtual APs and as many virtual STA interfaces
-as desired.
+On Thu, Sep 9, 2010 at 09:25, Steve deRosier <steve@cozybit.com> wrote:
+> mac80211 requires that the MAC address be known and set before calling
+> ieee80211_register_hw().  If this isn't done, we see bad MAC addresses
+> in our packet headers.  In order to make this happen, I had to restructure
+> to have if_sdio_probe load the firmware and get the hardware specs.
+>
+> I had to add a if_sdio_update_hw_spec function as if_sdio can't use the standard
+> command as several required variables aren't setup yet.
+> if_sdio_update_hw_spec essentially uses polled io to get the hw spec
+> command response from the card.
+>
+> Signed-off-by: Steve deRosier <steve@cozybit.com>
+> ---
+>  drivers/net/wireless/libertas_tf/if_sdio.c     |  263 ++++++++++++++++++++----
+>  drivers/net/wireless/libertas_tf/libertas_tf.h |    2 +-
+>  drivers/net/wireless/libertas_tf/main.c        |   38 +++--
+>  3 files changed, 248 insertions(+), 55 deletions(-)
+>
+> diff --git a/drivers/net/wireless/libertas_tf/if_sdio.c b/drivers/net/wireless/libertas_tf/if_sdio.c
+> index 1e72b4c..189b820 100644
+> --- a/drivers/net/wireless/libertas_tf/if_sdio.c
+> +++ b/drivers/net/wireless/libertas_tf/if_sdio.c
+> @@ -91,12 +91,15 @@ struct if_sdio_card {
+>        u8                      rx_unit;
+>  };
+>
+> -static int if_sdio_enable_interrupts(struct lbtf_private *priv)
+> +static int _if_sdio_enable_interrupts(struct if_sdio_card *card)
+>  {
+> -       struct if_sdio_card *card = priv->card;
+>        int ret;
+>
+>        lbtf_deb_enter(LBTF_DEB_SDIO);
+> @@ -109,9 +112,14 @@ static int if_sdio_enable_interrupts(struct lbtf_private *priv)
+>        return (ret);
+>  }
+>
+> -static int if_sdio_disable_interrupts(struct lbtf_private *priv)
+> +static int if_sdio_enable_interrupts(struct lbtf_private *priv)
+>  {
+>        struct if_sdio_card *card = priv->card;
+> +       return _if_sdio_enable_interrupts(card);
+> +}
+> +
+> +static int _if_sdio_disable_interrupts(struct if_sdio_card *card)
+> +{
+>        int ret;
+>
+>        lbtf_deb_enter(LBTF_DEB_SDIO);
+> @@ -124,6 +132,12 @@ static int if_sdio_disable_interrupts(struct lbtf_private *priv)
+>        return (ret);
+>  }
+>
+> +static int if_sdio_disable_interrupts(struct lbtf_private *priv)
+> +{
+> +       struct if_sdio_card *card = priv->card;
+> +       return _if_sdio_disable_interrupts(card);
+> +}
+> +
+>  /*
+>  *  For SD8385/SD8686, this function reads firmware status after
+>  *  the image is downloaded, or reads RX packet length when
 
-This patch is ported forward from a patch that Patrick McHardy
-did for me against 2.6.31.
+Are these changes really necessary here? - It'd probably be cleaner to
+change the initial functions to just take the card struct instead? (as
+it's always available as priv->card)
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 95072db... 23a693d... M	drivers/net/wireless/ath/ath5k/base.c
-:100644 100644 7f9d0d3... 7f91032... M	drivers/net/wireless/ath/ath5k/base.h
-:100644 100644 58912cd... 5b179d0... M	drivers/net/wireless/ath/ath5k/reset.c
- drivers/net/wireless/ath/ath5k/base.c  |  271 ++++++++++++++++++++++++++-----
- drivers/net/wireless/ath/ath5k/base.h  |   22 ++-
- drivers/net/wireless/ath/ath5k/reset.c |    4 +-
- 3 files changed, 246 insertions(+), 51 deletions(-)
+I'm guessing you're going to do something with the _* versions of
+these functions later, so should this change be there instead?
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 95072db..23a693d 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -52,6 +52,7 @@
- #include <linux/ethtool.h>
- #include <linux/uaccess.h>
- #include <linux/slab.h>
-+#include <linux/etherdevice.h>
- 
- #include <net/ieee80211_radiotap.h>
- 
-@@ -509,8 +510,69 @@ ath5k_setcurmode(struct ath5k_softc *sc, unsigned int mode)
- 	}
- }
- 
-+struct ath_vif_iter_data {
-+	const u8 *hw_macaddr;
-+	u8 mask[ETH_ALEN];
-+	u8 active_mac[ETH_ALEN]; /* first active MAC */
-+	bool need_set_hw_addr;
-+	bool found_active;
-+	bool any_assoc;
-+};
-+
-+static void ath_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
-+{
-+	struct ath_vif_iter_data *iter_data = data;
-+	int i;
-+
-+	for (i = 0; i < ETH_ALEN; i++)
-+		iter_data->mask[i] &= ~(iter_data->hw_macaddr[i] ^ mac[i]);
-+
-+	if (!iter_data->found_active) {
-+		iter_data->found_active = true;
-+		memcpy(iter_data->active_mac, mac, ETH_ALEN);
-+	}
-+
-+	if (iter_data->need_set_hw_addr)
-+		if (compare_ether_addr(iter_data->hw_macaddr, mac) == 0)
-+			iter_data->need_set_hw_addr = false;
-+
-+	if (!iter_data->any_assoc) {
-+		struct ath5k_vif *avf = (void *)vif->drv_priv;
-+		if (avf->assoc)
-+			iter_data->any_assoc = true;
-+	}
-+}
-+
-+void ath5k_update_bssid_mask(struct ath5k_softc *sc, struct ieee80211_vif *vif)
-+{
-+	struct ath_common *common = ath5k_hw_common(sc->ah);
-+	struct ath_vif_iter_data iter_data;
-+
-+	/*
-+	 * Use the hardware MAC address as reference, the hardware uses it
-+	 * together with the BSSID mask when matching addresses.
-+	 */
-+	iter_data.hw_macaddr = common->macaddr;
-+	memset(&iter_data.mask, 0xff, ETH_ALEN);
-+	iter_data.found_active = false;
-+	iter_data.need_set_hw_addr = true;
-+
-+	if (vif)
-+		ath_vif_iter(&iter_data, vif->addr, vif);
-+
-+	/* Get list of all active MAC addresses */
-+	ieee80211_iterate_active_interfaces_atomic(sc->hw, ath_vif_iter,
-+						   &iter_data);
-+	memcpy(sc->bssidmask, iter_data.mask, ETH_ALEN);
-+
-+	if (iter_data.need_set_hw_addr && iter_data.found_active)
-+		ath5k_hw_set_lladdr(sc->ah, iter_data.active_mac);
-+
-+	ath5k_hw_set_bssid_mask(sc->ah, sc->bssidmask);
-+}
-+
- static void
--ath5k_mode_setup(struct ath5k_softc *sc)
-+ath5k_mode_setup(struct ath5k_softc *sc, struct ieee80211_vif *vif)
- {
- 	struct ath5k_hw *ah = sc->ah;
- 	u32 rfilt;
-@@ -520,7 +582,7 @@ ath5k_mode_setup(struct ath5k_softc *sc)
- 	ath5k_hw_set_rx_filter(ah, rfilt);
- 
- 	if (ath5k_hw_hasbssidmask(ah))
--		ath5k_hw_set_bssid_mask(ah, sc->bssidmask);
-+		ath5k_update_bssid_mask(sc, vif);
- 
- 	/* configure operational mode */
- 	ath5k_hw_set_opmode(ah, sc->opmode);
-@@ -698,13 +760,13 @@ ath5k_txbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf,
- 		flags |= AR5K_TXDESC_RTSENA;
- 		cts_rate = ieee80211_get_rts_cts_rate(sc->hw, info)->hw_value;
- 		duration = le16_to_cpu(ieee80211_rts_duration(sc->hw,
--			sc->vif, pktlen, info));
-+			NULL, pktlen, info));
- 	}
- 	if (rc_flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
- 		flags |= AR5K_TXDESC_CTSENA;
- 		cts_rate = ieee80211_get_rts_cts_rate(sc->hw, info)->hw_value;
- 		duration = le16_to_cpu(ieee80211_ctstoself_duration(sc->hw,
--			sc->vif, pktlen, info));
-+			NULL, pktlen, info));
- 	}
- 	ret = ah->ah_setup_tx_desc(ah, ds, pktlen,
- 		ieee80211_get_hdrlen_from_skb(skb), padsize,
-@@ -806,10 +868,13 @@ ath5k_desc_alloc(struct ath5k_softc *sc, struct pci_dev *pdev)
- 		list_add_tail(&bf->list, &sc->txbuf);
- 	}
- 
--	/* beacon buffer */
--	bf->desc = ds;
--	bf->daddr = da;
--	sc->bbuf = bf;
-+	/* beacon buffers */
-+	INIT_LIST_HEAD(&sc->bcbuf);
-+	for (i = 0; i < ATH_BCBUF; i++, bf++, ds++, da += sizeof(*ds)) {
-+		bf->desc = ds;
-+		bf->daddr = da;
-+		list_add_tail(&bf->list, &sc->bcbuf);
-+	}
- 
- 	return 0;
- err_free:
-@@ -824,11 +889,12 @@ ath5k_desc_free(struct ath5k_softc *sc, struct pci_dev *pdev)
- {
- 	struct ath5k_buf *bf;
- 
--	ath5k_txbuf_free_skb(sc, sc->bbuf);
- 	list_for_each_entry(bf, &sc->txbuf, list)
- 		ath5k_txbuf_free_skb(sc, bf);
- 	list_for_each_entry(bf, &sc->rxbuf, list)
- 		ath5k_rxbuf_free_skb(sc, bf);
-+	list_for_each_entry(bf, &sc->bcbuf, list)
-+		ath5k_txbuf_free_skb(sc, bf);
- 
- 	/* Free memory associated with all descriptors */
- 	pci_free_consistent(pdev, sc->desc_len, sc->desc, sc->desc_daddr);
-@@ -837,7 +903,6 @@ ath5k_desc_free(struct ath5k_softc *sc, struct pci_dev *pdev)
- 
- 	kfree(sc->bufptr);
- 	sc->bufptr = NULL;
--	sc->bbuf = NULL;
- }
- 
- 
-@@ -1083,7 +1148,7 @@ ath5k_rx_start(struct ath5k_softc *sc)
- 	spin_unlock_bh(&sc->rxbuflock);
- 
- 	ath5k_hw_start_rx_dma(ah);	/* enable recv descriptors */
--	ath5k_mode_setup(sc);		/* set filters, etc. */
-+	ath5k_mode_setup(sc, NULL);		/* set filters, etc. */
- 	ath5k_hw_start_rx_pcu(ah);	/* re-enable PCU/DMA engine */
- 
- 	return 0;
-@@ -1741,6 +1806,7 @@ ath5k_beacon_update(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- {
- 	int ret;
- 	struct ath5k_softc *sc = hw->priv;
-+	struct ath5k_vif *avf = (void *)vif->drv_priv;
- 	struct sk_buff *skb;
- 
- 	if (WARN_ON(!vif)) {
-@@ -1757,11 +1823,34 @@ ath5k_beacon_update(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- 
- 	ath5k_debug_dump_skb(sc, skb, "BC  ", 1);
- 
--	ath5k_txbuf_free_skb(sc, sc->bbuf);
--	sc->bbuf->skb = skb;
--	ret = ath5k_beacon_setup(sc, sc->bbuf);
-+	if (!avf->bbuf) {
-+		WARN_ON(list_empty(&sc->bcbuf));
-+		avf->bbuf = list_first_entry(&sc->bcbuf, struct ath5k_buf,
-+					     list);
-+		list_del(&avf->bbuf->list);
-+
-+		/* Assign the vap to a beacon xmit slot. */
-+		if (avf->opmode == NL80211_IFTYPE_AP) {
-+			int slot;
-+
-+			avf->bslot = 0;
-+			for (slot = 0; slot < ATH_BCBUF; slot++) {
-+				if (!sc->bslot[slot]) {
-+					avf->bslot = slot;
-+					break;
-+				}
-+			}
-+			BUG_ON(sc->bslot[avf->bslot] != NULL);
-+			sc->bslot[avf->bslot] = vif;
-+			sc->nbcnvifs++;
-+		}
-+	}
-+
-+	ath5k_txbuf_free_skb(sc, avf->bbuf);
-+	avf->bbuf->skb = skb;
-+	ret = ath5k_beacon_setup(sc, avf->bbuf);
- 	if (ret)
--		sc->bbuf->skb = NULL;
-+		avf->bbuf->skb = NULL;
- out:
- 	return ret;
- }
-@@ -1777,16 +1866,18 @@ out:
- static void
- ath5k_beacon_send(struct ath5k_softc *sc)
- {
--	struct ath5k_buf *bf = sc->bbuf;
- 	struct ath5k_hw *ah = sc->ah;
-+	struct ieee80211_vif *vif;
-+	struct ath5k_vif *avf;
-+	struct ath5k_buf *bf;
- 	struct sk_buff *skb;
-+	u64 tsf;
-+	u32 tsftu;
-+	u16 intval;
-+	int slot;
- 
- 	ATH5K_DBG_UNLIMIT(sc, ATH5K_DEBUG_BEACON, "in beacon_send\n");
- 
--	if (unlikely(bf->skb == NULL || sc->opmode == NL80211_IFTYPE_STATION)) {
--		ATH5K_WARN(sc, "bf=%p bf_skb=%p\n", bf, bf ? bf->skb : NULL);
--		return;
--	}
- 	/*
- 	 * Check if the previous beacon has gone out.  If
- 	 * not, don't don't try to post another: skip this
-@@ -1815,6 +1906,28 @@ ath5k_beacon_send(struct ath5k_softc *sc)
- 		sc->bmisscount = 0;
- 	}
- 
-+	intval = sc->bintval ? sc->bintval : ATH5K_DEFAULT_BINTVAL;
-+
-+	tsf = ath5k_hw_get_tsf64(ah);
-+	tsftu = TSF_TO_TU(tsf);
-+	slot = ((tsftu % intval) * ATH_BCBUF) / intval;
-+	vif = sc->bslot[(slot + 1) % ATH_BCBUF];
-+
-+	pr_debug("tsf %llx tsftu %x intval %u slot %u vif %p\n",
-+		 (unsigned long long)tsf, tsftu, intval, slot, vif);
-+
-+	if (vif)
-+		avf = (void *)vif->drv_priv;
-+	else
-+		return;
-+
-+	bf = avf->bbuf;
-+	if (unlikely(bf->skb == NULL || sc->opmode == NL80211_IFTYPE_STATION ||
-+			sc->opmode == NL80211_IFTYPE_MONITOR)) {
-+		ATH5K_WARN(sc, "bf=%p bf_skb=%p\n", bf, bf ? bf->skb : NULL);
-+		return;
-+	}
-+
- 	/*
- 	 * Stop any current dma and put the new frame on the queue.
- 	 * This should never fail since we check above that no frames
-@@ -1827,17 +1940,17 @@ ath5k_beacon_send(struct ath5k_softc *sc)
- 
- 	/* refresh the beacon for AP mode */
- 	if (sc->opmode == NL80211_IFTYPE_AP)
--		ath5k_beacon_update(sc->hw, sc->vif);
-+		ath5k_beacon_update(sc->hw, vif);
- 
- 	ath5k_hw_set_txdp(ah, sc->bhalq, bf->daddr);
- 	ath5k_hw_start_tx_dma(ah, sc->bhalq);
- 	ATH5K_DBG(sc, ATH5K_DEBUG_BEACON, "TXDP[%u] = %llx (%p)\n",
- 		sc->bhalq, (unsigned long long)bf->daddr, bf->desc);
- 
--	skb = ieee80211_get_buffered_bc(sc->hw, sc->vif);
-+	skb = ieee80211_get_buffered_bc(sc->hw, vif);
- 	while (skb) {
- 		ath5k_tx_queue(sc->hw, skb, sc->cabq);
--		skb = ieee80211_get_buffered_bc(sc->hw, sc->vif);
-+		skb = ieee80211_get_buffered_bc(sc->hw, vif);
- 	}
- 
- 	sc->bsent++;
-@@ -1867,6 +1980,12 @@ ath5k_beacon_update_timers(struct ath5k_softc *sc, u64 bc_tsf)
- 	u64 hw_tsf;
- 
- 	intval = sc->bintval & AR5K_BEACON_PERIOD;
-+	if (sc->opmode == NL80211_IFTYPE_AP) {
-+		intval /= ATH_BCBUF;	/* staggered multi-bss beacons */
-+		if (intval < 15)
-+			ATH5K_WARN(sc, "intval %u is too low, min 15\n",
-+				   intval);
-+	}
- 	if (WARN_ON(!intval))
- 		return;
- 
-@@ -2056,6 +2175,15 @@ ath5k_intr(int irq, void *dev_id)
- 
- 	do {
- 		ath5k_hw_get_isr(ah, &status);		/* NB: clears IRQ too */
-+		{
-+			static unsigned int irq_counter;
-+			if ((++irq_counter % 10000) == 9999) {
-+				ATH5K_WARN(sc, "status 0x%x/0x%x  dev_id: %p"
-+					   "  counter: %i  irq_counter: %i\n",
-+					   status, sc->imask, dev_id, counter,
-+					   irq_counter);
-+			}
-+		}
- 		ATH5K_DBG(sc, ATH5K_DEBUG_INTR, "status 0x%x/0x%x\n",
- 				status, sc->imask);
- 		if (unlikely(status & AR5K_INT_FATAL)) {
-@@ -2311,6 +2439,10 @@ ath5k_init(struct ath5k_softc *sc)
- 		ath_hw_keyreset(common, (u16) i);
- 
- 	ath5k_hw_set_ack_bitrate_high(ah, true);
-+
-+	for (i = 0; i < ARRAY_SIZE(sc->bslot); i++)
-+		sc->bslot[i] = NULL;
-+
- 	ret = 0;
- done:
- 	mmiowb();
-@@ -2370,7 +2502,6 @@ ath5k_stop_hw(struct ath5k_softc *sc)
- 		ATH5K_DBG(sc, ATH5K_DEBUG_RESET,
- 				"putting device to sleep\n");
- 	}
--	ath5k_txbuf_free_skb(sc, sc->bbuf);
- 
- 	mmiowb();
- 	mutex_unlock(&sc->lock);
-@@ -2575,9 +2706,9 @@ ath5k_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
- 	}
- 
- 	SET_IEEE80211_PERM_ADDR(hw, mac);
-+	memcpy(&sc->lladdr, mac, ETH_ALEN);
- 	/* All MAC address bits matter for ACKs */
--	memcpy(sc->bssidmask, ath_bcast_mac, ETH_ALEN);
--	ath5k_hw_set_bssid_mask(sc->ah, sc->bssidmask);
-+	ath5k_update_bssid_mask(sc, NULL);
- 
- 	regulatory->current_rd = ah->ah_capabilities.cap_eeprom.ee_regdomain;
- 	ret = ath_regd_init(regulatory, hw->wiphy, ath5k_reg_notifier);
-@@ -2675,31 +2806,55 @@ static int ath5k_add_interface(struct ieee80211_hw *hw,
- {
- 	struct ath5k_softc *sc = hw->priv;
- 	int ret;
-+	struct ath5k_hw *ah = sc->ah;
-+	struct ath5k_vif *avf = (void *)vif->drv_priv;
- 
- 	mutex_lock(&sc->lock);
--	if (sc->vif) {
--		ret = 0;
-+
-+	if (vif->type == NL80211_IFTYPE_AP && sc->nbcnvifs >= ATH_BCBUF) {
-+		ret = -ELNRNG;
- 		goto end;
- 	}
--
--	sc->vif = vif;
-+	sc->nvifs++;
- 
- 	switch (vif->type) {
- 	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_STATION:
- 	case NL80211_IFTYPE_ADHOC:
- 	case NL80211_IFTYPE_MESH_POINT:
--		sc->opmode = vif->type;
-+		avf->opmode = vif->type;
- 		break;
- 	default:
- 		ret = -EOPNOTSUPP;
- 		goto end;
- 	}
- 
--	ATH5K_DBG(sc, ATH5K_DEBUG_MODE, "add interface mode %d\n", sc->opmode);
-+	ATH5K_DBG(sc, ATH5K_DEBUG_MODE, "add interface mode %d\n", avf->opmode);
-+
-+	/* Set combined mode - when APs are configured, operate in AP mode.
-+	 * Otherwise use the mode of the new interface. This can currently
-+	 * only deal with combinations of APs and STAs I think ...
-+	 */
-+	if (sc->nbcnvifs)
-+		sc->opmode = NL80211_IFTYPE_AP;
-+	else
-+		sc->opmode = vif->type;
-+
-+	ath5k_hw_set_opmode(ah, sc->opmode);
-+
-+	/* Set to a reasonable value. Note that this will
-+	 * be set to mac80211's value at ath5k_config(). */
-+	sc->bintval = ATH5K_DEFAULT_BINTVAL;
- 
-+	/* Any MAC address is finee, all others are included through the
-+	 * filter.
-+	 */
-+	memcpy(&sc->lladdr, vif->addr, ETH_ALEN);
- 	ath5k_hw_set_lladdr(sc->ah, vif->addr);
--	ath5k_mode_setup(sc);
-+
-+	memcpy(&avf->lladdr, vif->addr, ETH_ALEN);
-+
-+	ath5k_mode_setup(sc, vif);
- 
- 	ret = 0;
- end:
-@@ -2712,15 +2867,26 @@ ath5k_remove_interface(struct ieee80211_hw *hw,
- 			struct ieee80211_vif *vif)
- {
- 	struct ath5k_softc *sc = hw->priv;
--	u8 mac[ETH_ALEN] = {};
-+	struct ath5k_vif *avf = (void *)vif->drv_priv;
-+	unsigned int i;
- 
- 	mutex_lock(&sc->lock);
--	if (sc->vif != vif)
--		goto end;
-+	sc->nvifs--;
-+
-+	if (avf->bbuf) {
-+		ath5k_txbuf_free_skb(sc, avf->bbuf);
-+		list_add_tail(&avf->bbuf->list, &sc->bcbuf);
-+		for (i = 0; i < ATH_BCBUF; i++) {
-+			if (sc->bslot[i] == vif) {
-+				sc->bslot[i] = NULL;
-+				break;
-+			}
-+		}
-+		sc->nbcnvifs--;
-+		avf->bbuf = NULL;
-+	}
- 
--	ath5k_hw_set_lladdr(sc->ah, mac);
--	sc->vif = NULL;
--end:
-+	ath5k_update_bssid_mask(sc, NULL);
- 	mutex_unlock(&sc->lock);
- }
- 
-@@ -2803,6 +2969,18 @@ static u64 ath5k_prepare_multicast(struct ieee80211_hw *hw,
- 	return ((u64)(mfilt[1]) << 32) | mfilt[0];
- }
- 
-+static bool ath_any_vif_assoc(struct ath5k_softc *sc)
-+{
-+	struct ath_vif_iter_data iter_data;
-+	iter_data.any_assoc = false;
-+	iter_data.need_set_hw_addr = false;
-+	iter_data.found_active = true;
-+
-+	ieee80211_iterate_active_interfaces_atomic(sc->hw, ath_vif_iter,
-+						   &iter_data);
-+	return iter_data.any_assoc;
-+}
-+
- #define SUPPORTED_FIF_FLAGS \
- 	FIF_PROMISC_IN_BSS |  FIF_ALLMULTI | FIF_FCSFAIL | \
- 	FIF_PLCPFAIL | FIF_CONTROL | FIF_OTHER_BSS | \
-@@ -2873,7 +3051,7 @@ static void ath5k_configure_filter(struct ieee80211_hw *hw,
- 
- 	/* FIF_BCN_PRBRESP_PROMISC really means to enable beacons
- 	* and probes for any BSSID */
--	if (*new_flags & FIF_BCN_PRBRESP_PROMISC)
-+	if ((*new_flags & FIF_BCN_PRBRESP_PROMISC) || (sc->nvifs > 1))
- 		rfilt |= AR5K_RX_FILTER_BEACON;
- 
- 	/* FIF_CONTROL doc says that if FIF_PROMISC_IN_BSS is not
-@@ -3058,14 +3236,13 @@ static void ath5k_bss_info_changed(struct ieee80211_hw *hw,
- 				    struct ieee80211_bss_conf *bss_conf,
- 				    u32 changes)
- {
-+	struct ath5k_vif *avf = (void *)vif->drv_priv;
- 	struct ath5k_softc *sc = hw->priv;
- 	struct ath5k_hw *ah = sc->ah;
- 	struct ath_common *common = ath5k_hw_common(ah);
- 	unsigned long flags;
- 
- 	mutex_lock(&sc->lock);
--	if (WARN_ON(sc->vif != vif))
--		goto unlock;
- 
- 	if (changes & BSS_CHANGED_BSSID) {
- 		/* Cache for later use during resets */
-@@ -3079,7 +3256,12 @@ static void ath5k_bss_info_changed(struct ieee80211_hw *hw,
- 		sc->bintval = bss_conf->beacon_int;
- 
- 	if (changes & BSS_CHANGED_ASSOC) {
--		sc->assoc = bss_conf->assoc;
-+		avf->assoc = bss_conf->assoc;
-+		if (bss_conf->assoc)
-+			sc->assoc = bss_conf->assoc;
-+		else
-+			sc->assoc = ath_any_vif_assoc(sc);
-+
- 		if (sc->opmode == NL80211_IFTYPE_STATION)
- 			set_beacon_filter(hw, sc->assoc);
- 		ath5k_hw_set_ledstate(sc->ah, sc->assoc ?
-@@ -3107,7 +3289,6 @@ static void ath5k_bss_info_changed(struct ieee80211_hw *hw,
- 		       BSS_CHANGED_BEACON_INT))
- 		ath5k_beacon_config(sc);
- 
-- unlock:
- 	mutex_unlock(&sc->lock);
- }
- 
-@@ -3382,6 +3563,8 @@ ath5k_pci_probe(struct pci_dev *pdev,
- 		hw->max_rate_tries = 11;
- 	}
- 
-+	hw->vif_data_size = sizeof(struct ath5k_vif);
-+
- 	/* Finish private driver data initialization */
- 	ret = ath5k_attach(pdev, hw);
- 	if (ret)
-diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
-index 7f9d0d3..7f91032 100644
---- a/drivers/net/wireless/ath/ath5k/base.h
-+++ b/drivers/net/wireless/ath/ath5k/base.h
-@@ -58,8 +58,8 @@
- 
- #define	ATH_RXBUF	40		/* number of RX buffers */
- #define	ATH_TXBUF	200		/* number of TX buffers */
--#define ATH_BCBUF	1		/* number of beacon buffers */
--
-+#define ATH_BCBUF	4		/* number of beacon buffers */
-+#define ATH5K_DEFAULT_BINTVAL	1000
- #define ATH5K_TXQ_LEN_MAX	(ATH_TXBUF / 4)		/* bufs per queue */
- #define ATH5K_TXQ_LEN_LOW	(ATH5K_TXQ_LEN_MAX / 2)	/* low mark */
- 
-@@ -152,6 +152,15 @@ struct ath5k_statistics {
- #define ATH_CHAN_MAX	(14+14+14+252+20)
- #endif
- 
-+struct ath5k_vif {
-+	bool			assoc; /* are we associated or not */
-+	int			if_id;
-+	enum nl80211_iftype	opmode;
-+	int			bslot;
-+	struct ath5k_buf	*bbuf;		/* beacon buffer */
-+	u8			lladdr[ETH_ALEN];
-+};
-+
- /* Software Carrier, keeps track of the driver state
-  * associated with an instance of a device */
- struct ath5k_softc {
-@@ -188,10 +197,11 @@ struct ath5k_softc {
- 	unsigned int		curmode;	/* current phy mode */
- 	struct ieee80211_channel *curchan;	/* current h/w channel */
- 
--	struct ieee80211_vif *vif;
-+	u16			nvifs;
- 
- 	enum ath5k_int		imask;		/* interrupt mask copy */
- 
-+	u8			lladdr[ETH_ALEN];
- 	u8			bssidmask[ETH_ALEN];
- 
- 	unsigned int		led_pin,	/* GPIO pin for driving LED */
-@@ -219,7 +229,9 @@ struct ath5k_softc {
- 
- 	spinlock_t		block;		/* protects beacon */
- 	struct tasklet_struct	beacontq;	/* beacon intr tasklet */
--	struct ath5k_buf	*bbuf;		/* beacon buffer */
-+	struct list_head	bcbuf;		/* beacon buffer */
-+	struct ieee80211_vif	*bslot[ATH_BCBUF];
-+	u16			nbcnvifs;
- 	unsigned int		bhalq,		/* SW q for outgoing beacons */
- 				bmisscount,	/* missed beacon transmits */
- 				bintval,	/* beacon interval in TU */
-@@ -228,7 +240,7 @@ struct ath5k_softc {
- 	struct ath5k_txq	*cabq;		/* content after beacon */
- 
- 	int 			power_level;	/* Requested tx power in dbm */
--	bool			assoc;		/* associate state */
-+	bool                    assoc;          /* associate state */
- 	bool			enable_beacon;	/* true if beacons are on */
- 
- 	struct ath5k_statistics	stats;
-diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
-index 58912cd..5b179d0 100644
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -167,7 +167,7 @@ static inline void ath5k_hw_write_rate_duration(struct ath5k_hw *ah,
- 		 * ieee80211_duration() for a brief description of
- 		 * what rate we should choose to TX ACKs. */
- 		tx_time = le16_to_cpu(ieee80211_generic_frame_duration(sc->hw,
--							sc->vif, 10, rate));
-+							NULL, 10, rate));
- 
- 		ath5k_hw_reg_write(ah, tx_time, reg);
- 
-@@ -1060,7 +1060,7 @@ int ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
- 		 * XXX: rethink this after new mode changes to
- 		 * mac80211 are integrated */
- 		if (ah->ah_version == AR5K_AR5212 &&
--			ah->ah_sc->vif != NULL)
-+			ah->ah_sc->nvifs)
- 			ath5k_hw_write_rate_duration(ah, mode);
- 
- 		/*
+> @@ -187,7 +201,6 @@ static int if_sdio_handle_cmd(struct if_sdio_card *card,
+>        struct lbtf_private *priv = card->priv;
+>        int ret;
+>        unsigned long flags;
+> -       u8 i;
+>
+>        lbtf_deb_enter(LBTF_DEB_SDIO);
+>
+
+Shouldn't this be elsewhere (maybe rolled into patch #1?)
+
+> @@ -709,7 +726,6 @@ static int if_sdio_prog_firmware(struct if_sdio_card *card)
+>                if( lbtf_reset_fw == 0 ) {
+>                        goto success;
+>                } else {
+> -                       int i = 0;
+>                        lbtf_deb_sdio("attempting to reset and reload firmware\n");
+>
+>                        if_sdio_reset_device(card);
+
+Ditto.
+
+> @@ -846,7 +863,6 @@ static int if_sdio_enter_deep_sleep(struct lbtf_private *priv)
+>
+>  static int if_sdio_exit_deep_sleep(struct lbtf_private *priv)
+>  {
+> -       struct if_sdio_card *card = priv->card;
+>        int ret = -1;
+>
+>        lbtf_deb_enter(LBTF_DEB_SDIO);
+
+Ditto.
+
+> @@ -857,14 +873,12 @@ static int if_sdio_exit_deep_sleep(struct lbtf_private *priv)
+>
+>  static int if_sdio_reset_deep_sleep_wakeup(struct lbtf_private *priv)
+>  {
+> -       struct if_sdio_card *card = priv->card;
+>        int ret = -1;
+>
+>        lbtf_deb_enter(LBTF_DEB_SDIO);
+>
+>        lbtf_deb_leave_args(LBTF_DEB_SDIO, "ret %d", ret);
+>        return ret;
+> -
+>  }
+>
+>  static void if_sdio_reset_device(struct if_sdio_card *card)
+
+Ditto.
+
+> diff --git a/drivers/net/wireless/libertas_tf/main.c b/drivers/net/wireless/libertas_tf/main.c
+> index 119d625..14ce1bc 100644
+> --- a/drivers/net/wireless/libertas_tf/main.c
+> +++ b/drivers/net/wireless/libertas_tf/main.c
+> @@ -150,14 +150,15 @@ static int lbtf_setup_firmware(struct lbtf_private *priv)
+>        int ret = -1;
+>
+>        lbtf_deb_enter(LBTF_DEB_FW);
+> +
+>        /*
+>         * Read priv address from HW
+>         */
+>        memset(priv->current_addr, 0xff, ETH_ALEN);
+>        ret = lbtf_update_hw_spec(priv);
+>        if (ret) {
+> -               ret = -1;
+> -               goto done;
+> +                  ret = -1;
+> +                  goto done;
+>        }
+>
+>        lbtf_set_mac_control(priv);
+
+Whitespace change noise.
+
+> @@ -165,6 +166,7 @@ static int lbtf_setup_firmware(struct lbtf_private *priv)
+>        lbtf_set_mode(priv, LBTF_PASSIVE_MODE);
+>
+>        ret = 0;
+> +
+>  done:
+>        lbtf_deb_leave_args(LBTF_DEB_FW, "ret: %d", ret);
+>        return ret;
+
+And again.
+
+> @@ -433,6 +437,7 @@ static int lbtf_op_add_interface(struct ieee80211_hw *hw,
+>                lbtf_set_mac_address(priv, (u8 *) vif->addr);
+>        }
+>
+> +
+>        lbtf_deb_leave(LBTF_DEB_MACOPS);
+>        return 0;
+>  }
+
+And again.
+
+Thanks,
+
 -- 
-1.7.2.2
 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
