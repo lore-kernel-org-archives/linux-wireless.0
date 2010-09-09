@@ -1,43 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58896 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751492Ab0IIQi6 (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:41445 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752392Ab0IIFti convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Sep 2010 12:38:58 -0400
-To: Steve deRosier <steve@cozybit.com>
-Subject: Re: [PATCH 5/9] =?UTF-8?Q?libertas=5Ftf=3A=20Moved=20firmware=20loading?=
- =?UTF-8?Q?=20to=20probe=20in=20order=20to=20fetch=20MAC=20address?=
+	Thu, 9 Sep 2010 01:49:38 -0400
+Received: by mail-qy0-f174.google.com with SMTP id 36so5618210qyk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2010 22:49:38 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Date: Thu, 09 Sep 2010 18:38:56 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
-	<javier@cozybit.com>
-In-Reply-To: <1283988329-44549-6-git-send-email-steve@cozybit.com>
-References: <1283988329-44549-1-git-send-email-steve@cozybit.com> <1283988329-44549-6-git-send-email-steve@cozybit.com>
-Message-ID: <e23a1b600a18f179fa72d2cadf724d17@localhost>
+In-Reply-To: <AANLkTi=JFgw5Oh3xZcyBGGdQKjd=sSBLRXDtcxud5pBR@mail.gmail.com>
+References: <1283988329-44549-1-git-send-email-steve@cozybit.com>
+	<1283988329-44549-8-git-send-email-steve@cozybit.com>
+	<AANLkTi=JFgw5Oh3xZcyBGGdQKjd=sSBLRXDtcxud5pBR@mail.gmail.com>
+Date: Wed, 8 Sep 2010 22:49:38 -0700
+Message-ID: <AANLkTim_c4MuAbnx1QADezTuXc-15QuqeFT2WHo+j7Bm@mail.gmail.com>
+Subject: Re: [PATCH 7/9] libertas_tf: Add tx feedback to libertas_tf_sdio
+From: Steve deRosier <steve@cozybit.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net, javier@cozybit.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Sep 8, 2010 at 7:16 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
+> More nits:
+>
+> On Thu, Sep 9, 2010 at 09:25, Steve deRosier <steve@cozybit.com> wrote:
+>> This patch adds tx-feedback to libertas_tf_sdio so that mac80211 rate
+>> adaptation and other bookkeeping tasks function properly.
+>>
+>> Signed-off-by: Steve deRosier <steve@cozybit.com>
+>> ---
+>>  drivers/net/wireless/libertas_tf/deb_defs.h |    5 ++
+>>  drivers/net/wireless/libertas_tf/if_sdio.c  |   42 +++++++++++------
+>>  drivers/net/wireless/libertas_tf/main.c     |   65 ++++++++++++++++----------
+>>  3 files changed, 72 insertions(+), 40 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/libertas_tf/deb_defs.h b/drivers/net/wireless/libertas_tf/deb_defs.h
+>> index 99a7478..8e86e11 100644
+>> --- a/drivers/net/wireless/libertas_tf/deb_defs.h
+>> +++ b/drivers/net/wireless/libertas_tf/deb_defs.h
+>> @@ -1063,25 +1077,23 @@ static void if_sdio_interrupt(struct sdio_func *func)
+>>        if (ret)
+>>                goto out;
+>>
+>> -//     lbtf_deb_sdio("interrupt: 0x%X\n", (unsigned)cause);
+>> -
+>>        sdio_writeb(card->func, ~cause, IF_SDIO_H_INT_STATUS, &ret);
+>>        if (ret)
+>>                goto out;
+>
+> Shouldn't this have been removed instead of being commented in the
+> patch that commented it?
+>
 
-On Wed,  8 Sep 2010 16:25:25 -0700, Steve deRosier <steve@cozybit.com>
-wrote:
-> mac80211 requires that the MAC address be known and set before calling
-> ieee80211_register_hw().  If this isn't done, we see bad MAC addresses
-> in our packet headers.  In order to make this happen, I had to
-restructure
-> to have if_sdio_probe load the firmware and get the hardware specs.
-> 
-> I had to add a if_sdio_update_hw_spec function as if_sdio can't use the
-> standard
-> command as several required variables aren't setup yet.
-> if_sdio_update_hw_spec essentially uses polled io to get the hw spec
-> command response from the card.
+Until this time I was using this line intermittently.  I frequently
+uncommented it in order to see some debugging info.  But as it is in
+an interrupt, it creates a lot of noise that I usually didn't want to
+see.  Once I was past a certain point (here) and didn't need it
+anymore, it got deleted.
 
-You should probably keep this for development purposes, but it will break
-if your code is built into the kernel. The working model we've adopted to
-solve this is to use request_firmware_nowait() in probe, and then only
-continue doing work when the firmware loading returns (and then register
-with mac80211 etc)
+I could have rolled all the patches into one single patch that was
+nice and neat with a blue bow, but then you wouldn't have seen all the
+fun I had and you would have missed out.  :)
 
-johannes
+Thanks,
+- Steve
