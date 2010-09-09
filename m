@@ -1,57 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:34079 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751240Ab0IOH1W (ORCPT
+Received: from mga02.intel.com ([134.134.136.20]:25965 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751698Ab0IIPuG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 03:27:22 -0400
-Received: by wwd20 with SMTP id 20so808204wwd.1
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Sep 2010 00:27:21 -0700 (PDT)
+	Thu, 9 Sep 2010 11:50:06 -0400
+From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 9 Sep 2010 08:50:03 -0700
+Subject: RE: [PATCH 09/12] iwlwifi: force scan complete after timeout
+Message-ID: <E9954878DD1FB34FAE5187FB88C58A3501280FDC94@orsmsx506.amr.corp.intel.com>
+References: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
+ <1284040354-31703-10-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1284040354-31703-10-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <871v8v5vd2.fsf@purkki.adurom.net>
-References: <AANLkTim+Q773KvA7Et1s2Zf8yMx36RGS2LsoJsX1Wtt9@mail.gmail.com>
- <201009151216.32430.br1@einfach.org> <AANLkTiniROJatam4yA4sss3qjczT-6=jSP9QxvmDo2dq@mail.gmail.com>
- <201009151245.53194.br1@einfach.org> <AANLkTimHDXpazQ_rEXw81cdHLRmUpAA+r_tHGdvGOVYW@mail.gmail.com>
- <871v8v5vd2.fsf@purkki.adurom.net>
-From: Jonathan Guerin <jonathan@guerin.id.au>
-Date: Wed, 15 Sep 2010 17:27:01 +1000
-Message-ID: <AANLkTinD+y+CvxijXvxfqB9ncWdD0qYLi-e0PRvczwem@mail.gmail.com>
-Subject: Re: [ath5k-devel] [ath5k] Incorrect value for ACK_TIMEOUT
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Bruno Randolf <br1@einfach.org>, ath5k-devel@lists.ath5k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Nick Kossifidis <mickflemm@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So, we would prefer to match the spec for an out-of-the-box build,
-even tho it would appear to be a worse-performing driving to users?
+Hi Gruszka,
 
---
-Jonathan Guerin
+-----Original Message-----
+From: Stanislaw Gruszka [mailto:sgruszka@redhat.com]
+Sent: Thursday, September 09, 2010 6:52 AM
+To: Johannes Berg; Guy, Wey-Yi W; Chatre, Reinette; John W. Linville
+Cc: linux-wireless@vger.kernel.org; Stanislaw Gruszka
+Subject: [PATCH 09/12] iwlwifi: force scan complete after timeout
 
+If we do not get notification from hardware about scan complete, after
+timeout do mac80211 scan completion anyway. This assure we end scan
+in case of firmware hung.
 
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |   15 +++------------
+ drivers/net/wireless/iwlwifi/iwl-scan.c |   20 +++++++++++++++-----
+ 2 files changed, 18 insertions(+), 17 deletions(-)
 
-On Wed, Sep 15, 2010 at 5:17 PM, Kalle Valo <kvalo@adurom.com> wrote:
-> Jonathan Guerin <jonathan@guerin.id.au> writes:
->
->>> the thing is, like bob said, that we don't really know much about what the HW
->>> expects in some of these registers, so unless you can prove your changes to be
->>> correct - e.g. by measurements which fit the theoretical model better, or by
->>> better thruput, it's hard to say if they are correct or not.
->>>
->>> so before you worry about how to make a correct patch, just go ahead and
->>> change those initvals to what you believe they should be. if it improves
->>> something, let's talk about how to correctly fix it.
->>
->> I don't mean to be a smart-ass, but wouldn't setting the correct
->> values here decrease the throughput? I'm not quite sure how to verify
->> an improvement, other than get the card to contend for the medium with
->> another known-working card? Does this sound reasonable?
->
-> Yes, it does sound reasonable. You might get throughput increase by
-> violating the spec.
->
-> --
-> Kalle Valo
->
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 87a2e40..7c1819f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2041,7 +2041,6 @@ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
+ {
+        struct iwl_priv *priv = hw->priv;
+        struct iwl_rxon_context *ctx = iwl_rxon_ctx_from_vif(vif);
+-       bool scan_completed = false;
+
+        IWL_DEBUG_MAC80211(priv, "enter\n");
+
+@@ -2050,15 +2049,10 @@ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
+        WARN_ON(ctx->vif != vif);
+        ctx->vif = NULL;
+
+-       iwl_scan_cancel_timeout(priv, 100);
++       if (priv->scan_vif == vif)
++               iwl_scan_cancel_timeout(priv, 100);
+        iwl_set_mode(priv, vif);
+
+-       if (priv->scan_vif == vif) {
+-               scan_completed = true;
+-               priv->scan_vif = NULL;
+-               priv->scan_request = NULL;
+-       }
+-
+        /*
+         * When removing the IBSS interface, overwrite the
+         * BT traffic load with the stored one from the last
+@@ -2072,9 +2066,6 @@ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
+        memset(priv->bssid, 0, ETH_ALEN);
+        mutex_unlock(&priv->mutex);
+
+-       if (scan_completed)
+-               ieee80211_scan_completed(priv->hw, true);
+-
+        IWL_DEBUG_MAC80211(priv, "leave\n");
+
+ }
+@@ -2255,6 +2246,7 @@ void iwl_mac_reset_tsf(struct ieee80211_hw *hw)
+
+        spin_unlock_irqrestore(&priv->lock, flags);
+
++       iwl_scan_cancel_timeout(priv, 100);
+
+Not sure, do we need to check vif match?
+
+Thanks
+Wey
+
