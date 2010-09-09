@@ -1,100 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:53928 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752399Ab0ICWcx (ORCPT
+Received: from mga01.intel.com ([192.55.52.88]:51113 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751558Ab0IIPc7 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Sep 2010 18:32:53 -0400
-Date: Fri, 3 Sep 2010 19:32:56 -0300
-From: "Gustavo F. Padovan" <padovan@profusion.mobi>
-To: Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: linux-pcmcia@lists.infradead.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-ide@vger.kernel.org,
-	linux-usb@vger.kernel.org, laforge@gnumonks.org,
-	linux-mtd@lists.infradead.org, linux-bluetooth@vger.kernel.org,
-	alsa-devel@alsa-project.org, linux-serial@vger.kernel.org,
-	Jiri Kosina <jkosina@suse.cz>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 07/15] pcmcia: move config_{base,index,regs} to struct
- pcmcia_device
-Message-ID: <20100903223256.GC16973@vigoh>
-References: <20100903105628.GA21255@comet.dominikbrodowski.net>
- <1283511434-21620-7-git-send-email-linux@dominikbrodowski.net>
+	Thu, 9 Sep 2010 11:32:59 -0400
+From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 9 Sep 2010 08:32:56 -0700
+Subject: RE: [PATCH 0/16 v2] iwlwifi: rewrite iwl-scan.c to avoid race
+ conditions
+Message-ID: <E9954878DD1FB34FAE5187FB88C58A3501280FDC3D@orsmsx506.amr.corp.intel.com>
+References: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1283511434-21620-7-git-send-email-linux@dominikbrodowski.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Dominik Brodowski <linux@dominikbrodowski.net> [2010-09-03 12:57:06 +0200]:
+Hi Gruszka,
 
-> Several drivers prefer to explicitly set config_{base,index,regs},
-> formerly known as ConfigBase, ConfigIndex and Present. Instead of
-> passing these values inside config_req_t, store it in struct
-> pcmcia_device.
-> 
-> CC: netdev@vger.kernel.org
-> CC: linux-wireless@vger.kernel.org
-> CC: linux-ide@vger.kernel.org
-> CC: linux-usb@vger.kernel.org
-> CC: laforge@gnumonks.org
-> CC: linux-mtd@lists.infradead.org
-> CC: linux-bluetooth@vger.kernel.org
-> CC: alsa-devel@alsa-project.org
-> CC: linux-serial@vger.kernel.org
-> CC: Jiri Kosina <jkosina@suse.cz>
-> CC: linux-scsi@vger.kernel.org
-> Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
-> ---
->  drivers/bluetooth/bluecard_cs.c                  |    2 +-
->  drivers/char/pcmcia/ipwireless/main.c            |    2 +-
->  drivers/char/pcmcia/synclink_cs.c                |    6 ++--
->  drivers/ide/ide-cs.c                             |    3 +-
->  drivers/isdn/hardware/avm/avm_cs.c               |    4 +-
->  drivers/isdn/hisax/avma1_cs.c                    |    4 +-
->  drivers/isdn/hisax/elsa_cs.c                     |    2 +-
->  drivers/isdn/hisax/sedlbauer_cs.c                |    2 +-
->  drivers/isdn/hisax/teles_cs.c                    |    2 +-
->  drivers/mtd/maps/pcmciamtd.c                     |    2 +-
->  drivers/net/pcmcia/3c574_cs.c                    |    2 +-
->  drivers/net/pcmcia/3c589_cs.c                    |    2 +-
->  drivers/net/pcmcia/axnet_cs.c                    |    6 ++--
->  drivers/net/pcmcia/fmvj18x_cs.c                  |   22 ++++++------
->  drivers/net/pcmcia/ibmtr_cs.c                    |    4 +-
->  drivers/net/pcmcia/nmclan_cs.c                   |    4 +-
->  drivers/net/pcmcia/pcnet_cs.c                    |    6 ++--
->  drivers/net/pcmcia/smc91c92_cs.c                 |   10 +++---
->  drivers/net/pcmcia/xirc2ps_cs.c                  |    2 +-
->  drivers/net/wireless/airo_cs.c                   |    2 +-
->  drivers/net/wireless/hostap/hostap_cs.c          |    2 +-
->  drivers/net/wireless/ray_cs.c                    |    2 +-
->  drivers/net/wireless/wl3501_cs.c                 |    2 +-
->  drivers/parport/parport_cs.c                     |    2 +-
->  drivers/pcmcia/cs_internal.h                     |    3 --
->  drivers/pcmcia/ds.c                              |    8 ++--
->  drivers/pcmcia/pcmcia_cis.c                      |    2 +-
->  drivers/pcmcia/pcmcia_resource.c                 |   38 +++++++++++-----------
->  drivers/scsi/pcmcia/aha152x_stub.c               |    2 +-
->  drivers/scsi/pcmcia/fdomain_stub.c               |    2 +-
->  drivers/scsi/pcmcia/nsp_cs.c                     |    2 +-
->  drivers/scsi/pcmcia/qlogic_stub.c                |    2 +-
->  drivers/serial/serial_cs.c                       |    6 ++--
->  drivers/staging/comedi/drivers/cb_das16_cs.c     |    2 +-
->  drivers/staging/comedi/drivers/das08_cs.c        |    2 +-
->  drivers/staging/comedi/drivers/ni_daq_700.c      |    2 +-
->  drivers/staging/comedi/drivers/ni_daq_dio24.c    |    2 +-
->  drivers/staging/comedi/drivers/ni_labpc_cs.c     |    2 +-
->  drivers/staging/comedi/drivers/quatech_daqp_cs.c |    2 +-
->  drivers/staging/wlags49_h2/wl_cs.c               |    4 +-
->  drivers/usb/host/sl811_cs.c                      |    2 +-
->  include/pcmcia/cs.h                              |   15 --------
->  include/pcmcia/ds.h                              |   14 ++++++++
->  sound/pcmcia/pdaudiocf/pdaudiocf.c               |    6 ++--
->  sound/pcmcia/vx/vxpocket.c                       |    4 +-
->  45 files changed, 107 insertions(+), 112 deletions(-)
+Do we have any bugzilla bug# can associated to this set of patches?
 
-For drivers/bluetooth
+Thanks
+Wey
 
-Acked-by: Gustavo F. Padovan <padovan@profusion.mobi>
+-----Original Message-----
+From: Stanislaw Gruszka [mailto:sgruszka@redhat.com]
+Sent: Thursday, September 09, 2010 6:52 AM
+To: Johannes Berg; Guy, Wey-Yi W; Chatre, Reinette; John W. Linville
+Cc: linux-wireless@vger.kernel.org; Stanislaw Gruszka
+Subject: [PATCH 0/16 v2] iwlwifi: rewrite iwl-scan.c to avoid race conditions
 
--- 
-Gustavo F. Padovan
-ProFUSION embedded systems - http://profusion.mobi
+Avoid iwlwifi hardware scanning race conditions
+that may lead to not call ieee80211_scan_completed() (what in
+consequences gives "WARNING: at net/wireless/core.c:614
+wdev_cleanup_work+0xb7/0xf0"), or call iee80211_scan_completed() more
+then once (what gives " WARNING: at net/mac80211/scan.c:312
+ieee80211_scan_completed+0x5f/0x1f1").
+
+First problem (warning in wdev_cleanup_work) make any further scan
+request from cfg80211 are ignored by mac80211 with EBUSY error,
+hence NetworkManager can not perform successful scan and not allow
+to establish a new connection. So after suspend/resume (but maybe
+not only then) user is not able to connect to wireless network again.
+
+We can not rely on that the commands (start and abort scan) are
+successful. Even if they are successfully send to the hardware, we can
+not get back notification from firmware (i.e. firmware hung or was
+reseted), or we can get notification when we actually perform abort
+scan in driver code or after that.
+
+To assure we call ieee80211_scan_completed() only once when scan
+was started we use SCAN_SCANNING bit. Code path, which first clear
+STATUS_SCANNING bit will call ieee80211_scan_completed().
+We do this in many cases, in scan complete notification, scan
+abort, device down, etc. Each time we check SCANNING bit.
+
+Tested on 3945, 4965 and 5300 adapters. Tested normal work
+functionality and doing scan stress testing using scripts:
+http://people.redhat.com/sgruszka/misc/test_wifi_scan_reboot.sh
+http://people.redhat.com/sgruszka/misc/test_wifi_scan_updown.sh
+
+v1 -> v2:
+- fix not cleared STATUS_SCAN_HW bit in patch 2
+- merged patch 7 and 8
+- add 4 more patches
