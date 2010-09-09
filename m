@@ -1,54 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:49185 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754306Ab0IATD1 (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:42628 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753482Ab0IIGnj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Sep 2010 15:03:27 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 475D8418D8
-	for <linux-wireless@vger.kernel.org>; Wed,  1 Sep 2010 15:02:24 -0400 (EDT)
-Subject: Compat-wireless release for 2010-09-01 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20100901190323.BA08D41134@repository3.orbit-lab.org>
-Date: Wed,  1 Sep 2010 15:03:23 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Thu, 9 Sep 2010 02:43:39 -0400
+Received: by bwz11 with SMTP id 11so850873bwz.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2010 23:43:38 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTim_c4MuAbnx1QADezTuXc-15QuqeFT2WHo+j7Bm@mail.gmail.com>
+References: <1283988329-44549-1-git-send-email-steve@cozybit.com>
+ <1283988329-44549-8-git-send-email-steve@cozybit.com> <AANLkTi=JFgw5Oh3xZcyBGGdQKjd=sSBLRXDtcxud5pBR@mail.gmail.com>
+ <AANLkTim_c4MuAbnx1QADezTuXc-15QuqeFT2WHo+j7Bm@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 9 Sep 2010 16:43:18 +1000
+Message-ID: <AANLkTi=kjBuLx2XuWt9EL6FWzuVQ2Xdcnpt7kSp_4wBd@mail.gmail.com>
+Subject: Re: [PATCH 7/9] libertas_tf: Add tx feedback to libertas_tf_sdio
+To: Steve deRosier <steve@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net, javier@cozybit.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   e4ae279..48c2e3c  history    -> origin/history
- + 22681a2...13a20f7 master     -> origin/master  (forced update)
- * [new tag]         next-20100901 -> next-20100901
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/staging/ath6kl/Makefile: No such file or directory
-make[3]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/staging/ath6kl/Makefile'.  Stop.
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/staging/ath6kl] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/staging/ath6kl/Makefile: No such file or directory
-make[3]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/staging/ath6kl/Makefile'.  Stop.
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/staging/ath6kl] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/staging/ath6kl/Makefile: No such file or directory
-make[3]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/staging/ath6kl/Makefile'.  Stop.
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/staging/ath6kl] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
+On Thu, Sep 9, 2010 at 15:49, Steve deRosier <steve@cozybit.com> wrote:
+> On Wed, Sep 8, 2010 at 7:16 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
+>> More nits:
+>>
+>> On Thu, Sep 9, 2010 at 09:25, Steve deRosier <steve@cozybit.com> wrote:
+>>> This patch adds tx-feedback to libertas_tf_sdio so that mac80211 rate
+>>> adaptation and other bookkeeping tasks function properly.
+>>>
+>>> Signed-off-by: Steve deRosier <steve@cozybit.com>
+>>> ---
+>>>  drivers/net/wireless/libertas_tf/deb_defs.h |    5 ++
+>>>  drivers/net/wireless/libertas_tf/if_sdio.c  |   42 +++++++++++------
+>>>  drivers/net/wireless/libertas_tf/main.c     |   65 ++++++++++++++++----------
+>>>  3 files changed, 72 insertions(+), 40 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/libertas_tf/deb_defs.h b/drivers/net/wireless/libertas_tf/deb_defs.h
+>>> index 99a7478..8e86e11 100644
+>>> --- a/drivers/net/wireless/libertas_tf/deb_defs.h
+>>> +++ b/drivers/net/wireless/libertas_tf/deb_defs.h
+>>> @@ -1063,25 +1077,23 @@ static void if_sdio_interrupt(struct sdio_func *func)
+>>>        if (ret)
+>>>                goto out;
+>>>
+>>> -//     lbtf_deb_sdio("interrupt: 0x%X\n", (unsigned)cause);
+>>> -
+>>>        sdio_writeb(card->func, ~cause, IF_SDIO_H_INT_STATUS, &ret);
+>>>        if (ret)
+>>>                goto out;
+>>
+>> Shouldn't this have been removed instead of being commented in the
+>> patch that commented it?
+>>
+>
+> Until this time I was using this line intermittently.  I frequently
+> uncommented it in order to see some debugging info.  But as it is in
+> an interrupt, it creates a lot of noise that I usually didn't want to
+> see.  Once I was past a certain point (here) and didn't need it
+> anymore, it got deleted.
+>
+> I could have rolled all the patches into one single patch that was
+> nice and neat with a blue bow, but then you wouldn't have seen all the
+> fun I had and you would have missed out.  :)
 
-compat-wireless code metrics
+Hehehe. Quite. I guess I'm just more pedantic about such things than
+most people. Ah well =)
 
-    498970 - Total upstream lines of code being pulled
-      1714 - backport code changes
-      1475 - backport code additions
-       239 - backport code deletions
-      6073 - backport from compat module
-      7787 - total backport code
-    1.5606 - % of code consists of backport work
-      1218 - Crap changes not yet posted
-      1179 - Crap additions not yet posted
-        39 - Crap deletions not yet posted
-    0.2441 - % of crap code
+Thanks,
 
-Base tree: linux-next.git
-Base tree version: next-20100901
-compat-wireless release: compat-wireless--2010-08-30-3-g44e920c
+-- 
+
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
