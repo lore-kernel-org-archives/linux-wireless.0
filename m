@@ -1,41 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39490 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755277Ab0IVP3r (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Sep 2010 11:29:47 -0400
-Date: Wed, 22 Sep 2010 11:15:57 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [Fwd: Re: [PATCH wireless-2.6] iwlwifi: do not perferm force
- reset while doing scan]
-Message-ID: <20100922151557.GE5515@tuxdriver.com>
-References: <1285166620.12056.29.camel@wwguy-huron>
+Received: from mms2.broadcom.com ([216.31.210.18]:1839 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751371Ab0IIPKV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Sep 2010 11:10:21 -0400
+Message-ID: <4C88F8CE.5090708@broadcom.com>
+Date: Thu, 9 Sep 2010 08:10:06 -0700
+From: "Henry Ptasinski" <henryp@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1285166620.12056.29.camel@wwguy-huron>
+To: devel@linuxdriverproject.org, linux-wireless@vger.kernel.org
+cc: "Henry Ptasinski" <henryp@broadcom.com>
+Subject: [ANN] Full-source Broadcom wireless driver for 11n chips
+References: <20100908150322.17dac9c3@nehalam>
+ <20100908225132.GA12490@kroah.com>
+In-Reply-To: <20100908225132.GA12490@kroah.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 22, 2010 at 07:43:40AM -0700, Guy, Wey-Yi wrote:
+Broadcom would like to announce the initial release of a fully-open
+Linux driver for it's latest generation of 11n chipsets.  The driver,
+while still a work in progress, is released as full source and uses the
+native mac80211 stack.   It supports multiple current chips (BCM4313,
+BCM43224, BCM43225) as well as providing a framework for supporting
+additional chips in the future, including mac80211-aware embedded chips.
+   The README and TODO files included with the sources provide more
+details about the current feature set, known issues, and plans for
+improving the driver.
 
-> The "iwlwifi: do not perferm force reset while doing scan" patch, make
-> sense for .36, but after Gruszka's scan patch(which will in .37), it is
-> not needed. What is your recommendation?
-> 
-> 
-> commit#7acc7c683a747689aaaaad4fce1683fc3f85e552 iwlwifi: do not perferm
-> force reset while doing scan
+The driver is currently available in staging-next git tree, available at:
 
-I can pull wireless-2.6 into wireless-next-2.6 and then revert the
-patch there.
+	git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging-next-2.6.git
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+in the drivers/staging/brcm80211 directory.
+
+---
+Henry Ptasinski
+henryp@broadcom.com
+
