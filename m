@@ -1,37 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:46942 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753636Ab0IQAOn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Sep 2010 20:14:43 -0400
-Date: Thu, 16 Sep 2010 17:14:36 -0700
-From: Greg KH <greg@kroah.com>
-To: Vipin Mehta <vmehta@atheros.com>
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Subject: Re: [PATCH] staging: ath6kl: Including a header file to fix a
- compilation error
-Message-ID: <20100917001436.GA27148@kroah.com>
-References: <1284682087-19351-1-git-send-email-vmehta@atheros.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:59125 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754450Ab0IIOPI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Sep 2010 10:15:08 -0400
+Date: Thu, 9 Sep 2010 07:10:28 -0700
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Steve deRosier <steve@cozybit.com>, linux-wireless@vger.kernel.org
+Subject: Re: libertas_tf
+Message-ID: <20100909141023.GA5476@tuxdriver.com>
+References: <1282764076.3667.12.camel@jlt3.sipsolutions.net>
+ <AANLkTikc0-FbeRHm-0rxrWCGgaxa7svCsQmqpAD-87cq@mail.gmail.com>
+ <5144f966da86d4ab0984bc15bdd5fcab@localhost>
+ <AANLkTimgvEShOKnA3TTf0_3p2ghP2OL8ngKPBgpkf+zf@mail.gmail.com>
+ <d09bb244b842cf15a1513899d19bd39d@localhost>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1284682087-19351-1-git-send-email-vmehta@atheros.com>
+In-Reply-To: <d09bb244b842cf15a1513899d19bd39d@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 16, 2010 at 05:08:07PM -0700, Vipin Mehta wrote:
-> The commit fixes a compilation error that was encountered while using a specific kernel configuration file. The problem was the use of some fuunctions defined in <linux/semaphore.h> without including the header file explicitly. It was probably working before because of the dependency getting implicitly satisfied via some other header file. Also, eliminating the inclusion of the same header file more than once. The code needs additional cleanup and may be addressed by a subsequent commit.
-
-Um, please wrap your lines at 72 columns.
-
+On Tue, Sep 07, 2010 at 11:02:45PM +0200, Johannes Berg wrote:
 > 
-> Signed-off-by: Vipin Mehta <vmehta@atheros.com>
+> On Tue, 7 Sep 2010 13:52:47 -0700, Steve deRosier <steve@cozybit.com>
+> wrote:
 
-Did you forget to report who pointed out the problem to you?  That needs
-to go in a:
-	Reported-by: Foo <foo@baz.org>
-line.
+> > I'm now working on getting it all up to head, so patches should be
+> > coming soon.  Actually, on that note, how would you prefer I get them
+> > to you?  We're talking about an entire new module, libertas_tf_sdio,
+> > and lots of patches to the existing libertas_tf modules.  Something
+> > like 40+ patches.  Would you prefer a patchset posted, or me to squash
+> > a bunch into fewer but larger patches, or would you prefer to pull
+> > from my git tree?
+> 
+> Sounds like a lot of stuff... John will have to answer that. I think
+> posting it piecemeal as much as possible would probably be preferable.
 
-Care to redo this?
+Yes, just post the series.  If you can separate it into a few
+sub-series that might be nice, but don't sweat that too much.
 
-thanks,
-
-greg k-h
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
