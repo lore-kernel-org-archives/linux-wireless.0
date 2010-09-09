@@ -1,49 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:25722 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752080Ab0IHRmY (ORCPT
+Received: from nikosapi.org ([209.123.162.110]:52669 "EHLO nikosapi.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752610Ab0IIDOT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Sep 2010 13:42:24 -0400
-Subject: Re: [PATCH v1 8/8] wireless: wl1271_sdio: enable Runtime PM
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Ohad Ben-Cohen <ohad@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	San Mehat <san@google.com>,
-	"Quadros Roger (Nokia-MS/Helsinki)" <roger.quadros@nokia.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Gao Yunpeng <yunpeng.gao@intel.com>
-In-Reply-To: <1283858949-11073-9-git-send-email-ohad@wizery.com>
-References: <1283858949-11073-1-git-send-email-ohad@wizery.com>
-	 <1283858949-11073-9-git-send-email-ohad@wizery.com>
+	Wed, 8 Sep 2010 23:14:19 -0400
+Received: from 69-196-138-241.dsl.teksavvy.com ([69.196.138.241] helo=[192.168.0.109])
+	by nikosapi.org with esmtpsa (TLSv1:AES256-SHA:256)
+	(Exim 4.63)
+	(envelope-from <nikosapi@nikosapi.org>)
+	id 1OtXDf-0000YQ-4J
+	for linux-wireless@vger.kernel.org; Wed, 08 Sep 2010 22:50:35 -0400
+Subject: Re: ath9k: freeze when putting interface up
+From: Nick Nobody <me@nikosapi.org>
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 08 Sep 2010 10:40:23 -0700
-Message-ID: <1283967623.9120.13.camel@capsicum>
+Date: Wed, 08 Sep 2010 22:50:30 -0400
+Message-ID: <1284000630.2060.15.camel@localhost.localdomain>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-09-07 at 13:29 +0200, ext Ohad Ben-Cohen wrote:
-> Enable runtime pm for the wl1271 SDIO device.
-> 
-> We request power whenever the WLAN interface is brought up,
-> and release it after the WLAN interface is taken down.
-> 
-> As a result, power is released immediately after probe returns,
-> since at that point power has not been explicitly requested yet
-> (i.e. the WLAN interface is still down).
-> 
-> Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
-> ---
+I'm experiencing the exact same thing (with the same hardware). I'm
+using 2.6.35.4 with compat-wireless-2010-08-21.
 
-Looks fine to me, after considering David's comment and since it's done
-in the same way for PCI.
+Running Bjørnar Hansen's test, my system will freeze around 20. Using
+the version of ath9k that comes with 2.6.35.4 is impossible because the
+system would freeze on the first "ifconfig wlan0 up". My wireless
+connection is also a lot less stable compared to how it used to be with
+a 2.6.32 kernel on Fedora 12 (I'm using Arch now).
 
-Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
+I'll try to help in whatever way I can, just let me know what you need.
 
-
--- 
-Cheers,
-Luca.
+nick
 
