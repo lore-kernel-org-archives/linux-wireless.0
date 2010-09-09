@@ -1,77 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:59334 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751286Ab0INFx1 convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:48414 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750905Ab0IIFHY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 01:53:27 -0400
-Received: by wyf22 with SMTP id 22so7062144wyf.19
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Sep 2010 22:53:26 -0700 (PDT)
+	Thu, 9 Sep 2010 01:07:24 -0400
+Received: by iwn5 with SMTP id 5so725958iwn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2010 22:07:24 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <AANLkTi=azJS6bn7-=Bbb--ibACaQWqv4ZGLMUpfxynm7@mail.gmail.com>
-References: <AANLkTi=azJS6bn7-=Bbb--ibACaQWqv4ZGLMUpfxynm7@mail.gmail.com>
-From: Jonathan Guerin <jonathan@guerin.id.au>
-Date: Tue, 14 Sep 2010 15:53:06 +1000
-Message-ID: <AANLkTikvdkR=w-vGL=0LHnxQSibfoFBpuhLwjJZWVCuM@mail.gmail.com>
-Subject: Re: [support] ath5k contention windows
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath5k-devel <ath5k-devel@lists.ath5k.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <AANLkTindGAm4DPaG1MYa6u1rkRNv8z9EjUq+bwjD-+zX@mail.gmail.com>
+References: <AANLkTimq7nB-ea1XmORprBiS2B-OBNtEiiQXAZLzZfA2@mail.gmail.com>
+ <AANLkTi=i_7oMX4nTiWwcjGezv8vG92gX_8UV1tv_KdYL@mail.gmail.com>
+ <AANLkTi=oVwssd-YvVCqujm2MNqPGF4t6FUAXGu9Wei5=@mail.gmail.com> <AANLkTindGAm4DPaG1MYa6u1rkRNv8z9EjUq+bwjD-+zX@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 8 Sep 2010 22:07:03 -0700
+Message-ID: <AANLkTi=F_7aJeig9jtFxvETqAVtuEbr6wednJh9Q7xsA@mail.gmail.com>
+Subject: Re: ath9k: freeze when putting interface up
+To: =?UTF-8?Q?Bj=C3=B8rnar_Hansen?= <tilbjornar@gmail.com>,
+	Nick Nobody <me@nikosapi.org>,
+	Vivek Natarajan <Vivek.Natarajan@atheros.com>,
+	Senthil Balasubramanian <senthilkumar@atheros.com>,
+	Satagopan Kanthadai <Satagopan.Kanthadai@atheros.com>
+Cc: linux-wireless@vger.kernel.org,
+	ath9k-devel-request@lists.ath9k.org,
+	Mohammed Shafi <shafi.wireless@gmail.com>,
+	Vivek Natarajan <vnatarajan@atheros.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+On Sun, Sep 5, 2010 at 12:49 PM, BjÃ¸rnar Hansen <tilbjornar@gmail.com> wrote:
+> Hi again,
+>
+> I managed to use git bisect to pinpoint the exact commit that causes
+> my laptop to freeze:
+>
+> 53bc7aa08b48e5cd745f986731cc7dc24eef2a9f is the first bad commit
+> commit 53bc7aa08b48e5cd745f986731cc7dc24eef2a9f
+> Author: Vivek Natarajan <vnatarajan@atheros.com>
+> Date: Â  Mon Apr 5 14:48:04 2010 +0530
+>
+> Â  Â ath9k: Add support for newer AR9285 chipsets.
+>
+> Â  Â This patch adds support for a modified newer version of AR9285
+> Â  Â chipsets.
+>
+> Â  Â Signed-off-by: Vivek Natarajan <vnatarajan@atheros.com>
+> Â  Â Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>
+>
+> I'm CC'ing this to Vivek also.
+> The chipset is reported as AR9285 rev 01. by lspci (I previously
+> stated it was rev 2, this is wrong).
+>
+> While bisecting I found a reliable way to reproduce the freeze. I
+> devised a script to continuously bring the interface up and down:
+>
+> COUNTER=1
+> while(true); do
+> Â  Â sudo ifconfig wlan0 up &&
+> Â  Â sudo ifconfig wlan0 down &&
+> Â  Â echo $COUNTER &&
+> Â  Â let COUNTER=COUNTER+1
+> done
+>
+> On stable kernels I let it run to around 150. On unstable kernels it
+> reached at most 8.
 
-I have some behaviour I'm observing with some Atheros cards we use
-that doesn't seem to match what the initvals of ath5k are set up to.
-These are the cards I used:
-http://www.mini-box.com/s.nl/it.A/id.387/.f
+Some attention to this would be appreciated.
 
-I have run a saturated iPerf flow on a conducted testbed with both
-stations being inside RF-shielding boxes. They are set to 802.11a
-mode, on channel 1. I then parse the trace, looking for ACK-DATA
-pairs, and calculating the time difference between them. From this, I
-remove the TX_TIME of the DATA frame, as well as a DIFS:
-
-ACK_TIMESTAMP + DIFS + CONTENTION_TIME + DATA_TX_TIME = DATA_TIMESTAMP
-
-which will leave me with the CONTENTION_TIME. Dividing this time by a
-SLOT_TIME will give me the slot which was chosen by the hardware.
-
-
-According to the driver, in ath5k.h:
-
-#define AR5K_TUNE_CWMIN                15
-
-CWMIN is initialised to 15.
-
-The actual distribution of contention slots I'm observing resembles this:
-
-Slot Number,Count
-0,1315
-1,1302
-2,1249
-3,1291
-4,1347
-5,1219
-6,1249
-7,0
-8,0
-9,0
-<truncated>
-
-as well as 1360 frames which came in with a negative CONTENTION_TIME.
-
-Ignoring the fact that some frames are coming up with a negative
-CONTENTION_TIME (which potentially points to another problem), what is
-being observed here is that CW_MIN appears to start at 7, rather than
-the 15 which it should be.
-
-I'm just wondering if anyone would have any idea why this is occurring?
-
-Thanks,
-
---
-Jonathan Guerin
-
-PS sorry for the double-post, the system complained as my message was
-originally in HTML
+  Luis
