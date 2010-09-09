@@ -1,41 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:63833 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751624Ab0IIPwH convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:51690 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754993Ab0IIBpM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Sep 2010 11:52:07 -0400
-From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 9 Sep 2010 08:52:03 -0700
-Subject: RE: [PATCH 14/16] iwlwifi: replace and add IWL_DEBUG_SCAN
-Message-ID: <E9954878DD1FB34FAE5187FB88C58A3501280FDCA3@orsmsx506.amr.corp.intel.com>
-References: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
- <1284040354-31703-15-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1284040354-31703-15-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 8 Sep 2010 21:45:12 -0400
+Received: by bwz11 with SMTP id 11so709456bwz.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2010 18:45:11 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1283988329-44549-5-git-send-email-steve@cozybit.com>
+References: <1283988329-44549-1-git-send-email-steve@cozybit.com> <1283988329-44549-5-git-send-email-steve@cozybit.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 9 Sep 2010 11:44:51 +1000
+Message-ID: <AANLkTinhiQAVJKpyjXduVKDqvLXA8EgX7VCFTEu_F272@mail.gmail.com>
+Subject: Re: [PATCH 4/9] libertas_tf: Add firmware reset to sdio driver and
+ attempt firmware reload
+To: Steve deRosier <steve@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net, javier@cozybit.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Gruszka,
+Minor nit:
 
------Original Message-----
-From: Stanislaw Gruszka [mailto:sgruszka@redhat.com]
-Sent: Thursday, September 09, 2010 6:53 AM
-To: Johannes Berg; Guy, Wey-Yi W; Chatre, Reinette; John W. Linville
-Cc: linux-wireless@vger.kernel.org; Stanislaw Gruszka
-Subject: [PATCH 14/16] iwlwifi: replace and add IWL_DEBUG_SCAN
+On Thu, Sep 9, 2010 at 09:25, Steve deRosier <steve@cozybit.com> wrote:
+> This patch adds a method to do a firmware/chip reset to the sdio driver and
+> attempts to reload the firmware.
+>
+> Signed-off-by: Steve deRosier <steve@cozybit.com>
+> ---
+>  drivers/net/wireless/libertas_tf/if_sdio.c |   40 +++++++++++++++++++++++----
+>  drivers/net/wireless/libertas_tf/main.c    |    7 ++++-
+>  2 files changed, 40 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/net/wireless/libertas_tf/if_sdio.c b/drivers/net/wireless/libertas_tf/if_sdio.c
+> index fed5aff..1e72b4c 100644
+> --- a/drivers/net/wireless/libertas_tf/main.c
+> +++ b/drivers/net/wireless/libertas_tf/main.c
+> @@ -360,7 +364,8 @@ static int lbtf_op_start(struct ieee80211_hw *hw)
+>        return 0;
+>
+>  err_prog_firmware:
+> -//     priv->hw_reset_device(card);
+> +       if (priv->hw_reset_device)
+> +               priv->hw_reset_device(card);
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-scan.c |   29 ++++++++++++++++++-----------
- 1 files changed, 18 insertions(+), 11 deletions(-)
+Should this not be done in the first patch? - rather than just
+commenting out the call: Would commenting out this line in the first
+patch make the original version of libertas_tf unable to handle
+firmware errors properly?
 
-Should this patch merge with patch#5?
+>        lbtf_deb_leave_args(LBTF_DEB_MACOPS, "error programing fw; ret=%d", ret);
+>        return ret;
+>  }
 
-Thanks
-Wey
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
