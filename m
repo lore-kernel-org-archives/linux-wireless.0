@@ -1,117 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nyc-nss1.cypresscom.net ([64.190.13.53]:44946 "EHLO
-	nyc-nss1.cypresscom.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752925Ab0I3QCE convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45465 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757443Ab0IIXIj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Sep 2010 12:02:04 -0400
-Subject: Re: Question about starting up an AP
-Mime-Version: 1.0 (Apple Message framework v1081)
-Content-Type: text/plain; charset=windows-1252
-From: Joshua Smith <JoshuaESmith@charter.net>
-In-Reply-To: <C4D5DF09-82F0-48B4-9D64-6621B3C82932@kaon.com>
-Date: Thu, 30 Sep 2010 11:52:29 -0400
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	users@rt2x00.serialmonkey.com
-Message-Id: <71135D34-18F6-4909-A8AB-E7390FA73049@charter.net>
-References: <DA0C92FD-F6BF-4746-9BE1-A643A0D70F7A@kaon.com> <201009272143.52283.helmut.schaa@googlemail.com> <EA2A527E-E8DA-4612-B8CB-518E2C6BA7D2@kaon.com> <201009272235.42545.helmut.schaa@googlemail.com> <C4D5DF09-82F0-48B4-9D64-6621B3C82932@kaon.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
+	Thu, 9 Sep 2010 19:08:39 -0400
+To: Ben Greear <greearb@candelatech.com>
+Subject: Re: RFC:  Allow multiple STA connected to same AP.
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Date: Fri, 10 Sep 2010 01:08:38 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+In-Reply-To: <4C896747.6090905@candelatech.com>
+References: <4C8959BC.7040501@candelatech.com> <7fa0decef9a717c1562ee155bba78ce9@localhost> <4C896747.6090905@candelatech.com>
+Message-ID: <9b3afa510682d20c031f85f20345abd7@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I think I have a clue about the WPDMA TX/RX busy bug.  I was having trouble using the latest compat-wireless with USB dongle I have (ID AB50:2019 rt73usb), so I tried rolling Helmut's "oops" fix into:
 
-compat-wireless-2010-07-15
+On Thu, 09 Sep 2010 16:01:27 -0700, Ben Greear <greearb@candelatech.com>
+wrote:
+>>> +       /* If we have more than one virtual station, turn on
+>> PROMISC_IN_BSS
+>>> +        *  --Ben
+>>> +        */
+>>> +       list_for_each_entry_rcu(sdata,&local->interfaces, list) {
+>>> +               if (!sdata->dev || !netif_running(sdata->dev))
+>>> +                       continue;
+>>> +
+>>> +               if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+>>> +                       avifs++;
+>>> +                       if (avifs>  1)
+>>> +                               break;
+>>> +               }
+>>> +       }
+>>> +       if (avifs>  1)
+>>> +               new_flags |= FIF_PROMISC_IN_BSS;
+>>> +
+>>
+>> This seems weird. Why do you need to be *promisc* within a given
+>> BSS if you are multiple stations? You already have two MAC addrs
+>> that you need to accept, so that should be fine, i.e. you don't
+>> need to be promisc in the BSS. If ath9k needs to, it should be in
+>> the driver. So NAK on this change for sure.
+> 
+> This seems to let the driver receive pkts for the 'real' mac on
+> wlan0 and also the arbitrary mac on the second STA interface.
+> 
+> If there is supposed to be some other way for the driver to
+> figure out it's supposed to go promisc, please let me know and
+> I'll try to debug it.
 
-which I have been using successfully for the last few months.  Lo and behold, this version does *NOT* exhibit the TX/RX busy error.  So whatever is causing that problem was introduced between 7/15/2010 and 9/20/2010.
+But you can do the exact same thing in the driver. I just think
+it doesn't belong into mac80211, since mac80211 doesn't need you
+to be promisc, it just needs you to receive frames for those *two*
+addresses that you've added. And you already know about those,
+since you were notified about the interfaces going up and down
+and associating etc.
 
-This leaves me très happy, since with the "oops" fix, I can restart hostapd at will, and the card never crashes.  Woo hoo!
+>>> @@ -440,7 +440,7 @@ int sta_info_insert_rcu(struct sta_info *sta)
+>>> __acquires(RCU)
+>>>
+>>>           spin_lock_irqsave(&local->sta_lock, flags);
+>>>           /* check if STA exists already */
+>>> -       if (sta_info_get_bss(sdata, sta->sta.addr)) {
+>>> +       if (sta_info_get(sdata, sta->sta.addr)) {
+>>
+>> I don't understand this change. These functions are the same
+>> if sdata is in managed mode.
+> 
+> The _bss method returns anything in same bss or with same
+> sdata.  The sta_info_get only returns if MAC and sdata match.
+> 
+> W/out this change, the second STA fails this check because it
+> has same BSS as the first one.
 
--Joshua
+I'll have to look at this, I may misremember the way this works
+internally, but this change will certainly break some things
+since it'd allow adding the same STA to multiple VLANs that sit
+on top of the same BSS.
 
-On Sep 29, 2010, at 2:21 PM, Joshua Smith wrote:
-
-> OK, I have a working system now.  It's not pretty, but it's better than where I was.
-> 
-> - Using compat-wireless-2010-09-20, with the patch "rt2x00: Fix oops caused by error path in rt2x00lib_start"
->  Compiled with:
-> CONFIG_RT2X00_DEBUG=y
-> CONFIG_RT2X00_LIB_DEBUGFS=y
->  and all the other DEBUGFS also set to y
-> 
-> - Using a 2.6.27.8 kernel compiled with debug_fs support
-> 
-> When my system comes up, I try to start hostapd.  This may succeed, or it may fail because of the error:
-> 
-> phy0 -> rt2800_wait_wpdma_ready: Error - WPDMA TX/RX busy, aborting.
-> phy0 -> rt2800pci_set_device_state: Error - Device failed to enter state 4 (-5).
-> 
-> If the error occurs, try starting hostapd one more time.  (This hardly ever works.)  If it fails again, reboot.
-> 
-> If we got past hostapd starting, then we need to see whether the card is deaf.  Do this by polling
-> /sys/kernel/debug/ieee80211/phy0/rt2800pci/queue/queue
-> for a while, to see if the RX queue counts ever get over zero.
-> 
-> If they do, we're good to go.
-> 
-> If not, kick the card this way:
-> 
-> echo 1 > /sys/kernel/debug/ieee80211/phy0/reset
-> 
-> Now check to see if that hit the WPDMA TX/RX busy error.  If it did, reboot.  If not, assume that restarting the card fixed the RX queue (it always seems to), and we're good to go.
-> 
-> For your amusement and horror, I've pasted in the bash script below.
-> 
-> At this point, if I could eliminate the WPDMA TX/RX busy error, I'd be able to eliminate all the reboots, and make a more sane system.  I'm still open to any and all suggestions on how to clear that condition!
-> 
-> -Joshua
-> 
-> …hideous bash script...
-> 
->  ifconfig wlan0 down
-> 
->  sleep 1
->  if ! hostapd -B /etc/hostapd.conf
->  then
->    echo "Problem starting Wi-Fi hardware.  Retrying..."
->    sleep 3
->    if ! hostapd -B /etc/hostapd.conf
->    then
->      echo -e "***\n*** Unable to initialize Wi-Fi hardware\n***\n***\n*** Restarting...\n***"
->      cleanreboot
->      sleep 60
->    fi
->  fi
->  sleep 1
-> 
->  mount -t debugfs none /sys/kernel/debug/
->  if [ -e /sys/kernel/debug/ieee80211/phy0/rt2800pci/ ]
->  then
->    echo "Testing Wi-Fi hardware..."
->    RETRY=1
->    while [ $RETRY -lt 20 ]
->    do
->      if [ `cat /sys/kernel/debug/ieee80211/phy0/rt2800pci/queue/queue | egrep -c '^14.0.24.24.0.0.0$'` -eq 0 ]
->      then
->        break
->      fi
->      echo -n '.'
->      sleep 1
->      RETRY=$((RETRY+1))
->    done
->    if [ $RETRY -eq 20 ]
->    then
->      echo "failed.  Resetting..."
->      echo 1 > /sys/kernel/debug/ieee80211/phy0/reset
->      sleep 1
->      if [ `dmesg | tail -n 30 | grep -c "rt2800_wait_wpdma_ready"` -gt 0 ]
->      then
->        echo -e "***\n*** Unable to reset Wi-Fi hardware\n***\n***\n*** Restarting...\n***"
->        cleanreboot
->        sleep 60
->      fi
->    else
->     echo "Passed!"
->    fi
->  fi
-> 
-
+johannes
