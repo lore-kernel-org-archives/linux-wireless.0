@@ -1,83 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:49491 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756521Ab0IGL3r (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Sep 2010 07:29:47 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Gao Yunpeng <yunpeng.gao@intel.com>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v1 5/8] sdio: add general runtime PM support
-Date: Tue,  7 Sep 2010 14:29:06 +0300
-Message-Id: <1283858949-11073-6-git-send-email-ohad@wizery.com>
-In-Reply-To: <1283858949-11073-1-git-send-email-ohad@wizery.com>
-References: <1283858949-11073-1-git-send-email-ohad@wizery.com>
+Received: from mx1.redhat.com ([209.132.183.28]:1027 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754331Ab0IINx1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Sep 2010 09:53:27 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 13/14] iwlwifi: cleanup scan initiate check
+Date: Thu,  9 Sep 2010 15:52:31 +0200
+Message-Id: <1284040354-31703-14-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
+References: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add generic runtime PM handlers to sdio.
+Remove redundand checks and use iwl_is_ready_rf().
 
-Those handlers invoke the relevant SDIO function drivers' handlers, if
-such exist. If not they just return success.
-
-Runtime PM is still disabled by default, so this patch alone
-has no immediate effect.
-
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/mmc/core/sdio_bus.c |   20 ++++++++++++++++++++
- 1 files changed, 20 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-scan.c |   17 +----------------
+ 1 files changed, 1 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/mmc/core/sdio_bus.c b/drivers/mmc/core/sdio_bus.c
-index 4a890dc..256a968 100644
---- a/drivers/mmc/core/sdio_bus.c
-+++ b/drivers/mmc/core/sdio_bus.c
-@@ -14,6 +14,7 @@
- #include <linux/device.h>
- #include <linux/err.h>
- #include <linux/slab.h>
-+#include <linux/pm_runtime.h>
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 10b0ccc..9cc4901 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -361,7 +361,7 @@ static int __must_check iwl_scan_initiate(struct iwl_priv *priv,
  
- #include <linux/mmc/card.h>
- #include <linux/mmc/sdio_func.h>
-@@ -154,6 +155,24 @@ static int sdio_bus_remove(struct device *dev)
- 	return 0;
- }
+ 	cancel_delayed_work(&priv->scan_check);
  
-+#ifdef CONFIG_PM_RUNTIME
-+
-+static const struct dev_pm_ops sdio_bus_pm_ops = {
-+	SET_RUNTIME_PM_OPS(
-+		pm_generic_runtime_suspend,
-+		pm_generic_runtime_resume,
-+		pm_generic_runtime_idle
-+	)
-+};
-+
-+#define SDIO_PM_OPS_PTR	(&sdio_bus_pm_ops)
-+
-+#else /* !CONFIG_PM_RUNTIME */
-+
-+#define SDIO_PM_OPS_PTR	NULL
-+
-+#endif /* !CONFIG_PM_RUNTIME */
-+
- static struct bus_type sdio_bus_type = {
- 	.name		= "sdio",
- 	.dev_attrs	= sdio_dev_attrs,
-@@ -161,6 +180,7 @@ static struct bus_type sdio_bus_type = {
- 	.uevent		= sdio_bus_uevent,
- 	.probe		= sdio_bus_probe,
- 	.remove		= sdio_bus_remove,
-+	.pm		= SDIO_PM_OPS_PTR,
- };
+-	if (!iwl_is_ready(priv)) {
++	if (!iwl_is_ready_rf(priv)) {
+ 		IWL_WARN(priv, "request scan called when driver not ready.\n");
+ 		return -EIO;
+ 	}
+@@ -372,26 +372,11 @@ static int __must_check iwl_scan_initiate(struct iwl_priv *priv,
+ 		return -EBUSY;
+ 	}
  
- int sdio_register_bus(void)
+-	if (test_bit(STATUS_EXIT_PENDING, &priv->status)) {
+-		IWL_DEBUG_SCAN(priv, "Aborting scan due to device shutdown\n");
+-		return -EIO;
+-	}
+-
+ 	if (test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
+ 		IWL_DEBUG_HC(priv, "Scan request while abort pending.\n");
+ 		return -EBUSY;
+ 	}
+ 
+-	if (iwl_is_rfkill(priv)) {
+-		IWL_DEBUG_HC(priv, "Aborting scan due to RF Kill activation\n");
+-		return -EIO;
+-	}
+-
+-	if (!test_bit(STATUS_READY, &priv->status)) {
+-		IWL_DEBUG_HC(priv, "Scan request while uninitialized.\n");
+-		return -EBUSY;
+-	}
+-
+ 	IWL_DEBUG_INFO(priv, "Starting %sscan...\n",
+ 			internal ? "internal short " : "");
+ 
 -- 
-1.7.0.4
+1.7.1
 
