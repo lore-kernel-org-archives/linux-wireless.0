@@ -1,76 +1,212 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:44871 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758013Ab0IXUAf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Sep 2010 16:00:35 -0400
-Subject: Re: [PATCH v3] omap: beagle: add support for wl1271 on the board
- file
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Koen Kooi <koen@dominion.thruhere.net>
-Cc: Tony Lindgren <tony@atomide.com>,
-	"ext John W. Linville" <linville@tuxdriver.com>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Ido Yariv <ido@wizery.com>, Ohad Ben-Cohen <ohad@wizery.com>
-In-Reply-To: <8004B807-6120-41C0-979B-214BFB75E5CA@dominion.thruhere.net>
-References: <1285236215-21136-1-git-send-email-luciano.coelho@nokia.com>
-	 <20100924180316.GE8077@tuxdriver.com> <1285354249.9779.3.camel@powerslave>
-	 <20100924191139.GI4211@atomide.com>
-	 <8004B807-6120-41C0-979B-214BFB75E5CA@dominion.thruhere.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 24 Sep 2010 23:00:14 +0300
-Message-ID: <1285358414.9779.28.camel@powerslave>
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:20283 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753432Ab0IINxH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Sep 2010 09:53:07 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 11/12] iwlwifi: do not force complete scan too early
+Date: Thu,  9 Sep 2010 15:52:29 +0200
+Message-Id: <1284040354-31703-12-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
+References: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-09-24 at 21:42 +0200, ext Koen Kooi wrote:
-> Op 24 sep 2010, om 21:11 heeft Tony Lindgren het volgende geschreven:
-> 
-> > * Luciano Coelho <luciano.coelho@nokia.com> [100924 11:42]:
-> >> On Fri, 2010-09-24 at 20:03 +0200, ext John W. Linville wrote:
-> >>> On Thu, Sep 23, 2010 at 01:03:35PM +0300, Luciano Coelho wrote:
-> >>>> Add board configuration for the wl1271 daughter board.  This patch is based
-> >>>> on Ohad Ben-Cohen's patches for Zoom boards.
-> >>>> 
-> >>>> Cc: Ohad Ben-Cohen <ohad@wizery.com>
-> >>>> Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-> >>>> ---
-> >>>> from v2 to v3: removed accidental change to wl1271.h
-> >>> 
-> >>> I presume that this should come through my tree as well (since it
-> >>> contains the move of wl12xx.h)?
-> >> 
-> >> Yes, this is based on your tree.  But please hold on, because there were
-> >> some comments (namely, the expansion board should be detected, not
-> >> configured for wl1271 by default), which I still have to fix.  I'm
-> >> waiting for the manufacturer of the expansion board to provide me with
-> >> some more info for proper detection.
-> >> 
-> >> Also, I know that there are some other work being done in the beagle
-> >> board file, so we may need to rethink how to sync this.
-> >> 
-> >> So, for now, let's skip this patch and I'll provide another one when
-> >> these issues are addressed.
-> > 
-> > You could also do it based on some kernel cmdline option. Of course
-> > detection during the runtime would be better.
-> 
-> That's what we're currently doing in the beagle kernels: http://gitorious.org/beagleboard-validation/linux/commit/17c1b214b918c6f9efc5579134a7ff71d51b60bf
-> 
-> That needs forward porting to .37 before I can submit is as RFC here :)
+Currently we force scan complete at the end of iwl_scan_cancel_timeout
+function. This cause race condition when we can get a new scan request
+from mac80211 and complete it by iwl_bg_complete from older scan. Change
+code to force scan complete only when really needed: device goes down,
+interface is removed or scan timeout occurs.
 
-Yes! I have seen that as pointed out by Robert.  It would be nice if you
-could port this soon(ish) so that others can start using it (ok, maybe
-not many people, but at least me :P)
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    6 +++-
+ drivers/net/wireless/iwlwifi/iwl-core.c     |    6 +++-
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    2 +
+ drivers/net/wireless/iwlwifi/iwl-scan.c     |   40 ++++++++++++++++++++-------
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    4 +-
+ 5 files changed, 42 insertions(+), 16 deletions(-)
 
-What would you think about having the actual probing moved from u-boot
-to the kernel? Do you think that would make sense or are there some
-other reasons for having it in the bootloader?
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 0de2401..9ef48f8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -4054,13 +4054,15 @@ static void iwl_cancel_deferred_work(struct iwl_priv *priv)
+ 		priv->cfg->ops->lib->cancel_deferred_work(priv);
+ 
+ 	cancel_delayed_work_sync(&priv->init_alive_start);
+-	cancel_delayed_work(&priv->scan_check);
+-	cancel_work_sync(&priv->start_internal_scan);
+ 	cancel_delayed_work(&priv->alive_start);
+ 	cancel_work_sync(&priv->run_time_calib_work);
+ 	cancel_work_sync(&priv->beacon_update);
++
++	iwl_cancel_scan_deferred_work(priv);
++
+ 	cancel_work_sync(&priv->bt_full_concurrency);
+ 	cancel_work_sync(&priv->bt_runtime_config);
++
+ 	del_timer_sync(&priv->statistics_periodic);
+ 	del_timer_sync(&priv->ucode_trace);
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 7c1819f..57d157f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2049,8 +2049,10 @@ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
+ 	WARN_ON(ctx->vif != vif);
+ 	ctx->vif = NULL;
+ 
+-	if (priv->scan_vif == vif)
+-		iwl_scan_cancel_timeout(priv, 100);
++	if (priv->scan_vif == vif) {
++		iwl_scan_cancel_timeout(priv, 200);
++		iwl_force_scan_end(priv);
++	}
+ 	iwl_set_mode(priv, vif);
+ 
+ 	/*
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 8dab074..f1d40c6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -553,6 +553,7 @@ static inline __le32 iwl_hw_set_rate_n_flags(u8 rate, u32 flags)
+ void iwl_init_scan_params(struct iwl_priv *priv);
+ int iwl_scan_cancel(struct iwl_priv *priv);
+ int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms);
++void iwl_force_scan_end(struct iwl_priv *priv);
+ int iwl_mac_hw_scan(struct ieee80211_hw *hw,
+ 		    struct ieee80211_vif *vif,
+ 		    struct cfg80211_scan_request *req);
+@@ -568,6 +569,7 @@ u16 iwl_get_passive_dwell_time(struct iwl_priv *priv,
+ 			       enum ieee80211_band band,
+ 			       struct ieee80211_vif *vif);
+ void iwl_setup_scan_deferred_work(struct iwl_priv *priv);
++void iwl_cancel_scan_deferred_work(struct iwl_priv *priv);
+ 
+ /* For faster active scanning, scan will move to the next channel if fewer than
+  * PLCP_QUIET_THRESH packets are heard on this channel within
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index df61273..10b0ccc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -106,14 +106,22 @@ static void iwl_complete_scan(struct iwl_priv *priv, bool aborted)
+ 	priv->scan_request = NULL;
+ }
+ 
+-static void iwl_force_scan_end(struct iwl_priv *priv)
++void iwl_force_scan_end(struct iwl_priv *priv)
+ {
++	lockdep_assert_held(&priv->mutex);
++
++	if (!test_bit(STATUS_SCANNING, &priv->status)) {
++		IWL_DEBUG_SCAN(priv, "Forcing scan end while not scanning\n");
++		return;
++	}
++
+ 	IWL_DEBUG_SCAN(priv, "Forcing scan end\n");
+ 	clear_bit(STATUS_SCANNING, &priv->status);
+ 	clear_bit(STATUS_SCAN_HW, &priv->status);
+ 	clear_bit(STATUS_SCAN_ABORTING, &priv->status);
+ 	iwl_complete_scan(priv, true);
+ }
++EXPORT_SYMBOL(iwl_force_scan_end);
+ 
+ static void iwl_do_scan_abort(struct iwl_priv *priv)
+ {
+@@ -157,7 +165,6 @@ EXPORT_SYMBOL(iwl_scan_cancel);
+  */
+ int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
+ {
+-	int ret;
+ 	unsigned long timeout = jiffies + msecs_to_jiffies(ms);
+ 
+ 	lockdep_assert_held(&priv->mutex);
+@@ -172,10 +179,7 @@ int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
+ 		msleep(20);
+ 	}
+ 
+-	ret = test_bit(STATUS_SCAN_HW, &priv->status);
+-	if (ret)
+-		iwl_force_scan_end(priv);
+-	return ret;
++	return test_bit(STATUS_SCAN_HW, &priv->status);
+ }
+ EXPORT_SYMBOL(iwl_scan_cancel_timeout);
+ 
+@@ -490,8 +494,11 @@ static void iwl_bg_scan_check(struct work_struct *data)
+ 	struct iwl_priv *priv =
+ 	    container_of(data, struct iwl_priv, scan_check.work);
+ 
++	/* Since we are here firmware does not finish scan and
++	 * most likely is in bad shape, so we don't bother to
++	 * send abort command, just force scan complete to mac80211 */
+ 	mutex_lock(&priv->mutex);
+-	iwl_scan_cancel_timeout(priv, 200);
++	iwl_force_scan_end(priv);
+ 	mutex_unlock(&priv->mutex);
+ }
+ 
+@@ -547,8 +554,8 @@ static void iwl_bg_abort_scan(struct work_struct *work)
+ {
+ 	struct iwl_priv *priv = container_of(work, struct iwl_priv, abort_scan);
+ 
+-	cancel_delayed_work(&priv->scan_check);
+-
++	/* We keep scan_check work queued in case when firmware will not
++	 * report back scan completed notification */
+ 	mutex_lock(&priv->mutex);
+ 	iwl_scan_cancel_timeout(priv, 200);
+ 	mutex_unlock(&priv->mutex);
+@@ -564,7 +571,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+ 	IWL_DEBUG_INFO(priv, "Completed %sscan.\n",
+ 		       priv->is_internal_short_scan ? "internal short " : "");
+ 
+-	cancel_delayed_work(&priv->scan_check);
++	cancel_delayed_work_sync(&priv->scan_check);
+ 
+ 	mutex_lock(&priv->mutex);
+ 
+@@ -631,3 +638,16 @@ void iwl_setup_scan_deferred_work(struct iwl_priv *priv)
+ }
+ EXPORT_SYMBOL(iwl_setup_scan_deferred_work);
+ 
++void iwl_cancel_scan_deferred_work(struct iwl_priv *priv)
++{
++	cancel_work_sync(&priv->start_internal_scan);
++	cancel_work_sync(&priv->abort_scan);
++	cancel_work_sync(&priv->scan_completed);
++
++	if (cancel_delayed_work_sync(&priv->scan_check)) {
++		mutex_lock(&priv->mutex);
++		iwl_force_scan_end(priv);
++		mutex_unlock(&priv->mutex);
++	}
++}
++EXPORT_SYMBOL(iwl_cancel_scan_deferred_work);
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index fb894d8..6b8f654 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -3763,10 +3763,10 @@ static void iwl3945_cancel_deferred_work(struct iwl_priv *priv)
+ 	iwl3945_hw_cancel_deferred_work(priv);
+ 
+ 	cancel_delayed_work_sync(&priv->init_alive_start);
+-	cancel_delayed_work(&priv->scan_check);
+ 	cancel_delayed_work(&priv->alive_start);
+-	cancel_work_sync(&priv->start_internal_scan);
+ 	cancel_work_sync(&priv->beacon_update);
++
++	iwl_cancel_scan_deferred_work(priv);
+ }
+ 
+ static struct attribute *iwl3945_sysfs_entries[] = {
 -- 
-Cheers,
-Luca.
+1.7.1
 
