@@ -1,121 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:38437 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754886Ab0ISRrO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Sep 2010 13:47:14 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/4] compat-wireless: make patches apply again
-Date: Sun, 19 Sep 2010 19:46:45 +0200
-Message-Id: <1284918408-32242-1-git-send-email-hauke@hauke-m.de>
+Received: from he.sipsolutions.net ([78.46.109.217]:34423 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752933Ab0IIU6o (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Sep 2010 16:58:44 -0400
+To: Steve deRosier <steve@cozybit.com>
+Subject: Re: [PATCH 5/9] =?UTF-8?Q?libertas=5Ftf=3A=20Moved=20firmware=20loading?=
+ =?UTF-8?Q?=20to=20probe=20in=20order=20to=20fetch=20MAC=20address?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Date: Thu, 09 Sep 2010 22:58:01 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
+	<javier@cozybit.com>
+In-Reply-To: <AANLkTi=r_RdEG-2=gzV7uFNJt1Nynp3qNC-38SQkzhO2@mail.gmail.com>
+References: <1283988329-44549-1-git-send-email-steve@cozybit.com> <1283988329-44549-6-git-send-email-steve@cozybit.com> <e23a1b600a18f179fa72d2cadf724d17@localhost> <AANLkTi=r_RdEG-2=gzV7uFNJt1Nynp3qNC-38SQkzhO2@mail.gmail.com>
+Message-ID: <c9d7238e26d9e276d9c9ef9792f7c7f8@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/01-netdev.patch      |   16 ++++++++--------
- patches/30-bridge-port.patch |   10 +++++-----
- 2 files changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/patches/01-netdev.patch b/patches/01-netdev.patch
-index a62571b..5e24cfb 100644
---- a/patches/01-netdev.patch
-+++ b/patches/01-netdev.patch
-@@ -45,7 +45,7 @@ without creating a headache on maintenance of the pathes.
-  	retval = rndis_set_oid(usbdev, OID_GEN_CURRENT_PACKET_FILTER, &tmp,
- --- a/net/mac80211/iface.c
- +++ b/net/mac80211/iface.c
--@@ -698,7 +698,12 @@ static const struct net_device_ops ieee8
-+@@ -701,7 +701,12 @@ static const struct net_device_ops ieee8
-  static void ieee80211_if_setup(struct net_device *dev)
-  {
-  	ether_setup(dev);
-@@ -59,16 +59,16 @@ without creating a headache on maintenance of the pathes.
-  	dev->destructor = free_netdev;
-  }
-  
--@@ -843,7 +848,7 @@ static void ieee80211_setup_sdata(struct
-- 
-+@@ -847,7 +852,7 @@ static void ieee80211_setup_sdata(struct
-  	/* and set some type-dependent values */
-  	sdata->vif.type = type;
-+ 	sdata->vif.p2p = false;
- -	sdata->dev->netdev_ops = &ieee80211_dataif_ops;
- +	netdev_attach_ops(sdata->dev, &ieee80211_dataif_ops);
-  	sdata->wdev.iftype = type;
-  
-  	sdata->control_port_protocol = cpu_to_be16(ETH_P_PAE);
--@@ -872,7 +877,7 @@ static void ieee80211_setup_sdata(struct
-+@@ -886,7 +891,7 @@ static void ieee80211_setup_sdata(struct
-  		break;
-  	case NL80211_IFTYPE_MONITOR:
-  		sdata->dev->type = ARPHRD_IEEE80211_RADIOTAP;
-@@ -77,7 +77,7 @@ without creating a headache on maintenance of the pathes.
-  		sdata->u.mntr_flags = MONITOR_FLAG_CONTROL |
-  				      MONITOR_FLAG_OTHER_BSS;
-  		break;
--@@ -1113,6 +1118,8 @@ int ieee80211_if_add(struct ieee80211_lo
-+@@ -1137,6 +1142,8 @@ int ieee80211_if_add(struct ieee80211_lo
-  		return -ENOMEM;
-  	dev_net_set(ndev, wiphy_net(local->hw.wiphy));
-  
-@@ -86,7 +86,7 @@ without creating a headache on maintenance of the pathes.
-  	ndev->needed_headroom = local->tx_headroom +
-  				4*6 /* four MAC addresses */
-  				+ 2 + 2 + 2 + 2 /* ctl, dur, seq, qos */
--@@ -1121,6 +1128,7 @@ int ieee80211_if_add(struct ieee80211_lo
-+@@ -1145,6 +1152,7 @@ int ieee80211_if_add(struct ieee80211_lo
-  				- ETH_HLEN /* ethernet hard_header_len */
-  				+ IEEE80211_ENCRYPT_HEADROOM;
-  	ndev->needed_tailroom = IEEE80211_ENCRYPT_TAILROOM;
-@@ -94,7 +94,7 @@ without creating a headache on maintenance of the pathes.
-  
-  	ret = dev_alloc_name(ndev, ndev->name);
-  	if (ret < 0)
--@@ -1169,6 +1177,10 @@ int ieee80211_if_add(struct ieee80211_lo
-+@@ -1193,6 +1201,10 @@ int ieee80211_if_add(struct ieee80211_lo
-  	if (ret)
-  		goto fail;
-  
-@@ -267,7 +267,7 @@ without creating a headache on maintenance of the pathes.
-  #define LBS_DEB_LEAVE	0x00000002
- --- a/drivers/net/wireless/mac80211_hwsim.c
- +++ b/drivers/net/wireless/mac80211_hwsim.c
--@@ -1095,7 +1095,7 @@ static const struct net_device_ops hwsim
-+@@ -1100,7 +1100,7 @@ static const struct net_device_ops hwsim
-  
-  static void hwsim_mon_setup(struct net_device *dev)
-  {
-diff --git a/patches/30-bridge-port.patch b/patches/30-bridge-port.patch
-index c2f9b3a..c2ffc45 100644
---- a/patches/30-bridge-port.patch
-+++ b/patches/30-bridge-port.patch
-@@ -23,18 +23,18 @@ compat-wireless.
- 
- --- a/net/wireless/util.c
- +++ b/net/wireless/util.c
--@@ -777,7 +777,7 @@ int cfg80211_change_iface(struct cfg8021
-+@@ -781,7 +781,7 @@ int cfg80211_change_iface(struct cfg8021
-  		return -EOPNOTSUPP;
-  
-  	/* if it's part of a bridge, reject changing type to station/ibss */
- -	if ((dev->priv_flags & IFF_BRIDGE_PORT) &&
- +	if (br_port_exists(dev) &&
-- 	    (ntype == NL80211_IFTYPE_ADHOC || ntype == NL80211_IFTYPE_STATION))
-- 		return -EBUSY;
-- 
-+ 	    (ntype == NL80211_IFTYPE_ADHOC ||
-+ 	     ntype == NL80211_IFTYPE_STATION ||
-+ 	     ntype == NL80211_IFTYPE_P2P_CLIENT))
- --- a/net/wireless/nl80211.c
- +++ b/net/wireless/nl80211.c
--@@ -1197,7 +1197,7 @@ static int nl80211_valid_4addr(struct cf
-+@@ -1200,7 +1200,7 @@ static int nl80211_valid_4addr(struct cf
-  			       enum nl80211_iftype iftype)
-  {
-  	if (!use_4addr) {
--- 
-1.7.0.4
+On Thu, 9 Sep 2010 12:13:52 -0700, Steve deRosier <steve@cozybit.com>
+wrote:
+> Before doing any of this stuff (back in patch 1), my driver goes
+> through and loads the firmware using the request_firmware() calls
+> anyway.
+
+Right.
+
+> In other words, I haven't changed that part.  Is the problem
+> specifically with my "get the MAC from the hardware before setting up
+> mac80211" change, or with waiting on firmware loading?
+
+Well, so previously mac80211 had some support for *not* knowing
+the MAC address before setting up all of the mac80211 stuff, but
+that broke and I'd like to remove it as well because it advertises
+wrong things to userspace. So you need to know the MAC address
+before registering with mac80211.
+
+Now, on libertas_tf (correct me if I'm wrong), the firmware has to
+be loaded to read the MAC address. So you need to load the firmware
+in probe or so, like you do now. Then, however, building it into
+the kernel may fail to load the firmware.
+
+> For fun, I just tried compiling the driver into the kernel.  Mixed
+> results: with two cards on the system, the first card found failed on
+> the call to request_firmware() with a -ENOENT, while the second card
+> came up just fine.  When done as modules, both work fine.  So there's
+> clearly something to what you're saying. Is it that the filesystem is
+> not up and available yet when we try to load the firmware for the
+> first card?
+
+Yeah, userspace needs to be up and running to load firmware.
+
+> From looking through the drivers, iwl and ar9170_usb are the only ones
+> to use the request_firmware_nowait().  I don't know if those are the
+> only mac80211 cards with firmware or not everyone's following the
+> model.
+
+Well, not everyone's following the model _yet_ (look at mwl8k for
+example), but nobody but libertas_tf needs firmware loaded to know
+the MAC address. So they don't have the MAC address issue there.
+
+> Do you have specific pointers of which code I should look at as a
+> model, or a better way to solve the problem?
+
+You should probably look at ar9170 or iwlwifi.
+
+> In the short term, can we limit libertas_tf to build as module only
+> via Kconfig, and I can add the request_firmware_nowait() as a new
+> feature later with a new patch? 
+
+Certainly. I just wanted to point it out. This wasn't meant as
+a comment that should stop merging of these patches.
+
+> Looking at the examples, it looks
+> like the changes for this would be fairly involved and I would prefer
+> to break such a change out separately. 
+
+Yeah, I tried to do it in libertas_tf at some point last year and
+failed miserably :-)
+
+> I'd like to get
+> libertas_tf_sdio accepted as a base so I can then do smaller change
+> sets going forward. Is that a reasonable plan or just plain silly?
+
+Makes sense to me.
+
+johannes
 
