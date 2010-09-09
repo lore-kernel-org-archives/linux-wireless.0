@@ -1,77 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:61350 "EHLO mail.atheros.com"
+Received: from mga01.intel.com ([192.55.52.88]:50770 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754531Ab0I3JuX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Sep 2010 05:50:23 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Sep 2010 02:50:15 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <mcgrof@gmail.com>, <j@w1.fi>,
-	<Senthilkumar.Balasubramanian@Atheros.com>,
-	<Vasanth.Thiagarajan@Atheros.com>, <nbd@openwrt.org>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Subject: [RFC] ath9k : Fix for displaying the channel number
-Date: Thu, 30 Sep 2010 15:20:08 +0530
-Message-ID: <1285840208-12456-1-git-send-email-mshajakhan@atheros.com>
+	id S1752101Ab0IIPrF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Sep 2010 11:47:05 -0400
+From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 9 Sep 2010 08:46:57 -0700
+Subject: RE: [PATCH 13/14] iwlwifi: cleanup scan initiate check
+Message-ID: <E9954878DD1FB34FAE5187FB88C58A3501280FDC82@orsmsx506.amr.corp.intel.com>
+References: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
+ <1284040354-31703-14-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1284040354-31703-14-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Hi Gruszka,
 
-In the ath9k debugging feature 'wiphy' the current channel used by the
-station is incorrectly displayed.This is because the channels available
-are sequentially mapped from numbers 0 to 37.This mapping cannot be
-changed as the channel number is also used as an array index
-          This fix solves the above problem by calculating the channel
-number from center frequency.
+-----Original Message-----
+From: Stanislaw Gruszka [mailto:sgruszka@redhat.com]
+Sent: Thursday, September 09, 2010 6:53 AM
+To: Johannes Berg; Guy, Wey-Yi W; Chatre, Reinette; John W. Linville
+Cc: linux-wireless@vger.kernel.org; Stanislaw Gruszka
+Subject: [PATCH 13/14] iwlwifi: cleanup scan initiate check
 
-Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Remove redundand checks and use iwl_is_ready_rf().
+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/ath/ath9k/debug.c |   15 ++++++++++-----
- 1 files changed, 10 insertions(+), 5 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-scan.c |   17 +----------------
+ 1 files changed, 1 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 54aae93..13eb725 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -488,6 +488,8 @@ static ssize_t read_file_wiphy(struct file *file, char __user *user_buf,
- 			       size_t count, loff_t *ppos)
- {
- 	struct ath_softc *sc = file->private_data;
-+	struct ath_wiphy *aphy = sc->pri_wiphy;
-+	struct ieee80211_channel *chan = aphy->hw->conf.channel;
- 	char buf[512];
- 	unsigned int len = 0;
- 	int i;
-@@ -497,16 +499,19 @@ static ssize_t read_file_wiphy(struct file *file, char __user *user_buf,
- 			"primary: %s (%s chan=%d ht=%d)\n",
- 			wiphy_name(sc->pri_wiphy->hw->wiphy),
- 			ath_wiphy_state_str(sc->pri_wiphy->state),
--			sc->pri_wiphy->chan_idx, sc->pri_wiphy->chan_is_ht);
-+			ieee80211_frequency_to_channel(chan->center_freq),
-+			sc->pri_wiphy->chan_is_ht);
- 	for (i = 0; i < sc->num_sec_wiphy; i++) {
- 		struct ath_wiphy *aphy = sc->sec_wiphy[i];
- 		if (aphy == NULL)
- 			continue;
-+		chan = aphy->hw->conf.channel;
- 		len += snprintf(buf + len, sizeof(buf) - len,
--				"secondary: %s (%s chan=%d ht=%d)\n",
--				wiphy_name(aphy->hw->wiphy),
--				ath_wiphy_state_str(aphy->state),
--				aphy->chan_idx, aphy->chan_is_ht);
-+			"secondary: %s (%s chan=%d ht=%d)\n",
-+			wiphy_name(aphy->hw->wiphy),
-+			ath_wiphy_state_str(aphy->state),
-+			ieee80211_frequency_to_channel(chan->center_freq),
-+			aphy->chan_is_ht);
- 	}
- 
- 	put_unaligned_le32(REG_READ_D(sc->sc_ah, AR_STA_ID0), addr);
--- 
-1.7.0.4
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 10b0ccc..9cc4901 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -361,7 +361,7 @@ static int __must_check iwl_scan_initiate(struct iwl_priv *priv,
+
+        cancel_delayed_work(&priv->scan_check);
+
+-       if (!iwl_is_ready(priv)) {
++       if (!iwl_is_ready_rf(priv)) {
+                IWL_WARN(priv, "request scan called when driver not ready.\n");
+                return -EIO;
+        }
+@@ -372,26 +372,11 @@ static int __must_check iwl_scan_initiate(struct iwl_priv *priv,
+                return -EBUSY;
+        }
+
+-       if (test_bit(STATUS_EXIT_PENDING, &priv->status)) {
+-               IWL_DEBUG_SCAN(priv, "Aborting scan due to device shutdown\n");
+-               return -EIO;
+-       }
+-
+        if (test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
+                IWL_DEBUG_HC(priv, "Scan request while abort pending.\n");
+                return -EBUSY;
+        }
+
+-       if (iwl_is_rfkill(priv)) {
+-               IWL_DEBUG_HC(priv, "Aborting scan due to RF Kill activation\n");
+-               return -EIO;
+-       }
+-
+-       if (!test_bit(STATUS_READY, &priv->status)) {
+-               IWL_DEBUG_HC(priv, "Scan request while uninitialized.\n");
+-               return -EBUSY;
+-       }
+-
+        IWL_DEBUG_INFO(priv, "Starting %sscan...\n",
+                        internal ? "internal short " : "");
+
+
+Same cleanup for 3945?
+
+Thanks
+Wey
 
