@@ -1,59 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:56025 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751089Ab0I2RLA (ORCPT
+Received: from mga01.intel.com ([192.55.52.88]:4834 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752023Ab0IIPgO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Sep 2010 13:11:00 -0400
-Received: by gwj17 with SMTP id 17so348145gwj.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Sep 2010 10:11:00 -0700 (PDT)
+	Thu, 9 Sep 2010 11:36:14 -0400
+From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 9 Sep 2010 08:35:51 -0700
+Subject: RE: [PATCH 16/16] iwlwifi: clear is_internal_short_scan when fail
+ to initiate scan
+Message-ID: <E9954878DD1FB34FAE5187FB88C58A3501280FDC4D@orsmsx506.amr.corp.intel.com>
+References: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
+ <1284040354-31703-17-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1284040354-31703-17-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1285748303.3756.19.camel@jlt3.sipsolutions.net>
-References: <20100928222945.GB10932@tux> <1285748303.3756.19.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 29 Sep 2010 10:10:38 -0700
-Message-ID: <AANLkTi=qGb+aEz48kNKUvuhgA2RAr0pbQoENYV_DazWT@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: fix rate_control_send_low warnings for delbas
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, stable@kernel.org,
-	linux-wireless@vger.kernel.org, Paul Stewart <pstew@google.com>,
-	Amod Bodas <amod.bodas@atheros.com>,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>,
-	Jouni Malinen <j@w1.fi>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 29, 2010 at 1:18 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2010-09-28 at 15:29 -0700, Luis R. Rodriguez wrote:
->
->> Since we end up associated to two different APs at the same
->> time to transmit to either AP consists of an offchannel
->> operation but today we just lack the state machine to be able
->> to do this properly so for now just drop those frames.
->
-> I really think that can be done more easily though. For one, clearly we
-> already have the warning, so we don't need more infrastructure to catch
-> such errors?!
+Hi Gruszka,
 
-This is true, I just added that to ensure I hit these when testing
-really, I can nuke the counter, but it can help if eventually believe
-we have a proper fix to allow these frames through somehow too.
+-----Original Message-----
+From: Stanislaw Gruszka [mailto:sgruszka@redhat.com]
+Sent: Thursday, September 09, 2010 6:53 AM
+To: Johannes Berg; Guy, Wey-Yi W; Chatre, Reinette; John W. Linville
+Cc: linux-wireless@vger.kernel.org; Stanislaw Gruszka
+Subject: [PATCH 16/16] iwlwifi: clear is_internal_short_scan when fail to initiate scan
 
-> Also, this may end up hiding issues that we don't yet
-> understand, like the nullfunc one you were talking about.
+In case we fail to request scan we need to clear
+priv->is_internal_short_scan. Otherwise we pretend we perform internal
+short scan. Next external scan request will be differed, but never
+performed nor canceled because STATUS_SCANNING bit is cleared.
 
-Yeah, good point, although I am under the impression this is a similar
-situation, we probably try to send a nullfunc to notify the old AP we
-are going to go awake if we are transmitting data while roaming. But
-yeah, its not easily triggerable yet.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-scan.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-> The delBA one
-> we now understand fully, so it makes more sense to simply suppress
-> sending delBA when we are going to disassociate by way of associating
-> with a new AP, no?
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index b841016..c3f2957 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -381,14 +381,15 @@ static int __must_check iwl_scan_initiate(struct iwl_priv *priv,
+                        internal ? "internal short " : "");
 
-That's reasonable but we will still need the channel, otherwise how
-would we know its this issue?
+        set_bit(STATUS_SCANNING, &priv->status);
+-
+        priv->is_internal_short_scan = internal;
++
+Not needed
 
-  Luis
+Thanks
+Wey
