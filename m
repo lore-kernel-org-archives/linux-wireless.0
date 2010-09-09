@@ -1,42 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:47770 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753306Ab0ILRiA convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:35517 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750918Ab0IICaH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Sep 2010 13:38:00 -0400
-Received: by qyk33 with SMTP id 33so4501780qyk.19
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Sep 2010 10:38:00 -0700 (PDT)
+	Wed, 8 Sep 2010 22:30:07 -0400
+Received: by bwz11 with SMTP id 11so735782bwz.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2010 19:30:06 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <AANLkTik0UHW0osSL98KL1Pzm6_-HOWaQ5mn3O9Fu+7vN@mail.gmail.com>
-References: <AANLkTik0UHW0osSL98KL1Pzm6_-HOWaQ5mn3O9Fu+7vN@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Sun, 12 Sep 2010 19:37:40 +0200
-Message-ID: <AANLkTikw_aDa9W7gLZ4SqeG9Beb9Tc6H5MRLD70vTron@mail.gmail.com>
-Subject: Re: wireless problem
-To: Simon Baker <simon.baker7@virginmedia.com>
-Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1283988519-44671-1-git-send-email-steve@cozybit.com>
+References: <1283988519-44671-1-git-send-email-steve@cozybit.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 9 Sep 2010 12:29:46 +1000
+Message-ID: <AANLkTimrfBjaQH3gQKJjiir24cKFoj_0rrFHdNSvbuv7@mail.gmail.com>
+Subject: Re: [PATCH] libertas_tf_usb: fix libertas_tf_usb to match structural
+ changes in libertas_tf
+To: Steve deRosier <steve@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net, javier@cozybit.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 12, 2010 at 2:32 PM, Simon Baker
-<simon.baker7@virginmedia.com> wrote:
-> hi,just wondering if you can help me with a problem ive been having
-> when running the backtrack 3 program.i have windows 7 on my hp
-> pavillion laptop and my built-in wifi works fine but when i boot
-> backtrack it wont work.i looked in my hp wireless assistant and it
-> says i have 4 network adapter problems.could this be anything to do
-> with it? ive tried to update the drivers which it says to do but for
-> some reason it cant update them so im in limbo when it comes to fixing
-> the adapter issues
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Thu, Sep 9, 2010 at 09:28, Steve deRosier <steve@cozybit.com> wrote:
+> The development of the libertas_tf_sdio driver introduced structural
+> changes in libertas_tf.  Most notably, firmware loading and starting
+> was needed in the probe stage due to the requirement that mac80211
+> have the MAC address set before the starting of mac80211 in add_card.
+> This patch fixes libertas_tf_usb to match these structural changes
+> as needed.
 >
+> Signed-off-by: Steve deRosier <steve@cozybit.com>
 
-BackTrack 3 is very old (has 2.6.21 kernel, no longer
-supported/maintained). Please test with BackTrack 4.
+I'm not sure if the usb part of this driver is still functional, but
+even if it isn't, it may be nicer (bisectability, etc.) to re-order
+your patches like so:
+1. Make the structural changes (and clean ups) in the base code and usb driver
+2. Introduce the sdio driver in a single patch, taking advantage of
+these changes.
+
+It will also mean that the sdio driver will be introduced to the
+kernel in a working state, rather than introduced in a partially
+working state, then fixed over several commits.
+
+Thanks,
 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
