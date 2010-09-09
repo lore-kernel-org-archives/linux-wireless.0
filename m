@@ -1,37 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:49081 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933504Ab0I0Tol (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 15:44:41 -0400
-Received: by fxm3 with SMTP id 3so2151245fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 12:44:40 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Joshua Smith <jesmith@kaon.com>
-Subject: Re: Question about starting up an AP
-Date: Mon, 27 Sep 2010 21:43:52 +0200
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-References: <DA0C92FD-F6BF-4746-9BE1-A643A0D70F7A@kaon.com> <201009271956.41041.helmut.schaa@googlemail.com> <D83E9C0C-C35C-4787-832E-1308213F325E@kaon.com>
-In-Reply-To: <D83E9C0C-C35C-4787-832E-1308213F325E@kaon.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201009272143.52283.helmut.schaa@googlemail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:43425 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754268Ab0IINxK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Sep 2010 09:53:10 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 01/12] iwlwifi: remove unused conf variables
+Date: Thu,  9 Sep 2010 15:52:19 +0200
+Message-Id: <1284040354-31703-2-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
+References: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Montag 27 September 2010 schrieb Joshua Smith: 
-> I have another problem with these cards and hostapd where occasionally they
-> will send a beacon but not respond to clients trying to join the network. 
-> However, stopping hostapd and restarting it clears this condition.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Most likely a stuck tx queue. Do you have 11n enabled?
+There are a number of conf variables that are
+unused, remove them.
 
-A fix to make the tx queue not stuck anymore (at least on rt3052 SoC) is
-already in rt2x00 git [1] and [2]. However, I'm not sure if this is the same
-issue you're facing.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    3 ---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    6 ------
+ 2 files changed, 0 insertions(+), 9 deletions(-)
 
-Helmut
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index a8f2adf..51a8d7e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1162,7 +1162,6 @@ void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 		.flags = CMD_SIZE_HUGE,
+ 	};
+ 	struct iwl_scan_cmd *scan;
+-	struct ieee80211_conf *conf = NULL;
+ 	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_BSS];
+ 	u32 rate_flags = 0;
+ 	u16 cmd_len;
+@@ -1179,8 +1178,6 @@ void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 	if (vif)
+ 		ctx = iwl_rxon_ctx_from_vif(vif);
+ 
+-	conf = ieee80211_get_hw_conf(priv->hw);
+-
+ 	cancel_delayed_work(&priv->scan_check);
+ 
+ 	if (!iwl_is_ready(priv)) {
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 68e624a..5b742eb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -2569,12 +2569,9 @@ static void __iwl3945_down(struct iwl_priv *priv)
+ {
+ 	unsigned long flags;
+ 	int exit_pending = test_bit(STATUS_EXIT_PENDING, &priv->status);
+-	struct ieee80211_conf *conf = NULL;
+ 
+ 	IWL_DEBUG_INFO(priv, DRV_NAME " is going down\n");
+ 
+-	conf = ieee80211_get_hw_conf(priv->hw);
+-
+ 	if (!exit_pending)
+ 		set_bit(STATUS_EXIT_PENDING, &priv->status);
+ 
+@@ -2828,13 +2825,10 @@ void iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 		.flags = CMD_SIZE_HUGE,
+ 	};
+ 	struct iwl3945_scan_cmd *scan;
+-	struct ieee80211_conf *conf = NULL;
+ 	u8 n_probes = 0;
+ 	enum ieee80211_band band;
+ 	bool is_active = false;
+ 
+-	conf = ieee80211_get_hw_conf(priv->hw);
+-
+ 	cancel_delayed_work(&priv->scan_check);
+ 
+ 	if (!iwl_is_ready(priv)) {
+-- 
+1.7.1
 
-[1] http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=4758f8c3686911ecff11f39508a60327d42893df
-[2] http://git.kernel.org/?p=linux/kernel/git/ivd/rt2x00.git;a=commit;h=0402943d65e6832ba1cd88621d79c0c83a23ddeb
