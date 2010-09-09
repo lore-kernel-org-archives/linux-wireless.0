@@ -1,46 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34991 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750840Ab0I1Krr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Sep 2010 06:47:47 -0400
-Subject: Re: [RFC] mac80211: sets basic rate set parameter for IBSS creator
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mohammed Shafi <mshajakhan@atheros.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4CA1B5F3.5090801@atheros.com>
-References: <1285662586-31646-1-git-send-email-mshajakhan@atheros.com>
-	 <1285664569.3885.7.camel@jlt3.sipsolutions.net>
-	 <4CA1B5F3.5090801@atheros.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 28 Sep 2010 12:47:45 +0200
-Message-ID: <1285670865.3885.8.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:29996 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753286Ab0IINww (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Sep 2010 09:52:52 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 03/12] iwlwifi: move scan completed flags handling
+Date: Thu,  9 Sep 2010 15:52:21 +0200
+Message-Id: <1284040354-31703-4-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
+References: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-09-28 at 15:01 +0530, Mohammed Shafi wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> >> +	if (ifibss->basic_rates == 0)
-> >> +		ifibss->basic_rates = ieee80211_mandatory_rates(local,
-> >> +					local->hw.conf.channel->band);
-> >>      
-> > Shouldn't cfg80211 do this?
+Move the scan completed flags handling so that we
+can notify mac80211 about aborted scans with the
+correct status. Also queue the scan_completed work
+before the BT status update so that it won't see
+the bits still set (unless a new scan was started
+in which case that's fine.)
 
->                        Thank you for your suggestion,just found out ,i 
-> think  its already there to configure basic rates (if the user had not 
-> expicitly specified the basic rates in user space) in the 
-> nl80211_join_ibss(nl80211.c) , but the basic rates does not seems to get 
-> set there.I had checked its status in mac80211 in function 
-> ieee80211_ibss_join function , its still zero and I thought of calling 
-> it there itself , but the basic rate was not properly set for 2Ghz, so 
-> called it here and  I had tested it ,and everything working fine.
-> Pleas correct me if I am wrong .
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-scan.c |   30 ++++++++++++++----------------
+ 1 files changed, 14 insertions(+), 16 deletions(-)
 
-Well, I still think cfg80211 should do this, and it looks like it will
-except when you use iwconfig. So are you using iw or iwconfig? If
-iwconfig latter, you need to fix the wext code in cfg80211, if the
-former you need to figure out where the information gets lost.
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 01a4907..9df8bb8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -222,21 +222,11 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
+ 		       jiffies_to_msecs(elapsed_jiffies
+ 					(priv->scan_start, jiffies)));
+ 
+-	/*
+-	 * If a request to abort was given, or the scan did not succeed
+-	 * then we reset the scan state machine and terminate,
+-	 * re-queuing another scan if one has been requested
+-	 */
+-	if (test_and_clear_bit(STATUS_SCAN_ABORTING, &priv->status))
+-		IWL_DEBUG_INFO(priv, "Aborted scan completed.\n");
+-
+-	IWL_DEBUG_INFO(priv, "Setting scan to off\n");
+-
+-	clear_bit(STATUS_SCANNING, &priv->status);
++	queue_work(priv->workqueue, &priv->scan_completed);
+ 
+ 	if (priv->iw_mode != NL80211_IFTYPE_ADHOC &&
+-	    priv->cfg->advanced_bt_coexist && priv->bt_status !=
+-	    scan_notif->bt_status) {
++	    priv->cfg->advanced_bt_coexist &&
++	    priv->bt_status != scan_notif->bt_status) {
+ 		if (scan_notif->bt_status) {
+ 			/* BT on */
+ 			if (!priv->bt_ch_announce)
+@@ -254,7 +244,6 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
+ 		priv->bt_status = scan_notif->bt_status;
+ 		queue_work(priv->workqueue, &priv->bt_traffic_change_work);
+ 	}
+-	queue_work(priv->workqueue, &priv->scan_completed);
+ }
+ 
+ void iwl_setup_rx_scan_handlers(struct iwl_priv *priv)
+@@ -554,7 +543,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+ {
+ 	struct iwl_priv *priv =
+ 	    container_of(work, struct iwl_priv, scan_completed);
+-	bool internal = false;
++	bool internal = false, aborted;
+ 	struct iwl_rxon_context *ctx;
+ 
+ 	IWL_DEBUG_SCAN(priv, "SCAN complete scan\n");
+@@ -562,6 +551,15 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+ 	cancel_delayed_work(&priv->scan_check);
+ 
+ 	mutex_lock(&priv->mutex);
++
++	aborted = test_and_clear_bit(STATUS_SCAN_ABORTING, &priv->status);
++	if (aborted)
++		IWL_DEBUG_INFO(priv, "Aborted scan completed.\n");
++
++	IWL_DEBUG_INFO(priv, "Setting scan to off\n");
++
++	clear_bit(STATUS_SCANNING, &priv->status);
++
+ 	if (priv->is_internal_short_scan) {
+ 		priv->is_internal_short_scan = false;
+ 		IWL_DEBUG_SCAN(priv, "internal short scan completed\n");
+@@ -569,7 +567,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+ 	} else if (priv->scan_request) {
+ 		priv->scan_request = NULL;
+ 		priv->scan_vif = NULL;
+-		ieee80211_scan_completed(priv->hw, false);
++		ieee80211_scan_completed(priv->hw, aborted);
+ 	}
+ 
+ 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+-- 
+1.7.1
 
