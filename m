@@ -1,76 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ist.d-labs.de ([213.239.218.44]:53776 "EHLO mx01.d-labs.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753818Ab0IXQWQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Sep 2010 12:22:16 -0400
-From: Florian Mickler <florian@mickler.org>
-To: linux-wireless@vger.kernel.org
-Cc: Florian Mickler <florian@mickler.org>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>, Ben Cahill <ben.m.cahill@intel.com>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] iwl3945: queue the right work if the scan needs to be aborted
-Date: Fri, 24 Sep 2010 18:22:01 +0200
-Message-Id: <1285345323-4250-1-git-send-email-florian@mickler.org>
+Received: from mail.candelatech.com ([208.74.158.172]:42057 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757429Ab0IIXBe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Sep 2010 19:01:34 -0400
+Message-ID: <4C896747.6090905@candelatech.com>
+Date: Thu, 09 Sep 2010 16:01:27 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: RFC:  Allow multiple STA connected to same AP.
+References: <4C8959BC.7040501@candelatech.com> <7fa0decef9a717c1562ee155bba78ce9@localhost>
+In-Reply-To: <7fa0decef9a717c1562ee155bba78ce9@localhost>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iwl3945's scan_completed calls into the mac80211 stack which triggers a
-warn on if there is no scan outstanding.
+On 09/09/2010 03:51 PM, Johannes Berg wrote:
+>
+> On Thu, 09 Sep 2010 15:03:40 -0700, Ben Greear<greearb@candelatech.com>
+> wrote:
+>> With the patch below against latest wireless-testing, I can create two
+>> STA on the same ath9k phy0 and have them send traffic to each other.
+>> I tested only un-encrypted STAs at this point.
+>
+> After connecting them to the same AP, presumably?
 
-This can be avoided by not calling scan_completed but abort_scan in
-iwl3945_request_scan  in the done: branch of the function which is used
-as an error out.
+Yes, though hopefully it would also work connecting to different
+APs so long as the APs can communicate properly.
 
-The done: branch seems to be an error-out branch, as, for example, if
-iwl_is_ready(priv) returns false  the done: branch is executed.
+I've also been testing WPA..and that definitely doesn't work
+yet.  Seems they fail to authenticate with the AP, though they
+do talk and send EAPOL pkts back and forth.
 
-NOTE:
-I'm not familiar with the driver at all.
-I just quickly scanned as a reaction to
+>
+>> It seems the tx logic hangs after a bit, so there are still issues, but
+>> I'm not sure if that is something introduced by my patch or some
+>> existing ath9k bug.
+>>
+>> Please let me know if this is a viable approach.
+>
+>> +       /* If we have more than one virtual station, turn on
+> PROMISC_IN_BSS
+>> +        *  --Ben
+>> +        */
+>> +       list_for_each_entry_rcu(sdata,&local->interfaces, list) {
+>> +               if (!sdata->dev || !netif_running(sdata->dev))
+>> +                       continue;
+>> +
+>> +               if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+>> +                       avifs++;
+>> +                       if (avifs>  1)
+>> +                               break;
+>> +               }
+>> +       }
+>> +       if (avifs>  1)
+>> +               new_flags |= FIF_PROMISC_IN_BSS;
+>> +
+>
+> This seems weird. Why do you need to be *promisc* within a given
+> BSS if you are multiple stations? You already have two MAC addrs
+> that you need to accept, so that should be fine, i.e. you don't
+> need to be promisc in the BSS. If ath9k needs to, it should be in
+> the driver. So NAK on this change for sure.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=17722
+This seems to let the driver receive pkts for the 'real' mac on
+wlan0 and also the arbitrary mac on the second STA interface.
 
-the users of scan_completed in the  iwl3945 driver and noted the odd
-discrepancy between the comment above this instance and the comment in
-mac80211 scan_completed function.
+If there is supposed to be some other way for the driver to
+figure out it's supposed to go promisc, please let me know and
+I'll try to debug it.
 
-Signed-off-by: Florian Mickler <florian@mickler.org>
----
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    2 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+>> @@ -440,7 +440,7 @@ int sta_info_insert_rcu(struct sta_info *sta)
+>> __acquires(RCU)
+>>
+>>           spin_lock_irqsave(&local->sta_lock, flags);
+>>           /* check if STA exists already */
+>> -       if (sta_info_get_bss(sdata, sta->sta.addr)) {
+>> +       if (sta_info_get(sdata, sta->sta.addr)) {
+>
+> I don't understand this change. These functions are the same
+> if sdata is in managed mode.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 9dd9e64..8fd00a6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -1411,7 +1411,7 @@ void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- 	clear_bit(STATUS_SCAN_HW, &priv->status);
- 	clear_bit(STATUS_SCANNING, &priv->status);
- 	/* inform mac80211 scan aborted */
--	queue_work(priv->workqueue, &priv->scan_completed);
-+	queue_work(priv->workqueue, &priv->abort_scan);
- }
- 
- int iwlagn_manage_ibss_station(struct iwl_priv *priv,
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 59a308b..d31661c 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -3018,7 +3018,7 @@ void iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
- 	clear_bit(STATUS_SCANNING, &priv->status);
- 
- 	/* inform mac80211 scan aborted */
--	queue_work(priv->workqueue, &priv->scan_completed);
-+	queue_work(priv->workqueue, &priv->abort_scan);
- }
- 
- static void iwl3945_bg_restart(struct work_struct *data)
+The _bss method returns anything in same bss or with same
+sdata.  The sta_info_get only returns if MAC and sdata match.
+
+W/out this change, the second STA fails this check because it
+has same BSS as the first one.
+
+Thanks,
+Ben
+
 -- 
-1.7.3
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
