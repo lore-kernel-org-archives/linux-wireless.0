@@ -1,54 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:36284 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932247Ab0I3Qt1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Sep 2010 12:49:27 -0400
-Message-ID: <4CA4BF91.8070008@candelatech.com>
-Date: Thu, 30 Sep 2010 09:49:21 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC 1/2] wireless:  Show sta_flags for status in /proc/net/wireless
-References: <1285804637-5400-1-git-send-email-greearb@candelatech.com>	 <1285832587.3639.1.camel@jlt3.sipsolutions.net>	 <4CA4AD40.1010309@candelatech.com> <1285861161.5137.5.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1285861161.5137.5.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:40911 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752194Ab0IINxS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Sep 2010 09:53:18 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 15/15] iwlwifi: apply settings when finishing scan
+Date: Thu,  9 Sep 2010 15:52:33 +0200
+Message-Id: <1284040354-31703-16-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
+References: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/30/2010 08:39 AM, Johannes Berg wrote:
-> On Thu, 2010-09-30 at 08:31 -0700, Ben Greear wrote:
->
->> It would of course be easy to map them to a stable set of flags, but if you
->> don't want to fix /proc/net/wireless anyway, then I might as well do minimal changes
->> to make it easier to keep the patch in my own tree.
->>
->> Aside from listening to 'iw event', is there any way to know if a STA is scanning,
->> authenticated, associated, etc?  Some of this can be obtained from debugfs, but
->> that's not a fun api to code against...
->
-> You can't get scanning, but auth/assoc should be visible in "iw dev
-> <iface>  scan dump"
+Even is someone else complete scanning in mac80211, apply rxon and
+tx power settings if gets scan complete notification from hardware.
 
-I find it a bit frustrating that it takes so many different commands
-to find the information I'm looking for.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-scan.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-It looks like I'll need to integrate at least:
-
-The information for the in-use BSS from 'scan dump', the info
-from 'info', 'survey dump' for the active channel,
-'station dump' (with additional of at least the counters that
-used to be found in /proc/net/wireless),
-
-If I were only doing one or two STA interfaces, that's not so bad,
-but if I want to do hundreds, and update info relatively often,
-that's going to be a lot of overhead!
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index a214f79..b841016 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -573,7 +573,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+ 
+ 	if (!test_and_clear_bit(STATUS_SCANNING, &priv->status)) {
+ 		IWL_DEBUG_SCAN(priv, "Scan already completed.\n");
+-		goto out;
++		goto out_settings;
+ 	}
+ 
+ 	if (priv->is_internal_short_scan && !aborted) {
+@@ -599,6 +599,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+ out_complete:
+ 	iwl_complete_scan(priv, aborted);
+ 
++out_settings:
+ 	/* Can we still talk to firmware ? */
+ 	if (!iwl_is_ready_rf(priv))
+ 		goto out;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.1
 
