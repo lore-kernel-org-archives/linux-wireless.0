@@ -1,57 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:39602 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753365Ab0IWQ5n (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Sep 2010 12:57:43 -0400
-Message-ID: <4C9B8703.7070907@candelatech.com>
-Date: Thu, 23 Sep 2010 09:57:39 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [mac80211] mac80211:  Support receiving data frames on multiple
- vifs.
-References: <1285018776-21795-1-git-send-email-greearb@candelatech.com>	 <1285051641.3710.8.camel@jlt3.sipsolutions.net>	 <4C9B5CE4.9040806@candelatech.com> <1285250792.3770.110.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1285250792.3770.110.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mga01.intel.com ([192.55.52.88]:8122 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753556Ab0IJP5m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Sep 2010 11:57:42 -0400
+Subject: Re: [PATCH 14/14] iwlwifi: apply settings when finishing scan
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1284128807-11436-15-git-send-email-sgruszka@redhat.com>
+References: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
+	 <1284128807-11436-15-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain
+Date: Fri, 10 Sep 2010 08:56:55 -0700
+Message-Id: <1284134215.6054.29.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/23/2010 07:06 AM, Johannes Berg wrote:
-> On Thu, 2010-09-23 at 06:57 -0700, Ben Greear wrote:
->> On 09/20/2010 11:47 PM, Johannes Berg wrote:
->>> On Mon, 2010-09-20 at 14:39 -0700, greearb@candelatech.com wrote:
->>>> From: Ben Greear<greearb@candelatech.com>
->>>>
->>>> When using multiple STA interfaces on the same radio, some
->>>> data packets need to be received on all interfaces
->>>> (broadcast, for instance).
->>>>
->>>> Make the STA loop look similar to the mgt-data loop.
->>>>
->>>> Also, add logic to check RX_FLAG_MMIC_ERROR for last
->>>> interface in mgt-data loop.
->>>>
->>>> This needs review.
->>>
->>> Looks fine to me, I think.
->>
->> Does this need any more work before being accepted upstream?
->
-> Well, I personally would've tried to reduce the code duplication between
-> the two loops, but right now I'm not sure I see how to.
-
-I could move some of the rx setup code into prepare_for_handlers,
-but not sure how much that would help readability.
-
-In my opinion, that would be a good candidate for a followup
-patch instead of adding that to this patch, though.
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+On Fri, 2010-09-10 at 07:26 -0700, Stanislaw Gruszka wrote:
+> Even is someone else complete scanning in mac80211, apply rxon and
+> tx power settings if gets scan complete notification from hardware.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Acked-by: Wey-Yi W Guy <wey-yi.w.guy@intel.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-scan.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+> index 65b7cb4..599573f 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-scan.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+> @@ -573,7 +573,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+>  
+>  	if (!test_and_clear_bit(STATUS_SCANNING, &priv->status)) {
+>  		IWL_DEBUG_SCAN(priv, "Scan already completed.\n");
+> -		goto out;
+> +		goto out_settings;
+>  	}
+>  
+>  	if (priv->is_internal_short_scan && !aborted) {
+> @@ -599,6 +599,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+>  out_complete:
+>  	iwl_complete_scan(priv, aborted);
+>  
+> +out_settings:
+>  	/* Can we still talk to firmware ? */
+>  	if (!iwl_is_ready_rf(priv))
+>  		goto out;
 
