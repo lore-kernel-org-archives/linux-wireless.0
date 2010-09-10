@@ -1,53 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:57831 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750887Ab0IUMPU (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:40558 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750891Ab0IJTDm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Sep 2010 08:15:20 -0400
-Received: by pzk34 with SMTP id 34so1383458pzk.19
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Sep 2010 05:15:20 -0700 (PDT)
-From: greearb@gmail.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [mac80211] mac80211:  Support multiple VIFS per AP in debugfs.
-Date: Tue, 21 Sep 2010 05:15:10 -0700
-Message-Id: <1285071310-11440-1-git-send-email-greearb@candelatech.com>
+	Fri, 10 Sep 2010 15:03:42 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id BCF35418D8
+	for <linux-wireless@vger.kernel.org>; Fri, 10 Sep 2010 15:02:16 -0400 (EDT)
+Subject: Compat-wireless release for 2010-09-10 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100910190340.613B741134@repository3.orbit-lab.org>
+Date: Fri, 10 Sep 2010 15:03:40 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   80dfeef..79959c2  history    -> origin/history
+ + cbf9061...c204dd8 master     -> origin/master  (forced update)
+ * [new tag]         next-20100910 -> next-20100910
+error: Invalid path ''
 
-MAC address of AP isn't unique..need to add the device
-name as well.
+compat-wireless code metrics
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 76839d4... e802fce... M	net/mac80211/debugfs_sta.c
- net/mac80211/debugfs_sta.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+    591885 - Total upstream lines of code being pulled
+      1718 - backport code changes
+      1477 - backport code additions
+       241 - backport code deletions
+      6082 - backport from compat module
+      7800 - total backport code
+    1.3178 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2058 - % of crap code
 
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index 76839d4..e802fce 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -301,14 +301,15 @@ STA_OPS(ht_capa);
- void ieee80211_sta_debugfs_add(struct sta_info *sta)
- {
- 	struct dentry *stations_dir = sta->local->debugfs.stations;
--	u8 mac[3*ETH_ALEN];
-+	u8 mac[3*ETH_ALEN + IFNAMSIZ + 2];
- 
- 	sta->debugfs.add_has_run = true;
- 
- 	if (!stations_dir)
- 		return;
- 
--	snprintf(mac, sizeof(mac), "%pM", sta->sta.addr);
-+	snprintf(mac, sizeof(mac), "%pM-%s",
-+		 sta->sta.addr, sta->sdata->name);
- 
- 	/*
- 	 * This might fail due to a race condition:
--- 
-1.7.2.2
-
+Base tree: linux-next.git
+Base tree version: next-20100910
+compat-wireless release: compat-wireless--2010-09-02
