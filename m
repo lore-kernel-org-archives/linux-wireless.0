@@ -1,59 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:21709 "EHLO mail.atheros.com"
+Received: from mx1.redhat.com ([209.132.183.28]:3616 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754448Ab0IPOZl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Sep 2010 10:25:41 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Sep 2010 07:25:34 -0700
-From: Rajkumar Manoharan <rmanoharan@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanoharan@atheros.com>
-Subject: [PATCH] ath9k_htc: Fix register read through bulk pipe
-Date: Thu, 16 Sep 2010 19:56:55 +0530
-Message-ID: <1284647215-30185-1-git-send-email-rmanoharan@atheros.com>
+	id S1755157Ab0IJFlH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Sep 2010 01:41:07 -0400
+Date: Fri, 10 Sep 2010 07:36:08 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/16 v2] iwlwifi: rewrite iwl-scan.c to avoid race
+ conditions
+Message-ID: <20100910053607.GC2398@redhat.com>
+References: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
+ <E9954878DD1FB34FAE5187FB88C58A3501280FDC3D@orsmsx506.amr.corp.intel.com>
+ <20100909155522.GA376@redhat.com>
+ <E9954878DD1FB34FAE5187FB88C58A3501280FDCC3@orsmsx506.amr.corp.intel.com>
+ <20100909160646.GB376@redhat.com>
+ <E9954878DD1FB34FAE5187FB88C58A3501280FDD02@orsmsx506.amr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <E9954878DD1FB34FAE5187FB88C58A3501280FDD02@orsmsx506.amr.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To optimize register read/write operations, the HTC firmwares were patched
-to change EP3 and EP4 pipe types from Interrupt to Bulk. So register writes
-are submitted as bulk urbs, but register reads are not. Also changing the
-register read endpoint pipe as bulk type when URBs are filled improves the
-register reads considerably which results in reduced scan time and CPU
-utilization.
+On Thu, Sep 09, 2010 at 09:09:43AM -0700, Guy, Wey-Yi W wrote:
+> Understand, I was thinking adding the bug# to the key patch(es) which address the problem such as #4, #6, ...etc
 
-Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
----
- drivers/net/wireless/ath/ath9k/hif_usb.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+Actually most patches, maybe except 3, fix some aspect of problem.
+I'll put reference to bug report in 3 or 4 most important patches.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 27f88a0..728d904 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -541,7 +541,8 @@ static void ath9k_hif_usb_reg_in_cb(struct urb *urb)
- 		}
- 
- 		usb_fill_int_urb(urb, hif_dev->udev,
--				 usb_rcvintpipe(hif_dev->udev, USB_REG_IN_PIPE),
-+				 usb_rcvbulkpipe(hif_dev->udev,
-+						 USB_REG_IN_PIPE),
- 				 nskb->data, MAX_REG_IN_BUF_SIZE,
- 				 ath9k_hif_usb_reg_in_cb, nskb, 1);
- 
-@@ -720,7 +721,8 @@ static int ath9k_hif_usb_alloc_reg_in_urb(struct hif_device_usb *hif_dev)
- 		goto err;
- 
- 	usb_fill_int_urb(hif_dev->reg_in_urb, hif_dev->udev,
--			 usb_rcvintpipe(hif_dev->udev, USB_REG_IN_PIPE),
-+			 usb_rcvbulkpipe(hif_dev->udev,
-+					 USB_REG_IN_PIPE),
- 			 skb->data, MAX_REG_IN_BUF_SIZE,
- 			 ath9k_hif_usb_reg_in_cb, skb, 1);
- 
--- 
-1.7.2.3
-
+Stanislaw
