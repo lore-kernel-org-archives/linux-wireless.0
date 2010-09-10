@@ -1,35 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:61610 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751942Ab0I0XCP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 19:02:15 -0400
-Received: by gxk9 with SMTP id 9so1713998gxk.19
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 16:02:14 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:60373 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751793Ab0IJFP2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Sep 2010 01:15:28 -0400
+Date: Fri, 10 Sep 2010 07:15:46 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 09/12] iwlwifi: force scan complete after timeout
+Message-ID: <20100910051545.GA2968@redhat.com>
+References: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
+ <1284040354-31703-10-git-send-email-sgruszka@redhat.com>
+ <E9954878DD1FB34FAE5187FB88C58A3501280FDC94@orsmsx506.amr.corp.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <F2D55DC7DDE6443EA6E69CBBE698A335@ChuckPC>
-References: <58E3CFACA7054DC48245C67E9D4AE07B@ChuckPC> <AANLkTim=hHPMS9kUn11BnWDED1DeUVdJmu3u0Ajr3MPa@mail.gmail.com>
- <F2D55DC7DDE6443EA6E69CBBE698A335@ChuckPC>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 27 Sep 2010 16:01:54 -0700
-Message-ID: <AANLkTi=Sm_L+G9JXCuHJhzZm255EtHupkQ1YGy3wpuy3@mail.gmail.com>
-Subject: Re: memory leak in scan with 9170?
-To: Chuck Crisler <ccrisler@vgocom.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <E9954878DD1FB34FAE5187FB88C58A3501280FDC94@orsmsx506.amr.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 27, 2010 at 3:40 PM, Chuck Crisler <ccrisler@vgocom.com> wrote:
-> Well, (as usual) I was wrong. It isn't a memory problem. It seems that after
-> some indeterminant time, the USB interface locks up. When we try to take it
-> down (ifconfig wlan0 down) we get a message about outstanding urbs. By
-> powering down the 9170 we can re-set the device and get it to re-associate
-> and resume work. So, the problem is a USB problem. The question is if it is
-> a module problem or a system problem. We are typically seeing this after
-> 50-200 reassociations. If we don't reassociate, it doesn't seem to occur.
-> Does anyone else have experience or insight into this?
+On Thu, Sep 09, 2010 at 08:50:03AM -0700, Guy, Wey-Yi W wrote:
+> --- a/drivers/net/wireless/iwlwifi/iwl-core.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+> @@ -2041,7 +2041,6 @@ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
+>  {
+>         struct iwl_priv *priv = hw->priv;
+>         struct iwl_rxon_context *ctx = iwl_rxon_ctx_from_vif(vif);
+> -       bool scan_completed = false;
+> 
+>         IWL_DEBUG_MAC80211(priv, "enter\n");
+> 
+> @@ -2050,15 +2049,10 @@ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
+>         WARN_ON(ctx->vif != vif);
+>         ctx->vif = NULL;
+> 
+> -       iwl_scan_cancel_timeout(priv, 100);
+> +       if (priv->scan_vif == vif)
+> +               iwl_scan_cancel_timeout(priv, 100);
+>         iwl_set_mode(priv, vif);
+> 
+> -       if (priv->scan_vif == vif) {
+> -               scan_completed = true;
+> -               priv->scan_vif = NULL;
+> -               priv->scan_request = NULL;
+> -       }
+> -
+[snip]
+> Not sure, do we need to check vif match?
 
-Upgrade.
+I think it is. We should not cancel scan requested by vif0 if vif1 is
+removing. Previously we also check vif match before complete scan in
+mac.
 
-  Luis
+Stanislaw
