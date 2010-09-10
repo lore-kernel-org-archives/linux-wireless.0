@@ -1,62 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48890 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755263Ab0INU3r (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 16:29:47 -0400
-Date: Tue, 14 Sep 2010 16:30:01 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Ohad Ben-Cohen <ohad@wizery.com>
-Cc: linux-wireless@vger.kernel.org,
-	Luciano Coelho <luciano.coelho@nokia.com>
-Subject: Re: [PATCH] wl1271: sdio: claim host only when doing IO
-Message-ID: <20100914203000.GF2484@tuxdriver.com>
-References: <1283822661-16018-1-git-send-email-ohad@wizery.com>
+Received: from nbd.name ([88.198.39.176]:58788 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753483Ab0IJWyR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Sep 2010 18:54:17 -0400
+Message-ID: <4C8AB717.5030600@openwrt.org>
+Date: Fri, 10 Sep 2010 15:54:15 -0700
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1283822661-16018-1-git-send-email-ohad@wizery.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [virtual-sta 3/3] mac80211:  Allow multiple STA on same BSS.
+References: <1284156298-15863-1-git-send-email-greearb@candelatech.com> <1284156298-15863-3-git-send-email-greearb@candelatech.com> <4C8AB4BD.5090204@openwrt.org> <4C8AB60A.2060409@candelatech.com>
+In-Reply-To: <4C8AB60A.2060409@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 07, 2010 at 04:24:21AM +0300, Ohad Ben-Cohen wrote:
-> Do not maintain a persistent sdio_claim_host state. Instead,
-> claim host before doing IO and release host soon after.
+On 2010-09-10 3:49 PM, Ben Greear wrote:
+> On 09/10/2010 03:44 PM, Felix Fietkau wrote:
+>> On 2010-09-10 3:04 PM, greearb@candelatech.com wrote:
+>>> From: Ben Greear<greearb@candelatech.com>
+>>>
+>>> When adding an STA, the old code checked if there was already
+>>> an STA with the same BSS.  Instead, check to see if there is
+>>> exactly the same STA in order to allow multiple STA to be
+>>> associated with the same AP.
+>> I think that's misleading. sta_info_get_bss does not check if there is a
+>> STA with the same BSS. Like sta_info_get it looks for a STA with the
+>> given address, but unlike sta_info_get, it also accepts it if it's on a
+>> different interface than the provided sdata, but part of the same BSS as
+>> the sdata's.
+>> Because of that, this change seems bogus to me.
 > 
-> This fixes several mmc deadlock scenarios, e.g. during
-> suspend/resume.
+> W/out this change, I cannot get a second STA to associate with
+> the AP because that code returns EBUSY, because the
+> first STA and second STA point to the same bss.
 > 
-> Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+> There could be a better way to do what I'm trying to do,
+> but that one-line patch made it work for me.  I'll be happy
+> to try alternative suggestions.
+This patch will most likely break other stuff. the sta_info_get ->
+sta_info_get_bss change was added for a reason. I can look into it later
+to see what the reason was, but I don't think your change can go in
+without further review.
 
-<snip>
-
-> @@ -160,13 +189,11 @@ static void wl1271_sdio_set_power(struct wl1271 *wl, bool enable)
->  	 * keep host claimed while wlan is in use to keep wl1271
->  	 * alive.
->  	 */
-> -	if (enable) {
-> -		sdio_claim_host(func);
-> -		sdio_enable_func(func);
-> -	} else {
-> -		sdio_disable_func(func);
-> -		sdio_release_host(func);
-> -	}
-> +	if (enable)
-> +		return wl1271_sdio_power_on(wl);
-> +	else
-> +		return wl1271_sdio_power_off(wl);
-> +
->  }
-
-Please don't add new warnings...
-
-drivers/net/wireless/wl12xx/wl1271_sdio.c: In function ‘wl1271_sdio_set_power’:
-drivers/net/wireless/wl12xx/wl1271_sdio.c:193: warning: ‘return’ with a value, in function returning void
-drivers/net/wireless/wl12xx/wl1271_sdio.c:195: warning: ‘return’ with a value, in function returning void
-drivers/net/wireless/wl12xx/wl1271_sdio.c:186: warning: unused variable ‘func’
-
-I'll fix these in a separate patch.
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+- Felix
