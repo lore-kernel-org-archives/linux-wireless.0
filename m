@@ -1,30 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.deathmatch.net ([72.66.92.28]:3542 "EHLO
-	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753299Ab0IKR1e (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Sep 2010 13:27:34 -0400
-Date: Sat, 11 Sep 2010 13:23:31 -0400
-From: bob@bobcopeland.com
-To: Bruno Randolf <br1@einfach.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath5k-devel@lists.ath5k.org, lrodriguez@atheros.com,
-	mickflemm@gmail.com
-Subject: Re: [PATCH 4/8] ath5k: Remove old ath5k key handling functions
-Message-ID: <20100911172331.GF20385@hash.localnet>
-References: <20100908070427.11255.17659.stgit@tt-desk> <20100908070449.11255.48691.stgit@tt-desk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100908070449.11255.48691.stgit@tt-desk>
+Received: from lo.gmane.org ([80.91.229.12]:46936 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752798Ab0IJL3g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Sep 2010 07:29:36 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1Ou1nS-00049p-5R
+	for linux-wireless@vger.kernel.org; Fri, 10 Sep 2010 13:29:34 +0200
+Received: from 217.110.62.222 ([217.110.62.222])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Sep 2010 13:29:34 +0200
+Received: from claus.ried by 217.110.62.222 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Sep 2010 13:29:34 +0200
+To: linux-wireless@vger.kernel.org
+From: Claus Ried <claus.ried@gmail.com>
+Subject: Re: Realtek rtl8188 support?
+Date: Fri, 10 Sep 2010 11:29:25 +0000 (UTC)
+Message-ID: <loom.20100910T132509-455@post.gmane.org>
+References: <c785bba31003060945j22be2e78pfeaa1bcd39fcba2c@mail.gmail.com>  <69e28c911003061007y258ec349laa802810e0517de4@mail.gmail.com>  <1267949782.15192.13.camel@mj>  <69e28c911003070736t678cf6ccld0fe6dc332f4380d@mail.gmail.com> <1268190973.10669.12.camel@mj>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 08, 2010 at 04:04:49PM +0900, Bruno Randolf wrote:
-> Remove the old ath5k key handling functions, since we now use the key
-> management in ath common.
+Pavel Roskin <proski@...> writes:
+
 > 
-> Signed-off-by: Bruno Randolf <br1@einfach.org>
+> On Sun, 2010-03-07 at 16:36 +0100, Gábor Stefanik wrote:
+> 
+> > Maybe with an actual RTL8192SU firmware it would work... just my 2 HUF.
+> 
+> Actually, you are absolutely right!  The driver is working fine with the
+> firmware from rtl8192su_linux_2.6.0002.0708.2009.tar.gz
+> 
+> CCMP is working, and I could browse the web over it!
+> 
 
-Acked-by: Bob Copeland <me@bobcopeland.com>
 
+Hi,
+
+i have the same problems with an rtl8188su based usb wlan stick running on an
+amd64 based mandriva 2.6.33 kernel. The current staging drivers (inlcuding the
+firmware) do work to some extent, scanning is ok, listing surrounding wlans is
+working.
+But, i cannot connect to my wpa2 encrypted network using this stick.
+Everything is working fine if i am using the internal laptop wlan card (intel
+based).
+Any ideas why the usb stick won't connect?
+Claus
 
