@@ -1,37 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40725 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752683Ab0IUTHa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Sep 2010 15:07:30 -0400
-Subject: Re: [mac80211/ath9k] mac80211/ath9k:  Support AMPDU with multiple
- VIFs.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1285095455-29081-1-git-send-email-greearb@candelatech.com>
-References: <1285095455-29081-1-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 21 Sep 2010 21:07:28 +0200
-Message-ID: <1285096048.12764.9.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:6426 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751794Ab0IJO2Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Sep 2010 10:28:24 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 07/14] iwlwifi: rewrite scan completion
+Date: Fri, 10 Sep 2010 16:26:40 +0200
+Message-Id: <1284128807-11436-8-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
+References: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-09-21 at 11:57 -0700, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> The old ieee80211_find_sta_by_hw method didn't properly
-> find VIFS when there was more than on per AP.  This caused
-> AMPDU logic in ath9k to get the wrong VIF when trying to
-> account for transmitted SKBs.
-> 
-> This patch changes ieee80211_find_sta_by_hw to take a
-> net_device pointer to distinguish among multiple VIFs.
+Assure (partially) we call ieee80211_scan_completed() only once when
+scan was requested from mac80211.
 
-Err, no, this certainly isn't the right thing to do, is skb->dev even
-guaranteed to be right? I'm not convinced of that, and besides, if you
-can have the dev you can have the vif too.
+Code path that first clear STATUS_SCANNING bit is responsible to call
+ieee80211_scan_completed(). Before the call, we check if mac80211
+really request the scan.
 
-johannes
+Still persist some cases when we behave wrong, that will be addressed
+in the next patches.
+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-scan.c |   65 +++++++++++++++++++------------
+ 1 files changed, 40 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 6d02f41..e65a98d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -93,6 +93,19 @@ static int iwl_send_scan_abort(struct iwl_priv *priv)
+ 	return ret;
+ }
+ 
++static void iwl_complete_scan(struct iwl_priv *priv, bool aborted)
++{
++	/* check if scan was requested from mac80211 */
++	if (priv->scan_request) {
++		IWL_DEBUG_SCAN(priv, "Complete scan in mac80211\n");
++		ieee80211_scan_completed(priv->hw, aborted);
++	}
++
++	priv->is_internal_short_scan = false;
++	priv->scan_vif = NULL;
++	priv->scan_request = NULL;
++}
++
+ static void iwl_do_scan_abort(struct iwl_priv *priv)
+ {
+ 	int ret;
+@@ -115,7 +128,7 @@ static void iwl_do_scan_abort(struct iwl_priv *priv)
+ 		clear_bit(STATUS_SCANNING, &priv->status);
+ 		clear_bit(STATUS_SCAN_HW, &priv->status);
+ 		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
+-		ieee80211_scan_completed(priv->hw, true);
++		iwl_complete_scan(priv, true);
+ 	} else
+ 		IWL_DEBUG_SCAN(priv, "Sucessfully send scan abort\n");
+ }
+@@ -545,10 +558,11 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+ {
+ 	struct iwl_priv *priv =
+ 	    container_of(work, struct iwl_priv, scan_completed);
+-	bool internal = false, aborted;
++	bool aborted;
+ 	struct iwl_rxon_context *ctx;
+ 
+-	IWL_DEBUG_SCAN(priv, "SCAN complete scan\n");
++	IWL_DEBUG_INFO(priv, "Completed %sscan.\n",
++		       priv->is_internal_short_scan ? "internal short " : "");
+ 
+ 	cancel_delayed_work(&priv->scan_check);
+ 
+@@ -558,37 +572,38 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+ 	if (aborted)
+ 		IWL_DEBUG_INFO(priv, "Aborted scan completed.\n");
+ 
+-	IWL_DEBUG_INFO(priv, "Setting scan to off\n");
+-
+-	clear_bit(STATUS_SCANNING, &priv->status);
+-
+-	if (priv->is_internal_short_scan) {
+-		priv->is_internal_short_scan = false;
+-		IWL_DEBUG_SCAN(priv, "internal short scan completed\n");
+-		internal = true;
+-	} else if (priv->scan_request) {
+-		priv->scan_request = NULL;
+-		priv->scan_vif = NULL;
+-		ieee80211_scan_completed(priv->hw, aborted);
++	if (!test_and_clear_bit(STATUS_SCANNING, &priv->status)) {
++		IWL_DEBUG_INFO(priv, "Scan already completed.\n");
++		goto out;
+ 	}
+ 
+-	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+-		goto out;
++	if (priv->is_internal_short_scan && !aborted) {
++		int err;
+ 
+-	if (internal && priv->scan_request) {
+-		int err = iwl_scan_initiate(priv, priv->scan_vif, false,
+-					priv->scan_request->channels[0]->band);
++		/* Check if mac80211 requested scan during our internal scan */
++		if (priv->scan_request == NULL)
++			goto out_complete;
+ 
++		/* If so request a new scan */
++		err = iwl_scan_initiate(priv, priv->scan_vif, false,
++					priv->scan_request->channels[0]->band);
+ 		if (err) {
+ 			IWL_DEBUG_SCAN(priv,
+ 				"failed to initiate pending scan: %d\n", err);
+-			priv->scan_request = NULL;
+-			priv->scan_vif = NULL;
+-			ieee80211_scan_completed(priv->hw, true);
+-		} else
+-			goto out;
++			aborted = true;
++			goto out_complete;
++		}
++
++		goto out;
+ 	}
+ 
++out_complete:
++	iwl_complete_scan(priv, aborted);
++
++	/* Can we still talk to firmware ? */
++	if (!iwl_is_ready_rf(priv))
++		goto out;
++
+ 	/* Since setting the TXPOWER may have been deferred while
+ 	 * performing the scan, fire one off */
+ 	iwl_set_tx_power(priv, priv->tx_power_user_lmt, true);
+-- 
+1.7.1
 
