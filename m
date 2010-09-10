@@ -1,50 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:12429 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751818Ab0IOA6M (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 20:58:12 -0400
-Received: from vs3003.wh2.ocn.ne.jp (125.206.180.231)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0293012286
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Sep 2010 09:58:10 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Jonathan Guerin <jonathan@guerin.id.au>
-Subject: Re: [ath5k-devel] [support] ath5k contention windows
-Date: Wed, 15 Sep 2010 09:58:14 +0900
-References: <AANLkTi=azJS6bn7-=Bbb--ibACaQWqv4ZGLMUpfxynm7@mail.gmail.com> <AANLkTi==HEkmY4TR=r+4Ymk_55fBORmRgF+SFGQzK750@mail.gmail.com> <AANLkTim=hRJxQW+UomOQygmLjrePym=Cn-o7RzKqWc+D@mail.gmail.com>
-In-Reply-To: <AANLkTim=hRJxQW+UomOQygmLjrePym=Cn-o7RzKqWc+D@mail.gmail.com>
-Cc: "ath5k-devel" <ath5k-devel@lists.ath5k.org>,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201009150958.14525.br1@einfach.org>
+Received: from mga02.intel.com ([134.134.136.20]:6026 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753046Ab0IJPx2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Sep 2010 11:53:28 -0400
+Subject: Re: [PATCH 07/14] iwlwifi: rewrite scan completion
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1284128807-11436-8-git-send-email-sgruszka@redhat.com>
+References: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
+	 <1284128807-11436-8-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain
+Date: Fri, 10 Sep 2010 08:52:40 -0700
+Message-Id: <1284133960.6054.17.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed September 15 2010 08:07:36 Jonathan Guerin wrote:
-> I'm capturing using a third-party station. I've had to use a Madwifi
-> station, as ath5k throws a lot of spurious timestamps up, which make
-> calculating this very, very difficult.
+On Fri, 2010-09-10 at 07:26 -0700, Stanislaw Gruszka wrote:
+> Assure (partially) we call ieee80211_scan_completed() only once when
+> scan was requested from mac80211.
+> 
+> Code path that first clear STATUS_SCANNING bit is responsible to call
+> ieee80211_scan_completed(). Before the call, we check if mac80211
+> really request the scan.
+> 
+> Still persist some cases when we behave wrong, that will be addressed
+> in the next patches.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Acked-by: Wey-Yi W Guy <wey-yi.w.guy@intel.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-scan.c |   65 +++++++++++++++++++------------
+>  1 files changed, 40 insertions(+), 25 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+> index 6d02f41..e65a98d 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-scan.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+> @@ -93,6 +93,19 @@ static int iwl_send_scan_abort(struct iwl_priv *priv)
+>  	return ret;
+>  }
+>  
+> +static void iwl_complete_scan(struct iwl_priv *priv, bool aborted)
+> +{
+> +	/* check if scan was requested from mac80211 */
+> +	if (priv->scan_request) {
+> +		IWL_DEBUG_SCAN(priv, "Complete scan in mac80211\n");
+> +		ieee80211_scan_completed(priv->hw, aborted);
+> +	}
+> +
+> +	priv->is_internal_short_scan = false;
+> +	priv->scan_vif = NULL;
+> +	priv->scan_request = NULL;
+> +}
+> +
+>  static void iwl_do_scan_abort(struct iwl_priv *priv)
+>  {
+>  	int ret;
+> @@ -115,7 +128,7 @@ static void iwl_do_scan_abort(struct iwl_priv *priv)
+>  		clear_bit(STATUS_SCANNING, &priv->status);
+>  		clear_bit(STATUS_SCAN_HW, &priv->status);
+>  		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
+> -		ieee80211_scan_completed(priv->hw, true);
+> +		iwl_complete_scan(priv, true);
+>  	} else
+>  		IWL_DEBUG_SCAN(priv, "Sucessfully send scan abort\n");
+>  }
+> @@ -545,10 +558,11 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+>  {
+>  	struct iwl_priv *priv =
+>  	    container_of(work, struct iwl_priv, scan_completed);
+> -	bool internal = false, aborted;
+> +	bool aborted;
+>  	struct iwl_rxon_context *ctx;
+>  
+> -	IWL_DEBUG_SCAN(priv, "SCAN complete scan\n");
+> +	IWL_DEBUG_INFO(priv, "Completed %sscan.\n",
+> +		       priv->is_internal_short_scan ? "internal short " : "");
+>  
+>  	cancel_delayed_work(&priv->scan_check);
+>  
+> @@ -558,37 +572,38 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+>  	if (aborted)
+>  		IWL_DEBUG_INFO(priv, "Aborted scan completed.\n");
+>  
+> -	IWL_DEBUG_INFO(priv, "Setting scan to off\n");
+> -
+> -	clear_bit(STATUS_SCANNING, &priv->status);
+> -
+> -	if (priv->is_internal_short_scan) {
+> -		priv->is_internal_short_scan = false;
+> -		IWL_DEBUG_SCAN(priv, "internal short scan completed\n");
+> -		internal = true;
+> -	} else if (priv->scan_request) {
+> -		priv->scan_request = NULL;
+> -		priv->scan_vif = NULL;
+> -		ieee80211_scan_completed(priv->hw, aborted);
+> +	if (!test_and_clear_bit(STATUS_SCANNING, &priv->status)) {
+> +		IWL_DEBUG_INFO(priv, "Scan already completed.\n");
+> +		goto out;
+>  	}
+>  
+> -	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+> -		goto out;
+> +	if (priv->is_internal_short_scan && !aborted) {
+> +		int err;
+>  
+> -	if (internal && priv->scan_request) {
+> -		int err = iwl_scan_initiate(priv, priv->scan_vif, false,
+> -					priv->scan_request->channels[0]->band);
+> +		/* Check if mac80211 requested scan during our internal scan */
+> +		if (priv->scan_request == NULL)
+> +			goto out_complete;
+>  
+> +		/* If so request a new scan */
+> +		err = iwl_scan_initiate(priv, priv->scan_vif, false,
+> +					priv->scan_request->channels[0]->band);
+>  		if (err) {
+>  			IWL_DEBUG_SCAN(priv,
+>  				"failed to initiate pending scan: %d\n", err);
+> -			priv->scan_request = NULL;
+> -			priv->scan_vif = NULL;
+> -			ieee80211_scan_completed(priv->hw, true);
+> -		} else
+> -			goto out;
+> +			aborted = true;
+> +			goto out_complete;
+> +		}
+> +
+> +		goto out;
+>  	}
+>  
+> +out_complete:
+> +	iwl_complete_scan(priv, aborted);
+> +
+> +	/* Can we still talk to firmware ? */
+> +	if (!iwl_is_ready_rf(priv))
+> +		goto out;
+> +
+>  	/* Since setting the TXPOWER may have been deferred while
+>  	 * performing the scan, fire one off */
+>  	iwl_set_tx_power(priv, priv->tx_power_user_lmt, true);
 
-ah, that's interesting and something we should check, too...
-
-> Actually, I've found that they were exactly one slot time negative
-> (give or take 1us). That said, I was doing these calculations using
-> the 802.11a OFDM spec timings. I looked at the driver and realised
-> that SIFS is actually being initialised to 14us, whereas it should be
-> set to 16us. This will also affect DIFS. Once I take these into
-> consideration, they come up as approximately 4-5us out. Now that I
-> think about it, it could make sense.
-
-hmm, we have a function ath5k_hw_get_default_sifs() which returns 16 for 
-802.11a, but it's not used for setting the IFS...
-
-also i think current ath5k_hw_reset_tx_queue() is buggy and sets the AIFS 
-wrongly. it uses ah->ah_aifs + tq->tqi_aifs which is 2 + AR5K_TXQ_USEDEFAULT 
-which results in 2 + (-1). that does not make sense to me and i will post a 
-patch fixing up some of that confusion (but not the SIFS issue) today.
-
-bruno
