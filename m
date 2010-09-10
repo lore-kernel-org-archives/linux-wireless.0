@@ -1,34 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:42498 "EHLO ds10.nbd.name"
+Received: from mx1.redhat.com ([209.132.183.28]:23404 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755221Ab0ITO3Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Sep 2010 10:29:25 -0400
-Message-ID: <4C976FBD.8010007@openwrt.org>
-Date: Mon, 20 Sep 2010 16:29:17 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH 2/5] ath9k: fix an aggregation start related race condition
-References: <1284983140-30099-1-git-send-email-nbd@openwrt.org> <1284983140-30099-2-git-send-email-nbd@openwrt.org> <AANLkTinRQsy3JZ5yr_9xjPhFA3Mez5ewV1V+R1dN3yen@mail.gmail.com>
-In-Reply-To: <AANLkTinRQsy3JZ5yr_9xjPhFA3Mez5ewV1V+R1dN3yen@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	id S1752244Ab0IJO20 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Sep 2010 10:28:26 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 08/14] iwlwifi: force scan complete after timeout
+Date: Fri, 10 Sep 2010 16:26:41 +0200
+Message-Id: <1284128807-11436-9-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
+References: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-09-20 4:19 PM, Luis R. Rodriguez wrote:
-> On Mon, Sep 20, 2010 at 4:45 AM, Felix Fietkau <nbd@openwrt.org> wrote:
->> A new aggregation session start can be issued by mac80211, even when the
->> cleanup of the previous session has not completed yet. Since the data structure
->> for the session is not recreated, this could corrupt the block ack window
->> and lock up the aggregation session. Fix this by delaying the new session
->> until the old one has been cleaned up.
->>
->> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->> Cc: stable@kernel.org
-> 
-> Any reason to not fix this in mac80211 instead?
-mac80211 is already doing the right thing here. The cleanup is ath9k
-specific.
+If we do not get notification from hardware about scan complete, after
+timeout do mac80211 scan completion anyway. This assure we end scan
+in case of firmware hung.
 
-- Felix
+Patch fix one of the causes of wdev_cleanup_work warning reported at
+https://bugzilla.redhat.com/show_bug.cgi?id=593566
+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |   15 +++------------
+ drivers/net/wireless/iwlwifi/iwl-scan.c |   20 +++++++++++++++-----
+ 2 files changed, 18 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 87a2e40..7c1819f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2041,7 +2041,6 @@ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
+ {
+ 	struct iwl_priv *priv = hw->priv;
+ 	struct iwl_rxon_context *ctx = iwl_rxon_ctx_from_vif(vif);
+-	bool scan_completed = false;
+ 
+ 	IWL_DEBUG_MAC80211(priv, "enter\n");
+ 
+@@ -2050,15 +2049,10 @@ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
+ 	WARN_ON(ctx->vif != vif);
+ 	ctx->vif = NULL;
+ 
+-	iwl_scan_cancel_timeout(priv, 100);
++	if (priv->scan_vif == vif)
++		iwl_scan_cancel_timeout(priv, 100);
+ 	iwl_set_mode(priv, vif);
+ 
+-	if (priv->scan_vif == vif) {
+-		scan_completed = true;
+-		priv->scan_vif = NULL;
+-		priv->scan_request = NULL;
+-	}
+-
+ 	/*
+ 	 * When removing the IBSS interface, overwrite the
+ 	 * BT traffic load with the stored one from the last
+@@ -2072,9 +2066,6 @@ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
+ 	memset(priv->bssid, 0, ETH_ALEN);
+ 	mutex_unlock(&priv->mutex);
+ 
+-	if (scan_completed)
+-		ieee80211_scan_completed(priv->hw, true);
+-
+ 	IWL_DEBUG_MAC80211(priv, "leave\n");
+ 
+ }
+@@ -2255,6 +2246,7 @@ void iwl_mac_reset_tsf(struct ieee80211_hw *hw)
+ 
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ 
++	iwl_scan_cancel_timeout(priv, 100);
+ 	if (!iwl_is_ready_rf(priv)) {
+ 		IWL_DEBUG_MAC80211(priv, "leave - not ready\n");
+ 		mutex_unlock(&priv->mutex);
+@@ -2264,7 +2256,6 @@ void iwl_mac_reset_tsf(struct ieee80211_hw *hw)
+ 	/* we are restarting association process
+ 	 * clear RXON_FILTER_ASSOC_MSK bit
+ 	 */
+-	iwl_scan_cancel_timeout(priv, 100);
+ 	ctx->staging.filter_flags &= ~RXON_FILTER_ASSOC_MSK;
+ 	iwlcore_commit_rxon(priv, ctx);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index e65a98d..ce605e0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -106,6 +106,15 @@ static void iwl_complete_scan(struct iwl_priv *priv, bool aborted)
+ 	priv->scan_request = NULL;
+ }
+ 
++static void iwl_force_scan_end(struct iwl_priv *priv)
++{
++	IWL_DEBUG_SCAN(priv, "Forcing scan end\n");
++	clear_bit(STATUS_SCANNING, &priv->status);
++	clear_bit(STATUS_SCAN_HW, &priv->status);
++	clear_bit(STATUS_SCAN_ABORTING, &priv->status);
++	iwl_complete_scan(priv, true);
++}
++
+ static void iwl_do_scan_abort(struct iwl_priv *priv)
+ {
+ 	int ret;
+@@ -125,10 +134,7 @@ static void iwl_do_scan_abort(struct iwl_priv *priv)
+ 	ret = iwl_send_scan_abort(priv);
+ 	if (ret) {
+ 		IWL_DEBUG_SCAN(priv, "Send scan abort failed %d\n", ret);
+-		clear_bit(STATUS_SCANNING, &priv->status);
+-		clear_bit(STATUS_SCAN_HW, &priv->status);
+-		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
+-		iwl_complete_scan(priv, true);
++		iwl_force_scan_end(priv);
+ 	} else
+ 		IWL_DEBUG_SCAN(priv, "Sucessfully send scan abort\n");
+ }
+@@ -151,6 +157,7 @@ EXPORT_SYMBOL(iwl_scan_cancel);
+  */
+ int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
+ {
++	int ret;
+ 	unsigned long timeout = jiffies + msecs_to_jiffies(ms);
+ 
+ 	lockdep_assert_held(&priv->mutex);
+@@ -165,7 +172,10 @@ int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
+ 		msleep(20);
+ 	}
+ 
+-	return test_bit(STATUS_SCAN_HW, &priv->status);
++	ret = test_bit(STATUS_SCAN_HW, &priv->status);
++	if (ret)
++		iwl_force_scan_end(priv);
++	return ret;
+ }
+ EXPORT_SYMBOL(iwl_scan_cancel_timeout);
+ 
+-- 
+1.7.1
+
