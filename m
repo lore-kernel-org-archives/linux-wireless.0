@@ -1,84 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:16937 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932863Ab0I0Iid (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 04:38:33 -0400
-Received: from esebh105.NOE.Nokia.com (esebh105.ntc.nokia.com [172.21.138.211])
-	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o8R8c5Ea024679
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 03:38:33 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linux-wireless@vger.kernel.org
-Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 15/25] wl1271: Enable 11a support always, prevent scanning for unsupporting chips
-Date: Mon, 27 Sep 2010 11:37:39 +0300
-Message-Id: <1285576669-8070-16-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
-References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
+Received: from mx1.redhat.com ([209.132.183.28]:26893 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752244Ab0IJO23 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Sep 2010 10:28:29 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 05/14] iwlwifi: report scan completion when abort fail
+Date: Fri, 10 Sep 2010 16:26:38 +0200
+Message-Id: <1284128807-11436-6-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
+References: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+When we are not able to send abort command to firmware, notify mac80211
+that we complete scan, as we will newer do it lately. Check for all
+possible errors that low level sending command procedure does not check,
+to assure we catch all failures cases.
 
-This patch always enables 11a band towards the mac80211, but prevents scanning
-(and hence the usage of) 11a band channels if the chipset does not support it.
+Patch fix one of the causes of wdev_cleanup_work warning reported at
+https://bugzilla.redhat.com/show_bug.cgi?id=593566
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/wl12xx/wl1271_init.c |   15 +++++++--------
- drivers/net/wireless/wl12xx/wl1271_main.c |    4 +---
- 2 files changed, 8 insertions(+), 11 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-scan.c |  131 ++++++++++++++++---------------
+ 1 files changed, 67 insertions(+), 64 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_init.c b/drivers/net/wireless/wl12xx/wl1271_init.c
-index 879bae0..5614a35 100644
---- a/drivers/net/wireless/wl12xx/wl1271_init.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_init.c
-@@ -53,6 +53,7 @@ static int wl1271_init_hwenc_config(struct wl1271 *wl)
- int wl1271_init_templates_config(struct wl1271 *wl)
- {
- 	int ret, i;
-+	size_t size;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index ea33849..dbb07e8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -54,34 +54,83 @@
+ #define IWL_PASSIVE_DWELL_BASE      (100)
+ #define IWL_CHANNEL_TUNE_TIME       5
  
- 	/* send empty templates for fw memory reservation */
- 	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_CFG_PROBE_REQ_2_4, NULL,
-@@ -61,14 +62,12 @@ int wl1271_init_templates_config(struct wl1271 *wl)
- 	if (ret < 0)
- 		return ret;
++static int iwl_send_scan_abort(struct iwl_priv *priv)
++{
++	int ret;
++	struct iwl_rx_packet *pkt;
++	struct iwl_host_cmd cmd = {
++		.id = REPLY_SCAN_ABORT_CMD,
++		.flags = CMD_WANT_SKB,
++	};
  
--	if (wl->enable_11a) {
--		size_t size = sizeof(struct wl12xx_probe_req_template);
--		ret = wl1271_cmd_template_set(wl, CMD_TEMPL_CFG_PROBE_REQ_5,
--					      NULL, size, 0,
--					      WL1271_RATE_AUTOMATIC);
--		if (ret < 0)
--			return ret;
--	}
-+	size = sizeof(struct wl12xx_probe_req_template);
-+	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_CFG_PROBE_REQ_5,
-+				      NULL, size, 0,
-+				      WL1271_RATE_AUTOMATIC);
-+	if (ret < 0)
++	/* Exit instantly with error when device is not ready
++	 * to receive scan abort command or it does not perform
++	 * hardware scan currently */
++	if (!test_bit(STATUS_READY, &priv->status) ||
++	    !test_bit(STATUS_GEO_CONFIGURED, &priv->status) ||
++	    !test_bit(STATUS_SCAN_HW, &priv->status) ||
++	    test_bit(STATUS_FW_ERROR, &priv->status) ||
++	    test_bit(STATUS_EXIT_PENDING, &priv->status))
++		return -EIO;
+ 
+-/**
+- * iwl_scan_cancel - Cancel any currently executing HW scan
+- *
+- * NOTE: priv->mutex is not required before calling this function
+- */
+-int iwl_scan_cancel(struct iwl_priv *priv)
+-{
+-	if (!test_bit(STATUS_SCAN_HW, &priv->status)) {
+-		clear_bit(STATUS_SCANNING, &priv->status);
+-		return 0;
++	ret = iwl_send_cmd_sync(priv, &cmd);
++	if (ret)
 +		return ret;
++
++	pkt = (struct iwl_rx_packet *)cmd.reply_page;
++	if (pkt->u.status != CAN_ABORT_STATUS) {
++		/* The scan abort will return 1 for success or
++		 * 2 for "failure".  A failure condition can be
++		 * due to simply not being in an active scan which
++		 * can occur if we send the scan abort before we
++		 * the microcode has notified us that a scan is
++		 * completed. */
++		IWL_DEBUG_INFO(priv, "SCAN_ABORT ret %d.\n", pkt->u.status);
++		ret = -EIO;
+ 	}
  
- 	ret = wl1271_cmd_template_set(wl, CMD_TEMPL_NULL_DATA, NULL,
- 				      sizeof(struct wl12xx_null_data_template),
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 81f92a0..f0c2532 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -2403,9 +2403,7 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
- 		BIT(NL80211_IFTYPE_ADHOC);
- 	wl->hw->wiphy->max_scan_ssids = 1;
- 	wl->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = &wl1271_band_2ghz;
+-	if (test_bit(STATUS_SCANNING, &priv->status)) {
+-		if (!test_and_set_bit(STATUS_SCAN_ABORTING, &priv->status)) {
+-			IWL_DEBUG_SCAN(priv, "Queuing scan abort.\n");
+-			schedule_work(&priv->abort_scan);
++	iwl_free_pages(priv, cmd.reply_page);
++	return ret;
++}
+ 
+-		} else
+-			IWL_DEBUG_SCAN(priv, "Scan abort already in progress.\n");
++static void iwl_do_scan_abort(struct iwl_priv *priv)
++{
++	int ret;
+ 
+-		return test_bit(STATUS_SCANNING, &priv->status);
++	lockdep_assert_held(&priv->mutex);
++
++	if (!test_bit(STATUS_SCANNING, &priv->status)) {
++		IWL_DEBUG_SCAN(priv, "Not performing scan to abort\n");
++		return;
+ 	}
+ 
++	if (test_and_set_bit(STATUS_SCAN_ABORTING, &priv->status)) {
++		IWL_DEBUG_SCAN(priv, "Scan abort in progress\n");
++		return;
++	}
++
++	ret = iwl_send_scan_abort(priv);
++	if (ret) {
++		IWL_DEBUG_SCAN(priv, "Send scan abort failed %d\n", ret);
++		clear_bit(STATUS_SCANNING, &priv->status);
++		clear_bit(STATUS_SCAN_HW, &priv->status);
++		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
++		ieee80211_scan_completed(priv->hw, true);
++	} else
++		IWL_DEBUG_SCAN(priv, "Sucessfully send scan abort\n");
++}
++
++/**
++ * iwl_scan_cancel - Cancel any currently executing HW scan
++ */
++int iwl_scan_cancel(struct iwl_priv *priv)
++{
++	IWL_DEBUG_SCAN(priv, "Queuing abort scan\n");
++	schedule_work(&priv->abort_scan);
+ 	return 0;
+ }
+ EXPORT_SYMBOL(iwl_scan_cancel);
++
+ /**
+  * iwl_scan_cancel_timeout - Cancel any currently executing HW scan
+  * @ms: amount of time to wait (in milliseconds) for scan to abort
+@@ -108,47 +157,6 @@ int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
+ }
+ EXPORT_SYMBOL(iwl_scan_cancel_timeout);
+ 
+-static int iwl_send_scan_abort(struct iwl_priv *priv)
+-{
+-	int ret = 0;
+-	struct iwl_rx_packet *pkt;
+-	struct iwl_host_cmd cmd = {
+-		.id = REPLY_SCAN_ABORT_CMD,
+-		.flags = CMD_WANT_SKB,
+-	};
 -
--	if (wl->enable_11a)
--		wl->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &wl1271_band_5ghz;
-+	wl->hw->wiphy->bands[IEEE80211_BAND_5GHZ] = &wl1271_band_5ghz;
+-	/* If there isn't a scan actively going on in the hardware
+-	 * then we are in between scan bands and not actually
+-	 * actively scanning, so don't send the abort command */
+-	if (!test_bit(STATUS_SCAN_HW, &priv->status)) {
+-		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
+-		return 0;
+-	}
+-
+-	ret = iwl_send_cmd_sync(priv, &cmd);
+-	if (ret) {
+-		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
+-		return ret;
+-	}
+-
+-	pkt = (struct iwl_rx_packet *)cmd.reply_page;
+-	if (pkt->u.status != CAN_ABORT_STATUS) {
+-		/* The scan abort will return 1 for success or
+-		 * 2 for "failure".  A failure condition can be
+-		 * due to simply not being in an active scan which
+-		 * can occur if we send the scan abort before we
+-		 * the microcode has notified us that a scan is
+-		 * completed. */
+-		IWL_DEBUG_INFO(priv, "SCAN_ABORT returned %d.\n", pkt->u.status);
+-		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
+-		clear_bit(STATUS_SCAN_HW, &priv->status);
+-	}
+-
+-	iwl_free_pages(priv, cmd.reply_page);
+-
+-	return ret;
+-}
+-
+ /* Service response to REPLY_SCAN_CMD (0x80) */
+ static void iwl_rx_reply_scan(struct iwl_priv *priv,
+ 			      struct iwl_rx_mem_buffer *rxb)
+@@ -527,15 +535,10 @@ static void iwl_bg_abort_scan(struct work_struct *work)
+ {
+ 	struct iwl_priv *priv = container_of(work, struct iwl_priv, abort_scan);
  
- 	wl->hw->queues = 4;
- 	wl->hw->max_rates = 1;
+-	if (!test_bit(STATUS_READY, &priv->status) ||
+-	    !test_bit(STATUS_GEO_CONFIGURED, &priv->status))
+-		return;
+-
+ 	cancel_delayed_work(&priv->scan_check);
+ 
+ 	mutex_lock(&priv->mutex);
+-	if (test_bit(STATUS_SCAN_ABORTING, &priv->status))
+-		iwl_send_scan_abort(priv);
++	iwl_do_scan_abort(priv);
+ 	mutex_unlock(&priv->mutex);
+ }
+ 
 -- 
-1.6.3.3
+1.7.1
 
