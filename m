@@ -1,87 +1,208 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:33798 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753900Ab0IKQTP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Sep 2010 12:19:15 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 8/8] compat-wireless: add brcm80211 driver
-Date: Sat, 11 Sep 2010 18:18:33 +0200
-Message-Id: <1284221913-22455-10-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1284221913-22455-1-git-send-email-hauke@hauke-m.de>
-References: <1284221913-22455-1-git-send-email-hauke@hauke-m.de>
+Received: from mga01.intel.com ([192.55.52.88]:8070 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754315Ab0IJPwP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Sep 2010 11:52:15 -0400
+Subject: Re: [PATCH 05/14] iwlwifi: report scan completion when abort fail
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1284128807-11436-6-git-send-email-sgruszka@redhat.com>
+References: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
+	 <1284128807-11436-6-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain
+Date: Fri, 10 Sep 2010 08:51:19 -0700
+Message-Id: <1284133879.6054.13.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This driver was compile tested on kernel 2.6.29 to 2.6.36.
-
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- Makefile                                     |    1 +
- config.mk                                    |    4 ++++
- patches/35-backport-brcm80211-Makefile.patch |   11 +++++++++++
- scripts/admin-update.sh                      |    1 +
- 4 files changed, 17 insertions(+), 0 deletions(-)
- create mode 100644 patches/35-backport-brcm80211-Makefile.patch
-
-diff --git a/Makefile b/Makefile
-index b590ca2..61adb0d 100644
---- a/Makefile
-+++ b/Makefile
-@@ -39,6 +39,7 @@ obj-$(CONFIG_COMPAT_BLUETOOTH_MODULES) += drivers/bluetooth/
- 
- ifeq ($(CONFIG_STAGING_EXCLUDE_BUILD),)
- obj-$(CONFIG_COMPAT_STAGING) += drivers/staging/ath6kl/
-+obj-$(CONFIG_COMPAT_STAGING) += drivers/staging/brcm80211/
- endif
- 
- 
-diff --git a/config.mk b/config.mk
-index f2c62ed..b61c318 100644
---- a/config.mk
-+++ b/config.mk
-@@ -513,6 +513,10 @@ CONFIG_ATH6KL_ENABLE_TARGET_DEBUG_PRINTS=y
- # CONFIG_ATH6KL_SKIP_ABI_VERSION_CHECK is not set
- CONFIG_ATH6KL_VIRTUAL_SCATTER_GATHER=y
- CONFIG_ATH6K_LEGACY=m
-+
-+CONFIG_BRCM80211=m
-+CONFIG_BRCM80211_PCI=y
-+
- endif #CONFIG_WIRELESS_EXT
- endif #CONFIG_MMC
- 
-diff --git a/patches/35-backport-brcm80211-Makefile.patch b/patches/35-backport-brcm80211-Makefile.patch
-new file mode 100644
-index 0000000..2a94756
---- /dev/null
-+++ b/patches/35-backport-brcm80211-Makefile.patch
-@@ -0,0 +1,11 @@
-+--- a/drivers/staging/brcm80211/Makefile
-++++ b/drivers/staging/brcm80211/Makefile
-+@@ -15,7 +15,7 @@
-+ # OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-+ # CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ 
-+-EXTRA_CFLAGS := -DBCMDBG -DWLC_HIGH -DSTA -DWME -DWL11N -DDBAND -DBCMDMA32 -DBCMNVRAMR -Idrivers/staging/brcm80211/sys -Idrivers/staging/brcm80211/phy -Idrivers/staging/brcm80211/util -Idrivers/staging/brcm80211/include -Wall -Wstrict-prototypes -Werror -Wmissing-prototypes
-++EXTRA_CFLAGS := -DBCMDBG -DWLC_HIGH -DSTA -DWME -DWL11N -DDBAND -DBCMDMA32 -DBCMNVRAMR -I$(obj)/sys -I$(obj)/phy -I$(obj)/util -I$(obj)/include -Wall -Wstrict-prototypes -Werror -Wmissing-prototypes
-+ 
-+ PCI_CFLAGS := -DWLC_LOW
-+ 
-diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
-index e000faf..6ef281d 100755
---- a/scripts/admin-update.sh
-+++ b/scripts/admin-update.sh
-@@ -212,6 +212,7 @@ DRIVERS="$DRIVERS drivers/net/wireless/orinoco"
- 
- # Staging drivers
- STAGING_DRIVERS="drivers/staging/ath6kl"
-+STAGING_DRIVERS="$STAGING_DRIVERS drivers/staging/brcm80211"
- 
- # Ethernet drivers
- DRIVERS="$DRIVERS drivers/net/atl1c"
--- 
-1.7.0.4
+On Fri, 2010-09-10 at 07:26 -0700, Stanislaw Gruszka wrote:
+> When we are not able to send abort command to firmware, notify mac80211
+> that we complete scan, as we will newer do it lately. Check for all
+> possible errors that low level sending command procedure does not check,
+> to assure we catch all failures cases.
+> 
+> Patch fix one of the causes of wdev_cleanup_work warning reported at
+> https://bugzilla.redhat.com/show_bug.cgi?id=593566
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Acked-by: Wey-Yi W Guy <wey-yi.w.guy@intel.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-scan.c |  131 ++++++++++++++++---------------
+>  1 files changed, 67 insertions(+), 64 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+> index ea33849..dbb07e8 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-scan.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+> @@ -54,34 +54,83 @@
+>  #define IWL_PASSIVE_DWELL_BASE      (100)
+>  #define IWL_CHANNEL_TUNE_TIME       5
+>  
+> +static int iwl_send_scan_abort(struct iwl_priv *priv)
+> +{
+> +	int ret;
+> +	struct iwl_rx_packet *pkt;
+> +	struct iwl_host_cmd cmd = {
+> +		.id = REPLY_SCAN_ABORT_CMD,
+> +		.flags = CMD_WANT_SKB,
+> +	};
+>  
+> +	/* Exit instantly with error when device is not ready
+> +	 * to receive scan abort command or it does not perform
+> +	 * hardware scan currently */
+> +	if (!test_bit(STATUS_READY, &priv->status) ||
+> +	    !test_bit(STATUS_GEO_CONFIGURED, &priv->status) ||
+> +	    !test_bit(STATUS_SCAN_HW, &priv->status) ||
+> +	    test_bit(STATUS_FW_ERROR, &priv->status) ||
+> +	    test_bit(STATUS_EXIT_PENDING, &priv->status))
+> +		return -EIO;
+>  
+> -/**
+> - * iwl_scan_cancel - Cancel any currently executing HW scan
+> - *
+> - * NOTE: priv->mutex is not required before calling this function
+> - */
+> -int iwl_scan_cancel(struct iwl_priv *priv)
+> -{
+> -	if (!test_bit(STATUS_SCAN_HW, &priv->status)) {
+> -		clear_bit(STATUS_SCANNING, &priv->status);
+> -		return 0;
+> +	ret = iwl_send_cmd_sync(priv, &cmd);
+> +	if (ret)
+> +		return ret;
+> +
+> +	pkt = (struct iwl_rx_packet *)cmd.reply_page;
+> +	if (pkt->u.status != CAN_ABORT_STATUS) {
+> +		/* The scan abort will return 1 for success or
+> +		 * 2 for "failure".  A failure condition can be
+> +		 * due to simply not being in an active scan which
+> +		 * can occur if we send the scan abort before we
+> +		 * the microcode has notified us that a scan is
+> +		 * completed. */
+> +		IWL_DEBUG_INFO(priv, "SCAN_ABORT ret %d.\n", pkt->u.status);
+> +		ret = -EIO;
+>  	}
+>  
+> -	if (test_bit(STATUS_SCANNING, &priv->status)) {
+> -		if (!test_and_set_bit(STATUS_SCAN_ABORTING, &priv->status)) {
+> -			IWL_DEBUG_SCAN(priv, "Queuing scan abort.\n");
+> -			schedule_work(&priv->abort_scan);
+> +	iwl_free_pages(priv, cmd.reply_page);
+> +	return ret;
+> +}
+>  
+> -		} else
+> -			IWL_DEBUG_SCAN(priv, "Scan abort already in progress.\n");
+> +static void iwl_do_scan_abort(struct iwl_priv *priv)
+> +{
+> +	int ret;
+>  
+> -		return test_bit(STATUS_SCANNING, &priv->status);
+> +	lockdep_assert_held(&priv->mutex);
+> +
+> +	if (!test_bit(STATUS_SCANNING, &priv->status)) {
+> +		IWL_DEBUG_SCAN(priv, "Not performing scan to abort\n");
+> +		return;
+>  	}
+>  
+> +	if (test_and_set_bit(STATUS_SCAN_ABORTING, &priv->status)) {
+> +		IWL_DEBUG_SCAN(priv, "Scan abort in progress\n");
+> +		return;
+> +	}
+> +
+> +	ret = iwl_send_scan_abort(priv);
+> +	if (ret) {
+> +		IWL_DEBUG_SCAN(priv, "Send scan abort failed %d\n", ret);
+> +		clear_bit(STATUS_SCANNING, &priv->status);
+> +		clear_bit(STATUS_SCAN_HW, &priv->status);
+> +		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
+> +		ieee80211_scan_completed(priv->hw, true);
+> +	} else
+> +		IWL_DEBUG_SCAN(priv, "Sucessfully send scan abort\n");
+> +}
+> +
+> +/**
+> + * iwl_scan_cancel - Cancel any currently executing HW scan
+> + */
+> +int iwl_scan_cancel(struct iwl_priv *priv)
+> +{
+> +	IWL_DEBUG_SCAN(priv, "Queuing abort scan\n");
+> +	schedule_work(&priv->abort_scan);
+>  	return 0;
+>  }
+>  EXPORT_SYMBOL(iwl_scan_cancel);
+> +
+>  /**
+>   * iwl_scan_cancel_timeout - Cancel any currently executing HW scan
+>   * @ms: amount of time to wait (in milliseconds) for scan to abort
+> @@ -108,47 +157,6 @@ int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
+>  }
+>  EXPORT_SYMBOL(iwl_scan_cancel_timeout);
+>  
+> -static int iwl_send_scan_abort(struct iwl_priv *priv)
+> -{
+> -	int ret = 0;
+> -	struct iwl_rx_packet *pkt;
+> -	struct iwl_host_cmd cmd = {
+> -		.id = REPLY_SCAN_ABORT_CMD,
+> -		.flags = CMD_WANT_SKB,
+> -	};
+> -
+> -	/* If there isn't a scan actively going on in the hardware
+> -	 * then we are in between scan bands and not actually
+> -	 * actively scanning, so don't send the abort command */
+> -	if (!test_bit(STATUS_SCAN_HW, &priv->status)) {
+> -		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
+> -		return 0;
+> -	}
+> -
+> -	ret = iwl_send_cmd_sync(priv, &cmd);
+> -	if (ret) {
+> -		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
+> -		return ret;
+> -	}
+> -
+> -	pkt = (struct iwl_rx_packet *)cmd.reply_page;
+> -	if (pkt->u.status != CAN_ABORT_STATUS) {
+> -		/* The scan abort will return 1 for success or
+> -		 * 2 for "failure".  A failure condition can be
+> -		 * due to simply not being in an active scan which
+> -		 * can occur if we send the scan abort before we
+> -		 * the microcode has notified us that a scan is
+> -		 * completed. */
+> -		IWL_DEBUG_INFO(priv, "SCAN_ABORT returned %d.\n", pkt->u.status);
+> -		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
+> -		clear_bit(STATUS_SCAN_HW, &priv->status);
+> -	}
+> -
+> -	iwl_free_pages(priv, cmd.reply_page);
+> -
+> -	return ret;
+> -}
+> -
+>  /* Service response to REPLY_SCAN_CMD (0x80) */
+>  static void iwl_rx_reply_scan(struct iwl_priv *priv,
+>  			      struct iwl_rx_mem_buffer *rxb)
+> @@ -527,15 +535,10 @@ static void iwl_bg_abort_scan(struct work_struct *work)
+>  {
+>  	struct iwl_priv *priv = container_of(work, struct iwl_priv, abort_scan);
+>  
+> -	if (!test_bit(STATUS_READY, &priv->status) ||
+> -	    !test_bit(STATUS_GEO_CONFIGURED, &priv->status))
+> -		return;
+> -
+>  	cancel_delayed_work(&priv->scan_check);
+>  
+>  	mutex_lock(&priv->mutex);
+> -	if (test_bit(STATUS_SCAN_ABORTING, &priv->status))
+> -		iwl_send_scan_abort(priv);
+> +	iwl_do_scan_abort(priv);
+>  	mutex_unlock(&priv->mutex);
+>  }
+>  
 
