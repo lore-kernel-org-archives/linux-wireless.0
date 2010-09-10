@@ -1,38 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49393 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753702Ab0IWOI1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Sep 2010 10:08:27 -0400
-Subject: Re: [PATCH] mac80211/ath9k:  Support AMPDU with multiple VIFs.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@gmail.com
+Received: from mx1.redhat.com ([209.132.183.28]:32811 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752244Ab0IJO2a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Sep 2010 10:28:30 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-In-Reply-To: <1285250054-32035-1-git-send-email-greearb@candelatech.com>
-References: <1285250054-32035-1-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 23 Sep 2010 16:08:26 +0200
-Message-ID: <1285250906.3770.114.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 14/14] iwlwifi: apply settings when finishing scan
+Date: Fri, 10 Sep 2010 16:26:47 +0200
+Message-Id: <1284128807-11436-15-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
+References: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-09-23 at 06:54 -0700, greearb@gmail.com wrote:
+Even is someone else complete scanning in mac80211, apply rxon and
+tx power settings if gets scan complete notification from hardware.
 
->   *
-> - * NOTE: This function should not be used! When mac80211 is converted
-> - *	 internally to properly keep track of stations on multiple
-> - *	 virtual interfaces, it will not always know which station to
-> - *	 return here since a single address might be used by multiple
-> - *	 logical stations (e.g. consider a station connecting to another
-> - *	 BSSID on the same AP hardware without disconnecting first).
-> - *
-> - * DO NOT USE THIS FUNCTION.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-scan.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-Also, I'm not sure you really should remove this comment, since it still
-applies when you pass NULL, and I'm still not convinced that ath9k
-couldn't keep track of the virtual interface accurately?
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 65b7cb4..599573f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -573,7 +573,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+ 
+ 	if (!test_and_clear_bit(STATUS_SCANNING, &priv->status)) {
+ 		IWL_DEBUG_SCAN(priv, "Scan already completed.\n");
+-		goto out;
++		goto out_settings;
+ 	}
+ 
+ 	if (priv->is_internal_short_scan && !aborted) {
+@@ -599,6 +599,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+ out_complete:
+ 	iwl_complete_scan(priv, aborted);
+ 
++out_settings:
+ 	/* Can we still talk to firmware ? */
+ 	if (!iwl_is_ready_rf(priv))
+ 		goto out;
+-- 
+1.7.1
 
