@@ -1,54 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:51855 "EHLO ds10.nbd.name"
+Received: from mx1.redhat.com ([209.132.183.28]:42376 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751803Ab0IUMTg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Sep 2010 08:19:36 -0400
-Message-ID: <4C98A2C4.8060108@openwrt.org>
-Date: Tue, 21 Sep 2010 14:19:16 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: "ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [ath9k-devel] ath9k, multiple stations, and AMPDUs
-References: <4C9841BA.4080700@candelatech.com> <4C98848C.70005@openwrt.org> <4C98A022.7020106@candelatech.com>
-In-Reply-To: <4C98A022.7020106@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1751514Ab0IJO2K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Sep 2010 10:28:10 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 04/14] iwlwifi: cancel scan when down the device
+Date: Fri, 10 Sep 2010 16:26:37 +0200
+Message-Id: <1284128807-11436-5-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
+References: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-09-21 2:08 PM, Ben Greear wrote:
-> On 09/21/2010 03:10 AM, Felix Fietkau wrote:
->> On 2010-09-21 7:25 AM, Ben Greear wrote:
->>> I think I have narrowed down some problems I see when I create
->>> two STA interfaces on the same radio and associate with the
->>> same AP.
->>>
->>> I'm using wireless-testing plus some patches to the rx logic
->>> I posted earlier.
->>>
->>> It appears that the ath9k NIC does not transport AMPDUs properly,
->>> and after a few seconds, it's backlog is exhausted and the queues
->>> are stopped in ath_tx_start.
->> ath9k currently looks up the sta by hw and not by vif on tx completion.
->> That completely breaks aggregation in such a setup. Unfortunately I
->> don't know an easy way to fix this yet.
->>
->> This will be fixed by my sw aggregation rewrite, but I don't know when
->> I'll get that completed yet.
-> 
-> If you have any more details on this, please let me know.  I'm going to
-> attempt to fix it...I certainly have a good test case :)
-ath_tx_complete_aggr completes an A-MPDU frame, which typically triggers
-the release of the next A-MPDU to the hw queue.
-To keep track of the Block ACK window, it needs to look up the TID, for
-which it needs a STA pointer. At that level, the driver typically
-doesn't have access to the vif.
+Always cancel scan when stooping device and scan is currently pending,
+we should newer have scan running after down device.
 
-It might be possible to fix this by adding another sta lookup helper
-function in mac80211 that takes another address argument for the BSSID,
-so that it can get the sta entry for the correct vif. I don't know if
-Johannes wants something like that though.
+To assure we start scan cancel from restart work we have to schedule
+abort_scan to different workqueue than priv->workqueue.
 
-- Felix
+Patch fix not cancel scanning when restarting firmware, what is
+one of the causes of wdev_cleanup_work warning (together with permanent
+network connection lost) reported at
+https://bugzilla.redhat.com/show_bug.cgi?id=593566
+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   14 +++-----------
+ drivers/net/wireless/iwlwifi/iwl-scan.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   16 ++++------------
+ 3 files changed, 8 insertions(+), 24 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index c8a2ec8..25b3540 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2891,8 +2891,9 @@ static void __iwl_down(struct iwl_priv *priv)
+ 
+ 	IWL_DEBUG_INFO(priv, DRV_NAME " is going down\n");
+ 
+-	if (!exit_pending)
+-		set_bit(STATUS_EXIT_PENDING, &priv->status);
++	iwl_scan_cancel_timeout(priv, 200);
++
++	exit_pending = test_and_set_bit(STATUS_EXIT_PENDING, &priv->status);
+ 
+ 	/* Stop TX queues watchdog. We need to have STATUS_EXIT_PENDING bit set
+ 	 * to prevent rearm timer */
+@@ -3502,15 +3503,6 @@ static void iwl_mac_stop(struct ieee80211_hw *hw)
+ 
+ 	priv->is_open = 0;
+ 
+-	if (iwl_is_ready_rf(priv) || test_bit(STATUS_SCAN_HW, &priv->status)) {
+-		/* stop mac, cancel any scan request and clear
+-		 * RXON_FILTER_ASSOC_MSK BIT
+-		 */
+-		mutex_lock(&priv->mutex);
+-		iwl_scan_cancel_timeout(priv, 100);
+-		mutex_unlock(&priv->mutex);
+-	}
+-
+ 	iwl_down(priv);
+ 
+ 	flush_workqueue(priv->workqueue);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 22bdc98..ea33849 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -71,7 +71,7 @@ int iwl_scan_cancel(struct iwl_priv *priv)
+ 	if (test_bit(STATUS_SCANNING, &priv->status)) {
+ 		if (!test_and_set_bit(STATUS_SCAN_ABORTING, &priv->status)) {
+ 			IWL_DEBUG_SCAN(priv, "Queuing scan abort.\n");
+-			queue_work(priv->workqueue, &priv->abort_scan);
++			schedule_work(&priv->abort_scan);
+ 
+ 		} else
+ 			IWL_DEBUG_SCAN(priv, "Scan abort already in progress.\n");
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 3b3686b..fb894d8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -2568,12 +2568,13 @@ static void iwl3945_cancel_deferred_work(struct iwl_priv *priv);
+ static void __iwl3945_down(struct iwl_priv *priv)
+ {
+ 	unsigned long flags;
+-	int exit_pending = test_bit(STATUS_EXIT_PENDING, &priv->status);
++	int exit_pending;
+ 
+ 	IWL_DEBUG_INFO(priv, DRV_NAME " is going down\n");
+ 
+-	if (!exit_pending)
+-		set_bit(STATUS_EXIT_PENDING, &priv->status);
++	iwl_scan_cancel_timeout(priv, 200);
++
++	exit_pending = test_and_set_bit(STATUS_EXIT_PENDING, &priv->status);
+ 
+ 	/* Stop TX queues watchdog. We need to have STATUS_EXIT_PENDING bit set
+ 	 * to prevent rearm timer */
+@@ -3173,15 +3174,6 @@ static void iwl3945_mac_stop(struct ieee80211_hw *hw)
+ 
+ 	priv->is_open = 0;
+ 
+-	if (iwl_is_ready_rf(priv)) {
+-		/* stop mac, cancel any scan request and clear
+-		 * RXON_FILTER_ASSOC_MSK BIT
+-		 */
+-		mutex_lock(&priv->mutex);
+-		iwl_scan_cancel_timeout(priv, 100);
+-		mutex_unlock(&priv->mutex);
+-	}
+-
+ 	iwl3945_down(priv);
+ 
+ 	flush_workqueue(priv->workqueue);
+-- 
+1.7.1
+
