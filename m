@@ -1,48 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1936 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752621Ab0IKQoR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Sep 2010 12:44:17 -0400
-Date: Sat, 11 Sep 2010 09:44:09 -0700
-From: "Henry Ptasinski" <henryp@broadcom.com>
-To: gregkh@suse.de
-cc: henryp@broadcom.com, devel@linuxdriverproject.org,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] Fix URLs for firmware files.
-Message-ID: <20100911164409.GA7432@broadcom.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:43679 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754586Ab0IJQMo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Sep 2010 12:12:44 -0400
+To: Steve deRosier <steve@cozybit.com>
+Subject: Re: [PATCH 5/9] =?UTF-8?Q?libertas=5Ftf=3A=20Moved=20firmware=20loading?=
+ =?UTF-8?Q?=20to=20probe=20in=20order=20to=20fetch=20MAC=20address?=
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Date: Fri, 10 Sep 2010 18:12:41 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
+	<javier@cozybit.com>
+In-Reply-To: <AANLkTi=-JhwMmQK5ivX-FpSOV5_Pc3RfoswkFLFdGoFo@mail.gmail.com>
+References: <1283988329-44549-1-git-send-email-steve@cozybit.com> <1283988329-44549-6-git-send-email-steve@cozybit.com> <e23a1b600a18f179fa72d2cadf724d17@localhost> <AANLkTi=r_RdEG-2=gzV7uFNJt1Nynp3qNC-38SQkzhO2@mail.gmail.com> <c9d7238e26d9e276d9c9ef9792f7c7f8@localhost> <AANLkTi=-JhwMmQK5ivX-FpSOV5_Pc3RfoswkFLFdGoFo@mail.gmail.com>
+Message-ID: <cd546d0c03f6e92c9d3990d8edda0234@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 6c45ba230e63b6ee85b9a51962e545d6d0e5698c Mon Sep 17 00:00:00 2001
-From: Henry Ptasinski <henryp@broadcom.com>
-Date: Sat, 11 Sep 2010 09:40:20 -0700
-Subject: [PATCH] Fix URLs for firmware files.
 
+On Thu, 9 Sep 2010 20:34:41 -0700, Steve deRosier <steve@cozybit.com>
+wrote:
+> I think my mac80211 patch "mac80211: Fix dangling pointer in
+> ieee80211_xmit" stands 100% alone and fixes a clear bug.  I don't see
+> any need to delay that one.
 
-Signed-off-by: Henry Ptasinski <henryp@broadcom.com>
----
- drivers/staging/brcm80211/README |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Agree, best resend it outside this series, or if John wants to just
+pick it up outside the series.
 
-diff --git a/drivers/staging/brcm80211/README b/drivers/staging/brcm80211/README
-index 97fa01c..c3ba9bb 100644
---- a/drivers/staging/brcm80211/README
-+++ b/drivers/staging/brcm80211/README
-@@ -40,8 +40,8 @@ Firmware installation
- Firmware is available from the Linux firmware repository at:
- 
- 	git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git
--	http://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git
--	https://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git
-+	http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git
-+	https://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git
- 
- For all chips, copy brcm/bcm43xx-0-610-809-0.fw and
- brcm/bcm43xx_hdr-0-610-809-0.fw to /lib/firmware/brcm (or wherever firmware is
--- 
-1.6.3.3
+(Generally, I would ask to send mac80211 patches outside driver
+series anyway, because it makes it harder to miss such things)
 
-
+johannes
