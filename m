@@ -1,61 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:56731 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756376Ab0I0P5U (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 11:57:20 -0400
-Message-ID: <4CA0BED9.3050601@candelatech.com>
-Date: Mon, 27 Sep 2010 08:57:13 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mx1.redhat.com ([209.132.183.28]:6428 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752586Ab0IJFDK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Sep 2010 01:03:10 -0400
+Date: Fri, 10 Sep 2010 07:03:26 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 13/14] iwlwifi: cleanup scan initiate check
+Message-ID: <20100910050325.GB2398@redhat.com>
+References: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
+ <1284040354-31703-14-git-send-email-sgruszka@redhat.com>
+ <E9954878DD1FB34FAE5187FB88C58A3501280FDC82@orsmsx506.amr.corp.intel.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: rebased version of wireless-testing?
-References: <4C9CFD86.2080207@candelatech.com> <20100924200532.GH8077@tuxdriver.com> <4C9D14B6.70206@candelatech.com> <20100925134325.GD1948@tuxdriver.com> <4C9E1C5D.4020805@candelatech.com> <20100927150235.GB11086@tuxdriver.com>
-In-Reply-To: <20100927150235.GB11086@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <E9954878DD1FB34FAE5187FB88C58A3501280FDC82@orsmsx506.amr.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/27/2010 08:02 AM, John W. Linville wrote:
-> On Sat, Sep 25, 2010 at 08:59:25AM -0700, Ben Greear wrote:
->> On 09/25/2010 06:43 AM, John W. Linville wrote:
->>> On Fri, Sep 24, 2010 at 02:14:30PM -0700, Ben Greear wrote:
->>>
->>>>> You will be better-off pulling wireless-next-2.6 (and maybe
->>>>> wireless-2.6 as well).  The history there isn't always immutable
->>>>> (although I prefer it to be), but it will tend to be a lot cleaner
->>>>> than wireless-testing.
->>>>
->>>> Any chance you could push tags in wireless-next-2.6?
->>>
->>> Not sure what you mean -- are you not seeing the master-<date>   tags?
->>
->> It didn't seem like the 2.6.36-rcX tags were there..but then again, maybe
->> I'm looking for something that doesn't exist?
->
-> Ah...well, they probably won't be in there until after 2.6.36 is
-> released.  I generally don't pull from Linus into that tree during
-> the release cycle in order to avoid surprising Dave when he pulls it.
-> But if you are basing on linux-2.6 then you should already have those
-> tags anyway?
+Hi Wey
 
-I was going to run some diffs in wt against 2.6.36-rc5 to try to figure out
-the changes I needed to pull in.
+On Thu, Sep 09, 2010 at 08:46:57AM -0700, Guy, Wey-Yi W wrote:
+> --- a/drivers/net/wireless/iwlwifi/iwl-scan.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+> @@ -361,7 +361,7 @@ static int __must_check iwl_scan_initiate(struct iwl_priv *priv,
+> 
+>         cancel_delayed_work(&priv->scan_check);
+> 
+> -       if (!iwl_is_ready(priv)) {
+> +       if (!iwl_is_ready_rf(priv)) {
+>                 IWL_WARN(priv, "request scan called when driver not ready.\n");
+>                 return -EIO;
+>         }
+> @@ -372,26 +372,11 @@ static int __must_check iwl_scan_initiate(struct iwl_priv *priv,
+>                 return -EBUSY;
+>         }
+> 
+> -       if (test_bit(STATUS_EXIT_PENDING, &priv->status)) {
+> -               IWL_DEBUG_SCAN(priv, "Aborting scan due to device shutdown\n");
+> -               return -EIO;
+> -       }
+> -
+>         if (test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
+>                 IWL_DEBUG_HC(priv, "Scan request while abort pending.\n");
+>                 return -EBUSY;
+>         }
+> 
+> -       if (iwl_is_rfkill(priv)) {
+> -               IWL_DEBUG_HC(priv, "Aborting scan due to RF Kill activation\n");
+> -               return -EIO;
+> -       }
+> -
+> -       if (!test_bit(STATUS_READY, &priv->status)) {
+> -               IWL_DEBUG_HC(priv, "Scan request while uninitialized.\n");
+> -               return -EBUSY;
+> -       }
+> -
+>         IWL_DEBUG_INFO(priv, "Starting %sscan...\n",
+>                         internal ? "internal short " : "");
+> 
+> 
+> Same cleanup for 3945?
 
-A straight pull of wt into 2.6.36-rc5 didn't work well for me, and it
-appeared a rebase was going to be even worse.
+It's common code, we merge it in patch 2.
 
-So, I'm going to try manually applying patches...after I make another
-stab at getting the ath5k virtual AP/STA patch acceptable.
-
-Thanks,
-Ben
-
->
-> John
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Stanislaw
