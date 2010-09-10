@@ -1,63 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:41309 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752646Ab0INSAX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 14:00:23 -0400
-Message-ID: <4C8FB81A.7090007@candelatech.com>
-Date: Tue, 14 Sep 2010 10:59:54 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net, lrodriguez@atheros.com
-Subject: Re: [PATCH 1/2] ath9k: fix BSSID mask calculation
-References: <1284482240-57922-1-git-send-email-nbd@openwrt.org> <4C8FB1DA.5090209@candelatech.com> <4C8FB621.1060608@openwrt.org>
-In-Reply-To: <4C8FB621.1060608@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga09.intel.com ([134.134.136.24]:7919 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754540Ab0IJPvP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Sep 2010 11:51:15 -0400
+Subject: Re: [PATCH 03/14] iwlwifi: move scan completed flags handling
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+In-Reply-To: <1284128807-11436-4-git-send-email-sgruszka@redhat.com>
+References: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
+	 <1284128807-11436-4-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain
+Date: Fri, 10 Sep 2010 08:50:28 -0700
+Message-Id: <1284133828.6054.11.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/14/2010 10:51 AM, Felix Fietkau wrote:
-> On 2010-09-14 7:33 PM, Ben Greear wrote:
->> On 09/14/2010 09:37 AM, Felix Fietkau wrote:
->>> At the time the .add_interface driver op is called, the interface has not
->>> been marked as running yet, so ieee80211_iterate_active_interfaces will
->>> not pass it to the iterator function.
->>> Because of this, the calculated BSSID mask is wrong, which breaks multi-BSS
->>> operation.
->>>
->>> Additionally, the current way of comparing all addresses against each other
->>> is pointless, as the hardware only uses the hardware MAC address and the BSSID
->>> mask for matching the destination address, so all the address array
->>> reallocation is completely unnecessary.
->>>
->>> This patch simplifies the logic by setting the initial mask bytes to 0xff
->>> and removing all bits in the iterator call that don't match the hardware MAC
->>> address. It also calls the iterator for the vif that was passed to
->>> add_interface()
->>
->> You probably need to fix the mask-setting logic in
->> ath_opmode_init as well?
-> What do you mean?
+On Fri, 2010-09-10 at 07:26 -0700, Stanislaw Gruszka wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Move the scan completed flags handling so that we
+> can notify mac80211 about aborted scans with the
+> correct status. Also queue the scan_completed work
+> before the BT status update so that it won't see
+> the bits still set (unless a new scan was started
+> in which case that's fine.)
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Acked-by: Wey-Yi W Guy <wey-yi.w.guy@intel.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-scan.c |   30 ++++++++++++++----------------
+>  1 files changed, 14 insertions(+), 16 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+> index 6bd14bc..22bdc98 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-scan.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+> @@ -222,21 +222,11 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
+>  		       jiffies_to_msecs(elapsed_jiffies
+>  					(priv->scan_start, jiffies)));
+>  
+> -	/*
+> -	 * If a request to abort was given, or the scan did not succeed
+> -	 * then we reset the scan state machine and terminate,
+> -	 * re-queuing another scan if one has been requested
+> -	 */
+> -	if (test_and_clear_bit(STATUS_SCAN_ABORTING, &priv->status))
+> -		IWL_DEBUG_INFO(priv, "Aborted scan completed.\n");
+> -
+> -	IWL_DEBUG_INFO(priv, "Setting scan to off\n");
+> -
+> -	clear_bit(STATUS_SCANNING, &priv->status);
+> +	queue_work(priv->workqueue, &priv->scan_completed);
+>  
+>  	if (priv->iw_mode != NL80211_IFTYPE_ADHOC &&
+> -	    priv->cfg->advanced_bt_coexist && priv->bt_status !=
+> -	    scan_notif->bt_status) {
+> +	    priv->cfg->advanced_bt_coexist &&
+> +	    priv->bt_status != scan_notif->bt_status) {
+>  		if (scan_notif->bt_status) {
+>  			/* BT on */
+>  			if (!priv->bt_ch_announce)
+> @@ -254,7 +244,6 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
+>  		priv->bt_status = scan_notif->bt_status;
+>  		queue_work(priv->workqueue, &priv->bt_traffic_change_work);
+>  	}
+> -	queue_work(priv->workqueue, &priv->scan_completed);
+>  }
+>  
+>  void iwl_setup_rx_scan_handlers(struct iwl_priv *priv)
+> @@ -554,7 +543,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+>  {
+>  	struct iwl_priv *priv =
+>  	    container_of(work, struct iwl_priv, scan_completed);
+> -	bool internal = false;
+> +	bool internal = false, aborted;
+>  	struct iwl_rxon_context *ctx;
+>  
+>  	IWL_DEBUG_SCAN(priv, "SCAN complete scan\n");
+> @@ -562,6 +551,15 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+>  	cancel_delayed_work(&priv->scan_check);
+>  
+>  	mutex_lock(&priv->mutex);
+> +
+> +	aborted = test_and_clear_bit(STATUS_SCAN_ABORTING, &priv->status);
+> +	if (aborted)
+> +		IWL_DEBUG_INFO(priv, "Aborted scan completed.\n");
+> +
+> +	IWL_DEBUG_INFO(priv, "Setting scan to off\n");
+> +
+> +	clear_bit(STATUS_SCANNING, &priv->status);
+> +
+>  	if (priv->is_internal_short_scan) {
+>  		priv->is_internal_short_scan = false;
+>  		IWL_DEBUG_SCAN(priv, "internal short scan completed\n");
+> @@ -569,7 +567,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+>  	} else if (priv->scan_request) {
+>  		priv->scan_request = NULL;
+>  		priv->scan_vif = NULL;
+> -		ieee80211_scan_completed(priv->hw, false);
+> +		ieee80211_scan_completed(priv->hw, aborted);
+>  	}
+>  
+>  	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
 
-It seems I saw this code over-write the mask with a bad value
-when debugging this a few days ago..but perhaps I was mistaken,
-or perhaps your patch fixes this already.
-
-	/* configure bssid mask */
-	if (ah->caps.hw_caps & ATH9K_HW_CAP_BSSIDMASK)
-		ath_hw_setbssidmask(common);
-
-My plan was to have it call ath9k_set_bssid_mask(common->hw) instead.
-
-
-Were you able to create multiple STA interfaces and have them
-send/receive data with your patch?
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
