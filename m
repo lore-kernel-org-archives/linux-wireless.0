@@ -1,39 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:46110 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753407Ab0IWXFV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Sep 2010 19:05:21 -0400
-Message-ID: <4C9BDD2C.1090806@candelatech.com>
-Date: Thu, 23 Sep 2010 16:05:16 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Patch to get iw building on Fedora 8
-References: <4C98DFB6.10902@candelatech.com> <1285090085.12764.6.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1285090085.12764.6.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:36134 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752161Ab0IJO2S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Sep 2010 10:28:18 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 03/14] iwlwifi: move scan completed flags handling
+Date: Fri, 10 Sep 2010 16:26:36 +0200
+Message-Id: <1284128807-11436-4-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
+References: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I notice that you added some code to try to get this working:
+From: Johannes Berg <johannes.berg@intel.com>
 
-#ifndef _ISOC99_SOURCE
-#define _ISOC99_SOURCE
-#endif
+Move the scan completed flags handling so that we
+can notify mac80211 about aborted scans with the
+correct status. Also queue the scan_completed work
+before the BT status update so that it won't see
+the bits still set (unless a new scan was started
+in which case that's fine.)
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-scan.c |   30 ++++++++++++++----------------
+ 1 files changed, 14 insertions(+), 16 deletions(-)
 
-However, it still will not build for me on Fedora 8.  In case I'm doing something
-else strange..were you able to build it on FC8 by any chance?
-
-I can easily carry the fix in my own tree, but thought
-you might want to know...
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 6bd14bc..22bdc98 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -222,21 +222,11 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
+ 		       jiffies_to_msecs(elapsed_jiffies
+ 					(priv->scan_start, jiffies)));
+ 
+-	/*
+-	 * If a request to abort was given, or the scan did not succeed
+-	 * then we reset the scan state machine and terminate,
+-	 * re-queuing another scan if one has been requested
+-	 */
+-	if (test_and_clear_bit(STATUS_SCAN_ABORTING, &priv->status))
+-		IWL_DEBUG_INFO(priv, "Aborted scan completed.\n");
+-
+-	IWL_DEBUG_INFO(priv, "Setting scan to off\n");
+-
+-	clear_bit(STATUS_SCANNING, &priv->status);
++	queue_work(priv->workqueue, &priv->scan_completed);
+ 
+ 	if (priv->iw_mode != NL80211_IFTYPE_ADHOC &&
+-	    priv->cfg->advanced_bt_coexist && priv->bt_status !=
+-	    scan_notif->bt_status) {
++	    priv->cfg->advanced_bt_coexist &&
++	    priv->bt_status != scan_notif->bt_status) {
+ 		if (scan_notif->bt_status) {
+ 			/* BT on */
+ 			if (!priv->bt_ch_announce)
+@@ -254,7 +244,6 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
+ 		priv->bt_status = scan_notif->bt_status;
+ 		queue_work(priv->workqueue, &priv->bt_traffic_change_work);
+ 	}
+-	queue_work(priv->workqueue, &priv->scan_completed);
+ }
+ 
+ void iwl_setup_rx_scan_handlers(struct iwl_priv *priv)
+@@ -554,7 +543,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+ {
+ 	struct iwl_priv *priv =
+ 	    container_of(work, struct iwl_priv, scan_completed);
+-	bool internal = false;
++	bool internal = false, aborted;
+ 	struct iwl_rxon_context *ctx;
+ 
+ 	IWL_DEBUG_SCAN(priv, "SCAN complete scan\n");
+@@ -562,6 +551,15 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+ 	cancel_delayed_work(&priv->scan_check);
+ 
+ 	mutex_lock(&priv->mutex);
++
++	aborted = test_and_clear_bit(STATUS_SCAN_ABORTING, &priv->status);
++	if (aborted)
++		IWL_DEBUG_INFO(priv, "Aborted scan completed.\n");
++
++	IWL_DEBUG_INFO(priv, "Setting scan to off\n");
++
++	clear_bit(STATUS_SCANNING, &priv->status);
++
+ 	if (priv->is_internal_short_scan) {
+ 		priv->is_internal_short_scan = false;
+ 		IWL_DEBUG_SCAN(priv, "internal short scan completed\n");
+@@ -569,7 +567,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+ 	} else if (priv->scan_request) {
+ 		priv->scan_request = NULL;
+ 		priv->scan_vif = NULL;
+-		ieee80211_scan_completed(priv->hw, false);
++		ieee80211_scan_completed(priv->hw, aborted);
+ 	}
+ 
+ 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.1
 
