@@ -1,43 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38754 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:38981 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754650Ab0I3O0F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Sep 2010 10:26:05 -0400
-Date: Thu, 30 Sep 2010 16:27:35 +0200
+	id S1751941Ab0IJO2t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Sep 2010 10:28:49 -0400
 From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] iwlwifi: change WARN_ON to IWL_WARN in iwl_mac_add_interface
-Message-ID: <20100930142734.GA2368@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 12/14] iwlwifi: cleanup scan initiate check
+Date: Fri, 10 Sep 2010 16:26:45 +0200
+Message-Id: <1284128807-11436-13-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
+References: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We can start restarting firmware or RF kill switch can be turned on
-during call to iwl_mac_add_interface(). That are normal working
-conditions, so do not print call trace, just print simple message
-instead.
+Remove redundant checks and use iwl_is_ready_rf().
 
 Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-core.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-scan.c |   17 +----------------
+ 1 files changed, 1 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 5c56893..b7adcf8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2003,7 +2003,8 @@ int iwl_mac_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index af9a836..26dd8f3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -361,7 +361,7 @@ static int __must_check iwl_scan_initiate(struct iwl_priv *priv,
  
- 	mutex_lock(&priv->mutex);
+ 	cancel_delayed_work(&priv->scan_check);
  
--	if (WARN_ON(!iwl_is_ready_rf(priv))) {
+-	if (!iwl_is_ready(priv)) {
 +	if (!iwl_is_ready_rf(priv)) {
-+		IWL_WARN(priv, "Try to add interface when device not ready\n");
- 		err = -EINVAL;
- 		goto out;
+ 		IWL_WARN(priv, "request scan called when driver not ready.\n");
+ 		return -EIO;
  	}
+@@ -372,26 +372,11 @@ static int __must_check iwl_scan_initiate(struct iwl_priv *priv,
+ 		return -EBUSY;
+ 	}
+ 
+-	if (test_bit(STATUS_EXIT_PENDING, &priv->status)) {
+-		IWL_DEBUG_SCAN(priv, "Aborting scan due to device shutdown\n");
+-		return -EIO;
+-	}
+-
+ 	if (test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
+ 		IWL_DEBUG_HC(priv, "Scan request while abort pending.\n");
+ 		return -EBUSY;
+ 	}
+ 
+-	if (iwl_is_rfkill(priv)) {
+-		IWL_DEBUG_HC(priv, "Aborting scan due to RF Kill activation\n");
+-		return -EIO;
+-	}
+-
+-	if (!test_bit(STATUS_READY, &priv->status)) {
+-		IWL_DEBUG_HC(priv, "Scan request while uninitialized.\n");
+-		return -EBUSY;
+-	}
+-
+ 	IWL_DEBUG_INFO(priv, "Starting %sscan...\n",
+ 			internal ? "internal short " : "");
+ 
 -- 
 1.7.1
 
