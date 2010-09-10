@@ -1,77 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:43703 "EHLO ds10.nbd.name"
+Received: from mga14.intel.com ([143.182.124.37]:58448 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752519Ab0I2PPh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Sep 2010 11:15:37 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 4/6] ath9k: remove the noise floor value in the ani struct
-Date: Wed, 29 Sep 2010 17:15:29 +0200
-Message-Id: <1285773331-73439-4-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1285773331-73439-3-git-send-email-nbd@openwrt.org>
-References: <1285773331-73439-1-git-send-email-nbd@openwrt.org>
- <1285773331-73439-2-git-send-email-nbd@openwrt.org>
- <1285773331-73439-3-git-send-email-nbd@openwrt.org>
+	id S1753046Ab0IJPvm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Sep 2010 11:51:42 -0400
+Subject: Re: [PATCH 04/14] iwlwifi: cancel scan when down the device
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1284128807-11436-5-git-send-email-sgruszka@redhat.com>
+References: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
+	 <1284128807-11436-5-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain
+Date: Fri, 10 Sep 2010 08:50:54 -0700
+Message-Id: <1284133854.6054.12.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-common->ani.noise_floor is now only used for a similar redundant debug
-message similar to the one that was removed from ath9k_htc in an earlier
-patch. Remove it from ath9k as well now.
-
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath.h        |    1 -
- drivers/net/wireless/ath/ath9k/init.c |    1 -
- drivers/net/wireless/ath/ath9k/main.c |   10 ----------
- 3 files changed, 0 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index dd236c3..5894fcc 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -35,7 +35,6 @@ static const u8 ath_bcast_mac[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
- 
- struct ath_ani {
- 	bool caldone;
--	int16_t noise_floor;
- 	unsigned int longcal_timer;
- 	unsigned int shortcal_timer;
- 	unsigned int resetcal_timer;
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index de33938..11dc3ac 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -506,7 +506,6 @@ static void ath9k_init_misc(struct ath_softc *sc)
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	int i = 0;
- 
--	common->ani.noise_floor = ATH_DEFAULT_NOISE_FLOOR;
- 	setup_timer(&common->ani.timer, ath_ani_calibrate, (unsigned long)sc);
- 
- 	sc->config.txpowlimit = ATH_TXPOWER_MAX;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index fcba402..a801a08 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -459,16 +459,6 @@ void ath_ani_calibrate(unsigned long data)
- 						   ah->curchan,
- 						   common->rx_chainmask,
- 						   longcal);
--
--			if (longcal)
--				common->ani.noise_floor = ath9k_hw_getchan_noise(ah,
--								     ah->curchan);
--
--			ath_print(common, ATH_DBG_ANI,
--				  " calibrate chan %u/%x nf: %d\n",
--				  ah->curchan->channel,
--				  ah->curchan->channelFlags,
--				  common->ani.noise_floor);
- 		}
- 	}
- 
--- 
-1.7.2.2
+On Fri, 2010-09-10 at 07:26 -0700, Stanislaw Gruszka wrote:
+> Always cancel scan when stooping device and scan is currently pending,
+> we should newer have scan running after down device.
+> 
+> To assure we start scan cancel from restart work we have to schedule
+> abort_scan to different workqueue than priv->workqueue.
+> 
+> Patch fix not cancel scanning when restarting firmware, what is
+> one of the causes of wdev_cleanup_work warning (together with permanent
+> network connection lost) reported at
+> https://bugzilla.redhat.com/show_bug.cgi?id=593566
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Acked-by: Wey-Yi W Guy <wey-yi.w.guy@intel.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-agn.c      |   14 +++-----------
+>  drivers/net/wireless/iwlwifi/iwl-scan.c     |    2 +-
+>  drivers/net/wireless/iwlwifi/iwl3945-base.c |   16 ++++------------
+>  3 files changed, 8 insertions(+), 24 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+> index c8a2ec8..25b3540 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+> @@ -2891,8 +2891,9 @@ static void __iwl_down(struct iwl_priv *priv)
+>  
+>  	IWL_DEBUG_INFO(priv, DRV_NAME " is going down\n");
+>  
+> -	if (!exit_pending)
+> -		set_bit(STATUS_EXIT_PENDING, &priv->status);
+> +	iwl_scan_cancel_timeout(priv, 200);
+> +
+> +	exit_pending = test_and_set_bit(STATUS_EXIT_PENDING, &priv->status);
+>  
+>  	/* Stop TX queues watchdog. We need to have STATUS_EXIT_PENDING bit set
+>  	 * to prevent rearm timer */
+> @@ -3502,15 +3503,6 @@ static void iwl_mac_stop(struct ieee80211_hw *hw)
+>  
+>  	priv->is_open = 0;
+>  
+> -	if (iwl_is_ready_rf(priv) || test_bit(STATUS_SCAN_HW, &priv->status)) {
+> -		/* stop mac, cancel any scan request and clear
+> -		 * RXON_FILTER_ASSOC_MSK BIT
+> -		 */
+> -		mutex_lock(&priv->mutex);
+> -		iwl_scan_cancel_timeout(priv, 100);
+> -		mutex_unlock(&priv->mutex);
+> -	}
+> -
+>  	iwl_down(priv);
+>  
+>  	flush_workqueue(priv->workqueue);
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+> index 22bdc98..ea33849 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-scan.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+> @@ -71,7 +71,7 @@ int iwl_scan_cancel(struct iwl_priv *priv)
+>  	if (test_bit(STATUS_SCANNING, &priv->status)) {
+>  		if (!test_and_set_bit(STATUS_SCAN_ABORTING, &priv->status)) {
+>  			IWL_DEBUG_SCAN(priv, "Queuing scan abort.\n");
+> -			queue_work(priv->workqueue, &priv->abort_scan);
+> +			schedule_work(&priv->abort_scan);
+>  
+>  		} else
+>  			IWL_DEBUG_SCAN(priv, "Scan abort already in progress.\n");
+> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> index 3b3686b..fb894d8 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+> @@ -2568,12 +2568,13 @@ static void iwl3945_cancel_deferred_work(struct iwl_priv *priv);
+>  static void __iwl3945_down(struct iwl_priv *priv)
+>  {
+>  	unsigned long flags;
+> -	int exit_pending = test_bit(STATUS_EXIT_PENDING, &priv->status);
+> +	int exit_pending;
+>  
+>  	IWL_DEBUG_INFO(priv, DRV_NAME " is going down\n");
+>  
+> -	if (!exit_pending)
+> -		set_bit(STATUS_EXIT_PENDING, &priv->status);
+> +	iwl_scan_cancel_timeout(priv, 200);
+> +
+> +	exit_pending = test_and_set_bit(STATUS_EXIT_PENDING, &priv->status);
+>  
+>  	/* Stop TX queues watchdog. We need to have STATUS_EXIT_PENDING bit set
+>  	 * to prevent rearm timer */
+> @@ -3173,15 +3174,6 @@ static void iwl3945_mac_stop(struct ieee80211_hw *hw)
+>  
+>  	priv->is_open = 0;
+>  
+> -	if (iwl_is_ready_rf(priv)) {
+> -		/* stop mac, cancel any scan request and clear
+> -		 * RXON_FILTER_ASSOC_MSK BIT
+> -		 */
+> -		mutex_lock(&priv->mutex);
+> -		iwl_scan_cancel_timeout(priv, 100);
+> -		mutex_unlock(&priv->mutex);
+> -	}
+> -
+>  	iwl3945_down(priv);
+>  
+>  	flush_workqueue(priv->workqueue);
 
