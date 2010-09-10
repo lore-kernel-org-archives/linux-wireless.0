@@ -1,103 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:37666 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932844Ab0I0Iix (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 04:38:53 -0400
-Received: from vaebh105.NOE.Nokia.com (vaebh105.europe.nokia.com [10.160.244.31])
-	by mgw-mx06.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o8R8cb9l012895
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 11:38:51 +0300
-From: Luciano Coelho <luciano.coelho@nokia.com>
+Received: from lo.gmane.org ([80.91.229.12]:34126 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751258Ab0IJGzH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Sep 2010 02:55:07 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1OtxVo-0004ar-BJ
+	for linux-wireless@vger.kernel.org; Fri, 10 Sep 2010 08:55:04 +0200
+Received: from pool-96-253-143-208.sttlwa.dsl-w.verizon.net ([96.253.143.208])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Sep 2010 08:55:04 +0200
+Received: from yuhongbao_386 by pool-96-253-143-208.sttlwa.dsl-w.verizon.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Sep 2010 08:55:04 +0200
 To: linux-wireless@vger.kernel.org
-Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 16/25] wl1271: Add support for hardware GEM cipher
-Date: Mon, 27 Sep 2010 11:37:40 +0300
-Message-Id: <1285576669-8070-17-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
-References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
+From: Yuhong Bao <yuhongbao_386@hotmail.com>
+Subject: Re: [ANN] Full-source Broadcom wireless driver for 11n chips
+Date: Fri, 10 Sep 2010 06:49:14 +0000 (UTC)
+Message-ID: <loom.20100910T084604-390@post.gmane.org>
+References: <20100908150322.17dac9c3@nehalam> <20100908225132.GA12490@kroah.com> <4C88F8CE.5090708@broadcom.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Henry Ptasinski <henryp@...> writes:
 
-This patch adds support for the hardware GEM cipher suite.
+> 
+> Broadcom would like to announce the initial release of a fully-open
+> Linux driver for it's latest generation of 11n chipsets.  The driver,
+> while still a work in progress, is released as full source and uses the
+> native mac80211 stack.   It supports multiple current chips (BCM4313,
+> BCM43224, BCM43225) as well as providing a framework for supporting
+> additional chips in the future, including mac80211-aware embedded chips.
+>    The README and TODO files included with the sources provide more
+> details about the current feature set, known issues, and plans for
+> improving the driver.
+> 
+> The driver is currently available in staging-next git tree, available at:
+> 
+> 	git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging-next-2.6.git
+> 
+> in the drivers/staging/brcm80211 directory.
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271.h      |    2 ++
- drivers/net/wireless/wl12xx/wl1271_cmd.h  |    2 +-
- drivers/net/wireless/wl12xx/wl1271_main.c |   16 ++++++++++++++++
- 3 files changed, 19 insertions(+), 1 deletions(-)
+This is limited to newer chips. Can you at least authorize redistribution of
+firmware blobs for older chips so that b43-fwcutter won't be needed anymore? I
+have such a laptop myself with one of the older chips, and I remember the pains
+of having to download it after booting from a LiveCD.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
-index 763ece8..9782bc1 100644
---- a/drivers/net/wireless/wl12xx/wl1271.h
-+++ b/drivers/net/wireless/wl12xx/wl1271.h
-@@ -117,6 +117,8 @@ enum {
- #define WL1271_TX_SECURITY_LO16(s) ((u16)((s) & 0xffff))
- #define WL1271_TX_SECURITY_HI32(s) ((u32)(((s) >> 16) & 0xffffffff))
- 
-+#define WL1271_CIPHER_SUITE_GEM 0x000FACFF
-+
- #define WL1271_BUSY_WORD_CNT 1
- #define WL1271_BUSY_WORD_LEN (WL1271_BUSY_WORD_CNT * sizeof(u32))
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_cmd.h b/drivers/net/wireless/wl12xx/wl1271_cmd.h
-index ff8e35e..33b946b 100644
---- a/drivers/net/wireless/wl12xx/wl1271_cmd.h
-+++ b/drivers/net/wireless/wl12xx/wl1271_cmd.h
-@@ -279,7 +279,7 @@ enum wl1271_cmd_key_type {
- 	KEY_WEP  = 1,
- 	KEY_TKIP = 2,
- 	KEY_AES  = 3,
--	KEY_GEM  = 4
-+	KEY_GEM  = 4,
- };
- 
- /* FIXME: Add description for key-types */
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index f0c2532..39b5985 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1528,6 +1528,11 @@ static int wl1271_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		tx_seq_32 = WL1271_TX_SECURITY_HI32(wl->tx_security_seq);
- 		tx_seq_16 = WL1271_TX_SECURITY_LO16(wl->tx_security_seq);
- 		break;
-+	case WL1271_CIPHER_SUITE_GEM:
-+		key_type = KEY_GEM;
-+		tx_seq_32 = WL1271_TX_SECURITY_HI32(wl->tx_security_seq);
-+		tx_seq_16 = WL1271_TX_SECURITY_LO16(wl->tx_security_seq);
-+		break;
- 	default:
- 		wl1271_error("Unknown key algo 0x%x", key_conf->cipher);
- 
-@@ -2382,6 +2387,14 @@ EXPORT_SYMBOL_GPL(wl1271_unregister_hw);
- 
- int wl1271_init_ieee80211(struct wl1271 *wl)
- {
-+	static const u32 cipher_suites[] = {
-+		WLAN_CIPHER_SUITE_WEP40,
-+		WLAN_CIPHER_SUITE_WEP104,
-+		WLAN_CIPHER_SUITE_TKIP,
-+		WLAN_CIPHER_SUITE_CCMP,
-+		WL1271_CIPHER_SUITE_GEM,
-+	};
-+
- 	/* The tx descriptor buffer and the TKIP space. */
- 	wl->hw->extra_tx_headroom = WL1271_TKIP_IV_SPACE +
- 		sizeof(struct wl1271_tx_hw_descr);
-@@ -2399,6 +2412,9 @@ int wl1271_init_ieee80211(struct wl1271 *wl)
- 		IEEE80211_HW_CONNECTION_MONITOR |
- 		IEEE80211_HW_SUPPORTS_CQM_RSSI;
- 
-+	wl->hw->wiphy->cipher_suites = cipher_suites;
-+	wl->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
-+
- 	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
- 		BIT(NL80211_IFTYPE_ADHOC);
- 	wl->hw->wiphy->max_scan_ssids = 1;
--- 
-1.6.3.3
+
+
 
