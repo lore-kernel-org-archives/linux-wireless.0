@@ -1,53 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:63722 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750938Ab0IEWPE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Sep 2010 18:15:04 -0400
-Received: by qwh6 with SMTP id 6so3382365qwh.19
-        for <linux-wireless@vger.kernel.org>; Sun, 05 Sep 2010 15:15:02 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTikdXBsO0Qx2nEV+Ka9X2D55odmGwePMaUGaQi7j@mail.gmail.com>
-References: <AANLkTim_Ou8fFbfsn8AEZFpWBzjnAQuT4S_w8bV5saYD@mail.gmail.com>
- <loom.20100903T224155-155@post.gmane.org> <AANLkTikdXBsO0Qx2nEV+Ka9X2D55odmGwePMaUGaQi7j@mail.gmail.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Mon, 6 Sep 2010 00:14:42 +0200
-Message-ID: <AANLkTinu_4tsfJ=0CXS7yuuiqw0X5juqjP_T_edw0b4Y@mail.gmail.com>
-Subject: Re: mac80211-based commercial router?
-To: Bob Copeland <me@bobcopeland.com>
-Cc: jpo <pommnitz@yahoo.com>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from lo.gmane.org ([80.91.229.12]:45852 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754567Ab0IJJAG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Sep 2010 05:00:06 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1OtzSm-0007TS-Ad
+	for linux-wireless@vger.kernel.org; Fri, 10 Sep 2010 11:00:04 +0200
+Received: from 217.110.62.223 ([217.110.62.223])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Sep 2010 11:00:04 +0200
+Received: from claus.ried by 217.110.62.223 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Sep 2010 11:00:04 +0200
+To: linux-wireless@vger.kernel.org
+From: Claus Ried <claus.ried@gmail.com>
+Subject: Re: Conversion of driver for Realtek 8192SU
+Date: Fri, 10 Sep 2010 08:55:19 +0000 (UTC)
+Message-ID: <loom.20100910T104213-662@post.gmane.org>
+References: <4BFE9A22.5040005@lwfinger.net> <20100605205015.65979235@devel>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 5, 2010 at 10:08 PM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Fri, Sep 3, 2010 at 4:43 PM, jpo <pommnitz@yahoo.com> wrote:
->
->> Android 2.2 comes with AP functionality. Are the Android WLAN drivers mac80211
->> based?
->
-> No, they aren't.  Does Android really do AP mode or
-> just adhoc?
->
-> wl1251 is an in-tree module for the TI chip used in G1,
-> but it doesn't support AP mode.  I do not know if there's
-> a mac80211 driver that supports the broadcom chip used
-> in other phones.
+Frederic Leroy <fredo@...> writes:
 
-AFAIK BCM4325 should be doable, especially if it is attached via SDIO
-bus. In phones where SPI is used, it is more problematic, as b43
-doesn't support SPI.
+> 
+> Le Thu, 27 May 2010 11:13:22 -0500,
+> Larry Finger <Larry.Finger@...> a Ã©crit :
+> 
+> > I am in the process of converting the driver contained in the file
+> > RTL8192SU_usb_linux_v2.6.0006.20100511.zip obtained from the Realtek
+> > site. This driver is used for the following USB IDs:
+> > 
+> > Realtek (0x0bda)  0x8171, 0x8172, 0x8173, 0x8174, 0x8712,
+> > 0x8713,
+> > [...]
+> > My test device is a D-Link DWA-130 (14b2:3300). The Realtek driver
+> > compiles cleanly and works as-is for this device on i386 architecture;
+> 
+> I own a Trendnet TEW-649UB (usb ids : 0bda:8172).
+> I got the staging driver working only once. Since then, I found that the
+> function which sets the channel didn't work.
+> The 20100511 driver has the same behaviour at first sight, looking at
+> wireshark trace.
+> 
+> > My initial plan is to modify this driver code for inclusion in
+> > drivers/staging. The above list includes some, but not all, of the IDs
+> > in the driver currently in drivers/staging/rtl8192su. I will likely
+> > put this in as drivers/staging/rtl8712u, which is the name used in
+> > the code, and remove the duplicate IDs from rtl8192su. Once this step
+> > is done, I will then work at modifying it to use mac80211 so that it
+> > can go into mainline.
+> 
+> Some work has been made in the staging driver. Can it be a better
+> start ?
+> 
+> Have you a repository with your work ? I would like to test it again my
+> device and if possible join our effort.
+> 
 
->
-> --
-> Bob Copeland %% www.bobcopeland.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+
+Hi Frederic,
+
+maybe it's the wrong place to ask, but did you get the work in converting the
+original driver any further?
+My problem is, i have an usb wlan stick using an realtek 8188su chipset. 
+I used the (staging) driver for rtl8192su contained in the 2.6.33 kernel
+on a amd64-mandriva system and included the usid of the stick, compiled
+and installed.
+Up to now, the stick is recognized, and scans the surrounding networks. 
+It also detects the available wlans (displaying their ssids)
+
+But, i never did get it to work when i try to connect to a wpa2-protected 
+wlan. (never tried open or wep wlans yet).
+Could you please assist in how to achieve a connection? Any help is 
+appreciated...
+
+(other things done already:
+- i compiled the driver rtl8192su in the more recent kernel release 2.6.34 
+and installed it. This one already got my usb-id included, so no further
+changes to the code necessary. compiling, installing and using on my amd64
+mandriva (still running kernel 2.6.33) had the same effects as above - 
+scanning wlans is ok, connecting to a wpa2 protected wlan does not work)
+
+As a last resort i tried the original realtek driver, compiled this stuff 
+and had a kernel panic when inserting the usb stick. According to your 
+previous posts, this might be due to the pointer problems on an amd64 
+system as you pointed out.
+)
+
+So, any ideas how to proceed?
+Thanks,
+ Claus
 
 
 
--- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+
+
