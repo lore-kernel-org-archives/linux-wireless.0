@@ -1,27 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:60616 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753292Ab0IOPXj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 11:23:39 -0400
-Message-ID: <4C90E4F6.1090403@openwrt.org>
-Date: Wed, 15 Sep 2010 17:23:34 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:53423 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751453Ab0IJV1D (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Sep 2010 17:27:03 -0400
+To: Ben Greear <greearb@candelatech.com>
+Subject: Re: RFC:  v3: Support multiple STA on same AP with ath9k
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/3] ath9k: Paprd calibration should be per channel
-References: <1284560528-8934-1-git-send-email-vasanth@atheros.com> <1284560528-8934-2-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1284560528-8934-2-git-send-email-vasanth@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+Date: Fri, 10 Sep 2010 23:27:01 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
+In-Reply-To: <4C8AA1C5.8080906@candelatech.com>
+References: <4C8A8FF8.4030900@candelatech.com> <fc41890c0792e7440941448d5b8b9169@localhost> <4C8AA1C5.8080906@candelatech.com>
+Message-ID: <c358124867aecc372764a1a7c56a3890@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-09-15 4:22 PM, Vasanthakumar Thiagarajan wrote:
-> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-NACK. The point of the caldata struct is to keep calibration data for
-the operating channel and reset it whenever that changes (but not just
-for off-channel activity).
-Since the PAPRD data uses quite a bit of memory and doesn't take that
-long to generate, we don't really need to make it per-channel.
 
-- Felix
+On Fri, 10 Sep 2010 14:23:17 -0700, Ben Greear <greearb@candelatech.com>
+wrote:
+> As for counting, as far as I can tell, ath9k doesn't keep a list of
+> interfaces, but rather calls those iterator methods when it wants to
+> know them, so one way or another I need to call back into mac80211.
+
+But it can just call the atomic iterator with a callback that
+keeps the count.
+
+> I'll break the patches apart for the next posting.
+> 
+> Did you get a chance to think more about this part of the patch?
+
+No, I didn't, and since I'm at the wireless summit now it
+seems unlikely that I'll get to it before I get/go back
+home on Monday (US time morning).
+
+johannes
