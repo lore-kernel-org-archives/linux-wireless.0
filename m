@@ -1,38 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.9]:55114 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754778Ab0IXRk2 (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:41354 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750997Ab0IJWnI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Sep 2010 13:40:28 -0400
-Date: Fri, 24 Sep 2010 19:39:02 +0200
-From: Cyrille <cyrille@cbiot.fr>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>,
-	b43-dev@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: problem with b43
-Message-Id: <20100924193902.07c3db7c.cyrille@cbiot.fr>
-In-Reply-To: <20100924172132.GC8077@tuxdriver.com>
-References: <20100924185551.e3c3b41c.cyrille@cbiot.fr>
-	<AANLkTik5QPw6K_CFQW-5qH3PhyDAguqe51AcNaDMOUqt@mail.gmail.com>
-	<20100924172132.GC8077@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Fri, 10 Sep 2010 18:43:08 -0400
+Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id o8AMh7Od022460
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Fri, 10 Sep 2010 15:43:07 -0700
+Message-ID: <4C8AB47B.7090801@candelatech.com>
+Date: Fri, 10 Sep 2010 15:43:07 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: question on scanning and multiple VIFs.
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 'm guessing it is from "Free-dora"
-> by way of BLAG, and I have no control over it -- sorry.
-Yes I'm using a BLAG 119K with a free-dora kernel.
-Cyrille
 
-----
-[ cyrille@cbiot.fr | http://cbiot.fr ]
+I'm now debugging virtual stations with WPA.  It's not working, and at
+least part of the problem appears to be that scanning on one STA
+causes others to think they are going offchannel, though in reality,
+I'm not sure the channel is actually being changed.
 
-"Et le combat cessa faute de combattants." 
---- Le Cid (1636), IV, 3, Rodrigue - - - - 
+I think the proper action would be to have scan happen only
+on the single channel if any of the VIFS are associated.
+In this case, nothing would go offchannel and a secondary
+STA wouldn't overly conflict with the others.
 
-BLAG : http://blagblagblag.org
-Blag'em up! http://zenblagger.org
+Any ideas on a proper way to go about doing this?
 
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
