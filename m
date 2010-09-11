@@ -1,34 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:43451 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757177Ab0IZTC1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Sep 2010 15:02:27 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 1B8CB418D8
-	for <linux-wireless@vger.kernel.org>; Sun, 26 Sep 2010 15:00:19 -0400 (EDT)
-Subject: Compat-wireless release for 2010-09-26 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20100926190225.BD875404FC@repository3.orbit-lab.org>
-Date: Sun, 26 Sep 2010 15:02:25 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mga11.intel.com ([192.55.52.93]:42166 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753523Ab0IKQGp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Sep 2010 12:06:45 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 07/10] iwlwifi: improve timing handling with dual-mode
+Date: Sat, 11 Sep 2010 09:08:35 -0700
+Message-Id: <1284221318-28281-8-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1284221318-28281-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1284221318-28281-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
-   1594b0d..d003671  master     -> origin/master
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile: No such file or directory
-make[4]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap/Makefile'.  Stop.
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/hostap] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
+From: Johannes Berg <johannes.berg@intel.com>
 
-compat-wireless code metrics
+In dual-mode, a number of scenarios need to be
+considered, and the firmware can be very picky
+about them. Adjust the timing (most importantly
+the beacon interval) according to the different
+modes.
 
-    747513 - Total upstream lines of code being pulled
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |   14 +++++++++++++-
+ 1 files changed, 13 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index f67cab5..c393b20 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -529,10 +529,22 @@ int iwl_send_rxon_timing(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+ 	ctx->timing.atim_window = 0;
+ 
+ 	if (ctx->ctxid == IWL_RXON_CTX_PAN &&
+-	    (!ctx->vif || ctx->vif->type != NL80211_IFTYPE_STATION)) {
++	    (!ctx->vif || ctx->vif->type != NL80211_IFTYPE_STATION) &&
++	    iwl_is_associated(priv, IWL_RXON_CTX_BSS) &&
++	    priv->contexts[IWL_RXON_CTX_BSS].vif &&
++	    priv->contexts[IWL_RXON_CTX_BSS].vif->bss_conf.beacon_int) {
+ 		ctx->timing.beacon_interval =
+ 			priv->contexts[IWL_RXON_CTX_BSS].timing.beacon_interval;
+ 		beacon_int = le16_to_cpu(ctx->timing.beacon_interval);
++	} else if (ctx->ctxid == IWL_RXON_CTX_BSS &&
++		   iwl_is_associated(priv, IWL_RXON_CTX_PAN) &&
++		   priv->contexts[IWL_RXON_CTX_PAN].vif &&
++		   priv->contexts[IWL_RXON_CTX_PAN].vif->bss_conf.beacon_int &&
++		   (!iwl_is_associated_ctx(ctx) || !ctx->vif ||
++		    !ctx->vif->bss_conf.beacon_int)) {
++		ctx->timing.beacon_interval =
++			priv->contexts[IWL_RXON_CTX_PAN].timing.beacon_interval;
++		beacon_int = le16_to_cpu(ctx->timing.beacon_interval);
+ 	} else {
+ 		beacon_int = iwl_adjust_beacon_interval(beacon_int,
+ 				priv->hw_params.max_beacon_itrvl * TIME_UNIT);
+-- 
+1.7.0.4
+
