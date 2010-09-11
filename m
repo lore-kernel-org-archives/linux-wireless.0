@@ -1,64 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:55591 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754275Ab0IOVFK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 17:05:10 -0400
-Received: by yxp4 with SMTP id 4so206458yxp.19
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Sep 2010 14:05:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20100915203133.GA14541@jm.kir.nu>
-References: <4C8EB03D.7070808@candelatech.com> <20100915030316.GB30253@jm.kir.nu>
- <4C9059DC.7060009@candelatech.com> <20100915203133.GA14541@jm.kir.nu>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Wed, 15 Sep 2010 14:04:49 -0700
-Message-ID: <AANLkTik=47CCXUz9NdDYXKzzgtfqPHFDGkUid0+6y7kw@mail.gmail.com>
-Subject: Re: RFC: mac80211/ath9k: allow scanning single channel if other VIF
- is associated.
-To: Jouni Malinen <j@w1.fi>
-Cc: Ben Greear <greearb@candelatech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga11.intel.com ([192.55.52.93]:9763 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753537Ab0IKQGp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Sep 2010 12:06:45 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 08/10] iwlwifi: fix and describe iwl_adjust_beacon_interval
+Date: Sat, 11 Sep 2010 09:08:36 -0700
+Message-Id: <1284221318-28281-9-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1284221318-28281-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1284221318-28281-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 15, 2010 at 1:31 PM, Jouni Malinen <j@w1.fi> wrote:
-> On Tue, Sep 14, 2010 at 10:30:04PM -0700, Ben Greear wrote:
->> I think for the multi-VIF scenario, it should scan the single associated
->> channel by default, but it would be nice to allow full scans on demand.
->> (I would very much like to work with standard wpa_supplicant, but if hacking it
->> is the only way, then I can attempt that.)
->
-> "Standard wpa_supplicant" needs to become more aware of multiple users
-> of the same radio, so it is certainly fine to add changes there. For
-> example, a mechanism for noticing that interfaces are sharing a radio
-> would be useful. With that, it should also be possible to share the BSS
-> table and scan results (and requests!) within wpa_supplicant.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Depending on how this is implementing, sharing of the physical radio
-may require some kernel synchronization between the different
-interfaces using the same radio. It may also be possible to share the
-same radio between an 802.11 device and a wimax device, for example.
-Long ago we thought up of a frequency broker [1] but never really
-wrote it as we have had no usage case for it yet. If we implement the
-frequency broker we could also technically add a scheduler to sharing
-the same radio between separate interfaces / technologies, this could
-just be done in userspace as well, although I am not sure if the
-timing considerations for doing it in userspace would suffice.
+The iwl_adjust_beacon_interval function is a bit
+of black magic, so add comments to it describing
+what it does. Also, in the case when there's no
+beacon interval set, program the default into
+the device (instead of adjusting, which results
+in the max) since using the max in that case
+interacts badly with dual-mode/PAN parameters.
 
-[1] http://wireless.kernel.org/en/developers/FrequencyBroker
+Also update the PAN parameters accordingly and
+use the same constant as here.
 
-  Luis
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-core.c     |   25 +++++++++++++++++++++++--
+ 2 files changed, 25 insertions(+), 4 deletions(-)
 
-> Sure, mac80211 could potentially do some of merging and reusing, too,
-> but as far as wpa_supplicant use cases (including hostapd and AP mode in
-> Wi-Fi P2P like use cases here) are concerned, mac80211 changes may not
-> be needed for handling the scanning part.
->
-> --
-> Jouni Malinen                                            PGP id EFC895FA
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
+index a63582f..d86902b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c
+@@ -321,7 +321,7 @@ static int iwlagn_set_pan_params(struct iwl_priv *priv)
+ 			bcnint = max_t(int, bcnint,
+ 				       ctx_bss->vif->bss_conf.beacon_int);
+ 		if (!bcnint)
+-			bcnint = 100;
++			bcnint = DEFAULT_BEACON_INTERVAL;
+ 		slot0 = bcnint / 2;
+ 		slot1 = bcnint - slot0;
+ 
+@@ -339,7 +339,7 @@ static int iwlagn_set_pan_params(struct iwl_priv *priv)
+ 		slot0 = 0;
+ 		slot1 = max_t(int, 1, ctx_pan->vif->bss_conf.dtim_period) *
+ 					ctx_pan->vif->bss_conf.beacon_int;
+-		slot1 = max_t(int, 100, slot1);
++		slot1 = max_t(int, DEFAULT_BEACON_INTERVAL, slot1);
+ 
+ 		if (test_bit(STATUS_SCAN_HW, &priv->status)) {
+ 			slot0 = slot1 * 3 - 20;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index c393b20..c9c523b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -491,8 +491,29 @@ EXPORT_SYMBOL(iwl_is_ht40_tx_allowed);
+ 
+ static u16 iwl_adjust_beacon_interval(u16 beacon_val, u16 max_beacon_val)
+ {
+-	u16 new_val = 0;
+-	u16 beacon_factor = 0;
++	u16 new_val;
++	u16 beacon_factor;
++
++	/*
++	 * If mac80211 hasn't given us a beacon interval, program
++	 * the default into the device (not checking this here
++	 * would cause the adjustment below to return the maximum
++	 * value, which may break PAN.)
++	 */
++	if (!beacon_val)
++		return DEFAULT_BEACON_INTERVAL;
++
++	/*
++	 * If the beacon interval we obtained from the peer
++	 * is too large, we'll have to wake up more often
++	 * (and in IBSS case, we'll beacon too much)
++	 *
++	 * For example, if max_beacon_val is 4096, and the
++	 * requested beacon interval is 7000, we'll have to
++	 * use 3500 to be able to wake up on the beacons.
++	 *
++	 * This could badly influence beacon detection stats.
++	 */
+ 
+ 	beacon_factor = (beacon_val + max_beacon_val) / max_beacon_val;
+ 	new_val = beacon_val / beacon_factor;
+-- 
+1.7.0.4
+
