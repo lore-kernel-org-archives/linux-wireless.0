@@ -1,68 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:41600 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933228Ab0I0QkG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 12:40:06 -0400
-Message-ID: <4CA0C8DF.7050609@candelatech.com>
-Date: Mon, 27 Sep 2010 09:39:59 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: greearb@gmail.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] wireless: Use first phyX name available when registering
- phy devices.
-References: <1285603646-7710-1-git-send-email-greearb@candelatech.com>	 <1285603646-7710-2-git-send-email-greearb@candelatech.com> <1285604243.4043.25.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1285604243.4043.25.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mga11.intel.com ([192.55.52.93]:42166 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753361Ab0IKQGo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Sep 2010 12:06:44 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 05/10] iwlwifi: allow configure protection mode
+Date: Sat, 11 Sep 2010 09:08:33 -0700
+Message-Id: <1284221318-28281-6-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1284221318-28281-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1284221318-28281-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/27/2010 09:17 AM, Johannes Berg wrote:
-> On Mon, 2010-09-27 at 09:07 -0700, greearb@gmail.com wrote:
->
->> @@ -346,16 +332,36 @@ struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
->>
->>   	if (unlikely(!wiphy_idx_valid(rdev->wiphy_idx))) {
->>   		wiphy_counter--;
->> +		goto too_many_devs;
->> +	}
->
-> I believe the other path can also reduce the counter again, since it's
-> another failure case? Not that I'm really worried about it though.
->
->> +	/* 64k wiphy devices is enough for anyone! */
->> +	for (i = 0; i<  0xFFFF; i++) {
->
-> Come to think of it, this could be "i<= wiphy_counter", since in N
-> devices, only N different names can be in use, so checking N+1 names
-> will be sufficient, right?
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-I think it doesn't matter so much either way.  If we want to get really
-paranoid about this, then we need to hash lookup of phy by index and name
-and probably allow some reuse of phy indexes in case someone wants to reload
-a module 4 billion times.
+Even driver use rts/cts protection mode for aggregation packets by default.
+Allow the protection mode to be configure through debugfs
 
-But, since current use is probably < 2 phys in most cases, and less than 500 in
-all cases, I think we could just leave the code as is.  I'd guess the only reason
-to change this is if we ever get usable virtual phys (netdev had the same migration
-when VLANs started being useful and suddenly it was OK to have several thousand
-interfaces.)
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c |   40 ++++++++++++++++++++++++++++
+ 1 files changed, 40 insertions(+), 0 deletions(-)
 
-That said, I'll redo the patch if you want these changes.
-
-Thanks,
-Ben
-
->
-> johannes
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index 86017ed..e0b31a2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -1604,6 +1604,44 @@ static ssize_t iwl_dbgfs_bt_traffic_read(struct file *file,
+ 	return ret;
+ }
+ 
++static ssize_t iwl_dbgfs_protection_mode_read(struct file *file,
++					char __user *user_buf,
++					size_t count, loff_t *ppos)
++{
++	struct iwl_priv *priv = (struct iwl_priv *)file->private_data;
++
++	int pos = 0;
++	char buf[40];
++	const size_t bufsz = sizeof(buf);
++
++	pos += scnprintf(buf + pos, bufsz - pos, "use %s for aggregation\n",
++			 (priv->cfg->use_rts_for_aggregation) ? "rts/cts" :
++			 "cts-to-self");
++	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
++}
++
++static ssize_t iwl_dbgfs_protection_mode_write(struct file *file,
++					const char __user *user_buf,
++					size_t count, loff_t *ppos) {
++
++	struct iwl_priv *priv = file->private_data;
++	char buf[8];
++	int buf_size;
++	int rts;
++
++	memset(buf, 0, sizeof(buf));
++	buf_size = min(count, sizeof(buf) -  1);
++	if (copy_from_user(buf, user_buf, buf_size))
++		return -EFAULT;
++	if (sscanf(buf, "%d", &rts) != 1)
++		return -EINVAL;
++	if (rts)
++		priv->cfg->use_rts_for_aggregation = true;
++	else
++		priv->cfg->use_rts_for_aggregation = false;
++	return count;
++}
++
+ DEBUGFS_READ_FILE_OPS(rx_statistics);
+ DEBUGFS_READ_FILE_OPS(tx_statistics);
+ DEBUGFS_READ_WRITE_FILE_OPS(traffic_log);
+@@ -1629,6 +1667,7 @@ DEBUGFS_WRITE_FILE_OPS(txfifo_flush);
+ DEBUGFS_READ_FILE_OPS(ucode_bt_stats);
+ DEBUGFS_WRITE_FILE_OPS(monitor_period);
+ DEBUGFS_READ_FILE_OPS(bt_traffic);
++DEBUGFS_READ_WRITE_FILE_OPS(protection_mode);
+ 
+ /*
+  * Create the debugfs files and directories
+@@ -1689,6 +1728,7 @@ int iwl_dbgfs_register(struct iwl_priv *priv, const char *name)
+ 	DEBUGFS_ADD_FILE(ucode_general_stats, dir_debug, S_IRUSR);
+ 	if (priv->cfg->ops->lib->dev_txfifo_flush)
+ 		DEBUGFS_ADD_FILE(txfifo_flush, dir_debug, S_IWUSR);
++	DEBUGFS_ADD_FILE(protection_mode, dir_debug, S_IWUSR | S_IRUSR);
+ 
+ 	if (priv->cfg->sensitivity_calib_by_driver)
+ 		DEBUGFS_ADD_FILE(sensitivity, dir_debug, S_IRUSR);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.0.4
+
