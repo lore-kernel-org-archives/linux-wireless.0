@@ -1,80 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:54669 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753819Ab0IDPHO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Sep 2010 11:07:14 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 4/5] compat-wireless: fix for CONFIG_WIRELESS_EXT=n
-Date: Sat,  4 Sep 2010 17:06:48 +0200
-Message-Id: <1283612809-6798-5-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1283612809-6798-1-git-send-email-hauke@hauke-m.de>
-References: <1283612809-6798-1-git-send-email-hauke@hauke-m.de>
+Received: from mga11.intel.com ([192.55.52.93]:14287 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753361Ab0IKQGn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Sep 2010 12:06:43 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 01/10] iwlwifi: fix default LQ table in 5.2 band
+Date: Sat, 11 Sep 2010 09:08:29 -0700
+Message-Id: <1284221318-28281-2-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1284221318-28281-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1284221318-28281-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some modules need CONFIG_WIRELESS_EXT to be set. They should not be
-build if CONFIG_WIRELESS_EXT was not set.
+From: Tomas Winkler <tomas.winkler@intel.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+The default LQ is filled decreasingly using
+iwl_get_prev_ieee_rate from a starting rate.
+Since the starting rate is already the lowest one for
+a specific band it should be actually filled evenly with
+the starting rate: 1M and 6M for 5.2GHZ and 2.4GH respectively.
+The bug is that for for A or G-only it decreases to
+CCK rates which are not supported.
+iwl_get_prev_ieee_rate function is just not band aware.
+This affects broadcast station which lq table
+is not updated by rs algorithm
+
+G-only scenario is not treated by this patch
+
+iwl_get_prev_ieee_rate is removed completely as it
+is not used in other contexts
+
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- config.mk |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.h |    9 ---------
+ drivers/net/wireless/iwlwifi/iwl-sta.c    |   19 ++++++++-----------
+ 2 files changed, 8 insertions(+), 20 deletions(-)
 
-diff --git a/config.mk b/config.mk
-index 3e09763..3fee3fe 100644
---- a/config.mk
-+++ b/config.mk
-@@ -253,6 +253,7 @@ CONFIG_LIBIPW=m
- # CONFIG_LIBIPW_DEBUG=y
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
+index 3970ab1..357cdb2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.h
+@@ -453,15 +453,6 @@ static inline u8 first_antenna(u8 mask)
+ }
  
  
-+ifdef CONFIG_WIRELESS_EXT
- CONFIG_IPW2100=m
- CONFIG_IPW2100_MONITOR=y
- # CONFIG_IPW2100_DEBUG=y
-@@ -274,6 +275,7 @@ CONFIG_IPW2200_QOS=y
- # it on via sysfs:
- #
- # % echo 1 > /sys/bus/pci/drivers/ipw2200/*/rtap_iface
-+endif #CONFIG_WIRELESS_EXT
+-static inline u8 iwl_get_prev_ieee_rate(u8 rate_index)
+-{
+-	u8 rate = iwl_rates[rate_index].prev_ieee;
+-
+-	if (rate == IWL_RATE_INVALID)
+-		rate = rate_index;
+-	return rate;
+-}
+-
+ static inline u8 iwl3945_get_prev_ieee_rate(u8 rate_index)
+ {
+ 	u8 rate = iwl3945_rates[rate_index].prev_ieee;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sta.c b/drivers/net/wireless/iwlwifi/iwl-sta.c
+index ccd0902..6edd034 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sta.c
+@@ -386,7 +386,8 @@ static struct iwl_link_quality_cmd *iwl_sta_alloc_lq(struct iwl_priv *priv,
+ {
+ 	int i, r;
+ 	struct iwl_link_quality_cmd *link_cmd;
+-	u32 rate_flags;
++	u32 rate_flags = 0;
++	__le32 rate_n_flags;
  
- ifdef CONFIG_SSB
- # Sonics Silicon Backplane
-@@ -331,6 +333,7 @@ else #CONFIG_COMPAT_KERNEL_27
- CONFIG_ATL1C=m
- endif #CONFIG_COMPAT_KERNEL_27
+ 	link_cmd = kzalloc(sizeof(struct iwl_link_quality_cmd), GFP_KERNEL);
+ 	if (!link_cmd) {
+@@ -400,18 +401,14 @@ static struct iwl_link_quality_cmd *iwl_sta_alloc_lq(struct iwl_priv *priv,
+ 	else
+ 		r = IWL_RATE_1M_INDEX;
  
-+ifdef CONFIG_WIRELESS_EXT
- CONFIG_HERMES=m
- CONFIG_HERMES_CACHE_FW_ON_INIT=y
- ifdef CONFIG_PPC_PMAC
-@@ -344,6 +347,7 @@ ifdef CONFIG_PCMCIA
- CONFIG_PCMCIA_HERMES=m
- CONFIG_PCMCIA_SPECTRUM=m
- endif #CONFIG_PCMCIA
-+endif #CONFIG_WIRELESS_EXT
+-	for (i = 0; i < LINK_QUAL_MAX_RETRY_NUM; i++) {
+-		rate_flags = 0;
+-		if (r >= IWL_FIRST_CCK_RATE && r <= IWL_LAST_CCK_RATE)
+-			rate_flags |= RATE_MCS_CCK_MSK;
++	if (r >= IWL_FIRST_CCK_RATE && r <= IWL_LAST_CCK_RATE)
++		rate_flags |= RATE_MCS_CCK_MSK;
  
- endif #CONFIG_PCI
- ## end of PCI
-@@ -490,6 +494,7 @@ CONFIG_BT_HCIBTSDIO=m
- CONFIG_BT_MRVL_SDIO=m
+-		rate_flags |= first_antenna(priv->hw_params.valid_tx_ant) <<
++	rate_flags |= first_antenna(priv->hw_params.valid_tx_ant) <<
+ 				RATE_MCS_ANT_POS;
+-
+-		link_cmd->rs_table[i].rate_n_flags =
+-			iwl_hw_set_rate_n_flags(iwl_rates[r].plcp, rate_flags);
+-		r = iwl_get_prev_ieee_rate(r);
+-	}
++	rate_n_flags = iwl_hw_set_rate_n_flags(iwl_rates[r].plcp, rate_flags);
++	for (i = 0; i < LINK_QUAL_MAX_RETRY_NUM; i++)
++		link_cmd->rs_table[i].rate_n_flags = rate_n_flags;
  
- ifneq ($(CONFIG_COMPAT_STAGING),)
-+ifdef CONFIG_WIRELESS_EXT
- CONFIG_ATH6KL_CFG80211=y
- CONFIG_ATH6KL_DEBUG=y
- # CONFIG_ATH6KL_DISABLE_TARGET_DBGLOGS is not set
-@@ -501,6 +506,7 @@ CONFIG_ATH6KL_ENABLE_TARGET_DEBUG_PRINTS=y
- # CONFIG_ATH6KL_SKIP_ABI_VERSION_CHECK is not set
- CONFIG_ATH6KL_VIRTUAL_SCATTER_GATHER=y
- CONFIG_ATH6K_LEGACY=m
-+endif #CONFIG_WIRELESS_EXT
- endif #CONFIG_MMC
- 
- 
+ 	link_cmd->general_params.single_stream_ant_msk =
+ 				first_antenna(priv->hw_params.valid_tx_ant);
 -- 
 1.7.0.4
 
