@@ -1,105 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:14287 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752452Ab0IKQGo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Sep 2010 12:06:44 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 02/10] iwlwifi: remember the last uCode sysassert error code
-Date: Sat, 11 Sep 2010 09:08:30 -0700
-Message-Id: <1284221318-28281-3-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1284221318-28281-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1284221318-28281-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:47919 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752399Ab0IKXsq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Sep 2010 19:48:46 -0400
+Date: Sun, 12 Sep 2010 01:48:33 +0200
+From: Dan Carpenter <error27@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Matthieu CASTET <castet.matthieu@free.fr>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch v2] airo: remove "basic_rate" module option
+Message-ID: <20100911234833.GD25351@bicker>
+References: <20100910115714.GE5959@bicker> <20100910133401.GF2398@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100910133401.GF2398@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+The "basic_rate" module option is not implemented correctly.  If the
+rate was set to zero it was supposed to set it to "basic_rate | 0x80".
+Unfortunately the check to see if what zero was wrong and it checked
+"!ai->config.rates" (which is always false) instead of
+"!ai->config.rates[i]".
 
-When sysassert happen, uCode will report the error code,
-driver dump the information to dmesg. Here also remember
-the last error code for future reference.
+This option was just used for development and it wasn't documented
+anywhere.  Instead of fixing it, we can just remove it.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Reported-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Dan Carpenter <error27@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    3 +--
- drivers/net/wireless/iwlwifi/iwl-debugfs.c  |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-dev.h      |    2 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |    1 -
- 4 files changed, 4 insertions(+), 6 deletions(-)
+V2:  Version 1 was just a cleanup to please the static checkers but
+didn't fix anything.  Stanislaw suggests that we can remove the feature
+entirely so that's what I've done in version 2.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index c8a2ec8..df2edcc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1278,7 +1278,6 @@ static void iwl_irq_tasklet_legacy(struct iwl_priv *priv)
- 		IWL_ERR(priv, "Microcode SW error detected. "
- 			" Restarting 0x%X.\n", inta);
- 		priv->isr_stats.sw++;
--		priv->isr_stats.sw_err = inta;
- 		iwl_irq_handle_error(priv);
- 		handled |= CSR_INT_BIT_SW_ERR;
- 	}
-@@ -1459,7 +1458,6 @@ static void iwl_irq_tasklet(struct iwl_priv *priv)
- 		IWL_ERR(priv, "Microcode SW error detected. "
- 			" Restarting 0x%X.\n", inta);
- 		priv->isr_stats.sw++;
--		priv->isr_stats.sw_err = inta;
- 		iwl_irq_handle_error(priv);
- 		handled |= CSR_INT_BIT_SW_ERR;
- 	}
-@@ -2467,6 +2465,7 @@ void iwl_dump_nic_error_log(struct iwl_priv *priv)
+diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+index 1d05445..c20cad7 100644
+--- a/drivers/net/wireless/airo.c
++++ b/drivers/net/wireless/airo.c
+@@ -217,7 +217,6 @@ static char *statsLabels[] = {
+    (no spaces) list of rates (up to 8). */
+ 
+ static int rates[8];
+-static int basic_rate;
+ static char *ssids[3];
+ 
+ static int io[4];
+@@ -250,7 +249,6 @@ MODULE_LICENSE("Dual BSD/GPL");
+ MODULE_SUPPORTED_DEVICE("Aironet 4500, 4800 and Cisco 340/350");
+ module_param_array(io, int, NULL, 0);
+ module_param_array(irq, int, NULL, 0);
+-module_param(basic_rate, int, 0);
+ module_param_array(rates, int, NULL, 0);
+ module_param_array(ssids, charp, NULL, 0);
+ module_param(auto_wep, int, 0);
+@@ -3884,15 +3882,6 @@ static u16 setup_card(struct airo_info *ai, u8 *mac, int lock)
+ 				ai->config.rates[i] = rates[i];
+ 			}
+ 		}
+-		if ( basic_rate > 0 ) {
+-			for( i = 0; i < 8; i++ ) {
+-				if ( ai->config.rates[i] == basic_rate ||
+-				     !ai->config.rates ) {
+-					ai->config.rates[i] = basic_rate | 0x80;
+-					break;
+-				}
+-			}
+-		}
+ 		set_bit (FLAG_COMMIT, &ai->flags);
  	}
  
- 	desc = iwl_read_targ_mem(priv, base + 1 * sizeof(u32));
-+	priv->isr_stats.err_code = desc;
- 	pc = iwl_read_targ_mem(priv, base + 2 * sizeof(u32));
- 	blink1 = iwl_read_targ_mem(priv, base + 3 * sizeof(u32));
- 	blink2 = iwl_read_targ_mem(priv, base + 4 * sizeof(u32));
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-index 0ee8f51..86017ed 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
-@@ -575,10 +575,10 @@ static ssize_t iwl_dbgfs_interrupt_read(struct file *file,
- 		priv->isr_stats.hw);
- 	pos += scnprintf(buf + pos, bufsz - pos, "SW Error:\t\t\t %u\n",
- 		priv->isr_stats.sw);
--	if (priv->isr_stats.sw > 0) {
-+	if (priv->isr_stats.sw || priv->isr_stats.hw) {
- 		pos += scnprintf(buf + pos, bufsz - pos,
- 			"\tLast Restarting Code:  0x%X\n",
--			priv->isr_stats.sw_err);
-+			priv->isr_stats.err_code);
- 	}
- #ifdef CONFIG_IWLWIFI_DEBUG
- 	pos += scnprintf(buf + pos, bufsz - pos, "Frame transmitted:\t\t %u\n",
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 4dd38b7..504ff0f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -945,7 +945,7 @@ enum iwl_pa_type {
- struct isr_statistics {
- 	u32 hw;
- 	u32 sw;
--	u32 sw_err;
-+	u32 err_code;
- 	u32 sch;
- 	u32 alive;
- 	u32 rfkill;
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 68e624a..9c90be1 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -1730,7 +1730,6 @@ static void iwl3945_irq_tasklet(struct iwl_priv *priv)
- 		IWL_ERR(priv, "Microcode SW error detected. "
- 			"Restarting 0x%X.\n", inta);
- 		priv->isr_stats.sw++;
--		priv->isr_stats.sw_err = inta;
- 		iwl_irq_handle_error(priv);
- 		handled |= CSR_INT_BIT_SW_ERR;
- 	}
--- 
-1.7.0.4
-
