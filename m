@@ -1,42 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:42101 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752804Ab0IQVX2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Sep 2010 17:23:28 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 01/10] iwlagn: add bt_status_read for 5150
-Date: Fri, 17 Sep 2010 14:24:25 -0700
-Message-Id: <1284758674-25297-2-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1284758674-25297-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1284758674-25297-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:33858 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753722Ab0IKQUK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Sep 2010 12:20:10 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/2] compat: backport skb_checksum_none_assert
+Date: Sat, 11 Sep 2010 18:19:58 +0200
+Message-Id: <1284221999-22521-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+This is needed by atlx, b44, atl1c and atl1e.
 
-Include bt_status_read function pointer for 5150 device
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/iwlwifi/iwl-5000.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ include/linux/compat-2.6.37.h |   17 +++++++++++++++++
+ 1 files changed, 17 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index 1dbb124..b9399fb 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -474,6 +474,7 @@ static struct iwl_lib_ops iwl5150_lib = {
- 		.rx_stats_read = iwl_ucode_rx_stats_read,
- 		.tx_stats_read = iwl_ucode_tx_stats_read,
- 		.general_stats_read = iwl_ucode_general_stats_read,
-+		.bt_stats_read = iwl_ucode_bt_stats_read,
- 	},
- 	.recover_from_tx_stall = iwl_bg_monitor_recover,
- 	.check_plcp_health = iwl_good_plcp_health,
+diff --git a/include/linux/compat-2.6.37.h b/include/linux/compat-2.6.37.h
+index 5bd6edb..8ea0bab 100644
+--- a/include/linux/compat-2.6.37.h
++++ b/include/linux/compat-2.6.37.h
+@@ -5,6 +5,8 @@
+ 
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37))
+ 
++#include <linux/skbuff.h>
++
+ /*
+  * This is not part of The 2.6.37 kernel yet but we
+  * we use it to optimize the backport code we
+@@ -26,6 +28,21 @@
+ 
+ extern struct kobj_ns_type_operations net_ns_type_operations;
+ 
++/**
++ * skb_checksum_none_assert - make sure skb ip_summed is CHECKSUM_NONE
++ * @skb: skb to check
++ *
++ * fresh skbs have their ip_summed set to CHECKSUM_NONE.
++ * Instead of forcing ip_summed to CHECKSUM_NONE, we can
++ * use this helper, to document places where we make this assertion.
++ */
++static inline void skb_checksum_none_assert(struct sk_buff *skb)
++{
++#ifdef DEBUG
++	BUG_ON(skb->ip_summed != CHECKSUM_NONE);
++#endif
++}
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)) */
+ 
+ #endif /* LINUX_26_37_COMPAT_H */
 -- 
 1.7.0.4
 
