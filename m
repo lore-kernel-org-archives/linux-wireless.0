@@ -1,126 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:59039 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755830Ab0INXkj (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:44039 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751049Ab0IKTCp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 19:40:39 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
-	Paul Stewart <pstew@google.com>,
-	Amod Bodas <amod.bodas@atheros.com>
-Subject: [PATCH v3 03/11] ath9k: fix enabling ANI / tx monitor after bg scan
-Date: Tue, 14 Sep 2010 19:40:16 -0400
-Message-Id: <1284507624-18176-4-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1284507624-18176-1-git-send-email-lrodriguez@atheros.com>
-References: <1284507624-18176-1-git-send-email-lrodriguez@atheros.com>
+	Sat, 11 Sep 2010 15:02:45 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id AD843418D8
+	for <linux-wireless@vger.kernel.org>; Sat, 11 Sep 2010 15:01:17 -0400 (EDT)
+Subject: Compat-wireless release for 2010-09-11 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100911190244.0096541134@repository3.orbit-lab.org>
+Date: Sat, 11 Sep 2010 15:02:43 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath9k's entire logic with SC_OP_SCANNING is incorrect due to the
-way mac80211 currently implements the scan complete callback and
-we handle it in ath9k. This patch removes the flag completely in
-preference for the SC_OP_OFFCHANNEL which is really what we wanted.
 
-The scanning flag was used to ensure we reset ANI to the old values
-when we go back to the home channel, but if we are offchannel we
-use some defaults. The flag was also used to re-enable the TX monitor.
+compat-wireless code metrics
 
-Without this patch we simply never re-enabled ANI and the TX monitor
-after going offchannel. This means that after one background
-scan we are prone to noise issues and if we had a TX hang we would
-not recover. To get this to work properly we must enable ANI after
-we have configured the beacon timers, otherwise hardware acts really
-oddly.
+    591885 - Total upstream lines of code being pulled
+      1718 - backport code changes
+      1477 - backport code additions
+       241 - backport code deletions
+      6082 - backport from compat module
+      7800 - total backport code
+    1.3178 - % of code consists of backport work
+      1218 - Crap changes not yet posted
+      1179 - Crap additions not yet posted
+        39 - Crap deletions not yet posted
+    0.2058 - % of crap code
 
-This patch has stable fixes which apply down to [2.6.36+], there
-*may* be a to fix this on older kernels but requires a bit of
-work since this patch relies on the new mac80211 flag
-IEEE80211_CONF_OFFCHANNEL which was introduced as of 2.6.36.
-
-Cc: stable@kernel.org
-Cc: Paul Stewart <pstew@google.com>
-Cc: Amod Bodas <amod.bodas@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 -
- drivers/net/wireless/ath/ath9k/main.c  |   10 +++-------
- drivers/net/wireless/ath/ath9k/recv.c  |    4 ++--
- 3 files changed, 5 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index c8ff417..98b57e6 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -563,7 +563,6 @@ struct ath_ant_comb {
- #define SC_OP_RXFLUSH                BIT(7)
- #define SC_OP_LED_ASSOCIATED         BIT(8)
- #define SC_OP_LED_ON                 BIT(9)
--#define SC_OP_SCANNING               BIT(10)
- #define SC_OP_TSF_RESET              BIT(11)
- #define SC_OP_BT_PRIORITY_DETECTED   BIT(12)
- #define SC_OP_BT_SCAN		     BIT(13)
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 186afec..3d72c27 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -255,14 +255,12 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 	ath_update_txpow(sc);
- 	ath9k_hw_set_interrupts(ah, ah->imask);
- 
--	if (!(sc->sc_flags & (SC_OP_OFFCHANNEL | SC_OP_SCANNING))) {
--		ath_start_ani(common);
-+	if (!(sc->sc_flags & (SC_OP_OFFCHANNEL))) {
-+		ath_beacon_config(sc, NULL);
- 		ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work, 0);
-+		ath_start_ani(common);
- 	}
- 
--	if (!(sc->sc_flags & (SC_OP_OFFCHANNEL)))
--		ath_beacon_config(sc, NULL);
--
-  ps_restore:
- 	ath9k_ps_restore(sc);
- 	return r;
-@@ -2036,7 +2034,6 @@ static void ath9k_sw_scan_start(struct ieee80211_hw *hw)
- 
- 	aphy->state = ATH_WIPHY_SCAN;
- 	ath9k_wiphy_pause_all_forced(sc, aphy);
--	sc->sc_flags |= SC_OP_SCANNING;
- 	mutex_unlock(&sc->mutex);
- }
- 
-@@ -2051,7 +2048,6 @@ static void ath9k_sw_scan_complete(struct ieee80211_hw *hw)
- 
- 	mutex_lock(&sc->mutex);
- 	aphy->state = ATH_WIPHY_ACTIVE;
--	sc->sc_flags &= ~SC_OP_SCANNING;
- 	mutex_unlock(&sc->mutex);
- }
- 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 7523f7d..efd0651 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -300,7 +300,7 @@ static void ath_edma_start_recv(struct ath_softc *sc)
- 
- 	ath_opmode_init(sc);
- 
--	ath9k_hw_startpcureceive(sc->sc_ah, (sc->sc_flags & SC_OP_SCANNING));
-+	ath9k_hw_startpcureceive(sc->sc_ah, (sc->sc_flags & SC_OP_OFFCHANNEL));
- }
- 
- static void ath_edma_stop_recv(struct ath_softc *sc)
-@@ -506,7 +506,7 @@ int ath_startrecv(struct ath_softc *sc)
- start_recv:
- 	spin_unlock_bh(&sc->rx.rxbuflock);
- 	ath_opmode_init(sc);
--	ath9k_hw_startpcureceive(ah, (sc->sc_flags & SC_OP_SCANNING));
-+	ath9k_hw_startpcureceive(ah, (sc->sc_flags & SC_OP_OFFCHANNEL));
- 
- 	return 0;
- }
--- 
-1.7.0.4
-
+Base tree: linux-next.git
+Base tree version: next-20100910
+compat-wireless release: compat-wireless--2010-09-02
