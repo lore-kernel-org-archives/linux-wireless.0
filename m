@@ -1,60 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:59047 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751698Ab0INPAb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 11:00:31 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
-	Paul Stewart <pstew@google.com>,
-	Amod Bodas <amod.bodas@atheros.com>
-Subject: [PATCH v2 07/10] mac80211: disable beacon monitor while going offchannel
-Date: Tue, 14 Sep 2010 11:00:31 -0400
-Message-Id: <1284476431-13922-1-git-send-email-lrodriguez@atheros.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:33763 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753523Ab0IKQTF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Sep 2010 12:19:05 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 3/8] compat-wireless: fix for CONFIG_WIRELESS_EXT=n
+Date: Sat, 11 Sep 2010 18:18:28 +0200
+Message-Id: <1284221913-22455-5-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1284221913-22455-1-git-send-email-hauke@hauke-m.de>
+References: <1284221913-22455-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The beacon monitor should be disabled when going off channel
-to prevent spurious warnings and triggering connection
-deterioration work such as sending probe requests. Re-enable
-the beacon monitor once we come back to the home channel.
+Some modules need CONFIG_WIRELESS_EXT to be set. They should not be
+build if CONFIG_WIRELESS_EXT was not set.
 
-This patch has fixes for stable kernels [2.6.34+].
-
-Cc: stable@kernel.org
-Cc: Paul Stewart <pstew@google.com>
-Cc: Amod Bodas <amod.bodas@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
+ config.mk |   15 ++++++++++++++-
+ 1 files changed, 14 insertions(+), 1 deletions(-)
 
-This v2 now uses the already existing ifmgd variable, this
-is now consistant for the connection monitor and the beacon
-monitor.
-
- net/mac80211/offchannel.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index 627a33e..4b56409 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -29,6 +29,7 @@ static void ieee80211_offchannel_ps_enable(struct ieee80211_sub_if_data *sdata)
- 	/* FIXME: what to do when local->pspolling is true? */
+diff --git a/config.mk b/config.mk
+index 458de29..1498573 100644
+--- a/config.mk
++++ b/config.mk
+@@ -248,11 +248,13 @@ CONFIG_B43LEGACY_LEDS=y
+ CONFIG_B43LEGACY_DMA=y
+ CONFIG_B43LEGACY_PIO=y
  
- 	del_timer_sync(&local->dynamic_ps_timer);
-+	del_timer_sync(&ifmgd->bcn_mon_timer);
- 	del_timer_sync(&ifmgd->conn_mon_timer);
++ifdef CONFIG_WIRELESS_EXT
++ifdef CONFIG_WEXT_SPY
++ifdef CONFIG_WEXT_PRIV
+ # The Intel ipws
+ CONFIG_LIBIPW=m
+ # CONFIG_LIBIPW_DEBUG=y
  
- 	cancel_work_sync(&local->dynamic_ps_enable_work);
-@@ -89,6 +90,7 @@ static void ieee80211_offchannel_ps_disable(struct ieee80211_sub_if_data *sdata)
- 			  msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
- 	}
+-
+ CONFIG_IPW2100=m
+ CONFIG_IPW2100_MONITOR=y
+ # CONFIG_IPW2100_DEBUG=y
+@@ -274,6 +276,9 @@ CONFIG_IPW2200_QOS=y
+ # it on via sysfs:
+ #
+ # % echo 1 > /sys/bus/pci/drivers/ipw2200/*/rtap_iface
++endif #CONFIG_WEXT_PRIV
++endif #CONFIG_WEXT_SPY
++endif #CONFIG_WIRELESS_EXT
  
-+	ieee80211_sta_reset_beacon_monitor(sdata);
- 	ieee80211_sta_reset_conn_monitor(sdata);
- }
+ ifneq ($(CONFIG_SSB),)
+ # Sonics Silicon Backplane
+@@ -331,6 +336,9 @@ else #CONFIG_COMPAT_KERNEL_27
+ CONFIG_ATL1C=m
+ endif #CONFIG_COMPAT_KERNEL_27
+ 
++ifdef CONFIG_WIRELESS_EXT
++ifdef CONFIG_WEXT_SPY
++ifdef CONFIG_WEXT_PRIV
+ CONFIG_HERMES=m
+ CONFIG_HERMES_CACHE_FW_ON_INIT=y
+ ifneq ($(CONFIG_PPC_PMAC),)
+@@ -344,6 +352,9 @@ ifneq ($(CONFIG_PCMCIA),)
+ CONFIG_PCMCIA_HERMES=m
+ CONFIG_PCMCIA_SPECTRUM=m
+ endif
++endif #CONFIG_WEXT_PRIV
++endif #CONFIG_WEXT_SPY
++endif #CONFIG_WIRELESS_EXT
+ 
+ endif
+ ## end of PCI
+@@ -490,6 +501,7 @@ CONFIG_BT_HCIBTSDIO=m
+ CONFIG_BT_MRVL_SDIO=m
+ 
+ ifneq ($(CONFIG_COMPAT_STAGING),)
++ifdef CONFIG_WIRELESS_EXT
+ CONFIG_ATH6KL_CFG80211=y
+ CONFIG_ATH6KL_DEBUG=y
+ # CONFIG_ATH6KL_DISABLE_TARGET_DBGLOGS is not set
+@@ -501,6 +513,7 @@ CONFIG_ATH6KL_ENABLE_TARGET_DEBUG_PRINTS=y
+ # CONFIG_ATH6KL_SKIP_ABI_VERSION_CHECK is not set
+ CONFIG_ATH6KL_VIRTUAL_SCATTER_GATHER=y
+ CONFIG_ATH6K_LEGACY=m
++endif #CONFIG_WIRELESS_EXT
+ endif
+ 
  
 -- 
 1.7.0.4
