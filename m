@@ -1,41 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:40155 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754759Ab0IWMam (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Sep 2010 08:30:42 -0400
-Date: Thu, 23 Sep 2010 15:29:37 +0300
-From: Felipe Balbi <balbi@ti.com>
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: "Balbi, Felipe" <balbi@ti.com>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"tony@atomide.com" <tony@atomide.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: Re: [PATCH v2] omap: beagle: add support for wl1271 on the board
- file
-Message-ID: <20100923122937.GP4580@legolas.emea.dhcp.ti.com>
-Reply-To: balbi@ti.com
-References: <1285230003-5065-1-git-send-email-luciano.coelho@nokia.com>
- <20100923114528.GL4580@legolas.emea.dhcp.ti.com>
- <1285244253.3231.75.camel@chilepepper>
- <20100923122048.GO4580@legolas.emea.dhcp.ti.com>
- <1285244908.3231.77.camel@chilepepper>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:48538 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753217Ab0IKBX3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Sep 2010 21:23:29 -0400
+Received: by qwh6 with SMTP id 6so2014477qwh.19
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Sep 2010 18:23:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-In-Reply-To: <1285244908.3231.77.camel@chilepepper>
+Date: Fri, 10 Sep 2010 18:23:28 -0700
+Message-ID: <AANLkTikCBPGjNmRxdkgpZdTnHNvcMSOa6g2V-Z3o6bCx@mail.gmail.com>
+Subject: mesh beacons broken on HEAD for libertas_tf
+From: Steve deRosier <steve@cozybit.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+I found an issue with recent changes to mac80211 that break mesh
+beacons at least for libertas_tf.
 
-On Thu, Sep 23, 2010 at 07:28:28AM -0500, Luciano Coelho wrote:
->Ah, I see.  Thanks for the explanation.  I guess we could do that in a
->separate patch.  The zoom board file already uses this .irq element, so
->this patch would not be the appropriate place to change it.
->
->Is it okay if I deal with that after I'm done with the current patch?
+I say "recent" in that the exact same libertas_tf code works fine in a
+2.6.34-rc5-wl kernel but not in head.
 
-sure :-)
+ieee80211_do_open() calls ieee80211_start_mesh() which calls
+ieee80211_bss_info_change_notify() to turn on beaconing.
+ieee80211_bss_info_change_notify() checks that state is
+SDATA_STATE_RUNNING before it enables beacons.
 
--- 
-balbi
+Problem is, SDATA_STATE_RUNNING doesn't get set until right before
+ieee80211_do_open() exits, long after ieee80211_start_mesh() gets
+called and tries to enable beaconing.
+
+The SDATA_STATE_RUNNING stuff was added in commit 34d4bc4d about two weeks ago.
+
+The basic symptom is that the commands go down to the firmware to
+setup the beaconing, but instead of beaconing being enabled, it's
+disabled in the command call.
+
+I can set the bit right before the start mesh call and all works as
+expected.  But, I'm sure this isn't the correct change.
+
+I see four general strategies:
+1. Move the setting of SDATA_STATE_RUNNING to earlier in the function.
+ This is obviously problematic, having to unset it on errors or so on.
+2. Remove the check in ieee80211_bss_info_change_notify().  Of course,
+this was probably put here for a reason.
+3. Put an exception to the check in ieee80211_bss_info_change_notify()
+so that if vif->type is mesh, that we don't check the
+SDATA_STATE_RUNNING bit.  Fairly straight forward and I know how to do
+that.
+4. Somehow delay the mesh setup from setting up beacons till after the
+ieee80211_do_open() call finishes.  I'm not sure how to accomplish
+this in a sensible way.
+
+Does anyone have any suggestions?
+
+Thanks,
+- Steve
