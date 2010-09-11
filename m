@@ -1,56 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:61864 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751620Ab0IPAji convert rfc822-to-8bit (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:3542 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753299Ab0IKR1e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 20:39:38 -0400
-Received: by iwn5 with SMTP id 5so547061iwn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Sep 2010 17:39:38 -0700 (PDT)
+	Sat, 11 Sep 2010 13:27:34 -0400
+Date: Sat, 11 Sep 2010 13:23:31 -0400
+From: bob@bobcopeland.com
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath5k-devel@lists.ath5k.org, lrodriguez@atheros.com,
+	mickflemm@gmail.com
+Subject: Re: [PATCH 4/8] ath5k: Remove old ath5k key handling functions
+Message-ID: <20100911172331.GF20385@hash.localnet>
+References: <20100908070427.11255.17659.stgit@tt-desk> <20100908070449.11255.48691.stgit@tt-desk>
 MIME-Version: 1.0
-In-Reply-To: <1284578468.1569.29.camel@powerslave>
-References: <1284575472-19888-1-git-send-email-shahar_levi@ti.com>
- <1284575472-19888-5-git-send-email-shahar_levi@ti.com> <1284578468.1569.29.camel@powerslave>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 16 Sep 2010 10:39:18 +1000
-Message-ID: <AANLkTimCrCH_yh5y3L8WcfNus9A2RFMCqvK7Xb82VGUL@mail.gmail.com>
-Subject: Re: [PATCH 04/04] wl1271: 11n Support, 11n Kconfig Configurable
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: ext Shahar Levi <shahar_levi@ti.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100908070449.11255.48691.stgit@tt-desk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 16, 2010 at 05:21, Luciano Coelho <luciano.coelho@nokia.com> wrote:
-> On Wed, 2010-09-15 at 20:31 +0200, ext Shahar Levi wrote:
->> diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
->> index e89e574..8f2cea9 100644
->> --- a/drivers/net/wireless/wl12xx/wl1271_main.c
->> +++ b/drivers/net/wireless/wl12xx/wl1271_main.c
->> @@ -2087,7 +2087,9 @@ static struct ieee80211_supported_band wl1271_band_2ghz = {
->>       .n_channels = ARRAY_SIZE(wl1271_channels),
->>       .bitrates = wl1271_rates,
->>       .n_bitrates = ARRAY_SIZE(wl1271_rates),
->> +#ifdef CONFIG_WL1271_HT
->>       .ht_cap = WL12xx_HT_CAP,
->> +#endif
->
-> Here you can use #ifdef CONFIG_WL1271_80211_HT directly, no need to
-> duplicate it into a new flag.
+On Wed, Sep 08, 2010 at 04:04:49PM +0900, Bruno Randolf wrote:
+> Remove the old ath5k key handling functions, since we now use the key
+> management in ath common.
+> 
+> Signed-off-by: Bruno Randolf <br1@einfach.org>
 
-Another thing you might want to do could be to adjust the order of the
-patches so you introduce this config option *before* you introduce the
-actual code that is protected by it. At the moment, this functionality
-is enabled unconditionally if this patch isn't applied, which could
-potentially occur during bisection, given that John doesn't squash the
-patches into one when he applies them.
+Acked-by: Bob Copeland <me@bobcopeland.com>
 
-Thanks,
 
--- 
-
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
