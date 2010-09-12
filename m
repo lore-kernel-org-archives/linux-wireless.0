@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:50200 "EHLO
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:61684 "EHLO
 	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754525Ab0IPT5S convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1753792Ab0ILVeh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Sep 2010 15:57:18 -0400
+	Sun, 12 Sep 2010 17:34:37 -0400
+Received: by iwn5 with SMTP id 5so4446981iwn.19
+        for <linux-wireless@vger.kernel.org>; Sun, 12 Sep 2010 14:34:36 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1284662139.8951.7.camel@powerslave>
-References: <AANLkTikYd+TojQC-R+Vrdou6KSRwFNczBeTnsX7eTDn4@mail.gmail.com>
- <1284635762-12335-1-git-send-email-ohad@wizery.com> <1284662139.8951.7.camel@powerslave>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Thu, 16 Sep 2010 21:56:57 +0200
-Message-ID: <AANLkTinQ3EVOTjfnOy7EXP==b=tpSicDdokBAZ67Lc7O@mail.gmail.com>
-Subject: Re: [PATCH v6 01/17] wl12xx: make wl12xx.h common to both spi and sdio
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	San Mehat <san@google.com>,
-	"Quadros Roger (Nokia-MS/Helsinki)" <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>, Ido Yariv <ido@wizery.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Russell King <linux@arm.linux.org.uk>,
-	Vitaly Wool <vitalywool@gmail.com>,
-	"Paasikivi Teemu.3 (EXT-Ixonos/Tampere)"
-	<ext-teemu.3.paasikivi@nokia.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <AANLkTikF_089e9kTrV1wFc5a4TnhoZ9ekp2C0r-DMSE1@mail.gmail.com>
+References: <1284221913-22455-1-git-send-email-hauke@hauke-m.de>
+ <1284221913-22455-10-git-send-email-hauke@hauke-m.de> <AANLkTim8UUHmm_TNzg0Spm7SXm8OXfDAvhjUK7v9V-F=@mail.gmail.com>
+ <1284312581.8821.34.camel@maggie> <AANLkTikF_089e9kTrV1wFc5a4TnhoZ9ekp2C0r-DMSE1@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Sun, 12 Sep 2010 14:34:16 -0700
+Message-ID: <AANLkTin5mGf51p39Cje_ZpRvjH6LKo2xG4QLiw4W-ybo@mail.gmail.com>
+Subject: Re: [PATCH 8/8] compat-wireless: add brcm80211 driver
+To: =?UTF-8?Q?G=C3=A1bor_Stefanik?= <netrolller.3d@gmail.com>
+Cc: =?UTF-8?Q?Michael_B=C3=BCsch?= <mb@bu3sch.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless@vger.kernel.org, mcgrof@infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 16, 2010 at 8:35 PM, Luciano Coelho
-<luciano.coelho@nokia.com> wrote:
-> Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
+On Sun, Sep 12, 2010 at 10:36 AM, Gábor Stefanik
+<netrolller.3d@gmail.com> wrote:
+> On Sun, Sep 12, 2010 at 7:29 PM, Michael Büsch <mb@bu3sch.de> wrote:
+>> On Sun, 2010-09-12 at 19:16 +0200, Gábor Stefanik wrote:
+>>> Umm... do we accept staging drivers in compat-wireless?
+>>
+>> Why shouldn't we accept them in compat?
+>>
+>> --
+>> Greetings Michael.
+>>
+>>
 >
-> I just wonder why the wl12xx.h move wasn't detected as a rename. �Did
-> you forget to use the -M option in format-patch?
+> Dunno, just given the general hostility of the wireless team towards
+> staging drivers.
 
-I thought it's because I stripped the SPI_ from the
-#ifndef _LINUX_SPI_WL12XX_H, but it should be smarter than that.
-Probably the -M.
+The idea is to enable users, so I'll gladly accept them, thanks
+haukes, I'll apply after first reviewing your other series.
 
-Thanks,
-Ohad.
-
-
->
-> --
-> Cheers,
-> Luca.
->
->
+ Luis
