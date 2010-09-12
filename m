@@ -1,68 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:49491 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756501Ab0IGL3m (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Sep 2010 07:29:42 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Gao Yunpeng <yunpeng.gao@intel.com>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v1 3/8] sdio: add power_restore support
-Date: Tue,  7 Sep 2010 14:29:04 +0300
-Message-Id: <1283858949-11073-4-git-send-email-ohad@wizery.com>
-In-Reply-To: <1283858949-11073-1-git-send-email-ohad@wizery.com>
-References: <1283858949-11073-1-git-send-email-ohad@wizery.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:36355 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753530Ab0ILVJt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 12 Sep 2010 17:09:49 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	johannes@sipsolutions.net, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 6/8] compat-wireless: Add warning if wext is deactivated
+Date: Sun, 12 Sep 2010 23:09:20 +0200
+Message-Id: <1284325760-929-1-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <4C8D397F.4000608@hauke-m.de>
+References: <4C8D397F.4000608@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a power_restore handler to the SDIO bus ops,
-in order to support waking up SDIO cards that
-were powered off by runtime pm.
+Add a build warning if CONFIG_CFG80211_WEXT can not be activated.
 
-Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+wireless_handlers is only avaliable if the kernel was build with
+CONFIG_WIRELESS_EXT. Add a kernel log warning if CONFIG_CFG80211_WEXT
+is activated but we do not have CONFIG_WIRELESS_EXT, so we ware unable
+to attach the wireless_handlers for wext.
+
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/mmc/core/sdio.c |   18 ++++++++++++++++++
- 1 files changed, 18 insertions(+), 0 deletions(-)
+ config.mk                                    |    2 ++
+ patches/10-add-wext-handlers-to-netdev.patch |    8 +++++++-
+ 2 files changed, 9 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/mmc/core/sdio.c b/drivers/mmc/core/sdio.c
-index 8a34945..c118cc2 100644
---- a/drivers/mmc/core/sdio.c
-+++ b/drivers/mmc/core/sdio.c
-@@ -639,11 +639,29 @@ static int mmc_sdio_resume(struct mmc_host *host)
- 	return err;
- }
+diff --git a/config.mk b/config.mk
+index b7ef1ce..464a769 100644
+--- a/config.mk
++++ b/config.mk
+@@ -196,6 +196,8 @@ endif #CONFIG_PCMCIA
+ # autoconf.h
+ ifdef CONFIG_WIRELESS_EXT
+  CONFIG_CFG80211_WEXT=y
++else #CONFIG_CFG80211_WEXT
++$(warning "WARNING: CONFIG_CFG80211_WEXT will be deactivated or not working because kernel was compiled with CONFIG_WIRELESS_EXT=n. Tools using wext interface like iwconfig will not work. To activate it build your kernel e.g. with CONFIG_LIBIPW=m.")
+ endif #CONFIG_WIRELESS_EXT
  
-+static int mmc_sdio_power_restore(struct mmc_host *host)
-+{
-+	int ret;
-+
-+	BUG_ON(!host);
-+	BUG_ON(!host->card);
-+
-+	mmc_claim_host(host);
-+	ret = mmc_sdio_init_card(host, host->ocr, host->card,
-+			(host->pm_flags & MMC_PM_KEEP_POWER));
-+	if (!ret && host->sdio_irqs)
-+		mmc_signal_sdio_irq(host);
-+	mmc_release_host(host);
-+
-+	return ret;
-+}
-+
- static const struct mmc_bus_ops mmc_sdio_ops = {
- 	.remove = mmc_sdio_remove,
- 	.detect = mmc_sdio_detect,
- 	.suspend = mmc_sdio_suspend,
- 	.resume = mmc_sdio_resume,
-+	.power_restore = mmc_sdio_power_restore,
- };
- 
- 
+ ifneq ($(CONFIG_STAGING),)
+diff --git a/patches/10-add-wext-handlers-to-netdev.patch b/patches/10-add-wext-handlers-to-netdev.patch
+index 8a5c6e5..7f31c73 100644
+--- a/patches/10-add-wext-handlers-to-netdev.patch
++++ b/patches/10-add-wext-handlers-to-netdev.patch
+@@ -29,12 +29,18 @@ CONFIG_WIRELESS_EXT in compat-wireless.
+  	device_initialize(&rdev->wiphy.dev);
+  	rdev->wiphy.dev.class = &ieee80211_class;
+  	rdev->wiphy.dev.platform_data = rdev;
+-@@ -712,6 +708,8 @@ static int cfg80211_netdev_notifier_call
++@@ -712,6 +708,14 @@ static int cfg80211_netdev_notifier_call
+  		wdev->sme_state = CFG80211_SME_IDLE;
+  		mutex_unlock(&rdev->devlist_mtx);
+  #ifdef CONFIG_CFG80211_WEXT
+++#ifdef CONFIG_WIRELESS_EXT
+ +		if (!dev->wireless_handlers)
+ +			dev->wireless_handlers = &cfg80211_wext_handler;
+++#else
+++		printk(KERN_WARNING "cfg80211: wext will not work because "
+++			"kernel was compiled with CONFIG_WIRELESS_EXT=n. Tools "
+++			"using wext interface like iwconfig will not work.\n");
+++#endif
+  		wdev->wext.default_key = -1;
+  		wdev->wext.default_mgmt_key = -1;
+  		wdev->wext.connect.auth_type = NL80211_AUTHTYPE_AUTOMATIC;
 -- 
 1.7.0.4
 
