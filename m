@@ -1,37 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:60749 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754348Ab0IEUIW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Sep 2010 16:08:22 -0400
-Received: by vws3 with SMTP id 3so2776307vws.19
-        for <linux-wireless@vger.kernel.org>; Sun, 05 Sep 2010 13:08:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <loom.20100903T224155-155@post.gmane.org>
-References: <AANLkTim_Ou8fFbfsn8AEZFpWBzjnAQuT4S_w8bV5saYD@mail.gmail.com>
-	<loom.20100903T224155-155@post.gmane.org>
-Date: Sun, 5 Sep 2010 16:08:20 -0400
-Message-ID: <AANLkTikdXBsO0Qx2nEV+Ka9X2D55odmGwePMaUGaQi7j@mail.gmail.com>
-Subject: Re: mac80211-based commercial router?
-From: Bob Copeland <me@bobcopeland.com>
-To: jpo <pommnitz@yahoo.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from server19320154104.serverpool.info ([193.201.54.104]:50842 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753666Ab0ILVLw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 12 Sep 2010 17:11:52 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	johannes@sipsolutions.net, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 6/8 v2] compat-wireless: Add warning if wext is deactivated
+Date: Sun, 12 Sep 2010 23:11:37 +0200
+Message-Id: <1284325897-976-1-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <4C8D397F.4000608@hauke-m.de>
+References: <4C8D397F.4000608@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 3, 2010 at 4:43 PM, jpo <pommnitz@yahoo.com> wrote:
+Add a build warning if CONFIG_CFG80211_WEXT can not be activated.
 
-> Android 2.2 comes with AP functionality. Are the Android WLAN drivers mac80211
-> based?
+wireless_handlers is only avaliable if the kernel was build with
+CONFIG_WIRELESS_EXT. Add a kernel log warning if CONFIG_CFG80211_WEXT
+is activated but we do not have CONFIG_WIRELESS_EXT, so we ware unable
+to attach the wireless_handlers for wext.
 
-No, they aren't.  Does Android really do AP mode or
-just adhoc?
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-wl1251 is an in-tree module for the TI chip used in G1,
-but it doesn't support AP mode.  I do not know if there's
-a mac80211 driver that supports the broadcom chip used
-in other phones.
+v2: use printk_once
+---
+ config.mk                                    |    2 ++
+ patches/10-add-wext-handlers-to-netdev.patch |    9 ++++++++-
+ 2 files changed, 10 insertions(+), 1 deletions(-)
 
+diff --git a/config.mk b/config.mk
+index b7ef1ce..464a769 100644
+--- a/config.mk
++++ b/config.mk
+@@ -196,6 +196,8 @@ endif #CONFIG_PCMCIA
+ # autoconf.h
+ ifdef CONFIG_WIRELESS_EXT
+  CONFIG_CFG80211_WEXT=y
++else #CONFIG_CFG80211_WEXT
++$(warning "WARNING: CONFIG_CFG80211_WEXT will be deactivated or not working because kernel was compiled with CONFIG_WIRELESS_EXT=n. Tools using wext interface like iwconfig will not work. To activate it build your kernel e.g. with CONFIG_LIBIPW=m.")
+ endif #CONFIG_WIRELESS_EXT
+ 
+ ifneq ($(CONFIG_STAGING),)
+diff --git a/patches/10-add-wext-handlers-to-netdev.patch b/patches/10-add-wext-handlers-to-netdev.patch
+index 8a5c6e5..f0df259 100644
+--- a/patches/10-add-wext-handlers-to-netdev.patch
++++ b/patches/10-add-wext-handlers-to-netdev.patch
+@@ -29,12 +29,19 @@ CONFIG_WIRELESS_EXT in compat-wireless.
+  	device_initialize(&rdev->wiphy.dev);
+  	rdev->wiphy.dev.class = &ieee80211_class;
+  	rdev->wiphy.dev.platform_data = rdev;
+-@@ -712,6 +708,8 @@ static int cfg80211_netdev_notifier_call
++@@ -712,6 +708,15 @@ static int cfg80211_netdev_notifier_call
+  		wdev->sme_state = CFG80211_SME_IDLE;
+  		mutex_unlock(&rdev->devlist_mtx);
+  #ifdef CONFIG_CFG80211_WEXT
+++#ifdef CONFIG_WIRELESS_EXT
+ +		if (!dev->wireless_handlers)
+ +			dev->wireless_handlers = &cfg80211_wext_handler;
+++#else
+++		printk_once(KERN_WARNING "cfg80211: wext will not work because "
+++			    "kernel was compiled with CONFIG_WIRELESS_EXT=n. "
+++			    "Tools using wext interface, like iwconfig will "
+++			    "not work.\n");
+++#endif
+  		wdev->wext.default_key = -1;
+  		wdev->wext.default_mgmt_key = -1;
+  		wdev->wext.connect.auth_type = NL80211_AUTHTYPE_AUTOMATIC;
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.7.0.4
+
