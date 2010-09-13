@@ -1,73 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:52904 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755151Ab0IPPym convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Sep 2010 11:54:42 -0400
-From: "Levi, Shahar" <shahar_levi@ti.com>
-To: Julian Calaby <julian.calaby@gmail.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 16 Sep 2010 17:54:35 +0200
-Subject: RE: [PATCH 04/04] wl1271: 11n Support, 11n Kconfig Configurable
-Message-ID: <AC090B9732AB2B4DB7FF476E907FE6600113431B85@dnce02.ent.ti.com>
-References: <1284575472-19888-1-git-send-email-shahar_levi@ti.com>
- <1284575472-19888-5-git-send-email-shahar_levi@ti.com>
- <1284578468.1569.29.camel@powerslave>
- <AANLkTimCrCH_yh5y3L8WcfNus9A2RFMCqvK7Xb82VGUL@mail.gmail.com>
-In-Reply-To: <AANLkTimCrCH_yh5y3L8WcfNus9A2RFMCqvK7Xb82VGUL@mail.gmail.com>
-Content-Type: text/plain; charset="windows-1255"
-MIME-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:27208 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754783Ab0IMMqT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Sep 2010 08:46:19 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 01/14] iwlwifi: remove unused conf variables
+Date: Mon, 13 Sep 2010 14:46:32 +0200
+Message-Id: <1284382005-3246-2-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1284382005-3246-1-git-send-email-sgruszka@redhat.com>
+References: <1284382005-3246-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> -----Original Message-----
-> From: Julian Calaby [mailto:julian.calaby@gmail.com]
-> Sent: Thursday, September 16, 2010 2:39 AM
-> To: Luciano Coelho
-> Cc: Levi, Shahar; linux-wireless@vger.kernel.org
-> Subject: Re: [PATCH 04/04] wl1271: 11n Support, 11n Kconfig Configurable
-> 
-> On Thu, Sep 16, 2010 at 05:21, Luciano Coelho <luciano.coelho@nokia.com>
-> wrote:
-> > On Wed, 2010-09-15 at 20:31 +0200, ext Shahar Levi wrote:
-> >> diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c
-> b/drivers/net/wireless/wl12xx/wl1271_main.c
-> >> index e89e574..8f2cea9 100644
-> >> --- a/drivers/net/wireless/wl12xx/wl1271_main.c
-> >> +++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-> >> @@ -2087,7 +2087,9 @@ static struct ieee80211_supported_band
-> wl1271_band_2ghz = {
-> >>       .n_channels = ARRAY_SIZE(wl1271_channels),
-> >>       .bitrates = wl1271_rates,
-> >>       .n_bitrates = ARRAY_SIZE(wl1271_rates),
-> >> +#ifdef CONFIG_WL1271_HT
-> >>       .ht_cap = WL12xx_HT_CAP,
-> >> +#endif
-> >
-> > Here you can use #ifdef CONFIG_WL1271_80211_HT directly, no need to
-> > duplicate it into a new flag.
-> 
-> Another thing you might want to do could be to adjust the order of the
-> patches so you introduce this config option *before* you introduce the
-> actual code that is protected by it. At the moment, this functionality
-> is enabled unconditionally if this patch isn't applied, which could
-> potentially occur during bisection, given that John doesn't squash the
-> patches into one when he applies them.
-> 
-> Thanks,
-> 
-> --
-> 
-> Julian Calaby
-> 
-> Email: julian.calaby@gmail.com
-> Profile: http://www.google.com/profiles/julian.calaby/
-> .Plan: http://sites.google.com/site/juliancalaby/
+From: Johannes Berg <johannes.berg@intel.com>
 
-Hi Julian,
-It is a good point. ".ht_cap = WL12xx_HT_CAP" in wl1271_main.c adds only on patch 03/04. I believe that adding "#ifdef CONFIG_WL1271_HT" in wl1271_main.c with early patch on code that not exist is less clear. Squashing the patches 03 and 04 to one in v2 could prevent that but it will not emphasize the configuration option. Is there are cases that the some patches from series not applies?
-Thanks for your review,
-Shahar       
+There are a number of conf variables that are
+unused, remove them.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Acked-by: Wey-Yi W Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    3 ---
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |    6 ------
+ 2 files changed, 0 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index a8f2adf..51a8d7e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1162,7 +1162,6 @@ void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 		.flags = CMD_SIZE_HUGE,
+ 	};
+ 	struct iwl_scan_cmd *scan;
+-	struct ieee80211_conf *conf = NULL;
+ 	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_BSS];
+ 	u32 rate_flags = 0;
+ 	u16 cmd_len;
+@@ -1179,8 +1178,6 @@ void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 	if (vif)
+ 		ctx = iwl_rxon_ctx_from_vif(vif);
  
+-	conf = ieee80211_get_hw_conf(priv->hw);
+-
+ 	cancel_delayed_work(&priv->scan_check);
+ 
+ 	if (!iwl_is_ready(priv)) {
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 68e624a..5b742eb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -2569,12 +2569,9 @@ static void __iwl3945_down(struct iwl_priv *priv)
+ {
+ 	unsigned long flags;
+ 	int exit_pending = test_bit(STATUS_EXIT_PENDING, &priv->status);
+-	struct ieee80211_conf *conf = NULL;
+ 
+ 	IWL_DEBUG_INFO(priv, DRV_NAME " is going down\n");
+ 
+-	conf = ieee80211_get_hw_conf(priv->hw);
+-
+ 	if (!exit_pending)
+ 		set_bit(STATUS_EXIT_PENDING, &priv->status);
+ 
+@@ -2828,13 +2825,10 @@ void iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 		.flags = CMD_SIZE_HUGE,
+ 	};
+ 	struct iwl3945_scan_cmd *scan;
+-	struct ieee80211_conf *conf = NULL;
+ 	u8 n_probes = 0;
+ 	enum ieee80211_band band;
+ 	bool is_active = false;
+ 
+-	conf = ieee80211_get_hw_conf(priv->hw);
+-
+ 	cancel_delayed_work(&priv->scan_check);
+ 
+ 	if (!iwl_is_ready(priv)) {
+-- 
+1.7.1
 
