@@ -1,91 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:64673 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752457Ab0INUwB (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:36929 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752332Ab0IMR36 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 16:52:01 -0400
-Received: by bwz11 with SMTP id 11so5931424bwz.19
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Sep 2010 13:51:59 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: lockdep warning in ieee80211 rx path
-Date: Tue, 14 Sep 2010 22:51:52 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <AANLkTin5KfmQLYxLWdhTcO-AM0t83dVq=LFCG0UGysaw@mail.gmail.com>
-In-Reply-To: <AANLkTin5KfmQLYxLWdhTcO-AM0t83dVq=LFCG0UGysaw@mail.gmail.com>
+	Mon, 13 Sep 2010 13:29:58 -0400
+Received: by ywh1 with SMTP id 1so2102161ywh.19
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Sep 2010 10:29:58 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201009142251.53021.chunkeey@googlemail.com>
+In-Reply-To: <804B13F8F3D94A4AB18B9B01ACB68FA103AB02D1@EXCHSRV.fokus.fraunhofer.de>
+References: <804B13F8F3D94A4AB18B9B01ACB68FA1037B5158@EXCHSRV.fokus.fraunhofer.de>
+ <20100727172020.GE8293@tux> <804B13F8F3D94A4AB18B9B01ACB68FA103AB02D1@EXCHSRV.fokus.fraunhofer.de>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 13 Sep 2010 10:29:26 -0700
+Message-ID: <AANLkTikcnHU+JFpt7o3UG0+=Py5HKVBMmpkvZNTpQ=uy@mail.gmail.com>
+Subject: Re: [ath9k-devel] [PATCH 4/5] mac80211: add WoW support
+To: "Simsek, Burak" <burak.simsek@fokus.fraunhofer.de>
+Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 05 September 2010 11:32:26 Ming Lei wrote:
-> Seems the warning does not affect use of wireless,  false positive?
+On Mon, Sep 13, 2010 at 10:11 AM, Simsek, Burak
+<burak.simsek@fokus.fraunhofer.de> wrote:
+> Dear Luis,
+>
+> we are moving your patch to the latest version whenever we have the time to
+> do so... You had sent us two patch files:
+>
+> http://www.mk.kernel.org/pub/linux/kernel/people/mcgrof/patches/wow-07-21.pa
+> tch
+> http://www.mk.kernel.org/pub/linux/kernel/people/mcgrof/patches/iw-add-wow.p
+> atch
+>
+>
+> The first one is successfully accomplished, but we have problems with the
+> second one. I am giving a summary of the errors that we get below. There are
+> files and variables defined in that patch that we cannot find anywhere and
+> do not know what they should do. Can you please provide us with some hints
+> regarding those errors?
 
-No, it's a bug... but please read & test the attached patch.
+The first one is the biggest chunk of work, I can take care of the
+second one. Can you post the first patch so I can test?
 
-> [  221.023116] =======================================================
-> [  221.023164] [ INFO: possible circular locking dependency detected ]
-> [  221.023195] 2.6.36-rc3-next-20100903+ #65
-> [  221.023215] -------------------------------------------------------
-> [  221.023246] X/2091 is trying to acquire lock:
-> [  221.023268]  (slock-AF_INET/1){+.-...}, at: [<ffffffff81381151>]
-> tcp_v4_rcv+0x290/0x6b7
-> [  221.023323]
-> [  221.023323] but task is already holding lock:
-> [  221.023354]  (&(&sta->lock)->rlock){+.-...}, at:
-> [<ffffffffa01edd37>] sta_rx_agg_reorder_timer_expired+0x61/0x9c
-> [mac80211]
-> [  221.023425]
-> [  221.023426] which lock already depends on the new lock.
-> [  221.023426]
-> [  221.023469]
-> [  221.023469] the existing dependency chain (in reverse order) is:
-> [  221.023508]
-> [  221.023509] -> #2 (&(&sta->lock)->rlock){+.-...}:
-> [  221.023547]        [<ffffffff8107d7e3>] lock_acquire+0xe6/0x113
-> [  221.023581]        [<ffffffff813ce6a4>] _raw_spin_lock_irqsave+0x5d/0x97
-> [  221.024007]
-> [  221.024007] -> #1 (_xmit_ETHER){+.-...}:
-> [  221.024007]        [<ffffffff8107d7e3>] lock_acquire+0xe6/0x113
-> [  221.024007]        [<ffffffff81340d9c>] netif_receive_skb+0x6c/0x73
-> [  221.024007]        [<ffffffffa01fcf27>] ieee80211_rx+0x7b5/0x826 [mac80211]
-> [  221.024007]
-> [  221.024007] -> #0 (slock-AF_INET/1){+.-...}:
-> [  221.024007]        [<ffffffff8107d406>] __lock_acquire+0xa2c/0xd23
-> [  221.024007]        [<ffffffff8107d7e3>] lock_acquire+0xe6/0x113
-> [  221.024007]        [<ffffffff813ce47b>] _raw_spin_lock_nested+0x43/0x76
-> [  221.024007]        [<ffffffff81381151>] tcp_v4_rcv+0x290/0x6b7
-> [  221.024007]        [<ffffffff81364424>] ip_local_deliver+0x130/0x1c0
-> [  221.024007]        [<ffffffff81364161>] ip_rcv+0x4d9/0x519
-> [  221.024007]        [<ffffffff8133fdd9>] __netif_receive_skb+0x292/0x2bf
-> [  221.024007]        [<ffffffff81340d9c>] netif_receive_skb+0x6c/0x73
----
-[PATCH] mac80211: hoist sta->lock from reorder release timer
+BTW, I learned that we can test WoW in the community by using Apple
+boxen, Apple devices seems to always have WoW capable 802.11 Atheros
+chipsets. What are you using for your testing?
 
-The patch "mac80211: AMPDU rx reorder timeout timer" clashes
-with "mac80211: use netif_receive_skb in ieee80211_rx callpath"
-
-The timer itself is part of the station's private struct and
-it gets killed whenever the station is removed. Therefore
-the extra sta->lock protection (that can interferes with the
-tx path) is not necessary.
-
-Reported-by: Ming Lei <tom.leiming@gmail.com>
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index 58eab9e..309ed70 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -129,9 +129,7 @@ static void sta_rx_agg_reorder_timer_expired(unsigned long data)
- 			timer_to_tid[0]);
- 
- 	rcu_read_lock();
--	spin_lock(&sta->lock);
- 	ieee80211_release_reorder_timeout(sta, *ptid);
--	spin_unlock(&sta->lock);
- 	rcu_read_unlock();
- }
- 
+  Luis
