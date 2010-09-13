@@ -1,76 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:59031 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752515Ab0INXkZ (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:44847 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754131Ab0IMCfU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 19:40:25 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH v3 00/11] ath9k / mac80211: power save fixes
-Date: Tue, 14 Sep 2010 19:40:13 -0400
-Message-Id: <1284507624-18176-1-git-send-email-lrodriguez@atheros.com>
+	Sun, 12 Sep 2010 22:35:20 -0400
+Received: by qwh6 with SMTP id 6so3123060qwh.19
+        for <linux-wireless@vger.kernel.org>; Sun, 12 Sep 2010 19:35:19 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201009131017.35762.br1@einfach.org>
+References: <20100908070427.11255.17659.stgit@tt-desk>
+	<20100908070459.11255.52256.stgit@tt-desk>
+	<20100911172752.GH20385@hash.localnet>
+	<201009131017.35762.br1@einfach.org>
+Date: Sun, 12 Sep 2010 22:35:19 -0400
+Message-ID: <AANLkTik0Ph67jN3od3NAcwwLrQXnpyEqsJU5rfNAJWAJ@mail.gmail.com>
+Subject: Re: [ath5k-devel] [PATCH 6/8] ath5k: Use common crypt capabilities flags
+From: Bob Copeland <me@bobcopeland.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: bob@bobcopeland.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I reordered the patches, enhanced the commit log entries and
-and added a new patch to address ANI / the TX monitor, figured I'd just
-send a new series just to be clear.
+On Sun, Sep 12, 2010 at 9:17 PM, Bruno Randolf <br1@einfach.org> wrote:
+> On Sun September 12 2010 02:27:52 you wrote:
+>> On Wed, Sep 08, 2010 at 04:04:59PM +0900, Bruno Randolf wrote:
+>> > Replace ah_aes_support and ah_combined_mic with common ath_crypt_caps
+>> > ATH_CRYPT_CAP_CIPHER_AESCCM and ATH_CRYPT_CAP_MIC_COMBINED.
+>> >
+>> > Signed-off-by: Bruno Randolf <br1@einfach.org>
+>> >
+>> > --- a/drivers/net/wireless/ath/ath5k/base.c
+>> > +++ b/drivers/net/wireless/ath/ath5k/base.c
+>> > @@ -3298,7 +3298,7 @@ ath5k_set_key(struct ieee80211_hw *hw, enum
+>> > set_key_cmd cmd,
+>> >
+>> >     case WLAN_CIPHER_SUITE_TKIP:
+>> >             break;
+>> >
+>> >     case WLAN_CIPHER_SUITE_CCMP:
+>> > -           if (sc->ah->ah_aes_support)
+>> > +           if (common->crypt_caps & ATH_CRYPT_CAP_CIPHER_AESCCM)
+>> >
+>> >                     break;
+>> >
+>> >             return -EOPNOTSUPP;
+>>
+>> This could be done by the common code too, right?
+>
+> yes... ath9k doesn't do this, but i left the old code because i wasn't sure if
+> we need it or not. can we sort this out in a following patch?
 
-My next peet peeve is this:
+Yeah, I guess only certain ath5k chipsets do CCMP while all
+ath9k ones do..  for sure, follow-up patches are fine for
+my minor comments, none of them affect functionality.
 
-Sep 14 16:36:02 tux kernel: [ 1369.000106] ath: Set channel: 5220 MHz
-Sep 14 16:36:02 tux kernel: [ 1369.000116] ath: tx chmask: 3, rx chmask: 3
-Sep 14 16:36:02 tux kernel: [ 1369.000240] ath: (2412 MHz) -> (5220 MHz), conf_is_ht40: 0
-Sep 14 16:36:02 tux kernel: [ 1369.063449] ath: Set channel: 2412 MHz
-Sep 14 16:36:03 tux kernel: [ 1369.063459] ath: tx chmask: 3, rx chmask: 3
-Sep 14 16:36:03 tux kernel: [ 1369.063584] ath: (5220 MHz) -> (2412 MHz), conf_is_ht40: 0
-Sep 14 16:36:03 tux kernel: [ 1369.360111] ath: Set channel: 5240 MHz
-Sep 14 16:36:03 tux kernel: [ 1369.360120] ath: tx chmask: 3, rx chmask: 3
-Sep 14 16:36:03 tux kernel: [ 1369.360245] ath: (2412 MHz) -> (5240 MHz), conf_is_ht40: 0
-Sep 14 16:36:03 tux kernel: [ 1369.422736] ath: Set channel: 2412 MHz
-Sep 14 16:36:03 tux kernel: [ 1369.422745] ath: tx chmask: 3, rx chmask: 3
-Sep 14 16:36:03 tux kernel: [ 1369.422867] ath: (5240 MHz) -> (2412 MHz), conf_is_ht40: 0
-Sep 14 16:36:03 tux kernel: [ 1369.564685] __ratelimit: 81 callbacks suppressed
-Sep 14 16:36:03 tux kernel: [ 1369.564692] phy0: release an RX reorder frame due to timeout on earlier frames
-Sep 14 16:36:03 tux kernel: [ 1369.564698] phy0: release an RX reorder frame due to timeout on earlier frames
-Sep 14 16:36:03 tux kernel: [ 1369.564703] phy0: release an RX reorder frame due to timeout on earlier frames
-Sep 14 16:36:03 tux kernel: [ 1369.564708] phy0: release an RX reorder frame due to timeout on earlier frames
-Sep 14 16:36:03 tux kernel: [ 1369.564713] phy0: release an RX reorder frame due to timeout on earlier frames
-Sep 14 16:36:03 tux kernel: [ 1369.564718] phy0: release an RX reorder frame due to timeout on earlier frames
-Sep 14 16:36:03 tux kernel: [ 1369.564723] phy0: release an RX reorder frame due to timeout on earlier frames
-Sep 14 16:36:03 tux kernel: [ 1369.564728] phy0: release an RX reorder frame due to timeout on earlier frames
-Sep 14 16:36:03 tux kernel: [ 1369.564733] phy0: release an RX reorder frame due to timeout on earlier frames
-Sep 14 16:36:03 tux kernel: [ 1369.564738] phy0: release an RX reorder frame due to timeout on earlier frames
-Sep 14 16:36:03 tux kernel: [ 1369.720129] ath: Set channel: 5260 MHz
-Sep 14 16:36:03 tux kernel: [ 1369.720139] ath: tx chmask: 3, rx chmask: 3
-Sep 14 16:36:03 tux kernel: [ 1369.720263] ath: (2412 MHz) -> (5260 MHz), conf_is_ht40: 0
-
-My guess is we are not suspending / stopping the aggregations sessions /
-or simply extending the timer when going off channel. 
-
-Luis R. Rodriguez (10):
-  ath9k: fix power save race conditions
-  ath9k: fix regression on beacon loss after bgscan
-  ath9k: fix enabling ANI / tx monitor after bg scan
-  mac80211: add helper for reseting the connection monitor
-  mac80211: reset probe send counter upon connection timer reset
-  mac80211: reset connection idle when going offchannel
-  mac80211: make the beacon monitor available externally
-  mac80211: disable beacon monitor while going offchannel
-  mac80211: send last 3/5 probe requests as unicast
-  ath9k: fix regression which disabled ps on ath9k
-
-Senthil Balasubramanian (1):
-  ath9k: fix regression which prevents chip sleep after CAB data
-
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 -
- drivers/net/wireless/ath/ath9k/init.c  |    3 +-
- drivers/net/wireless/ath/ath9k/main.c  |   15 ++++++-----
- drivers/net/wireless/ath/ath9k/recv.c  |    9 ++++--
- net/mac80211/ieee80211_i.h             |    2 +
- net/mac80211/mlme.c                    |   40 +++++++++++++++++++++++--------
- net/mac80211/offchannel.c              |    7 +++++
- 7 files changed, 54 insertions(+), 23 deletions(-)
-
+-- 
+Bob Copeland %% www.bobcopeland.com
