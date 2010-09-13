@@ -1,76 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:39511 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757127Ab0I0R7G (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 13:59:06 -0400
-Received: by bwz11 with SMTP id 11so3540060bwz.19
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 10:59:04 -0700 (PDT)
-Message-Id: <4a4af8c40fea084b9e0f469249dc316dc7836db3.1285544496.git.chunkeey@googlemail.com>
-In-Reply-To: <cover.1285544496.git.chunkeey@googlemail.com>
-References: <cover.1285544496.git.chunkeey@googlemail.com>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Sun, 26 Sep 2010 22:49:34 +0200
-Subject: [PATCH 4/6] carl9170: fix tx_ampdu_upload counter
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
+Received: from mx1.redhat.com ([209.132.183.28]:35879 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755074Ab0IMMqk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Sep 2010 08:46:40 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 14/14] iwlwifi: apply settings when finishing scan
+Date: Mon, 13 Sep 2010 14:46:45 +0200
+Message-Id: <1284382005-3246-15-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1284382005-3246-1-git-send-email-sgruszka@redhat.com>
+References: <1284382005-3246-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-tx_ampdu_upload was not decreased when an a-MPDU
-frame had to be kicked out from the tx_pending
-queues.
+Even is someone else complete scanning in mac80211, apply rxon and
+tx power settings if gets scan complete notification from hardware.
 
-This broke ampdu aggregation, because the scheduler
-waits until tx_ampdu_upload drops to zero, before
-making the next aggregate.
-
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Acked-by: Wey-Yi W Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/carl9170/main.c |   15 ++++++++++++++-
- 1 files changed, 14 insertions(+), 1 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-scan.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
-index d28b4ff..a8b0cec 100644
---- a/drivers/net/wireless/ath/carl9170/main.c
-+++ b/drivers/net/wireless/ath/carl9170/main.c
-@@ -230,8 +230,15 @@ static void carl9170_flush(struct ar9170 *ar, bool drop_queued)
- 		for (i = 0; i < ar->hw->queues; i++) {
- 			struct sk_buff *skb;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 65b7cb4..599573f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -573,7 +573,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
  
--			while ((skb = skb_dequeue(&ar->tx_pending[i])))
-+			while ((skb = skb_dequeue(&ar->tx_pending[i]))) {
-+				struct ieee80211_tx_info *info;
-+
-+				info = IEEE80211_SKB_CB(skb);
-+				if (info->flags & IEEE80211_TX_CTL_AMPDU)
-+					atomic_dec(&ar->tx_ampdu_upload);
-+
- 				carl9170_tx_status(ar, skb, false);
-+			}
- 		}
+ 	if (!test_and_clear_bit(STATUS_SCANNING, &priv->status)) {
+ 		IWL_DEBUG_SCAN(priv, "Scan already completed.\n");
+-		goto out;
++		goto out_settings;
  	}
  
-@@ -1462,6 +1469,7 @@ static void carl9170_op_sta_notify(struct ieee80211_hw *hw,
- 			skb_queue_walk_safe(&ar->tx_pending[i], skb, tmp) {
- 				struct _carl9170_tx_superframe *super;
- 				struct ieee80211_hdr *hdr;
-+				struct ieee80211_tx_info *info;
+ 	if (priv->is_internal_short_scan && !aborted) {
+@@ -599,6 +599,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+ out_complete:
+ 	iwl_complete_scan(priv, aborted);
  
- 				super = (void *) skb->data;
- 				hdr = (void *) super->frame_data;
-@@ -1470,6 +1478,11 @@ static void carl9170_op_sta_notify(struct ieee80211_hw *hw,
- 					continue;
- 
- 				__skb_unlink(skb, &ar->tx_pending[i]);
-+
-+				info = IEEE80211_SKB_CB(skb);
-+				if (info->flags & IEEE80211_TX_CTL_AMPDU)
-+					atomic_dec(&ar->tx_ampdu_upload);
-+
- 				carl9170_tx_status(ar, skb, false);
- 			}
- 			spin_unlock_bh(&ar->tx_pending[i].lock);
++out_settings:
+ 	/* Can we still talk to firmware ? */
+ 	if (!iwl_is_ready_rf(priv))
+ 		goto out;
 -- 
 1.7.1
 
