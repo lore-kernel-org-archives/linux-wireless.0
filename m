@@ -1,85 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:63156 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753276Ab0IVO5Q convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Sep 2010 10:57:16 -0400
-Received: by iwn5 with SMTP id 5so612263iwn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 07:57:16 -0700 (PDT)
+Received: from mail.atheros.com ([12.19.149.2]:29505 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754475Ab0IMHyF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Sep 2010 03:54:05 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 13 Sep 2010 00:53:59 -0700
+Date: Mon, 13 Sep 2010 13:29:21 +0530
+From: Senthil Balasubramanian <senthilkumar@atheros.com>
+To: <mcgrof@gmail.com>, Luis Rodriguez <Luis.Rodriguez@Atheros.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/1] compat-wireless: fix scripts/driver-select for ath9k
+Message-ID: <20100913075921.GA3370@kamboji.users.atheros.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTikbyQi7dJFrqJrVmr7kV==tZoLRPaufC6tJv743@mail.gmail.com>
-References: <AANLkTik3_o03=m0w8XM_B-YTQrR-ibkbtTBErXfcYwGG@mail.gmail.com>
-	<201009221336.14382.chunkeey@googlemail.com>
-	<AANLkTim3YQ4vNyM_OA4qc+mjGJiwYoHrLB=x1sp+R8vP@mail.gmail.com>
-	<201009221424.39949.chunkeey@googlemail.com>
-	<AANLkTikbyQi7dJFrqJrVmr7kV==tZoLRPaufC6tJv743@mail.gmail.com>
-Date: Wed, 22 Sep 2010 18:57:15 +0400
-Message-ID: <AANLkTi=OF0=Ox7xoGpygL87eoxDyEgDiALi4R-pSNe+V@mail.gmail.com>
-Subject: Re: p54spi (STLC4560) with Marvel XScale CPU (kernel 2.6.25.4)
-From: Max Filippov <jcmvbkbc@gmail.com>
-To: Alex Mihaylov <minimumlaw@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> This code from Sagrad:
->
->        SPI_IRQ(DISABLE);
->
->        // Turn the device Off and then On again.
->        SPIDRV_Pwr(FALSE);
->        SPIDRV_Pwr(TRUE);
->
->        // 1. Power up
->        // 2. Wait 240 ms.
->        Delay(480);
->
-> [skiped]
+As compat wireless now supports 2.6.24 or later, we don't need
+to apply this special patch for ath9k.
 
-If you look closer into the skipped part you'll see
+This addresses a script error when ath9k alone is selected.
 
-	// 13. Enable host interrupts (EHostIntEnable1 = KIrqReady |
-KIrqWrReady | KHwUpdate | KSwUpdate)
-	TempReg = (SPI_HOST_INT_READY | SPI_HOST_INT_UPDATE |
-SPI_HOST_INT_SW_UPDATE| SPI_HOST_INT_WR_READY);
-	SPIDRVWriteReg32(SPI_ADRS_HOST_INT_EN, TempReg);
+Signed-off-by: Senthil Balasubramanian <senthilkumar@atheros.com>
+---
+ scripts/driver-select |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-which actually enables interrupts, exactly as SPI_IRQ(ENABLE); does.
-
->
->       // 14. Wait for the READY interrupt (100 ms timeout).
->        // Loop while waiting for SPI device to respond with
-> interrupt, max timeout is WIFI_BOOT_TIMEOUT
->        for ( i = 0 ; i < WIFI_BOOT_TIMEOUT ; i++)
->        {
->                TempReg = SPIDRVReadReg32(SPI_ADRS_HOST_INTERRUPTS);
->                if( TempReg && SPI_HOST_INT_READY)
->                {
->                        // 15. Acknowledge the READY interrupt.
->                        SPIDRVWriteReg32(SPI_ADRS_HOST_INT_ACK,
-> SPI_HOST_INT_READY);
->                        // 16. Issue the SLEEP interrupt.
->                        SPIDRVWriteReg32(SPI_ADRS_ARM_INTERRUPTS,
-> SPI_ARM_INT_SLEEP);
->                        break;
->                }
->
->                Delay(1);
->        }
->
->        SPI_IRQ(ENABLE);
->
->        if (i == WIFI_BOOT_TIMEOUT)
->        {
->                ret = FALSE;
->        }
->        else
->        {
->                ret = TRUE;
->                SET_WIFI_ACTIVE();
->        }
->
-
+diff --git a/scripts/driver-select b/scripts/driver-select
+index 5f7d422..131bf5f 100755
+--- a/scripts/driver-select
++++ b/scripts/driver-select
+@@ -302,7 +302,6 @@ case $1 in
+ 		disable_bt_usb_ethernet_var
+ 		select_driver		CONFIG_ATH_COMMON
+ 		select_ath9k_driver
+-		patch -p1 < enable-older-kernels/enable-2.6.24.patch
+ 		;;
+ 	ar9170)
+ 		disable_bt_usb_ethernet_var
 -- 
-Max
+1.7.2.1
+
