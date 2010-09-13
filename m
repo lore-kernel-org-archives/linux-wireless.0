@@ -1,52 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:54652 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752639Ab0IWN42 (ORCPT
+Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:55472 "EHLO
+	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752774Ab0IMS62 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Sep 2010 09:56:28 -0400
-Message-ID: <4C9B5C83.4000407@candelatech.com>
-Date: Thu, 23 Sep 2010 06:56:19 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 13 Sep 2010 14:58:28 -0400
+Message-ID: <4C8E744A.2020906@lakedaemon.net>
+Date: Mon, 13 Sep 2010 14:58:18 -0400
+From: Jason <linuxdriverproject@lakedaemon.net>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Felix Fietkau <nbd@openwrt.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] ath9k, multiple stations, and AMPDUs
-References: <4C9841BA.4080700@candelatech.com> <4C98848C.70005@openwrt.org>	 <4C98A022.7020106@candelatech.com> <4C98A2C4.8060108@openwrt.org>	 <4C98EAA1.7050908@candelatech.com>  <4C98F2D8.8020602@openwrt.org>	 <1285097307.12764.11.camel@jlt3.sipsolutions.net>	 <4C990859.70709@openwrt.org> <4C99135A.3090103@candelatech.com>	 <4C99348F.2090504@openwrt.org> <4C99870C.20006@candelatech.com>	 <4C99BEFC.2060209@openwrt.org>  <4C9ADE7E.5070406@candelatech.com> <1285230831.3691.5.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1285230831.3691.5.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Greg KH <greg@kroah.com>
+CC: Mike Rapoport <mike@compulab.co.il>, devel@linuxdriverproject.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [ANN] Full-source Broadcom wireless driver for 11n chips
+References: <20100908150322.17dac9c3@nehalam>	<20100908225132.GA12490@kroah.com> <4C88F8CE.5090708@broadcom.com>	<4C8DD9F4.5090305@compulab.co.il> <20100913154227.GB24563@kroah.com>
+In-Reply-To: <20100913154227.GB24563@kroah.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/23/2010 01:33 AM, Johannes Berg wrote:
-> On Wed, 2010-09-22 at 21:58 -0700, Ben Greear wrote:
->
->
->> + * @addr2: local address (vif->sdata->dev->dev_addr).  Can be NULL for 'any'.
->>     *
->>     * This function must be called under RCU lock and the
->>     * resulting pointer is only valid under RCU lock as well.
->> @@ -2434,7 +2435,8 @@ struct ieee80211_sta *ieee80211_find_sta(struct ieee80211_vif *vif,
->>     * DO NOT USE THIS FUNCTION.
->>     */
->>    struct ieee80211_sta *ieee80211_find_sta_by_hw(struct ieee80211_hw *hw,
->> -                                              const u8 *addr);
->> +                                              const u8 *addr,
->> +                                              const u8 *localaddr);
->
-> That's not going to generate proper documentation. Also, it now probably
-> shouldn't be called "by_hw" any more.
+Greg,
 
-I can't think of a better name, and it still does take the hw struct,
-but if you have a suggestion you like better, I will use it.
+Greg KH wrote:
+> On Mon, Sep 13, 2010 at 09:59:48AM +0200, Mike Rapoport wrote:
+>> Hi Henry,
+>> 
+>> Henry Ptasinski wrote:
+>>> Broadcom would like to announce the initial release of a
+>>> fully-open Linux driver for it's latest generation of 11n
+>>> chipsets.  The driver, while still a work in progress, is
+>>> released as full source and uses the native mac80211 stack.   It
+>>> supports multiple current chips (BCM4313, BCM43224, BCM43225) as
+>>> well as providing a framework for supporting additional chips in
+>>> the future, including mac80211-aware embedded chips. The README
+>>> and TODO files included with the sources provide more details
+>>> about the current feature set, known issues, and plans for 
+>>> improving the driver.
+>>> 
+>>> The driver is currently available in staging-next git tree,
+>>> available at:
+>>> 
+>>> git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging-next-2.6.git
+>>> 
+>>> 
+>>> 
+>>> in the drivers/staging/brcm80211 directory.
+>> Are there any plans to support BCM4319 and BCM4329 SDIO chipsets?
+> 
+> I think those are supported by the broadcom driver in the android
+> kernel trees, right?
 
-I re-posted with the rest of the changes you suggested.  Seems to
-be working fine.
+I know the BCM4329 is, it's in the Nexus One.  
 
-Thanks,
-Ben
+> If so, yes, there are plans for merging them into the main kernel
+> tree, and any help you can provide would be appreciated.
+> 
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+I'm currently working through the checkpatch issues for staging/brcm80211/*, so far, I've done:
+
+ERROR: "foo * bar" should be "foo *bar"
+ERROR: open brace '{' following function dec...
+ERROR: return is not a function, paren...
+ERROR: do not use assignment in if condition
+ERROR: trailing statements should be on next line
+ERROR: that open brace { ... prev line
+ERROR: while should follow close brace '}'
+ERROR: do not initialise globals to 0 or NULL
+ERROR: do not initialise statics to 0 or NULL
+ERROR: Macros w/ complex values ... parenthesis
+ERROR: Macros w/ mult. statements ... do - while loop
+
+The only remaining errors are whitespace, then I'll move on to warnings.  
+
+Since this is my first large (arguably trivial ;-) ) patchset, do you want them one by one as I finish them, or the whole thing in one shot?
+
+btw, each "ERROR: ..." line above is one commit.
+
+thx,
+
+Jason.
