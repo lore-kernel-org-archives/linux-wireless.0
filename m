@@ -1,83 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45465 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757443Ab0IIXIj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Sep 2010 19:08:39 -0400
-To: Ben Greear <greearb@candelatech.com>
-Subject: Re: RFC:  Allow multiple STA connected to same AP.
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Date: Fri, 10 Sep 2010 01:08:38 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-In-Reply-To: <4C896747.6090905@candelatech.com>
-References: <4C8959BC.7040501@candelatech.com> <7fa0decef9a717c1562ee155bba78ce9@localhost> <4C896747.6090905@candelatech.com>
-Message-ID: <9b3afa510682d20c031f85f20345abd7@localhost>
+Received: from mga14.intel.com ([143.182.124.37]:8778 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752163Ab0IMOI0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Sep 2010 10:08:26 -0400
+Subject: Re: [PATCH 09/14] iwlwifi: assure we complete scan in scan_abort
+ and scan_check works
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Chatre, Reinette" <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1284382005-3246-10-git-send-email-sgruszka@redhat.com>
+References: <1284382005-3246-1-git-send-email-sgruszka@redhat.com>
+	 <1284382005-3246-10-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain
+Date: Mon, 13 Sep 2010 07:07:24 -0700
+Message-Id: <1284386844.23922.19.camel@wwguy-ubuntu>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-On Thu, 09 Sep 2010 16:01:27 -0700, Ben Greear <greearb@candelatech.com>
-wrote:
->>> +       /* If we have more than one virtual station, turn on
->> PROMISC_IN_BSS
->>> +        *  --Ben
->>> +        */
->>> +       list_for_each_entry_rcu(sdata,&local->interfaces, list) {
->>> +               if (!sdata->dev || !netif_running(sdata->dev))
->>> +                       continue;
->>> +
->>> +               if (sdata->vif.type == NL80211_IFTYPE_STATION) {
->>> +                       avifs++;
->>> +                       if (avifs>  1)
->>> +                               break;
->>> +               }
->>> +       }
->>> +       if (avifs>  1)
->>> +               new_flags |= FIF_PROMISC_IN_BSS;
->>> +
->>
->> This seems weird. Why do you need to be *promisc* within a given
->> BSS if you are multiple stations? You already have two MAC addrs
->> that you need to accept, so that should be fine, i.e. you don't
->> need to be promisc in the BSS. If ath9k needs to, it should be in
->> the driver. So NAK on this change for sure.
+On Mon, 2010-09-13 at 05:46 -0700, Stanislaw Gruszka wrote:
+> Assure we complete scan in mac80211 when we abort scanning (scan_abort
+> work) or scan timeout occurs (scan_check work). Currently
+> iwl_scan_cancel_timeout() procedure force scan finish in mac80211
+> at the end of timeout loop, so we can use it in proper work functions.
 > 
-> This seems to let the driver receive pkts for the 'real' mac on
-> wlan0 and also the arbitrary mac on the second STA interface.
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> ---
+>  drivers/net/wireless/iwlwifi/iwl-scan.c |   14 ++------------
+>  1 files changed, 2 insertions(+), 12 deletions(-)
 > 
-> If there is supposed to be some other way for the driver to
-> figure out it's supposed to go promisc, please let me know and
-> I'll try to debug it.
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+> index ce605e0..da037b2 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-scan.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+> @@ -490,18 +490,8 @@ static void iwl_bg_scan_check(struct work_struct *data)
+>  	struct iwl_priv *priv =
+>  	    container_of(data, struct iwl_priv, scan_check.work);
+>  
+> -	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+> -		return;
+> -
+>  	mutex_lock(&priv->mutex);
+> -	if (test_bit(STATUS_SCANNING, &priv->status) &&
+> -	    !test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
+> -		IWL_DEBUG_SCAN(priv, "Scan completion watchdog (%dms)\n",
+> -			       jiffies_to_msecs(IWL_SCAN_CHECK_WATCHDOG));
+> -
+> -		if (!test_bit(STATUS_EXIT_PENDING, &priv->status))
+> -			iwl_send_scan_abort(priv);
+> -	}
+> +	iwl_scan_cancel_timeout(priv, 200);
+>  	mutex_unlock(&priv->mutex);
+>  }
+>  
+> @@ -560,7 +550,7 @@ static void iwl_bg_abort_scan(struct work_struct *work)
+>  	cancel_delayed_work(&priv->scan_check);
+>  
+>  	mutex_lock(&priv->mutex);
+> -	iwl_do_scan_abort(priv);
+> +	iwl_scan_cancel_timeout(priv, 200);
+>  	mutex_unlock(&priv->mutex);
+>  }
+>  
 
-But you can do the exact same thing in the driver. I just think
-it doesn't belong into mac80211, since mac80211 doesn't need you
-to be promisc, it just needs you to receive frames for those *two*
-addresses that you've added. And you already know about those,
-since you were notified about the interfaces going up and down
-and associating etc.
-
->>> @@ -440,7 +440,7 @@ int sta_info_insert_rcu(struct sta_info *sta)
->>> __acquires(RCU)
->>>
->>>           spin_lock_irqsave(&local->sta_lock, flags);
->>>           /* check if STA exists already */
->>> -       if (sta_info_get_bss(sdata, sta->sta.addr)) {
->>> +       if (sta_info_get(sdata, sta->sta.addr)) {
->>
->> I don't understand this change. These functions are the same
->> if sdata is in managed mode.
-> 
-> The _bss method returns anything in same bss or with same
-> sdata.  The sta_info_get only returns if MAC and sdata match.
-> 
-> W/out this change, the second STA fails this check because it
-> has same BSS as the first one.
-
-I'll have to look at this, I may misremember the way this works
-internally, but this change will certainly break some things
-since it'd allow adding the same STA to multiple VLANs that sit
-on top of the same BSS.
-
-johannes
