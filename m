@@ -1,39 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40148 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752064Ab0IUMYo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Sep 2010 08:24:44 -0400
-Subject: Re: [ath9k-devel] ath9k, multiple stations, and AMPDUs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Ben Greear <greearb@candelatech.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4C98A2C4.8060108@openwrt.org>
-References: <4C9841BA.4080700@candelatech.com> <4C98848C.70005@openwrt.org>
-	 <4C98A022.7020106@candelatech.com>  <4C98A2C4.8060108@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 21 Sep 2010 14:24:40 +0200
-Message-ID: <1285071880.12764.1.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:43360 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751273Ab0IMR72 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Sep 2010 13:59:28 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Mon, 13 Sep 2010 10:59:22 -0700
+Date: Mon, 13 Sep 2010 10:59:27 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"mcgrof@infradead.org" <mcgrof@infradead.org>
+Subject: Re: [PATCH 2/2] compat: backport printk_once
+Message-ID: <20100913175927.GL1824@tux>
+References: <1284221999-22521-1-git-send-email-hauke@hauke-m.de>
+ <1284221999-22521-2-git-send-email-hauke@hauke-m.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1284221999-22521-2-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-09-21 at 14:19 +0200, Felix Fietkau wrote:
+On Sat, Sep 11, 2010 at 09:19:59AM -0700, Hauke Mehrtens wrote:
+> This is needed by brcm80211.
 
-> To keep track of the Block ACK window, it needs to look up the TID, for
-> which it needs a STA pointer. At that level, the driver typically
-> doesn't have access to the vif.
-> 
-> It might be possible to fix this by adding another sta lookup helper
-> function in mac80211 that takes another address argument for the BSSID,
-> so that it can get the sta entry for the correct vif. I don't know if
-> Johannes wants something like that though.
+Applied both, thanks!
 
-Seems simple enough, and if it fixes things ... for iwlwifi I fixed the
-driver to keep track of the vif properly, though more work it does make
-a lot more things better than just this.
-
-johannes
-
+  Luis
