@@ -1,174 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:22625 "EHLO mail.atheros.com"
+Received: from mx1.redhat.com ([209.132.183.28]:14157 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754484Ab0IOSbS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 14:31:18 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Sep 2010 11:31:12 -0700
-Date: Wed, 15 Sep 2010 11:31:16 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Matt Smith <Matt.Smith@Atheros.com>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	Bennyam Malavazi <Bennyam.Malavazi@Atheros.com>,
-	Amod Bodas <Amod.Bodas@atheros.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3 00/11] ath9k / mac80211: power save fixes
-Message-ID: <20100915183116.GB1678@tux>
-References: <1284507624-18176-1-git-send-email-lrodriguez@atheros.com>
- <AANLkTinNA9Xb-bq17V_PcyLujaJM-mOWimvQzWMRKpk6@mail.gmail.com>
- <10161E8E-4F96-4B3B-B5D3-27DF9236BF83@Atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <10161E8E-4F96-4B3B-B5D3-27DF9236BF83@Atheros.com>
+	id S1755219Ab0IMMqr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Sep 2010 08:46:47 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 13/14] iwlwifi: use IWL_DEBUG_SCAN for debug scanning
+Date: Mon, 13 Sep 2010 14:46:44 +0200
+Message-Id: <1284382005-3246-14-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1284382005-3246-1-git-send-email-sgruszka@redhat.com>
+References: <1284382005-3246-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Taking this thread public for further review and comments.
+Replace IWL_DEBUG_{INFO,HC,RC} to IWL_DEBUG_SCAN in iwl-scan.c file. Add
+some more IWL_DEBUG_SCAN messages. This will allow to fully debug
+scanning using only IWL_DL_SCAN flag.
 
-On Wed, Sep 15, 2010 at 06:33:19AM -0700, Matt Smith wrote:
-> Luis,
-> 
-> Not sure what is meant by "block them".... Are you saying should we
-> pause the reordering buffer timeout? 
+Also start one message sentence with capital letter, since that
+convention in iwl-scan.c file.
+  
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-scan.c |   31 +++++++++++++++++++------------
+ 1 files changed, 19 insertions(+), 12 deletions(-)
 
-Yes, that or we simply cancel our existing BAs and reject future
-ones until we get back to the home channel. I wonder what is easier
-and less bug prone.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 26dd8f3..65b7cb4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -85,7 +85,7 @@ static int iwl_send_scan_abort(struct iwl_priv *priv)
+ 		 * can occur if we send the scan abort before we
+ 		 * the microcode has notified us that a scan is
+ 		 * completed. */
+-		IWL_DEBUG_INFO(priv, "SCAN_ABORT ret %d.\n", pkt->u.status);
++		IWL_DEBUG_SCAN(priv, "SCAN_ABORT ret %d.\n", pkt->u.status);
+ 		ret = -EIO;
+ 	}
+ 
+@@ -192,7 +192,7 @@ static void iwl_rx_reply_scan(struct iwl_priv *priv,
+ 	struct iwl_scanreq_notification *notif =
+ 	    (struct iwl_scanreq_notification *)pkt->u.raw;
+ 
+-	IWL_DEBUG_RX(priv, "Scan request status = 0x%x\n", notif->status);
++	IWL_DEBUG_SCAN(priv, "Scan request status = 0x%x\n", notif->status);
+ #endif
+ }
+ 
+@@ -251,7 +251,7 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
+ 	/* The HW is no longer scanning */
+ 	clear_bit(STATUS_SCAN_HW, &priv->status);
+ 
+-	IWL_DEBUG_INFO(priv, "Scan on %sGHz took %dms\n",
++	IWL_DEBUG_SCAN(priv, "Scan on %sGHz took %dms\n",
+ 		       (priv->scan_band == IEEE80211_BAND_2GHZ) ? "2.4" : "5.2",
+ 		       jiffies_to_msecs(elapsed_jiffies
+ 					(priv->scan_start, jiffies)));
+@@ -362,22 +362,22 @@ static int __must_check iwl_scan_initiate(struct iwl_priv *priv,
+ 	cancel_delayed_work(&priv->scan_check);
+ 
+ 	if (!iwl_is_ready_rf(priv)) {
+-		IWL_WARN(priv, "request scan called when driver not ready.\n");
++		IWL_WARN(priv, "Request scan called when driver not ready.\n");
+ 		return -EIO;
+ 	}
+ 
+ 	if (test_bit(STATUS_SCAN_HW, &priv->status)) {
+-		IWL_DEBUG_INFO(priv,
++		IWL_DEBUG_SCAN(priv,
+ 			"Multiple concurrent scan requests in parallel.\n");
+ 		return -EBUSY;
+ 	}
+ 
+ 	if (test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
+-		IWL_DEBUG_HC(priv, "Scan request while abort pending.\n");
++		IWL_DEBUG_SCAN(priv, "Scan request while abort pending.\n");
+ 		return -EBUSY;
+ 	}
+ 
+-	IWL_DEBUG_INFO(priv, "Starting %sscan...\n",
++	IWL_DEBUG_SCAN(priv, "Starting %sscan...\n",
+ 			internal ? "internal short " : "");
+ 
+ 	set_bit(STATUS_SCANNING, &priv->status);
+@@ -427,9 +427,10 @@ int iwl_mac_hw_scan(struct ieee80211_hw *hw,
+ 	 * If an internal scan is in progress, just set
+ 	 * up the scan_request as per above.
+ 	 */
+-	if (priv->is_internal_short_scan)
++	if (priv->is_internal_short_scan) {
++		IWL_DEBUG_SCAN(priv, "SCAN request during internal scan\n");
+ 		ret = 0;
+-	else
++	} else
+ 		ret = iwl_scan_initiate(priv, vif, false,
+ 					req->channels[0]->band);
+ 
+@@ -456,6 +457,8 @@ static void iwl_bg_start_internal_scan(struct work_struct *work)
+ 	struct iwl_priv *priv =
+ 		container_of(work, struct iwl_priv, start_internal_scan);
+ 
++	IWL_DEBUG_SCAN(priv, "Start internal scan\n");
++
+ 	mutex_lock(&priv->mutex);
+ 
+ 	if (priv->is_internal_short_scan == true) {
+@@ -479,6 +482,8 @@ static void iwl_bg_scan_check(struct work_struct *data)
+ 	struct iwl_priv *priv =
+ 	    container_of(data, struct iwl_priv, scan_check.work);
+ 
++	IWL_DEBUG_SCAN(priv, "Scan check work\n");
++
+ 	/* Since we are here firmware does not finish scan and
+ 	 * most likely is in bad shape, so we don't bother to
+ 	 * send abort command, just force scan complete to mac80211 */
+@@ -539,6 +544,8 @@ static void iwl_bg_abort_scan(struct work_struct *work)
+ {
+ 	struct iwl_priv *priv = container_of(work, struct iwl_priv, abort_scan);
+ 
++	IWL_DEBUG_SCAN(priv, "Abort scan work\n");
++
+ 	/* We keep scan_check work queued in case when firmware will not
+ 	 * report back scan completed notification */
+ 	mutex_lock(&priv->mutex);
+@@ -553,7 +560,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+ 	bool aborted;
+ 	struct iwl_rxon_context *ctx;
+ 
+-	IWL_DEBUG_INFO(priv, "Completed %sscan.\n",
++	IWL_DEBUG_SCAN(priv, "Completed %sscan.\n",
+ 		       priv->is_internal_short_scan ? "internal short " : "");
+ 
+ 	cancel_delayed_work(&priv->scan_check);
+@@ -562,10 +569,10 @@ static void iwl_bg_scan_completed(struct work_struct *work)
+ 
+ 	aborted = test_and_clear_bit(STATUS_SCAN_ABORTING, &priv->status);
+ 	if (aborted)
+-		IWL_DEBUG_INFO(priv, "Aborted scan completed.\n");
++		IWL_DEBUG_SCAN(priv, "Aborted scan completed.\n");
+ 
+ 	if (!test_and_clear_bit(STATUS_SCANNING, &priv->status)) {
+-		IWL_DEBUG_INFO(priv, "Scan already completed.\n");
++		IWL_DEBUG_SCAN(priv, "Scan already completed.\n");
+ 		goto out;
+ 	}
+ 
+-- 
+1.7.1
 
-> I think we should, as there could be some holes in the
-> reordering buffer and it's not fair to time them out and drop
-> the packet if we go off-channel.
-
-This was what I was thinking, just was not sure what approach
-would be more suitable, either to pause the timers for reorderign
-or simply stopping BAs completely until we come back to the
-home channel.
-
-> That said, most scans will wait until the medium is idle (~ 200ms),
-> so we shouldn't have any holes in the reordering buffer at that time.
-
-In mac80211 right now we do not wait until the medium is idle.
-We were reviewing what we should do at the wireless summit in San Francisco
-last week. Sam Leffler noted he thought it would be good we simply
-defer going offchannel until the medium is idle but my concern is
-if we have a constant stream of data, how long would we defer scanning,
-and what decision do we use to start scan despite a data stream being
-transmitted. There was also some suggestion of using a force scan request
-which would not wait for the medium to be idle, this would be more
-instrusive.
-
-I do not believe we had any consenus on the approach we should take,
-unless others were able to pick something up that I did not. So I'd like
-to take the opprortunity now that you mentioned it to talk about it with
-you as well. Any recommendations for best strategy for this?
-
-I should note what we end up deciding for both aggregation and scan logic
-would also affect how we deal with WiFi direct offchannel operation (ah,
-we can talk about WiFi Direct publicly now :))
-
-  Luis
-
-> Matt
-> 
-> On Sep 14, 2010, at 5:09 PM, Luis R. Rodriguez wrote:
-> 
-> > Matt,
-> > 
-> > mac80211 uses a queue to stuff MPDUs from an AMPDUs since we can
-> > receive them out of order. We have a timer on these and nuke 'em after
-> > it expires. When we're associated and we hit a scan trigger due to
-> > RSSI or a desire to go offchannel (WiFi Direct), what do you recommend
-> > we do when we go off channel? Should we stop all aggregation sessions
-> > and block them until back on our home channel?
-> > 
-> >  Luis
-> > 
-> > ---------- Forwarded message ----------
-> > From: Luis R. Rodriguez <lrodriguez@atheros.com>
-> > Date: Tue, Sep 14, 2010 at 4:40 PM
-> > Subject: [PATCH v3 00/11] ath9k / mac80211: power save fixes
-> > To: linville@tuxdriver.com
-> > Cc: linux-wireless@vger.kernel.org, "Luis R. Rodriguez" <lrodriguez@atheros.com>
-> > 
-> > 
-> > I reordered the patches, enhanced the commit log entries and
-> > and added a new patch to address ANI / the TX monitor, figured I'd just
-> > send a new series just to be clear.
-> > 
-> > My next peet peeve is this:
-> > 
-> > Sep 14 16:36:02 tux kernel: [ 1369.000106] ath: Set channel: 5220 MHz
-> > Sep 14 16:36:02 tux kernel: [ 1369.000116] ath: tx chmask: 3, rx chmask: 3
-> > Sep 14 16:36:02 tux kernel: [ 1369.000240] ath: (2412 MHz) -> (5220
-> > MHz), conf_is_ht40: 0
-> > Sep 14 16:36:02 tux kernel: [ 1369.063449] ath: Set channel: 2412 MHz
-> > Sep 14 16:36:03 tux kernel: [ 1369.063459] ath: tx chmask: 3, rx chmask: 3
-> > Sep 14 16:36:03 tux kernel: [ 1369.063584] ath: (5220 MHz) -> (2412
-> > MHz), conf_is_ht40: 0
-> > Sep 14 16:36:03 tux kernel: [ 1369.360111] ath: Set channel: 5240 MHz
-> > Sep 14 16:36:03 tux kernel: [ 1369.360120] ath: tx chmask: 3, rx chmask: 3
-> > Sep 14 16:36:03 tux kernel: [ 1369.360245] ath: (2412 MHz) -> (5240
-> > MHz), conf_is_ht40: 0
-> > Sep 14 16:36:03 tux kernel: [ 1369.422736] ath: Set channel: 2412 MHz
-> > Sep 14 16:36:03 tux kernel: [ 1369.422745] ath: tx chmask: 3, rx chmask: 3
-> > Sep 14 16:36:03 tux kernel: [ 1369.422867] ath: (5240 MHz) -> (2412
-> > MHz), conf_is_ht40: 0
-> > Sep 14 16:36:03 tux kernel: [ 1369.564685] __ratelimit: 81 callbacks suppressed
-> > Sep 14 16:36:03 tux kernel: [ 1369.564692] phy0: release an RX reorder
-> > frame due to timeout on earlier frames
-> > Sep 14 16:36:03 tux kernel: [ 1369.564698] phy0: release an RX reorder
-> > frame due to timeout on earlier frames
-> > Sep 14 16:36:03 tux kernel: [ 1369.564703] phy0: release an RX reorder
-> > frame due to timeout on earlier frames
-> > Sep 14 16:36:03 tux kernel: [ 1369.564708] phy0: release an RX reorder
-> > frame due to timeout on earlier frames
-> > Sep 14 16:36:03 tux kernel: [ 1369.564713] phy0: release an RX reorder
-> > frame due to timeout on earlier frames
-> > Sep 14 16:36:03 tux kernel: [ 1369.564718] phy0: release an RX reorder
-> > frame due to timeout on earlier frames
-> > Sep 14 16:36:03 tux kernel: [ 1369.564723] phy0: release an RX reorder
-> > frame due to timeout on earlier frames
-> > Sep 14 16:36:03 tux kernel: [ 1369.564728] phy0: release an RX reorder
-> > frame due to timeout on earlier frames
-> > Sep 14 16:36:03 tux kernel: [ 1369.564733] phy0: release an RX reorder
-> > frame due to timeout on earlier frames
-> > Sep 14 16:36:03 tux kernel: [ 1369.564738] phy0: release an RX reorder
-> > frame due to timeout on earlier frames
-> > Sep 14 16:36:03 tux kernel: [ 1369.720129] ath: Set channel: 5260 MHz
-> > Sep 14 16:36:03 tux kernel: [ 1369.720139] ath: tx chmask: 3, rx chmask: 3
-> > Sep 14 16:36:03 tux kernel: [ 1369.720263] ath: (2412 MHz) -> (5260
-> > MHz), conf_is_ht40: 0
-> > 
-> > My guess is we are not suspending / stopping the aggregations sessions /
-> > or simply extending the timer when going off channel.
-> > 
-> > Luis R. Rodriguez (10):
-> >  ath9k: fix power save race conditions
-> >  ath9k: fix regression on beacon loss after bgscan
-> >  ath9k: fix enabling ANI / tx monitor after bg scan
-> >  mac80211: add helper for reseting the connection monitor
-> >  mac80211: reset probe send counter upon connection timer reset
-> >  mac80211: reset connection idle when going offchannel
-> >  mac80211: make the beacon monitor available externally
-> >  mac80211: disable beacon monitor while going offchannel
-> >  mac80211: send last 3/5 probe requests as unicast
-> >  ath9k: fix regression which disabled ps on ath9k
-> > 
-> > Senthil Balasubramanian (1):
-> >  ath9k: fix regression which prevents chip sleep after CAB data
-> > 
-> >  drivers/net/wireless/ath/ath9k/ath9k.h |    1 -
-> >  drivers/net/wireless/ath/ath9k/init.c  |    3 +-
-> >  drivers/net/wireless/ath/ath9k/main.c  |   15 ++++++-----
-> >  drivers/net/wireless/ath/ath9k/recv.c  |    9 ++++--
-> >  net/mac80211/ieee80211_i.h             |    2 +
-> >  net/mac80211/mlme.c                    |   40 +++++++++++++++++++++++--------
-> >  net/mac80211/offchannel.c              |    7 +++++
-> >  7 files changed, 54 insertions(+), 23 deletions(-)
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
