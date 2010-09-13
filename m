@@ -1,8 +1,8 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46663 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:3904 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932101Ab0ICMBq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Sep 2010 08:01:46 -0400
+	id S1753417Ab0IMMqQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Sep 2010 08:46:16 -0400
 From: Stanislaw Gruszka <sgruszka@redhat.com>
 To: Johannes Berg <johannes@sipsolutions.net>,
 	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
@@ -10,132 +10,53 @@ To: Johannes Berg <johannes@sipsolutions.net>,
 	"John W. Linville" <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org,
 	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 10/13] iwlwifi: force scan complete after timeout
-Date: Fri,  3 Sep 2010 13:57:33 +0200
-Message-Id: <1283515056-11523-11-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1283515056-11523-1-git-send-email-sgruszka@redhat.com>
-References: <1283515056-11523-1-git-send-email-sgruszka@redhat.com>
+Subject: [PATCH 0/14 v4] iwlwifi: rewrite iwl-scan.c to avoid race conditions
+Date: Mon, 13 Sep 2010 14:46:31 +0200
+Message-Id: <1284382005-3246-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If we do not get notification from hardware about scan complete after
-timeout do mac80211 scan completion anyway. This assure we end scan
-in case of firmware hung.
+Avoid iwlwifi hardware scanning race conditions
+that may lead to not call ieee80211_scan_completed() (what in
+consequences gives "WARNING: at net/wireless/core.c:614
+wdev_cleanup_work+0xb7/0xf0"), or call iee80211_scan_completed() more
+then once (what gives " WARNING: at net/mac80211/scan.c:312
+ieee80211_scan_completed+0x5f/0x1f1").
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |   15 +++------------
- drivers/net/wireless/iwlwifi/iwl-scan.c |   20 +++++++++++++++-----
- 2 files changed, 18 insertions(+), 17 deletions(-)
+First problem (warning in wdev_cleanup_work) make any further scan
+request from cfg80211 are ignored by mac80211 with EBUSY error,
+hence NetworkManager can not perform successful scan and not allow
+to establish a new connection. So after suspend/resume (but maybe
+not only then) user is not able to connect to wireless network again.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 87a2e40..7c1819f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2041,7 +2041,6 @@ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
- {
- 	struct iwl_priv *priv = hw->priv;
- 	struct iwl_rxon_context *ctx = iwl_rxon_ctx_from_vif(vif);
--	bool scan_completed = false;
- 
- 	IWL_DEBUG_MAC80211(priv, "enter\n");
- 
-@@ -2050,15 +2049,10 @@ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
- 	WARN_ON(ctx->vif != vif);
- 	ctx->vif = NULL;
- 
--	iwl_scan_cancel_timeout(priv, 100);
-+	if (priv->scan_vif == vif)
-+		iwl_scan_cancel_timeout(priv, 100);
- 	iwl_set_mode(priv, vif);
- 
--	if (priv->scan_vif == vif) {
--		scan_completed = true;
--		priv->scan_vif = NULL;
--		priv->scan_request = NULL;
--	}
--
- 	/*
- 	 * When removing the IBSS interface, overwrite the
- 	 * BT traffic load with the stored one from the last
-@@ -2072,9 +2066,6 @@ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
- 	memset(priv->bssid, 0, ETH_ALEN);
- 	mutex_unlock(&priv->mutex);
- 
--	if (scan_completed)
--		ieee80211_scan_completed(priv->hw, true);
--
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
- 
- }
-@@ -2255,6 +2246,7 @@ void iwl_mac_reset_tsf(struct ieee80211_hw *hw)
- 
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
-+	iwl_scan_cancel_timeout(priv, 100);
- 	if (!iwl_is_ready_rf(priv)) {
- 		IWL_DEBUG_MAC80211(priv, "leave - not ready\n");
- 		mutex_unlock(&priv->mutex);
-@@ -2264,7 +2256,6 @@ void iwl_mac_reset_tsf(struct ieee80211_hw *hw)
- 	/* we are restarting association process
- 	 * clear RXON_FILTER_ASSOC_MSK bit
- 	 */
--	iwl_scan_cancel_timeout(priv, 100);
- 	ctx->staging.filter_flags &= ~RXON_FILTER_ASSOC_MSK;
- 	iwlcore_commit_rxon(priv, ctx);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index f79fb3e..fcc826e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -106,6 +106,15 @@ static void iwl_complete_scan(struct iwl_priv *priv, bool aborted)
- 	priv->scan_request = NULL;
- }
- 
-+static void iwl_force_scan_end(struct iwl_priv *priv)
-+{
-+	IWL_DEBUG_SCAN(priv, "Forcing scan end\n");
-+	clear_bit(STATUS_SCANNING, &priv->status);
-+	clear_bit(STATUS_SCAN_HW, &priv->status);
-+	clear_bit(STATUS_SCAN_ABORTING, &priv->status);
-+	iwl_complete_scan(priv, true);
-+}
-+
- static void iwl_do_scan_abort(struct iwl_priv *priv)
- {
- 	int ret;
-@@ -125,10 +134,7 @@ static void iwl_do_scan_abort(struct iwl_priv *priv)
- 	ret = iwl_send_scan_abort(priv);
- 	if (ret) {
- 		IWL_DEBUG_SCAN(priv, "Send scan abort failed %d\n", ret);
--		clear_bit(STATUS_SCANNING, &priv->status);
--		clear_bit(STATUS_SCAN_HW, &priv->status);
--		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
--		iwl_complete_scan(priv, true);
-+		iwl_force_scan_end(priv);
- 	} else
- 		IWL_DEBUG_SCAN(priv, "Sucessfully send scan abort\n");
- }
-@@ -151,6 +157,7 @@ EXPORT_SYMBOL(iwl_scan_cancel);
-  */
- int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
- {
-+	int ret;
- 	unsigned long timeout = jiffies + msecs_to_jiffies(ms);
- 
- 	lockdep_assert_held(&priv->mutex);
-@@ -165,7 +172,10 @@ int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
- 		msleep(20);
- 	}
- 
--	return test_bit(STATUS_SCAN_HW, &priv->status);
-+	ret = test_bit(STATUS_SCAN_HW, &priv->status);
-+	if (ret)
-+		iwl_force_scan_end(priv);
-+	return ret;
- }
- EXPORT_SYMBOL(iwl_scan_cancel_timeout);
- 
--- 
-1.7.1
+We can not rely on that the commands (start and abort scan) are
+successful. Even if they are successfully send to the hardware, we can
+not get back notification from firmware (i.e. firmware hung or was
+reseted), or we can get notification when we actually perform abort
+scan in driver code or after that.
 
+To assure we call ieee80211_scan_completed() only once when scan
+was started we use SCAN_SCANNING bit. Code path, which first clear
+STATUS_SCANNING bit will call ieee80211_scan_completed().
+We do this in many cases, in scan complete notification, scan
+abort, device down, etc. Each time we check SCANNING bit.
+
+Tested on 3945, 4965 and 5300 adapters. Tested normal work
+functionality and doing scan stress testing using scripts:
+http://people.redhat.com/sgruszka/misc/test_wifi_scan_reboot.sh
+http://people.redhat.com/sgruszka/misc/test_wifi_scan_updown.sh
+
+v1 -> v2:
+- fix not cleared STATUS_SCAN_HW bit in patch 2
+- merged patch 7 and 8
+- add 3 new patches
+
+v2 -> v3:
+- merged patch 5 and 14
+- merged patch 2 and 16
+- add bugzilla reference into 3 most important patches
+- not use cancel_delayed_work_sync in work function (patch 10)
+
+v3 -> v4:
+- add additional changelog comments in patch 9 and 13 and Wey acks
+  in other patches
