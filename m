@@ -1,50 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:47632 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752204Ab0INWPi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 18:15:38 -0400
-Received: by iwn5 with SMTP id 5so6410800iwn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Sep 2010 15:15:38 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87mxrk5610.fsf@purkki.adurom.net>
-References: <1284474071-8404-1-git-send-email-lrodriguez@atheros.com> <87mxrk5610.fsf@purkki.adurom.net>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Tue, 14 Sep 2010 15:15:18 -0700
-Message-ID: <AANLkTikQx3RZcWPEjktBb0gkTLtMfCxXMma6h=9u+UBr@mail.gmail.com>
-Subject: Re: [PATCH 08/10] mac80211: send last 3/5 probe requests as unicast
-To: Kalle Valo <kvalo@adurom.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Paul Stewart <pstew@google.com>,
-	Amod Bodas <amod.bodas@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:34490 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754934Ab0IMMq3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Sep 2010 08:46:29 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 08/14] iwlwifi: force scan complete after timeout
+Date: Mon, 13 Sep 2010 14:46:39 +0200
+Message-Id: <1284382005-3246-9-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1284382005-3246-1-git-send-email-sgruszka@redhat.com>
+References: <1284382005-3246-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 14, 2010 at 3:12 PM, Kalle Valo <kvalo@adurom.com> wrote:
-> "Luis R. Rodriguez" <lrodriguez@atheros.com> writes:
->
->> We need to do this since the beacon monitor does not
->> push back the connection monitor by design so even if we
->> are getting beacons from these type of APs our connection
->> monitor currently relies heavily on the way the probe
->> requests are received on the AP. An example of an AP
->> affected by this is the Nexus One, but this has also been
->> observed with random APs.
->>
->> We can probably optimize this later by using null funcs
->> instead of probe requests.
->
-> Beginning of this year I sent patches to use null funcs. Unfortunately
-> I had to drop them due to time constraints.
->
-> Also a major power consumption imporovement from using null func
-> frames is that we don't have to trigger dynamic power save timer
-> during the poll. Just send the frame with PSM bit set, wait for ack
-> and go immeaditely back to sleep. So instead of having radios enabled
-> for example 100 ms per frame, we can do it in just 1 ms.
+If we do not get notification from hardware about scan complete, after
+timeout do mac80211 scan completion anyway. This assure we end scan
+in case of firmware hung.
 
-Neat, do you have those patches dug up in a directory somewhere or
-should I dig the archives?
+Patch fix one of the causes of wdev_cleanup_work warning reported at
+https://bugzilla.redhat.com/show_bug.cgi?id=593566
 
-  Luis
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Acked-by: Wey-Yi W Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |   15 +++------------
+ drivers/net/wireless/iwlwifi/iwl-scan.c |   20 +++++++++++++++-----
+ 2 files changed, 18 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 87a2e40..7c1819f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2041,7 +2041,6 @@ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
+ {
+ 	struct iwl_priv *priv = hw->priv;
+ 	struct iwl_rxon_context *ctx = iwl_rxon_ctx_from_vif(vif);
+-	bool scan_completed = false;
+ 
+ 	IWL_DEBUG_MAC80211(priv, "enter\n");
+ 
+@@ -2050,15 +2049,10 @@ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
+ 	WARN_ON(ctx->vif != vif);
+ 	ctx->vif = NULL;
+ 
+-	iwl_scan_cancel_timeout(priv, 100);
++	if (priv->scan_vif == vif)
++		iwl_scan_cancel_timeout(priv, 100);
+ 	iwl_set_mode(priv, vif);
+ 
+-	if (priv->scan_vif == vif) {
+-		scan_completed = true;
+-		priv->scan_vif = NULL;
+-		priv->scan_request = NULL;
+-	}
+-
+ 	/*
+ 	 * When removing the IBSS interface, overwrite the
+ 	 * BT traffic load with the stored one from the last
+@@ -2072,9 +2066,6 @@ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
+ 	memset(priv->bssid, 0, ETH_ALEN);
+ 	mutex_unlock(&priv->mutex);
+ 
+-	if (scan_completed)
+-		ieee80211_scan_completed(priv->hw, true);
+-
+ 	IWL_DEBUG_MAC80211(priv, "leave\n");
+ 
+ }
+@@ -2255,6 +2246,7 @@ void iwl_mac_reset_tsf(struct ieee80211_hw *hw)
+ 
+ 	spin_unlock_irqrestore(&priv->lock, flags);
+ 
++	iwl_scan_cancel_timeout(priv, 100);
+ 	if (!iwl_is_ready_rf(priv)) {
+ 		IWL_DEBUG_MAC80211(priv, "leave - not ready\n");
+ 		mutex_unlock(&priv->mutex);
+@@ -2264,7 +2256,6 @@ void iwl_mac_reset_tsf(struct ieee80211_hw *hw)
+ 	/* we are restarting association process
+ 	 * clear RXON_FILTER_ASSOC_MSK bit
+ 	 */
+-	iwl_scan_cancel_timeout(priv, 100);
+ 	ctx->staging.filter_flags &= ~RXON_FILTER_ASSOC_MSK;
+ 	iwlcore_commit_rxon(priv, ctx);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index e65a98d..ce605e0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -106,6 +106,15 @@ static void iwl_complete_scan(struct iwl_priv *priv, bool aborted)
+ 	priv->scan_request = NULL;
+ }
+ 
++static void iwl_force_scan_end(struct iwl_priv *priv)
++{
++	IWL_DEBUG_SCAN(priv, "Forcing scan end\n");
++	clear_bit(STATUS_SCANNING, &priv->status);
++	clear_bit(STATUS_SCAN_HW, &priv->status);
++	clear_bit(STATUS_SCAN_ABORTING, &priv->status);
++	iwl_complete_scan(priv, true);
++}
++
+ static void iwl_do_scan_abort(struct iwl_priv *priv)
+ {
+ 	int ret;
+@@ -125,10 +134,7 @@ static void iwl_do_scan_abort(struct iwl_priv *priv)
+ 	ret = iwl_send_scan_abort(priv);
+ 	if (ret) {
+ 		IWL_DEBUG_SCAN(priv, "Send scan abort failed %d\n", ret);
+-		clear_bit(STATUS_SCANNING, &priv->status);
+-		clear_bit(STATUS_SCAN_HW, &priv->status);
+-		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
+-		iwl_complete_scan(priv, true);
++		iwl_force_scan_end(priv);
+ 	} else
+ 		IWL_DEBUG_SCAN(priv, "Sucessfully send scan abort\n");
+ }
+@@ -151,6 +157,7 @@ EXPORT_SYMBOL(iwl_scan_cancel);
+  */
+ int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
+ {
++	int ret;
+ 	unsigned long timeout = jiffies + msecs_to_jiffies(ms);
+ 
+ 	lockdep_assert_held(&priv->mutex);
+@@ -165,7 +172,10 @@ int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
+ 		msleep(20);
+ 	}
+ 
+-	return test_bit(STATUS_SCAN_HW, &priv->status);
++	ret = test_bit(STATUS_SCAN_HW, &priv->status);
++	if (ret)
++		iwl_force_scan_end(priv);
++	return ret;
+ }
+ EXPORT_SYMBOL(iwl_scan_cancel_timeout);
+ 
+-- 
+1.7.1
+
