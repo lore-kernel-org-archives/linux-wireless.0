@@ -1,83 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:33791 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753883Ab0IKQTN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Sep 2010 12:19:13 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 7/8] compat-wireless: remove special handling for CONFIG_CFG80211_WEXT
-Date: Sat, 11 Sep 2010 18:18:32 +0200
-Message-Id: <1284221913-22455-9-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1284221913-22455-1-git-send-email-hauke@hauke-m.de>
-References: <1284221913-22455-1-git-send-email-hauke@hauke-m.de>
+Received: from mx1.redhat.com ([209.132.183.28]:47709 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754783Ab0IMMq1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Sep 2010 08:46:27 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 04/14] iwlwifi: cancel scan when down the device
+Date: Mon, 13 Sep 2010 14:46:35 +0200
+Message-Id: <1284382005-3246-5-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1284382005-3246-1-git-send-email-sgruszka@redhat.com>
+References: <1284382005-3246-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The special handling for CONFIG_CFG80211_WEXT is not needed any more,
-because it is only activated when CONFIG_WIRELESS_EXT is also set.
-Enabling this condition only for kernel <= 2.6.32 was wrong. In compat-
-wireless we are able to deactivate CONFIG_WIRELESS_EXT for every
-kernel. For activating it we need CONFIG_WIRELESS_EXT on every kernel.
-If kernel <= 2.6.31 was build with cfg80211 support CONFIG_WIRELESS_EXT
-was also selected, so it was activated in most cases for that kernel
-versions. But it is possible to build compat-wireless without having
-cfg80211 while building the kernel and that caused problems in the past.
+Always cancel scan when stooping device and scan is currently pending,
+we should newer have scan running after down device.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+To assure we start scan cancel from restart work we have to schedule
+abort_scan to different workqueue than priv->workqueue.
+
+Patch fix not cancel scanning when restarting firmware, what is
+one of the causes of wdev_cleanup_work warning (together with permanent
+network connection lost) reported at
+https://bugzilla.redhat.com/show_bug.cgi?id=593566
+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Acked-by: Wey-Yi W Guy <wey-yi.w.guy@intel.com>
 ---
- config.mk                      |   20 ++++++++------------
- scripts/gen-compat-autoconf.sh |    4 ----
- 2 files changed, 8 insertions(+), 16 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   14 +++-----------
+ drivers/net/wireless/iwlwifi/iwl-scan.c     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl3945-base.c |   16 ++++------------
+ 3 files changed, 8 insertions(+), 24 deletions(-)
 
-diff --git a/config.mk b/config.mk
-index 464a769..f2c62ed 100644
---- a/config.mk
-+++ b/config.mk
-@@ -183,19 +183,15 @@ CONFIG_BT_HCIBTUART=m
- endif #CONFIG_PCMCIA
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index c8a2ec8..25b3540 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2891,8 +2891,9 @@ static void __iwl_down(struct iwl_priv *priv)
  
+ 	IWL_DEBUG_INFO(priv, DRV_NAME " is going down\n");
  
--# CONFIG_CFG80211_WEXT will be resepected for
--# future kernels but for older kenrels we need
--# to enable it against the the old CONFIG_WIRELESS_EXT.
--# By using a space here we prevent scripts/gen-compat-autoconf.sh
--# from defining CONFIG_CFG80211_WEXT through its grep sweep for ^CONFIG
--# options, instead its handled specially there based on kernel revision.
--# using this logic: if you are on older kernel and have CONFIG_WIRELESS_EXT
--# defined we'll define it.
--#
--# For newer kernels we'll just respect your own kernel's
--# autoconf.h
-+# We need CONFIG_WIRELESS_EXT for CONFIG_CFG80211_WEXT for every kernel 
-+# version. The new way CONFIG_CFG80211_WEXT is called from the kernel 
-+# does not work with compat-wireless because it calls some callback 
-+# function on struct wiphy. This struct is shipped with compat-wireless 
-+# and changes from kernel version to version. We are using the 
-+# wireless_handlers attribute which will be activated by 
-+# CONFIG_WIRELESS_EXT. 
- ifdef CONFIG_WIRELESS_EXT
-- CONFIG_CFG80211_WEXT=y
-+CONFIG_CFG80211_WEXT=y
- else #CONFIG_CFG80211_WEXT
- $(warning "WARNING: CONFIG_CFG80211_WEXT will be deactivated or not working because kernel was compiled with CONFIG_WIRELESS_EXT=n. Tools using wext interface like iwconfig will not work. To activate it build your kernel e.g. with CONFIG_LIBIPW=m.")
- endif #CONFIG_WIRELESS_EXT
-diff --git a/scripts/gen-compat-autoconf.sh b/scripts/gen-compat-autoconf.sh
-index 62aa890..9f6e6d2 100755
---- a/scripts/gen-compat-autoconf.sh
-+++ b/scripts/gen-compat-autoconf.sh
-@@ -195,10 +195,6 @@ if [ -f $KLIB_BUILD/Makefile ]; then
- 		echo CONFIG_NETDEVICES_MULTIQUEUE >> $MULT_DEP_FILE
- 		define_config_multiple_deps CONFIG_MAC80211_QOS y $ALL_DEPS
- 		rm -f $MULT_DEP_FILE
--		# Kernels >= 2.6.32 can disable WEXT :D
--		if [ $SUBLEVEL -le 32 ]; then
--			define_config_dep CONFIG_CFG80211_WEXT 1 CONFIG_WIRELESS_EXT
--		fi
- 	fi
- fi
- echo "#endif /* COMPAT_AUTOCONF_INCLUDED */"
+-	if (!exit_pending)
+-		set_bit(STATUS_EXIT_PENDING, &priv->status);
++	iwl_scan_cancel_timeout(priv, 200);
++
++	exit_pending = test_and_set_bit(STATUS_EXIT_PENDING, &priv->status);
+ 
+ 	/* Stop TX queues watchdog. We need to have STATUS_EXIT_PENDING bit set
+ 	 * to prevent rearm timer */
+@@ -3502,15 +3503,6 @@ static void iwl_mac_stop(struct ieee80211_hw *hw)
+ 
+ 	priv->is_open = 0;
+ 
+-	if (iwl_is_ready_rf(priv) || test_bit(STATUS_SCAN_HW, &priv->status)) {
+-		/* stop mac, cancel any scan request and clear
+-		 * RXON_FILTER_ASSOC_MSK BIT
+-		 */
+-		mutex_lock(&priv->mutex);
+-		iwl_scan_cancel_timeout(priv, 100);
+-		mutex_unlock(&priv->mutex);
+-	}
+-
+ 	iwl_down(priv);
+ 
+ 	flush_workqueue(priv->workqueue);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 22bdc98..ea33849 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -71,7 +71,7 @@ int iwl_scan_cancel(struct iwl_priv *priv)
+ 	if (test_bit(STATUS_SCANNING, &priv->status)) {
+ 		if (!test_and_set_bit(STATUS_SCAN_ABORTING, &priv->status)) {
+ 			IWL_DEBUG_SCAN(priv, "Queuing scan abort.\n");
+-			queue_work(priv->workqueue, &priv->abort_scan);
++			schedule_work(&priv->abort_scan);
+ 
+ 		} else
+ 			IWL_DEBUG_SCAN(priv, "Scan abort already in progress.\n");
+diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+index 3b3686b..fb894d8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
++++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
+@@ -2568,12 +2568,13 @@ static void iwl3945_cancel_deferred_work(struct iwl_priv *priv);
+ static void __iwl3945_down(struct iwl_priv *priv)
+ {
+ 	unsigned long flags;
+-	int exit_pending = test_bit(STATUS_EXIT_PENDING, &priv->status);
++	int exit_pending;
+ 
+ 	IWL_DEBUG_INFO(priv, DRV_NAME " is going down\n");
+ 
+-	if (!exit_pending)
+-		set_bit(STATUS_EXIT_PENDING, &priv->status);
++	iwl_scan_cancel_timeout(priv, 200);
++
++	exit_pending = test_and_set_bit(STATUS_EXIT_PENDING, &priv->status);
+ 
+ 	/* Stop TX queues watchdog. We need to have STATUS_EXIT_PENDING bit set
+ 	 * to prevent rearm timer */
+@@ -3173,15 +3174,6 @@ static void iwl3945_mac_stop(struct ieee80211_hw *hw)
+ 
+ 	priv->is_open = 0;
+ 
+-	if (iwl_is_ready_rf(priv)) {
+-		/* stop mac, cancel any scan request and clear
+-		 * RXON_FILTER_ASSOC_MSK BIT
+-		 */
+-		mutex_lock(&priv->mutex);
+-		iwl_scan_cancel_timeout(priv, 100);
+-		mutex_unlock(&priv->mutex);
+-	}
+-
+ 	iwl3945_down(priv);
+ 
+ 	flush_workqueue(priv->workqueue);
 -- 
-1.7.0.4
+1.7.1
 
