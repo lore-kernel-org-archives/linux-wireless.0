@@ -1,65 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:52884 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752094Ab0IXODq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Sep 2010 10:03:46 -0400
-Message-ID: <4C9CAFBC.3010702@candelatech.com>
-Date: Fri, 24 Sep 2010 07:03:40 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Michael Griepentrog <griepent@cs.wisc.edu>
-CC: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Detect if phy is a/b/g/n?
-References: <4C9BA6ED.8080304@candelatech.com> <AANLkTinY7y7Gf8K518293mdzXh5=42gQ64eUJjJFSaBw@mail.gmail.com> <4C9BC28E.7010105@candelatech.com> <AANLkTinHY5LfzcQNvbVr6kY87Bjhy0TMYB8uU=k0ReZU@mail.gmail.com>
-In-Reply-To: <AANLkTinHY5LfzcQNvbVr6kY87Bjhy0TMYB8uU=k0ReZU@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:1025 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755074Ab0IMMqp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Sep 2010 08:46:45 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 09/14] iwlwifi: assure we complete scan in scan_abort and scan_check works
+Date: Mon, 13 Sep 2010 14:46:40 +0200
+Message-Id: <1284382005-3246-10-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1284382005-3246-1-git-send-email-sgruszka@redhat.com>
+References: <1284382005-3246-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/23/2010 03:22 PM, Michael Griepentrog wrote:
-> There should also be a "HT TX/RX MCS rate indexes supported:" for n rates.
+Assure we complete scan in mac80211 when we abort scanning (scan_abort
+work) or scan timeout occurs (scan_check work). Currently
+iwl_scan_cancel_timeout() procedure force scan finish in mac80211
+at the end of timeout loop, so we can use it in proper work functions.
 
-That is unique, so I can use that.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-scan.c |   14 ++------------
+ 1 files changed, 2 insertions(+), 12 deletions(-)
 
-Next time someone is hacking on this, though, it would be nice for
-a simple print-out of the various a/b/g/n modes supported!
-
-Thanks,
-Ben
-
->
-> Mike
->
-> On Thu, Sep 23, 2010 at 4:11 PM, Ben Greear<greearb@candelatech.com>  wrote:
->> On 09/23/2010 01:35 PM, Luis R. Rodriguez wrote:
->>>
->>> On Thu, Sep 23, 2010 at 12:13 PM, Ben Greear<greearb@candelatech.com>
->>>   wrote:
->>>>
->>>> Is there a way to determine what a/b/g/n modes a particular phy
->>>> supports?  I tried 'iw phy', but I didn't see anything
->>>> obvious.
->>>
->>> 'iw list' Rates?
->>
->> Both a/b/g (ath5k) and /n (ath9k) show top speed of 54Mbps
->> on my systems.
->>
->> Ben
->>
->> --
->> Ben Greear<greearb@candelatech.com>
->> Candela Technologies Inc  http://www.candelatech.com
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index ce605e0..da037b2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -490,18 +490,8 @@ static void iwl_bg_scan_check(struct work_struct *data)
+ 	struct iwl_priv *priv =
+ 	    container_of(data, struct iwl_priv, scan_check.work);
+ 
+-	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+-		return;
+-
+ 	mutex_lock(&priv->mutex);
+-	if (test_bit(STATUS_SCANNING, &priv->status) &&
+-	    !test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
+-		IWL_DEBUG_SCAN(priv, "Scan completion watchdog (%dms)\n",
+-			       jiffies_to_msecs(IWL_SCAN_CHECK_WATCHDOG));
+-
+-		if (!test_bit(STATUS_EXIT_PENDING, &priv->status))
+-			iwl_send_scan_abort(priv);
+-	}
++	iwl_scan_cancel_timeout(priv, 200);
+ 	mutex_unlock(&priv->mutex);
+ }
+ 
+@@ -560,7 +550,7 @@ static void iwl_bg_abort_scan(struct work_struct *work)
+ 	cancel_delayed_work(&priv->scan_check);
+ 
+ 	mutex_lock(&priv->mutex);
+-	iwl_do_scan_abort(priv);
++	iwl_scan_cancel_timeout(priv, 200);
+ 	mutex_unlock(&priv->mutex);
+ }
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.1
+
