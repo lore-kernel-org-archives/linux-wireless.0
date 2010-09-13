@@ -1,51 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:46526 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755231Ab0ITVmp (ORCPT
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:5299 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754104Ab0IMBhd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Sep 2010 17:42:45 -0400
-Subject: Re: [PATCH] b43/b43legacy - Credit Broadcom with enabling the
- development of the drivers
-From: David Woodhouse <dwmw2@infradead.org>
-To: =?ISO-8859-1?Q?G=E1bor?= Stefanik <netrolller.3d@gmail.com>
-Cc: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTinoe86gtsMJMJ-jitj3yHo35FBdyiqbPKuUAe_R@mail.gmail.com>
-References: <1284921651.24835.11.camel@i7.infradead.org>
-	 <AANLkTinoe86gtsMJMJ-jitj3yHo35FBdyiqbPKuUAe_R@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 20 Sep 2010 22:42:41 +0100
-Message-ID: <1285018961.17079.10.camel@macbook.infradead.org>
-Mime-Version: 1.0
+	Sun, 12 Sep 2010 21:37:33 -0400
+Received: from vs3002.wh2.ocn.ne.jp (125.206.180.165)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-022923200
+	for <linux-wireless@vger.kernel.org>; Mon, 13 Sep 2010 10:10:39 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: ath5k-devel@lists.ath5k.org
+Subject: Re: [ath5k-devel] [PATCH 3/8] ath5k: Use common ath key management functions
+Date: Mon, 13 Sep 2010 10:09:59 +0900
+Cc: me@bobcopeland.com, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+References: <20100908070427.11255.17659.stgit@tt-desk> <20100908070443.11255.13951.stgit@tt-desk> <20100911172250.GE20385@hash.localnet>
+In-Reply-To: <20100911172250.GE20385@hash.localnet>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201009131009.59765.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-09-20 at 18:36 +0200, Gábor Stefanik wrote:
-> Only one problem: the license agreement of these drivers explicitly
-> forbids any reverse-engineering for any purpose. 
+On Sun September 12 2010 02:22:50 me@bobcopeland.com wrote:
+> On Wed, Sep 08, 2010 at 04:04:43PM +0900, Bruno Randolf wrote:
+> > Use common ath key management functions in ath5k. This fixes problems
+> > with HW encryption in AP mode, which was broken in the ath5k
+> > implementation.
+> 
+> We went from this:
+> > -		key->flags |= (IEEE80211_KEY_FLAG_GENERATE_IV |
+> > -			       IEEE80211_KEY_FLAG_GENERATE_MMIC);
+> 
+> to:
+> > +			/* push IV and Michael MIC generation to stack */
+> > +			key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
+> > +			if (key->cipher == WLAN_CIPHER_SUITE_TKIP)
+> > +				key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
+> 
+> There's no need to special case the flags based on whether the
+> cipher is TKIP; mac80211 does this already.
+> 
+> > +			if (key->cipher == WLAN_CIPHER_SUITE_CCMP)
+> > +				key->flags |= IEEE80211_KEY_FLAG_SW_MGMT;
+> 
+> Ditto, this already only affects CCMP in mac80211 (btw, why can't we do
+> management frames in hardware?) so it can be more simply written as:
+> 
+> key->flags |= (IEEE80211_KEY_FLAG_GENERATE_IV |
+>                IEEE80211_KEY_FLAG_GENERATE_MMIC |
+>                IEEE80211_KEY_FLAG_SW_MGMT);
 
-Which is kind of irrelevant, since the law already prohibits you from
-violating the regulatory framework. Making it *also* a potential
-copyright violation (except where it's deemed unenforceable) really
-doesn't make a blind bit of difference, surely?
+i just copied the code from ath9k, but you're right - i'll simplify it and 
+send a patch v2.
 
-> One can debate a lot about whether these are enforceable - however, in
-> the US, a similar case (though that one was about resale, rather than
-> reverse-engineering) was recently decided in the plaintiff's favor.
+i don't know wether we can encrypt management frames in HW, so until this is 
+sorted out, i disabled it.
 
-I don't believe the reverse engineering was done in the US, was it?
+bruno
 
-> And I believe Broadcom would indeed sue if they thought they were
-> risking their FCC approval by not doing so. 
-
-I don't see how it really affects their FCC approval. The fact that they
-do the regulatory enforcement in software is what enables you to
-trivially bypass it. 
-
-You are breaking the law by hacking the driver to violate the rules. You
-knew that anyway -- it really shouldn't make any difference if they
-*also* tell you it's illegal to hack the driver. And it doesn't change
-the fact that they have made it possible.
-
--- 
-dwmw2
 
