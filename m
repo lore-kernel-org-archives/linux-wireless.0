@@ -1,45 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50700 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754398Ab0IWSK3 (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:34831 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751450Ab0INViJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Sep 2010 14:10:29 -0400
-Subject: Re: [PATCH] wifi-test: add simple roam test script
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>,
-	"jiajia.zheng@intel.com" <jiajia.zheng@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"wifi-test-devel@lists.sourceforge.net"
-	<wifi-test-devel@lists.sourceforge.net>,
-	Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	Paul Stewart <pstew@google.com>
-In-Reply-To: <AANLkTimTQ1KP1JDBtSbxiMg-qvSm-Uw7H9EjDyp-WnrJ@mail.gmail.com>
-References: <1285201037-29405-1-git-send-email-lrodriguez@atheros.com>
-	 <20100923002240.GA4484@tux>
-	 <1285231958.3691.10.camel@jlt3.sipsolutions.net>
-	 <AANLkTikh+Q0AK+RyouLOQ5RN5wnKaD2TMnHR-ofqrMKJ@mail.gmail.com>
-	 <1285254157.3770.169.camel@jlt3.sipsolutions.net>
-	 <1285254226.3770.171.camel@jlt3.sipsolutions.net>
-	 <AANLkTimTQ1KP1JDBtSbxiMg-qvSm-Uw7H9EjDyp-WnrJ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 23 Sep 2010 20:10:23 +0200
-Message-ID: <1285265423.3770.359.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 14 Sep 2010 17:38:09 -0400
+Received: by bwz11 with SMTP id 11so5978484bwz.19
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Sep 2010 14:38:08 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] carl9170: use generic_file_llseek in debugfs
+Date: Tue, 14 Sep 2010 23:38:03 +0200
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	"John W. Linville" <linville@tuxdriver.com>
+References: <1284495763-7506-1-git-send-email-arnd@arndb.de> <1284495763-7506-3-git-send-email-arnd@arndb.de>
+In-Reply-To: <1284495763-7506-3-git-send-email-arnd@arndb.de>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201009142338.04104.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-09-23 at 11:06 -0700, Luis R. Rodriguez wrote:
-
-> >> > >> [ 3276.730081] BUG: unable to handle kernel NULL pointer dereference at 0000000000000003
-> >> > >> [ 3276.730148] IP: [<0000000000000003>] 0x3
-
-> > But still, it's a NULL pointer call, and I can't really see how that
-> > would happen.
+On Tuesday 14 September 2010 22:22:30 Arnd Bergmann wrote:
+> The default llseek operation is changing from
+> default_llseek to no_llseek, so all code relying on
+> the current behaviour needs to make that explicit.
 > 
-> Hey so how do we know its a function ?
+> All these files use debugfs and they typically rely
+> on simple_read_from_buffer, so the best llseek operation
+> here is generic_file_llseek.
 
-It says IP is 0x3, so technically it's not even NULL.
-
-johannes
-
+Cc: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+diff --git a/drivers/net/wireless/ath/carl9170/debug.c b/drivers/net/wireless/ath/carl9170/debug.c
+index 3e9b0e8..6559381 100644
+--- a/drivers/net/wireless/ath/carl9170/debug.c
++++ b/drivers/net/wireless/ath/carl9170/debug.c
+@@ -181,6 +181,7 @@ static const struct carl9170_debugfs_fops carl_debugfs_##name ##_ops = {\
+ 		.open	= carl9170_debugfs_open,			\
+ 		.read	= carl9170_debugfs_read,			\
+ 		.write	= carl9170_debugfs_write,			\
++		.llseek = generic_file_llseek,				\
+ 		.owner	= THIS_MODULE					\
+ 	},								\
+ }
