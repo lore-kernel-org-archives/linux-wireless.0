@@ -1,53 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:65375 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753273Ab0IHS6X (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:41601 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752214Ab0INXIV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Sep 2010 14:58:23 -0400
-Received: by mail-ey0-f174.google.com with SMTP id 6so346757eyb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2010 11:58:22 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 06/06] rt2x00: fix oops in rt2x00lib_txdone with rt61pci
-Date: Wed, 8 Sep 2010 20:57:40 +0200
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Pavel Roskin <proski@gnu.org>
-References: <201009082055.38033.IvDoorn@gmail.com> <201009082056.53759.IvDoorn@gmail.com> <201009082057.11427.IvDoorn@gmail.com>
-In-Reply-To: <201009082057.11427.IvDoorn@gmail.com>
+	Tue, 14 Sep 2010 19:08:21 -0400
+Received: by mail-ww0-f44.google.com with SMTP id 20so363384wwd.1
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Sep 2010 16:08:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201009082057.41892.IvDoorn@gmail.com>
+In-Reply-To: <AANLkTik+KjxZSbaShYKq91WN7niZYvtETXbpgDPgj84L@mail.gmail.com>
+References: <AANLkTi=azJS6bn7-=Bbb--ibACaQWqv4ZGLMUpfxynm7@mail.gmail.com> <AANLkTik+KjxZSbaShYKq91WN7niZYvtETXbpgDPgj84L@mail.gmail.com>
+From: Jonathan Guerin <jonathan@guerin.id.au>
+Date: Wed, 15 Sep 2010 09:07:59 +1000
+Message-ID: <AANLkTi=8p2umy+m4emdqKMb=eTYiLTsR3ZENwFaJyoe8@mail.gmail.com>
+Subject: Re: [ath5k-devel] [support] ath5k contention windows
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath5k-devel <ath5k-devel@lists.ath5k.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+On Wed, Sep 15, 2010 at 3:39 AM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Tue, Sep 14, 2010 at 1:51 AM, Jonathan Guerin <jonathan@guerin.id.au> wrote:
+>> as well as 1360 frames which came in with a negative CONTENTION_TIME.
+>>
+>> Ignoring the fact that some frames are coming up with a negative
+>> CONTENTION_TIME (which potentially points to another problem)
+>
+> How negative are these?  Are you subtracting more for, say, txtime
+> than you should be?
 
-Fix a typo introduced in "rt2x00: Add helper function for reporting tx
-status" that results in an oops in rt2x00lib_txdone.
+Actually, I've found that they were exactly one slot time negative
+(give or take 1us). That said, I was doing these calculations using
+the 802.11a OFDM spec timings. I looked at the driver and realised
+that SIFS is actually being initialised to 14us, whereas it should be
+set to 16us. This will also affect DIFS. Once I take these into
+consideration, they come up as approximately 4-5us out. Now that I
+think about it, it could make sense.
 
-Reported-by: Pavel Roskin <proski@gnu.org>
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt61pci.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+With regards to the tx_time, I'm using the OFDM tx_time formula from
+the 802.11-2007 spec. I'm trying to lock down enough aspects of the
+timing in order to verify it. From what I've seen now, my txtime is
+almost always 4us short, but I can't work out why. I will get the code
+for the txtime when I get into my office, I don't have it on this PC.
 
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 4aec344..97b3935 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -2117,7 +2117,7 @@ static void rt61pci_txdone(struct rt2x00_dev *rt2x00dev)
- 				"TX status report missed for entry %d\n",
- 				entry_done->entry_idx);
- 
--			rt2x00lib_txdone_noinfo(entry, TXDONE_UNKNOWN);
-+			rt2x00lib_txdone_noinfo(entry_done, TXDONE_UNKNOWN);
- 			entry_done = rt2x00queue_get_entry(queue, Q_INDEX_DONE);
- 		}
- 
--- 
-1.7.2.2
+>
+> --
+> Bob Copeland %% www.bobcopeland.com
+>
 
+Thanks,
+
+Jonathan
