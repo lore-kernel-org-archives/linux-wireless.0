@@ -1,69 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:57624 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753630Ab0IBHRr convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48890 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755263Ab0INU3r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Sep 2010 03:17:47 -0400
-Received: by iwn5 with SMTP id 5so233931iwn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Sep 2010 00:17:47 -0700 (PDT)
+	Tue, 14 Sep 2010 16:29:47 -0400
+Date: Tue, 14 Sep 2010 16:30:01 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ohad Ben-Cohen <ohad@wizery.com>
+Cc: linux-wireless@vger.kernel.org,
+	Luciano Coelho <luciano.coelho@nokia.com>
+Subject: Re: [PATCH] wl1271: sdio: claim host only when doing IO
+Message-ID: <20100914203000.GF2484@tuxdriver.com>
+References: <1283822661-16018-1-git-send-email-ohad@wizery.com>
 MIME-Version: 1.0
-In-Reply-To: <4C7F2477.6030006@gmail.com>
-References: <4C7D17CF.6030501@gmail.com> <AANLkTik8PLwUfLU1OouBq6uPwSvaWBokAkSHcCzx97ms@mail.gmail.com>
- <4C7D2DB6.2090609@gmail.com> <4C7F2477.6030006@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Thu, 2 Sep 2010 00:17:27 -0700
-Message-ID: <AANLkTinDXfNBBBjJYtu12vbARecc1xgYO=bA_K+Wu-h2@mail.gmail.com>
-Subject: Re: compat-wireless-2.6.35-rc6 won't build
-To: =?UTF-8?Q?Carlos_Salvador_P=C3=A9rez_Salgado?=
-	<carlosalvatore@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1283822661-16018-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/9/1 Carlos Salvador Pérez Salgado <carlosalvatore@gmail.com>:
-> On 08/31/2010 11:28 AM, Carlos Salvador Pérez Salgado wrote:
->>
->> On 08/31/2010 10:32 AM, Luis R. Rodriguez wrote:
->>>
->>> 2010/8/31 Carlos Salvador Pérez Salgado<carlosalvatore@gmail.com>:
->>>>
->>>> Do you have a better idea of how can I fix that? I'll really appreciate
->>>> it.
->>>
->>> Yeah, try to compat-wireless-2.6.36-rc2 ...
->>>
->>>   Luis
->>>
->> Nope... the same error...
->>
->>
->>  LD
->>  /media/disk/temp/compat-wireless-2.6.36-rc2-1/net/rfkill/built-in.o
->>  LD
->>  /media/disk/temp/compat-wireless-2.6.36-rc2-1/net/wireless/built-in.o
->>  CC [M]  /media/disk/temp/compat-wireless-2.6.36-rc2-1/net/wireless/core.o
->> /media/disk/temp/compat-wireless-2.6.36-rc2-1/net/wireless/core.c: In
->> function ‘cfg80211_netdev_notifier_call’:
->> /media/disk/temp/compat-wireless-2.6.36-rc2-1/net/wireless/core.c:705:
->> error: ‘struct net_device’ has no member named ‘wireless_handlers’
->> /media/disk/temp/compat-wireless-2.6.36-rc2-1/net/wireless/core.c:706:
->> error: ‘struct net_device’ has no member named ‘wireless_handlers’
->> make[3]: ***
->> [/media/disk/temp/compat-wireless-2.6.36-rc2-1/net/wireless/core.o] Error 1
->> make[2]: *** [/media/disk/temp/compat-wireless-2.6.36-rc2-1/net/wireless]
->> Error 2
->> make[1]: *** [_module_/media/disk/temp/compat-wireless-2.6.36-rc2-1] Error
->> 2
->> make[1]: Leaving directory `/media/disk/temp/linux-2.6.35.4'
->> make: *** [modules] Error 2
->>
->> That didn't help. I hope you can give me another idea.
->> Thanks.
->
-> So...? What should I do?
+On Tue, Sep 07, 2010 at 04:24:21AM +0300, Ohad Ben-Cohen wrote:
+> Do not maintain a persistent sdio_claim_host state. Instead,
+> claim host before doing IO and release host soon after.
+> 
+> This fixes several mmc deadlock scenarios, e.g. during
+> suspend/resume.
+> 
+> Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
 
-Sorry, I have not have had time to test compile against 2.6.35, but
-when I do I will let you know.
+<snip>
 
-  Luis
+> @@ -160,13 +189,11 @@ static void wl1271_sdio_set_power(struct wl1271 *wl, bool enable)
+>  	 * keep host claimed while wlan is in use to keep wl1271
+>  	 * alive.
+>  	 */
+> -	if (enable) {
+> -		sdio_claim_host(func);
+> -		sdio_enable_func(func);
+> -	} else {
+> -		sdio_disable_func(func);
+> -		sdio_release_host(func);
+> -	}
+> +	if (enable)
+> +		return wl1271_sdio_power_on(wl);
+> +	else
+> +		return wl1271_sdio_power_off(wl);
+> +
+>  }
+
+Please don't add new warnings...
+
+drivers/net/wireless/wl12xx/wl1271_sdio.c: In function ‘wl1271_sdio_set_power’:
+drivers/net/wireless/wl12xx/wl1271_sdio.c:193: warning: ‘return’ with a value, in function returning void
+drivers/net/wireless/wl12xx/wl1271_sdio.c:195: warning: ‘return’ with a value, in function returning void
+drivers/net/wireless/wl12xx/wl1271_sdio.c:186: warning: unused variable ‘func’
+
+I'll fix these in a separate patch.
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
