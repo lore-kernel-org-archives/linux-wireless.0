@@ -1,88 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:47151 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753789Ab0I2Iyn (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:41601 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752205Ab0INXH6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Sep 2010 04:54:43 -0400
-Received: by fxm14 with SMTP id 14so301327fxm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Sep 2010 01:54:42 -0700 (PDT)
-Message-ID: <4CA2FEE1.7030104@wizery.com>
-Date: Wed, 29 Sep 2010 10:54:57 +0200
-From: Eliad Peller <eliad@wizery.com>
+	Tue, 14 Sep 2010 19:07:58 -0400
+Received: by wwd20 with SMTP id 20so363384wwd.1
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Sep 2010 16:07:57 -0700 (PDT)
 MIME-Version: 1.0
-To: greearb@candelatech.com
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v7] ath5k: Allow ath5k to support virtual STA and AP interfaces.
-References: <1285720744-26246-1-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1285720744-26246-1-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <AANLkTi==HEkmY4TR=r+4Ymk_55fBORmRgF+SFGQzK750@mail.gmail.com>
+References: <AANLkTi=azJS6bn7-=Bbb--ibACaQWqv4ZGLMUpfxynm7@mail.gmail.com> <AANLkTi==HEkmY4TR=r+4Ymk_55fBORmRgF+SFGQzK750@mail.gmail.com>
+From: Jonathan Guerin <jonathan@guerin.id.au>
+Date: Wed, 15 Sep 2010 09:07:36 +1000
+Message-ID: <AANLkTim=hRJxQW+UomOQygmLjrePym=Cn-o7RzKqWc+D@mail.gmail.com>
+Subject: Re: [ath5k-devel] [support] ath5k contention windows
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath5k-devel <ath5k-devel@lists.ath5k.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/29/2010 02:39 AM, greearb@candelatech.com wrote:
-> @@ -2687,31 +2784,79 @@ static int ath5k_add_interface(struct ieee80211_hw *hw,
-> +
-> +	/* Set combined mode - when APs are configured, operate in AP mode.
-> +	 * Otherwise use the mode of the new interface. This can currently
-> +	 * only deal with combinations of APs and STAs I think ...
-> +	 * TODO:  What to do about mixed ADHOC + STA ?
-> +	 */
-> +	if (sc->num_ap_vifs)
-> +		sc->opmode = NL80211_IFTYPE_AP;
-> +	else
-> +		sc->opmode = vif->type;
-> +
-> +	ath5k_hw_set_opmode(ah, sc->opmode);
-> +
-> +	/* Any MAC address is fine, all others are included through the
-> +	 * filter.
-> +	 */
-> +	memcpy(&sc->lladdr, vif->addr, ETH_ALEN);
->   	ath5k_hw_set_lladdr(sc->ah, vif->addr);
-> -	ath5k_mode_setup(sc);
-> +
-> +	memcpy(&avf->lladdr, vif->addr, ETH_ALEN);
-> +
-> +	ath5k_mode_setup(sc, vif);
->    
+On Wed, Sep 15, 2010 at 8:48 AM, Nick Kossifidis <mickflemm@gmail.com> wrote:
+> 2010/9/14 Jonathan Guerin <jonathan@guerin.id.au>:
+>> Hi all,
+>>
+>> I have some behaviour I'm observing with some Atheros cards we use that
+>> doesn't seem to match what the initvals of ath5k are set up to. These are
+>> the cards I used:
+>> http://www.mini-box.com/s.nl/it.A/id.387/.f
+>>
+>> I have run a saturated iPerf flow on a conducted testbed with both stations
+>> being inside RF-shielding boxes. They are set to 802.11a mode, on channel 1.
+>> I then parse the trace, looking for ACK-DATA pairs, and calculating the time
+>> difference between them. From this, I remove the TX_TIME of the DATA frame,
+>> as well as a DIFS:
+>>
+>> ACK_TIMESTAMP + DIFS + CONTENTION_TIME + DATA_TX_TIME = DATA_TIMESTAMP
+>>
+>> which will leave me with the CONTENTION_TIME. Dividing this time by a
+>> SLOT_TIME will give me the slot which was chosen by the hardware.
+>>
+>>
+>> According to the driver, in ath5k.h:
+>>
+>> #define AR5K_TUNE_CWMIN                15
+>>
+>> CWMIN is initialised to 15.
+>>
+>> The actual distribution of contention slots I'm observing resembles this:
+>>
+>> Slot Number,Count
+>> 0,1315
+>> 1,1302
+>> 2,1249
+>> 3,1291
+>> 4,1347
+>> 5,1219
+>> 6,1249
+>> 7,0
+>> 8,0
+>> 9,0
+>> <truncated>
+>>
+>> as well as 1360 frames which came in with a negative CONTENTION_TIME.
+>>
+>> Ignoring the fact that some frames are coming up with a negative
+>> CONTENTION_TIME (which potentially points to another problem), what is being
+>> observed here is that CW_MIN appears to start at 7, rather than the 15 which
+>> it should be.
+>>
+>> I'm just wondering if anyone would have any idea why this is occurring?
+>>
+>> Thanks,
+>>
+>> --
+>> Jonathan Guerin
+>>
+>
+> What is your time refference ? Are the 2 stations synced to a point
+> you can have such great accuracy ?
 
-i guess you'd also like to add similar logic upon interface removal.
-> @@ -2724,15 +2869,29 @@ ath5k_remove_interface(struct ieee80211_hw *hw,
->   			struct ieee80211_vif *vif)
->   {
->   	struct ath5k_softc *sc = hw->priv;
-> -	u8 mac[ETH_ALEN] = {};
-> +	struct ath5k_vif *avf = (void *)vif->drv_priv;
-> +	unsigned int i;
->
->   	mutex_lock(&sc->lock);
-> -	if (sc->vif != vif)
-> -		goto end;
-> +	sc->nvifs--;
-> +
-> +	if (avf->bbuf) {
-> +		ath5k_txbuf_free_skb(sc, avf->bbuf);
-> +		list_add_tail(&avf->bbuf->list,&sc->bcbuf);
-> +		for (i = 0; i<  ATH_BCBUF; i++) {
-> +			if (sc->bslot[i] == vif) {
-> +				sc->bslot[i] = NULL;
-> +				break;
-> +			}
-> +		}
-> +		avf->bbuf = NULL;
-> +	}
-> +	if (avf->opmode == NL80211_IFTYPE_AP)
-> +		sc->num_ap_vifs--;
-> +	else if (avf->opmode == NL80211_IFTYPE_ADHOC)
-> +		sc->num_adhoc_vifs--;
->
-> -	ath5k_hw_set_lladdr(sc->ah, mac);
-> -	sc->vif = NULL;
-> -end:
-> +	ath5k_update_bssid_mask(sc, NULL);
->   	mutex_unlock(&sc->lock);
->   }
->
->    
+I'm capturing using a third-party station. I've had to use a Madwifi
+station, as ath5k throws a lot of spurious timestamps up, which make
+calculating this very, very difficult.
 
-Eliad.
+>
+>
+> --
+> GPG ID: 0xD21DB2DB
+> As you read this post global entropy rises. Have Fun ;-)
+> Nick
+>
+
+Thanks,
+
+--
+Jonathan Guerin
