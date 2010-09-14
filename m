@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:46288 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753140Ab0IHXeq (ORCPT
+Received: from mail.atheros.com ([12.19.149.2]:56082 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754462Ab0INRoW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Sep 2010 19:34:46 -0400
-Received: by mail-pv0-f174.google.com with SMTP id 2so255484pvg.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2010 16:34:46 -0700 (PDT)
-From: Steve deRosier <steve@cozybit.com>
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, javier@cozybit.com,
-	Steve deRosier <steve@cozybit.com>
-Subject: [PATCH 2/2] mac80211: Fix dangling pointer in ieee80211_xmit
-Date: Wed,  8 Sep 2010 16:34:32 -0700
-Message-Id: <1283988872-44843-3-git-send-email-steve@cozybit.com>
-In-Reply-To: <1283988872-44843-1-git-send-email-steve@cozybit.com>
-References: <1283988872-44843-1-git-send-email-steve@cozybit.com>
+	Tue, 14 Sep 2010 13:44:22 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 14 Sep 2010 10:44:15 -0700
+From: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>
+To: Kalle Valo <kvalo@adurom.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 14 Sep 2010 23:14:17 +0530
+Subject: RE: [PATCH] ath9k_htc: Enable fastcc for HTC devices.
+Message-ID: <44EE5C37ADC36343B0625A05DD408C4850DAB4D6C2@CHEXMB-01.global.atheros.com>
+References: <1283497888-8294-1-git-send-email-rmanoharan@atheros.com>,<87zkvk5tyx.fsf@purkki.adurom.net>
+In-Reply-To: <87zkvk5tyx.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hdr pointer is left dangling after call to ieee80211_skb_resize. This
-can cause guards around mesh path selection to fail.
+Rajkumar Manoharan <rmanoharan@atheros.com> writes:
+>
+>> By enabling fastcc, the scan time reduced to half.
+>
+>It helps the users if a patch like this describes what fastcc really
+>is and why it reduces the scan time. And what might be the side
+>effects. This is valuable information especially when someone is
+>debugging regressions. So please try to be as informative as possible,
+>especially when enabling new features.
+>
+>For example, I have no idea what fastcc means. Fast C Compiler? ;)
+>
+>--
+>Kalle Valo
 
-Signed-off-by: Steve deRosier <steve@cozybit.com>
----
- net/mac80211/tx.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+On every channel set, the full hw reset happens which issue mutiple register writes.
+For HTC devices, the host issue wmi commands. These register ops are time consumable one.
+Instead of full hw reset, ath9k is doing partial reset which is fast channel change (fastcc).
+By doing fast channel change, the scan period is considerably reduced. 
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index ccf3737..e1733dc 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1609,6 +1609,7 @@ static void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
- 		return;
- 	}
- 
-+	hdr = (struct ieee80211_hdr *) skb->data;
- 	info->control.vif = &sdata->vif;
- 
- 	if (ieee80211_vif_is_mesh(&sdata->vif) &&
--- 
-1.7.0
+Thanks for your input Kalle. :)
 
+Thanks,
+Rajkumar
