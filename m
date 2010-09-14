@@ -1,49 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:38816 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754417Ab0IOPca (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 11:32:30 -0400
-Message-ID: <4C90E708.5050109@candelatech.com>
-Date: Wed, 15 Sep 2010 08:32:24 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from void.printf.net ([89.145.121.20]:48128 "EHLO void.printf.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753370Ab0INT1m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Sep 2010 15:27:42 -0400
+Date: Tue, 14 Sep 2010 20:27:38 +0100
+From: Chris Ball <cjb@laptop.org>
+To: Ohad Ben-Cohen <ohad@wizery.com>
+Cc: linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	akpm@linux-foundation.org, San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Gao Yunpeng <yunpeng.gao@intel.com>
+Subject: Re: [PATCH v1 7/8] sdio: enable Runtime PM for SDIO functions
+Message-ID: <20100914192738.GB21918@void.printf.net>
+References: <1283858949-11073-1-git-send-email-ohad@wizery.com> <1283858949-11073-8-git-send-email-ohad@wizery.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Jouni Malinen <j@w1.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: RFC:  mac80211/ath9k:  allow scanning single channel if other
- VIF is associated.
-References: <4C8EB03D.7070808@candelatech.com>	 <20100915030316.GB30253@jm.kir.nu>  <4C9059DC.7060009@candelatech.com>	 <1284545796.3842.11.camel@jlt3.sipsolutions.net>	 <4C90D683.7000801@candelatech.com> <1284560664.7705.3.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1284560664.7705.3.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1283858949-11073-8-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/15/2010 07:24 AM, Johannes Berg wrote:
-> On Wed, 2010-09-15 at 07:21 -0700, Ben Greear wrote:
->
->> Right, but as soon as one finished, the next would start, and at least in .31,
->> that caused the first to un-associate, giving never-ending loop of interfaces
->> scanning and trying to associate.
->
-> There should be a grace period maybe?
+Hi Ohad,
 
-I don't think that really fixes anything, except make the race between
-full scan and attempting for the first interface to associate harder to
-hit (and that is only useful if the scan-one logic is enabled anyway).
+On Tue, Sep 07, 2010 at 02:29:08PM +0300, Ohad Ben-Cohen wrote:
+> @@ -152,6 +173,11 @@ static int sdio_bus_remove(struct device *dev)
+>  		sdio_release_host(func);
+>  	}
+>  
+> +	pm_runtime_put_noidle(dev);
+> +
+> +	/* Undo the runtime PM settings in sdio_bus_probe() */
+> +	pm_runtime_put_noidle(dev);
+> +
+>  	return 0;
+>  }
+>  
 
->> Ok, I'll see if I can add a 'scan-one-if-associated' flag for wpa-supplicant to
->> use.
->
-> Just make it give the channel instead of adding new API.
+Nit:  This makes sense in context, but stands out as a possible paste
+accident on first sight.  :)  I think it's worth adding a comment to
+the first call; something like: 
 
-I think you still need an 'any', because whoever wrote the wpa_supplicant config file doesn't
-necessarily know what channel the AP is on.  The first interface to do a full scan
-can figure that out and associate....
+> +     /* First, undo the increment made directly above */
+> +     pm_runtime_put_noidle(dev);
+> +     
+> +     /* Then undo the runtime PM settings in sdio_bus_probe() */
+> +     pm_runtime_put_noidle(dev);
+> +     
 
 Thanks,
-Ben
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Chris Ball   <cjb@laptop.org>   <http://printf.net/>
+One Laptop Per Child
