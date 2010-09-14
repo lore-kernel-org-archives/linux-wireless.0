@@ -1,43 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56411 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751907Ab0I2RD5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Sep 2010 13:03:57 -0400
-Subject: Re: [PATCH v3] mac80211:  Allow scanning single channel if other
- VIF is associated.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4CA3704E.1070702@candelatech.com>
-References: <1285708650-21858-1-git-send-email-greearb@candelatech.com>
-	 <1285743733.3756.3.camel@jlt3.sipsolutions.net>
-	 <4CA35BAB.8090701@candelatech.com>
-	 <1285778901.3756.25.camel@jlt3.sipsolutions.net>
-	 <4CA3704E.1070702@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 29 Sep 2010 19:03:56 +0200
-Message-ID: <1285779836.3756.26.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.perches.com ([173.55.12.10]:1998 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752144Ab0INEYQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Sep 2010 00:24:16 -0400
+From: Joe Perches <joe@perches.com>
+To: linux-kernel@vger.kernel.org
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	netdev@vger.kernel.org
+Subject: [PATCH next 09/16] drivers/net/wireless: Use static const char * const where possible
+Date: Mon, 13 Sep 2010 21:23:55 -0700
+Message-Id: <ccc9236f25803fbd8bc082e4fef2af8a0885ebf4.1284435710.git.joe@perches.com>
+In-Reply-To: <cover.1284435709.git.joe@perches.com>
+References: <cover.1284435709.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-09-29 at 09:58 -0700, Ben Greear wrote:
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00debug.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> >> +			if (!(wk->chan == local->scan_channel ||
-> >> +			      (wk->chan == local->oper_channel&&
-> >
-> > I don't think work items will ever run while scanning? And also, this
-> > might need to check the channel type as well, which isn't quite
-> > necessary right now (since no works requires HT channels) but would seem
-> > cleaner.
-> 
-> Just in case work ever does happen when scanning, I think we should
-> leave this check in.
-
-I think we'll have bigger problems if that happens, since scanning will
-switch away from the channel again quickly, likely before the work
-finishes. I'd rather add an assertion that it _doesn't_ happen, I think.
-
-johannes
+diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
+index b8cf45c..c1710b2 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00debug.c
++++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
+@@ -380,7 +380,7 @@ static ssize_t rt2x00debug_read_crypto_stats(struct file *file,
+ 					     loff_t *offset)
+ {
+ 	struct rt2x00debug_intf *intf = file->private_data;
+-	char *name[] = { "WEP64", "WEP128", "TKIP", "AES" };
++	static const char * const name[] = { "WEP64", "WEP128", "TKIP", "AES" };
+ 	char *data;
+ 	char *temp;
+ 	size_t size;
+-- 
+1.7.3.rc1
 
