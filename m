@@ -1,64 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:48649 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755823Ab0IHVZK (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:46277 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752988Ab0INOSe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Sep 2010 17:25:10 -0400
-From: Nikitas Angelinas <nikitasangelinas@gmail.com>
-To: lrodriguez@atheros.com, jmalinen@atheros.com, vasanth@atheros.com,
-	senthilkumar@atheros.com, linville@tuxdriver.com,
-	Sujith.Manoharan@atheros.com, nbd@openwrt.org
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Nikitas Angelinas <nikitasangelinas@gmail.com>
-Subject: [PATCH 6/8] drivers/net/wireless/ath/ath9k: use ARRAY_SIZE macro in ani.c
-Date: Wed,  8 Sep 2010 22:25:42 +0100
-Message-Id: <1283981142-5062-1-git-send-email-nikitasangelinas@gmail.com>
-In-Reply-To: <1283979457-4649-1-git-send-email-nikitasangelinas@gmail.com>
-References: <1283979457-4649-1-git-send-email-nikitasangelinas@gmail.com>
+	Tue, 14 Sep 2010 10:18:34 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
+	Paul Stewart <pstew@google.com>,
+	Amod Bodas <amod.bodas@atheros.com>
+Subject: [PATCH 04/10] mac80211: reset probe send counter upon connection timer reset
+Date: Tue, 14 Sep 2010 10:18:33 -0400
+Message-Id: <1284473913-21413-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace (sizeof(ofdm_level_table)/sizeof(ofdm_level_table[0]) with
-ARRAY_SIZE(ofdm_level_table), and (sizeof(cck_level_table)/
-sizeof(cck_level_table[0]) with ARRAY_SIZE(cck_level_table) in
-drivers/net/wireless/ath/ath9k/ani.c
+Upon beacon loss we send probe requests after 30 seconds of idle
+time and we wait for each probe response 1/2 second. We send a
+total of 3 probe requests before giving up on the AP. In the case
+that we reset the connection idle monitor we should reset the probe
+requests count to 0. Right now this won't help in any way but
+the next patch will.
 
-Signed-off-by: Nikitas Angelinas <nikitasangelinas@gmail.com>
+This patch has fixes for stable kernel [2.6.35+]
+
+Cc: stable@kernel.org
+Cc: Paul Stewart <pstew@google.com>
+Cc: Amod Bodas <amod.bodas@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/ath/ath9k/ani.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+ net/mac80211/mlme.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index cc648b6..0496f96 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -14,6 +14,7 @@
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index cfdafb7..172a397 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -126,11 +126,15 @@ static void mod_beacon_timer(struct ieee80211_sub_if_data *sdata)
  
-+#include <linux/kernel.h>
- #include "hw.h"
- #include "hw-ops.h"
+ void ieee80211_sta_reset_conn_monitor(struct ieee80211_sub_if_data *sdata)
+ {
++	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
++
+ 	if (sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR)
+ 		return;
  
-@@ -48,7 +49,7 @@ static const struct ani_ofdm_level_entry ofdm_level_table[] = {
- 	{  7,  8,  0  }  /* lvl 9 */
- };
- #define ATH9K_ANI_OFDM_NUM_LEVEL \
--	(sizeof(ofdm_level_table)/sizeof(ofdm_level_table[0]))
-+	ARRAY_SIZE(ofdm_level_table)
- #define ATH9K_ANI_OFDM_MAX_LEVEL \
- 	(ATH9K_ANI_OFDM_NUM_LEVEL-1)
- #define ATH9K_ANI_OFDM_DEF_LEVEL \
-@@ -94,7 +95,7 @@ static const struct ani_cck_level_entry cck_level_table[] = {
- };
+ 	mod_timer(&sdata->u.mgd.conn_mon_timer,
+ 		  round_jiffies_up(jiffies + IEEE80211_CONNECTION_IDLE_TIME));
++
++	ifmgd->probe_send_count = 0;
+ }
  
- #define ATH9K_ANI_CCK_NUM_LEVEL \
--	(sizeof(cck_level_table)/sizeof(cck_level_table[0]))
-+	ARRAY_SIZE(cck_level_table)
- #define ATH9K_ANI_CCK_MAX_LEVEL \
- 	(ATH9K_ANI_CCK_NUM_LEVEL-1)
- #define ATH9K_ANI_CCK_MAX_LEVEL_LOW_RSSI \
+ static int ecw2cw(int ecw)
 -- 
-1.7.2.3
+1.7.0.4
 
