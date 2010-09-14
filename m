@@ -1,68 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:7770 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753483Ab0IVOwp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Sep 2010 10:52:45 -0400
-Date: Wed, 22 Sep 2010 16:51:55 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Subject: Re: [PATCH wireless-2.6] iwlwifi: do not perferm force reset while
- doing scan
-Message-ID: <20100922165155.21cb6321@dhcp-lab-109.englab.brq.redhat.com>
-In-Reply-To: <1285166397.3684.64.camel@jlt3.sipsolutions.net>
-References: <1284758657-25267-1-git-send-email-wey-yi.w.guy@intel.com>
-	<20100922105722.3be42969@dhcp-lab-109.englab.brq.redhat.com>
-	<1285166397.3684.64.camel@jlt3.sipsolutions.net>
+Received: from he.sipsolutions.net ([78.46.109.217]:38807 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753476Ab0INOjY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Sep 2010 10:39:24 -0400
+Subject: Re: [PATCH 07/10] mac80211: disable beacon monitor while going
+ offchannel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	stable@kernel.org, Paul Stewart <pstew@google.com>,
+	Amod Bodas <amod.bodas@atheros.com>
+In-Reply-To: <AANLkTin5Dbb+0EdY4wEmbk=ZAvFbowBj5YqH4fX9hBgc@mail.gmail.com>
+References: <1284474028-3337-1-git-send-email-lrodriguez@atheros.com>
+	 <1284474577.3704.8.camel@jlt3.sipsolutions.net>
+	 <AANLkTin5Dbb+0EdY4wEmbk=ZAvFbowBj5YqH4fX9hBgc@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 14 Sep 2010 16:38:42 +0200
+Message-ID: <1284475122.3704.11.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 22 Sep 2010 16:39:57 +0200
-Johannes Berg <johannes@sipsolutions.net> wrote:
-
-> On Wed, 2010-09-22 at 10:57 +0200, Stanislaw Gruszka wrote:
+On Tue, 2010-09-14 at 07:35 -0700, Luis R. Rodriguez wrote:
+> On Tue, Sep 14, 2010 at 7:29 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Tue, 2010-09-14 at 10:20 -0400, Luis R. Rodriguez wrote:
+> >
+> >> +     del_timer_sync(&ifmgd->bcn_mon_timer);
+> >>       del_timer_sync(&sdata->u.mgd.conn_mon_timer);
+> >
+> > This is kinda inconsistent now ... and you added both these lines in
+> > your patch set :-)
 > 
-> > So why we can see this warning? During my testing I saw it also.
-> > There is race regarding SCAN_HW_SCANNING bit, usually we set/clear
-> > this bit under local->mtx, but not in ieee80211_restart_hw()
-> > 
-> > cpu0						cpu1
-> > __ieee80211_start_scan
-> >   __set_bit(SCAN_HW_SCANNING, &local->scanning);
-> >   
-> > 						iwl_bg_restart()
-> > 						  ieee80211_restart_hw()
-> > 						    WARN
-> 
-> Why can't iwlwifi's bg_restart() force-abort the scan? It'll be aborted
-> anyway...
+> Sorry, I do not follow, can you elaborate?
 
-Yes, bg_restart() force scan abort, but not if no scan is pending. It looks
-like that:
+You use "ifmgd->", but also "sdata->u.mgd." when both should be one of
+those.
 
-cpu0						cpu1
-
-						iwl_bg_restart()
-						  __iwl_down()
-						     iwl_scan_cancel_timeout
-						     (do nothing since no pending scan)
-			  
-__ieee80211_start_scan
-  __set_bit(SCAN_HW_SCANNING, &local->scanning);
-
-						  ieee80211_restart_hw()
-						    WARN
-  
-   drv_hw_scan
-     iwl_mac_hw_scan
-     (OK, fail new scan, return error)
-   
-   local->scanning = 0;
-
-
-
-
+johannes
 
