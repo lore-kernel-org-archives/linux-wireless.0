@@ -1,100 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39972 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754858Ab0IXJXq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Sep 2010 05:23:46 -0400
-Message-Id: <20100924092305.443028499@sipsolutions.net>
-Date: Fri, 24 Sep 2010 11:21:05 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: John Linville <linville@tuxdriver.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/5] mac80211: remove prepare_for_handlers sdata argument
-References: <20100924092104.384954781@sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:42374 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751426Ab0INHgQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Sep 2010 03:36:16 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 14 Sep 2010 00:36:10 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH] ath9k_htc: Fix memory leak on WMI event handler
+Date: Tue, 14 Sep 2010 13:07:28 +0530
+Message-ID: <1284449848-7870-1-git-send-email-rmanoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+ath9k_wmi_ctrl_rx is racy with ath9k_wmi_tasklet on event notification
+due to which the wmi_skb may be overwritten which leads to memory leak.
 
-The first argument to prepare_for_handlers is always
-the sdata that can just be stored in rx data directly
-(and even already is, in two of four code paths.)
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
 ---
- net/mac80211/rx.c |   16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ath9k/wmi.c |   72 ++++++++++-----------------------
+ drivers/net/wireless/ath/ath9k/wmi.h |    6 +--
+ 2 files changed, 23 insertions(+), 55 deletions(-)
 
---- wireless-testing.orig/net/mac80211/rx.c	2010-09-23 21:35:11.000000000 +0200
-+++ wireless-testing/net/mac80211/rx.c	2010-09-23 21:37:32.000000000 +0200
-@@ -2513,10 +2513,10 @@ void ieee80211_release_reorder_timeout(s
- 
- /* main receive path */
- 
--static int prepare_for_handlers(struct ieee80211_sub_if_data *sdata,
--				struct ieee80211_rx_data *rx,
-+static int prepare_for_handlers(struct ieee80211_rx_data *rx,
- 				struct ieee80211_hdr *hdr)
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+index 45fe9ca..93a8bda 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.c
++++ b/drivers/net/wireless/ath/ath9k/wmi.c
+@@ -124,55 +124,11 @@ void ath9k_wmi_tasklet(unsigned long data)
  {
-+	struct ieee80211_sub_if_data *sdata = rx->sdata;
- 	struct sk_buff *skb = rx->skb;
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
- 	u8 *bssid = ieee80211_get_bssid(hdr, skb->len, sdata->vif.type);
-@@ -2656,7 +2656,7 @@ static void __ieee80211_rx_handle_packet
- 			rx.sdata = prev_sta->sdata;
+ 	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *)data;
+ 	struct ath_common *common = ath9k_hw_common(priv->ah);
+-	struct wmi_cmd_hdr *hdr;
+-	struct wmi_swba *swba_hdr;
+-	enum wmi_event_id event;
+-	struct sk_buff *skb;
+-	void *wmi_event;
+-	unsigned long flags;
+-#ifdef CONFIG_ATH9K_HTC_DEBUGFS
+-	__be32 txrate;
+-#endif
  
- 			rx.flags |= IEEE80211_RX_RA_MATCH;
--			prepares = prepare_for_handlers(rx.sdata, &rx, hdr);
-+			prepares = prepare_for_handlers(&rx, hdr);
- 			if (!prepares)
- 				goto next_sta;
+-	spin_lock_irqsave(&priv->wmi->wmi_lock, flags);
+-	skb = priv->wmi->wmi_skb;
+-	spin_unlock_irqrestore(&priv->wmi->wmi_lock, flags);
++	ath_print(common, ATH_DBG_WMI, "SWBA Event received\n");
  
-@@ -2690,7 +2690,7 @@ next_sta:
- 			rx.sdata = prev_sta->sdata;
+-	hdr = (struct wmi_cmd_hdr *) skb->data;
+-	event = be16_to_cpu(hdr->command_id);
+-	wmi_event = skb_pull(skb, sizeof(struct wmi_cmd_hdr));
++	ath9k_htc_swba(priv, priv->wmi->beacon_pending);
  
- 			rx.flags |= IEEE80211_RX_RA_MATCH;
--			prepares = prepare_for_handlers(rx.sdata, &rx, hdr);
-+			prepares = prepare_for_handlers(&rx, hdr);
- 			if (!prepares)
- 				prev_sta = NULL;
+-	ath_print(common, ATH_DBG_WMI,
+-		  "WMI Event: 0x%x\n", event);
+-
+-	switch (event) {
+-	case WMI_TGT_RDY_EVENTID:
+-		break;
+-	case WMI_SWBA_EVENTID:
+-		swba_hdr = (struct wmi_swba *) wmi_event;
+-		ath9k_htc_swba(priv, swba_hdr->beacon_pending);
+-		break;
+-	case WMI_FATAL_EVENTID:
+-		break;
+-	case WMI_TXTO_EVENTID:
+-		break;
+-	case WMI_BMISS_EVENTID:
+-		break;
+-	case WMI_WLAN_TXCOMP_EVENTID:
+-		break;
+-	case WMI_DELBA_EVENTID:
+-		break;
+-	case WMI_TXRATE_EVENTID:
+-#ifdef CONFIG_ATH9K_HTC_DEBUGFS
+-		txrate = ((struct wmi_event_txrate *)wmi_event)->txrate;
+-		priv->debug.txrate = be32_to_cpu(txrate);
+-#endif
+-		break;
+-	default:
+-		break;
+-	}
+-
+-	kfree_skb(skb);
+ }
  
-@@ -2733,15 +2733,15 @@ next_sta:
- 			}
+ static void ath9k_wmi_rsp_callback(struct wmi *wmi, struct sk_buff *skb)
+@@ -191,6 +147,10 @@ static void ath9k_wmi_ctrl_rx(void *priv, struct sk_buff *skb,
+ 	struct wmi *wmi = (struct wmi *) priv;
+ 	struct wmi_cmd_hdr *hdr;
+ 	u16 cmd_id;
++	void *wmi_event;
++#ifdef CONFIG_ATH9K_HTC_DEBUGFS
++	__be32 txrate;
++#endif
  
- 			rx.sta = sta_info_get_bss(prev, hdr->addr2);
-+			rx.sdata = prev;
+ 	if (unlikely(wmi->stopped))
+ 		goto free_skb;
+@@ -199,10 +159,22 @@ static void ath9k_wmi_ctrl_rx(void *priv, struct sk_buff *skb,
+ 	cmd_id = be16_to_cpu(hdr->command_id);
  
- 			rx.flags |= IEEE80211_RX_RA_MATCH;
--			prepares = prepare_for_handlers(prev, &rx, hdr);
-+			prepares = prepare_for_handlers(&rx, hdr);
+ 	if (cmd_id & 0x1000) {
+-		spin_lock(&wmi->wmi_lock);
+-		wmi->wmi_skb = skb;
+-		spin_unlock(&wmi->wmi_lock);
+-		tasklet_schedule(&wmi->drv_priv->wmi_tasklet);
++		wmi_event = skb_pull(skb, sizeof(struct wmi_cmd_hdr));
++		switch (cmd_id) {
++		case WMI_SWBA_EVENTID:
++			wmi->beacon_pending = *(u8 *)wmi_event;
++			tasklet_schedule(&wmi->drv_priv->wmi_tasklet);
++			break;
++		case WMI_TXRATE_EVENTID:
++#ifdef CONFIG_ATH9K_HTC_DEBUGFS
++			txrate = ((struct wmi_event_txrate *)wmi_event)->txrate;
++			wmi->drv_priv->debug.txrate = be32_to_cpu(txrate);
++#endif
++			break;
++		default:
++			break;
++		}
++		kfree_skb(skb);
+ 		return;
+ 	}
  
- 			if (!prepares)
- 				goto next;
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.h b/drivers/net/wireless/ath/ath9k/wmi.h
+index a0bf857..ac61074 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.h
++++ b/drivers/net/wireless/ath/ath9k/wmi.h
+@@ -31,10 +31,6 @@ struct wmi_cmd_hdr {
+ 	__be16 seq_no;
+ } __packed;
  
- 			if (status->flag & RX_FLAG_MMIC_ERROR) {
--				rx.sdata = prev;
- 				if (rx.flags & IEEE80211_RX_RA_MATCH)
- 					ieee80211_rx_michael_mic_report(hdr,
- 									&rx);
-@@ -2768,15 +2768,15 @@ next:
+-struct wmi_swba {
+-	u8 beacon_pending;
+-} __packed;
+-
+ enum wmi_cmd_id {
+ 	WMI_ECHO_CMDID = 0x0001,
+ 	WMI_ACCESS_MEMORY_CMDID,
+@@ -104,7 +100,7 @@ struct wmi {
+ 	u32 cmd_rsp_len;
+ 	bool stopped;
  
- 		if (prev) {
- 			rx.sta = sta_info_get_bss(prev, hdr->addr2);
-+			rx.sdata = prev;
+-	struct sk_buff *wmi_skb;
++	u8 beacon_pending;
+ 	spinlock_t wmi_lock;
  
- 			rx.flags |= IEEE80211_RX_RA_MATCH;
--			prepares = prepare_for_handlers(prev, &rx, hdr);
-+			prepares = prepare_for_handlers(&rx, hdr);
- 
- 			if (!prepares)
- 				prev = NULL;
- 
- 			if (prev && status->flag & RX_FLAG_MMIC_ERROR) {
--				rx.sdata = prev;
- 				if (rx.flags & IEEE80211_RX_RA_MATCH)
- 					ieee80211_rx_michael_mic_report(hdr,
- 									&rx);
-
+ 	atomic_t mwrite_cnt;
+-- 
+1.7.2.3
 
