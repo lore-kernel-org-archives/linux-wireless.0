@@ -1,106 +1,283 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:57888 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750983Ab0IOHXm convert rfc822-to-8bit (ORCPT
+Received: from moutng.kundenserver.de ([212.227.17.8]:57575 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755404Ab0INUX3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 03:23:42 -0400
-Received: by iwn5 with SMTP id 5so6810794iwn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Sep 2010 00:23:41 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1284507624-18176-1-git-send-email-lrodriguez@atheros.com>
-References: <1284507624-18176-1-git-send-email-lrodriguez@atheros.com>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 15 Sep 2010 00:23:21 -0700
-Message-ID: <AANLkTi=+3i779OVCbR9LO+u-Mm47VVVb6y_eNqYSqU9b@mail.gmail.com>
-Subject: Re: [PATCH v3 00/11] ath9k / mac80211: power save fixes
-To: linville@tuxdriver.com, stable@kernel.org,
-	Greg KH <greg@kroah.com>, Paul Stewart <pstew@google.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 14 Sep 2010 16:23:29 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-kernel@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 02/15] net/wireless: use generic_file_llseek in debugfs
+Date: Tue, 14 Sep 2010 22:22:30 +0200
+Message-Id: <1284495763-7506-3-git-send-email-arnd@arndb.de>
+In-Reply-To: <1284495763-7506-1-git-send-email-arnd@arndb.de>
+References: <1284495763-7506-1-git-send-email-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 14, 2010 at 4:40 PM, Luis R. Rodriguez
-<lrodriguez@atheros.com> wrote:
-> I reordered the patches, enhanced the commit log entries and
-> and added a new patch to address ANI / the TX monitor, figured I'd just
-> send a new series just to be clear.
->
-> My next peet peeve is this:
->
-> Sep 14 16:36:02 tux kernel: [ 1369.000106] ath: Set channel: 5220 MHz
-> Sep 14 16:36:02 tux kernel: [ 1369.000116] ath: tx chmask: 3, rx chmask: 3
-> Sep 14 16:36:02 tux kernel: [ 1369.000240] ath: (2412 MHz) -> (5220 MHz), conf_is_ht40: 0
-> Sep 14 16:36:02 tux kernel: [ 1369.063449] ath: Set channel: 2412 MHz
-> Sep 14 16:36:03 tux kernel: [ 1369.063459] ath: tx chmask: 3, rx chmask: 3
-> Sep 14 16:36:03 tux kernel: [ 1369.063584] ath: (5220 MHz) -> (2412 MHz), conf_is_ht40: 0
-> Sep 14 16:36:03 tux kernel: [ 1369.360111] ath: Set channel: 5240 MHz
-> Sep 14 16:36:03 tux kernel: [ 1369.360120] ath: tx chmask: 3, rx chmask: 3
-> Sep 14 16:36:03 tux kernel: [ 1369.360245] ath: (2412 MHz) -> (5240 MHz), conf_is_ht40: 0
-> Sep 14 16:36:03 tux kernel: [ 1369.422736] ath: Set channel: 2412 MHz
-> Sep 14 16:36:03 tux kernel: [ 1369.422745] ath: tx chmask: 3, rx chmask: 3
-> Sep 14 16:36:03 tux kernel: [ 1369.422867] ath: (5240 MHz) -> (2412 MHz), conf_is_ht40: 0
-> Sep 14 16:36:03 tux kernel: [ 1369.564685] __ratelimit: 81 callbacks suppressed
-> Sep 14 16:36:03 tux kernel: [ 1369.564692] phy0: release an RX reorder frame due to timeout on earlier frames
-> Sep 14 16:36:03 tux kernel: [ 1369.564698] phy0: release an RX reorder frame due to timeout on earlier frames
-> Sep 14 16:36:03 tux kernel: [ 1369.564703] phy0: release an RX reorder frame due to timeout on earlier frames
-> Sep 14 16:36:03 tux kernel: [ 1369.564708] phy0: release an RX reorder frame due to timeout on earlier frames
-> Sep 14 16:36:03 tux kernel: [ 1369.564713] phy0: release an RX reorder frame due to timeout on earlier frames
-> Sep 14 16:36:03 tux kernel: [ 1369.564718] phy0: release an RX reorder frame due to timeout on earlier frames
-> Sep 14 16:36:03 tux kernel: [ 1369.564723] phy0: release an RX reorder frame due to timeout on earlier frames
-> Sep 14 16:36:03 tux kernel: [ 1369.564728] phy0: release an RX reorder frame due to timeout on earlier frames
-> Sep 14 16:36:03 tux kernel: [ 1369.564733] phy0: release an RX reorder frame due to timeout on earlier frames
-> Sep 14 16:36:03 tux kernel: [ 1369.564738] phy0: release an RX reorder frame due to timeout on earlier frames
-> Sep 14 16:36:03 tux kernel: [ 1369.720129] ath: Set channel: 5260 MHz
-> Sep 14 16:36:03 tux kernel: [ 1369.720139] ath: tx chmask: 3, rx chmask: 3
-> Sep 14 16:36:03 tux kernel: [ 1369.720263] ath: (2412 MHz) -> (5260 MHz), conf_is_ht40: 0
->
-> My guess is we are not suspending / stopping the aggregations sessions /
-> or simply extending the timer when going off channel.
->
-> Luis R. Rodriguez (10):
->  ath9k: fix power save race conditions
->  ath9k: fix regression on beacon loss after bgscan
->  ath9k: fix enabling ANI / tx monitor after bg scan
->  mac80211: add helper for reseting the connection monitor
->  mac80211: reset probe send counter upon connection timer reset
->  mac80211: reset connection idle when going offchannel
->  mac80211: make the beacon monitor available externally
->  mac80211: disable beacon monitor while going offchannel
->  mac80211: send last 3/5 probe requests as unicast
->  ath9k: fix regression which disabled ps on ath9k
->
-> Senthil Balasubramanian (1):
->  ath9k: fix regression which prevents chip sleep after CAB data
->
->  drivers/net/wireless/ath/ath9k/ath9k.h |    1 -
->  drivers/net/wireless/ath/ath9k/init.c  |    3 +-
->  drivers/net/wireless/ath/ath9k/main.c  |   15 ++++++-----
->  drivers/net/wireless/ath/ath9k/recv.c  |    9 ++++--
->  net/mac80211/ieee80211_i.h             |    2 +
->  net/mac80211/mlme.c                    |   40 +++++++++++++++++++++++--------
->  net/mac80211/offchannel.c              |    7 +++++
->  7 files changed, 54 insertions(+), 23 deletions(-)
+The default llseek operation is changing from
+default_llseek to no_llseek, so all code relying on
+the current behaviour needs to make that explicit.
 
-The respective stable patches are now backported to each kernel to
-which they apply to. To make life easier for stable maintenance you
-can just download the backported patches. I have put an all-in-one
-git-am-able file and also split up. I should note that we also had
-some CTL fixes pending merge. I've updated the wiki to help keep track
-of what is pending merge:
+The wireless driver infrastructure and some of the drivers
+make use of generated debugfs files, so they cannot
+be converted by our script that automatically determines
+the right operation.
 
-http://wireless.kernel.org/en/developers/stable-pending
+All these files use debugfs and they typically rely
+on simple_read_from_buffer, so the best llseek operation
+here is generic_file_llseek.
 
-If you are a distribution waiting consumption you can either start
-testing these patches or wait until Linus applies to his tree as that
-is what is required for the patches to trickle down to the other older
-stable series. The commit ID from Linus' tree is required so that the
-patches can be applied to older kernels.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+---
+ drivers/misc/iwmc3200top/debugfs.c           |    3 +++
+ drivers/net/wireless/b43/debugfs.c           |    1 +
+ drivers/net/wireless/b43legacy/debugfs.c     |    1 +
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c   |    3 +++
+ drivers/net/wireless/libertas/debugfs.c      |    1 +
+ drivers/net/wireless/rt2x00/rt2x00debug.c    |    1 +
+ drivers/net/wireless/wl12xx/wl1251_debugfs.c |    2 ++
+ drivers/net/wireless/wl12xx/wl1271_debugfs.c |    2 ++
+ net/mac80211/debugfs.c                       |    2 ++
+ net/mac80211/debugfs_key.c                   |    2 ++
+ net/mac80211/debugfs_netdev.c                |    1 +
+ net/mac80211/debugfs_sta.c                   |    2 ++
+ net/wireless/debugfs.c                       |    1 +
+ 13 files changed, 22 insertions(+), 0 deletions(-)
 
-Although I provide the links above, you can download the pending stuff from:
+diff --git a/drivers/misc/iwmc3200top/debugfs.c b/drivers/misc/iwmc3200top/debugfs.c
+index e9eda47..62fbaec 100644
+--- a/drivers/misc/iwmc3200top/debugfs.c
++++ b/drivers/misc/iwmc3200top/debugfs.c
+@@ -71,6 +71,7 @@ ssize_t iwmct_dbgfs_##name##_write(struct file *file,			\
+ 	static const struct file_operations iwmct_dbgfs_##name##_ops = {  \
+ 		.read = iwmct_dbgfs_##name##_read,			\
+ 		.open = iwmct_dbgfs_open_file_generic,			\
++		.llseek = generic_file_llseek,				\
+ 	};
+ 
+ #define DEBUGFS_WRITE_FILE_OPS(name)					\
+@@ -78,6 +79,7 @@ ssize_t iwmct_dbgfs_##name##_write(struct file *file,			\
+ 	static const struct file_operations iwmct_dbgfs_##name##_ops = {  \
+ 		.write = iwmct_dbgfs_##name##_write,			\
+ 		.open = iwmct_dbgfs_open_file_generic,			\
++		.llseek = generic_file_llseek,				\
+ 	};
+ 
+ #define DEBUGFS_READ_WRITE_FILE_OPS(name)				\
+@@ -87,6 +89,7 @@ ssize_t iwmct_dbgfs_##name##_write(struct file *file,			\
+ 		.write = iwmct_dbgfs_##name##_write,			\
+ 		.read = iwmct_dbgfs_##name##_read,			\
+ 		.open = iwmct_dbgfs_open_file_generic,			\
++		.llseek = generic_file_llseek,				\
+ 	};
+ 
+ 
+diff --git a/drivers/net/wireless/b43/debugfs.c b/drivers/net/wireless/b43/debugfs.c
+index 80b19a4..59f59fa 100644
+--- a/drivers/net/wireless/b43/debugfs.c
++++ b/drivers/net/wireless/b43/debugfs.c
+@@ -627,6 +627,7 @@ out_unlock:
+ 			.open	= b43_debugfs_open,		\
+ 			.read	= b43_debugfs_read,		\
+ 			.write	= b43_debugfs_write,		\
++			.llseek = generic_file_llseek,		\
+ 		},						\
+ 		.file_struct_offset = offsetof(struct b43_dfsentry, \
+ 					       file_##name),	\
+diff --git a/drivers/net/wireless/b43legacy/debugfs.c b/drivers/net/wireless/b43legacy/debugfs.c
+index 1f85ac5..f232618 100644
+--- a/drivers/net/wireless/b43legacy/debugfs.c
++++ b/drivers/net/wireless/b43legacy/debugfs.c
+@@ -334,6 +334,7 @@ out_unlock:
+ 			.open	= b43legacy_debugfs_open,		\
+ 			.read	= b43legacy_debugfs_read,		\
+ 			.write	= b43legacy_debugfs_write,		\
++			.llseek = generic_file_llseek,			\
+ 		},						\
+ 		.file_struct_offset = offsetof(struct b43legacy_dfsentry, \
+ 					       file_##name),	\
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index e96a1bb..a32d5d3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -87,6 +87,7 @@ static int iwl_dbgfs_open_file_generic(struct inode *inode, struct file *file)
+ static const struct file_operations iwl_dbgfs_##name##_ops = {          \
+ 	.read = iwl_dbgfs_##name##_read,                       		\
+ 	.open = iwl_dbgfs_open_file_generic,                    	\
++	.llseek = generic_file_llseek,					\
+ };
+ 
+ #define DEBUGFS_WRITE_FILE_OPS(name)                                    \
+@@ -94,6 +95,7 @@ static const struct file_operations iwl_dbgfs_##name##_ops = {          \
+ static const struct file_operations iwl_dbgfs_##name##_ops = {          \
+ 	.write = iwl_dbgfs_##name##_write,                              \
+ 	.open = iwl_dbgfs_open_file_generic,                    	\
++	.llseek = generic_file_llseek,					\
+ };
+ 
+ 
+@@ -104,6 +106,7 @@ static const struct file_operations iwl_dbgfs_##name##_ops = {          \
+ 	.write = iwl_dbgfs_##name##_write,                              \
+ 	.read = iwl_dbgfs_##name##_read,                                \
+ 	.open = iwl_dbgfs_open_file_generic,                            \
++	.llseek = generic_file_llseek,					\
+ };
+ 
+ static ssize_t iwl_dbgfs_tx_statistics_read(struct file *file,
+diff --git a/drivers/net/wireless/libertas/debugfs.c b/drivers/net/wireless/libertas/debugfs.c
+index 651a79c..74e94cc 100644
+--- a/drivers/net/wireless/libertas/debugfs.c
++++ b/drivers/net/wireless/libertas/debugfs.c
+@@ -696,6 +696,7 @@ out_unlock:
+ 	.open = open_file_generic, \
+ 	.read = (fread), \
+ 	.write = (fwrite), \
++	.llseek = generic_file_llseek, \
+ }
+ 
+ struct lbs_debugfs_files {
+diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
+index b0498e7..7d6f19a 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00debug.c
++++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
+@@ -509,6 +509,7 @@ static const struct file_operations rt2x00debug_fop_##__name = {\
+ 	.write		= rt2x00debug_write_##__name,		\
+ 	.open		= rt2x00debug_file_open,		\
+ 	.release	= rt2x00debug_file_release,		\
++	.llseek		= generic_file_llseek,			\
+ };
+ 
+ RT2X00DEBUGFS_OPS(csr, "0x%.8x\n", u32);
+diff --git a/drivers/net/wireless/wl12xx/wl1251_debugfs.c b/drivers/net/wireless/wl12xx/wl1251_debugfs.c
+index 5e4465a..a4ae7c4 100644
+--- a/drivers/net/wireless/wl12xx/wl1251_debugfs.c
++++ b/drivers/net/wireless/wl12xx/wl1251_debugfs.c
+@@ -50,6 +50,7 @@ static ssize_t name## _read(struct file *file, char __user *userbuf,	\
+ static const struct file_operations name## _ops = {			\
+ 	.read = name## _read,						\
+ 	.open = wl1251_open_file_generic,				\
++	.llseek	= generic_file_llseek,					\
+ };
+ 
+ #define DEBUGFS_ADD(name, parent)					\
+@@ -86,6 +87,7 @@ static ssize_t sub## _ ##name## _read(struct file *file,		\
+ static const struct file_operations sub## _ ##name## _ops = {		\
+ 	.read = sub## _ ##name## _read,					\
+ 	.open = wl1251_open_file_generic,				\
++	.llseek	= generic_file_llseek,					\
+ };
+ 
+ #define DEBUGFS_FWSTATS_ADD(sub, name)				\
+diff --git a/drivers/net/wireless/wl12xx/wl1271_debugfs.c b/drivers/net/wireless/wl12xx/wl1271_debugfs.c
+index c239ef4..6e25303 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_debugfs.c
++++ b/drivers/net/wireless/wl12xx/wl1271_debugfs.c
+@@ -51,6 +51,7 @@ static ssize_t name## _read(struct file *file, char __user *userbuf,	\
+ static const struct file_operations name## _ops = {			\
+ 	.read = name## _read,						\
+ 	.open = wl1271_open_file_generic,				\
++	.llseek	= generic_file_llseek,					\
+ };
+ 
+ #define DEBUGFS_ADD(name, parent)					\
+@@ -87,6 +88,7 @@ static ssize_t sub## _ ##name## _read(struct file *file,		\
+ static const struct file_operations sub## _ ##name## _ops = {		\
+ 	.read = sub## _ ##name## _read,					\
+ 	.open = wl1271_open_file_generic,				\
++	.llseek	= generic_file_llseek,					\
+ };
+ 
+ #define DEBUGFS_FWSTATS_ADD(sub, name)				\
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index a694c59..4a4d35c 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -36,6 +36,7 @@ static ssize_t name## _read(struct file *file, char __user *userbuf,	\
+ static const struct file_operations name## _ops = {			\
+ 	.read = name## _read,						\
+ 	.open = mac80211_open_file_generic,				\
++	.llseek = generic_file_llseek,					\
+ };
+ 
+ #define DEBUGFS_ADD(name)						\
+@@ -346,6 +347,7 @@ static ssize_t stats_ ##name## _read(struct file *file,			\
+ static const struct file_operations stats_ ##name## _ops = {		\
+ 	.read = stats_ ##name## _read,					\
+ 	.open = mac80211_open_file_generic,				\
++	.llseek = generic_file_llseek,					\
+ };
+ 
+ #define DEBUGFS_STATS_ADD(name, field)					\
+diff --git a/net/mac80211/debugfs_key.c b/net/mac80211/debugfs_key.c
+index fa5e76e..7cd8dd9 100644
+--- a/net/mac80211/debugfs_key.c
++++ b/net/mac80211/debugfs_key.c
+@@ -32,6 +32,7 @@ static ssize_t key_##name##_read(struct file *file,			\
+ static const struct file_operations key_ ##name## _ops = {		\
+ 	.read = key_##name##_read,					\
+ 	.open = mac80211_open_file_generic,				\
++	.llseek = generic_file_llseek,					\
+ }
+ 
+ #define KEY_FILE(name, format)						\
+@@ -46,6 +47,7 @@ static const struct file_operations key_ ##name## _ops = {		\
+ static const struct file_operations key_ ##name## _ops = {		\
+ 	.read = key_conf_##name##_read,					\
+ 	.open = mac80211_open_file_generic,				\
++	.llseek = generic_file_llseek,					\
+ }
+ 
+ #define KEY_CONF_FILE(name, format)					\
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index 20b2998..8ad33ee 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -121,6 +121,7 @@ static const struct file_operations name##_ops = {			\
+ 	.read = ieee80211_if_read_##name,				\
+ 	.write = (_write),						\
+ 	.open = mac80211_open_file_generic,				\
++	.llseek = generic_file_llseek,					\
+ }
+ 
+ #define __IEEE80211_IF_FILE_W(name)					\
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index 76839d4..6a8fdc3 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -36,6 +36,7 @@ static ssize_t sta_ ##name## _read(struct file *file,			\
+ static const struct file_operations sta_ ##name## _ops = {		\
+ 	.read = sta_##name##_read,					\
+ 	.open = mac80211_open_file_generic,				\
++	.llseek = generic_file_llseek,					\
+ }
+ 
+ #define STA_OPS_RW(name)						\
+@@ -43,6 +44,7 @@ static const struct file_operations sta_ ##name## _ops = {		\
+ 	.read = sta_##name##_read,					\
+ 	.write = sta_##name##_write,					\
+ 	.open = mac80211_open_file_generic,				\
++	.llseek = generic_file_llseek,					\
+ }
+ 
+ #define STA_FILE(name, field, format)					\
+diff --git a/net/wireless/debugfs.c b/net/wireless/debugfs.c
+index a4991a3..3f9a57e 100644
+--- a/net/wireless/debugfs.c
++++ b/net/wireless/debugfs.c
+@@ -34,6 +34,7 @@ static ssize_t name## _read(struct file *file, char __user *userbuf,	\
+ static const struct file_operations name## _ops = {			\
+ 	.read = name## _read,						\
+ 	.open = cfg80211_open_file_generic,				\
++	.llseek = generic_file_llseek,					\
+ };
+ 
+ DEBUGFS_READONLY_FILE(rts_threshold, 20, "%d",
+-- 
+1.7.1
 
-http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/2010/08/
-http://www.kernel.org/pub/linux/kernel/people/mcgrof/patches/ath9k/2010/09/14/
-
-  Luis
