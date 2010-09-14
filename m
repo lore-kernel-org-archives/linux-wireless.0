@@ -1,54 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:40004 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753822Ab0IVKjA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Sep 2010 06:39:00 -0400
-Received: by iwn5 with SMTP id 5so438106iwn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 03:38:59 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:64791 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751327Ab0INOea (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Sep 2010 10:34:30 -0400
+Date: Tue, 14 Sep 2010 16:28:15 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>
+Subject: 2.6.36-rc4/iwl: warning triggered in net/mac80211/scan.c:266
+Message-ID: <20100914142814.GA8744@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <AANLkTik3_o03=m0w8XM_B-YTQrR-ibkbtTBErXfcYwGG@mail.gmail.com>
-References: <AANLkTik3_o03=m0w8XM_B-YTQrR-ibkbtTBErXfcYwGG@mail.gmail.com>
-Date: Wed, 22 Sep 2010 14:38:58 +0400
-Message-ID: <AANLkTi=M9zSKkckxqs6XwBg3290L9yijmCbRn9_E93xJ@mail.gmail.com>
-Subject: Re: p54spi (STLC4560) with Marvel XScale CPU (kernel 2.6.25.4)
-From: Max Filippov <jcmvbkbc@gmail.com>
-To: Alex Mihaylov <minimumlaw@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Also i got firmware  2.13.0.0.a.13.14.arm from linux-wireles. After
-> loading module with proper command line, I see message
->
-> cx3110x spi1.0: firmware boot failed
->
-> and no other error/warning message presents. SPI signals like good.
->
->
-> phy0: p54 detected a LM20 firmware
-> p54: rx_mtu reduced from 3240 to 2376
-> phy0: FW rev 2.13.0.0.a.13.14 - Softmac protocol 5.6
-> phy0: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
-> cx3110x spi1.0: loading user eeprom...
+I am running 2.6.36-rc4 on T60 with an iwlagn wireless card:
+03:00.0 Network controller: Intel Corporation PRO/Wireless 5100 AGN [Shiloh] Network Connection
 
-Looks like you have custom eeprom image...
+I was compiling a large file which stressed the box heavily, and the
+following warning in net/mac80211/scan.c triggered:
 
-> phy0: hwaddr 00:02:ee:c0:ff:ee, MAC:isl3820 RF:Longbc
-> x3110x spi1.0: firmware boot failed
+        /*
+         * It's ok to abort a not-yet-running scan (that
+         * we have one at all will be verified by checking
+         * local->scan_req next), but not to complete it
+         * successfully.
+         */
+        if (WARN_ON(!local->scanning && !aborted))
+                aborted = true;
 
-...and this eeprom image has wrong format.
+dmesg below:
 
-> What's trouble? Incorrect firmware? Unsupported (so slow) SPI rate?
->
-> I try load another firmware from 2.13... series - result: firmware
-> boot failed. I also try load firmware cutted from Sagrad source
-> (version 2.19....) result is same: firmware boot failed.
->
-> What is my next step for this idea?
+[84379.361297] ------------[ cut here ]------------
+[84379.361307] WARNING: at net/mac80211/scan.c:266 ieee80211_scan_completed+0x43/0x17f()
+[84379.361311] Hardware name: 2241B48
+[84379.361313] Modules linked in: tun iwlagn kvm_intel kvm iwlcore e1000e thinkpad_acpi [last unloaded: scsi_wait_scan]
+[84379.361325] Pid: 8254, comm: kworker/u:0 Not tainted 2.6.36-rc4-mst #96
+[84379.361328] Call Trace:
+[84379.361334]  [<ffffffff815d1399>] ? ieee80211_scan_completed+0x43/0x17f
+[84379.361340]  [<ffffffff81042046>] warn_slowpath_common+0x80/0x99
+[84379.361354]  [<ffffffffa005d8e7>] ? iwl_generic_cmd_callback+0x0/0xe4 [iwlcore]
+[84379.361359]  [<ffffffff81042074>] warn_slowpath_null+0x15/0x17
+[84379.361363]  [<ffffffff815d1399>] ieee80211_scan_completed+0x43/0x17f
+[84379.361374]  [<ffffffffa0065212>] iwl_bg_scan_completed+0x1ce/0x1d7 [iwlcore]
+[84379.361380]  [<ffffffff81057153>] process_one_work+0x1e2/0x301
+[84379.361391]  [<ffffffffa0065044>] ? iwl_bg_scan_completed+0x0/0x1d7 [iwlcore]
+[84379.361395]  [<ffffffff8105752c>] worker_thread+0x130/0x243
+[84379.361400]  [<ffffffff810573fc>] ? worker_thread+0x0/0x243
+[84379.361404]  [<ffffffff8105bc1b>] kthread+0x81/0x89
+[84379.361409]  [<ffffffff81003914>] kernel_thread_helper+0x4/0x10
+[84379.361413]  [<ffffffff8105bb9a>] ? kthread+0x0/0x89
+[84379.361417]  [<ffffffff81003910>] ? kernel_thread_helper+0x0/0x10
+[84379.361420] ---[ end trace c5ebbd902daa4ea8 ]---
+[84379.361422] ------------[ cut here ]------------
+[84379.361426] WARNING: at net/mac80211/scan.c:269 ieee80211_scan_completed+0x62/0x17f()
+[84379.361429] Hardware name: 2241B48
+[84379.361431] Modules linked in: tun iwlagn kvm_intel kvm iwlcore e1000e thinkpad_acpi [last unloaded: scsi_wait_scan]
+[84379.361441] Pid: 8254, comm: kworker/u:0 Tainted: G        W   2.6.36-rc4-mst #96
+[84379.361461] Call Trace:
+[84379.361464]  [<ffffffff815d13b8>] ? ieee80211_scan_completed+0x62/0x17f
+[84379.361469]  [<ffffffff81042046>] warn_slowpath_common+0x80/0x99
+[84379.361479]  [<ffffffffa005d8e7>] ? iwl_generic_cmd_callback+0x0/0xe4 [iwlcore]
+[84379.361484]  [<ffffffff81042074>] warn_slowpath_null+0x15/0x17
+[84379.361488]  [<ffffffff815d13b8>] ieee80211_scan_completed+0x62/0x17f
+[84379.361503]  [<ffffffffa0065212>] iwl_bg_scan_completed+0x1ce/0x1d7 [iwlcore]
+[84379.361506]  [<ffffffff81057153>] process_one_work+0x1e2/0x301
+[84379.361512]  [<ffffffffa0065044>] ? iwl_bg_scan_completed+0x0/0x1d7 [iwlcore]
+[84379.361515]  [<ffffffff8105752c>] worker_thread+0x130/0x243
+[84379.361517]  [<ffffffff810573fc>] ? worker_thread+0x0/0x243
+[84379.361519]  [<ffffffff8105bc1b>] kthread+0x81/0x89
+[84379.361522]  [<ffffffff81003914>] kernel_thread_helper+0x4/0x10
+[84379.361524]  [<ffffffff8105bb9a>] ? kthread+0x0/0x89
+[84379.361526]  [<ffffffff81003910>] ? kernel_thread_helper+0x0/0x10
+[84379.361528] ---[ end trace c5ebbd902daa4ea9 ]---
 
-I'd suggest removing file 3826.eeprom and trying to boot without it.
+Should this happen? Does anyone care?
+I am not sure how reproducible this is.
+Thanks,
 
 -- 
-Max
+MST
