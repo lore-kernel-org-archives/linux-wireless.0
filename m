@@ -1,69 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:55811 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754383Ab0I1PW0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Sep 2010 11:22:26 -0400
-Message-ID: <4CA2082D.3040907@candelatech.com>
-Date: Tue, 28 Sep 2010 08:22:21 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mx1.redhat.com ([209.132.183.28]:7594 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752888Ab0INPVA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Sep 2010 11:21:00 -0400
+Date: Tue, 14 Sep 2010 17:14:39 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: Re: 2.6.36-rc4/iwl: warning triggered in net/mac80211/scan.c:266
+Message-ID: <20100914151439.GA13028@redhat.com>
+References: <20100914142814.GA8744@redhat.com>
+ <1284474988.3704.10.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] ath9k:  Check for identical channels when changing
- channels.
-References: <1285632457-27539-1-git-send-email-greearb@candelatech.com> <4CA1AC8F.6000802@openwrt.org> <4CA1EF94.9060508@candelatech.com> <4CA1F641.5090300@openwrt.org>
-In-Reply-To: <4CA1F641.5090300@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1284474988.3704.10.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/28/2010 07:05 AM, Felix Fietkau wrote:
-> On 2010-09-28 3:37 PM, Ben Greear wrote:
->> On 09/28/2010 01:51 AM, Felix Fietkau wrote:
->>> On 2010-09-28 2:07 AM, greearb@candelatech.com wrote:
->>>> From: Ben Greear<greearb@candelatech.com>
->>>>
->>>> Don't do un-needed work.  Should be useful when scanning on
->>>> only the working channel.
->>>>
->>>> Signed-off-by: Ben Greear<greearb@candelatech.com>
->>>> ---
->>>> :100644 100644 a133878... 4d34ba5... M	drivers/net/wireless/ath/ath9k/main.c
->>>>    drivers/net/wireless/ath/ath9k/main.c |    5 +++++
->>>>    1 files changed, 5 insertions(+), 0 deletions(-)
->>>>
->>>> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
->>>> index a133878..4d34ba5 100644
->>>> --- a/drivers/net/wireless/ath/ath9k/main.c
->>>> +++ b/drivers/net/wireless/ath/ath9k/main.c
->>>> @@ -1602,6 +1602,11 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
->>>>    		struct ieee80211_channel *curchan = hw->conf.channel;
->>>>    		int pos = curchan->hw_value;
->>>>
->>>> +		/* If channels are the same, then don't actually do anything.
->>>> +		 */
->>>> +		if (sc->sc_ah->curchan ==&sc->sc_ah->channels[pos])
->>>> +			goto skip_chan_change;
->>>> +
->>> NACK. This ignores off-channel flag changes, which are important for
->>> calibration.
->>
->> Is it enough to just add a check to make sure no changes were made to
->> the SC_OP_OFFCHANNEL flag?
-> Shouldn't this check be done in mac80211 then?
+On Tue, Sep 14, 2010 at 04:36:28PM +0200, Johannes Berg wrote:
+> On Tue, 2010-09-14 at 16:28 +0200, Michael S. Tsirkin wrote:
+> > I am running 2.6.36-rc4 on T60 with an iwlagn wireless card:
+> > 03:00.0 Network controller: Intel Corporation PRO/Wireless 5100 AGN [Shiloh] Network Connection
+> > 
+> > I was compiling a large file which stressed the box heavily, and the
+> > following warning in net/mac80211/scan.c triggered:
+> > 
+> >         /*
+> >          * It's ok to abort a not-yet-running scan (that
+> >          * we have one at all will be verified by checking
+> >          * local->scan_req next), but not to complete it
+> >          * successfully.
+> >          */
+> >         if (WARN_ON(!local->scanning && !aborted))
+> >                 aborted = true;
+> > 
+> > dmesg below:
+> > 
+> > [84379.361297] ------------[ cut here ]------------
+> > [84379.361307] WARNING: at net/mac80211/scan.c:266 ieee80211_scan_completed+0x43/0x17f()
+> 
+> > Should this happen? Does anyone care?
+> > I am not sure how reproducible this is.
+> 
+> No, it shouldn't happen. But there are various races in iwlwifi that can
+> cause this. Stanislaw has fixed them recently, but it's a fairly large
+> patchset. I'm not sure, but I don't think this is really new in .36.
+> 
+> johannes
 
-Maybe so...I was curious why the check wasn't already in place,
-and assumed that maybe some drivers needed it, or maybe the calling
-code doesn't always know the driver's current channel?
-
-Thanks,
-Ben
-
->
-> - Felix
-
+So ... get back to you after 2.6.37?
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+MST
