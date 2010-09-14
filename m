@@ -1,58 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:59859 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752714Ab0IWNMb (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:59027 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751490Ab0INPAV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Sep 2010 09:12:31 -0400
-Message-ID: <4C9B5234.1060002@candelatech.com>
-Date: Thu, 23 Sep 2010 06:12:20 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [mac80211] mac80211:  Support multiple VIFS per AP in debugfs.
-References: <1285071310-11440-1-git-send-email-greearb@candelatech.com>	 <4C98DC5D.2000108@candelatech.com>	 <1285086618.12764.3.camel@jlt3.sipsolutions.net>	 <4C98E05B.8050609@candelatech.com>	 <1285088605.12764.5.camel@jlt3.sipsolutions.net>	 <1285091341.12764.7.camel@jlt3.sipsolutions.net>	 <4C9A35FD.8060201@candelatech.com>	 <1285174896.3684.71.camel@jlt3.sipsolutions.net>	 <4C9A3E1C.8070306@candelatech.com>	 <1285180265.3684.74.camel@jlt3.sipsolutions.net>	 <20100922184846.GI5515@tuxdriver.com>  <4C9A5CEB.9010708@candelatech.com> <1285230639.3691.1.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1285230639.3691.1.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Tue, 14 Sep 2010 11:00:21 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
+	Paul Stewart <pstew@google.com>,
+	Amod Bodas <amod.bodas@atheros.com>
+Subject: [PATCH v2 02/10] ath9k: fix regression on beacon loss after bgscan
+Date: Tue, 14 Sep 2010 11:00:19 -0400
+Message-Id: <1284476419-13687-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/23/2010 01:30 AM, Johannes Berg wrote:
-> On Wed, 2010-09-22 at 12:45 -0700, Ben Greear wrote:
->
->> This look better?
->>
->> diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
->> index e81ef4e..ebd5b69 100644
->> --- a/net/mac80211/debugfs.c
->> +++ b/net/mac80211/debugfs.c
->> @@ -368,7 +368,6 @@ void debugfs_hw_add(struct ieee80211_local *local)
->>           if (!phyd)
->>                   return;
->>
->> -       local->debugfs.stations = debugfs_create_dir("stations", phyd);
->>           local->debugfs.keys = debugfs_create_dir("keys", phyd);
->>
->>           DEBUGFS_ADD(frequency);
->
-> Yeah, but completely whitespace damaged, you're going to have to work on
-> your submissions :)
->
-> Also, why do you do "[mac80211] mac80211" rather than "[PATCH]
-> mac80211"?
+When we return to the home channel we were never reseting our beacon
+timers, this was casued by the fact that the scanning flag was still
+on even after we returned to our home channel. There are also other
+reasons why we would get a reset and if we are not off channel
+we always need to resynch our beacon timers, because a reset will
+clear them.
 
-That was just pasted into email..I'll fix up your other suggestions and
-re-submit using git.  I'll see if I can get the email subject more correct
-as well.
+For more details refer to:
 
-Thanks,
-Ben
+http://code.google.com/p/chromium-os/issues/detail?id=5715
 
->
-> johannes
+This bug is a regression introduced on 2.6.36. The order of the
+changes are as follows:
 
+5ee08656 - Sat Jul 31 - ath9k: prevent calibration during off-channel activity
+a0daa0e7 - Tue Jul 27 - Revert "mac80211: fix sw scan bracketing"
+543708be - Fri Jun 18 - mac80211: fix sw scan bracketing
 
+mcgrof@tux ~/linux-2.6-allstable (git::master)$ git describe \
+        --contains 5ee0865615f65f84e6ee9174771a6716c29e08e1
+v2.6.36-rc1~43^2~34^2~22
+
+mcgrof@tux ~/linux-2.6-allstable (git::master)$ git describe \
+        --contains a0daa0e7592ada797d6835f11529097aabc27ad2
+v2.6.36-rc1~571^2~64^2~13
+
+mcgrof@tux ~/linux-2.6-allstable (git::master)$ git describe \
+        --contains 543708be320d7df692d24b349ca01a947b340764
+v2.6.36-rc1~571^2~107^2~187
+
+So 5ee08656 would have worked if a0daa0e7 was not committed but
+it was so this means 5ee08656 was broken since it assumed that
+when we were in the channel change routine the scan flag would
+be lifted. As it turns out the scan flag will be set when we
+are already on the home channel.
+
+These issues will need to be considered for our solution on
+reshifting the scan complete callback location on mac80211 on
+current development kernel work.
+
+This patch has stable fixes which apply down to [2.6.36+]
+
+Cc: stable@kernel.org
+Cc: Paul Stewart <pstew@google.com>
+Cc: Amod Bodas <amod.bodas@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+
+This v2 clarifies the second to last sentence, on the v1 this
+was just jiberish on my first read.. this should clarify what
+I meant.
+
+ drivers/net/wireless/ath/ath9k/main.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index ba029b2..e349619 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -258,9 +258,11 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 	if (!(sc->sc_flags & (SC_OP_OFFCHANNEL | SC_OP_SCANNING))) {
+ 		ath_start_ani(common);
+ 		ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work, 0);
+-		ath_beacon_config(sc, NULL);
+ 	}
+ 
++	if (!(sc->sc_flags & (SC_OP_OFFCHANNEL)))
++		ath_beacon_config(sc, NULL);
++
+  ps_restore:
+ 	ath9k_ps_restore(sc);
+ 	return r;
+@@ -957,7 +959,7 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 
+ 	ath_update_txpow(sc);
+ 
+-	if (sc->sc_flags & SC_OP_BEACONS)
++	if ((sc->sc_flags & SC_OP_BEACONS) || !(sc->sc_flags & (SC_OP_OFFCHANNEL)))
+ 		ath_beacon_config(sc, NULL);	/* restart beacons */
+ 
+ 	ath9k_hw_set_interrupts(ah, ah->imask);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.0.4
+
