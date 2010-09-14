@@ -1,75 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42406 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752897Ab0IXJUu (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:46920 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751657Ab0INOVM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Sep 2010 05:20:50 -0400
-Subject: [PATCH wireless-2.6] mac80211: fix use-after-free
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: John Linville <linville@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 24 Sep 2010 11:20:47 +0200
-Message-ID: <1285320047.3699.2.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 14 Sep 2010 10:21:12 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
+	Paul Stewart <pstew@google.com>,
+	Amod Bodas <amod.bodas@atheros.com>
+Subject: [PATCH 08/10] mac80211: send last 3/5 probe requests as unicast
+Date: Tue, 14 Sep 2010 10:21:11 -0400
+Message-Id: <1284474071-8404-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Some buggy APs do not respond to unicast probe requests
+or send unicast probe requests very delayed so in the
+worst case we should try to send broadcast probe requests,
+otherwise we can get disconnected from these APs.
 
-commit 8c0c709eea5cbab97fb464cd68b06f24acc58ee1
-Author: Johannes Berg <johannes@sipsolutions.net>
-Date:   Wed Nov 25 17:46:15 2009 +0100
+Even if drivers do not have filters to disregard probe
+responses from foreign APs mac80211 will only process
+probe responses from our associated AP for re-arming
+connection monitoring.
 
-    mac80211: move cmntr flag out of rx flags
+We need to do this since the beacon monitor does not
+push back the connection monitor by design so even if we
+are getting beacons from these type of APs our connection
+monitor currently relies heavily on the way the probe
+requests are received on the AP. An example of an AP
+affected by this is the Nexus One, but this has also been
+observed with random APs.
 
-moved the CMTR flag into the skb's status, and
-in doing so introduced a use-after-free -- when
-the skb has been handed to cooked monitors the
-status setting will touch now invalid memory.
+We can probably optimize this later by using null funcs
+instead of probe requests.
 
-Additionally, moving it there has effectively
-discarded the optimisation -- since the bit is
-only ever set on freed SKBs, and those were a
-copy, it could never be checked.
+For more details refer to:
 
-For the current release, fixing this properly
-is a bit too involved, so let's just remove the
-problematic code and leave userspace with one
-copy of each frame for each virtual interface.
+http://code.google.com/p/chromium-os/issues/detail?id=5715
 
-Cc: stable@kernel.org [2.6.33+]
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+This patch has fixes for stable kernels [2.6.35+]
+
+Cc: stable@kernel.org
+Cc: Paul Stewart <pstew@google.com>
+Cc: Amod Bodas <amod.bodas@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
-NOTE: John, you either need to put this into wireless-2.6
-      and then merge that into wireless-next-2.6 and revert
-      this patch before applying my other patchset, or there
-      will be merge issues (which should be fairly simple,
-      but I haven't tried) when you later merge wireless-2.6
-      into wireless-next-2.6 or this happens in linux-next.
+ net/mac80211/mlme.c |   13 +++++++++++--
+ 1 files changed, 11 insertions(+), 2 deletions(-)
 
- net/mac80211/rx.c |    4 ----
- 1 file changed, 4 deletions(-)
-
---- iwlwifi-jo.orig/net/mac80211/rx.c	2010-09-24 11:13:33.000000000 +0200
-+++ iwlwifi-jo/net/mac80211/rx.c	2010-09-24 11:14:28.000000000 +0200
-@@ -2199,9 +2199,6 @@ static void ieee80211_rx_cooked_monitor(
- 	struct net_device *prev_dev = NULL;
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index c2e1838..816566b 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1038,10 +1038,19 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	const u8 *ssid;
++	u8 *dst = ifmgd->associated->bssid;
++	u8 unicast_limit = max(1, IEEE80211_MAX_PROBE_TRIES - 3);
++
++	/*
++	 * Try sending broadcast probe requests for the last three
++	 * probe requests after the first ones failed since some
++	 * buggy APs only support broadcast probe requests.
++	 */
++	if (ifmgd->probe_send_count >= unicast_limit)
++		dst = NULL;
  
--	if (status->flag & RX_FLAG_INTERNAL_CMTR)
--		goto out_free_skb;
--
- 	if (skb_headroom(skb) < sizeof(*rthdr) &&
- 	    pskb_expand_head(skb, sizeof(*rthdr), 0, GFP_ATOMIC))
- 		goto out_free_skb;
-@@ -2260,7 +2257,6 @@ static void ieee80211_rx_cooked_monitor(
- 	} else
- 		goto out_free_skb;
+ 	ssid = ieee80211_bss_get_ie(ifmgd->associated, WLAN_EID_SSID);
+-	ieee80211_send_probe_req(sdata, ifmgd->associated->bssid,
+-				 ssid + 2, ssid[1], NULL, 0);
++	ieee80211_send_probe_req(sdata, dst, ssid + 2, ssid[1], NULL, 0);
  
--	status->flag |= RX_FLAG_INTERNAL_CMTR;
- 	return;
- 
-  out_free_skb:
-
+ 	ifmgd->probe_send_count++;
+ 	ifmgd->probe_timeout = jiffies + IEEE80211_PROBE_WAIT;
+-- 
+1.7.0.4
 
