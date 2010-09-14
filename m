@@ -1,60 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:44847 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754131Ab0IMCfU convert rfc822-to-8bit (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:59052 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755871Ab0INXkj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Sep 2010 22:35:20 -0400
-Received: by qwh6 with SMTP id 6so3123060qwh.19
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Sep 2010 19:35:19 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201009131017.35762.br1@einfach.org>
-References: <20100908070427.11255.17659.stgit@tt-desk>
-	<20100908070459.11255.52256.stgit@tt-desk>
-	<20100911172752.GH20385@hash.localnet>
-	<201009131017.35762.br1@einfach.org>
-Date: Sun, 12 Sep 2010 22:35:19 -0400
-Message-ID: <AANLkTik0Ph67jN3od3NAcwwLrQXnpyEqsJU5rfNAJWAJ@mail.gmail.com>
-Subject: Re: [ath5k-devel] [PATCH 6/8] ath5k: Use common crypt capabilities flags
-From: Bob Copeland <me@bobcopeland.com>
-To: Bruno Randolf <br1@einfach.org>
-Cc: bob@bobcopeland.com, ath5k-devel@lists.ath5k.org,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 14 Sep 2010 19:40:39 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
+	Paul Stewart <pstew@google.com>,
+	Amod Bodas <amod.bodas@atheros.com>
+Subject: [PATCH v3 02/11] ath9k: fix regression on beacon loss after bgscan
+Date: Tue, 14 Sep 2010 19:40:15 -0400
+Message-Id: <1284507624-18176-3-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1284507624-18176-1-git-send-email-lrodriguez@atheros.com>
+References: <1284507624-18176-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 12, 2010 at 9:17 PM, Bruno Randolf <br1@einfach.org> wrote:
-> On Sun September 12 2010 02:27:52 you wrote:
->> On Wed, Sep 08, 2010 at 04:04:59PM +0900, Bruno Randolf wrote:
->> > Replace ah_aes_support and ah_combined_mic with common ath_crypt_caps
->> > ATH_CRYPT_CAP_CIPHER_AESCCM and ATH_CRYPT_CAP_MIC_COMBINED.
->> >
->> > Signed-off-by: Bruno Randolf <br1@einfach.org>
->> >
->> > --- a/drivers/net/wireless/ath/ath5k/base.c
->> > +++ b/drivers/net/wireless/ath/ath5k/base.c
->> > @@ -3298,7 +3298,7 @@ ath5k_set_key(struct ieee80211_hw *hw, enum
->> > set_key_cmd cmd,
->> >
->> >     case WLAN_CIPHER_SUITE_TKIP:
->> >             break;
->> >
->> >     case WLAN_CIPHER_SUITE_CCMP:
->> > -           if (sc->ah->ah_aes_support)
->> > +           if (common->crypt_caps & ATH_CRYPT_CAP_CIPHER_AESCCM)
->> >
->> >                     break;
->> >
->> >             return -EOPNOTSUPP;
->>
->> This could be done by the common code too, right?
->
-> yes... ath9k doesn't do this, but i left the old code because i wasn't sure if
-> we need it or not. can we sort this out in a following patch?
+When we return to the home channel we were never reseting our beacon
+timers, this was casued by the fact that the scanning flag was still
+on even after we returned to our home channel. There are also other
+reasons why we would get a reset and if we are not off channel
+we always need to resynch our beacon timers, because a reset will
+clear them.
 
-Yeah, I guess only certain ath5k chipsets do CCMP while all
-ath9k ones do..  for sure, follow-up patches are fine for
-my minor comments, none of them affect functionality.
+This bug is a regression introduced on 2.6.36. The order of the
+changes are as follows:
 
+5ee08656 - Sat Jul 31 - ath9k: prevent calibration during off-channel activity
+a0daa0e7 - Tue Jul 27 - Revert "mac80211: fix sw scan bracketing"
+543708be - Fri Jun 18 - mac80211: fix sw scan bracketing
+
+mcgrof@tux ~/linux-2.6-allstable (git::master)$ git describe \
+        --contains 5ee0865615f65f84e6ee9174771a6716c29e08e1
+v2.6.36-rc1~43^2~34^2~22
+
+mcgrof@tux ~/linux-2.6-allstable (git::master)$ git describe \
+        --contains a0daa0e7592ada797d6835f11529097aabc27ad2
+v2.6.36-rc1~571^2~64^2~13
+
+mcgrof@tux ~/linux-2.6-allstable (git::master)$ git describe \
+        --contains 543708be320d7df692d24b349ca01a947b340764
+v2.6.36-rc1~571^2~107^2~187
+
+So 5ee08656 would have worked if a0daa0e7 was not committed but
+it was so this means 5ee08656 was broken since it assumed that
+when we were in the channel change routine the scan flag would
+be lifted. As it turns out the scan flag will be set when we
+are already on the home channel.
+
+For more details refer to:
+
+http://code.google.com/p/chromium-os/issues/detail?id=5715
+
+These issues will need to be considered for our solution on
+reshifting the scan complete callback location on mac80211 on
+current development kernel work.
+
+This patch has stable fixes which apply down to [2.6.36+]
+
+Cc: stable@kernel.org
+Cc: Paul Stewart <pstew@google.com>
+Cc: Amod Bodas <amod.bodas@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 826315d..186afec 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -258,9 +258,11 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+ 	if (!(sc->sc_flags & (SC_OP_OFFCHANNEL | SC_OP_SCANNING))) {
+ 		ath_start_ani(common);
+ 		ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work, 0);
+-		ath_beacon_config(sc, NULL);
+ 	}
+ 
++	if (!(sc->sc_flags & (SC_OP_OFFCHANNEL)))
++		ath_beacon_config(sc, NULL);
++
+  ps_restore:
+ 	ath9k_ps_restore(sc);
+ 	return r;
+@@ -957,7 +959,7 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
+ 
+ 	ath_update_txpow(sc);
+ 
+-	if (sc->sc_flags & SC_OP_BEACONS)
++	if ((sc->sc_flags & SC_OP_BEACONS) || !(sc->sc_flags & (SC_OP_OFFCHANNEL)))
+ 		ath_beacon_config(sc, NULL);	/* restart beacons */
+ 
+ 	ath9k_hw_set_interrupts(ah, ah->imask);
 -- 
-Bob Copeland %% www.bobcopeland.com
+1.7.0.4
+
