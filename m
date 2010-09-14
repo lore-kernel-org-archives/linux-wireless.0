@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:2471 "EHLO mail.perches.com"
+Received: from purkki.adurom.net ([80.68.90.206]:53674 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756390Ab0I0QDG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 12:03:06 -0400
-Subject: Re: [RFC v4]update broken web addresses in the kernel.
-From: Joe Perches <joe@perches.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "Justin P. Mattock" <justinmattock@gmail.com>, trivial@kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-fbdev@vger.kernel.org, alsa-devel@alsa-project.org,
-	dri-devel@lists.freedesktop.org, linux-ide@vger.kernel.org,
-	"Maciej W. Rozycki" <macro@linux-mips.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Finn Thain <fthain@telegraphics.com.au>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Matt Turner <mattst88@gmail.com>,
-	Dimitry Torokhov <dmitry.torokhov@gmail.com>,
-	Mike Frysinger <vapier.adi@gmail.com>
-In-Reply-To: <20100927151005.GC11086@tuxdriver.com>
-References: <1285525875-9920-1-git-send-email-justinmattock@gmail.com>
-	 <20100927151005.GC11086@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 27 Sep 2010 09:03:03 -0700
-Message-ID: <1285603383.1732.106.camel@Joe-Laptop>
-Mime-Version: 1.0
+	id S1753203Ab0INWVg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Sep 2010 18:21:36 -0400
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Paul Stewart <pstew@google.com>,
+	Amod Bodas <amod.bodas@atheros.com>
+Subject: Re: [PATCH 08/10] mac80211: send last 3/5 probe requests as unicast
+References: <1284474071-8404-1-git-send-email-lrodriguez@atheros.com>
+	<87mxrk5610.fsf@purkki.adurom.net>
+	<AANLkTikQx3RZcWPEjktBb0gkTLtMfCxXMma6h=9u+UBr@mail.gmail.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Wed, 15 Sep 2010 01:21:35 +0300
+In-Reply-To: <AANLkTikQx3RZcWPEjktBb0gkTLtMfCxXMma6h=9u+UBr@mail.gmail.com> (Luis R. Rodriguez's message of "Tue\, 14 Sep 2010 15\:15\:18 -0700")
+Message-ID: <87iq2855lc.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2010-09-27 at 11:10 -0400, John W. Linville wrote:
-> On Sun, Sep 26, 2010 at 11:31:15AM -0700, Justin P. Mattock wrote:
-> > Below is an updated patch from the original fixing broken web addresses in the kernel.
-> > Thanks for all the help and info on this to everybody..
-> > Hopefully I didnt miss any of them(if so let me know, and I'll resend).
-> Changing a URL for a relocated page is one thing, but removing links
-> isn't necessarily a great idea.  Even if the site is technically
-> gone, it may be possible to find information e.g through the Internet
-> Archive Wayback Machine.
+"Luis R. Rodriguez" <lrodriguez@atheros.com> writes:
 
-Perhaps it'd be better to scrape the contents of the various
-web pages, collect them somewhere like wiki.kernel.org and
-encourage others to put new contributions in that site.
+>> Beginning of this year I sent patches to use null funcs. Unfortunately
+>> I had to drop them due to time constraints.
+>>
+>> Also a major power consumption imporovement from using null func
+>> frames is that we don't have to trigger dynamic power save timer
+>> during the poll. Just send the frame with PSM bit set, wait for ack
+>> and go immeaditely back to sleep. So instead of having radios enabled
+>> for example 100 ms per frame, we can do it in just 1 ms.
+>
+> Neat, do you have those patches dug up in a directory somewhere or
+> should I dig the archives?
 
+They are here:
 
+http://marc.info/?l=linux-wireless&m=126644065026466&w=2
 
+But I'm sure they don't apply anymore. You interested about patch 2:
+
+http://marc.info/?l=linux-wireless&m=126644065926485&w=2
+
+-- 
+Kalle Valo
