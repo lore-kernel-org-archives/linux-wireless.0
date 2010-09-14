@@ -1,60 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:36123 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753273Ab0IHS6U (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60493 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752508Ab0INSo7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Sep 2010 14:58:20 -0400
-Received: by mail-ew0-f46.google.com with SMTP id 23so343042ewy.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2010 11:58:19 -0700 (PDT)
-From: Ivo van Doorn <ivdoorn@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 05/06] rt2x00: Enable missing interrupts in rt61pci
-Date: Wed, 8 Sep 2010 20:57:10 +0200
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-References: <201009082055.38033.IvDoorn@gmail.com> <201009082056.33182.IvDoorn@gmail.com> <201009082056.53759.IvDoorn@gmail.com>
-In-Reply-To: <201009082056.53759.IvDoorn@gmail.com>
+	Tue, 14 Sep 2010 14:44:59 -0400
+Date: Tue, 14 Sep 2010 14:41:43 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Joe Perches <joe@perches.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH 15/25] drivers/net/wireless/ipw2x00: Use static const
+ char arrays
+Message-ID: <20100914184142.GE2484@tuxdriver.com>
+References: <cover.1284406638.git.joe@perches.com>
+ <9c135a60c2ed3431ee59c8de0b39414f6c10299a.1284406638.git.joe@perches.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201009082057.11427.IvDoorn@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <9c135a60c2ed3431ee59c8de0b39414f6c10299a.1284406638.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+On Mon, Sep 13, 2010 at 12:47:53PM -0700, Joe Perches wrote:
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
+>  drivers/net/wireless/ipw2x00/ipw2100.c       |    2 +-
+>  drivers/net/wireless/ipw2x00/ipw2200.c       |    2 +-
+>  drivers/net/wireless/ipw2x00/libipw_module.c |    2 +-
+>  3 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
+> index 61915f3..f64103c 100644
+> --- a/drivers/net/wireless/ipw2x00/ipw2100.c
+> +++ b/drivers/net/wireless/ipw2x00/ipw2100.c
+> @@ -4261,7 +4261,7 @@ static ssize_t store_scan_age(struct device *d, struct device_attribute *attr,
+>  {
+>  	struct ipw2100_priv *priv = dev_get_drvdata(d);
+>  	struct net_device *dev = priv->net_dev;
+> -	char buffer[] = "00000000";
+> +	char buffer[sizeof("00000000")];
+>  	unsigned long len =
+>  	    (sizeof(buffer) - 1) > count ? count : sizeof(buffer) - 1;
+>  	unsigned long val;
 
-We're handling both, the CSR_BEACON_DONE and the CSR_TWAKEUP interrupts
-in rt61pci. However, these interrupts are masked out by default. Fix
-this.
+Had to look twice, since you replaced an initialization with a
+declaration.  But in all these cases the initial value was already
+being overwritten before use anyway.
 
-Found via pure code inspection.
+Acked-by: John W. Linville <linville@tuxdriver.com>
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Signed-off-by: Ivo van Doorn <IvDoorn@gmail.com>
----
- drivers/net/wireless/rt2x00/rt61pci.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+> diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+> index 0f25083..75e83c9 100644
+> --- a/drivers/net/wireless/ipw2x00/ipw2200.c
+> +++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+> @@ -1486,7 +1486,7 @@ static ssize_t store_scan_age(struct device *d, struct device_attribute *attr,
+>  {
+>  	struct ipw_priv *priv = dev_get_drvdata(d);
+>  	struct net_device *dev = priv->net_dev;
+> -	char buffer[] = "00000000";
+> +	char buffer[sizeof("00000000")];
+>  	unsigned long len =
+>  	    (sizeof(buffer) - 1) > count ? count : sizeof(buffer) - 1;
+>  	unsigned long val;
+> diff --git a/drivers/net/wireless/ipw2x00/libipw_module.c b/drivers/net/wireless/ipw2x00/libipw_module.c
+> index 32dee2c..d0c8a67 100644
+> --- a/drivers/net/wireless/ipw2x00/libipw_module.c
+> +++ b/drivers/net/wireless/ipw2x00/libipw_module.c
+> @@ -261,7 +261,7 @@ static int debug_level_proc_open(struct inode *inode, struct file *file)
+>  static ssize_t debug_level_proc_write(struct file *file,
+>  		const char __user *buffer, size_t count, loff_t *pos)
+>  {
+> -	char buf[] = "0x00000000\n";
+> +	char buf[sizeof("0x00000000\n")];
+>  	size_t len = min(sizeof(buf) - 1, count);
+>  	unsigned long val;
+>  
+> -- 
+> 1.7.3.rc1
+> 
+> 
 
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 042cfbe..4aec344 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -1654,6 +1654,7 @@ static void rt61pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
- 	rt2x00pci_register_read(rt2x00dev, INT_MASK_CSR, &reg);
- 	rt2x00_set_field32(&reg, INT_MASK_CSR_TXDONE, mask);
- 	rt2x00_set_field32(&reg, INT_MASK_CSR_RXDONE, mask);
-+	rt2x00_set_field32(&reg, INT_MASK_CSR_BEACON_DONE, mask);
- 	rt2x00_set_field32(&reg, INT_MASK_CSR_ENABLE_MITIGATION, mask);
- 	rt2x00_set_field32(&reg, INT_MASK_CSR_MITIGATION_PERIOD, 0xff);
- 	rt2x00pci_register_write(rt2x00dev, INT_MASK_CSR, reg);
-@@ -1667,6 +1668,7 @@ static void rt61pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field32(&reg, MCU_INT_MASK_CSR_5, mask);
- 	rt2x00_set_field32(&reg, MCU_INT_MASK_CSR_6, mask);
- 	rt2x00_set_field32(&reg, MCU_INT_MASK_CSR_7, mask);
-+	rt2x00_set_field32(&reg, MCU_INT_MASK_CSR_TWAKEUP, mask);
- 	rt2x00pci_register_write(rt2x00dev, MCU_INT_MASK_CSR, reg);
- }
- 
 -- 
-1.7.2.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
