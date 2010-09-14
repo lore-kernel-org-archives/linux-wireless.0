@@ -1,43 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:25219 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757620Ab0ICMBd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Sep 2010 08:01:33 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 0/13] iwlwifi: rewrite iwl-scan.c to avoid race conditions
-Date: Fri,  3 Sep 2010 13:57:23 +0200
-Message-Id: <1283515056-11523-1-git-send-email-sgruszka@redhat.com>
+Received: from mail.candelatech.com ([208.74.158.172]:41309 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752646Ab0INSAX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Sep 2010 14:00:23 -0400
+Message-ID: <4C8FB81A.7090007@candelatech.com>
+Date: Tue, 14 Sep 2010 10:59:54 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	johannes@sipsolutions.net, lrodriguez@atheros.com
+Subject: Re: [PATCH 1/2] ath9k: fix BSSID mask calculation
+References: <1284482240-57922-1-git-send-email-nbd@openwrt.org> <4C8FB1DA.5090209@candelatech.com> <4C8FB621.1060608@openwrt.org>
+In-Reply-To: <4C8FB621.1060608@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Avoid iwlwifi hardware scanning race conditions
-that may lead to not call ieee80211_scan_completed() (what in
-consequences gives "WARNING: at net/wireless/core.c:614
-wdev_cleanup_work+0xb7/0xf0"), or call iee80211_scan_completed() more
-then once (what gives " WARNING: at net/mac80211/scan.c:312
-ieee80211_scan_completed+0x5f/0x1f1").
+On 09/14/2010 10:51 AM, Felix Fietkau wrote:
+> On 2010-09-14 7:33 PM, Ben Greear wrote:
+>> On 09/14/2010 09:37 AM, Felix Fietkau wrote:
+>>> At the time the .add_interface driver op is called, the interface has not
+>>> been marked as running yet, so ieee80211_iterate_active_interfaces will
+>>> not pass it to the iterator function.
+>>> Because of this, the calculated BSSID mask is wrong, which breaks multi-BSS
+>>> operation.
+>>>
+>>> Additionally, the current way of comparing all addresses against each other
+>>> is pointless, as the hardware only uses the hardware MAC address and the BSSID
+>>> mask for matching the destination address, so all the address array
+>>> reallocation is completely unnecessary.
+>>>
+>>> This patch simplifies the logic by setting the initial mask bytes to 0xff
+>>> and removing all bits in the iterator call that don't match the hardware MAC
+>>> address. It also calls the iterator for the vif that was passed to
+>>> add_interface()
+>>
+>> You probably need to fix the mask-setting logic in
+>> ath_opmode_init as well?
+> What do you mean?
 
-First problem (warning in wdev_cleanup_work) make any further scan
-request from cfg80211 are ignored by mac80211 with EBUSY error,
-hence NetworkManager can not perform successful scan and not allow
-to establish a new connection. So after suspend/resume (but maybe
-not only then) user is not able to connect to wireless network again.
+It seems I saw this code over-write the mask with a bad value
+when debugging this a few days ago..but perhaps I was mistaken,
+or perhaps your patch fixes this already.
 
-We can not rely on that the commands (start and abort scan) are
-successful. Even if they are successfully send to the hardware, we can
-not get back notification from firmware (i.e. firmware hung or was
-reseted), or we can get notification when we actually perform abort
-scan in driver code or after that.
+	/* configure bssid mask */
+	if (ah->caps.hw_caps & ATH9K_HW_CAP_BSSIDMASK)
+		ath_hw_setbssidmask(common);
 
-To assure we call ieee80211_scan_completed() only once when scan
-was started we use SCAN_SCANNING bit. Code path, which first clear
-STATUS_SCANNING bit will call ieee80211_scan_completed().
-We do this in many cases, in scan complete notification, scan
-abort, device down, etc. Each time we check SCANNING bit.
+My plan was to have it call ath9k_set_bssid_mask(common->hw) instead.
 
+
+Were you able to create multiple STA interfaces and have them
+send/receive data with your patch?
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
