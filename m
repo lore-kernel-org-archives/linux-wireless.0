@@ -1,48 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:43563 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754279Ab0IJPz5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Sep 2010 11:55:57 -0400
-Subject: Re: [PATCH 11/14] mac80211: wait for scan work complete before
- restarting hw
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:41081 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751213Ab0INGJ4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Sep 2010 02:09:56 -0400
+Date: Tue, 14 Sep 2010 06:09:48 +0000
+From: Jarek Poplawski <jarkao2@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Felipe Contreras <felipe.contreras@gmail.com>,
+	linux-kernel@vger.kernel.org, Jiri Kosina <jkosina@suse.cz>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1284128807-11436-12-git-send-email-sgruszka@redhat.com>
-References: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
-	 <1284128807-11436-12-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain
-Date: Fri, 10 Sep 2010 08:55:10 -0700
-Message-Id: <1284134110.6054.23.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+	"David S. Miller" <davem@davemloft.net>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Felix Fietkau <nbd@openwrt.org>, Jouni Malinen <j@w1.fi>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 2/2] mac80211: fix compilation warning
+Message-ID: <20100914060948.GA6908@ff.dom.local>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1284441432.3704.0.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-09-10 at 07:26 -0700, Stanislaw Gruszka wrote:
-> This is needed to avoid warning in ieee80211_restart_hw about hardware
-> scan in progress.
+On 2010-09-14 07:17, Johannes Berg wrote:
+> On Sun, 2010-09-12 at 14:10 +0300, Felipe Contreras wrote:
 > 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Acked-by: Wey-Yi W Guy <wey-yi.w.guy@intel.com>
-> ---
->  net/mac80211/main.c |    3 +++
->  1 files changed, 3 insertions(+), 0 deletions(-)
+>>  	struct ieee80211_hdr hdr;
+>> -	struct ieee80211s_hdr mesh_hdr;
+>>  	const u8 *encaps_data;
+>>  	int encaps_len, skip_header_bytes;
+>>  	int nh_pos, h_pos;
+>> @@ -1755,7 +1754,9 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+>>  		hdrlen = 30;
+>>  		break;
+>>  #ifdef CONFIG_MAC80211_MESH
+>> -	case NL80211_IFTYPE_MESH_POINT:
+>> +	case NL80211_IFTYPE_MESH_POINT: {
+>> +		struct ieee80211s_hdr mesh_hdr;
+>> +
 > 
-> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-> index 4935b84..bf0eb6a 100644
-> --- a/net/mac80211/main.c
-> +++ b/net/mac80211/main.c
-> @@ -305,6 +305,9 @@ void ieee80211_restart_hw(struct ieee80211_hw *hw)
->  
->  	trace_api_restart_hw(local);
->  
-> +	/* wait for scan work complete */
-> +	flush_workqueue(local->workqueue);
-> +
->  	WARN(test_bit(SCAN_HW_SCANNING, &local->scanning),
->  		"%s called with hardware scan in progress\n", __func__);
->  
+> ...
+> 
+> might be nicer to just add __maybe_unused.
+> 
+> johannes
+> 
 
+Or at least more consistent with the fix in net-next ;-)
+
+Jarek P.
