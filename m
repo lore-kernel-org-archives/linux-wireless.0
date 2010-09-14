@@ -1,51 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:56618 "EHLO mga03.intel.com"
+Received: from purkki.adurom.net ([80.68.90.206]:60365 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752101Ab0IIP5V convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Sep 2010 11:57:21 -0400
-From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 9 Sep 2010 08:57:10 -0700
-Subject: RE: [PATCH 0/16 v2] iwlwifi: rewrite iwl-scan.c to avoid race
- conditions
-Message-ID: <E9954878DD1FB34FAE5187FB88C58A3501280FDCC3@orsmsx506.amr.corp.intel.com>
-References: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
- <E9954878DD1FB34FAE5187FB88C58A3501280FDC3D@orsmsx506.amr.corp.intel.com>
- <20100909155522.GA376@redhat.com>
-In-Reply-To: <20100909155522.GA376@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1752471Ab0INWMN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Sep 2010 18:12:13 -0400
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Paul Stewart <pstew@google.com>,
+	Amod Bodas <amod.bodas@atheros.com>
+Subject: Re: [PATCH 08/10] mac80211: send last 3/5 probe requests as unicast
+References: <1284474071-8404-1-git-send-email-lrodriguez@atheros.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Wed, 15 Sep 2010 01:12:11 +0300
+In-Reply-To: <1284474071-8404-1-git-send-email-lrodriguez@atheros.com> (Luis R. Rodriguez's message of "Tue\, 14 Sep 2010 10\:21\:11 -0400")
+Message-ID: <87mxrk5610.fsf@purkki.adurom.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Gruszka,
+"Luis R. Rodriguez" <lrodriguez@atheros.com> writes:
 
------Original Message-----
-From: Stanislaw Gruszka [mailto:sgruszka@redhat.com]
-Sent: Thursday, September 09, 2010 8:55 AM
-To: Guy, Wey-Yi W
-Cc: Johannes Berg; Chatre, Reinette; John W. Linville; linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/16 v2] iwlwifi: rewrite iwl-scan.c to avoid race conditions
+> We need to do this since the beacon monitor does not
+> push back the connection monitor by design so even if we
+> are getting beacons from these type of APs our connection
+> monitor currently relies heavily on the way the probe
+> requests are received on the AP. An example of an AP
+> affected by this is the Nexus One, but this has also been
+> observed with random APs.
+>
+> We can probably optimize this later by using null funcs
+> instead of probe requests.
 
-Hi.
+Beginning of this year I sent patches to use null funcs. Unfortunately
+I had to drop them due to time constraints.
 
-On Thu, Sep 09, 2010 at 08:32:56AM -0700, Guy, Wey-Yi W wrote:
-> Do we have any bugzilla bug# can associated to this set of patches?
+Also a major power consumption imporovement from using null func
+frames is that we don't have to trigger dynamic power save timer
+during the poll. Just send the frame with PSM bit set, wait for ack
+and go immeaditely back to sleep. So instead of having radios enabled
+for example 100 ms per frame, we can do it in just 1 ms.
 
-Yes, I'm doing this for RHEL6 bug:
-https://bugzilla.redhat.com/show_bug.cgi?id=593566
-
-I'm pretty sure there are lot's of other "WARNING: at
-net/wireless/core.c:614 wdev_cleanup_work" bug reports, which will
-be most likely fixed by this patchset.
-
-
-Could these bug# be part of description which can help us keep track of the bugs status
-
-Thanks
-Wey
+-- 
+Kalle Valo
