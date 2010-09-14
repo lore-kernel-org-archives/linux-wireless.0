@@ -1,47 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:57112 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753140Ab0IHXgO (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:48486 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754327Ab0INTqJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Sep 2010 19:36:14 -0400
-Received: by ywh1 with SMTP id 1so355788ywh.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2010 16:36:13 -0700 (PDT)
-From: Steve deRosier <steve@cozybit.com>
-To: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Cc: johannes@sipsolutions.net, javier@cozybit.com,
-	Mattia Barbon <mbarbon@cpan.org>,
-	Steve deRosier <steve@cozybit.com>
-Subject: [PATCH 1/3] libertas_tf: display debugging output only when debugging is enabled.
-Date: Wed,  8 Sep 2010 16:35:56 -0700
-Message-Id: <1283988958-44928-1-git-send-email-steve@cozybit.com>
+	Tue, 14 Sep 2010 15:46:09 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [ath9k] ath9k:  Print rxfilter in debugfs.
+Date: Tue, 14 Sep 2010 12:46:04 -0700
+Message-Id: <1284493564-26191-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mattia Barbon <mbarbon@cpan.org>
+From: Ben Greear <greearb@candelatech.com>
 
-Signed-off-by: Mattia Barbon <mbarbon@cpan.org>
-Signed-off-by: Steve deRosier <steve@cozybit.com>
+Print raw and decoded rxfilter in debufs 'wiphy' file.
+
+Also, move variable-length printouts to bottom of file to
+make bounds checking easier.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/libertas_tf/cmd.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+:100644 100644 54aae93... 863450d... M	drivers/net/wireless/ath/ath9k/debug.c
+ drivers/net/wireless/ath/ath9k/debug.c |   53 ++++++++++++++++++++++++++------
+ 1 files changed, 43 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas_tf/cmd.c b/drivers/net/wireless/libertas_tf/cmd.c
-index 8c15e35..1bca11b 100644
---- a/drivers/net/wireless/libertas_tf/cmd.c
-+++ b/drivers/net/wireless/libertas_tf/cmd.c
-@@ -741,10 +741,12 @@ int lbtf_process_rx_command(struct lbtf_private *priv)
- 	respcmd = le16_to_cpu(resp->command);
- 	result = le16_to_cpu(resp->result);
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 54aae93..863450d 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -492,12 +492,55 @@ static ssize_t read_file_wiphy(struct file *file, char __user *user_buf,
+ 	unsigned int len = 0;
+ 	int i;
+ 	u8 addr[ETH_ALEN];
++	u32 tmp;
  
-+#ifdef CONFIG_LIBERTAS_THINFIRM_DEBUG
- 	if (net_ratelimit())
- 		pr_info("libertastf: cmd response 0x%04x, seq %d, size %d\n",
- 			respcmd, le16_to_cpu(resp->seqnum),
- 			le16_to_cpu(resp->size));
-+#endif
+ 	len += snprintf(buf + len, sizeof(buf) - len,
+ 			"primary: %s (%s chan=%d ht=%d)\n",
+ 			wiphy_name(sc->pri_wiphy->hw->wiphy),
+ 			ath_wiphy_state_str(sc->pri_wiphy->state),
+ 			sc->pri_wiphy->chan_idx, sc->pri_wiphy->chan_is_ht);
++
++	put_unaligned_le32(REG_READ_D(sc->sc_ah, AR_STA_ID0), addr);
++	put_unaligned_le16(REG_READ_D(sc->sc_ah, AR_STA_ID1) & 0xffff, addr + 4);
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"addr: %pM\n", addr);
++	put_unaligned_le32(REG_READ_D(sc->sc_ah, AR_BSSMSKL), addr);
++	put_unaligned_le16(REG_READ_D(sc->sc_ah, AR_BSSMSKU) & 0xffff, addr + 4);
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"addrmask: %pM\n", addr);
++	tmp = ath9k_hw_getrxfilter(sc->sc_ah);
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"rfilt: 0x%x", tmp);
++	if (tmp & ATH9K_RX_FILTER_UCAST)
++		len += snprintf(buf + len, sizeof(buf) - len, " UCAST");
++	if (tmp & ATH9K_RX_FILTER_MCAST)
++		len += snprintf(buf + len, sizeof(buf) - len, " MCAST");
++	if (tmp & ATH9K_RX_FILTER_BCAST)
++		len += snprintf(buf + len, sizeof(buf) - len, " BCAST");
++	if (tmp & ATH9K_RX_FILTER_CONTROL)
++		len += snprintf(buf + len, sizeof(buf) - len, " CONTROL");
++	if (tmp & ATH9K_RX_FILTER_BEACON)
++		len += snprintf(buf + len, sizeof(buf) - len, " BEACON");
++	if (tmp & ATH9K_RX_FILTER_PROM)
++		len += snprintf(buf + len, sizeof(buf) - len, " PROM");
++	if (tmp & ATH9K_RX_FILTER_PROBEREQ)
++		len += snprintf(buf + len, sizeof(buf) - len, " PROBEREQ");
++	if (tmp & ATH9K_RX_FILTER_PHYERR)
++		len += snprintf(buf + len, sizeof(buf) - len, " PHYERR");
++	if (tmp & ATH9K_RX_FILTER_MYBEACON)
++		len += snprintf(buf + len, sizeof(buf) - len, " MYBEACON");
++	if (tmp & ATH9K_RX_FILTER_COMP_BAR)
++		len += snprintf(buf + len, sizeof(buf) - len, " COMP_BAR");
++	if (tmp & ATH9K_RX_FILTER_PSPOLL)
++		len += snprintf(buf + len, sizeof(buf) - len, " PSPOLL");
++	if (tmp & ATH9K_RX_FILTER_PHYRADAR)
++		len += snprintf(buf + len, sizeof(buf) - len, " PHYRADAR");
++	if (tmp & ATH9K_RX_FILTER_MCAST_BCAST_ALL)
++		len += snprintf(buf + len, sizeof(buf) - len, " MCAST_BCAST_ALL\n");
++	else
++		len += snprintf(buf + len, sizeof(buf) - len, "\n");
++		
++	/* Put variable-length stuff down here, and check for overflows. */
+ 	for (i = 0; i < sc->num_sec_wiphy; i++) {
+ 		struct ath_wiphy *aphy = sc->sec_wiphy[i];
+ 		if (aphy == NULL)
+@@ -508,16 +551,6 @@ static ssize_t read_file_wiphy(struct file *file, char __user *user_buf,
+ 				ath_wiphy_state_str(aphy->state),
+ 				aphy->chan_idx, aphy->chan_is_ht);
+ 	}
+-
+-	put_unaligned_le32(REG_READ_D(sc->sc_ah, AR_STA_ID0), addr);
+-	put_unaligned_le16(REG_READ_D(sc->sc_ah, AR_STA_ID1) & 0xffff, addr + 4);
+-	len += snprintf(buf + len, sizeof(buf) - len,
+-			"addr: %pM\n", addr);
+-	put_unaligned_le32(REG_READ_D(sc->sc_ah, AR_BSSMSKL), addr);
+-	put_unaligned_le16(REG_READ_D(sc->sc_ah, AR_BSSMSKU) & 0xffff, addr + 4);
+-	len += snprintf(buf + len, sizeof(buf) - len,
+-			"addrmask: %pM\n", addr);
+-
+ 	if (len > sizeof(buf))
+ 		len = sizeof(buf);
  
- 	if (resp->seqnum != priv->cur_cmd->cmdbuf->seqnum) {
- 		spin_unlock_irqrestore(&priv->driver_lock, flags);
 -- 
-1.7.0
+1.7.2.2
 
