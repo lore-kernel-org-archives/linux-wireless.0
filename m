@@ -1,38 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36947 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755350Ab0I3M7W (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:59047 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755865Ab0INXkj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Sep 2010 08:59:22 -0400
-Date: Tue, 28 Sep 2010 15:47:42 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Subject: Re: [PATCH v2] ath9k : Fix for displaying the channel number
-Message-ID: <20100928194742.GB5307@tuxdriver.com>
-References: <1284739766-31231-1-git-send-email-mshajakhan@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1284739766-31231-1-git-send-email-mshajakhan@atheros.com>
+	Tue, 14 Sep 2010 19:40:39 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
+	Paul Stewart <pstew@google.com>,
+	Amod Bodas <amod.bodas@atheros.com>
+Subject: [PATCH v3 09/11] mac80211: send last 3/5 probe requests as unicast
+Date: Tue, 14 Sep 2010 19:40:22 -0400
+Message-Id: <1284507624-18176-10-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1284507624-18176-1-git-send-email-lrodriguez@atheros.com>
+References: <1284507624-18176-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 17, 2010 at 09:39:26PM +0530, Mohammed Shafi Shajakhan wrote:
-> From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-> 
-> In the ath9k debugging feature 'wiphy' the current channel used by the
-> station is incorrectly displayed.This is because the channels available
-> are sequentially mapped from numbers 0 to 37.This mapping cannot be
-> changed as the channel number is also used as an index for an array of
-> structures in struct ath9k_channel channels[38] .
->           This fix solves the above problem by calculating the channel
-> number from center frequency.
-> 
-> Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+Some buggy APs do not respond to unicast probe requests
+or send unicast probe requests very delayed so in the
+worst case we should try to send broadcast probe requests,
+otherwise we can get disconnected from these APs.
 
-What was this patch based against?  It doesn't seem to apply anymore...
+Even if drivers do not have filters to disregard probe
+responses from foreign APs mac80211 will only process
+probe responses from our associated AP for re-arming
+connection monitoring.
 
-John
+We need to do this since the beacon monitor does not
+push back the connection monitor by design so even if we
+are getting beacons from these type of APs our connection
+monitor currently relies heavily on the way the probe
+requests are received on the AP. An example of an AP
+affected by this is the Nexus One, but this has also been
+observed with random APs.
+
+We can probably optimize this later by using null funcs
+instead of probe requests.
+
+For more details refer to:
+
+http://code.google.com/p/chromium-os/issues/detail?id=5715
+
+This patch has fixes for stable kernels [2.6.35+].
+
+Cc: stable@kernel.org
+Cc: Paul Stewart <pstew@google.com>
+Cc: Amod Bodas <amod.bodas@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ net/mac80211/mlme.c |   13 +++++++++++--
+ 1 files changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index c2e1838..816566b 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1038,10 +1038,19 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	const u8 *ssid;
++	u8 *dst = ifmgd->associated->bssid;
++	u8 unicast_limit = max(1, IEEE80211_MAX_PROBE_TRIES - 3);
++
++	/*
++	 * Try sending broadcast probe requests for the last three
++	 * probe requests after the first ones failed since some
++	 * buggy APs only support broadcast probe requests.
++	 */
++	if (ifmgd->probe_send_count >= unicast_limit)
++		dst = NULL;
+ 
+ 	ssid = ieee80211_bss_get_ie(ifmgd->associated, WLAN_EID_SSID);
+-	ieee80211_send_probe_req(sdata, ifmgd->associated->bssid,
+-				 ssid + 2, ssid[1], NULL, 0);
++	ieee80211_send_probe_req(sdata, dst, ssid + 2, ssid[1], NULL, 0);
+ 
+ 	ifmgd->probe_send_count++;
+ 	ifmgd->probe_timeout = jiffies + IEEE80211_PROBE_WAIT;
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.0.4
+
