@@ -1,203 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:4818 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752276Ab0IINw7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Sep 2010 09:52:59 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
+Received: from bombadil.infradead.org ([18.85.46.34]:46707 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751356Ab0INOU2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Sep 2010 10:20:28 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 06/12] iwlwifi: report scan completion when abort fail
-Date: Thu,  9 Sep 2010 15:52:24 +0200
-Message-Id: <1284040354-31703-7-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
-References: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
+	Paul Stewart <pstew@google.com>,
+	Amod Bodas <amod.bodas@atheros.com>
+Subject: [PATCH 07/10] mac80211: disable beacon monitor while going offchannel
+Date: Tue, 14 Sep 2010 10:20:28 -0400
+Message-Id: <1284474028-3337-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When we are not able to send abort command to firmware, notify mac80211
-that we complete scan, as we will newer do it lately. Check for all
-possible errors that low level sending command procedure does not check,
-to assure we catch all failures cases.
+The beacon monitor should be disabled when going off channel
+to prevent spurious warnings and triggering connection
+deterioration work such as sending probe requests. Re-enable
+the beacon monitor once we come back to the home channel.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+This patch has fixes for stable kernels [2.6.34+]
+
+Cc: stable@kernel.org
+Cc: Paul Stewart <pstew@google.com>
+Cc: Amod Bodas <amod.bodas@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-scan.c |  131 ++++++++++++++++---------------
- 1 files changed, 67 insertions(+), 64 deletions(-)
+ net/mac80211/offchannel.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 5fb49d2..4d2a09b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -54,34 +54,83 @@
- #define IWL_PASSIVE_DWELL_BASE      (100)
- #define IWL_CHANNEL_TUNE_TIME       5
- 
-+static int iwl_send_scan_abort(struct iwl_priv *priv)
-+{
-+	int ret;
-+	struct iwl_rx_packet *pkt;
-+	struct iwl_host_cmd cmd = {
-+		.id = REPLY_SCAN_ABORT_CMD,
-+		.flags = CMD_WANT_SKB,
-+	};
- 
-+	/* Exit instantly with error when device is not ready
-+	 * to receive scan abort command or it does not perform
-+	 * hardware scan currently */
-+	if (!test_bit(STATUS_READY, &priv->status) ||
-+	    !test_bit(STATUS_GEO_CONFIGURED, &priv->status) ||
-+	    !test_bit(STATUS_SCAN_HW, &priv->status) ||
-+	    test_bit(STATUS_FW_ERROR, &priv->status) ||
-+	    test_bit(STATUS_EXIT_PENDING, &priv->status))
-+		return -EIO;
- 
--/**
-- * iwl_scan_cancel - Cancel any currently executing HW scan
-- *
-- * NOTE: priv->mutex is not required before calling this function
-- */
--int iwl_scan_cancel(struct iwl_priv *priv)
--{
--	if (!test_bit(STATUS_SCAN_HW, &priv->status)) {
--		clear_bit(STATUS_SCANNING, &priv->status);
--		return 0;
-+	ret = iwl_send_cmd_sync(priv, &cmd);
-+	if (ret)
-+		return ret;
-+
-+	pkt = (struct iwl_rx_packet *)cmd.reply_page;
-+	if (pkt->u.status != CAN_ABORT_STATUS) {
-+		/* The scan abort will return 1 for success or
-+		 * 2 for "failure".  A failure condition can be
-+		 * due to simply not being in an active scan which
-+		 * can occur if we send the scan abort before we
-+		 * the microcode has notified us that a scan is
-+		 * completed. */
-+		IWL_DEBUG_INFO(priv, "SCAN_ABORT ret %d.\n", pkt->u.status);
-+		ret = -EIO;
- 	}
- 
--	if (test_bit(STATUS_SCANNING, &priv->status)) {
--		if (!test_and_set_bit(STATUS_SCAN_ABORTING, &priv->status)) {
--			IWL_DEBUG_SCAN(priv, "Queuing scan abort.\n");
--			schedule_work(&priv->abort_scan);
-+	iwl_free_pages(priv, cmd.reply_page);
-+	return ret;
-+}
- 
--		} else
--			IWL_DEBUG_SCAN(priv, "Scan abort already in progress.\n");
-+static void iwl_do_scan_abort(struct iwl_priv *priv)
-+{
-+	int ret;
- 
--		return test_bit(STATUS_SCANNING, &priv->status);
-+	lockdep_assert_held(&priv->mutex);
-+
-+	if (!test_bit(STATUS_SCANNING, &priv->status)) {
-+		IWL_DEBUG_SCAN(priv, "Not performing scan to abort\n");
-+		return;
- 	}
- 
-+	if (test_and_set_bit(STATUS_SCAN_ABORTING, &priv->status)) {
-+		IWL_DEBUG_SCAN(priv, "Scan abort in progress\n");
-+		return;
-+	}
-+
-+	ret = iwl_send_scan_abort(priv);
-+	if (ret) {
-+		IWL_DEBUG_SCAN(priv, "Send scan abort failed %d\n", ret);
-+		clear_bit(STATUS_SCANNING, &priv->status);
-+		clear_bit(STATUS_SCAN_HW, &priv->status);
-+		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
-+		ieee80211_scan_completed(priv->hw, true);
-+	} else
-+		IWL_DEBUG_SCAN(priv, "Sucessfully send scan abort\n");
-+}
-+
-+/**
-+ * iwl_scan_cancel - Cancel any currently executing HW scan
-+ */
-+int iwl_scan_cancel(struct iwl_priv *priv)
-+{
-+	IWL_DEBUG_SCAN(priv, "Queuing abort scan\n");
-+	schedule_work(&priv->abort_scan);
- 	return 0;
- }
- EXPORT_SYMBOL(iwl_scan_cancel);
-+
- /**
-  * iwl_scan_cancel_timeout - Cancel any currently executing HW scan
-  * @ms: amount of time to wait (in milliseconds) for scan to abort
-@@ -108,47 +157,6 @@ int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
- }
- EXPORT_SYMBOL(iwl_scan_cancel_timeout);
- 
--static int iwl_send_scan_abort(struct iwl_priv *priv)
--{
--	int ret = 0;
--	struct iwl_rx_packet *pkt;
--	struct iwl_host_cmd cmd = {
--		.id = REPLY_SCAN_ABORT_CMD,
--		.flags = CMD_WANT_SKB,
--	};
--
--	/* If there isn't a scan actively going on in the hardware
--	 * then we are in between scan bands and not actually
--	 * actively scanning, so don't send the abort command */
--	if (!test_bit(STATUS_SCAN_HW, &priv->status)) {
--		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
--		return 0;
--	}
--
--	ret = iwl_send_cmd_sync(priv, &cmd);
--	if (ret) {
--		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
--		return ret;
--	}
--
--	pkt = (struct iwl_rx_packet *)cmd.reply_page;
--	if (pkt->u.status != CAN_ABORT_STATUS) {
--		/* The scan abort will return 1 for success or
--		 * 2 for "failure".  A failure condition can be
--		 * due to simply not being in an active scan which
--		 * can occur if we send the scan abort before we
--		 * the microcode has notified us that a scan is
--		 * completed. */
--		IWL_DEBUG_INFO(priv, "SCAN_ABORT returned %d.\n", pkt->u.status);
--		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
--		clear_bit(STATUS_SCAN_HW, &priv->status);
--	}
--
--	iwl_free_pages(priv, cmd.reply_page);
--
--	return ret;
--}
--
- /* Service response to REPLY_SCAN_CMD (0x80) */
- static void iwl_rx_reply_scan(struct iwl_priv *priv,
- 			      struct iwl_rx_mem_buffer *rxb)
-@@ -527,15 +535,10 @@ static void iwl_bg_abort_scan(struct work_struct *work)
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index 8b58626..b199136 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -22,12 +22,14 @@
+ static void ieee80211_offchannel_ps_enable(struct ieee80211_sub_if_data *sdata)
  {
- 	struct iwl_priv *priv = container_of(work, struct iwl_priv, abort_scan);
+ 	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
  
--	if (!test_bit(STATUS_READY, &priv->status) ||
--	    !test_bit(STATUS_GEO_CONFIGURED, &priv->status))
--		return;
--
- 	cancel_delayed_work(&priv->scan_check);
+ 	local->offchannel_ps_enabled = false;
  
- 	mutex_lock(&priv->mutex);
--	if (test_bit(STATUS_SCAN_ABORTING, &priv->status))
--		iwl_send_scan_abort(priv);
-+	iwl_do_scan_abort(priv);
- 	mutex_unlock(&priv->mutex);
+ 	/* FIXME: what to do when local->pspolling is true? */
+ 
+ 	del_timer_sync(&local->dynamic_ps_timer);
++	del_timer_sync(&ifmgd->bcn_mon_timer);
+ 	del_timer_sync(&sdata->u.mgd.conn_mon_timer);
+ 
+ 	cancel_work_sync(&local->dynamic_ps_enable_work);
+@@ -88,6 +90,7 @@ static void ieee80211_offchannel_ps_disable(struct ieee80211_sub_if_data *sdata)
+ 			  msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
+ 	}
+ 
++	ieee80211_sta_reset_beacon_monitor(sdata);
+ 	ieee80211_sta_reset_conn_monitor(sdata);
  }
  
 -- 
-1.7.1
+1.7.0.4
 
