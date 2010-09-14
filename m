@@ -1,51 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:45318 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753447Ab0IRXCk (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:37371 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752526Ab0INHNA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Sep 2010 19:02:40 -0400
-Received: by wwb39 with SMTP id 39so2188000wwb.1
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Sep 2010 16:02:39 -0700 (PDT)
+	Tue, 14 Sep 2010 03:13:00 -0400
 MIME-Version: 1.0
-In-Reply-To: <AANLkTim4F8t2g8YGH8TKaudzAg42vzFgijcURUubVdkc@mail.gmail.com>
-References: <c785bba31003060945j22be2e78pfeaa1bcd39fcba2c@mail.gmail.com>
-	<69e28c911003061007y258ec349laa802810e0517de4@mail.gmail.com>
-	<1267949782.15192.13.camel@mj>
-	<69e28c911003070736t678cf6ccld0fe6dc332f4380d@mail.gmail.com>
-	<1268190973.10669.12.camel@mj>
-	<loom.20100910T132509-455@post.gmane.org>
-	<AANLkTim4F8t2g8YGH8TKaudzAg42vzFgijcURUubVdkc@mail.gmail.com>
-Date: Sat, 18 Sep 2010 16:02:39 -0700
-Message-ID: <AANLkTikSPf=VfcZEkTbwfZrfjgrtHe6_O0wXwWnz9g88@mail.gmail.com>
-Subject: Re: Realtek rtl8188 support?
-From: Paul Thomas <pthomas8589@gmail.com>
-To: Hin-Tak Leung <hintak.leung@gmail.com>
-Cc: Claus Ried <claus.ried@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <ccc9236f25803fbd8bc082e4fef2af8a0885ebf4.1284435710.git.joe@perches.com>
+References: <cover.1284435709.git.joe@perches.com>
+	<ccc9236f25803fbd8bc082e4fef2af8a0885ebf4.1284435710.git.joe@perches.com>
+Date: Tue, 14 Sep 2010 09:12:58 +0200
+Message-ID: <AANLkTi=QzToh00xz15mw9+v2YJ5bWigc21S4cGzAQE_X@mail.gmail.com>
+Subject: Re: [PATCH next 09/16] drivers/net/wireless: Use static const char *
+ const where possible
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Joe Perches <joe@perches.com>
+Cc: linux-kernel@vger.kernel.org,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	netdev@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 17, 2010 at 8:37 PM, Hin-Tak Leung <hintak.leung@gmail.com> wrote:
-> On Fri, Sep 10, 2010 at 12:29 PM, Claus Ried <claus.ried@gmail.com> wrote:
+On Tue, Sep 14, 2010 at 6:23 AM, Joe Perches <joe@perches.com> wrote:
+> Signed-off-by: Joe Perches <joe@perches.com>
+
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00debug.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 >
->> i have the same problems with an rtl8188su based usb wlan stick running on an
->> amd64 based mandriva 2.6.33 kernel. The current staging drivers (inlcuding the
->> firmware) do work to some extent, scanning is ok, listing surrounding wlans is
->> working.
->> But, i cannot connect to my wpa2 encrypted network using this stick.
->> Everything is working fine if i am using the internal laptop wlan card (intel
->> based).
->> Any ideas why the usb stick won't connect?
->> Claus
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00debug.c b/drivers/net/wireless/rt2x00/rt2x00debug.c
+> index b8cf45c..c1710b2 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00debug.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00debug.c
+> @@ -380,7 +380,7 @@ static ssize_t rt2x00debug_read_crypto_stats(struct file *file,
+>                                             loff_t *offset)
+>  {
+>        struct rt2x00debug_intf *intf = file->private_data;
+> -       char *name[] = { "WEP64", "WEP128", "TKIP", "AES" };
+> +       static const char * const name[] = { "WEP64", "WEP128", "TKIP", "AES" };
+>        char *data;
+>        char *temp;
+>        size_t size;
+> --
+> 1.7.3.rc1
 >
-> The Realtek vendor driver has always bundled its own wpa_supplicant
-> and I have wondered what mod they have made. Are you using your distro
-> wpa_supplicant or the Realtek vendor bundled one?
-
-So this is working for me now. I'm using the r8712u driver from here:
-http://git.kernel.org/?p=linux/kernel/git/lwfinger/r8712u.git;a=summary
-
-With debian's wpa_supplicant v0.6.4.
-
-thanks,
-Paul
+>
