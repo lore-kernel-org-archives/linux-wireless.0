@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:42477 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753593Ab0IBOb4 convert rfc822-to-8bit (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:42734 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750834Ab0INVaw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Sep 2010 10:31:56 -0400
-Received: by bwz11 with SMTP id 11so610091bwz.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Sep 2010 07:31:54 -0700 (PDT)
+	Tue, 14 Sep 2010 17:30:52 -0400
+Received: by iwn5 with SMTP id 5so6379240iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Sep 2010 14:30:51 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <AANLkTim_Ou8fFbfsn8AEZFpWBzjnAQuT4S_w8bV5saYD@mail.gmail.com>
-References: <AANLkTim_Ou8fFbfsn8AEZFpWBzjnAQuT4S_w8bV5saYD@mail.gmail.com>
-Date: Thu, 2 Sep 2010 09:31:54 -0500
-Message-ID: <AANLkTikWq6_J-BmJVCk2OEV++MV6_7tZY4oMmCaTShN3@mail.gmail.com>
-Subject: Re: mac80211-based commercial router?
-From: Xianghua Xiao <xiaoxianghua@gmail.com>
-To: =?UTF-8?Q?Bj=C3=B6rn_Smedman?= <bjorn.smedman@venatech.se>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20100914203000.GF2484@tuxdriver.com>
+References: <1283822661-16018-1-git-send-email-ohad@wizery.com> <20100914203000.GF2484@tuxdriver.com>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Tue, 14 Sep 2010 23:30:30 +0200
+Message-ID: <AANLkTinCyHrKxDYmdbWWXNRQ+zrHtnqLLDKQa-qp3OFV@mail.gmail.com>
+Subject: Re: [PATCH] wl1271: sdio: claim host only when doing IO
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Luciano Coelho <luciano.coelho@nokia.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/9/2 Bj√∂rn Smedman <bjorn.smedman@venatech.se>:
-> Hi all,
->
-> Is there any commercial router or access point in the market (or
-> planned) that uses a mac80211-based driver out of the box?
->
-> More intrested in consumer grade stuff but anything is of interest. I
-> was hoping Atheros might be first with this but from what I hear it
-> seems unlikely the access point SDK will come with ath9k anytime
-> soon...
->
-> Best regards,
->
-> Bj√∂rn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at ¬†http://vger.kernel.org/majordomo-info.html
->
+On Tue, Sep 14, 2010 at 10:30 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> drivers/net/wireless/wl12xx/wl1271_sdio.c: In function ëwl1271_sdio_set_powerí:
+> drivers/net/wireless/wl12xx/wl1271_sdio.c:193: warning: ëreturní with a value, in function returning void
+> drivers/net/wireless/wl12xx/wl1271_sdio.c:195: warning: ëreturní with a value, in function returning void
+> drivers/net/wireless/wl12xx/wl1271_sdio.c:186: warning: unused variable ëfuncí
 
-Looks like the commercial SDKs are all based on madwifi-alike code?
-Xianghua
+Sorry, I wrote the original patch on my branch which already
+propagates the error code from set_power.
+
+> I'll fix these in a separate patch.
+
+If you prefer I can submit a new one.
+
+Thanks,
+Ohad.
+
+>
+> John
+> --
+> John W. Linville † † † † † † † †Someday the world will need a hero, and you
+> linville@tuxdriver.com † † † † † † † † †might be all we have. †Be ready.
+>
