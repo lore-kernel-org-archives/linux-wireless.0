@@ -1,70 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:57520 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753986Ab0I2RMK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Sep 2010 13:12:10 -0400
-Message-ID: <4CA37366.3040906@openwrt.org>
-Date: Wed, 29 Sep 2010 19:12:06 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Paul Stewart <pstew@google.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	lrodriguez@atheros.com
-Subject: [PATCH v2 6/6] ath9k: return survey data for all channels instead
- of just the current one
-References: <1285773331-73439-1-git-send-email-nbd@openwrt.org>	<1285773331-73439-2-git-send-email-nbd@openwrt.org>	<1285773331-73439-3-git-send-email-nbd@openwrt.org>	<1285773331-73439-4-git-send-email-nbd@openwrt.org>	<1285773331-73439-5-git-send-email-nbd@openwrt.org>	<1285773331-73439-6-git-send-email-nbd@openwrt.org> <AANLkTim1MuVoJnOqeBQtKzTNLK=2Pf4SpMw4MiQHPeB2@mail.gmail.com>
-In-Reply-To: <AANLkTim1MuVoJnOqeBQtKzTNLK=2Pf4SpMw4MiQHPeB2@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from bombadil.infradead.org ([18.85.46.34]:59046 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755870Ab0INXkj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Sep 2010 19:40:39 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
+	Paul Stewart <pstew@google.com>,
+	Amod Bodas <amod.bodas@atheros.com>
+Subject: [PATCH v3 07/11] mac80211: make the beacon monitor available externally
+Date: Tue, 14 Sep 2010 19:40:20 -0400
+Message-Id: <1284507624-18176-8-git-send-email-lrodriguez@atheros.com>
+In-Reply-To: <1284507624-18176-1-git-send-email-lrodriguez@atheros.com>
+References: <1284507624-18176-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+This will be used by other components next. The beacon
+monitor was added as of 2.6.34 so these fixes are applicable
+only to kernels >= 2.6.34.
+
+Cc: stable@kernel.org
+Cc: Paul Stewart <pstew@google.com>
+Cc: Amod Bodas <amod.bodas@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
-v2: add a missing null pointer check for 5ghz sband (thx, paul)
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/mlme.c        |    8 ++++----
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
- drivers/net/wireless/ath/ath9k/main.c |   27 +++++++++++++++++++++------
- 1 files changed, 21 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index a801a08..49ea458 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1994,16 +1994,31 @@ static int ath9k_get_survey(struct ieee80211_hw *hw, int idx,
- 	struct ath_wiphy *aphy = hw->priv;
- 	struct ath_softc *sc = aphy->sc;
- 	struct ath_hw *ah = sc->sc_ah;
--	struct ieee80211_conf *conf = &hw->conf;
-+	struct ieee80211_supported_band *sband;
-+	struct ath9k_channel *chan;
-+
-+	sband = hw->wiphy->bands[IEEE80211_BAND_2GHZ];
-+	if (sband && idx >= sband->n_channels) {
-+		idx -= sband->n_channels;
-+		sband = NULL;
-+	}
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 737fd0f..9346a6b 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1041,6 +1041,7 @@ void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_sta_work(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 				  struct sk_buff *skb);
++void ieee80211_sta_reset_beacon_monitor(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_sta_reset_conn_monitor(struct ieee80211_sub_if_data *sdata);
  
--	 if (idx != 0)
--		return -ENOENT;
-+	if (!sband)
-+		sband = hw->wiphy->bands[IEEE80211_BAND_5GHZ];
+ /* IBSS code */
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 172a397..c2e1838 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -115,7 +115,7 @@ static void run_again(struct ieee80211_if_managed *ifmgd,
+ 		mod_timer(&ifmgd->timer, timeout);
+ }
  
--	survey->channel = conf->channel;
-+	if (!sband || idx >= sband->n_channels)
-+	    return -ENOENT;
-+
-+	survey->channel = &sband->channels[idx];
-+	chan = &ah->channels[survey->channel->hw_value];
- 	survey->filled = 0;
--	if (ah->curchan && ah->curchan->noisefloor) {
-+
-+	if (chan == ah->curchan)
-+		survey->filled |= SURVEY_INFO_IN_USE;
-+
-+	if (chan->noisefloor) {
- 		survey->filled |= SURVEY_INFO_NOISE_DBM;
--		survey->noise = ah->curchan->noisefloor;
-+		survey->noise = chan->noisefloor;
- 	}
+-static void mod_beacon_timer(struct ieee80211_sub_if_data *sdata)
++void ieee80211_sta_reset_beacon_monitor(struct ieee80211_sub_if_data *sdata)
+ {
+ 	if (sdata->local->hw.flags & IEEE80211_HW_BEACON_FILTER)
+ 		return;
+@@ -1390,7 +1390,7 @@ static bool ieee80211_assoc_success(struct ieee80211_work *wk,
+ 	 * Also start the timer that will detect beacon loss.
+ 	 */
+ 	ieee80211_sta_rx_notify(sdata, (struct ieee80211_hdr *)mgmt);
+-	mod_beacon_timer(sdata);
++	ieee80211_sta_reset_beacon_monitor(sdata);
  
- 	return 0;
+ 	return true;
+ }
+@@ -1493,7 +1493,7 @@ static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
+ 		 * we have or will be receiving any beacons or data, so let's
+ 		 * schedule the timers again, just in case.
+ 		 */
+-		mod_beacon_timer(sdata);
++		ieee80211_sta_reset_beacon_monitor(sdata);
+ 
+ 		mod_timer(&ifmgd->conn_mon_timer,
+ 			  round_jiffies_up(jiffies +
+@@ -1619,7 +1619,7 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 	 * Push the beacon loss detection into the future since
+ 	 * we are processing a beacon from the AP just now.
+ 	 */
+-	mod_beacon_timer(sdata);
++	ieee80211_sta_reset_beacon_monitor(sdata);
+ 
+ 	ncrc = crc32_be(0, (void *)&mgmt->u.beacon.beacon_int, 4);
+ 	ncrc = ieee802_11_parse_elems_crc(mgmt->u.beacon.variable,
+-- 
+1.7.0.4
 
