@@ -1,94 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.47]:52625 "EHLO mgw-sa01.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753049Ab0I2Pxe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Sep 2010 11:53:34 -0400
-Subject: pull request: wl1xx 2010-09-29
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Received: from he.sipsolutions.net ([78.46.109.217]:45042 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753261Ab0INOxg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Sep 2010 10:53:36 -0400
+Subject: Re: [virtual-sta 1/3] mac80211:  Add more general interface
+ iterator.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4C8F8B0D.8050902@candelatech.com>
+References: <1284156298-15863-1-git-send-email-greearb@candelatech.com>
+	 <1284469166.3704.3.camel@jlt3.sipsolutions.net>
+	 <4C8F8B0D.8050902@candelatech.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 29 Sep 2010 18:53:19 +0300
-Message-ID: <1285775599.9024.5.camel@powerslave>
+Date: Tue, 14 Sep 2010 16:53:00 +0200
+Message-ID: <1284475980.3704.13.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Tue, 2010-09-14 at 07:47 -0700, Ben Greear wrote:
 
-The wl12xx tree is ready for pulling.  There are lots of changes, as you
-already know, mostly bugfixes and other stability improvements that were
-still pending in our internal tree.
+> I'll see if I can get ath9k to use the normal iterator.  I didn't need my
+> own iterator, because I could just pass in NULL for iterator and pass
+> active_only as false.
 
-This is my first pull request to you, so please let me know if there are
-any problems with it.
+active_only as false still doesn't seem right. Why would you care about
+it before an interface is up?
 
-The following changes since commit 1728943d83e9fd919e454332fe344944123b3c3a:
-  John W. Linville (1):
-        Merge branch 'master' of git://git.kernel.org/.../linville/wireless-2.6
+> I think you should consider returning the count for the number of times the
+> iterator was called because it's simple code, and it would save the same logic
+> in each driver's iterator methods (or at least, ath9k).
 
-are available in the git repository at:
+Yeah, that seems like a good change, but I think we should probably get
+to the bottom of it first (the sdata->bss change on the other hand seems
+fine as is)
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git wireless-next
-
-Juuso Oikarinen (22):
-      wl1271: Implement CMD_SET_STA_STATE to indicate connection completion to FW
-      wl1271: Add trigger to net_device oper_state to change BT coex priority
-      wl1271: Fix scan race condition
-      wl1271: Change supported channel order for a more optimal scan
-      wl1271: Remove outdated FIXME's
-      wl1271: Move setting of wake-up conditions to ps.c from cmd.c
-      wl1271: Remove acx_fw_version function
-      wl1271: Release interrupt *after* releasing the driver context
-      wl1271: Remove function cmd_read_memory
-      wl1271: Enable/disable 11a support based on INI configuration
-      wl1271: Reduce rate used for last PSM entry attempt
-      wl1271: Enable 11a support always, prevent scanning for unsupporting chips
-      wl1271: Fix tid-configuration of TX frames
-      wl1271: Fix AC/TID default configuration
-      wl1271: Move scan complete invocation into work function
-      wl1271: Fix work cancelling when shutting down the driver
-      wl1271: Separate interface removal to another function
-      wl1271: Add hardware recovery mechanism
-      wl1271: Add handling for failing hardware scan command
-      wl1271: Optimize scan duration
-      wl1271: Increase connection reliability
-      wl1271: Add support for hardware GEM cipher
-
-Luciano Coelho (4):
-      wl1271: remove deprecated ACX definition
-      wl1271: remove useless 11a check when scanning
-      wl1271: fix forced passive scan
-      MAINTAINERS: Update git url for the wl1271 driver
-
-ext Ohad Ben-Cohen (1):
-      wl12xx: fix non-wl12xx build scenarios
-
- MAINTAINERS                                   |    2 +-
- drivers/net/wireless/wl12xx/wl1271.h          |   24 +-
- drivers/net/wireless/wl12xx/wl1271_acx.c      |   34 ---
- drivers/net/wireless/wl12xx/wl1271_acx.h      |   31 ---
- drivers/net/wireless/wl12xx/wl1271_boot.c     |   39 ++-
- drivers/net/wireless/wl12xx/wl1271_cmd.c      |   89 +++----
- drivers/net/wireless/wl12xx/wl1271_cmd.h      |   49 +---
- drivers/net/wireless/wl12xx/wl1271_conf.h     |   57 ++++-
- drivers/net/wireless/wl12xx/wl1271_event.c    |   15 +-
- drivers/net/wireless/wl12xx/wl1271_init.c     |   35 ++--
- drivers/net/wireless/wl12xx/wl1271_main.c     |  358 ++++++++++++++++---------
- drivers/net/wireless/wl12xx/wl1271_ps.c       |   20 ++-
- drivers/net/wireless/wl12xx/wl1271_ps.h       |    2 +-
- drivers/net/wireless/wl12xx/wl1271_scan.c     |   79 +++++-
- drivers/net/wireless/wl12xx/wl1271_scan.h     |    6 +-
- drivers/net/wireless/wl12xx/wl1271_sdio.c     |    3 +-
- drivers/net/wireless/wl12xx/wl1271_spi.c      |    3 +-
- drivers/net/wireless/wl12xx/wl1271_testmode.c |   14 +-
- drivers/net/wireless/wl12xx/wl1271_tx.c       |    6 +-
- drivers/net/wireless/wl12xx/wl1271_tx.h       |   17 --
- include/linux/wl12xx.h                        |   13 +
- 21 files changed, 500 insertions(+), 396 deletions(-)
-
-
--- 
-Cheers,
-Luca.
+johannes
 
