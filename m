@@ -1,34 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:42627 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755232Ab0IUTcu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Sep 2010 15:32:50 -0400
-Message-ID: <4C990859.70709@openwrt.org>
-Date: Tue, 21 Sep 2010 21:32:41 +0200
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Ben Greear <greearb@candelatech.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [ath9k-devel] ath9k, multiple stations, and AMPDUs
-References: <4C9841BA.4080700@candelatech.com> <4C98848C.70005@openwrt.org>	 <4C98A022.7020106@candelatech.com> <4C98A2C4.8060108@openwrt.org>	 <4C98EAA1.7050908@candelatech.com>  <4C98F2D8.8020602@openwrt.org> <1285097307.12764.11.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1285097307.12764.11.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from he.sipsolutions.net ([78.46.109.217]:40184 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753065Ab0INOgy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Sep 2010 10:36:54 -0400
+Subject: Re: 2.6.36-rc4/iwl: warning triggered in net/mac80211/scan.c:266
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Reinette Chatre <reinette.chatre@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+In-Reply-To: <20100914142814.GA8744@redhat.com>
+References: <20100914142814.GA8744@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 14 Sep 2010 16:36:28 +0200
+Message-ID: <1284474988.3704.10.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-09-21 9:28 PM, Johannes Berg wrote:
-> On Tue, 2010-09-21 at 20:00 +0200, Felix Fietkau wrote:
+On Tue, 2010-09-14 at 16:28 +0200, Michael S. Tsirkin wrote:
+> I am running 2.6.36-rc4 on T60 with an iwlagn wireless card:
+> 03:00.0 Network controller: Intel Corporation PRO/Wireless 5100 AGN [Shiloh] Network Connection
 > 
->> > Could we just poke a pointer to the STA into the ath_buf structure?
+> I was compiling a large file which stressed the box heavily, and the
+> following warning in net/mac80211/scan.c triggered:
 > 
->> No, that doesn't work because of RCU.
+>         /*
+>          * It's ok to abort a not-yet-running scan (that
+>          * we have one at all will be verified by checking
+>          * local->scan_req next), but not to complete it
+>          * successfully.
+>          */
+>         if (WARN_ON(!local->scanning && !aborted))
+>                 aborted = true;
 > 
-> Well, it could work, if you walk all the structures upon sta_notify and
-> remove now stale pointers (or just drop the frames or something).
-I think it would be much better to just add the helper function that
-checks the RA on STA lookup. Keeps things simple, especially since
-nothing else in the tx path needs the vif.
+> dmesg below:
+> 
+> [84379.361297] ------------[ cut here ]------------
+> [84379.361307] WARNING: at net/mac80211/scan.c:266 ieee80211_scan_completed+0x43/0x17f()
 
-- Felix
+> Should this happen? Does anyone care?
+> I am not sure how reproducible this is.
+
+No, it shouldn't happen. But there are various races in iwlwifi that can
+cause this. Stanislaw has fixed them recently, but it's a fairly large
+patchset. I'm not sure, but I don't think this is really new in .36.
+
+johannes
+
