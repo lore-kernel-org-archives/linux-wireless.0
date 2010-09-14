@@ -1,48 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55432 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754812Ab0I2SGi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Sep 2010 14:06:38 -0400
-Subject: Re: [PATCH 2/2] mac80211:  Don't go off-channel in work_work
- unless needed.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1285783383-20822-2-git-send-email-greearb@candelatech.com>
-References: <1285783383-20822-1-git-send-email-greearb@candelatech.com>
-	 <1285783383-20822-2-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 29 Sep 2010 20:06:38 +0200
-Message-ID: <1285783598.3756.31.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:42735 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751129Ab0INJEs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Sep 2010 05:04:48 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 14 Sep 2010 02:04:42 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH] ath9k_htc: Fix CPU usage issue during scan period
+Date: Tue, 14 Sep 2010 14:35:55 +0530
+Message-ID: <1284455155-20441-1-git-send-email-rmanoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-09-29 at 11:03 -0700, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> If the work to be done is on the current active channel, then
-> do not call the offchannel and return-to-channel logic.
-> 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
-> :100644 100644 ae344d1... 1f2673d... M	net/mac80211/work.c
->  net/mac80211/work.c |   28 ++++++++++++++++++++--------
->  1 files changed, 20 insertions(+), 8 deletions(-)
-> 
-> diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-> index ae344d1..1f2673d 100644
-> --- a/net/mac80211/work.c
-> +++ b/net/mac80211/work.c
-> @@ -873,6 +873,7 @@ static void ieee80211_work_work(struct work_struct *work)
->  	LIST_HEAD(free_work);
->  	enum work_action rma;
->  	bool remain_off_channel = false;
-> +	bool went_off_channel = false;
+The CPU consumption during the scan period is high, since
+the register write go over Interrupt endpoint. On downloading
+the firmware to the target, the USB descriptors are
+'patched' to change the type of the endpoints from Interrupt
+to Bulk.
 
-Heh, this is not going to work ... the return may be done in a separate
-invocation of the function. Would have been nice to test this ;-)
+With this fix, the CPU usage during a scan run comes down to
+acceptable levels.
 
-johannes
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.c |   26 ++++++++++++++++++++++----
+ 1 files changed, 22 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 495f189..27f88a0 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -92,10 +92,10 @@ static int hif_usb_send_regout(struct hif_device_usb *hif_dev,
+ 	cmd->skb = skb;
+ 	cmd->hif_dev = hif_dev;
+ 
+-	usb_fill_int_urb(urb, hif_dev->udev,
+-			 usb_sndintpipe(hif_dev->udev, USB_REG_OUT_PIPE),
++	usb_fill_bulk_urb(urb, hif_dev->udev,
++			 usb_sndbulkpipe(hif_dev->udev, USB_REG_OUT_PIPE),
+ 			 skb->data, skb->len,
+-			 hif_usb_regout_cb, cmd, 1);
++			 hif_usb_regout_cb, cmd);
+ 
+ 	usb_anchor_urb(urb, &hif_dev->regout_submitted);
+ 	ret = usb_submit_urb(urb, GFP_KERNEL);
+@@ -822,7 +822,9 @@ static int ath9k_hif_usb_download_fw(struct hif_device_usb *hif_dev)
+ 
+ static int ath9k_hif_usb_dev_init(struct hif_device_usb *hif_dev)
+ {
+-	int ret;
++	int ret, idx;
++	struct usb_host_interface *alt = &hif_dev->interface->altsetting[0];
++	struct usb_endpoint_descriptor *endp;
+ 
+ 	/* Request firmware */
+ 	ret = request_firmware(&hif_dev->firmware, hif_dev->fw_name,
+@@ -850,6 +852,22 @@ static int ath9k_hif_usb_dev_init(struct hif_device_usb *hif_dev)
+ 		goto err_fw_download;
+ 	}
+ 
++	/* On downloading the firmware to the target, the USB descriptor of EP4
++	 * is 'patched' to change the type of the endpoint to Bulk. This will
++	 * bring down CPU usage during the scan period.
++	 */
++	for (idx = 0; idx < alt->desc.bNumEndpoints; idx++) {
++		endp = &alt->endpoint[idx].desc;
++		if (((endp->bEndpointAddress & USB_ENDPOINT_NUMBER_MASK)
++				== 0x04) &&
++		    ((endp->bmAttributes & USB_ENDPOINT_XFERTYPE_MASK)
++				== USB_ENDPOINT_XFER_INT)) {
++			endp->bmAttributes &= ~USB_ENDPOINT_XFERTYPE_MASK;
++			endp->bmAttributes |= USB_ENDPOINT_XFER_BULK;
++			endp->bInterval = 0;
++		}
++	}
++
+ 	return 0;
+ 
+ err_fw_download:
+-- 
+1.7.2.3
 
