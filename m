@@ -1,66 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:34781 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752080Ab0IAV07 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55348 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752889Ab0INNNx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Sep 2010 17:26:59 -0400
-From: Ohad Ben-Cohen <ohad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <linux-mmc@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>
-Cc: Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	<akpm@linux-foundation.org>, San Mehat <san@google.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>, Ido Yariv <ido@wizery.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Russell King <linux@arm.linux.org.uk>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: [PATCH v5 0/7] native wl1271 support on ZOOM
-Date: Thu,  2 Sep 2010 00:26:43 +0300
-Message-Id: <1283376410-9999-1-git-send-email-ohad@wizery.com>
+	Tue, 14 Sep 2010 09:13:53 -0400
+Subject: Re: mesh beacons broken on HEAD for libertas_tf
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Steve deRosier <steve@cozybit.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTikCBPGjNmRxdkgpZdTnHNvcMSOa6g2V-Z3o6bCx@mail.gmail.com>
+References: <AANLkTikCBPGjNmRxdkgpZdTnHNvcMSOa6g2V-Z3o6bCx@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 14 Sep 2010 15:13:52 +0200
+Message-ID: <1284470032.3704.7.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset adds wl1271 support on ZOOM2/3 boards.
+On Fri, 2010-09-10 at 18:23 -0700, Steve deRosier wrote:
 
-Only basic support is included; MMC power manipulation part is submitted separately as Runtime PM migration.
+> 1. Move the setting of SDATA_STATE_RUNNING to earlier in the function.
+>  This is obviously problematic, having to unset it on errors or so on.
 
-Changes since v4:
-- Introduce a simple (yet safe) mechanism to pass platform-specific data to the driver, as suggested by Russell King. Currently only a single device is supported; multi-device support will be introduced only when/if required
+Yeah, that's why I did it this way mostly.
 
-Patches are based on 2.6.36-rc3 and tested on ZOOM3.
+> 3. Put an exception to the check in ieee80211_bss_info_change_notify()
+> so that if vif->type is mesh, that we don't check the
+> SDATA_STATE_RUNNING bit.  Fairly straight forward and I know how to do
+> that.
 
-Thanks,
+I see you posted a patch for this. I don't think it's a great change,
+and I think you may also need to check netif_running() which is true
+earlier in the function, but not while the interface is really down.
 
-Ohad Ben-Cohen (7):
-  wireless: wl1271: make wl12xx.h common to both spi and sdio
-  wireless: wl1271: support return value for the set power func
-  wireless: wl12xx: add platform data passing support
-  wireless: wl1271: take irq info from private board data
-  wireless: wl1271: make ref_clock configurable by board
-  omap: zoom: add fixed regulator device for wlan
-  omap: zoom: add mmc3/wl1271 device support
+> 4. Somehow delay the mesh setup from setting up beacons till after the
+> ieee80211_do_open() call finishes.  I'm not sure how to accomplish
+> this in a sensible way.
 
- arch/arm/mach-omap2/board-zoom-peripherals.c       |   54 ++++++++++++++++++++
- drivers/net/wireless/Makefile                      |    2 +
- drivers/net/wireless/wl12xx/Kconfig                |    5 ++-
- drivers/net/wireless/wl12xx/wl1251_sdio.c          |    2 +-
- drivers/net/wireless/wl12xx/wl1251_spi.c           |    2 +-
- drivers/net/wireless/wl12xx/wl1271.h               |    3 +-
- drivers/net/wireless/wl12xx/wl1271_boot.c          |    9 ++--
- drivers/net/wireless/wl12xx/wl1271_boot.h          |    1 -
- drivers/net/wireless/wl12xx/wl1271_io.h            |    9 ++-
- drivers/net/wireless/wl12xx/wl1271_main.c          |    4 +-
- drivers/net/wireless/wl12xx/wl1271_sdio.c          |   19 ++++---
- drivers/net/wireless/wl12xx/wl1271_spi.c           |    8 ++-
- drivers/net/wireless/wl12xx/wl12xx_platform_data.c |   31 +++++++++++
- include/linux/spi/wl12xx.h                         |   34 ------------
- include/linux/wl12xx.h                             |   38 ++++++++++++++
- 15 files changed, 164 insertions(+), 57 deletions(-)
- create mode 100644 drivers/net/wireless/wl12xx/wl12xx_platform_data.c
- delete mode 100644 include/linux/spi/wl12xx.h
- create mode 100644 include/linux/wl12xx.h
+That would be best, really. The main issue is that the way mesh is
+configured is really sad -- you set parameters before bringing up the
+interface and then they take effect. It'd be _much_ nicer if it behaved
+like IBSS in cfg80211, so that you can set parameters to "join" a mesh
+and then you could "leave" a mesh again without setting the interface
+down, etc. Some backward compat code might be needed in cfg80211 so if
+you set an interface up while it's already configured, these things take
+effect already ...
+
+johannes
 
