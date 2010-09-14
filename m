@@ -1,49 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:43568 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752701Ab0IOLIU (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:47095 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751237Ab0INOVy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 07:08:20 -0400
-MIME-Version: 1.0
-In-Reply-To: <AANLkTikedoL3HjohQfq2qa0TU5yMJR5p1GqyQJtQGrdb@mail.gmail.com>
-References: <1283376410-9999-1-git-send-email-ohad@wizery.com>
-	<AANLkTikedoL3HjohQfq2qa0TU5yMJR5p1GqyQJtQGrdb@mail.gmail.com>
-Date: Wed, 15 Sep 2010 13:08:18 +0200
-Message-ID: <AANLkTingdk=9Fbp9uKf6rGyAtR+b8KV4vFmYRfakkwBs@mail.gmail.com>
-Subject: Re: [PATCH v5 0/7] native wl1271 support on ZOOM
-From: Vitaly Wool <vitalywool@gmail.com>
-To: Ohad Ben-Cohen <ohad@wizery.com>
-Cc: Tony Lindgren <tony@atomide.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Russell King <linux@arm.linux.org.uk>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	"Wool, Vitaly" <Vitaly.Wool@sonyericsson.com>,
-	linux-wireless@vger.kernel.org,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Ido Yariv <ido@wizery.com>, San Mehat <san@google.com>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	linux-mmc@vger.kernel.org,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	linux-omap@vger.kernel.org, akpm@linux-foundation.org,
-	linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 14 Sep 2010 10:21:54 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
+	Paul Stewart <pstew@google.com>,
+	Amod Bodas <amod.bodas@atheros.com>
+Subject: [PATCH 09/10] ath9k: fix regression which disabled ps on ath9k
+Date: Tue, 14 Sep 2010 10:21:54 -0400
+Message-Id: <1284474114-11767-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 15, 2010 at 11:21 AM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
-> On Wed, Sep 1, 2010 at 11:26 PM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
->> This patchset adds wl1271 support on ZOOM2/3 boards.
->
-> Tony, John, let me please suggest merging this through the wireless tree.
->
-> wl1271 is a moving target - it keeps changing in the wireless tree and
-> merging this patchset there will allow wl1271 developers to have
-> everything in a single tree (and prevent merge conflicts in
-> linux-next).
+The patch titled "ath9k: Add new file init.c" shuffled some code
+around but in dong so for some reason also removed the revision
+check for disablign power save. Add this revision check again
+so we can get power save re-enabled again by default on cards
+newer than AR5416 and AR5418.
 
-Thanks Ohad, that's what I was about to suggest as well. :)
+$ git describe --contains 556242049cc3992d0ee625e9f15c4b00ea4baac8
+v2.6.34-rc1~233^2~49^2~343
 
-Thanks,
-   Vitaly
+This patch has fixes for stable kernel [2.6.34+]
+
+Cc: stable@kernel.org
+Cc: Paul Stewart <pstew@google.com>
+Cc: Amod Bodas <amod.bodas@atheros.com>
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/init.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index e7c07b3..6459815 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -644,7 +644,8 @@ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 		BIT(NL80211_IFTYPE_ADHOC) |
+ 		BIT(NL80211_IFTYPE_MESH_POINT);
+ 
+-	hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
++	if (AR_SREV_5416(sc->sc_ah))
++		hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
+ 
+ 	hw->queues = 4;
+ 	hw->max_rates = 4;
+-- 
+1.7.0.4
+
