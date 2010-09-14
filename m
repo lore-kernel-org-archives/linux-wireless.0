@@ -1,89 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:16943 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932871Ab0I0Iie (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 04:38:34 -0400
-Received: from esebh105.NOE.Nokia.com (esebh105.ntc.nokia.com [172.21.138.211])
-	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o8R8c5Ec024679
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 03:38:34 -0500
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linux-wireless@vger.kernel.org
-Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 20/25] wl1271: Fix work cancelling when shutting down the driver
-Date: Mon, 27 Sep 2010 11:37:44 +0300
-Message-Id: <1285576669-8070-21-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
-References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
+Received: from purkki.adurom.net ([80.68.90.206]:52019 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751510Ab0INVsi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Sep 2010 17:48:38 -0400
+To: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>
+Cc: "linville\@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath9k_htc: Enable fastcc for HTC devices.
+References: <1283497888-8294-1-git-send-email-rmanoharan@atheros.com>
+	<87zkvk5tyx.fsf@purkki.adurom.net>
+	<44EE5C37ADC36343B0625A05DD408C4850DAB4D6C2@CHEXMB-01.global.atheros.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Wed, 15 Sep 2010 00:48:35 +0300
+In-Reply-To: <44EE5C37ADC36343B0625A05DD408C4850DAB4D6C2@CHEXMB-01.global.atheros.com> (Rajkumar Manoharan's message of "Tue\, 14 Sep 2010 23\:14\:17 +0530")
+Message-ID: <87r5gw574c.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com> writes:
 
-The work cancelling has had several hazards, ranging from potentially
-executing work after the driver is in OFF state, to executing work after
-the driver and relevant memory structures are already removed.
+>>For example, I have no idea what fastcc means. Fast C Compiler? ;)
+>
+> On every channel set, the full hw reset happens which issue mutiple
+> register writes. For HTC devices, the host issue wmi commands. These
+> register ops are time consumable one. Instead of full hw reset,
+> ath9k is doing partial reset which is fast channel change (fastcc).
+> By doing fast channel change, the scan period is considerably
+> reduced.
 
-Fix these.
+Now this is a good commit message. I can understand what the change is
+actually about without browsing through ath9k source. Of course it
+takes few minutes to write this but on the other hand you save a lot
+of time from others. And possibly avoid answering to stupid questions
+like the one I had :)
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_event.c |    3 +++
- drivers/net/wireless/wl12xx/wl1271_main.c  |    3 +++
- drivers/net/wireless/wl12xx/wl1271_ps.c    |    3 +++
- 3 files changed, 9 insertions(+), 0 deletions(-)
+Thanks.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_event.c b/drivers/net/wireless/wl12xx/wl1271_event.c
-index bced829..e6c839a 100644
---- a/drivers/net/wireless/wl12xx/wl1271_event.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_event.c
-@@ -41,6 +41,9 @@ void wl1271_pspoll_work(struct work_struct *work)
- 
- 	mutex_lock(&wl->mutex);
- 
-+	if (unlikely(wl->state == WL1271_STATE_OFF))
-+		goto out;
-+
- 	if (!test_and_clear_bit(WL1271_FLAG_PSPOLL_FAILURE, &wl->flags))
- 		goto out;
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index 37f61de..2c03cb1 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -792,6 +792,8 @@ int wl1271_plt_stop(struct wl1271 *wl)
- out:
- 	mutex_unlock(&wl->mutex);
- 
-+	cancel_work_sync(&wl->irq_work);
-+
- 	return ret;
- }
- 
-@@ -995,6 +997,7 @@ static void wl1271_op_remove_interface(struct ieee80211_hw *hw,
- 	cancel_work_sync(&wl->irq_work);
- 	cancel_work_sync(&wl->tx_work);
- 	cancel_delayed_work_sync(&wl->pspoll_work);
-+	cancel_delayed_work_sync(&wl->elp_work);
- 
- 	mutex_lock(&wl->mutex);
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_ps.c b/drivers/net/wireless/wl12xx/wl1271_ps.c
-index f75668e..150dc67 100644
---- a/drivers/net/wireless/wl12xx/wl1271_ps.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_ps.c
-@@ -39,6 +39,9 @@ void wl1271_elp_work(struct work_struct *work)
- 
- 	mutex_lock(&wl->mutex);
- 
-+	if (unlikely(wl->state == WL1271_STATE_OFF))
-+		goto out;
-+
- 	if (test_bit(WL1271_FLAG_IN_ELP, &wl->flags) ||
- 	    (!test_bit(WL1271_FLAG_PSM, &wl->flags) &&
- 	     !test_bit(WL1271_FLAG_IDLE, &wl->flags)))
 -- 
-1.6.3.3
-
+Kalle Valo
