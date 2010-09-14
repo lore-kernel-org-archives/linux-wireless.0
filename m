@@ -1,45 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:42743 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750973Ab0INRMn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 13:12:43 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	lrodriguez@atheros.com
-Subject: [PATCH 2/2] mac80211: add a note about iterating interfaces during add_interface()
-Date: Tue, 14 Sep 2010 18:37:20 +0200
-Message-Id: <1284482240-57922-2-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1284482240-57922-1-git-send-email-nbd@openwrt.org>
-References: <1284482240-57922-1-git-send-email-nbd@openwrt.org>
+Received: from bombadil.infradead.org ([18.85.46.34]:41632 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751213Ab0INFaj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Sep 2010 01:30:39 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>
+Subject: [PATCH 00/10] ath9k / mac80211: power save fixes
+Date: Tue, 14 Sep 2010 01:30:27 -0400
+Message-Id: <1284442237-24425-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- include/net/mac80211.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Here are a bundle of joy of fixes for power save. Some of
+these are regressions, which sucks ass to find out about them
+so late. We *really* need a regression testbed for mac80211 and
+ath9k. Some stable fixes trickle down to 2.6.32 even.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index f91fc33..19a5cb4 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2293,6 +2293,7 @@ void ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted);
-  * This function allows the iterator function to sleep, when the iterator
-  * function is atomic @ieee80211_iterate_active_interfaces_atomic can
-  * be used.
-+ * Does not iterate over a new interface during add_interface()
-  *
-  * @hw: the hardware struct of which the interfaces should be iterated over
-  * @iterator: the iterator function to call
-@@ -2310,6 +2311,7 @@ void ieee80211_iterate_active_interfaces(struct ieee80211_hw *hw,
-  * hardware that are currently active and calls the callback for them.
-  * This function requires the iterator callback function to be atomic,
-  * if that is not desired, use @ieee80211_iterate_active_interfaces instead.
-+ * Does not iterate over a new interface during add_interface()
-  *
-  * @hw: the hardware struct of which the interfaces should be iterated over
-  * @iterator: the iterator function to call, cannot sleep
--- 
-1.7.2.2
+I'll soon send links for the respective ports of these patches to each
+kernels. For now I'd just like them merged upstream and ensure we get
+this out for 2.6.36-rc stuff.
+
+The offchannel needs more work to be really useful, for example
+we should just be sending nullunc frames prior to actualloy probing
+the AP. We can work on this later for 37.
+
+Luis R. Rodriguez (9):
+  ath9k: fix power save race conditions
+  ath9k: fix regression on beacon loss after bgscan
+  mac80211: add helper for reseting the connection monitor
+  mac80211: reset probe send counter upon connection timer reset
+  mac80211: reset connection idle when going offchannel
+  mac80211: make the beacon monitor available externally
+  mac80211: disable beacon monitor while going offchannel
+  mac80211: send last 3/5 probe requests as unicast
+  ath9k: fix regression which disabled ps on ath9k
+
+Senthil Balasubramanian (1):
+  ath9k: fix regression which prevents chip sleep after CAB data
+
+ drivers/net/wireless/ath/ath9k/init.c |    3 +-
+ drivers/net/wireless/ath/ath9k/main.c |   11 ++++++--
+ drivers/net/wireless/ath/ath9k/recv.c |    5 +++-
+ net/mac80211/ieee80211_i.h            |    2 +
+ net/mac80211/mlme.c                   |   40 +++++++++++++++++++++++---------
+ net/mac80211/offchannel.c             |    7 +++++
+ 6 files changed, 52 insertions(+), 16 deletions(-)
 
