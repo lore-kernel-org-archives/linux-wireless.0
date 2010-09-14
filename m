@@ -1,111 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49231 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754783Ab0IMMqW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Sep 2010 08:46:22 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 03/14] iwlwifi: move scan completed flags handling
-Date: Mon, 13 Sep 2010 14:46:34 +0200
-Message-Id: <1284382005-3246-4-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1284382005-3246-1-git-send-email-sgruszka@redhat.com>
-References: <1284382005-3246-1-git-send-email-sgruszka@redhat.com>
+Received: from mail.candelatech.com ([208.74.158.172]:58705 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753444Ab0INPxS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Sep 2010 11:53:18 -0400
+Message-ID: <4C8F9A65.3040204@candelatech.com>
+Date: Tue, 14 Sep 2010 08:53:09 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 00/10] ath9k / mac80211: power save fixes
+References: <1284442237-24425-1-git-send-email-lrodriguez@atheros.com> <AANLkTikazs3A+=BXVm9+VZaOsRD2YFSkRSDJKQ4qGBfB@mail.gmail.com>
+In-Reply-To: <AANLkTikazs3A+=BXVm9+VZaOsRD2YFSkRSDJKQ4qGBfB@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 09/14/2010 08:07 AM, Luis R. Rodriguez wrote:
+> On Mon, Sep 13, 2010 at 10:30 PM, Luis R. Rodriguez
+> <lrodriguez@atheros.com>  wrote:
+>> Here are a bundle of joy of fixes for power save. Some of
+>> these are regressions, which sucks ass to find out about them
+>> so late. We *really* need a regression testbed for mac80211 and
+>> ath9k. Some stable fixes trickle down to 2.6.32 even.
 
-Move the scan completed flags handling so that we
-can notify mac80211 about aborted scans with the
-correct status. Also queue the scan_completed work
-before the BT status update so that it won't see
-the bits still set (unless a new scan was started
-in which case that's fine.)
+We're working on supporting ath9k for the virtual interfaces
+in our system, and we do our own regression testing.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Acked-by: Wey-Yi W Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-scan.c |   30 ++++++++++++++----------------
- 1 files changed, 14 insertions(+), 16 deletions(-)
+Aside from normal traffic passing, do you have any test
+cases you'd like to see run?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 6bd14bc..22bdc98 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -222,21 +222,11 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
- 		       jiffies_to_msecs(elapsed_jiffies
- 					(priv->scan_start, jiffies)));
- 
--	/*
--	 * If a request to abort was given, or the scan did not succeed
--	 * then we reset the scan state machine and terminate,
--	 * re-queuing another scan if one has been requested
--	 */
--	if (test_and_clear_bit(STATUS_SCAN_ABORTING, &priv->status))
--		IWL_DEBUG_INFO(priv, "Aborted scan completed.\n");
--
--	IWL_DEBUG_INFO(priv, "Setting scan to off\n");
--
--	clear_bit(STATUS_SCANNING, &priv->status);
-+	queue_work(priv->workqueue, &priv->scan_completed);
- 
- 	if (priv->iw_mode != NL80211_IFTYPE_ADHOC &&
--	    priv->cfg->advanced_bt_coexist && priv->bt_status !=
--	    scan_notif->bt_status) {
-+	    priv->cfg->advanced_bt_coexist &&
-+	    priv->bt_status != scan_notif->bt_status) {
- 		if (scan_notif->bt_status) {
- 			/* BT on */
- 			if (!priv->bt_ch_announce)
-@@ -254,7 +244,6 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
- 		priv->bt_status = scan_notif->bt_status;
- 		queue_work(priv->workqueue, &priv->bt_traffic_change_work);
- 	}
--	queue_work(priv->workqueue, &priv->scan_completed);
- }
- 
- void iwl_setup_rx_scan_handlers(struct iwl_priv *priv)
-@@ -554,7 +543,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
- {
- 	struct iwl_priv *priv =
- 	    container_of(work, struct iwl_priv, scan_completed);
--	bool internal = false;
-+	bool internal = false, aborted;
- 	struct iwl_rxon_context *ctx;
- 
- 	IWL_DEBUG_SCAN(priv, "SCAN complete scan\n");
-@@ -562,6 +551,15 @@ static void iwl_bg_scan_completed(struct work_struct *work)
- 	cancel_delayed_work(&priv->scan_check);
- 
- 	mutex_lock(&priv->mutex);
-+
-+	aborted = test_and_clear_bit(STATUS_SCAN_ABORTING, &priv->status);
-+	if (aborted)
-+		IWL_DEBUG_INFO(priv, "Aborted scan completed.\n");
-+
-+	IWL_DEBUG_INFO(priv, "Setting scan to off\n");
-+
-+	clear_bit(STATUS_SCANNING, &priv->status);
-+
- 	if (priv->is_internal_short_scan) {
- 		priv->is_internal_short_scan = false;
- 		IWL_DEBUG_SCAN(priv, "internal short scan completed\n");
-@@ -569,7 +567,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
- 	} else if (priv->scan_request) {
- 		priv->scan_request = NULL;
- 		priv->scan_vif = NULL;
--		ieee80211_scan_completed(priv->hw, false);
-+		ieee80211_scan_completed(priv->hw, aborted);
- 	}
- 
- 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+> The all in one git am'able file can be downloaded here:
+>
+> http://bombadil.infradead.org/~mcgrof/patches/ath9k/2010/09/all-ps-fixes-09-14-v1.patch
+
+Is there any way to get automated emails for commits going into wireless-testing?
+
+If these go in soon, I'd rather not deal with merging them into my own repo,
+but if it's going to take a while, it might be worth the effort.
+
+Thanks,
+Ben
+
 -- 
-1.7.1
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
