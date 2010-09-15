@@ -1,89 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:58024 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754200Ab0IVSyP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Sep 2010 14:54:15 -0400
-Received: by fxm12 with SMTP id 12so265230fxm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 11:54:11 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: David Miller <davem@davemloft.net>
-Subject: Re: pull request: wireless-next-2.6 2010-09-21
-Date: Wed, 22 Sep 2010 20:54:05 +0200
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-References: <20100921201705.GC2448@tuxdriver.com> <201009221158.13806.chunkeey@googlemail.com> <20100922.092252.116390431.davem@davemloft.net>
-In-Reply-To: <20100922.092252.116390431.davem@davemloft.net>
+Received: from kroah.org ([198.145.64.141]:39144 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752393Ab0IOXFi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Sep 2010 19:05:38 -0400
+Date: Wed, 15 Sep 2010 15:48:36 -0700
+From: Greg KH <greg@kroah.com>
+To: Kees Cook <kees.cook@canonical.com>
+Cc: linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Joe Perches <joe@perches.com>, Jean Tourrilhes <jt@hpl.hp.com>,
+	Tejun Heo <tj@kernel.org>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [vendor-sec] [PATCH] wireless: fix 64K kernel heap content
+ leak via ioctl
+Message-ID: <20100915224836.GF19835@kroah.com>
+References: <20100827210240.GC4703@outflux.net>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201009222054.05469.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100827210240.GC4703@outflux.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 22 September 2010 18:22:52 David Miller wrote:
-> From: Christian Lamparter <chunkeey@googlemail.com>
-> Date: Wed, 22 Sep 2010 11:58:13 +0200
+On Fri, Aug 27, 2010 at 02:02:41PM -0700, Kees Cook wrote:
+> This problem was originally tracked down by Brad Spengler.
 > 
-> > On Wednesday 22 September 2010 03:36:14 David Miller wrote:
-> >> From: "John W. Linville" <linville@tuxdriver.com>
-> >> Date: Tue, 21 Sep 2010 16:17:05 -0400
-> >> 
-> >> Pulled, but I suspect the 'packed' attribute usage is wrong in
-> >> ath/carl9170 and can just be deleted.
-> > 
-> > which __packed do you think can be removed?
-> > 
-> > Note:
-> > The overzealous use of __packed is a result of a report from Al Viro
-> > for ar9170usb: "arm will pad even between u8's".
-> >
-> > as decribed in http://tinyurl.com/2ww8c53 [git.kernel.org]
+> When calling wireless ioctls, if a driver does not correctly
+> validate/shrink iwp->length, the resulting copy_to_user can leak up to
+> 64K of kernel heap contents.
 > 
-> Then only the structure that has the "u8's" needs the __packed attribute
-> not every single other structure it is included in.
+> It seems that this is triggerable[1] in 2.6.32 at least on ath5k, but
+> I was not able to track down how. The twisty maze of ioctl handlers
+> stumped me. :) Other drivers I checked did not appear to have any problems,
+> but the potential remains. I'm not sure if this patch is the right approach;
+> it was fixed differently[2] in grsecurity.
+> 
+> [1] http://forums.grsecurity.net/viewtopic.php?f=3&t=2290&start=0
+> [2] http://grsecurity.net/~spender/wireless-infoleak-fix2.patch
 
-Which exactly is the "every single other structure"?
-All structs which are internal to the driver are not packed
-(e.g.: device context, tid & sta info, tx info, etc... - carl9170.h).
+Is this fixed differently upstream in the kernel with commit id
+42da2f948d949efd0111309f5827bf0298bcc9a4?
 
-Only the structs which deal with hardware (hw.h, eeprom.h, wlan.h)
-or firmware (fwcmd.h, fwdesc.h & wlan.h) interface have the
-__packed attribute. And there are several good reasons.
+thanks,
 
-e.g.:
- * prevent gcc from aligning the elements to the architecture boundary,
-   which would be fatal because it can cause the device to malfunction.
-
- * prevent possibly fatal unaligned memory access bugs on
-   architectures that don't allow/support unaligned memory access.
-   (as described in Documentation/unaligned-memory-access.txt )
-
- * __packed does not only affect a structs element position, but
-   also prevent gcc from adding additional padding at the end.
-   This is bad because it breaks BUILD_BUG_ON asserts (as reported by Al Viro)
-
- * consistency and future-proofing changes.
-   The firmware is open source, and other people which are not familiar with
-   the point above are working/adding new stuff to the code.
-   Therefore the firmware descriptor (fwdesc.h), firmware command  interface
-   (fwcmd.h) and the super tx/rx descriptors (wlan.h) can change _alot_. 
-   So even it looks like some structs that currently don't necessarily need
-   to be __packed they need it in the future.
-   (no stable API nonsense!)
-
-In my opinion __packed is necessary for these *interface definitions/API*
-as long as it can't be 100% proven that the questionable structure would
-not cause problems with any compiler on any platform or architecture at
-any time.
-
-But If anyone thinks: "That's all just utter rubbish, you have no idea
-what you are talking about!" Then he/she is entitled to take action and
-draft a new guild-line which lists valid technical(not religious!) reasons
-why the use of __packed is discouraged for interface protocol definitions.
-
-This worked before, take a look at the rants in:
-volatile-considered-harmful.txt. Now check-patch.pl warns as soon
-as a volatile is buried deep between the lines.
-
-Best Regards,
-	Chr 
+greg k-h
