@@ -1,45 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web51402.mail.re2.yahoo.com ([206.190.38.181]:42332 "HELO
-	web51402.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751133Ab0IFHoL convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Sep 2010 03:44:11 -0400
-Message-ID: <655663.17350.qm@web51402.mail.re2.yahoo.com>
-References: <AANLkTim_Ou8fFbfsn8AEZFpWBzjnAQuT4S_w8bV5saYD@mail.gmail.com> <loom.20100903T224155-155@post.gmane.org> <AANLkTikdXBsO0Qx2nEV+Ka9X2D55odmGwePMaUGaQi7j@mail.gmail.com>
-Date: Mon, 6 Sep 2010 00:37:30 -0700 (PDT)
-From: Joerg Pommnitz <pommnitz@yahoo.com>
-Subject: AW: mac80211-based commercial router?
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <AANLkTikdXBsO0Qx2nEV+Ka9X2D55odmGwePMaUGaQi7j@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mx1.redhat.com ([209.132.183.28]:41621 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751768Ab0IOFqP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Sep 2010 01:46:15 -0400
+Subject: Re: RFC:  mac80211/ath9k:  allow scanning single channel if other
+ VIF is associated.
+From: Dan Williams <dcbw@redhat.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Jouni Malinen <j@w1.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1284529613.10728.32.camel@dcbw.foobar.com>
+References: <4C8EB03D.7070808@candelatech.com>
+	 <20100915030316.GB30253@jm.kir.nu>  <4C9059DC.7060009@candelatech.com>
+	 <1284529613.10728.32.camel@dcbw.foobar.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 15 Sep 2010 00:48:52 -0500
+Message-ID: <1284529732.10728.33.camel@dcbw.foobar.com>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Von: Bob Copeland <me@bobcopeland.com>
-
-> An: jpo <pommnitz@yahoo.com>
-> CC: linux-wireless@vger.kernel.org
-> Gesendet: Sonntag, den 5. September 2010, 22:08:20 Uhr
-> Betreff: Re: mac80211-based commercial router?
+On Wed, 2010-09-15 at 00:46 -0500, Dan Williams wrote:
+> On Tue, 2010-09-14 at 22:30 -0700, Ben Greear wrote:
+> > On 09/14/2010 08:03 PM, Jouni Malinen wrote:
+> > > On Mon, Sep 13, 2010 at 04:14:05PM -0700, Ben Greear wrote:
+> > >> This patch aims to decrease channel switching when there is at least one
+> > >> interface associated.  This should help multiple station interfaces co-exist
+> > >> on the same hardware, especially in WPA mode.
+> > >
+> > > If I understood the change correctly, it would prevent running full
+> > > scans when in associated state. That does not sound reasonable behavior
+> > > and scanning should not cause an association to be lost. Did I miss
+> > > something or what exactly is this trying to do?
+> > 
+> > That's pretty much what I'm trying to do.  We had similar code in
+> > our 2.6.31 kernel with ath5k. Imagine getting 50 virtual stations
+> > started with WPA and all of them trying to scan all channels at once!
+> > Most got timeouts, and one scanning would disrupt traffic on the others.
+> > And, the hardware can only associate on a single channel anyway, so getting
+> > scan results for other channels doesn't do a great deal of good.
+> > 
+> > With current ath9k, I see DMA timeouts and other nasty things (without
+> > that patch applied) when trying to bring up two VIFs with WPA.
+> > 
+> > I think for the multi-VIF scenario, it should scan the single associated
+> > channel by default, but it would be nice to allow full scans on demand.
+> > (I would very much like to work with standard wpa_supplicant, but if hacking it
+> > is the only way, then I can attempt that.)
 > 
-> On Fri, Sep 3, 2010 at 4:43 PM, jpo <pommnitz@yahoo.com> wrote:
+> Allowing full scans on demand (ie when userspace requests it) is a must.
+> Even in multi-VIF mode.
+
+Obviously I mean "when associated"...
+
+> Dan
 > 
-> >  Android 2.2 comes with AP functionality. Are the Android WLAN drivers  
->mac80211
-> > based?
+> > > If you want to limit scans a single channel in some special use cases,
+> > > you should be able to do that in user space, too, at least for the
+> > > initial scan before connection. As a future optimization, we should
+> > > somehow be able to merge scan requests from multiple VIFs into a single
+> > > one, i.e., share the results from a single scan to multiple VIFs..
+> > 
+> > Merging would be nice.  Maybe store the results in the global hardware/phy
+> > structs and just return that to user-space so long as it's relatively fresh?
+> > 
+> > > It would be easier to comment on the changes if you were to inline them
+> > > instead of attaching the file..
+> > 
+> > Sorry about that..I'll inline it next time.  It will probably be white-space
+> > damaged, but I can re-send any official patches using git.
+> > 
+> > Thanks,
+> > Ben
+> > 
+> > 
 > 
-> No, they aren't.  Does Android really do AP  mode or
-> just adhoc?
-
-Think so. From http://developer.android.com/sdk/android-2.2-highlights.html
-
-"Certain devices like the Nexus One can be turned into a portable Wi-Fi 
-hotspot that can be shared with up to 8 devices."
-
-Regards
-  Joerg
-
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
