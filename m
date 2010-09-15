@@ -1,54 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:38416 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751428Ab0IEPLn (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:27694 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751239Ab0IOHcg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Sep 2010 11:11:43 -0400
+	Wed, 15 Sep 2010 03:32:36 -0400
+Received: from vs3000.wh2.ocn.ne.jp (125.206.180.163)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0200975953
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Sep 2010 16:32:34 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Jonathan Guerin <jonathan@guerin.id.au>
+Subject: Re: [ath5k-devel] [ath5k] Incorrect value for ACK_TIMEOUT
+Date: Wed, 15 Sep 2010 16:32:46 +0900
+Cc: Kalle Valo <kvalo@adurom.com>, ath5k-devel@lists.ath5k.org,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	Nick Kossifidis <mickflemm@gmail.com>
+References: <AANLkTim+Q773KvA7Et1s2Zf8yMx36RGS2LsoJsX1Wtt9@mail.gmail.com> <871v8v5vd2.fsf@purkki.adurom.net> <AANLkTinD+y+CvxijXvxfqB9ncWdD0qYLi-e0PRvczwem@mail.gmail.com>
+In-Reply-To: <AANLkTinD+y+CvxijXvxfqB9ncWdD0qYLi-e0PRvczwem@mail.gmail.com>
 MIME-Version: 1.0
-Date: Sun, 5 Sep 2010 18:11:41 +0300
-Message-ID: <AANLkTi=BBQL5cS6Ox8MGiy+Pun56xtEhakJxeLwx9UnW@mail.gmail.com>
-Subject: [PROBLEM] ipw2200: WARNING: at kernel/softirq.c:143 local_bh_enable+0x58/0x80()
-From: Pekka Enberg <penberg@kernel.org>
-To: Linux Netdev List <netdev@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201009151632.46340.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed September 15 2010 16:27:01 Jonathan Guerin wrote:
+> So, we would prefer to match the spec for an out-of-the-box build,
+> even tho it would appear to be a worse-performing driving to users?
 
-This showed up in dmesg:
+sure, we need to comply to the specs.
 
-[  143.695527] ------------[ cut here ]------------
-[  143.695550] WARNING: at kernel/softirq.c:143 local_bh_enable+0x58/0x80()
-[  143.695557] Hardware name: 2373KYG
-[  143.695562] Modules linked in: ipw2200 libipw
-[  143.695577] Pid: 4112, comm: NetworkManager Not tainted 2.6.36-rc2+ #182
-[  143.695584] Call Trace:
-[  143.695596]  [<c15b8ddc>] ? printk+0x18/0x1a
-[  143.695610]  [<c1033fbd>] warn_slowpath_common+0x6d/0xa0
-[  143.695620]  [<c1039568>] ? local_bh_enable+0x58/0x80
-[  143.695630]  [<c1039568>] ? local_bh_enable+0x58/0x80
-[  143.695640]  [<c103400b>] warn_slowpath_null+0x1b/0x20
-[  143.695650]  [<c1039568>] local_bh_enable+0x58/0x80
-[  143.695662]  [<c1482d25>] netif_rx+0x155/0x180
-[  143.695677]  [<f807519c>] libipw_rx+0x55c/0xad0 [libipw]
-[  143.695703]  [<f816f86a>] ipw_handle_data_packet+0x12a/0x260 [ipw2200]
-[  143.695724]  [<f81702da>] ipw_irq_tasklet+0x82a/0xd80 [ipw2200]
-[  143.695736]  [<c1038942>] tasklet_action+0x62/0x70
-[  143.695746]  [<c103929d>] __do_softirq+0x7d/0x190
-[  143.695756]  [<c106d2f5>] ? handle_IRQ_event+0x45/0x150
-[  143.695766]  [<c10393dd>] do_softirq+0x2d/0x40
-[  143.695775]  [<c10394fd>] irq_exit+0x5d/0x70
-[  143.695785]  [<c10045b3>] do_IRQ+0x43/0xb0
-[  143.695796]  [<c10d0c74>] ? sys_poll+0x54/0xc0
-[  143.695806]  [<c1003269>] common_interrupt+0x29/0x30
-[  143.695814] ---[ end trace a6c4b2362817c5f7 ]---
+bruno
 
-I have IPW2200 wireless card on this laptop:
-
-02:02.0 Network controller: Intel Corporation PRO/Wireless 2200BG
-[Calexico2] Network Connection (rev 05)
-
-                        Pekka
+> --
+> Jonathan Guerin
+> 
+> On Wed, Sep 15, 2010 at 5:17 PM, Kalle Valo <kvalo@adurom.com> wrote:
+> > Jonathan Guerin <jonathan@guerin.id.au> writes:
+> >>> the thing is, like bob said, that we don't really know much about what
+> >>> the HW expects in some of these registers, so unless you can prove
+> >>> your changes to be correct - e.g. by measurements which fit the
+> >>> theoretical model better, or by better thruput, it's hard to say if
+> >>> they are correct or not.
+> >>> 
+> >>> so before you worry about how to make a correct patch, just go ahead
+> >>> and change those initvals to what you believe they should be. if it
+> >>> improves something, let's talk about how to correctly fix it.
+> >> 
+> >> I don't mean to be a smart-ass, but wouldn't setting the correct
+> >> values here decrease the throughput? I'm not quite sure how to verify
+> >> an improvement, other than get the card to contend for the medium with
+> >> another known-working card? Does this sound reasonable?
+> > 
+> > Yes, it does sound reasonable. You might get throughput increase by
+> > violating the spec.
+> > 
+> > --
+> > Kalle Valo
