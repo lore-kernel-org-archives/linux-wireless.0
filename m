@@ -1,59 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:8830 "HELO
-	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751498Ab0IPJvG (ORCPT
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:56275 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750695Ab0IOJrh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Sep 2010 05:51:06 -0400
-Received: from vs3003.wh2.ocn.ne.jp (125.206.180.231)
-	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-090268664
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Sep 2010 18:51:04 +0900 (JST)
-Subject: [PATCH 2/9] ath5k: Fix queue debug file
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Thu, 16 Sep 2010 18:51:23 +0900
-Message-ID: <20100916095123.17637.43751.stgit@tt-desk>
-In-Reply-To: <20100916095112.17637.17207.stgit@tt-desk>
-References: <20100916095112.17637.17207.stgit@tt-desk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Wed, 15 Sep 2010 05:47:37 -0400
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+To: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@suse.de>,
+	Nohee Ko <noheek@broadcom.com>,
+	Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: [PATCH 1/2] staging: brcm80211: use native ctype library
+Date: Wed, 15 Sep 2010 12:47:17 +0300
+Message-Id: <1284544038-5696-1-git-send-email-andy.shevchenko@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Take txq lock in debug file and fix reporting of used buffers.
-
-Signed-off-by: Bruno Randolf <br1@einfach.org>
+Signed-off-by: Andy Shevchenko <andy.shevchenko@gmail.com>
 ---
- drivers/net/wireless/ath/ath5k/debug.c |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
+ drivers/staging/brcm80211/include/bcmutils.h |   27 ------------
+ drivers/staging/brcm80211/sys/wlc_mac80211.c |    4 +-
+ drivers/staging/brcm80211/util/bcmutils.c    |   56 +++-----------------------
+ drivers/staging/brcm80211/util/bcmwifi.c     |    3 +-
+ 4 files changed, 11 insertions(+), 79 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
-index 1b7c6d7..b2c610b 100644
---- a/drivers/net/wireless/ath/ath5k/debug.c
-+++ b/drivers/net/wireless/ath/ath5k/debug.c
-@@ -763,7 +763,7 @@ static ssize_t read_file_queue(struct file *file, char __user *user_buf,
+diff --git a/drivers/staging/brcm80211/include/bcmutils.h b/drivers/staging/brcm80211/include/bcmutils.h
+index 321071b..f17dbb1 100644
+--- a/drivers/staging/brcm80211/include/bcmutils.h
++++ b/drivers/staging/brcm80211/include/bcmutils.h
+@@ -21,33 +21,6 @@
+ extern "C" {
+ #endif
  
- 	struct ath5k_txq *txq;
- 	struct ath5k_buf *bf, *bf0;
--	int i, n = 0;
-+	int i, n;
+-/* ctype replacement */
+-#define _BCM_U	0x01		/* upper */
+-#define _BCM_L	0x02		/* lower */
+-#define _BCM_D	0x04		/* digit */
+-#define _BCM_C	0x08		/* cntrl */
+-#define _BCM_P	0x10		/* punct */
+-#define _BCM_S	0x20		/* white space (space/lf/tab) */
+-#define _BCM_X	0x40		/* hex digit */
+-#define _BCM_SP	0x80		/* hard space (0x20) */
+-
+-	extern const unsigned char bcm_ctype[];
+-#define bcm_ismask(x)	(bcm_ctype[(int)(unsigned char)(x)])
+-
+-#define bcm_isalnum(c)	((bcm_ismask(c)&(_BCM_U|_BCM_L|_BCM_D)) != 0)
+-#define bcm_isalpha(c)	((bcm_ismask(c)&(_BCM_U|_BCM_L)) != 0)
+-#define bcm_iscntrl(c)	((bcm_ismask(c)&(_BCM_C)) != 0)
+-#define bcm_isdigit(c)	((bcm_ismask(c)&(_BCM_D)) != 0)
+-#define bcm_isgraph(c)	((bcm_ismask(c)&(_BCM_P|_BCM_U|_BCM_L|_BCM_D)) != 0)
+-#define bcm_islower(c)	((bcm_ismask(c)&(_BCM_L)) != 0)
+-#define bcm_isprint(c)	((bcm_ismask(c)&(_BCM_P|_BCM_U|_BCM_L|_BCM_D|_BCM_SP)) != 0)
+-#define bcm_ispunct(c)	((bcm_ismask(c)&(_BCM_P)) != 0)
+-#define bcm_isspace(c)	((bcm_ismask(c)&(_BCM_S)) != 0)
+-#define bcm_isupper(c)	((bcm_ismask(c)&(_BCM_U)) != 0)
+-#define bcm_isxdigit(c)	((bcm_ismask(c)&(_BCM_D|_BCM_X)) != 0)
+-#define bcm_tolower(c)	(bcm_isupper((c)) ? ((c) + 'a' - 'A') : (c))
+-#define bcm_toupper(c)	(bcm_islower((c)) ? ((c) + 'A' - 'a') : (c))
+-
+ /* Buffer structure for collecting string-formatted data
+ * using bcm_bprintf() API.
+ * Use bcm_binit() to initialize before use
+diff --git a/drivers/staging/brcm80211/sys/wlc_mac80211.c b/drivers/staging/brcm80211/sys/wlc_mac80211.c
+index 27ddc23..db9a7c2 100644
+--- a/drivers/staging/brcm80211/sys/wlc_mac80211.c
++++ b/drivers/staging/brcm80211/sys/wlc_mac80211.c
+@@ -75,6 +75,8 @@
+ #define W_REG(osh, r, v) RPC_WRITE_REG(osh, r, v)
+ #endif
  
- 	len += snprintf(buf+len, sizeof(buf)-len,
- 			"available txbuffers: %d\n", sc->txbuf_len);
-@@ -777,9 +777,14 @@ static ssize_t read_file_queue(struct file *file, char __user *user_buf,
- 		if (!txq->setup)
- 			continue;
- 
-+		n = 0;
-+		spin_lock_bh(&txq->lock);
- 		list_for_each_entry_safe(bf, bf0, &txq->q, list)
- 			n++;
--		len += snprintf(buf+len, sizeof(buf)-len, "  len: %d\n", n);
-+		spin_unlock_bh(&txq->lock);
++#include <linux/ctype.h>
 +
-+		len += snprintf(buf+len, sizeof(buf)-len,
-+				"  len: %d bufs: %d\n", txq->txq_len, n);
- 	}
+ /*
+  * buffer length needed for wlc_format_ssid
+  * 32 SSID chars, max of 4 chars for each SSID char "\xFF", plus NULL.
+@@ -5486,7 +5488,7 @@ int wlc_format_ssid(char *buf, const uchar ssid[], uint ssid_len)
+ 		if (c == '\\') {
+ 			*p++ = '\\';
+ 			*p++ = '\\';
+-		} else if (bcm_isprint((uchar) c)) {
++		} else if (isprint((uchar) c)) {
+ 			*p++ = (char)c;
+ 		} else {
+ 			p += snprintf(p, (endp - p), "\\x%02X", c);
+diff --git a/drivers/staging/brcm80211/util/bcmutils.c b/drivers/staging/brcm80211/util/bcmutils.c
+index 9505064..3f521e9 100644
+--- a/drivers/staging/brcm80211/util/bcmutils.c
++++ b/drivers/staging/brcm80211/util/bcmutils.c
+@@ -27,6 +27,8 @@
+ #include <proto/802.1d.h>
+ #include <proto/802.11.h>
  
- 	if (len > sizeof(buf))
++#include <linux/ctype.h>
++
+ #ifdef WLC_LOW
+ /* nvram vars cache */
+ static char *nvram_vars;
+@@ -490,52 +492,6 @@ void *BCMFASTPATH pktq_mdeq(struct pktq *pq, uint prec_bmp, int *prec_out)
+ 	return p;
+ }
+ 
+-const unsigned char bcm_ctype[] = {
+-
+-	_BCM_C, _BCM_C, _BCM_C, _BCM_C, _BCM_C, _BCM_C, _BCM_C, _BCM_C,	/* 0-7 */
+-	_BCM_C, _BCM_C | _BCM_S, _BCM_C | _BCM_S, _BCM_C | _BCM_S,
+-	    _BCM_C | _BCM_S, _BCM_C | _BCM_S, _BCM_C,
+-	_BCM_C,			/* 8-15 */
+-	_BCM_C, _BCM_C, _BCM_C, _BCM_C, _BCM_C, _BCM_C, _BCM_C, _BCM_C,	/* 16-23 */
+-	_BCM_C, _BCM_C, _BCM_C, _BCM_C, _BCM_C, _BCM_C, _BCM_C, _BCM_C,	/* 24-31 */
+-	_BCM_S | _BCM_SP, _BCM_P, _BCM_P, _BCM_P, _BCM_P, _BCM_P, _BCM_P, _BCM_P,	/* 32-39 */
+-	_BCM_P, _BCM_P, _BCM_P, _BCM_P, _BCM_P, _BCM_P, _BCM_P, _BCM_P,	/* 40-47 */
+-	_BCM_D, _BCM_D, _BCM_D, _BCM_D, _BCM_D, _BCM_D, _BCM_D, _BCM_D,	/* 48-55 */
+-	_BCM_D, _BCM_D, _BCM_P, _BCM_P, _BCM_P, _BCM_P, _BCM_P, _BCM_P,	/* 56-63 */
+-	_BCM_P, _BCM_U | _BCM_X, _BCM_U | _BCM_X, _BCM_U | _BCM_X,
+-	    _BCM_U | _BCM_X, _BCM_U | _BCM_X,
+-	_BCM_U | _BCM_X, _BCM_U,	/* 64-71 */
+-	_BCM_U, _BCM_U, _BCM_U, _BCM_U, _BCM_U, _BCM_U, _BCM_U, _BCM_U,	/* 72-79 */
+-	_BCM_U, _BCM_U, _BCM_U, _BCM_U, _BCM_U, _BCM_U, _BCM_U, _BCM_U,	/* 80-87 */
+-	_BCM_U, _BCM_U, _BCM_U, _BCM_P, _BCM_P, _BCM_P, _BCM_P, _BCM_P,	/* 88-95 */
+-	_BCM_P, _BCM_L | _BCM_X, _BCM_L | _BCM_X, _BCM_L | _BCM_X,
+-	    _BCM_L | _BCM_X, _BCM_L | _BCM_X,
+-	_BCM_L | _BCM_X, _BCM_L,	/* 96-103 */
+-	_BCM_L, _BCM_L, _BCM_L, _BCM_L, _BCM_L, _BCM_L, _BCM_L, _BCM_L,	/* 104-111 */
+-	_BCM_L, _BCM_L, _BCM_L, _BCM_L, _BCM_L, _BCM_L, _BCM_L, _BCM_L,	/* 112-119 */
+-	_BCM_L, _BCM_L, _BCM_L, _BCM_P, _BCM_P, _BCM_P, _BCM_P, _BCM_C,	/* 120-127 */
+-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 128-143 */
+-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 144-159 */
+-	_BCM_S | _BCM_SP, _BCM_P, _BCM_P, _BCM_P, _BCM_P, _BCM_P, _BCM_P,
+-	    _BCM_P, _BCM_P, _BCM_P,
+-	_BCM_P, _BCM_P, _BCM_P, _BCM_P, _BCM_P, _BCM_P,	/* 160-175 */
+-	_BCM_P, _BCM_P, _BCM_P, _BCM_P, _BCM_P, _BCM_P, _BCM_P, _BCM_P, _BCM_P,
+-	    _BCM_P, _BCM_P,
+-	_BCM_P, _BCM_P, _BCM_P, _BCM_P, _BCM_P,	/* 176-191 */
+-	_BCM_U, _BCM_U, _BCM_U, _BCM_U, _BCM_U, _BCM_U, _BCM_U, _BCM_U, _BCM_U,
+-	    _BCM_U, _BCM_U,
+-	_BCM_U, _BCM_U, _BCM_U, _BCM_U, _BCM_U,	/* 192-207 */
+-	_BCM_U, _BCM_U, _BCM_U, _BCM_U, _BCM_U, _BCM_U, _BCM_U, _BCM_P, _BCM_U,
+-	    _BCM_U, _BCM_U,
+-	_BCM_U, _BCM_U, _BCM_U, _BCM_U, _BCM_L,	/* 208-223 */
+-	_BCM_L, _BCM_L, _BCM_L, _BCM_L, _BCM_L, _BCM_L, _BCM_L, _BCM_L, _BCM_L,
+-	    _BCM_L, _BCM_L,
+-	_BCM_L, _BCM_L, _BCM_L, _BCM_L, _BCM_L,	/* 224-239 */
+-	_BCM_L, _BCM_L, _BCM_L, _BCM_L, _BCM_L, _BCM_L, _BCM_L, _BCM_P, _BCM_L,
+-	    _BCM_L, _BCM_L,
+-	_BCM_L, _BCM_L, _BCM_L, _BCM_L, _BCM_L	/* 240-255 */
+-};
+-
+ ulong BCMROMFN(bcm_strtoul) (char *cp, char **endp, uint base)
+ {
+ 	ulong result, last_result = 0, value;
+@@ -543,7 +499,7 @@ ulong BCMROMFN(bcm_strtoul) (char *cp, char **endp, uint base)
+ 
+ 	minus = FALSE;
+ 
+-	while (bcm_isspace(*cp))
++	while (isspace(*cp))
+ 		cp++;
+ 
+ 	if (cp[0] == '+')
+@@ -571,9 +527,9 @@ ulong BCMROMFN(bcm_strtoul) (char *cp, char **endp, uint base)
+ 
+ 	result = 0;
+ 
+-	while (bcm_isxdigit(*cp) &&
++	while (isxdigit(*cp) &&
+ 	       (value =
+-		bcm_isdigit(*cp) ? *cp - '0' : bcm_toupper(*cp) - 'A' + 10) <
++		isdigit(*cp) ? *cp - '0' : toupper(*cp) - 'A' + 10) <
+ 	       base) {
+ 		result = result * base + value;
+ 		/* Detected overflow */
+@@ -1775,7 +1731,7 @@ int bcm_format_ssid(char *buf, const uchar ssid[], uint ssid_len)
+ 		if (c == '\\') {
+ 			*p++ = '\\';
+ 			*p++ = '\\';
+-		} else if (bcm_isprint((uchar) c)) {
++		} else if (isprint((uchar) c)) {
+ 			*p++ = (char)c;
+ 		} else {
+ 			p += snprintf(p, (endp - p), "\\x%02X", c);
+diff --git a/drivers/staging/brcm80211/util/bcmwifi.c b/drivers/staging/brcm80211/util/bcmwifi.c
+index 5eced8e..cb41d10 100644
+--- a/drivers/staging/brcm80211/util/bcmwifi.c
++++ b/drivers/staging/brcm80211/util/bcmwifi.c
+@@ -19,9 +19,10 @@
+ #include <osl.h>
+ #include <bcmutils.h>
+ #define strtoul(nptr, endptr, base) bcm_strtoul((nptr), (endptr), (base))
+-#define tolower(c) (bcm_isupper((c)) ? ((c) + 'a' - 'A') : (c))
+ #include <bcmwifi.h>
+ 
++#include <linux/ctype.h>
++
+ /* Chanspec ASCII representation:
+  * <channel><band><bandwidth><ctl-sideband>
+  *   digit   [AB]     [N]        [UL]
+-- 
+1.7.2.2
 
