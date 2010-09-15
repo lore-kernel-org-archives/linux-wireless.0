@@ -1,45 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48604 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753655Ab0IONF3 (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:58384 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754452Ab0IOXae (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 09:05:29 -0400
-Subject: Re: [RFC] mac80211: avoid recalc_idle in monitor mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rajkumar Manoharan <rmanoharan@atheros.com>
-Cc: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>
-In-Reply-To: <20100915130526.GA18627@vmraj-lnx.users.atheros.com>
-References: <1284551772-18574-1-git-send-email-rmanoharan@atheros.com>
-	 <1284552730.7705.0.camel@jlt3.sipsolutions.net>
-	 <20100915130526.GA18627@vmraj-lnx.users.atheros.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 15 Sep 2010 15:05:26 +0200
-Message-ID: <1284555926.7705.1.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 15 Sep 2010 19:30:34 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <linux-omap@vger.kernel.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Nicolas Pitre <nico@fluxnic.net>, Ido Yariv <ido@wizery.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Russell King <linux@arm.linux.org.uk>,
+	Vitaly Wool <vitalywool@gmail.com>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH v6 3/7] wl12xx: add platform data passing support
+Date: Thu, 16 Sep 2010 01:31:12 +0200
+Message-Id: <1284593472-29964-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-09-15 at 18:35 +0530, Rajkumar Manoharan wrote:
+Add a simple mechanism to pass platform data to the
+SDIO instances of wl12xx.
 
-> > > -	mutex_lock(&local->mtx);
-> > > -	hw_reconf_flags |= __ieee80211_recalc_idle(local);
-> > > -	mutex_unlock(&local->mtx);
-> > > +	if (sdata->vif.type != NL80211_IFTYPE_MONITOR) {
-> > > +		mutex_lock(&local->mtx);
-> > > +		hw_reconf_flags |= __ieee80211_recalc_idle(local);
-> > > +		mutex_unlock(&local->mtx);
-> > > +	}
-> > 
-> > Hmm, that doesn't seem right, wouldn't it be idle to start with?
+This way there is no confusion over who owns the 'embedded data',
+typechecking is preserved, and no possibility for the wrong driver to
+pick up the data.
 
-> not sure whether I am missing something here. Shouldn't we be receiving frames
-> in monitor mode as soon as the interface is up and running. I don't see any
-> reason why should we even care about IDLE state for MONITOR mode.
+Originally proposed by Russell King.
 
-But if the device is already idle, adding the monitor wouldn't change it
-either, which seems wrong, no?
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+---
+ drivers/net/wireless/Makefile                      |    2 +
+ drivers/net/wireless/wl12xx/Kconfig                |    5 +++-
+ drivers/net/wireless/wl12xx/wl12xx_platform_data.c |   28 ++++++++++++++++++++
+ include/linux/wl12xx.h                             |    3 ++
+ 4 files changed, 37 insertions(+), 1 deletions(-)
+ create mode 100644 drivers/net/wireless/wl12xx/wl12xx_platform_data.c
 
-johannes
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index 5d4ce4d..85af697 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -50,5 +50,7 @@ obj-$(CONFIG_ATH_COMMON)	+= ath/
+ obj-$(CONFIG_MAC80211_HWSIM)	+= mac80211_hwsim.o
+ 
+ obj-$(CONFIG_WL12XX)	+= wl12xx/
++# small builtin driver bit
++obj-$(CONFIG_WL12XX_PLATFORM_DATA)	+= wl12xx/wl12xx_platform_data.o
+ 
+ obj-$(CONFIG_IWM)	+= iwmc3200wifi/
+diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
+index 2f98058..4a8bb25 100644
+--- a/drivers/net/wireless/wl12xx/Kconfig
++++ b/drivers/net/wireless/wl12xx/Kconfig
+@@ -74,4 +74,7 @@ config WL1271_SDIO
+ 	  If you choose to build a module, it'll be called
+ 	  wl1271_sdio. Say N if unsure.
+ 
+-
++config WL12XX_PLATFORM_DATA
++	bool
++	depends on WL1271_SDIO != n
++	default y
+diff --git a/drivers/net/wireless/wl12xx/wl12xx_platform_data.c b/drivers/net/wireless/wl12xx/wl12xx_platform_data.c
+new file mode 100644
+index 0000000..973b110
+--- /dev/null
++++ b/drivers/net/wireless/wl12xx/wl12xx_platform_data.c
+@@ -0,0 +1,28 @@
++#include <linux/module.h>
++#include <linux/err.h>
++#include <linux/wl12xx.h>
++
++static const struct wl12xx_platform_data *platform_data;
++
++int __init wl12xx_set_platform_data(const struct wl12xx_platform_data *data)
++{
++	if (platform_data)
++		return -EBUSY;
++	if (!data)
++		return -EINVAL;
++
++	platform_data = kmemdup(data, sizeof(*data), GFP_KERNEL);
++	if (!platform_data)
++		return -ENOMEM;
++
++	return 0;
++}
++
++const struct wl12xx_platform_data *wl12xx_get_platform_data(void)
++{
++	if (!platform_data)
++		return ERR_PTR(-ENODEV);
++
++	return platform_data;
++}
++EXPORT_SYMBOL(wl12xx_get_platform_data);
+diff --git a/include/linux/wl12xx.h b/include/linux/wl12xx.h
+index 015687a..bd70563 100644
+--- a/include/linux/wl12xx.h
++++ b/include/linux/wl12xx.h
+@@ -31,4 +31,7 @@ struct wl12xx_platform_data {
+ 	bool use_eeprom;
+ };
+ 
++int wl12xx_set_platform_data(const struct wl12xx_platform_data *data);
++const struct wl12xx_platform_data *wl12xx_get_platform_data(void);
++
+ #endif
+-- 
+1.7.0.4
 
