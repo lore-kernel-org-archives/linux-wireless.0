@@ -1,50 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:50588 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754900Ab0I2UOX (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:41592 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754244Ab0IOTDh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Sep 2010 16:14:23 -0400
-Message-ID: <4CA39E1B.8020409@candelatech.com>
-Date: Wed, 29 Sep 2010 13:14:19 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] mac80211:  Don't go off-channel in work_work unless
- needed.
-References: <1285787159-9207-1-git-send-email-greearb@candelatech.com> <1285790729.3756.37.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1285790729.3756.37.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Wed, 15 Sep 2010 15:03:37 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id A937B418D8
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Sep 2010 15:01:54 -0400 (EDT)
+Subject: Compat-wireless release for 2010-09-15 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100915190331.A451341134@repository3.orbit-lab.org>
+Date: Wed, 15 Sep 2010 15:03:31 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/29/2010 01:05 PM, Johannes Berg wrote:
-> On Wed, 2010-09-29 at 12:05 -0700, greearb@candelatech.com wrote:
->> From: Ben Greear<greearb@candelatech.com>
->>
->> If the work to be done is on the current active channel, then
->> do not call the offchannel and return-to-channel logic.
->>
->> Signed-off-by: Ben Greear<greearb@candelatech.com>
->> ---
->> v1 ->  v2:  Remove went_off_channel logic, and don't set
->>     tmp_channel if we're not going offchannel.
->
-> I briefly grepped through the source and am pretty sure this'll break a
-> few things in mlme.c and even the work-on-same-channel logic in
-> work.c...
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   91512d5..7b71870  history    -> origin/history
+ + b709709...8616cf4 master     -> origin/master  (forced update)
+   bfa88ea..9c03f16  stable     -> origin/stable
+ * [new tag]         next-20100915 -> next-20100915
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
 
-Ok.  I don't understand this code enough to make more progress
-here I think.
+compat-wireless code metrics
 
-Thanks,
-Ben
-
->
-> johannes
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+    707540 - Total upstream lines of code being pulled
