@@ -1,208 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:8070 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754315Ab0IJPwP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Sep 2010 11:52:15 -0400
-Subject: Re: [PATCH 05/14] iwlwifi: report scan completion when abort fail
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1284128807-11436-6-git-send-email-sgruszka@redhat.com>
-References: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
-	 <1284128807-11436-6-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain
-Date: Fri, 10 Sep 2010 08:51:19 -0700
-Message-Id: <1284133879.6054.13.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:55406 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754390Ab0IOD3B convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Sep 2010 23:29:01 -0400
+Received: by wyf22 with SMTP id 22so8146875wyf.19
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Sep 2010 20:28:59 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <201009151216.32430.br1@einfach.org>
+References: <AANLkTim+Q773KvA7Et1s2Zf8yMx36RGS2LsoJsX1Wtt9@mail.gmail.com>
+ <201009151130.15165.br1@einfach.org> <AANLkTi=uaJd3VTZ8cT0YHdE5awsmJaiO+607OLTWrt1E@mail.gmail.com>
+ <201009151216.32430.br1@einfach.org>
+From: Jonathan Guerin <jonathan@guerin.id.au>
+Date: Wed, 15 Sep 2010 13:28:36 +1000
+Message-ID: <AANLkTiniROJatam4yA4sss3qjczT-6=jSP9QxvmDo2dq@mail.gmail.com>
+Subject: Re: [ath5k-devel] [ath5k] Incorrect value for ACK_TIMEOUT
+To: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Nick Kossifidis <mickflemm@gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-09-10 at 07:26 -0700, Stanislaw Gruszka wrote:
-> When we are not able to send abort command to firmware, notify mac80211
-> that we complete scan, as we will newer do it lately. Check for all
-> possible errors that low level sending command procedure does not check,
-> to assure we catch all failures cases.
-> 
-> Patch fix one of the causes of wdev_cleanup_work warning reported at
-> https://bugzilla.redhat.com/show_bug.cgi?id=593566
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Acked-by: Wey-Yi W Guy <wey-yi.w.guy@intel.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-scan.c |  131 ++++++++++++++++---------------
->  1 files changed, 67 insertions(+), 64 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-> index ea33849..dbb07e8 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-> @@ -54,34 +54,83 @@
->  #define IWL_PASSIVE_DWELL_BASE      (100)
->  #define IWL_CHANNEL_TUNE_TIME       5
->  
-> +static int iwl_send_scan_abort(struct iwl_priv *priv)
-> +{
-> +	int ret;
-> +	struct iwl_rx_packet *pkt;
-> +	struct iwl_host_cmd cmd = {
-> +		.id = REPLY_SCAN_ABORT_CMD,
-> +		.flags = CMD_WANT_SKB,
-> +	};
->  
-> +	/* Exit instantly with error when device is not ready
-> +	 * to receive scan abort command or it does not perform
-> +	 * hardware scan currently */
-> +	if (!test_bit(STATUS_READY, &priv->status) ||
-> +	    !test_bit(STATUS_GEO_CONFIGURED, &priv->status) ||
-> +	    !test_bit(STATUS_SCAN_HW, &priv->status) ||
-> +	    test_bit(STATUS_FW_ERROR, &priv->status) ||
-> +	    test_bit(STATUS_EXIT_PENDING, &priv->status))
-> +		return -EIO;
->  
-> -/**
-> - * iwl_scan_cancel - Cancel any currently executing HW scan
-> - *
-> - * NOTE: priv->mutex is not required before calling this function
-> - */
-> -int iwl_scan_cancel(struct iwl_priv *priv)
-> -{
-> -	if (!test_bit(STATUS_SCAN_HW, &priv->status)) {
-> -		clear_bit(STATUS_SCANNING, &priv->status);
-> -		return 0;
-> +	ret = iwl_send_cmd_sync(priv, &cmd);
-> +	if (ret)
-> +		return ret;
-> +
-> +	pkt = (struct iwl_rx_packet *)cmd.reply_page;
-> +	if (pkt->u.status != CAN_ABORT_STATUS) {
-> +		/* The scan abort will return 1 for success or
-> +		 * 2 for "failure".  A failure condition can be
-> +		 * due to simply not being in an active scan which
-> +		 * can occur if we send the scan abort before we
-> +		 * the microcode has notified us that a scan is
-> +		 * completed. */
-> +		IWL_DEBUG_INFO(priv, "SCAN_ABORT ret %d.\n", pkt->u.status);
-> +		ret = -EIO;
->  	}
->  
-> -	if (test_bit(STATUS_SCANNING, &priv->status)) {
-> -		if (!test_and_set_bit(STATUS_SCAN_ABORTING, &priv->status)) {
-> -			IWL_DEBUG_SCAN(priv, "Queuing scan abort.\n");
-> -			schedule_work(&priv->abort_scan);
-> +	iwl_free_pages(priv, cmd.reply_page);
-> +	return ret;
-> +}
->  
-> -		} else
-> -			IWL_DEBUG_SCAN(priv, "Scan abort already in progress.\n");
-> +static void iwl_do_scan_abort(struct iwl_priv *priv)
-> +{
-> +	int ret;
->  
-> -		return test_bit(STATUS_SCANNING, &priv->status);
-> +	lockdep_assert_held(&priv->mutex);
-> +
-> +	if (!test_bit(STATUS_SCANNING, &priv->status)) {
-> +		IWL_DEBUG_SCAN(priv, "Not performing scan to abort\n");
-> +		return;
->  	}
->  
-> +	if (test_and_set_bit(STATUS_SCAN_ABORTING, &priv->status)) {
-> +		IWL_DEBUG_SCAN(priv, "Scan abort in progress\n");
-> +		return;
-> +	}
-> +
-> +	ret = iwl_send_scan_abort(priv);
-> +	if (ret) {
-> +		IWL_DEBUG_SCAN(priv, "Send scan abort failed %d\n", ret);
-> +		clear_bit(STATUS_SCANNING, &priv->status);
-> +		clear_bit(STATUS_SCAN_HW, &priv->status);
-> +		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
-> +		ieee80211_scan_completed(priv->hw, true);
-> +	} else
-> +		IWL_DEBUG_SCAN(priv, "Sucessfully send scan abort\n");
-> +}
-> +
-> +/**
-> + * iwl_scan_cancel - Cancel any currently executing HW scan
-> + */
-> +int iwl_scan_cancel(struct iwl_priv *priv)
-> +{
-> +	IWL_DEBUG_SCAN(priv, "Queuing abort scan\n");
-> +	schedule_work(&priv->abort_scan);
->  	return 0;
->  }
->  EXPORT_SYMBOL(iwl_scan_cancel);
-> +
->  /**
->   * iwl_scan_cancel_timeout - Cancel any currently executing HW scan
->   * @ms: amount of time to wait (in milliseconds) for scan to abort
-> @@ -108,47 +157,6 @@ int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
->  }
->  EXPORT_SYMBOL(iwl_scan_cancel_timeout);
->  
-> -static int iwl_send_scan_abort(struct iwl_priv *priv)
-> -{
-> -	int ret = 0;
-> -	struct iwl_rx_packet *pkt;
-> -	struct iwl_host_cmd cmd = {
-> -		.id = REPLY_SCAN_ABORT_CMD,
-> -		.flags = CMD_WANT_SKB,
-> -	};
-> -
-> -	/* If there isn't a scan actively going on in the hardware
-> -	 * then we are in between scan bands and not actually
-> -	 * actively scanning, so don't send the abort command */
-> -	if (!test_bit(STATUS_SCAN_HW, &priv->status)) {
-> -		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
-> -		return 0;
-> -	}
-> -
-> -	ret = iwl_send_cmd_sync(priv, &cmd);
-> -	if (ret) {
-> -		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
-> -		return ret;
-> -	}
-> -
-> -	pkt = (struct iwl_rx_packet *)cmd.reply_page;
-> -	if (pkt->u.status != CAN_ABORT_STATUS) {
-> -		/* The scan abort will return 1 for success or
-> -		 * 2 for "failure".  A failure condition can be
-> -		 * due to simply not being in an active scan which
-> -		 * can occur if we send the scan abort before we
-> -		 * the microcode has notified us that a scan is
-> -		 * completed. */
-> -		IWL_DEBUG_INFO(priv, "SCAN_ABORT returned %d.\n", pkt->u.status);
-> -		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
-> -		clear_bit(STATUS_SCAN_HW, &priv->status);
-> -	}
-> -
-> -	iwl_free_pages(priv, cmd.reply_page);
-> -
-> -	return ret;
-> -}
-> -
->  /* Service response to REPLY_SCAN_CMD (0x80) */
->  static void iwl_rx_reply_scan(struct iwl_priv *priv,
->  			      struct iwl_rx_mem_buffer *rxb)
-> @@ -527,15 +535,10 @@ static void iwl_bg_abort_scan(struct work_struct *work)
->  {
->  	struct iwl_priv *priv = container_of(work, struct iwl_priv, abort_scan);
->  
-> -	if (!test_bit(STATUS_READY, &priv->status) ||
-> -	    !test_bit(STATUS_GEO_CONFIGURED, &priv->status))
-> -		return;
-> -
->  	cancel_delayed_work(&priv->scan_check);
->  
->  	mutex_lock(&priv->mutex);
-> -	if (test_bit(STATUS_SCAN_ABORTING, &priv->status))
-> -		iwl_send_scan_abort(priv);
-> +	iwl_do_scan_abort(priv);
->  	mutex_unlock(&priv->mutex);
->  }
->  
+On Wed, Sep 15, 2010 at 1:16 PM, Bruno Randolf <br1@einfach.org> wrote:
+> On Wed September 15 2010 12:01:50 Jonathan Guerin wrote:
+>> On Wed, Sep 15, 2010 at 12:30 PM, Bruno Randolf <br1@einfach.org> wrote:
+>> > On Wed September 15 2010 10:56:32 Jonathan Guerin wrote:
+>> >> According to the 802.11-2007 spec document, the ACKTimeout value is
+>> >> (Section 9.2.8 ACK procedure):
+>> >> ACKTimeout = aSIFSTime + aSlotTime + aPHY-RX-START-Delay
+>> >>
+>> >> >From Table 17-15—OFDM PHY characteristics, the values are:
+>> >> aSIFSTime = 16
+>> >> aSlotTime = 9
+>> >> aPHY-RX-START-Delay = 25
+>> >>
+>> >> Therefore, ACKTimeout = 50
+>> >>
+>> >> In the driver source, this appears to be initialised to:
+>> >>
+>> >> $$ ath5k.h
+>> >> #define AR5K_INIT_ACK_CTS_TIMEOUT             1024
+>> >>
+>> >> $$ reg.h
+>> >> /*
+>> >>  * ACK/CTS timeout register
+>> >>  */
+>> >> #define AR5K_TIME_OUT         0x8014                  /* Register
+>> >> Address */ #define AR5K_TIME_OUT_ACK     0x00001fff      /* ACK timeout
+>> >> mask */ #define AR5K_TIME_OUT_ACK_S   0
+>> >> #define AR5K_TIME_OUT_CTS     0x1fff0000      /* CTS timeout mask */
+>> >> #define AR5K_TIME_OUT_CTS_S   16
+>> >>
+>> >> Taking the value of the register (1024), masking it with the ACK
+>> >> Timeout Mask (0x1fff) and dividing it by the clock rate (40), we get a
+>> >> much smaller ACK Timeout value:
+>> >> 1024 & 0x1fff = 1024
+>> >> 1024/40 = 25us
+>> >>
+>> >>
+>> >> Am I understanding this right? Is the driver actually setting the ACK
+>> >> Timeout to be much smaller than even a DIFS, let alone matching the
+>> >> spec?
+>> >
+>> > thanks for looking into this! i think you are right in that there is a
+>> > mistake here, but AR5K_INIT_ACK_CTS_TIMEOUT is just used for AR5210
+>> > chips for setting the AR5K_SLOT_TIME. so this is wrong, but it probably
+>> > does not affect you (or
+>>
+>> I did realise after posting my message that the value was being
+>> written into the SLOT_TIME register, rather than the TIME_OUT one. My
+>> bad, I should've done a more thorough search...
+>
+> probably writing this to SLOT_TIME is wrong too? anyhow 5210 is kind of broken
+> and not so important, imho. but it would be good to fix it too.
+>
+>> We have a 5213 chip - does this default to the 5212 branch inside ath5k?
+>
+> yes. anything higher than 5212 is treated as 5212, generally.
+>
+>> > this is all confusing and i think we should replace the initvals by
+>> > calling the function ath5k_hw_set_ack_timeout().
+>>
+>> Should all of the init be changed to use these functions, along with
+>> #define init values?
+>
+> i think it would be best if we could remove the initvals alltoghether and use
+> the function to set the ack timeout. but i'm not sure if we need to have them
+> initialized to some value at the beginning. in this case can we just override
+> them later using the function. or just update the initvals numerically (but no
+> defines).
 
+If there are no initvals, changing the mode won't init them to default
+values, will it? Or are you saying that values should not be
+initialised until the mode is set?
+
+>
+> it's great that you review this! i think no-one has looked at this since the
+> original import, so there may be really old bugs here.
+
+I've been a bit scared to post here until I had more information
+rather than a generic "uhh guys, something's not working". It's been
+causing me massive headaches with my work as I'm relying on the spec
+for timing values, but finding that the driver is doing something
+much, much different. I'm more than happy to post these things, but
+I'm not a good enough programmer to just give you patches without
+discussing the fact that I may just not be understanding what's really
+happening.
+
+Thanks for the help, it's greatly appreciated!
+
+>
+> thanks,
+> bruno
+>
