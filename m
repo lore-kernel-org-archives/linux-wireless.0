@@ -1,148 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:3435 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751941Ab0IJO2p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Sep 2010 10:28:45 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 13/14] iwlwifi: use IWL_DEBUG_SCAN for debug scanning
-Date: Fri, 10 Sep 2010 16:26:46 +0200
-Message-Id: <1284128807-11436-14-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
-References: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:52772 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754854Ab0IOSbg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Sep 2010 14:31:36 -0400
+From: Shahar Levi <shahar_levi@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>
+Subject: [PATCH 02/04] wl1271: 11n Support, ACX Commands
+Date: Wed, 15 Sep 2010 20:31:10 +0200
+Message-Id: <1284575472-19888-3-git-send-email-shahar_levi@ti.com>
+In-Reply-To: <1284575472-19888-1-git-send-email-shahar_levi@ti.com>
+References: <1284575472-19888-1-git-send-email-shahar_levi@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-scan.c |   31 +++++++++++++++++++------------
- 1 files changed, 19 insertions(+), 12 deletions(-)
+Added ACX command to the FW for 11n support.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 26dd8f3..65b7cb4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -85,7 +85,7 @@ static int iwl_send_scan_abort(struct iwl_priv *priv)
- 		 * can occur if we send the scan abort before we
- 		 * the microcode has notified us that a scan is
- 		 * completed. */
--		IWL_DEBUG_INFO(priv, "SCAN_ABORT ret %d.\n", pkt->u.status);
-+		IWL_DEBUG_SCAN(priv, "SCAN_ABORT ret %d.\n", pkt->u.status);
- 		ret = -EIO;
- 	}
- 
-@@ -192,7 +192,7 @@ static void iwl_rx_reply_scan(struct iwl_priv *priv,
- 	struct iwl_scanreq_notification *notif =
- 	    (struct iwl_scanreq_notification *)pkt->u.raw;
- 
--	IWL_DEBUG_RX(priv, "Scan request status = 0x%x\n", notif->status);
-+	IWL_DEBUG_SCAN(priv, "Scan request status = 0x%x\n", notif->status);
- #endif
+Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_acx.c |   91 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/wl1271_acx.h |    5 ++
+ 2 files changed, 96 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.c b/drivers/net/wireless/wl12xx/wl1271_acx.c
+index f03ad08..449079e 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_acx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_acx.c
+@@ -1260,6 +1260,97 @@ out:
+ 	return ret;
  }
  
-@@ -251,7 +251,7 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
- 	/* The HW is no longer scanning */
- 	clear_bit(STATUS_SCAN_HW, &priv->status);
- 
--	IWL_DEBUG_INFO(priv, "Scan on %sGHz took %dms\n",
-+	IWL_DEBUG_SCAN(priv, "Scan on %sGHz took %dms\n",
- 		       (priv->scan_band == IEEE80211_BAND_2GHZ) ? "2.4" : "5.2",
- 		       jiffies_to_msecs(elapsed_jiffies
- 					(priv->scan_start, jiffies)));
-@@ -362,22 +362,22 @@ static int __must_check iwl_scan_initiate(struct iwl_priv *priv,
- 	cancel_delayed_work(&priv->scan_check);
- 
- 	if (!iwl_is_ready_rf(priv)) {
--		IWL_WARN(priv, "request scan called when driver not ready.\n");
-+		IWL_WARN(priv, "Request scan called when driver not ready.\n");
- 		return -EIO;
- 	}
- 
- 	if (test_bit(STATUS_SCAN_HW, &priv->status)) {
--		IWL_DEBUG_INFO(priv,
-+		IWL_DEBUG_SCAN(priv,
- 			"Multiple concurrent scan requests in parallel.\n");
- 		return -EBUSY;
- 	}
- 
- 	if (test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
--		IWL_DEBUG_HC(priv, "Scan request while abort pending.\n");
-+		IWL_DEBUG_SCAN(priv, "Scan request while abort pending.\n");
- 		return -EBUSY;
- 	}
- 
--	IWL_DEBUG_INFO(priv, "Starting %sscan...\n",
-+	IWL_DEBUG_SCAN(priv, "Starting %sscan...\n",
- 			internal ? "internal short " : "");
- 
- 	set_bit(STATUS_SCANNING, &priv->status);
-@@ -427,9 +427,10 @@ int iwl_mac_hw_scan(struct ieee80211_hw *hw,
- 	 * If an internal scan is in progress, just set
- 	 * up the scan_request as per above.
- 	 */
--	if (priv->is_internal_short_scan)
-+	if (priv->is_internal_short_scan) {
-+		IWL_DEBUG_SCAN(priv, "SCAN request during internal scan\n");
- 		ret = 0;
--	else
-+	} else
- 		ret = iwl_scan_initiate(priv, vif, false,
- 					req->channels[0]->band);
- 
-@@ -456,6 +457,8 @@ static void iwl_bg_start_internal_scan(struct work_struct *work)
- 	struct iwl_priv *priv =
- 		container_of(work, struct iwl_priv, start_internal_scan);
- 
-+	IWL_DEBUG_SCAN(priv, "Start internal scan\n");
++int wl1271_acx_set_ht_capabilities(struct wl1271 *wl,
++				    struct ieee80211_sta_ht_cap *ht_cap,
++				    bool allow_ht_operation)
++{
++	struct wl1271_acx_ht_capabilities *acx;
++	/*
++	* Note, currently this value will be set to FFFFFFFFFFFF to indicate
++	* it is relevant for all peers since we only support HT in
++	* infrastructure mode. Later on this field will be relevant to
++	* IBSS/DLS operation */
++	u8 mac_address[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
++	int ret = 0;
 +
- 	mutex_lock(&priv->mutex);
- 
- 	if (priv->is_internal_short_scan == true) {
-@@ -479,6 +482,8 @@ static void iwl_bg_scan_check(struct work_struct *data)
- 	struct iwl_priv *priv =
- 	    container_of(data, struct iwl_priv, scan_check.work);
- 
-+	IWL_DEBUG_SCAN(priv, "Scan check work\n");
++	wl1271_debug(DEBUG_ACX, "acx ht capabilities setting");
 +
- 	/* Since we are here firmware does not finish scan and
- 	 * most likely is in bad shape, so we don't bother to
- 	 * send abort command, just force scan complete to mac80211 */
-@@ -539,6 +544,8 @@ static void iwl_bg_abort_scan(struct work_struct *work)
++	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
++	if (!acx) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	/* Allow HT Operation ? */
++	if (true == allow_ht_operation) {
++		acx->ht_capabilites =
++		WL1271_ACX_FW_CAP_BIT_MASK_HT_OPERATION;
++		acx->ht_capabilites |=
++		((ht_cap->cap & IEEE80211_HT_CAP_GRN_FLD) ?
++		WL1271_ACX_FW_CAP_BIT_MASK_GREENFIELD_FRAME_FORMAT : 0);
++		acx->ht_capabilites |=
++		((ht_cap->cap & IEEE80211_HT_CAP_SGI_20) ?
++		WL1271_ACX_FW_CAP_BIT_MASK_SHORT_GI_FOR_20MHZ_PACKETS : 0);
++		acx->ht_capabilites |=
++		((ht_cap->cap & IEEE80211_HT_CAP_LSIG_TXOP_PROT) ?
++		WL1271_ACX_FW_CAP_BIT_MASK_LSIG_TXOP_PROTECTION : 0);
++
++		/* get date from A-MPDU parameters field */
++		acx->ampdu_max_length = ht_cap->ampdu_factor;
++		acx->ampdu_min_spacing = ht_cap->ampdu_density;
++
++		memcpy(acx->mac_address, mac_address, ETH_ALEN);
++	}
++	/* HT operations are not allowed */
++	else
++		acx->ht_capabilites = 0;
++
++	ret = wl1271_cmd_configure(wl, ACX_PEER_HT_CAP, acx, sizeof(*acx));
++	if (ret < 0) {
++		wl1271_warning("acx ht capabilities setting failed: %d", ret);
++		goto out;
++	}
++
++out:
++	kfree(acx);
++	return ret;
++}
++
++int wl1271_acx_set_ht_information(struct wl1271 *wl,
++				   u16 ht_operation_mode)
++{
++	struct wl1271_acx_ht_information *acx;
++	int ret = 0;
++
++	wl1271_debug(DEBUG_ACX, "acx ht information setting");
++
++	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
++	if (!acx) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	acx->ht_protection =
++		(u8)(ht_operation_mode & IEEE80211_HT_OP_MODE_PROTECTION);
++	acx->rifs_mode = 0;
++	acx->gf_protection = 0;
++	acx->ht_tx_burst_limit = 0;
++	acx->dual_cts_protection = 0;
++
++	ret = wl1271_cmd_configure(wl,
++				   ACX_HT_BSS_OPERATION,
++				   acx,
++				   sizeof(*acx));
++	if (ret < 0) {
++		wl1271_warning("acx ht information setting failed: %d", ret);
++		goto out;
++	}
++
++out:
++	kfree(acx);
++	return ret;
++}
++
+ int wl1271_acx_tsf_info(struct wl1271 *wl, u64 *mactime)
  {
- 	struct iwl_priv *priv = container_of(work, struct iwl_priv, abort_scan);
+ 	struct wl1271_acx_fw_tsf_information *tsf_info;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.h b/drivers/net/wireless/wl12xx/wl1271_acx.h
+index 2a8fc43..1f85799 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_acx.h
++++ b/drivers/net/wireless/wl12xx/wl1271_acx.h
+@@ -1215,6 +1215,11 @@ int wl1271_acx_keep_alive_config(struct wl1271 *wl, u8 index, u8 tpl_valid);
+ int wl1271_acx_rssi_snr_trigger(struct wl1271 *wl, bool enable,
+ 				s16 thold, u8 hyst);
+ int wl1271_acx_rssi_snr_avg_weights(struct wl1271 *wl);
++int wl1271_acx_set_ht_capabilities(struct wl1271 *wl,
++				    struct ieee80211_sta_ht_cap *ht_cap,
++				    bool allow_ht_operation);
++int wl1271_acx_set_ht_information(struct wl1271 *wl,
++				   u16 ht_operation_mode);
+ int wl1271_acx_tsf_info(struct wl1271 *wl, u64 *mactime);
  
-+	IWL_DEBUG_SCAN(priv, "Abort scan work\n");
-+
- 	/* We keep scan_check work queued in case when firmware will not
- 	 * report back scan completed notification */
- 	mutex_lock(&priv->mutex);
-@@ -553,7 +560,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
- 	bool aborted;
- 	struct iwl_rxon_context *ctx;
- 
--	IWL_DEBUG_INFO(priv, "Completed %sscan.\n",
-+	IWL_DEBUG_SCAN(priv, "Completed %sscan.\n",
- 		       priv->is_internal_short_scan ? "internal short " : "");
- 
- 	cancel_delayed_work(&priv->scan_check);
-@@ -562,10 +569,10 @@ static void iwl_bg_scan_completed(struct work_struct *work)
- 
- 	aborted = test_and_clear_bit(STATUS_SCAN_ABORTING, &priv->status);
- 	if (aborted)
--		IWL_DEBUG_INFO(priv, "Aborted scan completed.\n");
-+		IWL_DEBUG_SCAN(priv, "Aborted scan completed.\n");
- 
- 	if (!test_and_clear_bit(STATUS_SCANNING, &priv->status)) {
--		IWL_DEBUG_INFO(priv, "Scan already completed.\n");
-+		IWL_DEBUG_SCAN(priv, "Scan already completed.\n");
- 		goto out;
- 	}
- 
+ #endif /* __WL1271_ACX_H__ */
 -- 
-1.7.1
+1.6.0.4
 
