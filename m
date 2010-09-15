@@ -1,69 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:33903 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753600Ab0IWMqy convert rfc822-to-8bit (ORCPT
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:12429 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751818Ab0IOA6M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Sep 2010 08:46:54 -0400
+	Tue, 14 Sep 2010 20:58:12 -0400
+Received: from vs3003.wh2.ocn.ne.jp (125.206.180.231)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-0293012286
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Sep 2010 09:58:10 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Jonathan Guerin <jonathan@guerin.id.au>
+Subject: Re: [ath5k-devel] [support] ath5k contention windows
+Date: Wed, 15 Sep 2010 09:58:14 +0900
+References: <AANLkTi=azJS6bn7-=Bbb--ibACaQWqv4ZGLMUpfxynm7@mail.gmail.com> <AANLkTi==HEkmY4TR=r+4Ymk_55fBORmRgF+SFGQzK750@mail.gmail.com> <AANLkTim=hRJxQW+UomOQygmLjrePym=Cn-o7RzKqWc+D@mail.gmail.com>
+In-Reply-To: <AANLkTim=hRJxQW+UomOQygmLjrePym=Cn-o7RzKqWc+D@mail.gmail.com>
+Cc: "ath5k-devel" <ath5k-devel@lists.ath5k.org>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>
 MIME-Version: 1.0
-In-Reply-To: <20100923122048.GO4580@legolas.emea.dhcp.ti.com>
-References: <1285230003-5065-1-git-send-email-luciano.coelho@nokia.com>
- <20100923114528.GL4580@legolas.emea.dhcp.ti.com> <1285244253.3231.75.camel@chilepepper>
- <20100923122048.GO4580@legolas.emea.dhcp.ti.com>
-From: Ohad Ben-Cohen <ohad@wizery.com>
-Date: Thu, 23 Sep 2010 14:46:33 +0200
-Message-ID: <AANLkTikN37=O8rnFkBfuJex25DdNPEieioL5jgenpoYY@mail.gmail.com>
-Subject: Re: [PATCH v2] omap: beagle: add support for wl1271 on the board file
-To: balbi@ti.com
-Cc: Luciano Coelho <luciano.coelho@nokia.com>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"tony@atomide.com" <tony@atomide.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201009150958.14525.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 23, 2010 at 2:20 PM, Felipe Balbi <balbi@ti.com> wrote:
-> Hi Luca,
->
-> On Thu, Sep 23, 2010 at 07:17:33AM -0500, Luciano Coelho wrote:
->>
->> On Thu, 2010-09-23 at 13:45 +0200, ext Felipe Balbi wrote:
->>>
->>> On Thu, Sep 23, 2010 at 03:20:03AM -0500, Luciano Coelho wrote:
->>> > static struct mtd_partition omap3beagle_nand_partitions[] = {
->>> >@@ -163,12 +168,25 @@ static void __init beagle_display_init(void)
->>> >
->>> > #include "sdram-micron-mt46h32m32lf-6.h"
->>> >
->>> >+struct wl12xx_platform_data omap_beagle_wlan_data __initdata = {
->>> >+      .irq = OMAP_GPIO_IRQ(OMAP_BEAGLE_WLAN_IRQ_GPIO),
->>>
->>> can you pass IRQ as a struct resource ?
->>
->> Sorry, I don't understand what you mean here.  Can you clarify?
->
-> static struct resource wl12xx_resource[] = {
->        {
->                .start  = OMAP_GPIO_IRQ(OMAP_BEAGLE_WLAN_IRQ_GPIO),
->                .flags  = IORESOURCE_IRQ,
->        },
-> };
->
-> static struct platform_device wl12xx_platform_device = {
->        .resource       = wl12xx_resource,
->        .num_resources  = ARRAY_SIZE(wl12xx_resource),
->        .....
-> };
->
-> then on driver you would:
->
-> irq = platform_get_irq(pdev, 0);
+On Wed September 15 2010 08:07:36 Jonathan Guerin wrote:
+> I'm capturing using a third-party station. I've had to use a Madwifi
+> station, as ath5k throws a lot of spurious timestamps up, which make
+> calculating this very, very difficult.
 
-only problem is that there is no platform device involved here :)
+ah, that's interesting and something we should check, too...
 
->
-> something like that :-)
->
-> --
-> balbi
->
+> Actually, I've found that they were exactly one slot time negative
+> (give or take 1us). That said, I was doing these calculations using
+> the 802.11a OFDM spec timings. I looked at the driver and realised
+> that SIFS is actually being initialised to 14us, whereas it should be
+> set to 16us. This will also affect DIFS. Once I take these into
+> consideration, they come up as approximately 4-5us out. Now that I
+> think about it, it could make sense.
+
+hmm, we have a function ath5k_hw_get_default_sifs() which returns 16 for 
+802.11a, but it's not used for setting the IFS...
+
+also i think current ath5k_hw_reset_tx_queue() is buggy and sets the AIFS 
+wrongly. it uses ah->ah_aifs + tq->tqi_aifs which is 2 + AR5K_TXQ_USEDEFAULT 
+which results in 2 + (-1). that does not make sense to me and i will post a 
+patch fixing up some of that confusion (but not the SIFS issue) today.
+
+bruno
