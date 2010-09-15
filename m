@@ -1,51 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:40575 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755273Ab0IXVbD (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:31772 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753430Ab0IODQZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Sep 2010 17:31:03 -0400
-Subject: Re: [wireless] wireless:  Keep phy name consistent across module
- reloads.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <4C9D1760.3040103@candelatech.com>
-References: <1285113431-25526-1-git-send-email-greearb@candelatech.com>
-	 <1285362170.11036.1.camel@jlt3.sipsolutions.net>
-	 <4C9D13AC.4080308@candelatech.com>
-	 <1285363135.11036.7.camel@jlt3.sipsolutions.net>
-	 <4C9D1760.3040103@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 24 Sep 2010 23:31:01 +0200
-Message-ID: <1285363861.11036.8.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 14 Sep 2010 23:16:25 -0400
+Received: from vs3000.wh2.ocn.ne.jp (125.206.180.163)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-080713582
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Sep 2010 12:16:24 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Jonathan Guerin <jonathan@guerin.id.au>
+Subject: Re: [ath5k-devel] [ath5k] Incorrect value for ACK_TIMEOUT
+Date: Wed, 15 Sep 2010 12:16:32 +0900
+Cc: ath5k-devel@lists.ath5k.org,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	Nick Kossifidis <mickflemm@gmail.com>
+References: <AANLkTim+Q773KvA7Et1s2Zf8yMx36RGS2LsoJsX1Wtt9@mail.gmail.com> <201009151130.15165.br1@einfach.org> <AANLkTi=uaJd3VTZ8cT0YHdE5awsmJaiO+607OLTWrt1E@mail.gmail.com>
+In-Reply-To: <AANLkTi=uaJd3VTZ8cT0YHdE5awsmJaiO+607OLTWrt1E@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="windows-1252"
+Message-Id: <201009151216.32430.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-09-24 at 14:25 -0700, Ben Greear wrote:
-
-> > Actually, right now it doesn't even allow you to use a "phy%d" name,
-> > which is because I don't want (sysfs, debugfs) errors coming from doing
-> > "iw phy0 set name phy1" and then plugging in a new device ... In doing
-> > that, I manage to avoid having to allocate two different numbers...
+On Wed September 15 2010 12:01:50 Jonathan Guerin wrote:
+> On Wed, Sep 15, 2010 at 12:30 PM, Bruno Randolf <br1@einfach.org> wrote:
+> > On Wed September 15 2010 10:56:32 Jonathan Guerin wrote:
+> >> According to the 802.11-2007 spec document, the ACKTimeout value is
+> >> (Section 9.2.8 ACK procedure):
+> >> ACKTimeout = aSIFSTime + aSlotTime + aPHY-RX-START-Delay
+> >> 
+> >> >From Table 17-15—OFDM PHY characteristics, the values are:
+> >> aSIFSTime = 16
+> >> aSlotTime = 9
+> >> aPHY-RX-START-Delay = 25
+> >> 
+> >> Therefore, ACKTimeout = 50
+> >> 
+> >> In the driver source, this appears to be initialised to:
+> >> 
+> >> $$ ath5k.h
+> >> #define AR5K_INIT_ACK_CTS_TIMEOUT             1024
+> >> 
+> >> $$ reg.h
+> >> /*
+> >>  * ACK/CTS timeout register
+> >>  */
+> >> #define AR5K_TIME_OUT         0x8014                  /* Register
+> >> Address */ #define AR5K_TIME_OUT_ACK     0x00001fff      /* ACK timeout
+> >> mask */ #define AR5K_TIME_OUT_ACK_S   0
+> >> #define AR5K_TIME_OUT_CTS     0x1fff0000      /* CTS timeout mask */
+> >> #define AR5K_TIME_OUT_CTS_S   16
+> >> 
+> >> Taking the value of the register (1024), masking it with the ACK
+> >> Timeout Mask (0x1fff) and dividing it by the clock rate (40), we get a
+> >> much smaller ACK Timeout value:
+> >> 1024 & 0x1fff = 1024
+> >> 1024/40 = 25us
+> >> 
+> >> 
+> >> Am I understanding this right? Is the driver actually setting the ACK
+> >> Timeout to be much smaller than even a DIFS, let alone matching the
+> >> spec?
+> > 
+> > thanks for looking into this! i think you are right in that there is a
+> > mistake here, but AR5K_INIT_ACK_CTS_TIMEOUT is just used for AR5210
+> > chips for setting the AR5K_SLOT_TIME. so this is wrong, but it probably
+> > does not affect you (or
 > 
-> I tried rename few months ago, to rename back to phy0, and it failed
-> for no obvious reason..so I just assumed rename didn't work at all.
-> Would you like a patch to print something in kernel logs when someone
-> tries to rename to phy%d?
+> I did realise after posting my message that the value was being
+> written into the SLOT_TIME register, rather than the TIME_OUT one. My
+> bad, I should've done a more thorough search...
 
-Well, if you want to work on getting an unused phy%d name this would be
-kinda pointless, no?
+probably writing this to SLOT_TIME is wrong too? anyhow 5210 is kind of broken 
+and not so important, imho. but it would be good to fix it too.
 
-> > I suppose it'd be possible to treat this more like interfaces. Want to
-> > also make it per net namespace? ;-)
+> We have a 5213 chip - does this default to the 5212 branch inside ath5k?
+
+yes. anything higher than 5212 is treated as 5212, generally.
+
+> > this is all confusing and i think we should replace the initvals by
+> > calling the function ath5k_hw_set_ack_timeout().
 > 
-> Probably best for all involved if I don't mess with namespaces right now,
-> but I'll be happy to work on (or test) a patch to find the first un-used phyX name,
-> if that's what you mean.
+> Should all of the init be changed to use these functions, along with
+> #define init values?
 
-I think that'd be OK, even if maybe at this point a little unexpected?
+i think it would be best if we could remove the initvals alltoghether and use 
+the function to set the ack timeout. but i'm not sure if we need to have them 
+initialized to some value at the beginning. in this case can we just override 
+them later using the function. or just update the initvals numerically (but no 
+defines).
 
-johannes
+it's great that you review this! i think no-one has looked at this since the 
+original import, so there may be really old bugs here.
 
+thanks,
+bruno
