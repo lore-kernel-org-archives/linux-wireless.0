@@ -1,73 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:59037 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751698Ab0INPA1 (ORCPT
+Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:65428 "EHLO
+	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753402Ab0IOQkD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 11:00:27 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
-	Paul Stewart <pstew@google.com>,
-	Amod Bodas <amod.bodas@atheros.com>
-Subject: [PATCH v2 05/10] mac80211: reset connection idle when going offchannel
-Date: Tue, 14 Sep 2010 11:00:27 -0400
-Message-Id: <1284476427-13810-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 15 Sep 2010 12:40:03 -0400
+Date: Wed, 15 Sep 2010 09:39:39 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: Vitaly Wool <vitalywool@gmail.com>
+Cc: Ohad Ben-Cohen <ohad@wizery.com>,
+	=?utf-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirqus@gmail.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	akpm@linux-foundation.org, Nicolas Pitre <nico@fluxnic.net>,
+	linux-mmc@vger.kernel.org,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	linux-wireless@vger.kernel.org, San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	linux-omap@vger.kernel.org, Ido Yariv <ido@wizery.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v5 3/7] wireless: wl12xx: add platform data passing
+ support
+Message-ID: <20100915163939.GU8647@atomide.com>
+References: <1283376410-9999-1-git-send-email-ohad@wizery.com>
+ <1283376410-9999-4-git-send-email-ohad@wizery.com>
+ <AANLkTi=goLEUqM1XQ__PrGu4=Erw2utaNP4qFmSgRta2@mail.gmail.com>
+ <20100906120716.GE20903@n2100.arm.linux.org.uk>
+ <AANLkTikAFCd+3ggZKhQXY=+bG==KgLkv3qNVdEGa=GBX@mail.gmail.com>
+ <AANLkTinM8vY7CygEN6DBR35WLkU-QOBwuiaRrpfwF6Mz@mail.gmail.com>
+ <AANLkTikSP874gnsPrc_M1LJYNpjX+Lz3-5=Bk5_HtgP+@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AANLkTikSP874gnsPrc_M1LJYNpjX+Lz3-5=Bk5_HtgP+@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When we go offchannel mac80211 currently leaves alive the
-connection idle monitor. This should be instead postponed
-until we come back to our home channel, otherwise by the
-time we get back to the home channel we could be triggering
-unecesary probe requests. For APs that do not respond to
-unicast probe requests (Nexus One is a simple example) this
-means we essentially get disconnected after the probes
-fails.
+* Vitaly Wool <vitalywool@gmail.com> [100915 01:18]:
+> 2010/9/15 Ohad Ben-Cohen <ohad@wizery.com>:
+> >> Sorry for pushing at this, but why would you mark data that's meant to
+> >> be used after init phase as __initdata?
+> >
+> > I can remove the first copying as well if Russell is ok with it.
+> 
+> I personally think it's not worth it. This copying basically happens
+> only once and this point is soooo irrelevant. My position therefore
+> is: let's get the current implementation in, and if Michal is
+> uncomfortable with that, he can come up with the patch. Let's
+> concentrate on the real problems.
 
-This patch has stable fixes for kernels [2.6.35+]
+This becomes an issue when compiling in support for multiple
+boards.. All the data that's not in use for the booted board
+should be __initdata.
 
-Cc: stable@kernel.org
-Cc: Paul Stewart <pstew@google.com>
-Cc: Amod Bodas <amod.bodas@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
+Regards,
 
-On this v2 I add the ifmgd on this patch, later on patch
-number 07 we make that use this same variable.
-
- net/mac80211/offchannel.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index eeacaa5..627a33e 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -22,12 +22,15 @@
- static void ieee80211_offchannel_ps_enable(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 
- 	local->offchannel_ps_enabled = false;
- 
- 	/* FIXME: what to do when local->pspolling is true? */
- 
- 	del_timer_sync(&local->dynamic_ps_timer);
-+	del_timer_sync(&ifmgd->conn_mon_timer);
-+
- 	cancel_work_sync(&local->dynamic_ps_enable_work);
- 
- 	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
-@@ -85,6 +88,8 @@ static void ieee80211_offchannel_ps_disable(struct ieee80211_sub_if_data *sdata)
- 		mod_timer(&local->dynamic_ps_timer, jiffies +
- 			  msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
- 	}
-+
-+	ieee80211_sta_reset_conn_monitor(sdata);
- }
- 
- void ieee80211_offchannel_stop_beaconing(struct ieee80211_local *local)
--- 
-1.7.0.4
-
+Tony
