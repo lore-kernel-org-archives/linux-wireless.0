@@ -1,33 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([147.243.1.47]:63967 "EHLO mgw-sa01.nokia.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752978Ab0I3DHa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Sep 2010 23:07:30 -0400
-Subject: Re: pull request: wl1xx 2010-09-29
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1285775599.9024.5.camel@powerslave>
-References: <1285775599.9024.5.camel@powerslave>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 30 Sep 2010 06:07:17 +0300
-Message-ID: <1285816037.9024.7.camel@powerslave>
-Mime-Version: 1.0
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:37476 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751768Ab0IOI1C (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Sep 2010 04:27:02 -0400
+MIME-Version: 1.0
+In-Reply-To: <AANLkTinM8vY7CygEN6DBR35WLkU-QOBwuiaRrpfwF6Mz@mail.gmail.com>
+References: <1283376410-9999-1-git-send-email-ohad@wizery.com>
+	<1283376410-9999-4-git-send-email-ohad@wizery.com>
+	<AANLkTi=goLEUqM1XQ__PrGu4=Erw2utaNP4qFmSgRta2@mail.gmail.com>
+	<20100906120716.GE20903@n2100.arm.linux.org.uk>
+	<AANLkTikAFCd+3ggZKhQXY=+bG==KgLkv3qNVdEGa=GBX@mail.gmail.com>
+	<AANLkTinM8vY7CygEN6DBR35WLkU-QOBwuiaRrpfwF6Mz@mail.gmail.com>
+Date: Wed, 15 Sep 2010 10:27:00 +0200
+Message-ID: <AANLkTikSP874gnsPrc_M1LJYNpjX+Lz3-5=Bk5_HtgP+@mail.gmail.com>
+Subject: Re: [PATCH v5 3/7] wireless: wl12xx: add platform data passing support
+From: Vitaly Wool <vitalywool@gmail.com>
+To: Ohad Ben-Cohen <ohad@wizery.com>
+Cc: =?ISO-8859-2?Q?Micha=B3_Miros=B3aw?= <mirqus@gmail.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	akpm@linux-foundation.org, Nicolas Pitre <nico@fluxnic.net>,
+	Tony Lindgren <tony@atomide.com>, linux-mmc@vger.kernel.org,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	linux-wireless@vger.kernel.org, San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	linux-omap@vger.kernel.org, Ido Yariv <ido@wizery.com>,
+	linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+2010/9/15 Ohad Ben-Cohen <ohad@wizery.com>:
+>> Sorry for pushing at this, but why would you mark data that's meant to
+>> be used after init phase as __initdata?
+>
+> I can remove the first copying as well if Russell is ok with it.
 
-On Wed, 2010-09-29 at 17:53 +0200, ext Luciano Coelho wrote:
-> ext Ohad Ben-Cohen (1):
->       wl12xx: fix non-wl12xx build scenarios
+I personally think it's not worth it. This copying basically happens
+only once and this point is soooo irrelevant. My position therefore
+is: let's get the current implementation in, and if Michal is
+uncomfortable with that, he can come up with the patch. Let's
+concentrate on the real problems.
 
-I made a small correction in my tree.  Because of our crappy mail
-servers, this "ext" was accidentally introduced in front of Ohad's name.
-I have fixed that and forced an update.  I hope this doesn't cause
-problems...
-
--- 
-Cheers,
-Luca.
-
+Thanks,
+   Vitaly
