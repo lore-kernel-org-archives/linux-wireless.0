@@ -1,337 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48856 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753434Ab0IBSOk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Sep 2010 14:14:40 -0400
-Date: Thu, 2 Sep 2010 14:08:27 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: pull request: wireless-next-2.6 2010-09-02
-Message-ID: <20100902180826.GC6802@tuxdriver.com>
+Received: from mail.atheros.com ([12.19.149.2]:22625 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754484Ab0IOSbS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Sep 2010 14:31:18 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Sep 2010 11:31:12 -0700
+Date: Wed, 15 Sep 2010 11:31:16 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Matt Smith <Matt.Smith@Atheros.com>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	Bennyam Malavazi <Bennyam.Malavazi@Atheros.com>,
+	Amod Bodas <Amod.Bodas@atheros.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3 00/11] ath9k / mac80211: power save fixes
+Message-ID: <20100915183116.GB1678@tux>
+References: <1284507624-18176-1-git-send-email-lrodriguez@atheros.com>
+ <AANLkTinNA9Xb-bq17V_PcyLujaJM-mOWimvQzWMRKpk6@mail.gmail.com>
+ <10161E8E-4F96-4B3B-B5D3-27DF9236BF83@Atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <10161E8E-4F96-4B3B-B5D3-27DF9236BF83@Atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dave,
+Taking this thread public for further review and comments.
 
-Here is another batch of patches intended for 2.6.37.  There are a
-variety of changes ranging from spelling fixes to more significant
-driver and infrastructure enhancements.  As usual iwlwifi is a
-major target, supplemented in this batch by rt2x00, ath5k, wl1251,
-and others.  Johannes seems to have had an itch to tweak mac80211 a
-bit as well.
+On Wed, Sep 15, 2010 at 06:33:19AM -0700, Matt Smith wrote:
+> Luis,
+> 
+> Not sure what is meant by "block them".... Are you saying should we
+> pause the reordering buffer timeout? 
 
-Please let me know if there are problems!
+Yes, that or we simply cancel our existing BAs and reject future
+ones until we get back to the home channel. I wonder what is easier
+and less bug prone.
 
-Thanks,
+> I think we should, as there could be some holes in the
+> reordering buffer and it's not fair to time them out and drop
+> the packet if we go off-channel.
 
-John
+This was what I was thinking, just was not sure what approach
+would be more suitable, either to pause the timers for reorderign
+or simply stopping BAs completely until we come back to the
+home channel.
 
----
+> That said, most scans will wait until the medium is idle (~ 200ms),
+> so we shouldn't have any holes in the reordering buffer at that time.
 
-The following changes since commit 3e502e63586920f219ed2590f69c1f5a8888cfa4:
+In mac80211 right now we do not wait until the medium is idle.
+We were reviewing what we should do at the wireless summit in San Francisco
+last week. Sam Leffler noted he thought it would be good we simply
+defer going offchannel until the medium is idle but my concern is
+if we have a constant stream of data, how long would we defer scanning,
+and what decision do we use to start scan despite a data stream being
+transmitted. There was also some suggestion of using a force scan request
+which would not wait for the medium to be idle, this would be more
+instrusive.
 
-  starfire: Temporary kludge to fix powerpc build. (2010-09-01 19:19:54 -0700)
+I do not believe we had any consenus on the approach we should take,
+unless others were able to pick something up that I did not. So I'd like
+to take the opprortunity now that you mentioned it to talk about it with
+you as well. Any recommendations for best strategy for this?
 
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-next-2.6.git for-davem
+I should note what we end up deciding for both aggregation and scan logic
+would also affect how we deal with WiFi direct offchannel operation (ah,
+we can talk about WiFi Direct publicly now :))
 
-Arnaud Patard (1):
-      rt2x00: fix "buffer size not provably correct" build warning
+  Luis
 
-Bob Copeland (4):
-      mac80211: trivial spelling fixes
-      ath5k: trivial spelling fixes
-      ath5k: log descriptor chains at a new debug level
-      ath5k: fix off-by-one in pilot magnitude mask
-
-Christian Lamparter (5):
-      p54spi: Kconfig option for config blob
-      p54usb: fix off-by-one on !CONFIG_PM
-      mac80211: cancel restart_work in ieee80211_unregister_hw
-      mac80211: fix rcu-unsafe pointer dereference
-      p54: better rssi->dbm conversion for longbow phys
-
-Dan Carpenter (1):
-      ath5k: re-order one of the frees on unwind
-
-David Kilroy (2):
-      orinoco: Fix walking past the end of the buffer
-      orinoco: update status in MAINTAINERS
-
-Denis 'GNUtoo' Carikli (1):
-      wl1251: Fix queue stopping/waking for TX path
-
-Felix Fietkau (1):
-      ath9k: fix spurious MIC failure reports
-
-Helmut Schaa (2):
-      rt2x00: Rename txentry_desc.queue -> txentry_desc.qid
-      rt2x00: Update rt2800 comments regarding AMPDU and PACKET_ID in TXWI
-
-Ivo van Doorn (16):
-      rt2x00: Simplify arguments to rt2x00 driver callback functions
-      rt2x00: Reduce indenting
-      rt2x00: Move direct access to queue->entries to rt2x00queue.c
-      rt2x00: Remove Q_INDEX_CRYPTO and ENTRY_OWNER_DEVICE_CRYPTO
-      rt2x00: Fix rt2800 retry calculation
-      rt2x00: Merge rt2800{pci/usb} radio enabling/disabling code to rt2800lib
-      rt2x00: Fix channel configuration for RF3052
-      rt2x00: Fix max TX power settings
-      rt2x00: Add rt2800_wait_csr_ready
-      rt2x00: Validate TX status results with current data entry
-      rt2x00: Wakeup hardware before loading firmware
-      rt2x00: Don't set unicast/BSSID masks when clearning MAC or BSSID
-      rt2x00: Set PWR_PIN_CFG during initialization
-      rt2x00: Correctly kill beacon queue
-      rt2x00: Split watchdog check into a DMA and STATUS timeout
-      rt2x00: Cleanup rt2x00usb_watchdog_reset_tx
-
-Joe Perches (2):
-      net/mac80211: Use wiphy_<level>
-      MAINTAINERS: add info for include/linux/spi/wl12xx.h
-
-Johannes Berg (55):
-      iwlwifi: add 6000g2b BT coexist API
-      iwlagn: implement advance BT config command
-      iwlagn: set BT IGNORE for some frames
-      iwlwifi: add BT notification support for bt coex
-      iwlagn: let bluetooth traffic load impact rate scale
-      iwlwifi: reset BT when going down
-      iwlagn: disable gen2b BT coexistence in IBSS
-      iwlagn: keep BT settings across restart
-      iwlwifi: use antenna A only under high BT load
-      iwlwifi: disable aggregation queue if stopped early
-      nl80211: fix missing nesting
-      mac80211: fix mesh advertisement
-      iwlwifi: initial contextification
-      iwlwifi: prepare for PAN queue/fifo assignment
-      iwlwifi: define PAN queues/FIFOs
-      iwlwifi: contextify broadcast station
-      iwlwifi: contextify-stations-completely
-      iwlwifi: contextify command sending
-      iwlwifi: move QoS into context
-      iwlwifi: add context into tx descriptor
-      iwlwifi: move virtual interface pointer into context
-      iwlwifi: clamp scanning dwell time to all contexts
-      iwlwifi: move AP sta ID to context
-      iwlwifi: make hw crypto context aware
-      iwlwifi: store default station flags in context
-      iwlwifi: add context pointer to station
-      iwlwifi: move HT configuration data into context
-      iwlwifi: introduce beacon context
-      iwlwifi: add PAN API
-      iwlagn: detect PAN capability
-      iwlagn: remove iw_mode check for beacon
-      iwlagn: queue frames according to context
-      iwlagn: send RXON timing before associating
-      iwlagn: send beacon before committing associated RXON
-      iwlwifi: send PAN parameters
-      iwlwifi: pass context to iwl_send_rxon_timing
-      iwlagn: always send RXON timing
-      iwlwifi: follow main beacon interval
-      iwlwifi: allow using multiple contexts
-      mac80211: remove unused scan expire define
-      mac80211: allow scan to complete from any context
-      wl12xx: remove unneeded locking
-      cfg80211 docbook: remove erronous !A
-      cfg80211: allow vendor specific cipher suites
-      mac80211: allow vendor specific cipher suites
-      cfg80211: allow changing port control protocol
-      mac80211: allow changing port control protocol
-      mac80211: use subqueue helpers
-      mac80211: clean up ifdown/cleanup paths
-      mac80211: switch to ieee80211_sdata_running
-      mac80211: simplify zero address checks
-      mac80211: split out concurrent vif checks
-      mac80211: support runtime interface type changes
-      mac80211_hwsim: support runtime iftype changes
-      mac80211: fix offchannel queue stop
-
-John W. Linville (4):
-      Merge branch 'wireless-next-2.6' of git://git.kernel.org/.../iwlwifi/iwlwifi-2.6
-      mac80211: cancel scan in ieee80211_restart_hw if software scan pending
-      mac80211: only cancel software-based scans on suspend
-      Merge branch 'master' of git://git.kernel.org/.../linville/wireless-next-2.6 into for-davem
-
-Jouni Malinen (2):
-      mac80211: Fix signal strength average initialization for CQM events
-      mac80211: Do not generate CQM events based on first Beacon frames
-
-Julia Lawall (1):
-      net/wireless: Remove double test
-
-Kalle Valo (4):
-      wl1251: update my email address
-      wl12xx: change contact person for the include file
-      wl1251: remove copyright contact person
-      wl1251: move include guard after the license
-
-Rafał Miłecki (1):
-      b43: N-PHY: add missing phyrxchain setting and fix warning in RX core function
-
-Rajkumar Manoharan (1):
-      ath9k_htc: Enable ANI in associated state only
-
-Stanislaw Gruszka (1):
-      iwlwifi: fix canceling monitor_recover timer
-
-Vivek Natarajan (1):
-      ath9k: Change the default LED pattern.
-
-Wey-Yi Guy (18):
-      mac80211: fix warning for un-used parameter
-      iwlwifi: update out-of-date comments
-      iwlwifi: comments cleanup
-      iwlwifi: Relax uCode timeout/error checking for 6000g2b
-      iwlwifi: add bt full concurrency support
-      iwlagn: wifi/bt coex configuration sequence
-      iwlwifi: indicate bt_kill condition when receive tx reply
-      iwlwifi: add debugfs to control stuck queue timer
-      iwlwifi: add bt_init_traffic_load as configurable parameter
-      iwlagn: add bt prio_boost to .cfg
-      iwlagn: parsing uart message and take actions
-      iwlagn: add additional bt related parameters
-      iwlagn: add bt_ch_announce module parameter
-      iwlagn: set traffic load based on multiple factors
-      iwlagn: generic bt coex functions
-      iwlagn: update bt status upon scan complete
-      iwlwifi: add bt traffic load debugfs file
-      iwlwifi: fix compile error without debugging support
-
- Documentation/DocBook/80211.tmpl              |    1 -
- MAINTAINERS                                   |    8 +-
- drivers/net/wireless/ath/ath.h                |    1 +
- drivers/net/wireless/ath/ath5k/base.c         |    4 +-
- drivers/net/wireless/ath/ath5k/debug.c        |    5 +-
- drivers/net/wireless/ath/ath5k/debug.h        |    2 +
- drivers/net/wireless/ath/ath5k/pcu.c          |    4 +-
- drivers/net/wireless/ath/ath5k/phy.c          |    4 +-
- drivers/net/wireless/ath/ath5k/reset.c        |    6 +-
- drivers/net/wireless/ath/ath9k/common.c       |   11 +
- drivers/net/wireless/ath/ath9k/htc_drv_main.c |    9 +-
- drivers/net/wireless/ath/ath9k/init.c         |    2 +-
- drivers/net/wireless/ath/ath9k/mac.c          |    3 +-
- drivers/net/wireless/ath/ath9k/recv.c         |   19 +-
- drivers/net/wireless/b43/phy_n.c              |    4 +-
- drivers/net/wireless/iwlwifi/iwl-1000.c       |    4 +-
- drivers/net/wireless/iwlwifi/iwl-3945-hw.h    |    3 +-
- drivers/net/wireless/iwlwifi/iwl-3945-rs.c    |    7 +-
- drivers/net/wireless/iwlwifi/iwl-3945.c       |   86 ++--
- drivers/net/wireless/iwlwifi/iwl-4965.c       |   57 +-
- drivers/net/wireless/iwlwifi/iwl-5000-hw.h    |    2 +-
- drivers/net/wireless/iwlwifi/iwl-5000.c       |   25 +-
- drivers/net/wireless/iwlwifi/iwl-6000-hw.h    |    2 +-
- drivers/net/wireless/iwlwifi/iwl-6000.c       |  156 +++++-
- drivers/net/wireless/iwlwifi/iwl-agn-calib.c  |   18 +-
- drivers/net/wireless/iwlwifi/iwl-agn-hcmd.c   |  112 ++++-
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c    |  422 ++++++++++++++-
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c     |  294 +++++++++--
- drivers/net/wireless/iwlwifi/iwl-agn-rs.h     |    2 +
- drivers/net/wireless/iwlwifi/iwl-agn-tt.c     |   26 +-
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c     |  137 +++--
- drivers/net/wireless/iwlwifi/iwl-agn-ucode.c  |   95 +++-
- drivers/net/wireless/iwlwifi/iwl-agn.c        |  546 ++++++++++++++-----
- drivers/net/wireless/iwlwifi/iwl-agn.h        |   12 +-
- drivers/net/wireless/iwlwifi/iwl-commands.h   |  470 +++++++++++++++-
- drivers/net/wireless/iwlwifi/iwl-core.c       |  747 +++++++++++++++----------
- drivers/net/wireless/iwlwifi/iwl-core.h       |   65 ++-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c    |  106 +++-
- drivers/net/wireless/iwlwifi/iwl-dev.h        |  165 +++++-
- drivers/net/wireless/iwlwifi/iwl-hcmd.c       |   13 +-
- drivers/net/wireless/iwlwifi/iwl-prph.h       |    9 +-
- drivers/net/wireless/iwlwifi/iwl-rx.c         |    9 +-
- drivers/net/wireless/iwlwifi/iwl-scan.c       |   57 ++-
- drivers/net/wireless/iwlwifi/iwl-sta.c        |  183 ++++---
- drivers/net/wireless/iwlwifi/iwl-sta.h        |   64 ++-
- drivers/net/wireless/iwlwifi/iwl-tx.c         |   34 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c   |  175 ++++---
- drivers/net/wireless/mac80211_hwsim.c         |   13 +
- drivers/net/wireless/orinoco/hw.c             |    9 +-
- drivers/net/wireless/orinoco/wext.c           |   11 +-
- drivers/net/wireless/p54/Kconfig              |   17 +
- drivers/net/wireless/p54/p54spi.c             |    7 +-
- drivers/net/wireless/p54/p54usb.c             |    2 +-
- drivers/net/wireless/p54/txrx.c               |    8 +-
- drivers/net/wireless/rt2x00/rt2400pci.c       |   31 +-
- drivers/net/wireless/rt2x00/rt2500pci.c       |   37 +-
- drivers/net/wireless/rt2x00/rt2500usb.c       |   31 +-
- drivers/net/wireless/rt2x00/rt2800.h          |   13 +-
- drivers/net/wireless/rt2x00/rt2800lib.c       |  305 ++++++++---
- drivers/net/wireless/rt2x00/rt2800lib.h       |    9 +-
- drivers/net/wireless/rt2x00/rt2800pci.c       |  114 +---
- drivers/net/wireless/rt2x00/rt2800usb.c       |  105 +---
- drivers/net/wireless/rt2x00/rt2x00.h          |   15 +-
- drivers/net/wireless/rt2x00/rt2x00debug.c     |    9 +-
- drivers/net/wireless/rt2x00/rt2x00dev.c       |    8 +-
- drivers/net/wireless/rt2x00/rt2x00queue.c     |   71 ++-
- drivers/net/wireless/rt2x00/rt2x00queue.h     |   48 ++-
- drivers/net/wireless/rt2x00/rt2x00usb.c       |  199 ++++----
- drivers/net/wireless/rt2x00/rt2x00usb.h       |   12 +-
- drivers/net/wireless/rt2x00/rt61pci.c         |   57 +-
- drivers/net/wireless/rt2x00/rt73usb.c         |   35 +-
- drivers/net/wireless/wl12xx/wl1251.h          |    7 +-
- drivers/net/wireless/wl12xx/wl1251_acx.h      |    2 -
- drivers/net/wireless/wl12xx/wl1251_boot.c     |    2 -
- drivers/net/wireless/wl12xx/wl1251_boot.h     |    2 -
- drivers/net/wireless/wl12xx/wl1251_cmd.h      |    2 -
- drivers/net/wireless/wl12xx/wl1251_debugfs.c  |    2 -
- drivers/net/wireless/wl12xx/wl1251_debugfs.h  |    2 -
- drivers/net/wireless/wl12xx/wl1251_event.c    |    4 -
- drivers/net/wireless/wl12xx/wl1251_event.h    |    2 -
- drivers/net/wireless/wl12xx/wl1251_init.c     |    2 -
- drivers/net/wireless/wl12xx/wl1251_init.h     |    2 -
- drivers/net/wireless/wl12xx/wl1251_io.c       |    2 -
- drivers/net/wireless/wl12xx/wl1251_main.c     |   18 +-
- drivers/net/wireless/wl12xx/wl1251_ps.c       |    2 -
- drivers/net/wireless/wl12xx/wl1251_ps.h       |    8 +-
- drivers/net/wireless/wl12xx/wl1251_reg.h      |    2 -
- drivers/net/wireless/wl12xx/wl1251_rx.c       |    2 -
- drivers/net/wireless/wl12xx/wl1251_rx.h       |    2 -
- drivers/net/wireless/wl12xx/wl1251_sdio.c     |    2 +-
- drivers/net/wireless/wl12xx/wl1251_spi.c      |    4 +-
- drivers/net/wireless/wl12xx/wl1251_spi.h      |    2 -
- drivers/net/wireless/wl12xx/wl1251_tx.c       |   22 +-
- drivers/net/wireless/wl12xx/wl1251_tx.h       |    2 -
- drivers/net/wireless/wl12xx/wl1271_main.c     |    2 -
- drivers/net/wireless/wl12xx/wl1271_scan.c     |    2 -
- include/linux/nl80211.h                       |   16 +-
- include/linux/spi/wl12xx.h                    |    2 +-
- include/net/cfg80211.h                        |   24 +-
- include/net/mac80211.h                        |   22 +-
- net/mac80211/cfg.c                            |   53 +--
- net/mac80211/debugfs.c                        |    6 +-
- net/mac80211/driver-ops.h                     |   14 +
- net/mac80211/driver-trace.h                   |   25 +
- net/mac80211/ibss.c                           |    4 +-
- net/mac80211/ieee80211_i.h                    |   46 ++-
- net/mac80211/iface.c                          |  314 ++++++-----
- net/mac80211/key.c                            |   52 ++-
- net/mac80211/key.h                            |    6 +-
- net/mac80211/main.c                           |   82 +++-
- net/mac80211/mlme.c                           |   36 +-
- net/mac80211/offchannel.c                     |   19 +-
- net/mac80211/pm.c                             |    3 +-
- net/mac80211/rate.c                           |    9 +-
- net/mac80211/rx.c                             |   33 +-
- net/mac80211/scan.c                           |   34 +-
- net/mac80211/sta_info.c                       |   21 +-
- net/mac80211/status.c                         |    9 +-
- net/mac80211/tx.c                             |   45 ++-
- net/mac80211/util.c                           |   11 +-
- net/wireless/nl80211.c                        |   27 +-
- net/wireless/util.c                           |    9 +-
- net/wireless/wext-core.c                      |    2 +-
- net/wireless/wext-sme.c                       |    2 +
- 124 files changed, 4513 insertions(+), 1866 deletions(-)
-
-Omnibus patch available here:
-
-	http://www.kernel.org/pub/linux/kernel/people/linville/wireless-next-2.6-2010-09-02.patch.bz2
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+> Matt
+> 
+> On Sep 14, 2010, at 5:09 PM, Luis R. Rodriguez wrote:
+> 
+> > Matt,
+> > 
+> > mac80211 uses a queue to stuff MPDUs from an AMPDUs since we can
+> > receive them out of order. We have a timer on these and nuke 'em after
+> > it expires. When we're associated and we hit a scan trigger due to
+> > RSSI or a desire to go offchannel (WiFi Direct), what do you recommend
+> > we do when we go off channel? Should we stop all aggregation sessions
+> > and block them until back on our home channel?
+> > 
+> >  Luis
+> > 
+> > ---------- Forwarded message ----------
+> > From: Luis R. Rodriguez <lrodriguez@atheros.com>
+> > Date: Tue, Sep 14, 2010 at 4:40 PM
+> > Subject: [PATCH v3 00/11] ath9k / mac80211: power save fixes
+> > To: linville@tuxdriver.com
+> > Cc: linux-wireless@vger.kernel.org, "Luis R. Rodriguez" <lrodriguez@atheros.com>
+> > 
+> > 
+> > I reordered the patches, enhanced the commit log entries and
+> > and added a new patch to address ANI / the TX monitor, figured I'd just
+> > send a new series just to be clear.
+> > 
+> > My next peet peeve is this:
+> > 
+> > Sep 14 16:36:02 tux kernel: [ 1369.000106] ath: Set channel: 5220 MHz
+> > Sep 14 16:36:02 tux kernel: [ 1369.000116] ath: tx chmask: 3, rx chmask: 3
+> > Sep 14 16:36:02 tux kernel: [ 1369.000240] ath: (2412 MHz) -> (5220
+> > MHz), conf_is_ht40: 0
+> > Sep 14 16:36:02 tux kernel: [ 1369.063449] ath: Set channel: 2412 MHz
+> > Sep 14 16:36:03 tux kernel: [ 1369.063459] ath: tx chmask: 3, rx chmask: 3
+> > Sep 14 16:36:03 tux kernel: [ 1369.063584] ath: (5220 MHz) -> (2412
+> > MHz), conf_is_ht40: 0
+> > Sep 14 16:36:03 tux kernel: [ 1369.360111] ath: Set channel: 5240 MHz
+> > Sep 14 16:36:03 tux kernel: [ 1369.360120] ath: tx chmask: 3, rx chmask: 3
+> > Sep 14 16:36:03 tux kernel: [ 1369.360245] ath: (2412 MHz) -> (5240
+> > MHz), conf_is_ht40: 0
+> > Sep 14 16:36:03 tux kernel: [ 1369.422736] ath: Set channel: 2412 MHz
+> > Sep 14 16:36:03 tux kernel: [ 1369.422745] ath: tx chmask: 3, rx chmask: 3
+> > Sep 14 16:36:03 tux kernel: [ 1369.422867] ath: (5240 MHz) -> (2412
+> > MHz), conf_is_ht40: 0
+> > Sep 14 16:36:03 tux kernel: [ 1369.564685] __ratelimit: 81 callbacks suppressed
+> > Sep 14 16:36:03 tux kernel: [ 1369.564692] phy0: release an RX reorder
+> > frame due to timeout on earlier frames
+> > Sep 14 16:36:03 tux kernel: [ 1369.564698] phy0: release an RX reorder
+> > frame due to timeout on earlier frames
+> > Sep 14 16:36:03 tux kernel: [ 1369.564703] phy0: release an RX reorder
+> > frame due to timeout on earlier frames
+> > Sep 14 16:36:03 tux kernel: [ 1369.564708] phy0: release an RX reorder
+> > frame due to timeout on earlier frames
+> > Sep 14 16:36:03 tux kernel: [ 1369.564713] phy0: release an RX reorder
+> > frame due to timeout on earlier frames
+> > Sep 14 16:36:03 tux kernel: [ 1369.564718] phy0: release an RX reorder
+> > frame due to timeout on earlier frames
+> > Sep 14 16:36:03 tux kernel: [ 1369.564723] phy0: release an RX reorder
+> > frame due to timeout on earlier frames
+> > Sep 14 16:36:03 tux kernel: [ 1369.564728] phy0: release an RX reorder
+> > frame due to timeout on earlier frames
+> > Sep 14 16:36:03 tux kernel: [ 1369.564733] phy0: release an RX reorder
+> > frame due to timeout on earlier frames
+> > Sep 14 16:36:03 tux kernel: [ 1369.564738] phy0: release an RX reorder
+> > frame due to timeout on earlier frames
+> > Sep 14 16:36:03 tux kernel: [ 1369.720129] ath: Set channel: 5260 MHz
+> > Sep 14 16:36:03 tux kernel: [ 1369.720139] ath: tx chmask: 3, rx chmask: 3
+> > Sep 14 16:36:03 tux kernel: [ 1369.720263] ath: (2412 MHz) -> (5260
+> > MHz), conf_is_ht40: 0
+> > 
+> > My guess is we are not suspending / stopping the aggregations sessions /
+> > or simply extending the timer when going off channel.
+> > 
+> > Luis R. Rodriguez (10):
+> >  ath9k: fix power save race conditions
+> >  ath9k: fix regression on beacon loss after bgscan
+> >  ath9k: fix enabling ANI / tx monitor after bg scan
+> >  mac80211: add helper for reseting the connection monitor
+> >  mac80211: reset probe send counter upon connection timer reset
+> >  mac80211: reset connection idle when going offchannel
+> >  mac80211: make the beacon monitor available externally
+> >  mac80211: disable beacon monitor while going offchannel
+> >  mac80211: send last 3/5 probe requests as unicast
+> >  ath9k: fix regression which disabled ps on ath9k
+> > 
+> > Senthil Balasubramanian (1):
+> >  ath9k: fix regression which prevents chip sleep after CAB data
+> > 
+> >  drivers/net/wireless/ath/ath9k/ath9k.h |    1 -
+> >  drivers/net/wireless/ath/ath9k/init.c  |    3 +-
+> >  drivers/net/wireless/ath/ath9k/main.c  |   15 ++++++-----
+> >  drivers/net/wireless/ath/ath9k/recv.c  |    9 ++++--
+> >  net/mac80211/ieee80211_i.h             |    2 +
+> >  net/mac80211/mlme.c                    |   40 +++++++++++++++++++++++--------
+> >  net/mac80211/offchannel.c              |    7 +++++
+> >  7 files changed, 54 insertions(+), 23 deletions(-)
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
