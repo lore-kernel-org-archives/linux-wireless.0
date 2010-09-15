@@ -1,66 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.230]:56035 "EHLO
-	mgw-mx03.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932845Ab0I0IiZ (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:37589 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753214Ab0IOQMa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 04:38:25 -0400
-Received: from vaebh106.NOE.Nokia.com (vaebh106.europe.nokia.com [10.160.244.32])
-	by mgw-mx03.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o8R8bvwh023998
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 11:38:23 +0300
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linux-wireless@vger.kernel.org
-Cc: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Subject: [PATCH 11/25] wl1271: Release interrupt *after* releasing the driver context
-Date: Mon, 27 Sep 2010 11:37:35 +0300
-Message-Id: <1285576669-8070-12-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
-References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
+	Wed, 15 Sep 2010 12:12:30 -0400
+Message-ID: <4C90F06A.1070606@candelatech.com>
+Date: Wed, 15 Sep 2010 09:12:26 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Jouni Malinen <j@w1.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: RFC:  mac80211/ath9k:  allow scanning single channel if other
+ VIF is associated.
+References: <4C8EB03D.7070808@candelatech.com>	 <20100915030316.GB30253@jm.kir.nu>  <4C9059DC.7060009@candelatech.com>	 <1284545796.3842.11.camel@jlt3.sipsolutions.net>	 <4C90D683.7000801@candelatech.com>	 <1284560664.7705.3.camel@jlt3.sipsolutions.net>	 <4C90E708.5050109@candelatech.com> <1284565033.7705.5.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1284565033.7705.5.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Juuso Oikarinen <juuso.oikarinen@nokia.com>
+On 09/15/2010 08:37 AM, Johannes Berg wrote:
+> On Wed, 2010-09-15 at 08:32 -0700, Ben Greear wrote:
+>
+>>>> Right, but as soon as one finished, the next would start, and at least in .31,
+>>>> that caused the first to un-associate, giving never-ending loop of interfaces
+>>>> scanning and trying to associate.
+>>>
+>>> There should be a grace period maybe?
+>>
+>> I don't think that really fixes anything, except make the race between
+>> full scan and attempting for the first interface to associate harder to
+>> hit (and that is only useful if the scan-one logic is enabled anyway).
+>
+> I think you just need to update ... newer kernels shouldn't be allowing
+> a scan while trying to associate, I think.
 
-The current order causes driver releasing to fail in various ways, and causes
-possible instability.
+Grab top-of-tree wireless-testing and apply my rxfilt patch to ath9k, and you can create two VIFS
+and attempt to run wpa_supplicant against them (I use one supplicant per
+interface.)
 
-Signed-off-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@nokia.com>
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_sdio.c |    3 +--
- drivers/net/wireless/wl12xx/wl1271_spi.c  |    3 +--
- 2 files changed, 2 insertions(+), 4 deletions(-)
+Unless it was fixed last night, I doubt you will have any luck.
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-index f2f0466..4c250d7 100644
---- a/drivers/net/wireless/wl12xx/wl1271_sdio.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
-@@ -274,9 +274,8 @@ static void __devexit wl1271_remove(struct sdio_func *func)
- {
- 	struct wl1271 *wl = sdio_get_drvdata(func);
- 
--	free_irq(wl->irq, wl);
--
- 	wl1271_unregister_hw(wl);
-+	free_irq(wl->irq, wl);
- 	wl1271_free_hw(wl);
- }
- 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
-index ced0a9e..75cbf36 100644
---- a/drivers/net/wireless/wl12xx/wl1271_spi.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
-@@ -416,9 +416,8 @@ static int __devexit wl1271_remove(struct spi_device *spi)
- {
- 	struct wl1271 *wl = dev_get_drvdata(&spi->dev);
- 
--	free_irq(wl->irq, wl);
--
- 	wl1271_unregister_hw(wl);
-+	free_irq(wl->irq, wl);
- 	wl1271_free_hw(wl);
- 
- 	return 0;
+Thanks,
+Ben
+
 -- 
-1.6.3.3
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
