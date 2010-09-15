@@ -1,43 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50865 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753163Ab0INTnV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 15:43:21 -0400
-Subject: Re: 2.6.36-rc4/iwl: warning triggered in net/mac80211/scan.c:266
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-In-Reply-To: <20100914151439.GA13028@redhat.com>
-References: <20100914142814.GA8744@redhat.com>
-	 <1284474988.3704.10.camel@jlt3.sipsolutions.net>
-	 <20100914151439.GA13028@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 14 Sep 2010 21:43:10 +0200
-Message-ID: <1284493390.3703.1.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:61632 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750844Ab0IOLy6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Sep 2010 07:54:58 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Sep 2010 04:54:52 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>,
+	Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Subject: [RFC] mac80211: avoid recalc_idle in monitor mode
+Date: Wed, 15 Sep 2010 17:26:12 +0530
+Message-ID: <1284551772-18574-1-git-send-email-rmanoharan@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-09-14 at 17:14 +0200, Michael S. Tsirkin wrote:
+ath9k is not receiving frames in monitor mode after the commit 34d4bc.
+The problem is mac80211 sets IEEE80211_CONF_IDLE in __ieee80211_recalc_idle
+at ieee80211_do_open. Due to this, ath9k disables the radio.
 
-> > No, it shouldn't happen. But there are various races in iwlwifi that can
-> > cause this. Stanislaw has fixed them recently, but it's a fairly large
-> > patchset. I'm not sure, but I don't think this is really new in .36.
+The above said commit sets SDATA_STATE_RUNNING after __ieee80211_recalc_idle.
+IMHO avoiding __ieee80211_recalc_idle in monitor mode looks better
+than moving SDATA_STATE_RUNNING set before __ieee80211_recalc_idle.
 
-> So ... get back to you after 2.6.37?
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+---
+ net/mac80211/iface.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
 
-Err, yes, I guess so, though I suppose it doesn't really solve the
-problem. This particular instance should be harmless though, I believe,
-other than the warning.
-
-johannes
-
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index c1cc200..2bec319 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -310,9 +310,11 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
+ 	if (sdata->flags & IEEE80211_SDATA_PROMISC)
+ 		atomic_inc(&local->iff_promiscs);
+ 
+-	mutex_lock(&local->mtx);
+-	hw_reconf_flags |= __ieee80211_recalc_idle(local);
+-	mutex_unlock(&local->mtx);
++	if (sdata->vif.type != NL80211_IFTYPE_MONITOR) {
++		mutex_lock(&local->mtx);
++		hw_reconf_flags |= __ieee80211_recalc_idle(local);
++		mutex_unlock(&local->mtx);
++	}
+ 
+ 	if (coming_up)
+ 		local->open_count++;
+-- 
+1.7.2.3
 
