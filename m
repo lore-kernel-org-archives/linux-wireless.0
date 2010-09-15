@@ -1,42 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:8653 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754270Ab0IWOsP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Sep 2010 10:48:15 -0400
-Subject: Re: [Fwd: Re: [PATCH wireless-2.6] iwlwifi: do not perferm force
- reset while doing scan]
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	Johannes Berg <johannes@sipsolutions.net>
-In-Reply-To: <20100922151557.GE5515@tuxdriver.com>
-References: <1285166620.12056.29.camel@wwguy-huron>
-	 <20100922151557.GE5515@tuxdriver.com>
-Content-Type: text/plain
-Date: Thu, 23 Sep 2010 07:47:25 -0700
-Message-Id: <1285253245.1382.0.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:35911 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751258Ab0IOKBM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Sep 2010 06:01:12 -0400
+Received: by wwd20 with SMTP id 20so19566wwd.1
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Sep 2010 03:01:11 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87wrqn4fvp.fsf@purkki.adurom.net>
+References: <AANLkTim+Q773KvA7Et1s2Zf8yMx36RGS2LsoJsX1Wtt9@mail.gmail.com>
+ <201009151216.32430.br1@einfach.org> <AANLkTiniROJatam4yA4sss3qjczT-6=jSP9QxvmDo2dq@mail.gmail.com>
+ <201009151245.53194.br1@einfach.org> <AANLkTimHDXpazQ_rEXw81cdHLRmUpAA+r_tHGdvGOVYW@mail.gmail.com>
+ <871v8v5vd2.fsf@purkki.adurom.net> <AANLkTinD+y+CvxijXvxfqB9ncWdD0qYLi-e0PRvczwem@mail.gmail.com>
+ <87wrqn4fvp.fsf@purkki.adurom.net>
+From: Jonathan Guerin <jonathan@guerin.id.au>
+Date: Wed, 15 Sep 2010 20:00:51 +1000
+Message-ID: <AANLkTi=ch5PozRHokWMgQPi71=gLPAaBYHR2eF6usadS@mail.gmail.com>
+Subject: Re: [ath5k-devel] [ath5k] Incorrect value for ACK_TIMEOUT
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Bruno Randolf <br1@einfach.org>, ath5k-devel@lists.ath5k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Nick Kossifidis <mickflemm@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-09-22 at 08:15 -0700, John W. Linville wrote:
-> On Wed, Sep 22, 2010 at 07:43:40AM -0700, Guy, Wey-Yi wrote:
-> 
-> > The "iwlwifi: do not perferm force reset while doing scan" patch, make
-> > sense for .36, but after Gruszka's scan patch(which will in .37), it is
-> > not needed. What is your recommendation?
-> > 
-> > 
-> > commit#7acc7c683a747689aaaaad4fce1683fc3f85e552 iwlwifi: do not perferm
-> > force reset while doing scan
-> 
-> I can pull wireless-2.6 into wireless-next-2.6 and then revert the
-> patch there.
-> 
-Thank you very much for the help!
+Any chance we can 'acquire' those test plans? ;-)
+--
+Jonathan Guerin
 
-Wey
 
+
+On Wed, Sep 15, 2010 at 5:36 PM, Kalle Valo <kvalo@adurom.com> wrote:
+> Jonathan Guerin <jonathan@guerin.id.au> writes:
+>
+>> So, we would prefer to match the spec for an out-of-the-box build,
+>> even tho it would appear to be a worse-performing driving to users?
+>
+> If "an out-of-the-box build" means correctly working 802.11 device
+> then my opinion is yes, we should strive to match the spec even if the
+> performance decreases. Getting performance increases by violating the
+> spec is just stealing airtime from others.
+>
+> But the challange is how to know if another 802.11 device is properly
+> working and following the spec? I know that Wi-Fi Alliance
+> certification tests contain lots of throughput tests to test for
+> contending the medium. So, for example, can we trust a device which
+> has passed Wi-Fi certification? I don't know.
+>
+> --
+> Kalle Valo
+>
