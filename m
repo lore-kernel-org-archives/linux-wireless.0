@@ -1,51 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33223 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756044Ab0IPT4J (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Sep 2010 15:56:09 -0400
-Subject: Re: [PATCH] mac80211: Filter ProbeReq SuppRates based on TX rate
- mask
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20100916195441.GB25174@jm.kir.nu>
-References: <20100828163610.GA23426@jm.kir.nu>
-	 <1283154490.3691.2.camel@jlt3.sipsolutions.net>
-	 <20100916195441.GB25174@jm.kir.nu>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 16 Sep 2010 21:55:58 +0200
-Message-ID: <1284666958.3731.15.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:40008 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753186Ab0IOVVm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Sep 2010 17:21:42 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/2] compat: backport list_for_each_entry_continue_rcu
+Date: Wed, 15 Sep 2010 22:42:33 +0200
+Message-Id: <1284583353-11456-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1284583353-11456-1-git-send-email-hauke@hauke-m.de>
+References: <1284583353-11456-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-09-16 at 09:54 -1000, Jouni Malinen wrote:
-> On Mon, Aug 30, 2010 at 09:48:10AM +0200, Johannes Berg wrote:
-> > On Sat, 2010-08-28 at 19:36 +0300, Jouni Malinen wrote:
-> > > If the TX rate set has been masked, the removed rates can also be
-> > > removed from the Supported Rates and Extended Supported Rates IEs in
-> > > Probe Request frames.
-> > 
-> > Technically, the probe request frame indicates RX bitrates. I don't
-> > really mind using the TX bitrates as well since typically I do think you
-> > probably want them to be symmetric, but shouldn't that come with nl80211
-> > updates etc. since that's all saying TX_BITRATES?
-> 
-> This change should really not be needed in the first place, but
-> unfortunately, P2P requires this for a compliant implementation.. The
-> field is really "Supported Rates", i.e., it would be used for both TX
-> and RX. I don't see any real point in configuring RX rates (i.e., make
-> hw not receive frames on one or more of the supported rates), so the TX
-> rate mask is the only reasonable configuration mechanism for this.
-> 
-> The minimum requirement (for P2P compliance) is to just remove rates 1,
-> 2, 5.5, 11 Mbps from the list, so we could also add something to disable
-> 802.11b rates in general if a different command would be desired.
+This is needed for new driver carl9170.
 
-Yes, so it's not really "RX rates" but "advertised RX rates". I just
-think that this fact should be made apparent in the documentation?
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ include/linux/compat-2.6.31.h |   11 +++++++++++
+ include/linux/compat-2.6.33.h |   14 ++++++++++++++
+ 2 files changed, 25 insertions(+), 0 deletions(-)
 
-johannes
+diff --git a/include/linux/compat-2.6.31.h b/include/linux/compat-2.6.31.h
+index 54ddefd..6c454cb 100644
+--- a/include/linux/compat-2.6.31.h
++++ b/include/linux/compat-2.6.31.h
+@@ -191,6 +191,17 @@ void compat_synchronize_threaded_irq(struct compat_threaded_irq *comp)
+ 	cancel_work_sync(&comp->work);
+ }
+ 
++/**
++ * list_entry_rcu - get the struct for this entry
++ * @ptr:        the &struct list_head pointer.
++ * @type:       the type of the struct this is embedded in.
++ * @member:     the name of the list_struct within the struct.
++ *
++ * This primitive may safely run concurrently with the _rcu list-mutation
++ * primitives such as list_add_rcu() as long as it's guarded by rcu_read_lock().
++ */
++#define list_entry_rcu(ptr, type, member) \
++	container_of(rcu_dereference(ptr), type, member)
+ 
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)) */
+ 
+diff --git a/include/linux/compat-2.6.33.h b/include/linux/compat-2.6.33.h
+index e4dff72..e7e20d9 100644
+--- a/include/linux/compat-2.6.33.h
++++ b/include/linux/compat-2.6.33.h
+@@ -98,6 +98,20 @@ int pccard_loop_tuple(struct pcmcia_socket *s, unsigned int function,
+ #define kfifo_out(a, b, c) __kfifo_get(*a, b, c)
+ #define kfifo_len(a) __kfifo_len(*a)
+ 
++/**
++ * list_for_each_entry_continue_rcu - continue iteration over list of given type
++ * @pos:	the type * to use as a loop cursor.
++ * @head:	the head for your list.
++ * @member:	the name of the list_struct within the struct.
++ *
++ * Continue to iterate over list of given type, continuing after
++ * the current position.
++ */
++#define list_for_each_entry_continue_rcu(pos, head, member) 		\
++	for (pos = list_entry_rcu(pos->member.next, typeof(*pos), member); \
++	     prefetch(pos->member.next), &pos->member != (head);	\
++	     pos = list_entry_rcu(pos->member.next, typeof(*pos), member))
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33)) */
+ 
+ #endif /* LINUX_26_33_COMPAT_H */
+-- 
+1.7.0.4
 
