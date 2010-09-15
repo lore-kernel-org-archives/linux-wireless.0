@@ -1,54 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48060 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752627Ab0ION3o (ORCPT
+Received: from smtp.nokia.com ([192.100.122.233]:63005 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754284Ab0IOUkh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 09:29:44 -0400
-Date: Wed, 15 Sep 2010 09:21:50 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Vitaly Wool <vitalywool@gmail.com>
-Cc: Ohad Ben-Cohen <ohad@wizery.com>, Tony Lindgren <tony@atomide.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Russell King <linux@arm.linux.org.uk>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	"Wool, Vitaly" <Vitaly.Wool@sonyericsson.com>,
-	linux-wireless@vger.kernel.org,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Ido Yariv <ido@wizery.com>, San Mehat <san@google.com>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	linux-mmc@vger.kernel.org,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	linux-omap@vger.kernel.org, akpm@linux-foundation.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v5 0/7] native wl1271 support on ZOOM
-Message-ID: <20100915132149.GA6997@tuxdriver.com>
-References: <1283376410-9999-1-git-send-email-ohad@wizery.com>
- <AANLkTikedoL3HjohQfq2qa0TU5yMJR5p1GqyQJtQGrdb@mail.gmail.com>
- <AANLkTingdk=9Fbp9uKf6rGyAtR+b8KV4vFmYRfakkwBs@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AANLkTingdk=9Fbp9uKf6rGyAtR+b8KV4vFmYRfakkwBs@mail.gmail.com>
+	Wed, 15 Sep 2010 16:40:37 -0400
+Subject: Re: [PATCH 00/04] wl1271: 11n Support, add support to 80211n spec
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: "ext Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: "Levi, Shahar" <shahar_levi@ti.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <AANLkTi=JYRN9WD5kfKJPqSX3_vANrKwTD+8yQBrvERM_@mail.gmail.com>
+References: <1284575472-19888-1-git-send-email-shahar_levi@ti.com>
+	 <1284577092.1569.8.camel@powerslave> <1284578740.1569.33.camel@powerslave>
+	 <AC090B9732AB2B4DB7FF476E907FE66001134316FB@dnce02.ent.ti.com>
+	 <AANLkTi=JYRN9WD5kfKJPqSX3_vANrKwTD+8yQBrvERM_@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 15 Sep 2010 23:40:25 +0300
+Message-ID: <1284583225.1569.50.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 15, 2010 at 01:08:18PM +0200, Vitaly Wool wrote:
-> On Wed, Sep 15, 2010 at 11:21 AM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
-> > On Wed, Sep 1, 2010 at 11:26 PM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
-> >> This patchset adds wl1271 support on ZOOM2/3 boards.
+On Wed, 2010-09-15 at 22:20 +0200, ext Luis R. Rodriguez wrote:
+> On Wed, Sep 15, 2010 at 12:34 PM, Levi, Shahar <shahar_levi@ti.com> wrote:
+> >> -----Original Message-----
+> >> From: Luciano Coelho [mailto:luciano.coelho@nokia.com]
+> >> Sent: Wednesday, September 15, 2010 9:26 PM
+> >> To: Levi, Shahar
+> >> Cc: linux-wireless@vger.kernel.org
+> >> Subject: Re: [PATCH 00/04] wl1271: 11n Support, add support to 80211n spec
+> >>
+> >> I had a few comments to your patches, but I'm really happy you have sent
+> >> these patches upstream! Just some minor non-functional comments.  Please
+> >> make the changes I proposed and send the series again as v2.
+> >>
+> >> I owe you a drink, if we meet some day ;)
+> >>
+> >> --
+> >> Cheers,
+> >> Luca.
 > >
-> > Tony, John, let me please suggest merging this through the wireless tree.
-> >
-> > wl1271 is a moving target - it keeps changing in the wireless tree and
-> > merging this patchset there will allow wl1271 developers to have
-> > everything in a single tree (and prevent merge conflicts in
-> > linux-next).
+> > Hi Luca,
+> > I greatly appreciate your review and comments.
+> > I will fix early next week and send.
 > 
-> Thanks Ohad, that's what I was about to suggest as well. :)
+> Might be good to add details of what is supported to the wiki too.
 
-OK, that is fine with me if the omap folks agree?
+Good point! Actually the wiki is quite outdated as nobody has been
+taking care of it for a very long time.  If anyone wants to volunteer to
+update it, this is the location:
 
-John
+http://wireless.kernel.org/en/users/Drivers/wl12xx
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Cheers,
+Luca.
+
