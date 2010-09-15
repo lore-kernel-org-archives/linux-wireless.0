@@ -1,121 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37888 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753322Ab0IWTi4 (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:39357 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753424Ab0IOOWD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Sep 2010 15:38:56 -0400
-Message-Id: <20100923193819.036284639@sipsolutions.net>
-Date: Thu, 23 Sep 2010 21:37:50 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC v2 3/3] mac80211: clean up rx handling wrt. found_sta
-References: <20100923193747.677517441@sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 15 Sep 2010 10:22:03 -0400
+Message-ID: <4C90D683.7000801@candelatech.com>
+Date: Wed, 15 Sep 2010 07:21:55 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Jouni Malinen <j@w1.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: RFC:  mac80211/ath9k:  allow scanning single channel if other
+ VIF is associated.
+References: <4C8EB03D.7070808@candelatech.com>	 <20100915030316.GB30253@jm.kir.nu>  <4C9059DC.7060009@candelatech.com> <1284545796.3842.11.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1284545796.3842.11.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 09/15/2010 03:16 AM, Johannes Berg wrote:
+> On Tue, 2010-09-14 at 22:30 -0700, Ben Greear wrote:
+>
+>>> If I understood the change correctly, it would prevent running full
+>>> scans when in associated state. That does not sound reasonable behavior
+>>> and scanning should not cause an association to be lost. Did I miss
+>>> something or what exactly is this trying to do?
+>>
+>> That's pretty much what I'm trying to do.  We had similar code in
+>> our 2.6.31 kernel with ath5k. Imagine getting 50 virtual stations
+>> started with WPA and all of them trying to scan all channels at once!
+>
+> They can't ... cfg80211 limits it to one scan at a time per hardware ...
 
-If a station was found, then we'll have exited
-the function already, so it is not necessary to
-have a variable keeping track of it.
+Right, but as soon as one finished, the next would start, and at least in .31,
+that caused the first to un-associate, giving never-ending loop of interfaces
+scanning and trying to associate.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rx.c |   60 ++++++++++++++++++++++++------------------------------
- 1 file changed, 27 insertions(+), 33 deletions(-)
+>> I think for the multi-VIF scenario, it should scan the single associated
+>> channel by default, but it would be nice to allow full scans on demand.
+>
+> Go change your userspace then to request only the single channel scan.
+>
+>> (I would very much like to work with standard wpa_supplicant, but if hacking it
+>> is the only way, then I can attempt that.)
+>
+> Yes, I don't see how we can reasonably work around this in the kernel.
 
---- wireless-testing.orig/net/mac80211/rx.c	2010-09-23 21:37:34.000000000 +0200
-+++ wireless-testing/net/mac80211/rx.c	2010-09-23 21:37:35.000000000 +0200
-@@ -2651,7 +2651,6 @@ static void __ieee80211_rx_handle_packet
- 	struct ieee80211_rx_data rx;
- 	struct ieee80211_sub_if_data *prev;
- 	struct sta_info *sta, *tmp, *prev_sta;
--	bool found_sta = false;
- 	int err = 0;
- 
- 	fc = ((struct ieee80211_hdr *)skb->data)->frame_control;
-@@ -2684,8 +2683,6 @@ static void __ieee80211_rx_handle_packet
- 		prev_sta = NULL;
- 
- 		for_each_sta_info(local, hdr->addr2, sta, tmp) {
--			found_sta = true;
--
- 			if (!prev_sta) {
- 				prev_sta = sta;
- 				continue;
-@@ -2707,43 +2704,40 @@ static void __ieee80211_rx_handle_packet
- 		}
- 	}
- 
--	if (!found_sta) {
--		prev = NULL;
--
--		list_for_each_entry_rcu(sdata, &local->interfaces, list) {
--			if (!ieee80211_sdata_running(sdata))
--				continue;
--
--			if (sdata->vif.type == NL80211_IFTYPE_MONITOR ||
--			    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
--				continue;
--
--			/*
--			 * frame is destined for this interface, but if it's
--			 * not also for the previous one we handle that after
--			 * the loop to avoid copying the SKB once too much
--			 */
-+	prev = NULL;
- 
--			if (!prev) {
--				prev = sdata;
--				continue;
--			}
--
--			rx.sta = sta_info_get_bss(prev, hdr->addr2);
--			rx.sdata = prev;
--			ieee80211_prepare_and_rx_handle(&rx, skb, false);
-+	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-+		if (!ieee80211_sdata_running(sdata))
-+			continue;
-+
-+		if (sdata->vif.type == NL80211_IFTYPE_MONITOR ||
-+		    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
-+			continue;
-+
-+		/*
-+		 * frame is destined for this interface, but if it's
-+		 * not also for the previous one we handle that after
-+		 * the loop to avoid copying the SKB once too much
-+		 */
- 
-+		if (!prev) {
- 			prev = sdata;
-+			continue;
- 		}
- 
--		if (prev) {
--			rx.sta = sta_info_get_bss(prev, hdr->addr2);
--			rx.sdata = prev;
-+		rx.sta = sta_info_get_bss(prev, hdr->addr2);
-+		rx.sdata = prev;
-+		ieee80211_prepare_and_rx_handle(&rx, skb, false);
- 
--			if (ieee80211_prepare_and_rx_handle(&rx, skb, true))
--				return;
--		}
-+		prev = sdata;
-+	}
-+
-+	if (prev) {
-+		rx.sta = sta_info_get_bss(prev, hdr->addr2);
-+		rx.sdata = prev;
- 
-+		if (ieee80211_prepare_and_rx_handle(&rx, skb, true))
-+			return;
- 	}
- 
- 	dev_kfree_skb(skb);
+Ok, I'll see if I can add a 'scan-one-if-associated' flag for wpa-supplicant to
+use.
+
+Thanks,
+Ben
 
 
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
