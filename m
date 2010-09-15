@@ -1,45 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:51036 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754390Ab0IPTEO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Sep 2010 15:04:14 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 8F8A7418D8
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Sep 2010 15:02:32 -0400 (EDT)
-Subject: Compat-wireless release for 2010-09-16 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20100916190412.42E4C41134@repository3.orbit-lab.org>
-Date: Thu, 16 Sep 2010 15:04:12 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55203 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754543Ab0IOUoK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Sep 2010 16:44:10 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/3] compat-wireless: make patch apply again.
+Date: Wed, 15 Sep 2010 22:43:34 +0200
+Message-Id: <1284583415-11506-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1284583415-11506-1-git-send-email-hauke@hauke-m.de>
+References: <1284583415-11506-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat-wireless-2.6
-   315a363..84ac593  linux-2.6.36.y -> origin/linux-2.6.36.y
-   f63dbfd..9c47425  master     -> origin/master
- + c2e94fd...6678d67 wl         -> origin/wl  (forced update)
- * [new tag]         compat-wireless-master-2010-09-14 -> compat-wireless-master-2010-09-14
- * [new tag]         describe   -> describe
->From git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/compat
-   48926c5..ea84094  master     -> origin/master
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   7b71870..abc3a88  history    -> origin/history
- + 8616cf4...09e4703 master     -> origin/master  (forced update)
- * [new tag]         next-20100916 -> next-20100916
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-cat: compat_base_tree: No such file or directory
-cat: compat_base_tree_version: No such file or directory
-cat: compat_version: No such file or directory
-cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
-scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/ath/carl9170/Makefile: No such file or directory
-make[5]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/ath/carl9170/Makefile'.  Stop.
-make[4]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/ath/carl9170] Error 2
-make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/ath] Error 2
-make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
-make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
-make: *** [clean] Error 2
 
-compat-wireless code metrics
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ ...k-Add-debugfs-interface-to-dump-registers.patch |   25 ++++++++++---------
+ 1 files changed, 13 insertions(+), 12 deletions(-)
 
-    707224 - Total upstream lines of code being pulled
+diff --git a/crap/0001-ath9k-Add-debugfs-interface-to-dump-registers.patch b/crap/0001-ath9k-Add-debugfs-interface-to-dump-registers.patch
+index d236c46..a6c6d3e 100644
+--- a/crap/0001-ath9k-Add-debugfs-interface-to-dump-registers.patch
++++ b/crap/0001-ath9k-Add-debugfs-interface-to-dump-registers.patch
+@@ -42,13 +42,10 @@ Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+  #ifdef CONFIG_ATH_DEBUG
+  
+  static ssize_t read_file_debug(struct file *file, char __user *user_buf,
+-@@ -893,7 +907,38 @@ static ssize_t write_file_regval(struct 
+- static const struct file_operations fops_regval = {
+- 	.read = read_file_regval,
+- 	.write = write_file_regval,
+--	.open = ath9k_debugfs_open,
+-+};
+-+
++@@ -908,6 +922,40 @@ static const struct file_operations fops
++ 	.llseek = default_llseek,/* read accesses f_pos */
++ };
++ 
+ +#define REGDUMP_LINE_SIZE	20
+ +#define REGDUMP_NUM_REGS	(0x16bd4 / 4 + 1)
+ +#define REGDUMP_DATA_LEN	(REGDUMP_NUM_REGS * REGDUMP_LINE_SIZE + 1)
+@@ -79,10 +76,14 @@ Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+ +	.open = open_file_regdump,
+ +	.read = ath9k_debugfs_read_buf,
+ +	.release = ath9k_debugfs_release_buf,
+- 	.owner = THIS_MODULE
+- };
+- 
+-@@ -961,6 +1006,11 @@ int ath9k_init_debug(struct ath_hw *ah)
+++	.owner = THIS_MODULE,
+++	.llseek = default_llseek,/* read accesses f_pos */
+++};
+++
++ int ath9k_init_debug(struct ath_hw *ah)
++ {
++ 	struct ath_common *common = ath9k_hw_common(ah);
++@@ -972,6 +1020,11 @@ int ath9k_init_debug(struct ath_hw *ah)
+  		goto err;
+  
+  	sc->debug.regidx = 0;
+@@ -94,7 +95,7 @@ Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+  	return 0;
+  err:
+  	ath9k_exit_debug(ah);
+-@@ -972,6 +1022,7 @@ void ath9k_exit_debug(struct ath_hw *ah)
++@@ -983,6 +1036,7 @@ void ath9k_exit_debug(struct ath_hw *ah)
+  	struct ath_common *common = ath9k_hw_common(ah);
+  	struct ath_softc *sc = (struct ath_softc *) common->priv;
+  
+-- 
+1.7.0.4
+
