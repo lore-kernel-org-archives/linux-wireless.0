@@ -1,59 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:49006 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757829Ab0IXVdW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Sep 2010 17:33:22 -0400
-Message-ID: <4C9D191B.9090307@candelatech.com>
-Date: Fri, 24 Sep 2010 14:33:15 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from nbd.name ([88.198.39.176]:60616 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753292Ab0IOPXj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Sep 2010 11:23:39 -0400
+Message-ID: <4C90E4F6.1090403@openwrt.org>
+Date: Wed, 15 Sep 2010 17:23:34 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [wireless] wireless:  Keep phy name consistent across module
- reloads.
-References: <1285113431-25526-1-git-send-email-greearb@candelatech.com>	 <1285362170.11036.1.camel@jlt3.sipsolutions.net>	 <4C9D13AC.4080308@candelatech.com>	 <1285363135.11036.7.camel@jlt3.sipsolutions.net>	 <4C9D1760.3040103@candelatech.com> <1285363861.11036.8.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1285363861.11036.8.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/3] ath9k: Paprd calibration should be per channel
+References: <1284560528-8934-1-git-send-email-vasanth@atheros.com> <1284560528-8934-2-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1284560528-8934-2-git-send-email-vasanth@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/24/2010 02:31 PM, Johannes Berg wrote:
-> On Fri, 2010-09-24 at 14:25 -0700, Ben Greear wrote:
->
->>> Actually, right now it doesn't even allow you to use a "phy%d" name,
->>> which is because I don't want (sysfs, debugfs) errors coming from doing
->>> "iw phy0 set name phy1" and then plugging in a new device ... In doing
->>> that, I manage to avoid having to allocate two different numbers...
->>
->> I tried rename few months ago, to rename back to phy0, and it failed
->> for no obvious reason..so I just assumed rename didn't work at all.
->> Would you like a patch to print something in kernel logs when someone
->> tries to rename to phy%d?
->
-> Well, if you want to work on getting an unused phy%d name this would be
-> kinda pointless, no?
->
->>> I suppose it'd be possible to treat this more like interfaces. Want to
->>> also make it per net namespace? ;-)
->>
->> Probably best for all involved if I don't mess with namespaces right now,
->> but I'll be happy to work on (or test) a patch to find the first un-used phyX name,
->> if that's what you mean.
->
-> I think that'd be OK, even if maybe at this point a little unexpected?
+On 2010-09-15 4:22 PM, Vasanthakumar Thiagarajan wrote:
+> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+NACK. The point of the caldata struct is to keep calibration data for
+the operating channel and reset it whenever that changes (but not just
+for off-channel activity).
+Since the PAPRD data uses quite a bit of memory and doesn't take that
+long to generate, we don't really need to make it per-channel.
 
-I'll give it a try right quick.
-
-Thanks,
-Ben
-
->
-> johannes
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+- Felix
