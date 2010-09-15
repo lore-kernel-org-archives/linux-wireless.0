@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:59125 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754450Ab0IIOPI (ORCPT
+Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:46163 "EHLO
+	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753035Ab0IODDh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Sep 2010 10:15:08 -0400
-Date: Thu, 9 Sep 2010 07:10:28 -0700
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Steve deRosier <steve@cozybit.com>, linux-wireless@vger.kernel.org
-Subject: Re: libertas_tf
-Message-ID: <20100909141023.GA5476@tuxdriver.com>
-References: <1282764076.3667.12.camel@jlt3.sipsolutions.net>
- <AANLkTikc0-FbeRHm-0rxrWCGgaxa7svCsQmqpAD-87cq@mail.gmail.com>
- <5144f966da86d4ab0984bc15bdd5fcab@localhost>
- <AANLkTimgvEShOKnA3TTf0_3p2ghP2OL8ngKPBgpkf+zf@mail.gmail.com>
- <d09bb244b842cf15a1513899d19bd39d@localhost>
+	Tue, 14 Sep 2010 23:03:37 -0400
+Date: Tue, 14 Sep 2010 17:03:16 -1000
+From: Jouni Malinen <j@w1.fi>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: RFC:  mac80211/ath9k:  allow scanning single channel if other
+ VIF is associated.
+Message-ID: <20100915030316.GB30253@jm.kir.nu>
+References: <4C8EB03D.7070808@candelatech.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <d09bb244b842cf15a1513899d19bd39d@localhost>
+In-Reply-To: <4C8EB03D.7070808@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 07, 2010 at 11:02:45PM +0200, Johannes Berg wrote:
-> 
-> On Tue, 7 Sep 2010 13:52:47 -0700, Steve deRosier <steve@cozybit.com>
-> wrote:
+On Mon, Sep 13, 2010 at 04:14:05PM -0700, Ben Greear wrote:
+> This patch aims to decrease channel switching when there is at least one
+> interface associated.  This should help multiple station interfaces co-exist
+> on the same hardware, especially in WPA mode.
 
-> > I'm now working on getting it all up to head, so patches should be
-> > coming soon.  Actually, on that note, how would you prefer I get them
-> > to you?  We're talking about an entire new module, libertas_tf_sdio,
-> > and lots of patches to the existing libertas_tf modules.  Something
-> > like 40+ patches.  Would you prefer a patchset posted, or me to squash
-> > a bunch into fewer but larger patches, or would you prefer to pull
-> > from my git tree?
-> 
-> Sounds like a lot of stuff... John will have to answer that. I think
-> posting it piecemeal as much as possible would probably be preferable.
+If I understood the change correctly, it would prevent running full
+scans when in associated state. That does not sound reasonable behavior
+and scanning should not cause an association to be lost. Did I miss
+something or what exactly is this trying to do?
 
-Yes, just post the series.  If you can separate it into a few
-sub-series that might be nice, but don't sweat that too much.
+If you want to limit scans a single channel in some special use cases,
+you should be able to do that in user space, too, at least for the
+initial scan before connection. As a future optimization, we should
+somehow be able to merge scan requests from multiple VIFs into a single
+one, i.e., share the results from a single scan to multiple VIFs..
 
-John
+
+PS.
+
+It would be easier to comment on the changes if you were to inline them
+instead of attaching the file..
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Jouni Malinen                                            PGP id EFC895FA
