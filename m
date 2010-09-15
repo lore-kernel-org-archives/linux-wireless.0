@@ -1,118 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:27999 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757569Ab0ICMBg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Sep 2010 08:01:36 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 04/13] iwlwifi: cancel scan when down the device
-Date: Fri,  3 Sep 2010 13:57:27 +0200
-Message-Id: <1283515056-11523-5-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1283515056-11523-1-git-send-email-sgruszka@redhat.com>
-References: <1283515056-11523-1-git-send-email-sgruszka@redhat.com>
+Received: from smtp.nokia.com ([192.100.122.233]:53305 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755239Ab0IOTQG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Sep 2010 15:16:06 -0400
+Subject: Re: [PATCH 01/04] wl1271: 11n Support, Add Definitions
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Shahar Levi <shahar_levi@ti.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1284575472-19888-2-git-send-email-shahar_levi@ti.com>
+References: <1284575472-19888-1-git-send-email-shahar_levi@ti.com>
+	 <1284575472-19888-2-git-send-email-shahar_levi@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 15 Sep 2010 22:15:53 +0300
+Message-ID: <1284578153.1569.24.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Always cancel scan when stooping device and scan is currently pending,
-we should newer have scan running after down device.
+On Wed, 2010-09-15 at 20:31 +0200, ext Shahar Levi wrote:
+> Added all definitions needed for 11n support.
 
-To assure we start scan cancel from restart work we have to schedule
-abort_scan to different workqueue than priv->workqueue.
+This could be a bit more descriptive...
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   14 +++-----------
- drivers/net/wireless/iwlwifi/iwl-scan.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   16 ++++------------
- 3 files changed, 8 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index ad0e67f..0de2401 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2875,8 +2875,9 @@ static void __iwl_down(struct iwl_priv *priv)
- 
- 	IWL_DEBUG_INFO(priv, DRV_NAME " is going down\n");
- 
--	if (!exit_pending)
--		set_bit(STATUS_EXIT_PENDING, &priv->status);
-+	iwl_scan_cancel_timeout(priv, 200);
-+
-+	exit_pending = test_and_set_bit(STATUS_EXIT_PENDING, &priv->status);
- 
- 	/* Stop TX queues watchdog. We need to have STATUS_EXIT_PENDING bit set
- 	 * to prevent rearm timer */
-@@ -3486,15 +3487,6 @@ static void iwl_mac_stop(struct ieee80211_hw *hw)
- 
- 	priv->is_open = 0;
- 
--	if (iwl_is_ready_rf(priv) || test_bit(STATUS_SCAN_HW, &priv->status)) {
--		/* stop mac, cancel any scan request and clear
--		 * RXON_FILTER_ASSOC_MSK BIT
--		 */
--		mutex_lock(&priv->mutex);
--		iwl_scan_cancel_timeout(priv, 100);
--		mutex_unlock(&priv->mutex);
--	}
--
- 	iwl_down(priv);
- 
- 	flush_workqueue(priv->workqueue);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 9df8bb8..d31ed14 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -71,7 +71,7 @@ int iwl_scan_cancel(struct iwl_priv *priv)
- 	if (test_bit(STATUS_SCANNING, &priv->status)) {
- 		if (!test_and_set_bit(STATUS_SCAN_ABORTING, &priv->status)) {
- 			IWL_DEBUG_SCAN(priv, "Queuing scan abort.\n");
--			queue_work(priv->workqueue, &priv->abort_scan);
-+			schedule_work(&priv->abort_scan);
- 
- 		} else
- 			IWL_DEBUG_SCAN(priv, "Scan abort already in progress.\n");
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 3b3686b..fb894d8 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -2568,12 +2568,13 @@ static void iwl3945_cancel_deferred_work(struct iwl_priv *priv);
- static void __iwl3945_down(struct iwl_priv *priv)
- {
- 	unsigned long flags;
--	int exit_pending = test_bit(STATUS_EXIT_PENDING, &priv->status);
-+	int exit_pending;
- 
- 	IWL_DEBUG_INFO(priv, DRV_NAME " is going down\n");
- 
--	if (!exit_pending)
--		set_bit(STATUS_EXIT_PENDING, &priv->status);
-+	iwl_scan_cancel_timeout(priv, 200);
-+
-+	exit_pending = test_and_set_bit(STATUS_EXIT_PENDING, &priv->status);
- 
- 	/* Stop TX queues watchdog. We need to have STATUS_EXIT_PENDING bit set
- 	 * to prevent rearm timer */
-@@ -3173,15 +3174,6 @@ static void iwl3945_mac_stop(struct ieee80211_hw *hw)
- 
- 	priv->is_open = 0;
- 
--	if (iwl_is_ready_rf(priv)) {
--		/* stop mac, cancel any scan request and clear
--		 * RXON_FILTER_ASSOC_MSK BIT
--		 */
--		mutex_lock(&priv->mutex);
--		iwl_scan_cancel_timeout(priv, 100);
--		mutex_unlock(&priv->mutex);
--	}
--
- 	iwl3945_down(priv);
- 
- 	flush_workqueue(priv->workqueue);
+> Signed-off-by: Shahar Levi <shahar_levi@ti.com>
+> ---
+
+
+
+> diff --git a/drivers/net/wireless/wl12xx/wl1271_acx.h b/drivers/net/wireless/wl12xx/wl1271_acx.h
+> index 4235bc5..2a8fc43 100644
+> --- a/drivers/net/wireless/wl12xx/wl1271_acx.h
+> +++ b/drivers/net/wireless/wl12xx/wl1271_acx.h
+> @@ -993,6 +993,97 @@ struct wl1271_acx_rssi_snr_avg_weights {
+>  	u8 snr_data;
+>  };
+>  
+> +/* 11n command to the FW */
+> +/*	Name:	ACX_PEER_HT_CAP
+> +*	Desc:	Configure HT capabilities - declare the capabilities of the peer
+> +*		we are connected to.
+> +* Type:	Configuration
+> +* Access:	Write Only
+> +* Length:
+> +*/
+> +struct wl1271_acx_ht_capabilities {
+> +	struct acx_header header;
+> +
+> +	/*
+> +	* bit 0 - Allow HT Operation
+> +	* bit 1 - Allow Greenfield format in TX
+> +	* bit 2 - Allow Short GI in TX
+> +	* bit 3 - Allow L-SIG TXOP Protection in TX
+> +	* bit 4 - Allow HT Control fields in TX.
+> +	*	Note, driver will still leave space for HT control in packets
+> +	*	regardless of the value of this field. FW will be responsible to
+> +	*	drop the HT field from any frame when this Bit is set to 0.
+> +	* 5 - Allow RD initiation in TXOP. FW is allowed to initate RD.
+> +	*	Exact policy setting for this feature is TBD.
+> +	*	Note, this bit can only be set to 1 if bit 3 is set to 1.
+> +	*/
+> +	u32 ht_capabilites;
+
+This should be __le32 instead.
+
+
+> +/*  HT Capabilites Fw Bit Mask Mapping */
+> +enum acx_ht_capabilites_fw {
+> +	WL1271_ACX_FW_CAP_BIT_MASK_HT_OPERATION               =  BIT(0),
+> +	WL1271_ACX_FW_CAP_BIT_MASK_GREENFIELD_FRAME_FORMAT    =  BIT(1),
+> +	WL1271_ACX_FW_CAP_BIT_MASK_SHORT_GI_FOR_20MHZ_PACKETS =  BIT(2),
+> +	WL1271_ACX_FW_CAP_BIT_MASK_LSIG_TXOP_PROTECTION       =  BIT(3),
+> +	WL1271_ACX_FW_CAP_BIT_MASK_HT_CONTROL_FIELDS          =  BIT(4),
+> +	WL1271_ACX_FW_CAP_BIT_MASK_RD_INITIATION              =  BIT(5)
+> +};
+
+I have a slight preference to use #defines for this kind of definition,
+but we use it in both ways currently, so no need to change.
+
+It is common practice to add a , after the last value in the
+enumeration, so that if any new lines are added in the future, the
+previous one doesn't need to be changed.  So please change to this:
+
++	WL1271_ACX_FW_CAP_BIT_MASK_RD_INITIATION              =  BIT(5),
+
+
+> diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+> index af26150..ae69397 100644
+> --- a/drivers/net/wireless/wl12xx/wl1271_main.c
+> +++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+> @@ -2041,6 +2041,19 @@ static const u8 wl1271_rate_to_idx_2ghz[] = {
+>  	0                              /* CONF_HW_RXTX_RATE_1    */
+>  };
+>  
+> +/* 11n sta capabilities */
+> +#define WL12xx_HT_CAP { \
+> +	.cap = IEEE80211_HT_CAP_GRN_FLD | IEEE80211_HT_CAP_SGI_20, \
+> +	.ht_supported = true, \
+> +	.ampdu_factor = IEEE80211_HT_MAX_AMPDU_8K, \
+> +	.ampdu_density = IEEE80211_HT_MPDU_DENSITY_8, \
+> +	.mcs = { \
+> +		.rx_mask = { 0xff, 0, 0, 0, 0, 0, 0, 0, 0, 0, }, \
+> +		.rx_highest = cpu_to_le16(65), \
+> +		.tx_params = IEEE80211_HT_MCS_TX_DEFINED, \
+> +		}, \
+> +}
+
+I don't like this macro.  I'd rather have this explicitly defined
+(despite twice) in wl1271_band_2ghz and wl1271_band_5ghz.
+
+Also, it would be nice to avoid using magic numbers (ie. 65).  Is it
+possible to define a descriptive macro for instead?
+
 -- 
-1.7.1
+Cheers,
+Luca.
 
