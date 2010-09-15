@@ -1,121 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:33509 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753510Ab0IVLgT convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:37109 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751685Ab0IOHec convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Sep 2010 07:36:19 -0400
-Received: by fxm3 with SMTP id 3so198620fxm.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 04:36:17 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Alex Mihaylov <minimumlaw@gmail.com>
-Subject: Re: p54spi (STLC4560) with Marvel XScale CPU (kernel 2.6.25.4)
-Date: Wed, 22 Sep 2010 13:36:13 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <AANLkTik3_o03=m0w8XM_B-YTQrR-ibkbtTBErXfcYwGG@mail.gmail.com> <AANLkTi=M9zSKkckxqs6XwBg3290L9yijmCbRn9_E93xJ@mail.gmail.com> <AANLkTinLbpycwLjVpHhx+ZdTzXkxC4jQ6iqrOOF6Fsc4@mail.gmail.com>
-In-Reply-To: <AANLkTinLbpycwLjVpHhx+ZdTzXkxC4jQ6iqrOOF6Fsc4@mail.gmail.com>
+	Wed, 15 Sep 2010 03:34:32 -0400
+Received: by bwz11 with SMTP id 11so250556bwz.19
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Sep 2010 00:34:30 -0700 (PDT)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Subject: ath9k_htc - kernel BUG on USB unplug
+Date: Wed, 15 Sep 2010 09:33:39 +0200
 MIME-Version: 1.0
 Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201009221336.14382.chunkeey@googlemail.com>
+  charset="us-ascii"
+Message-Id: <201009150933.39692.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 22 September 2010 13:25:55 Alex Mihaylov wrote:
-> 2010/9/22 Max Filippov <jcmvbkbc@gmail.com>:
-> 
-> >> loading module with proper command line, I see message
-> >> cx3110x spi1.0: firmware boot failed
-> >> phy0: p54 detected a LM20 firmware
-> >> p54: rx_mtu reduced from 3240 to 2376
-> >> phy0: FW rev 2.13.0.0.a.13.14 - Softmac protocol 5.6
-> >> phy0: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
-> >> cx3110x spi1.0: loading user eeprom...
-> 
-> > Looks like you have custom eeprom image...
-> > ...and this eeprom image has wrong format.
-> 
-> >> What is my next step for this idea?
-> > I'd suggest removing file 3826.eeprom and trying to boot without it.
-> 
-> eeprom image was created from p54spi_eeprom.h file. I try to delete
-> this file and load different fimware - result some:
-> 
-> 
-> cx3110x spi1.0: 13000000 Hz actual, PIO
-> cx3110x spi1.0: setup mode 0, 16 bits/w, 13000000 Hz max --> 0
-> phy0: p54 detected a LM20 firmware
-> p54: rx_mtu reduced from 3240 to 2376
-> phy0: FW rev 2.13.0.0.a.13.14 - Softmac protocol 5.6
-> phy0: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
-> cx3110x spi1.0: loading default eeprom...
-> phy0: hwaddr 00:02:ee:c0:ff:ee, MAC:isl3820 RF:Longbow
-> phy0: Selected rate control algorithm 'minstrel'
-> cx3110x spi1.0: is registered as 'phy0'
-> cx3110x spi1.0: firmware boot failed
-> 
-> and with Sagrad firmware:
-> 
-> cx3110x spi1.0: 13000000 Hz actual, PIO
-> cx3110x spi1.0: setup mode 0, 16 bits/w, 13000000 Hz max --> 0
-> phy0: p54 detected a LM20 firmware
-> p54: rx_mtu reduced from 3240 to 2376
-> phy0: FW rev 2.19.0.0.A.14 Private - Softmac protocol 5.6
-> phy0: cryptographic accelerator WEP:YES, TKIP:YES, CCMP:YES
-> cx3110x spi1.0: loading default eeprom...
-> phy0: hwaddr 00:02:ee:c0:ff:ee, MAC:isl3820 RF:Longbow
-> phy0: Selected rate control algorithm 'minstrel'
-> cx3110x spi1.0: is registered as 'phy0'
-> cx3110x spi1.0: firmware boot failed
-> 
-> IRQ line not change state after firmware loaded into chip (stay low).
-> Is this normal?
-> SPI_CS line switch to low, and stay low all time. May be I need SPI_CS
-> pulse after firmware loaded into chip? I try use SPI_CS as controller
-> specific pin (not gpio_cs in platform file) - in this case I have next
-> error:
-> 
-> cx3110x: spi_write_dma not allowed to dma write.
-> 
-> and no firmware load into chip. SPI_CS in this case, make pulse on
-> each SPI transaction. After switch to gpio_cs firmware try to load,
-> but:
-> 
->         timeout = msecs_to_jiffies(2000);
->         timeout =
-> wait_for_completion_interruptible_timeout(&priv->fw_comp, timeout);
->         if (!timeout) {
->                 dev_err(&priv->spi->dev, "firmware boot failed");
->                 p54spi_power_off(priv);
->                 ret = -1;
->                 goto out;
->         }
-> 
-> 
-> Not starting?
+Hi,
 
-their GPL driver looks funny. (Max, it's really worth a look)
+not sure if this is a known bug but I just ran into this while unplugging a
+ath9k_htc device (with current wireless-testing):
 
+Helmut
 
-anyway found this:
-	/*
-	   Sequence taken from STLC4560 DataSheet
-	   This sequence can be run with the maximum SPI clock frequency (that is, 48 MHz).
-	   1. Power up.
-	   2. Wait 240 ms.
-	   3. Halt processor (EHostDeviceCntrl2 = KSetHostOverride | KSetHostCPUEn=0).
-	   4. Wait 1 us.
-	   5. Enable DMA TX (EHostDmaTxCntrl, KDmaTxCntrlEnable).
-	   6. Write DMA TX length (EHostDmaTxLength).
-	   7. Write DMA TX base (EHostDmaTxBase1).
-	   8. Wait 1 ìs.
-	   9. Write firmware image (EHostDmaData).
-	   10. RAM reset (EHostDeviceCntrl2 = KSetHostOverride | KSetHostReset | KSetRamBoot).
-	   11. Wait 40 ms.
-	   12. RAM boot (EHostDeviceCntrl2 = KSetHostOverride | KSetRamBoot),
-	   13. Enable host interrupts (EHostIntEnable1 = KIrqReady | KIrqWrReady | KHwUpdate | KSwUpdate).
-	   14. Wait for the READY interrupt (100 ms timeout).
-	   15. Acknowledge the READY interrupt.
-	   16. Issue the SLEEP interrupt.
-	 */
+Sep 15 09:13:50 helmutmobil kernel: usb 2-6: USB disconnect, address 2
+Sep 15 09:13:50 helmutmobil kernel: ------------[ cut here ]------------
+Sep 15 09:13:50 helmutmobil kernel: kernel BUG at kernel/workqueue.c:2853!
+Sep 15 09:13:50 helmutmobil kernel: invalid opcode: 0000 [#1] PREEMPT SMP 
+Sep 15 09:13:50 helmutmobil kernel: last sysfs file: /sys/devices/pci0000:00/0000:00:1c.1/0000:10:00.0/ieee80211/phy0/rfkill4/uevent
+Sep 15 09:13:50 helmutmobil kernel: CPU 1 
+Sep 15 09:13:50 helmutmobil kernel: Modules linked in: ath9k_htc ath9k_common ath9k_hw ath md5 ip6t_LOG xt_tcpudp xt_pkttype xt_physdev ipt_LOG xt_limit aes_generic af_packet rfcomm sco bridge stp llc bnep l2cap snd_pcm_oss snd_mixer_oss snd_seq snd_seq_device edd nls_utf8 cifs ip6t_REJECT nf_conntrack_ipv6 ip6table_raw xt_NOTRACK ipt_REJECT xt_state iptable_raw iptable_filter ip6table_mangle nf_conntrack_netbios_ns nf_conntrack_ipv4 nf_conntrack nf_defrag_ipv4 ip_tables ip6table_filter ip6_tables x_tables ipv6 cpufreq_conservative cpufreq_userspace cpufreq_powersave acpi_cpufreq mperf fuse ext2 loop dm_mod arc4 ecb iwlagn snd_hda_codec_analog tpm_infineon iwlcore snd_hda_intel mac80211 usbhid snd_hda_codec hid snd_hwdep sdhci_pci pcmcia sdhci snd_pcm sierra mmc_core sr_mod snd_timer ohci1394 yenta_socket usbserial cfg80211 snd cdrom hp_wmi pcmcia_rsrc ieee1394 led_class btusb serio_raw sg pcmcia_core joydev e1000e tpm_tis soundcore iTCO_wdt snd_page_alloc iTCO_vendor_support tpm container wmi tpm_bios bluetooth batt
+Sep 15 09:13:50 helmutmobil kernel: ery ac rfkill ext4 mbcache jbd2 crc16 sd_mod uhci_hcd ata_piix ehci_hcd rtc_cmos rtc_core libahci usbcore rtc_lib fan processor ata_generic libata scsi_mod thermal
+Sep 15 09:13:50 helmutmobil kernel:
+Sep 15 09:13:50 helmutmobil kernel: Pid: 299, comm: khubd Not tainted 2.6.36-rc3-wl-default+ #115 30C9/HP Compaq 2510p Notebook PC
+Sep 15 09:13:50 helmutmobil kernel: RIP: 0010:[<ffffffff810513bd>]  [<ffffffff810513bd>] destroy_workqueue+0xdc/0x172
+Sep 15 09:13:50 helmutmobil kernel: RSP: 0018:ffff88003731db70  EFLAGS: 00010286
+Sep 15 09:13:50 helmutmobil kernel: RAX: ffff88007a5af580 RBX: ffff880079213980 RCX: ffff88003731db60
+Sep 15 09:13:50 helmutmobil kernel: RDX: 000000000000003c RSI: ffff880079213980 RDI: 0000000000000002
+Sep 15 09:13:50 helmutmobil kernel: RBP: ffff88003731db90 R08: 0000000000000000 R09: 0000000000000286
+Sep 15 09:13:50 helmutmobil kernel: R10: 0000000000000003 R11: ffff88004b875b68 R12: 0000000000000002
+Sep 15 09:13:50 helmutmobil kernel: R13: ffffffff81664230 R14: 0000000000000002 R15: ffffffffa050d9d0
+Sep 15 09:13:50 helmutmobil kernel: FS:  0000000000000000(0000) GS:ffff880001900000(0000) knlGS:0000000000000000
+Sep 15 09:13:50 helmutmobil kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+Sep 15 09:13:50 helmutmobil kernel: CR2: 00007f377fa618f0 CR3: 0000000001612000 CR4: 00000000000006e0
+Sep 15 09:13:50 helmutmobil kernel: DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+Sep 15 09:13:50 helmutmobil kernel: DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+Sep 15 09:13:50 helmutmobil kernel: Process khubd (pid: 299, threadinfo ffff88003731c000, task ffff880078400980)
+Sep 15 09:13:50 helmutmobil kernel: Stack:
+Sep 15 09:13:50 helmutmobil kernel: ffff88004b870480 ffff88004b871b80 ffff88004b870480 ffff88007b150888
+Sep 15 09:13:50 helmutmobil kernel: <0> ffff88003731dbb0 ffffffffa0446133 ffff88003731dbb0 ffff8800495a0000
+Sep 15 09:13:50 helmutmobil kernel: <0> ffff88003731dbe0 ffffffffa050cd68 ffff88003731dbd0 ffff88007b772dc0
+Sep 15 09:13:50 helmutmobil kernel: Call Trace:
+Sep 15 09:13:50 helmutmobil kernel: [<ffffffffa0446133>] ieee80211_unregister_hw+0xe7/0x110 [mac80211]
+Sep 15 09:13:50 helmutmobil kernel: [<ffffffffa050cd68>] ath9k_htc_disconnect_device+0x46/0x7c [ath9k_htc]
+Sep 15 09:13:50 helmutmobil kernel: [<ffffffffa050686e>] ath9k_htc_hw_deinit+0x12/0x14 [ath9k_htc]
+Sep 15 09:13:50 helmutmobil kernel: [<ffffffffa05076dc>] ath9k_hif_usb_disconnect+0x42/0x114 [ath9k_htc]
+Sep 15 09:13:50 helmutmobil kernel: [<ffffffff8124784e>] ? __pm_runtime_get+0x15/0x1e
+Sep 15 09:13:50 helmutmobil kernel: [<ffffffffa00e97a1>] usb_unbind_interface+0x69/0x13c [usbcore]
+Sep 15 09:13:50 helmutmobil kernel: [<ffffffff81241a7a>] __device_release_driver+0x76/0xcc
+Sep 15 09:13:50 helmutmobil kernel: [<ffffffff81241aee>] device_release_driver+0x1e/0x2b
+Sep 15 09:13:50 helmutmobil kernel: [<ffffffff81241639>] bus_remove_device+0x80/0x91
+Sep 15 09:13:50 helmutmobil kernel: [<ffffffff8123f2a5>] device_del+0x130/0x17f
+Sep 15 09:13:50 helmutmobil kernel: [<ffffffffa00e7a16>] usb_disable_device+0x81/0xf8 [usbcore]
+Sep 15 09:13:50 helmutmobil kernel: [<ffffffffa00e17ad>] usb_disconnect+0x8e/0xf6 [usbcore]
+Sep 15 09:13:50 helmutmobil kernel: [<ffffffffa00e2dd4>] hub_thread+0x483/0xdfc [usbcore]
+Sep 15 09:13:50 helmutmobil kernel: [<ffffffff81054c81>] ? autoremove_wake_function+0x0/0x34
+Sep 15 09:13:50 helmutmobil kernel: [<ffffffffa00e2951>] ? hub_thread+0x0/0xdfc [usbcore]
+Sep 15 09:13:50 helmutmobil kernel: [<ffffffff810547dc>] kthread+0x7d/0x85
+Sep 15 09:13:50 helmutmobil kernel: [<ffffffff810038a4>] kernel_thread_helper+0x4/0x10
+Sep 15 09:13:50 helmutmobil kernel: [<ffffffff8105475f>] ? kthread+0x0/0x85
+Sep 15 09:13:50 helmutmobil kernel: [<ffffffff810038a0>] ? kernel_thread_helper+0x0/0x10
+Sep 15 09:13:50 helmutmobil kernel: Code: e9 84 00 00 00 48 89 de 44 89 f7 e8 b4 d6 ff ff 31 d2 83 7c 10 18 00 74 02 0f 0b 48 83 c2 04 48 83 fa 3c 75 ed 83 78 54 00 74 02 <0f> 0b 48 8d 50 60 48 39 50 60 74 02 0f 0b 8b 03 83 e0 02 83 f8 
+Sep 15 09:13:50 helmutmobil kernel: RIP  [<ffffffff810513bd>] destroy_workqueue+0xdc/0x172
+Sep 15 09:13:50 helmutmobil kernel: RSP <ffff88003731db70>
+Sep 15 09:13:50 helmutmobil kernel: ---[ end trace ac55c0fbc23c74a5 ]---
 
-maybe it helps
