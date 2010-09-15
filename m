@@ -1,120 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:33117 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750983Ab0IWART (ORCPT
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:56542 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751947Ab0IOI0F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Sep 2010 20:17:19 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: jiajia.zheng@intel.com
-Cc: linux-wireless@vger.kernel.org,
-	wifi-test-devel@lists.sourceforge.net,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Paul Stewart <pstew@google.com>
-Subject: [PATCH] wifi-test: add simple roam test script
-Date: Wed, 22 Sep 2010 20:17:17 -0400
-Message-Id: <1285201037-29405-1-git-send-email-lrodriguez@atheros.com>
+	Wed, 15 Sep 2010 04:26:05 -0400
+Date: Wed, 15 Sep 2010 09:25:44 +0100
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: =?utf-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirqus@gmail.com>
+Cc: Ohad Ben-Cohen <ohad@wizery.com>, linux-wireless@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-omap@vger.kernel.org,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Nicolas Pitre <nico@fluxnic.net>,
+	Tony Lindgren <tony@atomide.com>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Ido Yariv <ido@wizery.com>, San Mehat <san@google.com>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	akpm@linux-foundation.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v5 3/7] wireless: wl12xx: add platform data passing
+	support
+Message-ID: <20100915082544.GA4625@n2100.arm.linux.org.uk>
+References: <1283376410-9999-1-git-send-email-ohad@wizery.com> <1283376410-9999-4-git-send-email-ohad@wizery.com> <AANLkTi=goLEUqM1XQ__PrGu4=Erw2utaNP4qFmSgRta2@mail.gmail.com> <20100906120716.GE20903@n2100.arm.linux.org.uk> <AANLkTikAFCd+3ggZKhQXY=+bG==KgLkv3qNVdEGa=GBX@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <AANLkTikAFCd+3ggZKhQXY=+bG==KgLkv3qNVdEGa=GBX@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds a simple roam test script. It uses the supplicant
-wpa_cli utility to interact with your existing session.
-You can either use Network Manager and connect to an ESS
-or use wpa_supplicant manually and connect to an ESS, in
-both cases you need to hand pick an ESS by SSID and support
-the control interface of the supplicant. The script will just
-force a roam onto all the APs on the ESS in round robin,
-sleeping 2 seconds between each roam. If you are not testing
-signal drops you can use this to move around APs without
-walking around a building.
+On Mon, Sep 06, 2010 at 09:42:41PM +0200, Michał Mirosław wrote:
+> W dniu 6 września 2010 14:07 użytkownik Russell King - ARM Linux
+> <linux@arm.linux.org.uk> napisał:
+> > On Sat, Sep 04, 2010 at 02:23:19PM +0200, Michał Mirosław wrote:
+> >> 2010/9/1 Ohad Ben-Cohen <ohad@wizery.com>:
+> >> > Add a simple mechanism to pass platform data to the
+> >> > SDIO instances of wl12xx.
+> [cut patch]
+> >> Why do you need all that copying? Isn't the data constant?
+> >
+> > The first copy is to allow platforms to have their data marked with
+> > __initdata.  The second copy probably isn't necessary, but avoids
+> > problems where the driver may decide to modify the platform data.
+> 
+> Sorry for pushing at this, but why would you mark data that's meant to
+> be used after init phase as __initdata?
 
-Cc: Paul Stewart <pstew@google.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
-
-The wifi-test.git tree is down right now.. so if you want to test
-this you can download the script from:
-
-http://bombadil.infradead.org/~mcgrof/test-roam
-
-for now. This script let me find a bug, I'll post the oops
-shortly.
-
- simple/test-roam |   66 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 66 insertions(+), 0 deletions(-)
- create mode 100755 simple/test-roam
-
-diff --git a/simple/test-roam b/simple/test-roam
-new file mode 100755
-index 0000000..9d1c0c4
---- /dev/null
-+++ b/simple/test-roam
-@@ -0,0 +1,66 @@
-+#!/bin/bash
-+# Copyright (c) 2010 Luis R. Rodriguez <mcgrof@gmail.com>
-+#
-+# Permission to use, copy, modify, and/or distribute this software for any
-+# purpose with or without fee is hereby granted, provided that the above
-+# copyright notice and this permission notice appear in all copies.
-+#
-+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING O
-+
-+# Pretty colors
-+GREEN="\033[01;32m"
-+YELLOW="\033[01;33m"
-+NORMAL="\033[00m"
-+BLUE="\033[34m"
-+RED="\033[31m"
-+PURPLE="\033[35m"
-+CYAN="\033[36m"
-+
-+if [ $# -ne 1 ]; then
-+	echo -e "Usage: $0 <SSID>"
-+	exit
-+fi
-+
-+SSID="$1"
-+
-+# assumes you have a control interface exposed,
-+# If you want to use this with network-manager ensure
-+# you modify your dbus settings for wpa_supplicant. This is
-+# documented here:
-+#
-+# http://wireless.kernel.org/en/users/Documentation/wpa_supplicant#Enabling_control_interface_and_nl80211_driver
-+
-+echo -e "${CYAN}Issuing first scan...${NORMAL}"
-+
-+# XXX: add 'iw event <event-type> -c 1' support
-+sudo wpa_cli scan
-+
-+echo -e "${CYAN}Waiting for results...${NORMAL}"
-+sleep 5
-+
-+echo -e "${CYAN}Collecting scan results...${NORMAL}"
-+ESS=$(sudo wpa_cli scan_results| grep $SSID | awk '{print $1}')
-+COUNT=$(echo $ESS | wc -w)
-+
-+echo -e "${RED}$COUNT ${NORMAL}APs found on ESS ${GREEN}$SSID${NORMAL}, going to roam between them now"
-+echo -e "AP list:${NORMAL}"
-+
-+echo -e "\t${GREEN}BSS\t\t\t${YELLOW}Freq${NORMAL}"
-+for i in $ESS; do
-+	FREQ=$(sudo wpa_cli scan_results| grep $i | awk '{print $2}')
-+	echo -e "\t${GREEN}$i\t${YELLOW}$FREQ"
-+done
-+
-+while true; do
-+	for i in $ESS; do
-+		FREQ=$(sudo wpa_cli scan_results| grep $i | awk '{print $2}')
-+		echo -e "${NORMAL}Roaming to ${CYAN}${SSID} ${GREEN}${i} ${YELLOW}${FREQ} ${NORMAL}MHz..."
-+		sudo wpa_cli roam $i;
-+		sleep 2;
-+	done;
-+done
--- 
-1.7.0.4
-
+Because you may have many instances of the data (due to multiple platform
+support), and only need one of them at run-time.
