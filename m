@@ -1,69 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:38676 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750726Ab0IPIeQ (ORCPT
+Received: from moutng.kundenserver.de ([212.227.17.10]:51433 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752152Ab0IOQjE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Sep 2010 04:34:16 -0400
-Received: from vs3016.wh2.ocn.ne.jp (125.206.180.189)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0977836053
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Sep 2010 17:34:14 +0900 (JST)
-Subject: [PATCH] mac80211: Add WME information element for IBSS
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 16 Sep 2010 17:34:31 +0900
-Message-ID: <20100916083431.14175.90366.stgit@tt-desk>
+	Wed, 15 Sep 2010 12:39:04 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Valdis.Kletnieks@vt.edu
+Subject: Re: [PATCH 00/15] change default_llseek action
+Date: Wed, 15 Sep 2010 18:37:29 +0200
+Cc: linux-kernel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>,
+	Christoph Hellwig <hch@infradead.org>,
+	David Airlie <airlied@linux.ie>,
+	dri-devel@lists.freedesktop.org, Jeremy Kerr <jk@ozlabs.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Julia Lawall <julia@diku.dk>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-fsdevel@vger.kernel.org, linux-omap@vger.kernel.org,
+	linuxppc-dev@ozlabs.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Samuel Ortiz <samuel@sortiz.org>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	Tony Lindgren <tony@atomide.com>
+References: <1284495763-7506-1-git-send-email-arnd@arndb.de> <9828.1284565136@localhost>
+In-Reply-To: <9828.1284565136@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201009151837.30026.arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable WME QoS in IBSS mode by adding a WME information element to beacons and
-probe respones and by checking for it and marking stations as WME capable if it
-is present.
+On Wednesday 15 September 2010, Valdis.Kletnieks@vt.edu wrote:
+>   Show Details
+>   On Tue, 14 Sep 2010 22:22:28 +0200, Arnd Bergmann said:
+> 
+> > This changes all instances of struct file_operations in
+> > the kernel to have a .llseek operation and then changes
+> > the default to no_llseek, which returns -ESPIPE, which
+> > is what we had decided some time ago in a discussion
+> > with Christoph Hellwig.
+> 
+> I don't suppose there's any clean way to throw a build error or a
+> printk_on_once() or something if we encounter an unconverted 'struct
+> file_operations', is there? I have this creeping fear that this patch will go
+> upstream during the merge window - as will 12 new staging/ drivers from authors
+> who didn't get the memo yet.
+> 
+> Other than the "missed converting a new usage" issue, it looks OK to me.
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- net/mac80211/ibss.c |   20 ++++++++++++++++++--
- 1 files changed, 18 insertions(+), 2 deletions(-)
+One advantage of the scripted approach is that I can run the script
+repeatedly, and send a patch after -rc1 fixing up all the new file
+operations.
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 1a3aae5..95fe43f 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -173,6 +173,19 @@ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 		memcpy(skb_put(skb, ifibss->ie_len),
- 		       ifibss->ie, ifibss->ie_len);
- 
-+	if (local->hw.queues >= 4) {
-+		pos = skb_put(skb, 9);
-+		*pos++ = WLAN_EID_VENDOR_SPECIFIC;
-+		*pos++ = 7; /* len */
-+		*pos++ = 0x00; /* Microsoft OUI 00:50:F2 */
-+		*pos++ = 0x50;
-+		*pos++ = 0xf2;
-+		*pos++ = 2; /* WME */
-+		*pos++ = 0; /* WME info */
-+		*pos++ = 1; /* WME ver */
-+		*pos++ = 0; /* U-APSD no in use */
-+	}
-+
- 	rcu_assign_pointer(ifibss->presp, skb);
- 
- 	sdata->vif.bss_conf.beacon_int = beacon_int;
-@@ -294,9 +307,12 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 			rcu_read_unlock();
- 		} else {
- 			rcu_read_unlock();
--			ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa,
--					       supp_rates, GFP_KERNEL);
-+
-+			sta = ieee80211_ibss_add_sta(sdata, mgmt->bssid,
-+					mgmt->sa, supp_rates, GFP_KERNEL);
- 		}
-+		if (sta && elems->wmm_info)
-+			set_sta_flags(sta, WLAN_STA_WME);
- 	}
- 
- 	bss = ieee80211_bss_info_update(local, rx_status, mgmt, len, elems,
+Moreover, any new drivers are by definition not regressions and staging
+drivers are expected to have issues. IIRC the most common llseek operation
+is 'noop_llseek', which usually means it should have been 'no_llseek' to
+start with, but since this has been in a released kernel, some random
+user application might expect a seek on that file to succeed without
+error.
 
+	Arnd
