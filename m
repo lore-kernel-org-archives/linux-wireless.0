@@ -1,77 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:51189 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750970Ab0IMOgi (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:36685 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752770Ab0IOB4w convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Sep 2010 10:36:38 -0400
-Message-ID: <4C8E36EE.7010007@candelatech.com>
-Date: Mon, 13 Sep 2010 07:36:30 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 14 Sep 2010 21:56:52 -0400
+Received: by pwi3 with SMTP id 3so16222pwi.19
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Sep 2010 18:56:52 -0700 (PDT)
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>
-Subject: Re: RFC:  v3: Support multiple STA on same AP with ath9k
-References: <4C8A8FF8.4030900@candelatech.com> <20100913121428.GA15567@vasanth-laptop>
-In-Reply-To: <20100913121428.GA15567@vasanth-laptop>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Jonathan Guerin <jonathan@guerin.id.au>
+Date: Wed, 15 Sep 2010 11:56:32 +1000
+Message-ID: <AANLkTim+Q773KvA7Et1s2Zf8yMx36RGS2LsoJsX1Wtt9@mail.gmail.com>
+Subject: [ath5k] Incorrect value for ACK_TIMEOUT
+To: ath5k-devel <ath5k-devel@lists.ath5k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/13/2010 05:14 AM, Vasanthakumar Thiagarajan wrote:
->>   	/* configure operational mode */
->> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
->> index b32c8f0..4ce4029 100644
->> --- a/drivers/net/wireless/ath/ath9k/recv.c
->> +++ b/drivers/net/wireless/ath/ath9k/recv.c
->> @@ -110,7 +110,6 @@ static void ath_setdefantenna(struct ath_softc *sc, u32 antenna)
->>   static void ath_opmode_init(struct ath_softc *sc)
->>   {
->>   	struct ath_hw *ah = sc->sc_ah;
->> -	struct ath_common *common = ath9k_hw_common(ah);
->>
->>   	u32 rfilt, mfilt[2];
->>
->> @@ -118,9 +117,15 @@ static void ath_opmode_init(struct ath_softc *sc)
->>   	rfilt = ath_calcrxfilter(sc);
->>   	ath9k_hw_setrxfilter(ah, rfilt);
->>
->> -	/* configure bssid mask */
->> -	if (ah->caps.hw_caps&  ATH9K_HW_CAP_BSSIDMASK)
->> -		ath_hw_setbssidmask(common);
->> +	/* configure bssid mask, if ah->hw is configured.
->> +	 * it is NOT configured when mac80211 is calling
->> +	 * ieee80211_do_open, but probably just as well since
->> +	 * this STA isn't in the list yet.
->> +	 */
->> +	if (ah->hw) {
->
-> This seems bogus. why a check for hw at this point??. IIRS hw of
-> ah is not initialized at all, in that case this would fail always.
-> Did you test with these code?
+According to the 802.11-2007 spec document, the ACKTimeout value is
+(Section 9.2.8 ACK procedure):
+ACKTimeout = aSIFSTime + aSlotTime + aPHY-RX-START-Delay
 
-I did test it, and it worked for me.  Maybe we just shouldn't configure
-the bssid mask in that method?  When using multiple VIFs, we need to do
-the mask properly, and from what I can tell, when this method is called,
-we do not have enough information to do that properly.
+>From Table 17-15—OFDM PHY characteristics, the values are:
+aSIFSTime = 16
+aSlotTime = 9
+aPHY-RX-START-Delay = 25
 
->
->> +	int avifs = ieee80211_count_sta_atomic(sc->hw);
->
-> If your aim here is to get the number of virtual interfaces
-> associated to a hw, sc->nvifs should work.
+Therefore, ACKTimeout = 50
 
-I'll check to see if this will work.
+In the driver source, this appears to be initialised to:
+
+$$ ath5k.h
+#define AR5K_INIT_ACK_CTS_TIMEOUT		1024
+
+$$ reg.h
+/*
+ * ACK/CTS timeout register
+ */
+#define AR5K_TIME_OUT		0x8014			/* Register Address */
+#define AR5K_TIME_OUT_ACK	0x00001fff	/* ACK timeout mask */
+#define AR5K_TIME_OUT_ACK_S	0
+#define AR5K_TIME_OUT_CTS	0x1fff0000	/* CTS timeout mask */
+#define AR5K_TIME_OUT_CTS_S	16
+
+Taking the value of the register (1024), masking it with the ACK
+Timeout Mask (0x1fff) and dividing it by the clock rate (40), we get a
+much smaller ACK Timeout value:
+1024 & 0x1fff = 1024
+1024/40 = 25us
+
+
+Am I understanding this right? Is the driver actually setting the ACK
+Timeout to be much smaller than even a DIFS, let alone matching the
+spec?
+
+
 
 Thanks,
-Ben
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+--
+Jonathan Guerin
