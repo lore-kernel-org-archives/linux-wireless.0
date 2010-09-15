@@ -1,60 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw-mx09.nokia.com ([192.100.105.134]:43816 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752359Ab0IVKZm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Sep 2010 06:25:42 -0400
-Subject: Re: [PATCH] wl1271: Fix overflow in wl1271_boot_upload_nvs
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Ido Yariv <ido@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1285141993-3772-1-git-send-email-ido@wizery.com>
-References: <1285141993-3772-1-git-send-email-ido@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 22 Sep 2010 13:24:42 +0300
-Message-ID: <1285151082.22517.8.camel@chilepepper>
-Mime-Version: 1.0
+Received: from purkki.adurom.net ([80.68.90.206]:59614 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751929Ab0IOKl4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Sep 2010 06:41:56 -0400
+To: Jonathan Guerin <jonathan@guerin.id.au>
+Cc: Bruno Randolf <br1@einfach.org>, ath5k-devel@lists.ath5k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Nick Kossifidis <mickflemm@gmail.com>
+Subject: Re: [ath5k-devel] [ath5k] Incorrect value for ACK_TIMEOUT
+References: <AANLkTim+Q773KvA7Et1s2Zf8yMx36RGS2LsoJsX1Wtt9@mail.gmail.com>
+	<201009151216.32430.br1@einfach.org>
+	<AANLkTiniROJatam4yA4sss3qjczT-6=jSP9QxvmDo2dq@mail.gmail.com>
+	<201009151245.53194.br1@einfach.org>
+	<AANLkTimHDXpazQ_rEXw81cdHLRmUpAA+r_tHGdvGOVYW@mail.gmail.com>
+	<871v8v5vd2.fsf@purkki.adurom.net>
+	<AANLkTinD+y+CvxijXvxfqB9ncWdD0qYLi-e0PRvczwem@mail.gmail.com>
+	<87wrqn4fvp.fsf@purkki.adurom.net>
+	<AANLkTi=ch5PozRHokWMgQPi71=gLPAaBYHR2eF6usadS@mail.gmail.com>
+From: Kalle Valo <kvalo@adurom.com>
+Date: Wed, 15 Sep 2010 13:41:54 +0300
+In-Reply-To: <AANLkTi=ch5PozRHokWMgQPi71=gLPAaBYHR2eF6usadS@mail.gmail.com> (Jonathan Guerin's message of "Wed\, 15 Sep 2010 20\:00\:51 +1000")
+Message-ID: <87sk1b47bh.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-09-22 at 09:53 +0200, ext Ido Yariv wrote:
-> Due to miscalculation of nvs_len, excessive data was sent to the
-> firmware.
-> Fix this by first setting nvs_ptr to point to the first NVS table,
-> and computing the total size of all NVS tables accordingly.
-> 
-> Signed-off-by: Ido Yariv <ido@wizery.com>
-> ---
+Jonathan Guerin <jonathan@guerin.id.au> writes:
 
-This looks reasonable, thanks!
+> Any chance we can 'acquire' those test plans? ;-)
 
-But I still want to have it briefly tested before I accept it.  Our
-tester will try it out today or tomorrow and, if everything is okay,
-I'll ack it.
-
-
->  drivers/net/wireless/wl12xx/wl1271_boot.c |   17 ++++++-----------
->  1 files changed, 6 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/wl12xx/wl1271_boot.c b/drivers/net/wireless/wl12xx/wl1271_boot.c
-> index fc21db8..e5a7f04 100644
-> --- a/drivers/net/wireless/wl12xx/wl1271_boot.c
-> +++ b/drivers/net/wireless/wl12xx/wl1271_boot.c
-> @@ -274,11 +274,11 @@ static int wl1271_boot_upload_nvs(struct wl1271 *wl)
-
-[...]
-
-> -	nvs_aligned = kmemdup(nvs_ptr, nvs_len, GFP_KERNEL); if
-> -	(!nvs_aligned) return -ENOMEM;
-> +	nvs_aligned = kmemdup(nvs_ptr, nvs_len, GFP_KERNEL);
-> +	if (!nvs_aligned)
-> +		return -ENOMEM;
-
-This looks pretty odd.  But I checked wireless-testing and it is looking
-bad there.  It's not like that in our internal tree, but git blames me
-for doing it in wireless-testing. :) Thanks for fixing.
+Most probably you need to pay kilo dollars to get access to them.
 
 -- 
-Cheers,
-Luca.
-
+Kalle Valo
