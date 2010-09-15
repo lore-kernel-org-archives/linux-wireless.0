@@ -1,159 +1,182 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:54385 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756683Ab0IXWCj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Sep 2010 18:02:39 -0400
-Received: by fxm3 with SMTP id 3so1004886fxm.19
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Sep 2010 15:02:38 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Luis Carlos Cobo <luisca@cozybit.com>
-Subject: Re: [RFC v2] mac80211: fix possible null-pointer dereference
-Date: Sat, 25 Sep 2010 00:02:20 +0200
-Cc: linux-wireless@vger.kernel.org, Javier Cardona <javier@cozybit.com>
-References: <201009210057.13297.chunkeey@googlemail.com> <20100924180013.GD8077@tuxdriver.com>
-In-Reply-To: <20100924180013.GD8077@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201009250002.21219.chunkeey@googlemail.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:33746 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754484Ab0IOSbj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Sep 2010 14:31:39 -0400
+From: Shahar Levi <shahar_levi@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>
+Subject: [PATCH 03/04] wl1271: 11n Support, Scan, Connection, MCS rates
+Date: Wed, 15 Sep 2010 20:31:11 +0200
+Message-Id: <1284575472-19888-4-git-send-email-shahar_levi@ti.com>
+In-Reply-To: <1284575472-19888-1-git-send-email-shahar_levi@ti.com>
+References: <1284575472-19888-1-git-send-email-shahar_levi@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 24 September 2010 20:00:13 John W. Linville wrote:
-> On Tue, Sep 21, 2010 at 12:57:13AM +0200, Christian Lamparter wrote:
-> > net/mac80211/mesh_plink.c +574 mesh_rx_plink_frame(168)
-> > error: we previously assumed 'sta' could be null.
-> > 
-> > This bug was detected by smatch.
-> > ( http://repo.or.cz/w/smatch.git )
-> > 
-> > Cc: <stable@kernel.org>
-> > Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
-> > ---
-> > diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-> > index ea13a80..1d7c564 100644
-> > --- a/net/mac80211/mesh_plink.c
-> > +++ b/net/mac80211/mesh_plink.c
-> > @@ -473,7 +473,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
-> >  	rcu_read_lock();
-> >  
-> >  	sta = sta_info_get(sdata, mgmt->sa);
-> > -	if (!sta && ftype != PLINK_OPEN) {
-> > +	if (!sta || ftype != PLINK_OPEN) {
-> >  		mpl_dbg("Mesh plink: cls or cnf from unknown peer\n");
-> >  		rcu_read_unlock();
-> >  		return;
-> 
-> Are you sure this is the intended check?  It isn't clear to me from looking at the code.
+11n support add to scan, connection via MCS rates
 
-You are right, that change may even break mesh.
-(if it did work?)
-
-because mesh uses actions instead of AUTH/ASSOC and
-the following code in ieee80211_rx_h_action (rx.c)
-
-1986)       if (!rx->sta && mgmt->u.action.category != WLAN_CATEGORY_PUBLIC)
-1987)               return RX_DROP_UNUSABLE;
-
-prevents any new plinks because action.category is probably
-WLAN_CATEGORY_MESH_PLINK, right?
-
-> Perhaps line 574 just needs to be protected by another NULL check?
-
-hard to say, smatch must see the null dereference, when
-we receive an action action frame where ftype is PLINK_OPEN
-and the mesh_matches_local(&elems, sdata) check fail, but why
-doesn't it complain about the "spin_lock_bh(&sta->lock)"?
-
+Signed-off-by: Shahar Levi <shahar_levi@ti.com>
 ---
+ drivers/net/wireless/wl12xx/wl1271_main.c |   63 +++++++++++++++++++++--------
+ drivers/net/wireless/wl12xx/wl1271_rx.c   |    4 ++
+ drivers/net/wireless/wl12xx/wl1271_tx.c   |    9 ++++
+ 3 files changed, 59 insertions(+), 17 deletions(-)
 
-[...]
-
-(from previous checks we know that sta has to be pointing to a
- valid sta_info or ftype is set to PLINK_OPEN)
-
-if (ftype != PLINK_CLOSE && (!mesh_matches_local(&elems, sdata))) {
-	switch (ftype) {
-		case PLINK_OPEN:
-			event = OPN_RJCT;
-			break;
-		case PLINK_CONFIRM:
-			event = CNF_RJCT;
-			break;
-		case PLINK_CLOSE:
-			/* avoid warning */
-		break;
-	}
-	--> spin_lock_bh(&sta->lock); <--
-} else if (!sta) {
-	/* ftype == PLINK_OPEN */
-	...
-}
-...
----
-anyway here's my new fix (this time RFC). Is there anyone at
-cozybits who can review the logic in the new patch?
-
----
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index ea13a80..8b7efee 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -412,7 +412,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 	enum plink_event event;
- 	enum plink_frame_type ftype;
- 	size_t baselen;
--	bool deactivated;
-+	bool deactivated, matches_local = true;
- 	u8 ie_len;
- 	u8 *baseaddr;
- 	__le16 plid, llid, reason;
-@@ -487,6 +487,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 	/* Now we will figure out the appropriate event... */
- 	event = PLINK_UNDEFINED;
- 	if (ftype != PLINK_CLOSE && (!mesh_matches_local(&elems, sdata))) {
-+		matches_local = false;
- 		switch (ftype) {
- 		case PLINK_OPEN:
- 			event = OPN_RJCT;
-@@ -498,7 +499,15 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 			/* avoid warning */
- 			break;
- 		}
--		spin_lock_bh(&sta->lock);
-+	}
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index ae69397..e89e574 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -782,10 +782,21 @@ static int wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 
+ 	/* peek into the rates configured in the STA entry */
+ 	spin_lock_irqsave(&wl->wl_lock, flags);
+-	if (sta && sta->supp_rates[conf->channel->band] != wl->sta_rate_set) {
++	if (sta &&
++	    (sta->supp_rates[conf->channel->band] !=
++	    (wl->sta_rate_set & HW_BG_RATES_MASK))) {
+ 		wl->sta_rate_set = sta->supp_rates[conf->channel->band];
+ 		set_bit(WL1271_FLAG_STA_RATES_CHANGED, &wl->flags);
+ 	}
 +
-+	if (!sta && !matches_local) {
-+		rcu_read_unlock();
-+		reason = cpu_to_le16(MESH_CAPABILITY_POLICY_VIOLATION);
-+		llid = 0;
-+		mesh_plink_frame_tx(sdata, PLINK_CLOSE, mgmt->sa, llid,
-+ 				    plid, reason);
-+		return;
- 	} else if (!sta) {
- 		/* ftype == PLINK_OPEN */
- 		u32 rates;
-@@ -522,7 +531,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
++	if (sta &&
++	    sta->ht_cap.ht_supported &&
++	    ((wl->sta_rate_set >> HW_HT_RATES_OFFSET) !=
++	      sta->ht_cap.mcs.rx_mask[0])) {
++		wl->sta_rate_set |=
++		(sta->ht_cap.mcs.rx_mask[0] << HW_HT_RATES_OFFSET);
++		set_bit(WL1271_FLAG_STA_RATES_CHANGED, &wl->flags);
++	}
+ 	spin_unlock_irqrestore(&wl->wl_lock, flags);
+ 
+ 	/* queue the packet */
+@@ -1622,6 +1633,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
+ {
+ 	enum wl1271_cmd_ps_mode mode;
+ 	struct wl1271 *wl = hw->priv;
++	struct ieee80211_sta *sta = ieee80211_find_sta(vif, bss_conf->bssid);
+ 	bool do_join = false;
+ 	bool set_assoc = false;
+ 	int ret;
+@@ -1837,6 +1849,21 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
  		}
- 		event = OPN_ACPT;
- 		spin_lock_bh(&sta->lock);
--	} else {
-+	} else if (matches_local) {
- 		spin_lock_bh(&sta->lock);
- 		switch (ftype) {
- 		case PLINK_OPEN:
-@@ -564,6 +573,8 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 			rcu_read_unlock();
- 			return;
- 		}
-+	} else {
-+		spin_lock_bh(&sta->lock);
  	}
  
- 	mpl_dbg("Mesh plink (peer, state, llid, plid, event): %pM %s %d %d %d\n",
----
++	if (sta) {
++		if (changed & BSS_CHANGED_HT) {
++			ret = wl1271_acx_set_ht_capabilities(wl,
++							     &sta->ht_cap,
++							     true);
++			ret = wl1271_acx_set_ht_information(wl,
++						bss_conf->ht_operation_mode);
++			}
++		else
++			if (changed & BSS_CHANGED_ASSOC)
++				ret = wl1271_acx_set_ht_capabilities(wl,
++								&sta->ht_cap,
++								false);
++	}
++
+ 	if (changed & BSS_CHANGED_ARP_FILTER) {
+ 		__be32 addr = bss_conf->arp_addr_list[0];
+ 		WARN_ON(wl->bss_type != BSS_TYPE_STA_BSS);
+@@ -2014,14 +2041,14 @@ static struct ieee80211_channel wl1271_channels[] = {
+ /* mapping to indexes for wl1271_rates */
+ static const u8 wl1271_rate_to_idx_2ghz[] = {
+ 	/* MCS rates are used only with 11n */
+-	CONF_HW_RXTX_RATE_UNSUPPORTED, /* CONF_HW_RXTX_RATE_MCS7 */
+-	CONF_HW_RXTX_RATE_UNSUPPORTED, /* CONF_HW_RXTX_RATE_MCS6 */
+-	CONF_HW_RXTX_RATE_UNSUPPORTED, /* CONF_HW_RXTX_RATE_MCS5 */
+-	CONF_HW_RXTX_RATE_UNSUPPORTED, /* CONF_HW_RXTX_RATE_MCS4 */
+-	CONF_HW_RXTX_RATE_UNSUPPORTED, /* CONF_HW_RXTX_RATE_MCS3 */
+-	CONF_HW_RXTX_RATE_UNSUPPORTED, /* CONF_HW_RXTX_RATE_MCS2 */
+-	CONF_HW_RXTX_RATE_UNSUPPORTED, /* CONF_HW_RXTX_RATE_MCS1 */
+-	CONF_HW_RXTX_RATE_UNSUPPORTED, /* CONF_HW_RXTX_RATE_MCS0 */
++	7,                            /* CONF_HW_RXTX_RATE_MCS7 */
++	6,                            /* CONF_HW_RXTX_RATE_MCS6 */
++	5,                            /* CONF_HW_RXTX_RATE_MCS5 */
++	4,                            /* CONF_HW_RXTX_RATE_MCS4 */
++	3,                            /* CONF_HW_RXTX_RATE_MCS3 */
++	2,                            /* CONF_HW_RXTX_RATE_MCS2 */
++	1,                            /* CONF_HW_RXTX_RATE_MCS1 */
++	0,                            /* CONF_HW_RXTX_RATE_MCS0 */
+ 
+ 	11,                            /* CONF_HW_RXTX_RATE_54   */
+ 	10,                            /* CONF_HW_RXTX_RATE_48   */
+@@ -2060,6 +2087,7 @@ static struct ieee80211_supported_band wl1271_band_2ghz = {
+ 	.n_channels = ARRAY_SIZE(wl1271_channels),
+ 	.bitrates = wl1271_rates,
+ 	.n_bitrates = ARRAY_SIZE(wl1271_rates),
++	.ht_cap	= WL12xx_HT_CAP,
+ };
+ 
+ /* 5 GHz data rates for WL1273 */
+@@ -2139,14 +2167,14 @@ static struct ieee80211_channel wl1271_channels_5ghz[] = {
+ /* mapping to indexes for wl1271_rates_5ghz */
+ static const u8 wl1271_rate_to_idx_5ghz[] = {
+ 	/* MCS rates are used only with 11n */
+-	CONF_HW_RXTX_RATE_UNSUPPORTED, /* CONF_HW_RXTX_RATE_MCS7 */
+-	CONF_HW_RXTX_RATE_UNSUPPORTED, /* CONF_HW_RXTX_RATE_MCS6 */
+-	CONF_HW_RXTX_RATE_UNSUPPORTED, /* CONF_HW_RXTX_RATE_MCS5 */
+-	CONF_HW_RXTX_RATE_UNSUPPORTED, /* CONF_HW_RXTX_RATE_MCS4 */
+-	CONF_HW_RXTX_RATE_UNSUPPORTED, /* CONF_HW_RXTX_RATE_MCS3 */
+-	CONF_HW_RXTX_RATE_UNSUPPORTED, /* CONF_HW_RXTX_RATE_MCS2 */
+-	CONF_HW_RXTX_RATE_UNSUPPORTED, /* CONF_HW_RXTX_RATE_MCS1 */
+-	CONF_HW_RXTX_RATE_UNSUPPORTED, /* CONF_HW_RXTX_RATE_MCS0 */
++	7,                            /* CONF_HW_RXTX_RATE_MCS7 */
++	6,                            /* CONF_HW_RXTX_RATE_MCS6 */
++	5,                            /* CONF_HW_RXTX_RATE_MCS5 */
++	4,                            /* CONF_HW_RXTX_RATE_MCS4 */
++	3,                            /* CONF_HW_RXTX_RATE_MCS3 */
++	2,                            /* CONF_HW_RXTX_RATE_MCS2 */
++	1,                            /* CONF_HW_RXTX_RATE_MCS1 */
++	0,                            /* CONF_HW_RXTX_RATE_MCS0 */
+ 
+ 	7,                             /* CONF_HW_RXTX_RATE_54   */
+ 	6,                             /* CONF_HW_RXTX_RATE_48   */
+@@ -2171,6 +2199,7 @@ static struct ieee80211_supported_band wl1271_band_5ghz = {
+ 	.n_channels = ARRAY_SIZE(wl1271_channels_5ghz),
+ 	.bitrates = wl1271_rates_5ghz,
+ 	.n_bitrates = ARRAY_SIZE(wl1271_rates_5ghz),
++	.ht_cap	= WL12xx_HT_CAP,
+ };
+ 
+ static const u8 *wl1271_band_rate_to_idx[] = {
+diff --git a/drivers/net/wireless/wl12xx/wl1271_rx.c b/drivers/net/wireless/wl12xx/wl1271_rx.c
+index 019aa79..e752215 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_rx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_rx.c
+@@ -53,6 +53,10 @@ static void wl1271_rx_status(struct wl1271 *wl,
+ 	status->band = wl->band;
+ 	status->rate_idx = wl1271_rate_to_idx(wl, desc->rate);
+ 
++	/* 11n support */
++	if (desc->rate <= CONF_HW_RXTX_RATE_MCS0)
++		status->flag |= RX_FLAG_HT;
++
+ 	status->signal = desc->rssi;
+ 
+ 	/*
+diff --git a/drivers/net/wireless/wl12xx/wl1271_tx.c b/drivers/net/wireless/wl12xx/wl1271_tx.c
+index dc0b46c..3dd9766 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_tx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_tx.c
+@@ -236,6 +236,15 @@ u32 wl1271_tx_enabled_rates_get(struct wl1271 *wl, u32 rate_set)
+ 		rate_set >>= 1;
+ 	}
+ 
++	/* MCS rates indication are on bits 16 - 23 */
++	rate_set >>= HW_HT_RATES_OFFSET - band->n_bitrates;
++
++	for (bit = 0; bit < 8; bit++) {
++		if (rate_set & 0x1)
++			enabled_rates |= (CONF_HW_BIT_RATE_MCS_0 << bit);
++		rate_set >>= 1;
++	}
++
+ 	return enabled_rates;
+ }
+ 
+-- 
+1.6.0.4
 
-Regards,
-	Chr
