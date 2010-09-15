@@ -1,41 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:47630 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756708Ab0I3Q1J (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Sep 2010 12:27:09 -0400
-Received: by pvg2 with SMTP id 2so546880pvg.19
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Sep 2010 09:27:09 -0700 (PDT)
+Received: from mail.atheros.com ([12.19.149.2]:49213 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751727Ab0IOWDr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Sep 2010 18:03:47 -0400
+Received: from mail.atheros.com ([10.10.20.107])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Sep 2010 15:03:41 -0700
+Date: Wed, 15 Sep 2010 15:03:45 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"mcgrof@infradead.org" <mcgrof@infradead.org>
+Subject: Re: [PATCH 2/3] compat-wireless: make patch apply again.
+Message-ID: <20100915220345.GD1734@tux>
+References: <1284583415-11506-1-git-send-email-hauke@hauke-m.de>
+ <1284583415-11506-2-git-send-email-hauke@hauke-m.de>
 MIME-Version: 1.0
-In-Reply-To: <201009250002.21219.chunkeey@googlemail.com>
-References: <201009210057.13297.chunkeey@googlemail.com>
-	<20100924180013.GD8077@tuxdriver.com>
-	<201009250002.21219.chunkeey@googlemail.com>
-Date: Thu, 30 Sep 2010 12:27:08 -0400
-Message-ID: <AANLkTikqRuDVwhxhXkpA3c5ppzVu_HhkaEUhyr+YBUMy@mail.gmail.com>
-Subject: Re: [RFC v2] mac80211: fix possible null-pointer dereference
-From: Bob Copeland <me@bobcopeland.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Luis Carlos Cobo <luisca@cozybit.com>,
-	linux-wireless@vger.kernel.org, Javier Cardona <javier@cozybit.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1284583415-11506-2-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 24, 2010 at 6:02 PM, Christian Lamparter
-<chunkeey@googlemail.com> wrote:
+On Wed, Sep 15, 2010 at 01:43:34PM -0700, Hauke Mehrtens wrote:
+> 
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-> hard to say, smatch must see the null dereference, when
-> we receive an action action frame where ftype is PLINK_OPEN
-> and the mesh_matches_local(&elems, sdata) check fail, but why
-> doesn't it complain about the "spin_lock_bh(&sta->lock)"?
+Thanks! Applied the first two patches, the carl9170 requires
+a bit more work to ensure we don't oops people's old kernels
+who require some extra version fixes.
 
-Smatch just does pattern matching right?  Maybe smatch doesn't
-assume you are actually using the pointer in spin_lock_bh().
-
-I.e. it is ok to do "&null_ptr->member", offsetof() basically
-does that; but not "null_ptr->member".
-
--- 
-Bob Copeland %% www.bobcopeland.com
+  Luis
