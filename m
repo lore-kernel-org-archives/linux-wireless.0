@@ -1,90 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gerolde.archlinux.org ([66.211.214.132]:54965 "EHLO
-	archlinux.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757716Ab0HDLg0 (ORCPT
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:35985 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751536Ab0IOBra convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Aug 2010 07:36:26 -0400
-Message-ID: <4C5950B7.4000802@archlinux.org>
-Date: Wed, 04 Aug 2010 13:36:23 +0200
-From: =?ISO-8859-15?Q?Thomas_B=E4chler?= <thomas@archlinux.org>
+	Tue, 14 Sep 2010 21:47:30 -0400
+Received: from vs3017.wh2.ocn.ne.jp (125.206.180.250)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-042605247
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Sep 2010 10:47:28 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: Jonathan Guerin <jonathan@guerin.id.au>
+Subject: Re: [ath5k-devel] [support] ath5k contention windows
+Date: Wed, 15 Sep 2010 10:47:38 +0900
+Cc: Bob Copeland <me@bobcopeland.com>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>,
+	"ath5k-devel" <ath5k-devel@lists.ath5k.org>
+References: <AANLkTi=azJS6bn7-=Bbb--ibACaQWqv4ZGLMUpfxynm7@mail.gmail.com> <AANLkTi=8p2umy+m4emdqKMb=eTYiLTsR3ZENwFaJyoe8@mail.gmail.com> <AANLkTimfyZ4N9LWXi-Tbk-xsVisa3C=B=n4s3S6Lf5HV@mail.gmail.com>
+In-Reply-To: <AANLkTimfyZ4N9LWXi-Tbk-xsVisa3C=B=n4s3S6Lf5HV@mail.gmail.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: linux-kernel@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: WARNING at net/wireless/reg.c when wireless network is disconnected
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="------------enigAA8E523DD3BE04A4F9B450F6"
+Content-Type: Text/Plain;
+  charset="windows-1252"
+Message-Id: <201009151047.38880.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigAA8E523DD3BE04A4F9B450F6
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: quoted-printable
+On Wed September 15 2010 09:44:09 Jonathan Guerin wrote:
+> The timings I used were from the 802.11-2007 spec.
+> SIFS, DIFS & Slot Time: Table 17-15—OFDM PHY characteristics
+> NDPS values: Table 17-3—Modulation-dependent parameters
+> txtime calculations: Section 17.4.3 OFDM TXTIME calculation
+> 
+> Here are the functions I use to do the basics:
+> int16_t ndbps(uint8_t rate_Mbps)
+> {
+>   //Radiotap returns rate in 500kbps units
+>   rate_Mbps/=2;
+> 
+>    static const uint8_t rate_nsyms[][2] = {
+>       {  6,  24 },
+>       {  9,  36 },
+>       { 12,  48 },
+>       { 18,  72 },
+>       { 24,  96 },
+>       { 36, 144 },
+>       { 48, 192 },
+>       { 54, 216 }
 
-Hello,
+this is rate * 4
 
-this warning has been around ever since I switched to 2.6.34, has
-accompanied me through the 2.6.35-rc* phase and is still there with
-2.6.35. I didn't bother to report it so far, as there seems to be no harm=
-=2E
+>    };
+>    static const size_t nof_rate_nsyms = sizeof(rate_nsyms) /
+> sizeof(rate_nsyms[0]);
+>    for(size_t i = 0; i < nof_rate_nsyms; ++i) {
+>       if(rate_Mbps == rate_nsyms[i][0]) {
+>          return rate_nsyms[i][1];
+>       }
+>    }
+>    return -1;
+> }
+> 
+> int getTXTime(int rate, int noctets) {
+>   uint16_t usecs = 0;
+>   const int16_t nof_bps = ndbps(rate);
+> 
+>   int chan_rate = 1;
+> 
+>   if(-1 != nof_bps) {
+>     const uint16_t preamble = 16 * chan_rate;
+>     const uint16_t signal = 4 * chan_rate;
+>     const uint16_t tsym = 4 * chan_rate;
+>     const uint16_t nsyms = ceill((16.0 + 8.0 * (noctets) + 6.0) / nof_bps);
+>     usecs = preamble + signal + tsym * nsyms;
+>   }
+> 
+>   return(usecs);
 
-Whenever I disconnect/get disconnected from the wireless, I receive the
-below warning:
+if you compare that to the code in mac80211/util.c ieee80211_frame_duration():
 
-------------[ cut here ]------------
-WARNING: at net/wireless/reg.c:272
-regulatory_hint_disconnect+0x1b3/0x230 [cfg80211]()
-Hardware name: TECRA A11
-Unexpected user alpha2: de
-Modules linked in: hidp rfcomm sco bnep l2cap bridge stp llc microcode
-cpufreq_ondemand tun btusb bluetooth uvcvideo videodev tpm_infineon
-v4l2_compat_ioctl32 arc4 snd_seq_dummy snd_seq_oss ecb
-snd_seq_midi_event snd_seq snd_seq_device snd_pcm_oss
-snd_hda_codec_intelhdmi snd_mixer_oss snd_hda_codec_realtek
-snd_hda_intel snd_hda_codec ath9k snd_hwdep kvm_intel ath9k_common kvm
-snd_pcm ath9k_hw snd_timer snd tpm_tis ehci_hcd ath sdhci_pci
-acpi_cpufreq sdhci soundcore mac80211 freq_table mmc_core tpm cfg80211
-usbcore snd_page_alloc tpm_bios e1000e mperf led_class psmouse sr_mod
-iTCO_wdt sg evdev toshiba_acpi toshiba_bluetooth cdrom battery ac
-thermal processor rfkill nls_base rtc_cmos rtc_core rtc_lib fpu
-aesni_intel cryptd aes_x86_64 aes_generic xts gf128mul dm_crypt dm_mod
-sd_mod ahci libahci libata scsi_mod ext4 mbcache jbd2 crc16 i915
-drm_kms_helper drm i2c_algo_bit cfbcopyarea video backlight output
-cfbimgblt cfbfillrect intel_agp agpgart
-Pid: 15, comm: events/0 Not tainted 2.6.35 #28
-Call Trace:
- [<ffffffff8103e98b>] ? warn_slowpath_common+0x7b/0xc0
- [<ffffffffa0337760>] ? disconnect_work+0x0/0x30 [cfg80211]
- [<ffffffff8103ea85>] ? warn_slowpath_fmt+0x45/0x50
- [<ffffffffa0337760>] ? disconnect_work+0x0/0x30 [cfg80211]
- [<ffffffffa0325163>] ? regulatory_hint_disconnect+0x1b3/0x230 [cfg80211]=
+		dur = 16; /* SIFS + signal ext */
+		dur += 16; /* 17.3.2.3: T_PREAMBLE = 16 usec */
+		dur += 4; /* 17.3.2.3: T_SIGNAL = 4 usec */
+		dur += 4 * DIV_ROUND_UP((16 + 8 * (len + 4) + 6) * 10,
+					4 * rate); /* T_SYM x N_SYM */
 
- [<ffffffffa0337760>] ? disconnect_work+0x0/0x30 [cfg80211]
- [<ffffffff81052df8>] ? worker_thread+0x158/0x230
- [<ffffffff810574d0>] ? autoremove_wake_function+0x0/0x30
- [<ffffffff81052ca0>] ? worker_thread+0x0/0x230
- [<ffffffff8105703e>] ? kthread+0x8e/0xa0
- [<ffffffff810032d4>] ? kernel_thread_helper+0x4/0x10
- [<ffffffff81056fb0>] ? kthread+0x0/0xa0
- [<ffffffff810032d0>] ? kernel_thread_helper+0x0/0x10
----[ end trace cbb09501d5faaa20 ]---
+it is equivalent, except that you don't add 16 /* SIFS + signal ext */. is 
+this intended?
 
-
---------------enigAA8E523DD3BE04A4F9B450F6
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
-
-iEYEAREIAAYFAkxZULcACgkQEda5KzHP/VCy3gCcDVXQvZLrnOPkD29ZDKtf7zbK
-OUQAoISV+5QMZoly9MmaXR7HvqHqR4vQ
-=78nf
------END PGP SIGNATURE-----
-
---------------enigAA8E523DD3BE04A4F9B450F6--
+bruno
