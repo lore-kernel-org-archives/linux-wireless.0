@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49284 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754640Ab0IVOkO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Sep 2010 10:40:14 -0400
-Subject: Re: [PATCH wireless-2.6] iwlwifi: do not perferm force reset while
- doing scan
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-In-Reply-To: <20100922105722.3be42969@dhcp-lab-109.englab.brq.redhat.com>
-References: <1284758657-25267-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <20100922105722.3be42969@dhcp-lab-109.englab.brq.redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 22 Sep 2010 16:39:57 +0200
-Message-ID: <1285166397.3684.64.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:55196 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754079Ab0IOUnu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Sep 2010 16:43:50 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/3] compat-wireless: make patch apply again.
+Date: Wed, 15 Sep 2010 22:43:33 +0200
+Message-Id: <1284583415-11506-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-09-22 at 10:57 +0200, Stanislaw Gruszka wrote:
 
-> So why we can see this warning? During my testing I saw it also.
-> There is race regarding SCAN_HW_SCANNING bit, usually we set/clear
-> this bit under local->mtx, but not in ieee80211_restart_hw()
-> 
-> cpu0						cpu1
-> __ieee80211_start_scan
->   __set_bit(SCAN_HW_SCANNING, &local->scanning);
->   
-> 						iwl_bg_restart()
-> 						  ieee80211_restart_hw()
-> 						    WARN
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/99-change-makefiles.patch |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-Why can't iwlwifi's bg_restart() force-abort the scan? It'll be aborted
-anyway...
-
-johannes
+diff --git a/patches/99-change-makefiles.patch b/patches/99-change-makefiles.patch
+index 47f3b5c..c75f4f2 100644
+--- a/patches/99-change-makefiles.patch
++++ b/patches/99-change-makefiles.patch
+@@ -13,7 +13,7 @@ only the wireless stuff.
+  obj-$(CONFIG_EEPROM_93CX6)	+= eeprom_93cx6.o
+ --- a/drivers/net/usb/Makefile
+ +++ b/drivers/net/usb/Makefile
+-@@ -2,27 +2,7 @@
++@@ -2,28 +2,7 @@
+  # Makefile for USB Network drivers
+  #
+  
+@@ -40,6 +40,7 @@ only the wireless stuff.
+ -obj-$(CONFIG_USB_CDC_PHONET)	+= cdc-phonet.o
+ -obj-$(CONFIG_USB_IPHETH)	+= ipheth.o
+ -obj-$(CONFIG_USB_SIERRA_NET)	+= sierra_net.o
++-obj-$(CONFIG_USB_NET_CX82310_ETH)	+= cx82310_eth.o
+  
+ --- a/drivers/net/wireless/Makefile
+ +++ b/drivers/net/wireless/Makefile
+-- 
+1.7.0.4
 
