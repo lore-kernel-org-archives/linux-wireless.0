@@ -1,41 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42177 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752949Ab0IUGdJ (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:56877 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753629Ab0IOUVS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Sep 2010 02:33:09 -0400
-Subject: Re: [PATCH] mac80211: clear txflags for ps-filtered frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <201009210022.27383.chunkeey@googlemail.com>
-References: <201009182133.50104.chunkeey@googlemail.com>
-	 <1284978231.3688.2.camel@jlt3.sipsolutions.net>
-	 <201009210022.27383.chunkeey@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 21 Sep 2010 08:33:32 +0200
-Message-ID: <1285050812.3710.2.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 15 Sep 2010 16:21:18 -0400
+Received: by yxp4 with SMTP id 4so192818yxp.19
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Sep 2010 13:21:17 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AC090B9732AB2B4DB7FF476E907FE66001134316FB@dnce02.ent.ti.com>
+References: <1284575472-19888-1-git-send-email-shahar_levi@ti.com>
+ <1284577092.1569.8.camel@powerslave> <1284578740.1569.33.camel@powerslave> <AC090B9732AB2B4DB7FF476E907FE66001134316FB@dnce02.ent.ti.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 15 Sep 2010 13:20:57 -0700
+Message-ID: <AANLkTi=JYRN9WD5kfKJPqSX3_vANrKwTD+8yQBrvERM_@mail.gmail.com>
+Subject: Re: [PATCH 00/04] wl1271: 11n Support, add support to 80211n spec
+To: "Levi, Shahar" <shahar_levi@ti.com>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-09-21 at 00:22 +0200, Christian Lamparter wrote:
+On Wed, Sep 15, 2010 at 12:34 PM, Levi, Shahar <shahar_levi@ti.com> wrote:
+>> -----Original Message-----
+>> From: Luciano Coelho [mailto:luciano.coelho@nokia.com]
+>> Sent: Wednesday, September 15, 2010 9:26 PM
+>> To: Levi, Shahar
+>> Cc: linux-wireless@vger.kernel.org
+>> Subject: Re: [PATCH 00/04] wl1271: 11n Support, add support to 80211n spec
+>>
+>> I had a few comments to your patches, but I'm really happy you have sent
+>> these patches upstream! Just some minor non-functional comments.  Please
+>> make the changes I proposed and send the series again as v2.
+>>
+>> I owe you a drink, if we meet some day ;)
+>>
+>> --
+>> Cheers,
+>> Luca.
+>
+> Hi Luca,
+> I greatly appreciate your review and comments.
+> I will fix early next week and send.
 
-> --- a/net/mac80211/agg-rx.c
-> +++ b/net/mac80211/agg-rx.c
-> @@ -129,9 +129,7 @@ static void sta_rx_agg_reorder_timer_expired(unsigned long data)
->  			timer_to_tid[0]);
->  
->  	rcu_read_lock();
-> -	spin_lock(&sta->lock);
->  	ieee80211_release_reorder_timeout(sta, *ptid);
-> -	spin_unlock(&sta->lock);
->  	rcu_read_unlock();
->  }
->  
+Might be good to add details of what is supported to the wiki too.
 
-Ack, apart from this?
-
-johannes
-
+  Luis
