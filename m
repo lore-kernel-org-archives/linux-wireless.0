@@ -1,37 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:60723 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750985Ab0IXRqm convert rfc822-to-8bit (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:58384 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753894Ab0IOXay (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Sep 2010 13:46:42 -0400
-Received: by pvg2 with SMTP id 2so741594pvg.19
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Sep 2010 10:46:42 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1285272430-9617-1-git-send-email-greearb@candelatech.com>
-References: <1285272430-9617-1-git-send-email-greearb@candelatech.com>
-Date: Fri, 24 Sep 2010 20:46:41 +0300
-Message-ID: <AANLkTi=n9GDjiBxiS0cen2objz+BO9CeC-Uy5c6hVWhS@mail.gmail.com>
-Subject: Re: [PATCH v2] This allows ath5k to support virtual STA and AP interfaces.
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 15 Sep 2010 19:30:54 -0400
+From: Ohad Ben-Cohen <ohad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <linux-omap@vger.kernel.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Nicolas Pitre <nico@fluxnic.net>, Ido Yariv <ido@wizery.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Russell King <linux@arm.linux.org.uk>,
+	Vitaly Wool <vitalywool@gmail.com>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Subject: [PATCH v6 4/7] wl1271: take irq info from private board data
+Date: Thu, 16 Sep 2010 01:31:35 +0200
+Message-Id: <1284593495-30012-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/9/23  <greearb@candelatech.com>:
-> From: Ben Greear <greearb@candelatech.com>
->
-> +#define ATH5K_VIF_MAX  2048
+Remove the hard coded irq information, and instead take
+the irq information from the board's platform data.
 
-This is too much !!! 2048 interfaces with a total of 4 beacon buffers
-40 rx buffers and 200 tx buffers ? Has anyone tested this ?
+Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_sdio.c |   15 ++++++++-------
+ 1 files changed, 8 insertions(+), 7 deletions(-)
 
-Also think about embedded devices, we don't want to waste memory like this...
-
->+       struct ieee80211_vif *vifs[ATH5K_VIF_MAX];
-
+diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
+index 1d5dc72..987ecdc 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_sdio.c
++++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
+@@ -29,14 +29,12 @@
+ #include <linux/mmc/sdio_ids.h>
+ #include <linux/mmc/card.h>
+ #include <linux/gpio.h>
++#include <linux/wl12xx.h>
+ 
+ #include "wl1271.h"
+ #include "wl12xx_80211.h"
+ #include "wl1271_io.h"
+ 
+-
+-#define RX71_WL1271_IRQ_GPIO		42
+-
+ #ifndef SDIO_VENDOR_ID_TI
+ #define SDIO_VENDOR_ID_TI		0x0097
+ #endif
+@@ -208,6 +206,7 @@ static int __devinit wl1271_probe(struct sdio_func *func,
+ 				  const struct sdio_device_id *id)
+ {
+ 	struct ieee80211_hw *hw;
++	const struct wl12xx_platform_data *wlan_data;
+ 	struct wl1271 *wl;
+ 	int ret;
+ 
+@@ -227,13 +226,15 @@ static int __devinit wl1271_probe(struct sdio_func *func,
+ 	/* Grab access to FN0 for ELP reg. */
+ 	func->card->quirks |= MMC_QUIRK_LENIENT_FN0;
+ 
+-	wl->irq = gpio_to_irq(RX71_WL1271_IRQ_GPIO);
+-	if (wl->irq < 0) {
+-		ret = wl->irq;
+-		wl1271_error("could not get irq!");
++	wlan_data = wl12xx_get_platform_data();
++	if (IS_ERR(wlan_data)) {
++		ret = PTR_ERR(wlan_data);
++		wl1271_error("missing wlan platform data: %d", ret);
+ 		goto out_free;
+ 	}
+ 
++	wl->irq = wlan_data->irq;
++
+ 	ret = request_irq(wl->irq, wl1271_irq, 0, DRIVER_NAME, wl);
+ 	if (ret < 0) {
+ 		wl1271_error("request_irq() failed: %d", ret);
 -- 
-GPG ID: 0xD21DB2DB
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.7.0.4
+
