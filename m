@@ -1,30 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:35278 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753575Ab0IDXhy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Sep 2010 19:37:54 -0400
-Received: by fxm13 with SMTP id 13so1950088fxm.19
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Sep 2010 16:37:53 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Michael =?utf-8?q?B=C3=BCsch?= <mb@bu3sch.de>
-Subject: Re: [PATCH] p54spi: Add error message for eeprom failure
-Date: Sun, 5 Sep 2010 01:37:46 +0200
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <1283640938.3538.7.camel@maggie>
-In-Reply-To: <1283640938.3538.7.camel@maggie>
+Received: from mail.atheros.com ([12.19.149.2]:42998 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752415Ab0IOVMB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Sep 2010 17:12:01 -0400
+Received: from mail.atheros.com ([10.10.20.108])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Sep 2010 14:11:55 -0700
+Date: Wed, 15 Sep 2010 14:11:59 -0700
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: Hauke Mehrtens <hauke@hauke-m.de>,
+	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"mcgrof@infradead.org" <mcgrof@infradead.org>
+Subject: Re: [PATCH 3/3] compat-wirelsss: add carl9170
+Message-ID: <20100915211159.GB1734@tux>
+References: <1284583415-11506-1-git-send-email-hauke@hauke-m.de>
+ <1284583415-11506-3-git-send-email-hauke@hauke-m.de>
+ <201009152250.56676.chunkeey@googlemail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201009050137.47106.chunkeey@googlemail.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <201009152250.56676.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 05 September 2010 00:55:38 Michael Büsch wrote:
-> This adds an error message for the eeprom request failure
-> case. This way it's easier for the user to figure out
-> what went wrong.
+On Wed, Sep 15, 2010 at 01:50:56PM -0700, Christian Lamparter wrote:
+> On Wednesday 15 September 2010 22:43:35 Hauke Mehrtens wrote:
+> > This patch adds upport for carl9170.
+> > 
+> > Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> NACK
 > 
-> Signed-off-by: Michael Büsch <mb@bu3sch.de>
-Acked-by: Christian Lamparter <chunkeey@googlemail.com>
+> usb_get_from_anchor is not thread-safe on older kernel.
+> See details:
+> 
+> https://patchwork.kernel.org/patch/118946/
+
+Why is this not a stable fix? And for what kernel was this patch
+merged for?
+
+  Luis
