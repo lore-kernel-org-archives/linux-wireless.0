@@ -1,55 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:55716 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751676Ab0IWIap (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:33010 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753431Ab0IOQWF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Sep 2010 04:30:45 -0400
-Subject: Re: [mac80211] mac80211:  Support multiple VIFS per AP in debugfs.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <4C9A5CEB.9010708@candelatech.com>
-References: <1285071310-11440-1-git-send-email-greearb@candelatech.com>
-	 <4C98DC5D.2000108@candelatech.com>
-	 <1285086618.12764.3.camel@jlt3.sipsolutions.net>
-	 <4C98E05B.8050609@candelatech.com>
-	 <1285088605.12764.5.camel@jlt3.sipsolutions.net>
-	 <1285091341.12764.7.camel@jlt3.sipsolutions.net>
-	 <4C9A35FD.8060201@candelatech.com>
-	 <1285174896.3684.71.camel@jlt3.sipsolutions.net>
-	 <4C9A3E1C.8070306@candelatech.com>
-	 <1285180265.3684.74.camel@jlt3.sipsolutions.net>
-	 <20100922184846.GI5515@tuxdriver.com>  <4C9A5CEB.9010708@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 23 Sep 2010 10:30:39 +0200
-Message-ID: <1285230639.3691.1.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 15 Sep 2010 12:22:05 -0400
+Received: by gyd8 with SMTP id 8so103565gyd.19
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Sep 2010 09:22:03 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1284560528-8934-1-git-send-email-vasanth@atheros.com>
+References: <1284560528-8934-1-git-send-email-vasanth@atheros.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Wed, 15 Sep 2010 09:21:43 -0700
+Message-ID: <AANLkTim5xPKBsitVut-74BNM9riL0C95Nqnyj7M5Bg87@mail.gmail.com>
+Subject: Re: [PATCH 1/3] ath9k: Fix regression in starting ANI after association
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-09-22 at 12:45 -0700, Ben Greear wrote:
+On Wed, Sep 15, 2010 at 7:22 AM, Vasanthakumar Thiagarajan
+<vasanth@atheros.com> wrote:
+> Author: Felix Fietkau <nbd@openwrt.org>
+> Date:   Sat Jul 31 00:11:59 2010 +0200
+>
+>    ath9k: prevent calibration during off-channel activity
+>
+> The above patch checks for off-channel before starting ANI,
+> but when the operating channel is set right after association,
+> IEEE80211_CONF_OFFCHANNEL would be set as still local->tmp_channel
+> is non-NULL. This would result in not starting calibration after
+> the association.
 
-> This look better?
-> 
-> diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-> index e81ef4e..ebd5b69 100644
-> --- a/net/mac80211/debugfs.c
-> +++ b/net/mac80211/debugfs.c
-> @@ -368,7 +368,6 @@ void debugfs_hw_add(struct ieee80211_local *local)
->          if (!phyd)
->                  return;
-> 
-> -       local->debugfs.stations = debugfs_create_dir("stations", phyd);
->          local->debugfs.keys = debugfs_create_dir("keys", phyd);
-> 
->          DEBUGFS_ADD(frequency);
+Why not fix this in mac80211 then?
 
-Yeah, but completely whitespace damaged, you're going to have to work on
-your submissions :)
-
-Also, why do you do "[mac80211] mac80211" rather than "[PATCH]
-mac80211"?
-
-johannes
-
+ Luis
