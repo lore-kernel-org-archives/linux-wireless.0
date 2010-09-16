@@ -1,51 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:35519 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754941Ab0ISQzD (ORCPT
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:32347 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753225Ab0IPJvc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Sep 2010 12:55:03 -0400
-Received: by fxm3 with SMTP id 3so295976fxm.19
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Sep 2010 09:55:02 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <luciano.coelho@nokia.com>
-Subject: [PATCH 2/2] wl1271: bugfix: use bitwise-AND instead of logical-AND
-Date: Sun, 19 Sep 2010 18:55:09 +0200
-Message-Id: <1284915309-999-2-git-send-email-eliad@wizery.com>
-In-Reply-To: <1284915309-999-1-git-send-email-eliad@wizery.com>
-References: <1284915309-999-1-git-send-email-eliad@wizery.com>
+	Thu, 16 Sep 2010 05:51:32 -0400
+Received: from vs3008.wh2.ocn.ne.jp (125.206.180.171)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-045067690
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Sep 2010 18:51:31 +0900 (JST)
+Subject: [PATCH 7/9] ath5k: Keep last descriptor in queue
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Thu, 16 Sep 2010 18:51:49 +0900
+Message-ID: <20100916095149.17637.77736.stgit@tt-desk>
+In-Reply-To: <20100916095112.17637.17207.stgit@tt-desk>
+References: <20100916095112.17637.17207.stgit@tt-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-typo - while looking for specific bits we should do a bitwise-AND instead of logical-AND.
+If we return a TX descriptor to the pool of available descriptors, while a
+queues TXDP still points to it we could potentially run into all sorts of
+troube.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+It has been suggested that there is hardware which can set the descriptors
+done bit before it reads ds_link and moves on to the next descriptor. While the
+documentation says this is not true for newer chipsets (the descriptor contents
+are copied to some internal memory), we don't know about older hardware.
+
+To be safe, we always keep the last descriptor in the queue, and avoid dangling
+TXDP pointers. Unfortunately this does not fully resolve the problem - queues
+still get stuck!
+
+This is similar to what ath9k does.
+
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 ---
- drivers/net/wireless/wl12xx/wl1271_main.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath5k/base.c |   64 +++++++++++++++++----------------
+ 1 files changed, 32 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
-index e6e0852..d2b8486 100644
---- a/drivers/net/wireless/wl12xx/wl1271_main.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_main.c
-@@ -1635,7 +1635,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 	if (ret < 0)
- 		goto out;
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index c4f0786..9b67cee 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1590,44 +1590,44 @@ ath5k_tx_processq(struct ath5k_softc *sc, struct ath5k_txq *txq)
  
--	if ((changed && BSS_CHANGED_BEACON_INT) &&
-+	if ((changed & BSS_CHANGED_BEACON_INT) &&
- 	    (wl->bss_type == BSS_TYPE_IBSS)) {
- 		wl1271_debug(DEBUG_ADHOC, "ad-hoc beacon interval updated: %d",
- 			bss_conf->beacon_int);
-@@ -1644,7 +1644,7 @@ static void wl1271_op_bss_info_changed(struct ieee80211_hw *hw,
- 		do_join = true;
+ 	spin_lock(&txq->lock);
+ 	list_for_each_entry_safe(bf, bf0, &txq->q, list) {
+-		ds = bf->desc;
++
++		txq->txq_poll_mark = false;
++
++		/* skb might already have been processed last time. */
++		if (bf->skb != NULL) {
++			ds = bf->desc;
++
++			ret = sc->ah->ah_proc_tx_desc(sc->ah, ds, &ts);
++			if (unlikely(ret == -EINPROGRESS))
++				break;
++			else if (unlikely(ret)) {
++				ATH5K_ERR(sc,
++					"error %d while processing "
++					"queue %u\n", ret, txq->qnum);
++				break;
++			}
++
++			skb = bf->skb;
++			bf->skb = NULL;
++			pci_unmap_single(sc->pdev, bf->skbaddr, skb->len,
++					PCI_DMA_TODEVICE);
++			ath5k_tx_frame_completed(sc, skb, &ts);
++		}
+ 
+ 		/*
+ 		 * It's possible that the hardware can say the buffer is
+ 		 * completed when it hasn't yet loaded the ds_link from
+-		 * host memory and moved on.  If there are more TX
+-		 * descriptors in the queue, wait for TXDP to change
+-		 * before processing this one.
++		 * host memory and moved on.
++		 * Always keep the last descriptor to avoid HW races...
+ 		 */
+-		if (ath5k_hw_get_txdp(sc->ah, txq->qnum) == bf->daddr &&
+-		    !list_is_last(&bf->list, &txq->q))
+-			break;
+-		ret = sc->ah->ah_proc_tx_desc(sc->ah, ds, &ts);
+-		if (unlikely(ret == -EINPROGRESS))
+-			break;
+-		else if (unlikely(ret)) {
+-			ATH5K_ERR(sc, "error %d while processing queue %u\n",
+-				ret, txq->qnum);
+-			break;
++		if (ath5k_hw_get_txdp(sc->ah, txq->qnum) != bf->daddr) {
++			spin_lock(&sc->txbuflock);
++			list_move_tail(&bf->list, &sc->txbuf);
++			sc->txbuf_len++;
++			txq->txq_len--;
++			spin_unlock(&sc->txbuflock);
+ 		}
+-
+-		skb = bf->skb;
+-		bf->skb = NULL;
+-		pci_unmap_single(sc->pdev, bf->skbaddr, skb->len,
+-				PCI_DMA_TODEVICE);
+-
+-		ath5k_tx_frame_completed(sc, skb, &ts);
+-
+-		spin_lock(&sc->txbuflock);
+-		list_move_tail(&bf->list, &sc->txbuf);
+-		sc->txbuf_len++;
+-		txq->txq_len--;
+-		spin_unlock(&sc->txbuflock);
+-
+-		txq->txq_poll_mark = false;
  	}
- 
--	if ((changed && BSS_CHANGED_BEACON) &&
-+	if ((changed & BSS_CHANGED_BEACON) &&
- 	    (wl->bss_type == BSS_TYPE_IBSS)) {
- 		struct sk_buff *beacon = ieee80211_beacon_get(hw, vif);
- 
--- 
-1.7.0.4
+-	if (likely(list_empty(&txq->q)))
+-		txq->link = NULL;
+ 	spin_unlock(&txq->lock);
+ 	if (txq->txq_len < ATH5K_TXQ_LEN_LOW)
+ 		ieee80211_wake_queue(sc->hw, txq->qnum);
+@@ -2192,7 +2192,7 @@ ath5k_tx_complete_poll_work(struct work_struct *work)
+ 		if (sc->txqs[i].setup) {
+ 			txq = &sc->txqs[i];
+ 			spin_lock_bh(&txq->lock);
+-			if (txq->txq_len > 0) {
++			if (txq->txq_len > 1) {
+ 				if (txq->txq_poll_mark) {
+ 					ATH5K_DBG(sc, ATH5K_DEBUG_XMIT,
+ 						  "TX queue stuck %d\n",
 
