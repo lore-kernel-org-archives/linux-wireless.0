@@ -1,69 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:38038 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752811Ab0I1XEP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Sep 2010 19:04:15 -0400
-Date: Tue, 28 Sep 2010 16:02:11 -0700
-From: Jouni Malinen <j@w1.fi>
-To: "Luis R. Rodriguez" <lrodriguez@Atheros.com>
-Cc: linville@tuxdriver.com, stable@kernel.org,
-	linux-wireless@vger.kernel.org, Paul Stewart <pstew@google.com>,
-	Amod Bodas <amod.bodas@Atheros.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Vasanthakumar Thiagarajan <vasanth@Atheros.com>
-Subject: Re: [PATCH] mac80211: fix rate_control_send_low warnings for delbas
-Message-ID: <20100928230211.GA9844@jm.kir.nu>
-References: <20100928222945.GB10932@tux>
+Received: from mail.atheros.com ([12.19.149.2]:21709 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754448Ab0IPOZl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Sep 2010 10:25:41 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Sep 2010 07:25:34 -0700
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanoharan@atheros.com>
+Subject: [PATCH] ath9k_htc: Fix register read through bulk pipe
+Date: Thu, 16 Sep 2010 19:56:55 +0530
+Message-ID: <1284647215-30185-1-git-send-email-rmanoharan@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20100928222945.GB10932@tux>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 28, 2010 at 03:29:45PM -0700, Luis R. Rodriguez wrote:
+To optimize register read/write operations, the HTC firmwares were patched
+to change EP3 and EP4 pipe types from Interrupt to Bulk. So register writes
+are submitted as bulk urbs, but register reads are not. Also changing the
+register read endpoint pipe as bulk type when URBs are filled improves the
+register reads considerably which results in reduced scan time and CPU
+utilization.
 
-> Added support for cfg80211/mac80211 to cleanly roam between two BSSes
-> on an ESS by allowing the station to reassociate to an old AP and
-> only when that is done drop the old association. What we forgot to
-> take into consideration is that when we disassociate with the older
-> AP we may need to transmit frames to that AP and those frames may
-> actually be intended to go under a different channel and even sometimes
-> a completely separate band than the new APs.
+Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-which frames are you talking about here? When reassociating to a new BSS
-in an ESS, there should be no need to transmit frames to the old AP
-anymore, i.e., we are never associated with more than one BSS (when
-talking about a single vif). We could just drop any potential TX frame
-to the old AP after the moment the new AP is marked associated.
-
-
-> + * @channel: the channel this sta belongs to
-
->  struct ieee80211_sta {
-> +	struct ieee80211_channel *channel;
->  	u32 supp_rates[IEEE80211_NUM_BANDS];
->  	u8 addr[ETH_ALEN];
->  	u16 aid;
-
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-
-> @@ -1213,6 +1217,12 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
->  	if (!tx->sta)
->  		tx->sta = sta_info_get(sdata, hdr->addr1);
->  
-> +	if (tx->sta && tx->sta->sta.channel &&
-> +	    tx->sta->sta.channel->center_freq != tx->channel->center_freq) {
-> +		I802_DEBUG_INC(local->tx_handlers_drop_wrong_channel);
-> +		return TX_DROP;
-> +	}
-
-Could this drop some off-channel frames should we happen to have a STA
-entry for the destination? I'm not sure about all implications of this,
-but I could not convince myself that this would be safe for all P2P use
-cases (e.g., frame exchange on non-operating  channel with a device that
-happens to be in group with us).
-
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 27f88a0..728d904 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -541,7 +541,8 @@ static void ath9k_hif_usb_reg_in_cb(struct urb *urb)
+ 		}
+ 
+ 		usb_fill_int_urb(urb, hif_dev->udev,
+-				 usb_rcvintpipe(hif_dev->udev, USB_REG_IN_PIPE),
++				 usb_rcvbulkpipe(hif_dev->udev,
++						 USB_REG_IN_PIPE),
+ 				 nskb->data, MAX_REG_IN_BUF_SIZE,
+ 				 ath9k_hif_usb_reg_in_cb, nskb, 1);
+ 
+@@ -720,7 +721,8 @@ static int ath9k_hif_usb_alloc_reg_in_urb(struct hif_device_usb *hif_dev)
+ 		goto err;
+ 
+ 	usb_fill_int_urb(hif_dev->reg_in_urb, hif_dev->udev,
+-			 usb_rcvintpipe(hif_dev->udev, USB_REG_IN_PIPE),
++			 usb_rcvbulkpipe(hif_dev->udev,
++					 USB_REG_IN_PIPE),
+ 			 skb->data, MAX_REG_IN_BUF_SIZE,
+ 			 ath9k_hif_usb_reg_in_cb, skb, 1);
  
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.7.2.3
+
