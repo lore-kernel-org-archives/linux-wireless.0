@@ -1,41 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37951 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:33106 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757994Ab0IGSjT (ORCPT
+	with ESMTP id S1755208Ab0IPWit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Sep 2010 14:39:19 -0400
-To: Steve deRosier <steve@cozybit.com>
-Subject: Re: =?UTF-8?Q?libertas=5Ftf?=
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 07 Sep 2010 20:39:15 +0200
+	Thu, 16 Sep 2010 18:38:49 -0400
+Subject: [PATCH] wext: fix potential private ioctl memory content leak
 From: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-In-Reply-To: <AANLkTikc0-FbeRHm-0rxrWCGgaxa7svCsQmqpAD-87cq@mail.gmail.com>
-References: <1282764076.3667.12.camel@jlt3.sipsolutions.net> <AANLkTikc0-FbeRHm-0rxrWCGgaxa7svCsQmqpAD-87cq@mail.gmail.com>
-Message-ID: <5144f966da86d4ab0984bc15bdd5fcab@localhost>
+To: John Linville <linville@tuxdriver.com>
+Cc: Jeff Mahoney <jeffm@suse.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 17 Sep 2010 00:38:25 +0200
+Message-ID: <1284676705.3731.16.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
-Steve,
+When a driver doesn't fill the entire buffer, old
+heap contents may remain, and if it also doesn't
+update the length properly, this old heap content
+will be copied back to userspace.
 
-> I'm actively working on it.  OLPC's XO-1.5 and also some Gumstix users
-> are using it right now.  In particular I've added an sdio interface
-> for the 8686 as well as some other general fixes.  I'm trying to get
-> it to a state to push it up to wireless-testing now.
-> 
-> If you or anyone else is interested, the details are on OLPC's wiki:
-> http://wiki.laptop.org/go/Thinfirm_1.5
+It is very unlikely that this happens in any of
+the drivers using private ioctls since it would
+show up as junk being reported by iwpriv, but it
+seems better to be safe here, so use kzalloc.
 
-Thanks for letting us know.
+Reported-by: Jeff Mahoney <jeffm@suse.com>
+Cc: stable@kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/wext-priv.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->> Is anyone using libertas_tf? I believe it has been broken since
->> 2.6.34-rc1. Anyone want to fix it?
+--- wireless-testing.orig/net/wireless/wext-priv.c	2010-09-17 00:32:34.000000000 +0200
++++ wireless-testing/net/wireless/wext-priv.c	2010-09-17 00:32:43.000000000 +0200
+@@ -152,7 +152,7 @@ static int ioctl_private_iw_point(struct
+ 	} else if (!iwp->pointer)
+ 		return -EFAULT;
+ 
+-	extra = kmalloc(extra_size, GFP_KERNEL);
++	extra = kzalloc(extra_size, GFP_KERNEL);
+ 	if (!extra)
+ 		return -ENOMEM;
+ 
 
-
-Is it working though on kernels newer than that? or do you have to set the
-MAC addr manually?
-
-johannes
 
