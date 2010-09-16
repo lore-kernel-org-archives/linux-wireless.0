@@ -1,36 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:60190 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759190Ab0I0R7H (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33223 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756044Ab0IPT4J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 13:59:07 -0400
-Received: by bwz11 with SMTP id 11so3540089bwz.19
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 10:59:05 -0700 (PDT)
-Message-Id: <cover.1285544496.git.chunkeey@googlemail.com>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Mon, 27 Sep 2010 01:41:36 +0200
-Subject: [PATCH 0/6] carl9170: updates
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com
+	Thu, 16 Sep 2010 15:56:09 -0400
+Subject: Re: [PATCH] mac80211: Filter ProbeReq SuppRates based on TX rate
+ mask
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20100916195441.GB25174@jm.kir.nu>
+References: <20100828163610.GA23426@jm.kir.nu>
+	 <1283154490.3691.2.camel@jlt3.sipsolutions.net>
+	 <20100916195441.GB25174@jm.kir.nu>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 16 Sep 2010 21:55:58 +0200
+Message-ID: <1284666958.3731.15.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A few more random changes.
-Note: I do have some problems with -rc5, so this series
-might need some external testing.
+On Thu, 2010-09-16 at 09:54 -1000, Jouni Malinen wrote:
+> On Mon, Aug 30, 2010 at 09:48:10AM +0200, Johannes Berg wrote:
+> > On Sat, 2010-08-28 at 19:36 +0300, Jouni Malinen wrote:
+> > > If the TX rate set has been masked, the removed rates can also be
+> > > removed from the Supported Rates and Extended Supported Rates IEs in
+> > > Probe Request frames.
+> > 
+> > Technically, the probe request frame indicates RX bitrates. I don't
+> > really mind using the TX bitrates as well since typically I do think you
+> > probably want them to be symmetric, but shouldn't that come with nl80211
+> > updates etc. since that's all saying TX_BITRATES?
+> 
+> This change should really not be needed in the first place, but
+> unfortunately, P2P requires this for a compliant implementation.. The
+> field is really "Supported Rates", i.e., it would be used for both TX
+> and RX. I don't see any real point in configuring RX rates (i.e., make
+> hw not receive frames on one or more of the supported rates), so the TX
+> rate mask is the only reasonable configuration mechanism for this.
+> 
+> The minimum requirement (for P2P compliance) is to just remove rates 1,
+> 2, 5.5, 11 Mbps from the list, so we could also add something to disable
+> 802.11b rates in general if a different command would be desired.
 
-Christian Lamparter (6):
-  carl9170: remove non-standard ba session teardown
-  carl9170: angle brackets for wiki link
-  carl9170: remove lost-frame workaround
-  carl9170: fix tx_ampdu_upload counter
-  carl9170: fix WARN_ON triggered by Broadcom HT STAs
-  carl9170: revamp carl9170_tx_prepare
+Yes, so it's not really "RX rates" but "advertised RX rates". I just
+think that this fact should be made apparent in the documentation?
 
- drivers/net/wireless/ath/carl9170/Kconfig    |    2 +-
- drivers/net/wireless/ath/carl9170/carl9170.h |    1 -
- drivers/net/wireless/ath/carl9170/debug.c    |    4 -
- drivers/net/wireless/ath/carl9170/main.c     |   20 ++-
- drivers/net/wireless/ath/carl9170/tx.c       |  192 ++++++++++---------------
- 5 files changed, 93 insertions(+), 126 deletions(-)
+johannes
 
