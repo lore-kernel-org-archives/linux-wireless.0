@@ -1,70 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38981 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751941Ab0IJO2t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Sep 2010 10:28:49 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 12/14] iwlwifi: cleanup scan initiate check
-Date: Fri, 10 Sep 2010 16:26:45 +0200
-Message-Id: <1284128807-11436-13-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
-References: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
+Received: from mho-01-ewr.mailhop.org ([204.13.248.71]:49268 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754708Ab0IPUrF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Sep 2010 16:47:05 -0400
+Date: Thu, 16 Sep 2010 13:46:48 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>
+Cc: ext Ohad Ben-Cohen <ohad@wizery.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	San Mehat <san@google.com>,
+	"Quadros Roger (Nokia-MS/Helsinki)" <roger.quadros@nokia.com>,
+	Nicolas Pitre <nico@fluxnic.net>, Ido Yariv <ido@wizery.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Russell King <linux@arm.linux.org.uk>,
+	Vitaly Wool <vitalywool@gmail.com>,
+	"Paasikivi Teemu.3 (EXT-Ixonos/Tampere)"
+	<ext-teemu.3.paasikivi@nokia.com>
+Subject: Re: [PATCH v6 01/17] wl12xx: make wl12xx.h common to both spi and
+ sdio
+Message-ID: <20100916204648.GO29610@atomide.com>
+References: <AANLkTikYd+TojQC-R+Vrdou6KSRwFNczBeTnsX7eTDn4@mail.gmail.com>
+ <1284635762-12335-1-git-send-email-ohad@wizery.com>
+ <1284662139.8951.7.camel@powerslave>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1284662139.8951.7.camel@powerslave>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove redundant checks and use iwl_is_ready_rf().
+* Luciano Coelho <luciano.coelho@nokia.com> [100916 11:28]:
+> On Thu, 2010-09-16 at 13:16 +0200, ext Ohad Ben-Cohen wrote:
+> > Move wl12xx.h outside of the spi-specific location,
+> > so it can be shared with both spi and sdio solutions.
+> > 
+> > Update all users of spi/wl12xx.h accordingly
+> > 
+> > Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+> > ---
+> 
+> Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-scan.c |   17 +----------------
- 1 files changed, 1 insertions(+), 16 deletions(-)
+Looks good to me too:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index af9a836..26dd8f3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -361,7 +361,7 @@ static int __must_check iwl_scan_initiate(struct iwl_priv *priv,
- 
- 	cancel_delayed_work(&priv->scan_check);
- 
--	if (!iwl_is_ready(priv)) {
-+	if (!iwl_is_ready_rf(priv)) {
- 		IWL_WARN(priv, "request scan called when driver not ready.\n");
- 		return -EIO;
- 	}
-@@ -372,26 +372,11 @@ static int __must_check iwl_scan_initiate(struct iwl_priv *priv,
- 		return -EBUSY;
- 	}
- 
--	if (test_bit(STATUS_EXIT_PENDING, &priv->status)) {
--		IWL_DEBUG_SCAN(priv, "Aborting scan due to device shutdown\n");
--		return -EIO;
--	}
--
- 	if (test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
- 		IWL_DEBUG_HC(priv, "Scan request while abort pending.\n");
- 		return -EBUSY;
- 	}
- 
--	if (iwl_is_rfkill(priv)) {
--		IWL_DEBUG_HC(priv, "Aborting scan due to RF Kill activation\n");
--		return -EIO;
--	}
--
--	if (!test_bit(STATUS_READY, &priv->status)) {
--		IWL_DEBUG_HC(priv, "Scan request while uninitialized.\n");
--		return -EBUSY;
--	}
--
- 	IWL_DEBUG_INFO(priv, "Starting %sscan...\n",
- 			internal ? "internal short " : "");
- 
--- 
-1.7.1
-
+Acked-by: Tony Lindgren <tony@atomide.com>
