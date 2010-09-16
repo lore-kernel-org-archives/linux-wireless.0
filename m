@@ -1,121 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:58346 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752394Ab0IWMDf convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58054 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754070Ab0IPSm2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Sep 2010 08:03:35 -0400
-MIME-Version: 1.0
-In-Reply-To: <AANLkTinLjQbvbTj3LTnw+54S-ojWzojqgyd=-3F783We@mail.gmail.com>
-References: <1285230003-5065-1-git-send-email-luciano.coelho@nokia.com>
-	<AANLkTinLjQbvbTj3LTnw+54S-ojWzojqgyd=-3F783We@mail.gmail.com>
-Date: Thu, 23 Sep 2010 07:03:33 -0500
-Message-ID: <AANLkTimce-=MP2DDNTpRh_oRFW15_gSkKZJ6fQzwc4yJ@mail.gmail.com>
-Subject: Re: [PATCH v2] omap: beagle: add support for wl1271 on the board file
-From: Robert Nelson <robertcnelson@gmail.com>
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: linux-omap@vger.kernel.org, tony@atomide.com,
-	linux-wireless@vger.kernel.org, Ohad Ben-Cohen <ohad@wizery.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 16 Sep 2010 14:42:28 -0400
+Subject: Re: [PATCH 2/2] mac80211: add p2p device type support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+In-Reply-To: <AANLkTikxcSXgEA-zM250AZ2v4sJk_U-gf2sjSoJ2x4ZR@mail.gmail.com>
+References: <20100916125821.369545798@sipsolutions.net>
+	 <20100916125927.163519598@sipsolutions.net>
+	 <AANLkTi=6KKLty-pg1O9EbGB3n9AviddL63X14z4a250Y@mail.gmail.com>
+	 <1284661809.3731.8.camel@jlt3.sipsolutions.net>
+	 <AANLkTikxcSXgEA-zM250AZ2v4sJk_U-gf2sjSoJ2x4ZR@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 16 Sep 2010 20:42:18 +0200
+Message-ID: <1284662538.3731.12.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 23, 2010 at 5:30 AM, Grazvydas Ignotas <notasas@gmail.com> wrote:
-> On Thu, Sep 23, 2010 at 11:20 AM, Luciano Coelho
-> <luciano.coelho@nokia.com> wrote:
->> Add board configuration for the wl1271 daughter board.  This patch is based
->> on Ohad Ben-Cohen's patches for Zoom boards.
->
-> Hm can that daughter board be detected? With your patch all beagle
-> users will get GPIO139 toggled, and if someone has that wired to
-> chainsaw switch somebody might get hurt.
+On Thu, 2010-09-16 at 11:40 -0700, Luis R. Rodriguez wrote:
 
-Expansion boards really need to follow:
+> >> While at it can you add a is_beaconing_iftype() or something, that
+> >> should reduce code and make it easier to check for these modes.
+> >
+> > Err, it doesn't really change for drivers, since it's still AP/IBSS --
+> > since GO is just an AP subtype internally.
+> 
+> Well if the iftype is a beaconing one it used to use AP interface type
+> before and now its a GO then yeah I could see this requiring changes
+> in drivers. Apart from the filter stuff ath9k does have some checks
+> for current operating interface type IIRC.
 
-http://elinux.org/BeagleBoardPinMux#Expansion_boards
+But nothing changes for it -- look at the patch again, I translate
+P2P_GO to AP and P2P_CLIENT to STATION precisely to require fewer
+changes in drivers unless they actually want to care. The only ath9k
+change that is required is the one I posted (and you'll be back to the
+same non-functioning state, but that's another matter).
 
-Is there any eeprom on i2c bus #2 for identification on this board?
+johannes
 
-Otherwise this is going to break a bunch of existing adapters.
-
-Regards,
-
->
->> Cc: Ohad Ben-Cohen <ohad@wizery.com>
->> Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
->> ---
->> There was a useless variable defined in omap3_beagle_init() that was causing a
->> warning.  I have removed it in v2.
->>
->>  arch/arm/mach-omap2/board-omap3beagle.c |   69 +++++++++++++++++++++++++++++++
->>  drivers/net/wireless/wl12xx/wl1271.h    |    2 +-
->>  2 files changed, 70 insertions(+), 1 deletions(-)
->>
->> diff --git a/arch/arm/mach-omap2/board-omap3beagle.c b/arch/arm/mach-omap2/board-omap3beagle.c
->> index 87969c7..755df29 100644
->> --- a/arch/arm/mach-omap2/board-omap3beagle.c
->> +++ b/arch/arm/mach-omap2/board-omap3beagle.c
->
-> <snip>
->
->> +static struct regulator_consumer_supply beagle_vmmc2_supply = {
->> +       .supply         = "vmmc",
->> +       .dev_name       = "mmci-omap-hs.1",
->> +};
->> +
->> +
->
-> single newline is enough.
->
->>  static struct regulator_consumer_supply beagle_vsim_supply = {
->>        .supply                 = "vmmc_aux",
->>  };
->>
->> +
->
-> here too.
->
->> +static struct regulator_init_data beagle_vmmc2 = {
->> +       .constraints = {
->> +               .valid_ops_mask = REGULATOR_CHANGE_STATUS,
->> +       },
->> +       .num_consumer_supplies = 1,
->> +       .consumer_supplies = &beagle_vmmc2_supply,
->> +};
->> +
->> +static struct fixed_voltage_config beagle_vwlan = {
->> +       .supply_name = "vwl1271",
->> +       .microvolts = 1800000,  /* 1.8V */
->> +       .gpio = OMAP_BEAGLE_WLAN_EN_GPIO,
->> +       .startup_delay = 70000, /* 70ms */
->> +       .enable_high = 1,
->> +       .enabled_at_boot = 0,
->> +       .init_data = &beagle_vmmc2,
->> +};
->
-> We tabify all structures in board files, take a look at other structures.
->
-> <snip>
->
->> diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
->> index 4134f44..8bb028e 100644
->> --- a/drivers/net/wireless/wl12xx/wl1271.h
->> +++ b/drivers/net/wireless/wl12xx/wl1271.h
->> @@ -60,7 +60,7 @@ enum {
->>        DEBUG_ALL       = ~0,
->>  };
->>
->> -#define DEBUG_LEVEL (DEBUG_NONE)
->> +#define DEBUG_LEVEL (DEBUG_MAC80211 | DEBUG_CMD | DEBUG_ACX | DEBUG_BOOT)
->
-> I guess you didn't want that?
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-omap" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
-
--- 
-Robert Nelson
-http://www.rcn-ee.com/
