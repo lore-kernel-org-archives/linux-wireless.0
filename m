@@ -1,52 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:33675 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753384Ab0IXWhN (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34690 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754575Ab0IPS7j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Sep 2010 18:37:13 -0400
-Message-ID: <4C9D280F.1080509@candelatech.com>
-Date: Fri, 24 Sep 2010 15:37:03 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
+	Thu, 16 Sep 2010 14:59:39 -0400
+Date: Thu, 16 Sep 2010 14:45:57 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [wireless] wireless:  Keep phy name consistent across module
- reloads.
-References: <1285113431-25526-1-git-send-email-greearb@candelatech.com>	 <1285362170.11036.1.camel@jlt3.sipsolutions.net>	 <4C9D13AC.4080308@candelatech.com>	 <1285363135.11036.7.camel@jlt3.sipsolutions.net>	 <4C9D1760.3040103@candelatech.com>	 <1285363861.11036.8.camel@jlt3.sipsolutions.net>	 <4C9D2487.5040202@candelatech.com> <1285367144.11036.11.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1285367144.11036.11.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Filter ProbeReq SuppRates based on TX rate mask
+Message-ID: <20100916184557.GD7221@tuxdriver.com>
+References: <20100828163610.GA23426@jm.kir.nu>
+ <1283154490.3691.2.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1283154490.3691.2.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/24/2010 03:25 PM, Johannes Berg wrote:
-> On Fri, 2010-09-24 at 15:21 -0700, Ben Greear wrote:
->
->> Here's a patch for consideration.  It's on top of my other patch,
->> but I can re-do it against a tree with that reverted if you prefer.
->
-> You also want to remove the restriction on renaming to phy%d now.
+On Mon, Aug 30, 2010 at 09:48:10AM +0200, Johannes Berg wrote:
+> On Sat, 2010-08-28 at 19:36 +0300, Jouni Malinen wrote:
+> > If the TX rate set has been masked, the removed rates can also be
+> > removed from the Supported Rates and Extended Supported Rates IEs in
+> > Probe Request frames.
+> 
+> Technically, the probe request frame indicates RX bitrates. I don't
+> really mind using the TX bitrates as well since typically I do think you
+> probably want them to be symmetric, but shouldn't that come with nl80211
+> updates etc. since that's all saying TX_BITRATES?
 
-Same patch, or a second one?
-
->> +	if (unlikely(!wiphy_idx_valid(rdev->wiphy_idx)))
->> +		goto too_many_devs;
->> +
->>    	/* 64k wiphy devices is enough for anyone! */
->>    	for (i = 0; i<  0xFFFF; i++) {
->
-> why limit yourself to this? You're guaranteed to find a free index if
-> you don't, so error handling could be easier?
-
-It's an N^2 loop, and if we are unlikely to ever need more than 512 STAs, I figure
-64k phys is probably enough. :)
-
-But, will change it if you want.
-
-Thanks,
-Ben
+Ping?
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
