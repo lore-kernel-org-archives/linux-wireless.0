@@ -1,585 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:35184 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755203Ab0ISSk5 (ORCPT
+Received: from mail.atheros.com ([12.19.149.2]:20028 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752224Ab0IPHEc convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Sep 2010 14:40:57 -0400
-Subject: [PATCH] b43/b43legacy - Credit Broadcom with enabling the
- development of the drivers
-From: David Woodhouse <dwmw2@infradead.org>
-To: b43-dev@lists.infradead.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 19 Sep 2010 19:40:51 +0100
-Message-ID: <1284921651.24835.11.camel@i7.infradead.org>
-Mime-Version: 1.0
+	Thu, 16 Sep 2010 03:04:32 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Sep 2010 00:04:25 -0700
+Date: Thu, 16 Sep 2010 12:35:47 +0530
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath9k_htc - kernel BUG on USB unplug
+Message-ID: <20100916070547.GB8413@vmraj-lnx.users.atheros.com>
+References: <201009150933.39692.helmut.schaa@googlemail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <201009150933.39692.helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Broadcom seem bizarrely paranoid about the legal consequences of
-"enabling" users to violate regulatory requirements.
+On Wed, Sep 15, 2010 at 01:03:39PM +0530, Helmut Schaa wrote:
+> Hi,
+> 
+> not sure if this is a known bug but I just ran into this while unplugging a
+> ath9k_htc device (with current wireless-testing):
+> 
+> Helmut
+> 
+> Sep 15 09:13:50 helmutmobil kernel: usb 2-6: USB disconnect, address 2
+> Sep 15 09:13:50 helmutmobil kernel: ------------[ cut here ]------------
+> Sep 15 09:13:50 helmutmobil kernel: kernel BUG at kernel/workqueue.c:2853!
+> Sep 15 09:13:50 helmutmobil kernel: invalid opcode: 0000 [#1] PREEMPT SMP 
+> Sep 15 09:13:50 helmutmobil kernel: last sysfs file: /sys/devices/pci0000:00/0000:00:1c.1/0000:10:00.0/ieee80211/phy0/rfkill4/uevent
+> Sep 15 09:13:50 helmutmobil kernel: CPU 1 
+> Sep 15 09:13:50 helmutmobil kernel: Modules linked in: ath9k_htc ath9k_common ath9k_hw ath md5 ip6t_LOG xt_tcpudp xt_pkttype xt_physdev ipt_LOG xt_limit aes_generic af_packet rfcomm sco bridge stp llc bnep l2cap snd_pcm_oss snd_mixer_oss snd_seq snd_seq_device edd nls_utf8 cifs ip6t_REJECT nf_conntrack_ipv6 ip6table_raw xt_NOTRACK ipt_REJECT xt_state iptable_raw iptable_filter ip6table_mangle nf_conntrack_netbios_ns nf_conntrack_ipv4 nf_conntrack nf_defrag_ipv4 ip_tables ip6table_filter ip6_tables x_tables ipv6 cpufreq_conservative cpufreq_userspace cpufreq_powersave acpi_cpufreq mperf fuse ext2 loop dm_mod arc4 ecb iwlagn snd_hda_codec_analog tpm_infineon iwlcore snd_hda_intel mac80211 usbhid snd_hda_codec hid snd_hwdep sdhci_pci pcmcia sdhci snd_pcm sierra mmc_core sr_mod snd_timer ohci1394 yenta_socket usbserial cfg80211 snd cdrom hp_wmi pcmcia_rsrc ieee1394 led_class btusb serio_raw sg pcmcia_core joydev e1000e tpm_tis soundcore iTCO_wdt snd_page_alloc iTCO_vendor_support
+>   tpm container wmi tpm_bios bluetooth batt
+> Sep 15 09:13:50 helmutmobil kernel: ery ac rfkill ext4 mbcache jbd2 crc16 sd_mod uhci_hcd ata_piix ehci_hcd rtc_cmos rtc_core libahci usbcore rtc_lib fan processor ata_generic libata scsi_mod thermal
+> Sep 15 09:13:50 helmutmobil kernel:
+> Sep 15 09:13:50 helmutmobil kernel: Pid: 299, comm: khubd Not tainted 2.6.36-rc3-wl-default+ #115 30C9/HP Compaq 2510p Notebook PC
+> Sep 15 09:13:50 helmutmobil kernel: RIP: 0010:[<ffffffff810513bd>]  [<ffffffff810513bd>] destroy_workqueue+0xdc/0x172
+> Sep 15 09:13:50 helmutmobil kernel: RSP: 0018:ffff88003731db70  EFLAGS: 00010286
+> Sep 15 09:13:50 helmutmobil kernel: RAX: ffff88007a5af580 RBX: ffff880079213980 RCX: ffff88003731db60
+> Sep 15 09:13:50 helmutmobil kernel: RDX: 000000000000003c RSI: ffff880079213980 RDI: 0000000000000002
+> Sep 15 09:13:50 helmutmobil kernel: RBP: ffff88003731db90 R08: 0000000000000000 R09: 0000000000000286
+> Sep 15 09:13:50 helmutmobil kernel: R10: 0000000000000003 R11: ffff88004b875b68 R12: 0000000000000002
+> Sep 15 09:13:50 helmutmobil kernel: R13: ffffffff81664230 R14: 0000000000000002 R15: ffffffffa050d9d0
+> Sep 15 09:13:50 helmutmobil kernel: FS:  0000000000000000(0000) GS:ffff880001900000(0000) knlGS:0000000000000000
+> Sep 15 09:13:50 helmutmobil kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+> Sep 15 09:13:50 helmutmobil kernel: CR2: 00007f377fa618f0 CR3: 0000000001612000 CR4: 00000000000006e0
+> Sep 15 09:13:50 helmutmobil kernel: DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> Sep 15 09:13:50 helmutmobil kernel: DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+> Sep 15 09:13:50 helmutmobil kernel: Process khubd (pid: 299, threadinfo ffff88003731c000, task ffff880078400980)
+> Sep 15 09:13:50 helmutmobil kernel: Stack:
+> Sep 15 09:13:50 helmutmobil kernel: ffff88004b870480 ffff88004b871b80 ffff88004b870480 ffff88007b150888
+> Sep 15 09:13:50 helmutmobil kernel: <0> ffff88003731dbb0 ffffffffa0446133 ffff88003731dbb0 ffff8800495a0000
+> Sep 15 09:13:50 helmutmobil kernel: <0> ffff88003731dbe0 ffffffffa050cd68 ffff88003731dbd0 ffff88007b772dc0
+> Sep 15 09:13:50 helmutmobil kernel: Call Trace:
+> Sep 15 09:13:50 helmutmobil kernel: [<ffffffffa0446133>] ieee80211_unregister_hw+0xe7/0x110 [mac80211]
+> Sep 15 09:13:50 helmutmobil kernel: [<ffffffffa050cd68>] ath9k_htc_disconnect_device+0x46/0x7c [ath9k_htc]
+> Sep 15 09:13:50 helmutmobil kernel: [<ffffffffa050686e>] ath9k_htc_hw_deinit+0x12/0x14 [ath9k_htc]
+> Sep 15 09:13:50 helmutmobil kernel: [<ffffffffa05076dc>] ath9k_hif_usb_disconnect+0x42/0x114 [ath9k_htc]
+> Sep 15 09:13:50 helmutmobil kernel: [<ffffffff8124784e>] ? __pm_runtime_get+0x15/0x1e
+> Sep 15 09:13:50 helmutmobil kernel: [<ffffffffa00e97a1>] usb_unbind_interface+0x69/0x13c [usbcore]
+> Sep 15 09:13:50 helmutmobil kernel: [<ffffffff81241a7a>] __device_release_driver+0x76/0xcc
+> Sep 15 09:13:50 helmutmobil kernel: [<ffffffff81241aee>] device_release_driver+0x1e/0x2b
+> Sep 15 09:13:50 helmutmobil kernel: [<ffffffff81241639>] bus_remove_device+0x80/0x91
+> Sep 15 09:13:50 helmutmobil kernel: [<ffffffff8123f2a5>] device_del+0x130/0x17f
+> Sep 15 09:13:50 helmutmobil kernel: [<ffffffffa00e7a16>] usb_disable_device+0x81/0xf8 [usbcore]
+> Sep 15 09:13:50 helmutmobil kernel: [<ffffffffa00e17ad>] usb_disconnect+0x8e/0xf6 [usbcore]
+> Sep 15 09:13:50 helmutmobil kernel: [<ffffffffa00e2dd4>] hub_thread+0x483/0xdfc [usbcore]
+> Sep 15 09:13:50 helmutmobil kernel: [<ffffffff81054c81>] ? autoremove_wake_function+0x0/0x34
+> Sep 15 09:13:50 helmutmobil kernel: [<ffffffffa00e2951>] ? hub_thread+0x0/0xdfc [usbcore]
+> Sep 15 09:13:50 helmutmobil kernel: [<ffffffff810547dc>] kthread+0x7d/0x85
+> Sep 15 09:13:50 helmutmobil kernel: [<ffffffff810038a4>] kernel_thread_helper+0x4/0x10
+> Sep 15 09:13:50 helmutmobil kernel: [<ffffffff8105475f>] ? kthread+0x0/0x85
+> Sep 15 09:13:50 helmutmobil kernel: [<ffffffff810038a0>] ? kernel_thread_helper+0x0/0x10
+> Sep 15 09:13:50 helmutmobil kernel: Code: e9 84 00 00 00 48 89 de 44 89 f7 e8 b4 d6 ff ff 31 d2 83 7c 10 18 00 74 02 0f 0b 48 83 c2 04 48 83 fa 3c 75 ed 83 78 54 00 74 02 <0f> 0b 48 8d 50 60 48 39 50 60 74 02 0f 0b 8b 03 83 e0 02 83 f8 
+> Sep 15 09:13:50 helmutmobil kernel: RIP  [<ffffffff810513bd>] destroy_workqueue+0xdc/0x172
+> Sep 15 09:13:50 helmutmobil kernel: RSP <ffff88003731db70>
+> Sep 15 09:13:50 helmutmobil kernel: ---[ end trace ac55c0fbc23c74a5 ]---
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-For some reason they seem to think that an open source driver is more of
-a problem than a closed-source driver. Even though it's often actually
-*easier* for end-users to use a hex editor to NOP out certain conditional
-jumps or change constants used in comparisons for regulatory enforcement,
-than it is for them to patch and rebuild an open source driver.
+This issue was already fixed and integrated to 2.6.36-rc4 wireless-testing.
+Please refer the patch in 
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=8a2e8e5dec7e29c56a46ba176c664ab6a3d04118
 
-The reverse engineering is hard, of course, but the end-users don't have
-to do that for themselves -- they only need to follow instructions like
-'set the byte at 0x4572 to 0x90'. More to the point, the reverse-engineering
-part is required *anyway* in order to document the hardware so we can write
-the open source drivers. We couldn't do an open driver without *first*
-knowing enough about the closed one that we can bypass the regulatory
-code in it.
-
-Everything we do in the b43 and b43legacy drivers is enabled by
-Broadcom's original binary-only drivers.
-
-So let's make that 'enablement' by Broadcom's binary drivers clear in
-our source code -- in the hope that it'll narrow the 'risk gap' that
-they falsely perceive between open and closed source drivers.
-
-Or failing that, in the hope that it'll give their crack-addled lawyers
-aneurysms, and they'll hire some saner ones to replace them.
-
-Signed-off-by: David Woodhouse <dwmw2@infradead.org>
----
-I'd like to see the b43 reverse engineering folks release more such
-instructions on bypassing the regulatory requirements (boosting TX
-power, using wrong channels, etc.) in the Windows and OSX drivers; that
-would be another good way to demonstrate how crack-inspired the Broadcom
-position on closed vs. open drivers is.
-
-
- drivers/net/wireless/b43/debugfs.c       |    3 +++
- drivers/net/wireless/b43/dma.c           |    3 +++
- drivers/net/wireless/b43/leds.c          |    3 +++
- drivers/net/wireless/b43/lo.c            |    3 +++
- drivers/net/wireless/b43/main.c          |    3 +++
- drivers/net/wireless/b43/main.h          |    3 +++
- drivers/net/wireless/b43/pcmcia.c        |    3 +++
- drivers/net/wireless/b43/phy_a.c         |    3 +++
- drivers/net/wireless/b43/phy_common.c    |    3 +++
- drivers/net/wireless/b43/phy_g.c         |    3 +++
- drivers/net/wireless/b43/phy_lp.c        |    3 +++
- drivers/net/wireless/b43/phy_n.c         |    3 +++
- drivers/net/wireless/b43/pio.c           |    3 +++
- drivers/net/wireless/b43/rfkill.c        |    3 +++
- drivers/net/wireless/b43/sdio.c          |    4 ++++
- drivers/net/wireless/b43/sysfs.c         |    3 +++
- drivers/net/wireless/b43/tables.c        |    3 +++
- drivers/net/wireless/b43/tables_lpphy.c  |    3 +++
- drivers/net/wireless/b43/tables_nphy.c   |    3 +++
- drivers/net/wireless/b43/wa.c            |    3 +++
- drivers/net/wireless/b43/xmit.c          |    3 +++
- drivers/net/wireless/b43legacy/debugfs.c |    3 +++
- drivers/net/wireless/b43legacy/dma.c     |    3 +++
- drivers/net/wireless/b43legacy/ilt.c     |    3 +++
- drivers/net/wireless/b43legacy/leds.c    |    3 +++
- drivers/net/wireless/b43legacy/main.c    |    3 +++
- drivers/net/wireless/b43legacy/main.h    |    3 +++
- drivers/net/wireless/b43legacy/phy.c     |    3 +++
- drivers/net/wireless/b43legacy/phy.h     |    3 +++
- drivers/net/wireless/b43legacy/pio.c     |    3 +++
- drivers/net/wireless/b43legacy/radio.c   |    3 +++
- drivers/net/wireless/b43legacy/radio.h   |    3 +++
- drivers/net/wireless/b43legacy/rfkill.c  |    3 +++
- drivers/net/wireless/b43legacy/sysfs.c   |    3 +++
- drivers/net/wireless/b43legacy/xmit.c    |    3 +++
- 35 files changed, 106 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/b43/debugfs.c b/drivers/net/wireless/b43/debugfs.c
-index 80b19a4..8f573fb 100644
---- a/drivers/net/wireless/b43/debugfs.c
-+++ b/drivers/net/wireless/b43/debugfs.c
-@@ -21,6 +21,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include <linux/fs.h>
-diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
-index 10d0aaf..5d53092 100644
---- a/drivers/net/wireless/b43/dma.c
-+++ b/drivers/net/wireless/b43/dma.c
-@@ -25,6 +25,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include "b43.h"
-diff --git a/drivers/net/wireless/b43/leds.c b/drivers/net/wireless/b43/leds.c
-index c587115..7be31f8 100644
---- a/drivers/net/wireless/b43/leds.c
-+++ b/drivers/net/wireless/b43/leds.c
-@@ -24,6 +24,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include "b43.h"
-diff --git a/drivers/net/wireless/b43/lo.c b/drivers/net/wireless/b43/lo.c
-index 94e4f13..de98656 100644
---- a/drivers/net/wireless/b43/lo.c
-+++ b/drivers/net/wireless/b43/lo.c
-@@ -25,6 +25,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include "b43.h"
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 20631ae..882fe74 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -29,6 +29,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include <linux/delay.h>
-diff --git a/drivers/net/wireless/b43/main.h b/drivers/net/wireless/b43/main.h
-index 40db036..5260069 100644
---- a/drivers/net/wireless/b43/main.h
-+++ b/drivers/net/wireless/b43/main.h
-@@ -26,6 +26,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #ifndef B43_MAIN_H_
-diff --git a/drivers/net/wireless/b43/pcmcia.c b/drivers/net/wireless/b43/pcmcia.c
-index dfbc41d..36abc3d 100644
---- a/drivers/net/wireless/b43/pcmcia.c
-+++ b/drivers/net/wireless/b43/pcmcia.c
-@@ -19,6 +19,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include "pcmcia.h"
-diff --git a/drivers/net/wireless/b43/phy_a.c b/drivers/net/wireless/b43/phy_a.c
-index b6428ec..45a6909 100644
---- a/drivers/net/wireless/b43/phy_a.c
-+++ b/drivers/net/wireless/b43/phy_a.c
-@@ -24,6 +24,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include <linux/slab.h>
-diff --git a/drivers/net/wireless/b43/phy_common.c b/drivers/net/wireless/b43/phy_common.c
-index 8f7d7ef..e46e852 100644
---- a/drivers/net/wireless/b43/phy_common.c
-+++ b/drivers/net/wireless/b43/phy_common.c
-@@ -24,6 +24,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include "phy_common.h"
-diff --git a/drivers/net/wireless/b43/phy_g.c b/drivers/net/wireless/b43/phy_g.c
-index 0dc33b6..f703c4e 100644
---- a/drivers/net/wireless/b43/phy_g.c
-+++ b/drivers/net/wireless/b43/phy_g.c
-@@ -24,6 +24,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include "b43.h"
-diff --git a/drivers/net/wireless/b43/phy_lp.c b/drivers/net/wireless/b43/phy_lp.c
-index fd50eb1..92a06ae 100644
---- a/drivers/net/wireless/b43/phy_lp.c
-+++ b/drivers/net/wireless/b43/phy_lp.c
-@@ -21,6 +21,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include <linux/slab.h>
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 5a72570..29d909d 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -20,6 +20,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include <linux/delay.h>
-diff --git a/drivers/net/wireless/b43/pio.c b/drivers/net/wireless/b43/pio.c
-index aa12273..cc45579 100644
---- a/drivers/net/wireless/b43/pio.c
-+++ b/drivers/net/wireless/b43/pio.c
-@@ -21,6 +21,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include "b43.h"
-diff --git a/drivers/net/wireless/b43/rfkill.c b/drivers/net/wireless/b43/rfkill.c
-index 78016ae..5874d03 100644
---- a/drivers/net/wireless/b43/rfkill.c
-+++ b/drivers/net/wireless/b43/rfkill.c
-@@ -20,6 +20,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include "b43.h"
-diff --git a/drivers/net/wireless/b43/sdio.c b/drivers/net/wireless/b43/sdio.c
-index 45933cf..a4f676c 100644
---- a/drivers/net/wireless/b43/sdio.c
-+++ b/drivers/net/wireless/b43/sdio.c
-@@ -10,6 +10,10 @@
-  * it under the terms of the GNU General Public License as published by
-  * the Free Software Foundation; either version 2 of the License, or (at
-  * your option) any later version.
-+ *
-+ *
-+ * Broadcom enabled the development of this driver, by providing all required
-+ * hardware information in the form of binary software drivers.
-  */
- 
- #include <linux/kernel.h>
-diff --git a/drivers/net/wireless/b43/sysfs.c b/drivers/net/wireless/b43/sysfs.c
-index f1ae4e0..e9d7df2 100644
---- a/drivers/net/wireless/b43/sysfs.c
-+++ b/drivers/net/wireless/b43/sysfs.c
-@@ -21,6 +21,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include <linux/capability.h>
-diff --git a/drivers/net/wireless/b43/tables.c b/drivers/net/wireless/b43/tables.c
-index 1ef9a64..2d09230 100644
---- a/drivers/net/wireless/b43/tables.c
-+++ b/drivers/net/wireless/b43/tables.c
-@@ -23,6 +23,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include "b43.h"
-diff --git a/drivers/net/wireless/b43/tables_lpphy.c b/drivers/net/wireless/b43/tables_lpphy.c
-index 61027ee..cf86624 100644
---- a/drivers/net/wireless/b43/tables_lpphy.c
-+++ b/drivers/net/wireless/b43/tables_lpphy.c
-@@ -21,6 +21,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include "b43.h"
-diff --git a/drivers/net/wireless/b43/tables_nphy.c b/drivers/net/wireless/b43/tables_nphy.c
-index d96e870..d6af589 100644
---- a/drivers/net/wireless/b43/tables_nphy.c
-+++ b/drivers/net/wireless/b43/tables_nphy.c
-@@ -20,6 +20,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include "b43.h"
-diff --git a/drivers/net/wireless/b43/wa.c b/drivers/net/wireless/b43/wa.c
-index 9a335da..ef56e6e 100644
---- a/drivers/net/wireless/b43/wa.c
-+++ b/drivers/net/wireless/b43/wa.c
-@@ -22,6 +22,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include "b43.h"
-diff --git a/drivers/net/wireless/b43/xmit.c b/drivers/net/wireless/b43/xmit.c
-index e6b0528..c9f1cc7 100644
---- a/drivers/net/wireless/b43/xmit.c
-+++ b/drivers/net/wireless/b43/xmit.c
-@@ -25,6 +25,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include "xmit.h"
-diff --git a/drivers/net/wireless/b43legacy/debugfs.c b/drivers/net/wireless/b43legacy/debugfs.c
-index 1f85ac5..76c430d 100644
---- a/drivers/net/wireless/b43legacy/debugfs.c
-+++ b/drivers/net/wireless/b43legacy/debugfs.c
-@@ -21,6 +21,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include <linux/fs.h>
-diff --git a/drivers/net/wireless/b43legacy/dma.c b/drivers/net/wireless/b43legacy/dma.c
-index e03e01d..d738335 100644
---- a/drivers/net/wireless/b43legacy/dma.c
-+++ b/drivers/net/wireless/b43legacy/dma.c
-@@ -25,6 +25,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include "b43legacy.h"
-diff --git a/drivers/net/wireless/b43legacy/ilt.c b/drivers/net/wireless/b43legacy/ilt.c
-index a849078..2c64050 100644
---- a/drivers/net/wireless/b43legacy/ilt.c
-+++ b/drivers/net/wireless/b43legacy/ilt.c
-@@ -23,6 +23,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include "b43legacy.h"
-diff --git a/drivers/net/wireless/b43legacy/leds.c b/drivers/net/wireless/b43legacy/leds.c
-index 37e9be8..151986c 100644
---- a/drivers/net/wireless/b43legacy/leds.c
-+++ b/drivers/net/wireless/b43legacy/leds.c
-@@ -24,6 +24,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include "b43legacy.h"
-diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
-index 1713f5f..f673229 100644
---- a/drivers/net/wireless/b43legacy/main.c
-+++ b/drivers/net/wireless/b43legacy/main.c
-@@ -27,6 +27,9 @@
-  *  the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-  *  Boston, MA 02110-1301, USA.
-  *
-+ *
-+ * Broadcom enabled the development of this driver, by providing all required
-+ * hardware information in the form of binary software drivers.
-  */
- 
- #include <linux/delay.h>
-diff --git a/drivers/net/wireless/b43legacy/main.h b/drivers/net/wireless/b43legacy/main.h
-index 1f0e2e37..a0697346 100644
---- a/drivers/net/wireless/b43legacy/main.h
-+++ b/drivers/net/wireless/b43legacy/main.h
-@@ -27,6 +27,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #ifndef B43legacy_MAIN_H_
-diff --git a/drivers/net/wireless/b43legacy/phy.c b/drivers/net/wireless/b43legacy/phy.c
-index 35033dd..87b18e5 100644
---- a/drivers/net/wireless/b43legacy/phy.c
-+++ b/drivers/net/wireless/b43legacy/phy.c
-@@ -27,6 +27,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include <linux/delay.h>
-diff --git a/drivers/net/wireless/b43legacy/phy.h b/drivers/net/wireless/b43legacy/phy.h
-index ecbe409..14462e0 100644
---- a/drivers/net/wireless/b43legacy/phy.h
-+++ b/drivers/net/wireless/b43legacy/phy.h
-@@ -27,6 +27,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #ifndef B43legacy_PHY_H_
-diff --git a/drivers/net/wireless/b43legacy/pio.c b/drivers/net/wireless/b43legacy/pio.c
-index b033b0e..4642a36 100644
---- a/drivers/net/wireless/b43legacy/pio.c
-+++ b/drivers/net/wireless/b43legacy/pio.c
-@@ -21,6 +21,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include "b43legacy.h"
-diff --git a/drivers/net/wireless/b43legacy/radio.c b/drivers/net/wireless/b43legacy/radio.c
-index 2df545c..e6c1bec 100644
---- a/drivers/net/wireless/b43legacy/radio.c
-+++ b/drivers/net/wireless/b43legacy/radio.c
-@@ -27,6 +27,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include <linux/delay.h>
-diff --git a/drivers/net/wireless/b43legacy/radio.h b/drivers/net/wireless/b43legacy/radio.h
-index ec4de28..e74f3d8 100644
---- a/drivers/net/wireless/b43legacy/radio.h
-+++ b/drivers/net/wireless/b43legacy/radio.h
-@@ -26,6 +26,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #ifndef B43legacy_RADIO_H_
-diff --git a/drivers/net/wireless/b43legacy/rfkill.c b/drivers/net/wireless/b43legacy/rfkill.c
-index d579df7..77b46c9 100644
---- a/drivers/net/wireless/b43legacy/rfkill.c
-+++ b/drivers/net/wireless/b43legacy/rfkill.c
-@@ -20,6 +20,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include "radio.h"
-diff --git a/drivers/net/wireless/b43legacy/sysfs.c b/drivers/net/wireless/b43legacy/sysfs.c
-index 56c384f..f741778 100644
---- a/drivers/net/wireless/b43legacy/sysfs.c
-+++ b/drivers/net/wireless/b43legacy/sysfs.c
-@@ -21,6 +21,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include "sysfs.h"
-diff --git a/drivers/net/wireless/b43legacy/xmit.c b/drivers/net/wireless/b43legacy/xmit.c
-index 7d177d9..384ff7e 100644
---- a/drivers/net/wireless/b43legacy/xmit.c
-+++ b/drivers/net/wireless/b43legacy/xmit.c
-@@ -26,6 +26,9 @@
-   the Free Software Foundation, Inc., 51 Franklin Steet, Fifth Floor,
-   Boston, MA 02110-1301, USA.
- 
-+
-+  Broadcom enabled the development of this driver, by providing all required
-+  hardware information in the form of binary software drivers.
- */
- 
- #include <net/dst.h>
--- 
-1.7.2.2
-
-
+Thanks,
+Rajkumar
