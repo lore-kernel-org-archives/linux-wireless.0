@@ -1,54 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.122.233]:62592 "EHLO
-	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754458Ab0IPSgw (ORCPT
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:16044 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751498Ab0IPJu6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Sep 2010 14:36:52 -0400
-Subject: Re: [PATCH v6 01/17] wl12xx: make wl12xx.h common to both spi and
- sdio
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Ohad Ben-Cohen <ohad@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	San Mehat <san@google.com>,
-	"Quadros Roger (Nokia-MS/Helsinki)" <roger.quadros@nokia.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Nicolas Pitre <nico@fluxnic.net>, Ido Yariv <ido@wizery.com>,
-	Kalle Valo <kalle.valo@iki.fi>,
-	Russell King <linux@arm.linux.org.uk>,
-	Vitaly Wool <vitalywool@gmail.com>,
-	"Paasikivi Teemu.3 (EXT-Ixonos/Tampere)"
-	<ext-teemu.3.paasikivi@nokia.com>
-In-Reply-To: <1284635762-12335-1-git-send-email-ohad@wizery.com>
-References: <AANLkTikYd+TojQC-R+Vrdou6KSRwFNczBeTnsX7eTDn4@mail.gmail.com>
-	 <1284635762-12335-1-git-send-email-ohad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 16 Sep 2010 21:35:39 +0300
-Message-ID: <1284662139.8951.7.camel@powerslave>
-Mime-Version: 1.0
+	Thu, 16 Sep 2010 05:50:58 -0400
+Received: from vs3017.wh2.ocn.ne.jp (125.206.180.250)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-032788654
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Sep 2010 18:50:55 +0900 (JST)
+Subject: [PATCH 0/9] ath5: Add multiple queues / QoS support
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Thu, 16 Sep 2010 18:51:13 +0900
+Message-ID: <20100916095112.17637.17207.stgit@tt-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-09-16 at 13:16 +0200, ext Ohad Ben-Cohen wrote:
-> Move wl12xx.h outside of the spi-specific location,
-> so it can be shared with both spi and sdio solutions.
-> 
-> Update all users of spi/wl12xx.h accordingly
-> 
-> Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
-> ---
+The following series adds WME QoS for ath5k by using four hardware queues
+and adding the necessary callback function for mac80211 to configure the
+queue parameters.
 
-Acked-by: Luciano Coelho <luciano.coelho@nokia.com>
+It is based on my last series ("PATCH 0/8] ath: Move key cache functions 
+to ath common") and Bobs reordered base.c ("ath5k: reorder base.c to remove 
+fwd decls"). Please let me know if you have any merge issues and i'll resend
+the whole series.
 
-I just wonder why the wl12xx.h move wasn't detected as a rename.  Did
-you forget to use the -M option in format-patch?
+Unfortunately, if we use multiple queues, the hardware can get stuck, and we
+don't know a better solution than resetting the hardware in this case. This
+is the same situation as in ath9k and i have copied the workaround from
+there.
 
--- 
-Cheers,
-Luca.
+bruno
 
+---
+
+Bruno Randolf (9):
+      ath5k: Use four hardware queues
+      ath5k: Fix queue debug file
+      ath5k: Fix TX queues stopping
+      ath5k: Move tx frame completion into separate function
+      ath5k: Add watchdog for stuck TX queues
+      ath5k: Count how many times a queue got stuck
+      ath5k: Keep last descriptor in queue
+      ath5k: Simplify cw_min/max and AIFS configuration
+      ath5k: Add tx queue configuration function
+
+
+ drivers/net/wireless/ath/ath5k/ath5k.h  |   13 -
+ drivers/net/wireless/ath/ath5k/attach.c |    2
+ drivers/net/wireless/ath/ath5k/base.c   |  322 ++++++++++++++++++++++---------
+ drivers/net/wireless/ath/ath5k/base.h   |    9 +
+ drivers/net/wireless/ath/ath5k/debug.c  |   11 +
+ drivers/net/wireless/ath/ath5k/qcu.c    |   99 +++++-----
+ 6 files changed, 302 insertions(+), 154 deletions(-)
+
+--
+Signature
+~                      
