@@ -1,90 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:29639 "EHLO mga11.intel.com"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:35538 "EHLO arroyo.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757793Ab0IXTv5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Sep 2010 15:51:57 -0400
-Subject: Re: [PATCH] iwl3945: queue the right work if the scan needs to be
- aborted
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Florian Mickler <florian@mickler.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	"Cahill, Ben M" <ben.m.cahill@intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <1285345323-4250-1-git-send-email-florian@mickler.org>
-References: <1285345323-4250-1-git-send-email-florian@mickler.org>
-Content-Type: text/plain
-Date: Fri, 24 Sep 2010 12:51:08 -0700
-Message-Id: <1285357868.12594.8.camel@wwguy-ubuntu>
-Mime-Version: 1.0
+	id S1754370Ab0IPPZC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Sep 2010 11:25:02 -0400
+From: "Levi, Shahar" <shahar_levi@ti.com>
+To: Luciano Coelho <luciano.coelho@nokia.com>,
+	"ext Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 16 Sep 2010 17:24:55 +0200
+Subject: RE: [PATCH 00/04] wl1271: 11n Support, add support to 80211n spec
+Message-ID: <AC090B9732AB2B4DB7FF476E907FE6600113431B61@dnce02.ent.ti.com>
+References: <1284575472-19888-1-git-send-email-shahar_levi@ti.com>
+	 <1284577092.1569.8.camel@powerslave> <1284578740.1569.33.camel@powerslave>
+	 <AC090B9732AB2B4DB7FF476E907FE66001134316FB@dnce02.ent.ti.com>
+	 <AANLkTi=JYRN9WD5kfKJPqSX3_vANrKwTD+8yQBrvERM_@mail.gmail.com>
+ <1284583225.1569.50.camel@powerslave>
+In-Reply-To: <1284583225.1569.50.camel@powerslave>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Florian,
-
-On Fri, 2010-09-24 at 09:22 -0700, Florian Mickler wrote:
-> iwl3945's scan_completed calls into the mac80211 stack which triggers a
-> warn on if there is no scan outstanding.
-> 
-> This can be avoided by not calling scan_completed but abort_scan in
-> iwl3945_request_scan  in the done: branch of the function which is used
-> as an error out.
-> 
-> The done: branch seems to be an error-out branch, as, for example, if
-> iwl_is_ready(priv) returns false  the done: branch is executed.
-> 
-> NOTE:
-> I'm not familiar with the driver at all.
-> I just quickly scanned as a reaction to
-> 
-> https://bugzilla.kernel.org/show_bug.cgi?id=17722
-> 
-> the users of scan_completed in the  iwl3945 driver and noted the odd
-> discrepancy between the comment above this instance and the comment in
-> mac80211 scan_completed function.
-> 
-> Signed-off-by: Florian Mickler <florian@mickler.org>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    2 +-
->  drivers/net/wireless/iwlwifi/iwl3945-base.c |    2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> index 9dd9e64..8fd00a6 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-> @@ -1411,7 +1411,7 @@ void iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
->  	clear_bit(STATUS_SCAN_HW, &priv->status);
->  	clear_bit(STATUS_SCANNING, &priv->status);
->  	/* inform mac80211 scan aborted */
-> -	queue_work(priv->workqueue, &priv->scan_completed);
-> +	queue_work(priv->workqueue, &priv->abort_scan);
->  }
->  
->  int iwlagn_manage_ibss_station(struct iwl_priv *priv,
-> diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> index 59a308b..d31661c 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-> @@ -3018,7 +3018,7 @@ void iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
->  	clear_bit(STATUS_SCANNING, &priv->status);
->  
->  	/* inform mac80211 scan aborted */
-> -	queue_work(priv->workqueue, &priv->scan_completed);
-> +	queue_work(priv->workqueue, &priv->abort_scan);
->  }
->  
->  static void iwl3945_bg_restart(struct work_struct *data)
-
-Thanks for sending the patch, the scan operation in iwlwifi just being
-modified and the changes you have no longer apply.please check the
-latest kernel.
-
-Thanks
-Wey
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogTHVjaWFubyBDb2VsaG8g
+W21haWx0bzpsdWNpYW5vLmNvZWxob0Bub2tpYS5jb21dDQo+IFNlbnQ6IFdlZG5lc2RheSwgU2Vw
+dGVtYmVyIDE1LCAyMDEwIDEwOjQwIFBNDQo+IFRvOiBleHQgTHVpcyBSLiBSb2RyaWd1ZXoNCj4g
+Q2M6IExldmksIFNoYWhhcjsgbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnDQo+IFN1Ympl
+Y3Q6IFJlOiBbUEFUQ0ggMDAvMDRdIHdsMTI3MTogMTFuIFN1cHBvcnQsIGFkZCBzdXBwb3J0IHRv
+IDgwMjExbiBzcGVjDQo+IA0KPiA+DQo+ID4gTWlnaHQgYmUgZ29vZCB0byBhZGQgZGV0YWlscyBv
+ZiB3aGF0IGlzIHN1cHBvcnRlZCB0byB0aGUgd2lraSB0b28uDQo+IA0KPiBHb29kIHBvaW50ISBB
+Y3R1YWxseSB0aGUgd2lraSBpcyBxdWl0ZSBvdXRkYXRlZCBhcyBub2JvZHkgaGFzIGJlZW4NCj4g
+dGFraW5nIGNhcmUgb2YgaXQgZm9yIGEgdmVyeSBsb25nIHRpbWUuICBJZiBhbnlvbmUgd2FudHMg
+dG8gdm9sdW50ZWVyIHRvDQo+IHVwZGF0ZSBpdCwgdGhpcyBpcyB0aGUgbG9jYXRpb246DQo+IA0K
+PiBodHRwOi8vd2lyZWxlc3Mua2VybmVsLm9yZy9lbi91c2Vycy9Ecml2ZXJzL3dsMTJ4eA0KPiAN
+Cj4gLS0NCj4gQ2hlZXJzLA0KPiBMdWNhLg0KSSB3aWxsIHVwZGF0ZSB0aGUgd2lraSBuZXh0IHdl
+ZWsgb24gdGhlIG5ldyBzdXBwb3J0Lg0KUmVnYXJkcywNClNoYWhhcg0K
