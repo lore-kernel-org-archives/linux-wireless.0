@@ -1,58 +1,224 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:27694 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751239Ab0IOHcg (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:36348 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753225Ab0IPLuq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 03:32:36 -0400
-Received: from vs3000.wh2.ocn.ne.jp (125.206.180.163)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-0200975953
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Sep 2010 16:32:34 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Jonathan Guerin <jonathan@guerin.id.au>
-Subject: Re: [ath5k-devel] [ath5k] Incorrect value for ACK_TIMEOUT
-Date: Wed, 15 Sep 2010 16:32:46 +0900
-Cc: Kalle Valo <kvalo@adurom.com>, ath5k-devel@lists.ath5k.org,
-	"linux-wireless" <linux-wireless@vger.kernel.org>,
-	Nick Kossifidis <mickflemm@gmail.com>
-References: <AANLkTim+Q773KvA7Et1s2Zf8yMx36RGS2LsoJsX1Wtt9@mail.gmail.com> <871v8v5vd2.fsf@purkki.adurom.net> <AANLkTinD+y+CvxijXvxfqB9ncWdD0qYLi-e0PRvczwem@mail.gmail.com>
-In-Reply-To: <AANLkTinD+y+CvxijXvxfqB9ncWdD0qYLi-e0PRvczwem@mail.gmail.com>
+	Thu, 16 Sep 2010 07:50:46 -0400
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201009151632.46340.br1@einfach.org>
+In-Reply-To: <1284635762-12335-1-git-send-email-ohad@wizery.com>
+References: <AANLkTikYd+TojQC-R+Vrdou6KSRwFNczBeTnsX7eTDn4@mail.gmail.com> <1284635762-12335-1-git-send-email-ohad@wizery.com>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Thu, 16 Sep 2010 13:50:25 +0200
+Message-ID: <AANLkTim0VpLFSM3cqZ+P4+o+8v3-t1NNfi_-_qrqMkB+@mail.gmail.com>
+Subject: Re: [PATCH v6 1/7] wl12xx: make wl12xx.h common to both spi and sdio
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, linux-omap@vger.kernel.org,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Nicolas Pitre <nico@fluxnic.net>, Ido Yariv <ido@wizery.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Russell King <linux@arm.linux.org.uk>,
+	Vitaly Wool <vitalywool@gmail.com>,
+	Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed September 15 2010 16:27:01 Jonathan Guerin wrote:
-> So, we would prefer to match the spec for an out-of-the-box build,
-> even tho it would appear to be a worse-performing driving to users?
+Hi John,
 
-sure, we need to comply to the specs.
+On Thu, Sep 16, 2010 at 1:16 PM, Ohad Ben-Cohen <ohad@wizery.com> wrote:
+> Move wl12xx.h outside of the spi-specific location,
+> so it can be shared with both spi and sdio solutions.
+>
+> Update all users of spi/wl12xx.h accordingly
+>
+> Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+> ---
 
-bruno
+This updates the first patch in the patchset.
 
+Please tell me if you prefer me to resubmit the whole set.
+
+Thanks,
+Ohad.
+
+>  MAINTAINERS                                  |    2 +-
+>  arch/arm/mach-omap2/board-omap3pandora.c     |    2 +-
+>  arch/arm/mach-omap2/board-rx51-peripherals.c |    2 +-
+>  drivers/net/wireless/wl12xx/wl1251_sdio.c    |    2 +-
+>  drivers/net/wireless/wl12xx/wl1251_spi.c     |    2 +-
+>  drivers/net/wireless/wl12xx/wl1271_spi.c     |    2 +-
+>  include/linux/spi/wl12xx.h                   |   34 --------------------------
+>  include/linux/wl12xx.h                       |   34 ++++++++++++++++++++++++++
+>  8 files changed, 40 insertions(+), 40 deletions(-)
+>  delete mode 100644 include/linux/spi/wl12xx.h
+>  create mode 100644 include/linux/wl12xx.h
+>
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 14ab8ca..b656c14 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -6416,7 +6416,7 @@ W:        http://wireless.kernel.org
+>  T:     git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+>  S:     Maintained
+>  F:     drivers/net/wireless/wl12xx/wl1271*
+> -F:     include/linux/spi/wl12xx.h
+> +F:     include/linux/wl12xx.h
+>
+>  WL3501 WIRELESS PCMCIA CARD DRIVER
+>  M:     Arnaldo Carvalho de Melo <acme@ghostprotocols.net>
+> diff --git a/arch/arm/mach-omap2/board-omap3pandora.c b/arch/arm/mach-omap2/board-omap3pandora.c
+> index dd3af2b..7ea1eb4 100644
+> --- a/arch/arm/mach-omap2/board-omap3pandora.c
+> +++ b/arch/arm/mach-omap2/board-omap3pandora.c
+> @@ -25,7 +25,7 @@
+>  #include <linux/spi/ads7846.h>
+>  #include <linux/regulator/machine.h>
+>  #include <linux/i2c/twl.h>
+> -#include <linux/spi/wl12xx.h>
+> +#include <linux/wl12xx.h>
+>  #include <linux/mtd/partitions.h>
+>  #include <linux/mtd/nand.h>
+>  #include <linux/leds.h>
+> diff --git a/arch/arm/mach-omap2/board-rx51-peripherals.c b/arch/arm/mach-omap2/board-rx51-peripherals.c
+> index 9a5eb87..ce28a85 100644
+> --- a/arch/arm/mach-omap2/board-rx51-peripherals.c
+> +++ b/arch/arm/mach-omap2/board-rx51-peripherals.c
+> @@ -14,7 +14,7 @@
+>  #include <linux/input.h>
+>  #include <linux/input/matrix_keypad.h>
+>  #include <linux/spi/spi.h>
+> -#include <linux/spi/wl12xx.h>
+> +#include <linux/wl12xx.h>
+>  #include <linux/i2c.h>
+>  #include <linux/i2c/twl.h>
+>  #include <linux/clk.h>
+> diff --git a/drivers/net/wireless/wl12xx/wl1251_sdio.c b/drivers/net/wireless/wl12xx/wl1251_sdio.c
+> index c0b68b0..74ba9ce 100644
+> --- a/drivers/net/wireless/wl12xx/wl1251_sdio.c
+> +++ b/drivers/net/wireless/wl12xx/wl1251_sdio.c
+> @@ -24,7 +24,7 @@
+>  #include <linux/mmc/sdio_func.h>
+>  #include <linux/mmc/sdio_ids.h>
+>  #include <linux/platform_device.h>
+> -#include <linux/spi/wl12xx.h>
+> +#include <linux/wl12xx.h>
+>  #include <linux/irq.h>
+>
+>  #include "wl1251.h"
+> diff --git a/drivers/net/wireless/wl12xx/wl1251_spi.c b/drivers/net/wireless/wl12xx/wl1251_spi.c
+> index 334ded9..320de79 100644
+> --- a/drivers/net/wireless/wl12xx/wl1251_spi.c
+> +++ b/drivers/net/wireless/wl12xx/wl1251_spi.c
+> @@ -24,7 +24,7 @@
+>  #include <linux/slab.h>
+>  #include <linux/crc7.h>
+>  #include <linux/spi/spi.h>
+> -#include <linux/spi/wl12xx.h>
+> +#include <linux/wl12xx.h>
+>
+>  #include "wl1251.h"
+>  #include "wl1251_reg.h"
+> diff --git a/drivers/net/wireless/wl12xx/wl1271_spi.c b/drivers/net/wireless/wl12xx/wl1271_spi.c
+> index 4cb99c5..c3fdab7 100644
+> --- a/drivers/net/wireless/wl12xx/wl1271_spi.c
+> +++ b/drivers/net/wireless/wl12xx/wl1271_spi.c
+> @@ -25,7 +25,7 @@
+>  #include <linux/module.h>
+>  #include <linux/crc7.h>
+>  #include <linux/spi/spi.h>
+> -#include <linux/spi/wl12xx.h>
+> +#include <linux/wl12xx.h>
+>  #include <linux/slab.h>
+>
+>  #include "wl1271.h"
+> diff --git a/include/linux/spi/wl12xx.h b/include/linux/spi/wl12xx.h
+> deleted file mode 100644
+> index a20bccf..0000000
+> --- a/include/linux/spi/wl12xx.h
+> +++ /dev/null
+> @@ -1,34 +0,0 @@
+> -/*
+> - * This file is part of wl12xx
+> - *
+> - * Copyright (C) 2009 Nokia Corporation
+> - *
+> - * Contact: Luciano Coelho <luciano.coelho@nokia.com>
+> - *
+> - * This program is free software; you can redistribute it and/or
+> - * modify it under the terms of the GNU General Public License
+> - * version 2 as published by the Free Software Foundation.
+> - *
+> - * This program is distributed in the hope that it will be useful, but
+> - * WITHOUT ANY WARRANTY; without even the implied warranty of
+> - * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+> - * General Public License for more details.
+> - *
+> - * You should have received a copy of the GNU General Public License
+> - * along with this program; if not, write to the Free Software
+> - * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+> - * 02110-1301 USA
+> - *
+> - */
+> -
+> -#ifndef _LINUX_SPI_WL12XX_H
+> -#define _LINUX_SPI_WL12XX_H
+> -
+> -struct wl12xx_platform_data {
+> -       void (*set_power)(bool enable);
+> -       /* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
+> -       int irq;
+> -       bool use_eeprom;
+> -};
+> -
+> -#endif
+> diff --git a/include/linux/wl12xx.h b/include/linux/wl12xx.h
+> new file mode 100644
+> index 0000000..015687a
+> --- /dev/null
+> +++ b/include/linux/wl12xx.h
+> @@ -0,0 +1,34 @@
+> +/*
+> + * This file is part of wl12xx
+> + *
+> + * Copyright (C) 2009 Nokia Corporation
+> + *
+> + * Contact: Luciano Coelho <luciano.coelho@nokia.com>
+> + *
+> + * This program is free software; you can redistribute it and/or
+> + * modify it under the terms of the GNU General Public License
+> + * version 2 as published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it will be useful, but
+> + * WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+> + * General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write to the Free Software
+> + * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+> + * 02110-1301 USA
+> + *
+> + */
+> +
+> +#ifndef _LINUX_WL12XX_H
+> +#define _LINUX_WL12XX_H
+> +
+> +struct wl12xx_platform_data {
+> +       void (*set_power)(bool enable);
+> +       /* SDIO only: IRQ number if WLAN_IRQ line is used, 0 for SDIO IRQs */
+> +       int irq;
+> +       bool use_eeprom;
+> +};
+> +
+> +#endif
 > --
-> Jonathan Guerin
-> 
-> On Wed, Sep 15, 2010 at 5:17 PM, Kalle Valo <kvalo@adurom.com> wrote:
-> > Jonathan Guerin <jonathan@guerin.id.au> writes:
-> >>> the thing is, like bob said, that we don't really know much about what
-> >>> the HW expects in some of these registers, so unless you can prove
-> >>> your changes to be correct - e.g. by measurements which fit the
-> >>> theoretical model better, or by better thruput, it's hard to say if
-> >>> they are correct or not.
-> >>> 
-> >>> so before you worry about how to make a correct patch, just go ahead
-> >>> and change those initvals to what you believe they should be. if it
-> >>> improves something, let's talk about how to correctly fix it.
-> >> 
-> >> I don't mean to be a smart-ass, but wouldn't setting the correct
-> >> values here decrease the throughput? I'm not quite sure how to verify
-> >> an improvement, other than get the card to contend for the medium with
-> >> another known-working card? Does this sound reasonable?
-> > 
-> > Yes, it does sound reasonable. You might get throughput increase by
-> > violating the spec.
-> > 
-> > --
-> > Kalle Valo
+> 1.7.0.4
+>
+>
