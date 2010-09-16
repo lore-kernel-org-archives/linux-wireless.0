@@ -1,120 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:47868 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752833Ab0IWLpi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Sep 2010 07:45:38 -0400
-Date: Thu, 23 Sep 2010 14:45:28 +0300
-From: Felipe Balbi <balbi@ti.com>
-To: Luciano Coelho <luciano.coelho@nokia.com>
-Cc: "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"tony@atomide.com" <tony@atomide.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Subject: Re: [PATCH v2] omap: beagle: add support for wl1271 on the board
- file
-Message-ID: <20100923114528.GL4580@legolas.emea.dhcp.ti.com>
-Reply-To: balbi@ti.com
-References: <1285230003-5065-1-git-send-email-luciano.coelho@nokia.com>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:35516 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754110Ab0IPSWW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Sep 2010 14:22:22 -0400
+Received: by gyd8 with SMTP id 8so482235gyd.19
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Sep 2010 11:22:21 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-In-Reply-To: <1285230003-5065-1-git-send-email-luciano.coelho@nokia.com>
+In-Reply-To: <20100916125927.163519598@sipsolutions.net>
+References: <20100916125821.369545798@sipsolutions.net> <20100916125927.163519598@sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 16 Sep 2010 11:22:01 -0700
+Message-ID: <AANLkTi=6KKLty-pg1O9EbGB3n9AviddL63X14z4a250Y@mail.gmail.com>
+Subject: Re: [PATCH 2/2] mac80211: add p2p device type support
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-On Thu, Sep 23, 2010 at 03:20:03AM -0500, Luciano Coelho wrote:
-> static struct mtd_partition omap3beagle_nand_partitions[] = {
->@@ -163,12 +168,25 @@ static void __init beagle_display_init(void)
+On Thu, Sep 16, 2010 at 5:58 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 >
-> #include "sdram-micron-mt46h32m32lf-6.h"
+> When a driver advertises p2p device support,
+> mac80211 will handle it, but internally it will
+> rewrite the interface type to STA/AP rather than
+> P2P-STA/GO since otherwise a lot of paths need
+> to be touched that are otherwise identical. A
+> p2p boolean tells drivers whether or not a given
+> interface will be used for p2p or not.
 >
->+struct wl12xx_platform_data omap_beagle_wlan_data __initdata = {
->+	.irq = OMAP_GPIO_IRQ(OMAP_BEAGLE_WLAN_IRQ_GPIO),
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-can you pass IRQ as a struct resource ?
+While at it can you add a is_beaconing_iftype() or something, that
+should reduce code and make it easier to check for these modes.
 
->+	.board_ref_clock = 2, /* 38.4 MHz */
->+};
->+
-> static struct omap2_hsmmc_info mmc[] = {
-> 	{
-> 		.mmc		= 1,
-> 		.wires		= 8,
-> 		.gpio_wp	= 29,
-> 	},
->+	{
->+		.name           = "wl1271",
->+		.mmc            = 2,
->+		.wires          = 4,
->+		.gpio_wp        = -EINVAL,
->+		.gpio_cd        = -EINVAL,
->+		.nonremovable   = true,
->+	},
-> 	{}	/* Terminator */
-> };
->
->@@ -176,10 +194,43 @@ static struct regulator_consumer_supply beagle_vmmc1_supply = {
-> 	.supply			= "vmmc",
-> };
->
->+static struct regulator_consumer_supply beagle_vmmc2_supply = {
->+	.supply         = "vmmc",
->+	.dev_name       = "mmci-omap-hs.1",
->+};
-
-this should be:
-
-static struct regulator_consume_supply beagle_vmmc2_supplies = {
-	{
-		.supply		= "vmmc",
-		.dev_name	= "mmci-omap-hs.1",
-	},
-};
-
->+static struct regulator_init_data beagle_vmmc2 = {
->+	.constraints = {
->+		.valid_ops_mask = REGULATOR_CHANGE_STATUS,
->+	},
->+	.num_consumer_supplies = 1,
->+	.consumer_supplies = &beagle_vmmc2_supply,
-
-please tabify, it's easier for reading, same for all below:
-
-	constrants	= {
-		.valid_ops_mask	= REGULATOR_CHANGE_STATUS,
-	},
-	.num_consumer_supplies	= ARRAY_SIZE(beagle_vmmc2_supplies),
-	.consumer_supplies	= beagle_vmmc2_supplies,
-
->@@ -464,9 +528,14 @@ static struct omap_musb_board_data musb_board_data = {
-> static void __init omap3_beagle_init(void)
-> {
-> 	omap3_mux_init(board_mux, OMAP_PACKAGE_CBB);
->+	if (wl12xx_set_platform_data(&omap_beagle_wlan_data))
->+		pr_err("error setting wl12xx data\n");
->+
-> 	omap3_beagle_i2c_init();
-> 	platform_add_devices(omap3_beagle_devices,
-> 			ARRAY_SIZE(omap3_beagle_devices));
->+	platform_device_register(&omap_vwlan_device);
->+
-
-trailing blank line. Also, you could just add omap_vwlan_device to
-omap3_beagle_devices.
-
->diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
->index 4134f44..8bb028e 100644
->--- a/drivers/net/wireless/wl12xx/wl1271.h
->+++ b/drivers/net/wireless/wl12xx/wl1271.h
->@@ -60,7 +60,7 @@ enum {
-> 	DEBUG_ALL	= ~0,
-> };
->
->-#define DEBUG_LEVEL (DEBUG_NONE)
->+#define DEBUG_LEVEL (DEBUG_MAC80211 | DEBUG_CMD | DEBUG_ACX | DEBUG_BOOT)
-
-some debugging trash came into commit ??
-
--- 
-balbi
+  Luis
