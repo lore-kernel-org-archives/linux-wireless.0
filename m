@@ -1,51 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:41632 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751213Ab0INFaj (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:43590 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752832Ab0IPKpv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 01:30:39 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>
-Subject: [PATCH 00/10] ath9k / mac80211: power save fixes
-Date: Tue, 14 Sep 2010 01:30:27 -0400
-Message-Id: <1284442237-24425-1-git-send-email-lrodriguez@atheros.com>
+	Thu, 16 Sep 2010 06:45:51 -0400
+MIME-Version: 1.0
+In-Reply-To: <1284632260.23784.10.camel@paavo-desktop>
+References: <1284592929-29616-1-git-send-email-ohad@wizery.com>
+ <1284592929-29616-2-git-send-email-ohad@wizery.com> <1284632260.23784.10.camel@paavo-desktop>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Thu, 16 Sep 2010 12:45:31 +0200
+Message-ID: <AANLkTikYd+TojQC-R+Vrdou6KSRwFNczBeTnsX7eTDn4@mail.gmail.com>
+Subject: Re: [PATCH v6 1/7] wl12xx: make wl12xx.h common to both spi and sdio
+To: Teemu Paasikivi <ext-teemu.3.paasikivi@nokia.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	"Coelho Luciano (Nokia-MS/Helsinki)" <Luciano.Coelho@nokia.com>,
+	San Mehat <san@google.com>,
+	"Quadros Roger (Nokia-MS/Helsinki)" <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Nicolas Pitre <nico@fluxnic.net>, Ido Yariv <ido@wizery.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Russell King <linux@arm.linux.org.uk>,
+	Vitaly Wool <vitalywool@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here are a bundle of joy of fixes for power save. Some of
-these are regressions, which sucks ass to find out about them
-so late. We *really* need a regression testbed for mac80211 and
-ath9k. Some stable fixes trickle down to 2.6.32 even.
+On Thu, Sep 16, 2010 at 12:17 PM, Teemu Paasikivi
+<ext-teemu.3.paasikivi@nokia.com> wrote:
+> On Thu, 2010-09-16 at 01:22 +0200, ext Ohad Ben-Cohen wrote:
+>> Move wl12xx.h outside of the spi-specific location,
+>> so it can be shared with both spi and sdio solutions.
+>>
+>> Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+>> ---
+> Hi,
+>
+>
+> wl12xx.h seems to be included also in
+> arch/arm/mach-omap2/board-rx51-peripherals.c, so that should be changed
+> too.
 
-I'll soon send links for the respective ports of these patches to each
-kernels. For now I'd just like them merged upstream and ensure we get
-this out for 2.6.36-rc stuff.
+Thanks for catching this, I now see there are several spi/wl12xx.h
+users (rx51, omap3pandora and MAINTAINERS).
 
-The offchannel needs more work to be really useful, for example
-we should just be sending nullunc frames prior to actualloy probing
-the AP. We can work on this later for 37.
+An update is coming.
 
-Luis R. Rodriguez (9):
-  ath9k: fix power save race conditions
-  ath9k: fix regression on beacon loss after bgscan
-  mac80211: add helper for reseting the connection monitor
-  mac80211: reset probe send counter upon connection timer reset
-  mac80211: reset connection idle when going offchannel
-  mac80211: make the beacon monitor available externally
-  mac80211: disable beacon monitor while going offchannel
-  mac80211: send last 3/5 probe requests as unicast
-  ath9k: fix regression which disabled ps on ath9k
-
-Senthil Balasubramanian (1):
-  ath9k: fix regression which prevents chip sleep after CAB data
-
- drivers/net/wireless/ath/ath9k/init.c |    3 +-
- drivers/net/wireless/ath/ath9k/main.c |   11 ++++++--
- drivers/net/wireless/ath/ath9k/recv.c |    5 +++-
- net/mac80211/ieee80211_i.h            |    2 +
- net/mac80211/mlme.c                   |   40 +++++++++++++++++++++++---------
- net/mac80211/offchannel.c             |    7 +++++
- 6 files changed, 52 insertions(+), 16 deletions(-)
-
+>
+>
+> Best Regards,
+>
+> Teemu Paasikivi
+>
+>
+>
