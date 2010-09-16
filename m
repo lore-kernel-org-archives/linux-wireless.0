@@ -1,34 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:53312 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755200Ab0IBNdJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Sep 2010 09:33:09 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 0/4] compat-wireless: small fixes.
-Date: Thu,  2 Sep 2010 15:32:53 +0200
-Message-Id: <1283434377-26210-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:43506 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753907Ab0IPS40 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Sep 2010 14:56:26 -0400
+Received: by iwn5 with SMTP id 5so1240316iwn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Sep 2010 11:56:25 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1284662538.3731.12.camel@jlt3.sipsolutions.net>
+References: <20100916125821.369545798@sipsolutions.net> <20100916125927.163519598@sipsolutions.net>
+ <AANLkTi=6KKLty-pg1O9EbGB3n9AviddL63X14z4a250Y@mail.gmail.com>
+ <1284661809.3731.8.camel@jlt3.sipsolutions.net> <AANLkTikxcSXgEA-zM250AZ2v4sJk_U-gf2sjSoJ2x4ZR@mail.gmail.com>
+ <1284662538.3731.12.camel@jlt3.sipsolutions.net>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Thu, 16 Sep 2010 11:56:05 -0700
+Message-ID: <AANLkTikYJ3Fn-5qPngcNySns7HAur+nDY2krjsHv77Rx@mail.gmail.com>
+Subject: Re: [PATCH 2/2] mac80211: add p2p device type support
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Theses patches are mostly fixing some problems introduced in the last 
-few days.
+On Thu, Sep 16, 2010 at 11:42 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2010-09-16 at 11:40 -0700, Luis R. Rodriguez wrote:
+>
+>> >> While at it can you add a is_beaconing_iftype() or something, that
+>> >> should reduce code and make it easier to check for these modes.
+>> >
+>> > Err, it doesn't really change for drivers, since it's still AP/IBSS --
+>> > since GO is just an AP subtype internally.
+>>
+>> Well if the iftype is a beaconing one it used to use AP interface type
+>> before and now its a GO then yeah I could see this requiring changes
+>> in drivers. Apart from the filter stuff ath9k does have some checks
+>> for current operating interface type IIRC.
+>
+> But nothing changes for it -- look at the patch again, I translate
+> P2P_GO to AP and P2P_CLIENT to STATION precisely to require fewer
+> changes in drivers unless they actually want to care. The only ath9k
+> change that is required is the one I posted (and you'll be back to the
+> same non-functioning state, but that's another matter).
 
-Including ath6kl causes problems. The Makefile wants to build ath6kl but 
-it is not there. This causes errors when compiling. We should exclude 
-ath6kl till it is integrated in linux-next.
+Ah OK fair enough, didn't pick up on that on first glance, nice.
 
-Hauke Mehrtens (4):
-  compat-wireless: convert ifndef for compat_autoconf.h
-  compat-wireless: replace name CONFIG_IWLWIFI
-  compat-wireless: fix generation of compat_autoconf.h
-  compat-wireless: fix patch style
-
- config.mk                              |    2 +-
- patches/08-rename-iwl4965-config.patch |   13 ++++++++++++-
- patches/24-pcmcia.patch                |    2 +-
- scripts/gen-compat-autoconf.sh         |    6 +++++-
- 4 files changed, 19 insertions(+), 4 deletions(-)
-
+  Luis
