@@ -1,73 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:13834 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756262Ab0I0T7a convert rfc822-to-8bit (ORCPT
+Received: from mho-01-ewr.mailhop.org ([204.13.248.71]:58442 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754045Ab0IPRop (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 15:59:30 -0400
-From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-To: Florian Mickler <florian@mickler.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
+	Thu, 16 Sep 2010 13:44:45 -0400
+Date: Thu, 16 Sep 2010 10:44:31 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: Ohad Ben-Cohen <ohad@wizery.com>
+Cc: linux-wireless@vger.kernel.org, linux-omap@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	"Cahill, Ben M" <ben.m.cahill@intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Mon, 27 Sep 2010 12:59:18 -0700
-Subject: RE: [PATCH] iwl3945: queue the right work if the scan needs to be
- aborted
-Message-ID: <E9954878DD1FB34FAE5187FB88C58A35012BADC9EC@orsmsx506.amr.corp.intel.com>
-References: <1285345323-4250-1-git-send-email-florian@mickler.org>
-	<1285357868.12594.8.camel@wwguy-ubuntu>
- <20100927081358.07b30327@schatten.dmk.lab>
-In-Reply-To: <20100927081358.07b30327@schatten.dmk.lab>
-Content-Type: text/plain; charset="us-ascii"
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	Luciano Coelho <luciano.coelho@nokia.com>,
+	San Mehat <san@google.com>,
+	Roger Quadros <roger.quadros@nokia.com>,
+	Nicolas Pitre <nico@fluxnic.net>, Ido Yariv <ido@wizery.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Russell King <linux@arm.linux.org.uk>,
+	Vitaly Wool <vitalywool@gmail.com>
+Subject: Re: [PATCH v6 6/7] omap: zoom: add fixed regulator device for wlan
+Message-ID: <20100916174431.GC29610@atomide.com>
+References: <1284593529-30100-1-git-send-email-ohad@wizery.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1284593529-30100-1-git-send-email-ohad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Florian,
+* Ohad Ben-Cohen <ohad@wizery.com> [100915 16:23]:
+> Add a fixed regulator vmmc device to enable power control
+> of the wl1271 wlan device.
 
-Agree the patch is needed for .35 and .36.
+<snip>
 
-Thanks
+> +static struct fixed_voltage_config zoom_vwlan = {
+> +	.supply_name = "vwl1271",
+> +	.microvolts = 1800000, /* 1.8V */
+> +	.gpio = OMAP_ZOOM_WLAN_PMENA_GPIO,
+> +	.startup_delay = 70000, /* 70msec */
+> +	.enable_high = 1,
+> +	.enabled_at_boot = 0,
+> +	.init_data = &zoom_vmmc3,
+> +};
 
-Wey
+These are usually aligned with tabs before the = sign.
 
------Original Message-----
-From: Florian Mickler [mailto:florian@mickler.org]
-Sent: Sunday, September 26, 2010 11:14 PM
-To: Guy, Wey-Yi W
-Cc: linux-wireless@vger.kernel.org; Chatre, Reinette; Intel Linux Wireless; John W. Linville; Berg, Johannes; Zhu Yi; Cahill, Ben M; netdev@vger.kernel.org; linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] iwl3945: queue the right work if the scan needs to be aborted
+> +static struct platform_device omap_vwlan_device = {
+> +	.name		= "reg-fixed-voltage",
+> +	.id		= 1,
+> +	.dev = {
+> +		.platform_data = &zoom_vwlan,
+> +	},
+> +};
 
-On Fri, 24 Sep 2010 12:51:08 -0700
-"Guy, Wey-Yi" <wey-yi.w.guy@intel.com> wrote:
+Like in this struct.
 
-> Hi Florian,
->
-> Thanks for sending the patch, the scan operation in iwlwifi just being
-> modified and the changes you have no longer apply.please check the
-> latest kernel.
->
-> Thanks
-> Wey
->
+After that's fixed, here's my ack for these to go via the
+wireless tree:
 
-Ok, I checked out
-git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-and it definitely looks better in there. This patch shouldn't be
-necessary for that.
-
-Do you plan on submitting this for 2.6.36 or .37?
-
-I think my patch should fix the instance reported in the bug in a less
-invasive manner.
-Only remaining question is why it did only show up now. But that's
-probably due to the workqueue changes.
-
-
-Regards,
-Flo
+Acked-by: Tony Lindgren <tony@atomide.com>
