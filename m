@@ -1,51 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60131 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755915Ab0I1PSk (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:49769 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753350Ab0IPJv1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Sep 2010 11:18:40 -0400
-Subject: Re: [PATCH 2/2] mac80211:  Allow scanning single channel if other
- VIF is associated.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4CA206F0.40607@candelatech.com>
-References: <1285632457-27539-1-git-send-email-greearb@candelatech.com>
-	 <1285632457-27539-2-git-send-email-greearb@candelatech.com>
-	 <1285658564.3885.1.camel@jlt3.sipsolutions.net>
-	 <4CA1F2A4.2090005@candelatech.com>
-	 <1285682224.3885.18.camel@jlt3.sipsolutions.net>
-	 <4CA206F0.40607@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 28 Sep 2010 17:18:40 +0200
-Message-ID: <1285687120.3885.20.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 16 Sep 2010 05:51:27 -0400
+Received: from vs3011.wh2.ocn.ne.jp (125.206.180.239)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-050582685
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Sep 2010 18:51:25 +0900 (JST)
+Subject: [PATCH 6/9] ath5k: Count how many times a queue got stuck
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Thu, 16 Sep 2010 18:51:44 +0900
+Message-ID: <20100916095144.17637.26932.stgit@tt-desk>
+In-Reply-To: <20100916095112.17637.17207.stgit@tt-desk>
+References: <20100916095112.17637.17207.stgit@tt-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2010-09-28 at 08:17 -0700, Ben Greear wrote:
+Add a counter to show how many times a queue got stuck in the debugfs queue
+file.
 
-> > You can run all networks in a single wpa_s instance, I believe, and then
-> > it'd know about all this, right?
-> 
-> But then, if you want to add an additional interface, you have to restart
-> everything.
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ drivers/net/wireless/ath/ath5k/base.c  |    2 ++
+ drivers/net/wireless/ath/ath5k/base.h  |    1 +
+ drivers/net/wireless/ath/ath5k/debug.c |    2 ++
+ 3 files changed, 5 insertions(+), 0 deletions(-)
 
-Well, you can add it dynamically over dbus or the unix socket control
-interface.
-
-> I was thinking that maybe I could keep the logic in wpa_s, but instead of
-> all the special casing, just locate the current associated channel for the
-> phy in question and populate the scan-req with that single channel.
-> 
-> Then, I think I wouldn't have to muck with much of the scan logic..just
-> a bit of code on the entry point to select the proper channel.
-> 
-> Does that sound like a possible solution to you?
-
-I don't care all that much, but I really don't like the in-kernel
-workaround. For that, you'd have to iterate over "iw <wlanX> link" I
-suppose.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index d13df7a..c4f0786 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -896,6 +896,7 @@ ath5k_txq_setup(struct ath5k_softc *sc,
+ 		txq->setup = true;
+ 		txq->txq_len = 0;
+ 		txq->txq_poll_mark = false;
++		txq->txq_stuck = 0;
+ 	}
+ 	return &sc->txqs[qnum];
+ }
+@@ -2197,6 +2198,7 @@ ath5k_tx_complete_poll_work(struct work_struct *work)
+ 						  "TX queue stuck %d\n",
+ 						  txq->qnum);
+ 					needreset = true;
++					txq->txq_stuck++;
+ 					spin_unlock_bh(&txq->lock);
+ 					break;
+ 				} else {
+diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
+index d8e2674..7f9d0d3 100644
+--- a/drivers/net/wireless/ath/ath5k/base.h
++++ b/drivers/net/wireless/ath/ath5k/base.h
+@@ -88,6 +88,7 @@ struct ath5k_txq {
+ 	bool			setup;
+ 	int			txq_len; /* number of queued buffers */
+ 	bool			txq_poll_mark;
++	unsigned int		txq_stuck;	/* informational counter */
+ };
+ 
+ #define ATH5K_LED_MAX_NAME_LEN 31
+diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
+index b2c610b..6583a82 100644
+--- a/drivers/net/wireless/ath/ath5k/debug.c
++++ b/drivers/net/wireless/ath/ath5k/debug.c
+@@ -785,6 +785,8 @@ static ssize_t read_file_queue(struct file *file, char __user *user_buf,
+ 
+ 		len += snprintf(buf+len, sizeof(buf)-len,
+ 				"  len: %d bufs: %d\n", txq->txq_len, n);
++		len += snprintf(buf+len, sizeof(buf)-len,
++				"  stuck: %d\n", txq->txq_stuck);
+ 	}
+ 
+ 	if (len > sizeof(buf))
 
