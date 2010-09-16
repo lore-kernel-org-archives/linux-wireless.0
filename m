@@ -1,66 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lime.solrad.nl ([213.193.238.107]:58169 "EHLO lime.solrad.nl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755573Ab0IAPcF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Sep 2010 11:32:05 -0400
-Message-ID: <4C7E71F3.7000301@youcom.nl>
-Date: Wed, 01 Sep 2010 17:32:03 +0200
-From: Jelle Martijn Kok <jmkok@youcom.nl>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org
-Subject: mac80211 and powersaving
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from smtp.nokia.com ([192.100.105.134]:16786 "EHLO
+	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754628Ab0IPTlV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Sep 2010 15:41:21 -0400
+Subject: Re: [PATCH v6 2/7] wl1271: propagate set_power's return value
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Ohad Ben-Cohen <ohad@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Mark Brown <broonie@opensource.wolfsonmicro.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
+	San Mehat <san@google.com>,
+	"Quadros Roger (Nokia-MS/Helsinki)" <roger.quadros@nokia.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Nicolas Pitre <nico@fluxnic.net>, Ido Yariv <ido@wizery.com>,
+	Kalle Valo <kalle.valo@iki.fi>,
+	Russell King <linux@arm.linux.org.uk>,
+	Vitaly Wool <vitalywool@gmail.com>
+In-Reply-To: <1284592929-29616-3-git-send-email-ohad@wizery.com>
+References: <1284592929-29616-1-git-send-email-ohad@wizery.com>
+	 <1284592929-29616-3-git-send-email-ohad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 16 Sep 2010 22:40:18 +0300
+Message-ID: <1284666018.8951.66.camel@powerslave>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(sorry if this mail is sent twice, but the first attempt was bounced due 
-to html text)
+On Thu, 2010-09-16 at 01:22 +0200, ext Ohad Ben-Cohen wrote:
+> Make it possible for the set power method to indicate a
+> success/failure return value. This is needed to support
+> more complex power on/off operations such as SDIO
+> power manipulations.
+> 
+> Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
+> ---
 
-I recently ran into trouble when using the RT73 with powersave enabled.
-So I started to investigate the problem and saw the the powersave mode 
-as it was implemented in de rt73usb driver could never function.
-The rt73usb driver seems to switch to sleep on receival of the 
-IEEE80211_CONF_CHANGE_PS flag, while it should only enable the powersave 
-feature (and essentially, it would go to sleep immediatly).
-However after the sleep period the rt73usb awakens for receival of a 
-beacon, en then never goes back to sleep.
+Some comments below.
 
-I discussed this issue with Ivo van Doorn (we discussed it in Dutch, so 
-I won't be including it here) and he suggested to post the issue the to 
-mailing list.
 
-Assuming the powersave implementation of the RT73 is indeed incorrect, I 
-would actually have the following question:
-Should it not be best if the mac80211 would directly enable and disable 
-the sleep modes of the hardware/driver.
+> diff --git a/drivers/net/wireless/wl12xx/wl1271_io.h b/drivers/net/wireless/wl12xx/wl1271_io.h
+> index bc806c7..c1f92e6 100644
+> --- a/drivers/net/wireless/wl12xx/wl1271_io.h
+> +++ b/drivers/net/wireless/wl12xx/wl1271_io.h
+> @@ -144,10 +144,13 @@ static inline void wl1271_power_off(struct wl1271 *wl)
+>  	clear_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
+>  }
+>  
+> -static inline void wl1271_power_on(struct wl1271 *wl)
+> +static inline int wl1271_power_on(struct wl1271 *wl)
+>  {
+> -	wl->if_ops->power(wl, true);
+> -	set_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
+> +	int ret = wl->if_ops->power(wl, true);
 
-I do realize that this might seriously change a lot of code, but:
-- If the driver is responsible for going to and from sleep, it needs to 
-have a notion of the contents of the packets it receives (as it only may 
-go to sleep on a beacon without a "directed_tim"). And thus this would 
-require the driver to implement a lot of code that is already present in 
-the mac80211.
-- It makes it much easier for drivers to support PS. The driver 
-basically only need to implement a "sleep" and "awake" callback.
-- Only 3 drivers seem to have a viable PS code (ath9k / iwlwifi / p54). 
-However I only quickly scanned the code.
-- All Ralink drivers seem to be similar to the rt73usb, that they only 
-go to sleep once.
+I think it look nicer if you keep the "int ret" in one line by itself
+and then do a ret = wl->if_ops... on another one.
 
-So, a quick (and very rough) idea:
-- The driver should implement an "sleep" and "awake" function
-- The driver should inform the mac80211 if it supports sleep and wake 
-and tell if it can do this auto(nomous).
-- If the driver cannot auto-sleep, the mac80211 should call the sleep 
-callback (likely from "ieee80211_rx_mgmt_beacon()")
-- If the driver cannot auto-wake, the mac80211 should start a timer to 
-wake the driver
-- Nullframes will normally also be handled by the mac80211 (unless 
-otherwise specified by the driver)
 
-This would allow almost any hardware to support (dynamic) PS, as all 
-steps performed and managed by the mac80211.
+> +	if (ret == 0)
+> +		set_bit(WL1271_FLAG_GPIO_POWER, &wl->flags);
+> +
+> +	return ret;
+>  }
 
-Jelle Martijn Kok
+
+> diff --git a/drivers/net/wireless/wl12xx/wl1271_sdio.c b/drivers/net/wireless/wl12xx/wl1271_sdio.c
+> index b5d9565..1d5dc72 100644
+> --- a/drivers/net/wireless/wl12xx/wl1271_sdio.c
+> +++ b/drivers/net/wireless/wl12xx/wl1271_sdio.c
+> @@ -159,35 +159,38 @@ static void wl1271_sdio_raw_write(struct wl1271 *wl, int addr, void *buf,
+>  		wl1271_error("sdio write failed (%d)", ret);
+>  }
+>  
+> -static void wl1271_sdio_power_on(struct wl1271 *wl)
+> +static int wl1271_sdio_power_on(struct wl1271 *wl)
+>  {
+>  	struct sdio_func *func = wl_to_func(wl);
+>  
+>  	sdio_claim_host(func);
+>  	sdio_enable_func(func);
+>  	sdio_release_host(func);
+> +
+> +	return 0;
+>  }
+
+You seem to always return 0, so the whole chain to pass the value up
+seems unnecessary.  Is this just a preparation for a future patch?
+
+-- 
+Cheers,
+Luca.
 
