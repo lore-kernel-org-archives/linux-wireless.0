@@ -1,60 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:53999 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754406Ab0IWQ01 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42853 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752170Ab0IPJig (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Sep 2010 12:26:27 -0400
-Message-ID: <4C9B7FA3.6040402@candelatech.com>
-Date: Thu, 23 Sep 2010 09:26:11 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: greearb@gmail.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211/ath9k:  Support AMPDU with multiple VIFs.
-References: <1285250054-32035-1-git-send-email-greearb@candelatech.com> <1285250906.3770.114.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1285250906.3770.114.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Thu, 16 Sep 2010 05:38:36 -0400
+Subject: Re: [PATCH] mac80211: Add WME information element for IBSS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <20100916083431.14175.90366.stgit@tt-desk>
+References: <20100916083431.14175.90366.stgit@tt-desk>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 16 Sep 2010 11:37:33 +0200
+Message-ID: <1284629853.3731.0.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/23/2010 07:08 AM, Johannes Berg wrote:
-> On Thu, 2010-09-23 at 06:54 -0700, greearb@gmail.com wrote:
->
->>    *
->> - * NOTE: This function should not be used! When mac80211 is converted
->> - *	 internally to properly keep track of stations on multiple
->> - *	 virtual interfaces, it will not always know which station to
->> - *	 return here since a single address might be used by multiple
->> - *	 logical stations (e.g. consider a station connecting to another
->> - *	 BSSID on the same AP hardware without disconnecting first).
->> - *
->> - * DO NOT USE THIS FUNCTION.
->
-> Also, I'm not sure you really should remove this comment, since it still
-> applies when you pass NULL, and I'm still not convinced that ath9k
-> couldn't keep track of the virtual interface accurately?
+On Thu, 2010-09-16 at 17:34 +0900, Bruno Randolf wrote:
+> Enable WME QoS in IBSS mode by adding a WME information element to beacons and
+> probe respones and by checking for it and marking stations as WME capable if it
+> is present.
 
-It seems ath9k would have to selectively remove buffers from it's tx queues
-with vifs dissappeared. I had a previous patch that flushed all when interfaces
-came and went, but it seems I would also have to do something similar
-for AP mode when remote stations came and went.  And for remote stations,
-Felix didn't like flushing the queues entirely, so it would have to be for
-just pkts belonging to that VIF.
+>  			rcu_read_unlock();
+> -			ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa,
+> -					       supp_rates, GFP_KERNEL);
+> +
+> +			sta = ieee80211_ibss_add_sta(sdata, mgmt->bssid,
+> +					mgmt->sa, supp_rates, GFP_KERNEL);
+>  		}
+> +		if (sta && elems->wmm_info)
+> +			set_sta_flags(sta, WLAN_STA_WME);
 
-That would mean quite a bit of re-write of the buffer flush logic as
-far as I can tell.
+NACK, this is obviously racy.
 
-As for the by_hw() method, it's only used in ath9k, and the only time
-it gets passed a NULL is in the ath9k_process_rssi code when the
-destination address is multicast (so we cannot reliably match on
-a destination interface).
+johannes
 
-I'll update the warning comment to mention about passing in NULL
-as localaddr.
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
