@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:59842 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752023Ab0IHRf0 (ORCPT
+Received: from mail.atheros.com ([12.19.149.2]:19024 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750714Ab0IPEtv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Sep 2010 13:35:26 -0400
-Received: by qyk33 with SMTP id 33so299480qyk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2010 10:35:25 -0700 (PDT)
+	Thu, 16 Sep 2010 00:49:51 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Wed, 15 Sep 2010 21:49:45 -0700
+Date: Thu, 16 Sep 2010 10:19:33 +0530
+From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/3] ath9k: Fix regression in starting ANI after
+	association
+Message-ID: <20100916044933.GA30871@vasanth-laptop>
+References: <1284560528-8934-1-git-send-email-vasanth@atheros.com> <AANLkTim5xPKBsitVut-74BNM9riL0C95Nqnyj7M5Bg87@mail.gmail.com>
 MIME-Version: 1.0
-Date: Wed, 8 Sep 2010 11:35:25 -0600
-Message-ID: <AANLkTiksQ3kgagLD5NC0TNALkjQ3kXwdWPeNAManK4DW@mail.gmail.com>
-Subject: ar6000 iMX31 2.6.35
-From: Badguy Badguy <therealbadguy@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="iso-8859-1"
+In-Reply-To: <AANLkTim5xPKBsitVut-74BNM9riL0C95Nqnyj7M5Bg87@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Wed, Sep 15, 2010 at 09:51:43PM +0530, Luis R. Rodriguez wrote:
+> On Wed, Sep 15, 2010 at 7:22 AM, Vasanthakumar Thiagarajan
+> <vasanth@atheros.com> wrote:
+> > Author: Felix Fietkau <nbd@openwrt.org>
+> > Date:   Sat Jul 31 00:11:59 2010 +0200
+> >
+> >    ath9k: prevent calibration during off-channel activity
+> >
+> > The above patch checks for off-channel before starting ANI,
+> > but when the operating channel is set right after association,
+> > IEEE80211_CONF_OFFCHANNEL would be set as still local->tmp_channel
+> > is non-NULL. This would result in not starting calibration after
+> > the association.
 
- I am having trouble with the ar6000 driver using a variety of
-different Atheros chipped cards.
+Yes, the bug is in mac80211, but fixing this one in mac80211 looks
+not straight forward and probably Felix would know this one better,
+for now let me do this in driver and remove it once it is cleanly
+fixed in mac80211.
 
-iMX31 LogicPD
-Kernel 2.6.35
-SDIO interface
-
-below is a log of what happens.
-
-ar6000_available
-BMI Get Target Info: Exit (ver: 0x20000188 type: 0x2)
-Serial console prints enabled
-Block Size Set: 128 (target address:0x50046C)
-ar6000_init() Got WMI @ 0xc3d8fa00.
- Timeout waiting for recv message
-Target debug interrupt
- Target Not Available!!
-ar6000_avail: register_netdev failed
-+ar6000_destroy
-ar6000_destroy(): WMI not ready 0xc372a340 0xc3d8fa00
-ar6000_destroy(): Shut down WMI
- Attempting to reset target on instance destroy....
--ar6000_destroy
-
-
-Thanks
+Vasanth
