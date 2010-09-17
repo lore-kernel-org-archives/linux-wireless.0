@@ -1,84 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:43707 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753317Ab0I2PPn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Sep 2010 11:15:43 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 5/6] nl80211: allow drivers to indicate whether the survey data channel is in use
-Date: Wed, 29 Sep 2010 17:15:30 +0200
-Message-Id: <1285773331-73439-5-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1285773331-73439-4-git-send-email-nbd@openwrt.org>
-References: <1285773331-73439-1-git-send-email-nbd@openwrt.org>
- <1285773331-73439-2-git-send-email-nbd@openwrt.org>
- <1285773331-73439-3-git-send-email-nbd@openwrt.org>
- <1285773331-73439-4-git-send-email-nbd@openwrt.org>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:54958 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753651Ab0IQXI2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Sep 2010 19:08:28 -0400
+Received: by mail-bw0-f46.google.com with SMTP id 11so3128487bwz.19
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 16:08:27 -0700 (PDT)
+Message-Id: <81729a27100af4463a92872ed4c83945554fdc2d.1284763835.git.chunkeey@googlemail.com>
+In-Reply-To: <cover.1284763834.git.chunkeey@googlemail.com>
+References: <cover.1284763834.git.chunkeey@googlemail.com>
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Fri, 17 Sep 2010 23:09:19 +0200
+Subject: [PATCH 6/7] carl9170: reinit phy after HT settings have changed
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some user space applications only want to display survey data for
-the operating channel, however there is no API to get that yet.
+The driver has a set of different initvals for 20 MHz
+vs dynamic HT2040 operation. Because we can't change
+some of the registers "in-flight", the driver needs to
+perform a warm reset.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 ---
- include/linux/nl80211.h |    2 ++
- include/net/cfg80211.h  |    2 ++
- net/wireless/nl80211.c  |    2 ++
- 3 files changed, 6 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/carl9170/carl9170.h |    1 +
+ drivers/net/wireless/ath/carl9170/phy.c      |   25 +++++++++++++------------
+ 2 files changed, 14 insertions(+), 12 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index f0518b0..edd21ae 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1400,6 +1400,7 @@ enum nl80211_reg_rule_flags {
-  * @__NL80211_SURVEY_INFO_INVALID: attribute number 0 is reserved
-  * @NL80211_SURVEY_INFO_FREQUENCY: center frequency of channel
-  * @NL80211_SURVEY_INFO_NOISE: noise level of channel (u8, dBm)
-+ * @NL80211_SURVEY_INFO_IN_USE: channel is currently being used
-  * @NL80211_SURVEY_INFO_MAX: highest survey info attribute number
-  *	currently defined
-  * @__NL80211_SURVEY_INFO_AFTER_LAST: internal use
-@@ -1408,6 +1409,7 @@ enum nl80211_survey_info {
- 	__NL80211_SURVEY_INFO_INVALID,
- 	NL80211_SURVEY_INFO_FREQUENCY,
- 	NL80211_SURVEY_INFO_NOISE,
-+	NL80211_SURVEY_INFO_IN_USE,
+diff --git a/drivers/net/wireless/ath/carl9170/carl9170.h b/drivers/net/wireless/ath/carl9170/carl9170.h
+index d43675a..d7c5482 100644
+--- a/drivers/net/wireless/ath/carl9170/carl9170.h
++++ b/drivers/net/wireless/ath/carl9170/carl9170.h
+@@ -325,6 +325,7 @@ struct ar9170 {
+ 	unsigned int chan_fail;
+ 	unsigned int total_chan_fail;
+ 	u8 heavy_clip;
++	u8 ht_settings;
  
- 	/* keep last */
- 	__NL80211_SURVEY_INFO_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index a0613ff..ecc0403 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -293,12 +293,14 @@ struct key_params {
-  * enum survey_info_flags - survey information flags
-  *
-  * @SURVEY_INFO_NOISE_DBM: noise (in dBm) was filled in
-+ * @SURVEY_INFO_IN_USE: channel is currently being used
-  *
-  * Used by the driver to indicate which info in &struct survey_info
-  * it has filled in during the get_survey().
-  */
- enum survey_info_flags {
- 	SURVEY_INFO_NOISE_DBM = 1<<0,
-+	SURVEY_INFO_IN_USE = 1<<1,
- };
+ 	/* power calibration data */
+ 	u8 power_5G_leg[4];
+diff --git a/drivers/net/wireless/ath/carl9170/phy.c b/drivers/net/wireless/ath/carl9170/phy.c
+index fa349b8..89deca3 100644
+--- a/drivers/net/wireless/ath/carl9170/phy.c
++++ b/drivers/net/wireless/ath/carl9170/phy.c
+@@ -1610,7 +1610,7 @@ int carl9170_set_channel(struct ar9170 *ar, struct ieee80211_channel *channel,
+ 	const struct carl9170_phy_freq_params *freqpar;
+ 	struct carl9170_rf_init_result rf_res;
+ 	struct carl9170_rf_init rf;
+-	u32 cmd, tmp, offs = 0;
++	u32 cmd, tmp, offs = 0, new_ht = 0;
+ 	int err;
+ 	enum carl9170_bw bw;
+ 	bool warm_reset;
+@@ -1618,12 +1618,19 @@ int carl9170_set_channel(struct ar9170 *ar, struct ieee80211_channel *channel,
  
- /**
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 9c84825..0087c43 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3489,6 +3489,8 @@ static int nl80211_send_survey(struct sk_buff *msg, u32 pid, u32 seq,
- 	if (survey->filled & SURVEY_INFO_NOISE_DBM)
- 		NLA_PUT_U8(msg, NL80211_SURVEY_INFO_NOISE,
- 			    survey->noise);
-+	if (survey->filled & SURVEY_INFO_IN_USE)
-+		NLA_PUT_FLAG(msg, NL80211_SURVEY_INFO_IN_USE);
+ 	bw = nl80211_to_carl(_bw);
  
- 	nla_nest_end(msg, infoattr);
++	if (conf_is_ht(&ar->hw->conf))
++		new_ht |= CARL9170FW_PHY_HT_ENABLE;
++
++	if (conf_is_ht40(&ar->hw->conf))
++		new_ht |= CARL9170FW_PHY_HT_DYN2040;
++
+ 	/* may be NULL at first setup */
+ 	if (ar->channel) {
+ 		old_channel = ar->channel;
+ 		warm_reset = (old_channel->band != channel->band) ||
+ 			     (old_channel->center_freq ==
+-			      channel->center_freq);
++			      channel->center_freq) ||
++			     (ar->ht_settings != new_ht);
  
+ 		ar->channel = NULL;
+ 	} else {
+@@ -1724,16 +1731,9 @@ int carl9170_set_channel(struct ar9170 *ar, struct ieee80211_channel *channel,
+ 
+ 	freqpar = carl9170_get_hw_dyn_params(channel, bw);
+ 
+-	rf.ht_settings = 0;
+-	if (conf_is_ht(&ar->hw->conf)) {
+-		rf.ht_settings |= CARL9170FW_PHY_HT_ENABLE;
+-
+-		if (conf_is_ht40(&ar->hw->conf)) {
+-			rf.ht_settings |= CARL9170FW_PHY_HT_DYN2040;
+-			SET_VAL(CARL9170FW_PHY_HT_EXT_CHAN_OFF,
+-				rf.ht_settings, offs);
+-		}
+-	}
++	rf.ht_settings = new_ht;
++	if (conf_is_ht40(&ar->hw->conf))
++		SET_VAL(CARL9170FW_PHY_HT_EXT_CHAN_OFF, rf.ht_settings, offs);
+ 
+ 	rf.freq = cpu_to_le32(channel->center_freq * 1000);
+ 	rf.delta_slope_coeff_exp = cpu_to_le32(freqpar->coeff_exp);
+@@ -1805,5 +1805,6 @@ int carl9170_set_channel(struct ar9170 *ar, struct ieee80211_channel *channel,
+ 		ar->ps.off_override &= ~PS_OFF_5GHZ;
+ 
+ 	ar->channel = channel;
++	ar->ht_settings = new_ht;
+ 	return 0;
+ }
 -- 
-1.7.2.2
+1.7.1
 
