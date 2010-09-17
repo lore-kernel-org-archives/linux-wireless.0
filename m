@@ -1,42 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:40980 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753614Ab0IWMuP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Sep 2010 08:50:15 -0400
-Date: Thu, 23 Sep 2010 15:50:01 +0300
-From: Felipe Balbi <balbi@ti.com>
-To: Ohad Ben-Cohen <ohad@wizery.com>
-Cc: "Balbi, Felipe" <balbi@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"tony@atomide.com" <tony@atomide.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] omap: beagle: add support for wl1271 on the board
- file
-Message-ID: <20100923125001.GS4580@legolas.emea.dhcp.ti.com>
-Reply-To: balbi@ti.com
-References: <1285230003-5065-1-git-send-email-luciano.coelho@nokia.com>
- <20100923114528.GL4580@legolas.emea.dhcp.ti.com>
- <1285244253.3231.75.camel@chilepepper>
- <20100923122048.GO4580@legolas.emea.dhcp.ti.com>
- <AANLkTikN37=O8rnFkBfuJex25DdNPEieioL5jgenpoYY@mail.gmail.com>
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:35419 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754700Ab0IQCgl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Sep 2010 22:36:41 -0400
+Received: from vs3017.wh2.ocn.ne.jp (125.206.180.250)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-012166999
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 11:36:39 +0900 (JST)
+Subject: [PATCH 08/11] ath5k: Count how many times a queue got stuck
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Fri, 17 Sep 2010 11:37:02 +0900
+Message-ID: <20100917023702.24997.19042.stgit@tt-desk>
+In-Reply-To: <20100917023543.24997.48466.stgit@tt-desk>
+References: <20100917023543.24997.48466.stgit@tt-desk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-In-Reply-To: <AANLkTikN37=O8rnFkBfuJex25DdNPEieioL5jgenpoYY@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Add a counter to show how many times a queue got stuck in the debugfs queue
+file.
 
-On Thu, Sep 23, 2010 at 07:46:33AM -0500, Ohad Ben-Cohen wrote:
->> irq = platform_get_irq(pdev, 0);
->
->only problem is that there is no platform device involved here :)
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ drivers/net/wireless/ath/ath5k/base.c  |    2 ++
+ drivers/net/wireless/ath/ath5k/base.h  |    1 +
+ drivers/net/wireless/ath/ath5k/debug.c |    2 ++
+ 3 files changed, 5 insertions(+), 0 deletions(-)
 
-heh, I thought the omap_beagle_vwlan_device was it, but it's only for
-the regulator :-p
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index d13df7a..c4f0786 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -896,6 +896,7 @@ ath5k_txq_setup(struct ath5k_softc *sc,
+ 		txq->setup = true;
+ 		txq->txq_len = 0;
+ 		txq->txq_poll_mark = false;
++		txq->txq_stuck = 0;
+ 	}
+ 	return &sc->txqs[qnum];
+ }
+@@ -2197,6 +2198,7 @@ ath5k_tx_complete_poll_work(struct work_struct *work)
+ 						  "TX queue stuck %d\n",
+ 						  txq->qnum);
+ 					needreset = true;
++					txq->txq_stuck++;
+ 					spin_unlock_bh(&txq->lock);
+ 					break;
+ 				} else {
+diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
+index d8e2674..7f9d0d3 100644
+--- a/drivers/net/wireless/ath/ath5k/base.h
++++ b/drivers/net/wireless/ath/ath5k/base.h
+@@ -88,6 +88,7 @@ struct ath5k_txq {
+ 	bool			setup;
+ 	int			txq_len; /* number of queued buffers */
+ 	bool			txq_poll_mark;
++	unsigned int		txq_stuck;	/* informational counter */
+ };
+ 
+ #define ATH5K_LED_MAX_NAME_LEN 31
+diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
+index b2c610b..6583a82 100644
+--- a/drivers/net/wireless/ath/ath5k/debug.c
++++ b/drivers/net/wireless/ath/ath5k/debug.c
+@@ -785,6 +785,8 @@ static ssize_t read_file_queue(struct file *file, char __user *user_buf,
+ 
+ 		len += snprintf(buf+len, sizeof(buf)-len,
+ 				"  len: %d bufs: %d\n", txq->txq_len, n);
++		len += snprintf(buf+len, sizeof(buf)-len,
++				"  stuck: %d\n", txq->txq_stuck);
+ 	}
+ 
+ 	if (len > sizeof(buf))
 
-nevermind.
-
--- 
-balbi
