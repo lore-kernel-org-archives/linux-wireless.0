@@ -1,61 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:42593 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754197Ab0I1PRJ (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:35298 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753285Ab0IQCgT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Sep 2010 11:17:09 -0400
-Message-ID: <4CA206F0.40607@candelatech.com>
-Date: Tue, 28 Sep 2010 08:17:04 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 16 Sep 2010 22:36:19 -0400
+Received: from vs3008.wh2.ocn.ne.jp (125.206.180.171)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-029102978
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 11:36:18 +0900 (JST)
+Subject: [PATCH 04/11] ath5k: Fix queue debug file
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Fri, 17 Sep 2010 11:36:40 +0900
+Message-ID: <20100917023640.24997.1987.stgit@tt-desk>
+In-Reply-To: <20100917023543.24997.48466.stgit@tt-desk>
+References: <20100917023543.24997.48466.stgit@tt-desk>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] mac80211:  Allow scanning single channel if other
- VIF is associated.
-References: <1285632457-27539-1-git-send-email-greearb@candelatech.com>	 <1285632457-27539-2-git-send-email-greearb@candelatech.com>	 <1285658564.3885.1.camel@jlt3.sipsolutions.net>	 <4CA1F2A4.2090005@candelatech.com> <1285682224.3885.18.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1285682224.3885.18.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/28/2010 06:57 AM, Johannes Berg wrote:
-> On Tue, 2010-09-28 at 06:50 -0700, Ben Greear wrote:
->
->> At best, it would be a race for wpa_s to determine if any other interface
->> on it's interface's hardware is associated, so I don't see a good way to
->> do this in user-space.
->>
->> When at least one is associated, I don't want the NIC to go offchannel at all,
->> at least not for wpa_s scanning.  Anything else is going to interrupt other
->> stations's traffic, and for no good reason that I can see, since the scanning
->> interface must associate on the same channel as the rest of the stations
->> anyway.
->>
->> If you have any suggestions for how to accomplish this, please let me know..
->> otherwise, I can just carry this patch in my tree.
->
-> You can run all networks in a single wpa_s instance, I believe, and then
-> it'd know about all this, right?
+Take txq lock in debug file and fix reporting of used buffers.
 
-But then, if you want to add an additional interface, you have to restart
-everything.
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ drivers/net/wireless/ath/ath5k/debug.c |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
 
-I was thinking that maybe I could keep the logic in wpa_s, but instead of
-all the special casing, just locate the current associated channel for the
-phy in question and populate the scan-req with that single channel.
+diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
+index 1b7c6d7..b2c610b 100644
+--- a/drivers/net/wireless/ath/ath5k/debug.c
++++ b/drivers/net/wireless/ath/ath5k/debug.c
+@@ -763,7 +763,7 @@ static ssize_t read_file_queue(struct file *file, char __user *user_buf,
+ 
+ 	struct ath5k_txq *txq;
+ 	struct ath5k_buf *bf, *bf0;
+-	int i, n = 0;
++	int i, n;
+ 
+ 	len += snprintf(buf+len, sizeof(buf)-len,
+ 			"available txbuffers: %d\n", sc->txbuf_len);
+@@ -777,9 +777,14 @@ static ssize_t read_file_queue(struct file *file, char __user *user_buf,
+ 		if (!txq->setup)
+ 			continue;
+ 
++		n = 0;
++		spin_lock_bh(&txq->lock);
+ 		list_for_each_entry_safe(bf, bf0, &txq->q, list)
+ 			n++;
+-		len += snprintf(buf+len, sizeof(buf)-len, "  len: %d\n", n);
++		spin_unlock_bh(&txq->lock);
++
++		len += snprintf(buf+len, sizeof(buf)-len,
++				"  len: %d bufs: %d\n", txq->txq_len, n);
+ 	}
+ 
+ 	if (len > sizeof(buf))
 
-Then, I think I wouldn't have to muck with much of the scan logic..just
-a bit of code on the entry point to select the proper channel.
-
-Does that sound like a possible solution to you?
-
-Thanks,
-Ben
-
->
-> johannes
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
