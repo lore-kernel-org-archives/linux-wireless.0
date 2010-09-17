@@ -1,25 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web56801.mail.re3.yahoo.com ([66.196.97.75]:46897 "HELO
-	web56801.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752676Ab0I2NAE (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:48250 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751178Ab0IQCsW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Sep 2010 09:00:04 -0400
-Message-ID: <733457.84719.qm@web56801.mail.re3.yahoo.com>
-Date: Wed, 29 Sep 2010 06:00:00 -0700 (PDT)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: [BUG] compat: broken driver-select always compiles ath6kl & brcm80211
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: linux-wireless@vger.kernel.org
+	Thu, 16 Sep 2010 22:48:22 -0400
+Received: from vs3017.wh2.ocn.ne.jp (125.206.180.250)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0363631700
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 11:48:21 +0900 (JST)
+From: Bruno Randolf <br1@einfach.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: wireless-testing or wireless-next
+Date: Fri, 17 Sep 2010 11:48:39 +0900
+Cc: linux-wireless@vger.kernel.org, lrodriguez@atheros.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <201009171148.39953.br1@einfach.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Latest compat-wireless manifests a bug when "scripts/driver-select" is invoked. Regardless of which driver is selected (zd1211rw for example),  ath6kl and brcm80211 are always compiled along with the designated module of choice.
+John, Luis,
 
-I tried looking in to it, but don't really have time. Perhaps someone would like to investigate.
+I'm a little confused about which tree to use. I though we should base driver 
+development on wireless-testing, but I see that you merge patches into 
+wireless-next first. So should we re-base patches to wireless-next before we 
+send them?
 
-Walter.
+Also, AFAIK, compat-wireless is based on linux-next, so if I want to create a 
+compat-wireless package based on my latest driver changes (I need to do this 
+frequently for testing my driver on my platform), I always run into problems 
+because my latest driver is in wireless-testing and not in linux-next. Do you 
+have any advise on a proper workflow here?
 
-
-      
+Thanks,
+bruno
