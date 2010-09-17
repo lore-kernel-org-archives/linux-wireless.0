@@ -1,63 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43986 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753776Ab0INUG6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 16:06:58 -0400
-Subject: [PATCH] mac80211: use correct station flags lock
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 14 Sep 2010 22:06:53 +0200
-Message-ID: <1284494813.3703.2.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from kroah.org ([198.145.64.141]:46942 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753636Ab0IQAOn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Sep 2010 20:14:43 -0400
+Date: Thu, 16 Sep 2010 17:14:36 -0700
+From: Greg KH <greg@kroah.com>
+To: Vipin Mehta <vmehta@atheros.com>
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: Re: [PATCH] staging: ath6kl: Including a header file to fix a
+ compilation error
+Message-ID: <20100917001436.GA27148@kroah.com>
+References: <1284682087-19351-1-git-send-email-vmehta@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1284682087-19351-1-git-send-email-vmehta@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, Sep 16, 2010 at 05:08:07PM -0700, Vipin Mehta wrote:
+> The commit fixes a compilation error that was encountered while using a specific kernel configuration file. The problem was the use of some fuunctions defined in <linux/semaphore.h> without including the header file explicitly. It was probably working before because of the dependency getting implicitly satisfied via some other header file. Also, eliminating the inclusion of the same header file more than once. The code needs additional cleanup and may be addressed by a subsequent commit.
 
-This code is modifying the station flags, and
-as such should hold the flags lock so it can
-do so atomically vs. other flags modifications
-and readers. This issue was introduced when
-this code was added in eccb8e8f, as it used
-the wrong lock (thus not fixing the race that
-was previously documented in a comment.)
+Um, please wrap your lines at 72 columns.
 
-Cc: stable@kernel.org [2.6.31+]
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> Signed-off-by: Vipin Mehta <vmehta@atheros.com>
 
---- wireless-testing.orig/net/mac80211/cfg.c	2010-09-14 22:05:14.000000000 +0200
-+++ wireless-testing/net/mac80211/cfg.c	2010-09-14 22:06:24.000000000 +0200
-@@ -591,6 +591,7 @@ static void sta_apply_parameters(struct
- 				 struct sta_info *sta,
- 				 struct station_parameters *params)
- {
-+	unsigned long flags;
- 	u32 rates;
- 	int i, j;
- 	struct ieee80211_supported_band *sband;
-@@ -599,7 +600,7 @@ static void sta_apply_parameters(struct
- 
- 	sband = local->hw.wiphy->bands[local->oper_channel->band];
- 
--	spin_lock_bh(&sta->lock);
-+	spin_lock_irqsave(&sta->flaglock, flags);
- 	mask = params->sta_flags_mask;
- 	set = params->sta_flags_set;
- 
-@@ -626,7 +627,7 @@ static void sta_apply_parameters(struct
- 		if (set & BIT(NL80211_STA_FLAG_MFP))
- 			sta->flags |= WLAN_STA_MFP;
- 	}
--	spin_unlock_bh(&sta->lock);
-+	spin_unlock_irqrestore(&sta->flaglock, flags);
- 
- 	/*
- 	 * cfg80211 validates this (1-2007) and allows setting the AID
+Did you forget to report who pointed out the problem to you?  That needs
+to go in a:
+	Reported-by: Foo <foo@baz.org>
+line.
 
+Care to redo this?
 
+thanks,
+
+greg k-h
