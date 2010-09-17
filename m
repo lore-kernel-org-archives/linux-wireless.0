@@ -1,122 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:42101 "EHLO mga09.intel.com"
+Received: from kroah.org ([198.145.64.141]:34680 "EHLO coco.kroah.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754277Ab0IQVXa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Sep 2010 17:23:30 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 06/10] iwlagn: adding aggregated frame failure status to debugfs
-Date: Fri, 17 Sep 2010 14:24:30 -0700
-Message-Id: <1284758674-25297-7-git-send-email-wey-yi.w.guy@intel.com>
-In-Reply-To: <1284758674-25297-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1284758674-25297-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1750844Ab0IQX17 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Sep 2010 19:27:59 -0400
+Date: Fri, 17 Sep 2010 16:26:43 -0700
+From: Greg KH <greg@kroah.com>
+To: Vipin Mehta <Vipin.Mehta@Atheros.com>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
+Subject: Re: [PATCH] staging: ath6kl: Including a header file to fix a
+ compilation error
+Message-ID: <20100917232643.GA25757@kroah.com>
+References: <1284742495-2970-1-git-send-email-vmehta@atheros.com>
+ <4C93A412.2070005@oracle.com>
+ <35B17FE5076C7040809188FBE7913F983F23937DAE@SC1EXMB-MBCL.global.atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <35B17FE5076C7040809188FBE7913F983F23937DAE@SC1EXMB-MBCL.global.atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+On Fri, Sep 17, 2010 at 04:11:57PM -0700, Vipin Mehta wrote:
+> > Hi,
+> > Thanks for the patch, but I still get these errors & warnings:
+> > 
+> > on linux-next 2010-0915:
+> > 
+> > drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif_scatter.c: In function
+> > 'SetupHIFScatterSupport':
+> > drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif_scatter.c:288: error:
+> > 'struct mmc_host' has no member named 'max_hw_segs'
+> > drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif_scatter.c:289: error:
+> > 'struct mmc_host' has no member named 'max_hw_segs'
+> > 
+> This is because of a recent change in the mmc_host structure that removes the distinction between hw and phys segments. The structure is different in the staging-next-2.6 tree which is where I usually build and test the changes. 
 
-Addition to standard tx frame failure report, adding aggregated
-frame failure report to debugfs
+Please, fix your email client to wrap lines at a sane place...
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c |   51 +++++++++++++++++++++++-
- drivers/net/wireless/iwlwifi/iwl-agn.h         |    5 ++
- 2 files changed, 54 insertions(+), 2 deletions(-)
+> Greg, 
+> The two trees linux-next and staging-next are not in sync so what is
+> the process that is usually followed under these circumstances? I see
+> little point in using the staging-next-2.6 tree to generate and test
+> my patches since the tree eventually drains into linux-next. Should I
+> stop worrying about if the patch works for the staging-next tree and
+> just focus on that things should work with linux-next?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
-index de68dde..52e9869 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
-@@ -25,7 +25,7 @@
- *  Intel Linux Wireless <ilw@linux.intel.com>
- * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
- *****************************************************************************/
--
-+#include "iwl-agn.h"
- #include "iwl-agn-debugfs.h"
- 
- static int iwl_statistics_flag(struct iwl_priv *priv, char *buf, int bufsz)
-@@ -1019,7 +1019,8 @@ ssize_t iwl_reply_tx_error_read(struct file *file,
- 	struct iwl_priv *priv = (struct iwl_priv *)file->private_data;
- 	int pos = 0;
- 	char *buf;
--	int bufsz = (sizeof(struct reply_tx_error_statistics) * 24) + 200;
-+	int bufsz = (sizeof(struct reply_tx_error_statistics) * 24) +
-+		(sizeof(struct reply_agg_tx_error_statistics) * 24) + 200;
- 	ssize_t ret;
- 
- 	if (!iwl_is_alive(priv))
-@@ -1104,6 +1105,52 @@ ssize_t iwl_reply_tx_error_read(struct file *file,
- 	pos += scnprintf(buf + pos, bufsz - pos, "UNKNOWN:\t\t\t%u\n",
- 			 priv->_agn.reply_tx_stats.unknown);
- 
-+	pos += scnprintf(buf + pos, bufsz - pos,
-+			 "\nStatistics_Agg_TX_Error:\n");
-+
-+	pos += scnprintf(buf + pos, bufsz - pos, "%s:\t\t\t%u\n",
-+			 iwl_get_agg_tx_fail_reason(AGG_TX_STATE_UNDERRUN_MSK),
-+			 priv->_agn.reply_agg_tx_stats.underrun);
-+	pos += scnprintf(buf + pos, bufsz - pos, "%s:\t\t\t%u\n",
-+			 iwl_get_agg_tx_fail_reason(AGG_TX_STATE_BT_PRIO_MSK),
-+			 priv->_agn.reply_agg_tx_stats.bt_prio);
-+	pos += scnprintf(buf + pos, bufsz - pos, "%s:\t\t\t%u\n",
-+			 iwl_get_agg_tx_fail_reason(AGG_TX_STATE_FEW_BYTES_MSK),
-+			 priv->_agn.reply_agg_tx_stats.few_bytes);
-+	pos += scnprintf(buf + pos, bufsz - pos, "%s:\t\t\t%u\n",
-+			 iwl_get_agg_tx_fail_reason(AGG_TX_STATE_ABORT_MSK),
-+			 priv->_agn.reply_agg_tx_stats.abort);
-+	pos += scnprintf(buf + pos, bufsz - pos, "%s:\t\t%u\n",
-+			 iwl_get_agg_tx_fail_reason(
-+				AGG_TX_STATE_LAST_SENT_TTL_MSK),
-+			 priv->_agn.reply_agg_tx_stats.last_sent_ttl);
-+	pos += scnprintf(buf + pos, bufsz - pos, "%s:\t\t%u\n",
-+			 iwl_get_agg_tx_fail_reason(
-+				AGG_TX_STATE_LAST_SENT_TRY_CNT_MSK),
-+			 priv->_agn.reply_agg_tx_stats.last_sent_try);
-+	pos += scnprintf(buf + pos, bufsz - pos, "%s:\t\t%u\n",
-+			 iwl_get_agg_tx_fail_reason(
-+				AGG_TX_STATE_LAST_SENT_BT_KILL_MSK),
-+			 priv->_agn.reply_agg_tx_stats.last_sent_bt_kill);
-+	pos += scnprintf(buf + pos, bufsz - pos, "%s:\t\t\t%u\n",
-+			 iwl_get_agg_tx_fail_reason(AGG_TX_STATE_SCD_QUERY_MSK),
-+			 priv->_agn.reply_agg_tx_stats.scd_query);
-+	pos += scnprintf(buf + pos, bufsz - pos, "%s:\t\t%u\n",
-+			 iwl_get_agg_tx_fail_reason(
-+				AGG_TX_STATE_TEST_BAD_CRC32_MSK),
-+			 priv->_agn.reply_agg_tx_stats.bad_crc32);
-+	pos += scnprintf(buf + pos, bufsz - pos, "%s:\t\t\t%u\n",
-+			 iwl_get_agg_tx_fail_reason(AGG_TX_STATE_RESPONSE_MSK),
-+			 priv->_agn.reply_agg_tx_stats.response);
-+	pos += scnprintf(buf + pos, bufsz - pos, "%s:\t\t\t%u\n",
-+			 iwl_get_agg_tx_fail_reason(AGG_TX_STATE_DUMP_TX_MSK),
-+			 priv->_agn.reply_agg_tx_stats.dump_tx);
-+	pos += scnprintf(buf + pos, bufsz - pos, "%s:\t\t\t%u\n",
-+			 iwl_get_agg_tx_fail_reason(AGG_TX_STATE_DELAY_TX_MSK),
-+			 priv->_agn.reply_agg_tx_stats.delay_tx);
-+	pos += scnprintf(buf + pos, bufsz - pos, "UNKNOWN:\t\t\t%u\n",
-+			 priv->_agn.reply_agg_tx_stats.unknown);
-+
- 	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
- 	kfree(buf);
- 	return ret;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index e1f85ae..a372184 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -238,4 +238,9 @@ void iwlagn_bt_rx_handler_setup(struct iwl_priv *priv);
- void iwlagn_bt_setup_deferred_work(struct iwl_priv *priv);
- void iwlagn_bt_cancel_deferred_work(struct iwl_priv *priv);
- 
-+#ifdef CONFIG_IWLWIFI_DEBUG
-+const char *iwl_get_agg_tx_fail_reason(u16 status);
-+#else
-+static inline const char *iwl_get_agg_tx_fail_reason(u16 status) { return ""; }
-+#endif
- #endif /* __iwl_agn_h__ */
--- 
-1.7.0.4
+If the problem is due to another change in a different tree, send me the
+patch and I'll hold on to it until the mmc tree is merged with Linus
+(during the .37 merge window) and then I'll apply it and push it out.
 
+Until then, we can ask Stephen to hold the patch in linux-next to fix
+the build issue.
+
+But I'd still like the .h file fixup patch to be resolved and in my tree
+first, right?
+
+thanks,
+
+greg k-h
