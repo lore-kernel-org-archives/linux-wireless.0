@@ -1,39 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:41996 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750752Ab0IFTEF (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:56365 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754696Ab0IQXI2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Sep 2010 15:04:05 -0400
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 0BD84418D8
-	for <linux-wireless@vger.kernel.org>; Mon,  6 Sep 2010 15:02:50 -0400 (EDT)
-Subject: Compat-wireless release for 2010-09-06 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20100906190402.DF73841134@repository3.orbit-lab.org>
-Date: Mon,  6 Sep 2010 15:04:02 -0400 (EDT)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Fri, 17 Sep 2010 19:08:28 -0400
+Received: by bwz11 with SMTP id 11so3128510bwz.19
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 16:08:27 -0700 (PDT)
+Message-Id: <cover.1284763834.git.chunkeey@googlemail.com>
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Sat, 18 Sep 2010 00:50:34 +0200
+Subject: [PATCH 0/7] carl9170: PHY updates + hang fix
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
-   3254605..2d615c9  history    -> origin/history
- + d24ab56...7c94c50 master     -> origin/master  (forced update)
- * [new tag]         next-20100906 -> next-20100906
+Christian Lamparter (7):
+  carl9170: use rx chainmask from eeprom
+  carl9170: fix noise dBm conversion
+  carl9170: don't load bogus nf of chain 1
+  carl9170: abort tasklet during usb reset
+  carl9170: fix state downgrade during reset
+  carl9170: reinit phy after HT settings have changed
+  carl9170: fix hang in AP mode when HT STA does PSM
 
-compat-wireless code metrics
+ drivers/net/wireless/ath/carl9170/carl9170.h |    3 +-
+ drivers/net/wireless/ath/carl9170/debug.c    |    8 ++---
+ drivers/net/wireless/ath/carl9170/main.c     |    4 +-
+ drivers/net/wireless/ath/carl9170/phy.c      |   45 ++++++++++++++------------
+ drivers/net/wireless/ath/carl9170/usb.c      |    5 ++-
+ 5 files changed, 34 insertions(+), 31 deletions(-)
 
-    591075 - Total upstream lines of code being pulled
-      1718 - backport code changes
-      1477 - backport code additions
-       241 - backport code deletions
-      6082 - backport from compat module
-      7800 - total backport code
-    1.3196 - % of code consists of backport work
-      1218 - Crap changes not yet posted
-      1179 - Crap additions not yet posted
-        39 - Crap deletions not yet posted
-    0.2061 - % of crap code
-
-Base tree: linux-next.git
-Base tree version: next-20100906
-compat-wireless release: compat-wireless--2010-09-02
