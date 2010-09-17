@@ -1,84 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:59047 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755865Ab0INXkj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 19:40:39 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Received: from mga09.intel.com ([134.134.136.24]:42101 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752804Ab0IQVX3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Sep 2010 17:23:29 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
-	Paul Stewart <pstew@google.com>,
-	Amod Bodas <amod.bodas@atheros.com>
-Subject: [PATCH v3 09/11] mac80211: send last 3/5 probe requests as unicast
-Date: Tue, 14 Sep 2010 19:40:22 -0400
-Message-Id: <1284507624-18176-10-git-send-email-lrodriguez@atheros.com>
-In-Reply-To: <1284507624-18176-1-git-send-email-lrodriguez@atheros.com>
-References: <1284507624-18176-1-git-send-email-lrodriguez@atheros.com>
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 05/10] iwlagn: keep track of aggregated tx frames failure counter
+Date: Fri, 17 Sep 2010 14:24:29 -0700
+Message-Id: <1284758674-25297-6-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1284758674-25297-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1284758674-25297-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some buggy APs do not respond to unicast probe requests
-or send unicast probe requests very delayed so in the
-worst case we should try to send broadcast probe requests,
-otherwise we can get disconnected from these APs.
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Even if drivers do not have filters to disregard probe
-responses from foreign APs mac80211 will only process
-probe responses from our associated AP for re-arming
-connection monitoring.
+When uCode completed the aggregated frames transmission attempt,
+it will send tx command response with aggregated frame status.
 
-We need to do this since the beacon monitor does not
-push back the connection monitor by design so even if we
-are getting beacons from these type of APs our connection
-monitor currently relies heavily on the way the probe
-requests are received on the AP. An example of an AP
-affected by this is the Nexus One, but this has also been
-observed with random APs.
+Keep track of the failure counter which help indicate any transmission
+error condition.
 
-We can probably optimize this later by using null funcs
-instead of probe requests.
-
-For more details refer to:
-
-http://code.google.com/p/chromium-os/issues/detail?id=5715
-
-This patch has fixes for stable kernels [2.6.35+].
-
-Cc: stable@kernel.org
-Cc: Paul Stewart <pstew@google.com>
-Cc: Amod Bodas <amod.bodas@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- net/mac80211/mlme.c |   13 +++++++++++--
- 1 files changed, 11 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |   50 ++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-dev.h     |   18 ++++++++++
+ 2 files changed, 68 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index c2e1838..816566b 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1038,10 +1038,19 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	const u8 *ssid;
-+	u8 *dst = ifmgd->associated->bssid;
-+	u8 unicast_limit = max(1, IEEE80211_MAX_PROBE_TRIES - 3);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index a8494d0..c42cb18 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -123,6 +123,53 @@ static void iwlagn_count_tx_err_status(struct iwl_priv *priv, u16 status)
+ 	}
+ }
+ 
++static void iwlagn_count_agg_tx_err_status(struct iwl_priv *priv, u16 status)
++{
++	status &= AGG_TX_STATUS_MSK;
 +
-+	/*
-+	 * Try sending broadcast probe requests for the last three
-+	 * probe requests after the first ones failed since some
-+	 * buggy APs only support broadcast probe requests.
-+	 */
-+	if (ifmgd->probe_send_count >= unicast_limit)
-+		dst = NULL;
++	switch (status) {
++	case AGG_TX_STATE_UNDERRUN_MSK:
++		priv->_agn.reply_agg_tx_stats.underrun++;
++		break;
++	case AGG_TX_STATE_BT_PRIO_MSK:
++		priv->_agn.reply_agg_tx_stats.bt_prio++;
++		break;
++	case AGG_TX_STATE_FEW_BYTES_MSK:
++		priv->_agn.reply_agg_tx_stats.few_bytes++;
++		break;
++	case AGG_TX_STATE_ABORT_MSK:
++		priv->_agn.reply_agg_tx_stats.abort++;
++		break;
++	case AGG_TX_STATE_LAST_SENT_TTL_MSK:
++		priv->_agn.reply_agg_tx_stats.last_sent_ttl++;
++		break;
++	case AGG_TX_STATE_LAST_SENT_TRY_CNT_MSK:
++		priv->_agn.reply_agg_tx_stats.last_sent_try++;
++		break;
++	case AGG_TX_STATE_LAST_SENT_BT_KILL_MSK:
++		priv->_agn.reply_agg_tx_stats.last_sent_bt_kill++;
++		break;
++	case AGG_TX_STATE_SCD_QUERY_MSK:
++		priv->_agn.reply_agg_tx_stats.scd_query++;
++		break;
++	case AGG_TX_STATE_TEST_BAD_CRC32_MSK:
++		priv->_agn.reply_agg_tx_stats.bad_crc32++;
++		break;
++	case AGG_TX_STATE_RESPONSE_MSK:
++		priv->_agn.reply_agg_tx_stats.response++;
++		break;
++	case AGG_TX_STATE_DUMP_TX_MSK:
++		priv->_agn.reply_agg_tx_stats.dump_tx++;
++		break;
++	case AGG_TX_STATE_DELAY_TX_MSK:
++		priv->_agn.reply_agg_tx_stats.delay_tx++;
++		break;
++	default:
++		priv->_agn.reply_agg_tx_stats.unknown++;
++		break;
++	}
++}
++
+ static void iwlagn_set_tx_status(struct iwl_priv *priv,
+ 				 struct ieee80211_tx_info *info,
+ 				 struct iwl5000_tx_resp *tx_resp,
+@@ -224,6 +271,9 @@ static int iwlagn_tx_status_reply_tx(struct iwl_priv *priv,
+ 			idx = SEQ_TO_INDEX(seq);
+ 			txq_id = SEQ_TO_QUEUE(seq);
  
- 	ssid = ieee80211_bss_get_ie(ifmgd->associated, WLAN_EID_SSID);
--	ieee80211_send_probe_req(sdata, ifmgd->associated->bssid,
--				 ssid + 2, ssid[1], NULL, 0);
-+	ieee80211_send_probe_req(sdata, dst, ssid + 2, ssid[1], NULL, 0);
++			if (status & AGG_TX_STATUS_MSK)
++				iwlagn_count_agg_tx_err_status(priv, status);
++
+ 			if (status & (AGG_TX_STATE_FEW_BYTES_MSK |
+ 				      AGG_TX_STATE_ABORT_MSK))
+ 				continue;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index bfa4864..74d25bc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -984,6 +984,23 @@ struct reply_tx_error_statistics {
+ 	u32 unknown;
+ };
  
- 	ifmgd->probe_send_count++;
- 	ifmgd->probe_timeout = jiffies + IEEE80211_PROBE_WAIT;
++/* reply_agg_tx_statistics (for _agn devices) */
++struct reply_agg_tx_error_statistics {
++	u32 underrun;
++	u32 bt_prio;
++	u32 few_bytes;
++	u32 abort;
++	u32 last_sent_ttl;
++	u32 last_sent_try;
++	u32 last_sent_bt_kill;
++	u32 scd_query;
++	u32 bad_crc32;
++	u32 response;
++	u32 dump_tx;
++	u32 delay_tx;
++	u32 unknown;
++};
++
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ /* management statistics */
+ enum iwl_mgmt_stats {
+@@ -1444,6 +1461,7 @@ struct iwl_priv {
+ 			struct iwl_bt_notif_statistics statistics_bt;
+ 			/* counts reply_tx error */
+ 			struct reply_tx_error_statistics reply_tx_stats;
++			struct reply_agg_tx_error_statistics reply_agg_tx_stats;
+ #ifdef CONFIG_IWLWIFI_DEBUGFS
+ 			struct iwl_notif_statistics accum_statistics;
+ 			struct iwl_notif_statistics delta_statistics;
 -- 
 1.7.0.4
 
