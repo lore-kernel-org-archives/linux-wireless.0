@@ -1,37 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37760 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932138Ab0I3Pis (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:64537 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751774Ab0IQXI2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Sep 2010 11:38:48 -0400
-Subject: Re: [RFC 1/2] wireless:  Show sta_flags for status in
- /proc/net/wireless
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
+	Fri, 17 Sep 2010 19:08:28 -0400
+Received: by mail-bw0-f46.google.com with SMTP id 11so3128491bwz.19
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 16:08:27 -0700 (PDT)
+Message-Id: <6c14f87ffdd46c45f3dfcd6c15ba7e89142c1dab.1284763835.git.chunkeey@googlemail.com>
+In-Reply-To: <cover.1284763834.git.chunkeey@googlemail.com>
+References: <cover.1284763834.git.chunkeey@googlemail.com>
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Fri, 17 Sep 2010 22:58:40 +0200
+Subject: [PATCH 5/7] carl9170: fix state downgrade during reset
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4CA4AD40.1010309@candelatech.com>
-References: <1285804637-5400-1-git-send-email-greearb@candelatech.com>
-	 <1285832587.3639.1.camel@jlt3.sipsolutions.net>
-	 <4CA4AD40.1010309@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 30 Sep 2010 17:39:21 +0200
-Message-ID: <1285861161.5137.5.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2010-09-30 at 08:31 -0700, Ben Greear wrote:
+Don't mark the device as completely dead just yet.
+If all goes to plan and carl9170_reboot succeeds
+then we can skip the expensive userspace-driven
+reinitialization anyway.
 
-> It would of course be easy to map them to a stable set of flags, but if you
-> don't want to fix /proc/net/wireless anyway, then I might as well do minimal changes
-> to make it easier to keep the patch in my own tree.
-> 
-> Aside from listening to 'iw event', is there any way to know if a STA is scanning,
-> authenticated, associated, etc?  Some of this can be obtained from debugfs, but
-> that's not a fun api to code against...
+And if it doesn't and carl9170_reboot fails,
+then carl9170_usb_cancel_urbs will do the
+necessary steps.
 
-You can't get scanning, but auth/assoc should be visible in "iw dev
-<iface> scan dump"
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+ drivers/net/wireless/ath/carl9170/usb.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/carl9170/usb.c b/drivers/net/wireless/ath/carl9170/usb.c
+index 1e7c274..eb789a9 100644
+--- a/drivers/net/wireless/ath/carl9170/usb.c
++++ b/drivers/net/wireless/ath/carl9170/usb.c
+@@ -846,8 +846,6 @@ int carl9170_usb_restart(struct ar9170 *ar)
+ 
+ 	carl9170_usb_stop(ar);
+ 
+-	carl9170_set_state(ar, CARL9170_UNKNOWN_STATE);
+-
+ 	if (err)
+ 		goto err_out;
+ 
+-- 
+1.7.1
 
