@@ -1,66 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:62173 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752438Ab0IXRbR convert rfc822-to-8bit (ORCPT
+Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:15353 "HELO
+	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752690Ab0IQCgA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Sep 2010 13:31:17 -0400
-Received: by qyk36 with SMTP id 36so1607022qyk.19
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Sep 2010 10:31:17 -0700 (PDT)
+	Thu, 16 Sep 2010 22:36:00 -0400
+Received: from vs3004.wh2.ocn.ne.jp (125.206.180.167)
+	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-011752957
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 11:35:58 +0900 (JST)
+Subject: [PATCH 00/11] ath5k: Add multiple queues / QoS support + more
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Fri, 17 Sep 2010 11:36:19 +0900
+Message-ID: <20100917023543.24997.48466.stgit@tt-desk>
 MIME-Version: 1.0
-In-Reply-To: <20100924172132.GC8077@tuxdriver.com>
-References: <20100924185551.e3c3b41c.cyrille@cbiot.fr> <AANLkTik5QPw6K_CFQW-5qH3PhyDAguqe51AcNaDMOUqt@mail.gmail.com>
- <20100924172132.GC8077@tuxdriver.com>
-From: =?ISO-8859-1?Q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Date: Fri, 24 Sep 2010 19:30:56 +0200
-Message-ID: <AANLkTinxr6avpgR9v3nBaNp8nSORFkStDcOsL2KW0-Ln@mail.gmail.com>
-Subject: Re: problem with b43
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Cyrille <cyrille@cbiot.fr>, b43-dev@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/9/24 John W. Linville <linville@tuxdriver.com>:
-> On Fri, Sep 24, 2010 at 07:06:17PM +0200, Gábor Stefanik wrote:
->> On Fri, Sep 24, 2010 at 6:55 PM, Cyrille <cyrille@cbiot.fr> wrote:
->> > Hi
->> > I've got a problem with a broadcom 4312 [12e4:4315].
->> > The environment :
->> > ===========================
->> > uname -a
->> > 2.6.35.5-libre.29.fc14.x86_64
->
->> > Broadcom 43xx driver loaded [ Features: PMLS, Firmware-ID: FW13 ]
->> > ssb0:0: Missing Free firmware
->> > b43-phy4 ERROR: Rejected non-Free firmware
->> > ssb0:0: Missing Free firmware
->> > b43-phy4 ERROR: Rejected non-Free firmware
->>
->> Compile compat-wireless to bypass the "free-only" patch in Fedora.
->>
->> (John, are you still maintaining the Fedora kernel's wireless part? If
->> so, please kill this "freedom enforcement"!)
->
-> This isn't a Fedora kernel.  I'm guessing it is from "Free-dora"
-> by way of BLAG, and I have no control over it -- sorry.
->
-> Cyrille, did you try b43-openfwwf?  If that doesn't work, then you
-> will need to use extracted proprietary firmware with some other kernel
-> (e.g. stock Fedora) or you will have to live without b43.
+This is now rebased to wireless-next and includes a fixup for a merge issue
+of the crypto series and Bob's reordering patch. I hope you don't mind - I
+will be gone for the next week, so I need to push this out now.
 
-OpenFWWF definitely won't work with LP-PHYs. We don't even know enough
-about LP-PHY to fix the DMA error, let alone to write our own
-firmware...
+The following series adds WME QoS for ath5k by using four hardware queues
+and adding the necessary callback function for mac80211 to configure the
+queue parameters.
 
->
-> John
-> --
-> John W. Linville                Someday the world will need a hero, and you
-> linville@tuxdriver.com                  might be all we have.  Be ready.
->
+Unfortunately, if we use multiple queues, the hardware can get stuck, and we
+don't know a better solution than resetting the hardware in this case. This
+is the same situation as in ath9k and i have copied the workaround from
+there.
+
+bruno
+
+---
+
+Bob Copeland (1):
+      This change reorganizes the main ath5k file in order to re-group
+
+Bruno Randolf (10):
+      ath/ath5k/ath9k: Fix crypto capabilities merge issue
+      ath5k: Use four hardware queues
+      ath5k: Fix queue debug file
+      ath5k: Fix TX queues stopping
+      ath5k: Move tx frame completion into separate function
+      ath5k: Add watchdog for stuck TX queues
+      ath5k: Count how many times a queue got stuck
+      ath5k: Keep last descriptor in queue
+      ath5k: Simplify cw_min/max and AIFS configuration
+      ath5k: Add tx queue configuration function
 
 
+ drivers/net/wireless/ath/ath.h          |    9 
+ drivers/net/wireless/ath/ath5k/ath5k.h  |   13 
+ drivers/net/wireless/ath/ath5k/attach.c |    5 
+ drivers/net/wireless/ath/ath5k/base.c   | 1972 ++++++++++++++++---------------
+ drivers/net/wireless/ath/ath5k/base.h   |    9 
+ drivers/net/wireless/ath/ath5k/debug.c  |   11 
+ drivers/net/wireless/ath/ath5k/qcu.c    |   99 +-
+ drivers/net/wireless/ath/ath9k/hw.c     |    2 
+ 8 files changed, 1065 insertions(+), 1055 deletions(-)
 
 -- 
-Vista: [V]iruses, [I]ntruders, [S]pyware, [T]rojans and [A]dware. :-)
+Signature
