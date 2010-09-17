@@ -1,62 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:36685 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752770Ab0IOB4w convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 21:56:52 -0400
-Received: by pwi3 with SMTP id 3so16222pwi.19
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Sep 2010 18:56:52 -0700 (PDT)
-MIME-Version: 1.0
-From: Jonathan Guerin <jonathan@guerin.id.au>
-Date: Wed, 15 Sep 2010 11:56:32 +1000
-Message-ID: <AANLkTim+Q773KvA7Et1s2Zf8yMx36RGS2LsoJsX1Wtt9@mail.gmail.com>
-Subject: [ath5k] Incorrect value for ACK_TIMEOUT
-To: ath5k-devel <ath5k-devel@lists.ath5k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=windows-1252
+Received: from mga09.intel.com ([134.134.136.24]:42101 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753034Ab0IQVXb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Sep 2010 17:23:31 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 09/10] iwlagn: minor coex API changes
+Date: Fri, 17 Sep 2010 14:24:33 -0700
+Message-Id: <1284758674-25297-10-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1284758674-25297-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1284758674-25297-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to the 802.11-2007 spec document, the ACKTimeout value is
-(Section 9.2.8 ACK procedure):
-ACKTimeout = aSIFSTime + aSlotTime + aPHY-RX-START-Delay
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
->From Table 17-15—OFDM PHY characteristics, the values are:
-aSIFSTime = 16
-aSlotTime = 9
-aPHY-RX-START-Delay = 25
+Adding two new parameters in config bt API. these two parameters
+use the 3 reserved bytes, so there is no structure size changes.
 
-Therefore, ACKTimeout = 50
+Make sure set both parameters to "zero" in order to preserve
+previous behavior.
 
-In the driver source, this appears to be initialised to:
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-commands.h |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
 
-$$ ath5k.h
-#define AR5K_INIT_ACK_CTS_TIMEOUT		1024
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index 294a1d5..27e250c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -2486,7 +2486,12 @@ struct iwlagn_bt_cmd {
+ 	__le16 bt4_decision_time; /* unused */
+ 	__le16 valid;
+ 	u8 prio_boost;
+-	u8 reserved[3];
++	/*
++	 * set IWLAGN_BT_VALID_BOOST to "1" in "valid" bitmask
++	 * if configure the following patterns
++	 */
++	u8 tx_prio_boost;	/* SW boost of WiFi tx priority */
++	__le16 rx_prio_boost;	/* SW boost of WiFi rx priority */
+ };
+ 
+ #define IWLAGN_BT_SCO_ACTIVE	cpu_to_le32(BIT(0))
+-- 
+1.7.0.4
 
-$$ reg.h
-/*
- * ACK/CTS timeout register
- */
-#define AR5K_TIME_OUT		0x8014			/* Register Address */
-#define AR5K_TIME_OUT_ACK	0x00001fff	/* ACK timeout mask */
-#define AR5K_TIME_OUT_ACK_S	0
-#define AR5K_TIME_OUT_CTS	0x1fff0000	/* CTS timeout mask */
-#define AR5K_TIME_OUT_CTS_S	16
-
-Taking the value of the register (1024), masking it with the ACK
-Timeout Mask (0x1fff) and dividing it by the clock rate (40), we get a
-much smaller ACK Timeout value:
-1024 & 0x1fff = 1024
-1024/40 = 25us
-
-
-Am I understanding this right? Is the driver actually setting the ACK
-Timeout to be much smaller than even a DIFS, let alone matching the
-spec?
-
-
-
-Thanks,
-
---
-Jonathan Guerin
