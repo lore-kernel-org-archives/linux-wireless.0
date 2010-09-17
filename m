@@ -1,141 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:25146 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754331Ab0IINxU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Sep 2010 09:53:20 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 09/12] iwlwifi: force scan complete after timeout
-Date: Thu,  9 Sep 2010 15:52:27 +0200
-Message-Id: <1284040354-31703-10-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
-References: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
+Received: from mail30s.wh2.ocn.ne.jp ([125.206.180.198]:42865 "HELO
+	mail30s.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754700Ab0IQCg4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Sep 2010 22:36:56 -0400
+Received: from vs3001.wh2.ocn.ne.jp (125.206.180.229)
+	by mail30s.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-0687531015
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 11:36:55 +0900 (JST)
+Subject: [PATCH 11/11] ath5k: Add tx queue configuration function
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Fri, 17 Sep 2010 11:37:18 +0900
+Message-ID: <20100917023718.24997.40780.stgit@tt-desk>
+In-Reply-To: <20100917023543.24997.48466.stgit@tt-desk>
+References: <20100917023543.24997.48466.stgit@tt-desk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If we do not get notification from hardware about scan complete, after
-timeout do mac80211 scan completion anyway. This assure we end scan
-in case of firmware hung.
+Add the mac80211 callback function to configure the tx queue properties like
+cw_min, cw_max and aifs.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Bruno Randolf <br1@einfach.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-core.c |   15 +++------------
- drivers/net/wireless/iwlwifi/iwl-scan.c |   20 +++++++++++++++-----
- 2 files changed, 18 insertions(+), 17 deletions(-)
+ drivers/net/wireless/ath/ath5k/base.c |   40 ++++++++++++++++++++++++++++++++-
+ 1 files changed, 39 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 87a2e40..7c1819f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -2041,7 +2041,6 @@ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
- {
- 	struct iwl_priv *priv = hw->priv;
- 	struct iwl_rxon_context *ctx = iwl_rxon_ctx_from_vif(vif);
--	bool scan_completed = false;
- 
- 	IWL_DEBUG_MAC80211(priv, "enter\n");
- 
-@@ -2050,15 +2049,10 @@ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
- 	WARN_ON(ctx->vif != vif);
- 	ctx->vif = NULL;
- 
--	iwl_scan_cancel_timeout(priv, 100);
-+	if (priv->scan_vif == vif)
-+		iwl_scan_cancel_timeout(priv, 100);
- 	iwl_set_mode(priv, vif);
- 
--	if (priv->scan_vif == vif) {
--		scan_completed = true;
--		priv->scan_vif = NULL;
--		priv->scan_request = NULL;
--	}
--
- 	/*
- 	 * When removing the IBSS interface, overwrite the
- 	 * BT traffic load with the stored one from the last
-@@ -2072,9 +2066,6 @@ void iwl_mac_remove_interface(struct ieee80211_hw *hw,
- 	memset(priv->bssid, 0, ETH_ALEN);
- 	mutex_unlock(&priv->mutex);
- 
--	if (scan_completed)
--		ieee80211_scan_completed(priv->hw, true);
--
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
- 
- }
-@@ -2255,6 +2246,7 @@ void iwl_mac_reset_tsf(struct ieee80211_hw *hw)
- 
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
-+	iwl_scan_cancel_timeout(priv, 100);
- 	if (!iwl_is_ready_rf(priv)) {
- 		IWL_DEBUG_MAC80211(priv, "leave - not ready\n");
- 		mutex_unlock(&priv->mutex);
-@@ -2264,7 +2256,6 @@ void iwl_mac_reset_tsf(struct ieee80211_hw *hw)
- 	/* we are restarting association process
- 	 * clear RXON_FILTER_ASSOC_MSK bit
- 	 */
--	iwl_scan_cancel_timeout(priv, 100);
- 	ctx->staging.filter_flags &= ~RXON_FILTER_ASSOC_MSK;
- 	iwlcore_commit_rxon(priv, ctx);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index f79fb3e..fcc826e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -106,6 +106,15 @@ static void iwl_complete_scan(struct iwl_priv *priv, bool aborted)
- 	priv->scan_request = NULL;
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index cfa9243..95072db 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -3144,6 +3144,44 @@ static void ath5k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
+ 	mutex_unlock(&sc->lock);
  }
  
-+static void iwl_force_scan_end(struct iwl_priv *priv)
++static int ath5k_conf_tx(struct ieee80211_hw *hw, u16 queue,
++			 const struct ieee80211_tx_queue_params *params)
 +{
-+	IWL_DEBUG_SCAN(priv, "Forcing scan end\n");
-+	clear_bit(STATUS_SCANNING, &priv->status);
-+	clear_bit(STATUS_SCAN_HW, &priv->status);
-+	clear_bit(STATUS_SCAN_ABORTING, &priv->status);
-+	iwl_complete_scan(priv, true);
++	struct ath5k_softc *sc = hw->priv;
++	struct ath5k_hw *ah = sc->ah;
++	struct ath5k_txq_info qi;
++	int ret = 0;
++
++	if (queue >= ah->ah_capabilities.cap_queues.q_tx_num)
++		return 0;
++
++	mutex_lock(&sc->lock);
++
++	ath5k_hw_get_tx_queueprops(ah, queue, &qi);
++
++	qi.tqi_aifs = params->aifs;
++	qi.tqi_cw_min = params->cw_min;
++	qi.tqi_cw_max = params->cw_max;
++	qi.tqi_burst_time = params->txop;
++
++	ATH5K_DBG(sc, ATH5K_DEBUG_ANY,
++		  "Configure tx [queue %d],  "
++		  "aifs: %d, cw_min: %d, cw_max: %d, txop: %d\n",
++		  queue, params->aifs, params->cw_min,
++		  params->cw_max, params->txop);
++
++	if (ath5k_hw_set_tx_queueprops(ah, queue, &qi)) {
++		ATH5K_ERR(sc,
++			  "Unable to update hardware queue %u!\n", queue);
++		ret = -EIO;
++	} else
++		ath5k_hw_reset_tx_queue(ah, queue);
++
++	mutex_unlock(&sc->lock);
++
++	return ret;
 +}
 +
- static void iwl_do_scan_abort(struct iwl_priv *priv)
- {
- 	int ret;
-@@ -125,10 +134,7 @@ static void iwl_do_scan_abort(struct iwl_priv *priv)
- 	ret = iwl_send_scan_abort(priv);
- 	if (ret) {
- 		IWL_DEBUG_SCAN(priv, "Send scan abort failed %d\n", ret);
--		clear_bit(STATUS_SCANNING, &priv->status);
--		clear_bit(STATUS_SCAN_HW, &priv->status);
--		clear_bit(STATUS_SCAN_ABORTING, &priv->status);
--		iwl_complete_scan(priv, true);
-+		iwl_force_scan_end(priv);
- 	} else
- 		IWL_DEBUG_SCAN(priv, "Sucessfully send scan abort\n");
- }
-@@ -151,6 +157,7 @@ EXPORT_SYMBOL(iwl_scan_cancel);
-  */
- int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
- {
-+	int ret;
- 	unsigned long timeout = jiffies + msecs_to_jiffies(ms);
- 
- 	lockdep_assert_held(&priv->mutex);
-@@ -165,7 +172,10 @@ int iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
- 		msleep(20);
- 	}
- 
--	return test_bit(STATUS_SCAN_HW, &priv->status);
-+	ret = test_bit(STATUS_SCAN_HW, &priv->status);
-+	if (ret)
-+		iwl_force_scan_end(priv);
-+	return ret;
- }
- EXPORT_SYMBOL(iwl_scan_cancel_timeout);
- 
--- 
-1.7.1
+ static const struct ieee80211_ops ath5k_hw_ops = {
+ 	.tx 		= ath5k_tx,
+ 	.start 		= ath5k_start,
+@@ -3156,7 +3194,7 @@ static const struct ieee80211_ops ath5k_hw_ops = {
+ 	.set_key 	= ath5k_set_key,
+ 	.get_stats 	= ath5k_get_stats,
+ 	.get_survey	= ath5k_get_survey,
+-	.conf_tx 	= NULL,
++	.conf_tx	= ath5k_conf_tx,
+ 	.get_tsf 	= ath5k_get_tsf,
+ 	.set_tsf 	= ath5k_set_tsf,
+ 	.reset_tsf 	= ath5k_reset_tsf,
 
