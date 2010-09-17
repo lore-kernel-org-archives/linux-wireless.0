@@ -1,84 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:25437 "HELO
-	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753164Ab0IQCgE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Sep 2010 22:36:04 -0400
-Received: from vs3011.wh2.ocn.ne.jp (125.206.180.239)
-	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-028923962
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 11:36:03 +0900 (JST)
-Subject: [PATCH 01/11] ath/ath5k/ath9k: Fix crypto capabilities merge issue
+Received: from mga09.intel.com ([134.134.136.24]:42101 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754277Ab0IQVXa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Sep 2010 17:23:30 -0400
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Fri, 17 Sep 2010 11:36:25 +0900
-Message-ID: <20100917023625.24997.72252.stgit@tt-desk>
-In-Reply-To: <20100917023543.24997.48466.stgit@tt-desk>
-References: <20100917023543.24997.48466.stgit@tt-desk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Cc: linux-wireless@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 06/10] iwlagn: adding aggregated frame failure status to debugfs
+Date: Fri, 17 Sep 2010 14:24:30 -0700
+Message-Id: <1284758674-25297-7-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1284758674-25297-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1284758674-25297-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixing up a merge issue / concurrent development:
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Remove unneeded ath_crypt_caps flags, as per "ath9k_hw: remove useless hw
-capability flags" (364734fafbba0c3133e482db78149b9a823ae7a5), but set the
-AESCCM flag for ath9k. common ath code still needs a flag for this because
-there is ath5k hardware which can't do AES in hardware.
+Addition to standard tx frame failure report, adding aggregated
+frame failure report to debugfs
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/ath.h          |    9 ++-------
- drivers/net/wireless/ath/ath5k/attach.c |    3 +--
- drivers/net/wireless/ath/ath9k/hw.c     |    2 ++
- 3 files changed, 5 insertions(+), 9 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c |   51 +++++++++++++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-agn.h         |    5 ++
+ 2 files changed, 54 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index c558407..dd236c3 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -72,13 +72,8 @@ struct ath_regulatory {
- };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
+index de68dde..52e9869 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c
+@@ -25,7 +25,7 @@
+ *  Intel Linux Wireless <ilw@linux.intel.com>
+ * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
+ *****************************************************************************/
+-
++#include "iwl-agn.h"
+ #include "iwl-agn-debugfs.h"
  
- enum ath_crypt_caps {
--	ATH_CRYPT_CAP_MIC_AESCCM		= BIT(0),
--	ATH_CRYPT_CAP_MIC_CKIP			= BIT(1),
--	ATH_CRYPT_CAP_MIC_TKIP			= BIT(2),
--	ATH_CRYPT_CAP_CIPHER_AESCCM		= BIT(3),
--	ATH_CRYPT_CAP_CIPHER_CKIP		= BIT(4),
--	ATH_CRYPT_CAP_CIPHER_TKIP		= BIT(5),
--	ATH_CRYPT_CAP_MIC_COMBINED		= BIT(6),
-+	ATH_CRYPT_CAP_CIPHER_AESCCM		= BIT(0),
-+	ATH_CRYPT_CAP_MIC_COMBINED		= BIT(1),
- };
+ static int iwl_statistics_flag(struct iwl_priv *priv, char *buf, int bufsz)
+@@ -1019,7 +1019,8 @@ ssize_t iwl_reply_tx_error_read(struct file *file,
+ 	struct iwl_priv *priv = (struct iwl_priv *)file->private_data;
+ 	int pos = 0;
+ 	char *buf;
+-	int bufsz = (sizeof(struct reply_tx_error_statistics) * 24) + 200;
++	int bufsz = (sizeof(struct reply_tx_error_statistics) * 24) +
++		(sizeof(struct reply_agg_tx_error_statistics) * 24) + 200;
+ 	ssize_t ret;
  
- struct ath_keyval {
-diff --git a/drivers/net/wireless/ath/ath5k/attach.c b/drivers/net/wireless/ath/ath5k/attach.c
-index a0e0820..20d178e 100644
---- a/drivers/net/wireless/ath/ath5k/attach.c
-+++ b/drivers/net/wireless/ath/ath5k/attach.c
-@@ -320,8 +320,7 @@ int ath5k_hw_attach(struct ath5k_softc *sc)
- 	if (srev >= AR5K_SREV_AR5212_V4 &&
- 	    (ee->ee_version >= AR5K_EEPROM_VERSION_5_0 &&
- 	    !AR5K_EEPROM_AES_DIS(ee->ee_misc5)))
--		common->crypt_caps |= ATH_CRYPT_CAP_CIPHER_AESCCM |
--					ATH_CRYPT_CAP_MIC_AESCCM;
-+		common->crypt_caps |= ATH_CRYPT_CAP_CIPHER_AESCCM;
+ 	if (!iwl_is_alive(priv))
+@@ -1104,6 +1105,52 @@ ssize_t iwl_reply_tx_error_read(struct file *file,
+ 	pos += scnprintf(buf + pos, bufsz - pos, "UNKNOWN:\t\t\t%u\n",
+ 			 priv->_agn.reply_tx_stats.unknown);
  
- 	if (srev >= AR5K_SREV_AR2414) {
- 		common->crypt_caps |= ATH_CRYPT_CAP_MIC_COMBINED;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index f3c9d75..0b2ff98 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1866,6 +1866,8 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 	pCap->low_5ghz_chan = 4920;
- 	pCap->high_5ghz_chan = 6100;
- 
-+	common->crypt_caps |= ATH_CRYPT_CAP_CIPHER_AESCCM;
++	pos += scnprintf(buf + pos, bufsz - pos,
++			 "\nStatistics_Agg_TX_Error:\n");
 +
- 	if (ah->config.ht_enable)
- 		pCap->hw_caps |= ATH9K_HW_CAP_HT;
- 	else
++	pos += scnprintf(buf + pos, bufsz - pos, "%s:\t\t\t%u\n",
++			 iwl_get_agg_tx_fail_reason(AGG_TX_STATE_UNDERRUN_MSK),
++			 priv->_agn.reply_agg_tx_stats.underrun);
++	pos += scnprintf(buf + pos, bufsz - pos, "%s:\t\t\t%u\n",
++			 iwl_get_agg_tx_fail_reason(AGG_TX_STATE_BT_PRIO_MSK),
++			 priv->_agn.reply_agg_tx_stats.bt_prio);
++	pos += scnprintf(buf + pos, bufsz - pos, "%s:\t\t\t%u\n",
++			 iwl_get_agg_tx_fail_reason(AGG_TX_STATE_FEW_BYTES_MSK),
++			 priv->_agn.reply_agg_tx_stats.few_bytes);
++	pos += scnprintf(buf + pos, bufsz - pos, "%s:\t\t\t%u\n",
++			 iwl_get_agg_tx_fail_reason(AGG_TX_STATE_ABORT_MSK),
++			 priv->_agn.reply_agg_tx_stats.abort);
++	pos += scnprintf(buf + pos, bufsz - pos, "%s:\t\t%u\n",
++			 iwl_get_agg_tx_fail_reason(
++				AGG_TX_STATE_LAST_SENT_TTL_MSK),
++			 priv->_agn.reply_agg_tx_stats.last_sent_ttl);
++	pos += scnprintf(buf + pos, bufsz - pos, "%s:\t\t%u\n",
++			 iwl_get_agg_tx_fail_reason(
++				AGG_TX_STATE_LAST_SENT_TRY_CNT_MSK),
++			 priv->_agn.reply_agg_tx_stats.last_sent_try);
++	pos += scnprintf(buf + pos, bufsz - pos, "%s:\t\t%u\n",
++			 iwl_get_agg_tx_fail_reason(
++				AGG_TX_STATE_LAST_SENT_BT_KILL_MSK),
++			 priv->_agn.reply_agg_tx_stats.last_sent_bt_kill);
++	pos += scnprintf(buf + pos, bufsz - pos, "%s:\t\t\t%u\n",
++			 iwl_get_agg_tx_fail_reason(AGG_TX_STATE_SCD_QUERY_MSK),
++			 priv->_agn.reply_agg_tx_stats.scd_query);
++	pos += scnprintf(buf + pos, bufsz - pos, "%s:\t\t%u\n",
++			 iwl_get_agg_tx_fail_reason(
++				AGG_TX_STATE_TEST_BAD_CRC32_MSK),
++			 priv->_agn.reply_agg_tx_stats.bad_crc32);
++	pos += scnprintf(buf + pos, bufsz - pos, "%s:\t\t\t%u\n",
++			 iwl_get_agg_tx_fail_reason(AGG_TX_STATE_RESPONSE_MSK),
++			 priv->_agn.reply_agg_tx_stats.response);
++	pos += scnprintf(buf + pos, bufsz - pos, "%s:\t\t\t%u\n",
++			 iwl_get_agg_tx_fail_reason(AGG_TX_STATE_DUMP_TX_MSK),
++			 priv->_agn.reply_agg_tx_stats.dump_tx);
++	pos += scnprintf(buf + pos, bufsz - pos, "%s:\t\t\t%u\n",
++			 iwl_get_agg_tx_fail_reason(AGG_TX_STATE_DELAY_TX_MSK),
++			 priv->_agn.reply_agg_tx_stats.delay_tx);
++	pos += scnprintf(buf + pos, bufsz - pos, "UNKNOWN:\t\t\t%u\n",
++			 priv->_agn.reply_agg_tx_stats.unknown);
++
+ 	ret = simple_read_from_buffer(user_buf, count, ppos, buf, pos);
+ 	kfree(buf);
+ 	return ret;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index e1f85ae..a372184 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -238,4 +238,9 @@ void iwlagn_bt_rx_handler_setup(struct iwl_priv *priv);
+ void iwlagn_bt_setup_deferred_work(struct iwl_priv *priv);
+ void iwlagn_bt_cancel_deferred_work(struct iwl_priv *priv);
+ 
++#ifdef CONFIG_IWLWIFI_DEBUG
++const char *iwl_get_agg_tx_fail_reason(u16 status);
++#else
++static inline const char *iwl_get_agg_tx_fail_reason(u16 status) { return ""; }
++#endif
+ #endif /* __iwl_agn_h__ */
+-- 
+1.7.0.4
 
