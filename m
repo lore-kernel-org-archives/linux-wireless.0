@@ -1,71 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:44593 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757189Ab0I0S5h (ORCPT
+Received: from mail30f.wh2.ocn.ne.jp ([220.111.41.203]:26921 "HELO
+	mail30f.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753285Ab0IQCga (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 14:57:37 -0400
-Message-ID: <4CA0E91A.7090704@candelatech.com>
-Date: Mon, 27 Sep 2010 11:57:30 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 16 Sep 2010 22:36:30 -0400
+Received: from vs3002.wh2.ocn.ne.jp (125.206.180.165)
+	by mail30f.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 4-029181988
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 11:36:28 +0900 (JST)
+Subject: [PATCH 06/11] ath5k: Move tx frame completion into separate function
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Fri, 17 Sep 2010 11:36:51 +0900
+Message-ID: <20100917023651.24997.19446.stgit@tt-desk>
+In-Reply-To: <20100917023543.24997.48466.stgit@tt-desk>
+References: <20100917023543.24997.48466.stgit@tt-desk>
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Nick Kossifidis <mickflemm@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] This allows ath5k to support virtual STA and AP interfaces.
-References: <1285272430-9617-1-git-send-email-greearb@candelatech.com> <AANLkTi=n9GDjiBxiS0cen2objz+BO9CeC-Uy5c6hVWhS@mail.gmail.com> <4C9CEB3F.5090804@candelatech.com> <4C9DBD69.2070700@openwrt.org>
-In-Reply-To: <4C9DBD69.2070700@openwrt.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/25/2010 02:14 AM, Felix Fietkau wrote:
-> On 2010-09-24 8:17 PM, Ben Greear wrote:
->> On 09/24/2010 10:46 AM, Nick Kossifidis wrote:
->>> 2010/9/23<greearb@candelatech.com>:
->>>> From: Ben Greear<greearb@candelatech.com>
->>>>
->>>> +#define ATH5K_VIF_MAX  2048
->>>
->>> This is too much !!! 2048 interfaces with a total of 4 beacon buffers
->>> 40 rx buffers and 200 tx buffers ? Has anyone tested this ?
->>>
->>> Also think about embedded devices, we don't want to waste memory like this...
->>>
->>>> +       struct ieee80211_vif *vifs[ATH5K_VIF_MAX];
->>
->> It only costs 4 or 8 bytes per pointer as long as no one actually
->> adds the vifs.
->>
->> We've tested at least 128 on an old 1Ghz VIA system, and I'd hope for more
->> on more modern hardware.  I didn't think the driver should make the decision
->> to limit un-necessarily.
->>
->> If you still think this is too much, then tell me the biggest number
->> you wouldn't complain about :)
-> Actually, looking at the code, I don't see much reason to even have this
-> array. Most of the time the code is iterating over the list anyway, so
-> we might as well just have a linked list here...
-> That way we can avoid introducing bogus limitations or memory waste.
+Clearer separation between queue handling and what we do with completed frames.
 
-I tried really hard to just use the mac80211 vif list, but I cannot
-find a sane way to lookup a vif by a particular immutable piece of information.
-I *could* find it based on mac-addr with a linear search by abusing
-the mac80211 iterator logic, but that seems fragile (can't macs change?)
-as well as a poor perfomer.
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+---
+ drivers/net/wireless/ath/ath5k/base.c |  107 ++++++++++++++++++---------------
+ 1 files changed, 57 insertions(+), 50 deletions(-)
 
-Any other regular list based approach is going to involve linear lookups
-as well.  See ath5k_beacon_send for the need to lookup based on
-an index or similar.
-
-I think for now, I'd like to just stay with a 512 fixed size array
-for the vifs.  Maybe someday someone will add an index to ieee80211_vif
-and logic to look it up by hash, but I suspect I'd have at best
-a long slow time of trying to get that sort of change upstream.
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 1e3d7b7..eba2e74 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1520,6 +1520,61 @@ drop_packet:
+ 	return NETDEV_TX_OK;
+ }
+ 
++static void
++ath5k_tx_frame_completed(struct ath5k_softc *sc, struct sk_buff *skb,
++			 struct ath5k_tx_status *ts)
++{
++	struct ieee80211_tx_info *info;
++	int i;
++
++	sc->stats.tx_all_count++;
++	info = IEEE80211_SKB_CB(skb);
++
++	ieee80211_tx_info_clear_status(info);
++	for (i = 0; i < 4; i++) {
++		struct ieee80211_tx_rate *r =
++			&info->status.rates[i];
++
++		if (ts->ts_rate[i]) {
++			r->idx = ath5k_hw_to_driver_rix(sc, ts->ts_rate[i]);
++			r->count = ts->ts_retry[i];
++		} else {
++			r->idx = -1;
++			r->count = 0;
++		}
++	}
++
++	/* count the successful attempt as well */
++	info->status.rates[ts->ts_final_idx].count++;
++
++	if (unlikely(ts->ts_status)) {
++		sc->stats.ack_fail++;
++		if (ts->ts_status & AR5K_TXERR_FILT) {
++			info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
++			sc->stats.txerr_filt++;
++		}
++		if (ts->ts_status & AR5K_TXERR_XRETRY)
++			sc->stats.txerr_retry++;
++		if (ts->ts_status & AR5K_TXERR_FIFO)
++			sc->stats.txerr_fifo++;
++	} else {
++		info->flags |= IEEE80211_TX_STAT_ACK;
++		info->status.ack_signal = ts->ts_rssi;
++	}
++
++	/*
++	* Remove MAC header padding before giving the frame
++	* back to mac80211.
++	*/
++	ath5k_remove_padding(skb);
++
++	if (ts->ts_antenna > 0 && ts->ts_antenna < 5)
++		sc->stats.antenna_tx[ts->ts_antenna]++;
++	else
++		sc->stats.antenna_tx[0]++; /* invalid */
++
++	ieee80211_tx_status(sc->hw, skb);
++}
+ 
+ static void
+ ath5k_tx_processq(struct ath5k_softc *sc, struct ath5k_txq *txq)
+@@ -1528,8 +1583,7 @@ ath5k_tx_processq(struct ath5k_softc *sc, struct ath5k_txq *txq)
+ 	struct ath5k_buf *bf, *bf0;
+ 	struct ath5k_desc *ds;
+ 	struct sk_buff *skb;
+-	struct ieee80211_tx_info *info;
+-	int i, ret;
++	int ret;
+ 
+ 	spin_lock(&txq->lock);
+ 	list_for_each_entry_safe(bf, bf0, &txq->q, list) {
+@@ -1545,7 +1599,6 @@ ath5k_tx_processq(struct ath5k_softc *sc, struct ath5k_txq *txq)
+ 		if (ath5k_hw_get_txdp(sc->ah, txq->qnum) == bf->daddr &&
+ 		    !list_is_last(&bf->list, &txq->q))
+ 			break;
+-
+ 		ret = sc->ah->ah_proc_tx_desc(sc->ah, ds, &ts);
+ 		if (unlikely(ret == -EINPROGRESS))
+ 			break;
+@@ -1555,58 +1608,12 @@ ath5k_tx_processq(struct ath5k_softc *sc, struct ath5k_txq *txq)
+ 			break;
+ 		}
+ 
+-		sc->stats.tx_all_count++;
+ 		skb = bf->skb;
+-		info = IEEE80211_SKB_CB(skb);
+ 		bf->skb = NULL;
+-
+ 		pci_unmap_single(sc->pdev, bf->skbaddr, skb->len,
+ 				PCI_DMA_TODEVICE);
+ 
+-		ieee80211_tx_info_clear_status(info);
+-		for (i = 0; i < 4; i++) {
+-			struct ieee80211_tx_rate *r =
+-				&info->status.rates[i];
+-
+-			if (ts.ts_rate[i]) {
+-				r->idx = ath5k_hw_to_driver_rix(sc, ts.ts_rate[i]);
+-				r->count = ts.ts_retry[i];
+-			} else {
+-				r->idx = -1;
+-				r->count = 0;
+-			}
+-		}
+-
+-		/* count the successful attempt as well */
+-		info->status.rates[ts.ts_final_idx].count++;
+-
+-		if (unlikely(ts.ts_status)) {
+-			sc->stats.ack_fail++;
+-			if (ts.ts_status & AR5K_TXERR_FILT) {
+-				info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
+-				sc->stats.txerr_filt++;
+-			}
+-			if (ts.ts_status & AR5K_TXERR_XRETRY)
+-				sc->stats.txerr_retry++;
+-			if (ts.ts_status & AR5K_TXERR_FIFO)
+-				sc->stats.txerr_fifo++;
+-		} else {
+-			info->flags |= IEEE80211_TX_STAT_ACK;
+-			info->status.ack_signal = ts.ts_rssi;
+-		}
+-
+-		/*
+-		 * Remove MAC header padding before giving the frame
+-		 * back to mac80211.
+-		 */
+-		ath5k_remove_padding(skb);
+-
+-		if (ts.ts_antenna > 0 && ts.ts_antenna < 5)
+-			sc->stats.antenna_tx[ts.ts_antenna]++;
+-		else
+-			sc->stats.antenna_tx[0]++; /* invalid */
+-
+-		ieee80211_tx_status(sc->hw, skb);
++		ath5k_tx_frame_completed(sc, skb, &ts);
+ 
+ 		spin_lock(&sc->txbuflock);
+ 		list_move_tail(&bf->list, &sc->txbuf);
 
