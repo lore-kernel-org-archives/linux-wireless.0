@@ -1,115 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:21539 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.19.149.2]:16761 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751217Ab0IBIey (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Sep 2010 04:34:54 -0400
-Received: from mail.atheros.com ([10.10.20.105])
+	id S1754813Ab0IQANU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Sep 2010 20:13:20 -0400
+Received: from mail.atheros.com ([10.10.20.108])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Thu, 02 Sep 2010 01:34:49 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/3] ath9k_hw: Add functions to get/set antenna diversity configuration
-Date: Thu, 2 Sep 2010 01:34:42 -0700
-Message-ID: <1283416483-5674-2-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1283416483-5674-1-git-send-email-vasanth@atheros.com>
-References: <1283416483-5674-1-git-send-email-vasanth@atheros.com>
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Sep 2010 17:13:14 -0700
+From: Vipin Mehta <Vipin.Mehta@Atheros.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: "greg@kroah.com" <greg@kroah.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
+Date: Thu, 16 Sep 2010 17:13:17 -0700
+Subject: RE: [PATCH] staging: ath6kl: Including a header file to fix a
+ compilation error
+Message-ID: <35B17FE5076C7040809188FBE7913F983F23937A92@SC1EXMB-MBCL.global.atheros.com>
+References: <1284682087-19351-1-git-send-email-vmehta@atheros.com>
+ <AANLkTinPPuie4cUjdLcDD=tt_pfYVx9n+r3xvJKB2=tx@mail.gmail.com>
+In-Reply-To: <AANLkTinPPuie4cUjdLcDD=tt_pfYVx9n+r3xvJKB2=tx@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
----
- drivers/net/wireless/ath/ath9k/ar9002_phy.c |   35 +++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/ar9002_phy.h |    2 +
- drivers/net/wireless/ath/ath9k/hw.h         |   10 +++++++
- 3 files changed, 47 insertions(+), 0 deletions(-)
+You meant 70 characters. Right ?
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-index adbf031..cd56c86 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
-@@ -530,3 +530,38 @@ void ar9002_hw_attach_phy_ops(struct ath_hw *ah)
- 
- 	ar9002_hw_set_nf_limits(ah);
- }
-+
-+void ath9k_hw_antdiv_comb_conf_get(struct ath_hw *ah,
-+				   struct ath_hw_antcomb_conf *antconf)
-+{
-+	u32 regval;
-+
-+	regval = REG_READ(ah, AR_PHY_MULTICHAIN_GAIN_CTL);
-+	antconf->main_lna_conf = (regval & AR_PHY_9285_ANT_DIV_MAIN_LNACONF) >>
-+				  AR_PHY_9285_ANT_DIV_MAIN_LNACONF_S;
-+	antconf->alt_lna_conf = (regval & AR_PHY_9285_ANT_DIV_ALT_LNACONF) >>
-+				 AR_PHY_9285_ANT_DIV_ALT_LNACONF_S;
-+	antconf->fast_div_bias = (regval & AR_PHY_9285_FAST_DIV_BIAS) >>
-+				  AR_PHY_9285_FAST_DIV_BIAS_S;
-+}
-+EXPORT_SYMBOL(ath9k_hw_antdiv_comb_conf_get);
-+
-+void ath9k_hw_antdiv_comb_conf_set(struct ath_hw *ah,
-+				   struct ath_hw_antcomb_conf *antconf)
-+{
-+	u32 regval;
-+
-+	regval = REG_READ(ah, AR_PHY_MULTICHAIN_GAIN_CTL);
-+	regval &= ~(AR_PHY_9285_ANT_DIV_MAIN_LNACONF |
-+		    AR_PHY_9285_ANT_DIV_ALT_LNACONF |
-+		    AR_PHY_9285_FAST_DIV_BIAS);
-+	regval |= ((antconf->main_lna_conf << AR_PHY_9285_ANT_DIV_MAIN_LNACONF_S)
-+		   & AR_PHY_9285_ANT_DIV_MAIN_LNACONF);
-+	regval |= ((antconf->alt_lna_conf << AR_PHY_9285_ANT_DIV_ALT_LNACONF_S)
-+		   & AR_PHY_9285_ANT_DIV_ALT_LNACONF);
-+	regval |= ((antconf->fast_div_bias << AR_PHY_9285_FAST_DIV_BIAS_S)
-+		   & AR_PHY_9285_FAST_DIV_BIAS);
-+
-+	REG_WRITE(ah, AR_PHY_MULTICHAIN_GAIN_CTL, regval);
-+}
-+EXPORT_SYMBOL(ath9k_hw_antdiv_comb_conf_set);
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.h b/drivers/net/wireless/ath/ath9k/ar9002_phy.h
-index c5151a4..37663db 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.h
-@@ -302,6 +302,8 @@
- #define AR_PHY_NEW_ADC_DC_OFFSET_CORR_ENABLE 0x80000000
- 
- #define AR_PHY_MULTICHAIN_GAIN_CTL          0x99ac
-+#define AR_PHY_9285_FAST_DIV_BIAS	    0x00007E00
-+#define AR_PHY_9285_FAST_DIV_BIAS_S	    9
- #define AR_PHY_9285_ANT_DIV_CTL_ALL         0x7f000000
- #define AR_PHY_9285_ANT_DIV_CTL             0x01000000
- #define AR_PHY_9285_ANT_DIV_CTL_S           24
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 1a0efbd..197c717 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -496,6 +496,12 @@ struct ath_gen_timer_table {
- 	} timer_mask;
- };
- 
-+struct ath_hw_antcomb_conf {
-+	u8 main_lna_conf;
-+	u8 alt_lna_conf;
-+	u8 fast_div_bias;
-+};
-+
- /**
-  * struct ath_hw_private_ops - callbacks used internally by hardware code
-  *
-@@ -889,6 +895,10 @@ void ath9k_hw_cfg_output(struct ath_hw *ah, u32 gpio,
- void ath9k_hw_set_gpio(struct ath_hw *ah, u32 gpio, u32 val);
- u32 ath9k_hw_getdefantenna(struct ath_hw *ah);
- void ath9k_hw_setantenna(struct ath_hw *ah, u32 antenna);
-+void ath9k_hw_antdiv_comb_conf_get(struct ath_hw *ah,
-+				   struct ath_hw_antcomb_conf *antconf);
-+void ath9k_hw_antdiv_comb_conf_set(struct ath_hw *ah,
-+				   struct ath_hw_antcomb_conf *antconf);
- 
- /* General Operation */
- bool ath9k_hw_wait(struct ath_hw *ah, u32 reg, u32 mask, u32 val, u32 timeout);
--- 
-1.7.0.4
-
+> -----Original Message-----
+> From: Luis R. Rodriguez [mailto:mcgrof@gmail.com]
+> Sent: Thursday, September 16, 2010 5:11 PM
+> To: Vipin Mehta
+> Cc: greg@kroah.com; linux-wireless@vger.kernel.org;
+> devel@driverdev.osuosl.org
+> Subject: Re: [PATCH] staging: ath6kl: Including a header file to fix a
+> compilation error
+> 
+> On Thu, Sep 16, 2010 at 5:08 PM, Vipin Mehta <vmehta@atheros.com> wrote:
+> > The commit fixes a compilation error that was encountered while using a
+> specific kernel configuration file. The problem was the use of some
+> fuunctions defined in <linux/semaphore.h> without including the header
+> file explicitly. It was probably working before because of the dependency
+> getting implicitly satisfied via some other header file. Also, eliminating
+> the inclusion of the same header file more than once. The code needs
+> additional cleanup and may be addressed by a subsequent commit.
+> 
+> Keep the commit log lines to less than about 70 lines or so.
+> 
+>  Luis
