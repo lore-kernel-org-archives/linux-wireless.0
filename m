@@ -1,55 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:48357 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756953Ab0I0QtJ (ORCPT
+Received: from mail.deathmatch.net ([72.66.92.28]:3476 "EHLO
+	mail.deathmatch.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751545Ab0IQDfW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 12:49:09 -0400
-Message-ID: <4CA0CB0F.3060303@gmail.com>
-Date: Mon, 27 Sep 2010 09:49:19 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+	Thu, 16 Sep 2010 23:35:22 -0400
+Date: Thu, 16 Sep 2010 23:32:24 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Bruno Randolf <br1@einfach.org>
+Cc: linville@tuxdriver.com, ath5k-devel@lists.ath5k.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 02/11] This change reorganizes the main ath5k file in
+	order to re-group
+Message-ID: <20100917033224.GB32630@hash.localnet>
+References: <20100917023543.24997.48466.stgit@tt-desk> <20100917023630.24997.40997.stgit@tt-desk>
 MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: "John W. Linville" <linville@tuxdriver.com>, trivial@kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-fbdev@vger.kernel.org, alsa-devel@alsa-project.org,
-	dri-devel@lists.freedesktop.org, linux-ide@vger.kernel.org,
-	"Maciej W. Rozycki" <macro@linux-mips.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Finn Thain <fthain@telegraphics.com.au>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Matt Turner <mattst88@gmail.com>,
-	Dimitry Torokhov <dmitry.torokhov@gmail.com>,
-	Mike Frysinger <vapier.adi@gmail.com>
-Subject: Re: [RFC v4]update broken web addresses in the kernel.
-References: <1285525875-9920-1-git-send-email-justinmattock@gmail.com>  <20100927151005.GC11086@tuxdriver.com> <1285603383.1732.106.camel@Joe-Laptop>
-In-Reply-To: <1285603383.1732.106.camel@Joe-Laptop>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20100917023630.24997.40997.stgit@tt-desk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/27/2010 09:03 AM, Joe Perches wrote:
-> On Mon, 2010-09-27 at 11:10 -0400, John W. Linville wrote:
->> On Sun, Sep 26, 2010 at 11:31:15AM -0700, Justin P. Mattock wrote:
->>> Below is an updated patch from the original fixing broken web addresses in the kernel.
->>> Thanks for all the help and info on this to everybody..
->>> Hopefully I didnt miss any of them(if so let me know, and I'll resend).
->> Changing a URL for a relocated page is one thing, but removing links
->> isn't necessarily a great idea.  Even if the site is technically
->> gone, it may be possible to find information e.g through the Internet
->> Archive Wayback Machine.
->
-> Perhaps it'd be better to scrape the contents of the various
-> web pages, collect them somewhere like wiki.kernel.org and
-> encourage others to put new contributions in that site.
->
->
->
->
+On Fri, Sep 17, 2010 at 11:36:30AM +0900, Bruno Randolf wrote:
+> From: Bob Copeland <me@bobcopeland.com>
+> 
+> related functions and remove most of the forward declarations
+> (from 61 down to 3).  This is, unfortunately, a lot of churn, but
+> there should be no functional changes.
+> 
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+> Signed-off-by: Bruno Randolf <br1@einfach.org>
 
+> Bruno: rebased to wireless-next
 
-yeah I think somebody was saying something about having a separate file, 
-with all the web addresses in them or something...In any case, up to you 
-guys..
+I'm happy that you did the work :) but something weird happened
+to the commit log: subject is gone and first line of the message
+became the subject.
 
-Justin P. Mattock
+-- 
+Bob Copeland %% www.bobcopeland.com
+
