@@ -1,84 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from adsl-67-113-118-6.dsl.sndg02.pacbell.net ([67.113.118.6]:53291
-	"EHLO multivac.one-eyed-alien.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752940Ab0IYVna (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:42064 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756187Ab0IQTEA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Sep 2010 17:43:30 -0400
-Date: Sat, 25 Sep 2010 13:47:36 -0700
-From: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: Greg KH <greg@kroah.com>, trivial@kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-fbdev@vger.kernel.org, alsa-devel@alsa-project.org,
-	dri-devel@lists.freedesktop.org, linux-ide@vger.kernel.org
-Subject: Re: [RFC 2/3 v3]update web addresses in stagging
-Message-ID: <20100925204736.GD25677@one-eyed-alien.net>
-References: <1285373337-10945-1-git-send-email-justinmattock@gmail.com> <1285373337-10945-2-git-send-email-justinmattock@gmail.com> <20100925003406.GA30029@kroah.com> <4C9D47AC.6000002@gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="7CZp05NP8/gJM8Cl"
-In-Reply-To: <4C9D47AC.6000002@gmail.com>
+	Fri, 17 Sep 2010 15:04:00 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 1683C418D8
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 15:02:16 -0400 (EDT)
+Subject: Compat-wireless release for 2010-09-17 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100917190358.66FBD41134@repository3.orbit-lab.org>
+Date: Fri, 17 Sep 2010 15:03:57 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+   abc3a88..103f01c  history    -> origin/history
+ + 09e4703...cb131d8 master     -> origin/master  (forced update)
+   9c03f16..03a7ab0  stable     -> origin/stable
+ * [new tag]         next-20100917 -> next-20100917
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/ath/carl9170/Makefile: No such file or directory
+make[5]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/ath/carl9170/Makefile'.  Stop.
+make[4]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/ath/carl9170] Error 2
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/ath] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
 
---7CZp05NP8/gJM8Cl
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+compat-wireless code metrics
 
-On Fri, Sep 24, 2010 at 05:51:56PM -0700, Justin P. Mattock wrote:
-> On 09/24/2010 05:34 PM, Greg KH wrote:
-> >On Fri, Sep 24, 2010 at 05:08:56PM -0700, Justin P. Mattock wrote:
-> >>The below patch, is a simple fix to a broken web address not using a=20
-> >>period in it's
-> >>name. I'll leave this up to you guys if you want to use it...
-> >>
-> >>  Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
-> >
-> >I'll queue it up, thanks.
-> >
-> >Oh, it's "staging", not "stagging" as you have up there in the Subject:
-> >:)
-> >
-> >thanks,
-> >
-> >greg k-h
-> >
->=20
-> shoot... and I actually changed it from staging to stagging thinking=20
-> that was correct..(duh)..
->=20
-> Anyways alright.. I'll exclude this one if the other sets get finalized.
-
-One random suggestion:  Perhaps you should include a date here?  i.e. "URL
-blah blah blah (as of Sept 2010)"
-
-That way, people have some idea how much they can trust that URL without
-having to dig into the kernel history to see when it was last changed.
-
-Matt
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-It was a new hope.
-					-- Dust Puppy
-User Friendly, 12/25/1998
-
---7CZp05NP8/gJM8Cl
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
-
-iD8DBQFMnl/o3gL8qCooyc4RAqGYAJ0Vtb9UGcVSOagW2v+EWpTeucsEpACeOJOu
-8n2eXNSWdRbDQNClZROGuGE=
-=rS8p
------END PGP SIGNATURE-----
-
---7CZp05NP8/gJM8Cl--
+    706813 - Total upstream lines of code being pulled
