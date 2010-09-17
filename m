@@ -1,364 +1,1844 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:57190 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751803Ab0IXKi1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Sep 2010 06:38:27 -0400
-Subject: [PATCH 5/5 v2] mac80211: move packet flags into packet
-From: Johannes Berg <johannes.berg@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: John Linville <linville@tuxdriver.com>
-In-Reply-To: <20100924092306.234695699@sipsolutions.net>
-References: <20100924092104.384954781@sipsolutions.net>
-	 <20100924092306.234695699@sipsolutions.net>
-Date: Fri, 24 Sep 2010 12:38:25 +0200
-Message-ID: <1285324705.3699.10.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:24418 "HELO
+	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753267Ab0IQCgN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Sep 2010 22:36:13 -0400
+Received: from vs3013.wh2.ocn.ne.jp (125.206.180.245)
+	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 3-029439969
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 11:36:10 +0900 (JST)
+Subject: [PATCH 02/11] This change reorganizes the main ath5k file in order to
+	re-group
+To: linville@tuxdriver.com
+From: Bruno Randolf <br1@einfach.org>
+Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
+Date: Fri, 17 Sep 2010 11:36:30 +0900
+Message-ID: <20100917023630.24997.40997.stgit@tt-desk>
+In-Reply-To: <20100917023543.24997.48466.stgit@tt-desk>
+References: <20100917023543.24997.48466.stgit@tt-desk>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RnJvbTogSm9oYW5uZXMgQmVyZyA8am9oYW5uZXMuYmVyZ0BpbnRlbC5jb20+Cgpjb21taXQgOGMw
-YzcwOWVlYTVjYmFiOTdmYjQ2NGNkNjhiMDZmMjRhY2M1OGVlMQpBdXRob3I6IEpvaGFubmVzIEJl
-cmcgPGpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXQ+CkRhdGU6ICAgV2VkIE5vdiAyNSAxNzo0Njox
-NSAyMDA5ICswMTAwCgogICAgbWFjODAyMTE6IG1vdmUgY21udHIgZmxhZyBvdXQgb2YgcnggZmxh
-Z3MKCm1vdmVkIHRoZSBDTU5UUiBmbGFnIGludG8gdGhlIHNrYiBSWCBmbGFncyBmb3IKc29tZSBh
-Z2dyZWdhdGlvbiBjbGVhbnVwcywgYnV0IHRoaXMgd2FzIHdyb25nCnNpbmNlIHRoZSBvcHRpbWlz
-YXRpb24gdGhpcyBmbGFnIHRyaWVkIHRvIG1ha2UKcmVxdWlyZXMgdGhhdCBpdCBpcyBrZXB0IGFj
-cm9zcyB0aGUgcHJvY2Vzc2luZwpvZiBtdWx0aXBsZSBpbnRlcmZhY2VzIC0tIHdoaWNoIGlzbid0
-IHRydWUgZm9yCmZsYWdzIGluIHRoZSBza2IuIFRoZSBwYXRjaCBub3Qgb25seSBicm9rZSB0aGUK
-b3B0aW1pc2F0aW9uLCBpdCBhbHNvIGludHJvZHVjZWQgYSBidWc6IHVuZGVyCnNvbWUgKGNvbW1v
-biEpIGNpcmN1bXN0YW5jZXMgdGhlIGZsYWcgd2lsbCBiZQpzZXQgb24gYW4gYWxyZWFkeSBmcmVl
-ZCBza2IhCgpIb3dldmVyLCBpbnZlc3RpZ2F0aW5nIHRoaXMgaW4gbW9yZSBkZXRhaWwsIEkKZm91
-bmQgdGhhdCBtb3N0IG9mIHRoZSBmbGFncyB0aGF0IHdlIHNldCBzaG91bGQKYmUgcGVyIHBhY2tl
-dCwgX2V4Y2VwdF8gZm9yIHRoaXMgb25lLCBkdWUgdG8KYS1NUERVIHByb2Nlc3NpbmcuIEFkZGl0
-aW9uYWxseSwgdGhlIGZsYWdzIHVzZWQKZm9yIHByb2Nlc3NpbmcgKGN1cnJlbnRseSBqdXN0IHRo
-aXMgb25lKSBuZWVkCnRvIGJlIHJlc2V0IGJlZm9yZSBwcm9jZXNzaW5nIGEgbmV3IHBhY2tldC4K
-ClNpbmNlIHdlIGhhdmVuJ3QgYWN0dWFsbHkgc2VlbiBidWdzIHJlcG9ydGVkIGFzCmEgcmVzdWx0
-IG9mIHRoZSB3cm9uZyBmbGFncyBoYW5kbGluZyAod2hpY2ggaXMKbm90IHRvbyBzdXJwcmlzaW5n
-IC0tIHRoZSBvbmx5IHJlYWwgYnVnIGNhc2UgSQpjYW4gY29tZSB1cCB3aXRoIGlzIGFuIGEtTVNE
-VSBjb250YWluZWQgaW4gYW4KYS1NUERVKSwgSSdsbCBtYWtlIGEgZGlmZmVyZW50IGZpeCBmb3Ig
-cmMuCgpTaWduZWQtb2ZmLWJ5OiBKb2hhbm5lcyBCZXJnIDxqb2hhbm5lcy5iZXJnQGludGVsLmNv
-bT4KLS0tCnYyOiBmaXggc21hbGwgYnVnIGluIGRvY3MgZm9yIGEtTVNEVSBmbGFnCgogaW5jbHVk
-ZS9uZXQvbWFjODAyMTEuaCAgICAgfCAgICA2IC0tCiBuZXQvbWFjODAyMTEvaWVlZTgwMjExX2ku
-aCB8ICAgMzggKysrKysrKysrKysrKy0tLQogbmV0L21hYzgwMjExL3J4LmMgICAgICAgICAgfCAg
-MTAyICsrKysrKysrKysrKysrKysrKysrKysrKystLS0tLS0tLS0tLS0tLS0tLS0tLQogbmV0L21h
-YzgwMjExL3dwYS5jICAgICAgICAgfCAgICAyIAogNCBmaWxlcyBjaGFuZ2VkLCA5MSBpbnNlcnRp
-b25zKCspLCA1NyBkZWxldGlvbnMoLSkKCi0tLSB3aXJlbGVzcy10ZXN0aW5nLm9yaWcvbmV0L21h
-YzgwMjExL3J4LmMJMjAxMC0wOS0yNCAxMjozNzowNS4wMDAwMDAwMDAgKzAyMDAKKysrIHdpcmVs
-ZXNzLXRlc3RpbmcvbmV0L21hYzgwMjExL3J4LmMJMjAxMC0wOS0yNCAxMjozNzoyMC4wMDAwMDAw
-MDAgKzAyMDAKQEAgLTMxNSw2ICszMTUsNyBAQCBpZWVlODAyMTFfcnhfbW9uaXRvcihzdHJ1Y3Qg
-aWVlZTgwMjExX2xvCiBzdGF0aWMgdm9pZCBpZWVlODAyMTFfcGFyc2VfcW9zKHN0cnVjdCBpZWVl
-ODAyMTFfcnhfZGF0YSAqcngpCiB7CiAJc3RydWN0IGllZWU4MDIxMV9oZHIgKmhkciA9IChzdHJ1
-Y3QgaWVlZTgwMjExX2hkciAqKXJ4LT5za2ItPmRhdGE7CisJc3RydWN0IGllZWU4MDIxMV9yeF9z
-dGF0dXMgKnN0YXR1cyA9IElFRUU4MDIxMV9TS0JfUlhDQihyeC0+c2tiKTsKIAlpbnQgdGlkOwog
-CiAJLyogZG9lcyB0aGUgZnJhbWUgaGF2ZSBhIHFvcyBjb250cm9sIGZpZWxkPyAqLwpAQCAtMzIz
-LDkgKzMyNCw3IEBAIHN0YXRpYyB2b2lkIGllZWU4MDIxMV9wYXJzZV9xb3Moc3RydWN0IGkKIAkJ
-LyogZnJhbWUgaGFzIHFvcyBjb250cm9sICovCiAJCXRpZCA9ICpxYyAmIElFRUU4MDIxMV9RT1Nf
-Q1RMX1RJRF9NQVNLOwogCQlpZiAoKnFjICYgSUVFRTgwMjExX1FPU19DT05UUk9MX0FfTVNEVV9Q
-UkVTRU5UKQotCQkJcngtPmZsYWdzIHw9IElFRUU4MDIxMV9SWF9BTVNEVTsKLQkJZWxzZQotCQkJ
-cngtPmZsYWdzICY9IH5JRUVFODAyMTFfUlhfQU1TRFU7CisJCQlzdGF0dXMtPnJ4X2ZsYWdzIHw9
-IElFRUU4MDIxMV9SWF9BTVNEVTsKIAl9IGVsc2UgewogCQkvKgogCQkgKiBJRUVFIDgwMi4xMS0y
-MDA3LCA3LjEuMy40LjEgKCJTZXF1ZW5jZSBOdW1iZXIgZmllbGQiKToKQEAgLTM4Nyw5ICszODYs
-MTAgQEAgc3RhdGljIGllZWU4MDIxMV9yeF9yZXN1bHQgZGVidWdfbm9pbmxpbgogaWVlZTgwMjEx
-X3J4X2hfcGFzc2l2ZV9zY2FuKHN0cnVjdCBpZWVlODAyMTFfcnhfZGF0YSAqcngpCiB7CiAJc3Ry
-dWN0IGllZWU4MDIxMV9sb2NhbCAqbG9jYWwgPSByeC0+bG9jYWw7CisJc3RydWN0IGllZWU4MDIx
-MV9yeF9zdGF0dXMgKnN0YXR1cyA9IElFRUU4MDIxMV9TS0JfUlhDQihyeC0+c2tiKTsKIAlzdHJ1
-Y3Qgc2tfYnVmZiAqc2tiID0gcngtPnNrYjsKIAotCWlmIChsaWtlbHkoIShyeC0+ZmxhZ3MgJiBJ
-RUVFODAyMTFfUlhfSU5fU0NBTikpKQorCWlmIChsaWtlbHkoIShzdGF0dXMtPnJ4X2ZsYWdzICYg
-SUVFRTgwMjExX1JYX0lOX1NDQU4pKSkKIAkJcmV0dXJuIFJYX0NPTlRJTlVFOwogCiAJaWYgKHRl
-c3RfYml0KFNDQU5fSFdfU0NBTk5JTkcsICZsb2NhbC0+c2Nhbm5pbmcpKQpAQCAtNzgzLDEzICs3
-ODMsMTQgQEAgc3RhdGljIGllZWU4MDIxMV9yeF9yZXN1bHQgZGVidWdfbm9pbmxpbgogaWVlZTgw
-MjExX3J4X2hfY2hlY2soc3RydWN0IGllZWU4MDIxMV9yeF9kYXRhICpyeCkKIHsKIAlzdHJ1Y3Qg
-aWVlZTgwMjExX2hkciAqaGRyID0gKHN0cnVjdCBpZWVlODAyMTFfaGRyICopcngtPnNrYi0+ZGF0
-YTsKKwlzdHJ1Y3QgaWVlZTgwMjExX3J4X3N0YXR1cyAqc3RhdHVzID0gSUVFRTgwMjExX1NLQl9S
-WENCKHJ4LT5za2IpOwogCiAJLyogRHJvcCBkdXBsaWNhdGUgODAyLjExIHJldHJhbnNtaXNzaW9u
-cyAoSUVFRSA4MDIuMTEgQ2hhcC4gOS4yLjkpICovCiAJaWYgKHJ4LT5zdGEgJiYgIWlzX211bHRp
-Y2FzdF9ldGhlcl9hZGRyKGhkci0+YWRkcjEpKSB7CiAJCWlmICh1bmxpa2VseShpZWVlODAyMTFf
-aGFzX3JldHJ5KGhkci0+ZnJhbWVfY29udHJvbCkgJiYKIAkJCSAgICAgcngtPnN0YS0+bGFzdF9z
-ZXFfY3RybFtyeC0+cXVldWVdID09CiAJCQkgICAgIGhkci0+c2VxX2N0cmwpKSB7Ci0JCQlpZiAo
-cngtPmZsYWdzICYgSUVFRTgwMjExX1JYX1JBX01BVENIKSB7CisJCQlpZiAoc3RhdHVzLT5yeF9m
-bGFncyAmIElFRUU4MDIxMV9SWF9SQV9NQVRDSCkgewogCQkJCXJ4LT5sb2NhbC0+ZG90MTFGcmFt
-ZUR1cGxpY2F0ZUNvdW50Kys7CiAJCQkJcngtPnN0YS0+bnVtX2R1cGxpY2F0ZXMrKzsKIAkJCX0K
-QEAgLTgyMiw3ICs4MjMsNyBAQCBpZWVlODAyMTFfcnhfaF9jaGVjayhzdHJ1Y3QgaWVlZTgwMjEx
-X3J4CiAJCWlmICgoIWllZWU4MDIxMV9oYXNfZnJvbWRzKGhkci0+ZnJhbWVfY29udHJvbCkgJiYK
-IAkJICAgICAhaWVlZTgwMjExX2hhc190b2RzKGhkci0+ZnJhbWVfY29udHJvbCkgJiYKIAkJICAg
-ICBpZWVlODAyMTFfaXNfZGF0YShoZHItPmZyYW1lX2NvbnRyb2wpKSB8fAotCQkgICAgIShyeC0+
-ZmxhZ3MgJiBJRUVFODAyMTFfUlhfUkFfTUFUQ0gpKSB7CisJCSAgICAhKHN0YXR1cy0+cnhfZmxh
-Z3MgJiBJRUVFODAyMTFfUlhfUkFfTUFUQ0gpKSB7CiAJCQkvKiBEcm9wIElCU1MgZnJhbWVzIGFu
-ZCBmcmFtZXMgZm9yIG90aGVyIGhvc3RzCiAJCQkgKiBzaWxlbnRseS4gKi8KIAkJCXJldHVybiBS
-WF9EUk9QX01PTklUT1I7CkBAIC04NzksNyArODgwLDcgQEAgaWVlZTgwMjExX3J4X2hfZGVjcnlw
-dChzdHJ1Y3QgaWVlZTgwMjExXwogCSAqIE5vIHBvaW50IGluIGZpbmRpbmcgYSBrZXkgYW5kIGRl
-Y3J5cHRpbmcgaWYgdGhlIGZyYW1lIGlzIG5laXRoZXIKIAkgKiBhZGRyZXNzZWQgdG8gdXMgbm9y
-IGEgbXVsdGljYXN0IGZyYW1lLgogCSAqLwotCWlmICghKHJ4LT5mbGFncyAmIElFRUU4MDIxMV9S
-WF9SQV9NQVRDSCkpCisJaWYgKCEoc3RhdHVzLT5yeF9mbGFncyAmIElFRUU4MDIxMV9SWF9SQV9N
-QVRDSCkpCiAJCXJldHVybiBSWF9DT05USU5VRTsKIAogCS8qIHN0YXJ0IHdpdGhvdXQgYSBrZXkg
-Ki8KQEAgLTExMTIsNyArMTExMyw3IEBAIGllZWU4MDIxMV9yeF9oX3N0YV9wcm9jZXNzKHN0cnVj
-dCBpZWVlODAKIAkJc3RhLT5sYXN0X3J4ID0gamlmZmllczsKIAl9CiAKLQlpZiAoIShyeC0+Zmxh
-Z3MgJiBJRUVFODAyMTFfUlhfUkFfTUFUQ0gpKQorCWlmICghKHN0YXR1cy0+cnhfZmxhZ3MgJiBJ
-RUVFODAyMTFfUlhfUkFfTUFUQ0gpKQogCQlyZXR1cm4gUlhfQ09OVElOVUU7CiAKIAlpZiAocngt
-PnNkYXRhLT52aWYudHlwZSA9PSBOTDgwMjExX0lGVFlQRV9TVEFUSU9OKQpAQCAtMTI2OSw2ICsx
-MjcwLDcgQEAgaWVlZTgwMjExX3J4X2hfZGVmcmFnbWVudChzdHJ1Y3QgaWVlZTgwMgogCXVuc2ln
-bmVkIGludCBmcmFnLCBzZXE7CiAJc3RydWN0IGllZWU4MDIxMV9mcmFnbWVudF9lbnRyeSAqZW50
-cnk7CiAJc3RydWN0IHNrX2J1ZmYgKnNrYjsKKwlzdHJ1Y3QgaWVlZTgwMjExX3J4X3N0YXR1cyAq
-c3RhdHVzOwogCiAJaGRyID0gKHN0cnVjdCBpZWVlODAyMTFfaGRyICopcngtPnNrYi0+ZGF0YTsK
-IAlmYyA9IGhkci0+ZnJhbWVfY29udHJvbDsKQEAgLTEzNjgsNyArMTM3MCw4IEBAIGllZWU4MDIx
-MV9yeF9oX2RlZnJhZ21lbnQoc3RydWN0IGllZWU4MDIKIAl9CiAKIAkvKiBDb21wbGV0ZSBmcmFt
-ZSBoYXMgYmVlbiByZWFzc2VtYmxlZCAtIHByb2Nlc3MgaXQgbm93ICovCi0JcngtPmZsYWdzIHw9
-IElFRUU4MDIxMV9SWF9GUkFHTUVOVEVEOworCXN0YXR1cyA9IElFRUU4MDIxMV9TS0JfUlhDQihy
-eC0+c2tiKTsKKwlzdGF0dXMtPnJ4X2ZsYWdzIHw9IElFRUU4MDIxMV9SWF9GUkFHTUVOVEVEOwog
-CiAgb3V0OgogCWlmIChyeC0+c3RhKQpAQCAtMTM4NSw5ICsxMzg4LDEwIEBAIGllZWU4MDIxMV9y
-eF9oX3BzX3BvbGwoc3RydWN0IGllZWU4MDIxMV8KIHsKIAlzdHJ1Y3QgaWVlZTgwMjExX3N1Yl9p
-Zl9kYXRhICpzZGF0YSA9IHJ4LT5zZGF0YTsKIAlfX2xlMTYgZmMgPSAoKHN0cnVjdCBpZWVlODAy
-MTFfaGRyICopcngtPnNrYi0+ZGF0YSktPmZyYW1lX2NvbnRyb2w7CisJc3RydWN0IGllZWU4MDIx
-MV9yeF9zdGF0dXMgKnN0YXR1cyA9IElFRUU4MDIxMV9TS0JfUlhDQihyeC0+c2tiKTsKIAogCWlm
-IChsaWtlbHkoIXJ4LT5zdGEgfHwgIWllZWU4MDIxMV9pc19wc3BvbGwoZmMpIHx8Ci0JCSAgICEo
-cngtPmZsYWdzICYgSUVFRTgwMjExX1JYX1JBX01BVENIKSkpCisJCSAgICEoc3RhdHVzLT5yeF9m
-bGFncyAmIElFRUU4MDIxMV9SWF9SQV9NQVRDSCkpKQogCQlyZXR1cm4gUlhfQ09OVElOVUU7CiAK
-IAlpZiAoKHNkYXRhLT52aWYudHlwZSAhPSBOTDgwMjExX0lGVFlQRV9BUCkgJiYKQEAgLTE1NDgs
-NiArMTU1Miw3IEBAIGllZWU4MDIxMV9kZWxpdmVyX3NrYihzdHJ1Y3QgaWVlZTgwMjExX3IKIAlz
-dHJ1Y3Qgc2tfYnVmZiAqc2tiLCAqeG1pdF9za2I7CiAJc3RydWN0IGV0aGhkciAqZWhkciA9IChz
-dHJ1Y3QgZXRoaGRyICopIHJ4LT5za2ItPmRhdGE7CiAJc3RydWN0IHN0YV9pbmZvICpkc3RhOwor
-CXN0cnVjdCBpZWVlODAyMTFfcnhfc3RhdHVzICpzdGF0dXMgPSBJRUVFODAyMTFfU0tCX1JYQ0Io
-cngtPnNrYik7CiAKIAlza2IgPSByeC0+c2tiOwogCXhtaXRfc2tiID0gTlVMTDsKQEAgLTE1NTUs
-NyArMTU2MCw3IEBAIGllZWU4MDIxMV9kZWxpdmVyX3NrYihzdHJ1Y3QgaWVlZTgwMjExX3IKIAlp
-ZiAoKHNkYXRhLT52aWYudHlwZSA9PSBOTDgwMjExX0lGVFlQRV9BUCB8fAogCSAgICAgc2RhdGEt
-PnZpZi50eXBlID09IE5MODAyMTFfSUZUWVBFX0FQX1ZMQU4pICYmCiAJICAgICEoc2RhdGEtPmZs
-YWdzICYgSUVFRTgwMjExX1NEQVRBX0RPTlRfQlJJREdFX1BBQ0tFVFMpICYmCi0JICAgIChyeC0+
-ZmxhZ3MgJiBJRUVFODAyMTFfUlhfUkFfTUFUQ0gpICYmCisJICAgIChzdGF0dXMtPnJ4X2ZsYWdz
-ICYgSUVFRTgwMjExX1JYX1JBX01BVENIKSAmJgogCSAgICAoc2RhdGEtPnZpZi50eXBlICE9IE5M
-ODAyMTFfSUZUWVBFX0FQX1ZMQU4gfHwgIXNkYXRhLT51LnZsYW4uc3RhKSkgewogCQlpZiAoaXNf
-bXVsdGljYXN0X2V0aGVyX2FkZHIoZWhkci0+aF9kZXN0KSkgewogCQkJLyoKQEAgLTE2MzIsNiAr
-MTYzNyw3IEBAIGllZWU4MDIxMV9yeF9oX2Ftc2R1KHN0cnVjdCBpZWVlODAyMTFfcngKIAlzdHJ1
-Y3QgaWVlZTgwMjExX2hkciAqaGRyID0gKHN0cnVjdCBpZWVlODAyMTFfaGRyICopc2tiLT5kYXRh
-OwogCV9fbGUxNiBmYyA9IGhkci0+ZnJhbWVfY29udHJvbDsKIAlzdHJ1Y3Qgc2tfYnVmZl9oZWFk
-IGZyYW1lX2xpc3Q7CisJc3RydWN0IGllZWU4MDIxMV9yeF9zdGF0dXMgKnN0YXR1cyA9IElFRUU4
-MDIxMV9TS0JfUlhDQihyeC0+c2tiKTsKIAogCWlmICh1bmxpa2VseSghaWVlZTgwMjExX2lzX2Rh
-dGEoZmMpKSkKIAkJcmV0dXJuIFJYX0NPTlRJTlVFOwpAQCAtMTYzOSw3ICsxNjQ1LDcgQEAgaWVl
-ZTgwMjExX3J4X2hfYW1zZHUoc3RydWN0IGllZWU4MDIxMV9yeAogCWlmICh1bmxpa2VseSghaWVl
-ZTgwMjExX2lzX2RhdGFfcHJlc2VudChmYykpKQogCQlyZXR1cm4gUlhfRFJPUF9NT05JVE9SOwog
-Ci0JaWYgKCEocngtPmZsYWdzICYgSUVFRTgwMjExX1JYX0FNU0RVKSkKKwlpZiAoIShzdGF0dXMt
-PnJ4X2ZsYWdzICYgSUVFRTgwMjExX1JYX0FNU0RVKSkKIAkJcmV0dXJuIFJYX0NPTlRJTlVFOwog
-CiAJaWYgKGllZWU4MDIxMV9oYXNfYTQoaGRyLT5mcmFtZV9jb250cm9sKSAmJgpAQCAtMTY5MCw2
-ICsxNjk2LDcgQEAgaWVlZTgwMjExX3J4X2hfbWVzaF9md2Rpbmcoc3RydWN0IGllZWU4MAogCXN0
-cnVjdCBza19idWZmICpza2IgPSByeC0+c2tiLCAqZndkX3NrYjsKIAlzdHJ1Y3QgaWVlZTgwMjEx
-X2xvY2FsICpsb2NhbCA9IHJ4LT5sb2NhbDsKIAlzdHJ1Y3QgaWVlZTgwMjExX3N1Yl9pZl9kYXRh
-ICpzZGF0YSA9IHJ4LT5zZGF0YTsKKwlzdHJ1Y3QgaWVlZTgwMjExX3J4X3N0YXR1cyAqc3RhdHVz
-ID0gSUVFRTgwMjExX1NLQl9SWENCKHNrYik7CiAKIAloZHIgPSAoc3RydWN0IGllZWU4MDIxMV9o
-ZHIgKikgc2tiLT5kYXRhOwogCWhkcmxlbiA9IGllZWU4MDIxMV9oZHJsZW4oaGRyLT5mcmFtZV9j
-b250cm9sKTsKQEAgLTE3MzUsNyArMTc0Miw3IEBAIGllZWU4MDIxMV9yeF9oX21lc2hfZndkaW5n
-KHN0cnVjdCBpZWVlODAKIAogCW1lc2hfaGRyLT50dGwtLTsKIAotCWlmIChyeC0+ZmxhZ3MgJiBJ
-RUVFODAyMTFfUlhfUkFfTUFUQ0gpIHsKKwlpZiAoc3RhdHVzLT5yeF9mbGFncyAmIElFRUU4MDIx
-MV9SWF9SQV9NQVRDSCkgewogCQlpZiAoIW1lc2hfaGRyLT50dGwpCiAJCQlJRUVFODAyMTFfSUZT
-VEFfTUVTSF9DVFJfSU5DKCZyeC0+c2RhdGEtPnUubWVzaCwKIAkJCQkJCSAgICAgZHJvcHBlZF9m
-cmFtZXNfdHRsKTsKQEAgLTE5NDUsNiArMTk1Miw3IEBAIHN0YXRpYyBpZWVlODAyMTFfcnhfcmVz
-dWx0IGRlYnVnX25vaW5saW4KIGllZWU4MDIxMV9yeF9oX21nbXRfY2hlY2soc3RydWN0IGllZWU4
-MDIxMV9yeF9kYXRhICpyeCkKIHsKIAlzdHJ1Y3QgaWVlZTgwMjExX21nbXQgKm1nbXQgPSAoc3Ry
-dWN0IGllZWU4MDIxMV9tZ210ICopIHJ4LT5za2ItPmRhdGE7CisJc3RydWN0IGllZWU4MDIxMV9y
-eF9zdGF0dXMgKnN0YXR1cyA9IElFRUU4MDIxMV9TS0JfUlhDQihyeC0+c2tiKTsKIAogCS8qCiAJ
-ICogRnJvbSBoZXJlIG9uLCBsb29rIG9ubHkgYXQgbWFuYWdlbWVudCBmcmFtZXMuCkBAIC0xOTU3
-LDcgKzE5NjUsNyBAQCBpZWVlODAyMTFfcnhfaF9tZ210X2NoZWNrKHN0cnVjdCBpZWVlODAyCiAJ
-aWYgKCFpZWVlODAyMTFfaXNfbWdtdChtZ210LT5mcmFtZV9jb250cm9sKSkKIAkJcmV0dXJuIFJY
-X0RST1BfTU9OSVRPUjsKIAotCWlmICghKHJ4LT5mbGFncyAmIElFRUU4MDIxMV9SWF9SQV9NQVRD
-SCkpCisJaWYgKCEoc3RhdHVzLT5yeF9mbGFncyAmIElFRUU4MDIxMV9SWF9SQV9NQVRDSCkpCiAJ
-CXJldHVybiBSWF9EUk9QX01PTklUT1I7CiAKIAlpZiAoaWVlZTgwMjExX2Ryb3BfdW5lbmNyeXB0
-ZWRfbWdtdChyeCkpCkBAIC0xOTcyLDYgKzE5ODAsNyBAQCBpZWVlODAyMTFfcnhfaF9hY3Rpb24o
-c3RydWN0IGllZWU4MDIxMV9yCiAJc3RydWN0IGllZWU4MDIxMV9sb2NhbCAqbG9jYWwgPSByeC0+
-bG9jYWw7CiAJc3RydWN0IGllZWU4MDIxMV9zdWJfaWZfZGF0YSAqc2RhdGEgPSByeC0+c2RhdGE7
-CiAJc3RydWN0IGllZWU4MDIxMV9tZ210ICptZ210ID0gKHN0cnVjdCBpZWVlODAyMTFfbWdtdCAq
-KSByeC0+c2tiLT5kYXRhOworCXN0cnVjdCBpZWVlODAyMTFfcnhfc3RhdHVzICpzdGF0dXMgPSBJ
-RUVFODAyMTFfU0tCX1JYQ0IocngtPnNrYik7CiAJaW50IGxlbiA9IHJ4LT5za2ItPmxlbjsKIAog
-CWlmICghaWVlZTgwMjExX2lzX2FjdGlvbihtZ210LT5mcmFtZV9jb250cm9sKSkKQEAgLTE5ODQs
-NyArMTk5Myw3IEBAIGllZWU4MDIxMV9yeF9oX2FjdGlvbihzdHJ1Y3QgaWVlZTgwMjExX3IKIAlp
-ZiAoIXJ4LT5zdGEgJiYgbWdtdC0+dS5hY3Rpb24uY2F0ZWdvcnkgIT0gV0xBTl9DQVRFR09SWV9Q
-VUJMSUMpCiAJCXJldHVybiBSWF9EUk9QX1VOVVNBQkxFOwogCi0JaWYgKCEocngtPmZsYWdzICYg
-SUVFRTgwMjExX1JYX1JBX01BVENIKSkKKwlpZiAoIShzdGF0dXMtPnJ4X2ZsYWdzICYgSUVFRTgw
-MjExX1JYX1JBX01BVENIKSkKIAkJcmV0dXJuIFJYX0RST1BfVU5VU0FCTEU7CiAKIAlzd2l0Y2gg
-KG1nbXQtPnUuYWN0aW9uLmNhdGVnb3J5KSB7CkBAIC0yMDgwLDcgKzIwODksNyBAQCBpZWVlODAy
-MTFfcnhfaF9hY3Rpb24oc3RydWN0IGllZWU4MDIxMV9yCiAJcmV0dXJuIFJYX0NPTlRJTlVFOwog
-CiAgaW52YWxpZDoKLQlyeC0+ZmxhZ3MgfD0gSUVFRTgwMjExX01BTEZPUk1FRF9BQ1RJT05fRlJN
-OworCXN0YXR1cy0+cnhfZmxhZ3MgfD0gSUVFRTgwMjExX1JYX01BTEZPUk1FRF9BQ1RJT05fRlJN
-OwogCS8qIHdpbGwgcmV0dXJuIGluIHRoZSBuZXh0IGhhbmRsZXJzICovCiAJcmV0dXJuIFJYX0NP
-TlRJTlVFOwogCkBAIC0yMTAyLDEwICsyMTExLDEwIEBAIGllZWU4MDIxMV9yeF9oX2FjdGlvbihz
-dHJ1Y3QgaWVlZTgwMjExX3IKIHN0YXRpYyBpZWVlODAyMTFfcnhfcmVzdWx0IGRlYnVnX25vaW5s
-aW5lCiBpZWVlODAyMTFfcnhfaF91c2Vyc3BhY2VfbWdtdChzdHJ1Y3QgaWVlZTgwMjExX3J4X2Rh
-dGEgKnJ4KQogewotCXN0cnVjdCBpZWVlODAyMTFfcnhfc3RhdHVzICpzdGF0dXM7CisJc3RydWN0
-IGllZWU4MDIxMV9yeF9zdGF0dXMgKnN0YXR1cyA9IElFRUU4MDIxMV9TS0JfUlhDQihyeC0+c2ti
-KTsKIAogCS8qIHNraXAga25vd24tYmFkIGFjdGlvbiBmcmFtZXMgYW5kIHJldHVybiB0aGVtIGlu
-IHRoZSBuZXh0IGhhbmRsZXIgKi8KLQlpZiAocngtPmZsYWdzICYgSUVFRTgwMjExX01BTEZPUk1F
-RF9BQ1RJT05fRlJNKQorCWlmIChzdGF0dXMtPnJ4X2ZsYWdzICYgSUVFRTgwMjExX1JYX01BTEZP
-Uk1FRF9BQ1RJT05fRlJNKQogCQlyZXR1cm4gUlhfQ09OVElOVUU7CiAKIAkvKgpAQCAtMjExNCw3
-ICsyMTIzLDYgQEAgaWVlZTgwMjExX3J4X2hfdXNlcnNwYWNlX21nbXQoc3RydWN0IGllZQogCSAq
-IHNvIHVzZXJzcGFjZSBjYW4gcmVnaXN0ZXIgZm9yIHRob3NlIHRvIGtub3cgd2hldGhlciBvbmVz
-CiAJICogaXQgdHJhbnNtaXR0ZWQgd2VyZSBwcm9jZXNzZWQgb3IgcmV0dXJuZWQuCiAJICovCi0J
-c3RhdHVzID0gSUVFRTgwMjExX1NLQl9SWENCKHJ4LT5za2IpOwogCiAJaWYgKGNmZzgwMjExX3J4
-X21nbXQocngtPnNkYXRhLT5kZXYsIHN0YXR1cy0+ZnJlcSwKIAkJCSAgICAgcngtPnNrYi0+ZGF0
-YSwgcngtPnNrYi0+bGVuLApAQCAtMjEzNiw2ICsyMTQ0LDcgQEAgaWVlZTgwMjExX3J4X2hfYWN0
-aW9uX3JldHVybihzdHJ1Y3QgaWVlZQogCXN0cnVjdCBpZWVlODAyMTFfbWdtdCAqbWdtdCA9IChz
-dHJ1Y3QgaWVlZTgwMjExX21nbXQgKikgcngtPnNrYi0+ZGF0YTsKIAlzdHJ1Y3Qgc2tfYnVmZiAq
-bnNrYjsKIAlzdHJ1Y3QgaWVlZTgwMjExX3N1Yl9pZl9kYXRhICpzZGF0YSA9IHJ4LT5zZGF0YTsK
-KwlzdHJ1Y3QgaWVlZTgwMjExX3J4X3N0YXR1cyAqc3RhdHVzID0gSUVFRTgwMjExX1NLQl9SWENC
-KHJ4LT5za2IpOwogCiAJaWYgKCFpZWVlODAyMTFfaXNfYWN0aW9uKG1nbXQtPmZyYW1lX2NvbnRy
-b2wpKQogCQlyZXR1cm4gUlhfQ09OVElOVUU7CkBAIC0yMTUwLDcgKzIxNTksNyBAQCBpZWVlODAy
-MTFfcnhfaF9hY3Rpb25fcmV0dXJuKHN0cnVjdCBpZWVlCiAJICogcmVnaXN0cmF0aW9uIG1lY2hh
-bmlzbXMsIGJ1dCBvbGRlciBvbmVzIHN0aWxsIHVzZSBjb29rZWQKIAkgKiBtb25pdG9yIGludGVy
-ZmFjZXMgc28gcHVzaCBhbGwgZnJhbWVzIHRoZXJlLgogCSAqLwotCWlmICghKHJ4LT5mbGFncyAm
-IElFRUU4MDIxMV9NQUxGT1JNRURfQUNUSU9OX0ZSTSkgJiYKKwlpZiAoIShzdGF0dXMtPnJ4X2Zs
-YWdzICYgSUVFRTgwMjExX1JYX01BTEZPUk1FRF9BQ1RJT05fRlJNKSAmJgogCSAgICAoc2RhdGEt
-PnZpZi50eXBlID09IE5MODAyMTFfSUZUWVBFX0FQIHx8CiAJICAgICBzZGF0YS0+dmlmLnR5cGUg
-PT0gTkw4MDIxMV9JRlRZUEVfQVBfVkxBTikpCiAJCXJldHVybiBSWF9EUk9QX01PTklUT1I7CkBA
-IC0yMjg0LDggKzIyOTMsMTMgQEAgc3RhdGljIHZvaWQgaWVlZTgwMjExX3J4X2Nvb2tlZF9tb25p
-dG9yKAogCXN0cnVjdCBuZXRfZGV2aWNlICpwcmV2X2RldiA9IE5VTEw7CiAJc3RydWN0IGllZWU4
-MDIxMV9yeF9zdGF0dXMgKnN0YXR1cyA9IElFRUU4MDIxMV9TS0JfUlhDQihza2IpOwogCi0JaWYg
-KHN0YXR1cy0+ZmxhZyAmIFJYX0ZMQUdfSU5URVJOQUxfQ01UUikKKwkvKgorCSAqIElmIGNvb2tl
-ZCBtb25pdG9yIGhhcyBiZWVuIHByb2Nlc3NlZCBhbHJlYWR5LCB0aGVuCisJICogZG9uJ3QgZG8g
-aXQgYWdhaW4uIElmIG5vdCwgc2V0IHRoZSBmbGFnLgorCSAqLworCWlmIChyeC0+ZmxhZ3MgJiBJ
-RUVFODAyMTFfUlhfQ01OVFIpCiAJCWdvdG8gb3V0X2ZyZWVfc2tiOworCXJ4LT5mbGFncyB8PSBJ
-RUVFODAyMTFfUlhfQ01OVFI7CiAKIAlpZiAoc2tiX2hlYWRyb29tKHNrYikgPCBzaXplb2YoKnJ0
-aGRyKSAmJgogCSAgICBwc2tiX2V4cGFuZF9oZWFkKHNrYiwgc2l6ZW9mKCpydGhkciksIDAsIEdG
-UF9BVE9NSUMpKQpAQCAtMjM0MSwxMiArMjM1NSw4IEBAIHN0YXRpYyB2b2lkIGllZWU4MDIxMV9y
-eF9jb29rZWRfbW9uaXRvcigKIAlpZiAocHJldl9kZXYpIHsKIAkJc2tiLT5kZXYgPSBwcmV2X2Rl
-djsKIAkJbmV0aWZfcmVjZWl2ZV9za2Ioc2tiKTsKLQkJc2tiID0gTlVMTDsKLQl9IGVsc2UKLQkJ
-Z290byBvdXRfZnJlZV9za2I7Ci0KLQlzdGF0dXMtPmZsYWcgfD0gUlhfRkxBR19JTlRFUk5BTF9D
-TVRSOwotCXJldHVybjsKKwkJcmV0dXJuOworCX0KIAogIG91dF9mcmVlX3NrYjoKIAlkZXZfa2Zy
-ZWVfc2tiKHNrYik7CkBAIC0yNDA3LDYgKzI0MTcsNyBAQCBzdGF0aWMgdm9pZCBpZWVlODAyMTFf
-cnhfaGFuZGxlcnMoc3RydWN0CiAJCSAqIHNhbWUgVElEIGZyb20gdGhlIHNhbWUgc3RhdGlvbgog
-CQkgKi8KIAkJcngtPnNrYiA9IHNrYjsKKwkJcngtPmZsYWdzID0gMDsKIAogCQlDQUxMX1JYSChp
-ZWVlODAyMTFfcnhfaF9kZWNyeXB0KQogCQlDQUxMX1JYSChpZWVlODAyMTFfcnhfaF9jaGVja19t
-b3JlX2RhdGEpCkBAIC0yNDc3LDcgKzI0ODgsMTIgQEAgc3RhdGljIHZvaWQgaWVlZTgwMjExX2lu
-dm9rZV9yeF9oYW5kbGVycwogdm9pZCBpZWVlODAyMTFfcmVsZWFzZV9yZW9yZGVyX3RpbWVvdXQo
-c3RydWN0IHN0YV9pbmZvICpzdGEsIGludCB0aWQpCiB7CiAJc3RydWN0IHNrX2J1ZmZfaGVhZCBm
-cmFtZXM7Ci0Jc3RydWN0IGllZWU4MDIxMV9yeF9kYXRhIHJ4ID0geyB9OworCXN0cnVjdCBpZWVl
-ODAyMTFfcnhfZGF0YSByeCA9IHsKKwkJLnN0YSA9IHN0YSwKKwkJLnNkYXRhID0gc3RhLT5zZGF0
-YSwKKwkJLmxvY2FsID0gc3RhLT5sb2NhbCwKKwkJLnF1ZXVlID0gdGlkLAorCX07CiAJc3RydWN0
-IHRpZF9hbXBkdV9yeCAqdGlkX2FnZ19yeDsKIAogCXRpZF9hZ2dfcnggPSByY3VfZGVyZWZlcmVu
-Y2Uoc3RhLT5hbXBkdV9tbG1lLnRpZF9yeFt0aWRdKTsKQEAgLTI0ODYsMTMgKzI1MDIsNiBAQCB2
-b2lkIGllZWU4MDIxMV9yZWxlYXNlX3Jlb3JkZXJfdGltZW91dChzCiAKIAlfX3NrYl9xdWV1ZV9o
-ZWFkX2luaXQoJmZyYW1lcyk7CiAKLQkvKiBjb25zdHJ1Y3Qgcnggc3RydWN0ICovCi0Jcnguc3Rh
-ID0gc3RhOwotCXJ4LnNkYXRhID0gc3RhLT5zZGF0YTsKLQlyeC5sb2NhbCA9IHN0YS0+bG9jYWw7
-Ci0JcngucXVldWUgPSB0aWQ7Ci0JcnguZmxhZ3MgfD0gSUVFRTgwMjExX1JYX1JBX01BVENIOwot
-CiAJc3Bpbl9sb2NrKCZ0aWRfYWdnX3J4LT5yZW9yZGVyX2xvY2spOwogCWllZWU4MDIxMV9zdGFf
-cmVvcmRlcl9yZWxlYXNlKCZzdGEtPmxvY2FsLT5odywgdGlkX2FnZ19yeCwgJmZyYW1lcyk7CiAJ
-c3Bpbl91bmxvY2soJnRpZF9hZ2dfcngtPnJlb3JkZXJfbG9jayk7CkBAIC0yNTE5LDcgKzI1Mjgs
-NyBAQCBzdGF0aWMgaW50IHByZXBhcmVfZm9yX2hhbmRsZXJzKHN0cnVjdCBpCiAJCSAgICBjb21w
-YXJlX2V0aGVyX2FkZHIoc2RhdGEtPnZpZi5hZGRyLCBoZHItPmFkZHIxKSAhPSAwKSB7CiAJCQlp
-ZiAoIShzZGF0YS0+ZGV2LT5mbGFncyAmIElGRl9QUk9NSVNDKSkKIAkJCQlyZXR1cm4gMDsKLQkJ
-CXJ4LT5mbGFncyAmPSB+SUVFRTgwMjExX1JYX1JBX01BVENIOworCQkJc3RhdHVzLT5yeF9mbGFn
-cyAmPSB+SUVFRTgwMjExX1JYX1JBX01BVENIOwogCQl9CiAJCWJyZWFrOwogCWNhc2UgTkw4MDIx
-MV9JRlRZUEVfQURIT0M6CkBAIC0yNTI5LDE1ICsyNTM4LDE1IEBAIHN0YXRpYyBpbnQgcHJlcGFy
-ZV9mb3JfaGFuZGxlcnMoc3RydWN0IGkKIAkJCXJldHVybiAxOwogCQl9CiAJCWVsc2UgaWYgKCFp
-ZWVlODAyMTFfYnNzaWRfbWF0Y2goYnNzaWQsIHNkYXRhLT51Lmlic3MuYnNzaWQpKSB7Ci0JCQlp
-ZiAoIShyeC0+ZmxhZ3MgJiBJRUVFODAyMTFfUlhfSU5fU0NBTikpCisJCQlpZiAoIShzdGF0dXMt
-PnJ4X2ZsYWdzICYgSUVFRTgwMjExX1JYX0lOX1NDQU4pKQogCQkJCXJldHVybiAwOwotCQkJcngt
-PmZsYWdzICY9IH5JRUVFODAyMTFfUlhfUkFfTUFUQ0g7CisJCQlzdGF0dXMtPnJ4X2ZsYWdzICY9
-IH5JRUVFODAyMTFfUlhfUkFfTUFUQ0g7CiAJCX0gZWxzZSBpZiAoIW11bHRpY2FzdCAmJgogCQkJ
-ICAgY29tcGFyZV9ldGhlcl9hZGRyKHNkYXRhLT52aWYuYWRkciwKIAkJCQkJICAgICAgaGRyLT5h
-ZGRyMSkgIT0gMCkgewogCQkJaWYgKCEoc2RhdGEtPmRldi0+ZmxhZ3MgJiBJRkZfUFJPTUlTQykp
-CiAJCQkJcmV0dXJuIDA7Ci0JCQlyeC0+ZmxhZ3MgJj0gfklFRUU4MDIxMV9SWF9SQV9NQVRDSDsK
-KwkJCXN0YXR1cy0+cnhfZmxhZ3MgJj0gfklFRUU4MDIxMV9SWF9SQV9NQVRDSDsKIAkJfSBlbHNl
-IGlmICghcngtPnN0YSkgewogCQkJaW50IHJhdGVfaWR4OwogCQkJaWYgKHN0YXR1cy0+ZmxhZyAm
-IFJYX0ZMQUdfSFQpCkBAIC0yNTU1LDcgKzI1NjQsNyBAQCBzdGF0aWMgaW50IHByZXBhcmVfZm9y
-X2hhbmRsZXJzKHN0cnVjdCBpCiAJCQlpZiAoIShzZGF0YS0+ZGV2LT5mbGFncyAmIElGRl9QUk9N
-SVNDKSkKIAkJCQlyZXR1cm4gMDsKIAotCQkJcngtPmZsYWdzICY9IH5JRUVFODAyMTFfUlhfUkFf
-TUFUQ0g7CisJCQlzdGF0dXMtPnJ4X2ZsYWdzICY9IH5JRUVFODAyMTFfUlhfUkFfTUFUQ0g7CiAJ
-CX0KIAkJYnJlYWs7CiAJY2FzZSBOTDgwMjExX0lGVFlQRV9BUF9WTEFOOgpAQCAtMjU2Niw5ICsy
-NTc1LDkgQEAgc3RhdGljIGludCBwcmVwYXJlX2Zvcl9oYW5kbGVycyhzdHJ1Y3QgaQogCQkJCXJl
-dHVybiAwOwogCQl9IGVsc2UgaWYgKCFpZWVlODAyMTFfYnNzaWRfbWF0Y2goYnNzaWQsCiAJCQkJ
-CXNkYXRhLT52aWYuYWRkcikpIHsKLQkJCWlmICghKHJ4LT5mbGFncyAmIElFRUU4MDIxMV9SWF9J
-Tl9TQ0FOKSkKKwkJCWlmICghKHN0YXR1cy0+cnhfZmxhZ3MgJiBJRUVFODAyMTFfUlhfSU5fU0NB
-TikpCiAJCQkJcmV0dXJuIDA7Ci0JCQlyeC0+ZmxhZ3MgJj0gfklFRUU4MDIxMV9SWF9SQV9NQVRD
-SDsKKwkJCXN0YXR1cy0+cnhfZmxhZ3MgJj0gfklFRUU4MDIxMV9SWF9SQV9NQVRDSDsKIAkJfQog
-CQlicmVhazsKIAljYXNlIE5MODAyMTFfSUZUWVBFX1dEUzoKQEAgLTI2MDIsMTQgKzI2MTEsMTQg
-QEAgc3RhdGljIGJvb2wgaWVlZTgwMjExX3ByZXBhcmVfYW5kX3J4X2hhbgogCWludCBwcmVwYXJl
-czsKIAogCXJ4LT5za2IgPSBza2I7Ci0JcngtPmZsYWdzIHw9IElFRUU4MDIxMV9SWF9SQV9NQVRD
-SDsKKwlzdGF0dXMtPnJ4X2ZsYWdzIHw9IElFRUU4MDIxMV9SWF9SQV9NQVRDSDsKIAlwcmVwYXJl
-cyA9IHByZXBhcmVfZm9yX2hhbmRsZXJzKHJ4LCBoZHIpOwogCiAJaWYgKCFwcmVwYXJlcykKIAkJ
-cmV0dXJuIGZhbHNlOwogCiAJaWYgKHN0YXR1cy0+ZmxhZyAmIFJYX0ZMQUdfTU1JQ19FUlJPUikg
-ewotCQlpZiAocngtPmZsYWdzICYgSUVFRTgwMjExX1JYX1JBX01BVENIKQorCQlpZiAoc3RhdHVz
-LT5yeF9mbGFncyAmIElFRUU4MDIxMV9SWF9SQV9NQVRDSCkKIAkJCWllZWU4MDIxMV9yeF9taWNo
-YWVsX21pY19yZXBvcnQoaGRyLCByeCk7CiAJCXJldHVybiBmYWxzZTsKIAl9CkBAIC0yNjM4LDYg
-KzI2NDcsNyBAQCBzdGF0aWMgYm9vbCBpZWVlODAyMTFfcHJlcGFyZV9hbmRfcnhfaGFuCiBzdGF0
-aWMgdm9pZCBfX2llZWU4MDIxMV9yeF9oYW5kbGVfcGFja2V0KHN0cnVjdCBpZWVlODAyMTFfaHcg
-Kmh3LAogCQkJCQkgc3RydWN0IHNrX2J1ZmYgKnNrYikKIHsKKwlzdHJ1Y3QgaWVlZTgwMjExX3J4
-X3N0YXR1cyAqc3RhdHVzID0gSUVFRTgwMjExX1NLQl9SWENCKHNrYik7CiAJc3RydWN0IGllZWU4
-MDIxMV9sb2NhbCAqbG9jYWwgPSBod190b19sb2NhbChodyk7CiAJc3RydWN0IGllZWU4MDIxMV9z
-dWJfaWZfZGF0YSAqc2RhdGE7CiAJc3RydWN0IGllZWU4MDIxMV9oZHIgKmhkcjsKQEAgLTI2NTcs
-NyArMjY2Nyw3IEBAIHN0YXRpYyB2b2lkIF9faWVlZTgwMjExX3J4X2hhbmRsZV9wYWNrZXQKIAog
-CWlmICh1bmxpa2VseSh0ZXN0X2JpdChTQ0FOX0hXX1NDQU5OSU5HLCAmbG9jYWwtPnNjYW5uaW5n
-KSB8fAogCQkgICAgIHRlc3RfYml0KFNDQU5fT0ZGX0NIQU5ORUwsICZsb2NhbC0+c2Nhbm5pbmcp
-KSkKLQkJcnguZmxhZ3MgfD0gSUVFRTgwMjExX1JYX0lOX1NDQU47CisJCXN0YXR1cy0+cnhfZmxh
-Z3MgfD0gSUVFRTgwMjExX1JYX0lOX1NDQU47CiAKIAlpZiAoaWVlZTgwMjExX2lzX21nbXQoZmMp
-KQogCQllcnIgPSBza2JfbGluZWFyaXplKHNrYik7CkBAIC0yODA4LDYgKzI4MTgsOCBAQCB2b2lk
-IGllZWU4MDIxMV9yeChzdHJ1Y3QgaWVlZTgwMjExX2h3ICpoCiAJCX0KIAl9CiAKKwlzdGF0dXMt
-PnJ4X2ZsYWdzID0gMDsKKwogCS8qCiAJICoga2V5IHJlZmVyZW5jZXMgYW5kIHZpcnR1YWwgaW50
-ZXJmYWNlcyBhcmUgcHJvdGVjdGVkIHVzaW5nIFJDVQogCSAqIGFuZCB0aGlzIHJlcXVpcmVzIHRo
-YXQgd2UgYXJlIGluIGEgcmVhZC1zaWRlIFJDVSBzZWN0aW9uIGR1cmluZwotLS0gd2lyZWxlc3Mt
-dGVzdGluZy5vcmlnL25ldC9tYWM4MDIxMS9pZWVlODAyMTFfaS5oCTIwMTAtMDktMjQgMTI6Mzc6
-MDUuMDAwMDAwMDAwICswMjAwCisrKyB3aXJlbGVzcy10ZXN0aW5nL25ldC9tYWM4MDIxMS9pZWVl
-ODAyMTFfaS5oCTIwMTAtMDktMjQgMTI6Mzc6MjAuMDAwMDAwMDAwICswMjAwCkBAIC0xNTksMTMg
-KzE1OSwzNyBAQCB0eXBlZGVmIHVuc2lnbmVkIF9fYml0d2lzZV9fIGllZWU4MDIxMV9yCiAjZGVm
-aW5lIFJYX0RST1BfTU9OSVRPUgkJKChfX2ZvcmNlIGllZWU4MDIxMV9yeF9yZXN1bHQpIDJ1KQog
-I2RlZmluZSBSWF9RVUVVRUQJCSgoX19mb3JjZSBpZWVlODAyMTFfcnhfcmVzdWx0KSAzdSkKIAot
-I2RlZmluZSBJRUVFODAyMTFfUlhfSU5fU0NBTgkJQklUKDApCi0vKiBmcmFtZSBpcyBkZXN0aW5l
-ZCB0byBpbnRlcmZhY2UgY3VycmVudGx5IHByb2Nlc3NlZCAoaW5jbC4gbXVsdGljYXN0IGZyYW1l
-cykgKi8KLSNkZWZpbmUgSUVFRTgwMjExX1JYX1JBX01BVENICQlCSVQoMSkKLSNkZWZpbmUgSUVF
-RTgwMjExX1JYX0FNU0RVCQlCSVQoMikKLSNkZWZpbmUgSUVFRTgwMjExX1JYX0ZSQUdNRU5URUQJ
-CUJJVCgzKQotI2RlZmluZSBJRUVFODAyMTFfTUFMRk9STUVEX0FDVElPTl9GUk0JQklUKDQpCi0v
-KiBvbmx5IGFkZCBmbGFncyBoZXJlIHRoYXQgZG8gbm90IGNoYW5nZSB3aXRoIHN1YmZyYW1lcyBv
-ZiBhbiBhTVBEVSAqLworLyoqCisgKiBlbnVtIGllZWU4MDIxMV9wYWNrZXRfcnhfZmxhZ3MgLSBw
-YWNrZXQgUlggZmxhZ3MKKyAqIEBJRUVFODAyMTFfUlhfUkFfTUFUQ0g6IGZyYW1lIGlzIGRlc3Rp
-bmVkIHRvIGludGVyZmFjZSBjdXJyZW50bHkgcHJvY2Vzc2VkCisgKgkoaW5jbC4gbXVsdGljYXN0
-IGZyYW1lcykKKyAqIEBJRUVFODAyMTFfUlhfSU5fU0NBTjogcmVjZWl2ZWQgd2hpbGUgc2Nhbm5p
-bmcKKyAqIEBJRUVFODAyMTFfUlhfRlJBR01FTlRFRDogZnJhZ21lbnRlZCBmcmFtZQorICogQElF
-RUU4MDIxMV9SWF9BTVNEVTogYS1NU0RVIHBhY2tldAorICogQElFRUU4MDIxMV9SWF9NQUxGT1JN
-RURfQUNUSU9OX0ZSTTogYWN0aW9uIGZyYW1lIGlzIG1hbGZvcm1lZAorICoKKyAqIFRoZXNlIGFy
-ZSBwZXItZnJhbWUgZmxhZ3MgdGhhdCBhcmUgYXR0YWNoZWQgdG8gYSBmcmFtZSBpbiB0aGUKKyAq
-IEByeF9mbGFncyBmaWVsZCBvZiAmc3RydWN0IGllZWU4MDIxMV9yeF9zdGF0dXMuCisgKi8KK2Vu
-dW0gaWVlZTgwMjExX3BhY2tldF9yeF9mbGFncyB7CisJSUVFRTgwMjExX1JYX0lOX1NDQU4JCQk9
-IEJJVCgwKSwKKwlJRUVFODAyMTFfUlhfUkFfTUFUQ0gJCQk9IEJJVCgxKSwKKwlJRUVFODAyMTFf
-UlhfRlJBR01FTlRFRAkJCT0gQklUKDIpLAorCUlFRUU4MDIxMV9SWF9BTVNEVQkJCT0gQklUKDMp
-LAorCUlFRUU4MDIxMV9SWF9NQUxGT1JNRURfQUNUSU9OX0ZSTQk9IEJJVCg0KSwKK307CisKKy8q
-KgorICogZW51bSBpZWVlODAyMTFfcnhfZmxhZ3MgLSBSWCBkYXRhIGZsYWdzCisgKgorICogQElF
-RUU4MDIxMV9SWF9DTU5UUjogcmVjZWl2ZWQgb24gY29va2VkIG1vbml0b3IgYWxyZWFkeQorICoK
-KyAqIFRoZXNlIGZsYWdzIGFyZSB1c2VkIGFjcm9zcyBoYW5kbGluZyBtdWx0aXBsZSBpbnRlcmZh
-Y2VzCisgKiBmb3IgYSBzaW5nbGUgZnJhbWUuCisgKi8KK2VudW0gaWVlZTgwMjExX3J4X2ZsYWdz
-IHsKKwlJRUVFODAyMTFfUlhfQ01OVFIJCT0gQklUKDApLAorfTsKIAogc3RydWN0IGllZWU4MDIx
-MV9yeF9kYXRhIHsKIAlzdHJ1Y3Qgc2tfYnVmZiAqc2tiOwotLS0gd2lyZWxlc3MtdGVzdGluZy5v
-cmlnL2luY2x1ZGUvbmV0L21hYzgwMjExLmgJMjAxMC0wOS0yNCAxMjozNzowNS4wMDAwMDAwMDAg
-KzAyMDAKKysrIHdpcmVsZXNzLXRlc3RpbmcvaW5jbHVkZS9uZXQvbWFjODAyMTEuaAkyMDEwLTA5
-LTI0IDEyOjM3OjIwLjAwMDAwMDAwMCArMDIwMApAQCAtNTY1LDkgKzU2NSw2IEBAIGllZWU4MDIx
-MV90eF9pbmZvX2NsZWFyX3N0YXR1cyhzdHJ1Y3QgaWUKICAqIEBSWF9GTEFHX0hUOiBIVCBNQ1Mg
-d2FzIHVzZWQgYW5kIHJhdGVfaWR4IGlzIE1DUyBpbmRleAogICogQFJYX0ZMQUdfNDBNSFo6IEhU
-NDAgKDQwIE1Ieikgd2FzIHVzZWQKICAqIEBSWF9GTEFHX1NIT1JUX0dJOiBTaG9ydCBndWFyZCBp
-bnRlcnZhbCB3YXMgdXNlZAotICogQFJYX0ZMQUdfSU5URVJOQUxfQ01UUjogc2V0IGludGVybmFs
-bHkgYWZ0ZXIgZnJhbWUgd2FzIHJlcG9ydGVkCi0gKglvbiBjb29rZWQgbW9uaXRvciB0byBhdm9p
-ZCBkb3VibGUtcmVwb3J0aW5nIGl0IGZvciBtdWx0aXBsZQotICoJdmlydHVhbCBpbnRlcmZhY2Vz
-CiAgKi8KIGVudW0gbWFjODAyMTFfcnhfZmxhZ3MgewogCVJYX0ZMQUdfTU1JQ19FUlJPUgk9IDE8
-PDAsCkBAIC01ODEsNyArNTc4LDYgQEAgZW51bSBtYWM4MDIxMV9yeF9mbGFncyB7CiAJUlhfRkxB
-R19IVAkJPSAxPDw5LAogCVJYX0ZMQUdfNDBNSFoJCT0gMTw8MTAsCiAJUlhfRkxBR19TSE9SVF9H
-SQk9IDE8PDExLAotCVJYX0ZMQUdfSU5URVJOQUxfQ01UUgk9IDE8PDEyLAogfTsKIAogLyoqCkBA
-IC02MDIsNiArNTk4LDcgQEAgZW51bSBtYWM4MDIxMV9yeF9mbGFncyB7CiAgKiBAcmF0ZV9pZHg6
-IGluZGV4IG9mIGRhdGEgcmF0ZSBpbnRvIGJhbmQncyBzdXBwb3J0ZWQgcmF0ZXMgb3IgTUNTIGlu
-ZGV4IGlmCiAgKglIVCByYXRlcyBhcmUgdXNlIChSWF9GTEFHX0hUKQogICogQGZsYWc6ICVSWF9G
-TEFHXyoKKyAqIEByeF9mbGFnczogaW50ZXJuYWwgUlggZmxhZ3MgZm9yIG1hYzgwMjExCiAgKi8K
-IHN0cnVjdCBpZWVlODAyMTFfcnhfc3RhdHVzIHsKIAl1NjQgbWFjdGltZTsKQEAgLTYxMSw2ICs2
-MDgsNyBAQCBzdHJ1Y3QgaWVlZTgwMjExX3J4X3N0YXR1cyB7CiAJaW50IGFudGVubmE7CiAJaW50
-IHJhdGVfaWR4OwogCWludCBmbGFnOworCXVuc2lnbmVkIGludCByeF9mbGFnczsKIH07CiAKIC8q
-KgotLS0gd2lyZWxlc3MtdGVzdGluZy5vcmlnL25ldC9tYWM4MDIxMS93cGEuYwkyMDEwLTA5LTI0
-IDEyOjM3OjA1LjAwMDAwMDAwMCArMDIwMAorKysgd2lyZWxlc3MtdGVzdGluZy9uZXQvbWFjODAy
-MTEvd3BhLmMJMjAxMC0wOS0yNCAxMjozNzoyMC4wMDAwMDAwMDAgKzAyMDAKQEAgLTExNyw3ICsx
-MTcsNyBAQCBpZWVlODAyMTFfcnhfaF9taWNoYWVsX21pY192ZXJpZnkoc3RydWN0CiAJa2V5ID0g
-JnJ4LT5rZXktPmNvbmYua2V5W2tleV9vZmZzZXRdOwogCW1pY2hhZWxfbWljKGtleSwgaGRyLCBk
-YXRhLCBkYXRhX2xlbiwgbWljKTsKIAlpZiAobWVtY21wKG1pYywgZGF0YSArIGRhdGFfbGVuLCBN
-SUNIQUVMX01JQ19MRU4pICE9IDAgfHwgd3BhX3Rlc3QpIHsKLQkJaWYgKCEocngtPmZsYWdzICYg
-SUVFRTgwMjExX1JYX1JBX01BVENIKSkKKwkJaWYgKCEoc3RhdHVzLT5yeF9mbGFncyAmIElFRUU4
-MDIxMV9SWF9SQV9NQVRDSCkpCiAJCQlyZXR1cm4gUlhfRFJPUF9VTlVTQUJMRTsKIAogCQltYWM4
-MDIxMV9ldl9taWNoYWVsX21pY19mYWlsdXJlKHJ4LT5zZGF0YSwgcngtPmtleS0+Y29uZi5rZXlp
-ZHgsCgoKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KSW50ZWwgR21iSApEb3JuYWNoZXIg
-U3RyYXNzZSAxCjg1NjIyIEZlbGRraXJjaGVuL011ZW5jaGVuLCBEZXV0c2NobGFuZCAKU2l0eiBk
-ZXIgR2VzZWxsc2NoYWZ0OiBGZWxka2lyY2hlbiBiZWkgTXVlbmNoZW4KR2VzY2hhZWZ0c2Z1ZWhy
-ZXI6IERvdWdsYXMgTHVzaywgUGV0ZXIgR2xlaXNzbmVyLCBIYW5uZXMgU2Nod2FkZXJlcgpSZWdp
-c3RlcmdlcmljaHQ6IE11ZW5jaGVuIEhSQiA0NzQ1NiAKVXN0Li1JZE5yLi9WQVQgUmVnaXN0cmF0
-aW9uIE5vLjogREUxMjkzODU4OTUKQ2l0aWJhbmsgRnJhbmtmdXJ0IGEuTS4gKEJMWiA1MDIgMTA5
-IDAwKSA2MDAxMTkwNTIK
+From: Bob Copeland <me@bobcopeland.com>
+
+related functions and remove most of the forward declarations
+(from 61 down to 3).  This is, unfortunately, a lot of churn, but
+there should be no functional changes.
+
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+
+---
+Bruno: rebased to wireless-next
+---
+ drivers/net/wireless/ath/ath5k/base.c | 1662 +++++++++++++++------------------
+ 1 files changed, 764 insertions(+), 898 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index f8c699d..9e4636f 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -70,11 +70,6 @@ static int modparam_all_channels;
+ module_param_named(all_channels, modparam_all_channels, bool, S_IRUGO);
+ MODULE_PARM_DESC(all_channels, "Expose all channels the device can use.");
+ 
+-
+-/******************\
+-* Internal defines *
+-\******************/
+-
+ /* Module info */
+ MODULE_AUTHOR("Jiri Slaby");
+ MODULE_AUTHOR("Nick Kossifidis");
+@@ -83,6 +78,10 @@ MODULE_SUPPORTED_DEVICE("Atheros 5xxx WLAN cards");
+ MODULE_LICENSE("Dual BSD/GPL");
+ MODULE_VERSION("0.6.0 (EXPERIMENTAL)");
+ 
++static int ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan);
++static int ath5k_beacon_update(struct ieee80211_hw *hw,
++		struct ieee80211_vif *vif);
++static void ath5k_beacon_update_timers(struct ath5k_softc *sc, u64 bc_tsf);
+ 
+ /* Known PCI ids */
+ static DEFINE_PCI_DEVICE_TABLE(ath5k_pci_id_table) = {
+@@ -190,129 +189,6 @@ static const struct ieee80211_rate ath5k_rates[] = {
+ 	/* XR missing */
+ };
+ 
+-/*
+- * Prototypes - PCI stack related functions
+- */
+-static int __devinit	ath5k_pci_probe(struct pci_dev *pdev,
+-				const struct pci_device_id *id);
+-static void __devexit	ath5k_pci_remove(struct pci_dev *pdev);
+-#ifdef CONFIG_PM_SLEEP
+-static int		ath5k_pci_suspend(struct device *dev);
+-static int		ath5k_pci_resume(struct device *dev);
+-
+-static SIMPLE_DEV_PM_OPS(ath5k_pm_ops, ath5k_pci_suspend, ath5k_pci_resume);
+-#define ATH5K_PM_OPS	(&ath5k_pm_ops)
+-#else
+-#define ATH5K_PM_OPS	NULL
+-#endif /* CONFIG_PM_SLEEP */
+-
+-static struct pci_driver ath5k_pci_driver = {
+-	.name		= KBUILD_MODNAME,
+-	.id_table	= ath5k_pci_id_table,
+-	.probe		= ath5k_pci_probe,
+-	.remove		= __devexit_p(ath5k_pci_remove),
+-	.driver.pm	= ATH5K_PM_OPS,
+-};
+-
+-
+-
+-/*
+- * Prototypes - MAC 802.11 stack related functions
+- */
+-static int ath5k_tx(struct ieee80211_hw *hw, struct sk_buff *skb);
+-static int ath5k_tx_queue(struct ieee80211_hw *hw, struct sk_buff *skb,
+-		struct ath5k_txq *txq);
+-static int ath5k_reset(struct ath5k_softc *sc, struct ieee80211_channel *chan);
+-static int ath5k_start(struct ieee80211_hw *hw);
+-static void ath5k_stop(struct ieee80211_hw *hw);
+-static int ath5k_add_interface(struct ieee80211_hw *hw,
+-		struct ieee80211_vif *vif);
+-static void ath5k_remove_interface(struct ieee80211_hw *hw,
+-		struct ieee80211_vif *vif);
+-static int ath5k_config(struct ieee80211_hw *hw, u32 changed);
+-static u64 ath5k_prepare_multicast(struct ieee80211_hw *hw,
+-				   struct netdev_hw_addr_list *mc_list);
+-static void ath5k_configure_filter(struct ieee80211_hw *hw,
+-		unsigned int changed_flags,
+-		unsigned int *new_flags,
+-		u64 multicast);
+-static int ath5k_set_key(struct ieee80211_hw *hw,
+-		enum set_key_cmd cmd,
+-		struct ieee80211_vif *vif, struct ieee80211_sta *sta,
+-		struct ieee80211_key_conf *key);
+-static int ath5k_get_stats(struct ieee80211_hw *hw,
+-		struct ieee80211_low_level_stats *stats);
+-static int ath5k_get_survey(struct ieee80211_hw *hw,
+-		int idx, struct survey_info *survey);
+-static u64 ath5k_get_tsf(struct ieee80211_hw *hw);
+-static void ath5k_set_tsf(struct ieee80211_hw *hw, u64 tsf);
+-static void ath5k_reset_tsf(struct ieee80211_hw *hw);
+-static int ath5k_beacon_update(struct ieee80211_hw *hw,
+-		struct ieee80211_vif *vif);
+-static void ath5k_bss_info_changed(struct ieee80211_hw *hw,
+-		struct ieee80211_vif *vif,
+-		struct ieee80211_bss_conf *bss_conf,
+-		u32 changes);
+-static void ath5k_sw_scan_start(struct ieee80211_hw *hw);
+-static void ath5k_sw_scan_complete(struct ieee80211_hw *hw);
+-static void ath5k_set_coverage_class(struct ieee80211_hw *hw,
+-		u8 coverage_class);
+-
+-static const struct ieee80211_ops ath5k_hw_ops = {
+-	.tx 		= ath5k_tx,
+-	.start 		= ath5k_start,
+-	.stop 		= ath5k_stop,
+-	.add_interface 	= ath5k_add_interface,
+-	.remove_interface = ath5k_remove_interface,
+-	.config 	= ath5k_config,
+-	.prepare_multicast = ath5k_prepare_multicast,
+-	.configure_filter = ath5k_configure_filter,
+-	.set_key 	= ath5k_set_key,
+-	.get_stats 	= ath5k_get_stats,
+-	.get_survey	= ath5k_get_survey,
+-	.conf_tx 	= NULL,
+-	.get_tsf 	= ath5k_get_tsf,
+-	.set_tsf 	= ath5k_set_tsf,
+-	.reset_tsf 	= ath5k_reset_tsf,
+-	.bss_info_changed = ath5k_bss_info_changed,
+-	.sw_scan_start	= ath5k_sw_scan_start,
+-	.sw_scan_complete = ath5k_sw_scan_complete,
+-	.set_coverage_class = ath5k_set_coverage_class,
+-};
+-
+-/*
+- * Prototypes - Internal functions
+- */
+-/* Attach detach */
+-static int 	ath5k_attach(struct pci_dev *pdev,
+-			struct ieee80211_hw *hw);
+-static void 	ath5k_detach(struct pci_dev *pdev,
+-			struct ieee80211_hw *hw);
+-/* Channel/mode setup */
+-static inline short ath5k_ieee2mhz(short chan);
+-static unsigned int ath5k_copy_channels(struct ath5k_hw *ah,
+-				struct ieee80211_channel *channels,
+-				unsigned int mode,
+-				unsigned int max);
+-static int 	ath5k_setup_bands(struct ieee80211_hw *hw);
+-static int 	ath5k_chan_set(struct ath5k_softc *sc,
+-				struct ieee80211_channel *chan);
+-static void	ath5k_setcurmode(struct ath5k_softc *sc,
+-				unsigned int mode);
+-static void	ath5k_mode_setup(struct ath5k_softc *sc);
+-
+-/* Descriptor setup */
+-static int	ath5k_desc_alloc(struct ath5k_softc *sc,
+-				struct pci_dev *pdev);
+-static void	ath5k_desc_free(struct ath5k_softc *sc,
+-				struct pci_dev *pdev);
+-/* Buffers setup */
+-static int 	ath5k_rxbuf_setup(struct ath5k_softc *sc,
+-				struct ath5k_buf *bf);
+-static int 	ath5k_txbuf_setup(struct ath5k_softc *sc,
+-				struct ath5k_buf *bf,
+-				struct ath5k_txq *txq, int padsize);
+-
+ static inline void ath5k_txbuf_free_skb(struct ath5k_softc *sc,
+ 				struct ath5k_buf *bf)
+ {
+@@ -345,35 +221,6 @@ static inline void ath5k_rxbuf_free_skb(struct ath5k_softc *sc,
+ }
+ 
+ 
+-/* Queues setup */
+-static struct 	ath5k_txq *ath5k_txq_setup(struct ath5k_softc *sc,
+-				int qtype, int subtype);
+-static int 	ath5k_beaconq_setup(struct ath5k_hw *ah);
+-static int 	ath5k_beaconq_config(struct ath5k_softc *sc);
+-static void 	ath5k_txq_drainq(struct ath5k_softc *sc,
+-				struct ath5k_txq *txq);
+-static void 	ath5k_txq_cleanup(struct ath5k_softc *sc);
+-static void 	ath5k_txq_release(struct ath5k_softc *sc);
+-/* Rx handling */
+-static int 	ath5k_rx_start(struct ath5k_softc *sc);
+-static void 	ath5k_rx_stop(struct ath5k_softc *sc);
+-static unsigned int ath5k_rx_decrypted(struct ath5k_softc *sc,
+-					struct sk_buff *skb,
+-					struct ath5k_rx_status *rs);
+-static void 	ath5k_tasklet_rx(unsigned long data);
+-/* Tx handling */
+-static void 	ath5k_tx_processq(struct ath5k_softc *sc,
+-				struct ath5k_txq *txq);
+-static void 	ath5k_tasklet_tx(unsigned long data);
+-/* Beacon handling */
+-static int 	ath5k_beacon_setup(struct ath5k_softc *sc,
+-					struct ath5k_buf *bf);
+-static void 	ath5k_beacon_send(struct ath5k_softc *sc);
+-static void 	ath5k_beacon_config(struct ath5k_softc *sc);
+-static void	ath5k_beacon_update_timers(struct ath5k_softc *sc, u64 bc_tsf);
+-static void	ath5k_tasklet_beacon(unsigned long data);
+-static void	ath5k_tasklet_ani(unsigned long data);
+-
+ static inline u64 ath5k_extend_tsf(struct ath5k_hw *ah, u32 rstamp)
+ {
+ 	u64 tsf = ath5k_hw_get_tsf64(ah);
+@@ -384,50 +231,6 @@ static inline u64 ath5k_extend_tsf(struct ath5k_hw *ah, u32 rstamp)
+ 	return (tsf & ~0x7fff) | rstamp;
+ }
+ 
+-/* Interrupt handling */
+-static int 	ath5k_init(struct ath5k_softc *sc);
+-static int 	ath5k_stop_locked(struct ath5k_softc *sc);
+-static int 	ath5k_stop_hw(struct ath5k_softc *sc);
+-static irqreturn_t ath5k_intr(int irq, void *dev_id);
+-static void ath5k_reset_work(struct work_struct *work);
+-
+-static void 	ath5k_tasklet_calibrate(unsigned long data);
+-
+-/*
+- * Module init/exit functions
+- */
+-static int __init
+-init_ath5k_pci(void)
+-{
+-	int ret;
+-
+-	ath5k_debug_init();
+-
+-	ret = pci_register_driver(&ath5k_pci_driver);
+-	if (ret) {
+-		printk(KERN_ERR "ath5k_pci: can't register pci driver\n");
+-		return ret;
+-	}
+-
+-	return 0;
+-}
+-
+-static void __exit
+-exit_ath5k_pci(void)
+-{
+-	pci_unregister_driver(&ath5k_pci_driver);
+-
+-	ath5k_debug_finish();
+-}
+-
+-module_init(init_ath5k_pci);
+-module_exit(exit_ath5k_pci);
+-
+-
+-/********************\
+-* PCI Initialization *
+-\********************/
+-
+ static const char *
+ ath5k_chip_name(enum ath5k_srev_type type, u_int16_t val)
+ {
+@@ -466,299 +269,6 @@ static const struct ath_ops ath5k_common_ops = {
+ 	.write = ath5k_iowrite32,
+ };
+ 
+-static int __devinit
+-ath5k_pci_probe(struct pci_dev *pdev,
+-		const struct pci_device_id *id)
+-{
+-	void __iomem *mem;
+-	struct ath5k_softc *sc;
+-	struct ath_common *common;
+-	struct ieee80211_hw *hw;
+-	int ret;
+-	u8 csz;
+-
+-	/*
+-	 * L0s needs to be disabled on all ath5k cards.
+-	 *
+-	 * For distributions shipping with CONFIG_PCIEASPM (this will be enabled
+-	 * by default in the future in 2.6.36) this will also mean both L1 and
+-	 * L0s will be disabled when a pre 1.1 PCIe device is detected. We do
+-	 * know L1 works correctly even for all ath5k pre 1.1 PCIe devices
+-	 * though but cannot currently undue the effect of a blacklist, for
+-	 * details you can read pcie_aspm_sanity_check() and see how it adjusts
+-	 * the device link capability.
+-	 *
+-	 * It may be possible in the future to implement some PCI API to allow
+-	 * drivers to override blacklists for pre 1.1 PCIe but for now it is
+-	 * best to accept that both L0s and L1 will be disabled completely for
+-	 * distributions shipping with CONFIG_PCIEASPM rather than having this
+-	 * issue present. Motivation for adding this new API will be to help
+-	 * with power consumption for some of these devices.
+-	 */
+-	pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S);
+-
+-	ret = pci_enable_device(pdev);
+-	if (ret) {
+-		dev_err(&pdev->dev, "can't enable device\n");
+-		goto err;
+-	}
+-
+-	/* XXX 32-bit addressing only */
+-	ret = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
+-	if (ret) {
+-		dev_err(&pdev->dev, "32-bit DMA not available\n");
+-		goto err_dis;
+-	}
+-
+-	/*
+-	 * Cache line size is used to size and align various
+-	 * structures used to communicate with the hardware.
+-	 */
+-	pci_read_config_byte(pdev, PCI_CACHE_LINE_SIZE, &csz);
+-	if (csz == 0) {
+-		/*
+-		 * Linux 2.4.18 (at least) writes the cache line size
+-		 * register as a 16-bit wide register which is wrong.
+-		 * We must have this setup properly for rx buffer
+-		 * DMA to work so force a reasonable value here if it
+-		 * comes up zero.
+-		 */
+-		csz = L1_CACHE_BYTES >> 2;
+-		pci_write_config_byte(pdev, PCI_CACHE_LINE_SIZE, csz);
+-	}
+-	/*
+-	 * The default setting of latency timer yields poor results,
+-	 * set it to the value used by other systems.  It may be worth
+-	 * tweaking this setting more.
+-	 */
+-	pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 0xa8);
+-
+-	/* Enable bus mastering */
+-	pci_set_master(pdev);
+-
+-	/*
+-	 * Disable the RETRY_TIMEOUT register (0x41) to keep
+-	 * PCI Tx retries from interfering with C3 CPU state.
+-	 */
+-	pci_write_config_byte(pdev, 0x41, 0);
+-
+-	ret = pci_request_region(pdev, 0, "ath5k");
+-	if (ret) {
+-		dev_err(&pdev->dev, "cannot reserve PCI memory region\n");
+-		goto err_dis;
+-	}
+-
+-	mem = pci_iomap(pdev, 0, 0);
+-	if (!mem) {
+-		dev_err(&pdev->dev, "cannot remap PCI memory region\n") ;
+-		ret = -EIO;
+-		goto err_reg;
+-	}
+-
+-	/*
+-	 * Allocate hw (mac80211 main struct)
+-	 * and hw->priv (driver private data)
+-	 */
+-	hw = ieee80211_alloc_hw(sizeof(*sc), &ath5k_hw_ops);
+-	if (hw == NULL) {
+-		dev_err(&pdev->dev, "cannot allocate ieee80211_hw\n");
+-		ret = -ENOMEM;
+-		goto err_map;
+-	}
+-
+-	dev_info(&pdev->dev, "registered as '%s'\n", wiphy_name(hw->wiphy));
+-
+-	/* Initialize driver private data */
+-	SET_IEEE80211_DEV(hw, &pdev->dev);
+-	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
+-		    IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
+-		    IEEE80211_HW_SIGNAL_DBM;
+-
+-	hw->wiphy->interface_modes =
+-		BIT(NL80211_IFTYPE_AP) |
+-		BIT(NL80211_IFTYPE_STATION) |
+-		BIT(NL80211_IFTYPE_ADHOC) |
+-		BIT(NL80211_IFTYPE_MESH_POINT);
+-
+-	hw->extra_tx_headroom = 2;
+-	hw->channel_change_time = 5000;
+-	sc = hw->priv;
+-	sc->hw = hw;
+-	sc->pdev = pdev;
+-
+-	ath5k_debug_init_device(sc);
+-
+-	/*
+-	 * Mark the device as detached to avoid processing
+-	 * interrupts until setup is complete.
+-	 */
+-	__set_bit(ATH_STAT_INVALID, sc->status);
+-
+-	sc->iobase = mem; /* So we can unmap it on detach */
+-	sc->opmode = NL80211_IFTYPE_STATION;
+-	sc->bintval = 1000;
+-	mutex_init(&sc->lock);
+-	spin_lock_init(&sc->rxbuflock);
+-	spin_lock_init(&sc->txbuflock);
+-	spin_lock_init(&sc->block);
+-
+-	/* Set private data */
+-	pci_set_drvdata(pdev, sc);
+-
+-	/* Setup interrupt handler */
+-	ret = request_irq(pdev->irq, ath5k_intr, IRQF_SHARED, "ath", sc);
+-	if (ret) {
+-		ATH5K_ERR(sc, "request_irq failed\n");
+-		goto err_free;
+-	}
+-
+-	/* If we passed the test, malloc an ath5k_hw struct */
+-	sc->ah = kzalloc(sizeof(struct ath5k_hw), GFP_KERNEL);
+-	if (!sc->ah) {
+-		ret = -ENOMEM;
+-		ATH5K_ERR(sc, "out of memory\n");
+-		goto err_irq;
+-	}
+-
+-	sc->ah->ah_sc = sc;
+-	sc->ah->ah_iobase = sc->iobase;
+-	common = ath5k_hw_common(sc->ah);
+-	common->ops = &ath5k_common_ops;
+-	common->ah = sc->ah;
+-	common->hw = hw;
+-	common->cachelsz = csz << 2; /* convert to bytes */
+-
+-	/* Initialize device */
+-	ret = ath5k_hw_attach(sc);
+-	if (ret) {
+-		goto err_free_ah;
+-	}
+-
+-	/* set up multi-rate retry capabilities */
+-	if (sc->ah->ah_version == AR5K_AR5212) {
+-		hw->max_rates = 4;
+-		hw->max_rate_tries = 11;
+-	}
+-
+-	/* Finish private driver data initialization */
+-	ret = ath5k_attach(pdev, hw);
+-	if (ret)
+-		goto err_ah;
+-
+-	ATH5K_INFO(sc, "Atheros AR%s chip found (MAC: 0x%x, PHY: 0x%x)\n",
+-			ath5k_chip_name(AR5K_VERSION_MAC, sc->ah->ah_mac_srev),
+-					sc->ah->ah_mac_srev,
+-					sc->ah->ah_phy_revision);
+-
+-	if (!sc->ah->ah_single_chip) {
+-		/* Single chip radio (!RF5111) */
+-		if (sc->ah->ah_radio_5ghz_revision &&
+-			!sc->ah->ah_radio_2ghz_revision) {
+-			/* No 5GHz support -> report 2GHz radio */
+-			if (!test_bit(AR5K_MODE_11A,
+-				sc->ah->ah_capabilities.cap_mode)) {
+-				ATH5K_INFO(sc, "RF%s 2GHz radio found (0x%x)\n",
+-					ath5k_chip_name(AR5K_VERSION_RAD,
+-						sc->ah->ah_radio_5ghz_revision),
+-						sc->ah->ah_radio_5ghz_revision);
+-			/* No 2GHz support (5110 and some
+-			 * 5Ghz only cards) -> report 5Ghz radio */
+-			} else if (!test_bit(AR5K_MODE_11B,
+-				sc->ah->ah_capabilities.cap_mode)) {
+-				ATH5K_INFO(sc, "RF%s 5GHz radio found (0x%x)\n",
+-					ath5k_chip_name(AR5K_VERSION_RAD,
+-						sc->ah->ah_radio_5ghz_revision),
+-						sc->ah->ah_radio_5ghz_revision);
+-			/* Multiband radio */
+-			} else {
+-				ATH5K_INFO(sc, "RF%s multiband radio found"
+-					" (0x%x)\n",
+-					ath5k_chip_name(AR5K_VERSION_RAD,
+-						sc->ah->ah_radio_5ghz_revision),
+-						sc->ah->ah_radio_5ghz_revision);
+-			}
+-		}
+-		/* Multi chip radio (RF5111 - RF2111) ->
+-		 * report both 2GHz/5GHz radios */
+-		else if (sc->ah->ah_radio_5ghz_revision &&
+-				sc->ah->ah_radio_2ghz_revision){
+-			ATH5K_INFO(sc, "RF%s 5GHz radio found (0x%x)\n",
+-				ath5k_chip_name(AR5K_VERSION_RAD,
+-					sc->ah->ah_radio_5ghz_revision),
+-					sc->ah->ah_radio_5ghz_revision);
+-			ATH5K_INFO(sc, "RF%s 2GHz radio found (0x%x)\n",
+-				ath5k_chip_name(AR5K_VERSION_RAD,
+-					sc->ah->ah_radio_2ghz_revision),
+-					sc->ah->ah_radio_2ghz_revision);
+-		}
+-	}
+-
+-
+-	/* ready to process interrupts */
+-	__clear_bit(ATH_STAT_INVALID, sc->status);
+-
+-	return 0;
+-err_ah:
+-	ath5k_hw_detach(sc->ah);
+-err_free_ah:
+-	kfree(sc->ah);
+-err_irq:
+-	free_irq(pdev->irq, sc);
+-err_free:
+-	ieee80211_free_hw(hw);
+-err_map:
+-	pci_iounmap(pdev, mem);
+-err_reg:
+-	pci_release_region(pdev, 0);
+-err_dis:
+-	pci_disable_device(pdev);
+-err:
+-	return ret;
+-}
+-
+-static void __devexit
+-ath5k_pci_remove(struct pci_dev *pdev)
+-{
+-	struct ath5k_softc *sc = pci_get_drvdata(pdev);
+-
+-	ath5k_debug_finish_device(sc);
+-	ath5k_detach(pdev, sc->hw);
+-	ath5k_hw_detach(sc->ah);
+-	kfree(sc->ah);
+-	free_irq(pdev->irq, sc);
+-	pci_iounmap(pdev, sc->iobase);
+-	pci_release_region(pdev, 0);
+-	pci_disable_device(pdev);
+-	ieee80211_free_hw(sc->hw);
+-}
+-
+-#ifdef CONFIG_PM_SLEEP
+-static int ath5k_pci_suspend(struct device *dev)
+-{
+-	struct ath5k_softc *sc = pci_get_drvdata(to_pci_dev(dev));
+-
+-	ath5k_led_off(sc);
+-	return 0;
+-}
+-
+-static int ath5k_pci_resume(struct device *dev)
+-{
+-	struct pci_dev *pdev = to_pci_dev(dev);
+-	struct ath5k_softc *sc = pci_get_drvdata(pdev);
+-
+-	/*
+-	 * Suspend/Resume resets the PCI configuration space, so we have to
+-	 * re-disable the RETRY_TIMEOUT register (0x41) to keep
+-	 * PCI Tx retries from interfering with C3 CPU state
+-	 */
+-	pci_write_config_byte(pdev, 0x41, 0);
+-
+-	ath5k_led_enable(sc);
+-	return 0;
+-}
+-#endif /* CONFIG_PM_SLEEP */
+-
+-
+ /***********************\
+ * Driver Initialization *
+ \***********************/
+@@ -772,170 +282,6 @@ static int ath5k_reg_notifier(struct wiphy *wiphy, struct regulatory_request *re
+ 	return ath_reg_notifier_apply(wiphy, request, regulatory);
+ }
+ 
+-static int
+-ath5k_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
+-{
+-	struct ath5k_softc *sc = hw->priv;
+-	struct ath5k_hw *ah = sc->ah;
+-	struct ath_regulatory *regulatory = ath5k_hw_regulatory(ah);
+-	u8 mac[ETH_ALEN] = {};
+-	int ret;
+-
+-	ATH5K_DBG(sc, ATH5K_DEBUG_ANY, "devid 0x%x\n", pdev->device);
+-
+-	/*
+-	 * Check if the MAC has multi-rate retry support.
+-	 * We do this by trying to setup a fake extended
+-	 * descriptor.  MACs that don't have support will
+-	 * return false w/o doing anything.  MACs that do
+-	 * support it will return true w/o doing anything.
+-	 */
+-	ret = ath5k_hw_setup_mrr_tx_desc(ah, NULL, 0, 0, 0, 0, 0, 0);
+-
+-	if (ret < 0)
+-		goto err;
+-	if (ret > 0)
+-		__set_bit(ATH_STAT_MRRETRY, sc->status);
+-
+-	/*
+-	 * Collect the channel list.  The 802.11 layer
+-	 * is resposible for filtering this list based
+-	 * on settings like the phy mode and regulatory
+-	 * domain restrictions.
+-	 */
+-	ret = ath5k_setup_bands(hw);
+-	if (ret) {
+-		ATH5K_ERR(sc, "can't get channels\n");
+-		goto err;
+-	}
+-
+-	/* NB: setup here so ath5k_rate_update is happy */
+-	if (test_bit(AR5K_MODE_11A, ah->ah_modes))
+-		ath5k_setcurmode(sc, AR5K_MODE_11A);
+-	else
+-		ath5k_setcurmode(sc, AR5K_MODE_11B);
+-
+-	/*
+-	 * Allocate tx+rx descriptors and populate the lists.
+-	 */
+-	ret = ath5k_desc_alloc(sc, pdev);
+-	if (ret) {
+-		ATH5K_ERR(sc, "can't allocate descriptors\n");
+-		goto err;
+-	}
+-
+-	/*
+-	 * Allocate hardware transmit queues: one queue for
+-	 * beacon frames and one data queue for each QoS
+-	 * priority.  Note that hw functions handle resetting
+-	 * these queues at the needed time.
+-	 */
+-	ret = ath5k_beaconq_setup(ah);
+-	if (ret < 0) {
+-		ATH5K_ERR(sc, "can't setup a beacon xmit queue\n");
+-		goto err_desc;
+-	}
+-	sc->bhalq = ret;
+-	sc->cabq = ath5k_txq_setup(sc, AR5K_TX_QUEUE_CAB, 0);
+-	if (IS_ERR(sc->cabq)) {
+-		ATH5K_ERR(sc, "can't setup cab queue\n");
+-		ret = PTR_ERR(sc->cabq);
+-		goto err_bhal;
+-	}
+-
+-	sc->txq = ath5k_txq_setup(sc, AR5K_TX_QUEUE_DATA, AR5K_WME_AC_BK);
+-	if (IS_ERR(sc->txq)) {
+-		ATH5K_ERR(sc, "can't setup xmit queue\n");
+-		ret = PTR_ERR(sc->txq);
+-		goto err_queues;
+-	}
+-
+-	tasklet_init(&sc->rxtq, ath5k_tasklet_rx, (unsigned long)sc);
+-	tasklet_init(&sc->txtq, ath5k_tasklet_tx, (unsigned long)sc);
+-	tasklet_init(&sc->calib, ath5k_tasklet_calibrate, (unsigned long)sc);
+-	tasklet_init(&sc->beacontq, ath5k_tasklet_beacon, (unsigned long)sc);
+-	tasklet_init(&sc->ani_tasklet, ath5k_tasklet_ani, (unsigned long)sc);
+-
+-	INIT_WORK(&sc->reset_work, ath5k_reset_work);
+-
+-	ret = ath5k_eeprom_read_mac(ah, mac);
+-	if (ret) {
+-		ATH5K_ERR(sc, "unable to read address from EEPROM: 0x%04x\n",
+-			sc->pdev->device);
+-		goto err_queues;
+-	}
+-
+-	SET_IEEE80211_PERM_ADDR(hw, mac);
+-	/* All MAC address bits matter for ACKs */
+-	memcpy(sc->bssidmask, ath_bcast_mac, ETH_ALEN);
+-	ath5k_hw_set_bssid_mask(sc->ah, sc->bssidmask);
+-
+-	regulatory->current_rd = ah->ah_capabilities.cap_eeprom.ee_regdomain;
+-	ret = ath_regd_init(regulatory, hw->wiphy, ath5k_reg_notifier);
+-	if (ret) {
+-		ATH5K_ERR(sc, "can't initialize regulatory system\n");
+-		goto err_queues;
+-	}
+-
+-	ret = ieee80211_register_hw(hw);
+-	if (ret) {
+-		ATH5K_ERR(sc, "can't register ieee80211 hw\n");
+-		goto err_queues;
+-	}
+-
+-	if (!ath_is_world_regd(regulatory))
+-		regulatory_hint(hw->wiphy, regulatory->alpha2);
+-
+-	ath5k_init_leds(sc);
+-
+-	ath5k_sysfs_register(sc);
+-
+-	return 0;
+-err_queues:
+-	ath5k_txq_release(sc);
+-err_bhal:
+-	ath5k_hw_release_tx_queue(ah, sc->bhalq);
+-err_desc:
+-	ath5k_desc_free(sc, pdev);
+-err:
+-	return ret;
+-}
+-
+-static void
+-ath5k_detach(struct pci_dev *pdev, struct ieee80211_hw *hw)
+-{
+-	struct ath5k_softc *sc = hw->priv;
+-
+-	/*
+-	 * NB: the order of these is important:
+-	 * o call the 802.11 layer before detaching ath5k_hw to
+-	 *   ensure callbacks into the driver to delete global
+-	 *   key cache entries can be handled
+-	 * o reclaim the tx queue data structures after calling
+-	 *   the 802.11 layer as we'll get called back to reclaim
+-	 *   node state and potentially want to use them
+-	 * o to cleanup the tx queues the hal is called, so detach
+-	 *   it last
+-	 * XXX: ??? detach ath5k_hw ???
+-	 * Other than that, it's straightforward...
+-	 */
+-	ieee80211_unregister_hw(hw);
+-	ath5k_desc_free(sc, pdev);
+-	ath5k_txq_release(sc);
+-	ath5k_hw_release_tx_queue(sc->ah, sc->bhalq);
+-	ath5k_unregister_leds(sc);
+-
+-	ath5k_sysfs_unregister(sc);
+-	/*
+-	 * NB: can't reclaim these until after ieee80211_ifdetach
+-	 * returns because we'll get called back to reclaim node
+-	 * state and potentially want to use them.
+-	 */
+-}
+-
+-
+-
+-
+ /********************\
+ * Channel/mode setup *
+ \********************/
+@@ -1494,9 +840,6 @@ ath5k_desc_free(struct ath5k_softc *sc, struct pci_dev *pdev)
+ }
+ 
+ 
+-
+-
+-
+ /**************\
+ * Queues setup *
+ \**************/
+@@ -1696,8 +1039,6 @@ ath5k_txq_release(struct ath5k_softc *sc)
+ }
+ 
+ 
+-
+-
+ /*************\
+ * RX Handling *
+ \*************/
+@@ -2121,6 +1462,59 @@ unlock:
+ * TX Handling *
+ \*************/
+ 
++static int ath5k_tx_queue(struct ieee80211_hw *hw, struct sk_buff *skb,
++			  struct ath5k_txq *txq)
++{
++	struct ath5k_softc *sc = hw->priv;
++	struct ath5k_buf *bf;
++	unsigned long flags;
++	int padsize;
++
++	ath5k_debug_dump_skb(sc, skb, "TX  ", 1);
++
++	/*
++	 * The hardware expects the header padded to 4 byte boundaries.
++	 * If this is not the case, we add the padding after the header.
++	 */
++	padsize = ath5k_add_padding(skb);
++	if (padsize < 0) {
++		ATH5K_ERR(sc, "tx hdrlen not %%4: not enough"
++			  " headroom to pad");
++		goto drop_packet;
++	}
++
++	spin_lock_irqsave(&sc->txbuflock, flags);
++	if (list_empty(&sc->txbuf)) {
++		ATH5K_ERR(sc, "no further txbuf available, dropping packet\n");
++		spin_unlock_irqrestore(&sc->txbuflock, flags);
++		ieee80211_stop_queue(hw, skb_get_queue_mapping(skb));
++		goto drop_packet;
++	}
++	bf = list_first_entry(&sc->txbuf, struct ath5k_buf, list);
++	list_del(&bf->list);
++	sc->txbuf_len--;
++	if (list_empty(&sc->txbuf))
++		ieee80211_stop_queues(hw);
++	spin_unlock_irqrestore(&sc->txbuflock, flags);
++
++	bf->skb = skb;
++
++	if (ath5k_txbuf_setup(sc, bf, txq, padsize)) {
++		bf->skb = NULL;
++		spin_lock_irqsave(&sc->txbuflock, flags);
++		list_add_tail(&bf->list, &sc->txbuf);
++		sc->txbuf_len++;
++		spin_unlock_irqrestore(&sc->txbuflock, flags);
++		goto drop_packet;
++	}
++	return NETDEV_TX_OK;
++
++drop_packet:
++	dev_kfree_skb_any(skb);
++	return NETDEV_TX_OK;
++}
++
++
+ static void
+ ath5k_tx_processq(struct ath5k_softc *sc, struct ath5k_txq *txq)
+ {
+@@ -2313,6 +1707,43 @@ err_unmap:
+ }
+ 
+ /*
++ * Updates the beacon that is sent by ath5k_beacon_send.  For adhoc,
++ * this is called only once at config_bss time, for AP we do it every
++ * SWBA interrupt so that the TIM will reflect buffered frames.
++ *
++ * Called with the beacon lock.
++ */
++static int
++ath5k_beacon_update(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
++{
++	int ret;
++	struct ath5k_softc *sc = hw->priv;
++	struct sk_buff *skb;
++
++	if (WARN_ON(!vif)) {
++		ret = -EINVAL;
++		goto out;
++	}
++
++	skb = ieee80211_beacon_get(hw, vif);
++
++	if (!skb) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	ath5k_debug_dump_skb(sc, skb, "BC  ", 1);
++
++	ath5k_txbuf_free_skb(sc, sc->bbuf);
++	sc->bbuf->skb = skb;
++	ret = ath5k_beacon_setup(sc, sc->bbuf);
++	if (ret)
++		sc->bbuf->skb = NULL;
++out:
++	return ret;
++}
++
++/*
+  * Transmit a beacon frame at SWBA.  Dynamic updates to the
+  * frame contents are done as needed and the slot time is
+  * also adjusted based on current state.
+@@ -2389,7 +1820,6 @@ ath5k_beacon_send(struct ath5k_softc *sc)
+ 	sc->bsent++;
+ }
+ 
+-
+ /**
+  * ath5k_beacon_update_timers - update beacon timers
+  *
+@@ -2491,7 +1921,6 @@ ath5k_beacon_update_timers(struct ath5k_softc *sc, u64 bc_tsf)
+ 		intval & AR5K_BEACON_RESET_TSF ? "AR5K_BEACON_RESET_TSF" : "");
+ }
+ 
+-
+ /**
+  * ath5k_beacon_config - Configure the beacon queues and interrupts
+  *
+@@ -2570,156 +1999,6 @@ static void ath5k_tasklet_beacon(unsigned long data)
+ * Interrupt handling *
+ \********************/
+ 
+-static int
+-ath5k_init(struct ath5k_softc *sc)
+-{
+-	struct ath5k_hw *ah = sc->ah;
+-	struct ath_common *common = ath5k_hw_common(ah);
+-	int ret, i;
+-
+-	mutex_lock(&sc->lock);
+-
+-	ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "mode %d\n", sc->opmode);
+-
+-	/*
+-	 * Stop anything previously setup.  This is safe
+-	 * no matter this is the first time through or not.
+-	 */
+-	ath5k_stop_locked(sc);
+-
+-	/*
+-	 * The basic interface to setting the hardware in a good
+-	 * state is ``reset''.  On return the hardware is known to
+-	 * be powered up and with interrupts disabled.  This must
+-	 * be followed by initialization of the appropriate bits
+-	 * and then setup of the interrupt mask.
+-	 */
+-	sc->curchan = sc->hw->conf.channel;
+-	sc->curband = &sc->sbands[sc->curchan->band];
+-	sc->imask = AR5K_INT_RXOK | AR5K_INT_RXERR | AR5K_INT_RXEOL |
+-		AR5K_INT_RXORN | AR5K_INT_TXDESC | AR5K_INT_TXEOL |
+-		AR5K_INT_FATAL | AR5K_INT_GLOBAL | AR5K_INT_MIB;
+-
+-	ret = ath5k_reset(sc, NULL);
+-	if (ret)
+-		goto done;
+-
+-	ath5k_rfkill_hw_start(ah);
+-
+-	/*
+-	 * Reset the key cache since some parts do not reset the
+-	 * contents on initial power up or resume from suspend.
+-	 */
+-	for (i = 0; i < common->keymax; i++)
+-		ath_hw_keyreset(common, (u16)i);
+-
+-	ath5k_hw_set_ack_bitrate_high(ah, true);
+-	ret = 0;
+-done:
+-	mmiowb();
+-	mutex_unlock(&sc->lock);
+-	return ret;
+-}
+-
+-static int
+-ath5k_stop_locked(struct ath5k_softc *sc)
+-{
+-	struct ath5k_hw *ah = sc->ah;
+-
+-	ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "invalid %u\n",
+-			test_bit(ATH_STAT_INVALID, sc->status));
+-
+-	/*
+-	 * Shutdown the hardware and driver:
+-	 *    stop output from above
+-	 *    disable interrupts
+-	 *    turn off timers
+-	 *    turn off the radio
+-	 *    clear transmit machinery
+-	 *    clear receive machinery
+-	 *    drain and release tx queues
+-	 *    reclaim beacon resources
+-	 *    power down hardware
+-	 *
+-	 * Note that some of this work is not possible if the
+-	 * hardware is gone (invalid).
+-	 */
+-	ieee80211_stop_queues(sc->hw);
+-
+-	if (!test_bit(ATH_STAT_INVALID, sc->status)) {
+-		ath5k_led_off(sc);
+-		ath5k_hw_set_imr(ah, 0);
+-		synchronize_irq(sc->pdev->irq);
+-	}
+-	ath5k_txq_cleanup(sc);
+-	if (!test_bit(ATH_STAT_INVALID, sc->status)) {
+-		ath5k_rx_stop(sc);
+-		ath5k_hw_phy_disable(ah);
+-	}
+-
+-	return 0;
+-}
+-
+-static void stop_tasklets(struct ath5k_softc *sc)
+-{
+-	tasklet_kill(&sc->rxtq);
+-	tasklet_kill(&sc->txtq);
+-	tasklet_kill(&sc->calib);
+-	tasklet_kill(&sc->beacontq);
+-	tasklet_kill(&sc->ani_tasklet);
+-}
+-
+-/*
+- * Stop the device, grabbing the top-level lock to protect
+- * against concurrent entry through ath5k_init (which can happen
+- * if another thread does a system call and the thread doing the
+- * stop is preempted).
+- */
+-static int
+-ath5k_stop_hw(struct ath5k_softc *sc)
+-{
+-	int ret;
+-
+-	mutex_lock(&sc->lock);
+-	ret = ath5k_stop_locked(sc);
+-	if (ret == 0 && !test_bit(ATH_STAT_INVALID, sc->status)) {
+-		/*
+-		 * Don't set the card in full sleep mode!
+-		 *
+-		 * a) When the device is in this state it must be carefully
+-		 * woken up or references to registers in the PCI clock
+-		 * domain may freeze the bus (and system).  This varies
+-		 * by chip and is mostly an issue with newer parts
+-		 * (madwifi sources mentioned srev >= 0x78) that go to
+-		 * sleep more quickly.
+-		 *
+-		 * b) On older chips full sleep results a weird behaviour
+-		 * during wakeup. I tested various cards with srev < 0x78
+-		 * and they don't wake up after module reload, a second
+-		 * module reload is needed to bring the card up again.
+-		 *
+-		 * Until we figure out what's going on don't enable
+-		 * full chip reset on any chip (this is what Legacy HAL
+-		 * and Sam's HAL do anyway). Instead Perform a full reset
+-		 * on the device (same as initial state after attach) and
+-		 * leave it idle (keep MAC/BB on warm reset) */
+-		ret = ath5k_hw_on_hold(sc->ah);
+-
+-		ATH5K_DBG(sc, ATH5K_DEBUG_RESET,
+-				"putting device to sleep\n");
+-	}
+-	ath5k_txbuf_free_skb(sc, sc->bbuf);
+-
+-	mmiowb();
+-	mutex_unlock(&sc->lock);
+-
+-	stop_tasklets(sc);
+-
+-	ath5k_rfkill_hw_stop(sc->ah);
+-
+-	return ret;
+-}
+-
+ static void
+ ath5k_intr_calibration_poll(struct ath5k_hw *ah)
+ {
+@@ -2882,68 +2161,158 @@ ath5k_tasklet_ani(unsigned long data)
+ }
+ 
+ 
+-/********************\
+-* Mac80211 functions *
+-\********************/
++/*************************\
++* Initialization routines *
++\*************************/
+ 
+ static int
+-ath5k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
++ath5k_stop_locked(struct ath5k_softc *sc)
+ {
+-	struct ath5k_softc *sc = hw->priv;
++	struct ath5k_hw *ah = sc->ah;
+ 
+-	return ath5k_tx_queue(hw, skb, sc->txq);
++	ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "invalid %u\n",
++			test_bit(ATH_STAT_INVALID, sc->status));
++
++	/*
++	 * Shutdown the hardware and driver:
++	 *    stop output from above
++	 *    disable interrupts
++	 *    turn off timers
++	 *    turn off the radio
++	 *    clear transmit machinery
++	 *    clear receive machinery
++	 *    drain and release tx queues
++	 *    reclaim beacon resources
++	 *    power down hardware
++	 *
++	 * Note that some of this work is not possible if the
++	 * hardware is gone (invalid).
++	 */
++	ieee80211_stop_queues(sc->hw);
++
++	if (!test_bit(ATH_STAT_INVALID, sc->status)) {
++		ath5k_led_off(sc);
++		ath5k_hw_set_imr(ah, 0);
++		synchronize_irq(sc->pdev->irq);
++	}
++	ath5k_txq_cleanup(sc);
++	if (!test_bit(ATH_STAT_INVALID, sc->status)) {
++		ath5k_rx_stop(sc);
++		ath5k_hw_phy_disable(ah);
++	}
++
++	return 0;
+ }
+ 
+-static int ath5k_tx_queue(struct ieee80211_hw *hw, struct sk_buff *skb,
+-			  struct ath5k_txq *txq)
++static int
++ath5k_init(struct ath5k_softc *sc)
+ {
+-	struct ath5k_softc *sc = hw->priv;
+-	struct ath5k_buf *bf;
+-	unsigned long flags;
+-	int padsize;
++	struct ath5k_hw *ah = sc->ah;
++	struct ath_common *common = ath5k_hw_common(ah);
++	int ret, i;
+ 
+-	ath5k_debug_dump_skb(sc, skb, "TX  ", 1);
++	mutex_lock(&sc->lock);
++
++	ATH5K_DBG(sc, ATH5K_DEBUG_RESET, "mode %d\n", sc->opmode);
+ 
+ 	/*
+-	 * The hardware expects the header padded to 4 byte boundaries.
+-	 * If this is not the case, we add the padding after the header.
++	 * Stop anything previously setup.  This is safe
++	 * no matter this is the first time through or not.
+ 	 */
+-	padsize = ath5k_add_padding(skb);
+-	if (padsize < 0) {
+-		ATH5K_ERR(sc, "tx hdrlen not %%4: not enough"
+-			  " headroom to pad");
+-		goto drop_packet;
+-	}
++	ath5k_stop_locked(sc);
+ 
+-	spin_lock_irqsave(&sc->txbuflock, flags);
+-	if (list_empty(&sc->txbuf)) {
+-		ATH5K_ERR(sc, "no further txbuf available, dropping packet\n");
+-		spin_unlock_irqrestore(&sc->txbuflock, flags);
+-		ieee80211_stop_queue(hw, skb_get_queue_mapping(skb));
+-		goto drop_packet;
+-	}
+-	bf = list_first_entry(&sc->txbuf, struct ath5k_buf, list);
+-	list_del(&bf->list);
+-	sc->txbuf_len--;
+-	if (list_empty(&sc->txbuf))
+-		ieee80211_stop_queues(hw);
+-	spin_unlock_irqrestore(&sc->txbuflock, flags);
++	/*
++	 * The basic interface to setting the hardware in a good
++	 * state is ``reset''.  On return the hardware is known to
++	 * be powered up and with interrupts disabled.  This must
++	 * be followed by initialization of the appropriate bits
++	 * and then setup of the interrupt mask.
++	 */
++	sc->curchan = sc->hw->conf.channel;
++	sc->curband = &sc->sbands[sc->curchan->band];
++	sc->imask = AR5K_INT_RXOK | AR5K_INT_RXERR | AR5K_INT_RXEOL |
++		AR5K_INT_RXORN | AR5K_INT_TXDESC | AR5K_INT_TXEOL |
++		AR5K_INT_FATAL | AR5K_INT_GLOBAL | AR5K_INT_MIB;
+ 
+-	bf->skb = skb;
++	ret = ath5k_reset(sc, NULL);
++	if (ret)
++		goto done;
+ 
+-	if (ath5k_txbuf_setup(sc, bf, txq, padsize)) {
+-		bf->skb = NULL;
+-		spin_lock_irqsave(&sc->txbuflock, flags);
+-		list_add_tail(&bf->list, &sc->txbuf);
+-		sc->txbuf_len++;
+-		spin_unlock_irqrestore(&sc->txbuflock, flags);
+-		goto drop_packet;
++	ath5k_rfkill_hw_start(ah);
++
++	/*
++	 * Reset the key cache since some parts do not reset the
++	 * contents on initial power up or resume from suspend.
++	 */
++	for (i = 0; i < common->keymax; i++)
++		ath_hw_keyreset(common, (u16) i);
++
++	ath5k_hw_set_ack_bitrate_high(ah, true);
++	ret = 0;
++done:
++	mmiowb();
++	mutex_unlock(&sc->lock);
++	return ret;
++}
++
++static void stop_tasklets(struct ath5k_softc *sc)
++{
++	tasklet_kill(&sc->rxtq);
++	tasklet_kill(&sc->txtq);
++	tasklet_kill(&sc->calib);
++	tasklet_kill(&sc->beacontq);
++	tasklet_kill(&sc->ani_tasklet);
++}
++
++/*
++ * Stop the device, grabbing the top-level lock to protect
++ * against concurrent entry through ath5k_init (which can happen
++ * if another thread does a system call and the thread doing the
++ * stop is preempted).
++ */
++static int
++ath5k_stop_hw(struct ath5k_softc *sc)
++{
++	int ret;
++
++	mutex_lock(&sc->lock);
++	ret = ath5k_stop_locked(sc);
++	if (ret == 0 && !test_bit(ATH_STAT_INVALID, sc->status)) {
++		/*
++		 * Don't set the card in full sleep mode!
++		 *
++		 * a) When the device is in this state it must be carefully
++		 * woken up or references to registers in the PCI clock
++		 * domain may freeze the bus (and system).  This varies
++		 * by chip and is mostly an issue with newer parts
++		 * (madwifi sources mentioned srev >= 0x78) that go to
++		 * sleep more quickly.
++		 *
++		 * b) On older chips full sleep results a weird behaviour
++		 * during wakeup. I tested various cards with srev < 0x78
++		 * and they don't wake up after module reload, a second
++		 * module reload is needed to bring the card up again.
++		 *
++		 * Until we figure out what's going on don't enable
++		 * full chip reset on any chip (this is what Legacy HAL
++		 * and Sam's HAL do anyway). Instead Perform a full reset
++		 * on the device (same as initial state after attach) and
++		 * leave it idle (keep MAC/BB on warm reset) */
++		ret = ath5k_hw_on_hold(sc->ah);
++
++		ATH5K_DBG(sc, ATH5K_DEBUG_RESET,
++				"putting device to sleep\n");
+ 	}
+-	return NETDEV_TX_OK;
++	ath5k_txbuf_free_skb(sc, sc->bbuf);
+ 
+-drop_packet:
+-	dev_kfree_skb_any(skb);
+-	return NETDEV_TX_OK;
++	mmiowb();
++	mutex_unlock(&sc->lock);
++
++	stop_tasklets(sc);
++
++	ath5k_rfkill_hw_stop(sc->ah);
++
++	return ret;
+ }
+ 
+ /*
+@@ -3020,6 +2389,179 @@ static void ath5k_reset_work(struct work_struct *work)
+ 	mutex_unlock(&sc->lock);
+ }
+ 
++static int
++ath5k_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
++{
++	struct ath5k_softc *sc = hw->priv;
++	struct ath5k_hw *ah = sc->ah;
++	struct ath_regulatory *regulatory = ath5k_hw_regulatory(ah);
++	u8 mac[ETH_ALEN] = {};
++	int ret;
++
++	ATH5K_DBG(sc, ATH5K_DEBUG_ANY, "devid 0x%x\n", pdev->device);
++
++	/*
++	 * Check if the MAC has multi-rate retry support.
++	 * We do this by trying to setup a fake extended
++	 * descriptor.  MACs that don't have support will
++	 * return false w/o doing anything.  MACs that do
++	 * support it will return true w/o doing anything.
++	 */
++	ret = ath5k_hw_setup_mrr_tx_desc(ah, NULL, 0, 0, 0, 0, 0, 0);
++
++	if (ret < 0)
++		goto err;
++	if (ret > 0)
++		__set_bit(ATH_STAT_MRRETRY, sc->status);
++
++	/*
++	 * Collect the channel list.  The 802.11 layer
++	 * is resposible for filtering this list based
++	 * on settings like the phy mode and regulatory
++	 * domain restrictions.
++	 */
++	ret = ath5k_setup_bands(hw);
++	if (ret) {
++		ATH5K_ERR(sc, "can't get channels\n");
++		goto err;
++	}
++
++	/* NB: setup here so ath5k_rate_update is happy */
++	if (test_bit(AR5K_MODE_11A, ah->ah_modes))
++		ath5k_setcurmode(sc, AR5K_MODE_11A);
++	else
++		ath5k_setcurmode(sc, AR5K_MODE_11B);
++
++	/*
++	 * Allocate tx+rx descriptors and populate the lists.
++	 */
++	ret = ath5k_desc_alloc(sc, pdev);
++	if (ret) {
++		ATH5K_ERR(sc, "can't allocate descriptors\n");
++		goto err;
++	}
++
++	/*
++	 * Allocate hardware transmit queues: one queue for
++	 * beacon frames and one data queue for each QoS
++	 * priority.  Note that hw functions handle resetting
++	 * these queues at the needed time.
++	 */
++	ret = ath5k_beaconq_setup(ah);
++	if (ret < 0) {
++		ATH5K_ERR(sc, "can't setup a beacon xmit queue\n");
++		goto err_desc;
++	}
++	sc->bhalq = ret;
++	sc->cabq = ath5k_txq_setup(sc, AR5K_TX_QUEUE_CAB, 0);
++	if (IS_ERR(sc->cabq)) {
++		ATH5K_ERR(sc, "can't setup cab queue\n");
++		ret = PTR_ERR(sc->cabq);
++		goto err_bhal;
++	}
++
++	sc->txq = ath5k_txq_setup(sc, AR5K_TX_QUEUE_DATA, AR5K_WME_AC_BK);
++	if (IS_ERR(sc->txq)) {
++		ATH5K_ERR(sc, "can't setup xmit queue\n");
++		ret = PTR_ERR(sc->txq);
++		goto err_queues;
++	}
++
++	tasklet_init(&sc->rxtq, ath5k_tasklet_rx, (unsigned long)sc);
++	tasklet_init(&sc->txtq, ath5k_tasklet_tx, (unsigned long)sc);
++	tasklet_init(&sc->calib, ath5k_tasklet_calibrate, (unsigned long)sc);
++	tasklet_init(&sc->beacontq, ath5k_tasklet_beacon, (unsigned long)sc);
++	tasklet_init(&sc->ani_tasklet, ath5k_tasklet_ani, (unsigned long)sc);
++
++	INIT_WORK(&sc->reset_work, ath5k_reset_work);
++
++	ret = ath5k_eeprom_read_mac(ah, mac);
++	if (ret) {
++		ATH5K_ERR(sc, "unable to read address from EEPROM: 0x%04x\n",
++			sc->pdev->device);
++		goto err_queues;
++	}
++
++	SET_IEEE80211_PERM_ADDR(hw, mac);
++	/* All MAC address bits matter for ACKs */
++	memcpy(sc->bssidmask, ath_bcast_mac, ETH_ALEN);
++	ath5k_hw_set_bssid_mask(sc->ah, sc->bssidmask);
++
++	regulatory->current_rd = ah->ah_capabilities.cap_eeprom.ee_regdomain;
++	ret = ath_regd_init(regulatory, hw->wiphy, ath5k_reg_notifier);
++	if (ret) {
++		ATH5K_ERR(sc, "can't initialize regulatory system\n");
++		goto err_queues;
++	}
++
++	ret = ieee80211_register_hw(hw);
++	if (ret) {
++		ATH5K_ERR(sc, "can't register ieee80211 hw\n");
++		goto err_queues;
++	}
++
++	if (!ath_is_world_regd(regulatory))
++		regulatory_hint(hw->wiphy, regulatory->alpha2);
++
++	ath5k_init_leds(sc);
++
++	ath5k_sysfs_register(sc);
++
++	return 0;
++err_queues:
++	ath5k_txq_release(sc);
++err_bhal:
++	ath5k_hw_release_tx_queue(ah, sc->bhalq);
++err_desc:
++	ath5k_desc_free(sc, pdev);
++err:
++	return ret;
++}
++
++static void
++ath5k_detach(struct pci_dev *pdev, struct ieee80211_hw *hw)
++{
++	struct ath5k_softc *sc = hw->priv;
++
++	/*
++	 * NB: the order of these is important:
++	 * o call the 802.11 layer before detaching ath5k_hw to
++	 *   ensure callbacks into the driver to delete global
++	 *   key cache entries can be handled
++	 * o reclaim the tx queue data structures after calling
++	 *   the 802.11 layer as we'll get called back to reclaim
++	 *   node state and potentially want to use them
++	 * o to cleanup the tx queues the hal is called, so detach
++	 *   it last
++	 * XXX: ??? detach ath5k_hw ???
++	 * Other than that, it's straightforward...
++	 */
++	ieee80211_unregister_hw(hw);
++	ath5k_desc_free(sc, pdev);
++	ath5k_txq_release(sc);
++	ath5k_hw_release_tx_queue(sc->ah, sc->bhalq);
++	ath5k_unregister_leds(sc);
++
++	ath5k_sysfs_unregister(sc);
++	/*
++	 * NB: can't reclaim these until after ieee80211_ifdetach
++	 * returns because we'll get called back to reclaim node
++	 * state and potentially want to use them.
++	 */
++}
++
++/********************\
++* Mac80211 functions *
++\********************/
++
++static int
++ath5k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
++{
++	struct ath5k_softc *sc = hw->priv;
++
++	return ath5k_tx_queue(hw, skb, sc->txq);
++}
++
+ static int ath5k_start(struct ieee80211_hw *hw)
+ {
+ 	return ath5k_init(hw->priv);
+@@ -3398,43 +2940,6 @@ ath5k_reset_tsf(struct ieee80211_hw *hw)
+ 		ath5k_hw_reset_tsf(sc->ah);
+ }
+ 
+-/*
+- * Updates the beacon that is sent by ath5k_beacon_send.  For adhoc,
+- * this is called only once at config_bss time, for AP we do it every
+- * SWBA interrupt so that the TIM will reflect buffered frames.
+- *
+- * Called with the beacon lock.
+- */
+-static int
+-ath5k_beacon_update(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+-{
+-	int ret;
+-	struct ath5k_softc *sc = hw->priv;
+-	struct sk_buff *skb;
+-
+-	if (WARN_ON(!vif)) {
+-		ret = -EINVAL;
+-		goto out;
+-	}
+-
+-	skb = ieee80211_beacon_get(hw, vif);
+-
+-	if (!skb) {
+-		ret = -ENOMEM;
+-		goto out;
+-	}
+-
+-	ath5k_debug_dump_skb(sc, skb, "BC  ", 1);
+-
+-	ath5k_txbuf_free_skb(sc, sc->bbuf);
+-	sc->bbuf->skb = skb;
+-	ret = ath5k_beacon_setup(sc, sc->bbuf);
+-	if (ret)
+-		sc->bbuf->skb = NULL;
+-out:
+-	return ret;
+-}
+-
+ static void
+ set_beacon_filter(struct ieee80211_hw *hw, bool enable)
+ {
+@@ -3540,3 +3045,364 @@ static void ath5k_set_coverage_class(struct ieee80211_hw *hw, u8 coverage_class)
+ 	ath5k_hw_set_coverage_class(sc->ah, coverage_class);
+ 	mutex_unlock(&sc->lock);
+ }
++
++static const struct ieee80211_ops ath5k_hw_ops = {
++	.tx 		= ath5k_tx,
++	.start 		= ath5k_start,
++	.stop 		= ath5k_stop,
++	.add_interface 	= ath5k_add_interface,
++	.remove_interface = ath5k_remove_interface,
++	.config 	= ath5k_config,
++	.prepare_multicast = ath5k_prepare_multicast,
++	.configure_filter = ath5k_configure_filter,
++	.set_key 	= ath5k_set_key,
++	.get_stats 	= ath5k_get_stats,
++	.get_survey	= ath5k_get_survey,
++	.conf_tx 	= NULL,
++	.get_tsf 	= ath5k_get_tsf,
++	.set_tsf 	= ath5k_set_tsf,
++	.reset_tsf 	= ath5k_reset_tsf,
++	.bss_info_changed = ath5k_bss_info_changed,
++	.sw_scan_start	= ath5k_sw_scan_start,
++	.sw_scan_complete = ath5k_sw_scan_complete,
++	.set_coverage_class = ath5k_set_coverage_class,
++};
++
++/********************\
++* PCI Initialization *
++\********************/
++
++static int __devinit
++ath5k_pci_probe(struct pci_dev *pdev,
++		const struct pci_device_id *id)
++{
++	void __iomem *mem;
++	struct ath5k_softc *sc;
++	struct ath_common *common;
++	struct ieee80211_hw *hw;
++	int ret;
++	u8 csz;
++
++	/*
++	 * L0s needs to be disabled on all ath5k cards.
++	 *
++	 * For distributions shipping with CONFIG_PCIEASPM (this will be enabled
++	 * by default in the future in 2.6.36) this will also mean both L1 and
++	 * L0s will be disabled when a pre 1.1 PCIe device is detected. We do
++	 * know L1 works correctly even for all ath5k pre 1.1 PCIe devices
++	 * though but cannot currently undue the effect of a blacklist, for
++	 * details you can read pcie_aspm_sanity_check() and see how it adjusts
++	 * the device link capability.
++	 *
++	 * It may be possible in the future to implement some PCI API to allow
++	 * drivers to override blacklists for pre 1.1 PCIe but for now it is
++	 * best to accept that both L0s and L1 will be disabled completely for
++	 * distributions shipping with CONFIG_PCIEASPM rather than having this
++	 * issue present. Motivation for adding this new API will be to help
++	 * with power consumption for some of these devices.
++	 */
++	pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S);
++
++	ret = pci_enable_device(pdev);
++	if (ret) {
++		dev_err(&pdev->dev, "can't enable device\n");
++		goto err;
++	}
++
++	/* XXX 32-bit addressing only */
++	ret = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
++	if (ret) {
++		dev_err(&pdev->dev, "32-bit DMA not available\n");
++		goto err_dis;
++	}
++
++	/*
++	 * Cache line size is used to size and align various
++	 * structures used to communicate with the hardware.
++	 */
++	pci_read_config_byte(pdev, PCI_CACHE_LINE_SIZE, &csz);
++	if (csz == 0) {
++		/*
++		 * Linux 2.4.18 (at least) writes the cache line size
++		 * register as a 16-bit wide register which is wrong.
++		 * We must have this setup properly for rx buffer
++		 * DMA to work so force a reasonable value here if it
++		 * comes up zero.
++		 */
++		csz = L1_CACHE_BYTES >> 2;
++		pci_write_config_byte(pdev, PCI_CACHE_LINE_SIZE, csz);
++	}
++	/*
++	 * The default setting of latency timer yields poor results,
++	 * set it to the value used by other systems.  It may be worth
++	 * tweaking this setting more.
++	 */
++	pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 0xa8);
++
++	/* Enable bus mastering */
++	pci_set_master(pdev);
++
++	/*
++	 * Disable the RETRY_TIMEOUT register (0x41) to keep
++	 * PCI Tx retries from interfering with C3 CPU state.
++	 */
++	pci_write_config_byte(pdev, 0x41, 0);
++
++	ret = pci_request_region(pdev, 0, "ath5k");
++	if (ret) {
++		dev_err(&pdev->dev, "cannot reserve PCI memory region\n");
++		goto err_dis;
++	}
++
++	mem = pci_iomap(pdev, 0, 0);
++	if (!mem) {
++		dev_err(&pdev->dev, "cannot remap PCI memory region\n") ;
++		ret = -EIO;
++		goto err_reg;
++	}
++
++	/*
++	 * Allocate hw (mac80211 main struct)
++	 * and hw->priv (driver private data)
++	 */
++	hw = ieee80211_alloc_hw(sizeof(*sc), &ath5k_hw_ops);
++	if (hw == NULL) {
++		dev_err(&pdev->dev, "cannot allocate ieee80211_hw\n");
++		ret = -ENOMEM;
++		goto err_map;
++	}
++
++	dev_info(&pdev->dev, "registered as '%s'\n", wiphy_name(hw->wiphy));
++
++	/* Initialize driver private data */
++	SET_IEEE80211_DEV(hw, &pdev->dev);
++	hw->flags = IEEE80211_HW_RX_INCLUDES_FCS |
++		    IEEE80211_HW_HOST_BROADCAST_PS_BUFFERING |
++		    IEEE80211_HW_SIGNAL_DBM;
++
++	hw->wiphy->interface_modes =
++		BIT(NL80211_IFTYPE_AP) |
++		BIT(NL80211_IFTYPE_STATION) |
++		BIT(NL80211_IFTYPE_ADHOC) |
++		BIT(NL80211_IFTYPE_MESH_POINT);
++
++	hw->extra_tx_headroom = 2;
++	hw->channel_change_time = 5000;
++	sc = hw->priv;
++	sc->hw = hw;
++	sc->pdev = pdev;
++
++	ath5k_debug_init_device(sc);
++
++	/*
++	 * Mark the device as detached to avoid processing
++	 * interrupts until setup is complete.
++	 */
++	__set_bit(ATH_STAT_INVALID, sc->status);
++
++	sc->iobase = mem; /* So we can unmap it on detach */
++	sc->opmode = NL80211_IFTYPE_STATION;
++	sc->bintval = 1000;
++	mutex_init(&sc->lock);
++	spin_lock_init(&sc->rxbuflock);
++	spin_lock_init(&sc->txbuflock);
++	spin_lock_init(&sc->block);
++
++	/* Set private data */
++	pci_set_drvdata(pdev, sc);
++
++	/* Setup interrupt handler */
++	ret = request_irq(pdev->irq, ath5k_intr, IRQF_SHARED, "ath", sc);
++	if (ret) {
++		ATH5K_ERR(sc, "request_irq failed\n");
++		goto err_free;
++	}
++
++	/* If we passed the test, malloc an ath5k_hw struct */
++	sc->ah = kzalloc(sizeof(struct ath5k_hw), GFP_KERNEL);
++	if (!sc->ah) {
++		ret = -ENOMEM;
++		ATH5K_ERR(sc, "out of memory\n");
++		goto err_irq;
++	}
++
++	sc->ah->ah_sc = sc;
++	sc->ah->ah_iobase = sc->iobase;
++	common = ath5k_hw_common(sc->ah);
++	common->ops = &ath5k_common_ops;
++	common->ah = sc->ah;
++	common->hw = hw;
++	common->cachelsz = csz << 2; /* convert to bytes */
++
++	/* Initialize device */
++	ret = ath5k_hw_attach(sc);
++	if (ret) {
++		goto err_free_ah;
++	}
++
++	/* set up multi-rate retry capabilities */
++	if (sc->ah->ah_version == AR5K_AR5212) {
++		hw->max_rates = 4;
++		hw->max_rate_tries = 11;
++	}
++
++	/* Finish private driver data initialization */
++	ret = ath5k_attach(pdev, hw);
++	if (ret)
++		goto err_ah;
++
++	ATH5K_INFO(sc, "Atheros AR%s chip found (MAC: 0x%x, PHY: 0x%x)\n",
++			ath5k_chip_name(AR5K_VERSION_MAC, sc->ah->ah_mac_srev),
++					sc->ah->ah_mac_srev,
++					sc->ah->ah_phy_revision);
++
++	if (!sc->ah->ah_single_chip) {
++		/* Single chip radio (!RF5111) */
++		if (sc->ah->ah_radio_5ghz_revision &&
++			!sc->ah->ah_radio_2ghz_revision) {
++			/* No 5GHz support -> report 2GHz radio */
++			if (!test_bit(AR5K_MODE_11A,
++				sc->ah->ah_capabilities.cap_mode)) {
++				ATH5K_INFO(sc, "RF%s 2GHz radio found (0x%x)\n",
++					ath5k_chip_name(AR5K_VERSION_RAD,
++						sc->ah->ah_radio_5ghz_revision),
++						sc->ah->ah_radio_5ghz_revision);
++			/* No 2GHz support (5110 and some
++			 * 5Ghz only cards) -> report 5Ghz radio */
++			} else if (!test_bit(AR5K_MODE_11B,
++				sc->ah->ah_capabilities.cap_mode)) {
++				ATH5K_INFO(sc, "RF%s 5GHz radio found (0x%x)\n",
++					ath5k_chip_name(AR5K_VERSION_RAD,
++						sc->ah->ah_radio_5ghz_revision),
++						sc->ah->ah_radio_5ghz_revision);
++			/* Multiband radio */
++			} else {
++				ATH5K_INFO(sc, "RF%s multiband radio found"
++					" (0x%x)\n",
++					ath5k_chip_name(AR5K_VERSION_RAD,
++						sc->ah->ah_radio_5ghz_revision),
++						sc->ah->ah_radio_5ghz_revision);
++			}
++		}
++		/* Multi chip radio (RF5111 - RF2111) ->
++		 * report both 2GHz/5GHz radios */
++		else if (sc->ah->ah_radio_5ghz_revision &&
++				sc->ah->ah_radio_2ghz_revision){
++			ATH5K_INFO(sc, "RF%s 5GHz radio found (0x%x)\n",
++				ath5k_chip_name(AR5K_VERSION_RAD,
++					sc->ah->ah_radio_5ghz_revision),
++					sc->ah->ah_radio_5ghz_revision);
++			ATH5K_INFO(sc, "RF%s 2GHz radio found (0x%x)\n",
++				ath5k_chip_name(AR5K_VERSION_RAD,
++					sc->ah->ah_radio_2ghz_revision),
++					sc->ah->ah_radio_2ghz_revision);
++		}
++	}
++
++
++	/* ready to process interrupts */
++	__clear_bit(ATH_STAT_INVALID, sc->status);
++
++	return 0;
++err_ah:
++	ath5k_hw_detach(sc->ah);
++err_free_ah:
++	kfree(sc->ah);
++err_irq:
++	free_irq(pdev->irq, sc);
++err_free:
++	ieee80211_free_hw(hw);
++err_map:
++	pci_iounmap(pdev, mem);
++err_reg:
++	pci_release_region(pdev, 0);
++err_dis:
++	pci_disable_device(pdev);
++err:
++	return ret;
++}
++
++static void __devexit
++ath5k_pci_remove(struct pci_dev *pdev)
++{
++	struct ath5k_softc *sc = pci_get_drvdata(pdev);
++
++	ath5k_debug_finish_device(sc);
++	ath5k_detach(pdev, sc->hw);
++	ath5k_hw_detach(sc->ah);
++	kfree(sc->ah);
++	free_irq(pdev->irq, sc);
++	pci_iounmap(pdev, sc->iobase);
++	pci_release_region(pdev, 0);
++	pci_disable_device(pdev);
++	ieee80211_free_hw(sc->hw);
++}
++
++#ifdef CONFIG_PM_SLEEP
++static int ath5k_pci_suspend(struct device *dev)
++{
++	struct ath5k_softc *sc = pci_get_drvdata(to_pci_dev(dev));
++
++	ath5k_led_off(sc);
++	return 0;
++}
++
++static int ath5k_pci_resume(struct device *dev)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	struct ath5k_softc *sc = pci_get_drvdata(pdev);
++
++	/*
++	 * Suspend/Resume resets the PCI configuration space, so we have to
++	 * re-disable the RETRY_TIMEOUT register (0x41) to keep
++	 * PCI Tx retries from interfering with C3 CPU state
++	 */
++	pci_write_config_byte(pdev, 0x41, 0);
++
++	ath5k_led_enable(sc);
++	return 0;
++}
++
++static SIMPLE_DEV_PM_OPS(ath5k_pm_ops, ath5k_pci_suspend, ath5k_pci_resume);
++#define ATH5K_PM_OPS	(&ath5k_pm_ops)
++#else
++#define ATH5K_PM_OPS	NULL
++#endif /* CONFIG_PM_SLEEP */
++
++static struct pci_driver ath5k_pci_driver = {
++	.name		= KBUILD_MODNAME,
++	.id_table	= ath5k_pci_id_table,
++	.probe		= ath5k_pci_probe,
++	.remove		= __devexit_p(ath5k_pci_remove),
++	.driver.pm	= ATH5K_PM_OPS,
++};
++
++/*
++ * Module init/exit functions
++ */
++static int __init
++init_ath5k_pci(void)
++{
++	int ret;
++
++	ath5k_debug_init();
++
++	ret = pci_register_driver(&ath5k_pci_driver);
++	if (ret) {
++		printk(KERN_ERR "ath5k_pci: can't register pci driver\n");
++		return ret;
++	}
++
++	return 0;
++}
++
++static void __exit
++exit_ath5k_pci(void)
++{
++	pci_unregister_driver(&ath5k_pci_driver);
++
++	ath5k_debug_finish();
++}
++
++module_init(init_ath5k_pci);
++module_exit(exit_ath5k_pci);
 
