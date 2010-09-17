@@ -1,65 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:57416 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753454Ab0IAPNQ convert rfc822-to-8bit (ORCPT
+Received: from mail.atheros.com ([12.19.149.2]:20525 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754977Ab0IQXNt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Sep 2010 11:13:16 -0400
-Received: by pxi10 with SMTP id 10so2874776pxi.19
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Sep 2010 08:13:15 -0700 (PDT)
+	Fri, 17 Sep 2010 19:13:49 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 16:13:43 -0700
+From: Vipin Mehta <Vipin.Mehta@Atheros.com>
+To: Randy Dunlap <randy.dunlap@oracle.com>,
+	"greg@kroah.com" <greg@kroah.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
+Date: Fri, 17 Sep 2010 16:11:57 -0700
+Subject: RE: [PATCH] staging: ath6kl: Including a header file to fix a
+ compilation error
+Message-ID: <35B17FE5076C7040809188FBE7913F983F23937DAE@SC1EXMB-MBCL.global.atheros.com>
+References: <1284742495-2970-1-git-send-email-vmehta@atheros.com>
+ <4C93A412.2070005@oracle.com>
+In-Reply-To: <4C93A412.2070005@oracle.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <4C7E6C1D.8050305@hauke-m.de>
-References: <1282934514-18160-1-git-send-email-hauke@hauke-m.de>
- <20100828210131.GA2422@tux> <4C7E6C1D.8050305@hauke-m.de>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Wed, 1 Sep 2010 08:12:55 -0700
-Message-ID: <AANLkTi=29wfzQz7CK8QX++n+S-KrHVGszW60AFS_vpbs@mail.gmail.com>
-Subject: Re: [PATCH] compat: backport linux/pci-aspm.h
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: Luis Rodriguez <Luis.Rodriguez@atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"mcgrof@infradead.org" <mcgrof@infradead.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 1, 2010 at 8:07 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> Am 28.08.2010 23:01, schrieb Luis R. Rodriguez:
->> On Fri, Aug 27, 2010 at 11:41:54AM -0700, Hauke Mehrtens wrote:
->>> pci-aspm.h was introduced in kernel 2.6.25 and is used by the ath5k driver.
->>>
->>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
->>> ---
->>>  include/linux/pci-aspm.h |   55 ++++++++++++++++++++++++++++++++++++++++++++++
->>>  1 files changed, 55 insertions(+), 0 deletions(-)
->>>  create mode 100644 include/linux/pci-aspm.h
->>>
->>> diff --git a/include/linux/pci-aspm.h b/include/linux/pci-aspm.h
->>> new file mode 100644
->>> index 0000000..c791d00
->>> --- /dev/null
->>> +++ b/include/linux/pci-aspm.h
->>
->> So compat-wireless would have to copy this file over? We'd then have to synch
->> this file for older kernels, and the real kernel header's own pci-aspm.h for
->> kernels >= 2.6.25 would be using this version of the file. Can we just stuff
->> the ASPM required stuff onto include/linux/compat-2.6.25.h ?
->>
->>   Luis
 > Hi,
->
-> we can stuff the empty aspm functions into compat-2.6.25.h, but we need
-> include/linux/pci-aspm.h or we need an extra ifdef in compat-wireless
-> (not nice). Some drivers like drivers/net/wireless/ath/ath5k/base.c and
-> drivers/net/wireless/iwlwifi/iwl-agn.c are including pci-aspm.h, but it
-> is not there for kernels < 2.6.25.
+> Thanks for the patch, but I still get these errors & warnings:
+> 
+> on linux-next 2010-0915:
+> 
+> drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif_scatter.c: In function
+> 'SetupHIFScatterSupport':
+> drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif_scatter.c:288: error:
+> 'struct mmc_host' has no member named 'max_hw_segs'
+> drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif_scatter.c:289: error:
+> 'struct mmc_host' has no member named 'max_hw_segs'
+> 
+This is because of a recent change in the mmc_host structure that removes the distinction between hw and phys segments. The structure is different in the staging-next-2.6 tree which is where I usually build and test the changes. 
 
-Understood and good point.
+Greg, 
+   The two trees linux-next and staging-next are not in sync so what is the process that is usually followed under these circumstances? I see little point in using the staging-next-2.6 tree to generate and test my patches since the tree eventually drains into linux-next. Should I stop worrying about if the patch works for the staging-next tree and just focus on that things should work with linux-next?
 
-> I will prepare a new patch for compat. With an mostly empty pci-aspm.h
-> with an include_next and some functions in compat-2.6.35.h.
-
-Well so the issue is getting kernels newer than include their own
-kernel header's include/linux/pci-aspm.h rather than the one provided
-by compat. How will this be achieved?
-
-  Luis
+> and on linux-next 2010-0917:
+> 
+> drivers/staging/ath6kl/os/linux/ar6000_drv.c: In function
+> 'ar6000_transfer_bin_file':
+> drivers/staging/ath6kl/os/linux/ar6000_drv.c:1129: warning: cast from
+> pointer to integer of different size
+> drivers/staging/ath6kl/os/linux/ar6000_drv.c:1129: warning: cast to
+> pointer from integer of different size
+> drivers/staging/ath6kl/wmi/wmi.c: In function 'wmi_bssInfo_event_rx':
+> drivers/staging/ath6kl/wmi/wmi.c:1459: error: 'i' undeclared (first use in
+> this function)
+> 
+> 
+This is due to a recent patch that went it to use '%pM' format specifier to print MAC addresses. I'll fix it.
