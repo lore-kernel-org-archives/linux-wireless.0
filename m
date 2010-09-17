@@ -1,123 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42376 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751514Ab0IJO2K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Sep 2010 10:28:10 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 04/14] iwlwifi: cancel scan when down the device
-Date: Fri, 10 Sep 2010 16:26:37 +0200
-Message-Id: <1284128807-11436-5-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
-References: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:51165 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755737Ab0IQRYq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Sep 2010 13:24:46 -0400
+Message-ID: <4C93A412.2070005@oracle.com>
+Date: Fri, 17 Sep 2010 10:23:30 -0700
+From: Randy Dunlap <randy.dunlap@oracle.com>
+MIME-Version: 1.0
+To: Vipin Mehta <vmehta@Atheros.com>
+CC: greg@kroah.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org
+Subject: Re: [PATCH] staging: ath6kl: Including a header file to fix a compilation
+ error
+References: <1284742495-2970-1-git-send-email-vmehta@atheros.com>
+In-Reply-To: <1284742495-2970-1-git-send-email-vmehta@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Always cancel scan when stooping device and scan is currently pending,
-we should newer have scan running after down device.
+On 09/17/10 09:54, Vipin Mehta wrote:
+> The commit fixes a compilation error that was encountered while using
+> a specific kernel configuration file. The problem was the use of some
+> functions defined in <linux/semaphore.h> without including the header
+> file explicitly. It was probably working before because of the
+> dependency getting implicitly satisfied via some other header file.
+> Also, eliminating the inclusion of the same header file more than
+> once. The code needs additional cleanup and may be addressed by a
+> subsequent commit.
+> 
+> Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
+> Signed-off-by: Vipin Mehta <vmehta@atheros.com>
+> ---
 
-To assure we start scan cancel from restart work we have to schedule
-abort_scan to different workqueue than priv->workqueue.
+Hi,
+Thanks for the patch, but I still get these errors & warnings:
 
-Patch fix not cancel scanning when restarting firmware, what is
-one of the causes of wdev_cleanup_work warning (together with permanent
-network connection lost) reported at
-https://bugzilla.redhat.com/show_bug.cgi?id=593566
+on linux-next 2010-0915:
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   14 +++-----------
- drivers/net/wireless/iwlwifi/iwl-scan.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   16 ++++------------
- 3 files changed, 8 insertions(+), 24 deletions(-)
+drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif_scatter.c: In function 'SetupHIFScatterSupport':
+drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif_scatter.c:288: error: 'struct mmc_host' has no member named 'max_hw_segs'
+drivers/staging/ath6kl/hif/sdio/linux_sdio/src/hif_scatter.c:289: error: 'struct mmc_host' has no member named 'max_hw_segs'
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index c8a2ec8..25b3540 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2891,8 +2891,9 @@ static void __iwl_down(struct iwl_priv *priv)
- 
- 	IWL_DEBUG_INFO(priv, DRV_NAME " is going down\n");
- 
--	if (!exit_pending)
--		set_bit(STATUS_EXIT_PENDING, &priv->status);
-+	iwl_scan_cancel_timeout(priv, 200);
-+
-+	exit_pending = test_and_set_bit(STATUS_EXIT_PENDING, &priv->status);
- 
- 	/* Stop TX queues watchdog. We need to have STATUS_EXIT_PENDING bit set
- 	 * to prevent rearm timer */
-@@ -3502,15 +3503,6 @@ static void iwl_mac_stop(struct ieee80211_hw *hw)
- 
- 	priv->is_open = 0;
- 
--	if (iwl_is_ready_rf(priv) || test_bit(STATUS_SCAN_HW, &priv->status)) {
--		/* stop mac, cancel any scan request and clear
--		 * RXON_FILTER_ASSOC_MSK BIT
--		 */
--		mutex_lock(&priv->mutex);
--		iwl_scan_cancel_timeout(priv, 100);
--		mutex_unlock(&priv->mutex);
--	}
--
- 	iwl_down(priv);
- 
- 	flush_workqueue(priv->workqueue);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 22bdc98..ea33849 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -71,7 +71,7 @@ int iwl_scan_cancel(struct iwl_priv *priv)
- 	if (test_bit(STATUS_SCANNING, &priv->status)) {
- 		if (!test_and_set_bit(STATUS_SCAN_ABORTING, &priv->status)) {
- 			IWL_DEBUG_SCAN(priv, "Queuing scan abort.\n");
--			queue_work(priv->workqueue, &priv->abort_scan);
-+			schedule_work(&priv->abort_scan);
- 
- 		} else
- 			IWL_DEBUG_SCAN(priv, "Scan abort already in progress.\n");
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 3b3686b..fb894d8 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -2568,12 +2568,13 @@ static void iwl3945_cancel_deferred_work(struct iwl_priv *priv);
- static void __iwl3945_down(struct iwl_priv *priv)
- {
- 	unsigned long flags;
--	int exit_pending = test_bit(STATUS_EXIT_PENDING, &priv->status);
-+	int exit_pending;
- 
- 	IWL_DEBUG_INFO(priv, DRV_NAME " is going down\n");
- 
--	if (!exit_pending)
--		set_bit(STATUS_EXIT_PENDING, &priv->status);
-+	iwl_scan_cancel_timeout(priv, 200);
-+
-+	exit_pending = test_and_set_bit(STATUS_EXIT_PENDING, &priv->status);
- 
- 	/* Stop TX queues watchdog. We need to have STATUS_EXIT_PENDING bit set
- 	 * to prevent rearm timer */
-@@ -3173,15 +3174,6 @@ static void iwl3945_mac_stop(struct ieee80211_hw *hw)
- 
- 	priv->is_open = 0;
- 
--	if (iwl_is_ready_rf(priv)) {
--		/* stop mac, cancel any scan request and clear
--		 * RXON_FILTER_ASSOC_MSK BIT
--		 */
--		mutex_lock(&priv->mutex);
--		iwl_scan_cancel_timeout(priv, 100);
--		mutex_unlock(&priv->mutex);
--	}
--
- 	iwl3945_down(priv);
- 
- 	flush_workqueue(priv->workqueue);
+and on linux-next 2010-0917:
+
+drivers/staging/ath6kl/os/linux/ar6000_drv.c: In function 'ar6000_transfer_bin_file':
+drivers/staging/ath6kl/os/linux/ar6000_drv.c:1129: warning: cast from pointer to integer of different size
+drivers/staging/ath6kl/os/linux/ar6000_drv.c:1129: warning: cast to pointer from integer of different size
+drivers/staging/ath6kl/wmi/wmi.c: In function 'wmi_bssInfo_event_rx':
+drivers/staging/ath6kl/wmi/wmi.c:1459: error: 'i' undeclared (first use in this function)
+
+
+>  .../staging/ath6kl/miscdrv/ar3kps/ar3kpsconfig.h   |    4 ----
+>  drivers/staging/ath6kl/os/linux/cfg80211.c         |    2 --
+>  .../staging/ath6kl/os/linux/include/ar6000_drv.h   |    8 --------
+>  .../staging/ath6kl/os/linux/include/osapi_linux.h  |    1 +
+>  drivers/staging/ath6kl/os/linux/netbuf.c           |    2 --
+>  5 files changed, 1 insertions(+), 16 deletions(-)
+> 
+> diff --git a/drivers/staging/ath6kl/miscdrv/ar3kps/ar3kpsconfig.h b/drivers/staging/ath6kl/miscdrv/ar3kps/ar3kpsconfig.h
+> index 4358834..4e5b7bf 100644
+> --- a/drivers/staging/ath6kl/miscdrv/ar3kps/ar3kpsconfig.h
+> +++ b/drivers/staging/ath6kl/miscdrv/ar3kps/ar3kpsconfig.h
+> @@ -36,15 +36,11 @@
+>  
+>  #include <linux/fs.h>
+>  #include <linux/errno.h>
+> -#include <linux/string.h>
+>  #include <linux/signal.h>
+> -#include <linux/timer.h>
+>  
+>  
+>  #include <linux/ioctl.h>
+> -#include <linux/skbuff.h>
+>  #include <linux/firmware.h>
+> -#include <linux/wait.h>
+>  
+>  
+>  #include <net/bluetooth/bluetooth.h>
+> diff --git a/drivers/staging/ath6kl/os/linux/cfg80211.c b/drivers/staging/ath6kl/os/linux/cfg80211.c
+> index 7a3784d..f51c5e1 100644
+> --- a/drivers/staging/ath6kl/os/linux/cfg80211.c
+> +++ b/drivers/staging/ath6kl/os/linux/cfg80211.c
+> @@ -21,8 +21,6 @@
+>  // Author(s): ="Atheros"
+>  //------------------------------------------------------------------------------
+>  
+> -#include <linux/kernel.h>
+> -#include <linux/netdevice.h>
+>  #include <linux/wireless.h>
+>  #include <linux/ieee80211.h>
+>  #include <net/cfg80211.h>
+> diff --git a/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h b/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h
+> index 8be4f55..e624883 100644
+> --- a/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h
+> +++ b/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h
+> @@ -24,22 +24,14 @@
+>  #ifndef _AR6000_H_
+>  #define _AR6000_H_
+>  
+> -#include <linux/version.h>
+> -
+> -
+> -#include <generated/autoconf.h>
+>  #include <linux/init.h>
+> -#include <linux/kernel.h>
+>  #include <linux/sched.h>
+>  #include <linux/spinlock.h>
+> -#include <linux/skbuff.h>
+>  #include <linux/if_ether.h>
+> -#include <linux/netdevice.h>
+>  #include <linux/etherdevice.h>
+>  #include <net/iw_handler.h>
+>  #include <linux/if_arp.h>
+>  #include <linux/ip.h>
+> -#include <linux/semaphore.h>
+>  #include <linux/wireless.h>
+>  #ifdef ATH6K_CONFIG_CFG80211
+>  #include <net/cfg80211.h>
+> diff --git a/drivers/staging/ath6kl/os/linux/include/osapi_linux.h b/drivers/staging/ath6kl/os/linux/include/osapi_linux.h
+> index ef7cc82..9892dfc 100644
+> --- a/drivers/staging/ath6kl/os/linux/include/osapi_linux.h
+> +++ b/drivers/staging/ath6kl/os/linux/include/osapi_linux.h
+> @@ -39,6 +39,7 @@
+>  #include <linux/timer.h>
+>  #include <linux/delay.h>
+>  #include <linux/wait.h>
+> +#include <linux/semaphore.h>
+>  
+>  #include <linux/cache.h>
+>  
+> diff --git a/drivers/staging/ath6kl/os/linux/netbuf.c b/drivers/staging/ath6kl/os/linux/netbuf.c
+> index 63fa49c..15e5d04 100644
+> --- a/drivers/staging/ath6kl/os/linux/netbuf.c
+> +++ b/drivers/staging/ath6kl/os/linux/netbuf.c
+> @@ -20,8 +20,6 @@
+>  //
+>  // Author(s): ="Atheros"
+>  //------------------------------------------------------------------------------
+> -#include <linux/kernel.h>
+> -#include <linux/skbuff.h>
+>  #include <a_config.h>
+>  #include "athdefs.h"
+>  #include "a_types.h"
+
+
 -- 
-1.7.1
-
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
