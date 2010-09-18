@@ -1,30 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:43360 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751273Ab0IMR72 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Sep 2010 13:59:28 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 13 Sep 2010 10:59:22 -0700
-Date: Mon, 13 Sep 2010 10:59:27 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-CC: Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"mcgrof@infradead.org" <mcgrof@infradead.org>
-Subject: Re: [PATCH 2/2] compat: backport printk_once
-Message-ID: <20100913175927.GL1824@tux>
-References: <1284221999-22521-1-git-send-email-hauke@hauke-m.de>
- <1284221999-22521-2-git-send-email-hauke@hauke-m.de>
+Received: from snt0-omc2-s18.snt0.hotmail.com ([65.55.90.93]:14559 "EHLO
+	snt0-omc2-s18.snt0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750782Ab0IRAkG convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Sep 2010 20:40:06 -0400
+Message-ID: <SNT113-W12286EC2B662C82589B427F17C0@phx.gbl>
+From: Dale Turner <rx_guy@hotmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: 
+Date: Fri, 17 Sep 2010 21:40:05 -0300
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1284221999-22521-2-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 11, 2010 at 09:19:59AM -0700, Hauke Mehrtens wrote:
-> This is needed by brcm80211.
 
-Applied both, thanks!
+Hello.
 
-  Luis
+Can someone tell me how to compile the carl9170 module 
+WITHOUT compiling a complete kernel. I just purchased a TP-Link WN821N 
+based on the capabilities of this driver, but am disappointed that I 
+currently don't have the module.
+
+I am familiar with the 
+compat-wireless packages as I have needed to compile the ath9k_htc 
+driver for my other adapter (TP-Link WN721N), but the carl driver does 
+not seem to be available in that package.
+
+Can anyone help?? 
+
+Thanks in advance. 		 	   		  
