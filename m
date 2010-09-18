@@ -1,54 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38579 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756259Ab0I3TUz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Sep 2010 15:20:55 -0400
-Subject: [PATCH] cfg80211: remove spurious __KERNEL__ ifdef
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Joe Perches <joe@perches.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 30 Sep 2010 21:21:25 +0200
-Message-ID: <1285874485.5137.16.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from mail.atheros.com ([12.19.149.2]:31835 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752179Ab0IRB0I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Sep 2010 21:26:08 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 18:26:02 -0700
+From: Vipin Mehta <vmehta@atheros.com>
+To: <greg@kroah.com>
+CC: <linux-wireless@vger.kernel.org>, <vmehta@atheros.com>,
+	<devel@driverdev.osuosl.org>, <randy.dunlap@oracle.com>
+Subject: [PATCH] staging: ath6kl: Removing duplicate includes
+Date: Fri, 17 Sep 2010 18:26:03 -0700
+Message-ID: <1284773163-13954-1-git-send-email-vmehta@atheros.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Eliminating the inclusion of the same header file more than once.
+The files being removed are already included by osapi_linux.h.
 
-The net/cfg80211.h header file isn't exported to
-userspace, so there's no need for any kind of
-__KERNEL__ protection in it. If it was exported,
-everything else in it would need protection as
-well, not just the logging stuff ...
-
-Cc:Joe Perches <joe@perches.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
+Signed-off-by: Vipin Mehta <vmehta@atheros.com>
 ---
-Might be something that slipped in elsewhere too?
+ .../staging/ath6kl/miscdrv/ar3kps/ar3kpsconfig.h   |    4 ----
+ drivers/staging/ath6kl/os/linux/cfg80211.c         |    2 --
+ .../staging/ath6kl/os/linux/include/ar6000_drv.h   |    8 --------
+ drivers/staging/ath6kl/os/linux/netbuf.c           |    2 --
+ 4 files changed, 0 insertions(+), 16 deletions(-)
 
- include/net/cfg80211.h |    4 ----
- 1 file changed, 4 deletions(-)
-
---- wireless-testing.orig/include/net/cfg80211.h	2010-09-30 21:18:46.000000000 +0200
-+++ wireless-testing/include/net/cfg80211.h	2010-09-30 21:18:51.000000000 +0200
-@@ -2551,8 +2551,6 @@ void cfg80211_cqm_rssi_notify(struct net
- 			      enum nl80211_cqm_rssi_threshold_event rssi_event,
- 			      gfp_t gfp);
+diff --git a/drivers/staging/ath6kl/miscdrv/ar3kps/ar3kpsconfig.h b/drivers/staging/ath6kl/miscdrv/ar3kps/ar3kpsconfig.h
+index 4358834..4e5b7bf 100644
+--- a/drivers/staging/ath6kl/miscdrv/ar3kps/ar3kpsconfig.h
++++ b/drivers/staging/ath6kl/miscdrv/ar3kps/ar3kpsconfig.h
+@@ -36,15 +36,11 @@
  
--#ifdef __KERNEL__
+ #include <linux/fs.h>
+ #include <linux/errno.h>
+-#include <linux/string.h>
+ #include <linux/signal.h>
+-#include <linux/timer.h>
+ 
+ 
+ #include <linux/ioctl.h>
+-#include <linux/skbuff.h>
+ #include <linux/firmware.h>
+-#include <linux/wait.h>
+ 
+ 
+ #include <net/bluetooth/bluetooth.h>
+diff --git a/drivers/staging/ath6kl/os/linux/cfg80211.c b/drivers/staging/ath6kl/os/linux/cfg80211.c
+index d5890d4..b8f2061 100644
+--- a/drivers/staging/ath6kl/os/linux/cfg80211.c
++++ b/drivers/staging/ath6kl/os/linux/cfg80211.c
+@@ -21,8 +21,6 @@
+ // Author(s): ="Atheros"
+ //------------------------------------------------------------------------------
+ 
+-#include <linux/kernel.h>
+-#include <linux/netdevice.h>
+ #include <linux/wireless.h>
+ #include <linux/ieee80211.h>
+ #include <net/cfg80211.h>
+diff --git a/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h b/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h
+index 8be4f55..e624883 100644
+--- a/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h
++++ b/drivers/staging/ath6kl/os/linux/include/ar6000_drv.h
+@@ -24,22 +24,14 @@
+ #ifndef _AR6000_H_
+ #define _AR6000_H_
+ 
+-#include <linux/version.h>
 -
- /* Logging, debugging and troubleshooting/diagnostic helpers. */
- 
- /* wiphy_printk helpers, similar to dev_printk */
-@@ -2599,6 +2597,4 @@ void cfg80211_cqm_rssi_notify(struct net
- #define wiphy_WARN(wiphy, format, args...)			\
- 	WARN(1, "wiphy: %s\n" format, wiphy_name(wiphy), ##args);
- 
--#endif
 -
- #endif /* __NET_CFG80211_H */
-
+-#include <generated/autoconf.h>
+ #include <linux/init.h>
+-#include <linux/kernel.h>
+ #include <linux/sched.h>
+ #include <linux/spinlock.h>
+-#include <linux/skbuff.h>
+ #include <linux/if_ether.h>
+-#include <linux/netdevice.h>
+ #include <linux/etherdevice.h>
+ #include <net/iw_handler.h>
+ #include <linux/if_arp.h>
+ #include <linux/ip.h>
+-#include <linux/semaphore.h>
+ #include <linux/wireless.h>
+ #ifdef ATH6K_CONFIG_CFG80211
+ #include <net/cfg80211.h>
+diff --git a/drivers/staging/ath6kl/os/linux/netbuf.c b/drivers/staging/ath6kl/os/linux/netbuf.c
+index 63fa49c..15e5d04 100644
+--- a/drivers/staging/ath6kl/os/linux/netbuf.c
++++ b/drivers/staging/ath6kl/os/linux/netbuf.c
+@@ -20,8 +20,6 @@
+ //
+ // Author(s): ="Atheros"
+ //------------------------------------------------------------------------------
+-#include <linux/kernel.h>
+-#include <linux/skbuff.h>
+ #include <a_config.h>
+ #include "athdefs.h"
+ #include "a_types.h"
+-- 
+1.6.3.3
 
