@@ -1,51 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:35534 "EHLO mail.atheros.com"
+Received: from mail.atheros.com ([12.19.149.2]:30759 "EHLO mail.atheros.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750983Ab0IUKdO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Sep 2010 06:33:14 -0400
+	id S1754355Ab0IRBGY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Sep 2010 21:06:24 -0400
 Received: from mail.atheros.com ([10.10.20.105])
 	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Tue, 21 Sep 2010 03:33:07 -0700
-Date: Tue, 21 Sep 2010 16:02:59 +0530
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Vasanth Thiagarajan <Vasanth.Thiagarajan@Atheros.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] ath9k: Kick start paprd calibration whenever
-	operating channel changes
-Message-ID: <20100921103259.GB4229@vasanth-laptop>
-References: <1285048487-16795-1-git-send-email-vasanth@atheros.com> <1285048487-16795-2-git-send-email-vasanth@atheros.com> <4C9883A4.60302@openwrt.org> <20100921101757.GA4229@vasanth-laptop> <4C9887FD.6070505@openwrt.org>
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 18:06:18 -0700
+From: Vipin Mehta <vmehta@atheros.com>
+To: <greg@kroah.com>
+CC: <linux-wireless@vger.kernel.org>, <vmehta@atheros.com>,
+	<devel@driverdev.osuosl.org>, <andy.shevchenko@gmail.com>,
+	<randy.dunlap@oracle.com>
+Subject: [PATCH] staging: ath6kl: Fixing a compile error
+Date: Fri, 17 Sep 2010 18:06:19 -0700
+Message-ID: <1284771979-13249-1-git-send-email-vmehta@atheros.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4C9887FD.6070505@openwrt.org>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 21, 2010 at 03:55:01PM +0530, Felix Fietkau wrote:
-> On 2010-09-21 12:17 PM, Vasanthakumar Thiagarajan wrote:
-> > On Tue, Sep 21, 2010 at 03:36:28PM +0530, Felix Fietkau wrote:
-> >> That seems like code duplication to me. The caldata already has the
-> >> channel number and the channel flags. ath9k_hw_reset() clears the entire
-> >> caldata whenever that changes. Because of that, ah->caldata->paprd_done
-> >> should have already been set to zero automatically after the reset
-> >> triggered by an operating channel change.
-> >> Is that part not working, or why did you write this patch?
-> >> Either way, we should not have a separate check just for paprd, it
-> >> belongs to the other calibrations.
-> > 
-> > I don't want to do paprd again whenever coming back from off-channel
-> > (like during background scanning).
-> That's not what it does. The caldata is only reset after *operating*
-> channel changes, not just after off-channel activity.
-> The reason this works is that for off-channel activity, the caldata
-> pointer is not passed to the hw reset function, so it can't reset any
-> data there. The intention behind that is that offchannel activity should
-> never trigger any long calibration activity, nor change the state of the
-> existing long calibration data.
+Fixing a typo that came in as part of commit
+fa1ae16c97d25bb57ed9e1971b9e814da6a290bd.
 
-yeah I see that. probably I completely ignored this
-SC_OP_OFFCHANNNEL for sometime, thanks.
+Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
+Signed-off-by: Vipin Mehta <vmehta@atheros.com>
+---
+ drivers/staging/ath6kl/wmi/wmi.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/staging/ath6kl/wmi/wmi.c b/drivers/staging/ath6kl/wmi/wmi.c
+index 9811ce7..23ae5d2 100644
+--- a/drivers/staging/ath6kl/wmi/wmi.c
++++ b/drivers/staging/ath6kl/wmi/wmi.c
+@@ -1458,7 +1458,7 @@ wmi_bssInfo_event_rx(struct wmi_t *wmip, A_UINT8 *datap, int len)
+ 
+ 	A_DPRINTF(DBG_WMI2, (DBGFMT "bssInfo event - ch %u, rssi %02x, "
+ 		"bssid \"%pM\"\n", DBGARG, bih->channel,
+-		(unsigned char) bih->rssi, i&bih->bssid[0]));
++		(unsigned char) bih->rssi, &bih->bssid[0]));
+ 
+     if(wps_enable && (bih->frameType == PROBERESP_FTYPE) ) {
+         wmi_node_return(wmip, bss);
+-- 
+1.6.3.3
 
-Vasanth
