@@ -1,42 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:52019 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751510Ab0INVsi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 17:48:38 -0400
-To: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>
-Cc: "linville\@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k_htc: Enable fastcc for HTC devices.
-References: <1283497888-8294-1-git-send-email-rmanoharan@atheros.com>
-	<87zkvk5tyx.fsf@purkki.adurom.net>
-	<44EE5C37ADC36343B0625A05DD408C4850DAB4D6C2@CHEXMB-01.global.atheros.com>
-From: Kalle Valo <kvalo@adurom.com>
-Date: Wed, 15 Sep 2010 00:48:35 +0300
-In-Reply-To: <44EE5C37ADC36343B0625A05DD408C4850DAB4D6C2@CHEXMB-01.global.atheros.com> (Rajkumar Manoharan's message of "Tue\, 14 Sep 2010 23\:14\:17 +0530")
-Message-ID: <87r5gw574c.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from external1.orbit-lab.org ([128.6.192.131]:52808 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756336Ab0IRTCm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Sep 2010 15:02:42 -0400
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 4A313418D8
+	for <linux-wireless@vger.kernel.org>; Sat, 18 Sep 2010 15:00:56 -0400 (EDT)
+Subject: Compat-wireless release for 2010-09-18 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20100918190241.5C99F404FC@repository3.orbit-lab.org>
+Date: Sat, 18 Sep 2010 15:02:41 -0400 (EDT)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com> writes:
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+cat: compat_base_tree: No such file or directory
+cat: compat_base_tree_version: No such file or directory
+cat: compat_version: No such file or directory
+cat: /var/opt/compat/compat-wireless-2.6/compat_version: No such file or directory
+scripts/Makefile.clean:17: /var/opt/compat/compat-wireless-2.6/drivers/net/wireless/ath/carl9170/Makefile: No such file or directory
+make[5]: *** No rule to make target `/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/ath/carl9170/Makefile'.  Stop.
+make[4]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/ath/carl9170] Error 2
+make[3]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless/ath] Error 2
+make[2]: *** [/var/opt/compat/compat-wireless-2.6/drivers/net/wireless] Error 2
+make[1]: *** [_clean_/var/opt/compat/compat-wireless-2.6] Error 2
+make: *** [clean] Error 2
 
->>For example, I have no idea what fastcc means. Fast C Compiler? ;)
->
-> On every channel set, the full hw reset happens which issue mutiple
-> register writes. For HTC devices, the host issue wmi commands. These
-> register ops are time consumable one. Instead of full hw reset,
-> ath9k is doing partial reset which is fast channel change (fastcc).
-> By doing fast channel change, the scan period is considerably
-> reduced.
+compat-wireless code metrics
 
-Now this is a good commit message. I can understand what the change is
-actually about without browsing through ath9k source. Of course it
-takes few minutes to write this but on the other hand you save a lot
-of time from others. And possibly avoid answering to stupid questions
-like the one I had :)
-
-Thanks.
-
--- 
-Kalle Valo
+    706813 - Total upstream lines of code being pulled
