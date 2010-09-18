@@ -1,65 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:54118 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752057Ab0ICWeK (ORCPT
+Received: from smtp-out.google.com ([216.239.44.51]:56430 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753948Ab0IRDBg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Sep 2010 18:34:10 -0400
-Date: Fri, 3 Sep 2010 19:34:13 -0300
-From: "Gustavo F. Padovan" <padovan@profusion.mobi>
-To: Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: linux-pcmcia@lists.infradead.org, linux-ide@vger.kernel.org,
-	netdev@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-mtd@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-serial@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 03/15] pcmcia: move Vpp setup to struct pcmcia_device
-Message-ID: <20100903223413.GD16973@vigoh>
-References: <20100903105628.GA21255@comet.dominikbrodowski.net>
- <1283511434-21620-3-git-send-email-linux@dominikbrodowski.net>
+	Fri, 17 Sep 2010 23:01:36 -0400
+Received: from hpaq1.eem.corp.google.com (hpaq1.eem.corp.google.com [172.25.149.1])
+	by smtp-out.google.com with ESMTP id o8I31Y41025397
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 20:01:35 -0700
+Received: from iwn38 (iwn38.prod.google.com [10.241.68.102])
+	by hpaq1.eem.corp.google.com with ESMTP id o8I31WjS013443
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 20:01:33 -0700
+Received: by iwn38 with SMTP id 38so2375386iwn.32
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 20:01:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1283511434-21620-3-git-send-email-linux@dominikbrodowski.net>
+Date: Fri, 17 Sep 2010 20:01:32 -0700
+Message-ID: <AANLkTimYa4A=WFoY_sv-iMOPeZ37u8Hcy9wbsZO5eNun@mail.gmail.com>
+Subject: mac80211: Why probe after each scan?
+From: Paul Stewart <pstew@google.com>
+To: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: Sam Leffler <sleffler@chromium.org>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Dominik Brodowski <linux@dominikbrodowski.net> [2010-09-03 12:57:02 +0200]:
+I found a small bit of behavior related in some vague way to
+connection monitoring:  During the scan-completed notification
+(ieee80211_mlme_notify_scan_completed) we call
+ieee80211_restart_sta_timer() on all our interfaces, which in turn
+queues up the &ifmgd->monitor_work, which does a probe request of our
+AP.  Why should we do a probe request of your associated AP every time
+a scan completes?  Wouldn't the other active monitoring schemes (like
+beacon loss) be sufficient for a "scan finished" condition?
 
-> Some drivers prefer to explicitly set Vpp. Instead of passing the
-> voltage inside config_req_t, store it in struct pcmcia_device.
-> 
-> CC: linux-ide@vger.kernel.org
-> CC: netdev@vger.kernel.org
-> CC: linux-bluetooth@vger.kernel.org
-> CC: linux-mtd@lists.infradead.org
-> CC: linux-wireless@vger.kernel.org
-> CC: linux-serial@vger.kernel.org
-> CC: linux-usb@vger.kernel.org
-> CC: linux-scsi@vger.kernel.org
-> Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
-> ---
->  drivers/ata/pata_pcmcia.c                  |    4 ++--
->  drivers/bluetooth/bt3c_cs.c                |    2 +-
->  drivers/bluetooth/btuart_cs.c              |    2 +-
->  drivers/ide/ide-cs.c                       |    6 +++---
->  drivers/isdn/hisax/sedlbauer_cs.c          |    8 ++++----
->  drivers/mtd/maps/pcmciamtd.c               |    4 ++--
->  drivers/net/wireless/airo_cs.c             |    8 ++++----
->  drivers/net/wireless/atmel_cs.c            |    4 ++--
->  drivers/net/wireless/hostap/hostap_cs.c    |   10 +++++-----
->  drivers/net/wireless/orinoco/orinoco_cs.c  |    4 ++--
->  drivers/net/wireless/orinoco/spectrum_cs.c |    4 ++--
->  drivers/pcmcia/pcmcia_resource.c           |    3 ++-
->  drivers/scsi/pcmcia/nsp_cs.c               |    8 ++++----
->  drivers/serial/serial_cs.c                 |    2 +-
->  drivers/usb/host/sl811_cs.c                |    8 ++++----
->  include/pcmcia/cs.h                        |    1 -
->  include/pcmcia/ds.h                        |    1 +
->  17 files changed, 40 insertions(+), 39 deletions(-)
-
-For drivers/bluetooth
-
-Acked-by: Gustavo F. Padovan <padovan@profusion.mobi>
-
--- 
-Gustavo F. Padovan
-ProFUSION embedded systems - http://profusion.mobi
+--
+Paul
