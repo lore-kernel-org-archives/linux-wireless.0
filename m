@@ -1,71 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:51113 "EHLO mga01.intel.com"
+Received: from kroah.org ([198.145.64.141]:59175 "EHLO coco.kroah.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751558Ab0IIPc7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Sep 2010 11:32:59 -0400
-From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 9 Sep 2010 08:32:56 -0700
-Subject: RE: [PATCH 0/16 v2] iwlwifi: rewrite iwl-scan.c to avoid race
- conditions
-Message-ID: <E9954878DD1FB34FAE5187FB88C58A3501280FDC3D@orsmsx506.amr.corp.intel.com>
-References: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1752588Ab0IRFfB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Sep 2010 01:35:01 -0400
+Date: Fri, 17 Sep 2010 22:11:22 -0700
+From: Greg KH <greg@kroah.com>
+To: Vipin Mehta <Vipin.Mehta@Atheros.com>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
+Subject: Re: [PATCH] staging: ath6kl: Including a header file to fix a
+	compilation error
+Message-ID: <20100918051122.GA18733@kroah.com>
+References: <1284742495-2970-1-git-send-email-vmehta@atheros.com> <4C93A412.2070005@oracle.com> <20100917180056.GA20199@kroah.com> <35B17FE5076C7040809188FBE7913F983F23A275AF@SC1EXMB-MBCL.global.atheros.com> <20100917234627.GA26329@kroah.com> <35B17FE5076C7040809188FBE7913F983F23A2763A@SC1EXMB-MBCL.global.atheros.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <35B17FE5076C7040809188FBE7913F983F23A2763A@SC1EXMB-MBCL.global.atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Gruszka,
+On Fri, Sep 17, 2010 at 07:06:42PM -0700, Vipin Mehta wrote:
+> > 
+> > {sigh}  Line length please...
+> Sorry about that. I have now configured outlook to wrap the line at 70 characters. It was 76 by default. Hopefully, it shows up better now.
 
-Do we have any bugzilla bug# can associated to this set of patches?
+No, it's still wrong, you need to fix outlook to properly add line ends
+for your lines.
 
-Thanks
-Wey
+Or better yet, don't use outlook.  Seriously.  There are lots of other
+email clients out there that are way better, and free, and some even
+will work with your exchange server.
 
------Original Message-----
-From: Stanislaw Gruszka [mailto:sgruszka@redhat.com]
-Sent: Thursday, September 09, 2010 6:52 AM
-To: Johannes Berg; Guy, Wey-Yi W; Chatre, Reinette; John W. Linville
-Cc: linux-wireless@vger.kernel.org; Stanislaw Gruszka
-Subject: [PATCH 0/16 v2] iwlwifi: rewrite iwl-scan.c to avoid race conditions
+good luck,
 
-Avoid iwlwifi hardware scanning race conditions
-that may lead to not call ieee80211_scan_completed() (what in
-consequences gives "WARNING: at net/wireless/core.c:614
-wdev_cleanup_work+0xb7/0xf0"), or call iee80211_scan_completed() more
-then once (what gives " WARNING: at net/mac80211/scan.c:312
-ieee80211_scan_completed+0x5f/0x1f1").
-
-First problem (warning in wdev_cleanup_work) make any further scan
-request from cfg80211 are ignored by mac80211 with EBUSY error,
-hence NetworkManager can not perform successful scan and not allow
-to establish a new connection. So after suspend/resume (but maybe
-not only then) user is not able to connect to wireless network again.
-
-We can not rely on that the commands (start and abort scan) are
-successful. Even if they are successfully send to the hardware, we can
-not get back notification from firmware (i.e. firmware hung or was
-reseted), or we can get notification when we actually perform abort
-scan in driver code or after that.
-
-To assure we call ieee80211_scan_completed() only once when scan
-was started we use SCAN_SCANNING bit. Code path, which first clear
-STATUS_SCANNING bit will call ieee80211_scan_completed().
-We do this in many cases, in scan complete notification, scan
-abort, device down, etc. Each time we check SCANNING bit.
-
-Tested on 3945, 4965 and 5300 adapters. Tested normal work
-functionality and doing scan stress testing using scripts:
-http://people.redhat.com/sgruszka/misc/test_wifi_scan_reboot.sh
-http://people.redhat.com/sgruszka/misc/test_wifi_scan_updown.sh
-
-v1 -> v2:
-- fix not cleared STATUS_SCAN_HW bit in patch 2
-- merged patch 7 and 8
-- add 4 more patches
+greg k-h
