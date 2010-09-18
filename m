@@ -1,41 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58426 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754897Ab0I3HpI (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:45594 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754630Ab0IRIll convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Sep 2010 03:45:08 -0400
-Subject: Re: [RFC 2/2] wireless:  Report noise to /proc/net/wireless
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1285804637-5400-2-git-send-email-greearb@candelatech.com>
-References: <1285804637-5400-1-git-send-email-greearb@candelatech.com>
-	 <1285804637-5400-2-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 30 Sep 2010 09:45:38 +0200
-Message-ID: <1285832738.3639.3.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Sat, 18 Sep 2010 04:41:41 -0400
+Received: by vws3 with SMTP id 3so2080537vws.19
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Sep 2010 01:41:40 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1284771979-13249-1-git-send-email-vmehta@atheros.com>
+References: <1284771979-13249-1-git-send-email-vmehta@atheros.com>
+Date: Sat, 18 Sep 2010 11:41:40 +0300
+Message-ID: <AANLkTi=OsZGF=JxgwRCLCzBXqgYUW6xoOYHUN7Jb4MUv@mail.gmail.com>
+Subject: Re: [PATCH] staging: ath6kl: Fixing a compile error
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+To: Vipin Mehta <vmehta@atheros.com>
+Cc: greg@kroah.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, randy.dunlap@oracle.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-09-29 at 16:57 -0700, greearb@candelatech.com wrote:
+Yeah, but this is fixed in my correction series.
+Whole store there:
 
-> This adds noise reports to /proc/net/wireless again.
+http://lkml.org/lkml/2010/9/16/330
+http://lkml.org/lkml/2010/9/17/54
 
-Same comment applies here really...
+On Sat, Sep 18, 2010 at 4:06 AM, Vipin Mehta <vmehta@atheros.com> wrote:
+> Fixing a typo that came in as part of commit
+> fa1ae16c97d25bb57ed9e1971b9e814da6a290bd.
+>
+> Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
+> Signed-off-by: Vipin Mehta <vmehta@atheros.com>
+> ---
+>  drivers/staging/ath6kl/wmi/wmi.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/staging/ath6kl/wmi/wmi.c b/drivers/staging/ath6kl/wmi/wmi.c
+> index 9811ce7..23ae5d2 100644
+> --- a/drivers/staging/ath6kl/wmi/wmi.c
+> +++ b/drivers/staging/ath6kl/wmi/wmi.c
+> @@ -1458,7 +1458,7 @@ wmi_bssInfo_event_rx(struct wmi_t *wmip, A_UINT8 *datap, int len)
+>
+>        A_DPRINTF(DBG_WMI2, (DBGFMT "bssInfo event - ch %u, rssi %02x, "
+>                "bssid \"%pM\"\n", DBGARG, bih->channel,
+> -               (unsigned char) bih->rssi, i&bih->bssid[0]));
+> +               (unsigned char) bih->rssi, &bih->bssid[0]));
+>
+>     if(wps_enable && (bih->frameType == PROBERESP_FTYPE) ) {
+>         wmi_node_return(wmip, bss);
+> --
+> 1.6.3.3
+>
+>
 
-> + * @noise: noise, as obtained from dump_survey of index 0.
 
-It's not actually obtained that way, because if it was, cfg80211 could
-just handle it by itself.
 
-Additionally, even within mac80211 there's no guarantee that the
-dump_survey(0) callback will give you the correct channel's noise.
-
-Since you can easily obtain this information from userspace (and with
-the extension that Felix proposed you can figure out which noise belongs
-to the operating channel without really knowing the operating channel),
-I don't think we should be doing this.
-
-johannes
-
+-- 
+With Best Regards,
+Andy Shevchenko
