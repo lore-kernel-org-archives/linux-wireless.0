@@ -1,51 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50234 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751600Ab0IIPoo (ORCPT
+Received: from mail.atheros.com ([12.19.149.2]:33188 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753281Ab0IRCGp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Sep 2010 11:44:44 -0400
-Date: Thu, 9 Sep 2010 08:42:18 -0700
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Henry Ptasinski <henryp@broadcom.com>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
-Subject: Re: [ANN] Full-source Broadcom wireless driver for 11n chips
-Message-ID: <20100909154217.GA2694@tuxdriver.com>
-References: <20100908150322.17dac9c3@nehalam>
- <20100908225132.GA12490@kroah.com>
- <4C88F8CE.5090708@broadcom.com>
+	Fri, 17 Sep 2010 22:06:45 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 19:06:39 -0700
+From: Vipin Mehta <Vipin.Mehta@Atheros.com>
+To: Greg KH <greg@kroah.com>
+CC: Randy Dunlap <randy.dunlap@oracle.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
+Date: Fri, 17 Sep 2010 19:06:42 -0700
+Subject: RE: [PATCH] staging: ath6kl: Including a header file to fix a
+ compilation error
+Message-ID: <35B17FE5076C7040809188FBE7913F983F23A2763A@SC1EXMB-MBCL.global.atheros.com>
+References: <1284742495-2970-1-git-send-email-vmehta@atheros.com>
+ <4C93A412.2070005@oracle.com> <20100917180056.GA20199@kroah.com>
+ <35B17FE5076C7040809188FBE7913F983F23A275AF@SC1EXMB-MBCL.global.atheros.com>
+ <20100917234627.GA26329@kroah.com>
+In-Reply-To: <20100917234627.GA26329@kroah.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4C88F8CE.5090708@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 09, 2010 at 08:10:06AM -0700, Henry Ptasinski wrote:
-> Broadcom would like to announce the initial release of a fully-open
-> Linux driver for it's latest generation of 11n chipsets.  The driver,
-> while still a work in progress, is released as full source and uses the
-> native mac80211 stack.   It supports multiple current chips (BCM4313,
-> BCM43224, BCM43225) as well as providing a framework for supporting
-> additional chips in the future, including mac80211-aware embedded chips.
->   The README and TODO files included with the sources provide more
-> details about the current feature set, known issues, and plans for
-> improving the driver.
 > 
-> The driver is currently available in staging-next git tree, available at:
+> {sigh}  Line length please...
+Sorry about that. I have now configured outlook to wrap the line at 70 characters. It was 76 by default. Hopefully, it shows up better now.
+
+> But that has nothing to do with this fix, right?  Don't mix things
+> in a
+> single patch.  Cleanup is good and nice, but don't do that in a "fix
+> a
+> problem" patch at the same time.
 > 
-> 	git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging-next-2.6.git
-> 
-> in the drivers/staging/brcm80211 directory.
-
-Obviously we are all thrilled to see Broadcom take this step, which
-I know involved a lot of soul-searching within their organization. :-)
-
-I hope we can use this as a base for productive cooperation between
-Broadcom's wireless folks and the greater Linux community for along
-time to come!
-
-John
-
-P.S.  I knew that January 2007 meeting in London was good for something... :-)
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+> Remember:
+> 	One patch per "thing" you do.
+I have split the patch into two and sent you the patches.
