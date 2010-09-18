@@ -1,66 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:46671 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933247Ab0I0QHe (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:57670 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753235Ab0IRSvh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 12:07:34 -0400
-Received: by pwi1 with SMTP id 1so63892pwi.19
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 09:07:34 -0700 (PDT)
-From: greearb@gmail.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 1/2] Revert "wireless: Keep phy name consistent across module reloads."
-Date: Mon, 27 Sep 2010 09:07:25 -0700
-Message-Id: <1285603646-7710-1-git-send-email-greearb@candelatech.com>
+	Sat, 18 Sep 2010 14:51:37 -0400
+Message-ID: <4C950A22.6050105@candelatech.com>
+Date: Sat, 18 Sep 2010 11:51:14 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: Bruno Randolf <br1@einfach.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: wireless-testing or wireless-next
+References: <201009171148.39953.br1@einfach.org> <AANLkTinYo5qgXvSnQSHpLbhhBq0VG7Kh-X3dGK8NhXcj@mail.gmail.com>
+In-Reply-To: <AANLkTinYo5qgXvSnQSHpLbhhBq0VG7Kh-X3dGK8NhXcj@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On 09/16/2010 08:02 PM, Luis R. Rodriguez wrote:
+> On Thu, Sep 16, 2010 at 7:48 PM, Bruno Randolf<br1@einfach.org>  wrote:
+>> John, Luis,
+>>
+>> I'm a little confused about which tree to use. I though we should base driver
+>> development on wireless-testing, but I see that you merge patches into
+>> wireless-next first. So should we re-base patches to wireless-next before we
+>> send them?
+>
+> Rule of thumb is if its large use linux-next, wireless-testing just
+> lets you actually boot a usable kernel.
 
-This reverts commit a6ab8e2903d4416a53e3bcc97ae2d3148a36c5df.
+I saw what looked like a nice series of patches from you four days ago
+(power save, etc).  But, they have not been applied to wireless-testing.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 8226ba7... 9c21ebf... M	net/wireless/core.c
- net/wireless/core.c |   15 +++++----------
- 1 files changed, 5 insertions(+), 10 deletions(-)
+Is there a tree that does contain these sorts of patches, or must
+we manually apply them to our own trees if we want to try them out?
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 8226ba7..9c21ebf 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -319,7 +319,8 @@ static void cfg80211_event_work(struct work_struct *work)
- 
- struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
- {
--	int i;
-+	static int wiphy_counter;
-+
- 	struct cfg80211_registered_device *rdev;
- 	int alloc_size;
- 
-@@ -341,18 +342,12 @@ struct wiphy *wiphy_new(const struct cfg80211_ops *ops, int sizeof_priv)
- 
- 	mutex_lock(&cfg80211_mutex);
- 
--	/* 64k wiphy devices is enough for anyone! */
--	for (i = 0; i < 0xFFFF; i++) {
--		if (!cfg80211_rdev_by_wiphy_idx(i))
--			break;
--	}
--	if (i == 0xFFFF)
--		i = -1; /* invalid */
--	rdev->wiphy_idx = i;
-+	rdev->wiphy_idx = wiphy_counter++;
- 
- 	if (unlikely(!wiphy_idx_valid(rdev->wiphy_idx))) {
-+		wiphy_counter--;
- 		mutex_unlock(&cfg80211_mutex);
--		/* ugh, too many devices already! */
-+		/* ugh, wrapped! */
- 		kfree(rdev);
- 		return NULL;
- 	}
+Thanks,
+Ben
+
 -- 
-1.7.2.3
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
