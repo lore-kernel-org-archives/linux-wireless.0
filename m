@@ -1,56 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:41305 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751208Ab0IMXSM (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:56499 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753358Ab0ISQzC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Sep 2010 19:18:12 -0400
-Message-ID: <4C8EB131.6090903@candelatech.com>
-Date: Mon, 13 Sep 2010 16:18:09 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath9k, virtual stations, and WPA:  No luck so far.
-References: <4C8EA7D6.4040101@candelatech.com> <201009140112.23751.chunkeey@googlemail.com>
-In-Reply-To: <201009140112.23751.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sun, 19 Sep 2010 12:55:02 -0400
+Received: by fxm3 with SMTP id 3so295970fxm.19
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Sep 2010 09:55:01 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>
+Subject: [PATCH 1/2] wl1271: avoid redundant memcpy of rx_status
+Date: Sun, 19 Sep 2010 18:55:08 +0200
+Message-Id: <1284915309-999-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/13/2010 04:12 PM, Christian Lamparter wrote:
-> On Tuesday 14 September 2010 00:38:14 Ben Greear wrote:
->> I'm having no luck getting WPA to work with two STA interfaces
->> on the same ath9k NIC.
->>
->> So far, I've done a bunch of hacking to only scan on the one
->> channel that we're currently using if 1+ stations are associated,
->> and some other logic to not call change-channel logic unnecessarily.
->>
->> Currently, I see wlan0 able to associate and authenticate with wpa_supplicant,
->> but sta1 (the other STA interface), won't work.  A snippet from it's supplicant
->> log is below.  No-encryption and WEP seems to work fine.
->> If anyone has any suggestions as to where I should look to debug this,
->> I'd welcome the pointers!
->
-> First things first: Have you tried your "idea" with mac80211_hwsim?
+copy the rx_status directly to skb->cb (control buffer) instead of copying
+it to a local struct and then copying it again (for each rx packet)
 
-No, I didn't know that existed..I will look for information
-on that.
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/wl1271_rx.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-> Also, have you disabled the hardware crypto accelerator? Because if
-> you spend one second to look at ath9k's set_key code, you "will see"
-> why the hardware has a problem dealing with multiple keys for a
-> single MAC (of your AP).
-
-Yes, I think that part is correct:
-
-[root@a230-ath9k ~]# cat /sys/module/ath9k/parameters/nohwcrypt
-1
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/wl12xx/wl1271_rx.c b/drivers/net/wireless/wl12xx/wl1271_rx.c
+index 019aa79..94da5dd 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_rx.c
++++ b/drivers/net/wireless/wl12xx/wl1271_rx.c
+@@ -76,7 +76,6 @@ static void wl1271_rx_status(struct wl1271 *wl,
+ 
+ static void wl1271_rx_handle_data(struct wl1271 *wl, u32 length)
+ {
+-	struct ieee80211_rx_status rx_status;
+ 	struct wl1271_rx_descriptor *desc;
+ 	struct sk_buff *skb;
+ 	u16 *fc;
+@@ -109,14 +108,13 @@ static void wl1271_rx_handle_data(struct wl1271 *wl, u32 length)
+ 	if ((*fc & IEEE80211_FCTL_STYPE) == IEEE80211_STYPE_BEACON)
+ 		beacon = 1;
+ 
+-	wl1271_rx_status(wl, desc, &rx_status, beacon);
++	wl1271_rx_status(wl, desc, IEEE80211_SKB_RXCB(skb), beacon);
+ 
+ 	wl1271_debug(DEBUG_RX, "rx skb 0x%p: %d B %s", skb, skb->len,
+ 		     beacon ? "beacon" : "");
+ 
+ 	skb_trim(skb, skb->len - desc->pad_len);
+ 
+-	memcpy(IEEE80211_SKB_RXCB(skb), &rx_status, sizeof(rx_status));
+ 	ieee80211_rx_ni(wl->hw, skb);
+ }
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.0.4
 
