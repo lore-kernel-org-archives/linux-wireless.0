@@ -1,49 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:56546 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756989Ab0I0ROr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 13:14:47 -0400
-Received: by iwn5 with SMTP id 5so4905322iwn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 10:14:47 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1285584763.4043.14.camel@jlt3.sipsolutions.net>
-References: <1285379997-1544-1-git-send-email-lrodriguez@atheros.com> <1285584763.4043.14.camel@jlt3.sipsolutions.net>
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-Date: Mon, 27 Sep 2010 10:14:26 -0700
-Message-ID: <AANLkTi=9iMqdpAjRDTE8BhLpa71T4BDR20BgHTucgz-e@mail.gmail.com>
-Subject: Re: [PATCH] mac80211: fix offchannel assumption upon association
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	stable@kernel.org, Amod Bodas <amod.bodas@atheros.com>,
-	Vasanth Thiagarajan <vasanth.thiagarajan@atheros.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:53254 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753651Ab0ISR0D (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Sep 2010 13:26:03 -0400
+Subject: [ANN] Assembler/disassembler for brcm80211 / b43 / b43legacy r15
+ firmware
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: linux-wireless@vger.kernel.org
+Cc: David Woodhouse <dwmw2@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 19 Sep 2010 19:25:58 +0200
+Message-ID: <1284917158.14353.37.camel@maggie>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 27, 2010 at 3:52 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2010-09-24 at 21:59 -0400, Luis R. Rodriguez wrote:
->> Association is dealt with as an atomic offchannel operation,
->> we do this because we don't know we are associated until we
->> get the associatin response from the AP. When we do get the
->> associatin response though we were never clearing the offchannel
->> state. This has a few implications, we told drivers we were
->> still offchannel, and the first configured TX power for the
->> channel does not take into account any power constraints.
->>
->> For ath9k this meant ANI calibration would not start upon
->> association, and we'd have to wait until the first bgscan
->> to be triggered. There may be other issues this resolves
->> but I'm too lazy to colb the code to check.
->
-> colb?
+Hi,
 
-Heh oops typo, I meant "comb".
+I updated the firmware toolchain for the broadcom wireless chipsets 
+to support newer >=r15 wireless cores.
+Old wireless cores r5-r14 are fully supported. For r15 cores, there
+are a few unknown instructions left. Subroutine calling seems to have
+changed in r15 cores.
+However, the toolchain is already pretty much usable as-is on r15 cores.
 
-> But anyway, looks OK to me. Need to revisit some of the off-channel
-> stuff eventually, but for now this is fine I think.
+To install the toolchain, fetch the git tree:
+git clone git://git.bu3sch.de/b43-tools.git
 
-OK thanks.
+Then build and install the tools in the "assembler" and "disassembler"
+subdirectories. (make && make install).
+Note that the assembler depends on flex and bison. So install these.
 
-  Luis
+To use the toolchain on brcm80211 firmware, the firmware blobs first have
+to be converted to raw format. The "brcm80211fwconv" tool shipped with
+the disassembler can be used for that.
+
+This will show you a dump of what is in the firmware files:
+brcm80211fwconv --header bcm43xx_hdr-0-610-809-0.fw --bin bcm43xx-0-610-809-0.fw --dump
+
+If you want to extract the r16 microcode (which is index 10. See the --dump),
+run the following command:
+
+brcm80211fwconv --header bcm43xx_hdr-0-610-809-0.fw --bin bcm43xx-0-610-809-0.fw --extract 10:ucode16.raw
+
+This will create the file "ucode16.raw", which can be disassembled:
+
+b43-dasm ucode16.raw ucode16.asm --arch 15 --format raw-le32
+
+Now modify the ucode16.asm source code file and re-assemble it to a
+binary with that command:
+
+b43-asm ucode16.asm ucode16.modified --format raw-le32
+
+If you want to use the modified firmware with the brcm80211 driver, you have
+to merge the modified ucode binary back into the bcm80211 image:
+
+brcm80211fwconv -H bcm43xx_hdr-0-610-809-0.fw -B bcm43xx-0-610-809-0.fw --merge 10:ucode16.modified
+
+Note that this modified the two .fw files in place!
+
+Also note that the --format and --arch options to b43-dasm and b43-asm are important.
+If you don't pass these, it won't work.
+
+And finally note that I did not try to run a re-assembled and re-merged
+firmware on an actual device, yet. So there might be bugs left.
+
+Happy hacking! :)
+
+-- 
+Greetings Michael.
+
