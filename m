@@ -1,118 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36593 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753786Ab0IINwt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Sep 2010 09:52:49 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 04/12] iwlwifi: cancel scan when down the device
-Date: Thu,  9 Sep 2010 15:52:22 +0200
-Message-Id: <1284040354-31703-5-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
-References: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:38478 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754998Ab0ISRtq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Sep 2010 13:49:46 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Christian Lamparter <chunkeey@googlemail.com>
+Subject: [PATCH 3/4] compat-wirelsss: add carl9170
+Date: Sun, 19 Sep 2010 19:49:12 +0200
+Message-Id: <1284918553-32365-2-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1284918408-32242-1-git-send-email-hauke@hauke-m.de>
+References: <1284918408-32242-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Always cancel scan when stooping device and scan is currently pending,
-we should newer have scan running after down device.
+This patch adds support for carl9170.
 
-To assure we start scan cancel from restart work we have to schedule
-abort_scan to different workqueue than priv->workqueue.
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: Christian Lamparter <chunkeey@googlemail.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   14 +++-----------
- drivers/net/wireless/iwlwifi/iwl-scan.c     |    2 +-
- drivers/net/wireless/iwlwifi/iwl3945-base.c |   16 ++++------------
- 3 files changed, 8 insertions(+), 24 deletions(-)
+ config.mk                            |   12 ++++++++++
+ patches/25-multicast-list_head.patch |   38 ++++++++++++++++++++++++++++++++++
+ scripts/admin-update.sh              |    1 +
+ 3 files changed, 51 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index ad0e67f..0de2401 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2875,8 +2875,9 @@ static void __iwl_down(struct iwl_priv *priv)
+diff --git a/config.mk b/config.mk
+index a021172..7f73744 100644
+--- a/config.mk
++++ b/config.mk
+@@ -413,6 +413,18 @@ CONFIG_AR9170_USB=m
+ CONFIG_AR9170_LEDS=y
+ endif #CONFIG_COMPAT_KERNEL_28
  
- 	IWL_DEBUG_INFO(priv, DRV_NAME " is going down\n");
- 
--	if (!exit_pending)
--		set_bit(STATUS_EXIT_PENDING, &priv->status);
-+	iwl_scan_cancel_timeout(priv, 200);
++ifndef CONFIG_COMPAT_KERNEL_29
++CONFIG_CARL9170=m
++CONFIG_CARL9170_LEDS=y
++# CONFIG_CARL9170_DEBUGFS=y
++# CONFIG_CARL9170_WPC=y
++endif #CONFIG_COMPAT_KERNEL_29
 +
-+	exit_pending = test_and_set_bit(STATUS_EXIT_PENDING, &priv->status);
- 
- 	/* Stop TX queues watchdog. We need to have STATUS_EXIT_PENDING bit set
- 	 * to prevent rearm timer */
-@@ -3486,15 +3487,6 @@ static void iwl_mac_stop(struct ieee80211_hw *hw)
- 
- 	priv->is_open = 0;
- 
--	if (iwl_is_ready_rf(priv) || test_bit(STATUS_SCAN_HW, &priv->status)) {
--		/* stop mac, cancel any scan request and clear
--		 * RXON_FILTER_ASSOC_MSK BIT
--		 */
--		mutex_lock(&priv->mutex);
--		iwl_scan_cancel_timeout(priv, 100);
--		mutex_unlock(&priv->mutex);
--	}
--
- 	iwl_down(priv);
- 
- 	flush_workqueue(priv->workqueue);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 9df8bb8..d31ed14 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -71,7 +71,7 @@ int iwl_scan_cancel(struct iwl_priv *priv)
- 	if (test_bit(STATUS_SCANNING, &priv->status)) {
- 		if (!test_and_set_bit(STATUS_SCAN_ABORTING, &priv->status)) {
- 			IWL_DEBUG_SCAN(priv, "Queuing scan abort.\n");
--			queue_work(priv->workqueue, &priv->abort_scan);
-+			schedule_work(&priv->abort_scan);
- 
- 		} else
- 			IWL_DEBUG_SCAN(priv, "Scan abort already in progress.\n");
-diff --git a/drivers/net/wireless/iwlwifi/iwl3945-base.c b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-index 3b3686b..fb894d8 100644
---- a/drivers/net/wireless/iwlwifi/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlwifi/iwl3945-base.c
-@@ -2568,12 +2568,13 @@ static void iwl3945_cancel_deferred_work(struct iwl_priv *priv);
- static void __iwl3945_down(struct iwl_priv *priv)
- {
- 	unsigned long flags;
--	int exit_pending = test_bit(STATUS_EXIT_PENDING, &priv->status);
-+	int exit_pending;
- 
- 	IWL_DEBUG_INFO(priv, DRV_NAME " is going down\n");
- 
--	if (!exit_pending)
--		set_bit(STATUS_EXIT_PENDING, &priv->status);
-+	iwl_scan_cancel_timeout(priv, 200);
++# This activates a threading fix for usb urb.
++# this is mainline commit: b3e670443b7fb8a2d29831b62b44a039c283e351
++# This fix will be included in some stable releases.
++CONFIG_COMPAT_USB_URB_THREAD_FIX=y
 +
-+	exit_pending = test_and_set_bit(STATUS_EXIT_PENDING, &priv->status);
+ CONFIG_ATH9K_HTC=m
+ # CONFIG_ATH9K_HTC_DEBUGFS=y
  
- 	/* Stop TX queues watchdog. We need to have STATUS_EXIT_PENDING bit set
- 	 * to prevent rearm timer */
-@@ -3173,15 +3174,6 @@ static void iwl3945_mac_stop(struct ieee80211_hw *hw)
+diff --git a/patches/25-multicast-list_head.patch b/patches/25-multicast-list_head.patch
+index 0f07b5c..5a6bb16 100644
+--- a/patches/25-multicast-list_head.patch
++++ b/patches/25-multicast-list_head.patch
+@@ -227,6 +227,44 @@ This also backport commit 2f787b0b76bf5de2eaa3ca3a29d89123ae03c856
+  	}
+  
+  	return ((u64)(mfilt[1]) << 32) | mfilt[0];
++--- a/drivers/net/wireless/ath/carl9170/main.c
+++++ b/drivers/net/wireless/ath/carl9170/main.c
++@@ -810,17 +810,35 @@ out:
++ 	return err;
++ }
++ 
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
++ static u64 carl9170_op_prepare_multicast(struct ieee80211_hw *hw,
++ 					 struct netdev_hw_addr_list *mc_list)
+++#else
+++static u64 carl9170_op_prepare_multicast(struct ieee80211_hw *hw, int mc_count,
+++					 struct dev_addr_list *ha)
+++#endif
++ {
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
++ 	struct netdev_hw_addr *ha;
+++#else
+++	int i;
+++#endif
++ 	u64 mchash;
++ 
++ 	/* always get broadcast frames */
++ 	mchash = 1ULL << (0xff >> 2);
++ 
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
++ 	netdev_hw_addr_list_for_each(ha, mc_list)
++ 		mchash |= 1ULL << (ha->addr[5] >> 2);
+++#else
+++	for (i = 0; i < mc_count; i++) {
+++		if (WARN_ON(!ha))
+++			break;
+++		mchash |= 1ULL << (ha->dmi_addr[5] >> 2);
+++		ha = ha->next;
+++	}
+++#endif
++ 
++ 	return mchash;
++ }
+ --- a/drivers/net/wireless/libertas/main.c
+ +++ b/drivers/net/wireless/libertas/main.c
+ @@ -242,18 +242,34 @@ static int lbs_add_mcast_addrs(struct cm
+diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
+index 6ef281d..ac9470d 100755
+--- a/scripts/admin-update.sh
++++ b/scripts/admin-update.sh
+@@ -192,6 +192,7 @@ fi
  
- 	priv->is_open = 0;
- 
--	if (iwl_is_ready_rf(priv)) {
--		/* stop mac, cancel any scan request and clear
--		 * RXON_FILTER_ASSOC_MSK BIT
--		 */
--		mutex_lock(&priv->mutex);
--		iwl_scan_cancel_timeout(priv, 100);
--		mutex_unlock(&priv->mutex);
--	}
--
- 	iwl3945_down(priv);
- 
- 	flush_workqueue(priv->workqueue);
+ # Drivers that have their own directory
+ DRIVERS="drivers/net/wireless/ath"
++DRIVERS="$DRIVERS drivers/net/wireless/ath/carl9170"
+ DRIVERS="$DRIVERS drivers/net/wireless/ath/ar9170"
+ DRIVERS="$DRIVERS drivers/net/wireless/ath/ath5k"
+ DRIVERS="$DRIVERS drivers/net/wireless/ath/ath9k"
 -- 
-1.7.1
+1.7.0.4
 
