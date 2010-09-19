@@ -1,72 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:34684 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753094Ab0IUFys (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Sep 2010 01:54:48 -0400
-Received: from mail.atheros.com ([10.10.20.105])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 20 Sep 2010 22:54:41 -0700
-From: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <stable@kernel.org>
-Subject: [PATCH 1/2] ath9k: Fix tx struck state with paprd
-Date: Mon, 20 Sep 2010 22:54:46 -0700
-Message-ID: <1285048487-16795-1-git-send-email-vasanth@atheros.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from server19320154104.serverpool.info ([193.201.54.104]:59600 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754773Ab0ISRmd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Sep 2010 13:42:33 -0400
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: lrodriguez@atheros.com
+Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Kshitij Kulshreshtha <kkhere.geo@gmail.com>
+Subject: [PATCH 3/4] compat: move pmcia backport code into compat-2.6.36.h
+Date: Sun, 19 Sep 2010 19:42:10 +0200
+Message-Id: <1284918131-32065-3-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1284918131-32065-1-git-send-email-hauke@hauke-m.de>
+References: <1284918131-32065-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Paprd needs to be done only on active chains(not for all the chains
-that hw can support). The paprd training frames which are sent
-for inactive chains would be hanging on the hw queue without
-getting transmitted and would make the connection so unstable.
-This issue happens only with the hw which supports paprd cal(ar9003).
+We have all out backport headers in include/linux/compat-2.6.XX.h also the pcmcia
+part there.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-Cc: stable@kernel.org
+CC: Kshitij Kulshreshtha <kkhere.geo@gmail.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/ath/ath9k/main.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+ include/linux/compat-2.6.36.h |   29 +++++++++++++++++++++++++++++
+ include/pcmcia/ds.h           |   36 ------------------------------------
+ 2 files changed, 29 insertions(+), 36 deletions(-)
+ delete mode 100644 include/pcmcia/ds.h
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 8b327bc..a133878 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -270,6 +270,7 @@ static void ath_paprd_activate(struct ath_softc *sc)
- {
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath9k_hw_cal_data *caldata = ah->caldata;
-+	struct ath_common *common = ath9k_hw_common(ah);
- 	int chain;
+diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
+index 2df34d6..1d929d7 100644
+--- a/include/linux/compat-2.6.36.h
++++ b/include/linux/compat-2.6.36.h
+@@ -6,6 +6,8 @@
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36))
  
- 	if (!caldata || !caldata->paprd_done)
-@@ -278,7 +279,7 @@ static void ath_paprd_activate(struct ath_softc *sc)
- 	ath9k_ps_wakeup(sc);
- 	ar9003_paprd_enable(ah, false);
- 	for (chain = 0; chain < AR9300_MAX_CHAINS; chain++) {
--		if (!(ah->caps.tx_chainmask & BIT(chain)))
-+		if (!(common->tx_chainmask & BIT(chain)))
- 			continue;
+ #include <linux/usb.h>
++#include <pcmcia/cistpl.h>
++#include <pcmcia/ds.h>
  
- 		ar9003_paprd_populate_single_table(ah, caldata, chain);
-@@ -300,6 +301,7 @@ void ath_paprd_calibrate(struct work_struct *work)
- 	struct ieee80211_supported_band *sband = &sc->sbands[band];
- 	struct ath_tx_control txctl;
- 	struct ath9k_hw_cal_data *caldata = ah->caldata;
-+	struct ath_common *common = ath9k_hw_common(ah);
- 	int qnum, ftype;
- 	int chain_ok = 0;
- 	int chain;
-@@ -333,7 +335,7 @@ void ath_paprd_calibrate(struct work_struct *work)
- 	ath9k_ps_wakeup(sc);
- 	ar9003_paprd_init_table(ah);
- 	for (chain = 0; chain < AR9300_MAX_CHAINS; chain++) {
--		if (!(ah->caps.tx_chainmask & BIT(chain)))
-+		if (!(common->tx_chainmask & BIT(chain)))
- 			continue;
+ #define kparam_block_sysfs_write(a)
+ #define kparam_unblock_sysfs_write(a)
+@@ -27,6 +29,33 @@ extern struct urb *compat_usb_get_from_anchor(struct usb_anchor *anchor);
+ extern void compat_usb_scuttle_anchored_urbs(struct usb_anchor *anchor);
+ #endif
  
- 		chain_ok = 0;
++/**
++ * pcmcia_read_config_byte() - read a byte from a card configuration register
++ *
++ * pcmcia_read_config_byte() reads a byte from a configuration register in
++ * attribute memory.
++ */
++static inline int pcmcia_read_config_byte(struct pcmcia_device *p_dev, off_t where, u8 *val)
++{
++        int ret;
++        conf_reg_t reg = { 0, CS_READ, where, 0 };
++        ret = pcmcia_access_configuration_register(p_dev, &reg);
++        *val = reg.Value;
++        return ret;
++}
++
++/**
++ * pcmcia_write_config_byte() - write a byte to a card configuration register
++ *
++ * pcmcia_write_config_byte() writes a byte to a configuration register in
++ * attribute memory.
++ */
++static inline int pcmcia_write_config_byte(struct pcmcia_device *p_dev, off_t where, u8 val)
++{
++	conf_reg_t reg = { 0, CS_WRITE, where, val };
++	return pcmcia_access_configuration_register(p_dev, &reg);
++}
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36)) */
+ 
+ #endif /* LINUX_26_36_COMPAT_H */
+diff --git a/include/pcmcia/ds.h b/include/pcmcia/ds.h
+deleted file mode 100644
+index fc43703..0000000
+--- a/include/pcmcia/ds.h
++++ /dev/null
+@@ -1,36 +0,0 @@
+-#ifndef _COMPAT_PCMCIA_DS_H
+-#define _COMPAT_PCMCIA_DS_H
+-#include <linux/version.h>
+-
+-#include_next <pcmcia/ds.h>
+-
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36)
+-/**
+- * pcmcia_read_config_byte() - read a byte from a card configuration register
+- *
+- * pcmcia_read_config_byte() reads a byte from a configuration register in
+- * attribute memory.
+- */
+-static inline int pcmcia_read_config_byte(struct pcmcia_device *p_dev, off_t where, u8 *val)
+-{
+-        int ret;
+-        conf_reg_t reg = { 0, CS_READ, where, 0 };
+-        ret = pcmcia_access_configuration_register(p_dev, &reg);
+-        *val = reg.Value;
+-        return ret;
+-}
+-
+-/**
+- * pcmcia_write_config_byte() - write a byte to a card configuration register
+- *
+- * pcmcia_write_config_byte() writes a byte to a configuration register in
+- * attribute memory.
+- */
+-static inline int pcmcia_write_config_byte(struct pcmcia_device *p_dev, off_t where, u8 val)
+-{
+-	conf_reg_t reg = { 0, CS_WRITE, where, val };
+-	return pcmcia_access_configuration_register(p_dev, &reg);
+-}
+-#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36) */
+-
+-#endif
 -- 
 1.7.0.4
 
