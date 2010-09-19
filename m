@@ -1,52 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.nokia.com ([192.100.105.134]:17067 "EHLO
-	mgw-mx09.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932844Ab0I0IjP (ORCPT
+Received: from comal.ext.ti.com ([198.47.26.152]:38292 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752374Ab0ISMX3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 04:39:15 -0400
-Received: from esebh106.NOE.Nokia.com (esebh106.ntc.nokia.com [172.21.138.213])
-	by mgw-mx09.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o8R8d5dI026506
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 03:39:14 -0500
-Received: from localhost.localdomain (chilepepper.research.nokia.com [172.21.50.167])
-	by mgw-da02.ext.nokia.com (Switch-3.3.3/Switch-3.3.3) with ESMTP id o8R8boh2022566
-	for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 11:37:58 +0300
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 06/25] wl1271: fix forced passive scan
-Date: Mon, 27 Sep 2010 11:37:30 +0300
-Message-Id: <1285576669-8070-7-git-send-email-luciano.coelho@nokia.com>
-In-Reply-To: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
-References: <1285576669-8070-1-git-send-email-luciano.coelho@nokia.com>
+	Sun, 19 Sep 2010 08:23:29 -0400
+From: "Levi, Shahar" <shahar_levi@ti.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: Luciano Coelho <luciano.coelho@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Sun, 19 Sep 2010 14:23:21 +0200
+Subject: RE: [PATCH 04/04] wl1271: 11n Support, 11n Kconfig Configurable
+Message-ID: <AC090B9732AB2B4DB7FF476E907FE6600113432125@dnce02.ent.ti.com>
+References: <1284575472-19888-1-git-send-email-shahar_levi@ti.com>
+ <1284575472-19888-5-git-send-email-shahar_levi@ti.com>
+ <1284578468.1569.29.camel@powerslave>
+ <AANLkTimCrCH_yh5y3L8WcfNus9A2RFMCqvK7Xb82VGUL@mail.gmail.com>
+ <AC090B9732AB2B4DB7FF476E907FE6600113431B85@dnce02.ent.ti.com>
+ <AANLkTinPodQRk8HYDxxZ9BiKJ=-yAg8nybVqGpCqXsa2@mail.gmail.com>
+ <AC090B9732AB2B4DB7FF476E907FE6600113431FC4@dnce02.ent.ti.com>
+ <AANLkTin=Mk2P2ak9VAYxN4ehgPMcvKP9J7iEV55WKtx7@mail.gmail.com>
+In-Reply-To: <AANLkTin=Mk2P2ak9VAYxN4ehgPMcvKP9J7iEV55WKtx7@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When we get no SSIDs in the scan request, we should force a passive scan in
-all channels.  This patch adds code to force the passive scan flag to be set
-in that case.
-
-Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-Reviewed-by: Juuso Oikarinen <juuso.oikarinen@nokia.com>
----
- drivers/net/wireless/wl12xx/wl1271_scan.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/wl1271_scan.c b/drivers/net/wireless/wl12xx/wl1271_scan.c
-index 8ceaabe..7f42ca9 100644
---- a/drivers/net/wireless/wl12xx/wl1271_scan.c
-+++ b/drivers/net/wireless/wl12xx/wl1271_scan.c
-@@ -100,8 +100,11 @@ static int wl1271_scan_send(struct wl1271 *wl, enum ieee80211_band band,
- 
- 	/* We always use high priority scans */
- 	scan_options = WL1271_SCAN_OPT_PRIORITY_HIGH;
--	if(passive)
-+
-+	/* No SSIDs means that we have a forced passive scan */
-+	if (passive || wl->scan.req->n_ssids == 0)
- 		scan_options |= WL1271_SCAN_OPT_PASSIVE;
-+
- 	cmd->params.scan_options = cpu_to_le16(scan_options);
- 
- 	cmd->params.n_ch = wl1271_get_scan_channels(wl, wl->scan.req,
--- 
-1.6.3.3
+> -----Original Message-----
+> From: Julian Calaby [mailto:julian.calaby@gmail.com]
+> Sent: Sunday, September 19, 2010 3:19 AM
+> To: Levi, Shahar
+> Cc: Luciano Coelho; linux-wireless@vger.kernel.org
+> Subject: Re: [PATCH 04/04] wl1271: 11n Support, 11n Kconfig Configurable
+> 
+> Unless people dislike your patches, there's no danger that they won't
+> all be applied to the kernel.
+> 
+> That said, there are still circumstances when only part of a patch
+> series like your one will be applied to a kernel. One of these is when
+> a user is using git bisection to find exactly which commit caused a
+> particular bug.
+> 
+> So, let's say you upgrade your kernel from 2.6.35 to 2.6.38 and your
+> wl1271 device now won't connect to an AP running on some random
+> proprietary hardware. The simplest way to determine exactly which
+> patch caused this issue is to use git bisect to do a binary search
+> over the changes between these two kernel versions to determine the
+> exact patch that broke it. Now, let's assume that, this particular
+> piece of hardware won't connect to *anything* when 802.11n support is
+> added, so you've already excluded that from your kernel. If git bisect
+> decides to leap into the middle of your series, so that 802.11n
+> support is added before the Kconfig option is added, then 802.11n
+> support will be unconditionally enabled, and you'll see the symptoms
+> of that bug, and won't be able to quickly determine whether the bug
+> existed before the 802.11n patches or after, and git bisect might
+> wrongly assume that these patches were the cause of the bug.
+> 
+> As such, it's generally regarded as a good idea to introduce Kconfig
+> options with the code they guard.
+> 
+> Thanks,
+> 
+> --
+> 
+> Julian Calaby
+> 
+> Email: julian.calaby@gmail.com
+> Profile: http://www.google.com/profiles/julian.calaby/
+> .Plan: http://sites.google.com/site/juliancalaby/
+Hi Julian,
+You are right. I will squash 3 and 4 into one patch in v2.
+I greatly appreciate your elaboration and help to understand. 
+Thanks you,
+Shahar
 
