@@ -1,125 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55211 "EHLO
+Received: from server19320154104.serverpool.info ([193.201.54.104]:38486 "EHLO
 	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754552Ab0IOUoC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 16:44:02 -0400
+	id S1754877Ab0ISRtw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Sep 2010 13:49:52 -0400
 From: Hauke Mehrtens <hauke@hauke-m.de>
 To: lrodriguez@atheros.com
 Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
 	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 3/3] compat-wirelsss: add carl9170
-Date: Wed, 15 Sep 2010 22:43:35 +0200
-Message-Id: <1284583415-11506-3-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1284583415-11506-1-git-send-email-hauke@hauke-m.de>
-References: <1284583415-11506-1-git-send-email-hauke@hauke-m.de>
+Subject: [PATCH 4/4] compat-wireless: fix unresolved symbols with old kernels
+Date: Sun, 19 Sep 2010 19:49:13 +0200
+Message-Id: <1284918553-32365-3-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1284918408-32242-1-git-send-email-hauke@hauke-m.de>
+References: <1284918408-32242-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds upport for carl9170.
+CONFIG_WEXT_PRIV and CONFIG_WEXT_SPY were introduced with kernel 2.6.33
+and are not available in older kernel versions. We should just depend on
+them for recent kernel versions, but this feature is not implemented in
+compat-wireless yet. If compat-wireless was commpield against kernel <
+2.6.29 with e.g. CONFIG_IPW2200=m then libipw was not build in compat-
+wireless but ipw2200 was build, because the config options set in the
+kernel config were used. For now we build ipw2*00 every time
+CONFIG_WIRELESS_EXT is enabled. This could cause some problems with
+kernel > 2.6.32 and CONFIG_WEXT_PRIV=n but there are no such
+distribution kernel available and we haven't got an bug report because
+of this problem although is problem existed for a long time.
 
 Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- config.mk                            |    6 +++++
- patches/25-multicast-list_head.patch |   42 ++++++++++++++++++++++++++++++++-
- scripts/admin-update.sh              |    1 +
- 3 files changed, 47 insertions(+), 2 deletions(-)
+ config.mk |    8 --------
+ 1 files changed, 0 insertions(+), 8 deletions(-)
 
 diff --git a/config.mk b/config.mk
-index b61c318..5e7ae1b 100644
+index 7f73744..de5766f 100644
 --- a/config.mk
 +++ b/config.mk
-@@ -411,6 +411,12 @@ CONFIG_AT76C50X_USB=m
- ifndef CONFIG_COMPAT_KERNEL_28
- CONFIG_AR9170_USB=m
- CONFIG_AR9170_LEDS=y
-+
-+CONFIG_CARL9170=m
-+CONFIG_CARL9170_LEDS=y
-+# CONFIG_CARL9170_DEBUGFS=y
-+# CONFIG_CARL9170_WPC=y
-+
- endif #CONFIG_COMPAT_KERNEL_28
+@@ -249,8 +249,6 @@ CONFIG_B43LEGACY_DMA=y
+ CONFIG_B43LEGACY_PIO=y
  
- CONFIG_ATH9K_HTC=m
-diff --git a/patches/25-multicast-list_head.patch b/patches/25-multicast-list_head.patch
-index 2869364..5a6bb16 100644
---- a/patches/25-multicast-list_head.patch
-+++ b/patches/25-multicast-list_head.patch
-@@ -69,7 +69,7 @@ This also backport commit 2f787b0b76bf5de2eaa3ca3a29d89123ae03c856
-  }
- --- a/drivers/net/b44.c
- +++ b/drivers/net/b44.c
--@@ -1680,7 +1680,11 @@ static int __b44_load_mcast(struct b44 *
-+@@ -1689,7 +1689,11 @@ static int __b44_load_mcast(struct b44 *
-  	netdev_for_each_mc_addr(ha, dev) {
-  		if (i == num_ents)
-  			break;
-@@ -227,6 +227,44 @@ This also backport commit 2f787b0b76bf5de2eaa3ca3a29d89123ae03c856
-  	}
-  
-  	return ((u64)(mfilt[1]) << 32) | mfilt[0];
-+--- a/drivers/net/wireless/ath/carl9170/main.c
-++++ b/drivers/net/wireless/ath/carl9170/main.c
-+@@ -810,17 +810,35 @@ out:
-+ 	return err;
-+ }
-+ 
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
-+ static u64 carl9170_op_prepare_multicast(struct ieee80211_hw *hw,
-+ 					 struct netdev_hw_addr_list *mc_list)
-++#else
-++static u64 carl9170_op_prepare_multicast(struct ieee80211_hw *hw, int mc_count,
-++					 struct dev_addr_list *ha)
-++#endif
-+ {
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
-+ 	struct netdev_hw_addr *ha;
-++#else
-++	int i;
-++#endif
-+ 	u64 mchash;
-+ 
-+ 	/* always get broadcast frames */
-+ 	mchash = 1ULL << (0xff >> 2);
-+ 
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35))
-+ 	netdev_hw_addr_list_for_each(ha, mc_list)
-+ 		mchash |= 1ULL << (ha->addr[5] >> 2);
-++#else
-++	for (i = 0; i < mc_count; i++) {
-++		if (WARN_ON(!ha))
-++			break;
-++		mchash |= 1ULL << (ha->dmi_addr[5] >> 2);
-++		ha = ha->next;
-++	}
-++#endif
-+ 
-+ 	return mchash;
-+ }
- --- a/drivers/net/wireless/libertas/main.c
- +++ b/drivers/net/wireless/libertas/main.c
- @@ -242,18 +242,34 @@ static int lbs_add_mcast_addrs(struct cm
-@@ -693,7 +731,7 @@ This also backport commit 2f787b0b76bf5de2eaa3ca3a29d89123ae03c856
-  	spin_unlock_bh(&local->filter_lock);
-  
-  	/* be a bit nasty */
--@@ -521,9 +525,11 @@ struct ieee80211_hw *ieee80211_alloc_hw(
-+@@ -524,9 +528,11 @@ struct ieee80211_hw *ieee80211_alloc_hw(
-  	local->uapsd_max_sp_len = IEEE80211_DEFAULT_MAX_SP_LEN;
-  
-  	INIT_LIST_HEAD(&local->interfaces);
-diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
-index 6ef281d..ac9470d 100755
---- a/scripts/admin-update.sh
-+++ b/scripts/admin-update.sh
-@@ -192,6 +192,7 @@ fi
+ ifdef CONFIG_WIRELESS_EXT
+-ifdef CONFIG_WEXT_SPY
+-ifdef CONFIG_WEXT_PRIV
+ # The Intel ipws
+ CONFIG_LIBIPW=m
+ # CONFIG_LIBIPW_DEBUG=y
+@@ -276,8 +274,6 @@ CONFIG_IPW2200_QOS=y
+ # it on via sysfs:
+ #
+ # % echo 1 > /sys/bus/pci/drivers/ipw2200/*/rtap_iface
+-endif #CONFIG_WEXT_PRIV
+-endif #CONFIG_WEXT_SPY
+ endif #CONFIG_WIRELESS_EXT
  
- # Drivers that have their own directory
- DRIVERS="drivers/net/wireless/ath"
-+DRIVERS="$DRIVERS drivers/net/wireless/ath/carl9170"
- DRIVERS="$DRIVERS drivers/net/wireless/ath/ar9170"
- DRIVERS="$DRIVERS drivers/net/wireless/ath/ath5k"
- DRIVERS="$DRIVERS drivers/net/wireless/ath/ath9k"
+ ifdef CONFIG_SSB
+@@ -337,8 +333,6 @@ CONFIG_ATL1C=m
+ endif #CONFIG_COMPAT_KERNEL_27
+ 
+ ifdef CONFIG_WIRELESS_EXT
+-ifdef CONFIG_WEXT_SPY
+-ifdef CONFIG_WEXT_PRIV
+ CONFIG_HERMES=m
+ CONFIG_HERMES_CACHE_FW_ON_INIT=y
+ ifdef CONFIG_PPC_PMAC
+@@ -352,8 +346,6 @@ ifdef CONFIG_PCMCIA
+ CONFIG_PCMCIA_HERMES=m
+ CONFIG_PCMCIA_SPECTRUM=m
+ endif #CONFIG_PCMCIA
+-endif #CONFIG_WEXT_PRIV
+-endif #CONFIG_WEXT_SPY
+ endif #CONFIG_WIRELESS_EXT
+ 
+ endif #CONFIG_PCI
 -- 
 1.7.0.4
 
