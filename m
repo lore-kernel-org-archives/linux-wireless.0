@@ -1,39 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52108 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753926Ab0I2SOl (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:53499 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754316Ab0ISBTj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Sep 2010 14:14:41 -0400
-Subject: Re: [PATCH 2/2] mac80211:  Don't go off-channel in work_work
- unless needed.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4CA38155.90306@candelatech.com>
-References: <1285783383-20822-1-git-send-email-greearb@candelatech.com>
-	 <1285783383-20822-2-git-send-email-greearb@candelatech.com>
-	 <1285783598.3756.31.camel@jlt3.sipsolutions.net>
-	 <4CA38155.90306@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 29 Sep 2010 20:14:41 +0200
-Message-ID: <1285784081.3756.32.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Sat, 18 Sep 2010 21:19:39 -0400
+Received: by iwn5 with SMTP id 5so3123840iwn.19
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Sep 2010 18:19:39 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AC090B9732AB2B4DB7FF476E907FE6600113431FC4@dnce02.ent.ti.com>
+References: <1284575472-19888-1-git-send-email-shahar_levi@ti.com>
+ <1284575472-19888-5-git-send-email-shahar_levi@ti.com> <1284578468.1569.29.camel@powerslave>
+ <AANLkTimCrCH_yh5y3L8WcfNus9A2RFMCqvK7Xb82VGUL@mail.gmail.com>
+ <AC090B9732AB2B4DB7FF476E907FE6600113431B85@dnce02.ent.ti.com>
+ <AANLkTinPodQRk8HYDxxZ9BiKJ=-yAg8nybVqGpCqXsa2@mail.gmail.com> <AC090B9732AB2B4DB7FF476E907FE6600113431FC4@dnce02.ent.ti.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Sun, 19 Sep 2010 11:19:19 +1000
+Message-ID: <AANLkTin=Mk2P2ak9VAYxN4ehgPMcvKP9J7iEV55WKtx7@mail.gmail.com>
+Subject: Re: [PATCH 04/04] wl1271: 11n Support, 11n Kconfig Configurable
+To: "Levi, Shahar" <shahar_levi@ti.com>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-09-29 at 11:11 -0700, Ben Greear wrote:
+2010/9/19 Levi, Shahar <shahar_levi@ti.com>:
+> I am confuse. If there option that patch isn't applied from a series how we could trust any patches series we send to that list. I would greatly appreciate if you help me to understand and elaborate what it bisection danger. Am I missing something?
+> I really appreciate your willingness to help.
 
-> >> +	bool went_off_channel = false;
-> >
-> > Heh, this is not going to work ... the return may be done in a separate
-> > invocation of the function. Would have been nice to test this ;-)
-> 
-> What is a good way to test this?  I brought up several STA interfaces
-> and an AP and ran traffic..but I guess I need to do something different?
+Unless people dislike your patches, there's no danger that they won't
+all be applied to the kernel.
 
-The work stuff gets invoked when you try to auth, assoc, do off-channel
-work, etc... best way is probably to use iw's off-channel command that
-translates to a work item here...
+That said, there are still circumstances when only part of a patch
+series like your one will be applied to a kernel. One of these is when
+a user is using git bisection to find exactly which commit caused a
+particular bug.
 
-johannes
+So, let's say you upgrade your kernel from 2.6.35 to 2.6.38 and your
+wl1271 device now won't connect to an AP running on some random
+proprietary hardware. The simplest way to determine exactly which
+patch caused this issue is to use git bisect to do a binary search
+over the changes between these two kernel versions to determine the
+exact patch that broke it. Now, let's assume that, this particular
+piece of hardware won't connect to *anything* when 802.11n support is
+added, so you've already excluded that from your kernel. If git bisect
+decides to leap into the middle of your series, so that 802.11n
+support is added before the Kconfig option is added, then 802.11n
+support will be unconditionally enabled, and you'll see the symptoms
+of that bug, and won't be able to quickly determine whether the bug
+existed before the 802.11n patches or after, and git bisect might
+wrongly assume that these patches were the cause of the bug.
 
+As such, it's generally regarded as a good idea to introduce Kconfig
+options with the code they guard.
+
+Thanks,
+
+-- 
+
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
