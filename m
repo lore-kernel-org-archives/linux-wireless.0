@@ -1,54 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.telegraphics.com.au ([204.15.192.19]:63300 "EHLO
-	mail.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750974Ab0I1EQD (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:53943 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751781Ab0ITHPk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Sep 2010 00:16:03 -0400
-Date: Tue, 28 Sep 2010 14:15:58 +1000 (EST)
-From: Finn Thain <fthain@telegraphics.com.au>
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-cc: trivial@kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org,
-	alsa-devel@alsa-project.org, dri-devel@lists.freedesktop.org,
-	linux-ide@vger.kernel.org,
-	"Maciej W. Rozycki" <macro@linux-mips.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Randy Dunlap <rdunlap@xenotime.net>,
-	Matt Turner <mattst88@gmail.com>,
-	Dimitry Torokhov <dmitry.torokhov@gmail.com>,
-	Mike Frysinger <vapier.adi@gmail.com>
-Subject: Re: [RFC v4]update broken web addresses in the kernel.
-In-Reply-To: <4CA15FA6.3040702@gmail.com>
-Message-ID: <alpine.OSX.2.00.1009281409040.276@localhost>
-References: <1285525875-9920-1-git-send-email-justinmattock@gmail.com> <alpine.OSX.2.00.1009271114330.275@localhost> <4CA15FA6.3040702@gmail.com>
+	Mon, 20 Sep 2010 03:15:40 -0400
+Received: by vws3 with SMTP id 3so3076397vws.19
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Sep 2010 00:15:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+In-Reply-To: <SNT113-W3652C8510E7AB89D2036ECF17E0@phx.gbl>
+References: <SNT113-W3652C8510E7AB89D2036ECF17E0@phx.gbl>
+Date: Mon, 20 Sep 2010 09:15:39 +0200
+Message-ID: <AANLkTin7eTsGXBb5VXsRU_4rwvFpU3-BYe+2w5352SRE@mail.gmail.com>
+Subject: Re: Compiling carl9170
+From: Christophe Chapuis <chris.chapuis@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Actually, the carl9170 driver has been included in compat-wireless,
+but the compilation of compat-wireless fails since then (latest
+successful baking was sept. 12th). I hope this will be fixed soon.
+Having the same adapter as you, I'm also following the situation daily :)
 
-On Mon, 27 Sep 2010, Justin P. Mattock wrote:
-
-> alright.. I'll redu this... remove the brackets, and fix up the rest..
-> one note is:
-> http://dri.freedesktop.org/wiki/Documentation
-> this address is already there..
-
-Right you are.
-
-> probably best to just leave the sourceforge
-> address and use the webarchive and/or if theirs a
-> proper address for the sourceforge dri..
-
-I didn't find a sensible address for the sourceforge stuff now that 
-indexes are turned off for /doc/.
-
-I agree, best just to leave it as is, since it is in the archive.
-
-Finn
-
-> 
-> Justin P. Mattock
-> 
-> 
+On Mon, Sep 20, 2010 at 4:32 AM, Dale Turner <rx_guy@hotmail.com> wrote:
+>
+> Hello.
+>
+> Can someone tell me how to compile the carl9170 module
+> WITHOUT compiling a complete kernel. I just purchased a TP-Link WN821N
+> based on the capabilities of this driver, but am disappointed that I
+> currently don't have the module.
+>
+> I am familiar with the
+> compat-wireless packages as I have needed to compile the ath9k_htc
+> driver for my other adapter (TP-Link WN721N), but the carl driver does
+> not seem to be available in that package.
+>
+> Can anyone help??
+>
+> Thanks in advance.
+>
+> (Sorry about the first post without a subject)
+>
+> Dale Turner
+>                                          --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
