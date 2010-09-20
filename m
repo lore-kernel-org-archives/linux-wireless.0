@@ -1,33 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:56365 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754696Ab0IQXI2 (ORCPT
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:33857 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754454Ab0ITOgU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Sep 2010 19:08:28 -0400
-Received: by bwz11 with SMTP id 11so3128510bwz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 16:08:27 -0700 (PDT)
-Message-Id: <cover.1284763834.git.chunkeey@googlemail.com>
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Sat, 18 Sep 2010 00:50:34 +0200
-Subject: [PATCH 0/7] carl9170: PHY updates + hang fix
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
+	Mon, 20 Sep 2010 10:36:20 -0400
+Received: by iwn5 with SMTP id 5so4314747iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Sep 2010 07:36:19 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <4C976FBD.8010007@openwrt.org>
+References: <1284983140-30099-1-git-send-email-nbd@openwrt.org>
+ <1284983140-30099-2-git-send-email-nbd@openwrt.org> <AANLkTinRQsy3JZ5yr_9xjPhFA3Mez5ewV1V+R1dN3yen@mail.gmail.com>
+ <4C976FBD.8010007@openwrt.org>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 20 Sep 2010 07:35:59 -0700
+Message-ID: <AANLkTikaJhGvOVVLXH7+m33u=xBBZYL+TJGT6jHiNKDG@mail.gmail.com>
+Subject: Re: [PATCH 2/5] ath9k: fix an aggregation start related race condition
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter (7):
-  carl9170: use rx chainmask from eeprom
-  carl9170: fix noise dBm conversion
-  carl9170: don't load bogus nf of chain 1
-  carl9170: abort tasklet during usb reset
-  carl9170: fix state downgrade during reset
-  carl9170: reinit phy after HT settings have changed
-  carl9170: fix hang in AP mode when HT STA does PSM
+On Mon, Sep 20, 2010 at 7:29 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> On 2010-09-20 4:19 PM, Luis R. Rodriguez wrote:
+>> On Mon, Sep 20, 2010 at 4:45 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+>>> A new aggregation session start can be issued by mac80211, even when the
+>>> cleanup of the previous session has not completed yet. Since the data structure
+>>> for the session is not recreated, this could corrupt the block ack window
+>>> and lock up the aggregation session. Fix this by delaying the new session
+>>> until the old one has been cleaned up.
+>>>
+>>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>>> Cc: stable@kernel.org
+>>
+>> Any reason to not fix this in mac80211 instead?
+> mac80211 is already doing the right thing here. The cleanup is ath9k
+> specific.
 
- drivers/net/wireless/ath/carl9170/carl9170.h |    3 +-
- drivers/net/wireless/ath/carl9170/debug.c    |    8 ++---
- drivers/net/wireless/ath/carl9170/main.c     |    4 +-
- drivers/net/wireless/ath/carl9170/phy.c      |   45 ++++++++++++++------------
- drivers/net/wireless/ath/carl9170/usb.c      |    5 ++-
- 5 files changed, 34 insertions(+), 31 deletions(-)
+Thanks for the clarification.
 
+  Luis
