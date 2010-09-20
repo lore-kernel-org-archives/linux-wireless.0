@@ -1,60 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:33858 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753722Ab0IKQUK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Sep 2010 12:20:10 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] compat: backport skb_checksum_none_assert
-Date: Sat, 11 Sep 2010 18:19:58 +0200
-Message-Id: <1284221999-22521-1-git-send-email-hauke@hauke-m.de>
+Received: from nbd.name ([88.198.39.176]:57154 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756307Ab0ITLqB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Sep 2010 07:46:01 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH 3/5] ath9k: clean up / fix aggregation session flush
+Date: Mon, 20 Sep 2010 13:45:38 +0200
+Message-Id: <1284983140-30099-3-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1284983140-30099-2-git-send-email-nbd@openwrt.org>
+References: <1284983140-30099-1-git-send-email-nbd@openwrt.org>
+ <1284983140-30099-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is needed by atlx, b44, atl1c and atl1e.
+The tid aggregation cleanup is a bit fragile, as it discards failed
+subframes in some places, and retransmits them in others. This could
+block the cleanup of an existing aggregation session, if a retransmission
+for a tid is issued, yet the tid is never scheduled again because of
+the cleanup state.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Fix this by getting rid of as many subframes as possible, as early
+as possible, and immediately transmitting pending subframes as regular
+HT frames instead of waiting for the cleanup to complete.
+
+Drop all pending subframes while keeping track of the Block ACK window
+during aggregate tx completion to prevent sending out stale subframes,
+which could confuse the receiver side.
+
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc: stable@kernel.org
 ---
- include/linux/compat-2.6.37.h |   17 +++++++++++++++++
- 1 files changed, 17 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/xmit.c |   63 +++++++++++++-------------------
+ 1 files changed, 26 insertions(+), 37 deletions(-)
 
-diff --git a/include/linux/compat-2.6.37.h b/include/linux/compat-2.6.37.h
-index 5bd6edb..8ea0bab 100644
---- a/include/linux/compat-2.6.37.h
-+++ b/include/linux/compat-2.6.37.h
-@@ -5,6 +5,8 @@
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index d629bfb..e53433e 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -61,6 +61,8 @@ static int ath_tx_num_badfrms(struct ath_softc *sc, struct ath_buf *bf,
+ 			      struct ath_tx_status *ts, int txok);
+ static void ath_tx_rc_status(struct ath_buf *bf, struct ath_tx_status *ts,
+ 			     int nbad, int txok, bool update_rc);
++static void ath_tx_update_baw(struct ath_softc *sc, struct ath_atx_tid *tid,
++			      int seqno);
  
- #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37))
+ enum {
+ 	MCS_HT20,
+@@ -143,18 +145,23 @@ static void ath_tx_flush_tid(struct ath_softc *sc, struct ath_atx_tid *tid)
+ 	struct ath_txq *txq = &sc->tx.txq[tid->ac->qnum];
+ 	struct ath_buf *bf;
+ 	struct list_head bf_head;
+-	INIT_LIST_HEAD(&bf_head);
++	struct ath_tx_status ts;
  
-+#include <linux/skbuff.h>
+-	WARN_ON(!tid->paused);
++	INIT_LIST_HEAD(&bf_head);
+ 
++	memset(&ts, 0, sizeof(ts));
+ 	spin_lock_bh(&txq->axq_lock);
+-	tid->paused = false;
+ 
+ 	while (!list_empty(&tid->buf_q)) {
+ 		bf = list_first_entry(&tid->buf_q, struct ath_buf, list);
+-		BUG_ON(bf_isretried(bf));
+ 		list_move_tail(&bf->list, &bf_head);
+-		ath_tx_send_ht_normal(sc, txq, tid, &bf_head);
 +
- /*
-  * This is not part of The 2.6.37 kernel yet but we
-  * we use it to optimize the backport code we
-@@ -26,6 +28,21 @@
++		if (bf_isretried(bf)) {
++			ath_tx_update_baw(sc, tid, bf->bf_seqno);
++			ath_tx_complete_buf(sc, bf, txq, &bf_head, &ts, 0, 0);
++		} else {
++			ath_tx_send_ht_normal(sc, txq, tid, &bf_head);
++		}
+ 	}
  
- extern struct kobj_ns_type_operations net_ns_type_operations;
+ 	spin_unlock_bh(&txq->axq_lock);
+@@ -429,7 +436,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 			list_move_tail(&bf->list, &bf_head);
+ 		}
  
-+/**
-+ * skb_checksum_none_assert - make sure skb ip_summed is CHECKSUM_NONE
-+ * @skb: skb to check
-+ *
-+ * fresh skbs have their ip_summed set to CHECKSUM_NONE.
-+ * Instead of forcing ip_summed to CHECKSUM_NONE, we can
-+ * use this helper, to document places where we make this assertion.
-+ */
-+static inline void skb_checksum_none_assert(struct sk_buff *skb)
-+{
-+#ifdef DEBUG
-+	BUG_ON(skb->ip_summed != CHECKSUM_NONE);
-+#endif
-+}
+-		if (!txpending) {
++		if (!txpending || (tid->state & AGGR_CLEANUP)) {
+ 			/*
+ 			 * complete the acked-ones/xretried ones; update
+ 			 * block-ack window
+@@ -508,15 +515,12 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 	}
+ 
+ 	if (tid->state & AGGR_CLEANUP) {
++		ath_tx_flush_tid(sc, tid);
 +
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,37)) */
+ 		if (tid->baw_head == tid->baw_tail) {
+ 			tid->state &= ~AGGR_ADDBA_COMPLETE;
+ 			tid->state &= ~AGGR_CLEANUP;
+-
+-			/* send buffered frames as singles */
+-			ath_tx_flush_tid(sc, tid);
+ 		}
+-		rcu_read_unlock();
+-		return;
+ 	}
  
- #endif /* LINUX_26_37_COMPAT_H */
+ 	rcu_read_unlock();
+@@ -807,12 +811,6 @@ void ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid)
+ 	struct ath_node *an = (struct ath_node *)sta->drv_priv;
+ 	struct ath_atx_tid *txtid = ATH_AN_2_TID(an, tid);
+ 	struct ath_txq *txq = &sc->tx.txq[txtid->ac->qnum];
+-	struct ath_tx_status ts;
+-	struct ath_buf *bf;
+-	struct list_head bf_head;
+-
+-	memset(&ts, 0, sizeof(ts));
+-	INIT_LIST_HEAD(&bf_head);
+ 
+ 	if (txtid->state & AGGR_CLEANUP)
+ 		return;
+@@ -822,31 +820,22 @@ void ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid)
+ 		return;
+ 	}
+ 
+-	/* drop all software retried frames and mark this TID */
+ 	spin_lock_bh(&txq->axq_lock);
+ 	txtid->paused = true;
+-	while (!list_empty(&txtid->buf_q)) {
+-		bf = list_first_entry(&txtid->buf_q, struct ath_buf, list);
+-		if (!bf_isretried(bf)) {
+-			/*
+-			 * NB: it's based on the assumption that
+-			 * software retried frame will always stay
+-			 * at the head of software queue.
+-			 */
+-			break;
+-		}
+-		list_move_tail(&bf->list, &bf_head);
+-		ath_tx_update_baw(sc, txtid, bf->bf_seqno);
+-		ath_tx_complete_buf(sc, bf, txq, &bf_head, &ts, 0, 0);
+-	}
+-	spin_unlock_bh(&txq->axq_lock);
+ 
+-	if (txtid->baw_head != txtid->baw_tail) {
++	/*
++	 * If frames are still being transmitted for this TID, they will be
++	 * cleaned up during tx completion. To prevent race conditions, this
++	 * TID can only be reused after all in-progress subframes have been
++	 * completed.
++	 */
++	if (txtid->baw_head != txtid->baw_tail)
+ 		txtid->state |= AGGR_CLEANUP;
+-	} else {
++	else
+ 		txtid->state &= ~AGGR_ADDBA_COMPLETE;
+-		ath_tx_flush_tid(sc, txtid);
+-	}
++	spin_unlock_bh(&txq->axq_lock);
++
++	ath_tx_flush_tid(sc, txtid);
+ }
+ 
+ void ath_tx_aggr_resume(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid)
 -- 
-1.7.0.4
+1.7.2.2
 
