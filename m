@@ -1,49 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:12017 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751091Ab0IBIuy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Sep 2010 04:50:54 -0400
-Date: Thu, 2 Sep 2010 10:47:21 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH w-t] iwlwifi: rewrite iwl-scan.c to avoid race conditions
-Message-ID: <20100902084720.GA2372@redhat.com>
-References: <20100831150021.GA10963@redhat.com>
- <1283338760.4131.22.camel@jlt3.sipsolutions.net>
- <20100901115826.GB6547@redhat.com>
- <1283344912.4124.2.camel@jlt3.sipsolutions.net>
- <20100901141643.GC6547@redhat.com>
- <1283351204.4124.10.camel@jlt3.sipsolutions.net>
- <20100901152438.GD6547@redhat.com>
- <1283357075.4124.11.camel@jlt3.sipsolutions.net>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:35297 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756427Ab0ITOTc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Sep 2010 10:19:32 -0400
+Received: by iwn5 with SMTP id 5so4307682iwn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Sep 2010 07:19:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1283357075.4124.11.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1284983140-30099-2-git-send-email-nbd@openwrt.org>
+References: <1284983140-30099-1-git-send-email-nbd@openwrt.org> <1284983140-30099-2-git-send-email-nbd@openwrt.org>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Mon, 20 Sep 2010 07:19:11 -0700
+Message-ID: <AANLkTinRQsy3JZ5yr_9xjPhFA3Mez5ewV1V+R1dN3yen@mail.gmail.com>
+Subject: Re: [PATCH 2/5] ath9k: fix an aggregation start related race condition
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 01, 2010 at 06:04:35PM +0200, Johannes Berg wrote:
-> > Cancel at the end of iwl_cancel_scan_deferred_work() is for case
-> > when we still get notification from f/w and clear STATUS_SCAN_HW bit in 
-> > iwl_rx_scan_complete_notif. This can happen when firmware is in some
-> > sane state but we do restart (for example: when debugfs force_reset
-> > file was used).
-> > 
-> > For the same reason we need have to iwl_bg_scan_completed allow to run
-> > in parallel with iwl_bg_restart. To complete scanning when performing
-> > restart, but f/w is responsible.
-> 
-> I think you mean "responsive"? Otherwise what you're saying doesn't make
-> much sense to me?
-Ehh, yes responsive.
+On Mon, Sep 20, 2010 at 4:45 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> A new aggregation session start can be issued by mac80211, even when the
+> cleanup of the previous session has not completed yet. Since the data structure
+> for the session is not recreated, this could corrupt the block ack window
+> and lock up the aggregation session. Fix this by delaying the new session
+> until the old one has been cleaned up.
+>
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> Cc: stable@kernel.org
 
-> But they all take the mutex, so they can't run in parallel anyway. So it
-> only becomes an ordering issue, no?
+Any reason to not fix this in mac80211 instead?
 
-Mutex is not taken all the time in iwl_bg_restart.
-
-Stanislaw
+  Luis
