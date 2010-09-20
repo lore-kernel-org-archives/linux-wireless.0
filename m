@@ -1,154 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:41838 "EHLO
+Received: from mail.candelatech.com ([208.74.158.172]:45832 "EHLO
 	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754360Ab0IWQok (ORCPT
+	with ESMTP id S1753440Ab0ITVjk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Sep 2010 12:44:40 -0400
+	Mon, 20 Sep 2010 17:39:40 -0400
 From: greearb@candelatech.com
 To: linux-wireless@vger.kernel.org
 Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] mac80211/ath9k:  Support AMPDU with multiple VIFs.
-Date: Thu, 23 Sep 2010 09:44:36 -0700
-Message-Id: <1285260276-29105-1-git-send-email-greearb@candelatech.com>
+Subject: [mac80211] mac80211:  Support receiving data frames on multiple vifs.
+Date: Mon, 20 Sep 2010 14:39:36 -0700
+Message-Id: <1285018776-21795-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Ben Greear <greearb@candelatech.com>
 
-The old ieee80211_find_sta_by_hw method didn't properly
-find VIFS when there was more than one per AP.  This caused
-AMPDU logic in ath9k to get the wrong VIF when trying to
-account for transmitted SKBs.
+When using multiple STA interfaces on the same radio, some
+data packets need to be received on all interfaces
+(broadcast, for instance).
 
-This patch changes ieee80211_find_sta_by_hw to take a
-localaddr argument to distinguish between VIFs with the
-same AP but different local addresses.  The method name
-is changed to ieee80211_find_sta_by_ifaddr.
+Make the STA loop look similar to the mgt-data loop.
+
+Also, add logic to check RX_FLAG_MMIC_ERROR for last
+interface in mgt-data loop.
+
+This needs review.
 
 Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
-:100644 100644 c5e7af4... 9cd0597... M	drivers/net/wireless/ath/ath9k/recv.c
-:100644 100644 85a7323... f7da6b2... M	drivers/net/wireless/ath/ath9k/xmit.c
-:100644 100644 12a49f0... a0afea1... M	include/net/mac80211.h
-:100644 100644 44e10a9... ca2cba9... M	net/mac80211/sta_info.c
- drivers/net/wireless/ath/ath9k/recv.c |    6 +++++-
- drivers/net/wireless/ath/ath9k/xmit.c |    3 +--
- include/net/mac80211.h                |   25 ++++++++++++++-----------
- net/mac80211/sta_info.c               |   15 +++++++++++----
- 4 files changed, 31 insertions(+), 18 deletions(-)
+:100644 100644 c036815... a7847e1... M	net/mac80211/rx.c
+ net/mac80211/rx.c |   80 ++++++++++++++++++++++++++++++++++++++++++++++------
+ 1 files changed, 70 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index c5e7af4..9cd0597 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -977,7 +977,11 @@ static void ath9k_process_rssi(struct ath_common *common,
- 	 * at least one sdata of a wiphy on mac80211 but with ath9k virtual
- 	 * wiphy you'd have to iterate over every wiphy and each sdata.
- 	 */
--	sta = ieee80211_find_sta_by_hw(hw, hdr->addr2);
-+	if (is_multicast_ether_addr(hdr->addr1))
-+		sta = ieee80211_find_sta_by_ifaddr(hw, hdr->addr2, NULL);
-+	else
-+		sta = ieee80211_find_sta_by_ifaddr(hw, hdr->addr2, hdr->addr1);
-+		
- 	if (sta) {
- 		an = (struct ath_node *) sta->drv_priv;
- 		if (rx_stats->rs_rssi != ATH9K_RSSI_BAD &&
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 85a7323..f7da6b2 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -328,8 +328,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index c036815..a7847e1 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2613,7 +2613,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+ 	int prepares;
+ 	struct ieee80211_sub_if_data *prev = NULL;
+ 	struct sk_buff *skb_new;
+-	struct sta_info *sta, *tmp;
++	struct sta_info *sta, *tmp, *prev_sta;
+ 	bool found_sta = false;
+ 	int err = 0;
  
- 	rcu_read_lock();
+@@ -2644,22 +2644,74 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+ 	ieee80211_verify_alignment(&rx);
  
--	/* XXX: use ieee80211_find_sta! */
--	sta = ieee80211_find_sta_by_hw(hw, hdr->addr1);
-+	sta = ieee80211_find_sta_by_ifaddr(hw, hdr->addr1, hdr->addr2);
- 	if (!sta) {
- 		rcu_read_unlock();
+ 	if (ieee80211_is_data(fc)) {
++		prev_sta = NULL;
+ 		for_each_sta_info(local, hdr->addr2, sta, tmp) {
+-			rx.sta = sta;
+ 			found_sta = true;
+-			rx.sdata = sta->sdata;
++			if (!prev_sta) {
++				prev_sta = sta;
++				continue;
++			}
++
++			rx.sta = prev_sta;
++			rx.sdata = prev_sta->sdata;
  
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 12a49f0..a0afea1 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -2416,25 +2416,28 @@ struct ieee80211_sta *ieee80211_find_sta(struct ieee80211_vif *vif,
- 					 const u8 *addr);
+ 			rx.flags |= IEEE80211_RX_RA_MATCH;
+ 			prepares = prepare_for_handlers(rx.sdata, &rx, hdr);
+-			if (prepares) {
+-				if (status->flag & RX_FLAG_MMIC_ERROR) {
+-					if (rx.flags & IEEE80211_RX_RA_MATCH)
+-						ieee80211_rx_michael_mic_report(hdr, &rx);
+-				} else
+-					prev = rx.sdata;
++			if (!prepares)
++				goto next_sta;
++
++			if (status->flag & RX_FLAG_MMIC_ERROR) {
++				if (rx.flags & IEEE80211_RX_RA_MATCH)
++					ieee80211_rx_michael_mic_report(hdr, &rx);
++				goto next_sta;
++			}
++
++			/*
++			 * frame was destined for the previous interface
++			 * so invoke RX handlers for it
++			 */
++			skb_new = skb_copy(skb, GFP_ATOMIC);
++			if (!skb_new) {
++				if (net_ratelimit())
++					wiphy_debug(local->hw.wiphy,
++						    "failed to copy multicast"
++						    " frame for %s\n",
++						    prev_sta->sdata->name);
++				goto next_sta;
++			}
++			ieee80211_invoke_rx_handlers(prev_sta->sdata, &rx,
++						     skb_new);
++next_sta:
++			prev_sta = sta;
++		} /* for all STA info */
++
++		if (prev_sta) {
++			rx.sta = prev_sta;
++			rx.sdata = prev_sta->sdata;
++
++			rx.flags |= IEEE80211_RX_RA_MATCH;
++			prepares = prepare_for_handlers(rx.sdata, &rx, hdr);
++			if (!prepares)
++				prev_sta = NULL;
++
++			if (status->flag & RX_FLAG_MMIC_ERROR) {
++				if (rx.flags & IEEE80211_RX_RA_MATCH)
++					ieee80211_rx_michael_mic_report(hdr, &rx);
++				prev_sta = NULL;
+ 			}
+ 		}
+-	}
++
++
++		if (prev_sta) {
++			ieee80211_invoke_rx_handlers(prev_sta->sdata, &rx, skb);
++			return;
++		} else {
++			if (found_sta) {
++				dev_kfree_skb(skb);
++				return;
++			}
++		}
++	} /* if data frame */
+ 	if (!found_sta) {
+ 		list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+ 			if (!ieee80211_sdata_running(sdata))
+@@ -2722,6 +2774,14 @@ next:
  
- /**
-- * ieee80211_find_sta_by_hw - find a station on hardware
-+ * ieee80211_find_sta_by_ifaddr - find a station on hardware
-  *
-  * @hw: pointer as obtained from ieee80211_alloc_hw()
-- * @addr: station's address
-+ * @addr: remote station's address
-+ * @localaddr: local address (vif->sdata->vif.addr). Use NULL for 'any'.
-  *
-  * This function must be called under RCU lock and the
-  * resulting pointer is only valid under RCU lock as well.
-  *
-- * NOTE: This function should not be used! When mac80211 is converted
-- *	 internally to properly keep track of stations on multiple
-- *	 virtual interfaces, it will not always know which station to
-- *	 return here since a single address might be used by multiple
-- *	 logical stations (e.g. consider a station connecting to another
-- *	 BSSID on the same AP hardware without disconnecting first).
-+ * NOTE: You may pass NULL for localaddr, but then you will just get
-+ *      the first STA that matches the remote address 'addr'.
-+ *      We can have multiple STA associated with multiple
-+ *      logical stations (e.g. consider a station connecting to another
-+ *      BSSID on the same AP hardware without disconnecting first).
-+ *      In this case, the result of this method with localaddr NULL
-+ *      is not reliable.
-  *
-- * DO NOT USE THIS FUNCTION.
-+ * DO NOT USE THIS FUNCTION with localaddr NULL if at all possible.
-  */
--struct ieee80211_sta *ieee80211_find_sta_by_hw(struct ieee80211_hw *hw,
--					       const u8 *addr);
-+struct ieee80211_sta *ieee80211_find_sta_by_ifaddr(struct ieee80211_hw *hw,
-+					       const u8 *addr,
-+					       const u8 *localaddr);
- 
- /**
-  * ieee80211_sta_block_awake - block station from waking up
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 44e10a9..ca2cba9 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -838,13 +838,20 @@ void ieee80211_sta_expire(struct ieee80211_sub_if_data *sdata,
- 	mutex_unlock(&local->sta_mtx);
- }
- 
--struct ieee80211_sta *ieee80211_find_sta_by_hw(struct ieee80211_hw *hw,
--					       const u8 *addr)
-+struct ieee80211_sta *ieee80211_find_sta_by_ifaddr(struct ieee80211_hw *hw,
-+					       const u8 *addr,
-+					       const u8 *localaddr)
- {
- 	struct sta_info *sta, *nxt;
- 
--	/* Just return a random station ... first in list ... */
-+	/*
-+	 * Just return a random station if localaddr is NULL
-+	 * ... first in list.
-+	 */
- 	for_each_sta_info(hw_to_local(hw), addr, sta, nxt) {
-+		if (localaddr &&
-+		    compare_ether_addr(sta->sdata->vif.addr, localaddr) != 0)
-+			continue;
- 		if (!sta->uploaded)
- 			return NULL;
- 		return &sta->sta;
-@@ -852,7 +859,7 @@ struct ieee80211_sta *ieee80211_find_sta_by_hw(struct ieee80211_hw *hw,
- 
- 	return NULL;
- }
--EXPORT_SYMBOL_GPL(ieee80211_find_sta_by_hw);
-+EXPORT_SYMBOL_GPL(ieee80211_find_sta_by_ifaddr);
- 
- struct ieee80211_sta *ieee80211_find_sta(struct ieee80211_vif *vif,
- 					 const u8 *addr)
+ 			if (!prepares)
+ 				prev = NULL;
++
++			if (status->flag & RX_FLAG_MMIC_ERROR) {
++				rx.sdata = prev;
++				if (rx.flags & IEEE80211_RX_RA_MATCH)
++					ieee80211_rx_michael_mic_report(hdr,
++									&rx);
++				prev = NULL;
++			}
+ 		}
+ 	}
+ 	if (prev)
 -- 
 1.7.2.2
 
