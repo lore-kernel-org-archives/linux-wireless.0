@@ -1,91 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:57153 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756238Ab0ITLp4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Sep 2010 07:45:56 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, lrodriguez@atheros.com
-Subject: [PATCH 2/5] ath9k: fix an aggregation start related race condition
-Date: Mon, 20 Sep 2010 13:45:37 +0200
-Message-Id: <1284983140-30099-2-git-send-email-nbd@openwrt.org>
-In-Reply-To: <1284983140-30099-1-git-send-email-nbd@openwrt.org>
-References: <1284983140-30099-1-git-send-email-nbd@openwrt.org>
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:42130 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932075Ab0ITTT7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Sep 2010 15:19:59 -0400
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <1fwtoy8sG5H.A.veG.9D7lMB@chimera>
+References: <1fwtoy8sG5H.A.veG.9D7lMB@chimera>
+Date: Mon, 20 Sep 2010 21:19:58 +0200
+Message-ID: <AANLkTinLR0Js0ueVOGEkbs27d4FEH14c=1wuhUqPsiHx@mail.gmail.com>
+Subject: Re: 2.6.36-rc4-git5: Reported regressions from 2.6.35
+From: Sedat Dilek <sedat.dilek@googlemail.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>,
+	Florian Mickler <florian@mickler.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PM List <linux-pm@lists.linux-foundation.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>, harn-solo@gmx.de
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A new aggregation session start can be issued by mac80211, even when the
-cleanup of the previous session has not completed yet. Since the data structure
-for the session is not recreated, this could corrupt the block ack window
-and lock up the aggregation session. Fix this by delaying the new session
-until the old one has been cleaned up.
+Hi Rafael,
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@kernel.org
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    4 ++--
- drivers/net/wireless/ath/ath9k/main.c  |    2 +-
- drivers/net/wireless/ath/ath9k/xmit.c  |   10 ++++++++--
- 3 files changed, 11 insertions(+), 5 deletions(-)
+can you please add the following, Thanks in advance.
+> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=18872
+> Subject         : Radeon KMS r100 and STR problems
+> Submitter       : Richard Mittendorfer <delist@gmx.net>
+> Date            : 2010-09-17 18:26 (4 days old)
+> Message-ID      : <20100917202647.aa4b6300.delist@gmx.net>
+> References      : http://marc.info/?l=linux-kernel&m=128474802809779&w=2
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 9fddd80..dfd368a 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -346,8 +346,8 @@ void ath_tx_tasklet(struct ath_softc *sc);
- void ath_tx_edma_tasklet(struct ath_softc *sc);
- void ath_tx_cabq(struct ieee80211_hw *hw, struct sk_buff *skb);
- bool ath_tx_aggr_check(struct ath_softc *sc, struct ath_node *an, u8 tidno);
--void ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
--		       u16 tid, u16 *ssn);
-+int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
-+		      u16 tid, u16 *ssn);
- void ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid);
- void ath_tx_aggr_resume(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid);
- void ath9k_enable_ps(struct ath_softc *sc);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 1165f90..f5af9f9 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1975,7 +1975,7 @@ static int ath9k_ampdu_action(struct ieee80211_hw *hw,
- 		break;
- 	case IEEE80211_AMPDU_TX_START:
- 		ath9k_ps_wakeup(sc);
--		ath_tx_aggr_start(sc, sta, tid, ssn);
-+		ret = ath_tx_aggr_start(sc, sta, tid, ssn);
- 		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
- 		ath9k_ps_restore(sc);
- 		break;
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 5323a4d..d629bfb 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -783,17 +783,23 @@ static void ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 		 status != ATH_AGGR_BAW_CLOSED);
- }
- 
--void ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
--		       u16 tid, u16 *ssn)
-+int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
-+		      u16 tid, u16 *ssn)
- {
- 	struct ath_atx_tid *txtid;
- 	struct ath_node *an;
- 
- 	an = (struct ath_node *)sta->drv_priv;
- 	txtid = ATH_AN_2_TID(an, tid);
-+
-+	if (txtid->state & (AGGR_CLEANUP | AGGR_ADDBA_COMPLETE))
-+		return -EAGAIN;
-+
- 	txtid->state |= AGGR_ADDBA_PROGRESS;
- 	txtid->paused = true;
- 	*ssn = txtid->seq_start;
-+
-+	return 0;
- }
- 
- void ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid)
--- 
-1.7.2.2
+On Mon, Sep 20, 2010 at 8:47 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
+> This message contains a list of some regressions from 2.6.35,
+> for which there are no fixes in the mainline known to the tracking team.
+> If any of them have been fixed already, please let us know.
+>
+> If you know of any other unresolved regressions from 2.6.35, please let us
+> know either and we'll add them to the list.  Also, please let us know
+> if any of the entries below are invalid.
+>
+> Each entry from the list will be sent additionally in an automatic reply
+> to this message with CCs to the people involved in reporting and handling
+> the issue.
+>
+>
+> Listed regressions statistics:
+>
+>  Date          Total  Pending  Unresolved
+>  ----------------------------------------
+>  2010-09-20       38       15          15
+>  2010-09-12       28       14          13
+>  2010-08-30       21       16          15
+>
+>
+> Unresolved regressions
 
+Hi Rafael,
+
+can you please add the following Bug, Thanks in advance.
+
+Bug-Entry       : https://bugzilla.kernel.org/show_bug.cgi?id=16140
+Subject         : Suspend To RAM/ Resume broken - Radeon KMS on RV250
+Submitter       : Michael Long <harn-solo@gmx.de>
+Date            : 2010-06-06 09:52
+Message-ID      : ???
+References      : ???
+
+What is with "Regression:	No" in the BR? Change?
+
+Regards,
+- Sedat -
