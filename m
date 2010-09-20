@@ -1,50 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from snt0-omc2-s43.snt0.hotmail.com ([65.54.61.94]:63591 "EHLO
-	snt0-omc2-s43.snt0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754832Ab0IYAe1 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Sep 2010 20:34:27 -0400
-Message-ID: <SNT113-W182B461295E717BB27130BF1630@phx.gbl>
-From: Dale Turner <rx_guy@hotmail.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: carl9170 problem
-Date: Fri, 24 Sep 2010 21:34:26 -0300
-Content-Type: text/plain; charset=US-ASCII
+Received: from nbd.name ([88.198.39.176]:39394 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753111Ab0ITRfk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Sep 2010 13:35:40 -0400
+Message-ID: <4C979B60.3060901@openwrt.org>
+Date: Mon, 20 Sep 2010 19:35:28 +0200
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+CC: linville@tuxdriver.com, lrodriguez@atheros.com
+Subject: [PATCH v2 2/5] ath9k: fix an aggregation start related race condition
+References: <1284983140-30099-1-git-send-email-nbd@openwrt.org> <1284983140-30099-2-git-send-email-nbd@openwrt.org>
+In-Reply-To: <1284983140-30099-2-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+A new aggregation session start can be issued by mac80211, even when the
+cleanup of the previous session has not completed yet. Since the data structure
+for the session is not recreated, this could corrupt the block ack window
+and lock up the aggregation session. Fix this by delaying the new session
+until the old one has been cleaned up.
 
-Hello everyone.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Cc: stable@kernel.org
+---
+ v2: add a return code check before calling ieee80211_start_tx_ba_cb_irqsafe
 
-Thanks for releasing the carl9170 driver in the 
-compat-wireless package. I have been able to compile the driver, so that
- is great. The connection seems to be a bit inconsistent. I get the 
-following quite often in /var/log/messages :
+ drivers/net/wireless/ath/ath9k/ath9k.h |    4 ++--
+ drivers/net/wireless/ath/ath9k/main.c  |    5 +++--
+ drivers/net/wireless/ath/ath9k/xmit.c  |   10 ++++++++--
+ 3 files changed, 13 insertions(+), 6 deletions(-)
 
-kernel: ieee80211 phy9: channel change: 2472 -> 2462 failed (2)
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 9fddd80..dfd368a 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -346,8 +346,8 @@ void ath_tx_tasklet(struct ath_softc *sc);
+ void ath_tx_edma_tasklet(struct ath_softc *sc);
+ void ath_tx_cabq(struct ieee80211_hw *hw, struct sk_buff *skb);
+ bool ath_tx_aggr_check(struct ath_softc *sc, struct ath_node *an, u8 tidno);
+-void ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
+-		       u16 tid, u16 *ssn);
++int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
++		      u16 tid, u16 *ssn);
+ void ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid);
+ void ath_tx_aggr_resume(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid);
+ void ath9k_enable_ps(struct ath_softc *sc);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 1165f90..8ffeff4 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1975,8 +1975,9 @@ static int ath9k_ampdu_action(struct ieee80211_hw *hw,
+ 		break;
+ 	case IEEE80211_AMPDU_TX_START:
+ 		ath9k_ps_wakeup(sc);
+-		ath_tx_aggr_start(sc, sta, tid, ssn);
+-		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
++		ret = ath_tx_aggr_start(sc, sta, tid, ssn);
++		if (!ret)
++			ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
+ 		ath9k_ps_restore(sc);
+ 		break;
+ 	case IEEE80211_AMPDU_TX_STOP:
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 5323a4d..d629bfb 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -783,17 +783,23 @@ static void ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 		 status != ATH_AGGR_BAW_CLOSED);
+ }
+ 
+-void ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
+-		       u16 tid, u16 *ssn)
++int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
++		      u16 tid, u16 *ssn)
+ {
+ 	struct ath_atx_tid *txtid;
+ 	struct ath_node *an;
+ 
+ 	an = (struct ath_node *)sta->drv_priv;
+ 	txtid = ATH_AN_2_TID(an, tid);
++
++	if (txtid->state & (AGGR_CLEANUP | AGGR_ADDBA_COMPLETE))
++		return -EAGAIN;
++
+ 	txtid->state |= AGGR_ADDBA_PROGRESS;
+ 	txtid->paused = true;
+ 	*ssn = txtid->seq_start;
++
++	return 0;
+ }
+ 
+ void ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid)
 
-and/or
-
-kernel: ieee80211 phy9: invalid plcp cck rate (0)
-
-and/or
-
-kernel: ieee80211 phy9: FW: MAC RESET
-
-When
- that happens (which can be as often as every few minutes) my reported 
-connection speed in network manager drops to 6 or 1 Mb/s. The network 
-speed is noticeably reduced (for instance download speeds drastically 
-reduce, online videos stutter, or music streaming from a different 
-computer pauses, etc).
-
-My previous adapter TP-Link TL-WN721N (ath9k_htc driver) did not behave like this.
-
-Any thoughts/solutions ??
-
-Again, many thanks for providing the driver. I cannot program (I wish I could to help) but I can report my experience.
-
-Dale
-
- 		 	   		   		 	   		  
