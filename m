@@ -1,41 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29158 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751909Ab0IBLKz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Sep 2010 07:10:55 -0400
-Date: Thu, 2 Sep 2010 13:07:18 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH w-t] iwlwifi: rewrite iwl-scan.c to avoid race conditions
-Message-ID: <20100902110717.GC2372@redhat.com>
-References: <20100831150021.GA10963@redhat.com>
- <1283420177.3793.97.camel@jlt3.sipsolutions.net>
+Received: from mail.candelatech.com ([208.74.158.172]:60176 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753897Ab0ITRfh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Sep 2010 13:35:37 -0400
+Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id o8KHZaKt010078
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Sep 2010 10:35:36 -0700
+Message-ID: <4C979B68.4050206@candelatech.com>
+Date: Mon, 20 Sep 2010 10:35:36 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1283420177.3793.97.camel@jlt3.sipsolutions.net>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: ath9k and AMPDUs
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 02, 2010 at 11:36:17AM +0200, Johannes Berg wrote:
-> On Tue, 2010-08-31 at 17:00 +0200, Stanislaw Gruszka wrote:
-> 
-> > +	priv->status &= IWL_PRESERVE_STATUS_MASK;
-> 
-> Is that completely save here? No other functions can interfere?
+What does it mean when ath9k shows AMPDUs queued increasing, but
+completed remains the same?  I'm seeing this in a case where it appears
+I have lost connectivity to the AP, though it still shows as Associated.
 
-I don't know, I think is not safe, but seems that is not worse 
-compeered to what we have now.
+AMPDUs Queued:             939          0         0         0
+AMPDUs Completed:          872          0         0         0
 
-> I just ported your patch to the current tree:
-> http://johannes.sipsolutions.net/patches/kernel/all/LATEST/NNN-iwl-scan.patch
-> 
-> but I'm going to split it up into multiple now.
+Thanks,
+Ben
 
-Ok, if you want to. I could to this as well, actually I should
-doing that way from the beginning.
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
-Stanislaw
