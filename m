@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bar.sig21.net ([80.81.252.164]:40609 "EHLO bar.sig21.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753013Ab0IUWGr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Sep 2010 18:06:47 -0400
-Date: Tue, 21 Sep 2010 23:34:51 +0200
-From: Johannes Stezenbach <js@sig21.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Andreas Schwab <schwab@linux-m68k.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Patch to get iw building on Fedora 8
-Message-ID: <20100921213451.GA29134@sig21.net>
-References: <4C98DFB6.10902@candelatech.com>
- <m2wrqej2qk.fsf@igel.home>
- <4C991F25.1000102@candelatech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4C991F25.1000102@candelatech.com>
+Received: from smtp.nokia.com ([192.100.122.233]:34025 "EHLO
+	mgw-mx06.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755715Ab0ITJJs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Sep 2010 05:09:48 -0400
+Subject: Re: [PATCH] Add 802.11a support configuration
+From: Luciano Coelho <luciano.coelho@nokia.com>
+To: ext Gery Kahn <geryk@ti.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1284973376-9396-1-git-send-email-geryk@ti.com>
+References: <1284973376-9396-1-git-send-email-geryk@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 20 Sep 2010 12:09:14 +0300
+Message-ID: <1284973754.9281.52.camel@chilepepper>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 21, 2010 at 02:09:57PM -0700, Ben Greear wrote:
-> On 09/21/2010 12:49 PM, Andreas Schwab wrote:
-> >Ben Greear<greearb-my8/4N5VtI7c+919tysfdA@public.gmane.org>  writes:
-> >
-> >>I need this in order to get iw to build on Fedora 8.
-> >>
-...
-> >>+#define  __USE_ISOC99
-> >
-> >This is wrong.  You must never define internal glibc macros.
+Hi Gery,
+
+On Mon, 2010-09-20 at 11:02 +0200, ext Gery Kahn wrote:
+> This patch adds ability to configure 802.11a support on wl1271.
 > 
-> How about this then?
-...
-> -                       tmpf = strtof(argv[i], &end);
-> +                       tmpf = strtod(argv[i], &end);
-... 
-> Seems you don't have to do anything clever to get strtod to work,
-> and I assume it should cast just fine.
+> The code is not tested enough, this is why marked as EXPERIMENTAL.
+> 
+> 
+> Signed-off-by: Gery Kahn <geryk@ti.com>
+> ---
 
-I think to use C99 features like strtof() you need to either
-add -std=c99 to CFLAGS, or #define _ISOC99_SOURCE
-(see /usr/include/features.h).
+Sorry for not answering your previous email.  I read it and was going to
+reply to it later, but it got flooded down my inbox.
 
-HTH,
-Johannes
+We already have a implemented a mechanism to decide whether to use 11a
+or not at runtime.  It is still not upstream because I haven't been able
+to test our forward-ports.  Now I got a beagle board with wl1271 and
+I'll be able to test the upstream kernel and will submit everything
+after I have tested.
+
+Sorry for the trouble, but I have to NACK this.
+
+
+-- 
+Cheers,
+Luca.
+
