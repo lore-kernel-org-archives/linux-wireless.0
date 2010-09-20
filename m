@@ -1,128 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:45253 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752579Ab0IDMXU convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58741 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752864Ab0ITKXx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Sep 2010 08:23:20 -0400
-MIME-Version: 1.0
-In-Reply-To: <1283376410-9999-4-git-send-email-ohad@wizery.com>
-References: <1283376410-9999-1-git-send-email-ohad@wizery.com>
-	<1283376410-9999-4-git-send-email-ohad@wizery.com>
-Date: Sat, 4 Sep 2010 14:23:19 +0200
-Message-ID: <AANLkTi=goLEUqM1XQ__PrGu4=Erw2utaNP4qFmSgRta2@mail.gmail.com>
-Subject: Re: [PATCH v5 3/7] wireless: wl12xx: add platform data passing support
-From: =?ISO-8859-2?Q?Micha=B3_Miros=B3aw?= <mirqus@gmail.com>
-To: Ohad Ben-Cohen <ohad@wizery.com>
-Cc: linux-wireless@vger.kernel.org, linux-mmc@vger.kernel.org,
-	linux-omap@vger.kernel.org, Kalle Valo <kalle.valo@iki.fi>,
-	Russell King <linux@arm.linux.org.uk>,
-	Nicolas Pitre <nico@fluxnic.net>,
-	Tony Lindgren <tony@atomide.com>,
-	Mark Brown <broonie@opensource.wolfsonmicro.com>,
-	Roger Quadros <roger.quadros@nokia.com>,
-	Ido Yariv <ido@wizery.com>, San Mehat <san@google.com>,
-	Chikkature Rajashekar Madhusudhan <madhu.cr@ti.com>,
-	Luciano Coelho <luciano.coelho@nokia.com>,
-	akpm@linux-foundation.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset=ISO-8859-2
+	Mon, 20 Sep 2010 06:23:53 -0400
+Subject: Re: [RFC] mac80211: clear txflags for filtered/retried frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <201009182133.50104.chunkeey@googlemail.com>
+References: <201009182133.50104.chunkeey@googlemail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 20 Sep 2010 12:23:50 +0200
+Message-ID: <1284978231.3688.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/9/1 Ohad Ben-Cohen <ohad@wizery.com>:
-> Add a simple mechanism to pass platform data to the
-> SDIO instances of wl12xx.
->
-> This way there is no confusion over who owns the 'embedded data',
-> typechecking is preserved, and no possibility for the wrong driver to
-> pick up the data.
->
-> Originally proposed by Russell King.
->
-> Signed-off-by: Ohad Ben-Cohen <ohad@wizery.com>
-> ---
->  drivers/net/wireless/Makefile                      |    2 +
->  drivers/net/wireless/wl12xx/Kconfig                |    5 ++-
->  drivers/net/wireless/wl12xx/wl12xx_platform_data.c |   31 ++++++++++++++++++++
->  include/linux/wl12xx.h                             |    3 ++
->  4 files changed, 40 insertions(+), 1 deletions(-)
->  create mode 100644 drivers/net/wireless/wl12xx/wl12xx_platform_data.c
->
-> diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
-> index 5d4ce4d..85af697 100644
-> --- a/drivers/net/wireless/Makefile
-> +++ b/drivers/net/wireless/Makefile
-> @@ -50,5 +50,7 @@ obj-$(CONFIG_ATH_COMMON)      += ath/
->  obj-$(CONFIG_MAC80211_HWSIM)   += mac80211_hwsim.o
->
->  obj-$(CONFIG_WL12XX)   += wl12xx/
-> +# small builtin driver bit
-> +obj-$(CONFIG_WL12XX_PLATFORM_DATA)     += wl12xx/wl12xx_platform_data.o
->
->  obj-$(CONFIG_IWM)      += iwmc3200wifi/
-> diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
-> index 2f98058..4a8bb25 100644
-> --- a/drivers/net/wireless/wl12xx/Kconfig
-> +++ b/drivers/net/wireless/wl12xx/Kconfig
-> @@ -74,4 +74,7 @@ config WL1271_SDIO
->          If you choose to build a module, it'll be called
->          wl1271_sdio. Say N if unsure.
->
-> -
-> +config WL12XX_PLATFORM_DATA
-> +       bool
-> +       depends on WL1271_SDIO != n
-> +       default y
-> diff --git a/drivers/net/wireless/wl12xx/wl12xx_platform_data.c b/drivers/net/wireless/wl12xx/wl12xx_platform_data.c
-> new file mode 100644
-> index 0000000..e00973b
-> --- /dev/null
-> +++ b/drivers/net/wireless/wl12xx/wl12xx_platform_data.c
-> @@ -0,0 +1,31 @@
-> +#include <linux/module.h>
-> +#include <linux/wl12xx.h>
-> +
-> +static struct wl12xx_platform_data *platform_data;
-> +
-> +int __init wl12xx_set_platform_data(const struct wl12xx_platform_data *data)
-> +{
-> +       if (platform_data)
-> +               return -EBUSY;
-> +       if (!data)
-> +               return -EINVAL;
-> +
-> +       platform_data = kmemdup(data, sizeof(*data), GFP_KERNEL);
-> +       if (!platform_data)
-> +               return -ENOMEM;
-> +
-> +       return 0;
-> +}
-> +
-> +int wl12xx_get_platform_data(struct wl12xx_platform_data *data)
-> +{
-> +       if (!platform_data)
-> +               return -ENODEV;
-> +       if (!data)
-> +               return -EINVAL;
-> +
-> +       memcpy(data, platform_data, sizeof(*data));
-> +
-> +       return 0;
-> +}
-> +EXPORT_SYMBOL(wl12xx_get_platform_data);
-> diff --git a/include/linux/wl12xx.h b/include/linux/wl12xx.h
-> index 137ac89..3e33ae1 100644
-> --- a/include/linux/wl12xx.h
-> +++ b/include/linux/wl12xx.h
-> @@ -31,4 +31,7 @@ struct wl12xx_platform_data {
->        bool use_eeprom;
->  };
->
-> +int wl12xx_set_platform_data(const struct wl12xx_platform_data *data);
-> +int wl12xx_get_platform_data(struct wl12xx_platform_data *data);
-> +
->  #endif
+On Sat, 2010-09-18 at 21:33 +0200, Christian Lamparter wrote:
 
-Why do you need all that copying? Isn't the data constant?
+>  	info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING |
+>  		       IEEE80211_TX_INTFL_RETRANSMISSION;
+> +	info->flags &= ~(IEEE80211_TX_CTL_RATE_CTRL_PROBE |
+> +			 IEEE80211_TX_CTL_PSPOLL_RESPONSE |
+> +			 IEEE80211_TX_CTL_FIRST_FRAGMENT |
+> +			 IEEE80211_TX_CTL_CLEAR_PS_FILT |
+> +			 IEEE80211_TX_CTL_MORE_FRAMES |
+> +			 IEEE80211_TX_CTL_AMPDU |
+> +			 IEEE80211_TX_STAT_AMPDU_NO_BACK |
+> +			 IEEE80211_TX_STAT_TX_FILTERED |
+> +			 IEEE80211_TX_STAT_AMPDU);
 
-Best Regards,
-Micha³ Miros³aw
+Theo nly thing I wonder is if we should introduce some #define for the
+temporary flags here and put it into mac80211.h so we'll be less likely
+to forget updating it when adding new flags?
+
+johannes
+
