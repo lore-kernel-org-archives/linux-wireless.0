@@ -1,70 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1027 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754331Ab0IINx1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Sep 2010 09:53:27 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 13/14] iwlwifi: cleanup scan initiate check
-Date: Thu,  9 Sep 2010 15:52:31 +0200
-Message-Id: <1284040354-31703-14-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
-References: <1284040354-31703-1-git-send-email-sgruszka@redhat.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:56234 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753480Ab0ITJDF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Sep 2010 05:03:05 -0400
+From: Gery Kahn <geryk@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <luciano.coelho@nokia.com>
+Subject: [PATCH] Add 802.11a support configuration
+Date: Mon, 20 Sep 2010 11:02:56 +0200
+Message-Id: <1284973376-9396-1-git-send-email-geryk@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove redundand checks and use iwl_is_ready_rf().
+This patch adds ability to configure 802.11a support on wl1271.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+The code is not tested enough, this is why marked as EXPERIMENTAL.
+
+
+Signed-off-by: Gery Kahn <geryk@ti.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-scan.c |   17 +----------------
- 1 files changed, 1 insertions(+), 16 deletions(-)
+ drivers/net/wireless/wl12xx/Kconfig       |    7 +++++++
+ drivers/net/wireless/wl12xx/wl1271.h      |    7 +------
+ drivers/net/wireless/wl12xx/wl1271_main.c |    8 ++------
+ 3 files changed, 10 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 10b0ccc..9cc4901 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -361,7 +361,7 @@ static int __must_check iwl_scan_initiate(struct iwl_priv *priv,
+diff --git a/drivers/net/wireless/wl12xx/Kconfig b/drivers/net/wireless/wl12xx/Kconfig
+index 4a8bb25..7f62a6f 100644
+--- a/drivers/net/wireless/wl12xx/Kconfig
++++ b/drivers/net/wireless/wl12xx/Kconfig
+@@ -52,6 +52,13 @@ config WL1271
+ 	  If you choose to build a module, it'll be called wl1271. Say N if
+ 	  unsure.
  
- 	cancel_delayed_work(&priv->scan_check);
++config WL1271_80211A
++        bool "TI wl1271 802.11a support (EXPERIMENTAL)"
++        depends on WL1271 && EXPERIMENTAL
++        default n
++        ---help---
++          This will enable 802.11a support for TI wl1271 chipset.
++
+ config WL1271_SPI
+ 	tristate "TI wl1271 SPI support"
+ 	depends on WL1271 && SPI_MASTER
+diff --git a/drivers/net/wireless/wl12xx/wl1271.h b/drivers/net/wireless/wl12xx/wl1271.h
+index 4134f44..a22769a 100644
+--- a/drivers/net/wireless/wl12xx/wl1271.h
++++ b/drivers/net/wireless/wl12xx/wl1271.h
+@@ -117,11 +117,6 @@ enum {
+ #define WL1271_TX_SECURITY_LO16(s) ((u16)((s) & 0xffff))
+ #define WL1271_TX_SECURITY_HI32(s) ((u32)(((s) >> 16) & 0xffffffff))
  
--	if (!iwl_is_ready(priv)) {
-+	if (!iwl_is_ready_rf(priv)) {
- 		IWL_WARN(priv, "request scan called when driver not ready.\n");
- 		return -EIO;
- 	}
-@@ -372,26 +372,11 @@ static int __must_check iwl_scan_initiate(struct iwl_priv *priv,
- 		return -EBUSY;
- 	}
- 
--	if (test_bit(STATUS_EXIT_PENDING, &priv->status)) {
--		IWL_DEBUG_SCAN(priv, "Aborting scan due to device shutdown\n");
--		return -EIO;
--	}
+-/*
+- * Enable/disable 802.11a support for WL1273
+- */
+-#undef WL1271_80211A_ENABLED
 -
- 	if (test_bit(STATUS_SCAN_ABORTING, &priv->status)) {
- 		IWL_DEBUG_HC(priv, "Scan request while abort pending.\n");
- 		return -EBUSY;
- 	}
+ #define WL1271_BUSY_WORD_CNT 1
+ #define WL1271_BUSY_WORD_LEN (WL1271_BUSY_WORD_CNT * sizeof(u32))
  
--	if (iwl_is_rfkill(priv)) {
--		IWL_DEBUG_HC(priv, "Aborting scan due to RF Kill activation\n");
--		return -EIO;
--	}
--
--	if (!test_bit(STATUS_READY, &priv->status)) {
--		IWL_DEBUG_HC(priv, "Scan request while uninitialized.\n");
--		return -EBUSY;
--	}
--
- 	IWL_DEBUG_INFO(priv, "Starting %sscan...\n",
- 			internal ? "internal short " : "");
+@@ -501,7 +496,7 @@ int wl1271_plt_stop(struct wl1271 *wl);
+ static inline bool wl1271_11a_enabled(void)
+ {
+ 	/* FIXME: this could be determined based on the NVS-INI file */
+-#ifdef WL1271_80211A_ENABLED
++#ifdef CONFIG_WL1271_80211A
+ 	return true;
+ #else
+ 	return false;
+diff --git a/drivers/net/wireless/wl12xx/wl1271_main.c b/drivers/net/wireless/wl12xx/wl1271_main.c
+index af26150..783bf7b 100644
+--- a/drivers/net/wireless/wl12xx/wl1271_main.c
++++ b/drivers/net/wireless/wl12xx/wl1271_main.c
+@@ -568,8 +568,7 @@ static int wl1271_fetch_nvs(struct wl1271 *wl)
+ 	 * around.
+ 	 */
+ 	if (fw->size != sizeof(struct wl1271_nvs_file) &&
+-	    (fw->size != WL1271_INI_LEGACY_NVS_FILE_SIZE ||
+-	     wl1271_11a_enabled())) {
++	    (fw->size != WL1271_INI_LEGACY_NVS_FILE_SIZE)) {
+ 		wl1271_error("nvs size is not as expected: %zu != %zu",
+ 			     fw->size, sizeof(struct wl1271_nvs_file));
+ 		ret = -EILSEQ;
+@@ -1559,10 +1558,7 @@ static int wl1271_op_hw_scan(struct ieee80211_hw *hw,
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	if (wl1271_11a_enabled())
+-		ret = wl1271_scan(hw->priv, ssid, len, req);
+-	else
+-		ret = wl1271_scan(hw->priv, ssid, len, req);
++	ret = wl1271_scan(hw->priv, ssid, len, req);
+ 
+ 	wl1271_ps_elp_sleep(wl);
  
 -- 
-1.7.1
+1.7.0.4
 
