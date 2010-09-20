@@ -1,110 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:41445 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752483Ab0IIFta convert rfc822-to-8bit (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:57457 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753322Ab0ITRwt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Sep 2010 01:49:30 -0400
-Received: by qyk36 with SMTP id 36so5618210qyk.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Sep 2010 22:49:29 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <AANLkTimTgYmdrytn6_wdx_7HVX20nurdsJ=OqiSoGJLs@mail.gmail.com>
-References: <1283988329-44549-1-git-send-email-steve@cozybit.com>
-	<1283988329-44549-6-git-send-email-steve@cozybit.com>
-	<AANLkTimTgYmdrytn6_wdx_7HVX20nurdsJ=OqiSoGJLs@mail.gmail.com>
-Date: Wed, 8 Sep 2010 22:49:29 -0700
-Message-ID: <AANLkTikgQHk8OCMqd5VerKwG9J2p5R35=Q_YxoWGQa_v@mail.gmail.com>
-Subject: Re: [PATCH 5/9] libertas_tf: Moved firmware loading to probe in order
- to fetch MAC address
-From: Steve deRosier <steve@cozybit.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	johannes@sipsolutions.net, javier@cozybit.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 20 Sep 2010 13:52:49 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [mac80211] mac80211:  Support receiving data frames on multiple vifs.
+Date: Mon, 20 Sep 2010 10:52:43 -0700
+Message-Id: <1285005163-4569-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 8, 2010 at 7:06 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
-> More nits:
->
->
-> Are these changes really necessary here? - It'd probably be cleaner to
-> change the initial functions to just take the card struct instead? (as
-> it's always available as priv->card)
->
-> I'm guessing you're going to do something with the _* versions of
-> these functions later, so should this change be there instead?
->
+From: Ben Greear <greearb@candelatech.com>
 
-Yes, these changes are necessary.  The enable and disable interrupt
-calls are called both from main.c as well as sdio.c.  main.c has
-access to and needs to call with a priv, while at least one of the
-calls from sdio.c happens before priv exists.  I could have changed
-the stuff in main.c to call with priv->card, but alas at the time I
-was still trying to minimize structural changes main.c and avoiding
-changes to the USB driver.
+When using multiple STA interfaces on the same radio, some
+data packets need to be received on all interfaces
+(broadcast, for instance).
 
->> @@ -187,7 +201,6 @@ static int if_sdio_handle_cmd(struct if_sdio_card *card,
->>        struct lbtf_private *priv = card->priv;
->>        int ret;
->>        unsigned long flags;
->> -       u8 i;
->>
->>        lbtf_deb_enter(LBTF_DEB_SDIO);
->>
->
-> Shouldn't this be elsewhere (maybe rolled into patch #1?)
->
+Remove special loop for data-only packets and just process all
+packets in the big loop that previously only handled non-data
+packets.
 
-It could be, but I didn't do this cleanup till now, some 20 commits
-later.  Not that easy to pick and choose which lines from an atomic
-commit go to which patch some weeks later.
+This needs review.
 
->> @@ -709,7 +726,6 @@ static int if_sdio_prog_firmware(struct if_sdio_card *card)
->>                if( lbtf_reset_fw == 0 ) {
->>                        goto success;
->>                } else {
->> -                       int i = 0;
->>                        lbtf_deb_sdio("attempting to reset and reload firmware\n");
->>
->>                        if_sdio_reset_device(card);
->
-> Ditto.
-Ditto.  And so on...
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+:100644 100644 c036815... 63baa04... M	net/mac80211/rx.c
+ net/mac80211/rx.c |  121 ++++++++++++++++++++++-------------------------------
+ 1 files changed, 50 insertions(+), 71 deletions(-)
 
->> diff --git a/drivers/net/wireless/libertas_tf/main.c b/drivers/net/wireless/libertas_tf/main.c
->> index 119d625..14ce1bc 100644
->> --- a/drivers/net/wireless/libertas_tf/main.c
->> +++ b/drivers/net/wireless/libertas_tf/main.c
->> @@ -150,14 +150,15 @@ static int lbtf_setup_firmware(struct lbtf_private *priv)
->>        int ret = -1;
->>
->>        lbtf_deb_enter(LBTF_DEB_FW);
->> +
->>        /*
->>         * Read priv address from HW
->>         */
->>        memset(priv->current_addr, 0xff, ETH_ALEN);
->>        ret = lbtf_update_hw_spec(priv);
->>        if (ret) {
->> -               ret = -1;
->> -               goto done;
->> +                  ret = -1;
->> +                  goto done;
->>        }
->>
->>        lbtf_set_mac_control(priv);
->
-> Whitespace change noise.
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index c036815..63baa04 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2613,8 +2613,6 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+ 	int prepares;
+ 	struct ieee80211_sub_if_data *prev = NULL;
+ 	struct sk_buff *skb_new;
+-	struct sta_info *sta, *tmp;
+-	bool found_sta = false;
+ 	int err = 0;
+ 
+ 	fc = ((struct ieee80211_hdr *)skb->data)->frame_control;
+@@ -2643,87 +2641,68 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+ 	ieee80211_parse_qos(&rx);
+ 	ieee80211_verify_alignment(&rx);
+ 
+-	if (ieee80211_is_data(fc)) {
+-		for_each_sta_info(local, hdr->addr2, sta, tmp) {
+-			rx.sta = sta;
+-			found_sta = true;
+-			rx.sdata = sta->sdata;
+-
+-			rx.flags |= IEEE80211_RX_RA_MATCH;
+-			prepares = prepare_for_handlers(rx.sdata, &rx, hdr);
+-			if (prepares) {
+-				if (status->flag & RX_FLAG_MMIC_ERROR) {
+-					if (rx.flags & IEEE80211_RX_RA_MATCH)
+-						ieee80211_rx_michael_mic_report(hdr, &rx);
+-				} else
+-					prev = rx.sdata;
+-			}
+-		}
+-	}
+-	if (!found_sta) {
+-		list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+-			if (!ieee80211_sdata_running(sdata))
+-				continue;
+-
+-			if (sdata->vif.type == NL80211_IFTYPE_MONITOR ||
+-			    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+-				continue;
++	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
++		if (!ieee80211_sdata_running(sdata))
++			continue;
+ 
+-			/*
+-			 * frame is destined for this interface, but if it's
+-			 * not also for the previous one we handle that after
+-			 * the loop to avoid copying the SKB once too much
+-			 */
++		if (sdata->vif.type == NL80211_IFTYPE_MONITOR ||
++		    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++			continue;
+ 
+-			if (!prev) {
+-				prev = sdata;
+-				continue;
+-			}
++		/*
++		 * frame is destined for this interface, but if it's
++		 * not also for the previous one we handle that after
++		 * the loop to avoid copying the SKB once too much
++		 */
+ 
+-			rx.sta = sta_info_get_bss(prev, hdr->addr2);
++		if (!prev) {
++			prev = sdata;
++			continue;
++		}
+ 
+-			rx.flags |= IEEE80211_RX_RA_MATCH;
+-			prepares = prepare_for_handlers(prev, &rx, hdr);
++		rx.sta = sta_info_get_bss(prev, hdr->addr2);
++		rx.sdata = prev;
++		rx.flags |= IEEE80211_RX_RA_MATCH;
++		prepares = prepare_for_handlers(prev, &rx, hdr);
+ 
+-			if (!prepares)
+-				goto next;
++		if (!prepares)
++			goto next;
+ 
+-			if (status->flag & RX_FLAG_MMIC_ERROR) {
+-				rx.sdata = prev;
+-				if (rx.flags & IEEE80211_RX_RA_MATCH)
+-					ieee80211_rx_michael_mic_report(hdr,
+-									&rx);
+-				goto next;
+-			}
++		if (status->flag & RX_FLAG_MMIC_ERROR) {
++			rx.sdata = prev;
++			if (rx.flags & IEEE80211_RX_RA_MATCH)
++				ieee80211_rx_michael_mic_report(hdr, &rx);
++			goto next;
++		}
+ 
+-			/*
+-			 * frame was destined for the previous interface
+-			 * so invoke RX handlers for it
+-			 */
++		/*
++		 * frame was destined for the previous interface
++		 * so invoke RX handlers for it
++		 */
+ 
+-			skb_new = skb_copy(skb, GFP_ATOMIC);
+-			if (!skb_new) {
+-				if (net_ratelimit())
+-					wiphy_debug(local->hw.wiphy,
+-						    "failed to copy multicast frame for %s\n",
+-						    prev->name);
+-				goto next;
+-			}
+-			ieee80211_invoke_rx_handlers(prev, &rx, skb_new);
+-next:
+-			prev = sdata;
++		skb_new = skb_copy(skb, GFP_ATOMIC);
++		if (!skb_new) {
++			if (net_ratelimit())
++				wiphy_debug(local->hw.wiphy,
++					    "failed to copy multicast frame for %s\n",
++					    prev->name);
++			goto next;
+ 		}
++		ieee80211_invoke_rx_handlers(prev, &rx, skb_new);
++next:
++		prev = sdata;
++	} /* for all interfaces */
+ 
+-		if (prev) {
+-			rx.sta = sta_info_get_bss(prev, hdr->addr2);
+-
+-			rx.flags |= IEEE80211_RX_RA_MATCH;
+-			prepares = prepare_for_handlers(prev, &rx, hdr);
++	if (prev) {
++		rx.sta = sta_info_get_bss(prev, hdr->addr2);
++		rx.sdata = prev;
++		rx.flags |= IEEE80211_RX_RA_MATCH;
++		prepares = prepare_for_handlers(prev, &rx, hdr);
+ 
+-			if (!prepares)
+-				prev = NULL;
+-		}
++		if (!prepares)
++			prev = NULL;
+ 	}
++
+ 	if (prev)
+ 		ieee80211_invoke_rx_handlers(prev, &rx, skb);
+ 	else
+-- 
+1.7.2.2
 
-Well, perhaps.  On the other hand, it made it more readable to me (the
-first one, the newline.  The indentation change is actually incorrect,
-no doubt about it).  Have you ever worked with a codebase for 3 some
-months and not incidentally or accidentally changed some whitespace?
-If this patch was just to change whitespace, then I'd agree with you
-and wouldn't have wasted time bothering to submit it, but the patch as
-a whole adds necessary functionality.
-
-If you want me to fix the whitespace, I can.
-
-Thanks,
-- Steve
