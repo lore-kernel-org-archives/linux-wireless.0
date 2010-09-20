@@ -1,110 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:17197 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932101Ab0ICMBy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Sep 2010 08:01:54 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 03/13] iwlwifi: move scan completed flags handling
-Date: Fri,  3 Sep 2010 13:57:26 +0200
-Message-Id: <1283515056-11523-4-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1283515056-11523-1-git-send-email-sgruszka@redhat.com>
-References: <1283515056-11523-1-git-send-email-sgruszka@redhat.com>
+Received: from snt0-omc2-s26.snt0.hotmail.com ([65.55.90.101]:20186 "EHLO
+	snt0-omc2-s26.snt0.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754403Ab0ITCce convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Sep 2010 22:32:34 -0400
+Message-ID: <SNT113-W3652C8510E7AB89D2036ECF17E0@phx.gbl>
+From: Dale Turner <rx_guy@hotmail.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: Compiling carl9170
+Date: Sun, 19 Sep 2010 23:32:33 -0300
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-Move the scan completed flags handling so that we
-can notify mac80211 about aborted scans with the
-correct status. Also queue the scan_completed work
-before the BT status update so that it won't see
-the bits still set (unless a new scan was started
-in which case that's fine.)
+Hello.
+ 
+Can someone tell me how to compile the carl9170 module 
+WITHOUT compiling a complete kernel. I just purchased a TP-Link WN821N 
+based on the capabilities of this driver, but am disappointed that I 
+currently don't have the module.
+ 
+I am familiar with the 
+compat-wireless packages as I have needed to compile the ath9k_htc 
+driver for my other adapter (TP-Link WN721N), but the carl driver does 
+not seem to be available in that package.
+ 
+Can anyone help?? 
+ 
+Thanks in advance.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-scan.c |   30 ++++++++++++++----------------
- 1 files changed, 14 insertions(+), 16 deletions(-)
+(Sorry about the first post without a subject)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 01a4907..9df8bb8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -222,21 +222,11 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
- 		       jiffies_to_msecs(elapsed_jiffies
- 					(priv->scan_start, jiffies)));
- 
--	/*
--	 * If a request to abort was given, or the scan did not succeed
--	 * then we reset the scan state machine and terminate,
--	 * re-queuing another scan if one has been requested
--	 */
--	if (test_and_clear_bit(STATUS_SCAN_ABORTING, &priv->status))
--		IWL_DEBUG_INFO(priv, "Aborted scan completed.\n");
--
--	IWL_DEBUG_INFO(priv, "Setting scan to off\n");
--
--	clear_bit(STATUS_SCANNING, &priv->status);
-+	queue_work(priv->workqueue, &priv->scan_completed);
- 
- 	if (priv->iw_mode != NL80211_IFTYPE_ADHOC &&
--	    priv->cfg->advanced_bt_coexist && priv->bt_status !=
--	    scan_notif->bt_status) {
-+	    priv->cfg->advanced_bt_coexist &&
-+	    priv->bt_status != scan_notif->bt_status) {
- 		if (scan_notif->bt_status) {
- 			/* BT on */
- 			if (!priv->bt_ch_announce)
-@@ -254,7 +244,6 @@ static void iwl_rx_scan_complete_notif(struct iwl_priv *priv,
- 		priv->bt_status = scan_notif->bt_status;
- 		queue_work(priv->workqueue, &priv->bt_traffic_change_work);
- 	}
--	queue_work(priv->workqueue, &priv->scan_completed);
- }
- 
- void iwl_setup_rx_scan_handlers(struct iwl_priv *priv)
-@@ -554,7 +543,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
- {
- 	struct iwl_priv *priv =
- 	    container_of(work, struct iwl_priv, scan_completed);
--	bool internal = false;
-+	bool internal = false, aborted;
- 	struct iwl_rxon_context *ctx;
- 
- 	IWL_DEBUG_SCAN(priv, "SCAN complete scan\n");
-@@ -562,6 +551,15 @@ static void iwl_bg_scan_completed(struct work_struct *work)
- 	cancel_delayed_work(&priv->scan_check);
- 
- 	mutex_lock(&priv->mutex);
-+
-+	aborted = test_and_clear_bit(STATUS_SCAN_ABORTING, &priv->status);
-+	if (aborted)
-+		IWL_DEBUG_INFO(priv, "Aborted scan completed.\n");
-+
-+	IWL_DEBUG_INFO(priv, "Setting scan to off\n");
-+
-+	clear_bit(STATUS_SCANNING, &priv->status);
-+
- 	if (priv->is_internal_short_scan) {
- 		priv->is_internal_short_scan = false;
- 		IWL_DEBUG_SCAN(priv, "internal short scan completed\n");
-@@ -569,7 +567,7 @@ static void iwl_bg_scan_completed(struct work_struct *work)
- 	} else if (priv->scan_request) {
- 		priv->scan_request = NULL;
- 		priv->scan_vif = NULL;
--		ieee80211_scan_completed(priv->hw, false);
-+		ieee80211_scan_completed(priv->hw, aborted);
- 	}
- 
- 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
--- 
-1.7.1
-
+Dale Turner 
+ 		 	   		  
