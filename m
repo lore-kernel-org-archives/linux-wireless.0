@@ -1,149 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:45832 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753440Ab0ITVjk (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57811 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758011Ab0IUS3i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Sep 2010 17:39:40 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [mac80211] mac80211:  Support receiving data frames on multiple vifs.
-Date: Mon, 20 Sep 2010 14:39:36 -0700
-Message-Id: <1285018776-21795-1-git-send-email-greearb@candelatech.com>
+	Tue, 21 Sep 2010 14:29:38 -0400
+Date: Tue, 21 Sep 2010 14:26:20 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless-2.6 2010-09-21
+Message-ID: <20100921182620.GB2448@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Dave,
 
-When using multiple STA interfaces on the same radio, some
-data packets need to be received on all interfaces
-(broadcast, for instance).
+Here are two more small fixes intended for 2.6.36.  One is a one-liner
+(kmalloc->kzalloc) that prevents a potential information leak.
+The other is a small fix that skips firmware reloads (a workaround
+for firmware problems) while a scan is in progress in order to avoid
+the stack trace cited in the commit log.
 
-Make the STA loop look similar to the mgt-data loop.
+Please let me know if there are problems!
 
-Also, add logic to check RX_FLAG_MMIC_ERROR for last
-interface in mgt-data loop.
+Thanks,
 
-This needs review.
+John
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
-:100644 100644 c036815... a7847e1... M	net/mac80211/rx.c
- net/mac80211/rx.c |   80 ++++++++++++++++++++++++++++++++++++++++++++++------
- 1 files changed, 70 insertions(+), 10 deletions(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index c036815..a7847e1 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2613,7 +2613,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 	int prepares;
- 	struct ieee80211_sub_if_data *prev = NULL;
- 	struct sk_buff *skb_new;
--	struct sta_info *sta, *tmp;
-+	struct sta_info *sta, *tmp, *prev_sta;
- 	bool found_sta = false;
- 	int err = 0;
+The following changes since commit 3779298b81cd9a2531cec93e3beefc1acdb01382:
+
+  Merge branch 'vhost-net' of git://git.kernel.org/pub/scm/linux/kernel/git/mst/vhost (2010-09-20 11:13:34 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-2.6.git master
+
+Johannes Berg (1):
+      wext: fix potential private ioctl memory content leak
+
+Wey-Yi Guy (1):
+      iwlwifi: do not perferm force reset while doing scan
+
+ drivers/net/wireless/iwlwifi/iwl-core.c |    5 +++++
+ net/wireless/wext-priv.c                |    2 +-
+ 2 files changed, 6 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 07dbc27..e23c406 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -2613,6 +2613,11 @@ int iwl_force_reset(struct iwl_priv *priv, int mode, bool external)
+ 	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
+ 		return -EINVAL;
  
-@@ -2644,22 +2644,74 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 	ieee80211_verify_alignment(&rx);
++	if (test_bit(STATUS_SCANNING, &priv->status)) {
++		IWL_DEBUG_INFO(priv, "scan in progress.\n");
++		return -EINVAL;
++	}
++
+ 	if (mode >= IWL_MAX_FORCE_RESET) {
+ 		IWL_DEBUG_INFO(priv, "invalid reset request.\n");
+ 		return -EINVAL;
+diff --git a/net/wireless/wext-priv.c b/net/wireless/wext-priv.c
+index 3feb28e..674d426 100644
+--- a/net/wireless/wext-priv.c
++++ b/net/wireless/wext-priv.c
+@@ -152,7 +152,7 @@ static int ioctl_private_iw_point(struct iw_point *iwp, unsigned int cmd,
+ 	} else if (!iwp->pointer)
+ 		return -EFAULT;
  
- 	if (ieee80211_is_data(fc)) {
-+		prev_sta = NULL;
- 		for_each_sta_info(local, hdr->addr2, sta, tmp) {
--			rx.sta = sta;
- 			found_sta = true;
--			rx.sdata = sta->sdata;
-+			if (!prev_sta) {
-+				prev_sta = sta;
-+				continue;
-+			}
-+
-+			rx.sta = prev_sta;
-+			rx.sdata = prev_sta->sdata;
+-	extra = kmalloc(extra_size, GFP_KERNEL);
++	extra = kzalloc(extra_size, GFP_KERNEL);
+ 	if (!extra)
+ 		return -ENOMEM;
  
- 			rx.flags |= IEEE80211_RX_RA_MATCH;
- 			prepares = prepare_for_handlers(rx.sdata, &rx, hdr);
--			if (prepares) {
--				if (status->flag & RX_FLAG_MMIC_ERROR) {
--					if (rx.flags & IEEE80211_RX_RA_MATCH)
--						ieee80211_rx_michael_mic_report(hdr, &rx);
--				} else
--					prev = rx.sdata;
-+			if (!prepares)
-+				goto next_sta;
-+
-+			if (status->flag & RX_FLAG_MMIC_ERROR) {
-+				if (rx.flags & IEEE80211_RX_RA_MATCH)
-+					ieee80211_rx_michael_mic_report(hdr, &rx);
-+				goto next_sta;
-+			}
-+
-+			/*
-+			 * frame was destined for the previous interface
-+			 * so invoke RX handlers for it
-+			 */
-+			skb_new = skb_copy(skb, GFP_ATOMIC);
-+			if (!skb_new) {
-+				if (net_ratelimit())
-+					wiphy_debug(local->hw.wiphy,
-+						    "failed to copy multicast"
-+						    " frame for %s\n",
-+						    prev_sta->sdata->name);
-+				goto next_sta;
-+			}
-+			ieee80211_invoke_rx_handlers(prev_sta->sdata, &rx,
-+						     skb_new);
-+next_sta:
-+			prev_sta = sta;
-+		} /* for all STA info */
-+
-+		if (prev_sta) {
-+			rx.sta = prev_sta;
-+			rx.sdata = prev_sta->sdata;
-+
-+			rx.flags |= IEEE80211_RX_RA_MATCH;
-+			prepares = prepare_for_handlers(rx.sdata, &rx, hdr);
-+			if (!prepares)
-+				prev_sta = NULL;
-+
-+			if (status->flag & RX_FLAG_MMIC_ERROR) {
-+				if (rx.flags & IEEE80211_RX_RA_MATCH)
-+					ieee80211_rx_michael_mic_report(hdr, &rx);
-+				prev_sta = NULL;
- 			}
- 		}
--	}
-+
-+
-+		if (prev_sta) {
-+			ieee80211_invoke_rx_handlers(prev_sta->sdata, &rx, skb);
-+			return;
-+		} else {
-+			if (found_sta) {
-+				dev_kfree_skb(skb);
-+				return;
-+			}
-+		}
-+	} /* if data frame */
- 	if (!found_sta) {
- 		list_for_each_entry_rcu(sdata, &local->interfaces, list) {
- 			if (!ieee80211_sdata_running(sdata))
-@@ -2722,6 +2774,14 @@ next:
- 
- 			if (!prepares)
- 				prev = NULL;
-+
-+			if (status->flag & RX_FLAG_MMIC_ERROR) {
-+				rx.sdata = prev;
-+				if (rx.flags & IEEE80211_RX_RA_MATCH)
-+					ieee80211_rx_michael_mic_report(hdr,
-+									&rx);
-+				prev = NULL;
-+			}
- 		}
- 	}
- 	if (prev)
 -- 
-1.7.2.2
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
