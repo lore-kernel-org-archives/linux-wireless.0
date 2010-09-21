@@ -1,38 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46811 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752803Ab0IVKBW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Sep 2010 06:01:22 -0400
-Subject: Re: pull request: wireless-next-2.6 2010-09-21
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: David Miller <davem@davemloft.net>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <201009221158.13806.chunkeey@googlemail.com>
-References: <20100921201705.GC2448@tuxdriver.com>
-	 <20100921.183614.245388137.davem@davemloft.net>
-	 <201009221158.13806.chunkeey@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 22 Sep 2010 12:01:17 +0200
-Message-ID: <1285149677.3684.12.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+Received: from nbd.name ([88.198.39.176]:54218 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752506Ab0IUKGj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Sep 2010 06:06:39 -0400
+Message-ID: <4C9883A4.60302@openwrt.org>
+Date: Tue, 21 Sep 2010 12:06:28 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] ath9k: Kick start paprd calibration whenever operating
+ channel changes
+References: <1285048487-16795-1-git-send-email-vasanth@atheros.com> <1285048487-16795-2-git-send-email-vasanth@atheros.com>
+In-Reply-To: <1285048487-16795-2-git-send-email-vasanth@atheros.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-09-22 at 11:58 +0200, Christian Lamparter wrote:
-> On Wednesday 22 September 2010 03:36:14 David Miller wrote:
-> > From: "John W. Linville" <linville@tuxdriver.com>
-> > Date: Tue, 21 Sep 2010 16:17:05 -0400
-> > 
-> > Pulled, but I suspect the 'packed' attribute usage is wrong in
-> > ath/carl9170 and can just be deleted.
+On 2010-09-21 7:54 AM, Vasanthakumar Thiagarajan wrote:
+> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/hw.h   |    1 +
+>  drivers/net/wireless/ath/ath9k/main.c |   18 +++++++++++++++++-
+>  2 files changed, 18 insertions(+), 1 deletions(-)
 > 
-> which __packed do you think can be removed?
+> diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+> index df47f79..c1b4962 100644
+> --- a/drivers/net/wireless/ath/ath9k/hw.h
+> +++ b/drivers/net/wireless/ath/ath9k/hw.h
+> @@ -645,6 +645,7 @@ struct ath_hw {
+>  	struct ath9k_hw_capabilities caps;
+>  	struct ath9k_channel channels[38];
+>  	struct ath9k_channel *curchan;
+> +	struct ath9k_channel prev_paprd_chan;
+>  
+>  	union {
+>  		struct ar5416_eeprom_def def;
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> index a133878..9150788 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -266,6 +266,20 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
+>  	return r;
+>  }
+>  
+> +static bool is_paprd_done(struct ath_hw *ah)
+> +{
+> +	struct ath9k_channel *curchan, *paprd_chan;
+> +
+> +	curchan = ah->curchan;
+> +	paprd_chan = &ah->prev_paprd_chan;
+> +
+> +	if ((paprd_chan->channel == curchan->channel) &&
+> +	    paprd_chan->chanmode == curchan->chanmode)
+> +		return true;
+> +
+> +	return false;
+> +}
+That seems like code duplication to me. The caldata already has the
+channel number and the channel flags. ath9k_hw_reset() clears the entire
+caldata whenever that changes. Because of that, ah->caldata->paprd_done
+should have already been set to zero automatically after the reset
+triggered by an operating channel change.
+Is that part not working, or why did you write this patch?
+Either way, we should not have a separate check just for paprd, it
+belongs to the other calibrations.
 
-Well, there are bitfields in packed structs, which is either completely
-wrong (think endianness ... never use them to interface with something
-outside your own CPU), or needn't be packed.
-
-johannes
-
+- Felix
