@@ -1,84 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:43747 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754970Ab0I2SDM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Sep 2010 14:03:12 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 2/2] mac80211:  Don't go off-channel in work_work unless needed.
-Date: Wed, 29 Sep 2010 11:03:03 -0700
-Message-Id: <1285783383-20822-2-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1285783383-20822-1-git-send-email-greearb@candelatech.com>
-References: <1285783383-20822-1-git-send-email-greearb@candelatech.com>
+Received: from mail.atheros.com ([12.19.149.2]:34978 "EHLO mail.atheros.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756028Ab0IUHZQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Sep 2010 03:25:16 -0400
+Received: from mail.atheros.com ([10.10.20.105])
+	by sidewinder.atheros.com
+	for <linux-wireless@vger.kernel.org>; Tue, 21 Sep 2010 00:25:09 -0700
+Date: Tue, 21 Sep 2010 12:56:35 +0530
+From: Rajkumar Manoharan <rmanoharan@atheros.com>
+To: Felix Fietkau <nbd@openwrt.org>
+CC: Rajkumar Manoharan <Rajkumar.Manoharan@Atheros.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath9k_htc: Fix beacon distribution in IBSS mode
+Message-ID: <20100921072634.GA6675@vmraj-lnx.users.atheros.com>
+References: <1284985872-31021-1-git-send-email-rmanoharan@atheros.com>
+ <4C9756CE.1060908@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4C9756CE.1060908@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Mon, Sep 20, 2010 at 06:12:54PM +0530, Felix Fietkau wrote:
+> On 2010-09-20 2:31 PM, Rajkumar Manoharan wrote:
+> > This patch ensures fair beacon distribution in IBSS mode
+> > by configuring proper CWmin based on slot time.
+> > 
+> > Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
+> > ---
+> >  drivers/net/wireless/ath/ath9k/htc_drv_beacon.c |    9 +++++-
+> >  drivers/net/wireless/ath/ath9k/hw.c             |   32 +++++++++++++++++++++++
+> >  drivers/net/wireless/ath/ath9k/hw.h             |    1 +
+> >  3 files changed, 41 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+> > index bd1506e..3e699a5 100644
+> > --- a/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+> > +++ b/drivers/net/wireless/ath/ath9k/htc_drv_beacon.c
+> > @@ -235,7 +235,14 @@ void ath9k_htc_beaconq_config(struct ath9k_htc_priv *priv)
+> >  	ath9k_hw_get_txq_props(ah, qnum, &qi_be);
+> >  
+> >  	qi.tqi_aifs = qi_be.tqi_aifs;
+> > -	qi.tqi_cwmin = 4*qi_be.tqi_cwmin;
+> > +	/* For WIFI Beacon Distribution
+> > +	 * Long slot time  : 2x cwmin
+> > +	 * Short slot time : 4x cwmin
+> > +	 */
+> > +	if (ath9k_hw_getslottime(ah) == ATH9K_SLOT_TIME_20)
+> I'd recommend using ah->slottime here and dropping all of those ath9k_hw
+> changes.
+> 
+> - Felix
+Yep. I am sending the updated patch. Thanks for your review Felix. :)
 
-If the work to be done is on the current active channel, then
-do not call the offchannel and return-to-channel logic.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-:100644 100644 ae344d1... 1f2673d... M	net/mac80211/work.c
- net/mac80211/work.c |   28 ++++++++++++++++++++--------
- 1 files changed, 20 insertions(+), 8 deletions(-)
-
-diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-index ae344d1..1f2673d 100644
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -873,6 +873,7 @@ static void ieee80211_work_work(struct work_struct *work)
- 	LIST_HEAD(free_work);
- 	enum work_action rma;
- 	bool remain_off_channel = false;
-+	bool went_off_channel = false;
- 
- 	if (local->scanning)
- 		return;
-@@ -910,12 +911,21 @@ static void ieee80211_work_work(struct work_struct *work)
- 			 *	 happen to be on the same channel as
- 			 *	 the requested channel
- 			 */
--			ieee80211_offchannel_stop_beaconing(local);
--			ieee80211_offchannel_stop_station(local);
--
--			local->tmp_channel = wk->chan;
--			local->tmp_channel_type = wk->chan_type;
--			ieee80211_hw_config(local, 0);
-+			WARN_ON(local->scan_channel != NULL);
-+			if (wk->chan != local->oper_channel ||
-+			    wk->chan_type != local->_oper_channel_type) {
-+				/* Only change channels if we need to */
-+				ieee80211_offchannel_stop_beaconing(local);
-+				ieee80211_offchannel_stop_station(local);
-+
-+				local->tmp_channel = wk->chan;
-+				local->tmp_channel_type = wk->chan_type;
-+				ieee80211_hw_config(local, 0);
-+				went_off_channel = true;
-+			} else {
-+				local->tmp_channel = wk->chan;
-+				local->tmp_channel_type = wk->chan_type;
-+			}
- 			started = true;
- 			wk->timeout = jiffies;
- 		}
-@@ -989,8 +999,10 @@ static void ieee80211_work_work(struct work_struct *work)
- 
- 	if (!remain_off_channel && local->tmp_channel) {
- 		local->tmp_channel = NULL;
--		ieee80211_hw_config(local, 0);
--		ieee80211_offchannel_return(local, true);
-+		if (went_off_channel) {
-+			ieee80211_hw_config(local, 0);
-+			ieee80211_offchannel_return(local, true);
-+		}
- 		/* give connection some time to breathe */
- 		run_again(local, jiffies + HZ/2);
- 	}
--- 
-1.7.2.2
-
+- Rajkumar
