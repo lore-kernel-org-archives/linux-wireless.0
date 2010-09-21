@@ -1,45 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18774 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752086Ab0IJO2M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Sep 2010 10:28:12 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Reinette Chatre <reinette.chatre@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 11/14] mac80211: wait for scan work complete before restarting hw
-Date: Fri, 10 Sep 2010 16:26:44 +0200
-Message-Id: <1284128807-11436-12-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
-References: <1284128807-11436-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:48520 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751319Ab0IUEVx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Sep 2010 00:21:53 -0400
+Received: by pvg2 with SMTP id 2so1320247pvg.19
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Sep 2010 21:21:53 -0700 (PDT)
+From: greearb@gmail.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [mac80211] mac80211:  Support multiple VIFS per AP in debugfs.
+Date: Mon, 20 Sep 2010 21:21:43 -0700
+Message-Id: <1285042903-19189-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is needed to avoid warning in ieee80211_restart_hw about hardware
-scan in progress.
+From: Ben Greear <greearb@candelatech.com>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+MAC address of AP isn't unique..need to add the device
+name as well.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- net/mac80211/main.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+:100644 100644 76839d4... 4cf451c... M	net/mac80211/debugfs_sta.c
+ net/mac80211/debugfs_sta.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 4935b84..bf0eb6a 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -305,6 +305,9 @@ void ieee80211_restart_hw(struct ieee80211_hw *hw)
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index 76839d4..4cf451c 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -301,14 +301,18 @@ STA_OPS(ht_capa);
+ void ieee80211_sta_debugfs_add(struct sta_info *sta)
+ {
+ 	struct dentry *stations_dir = sta->local->debugfs.stations;
+-	u8 mac[3*ETH_ALEN];
++	u8 mac[3*ETH_ALEN + IFNAMSIZ + 2];
  
- 	trace_api_restart_hw(local);
+ 	sta->debugfs.add_has_run = true;
  
-+	/* wait for scan work complete */
-+	flush_workqueue(local->workqueue);
-+
- 	WARN(test_bit(SCAN_HW_SCANNING, &local->scanning),
- 		"%s called with hardware scan in progress\n", __func__);
+ 	if (!stations_dir)
+ 		return;
  
+-	snprintf(mac, sizeof(mac), "%pM", sta->sta.addr);
++	if (sta->sdata)
++		snprintf(mac, sizeof(mac), "%pM-%s",
++			 sta->sta.addr, sta->sdata->name);
++	else
++		snprintf(mac, sizeof(mac), "%pM-NULL", sta->sta.addr);
+ 
+ 	/*
+ 	 * This might fail due to a race condition:
 -- 
-1.7.1
+1.7.2.2
 
