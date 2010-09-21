@@ -1,54 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.comsound.de ([188.40.207.2]:47442 "EHLO mail.comsound.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753317Ab0IWUOn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Sep 2010 16:14:43 -0400
-Date: Thu, 23 Sep 2010 22:14:49 +0200
-From: Daniel Berger <daniel@dat-berger.de>
-To: "Bjoern Czybik" <wlfw@gmx.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: Manual Control about Sending ACKs
-Message-ID: <20100923221449.641ead02@danmob>
-In-Reply-To: <000901cb5b51$18994e90$49cbebb0$@com>
-References: <20100922123953.67a4fc5e@danmob>
-	<20100922130245.GC5515@tuxdriver.com>
-	<201009221545.41377.chunkeey@googlemail.com>
-	<1285163687.15806.9.camel@maggie>
-	<AANLkTinr0omWQCaMj91P8=CFZLDLroxWdrV2c=9KjG4e@mail.gmail.com>
-	<4C9A3A1C.4010704@candelatech.com>
-	<20100922203851.28945ab5@danmob>
-	<000901cb5b51$18994e90$49cbebb0$@com>
+Received: from he.sipsolutions.net ([78.46.109.217]:41359 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754045Ab0IURtC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Sep 2010 13:49:02 -0400
+Subject: Re: [mac80211] mac80211:  Support multiple VIFS per AP in debugfs.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1285088605.12764.5.camel@jlt3.sipsolutions.net>
+References: <1285071310-11440-1-git-send-email-greearb@candelatech.com>
+	 <4C98DC5D.2000108@candelatech.com>
+	 <1285086618.12764.3.camel@jlt3.sipsolutions.net>
+	 <4C98E05B.8050609@candelatech.com>
+	 <1285088605.12764.5.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 21 Sep 2010 19:49:01 +0200
+Message-ID: <1285091341.12764.7.camel@jlt3.sipsolutions.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/GgVpYBsK_XfTPVG9tbNE6yc"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/GgVpYBsK_XfTPVG9tbNE6yc
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+On Tue, 2010-09-21 at 19:03 +0200, Johannes Berg wrote:
 
-Hi Bj=F6rn,
+> > >>> -	snprintf(mac, sizeof(mac), "%pM", sta->sta.addr);
+> > >>> +	snprintf(mac, sizeof(mac), "%pM-%s",
+> > >>> +		 sta->sta.addr, sta->sdata->name);
+> > >>>
+> > >>>    	/*
+> > >>>    	 * This might fail due to a race condition:
+> > >>
+> > >> I got to thinking:  Is there any reason to put the sta.addr in there?
+> > >>
+> > >> Maybe just use sta->sdata->name?  Seems it might be easier for
+> > >> scripts to deal with?
+> > >
+> > > APs have many STAs
+> > 
+> > So, when in STA mode, sta_info are related to local VIFs, but
+> > in AP mode, they represent the remote wireless devices, with sdata pointing
+> > to the local AP interface?
+> 
+> No, there's a sta_info for each peer, which in STA mode is only the AP.
 
-actually we're a bit short on time and should come to an ending at the
-end of october (though ack control is only a part of our topic).
-Thus, today we've already worked on this topic and at a first step
-suceeded to compile the original stuff for the well-known WRT54GL
-hardware and created a new testbed...
+maybe the stations should be moved from phy0/stations/ to
+phy0/wlan0/stations/ instead?
 
-For further information me may communicate off list.
+johannes
 
-Daniel
-
---Sig_/GgVpYBsK_XfTPVG9tbNE6yc
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAkybtTkACgkQ+JUYmR11gaBv3ACeODIkMGh8WaETyaoVYYn8a3V4
-bJcAoIYlblZotRX6dFnT5jaU3c2J8oeH
-=QO5+
------END PGP SIGNATURE-----
-
---Sig_/GgVpYBsK_XfTPVG9tbNE6yc--
