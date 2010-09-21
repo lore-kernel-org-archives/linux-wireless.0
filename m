@@ -1,102 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:59027 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751490Ab0INPAV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Sep 2010 11:00:21 -0400
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>, stable@kernel.org,
-	Paul Stewart <pstew@google.com>,
-	Amod Bodas <amod.bodas@atheros.com>
-Subject: [PATCH v2 02/10] ath9k: fix regression on beacon loss after bgscan
-Date: Tue, 14 Sep 2010 11:00:19 -0400
-Message-Id: <1284476419-13687-1-git-send-email-lrodriguez@atheros.com>
+Received: from nbd.name ([88.198.39.176]:42627 "EHLO ds10.nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755232Ab0IUTcu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Sep 2010 15:32:50 -0400
+Message-ID: <4C990859.70709@openwrt.org>
+Date: Tue, 21 Sep 2010 21:32:41 +0200
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Ben Greear <greearb@candelatech.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [ath9k-devel] ath9k, multiple stations, and AMPDUs
+References: <4C9841BA.4080700@candelatech.com> <4C98848C.70005@openwrt.org>	 <4C98A022.7020106@candelatech.com> <4C98A2C4.8060108@openwrt.org>	 <4C98EAA1.7050908@candelatech.com>  <4C98F2D8.8020602@openwrt.org> <1285097307.12764.11.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1285097307.12764.11.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When we return to the home channel we were never reseting our beacon
-timers, this was casued by the fact that the scanning flag was still
-on even after we returned to our home channel. There are also other
-reasons why we would get a reset and if we are not off channel
-we always need to resynch our beacon timers, because a reset will
-clear them.
+On 2010-09-21 9:28 PM, Johannes Berg wrote:
+> On Tue, 2010-09-21 at 20:00 +0200, Felix Fietkau wrote:
+> 
+>> > Could we just poke a pointer to the STA into the ath_buf structure?
+> 
+>> No, that doesn't work because of RCU.
+> 
+> Well, it could work, if you walk all the structures upon sta_notify and
+> remove now stale pointers (or just drop the frames or something).
+I think it would be much better to just add the helper function that
+checks the RA on STA lookup. Keeps things simple, especially since
+nothing else in the tx path needs the vif.
 
-For more details refer to:
-
-http://code.google.com/p/chromium-os/issues/detail?id=5715
-
-This bug is a regression introduced on 2.6.36. The order of the
-changes are as follows:
-
-5ee08656 - Sat Jul 31 - ath9k: prevent calibration during off-channel activity
-a0daa0e7 - Tue Jul 27 - Revert "mac80211: fix sw scan bracketing"
-543708be - Fri Jun 18 - mac80211: fix sw scan bracketing
-
-mcgrof@tux ~/linux-2.6-allstable (git::master)$ git describe \
-        --contains 5ee0865615f65f84e6ee9174771a6716c29e08e1
-v2.6.36-rc1~43^2~34^2~22
-
-mcgrof@tux ~/linux-2.6-allstable (git::master)$ git describe \
-        --contains a0daa0e7592ada797d6835f11529097aabc27ad2
-v2.6.36-rc1~571^2~64^2~13
-
-mcgrof@tux ~/linux-2.6-allstable (git::master)$ git describe \
-        --contains 543708be320d7df692d24b349ca01a947b340764
-v2.6.36-rc1~571^2~107^2~187
-
-So 5ee08656 would have worked if a0daa0e7 was not committed but
-it was so this means 5ee08656 was broken since it assumed that
-when we were in the channel change routine the scan flag would
-be lifted. As it turns out the scan flag will be set when we
-are already on the home channel.
-
-These issues will need to be considered for our solution on
-reshifting the scan complete callback location on mac80211 on
-current development kernel work.
-
-This patch has stable fixes which apply down to [2.6.36+]
-
-Cc: stable@kernel.org
-Cc: Paul Stewart <pstew@google.com>
-Cc: Amod Bodas <amod.bodas@atheros.com>
-Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
----
-
-This v2 clarifies the second to last sentence, on the v1 this
-was just jiberish on my first read.. this should clarify what
-I meant.
-
- drivers/net/wireless/ath/ath9k/main.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index ba029b2..e349619 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -258,9 +258,11 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
- 	if (!(sc->sc_flags & (SC_OP_OFFCHANNEL | SC_OP_SCANNING))) {
- 		ath_start_ani(common);
- 		ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work, 0);
--		ath_beacon_config(sc, NULL);
- 	}
- 
-+	if (!(sc->sc_flags & (SC_OP_OFFCHANNEL)))
-+		ath_beacon_config(sc, NULL);
-+
-  ps_restore:
- 	ath9k_ps_restore(sc);
- 	return r;
-@@ -957,7 +959,7 @@ int ath_reset(struct ath_softc *sc, bool retry_tx)
- 
- 	ath_update_txpow(sc);
- 
--	if (sc->sc_flags & SC_OP_BEACONS)
-+	if ((sc->sc_flags & SC_OP_BEACONS) || !(sc->sc_flags & (SC_OP_OFFCHANNEL)))
- 		ath_beacon_config(sc, NULL);	/* restart beacons */
- 
- 	ath9k_hw_set_interrupts(ah, ah->imask);
--- 
-1.7.0.4
-
+- Felix
