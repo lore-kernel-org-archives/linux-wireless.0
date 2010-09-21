@@ -1,56 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ist.d-labs.de ([213.239.218.44]:40330 "EHLO mx01.d-labs.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932730Ab0I0GOC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 02:14:02 -0400
-Date: Mon, 27 Sep 2010 08:13:58 +0200
-From: Florian Mickler <florian@mickler.org>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Chatre, Reinette" <reinette.chatre@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	Zhu Yi <yi.zhu@intel.com>,
-	"Cahill, Ben M" <ben.m.cahill@intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] iwl3945: queue the right work if the scan needs to be
- aborted
-Message-ID: <20100927081358.07b30327@schatten.dmk.lab>
-In-Reply-To: <1285357868.12594.8.camel@wwguy-ubuntu>
-References: <1285345323-4250-1-git-send-email-florian@mickler.org>
-	<1285357868.12594.8.camel@wwguy-ubuntu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail.candelatech.com ([208.74.158.172]:48368 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755209Ab0IUVKK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Sep 2010 17:10:10 -0400
+Message-ID: <4C991F25.1000102@candelatech.com>
+Date: Tue, 21 Sep 2010 14:09:57 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Andreas Schwab <schwab@linux-m68k.org>
+CC: Ben Greear <greearb-my8/4N5VtI7c+919tysfdA@public.gmane.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Patch to get iw building on Fedora 8
+References: <4C98DFB6.10902@candelatech.com> <m2wrqej2qk.fsf@igel.home>
+In-Reply-To: <m2wrqej2qk.fsf@igel.home>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 24 Sep 2010 12:51:08 -0700
-"Guy, Wey-Yi" <wey-yi.w.guy@intel.com> wrote:
+On 09/21/2010 12:49 PM, Andreas Schwab wrote:
+> Ben Greear<greearb-my8/4N5VtI7c+919tysfdA@public.gmane.org>  writes:
+>
+>> I need this in order to get iw to build on Fedora 8.
+>>
+>> [greearb@fs2 iw]$ git diff
+>> diff --git a/bitrate.c b/bitrate.c
+>> index 8de8839..9b6defc 100644
+>> --- a/bitrate.c
+>> +++ b/bitrate.c
+>> @@ -1,4 +1,6 @@
+>>   #include<errno.h>
+>> +#define  __USE_ISOC99
+>
+> This is wrong.  You must never define internal glibc macros.
 
-> Hi Florian,
-> 
-> Thanks for sending the patch, the scan operation in iwlwifi just being
-> modified and the changes you have no longer apply.please check the
-> latest kernel.
-> 
-> Thanks
-> Wey
-> 
+How about this then?
 
-Ok, I checked out
-git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-2.6.git
-and it definitely looks better in there. This patch shouldn't be
-necessary for that. 
+diff --git a/bitrate.c b/bitrate.c
+index 8de8839..f0d513f 100644
+--- a/bitrate.c
++++ b/bitrate.c
+@@ -70,7 +70,7 @@ static int handle_bitrates(struct nl80211_state *state,
+  #endif
+                 else switch (parser_state) {
+                 case S_LEGACY:
+-                       tmpf = strtof(argv[i], &end);
++                       tmpf = strtod(argv[i], &end);
+                         if (*end != '\0')
+                                 return 1;
+                         if (tmpf < 1 || tmpf > 255 * 2)
 
-Do you plan on submitting this for 2.6.36 or .37?
+Seems you don't have to do anything clever to get strtod to work,
+and I assume it should cast just fine.
 
-I think my patch should fix the instance reported in the bug in a less
-invasive manner. 
-Only remaining question is why it did only show up now. But that's
-probably due to the workqueue changes.
+Thanks,
+Ben
+
+>
+> Andreas.
+>
 
 
-Regards,
-Flo
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
