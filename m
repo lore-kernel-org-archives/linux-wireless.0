@@ -1,62 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:23144 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756367Ab0ITOPW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Sep 2010 10:15:22 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Mon, 20 Sep 2010 07:15:15 -0700
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <johannes@sipsolutions.net>,
-	Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
-Subject: [RFC] mac80211 : Fix for setting of mandatory rate flags
-Date: Mon, 20 Sep 2010 19:45:10 +0530
-Message-ID: <1284992110-25460-1-git-send-email-mshajakhan@atheros.com>
+Received: from mail.candelatech.com ([208.74.158.172]:42027 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754521Ab0IUFZW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Sep 2010 01:25:22 -0400
+Message-ID: <4C9841BA.4080700@candelatech.com>
+Date: Mon, 20 Sep 2010 22:25:14 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: ath9k, multiple stations, and AMPDUs
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
+I think I have narrowed down some problems I see when I create
+two STA interfaces on the same radio and associate with the
+same AP.
 
-	The mandatory rate flags for 'g' mode was not set.Because of
-this the basic rates for 'g' mode will not be advertised.
+I'm using wireless-testing plus some patches to the rx logic
+I posted earlier.
 
- Signed-off-by: Mohammed Shafi Shajakhan <mshajakhan@atheros.com>
----
- net/mac80211/util.c    |    3 ++-
- net/wireless/nl80211.c |    3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
+It appears that the ath9k NIC does not transport AMPDUs properly,
+and after a few seconds, it's backlog is exhausted and the queues
+are stopped in ath_tx_start.
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index bd40b11..c1f7ce3 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -851,7 +851,8 @@ u32 ieee80211_mandatory_rates(struct ieee80211_local *local,
- 	}
- 
- 	if (band == IEEE80211_BAND_2GHZ)
--		mandatory_flag = IEEE80211_RATE_MANDATORY_B;
-+		mandatory_flag = IEE80211_RATE_MANDATORY_B |
-+				 IEEE80211_RATE_MANDATORY_G ;
- 	else
- 		mandatory_flag = IEEE80211_RATE_MANDATORY_A;
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 1d6ef24..835742c 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4115,7 +4115,8 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- 		int j;
- 		u32 flag = ibss.channel->band == IEEE80211_BAND_5GHZ ?
- 			IEEE80211_RATE_MANDATORY_A :
--			IEEE80211_RATE_MANDATORY_B;
-+			IEEE80211_RATE_MANDATORY_B |
-+			IEEE80211_RATE_MANDATORY_G ;
- 
- 		for (j = 0; j < sband->n_bitrates; j++) {
- 			if (sband->bitrates[j].flags & flag)
+debugfs seems to agree:
+
+[root@atom ~]# cat /debug/ath9k/phy0/xmit
+                             BE         BK        VI        VO
+
+MPDUs Queued:                2          0         0        85
+MPDUs Completed:             2          0         0        85
+Aggregates:                  0          0         0         0
+AMPDUs Queued:             144          0         0         0
+AMPDUs Completed:           20          0         0         0
+AMPDUs Retried:             18          0         0         0
+AMPDUs XRetried:             0          0         0         0
+FIFO Underrun:               0          0         0         0
+TXOP Exceeded:               0          0         0         0
+TXTIMER Expiry:              0          0         0         0
+DESC CFG Error:              0          0         0         0
+DATA Underrun:               0          0         0         0
+DELIM Underrun:              0          0         0         0
+[root@atom ~]#
+
+
+I can still receive packets on the interface, but nothing is
+transmitted.
+
+I tested against an a/b/g AP (instead of N), and it ran clean
+for many minutes.
+
+Any ideas how to debug this further?
+
+Thanks,
+Ben
+	
 -- 
-1.7.0.4
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
