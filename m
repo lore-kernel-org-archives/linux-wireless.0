@@ -1,76 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55203 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754543Ab0IOUoK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 16:44:10 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 2/3] compat-wireless: make patch apply again.
-Date: Wed, 15 Sep 2010 22:43:34 +0200
-Message-Id: <1284583415-11506-2-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1284583415-11506-1-git-send-email-hauke@hauke-m.de>
-References: <1284583415-11506-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:45688 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752531Ab0IUWRa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Sep 2010 18:17:30 -0400
+Received: by iwn5 with SMTP id 5so5459574iwn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Sep 2010 15:17:29 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTikAbwntNzX43zAfNjkV56sVeFhOuHiV5odpuL5T@mail.gmail.com>
+References: <1285097222-10286-1-git-send-email-lrodriguez@atheros.com>
+ <1285097460.12764.13.camel@jlt3.sipsolutions.net> <AANLkTikAbwntNzX43zAfNjkV56sVeFhOuHiV5odpuL5T@mail.gmail.com>
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+Date: Tue, 21 Sep 2010 15:17:09 -0700
+Message-ID: <AANLkTim=WSFjhW6N775-tg51PoRmKf2t_KPU9oS0O4cz@mail.gmail.com>
+Subject: Re: [RFC] mac80211: Deny new BA sessions from being started during
+ offchannel operation
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, srinivasa.duvvuri@atheros.com,
+	matt.smith@atheros.com, bennyam.malavazi@atheros.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Sep 21, 2010 at 12:39 PM, Luis R. Rodriguez
+<lrodriguez@atheros.com> wrote:
+> On Tue, Sep 21, 2010 at 12:31 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Tue, 2010-09-21 at 15:27 -0400, Luis R. Rodriguez wrote:
+>>
+>>> +     mutex_lock(&local->sta_mtx);
+>>> +     list_for_each_entry(sta, &local->sta_list, list)
+>>> +             if (local->hw.flags & IEEE80211_HW_AMPDU_AGGREGATION)
+>>> +                     set_sta_flags(sta, WLAN_STA_BLOCK_BA);
+>>> +     mutex_unlock(&local->sta_mtx);
+>>> +
+>>
+>> This is really expensive, I don't think we should do it this way.
+>> Wouldn't it be possible to put a check into place wherever the flag is
+>> checked too?
+>
+> Good point, sure, we'll need more checks and conditions added later
+> too so that would also help to avoid running into this code for
+> non-11n cards.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- ...k-Add-debugfs-interface-to-dump-registers.patch |   25 ++++++++++---------
- 1 files changed, 13 insertions(+), 12 deletions(-)
+So some notes of a meeting I had with some of our Atheros folks on
+this topic and this whole offchanel operation thing:
 
-diff --git a/crap/0001-ath9k-Add-debugfs-interface-to-dump-registers.patch b/crap/0001-ath9k-Add-debugfs-interface-to-dump-registers.patch
-index d236c46..a6c6d3e 100644
---- a/crap/0001-ath9k-Add-debugfs-interface-to-dump-registers.patch
-+++ b/crap/0001-ath9k-Add-debugfs-interface-to-dump-registers.patch
-@@ -42,13 +42,10 @@ Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-  #ifdef CONFIG_ATH_DEBUG
-  
-  static ssize_t read_file_debug(struct file *file, char __user *user_buf,
--@@ -893,7 +907,38 @@ static ssize_t write_file_regval(struct 
-- static const struct file_operations fops_regval = {
-- 	.read = read_file_regval,
-- 	.write = write_file_regval,
---	.open = ath9k_debugfs_open,
--+};
--+
-+@@ -908,6 +922,40 @@ static const struct file_operations fops
-+ 	.llseek = default_llseek,/* read accesses f_pos */
-+ };
-+ 
- +#define REGDUMP_LINE_SIZE	20
- +#define REGDUMP_NUM_REGS	(0x16bd4 / 4 + 1)
- +#define REGDUMP_DATA_LEN	(REGDUMP_NUM_REGS * REGDUMP_LINE_SIZE + 1)
-@@ -79,10 +76,14 @@ Signed-off-by: Felix Fietkau <nbd@openwrt.org>
- +	.open = open_file_regdump,
- +	.read = ath9k_debugfs_read_buf,
- +	.release = ath9k_debugfs_release_buf,
-- 	.owner = THIS_MODULE
-- };
-- 
--@@ -961,6 +1006,11 @@ int ath9k_init_debug(struct ath_hw *ah)
-++	.owner = THIS_MODULE,
-++	.llseek = default_llseek,/* read accesses f_pos */
-++};
-++
-+ int ath9k_init_debug(struct ath_hw *ah)
-+ {
-+ 	struct ath_common *common = ath9k_hw_common(ah);
-+@@ -972,6 +1020,11 @@ int ath9k_init_debug(struct ath_hw *ah)
-  		goto err;
-  
-  	sc->debug.regidx = 0;
-@@ -94,7 +95,7 @@ Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-  	return 0;
-  err:
-  	ath9k_exit_debug(ah);
--@@ -972,6 +1022,7 @@ void ath9k_exit_debug(struct ath_hw *ah)
-+@@ -983,6 +1036,7 @@ void ath9k_exit_debug(struct ath_hw *ah)
-  	struct ath_common *common = ath9k_hw_common(ah);
-  	struct ath_softc *sc = (struct ath_softc *) common->priv;
-  
--- 
-1.7.0.4
+  * AR9003 has hardware beacon processing so we can
+    just detect checksums of IEs, etc. Once we get this code
+    settled in we can add a hw flag to mac80211 to indicate support
+    for beacon monitoring to be handled by hw and let AR9003 devices
+    handle this (we may have this already)
 
+  * bgscan on deadzone: if beacon monitor is OK but
+    connection monitor gets hit -- send an event to userspace, we've hit the
+    "deadzone" and expect userspace to interpret this as
+    a desire on the kernel side to try to roam to another AP
+
+  * If we send an ADDBA request to the AP and timer is pending
+    clear timer and reset TID state, that's all
+
+  * in case of BA agreements, no reason to tear them down,
+    TX flush, and keep the RX reorder timer as-is because:
+    - we do not know what the transmitter is doing,
+      so extending the timeout may actually worsten
+      the situation. This is expected when going offchannel.
+    - we not want to tear down aggregation
+    - If we want optimizations here we can consider different
+      timeout values for each reorder buffer based on TID / priority
+      We should check with Steve Kuhn on some of these values as we
+      may already have some values we can use here.
+
+  * We should clear the connection monitor and beacon monitor when we
+are able to
+    successfully TX data to an AP, but before we enable this we will
+want to implement
+    a force scan command. If the force scan command is used we do not
+want to put off
+    delaying offchannel operation if we're currently non-idle. Review
+the dynamic PS work and
+    if it is based on successful TX data, we can re-use this to know
+whether or not we want
+    to postpone offchannel operation.
+
+  * We send nulldata frames for going into powersave and when going
+offchannel. In the powersave
+    case we wait for an ACK and that is perfect. For the offchannel
+case we currently do not wait
+    for an ACK but we should not add support for checkign for the ACK
+-- simply do best effort by
+    relying on hardware multi rate retries for the nullfunc frame, all
+we need to do is wait for the
+    TX completion of the nulldata frame, whether or not the nulldata
+frame was successfull or not.
+
+  Luis
