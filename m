@@ -1,45 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:5802 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751342Ab0IIAlm (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:57728 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752393Ab0IUMbQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Sep 2010 20:41:42 -0400
-Received: from vs3007.wh2.ocn.ne.jp (125.206.180.235)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 2-0829262898
-	for <linux-wireless@vger.kernel.org>; Thu,  9 Sep 2010 09:41:40 +0900 (JST)
-From: Bruno Randolf <br1@einfach.org>
-To: Fabio Rossi <rossi.f@inwind.it>
-Subject: Re: [PATCH] ath5k: avoid unneeded calibration error messages
-Date: Thu, 9 Sep 2010 09:40:57 +0900
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <201009070110.11495.rossi.f@inwind.it> <201009070948.29066.br1@einfach.org> <201009082237.41479.rossi.f@inwind.it>
-In-Reply-To: <201009082237.41479.rossi.f@inwind.it>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201009090940.57621.br1@einfach.org>
+	Tue, 21 Sep 2010 08:31:16 -0400
+Subject: Re: [ath9k-devel] ath9k, multiple stations, and AMPDUs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Ben Greear <greearb@candelatech.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4C98A2C4.8060108@openwrt.org>
+References: <4C9841BA.4080700@candelatech.com> <4C98848C.70005@openwrt.org>
+	 <4C98A022.7020106@candelatech.com>  <4C98A2C4.8060108@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 21 Sep 2010 14:31:15 +0200
+Message-ID: <1285072275.12764.2.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu September 9 2010 05:37:41 Fabio Rossi wrote:
-> Don't generate calibration errors messages when not needed.
-> 
-> Signed-off-by: Fabio Rossi <rossi.f@inwind.it>
-> ---
-> diff --git a/drivers/net/wireless/ath/ath5k/phy.c
-> b/drivers/net/wireless/ath/ath5k/phy.c
-> index 984ba92..4932bf2 100644
-> --- a/drivers/net/wireless/ath/ath5k/phy.c
-> +++ b/drivers/net/wireless/ath/ath5k/phy.c
-> @@ -1377,7 +1377,7 @@ ath5k_hw_rf511x_iq_calibrate(struct ath5k_hw *ah)
-> 
->         /* protect against divide by 0 and loss of sign bits */
->         if (i_coffd == 0 || q_coffd < 2)
-> -               return -1;
-> +               return 0;
-> 
->         i_coff = (-iq_corr) / i_coffd;
->         i_coff = clamp(i_coff, -32, 31); /* signed 6 bit */
+On Tue, 2010-09-21 at 14:19 +0200, Felix Fietkau wrote:
 
-Acked-by: Bruno Randolf <br1@einfach.org>
+> It might be possible to fix this by adding another sta lookup helper
+> function in mac80211 that takes another address argument for the BSSID,
+> so that it can get the sta entry for the correct vif. I don't know if
+> Johannes wants something like that though.
+
+Actually, you want the RA, not the BSSID.
+
+johannes
+
