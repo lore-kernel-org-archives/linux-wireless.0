@@ -1,43 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:36184 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758107Ab0IXUOf (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39910 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754059Ab0IURD0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Sep 2010 16:14:35 -0400
-Date: Fri, 24 Sep 2010 16:05:33 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
+	Tue, 21 Sep 2010 13:03:26 -0400
+Subject: Re: [mac80211] mac80211:  Support multiple VIFS per AP in debugfs.
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: rebased version of wireless-testing?
-Message-ID: <20100924200532.GH8077@tuxdriver.com>
-References: <4C9CFD86.2080207@candelatech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4C9CFD86.2080207@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4C98E05B.8050609@candelatech.com>
+References: <1285071310-11440-1-git-send-email-greearb@candelatech.com>
+	 <4C98DC5D.2000108@candelatech.com>
+	 <1285086618.12764.3.camel@jlt3.sipsolutions.net>
+	 <4C98E05B.8050609@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 21 Sep 2010 19:03:25 +0200
+Message-ID: <1285088605.12764.5.camel@jlt3.sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 24, 2010 at 12:35:34PM -0700, Ben Greear wrote:
-> Is there a rebased version of wireless-testing, or is there a way to
-> tell git to not apply any patch that was later reverted when pulling?
+On Tue, 2010-09-21 at 09:42 -0700, Ben Greear wrote:
+> On 09/21/2010 09:30 AM, Johannes Berg wrote:
+> > On Tue, 2010-09-21 at 09:25 -0700, Ben Greear wrote:
+> >
+> >>> -	snprintf(mac, sizeof(mac), "%pM", sta->sta.addr);
+> >>> +	snprintf(mac, sizeof(mac), "%pM-%s",
+> >>> +		 sta->sta.addr, sta->sdata->name);
+> >>>
+> >>>    	/*
+> >>>    	 * This might fail due to a race condition:
+> >>
+> >> I got to thinking:  Is there any reason to put the sta.addr in there?
+> >>
+> >> Maybe just use sta->sdata->name?  Seems it might be easier for
+> >> scripts to deal with?
+> >
+> > APs have many STAs
 > 
-> I'd like to pull wireless-testing changes into a tree based on linux-2.6,
-> but I want it clean enough to easily see what changes I actually
-> pulled in.
-> 
-> If not, I can manually pull in some patches as needed.
+> So, when in STA mode, sta_info are related to local VIFs, but
+> in AP mode, they represent the remote wireless devices, with sdata pointing
+> to the local AP interface?
 
-Don't do that -- wireless-testing is and likely always will be a mess.
-It really only exists as a "-next lite" for those that only want
-bleeding-edge wireless while keeping-up with linux-2.6 release
-candidates.
+No, there's a sta_info for each peer, which in STA mode is only the AP.
 
-You will be better-off pulling wireless-next-2.6 (and maybe
-wireless-2.6 as well).  The history there isn't always immutable
-(although I prefer it to be), but it will tend to be a lot cleaner
-than wireless-testing.
+johannes
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
