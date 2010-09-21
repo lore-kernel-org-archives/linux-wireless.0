@@ -1,88 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:43550 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752598Ab0IVMdz (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:43148 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754323Ab0IUSEe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Sep 2010 08:33:55 -0400
-Received: by iwn5 with SMTP id 5so528269iwn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 05:33:55 -0700 (PDT)
+	Tue, 21 Sep 2010 14:04:34 -0400
+Message-ID: <4C98F3AB.20206@candelatech.com>
+Date: Tue, 21 Sep 2010 11:04:27 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <201009221424.39949.chunkeey@googlemail.com>
-References: <AANLkTik3_o03=m0w8XM_B-YTQrR-ibkbtTBErXfcYwGG@mail.gmail.com>
-	<201009221336.14382.chunkeey@googlemail.com>
-	<AANLkTim3YQ4vNyM_OA4qc+mjGJiwYoHrLB=x1sp+R8vP@mail.gmail.com>
-	<201009221424.39949.chunkeey@googlemail.com>
-Date: Wed, 22 Sep 2010 16:33:54 +0400
-Message-ID: <AANLkTikbyQi7dJFrqJrVmr7kV==tZoLRPaufC6tJv743@mail.gmail.com>
-Subject: Re: p54spi (STLC4560) with Marvel XScale CPU (kernel 2.6.25.4)
-From: Alex Mihaylov <minimumlaw@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Felix Fietkau <nbd@openwrt.org>
+CC: "ath9k-devel@lists.ath9k.org" <ath9k-devel@venema.h4ckr.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [ath9k-devel] ath9k, multiple stations, and AMPDUs
+References: <4C9841BA.4080700@candelatech.com> <4C98848C.70005@openwrt.org> <4C98A022.7020106@candelatech.com> <4C98A2C4.8060108@openwrt.org> <4C98EAA1.7050908@candelatech.com> <4C98F2D8.8020602@openwrt.org>
+In-Reply-To: <4C98F2D8.8020602@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2010/9/22 Christian Lamparter <chunkeey@googlemail.com>:
-> why polling? They even say "14. Wait for the READY interrupt".
+On 09/21/2010 11:00 AM, Felix Fietkau wrote:
+> On 2010-09-21 7:25 PM, Ben Greear wrote:
+>> On 09/21/2010 05:19 AM, Felix Fietkau wrote:
+>>> On 2010-09-21 2:08 PM, Ben Greear wrote:
+>>
+>>>> If you have any more details on this, please let me know.  I'm going to
+>>>> attempt to fix it...I certainly have a good test case :)
+>>> ath_tx_complete_aggr completes an A-MPDU frame, which typically triggers
+>>> the release of the next A-MPDU to the hw queue.
+>>> To keep track of the Block ACK window, it needs to look up the TID, for
+>>> which it needs a STA pointer. At that level, the driver typically
+>>> doesn't have access to the vif.
+>>>
+>>> It might be possible to fix this by adding another sta lookup helper
+>>> function in mac80211 that takes another address argument for the BSSID,
+>>> so that it can get the sta entry for the correct vif. I don't know if
+>>> Johannes wants something like that though.
+>>
+>> Could we just poke a pointer to the STA into the ath_buf structure?
+> No, that doesn't work because of RCU.
 
-This code from Sagrad:
+Would it also be bad to use skb->dev to find an STA?
 
-        SPI_IRQ(DISABLE);
+Thanks,
+Ben
 
-        // Turn the device Off and then On again.
-        SPIDRV_Pwr(FALSE);
-        SPIDRV_Pwr(TRUE);
+>
+> - Felix
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-        // 1. Power up
-        // 2. Wait 240 ms.
-        Delay(480);
-
-[skiped]
-
-       // 14. Wait for the READY interrupt (100 ms timeout).
-        // Loop while waiting for SPI device to respond with
-interrupt, max timeout is WIFI_BOOT_TIMEOUT
-        for ( i = 0 ; i < WIFI_BOOT_TIMEOUT ; i++)
-        {
-                TempReg = SPIDRVReadReg32(SPI_ADRS_HOST_INTERRUPTS);
-                if( TempReg && SPI_HOST_INT_READY)
-                {
-                        // 15. Acknowledge the READY interrupt.
-                        SPIDRVWriteReg32(SPI_ADRS_HOST_INT_ACK,
-SPI_HOST_INT_READY);
-                        // 16. Issue the SLEEP interrupt.
-                        SPIDRVWriteReg32(SPI_ADRS_ARM_INTERRUPTS,
-SPI_ARM_INT_SLEEP);
-                        break;
-                }
-
-                Delay(1);
-        }
-
-        SPI_IRQ(ENABLE);
-
-        if (i == WIFI_BOOT_TIMEOUT)
-        {
-                ret = FALSE;
-        }
-        else
-        {
-                ret = TRUE;
-                SET_WIFI_ACTIVE();
-        }
-
-SPIDRVReadReg32(SPI_ADRS_HOST_INTERRUPTS) - poll SPI register. IRQ
-from STLC chip disabled.
-
-> Have you checked if the module parameters for power + irq are correct?
-
-Yes. I check this in code and on osciloscope.
-
-> Also, on power_on the driver currently waits just 10 and not 240 ms,
-> maybe this could just be the problem...
-
-OK. I try change this.
 
 -- 
-Sincerely,
-Alex A. Mihaylov
-AKA MinimumLaw
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
