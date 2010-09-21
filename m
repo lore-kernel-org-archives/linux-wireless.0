@@ -1,42 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.atheros.com ([12.19.149.2]:42998 "EHLO mail.atheros.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752415Ab0IOVMB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 17:12:01 -0400
-Received: from mail.atheros.com ([10.10.20.108])
-	by sidewinder.atheros.com
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Sep 2010 14:11:55 -0700
-Date: Wed, 15 Sep 2010 14:11:59 -0700
-From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: Hauke Mehrtens <hauke@hauke-m.de>,
-	Luis Rodriguez <Luis.Rodriguez@Atheros.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"mcgrof@infradead.org" <mcgrof@infradead.org>
-Subject: Re: [PATCH 3/3] compat-wirelsss: add carl9170
-Message-ID: <20100915211159.GB1734@tux>
-References: <1284583415-11506-1-git-send-email-hauke@hauke-m.de>
- <1284583415-11506-3-git-send-email-hauke@hauke-m.de>
- <201009152250.56676.chunkeey@googlemail.com>
+Received: from mail.candelatech.com ([208.74.158.172]:33960 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756208Ab0IUT36 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Sep 2010 15:29:58 -0400
+Message-ID: <4C9907B2.4050503@candelatech.com>
+Date: Tue, 21 Sep 2010 12:29:54 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <201009152250.56676.chunkeey@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [mac80211/ath9k] mac80211/ath9k:  Support AMPDU with multiple
+ VIFs.
+References: <1285095455-29081-1-git-send-email-greearb@candelatech.com>	 <1285096048.12764.9.camel@jlt3.sipsolutions.net>	 <4C9904AE.7060107@candelatech.com> <1285096749.12764.10.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1285096749.12764.10.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 15, 2010 at 01:50:56PM -0700, Christian Lamparter wrote:
-> On Wednesday 15 September 2010 22:43:35 Hauke Mehrtens wrote:
-> > This patch adds upport for carl9170.
-> > 
-> > Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> NACK
-> 
-> usb_get_from_anchor is not thread-safe on older kernel.
-> See details:
-> 
-> https://patchwork.kernel.org/patch/118946/
+On 09/21/2010 12:19 PM, Johannes Berg wrote:
+> On Tue, 2010-09-21 at 12:17 -0700, Ben Greear wrote:
+>> The tx path doesn't seem to pass in more than the hardware and the skb,
+>> and we don't always need to lookup the VIF, so looking it up early is
+>> probably a waste.
+>>
+>> mac80211 could be changed to pass in the VIF in the xmit path,
+>> and then we could make sure that is passed through the entire
+>> xmit process, but that would touch a lot of drivers and code.
+>
+> It does pass this through in the skb's CB.
 
-Why is this not a stable fix? And for what kernel was this patch
-merged for?
+>> I'm more than happy to test any patches if someone thinks up
+>> a different approach.
+>
+> I just don't want drivers using struct net_device pointers anywhere,
+> because they shouldn't have to worry about them.
 
-  Luis
+Can we just use:
+sta = tx_info->control.sta
+in ath_tx_complete_aggr()
+?
+
+Thanks,
+Ben
+
+>
+> johannes
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
