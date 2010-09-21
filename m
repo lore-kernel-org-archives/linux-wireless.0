@@ -1,47 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:33768 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753541Ab0IKQTF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Sep 2010 12:19:05 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: lrodriguez@atheros.com
-Cc: linux-wireless@vger.kernel.org, mcgrof@infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 4/8] compat-wireless: build if kernel does not have mac80211
-Date: Sat, 11 Sep 2010 18:18:29 +0200
-Message-Id: <1284221913-22455-6-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1284221913-22455-1-git-send-email-hauke@hauke-m.de>
-References: <1284221913-22455-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.candelatech.com ([208.74.158.172]:57384 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753740Ab0IUQjT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Sep 2010 12:39:19 -0400
+Received: from [192.168.100.195] (firewall.candelatech.com [70.89.124.249])
+	(authenticated bits=0)
+	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id o8LGdJL6026381
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Tue, 21 Sep 2010 09:39:19 -0700
+Message-ID: <4C98DFB6.10902@candelatech.com>
+Date: Tue, 21 Sep 2010 09:39:18 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Patch to get iw building on Fedora 8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In kernel 2.6.31 the attributes do_not_encrypt and requeue were removed
-from struct sk_buff so we do not need mac80211 to be build while the
-kernel was build for nwer kernels.
+I need this in order to get iw to build on Fedora 8.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- config.mk |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+[greearb@fs2 iw]$ git diff
+diff --git a/bitrate.c b/bitrate.c
+index 8de8839..9b6defc 100644
+--- a/bitrate.c
++++ b/bitrate.c
+@@ -1,4 +1,6 @@
+  #include <errno.h>
++#define  __USE_ISOC99
++#include <stdlib.h>
 
-diff --git a/config.mk b/config.mk
-index 1498573..8b0038c 100644
---- a/config.mk
-+++ b/config.mk
-@@ -52,9 +52,11 @@ endif
- #
- # skb->requeue
- #
--ifeq ($(shell test $(KERNEL_SUBLEVEL) -ge 27 && echo yes),yes)
-+# In kernel 2.6.32 both attributes were removed.
-+#
-+ifeq ($(shell test $(KERNEL_SUBLEVEL) -ge 27 -a $(KERNEL_SUBLEVEL) -le 31 && echo yes),yes)
- ifeq ($(CONFIG_MAC80211),)
--$(error "ERROR: Your >=2.6.27 kernel has CONFIG_MAC80211 disabled, you should have it CONFIG_MAC80211=m if you want to use this thing.")
-+$(error "ERROR: Your >=2.6.27 and <= 2.6.31 kernel has CONFIG_MAC80211 disabled, you should have it CONFIG_MAC80211=m if you want to use this thing.")
- endif
- endif
- 
+  #include "nl80211.h"
+  #include "iw.h"
+
+Signed-off-by:  Ben Greear<greearb@candelatech.com>
+
 -- 
-1.7.0.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
