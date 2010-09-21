@@ -1,185 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30t.wh2.ocn.ne.jp ([125.206.180.136]:3896 "HELO
-	mail30t.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753285Ab0IQCgO (ORCPT
+Received: from bombadil.infradead.org ([18.85.46.34]:39912 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756579Ab0IUT1D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Sep 2010 22:36:14 -0400
-Received: from vs3005.wh2.ocn.ne.jp (125.206.180.233)
-	by mail30t.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 1-011936973
-	for <linux-wireless@vger.kernel.org>; Fri, 17 Sep 2010 11:36:13 +0900 (JST)
-Subject: [PATCH 03/11] ath5k: Use four hardware queues
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Fri, 17 Sep 2010 11:36:35 +0900
-Message-ID: <20100917023635.24997.50520.stgit@tt-desk>
-In-Reply-To: <20100917023543.24997.48466.stgit@tt-desk>
-References: <20100917023543.24997.48466.stgit@tt-desk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Tue, 21 Sep 2010 15:27:03 -0400
+From: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+To: linux-wireless@vger.kernel.org
+Cc: "Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	srinivasa.duvvuri@atheros.com, matt.smith@atheros.com,
+	bennyam.malavazi@atheros.com
+Subject: [RFC] mac80211: Deny new BA sessions from being started during offchannel operation
+Date: Tue, 21 Sep 2010 15:27:02 -0400
+Message-Id: <1285097222-10286-1-git-send-email-lrodriguez@atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prepare ath5k for WME by using four hardware queues.
+It only makes sense to allow BlockAckRequests to be processed
+when we are going to spend some time on the operating channel,
+otherwise our timers will be off and until we properly figure out
+how to handle CAB data when going offchannel extending the BA
+session timers would be pointless. This blocks all new incoming
+BlockAck requests while we go offchannel, but keeps existing
+sessions alive.
 
-The way we set up our queues matches the mac80211 queue priority 1:1, so we
-don't have to do any mapping for queue numbers.
-
-Every queue uses 50 of the total 200 available transmit buffers, so the DMA
-memory usage does not increase with this patch, but it might be good to
-fine-tune the number of buffers per queue later (depending on the CPU speed and
-load, and the speed of the medium access, it might not be big enough).
-
-Signed-off-by: Bruno Randolf <br1@einfach.org>
+Cc: srinivasa.duvvuri@atheros.com
+Cc: matt.smith@atheros.com
+Cc: bennyam.malavazi@atheros.com
+Signed-off-by: Luis R. Rodriguez <lrodriguez@atheros.com>
 ---
- drivers/net/wireless/ath/ath5k/base.c |   47 +++++++++++++++++++++++++++++----
- drivers/net/wireless/ath/ath5k/base.h |    5 +++-
- 2 files changed, 45 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 9e4636f..c105dba 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -737,6 +737,7 @@ ath5k_txbuf_setup(struct ath5k_softc *sc, struct ath5k_buf *bf,
+This is what I'm starting off with, then if a current BA session
+timer is pending then postpone the offchannel operation for
+the next target channel until its done or we surpass a counter.
+Then after that I'd extend the reorder timer based on the
+calculated max offchannel time -- or we can just disarm and
+re-arm the timer completely when we come back.
+
+For TX we'll just implement a TX flush prior to going offchannel.
+
+ net/mac80211/agg-rx.c     |    8 ++++++--
+ net/mac80211/offchannel.c |   14 ++++++++++++++
+ net/mac80211/sta_info.h   |    3 ++-
+ 3 files changed, 22 insertions(+), 3 deletions(-)
+
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index 58eab9e..64aa5ca 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -209,8 +209,12 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
  
- 	spin_lock_bh(&txq->lock);
- 	list_add_tail(&bf->list, &txq->q);
-+	txq->txq_len++;
- 	if (txq->link == NULL) /* is this first packet? */
- 		ath5k_hw_set_txdp(ah, txq->qnum, bf->daddr);
- 	else /* no, so only link it */
-@@ -893,6 +894,7 @@ ath5k_txq_setup(struct ath5k_softc *sc,
- 		INIT_LIST_HEAD(&txq->q);
- 		spin_lock_init(&txq->lock);
- 		txq->setup = true;
-+		txq->txq_len = 0;
+ 	if (test_sta_flags(sta, WLAN_STA_BLOCK_BA)) {
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+-		printk(KERN_DEBUG "Suspend in progress. "
+-		       "Denying ADDBA request\n");
++		if (local->quiescing)
++			printk(KERN_DEBUG "Suspend in progress. "
++			      "Denying ADDBA request\n");
++		else
++			printk(KERN_DEBUG "Offchannel operation in progress, "
++			      "Denying ADDBA request\n");
+ #endif
+ 		goto end_no_lock;
  	}
- 	return &sc->txqs[qnum];
- }
-@@ -987,6 +989,7 @@ ath5k_txq_drainq(struct ath5k_softc *sc, struct ath5k_txq *txq)
- 		spin_lock_bh(&sc->txbuflock);
- 		list_move_tail(&bf->list, &sc->txbuf);
- 		sc->txbuf_len++;
-+		txq->txq_len--;
- 		spin_unlock_bh(&sc->txbuflock);
- 	}
- 	txq->link = NULL;
-@@ -1483,6 +1486,9 @@ static int ath5k_tx_queue(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		goto drop_packet;
- 	}
- 
-+	if (txq->txq_len >= ATH5K_TXQ_LEN_MAX)
-+		ieee80211_stop_queue(hw, txq->qnum);
-+
- 	spin_lock_irqsave(&sc->txbuflock, flags);
- 	if (list_empty(&sc->txbuf)) {
- 		ATH5K_ERR(sc, "no further txbuf available, dropping packet\n");
-@@ -1605,13 +1611,14 @@ ath5k_tx_processq(struct ath5k_softc *sc, struct ath5k_txq *txq)
- 		spin_lock(&sc->txbuflock);
- 		list_move_tail(&bf->list, &sc->txbuf);
- 		sc->txbuf_len++;
-+		txq->txq_len--;
- 		spin_unlock(&sc->txbuflock);
- 	}
- 	if (likely(list_empty(&txq->q)))
- 		txq->link = NULL;
- 	spin_unlock(&txq->lock);
--	if (sc->txbuf_len > ATH_TXBUF / 5)
--		ieee80211_wake_queues(sc->hw);
-+	if (txq->txq_len < ATH5K_TXQ_LEN_LOW)
-+		ieee80211_wake_queue(sc->hw, txq->qnum);
- }
- 
- static void
-@@ -2395,6 +2402,7 @@ ath5k_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
- 	struct ath5k_softc *sc = hw->priv;
- 	struct ath5k_hw *ah = sc->ah;
- 	struct ath_regulatory *regulatory = ath5k_hw_regulatory(ah);
-+	struct ath5k_txq *txq;
- 	u8 mac[ETH_ALEN] = {};
- 	int ret;
- 
-@@ -2460,12 +2468,33 @@ ath5k_attach(struct pci_dev *pdev, struct ieee80211_hw *hw)
- 		goto err_bhal;
- 	}
- 
--	sc->txq = ath5k_txq_setup(sc, AR5K_TX_QUEUE_DATA, AR5K_WME_AC_BK);
--	if (IS_ERR(sc->txq)) {
-+	/* This order matches mac80211's queue priority, so we can
-+	 * directly use the mac80211 queue number without any mapping */
-+	txq = ath5k_txq_setup(sc, AR5K_TX_QUEUE_DATA, AR5K_WME_AC_VO);
-+	if (IS_ERR(txq)) {
-+		ATH5K_ERR(sc, "can't setup xmit queue\n");
-+		ret = PTR_ERR(txq);
-+		goto err_queues;
-+	}
-+	txq = ath5k_txq_setup(sc, AR5K_TX_QUEUE_DATA, AR5K_WME_AC_VI);
-+	if (IS_ERR(txq)) {
- 		ATH5K_ERR(sc, "can't setup xmit queue\n");
--		ret = PTR_ERR(sc->txq);
-+		ret = PTR_ERR(txq);
- 		goto err_queues;
- 	}
-+	txq = ath5k_txq_setup(sc, AR5K_TX_QUEUE_DATA, AR5K_WME_AC_BE);
-+	if (IS_ERR(txq)) {
-+		ATH5K_ERR(sc, "can't setup xmit queue\n");
-+		ret = PTR_ERR(txq);
-+		goto err_queues;
-+	}
-+	txq = ath5k_txq_setup(sc, AR5K_TX_QUEUE_DATA, AR5K_WME_AC_BK);
-+	if (IS_ERR(txq)) {
-+		ATH5K_ERR(sc, "can't setup xmit queue\n");
-+		ret = PTR_ERR(txq);
-+		goto err_queues;
-+	}
-+	hw->queues = 4;
- 
- 	tasklet_init(&sc->rxtq, ath5k_tasklet_rx, (unsigned long)sc);
- 	tasklet_init(&sc->txtq, ath5k_tasklet_tx, (unsigned long)sc);
-@@ -2558,8 +2587,14 @@ static int
- ath5k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index 4b56409..776d45b 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -23,6 +23,7 @@ static void ieee80211_offchannel_ps_enable(struct ieee80211_sub_if_data *sdata)
  {
- 	struct ath5k_softc *sc = hw->priv;
-+	u16 qnum = skb_get_queue_mapping(skb);
-+
-+	if (WARN_ON(qnum >= sc->ah->ah_capabilities.cap_queues.q_tx_num)) {
-+		dev_kfree_skb_any(skb);
-+		return 0;
-+	}
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
++	struct sta_info *sta;
  
--	return ath5k_tx_queue(hw, skb, sc->txq);
-+	return ath5k_tx_queue(hw, skb, &sc->txqs[qnum]);
+ 	local->offchannel_ps_enabled = false;
+ 
+@@ -34,6 +35,12 @@ static void ieee80211_offchannel_ps_enable(struct ieee80211_sub_if_data *sdata)
+ 
+ 	cancel_work_sync(&local->dynamic_ps_enable_work);
+ 
++	mutex_lock(&local->sta_mtx);
++	list_for_each_entry(sta, &local->sta_list, list)
++		if (local->hw.flags & IEEE80211_HW_AMPDU_AGGREGATION)
++			set_sta_flags(sta, WLAN_STA_BLOCK_BA);
++	mutex_unlock(&local->sta_mtx);
++
+ 	if (local->hw.conf.flags & IEEE80211_CONF_PS) {
+ 		local->offchannel_ps_enabled = true;
+ 		local->hw.conf.flags &= ~IEEE80211_CONF_PS;
+@@ -59,6 +66,7 @@ static void ieee80211_offchannel_ps_enable(struct ieee80211_sub_if_data *sdata)
+ static void ieee80211_offchannel_ps_disable(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_local *local = sdata->local;
++	struct sta_info *sta;
+ 
+ 	if (!local->ps_sdata)
+ 		ieee80211_send_nullfunc(local, sdata, 0);
+@@ -92,6 +100,12 @@ static void ieee80211_offchannel_ps_disable(struct ieee80211_sub_if_data *sdata)
+ 
+ 	ieee80211_sta_reset_beacon_monitor(sdata);
+ 	ieee80211_sta_reset_conn_monitor(sdata);
++
++	mutex_lock(&local->sta_mtx);
++	list_for_each_entry(sta, &local->sta_list, list)
++		if (local->hw.flags & IEEE80211_HW_AMPDU_AGGREGATION)
++			clear_sta_flags(sta, WLAN_STA_BLOCK_BA);
++	mutex_unlock(&local->sta_mtx);
  }
  
- static int ath5k_start(struct ieee80211_hw *hw)
-diff --git a/drivers/net/wireless/ath/ath5k/base.h b/drivers/net/wireless/ath/ath5k/base.h
-index dc1241f..5e2366d 100644
---- a/drivers/net/wireless/ath/ath5k/base.h
-+++ b/drivers/net/wireless/ath/ath5k/base.h
-@@ -60,6 +60,9 @@
- #define	ATH_TXBUF	200		/* number of TX buffers */
- #define ATH_BCBUF	1		/* number of beacon buffers */
- 
-+#define ATH5K_TXQ_LEN_MAX	(ATH_TXBUF / 4)		/* bufs per queue */
-+#define ATH5K_TXQ_LEN_LOW	(ATH5K_TXQ_LEN_MAX / 2)	/* low mark */
-+
- struct ath5k_buf {
- 	struct list_head	list;
- 	struct ath5k_desc	*desc;	/* virtual addr of desc */
-@@ -83,6 +86,7 @@ struct ath5k_txq {
- 	struct list_head	q;	/* transmit queue */
- 	spinlock_t		lock;	/* lock on q and link */
- 	bool			setup;
-+	int			txq_len; /* number of queued buffers */
- };
- 
- #define ATH5K_LED_MAX_NAME_LEN 31
-@@ -204,7 +208,6 @@ struct ath5k_softc {
- 	spinlock_t		txbuflock;
- 	unsigned int		txbuf_len;	/* buf count in txbuf list */
- 	struct ath5k_txq	txqs[AR5K_NUM_TX_QUEUES];	/* tx queues */
--	struct ath5k_txq	*txq;		/* main tx queue */
- 	struct tasklet_struct	txtq;		/* tx intr tasklet */
- 	struct ath5k_led	tx_led;		/* tx led */
- 
+ void ieee80211_offchannel_stop_beaconing(struct ieee80211_local *local)
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 810c5ce..207997a 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -36,7 +36,8 @@
+  *	frame to this station is transmitted.
+  * @WLAN_STA_MFP: Management frame protection is used with this STA.
+  * @WLAN_STA_BLOCK_BA: Used to deny ADDBA requests (both TX and RX)
+- *	during suspend/resume and station removal.
++ *	during suspend/resume, station removal, and when we go offchannel
++ *	when associated.
+  * @WLAN_STA_PS_DRIVER: driver requires keeping this station in
+  *	power-save mode logically to flush frames that might still
+  *	be in the queues
+-- 
+1.7.0.4
 
