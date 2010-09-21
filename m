@@ -1,75 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw-sa02.ext.nokia.com ([147.243.1.48]:49988 "EHLO
-	mgw-sa02.nokia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754751Ab0IXTzt (ORCPT
+Received: from mail-out.m-online.net ([212.18.0.9]:47117 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753444Ab0IUTt4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Sep 2010 15:55:49 -0400
-Subject: Re: [PATCH v3] omap: beagle: add support for wl1271 on the board
- file
-From: Luciano Coelho <luciano.coelho@nokia.com>
-To: ext Tony Lindgren <tony@atomide.com>
-Cc: "ext John W. Linville" <linville@tuxdriver.com>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Ido Yariv <ido@wizery.com>, Ohad Ben-Cohen <ohad@wizery.com>,
-	ext Robert Nelson <robertcnelson@gmail.com>
-In-Reply-To: <20100924191139.GI4211@atomide.com>
-References: <1285236215-21136-1-git-send-email-luciano.coelho@nokia.com>
-	 <20100924180316.GE8077@tuxdriver.com> <1285354249.9779.3.camel@powerslave>
-	 <20100924191139.GI4211@atomide.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 24 Sep 2010 22:55:33 +0300
-Message-ID: <1285358133.9779.24.camel@powerslave>
-Mime-Version: 1.0
+	Tue, 21 Sep 2010 15:49:56 -0400
+From: Andreas Schwab <schwab@linux-m68k.org>
+To: Ben Greear <greearb-my8/4N5VtI7c+919tysfdA@public.gmane.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Patch to get iw building on Fedora 8
+References: <4C98DFB6.10902@candelatech.com>
+Date: Tue, 21 Sep 2010 21:49:55 +0200
+In-Reply-To: <4C98DFB6.10902@candelatech.com> (Ben Greear's message of "Tue,
+	21 Sep 2010 09:39:18 -0700")
+Message-ID: <m2wrqej2qk.fsf@igel.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2010-09-24 at 21:11 +0200, ext Tony Lindgren wrote:
-> * Luciano Coelho <luciano.coelho@nokia.com> [100924 11:42]:
-> > On Fri, 2010-09-24 at 20:03 +0200, ext John W. Linville wrote:
-> > > On Thu, Sep 23, 2010 at 01:03:35PM +0300, Luciano Coelho wrote:
-> > > > Add board configuration for the wl1271 daughter board.  This patch is based
-> > > > on Ohad Ben-Cohen's patches for Zoom boards.
-> > > > 
-> > > > Cc: Ohad Ben-Cohen <ohad@wizery.com>
-> > > > Signed-off-by: Luciano Coelho <luciano.coelho@nokia.com>
-> > > > ---
-> > > > from v2 to v3: removed accidental change to wl1271.h
-> > > 
-> > > I presume that this should come through my tree as well (since it
-> > > contains the move of wl12xx.h)?
-> > 
-> > Yes, this is based on your tree.  But please hold on, because there were
-> > some comments (namely, the expansion board should be detected, not
-> > configured for wl1271 by default), which I still have to fix.  I'm
-> > waiting for the manufacturer of the expansion board to provide me with
-> > some more info for proper detection.
-> > 
-> > Also, I know that there are some other work being done in the beagle
-> > board file, so we may need to rethink how to sync this.
-> > 
-> > So, for now, let's skip this patch and I'll provide another one when
-> > these issues are addressed.
-> 
-> You could also do it based on some kernel cmdline option. Of course
-> detection during the runtime would be better.
+Ben Greear <greearb-my8/4N5VtI7c+919tysfdA@public.gmane.org> writes:
 
-Yes, this is more or less what Openembedded (?) guys seem to be doing.
-You can check Robert Nelson's email in the "v2" thread.
+> I need this in order to get iw to build on Fedora 8.
+>
+> [greearb@fs2 iw]$ git diff
+> diff --git a/bitrate.c b/bitrate.c
+> index 8de8839..9b6defc 100644
+> --- a/bitrate.c
+> +++ b/bitrate.c
+> @@ -1,4 +1,6 @@
+>  #include <errno.h>
+> +#define  __USE_ISOC99
 
-The already have some changes in u-boot (which are apparently not in its
-mainline yet) that does exactly that.  The bootloader probes the
-expansion board and passes the result in a kernel cmdline option.  This
-is "runtime", but I think the best solution would be in the end to let
-the kernel do the probing itself.
+This is wrong.  You must never define internal glibc macros.
 
-As far as I could tell after some googling, having the bootloader probe
-this kind of stuff is legacy because of problems with muxing in older
-kernels, so the omap muxing had to be done in the bootloader.  Now that
-muxing is working fine in newer kernel, this kind of thing should be
-moved to the kernel, or what do you think?
+Andreas.
 
 -- 
-Cheers,
-Luca.
-
+Andreas Schwab, schwab@linux-m68k.org
+GPG Key fingerprint = 58CA 54C7 6D53 942B 1756  01D3 44D5 214B 8276 4ED5
+"And now for something completely different."
