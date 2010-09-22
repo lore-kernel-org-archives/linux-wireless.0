@@ -1,55 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:33581 "EHLO
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:41932 "EHLO
 	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751604Ab0I0Xju (ORCPT
+	with ESMTP id S1755140Ab0IVTJo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Sep 2010 19:39:50 -0400
-Received: by mail-fx0-f46.google.com with SMTP id 3so2287943fxm.19
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Sep 2010 16:39:50 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Ignacy Gawedzki <i@lri.fr>
-Subject: Re: A few questions about modifications in carl9170
-Date: Tue, 28 Sep 2010 01:39:43 +0200
-Cc: linux-wireless@vger.kernel.org
-References: <20100927132957.GA2977@qubit.lri.fr> <20100927230137.GA5702@qubit.lri.fr> <20100927232357.GA5869@qubit.lri.fr>
-In-Reply-To: <20100927232357.GA5869@qubit.lri.fr>
+	Wed, 22 Sep 2010 15:09:44 -0400
+Received: by fxm12 with SMTP id 12so278498fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 12:09:43 -0700 (PDT)
+Message-ID: <4C9A5471.2090009@gmail.com>
+Date: Wed, 22 Sep 2010 21:09:37 +0200
+From: Kshitij Kulshreshtha <kkhere.geo@gmail.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201009280139.43745.chunkeey@googlemail.com>
+To: "Luis R. Rodriguez" <lrodriguez@atheros.com>
+CC: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org,
+	mcgrof@infradead.org
+Subject: Re: [PATCH 3/4] compat: move pmcia backport code into compat-2.6.36.h
+References: <1284918131-32065-1-git-send-email-hauke@hauke-m.de> <1284918131-32065-3-git-send-email-hauke@hauke-m.de> <4C9A34FB.5020809@gmail.com> <AANLkTinJG=mgYE-eUmptCVkXDDpSB9YDHA0AwbYi7xfw@mail.gmail.com>
+In-Reply-To: <AANLkTinJG=mgYE-eUmptCVkXDDpSB9YDHA0AwbYi7xfw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 28 September 2010 01:23:57 Ignacy Gawedzki wrote:
-> And while writing that email, I left the card plugged in the USB socket.  In
-> the meantime, I got the following:
-> 
->   usb 5-1: no command feedback received (-110).
->   carl9170 cmd: 08 01 00 00 04 40 1d 00 00 00 00 00              .....@......
->   usb 5-1: restart device (6)
->   ieee80211 phy1: writing reg 0x1d4004 (val 0x0) failed (-110)
->   usb 5-1: device restarted successfully.
-> 
-> Then when I unplugged it:
-> 
->   usb 5-1: USB disconnect, address 11
-> 
-> And finally upon modprobe -r carl9170:
-> 
->   usbcore: deregistering interface driver carl9170
-> 
-> And now modprobe is stuck in D+. :/
 
-yup, this should be fixed by "[PATCH] carl9170: fix hung workqueue".
- 
-> I now wonder how that could possibly be due to my modifications in the driver
-> and mac80211 (in a nutshell: retrieve the measurement per frame from the FW
-> and collect it into a stats structure in the sta descriptor, which is later
-> retrieved from userspace through netlink).  I'll try without these and report
-> back if that still happens.
-hm, you could also add a "custom" RADIO_TAP field. This way you could use
-wireshark to monitor the round trip times for each individual frame
-(this way you could also export the frames' duration + tx vectors too)
 
-Regards,
-	Christian
+As on 2010-09-22 18:59, Luis R. Rodriguez did write:
+> On Wed, Sep 22, 2010 at 9:55 AM, Kshitij Kulshreshtha
+> <kkhere.geo@gmail.com> wrote:
+>> Hello,
+>>
+>> As on 2010-09-19 19:42, Hauke Mehrtens did write:
+>>> We have all out backport headers in include/linux/compat-2.6.XX.h also the pcmcia
+>>> part there.
+>>
+>> I'm not sure if this won't make all the compat-wireless modules depend
+>> on pcmcia.ko for kernels < 2.6.36 where
+>> pcmcia_access_configuation_register() is exported. Even if someone is
+>> only building selected drivers like iwlwifi or ath.
+> 
+> Have you tried loading ath9k or iwlagn on compat-wireless? Did you
+> note compat doesn't get loaded? Anyway, patches welcomed to enhance
+> this if your concern is if your kernel won't build with this. We also
+> plan on dropping PCMCIA completely anyway.
+
+Actually compat does get loaded since mac80211 needs it for noop_llseek
+on 2.6.34, however my current build is not showing the pcmcia dependency
+that I was afraid of, so please ignore this.
+
+Thanks.
+-- 
+Kshitij Kulshreshtha
+
+Institut für Mathematik,
+Universität Paderborn,
+Warburger Straße 100,
+33098 Paderborn.
+
+Büro: A3.235
+
+Privatanschrift:
+Arnikaweg 62
+33100 Paderborn.
