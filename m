@@ -1,46 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 128-177-27-249.ip.openhosting.com ([128.177.27.249]:60103 "EHLO
-	jmalinen.user.openhosting.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753851Ab0IPTzN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Sep 2010 15:55:13 -0400
-Date: Thu, 16 Sep 2010 09:54:41 -1000
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
+Received: from 80-190-117-144.ip-home.de ([80.190.117.144]:44168 "EHLO
+	bu3sch.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752414Ab0IVNyx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Sep 2010 09:54:53 -0400
+Subject: Re: Manual Control about Sending ACKs
+From: Michael =?ISO-8859-1?Q?B=FCsch?= <mb@bu3sch.de>
+To: Christian Lamparter <chunkeey@googlemail.com>
 Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Daniel Berger <daniel@dat-berger.de>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Filter ProbeReq SuppRates based on TX rate
- mask
-Message-ID: <20100916195441.GB25174@jm.kir.nu>
-References: <20100828163610.GA23426@jm.kir.nu>
- <1283154490.3691.2.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1283154490.3691.2.camel@jlt3.sipsolutions.net>
+In-Reply-To: <201009221545.41377.chunkeey@googlemail.com> (sfid-20100922_154601_624932_FFFFFFFFD00B9F23)
+References: <20100922123953.67a4fc5e@danmob>
+	 <20100922130245.GC5515@tuxdriver.com>
+	 <201009221545.41377.chunkeey@googlemail.com>
+	 (sfid-20100922_154601_624932_FFFFFFFFD00B9F23)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 22 Sep 2010 15:54:47 +0200
+Message-ID: <1285163687.15806.9.camel@maggie>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 30, 2010 at 09:48:10AM +0200, Johannes Berg wrote:
-> On Sat, 2010-08-28 at 19:36 +0300, Jouni Malinen wrote:
-> > If the TX rate set has been masked, the removed rates can also be
-> > removed from the Supported Rates and Extended Supported Rates IEs in
-> > Probe Request frames.
+On Wed, 2010-09-22 at 15:45 +0200, Christian Lamparter wrote:
+
+> > I suspect you need to be looking at hacking firmware.
+> > You might look at the open-source ar9170 firmware
+> > or the b43-openfwwf project.
 > 
-> Technically, the probe request frame indicates RX bitrates. I don't
-> really mind using the TX bitrates as well since typically I do think you
-> probably want them to be symmetric, but shouldn't that come with nl80211
-> updates etc. since that's all saying TX_BITRATES?
+> probably not ar9170 either.
+> The ACK - mechanism (response control) is mostly hardwired in
+> the chip, there is not much to control here.
 
-This change should really not be needed in the first place, but
-unfortunately, P2P requires this for a compliant implementation.. The
-field is really "Supported Rates", i.e., it would be used for both TX
-and RX. I don't see any real point in configuring RX rates (i.e., make
-hw not receive frames on one or more of the supported rates), so the TX
-rate mask is the only reasonable configuration mechanism for this.
-
-The minimum requirement (for P2P compliance) is to just remove rates 1,
-2, 5.5, 11 Mbps from the list, so we could also add something to disable
-802.11b rates in general if a different command would be desired.
+The ack mechanism is implemented in firmware for the b43 chip and I
+think it's understood pretty much completely how ACKing works in
+the firmware. So you may want to take a look at b43-openfwwf.
+The guys who created b43-openfwwf also experimented with this
+kind of stuff, so you might want to contact them.
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Greetings Michael.
+
