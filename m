@@ -1,56 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36121 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752990Ab0IOMMO (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:55822 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752828Ab0IVQnP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Sep 2010 08:12:14 -0400
-Subject: Re: [RFC] mac80211: avoid recalc_idle in monitor mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rajkumar Manoharan <rmanoharan@atheros.com>
-Cc: linux-wireless@vger.kernel.org,
-	Vasanthakumar Thiagarajan <vasanth@atheros.com>
-In-Reply-To: <1284551772-18574-1-git-send-email-rmanoharan@atheros.com>
-References: <1284551772-18574-1-git-send-email-rmanoharan@atheros.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 15 Sep 2010 14:12:10 +0200
-Message-ID: <1284552730.7705.0.camel@jlt3.sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 22 Sep 2010 12:43:15 -0400
+Received: by gxk9 with SMTP id 9so232004gxk.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 09:43:14 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <AANLkTinn-nPed0nCvveBUtkY3AEHf_+bVvV=q1J=XzdY@mail.gmail.com>
+References: <AANLkTik3_o03=m0w8XM_B-YTQrR-ibkbtTBErXfcYwGG@mail.gmail.com>
+	<201009221336.14382.chunkeey@googlemail.com>
+	<AANLkTim3YQ4vNyM_OA4qc+mjGJiwYoHrLB=x1sp+R8vP@mail.gmail.com>
+	<201009221424.39949.chunkeey@googlemail.com>
+	<AANLkTikbyQi7dJFrqJrVmr7kV==tZoLRPaufC6tJv743@mail.gmail.com>
+	<AANLkTi=OF0=Ox7xoGpygL87eoxDyEgDiALi4R-pSNe+V@mail.gmail.com>
+	<AANLkTinaaAp8XXbqEmA-BCEbSQ8oMV5M-BNSs2iKmyNk@mail.gmail.com>
+	<AANLkTinn-nPed0nCvveBUtkY3AEHf_+bVvV=q1J=XzdY@mail.gmail.com>
+Date: Wed, 22 Sep 2010 20:43:13 +0400
+Message-ID: <AANLkTinevz-Re9z15CO5tXHygP2n4F13=QUGFsyZLdTC@mail.gmail.com>
+Subject: Re: p54spi (STLC4560) with Marvel XScale CPU (kernel 2.6.25.4)
+From: Max Filippov <jcmvbkbc@gmail.com>
+To: Alex Mihaylov <minimumlaw@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2010-09-15 at 17:26 +0530, Rajkumar Manoharan wrote:
-> ath9k is not receiving frames in monitor mode after the commit 34d4bc.
-> The problem is mac80211 sets IEEE80211_CONF_IDLE in __ieee80211_recalc_idle
-> at ieee80211_do_open. Due to this, ath9k disables the radio.
-> 
-> The above said commit sets SDATA_STATE_RUNNING after __ieee80211_recalc_idle.
-> IMHO avoiding __ieee80211_recalc_idle in monitor mode looks better
-> than moving SDATA_STATE_RUNNING set before __ieee80211_recalc_idle.
-> 
-> Signed-off-by: Rajkumar Manoharan <rmanoharan@atheros.com>
-> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> ---
->  net/mac80211/iface.c |    8 +++++---
->  1 files changed, 5 insertions(+), 3 deletions(-)
-> 
-> diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-> index c1cc200..2bec319 100644
-> --- a/net/mac80211/iface.c
-> +++ b/net/mac80211/iface.c
-> @@ -310,9 +310,11 @@ static int ieee80211_do_open(struct net_device *dev, bool coming_up)
->  	if (sdata->flags & IEEE80211_SDATA_PROMISC)
->  		atomic_inc(&local->iff_promiscs);
->  
-> -	mutex_lock(&local->mtx);
-> -	hw_reconf_flags |= __ieee80211_recalc_idle(local);
-> -	mutex_unlock(&local->mtx);
-> +	if (sdata->vif.type != NL80211_IFTYPE_MONITOR) {
-> +		mutex_lock(&local->mtx);
-> +		hw_reconf_flags |= __ieee80211_recalc_idle(local);
-> +		mutex_unlock(&local->mtx);
-> +	}
+>>> This code from Sagrad:
+>>>
+>>>        SPI_IRQ(DISABLE);
+>>>
+>>> [skiped]
+>>
+>> If you look closer into the skipped part you'll see
+>>
+>>        // 13. Enable host interrupts (EHostIntEnable1 = KIrqReady |
+>> KIrqWrReady | KHwUpdate | KSwUpdate)
+>>        TempReg = (SPI_HOST_INT_READY | SPI_HOST_INT_UPDATE |
+>> SPI_HOST_INT_SW_UPDATE| SPI_HOST_INT_WR_READY);
+>>        SPIDRVWriteReg32(SPI_ADRS_HOST_INT_EN, TempReg);
+>>
+>> which actually enables interrupts, exactly as SPI_IRQ(ENABLE); does.
+>>
+>>>
+>>>       // 14. Wait for the READY interrupt (100 ms timeout).
+>>>        // Loop while waiting for SPI device to respond with
+>>> interrupt, max timeout is WIFI_BOOT_TIMEOUT
+>>>        for ( i = 0 ; i < WIFI_BOOT_TIMEOUT ; i++)
+>>>        {
+>>>                TempReg = SPIDRVReadReg32(SPI_ADRS_HOST_INTERRUPTS);
+>>>                if( TempReg && SPI_HOST_INT_READY)
+>>>                {
+>>>                        // 15. Acknowledge the READY interrupt.
+>>>                        SPIDRVWriteReg32(SPI_ADRS_HOST_INT_ACK,
+>>> SPI_HOST_INT_READY);
+>>>                        // 16. Issue the SLEEP interrupt.
+>>>                        SPIDRVWriteReg32(SPI_ADRS_ARM_INTERRUPTS,
+>>> SPI_ARM_INT_SLEEP);
+>>>                        break;
+>>>                }
+>>>
+>>>                Delay(1);
+>>>        }
+>>>
+>>>        SPI_IRQ(ENABLE);
+>
+> OK. Chip (STLC4560) have some reasons to make IRQ reqest to host
+> (XScale or Omap). In code:
+>
+> SPIDRVWriteReg32(SPI_ADRS_HOST_INT_EN, TempReg);
+>
+> we set IRQ mask for chip. So, chip CAN generate IRQ request to host
+> (make pulse on host IRQ GPIO line). But host NOT serve this interrupt
+> request ( SPI_IRQ(DISABLE) ). Host wait for event by pool interrupt
+> reason register. In linux kernel (p54spi.c) host serve this IRQ.
+> SPI_IRQ(ENABLE/DISABLE) used for enable/disable host handler, but
+> SPIDRVWriteReg32(SPI_ADRS_HOST_INT_EN, TempReg) used for device IRQ
+> reason control. I think so.
 
-Hmm, that doesn't seem right, wouldn't it be idle to start with?
+Look at the code of SPI_IRQ routine:
 
-johannes
+void SPI_IRQ(FunctionalState state)
+{
+    NVIC_InitTypeDef NVIC_InitStructure;
+    static FunctionalState CurrState = DISABLE;
+    // Check if we're changing states, otherwise just leave it.
+    if(state != CurrState)
+    {
+        // 5. Configure the interrupt controller for the External
+Interrupt x SPI
+        // Enable the interrupt controller for the External Interrupt
+        NVIC_InitStructure.NVIC_IRQChannel = WIFI_INT_IRQ_CHAN;
+        NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+        NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+        NVIC_InitStructure.NVIC_IRQChannelCmd = state;
+        NVIC_Init(&NVIC_InitStructure);
 
+        if( state == ENABLE )
+        {
+            SPIDRVWriteReg32(SPI_ADRS_HOST_INT_EN, SPI_HOST_INTS_DEFAULT);
+        }
+        else
+        {
+            SPIDRVWriteReg32(SPI_ADRS_HOST_INT_EN, 0);
+        }
+        CurrState = state;
+    }
+
+}
+
+There's some activity with something unknown to me: // 5. Configure
+the interrupt controller for the External Interrupt x SPI
+And then programming of the stlc's HOST_INT_EN.
+
+It's not quite clear to me, what is that NVIC and what additional
+external interrupt configuration is going on. What's clear is that
+it's not related to the stlc chip. Looks like there's additional
+hardware on your board that conveys interrupt signal and that has to
+be configured.
+
+In nokia's N810 stlc's IRQ line seems to be connected directly to gpio
+pin. That gpio line is configured in p54spi_probe and that's enough
+for interrupts to get to us.
+
+-- 
+Max
