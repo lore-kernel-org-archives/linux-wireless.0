@@ -1,132 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail30g.wh2.ocn.ne.jp ([220.111.41.239]:32347 "HELO
-	mail30g.wh2.ocn.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753225Ab0IPJvc (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:54390
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752104Ab0IVTSm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Sep 2010 05:51:32 -0400
-Received: from vs3008.wh2.ocn.ne.jp (125.206.180.171)
-	by mail30g.wh2.ocn.ne.jp (RS ver 1.0.95vs) with SMTP id 0-045067690
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Sep 2010 18:51:31 +0900 (JST)
-Subject: [PATCH 7/9] ath5k: Keep last descriptor in queue
-To: linville@tuxdriver.com
-From: Bruno Randolf <br1@einfach.org>
-Cc: ath5k-devel@lists.ath5k.org, linux-wireless@vger.kernel.org
-Date: Thu, 16 Sep 2010 18:51:49 +0900
-Message-ID: <20100916095149.17637.77736.stgit@tt-desk>
-In-Reply-To: <20100916095112.17637.17207.stgit@tt-desk>
-References: <20100916095112.17637.17207.stgit@tt-desk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Wed, 22 Sep 2010 15:18:42 -0400
+Date: Wed, 22 Sep 2010 12:19:02 -0700 (PDT)
+Message-Id: <20100922.121902.71115228.davem@davemloft.net>
+To: chunkeey@googlemail.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: pull request: wireless-next-2.6 2010-09-21
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <201009222054.05469.chunkeey@googlemail.com>
+References: <201009221158.13806.chunkeey@googlemail.com>
+	<20100922.092252.116390431.davem@davemloft.net>
+	<201009222054.05469.chunkeey@googlemail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If we return a TX descriptor to the pool of available descriptors, while a
-queues TXDP still points to it we could potentially run into all sorts of
-troube.
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Wed, 22 Sep 2010 20:54:05 +0200
 
-It has been suggested that there is hardware which can set the descriptors
-done bit before it reads ds_link and moves on to the next descriptor. While the
-documentation says this is not true for newer chipsets (the descriptor contents
-are copied to some internal memory), we don't know about older hardware.
+> Only the structs which deal with hardware (hw.h, eeprom.h, wlan.h)
+> or firmware (fwcmd.h, fwdesc.h & wlan.h) interface have the
+> __packed attribute. And there are several good reasons.
 
-To be safe, we always keep the last descriptor in the queue, and avoid dangling
-TXDP pointers. Unfortunately this does not fully resolve the problem - queues
-still get stuck!
+There is a cost in being lazy and just stabbing __packed to every
+structure shared with firmware or hardware.
 
-This is similar to what ath9k does.
+And that cost is that every larger-than-byte sized element will be
+loaded with a disgustingly expensive series of byte loads, shifts,
+and masks.
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
----
- drivers/net/wireless/ath/ath5k/base.c |   64 +++++++++++++++++----------------
- 1 files changed, 32 insertions(+), 32 deletions(-)
+Every access.
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index c4f0786..9b67cee 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1590,44 +1590,44 @@ ath5k_tx_processq(struct ath5k_softc *sc, struct ath5k_txq *txq)
- 
- 	spin_lock(&txq->lock);
- 	list_for_each_entry_safe(bf, bf0, &txq->q, list) {
--		ds = bf->desc;
-+
-+		txq->txq_poll_mark = false;
-+
-+		/* skb might already have been processed last time. */
-+		if (bf->skb != NULL) {
-+			ds = bf->desc;
-+
-+			ret = sc->ah->ah_proc_tx_desc(sc->ah, ds, &ts);
-+			if (unlikely(ret == -EINPROGRESS))
-+				break;
-+			else if (unlikely(ret)) {
-+				ATH5K_ERR(sc,
-+					"error %d while processing "
-+					"queue %u\n", ret, txq->qnum);
-+				break;
-+			}
-+
-+			skb = bf->skb;
-+			bf->skb = NULL;
-+			pci_unmap_single(sc->pdev, bf->skbaddr, skb->len,
-+					PCI_DMA_TODEVICE);
-+			ath5k_tx_frame_completed(sc, skb, &ts);
-+		}
- 
- 		/*
- 		 * It's possible that the hardware can say the buffer is
- 		 * completed when it hasn't yet loaded the ds_link from
--		 * host memory and moved on.  If there are more TX
--		 * descriptors in the queue, wait for TXDP to change
--		 * before processing this one.
-+		 * host memory and moved on.
-+		 * Always keep the last descriptor to avoid HW races...
- 		 */
--		if (ath5k_hw_get_txdp(sc->ah, txq->qnum) == bf->daddr &&
--		    !list_is_last(&bf->list, &txq->q))
--			break;
--		ret = sc->ah->ah_proc_tx_desc(sc->ah, ds, &ts);
--		if (unlikely(ret == -EINPROGRESS))
--			break;
--		else if (unlikely(ret)) {
--			ATH5K_ERR(sc, "error %d while processing queue %u\n",
--				ret, txq->qnum);
--			break;
-+		if (ath5k_hw_get_txdp(sc->ah, txq->qnum) != bf->daddr) {
-+			spin_lock(&sc->txbuflock);
-+			list_move_tail(&bf->list, &sc->txbuf);
-+			sc->txbuf_len++;
-+			txq->txq_len--;
-+			spin_unlock(&sc->txbuflock);
- 		}
--
--		skb = bf->skb;
--		bf->skb = NULL;
--		pci_unmap_single(sc->pdev, bf->skbaddr, skb->len,
--				PCI_DMA_TODEVICE);
--
--		ath5k_tx_frame_completed(sc, skb, &ts);
--
--		spin_lock(&sc->txbuflock);
--		list_move_tail(&bf->list, &sc->txbuf);
--		sc->txbuf_len++;
--		txq->txq_len--;
--		spin_unlock(&sc->txbuflock);
--
--		txq->txq_poll_mark = false;
- 	}
--	if (likely(list_empty(&txq->q)))
--		txq->link = NULL;
- 	spin_unlock(&txq->lock);
- 	if (txq->txq_len < ATH5K_TXQ_LEN_LOW)
- 		ieee80211_wake_queue(sc->hw, txq->qnum);
-@@ -2192,7 +2192,7 @@ ath5k_tx_complete_poll_work(struct work_struct *work)
- 		if (sc->txqs[i].setup) {
- 			txq = &sc->txqs[i];
- 			spin_lock_bh(&txq->lock);
--			if (txq->txq_len > 0) {
-+			if (txq->txq_len > 1) {
- 				if (txq->txq_poll_mark) {
- 					ATH5K_DBG(sc, ATH5K_DEBUG_XMIT,
- 						  "TX queue stuck %d\n",
+This is because GCC is not allowed to assume the alignment of any
+structure marked with __packed.  Therefore only byte sized loads are
+safe on architectures that require types be aligned to their size.
 
+This really is a performance issue, otherwise I frankly wouldn't
+care where you put __packed.
+
+So please minimize the annotations to only the structures that
+actually require __packed, not those that "might."
