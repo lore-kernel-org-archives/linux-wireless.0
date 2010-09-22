@@ -1,69 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([88.198.39.176]:54218 "EHLO ds10.nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752506Ab0IUKGj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Sep 2010 06:06:39 -0400
-Message-ID: <4C9883A4.60302@openwrt.org>
-Date: Tue, 21 Sep 2010 12:06:28 +0200
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:61302 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752998Ab0IVQz2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Sep 2010 12:55:28 -0400
+Received: by fxm12 with SMTP id 12so157838fxm.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Sep 2010 09:55:27 -0700 (PDT)
+Message-ID: <4C9A34FB.5020809@gmail.com>
+Date: Wed, 22 Sep 2010 18:55:23 +0200
+From: Kshitij Kulshreshtha <kkhere.geo@gmail.com>
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] ath9k: Kick start paprd calibration whenever operating
- channel changes
-References: <1285048487-16795-1-git-send-email-vasanth@atheros.com> <1285048487-16795-2-git-send-email-vasanth@atheros.com>
-In-Reply-To: <1285048487-16795-2-git-send-email-vasanth@atheros.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: lrodriguez@atheros.com, linux-wireless@vger.kernel.org,
+	mcgrof@infradead.org
+Subject: Re: [PATCH 3/4] compat: move pmcia backport code into compat-2.6.36.h
+References: <1284918131-32065-1-git-send-email-hauke@hauke-m.de> <1284918131-32065-3-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1284918131-32065-3-git-send-email-hauke@hauke-m.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2010-09-21 7:54 AM, Vasanthakumar Thiagarajan wrote:
-> Signed-off-by: Vasanthakumar Thiagarajan <vasanth@atheros.com>
-> ---
->  drivers/net/wireless/ath/ath9k/hw.h   |    1 +
->  drivers/net/wireless/ath/ath9k/main.c |   18 +++++++++++++++++-
->  2 files changed, 18 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-> index df47f79..c1b4962 100644
-> --- a/drivers/net/wireless/ath/ath9k/hw.h
-> +++ b/drivers/net/wireless/ath/ath9k/hw.h
-> @@ -645,6 +645,7 @@ struct ath_hw {
->  	struct ath9k_hw_capabilities caps;
->  	struct ath9k_channel channels[38];
->  	struct ath9k_channel *curchan;
-> +	struct ath9k_channel prev_paprd_chan;
->  
->  	union {
->  		struct ar5416_eeprom_def def;
-> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> index a133878..9150788 100644
-> --- a/drivers/net/wireless/ath/ath9k/main.c
-> +++ b/drivers/net/wireless/ath/ath9k/main.c
-> @@ -266,6 +266,20 @@ int ath_set_channel(struct ath_softc *sc, struct ieee80211_hw *hw,
->  	return r;
->  }
->  
-> +static bool is_paprd_done(struct ath_hw *ah)
-> +{
-> +	struct ath9k_channel *curchan, *paprd_chan;
-> +
-> +	curchan = ah->curchan;
-> +	paprd_chan = &ah->prev_paprd_chan;
-> +
-> +	if ((paprd_chan->channel == curchan->channel) &&
-> +	    paprd_chan->chanmode == curchan->chanmode)
-> +		return true;
-> +
-> +	return false;
-> +}
-That seems like code duplication to me. The caldata already has the
-channel number and the channel flags. ath9k_hw_reset() clears the entire
-caldata whenever that changes. Because of that, ah->caldata->paprd_done
-should have already been set to zero automatically after the reset
-triggered by an operating channel change.
-Is that part not working, or why did you write this patch?
-Either way, we should not have a separate check just for paprd, it
-belongs to the other calibrations.
+Hello,
 
-- Felix
+As on 2010-09-19 19:42, Hauke Mehrtens did write:
+> We have all out backport headers in include/linux/compat-2.6.XX.h also the pcmcia
+> part there.
+
+I'm not sure if this won't make all the compat-wireless modules depend
+on pcmcia.ko for kernels < 2.6.36 where
+pcmcia_access_configuation_register() is exported. Even if someone is
+only building selected drivers like iwlwifi or ath.
+
+
+> 
+> CC: Kshitij Kulshreshtha <kkhere.geo@gmail.com>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  include/linux/compat-2.6.36.h |   29 +++++++++++++++++++++++++++++
+>  include/pcmcia/ds.h           |   36 ------------------------------------
+>  2 files changed, 29 insertions(+), 36 deletions(-)
+>  delete mode 100644 include/pcmcia/ds.h
+> 
+> diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
+> index 2df34d6..1d929d7 100644
+> --- a/include/linux/compat-2.6.36.h
+> +++ b/include/linux/compat-2.6.36.h
+> @@ -6,6 +6,8 @@
+>  #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36))
+>  
+>  #include <linux/usb.h>
+> +#include <pcmcia/cistpl.h>
+> +#include <pcmcia/ds.h>
+>  
+>  #define kparam_block_sysfs_write(a)
+>  #define kparam_unblock_sysfs_write(a)
+> @@ -27,6 +29,33 @@ extern struct urb *compat_usb_get_from_anchor(struct usb_anchor *anchor);
+>  extern void compat_usb_scuttle_anchored_urbs(struct usb_anchor *anchor);
+>  #endif
+>  
+> +/**
+> + * pcmcia_read_config_byte() - read a byte from a card configuration register
+> + *
+> + * pcmcia_read_config_byte() reads a byte from a configuration register in
+> + * attribute memory.
+> + */
+> +static inline int pcmcia_read_config_byte(struct pcmcia_device *p_dev, off_t where, u8 *val)
+> +{
+> +        int ret;
+> +        conf_reg_t reg = { 0, CS_READ, where, 0 };
+> +        ret = pcmcia_access_configuration_register(p_dev, &reg);
+> +        *val = reg.Value;
+> +        return ret;
+> +}
+> +
+> +/**
+> + * pcmcia_write_config_byte() - write a byte to a card configuration register
+> + *
+> + * pcmcia_write_config_byte() writes a byte to a configuration register in
+> + * attribute memory.
+> + */
+> +static inline int pcmcia_write_config_byte(struct pcmcia_device *p_dev, off_t where, u8 val)
+> +{
+> +	conf_reg_t reg = { 0, CS_WRITE, where, val };
+> +	return pcmcia_access_configuration_register(p_dev, &reg);
+> +}
+> +
+>  #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36)) */
+>  
+>  #endif /* LINUX_26_36_COMPAT_H */
+> diff --git a/include/pcmcia/ds.h b/include/pcmcia/ds.h
+> deleted file mode 100644
+> index fc43703..0000000
+> --- a/include/pcmcia/ds.h
+> +++ /dev/null
+> @@ -1,36 +0,0 @@
+> -#ifndef _COMPAT_PCMCIA_DS_H
+> -#define _COMPAT_PCMCIA_DS_H
+> -#include <linux/version.h>
+> -
+> -#include_next <pcmcia/ds.h>
+> -
+> -#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36)
+> -/**
+> - * pcmcia_read_config_byte() - read a byte from a card configuration register
+> - *
+> - * pcmcia_read_config_byte() reads a byte from a configuration register in
+> - * attribute memory.
+> - */
+> -static inline int pcmcia_read_config_byte(struct pcmcia_device *p_dev, off_t where, u8 *val)
+> -{
+> -        int ret;
+> -        conf_reg_t reg = { 0, CS_READ, where, 0 };
+> -        ret = pcmcia_access_configuration_register(p_dev, &reg);
+> -        *val = reg.Value;
+> -        return ret;
+> -}
+> -
+> -/**
+> - * pcmcia_write_config_byte() - write a byte to a card configuration register
+> - *
+> - * pcmcia_write_config_byte() writes a byte to a configuration register in
+> - * attribute memory.
+> - */
+> -static inline int pcmcia_write_config_byte(struct pcmcia_device *p_dev, off_t where, u8 val)
+> -{
+> -	conf_reg_t reg = { 0, CS_WRITE, where, val };
+> -	return pcmcia_access_configuration_register(p_dev, &reg);
+> -}
+> -#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36) */
+> -
+> -#endif
+
+-- 
+Kshitij Kulshreshtha
+
+Institut für Mathematik,
+Universität Paderborn,
+Warburger Straße 100,
+33098 Paderborn.
+
+Büro: A3.235
+
+Privatanschrift:
+Arnikaweg 62
+33100 Paderborn.
